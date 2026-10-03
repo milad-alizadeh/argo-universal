@@ -1,4 +1,4 @@
-import { SessionScreen } from '@argo/client';
+import { SessionScreen } from '@repo/client';
 import { useLocalSearchParams } from 'expo-router';
 
 export default function SessionRoute() {

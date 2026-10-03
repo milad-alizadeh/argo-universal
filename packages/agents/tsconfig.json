@@ -1,4 +1,4 @@
 {
-  "extends": "@argo/typescript/node.json",
+  "extends": "@repo/typescript/node.json",
   "include": ["src"]
 }

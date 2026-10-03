@@ -6,7 +6,7 @@
     "build": "turbo run build",
     "check": "biome check .",
     "check-types": "turbo run check-types",
-    "db:generate": "pnpm --filter @argo/db db:generate",
+    "db:generate": "pnpm --filter @repo/db db:generate",
     "dev": "turbo run dev",
     "format": "biome check --write .",
     "postinstall": "sherif",
@@ -15,8 +15,8 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@argo/biome": "workspace:*",
     "@biomejs/biome": "catalog:",
+    "@repo/biome": "workspace:*",
     "sherif": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:",

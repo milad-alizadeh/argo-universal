@@ -1,5 +1,5 @@
 {
-  "name": "@argo/universal-app",
+  "name": "@repo/universal-app",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "private": true,
@@ -13,8 +13,8 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "@argo/client": "workspace:*",
-    "@argo/uniwind": "workspace:*",
+    "@repo/client": "workspace:*",
+    "@repo/uniwind": "workspace:*",
     "expo": "catalog:",
     "expo-constants": "catalog:",
     "expo-dev-client": "catalog:",
@@ -37,7 +37,7 @@
     "uniwind": "catalog:"
   },
   "devDependencies": {
-    "@argo/typescript": "workspace:*",
+    "@repo/typescript": "workspace:*",
     "@types/react": "catalog:",
     "typescript": "catalog:"
   },

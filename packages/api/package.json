@@ -1,5 +1,5 @@
 {
-  "name": "@argo/api",
+  "name": "@repo/api",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -10,12 +10,12 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@argo/contracts": "workspace:*",
+    "@repo/contracts": "workspace:*",
     "@trpc/server": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@argo/typescript": "workspace:*",
+    "@repo/typescript": "workspace:*",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

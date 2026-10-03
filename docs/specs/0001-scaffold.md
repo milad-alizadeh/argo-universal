@@ -76,7 +76,7 @@ Out of scope (milestone 1 and later):
 
 Use the newest stable version of each tool on the day you scaffold. Drizzle is the exception: use the newest 1.0 release candidate. Record every version you picked in the catalog. Make sure that Expo is SDK 54 or newer, that Drizzle supports `drizzle-orm/node-sqlite` (Argo uses `drizzle-orm` 1.0.0-rc), that Zod is 4, that XState is 5, and that tRPC is 11.
 
-Package names use the `@argo/` scope: `@argo/universal-app`, `@argo/desktop`, `@argo/server`, `@argo/storybook`, `@argo/contracts`, `@argo/api`, `@argo/db`, `@argo/agents`, `@argo/git`, `@argo/client`, `@argo/typescript`, `@argo/uniwind`, `@argo/biome`.
+Package names use the `@repo/` scope: `@repo/universal-app`, `@repo/desktop`, `@repo/server`, `@repo/storybook`, `@repo/contracts`, `@repo/api`, `@repo/db`, `@repo/agents`, `@repo/git`, `@repo/client`, `@repo/typescript`, `@repo/uniwind`, `@repo/biome`.
 
 ## 3. Folder tree
 
@@ -85,7 +85,7 @@ argo-universal/
 ├── apps/
 │   ├── universal-app/              Expo app for iOS, Android, and web
 │   │   ├── src/app/
-│   │   │   ├── _layout.tsx         imports global.css, renders <AppProviders> from @argo/client
+│   │   │   ├── _layout.tsx         imports global.css, renders <AppProviders> from @repo/client
 │   │   │   ├── index.tsx           renders <ProjectsScreen/>
 │   │   │   ├── sessions/[id].tsx   renders <SessionScreen/>
 │   │   │   └── (dev)/storybook.tsx on-device Storybook, only in development builds
@@ -119,7 +119,7 @@ argo-universal/
 │   │   ├── services.ts             Services = { system: SystemService }
 │   │   ├── trpc.ts                 context { services }, router, publicProcedure
 │   │   └── root.ts                 appRouter and the AppRouter type
-│   ├── db/src/                     Drizzle schema (@argo/db/schema, no Node APIs), client, migrations in db/drizzle/
+│   ├── db/src/                     Drizzle schema (@repo/db/schema, no Node APIs), client, migrations in db/drizzle/
 │   ├── agents/src/                 index.ts only (claude/ and codex/ come in milestone 1)
 │   ├── git/src/                    index.ts only
 │   └── client/
@@ -152,7 +152,7 @@ argo-universal/
 
 | Package | Can import | Never imports |
 |---|---|---|
-| `contracts` | `zod`, `drizzle-orm` (`drizzle-orm/zod`), `@argo/db/schema` | anything else, including the `@argo/db` client |
+| `contracts` | `zod`, `drizzle-orm` (`drizzle-orm/zod`), `@repo/db/schema` | anything else, including the `@repo/db` client |
 | `api` | `contracts`, `@trpc/server` | `db`, `agents`, `git`, Node APIs |
 | `db` | `drizzle-orm`, `node:sqlite` | `contracts`, `api`, `agents`, `git` |
 | `agents` | `contracts`, vendor SDKs | `db`, `api`, `git` |
@@ -251,7 +251,7 @@ Vitest tests for `api` call the routers with `createCaller` and mock services, w
 - One `node:http` server on `127.0.0.1`, on the port in `ARGO_SERVER_PORT`, with 7337 as the default. The supervisor writes the port that the worker uses into `server.json`.
 - `GET /health` returns `{ok: true, version, startedAt}`.
 - `GET /blobs/:id` streams the file from `~/.argo/blobs/`. It returns 404 for an unknown id.
-- A `ws` server on the same port, with tRPC's `applyWSSHandler` and `@argo/api`'s `appRouter`.
+- A `ws` server on the same port, with tRPC's `applyWSSHandler` and `@repo/api`'s `appRouter`.
 - On start, it opens the database and runs the Drizzle migrations from `packages/db/drizzle/`.
 - Scaffold procedures: `system.info` (query, returns `{version, startedAt, pid}`) and `system.clock` (subscription, sends `{now}` every second).
 
@@ -345,7 +345,7 @@ The Session's current Plan is not stored. A query reads it from the newest `plan
 
 - Expo Router with routes in `src/app/`. Web uses Metro.
 - `metro.config.js`: `withUniwindConfig` is the outermost wrapper.
-- `global.css`: imports Tailwind and Uniwind, imports `@argo/uniwind/theme.css`, and adds `@source` for `../../packages/client/src`.
+- `global.css`: imports Tailwind and Uniwind, imports `@repo/uniwind/theme.css`, and adds `@source` for `../../packages/client/src`.
 - Install `expo-dev-client`. Add a dev menu item that opens `/(dev)/storybook`. The route renders nothing in a production build.
 - `.rnstorybook/main.ts` reads `../../packages/client/src/**/*.stories.tsx` and leaves out `*.test.stories.tsx`.
 - Android emulator: use `adb reverse tcp:7337 tcp:7337` so that `127.0.0.1` works.

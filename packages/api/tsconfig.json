@@ -1,5 +1,5 @@
 {
-  "extends": "@argo/typescript/base.json",
+  "extends": "@repo/typescript/base.json",
   // AbortSignal is a web global that tRPC subscriptions use; DOM types give it without Node APIs.
   "compilerOptions": {
     "lib": ["es2025", "DOM"]

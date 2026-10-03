@@ -1,5 +1,5 @@
 {
-  "name": "@argo/git",
+  "name": "@repo/git",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -10,7 +10,7 @@
     "check-types": "tsc --noEmit"
   },
   "devDependencies": {
-    "@argo/typescript": "workspace:*",
+    "@repo/typescript": "workspace:*",
     "@types/node": "catalog:",
     "typescript": "catalog:"
   }

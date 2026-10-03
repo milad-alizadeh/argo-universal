@@ -1,5 +1,5 @@
 {
-  "name": "@argo/client",
+  "name": "@repo/client",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -31,8 +31,8 @@
     "react-native": "catalog:"
   },
   "devDependencies": {
-    "@argo/api": "workspace:*",
-    "@argo/typescript": "workspace:*",
+    "@repo/api": "workspace:*",
+    "@repo/typescript": "workspace:*",
     "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
     "@types/ws": "catalog:",

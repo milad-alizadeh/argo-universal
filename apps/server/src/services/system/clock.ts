@@ -1,4 +1,4 @@
-import type { ClockTick } from '@argo/contracts';
+import type { ClockTick } from '@repo/contracts';
 
 const tickIntervalMs = 1000;
 

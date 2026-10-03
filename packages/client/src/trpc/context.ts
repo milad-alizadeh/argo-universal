@@ -1,4 +1,4 @@
-import type { AppRouter } from '@argo/api';
+import type { AppRouter } from '@repo/api';
 import { createTRPCContext } from '@trpc/tanstack-react-query';
 
 // Screens take tRPC from context, so a story can swap the client (ADR 0009).

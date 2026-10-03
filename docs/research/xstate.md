@@ -49,7 +49,7 @@ catalog:
 ```
 
 ```sh
-pnpm --filter @argo/server add xstate@catalog:
+pnpm --filter @repo/server add xstate@catalog:
 ```
 
 `@statelyai/inspect` is optional and dev-only (see Inspection below).

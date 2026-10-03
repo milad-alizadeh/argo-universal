@@ -92,7 +92,7 @@ Run `biome init --jsonc` inside `tooling/biome/`, then fit it as below.
 
 ```json
 {
-  "name": "@argo/biome",
+  "name": "@repo/biome",
   "private": true,
   "type": "module",
   "exports": { "./biome.jsonc": "./biome.jsonc" }
@@ -122,7 +122,7 @@ Root `biome.jsonc`:
 ```jsonc
 {
 	"$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-	"extends": ["@argo/biome/biome.jsonc"],
+	"extends": ["@repo/biome/biome.jsonc"],
 	"vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true, "defaultBranch": "main" },
 	"files": {
 		"includes": [
@@ -138,7 +138,7 @@ Root `biome.jsonc`:
 
 Notes on that config:
 
-- `extends` takes paths or package names, applied from least to most relevant. (B3) Both `"@argo/biome/biome.jsonc"` and `"./tooling/biome/biome.jsonc"` worked in the observed run.
+- `extends` takes paths or package names, applied from least to most relevant. (B3) Both `"@repo/biome/biome.jsonc"` and `"./tooling/biome/biome.jsonc"` worked in the observed run.
 - `$schema` can be the versioned URL or the local `./node_modules/@biomejs/biome/configuration_schema.json`. The local file always matches the installed version. (B3)
 - `vcs.useIgnoreFile: true` makes Biome skip what `.gitignore` skips. `vcs.defaultBranch` is the base for `--changed`. (B3)
 - `!` excludes a path from processing. `!!` force-ignores it: the scanner never indexes it, even when other files import it. Biome recommends `!!` for output folders such as `dist/`, and plain `!` for generated source so type information can still be read. (B3, B7, 2.3.0)
@@ -163,7 +163,7 @@ Sources: B4 and `biome check --help` / `biome ci --help` with 2.5.15 (observed).
 - Turborepo recommends Biome as one root task, not a script per package, because it is fast. Register it in `turbo.json` as `"//#<script>"`. A root task misses the cache for every package when Biome or its config changes. (B9)
 - Biome 2 discovers nested `biome.json(c)` files. A nested file must set `"root": false`, or use `"extends": "//"` which implies it. (B2)
 - A file that is extended cannot extend another file. So `tooling/biome/biome.jsonc` must be self-contained. (B2)
-- In CI, install dependencies before running Biome, so that `extends` can resolve `@argo/biome` from `node_modules`. (B5)
+- In CI, install dependencies before running Biome, so that `extends` can resolve `@repo/biome` from `node_modules`. (B5)
 
 ### Gotchas
 
@@ -227,7 +227,7 @@ How Vitest reads it:
 
 - `vitest.config.*` wins over `vite.config.*`. (V7)
 - The root config is not itself a project. It only sets global options such as `reporters` and `coverage`. (V2)
-- Every folder matched by a glob is a project, even without a config file. Its name is the `name` in the nearest `package.json`, else the folder name. (V2) Observed: `packages/a` with no config ran as `@argo/a`.
+- Every folder matched by a glob is a project, even without a config file. Its name is the `name` in the nearest `package.json`, else the folder name. (V2) Observed: `packages/a` with no config ran as `@repo/a`.
 - An entry that points at a file must be named `vitest.config.*`, `vite.config.*`, `vitest.<name>.config.*`, or `vite.<name>.config.*`. (V2)
 - Project names must be unique, or Vitest throws. (V2)
 - Options only the root may set: `coverage`, `reporters`, `resolveSnapshotPath`, `attachmentsDir`. (V2)
@@ -284,9 +284,9 @@ Filtering:
 
 ```sh
 vitest run                                  # all projects
-vitest run --project @argo/server           # one project
-vitest run --project "@argo/storybook*"     # the nested Storybook project
-vitest run --project '!@argo/storybook*'    # everything except Storybook
+vitest run --project @repo/server           # one project
+vitest run --project "@repo/storybook*"     # the nested Storybook project
+vitest run --project '!@repo/storybook*'    # everything except Storybook
 DEBUG=vitest:projects vitest                # print how projects resolved
 ```
 
@@ -318,7 +318,7 @@ Add `.vitest/` to `.gitignore`. Vitest 5 writes attachments, reports, and screen
 
 ### Gotchas
 
-- **Nested Storybook project name.** Referenced from the root, the Storybook project is named `@argo/storybook (storybook)`: nested names get the declaring config's name as a prefix, and that config takes its name from `apps/storybook/package.json`. (V2, observed) The generator's script `vitest --project=storybook` (V9) then matches nothing from the root ("No projects were found"). It still works when run inside `apps/storybook`. From the root, use `--project "@argo/storybook*"`.
+- **Nested Storybook project name.** Referenced from the root, the Storybook project is named `@repo/storybook (storybook)`: nested names get the declaring config's name as a prefix, and that config takes its name from `apps/storybook/package.json`. (V2, observed) The generator's script `vitest --project=storybook` (V9) then matches nothing from the root ("No projects were found"). It still works when run inside `apps/storybook`. From the root, use `--project "@repo/storybook*"`.
 - **A project with no tests** passes inside a full run, but `vitest run --project <it>` alone exits 1 with "No test files found" (observed). Use `--passWithNoTests` for single-project scripts.
 - The Storybook addon's peer range still lists `@vitest/browser`; with Vitest 5 it comes in through `@vitest/browser-playwright`. (V8) If `sherif` or pnpm complains, add it to the catalog at the same version as `vitest`.
 - Keep every `vitest` and `@vitest/*` package on the same exact version. Their peer dependencies pin each other (`@vitest/browser-playwright` 5.0.3 needs `vitest` 5.0.3). (V8)

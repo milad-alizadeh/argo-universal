@@ -146,7 +146,7 @@ export default config;
 ```css
 @import 'tailwindcss';
 @import 'uniwind';
-@import '@argo/uniwind/theme.css';
+@import '@repo/uniwind/theme.css';
 @source '../../packages/client/src';
 ```
 
@@ -156,7 +156,7 @@ export default config;
 
 ```tsx
 import type { Preview } from '@storybook/react-native-web-vite';
-import { withTrpcMocks } from '@argo/client/mocks';
+import { withTrpcMocks } from '@repo/client/mocks';
 import '../global.css';
 
 const preview: Preview = {
@@ -238,7 +238,7 @@ Run: `vitest --project=storybook` [S4].
   ```
 
 - The generator writes `"latest"` for `vite`, `vitest`, `@vitest/browser-playwright`, `@vitest/coverage-v8`, `playwright`, and `@chromatic-com/storybook`, and `^10.6.1` for Storybook packages [L1]. Move each one to the pnpm catalog and use `catalog:`.
-- Root `vitest.config.ts` with projects: Vitest supports nested projects. A nested project's name is prefixed with the name of the config that declares it [S18]. A folder project's default name is the `name` in its `package.json` [S18]. So with the generated config and root `projects: ['apps/*']`, the project is `@argo/storybook (storybook)`, and `vitest --project=storybook` from the root fails with `No projects were found` [L1]. With the flat `defineProject` above, `vitest --run --project=storybook` works from the root and from `apps/storybook` [L1]. The root needs `vitest` installed.
+- Root `vitest.config.ts` with projects: Vitest supports nested projects. A nested project's name is prefixed with the name of the config that declares it [S18]. A folder project's default name is the `name` in its `package.json` [S18]. So with the generated config and root `projects: ['apps/*']`, the project is `@repo/storybook (storybook)`, and `vitest --project=storybook` from the root fails with `No projects were found` [L1]. With the flat `defineProject` above, `vitest --run --project=storybook` works from the root and from `apps/storybook` [L1]. The root needs `vitest` installed.
 - Vitest 5 projects inherit the root config by default (`extends` is on since 5.0) [S18].
 - Uniwind's Vite plugin resolves `cssEntryFile` and `dtsFile` from `process.cwd()` [S17]. Running Vitest from the repo root with relative paths wrote `uniwind-types.d.ts` into the repo root, and a missing CSS file is read as empty without an error [S17][L1]. Use absolute paths, as in `main.ts` above.
 - Turborepo: `storybook build` writes `storybook-static/` [S1]; give the build task that output. `storybook dev` is a long-running task; mark it `persistent` and uncached in `turbo.json`. Storybook's cache is `apps/storybook/node_modules/.cache/storybook/` [L1].

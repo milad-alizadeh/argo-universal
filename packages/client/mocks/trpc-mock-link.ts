@@ -1,4 +1,4 @@
-import type { AppRouter } from '@argo/api';
+import type { AppRouter } from '@repo/api';
 import { TRPCClientError, type TRPCLink } from '@trpc/client';
 import type {
   AnyTRPCProcedure,

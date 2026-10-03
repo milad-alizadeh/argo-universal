@@ -1,4 +1,4 @@
-import type { AppRouter } from '@argo/api';
+import type { AppRouter } from '@repo/api';
 import { createTRPCClient } from '@trpc/client';
 import { describe, expect, it } from 'vitest';
 import { fails, pending, trpcMockLink } from './trpc-mock-link';

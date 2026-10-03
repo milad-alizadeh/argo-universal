@@ -59,8 +59,8 @@ catalog:
 ```
 
 ```bash
-pnpm --filter @argo/db add drizzle-orm@catalog:
-pnpm --filter @argo/db add -D drizzle-kit@catalog:
+pnpm --filter @repo/db add drizzle-orm@catalog:
+pnpm --filter @repo/db add -D drizzle-kit@catalog:
 ```
 
 `node:sqlite` is built into Node and needs no install. (S14)
@@ -124,7 +124,7 @@ export default defineConfig({
 ### Schema (`drizzle-orm/sqlite-core`)
 
 ```ts
-import type { FeedRowPayload } from '@argo/contracts'
+import type { FeedRowPayload } from '@repo/contracts'
 import { index, integer, primaryKey, snakeCase, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
 
 export const feedRow = snakeCase.table(
@@ -187,7 +187,7 @@ export function openDatabase(filePath: string) {
 
 ```ts
 import { createSelectSchema } from 'drizzle-orm/zod'
-import { feedRowPayloadSchema } from '@argo/contracts'
+import { feedRowPayloadSchema } from '@repo/contracts'
 
 export const feedRowSelectSchema = createSelectSchema(feedRow, { payload: feedRowPayloadSchema })
 ```
@@ -206,8 +206,8 @@ export const feedRowSelectSchema = createSelectSchema(feedRow, { payload: feedRo
 
 ## pnpm + Turborepo monorepo specifics
 
-- Put `drizzle-orm` in `dependencies` and `drizzle-kit` in `devDependencies` of `@argo/db`, both from the catalog. (S5, S17)
-- `drizzle-kit` loads `drizzle.config.ts` and the schema through `jiti`, not tsx. A schema that imports a type from a workspace package (`import type { Payload } from '@argo/contracts'`, exported as `./src/index.ts`) generated fine under pnpm. (S13, S18)
+- Put `drizzle-orm` in `dependencies` and `drizzle-kit` in `devDependencies` of `@repo/db`, both from the catalog. (S5, S17)
+- `drizzle-kit` loads `drizzle.config.ts` and the schema through `jiti`, not tsx. A schema that imports a type from a workspace package (`import type { Payload } from '@repo/contracts'`, exported as `./src/index.ts`) generated fine under pnpm. (S13, S18)
 - `drizzle-kit` resolves `drizzle-orm/version` from its own location. pnpm's default hidden hoisting (`node_modules/.pnpm/node_modules`) made this work in a workspace test with pnpm 9.15.4 and 12.8.1. (S13, S18)
 - **esbuild build script.** `drizzle-kit` depends on `esbuild`, which has a `postinstall` script. With pnpm 10.3 or newer, `strictDepBuilds` is `true` by default, and `pnpm install` failed with `ERR_PNPM_IGNORED_BUILDS` (exit 1) on pnpm 12.8.1. Record a decision in `pnpm-workspace.yaml`. `drizzle-kit generate` worked with the script not run, so `false` is enough: (S15, S18)
 
@@ -216,8 +216,8 @@ export const feedRowSelectSchema = createSelectSchema(feedRow, { payload: feedRo
     esbuild: false
   ```
 
-- pnpm resolved the optional `zod` peer of `drizzle-orm` from the workspace (`drizzle-orm@1.0.0-rc.4_zod@4.6.5`) even though `@argo/db` did not list `zod`. (S18)
-- **Run `db:generate` outside Turborepo**, or keep in mind it cannot prompt there. A Turborepo task accepts stdin only when `interactive: true`, which must be used with `persistent`. Without a TTY, `drizzle-kit generate` exits 2 on any rename question. A root script `pnpm --filter @argo/db db:generate` keeps the TTY. (S13, S16, S18)
+- pnpm resolved the optional `zod` peer of `drizzle-orm` from the workspace (`drizzle-orm@1.0.0-rc.4_zod@4.6.5`) even though `@repo/db` did not list `zod`. (S18)
+- **Run `db:generate` outside Turborepo**, or keep in mind it cannot prompt there. A Turborepo task accepts stdin only when `interactive: true`, which must be used with `persistent`. Without a TTY, `drizzle-kit generate` exits 2 on any rename question. A root script `pnpm --filter @repo/db db:generate` keeps the TTY. (S13, S16, S18)
 - `generate` is not a cacheable build step: it writes new files from the schema. Do not add it to a cached Turborepo pipeline. (S8, S16)
 
 ## Gotchas

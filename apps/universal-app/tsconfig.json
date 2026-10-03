@@ -1,5 +1,5 @@
 {
-  "extends": "@argo/typescript/react-native.json",
+  "extends": "@repo/typescript/react-native.json",
   "compilerOptions": {
     "strict": true,
     "paths": {

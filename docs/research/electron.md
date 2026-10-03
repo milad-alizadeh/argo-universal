@@ -64,7 +64,7 @@ Electron 44's bundled Node (24.21.0) matches the repo's Node 24.21.0 [S2].
 ## Install command
 
 ```sh
-pnpm add --save-dev --save-exact electron@44.5.1 --filter @argo/desktop
+pnpm add --save-dev --save-exact electron@44.5.1 --filter @repo/desktop
 ```
 
 - Electron's docs install it as a dev dependency: `npm install electron --save-dev` [S1 README, S4]. Forge installs it with an exact version [S25].
@@ -279,11 +279,11 @@ From S7:
 ## pnpm + Turborepo monorepo specifics
 
 - **Build approval:** `electron` 42+ has no lifecycle scripts [S1, S3], so pnpm's build gate (`strictDepBuilds`, default `true` [S31]) does not involve it. pnpm 11 replaced `onlyBuiltDependencies` with `allowBuilds` (`onlyBuiltDependencies: [electron]` → `allowBuilds: {electron: true}`) [S31]. The Forge template still writes `allowBuilds: {electron: true}` [S26]. With 44.5.1 that has nothing to allow [S1].
-- **Download in CI:** the binary downloads on first run [S3]. In CI, run `pnpm --filter @argo/desktop exec install-electron --no` before Playwright, and cache `~/.cache/electron` on Linux [S3, S4].
+- **Download in CI:** the binary downloads on first run [S3]. In CI, run `pnpm --filter @repo/desktop exec install-electron --no` before Playwright, and cache `~/.cache/electron` on Linux [S3, S4].
 - **`node-linker`:** Electron's install docs say nothing about pnpm [S4]. Forge requires `node-linker=hoisted` [S23].
 - **Nested workspace file:** the Forge generator writes its own `pnpm-workspace.yaml` (with `nodeLinker: hoisted`) into the generated folder when pnpm is chosen [S26]. Inside this repo, that file would sit under `apps/desktop/`, next to the root workspace file.
 - **`@types/node`:** `electron` depends on `@types/node ^24.9.0` [S1]. Keep the catalog's `@types/node` on 24.x so that there is one copy.
-- **Turborepo `dev`:** a persistent task cannot be a dependency ("Turborepo will error") [S32]. So `@argo/desktop#dev` cannot `dependsOn` the Server's or Expo's `dev`. It must wait by itself, as spec section 10 already says. `with` runs companion tasks alongside [S32]. Use `"persistent": true, "cache": false` for `dev` [S32].
+- **Turborepo `dev`:** a persistent task cannot be a dependency ("Turborepo will error") [S32]. So `@repo/desktop#dev` cannot `dependsOn` the Server's or Expo's `dev`. It must wait by itself, as spec section 10 already says. `with` runs companion tasks alongside [S32]. Use `"persistent": true, "cache": false` for `dev` [S32].
 - **Turborepo env:** strict mode filters the environment [S32]. `DISPLAY`, `XAUTHORITY`, `DBUS_SESSION_BUS_ADDRESS`, `HOME`, and `ELECTRON_RUN_AS_NODE` pass through by default [S33]. Add our own variables (for example the Expo web URL) to `env`/`passThroughEnv` [S32].
 
 ## Gotchas

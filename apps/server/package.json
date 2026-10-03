@@ -1,5 +1,5 @@
 {
-  "name": "@argo/server",
+  "name": "@repo/server",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -10,9 +10,9 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@argo/api": "workspace:*",
-    "@argo/contracts": "workspace:*",
-    "@argo/db": "workspace:*",
+    "@repo/api": "workspace:*",
+    "@repo/contracts": "workspace:*",
+    "@repo/db": "workspace:*",
     "@trpc/server": "catalog:",
     "tsx": "catalog:",
     "ws": "catalog:",
@@ -20,7 +20,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@argo/typescript": "workspace:*",
+    "@repo/typescript": "workspace:*",
     "@types/node": "catalog:",
     "@types/ws": "catalog:",
     "typescript": "catalog:",

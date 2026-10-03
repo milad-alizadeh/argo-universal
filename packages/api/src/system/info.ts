@@ -1,4 +1,4 @@
-import { SystemInfo } from '@argo/contracts';
+import { SystemInfo } from '@repo/contracts';
 import { publicProcedure } from '../trpc';
 
 export const info = publicProcedure

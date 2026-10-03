@@ -132,7 +132,7 @@ What it does [S24]:
 
 Per-component dependencies [S26]: `text` adds `@rn-primitives/slot`. `button` and `card` add no packages but pull in `text`. Files have type `registry:ui`, so they land in the `ui` alias folder.
 
-Local run in a pnpm workspace, from `packages/client` [S29]: it created `src/primitives/text.tsx`, `button.tsx`, and `card.tsx`. It rewrote imports to the configured aliases, for example `import { cn } from '@argo/client/lib/utils'` and `import { Text, TextClassContext } from '@argo/client/primitives/text'`. It added `"@rn-primitives/slot": "^1.5.2"` to `packages/client/package.json`. It did not add `class-variance-authority`, `clsx`, or `tailwind-merge`.
+Local run in a pnpm workspace, from `packages/client` [S29]: it created `src/primitives/text.tsx`, `button.tsx`, and `card.tsx`. It rewrote imports to the configured aliases, for example `import { cn } from '@repo/client/lib/utils'` and `import { Text, TextClassContext } from '@repo/client/primitives/text'`. It added `"@rn-primitives/slot": "^1.5.2"` to `packages/client/package.json`. It did not add `class-variance-authority`, `clsx`, or `tailwind-merge`.
 
 ### `doctor`
 
@@ -169,7 +169,7 @@ Other options: `extraThemes: string[]` (names beyond light and dark), `polyfills
 @import 'tailwindcss';
 @import 'uniwind';
 @import 'tw-animate-css';
-@import '@argo/uniwind/theme.css';
+@import '@repo/uniwind/theme.css';
 
 @source '../../packages/client/src';
 ```
@@ -202,7 +202,7 @@ Other options: `extraThemes: string[]` (names beyond light and dark), `polyfills
 }
 ```
 
-`tooling/uniwind/package.json` needs `"exports": { "./theme.css": "./theme.css" }`, and every app that imports it lists `"@argo/uniwind": "workspace:*"`. I tested this locally: `uniwind generate-artifacts` followed the `@argo/uniwind/theme.css` import and found the light and dark variables [S10, S29].
+`tooling/uniwind/package.json` needs `"exports": { "./theme.css": "./theme.css" }`, and every app that imports it lists `"@repo/uniwind": "workspace:*"`. I tested this locally: `uniwind generate-artifacts` followed the `@repo/uniwind/theme.css` import and found the light and dark variables [S10, S29].
 
 Import the CSS in the root layout, not in the entry file that registers the root component. Importing it in the entry file turns every CSS edit into a full reload [S1, S8]. With the spec tree, `apps/universal-app/src/app/_layout.tsx` imports `'../../global.css'`.
 
@@ -218,19 +218,19 @@ Themes [S6]: `light`, `dark`, and `system` are built in. `system` follows the de
   "tsx": true,
   "tailwind": { "config": "", "css": "../../tooling/uniwind/theme.css", "baseColor": "neutral", "cssVariables": true },
   "aliases": {
-    "components": "@argo/client/components",
-    "utils": "@argo/client/lib/utils",
-    "ui": "@argo/client/primitives",
-    "lib": "@argo/client/lib",
-    "hooks": "@argo/client/hooks"
+    "components": "@repo/client/components",
+    "utils": "@repo/client/lib/utils",
+    "ui": "@repo/client/primitives",
+    "lib": "@repo/client/lib",
+    "hooks": "@repo/client/hooks"
   },
   "iconLibrary": "lucide"
 }
 ```
 
-`packages/client/tsconfig.json` needs `"paths": { "@argo/client/*": ["./src/*"] }`, because the CLI resolves aliases through `tsconfig` paths [S24, S29]. `packages/client/package.json` needs `exports` for each aliased folder, for example `"./primitives/*": "./src/primitives/*.tsx"` and `"./lib/*": "./src/lib/*.ts"`, so other workspaces and Metro can resolve the same specifiers [S27]. Leave `tailwind.config` empty for Tailwind 4 [S27].
+`packages/client/tsconfig.json` needs `"paths": { "@repo/client/*": ["./src/*"] }`, because the CLI resolves aliases through `tsconfig` paths [S24, S29]. `packages/client/package.json` needs `exports` for each aliased folder, for example `"./primitives/*": "./src/primitives/*.tsx"` and `"./lib/*": "./src/lib/*.ts"`, so other workspaces and Metro can resolve the same specifiers [S27]. Leave `tailwind.config` empty for Tailwind 4 [S27].
 
-The `cn` helper: copy the template `lib/utils.ts` to the path behind the `utils` alias [S22, S25]. `add` never creates it [S24, S29]. The spec tree does not name a `lib/` folder in `packages/client`. Either add `src/lib/utils.ts` (tested), or point `utils` at `@argo/client/primitives/utils` and put it in `src/primitives/utils.ts`. Both work, because the alias is only a rewritten import string. This is a choice for the owner.
+The `cn` helper: copy the template `lib/utils.ts` to the path behind the `utils` alias [S22, S25]. `add` never creates it [S24, S29]. The spec tree does not name a `lib/` folder in `packages/client`. Either add `src/lib/utils.ts` (tested), or point `utils` at `@repo/client/primitives/utils` and put it in `src/primitives/utils.ts`. Both work, because the alias is only a rewritten import string. This is a choice for the owner.
 
 Command for the spec's primitives (run it in `packages/client`):
 

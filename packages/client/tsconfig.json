@@ -1,5 +1,5 @@
 {
-  "extends": "@argo/typescript/react-native.json",
+  "extends": "@repo/typescript/react-native.json",
   "compilerOptions": {
     // className props on React Native components come from Uniwind's type augmentation.
     "types": ["uniwind/types"]

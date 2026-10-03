@@ -1,4 +1,4 @@
-import type { SystemInfo } from '@argo/contracts';
+import type { SystemInfo } from '@repo/contracts';
 
 export interface SystemDeps {
   version: string;

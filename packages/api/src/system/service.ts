@@ -1,4 +1,4 @@
-import type { ClockTick, SystemInfo } from '@argo/contracts';
+import type { ClockTick, SystemInfo } from '@repo/contracts';
 
 export interface SystemService {
   info(): SystemInfo;

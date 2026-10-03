@@ -122,7 +122,7 @@ export default defineConfig<AppOptions>({
   webServer: [
     {
       name: 'Server',
-      command: 'pnpm --filter @argo/server start',
+      command: 'pnpm --filter @repo/server start',
       url: 'http://127.0.0.1:7337/health',
       cwd: repoRoot,
       env: { ARGO_HOME: argoHome },
@@ -131,7 +131,7 @@ export default defineConfig<AppOptions>({
     },
     {
       name: 'Web',
-      command: 'pnpm --filter @argo/universal-app exec expo serve --port 8081',
+      command: 'pnpm --filter @repo/universal-app exec expo serve --port 8081',
       url: 'http://127.0.0.1:8081',
       cwd: repoRoot,
       reuseExistingServer: !process.env.CI,

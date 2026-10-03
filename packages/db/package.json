@@ -1,5 +1,5 @@
 {
-  "name": "@argo/db",
+  "name": "@repo/db",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -15,7 +15,7 @@
     "drizzle-orm": "catalog:"
   },
   "devDependencies": {
-    "@argo/typescript": "workspace:*",
+    "@repo/typescript": "workspace:*",
     "@types/node": "catalog:",
     "drizzle-kit": "catalog:",
     "typescript": "catalog:"

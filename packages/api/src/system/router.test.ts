@@ -1,4 +1,4 @@
-import type { ClockTick, SystemInfo } from '@argo/contracts';
+import type { ClockTick, SystemInfo } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import { appRouter } from '../root';
 import type { Services } from '../services';

@@ -156,7 +156,7 @@ allowBuilds:
 - `allowBuilds` replaces `onlyBuiltDependencies`, `neverBuiltDependencies`, `ignoredBuiltDependencies`, `onlyBuiltDependenciesFile` and `ignoreDepScripts`, which were removed in pnpm 11 [S3, S7]. `strictDepBuilds` defaults to `true`, so an unreviewed build script fails the install. pnpm then adds a placeholder entry to `pnpm-workspace.yaml` for you to set to `true` or `false` [S7]. `pnpm add --allow-build=<pkg>` writes the entry for you [S14]. Fill the list from what the install reports. Do not guess it.
 - `nodeLinker`: leave it at the default `isolated`. Expo supports isolated installs from SDK 54 and configures Metro for monorepos automatically from SDK 52. The fallback, if needed, is `nodeLinker: hoisted` [S33]. create-t3-turbo runs Expo SDK 54 with no `nodeLinker` and no `.npmrc` [S32].
 - `minimumReleaseAge` defaults to 1440 minutes (1 day) since pnpm 11 [S3, S8]. Set `minimumReleaseAgeExclude` for packages that must install the same day. Turborepo's own repo excludes `turbo` and `@turbo/*` [S28].
-- `linkWorkspacePackages` defaults to `false`. Use `workspace:*` for `@argo/*` packages so pnpm never fetches them from the registry [S13].
+- `linkWorkspacePackages` defaults to `false`. Use `workspace:*` for `@repo/*` packages so pnpm never fetches them from the registry [S13].
 
 ### Root `package.json`
 
@@ -207,8 +207,8 @@ allowBuilds:
   "extends": ["//"],
   "tasks": {
     "dev": {
-      "with": ["@argo/server#dev", "@argo/universal-app#dev"],
-      "dependsOn": ["@argo/server#dev:ready", "@argo/universal-app#dev:ready"]
+      "with": ["@repo/server#dev", "@repo/universal-app#dev"],
+      "dependsOn": ["@repo/server#dev:ready", "@repo/universal-app#dev:ready"]
     }
   }
 }

@@ -1,4 +1,4 @@
-import { ClockTick } from '@argo/contracts';
+import { ClockTick } from '@repo/contracts';
 import { publicProcedure, zAsyncIterable } from '../trpc';
 
 export const clock = publicProcedure

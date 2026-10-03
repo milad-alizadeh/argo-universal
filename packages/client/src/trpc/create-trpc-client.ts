@@ -1,4 +1,4 @@
-import type { AppRouter } from '@argo/api';
+import type { AppRouter } from '@repo/api';
 import * as trpc from '@trpc/client';
 
 // Every tRPC call goes over one WebSocket to the Server (ADR 0002).

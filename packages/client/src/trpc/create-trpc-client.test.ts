@@ -1,6 +1,6 @@
 // @vitest-environment node
 import type { AddressInfo } from 'node:net';
-import { appRouter, type Services } from '@argo/api';
+import { appRouter, type Services } from '@repo/api';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { afterEach, describe, expect, it } from 'vitest';
 import { WebSocketServer } from 'ws';

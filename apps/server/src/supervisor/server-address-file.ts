@@ -1,6 +1,6 @@
 import { renameSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { ServerAddress } from '@argo/contracts';
+import { ServerAddress } from '@repo/contracts';
 
 const fileName = 'server.json';
 

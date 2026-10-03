@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-  "extends": ["@argo/biome/biome.jsonc"],
+  "extends": ["@repo/biome/biome.jsonc"],
   // The shared config leaves version control off; the root turns it on so .gitignore applies.
   "vcs": {
     "enabled": true,

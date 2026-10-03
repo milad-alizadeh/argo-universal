@@ -1,4 +1,4 @@
-import type { SystemService } from '@argo/api';
+import type { SystemService } from '@repo/api';
 import { clock } from './clock';
 import { info, type SystemDeps } from './info';
 

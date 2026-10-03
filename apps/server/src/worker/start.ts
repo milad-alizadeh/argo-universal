@@ -1,7 +1,7 @@
 import { createServer } from 'node:http';
 import { join } from 'node:path';
-import { appRouter, type Services } from '@argo/api';
-import { openDatabase } from '@argo/db';
+import { appRouter, type Services } from '@repo/api';
+import { openDatabase } from '@repo/db';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { WebSocketServer } from 'ws';
 import { createSystemService } from '../services/system';

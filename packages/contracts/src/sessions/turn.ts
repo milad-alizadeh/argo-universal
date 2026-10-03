@@ -1,4 +1,4 @@
-import { stopReasons, turnStatuses } from '@argo/db/schema';
+import { stopReasons, turnStatuses } from '@repo/db/schema';
 import { z } from 'zod';
 import { turnColumns } from '../columns';
 

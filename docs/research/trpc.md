@@ -57,11 +57,11 @@ All three `@trpc/*` packages are ESM-first with CJS fallbacks (`exports.import` 
 From the tRPC docs [S2, S4, S7], split by workspace package to match spec section 4:
 
 ```sh
-pnpm --filter @argo/api add @trpc/server zod
-pnpm --filter @argo/server add @trpc/server ws
-pnpm --filter @argo/server add -D @types/ws
-pnpm --filter @argo/client add @trpc/client @trpc/server @trpc/tanstack-react-query @tanstack/react-query
-pnpm --filter @argo/client add -D @argo/api@workspace:*
+pnpm --filter @repo/api add @trpc/server zod
+pnpm --filter @repo/server add @trpc/server ws
+pnpm --filter @repo/server add -D @types/ws
+pnpm --filter @repo/client add @trpc/client @trpc/server @trpc/tanstack-react-query @tanstack/react-query
+pnpm --filter @repo/client add -D @repo/api@workspace:*
 ```
 
 In the repo these versions go into the pnpm catalog and packages use `catalog:` (spec section 2).
@@ -139,7 +139,7 @@ The official example attaches `ws` to the HTTP server with `new WebSocketServer(
 import http from 'node:http';
 import { WebSocketServer } from 'ws';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
-import { appRouter } from '@argo/api';
+import { appRouter } from '@repo/api';
 
 const server = http.createServer(handleHttp); // /health and /blobs/:id
 const webSocketServer = new WebSocketServer({ server });
@@ -178,7 +178,7 @@ process.on('SIGTERM', () => {
 ```ts
 // packages/client/src/trpc/context.ts
 import { createTRPCContext } from '@trpc/tanstack-react-query';
-import type { AppRouter } from '@argo/api';
+import type { AppRouter } from '@repo/api';
 
 export const { TRPCProvider, useTRPC, useTRPCClient } = createTRPCContext<AppRouter>();
 ```
@@ -186,7 +186,7 @@ export const { TRPCProvider, useTRPC, useTRPCClient } = createTRPCContext<AppRou
 ```ts
 // packages/client/src/trpc/create-argo-client.ts
 import { createTRPCClient, createWSClient, wsLink } from '@trpc/client';
-import type { AppRouter } from '@argo/api';
+import type { AppRouter } from '@repo/api';
 
 export function createArgoClient(url: string) {
   const webSocketClient = createWSClient({
@@ -268,7 +268,7 @@ A working mock link that satisfies spec section 8 (verified: `tsc --strict` pass
 import { TRPCClientError, type TRPCLink } from '@trpc/client';
 import type { AnyTRPCProcedure, TRPCRouterRecord, inferProcedureInput, inferProcedureOutput } from '@trpc/server';
 import { observable } from '@trpc/server/observable';
-import type { AppRouter } from '@argo/api';
+import type { AppRouter } from '@repo/api';
 
 type RouterRecord = AppRouter['_def']['record'];
 type ProcedurePath<TRecord, TPrefix extends string = ''> = {
@@ -364,7 +364,7 @@ Verified: a subscription called through the caller resolves to an async iterable
 
 - `@trpc/client` and `@trpc/tanstack-react-query` peer-depend on `@trpc/server` at the exact same version (`11.19.0`, no range) [S1]. Put all three `@trpc/*` packages in the catalog at one version so `sherif` and pnpm agree; a mismatch gives a peer warning.
 - `packages/client` should list `@trpc/server` itself, as a peer target for `@trpc/client` and for the `@trpc/server/observable` import in the mock link [S1].
-- `packages/client` imports the router only as `import type { AppRouter } from '@argo/api'`, so no server code is bundled [S12]. Add `@argo/api` as `workspace:*` (a devDependency is enough for type-only use). Spec section 4 already allows this ("`api` (types only, `import type`)").
+- `packages/client` imports the router only as `import type { AppRouter } from '@repo/api'`, so no server code is bundled [S12]. Add `@repo/api` as `workspace:*` (a devDependency is enough for type-only use). Spec section 4 already allows this ("`api` (types only, `import type`)").
 - Because the type comes from `api` source, `tsc` in `packages/client` also checks the types `api` pulls in (`@trpc/server`, `zod`, `contracts`). Both packages must resolve the same `zod` and `@trpc/server` versions, which the catalog gives. tRPC requires TypeScript >=5.7.2 and strongly recommends `strict: true` [S2]; keep `strict` on in the shared base config.
 - `ws` and `@types/ws` belong only in `apps/server` (spec section 4 forbids Node APIs in `api` and `client`). `@trpc/server/adapters/ws` deliberately does not import `ws` at runtime [S19 comment, "Importing ws causes a build error"], so `packages/api` can stay free of `ws`.
 - `bufferutil` and `utf-8-validate` are optional peers of `ws`; skip them [S1, S26].

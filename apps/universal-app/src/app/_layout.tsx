@@ -1,6 +1,6 @@
 import '../../global.css';
 
-import { AppProviders } from '@argo/client';
+import { AppProviders } from '@repo/client';
 import { Stack } from 'expo-router';
 import { ThemeProvider } from 'expo-router/react-navigation';
 import { StatusBar } from 'expo-status-bar';

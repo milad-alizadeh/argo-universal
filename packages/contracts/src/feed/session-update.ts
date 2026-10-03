@@ -1,4 +1,4 @@
-import { sessionUpdateKinds, sessionUpdateStates } from '@argo/db/schema';
+import { sessionUpdateKinds, sessionUpdateStates } from '@repo/db/schema';
 import { z } from 'zod';
 import { feedRowColumns } from '../columns';
 import { ContentBlock } from './content-block';
