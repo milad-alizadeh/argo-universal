@@ -208,15 +208,16 @@ A Session then opens as `idle` the next time a service asks for it.
 
 Electron has one Server job: make sure a Supervisor runs. The Supervisor watches and repairs the Engine, so Electron never calls `/health` and never watches the Engine. Spec 0001 section 9 states the same rule.
 
-`apps/desktop/src/main/server-machine.ts` replaces `server-lifecycle.ts`. `server-process.ts` keeps the functions that the machine invokes.
+`apps/desktop/src/main/server-machine.ts` replaces `server-lifecycle.ts`. `server-process.ts` keeps the functions that the machine invokes. Each one acts once and returns; the machine owns every wait as a named delay.
 
 Context: `address`, `ownedPid` (the Supervisor this app started, or null), `failure`.
 
 - `locating` invokes `readAddress`, which reads `server.json` and checks that its PID is alive. With a live PID, it goes to `ready`. Otherwise it goes to `starting`.
-- `starting` invokes `start`, which spawns the Supervisor detached. It sends `server.spawned {pid}`, which sets `ownedPid`, and resolves once `server.json` names that PID. Then `ready`. An error goes to `abandoning`, which stops `ownedPid`, and then to `failed`.
+- `starting` invokes `spawnServer`, a callback actor that spawns the Supervisor detached. It sends `server.spawned {pid}`, which sets `ownedPid`, and `server.exited {reason}` if the Supervisor exits or fails to spawn while it starts. `starting` then reads `server.json` every 200 milliseconds (`pollDelay`) until it names that PID. Then `ready`.
+- `server.exited`, or 30 seconds (`startLimit`) without `ready`, goes to `abandoning` when `ownedPid` is set, and to `failed` otherwise. `abandoning` signals `ownedPid` and checks every `pollDelay` until it exits, for 5 seconds (`stopLimit`) at most. Then `failed`.
 - `ready` emits `server.ready {address}`, and the main process opens the window with that address.
 - `failed` holds the failure. The main process shows it in a dialog with Retry and Quit, which send `server.retry` (to `locating`) or `app.quit`.
-- `app.quit` from any state goes to `stopping` when `ownedPid` is set, which stops that process for 5 seconds at most. Otherwise it goes straight to `stopped`, which is final.
+- `app.quit` from any state goes to `stopping` when `ownedPid` is set. `stopping` signals that process and checks every `pollDelay` until it exits, for 5 seconds (`stopLimit`) at most. Otherwise `app.quit` goes straight to `stopped`, which is final.
 - Electron reuses a Supervisor of any version. A version check comes with release packaging. A setting may later keep the Supervisor running after quit.
 - If the Supervisor exits while Electron runs, Electron does nothing. The App's Connection shows `offline` (section 11).
 

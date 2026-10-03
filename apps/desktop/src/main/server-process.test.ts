@@ -3,7 +3,11 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { readLiveServerAddress } from './server-process';
+import {
+  readLiveServerAddress,
+  signalServer,
+  spawnServer,
+} from './server-process';
 
 let home: string;
 
@@ -42,5 +46,39 @@ describe('readLiveServerAddress', () => {
 
   it('returns null without server.json', async () => {
     expect(await readLiveServerAddress(home)).toBeNull();
+  });
+});
+
+describe('spawnServer', () => {
+  it('reports the pid, then the exit, of a Server that exits while it starts', async () => {
+    // No src/main.ts here, so Node exits at once.
+    const reports: string[] = [];
+    const exited = new Promise<void>((resolve) => {
+      spawnServer(
+        { home, serverDirectory: home },
+        {
+          spawned: (pid) => reports.push(`spawned ${typeof pid}`),
+          exited: (reason) => {
+            reports.push(reason);
+            resolve();
+          },
+        },
+      );
+    });
+
+    await exited;
+
+    expect(reports).toEqual([
+      'spawned number',
+      expect.stringMatching(/^The Server exited while starting \(1\)/),
+    ]);
+  });
+});
+
+describe('signalServer', () => {
+  it('does nothing for a pid that has exited', () => {
+    const exited = spawnSync(process.execPath, ['--version']).pid;
+
+    expect(() => signalServer(exited)).not.toThrow();
   });
 });
