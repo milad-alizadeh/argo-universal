@@ -4,23 +4,11 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { ServerAddress } from '@repo/contracts';
-import { z } from 'zod';
-import type {
-  ServerHealth,
-  ServerLifecycleDependencies,
-} from './server-lifecycle';
-
-const ServerHealthResponse = z.object({
-  ok: z.literal(true),
-  version: z.string(),
-  startedAt: z.iso.datetime(),
-});
-const ServerPackage = z.object({ version: z.string() });
+import type { z } from 'zod';
 
 const pollIntervalMs = 200;
 const startTimeoutMs = 30_000;
 const stopTimeoutMs = 10_000;
-const healthTimeoutMs = 1000;
 
 let unrecognisedShapes = 0;
 const reportUnrecognised = (source: string, error: z.ZodError) => {
@@ -58,32 +46,6 @@ export async function readServerAddress(
   return null;
 }
 
-export async function readServerHealth(
-  port: number,
-): Promise<ServerHealth | null> {
-  let json: unknown;
-  try {
-    const response = await fetch(`http://127.0.0.1:${port}/health`, {
-      signal: AbortSignal.timeout(healthTimeoutMs),
-    });
-    if (!response.ok) return null;
-    json = await response.json();
-  } catch {
-    return null;
-  }
-  const health = ServerHealthResponse.safeParse(json);
-  if (health.success) return { version: health.data.version };
-  reportUnrecognised('/health answer', health.error);
-  return null;
-}
-
-export async function readServerVersion(serverDirectory: string) {
-  const json: unknown = JSON.parse(
-    await readFile(join(serverDirectory, 'package.json'), 'utf8'),
-  );
-  return ServerPackage.parse(json).version;
-}
-
 const isRunning = (pid: number) => {
   try {
     process.kill(pid, 0);
@@ -92,6 +54,14 @@ const isRunning = (pid: number) => {
     return false;
   }
 };
+
+// server.json when its pid is alive; the Supervisor removes the file when it stops, so a crash can leave one behind.
+export async function readLiveServerAddress(
+  home: string,
+): Promise<ServerAddress | null> {
+  const address = await readServerAddress(home);
+  return address && isRunning(address.pid) ? address : null;
+}
 
 export async function stopServer(pid: number) {
   try {
@@ -107,10 +77,11 @@ export async function stopServer(pid: number) {
   }
 }
 
-// Spawns the supervisor with Node and tsx, detached so it outlives this app; utilityProcess has no `detached`.
+// Spawns the Supervisor with Node and tsx, detached so it outlives this app; utilityProcess has no `detached`.
 export async function startServer(
   options: { home: string; serverDirectory: string },
   onSpawn: (pid: number) => void,
+  signal: AbortSignal,
 ): Promise<ServerAddress> {
   const { ELECTRON_RUN_AS_NODE: _runAsNode, ...environment } = process.env;
   const child = spawn('node', ['--import', 'tsx', 'src/main.ts'], {
@@ -125,32 +96,24 @@ export async function startServer(
     child.once('error', reject);
   });
   const pid = await spawned;
+  // Quit came before the spawn, so nobody else knows this pid to stop it.
+  if (signal.aborted) {
+    await stopServer(pid);
+    throw signal.reason;
+  }
   onSpawn(pid);
 
+  // The Supervisor writes server.json once its Engine listens.
   const deadline = Date.now() + startTimeoutMs;
   while (Date.now() < deadline) {
+    signal.throwIfAborted();
     if (child.exitCode !== null || child.signalCode !== null)
       throw new Error(
         `The Server exited while starting (${child.exitCode ?? child.signalCode}); see ${join(options.home, 'logs')}`,
       );
     const address = await readServerAddress(options.home);
-    if (address?.pid === pid && (await readServerHealth(address.port)))
-      return address;
+    if (address?.pid === pid) return address;
     await delay(pollIntervalMs);
   }
   throw new Error(`The Server (pid ${pid}) did not answer in time`);
-}
-
-export function createServerProcessDependencies(options: {
-  home: string;
-  serverDirectory: string;
-  version: string;
-}): ServerLifecycleDependencies {
-  return {
-    version: options.version,
-    readAddress: () => readServerAddress(options.home),
-    readHealth: readServerHealth,
-    start: (onSpawn) => startServer(options, onSpawn),
-    stop: stopServer,
-  };
 }

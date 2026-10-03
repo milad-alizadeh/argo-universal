@@ -1,20 +1,14 @@
 import path from 'node:path';
+import type { ServerAddress } from '@repo/contracts';
 import { app, BrowserWindow, dialog, ipcMain } from 'electron';
+import { createActor } from 'xstate';
 import {
   appOrigin,
   handleAppProtocol,
   registerAppScheme,
 } from './app-protocol';
-import {
-  createServerLifecycle,
-  type ServerLifecycle,
-  serverUrl,
-} from './server-lifecycle';
-import {
-  createServerProcessDependencies,
-  readServerVersion,
-  resolveHome,
-} from './server-process';
+import { serverMachine } from './server-machine';
+import { resolveHome } from './server-process';
 
 // The dev script sets the Expo web dev URL; without it the window loads the web export over app://.
 const webDevelopmentUrl = process.env.ARGO_EXPO_WEB_URL;
@@ -32,7 +26,12 @@ const windowOrigin = webDevelopmentUrl
 
 registerAppScheme();
 
-let lifecycle: ServerLifecycle | undefined;
+const serverUrl = (address: ServerAddress) => `ws://127.0.0.1:${address.port}`;
+
+// Makes sure a Supervisor runs; on quit it stops only one that it started (spec 0002 section 10).
+const server = createActor(serverMachine, {
+  input: { home: resolveHome(), serverDirectory },
+});
 
 const createWindow = (url: string) => {
   const mainWindow = new BrowserWindow({
@@ -68,21 +67,42 @@ for (const action of ['minimize', 'maximize', 'close'] as const) {
   });
 }
 
-const start = async () => {
+let serverStarted = false;
+
+const start = () => {
   if (!webDevelopmentUrl) handleAppProtocol(webExportDirectory);
-  lifecycle = createServerLifecycle(
-    createServerProcessDependencies({
-      home: resolveHome(),
-      serverDirectory,
-      version: await readServerVersion(serverDirectory),
-    }),
-  );
-  const url = serverUrl(await lifecycle.connect());
-  createWindow(url);
+  let url: string | null = null;
+  server.on('server.ready', ({ address }) => {
+    url = serverUrl(address);
+    if (BrowserWindow.getAllWindows().length === 0) createWindow(url);
+  });
+
+  // The failure dialog offers Retry and Quit.
+  let failed = false;
+  server.subscribe((snapshot) => {
+    const enteredFailed = snapshot.matches('failed') && !failed;
+    failed = snapshot.matches('failed');
+    if (!enteredFailed) return;
+    void dialog
+      .showMessageBox({
+        type: 'error',
+        message: 'Argo could not start the Server',
+        detail: snapshot.context.failure ?? undefined,
+        buttons: ['Retry', 'Quit'],
+        defaultId: 0,
+        cancelId: 1,
+      })
+      .then(({ response }) => {
+        if (response === 0) server.send({ type: 'server.retry' });
+        else app.quit();
+      });
+  });
+  server.start();
+  serverStarted = true;
 
   // On macOS, clicking the dock icon with no window open opens one.
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
+    if (url && BrowserWindow.getAllWindows().length === 0) {
       createWindow(url);
     }
   });
@@ -100,26 +120,15 @@ if (!app.requestSingleInstanceLock()) {
     window.focus();
   });
 
-  app
-    .whenReady()
-    .then(start)
-    .catch((error: unknown) => {
-      // Quitting stops a starting Server, which then fails its start; that is no error to show.
-      if (!released) dialog.showErrorBox('Argo could not start', String(error));
-      app.quit();
-    });
+  void app.whenReady().then(start);
 }
 
-// Stop the Server on quit only if this app started it (spec section 9).
-let released = false;
+// Quit waits for the Server machine, which stops the Supervisor only if this app started it.
+server.subscribe({ complete: () => app.quit() });
 app.on('will-quit', (event) => {
-  if (released || !lifecycle) return;
+  if (!serverStarted || server.getSnapshot().status !== 'active') return;
   event.preventDefault();
-  released = true;
-  lifecycle
-    .release()
-    .catch((error: unknown) => console.error('desktop:', error))
-    .finally(() => app.quit());
+  server.send({ type: 'app.quit' });
 });
 
 // Closing the last window quits, except on macOS, where the app stays until Cmd+Q.
