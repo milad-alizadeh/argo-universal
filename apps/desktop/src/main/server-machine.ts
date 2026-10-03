@@ -1,50 +1,67 @@
 import type { ServerAddress } from '@repo/contracts';
 import {
+  type ActorRef,
   assign,
   type EventObject,
   enqueueActions,
   fromCallback,
   fromPromise,
+  type Snapshot,
   setup,
 } from 'xstate';
 import {
   isRunning,
   readLiveServerAddress,
-  signalServer,
-  spawnServer,
+  type SupervisorPaths,
+  signalSupervisor,
+  spawnSupervisor,
 } from './server-process';
 
-export interface ServerInput {
-  home: string;
-  // apps/server, which `spawnServer` runs.
-  serverDirectory: string;
-}
+export type ServerInput = SupervisorPaths;
 
 interface ServerContext extends ServerInput {
   address: ServerAddress | null;
   // The Supervisor this app started, which it stops on quit.
   ownedPid: number | null;
+  // When this app spawned `ownedPid`, so a stale server.json that names a reused pid does not count.
+  spawnedAt: number | null;
   failure: string | null;
 }
 
+type SupervisorReport =
+  | { type: 'server.spawned'; pid: number; at: number }
+  | { type: 'server.exited'; reason: string };
 type ServerEvent =
-  | { type: 'server.spawned'; pid: number }
-  | { type: 'server.exited'; reason: string }
+  | SupervisorReport
   | { type: 'server.retry' }
   | { type: 'app.quit' };
 
 export type ServerEmitted = { type: 'server.ready'; address: ServerAddress };
 
+export interface SpawnInput extends ServerInput {
+  parent: ActorRef<Snapshot<unknown>, SupervisorReport>;
+}
+
 export interface CheckRunningInput {
-  pid: number | null;
+  pid: number;
 }
 
 const pollDelayMs = 200;
 const startLimitMs = 30_000;
 const stopLimitMs = 5000;
 
-// Spec 0002 section 10: Electron makes sure a Supervisor runs, and on quit stops only one that it started.
-export const serverConnectionMachine = setup({
+const serverInput = ({ context }: { context: ServerContext }): ServerInput => ({
+  home: context.home,
+  serverDirectory: context.serverDirectory,
+});
+
+// Only states that the `ownsSupervisor` guard leads to call this.
+const requireOwnedPid = (context: ServerContext) => {
+  if (context.ownedPid === null) throw new Error('This app owns no Supervisor');
+  return context.ownedPid;
+};
+
+const serverSetup = setup({
   types: {
     input: {} as ServerInput,
     context: {} as ServerContext,
@@ -57,16 +74,16 @@ export const serverConnectionMachine = setup({
       readLiveServerAddress(input.home),
     ),
     // Sends `server.spawned`, then `server.exited` if the Supervisor exits while it starts.
-    spawnServer: fromCallback<EventObject, ServerInput>(({ input, sendBack }) =>
-      spawnServer(input, {
+    spawnSupervisor: fromCallback<EventObject, SpawnInput>(({ input }) =>
+      spawnSupervisor(input, {
         spawned: (pid) =>
-          sendBack({ type: 'server.spawned', pid } satisfies ServerEvent),
+          input.parent.send({ type: 'server.spawned', pid, at: Date.now() }),
         exited: (reason) =>
-          sendBack({ type: 'server.exited', reason } satisfies ServerEvent),
+          input.parent.send({ type: 'server.exited', reason }),
       }),
     ),
-    checkRunning: fromPromise<boolean, CheckRunningInput>(
-      async ({ input }) => input.pid !== null && isRunning(input.pid),
+    checkRunning: fromPromise<boolean, CheckRunningInput>(async ({ input }) =>
+      isRunning(input.pid),
     ),
   },
   actions: {
@@ -75,9 +92,10 @@ export const serverConnectionMachine = setup({
       if (context.address)
         enqueue.emit({ type: 'server.ready', address: context.address });
     }),
-    signalSupervisor: ({ context }) => {
-      if (context.ownedPid !== null) signalServer(context.ownedPid);
+    signalOwnedSupervisor: ({ context }) => {
+      signalSupervisor(requireOwnedPid(context));
     },
+    forgetSupervisor: assign({ ownedPid: null, spawnedAt: null }),
     log: (_, params: { line: string }) => {
       console.error(`desktop: ${params.line}`);
     },
@@ -85,8 +103,14 @@ export const serverConnectionMachine = setup({
   guards: {
     foundAddress: (_, params: { address: ServerAddress | null }) =>
       params.address !== null,
-    namesOwnedPid: ({ context }, params: { address: ServerAddress | null }) =>
-      params.address !== null && params.address.pid === context.ownedPid,
+    namesOwnedSupervisor: (
+      { context },
+      params: { address: ServerAddress | null },
+    ) =>
+      params.address !== null &&
+      params.address.pid === context.ownedPid &&
+      context.spawnedAt !== null &&
+      Date.parse(params.address.startedAt) >= context.spawnedAt,
     stillRunning: (_, params: { running: boolean }) => params.running,
     ownsSupervisor: ({ context }) => context.ownedPid !== null,
   },
@@ -95,12 +119,88 @@ export const serverConnectionMachine = setup({
     startLimit: startLimitMs,
     stopLimit: stopLimitMs,
   },
-}).createMachine({
+});
+
+// Reads server.json once: `ready` with a live Supervisor, otherwise `noneTarget`.
+const readingAddress = (noneTarget: string) =>
+  serverSetup.createStateConfig({
+    invoke: {
+      id: 'readAddress',
+      src: 'readAddress',
+      input: serverInput,
+      onDone: [
+        {
+          guard: {
+            type: 'foundAddress',
+            params: ({ event }) => ({ address: event.output }),
+          },
+          target: '#serverConnection.ready',
+          actions: assign({
+            address: ({ event }) => event.output,
+            failure: null,
+          }),
+        },
+        { target: noneTarget },
+      ],
+      onError: {
+        target: '#serverConnection.failed',
+        actions: assign({
+          failure: ({ event }) =>
+            `could not read server.json: ${String(event.error)}`,
+        }),
+      },
+    },
+  });
+
+// Signals the Supervisor this app owns, then checks every `pollDelay` until it exits, for `stopLimit` at most.
+const waitingForSupervisorExit = (
+  exitedTarget: string,
+  stuckTarget = exitedTarget,
+) =>
+  serverSetup.createStateConfig({
+    entry: 'signalOwnedSupervisor',
+    initial: 'waiting',
+    after: {
+      stopLimit: {
+        target: stuckTarget,
+        actions: {
+          type: 'log',
+          params: ({ context }) => ({
+            line: `the Supervisor (pid ${context.ownedPid}) did not stop in ${stopLimitMs / 1000} seconds`,
+          }),
+        },
+      },
+    },
+    states: {
+      waiting: { after: { pollDelay: 'checking' } },
+      checking: {
+        invoke: {
+          id: 'checkRunning',
+          src: 'checkRunning',
+          input: ({ context }) => ({ pid: requireOwnedPid(context) }),
+          onDone: [
+            {
+              guard: {
+                type: 'stillRunning',
+                params: ({ event }) => ({ running: event.output }),
+              },
+              target: 'waiting',
+            },
+            { target: exitedTarget, actions: 'forgetSupervisor' },
+          ],
+        },
+      },
+    },
+  });
+
+// Spec 0002 section 10: Electron makes sure a Supervisor runs, and on quit stops only one that it started.
+export const serverConnectionMachine = serverSetup.createMachine({
   id: 'serverConnection',
   context: ({ input }) => ({
     ...input,
     address: null,
     ownedPid: null,
+    spawnedAt: null,
     failure: null,
   }),
   initial: 'locating',
@@ -112,201 +212,104 @@ export const serverConnectionMachine = setup({
   },
   states: {
     locating: {
-      invoke: {
-        id: 'readAddress',
-        src: 'readAddress',
-        input: ({ context }) => ({
-          home: context.home,
-          serverDirectory: context.serverDirectory,
-        }),
-        onDone: [
-          {
-            guard: {
-              type: 'foundAddress',
-              params: ({ event }) => ({ address: event.output }),
-            },
-            target: 'ready',
-            actions: assign({ address: ({ event }) => event.output }),
-          },
-          { target: 'starting' },
-        ],
-        onError: {
-          target: 'failed',
-          actions: assign({
-            failure: ({ event }) =>
-              `could not read server.json: ${String(event.error)}`,
-          }),
-        },
-      },
+      entry: assign({ failure: null }),
+      ...readingAddress('#serverConnection.starting'),
     },
-    // Spawns the Supervisor, then reads server.json every `pollDelay` until it names that pid.
     starting: {
       invoke: {
-        id: 'spawnServer',
-        src: 'spawnServer',
-        input: ({ context }) => ({
-          home: context.home,
-          serverDirectory: context.serverDirectory,
+        id: 'spawnSupervisor',
+        src: 'spawnSupervisor',
+        input: ({ context, self }) => ({
+          ...serverInput({ context }),
+          parent: self,
         }),
       },
       initial: 'spawning',
       on: {
         'server.spawned': {
-          target: '.waiting',
-          actions: assign({ ownedPid: ({ event }) => event.pid }),
+          target: '.answering',
+          actions: assign({
+            ownedPid: ({ event }) => event.pid,
+            spawnedAt: ({ event }) => event.at,
+          }),
         },
-        'server.exited': [
-          {
-            guard: 'ownsSupervisor',
-            target: 'abandoning',
-            actions: assign({ failure: ({ event }) => event.reason }),
-          },
-          {
-            target: 'failed',
-            actions: assign({ failure: ({ event }) => event.reason }),
-          },
-        ],
-      },
-      after: {
-        startLimit: [
-          {
-            guard: 'ownsSupervisor',
-            target: 'abandoning',
-            actions: assign({
-              failure: ({ context }) =>
-                `The Server (pid ${context.ownedPid}) did not answer in ${startLimitMs / 1000} seconds`,
-            }),
-          },
-          {
-            target: 'failed',
-            actions: assign({
-              failure: `The Server did not spawn in ${startLimitMs / 1000} seconds`,
-            }),
-          },
-        ],
+        'server.exited': {
+          target: 'rechecking',
+          actions: [
+            'forgetSupervisor',
+            assign({ failure: ({ event }) => event.reason }),
+          ],
+        },
       },
       states: {
         spawning: {},
-        waiting: { after: { pollDelay: 'checking' } },
-        checking: {
-          invoke: {
-            id: 'readAddress',
-            src: 'readAddress',
-            input: ({ context }) => ({
-              home: context.home,
-              serverDirectory: context.serverDirectory,
-            }),
-            onDone: [
-              {
-                guard: {
-                  type: 'namesOwnedPid',
-                  params: ({ event }) => ({ address: event.output }),
+        // Reads server.json every `pollDelay` until it names the spawned Supervisor.
+        answering: {
+          initial: 'waiting',
+          after: {
+            startLimit: {
+              target: '#serverConnection.abandoning',
+              actions: assign({
+                failure: ({ context }) =>
+                  `The Supervisor (pid ${context.ownedPid}) did not answer in ${startLimitMs / 1000} seconds`,
+              }),
+            },
+          },
+          states: {
+            waiting: { after: { pollDelay: 'checking' } },
+            checking: {
+              invoke: {
+                id: 'readAddress',
+                src: 'readAddress',
+                input: serverInput,
+                onDone: [
+                  {
+                    guard: {
+                      type: 'namesOwnedSupervisor',
+                      params: ({ event }) => ({ address: event.output }),
+                    },
+                    target: '#serverConnection.ready',
+                    actions: assign({ address: ({ event }) => event.output }),
+                  },
+                  { target: 'waiting' },
+                ],
+                onError: {
+                  target: 'waiting',
+                  actions: {
+                    type: 'log',
+                    params: ({ event }) => ({
+                      line: `could not read server.json: ${String(event.error)}`,
+                    }),
+                  },
                 },
-                target: '#serverConnection.ready',
-                actions: assign({ address: ({ event }) => event.output }),
-              },
-              { target: 'waiting' },
-            ],
-            onError: {
-              target: 'waiting',
-              actions: {
-                type: 'log',
-                params: ({ event }) => ({
-                  line: `could not read server.json: ${String(event.error)}`,
-                }),
               },
             },
           },
         },
       },
     },
-    // Stops the Supervisor that failed to start, so a Retry begins from nothing.
-    abandoning: {
-      entry: 'signalSupervisor',
-      initial: 'waiting',
-      after: {
-        stopLimit: {
-          target: 'failed',
-          actions: {
-            type: 'log',
-            params: ({ context }) => ({
-              line: `the Supervisor (pid ${context.ownedPid}) did not stop in ${stopLimitMs / 1000} seconds`,
-            }),
-          },
-        },
-      },
-      states: {
-        waiting: { after: { pollDelay: 'checking' } },
-        checking: {
-          invoke: {
-            id: 'checkRunning',
-            src: 'checkRunning',
-            input: ({ context }) => ({ pid: context.ownedPid }),
-            onDone: [
-              {
-                guard: {
-                  type: 'stillRunning',
-                  params: ({ event }) => ({ running: event.output }),
-                },
-                target: 'waiting',
-              },
-              {
-                target: '#serverConnection.failed',
-                actions: assign({ ownedPid: null }),
-              },
-            ],
-          },
-        },
-      },
-    },
+    // Its Supervisor exited while starting; another one may have won the race to start.
+    rechecking: readingAddress('#serverConnection.failed'),
+    // Stops the Supervisor that did not answer, so a Retry begins from nothing.
+    abandoning: waitingForSupervisorExit('#serverConnection.failed'),
     ready: { entry: 'announceReady' },
     failed: {
       on: {
-        'server.retry': {
-          target: 'locating',
-          actions: assign({ failure: null }),
-        },
+        'server.retry': [
+          { guard: 'ownsSupervisor', target: 'retrying' },
+          { target: 'locating' },
+        ],
       },
     },
+    // The last attempt's Supervisor has not stopped yet; Retry stops it before it starts over.
+    retrying: waitingForSupervisorExit(
+      '#serverConnection.locating',
+      '#serverConnection.failed',
+    ),
     stopping: {
-      entry: 'signalSupervisor',
-      initial: 'waiting',
-      after: {
-        stopLimit: {
-          target: 'stopped',
-          actions: {
-            type: 'log',
-            params: ({ context }) => ({
-              line: `the Supervisor (pid ${context.ownedPid}) did not stop in ${stopLimitMs / 1000} seconds`,
-            }),
-          },
-        },
-      },
+      ...waitingForSupervisorExit('#serverConnection.stopped'),
       // Already stopping; a second quit waits for the same stop.
       on: { 'app.quit': { actions: [] } },
-      states: {
-        waiting: { after: { pollDelay: 'checking' } },
-        checking: {
-          invoke: {
-            id: 'checkRunning',
-            src: 'checkRunning',
-            input: ({ context }) => ({ pid: context.ownedPid }),
-            onDone: [
-              {
-                guard: {
-                  type: 'stillRunning',
-                  params: ({ event }) => ({ running: event.output }),
-                },
-                target: 'waiting',
-              },
-              {
-                target: '#serverConnection.stopped',
-                actions: assign({ ownedPid: null }),
-              },
-            ],
-          },
-        },
-      },
     },
     stopped: { type: 'final' },
   },

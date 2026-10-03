@@ -5,8 +5,8 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   readLiveServerAddress,
-  signalServer,
-  spawnServer,
+  signalSupervisor,
+  spawnSupervisor,
 } from './server-process';
 
 let home: string;
@@ -49,12 +49,13 @@ describe('readLiveServerAddress', () => {
   });
 });
 
-describe('spawnServer', () => {
-  it('reports the pid, then the exit, of a Server that exits while it starts', async () => {
+describe('spawnSupervisor', () => {
+  it('reports the pid before it returns, then the exit of a Supervisor that exits while it starts', async () => {
     // No src/main.ts here, so Node exits at once.
     const reports: string[] = [];
+    let reportsOnReturn: string[] = [];
     const exited = new Promise<void>((resolve) => {
-      spawnServer(
+      spawnSupervisor(
         { home, serverDirectory: home },
         {
           spawned: (pid) => reports.push(`spawned ${typeof pid}`),
@@ -64,21 +65,44 @@ describe('spawnServer', () => {
           },
         },
       );
+      reportsOnReturn = [...reports];
     });
 
     await exited;
 
+    expect(reportsOnReturn).toEqual(['spawned number']);
     expect(reports).toEqual([
       'spawned number',
-      expect.stringMatching(/^The Server exited while starting \(1\)/),
+      `The Supervisor exited while starting (1); see ${join(home, 'logs')}`,
     ]);
+  });
+
+  it('stops reporting once the returned function runs', async () => {
+    const reports: string[] = [];
+    let stopListening = () => {};
+    const exited = new Promise<void>((resolve) => {
+      stopListening = spawnSupervisor(
+        { home, serverDirectory: home },
+        {
+          spawned: () => {},
+          exited: (reason) => reports.push(reason),
+        },
+      );
+      // Node exits within this wait, as it does in the test above.
+      setTimeout(resolve, 2000);
+    });
+    stopListening();
+
+    await exited;
+
+    expect(reports).toEqual([]);
   });
 });
 
-describe('signalServer', () => {
+describe('signalSupervisor', () => {
   it('does nothing for a pid that has exited', () => {
     const exited = spawnSync(process.execPath, ['--version']).pid;
 
-    expect(() => signalServer(exited)).not.toThrow();
+    expect(() => signalSupervisor(exited)).not.toThrow();
   });
 });

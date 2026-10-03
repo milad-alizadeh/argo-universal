@@ -59,10 +59,18 @@ export async function readLiveServerAddress(
 }
 
 // Asks the Supervisor to stop; one that has already exited needs nothing.
-export function signalServer(pid: number) {
+export function signalSupervisor(pid: number) {
   try {
     process.kill(pid, 'SIGTERM');
-  } catch {}
+  } catch {
+    // It has already exited.
+  }
+}
+
+// Where the Supervisor keeps its state, and apps/server, which `spawnSupervisor` runs.
+export interface SupervisorPaths {
+  home: string;
+  serverDirectory: string;
 }
 
 export interface SpawnReport {
@@ -71,34 +79,30 @@ export interface SpawnReport {
 }
 
 // Spawns the Supervisor with Node and tsx, detached so it outlives this app; utilityProcess has no `detached`. The returned function stops reporting.
-export function spawnServer(
-  options: { home: string; serverDirectory: string },
+export function spawnSupervisor(
+  paths: SupervisorPaths,
   report: SpawnReport,
 ): () => void {
   let listening = true;
   const { ELECTRON_RUN_AS_NODE: _runAsNode, ...environment } = process.env;
   const child = spawn('node', ['--import', 'tsx', 'src/main.ts'], {
-    cwd: options.serverDirectory,
+    cwd: paths.serverDirectory,
     detached: true,
     stdio: 'ignore',
-    env: { ...environment, ARGO_HOME: options.home },
+    env: { ...environment, ARGO_HOME: paths.home },
   });
   child.unref();
-  child.once('spawn', () => {
-    if (child.pid === undefined) return;
-    // Nobody listens any more, so nobody else knows this pid to stop it.
-    if (!listening) signalServer(child.pid);
-    else report.spawned(child.pid);
-  });
   child.once('error', (error) => {
-    if (listening) report.exited(`The Server could not start: ${error}`);
+    if (listening) report.exited(`The Supervisor could not start: ${error}`);
   });
   child.once('exit', (code, signal) => {
     if (listening)
       report.exited(
-        `The Server exited while starting (${code ?? signal}); see ${join(options.home, 'logs')}`,
+        `The Supervisor exited while starting (${code ?? signal}); see ${join(paths.home, 'logs')}`,
       );
   });
+  // The pid exists once `spawn` returns; its `spawn` event only follows a tick later, too late for a quit in between.
+  if (child.pid !== undefined) report.spawned(child.pid);
   return () => {
     listening = false;
   };

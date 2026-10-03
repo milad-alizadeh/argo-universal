@@ -208,15 +208,17 @@ A Session then opens as `idle` the next time a service asks for it.
 
 Electron has one Server job: make sure a Supervisor runs. The Supervisor watches and repairs the Engine, so Electron never calls `/health` and never watches the Engine. Spec 0001 section 9 states the same rule.
 
-`apps/desktop/src/main/server-machine.ts` replaces `server-lifecycle.ts`. `server-process.ts` keeps the functions that the machine invokes. Each one acts once and returns; the machine owns every wait as a named delay.
+`apps/desktop/src/main/server-machine.ts` replaces `server-lifecycle.ts`. `server-process.ts` keeps the I/O that the machine's actors and actions run. Each function acts once and returns; the machine owns every wait as a named delay.
 
-Context: `address`, `ownedPid` (the Supervisor this app started, or null), `failure`.
+Context: `address`, `ownedPid` (the Supervisor this app started, or null), `spawnedAt` (when it started it), `failure`.
 
 - `locating` invokes `readAddress`, which reads `server.json` and checks that its PID is alive. With a live PID, it goes to `ready`. Otherwise it goes to `starting`.
-- `starting` invokes `spawnServer`, a callback actor that spawns the Supervisor detached. It sends `server.spawned {pid}`, which sets `ownedPid`, and `server.exited {reason}` if the Supervisor exits or fails to spawn while it starts. `starting` then reads `server.json` every 200 milliseconds (`pollDelay`) until it names that PID. Then `ready`.
-- `server.exited`, or 30 seconds (`startLimit`) without `ready`, goes to `abandoning` when `ownedPid` is set, and to `failed` otherwise. `abandoning` signals `ownedPid` and checks every `pollDelay` until it exits, for 5 seconds (`stopLimit`) at most. Then `failed`.
+- `starting` invokes `spawnSupervisor`, a callback actor that spawns the Supervisor detached and reports to the parent ref in its input. It sends `server.spawned {pid, at}` as soon as `spawn` returns, which sets `ownedPid` and `spawnedAt`, and `server.exited {reason}` if the Supervisor exits or fails to spawn while it starts.
+- After `server.spawned`, `starting` reads `server.json` every 200 milliseconds (`pollDelay`) until it names `ownedPid` with a `startedAt` no earlier than `spawnedAt`, so a stale file whose PID the OS reused does not count. Then `ready`. 30 seconds (`startLimit`) after the spawn without `ready`, it goes to `abandoning`.
+- `server.exited` forgets `ownedPid` and goes to `rechecking`, which reads `server.json` once more, since another Supervisor may have won the race to start. With a live PID, `ready`; otherwise `failed`.
+- `abandoning` signals `ownedPid` and checks every `pollDelay` until it exits, for 5 seconds (`stopLimit`) at most. Then `failed`. A Supervisor that does not stop stays in `ownedPid`.
 - `ready` emits `server.ready {address}`, and the main process opens the window with that address.
-- `failed` holds the failure. The main process shows it in a dialog with Retry and Quit, which send `server.retry` (to `locating`) or `app.quit`.
+- `failed` holds the failure. The main process shows it in a dialog with Retry and Quit, which send `server.retry` or `app.quit`. Retry goes to `locating`, or, while `ownedPid` is set, to `retrying`, which stops that Supervisor as `abandoning` does. If it exits, `locating`; if not, `failed` again, with nothing spawned.
 - `app.quit` from any state goes to `stopping` when `ownedPid` is set. `stopping` signals that process and checks every `pollDelay` until it exits, for 5 seconds (`stopLimit`) at most. Otherwise `app.quit` goes straight to `stopped`, which is final.
 - Electron reuses a Supervisor of any version. A version check comes with release packaging. A setting may later keep the Supervisor running after quit.
 - If the Supervisor exits while Electron runs, Electron does nothing. The App's Connection shows `offline` (section 11).

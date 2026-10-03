@@ -22,6 +22,7 @@ import {
 import {
   type CheckRunningInput,
   type ServerInput,
+  type SpawnInput,
   serverConnectionMachine,
 } from './server-machine';
 
@@ -30,6 +31,7 @@ const pollDelayMs = 200;
 const startLimitMs = 30_000;
 const stopLimitMs = 5000;
 
+const spawnedAt = Date.parse('2026-10-03T09:30:00.000Z');
 const runningAddress: ServerAddress = {
   pid: 100,
   port: 7337,
@@ -42,7 +44,13 @@ const startedAddress: ServerAddress = {
   version: '1.0.0',
   startedAt: '2026-10-03T10:00:00.000Z',
 };
-const exitReason = 'The Server exited while starting (1)';
+// A server.json from before the spawn whose pid the OS gave to the new Supervisor.
+const staleAddress: ServerAddress = {
+  ...startedAddress,
+  port: 7339,
+  startedAt: '2026-10-03T08:00:00.000Z',
+};
+const exitReason = 'The Supervisor exited while starting (1)';
 
 interface PendingCall<TInput, TOutput> {
   input: TInput;
@@ -51,7 +59,7 @@ interface PendingCall<TInput, TOutput> {
 }
 
 interface SpawnCall {
-  sendBack: (event: AnyEventObject) => void;
+  input: SpawnInput;
   live: boolean;
 }
 
@@ -77,8 +85,8 @@ const machine = serverConnectionMachine.provide({
   actors: {
     readAddress: createPromiseMock(() => readAddressCalls),
     checkRunning: createPromiseMock(() => checkRunningCalls),
-    spawnServer: fromCallback(({ sendBack }) => {
-      const call = { sendBack, live: true };
+    spawnSupervisor: fromCallback<AnyEventObject, SpawnInput>(({ input }) => {
+      const call = { input, live: true };
       spawnCalls.push(call);
       return () => {
         call.live = false;
@@ -86,7 +94,7 @@ const machine = serverConnectionMachine.provide({
     }),
   },
   actions: {
-    signalSupervisor: ({ context }) => {
+    signalOwnedSupervisor: ({ context }) => {
       signalledPids.push(context.ownedPid);
     },
     log: () => {},
@@ -115,6 +123,19 @@ const startServerMachine = () => {
 const latest = <TCall>(calls: TCall[]) =>
   calls.at(-1) ?? expect.unreachable('The actor was not invoked');
 
+// What the real `spawnSupervisor` sends to the machine it was given.
+const reportSpawned = () =>
+  latest(spawnCalls).input.parent.send({
+    type: 'server.spawned',
+    pid: startedAddress.pid,
+    at: spawnedAt,
+  });
+const reportExited = () =>
+  latest(spawnCalls).input.parent.send({
+    type: 'server.exited',
+    reason: exitReason,
+  });
+
 // Settles a mock promise, then lets the machine take its done or error event.
 const settle = async (settleCall: () => void) => {
   settleCall();
@@ -139,13 +160,16 @@ describe('server connection model', () => {
   const readError = new Error('EACCES');
   // Done and error events of invoked actors are not in the machine's event type, but the model drives them.
   const payloads: Record<string, AnyEventObject[]> = {
-    'xstate.done.actor.readAddress': [runningAddress, null, startedAddress].map(
-      (output) => ({
-        type: 'xstate.done.actor.readAddress',
-        output,
-        actorId: 'readAddress',
-      }),
-    ),
+    'xstate.done.actor.readAddress': [
+      runningAddress,
+      null,
+      startedAddress,
+      staleAddress,
+    ].map((output) => ({
+      type: 'xstate.done.actor.readAddress',
+      output,
+      actorId: 'readAddress',
+    })),
     'xstate.error.actor.readAddress': [
       {
         type: 'xstate.error.actor.readAddress',
@@ -158,7 +182,9 @@ describe('server connection model', () => {
       output,
       actorId: 'checkRunning',
     })),
-    'server.spawned': [{ type: 'server.spawned', pid: startedAddress.pid }],
+    'server.spawned': [
+      { type: 'server.spawned', pid: startedAddress.pid, at: spawnedAt },
+    ],
     'server.exited': [{ type: 'server.exited', reason: exitReason }],
   };
   const eventTypes = (node: DirectedGraphNode): string[] => [
@@ -169,6 +195,8 @@ describe('server connection model', () => {
   const events = types.flatMap(
     (type) => (payloads[type] ?? [{ type }]) as ServerEvent[],
   );
+  const output = (event: ServerEvent) =>
+    (event as unknown as { output: unknown }).output;
 
   // Never the address itself, only whose it is.
   const vertex = (snapshot: ServerSnapshot) => ({
@@ -180,9 +208,12 @@ describe('server connection model', () => {
   const model = new TestModel(modelLogic, {
     input,
     events,
-    // A done actor ignores events, but traversal still leaves a final state through the root `on`.
+    // A done actor ignores events, but traversal still leaves a final state through the root `on`; a stale server.json only matters while the spawned Supervisor answers.
     filterEvents: (snapshot, event) =>
-      snapshot.status === 'active' && snapshot.can(event),
+      snapshot.status === 'active' &&
+      snapshot.can(event) &&
+      (output(event) !== staleAddress ||
+        snapshot.matches({ starting: { answering: 'checking' } })),
     // `via` gives each step into a state its own vertex, so the shortest paths walk every transition.
     serializeState: (snapshot, event, previous) =>
       JSON.stringify({
@@ -191,15 +222,24 @@ describe('server connection model', () => {
       }),
     stateMatcher: (snapshot, key) => snapshot.matches(key as never),
   });
-  // Without `via`: with it, the polling loops give about 9700 simple paths.
+  // Without `via`: with it, the polling loops give thousands of simple paths.
   const simplePathModel = new TestModel(modelLogic, {
     ...model.options,
     serializeState: (snapshot) => JSON.stringify(vertex(snapshot)),
   });
 
-  const output = (event: ServerEvent) =>
-    (event as unknown as { output: unknown }).output;
-  // Each sends its delayed event itself: the poll delay and the limits run at once, so crossing one could fire another. The example tests below time them.
+  // Fires timers in order until the delayed transition has run; an earlier `pollDelay` may fire on the way.
+  const fireDelay: EventExecutor<ServerSnapshot, ServerEvent> = async ({
+    state,
+  }) => {
+    for (let timers = 0; timers < 5; timers++) {
+      await vi.advanceTimersToNextTimerAsync();
+      const actual = server.getSnapshot().value;
+      if (JSON.stringify(actual) === JSON.stringify(state.value)) return;
+    }
+    expect.unreachable(`${JSON.stringify(state.value)} was never reached`);
+  };
+
   const executors: Record<
     string,
     EventExecutor<ServerSnapshot, ServerEvent>
@@ -215,22 +255,14 @@ describe('server connection model', () => {
       settle(() => latest(readAddressCalls).reject(readError)),
     'xstate.done.actor.checkRunning': ({ event }) =>
       settle(() => latest(checkRunningCalls).resolve(output(event) as boolean)),
-    'server.spawned': () =>
-      latest(spawnCalls).sendBack({
-        type: 'server.spawned',
-        pid: startedAddress.pid,
-      }),
-    'server.exited': () =>
-      latest(spawnCalls).sendBack({
-        type: 'server.exited',
-        reason: exitReason,
-      }),
+    'server.spawned': reportSpawned,
+    'server.exited': reportExited,
     'server.retry': () => server.send({ type: 'server.retry' }),
     'app.quit': () => server.send({ type: 'app.quit' }),
     ...Object.fromEntries(
       types
         .filter((type) => type.startsWith('xstate.after.'))
-        .map((type) => [type, () => server.send({ type } as never)]),
+        .map((type) => [type, fireDelay]),
     ),
   };
 
@@ -252,14 +284,18 @@ describe('server connection model', () => {
       );
     },
     ready: (snapshot) => {
-      // `ready` hands its address to the main process once.
+      // `ready` hands its address to the main process once, never a stale one.
       expect(readyAddresses).toEqual([snapshot.context.address]);
+      expect(snapshot.context.address).not.toEqual(staleAddress);
     },
     failed: (snapshot) => {
       expect(snapshot.context.failure).not.toBeNull();
       expect(readyAddresses).toEqual([]);
     },
     abandoning: () => {
+      expect(latest(signalledPids)).toBe(startedAddress.pid);
+    },
+    retrying: () => {
       expect(latest(signalledPids)).toBe(startedAddress.pid);
     },
     stopping: () => {
@@ -282,6 +318,7 @@ describe('server connection model', () => {
         const value = output(event);
         if (typeof value === 'boolean')
           return `${name} (${value ? 'running' : 'exited'})`;
+        if (value === staleAddress) return `${name} (stale pid 200)`;
         return `${name} (${value === null ? 'none' : `pid ${(value as ServerAddress).pid}`})`;
       })
       .join(' → ');
@@ -324,17 +361,15 @@ describe('server connection model', () => {
   });
 });
 
-// The real timers, which the model sends as events.
+// The exact timing of each delay.
 describe('server connection', () => {
   const value = () => server.getSnapshot().value;
+  const context = () => server.getSnapshot().context;
 
   const spawnSupervisor = async () => {
     startServerMachine();
     await settle(() => latest(readAddressCalls).resolve(null));
-    latest(spawnCalls).sendBack({
-      type: 'server.spawned',
-      pid: startedAddress.pid,
-    });
+    reportSpawned();
   };
 
   const startSupervisor = async () => {
@@ -342,6 +377,13 @@ describe('server connection', () => {
     await vi.advanceTimersByTimeAsync(pollDelayMs);
     await settle(() => latest(readAddressCalls).resolve(startedAddress));
     expect(value()).toBe('ready');
+  };
+
+  // Reaches `failed` with the spawned Supervisor still owned, as when it ignores SIGTERM.
+  const abandonStuckSupervisor = async () => {
+    await spawnSupervisor();
+    await vi.advanceTimersByTimeAsync(startLimitMs + stopLimitMs);
+    expect(value()).toBe('failed');
   };
 
   it('reads server.json every 200 ms until it names the spawned Supervisor', async () => {
@@ -355,7 +397,10 @@ describe('server connection', () => {
     // server.json still names an older Supervisor.
     await settle(() => latest(readAddressCalls).resolve(runningAddress));
     await vi.advanceTimersByTimeAsync(pollDelayMs);
-    expect(readAddressCalls).toHaveLength(3);
+    // server.json was written before the spawn, by a process whose pid the OS reused.
+    await settle(() => latest(readAddressCalls).resolve(staleAddress));
+    await vi.advanceTimersByTimeAsync(pollDelayMs);
+    expect(readAddressCalls).toHaveLength(4);
     await settle(() => latest(readAddressCalls).resolve(startedAddress));
 
     expect(value()).toBe('ready');
@@ -366,26 +411,40 @@ describe('server connection', () => {
     await spawnSupervisor();
 
     await vi.advanceTimersByTimeAsync(startLimitMs - 1);
-    expect(value()).toEqual({ starting: 'checking' });
+    expect(value()).toEqual({ starting: { answering: 'checking' } });
     await vi.advanceTimersByTimeAsync(1);
 
     expect(value()).toEqual({ abandoning: 'waiting' });
     expect(signalledPids).toEqual([startedAddress.pid]);
   });
 
-  it('fails when no Supervisor spawns in 30 seconds', async () => {
-    startServerMachine();
+  it('reuses the Supervisor that won the race to start when its own exits', async () => {
+    await spawnSupervisor();
+
+    reportExited();
+    await settle(() => latest(readAddressCalls).resolve(runningAddress));
+
+    expect(value()).toBe('ready');
+    expect(context()).toEqual(
+      expect.objectContaining({ ownedPid: null, failure: null }),
+    );
+    expect(readyAddresses).toEqual([runningAddress]);
+  });
+
+  it('fails when its Supervisor exits and no other runs', async () => {
+    await spawnSupervisor();
+
+    reportExited();
     await settle(() => latest(readAddressCalls).resolve(null));
 
-    await vi.advanceTimersByTimeAsync(startLimitMs);
-
     expect(value()).toBe('failed');
+    expect(context().failure).toBe(exitReason);
     expect(signalledPids).toEqual([]);
   });
 
-  it('gives up abandoning after 5 seconds, and keeps the pid to stop on quit', async () => {
+  it('gives up abandoning after 5 seconds, and keeps the pid', async () => {
     await spawnSupervisor();
-    latest(spawnCalls).sendBack({ type: 'server.exited', reason: exitReason });
+    await vi.advanceTimersByTimeAsync(startLimitMs);
 
     await vi.advanceTimersByTimeAsync(pollDelayMs);
     await settle(() => latest(checkRunningCalls).resolve(true));
@@ -394,9 +453,32 @@ describe('server connection', () => {
     await vi.advanceTimersByTimeAsync(1);
 
     expect(value()).toBe('failed');
-    expect(server.getSnapshot().context.ownedPid).toBe(startedAddress.pid);
-    server.send({ type: 'app.quit' });
-    expect(value()).toEqual({ stopping: 'waiting' });
+    expect(context().ownedPid).toBe(startedAddress.pid);
+  });
+
+  it('stops the last Supervisor on Retry before it starts over', async () => {
+    await abandonStuckSupervisor();
+
+    server.send({ type: 'server.retry' });
+    expect(signalledPids).toEqual([startedAddress.pid, startedAddress.pid]);
+    await vi.advanceTimersByTimeAsync(pollDelayMs);
+    await settle(() => latest(checkRunningCalls).resolve(false));
+
+    expect(value()).toBe('locating');
+    expect(context()).toEqual(
+      expect.objectContaining({ ownedPid: null, failure: null }),
+    );
+  });
+
+  it('fails Retry again, spawning nothing, while the last Supervisor does not stop', async () => {
+    await abandonStuckSupervisor();
+
+    server.send({ type: 'server.retry' });
+    await vi.advanceTimersByTimeAsync(stopLimitMs);
+
+    expect(value()).toBe('failed');
+    expect(context().ownedPid).toBe(startedAddress.pid);
+    expect(spawnCalls).toHaveLength(1);
   });
 
   it('waits 5 seconds at most for the Supervisor it started to stop on quit', async () => {
@@ -421,6 +503,6 @@ describe('server connection', () => {
     await settle(() => latest(checkRunningCalls).resolve(false));
 
     expect(server.getSnapshot().status).toBe('done');
-    expect(server.getSnapshot().context.ownedPid).toBeNull();
+    expect(context().ownedPid).toBeNull();
   });
 });
