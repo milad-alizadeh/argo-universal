@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@repo/contracts": "workspace:*",
+    "xstate": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

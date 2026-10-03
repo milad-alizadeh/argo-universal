@@ -37,6 +37,8 @@ catalog:
   "@types/ws": 8.18.2
   "@vitest/browser-playwright": 5.0.3
   "@vitest/coverage-v8": 5.0.3
+  # Peers on xstate ^5.28.0 (spec 0002 section 13).
+  "@xstate/react": 6.1.0
   class-variance-authority: 0.7.1
   clsx: 2.1.1
   # Exact pins: a caret range on 1.0.0-rc.4 pulls commit builds such as 1.0.0-rc.5-5935859 (docs/research/drizzle.md).

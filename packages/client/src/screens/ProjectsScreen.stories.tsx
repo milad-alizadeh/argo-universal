@@ -22,3 +22,11 @@ export const ErrorState: Story = {
   name: 'Error',
   parameters: { trpc: { 'system.info': fails('Server is down') } },
 };
+
+export const Reconnecting: Story = {
+  parameters: { connection: 'reconnecting' },
+};
+
+export const Offline: Story = {
+  parameters: { connection: 'offline' },
+};

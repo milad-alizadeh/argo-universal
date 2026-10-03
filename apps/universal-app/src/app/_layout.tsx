@@ -1,11 +1,12 @@
 import '../../global.css';
 
-import { AppProviders } from '@repo/client';
+import { AppProviders, useConnection } from '@repo/client';
 import { registerDevMenuItems } from 'expo-dev-client';
 import { router, Stack } from 'expo-router';
 import { ThemeProvider } from 'expo-router/react-navigation';
 import { StatusBar } from 'expo-status-bar';
-import { Platform } from 'react-native';
+import { useEffect } from 'react';
+import { AppState, Platform } from 'react-native';
 import { useUniwind } from 'uniwind';
 import { NAV_THEME } from '@/lib/theme';
 
@@ -46,6 +47,7 @@ export default function RootLayout() {
 
   return (
     <AppProviders serverUrl={serverUrl}>
+      <ForegroundSignal />
       <ThemeProvider value={NAV_THEME[theme ?? 'light']}>
         <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
         <Stack>
@@ -59,4 +61,16 @@ export default function RootLayout() {
       </ThemeProvider>
     </AppProviders>
   );
+}
+
+// Coming to the foreground lets a waiting reconnect attempt go at once (spec 0002 section 11).
+function ForegroundSignal() {
+  const connection = useConnection();
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') connection.send({ type: 'app.foreground' });
+    });
+    return () => subscription.remove();
+  }, [connection]);
+  return null;
 }

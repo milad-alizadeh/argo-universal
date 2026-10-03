@@ -29,6 +29,8 @@ export const ShowsServerInfoAndClock: Story = {
     await expect(getComputedStyle(card as Element).borderTopLeftRadius).toBe(
       '14px',
     );
+    // An open Connection shows no banner.
+    await expect(canvas.queryByRole('status')).toBeNull();
   },
 };
 
@@ -63,5 +65,25 @@ export const ShowsSystemInfoError: Story = {
   },
   play: async ({ canvas }) => {
     await expect(await canvas.findByText('Server is down')).toBeVisible();
+  },
+};
+
+export const ShowsReconnectingBanner: Story = {
+  parameters: { connection: 'reconnecting' },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('status')).toHaveTextContent(
+      'Reconnecting to the Server…',
+    );
+    // The last data stays on screen while the Connection is down.
+    await expect(await canvas.findByText('4242')).toBeVisible();
+  },
+};
+
+export const ShowsOfflineBanner: Story = {
+  parameters: { connection: 'offline' },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('status')).toHaveTextContent(
+      'The Server is offline. Argo keeps trying to reconnect.',
+    );
   },
 };
