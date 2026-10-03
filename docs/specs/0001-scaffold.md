@@ -231,6 +231,7 @@ Vitest tests for `api` call the routers with `createCaller` and mock services, w
 | `~/.argo/server.json` | `{pid, port, version, startedAt}`, written to a temp file and renamed |
 | `~/.argo/blobs/<sha256>` | blob files |
 | `~/.argo/worktrees/<projectId>/<slug>` | worktrees (milestone 1) |
+| `~/.argo/shells/<sessionId>/<shellId>.log` | a running Shell's output, which becomes a blob when the Shell ends (spec 0003) |
 | `~/.argo/logs/` | Supervisor and Engine logs |
 
 `ARGO_HOME` overrides `~/.argo`. Tests set it to a temp folder.
@@ -269,7 +270,7 @@ Vitest tests for `api` call the routers with `createCaller` and mock services, w
 
 ### Session update envelope
 
-The `id` comes from the vendor where the vendor has a stable id: Codex `item.id`, Claude `tool_use.id` for tools and the record's own id for text (spec 0003; `message.id` repeats across blocks). The streamed version and the final version of a row then have the same `id`.
+The `id` comes from the vendor where the vendor has a stable id: Codex `item.id`, Claude `tool_use.id` for tools and `message.id#blockIndex` for text. Claude writes one record per block with the same `message.id`, so the adapter counts blocks to get the index (spec 0003). The streamed version and the final version of a row then have the same `id`.
 
 ```ts
 { id: string, sessionId: string, position: number, revision: number, turnId: string | null,
@@ -277,6 +278,8 @@ The `id` comes from the vendor where the vendor has a stable id: Codex `item.id`
 ```
 
 ### Session update kinds
+
+Spec 0003 adds the kind `session_message` and `_meta.argo` fields on `tool_call_update`, `subagent_update`, `plan_update` and `task_update`.
 
 | `sessionUpdate` | Payload |
 |---|---|
@@ -306,6 +309,7 @@ Shared types:
   - `pendingElicitation` has the shape of ACP `elicitation/create` in form mode.
   - `usage` has the shape of ACP `usage_update`: `{used, size, cost?: {amount, currency}}`.
   - `configOptions` holds mode, model, and effort as ACP v2 config options. Spec 0003 opens the categories and allows `_meta`.
+  - Spec 0003 adds fields to `SessionSnapshot`, adds `requestId` to `pendingElicitation`, and adds `SessionInfo`, `Subagent` and `Shell`.
 - `Turn`: `{id, sessionId, status, stopReason: 'end_turn' | 'max_tokens' | 'max_turn_requests' | 'refusal' | 'cancelled' | 'error' | null, error?, usage?, startedAt, endedAt}`.
 - `ServerAddress`: the `server.json` schema `{pid, port, version, startedAt}`.
 
@@ -319,11 +323,11 @@ Shared types:
   - `snapshot {snapshot}`
   - `reset {epoch}`
 - `feed.row` query. Input `{sessionId, id}`. Output the row.
-- Session procedures, named after ACP methods (spec 0003 adds more): `session.new`, `session.prompt`, `session.cancel`, `session.list`, `session.close`, `session.delete`, `session.setConfigOption`.
+- Session procedures, named after ACP methods (spec 0003 adds more and gives `session.new` its input): `session.new`, `session.prompt`, `session.cancel`, `session.list`, `session.close`, `session.delete`, `session.setConfigOption`.
 
 ## 7. Database
 
-`packages/db` holds the Drizzle schema for all six tables and the first migrations. The schema also holds the enums that columns use, and `contracts` derives from it (ADR 0013). Store each payload as JSON text. The Server validates it with the `contracts` schema on write and on read. Times are Unix milliseconds that the database writes: `createdAt` and `startedAt` by column default, `updatedAt` by a trigger on update.
+`packages/db` holds the Drizzle schema for these six tables and the first migrations. Spec 0003 adds the `shell` table and columns on `project`, `session` and `turn`. The schema also holds the enums that columns use, and `contracts` derives from it (ADR 0013). Store each payload as JSON text. The Server validates it with the `contracts` schema on write and on read. Times are Unix milliseconds that the database writes: `createdAt` and `startedAt` by column default, `updatedAt` by a trigger on update.
 
 | Table | Columns |
 |---|---|
@@ -340,6 +344,7 @@ The Session's current Plan is not stored. A query reads it from the newest `plan
 
 - `src/trpc/`: `createTRPCContext<AppRouter>()` gives `TRPCProvider` and `useTRPC()`. `createTRPCClient(url)` builds a client with `wsLink` and `createWSClient`. `AppProviders` holds the `QueryClient`, the tRPC provider, and the Server URL.
 - Screens get tRPC only from `useTRPC()`.
+- Spec 0003 replaces the Projects screen at `/` with the Sessions list.
 - `src/primitives/`: run `npx @react-native-reusables/cli init -t minimal-uniwind` and point its output here. Add only the primitives that the Projects screen uses.
 - `mocks/trpc-mock-link.ts`: a `TRPCLink` that serves fixtures by procedure path. The fixture map is typed from `AppRouter` with `inferProcedureInput` and `inferProcedureOutput`, so a wrong procedure path or a wrong fixture shape fails `tsc`. A subscription fixture is an async generator. `withTrpcMocks` is the story decorator. It reads `parameters.trpc`, builds a `QueryClient` with `retry: false`, and wraps the story in the providers. A missing fixture fails with `No story mock for <path>`.
 - `mocks/` also exports `pending()` (never answers) and `fails(message)` (always errors).
@@ -362,7 +367,7 @@ The Session's current Plan is not stored. A query reads it from the newest `plan
 
 - `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`.
 - In production, a custom `app://` protocol serves the Expo web export from `apps/universal-app/dist`. In dev, the window loads the Expo web dev URL.
-- On launch, make sure a Supervisor runs: reuse the one whose PID in `~/.argo/server.json` is alive, of any version, or start `apps/server` detached. On quit, stop it only if this app started it. Spec 0003 amends this: when a Turn runs, the app asks whether to keep Sessions going. Electron never calls `/health`; spec 0002 section 10 has the machine.
+- On launch, make sure a Supervisor runs: reuse the one whose PID in `~/.argo/server.json` is alive, of any version, or start `apps/server` detached. On quit, stop it only if this app started it. Spec 0003 amends this: when that Supervisor has a running Turn, the app asks whether to keep Sessions going, and the main process gets a tRPC client to read the counts. Electron never calls `/health`; spec 0002 section 10 has the machine.
 - Preload exposes `window.argo = {serverUrl, window: {minimize, maximize, close}}` and nothing else.
 
 ### Web Storybook

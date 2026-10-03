@@ -28,6 +28,10 @@ _Avoid_: Client (ACP uses that word for the Server), frontend
 The live link between an App and the Server.
 _Avoid_: Binding, socket
 
+**Issue**:
+A work item in a Project's tracker, such as Linear or GitHub.
+_Avoid_: Ticket, task
+
 **Integration**:
 A Project's link to an outside service, such as GitHub.
 _Avoid_: Connection, account link
@@ -111,6 +115,10 @@ _Avoid_: Summarisation, context reset
 **Unread**:
 A Session whose Feed changed after anyone last saw its end, on any App.
 _Avoid_: New, unseen
+
+**Live header**:
+The one line that says what the Agent is doing while a Turn runs, such as "Running pnpm test".
+_Avoid_: Status line, spinner text
 
 **Notice**:
 A short message about the Session that is not from the Agent's conversation, such as a retry or a hook result.

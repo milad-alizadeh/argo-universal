@@ -43,6 +43,8 @@ Supervisor (process)
    │        └─ vendorStream
    └─ startHttpServer            the services hold the `sessions` ref
 
+Spec 0003 adds a feed actor for each Subagent under its parent Session, and a tRPC client in the Electron main process.
+
 Electron main process: serverConnection (section 10)
 Each App: connection (section 11)
 ```
@@ -75,9 +77,11 @@ The Engine machine (`apps/server/src/engine/machine.ts`) changes to this shape:
 - States: `running`, then `stopping` on `sessions.stopAll`, which sends `session.close` to every open Session and goes to `stopped` (final) once none is left.
 - The services find a Session with `system.get('session:<id>')` after they send `sessions.open`.
 
+Spec 0003 amends this section: `sessions.open` refuses a Subagent's id, and a Session closes itself after 5 minutes idle.
+
 ## 6. Session machine
 
-Spec 0003 amends this section: Agent-started Turns, Plan proposals, held config options, titles, Subagents, Shells, archive, and idle close.
+Spec 0003 amends this section: Agent-started Turns, Plan proposals, held config options, titles, Subagents, Shells, terminal continuation, archive, idle close, and giving up.
 
 `apps/server/src/services/sessions/session-machine.ts`. One actor per open Session, with `systemId` `session:<id>`.
 
@@ -139,7 +143,7 @@ A Subagent has no Session actor of its own. It is a read-only child Session whos
 
 ## 7. Agent machines
 
-Spec 0003 adds Agent events to this section.
+Spec 0003 amends this section: new Agent events, `message` on `agent.answerPermission`, `continuedOutside` on `agent.ready`, and Turns that the agent starts from `ready.idle` with no prompt.
 
 Each adapter in `packages/agents/<agent>/` has its own machine with the same events in and out. `packages/agents/src/agent-events.ts` holds those event types and the `AgentAdapter` type: `{agent, capabilities, machine}`. Shared code branches on `capabilities`.
 
@@ -179,6 +183,8 @@ The vendor calls in `connect`, `vendorStream`, and cancelling come from each ada
 
 ### Feed actor
 
+Spec 0003 amends this: a parent Session also invokes one feed actor per Subagent, and routes the Subagent's changes to it.
+
 `apps/server/src/services/feed/feed-machine.ts`. One per Session, invoked by the Session.
 
 - A `FeedChange` is `{type: 'upsert', update}`, `{type: 'append', id, field, text}`, or `{type: 'patch', id, set}`. An update with `state: 'settled'` settles its row.
@@ -200,7 +206,7 @@ The vendor calls in `connect`, `vendorStream`, and cancelling come from each ada
 
 ## 9. Recovery after an Engine restart
 
-Spec 0003 adds: running Shells become `lost`.
+Spec 0003 adds: running Shells become `lost`, each ended Turn gets `error: {code: 'interrupted'}` and a Notice, and the worktrees of archived Sessions are removed.
 
 The Engine's `recovering` state invokes `recoverAfterRestart`, which runs one transaction:
 
@@ -212,7 +218,7 @@ A Session then opens as `idle` the next time a service asks for it.
 
 ## 10. Electron Server connection
 
-Spec 0003 amends `app.quit`: when a Turn runs, the app asks whether to keep Sessions going, and Keep quits without stopping the Supervisor.
+Spec 0003 amends `app.quit`: when `ownedPid` is set and a Turn runs, the app asks whether to keep Sessions going, and Keep quits without stopping the Supervisor. The main process reads the running count over its own tRPC client.
 
 Electron has one Server job: make sure a Supervisor runs. The Supervisor watches and repairs the Engine, so Electron never calls `/health` and never watches the Engine. Spec 0001 section 9 states the same rule.
 
