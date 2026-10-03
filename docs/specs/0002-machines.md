@@ -231,8 +231,9 @@ Context: `address`, `ownedPid` (the Supervisor this app started, or null), `fail
   - `reconnecting` → `open` on `connection.opened`, and runs `refetchAfterReconnect`. After 10 seconds (`offlineDelay`) it goes to `offline`.
   - `offline` → `open` on `connection.opened`, and runs `refetchAfterReconnect`.
 - `refetchAfterReconnect` invalidates every query, so `system.info` and the Feed pages fetch again. This fixes the stale Started time and PID after an Engine restart. Subscriptions restart through `wsLink` with their newest input. The Feed's `after: {epoch, revision}` comes from the cache (ADR 0007).
-- `wsClient` keeps the retry timing, with `retryDelayMs` doubling from 0.5 seconds to a 30-second cap.
-- The universal app sends `app.foreground` from React Native `AppState`. In `reconnecting` or `offline`, it reconnects at once.
+- The machine owns the retry timing, because tRPC 11.19's `wsClient` sleeps `retryDelayMs` in a private loop that nothing can cut short. `createWSClient` gets `retryDelayMs: () => 0` and an async `url` function, which `wsClient` awaits before every attempt. That function sends `connection.attemptRequested` and resolves when the machine emits `connection.attemptAllowed`.
+- `connecting` allows the first attempt at once. In `reconnecting` and `offline`, the machine allows each attempt after `retryDelay`, which doubles from 0.5 seconds to a 30-second cap with the attempts since the last `connection.opened`. `connection.opened` resets the count.
+- The universal app sends `app.foreground` from React Native `AppState`. In `reconnecting` or `offline`, it allows a waiting attempt at once.
 - `useConnectionState()` reads the state with `@xstate/react`'s `useSelector`. A screen may show a banner in `reconnecting` and `offline`. The banner's tests are play functions with a mocked connection.
 
 ## 12. Tests
