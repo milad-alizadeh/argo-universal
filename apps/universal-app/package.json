@@ -13,6 +13,8 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@argo/client": "workspace:*",
+    "@argo/uniwind": "workspace:*",
     "expo": "catalog:",
     "expo-constants": "catalog:",
     "expo-dev-client": "catalog:",
@@ -30,7 +32,9 @@
     "react-native-safe-area-context": "catalog:",
     "react-native-screens": "catalog:",
     "react-native-web": "catalog:",
-    "react-native-worklets": "catalog:"
+    "react-native-worklets": "catalog:",
+    "tailwindcss": "catalog:",
+    "uniwind": "catalog:"
   },
   "devDependencies": {
     "@argo/typescript": "workspace:*",

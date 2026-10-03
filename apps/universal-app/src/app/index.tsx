@@ -1,18 +1,5 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { ProjectsScreen } from '@argo/client';
 
-// Placeholder until @argo/client provides ProjectsScreen.
-export default function Index() {
-  return (
-    <View style={styles.container}>
-      <Text>Projects</Text>
-    </View>
-  );
+export default function ProjectsRoute() {
+  return <ProjectsScreen />;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
