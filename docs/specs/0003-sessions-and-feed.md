@@ -196,7 +196,7 @@ The procedures are named after ACP methods, and the existing contracts carry the
   - `configOptions` is the template for the New Session composer.
 - `projects.list` returns the one Project with its `checkoutChoice`. `projects.branches {projectId}` returns its local branches and the current one, which is the default base branch.
 - The Feed procedures from spec 0001 section 6 are built as written. `feed.page` and `feed.subscribe` also serve Subagents.
-- **Open, for the owner:** how an image reaches the Server before `session.new` or `session.prompt` refers to it as a `BlobRef`.
+- `blob.upload` is a mutation whose input is `FormData` with one file. It stores the file as a content-addressed blob and returns its `BlobRef`, which `session.new` and `session.prompt` then put in an image `ContentBlock`. It is the only call over HTTP (see "Server transport").
 
 ### Session list contract
 
@@ -336,6 +336,18 @@ These amend spec 0002 sections 5 and 8.
   - gives each Turn it ends `error: {code: 'interrupted'}`, and adds a warning Notice saying the Server stopped during the Turn. The list does not count an interrupted Turn as Failed.
   - removes the worktree of every archived Session whose Checkout still exists, which finishes an archive that a restart cut short
 
+### Server transport
+
+These amend ADR 0002 and spec 0001 section 5. The source is tRPC's guides on non-JSON content types and the standalone adapter.
+
+- One router serves both transports. The Engine's one `node:http` server sends `/blobs/:id` to a plain handler that streams the file, and every other request to tRPC's `createHTTPHandler` with `basePath: '/trpc/'`. The WebSocket server sits on the same server with the same router.
+- Hono and `@hono/node-server` are removed. `/health` goes, and the dev wait script calls `system.info` over HTTP instead.
+- The client's links are a `splitLink`: a call whose input is not JSON-serialisable (`isNonJsonSerializable`) goes through `httpLink`, and every other call goes through `wsLink`.
+- The Server must not read a request body before tRPC does, since tRPC parses it by `Content-Type`.
+- The `Host` check covers every request. The `Origin` check that guards the WebSocket also guards tRPC over HTTP, so a website cannot post to the Server.
+- An upload is at most 20 MB. A blob that no prompt refers to is deleted when the Engine starts, if it is older than a day.
+- Before any other upload work, check `FormData` with a file through `httpLink` on the iOS simulator and the Android emulator. tRPC's guide has no React Native notes. If it fails, stop and ask the owner.
+
 ### Server work
 
 - Changed files: the Server runs `git status` and `git diff --numstat` on the Checkout after each edit Tool call settles and when each Turn ends. The result goes into the snapshot.
@@ -397,6 +409,7 @@ A good test checks what a user or a caller sees, through the highest seam that r
    - Subagents and Shells
    - list search, the Archived filter, and the list updating live
    - the layout switch at 720 px with the URL kept, by resizing the viewport
+   - an upload from a page on another origin, which the Server refuses
    - a Feed that catches up after the Engine restarts
 
    One test opens two browser pages on one Session, to check that they stay in sync and that the late answer sees "already answered". The scaffold's Projects end-to-end test is the prior art.
@@ -476,7 +489,7 @@ Every backend part covers both Agents, because parity is part of every Session c
 
 The slices, in order:
 
-1. The app shell, routes, `useNavigate()`, and placeholder Issues, Atlas and Settings screens.
+1. The app shell, routes, `useNavigate()`, and placeholder Issues, Atlas and Settings screens. The backend part replaces Hono with tRPC's HTTP handler.
 2. The Sessions list and row.
 3. New Session and the first Turn.
 4. The Feed.
@@ -495,10 +508,11 @@ The slices, in order:
 
 This PR makes these changes:
 
+- ADR 0002: tRPC over HTTP for uploads, one plain blob route, no Hono.
 - ADR 0003: Electron's quit asks whether to keep running Sessions going.
 - ADR 0008: a Subagent borrows its parent's Checkout.
 - Spec 0001:
-  - Section 5: the Shell output files in the runtime layout.
+  - Section 5: the Shell output files in the runtime layout, and the HTTP server without Hono.
   - Section 6: the new kinds and `_meta.argo` fields, the `SessionSnapshot` and `SessionInfo` fields, the config option contract, and the Session procedures.
   - Section 7: the `shell` table and the new columns.
   - Section 8: the Sessions list replaces the Projects screen at `/`.
@@ -531,3 +545,5 @@ These were not discussed in the grilling sessions:
 - The final answer has no actions, and `phase` is dropped.
 - Claude row ids keep `message.id#blockIndex`, with the index counted from records.
 - A restart's interrupted Turns are not Failed, and get a Notice.
+- Uploads are capped at 20 MB, and an unused blob is deleted after a day.
+- `/health` is replaced by `system.info` over HTTP.

@@ -250,6 +250,7 @@ Vitest tests for `api` call the routers with `createCaller` and mock services, w
 
 ### Engine
 
+- Spec 0003 replaces Hono: tRPC's `createHTTPHandler` serves uploads at `/trpc/`, `/health` becomes the `system.info` query over HTTP, and a plain handler serves `/blobs/:id` (ADR 0002).
 - One `node:http` server on `127.0.0.1` whose requests a Hono app handles through `@hono/node-server`, on the port in `ARGO_SERVER_PORT`, with 7337 as the default. The Supervisor writes the port that the Engine uses into `server.json`.
 - `GET /health` returns `{ok: true, version, startedAt}`.
 - `GET /blobs/:id` streams the file from `~/.argo/blobs/`. It returns 404 for an unknown id.
