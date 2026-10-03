@@ -156,12 +156,12 @@ argo-universal/
 | `contracts` | `zod`, `drizzle-orm` (`drizzle-orm/zod`), `@repo/db/schema` | anything else, including the `@repo/db` client |
 | `api` | `contracts`, `@trpc/server` | `db`, `agents`, `git`, Node APIs |
 | `db` | `drizzle-orm`, `node:sqlite` | `contracts`, `api`, `agents`, `git` |
-| `agents` | `contracts`, vendor SDKs | `db`, `api`, `git` |
+| `agents` | `contracts`, vendor SDKs, `xstate` (spec 0002) | `db`, `api`, `git` |
 | `git` | `contracts`, `node:child_process` | `db`, `api`, `agents` |
-| `client` | `contracts`, `api` (types only, `import type`), tRPC client, TanStack Query, React Native, Uniwind | `db`, `agents`, `git`, Node APIs |
+| `client` | `contracts`, `api` (types only, `import type`), tRPC client, TanStack Query, React Native, Uniwind, `xstate` and `@xstate/react` (spec 0002) | `db`, `agents`, `git`, Node APIs |
 | `apps/server` | every server-side package | `client` |
 | `apps/universal-app` | `client` | server-side packages |
-| `apps/desktop` | `electron`, `contracts` (for the `server.json` schema) | `client`, `api`, `db` |
+| `apps/desktop` | `electron`, `contracts` (for the `server.json` schema), `xstate` (spec 0002) | `client`, `api`, `db` |
 | `apps/storybook` | `client` | server-side packages |
 
 ### Domain folders
