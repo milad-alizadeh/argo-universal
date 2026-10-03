@@ -1,11 +1,12 @@
-import { createServer } from 'node:http';
+import { createServer, type Server } from 'node:http';
 import { join } from 'node:path';
+import { getRequestListener } from '@hono/node-server';
 import { appRouter, type Services } from '@repo/api';
 import { openDatabase } from '@repo/db';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { WebSocketServer } from 'ws';
 import { createSystemService } from '../services/system';
-import { createHttpRoutes } from './http-routes';
+import { createHttpApp, createRequestErrorHandler } from './http-app';
 import { createRequestGuard } from './request-guard';
 
 export interface WorkerOptions {
@@ -13,6 +14,20 @@ export interface WorkerOptions {
   port: number;
   version: string;
 }
+
+const listen = (server: Server, port: number) =>
+  new Promise<void>((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(port, '127.0.0.1', () => {
+      server.off('error', reject);
+      resolve();
+    });
+  });
+
+const closeServer = (server: Server) =>
+  new Promise<void>((resolve, reject) =>
+    server.close((error) => (error ? reject(error) : resolve())),
+  );
 
 // Opens the database, then serves HTTP and tRPC over one WebSocket on 127.0.0.1 (ADR 0002).
 export async function startWorker(options: WorkerOptions) {
@@ -23,23 +38,38 @@ export async function startWorker(options: WorkerOptions) {
   };
 
   const guard = createRequestGuard(options.port);
-  const routes = createHttpRoutes({
+  const app = createHttpApp({
+    guard,
     blobsFolder: join(options.home, 'blobs'),
     version: options.version,
     startedAt,
   });
-  const server = createServer((request, response) => {
-    if (guard.allowsRequest(request)) {
-      routes(request, response);
-      return;
-    }
-    response.writeHead(403, { 'content-type': 'application/json' });
-    response.end(JSON.stringify({ error: 'Forbidden' }));
-  });
+  const server = createServer(
+    getRequestListener(app.fetch, {
+      overrideGlobalObjects: false,
+      errorHandler: createRequestErrorHandler(guard),
+    }),
+  );
+
+  try {
+    await listen(server, options.port);
+  } catch (error) {
+    database.$client.close();
+    throw error;
+  }
+
+  // Attached after listen: ws re-emits the server's 'error', so a failed listen would throw from it.
   const webSocketServer = new WebSocketServer({
     server,
     verifyClient: ({ req }, callback) =>
-      callback(guard.allowsUpgrade(req), 403, 'Forbidden'),
+      callback(
+        guard.allowsUpgrade({
+          host: req.headers.host,
+          origin: req.headers.origin,
+        }),
+        403,
+        'Forbidden',
+      ),
   });
   const handler = applyWSSHandler({
     wss: webSocketServer,
@@ -48,20 +78,21 @@ export async function startWorker(options: WorkerOptions) {
     keepAlive: { enabled: true, pingMs: 30_000, pongWaitMs: 5000 },
   });
 
-  await new Promise<void>((resolve, reject) => {
-    server.once('error', reject);
-    server.listen(options.port, '127.0.0.1', () => {
-      server.off('error', reject);
-      resolve();
-    });
-  });
-
-  const close = () => {
+  // server.close() waits for upgraded sockets, so the WebSocket clients go first.
+  const closeAll = async () => {
     handler.broadcastReconnectNotification();
     for (const client of webSocketServer.clients) client.terminate();
     webSocketServer.close();
-    server.close();
-    database.$client.close();
+    try {
+      await closeServer(server);
+    } finally {
+      database.$client.close();
+    }
+  };
+  let closing: Promise<void> | undefined;
+  const close = () => {
+    closing ??= closeAll();
+    return closing;
   };
 
   return { startedAt, close };

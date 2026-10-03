@@ -3,13 +3,13 @@ import { request } from 'node:http';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { WebSocket } from 'ws';
 import { startWorker } from './start';
 
 let home: string;
 let port: number;
-let closeWorker: () => void;
+let closeWorker: () => Promise<void>;
 
 const findFreePort = () =>
   new Promise<number>((resolve, reject) => {
@@ -40,18 +40,32 @@ const upgradeStatus = (headers: Record<string, string>) =>
     socket.once('error', reject);
   });
 
-const healthStatus = (host: string) =>
+interface HttpRequest {
+  host: string;
+  method?: string;
+  path?: string;
+  body?: string;
+}
+
+const httpStatus = ({
+  host,
+  method = 'GET',
+  path = '/health',
+  body,
+}: HttpRequest) =>
   new Promise<number>((resolve, reject) => {
     const outgoing = request(
-      { host: '127.0.0.1', port, path: '/health', headers: { host } },
+      { host: '127.0.0.1', port, method, path, headers: { host } },
       (response) => {
         resolve(response.statusCode ?? 0);
         response.resume();
       },
     );
     outgoing.once('error', reject);
-    outgoing.end();
+    outgoing.end(body);
   });
+
+const healthStatus = (host: string) => httpStatus({ host });
 
 beforeEach(async () => {
   home = mkdtempSync(join(tmpdir(), 'server-worker-'));
@@ -63,8 +77,9 @@ beforeEach(async () => {
   }));
 });
 
-afterEach(() => {
-  closeWorker();
+afterEach(async () => {
+  vi.restoreAllMocks();
+  await closeWorker();
   rmSync(home, { recursive: true, force: true });
 });
 
@@ -98,5 +113,41 @@ describe('worker', () => {
   it('rejects HTTP with another Host', async () => {
     expect(await healthStatus(`127.0.0.1:${port}`)).toBe(200);
     expect(await healthStatus('evil.example:7337')).toBe(403);
+  });
+
+  it('answers 403 to a Host the adapter cannot parse, and counts it', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect(await healthStatus(`evil.example@127.0.0.1:${port}`)).toBe(403);
+    expect(console.error).toHaveBeenCalledExactlyOnceWith(
+      expect.stringMatching(/^worker: rejected request .* #1$/),
+    );
+  });
+
+  it('answers 405 to a POST with a body', async () => {
+    const status = await httpStatus({
+      host: `127.0.0.1:${port}`,
+      method: 'POST',
+      body: '{}',
+    });
+    expect(status).toBe(405);
+    expect(await healthStatus(`127.0.0.1:${port}`)).toBe(200);
+  });
+
+  it('rejects a second worker on the same port', async () => {
+    await expect(
+      startWorker({ home, port, version: '1.2.3' }),
+    ).rejects.toMatchObject({ code: 'EADDRINUSE' });
+    expect(await healthStatus(`127.0.0.1:${port}`)).toBe(200);
+  });
+
+  it('closes while a WebSocket client is connected', async () => {
+    const socket = new WebSocket(`ws://127.0.0.1:${port}`);
+    await new Promise((resolve, reject) => {
+      socket.once('open', resolve);
+      socket.once('error', reject);
+    });
+    const closed = new Promise((resolve) => socket.once('close', resolve));
+    await closeWorker();
+    await closed;
   });
 });

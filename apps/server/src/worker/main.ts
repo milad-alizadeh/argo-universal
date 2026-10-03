@@ -44,8 +44,13 @@ const heartbeat = setInterval(
 const stop = (reason: string) => {
   log(`stopping: ${reason}`);
   clearInterval(heartbeat);
-  worker.close();
-  process.exit(0);
+  worker.close().then(
+    () => process.exit(0),
+    (error: unknown) => {
+      log(`could not close: ${String(error)}`);
+      process.exit(1);
+    },
+  );
 };
 process.on('SIGINT', () => stop('SIGINT'));
 process.on('SIGTERM', () => stop('SIGTERM'));
