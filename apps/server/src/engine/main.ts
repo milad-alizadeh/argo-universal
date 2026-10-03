@@ -1,6 +1,6 @@
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { createNodeMachineLog } from '@repo/machine-log/node';
+import { createNodeMachineInspection } from '@repo/machine-log/node';
 import { createActor } from 'xstate';
 import { z } from 'zod';
 import packageJson from '../../package.json' with { type: 'json' };
@@ -14,8 +14,9 @@ const port = z.coerce
   .parse(process.env.ARGO_SERVER_PORT ?? 7337);
 
 const home = process.env.ARGO_HOME ?? join(homedir(), '.argo');
+const inspection = createNodeMachineInspection({ home, processName: 'engine' });
 const engine = createActor(engineMachine, {
-  inspect: createNodeMachineLog({ home, processName: 'engine' }),
+  inspect: inspection.inspect,
   input: {
     home,
     port,
@@ -24,8 +25,12 @@ const engine = createActor(engineMachine, {
   },
 });
 engine.subscribe({
-  complete: () => process.exit(engine.getSnapshot().output?.exitCode ?? 1),
+  complete: () => {
+    inspection.stop();
+    process.exit(engine.getSnapshot().output?.exitCode ?? 1);
+  },
   error: (error) => {
+    inspection.stop();
     console.error(`engine: ${String(error)}`);
     process.exit(1);
   },

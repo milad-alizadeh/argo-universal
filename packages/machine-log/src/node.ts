@@ -1,6 +1,8 @@
 import { appendFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { createActor, type InspectionEvent } from 'xstate';
 import { createMachineLog } from './index';
+import { inspectorMachine } from './inspector-machine';
 
 export interface NodeMachineLogOptions {
   home: string;
@@ -27,4 +29,32 @@ export function createNodeMachineLog(options: NodeMachineLogOptions) {
       appendFileSync(file, line);
     },
   });
+}
+
+export function createNodeMachineInspection(
+  options: NodeMachineLogOptions & { inspectorPort?: number },
+) {
+  const log = createNodeMachineLog(options);
+  if (
+    options.development === false ||
+    process.env.NODE_ENV === 'production' ||
+    process.env.ARGO_MACHINE_INSPECT !== '1'
+  ) {
+    return { inspect: log, stop: () => {} };
+  }
+  const inspector = createActor(inspectorMachine, {
+    input: {
+      port: options.inspectorPort ?? 8080,
+      processName: options.processName,
+      processId: process.pid,
+    },
+  }).start();
+  return {
+    inspect: (inspection: InspectionEvent) => {
+      log?.(inspection);
+      if (inspector.getSnapshot().status === 'active')
+        inspector.send({ type: 'inspection.record', inspection });
+    },
+    stop: () => inspector.stop(),
+  };
 }

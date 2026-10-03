@@ -1,6 +1,6 @@
 import path from 'node:path';
 import type { ServerAddress } from '@repo/contracts';
-import { createNodeMachineLog } from '@repo/machine-log/node';
+import { createNodeMachineInspection } from '@repo/machine-log/node';
 import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import { createActor } from 'xstate';
 import {
@@ -31,12 +31,14 @@ const serverUrl = (address: ServerAddress) => `ws://127.0.0.1:${address.port}`;
 
 // Makes sure a Supervisor runs; on quit it stops only one that it started (spec 0002 section 10).
 const home = resolveHome();
+const inspection = createNodeMachineInspection({
+  home,
+  processName: 'desktop',
+  development: !app.isPackaged,
+});
+app.once('quit', () => inspection.stop());
 const server = createActor(serverConnectionMachine, {
-  inspect: createNodeMachineLog({
-    home,
-    processName: 'desktop',
-    development: !app.isPackaged,
-  }),
+  inspect: inspection.inspect,
   input: { home, serverDirectory },
 });
 
@@ -54,11 +56,33 @@ const createWindow = (url: string) => {
     },
   });
 
-  // Keep the window on the App; open nothing else.
+  // Keep the window on the App; the development inspector opens separately.
   mainWindow.webContents.on('will-navigate', (event, target) => {
     if (originOf(target) !== windowOrigin) event.preventDefault();
   });
-  mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (
+      !app.isPackaged &&
+      process.env.NODE_ENV !== 'production' &&
+      process.env.EXPO_PUBLIC_ARGO_MACHINE_INSPECT === '1' &&
+      url === 'https://stately.ai/inspect'
+    ) {
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: {
+          parent: mainWindow,
+          webPreferences: {
+            preload: undefined,
+            additionalArguments: [],
+            contextIsolation: true,
+            nodeIntegration: false,
+            sandbox: true,
+          },
+        },
+      };
+    }
+    return { action: 'deny' };
+  });
 
   void mainWindow.loadURL(webDevelopmentUrl ?? `${appOrigin}/`);
 };
@@ -131,11 +155,17 @@ if (!app.requestSingleInstanceLock()) {
 }
 
 // Quit waits for the Server machine, which stops the Supervisor only if this app started it.
-server.subscribe({ complete: () => app.quit() });
+server.subscribe({
+  complete: () => {
+    inspection.stop();
+    app.quit();
+  },
+});
 app.on('will-quit', (event) => {
   if (!serverStarted || server.getSnapshot().status !== 'active') return;
-  event.preventDefault();
   server.send({ type: 'app.quit' });
+  // A reused Supervisor stops synchronously; prevent quit only while an owned one is stopping.
+  if (server.getSnapshot().status === 'active') event.preventDefault();
 });
 
 // Closing the last window quits, except on macOS, where the app stays until Cmd+Q.

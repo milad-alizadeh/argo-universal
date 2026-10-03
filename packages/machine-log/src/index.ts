@@ -15,7 +15,7 @@ type JsonValue =
   | JsonValue[]
   | { [key: string]: JsonValue };
 
-function cleanContext(
+export function cleanMachineContext(
   value: unknown,
   ancestors = new Set<object>(),
 ): JsonValue | undefined {
@@ -39,14 +39,14 @@ function cleanContext(
     cleaned = Array.from({ length: value.length }, (_, index) => {
       const descriptor = descriptors[index];
       return descriptor && 'value' in descriptor
-        ? (cleanContext(descriptor.value, ancestors) ?? null)
+        ? (cleanMachineContext(descriptor.value, ancestors) ?? null)
         : null;
     });
   } else {
     const entries: [string, JsonValue][] = [];
     for (const [key, descriptor] of Object.entries(descriptors)) {
       if (!descriptor.enumerable || !('value' in descriptor)) continue;
-      const cleanedValue = cleanContext(descriptor.value, ancestors);
+      const cleanedValue = cleanMachineContext(descriptor.value, ancestors);
       if (cleanedValue !== undefined) entries.push([key, cleanedValue]);
     }
     cleaned = Object.fromEntries(entries);
@@ -94,7 +94,7 @@ export function createMachineLog(options: MachineLogOptions) {
         status: snapshot?.status ?? null,
         context:
           snapshot && 'context' in snapshot
-            ? (cleanContext(snapshot.context) ?? null)
+            ? (cleanMachineContext(snapshot.context) ?? null)
             : null,
       };
       options.writeLine(`${JSON.stringify(line)}\n`);
@@ -107,3 +107,26 @@ export function createMachineLog(options: MachineLogOptions) {
     }
   };
 }
+
+export function cleanInspection(inspection: InspectionEvent): InspectionEvent {
+  if (inspection.type !== '@xstate.snapshot') return inspection;
+  const snapshot = {
+    ...inspection.snapshot,
+    ...('context' in inspection.snapshot
+      ? { context: cleanMachineContext(inspection.snapshot.context) ?? {} }
+      : {}),
+  };
+  if (snapshot.status === 'done')
+    snapshot.output = cleanMachineContext(snapshot.output) ?? null;
+  return { ...inspection, snapshot };
+}
+
+export const inspectorOptions = {
+  sanitizeEvent: (event: { type: string }) => ({ type: event.type }),
+  sanitizeContext: (context: unknown) => {
+    const cleaned = cleanMachineContext(context);
+    return cleaned && typeof cleaned === 'object' && !Array.isArray(cleaned)
+      ? cleaned
+      : {};
+  },
+};

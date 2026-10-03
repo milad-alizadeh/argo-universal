@@ -42,6 +42,20 @@ File writes are synchronous to preserve the last records when a process exits. I
 
 ## Adding machines
 
-Attach the observer in the root `createActor` options before starting the actor. Children of an observed root are covered automatically. A new independent root needs its own observer. `@repo/machine-log` is portable and accepts a line writer; `@repo/machine-log/node` provides the gated Node file writer. The App bundle must import only the portable entry point.
+Attach the observer in the root `createActor` options before starting the actor. Children of an observed root are covered automatically. A new independent root needs its own observer. `@repo/machine-log` is portable and accepts a line writer; `@repo/machine-log/node` provides Node files and inspection. `@repo/machine-log/browser` combines App console logging with browser inspection and selects a console-only implementation on native platforms. Keep Node imports out of the App bundle.
 
-The optional live diagram from issue #8 is deferred. This implementation has no inspector service or third-party transport.
+## Live diagrams
+
+Start the App, Server, Electron shell, and official Stately inspector together:
+
+```sh
+pnpm dev:inspect
+```
+
+This Turbo command enables both logging switches and both inspector switches, then runs the persistent `dev` and `inspect` tasks without caching. Plain `pnpm dev` leaves inspection off. For the inspector relay alone, run `pnpm inspect`.
+
+The relay opens `http://localhost:8080`, embedding the official Stately UI. It receives machine definitions, events, and snapshots from Electron main, the Supervisor, and the Engine. Process names and ids qualify actor identities so separate processes and restarts stay distinct. The App on web and in the Electron renderer opens a separate official browser inspector; allow its popup if the browser blocks it. Native Apps keep their console logs because the browser inspector requires a window.
+
+`ARGO_MACHINE_INSPECT=1` enables Node inspection; `EXPO_PUBLIC_ARGO_MACHINE_INSPECT=1` enables the App's browser inspector. Both are independent of JSONL logging and disabled in production. Node processes wait briefly for the relay at startup; if it is unavailable, they report once and continue. Restart the processes after starting a late relay. Inspection sockets close when Node processes stop. Context cleaning and event type filtering also apply to visual inspection.
+
+Port 8080 must be free. The relay opens a browser automatically except when `CI` is set. The Stately UI requires internet access. Keep its window open from startup; the official relay retains only 200 recent events, so reopening it later may require restarting the processes to recover their definitions.

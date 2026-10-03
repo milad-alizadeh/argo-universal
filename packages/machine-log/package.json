@@ -5,6 +5,11 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./browser": {
+      "browser": "./src/browser.ts",
+      "react-native": "./src/browser.native.ts",
+      "default": "./src/browser.ts"
+    },
     "./node": "./src/node.ts"
   },
   "scripts": {
@@ -12,11 +17,14 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@statelyai/inspect": "catalog:",
+    "ws": "catalog:",
     "xstate": "catalog:"
   },
   "devDependencies": {
     "@repo/typescript": "workspace:*",
     "@types/node": "catalog:",
+    "@types/ws": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

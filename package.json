@@ -8,6 +8,8 @@
     "check-types": "turbo run check-types",
     "db:generate": "pnpm --filter @repo/db db:generate",
     "dev": "turbo run dev",
+    "dev:inspect": "ARGO_MACHINE_LOG=1 ARGO_MACHINE_INSPECT=1 EXPO_PUBLIC_ARGO_MACHINE_LOG=1 EXPO_PUBLIC_ARGO_MACHINE_INSPECT=1 turbo run dev inspect",
+    "inspect": "turbo run inspect",
     "dev:storybook": "pnpm --filter @repo/storybook storybook",
     "format": "biome check --write .",
     "postinstall": "sherif",
