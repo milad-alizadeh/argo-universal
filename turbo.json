@@ -13,7 +13,9 @@
     },
     "dev": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      // Strict env mode hides the Server home, port, and Expo web URL from dev scripts otherwise.
+      "passThroughEnv": ["ARGO_*"]
     }
   }
 }
