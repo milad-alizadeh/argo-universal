@@ -1,5 +1,7 @@
 # Hono for the Server's plain HTTP routes
 
+> Replaced on 2026-10-03: the Server no longer uses Hono (ADR 0002, spec 0003). Section 5's way of streaming a blob still applies to the plain `/blobs/:id` handler.
+
 Research for serving `GET /health` and `GET /blobs/:id` with Hono in `apps/server/src/worker/`, while tRPC stays on the one WebSocket (`ws` with `applyWSSHandler`) on the same port (`docs/adr/0002-a-local-server-owns-all-machine-work.md`, spec `docs/specs/0001-scaffold.md` section 5). Checked on 2026-10-03.
 
 Source facts come from the npm registry, the tagged sources of `honojs/hono` (`v4.13.12`) and `honojs/node-server` (`v2.1.3`), and the hono.dev docs. Nothing was installed for this note. The Hono snippets below follow the read source but were **not compiled or run**. The `ws` and Node facts marked "checked" were run on Node 24.21.0 with the repo's installed `ws` 8.22.0 [S26].
