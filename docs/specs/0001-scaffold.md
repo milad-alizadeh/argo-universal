@@ -22,7 +22,7 @@ Tools:
 - tRPC 11 with TanStack Query and WebSocket
 - Drizzle with `node:sqlite`
 - XState 5
-- Biome, Vitest, and Maestro
+- Biome and Vitest
 
 The research is done when every tool has a note, and every generator command in step 2 comes from a note.
 
@@ -90,7 +90,6 @@ argo-universal/
 │   │   │   ├── sessions/[id].tsx   renders <SessionScreen/>
 │   │   │   └── (dev)/storybook.tsx on-device Storybook, only in development builds
 │   │   ├── .rnstorybook/           main.ts, preview.tsx, index.ts
-│   │   ├── maestro/                one smoke flow: launch, Projects screen shows the Server version
 │   │   ├── global.css              Uniwind entry
 │   │   ├── metro.config.js
 │   │   └── app.json
@@ -381,7 +380,7 @@ The Session's current Plan is not stored. A query reads it from the newest `plan
 1. On every pull request and every push to `main`: install with pnpm, `pnpm quality`, export the Expo web build, `pnpm test:e2e`.
 2. Only on `main` and `release/*`: `pnpm test:e2e:electron` under `xvfb-run`.
 
-No mobile job. Maestro runs only on the developer machine.
+No mobile job. Mobile smoke flows are deferred; Playwright covers end to end.
 
 ## 12. Spike checks
 
@@ -395,6 +394,5 @@ Each check must pass before the scaffold is done. If a check fails, stop and rep
 Also make sure that:
 
 - `pnpm dev` starts all three, and the Projects screen shows a ticking clock on web, in Electron, and on the iOS simulator.
-- The Maestro flow passes on the iOS simulator.
 - `pnpm quality` passes, and `sherif` reports no mismatch.
 - Killing the worker process makes the supervisor restart it, and `server.json` keeps the same supervisor PID.
