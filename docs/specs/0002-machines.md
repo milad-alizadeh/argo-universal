@@ -208,7 +208,7 @@ A Session then opens as `idle` the next time a service asks for it.
 
 Electron has one Server job: make sure a Supervisor runs. The Supervisor watches and repairs the Engine, so Electron never calls `/health` and never watches the Engine. Spec 0001 section 9 states the same rule.
 
-`apps/desktop/src/main/server-machine.ts` replaces `server-lifecycle.ts`. `server-process.ts` keeps the functions that the machine invokes.
+`apps/desktop/src/main/server-machine.ts` replaces `server-lifecycle.ts` and `server-process.ts`. It holds the machine and the functions that its actors run.
 
 Context: `address`, `ownedPid` (the Supervisor this app started, or null), `failure`.
 

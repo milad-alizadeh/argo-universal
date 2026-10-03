@@ -7,8 +7,7 @@ import {
   handleAppProtocol,
   registerAppScheme,
 } from './app-protocol';
-import { serverConnectionMachine } from './server-machine';
-import { resolveHome } from './server-process';
+import { resolveHome, serverConnectionMachine } from './server-machine';
 
 // The dev script sets the Expo web dev URL; without it the window loads the web export over app://.
 const webDevelopmentUrl = process.env.ARGO_EXPO_WEB_URL;
