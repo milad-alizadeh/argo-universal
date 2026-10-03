@@ -1,0 +1,7 @@
+# Vite files
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+.vite/
+
+# Electron-Forge
+out/

@@ -9,8 +9,16 @@ A registered git repository that Argo works in. One git common directory is one 
 _Avoid_: Repo, workspace
 
 **Server**:
-The local process that owns Sessions, git work, and storage for one machine. It plays the role that ACP calls the Client.
+The local program that owns Sessions, git work, and storage for one machine. It runs as a Supervisor and an Engine. It plays the role that ACP calls the Client.
 _Avoid_: Daemon, backend, host
+
+**Supervisor**:
+The long-lived Server process that starts the Engine, restarts it when it fails, and tells Apps where the Server is.
+_Avoid_: Parent, watchdog, launcher
+
+**Engine**:
+The Server process that does the Server's work: storage, the Connections, and Sessions. The Supervisor can restart it without the Server going away.
+_Avoid_: Worker, child, core
 
 **App**:
 A program that shows Argo to a person: the universal app on iOS, Android, and web, or the desktop app.

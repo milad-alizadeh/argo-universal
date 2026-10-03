@@ -1,0 +1,38 @@
+{
+  "name": "@repo/storybook",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build-storybook": "storybook build",
+    "check-types": "tsc --noEmit",
+    "storybook": "storybook dev -p 6006",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@repo/client": "workspace:*",
+    "@repo/uniwind": "workspace:*",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-native": "catalog:",
+    "react-native-web": "catalog:",
+    "tailwindcss": "catalog:",
+    "uniwind": "catalog:"
+  },
+  "devDependencies": {
+    "@chromatic-com/storybook": "catalog:",
+    "@repo/typescript": "workspace:*",
+    "@storybook/addon-docs": "catalog:",
+    "@storybook/addon-vitest": "catalog:",
+    "@storybook/react-native-web-vite": "catalog:",
+    "@tailwindcss/vite": "catalog:",
+    "@types/react": "catalog:",
+    "@vitest/browser-playwright": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "playwright": "catalog:",
+    "storybook": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  }
+}

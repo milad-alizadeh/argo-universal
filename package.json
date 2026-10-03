@@ -1,0 +1,33 @@
+{
+  "name": "argo-universal",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "turbo run build",
+    "check": "biome check .",
+    "check-types": "turbo run check-types",
+    "db:generate": "pnpm --filter @repo/db db:generate",
+    "dev": "turbo run dev",
+    "dev:storybook": "pnpm --filter @repo/storybook storybook",
+    "format": "biome check --write .",
+    "postinstall": "sherif",
+    "quality": "sherif && biome check . && turbo run check-types && vitest run",
+    "sherif": "sherif",
+    "test": "vitest run",
+    "test:e2e": "pnpm --filter @repo/e2e test:web",
+    "test:e2e:electron": "pnpm --filter @repo/e2e test:electron"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "catalog:",
+    "@repo/biome": "workspace:*",
+    "sherif": "catalog:",
+    "turbo": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  },
+  "packageManager": "pnpm@12.8.1",
+  "engines": {
+    "node": "24.x"
+  }
+}
