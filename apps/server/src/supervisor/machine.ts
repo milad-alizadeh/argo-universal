@@ -50,7 +50,8 @@ export const supervisorMachine = setup({
         startedAt: context.startedAt,
       });
     },
-    removeServerAddress: ({ context }) => removeServerAddress(context.home),
+    removeServerAddress: ({ context }) =>
+      removeServerAddress(context.home, process.pid),
   },
   guards: {
     crashedTooOften: ({ context }) =>

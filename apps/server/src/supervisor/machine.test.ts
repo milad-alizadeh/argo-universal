@@ -1,4 +1,10 @@
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -31,6 +37,14 @@ const latestWorker = () => {
 
 const serverJsonPath = () => join(home, 'server.json');
 const readServerJson = () => JSON.parse(readFileSync(serverJsonPath(), 'utf8'));
+const otherServerAddress = {
+  pid: process.pid + 1,
+  port: 7337,
+  version: '1.2.3',
+  startedAt: '2026-10-02T00:00:00.000Z',
+};
+const writeOtherServerJson = () =>
+  writeFileSync(serverJsonPath(), JSON.stringify(otherServerAddress));
 
 function startSupervisor() {
   return createActor(
@@ -189,5 +203,26 @@ describe('supervisor', () => {
     expect(supervisor.getSnapshot().status).toBe('done');
     expect(latestWorker().stopped).toBe(true);
     expect(existsSync(serverJsonPath())).toBe(false);
+  });
+
+  it('leaves a server.json with another pid when it fails', () => {
+    const supervisor = startSupervisor();
+    writeOtherServerJson();
+
+    for (let crash = 0; crash < 9; crash++) crashAndWaitForRestart();
+    crashLatestWorker();
+
+    expect(supervisor.getSnapshot().value).toBe('failed');
+    expect(readServerJson()).toEqual(otherServerAddress);
+  });
+
+  it('leaves a server.json with another pid when asked to stop', () => {
+    const supervisor = startSupervisor();
+    writeOtherServerJson();
+
+    supervisor.send({ type: 'server.stop' });
+
+    expect(supervisor.getSnapshot().value).toBe('stopping');
+    expect(readServerJson()).toEqual(otherServerAddress);
   });
 });

@@ -1,4 +1,4 @@
-import { renameSync, rmSync, writeFileSync } from 'node:fs';
+import { readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ServerAddress } from '@repo/contracts';
 
@@ -15,6 +15,16 @@ export function writeServerAddress(home: string, address: ServerAddress) {
   renameSync(temporaryPath, filePath);
 }
 
-export function removeServerAddress(home: string) {
-  rmSync(join(home, fileName), { force: true });
+// Removes server.json only when it names this pid, so a failed second supervisor leaves the running Server's file.
+export function removeServerAddress(home: string, pid: number) {
+  const filePath = join(home, fileName);
+  let json: unknown;
+  try {
+    json = JSON.parse(readFileSync(filePath, 'utf8'));
+  } catch {
+    return;
+  }
+  const address = ServerAddress.safeParse(json);
+  if (address.success && address.data.pid === pid)
+    rmSync(filePath, { force: true });
 }
