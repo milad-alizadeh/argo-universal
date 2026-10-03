@@ -14,9 +14,6 @@ interface SupervisorContext extends SupervisorInput {
   port: number | null;
   // Times of recent worker crashes, in Unix milliseconds, oldest first.
   crashTimes: number[];
-  // In `backingOff`, the next worker starts once both the old one has exited and the delay has passed.
-  workerExited: boolean;
-  backoffElapsed: boolean;
 }
 
 type SupervisorEvent = WorkerEvent | { type: 'server.stop' };
@@ -60,8 +57,6 @@ export const supervisorMachine = setup({
   guards: {
     crashedTooOften: ({ context }) =>
       context.crashTimes.length >= maxCrashesInWindow,
-    workerExited: ({ context }) => context.workerExited,
-    backoffElapsed: ({ context }) => context.backoffElapsed,
   },
   delays: {
     backoff: ({ context }) =>
@@ -78,8 +73,6 @@ export const supervisorMachine = setup({
     ...input,
     port: null,
     crashTimes: [],
-    workerExited: false,
-    backoffElapsed: false,
   }),
   initial: 'starting',
   on: {
@@ -119,30 +112,35 @@ export const supervisorMachine = setup({
         'worker.exit': { target: 'backingOff' },
       },
     },
-    // A blocked worker holds the port until it exits, so the next one waits for that exit.
+    // A blocked worker holds the port until it exits, so the next one starts after both the exit and the delay.
     backingOff: {
-      entry: [
-        assign({ workerExited: false, backoffElapsed: false }),
-        { type: 'askWorkerToStop' },
-        { type: 'recordCrash' },
-      ],
+      type: 'parallel',
+      entry: [{ type: 'askWorkerToStop' }, { type: 'recordCrash' }],
       always: { guard: 'crashedTooOften', target: 'failed' },
-      on: {
-        'worker.exited': [
-          {
-            guard: 'backoffElapsed',
-            target: 'starting',
-            actions: stopChild('worker'),
+      states: {
+        worker: {
+          initial: 'stopping',
+          states: {
+            stopping: {
+              on: {
+                'worker.exited': {
+                  target: 'exited',
+                  actions: stopChild('worker'),
+                },
+              },
+            },
+            exited: { type: 'final' },
           },
-          { actions: [stopChild('worker'), assign({ workerExited: true })] },
-        ],
+        },
+        delay: {
+          initial: 'waiting',
+          states: {
+            waiting: { after: { backoff: { target: 'elapsed' } } },
+            elapsed: { type: 'final' },
+          },
+        },
       },
-      after: {
-        backoff: [
-          { guard: 'workerExited', target: 'starting' },
-          { actions: assign({ backoffElapsed: true }) },
-        ],
-      },
+      onDone: { target: 'starting' },
     },
     failed: {
       type: 'final',

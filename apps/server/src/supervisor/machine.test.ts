@@ -1,6 +1,7 @@
 import {
   existsSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
@@ -8,195 +9,365 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { type AnyEventObject, createActor, fromCallback } from 'xstate';
+import {
+  type Actor,
+  type AnyEventObject,
+  createActor,
+  type EventFromLogic,
+  fromCallback,
+  type SnapshotFrom,
+} from 'xstate';
+import {
+  adjacencyMapToArray,
+  type DirectedGraphNode,
+  type EventExecutor,
+  getAdjacencyMap,
+  TestModel,
+  type TestPath,
+  toDirectedGraph,
+} from 'xstate/graph';
 import { supervisorMachine } from './machine';
 import type { WorkerCommand } from './worker-message';
 
-interface FakeWorker {
+// Spec 0001 section 5 numbers, written out so the model cannot grade itself.
+const readyTimeoutMs = 15_000;
+const heartbeatTimeoutMs = 5000;
+const maxCrashes = 10;
+const backoffMs = (crashes: number) =>
+  Math.min(500 * 2 ** (crashes - 1), 30_000);
+
+interface MockWorker {
   send: (event: AnyEventObject) => void;
   exit: () => void;
+  askedToStop: boolean;
   stopped: boolean;
 }
 
-let home: string;
-let workers: FakeWorker[];
-// A blocked worker ignores SIGTERM and holds its port until it exits.
-let workersExitWhenAsked: boolean;
+let workers: MockWorker[];
+let supervisor: Actor<typeof supervisorMachine>;
 
-const fakeWorker = fromCallback<WorkerCommand, { watch: boolean }>(
-  ({ sendBack, receive }) => {
-    const worker: FakeWorker = {
+// A worker that exits when asked, unless the test drives `worker.exited` itself.
+const createMockWorker = (options: { exitsWhenAsked: boolean }) =>
+  fromCallback<WorkerCommand, { watch: boolean }>(({ sendBack, receive }) => {
+    const worker: MockWorker = {
       send: sendBack,
       exit: () => sendBack({ type: 'worker.exited' }),
+      askedToStop: false,
       stopped: false,
     };
     workers.push(worker);
     receive(() => {
-      if (workersExitWhenAsked) worker.exit();
+      worker.askedToStop = true;
+      if (options.exitsWhenAsked) worker.exit();
     });
     return () => {
       worker.stopped = true;
     };
-  },
-);
+  });
 
-const latestWorker = () => {
-  const worker = workers.at(-1);
-  if (!worker) throw new Error('No worker was started');
-  return worker;
-};
-
-const serverJsonPath = () => join(home, 'server.json');
-const readServerJson = () => JSON.parse(readFileSync(serverJsonPath(), 'utf8'));
-const otherServerAddress = {
-  pid: process.pid + 1,
-  port: 7337,
-  version: '1.2.3',
-  startedAt: '2026-10-02T00:00:00.000Z',
-};
-const writeOtherServerJson = () =>
-  writeFileSync(serverJsonPath(), JSON.stringify(otherServerAddress));
-
-function startSupervisor() {
-  return createActor(
-    supervisorMachine.provide({ actors: { worker: fakeWorker } }),
-    {
-      input: {
-        home,
-        version: '1.2.3',
-        startedAt: '2026-10-03T00:00:00.000Z',
-        watch: false,
-      },
-    },
-  ).start();
-}
-
-const crashLatestWorker = () =>
-  latestWorker().send({ type: 'worker.exit', code: 1 });
-
-// Crashes the worker and returns how long the supervisor waited before it started the next one.
-function crashAndWaitForRestart() {
-  const before = workers.length;
-  crashLatestWorker();
-  let waited = 0;
-  while (workers.length === before) {
-    if (waited >= 60_000) throw new Error('The worker was not restarted');
-    vi.advanceTimersByTime(100);
-    waited += 100;
-  }
-  return waited;
-}
-
-function keepRunningFor(milliseconds: number) {
-  latestWorker().send({ type: 'worker.ready', port: 7337 });
-  for (let waited = 0; waited < milliseconds; waited += 1000) {
-    vi.advanceTimersByTime(1000);
-    latestWorker().send({ type: 'worker.heartbeat' });
-  }
-}
+const latestWorker = () =>
+  workers.at(-1) ?? expect.unreachable('No worker was started');
+const liveWorkers = () => workers.filter((worker) => !worker.stopped).length;
 
 beforeEach(() => {
   vi.useFakeTimers();
-  home = mkdtempSync(join(tmpdir(), 'server-supervisor-'));
   workers = [];
-  workersExitWhenAsked = true;
 });
 
 afterEach(() => {
+  supervisor?.stop();
   vi.useRealTimers();
-  rmSync(home, { recursive: true, force: true });
 });
 
+describe('supervisor model', () => {
+  let serverAddressWrites: unknown[];
+  let serverAddressRemovals: number;
+
+  const machine = supervisorMachine.provide({
+    actors: { worker: createMockWorker({ exitsWhenAsked: false }) },
+    actions: {
+      writeServerAddress: ({ context }) => {
+        serverAddressWrites.push({
+          port: context.port,
+          version: context.version,
+          startedAt: context.startedAt,
+        });
+      },
+      removeServerAddress: () => {
+        serverAddressRemovals += 1;
+      },
+    },
+  });
+  type SupervisorSnapshot = SnapshotFrom<typeof machine>;
+  type SupervisorEvent = EventFromLogic<typeof machine>;
+
+  const input = {
+    home: '/unused',
+    version: '1.2.3',
+    startedAt: '2026-10-03T00:00:00.000Z',
+    watch: false,
+  };
+  const payloads: Record<string, SupervisorEvent> = {
+    'worker.ready': { type: 'worker.ready', port: 7337 },
+    'worker.exit': { type: 'worker.exit', code: 1 },
+  };
+  const eventTypes = (node: DirectedGraphNode): string[] => [
+    ...node.edges.map((edge) => edge.label.text),
+    ...node.children.flatMap(eventTypes),
+  ];
+  // The machine raises `xstate.done.state.*` itself, so the model must not send it.
+  const events = [...new Set(eventTypes(toDirectedGraph(machine)))]
+    .filter((type) => !type.startsWith('xstate.done.state.'))
+    .map((type) => payloads[type] ?? ({ type } as SupervisorEvent));
+
+  const model = new TestModel(machine, {
+    input,
+    events,
+    limit: 10_000,
+    // A done actor ignores events, but traversal still leaves a final state through the root `on`.
+    filterEvents: (snapshot, event) =>
+      snapshot.status === 'active' && snapshot.can(event),
+    // Crash count, not crash times; `via` gives self-transitions their own vertex.
+    serializeState: (snapshot, event, previous) =>
+      JSON.stringify({
+        value: snapshot.value,
+        port: snapshot.context.port,
+        crashes: snapshot.context.crashTimes.length,
+        via: event && `${JSON.stringify(previous?.value)} ${event.type}`,
+      }),
+    stateMatcher: (snapshot, key) => snapshot.matches(key as never),
+  });
+
+  // Moves to one millisecond short of a delay, checks the state held, then crosses it.
+  const crossDelay = (milliseconds: number) => {
+    const before = supervisor.getSnapshot().value;
+    vi.advanceTimersByTime(milliseconds - 1);
+    expect(supervisor.getSnapshot().value).toEqual(before);
+    vi.advanceTimersByTime(1);
+  };
+
+  const executors: Record<
+    string,
+    EventExecutor<SupervisorSnapshot, SupervisorEvent>
+  > = {
+    'xstate.init': () => {
+      supervisor = createActor(machine, { input }).start();
+    },
+    'worker.ready': () =>
+      latestWorker().send({ type: 'worker.ready', port: 7337 }),
+    'worker.heartbeat': () => {
+      vi.advanceTimersByTime(heartbeatTimeoutMs - 1);
+      latestWorker().send({ type: 'worker.heartbeat' });
+    },
+    'worker.exit': () => latestWorker().send({ type: 'worker.exit', code: 1 }),
+    'worker.exited': () => {
+      expect(latestWorker().askedToStop).toBe(true);
+      latestWorker().exit();
+    },
+    'server.stop': () => supervisor.send({ type: 'server.stop' }),
+    'xstate.after.readyTimeout.supervisor.starting': () =>
+      crossDelay(readyTimeoutMs),
+    'xstate.after.heartbeatTimeout.supervisor.running': () =>
+      crossDelay(heartbeatTimeoutMs),
+    'xstate.after.backoff.supervisor.backingOff.delay.waiting': () =>
+      crossDelay(backoffMs(supervisor.getSnapshot().context.crashTimes.length)),
+  };
+
+  const expectModelState = (expected: SupervisorSnapshot) => {
+    const actual = supervisor.getSnapshot();
+    expect(actual.value).toEqual(expected.value);
+    expect(actual.status).toBe(expected.status);
+    expect(actual.context.crashTimes).toHaveLength(
+      expected.context.crashTimes.length,
+    );
+  };
+  const ownAddress = {
+    port: 7337,
+    version: '1.2.3',
+    startedAt: input.startedAt,
+  };
+  const states: Record<string, (snapshot: SupervisorSnapshot) => void> = {
+    starting: (snapshot) => {
+      expectModelState(snapshot);
+      expect(liveWorkers()).toBe(1);
+      if (snapshot.context.port === null)
+        expect(serverAddressWrites).toEqual([]);
+    },
+    running: (snapshot) => {
+      expectModelState(snapshot);
+      expect(liveWorkers()).toBe(1);
+      expect(serverAddressWrites.at(-1)).toEqual(ownAddress);
+    },
+    backingOff: (snapshot) => {
+      expectModelState(snapshot);
+      expect(liveWorkers()).toBe(
+        snapshot.matches({ backingOff: { worker: 'exited' } }) ? 0 : 1,
+      );
+      expect(latestWorker().askedToStop).toBe(true);
+      expect(snapshot.context.crashTimes.length).toBeLessThan(maxCrashes);
+      expect(serverAddressRemovals).toBe(0);
+    },
+    failed: (snapshot) => {
+      expectModelState(snapshot);
+      expect(snapshot.context.crashTimes).toHaveLength(maxCrashes);
+      expect(liveWorkers()).toBe(0);
+      expect(serverAddressRemovals).toBe(1);
+    },
+    stopping: (snapshot) => {
+      expectModelState(snapshot);
+      expect(liveWorkers()).toBe(0);
+      expect(serverAddressRemovals).toBe(1);
+    },
+  };
+
+  const shortestPaths = model.getShortestPaths();
+  const simplePaths = model.getSimplePaths({
+    stopWhen: (snapshot) => snapshot.context.crashTimes.length >= 2,
+  });
+  const title = (path: TestPath<SupervisorSnapshot, SupervisorEvent>) =>
+    path.steps
+      .map(({ event }) =>
+        event.type.replace(/^xstate\.after\.(\w+)\..*$/, 'after $1'),
+      )
+      .join(' → ');
+
+  beforeEach(() => {
+    serverAddressWrites = [];
+    serverAddressRemovals = 0;
+  });
+
+  describe.each([
+    ['shortest path', shortestPaths],
+    ['simple path, up to two crashes', simplePaths],
+  ])('%s', (_, paths) => {
+    it.each(paths.map((path) => [title(path), path] as const))(
+      '%s',
+      async (_, path) => {
+        await path.test({ events: executors, states });
+      },
+    );
+  });
+
+  it('the generated paths walk every transition', () => {
+    const key = (
+      from: SupervisorSnapshot,
+      type: string,
+      to: SupervisorSnapshot,
+    ) => `${JSON.stringify(from.value)} ${type} ${JSON.stringify(to.value)}`;
+    const transitions = adjacencyMapToArray(
+      getAdjacencyMap(machine, model.options),
+    ).map(({ state, event, nextState }) => key(state, event.type, nextState));
+    const walked = new Set(
+      [...shortestPaths, ...simplePaths].flatMap((path) =>
+        path.steps
+          .slice(1)
+          .map((step, index) =>
+            key(
+              path.steps[index]?.state ?? expect.unreachable(),
+              step.event.type,
+              step.state,
+            ),
+          ),
+      ),
+    );
+    expect(transitions.length).toBeGreaterThan(0);
+    expect(transitions.filter((transition) => !walked.has(transition))).toEqual(
+      [],
+    );
+  });
+});
+
+// What the real server.json actions do on disk, and the crash window, which traversal cannot reach.
 describe('supervisor', () => {
-  it('writes server.json with its own pid and the worker port once the worker is ready', () => {
-    const supervisor = startSupervisor();
+  let home: string;
+
+  const serverJsonPath = () => join(home, 'server.json');
+  const readServerJson = () =>
+    JSON.parse(readFileSync(serverJsonPath(), 'utf8'));
+  const otherServerAddress = {
+    pid: process.pid + 1,
+    port: 7337,
+    version: '1.2.3',
+    startedAt: '2026-10-02T00:00:00.000Z',
+  };
+  const writeOtherServerJson = () =>
+    writeFileSync(serverJsonPath(), JSON.stringify(otherServerAddress));
+
+  const startSupervisor = () => {
+    supervisor = createActor(
+      supervisorMachine.provide({
+        actors: { worker: createMockWorker({ exitsWhenAsked: true }) },
+      }),
+      {
+        input: {
+          home,
+          version: '1.2.3',
+          startedAt: '2026-10-03T00:00:00.000Z',
+          watch: false,
+        },
+      },
+    ).start();
+    return supervisor;
+  };
+
+  const crashLatestWorker = () =>
+    latestWorker().send({ type: 'worker.exit', code: 1 });
+
+  // Crashes the worker and returns how long the supervisor waited before it started the next one.
+  const crashAndWaitForRestart = () => {
+    const before = workers.length;
+    crashLatestWorker();
+    let waited = 0;
+    while (workers.length === before) {
+      if (waited >= 60_000) throw new Error('The worker was not restarted');
+      vi.advanceTimersByTime(100);
+      waited += 100;
+    }
+    return waited;
+  };
+
+  const keepRunningFor = (milliseconds: number) => {
+    latestWorker().send({ type: 'worker.ready', port: 7337 });
+    for (let waited = 0; waited < milliseconds; waited += 1000) {
+      vi.advanceTimersByTime(1000);
+      latestWorker().send({ type: 'worker.heartbeat' });
+    }
+  };
+
+  beforeEach(() => {
+    home = mkdtempSync(join(tmpdir(), 'server-supervisor-'));
+  });
+
+  afterEach(() => {
+    rmSync(home, { recursive: true, force: true });
+  });
+
+  it('writes server.json atomically with its own pid and the worker port', () => {
+    startSupervisor();
     expect(existsSync(serverJsonPath())).toBe(false);
 
     latestWorker().send({ type: 'worker.ready', port: 7337 });
 
-    expect(supervisor.getSnapshot().value).toBe('running');
     expect(readServerJson()).toEqual({
       pid: process.pid,
       port: 7337,
       version: '1.2.3',
       startedAt: '2026-10-03T00:00:00.000Z',
     });
+    expect(readdirSync(home)).toEqual(['server.json']);
   });
 
-  it('stays running while heartbeats arrive', () => {
-    const supervisor = startSupervisor();
-    latestWorker().send({ type: 'worker.ready', port: 7337 });
-
-    for (let second = 0; second < 10; second++) {
-      vi.advanceTimersByTime(1000);
-      latestWorker().send({ type: 'worker.heartbeat' });
-    }
-
-    expect(supervisor.getSnapshot().value).toBe('running');
-    expect(workers).toHaveLength(1);
-  });
-
-  it('restarts a worker that exits, and keeps server.json', () => {
-    const supervisor = startSupervisor();
-    latestWorker().send({ type: 'worker.ready', port: 7337 });
-
-    crashLatestWorker();
-    expect(supervisor.getSnapshot().value).toBe('backingOff');
-    vi.advanceTimersByTime(500);
-    latestWorker().send({ type: 'worker.ready', port: 7337 });
-
-    expect(workers).toHaveLength(2);
-    expect(supervisor.getSnapshot().value).toBe('running');
-    expect(readServerJson().pid).toBe(process.pid);
-  });
-
-  it('stops and restarts a worker that misses its heartbeat', () => {
-    const supervisor = startSupervisor();
-    latestWorker().send({ type: 'worker.ready', port: 7337 });
-
-    vi.advanceTimersByTime(5000);
-
-    expect(supervisor.getSnapshot().value).toBe('backingOff');
-    expect(workers[0]?.stopped).toBe(true);
-    vi.advanceTimersByTime(500);
-    expect(workers).toHaveLength(2);
-  });
-
-  it('restarts a worker that never becomes ready', () => {
+  it('removes its own server.json when asked to stop', () => {
     startSupervisor();
-
-    vi.advanceTimersByTime(15_000);
-    vi.advanceTimersByTime(500);
-
-    expect(workers[0]?.stopped).toBe(true);
-    expect(workers).toHaveLength(2);
-  });
-
-  it('doubles the restart delay after each crash, up to 30 seconds', () => {
-    startSupervisor();
-    const delays: number[] = [];
-
-    for (let crash = 0; crash < 7; crash++)
-      delays.push(crashAndWaitForRestart());
-
-    expect(delays).toEqual([500, 1000, 2000, 4000, 8000, 16_000, 30_000]);
-  });
-
-  it('fails, removes server.json, and stops after 10 crashes in 10 minutes', () => {
-    const supervisor = startSupervisor();
     latestWorker().send({ type: 'worker.ready', port: 7337 });
 
-    for (let crash = 0; crash < 9; crash++) crashAndWaitForRestart();
-    expect(supervisor.getSnapshot().value).toBe('starting');
-    crashLatestWorker();
+    supervisor.send({ type: 'server.stop' });
 
-    expect(supervisor.getSnapshot().value).toBe('failed');
-    expect(supervisor.getSnapshot().status).toBe('done');
     expect(existsSync(serverJsonPath())).toBe(false);
   });
 
   it('forgets crashes older than 10 minutes', () => {
-    const supervisor = startSupervisor();
+    startSupervisor();
 
     for (let crash = 0; crash < 9; crash++) crashAndWaitForRestart();
     keepRunningFor(10 * 60_000);
@@ -205,20 +376,8 @@ describe('supervisor', () => {
     expect(supervisor.getSnapshot().value).toBe('starting');
   });
 
-  it('stops the worker and removes server.json when asked to stop', () => {
-    const supervisor = startSupervisor();
-    latestWorker().send({ type: 'worker.ready', port: 7337 });
-
-    supervisor.send({ type: 'server.stop' });
-
-    expect(supervisor.getSnapshot().value).toBe('stopping');
-    expect(supervisor.getSnapshot().status).toBe('done');
-    expect(latestWorker().stopped).toBe(true);
-    expect(existsSync(serverJsonPath())).toBe(false);
-  });
-
   it('leaves a server.json with another pid when it fails', () => {
-    const supervisor = startSupervisor();
+    startSupervisor();
     writeOtherServerJson();
 
     for (let crash = 0; crash < 9; crash++) crashAndWaitForRestart();
@@ -229,40 +388,12 @@ describe('supervisor', () => {
   });
 
   it('leaves a server.json with another pid when asked to stop', () => {
-    const supervisor = startSupervisor();
+    startSupervisor();
     writeOtherServerJson();
 
     supervisor.send({ type: 'server.stop' });
 
     expect(supervisor.getSnapshot().value).toBe('stopping');
     expect(readServerJson()).toEqual(otherServerAddress);
-  });
-
-  it('starts the next worker only after the old one has exited', () => {
-    workersExitWhenAsked = false;
-    const supervisor = startSupervisor();
-    latestWorker().send({ type: 'worker.ready', port: 7337 });
-
-    vi.advanceTimersByTime(5000);
-    vi.advanceTimersByTime(10_000);
-    expect(supervisor.getSnapshot().value).toBe('backingOff');
-    expect(workers).toHaveLength(1);
-
-    latestWorker().exit();
-    expect(workers).toHaveLength(2);
-    expect(supervisor.getSnapshot().value).toBe('starting');
-  });
-
-  it('waits out the restart delay when the old worker exits at once', () => {
-    workersExitWhenAsked = false;
-    startSupervisor();
-    latestWorker().send({ type: 'worker.ready', port: 7337 });
-
-    vi.advanceTimersByTime(5000);
-    latestWorker().exit();
-    expect(workers).toHaveLength(1);
-
-    vi.advanceTimersByTime(500);
-    expect(workers).toHaveLength(2);
   });
 });

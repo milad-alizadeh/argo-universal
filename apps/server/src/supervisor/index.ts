@@ -24,12 +24,16 @@ export function startSupervisor(options: { watch: boolean }) {
     },
   });
 
-  let lastState: unknown;
+  let lastState: string | undefined;
   supervisor.subscribe({
     next: (snapshot) => {
-      if (snapshot.value === lastState) return;
-      lastState = snapshot.value;
-      log(`${String(snapshot.value)}`);
+      const state =
+        typeof snapshot.value === 'string'
+          ? snapshot.value
+          : JSON.stringify(snapshot.value);
+      if (state === lastState) return;
+      lastState = state;
+      log(state);
     },
     // The worker process keeps the event loop alive until it exits, then Node exits with this code.
     complete: () => {
