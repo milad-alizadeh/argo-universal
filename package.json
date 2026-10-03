@@ -1,0 +1,22 @@
+{
+  "name": "argo-universal",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "turbo run build",
+    "check-types": "turbo run check-types",
+    "dev": "turbo run dev",
+    "postinstall": "sherif",
+    "quality": "sherif && turbo run check-types",
+    "sherif": "sherif"
+  },
+  "devDependencies": {
+    "sherif": "catalog:",
+    "turbo": "catalog:",
+    "typescript": "catalog:"
+  },
+  "packageManager": "pnpm@12.8.1",
+  "engines": {
+    "node": "24.x"
+  }
+}

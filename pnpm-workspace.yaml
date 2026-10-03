@@ -1,0 +1,19 @@
+packages:
+  - apps/*
+  - packages/*
+  - tooling/*
+
+# Every shared dependency is pinned here; packages refer to it as "catalog:" (spec section 2).
+catalog:
+  "@types/node": 24.19.1
+  sherif: 1.13.0
+  turbo: 2.11.7
+  typescript: 7.0.2
+
+# `pnpm add` fails when a version is outside the catalog.
+catalogMode: strict
+
+# turbo 2.11.7 is younger than the default one-day minimumReleaseAge; the spec asks for the newest stable.
+minimumReleaseAgeExclude:
+  - turbo
+  - "@turbo/*"
