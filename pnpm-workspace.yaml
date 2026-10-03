@@ -7,6 +7,9 @@ packages:
 catalog:
   "@biomejs/biome": 2.5.15
   "@types/node": 24.19.1
+  # Exact pins: a caret range on 1.0.0-rc.4 pulls commit builds such as 1.0.0-rc.5-5935859 (docs/research/drizzle.md).
+  drizzle-kit: 1.0.0-rc.4
+  drizzle-orm: 1.0.0-rc.4
   sherif: 1.13.0
   turbo: 2.11.7
   typescript: 7.0.2
@@ -21,3 +24,7 @@ catalogMode: strict
 minimumReleaseAgeExclude:
   - turbo
   - "@turbo/*"
+
+# drizzle-kit pulls esbuild; `drizzle-kit generate` works without its install script (docs/research/drizzle.md).
+allowBuilds:
+  esbuild: false
