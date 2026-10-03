@@ -1,9 +1,11 @@
 import '../../global.css';
 
 import { AppProviders } from '@repo/client';
-import { Stack } from 'expo-router';
+import { registerDevMenuItems } from 'expo-dev-client';
+import { router, Stack } from 'expo-router';
 import { ThemeProvider } from 'expo-router/react-navigation';
 import { StatusBar } from 'expo-status-bar';
+import { Platform } from 'react-native';
 import { useUniwind } from 'uniwind';
 import { NAV_THEME } from '@/lib/theme';
 
@@ -11,6 +13,17 @@ export {
   // Catch any errors thrown by the Layout component.
   ErrorBoundary,
 } from 'expo-router';
+
+// The dev menu exists only in native development builds; on web it throws.
+if (__DEV__ && Platform.OS !== 'web') {
+  registerDevMenuItems([
+    {
+      name: 'Open Storybook',
+      callback: () => router.push('/(dev)/storybook'),
+      shouldCollapse: true,
+    },
+  ]);
+}
 
 const serverUrl =
   process.env.EXPO_PUBLIC_ARGO_SERVER_URL ?? 'ws://127.0.0.1:7337';
@@ -25,6 +38,10 @@ export default function RootLayout() {
         <Stack>
           <Stack.Screen name="index" options={{ title: 'Projects' }} />
           <Stack.Screen name="sessions/[id]" options={{ title: 'Session' }} />
+          <Stack.Screen
+            name="(dev)/storybook"
+            options={{ headerShown: false }}
+          />
         </Stack>
       </ThemeProvider>
     </AppProviders>
