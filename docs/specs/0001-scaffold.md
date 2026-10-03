@@ -47,7 +47,7 @@ In scope:
 
 - Every folder in section 3, with its `package.json`, `tsconfig.json`, and entry files.
 - The toolchain (section 2), the root scripts (section 10), and CI (section 11).
-- The Server supervisor and worker, with `system.info` and `system.clock` (section 5).
+- The Server Supervisor and Engine, with `system.info` and `system.clock` (section 5).
 - The full Zod contracts for the Feed (section 6) and the full Drizzle schema with its first migration (section 7). These are types and tables only. Nothing produces Session updates yet.
 - The two agreed routes. In the scaffold, `ProjectsScreen` in `packages/client` shows `system.info` and the live `system.clock` value, in the universal app, in Electron, and in both Storybooks. `SessionScreen` is a placeholder that shows its `id`. Milestone 1 replaces both.
 
@@ -99,13 +99,13 @@ argo-universal/
 │   │       └── preload/            exposes the Server address and window controls
 │   ├── server/
 │   │   └── src/
-│   │       ├── supervisor/         machine.ts (lifecycle, heartbeat, backoff, server.json), worker-process.ts,
-│   │       │                       worker-message.ts, index.ts (runner)
-│   │       ├── worker/             machine.ts (lifecycle), http-server.ts (HTTP and WebSocket server, tRPC adapter),
+│   │       ├── supervisor/         machine.ts (lifecycle, heartbeat, backoff, server.json), engine-process.ts,
+│   │       │                       engine-message.ts, index.ts (runner)
+│   │       ├── engine/             machine.ts (lifecycle), http-server.ts (HTTP and WebSocket server, tRPC adapter),
 │   │       │                       http-app.ts (/health, /blobs/:id), request-guard.ts, process-signals.ts, main.ts
 │   │       ├── services/
 │   │       │   └── system/         info.ts, clock.ts, index.ts (createSystemService)
-│   │       └── main.ts             starts the supervisor
+│   │       └── main.ts             starts the Supervisor
 │   └── storybook/                  web Storybook
 │       └── .storybook/             main.ts, preview.tsx (Storybook 10's Vitest addon needs no setup file)
 ├── packages/
@@ -214,7 +214,7 @@ export const createSystemService = (deps: SystemDeps): SystemService => ({
   clock: (signal) => clock(signal),
 });
 
-// apps/server/src/worker/start.ts
+// apps/server/src/engine/http-server.ts
 const services: Services = { system: createSystemService({ version, startedAt }) };
 applyWSSHandler({ wss, router: appRouter, createContext: () => ({ services }) });
 ```
@@ -231,34 +231,34 @@ Vitest tests for `api` call the routers with `createCaller` and mock services, w
 | `~/.argo/server.json` | `{pid, port, version, startedAt}`, written to a temp file and renamed |
 | `~/.argo/blobs/<sha256>` | blob files |
 | `~/.argo/worktrees/<projectId>/<slug>` | worktrees (milestone 1) |
-| `~/.argo/logs/` | supervisor and worker logs |
+| `~/.argo/logs/` | Supervisor and Engine logs |
 
 `ARGO_HOME` overrides `~/.argo`. Tests set it to a temp folder.
 
 ### Supervisor
 
-`apps/server/src/supervisor/` holds an XState 5 machine and a small runner. The machine's actions write and remove `server.json`. The supervisor imports no app code, only `contracts` for the `server.json` schema.
+`apps/server/src/supervisor/` holds an XState 5 machine and a small runner. The machine's actions write and remove `server.json`. The Supervisor imports no app code, only `contracts` for the `server.json` schema.
 
 - States: `starting`, `running`, `backingOff`, `failed`, `stopping`.
-- `starting` forks the worker with `child_process.fork` and waits for a `ready {port}` message.
-- `running` writes `server.json` and expects a `heartbeat` message from the worker. A missed heartbeat or a worker exit goes to `backingOff`.
-- `backingOff` asks the worker to stop and waits in two parallel regions: `worker` until the old worker has exited, and `delay` until the backoff has passed. Then it forks the worker again, and goes to `running` on `ready`, or to `failed`. The delay doubles from a base to a cap.
-- `failed` is final when the worker crashes too often in a window. It removes `server.json` if this supervisor wrote it, and exits with a non-zero code.
-- `stopping` runs on `SIGINT` and `SIGTERM`: it stops the worker, removes `server.json` if this supervisor wrote it, and exits.
-- In dev, the supervisor forks the worker under `tsx watch`, so a file change restarts only the worker.
+- `starting` forks the Engine with `child_process.fork` and waits for a `ready {port}` message.
+- `running` writes `server.json` and expects a `heartbeat` message from the Engine. A missed heartbeat or an Engine exit goes to `backingOff`.
+- `backingOff` asks the Engine to stop and waits in two parallel regions: `engine` until the old Engine has exited, and `delay` until the backoff has passed. Then it forks the Engine again, and goes to `running` on `ready`, or to `failed`. The delay doubles from a base to a cap.
+- `failed` is final when the Engine crashes too often in a window. It removes `server.json` if this Supervisor wrote it, and exits with a non-zero code.
+- `stopping` runs on `SIGINT` and `SIGTERM`: it stops the Engine, removes `server.json` if this Supervisor wrote it, and exits.
+- In dev, the Supervisor forks the Engine under `tsx watch`, so a file change restarts only the Engine.
 
-### Worker
+### Engine
 
-- One `node:http` server on `127.0.0.1` whose requests a Hono app handles through `@hono/node-server`, on the port in `ARGO_SERVER_PORT`, with 7337 as the default. The supervisor writes the port that the worker uses into `server.json`.
+- One `node:http` server on `127.0.0.1` whose requests a Hono app handles through `@hono/node-server`, on the port in `ARGO_SERVER_PORT`, with 7337 as the default. The Supervisor writes the port that the Engine uses into `server.json`.
 - `GET /health` returns `{ok: true, version, startedAt}`.
 - `GET /blobs/:id` streams the file from `~/.argo/blobs/`. It returns 404 for an unknown id.
 - A `ws` server on the same port, with tRPC's `applyWSSHandler` and `@repo/api`'s `appRouter`.
 - Every request must carry `Host` `127.0.0.1:<port>` or `localhost:<port>`. A WebSocket upgrade must have no `Origin`, `app://app`, or an `http://localhost` or `http://127.0.0.1` origin. Anything else gets 403.
 - On start, it opens the database and runs the Drizzle migrations from `packages/db/drizzle/`.
-- `apps/server/src/worker/machine.ts` is an XState 5 machine that runs the worker's whole lifecycle. `main.ts` only creates it and exits with its output.
+- `apps/server/src/engine/machine.ts` is an XState 5 machine that runs the Engine's whole lifecycle. `main.ts` only creates it and exits with its output.
   - `openingDatabase` opens the database and migrates it, then goes to `serving`, or to `failed`.
-  - `serving.listening` starts the HTTP server from `http-server.ts`. Once the port is bound, it sends `ready {port}` to the supervisor and goes to `serving.running`, or to `failed`, for example on `EADDRINUSE`.
-  - `serving.running` sends a `heartbeat` to the supervisor every second.
+  - `serving.listening` starts the HTTP server from `http-server.ts`. Once the port is bound, it sends `ready {port}` to the Supervisor and goes to `serving.running`, or to `failed`, for example on `EADDRINUSE`.
+  - `serving.running` sends a `heartbeat` to the Supervisor every second.
   - `SIGINT`, `SIGTERM`, or a closed IPC channel goes to `stopping`, which awaits the server's `close()` and then goes to `stopped`, or to `failed` if closing fails.
   - `stopped` and `failed` are final. Both close the database. The output is `{exitCode}`: 0 from `stopped`, 1 from `failed`.
 - Scaffold procedures: `system.info` (query, returns `{version, startedAt, pid}`) and `system.clock` (subscription, sends `{now}` every second).
@@ -362,7 +362,7 @@ The Session's current Plan is not stored. A query reads it from the newest `plan
 
 - `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`.
 - In production, a custom `app://` protocol serves the Expo web export from `apps/universal-app/dist`. In dev, the window loads the Expo web dev URL.
-- On launch, read `~/.argo/server.json` and call `/health`. If the Server answers with the same version, reuse it. If the version differs, restart it. If no Server answers, start `apps/server` (the supervisor) as a detached process. On quit, stop the Server only if this app started it.
+- On launch, read `~/.argo/server.json` and call `/health`. If the Server answers with the same version, reuse it. If the version differs, restart it. If no Server answers, start `apps/server` (the Supervisor) as a detached process. On quit, stop the Server only if this app started it.
 - Preload exposes `window.argo = {serverUrl, window: {minimize, maximize, close}}` and nothing else.
 
 ### Web Storybook
@@ -375,7 +375,7 @@ The Session's current Plan is not stored. A query reads it from the newest `plan
 
 | Script | Does |
 |---|---|
-| `pnpm dev` | `turbo dev`: the Server (supervisor with the worker under `tsx watch`), the universal app (`expo start` for web and Metro), and desktop. Desktop waits until `server.json` exists, the Server's `/health` answers, and the Expo web URL answers. |
+| `pnpm dev` | `turbo dev`: the Server (Supervisor with the Engine under `tsx watch`), the universal app (`expo start` for web and Metro), and desktop. Desktop waits until `server.json` exists, the Server's `/health` answers, and the Expo web URL answers. |
 | `pnpm dev:storybook` | web Storybook only |
 | `pnpm quality` | `sherif`, `biome check`, `tsc` in every package, Vitest, and the Storybook Vitest tests |
 | `pnpm test:e2e` | Playwright `web` project against the Expo web export |
@@ -398,10 +398,10 @@ Each check must pass before the scaffold is done. If a check fails, stop and rep
 1. Web Storybook with the Vitest addon runs `ProjectsScreen.test.stories.tsx` with a play function, and Uniwind classes apply. Fallback to propose: Playwright component tests against the web build.
 2. The tRPC mock link renders `ProjectsScreen` with a `system.info` fixture and a `system.clock` generator, in web Storybook and in on-device Storybook on the iOS simulator.
 3. One Playwright spec (`e2e/projects/projects.spec.ts`) passes in the `web` project and in the `electron` project.
-4. The Server runs under `tsx watch` with `ws` and `node:sqlite`: the migrations run, `/health` answers, and a file change restarts only the worker while the supervisor keeps running.
+4. The Server runs under `tsx watch` with `ws` and `node:sqlite`: the migrations run, `/health` answers, and a file change restarts only the Engine while the Supervisor keeps running.
 
 Also make sure that:
 
 - `pnpm dev` starts all three, and the Projects screen shows a ticking clock on web, in Electron, and on the iOS simulator.
 - `pnpm quality` passes, and `sherif` reports no mismatch.
-- Killing the worker process makes the supervisor restart it, and `server.json` keeps the same supervisor PID.
+- Killing the Engine process makes the Supervisor restart it, and `server.json` keeps the same Supervisor PID.
