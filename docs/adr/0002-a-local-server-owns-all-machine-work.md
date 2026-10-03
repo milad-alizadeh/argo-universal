@@ -2,11 +2,11 @@
 
 The phone, the web app, and the desktop app must have the same abilities. So one local Node process, the Server (`apps/server`), owns Sessions, Agents, git, worktrees, and storage. Electron never does this work in its main process.
 
-Every App connects to the Server over one WebSocket that carries every tRPC call (`wsLink`, `ws` with `applyWSSHandler`, Zod, no superjson). The Server serves plain HTTP only for `GET /health` and `GET /blobs/:id`. The Electron renderer connects in the same way as the phone. There is no tRPC over Electron IPC. The preload script gives the renderer only the Server address and window controls.
+Every App connects to the Server over one WebSocket that carries every tRPC call (`wsLink`, `ws` with `applyWSSHandler`, Zod, no superjson). The Server serves plain HTTP only for `GET /health` and `GET /blobs/:id`, with Hono (`@hono/node-server`'s `getRequestListener`) on the same `node:http` server. The Electron renderer connects in the same way as the phone. There is no tRPC over Electron IPC. The preload script gives the renderer only the Server address and window controls.
 
 The Server owns the only database: SQLite at `~/.argo/argo.db`, through Drizzle on `node:sqlite`. Apps keep no local database. The TanStack Query cache is enough. This follows Argo ADR-0043, where SQLite owns per-machine state.
 
-For now the Server binds to `127.0.0.1` only and has no authentication. Pairing a real phone and authentication come later, with their own ADR.
+For now the Server binds to `127.0.0.1` only and has no authentication. It checks `Host` and the WebSocket `Origin`, so a website open in a browser on the same machine cannot call it (owner, 2026-10-03). Pairing a real phone and authentication come later, with their own ADR.
 
 ## Considered Options
 

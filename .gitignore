@@ -1,6 +1,31 @@
+# Dependencies
 node_modules/
-.turbo/
+
+# Build outputs
 dist/
+out/
 .expo/
+
+# Turbo
+.turbo/
+
+# Testing
+coverage/
+
+# Local env files
+.env
+.env*.local
+
+# Debug
 *.log
+
+# Misc
 .DS_Store
+*.pem
+
+# Vitest
+.vitest/
+.claude/settings.local.json
+
+*storybook.log
+storybook-static

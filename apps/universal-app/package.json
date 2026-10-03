@@ -1,0 +1,60 @@
+{
+  "name": "@repo/universal-app",
+  "main": "expo-router/entry",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "android": "expo run:android",
+    "build": "expo export --platform web",
+    "check-types": "tsc --noEmit",
+    "dev": "expo start",
+    "ios": "expo run:ios",
+    "start": "expo start",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@gorhom/bottom-sheet": "catalog:",
+    "@react-native-async-storage/async-storage": "catalog:",
+    "@react-native-community/datetimepicker": "catalog:",
+    "@react-native-community/slider": "catalog:",
+    "@repo/client": "workspace:*",
+    "@repo/uniwind": "workspace:*",
+    "@storybook/addon-ondevice-actions": "catalog:",
+    "@storybook/addon-ondevice-controls": "catalog:",
+    "@storybook/react-native": "catalog:",
+    "expo": "catalog:",
+    "expo-constants": "catalog:",
+    "expo-dev-client": "catalog:",
+    "expo-font": "catalog:",
+    "expo-linking": "catalog:",
+    "expo-router": "catalog:",
+    "expo-splash-screen": "catalog:",
+    "expo-status-bar": "catalog:",
+    "expo-system-ui": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-native": "catalog:",
+    "react-native-gesture-handler": "catalog:",
+    "react-native-reanimated": "catalog:",
+    "react-native-safe-area-context": "catalog:",
+    "react-native-screens": "catalog:",
+    "react-native-svg": "catalog:",
+    "react-native-web": "catalog:",
+    "react-native-worklets": "catalog:",
+    "storybook": "catalog:",
+    "tailwindcss": "catalog:",
+    "uniwind": "catalog:"
+  },
+  "devDependencies": {
+    "@repo/typescript": "workspace:*",
+    "@types/react": "catalog:",
+    "typescript": "catalog:"
+  },
+  "expo": {
+    "install": {
+      "exclude": [
+        "typescript"
+      ]
+    }
+  }
+}

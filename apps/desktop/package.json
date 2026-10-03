@@ -1,0 +1,33 @@
+{
+  "name": "@repo/desktop",
+  "productName": "Argo Universal",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The Electron shell that loads the universal app's web build",
+  "type": "module",
+  "main": ".vite/build/main.cjs",
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "dev": "export ARGO_EXPO_WEB_URL=${ARGO_EXPO_WEB_URL:-http://localhost:8081} && unset ELECTRON_RUN_AS_NODE && node scripts/wait-for-dev-servers.mts && electron-forge start",
+    "package": "electron-forge package",
+    "start": "unset ELECTRON_RUN_AS_NODE && electron-forge start",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@repo/contracts": "workspace:*",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "catalog:",
+    "@electron-forge/plugin-fuses": "catalog:",
+    "@electron-forge/plugin-vite": "catalog:",
+    "@electron-forge/shared-types": "catalog:",
+    "@electron/fuses": "catalog:",
+    "@repo/typescript": "workspace:*",
+    "@types/node": "catalog:",
+    "electron": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  }
+}

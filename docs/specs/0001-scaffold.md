@@ -22,7 +22,7 @@ Tools:
 - tRPC 11 with TanStack Query and WebSocket
 - Drizzle with `node:sqlite`
 - XState 5
-- Biome, Vitest, and Maestro
+- Biome and Vitest
 
 The research is done when every tool has a note, and every generator command in step 2 comes from a note.
 
@@ -47,7 +47,7 @@ In scope:
 
 - Every folder in section 3, with its `package.json`, `tsconfig.json`, and entry files.
 - The toolchain (section 2), the root scripts (section 10), and CI (section 11).
-- The Server supervisor and worker, with `system.info` and `system.clock` (section 5).
+- The Server Supervisor and Engine, with `system.info` and `system.clock` (section 5).
 - The full Zod contracts for the Feed (section 6) and the full Drizzle schema with its first migration (section 7). These are types and tables only. Nothing produces Session updates yet.
 - The two agreed routes. In the scaffold, `ProjectsScreen` in `packages/client` shows `system.info` and the live `system.clock` value, in the universal app, in Electron, and in both Storybooks. `SessionScreen` is a placeholder that shows its `id`. Milestone 1 replaces both.
 
@@ -71,12 +71,12 @@ Out of scope (milestone 1 and later):
 | Lint and format | Biome, one `biome.jsonc` at the root that extends `tooling/biome`. |
 | Types | `tsc --noEmit` per package. Base configs in `tooling/typescript`. |
 | Language | TypeScript, ESM everywhere. Node scripts are `.mts`. |
-| Server runner | `tsx` (`tsx watch` in dev). |
+| Server runner | `tsx`. In dev, the Engine runs under Node's `--watch` with tsx loaded through `--import`. |
 | Unit tests | Vitest, one root `vitest.config.ts` with projects. |
 
 Use the newest stable version of each tool on the day you scaffold. Drizzle is the exception: use the newest 1.0 release candidate. Record every version you picked in the catalog. Make sure that Expo is SDK 54 or newer, that Drizzle supports `drizzle-orm/node-sqlite` (Argo uses `drizzle-orm` 1.0.0-rc), that Zod is 4, that XState is 5, and that tRPC is 11.
 
-Package names use the `@argo/` scope: `@argo/universal-app`, `@argo/desktop`, `@argo/server`, `@argo/storybook`, `@argo/contracts`, `@argo/api`, `@argo/db`, `@argo/agents`, `@argo/git`, `@argo/client`, `@argo/typescript`, `@argo/uniwind`, `@argo/biome`.
+Package names use the `@repo/` scope: `@repo/universal-app`, `@repo/desktop`, `@repo/server`, `@repo/storybook`, `@repo/contracts`, `@repo/api`, `@repo/db`, `@repo/agents`, `@repo/git`, `@repo/client`, `@repo/typescript`, `@repo/uniwind`, `@repo/biome`.
 
 ## 3. Folder tree
 
@@ -85,12 +85,11 @@ argo-universal/
 ├── apps/
 │   ├── universal-app/              Expo app for iOS, Android, and web
 │   │   ├── src/app/
-│   │   │   ├── _layout.tsx         imports global.css, renders <AppProviders> from @argo/client
+│   │   │   ├── _layout.tsx         imports global.css, renders <AppProviders> from @repo/client
 │   │   │   ├── index.tsx           renders <ProjectsScreen/>
 │   │   │   ├── sessions/[id].tsx   renders <SessionScreen/>
 │   │   │   └── (dev)/storybook.tsx on-device Storybook, only in development builds
 │   │   ├── .rnstorybook/           main.ts, preview.tsx, index.ts
-│   │   ├── maestro/                one smoke flow: launch, Projects screen shows the Server version
 │   │   ├── global.css              Uniwind entry
 │   │   ├── metro.config.js
 │   │   └── app.json
@@ -100,15 +99,17 @@ argo-universal/
 │   │       └── preload/            exposes the Server address and window controls
 │   ├── server/
 │   │   └── src/
-│   │       ├── supervisor/         lifecycle machine, heartbeat, backoff, server.json
-│   │       ├── worker/             HTTP and WebSocket server, tRPC adapter, /health, /blobs/:id
+│   │       ├── supervisor/         machine.ts (lifecycle, heartbeat, backoff, server.json), engine-process.ts,
+│   │       │                       engine-message.ts, index.ts (runner)
+│   │       ├── engine/             machine.ts (lifecycle), http-server.ts (HTTP and WebSocket server, tRPC adapter),
+│   │       │                       http-app.ts (/health, /blobs/:id), request-guard.ts, process-signals.ts, main.ts
 │   │       ├── services/
 │   │       │   └── system/         info.ts, clock.ts, index.ts (createSystemService)
-│   │       └── main.ts             starts the supervisor
+│   │       └── main.ts             starts the Supervisor
 │   └── storybook/                  web Storybook
-│       └── .storybook/             main.ts, preview.tsx, vitest.setup.ts
+│       └── .storybook/             main.ts, preview.tsx (Storybook 10's Vitest addon needs no setup file)
 ├── packages/
-│   ├── contracts/src/              Zod schemas only, no runtime code apart from Zod
+│   ├── contracts/src/              Zod schemas only, derived from db tables where a table holds the shape
 │   │   ├── system/                 info.ts, clock.ts, server-address.ts, index.ts
 │   │   ├── feed/                   page.ts, row.ts, subscribe.ts, session-update.ts, index.ts
 │   │   ├── sessions/               new.ts, prompt.ts, cancel.ts, list.ts, close.ts, delete.ts,
@@ -119,7 +120,7 @@ argo-universal/
 │   │   ├── services.ts             Services = { system: SystemService }
 │   │   ├── trpc.ts                 context { services }, router, publicProcedure
 │   │   └── root.ts                 appRouter and the AppRouter type
-│   ├── db/src/                     Drizzle schema, client, migrations in db/drizzle/
+│   ├── db/src/                     Drizzle schema (@repo/db/schema, no Node APIs), client, migrations in db/drizzle/
 │   ├── agents/src/                 index.ts only (claude/ and codex/ come in milestone 1)
 │   ├── git/src/                    index.ts only
 │   └── client/
@@ -152,15 +153,15 @@ argo-universal/
 
 | Package | Can import | Never imports |
 |---|---|---|
-| `contracts` | `zod` | anything else |
+| `contracts` | `zod`, `drizzle-orm` (`drizzle-orm/zod`), `@repo/db/schema` | anything else, including the `@repo/db` client |
 | `api` | `contracts`, `@trpc/server` | `db`, `agents`, `git`, Node APIs |
-| `db` | `contracts`, `drizzle-orm`, `node:sqlite` | `api`, `agents`, `git` |
-| `agents` | `contracts`, vendor SDKs | `db`, `api`, `git` |
+| `db` | `drizzle-orm`, `node:sqlite` | `contracts`, `api`, `agents`, `git` |
+| `agents` | `contracts`, vendor SDKs, `xstate` (spec 0002) | `db`, `api`, `git` |
 | `git` | `contracts`, `node:child_process` | `db`, `api`, `agents` |
-| `client` | `contracts`, `api` (types only, `import type`), tRPC client, TanStack Query, React Native, Uniwind | `db`, `agents`, `git`, Node APIs |
+| `client` | `contracts`, `api` (types only, `import type`), tRPC client, TanStack Query, React Native, Uniwind, `xstate` and `@xstate/react` (spec 0002) | `db`, `agents`, `git`, Node APIs |
 | `apps/server` | every server-side package | `client` |
 | `apps/universal-app` | `client` | server-side packages |
-| `apps/desktop` | `electron`, `contracts` (for the `server.json` schema) | `client`, `api`, `db` |
+| `apps/desktop` | `electron`, `contracts` (for the `server.json` schema), `xstate` (spec 0002) | `client`, `api`, `db` |
 | `apps/storybook` | `client` | server-side packages |
 
 ### Domain folders
@@ -173,7 +174,7 @@ Code is split by domain, and each domain has one file per procedure. The same do
 | `packages/api/src/<domain>/` | one file per procedure, the domain's service interface in `service.ts`, and `router.ts` |
 | `apps/server/src/services/<domain>/` | one file per procedure that implements the service method, the domain's internals, and `index.ts` with `create<Domain>Service(deps)` |
 
-The domains are `system` in the scaffold, and `projects`, `sessions`, `feed`, and `checkouts` in milestone 1. The scaffold writes the contracts for `system`, `feed`, and `sessions` (section 6), and the api and server folders for `system` only. A domain's internals, such as the Session machines, the Feed projector, and the writer queue, live in its server folder. Other code imports a domain folder only through its `index.ts`. Contracts stay in `packages/contracts`, because `client`, `agents`, `db`, and `desktop` import them and must not import from `apps/server` or `api`.
+The domains are `system` in the scaffold, and `projects`, `sessions`, `feed`, and `checkouts` in milestone 1. The scaffold writes the contracts for `system`, `feed`, and `sessions` (section 6), and the api and server folders for `system` only. A domain's internals, such as the Session machines, the Feed projector, and the writer queue, live in its server folder. Other code imports a domain folder only through its `index.ts`. Contracts stay in `packages/contracts`, because `client`, `agents`, and `desktop` import them and must not import from `apps/server` or `api`.
 
 ### Services
 
@@ -213,7 +214,7 @@ export const createSystemService = (deps: SystemDeps): SystemService => ({
   clock: (signal) => clock(signal),
 });
 
-// apps/server/src/worker/start.ts
+// apps/server/src/engine/http-server.ts
 const services: Services = { system: createSystemService({ version, startedAt }) };
 applyWSSHandler({ wss, router: appRouter, createContext: () => ({ services }) });
 ```
@@ -230,34 +231,41 @@ Vitest tests for `api` call the routers with `createCaller` and mock services, w
 | `~/.argo/server.json` | `{pid, port, version, startedAt}`, written to a temp file and renamed |
 | `~/.argo/blobs/<sha256>` | blob files |
 | `~/.argo/worktrees/<projectId>/<slug>` | worktrees (milestone 1) |
-| `~/.argo/logs/` | supervisor and worker logs |
+| `~/.argo/logs/` | Supervisor and Engine logs |
 
 `ARGO_HOME` overrides `~/.argo`. Tests set it to a temp folder.
 
 ### Supervisor
 
-`apps/server/src/supervisor/` holds an XState 5 machine and a small runner, about 100 lines. The supervisor imports no app code, only `contracts` for the `server.json` schema.
+`apps/server/src/supervisor/` holds an XState 5 machine and a small runner. The machine's actions write and remove `server.json`. The Supervisor imports no app code, only `contracts` for the `server.json` schema.
 
 - States: `starting`, `running`, `backingOff`, `failed`, `stopping`.
-- `starting` forks the worker with `child_process.fork` and waits for a `ready {port}` message.
-- `running` writes `server.json` and expects a `heartbeat` message from the worker. A missed heartbeat or a worker exit goes to `backingOff`.
-- `backingOff` waits, forks the worker again, and goes to `running` on `ready`, or to `failed`. The delay doubles from a base to a cap.
-- `failed` is final when the worker crashes too often in a window. It removes `server.json` and exits with a non-zero code.
-- `stopping` runs on `SIGINT` and `SIGTERM`: it stops the worker, removes `server.json`, and exits.
-- In dev, the supervisor forks the worker under `tsx watch`, so a file change restarts only the worker.
+- `starting` forks the Engine with `child_process.fork` and waits for a `ready {port}` message.
+- `running` writes `server.json` and expects a `heartbeat` message from the Engine. A missed heartbeat or an Engine exit goes to `backingOff`.
+- `backingOff` asks the Engine to stop and waits in two parallel regions: `engine` until the old Engine has exited, and `delay` until the backoff has passed. Then it forks the Engine again, and goes to `running` on `ready`, or to `failed`. The delay doubles from a base to a cap.
+- `failed` is final when the Engine crashes too often in a window. It removes `server.json` if this Supervisor wrote it, and exits with a non-zero code.
+- `stopping` runs on `SIGINT` and `SIGTERM`: it stops the Engine, removes `server.json` if this Supervisor wrote it, and exits.
+- In dev (`--watch`), the Supervisor forks the Engine under Node's `--watch` with tsx loaded through `--import`, so a file change restarts only the Engine. `tsx watch` on the entry file would restart the Supervisor too.
 
-### Worker
+### Engine
 
-- One `node:http` server on `127.0.0.1`, on the port in `ARGO_SERVER_PORT`, with 7337 as the default. The supervisor writes the port that the worker uses into `server.json`.
+- One `node:http` server on `127.0.0.1` whose requests a Hono app handles through `@hono/node-server`, on the port in `ARGO_SERVER_PORT`, with 7337 as the default. The Supervisor writes the port that the Engine uses into `server.json`.
 - `GET /health` returns `{ok: true, version, startedAt}`.
 - `GET /blobs/:id` streams the file from `~/.argo/blobs/`. It returns 404 for an unknown id.
-- A `ws` server on the same port, with tRPC's `applyWSSHandler` and `@argo/api`'s `appRouter`.
+- A `ws` server on the same port, with tRPC's `applyWSSHandler` and `@repo/api`'s `appRouter`.
+- Every request must carry `Host` `127.0.0.1:<port>` or `localhost:<port>`. A WebSocket upgrade must have no `Origin`, `app://app`, or an `http://localhost` or `http://127.0.0.1` origin. Anything else gets 403.
 - On start, it opens the database and runs the Drizzle migrations from `packages/db/drizzle/`.
+- `apps/server/src/engine/machine.ts` is an XState 5 machine that runs the Engine's whole lifecycle. `main.ts` only creates it and exits with its output.
+  - `openingDatabase` opens the database and migrates it, then goes to `serving`, or to `failed`.
+  - `serving.listening` starts the HTTP server from `http-server.ts`. Once the port is bound, it sends `ready {port}` to the Supervisor and goes to `serving.running`, or to `failed`, for example on `EADDRINUSE`.
+  - `serving.running` sends a `heartbeat` to the Supervisor every second.
+  - `SIGINT`, `SIGTERM`, or a closed IPC channel goes to `stopping`, which awaits the server's `close()` and then goes to `stopped`, or to `failed` if closing fails.
+  - `stopped` and `failed` are final. Both close the database. The output is `{exitCode}`: 0 from `stopped`, 1 from `failed`.
 - Scaffold procedures: `system.info` (query, returns `{version, startedAt, pid}`) and `system.clock` (subscription, sends `{now}` every second).
 
 ## 6. Contracts
 
-`packages/contracts` holds these Zod schemas. Infer every TypeScript type from its schema. Use ACP's exact field spelling.
+`packages/contracts` holds these Zod schemas. Infer every TypeScript type from its schema. Use ACP's exact field spelling. Where a `db` table holds a shape, derive the schema from the table with `drizzle-orm/zod` and add only the fields the API adds (ADR 0013).
 
 ### Session update envelope
 
@@ -278,7 +286,7 @@ The `id` comes from the vendor where the vendor has a stable id: Codex `item.id`
 | `tool_call_update` | `{toolCallId, title, name?, kind: ToolKind, status: ToolCallStatus, content: ToolCallContent[], locations?: {path, line?}[], rawInput?, rawOutput?}`. `_meta.argo`: `{truncated?, permissionOutcome?}` |
 | `plan_update` | `{plan: {type: 'items', planId, entries: PlanEntry[]} \| {type: 'markdown', planId, content: string}}`. `_meta.argo` on a markdown plan: `{requestId?, filePath?}` |
 | `compaction_update` | `{compactionId, status: 'in_progress' \| 'completed' \| 'failed' \| 'cancelled', summary?}` |
-| `subagent_update` | `{sessionId: <child Session id>, title?, state?: 'running' \| 'idle' \| 'requires_action'}` |
+| `subagent_update` | `{subagentSessionId: <child Session id>, title?, subagentState?: 'running' \| 'idle' \| 'requires_action'}`. ACP's `sessionId` and `state` clash with the row's own fields, so both carry a `subagent` prefix. |
 | `notice` | `{severity: 'info' \| 'warning' \| 'error', title, description?}`. `_meta.argo`: `{retry?: {attempt, maxAttempts, delayMs}, unrecognised?: {excerpt}}` |
 | `task_update` | Argo extension: `{taskId, status: 'running' \| 'completed' \| 'failed' \| 'cancelled', title}` |
 
@@ -315,7 +323,7 @@ Shared types:
 
 ## 7. Database
 
-`packages/db` holds the Drizzle schema for all six tables and the first migration. Store each payload as JSON text. Validate it with the `contracts` schema on write and on read.
+`packages/db` holds the Drizzle schema for all six tables and the first migrations. The schema also holds the enums that columns use, and `contracts` derives from it (ADR 0013). Store each payload as JSON text. The Server validates it with the `contracts` schema on write and on read. Times are Unix milliseconds that the database writes: `createdAt` and `startedAt` by column default, `updatedAt` by a trigger on update.
 
 | Table | Columns |
 |---|---|
@@ -330,7 +338,7 @@ The Session's current Plan is not stored. A query reads it from the newest `plan
 
 ## 8. Client package
 
-- `src/trpc/`: `createTRPCContext<AppRouter>()` gives `TRPCProvider` and `useTRPC()`. `createArgoClient(url)` builds a client with `wsLink` and `createWSClient`. `AppProviders` holds the `QueryClient`, the tRPC provider, and the Server URL.
+- `src/trpc/`: `createTRPCContext<AppRouter>()` gives `TRPCProvider` and `useTRPC()`. `createTRPCClient(url)` builds a client with `wsLink` and `createWSClient`. `AppProviders` holds the `QueryClient`, the tRPC provider, and the Server URL.
 - Screens get tRPC only from `useTRPC()`.
 - `src/primitives/`: run `npx @react-native-reusables/cli init -t minimal-uniwind` and point its output here. Add only the primitives that the Projects screen uses.
 - `mocks/trpc-mock-link.ts`: a `TRPCLink` that serves fixtures by procedure path. The fixture map is typed from `AppRouter` with `inferProcedureInput` and `inferProcedureOutput`, so a wrong procedure path or a wrong fixture shape fails `tsc`. A subscription fixture is an async generator. `withTrpcMocks` is the story decorator. It reads `parameters.trpc`, builds a `QueryClient` with `retry: false`, and wraps the story in the providers. A missing fixture fails with `No story mock for <path>`.
@@ -345,7 +353,7 @@ The Session's current Plan is not stored. A query reads it from the newest `plan
 
 - Expo Router with routes in `src/app/`. Web uses Metro.
 - `metro.config.js`: `withUniwindConfig` is the outermost wrapper.
-- `global.css`: imports Tailwind and Uniwind, imports `@argo/uniwind/theme.css`, and adds `@source` for `../../packages/client/src`.
+- `global.css`: imports Tailwind and Uniwind, imports `@repo/uniwind/theme.css`, and adds `@source` for `../../packages/client/src`.
 - Install `expo-dev-client`. Add a dev menu item that opens `/(dev)/storybook`. The route renders nothing in a production build.
 - `.rnstorybook/main.ts` reads `../../packages/client/src/**/*.stories.tsx` and leaves out `*.test.stories.tsx`.
 - Android emulator: use `adb reverse tcp:7337 tcp:7337` so that `127.0.0.1` works.
@@ -354,7 +362,7 @@ The Session's current Plan is not stored. A query reads it from the newest `plan
 
 - `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`.
 - In production, a custom `app://` protocol serves the Expo web export from `apps/universal-app/dist`. In dev, the window loads the Expo web dev URL.
-- On launch, read `~/.argo/server.json` and call `/health`. If the Server answers with the same version, reuse it. If the version differs, restart it. If no Server answers, start `apps/server` (the supervisor) as a detached process. On quit, stop the Server only if this app started it.
+- On launch, read `~/.argo/server.json` and call `/health`. If the Server answers with the same version, reuse it. If the version differs, restart it. If no Server answers, start `apps/server` (the Supervisor) as a detached process. On quit, stop the Server only if this app started it.
 - Preload exposes `window.argo = {serverUrl, window: {minimize, maximize, close}}` and nothing else.
 
 ### Web Storybook
@@ -367,7 +375,7 @@ The Session's current Plan is not stored. A query reads it from the newest `plan
 
 | Script | Does |
 |---|---|
-| `pnpm dev` | `turbo dev`: the Server (supervisor with the worker under `tsx watch`), the universal app (`expo start` for web and Metro), and desktop. Desktop waits until `server.json` exists and the Expo web URL answers. |
+| `pnpm dev` | `turbo dev`: the Server (Supervisor with the Engine under Node's `--watch`), the universal app (`expo start` for web and Metro), and desktop. Desktop waits until `server.json` exists, the Server's `/health` answers, and the Expo web URL answers. |
 | `pnpm dev:storybook` | web Storybook only |
 | `pnpm quality` | `sherif`, `biome check`, `tsc` in every package, Vitest, and the Storybook Vitest tests |
 | `pnpm test:e2e` | Playwright `web` project against the Expo web export |
@@ -381,7 +389,7 @@ The Session's current Plan is not stored. A query reads it from the newest `plan
 1. On every pull request and every push to `main`: install with pnpm, `pnpm quality`, export the Expo web build, `pnpm test:e2e`.
 2. Only on `main` and `release/*`: `pnpm test:e2e:electron` under `xvfb-run`.
 
-No mobile job. Maestro runs only on the developer machine.
+No mobile job. Mobile smoke flows are deferred; Playwright covers end to end.
 
 ## 12. Spike checks
 
@@ -390,11 +398,10 @@ Each check must pass before the scaffold is done. If a check fails, stop and rep
 1. Web Storybook with the Vitest addon runs `ProjectsScreen.test.stories.tsx` with a play function, and Uniwind classes apply. Fallback to propose: Playwright component tests against the web build.
 2. The tRPC mock link renders `ProjectsScreen` with a `system.info` fixture and a `system.clock` generator, in web Storybook and in on-device Storybook on the iOS simulator.
 3. One Playwright spec (`e2e/projects/projects.spec.ts`) passes in the `web` project and in the `electron` project.
-4. The Server runs under `tsx watch` with `ws` and `node:sqlite`: the migrations run, `/health` answers, and a file change restarts only the worker while the supervisor keeps running.
+4. The Server runs in watch mode with `ws` and `node:sqlite`: the migrations run, `/health` answers, and a file change restarts only the Engine while the Supervisor keeps running.
 
 Also make sure that:
 
 - `pnpm dev` starts all three, and the Projects screen shows a ticking clock on web, in Electron, and on the iOS simulator.
-- The Maestro flow passes on the iOS simulator.
 - `pnpm quality` passes, and `sherif` reports no mismatch.
-- Killing the worker process makes the supervisor restart it, and `server.json` keeps the same supervisor PID.
+- Killing the Engine process makes the Supervisor restart it, and `server.json` keeps the same Supervisor PID.

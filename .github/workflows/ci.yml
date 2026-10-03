@@ -1,0 +1,83 @@
+# Spec 0001 section 11: quality and web e2e on every pull request and push to main; Electron e2e on main and release/*.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      # Pushes to release branches run CI so the Electron step below can run there.
+      - "release/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: Quality and end-to-end tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+
+      # Installs the pnpm version in package.json's packageManager.
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Chromium for the web e2e project and the Storybook Vitest tests in pnpm quality; --with-deps also installs xvfb.
+      - name: Install Playwright Chromium
+        run: pnpm --filter @repo/e2e exec playwright install --with-deps chromium
+
+      - name: Quality
+        run: pnpm quality
+
+      - name: Export the Expo web build
+        run: pnpm --filter @repo/universal-app build
+
+      - name: End-to-end tests (web)
+        run: pnpm test:e2e
+
+      - name: Upload the web e2e report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-web
+          path: |
+            e2e/playwright-report/
+            e2e/test-results/
+          retention-days: 30
+
+      # Electron 44 downloads its binary on first use; fetch it before the tests start their timers.
+      - name: Install Electron
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/')
+        run: pnpm --filter @repo/desktop exec install-electron
+
+      # Ubuntu 24.04 blocks the unprivileged user namespaces Electron's sandbox uses (electron/electron#42510).
+      - name: Allow user namespaces for Electron
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/')
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+      - name: End-to-end tests (Electron)
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/')
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" -- pnpm test:e2e:electron
+
+      - name: Upload the Electron e2e report
+        if: ${{ !cancelled() && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/')) }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-electron
+          path: |
+            e2e/playwright-report/
+            e2e/test-results/
+          retention-days: 30
