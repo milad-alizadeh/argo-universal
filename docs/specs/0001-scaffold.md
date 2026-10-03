@@ -362,7 +362,7 @@ The Session's current Plan is not stored. A query reads it from the newest `plan
 
 - `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`.
 - In production, a custom `app://` protocol serves the Expo web export from `apps/universal-app/dist`. In dev, the window loads the Expo web dev URL.
-- On launch, read `~/.argo/server.json` and call `/health`. If the Server answers with the same version, reuse it. If the version differs, restart it. If no Server answers, start `apps/server` (the Supervisor) as a detached process. On quit, stop the Server only if this app started it.
+- On launch, make sure a Supervisor runs: reuse the one whose PID in `~/.argo/server.json` is alive, of any version, or start `apps/server` detached. On quit, stop it only if this app started it. Electron never calls `/health`; spec 0002 section 10 has the machine.
 - Preload exposes `window.argo = {serverUrl, window: {minimize, maximize, close}}` and nothing else.
 
 ### Web Storybook
