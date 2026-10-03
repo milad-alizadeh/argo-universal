@@ -7,6 +7,11 @@ packages:
 catalog:
   "@biomejs/biome": 2.5.15
   "@chromatic-com/storybook": 5.4.0
+  "@electron-forge/cli": 8.0.1
+  "@electron-forge/plugin-fuses": 8.0.1
+  "@electron-forge/plugin-vite": 8.0.1
+  "@electron-forge/shared-types": 8.0.1
+  "@electron/fuses": 2.1.3
   "@gorhom/bottom-sheet": 5.2.14
   "@react-native-async-storage/async-storage": 2.2.0
   "@react-native-community/datetimepicker": 9.1.0
@@ -35,6 +40,7 @@ catalog:
   # Exact pins: a caret range on 1.0.0-rc.4 pulls commit builds such as 1.0.0-rc.5-5935859 (docs/research/drizzle.md).
   drizzle-kit: 1.0.0-rc.4
   drizzle-orm: 1.0.0-rc.4
+  electron: 44.5.1
   # Expo SDK 57 ranges as create-expo-app writes them, so `expo install --check` agrees.
   expo: ~57.0.26
   expo-constants: ~57.0.20
@@ -87,3 +93,7 @@ minimumReleaseAgeExclude:
 # drizzle-kit pulls esbuild; `drizzle-kit generate` works without its install script (docs/research/drizzle.md).
 allowBuilds:
   esbuild: false
+
+# pnpm's default, written out: Electron Forge refuses to start unless node-linker is hoisted or a hoist pattern is set (docs/research/electron.md).
+hoistPattern:
+  - "*"
