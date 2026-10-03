@@ -10,7 +10,6 @@
     "dev": "expo start",
     "ios": "expo run:ios",
     "start": "expo start",
-    "test:maestro": "maestro test maestro/",
     "web": "expo start --web"
   },
   "dependencies": {
