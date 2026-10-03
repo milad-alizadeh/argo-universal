@@ -6,15 +6,21 @@ packages:
 # Every shared dependency is pinned here; packages refer to it as "catalog:" (spec section 2).
 catalog:
   "@biomejs/biome": 2.5.15
+  "@trpc/server": 11.19.0
   "@types/node": 24.19.1
+  "@types/ws": 8.18.2
   # Exact pins: a caret range on 1.0.0-rc.4 pulls commit builds such as 1.0.0-rc.5-5935859 (docs/research/drizzle.md).
   drizzle-kit: 1.0.0-rc.4
   drizzle-orm: 1.0.0-rc.4
   sherif: 1.13.0
+  tsx: 4.23.15
   turbo: 2.11.7
   typescript: 7.0.2
   vite: 8.3.2
   vitest: 5.0.3
+  ws: 8.22.0
+  # Exact pin: XState may change types in minor releases (docs/research/xstate.md).
+  xstate: 5.33.2
   zod: 4.6.5
 
 # `pnpm add` fails when a version is outside the catalog.

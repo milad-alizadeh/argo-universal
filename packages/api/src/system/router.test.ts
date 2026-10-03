@@ -1,0 +1,68 @@
+import type { ClockTick, SystemInfo } from '@argo/contracts';
+import { describe, expect, it } from 'vitest';
+import { appRouter } from '../root';
+import type { Services } from '../services';
+import { createCallerFactory } from '../trpc';
+
+const createCaller = createCallerFactory(appRouter);
+
+const systemInfo: SystemInfo = {
+  version: '1.2.3',
+  startedAt: '2026-10-03T00:00:00.000Z',
+  pid: 4242,
+};
+
+function servicesWith(ticks: ClockTick[]): Services {
+  return {
+    system: {
+      info: () => systemInfo,
+      clock: async function* () {
+        yield* ticks;
+      },
+    },
+  };
+}
+
+describe('system router', () => {
+  it('answers system.info from the system service', async () => {
+    const caller = createCaller({ services: servicesWith([]) });
+
+    expect(await caller.system.info()).toEqual(systemInfo);
+  });
+
+  it('rejects a system.info that breaks the contract', async () => {
+    const services = servicesWith([]);
+    services.system.info = () => ({ ...systemInfo, pid: -1 });
+    const caller = createCaller({ services });
+
+    await expect(caller.system.info()).rejects.toThrow(
+      'Output validation failed',
+    );
+  });
+
+  it('streams system.clock ticks from the system service', async () => {
+    const ticks = [
+      { now: '2026-10-03T00:00:00.000Z' },
+      { now: '2026-10-03T00:00:01.000Z' },
+    ];
+    const caller = createCaller({ services: servicesWith(ticks) });
+
+    const received: ClockTick[] = [];
+    for await (const tick of await caller.system.clock()) received.push(tick);
+
+    expect(received).toEqual(ticks);
+  });
+
+  it('rejects a system.clock tick that breaks the contract', async () => {
+    const caller = createCaller({
+      services: servicesWith([{ now: 'not a time' }]),
+    });
+
+    const iterate = async () => {
+      for await (const _tick of await caller.system.clock()) {
+      }
+    };
+
+    await expect(iterate()).rejects.toThrow();
+  });
+});
