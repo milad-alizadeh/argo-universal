@@ -1,12 +1,12 @@
 import { fromCallback } from 'xstate';
 
 export type StopReason = 'SIGINT' | 'SIGTERM' | 'IPC channel closed';
-export type WorkerStop = { type: 'worker.stop'; reason: StopReason };
+export type EngineStop = { type: 'engine.stop'; reason: StopReason };
 
-// Turns SIGINT, SIGTERM and a closed IPC channel into `worker.stop`; a closed channel means nobody can restart or stop this worker.
+// Turns SIGINT, SIGTERM and a closed IPC channel into `engine.stop`; a closed channel means nobody can restart or stop this Engine.
 export const processSignals = fromCallback(({ sendBack }) => {
   const stop = (reason: StopReason) => () =>
-    sendBack({ type: 'worker.stop', reason } satisfies WorkerStop);
+    sendBack({ type: 'engine.stop', reason } satisfies EngineStop);
   const onSigint = stop('SIGINT');
   const onSigterm = stop('SIGTERM');
   const onDisconnect = stop('IPC channel closed');

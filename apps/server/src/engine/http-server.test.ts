@@ -122,7 +122,7 @@ describe('http server', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     expect(await healthStatus(`evil.example@127.0.0.1:${port}`)).toBe(403);
     expect(console.error).toHaveBeenCalledExactlyOnceWith(
-      expect.stringMatching(/^worker: rejected request .* #1$/),
+      expect.stringMatching(/^engine: rejected request .* #1$/),
     );
   });
 

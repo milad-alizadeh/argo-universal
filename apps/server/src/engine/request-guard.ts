@@ -20,7 +20,7 @@ export function createRequestGuard(port: number) {
   const report = (subject: string, value: string | undefined) => {
     rejectedRequests += 1;
     console.error(
-      `worker: rejected ${subject} ${JSON.stringify(value?.slice(0, headerExcerptLength))} #${rejectedRequests}`,
+      `engine: rejected ${subject} ${JSON.stringify(value?.slice(0, headerExcerptLength))} #${rejectedRequests}`,
     );
   };
 

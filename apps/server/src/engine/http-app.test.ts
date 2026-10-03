@@ -71,7 +71,7 @@ describe('http app', () => {
       const response = await send(`/blobs/${id}`);
       expect(response.status).toBe(404);
       expect(console.error).toHaveBeenCalledExactlyOnceWith(
-        expect.stringMatching(/^worker: rejected blob id .* #1$/),
+        expect.stringMatching(/^engine: rejected blob id .* #1$/),
       );
     },
   );
@@ -97,7 +97,7 @@ describe('http app', () => {
     });
     expect(response.status).toBe(403);
     expect(console.error).toHaveBeenCalledExactlyOnceWith(
-      'worker: rejected Host "evil.example:7337" #1',
+      'engine: rejected Host "evil.example:7337" #1',
     );
   });
 });

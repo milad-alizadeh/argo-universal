@@ -52,7 +52,7 @@ export default defineConfig<AppOptions>({
       },
       // Never reuse a dev Server, which runs on the owner's ~/.argo.
       reuseExistingServer: false,
-      // SIGTERM lets the supervisor stop the worker and remove server.json (spec section 5).
+      // SIGTERM lets the supervisor stop the Engine and remove server.json (spec section 5).
       gracefulShutdown: { signal: 'SIGTERM', timeout: 10_000 },
     },
     {

@@ -2,28 +2,28 @@ import { appendFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { type Database, openDatabase } from '@repo/db';
 import { assign, fromPromise, setup } from 'xstate';
-import type { WorkerMessage } from '../supervisor/worker-message';
+import type { EngineMessage } from '../supervisor/engine-message';
 import { type HttpServer, startHttpServer } from './http-server';
-import { processSignals, type WorkerStop } from './process-signals';
+import { type EngineStop, processSignals } from './process-signals';
 
-export interface WorkerInput {
+export interface EngineInput {
   home: string;
   port: number;
   version: string;
   startedAt: string;
 }
 
-interface WorkerContext extends WorkerInput {
+interface EngineContext extends EngineInput {
   database: Database | null;
   server: HttpServer | null;
   failure: string | null;
 }
 
-export const workerMachine = setup({
+export const engineMachine = setup({
   types: {
-    input: {} as WorkerInput,
-    context: {} as WorkerContext,
-    events: {} as WorkerStop,
+    input: {} as EngineInput,
+    context: {} as EngineContext,
+    events: {} as EngineStop,
     output: {} as { exitCode: number },
   },
   actors: {
@@ -31,7 +31,7 @@ export const workerMachine = setup({
     openDatabase: fromPromise<Database, { home: string }>(async ({ input }) =>
       openDatabase(join(input.home, 'argo.db')),
     ),
-    startHttpServer: fromPromise<HttpServer, WorkerInput>(({ input }) =>
+    startHttpServer: fromPromise<HttpServer, EngineInput>(({ input }) =>
       startHttpServer(input),
     ),
     closeHttpServer: fromPromise<void, { server: HttpServer | null }>(
@@ -40,14 +40,14 @@ export const workerMachine = setup({
     processSignals,
   },
   actions: {
-    sendToSupervisor: (_, message: WorkerMessage) => {
+    sendToSupervisor: (_, message: EngineMessage) => {
       process.send?.(message);
     },
     log: ({ context }, params: { line: string }) => {
-      const stamped = `${new Date().toISOString()} worker ${process.pid}: ${params.line}`;
+      const stamped = `${new Date().toISOString()} engine ${process.pid}: ${params.line}`;
       console.log(stamped);
       mkdirSync(join(context.home, 'logs'), { recursive: true });
-      appendFileSync(join(context.home, 'logs', 'worker.log'), `${stamped}\n`);
+      appendFileSync(join(context.home, 'logs', 'engine.log'), `${stamped}\n`);
     },
     closeDatabase: ({ context }) => {
       context.database?.$client.close();
@@ -55,7 +55,7 @@ export const workerMachine = setup({
   },
   delays: { heartbeatInterval: 1000 },
 }).createMachine({
-  id: 'worker',
+  id: 'engine',
   context: ({ input }) => ({
     ...input,
     database: null,
@@ -83,7 +83,7 @@ export const workerMachine = setup({
         },
       },
       on: {
-        'worker.stop': {
+        'engine.stop': {
           target: 'stopping',
           actions: {
             type: 'log',
@@ -95,7 +95,7 @@ export const workerMachine = setup({
     serving: {
       initial: 'listening',
       on: {
-        'worker.stop': {
+        'engine.stop': {
           target: 'stopping',
           actions: {
             type: 'log',
@@ -134,7 +134,7 @@ export const workerMachine = setup({
               ],
             },
             onError: {
-              target: '#worker.failed',
+              target: '#engine.failed',
               actions: assign({
                 failure: ({ event }) =>
                   `could not listen: ${String(event.error)}`,
@@ -142,7 +142,7 @@ export const workerMachine = setup({
             },
           },
         },
-        // The supervisor restarts a worker that misses its heartbeat for 5 seconds.
+        // The Supervisor restarts an Engine that misses its heartbeat for 5 seconds.
         running: {
           after: {
             heartbeatInterval: {
@@ -157,7 +157,7 @@ export const workerMachine = setup({
         },
       },
     },
-    // A second signal while closing is ignored; the supervisor kills a worker that takes too long.
+    // A second signal while closing is ignored; the Supervisor kills an Engine that takes too long.
     stopping: {
       invoke: {
         id: 'closeHttpServer',

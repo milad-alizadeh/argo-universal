@@ -35,7 +35,7 @@ export function startSupervisor(options: { watch: boolean }) {
       lastState = state;
       log(state);
     },
-    // The worker process keeps the event loop alive until it exits, then Node exits with this code.
+    // The Engine process keeps the event loop alive until it exits, then Node exits with this code.
     complete: () => {
       process.exitCode = supervisor.getSnapshot().matches('failed') ? 1 : 0;
     },

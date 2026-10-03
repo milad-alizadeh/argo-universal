@@ -18,11 +18,11 @@ import {
   type TestPath,
   toDirectedGraph,
 } from 'xstate/graph';
-import type { WorkerMessage } from '../supervisor/worker-message';
+import type { EngineMessage } from '../supervisor/engine-message';
 import type { HttpServer, HttpServerOptions } from './http-server';
-import { workerMachine } from './machine';
+import { engineMachine } from './machine';
 
-// Spec 0001 section 5: the worker sends a heartbeat every second.
+// Spec 0001 section 5: the Engine sends a heartbeat every second.
 const heartbeatIntervalMs = 1000;
 
 interface PendingCall<TInput, TOutput> {
@@ -46,9 +46,9 @@ let openDatabaseCalls: PendingCall<{ home: string }, Database>[];
 let startHttpServerCalls: PendingCall<HttpServerOptions, HttpServer>[];
 let closeHttpServerCalls: PendingCall<{ server: HttpServer | null }, void>[];
 let processSignals: { send: (event: AnyEventObject) => void; live: boolean };
-let messages: WorkerMessage[];
+let messages: EngineMessage[];
 let databaseCloses: number;
-let worker: Actor<typeof machine>;
+let engine: Actor<typeof machine>;
 
 const mockDatabase = {
   $client: {
@@ -62,7 +62,7 @@ const mockHttpServer: HttpServer = {
   close: () => expect.unreachable('The machine closes through closeHttpServer'),
 };
 
-const machine = workerMachine.provide({
+const machine = engineMachine.provide({
   actors: {
     openDatabase: createPromiseMock(() => openDatabaseCalls),
     startHttpServer: createPromiseMock(() => startHttpServerCalls),
@@ -82,8 +82,8 @@ const machine = workerMachine.provide({
     log: () => {},
   },
 });
-type WorkerSnapshot = SnapshotFrom<typeof machine>;
-type WorkerEvent = EventFromLogic<typeof machine>;
+type EngineSnapshot = SnapshotFrom<typeof machine>;
+type EngineEvent = EventFromLogic<typeof machine>;
 
 const input = {
   home: '/unused',
@@ -123,7 +123,7 @@ const payloads: Record<string, AnyEventObject> = {
     error: closeError,
     actorId: 'closeHttpServer',
   },
-  'worker.stop': { type: 'worker.stop', reason: 'SIGTERM' },
+  'engine.stop': { type: 'engine.stop', reason: 'SIGTERM' },
 };
 const eventTypes = (node: DirectedGraphNode): string[] => [
   ...node.edges.map((edge) => edge.label.text),
@@ -132,7 +132,7 @@ const eventTypes = (node: DirectedGraphNode): string[] => [
 // The machine raises `xstate.done.state.*` itself, so the model must not send it.
 const events = [...new Set(eventTypes(toDirectedGraph(machine)))]
   .filter((type) => !type.startsWith('xstate.done.state.'))
-  .map((type) => (payloads[type] ?? { type }) as WorkerEvent);
+  .map((type) => (payloads[type] ?? { type }) as EngineEvent);
 
 const model = new TestModel(machine, {
   input,
@@ -162,9 +162,9 @@ const settle = async (settleCall: () => void) => {
   await vi.advanceTimersByTimeAsync(0);
 };
 
-const executors: Record<string, EventExecutor<WorkerSnapshot, WorkerEvent>> = {
+const executors: Record<string, EventExecutor<EngineSnapshot, EngineEvent>> = {
   'xstate.init': () => {
-    worker = createActor(machine, { input }).start();
+    engine = createActor(machine, { input }).start();
   },
   'xstate.done.actor.openDatabase': () =>
     settle(() => latest(openDatabaseCalls).resolve(mockDatabase)),
@@ -178,32 +178,32 @@ const executors: Record<string, EventExecutor<WorkerSnapshot, WorkerEvent>> = {
     settle(() => latest(closeHttpServerCalls).resolve()),
   'xstate.error.actor.closeHttpServer': () =>
     settle(() => latest(closeHttpServerCalls).reject(closeError)),
-  'xstate.after.heartbeatInterval.worker.serving.running': () => {
+  'xstate.after.heartbeatInterval.engine.serving.running': () => {
     const sent = messages.length;
     vi.advanceTimersByTime(heartbeatIntervalMs - 1);
     expect(messages).toHaveLength(sent);
     vi.advanceTimersByTime(1);
     expect(messages).toHaveLength(sent + 1);
   },
-  'worker.stop': () =>
-    processSignals.send({ type: 'worker.stop', reason: 'SIGTERM' }),
+  'engine.stop': () =>
+    processSignals.send({ type: 'engine.stop', reason: 'SIGTERM' }),
 };
 
-const expectModelState = (expected: WorkerSnapshot) => {
-  const actual = worker.getSnapshot();
+const expectModelState = (expected: EngineSnapshot) => {
+  const actual = engine.getSnapshot();
   expect(actual.value).toEqual(expected.value);
   expect(actual.status).toBe(expected.status);
   expect(actual.context.database).toBe(expected.context.database);
   expect(actual.context.server).toBe(expected.context.server);
 };
 // Final states close the database they opened, stop listening for signals, and exit with a code.
-const expectExit = (snapshot: WorkerSnapshot, exitCode: number) => {
+const expectExit = (snapshot: EngineSnapshot, exitCode: number) => {
   expectModelState(snapshot);
-  expect(worker.getSnapshot().output).toEqual({ exitCode });
+  expect(engine.getSnapshot().output).toEqual({ exitCode });
   expect(databaseCloses).toBe(snapshot.context.database === null ? 0 : 1);
   expect(processSignals.live).toBe(false);
 };
-const states: Record<string, (snapshot: WorkerSnapshot) => void> = {
+const states: Record<string, (snapshot: EngineSnapshot) => void> = {
   openingDatabase: (snapshot) => {
     expectModelState(snapshot);
     expect(openDatabaseCalls).toEqual([
@@ -241,7 +241,7 @@ const states: Record<string, (snapshot: WorkerSnapshot) => void> = {
       expect.objectContaining({ input: { server: snapshot.context.server } }),
     ]);
     expect(databaseCloses).toBe(0);
-    // No heartbeat while closing, even if the supervisor waits.
+    // No heartbeat while closing, even if the Supervisor waits.
     const sent = messages.length;
     vi.advanceTimersByTime(heartbeatIntervalMs * 5);
     expect(messages).toHaveLength(sent);
@@ -252,7 +252,7 @@ const states: Record<string, (snapshot: WorkerSnapshot) => void> = {
 
 const shortestPaths = model.getShortestPaths();
 const simplePaths = model.getSimplePaths();
-const title = (path: TestPath<WorkerSnapshot, WorkerEvent>) =>
+const title = (path: TestPath<EngineSnapshot, EngineEvent>) =>
   path.steps
     .map(({ event }) =>
       event.type
@@ -271,11 +271,11 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  worker.stop();
+  engine.stop();
   vi.useRealTimers();
 });
 
-describe('worker model', () => {
+describe('engine model', () => {
   describe.each([
     ['shortest path', shortestPaths],
     ['simple path', simplePaths],
@@ -289,7 +289,7 @@ describe('worker model', () => {
   });
 
   it('the generated paths walk every transition', () => {
-    const key = (from: WorkerSnapshot, type: string, to: WorkerSnapshot) =>
+    const key = (from: EngineSnapshot, type: string, to: EngineSnapshot) =>
       `${JSON.stringify(from.value)} ${type} ${JSON.stringify(to.value)}`;
     const transitions = adjacencyMapToArray(
       getAdjacencyMap(machine, model.options),

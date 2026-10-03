@@ -26,8 +26,8 @@ import {
   type TestPath,
   toDirectedGraph,
 } from 'xstate/graph';
+import type { EngineCommand } from './engine-message';
 import { supervisorMachine } from './machine';
-import type { WorkerCommand } from './worker-message';
 
 // Spec 0001 section 5 numbers, written out so the model cannot grade itself.
 const readyTimeoutMs = 15_000;
@@ -36,42 +36,42 @@ const maxCrashes = 10;
 const backoffMs = (crashes: number) =>
   Math.min(500 * 2 ** (crashes - 1), 30_000);
 
-interface MockWorker {
+interface MockEngine {
   send: (event: AnyEventObject) => void;
   exit: () => void;
   askedToStop: boolean;
   stopped: boolean;
 }
 
-let workers: MockWorker[];
+let engines: MockEngine[];
 let supervisor: Actor<typeof supervisorMachine>;
 
-// A worker that exits when asked, unless the test drives `worker.exited` itself.
-const createMockWorker = (options: { exitsWhenAsked: boolean }) =>
-  fromCallback<WorkerCommand, { watch: boolean }>(({ sendBack, receive }) => {
-    const worker: MockWorker = {
+// An Engine that exits when asked, unless the test drives `engine.exited` itself.
+const createMockEngine = (options: { exitsWhenAsked: boolean }) =>
+  fromCallback<EngineCommand, { watch: boolean }>(({ sendBack, receive }) => {
+    const engine: MockEngine = {
       send: sendBack,
-      exit: () => sendBack({ type: 'worker.exited' }),
+      exit: () => sendBack({ type: 'engine.exited' }),
       askedToStop: false,
       stopped: false,
     };
-    workers.push(worker);
+    engines.push(engine);
     receive(() => {
-      worker.askedToStop = true;
-      if (options.exitsWhenAsked) worker.exit();
+      engine.askedToStop = true;
+      if (options.exitsWhenAsked) engine.exit();
     });
     return () => {
-      worker.stopped = true;
+      engine.stopped = true;
     };
   });
 
-const latestWorker = () =>
-  workers.at(-1) ?? expect.unreachable('No worker was started');
-const liveWorkers = () => workers.filter((worker) => !worker.stopped).length;
+const latestEngine = () =>
+  engines.at(-1) ?? expect.unreachable('No engine was started');
+const liveEngines = () => engines.filter((engine) => !engine.stopped).length;
 
 beforeEach(() => {
   vi.useFakeTimers();
-  workers = [];
+  engines = [];
 });
 
 afterEach(() => {
@@ -84,7 +84,7 @@ describe('supervisor model', () => {
   let serverAddressRemovals: number;
 
   const machine = supervisorMachine.provide({
-    actors: { worker: createMockWorker({ exitsWhenAsked: false }) },
+    actors: { engine: createMockEngine({ exitsWhenAsked: false }) },
     actions: {
       writeServerAddress: ({ context }) => {
         serverAddressWrites.push({
@@ -108,8 +108,8 @@ describe('supervisor model', () => {
     watch: false,
   };
   const payloads: Record<string, SupervisorEvent> = {
-    'worker.ready': { type: 'worker.ready', port: 7337 },
-    'worker.exit': { type: 'worker.exit', code: 1 },
+    'engine.ready': { type: 'engine.ready', port: 7337 },
+    'engine.exit': { type: 'engine.exit', code: 1 },
   };
   const eventTypes = (node: DirectedGraphNode): string[] => [
     ...node.edges.map((edge) => edge.label.text),
@@ -153,16 +153,16 @@ describe('supervisor model', () => {
     'xstate.init': () => {
       supervisor = createActor(machine, { input }).start();
     },
-    'worker.ready': () =>
-      latestWorker().send({ type: 'worker.ready', port: 7337 }),
-    'worker.heartbeat': () => {
+    'engine.ready': () =>
+      latestEngine().send({ type: 'engine.ready', port: 7337 }),
+    'engine.heartbeat': () => {
       vi.advanceTimersByTime(heartbeatTimeoutMs - 1);
-      latestWorker().send({ type: 'worker.heartbeat' });
+      latestEngine().send({ type: 'engine.heartbeat' });
     },
-    'worker.exit': () => latestWorker().send({ type: 'worker.exit', code: 1 }),
-    'worker.exited': () => {
-      expect(latestWorker().askedToStop).toBe(true);
-      latestWorker().exit();
+    'engine.exit': () => latestEngine().send({ type: 'engine.exit', code: 1 }),
+    'engine.exited': () => {
+      expect(latestEngine().askedToStop).toBe(true);
+      latestEngine().exit();
     },
     'server.stop': () => supervisor.send({ type: 'server.stop' }),
     'xstate.after.readyTimeout.supervisor.starting': () =>
@@ -189,33 +189,33 @@ describe('supervisor model', () => {
   const states: Record<string, (snapshot: SupervisorSnapshot) => void> = {
     starting: (snapshot) => {
       expectModelState(snapshot);
-      expect(liveWorkers()).toBe(1);
+      expect(liveEngines()).toBe(1);
       if (snapshot.context.port === null)
         expect(serverAddressWrites).toEqual([]);
     },
     running: (snapshot) => {
       expectModelState(snapshot);
-      expect(liveWorkers()).toBe(1);
+      expect(liveEngines()).toBe(1);
       expect(serverAddressWrites.at(-1)).toEqual(ownAddress);
     },
     backingOff: (snapshot) => {
       expectModelState(snapshot);
-      expect(liveWorkers()).toBe(
-        snapshot.matches({ backingOff: { worker: 'exited' } }) ? 0 : 1,
+      expect(liveEngines()).toBe(
+        snapshot.matches({ backingOff: { engine: 'exited' } }) ? 0 : 1,
       );
-      expect(latestWorker().askedToStop).toBe(true);
+      expect(latestEngine().askedToStop).toBe(true);
       expect(snapshot.context.crashTimes.length).toBeLessThan(maxCrashes);
       expect(serverAddressRemovals).toBe(0);
     },
     failed: (snapshot) => {
       expectModelState(snapshot);
       expect(snapshot.context.crashTimes).toHaveLength(maxCrashes);
-      expect(liveWorkers()).toBe(0);
+      expect(liveEngines()).toBe(0);
       expect(serverAddressRemovals).toBe(1);
     },
     stopping: (snapshot) => {
       expectModelState(snapshot);
-      expect(liveWorkers()).toBe(0);
+      expect(liveEngines()).toBe(0);
       expect(serverAddressRemovals).toBe(1);
     },
   };
@@ -296,7 +296,7 @@ describe('supervisor', () => {
   const startSupervisor = () => {
     supervisor = createActor(
       supervisorMachine.provide({
-        actors: { worker: createMockWorker({ exitsWhenAsked: true }) },
+        actors: { engine: createMockEngine({ exitsWhenAsked: true }) },
       }),
       {
         input: {
@@ -310,16 +310,16 @@ describe('supervisor', () => {
     return supervisor;
   };
 
-  const crashLatestWorker = () =>
-    latestWorker().send({ type: 'worker.exit', code: 1 });
+  const crashLatestEngine = () =>
+    latestEngine().send({ type: 'engine.exit', code: 1 });
 
-  // Crashes the worker and returns how long the supervisor waited before it started the next one.
+  // Crashes the Engine and returns how long the Supervisor waited before it started the next one.
   const crashAndWaitForRestart = () => {
-    const before = workers.length;
-    crashLatestWorker();
+    const before = engines.length;
+    crashLatestEngine();
     let waited = 0;
-    while (workers.length === before) {
-      if (waited >= 60_000) throw new Error('The worker was not restarted');
+    while (engines.length === before) {
+      if (waited >= 60_000) throw new Error('The engine was not restarted');
       vi.advanceTimersByTime(100);
       waited += 100;
     }
@@ -327,10 +327,10 @@ describe('supervisor', () => {
   };
 
   const keepRunningFor = (milliseconds: number) => {
-    latestWorker().send({ type: 'worker.ready', port: 7337 });
+    latestEngine().send({ type: 'engine.ready', port: 7337 });
     for (let waited = 0; waited < milliseconds; waited += 1000) {
       vi.advanceTimersByTime(1000);
-      latestWorker().send({ type: 'worker.heartbeat' });
+      latestEngine().send({ type: 'engine.heartbeat' });
     }
   };
 
@@ -342,11 +342,11 @@ describe('supervisor', () => {
     rmSync(home, { recursive: true, force: true });
   });
 
-  it('writes server.json atomically with its own pid and the worker port', () => {
+  it('writes server.json atomically with its own pid and the engine port', () => {
     startSupervisor();
     expect(existsSync(serverJsonPath())).toBe(false);
 
-    latestWorker().send({ type: 'worker.ready', port: 7337 });
+    latestEngine().send({ type: 'engine.ready', port: 7337 });
 
     expect(readServerJson()).toEqual({
       pid: process.pid,
@@ -359,7 +359,7 @@ describe('supervisor', () => {
 
   it('removes its own server.json when asked to stop', () => {
     startSupervisor();
-    latestWorker().send({ type: 'worker.ready', port: 7337 });
+    latestEngine().send({ type: 'engine.ready', port: 7337 });
 
     supervisor.send({ type: 'server.stop' });
 
@@ -381,7 +381,7 @@ describe('supervisor', () => {
 
     for (let crash = 0; crash < 9; crash++) crashAndWaitForRestart();
     keepRunningFor(5 * 60_000);
-    crashLatestWorker();
+    crashLatestEngine();
 
     expect(supervisor.getSnapshot().value).toBe('failed');
   });
@@ -391,7 +391,7 @@ describe('supervisor', () => {
     writeOtherServerJson();
 
     for (let crash = 0; crash < 9; crash++) crashAndWaitForRestart();
-    crashLatestWorker();
+    crashLatestEngine();
 
     expect(supervisor.getSnapshot().value).toBe('failed');
     expect(readServerJson()).toEqual(otherServerAddress);

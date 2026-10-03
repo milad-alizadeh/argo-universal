@@ -64,7 +64,7 @@ export function createHttpApp(options: HttpAppOptions) {
   });
   app.notFound((context) => context.json({ error: 'Not found' }, 404));
   app.onError((error, context) => {
-    console.error(`worker: ${String(error)}`);
+    console.error(`engine: ${String(error)}`);
     return context.json({ error: 'Internal error' }, 500);
   });
   return app;
@@ -77,6 +77,6 @@ export const createRequestErrorHandler =
       guard.report('request', error.message);
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
-    console.error(`worker: ${String(error)}`);
+    console.error(`engine: ${String(error)}`);
     return Response.json({ error: 'Internal error' }, { status: 500 });
   };

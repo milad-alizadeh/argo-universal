@@ -2,8 +2,8 @@ import { readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ServerAddress } from '@repo/contracts';
 import { assign, sendTo, setup, spawnChild, stopChild } from 'xstate';
-import type { WorkerEvent } from './worker-message';
-import { workerProcess } from './worker-process';
+import type { EngineEvent } from './engine-message';
+import { engineProcess } from './engine-process';
 
 export interface SupervisorInput {
   home: string;
@@ -14,11 +14,11 @@ export interface SupervisorInput {
 
 interface SupervisorContext extends SupervisorInput {
   port: number | null;
-  // Times of recent worker crashes, in Unix milliseconds, oldest first.
+  // Times of recent Engine crashes, in Unix milliseconds, oldest first.
   crashTimes: number[];
 }
 
-type SupervisorEvent = WorkerEvent | { type: 'server.stop' };
+type SupervisorEvent = EngineEvent | { type: 'server.stop' };
 
 const serverAddressFile = 'server.json';
 const crashWindowMs = 10 * 60_000;
@@ -32,7 +32,7 @@ export const supervisorMachine = setup({
     context: {} as SupervisorContext,
     events: {} as SupervisorEvent,
   },
-  actors: { worker: workerProcess },
+  actors: { engine: engineProcess },
   actions: {
     setPort: assign({ port: (_, params: { port: number }) => params.port }),
     recordCrash: assign({
@@ -58,8 +58,8 @@ export const supervisorMachine = setup({
       writeFileSync(temporaryPath, `${JSON.stringify(address, null, 2)}\n`);
       renameSync(temporaryPath, filePath);
     },
-    askWorkerToStop: sendTo('worker', { type: 'worker.stop' }),
-    // Removes server.json only when it names this pid, so a failed second supervisor leaves the running Server's file.
+    askEngineToStop: sendTo('engine', { type: 'engine.stop' }),
+    // Removes server.json only when it names this pid, so a failed second Supervisor leaves the running Server's file.
     removeServerAddress: ({ context }) => {
       const filePath = join(context.home, serverAddressFile);
       let json: unknown;
@@ -99,28 +99,28 @@ export const supervisorMachine = setup({
   },
   states: {
     starting: {
-      entry: spawnChild('worker', {
-        id: 'worker',
+      entry: spawnChild('engine', {
+        id: 'engine',
         input: ({ context }) => ({ watch: context.watch }),
       }),
       after: { readyTimeout: { target: 'backingOff' } },
       on: {
-        'worker.ready': {
+        'engine.ready': {
           target: 'running',
           actions: [
             { type: 'setPort', params: ({ event }) => ({ port: event.port }) },
             { type: 'writeServerAddress' },
           ],
         },
-        'worker.exit': { target: 'backingOff' },
+        'engine.exit': { target: 'backingOff' },
       },
     },
     running: {
       after: { heartbeatTimeout: { target: 'backingOff' } },
       on: {
-        'worker.heartbeat': { target: 'running', reenter: true },
-        // In watch mode the worker restarts itself after a file change and is ready again.
-        'worker.ready': {
+        'engine.heartbeat': { target: 'running', reenter: true },
+        // In watch mode the Engine restarts itself after a file change and is ready again.
+        'engine.ready': {
           target: 'running',
           reenter: true,
           actions: [
@@ -128,23 +128,23 @@ export const supervisorMachine = setup({
             { type: 'writeServerAddress' },
           ],
         },
-        'worker.exit': { target: 'backingOff' },
+        'engine.exit': { target: 'backingOff' },
       },
     },
-    // A blocked worker holds the port until it exits, so the next one starts after both the exit and the delay.
+    // A blocked Engine holds the port until it exits, so the next one starts after both the exit and the delay.
     backingOff: {
       type: 'parallel',
-      entry: [{ type: 'askWorkerToStop' }, { type: 'recordCrash' }],
+      entry: [{ type: 'askEngineToStop' }, { type: 'recordCrash' }],
       always: { guard: 'crashedTooOften', target: 'failed' },
       states: {
-        worker: {
+        engine: {
           initial: 'stopping',
           states: {
             stopping: {
               on: {
-                'worker.exited': {
+                'engine.exited': {
                   target: 'exited',
-                  actions: stopChild('worker'),
+                  actions: stopChild('engine'),
                 },
               },
             },
@@ -167,7 +167,7 @@ export const supervisorMachine = setup({
     },
     stopping: {
       type: 'final',
-      entry: [stopChild('worker'), { type: 'removeServerAddress' }],
+      entry: [stopChild('engine'), { type: 'removeServerAddress' }],
     },
   },
 });
