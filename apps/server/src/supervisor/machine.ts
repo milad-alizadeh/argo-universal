@@ -1,5 +1,7 @@
+import { readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { ServerAddress } from '@repo/contracts';
 import { assign, sendTo, setup, spawnChild, stopChild } from 'xstate';
-import { removeServerAddress, writeServerAddress } from './server-address-file';
 import type { WorkerEvent } from './worker-message';
 import { workerProcess } from './worker-process';
 
@@ -18,6 +20,7 @@ interface SupervisorContext extends SupervisorInput {
 
 type SupervisorEvent = WorkerEvent | { type: 'server.stop' };
 
+const serverAddressFile = 'server.json';
 const crashWindowMs = 10 * 60_000;
 const maxCrashesInWindow = 10;
 const backoffBaseMs = 500;
@@ -41,18 +44,34 @@ export const supervisorMachine = setup({
         ];
       },
     }),
+    // Writes a temp file and renames it, so a reader never sees half a file.
     writeServerAddress: ({ context }) => {
       if (context.port === null) return;
-      writeServerAddress(context.home, {
+      const filePath = join(context.home, serverAddressFile);
+      const temporaryPath = `${filePath}.${process.pid}.tmp`;
+      const address = ServerAddress.parse({
         pid: process.pid,
         port: context.port,
         version: context.version,
         startedAt: context.startedAt,
       });
+      writeFileSync(temporaryPath, `${JSON.stringify(address, null, 2)}\n`);
+      renameSync(temporaryPath, filePath);
     },
     askWorkerToStop: sendTo('worker', { type: 'worker.stop' }),
-    removeServerAddress: ({ context }) =>
-      removeServerAddress(context.home, process.pid),
+    // Removes server.json only when it names this pid, so a failed second supervisor leaves the running Server's file.
+    removeServerAddress: ({ context }) => {
+      const filePath = join(context.home, serverAddressFile);
+      let json: unknown;
+      try {
+        json = JSON.parse(readFileSync(filePath, 'utf8'));
+      } catch {
+        return;
+      }
+      const address = ServerAddress.safeParse(json);
+      if (address.success && address.data.pid === process.pid)
+        rmSync(filePath, { force: true });
+    },
   },
   guards: {
     crashedTooOften: ({ context }) =>
