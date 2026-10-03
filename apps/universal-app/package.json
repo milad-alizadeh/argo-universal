@@ -4,11 +4,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "android": "expo start --android",
+    "android": "expo run:android",
     "build": "expo export --platform web",
     "check-types": "tsc --noEmit",
     "dev": "expo start",
-    "ios": "expo start --ios",
+    "ios": "expo run:ios",
     "start": "expo start",
     "web": "expo start --web"
   },
