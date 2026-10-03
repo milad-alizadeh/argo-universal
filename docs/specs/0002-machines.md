@@ -206,7 +206,7 @@ A Session then opens as `idle` the next time a service asks for it.
 
 ## 10. Electron Server connection
 
-Electron has one Server job: make sure a Supervisor runs. The Supervisor watches and repairs the Engine, so Electron never calls `/health` and never watches the Engine. This replaces the launch rule in spec 0001 section 9.
+Electron has one Server job: make sure a Supervisor runs. The Supervisor watches and repairs the Engine, so Electron never calls `/health` and never watches the Engine. Spec 0001 section 9 states the same rule.
 
 `apps/desktop/src/main/server-machine.ts` replaces `server-lifecycle.ts`. `server-process.ts` keeps the functions that the machine invokes.
 
