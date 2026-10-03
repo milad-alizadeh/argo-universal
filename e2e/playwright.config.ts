@@ -57,7 +57,7 @@ export default defineConfig<AppOptions>({
       cwd: path.join(repositoryRoot, 'apps/server'),
       // Playwright empties test-results before it starts web servers, so each run gets a fresh home.
       env: {
-        ARGO_HOME: path.join(import.meta.dirname, 'test-results', 'argo-home'),
+        ARGO_HOME: path.join(import.meta.dirname, 'test-results', 'server-home'),
       },
       // Never reuse a dev Server, which runs on the owner's ~/.argo.
       reuseExistingServer: false,

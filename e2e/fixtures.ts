@@ -57,7 +57,7 @@ export const test = base.extend<AppOptions>({
     }
 
     // Desktop starts its own Server in a fresh home on a free port, so it never meets the web project's Server.
-    const home = testInfo.outputPath('argo-home');
+    const home = testInfo.outputPath('server-home');
     const {
       ARGO_EXPO_WEB_URL: _webDevelopmentUrl,
       ELECTRON_RUN_AS_NODE: _runAsNode,

@@ -86,7 +86,7 @@ function keepRunningFor(milliseconds: number) {
 
 beforeEach(() => {
   vi.useFakeTimers();
-  home = mkdtempSync(join(tmpdir(), 'argo-supervisor-'));
+  home = mkdtempSync(join(tmpdir(), 'server-supervisor-'));
   workers = [];
 });
 

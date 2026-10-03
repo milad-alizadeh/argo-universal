@@ -2,10 +2,10 @@ import type { ClockTick } from '@repo/contracts';
 
 const tickIntervalMs = 1000;
 
-// Resolves after `ms`, or at once when the signal aborts.
-const sleep = (ms: number, signal: AbortSignal | undefined) =>
+// Resolves after `milliseconds`, or at once when the signal aborts.
+const sleep = (milliseconds: number, signal: AbortSignal | undefined) =>
   new Promise<void>((resolve) => {
-    const timer = setTimeout(done, ms);
+    const timer = setTimeout(done, milliseconds);
     signal?.addEventListener('abort', done, { once: true });
     function done() {
       clearTimeout(timer);
