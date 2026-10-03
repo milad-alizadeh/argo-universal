@@ -9,6 +9,7 @@
   "scripts": {
     "check-types": "tsc --noEmit",
     "dev": "export ARGO_EXPO_WEB_URL=${ARGO_EXPO_WEB_URL:-http://localhost:8081} && unset ELECTRON_RUN_AS_NODE && node scripts/wait-for-dev-servers.mts && electron-forge start",
+    "package": "electron-forge package",
     "start": "unset ELECTRON_RUN_AS_NODE && electron-forge start",
     "test": "vitest run"
   },

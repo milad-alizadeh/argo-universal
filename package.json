@@ -13,7 +13,9 @@
     "postinstall": "sherif",
     "quality": "sherif && biome check . && turbo run check-types && vitest run",
     "sherif": "sherif",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:e2e": "pnpm --filter @repo/e2e test:web",
+    "test:e2e:electron": "pnpm --filter @repo/e2e test:electron"
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:",
