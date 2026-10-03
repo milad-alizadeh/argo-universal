@@ -1,4 +1,4 @@
-import { assign, setup, spawnChild, stopChild } from 'xstate';
+import { assign, sendTo, setup, spawnChild, stopChild } from 'xstate';
 import { removeServerAddress, writeServerAddress } from './server-address-file';
 import type { WorkerEvent } from './worker-message';
 import { workerProcess } from './worker-process';
@@ -14,6 +14,9 @@ interface SupervisorContext extends SupervisorInput {
   port: number | null;
   // Times of recent worker crashes, in Unix milliseconds, oldest first.
   crashTimes: number[];
+  // In `backingOff`, the next worker starts once both the old one has exited and the delay has passed.
+  workerExited: boolean;
+  backoffElapsed: boolean;
 }
 
 type SupervisorEvent = WorkerEvent | { type: 'server.stop' };
@@ -50,12 +53,15 @@ export const supervisorMachine = setup({
         startedAt: context.startedAt,
       });
     },
+    askWorkerToStop: sendTo('worker', { type: 'worker.stop' }),
     removeServerAddress: ({ context }) =>
       removeServerAddress(context.home, process.pid),
   },
   guards: {
     crashedTooOften: ({ context }) =>
       context.crashTimes.length >= maxCrashesInWindow,
+    workerExited: ({ context }) => context.workerExited,
+    backoffElapsed: ({ context }) => context.backoffElapsed,
   },
   delays: {
     backoff: ({ context }) =>
@@ -68,7 +74,13 @@ export const supervisorMachine = setup({
   },
 }).createMachine({
   id: 'supervisor',
-  context: ({ input }) => ({ ...input, port: null, crashTimes: [] }),
+  context: ({ input }) => ({
+    ...input,
+    port: null,
+    crashTimes: [],
+    workerExited: false,
+    backoffElapsed: false,
+  }),
   initial: 'starting',
   on: {
     'server.stop': { target: '.stopping' },
@@ -107,10 +119,30 @@ export const supervisorMachine = setup({
         'worker.exit': { target: 'backingOff' },
       },
     },
+    // A blocked worker holds the port until it exits, so the next one waits for that exit.
     backingOff: {
-      entry: [stopChild('worker'), { type: 'recordCrash' }],
+      entry: [
+        assign({ workerExited: false, backoffElapsed: false }),
+        { type: 'askWorkerToStop' },
+        { type: 'recordCrash' },
+      ],
       always: { guard: 'crashedTooOften', target: 'failed' },
-      after: { backoff: { target: 'starting' } },
+      on: {
+        'worker.exited': [
+          {
+            guard: 'backoffElapsed',
+            target: 'starting',
+            actions: stopChild('worker'),
+          },
+          { actions: [stopChild('worker'), assign({ workerExited: true })] },
+        ],
+      },
+      after: {
+        backoff: [
+          { guard: 'workerExited', target: 'starting' },
+          { actions: assign({ backoffElapsed: true }) },
+        ],
+      },
     },
     failed: {
       type: 'final',

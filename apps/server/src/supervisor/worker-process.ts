@@ -1,8 +1,9 @@
 import { fork } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { type AnyEventObject, fromCallback } from 'xstate';
+import { fromCallback } from 'xstate';
 import {
   WatchModeMessage,
+  type WorkerCommand,
   type WorkerEvent,
   WorkerMessage,
 } from './worker-message';
@@ -13,8 +14,8 @@ const workerEntry = fileURLToPath(
 const killTimeoutMs = 5000;
 
 // Forks the worker under tsx; in watch mode Node restarts it on a file change and relays its IPC messages.
-export const workerProcess = fromCallback<AnyEventObject, { watch: boolean }>(
-  ({ input, sendBack }) => {
+export const workerProcess = fromCallback<WorkerCommand, { watch: boolean }>(
+  ({ input, sendBack, receive }) => {
     const send = (event: WorkerEvent) => sendBack(event);
     const child = fork(workerEntry, [], {
       execArgv: [
@@ -42,16 +43,30 @@ export const workerProcess = fromCallback<AnyEventObject, { watch: boolean }>(
     };
     const onExit = (code: number | null) => send({ type: 'worker.exit', code });
 
-    child.on('message', onMessage);
-    child.on('exit', onExit);
-    return () => {
-      child.off('message', onMessage);
-      child.off('exit', onExit);
-      if (child.exitCode !== null || child.signalCode !== null) return;
+    const hasExited = () =>
+      child.exitCode !== null || child.signalCode !== null;
+    // Sends SIGTERM, then SIGKILL if the worker is still running after the timeout.
+    const kill = () => {
       child.kill('SIGTERM');
       const forceKill = setTimeout(() => child.kill('SIGKILL'), killTimeoutMs);
       forceKill.unref();
       child.once('exit', () => clearTimeout(forceKill));
+    };
+
+    child.on('message', onMessage);
+    child.on('exit', onExit);
+    receive(() => {
+      if (hasExited()) {
+        send({ type: 'worker.exited' });
+        return;
+      }
+      child.once('exit', () => send({ type: 'worker.exited' }));
+      kill();
+    });
+    return () => {
+      child.off('message', onMessage);
+      child.off('exit', onExit);
+      if (!hasExited()) kill();
     };
   },
 );

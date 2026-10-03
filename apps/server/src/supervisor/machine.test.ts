@@ -10,19 +10,30 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { type AnyEventObject, createActor, fromCallback } from 'xstate';
 import { supervisorMachine } from './machine';
+import type { WorkerCommand } from './worker-message';
 
 interface FakeWorker {
   send: (event: AnyEventObject) => void;
+  exit: () => void;
   stopped: boolean;
 }
 
 let home: string;
 let workers: FakeWorker[];
+// A blocked worker ignores SIGTERM and holds its port until it exits.
+let workersExitWhenAsked: boolean;
 
-const fakeWorker = fromCallback<AnyEventObject, { watch: boolean }>(
-  ({ sendBack }) => {
-    const worker: FakeWorker = { send: sendBack, stopped: false };
+const fakeWorker = fromCallback<WorkerCommand, { watch: boolean }>(
+  ({ sendBack, receive }) => {
+    const worker: FakeWorker = {
+      send: sendBack,
+      exit: () => sendBack({ type: 'worker.exited' }),
+      stopped: false,
+    };
     workers.push(worker);
+    receive(() => {
+      if (workersExitWhenAsked) worker.exit();
+    });
     return () => {
       worker.stopped = true;
     };
@@ -88,6 +99,7 @@ beforeEach(() => {
   vi.useFakeTimers();
   home = mkdtempSync(join(tmpdir(), 'server-supervisor-'));
   workers = [];
+  workersExitWhenAsked = true;
 });
 
 afterEach(() => {
@@ -224,5 +236,33 @@ describe('supervisor', () => {
 
     expect(supervisor.getSnapshot().value).toBe('stopping');
     expect(readServerJson()).toEqual(otherServerAddress);
+  });
+
+  it('starts the next worker only after the old one has exited', () => {
+    workersExitWhenAsked = false;
+    const supervisor = startSupervisor();
+    latestWorker().send({ type: 'worker.ready', port: 7337 });
+
+    vi.advanceTimersByTime(5000);
+    vi.advanceTimersByTime(10_000);
+    expect(supervisor.getSnapshot().value).toBe('backingOff');
+    expect(workers).toHaveLength(1);
+
+    latestWorker().exit();
+    expect(workers).toHaveLength(2);
+    expect(supervisor.getSnapshot().value).toBe('starting');
+  });
+
+  it('waits out the restart delay when the old worker exits at once', () => {
+    workersExitWhenAsked = false;
+    startSupervisor();
+    latestWorker().send({ type: 'worker.ready', port: 7337 });
+
+    vi.advanceTimersByTime(5000);
+    latestWorker().exit();
+    expect(workers).toHaveLength(1);
+
+    vi.advanceTimersByTime(500);
+    expect(workers).toHaveLength(2);
   });
 });

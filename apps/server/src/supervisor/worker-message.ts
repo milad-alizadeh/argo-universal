@@ -13,8 +13,12 @@ export const WatchModeMessage = z.record(
   z.unknown(),
 );
 
-// Events that the worker actor sends to the supervisor machine.
+// Events that the worker actor sends to the supervisor machine; `worker.exited` answers `worker.stop`.
 export type WorkerEvent =
   | { type: 'worker.ready'; port: number }
   | { type: 'worker.heartbeat' }
-  | { type: 'worker.exit'; code: number | null };
+  | { type: 'worker.exit'; code: number | null }
+  | { type: 'worker.exited' };
+
+// The event that the supervisor machine sends the worker actor.
+export type WorkerCommand = { type: 'worker.stop' };
