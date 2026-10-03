@@ -21,13 +21,7 @@ export type SessionUpdateKind = z.infer<typeof SessionUpdateKind>;
 export const SessionUpdateState = z.enum(sessionUpdateStates);
 export type SessionUpdateState = z.infer<typeof SessionUpdateState>;
 
-const feedRowColumns = createSelectSchema(feedRow, {
-  id: (schema) => schema.min(1),
-  sessionId: (schema) => schema.min(1),
-  position: (schema) => schema.nonnegative(),
-  revision: (schema) => schema.nonnegative(),
-  turnId: (schema) => schema.min(1),
-});
+const feedRowColumns = createSelectSchema(feedRow);
 
 // Fields every Feed row carries, from the `feed_row` table (spec section 6, ADR-0007).
 const envelope = feedRowColumns.pick({

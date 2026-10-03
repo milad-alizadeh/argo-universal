@@ -27,12 +27,7 @@ export const TurnUsage = z.strictObject({
 });
 export type TurnUsage = z.infer<typeof TurnUsage>;
 
-const turnColumns = createSelectSchema(turn, {
-  id: (schema) => schema.min(1),
-  sessionId: (schema) => schema.min(1),
-  startedAt: (schema) => schema.nonnegative(),
-  endedAt: (schema) => schema.nonnegative(),
-});
+const turnColumns = createSelectSchema(turn);
 
 // The `turn` table's columns, times in Unix milliseconds; `error` and `usage` are typed JSON here.
 export const Turn = z.strictObject({

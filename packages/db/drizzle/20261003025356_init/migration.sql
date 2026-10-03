@@ -4,7 +4,7 @@ CREATE TABLE `blob` (
 	`bytes` integer NOT NULL,
 	`width` integer,
 	`height` integer,
-	`created_at` integer NOT NULL
+	`created_at` integer DEFAULT (cast(unixepoch('subsec') * 1000 as integer)) NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE `blob_ref` (
@@ -27,8 +27,8 @@ CREATE TABLE `feed_row` (
 	`payload_version` integer NOT NULL,
 	`source_ref` text,
 	`search_text` text,
-	`created_at` integer NOT NULL,
-	`updated_at` integer NOT NULL,
+	`created_at` integer DEFAULT (cast(unixepoch('subsec') * 1000 as integer)) NOT NULL,
+	`updated_at` integer DEFAULT (cast(unixepoch('subsec') * 1000 as integer)) NOT NULL,
 	CONSTRAINT `feed_row_pk` PRIMARY KEY(`session_id`, `position`),
 	CONSTRAINT `fk_feed_row_session_id_session_id_fk` FOREIGN KEY (`session_id`) REFERENCES `session`(`id`) ON DELETE CASCADE
 );
@@ -37,7 +37,7 @@ CREATE TABLE `project` (
 	`id` text PRIMARY KEY,
 	`path` text NOT NULL UNIQUE,
 	`name` text NOT NULL,
-	`created_at` integer NOT NULL
+	`created_at` integer DEFAULT (cast(unixepoch('subsec') * 1000 as integer)) NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE `session` (
@@ -52,8 +52,8 @@ CREATE TABLE `session` (
 	`epoch` integer DEFAULT 0 NOT NULL,
 	`projection_version` integer NOT NULL,
 	`max_revision` integer DEFAULT 0 NOT NULL,
-	`created_at` integer NOT NULL,
-	`updated_at` integer NOT NULL,
+	`created_at` integer DEFAULT (cast(unixepoch('subsec') * 1000 as integer)) NOT NULL,
+	`updated_at` integer DEFAULT (cast(unixepoch('subsec') * 1000 as integer)) NOT NULL,
 	CONSTRAINT `fk_session_project_id_project_id_fk` FOREIGN KEY (`project_id`) REFERENCES `project`(`id`) ON DELETE CASCADE,
 	CONSTRAINT `fk_session_parent_session_id_session_id_fk` FOREIGN KEY (`parent_session_id`) REFERENCES `session`(`id`) ON DELETE SET NULL
 );
@@ -65,7 +65,7 @@ CREATE TABLE `turn` (
 	`stop_reason` text,
 	`error` text,
 	`usage` text,
-	`started_at` integer NOT NULL,
+	`started_at` integer DEFAULT (cast(unixepoch('subsec') * 1000 as integer)) NOT NULL,
 	`ended_at` integer,
 	CONSTRAINT `fk_turn_session_id_session_id_fk` FOREIGN KEY (`session_id`) REFERENCES `session`(`id`) ON DELETE CASCADE
 );

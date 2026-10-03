@@ -9,15 +9,7 @@ export const SessionListInput = z.strictObject({
 });
 export type SessionListInput = z.infer<typeof SessionListInput>;
 
-const sessionColumns = createSelectSchema(session, {
-  id: (schema) => schema.min(1),
-  projectId: (schema) => schema.min(1),
-  agent: (schema) => schema.min(1),
-  parentSessionId: (schema) => schema.min(1),
-  checkoutPath: (schema) => schema.min(1),
-  createdAt: (schema) => schema.nonnegative(),
-  updatedAt: (schema) => schema.nonnegative(),
-});
+const sessionColumns = createSelectSchema(session);
 
 // One Session in a list, after ACP `SessionInfo`: `session` columns under ACP names, times in Unix milliseconds.
 export const SessionInfo = z.strictObject({

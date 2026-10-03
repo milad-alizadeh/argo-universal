@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import {
   type AnySQLiteColumn,
   index,
@@ -40,12 +41,15 @@ export const stopReasons = [
 export type StopReason = (typeof stopReasons)[number];
 
 // Times are Unix milliseconds. JSON columns are text; the Server validates them on write and read.
+// The database stamps `createdAt` and `startedAt` on insert, and a trigger stamps `updatedAt` on update (migration `updated_at_triggers`).
+const now = sql`(cast(unixepoch('subsec') * 1000 as integer))`;
+const timestamp = () => integer().notNull().default(now);
 
 export const project = snakeCase.table('project', {
   id: text().primaryKey(),
   path: text().notNull().unique(),
   name: text().notNull(),
-  createdAt: integer().notNull(),
+  createdAt: timestamp(),
 });
 
 export const session = snakeCase.table('session', {
@@ -64,8 +68,8 @@ export const session = snakeCase.table('session', {
   epoch: integer().notNull().default(0),
   projectionVersion: integer().notNull(),
   maxRevision: integer().notNull().default(0),
-  createdAt: integer().notNull(),
-  updatedAt: integer().notNull(),
+  createdAt: timestamp(),
+  updatedAt: timestamp(),
 });
 
 export const turn = snakeCase.table('turn', {
@@ -77,7 +81,7 @@ export const turn = snakeCase.table('turn', {
   stopReason: text({ enum: stopReasons }),
   error: text({ mode: 'json' }),
   usage: text({ mode: 'json' }),
-  startedAt: integer().notNull(),
+  startedAt: timestamp(),
   endedAt: integer(),
 });
 
@@ -97,8 +101,8 @@ export const feedRow = snakeCase.table(
     payloadVersion: integer().notNull(),
     sourceRef: text({ mode: 'json' }),
     searchText: text(),
-    createdAt: integer().notNull(),
-    updatedAt: integer().notNull(),
+    createdAt: timestamp(),
+    updatedAt: timestamp(),
   },
   (table) => [
     primaryKey({ columns: [table.sessionId, table.position] }),
@@ -122,7 +126,7 @@ export const blob = snakeCase.table('blob', {
   bytes: integer().notNull(),
   width: integer(),
   height: integer(),
-  createdAt: integer().notNull(),
+  createdAt: timestamp(),
 });
 
 // A deleted Session takes its refs with it; the Server deletes blob files that have no ref left.

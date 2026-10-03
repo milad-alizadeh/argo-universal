@@ -315,7 +315,7 @@ Shared types:
 
 ## 7. Database
 
-`packages/db` holds the Drizzle schema for all six tables and the first migration. The schema also holds the enums that columns use, and `contracts` derives from it (ADR 0013). Store each payload as JSON text. The Server validates it with the `contracts` schema on write and on read.
+`packages/db` holds the Drizzle schema for all six tables and the first migrations. The schema also holds the enums that columns use, and `contracts` derives from it (ADR 0013). Store each payload as JSON text. The Server validates it with the `contracts` schema on write and on read. Times are Unix milliseconds that the database writes: `createdAt` and `startedAt` by column default, `updatedAt` by a trigger on update.
 
 | Table | Columns |
 |---|---|

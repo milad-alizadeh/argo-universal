@@ -2,13 +2,7 @@ import { blob } from '@argo/db/schema';
 import { createSelectSchema } from 'drizzle-orm/zod';
 import { z } from 'zod';
 
-const blobColumns = createSelectSchema(blob, {
-  id: z.hash('sha256'),
-  mime: (schema) => schema.min(1),
-  bytes: (schema) => schema.nonnegative(),
-  width: (schema) => schema.positive(),
-  height: (schema) => schema.positive(),
-}).shape;
+const blobColumns = createSelectSchema(blob).shape;
 
 // A reference to a content-addressed file in `~/.argo/blobs/` (ADR-0005), from the `blob` table.
 export const BlobRef = z.strictObject({

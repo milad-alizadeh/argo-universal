@@ -7,3 +7,4 @@ The Drizzle tables in `@argo/db/schema` are the one source of truth for every sh
 - `@argo/db/schema` imports only `drizzle-orm`, never `node:sqlite` or other Node APIs, because the App bundles it through `contracts`.
 - `db` never imports `contracts`. The Server, which imports both, validates JSON payload columns with `contracts` schemas on write and on read.
 - Shapes with no table behind them, such as the Session update payloads and `server.json`, are still written by hand in `contracts`.
+- Derived schemas take the columns as they are. The Server wrote those values, so refining them adds nothing; procedure inputs, which come from outside, carry the checks.
