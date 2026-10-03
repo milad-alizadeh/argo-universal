@@ -32,14 +32,14 @@ const kind = <Kind extends SessionUpdateKind>(value: Kind) =>
   feedRowColumns.shape.sessionUpdate.extract([value]);
 
 // `_meta` is ACP's extension slot; Argo's own fields live under `_meta.argo` (ADR-0006).
-const meta = <Argo extends z.ZodObject>(argo: Argo) =>
-  z.strictObject({ argo: argo.optional() }).optional();
-const noArgoMeta = meta(z.strictObject({}));
+const meta = <Extension extends z.ZodObject>(extension: Extension) =>
+  z.strictObject({ argo: extension.optional() }).optional();
+const noExtensionMeta = meta(z.strictObject({}));
 
 const message = {
   messageId: z.string(),
   content: z.array(ContentBlock),
-  _meta: noArgoMeta,
+  _meta: noExtensionMeta,
 };
 
 export const UserMessage = z.strictObject({
@@ -88,7 +88,7 @@ export const PlanUpdate = z.strictObject({
   ...envelope,
   sessionUpdate: kind('plan_update'),
   plan: Plan,
-  _meta: noArgoMeta,
+  _meta: noExtensionMeta,
 });
 export type PlanUpdate = z.infer<typeof PlanUpdate>;
 
@@ -106,7 +106,7 @@ export const CompactionUpdate = z.strictObject({
   compactionId: z.string(),
   status: CompactionStatus,
   summary: z.array(ContentBlock).optional(),
-  _meta: noArgoMeta,
+  _meta: noExtensionMeta,
 });
 export type CompactionUpdate = z.infer<typeof CompactionUpdate>;
 
@@ -120,7 +120,7 @@ export const SubagentUpdate = z.strictObject({
   subagentSessionId: z.string(),
   title: z.string().optional(),
   subagentState: SubagentState.optional(),
-  _meta: noArgoMeta,
+  _meta: noExtensionMeta,
 });
 export type SubagentUpdate = z.infer<typeof SubagentUpdate>;
 
@@ -164,7 +164,7 @@ export const TaskUpdate = z.strictObject({
   taskId: z.string(),
   status: TaskStatus,
   title: z.string(),
-  _meta: noArgoMeta,
+  _meta: noExtensionMeta,
 });
 export type TaskUpdate = z.infer<typeof TaskUpdate>;
 
