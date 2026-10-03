@@ -21,8 +21,13 @@ const webDevelopmentUrl = process.env.ARGO_EXPO_WEB_URL;
 const appDirectory = app.getAppPath();
 const serverDirectory = path.join(appDirectory, '../server');
 const webExportDirectory = path.join(appDirectory, '../universal-app/dist');
+// Node's URL gives origin 'null' for the app: scheme, so build the origin from its parts.
+const originOf = (url: string) => {
+  const { protocol, host } = new URL(url);
+  return `${protocol}//${host}`;
+};
 const windowOrigin = webDevelopmentUrl
-  ? new URL(webDevelopmentUrl).origin
+  ? originOf(webDevelopmentUrl)
   : appOrigin;
 
 registerAppScheme();
@@ -46,7 +51,7 @@ const createWindow = (url: string) => {
 
   // Keep the window on the App; open nothing else.
   mainWindow.webContents.on('will-navigate', (event, target) => {
-    if (new URL(target).origin !== windowOrigin) event.preventDefault();
+    if (originOf(target) !== windowOrigin) event.preventDefault();
   });
   mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
 
