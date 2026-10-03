@@ -1,29 +1,29 @@
 {
-	"name": "argo-universal",
-	"private": true,
-	"type": "module",
-	"scripts": {
-		"build": "turbo run build",
-		"check": "biome check .",
-		"check-types": "turbo run check-types",
-		"dev": "turbo run dev",
-		"format": "biome check --write .",
-		"postinstall": "sherif",
-		"quality": "sherif && biome check . && turbo run check-types && vitest run",
-		"sherif": "sherif",
-		"test": "vitest run"
-	},
-	"devDependencies": {
-		"@argo/biome": "workspace:*",
-		"@biomejs/biome": "catalog:",
-		"sherif": "catalog:",
-		"turbo": "catalog:",
-		"typescript": "catalog:",
-		"vite": "catalog:",
-		"vitest": "catalog:"
-	},
-	"packageManager": "pnpm@12.8.1",
-	"engines": {
-		"node": "24.x"
-	}
+  "name": "argo-universal",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "turbo run build",
+    "check": "biome check .",
+    "check-types": "turbo run check-types",
+    "dev": "turbo run dev",
+    "format": "biome check --write .",
+    "postinstall": "sherif",
+    "quality": "sherif && biome check . && turbo run check-types && vitest run",
+    "sherif": "sherif",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@argo/biome": "workspace:*",
+    "@biomejs/biome": "catalog:",
+    "sherif": "catalog:",
+    "turbo": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  },
+  "packageManager": "pnpm@12.8.1",
+  "engines": {
+    "node": "24.x"
+  }
 }

@@ -1,4 +1,4 @@
 {
-	"extends": "@argo/typescript/node.json",
-	"include": ["src"]
+  "extends": "@argo/typescript/node.json",
+  "include": ["src"]
 }
