@@ -105,7 +105,7 @@ argo-universal/
 │   │       │   └── system/         info.ts, clock.ts, index.ts (createSystemService)
 │   │       └── main.ts             starts the supervisor
 │   └── storybook/                  web Storybook
-│       └── .storybook/             main.ts, preview.tsx, vitest.setup.ts
+│       └── .storybook/             main.ts, preview.tsx (Storybook 10's Vitest addon needs no setup file)
 ├── packages/
 │   ├── contracts/src/              Zod schemas only, derived from db tables where a table holds the shape
 │   │   ├── system/                 info.ts, clock.ts, server-address.ts, index.ts
