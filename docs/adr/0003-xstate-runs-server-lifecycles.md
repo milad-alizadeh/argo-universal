@@ -1,8 +1,8 @@
 # XState runs the Server lifecycles, and the Server address lives in a file
 
-XState runs only on the Server: the supervisor, the Session machines, and Agent lifecycles. Apps use TanStack Query and React state, with no machines.
+XState runs only on the Server: the supervisor, the worker, the Session machines, and Agent lifecycles. Apps use TanStack Query and React state, with no machines.
 
-The supervisor is an XState machine in `apps/server`, next to the worker that it starts. Its states are `starting`, `running`, `backingOff`, `failed`, and `stopping`. It restarts the worker after a missed heartbeat, with exponential backoff that has a cap. Electron starts the supervisor, not the worker. Electron reuses a running Server with the same version, restarts one with a different version, and stops only a Server that it started.
+The supervisor is an XState machine in `apps/server`, next to the worker that it starts. Its states are `starting`, `running`, `backingOff`, `failed`, and `stopping`. It restarts the worker after a missed heartbeat, with exponential backoff that has a cap. The worker is a machine too: it opens the database, serves, sends the heartbeat, and stops on a signal, with an exit code as its output. Electron starts the supervisor, not the worker. Electron reuses a running Server with the same version, restarts one with a different version, and stops only a Server that it started.
 
 The supervisor writes `~/.argo/server.json` atomically with `{pid, port, version, startedAt}`. The PID and port are runtime facts, so they are not in SQLite. Electron can then find the Server without the database package, and a crash leaves no stale row.
 

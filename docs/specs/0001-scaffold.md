@@ -99,8 +99,10 @@ argo-universal/
 │   │       └── preload/            exposes the Server address and window controls
 │   ├── server/
 │   │   └── src/
-│   │       ├── supervisor/         lifecycle machine, heartbeat, backoff, server.json
-│   │       ├── worker/             HTTP and WebSocket server, tRPC adapter, /health, /blobs/:id
+│   │       ├── supervisor/         machine.ts (lifecycle, heartbeat, backoff, server.json), worker-process.ts,
+│   │       │                       worker-message.ts, index.ts (runner)
+│   │       ├── worker/             machine.ts (lifecycle), http-server.ts (HTTP and WebSocket server, tRPC adapter),
+│   │       │                       http-app.ts (/health, /blobs/:id), request-guard.ts, process-signals.ts, main.ts
 │   │       ├── services/
 │   │       │   └── system/         info.ts, clock.ts, index.ts (createSystemService)
 │   │       └── main.ts             starts the supervisor
@@ -235,12 +237,12 @@ Vitest tests for `api` call the routers with `createCaller` and mock services, w
 
 ### Supervisor
 
-`apps/server/src/supervisor/` holds an XState 5 machine and a small runner, about 100 lines. The supervisor imports no app code, only `contracts` for the `server.json` schema.
+`apps/server/src/supervisor/` holds an XState 5 machine and a small runner. The machine's actions write and remove `server.json`. The supervisor imports no app code, only `contracts` for the `server.json` schema.
 
 - States: `starting`, `running`, `backingOff`, `failed`, `stopping`.
 - `starting` forks the worker with `child_process.fork` and waits for a `ready {port}` message.
 - `running` writes `server.json` and expects a `heartbeat` message from the worker. A missed heartbeat or a worker exit goes to `backingOff`.
-- `backingOff` waits, forks the worker again, and goes to `running` on `ready`, or to `failed`. The delay doubles from a base to a cap.
+- `backingOff` asks the worker to stop and waits in two parallel regions: `worker` until the old worker has exited, and `delay` until the backoff has passed. Then it forks the worker again, and goes to `running` on `ready`, or to `failed`. The delay doubles from a base to a cap.
 - `failed` is final when the worker crashes too often in a window. It removes `server.json` if this supervisor wrote it, and exits with a non-zero code.
 - `stopping` runs on `SIGINT` and `SIGTERM`: it stops the worker, removes `server.json` if this supervisor wrote it, and exits.
 - In dev, the supervisor forks the worker under `tsx watch`, so a file change restarts only the worker.
@@ -253,6 +255,12 @@ Vitest tests for `api` call the routers with `createCaller` and mock services, w
 - A `ws` server on the same port, with tRPC's `applyWSSHandler` and `@repo/api`'s `appRouter`.
 - Every request must carry `Host` `127.0.0.1:<port>` or `localhost:<port>`. A WebSocket upgrade must have no `Origin`, `app://app`, or an `http://localhost` or `http://127.0.0.1` origin. Anything else gets 403.
 - On start, it opens the database and runs the Drizzle migrations from `packages/db/drizzle/`.
+- `apps/server/src/worker/machine.ts` is an XState 5 machine that runs the worker's whole lifecycle. `main.ts` only creates it and exits with its output.
+  - `openingDatabase` opens the database and migrates it, then goes to `serving`, or to `failed`.
+  - `serving.listening` starts the HTTP server from `http-server.ts`. Once the port is bound, it sends `ready {port}` to the supervisor and goes to `serving.running`, or to `failed`, for example on `EADDRINUSE`.
+  - `serving.running` sends a `heartbeat` to the supervisor every second.
+  - `SIGINT`, `SIGTERM`, or a closed IPC channel goes to `stopping`, which awaits the server's `close()` and then goes to `stopped`, or to `failed` if closing fails.
+  - `stopped` and `failed` are final. Both close the database. The output is `{exitCode}`: 0 from `stopped`, 1 from `failed`.
 - Scaffold procedures: `system.info` (query, returns `{version, startedAt, pid}`) and `system.clock` (subscription, sends `{now}` every second).
 
 ## 6. Contracts
