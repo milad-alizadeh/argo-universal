@@ -376,6 +376,16 @@ describe('supervisor', () => {
     expect(supervisor.getSnapshot().value).toBe('starting');
   });
 
+  it('still counts crashes from less than 10 minutes ago', () => {
+    startSupervisor();
+
+    for (let crash = 0; crash < 9; crash++) crashAndWaitForRestart();
+    keepRunningFor(5 * 60_000);
+    crashLatestWorker();
+
+    expect(supervisor.getSnapshot().value).toBe('failed');
+  });
+
   it('leaves a server.json with another pid when it fails', () => {
     startSupervisor();
     writeOtherServerJson();
