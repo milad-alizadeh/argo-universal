@@ -31,6 +31,7 @@
     "expo-splash-screen": "catalog:",
     "expo-status-bar": "catalog:",
     "expo-system-ui": "catalog:",
+    "lucide-react-native": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-native": "catalog:",

@@ -11,6 +11,7 @@
     "dev:storybook": "pnpm --filter @repo/storybook storybook",
     "format": "biome check --write .",
     "postinstall": "sherif",
+    "prototype": "pnpm --filter @repo/universal-app web",
     "quality": "sherif && biome check . && turbo run check-types && vitest run",
     "sherif": "sherif",
     "test": "vitest run",

@@ -53,6 +53,7 @@ export default function RootLayout() {
         <Stack>
           <Stack.Screen name="index" options={{ title: 'Projects' }} />
           <Stack.Screen name="sessions/[id]" options={{ title: 'Session' }} />
+          <Stack.Screen name="prototype" options={{ headerShown: false }} />
           <Stack.Screen
             name="(dev)/storybook"
             options={{ headerShown: false }}
