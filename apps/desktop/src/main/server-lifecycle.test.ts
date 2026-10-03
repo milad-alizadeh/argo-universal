@@ -25,7 +25,10 @@ function fakeDependencies(
     version: '1.0.0',
     readAddress: vi.fn(async () => runningAddress),
     readHealth: vi.fn(async () => ({ version: '1.0.0' })),
-    start: vi.fn(async () => startedAddress),
+    start: vi.fn(async (onSpawn: (pid: number) => void) => {
+      onSpawn(startedAddress.pid);
+      return startedAddress;
+    }),
     stop: vi.fn(async () => {}),
     ...overrides,
   };
@@ -124,6 +127,42 @@ describe('createServerLifecycle', () => {
     await lifecycle.connect();
 
     await Promise.all([lifecycle.release(), lifecycle.release()]);
+    expect(dependencies.stop).toHaveBeenCalledOnce();
+  });
+
+  it('stops on release a Server that is still starting', async () => {
+    const dependencies = fakeDependencies({
+      readAddress: vi.fn(async () => null),
+      start: vi.fn((onSpawn: (pid: number) => void) => {
+        onSpawn(startedAddress.pid);
+        return new Promise<ServerAddress>(() => {});
+      }),
+    });
+    const lifecycle = createServerLifecycle(dependencies);
+    void lifecycle.connect();
+    await vi.waitFor(() => expect(dependencies.start).toHaveBeenCalled());
+
+    await lifecycle.release();
+    expect(dependencies.stop).toHaveBeenCalledExactlyOnceWith(
+      startedAddress.pid,
+    );
+  });
+
+  it('stops the Server it spawned when the start fails', async () => {
+    const dependencies = fakeDependencies({
+      readAddress: vi.fn(async () => null),
+      start: vi.fn(async (onSpawn: (pid: number) => void) => {
+        onSpawn(startedAddress.pid);
+        throw new Error('The Server did not answer in time');
+      }),
+    });
+    const lifecycle = createServerLifecycle(dependencies);
+
+    await expect(lifecycle.connect()).rejects.toThrow('did not answer');
+    expect(dependencies.stop).toHaveBeenCalledExactlyOnceWith(
+      startedAddress.pid,
+    );
+    await lifecycle.release();
     expect(dependencies.stop).toHaveBeenCalledOnce();
   });
 });

@@ -108,10 +108,10 @@ export async function stopServer(pid: number) {
 }
 
 // Spawns the supervisor with Node and tsx, detached so it outlives this app; utilityProcess has no `detached`.
-export async function startServer(options: {
-  home: string;
-  serverDirectory: string;
-}): Promise<ServerAddress> {
+export async function startServer(
+  options: { home: string; serverDirectory: string },
+  onSpawn: (pid: number) => void,
+): Promise<ServerAddress> {
   const { ELECTRON_RUN_AS_NODE: _runAsNode, ...environment } = process.env;
   const child = spawn('node', ['--import', 'tsx', 'src/main.ts'], {
     cwd: options.serverDirectory,
@@ -125,6 +125,7 @@ export async function startServer(options: {
     child.once('error', reject);
   });
   const pid = await spawned;
+  onSpawn(pid);
 
   const deadline = Date.now() + startTimeoutMs;
   while (Date.now() < deadline) {
@@ -149,7 +150,7 @@ export function createServerProcessDependencies(options: {
     version: options.version,
     readAddress: () => readServerAddress(options.home),
     readHealth: readServerHealth,
-    start: () => startServer(options),
+    start: (onSpawn) => startServer(options, onSpawn),
     stop: stopServer,
   };
 }

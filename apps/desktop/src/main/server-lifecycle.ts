@@ -11,8 +11,8 @@ export interface ServerLifecycleDependencies {
   readAddress(): Promise<ServerAddress | null>;
   // Returns the Server's /health answer, or null when nothing answers.
   readHealth(port: number): Promise<ServerHealth | null>;
-  // Starts the supervisor detached and resolves once its server.json and /health agree.
-  start(): Promise<ServerAddress>;
+  // Starts the supervisor detached, reports its pid once spawned, and resolves once its server.json and /health agree.
+  start(onSpawn: (pid: number) => void): Promise<ServerAddress>;
   // Asks the process to stop and resolves once it has exited.
   stop(pid: number): Promise<void>;
 }
@@ -28,6 +28,13 @@ export function createServerLifecycle(
 ): ServerLifecycle {
   let startedPid: number | null = null;
 
+  const stopStarted = async () => {
+    if (startedPid === null) return;
+    const pid = startedPid;
+    startedPid = null;
+    await dependencies.stop(pid);
+  };
+
   return {
     async connect() {
       const address = await dependencies.readAddress();
@@ -36,16 +43,16 @@ export function createServerLifecycle(
         : null;
       if (address && health?.version === dependencies.version) return address;
       if (address && health) await dependencies.stop(address.pid);
-      const started = await dependencies.start();
-      startedPid = started.pid;
-      return started;
+      try {
+        return await dependencies.start((pid) => {
+          startedPid = pid;
+        });
+      } catch (error) {
+        await stopStarted();
+        throw error;
+      }
     },
-    async release() {
-      if (startedPid === null) return;
-      const pid = startedPid;
-      startedPid = null;
-      await dependencies.stop(pid);
-    },
+    release: stopStarted,
   };
 }
 

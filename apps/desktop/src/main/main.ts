@@ -92,7 +92,8 @@ app
   .whenReady()
   .then(start)
   .catch((error: unknown) => {
-    dialog.showErrorBox('Argo could not start', String(error));
+    // Quitting stops a starting Server, which then fails its start; that is no error to show.
+    if (!released) dialog.showErrorBox('Argo could not start', String(error));
     app.quit();
   });
 
