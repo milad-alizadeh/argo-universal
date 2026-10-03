@@ -1,16 +1,11 @@
+import { stopReasons, turn, turnStatuses } from '@argo/db/schema';
+import { createSelectSchema } from 'drizzle-orm/zod';
 import { z } from 'zod';
 
-export const StopReason = z.enum([
-  'end_turn',
-  'max_tokens',
-  'max_turn_requests',
-  'refusal',
-  'cancelled',
-  'error',
-]);
+export const StopReason = z.enum(stopReasons);
 export type StopReason = z.infer<typeof StopReason>;
 
-export const TurnStatus = z.enum(['running', 'ended']);
+export const TurnStatus = z.enum(turnStatuses);
 export type TurnStatus = z.infer<typeof TurnStatus>;
 
 // ACP `Error`, the error a Turn ended with.
@@ -32,14 +27,17 @@ export const TurnUsage = z.strictObject({
 });
 export type TurnUsage = z.infer<typeof TurnUsage>;
 
+const turnColumns = createSelectSchema(turn, {
+  id: (schema) => schema.min(1),
+  sessionId: (schema) => schema.min(1),
+  startedAt: (schema) => schema.nonnegative(),
+  endedAt: (schema) => schema.nonnegative(),
+});
+
+// The `turn` table's columns, times in Unix milliseconds; `error` and `usage` are typed JSON here.
 export const Turn = z.strictObject({
-  id: z.string().min(1),
-  sessionId: z.string().min(1),
-  status: TurnStatus,
-  stopReason: StopReason.nullable(),
+  ...turnColumns.omit({ error: true, usage: true }).shape,
   error: TurnError.optional(),
   usage: TurnUsage.optional(),
-  startedAt: z.iso.datetime(),
-  endedAt: z.iso.datetime().nullable(),
 });
 export type Turn = z.infer<typeof Turn>;
