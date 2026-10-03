@@ -23,6 +23,8 @@
       "!packages/db/drizzle",
       "!**/.rnstorybook/storybook.requires.ts",
       "!**/*.gen.*",
+      // Icon Composer bundles are written by Apple's tool, not by hand.
+      "!**/*.icon",
       // Installed by the skills tool, not written in this repo.
       "!!.agents",
       "!!.claude",
