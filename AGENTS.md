@@ -22,10 +22,6 @@ The five default label names: `needs-triage`, `needs-info`, `ready-for-agent`, `
 
 One `GLOSSARY.md` and one `docs/adr/` folder at the repo root ("single-context"). See `docs/agents/domain.md`.
 
-### Xstate
-
-load the `xstate-v5` skill before you design or write a machine.
-
 ## Rules that no tool checks
 
 - In source code, a vendor name (`claude`, `codex`) appears only inside `packages/agents/<agent>/`. Test mocks in `mocks/cli/<agent>/` carry it too. Shared code branches on capabilities that an adapter registers.
