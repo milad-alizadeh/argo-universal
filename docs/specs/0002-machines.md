@@ -206,17 +206,19 @@ A Session then opens as `idle` the next time a service asks for it.
 
 ## 10. Electron Server connection
 
+Electron has one Server job: make sure a Supervisor runs. The Supervisor watches and repairs the Engine, so Electron never calls `/health` and never watches the Engine. This replaces the launch rule in spec 0001 section 9.
+
 `apps/desktop/src/main/server-machine.ts` replaces `server-lifecycle.ts`. `server-process.ts` keeps the functions that the machine invokes.
 
-Context: `version`, `address`, `ownedPid` (the Supervisor this app started, or null), `restarts` (times), `failure`.
+Context: `address`, `ownedPid` (the Supervisor this app started, or null), `failure`.
 
-- `locating` invokes `readAddress`. With an address, it goes to `probing`. Without one, it goes to `starting`.
-- `probing` invokes `readHealth(port)`. With the same version, it goes to `ready`. With another version, it goes to `replacing`. With no answer, it goes to `starting`.
-- `replacing` invokes `stop(pid)` and goes to `starting`.
-- `starting` invokes `start`, which spawns the Supervisor detached. It sends `server.spawned {pid}`, which sets `ownedPid`, and resolves once `server.json` and `/health` agree. Then `ready`. An error goes to `abandoning`, which stops `ownedPid`, and then to `failed`.
-- `ready` emits `server.ready {address}`. The main process opens the window with that address. If a return to `ready` brings a different port, the main process reloads the window. `ready` invokes `watchHealth`, which calls `/health` every 5 seconds. After 3 misses in a row, it records the time in `restarts` and goes to `locating`. With 3 restarts in 1 minute, it goes to `failed`.
+- `locating` invokes `readAddress`, which reads `server.json` and checks that its PID is alive. With a live PID, it goes to `ready`. Otherwise it goes to `starting`.
+- `starting` invokes `start`, which spawns the Supervisor detached. It sends `server.spawned {pid}`, which sets `ownedPid`, and resolves once `server.json` names that PID. Then `ready`. An error goes to `abandoning`, which stops `ownedPid`, and then to `failed`.
+- `ready` emits `server.ready {address}`, and the main process opens the window with that address.
 - `failed` holds the failure. The main process shows it in a dialog with Retry and Quit, which send `server.retry` (to `locating`) or `app.quit`.
 - `app.quit` from any state goes to `stopping` when `ownedPid` is set, which stops that process for 5 seconds at most. Otherwise it goes straight to `stopped`, which is final.
+- Electron reuses a Supervisor of any version. A version check comes with release packaging. A setting may later keep the Supervisor running after quit.
+- If the Supervisor exits while Electron runs, Electron does nothing. The App's Connection shows `offline` (section 11).
 
 ## 11. App Connection
 
