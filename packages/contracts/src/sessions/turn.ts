@@ -27,10 +27,10 @@ export const TurnUsage = z.strictObject({
 });
 export type TurnUsage = z.infer<typeof TurnUsage>;
 
-// The `turn` table's columns, times in Unix milliseconds; `error` and `usage` are typed JSON here.
+// The `turn` table's columns, times in Unix milliseconds; `error` and `usage` are typed JSON, null in a row and optional in the spec.
 export const Turn = z.strictObject({
   ...turnColumns.omit({ error: true, usage: true }).shape,
-  error: TurnError.optional(),
-  usage: TurnUsage.optional(),
+  error: TurnError.nullish(),
+  usage: TurnUsage.nullish(),
 });
 export type Turn = z.infer<typeof Turn>;
