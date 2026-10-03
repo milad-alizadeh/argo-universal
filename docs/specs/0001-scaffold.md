@@ -247,7 +247,7 @@ Vitest tests for `api` call the routers with `createCaller` and mock services, w
 
 ### Worker
 
-- One `node:http` server on `127.0.0.1`, on the port in `ARGO_SERVER_PORT`, with 7337 as the default. The supervisor writes the port that the worker uses into `server.json`.
+- One `node:http` server on `127.0.0.1` whose requests a Hono app handles through `@hono/node-server`, on the port in `ARGO_SERVER_PORT`, with 7337 as the default. The supervisor writes the port that the worker uses into `server.json`.
 - `GET /health` returns `{ok: true, version, startedAt}`.
 - `GET /blobs/:id` streams the file from `~/.argo/blobs/`. It returns 404 for an unknown id.
 - A `ws` server on the same port, with tRPC's `applyWSSHandler` and `@repo/api`'s `appRouter`.
