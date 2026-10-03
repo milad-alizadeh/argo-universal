@@ -13,8 +13,16 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@gorhom/bottom-sheet": "catalog:",
+    "@react-native-async-storage/async-storage": "catalog:",
+    "@react-native-community/datetimepicker": "catalog:",
+    "@react-native-community/slider": "catalog:",
     "@repo/client": "workspace:*",
     "@repo/uniwind": "workspace:*",
+    "@storybook/addon-ondevice-actions": "catalog:",
+    "@storybook/addon-ondevice-controls": "catalog:",
+    "@storybook/react-native": "catalog:",
+    "@storybook/react-native-ui-lite": "catalog:",
     "expo": "catalog:",
     "expo-constants": "catalog:",
     "expo-dev-client": "catalog:",
@@ -31,8 +39,10 @@
     "react-native-reanimated": "catalog:",
     "react-native-safe-area-context": "catalog:",
     "react-native-screens": "catalog:",
+    "react-native-svg": "catalog:",
     "react-native-web": "catalog:",
     "react-native-worklets": "catalog:",
+    "storybook": "catalog:",
     "tailwindcss": "catalog:",
     "uniwind": "catalog:"
   },
