@@ -23,6 +23,8 @@
       "!packages/db/drizzle",
       "!**/.rnstorybook/storybook.requires.ts",
       "!**/*.gen.*",
+      // Metro and `uniwind generate-artifacts` rewrite this file on every run.
+      "!**/uniwind-types.d.ts",
       // Icon Composer bundles are written by Apple's tool, not by hand.
       "!**/*.icon",
       // Installed by the skills tool, not written in this repo.
@@ -32,6 +34,16 @@
     ]
   },
   "overrides": [
+    {
+      // Uniwind themes repeat each variable per @variant and use its own CSS functions, such as hairlineWidth().
+      "includes": ["tooling/uniwind/*.css"],
+      "linter": {
+        "rules": {
+          "correctness": { "noUnknownFunction": "off" },
+          "suspicious": { "noDuplicateCustomProperties": "off" }
+        }
+      }
+    },
     {
       // Shared tsconfigs carry comments like tsconfig.json, which Biome knows only by name.
       "includes": ["tooling/typescript/*.json"],
