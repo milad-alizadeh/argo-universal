@@ -241,8 +241,8 @@ Vitest tests for `api` call the routers with `createCaller` and mock services, w
 - `starting` forks the worker with `child_process.fork` and waits for a `ready {port}` message.
 - `running` writes `server.json` and expects a `heartbeat` message from the worker. A missed heartbeat or a worker exit goes to `backingOff`.
 - `backingOff` waits, forks the worker again, and goes to `running` on `ready`, or to `failed`. The delay doubles from a base to a cap.
-- `failed` is final when the worker crashes too often in a window. It removes `server.json` and exits with a non-zero code.
-- `stopping` runs on `SIGINT` and `SIGTERM`: it stops the worker, removes `server.json`, and exits.
+- `failed` is final when the worker crashes too often in a window. It removes `server.json` if this supervisor wrote it, and exits with a non-zero code.
+- `stopping` runs on `SIGINT` and `SIGTERM`: it stops the worker, removes `server.json` if this supervisor wrote it, and exits.
 - In dev, the supervisor forks the worker under `tsx watch`, so a file change restarts only the worker.
 
 ### Worker
@@ -251,6 +251,7 @@ Vitest tests for `api` call the routers with `createCaller` and mock services, w
 - `GET /health` returns `{ok: true, version, startedAt}`.
 - `GET /blobs/:id` streams the file from `~/.argo/blobs/`. It returns 404 for an unknown id.
 - A `ws` server on the same port, with tRPC's `applyWSSHandler` and `@repo/api`'s `appRouter`.
+- Every request must carry `Host` `127.0.0.1:<port>` or `localhost:<port>`. A WebSocket upgrade must have no `Origin`, `app://app`, or an `http://localhost` or `http://127.0.0.1` origin. Anything else gets 403.
 - On start, it opens the database and runs the Drizzle migrations from `packages/db/drizzle/`.
 - Scaffold procedures: `system.info` (query, returns `{version, startedAt, pid}`) and `system.clock` (subscription, sends `{now}` every second).
 
@@ -277,7 +278,7 @@ The `id` comes from the vendor where the vendor has a stable id: Codex `item.id`
 | `tool_call_update` | `{toolCallId, title, name?, kind: ToolKind, status: ToolCallStatus, content: ToolCallContent[], locations?: {path, line?}[], rawInput?, rawOutput?}`. `_meta.argo`: `{truncated?, permissionOutcome?}` |
 | `plan_update` | `{plan: {type: 'items', planId, entries: PlanEntry[]} \| {type: 'markdown', planId, content: string}}`. `_meta.argo` on a markdown plan: `{requestId?, filePath?}` |
 | `compaction_update` | `{compactionId, status: 'in_progress' \| 'completed' \| 'failed' \| 'cancelled', summary?}` |
-| `subagent_update` | `{sessionId: <child Session id>, title?, state?: 'running' \| 'idle' \| 'requires_action'}` |
+| `subagent_update` | `{subagentSessionId: <child Session id>, title?, subagentState?: 'running' \| 'idle' \| 'requires_action'}`. ACP's `sessionId` and `state` clash with the row's own fields, so both carry a `subagent` prefix. |
 | `notice` | `{severity: 'info' \| 'warning' \| 'error', title, description?}`. `_meta.argo`: `{retry?: {attempt, maxAttempts, delayMs}, unrecognised?: {excerpt}}` |
 | `task_update` | Argo extension: `{taskId, status: 'running' \| 'completed' \| 'failed' \| 'cancelled', title}` |
 
@@ -366,7 +367,7 @@ The Session's current Plan is not stored. A query reads it from the newest `plan
 
 | Script | Does |
 |---|---|
-| `pnpm dev` | `turbo dev`: the Server (supervisor with the worker under `tsx watch`), the universal app (`expo start` for web and Metro), and desktop. Desktop waits until `server.json` exists and the Expo web URL answers. |
+| `pnpm dev` | `turbo dev`: the Server (supervisor with the worker under `tsx watch`), the universal app (`expo start` for web and Metro), and desktop. Desktop waits until `server.json` exists, the Server's `/health` answers, and the Expo web URL answers. |
 | `pnpm dev:storybook` | web Storybook only |
 | `pnpm quality` | `sherif`, `biome check`, `tsc` in every package, Vitest, and the Storybook Vitest tests |
 | `pnpm test:e2e` | Playwright `web` project against the Expo web export |

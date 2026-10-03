@@ -6,7 +6,7 @@ Every App connects to the Server over one WebSocket that carries every tRPC call
 
 The Server owns the only database: SQLite at `~/.argo/argo.db`, through Drizzle on `node:sqlite`. Apps keep no local database. The TanStack Query cache is enough. This follows Argo ADR-0043, where SQLite owns per-machine state.
 
-For now the Server binds to `127.0.0.1` only and has no authentication. Pairing a real phone and authentication come later, with their own ADR.
+For now the Server binds to `127.0.0.1` only and has no authentication. It checks `Host` and the WebSocket `Origin`, so a website open in a browser on the same machine cannot call it (owner, 2026-10-03). Pairing a real phone and authentication come later, with their own ADR.
 
 ## Considered Options
 
