@@ -1,6 +1,6 @@
 # XState 5 for the Server supervisor
 
-Research for the supervisor in `docs/specs/0001-scaffold.md` section 5 and `docs/adr/0003-xstate-runs-server-lifecycles.md`. Checked on 2026-10-03.
+Research for the supervisor in `docs/specs/0001-scaffold.md` section 5 and `docs/adr/0003-xstate-runs-every-lifecycle.md`. Checked on 2026-10-03.
 
 ## Sources
 
