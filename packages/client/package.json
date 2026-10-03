@@ -35,18 +35,13 @@
     "@repo/api": "workspace:*",
     "@repo/typescript": "workspace:*",
     "@storybook/react-native-web-vite": "catalog:",
-    "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
     "@types/ws": "catalog:",
-    "jsdom": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:",
     "react-native": "catalog:",
-    "react-native-web": "catalog:",
     "storybook": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
-    "vite": "catalog:",
     "vitest": "catalog:",
     "ws": "catalog:"
   }
