@@ -25,8 +25,21 @@ if (__DEV__ && Platform.OS !== 'web') {
   ]);
 }
 
+declare global {
+  interface Window {
+    // Set by the desktop preload script (spec section 9).
+    argo?: {
+      serverUrl: string | null;
+      window: { minimize(): void; maximize(): void; close(): void };
+    };
+  }
+}
+
+// Electron's preload gives the Server URL; elsewhere it comes from the environment (spec section 8).
 const serverUrl =
-  process.env.EXPO_PUBLIC_ARGO_SERVER_URL ?? 'ws://127.0.0.1:7337';
+  globalThis.window?.argo?.serverUrl ??
+  process.env.EXPO_PUBLIC_ARGO_SERVER_URL ??
+  'ws://127.0.0.1:7337';
 
 export default function RootLayout() {
   const { theme } = useUniwind();
