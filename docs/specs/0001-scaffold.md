@@ -330,7 +330,7 @@ The Session's current Plan is not stored. A query reads it from the newest `plan
 
 ## 8. Client package
 
-- `src/trpc/`: `createTRPCContext<AppRouter>()` gives `TRPCProvider` and `useTRPC()`. `createArgoClient(url)` builds a client with `wsLink` and `createWSClient`. `AppProviders` holds the `QueryClient`, the tRPC provider, and the Server URL.
+- `src/trpc/`: `createTRPCContext<AppRouter>()` gives `TRPCProvider` and `useTRPC()`. `createTRPCClient(url)` builds a client with `wsLink` and `createWSClient`. `AppProviders` holds the `QueryClient`, the tRPC provider, and the Server URL.
 - Screens get tRPC only from `useTRPC()`.
 - `src/primitives/`: run `npx @react-native-reusables/cli init -t minimal-uniwind` and point its output here. Add only the primitives that the Projects screen uses.
 - `mocks/trpc-mock-link.ts`: a `TRPCLink` that serves fixtures by procedure path. The fixture map is typed from `AppRouter` with `inferProcedureInput` and `inferProcedureOutput`, so a wrong procedure path or a wrong fixture shape fails `tsc`. A subscription fixture is an async generator. `withTrpcMocks` is the story decorator. It reads `parameters.trpc`, builds a `QueryClient` with `retry: false`, and wraps the story in the providers. A missing fixture fails with `No story mock for <path>`.

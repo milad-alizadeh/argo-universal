@@ -184,25 +184,30 @@ export const { TRPCProvider, useTRPC, useTRPCClient } = createTRPCContext<AppRou
 ```
 
 ```ts
-// packages/client/src/trpc/create-argo-client.ts
-import { createTRPCClient, createWSClient, wsLink } from '@trpc/client';
+// packages/client/src/trpc/create-trpc-client.ts
 import type { AppRouter } from '@repo/api';
+import * as trpc from '@trpc/client';
 
-export function createArgoClient(url: string) {
-  const webSocketClient = createWSClient({
+// Every tRPC call goes over one WebSocket to the Server (ADR 0002).
+export function createTRPCClient(url: string) {
+  const webSocketClient = trpc.createWSClient({
     url,
-    keepAlive: { enabled: true, intervalMs: 5_000, pongTimeoutMs: 1_000 },
+    keepAlive: { enabled: true, intervalMs: 5000, pongTimeoutMs: 1000 },
   });
-  const client = createTRPCClient<AppRouter>({ links: [wsLink<AppRouter>({ client: webSocketClient })] });
-  return { client, webSocketClient };
+  const client = trpc.createTRPCClient<AppRouter>({
+    links: [trpc.wsLink<AppRouter>({ client: webSocketClient })],
+  });
+  return { client, close: () => webSocketClient.close() };
 }
+
+export type TRPCClient = ReturnType<typeof createTRPCClient>['client'];
 ```
 
 ```tsx
 // packages/client/src/trpc/AppProviders.tsx
 export function AppProviders({ serverUrl, children }: { serverUrl: string; children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
-  const [{ client }] = useState(() => createArgoClient(serverUrl));
+  const [{ client }] = useState(() => createTRPCClient(serverUrl));
   return (
     <QueryClientProvider client={queryClient}>
       <TRPCProvider trpcClient={client} queryClient={queryClient}>{children}</TRPCProvider>
