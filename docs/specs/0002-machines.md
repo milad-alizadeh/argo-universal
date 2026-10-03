@@ -116,11 +116,14 @@ Context: `sessionId`, `projectId`, `agent`, `vendorSessionId`, `checkout`, `capa
   - `session.answerElicitation {action: 'accept' | 'decline' | 'cancel', content?}` sends `agent.answerElicitation` and goes to `working`.
   - `agent.turnEnded {stopReason, usage?, error?}` ends the Turn in the database and goes to `idle`.
   - `session.cancel` goes to `cancelling`.
+  - `session.prompt` is not accepted, so a prompt sent while a Turn runs fails with `CONFLICT`. Queueing prompts can come later.
 - `live.cancelling` sends `agent.cancel` and answers every queued Permission request and the Elicitation as cancelled. `agent.turnEnded` ends the Turn and goes to `idle`. After 10 seconds (`cancelLimit`) it ends the Turn with `cancelled`, adds a `notice` that the Agent did not stop, and goes to `recovering`.
 - On `live`, in every child state: `agent.feed {change}` goes to `feed` with the `activeTurnId`. `agent.usage` and `agent.configOptionsChanged` update the context.
 - `session.close` goes to `live.closing` from inside `live`, and to `flushing` from `recovering`. `live.closing` ends a running Turn with `cancelled`, sends `agent.stop`, and goes to `flushing` when the agent finishes, or after 5 seconds (`agentStopLimit`).
 - When the agent finishes or fails outside `closing`, the Session goes to `recovering`. It ends a running Turn with `error`, adds a `notice`, and records the time in `agentCrashes`. With 3 crashes in 10 minutes it sets `failure` and goes to `flushing`. Otherwise, after 1 second (`agentRestartDelay`), it goes back to `live`, which starts the agent again and resumes the vendor session.
 - `flushing` sends `feed.flush`, and goes to `closed` when `feed` finishes, or after 5 seconds.
+
+A Subagent has no Session actor of its own in milestone 1. Its updates come through the parent's agent and show as `subagent_update` rows.
 
 `toSessionSnapshot(sessionSnapshot, feedSnapshot)` in `session-snapshot.ts` is a pure function and the only producer of `SessionSnapshot`:
 
@@ -250,9 +253,3 @@ These change spec 0001 section 4:
 
 1. The App Connection (section 11) and the Electron Server connection (section 10). They replace scaffold code, so each is checked by the existing e2e tests.
 2. Milestone 1, in order: the database writer, the Feed actor, recovery, the Agent events and a mock agent machine, the Session machine, the registry, and the Engine changes. Then each adapter.
-
-## 15. Open questions for the owner
-
-- A prompt sent while a Turn runs fails with `CONFLICT`. Should it queue instead?
-- Subagent Sessions get their updates through the parent Session's agent. Do they need their own Session actor? Milestone 1 shows them only as `subagent_update` rows.
-- `cancelLimit` restarts the agent after 10 seconds without an end of Turn. Is 10 seconds right?

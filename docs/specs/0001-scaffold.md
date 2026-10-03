@@ -71,7 +71,7 @@ Out of scope (milestone 1 and later):
 | Lint and format | Biome, one `biome.jsonc` at the root that extends `tooling/biome`. |
 | Types | `tsc --noEmit` per package. Base configs in `tooling/typescript`. |
 | Language | TypeScript, ESM everywhere. Node scripts are `.mts`. |
-| Server runner | `tsx` (`tsx watch` in dev). |
+| Server runner | `tsx`. In dev, the Engine runs under Node's `--watch` with tsx loaded through `--import`. |
 | Unit tests | Vitest, one root `vitest.config.ts` with projects. |
 
 Use the newest stable version of each tool on the day you scaffold. Drizzle is the exception: use the newest 1.0 release candidate. Record every version you picked in the catalog. Make sure that Expo is SDK 54 or newer, that Drizzle supports `drizzle-orm/node-sqlite` (Argo uses `drizzle-orm` 1.0.0-rc), that Zod is 4, that XState is 5, and that tRPC is 11.
@@ -245,7 +245,7 @@ Vitest tests for `api` call the routers with `createCaller` and mock services, w
 - `backingOff` asks the Engine to stop and waits in two parallel regions: `engine` until the old Engine has exited, and `delay` until the backoff has passed. Then it forks the Engine again, and goes to `running` on `ready`, or to `failed`. The delay doubles from a base to a cap.
 - `failed` is final when the Engine crashes too often in a window. It removes `server.json` if this Supervisor wrote it, and exits with a non-zero code.
 - `stopping` runs on `SIGINT` and `SIGTERM`: it stops the Engine, removes `server.json` if this Supervisor wrote it, and exits.
-- In dev, the Supervisor forks the Engine under `tsx watch`, so a file change restarts only the Engine.
+- In dev (`--watch`), the Supervisor forks the Engine under Node's `--watch` with tsx loaded through `--import`, so a file change restarts only the Engine. `tsx watch` on the entry file would restart the Supervisor too.
 
 ### Engine
 
@@ -375,7 +375,7 @@ The Session's current Plan is not stored. A query reads it from the newest `plan
 
 | Script | Does |
 |---|---|
-| `pnpm dev` | `turbo dev`: the Server (Supervisor with the Engine under `tsx watch`), the universal app (`expo start` for web and Metro), and desktop. Desktop waits until `server.json` exists, the Server's `/health` answers, and the Expo web URL answers. |
+| `pnpm dev` | `turbo dev`: the Server (Supervisor with the Engine under Node's `--watch`), the universal app (`expo start` for web and Metro), and desktop. Desktop waits until `server.json` exists, the Server's `/health` answers, and the Expo web URL answers. |
 | `pnpm dev:storybook` | web Storybook only |
 | `pnpm quality` | `sherif`, `biome check`, `tsc` in every package, Vitest, and the Storybook Vitest tests |
 | `pnpm test:e2e` | Playwright `web` project against the Expo web export |
@@ -398,7 +398,7 @@ Each check must pass before the scaffold is done. If a check fails, stop and rep
 1. Web Storybook with the Vitest addon runs `ProjectsScreen.test.stories.tsx` with a play function, and Uniwind classes apply. Fallback to propose: Playwright component tests against the web build.
 2. The tRPC mock link renders `ProjectsScreen` with a `system.info` fixture and a `system.clock` generator, in web Storybook and in on-device Storybook on the iOS simulator.
 3. One Playwright spec (`e2e/projects/projects.spec.ts`) passes in the `web` project and in the `electron` project.
-4. The Server runs under `tsx watch` with `ws` and `node:sqlite`: the migrations run, `/health` answers, and a file change restarts only the Engine while the Supervisor keeps running.
+4. The Server runs in watch mode with `ws` and `node:sqlite`: the migrations run, `/health` answers, and a file change restarts only the Engine while the Supervisor keeps running.
 
 Also make sure that:
 
