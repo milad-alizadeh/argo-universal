@@ -2,17 +2,21 @@ import { createServer, type Server } from 'node:http';
 import { join } from 'node:path';
 import { getRequestListener } from '@hono/node-server';
 import { appRouter, type Services } from '@repo/api';
-import { openDatabase } from '@repo/db';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { WebSocketServer } from 'ws';
 import { createSystemService } from '../services/system';
 import { createHttpApp, createRequestErrorHandler } from './http-app';
 import { createRequestGuard } from './request-guard';
 
-export interface WorkerOptions {
+export interface HttpServerOptions {
   home: string;
   port: number;
   version: string;
+  startedAt: string;
+}
+
+export interface HttpServer {
+  close: () => Promise<void>;
 }
 
 const listen = (server: Server, port: number) =>
@@ -29,19 +33,20 @@ const closeServer = (server: Server) =>
     server.close((error) => (error ? reject(error) : resolve())),
   );
 
-// Opens the database, then serves HTTP and tRPC over one WebSocket on 127.0.0.1 (ADR 0002).
-export async function startWorker(options: WorkerOptions) {
-  const startedAt = new Date().toISOString();
-  const database = openDatabase(join(options.home, 'argo.db'));
+// Serves HTTP and tRPC over one WebSocket on 127.0.0.1 (ADR 0002); resolves once the port is bound.
+export async function startHttpServer(
+  options: HttpServerOptions,
+): Promise<HttpServer> {
+  const { version, startedAt } = options;
   const services: Services = {
-    system: createSystemService({ version: options.version, startedAt }),
+    system: createSystemService({ version, startedAt }),
   };
 
   const guard = createRequestGuard(options.port);
   const app = createHttpApp({
     guard,
     blobsFolder: join(options.home, 'blobs'),
-    version: options.version,
+    version,
     startedAt,
   });
   const server = createServer(
@@ -51,12 +56,7 @@ export async function startWorker(options: WorkerOptions) {
     }),
   );
 
-  try {
-    await listen(server, options.port);
-  } catch (error) {
-    database.$client.close();
-    throw error;
-  }
+  await listen(server, options.port);
 
   // Attached after listen: ws re-emits the server's 'error', so a failed listen would throw from it.
   const webSocketServer = new WebSocketServer({
@@ -83,11 +83,7 @@ export async function startWorker(options: WorkerOptions) {
     handler.broadcastReconnectNotification();
     for (const client of webSocketServer.clients) client.terminate();
     webSocketServer.close();
-    try {
-      await closeServer(server);
-    } finally {
-      database.$client.close();
-    }
+    await closeServer(server);
   };
   let closing: Promise<void> | undefined;
   const close = () => {
@@ -95,5 +91,5 @@ export async function startWorker(options: WorkerOptions) {
     return closing;
   };
 
-  return { startedAt, close };
+  return { close };
 }

@@ -5,11 +5,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { WebSocket } from 'ws';
-import { startWorker } from './start';
+import { startHttpServer } from './http-server';
 
 let home: string;
 let port: number;
-let closeWorker: () => Promise<void>;
+let closeServer: () => Promise<void>;
 
 const findFreePort = () =>
   new Promise<number>((resolve, reject) => {
@@ -67,23 +67,26 @@ const httpStatus = ({
 
 const healthStatus = (host: string) => httpStatus({ host });
 
+const options = () => ({
+  home,
+  port,
+  version: '1.2.3',
+  startedAt: '2026-10-03T00:00:00.000Z',
+});
+
 beforeEach(async () => {
-  home = mkdtempSync(join(tmpdir(), 'server-worker-'));
+  home = mkdtempSync(join(tmpdir(), 'server-http-server-'));
   port = await findFreePort();
-  ({ close: closeWorker } = await startWorker({
-    home,
-    port,
-    version: '1.2.3',
-  }));
+  ({ close: closeServer } = await startHttpServer(options()));
 });
 
 afterEach(async () => {
   vi.restoreAllMocks();
-  await closeWorker();
+  await closeServer();
   rmSync(home, { recursive: true, force: true });
 });
 
-describe('worker', () => {
+describe('http server', () => {
   it.each([
     ['no Origin', {}],
     ['the desktop app', { origin: 'app://app' }],
@@ -133,10 +136,10 @@ describe('worker', () => {
     expect(await healthStatus(`127.0.0.1:${port}`)).toBe(200);
   });
 
-  it('rejects a second worker on the same port', async () => {
-    await expect(
-      startWorker({ home, port, version: '1.2.3' }),
-    ).rejects.toMatchObject({ code: 'EADDRINUSE' });
+  it('rejects a second server on the same port', async () => {
+    await expect(startHttpServer(options())).rejects.toMatchObject({
+      code: 'EADDRINUSE',
+    });
     expect(await healthStatus(`127.0.0.1:${port}`)).toBe(200);
   });
 
@@ -147,7 +150,7 @@ describe('worker', () => {
       socket.once('error', reject);
     });
     const closed = new Promise((resolve) => socket.once('close', resolve));
-    await closeWorker();
+    await closeServer();
     await closed;
   });
 });
