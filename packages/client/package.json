@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./mocks": "./mocks/index.ts"
   },
   "imports": {
     "#components/*": "./src/components/*.tsx",
@@ -33,6 +34,7 @@
   "devDependencies": {
     "@repo/api": "workspace:*",
     "@repo/typescript": "workspace:*",
+    "@storybook/react-native-web-vite": "catalog:",
     "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
     "@types/ws": "catalog:",
@@ -41,6 +43,7 @@
     "react-dom": "catalog:",
     "react-native": "catalog:",
     "react-native-web": "catalog:",
+    "storybook": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",

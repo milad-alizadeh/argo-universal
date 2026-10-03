@@ -1,0 +1,2 @@
+# The Uniwind Vite plugin rewrites this on every run; nothing here uses className types.
+uniwind-types.d.ts

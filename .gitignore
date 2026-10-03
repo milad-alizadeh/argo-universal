@@ -26,3 +26,6 @@ coverage/
 # Vitest
 .vitest/
 .claude/settings.local.json
+
+*storybook.log
+storybook-static
