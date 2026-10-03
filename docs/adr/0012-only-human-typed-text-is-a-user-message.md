@@ -1,0 +1,14 @@
+# Only human-typed text becomes a user message
+
+Agents put their own text into the user's side of the transcript: system reminders, slash-command echoes, hook output, local command output, and injected AGENTS.md or environment blocks. Paseo shows most of it as user text. Argo trusts the vendor's origin flag instead. Only text that the vendor marks as typed by a human becomes a `user_message`, and it is shown as written.
+
+The adapter maps each recognised wrapper to a typed Session update:
+
+- A slash command becomes a `user_message` with the text `/name args`. It needs only the command name, and the arguments can be absent.
+- `!bash` input and its output become a `tool_call_update` of kind `execute`.
+- Local command output and hook output become a `notice`.
+- "[Request interrupted by user]" ends the Turn with the stop reason `cancelled`.
+- A background task notification becomes a `task_update`.
+- One compaction produces one `compaction_update`, from the vendor's compaction boundary.
+
+The adapter drops system reminders, records that the vendor flags as meta or synthetic, and Codex's injected AGENTS.md, environment, and plugin blocks. It never removes text from inside tool output. An unrecognised shape becomes a `notice` with `_meta.argo.unrecognised`, and the adapter counts it.
