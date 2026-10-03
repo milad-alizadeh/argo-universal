@@ -1,0 +1,532 @@
+<title>Argo Universal UI Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column of numbered decisions, wireframes and diagrams inline, a sticky review bar at the bottom. */
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --sunken: #eceef2;
+  --fg: #171a21;
+  --muted: #5d6573;
+  --line: #d9dde4;
+  --accent: #2f5bd3;
+  --accent-soft: #e4ebfb;
+  --good: #1f8a4c;
+  --good-soft: #def3e6;
+  --warn: #b5560f;
+  --warn-soft: #fbe9dc;
+  --font-display: "Schibsted Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Schibsted Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121419; --surface: #1a1d24; --sunken: #23272f; --fg: #e8eaef; --muted: #9aa2b1; --line: #313641;
+    --accent: #7d9ef0; --accent-soft: #232d47; --good: #4cc27d; --good-soft: #1b3326; --warn: #f0a062; --warn-soft: #3a281b;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121419; --surface: #1a1d24; --sunken: #23272f; --fg: #e8eaef; --muted: #9aa2b1; --line: #313641;
+  --accent: #7d9ef0; --accent-soft: #232d47; --good: #4cc27d; --good-soft: #1b3326; --warn: #f0a062; --warn-soft: #3a281b;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.55; padding-inline: 16px; padding-block: 0 48px; }
+main { max-width: 980px; margin: 0 auto; }
+header.top { padding-block: 40px 8px; }
+.eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+h1 { font-family: var(--font-display); font-size: clamp(28px, 5vw, 40px); line-height: 1.1; margin: 6px 0 10px; font-weight: 800; letter-spacing: -.02em; text-wrap: balance; }
+h2 { font-size: 22px; margin: 0; font-weight: 700; letter-spacing: -.01em; text-wrap: balance; }
+h3 { font-size: 16px; margin: 0; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+.lede { color: var(--muted); font-size: 16px; }
+code, .mono { font-family: var(--font-mono); font-size: .86em; }
+code { background: var(--sunken); padding: 1px 5px; border-radius: 4px; }
+nav.toc { display: flex; flex-wrap: wrap; gap: 6px; margin: 20px 0 8px; }
+nav.toc a { font-size: 13px; color: var(--fg); text-decoration: none; border: 1px solid var(--line); background: var(--surface); padding: 4px 10px; border-radius: 99px; }
+nav.toc a:hover, nav.toc a:focus-visible { border-color: var(--accent); color: var(--accent); outline: none; }
+section { padding-block: 36px 8px; border-top: 1px solid var(--line); margin-top: 28px; display: grid; gap: 16px; }
+.sec-head { display: grid; gap: 4px; }
+.sec-head .tag { font-family: var(--font-mono); font-size: 12px; color: var(--accent); }
+
+/* decisions */
+ol.decisions { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.d { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 4px 12px; align-items: start; }
+.d .id { font-family: var(--font-mono); font-size: 12px; color: var(--muted); padding-top: 3px; }
+.d .text { min-width: 0; }
+.d .text b { font-weight: 600; }
+.d .text .src { display: block; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.d .vote { display: flex; gap: 4px; }
+.d .vote button { font: inherit; font-size: 12.5px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); padding: 3px 9px; border-radius: 6px; cursor: pointer; }
+.d .vote button:hover { color: var(--fg); }
+.d .vote button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.d[data-vote="agree"] { border-color: var(--good); }
+.d[data-vote="agree"] .vote .agree { background: var(--good-soft); color: var(--good); border-color: var(--good); }
+.d[data-vote="change"] { border-color: var(--warn); }
+.d[data-vote="change"] .vote .change { background: var(--warn-soft); color: var(--warn); border-color: var(--warn); }
+.d textarea { grid-column: 2 / 4; font: inherit; font-size: 14px; width: 100%; min-height: 56px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); border-radius: 8px; padding: 8px 10px; resize: vertical; }
+.d.proposal .id::after { content: "new"; display: block; font-size: 10px; color: var(--accent); letter-spacing: .05em; text-transform: uppercase; }
+@media (max-width: 560px) {
+  .d { grid-template-columns: 34px minmax(0, 1fr); }
+  .d .vote { grid-column: 2; }
+  .d textarea { grid-column: 1 / 3; }
+}
+
+/* wireframes */
+.frames { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; }
+.frame-wrap { display: grid; gap: 6px; }
+.frame-wrap figcaption { font-size: 12.5px; color: var(--muted); max-width: 210px; }
+.phone { width: 196px; height: 400px; border: 2px solid var(--fg); border-radius: 26px; background: var(--surface); position: relative; overflow: hidden; padding: 26px 10px 10px; font-size: 10.5px; line-height: 1.3; }
+.phone::before { content: ""; position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 54px; height: 10px; border-radius: 6px; background: var(--fg); }
+.w-title { font-weight: 800; font-size: 17px; display: flex; align-items: center; gap: 6px; }
+.w-title .ic { margin-left: auto; color: var(--muted); font-size: 11px; font-weight: 500; }
+.w-sub { display: flex; color: var(--muted); font-weight: 600; margin: 8px 0 4px; }
+.w-sub span:last-child { margin-left: auto; }
+.w-head { font-weight: 600; margin-top: 6px; }
+.w-row { padding: 3px 0 3px 14px; color: var(--fg); display: flex; gap: 4px; align-items: center; }
+.w-row.sel { background: var(--sunken); border-radius: 5px; }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); display: inline-block; flex: none; }
+.dot.g { background: var(--good); } .dot.o { background: var(--warn); }
+.fab { position: absolute; right: 12px; bottom: 16px; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); box-shadow: 0 3px 10px rgb(0 0 0 / .15); display: grid; place-items: center; font-size: 13px; }
+.drawer { position: absolute; inset: 0 60px 0 0; background: var(--sunken); padding: 30px 10px; display: grid; align-content: start; gap: 4px; border-right: 1px solid var(--line); }
+.drawer .brand { font-weight: 800; font-size: 14px; margin-bottom: 6px; }
+.drawer .item { padding: 5px 7px; border-radius: 6px; display: flex; }
+.drawer .item.on { background: var(--surface); font-weight: 600; }
+.drawer .item .badge { margin-left: auto; background: #d33; color: #fff; border-radius: 9px; padding: 0 5px; font-size: 9px; }
+.scrim { position: absolute; inset: 0; background: rgb(0 0 0 / .25); }
+.w-bar { display: flex; align-items: center; gap: 6px; border-bottom: 1px solid var(--line); padding-bottom: 6px; font-weight: 600; }
+.w-bar .ic { margin-left: auto; color: var(--muted); font-weight: 500; }
+.bubble { background: var(--sunken); border-radius: 10px; padding: 5px 8px; margin: 8px 0 6px 30px; }
+.feedline { height: 6px; border-radius: 3px; background: var(--sunken); margin: 5px 0; }
+.pills { position: absolute; left: 10px; right: 10px; bottom: 62px; display: flex; gap: 5px; }
+.pill { border: 1px solid var(--line); border-radius: 99px; padding: 2px 6px; display: flex; gap: 3px; align-items: center; background: var(--surface); }
+.pill .n { background: var(--good); color: #fff; border-radius: 8px; padding: 0 4px; font-size: 9px; }
+.pill .n.grey { background: var(--muted); }
+.composer { position: absolute; left: 8px; right: 8px; bottom: 10px; height: 46px; border: 1px solid var(--line); border-radius: 12px; padding: 6px 8px; color: var(--muted); }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; top: 46px; background: var(--surface); border-top-left-radius: 14px; border-top-right-radius: 14px; border-top: 1px solid var(--line); padding: 8px 10px; box-shadow: 0 -6px 20px rgb(0 0 0 / .18); }
+.grab { width: 30px; height: 4px; border-radius: 2px; background: var(--line); margin: 0 auto 8px; }
+.pop { position: absolute; left: 10px; bottom: 90px; width: 160px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 6px 20px rgb(0 0 0 / .18); padding: 6px; }
+.pop .g { color: var(--muted); font-weight: 600; font-size: 9.5px; margin: 2px 0; }
+
+.desk-scroll { overflow-x: auto; }
+.desktop { min-width: 760px; height: 330px; border: 2px solid var(--fg); border-radius: 10px; background: var(--sunken); display: grid; grid-template-columns: 40px 190px minmax(0, 1fr) 210px; gap: 8px; padding: 8px 8px 8px 0; font-size: 11px; line-height: 1.3; position: relative; }
+.rail { display: grid; align-content: start; justify-items: center; gap: 8px; padding-top: 6px; color: var(--muted); }
+.rail .on { color: var(--fg); background: var(--surface); border-radius: 6px; padding: 2px 4px; }
+.rail .bottom { margin-top: 170px; }
+.side { padding: 4px 6px; position: relative; }
+.pane, .insp { background: var(--surface); border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; position: relative; min-width: 0; }
+.pane .hdr { display: flex; gap: 6px; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+.pane .hdr .r { margin-left: auto; display: flex; gap: 5px; color: var(--muted); }
+.chip { border: 1px solid var(--line); border-radius: 6px; padding: 0 5px; }
+.cornered { position: relative; }
+.cornered .n { position: absolute; top: -6px; right: -7px; background: var(--good); color: #fff; border-radius: 8px; padding: 0 4px; font-size: 9px; }
+.pane .composer { left: 40px; right: 40px; }
+.side .fab { right: auto; left: 8px; bottom: 6px; width: 28px; height: 28px; }
+.label-tag { position: absolute; font-family: var(--font-mono); font-size: 10px; color: var(--accent); background: var(--accent-soft); padding: 0 5px; border-radius: 4px; }
+
+/* diagrams */
+.diagram { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; overflow-x: auto; }
+.diagram pre.mermaid { margin: 0; background: transparent; }
+.flow { display: grid; gap: 8px; }
+.flow .why { font-size: 13.5px; color: var(--muted); }
+.flow-grid { display: grid; gap: 22px; }
+
+/* tables and trees */
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; min-width: 700px; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; background: var(--sunken); }
+tr:last-child td { border-bottom: 0; }
+td .mono { white-space: nowrap; }
+.tree { font-family: var(--font-mono); font-size: 12.5px; line-height: 1.65; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; overflow-x: auto; white-space: pre; margin: 0; }
+.tree .c { color: var(--muted); }
+.tree .k { color: var(--accent); }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 16px; }
+.two > * { min-width: 0; }
+.note { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 14px; }
+.open-list { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+
+/* review bar */
+.bar { position: fixed; left: 0; right: 0; bottom: 0; padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); background: var(--surface); border-top: 1px solid var(--line); display: flex; gap: 12px; align-items: center; justify-content: center; flex-wrap: wrap; z-index: 5; }
+.bar .count { font-size: 14px; font-variant-numeric: tabular-nums; }
+.bar .count b { color: var(--good); } .bar .count i { color: var(--warn); font-style: normal; font-weight: 600; }
+.bar button { font: inherit; font-size: 14px; border-radius: 8px; padding: 6px 12px; cursor: pointer; border: 1px solid var(--line); background: var(--surface); color: var(--fg); }
+.bar button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.bar button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#copied { font-size: 13px; color: var(--muted); }
+#answers { width: 100%; max-width: 980px; font-family: var(--font-mono); font-size: 12px; min-height: 120px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); padding: 8px; }
+@media (prefers-reduced-motion: no-preference) { .d { transition: border-color .15s; } }
+
+.d { grid-template-columns: 44px minmax(0, 1fr) auto; }
+.d::after { font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 99px; align-self: start; }
+.d[data-status="agreed"]::after { content: "Agreed"; color: var(--good); background: var(--good-soft); }
+.d[data-status="revised"]::after { content: "Revised"; color: var(--warn); background: var(--warn-soft); }
+.d[data-status="revised"] { border-color: var(--warn); }
+@media (max-width: 560px) { .d::after { grid-column: 2; justify-self: start; } }
+.d.proposal .id::after { content: none; }
+</style>
+
+<main>
+<header class="top">
+  <div class="eyebrow">Argo Universal · agreed 3 Oct 2026</div>
+  <h1>How Argo navigates on a phone and on a desktop</h1>
+  <p class="lede">The layout, navigation, route and folder decisions behind the prototype on <code>prototype/universal-session-ui</code>, as agreed in review. Items marked <b>Revised</b> were changed in review, and their text below is the final version. The prototype is rough: sizes, spacing and styling are not decided here and need proper design.</p>
+  <nav class="toc" aria-label="Sections">
+    <a href="#layout">Layout model</a><a href="#lists">Lists</a><a href="#session">Session screen</a><a href="#overlays">Overlays</a><a href="#new">New work</a><a href="#flows">UX flows</a><a href="#routes">Routes</a><a href="#folders">Folders</a><a href="#open">Still open</a>
+  </nav>
+</header>
+
+<section id="layout">
+  <div class="sec-head"><span class="tag">L · layout model</span><h2>One route tree, two shells</h2>
+  <p class="lede">At 720 px or wider the app draws old Argo's desktop layout. Below 720 px it draws the phone layout. Every URL opens the same thing in both.</p></div>
+
+  <div class="frames">
+    <figure class="frame-wrap" style="margin:0">
+      <div class="phone" aria-label="Phone with drawer open">
+        <div class="w-title">Sessions</div>
+        <div class="scrim"></div>
+        <div class="drawer">
+          <div class="brand">argo</div>
+          <div class="item on">Sessions <span class="badge">2</span></div>
+          <div class="item">Issues</div>
+          <div class="item">Atlas</div>
+          <div class="item">Settings</div>
+        </div>
+      </div>
+      <figcaption>Drawer: the four sections. The badge counts Sessions that are waiting for you.</figcaption>
+    </figure>
+    <figure class="frame-wrap" style="margin:0">
+      <div class="phone" aria-label="Phone Sessions list">
+        <div class="w-title">☰ Sessions <span class="ic">⌕ ⫶</span></div>
+        <div class="w-sub"><span>Projects</span><span>⋯ +</span></div>
+        <div class="w-head">▾ argo</div>
+        <div class="w-row"><span class="dot g"></span> Feed survey</div>
+        <div class="w-row"><span class="dot o"></span> Live tests</div>
+        <div class="w-head">▾ argo-universal</div>
+        <div class="w-row"><span class="dot"></span> Architecture</div>
+        <div class="w-head">▸ website <span style="margin-left:auto;color:var(--muted)">3</span></div>
+        <div class="fab" aria-label="Write button">✎</div>
+      </div>
+      <figcaption>Section list: the desktop sidebar drawn full screen. The write button sits at the bottom right.</figcaption>
+    </figure>
+    <figure class="frame-wrap" style="margin:0">
+      <div class="phone" aria-label="Phone Session screen">
+        <div class="w-bar">‹ <span class="dot g"></span> Live tests <span class="ic">☑ 2/5 ⋯</span></div>
+        <div class="bubble">Write tests for the Feed</div>
+        <div class="feedline" style="width:90%"></div><div class="feedline" style="width:70%"></div><div class="feedline" style="width:82%"></div>
+        <div class="pills"><span class="pill">🤖 <span class="n">3</span> ▾</span><span class="pill">▭ <span class="n">2</span> ▾</span></div>
+        <div class="composer">Ask for follow-up changes</div>
+      </div>
+      <figcaption>Details push full screen with a back chevron. Subagents and Shells are pills above the composer.</figcaption>
+    </figure>
+    <figure class="frame-wrap" style="margin:0">
+      <div class="phone" aria-label="Phone Subagent sheet">
+        <div class="w-bar">‹ Live tests</div>
+        <div class="sheet">
+          <div class="grab"></div>
+          <div class="w-bar">🤖 Test writer <span class="ic" style="color:var(--accent)">Done</span></div>
+          <div style="color:var(--muted);font-size:9.5px;margin-top:3px"><span class="dot g"></span> Running · sonnet-5 · 31s</div>
+          <div class="bubble">Cover the row grouping</div>
+          <div class="feedline" style="width:85%"></div><div class="feedline" style="width:60%"></div>
+        </div>
+      </div>
+      <figcaption>A Subagent or Shell opens in a native page sheet. On iOS, swipe down to close it.</figcaption>
+    </figure>
+  </div>
+
+  <div class="desk-scroll">
+    <div class="desktop" aria-label="Desktop layout">
+      <div class="rail"><span>▤</span><span class="on">💬</span><span>◎</span><span>⌘</span><span class="bottom">⚙</span></div>
+      <div class="side">
+        <div style="font-weight:600;display:flex">Sessions <span style="margin-left:auto;color:var(--muted)">⌕ ⫶</span></div>
+        <div class="w-sub"><span>Projects</span><span>⋯ +</span></div>
+        <div class="w-head">▾ argo</div>
+        <div class="w-row"><span class="dot g"></span> Feed survey</div>
+        <div class="w-row sel"><span class="dot o"></span> Live tests</div>
+        <div class="w-head">▾ argo-universal</div>
+        <div class="w-row"><span class="dot"></span> Architecture</div>
+        <div class="fab">✎</div>
+      </div>
+      <div class="pane">
+        <div class="hdr"><b>Live tests</b> <span style="color:var(--muted)">Working</span>
+          <span class="r"><span class="cornered">🤖<span class="n">3</span></span> <span class="cornered">▭<span class="n">2</span></span> <span class="chip">4 +82 −9</span> ⋯ ◫</span></div>
+        <div class="bubble" style="margin-left:40%">Write tests for the Feed</div>
+        <div class="feedline" style="width:80%"></div><div class="feedline" style="width:64%"></div><div class="feedline" style="width:72%"></div>
+        <div class="composer">Ask for follow-up changes</div>
+      </div>
+      <div class="insp">
+        <div class="w-bar">🤖 Test writer</div>
+        <div style="color:var(--muted);font-size:10px;margin-top:3px">Running · sonnet-5 · 31s · 6.2k tokens</div>
+        <div class="feedline" style="width:90%;margin-top:10px"></div><div class="feedline" style="width:70%"></div>
+      </div>
+      <span class="label-tag" style="left:2px;bottom:-18px">rail</span>
+      <span class="label-tag" style="left:110px;bottom:-18px">list sidebar</span>
+      <span class="label-tag" style="left:420px;bottom:-18px">Session pane</span>
+      <span class="label-tag" style="right:60px;bottom:-18px">inspector</span>
+    </div>
+  </div>
+  <div style="height:8px"></div>
+
+  <ol class="decisions">
+    <li class="d" data-id="L1" data-status="agreed"><span class="id">L1</span><div class="text">The app has <b>one Expo Router tree</b>. At 720 px or wider it draws the desktop shell, and below that it draws the phone. The same URL opens the same thing on both.</div></li>
+    <li class="d" data-id="L2" data-status="agreed"><span class="id">L2</span><div class="text">On a phone, a <b>left drawer</b> holds the sections: Sessions, Issues, Atlas and Settings. It opens from ☰ or by swiping from the left edge. Sessions has a badge that counts the Sessions waiting for input.</div></li>
+    <li class="d" data-id="L3" data-status="revised"><span class="id">L3</span><div class="text">Each section <b>opens on its list</b>, which is the desktop sidebar's list drawn full screen. The list has a title with ☰ on the left and search and filter icons on the right.</div></li>
+    <li class="d" data-id="L4" data-status="agreed"><span class="id">L4</span><div class="text">On a phone, detail screens <b>push full screen</b> over the drawer with a back chevron, and iOS also lets you swipe back from the edge. The detail screens are Session, New Session, Issue view, Issue, New Issue, Atlas resource, Project settings and Accounts.</div></li>
+    <li class="d" data-id="L5" data-status="revised"><span class="id">L5</span><div class="text">The desktop follows <b>old Argo's layout</b>:<span class="src">· an icon rail with the sidebar toggle at the top, then Sessions, Issues and Atlas, and Settings at the bottom<br>· a list sidebar<br>· the detail pane<br>· a right inspector</span><b>Confirm each piece with the owner before copying anything from the old app.</b></div></li>
+    <li class="d" data-id="L6" data-status="agreed"><span class="id">L6</span><div class="text">On the desktop, each section root <b>opens a detail</b> next to its list:<span class="src">· Sessions opens the first active Session<br>· Issues opens the "All open" view<br>· Atlas opens the first resource<br>· Settings opens Accounts</span></div></li>
+    <li class="d" data-id="L7" data-status="agreed"><span class="id">L7</span><div class="text">When a web or Electron window crosses 720 px, the shell <b>swaps and the URL stays</b>. On a phone, the open detail screen has a back stack that returns to its section list.</div></li>
+  </ol>
+</section>
+
+<section id="lists">
+  <div class="sec-head"><span class="tag">S · lists</span><h2>Every section list has the same shape</h2>
+  <p class="lede">Sessions, Issues, Atlas and Settings draw the same list in the desktop sidebar and on the phone's section screen.</p></div>
+  <ol class="decisions">
+    <li class="d" data-id="S1" data-status="agreed"><span class="id">S1</span><div class="text">The list starts with a <b>title row</b>, followed by search and filter as icons. Search opens in place of the title. The filter opens a popover.</div></li>
+    <li class="d" data-id="S2" data-status="agreed"><span class="id">S2</span><div class="text">Rows are <b>grouped under Projects</b>. A "Projects ⋯ +" sub-header stays expanded. Its <b>+</b> adds a Project, and its <b>⋯</b> collapses or expands all Projects. The flat lists are gone.</div></li>
+    <li class="d" data-id="S3" data-status="agreed"><span class="id">S3</span><div class="text">Each Project has a <b>plain heading</b>:<span class="src">· tapping the heading collapses it, and a collapsed heading shows its count<br>· its ⋯ opens that Project's settings: hover shows it on the desktop, long-press opens it on a phone<br>· headings have no + of their own<br>· an empty Project keeps its heading unless search or the archive filter narrows the list</span></div></li>
+    <li class="d" data-id="S4" data-status="agreed"><span class="id">S4</span><div class="text">The Sessions filter switches between <b>Active and Archived</b>.</div></li>
+    <li class="d" data-id="S5" data-status="agreed"><span class="id">S5</span><div class="text">Issues has <b>"All open"</b> above the Projects sub-header, and it groups its Issues by Project. A Project's views group by the tracker's status. A Project without a tracker shows <b>"Set up Issues…"</b>, which goes to that Project's settings. The views come from each tracker Integration, Linear or GitHub.</div></li>
+    <li class="d" data-id="S6" data-status="revised"><span class="id">S6</span><div class="text">New work starts from one floating round <b>write button</b> on the Sessions and Issues lists. On a phone it sits at the bottom right. On the desktop it sits at the bottom left of the sidebar. Its size and look need proper design.</div></li>
+    <li class="d" data-id="S7" data-status="agreed"><span class="id">S7</span><div class="text">Settings has four groups:<span class="src">· <b>Projects</b>: each Project with its tracker, plus Add Project<br>· <b>Server</b>: Accounts and Connection<br>· <b>Agents</b>: Claude and Codex<br>· <b>App</b>: Appearance and Notifications</span>On the desktop this list sits in the sidebar.</div></li>
+  </ol>
+</section>
+
+<section id="session">
+  <div class="sec-head"><span class="tag">P · Session screen</span><h2>The Session screen</h2></div>
+  <ol class="decisions">
+    <li class="d" data-id="P1" data-status="agreed"><span class="id">P1</span><div class="text">The <b>phone header</b> keeps only four things: back, the status mark with the title, a Plan button showing done out of total when a Plan exists, and ⋯. The ⋯ menu holds Changed files · n, Rename and Archive.</div></li>
+    <li class="d" data-id="P2" data-status="agreed"><span class="id">P2</span><div class="text">The <b>desktop header</b> shows:<span class="src">· the title and its state (click the title to rename)<br>· the checkout path · branch<br>· the Subagents and Shells buttons<br>· the Changed files chip<br>· ⋯<br>· the inspector toggles</span></div></li>
+    <li class="d" data-id="P3" data-status="agreed"><span class="id">P3</span><div class="text">The bottom of the Session shows <b>exactly one</b> of three things:<span class="src">· the composer<br>· a Permission request or Elicitation card in place of the composer<br>· an "Archived · read-only" banner</span></div></li>
+    <li class="d" data-id="P4" data-status="agreed"><span class="id">P4</span><div class="text">On the desktop, the <b>Plan</b> is a sticky panel at the top of the Feed. On a phone it opens as a popover from the header's Plan button.</div></li>
+    <li class="d" data-id="P5" data-status="agreed"><span class="id">P5</span><div class="text"><b>Changed files</b>: on the desktop, the chip opens the file list in the right inspector, which can expand to the full width. On a phone, ⋯ → Changed files opens a popover.</div></li>
+    <li class="d" data-id="P6" data-status="agreed"><span class="id">P6</span><div class="text"><b>Subagents and Shells</b> are old Argo's two buttons, each with a count that is green while anything runs and grey once all have ended. Each button opens a list grouped into Running and Finished, and each row shows model · duration · tokens.<span class="src">· on the desktop the buttons sit at the top right of the header, and an item opens in the right inspector<br>· on a phone they are pills above the composer, and an item opens in a native page sheet<br>· a Subagent row in the Feed opens the same place</span></div></li>
+    <li class="d" data-id="P7" data-status="agreed"><span class="id">P7</span><div class="text">Archiving a Session that has uncommitted files <b>asks first</b>. Archiving shows a toast with <b>Undo</b>, and the branch is kept.</div></li>
+  </ol>
+</section>
+
+<section id="overlays">
+  <div class="sec-head"><span class="tag">O · overlays</span><h2>Popovers everywhere, for now</h2></div>
+  <ol class="decisions">
+    <li class="d" data-id="O1" data-status="revised"><span class="id">O1</span><div class="text">Menus, filters, pickers, confirmations and Add Project open as a <b>popover on every platform</b>, anchored to the button that opened it. This applies to phones too, for now.</div></li>
+    <li class="d" data-id="O2" data-status="revised"><span class="id">O2</span><div class="text"><b>No bottom sheets on a phone.</b> The Subagents and Shells list is a popover like every other one.</div></li>
+    <li class="d" data-id="O3" data-status="agreed"><span class="id">O3</span><div class="text">A full view that belongs to a Session opens as a <b>native page sheet</b> on a phone, not as a pushed screen. That covers a Subagent's Feed and a Shell's output. Android and narrow web show it full screen.</div></li>
+  </ol>
+</section>
+
+<section id="new">
+  <div class="sec-head"><span class="tag">N · new work</span><h2>Starting a Session or an Issue</h2></div>
+  <ol class="decisions">
+    <li class="d" data-id="N1" data-status="agreed"><span class="id">N1</span><div class="text">The <b>New Session</b> page has Codex-style "Start the Session in" rows for Server and Project above the composer. Server has one entry until the app supports more machines. The composer holds the Agent, model, mode, effort and checkout (worktree from a branch, or local). The desktop shows the heading "What should we work on?".</div></li>
+    <li class="d" data-id="N2" data-status="agreed"><span class="id">N2</span><div class="text"><b>New Issue</b> uses the same "Create the Issue in" rows, and lists only Projects that have an Issue tracker.</div></li>
+    <li class="d" data-id="N3" data-status="agreed"><span class="id">N3</span><div class="text">Sending <b>replaces</b> the New page with the new Session or Issue, so going back returns to the list, not to an empty form.</div></li>
+  </ol>
+</section>
+
+<section id="flows">
+  <div class="sec-head"><span class="tag">F · UX flows</span><h2>UX flows</h2>
+  <p class="lede">Each flow uses the decisions above. Solid arrows are taps, and dashed arrows are the desktop path where it differs.</p></div>
+  <div class="flow-grid">
+
+    <div class="flow"><h3>F1 · Start a Session</h3>
+      <div class="diagram"><pre class="mermaid">
+flowchart LR
+  A["Sessions list"] -->|"tap write button"| B["New Session"]
+  B --> C["Server and Project rows"]
+  C --> D["Composer: Agent, model, mode, checkout"]
+  D -->|"Send"| E["Session (replaces New)"]
+  E -->|"back"| A
+      </pre></div></div>
+
+    <div class="flow"><h3>F2 · Find and open a Session</h3>
+      <div class="diagram"><pre class="mermaid">
+flowchart LR
+  Z["Anywhere"] -->|"☰ or edge swipe"| DR["Drawer"]
+  DR -->|"Sessions"| L["Sessions list"]
+  L -->|"⌕ search / ⫶ Active or Archived"| L
+  L -->|"tap heading"| L
+  L -->|"tap row"| S["Session, pushed"]
+  S -->|"back"| L
+  R["Desktop rail: Sessions"] -.-> SB["Sidebar list"]
+  SB -.->|"click row"| P["Session pane"]
+      </pre></div></div>
+
+    <div class="flow"><h3>F3 · Answer a Permission request</h3>
+      <div class="diagram"><pre class="mermaid">
+flowchart LR
+  A["Drawer badge or orange row"] --> S["Session"]
+  S --> C["Request card replaces composer"]
+  C -->|"Allow once"| F["Feed continues, composer returns"]
+  C -->|"Deny…"| R["Optional reason"] --> F
+  C -->|"Elicitation: answer"| F
+      </pre></div></div>
+
+    <div class="flow"><h3>F4 · Look at a Subagent or a Shell</h3>
+      <div class="diagram"><pre class="mermaid">
+flowchart LR
+  subgraph Phone
+    P1["Pill above composer"] --> P2["Upward list: Running, Finished"]
+    P2 -->|"tap item"| P3["Native page sheet: header, prompt, Feed or output"]
+    P3 -->|"Done or swipe down"| P4["Session"]
+    FR["Feed Subagent row: Open"] --> P3
+  end
+  subgraph Desktop
+    D1["Header button with count"] --> D2["Popover list"]
+    D2 -->|"click item"| D3["Right inspector"]
+    FD["Feed Subagent row: Open"] --> D3
+  end
+      </pre></div></div>
+
+    <div class="flow"><h3>F5 · Check changed files and the Plan</h3>
+      <div class="diagram"><pre class="mermaid">
+flowchart LR
+  subgraph Phone
+    A["⋯ menu"] -->|"Changed files · n"| B["Popover: file list and diffs"]
+    C["Plan button 2/5"] --> D["Popover: Plan steps"]
+  end
+  subgraph Desktop
+    E["Changed files chip"] --> F["Inspector: files"]
+    F -->|"expand"| G["Inspector full width"]
+    H["Feed edit row"] --> I["Inspector: that diff"]
+    J["Sticky Plan panel"]
+  end
+      </pre></div></div>
+
+    <div class="flow"><h3>F6 · Rename or archive a Session</h3>
+      <div class="diagram"><pre class="mermaid">
+flowchart LR
+  M["⋯ menu, or desktop title"] -->|"Rename"| R["Rename dialog"] --> S["Session"]
+  M -->|"Archive"| Q{"Uncommitted files?"}
+  Q -->|"no"| T["Toast: Archived · Undo"]
+  Q -->|"yes"| W["Confirm popover"] -->|"Archive"| T
+  T --> L["Session moves to Archived filter, read-only banner"]
+      </pre></div></div>
+
+    <div class="flow"><h3>F7 · Issues</h3>
+      <div class="diagram"><pre class="mermaid">
+flowchart LR
+  DR["Drawer: Issues"] --> V["Views list: All open, then Projects"]
+  V -->|"tap view"| VL["Issue view, pushed"]
+  VL -->|"tap Issue"| I["Issue"]
+  I -->|"linked Session"| S["Session"]
+  V -->|"write button"| N["New Issue"] -->|"Create"| I
+  V -->|"Set up Issues…"| PS["Project settings"]
+  DK["Desktop: rail Issues"] -.-> AO["All open pane"]
+      </pre></div></div>
+
+    <div class="flow"><h3>F8 · Manage Projects</h3>
+      <div class="diagram"><pre class="mermaid">
+flowchart LR
+  L["Any section list"] -->|"Projects +"| AP["Add Project popover"] --> PS["Project settings"]
+  L -->|"long-press heading / hover ⋯"| PS
+  L -->|"Projects ⋯"| C["Collapse all / Expand all"]
+  ST["Settings: Projects"] --> PS
+      </pre></div></div>
+
+    <div class="flow"><h3>F9 · A window crosses 720 px</h3>
+      <div class="diagram"><pre class="mermaid">
+flowchart LR
+  W["Desktop: /sessions/live"] -->|"narrow below 720"| N["Phone stack: Sessions list → Session live"]
+  N -->|"widen to 720+"| W
+  WA["Desktop: /atlas"] -->|"redirect"| WR["/atlas/first-resource"]
+      </pre></div></div>
+  </div>
+</section>
+
+<section id="routes">
+  <div class="sec-head"><span class="tag">R · routes</span><h2>Screens and URLs</h2>
+  <p class="lede">The prototype runs under <code>/prototype</code> with short paths. For the real app I propose the URLs below, with nested, plural paths.</p></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Screen</th><th>Proposed URL</th><th>Prototype URL</th><th>Phone</th><th>Desktop</th></tr></thead>
+    <tbody>
+      <tr><td>Sessions list</td><td class="mono">/</td><td class="mono">/prototype</td><td>Drawer section</td><td>Sidebar; root redirects to first Session</td></tr>
+      <tr><td>Session</td><td class="mono">/sessions/[id]</td><td class="mono">/session/[id]</td><td>Pushed</td><td>Pane</td></tr>
+      <tr><td>New Session</td><td class="mono">/sessions/new</td><td class="mono">/new</td><td>Pushed</td><td>Pane</td></tr>
+      <tr><td>Issues (views)</td><td class="mono">/issues</td><td class="mono">/issues</td><td>Drawer section</td><td>Sidebar; pane shows All open</td></tr>
+      <tr><td>Issue view</td><td class="mono">/issues/views/[view]</td><td class="mono">/view/[view]</td><td>Pushed</td><td>Pane</td></tr>
+      <tr><td>Issue</td><td class="mono">/issues/[id]</td><td class="mono">/issue/[id]</td><td>Pushed</td><td>Pane</td></tr>
+      <tr><td>New Issue</td><td class="mono">/issues/new</td><td class="mono">/new-issue</td><td>Pushed</td><td>Pane</td></tr>
+      <tr><td>Atlas</td><td class="mono">/atlas</td><td class="mono">/atlas</td><td>Drawer section</td><td>Sidebar; redirects to the first resource</td></tr>
+      <tr><td>Atlas resource</td><td class="mono">/atlas/[id]</td><td class="mono">/resource/[project]/[id]</td><td>Pushed</td><td>Pane</td></tr>
+      <tr><td>Settings</td><td class="mono">/settings</td><td class="mono">/settings</td><td>Drawer section</td><td>Sidebar; pane shows Accounts</td></tr>
+      <tr><td>Project settings</td><td class="mono">/settings/projects/[name]</td><td class="mono">/projects/[name]</td><td>Pushed</td><td>Pane</td></tr>
+      <tr><td>Accounts</td><td class="mono">/settings/accounts</td><td class="mono">/accounts</td><td>Pushed</td><td>Pane</td></tr>
+    </tbody>
+  </table></div>
+  <ol class="decisions">
+    <li class="d proposal" data-id="R1" data-status="revised"><span class="id">R1</span><div class="text">Use the <b>proposed URLs</b> above. An Atlas resource follows the same <code>/atlas/[id]</code> pattern as the rest, without a Project segment.<span class="src">The prototype's short paths were only for speed. A resource id must then be unique across Projects.</span></div></li>
+    <li class="d proposal" data-id="R2" data-status="agreed"><span class="id">R2</span><div class="text">The Sessions list replaces <b>today's Projects screen at <code>/</code></b>. Projects live on as list headings and in Settings → Projects. <code>/sessions/[id]</code> keeps the same URL it has on main.</div></li>
+  </ol>
+</section>
+
+<section id="folders">
+  <div class="sec-head"><span class="tag">R · folders</span><h2>Folder structure</h2>
+  <p class="lede">ADR 0009 says route files in the app only render a screen, and screens, components and tRPC live in <code>@repo/client</code>. The trees below follow that. Layouts own the navigators, and the client package draws what goes inside them.</p></div>
+  <div class="two">
+    <pre class="tree"><span class="k">apps/universal-app/src/app/</span>
+├─ _layout.tsx        <span class="c">providers, theme, root Stack</span>
+├─ (app)/
+│  ├─ _layout.tsx     <span class="c">wide: DesktopShell + Slot
+│  │                  phone: Stack</span>
+│  ├─ (sections)/
+│  │  ├─ _layout.tsx  <span class="c">phone: Drawer + SectionsDrawer
+│  │  │               wide: Slot</span>
+│  │  ├─ index.tsx    <span class="c">SessionsScreen</span>
+│  │  ├─ issues.tsx   <span class="c">IssuesScreen</span>
+│  │  ├─ atlas.tsx    <span class="c">AtlasScreen</span>
+│  │  └─ settings.tsx <span class="c">SettingsScreen</span>
+│  ├─ sessions/
+│  │  ├─ new.tsx      <span class="c">NewSessionScreen</span>
+│  │  └─ [id].tsx     <span class="c">SessionScreen</span>
+│  ├─ issues/
+│  │  ├─ new.tsx
+│  │  ├─ [id].tsx
+│  │  └─ views/[view].tsx
+│  ├─ atlas/[id].tsx
+│  └─ settings/
+│     ├─ accounts.tsx
+│     └─ projects/[name].tsx
+└─ (dev)/storybook.tsx  <span class="c">outside the shell</span></pre>
+    <pre class="tree"><span class="k">packages/client/src/</span>
+├─ navigation/
+│  ├─ context.ts       <span class="c">useNavigate(): typed destinations</span>
+│  ├─ use-wide.ts      <span class="c">720 px breakpoint</span>
+│  └─ Overlay.tsx      <span class="c">the popover, on every platform</span>
+├─ primitives/         <span class="c">React Native Reusables (exists)</span>
+├─ components/
+│  ├─ shell/           <span class="c">DesktopShell, SectionsDrawer, ListScreen</span>
+│  ├─ lists/           <span class="c">ListHeader, ProjectGroups, GroupRow, WriteButton</span>
+│  ├─ sessions/        <span class="c">SessionList, SessionRow, SessionHeader, SessionActions, PlanPanel</span>
+│  ├─ feed/            <span class="c">Feed rows, LiveHeader, Diff</span>
+│  ├─ composer/        <span class="c">Composer, RequestCard, TargetRows, WorktreeRow</span>
+│  ├─ inspector/       <span class="c">Inspector, FileDiffList, EditDiff</span>
+│  ├─ work/            <span class="c">WorkButtons, WorkSheet, WorkBody</span>
+│  ├─ issues/  atlas/  settings/  projects/
+│  └─ ConnectionBanner.tsx  <span class="c">(exists)</span>
+├─ screens/            <span class="c">one connected screen per route,
+│                      each with .stories, .test.stories, .mocks</span>
+├─ trpc/               <span class="c">(exists)</span>
+└─ connection/         <span class="c">(exists)</span></pre>
+  </div>
+  <ol class="decisions">
+    <li class="d proposal" data-id="R3" data-status="agreed"><span class="id">R3</span><div class="text">Two Expo Router groups carry the layout: <b><code>(app)</code></b> picks the shell by width, and <b><code>(sections)</code></b> is the phone drawer. Detail routes sit beside <code>(sections)</code>, so on a phone they push over the drawer. Storybook stays outside the shell.</div></li>
+    <li class="d proposal" data-id="R4" data-status="agreed"><span class="id">R4</span><div class="text">Layout files own the navigators (Stack, Drawer, Slot) and render the shell pieces from <code>@repo/client</code>. Route files stay one-liners that render a screen, as ADR 0009 requires.</div></li>
+    <li class="d proposal" data-id="R5" data-status="agreed"><span class="id">R5</span><div class="text"><code>@repo/client</code> stays <b>free of expo-router</b>. Screens move through a <code>useNavigate()</code> context with typed destinations, such as <code>{ to: 'session', id }</code>. The app fills that context from expo-router, and Storybook fills it with a recorder that play functions can assert on.</div></li>
+    <li class="d proposal" data-id="R6" data-status="agreed"><span class="id">R6</span><div class="text">Components are grouped <b>by feature</b> under <code>components/</code>. File names stay PascalCase as in the client package today, and each feature folder holds its own stories.</div></li>
+    <li class="d proposal" data-id="R7" data-status="agreed"><span class="id">R7</span><div class="text">Components <b>adapt with <code>useWide()</code></b>. They split into separate phone and desktop components only where the two trees really differ: the Session header, the shell, and the list screen frame.</div></li>
+  </ol>
+</section>
+
+<section id="open">
+  <div class="sec-head"><span class="tag">X · scope</span><h2>Scope and terms</h2></div>
+  <ol class="decisions">
+    <li class="d" data-id="X1" data-status="revised"><span class="id">X1</span><div class="text"><b>Atlas resources</b> are diagrams and maps of the code. They are <b>not scoped yet</b>, so build nothing for them beyond the placeholder list.</div></li>
+    <li class="d" data-id="X2" data-status="agreed"><span class="id">X2</span><div class="text">Keep the <b>Shells</b> button and add the term to GLOSSARY.md:<span class="src"><b>Shell</b>: a command an Agent started in the background, which keeps running while the Turn goes on. <i>Avoid</i>: background task, terminal, process.</span></div></li>
+    <li class="d" data-id="X3" data-status="revised"><span class="id">X3</span><div class="text"><b>React Native Reusables</b> primitives replace the prototype's hand-made ones. This is the <b>implementer's job</b>, not part of the prototype.</div></li>
+    <li class="d" data-id="X4" data-status="agreed"><span class="id">X4</span><div class="text"><b>ADR 0010.</b> The prototype's Feed fixtures are hand-written. Real stories use recorded vendor sessions, so the Feed parts need recordings first.</div></li>
+  </ol>
+</section>
+</main>
+
