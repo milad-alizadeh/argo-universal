@@ -1,6 +1,7 @@
 import { appendFileSync, mkdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import { createNodeMachineLog } from '@repo/machine-log/node';
 import { createActor } from 'xstate';
 import packageJson from '../../package.json' with { type: 'json' };
 import { supervisorMachine } from './machine';
@@ -16,6 +17,7 @@ export function startSupervisor(options: { watch: boolean }) {
   };
 
   const supervisor = createActor(supervisorMachine, {
+    inspect: createNodeMachineLog({ home, processName: 'supervisor' }),
     input: {
       home,
       version: packageJson.version,

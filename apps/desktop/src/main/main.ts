@@ -1,5 +1,6 @@
 import path from 'node:path';
 import type { ServerAddress } from '@repo/contracts';
+import { createNodeMachineLog } from '@repo/machine-log/node';
 import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import { createActor } from 'xstate';
 import {
@@ -29,8 +30,14 @@ registerAppScheme();
 const serverUrl = (address: ServerAddress) => `ws://127.0.0.1:${address.port}`;
 
 // Makes sure a Supervisor runs; on quit it stops only one that it started (spec 0002 section 10).
+const home = resolveHome();
 const server = createActor(serverConnectionMachine, {
-  input: { home: resolveHome(), serverDirectory },
+  inspect: createNodeMachineLog({
+    home,
+    processName: 'desktop',
+    development: !app.isPackaged,
+  }),
+  input: { home, serverDirectory },
 });
 
 const createWindow = (url: string) => {

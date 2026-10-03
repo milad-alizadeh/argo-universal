@@ -18,6 +18,7 @@
     "@react-native-community/datetimepicker": "catalog:",
     "@react-native-community/slider": "catalog:",
     "@repo/client": "workspace:*",
+    "@repo/machine-log": "workspace:*",
     "@repo/uniwind": "workspace:*",
     "@storybook/addon-ondevice-actions": "catalog:",
     "@storybook/addon-ondevice-controls": "catalog:",

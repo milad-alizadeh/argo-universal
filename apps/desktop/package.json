@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@repo/contracts": "workspace:*",
+    "@repo/machine-log": "workspace:*",
     "xstate": "catalog:",
     "zod": "catalog:"
   },

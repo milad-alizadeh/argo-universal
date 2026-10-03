@@ -1,5 +1,6 @@
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import { createNodeMachineLog } from '@repo/machine-log/node';
 import { createActor } from 'xstate';
 import { z } from 'zod';
 import packageJson from '../../package.json' with { type: 'json' };
@@ -12,9 +13,11 @@ const port = z.coerce
   .max(65535)
   .parse(process.env.ARGO_SERVER_PORT ?? 7337);
 
+const home = process.env.ARGO_HOME ?? join(homedir(), '.argo');
 const engine = createActor(engineMachine, {
+  inspect: createNodeMachineLog({ home, processName: 'engine' }),
   input: {
-    home: process.env.ARGO_HOME ?? join(homedir(), '.argo'),
+    home,
     port,
     version: packageJson.version,
     startedAt: new Date().toISOString(),
