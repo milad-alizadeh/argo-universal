@@ -6,6 +6,7 @@ import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { WebSocketServer } from 'ws';
 import { createSystemService } from '../services/system';
 import { createHttpRoutes } from './http-routes';
+import { createRequestGuard } from './request-guard';
 
 export interface WorkerOptions {
   home: string;
@@ -21,14 +22,25 @@ export async function startWorker(options: WorkerOptions) {
     system: createSystemService({ version: options.version, startedAt }),
   };
 
-  const server = createServer(
-    createHttpRoutes({
-      blobsFolder: join(options.home, 'blobs'),
-      version: options.version,
-      startedAt,
-    }),
-  );
-  const webSocketServer = new WebSocketServer({ server });
+  const guard = createRequestGuard(options.port);
+  const routes = createHttpRoutes({
+    blobsFolder: join(options.home, 'blobs'),
+    version: options.version,
+    startedAt,
+  });
+  const server = createServer((request, response) => {
+    if (guard.allowsRequest(request)) {
+      routes(request, response);
+      return;
+    }
+    response.writeHead(403, { 'content-type': 'application/json' });
+    response.end(JSON.stringify({ error: 'Forbidden' }));
+  });
+  const webSocketServer = new WebSocketServer({
+    server,
+    verifyClient: ({ req }, callback) =>
+      callback(guard.allowsUpgrade(req), 403, 'Forbidden'),
+  });
   const handler = applyWSSHandler({
     wss: webSocketServer,
     router: appRouter,
