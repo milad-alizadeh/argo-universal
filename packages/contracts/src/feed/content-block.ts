@@ -1,16 +1,13 @@
-import { blob } from '@argo/db/schema';
-import { createSelectSchema } from 'drizzle-orm/zod';
 import { z } from 'zod';
-
-const blobColumns = createSelectSchema(blob).shape;
+import { blobColumns } from '../columns';
 
 // A reference to a content-addressed file in `~/.argo/blobs/` (ADR-0005), from the `blob` table.
 export const BlobRef = z.strictObject({
-  blobId: blobColumns.id,
-  mime: blobColumns.mime,
-  bytes: blobColumns.bytes,
-  width: blobColumns.width.unwrap().optional(),
-  height: blobColumns.height.unwrap().optional(),
+  blobId: blobColumns.shape.id,
+  mime: blobColumns.shape.mime,
+  bytes: blobColumns.shape.bytes,
+  width: blobColumns.shape.width.unwrap().optional(),
+  height: blobColumns.shape.height.unwrap().optional(),
 });
 export type BlobRef = z.infer<typeof BlobRef>;
 
@@ -29,7 +26,7 @@ export type TextContent = z.infer<typeof TextContent>;
 
 export const ImageContent = z.strictObject({
   type: z.literal('image'),
-  mimeType: z.string().min(1),
+  mimeType: z.string(),
   blob: BlobRef,
   _meta: AttachmentMeta.optional(),
 });
@@ -38,8 +35,8 @@ export type ImageContent = z.infer<typeof ImageContent>;
 export const ResourceLink = z.strictObject({
   type: z.literal('resource_link'),
   name: z.string(),
-  uri: z.string().min(1),
-  mimeType: z.string().min(1).optional(),
+  uri: z.string(),
+  mimeType: z.string().optional(),
   _meta: AttachmentMeta.optional(),
 });
 export type ResourceLink = z.infer<typeof ResourceLink>;
@@ -47,9 +44,9 @@ export type ResourceLink = z.infer<typeof ResourceLink>;
 export const EmbeddedResource = z.strictObject({
   type: z.literal('resource'),
   resource: z.strictObject({
-    uri: z.string().min(1),
+    uri: z.string(),
     text: z.string().optional(),
-    mimeType: z.string().min(1).optional(),
+    mimeType: z.string().optional(),
   }),
   _meta: AttachmentMeta.optional(),
 });

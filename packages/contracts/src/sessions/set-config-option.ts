@@ -1,8 +1,9 @@
 import { z } from 'zod';
+import { sessionColumns } from '../columns';
 
 // ACP v2 `SessionConfigSelectOption`.
 export const SessionConfigSelectOption = z.strictObject({
-  value: z.string().min(1),
+  value: z.string(),
   name: z.string(),
   description: z.string().optional(),
 });
@@ -12,7 +13,7 @@ export type SessionConfigSelectOption = z.infer<
 
 // ACP v2 `SessionConfigSelectGroup`.
 export const SessionConfigSelectGroup = z.strictObject({
-  groupId: z.string().min(1),
+  groupId: z.string(),
   name: z.string(),
   options: z.array(SessionConfigSelectOption),
 });
@@ -30,7 +31,7 @@ export type SessionConfigOptionCategory = z.infer<
 >;
 
 const configOptionBase = {
-  configId: z.string().min(1),
+  configId: z.string(),
   name: z.string(),
   description: z.string().optional(),
   category: SessionConfigOptionCategory.optional(),
@@ -41,7 +42,7 @@ export const SessionConfigOption = z.discriminatedUnion('type', [
   z.strictObject({
     ...configOptionBase,
     type: z.literal('select'),
-    currentValue: z.string().min(1),
+    currentValue: z.string(),
     options: z.union([
       z.array(SessionConfigSelectOption),
       z.array(SessionConfigSelectGroup),
@@ -58,14 +59,14 @@ export type SessionConfigOption = z.infer<typeof SessionConfigOption>;
 // Input of `session.setConfigOption`, after ACP v2 `SetSessionConfigOptionRequest`.
 export const SessionSetConfigOptionInput = z.discriminatedUnion('type', [
   z.strictObject({
-    sessionId: z.string().min(1),
-    configId: z.string().min(1),
+    sessionId: sessionColumns.shape.id,
+    configId: z.string(),
     type: z.literal('id'),
-    value: z.string().min(1),
+    value: z.string(),
   }),
   z.strictObject({
-    sessionId: z.string().min(1),
-    configId: z.string().min(1),
+    sessionId: sessionColumns.shape.id,
+    configId: z.string(),
     type: z.literal('boolean'),
     value: z.boolean(),
   }),

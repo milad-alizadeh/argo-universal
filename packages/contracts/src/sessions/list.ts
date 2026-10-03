@@ -1,15 +1,12 @@
-import { session } from '@argo/db/schema';
-import { createSelectSchema } from 'drizzle-orm/zod';
 import { z } from 'zod';
+import { sessionColumns } from '../columns';
 
 // Input of `session.list`, after ACP `ListSessionsRequest`, filtered by Project instead of `cwd`.
 export const SessionListInput = z.strictObject({
-  projectId: z.string().min(1).optional(),
-  cursor: z.string().min(1).optional(),
+  projectId: sessionColumns.shape.projectId.optional(),
+  cursor: z.string().optional(),
 });
 export type SessionListInput = z.infer<typeof SessionListInput>;
-
-const sessionColumns = createSelectSchema(session);
 
 // One Session in a list, after ACP `SessionInfo`: `session` columns under ACP names, times in Unix milliseconds.
 export const SessionInfo = z.strictObject({
@@ -28,6 +25,6 @@ export type SessionInfo = z.infer<typeof SessionInfo>;
 
 export const SessionListOutput = z.strictObject({
   sessions: z.array(SessionInfo),
-  nextCursor: z.string().min(1).nullable(),
+  nextCursor: z.string().nullable(),
 });
 export type SessionListOutput = z.infer<typeof SessionListOutput>;

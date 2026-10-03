@@ -1,10 +1,6 @@
-import {
-  feedRow,
-  sessionUpdateKinds,
-  sessionUpdateStates,
-} from '@argo/db/schema';
-import { createSelectSchema } from 'drizzle-orm/zod';
+import { sessionUpdateKinds, sessionUpdateStates } from '@argo/db/schema';
 import { z } from 'zod';
+import { feedRowColumns } from '../columns';
 import { ContentBlock } from './content-block';
 import { Plan } from './plan';
 import {
@@ -20,8 +16,6 @@ export type SessionUpdateKind = z.infer<typeof SessionUpdateKind>;
 
 export const SessionUpdateState = z.enum(sessionUpdateStates);
 export type SessionUpdateState = z.infer<typeof SessionUpdateState>;
-
-const feedRowColumns = createSelectSchema(feedRow);
 
 // Fields every Feed row carries, from the `feed_row` table (spec section 6, ADR-0007).
 const envelope = feedRowColumns.pick({
@@ -43,7 +37,7 @@ const meta = <Argo extends z.ZodObject>(argo: Argo) =>
 const noArgoMeta = meta(z.strictObject({}));
 
 const message = {
-  messageId: z.string().min(1),
+  messageId: z.string(),
   content: z.array(ContentBlock),
   _meta: noArgoMeta,
 };
@@ -72,9 +66,9 @@ export type AgentThought = z.infer<typeof AgentThought>;
 export const ToolCallUpdate = z.strictObject({
   ...envelope,
   sessionUpdate: kind('tool_call_update'),
-  toolCallId: z.string().min(1),
+  toolCallId: z.string(),
   title: z.string(),
-  name: z.string().min(1).optional(),
+  name: z.string().optional(),
   kind: ToolKind,
   status: ToolCallStatus,
   content: z.array(ToolCallContent),
@@ -109,7 +103,7 @@ export type CompactionStatus = z.infer<typeof CompactionStatus>;
 export const CompactionUpdate = z.strictObject({
   ...envelope,
   sessionUpdate: kind('compaction_update'),
-  compactionId: z.string().min(1),
+  compactionId: z.string(),
   status: CompactionStatus,
   summary: z.array(ContentBlock).optional(),
   _meta: noArgoMeta,
@@ -123,7 +117,7 @@ export type SubagentState = z.infer<typeof SubagentState>;
 export const SubagentUpdate = z.strictObject({
   ...envelope,
   sessionUpdate: kind('subagent_update'),
-  subagentSessionId: z.string().min(1),
+  subagentSessionId: z.string(),
   title: z.string().optional(),
   subagentState: SubagentState.optional(),
   _meta: noArgoMeta,
@@ -137,15 +131,15 @@ export const Notice = z.strictObject({
   ...envelope,
   sessionUpdate: kind('notice'),
   severity: NoticeSeverity,
-  title: z.string().min(1),
+  title: z.string(),
   description: z.string().optional(),
   _meta: meta(
     z.strictObject({
       retry: z
         .strictObject({
-          attempt: z.int().positive(),
-          maxAttempts: z.int().positive(),
-          delayMs: z.int().nonnegative(),
+          attempt: z.int(),
+          maxAttempts: z.int(),
+          delayMs: z.int(),
         })
         .optional(),
       // A vendor shape that the adapter did not recognise (ADR-0012).
@@ -167,7 +161,7 @@ export type TaskStatus = z.infer<typeof TaskStatus>;
 export const TaskUpdate = z.strictObject({
   ...envelope,
   sessionUpdate: kind('task_update'),
-  taskId: z.string().min(1),
+  taskId: z.string(),
   status: TaskStatus,
   title: z.string(),
   _meta: noArgoMeta,

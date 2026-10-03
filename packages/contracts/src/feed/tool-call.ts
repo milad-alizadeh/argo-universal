@@ -25,15 +25,15 @@ export const ToolCallStatus = z.enum([
 export type ToolCallStatus = z.infer<typeof ToolCallStatus>;
 
 export const ToolCallLocation = z.strictObject({
-  path: z.string().min(1),
-  line: z.int().nonnegative().optional(),
+  path: z.string(),
+  line: z.int().optional(),
 });
 export type ToolCallLocation = z.infer<typeof ToolCallLocation>;
 
 export const DiffChange = z.strictObject({
   operation: z.enum(['add', 'delete', 'modify', 'move']),
-  path: z.string().min(1),
-  oldPath: z.string().min(1).optional(),
+  path: z.string(),
+  oldPath: z.string().optional(),
   oldText: z.string().optional(),
   newText: z.string().optional(),
 });
@@ -47,8 +47,8 @@ export type DiffPatch = z.infer<typeof DiffPatch>;
 
 // ACP `TerminalExitStatus`.
 export const TerminalExitStatus = z.strictObject({
-  exitCode: z.int().nonnegative().optional(),
-  signal: z.string().min(1).optional(),
+  exitCode: z.int().optional(),
+  signal: z.string().optional(),
 });
 export type TerminalExitStatus = z.infer<typeof TerminalExitStatus>;
 
@@ -68,7 +68,7 @@ export type ToolCallDiff = z.infer<typeof ToolCallDiff>;
 export const ToolCallTerminal = z.strictObject({
   type: z.literal('terminal'),
   command: z.string(),
-  cwd: z.string().min(1).optional(),
+  cwd: z.string().optional(),
   output: z.string(),
   exitStatus: TerminalExitStatus.optional(),
 });
@@ -86,7 +86,7 @@ export const PermissionOutcome = z.discriminatedUnion('outcome', [
   z.strictObject({ outcome: z.literal('cancelled') }),
   z.strictObject({
     outcome: z.literal('selected'),
-    optionId: z.string().min(1),
+    optionId: z.string(),
   }),
 ]);
 export type PermissionOutcome = z.infer<typeof PermissionOutcome>;

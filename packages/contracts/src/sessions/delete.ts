@@ -1,8 +1,9 @@
 import { z } from 'zod';
+import { sessionColumns } from '../columns';
 
 // Input of `session.delete`, after ACP `DeleteSessionRequest`.
 export const SessionDeleteInput = z.strictObject({
-  sessionId: z.string().min(1),
+  sessionId: sessionColumns.shape.id,
 });
 export type SessionDeleteInput = z.infer<typeof SessionDeleteInput>;
 

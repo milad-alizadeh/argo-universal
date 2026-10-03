@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { sessionColumns, turnColumns } from '../columns';
 import { SessionConfigOption } from './set-config-option';
 
 export const SessionState = z.enum(['running', 'idle', 'requires_action']);
@@ -6,12 +7,12 @@ export type SessionState = z.infer<typeof SessionState>;
 
 // ACP `usage_update`: how full the context window is.
 export const ContextUsage = z.strictObject({
-  used: z.int().nonnegative(),
-  size: z.int().nonnegative(),
+  used: z.int(),
+  size: z.int(),
   cost: z
     .strictObject({
       amount: z.number(),
-      currency: z.string().regex(/^[A-Z]{3}$/),
+      currency: z.string(),
     })
     .optional(),
 });
@@ -26,7 +27,7 @@ export const PermissionOptionKind = z.enum([
 export type PermissionOptionKind = z.infer<typeof PermissionOptionKind>;
 
 export const PermissionOption = z.strictObject({
-  optionId: z.string().min(1),
+  optionId: z.string(),
   name: z.string(),
   kind: PermissionOptionKind,
 });
@@ -34,9 +35,9 @@ export type PermissionOption = z.infer<typeof PermissionOption>;
 
 // A Permission request, after ACP `session/request_permission`.
 export const PendingPermission = z.strictObject({
-  toolCallId: z.string().min(1),
+  toolCallId: z.string(),
   title: z.string(),
-  options: z.array(PermissionOption).min(1),
+  options: z.array(PermissionOption),
 });
 export type PendingPermission = z.infer<typeof PendingPermission>;
 
@@ -58,13 +59,13 @@ export const ElicitationPropertySchema = z.discriminatedUnion('type', [
   z.strictObject({
     ...propertyBase,
     type: z.literal('string'),
-    minLength: z.int().nonnegative().optional(),
-    maxLength: z.int().nonnegative().optional(),
+    minLength: z.int().optional(),
+    maxLength: z.int().optional(),
     pattern: z.string().optional(),
     format: z.enum(['email', 'uri', 'date', 'date-time']).optional(),
     default: z.string().optional(),
-    enum: z.array(z.string()).min(1).optional(),
-    oneOf: z.array(ElicitationEnumOption).min(1).optional(),
+    enum: z.array(z.string()).optional(),
+    oneOf: z.array(ElicitationEnumOption).optional(),
   }),
   z.strictObject({
     ...propertyBase,
@@ -88,14 +89,14 @@ export const ElicitationPropertySchema = z.discriminatedUnion('type', [
   z.strictObject({
     ...propertyBase,
     type: z.literal('array'),
-    minItems: z.int().nonnegative().optional(),
-    maxItems: z.int().nonnegative().optional(),
+    minItems: z.int().optional(),
+    maxItems: z.int().optional(),
     items: z.union([
       z.strictObject({
         type: z.literal('string'),
-        enum: z.array(z.string()).min(1),
+        enum: z.array(z.string()),
       }),
-      z.strictObject({ anyOf: z.array(ElicitationEnumOption).min(1) }),
+      z.strictObject({ anyOf: z.array(ElicitationEnumOption) }),
     ]),
     default: z.array(z.string()).optional(),
   }),
@@ -119,19 +120,19 @@ export const PendingElicitation = z.strictObject({
   mode: z.literal('form'),
   message: z.string(),
   requestedSchema: ElicitationSchema,
-  toolCallId: z.string().min(1).optional(),
+  toolCallId: z.string().optional(),
 });
 export type PendingElicitation = z.infer<typeof PendingElicitation>;
 
 // The live state of a Session that is not a Feed row.
 export const SessionSnapshot = z.strictObject({
   state: SessionState,
-  activeTurnId: z.string().min(1).nullable(),
+  activeTurnId: turnColumns.shape.id.nullable(),
   usage: ContextUsage.nullable(),
   pendingPermission: PendingPermission.nullable(),
   pendingElicitation: PendingElicitation.nullable(),
   configOptions: z.array(SessionConfigOption),
-  maxRevision: z.int().nonnegative(),
-  epoch: z.int().nonnegative(),
+  maxRevision: sessionColumns.shape.maxRevision,
+  epoch: sessionColumns.shape.epoch,
 });
 export type SessionSnapshot = z.infer<typeof SessionSnapshot>;

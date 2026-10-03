@@ -1,8 +1,9 @@
 import { z } from 'zod';
+import { sessionColumns } from '../columns';
 
 // Input of `session.cancel`, after ACP `CancelSessionNotification`.
 export const SessionCancelInput = z.strictObject({
-  sessionId: z.string().min(1),
+  sessionId: sessionColumns.shape.id,
 });
 export type SessionCancelInput = z.infer<typeof SessionCancelInput>;
 

@@ -26,7 +26,7 @@ export type PlanEntry = z.infer<typeof PlanEntry>;
 // The Plan: the Agent's live checklist.
 export const PlanItems = z.strictObject({
   type: z.literal('items'),
-  planId: z.string().min(1),
+  planId: z.string(),
   entries: z.array(PlanEntry),
 });
 export type PlanItems = z.infer<typeof PlanItems>;
@@ -34,14 +34,14 @@ export type PlanItems = z.infer<typeof PlanItems>;
 // A Plan proposal: a written plan that the user approves or rejects.
 export const PlanMarkdown = z.strictObject({
   type: z.literal('markdown'),
-  planId: z.string().min(1),
+  planId: z.string(),
   content: z.string(),
   _meta: z
     .strictObject({
       argo: z
         .strictObject({
-          requestId: z.string().min(1).optional(),
-          filePath: z.string().min(1).optional(),
+          requestId: z.string().optional(),
+          filePath: z.string().optional(),
         })
         .optional(),
     })

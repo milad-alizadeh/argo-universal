@@ -1,6 +1,6 @@
-import { stopReasons, turn, turnStatuses } from '@argo/db/schema';
-import { createSelectSchema } from 'drizzle-orm/zod';
+import { stopReasons, turnStatuses } from '@argo/db/schema';
 import { z } from 'zod';
+import { turnColumns } from '../columns';
 
 export const StopReason = z.enum(stopReasons);
 export type StopReason = z.infer<typeof StopReason>;
@@ -18,16 +18,14 @@ export type TurnError = z.infer<typeof TurnError>;
 
 // ACP `Usage`: tokens one Turn used.
 export const TurnUsage = z.strictObject({
-  totalTokens: z.int().nonnegative(),
-  inputTokens: z.int().nonnegative(),
-  outputTokens: z.int().nonnegative(),
-  thoughtTokens: z.int().nonnegative().optional(),
-  cachedReadTokens: z.int().nonnegative().optional(),
-  cachedWriteTokens: z.int().nonnegative().optional(),
+  totalTokens: z.int(),
+  inputTokens: z.int(),
+  outputTokens: z.int(),
+  thoughtTokens: z.int().optional(),
+  cachedReadTokens: z.int().optional(),
+  cachedWriteTokens: z.int().optional(),
 });
 export type TurnUsage = z.infer<typeof TurnUsage>;
-
-const turnColumns = createSelectSchema(turn);
 
 // The `turn` table's columns, times in Unix milliseconds; `error` and `usage` are typed JSON here.
 export const Turn = z.strictObject({

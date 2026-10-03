@@ -32,7 +32,7 @@ describe('system router', () => {
 
   it('rejects a system.info that breaks the contract', async () => {
     const services = servicesWith([]);
-    services.system.info = () => ({ ...systemInfo, pid: -1 });
+    services.system.info = () => ({ ...systemInfo, pid: 'one' as never });
     const caller = createCaller({ services });
 
     await expect(caller.system.info()).rejects.toThrow(

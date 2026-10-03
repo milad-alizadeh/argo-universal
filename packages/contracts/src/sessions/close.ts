@@ -1,8 +1,9 @@
 import { z } from 'zod';
+import { sessionColumns } from '../columns';
 
 // Input of `session.close`, after ACP `CloseSessionRequest`.
 export const SessionCloseInput = z.strictObject({
-  sessionId: z.string().min(1),
+  sessionId: sessionColumns.shape.id,
 });
 export type SessionCloseInput = z.infer<typeof SessionCloseInput>;
 
