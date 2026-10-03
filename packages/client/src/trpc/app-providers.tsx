@@ -1,14 +1,15 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { type ReactNode, useEffect, useState } from 'react';
+import { ConnectionContext } from '../connection/context';
+import { openConnection } from '../connection/open-connection';
 import { TRPCProvider } from './context';
-import { createTRPCClient } from './create-trpc-client';
 
 export interface AppProvidersProps {
   serverUrl: string;
   children: ReactNode;
 }
 
-type Connection = ReturnType<typeof createTRPCClient>;
+type Connection = ReturnType<typeof openConnection>;
 
 // One QueryClient and one Connection for the App's lifetime; give it a new key to switch Servers.
 export function AppProviders({ serverUrl, children }: AppProvidersProps) {
@@ -17,18 +18,20 @@ export function AppProviders({ serverUrl, children }: AppProvidersProps) {
 
   // An effect owns the Connection, so unmounting closes it and StrictMode's remount opens a fresh one.
   useEffect(() => {
-    const opened = createTRPCClient(serverUrl);
+    const opened = openConnection(serverUrl, queryClient);
     setConnection(opened);
     return () => {
       void opened.close();
     };
-  }, [serverUrl]);
+  }, [serverUrl, queryClient]);
 
   if (!connection) return null;
   return (
     <QueryClientProvider client={queryClient}>
       <TRPCProvider trpcClient={connection.client} queryClient={queryClient}>
-        {children}
+        <ConnectionContext.Provider value={connection.connection}>
+          {children}
+        </ConnectionContext.Provider>
       </TRPCProvider>
     </QueryClientProvider>
   );

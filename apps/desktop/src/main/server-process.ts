@@ -2,25 +2,10 @@ import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { setTimeout as delay } from 'node:timers/promises';
 import { ServerAddress } from '@repo/contracts';
-import { z } from 'zod';
-import type {
-  ServerHealth,
-  ServerLifecycleDependencies,
-} from './server-lifecycle';
+import type { z } from 'zod';
 
-const ServerHealthResponse = z.object({
-  ok: z.literal(true),
-  version: z.string(),
-  startedAt: z.iso.datetime(),
-});
-const ServerPackage = z.object({ version: z.string() });
-
-const pollIntervalMs = 200;
-const startTimeoutMs = 30_000;
-const stopTimeoutMs = 10_000;
-const healthTimeoutMs = 1000;
+// One-shot I/O for the Server connection machine; the machine owns every wait (spec 0002 section 10).
 
 let unrecognisedShapes = 0;
 const reportUnrecognised = (source: string, error: z.ZodError) => {
@@ -35,9 +20,7 @@ const reportUnrecognised = (source: string, error: z.ZodError) => {
 export const resolveHome = () =>
   process.env.ARGO_HOME ?? join(homedir(), '.argo');
 
-export async function readServerAddress(
-  home: string,
-): Promise<ServerAddress | null> {
+async function readServerAddress(home: string): Promise<ServerAddress | null> {
   let text: string;
   try {
     text = await readFile(join(home, 'server.json'), 'utf8');
@@ -58,33 +41,7 @@ export async function readServerAddress(
   return null;
 }
 
-export async function readServerHealth(
-  port: number,
-): Promise<ServerHealth | null> {
-  let json: unknown;
-  try {
-    const response = await fetch(`http://127.0.0.1:${port}/health`, {
-      signal: AbortSignal.timeout(healthTimeoutMs),
-    });
-    if (!response.ok) return null;
-    json = await response.json();
-  } catch {
-    return null;
-  }
-  const health = ServerHealthResponse.safeParse(json);
-  if (health.success) return { version: health.data.version };
-  reportUnrecognised('/health answer', health.error);
-  return null;
-}
-
-export async function readServerVersion(serverDirectory: string) {
-  const json: unknown = JSON.parse(
-    await readFile(join(serverDirectory, 'package.json'), 'utf8'),
-  );
-  return ServerPackage.parse(json).version;
-}
-
-const isRunning = (pid: number) => {
+export const isRunning = (pid: number) => {
   try {
     process.kill(pid, 0);
     return true;
@@ -93,64 +50,60 @@ const isRunning = (pid: number) => {
   }
 };
 
-export async function stopServer(pid: number) {
+// server.json when its pid is alive; the Supervisor removes the file when it stops, so a crash can leave one behind.
+export async function readLiveServerAddress(
+  home: string,
+): Promise<ServerAddress | null> {
+  const address = await readServerAddress(home);
+  return address && isRunning(address.pid) ? address : null;
+}
+
+// Asks the Supervisor to stop; one that has already exited needs nothing.
+export function signalSupervisor(pid: number) {
   try {
     process.kill(pid, 'SIGTERM');
   } catch {
-    return;
-  }
-  const deadline = Date.now() + stopTimeoutMs;
-  while (isRunning(pid)) {
-    if (Date.now() > deadline)
-      throw new Error(`The Server (pid ${pid}) did not stop`);
-    await delay(pollIntervalMs);
+    // It has already exited.
   }
 }
 
-// Spawns the supervisor with Node and tsx, detached so it outlives this app; utilityProcess has no `detached`.
-export async function startServer(
-  options: { home: string; serverDirectory: string },
-  onSpawn: (pid: number) => void,
-): Promise<ServerAddress> {
-  const { ELECTRON_RUN_AS_NODE: _runAsNode, ...environment } = process.env;
-  const child = spawn('node', ['--import', 'tsx', 'src/main.ts'], {
-    cwd: options.serverDirectory,
-    detached: true,
-    stdio: 'ignore',
-    env: { ...environment, ARGO_HOME: options.home },
-  });
-  child.unref();
-  const spawned = new Promise<number>((resolve, reject) => {
-    child.once('spawn', () => resolve(child.pid ?? 0));
-    child.once('error', reject);
-  });
-  const pid = await spawned;
-  onSpawn(pid);
-
-  const deadline = Date.now() + startTimeoutMs;
-  while (Date.now() < deadline) {
-    if (child.exitCode !== null || child.signalCode !== null)
-      throw new Error(
-        `The Server exited while starting (${child.exitCode ?? child.signalCode}); see ${join(options.home, 'logs')}`,
-      );
-    const address = await readServerAddress(options.home);
-    if (address?.pid === pid && (await readServerHealth(address.port)))
-      return address;
-    await delay(pollIntervalMs);
-  }
-  throw new Error(`The Server (pid ${pid}) did not answer in time`);
-}
-
-export function createServerProcessDependencies(options: {
+// Where the Supervisor keeps its state, and apps/server, which `spawnSupervisor` runs.
+export interface SupervisorPaths {
   home: string;
   serverDirectory: string;
-  version: string;
-}): ServerLifecycleDependencies {
-  return {
-    version: options.version,
-    readAddress: () => readServerAddress(options.home),
-    readHealth: readServerHealth,
-    start: (onSpawn) => startServer(options, onSpawn),
-    stop: stopServer,
+}
+
+export interface SpawnReport {
+  spawned: (pid: number) => void;
+  exited: (reason: string) => void;
+}
+
+// Spawns the Supervisor with Node and tsx, detached so it outlives this app; utilityProcess has no `detached`. The returned function stops reporting.
+export function spawnSupervisor(
+  paths: SupervisorPaths,
+  report: SpawnReport,
+): () => void {
+  let listening = true;
+  const { ELECTRON_RUN_AS_NODE: _runAsNode, ...environment } = process.env;
+  const child = spawn('node', ['--import', 'tsx', 'src/main.ts'], {
+    cwd: paths.serverDirectory,
+    detached: true,
+    stdio: 'ignore',
+    env: { ...environment, ARGO_HOME: paths.home },
+  });
+  child.unref();
+  child.once('error', (error) => {
+    if (listening) report.exited(`The Supervisor could not start: ${error}`);
+  });
+  child.once('exit', (code, signal) => {
+    if (listening)
+      report.exited(
+        `The Supervisor exited while starting (${code ?? signal}); see ${join(paths.home, 'logs')}`,
+      );
+  });
+  // The pid exists once `spawn` returns; its `spawn` event only follows a tick later, too late for a quit in between.
+  if (child.pid !== undefined) report.spawned(child.pid);
+  return () => {
+    listening = false;
   };
 }

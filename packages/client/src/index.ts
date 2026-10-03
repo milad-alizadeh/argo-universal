@@ -1,3 +1,8 @@
+export {
+  type ConnectionState,
+  useConnection,
+  useConnectionState,
+} from './connection/context';
 export { ProjectsScreen } from './screens/ProjectsScreen';
 export {
   SessionScreen,

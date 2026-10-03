@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { View } from 'react-native';
+import { ConnectionBanner } from '#components/ConnectionBanner';
 import {
   Card,
   CardContent,
@@ -18,29 +19,32 @@ export function ProjectsScreen() {
   const clock = useSubscription(trpc.system.clock.subscriptionOptions());
 
   return (
-    <View className="flex-1 items-center justify-center bg-background p-6">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Server</CardTitle>
-          <CardDescription>The local Argo Server</CardDescription>
-        </CardHeader>
-        <CardContent className="gap-3">
-          {info.isPending ? (
-            <Text className="text-muted-foreground">
-              Connecting to the Server…
-            </Text>
-          ) : info.isError ? (
-            <Text className="text-destructive">{info.error.message}</Text>
-          ) : (
-            <>
-              <Row label="Version" value={info.data.version} />
-              <Row label="Started" value={info.data.startedAt} />
-              <Row label="PID" value={String(info.data.pid)} />
-              <Row label="Clock" value={clock.data?.now ?? '…'} />
-            </>
-          )}
-        </CardContent>
-      </Card>
+    <View className="flex-1 bg-background">
+      <ConnectionBanner />
+      <View className="flex-1 items-center justify-center p-6">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Server</CardTitle>
+            <CardDescription>The local Argo Server</CardDescription>
+          </CardHeader>
+          <CardContent className="gap-3">
+            {info.isPending ? (
+              <Text className="text-muted-foreground">
+                Connecting to the Server…
+              </Text>
+            ) : info.isError ? (
+              <Text className="text-destructive">{info.error.message}</Text>
+            ) : (
+              <>
+                <Row label="Version" value={info.data.version} />
+                <Row label="Started" value={info.data.startedAt} />
+                <Row label="PID" value={String(info.data.pid)} />
+                <Row label="Clock" value={clock.data?.now ?? '…'} />
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </View>
     </View>
   );
 }

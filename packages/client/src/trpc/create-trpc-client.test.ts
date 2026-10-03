@@ -44,7 +44,7 @@ async function startServer() {
 describe('createTRPCClient', () => {
   it('sends queries and subscriptions over one WebSocket', async () => {
     const server = await startServer();
-    const { client, close } = createTRPCClient(server.url);
+    const { client, close } = createTRPCClient(async () => server.url);
     closers.push(close);
 
     const info = await client.system.info.query();

@@ -6,11 +6,13 @@ import { useTRPCClient } from '../src/trpc/context';
 interface ConnectionReport {
   open: number;
   closed: number;
+  screenSubscriptions: number;
   statesScreensSaw: string[];
 }
 
 const sockets: WebSocketMock[] = [];
 const statesScreensSaw = new Set<string>();
+let screenSubscriptions = 0;
 const listeners = new Set<() => void>();
 let report = buildReport();
 
@@ -19,6 +21,7 @@ function buildReport(): ConnectionReport {
   return {
     open: sockets.length - closed,
     closed,
+    screenSubscriptions,
     statesScreensSaw: [...statesScreensSaw],
   };
 }
@@ -78,6 +81,7 @@ class WebSocketMock extends EventTarget {
 export function mockWebSocket() {
   const browserWebSocket = globalThis.WebSocket;
   sockets.splice(0);
+  screenSubscriptions = 0;
   statesScreensSaw.clear();
   changed();
   globalThis.WebSocket = WebSocketMock as unknown as typeof WebSocket;
@@ -108,6 +112,7 @@ export function ConnectionMock({ strictMode = false }: ConnectionMockProps) {
       {strictMode ? <StrictMode>{providers}</StrictMode> : providers}
       <Text>{`Open Connections: ${current.open}`}</Text>
       <Text>{`Closed Connections: ${current.closed}`}</Text>
+      <Text>{`Screen subscriptions: ${current.screenSubscriptions}`}</Text>
       <Text>
         {`Connection states the screens saw: ${current.statesScreensSaw.join(', ')}`}
       </Text>
@@ -119,6 +124,8 @@ export function ConnectionMock({ strictMode = false }: ConnectionMockProps) {
 function ScreenMock() {
   const client = useTRPCClient();
   useEffect(() => {
+    screenSubscriptions += 1;
+    changed();
     const subscription = client.system.clock.subscribe(undefined, {
       onConnectionStateChange: ({ state }) => {
         statesScreensSaw.add(state);
