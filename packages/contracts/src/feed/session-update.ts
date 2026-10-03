@@ -125,13 +125,13 @@ export type CompactionUpdate = z.infer<typeof CompactionUpdate>;
 export const SubagentState = z.enum(['running', 'idle', 'requires_action']);
 export type SubagentState = z.infer<typeof SubagentState>;
 
-// ACP names the child `sessionId`, which the envelope already uses for the parent Session.
+// ACP's `sessionId` and `state` clash with the envelope's, so both carry a `subagent` prefix.
 export const SubagentUpdate = z.strictObject({
   ...envelope,
   sessionUpdate: kind('subagent_update'),
   subagentSessionId: z.string().min(1),
   title: z.string().optional(),
-  state: SubagentState.optional(),
+  subagentState: SubagentState.optional(),
   _meta: noArgoMeta,
 });
 export type SubagentUpdate = z.infer<typeof SubagentUpdate>;
