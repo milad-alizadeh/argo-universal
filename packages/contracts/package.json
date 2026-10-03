@@ -10,11 +10,12 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@argo/db": "workspace:*",
+    "drizzle-orm": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@argo/typescript": "workspace:*",
-    "typescript": "catalog:",
-    "vitest": "catalog:"
+    "typescript": "catalog:"
   }
 }
