@@ -4,13 +4,17 @@
   "type": "module",
   "scripts": {
     "build": "turbo run build",
+    "check": "biome check .",
     "check-types": "turbo run check-types",
     "dev": "turbo run dev",
+    "format": "biome check --write .",
     "postinstall": "sherif",
-    "quality": "sherif && turbo run check-types",
+    "quality": "sherif && biome check . && turbo run check-types",
     "sherif": "sherif"
   },
   "devDependencies": {
+    "@argo/biome": "workspace:*",
+    "@biomejs/biome": "catalog:",
     "sherif": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:"

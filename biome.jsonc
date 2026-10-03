@@ -1,0 +1,43 @@
+{
+	"$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+	"extends": ["@argo/biome/biome.jsonc"],
+	// The shared config leaves version control off; the root turns it on so .gitignore applies.
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true,
+		"defaultBranch": "main"
+	},
+	"files": {
+		"includes": [
+			"**",
+			"!!**/dist",
+			"!!**/.expo",
+			"!!**/.turbo",
+			"!!**/.vitest",
+			"!!**/coverage",
+			"!!**/storybook-static",
+			"!!**/playwright-report",
+			"!!**/blob-report",
+			"!!**/test-results",
+			"!packages/db/drizzle",
+			"!**/.rnstorybook/storybook.requires.ts",
+			"!**/*.gen.*",
+			// Installed by the skills tool, not written in this repo.
+			"!!.agents",
+			"!!.claude",
+			"!!skills-lock.json"
+		]
+	},
+	"overrides": [
+		{
+			// Shared tsconfigs carry comments like tsconfig.json, which Biome knows only by name.
+			"includes": ["tooling/typescript/*.json"],
+			"json": {
+				"parser": {
+					"allowComments": true
+				}
+			}
+		}
+	]
+}
