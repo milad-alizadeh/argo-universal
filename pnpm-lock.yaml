@@ -188,6 +188,9 @@ catalogs:
     '@gorhom/bottom-sheet':
       specifier: 5.2.14
       version: 5.2.14
+    '@hono/node-server':
+      specifier: 2.1.3
+      version: 2.1.3
     '@playwright/test':
       specifier: 1.63.0
       version: 1.63.0
@@ -299,6 +302,9 @@ catalogs:
     expo-system-ui:
       specifier: ~57.0.4
       version: 57.0.4
+    hono:
+      specifier: 4.13.12
+      version: 4.13.12
     jsdom:
       specifier: 30.1.1
       version: 30.1.1
@@ -446,6 +452,9 @@ importers:
 
   apps/server:
     dependencies:
+      '@hono/node-server':
+        specifier: 'catalog:'
+        version: 2.1.3(hono@4.13.12)
       '@repo/api':
         specifier: workspace:*
         version: link:../../packages/api
@@ -458,6 +467,9 @@ importers:
       '@trpc/server':
         specifier: 'catalog:'
         version: 11.19.0(typescript@7.0.2)
+      hono:
+        specifier: 'catalog:'
+        version: 4.13.12
       tsx:
         specifier: 'catalog:'
         version: 4.23.15
@@ -2015,6 +2027,12 @@ packages:
     peerDependencies:
       react: '*'
       react-native: '*'
+
+  '@hono/node-server@2.1.3':
+    resolution: {integrity: sha512-TA//nWMqPhbfdfneACk6t5a9eqbS9lABEPyKn0/xZTah3H3U2XaVg85rJFl0/Fyit0I552YDHgXGVSf3GwqbUw==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      hono: ^4
 
   '@isaacs/fs-minipass@4.0.1':
     resolution: {integrity: sha512-wgm9Ehl2jpeqP3zw/7mo3kRHFp5MEDhqAdwy1fTGkHAwnkGOVsgpvQhL8B5n1qlb01jV3n/bI0ZfZp5lWA1k4w==}
@@ -4661,6 +4679,10 @@ packages:
 
   hoist-non-react-statics@3.3.2:
     resolution: {integrity: sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw==}
+
+  hono@4.13.12:
+    resolution: {integrity: sha512-6E2QDAc9Ick9Sq77ZrGS/dk2WUYni91aufTw6LJKpV7w8kW5/GxVUc650FOADOmlwg3K+f7Pun6XlV+pYmW6gw==}
+    engines: {node: '>=16.9.0'}
 
   hosted-git-info@7.0.2:
     resolution: {integrity: sha512-puUZAUKT5m8Zzvs72XWy3HtvVbTWljRE66cP60bxJzAqf2DgICo7lYTY2IHUmLnNpjYvw5bvmoHvPc0QO2a62w==}
@@ -8183,6 +8205,10 @@ snapshots:
       react: 19.2.3
       react-native: 0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1)
 
+  '@hono/node-server@2.1.3(hono@4.13.12)':
+    dependencies:
+      hono: 4.13.12
+
   '@isaacs/fs-minipass@4.0.1':
     dependencies:
       minipass: 7.1.3
@@ -10628,6 +10654,8 @@ snapshots:
   hoist-non-react-statics@3.3.2:
     dependencies:
       react-is: 16.13.1
+
+  hono@4.13.12: {}
 
   hosted-git-info@7.0.2:
     dependencies:

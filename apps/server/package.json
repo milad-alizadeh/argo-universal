@@ -10,10 +10,12 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@hono/node-server": "catalog:",
     "@repo/api": "workspace:*",
     "@repo/contracts": "workspace:*",
     "@repo/db": "workspace:*",
     "@trpc/server": "catalog:",
+    "hono": "catalog:",
     "tsx": "catalog:",
     "ws": "catalog:",
     "xstate": "catalog:",
