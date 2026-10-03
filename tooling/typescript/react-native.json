@@ -1,12 +1,12 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": "./base.json",
-  // Mirrors expo/tsconfig.base from Expo SDK 57, so shared React Native code checks like the app.
-  "compilerOptions": {
-    "jsx": "react-jsx",
-    "lib": ["DOM", "ESNext"],
-    "module": "preserve",
-    "customConditions": ["react-native"],
-    "target": "ESNext"
-  }
+	"$schema": "https://json.schemastore.org/tsconfig",
+	"extends": "./base.json",
+	// Mirrors expo/tsconfig.base from Expo SDK 57, so shared React Native code checks like the app.
+	"compilerOptions": {
+		"jsx": "react-jsx",
+		"lib": ["DOM", "ESNext"],
+		"module": "preserve",
+		"customConditions": ["react-native"],
+		"target": "ESNext"
+	}
 }

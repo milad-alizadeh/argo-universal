@@ -1,21 +1,21 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "compilerOptions": {
-    "esModuleInterop": true,
-    "isolatedModules": true,
-    // Node 24 runs ES2025; react-native.json adds DOM.
-    "lib": ["es2025"],
-    // tsx, Metro, and Vite resolve imports like a bundler (TypeScript modules guide).
-    "module": "esnext",
-    "moduleDetection": "force",
-    "moduleResolution": "bundler",
-    // Packages are checked with `tsc --noEmit` and run from source (spec section 2).
-    "noEmit": true,
-    "noUncheckedIndexedAccess": true,
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "target": "es2025",
-    "verbatimModuleSyntax": true
-  }
+	"$schema": "https://json.schemastore.org/tsconfig",
+	"compilerOptions": {
+		"esModuleInterop": true,
+		"isolatedModules": true,
+		// Node 24 runs ES2025; react-native.json adds DOM.
+		"lib": ["es2025"],
+		// tsx, Metro, and Vite resolve imports like a bundler (TypeScript modules guide).
+		"module": "esnext",
+		"moduleDetection": "force",
+		"moduleResolution": "bundler",
+		// Packages are checked with `tsc --noEmit` and run from source (spec section 2).
+		"noEmit": true,
+		"noUncheckedIndexedAccess": true,
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
+		"strict": true,
+		"target": "es2025",
+		"verbatimModuleSyntax": true
+	}
 }
