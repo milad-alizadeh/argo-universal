@@ -7,6 +7,12 @@
       "skillPath": "skills/engineering/ask-matt/SKILL.md",
       "computedHash": "e59e88ad97b8766d13350afaecabeca3b9af62ad88a4e089a22b47c32e2e4f69"
     },
+    "client-setup": {
+      "source": "trpc/trpc",
+      "sourceType": "github",
+      "skillPath": "packages/client/skills/client-setup/SKILL.md",
+      "computedHash": "65b2f97d796665441ec9044e422d549184836684b2f15b8586d978b9f8bb0406"
+    },
     "code-review": {
       "source": "mattpocock/skills",
       "sourceType": "github",
@@ -30,6 +36,90 @@
       "sourceType": "github",
       "skillPath": "skills/engineering/domain-modeling/SKILL.md",
       "computedHash": "b3eb40152b81f0c98fd2095a023c019452dbdce56f7540cc67fece2972db8369"
+    },
+    "drizzle": {
+      "source": "drizzle-team/drizzle-orm",
+      "ref": "beta",
+      "sourceType": "github",
+      "skillPath": "drizzle-kit/skills/drizzle/SKILL.md",
+      "computedHash": "1cbae732ee979cebb27a27154e923c1a669a22897c9b01669e2011bfeb8aa804"
+    },
+    "drizzle-generate": {
+      "source": "drizzle-team/drizzle-orm",
+      "ref": "beta",
+      "sourceType": "github",
+      "skillPath": "drizzle-kit/skills/drizzle-generate/SKILL.md",
+      "computedHash": "3d520b8d77221aa72bc7e34dc13cd133ffcd569c32135793ec43add27f42ebec"
+    },
+    "drizzle-hints": {
+      "source": "drizzle-team/drizzle-orm",
+      "ref": "beta",
+      "sourceType": "github",
+      "skillPath": "drizzle-kit/skills/drizzle-hints/SKILL.md",
+      "computedHash": "dc9bc7ed9a0d21f63e540a8702cb4cb34b51c585493507cec86fd21d9c255166"
+    },
+    "drizzle-migrations": {
+      "source": "drizzle-team/drizzle-orm",
+      "ref": "beta",
+      "sourceType": "github",
+      "skillPath": "drizzle-kit/skills/drizzle-migrations/SKILL.md",
+      "computedHash": "aa30ca0f9e0a66e4feaa50a08e80b2908c8bb720433d1159107739f3aa2fbb86"
+    },
+    "drizzle-output-modes": {
+      "source": "drizzle-team/drizzle-orm",
+      "ref": "beta",
+      "sourceType": "github",
+      "skillPath": "drizzle-kit/skills/drizzle-output-modes/SKILL.md",
+      "computedHash": "5ad547aeb18630af024dd026b96364bce0df6274660f1d59ae11f259916b63c2"
+    },
+    "drizzle-responses-and-errors": {
+      "source": "drizzle-team/drizzle-orm",
+      "ref": "beta",
+      "sourceType": "github",
+      "skillPath": "drizzle-kit/skills/drizzle-responses-and-errors/SKILL.md",
+      "computedHash": "fbc0b0d5aa071cf06eee711b5de52ad821a0d1e5bc0c703f0c59b429697331d3"
+    },
+    "error-handling": {
+      "source": "trpc/trpc",
+      "sourceType": "github",
+      "skillPath": "packages/server/skills/error-handling/SKILL.md",
+      "computedHash": "5816a0b5e2e7a33b2bf5b130201bba4251b0865688f4c647a780f39af277c6b8"
+    },
+    "expo-dev-client": {
+      "source": "expo/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/expo/skills/expo-dev-client/SKILL.md",
+      "computedHash": "9560a3f40e699af7b3317dbd3887cca646901d6addf7d78eb9429922e2d3baf3"
+    },
+    "expo-native-ui": {
+      "source": "expo/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/expo/skills/expo-native-ui/SKILL.md",
+      "computedHash": "3e7374ba3679e4e57cbe6aa97c8bcc17c977b7c526b00e0e67b9e0ccd119ba68"
+    },
+    "expo-overview": {
+      "source": "expo/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/expo/skills/expo-overview/SKILL.md",
+      "computedHash": "ae10834702315c887df298a220712bf5e89ab6a0d9088eb54c6d7fddddb3e8b3"
+    },
+    "expo-router": {
+      "source": "expo/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/expo/skills/expo-router/SKILL.md",
+      "computedHash": "512978d4ea35857932b79ee9b15a47d7ab78382dc1fcd275601b87e4c80c1e59"
+    },
+    "expo-ui": {
+      "source": "expo/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/expo/skills/expo-ui/SKILL.md",
+      "computedHash": "b7cf8d50798a484d84d359c9361c08e80e74fa922a6cb4601e88ce2701f7c449"
+    },
+    "expo-upgrade": {
+      "source": "expo/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/expo/skills/expo-upgrade/SKILL.md",
+      "computedHash": "43a39224285e495e0eb4b72ace99c8f1915123f69ee50ce6de4f0cd027374e6a"
     },
     "grill-me": {
       "source": "mattpocock/skills",
@@ -73,6 +163,37 @@
       "skillPath": "skills/engineering/improve-codebase-architecture/SKILL.md",
       "computedHash": "ac2c94885f34ff8492dc12aa4543182f661f32ea1722b8d6b6c2c7045af33ae3"
     },
+    "links": {
+      "source": "trpc/trpc",
+      "sourceType": "github",
+      "skillPath": "packages/client/skills/links/SKILL.md",
+      "computedHash": "1a3b8d6ebed34539510683825ce88372b0bec28f01a75456c60bdc79568d41ec"
+    },
+    "middlewares": {
+      "source": "trpc/trpc",
+      "sourceType": "github",
+      "skillPath": "packages/server/skills/middlewares/SKILL.md",
+      "computedHash": "f6e57c21ef44f645b7cb3f144901497631abb6dbe8aa37a0bfcce48459b274b3"
+    },
+    "playwright-cli": {
+      "source": "microsoft/playwright-cli",
+      "sourceType": "github",
+      "skillPath": "skills/playwright-cli/SKILL.md",
+      "computedHash": "ffbd59a973d4e2c19c6ecc31254a14497069c362f1d1820b6a6cfbe62de34a73"
+    },
+    "playwright-trace": {
+      "source": "microsoft/playwright",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "packages/playwright-core/src/tools/skills/playwright-trace/SKILL.md",
+      "computedHash": "d9ee5c7252de14bb30256a845653e738fd92c577c54238ca0b31c5f198096c8f"
+    },
+    "pnpm": {
+      "source": "antfu/skills",
+      "sourceType": "github",
+      "skillPath": "skills/pnpm/SKILL.md",
+      "computedHash": "d1bd6f4fd38ff1ba33b857223c58a832d1cd5b488163ba0d389db449be472603"
+    },
     "pr": {
       "source": "mattpocock/skills",
       "sourceType": "github",
@@ -84,6 +205,12 @@
       "sourceType": "github",
       "skillPath": "skills/engineering/prototype/SKILL.md",
       "computedHash": "d3fc74689bd993e39c44bfae510d014eecffbeec2922764b065377fd1327c0f6"
+    },
+    "react-query-setup": {
+      "source": "trpc/trpc",
+      "sourceType": "github",
+      "skillPath": "packages/tanstack-react-query/skills/react-query-setup/SKILL.md",
+      "computedHash": "34fc54299a4669024ee8e42ccde8f384533c3641f4c67306e5ebc454a7141484"
     },
     "research": {
       "source": "mattpocock/skills",
@@ -97,11 +224,42 @@
       "skillPath": "skills/engineering/retro/SKILL.md",
       "computedHash": "b8d55851a2909e26c2dbb2e8563719c87b3b700559f604e4df344f8c27e21047"
     },
+    "server-setup": {
+      "source": "trpc/trpc",
+      "sourceType": "github",
+      "skillPath": "packages/server/skills/server-setup/SKILL.md",
+      "computedHash": "ab611adb5895b038b4579832a039d5d8961b9244b8da395017c84f749179daa2"
+    },
+    "server-side-calls": {
+      "source": "trpc/trpc",
+      "sourceType": "github",
+      "skillPath": "packages/server/skills/server-side-calls/SKILL.md",
+      "computedHash": "c6b3a9b12a4eaf8c7411cdf1b4858eb26321fa64ce9d61872190e69e0dd15b22"
+    },
     "setup-matt-pocock-skills": {
       "source": "mattpocock/skills",
       "sourceType": "github",
       "skillPath": "skills/engineering/setup-matt-pocock-skills/SKILL.md",
       "computedHash": "09f2ffc146213ba0d02f385f20e8d340ef04858ba7d90e71963fbd96fdba78d8"
+    },
+    "setup-react-native-storybook": {
+      "source": "storybookjs/react-native",
+      "sourceType": "github",
+      "skillPath": "skills/setup-react-native-storybook/SKILL.md",
+      "computedHash": "c991e2752c560169cd632c0b18a00518e3f57a4514e35d9f3ed905bd9bd1efbc"
+    },
+    "storybook-upgrade": {
+      "source": "storybookjs/storybook",
+      "ref": "next",
+      "sourceType": "github",
+      "skillPath": "code/lib/claude-plugin/skills/storybook-upgrade/SKILL.md",
+      "computedHash": "ab9b92e7c7a2180ca77933105739e1b4306ed65cc477707b1dfc55f694e86df5"
+    },
+    "subscriptions": {
+      "source": "trpc/trpc",
+      "sourceType": "github",
+      "skillPath": "packages/server/skills/subscriptions/SKILL.md",
+      "computedHash": "9da7fc9d98616564a67d7ff567641b517cb321fefc281ac6ca245517a2ef71ad"
     },
     "tdd": {
       "source": "mattpocock/skills",
@@ -139,6 +297,36 @@
       "skillPath": "skills/engineering/triage/SKILL.md",
       "computedHash": "a683e69163e23630f39c05a50fb9d83a3795a6a6fbd317357669e082cd43a158"
     },
+    "trpc-router": {
+      "source": "trpc/trpc",
+      "sourceType": "github",
+      "skillPath": "packages/server/skills/trpc-router/SKILL.md",
+      "computedHash": "dd22c754d042bbc48826d7289463e5cfc40725899c576e25bf9766706a4b2850"
+    },
+    "turborepo": {
+      "source": "vercel/turborepo",
+      "sourceType": "github",
+      "skillPath": "skills/turborepo/SKILL.md",
+      "computedHash": "9681d8dfeb5e6cdff767f1bcaba5d7ac55732a9d6c02ee120f44229f8ec25e7e"
+    },
+    "uniwind": {
+      "source": "uni-stack/uniwind",
+      "sourceType": "github",
+      "skillPath": "skills/uniwind/SKILL.md",
+      "computedHash": "d886797a7bf8989393c3f784b48242e4d6baeb9ad85ef765143010f893ea3656"
+    },
+    "validators": {
+      "source": "trpc/trpc",
+      "sourceType": "github",
+      "skillPath": "packages/server/skills/validators/SKILL.md",
+      "computedHash": "2bd2393213400f414b3592b3ca6369177fb17229076fa6c4435578410b28607b"
+    },
+    "vitest": {
+      "source": "antfu/skills",
+      "sourceType": "github",
+      "skillPath": "skills/vitest/SKILL.md",
+      "computedHash": "21af2b13d47d31f3094b61c0f41abc8d6a7eed0df3c9a4029ea671f6978b7209"
+    },
     "wait-what": {
       "source": "mattpocock/skills",
       "sourceType": "github",
@@ -162,6 +350,12 @@
       "sourceType": "github",
       "skillPath": "skills/productivity/writing-for-agents/SKILL.md",
       "computedHash": "95da47fc97af998e85b7d7e6d57b3ac76727c1e290cfe9ea09005aacb826959f"
+    },
+    "writing-react-native-storybook-stories": {
+      "source": "storybookjs/react-native",
+      "sourceType": "github",
+      "skillPath": "skills/writing-react-native-storybook-stories/SKILL.md",
+      "computedHash": "c174f3d3b2cb5c242da800403b231882742764adb4f78dc825918edcd755db74"
     },
     "xstate-v5": {
       "source": "statelyai/skills",
