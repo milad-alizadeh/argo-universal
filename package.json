@@ -6,6 +6,7 @@
     "build": "turbo run build",
     "check": "biome check .",
     "check-types": "turbo run check-types",
+    "db:generate": "pnpm --filter @argo/db db:generate",
     "dev": "turbo run dev",
     "format": "biome check --write .",
     "postinstall": "sherif",
