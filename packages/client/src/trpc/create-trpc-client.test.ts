@@ -1,4 +1,3 @@
-// @vitest-environment node
 import type { AddressInfo } from 'node:net';
 import { appRouter, type Services } from '@repo/api';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
