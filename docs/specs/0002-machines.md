@@ -77,6 +77,8 @@ The Engine machine (`apps/server/src/engine/machine.ts`) changes to this shape:
 
 ## 6. Session machine
 
+Spec 0003 amends this section: Agent-started Turns, Plan proposals, held config options, titles, Subagents, Shells, archive, and idle close.
+
 `apps/server/src/services/sessions/session-machine.ts`. One actor per open Session, with `systemId` `session:<id>`.
 
 ```
@@ -123,7 +125,7 @@ Context: `sessionId`, `projectId`, `agent`, `vendorSessionId`, `checkout`, `capa
 - When the agent finishes or fails outside `closing`, the Session goes to `recovering`. It ends a running Turn with `error`, adds a `notice`, and records the time in `agentCrashes`. With 3 crashes in 10 minutes it sets `failure` and goes to `flushing`. Otherwise, after 1 second (`agentRestartDelay`), it goes back to `live`, which starts the agent again and resumes the vendor session.
 - `flushing` sends `feed.flush`, and goes to `closed` when `feed` finishes, or after 5 seconds.
 
-A Subagent has no Session actor of its own in milestone 1. Its updates come through the parent's agent and show as `subagent_update` rows.
+A Subagent has no Session actor of its own. It is a read-only child Session whose rows the parent's agent writes (spec 0003).
 
 `toSessionSnapshot(sessionSnapshot, feedSnapshot)` in `session-snapshot.ts` is a pure function and the only producer of `SessionSnapshot`:
 
@@ -136,6 +138,8 @@ A Subagent has no Session actor of its own in milestone 1. Its updates come thro
 `activeTurnId`, `usage`, `pendingPermission` (the queue head), `pendingElicitation`, and `configOptions` come from the Session context. `maxRevision` and `epoch` come from `feed`. The feed service watches the Session actor and sends `snapshot {snapshot}` on `feed.subscribe` when the result changes.
 
 ## 7. Agent machines
+
+Spec 0003 adds Agent events to this section.
 
 Each adapter in `packages/agents/<agent>/` has its own machine with the same events in and out. `packages/agents/src/agent-events.ts` holds those event types and the `AgentAdapter` type: `{agent, capabilities, machine}`. Shared code branches on `capabilities`.
 
@@ -196,6 +200,8 @@ The vendor calls in `connect`, `vendorStream`, and cancelling come from each ada
 
 ## 9. Recovery after an Engine restart
 
+Spec 0003 adds: running Shells become `lost`.
+
 The Engine's `recovering` state invokes `recoverAfterRestart`, which runs one transaction:
 
 - Every Turn with status `running` becomes `ended`, with stop reason `error` and `endedAt` now.
@@ -205,6 +211,8 @@ The Engine's `recovering` state invokes `recoverAfterRestart`, which runs one tr
 A Session then opens as `idle` the next time a service asks for it.
 
 ## 10. Electron Server connection
+
+Spec 0003 amends `app.quit`: when a Turn runs, the app asks whether to keep Sessions going, and Keep quits without stopping the Supervisor.
 
 Electron has one Server job: make sure a Supervisor runs. The Supervisor watches and repairs the Engine, so Electron never calls `/health` and never watches the Engine. Spec 0001 section 9 states the same rule.
 

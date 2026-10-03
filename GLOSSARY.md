@@ -46,6 +46,14 @@ _Avoid_: Chat, thread, conversation
 A Session that another Session started to do delegated work.
 _Avoid_: Child agent, task agent
 
+**Shell**:
+A command an Agent started in the background, which keeps running while the Turn goes on.
+_Avoid_: Background task, terminal, process
+
+**Goal**:
+An objective that the Agent keeps working toward across Turns, starting the next Turn itself until the Goal is met.
+_Avoid_: Target, loop
+
 **Checkout**:
 The git working tree that a Session runs in: its own worktree, or the Project's main checkout.
 _Avoid_: Workspace, worktree (when the main checkout is also possible)
@@ -99,6 +107,10 @@ _Avoid_: User question, ask
 **Compaction**:
 A point where the Agent condensed the Session history so that the Session can continue.
 _Avoid_: Summarisation, context reset
+
+**Unread**:
+A Session whose Feed changed after anyone last saw its end, on any App.
+_Avoid_: New, unseen
 
 **Notice**:
 A short message about the Session that is not from the Agent's conversation, such as a retry or a hook result.

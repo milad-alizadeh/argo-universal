@@ -269,7 +269,7 @@ Vitest tests for `api` call the routers with `createCaller` and mock services, w
 
 ### Session update envelope
 
-The `id` comes from the vendor where the vendor has a stable id: Codex `item.id`, Claude `tool_use.id` for tools and `message.id#blockIndex` for text. The streamed version and the final version of a row then have the same `id`.
+The `id` comes from the vendor where the vendor has a stable id: Codex `item.id`, Claude `tool_use.id` for tools and the record's own id for text (spec 0003; `message.id` repeats across blocks). The streamed version and the final version of a row then have the same `id`.
 
 ```ts
 { id: string, sessionId: string, position: number, revision: number, turnId: string | null,
@@ -305,7 +305,7 @@ Shared types:
   - `pendingPermission` has the shape of ACP `session/request_permission`: `{toolCallId, title, options: {optionId, name, kind: 'allow_once' | 'allow_always' | 'reject_once' | 'reject_always'}[]}`.
   - `pendingElicitation` has the shape of ACP `elicitation/create` in form mode.
   - `usage` has the shape of ACP `usage_update`: `{used, size, cost?: {amount, currency}}`.
-  - `configOptions` holds mode, model, and effort as ACP v2 config options.
+  - `configOptions` holds mode, model, and effort as ACP v2 config options. Spec 0003 opens the categories and allows `_meta`.
 - `Turn`: `{id, sessionId, status, stopReason: 'end_turn' | 'max_tokens' | 'max_turn_requests' | 'refusal' | 'cancelled' | 'error' | null, error?, usage?, startedAt, endedAt}`.
 - `ServerAddress`: the `server.json` schema `{pid, port, version, startedAt}`.
 
@@ -319,7 +319,7 @@ Shared types:
   - `snapshot {snapshot}`
   - `reset {epoch}`
 - `feed.row` query. Input `{sessionId, id}`. Output the row.
-- Session procedures, named after ACP methods: `session.new`, `session.prompt`, `session.cancel`, `session.list`, `session.close`, `session.delete`, `session.setConfigOption`.
+- Session procedures, named after ACP methods (spec 0003 adds more): `session.new`, `session.prompt`, `session.cancel`, `session.list`, `session.close`, `session.delete`, `session.setConfigOption`.
 
 ## 7. Database
 
@@ -362,7 +362,7 @@ The Session's current Plan is not stored. A query reads it from the newest `plan
 
 - `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`.
 - In production, a custom `app://` protocol serves the Expo web export from `apps/universal-app/dist`. In dev, the window loads the Expo web dev URL.
-- On launch, make sure a Supervisor runs: reuse the one whose PID in `~/.argo/server.json` is alive, of any version, or start `apps/server` detached. On quit, stop it only if this app started it. Electron never calls `/health`; spec 0002 section 10 has the machine.
+- On launch, make sure a Supervisor runs: reuse the one whose PID in `~/.argo/server.json` is alive, of any version, or start `apps/server` detached. On quit, stop it only if this app started it. Spec 0003 amends this: when a Turn runs, the app asks whether to keep Sessions going. Electron never calls `/health`; spec 0002 section 10 has the machine.
 - Preload exposes `window.argo = {serverUrl, window: {minimize, maximize, close}}` and nothing else.
 
 ### Web Storybook
