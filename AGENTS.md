@@ -28,6 +28,8 @@ One `GLOSSARY.md` and one `docs/adr/` folder at the repo root ("single-context")
 - Claude and Codex Sessions draw the same UI. Parity is part of every Session change.
 - End-to-end tests mock only the Agent CLI, with mocks in `mocks/cli/<agent>/`.
 - Test assets live outside `src/`: `e2e/<flow>/`, `mocks/`, `tools/`. Call them mocks.
+- Test components with Storybook play functions in `*.test.stories.tsx`, which run in the browser. Plain Vitest tests non-UI code only.
+- Every XState machine has model-based tests from `xstate/graph` that walk all of its transitions.
 - Screens get tRPC from `useTRPC()` only.
 - Use full words in names, except domain acronyms and platform-fixed names.
 - Name code for what it does (`createTRPCClient`). The product name lives only in app config, environment variables, and UI text, so a rename stays small.
