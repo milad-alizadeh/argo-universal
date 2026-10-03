@@ -90,17 +90,30 @@ const start = async () => {
   });
 };
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app
-  .whenReady()
-  .then(start)
-  .catch((error: unknown) => {
-    // Quitting stops a starting Server, which then fails its start; that is no error to show.
-    if (!released) dialog.showErrorBox('Argo could not start', String(error));
-    app.quit();
+// A second launch hands over to the first one, which shows its window, and quits.
+if (!app.requestSingleInstanceLock()) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    const window = BrowserWindow.getAllWindows()[0];
+    if (!window) return;
+    if (window.isMinimized()) window.restore();
+    window.show();
+    window.focus();
   });
+
+  // This method will be called when Electron has finished
+  // initialization and is ready to create browser windows.
+  // Some APIs can only be used after this event occurs.
+  app
+    .whenReady()
+    .then(start)
+    .catch((error: unknown) => {
+      // Quitting stops a starting Server, which then fails its start; that is no error to show.
+      if (!released) dialog.showErrorBox('Argo could not start', String(error));
+      app.quit();
+    });
+}
 
 // Stop the Server on quit only if this app started it (spec section 9).
 let released = false;
