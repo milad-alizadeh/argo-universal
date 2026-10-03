@@ -102,13 +102,23 @@ argo-universal/
 │   │   └── src/
 │   │       ├── supervisor/         lifecycle machine, heartbeat, backoff, server.json
 │   │       ├── worker/             HTTP and WebSocket server, tRPC adapter, /health, /blobs/:id
-│   │       ├── sessions/           empty in the scaffold (Session machines, projector, writer queue)
+│   │       ├── services/
+│   │       │   └── system/         info.ts, clock.ts, index.ts (createSystemService)
 │   │       └── main.ts             starts the supervisor
 │   └── storybook/                  web Storybook
 │       └── .storybook/             main.ts, preview.tsx, vitest.setup.ts
 ├── packages/
 │   ├── contracts/src/              Zod schemas only, no runtime code apart from Zod
-│   ├── api/src/                    tRPC routers and the AppRouter type
+│   │   ├── system/                 info.ts, clock.ts, server-address.ts, index.ts
+│   │   ├── feed/                   page.ts, row.ts, subscribe.ts, session-update.ts, index.ts
+│   │   ├── sessions/               new.ts, prompt.ts, cancel.ts, list.ts, close.ts, delete.ts,
+│   │   │                           set-config-option.ts, snapshot.ts, turn.ts, index.ts
+│   │   └── index.ts
+│   ├── api/src/
+│   │   ├── system/                 info.ts, clock.ts, service.ts (SystemService), router.ts
+│   │   ├── services.ts             Services = { system: SystemService }
+│   │   ├── trpc.ts                 context { services }, router, publicProcedure
+│   │   └── root.ts                 appRouter and the AppRouter type
 │   ├── db/src/                     Drizzle schema, client, migrations in db/drizzle/
 │   ├── agents/src/                 index.ts only (claude/ and codex/ come in milestone 1)
 │   ├── git/src/                    index.ts only
@@ -153,24 +163,54 @@ argo-universal/
 | `apps/desktop` | `electron`, `contracts` (for the `server.json` schema) | `client`, `api`, `db` |
 | `apps/storybook` | `client` | server-side packages |
 
+### Domain folders
+
+Code is split by domain, and each domain has one file per procedure. The same domain name is used in three places:
+
+| Place | Holds |
+|---|---|
+| `packages/contracts/src/<domain>/` | the Zod schemas for each procedure, plus shapes that the domain shares, such as a Session update or the Session snapshot |
+| `packages/api/src/<domain>/` | one file per procedure, the domain's service interface in `service.ts`, and `router.ts` |
+| `apps/server/src/services/<domain>/` | one file per procedure that implements the service method, the domain's internals, and `index.ts` with `create<Domain>Service(deps)` |
+
+The domains are `system` in the scaffold, and `projects`, `sessions`, `feed`, and `checkouts` in milestone 1. The scaffold writes the contracts for `system`, `feed`, and `sessions` (section 6), and the api and server folders for `system` only. A domain's internals, such as the Session machines, the Feed projector, and the writer queue, live in its server folder. Other code imports a domain folder only through its `index.ts`. Contracts stay in `packages/contracts`, because `client`, `agents`, `db`, and `desktop` import them and must not import from `apps/server` or `api`.
+
+### Services
+
 `api` defines its routers against a `Services` interface in its tRPC context. `apps/server` builds the real services from `db`, `agents`, and `git`, and passes them in. A router only validates input and output with `contracts` schemas and calls one service method.
 
 ```ts
-// packages/api/src/services.ts: types come from contracts only
+// packages/contracts/src/system/info.ts
+export const SystemInfo = z.object({ version: z.string(), startedAt: z.iso.datetime(), pid: z.number().int() });
+export type SystemInfo = z.infer<typeof SystemInfo>;
+
+// packages/api/src/system/service.ts: types come from contracts only
+export interface SystemService {
+  info(): SystemInfo;
+  clock(signal: AbortSignal): AsyncIterable<ClockTick>;
+}
+
+// packages/api/src/services.ts
 export interface Services {
-  system: {
-    info(): SystemInfo;
-    clock(signal: AbortSignal): AsyncIterable<ClockTick>;
-  };
+  system: SystemService;
   // milestone 1 adds: projects, sessions, feed, checkouts
 }
 
-// packages/api/src/routers/system.ts
-export const systemRouter = router({
-  info: publicProcedure.output(SystemInfo).query(({ ctx }) => ctx.services.system.info()),
-  clock: publicProcedure.subscription(async function* ({ ctx, signal }) {
-    yield* ctx.services.system.clock(signal);
-  }),
+// packages/api/src/system/info.ts
+export const info = publicProcedure.output(SystemInfo).query(({ ctx }) => ctx.services.system.info());
+
+// packages/api/src/system/clock.ts
+export const clock = publicProcedure.subscription(async function* ({ ctx, signal }) {
+  yield* ctx.services.system.clock(signal);
+});
+
+// packages/api/src/system/router.ts
+export const systemRouter = router({ info, clock });
+
+// apps/server/src/services/system/index.ts
+export const createSystemService = (deps: SystemDeps): SystemService => ({
+  info: () => info(deps),
+  clock: (signal) => clock(signal),
 });
 
 // apps/server/src/worker/start.ts
