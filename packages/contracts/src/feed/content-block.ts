@@ -1,12 +1,22 @@
+import { blob } from '@argo/db/schema';
+import { createSelectSchema } from 'drizzle-orm/zod';
 import { z } from 'zod';
 
-// A reference to a content-addressed file in `~/.argo/blobs/` (ADR-0005).
+const blobColumns = createSelectSchema(blob, {
+  id: z.hash('sha256'),
+  mime: (schema) => schema.min(1),
+  bytes: (schema) => schema.nonnegative(),
+  width: (schema) => schema.positive(),
+  height: (schema) => schema.positive(),
+}).shape;
+
+// A reference to a content-addressed file in `~/.argo/blobs/` (ADR-0005), from the `blob` table.
 export const BlobRef = z.strictObject({
-  blobId: z.hash('sha256'),
-  mime: z.string().min(1),
-  bytes: z.int().nonnegative(),
-  width: z.int().positive().optional(),
-  height: z.int().positive().optional(),
+  blobId: blobColumns.id,
+  mime: blobColumns.mime,
+  bytes: blobColumns.bytes,
+  width: blobColumns.width.unwrap().optional(),
+  height: blobColumns.height.unwrap().optional(),
 });
 export type BlobRef = z.infer<typeof BlobRef>;
 
