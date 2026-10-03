@@ -7,7 +7,7 @@ import {
   handleAppProtocol,
   registerAppScheme,
 } from './app-protocol';
-import { serverMachine } from './server-machine';
+import { serverConnectionMachine } from './server-machine';
 import { resolveHome } from './server-process';
 
 // The dev script sets the Expo web dev URL; without it the window loads the web export over app://.
@@ -29,7 +29,7 @@ registerAppScheme();
 const serverUrl = (address: ServerAddress) => `ws://127.0.0.1:${address.port}`;
 
 // Makes sure a Supervisor runs; on quit it stops only one that it started (spec 0002 section 10).
-const server = createActor(serverMachine, {
+const server = createActor(serverConnectionMachine, {
   input: { home: resolveHome(), serverDirectory },
 });
 

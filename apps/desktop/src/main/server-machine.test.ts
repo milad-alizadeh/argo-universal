@@ -22,7 +22,7 @@ import {
   type ServerInput,
   type StartInput,
   type StopInput,
-  serverMachine,
+  serverConnectionMachine,
 } from './server-machine';
 
 // Spec 0002 section 10: a Supervisor this app started gets 5 seconds to stop on quit.
@@ -64,7 +64,7 @@ let stopCalls: PendingCall<StopInput, void>[];
 let readyAddresses: ServerAddress[];
 let server: Actor<typeof machine>;
 
-const machine = serverMachine.provide({
+const machine = serverConnectionMachine.provide({
   actors: {
     readAddress: createPromiseMock(() => readAddressCalls),
     start: createPromiseMock(() => startCalls),
@@ -208,7 +208,7 @@ describe('server model', () => {
     'xstate.done.actor.stop': () => settle(() => latest(stopCalls).resolve()),
     'xstate.error.actor.stop': () =>
       settle(() => latest(stopCalls).reject(stopError)),
-    'xstate.after.stopLimit.server.stopping': () => {
+    'xstate.after.stopLimit.serverConnection.stopping': () => {
       vi.advanceTimersByTime(stopLimitMs - 1);
       expect(server.getSnapshot().value).toBe('stopping');
       vi.advanceTimersByTime(1);

@@ -43,7 +43,7 @@ export interface StopInput {
 }
 
 // Spec 0002 section 10: Electron makes sure a Supervisor runs, and on quit stops only one that it started.
-export const serverMachine = setup({
+export const serverConnectionMachine = setup({
   types: {
     input: {} as ServerInput,
     context: {} as ServerContext,
@@ -65,16 +65,23 @@ export const serverMachine = setup({
     stop: fromPromise<void, StopInput>(({ input }) => stopServer(input.pid)),
   },
   actions: {
+    // The main process opens the window with this address.
+    announceReady: enqueueActions(({ context, enqueue }) => {
+      if (context.address)
+        enqueue.emit({ type: 'server.ready', address: context.address });
+    }),
     log: (_, params: { line: string }) => {
       console.error(`desktop: ${params.line}`);
     },
   },
   guards: {
+    foundAddress: (_, params: { address: ServerAddress | null }) =>
+      params.address !== null,
     ownsSupervisor: ({ context }) => context.ownedPid !== null,
   },
   delays: { stopLimit: 5000 },
 }).createMachine({
-  id: 'server',
+  id: 'serverConnection',
   context: ({ input }) => ({
     ...input,
     address: null,
@@ -99,7 +106,10 @@ export const serverMachine = setup({
         }),
         onDone: [
           {
-            guard: ({ event }) => event.output !== null,
+            guard: {
+              type: 'foundAddress',
+              params: ({ event }) => ({ address: event.output }),
+            },
             target: 'ready',
             actions: assign({ address: ({ event }) => event.output }),
           },
@@ -157,19 +167,13 @@ export const serverMachine = setup({
           actions: {
             type: 'log',
             params: ({ event }) => ({
-              line: `could not stop the Server it started: ${String(event.error)}`,
+              line: `could not stop the Supervisor it started: ${String(event.error)}`,
             }),
           },
         },
       },
     },
-    // The main process opens the window with this address.
-    ready: {
-      entry: enqueueActions(({ context, enqueue }) => {
-        if (context.address)
-          enqueue.emit({ type: 'server.ready', address: context.address });
-      }),
-    },
+    ready: { entry: 'announceReady' },
     failed: {
       on: {
         'server.retry': {
@@ -189,7 +193,7 @@ export const serverMachine = setup({
           actions: {
             type: 'log',
             params: ({ event }) => ({
-              line: `could not stop the Server it started: ${String(event.error)}`,
+              line: `could not stop the Supervisor it started: ${String(event.error)}`,
             }),
           },
         },
@@ -200,7 +204,7 @@ export const serverMachine = setup({
           actions: {
             type: 'log',
             params: ({ context }) => ({
-              line: `the Server (pid ${context.ownedPid}) did not stop in time`,
+              line: `the Supervisor (pid ${context.ownedPid}) did not stop in time`,
             }),
           },
         },
