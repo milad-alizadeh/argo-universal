@@ -108,7 +108,7 @@ argo-universal/
 │   └── storybook/                  web Storybook
 │       └── .storybook/             main.ts, preview.tsx, vitest.setup.ts
 ├── packages/
-│   ├── contracts/src/              Zod schemas only, no runtime code apart from Zod
+│   ├── contracts/src/              Zod schemas only, derived from db tables where a table holds the shape
 │   │   ├── system/                 info.ts, clock.ts, server-address.ts, index.ts
 │   │   ├── feed/                   page.ts, row.ts, subscribe.ts, session-update.ts, index.ts
 │   │   ├── sessions/               new.ts, prompt.ts, cancel.ts, list.ts, close.ts, delete.ts,
@@ -119,7 +119,7 @@ argo-universal/
 │   │   ├── services.ts             Services = { system: SystemService }
 │   │   ├── trpc.ts                 context { services }, router, publicProcedure
 │   │   └── root.ts                 appRouter and the AppRouter type
-│   ├── db/src/                     Drizzle schema, client, migrations in db/drizzle/
+│   ├── db/src/                     Drizzle schema (@argo/db/schema, no Node APIs), client, migrations in db/drizzle/
 │   ├── agents/src/                 index.ts only (claude/ and codex/ come in milestone 1)
 │   ├── git/src/                    index.ts only
 │   └── client/
@@ -152,9 +152,9 @@ argo-universal/
 
 | Package | Can import | Never imports |
 |---|---|---|
-| `contracts` | `zod` | anything else |
+| `contracts` | `zod`, `drizzle-orm` (`drizzle-orm/zod`), `@argo/db/schema` | anything else, including the `@argo/db` client |
 | `api` | `contracts`, `@trpc/server` | `db`, `agents`, `git`, Node APIs |
-| `db` | `contracts`, `drizzle-orm`, `node:sqlite` | `api`, `agents`, `git` |
+| `db` | `drizzle-orm`, `node:sqlite` | `contracts`, `api`, `agents`, `git` |
 | `agents` | `contracts`, vendor SDKs | `db`, `api`, `git` |
 | `git` | `contracts`, `node:child_process` | `db`, `api`, `agents` |
 | `client` | `contracts`, `api` (types only, `import type`), tRPC client, TanStack Query, React Native, Uniwind | `db`, `agents`, `git`, Node APIs |
@@ -173,7 +173,7 @@ Code is split by domain, and each domain has one file per procedure. The same do
 | `packages/api/src/<domain>/` | one file per procedure, the domain's service interface in `service.ts`, and `router.ts` |
 | `apps/server/src/services/<domain>/` | one file per procedure that implements the service method, the domain's internals, and `index.ts` with `create<Domain>Service(deps)` |
 
-The domains are `system` in the scaffold, and `projects`, `sessions`, `feed`, and `checkouts` in milestone 1. The scaffold writes the contracts for `system`, `feed`, and `sessions` (section 6), and the api and server folders for `system` only. A domain's internals, such as the Session machines, the Feed projector, and the writer queue, live in its server folder. Other code imports a domain folder only through its `index.ts`. Contracts stay in `packages/contracts`, because `client`, `agents`, `db`, and `desktop` import them and must not import from `apps/server` or `api`.
+The domains are `system` in the scaffold, and `projects`, `sessions`, `feed`, and `checkouts` in milestone 1. The scaffold writes the contracts for `system`, `feed`, and `sessions` (section 6), and the api and server folders for `system` only. A domain's internals, such as the Session machines, the Feed projector, and the writer queue, live in its server folder. Other code imports a domain folder only through its `index.ts`. Contracts stay in `packages/contracts`, because `client`, `agents`, and `desktop` import them and must not import from `apps/server` or `api`.
 
 ### Services
 
@@ -257,7 +257,7 @@ Vitest tests for `api` call the routers with `createCaller` and mock services, w
 
 ## 6. Contracts
 
-`packages/contracts` holds these Zod schemas. Infer every TypeScript type from its schema. Use ACP's exact field spelling.
+`packages/contracts` holds these Zod schemas. Infer every TypeScript type from its schema. Use ACP's exact field spelling. Where a `db` table holds a shape, derive the schema from the table with `drizzle-orm/zod` and add only the fields the API adds (ADR 0013).
 
 ### Session update envelope
 
@@ -315,7 +315,7 @@ Shared types:
 
 ## 7. Database
 
-`packages/db` holds the Drizzle schema for all six tables and the first migration. Store each payload as JSON text. Validate it with the `contracts` schema on write and on read.
+`packages/db` holds the Drizzle schema for all six tables and the first migration. The schema also holds the enums that columns use, and `contracts` derives from it (ADR 0013). Store each payload as JSON text. The Server validates it with the `contracts` schema on write and on read.
 
 | Table | Columns |
 |---|---|
