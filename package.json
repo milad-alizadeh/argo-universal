@@ -9,15 +9,18 @@
 		"dev": "turbo run dev",
 		"format": "biome check --write .",
 		"postinstall": "sherif",
-		"quality": "sherif && biome check . && turbo run check-types",
-		"sherif": "sherif"
+		"quality": "sherif && biome check . && turbo run check-types && vitest run",
+		"sherif": "sherif",
+		"test": "vitest run"
 	},
 	"devDependencies": {
 		"@argo/biome": "workspace:*",
 		"@biomejs/biome": "catalog:",
 		"sherif": "catalog:",
 		"turbo": "catalog:",
-		"typescript": "catalog:"
+		"typescript": "catalog:",
+		"vite": "catalog:",
+		"vitest": "catalog:"
 	},
 	"packageManager": "pnpm@12.8.1",
 	"engines": {

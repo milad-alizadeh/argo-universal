@@ -10,6 +10,8 @@ catalog:
   sherif: 1.13.0
   turbo: 2.11.7
   typescript: 7.0.2
+  vite: 8.3.2
+  vitest: 5.0.3
 
 # `pnpm add` fails when a version is outside the catalog.
 catalogMode: strict

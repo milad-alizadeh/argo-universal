@@ -22,3 +22,6 @@ coverage/
 # Misc
 .DS_Store
 *.pem
+
+# Vitest
+.vitest/
