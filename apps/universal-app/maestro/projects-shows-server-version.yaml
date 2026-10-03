@@ -1,0 +1,24 @@
+# Smoke flow: launch the development build, load the bundle from Metro, and see the Server version.
+# Run `pnpm --filter @repo/universal-app test:maestro` with `pnpm dev` running; checked with Maestro CLI 2.3.0.
+# On Android also run `adb reverse tcp:8081 tcp:8081` and `adb reverse tcp:7337 tcp:7337`.
+appId: dev.argo.app
+tags:
+  - smoke
+---
+- launchApp:
+    clearState: true
+# The dev launcher opens a project only through its launch URL (SDK 57 form); the flags keep the dev menu closed.
+- openLink: 'exp+argo://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081&disableOnboarding=1&disableAutoLaunch=1&disableFab=1'
+# iOS asks once per Simulator before an app opens a link; Android never shows this.
+- runFlow:
+    when:
+      visible: 'Open'
+    commands:
+      - tapOn: 'Open'
+- extendedWaitUntil:
+    visible: 'Version'
+    timeout: 120000
+# The value next to the Version label is the Server's semantic version.
+- assertVisible:
+    text: '\d+\.\d+\.\d+'
+    rightOf: 'Version'
