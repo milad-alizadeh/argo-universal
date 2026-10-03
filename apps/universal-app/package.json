@@ -22,7 +22,6 @@
     "@storybook/addon-ondevice-actions": "catalog:",
     "@storybook/addon-ondevice-controls": "catalog:",
     "@storybook/react-native": "catalog:",
-    "@storybook/react-native-ui-lite": "catalog:",
     "expo": "catalog:",
     "expo-constants": "catalog:",
     "expo-dev-client": "catalog:",
