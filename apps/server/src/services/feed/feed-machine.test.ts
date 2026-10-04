@@ -438,6 +438,27 @@ describe('feed', () => {
     expect(feed.getSnapshot().context.nextPosition).toBe(2);
   });
 
+  it('rejects a change when its written row cannot be read, and keeps running', () => {
+    feed.stop();
+    feed = createActor(machine, {
+      input: {
+        ...input,
+        findWrittenRow: () => {
+          throw new Error('payload does not match agent_message');
+        },
+      },
+    }).start();
+    feed.send(appendText);
+
+    expect(logLines).toEqual([
+      'rejected a change: could not read written row message-1#0: payload does not match agent_message',
+    ]);
+    expect(feed.getSnapshot()).toMatchObject({
+      status: 'active',
+      context: { rejectedChanges: 1 },
+    });
+  });
+
   it('logs and counts a rejected change, and streams and writes nothing for it', () => {
     feed.send(appendText);
     vi.advanceTimersByTime(storeDelayMs);

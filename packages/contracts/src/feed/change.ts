@@ -20,7 +20,7 @@ const withoutEnvelope = {
   turnId: true,
 } as const;
 
-// A Session update as an agent reports it: a row without the fields the Feed actor sets.
+// A Session update as an Agent reports it: a row without the fields the Feed actor sets.
 export const FeedUpdate = z.discriminatedUnion('sessionUpdate', [
   UserMessage.omit(withoutEnvelope),
   AgentMessage.omit(withoutEnvelope),
@@ -58,7 +58,7 @@ export const FeedPatch = z.strictObject({
 });
 export type FeedPatch = z.infer<typeof FeedPatch>;
 
-// One change an agent makes to a Session's Feed (spec 0002 section 8).
+// One change an Agent makes to a Session's Feed (spec 0002 section 8).
 export const FeedChange = z.discriminatedUnion('type', [
   FeedUpsert,
   FeedAppend,

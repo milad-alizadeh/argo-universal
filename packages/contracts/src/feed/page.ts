@@ -12,7 +12,7 @@ export const FeedPageInput = z.strictObject({
 });
 export type FeedPageInput = z.infer<typeof FeedPageInput>;
 
-// Output of `feed.page`. `staleCursor` is true when the cursor belongs to an older epoch; the page is then the tail.
+// Output of `feed.page`. `staleCursor` is true when the input's `epoch` is not the Session's; the page is then the tail.
 export const FeedPageOutput = z.strictObject({
   epoch: sessionColumns.shape.epoch,
   maxRevision: sessionColumns.shape.maxRevision,

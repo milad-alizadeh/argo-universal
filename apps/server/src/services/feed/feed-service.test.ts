@@ -235,6 +235,17 @@ describe('feed.page', () => {
     });
   });
 
+  it('flags a tail request from another epoch', async () => {
+    expect(
+      await caller().feed.page({
+        sessionId: 'session-1',
+        direction: 'tail',
+        epoch: 2,
+        limit: 1,
+      }),
+    ).toMatchObject({ epoch: 3, rows: [message(4)], staleCursor: true });
+  });
+
   it('pages a Session with no rows', async () => {
     database
       .insert(session)

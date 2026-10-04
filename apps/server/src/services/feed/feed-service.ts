@@ -71,10 +71,7 @@ export function createFeedService(deps: FeedDeps): FeedService {
   // Stored rows only: the subscription's catch-up adds what the writer has not committed.
   const page = (input: FeedPageInput) => {
     const { epoch, maxRevision } = readSession(input.sessionId);
-    const staleCursor =
-      input.direction === 'before' &&
-      input.epoch !== undefined &&
-      input.epoch !== epoch;
+    const staleCursor = input.epoch !== undefined && input.epoch !== epoch;
     const cursor =
       input.direction === 'before' && !staleCursor ? input.cursor : undefined;
     const newestFirst = database
@@ -131,8 +128,8 @@ export function createFeedService(deps: FeedDeps): FeedService {
       live.push(...batch.events);
       wake?.();
     });
-    const stop = () => wake?.();
-    signal?.addEventListener('abort', stop);
+    const wakeOnAbort = () => wake?.();
+    signal?.addEventListener('abort', wakeOnAbort);
 
     try {
       const reset = after !== null && after.epoch !== epoch;
@@ -172,7 +169,7 @@ export function createFeedService(deps: FeedDeps): FeedService {
       }
     } finally {
       listener?.unsubscribe();
-      signal?.removeEventListener('abort', stop);
+      signal?.removeEventListener('abort', wakeOnAbort);
     }
   }
 

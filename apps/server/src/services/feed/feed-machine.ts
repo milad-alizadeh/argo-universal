@@ -80,9 +80,17 @@ export const feedMachine = setup({
       const id = changedRowId(event.change);
       const { sessionId, maxRevision, nextPosition } = context;
       // A written row comes back with its position, so a later change keeps its place.
-      const written = Object.hasOwn(context.rows, id)
-        ? undefined
-        : context.findWrittenRow(id);
+      let written: SessionUpdate | undefined;
+      if (!Object.hasOwn(context.rows, id))
+        try {
+          written = context.findWrittenRow(id);
+        } catch (error) {
+          enqueue.raise({
+            type: 'feed.changeRejected',
+            reason: `could not read written row ${id}: ${error instanceof Error ? error.message : String(error)}`,
+          });
+          return;
+        }
       const { feed, streamEvents, rejection } = applyFeedChange(
         {
           sessionId,
