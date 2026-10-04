@@ -7,16 +7,16 @@ import { findRecording } from './recording.ts';
 export type MockCliOptions = {
   // The recording's file name without its extension, such as `task-plan`.
   recording: string;
-  // Exit after the first recorded frame of a Turn, as a crashed Agent does.
+  // Exit early in a Turn, as a crashed Agent does.
   exitMidTurn?: boolean;
 };
 
-const RECORDING_ENV = 'MOCK_CLI_RECORDING';
-const EXIT_MID_TURN_ENV = 'MOCK_CLI_EXIT_MID_TURN';
+const RECORDING_VARIABLE = 'MOCK_CLI_RECORDING';
+const EXIT_MID_TURN_VARIABLE = 'MOCK_CLI_EXIT_MID_TURN';
 
 const MockCliEnvironment = z.object({
-  [RECORDING_ENV]: z.string().min(1),
-  [EXIT_MID_TURN_ENV]: z.enum(['0', '1']),
+  [RECORDING_VARIABLE]: z.string().min(1),
+  [EXIT_MID_TURN_VARIABLE]: z.enum(['0', '1']),
 });
 
 const quote = (text: string) => `'${text.replaceAll("'", `'\\''`)}'`;
@@ -38,8 +38,8 @@ export async function writeMockCliShim({
     executable,
     [
       '#!/bin/sh',
-      `export ${RECORDING_ENV}=${quote(recordingFile)}`,
-      `export ${EXIT_MID_TURN_ENV}=${exitMidTurn ? '1' : '0'}`,
+      `export ${RECORDING_VARIABLE}=${quote(recordingFile)}`,
+      `export ${EXIT_MID_TURN_VARIABLE}=${exitMidTurn ? '1' : '0'}`,
       `exec ${quote(process.execPath)} --no-warnings ${quote(script)} "$@"`,
       '',
     ].join('\n'),
@@ -52,8 +52,8 @@ export async function writeMockCliShim({
 export function readMockCliEnvironment() {
   const environment = MockCliEnvironment.parse(process.env);
   return {
-    recordingFile: environment[RECORDING_ENV],
-    exitMidTurn: environment[EXIT_MID_TURN_ENV] === '1',
+    recordingFile: environment[RECORDING_VARIABLE],
+    exitMidTurn: environment[EXIT_MID_TURN_VARIABLE] === '1',
   };
 }
 
@@ -61,14 +61,34 @@ export function readMockCliEnvironment() {
 export const send = (message: unknown) =>
   process.stdout.write(`${JSON.stringify(message)}\n`);
 
+let crashed = false;
+
 // Reads one JSON message per stdin line, and exits when the client closes stdin.
 export function serveJsonLines(handle: (message: unknown) => void) {
   createInterface({ input: process.stdin })
-    .on('line', (line) => handle(JSON.parse(line)))
-    .on('close', () => process.exit(0));
+    .on('line', (line) => {
+      if (!crashed) handle(JSON.parse(line));
+    })
+    .on('close', () => {
+      if (!crashed) process.exit(0);
+    });
 }
 
-export function exitMidTurn(): never {
-  process.stderr.write('Mock CLI exited mid-Turn.\n');
-  process.exit(1);
+// Sends a recorded Turn. With `crashAfter`, exits with code 1 after the first frame it matches.
+// Returns whether the Turn was sent in full.
+export function replayTurn<Frame>(
+  frames: Frame[],
+  crashAfter: ((frame: Frame) => boolean) | null,
+): boolean {
+  for (const frame of frames) {
+    send(frame);
+    if (crashAfter?.(frame)) {
+      crashed = true;
+      process.stderr.write('Mock CLI exited mid-Turn.\n');
+      // Exits once stdout has flushed, since pipe writes are asynchronous on macOS.
+      process.stdout.write('', () => process.exit(1));
+      return false;
+    }
+  }
+  return true;
 }

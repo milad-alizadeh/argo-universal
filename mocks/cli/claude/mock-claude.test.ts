@@ -45,7 +45,7 @@ afterEach(() => rm(directory, { recursive: true, force: true }));
 describe('claude recordings', () => {
   const folder = path.join(import.meta.dirname, 'recordings/2.1.286');
 
-  it.each(readdirSync(folder))(
+  it.each(readdirSync(folder).filter((name) => /\.jsonl?$/.test(name)))(
     '%s reads as a recording of its folder version',
     (name) => {
       expect(readRecording(path.join(folder, name), 'claude-cli').version).toBe(

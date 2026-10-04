@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { z } from 'zod';
 
@@ -43,11 +43,13 @@ export function readRecording(file: string, producer: string): Recording {
 
 // The file of the recording called `name` in `recordings/<version>/`, which holds one version.
 export function findRecording(recordings: string, name: string): string {
-  for (const version of readdirSync(recordings)) {
+  const versions = readdirSync(recordings, { withFileTypes: true }).filter(
+    (entry) => entry.isDirectory(),
+  );
+  for (const version of versions) {
     for (const extension of ['.json', '.jsonl']) {
-      const file = path.join(recordings, version, `${name}${extension}`);
-      if (readdirSync(path.dirname(file)).includes(path.basename(file)))
-        return file;
+      const file = path.join(recordings, version.name, `${name}${extension}`);
+      if (existsSync(file)) return file;
     }
   }
   throw new Error(`No recording named ${name} in ${recordings}.`);

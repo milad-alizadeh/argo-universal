@@ -2,12 +2,14 @@
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import {
-  exitMidTurn,
   readMockCliEnvironment,
+  replayTurn,
   send,
   serveJsonLines,
 } from '../mock-cli.ts';
 import { readRecording, splitTurns } from '../recording.ts';
+
+const PRODUCER = 'claude-cli';
 
 const Frame = z.looseObject({
   type: z.string(),
@@ -33,7 +35,7 @@ const Input = z.looseObject({
 });
 
 const environment = readMockCliEnvironment();
-const recording = readRecording(environment.recordingFile, 'claude-cli');
+const recording = readRecording(environment.recordingFile, PRODUCER);
 
 if (process.argv.includes('--version')) {
   process.stdout.write(`${recording.version} (Claude Code)\n`);
@@ -44,10 +46,11 @@ const frames = z.array(Frame).parse(recording.payload);
 const turns = splitTurns(frames, (frame) => frame.type === 'result');
 const sessionId =
   frames.find((frame) => frame.session_id)?.session_id ?? randomUUID();
-const assistantFrames = frames.flatMap((frame) => {
-  const assistant = AssistantFrame.safeParse(frame);
-  return assistant.success ? [assistant.data] : [];
-});
+const assistantFrames = (turnFrames: Frame[]) =>
+  turnFrames.flatMap((frame) => {
+    const assistant = AssistantFrame.safeParse(frame);
+    return assistant.success ? [assistant.data] : [];
+  });
 let turnIndex = 0;
 
 // The CLI's `system/init`, written when a recorded Turn lacks one.
@@ -59,7 +62,7 @@ const initFrame = () => ({
   cwd: process.cwd(),
   tools: [],
   mcp_servers: [],
-  model: assistantFrames[0]?.message.model ?? 'default',
+  model: assistantFrames(frames)[0]?.message.model ?? 'default',
   permissionMode: 'default',
   slash_commands: [],
   output_style: 'default',
@@ -70,7 +73,7 @@ const initFrame = () => ({
 });
 
 // The CLI's `result`, written when a recorded Turn lacks one.
-const resultFrame = () => ({
+const resultFrame = (turn: Frame[]) => ({
   type: 'result',
   subtype: 'success',
   is_error: false,
@@ -78,7 +81,7 @@ const resultFrame = () => ({
   duration_api_ms: 0,
   num_turns: 1,
   result:
-    assistantFrames
+    assistantFrames(turn)
       .flatMap((frame) => frame.message.content)
       .findLast((block) => block.text !== undefined)?.text ?? '',
   stop_reason: 'end_turn',
@@ -117,11 +120,11 @@ function playTurn() {
     process.exit(1);
   }
   if (!turn.some(isInit)) send(initFrame());
-  for (const frame of turn) {
-    send(frame);
-    if (environment.exitMidTurn) exitMidTurn();
-  }
-  if (turn.at(-1)?.type !== 'result') send(resultFrame());
+  const crashAfter = environment.exitMidTurn
+    ? (frame: Frame) => !isInit(frame)
+    : null;
+  if (replayTurn(turn, crashAfter) && turn.at(-1)?.type !== 'result')
+    send(resultFrame(turn));
 }
 
 serveJsonLines((line) => {

@@ -6,7 +6,7 @@ A stand-in `codex` whose `app-server` speaks JSON-RPC over stdio. Each `turn/sta
 import { writeMockCodex } from '@repo/mocks/cli/codex/write-mock-codex';
 
 const codex = await writeMockCodex(directory, { recording: 'file-change' });
-// Stands in for an Agent crash: exits with code 1 after the Turn's first recorded message.
+// Stands in for an Agent crash: exits with code 1 right after the Turn's `turn/started`.
 const crashing = await writeMockCodex(directory, { recording: 'file-change', exitMidTurn: true });
 ```
 

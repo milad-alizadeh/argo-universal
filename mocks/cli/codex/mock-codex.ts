@@ -2,8 +2,8 @@
 import path from 'node:path';
 import { z } from 'zod';
 import {
-  exitMidTurn,
   readMockCliEnvironment,
+  replayTurn,
   send,
   serveJsonLines,
 } from '../mock-cli.ts';
@@ -71,10 +71,11 @@ function startTurn(id: string | number | undefined) {
     return;
   }
   send({ id, result: { turn: started.params?.turn } });
-  for (const message of turn) {
-    send(message);
-    if (environment.exitMidTurn) exitMidTurn();
-  }
+  // Every recording crashes at the same point: right after `turn/started`.
+  replayTurn(
+    turn,
+    environment.exitMidTurn ? (message) => message === started : null,
+  );
 }
 
 serveJsonLines((line) => {

@@ -6,6 +6,7 @@ import path from 'node:path';
 import { promisify } from 'node:util';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { startLineProcess } from '../line-process.ts';
+import type { MockCliOptions } from '../mock-cli.ts';
 import { readRecording } from '../recording.ts';
 import { writeMockCodex } from './write-mock-codex.ts';
 
@@ -36,7 +37,7 @@ beforeEach(async () => {
 
 afterEach(() => rm(directory, { recursive: true, force: true }));
 
-const startAppServer = async (options: { exitMidTurn?: boolean } = {}) => {
+const startAppServer = async (options: Partial<MockCliOptions> = {}) => {
   const codex = startLineProcess(
     await writeMockCodex(directory, { recording: 'file-change', ...options }),
     ['app-server'],
@@ -50,7 +51,7 @@ const startAppServer = async (options: { exitMidTurn?: boolean } = {}) => {
 describe('codex recordings', () => {
   const folder = path.join(import.meta.dirname, 'recordings/0.157.0');
 
-  it.each(readdirSync(folder))(
+  it.each(readdirSync(folder).filter((name) => /\.jsonl?$/.test(name)))(
     '%s reads as a recording of its folder version',
     (name) => {
       expect(
@@ -118,25 +119,28 @@ describe('mock Codex CLI', () => {
     expect(await codex.exited).toBe(0);
   });
 
-  it('exits mid-Turn when asked to stand in for a crash', async () => {
-    const messages = wireMessages('file-change.json');
-    const codex = await startAppServer({ exitMidTurn: true });
-    const threadId = messages[0]?.params.threadId;
+  it.each(['file-change', 'reply'])(
+    'exits right after turn/started in %s, to stand in for a crash',
+    async (recording) => {
+      const messages = wireMessages(`${recording}.json`);
+      const threadId = messages[0]?.params.threadId;
+      const codex = await startAppServer({ recording, exitMidTurn: true });
 
-    codex.send({ id: 2, method: 'thread/start', params: {} });
-    await codex.next();
-    codex.send({
-      id: 3,
-      method: 'turn/start',
-      params: { threadId, input: [] },
-    });
+      codex.send({ id: 2, method: 'thread/start', params: {} });
+      await codex.next();
+      codex.send({
+        id: 3,
+        method: 'turn/start',
+        params: { threadId, input: [] },
+      });
 
-    expect(await codex.exited).not.toBe(0);
-    expect(codex.output.slice(-1)).toEqual(messages.slice(0, 1));
-    expect(
-      codex.output.some((message) => message.method === 'turn/completed'),
-    ).toBe(false);
-  });
+      expect(await codex.exited).not.toBe(0);
+      const started = messages.findIndex(
+        (message) => message.method === 'turn/started',
+      );
+      expect(codex.output.slice(3)).toEqual(messages.slice(0, started + 1));
+    },
+  );
 
   it('rejects a method it has no answer for', async () => {
     const codex = await startAppServer();
@@ -148,5 +152,6 @@ describe('mock Codex CLI', () => {
       error: { code: -32601 },
     });
     codex.close();
+    expect(await codex.exited).toBe(0);
   });
 });
