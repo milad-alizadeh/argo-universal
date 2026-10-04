@@ -1,10 +1,7 @@
 import * as SelectPrimitive from '@rn-primitives/select';
-import {
-  Check,
-  ChevronDown,
-  ChevronDownIcon,
-  ChevronUpIcon,
-} from 'lucide-react-native';
+import { CaretDownIcon } from 'phosphor-react-native/src/icons/CaretDown';
+import { CaretUpIcon } from 'phosphor-react-native/src/icons/CaretUp';
+import { CheckIcon } from 'phosphor-react-native/src/icons/Check';
 import * as React from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { FadeIn, FadeOut, ReduceMotion } from 'react-native-reanimated';
@@ -67,7 +64,7 @@ function SelectTrigger({
     >
       <>{children}</>
       <Icon
-        as={ChevronDown}
+        as={CaretDownIcon}
         aria-hidden={true}
         className="text-muted-foreground size-4"
       />
@@ -183,7 +180,10 @@ function SelectItem({
     >
       <View className="absolute right-2 flex size-3.5 items-center justify-center">
         <SelectPrimitive.ItemIndicator>
-          <Icon as={Check} className="text-muted-foreground size-4 shrink-0" />
+          <Icon
+            as={CheckIcon}
+            className="text-muted-foreground size-4 shrink-0"
+          />
         </SelectPrimitive.ItemIndicator>
       </View>
       <SelectPrimitive.ItemText className="text-foreground group-active:text-accent-foreground select-none text-sm" />
@@ -226,7 +226,7 @@ function SelectScrollUpButton({
       )}
       {...props}
     >
-      <Icon as={ChevronUpIcon} className="size-4" />
+      <Icon as={CaretUpIcon} className="size-4" />
     </SelectPrimitive.ScrollUpButton>
   );
 }
@@ -250,7 +250,7 @@ function SelectScrollDownButton({
       )}
       {...props}
     >
-      <Icon as={ChevronDownIcon} className="size-4" />
+      <Icon as={CaretDownIcon} className="size-4" />
     </SelectPrimitive.ScrollDownButton>
   );
 }

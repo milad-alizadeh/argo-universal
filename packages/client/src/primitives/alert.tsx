@@ -1,4 +1,4 @@
-import type { LucideIcon } from 'lucide-react-native';
+import type { Icon as PhosphorIcon } from 'phosphor-react-native';
 import * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/utils';
@@ -14,7 +14,7 @@ function Alert({
   ...props
 }: React.ComponentProps<typeof View> &
   React.RefAttributes<View> & {
-    icon: LucideIcon;
+    icon: PhosphorIcon;
     variant?: 'default' | 'destructive';
     iconClassName?: string;
   }) {

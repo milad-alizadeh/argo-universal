@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { Check, Plus, Search } from 'lucide-react-native';
+import { CheckIcon } from 'phosphor-react-native/src/icons/Check';
+import { MagnifyingGlassIcon } from 'phosphor-react-native/src/icons/MagnifyingGlass';
+import { PlusIcon } from 'phosphor-react-native/src/icons/Plus';
 import {
   StorySections,
   Variation,
@@ -11,12 +13,12 @@ function AsExamples() {
   return (
     <Variations>
       {[
-        ['Plus', Plus],
-        ['Check', Check],
-        ['Search', Search],
+        ['Plus', PlusIcon],
+        ['Check', CheckIcon],
+        ['Search', MagnifyingGlassIcon],
       ].map(([label, icon]) => (
         <Variation key={String(label)} label={String(label)}>
-          <Icon as={icon as typeof Plus} />
+          <Icon as={icon as typeof PlusIcon} />
         </Variation>
       ))}
     </Variations>
@@ -27,7 +29,7 @@ function SizeExamples() {
     <Variations>
       {['size-4', 'size-6', 'size-8'].map((className) => (
         <Variation key={className} label={className}>
-          <Icon as={Plus} className={className} />
+          <Icon as={PlusIcon} className={className} />
         </Variation>
       ))}
     </Variations>

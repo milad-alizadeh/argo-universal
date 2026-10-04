@@ -1,11 +1,20 @@
 import { withReusablesPreview, withTrpcMocks } from '@repo/client/mocks';
+import { themes } from '@repo/uniwind/themes';
 import type { Preview } from '@storybook/react-native';
 
 const preview: Preview = {
   // Stories get tRPC fixtures from parameters.trpc through the mock link (ADR 0010).
   decorators: [withReusablesPreview, withTrpcMocks],
-  initialGlobals: { mode: 'light' },
+  initialGlobals: { themeId: 'default', mode: 'light' },
   globalTypes: {
+    themeId: {
+      description: 'Interface theme',
+      toolbar: {
+        icon: 'paintbrush',
+        dynamicTitle: true,
+        items: themes.map(({ id, label }) => ({ value: id, title: label })),
+      },
+    },
     mode: {
       description: 'Appearance mode',
       toolbar: {

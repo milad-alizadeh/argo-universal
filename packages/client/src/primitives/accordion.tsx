@@ -1,5 +1,5 @@
 import * as AccordionPrimitive from '@rn-primitives/accordion';
-import { ChevronDown } from 'lucide-react-native';
+import { CaretDownIcon } from 'phosphor-react-native/src/icons/CaretDown';
 import { Platform, Pressable, View } from 'react-native';
 import Animated, {
   FadeOutUp,
@@ -106,7 +106,7 @@ function AccordionTrigger({
             <>{children}</>
             <Animated.View style={chevronStyle}>
               <Icon
-                as={ChevronDown}
+                as={CaretDownIcon}
                 size={16}
                 className={cn(
                   'text-muted-foreground shrink-0',

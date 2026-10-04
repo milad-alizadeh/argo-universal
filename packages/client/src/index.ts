@@ -4,6 +4,7 @@ export {
   useConnection,
   useConnectionState,
 } from './connection/context';
+export { applyTheme } from './lib/theme';
 export { ProjectsScreen } from './screens/ProjectsScreen';
 export {
   SessionScreen,

@@ -1,12 +1,13 @@
+import { type ThemeId, themes } from '@repo/uniwind/themes';
 import { PortalHost } from '@rn-primitives/portal';
 import { type ComponentType, useLayoutEffect } from 'react';
 import { Platform, ScrollView, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Uniwind } from 'uniwind';
+import { applyTheme } from '../src/lib/theme';
 
 interface PreviewContext {
-  globals: { mode?: string };
+  globals: { themeId?: string; mode?: string };
   parameters: { standalonePreview?: boolean };
 }
 
@@ -17,16 +18,18 @@ const initialMetrics = {
 
 function ReusablesPreview({
   Story,
+  themeId,
   mode,
   standalone,
 }: {
   Story: ComponentType;
+  themeId: ThemeId;
   mode: 'light' | 'dark';
   standalone: boolean;
 }) {
   useLayoutEffect(() => {
-    Uniwind.setTheme(mode);
-  }, [mode]);
+    applyTheme(themeId, mode);
+  }, [themeId, mode]);
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider initialMetrics={initialMetrics}>
@@ -55,6 +58,10 @@ export function withReusablesPreview(
   return (
     <ReusablesPreview
       Story={Story}
+      themeId={
+        themes.find((theme) => theme.id === context.globals.themeId)?.id ??
+        'default'
+      }
       mode={context.globals.mode === 'dark' ? 'dark' : 'light'}
       standalone={context.parameters.standalonePreview === true}
     />
