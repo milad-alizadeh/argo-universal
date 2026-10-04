@@ -1,10 +1,8 @@
 import * as ContextMenuPrimitive from '@rn-primitives/context-menu';
-import {
-  Check,
-  ChevronDown,
-  ChevronRight,
-  ChevronUp,
-} from 'lucide-react-native';
+import { CaretDownIcon } from 'phosphor-react-native/src/icons/CaretDown';
+import { CaretRightIcon } from 'phosphor-react-native/src/icons/CaretRight';
+import { CaretUpIcon } from 'phosphor-react-native/src/icons/CaretUp';
+import { CheckIcon } from 'phosphor-react-native/src/icons/Check';
 import * as React from 'react';
 import {
   Platform,
@@ -40,7 +38,7 @@ function ContextMenuSubTrigger({
 }) {
   const { open } = ContextMenuPrimitive.useSubContext();
   const icon =
-    Platform.OS === 'web' ? ChevronRight : open ? ChevronUp : ChevronDown;
+    Platform.OS === 'web' ? CaretRightIcon : open ? CaretUpIcon : CaretDownIcon;
   return (
     <TextClassContext.Provider
       value={cn(
@@ -210,7 +208,7 @@ function ContextMenuCheckboxItem({
         <View className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
           <ContextMenuPrimitive.ItemIndicator>
             <Icon
-              as={Check}
+              as={CheckIcon}
               className={cn(
                 'text-foreground size-4',
                 Platform.select({ web: 'pointer-events-none' }),

@@ -10,7 +10,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { AppState, Platform } from 'react-native';
 import { useUniwind } from 'uniwind';
-import { NAV_THEME } from '@/lib/theme';
+import { useNavigationTheme } from '@/lib/theme';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -54,11 +54,12 @@ const inspection = createBrowserMachineInspection({
 
 export default function RootLayout() {
   const { theme } = useUniwind();
+  const navigationTheme = useNavigationTheme();
 
   return (
     <AppProviders serverUrl={serverUrl} inspect={inspection.inspect}>
       <ForegroundSignal />
-      <ThemeProvider value={NAV_THEME[theme ?? 'light']}>
+      <ThemeProvider value={navigationTheme}>
         <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
         <Stack>
           <Stack.Screen name="index" options={{ title: 'Projects' }} />

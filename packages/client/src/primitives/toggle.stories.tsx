@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { Bold } from 'lucide-react-native';
+import { TextBIcon } from 'phosphor-react-native/src/icons/TextB';
 import { useState } from 'react';
 import { View } from 'react-native';
 import {
@@ -31,7 +31,7 @@ function ToggleExample({
         onPressedChange={setPressed}
         accessibilityLabel="Toggle bold"
       >
-        <ToggleIcon as={Bold} />
+        <ToggleIcon as={TextBIcon} />
       </Toggle>
     </View>
   );

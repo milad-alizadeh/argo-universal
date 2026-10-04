@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { Bold, Italic, Underline } from 'lucide-react-native';
+import { TextBIcon } from 'phosphor-react-native/src/icons/TextB';
+import { TextItalicIcon } from 'phosphor-react-native/src/icons/TextItalic';
+import { TextUnderlineIcon } from 'phosphor-react-native/src/icons/TextUnderline';
 import { useState } from 'react';
 import {
   StorySections,
@@ -22,9 +24,9 @@ function ToggleGroupExample({
   const [single, setSingle] = useState<string | undefined>('bold');
   const [multiple, setMultiple] = useState<string[]>(['bold']);
   const items = [
-    ['bold', Bold],
-    ['italic', Italic],
-    ['underline', Underline],
+    ['bold', TextBIcon],
+    ['italic', TextItalicIcon],
+    ['underline', TextUnderlineIcon],
   ] as const;
   const props = {
     variant,
