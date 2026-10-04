@@ -4,6 +4,8 @@ packages:
   - tooling/*
   # Playwright suite as its own package, as Turborepo's Playwright guide recommends (docs/research/playwright.md).
   - e2e
+  # Mock CLIs and their recordings, as a package so Vitest and check-types reach them.
+  - mocks
 
 # Every shared dependency is pinned here; packages refer to it as "catalog:" (spec section 2).
 catalog:
