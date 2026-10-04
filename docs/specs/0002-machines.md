@@ -201,7 +201,10 @@ Spec 0003 amends this: a parent Session also invokes one feed actor per Subagent
 - `writer.write {job}` adds a job to the queue. A job is a batch of Feed rows with the Session's `maxRevision`, a Turn insert or update, or a `session` row update. Jobs commit in the order they arrive.
 - States: `idle`, then `writing` on a job. `writing` invokes `writeBatch`, which commits every queued job in one transaction. Then it goes to `writing` again while the queue has jobs, or to `idle`.
 - When `writeBatch` fails, the writer logs the error, keeps the jobs, and tries again after 1 second (`writeRetryDelay`).
-- `writer.drain` goes to `draining`, which writes the queue and goes to `drained` (final). A failure while draining logs the lost jobs and goes to `drained`.
+  A job that can never commit, such as a Turn insert for a deleted Session, holds the queue until `writer.drain`. This is accepted.
+- `writer.drain` goes to `draining`, which writes the queue and goes to `drained` (final). A failure while draining logs the lost jobs and goes to `drained`. A drain during `writing` first waits for that batch, and a failed batch is tried once more at once while draining.
+- The writer does not validate jobs. The Feed actor checks a row's payload with the `contracts` schema when it turns a Session update into a row (spec 0001 section 7).
+- The writer's log lines go to `logs/engine.log`, as the Engine's do. The Engine changes (section 4) wire this.
 - `createSession` and `loadSession` write and read directly. `node:sqlite` runs them on the one Engine thread, so they never run inside a `writeBatch`.
 
 ## 9. Recovery after an Engine restart
