@@ -1,12 +1,11 @@
 import { createServer, type Server } from 'node:http';
 import { join } from 'node:path';
-import { getRequestListener } from '@hono/node-server';
 import { appRouter, type Services } from '@repo/api';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { WebSocketServer } from 'ws';
 import { createSystemService } from '../services/system';
-import { createHttpApp, createRequestErrorHandler } from './http-app';
 import { createRequestGuard } from './request-guard';
+import { createRequestListener } from './request-listener';
 
 export interface HttpServerOptions {
   home: string;
@@ -33,7 +32,7 @@ const closeServer = (server: Server) =>
     server.close((error) => (error ? reject(error) : resolve())),
   );
 
-// Serves HTTP and tRPC over one WebSocket on 127.0.0.1 (ADR 0002); resolves once the port is bound.
+// Serves one tRPC router over the WebSocket and over HTTP, and blobs, on 127.0.0.1 (ADR 0002); resolves once the port is bound.
 export async function startHttpServer(
   options: HttpServerOptions,
 ): Promise<HttpServer> {
@@ -42,17 +41,15 @@ export async function startHttpServer(
     system: createSystemService({ version, startedAt }),
   };
 
+  const createContext = () => ({ services });
+
   const guard = createRequestGuard(options.port);
-  const app = createHttpApp({
-    guard,
-    blobsFolder: join(options.home, 'blobs'),
-    version,
-    startedAt,
-  });
   const server = createServer(
-    getRequestListener(app.fetch, {
-      overrideGlobalObjects: false,
-      errorHandler: createRequestErrorHandler(guard),
+    createRequestListener({
+      guard,
+      blobsFolder: join(options.home, 'blobs'),
+      router: appRouter,
+      createContext,
     }),
   );
 
@@ -74,7 +71,7 @@ export async function startHttpServer(
   const handler = applyWSSHandler({
     wss: webSocketServer,
     router: appRouter,
-    createContext: () => ({ services }),
+    createContext,
     keepAlive: { enabled: true, pingMs: 30_000, pongWaitMs: 5000 },
   });
 
@@ -83,7 +80,10 @@ export async function startHttpServer(
     handler.broadcastReconnectNotification();
     for (const client of webSocketServer.clients) client.terminate();
     webSocketServer.close();
-    await closeServer(server);
+    const closed = closeServer(server);
+    // close() would otherwise wait out the keep-alive timeout of an HTTP socket that turns idle later.
+    server.closeAllConnections();
+    await closed;
   };
   let closing: Promise<void> | undefined;
   const close = () => {

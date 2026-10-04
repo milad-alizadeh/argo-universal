@@ -11,7 +11,7 @@ const headerExcerptLength = 100;
 
 export type RequestGuard = ReturnType<typeof createRequestGuard>;
 
-// Checks Host on every request and Origin on WebSocket upgrades, so a website cannot reach the Server (ADR 0002).
+// Checks Host on every request and Origin on every tRPC call, so a website cannot reach the Server (ADR 0002).
 export function createRequestGuard(port: number) {
   const AllowedHost = z.enum([`127.0.0.1:${port}`, `localhost:${port}`]);
   let rejectedRequests = 0;
@@ -43,6 +43,7 @@ export function createRequestGuard(port: number) {
       host: string | undefined;
       origin: string | undefined;
     }) => allowsHost(headers.host) && allowsOrigin(headers.origin),
+    allowsOrigin,
     report,
   };
 }

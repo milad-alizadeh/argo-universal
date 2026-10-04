@@ -40,32 +40,24 @@ const upgradeStatus = (headers: Record<string, string>) =>
     socket.once('error', reject);
   });
 
-interface HttpRequest {
-  host: string;
-  method?: string;
-  path?: string;
-  body?: string;
-}
-
-const httpStatus = ({
-  host,
-  method = 'GET',
-  path = '/health',
-  body,
-}: HttpRequest) =>
+// Resolves with the HTTP status of system.info over HTTP.
+const systemInfoStatus = (headers: Record<string, string> = {}) =>
   new Promise<number>((resolve, reject) => {
     const outgoing = request(
-      { host: '127.0.0.1', port, method, path, headers: { host } },
+      {
+        host: '127.0.0.1',
+        port,
+        path: '/trpc/system.info',
+        headers: { host: `127.0.0.1:${port}`, ...headers },
+      },
       (response) => {
         resolve(response.statusCode ?? 0);
         response.resume();
       },
     );
     outgoing.once('error', reject);
-    outgoing.end(body);
+    outgoing.end();
   });
-
-const healthStatus = (host: string) => httpStatus({ host });
 
 const options = () => ({
   home,
@@ -98,7 +90,27 @@ describe('http server', () => {
 
   it('accepts a WebSocket and HTTP on localhost', async () => {
     expect(await upgradeStatus({ host: `localhost:${port}` })).toBe(101);
-    expect(await healthStatus(`localhost:${port}`)).toBe(200);
+    expect(await systemInfoStatus({ host: `localhost:${port}` })).toBe(200);
+  });
+
+  it('answers system.info over HTTP', async () => {
+    const response = await fetch(`http://127.0.0.1:${port}/trpc/system.info`);
+    expect(await response.json()).toEqual({
+      result: {
+        data: {
+          version: '1.2.3',
+          startedAt: '2026-10-03T00:00:00.000Z',
+          pid: process.pid,
+        },
+      },
+    });
+  });
+
+  it('refuses a call from another origin over the WebSocket and over HTTP', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const origin = 'https://evil.example';
+    expect(await upgradeStatus({ origin })).toBe(403);
+    expect(await systemInfoStatus({ origin })).toBe(403);
   });
 
   it.each(['https://evil.example', 'http://localhost.evil.example', 'null'])(
@@ -114,33 +126,16 @@ describe('http server', () => {
   });
 
   it('rejects HTTP with another Host', async () => {
-    expect(await healthStatus(`127.0.0.1:${port}`)).toBe(200);
-    expect(await healthStatus('evil.example:7337')).toBe(403);
-  });
-
-  it('answers 403 to a Host the adapter cannot parse, and counts it', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
-    expect(await healthStatus(`evil.example@127.0.0.1:${port}`)).toBe(403);
-    expect(console.error).toHaveBeenCalledExactlyOnceWith(
-      expect.stringMatching(/^engine: rejected request .* #1$/),
-    );
-  });
-
-  it('answers 405 to a POST with a body', async () => {
-    const status = await httpStatus({
-      host: `127.0.0.1:${port}`,
-      method: 'POST',
-      body: '{}',
-    });
-    expect(status).toBe(405);
-    expect(await healthStatus(`127.0.0.1:${port}`)).toBe(200);
+    expect(await systemInfoStatus()).toBe(200);
+    expect(await systemInfoStatus({ host: 'evil.example:7337' })).toBe(403);
   });
 
   it('rejects a second server on the same port', async () => {
     await expect(startHttpServer(options())).rejects.toMatchObject({
       code: 'EADDRINUSE',
     });
-    expect(await healthStatus(`127.0.0.1:${port}`)).toBe(200);
+    expect(await systemInfoStatus()).toBe(200);
   });
 
   it('closes while a WebSocket client is connected', async () => {

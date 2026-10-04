@@ -40,7 +40,7 @@ export default defineConfig<AppOptions>({
       // The supervisor as desktop starts it; pnpm would report SIGTERM as a failure.
       command: 'node --import tsx src/main.ts',
       // The web export has the default Server URL, ws://127.0.0.1:7337, built in (spec section 8).
-      url: 'http://127.0.0.1:7337/health',
+      url: 'http://127.0.0.1:7337/trpc/system.info',
       cwd: path.join(repositoryRoot, 'apps/server'),
       // Playwright empties test-results before it starts web servers, so each run gets a fresh home.
       env: {

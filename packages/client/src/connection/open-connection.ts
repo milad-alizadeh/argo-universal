@@ -38,12 +38,11 @@ export function openConnection(
   inspect?: ConnectionInspection,
 ) {
   let connection: ConnectionActor | undefined;
-  const trpc = createTRPCClient(async () => {
+  const trpc = createTRPCClient(serverUrl, async () => {
     // wsClient asks for its first URL while it is built, before `connection` below exists.
     await Promise.resolve();
     if (!connection) throw new Error('The Connection machine was not created');
     await waitForAttempt(connection);
-    return serverUrl;
   });
   const started = createActor(connectionMachine, {
     inspect,
