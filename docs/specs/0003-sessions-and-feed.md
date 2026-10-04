@@ -480,12 +480,22 @@ Each item below becomes its own issue, labelled `needs-triage`. The issues are s
 
 ### Delivery in vertical slices
 
-Each slice is one GitHub issue that first fixes its contract: Zod schemas, tRPC procedure signatures and recorded fixtures. Then two agents work in parallel:
+Each slice becomes several small GitHub issues, each sized for one agent session:
 
-- **UI**, labelled `ready-for-human`: builds the screens in Storybook against the fixtures with the owner, until the design is right.
-- **Backend**, labelled `ready-for-agent`: builds the Server side, connects the screen to live data, and adds the end-to-end test.
+1. **Contract**, labelled `ready-for-agent`: Zod schemas, tRPC procedure signatures, the recordings the slice needs, and fixtures built from them.
+2. **UI**, labelled `ready-for-human`, one issue per component or screen region: built in Storybook against the fixtures, with the owner. It is blocked by the contract and by the design foundations (theme tokens and primitives), and uses only what those provide. When it needs a token or a primitive that is missing, the agent stops and asks.
+3. **Backend**, labelled `ready-for-agent`: the Server side with its Server tests. It is blocked by the contract only, so it runs alongside the UI.
+4. **Wire-up**, labelled `ready-for-agent`: the screen on live data, and the end-to-end test. It is blocked by the backend and by the owner's approval of the UI.
 
-Every backend part covers both Agents, because parity is part of every Session change. The foundations from spec 0002 section 14 come first, and so do the recordings, since fixtures depend on them.
+Every UI issue has a design gate:
+
+- Before building, the agent shows the owner the matching piece of old Argo and asks what to keep.
+- The PR posts screenshots of every state, at phone and wide widths, in light and dark.
+- The owner's approval of the PR is the gate. After it, the stories are the reference, and later issues reuse the component without restyling it.
+
+Each issue lists its stories or tests as its acceptance check. When an agent finds the work bigger than its issue, it stops and proposes a split.
+
+Every backend part covers both Agents, because parity is part of every Session change. The machines from spec 0002 section 14 come first, and so do the recordings, since fixtures depend on them.
 
 The slices, in order:
 
