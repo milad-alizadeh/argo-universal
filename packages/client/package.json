@@ -17,6 +17,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@repo/uniwind": "workspace:*",
     "@rn-primitives/accordion": "catalog:",
     "@rn-primitives/alert-dialog": "catalog:",
     "@rn-primitives/aspect-ratio": "catalog:",
@@ -49,7 +50,6 @@
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",
     "expo-haptics": "catalog:",
-    "lucide-react-native": "catalog:",
     "phosphor-react-native": "catalog:",
     "react-native-gesture-handler": "catalog:",
     "react-native-reanimated": "catalog:",

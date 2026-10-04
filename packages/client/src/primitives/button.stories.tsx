@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { Plus } from 'lucide-react-native';
+import { PlusIcon } from 'phosphor-react-native/src/icons/Plus';
 import { View } from 'react-native';
 import {
   StorySections,
@@ -44,7 +44,7 @@ function SizeExamples() {
               size={size}
               accessibilityLabel={size === 'icon' ? 'Add' : 'Button'}
             >
-              {size === 'icon' ? <Icon as={Plus} /> : <Text>Button</Text>}
+              {size === 'icon' ? <Icon as={PlusIcon} /> : <Text>Button</Text>}
             </Button>
           </View>
         </Variation>
