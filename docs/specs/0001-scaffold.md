@@ -316,7 +316,7 @@ Shared types:
 ### Feed procedures (schemas now, routers in milestone 1)
 
 - `feed.page` query. Input `{sessionId, direction: 'tail' | 'before', cursor?: position, epoch?, limit = 40 (max 200)}`. `epoch` is the one the cursor came from. Output `{epoch, maxRevision, rows, hasOlder, startCursor, staleCursor}`. When `epoch` differs from the Session's, `staleCursor` is true and the page is the tail.
-- `feed.subscribe` subscription. Input `{sessionId, after: {epoch, revision} | null}`. Emits one of:
+- `feed.subscribe` subscription. Input `{sessionId, after: {epoch, revision} | null}`. It sends the newest version of each row changed after `after.revision`, then live changes. With `after: null`, it skips stored rows, which the App reads with `feed.page`, and sends the rows not stored yet. When `after.epoch` is not the Session's, it sends `reset {epoch}`, and then the same as `null`. Emits one of:
   - `row.upsert {rev, row}`
   - `row.append {rev, id, field, off, text}`. `field` is a dotted path to a string, such as `content.0.text`. The App applies it only if `off` equals its current length of that field. Otherwise it fetches that one row again with `feed.row`.
   - `row.patch {rev, id, set}`

@@ -13,7 +13,7 @@ export interface Feed {
   // The revision of the newest change.
   maxRevision: number;
   nextPosition: number;
-  // Open rows, and rows that settled since the last write, by id.
+  // Open rows, rows that settled since the last write, and written rows a change brought back, by id.
   rows: Record<string, SessionUpdate>;
 }
 
@@ -90,9 +90,6 @@ export function applyFeedChange(
   const existing = feed.rows[id];
   const revision = feed.maxRevision + 1;
 
-  if (existing?.state === 'settled')
-    return reject(feed, `row ${id} is settled`);
-
   const accept = (
     candidate: Record<string, unknown> & { sessionUpdate: string },
     toStreamEvent: (row: SessionUpdate) => FeedStreamEvent,
@@ -134,7 +131,7 @@ export function applyFeedChange(
       );
     }
     case 'append': {
-      if (!existing) return reject(feed, `no open row ${id}`);
+      if (!existing) return reject(feed, `no row ${id}`);
       const path = change.field.split('.');
       if (envelopeFields.has(path[0] ?? ''))
         return reject(feed, `${change.field} of row ${id} is set by the Feed`);
@@ -161,7 +158,7 @@ export function applyFeedChange(
       );
     }
     case 'patch': {
-      if (!existing) return reject(feed, `no open row ${id}`);
+      if (!existing) return reject(feed, `no row ${id}`);
       const envelopeField = Object.keys(change.set).find((key) =>
         envelopeFields.has(key),
       );

@@ -7,6 +7,7 @@ import type {
   FeedChange,
   FeedSubscribeOutput,
   FeedSyncPoint,
+  SessionUpdate,
 } from '@repo/contracts';
 import { type Database, openDatabase } from '@repo/db';
 import { project, session } from '@repo/db/schema';
@@ -14,7 +15,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { type Actor, createActor, fromPromise, setup } from 'xstate';
 import { createSystemService } from '../system';
 import { feedMachine } from './feed-machine';
-import { toFeedRowWrite } from './feed-row';
+import { readWrittenRow, toFeedRowWrite } from './feed-row';
 import { createFeedService } from './feed-service';
 import { writeJobs } from './writer-job';
 import { writerMachine } from './writer-machine';
@@ -55,6 +56,13 @@ const hostMachine = (writer = writerMachine) =>
           epoch: 3,
           maxRevision: 5,
           nextPosition: 5,
+          findWrittenRow: (id: string): SessionUpdate | undefined =>
+            readWrittenRow({
+              database,
+              writer: host.system.get('databaseWriter'),
+              sessionId: 'session-1',
+              id,
+            }),
         },
       },
     ],
@@ -287,6 +295,30 @@ describe('feed.page', () => {
   });
 });
 
+describe('a change to a stored row', () => {
+  beforeEach(() => startHost());
+
+  it('keeps its place', async () => {
+    sendChange({
+      type: 'patch',
+      id: 'message-3#0',
+      set: { messageId: 'plan-3' },
+    });
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(
+      await caller().feed.page({
+        sessionId: 'session-1',
+        direction: 'tail',
+        limit: 2,
+      }),
+    ).toMatchObject({
+      maxRevision: 6,
+      rows: [{ ...message(3), revision: 6, messageId: 'plan-3' }, message(4)],
+    });
+  });
+});
+
 describe('feed.row', () => {
   beforeEach(() => startHost());
 
@@ -313,24 +345,19 @@ describe('feed.row', () => {
 });
 
 describe('feed.subscribe', () => {
-  it('sends every row, then live changes', async () => {
+  it('with no sync point, sends the rows not yet stored, then live changes', async () => {
     startHost();
+    sendChange(openMessage('message-5#0', 'Hel'));
     const updates = await subscribe(null);
 
-    expect(summary(await take(updates, 5))).toEqual([
-      'upsert message-0#0 @1',
-      'upsert message-1#0 @2',
-      'upsert message-2#0 @3',
-      'upsert message-3#0 @4',
-      'upsert message-4#0 @5',
-    ]);
+    expect(summary(await take(updates, 1))).toEqual(['upsert message-5#0 @6']);
 
-    sendChange(openMessage('message-5#0'));
-    sendChange(appendText('message-5#0', 'Hi'));
+    sendChange(appendText('message-5#0', 'lo'));
+    sendChange(openMessage('message-6#0'));
     await vi.advanceTimersByTimeAsync(60);
     expect(summary(await take(updates, 2))).toEqual([
-      'upsert message-5#0 @6',
-      'append message-5#0 +Hi at 0 @7',
+      'append message-5#0 +lo at 3 @7',
+      'upsert message-6#0 @8',
     ]);
   });
 
@@ -379,17 +406,14 @@ describe('feed.subscribe', () => {
     ]);
   });
 
-  it('resets a subscriber from another epoch and sends every row', async () => {
+  it('resets a subscriber from another epoch, then sends the rows not yet stored', async () => {
     startHost();
-    const updates = await subscribe({ epoch: 2, revision: 5 });
+    sendChange(openMessage('message-5#0'));
+    const updates = await subscribe({ epoch: 2, revision: 9 });
 
-    expect(summary(await take(updates, 6))).toEqual([
+    expect(summary(await take(updates, 2))).toEqual([
       'reset',
-      'upsert message-0#0 @1',
-      'upsert message-1#0 @2',
-      'upsert message-2#0 @3',
-      'upsert message-3#0 @4',
-      'upsert message-4#0 @5',
+      'upsert message-5#0 @6',
     ]);
   });
 

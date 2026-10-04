@@ -1,4 +1,4 @@
-import type { FeedChange } from '@repo/contracts';
+import type { FeedChange, SessionUpdate } from '@repo/contracts';
 import {
   type ActorRefFrom,
   assertEvent,
@@ -24,10 +24,13 @@ export interface FeedInput {
   epoch: number;
   maxRevision: number;
   nextPosition: number;
+  // A row that has left memory, as last handed to the database writer.
+  findWrittenRow: (id: string) => SessionUpdate | undefined;
 }
 
-export interface FeedContext extends Feed {
-  epoch: number;
+export interface FeedContext
+  extends Feed,
+    Pick<FeedInput, 'epoch' | 'findWrittenRow'> {
   // Rows changed since the last write, in the order they first changed.
   changedRowIds: string[];
   // Stream events waiting for the next batch.
@@ -41,24 +44,10 @@ export type FeedEvent =
 
 // Raised after `feed.change` is applied, so each region reacts to it once.
 type FeedChangeApplied = { type: 'feed.changeApplied'; settled: boolean };
+type FeedChangeRejected = { type: 'feed.changeRejected'; reason: string };
+type FeedInternalEvent = FeedChangeApplied | FeedChangeRejected;
 
 export type FeedBatch = { type: 'feed.batch'; events: FeedStreamEvent[] };
-
-const changeResult = ({
-  context,
-  event,
-}: {
-  context: FeedContext;
-  event: FeedEvent | FeedChangeApplied;
-}) => {
-  assertEvent(event, 'feed.change');
-  const { sessionId, maxRevision, nextPosition, rows } = context;
-  return applyFeedChange(
-    { sessionId, maxRevision, nextPosition, rows },
-    event.change,
-    event.turnId,
-  );
-};
 
 // Every changed row with the newest revision, as one job for the database writer.
 const rowsJob = ({ context }: { context: FeedContext }) => ({
@@ -82,14 +71,32 @@ export const feedMachine = setup({
   types: {
     input: {} as FeedInput,
     context: {} as FeedContext,
-    events: {} as FeedEvent | FeedChangeApplied,
+    events: {} as FeedEvent | FeedInternalEvent,
     emitted: {} as FeedBatch,
   },
   actions: {
     applyChange: enqueueActions(({ context, event, enqueue }) => {
       assertEvent(event, 'feed.change');
-      const { feed, streamEvents } = changeResult({ context, event });
       const id = changedRowId(event.change);
+      const { sessionId, maxRevision, nextPosition } = context;
+      // A written row comes back with its position, so a later change keeps its place.
+      const written = Object.hasOwn(context.rows, id)
+        ? undefined
+        : context.findWrittenRow(id);
+      const { feed, streamEvents, rejection } = applyFeedChange(
+        {
+          sessionId,
+          maxRevision,
+          nextPosition,
+          rows: written ? { ...context.rows, [id]: written } : context.rows,
+        },
+        event.change,
+        event.turnId,
+      );
+      if (rejection !== null) {
+        enqueue.raise({ type: 'feed.changeRejected', reason: rejection });
+        return;
+      }
       enqueue.assign({
         ...feed,
         changedRowIds: context.changedRowIds.includes(id)
@@ -132,7 +139,6 @@ export const feedMachine = setup({
     },
   },
   guards: {
-    changeRejected: (args) => changeResult(args).rejection !== null,
     changeSettled: ({ event }) =>
       event.type === 'feed.changeApplied' && event.settled,
     hasStreamEvents: ({ context }) => context.streamEvents.length > 0,
@@ -153,21 +159,19 @@ export const feedMachine = setup({
     active: {
       type: 'parallel',
       on: {
-        'feed.change': [
-          {
-            guard: 'changeRejected',
-            actions: [
-              'countRejectedChange',
-              {
-                type: 'log',
-                params: (args) => ({
-                  line: `rejected a change: ${changeResult(args).rejection}`,
-                }),
+        'feed.change': { actions: 'applyChange' },
+        'feed.changeRejected': {
+          actions: [
+            'countRejectedChange',
+            {
+              type: 'log',
+              params: ({ event }) => {
+                assertEvent(event, 'feed.changeRejected');
+                return { line: `rejected a change: ${event.reason}` };
               },
-            ],
-          },
-          { actions: 'applyChange' },
-        ],
+            },
+          ],
+        },
         // Emits the waiting batch and writes every changed row, open or settled.
         'feed.flush': {
           target: 'flushed',

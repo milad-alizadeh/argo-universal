@@ -12,11 +12,8 @@ import { and, asc, desc, eq, gt, lt } from 'drizzle-orm';
 import type { ActorRefFrom } from 'xstate';
 import type { FeedStreamEvent } from './feed-change';
 import type { FeedActorRef } from './feed-machine';
-import { fromFeedRow } from './feed-row';
-import type { WriterJob } from './writer-job';
+import { fromFeedRow, queuedFeedRows, readWrittenRow } from './feed-row';
 import type { writerMachine } from './writer-machine';
-
-type FeedRowsJob = Extract<WriterJob, { type: 'feedRows' }>;
 
 export interface FeedDeps {
   database: Database;
@@ -54,10 +51,7 @@ export function createFeedService(deps: FeedDeps): FeedService {
 
   // Rows the database does not hold yet: queued in the writer, then held by the feed actor.
   const readUnsaved = (sessionId: string) => {
-    const jobs = (deps.findWriter()?.getSnapshot().context.queue ?? []).filter(
-      (job): job is FeedRowsJob =>
-        job.type === 'feedRows' && job.sessionId === sessionId,
-    );
+    const jobs = queuedFeedRows(deps.findWriter(), sessionId);
     const feed = deps.findFeed(sessionId)?.getSnapshot().context;
     return {
       rows: [
@@ -111,15 +105,10 @@ export function createFeedService(deps: FeedDeps): FeedService {
 
   const row = ({ sessionId, id }: { sessionId: string; id: string }) => {
     readSession(sessionId);
-    const stored = database
-      .select()
-      .from(feedRow)
-      .where(and(eq(feedRow.sessionId, sessionId), eq(feedRow.id, id)))
-      .get();
-    const newest = newestById([
-      ...(stored ? [fromFeedRow(sessionId, stored)] : []),
-      ...readUnsaved(sessionId).rows.filter((unsaved) => unsaved.id === id),
-    ]).get(id);
+    // The feed actor holds the newest version of a row it has in memory.
+    const newest =
+      deps.findFeed(sessionId)?.getSnapshot().context.rows[id] ??
+      readWrittenRow({ database, writer: deps.findWriter(), sessionId, id });
     if (!newest)
       throw new TRPCError({
         code: 'NOT_FOUND',
@@ -128,7 +117,7 @@ export function createFeedService(deps: FeedDeps): FeedService {
     return newest;
   };
 
-  // Sends every row changed after `after`, then the feed actor's batches; a new epoch first sends `reset`.
+  // Sends every row changed after `after`, then the feed actor's batches. With no sync point, or after `reset` for a new epoch, it skips stored rows, which the App pages.
   async function* subscribe(
     { sessionId, after }: FeedSubscribeInput,
     signal: AbortSignal | undefined,
@@ -147,7 +136,7 @@ export function createFeedService(deps: FeedDeps): FeedService {
 
     try {
       const reset = after !== null && after.epoch !== epoch;
-      const from = after === null || reset ? 0 : after.revision;
+      const from = after === null || reset ? maxRevision : after.revision;
       const unsaved = readUnsaved(sessionId);
       const stored = database
         .select()

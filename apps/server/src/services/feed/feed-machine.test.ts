@@ -17,6 +17,7 @@ import {
 } from 'xstate/graph';
 import type { FeedStreamEvent } from './feed-change';
 import { feedMachine } from './feed-machine';
+import { fromFeedRow } from './feed-row';
 import type { WriterJob } from './writer-job';
 
 // Spec 0002 section 8: a batch every 60 ms, and open rows written after 1 second.
@@ -47,7 +48,18 @@ const input = {
   epoch: 2,
   maxRevision: 0,
   nextPosition: 0,
+  // Rows the mocked writer received come back to a later change.
+  findWrittenRow: (id: string) => {
+    const row = jobs
+      .flatMap((job) => job.rows)
+      .filter((written) => written.id === id)
+      .at(-1);
+    return row && fromFeedRow('session-1', row);
+  },
 };
+
+// xstate/graph runs no actions, so the model's writer keeps nothing to give back; the example tests cover written rows.
+const modelInput = { ...input, findWrittenRow: () => undefined };
 
 const change = (feedChange: FeedChange) =>
   ({ type: 'feed.change', change: feedChange, turnId: 'turn-1' }) as const;
@@ -104,7 +116,7 @@ const events = [
 const graphLogic = machine as unknown as ActorLogic<
   FeedSnapshot,
   FeedMachineEvent,
-  typeof input
+  typeof modelInput
 >;
 
 // The message's place, and the state value; `via` names how a vertex was reached.
@@ -129,7 +141,7 @@ const serializeWith =
   };
 
 const modelOptions = {
-  input,
+  input: modelInput,
   events,
   // A done actor ignores events, so the model must not send any.
   filterEvents: (snapshot: FeedSnapshot, event: FeedMachineEvent) =>
@@ -157,7 +169,7 @@ const executors: Record<
   EventExecutor<FeedSnapshot, FeedMachineEvent>
 > = {
   'xstate.init': () => {
-    feed = createActor(machine, { input }).start();
+    feed = createActor(machine, { input: modelInput }).start();
     feed.on('feed.batch', ({ events: batch }) => {
       batches.push(batch);
     });
@@ -397,11 +409,40 @@ describe('feed', () => {
     expect(feed.getSnapshot().status).toBe('done');
   });
 
+  it('brings a written row back for a later change, in its place', () => {
+    feed.send(openTool);
+    feed.send(openMessage);
+    feed.send(settleMessage);
+    feed.send(
+      change({
+        type: 'patch',
+        id: 'message-1#0',
+        set: { messageId: 'plan-1' },
+      }),
+    );
+
+    expect(jobs.at(-1)).toEqual(
+      expect.objectContaining({
+        rows: [
+          expect.objectContaining({
+            id: 'message-1#0',
+            position: 1,
+            revision: 4,
+            state: 'settled',
+            turnId: 'turn-1',
+          }),
+        ],
+        maxRevision: 4,
+      }),
+    );
+    expect(feed.getSnapshot().context.nextPosition).toBe(2);
+  });
+
   it('logs and counts a rejected change, and streams and writes nothing for it', () => {
     feed.send(appendText);
     vi.advanceTimersByTime(storeDelayMs);
 
-    expect(logLines).toEqual(['rejected a change: no open row message-1#0']);
+    expect(logLines).toEqual(['rejected a change: no row message-1#0']);
     expect(feed.getSnapshot().context.rejectedChanges).toBe(1);
     expect(batches).toEqual([]);
     expect(jobs).toEqual([]);

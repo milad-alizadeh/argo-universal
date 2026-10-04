@@ -1,5 +1,13 @@
 import { SessionUpdate } from '@repo/contracts';
-import type { FeedRowWrite } from './writer-job';
+import type { Database } from '@repo/db';
+import { feedRow } from '@repo/db/schema';
+import { and, eq } from 'drizzle-orm';
+import type { ActorRefFrom } from 'xstate';
+import type { FeedRowWrite, WriterJob } from './writer-job';
+import type { writerMachine } from './writer-machine';
+
+type WriterRef = ActorRefFrom<typeof writerMachine>;
+type FeedRowsJob = Extract<WriterJob, { type: 'feedRows' }>;
 
 // The shape version of `payload` in the rows this Server writes.
 export const payloadVersion = 1;
@@ -52,4 +60,40 @@ export function fromFeedRow(
     state: row.state,
     sessionUpdate: row.sessionUpdate,
   });
+}
+
+// The jobs of a Session's rows that the database writer holds until they commit.
+export function queuedFeedRows(
+  writer: WriterRef | undefined,
+  sessionId: string,
+): FeedRowsJob[] {
+  return (writer?.getSnapshot().context.queue ?? []).filter(
+    (job): job is FeedRowsJob =>
+      job.type === 'feedRows' && job.sessionId === sessionId,
+  );
+}
+
+// The newest version of a row the feed actor handed to the database writer, queued or stored.
+export function readWrittenRow({
+  database,
+  writer,
+  sessionId,
+  id,
+}: {
+  database: Database;
+  writer: WriterRef | undefined;
+  sessionId: string;
+  id: string;
+}): SessionUpdate | undefined {
+  const queued = queuedFeedRows(writer, sessionId)
+    .flatMap((job) => job.rows)
+    .filter((row) => row.id === id)
+    .at(-1);
+  if (queued) return fromFeedRow(sessionId, queued);
+  const stored = database
+    .select()
+    .from(feedRow)
+    .where(and(eq(feedRow.sessionId, sessionId), eq(feedRow.id, id)))
+    .get();
+  return stored && fromFeedRow(sessionId, stored);
 }

@@ -260,6 +260,26 @@ const accepted: Accepted[] = [
       },
     ],
   },
+  {
+    name: 'a patch to a settled row, which keeps its place',
+    feed: feedWith(message({ state: 'settled' })),
+    change: { type: 'patch', id: 'message-1#0', set: { messageId: 'plan-1' } },
+    turnId: 'turn-2',
+    feedAfter: {
+      ...feedWith(
+        message({ revision: 9, state: 'settled', messageId: 'plan-1' }),
+      ),
+      maxRevision: 9,
+    },
+    streamEvents: [
+      {
+        type: 'row.patch',
+        rev: 9,
+        id: 'message-1#0',
+        set: { messageId: 'plan-1' },
+      },
+    ],
+  },
 ];
 
 interface Rejected {
@@ -289,12 +309,6 @@ const rejected: Rejected[] = [
     rejection: /^row message-1#0 is agent_message, not tool_call_update$/,
   },
   {
-    name: 'a change to a settled row',
-    feed: feedWith(message({ state: 'settled' })),
-    change: { type: 'upsert', update: update(message()) },
-    rejection: /^row message-1#0 is settled$/,
-  },
-  {
     name: 'an append to a row the feed does not hold',
     feed: feedWith(message()),
     change: {
@@ -303,7 +317,7 @@ const rejected: Rejected[] = [
       field: 'content.0.text',
       text: 'x',
     },
-    rejection: /^no open row message-2#0$/,
+    rejection: /^no row message-2#0$/,
   },
   {
     name: 'an append to a path that is not a string',
@@ -337,7 +351,7 @@ const rejected: Rejected[] = [
     name: 'a patch to a row the feed does not hold',
     feed: feedWith(),
     change: { type: 'patch', id: 'tool-1', set: { status: 'completed' } },
-    rejection: /^no open row tool-1$/,
+    rejection: /^no row tool-1$/,
   },
   {
     name: 'a patch of an envelope field',
