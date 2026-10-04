@@ -273,3 +273,12 @@ These change spec 0001 section 4:
 
 1. The App Connection (section 11) and the Electron Server connection (section 10). They replace scaffold code, so each is checked by the existing e2e tests.
 2. Milestone 1, in order: the database writer, the Feed actor, recovery, the Agent events and a mock agent machine, the Session machine, the registry, and the Engine changes. Then each adapter.
+
+## 15. Development machine inspection
+
+`packages/machine-log/src/inspector-machine.ts` owns each Node process's optional connection to the local Stately relay. It is enabled only in development by `ARGO_MACHINE_INSPECT=1`; `pnpm dev:inspect` starts the relay and normal development tasks together.
+
+- `active.connecting` invokes a WebSocket transport and waits up to 1 second (`connectionLimit`) for `transport.opened`, then enters `active.connected`. Both states share the same transport.
+- A connection failure or loss sends `transport.failed`, closes that transport, and enters `backingOff`. After 500 ms (`retryDelay`), it returns to `active`, up to 20 attempts. Exhaustion enters `unavailable` (final) and reports once. JSONL logging continues independently.
+- Inspection records wait in a bounded queue of 200 while disconnected and flush on connection. Connected records go directly to the official inspector formatter.
+- `inspection.stop` enters `stopped` (final). Stopping the actor also closes its transport and cancels its timers. The diagnostic machine's own actor is not inspected.

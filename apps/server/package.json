@@ -6,6 +6,7 @@
   "scripts": {
     "check-types": "tsc --noEmit",
     "dev": "tsx src/main.ts --watch",
+    "inspect": "tsx src/inspect-machines.ts",
     "start": "tsx src/main.ts",
     "test": "vitest run"
   },
@@ -14,6 +15,8 @@
     "@repo/api": "workspace:*",
     "@repo/contracts": "workspace:*",
     "@repo/db": "workspace:*",
+    "@repo/machine-log": "workspace:*",
+    "@statelyai/inspect": "catalog:",
     "@trpc/server": "catalog:",
     "hono": "catalog:",
     "tsx": "catalog:",

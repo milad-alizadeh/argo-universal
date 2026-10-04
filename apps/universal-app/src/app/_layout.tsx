@@ -1,6 +1,7 @@
 import '../../global.css';
 
 import { AppProviders, useConnection } from '@repo/client';
+import { createBrowserMachineInspection } from '@repo/machine-log/browser';
 import { registerDevMenuItems } from 'expo-dev-client';
 import { router, Stack } from 'expo-router';
 import { ThemeProvider } from 'expo-router/react-navigation';
@@ -42,11 +43,19 @@ const serverUrl =
   process.env.EXPO_PUBLIC_ARGO_SERVER_URL ??
   'ws://127.0.0.1:7337';
 
+const inspection = createBrowserMachineInspection({
+  enabled: __DEV__ && process.env.EXPO_PUBLIC_ARGO_MACHINE_LOG === '1',
+  inspectEnabled:
+    __DEV__ && process.env.EXPO_PUBLIC_ARGO_MACHINE_INSPECT === '1',
+  processName: 'app',
+  writeLine: (line) => console.log(line.trimEnd()),
+});
+
 export default function RootLayout() {
   const { theme } = useUniwind();
 
   return (
-    <AppProviders serverUrl={serverUrl}>
+    <AppProviders serverUrl={serverUrl} inspect={inspection.inspect}>
       <ForegroundSignal />
       <ThemeProvider value={NAV_THEME[theme ?? 'light']}>
         <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
