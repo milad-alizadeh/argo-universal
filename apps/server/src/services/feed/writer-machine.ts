@@ -17,6 +17,12 @@ export type WriterEvent =
   | { type: 'writer.write'; job: WriterJob }
   | { type: 'writer.drain' };
 
+// The jobs `takeBatch` counted, oldest first.
+const batchInput = ({ context }: { context: WriterContext }) => ({
+  database: context.database,
+  jobs: context.queue.slice(0, context.batchSize),
+});
+
 export const writerMachine = setup({
   types: {
     input: {} as WriterInput,
@@ -40,7 +46,7 @@ export const writerMachine = setup({
       queue: ({ context }) => context.queue.slice(context.batchSize),
       batchSize: 0,
     }),
-    keepBatch: assign({ batchSize: 0 }),
+    releaseBatch: assign({ batchSize: 0 }),
     log: (_, params: { line: string }) => {
       console.error(`databaseWriter: ${params.line}`);
     },
@@ -69,10 +75,7 @@ export const writerMachine = setup({
       invoke: {
         id: 'writeBatch',
         src: 'writeBatch',
-        input: ({ context }) => ({
-          database: context.database,
-          jobs: context.queue.slice(0, context.batchSize),
-        }),
+        input: batchInput,
         onDone: [
           {
             guard: and(['drainRequested', 'hasJobsAfterBatch']),
@@ -88,6 +91,7 @@ export const writerMachine = setup({
           },
           { target: 'idle', actions: 'dropBatch' },
         ],
+        // While draining, a failed batch is tried once more at once, not after `writeRetryDelay`.
         onError: [
           {
             guard: 'drainRequested',
@@ -99,7 +103,7 @@ export const writerMachine = setup({
                   line: `could not write, draining: ${String(event.error)}`,
                 }),
               },
-              'keepBatch',
+              'releaseBatch',
             ],
           },
           {
@@ -111,7 +115,7 @@ export const writerMachine = setup({
                   line: `could not write, keeping ${context.queue.length} jobs to retry: ${String(event.error)}`,
                 }),
               },
-              'keepBatch',
+              'releaseBatch',
             ],
           },
         ],
@@ -131,10 +135,7 @@ export const writerMachine = setup({
       invoke: {
         id: 'writeBatch',
         src: 'writeBatch',
-        input: ({ context }) => ({
-          database: context.database,
-          jobs: context.queue.slice(0, context.batchSize),
-        }),
+        input: batchInput,
         onDone: [
           {
             guard: 'hasJobsAfterBatch',
@@ -154,7 +155,7 @@ export const writerMachine = setup({
                 line: `could not write while draining, lost ${context.queue.length} jobs: ${String(event.error)}\n${context.queue.map(describeJob).join('\n')}`,
               }),
             },
-            'keepBatch',
+            'releaseBatch',
           ],
         },
       },
