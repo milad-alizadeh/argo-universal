@@ -72,19 +72,12 @@ const initFrame = () => ({
   session_id: sessionId,
 });
 
-// The CLI's `result`, written when a recorded Turn lacks one.
-const resultFrame = (turn: Frame[]) => ({
+// The fields every `result` frame carries, zeroed because a mock spends nothing.
+const resultFields = () => ({
   type: 'result',
-  subtype: 'success',
-  is_error: false,
   duration_ms: 0,
   duration_api_ms: 0,
   num_turns: 1,
-  result:
-    assistantFrames(turn)
-      .flatMap((frame) => frame.message.content)
-      .findLast((block) => block.text !== undefined)?.text ?? '',
-  stop_reason: 'end_turn',
   total_cost_usd: 0,
   usage: {
     input_tokens: 0,
@@ -96,6 +89,27 @@ const resultFrame = (turn: Frame[]) => ({
   permission_denials: [],
   uuid: randomUUID(),
   session_id: sessionId,
+});
+
+// The CLI's `result`, written when a recorded Turn lacks one.
+const resultFrame = (turn: Frame[]) => ({
+  ...resultFields(),
+  subtype: 'success',
+  is_error: false,
+  result:
+    assistantFrames(turn)
+      .flatMap((frame) => frame.message.content)
+      .findLast((block) => block.text !== undefined)?.text ?? '',
+  stop_reason: 'end_turn',
+});
+
+// Ends a prompt past the recording's last Turn as a failed Turn, which a crash never writes.
+const noTurnFrame = (turnNumber: number) => ({
+  ...resultFields(),
+  subtype: 'error_during_execution',
+  is_error: true,
+  errors: [`The recording has no Turn ${turnNumber}.`],
+  stop_reason: null,
 });
 
 // The answer to the SDK's `initialize`, with no commands, agents or models of its own.
@@ -116,8 +130,8 @@ const isInit = (frame: Frame) =>
 function playTurn() {
   const turn = turns[turnIndex++];
   if (turn === undefined) {
-    process.stderr.write(`The recording has no Turn ${turnIndex}.\n`);
-    process.exit(1);
+    send(noTurnFrame(turnIndex));
+    return;
   }
   if (!turn.some(isInit)) send(initFrame());
   const crashAfter = environment.exitMidTurn
@@ -131,13 +145,18 @@ serveJsonLines((line) => {
   const input = Input.parse(line);
   if (input.type === 'user') return playTurn();
   if (input.type !== 'control_request') return;
-  send({
-    type: 'control_response',
-    response: {
-      subtype: 'success',
-      request_id: input.request_id,
-      response:
-        input.request?.subtype === 'initialize' ? initializeResponse : {},
-    },
-  });
+  const subtype = input.request?.subtype;
+  const response =
+    subtype === 'initialize'
+      ? {
+          subtype: 'success',
+          request_id: input.request_id,
+          response: initializeResponse,
+        }
+      : {
+          subtype: 'error',
+          request_id: input.request_id,
+          error: `The recording does not answer ${subtype}.`,
+        };
+  send({ type: 'control_response', response });
 });

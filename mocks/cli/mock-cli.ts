@@ -63,7 +63,7 @@ export const send = (message: unknown) =>
 
 let crashed = false;
 
-// Reads one JSON message per stdin line, and exits when the client closes stdin.
+// Reads one JSON message per stdin line, and exits when the caller closes stdin.
 export function serveJsonLines(handle: (message: unknown) => void) {
   createInterface({ input: process.stdin })
     .on('line', (line) => {
@@ -74,8 +74,7 @@ export function serveJsonLines(handle: (message: unknown) => void) {
     });
 }
 
-// Sends a recorded Turn. With `crashAfter`, exits with code 1 after the first frame it matches.
-// Returns whether the Turn was sent in full.
+// Sends a recorded Turn, or with `crashAfter` exits with code 1 after the first frame it matches.
 export function replayTurn<Frame>(
   frames: Frame[],
   crashAfter: ((frame: Frame) => boolean) | null,

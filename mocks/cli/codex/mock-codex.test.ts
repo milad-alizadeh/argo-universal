@@ -1,32 +1,44 @@
 import { execFile } from 'node:child_process';
-import { readdirSync, readFileSync } from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { z } from 'zod';
 import { startLineProcess } from '../line-process.ts';
 import type { MockCliOptions } from '../mock-cli.ts';
-import { readRecording } from '../recording.ts';
+import {
+  findRecording,
+  readRecording,
+  recordingFiles,
+  recordingVersion,
+} from '../recording.ts';
 import { writeMockCodex } from './write-mock-codex.ts';
 
-type RecordedMessage = {
-  method: string;
-  params: { threadId: string; turn?: { id: string } };
-};
+const PRODUCER = 'codex-app-server';
+const RECORDINGS = path.join(import.meta.dirname, 'recordings');
+const VERSION = recordingVersion(RECORDINGS);
 
-const recorded = (name: string) =>
-  JSON.parse(
-    readFileSync(
-      path.join(import.meta.dirname, 'recordings/0.157.0', name),
-      'utf8',
-    ),
-  ).payload;
+const RecordedTurns = z.object({
+  messages: z.array(
+    z.looseObject({
+      method: z.string(),
+      params: z.looseObject({
+        threadId: z.string(),
+        turn: z.looseObject({ id: z.string() }).optional(),
+      }),
+      emittedAtMs: z.number(),
+    }),
+  ),
+});
+
+const recordedPayload = (name: string) =>
+  readRecording(findRecording(RECORDINGS, name), PRODUCER).payload;
 
 // The wire messages of a recording, without the time each was captured.
-const wireMessages = (name: string): RecordedMessage[] =>
-  recorded(name).messages.map(
-    ({ emittedAtMs: _, ...message }: { emittedAtMs: number }) => message,
+const wireMessages = (name: string) =>
+  RecordedTurns.parse(recordedPayload(name)).messages.map(
+    ({ emittedAtMs: _, ...message }) => message,
   );
 
 let directory: string;
@@ -48,17 +60,26 @@ const startAppServer = async (options: Partial<MockCliOptions> = {}) => {
   return codex;
 };
 
-describe('codex recordings', () => {
-  const folder = path.join(import.meta.dirname, 'recordings/0.157.0');
+const startTurn = async (
+  codex: Awaited<ReturnType<typeof startAppServer>>,
+  threadId: string | undefined,
+) => {
+  codex.send({ id: 2, method: 'thread/start', params: {} });
+  expect(await codex.next()).toEqual({
+    id: 2,
+    result: { thread: { id: threadId } },
+  });
+  codex.send({
+    id: 3,
+    method: 'turn/start',
+    params: { threadId, input: [{ type: 'text', text: 'Go.' }] },
+  });
+};
 
-  it.each(readdirSync(folder).filter((name) => /\.jsonl?$/.test(name)))(
-    '%s reads as a recording of its folder version',
-    (name) => {
-      expect(
-        readRecording(path.join(folder, name), 'codex-app-server').version,
-      ).toBe('0.157.0');
-    },
-  );
+describe('codex recordings', () => {
+  it.each(recordingFiles(RECORDINGS))('%s reads as a recording', (file) => {
+    expect(readRecording(file, PRODUCER).version).toBe(VERSION);
+  });
 });
 
 describe('mock Codex CLI', () => {
@@ -69,7 +90,7 @@ describe('mock Codex CLI', () => {
 
     const { stdout } = await promisify(execFile)(executable, ['--version']);
 
-    expect(stdout).toBe('codex-cli 0.157.0\n');
+    expect(stdout).toBe(`codex-cli ${VERSION}\n`);
   });
 
   it('refuses a recording it does not have', async () => {
@@ -85,36 +106,48 @@ describe('mock Codex CLI', () => {
 
     expect(await codex.next()).toEqual({
       id: 2,
-      result: recorded('model-list.json'),
+      result: recordedPayload('model-list'),
     });
     codex.close();
     expect(await codex.exited).toBe(0);
   });
 
-  it('replays the recorded Turn after turn/start', async () => {
-    const messages = wireMessages('file-change.json');
-    const threadId = messages[0]?.params.threadId;
+  it.each(['file-change', 'reply'])(
+    'replays %s after turn/start',
+    async (recording) => {
+      const messages = wireMessages(recording);
+      const started = messages.find(
+        (message) => message.method === 'turn/started',
+      );
+      const codex = await startAppServer({ recording });
+
+      await startTurn(codex, started?.params.threadId);
+      const output = await codex.until(
+        (message) => message.method === 'turn/completed',
+      );
+
+      expect(output[0]).toEqual({
+        id: 3,
+        result: { turn: started?.params.turn },
+      });
+      expect(output.slice(1)).toEqual(messages);
+      codex.close();
+      expect(await codex.exited).toBe(0);
+    },
+  );
+
+  it('answers turn/start past the last Turn with an error, not a crash', async () => {
+    const messages = wireMessages('file-change');
     const codex = await startAppServer();
 
-    codex.send({ id: 2, method: 'thread/start', params: { cwd: directory } });
-    expect(await codex.next()).toEqual({
-      id: 2,
-      result: { thread: { id: threadId } },
-    });
-    codex.send({
-      id: 3,
-      method: 'turn/start',
-      params: { threadId, input: [{ type: 'text', text: 'Edit the files.' }] },
-    });
-    const output = await codex.until(
-      (message) => message.method === 'turn/completed',
-    );
+    await startTurn(codex, messages[0]?.params.threadId);
+    await codex.until((message) => message.method === 'turn/completed');
+    codex.send({ id: 4, method: 'turn/start', params: { input: [] } });
 
-    expect(output[0]).toMatchObject({
-      id: 3,
-      result: { turn: { id: messages[0]?.params.turn?.id } },
+    expect(await codex.next()).toEqual({
+      id: 4,
+      error: { code: -32603, message: 'The recording has no Turn 2.' },
     });
-    expect(output.slice(1)).toEqual(messages);
     codex.close();
     expect(await codex.exited).toBe(0);
   });
@@ -122,19 +155,12 @@ describe('mock Codex CLI', () => {
   it.each(['file-change', 'reply'])(
     'exits right after turn/started in %s, to stand in for a crash',
     async (recording) => {
-      const messages = wireMessages(`${recording}.json`);
-      const threadId = messages[0]?.params.threadId;
+      const messages = wireMessages(recording);
       const codex = await startAppServer({ recording, exitMidTurn: true });
 
-      codex.send({ id: 2, method: 'thread/start', params: {} });
-      await codex.next();
-      codex.send({
-        id: 3,
-        method: 'turn/start',
-        params: { threadId, input: [] },
-      });
+      await startTurn(codex, messages[0]?.params.threadId);
 
-      expect(await codex.exited).not.toBe(0);
+      expect(await codex.exited).toBe(1);
       const started = messages.findIndex(
         (message) => message.method === 'turn/started',
       );
@@ -142,16 +168,19 @@ describe('mock Codex CLI', () => {
     },
   );
 
-  it('rejects a method it has no answer for', async () => {
-    const codex = await startAppServer();
+  it.each(['thread/fork', 'turn/interrupt'])(
+    'rejects %s, which the recording cannot answer',
+    async (method) => {
+      const codex = await startAppServer();
 
-    codex.send({ id: 2, method: 'thread/fork', params: {} });
+      codex.send({ id: 2, method, params: {} });
 
-    expect(await codex.next()).toMatchObject({
-      id: 2,
-      error: { code: -32601 },
-    });
-    codex.close();
-    expect(await codex.exited).toBe(0);
-  });
+      expect(await codex.next()).toMatchObject({
+        id: 2,
+        error: { code: -32601 },
+      });
+      codex.close();
+      expect(await codex.exited).toBe(0);
+    },
+  );
 });

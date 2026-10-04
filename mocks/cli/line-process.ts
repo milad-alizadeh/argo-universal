@@ -13,17 +13,27 @@ export function startLineProcess(executable: string, args: string[]) {
   let readCount = 0;
   let closed = false;
   let stderrText = '';
+  let failure: Error | null = null;
+  const fail = (error: Error) => {
+    failure ??= error;
+    notify();
+  };
   const notify = () => {
     for (const listener of listeners) listener();
   };
 
+  child.on('error', fail);
   child.stdin.on('error', () => {});
   child.stderr.on('data', (chunk) => {
     stderrText += chunk;
   });
   createInterface({ input: child.stdout }).on('line', (line) => {
-    output.push(LineMessage.parse(JSON.parse(line)));
-    notify();
+    try {
+      output.push(LineMessage.parse(JSON.parse(line)));
+      notify();
+    } catch (error) {
+      fail(new Error(`Unreadable line: ${line}`, { cause: error }));
+    }
   });
   // `close` waits for stdout to drain, so `output` is complete once it resolves.
   const exited = new Promise<number | null>((resolve) =>
@@ -38,7 +48,10 @@ export function startLineProcess(executable: string, args: string[]) {
     new Promise<Value>((resolve, reject) => {
       const check = () => {
         const value = take();
-        if (value !== undefined) {
+        if (failure !== null) {
+          listeners.delete(check);
+          reject(failure);
+        } else if (value !== undefined) {
           listeners.delete(check);
           resolve(value);
         } else if (closed) {

@@ -1,13 +1,9 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { z } from 'zod';
 
 // What one recording holds. Its folder names the CLI version it was recorded from.
-export type Recording = {
-  version: string;
-  recordedAt: string | null;
-  payload: unknown;
-};
+export type Recording = { version: string; payload: unknown };
 
 const envelope = (producer: string, version: string) =>
   z.object({
@@ -26,7 +22,7 @@ export function readRecording(file: string, producer: string): Recording {
       .trim()
       .split('\n')
       .map((line) => JSON.parse(line));
-    return { version, recordedAt: null, payload };
+    return { version, payload };
   }
   const tagged = envelope(producer, version).safeParse(JSON.parse(text));
   if (!tagged.success) {
@@ -37,22 +33,40 @@ export function readRecording(file: string, producer: string): Recording {
       cause: tagged.error,
     });
   }
-  const { recordedAt, payload } = tagged.data;
-  return { version, recordedAt, payload };
+  return { version, payload: tagged.data.payload };
 }
 
-// The file of the recording called `name` in `recordings/<version>/`, which holds one version.
+const RECORDING_FILE = /\.jsonl?$/;
+
+// The one version folder in `recordings/`; new recordings replace the old version rather than join it.
+export function recordingVersion(recordings: string): string {
+  const versions = readdirSync(recordings, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name);
+  const [version] = versions;
+  if (version === undefined || versions.length > 1)
+    throw new Error(
+      `${recordings} must hold one version folder, not ${versions.length}.`,
+    );
+  return version;
+}
+
+// Every recording file in `recordings/<version>/`.
+export function recordingFiles(recordings: string): string[] {
+  const folder = path.join(recordings, recordingVersion(recordings));
+  return readdirSync(folder)
+    .filter((name) => RECORDING_FILE.test(name))
+    .map((name) => path.join(folder, name));
+}
+
+// The file of the recording called `name` in `recordings/<version>/`.
 export function findRecording(recordings: string, name: string): string {
-  const versions = readdirSync(recordings, { withFileTypes: true }).filter(
-    (entry) => entry.isDirectory(),
+  const file = recordingFiles(recordings).find(
+    (candidate) => path.parse(candidate).name === name,
   );
-  for (const version of versions) {
-    for (const extension of ['.json', '.jsonl']) {
-      const file = path.join(recordings, version.name, `${name}${extension}`);
-      if (existsSync(file)) return file;
-    }
-  }
-  throw new Error(`No recording named ${name} in ${recordings}.`);
+  if (file === undefined)
+    throw new Error(`No recording named ${name} in ${recordings}.`);
+  return file;
 }
 
 // Splits recorded frames into Turns, each ending at the frame that ends a Turn.

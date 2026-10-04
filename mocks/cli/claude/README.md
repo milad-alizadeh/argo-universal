@@ -11,12 +11,13 @@ const crashing = await writeMockClaude(directory, { recording: 'task-plan', exit
 ```
 
 - `--version` prints the version of the recordings folder.
-- The mock answers `initialize` with no commands, agents or models. It acknowledges every other control request.
+- The mock answers `initialize` with no commands, agents or models. It rejects every other control request, such as `interrupt`, with an error.
 - A `result` frame ends a Turn. A recording without one is a single Turn.
+- A prompt past the last recorded Turn gets an error `result`, so it never looks like a crash.
 
 ## Recordings
 
-`recordings/<claude-cli version>/<name>.jsonl` holds stdout frames, one per line. A `.json` recording carries `producer`, `version`, `recordedAt` and the frames in `payload`.
+`recordings/` holds one `<claude-cli version>` folder. `<name>.jsonl` holds stdout frames, one per line. A `.json` recording carries `producer`, `version`, `recordedAt` and the frames in `payload`.
 
 | Recording | What it holds |
 |---|---|

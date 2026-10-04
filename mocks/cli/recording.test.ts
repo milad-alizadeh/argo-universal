@@ -2,7 +2,12 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { readRecording, splitTurns } from './recording.ts';
+import {
+  findRecording,
+  readRecording,
+  recordingVersion,
+  splitTurns,
+} from './recording.ts';
 
 let directory: string;
 
@@ -34,7 +39,6 @@ describe('readRecording', () => {
 
     expect(readRecording(file, 'agent-cli')).toEqual({
       version: '1.2.3',
-      recordedAt: '2026-10-01',
       payload: [{ type: 'frame' }],
     });
   });
@@ -44,7 +48,6 @@ describe('readRecording', () => {
 
     expect(readRecording(file, 'agent-cli')).toEqual({
       version: '1.2.3',
-      recordedAt: null,
       payload: [{ type: 'a' }, { type: 'b' }],
     });
   });
@@ -71,6 +74,27 @@ describe('readRecording', () => {
     expect(() => readRecording(file, 'agent-cli')).toThrow(
       /turn\.json.*recordedAt/,
     );
+  });
+});
+
+describe('findRecording', () => {
+  it('finds a recording by name in the version folder, past stray files', async () => {
+    await writeFile(path.join(directory, '.DS_Store'), '');
+    const file = await write('turn.jsonl', '{"type":"a"}\n');
+    await write('notes.txt', '');
+
+    expect(findRecording(directory, 'turn')).toBe(file);
+    expect(recordingVersion(directory)).toBe('1.2.3');
+  });
+
+  it('refuses a name with no recording', () => {
+    expect(() => findRecording(directory, 'missing')).toThrow(/missing/);
+  });
+
+  it('refuses a second version folder', async () => {
+    await mkdir(path.join(directory, '1.10.0'));
+
+    expect(() => recordingVersion(directory)).toThrow(/one version folder/);
   });
 });
 

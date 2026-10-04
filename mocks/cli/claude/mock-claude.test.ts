@@ -1,22 +1,31 @@
 import { execFile } from 'node:child_process';
-import { readdirSync, readFileSync } from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { z } from 'zod';
 import { startLineProcess } from '../line-process.ts';
-import { readRecording } from '../recording.ts';
+import {
+  findRecording,
+  readRecording,
+  recordingFiles,
+  recordingVersion,
+} from '../recording.ts';
 import { writeMockClaude } from './write-mock-claude.ts';
 
-const recorded = (name: string) =>
-  readFileSync(
-    path.join(import.meta.dirname, 'recordings/2.1.286', name),
-    'utf8',
-  )
-    .trim()
-    .split('\n')
-    .map((line) => JSON.parse(line));
+const PRODUCER = 'claude-cli';
+const RECORDINGS = path.join(import.meta.dirname, 'recordings');
+const VERSION = recordingVersion(RECORDINGS);
+
+const RecordedFrames = z.array(
+  z.looseObject({ type: z.string(), session_id: z.string().optional() }),
+);
+
+const recordedFrames = (name: string) =>
+  RecordedFrames.parse(
+    readRecording(findRecording(RECORDINGS, name), PRODUCER).payload,
+  );
 
 const prompt = (text: string) => ({
   type: 'user',
@@ -42,17 +51,16 @@ beforeEach(async () => {
 
 afterEach(() => rm(directory, { recursive: true, force: true }));
 
-describe('claude recordings', () => {
-  const folder = path.join(import.meta.dirname, 'recordings/2.1.286');
-
-  it.each(readdirSync(folder).filter((name) => /\.jsonl?$/.test(name)))(
-    '%s reads as a recording of its folder version',
-    (name) => {
-      expect(readRecording(path.join(folder, name), 'claude-cli').version).toBe(
-        '2.1.286',
-      );
-    },
+const startClaude = async (recording: string, exitMidTurn = false) =>
+  startLineProcess(
+    await writeMockClaude(directory, { recording, exitMidTurn }),
+    SDK_FLAGS,
   );
+
+describe('claude recordings', () => {
+  it.each(recordingFiles(RECORDINGS))('%s reads as a recording', (file) => {
+    expect(readRecording(file, PRODUCER).version).toBe(VERSION);
+  });
 });
 
 describe('mock Claude CLI', () => {
@@ -63,7 +71,7 @@ describe('mock Claude CLI', () => {
 
     const { stdout } = await promisify(execFile)(executable, ['--version']);
 
-    expect(stdout).toBe('2.1.286 (Claude Code)\n');
+    expect(stdout).toBe(`${VERSION} (Claude Code)\n`);
   });
 
   it('refuses a recording it does not have', async () => {
@@ -73,10 +81,7 @@ describe('mock Claude CLI', () => {
   });
 
   it('answers the SDK initialize request', async () => {
-    const claude = startLineProcess(
-      await writeMockClaude(directory, { recording: 'task-plan' }),
-      SDK_FLAGS,
-    );
+    const claude = await startClaude('task-plan');
 
     claude.send({
       type: 'control_request',
@@ -92,47 +97,74 @@ describe('mock Claude CLI', () => {
     expect(await claude.exited).toBe(0);
   });
 
-  it('replays the recorded Turn between its own init and result frames', async () => {
-    const frames = recorded('task-plan.jsonl');
-    const sessionId = frames[0].session_id;
-    const claude = startLineProcess(
-      await writeMockClaude(directory, { recording: 'task-plan' }),
-      SDK_FLAGS,
-    );
+  it('rejects a control request the recording cannot answer', async () => {
+    const claude = await startClaude('task-plan');
 
-    claude.send(prompt('Plan the work.'));
-    const output = await claude.until((frame) => frame.type === 'result');
-
-    expect(output[0]).toMatchObject({
-      type: 'system',
-      subtype: 'init',
-      session_id: sessionId,
-      claude_code_version: '2.1.286',
+    claude.send({
+      type: 'control_request',
+      request_id: 'interrupt-1',
+      request: { subtype: 'interrupt' },
     });
-    expect(output.slice(1, -1)).toEqual(frames);
-    expect(output.at(-1)).toMatchObject({
+
+    expect(await claude.next()).toMatchObject({
+      type: 'control_response',
+      response: { subtype: 'error', request_id: 'interrupt-1' },
+    });
+    claude.close();
+    expect(await claude.exited).toBe(0);
+  });
+
+  it.each(['task-plan', 'text-stream', 'lifecycle'])(
+    'replays %s between its own init and result frames',
+    async (recording) => {
+      const frames = recordedFrames(recording);
+      const sessionId = frames[0]?.session_id;
+      const claude = await startClaude(recording);
+
+      claude.send(prompt('Go.'));
+      const output = await claude.until((frame) => frame.type === 'result');
+
+      expect(output[0]).toMatchObject({
+        type: 'system',
+        subtype: 'init',
+        session_id: sessionId,
+        claude_code_version: VERSION,
+      });
+      expect(output.slice(1, -1)).toEqual(frames);
+      expect(output.at(-1)).toMatchObject({
+        type: 'result',
+        subtype: 'success',
+        is_error: false,
+        session_id: sessionId,
+      });
+      claude.close();
+      expect(await claude.exited).toBe(0);
+    },
+  );
+
+  it('ends a prompt past the last Turn as a failed Turn, not a crash', async () => {
+    const claude = await startClaude('task-plan');
+
+    claude.send(prompt('Go.'));
+    await claude.until((frame) => frame.type === 'result');
+    claude.send(prompt('Again.'));
+
+    expect(await claude.next()).toMatchObject({
       type: 'result',
-      subtype: 'success',
-      is_error: false,
-      session_id: sessionId,
+      is_error: true,
+      errors: ['The recording has no Turn 2.'],
     });
     claude.close();
     expect(await claude.exited).toBe(0);
   });
 
   it('exits mid-Turn when asked to stand in for a crash', async () => {
-    const frames = recorded('task-plan.jsonl');
-    const claude = startLineProcess(
-      await writeMockClaude(directory, {
-        recording: 'task-plan',
-        exitMidTurn: true,
-      }),
-      SDK_FLAGS,
-    );
+    const frames = recordedFrames('task-plan');
+    const claude = await startClaude('task-plan', true);
 
-    claude.send(prompt('Plan the work.'));
+    claude.send(prompt('Go.'));
 
-    expect(await claude.exited).not.toBe(0);
+    expect(await claude.exited).toBe(1);
     expect(claude.output.slice(1)).toEqual(frames.slice(0, 1));
     expect(claude.output.some((frame) => frame.type === 'result')).toBe(false);
   });

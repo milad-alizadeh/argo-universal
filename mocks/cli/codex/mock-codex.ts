@@ -7,9 +7,12 @@ import {
   send,
   serveJsonLines,
 } from '../mock-cli.ts';
-import { readRecording, splitTurns } from '../recording.ts';
+import { findRecording, readRecording, splitTurns } from '../recording.ts';
 
 const PRODUCER = 'codex-app-server';
+// JSON-RPC error codes.
+const METHOD_NOT_FOUND = -32601;
+const INTERNAL_ERROR = -32603;
 
 const RecordedMessage = z.looseObject({
   method: z.string(),
@@ -51,11 +54,20 @@ const turns = splitTurns(
 );
 const threadId = messages.find((message) => message.params?.threadId)?.params
   ?.threadId;
-const models = readRecording(
-  path.join(path.dirname(environment.recordingFile), 'model-list.json'),
-  PRODUCER,
-).payload;
 let turnIndex = 0;
+
+// Read on request, so a version folder without a model list still serves Turns.
+function listModels(id: string | number | undefined) {
+  try {
+    const file = findRecording(
+      path.join(import.meta.dirname, 'recordings'),
+      'model-list',
+    );
+    send({ id, result: readRecording(file, PRODUCER).payload });
+  } catch (error) {
+    send({ id, error: { code: INTERNAL_ERROR, message: String(error) } });
+  }
+}
 
 function startTurn(id: string | number | undefined) {
   const turn = turns[turnIndex++];
@@ -64,7 +76,7 @@ function startTurn(id: string | number | undefined) {
     send({
       id,
       error: {
-        code: -32603,
+        code: INTERNAL_ERROR,
         message: `The recording has no Turn ${turnIndex}.`,
       },
     });
@@ -85,12 +97,10 @@ serveJsonLines((line) => {
     case 'initialized':
       return;
     case 'initialize':
-    case 'turn/interrupt':
       return send({ id, result: {} });
     case 'model/list':
-      return send({ id, result: models });
+      return listModels(id);
     case 'thread/start':
-    case 'thread/resume':
       return send({ id, result: { thread: { id: threadId } } });
     case 'turn/start':
       return startTurn(id);
@@ -98,7 +108,7 @@ serveJsonLines((line) => {
       send({
         id,
         error: {
-          code: -32601,
+          code: METHOD_NOT_FOUND,
           message: `The recording does not answer ${method}.`,
         },
       });
