@@ -15,7 +15,9 @@ const requestTimeoutMs = 2000;
 
 // Plain Node cannot load @repo/contracts from source, so these copy the fields this script reads.
 const ServerAddress = z.object({ port: z.int() });
-const ServerHealthResponse = z.object({ ok: z.literal(true) });
+const SystemInfoResponse = z.object({
+  result: z.object({ data: z.object({ version: z.string() }) }),
+});
 
 let unrecognisedShapes = 0;
 const isRecognised = <Shape extends z.ZodType>(
@@ -33,7 +35,7 @@ const isRecognised = <Shape extends z.ZodType>(
   return false;
 };
 
-// True once server.json names a port and /health on that port answers.
+// True once server.json names a port and system.info, over tRPC's HTTP handler on that port, answers.
 export async function serverAnswers(file: string) {
   let address: unknown;
   try {
@@ -42,17 +44,18 @@ export async function serverAnswers(file: string) {
     return false;
   }
   if (!isRecognised('server.json', ServerAddress, address)) return false;
-  let health: unknown;
+  let info: unknown;
   try {
-    const response = await fetch(`http://127.0.0.1:${address.port}/health`, {
-      signal: AbortSignal.timeout(requestTimeoutMs),
-    });
+    const response = await fetch(
+      `http://127.0.0.1:${address.port}/trpc/system.info`,
+      { signal: AbortSignal.timeout(requestTimeoutMs) },
+    );
     if (!response.ok) return false;
-    health = await response.json();
+    info = await response.json();
   } catch {
     return false;
   }
-  return isRecognised('/health answer', ServerHealthResponse, health);
+  return isRecognised('system.info answer', SystemInfoResponse, info);
 }
 
 const webAnswers = async () => {
@@ -67,7 +70,7 @@ const webAnswers = async () => {
 };
 
 if (import.meta.main) {
-  console.log(`Waiting for ${serverFile}, its /health, and ${webUrl}`);
+  console.log(`Waiting for ${serverFile}, its system.info, and ${webUrl}`);
   const deadline = Date.now() + timeoutMs;
   while (!((await serverAnswers(serverFile)) && (await webAnswers()))) {
     if (Date.now() > deadline) {

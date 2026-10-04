@@ -102,7 +102,7 @@ argo-universal/
 │   │       ├── supervisor/         machine.ts (lifecycle, heartbeat, backoff, server.json), engine-process.ts,
 │   │       │                       engine-message.ts, index.ts (runner)
 │   │       ├── engine/             machine.ts (lifecycle), http-server.ts (HTTP and WebSocket server, tRPC adapter),
-│   │       │                       http-app.ts (/health, /blobs/:id), request-guard.ts, process-signals.ts, main.ts
+│   │       │                       request-listener.ts (/blobs/:id, tRPC at /trpc/), request-guard.ts, process-signals.ts, main.ts
 │   │       ├── services/
 │   │       │   └── system/         info.ts, clock.ts, index.ts (createSystemService)
 │   │       └── main.ts             starts the Supervisor
@@ -250,12 +250,11 @@ Vitest tests for `api` call the routers with `createCaller` and mock services, w
 
 ### Engine
 
-- Spec 0003 replaces Hono: tRPC's `createHTTPHandler` serves uploads at `/trpc/`, `/health` becomes the `system.info` query over HTTP, and a plain handler serves `/blobs/:id` (ADR 0002).
-- One `node:http` server on `127.0.0.1` whose requests a Hono app handles through `@hono/node-server`, on the port in `ARGO_SERVER_PORT`, with 7337 as the default. The Supervisor writes the port that the Engine uses into `server.json`.
-- `GET /health` returns `{ok: true, version, startedAt}`.
-- `GET /blobs/:id` streams the file from `~/.argo/blobs/`. It returns 404 for an unknown id.
-- A `ws` server on the same port, with tRPC's `applyWSSHandler` and `@repo/api`'s `appRouter`.
-- Every request must carry `Host` `127.0.0.1:<port>` or `localhost:<port>`. A WebSocket upgrade must have no `Origin`, `app://app`, or an `http://localhost` or `http://127.0.0.1` origin. Anything else gets 403.
+- One `node:http` server on `127.0.0.1`, with no HTTP framework, on the port in `ARGO_SERVER_PORT`, with 7337 as the default. The Supervisor writes the port that the Engine uses into `server.json`. Spec 0003 replaced Hono and `/health` (ADR 0002).
+- `GET /blobs/:id` streams the file from `~/.argo/blobs/`. It returns 404 for an unknown id, and 405 to any other method.
+- Every other request goes to tRPC's `createHTTPHandler` with `@repo/api`'s `appRouter` and `basePath: '/trpc/'`, so `GET /trpc/system.info` answers the Server's version and start time.
+- A `ws` server on the same port, with tRPC's `applyWSSHandler` and the same router.
+- Every request must carry `Host` `127.0.0.1:<port>` or `localhost:<port>`. A WebSocket upgrade and a tRPC call over HTTP must have no `Origin`, `app://app`, or an `http://localhost` or `http://127.0.0.1` origin. Anything else gets 403.
 - On start, it opens the database and runs the Drizzle migrations from `packages/db/drizzle/`.
 - `apps/server/src/engine/machine.ts` is an XState 5 machine that runs the Engine's whole lifecycle. `main.ts` only creates it and exits with its output.
   - `openingDatabase` opens the database and migrates it, then goes to `serving`, or to `failed`.
@@ -343,7 +342,7 @@ The Session's current Plan is not stored. A query reads it from the newest `plan
 
 ## 8. Client package
 
-- `src/trpc/`: `createTRPCContext<AppRouter>()` gives `TRPCProvider` and `useTRPC()`. `createTRPCClient(url)` builds a client with `wsLink` and `createWSClient`. `AppProviders` holds the `QueryClient`, the tRPC provider, and the Server URL.
+- `src/trpc/`: `createTRPCContext<AppRouter>()` gives `TRPCProvider` and `useTRPC()`. `createTRPCClient(serverUrl, beforeConnect)` builds a client whose `splitLink` sends a call with a file through `httpLink` to `/trpc/`, and every other call through `wsLink` and `createWSClient`. `AppProviders` holds the `QueryClient`, the tRPC provider, and the Server URL.
 - Screens get tRPC only from `useTRPC()`.
 - Spec 0003 replaces the Projects screen at `/` with the Sessions list.
 - `src/primitives/`: run `npx @react-native-reusables/cli init -t minimal-uniwind` and point its output here. Add only the primitives that the Projects screen uses.
@@ -381,7 +380,7 @@ The Session's current Plan is not stored. A query reads it from the newest `plan
 
 | Script | Does |
 |---|---|
-| `pnpm dev` | `turbo dev`: the Server (Supervisor with the Engine under Node's `--watch`), the universal app (`expo start` for web and Metro), and desktop. Desktop waits until `server.json` exists, the Server's `/health` answers, and the Expo web URL answers. |
+| `pnpm dev` | `turbo dev`: the Server (Supervisor with the Engine under Node's `--watch`), the universal app (`expo start` for web and Metro), and desktop. Desktop waits until `server.json` exists, the Server's `system.info` answers over HTTP, and the Expo web URL answers. |
 | `pnpm dev:storybook` | web Storybook only |
 | `pnpm quality` | `sherif`, `biome check`, `tsc` in every package, Vitest, and the Storybook Vitest tests |
 | `pnpm test:e2e` | Playwright `web` project against the Expo web export |
@@ -404,7 +403,7 @@ Each check must pass before the scaffold is done. If a check fails, stop and rep
 1. Web Storybook with the Vitest addon runs `ProjectsScreen.test.stories.tsx` with a play function, and Uniwind classes apply. Fallback to propose: Playwright component tests against the web build.
 2. The tRPC mock link renders `ProjectsScreen` with a `system.info` fixture and a `system.clock` generator, in web Storybook and in on-device Storybook on the iOS simulator.
 3. One Playwright spec (`e2e/projects/projects.spec.ts`) passes in the `web` project and in the `electron` project.
-4. The Server runs in watch mode with `ws` and `node:sqlite`: the migrations run, `/health` answers, and a file change restarts only the Engine while the Supervisor keeps running.
+4. The Server runs in watch mode with `ws` and `node:sqlite`: the migrations run, `system.info` answers, and a file change restarts only the Engine while the Supervisor keeps running.
 
 Also make sure that:
 

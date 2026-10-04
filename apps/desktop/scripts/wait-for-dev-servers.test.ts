@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { serverAnswers } from './wait-for-dev-servers.mjs';
 
 let home: string;
-let healthServer: Server | undefined;
+let mockServer: Server | undefined;
 
 const serverFile = () => join(home, 'server.json');
 
@@ -22,13 +22,17 @@ const writeServerFile = (port: number) =>
     }),
   );
 
-// Starts an HTTP server whose /health answers with `body`, and returns its port.
-async function startHealthServer(body: unknown) {
-  healthServer = createServer((_request, response) => {
+// Starts an HTTP server whose tRPC system.info answers with `body`, and returns its port.
+async function startMockServer(body: unknown) {
+  mockServer = createServer((request, response) => {
+    if (request.url !== '/trpc/system.info') {
+      response.writeHead(404).end();
+      return;
+    }
     response.writeHead(200, { 'content-type': 'application/json' });
     response.end(JSON.stringify(body));
   });
-  const server = healthServer;
+  const server = mockServer;
   await new Promise<void>((resolve) =>
     server.listen(0, '127.0.0.1', () => resolve()),
   );
@@ -40,8 +44,8 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  healthServer?.close();
-  healthServer = undefined;
+  mockServer?.close();
+  mockServer = undefined;
   rmSync(home, { recursive: true, force: true });
 });
 
@@ -51,25 +55,29 @@ describe('serverAnswers', () => {
   });
 
   it('is false while nothing answers on the port in server.json', async () => {
-    const port = await startHealthServer({});
-    healthServer?.close();
+    const port = await startMockServer({});
+    mockServer?.close();
     writeServerFile(port);
 
     expect(await serverAnswers(serverFile())).toBe(false);
   });
 
-  it('is false when /health answers with another shape', async () => {
-    writeServerFile(await startHealthServer({ ok: false }));
+  it('is false when system.info answers with another shape', async () => {
+    writeServerFile(await startMockServer({ result: { data: { ok: true } } }));
 
     expect(await serverAnswers(serverFile())).toBe(false);
   });
 
-  it('is true once /health answers on the port in server.json', async () => {
+  it('is true once system.info answers on the port in server.json', async () => {
     writeServerFile(
-      await startHealthServer({
-        ok: true,
-        version: '1.2.3',
-        startedAt: '2026-10-03T00:00:00.000Z',
+      await startMockServer({
+        result: {
+          data: {
+            version: '1.2.3',
+            startedAt: '2026-10-03T00:00:00.000Z',
+            pid: 4242,
+          },
+        },
       }),
     );
 
