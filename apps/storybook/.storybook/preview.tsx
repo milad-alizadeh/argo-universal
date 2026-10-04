@@ -20,6 +20,7 @@ const preview: Preview = {
     },
   },
   parameters: {
+    standalonePreview: true,
     layout: 'fullscreen',
     backgrounds: { disable: true },
     controls: {

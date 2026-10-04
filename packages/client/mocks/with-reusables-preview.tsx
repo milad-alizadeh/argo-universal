@@ -7,6 +7,7 @@ import { Uniwind } from 'uniwind';
 
 interface PreviewContext {
   globals: { mode?: string };
+  parameters: { standalonePreview?: boolean };
 }
 
 const initialMetrics = {
@@ -17,9 +18,11 @@ const initialMetrics = {
 function ReusablesPreview({
   Story,
   mode,
+  standalone,
 }: {
   Story: ComponentType;
   mode: 'light' | 'dark';
+  standalone: boolean;
 }) {
   useLayoutEffect(() => {
     Uniwind.setTheme(mode);
@@ -39,7 +42,7 @@ function ReusablesPreview({
             <Story />
           </ScrollView>
         )}
-        <PortalHost />
+        {standalone && <PortalHost />}
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
@@ -53,6 +56,7 @@ export function withReusablesPreview(
     <ReusablesPreview
       Story={Story}
       mode={context.globals.mode === 'dark' ? 'dark' : 'light'}
+      standalone={context.parameters.standalonePreview === true}
     />
   );
 }
