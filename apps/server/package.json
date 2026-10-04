@@ -17,6 +17,7 @@
     "@repo/machine-log": "workspace:*",
     "@statelyai/inspect": "catalog:",
     "@trpc/server": "catalog:",
+    "drizzle-orm": "catalog:",
     "tsx": "catalog:",
     "ws": "catalog:",
     "xstate": "catalog:",
