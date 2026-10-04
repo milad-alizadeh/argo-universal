@@ -3,6 +3,6 @@ import { defineProject } from 'vitest/config';
 export default defineProject({
   test: {
     environment: 'node',
-    include: ['cli/**/*.test.ts'],
+    include: ['agent/**/*.test.ts', 'cli/**/*.test.ts'],
   },
 });

@@ -9,6 +9,10 @@
   "scripts": {
     "check-types": "tsc --noEmit"
   },
+  "dependencies": {
+    "@repo/contracts": "workspace:*",
+    "xstate": "catalog:"
+  },
   "devDependencies": {
     "@repo/typescript": "workspace:*",
     "@types/node": "catalog:",

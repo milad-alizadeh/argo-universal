@@ -800,6 +800,12 @@ importers:
 
   mocks:
     dependencies:
+      '@repo/agents':
+        specifier: workspace:*
+        version: link:../packages/agents
+      xstate:
+        specifier: 'catalog:'
+        version: 5.33.2
       zod:
         specifier: 'catalog:'
         version: 4.6.5
@@ -818,6 +824,13 @@ importers:
         version: 5.0.3(@types/node@24.19.1)(@vitest/browser-playwright@5.0.3)(@vitest/coverage-v8@5.0.3)(@vitest/ui@5.0.3)(jsdom@30.1.1)(vite@8.3.2(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
   packages/agents:
+    dependencies:
+      '@repo/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      xstate:
+        specifier: 'catalog:'
+        version: 5.33.2
     devDependencies:
       '@repo/typescript':
         specifier: workspace:*
