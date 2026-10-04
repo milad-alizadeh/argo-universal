@@ -1,3 +1,4 @@
+export { Icon, type IconProps } from './components/Icon';
 export {
   type ConnectionState,
   useConnection,

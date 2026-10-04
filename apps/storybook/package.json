@@ -15,8 +15,12 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-native": "catalog:",
+    "react-native-gesture-handler": "catalog:",
+    "react-native-safe-area-context": "catalog:",
+    "react-native-svg": "catalog:",
     "react-native-web": "catalog:",
     "tailwindcss": "catalog:",
+    "tw-animate-css": "catalog:",
     "uniwind": "catalog:"
   },
   "devDependencies": {

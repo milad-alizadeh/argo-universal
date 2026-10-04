@@ -20,6 +20,7 @@
     "@repo/client": "workspace:*",
     "@repo/machine-log": "workspace:*",
     "@repo/uniwind": "workspace:*",
+    "@rn-primitives/portal": "catalog:",
     "@storybook/addon-ondevice-actions": "catalog:",
     "@storybook/addon-ondevice-controls": "catalog:",
     "@storybook/react-native": "catalog:",
@@ -44,6 +45,7 @@
     "react-native-worklets": "catalog:",
     "storybook": "catalog:",
     "tailwindcss": "catalog:",
+    "tw-animate-css": "catalog:",
     "uniwind": "catalog:"
   },
   "devDependencies": {
