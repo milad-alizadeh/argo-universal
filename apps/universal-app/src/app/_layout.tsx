@@ -2,6 +2,7 @@ import '../../global.css';
 
 import { AppProviders, useConnection } from '@repo/client';
 import { createBrowserMachineInspection } from '@repo/machine-log/browser';
+import { PortalHost } from '@rn-primitives/portal';
 import { registerDevMenuItems } from 'expo-dev-client';
 import { router, Stack } from 'expo-router';
 import { ThemeProvider } from 'expo-router/react-navigation';
@@ -67,6 +68,7 @@ export default function RootLayout() {
             options={{ headerShown: false }}
           />
         </Stack>
+        <PortalHost />
       </ThemeProvider>
     </AppProviders>
   );

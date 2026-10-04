@@ -1,0 +1,32 @@
+import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { View } from 'react-native';
+import { Variation, Variations } from '../../mocks/primitive-story-variations';
+import { Badge } from './badge';
+import { Text } from './text';
+
+function VariantExamples() {
+  return (
+    <Variations>
+      {(['default', 'secondary', 'destructive', 'outline'] as const).map(
+        (variant) => (
+          <Variation key={variant} label={variant}>
+            <View className="flex-row">
+              <Badge variant={variant}>
+                <Text>Badge</Text>
+              </Badge>
+            </View>
+          </Variation>
+        ),
+      )}
+    </Variations>
+  );
+}
+
+const meta = {
+  title: 'Design System/Primitives/Badge',
+  tags: ['third-party'],
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = { render: VariantExamples };

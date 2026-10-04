@@ -7,10 +7,14 @@ export default defineProject({
   plugins: [
     // The plugin will run tests for the stories defined in your Storybook config
     // See options at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon#storybooktest
-    storybookTest({ configDir: `${import.meta.dirname}/.storybook` }),
+    storybookTest({
+      configDir: `${import.meta.dirname}/.storybook`,
+      tags: { exclude: ['third-party'] },
+    }),
   ],
   test: {
     name: 'storybook',
+    exclude: ['../../packages/client/src/primitives/**'],
     browser: {
       enabled: true,
       headless: true,
