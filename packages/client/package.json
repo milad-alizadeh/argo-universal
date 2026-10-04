@@ -50,6 +50,7 @@
     "clsx": "catalog:",
     "expo-haptics": "catalog:",
     "lucide-react-native": "catalog:",
+    "phosphor-react-native": "catalog:",
     "react-native-gesture-handler": "catalog:",
     "react-native-reanimated": "catalog:",
     "react-native-safe-area-context": "catalog:",
