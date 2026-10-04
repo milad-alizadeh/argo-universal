@@ -24,7 +24,7 @@ export const RowUpsert = z.strictObject({
 });
 export type RowUpsert = z.infer<typeof RowUpsert>;
 
-// Text appended to one field of an open row; the App applies it only when `off` equals that field's length.
+// Text appended to the string at `field`, a dotted path such as `content.0.text`; the App applies it only when `off` equals that string's length.
 export const RowAppend = z.strictObject({
   type: z.literal('row.append'),
   rev: feedRowColumns.shape.revision,

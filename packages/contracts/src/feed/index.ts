@@ -1,3 +1,4 @@
+export * from './change';
 export * from './content-block';
 export * from './page';
 export * from './plan';

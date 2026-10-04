@@ -23,6 +23,11 @@ const services: Services = {
       yield { now: '2026-10-03T00:00:01.000Z' };
     },
   },
+  feed: {
+    page: () => expect.unreachable(),
+    row: () => expect.unreachable(),
+    subscribe: () => expect.unreachable(),
+  },
 };
 
 const closers: (() => void)[] = [];

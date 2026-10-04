@@ -17,6 +17,11 @@ const services: Services = {
     }),
     clock: async function* () {},
   },
+  feed: {
+    page: () => expect.unreachable(),
+    row: () => expect.unreachable(),
+    subscribe: () => expect.unreachable(),
+  },
 };
 
 const closers: (() => unknown)[] = [];

@@ -3,12 +3,14 @@ import { request } from 'node:http';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { type Database, openDatabase } from '@repo/db';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { WebSocket } from 'ws';
 import { startHttpServer } from './http-server';
 
 let home: string;
 let port: number;
+let database: Database;
 let closeServer: () => Promise<void>;
 
 const findFreePort = () =>
@@ -64,17 +66,20 @@ const options = () => ({
   port,
   version: '1.2.3',
   startedAt: '2026-10-03T00:00:00.000Z',
+  database,
 });
 
 beforeEach(async () => {
   home = mkdtempSync(join(tmpdir(), 'server-http-server-'));
   port = await findFreePort();
+  database = openDatabase(join(home, 'argo.db'));
   ({ close: closeServer } = await startHttpServer(options()));
 });
 
 afterEach(async () => {
   vi.restoreAllMocks();
   await closeServer();
+  database.$client.close();
   rmSync(home, { recursive: true, force: true });
 });
 
@@ -103,6 +108,19 @@ describe('http server', () => {
           pid: process.pid,
         },
       },
+    });
+  });
+
+  it('answers feed.page from the database', async () => {
+    const input = encodeURIComponent(
+      JSON.stringify({ sessionId: 'session-9', direction: 'tail' }),
+    );
+    const response = await fetch(
+      `http://127.0.0.1:${port}/trpc/feed.page?input=${input}`,
+    );
+    expect(response.status).toBe(404);
+    expect(await response.json()).toMatchObject({
+      error: { message: 'No Session session-9' },
     });
   });
 
