@@ -1,0 +1,14 @@
+:root {
+  /* RN Web's unlayered placeholder rule needs a fallback when its colour prop is unset. */
+  --placeholderTextColor: var(--color-muted-foreground);
+}
+
+@layer base {
+  input,
+  textarea,
+  :where([class*="css-text-"]) {
+    font-family:
+      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+      sans-serif;
+  }
+}

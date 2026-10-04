@@ -13,14 +13,49 @@ const config: StorybookConfig = {
     getAbsolutePath('@storybook/addon-vitest'),
     getAbsolutePath('@storybook/addon-docs'),
   ],
+  typescript: { reactDocgen: false },
   framework: getAbsolutePath('@storybook/react-native-web-vite'),
   // Uniwind styles the screens (spec section 9); the Vitest addon reuses this hook.
   async viteFinal(config) {
     const { mergeConfig } = await import('vite');
     const { default: tailwindcss } = await import('@tailwindcss/vite');
     const { uniwind } = await import('uniwind/vite');
+    const expoDeclarationImports = {
+      name: 'expo-declaration-imports',
+      enforce: 'pre' as const,
+      transform(code: string, id: string) {
+        // These four imports only supply Expo's ambient namespace declarations.
+        if (
+          id
+            .split('?')[0]
+            ?.endsWith('/expo-modules-core/src/ts-declarations/global.ts')
+        )
+          return {
+            code: code.replace(/^import \{/gm, 'import type {'),
+            map: null,
+          };
+      },
+    };
     return mergeConfig(config, {
+      optimizeDeps: {
+        include: ['react-native-svg', 'expo-haptics'],
+        rolldownOptions: { plugins: [expoDeclarationImports] },
+      },
+      resolve: {
+        extensions: [
+          '.web.tsx',
+          '.web.ts',
+          '.web.jsx',
+          '.web.js',
+          '.mjs',
+          '.js',
+          '.ts',
+          '.tsx',
+          '.json',
+        ],
+      },
       plugins: [
+        expoDeclarationImports,
         tailwindcss(),
         // Uniwind resolves these from process.cwd(), so they are absolute.
         uniwind({
