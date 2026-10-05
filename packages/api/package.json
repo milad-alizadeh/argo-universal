@@ -8,7 +8,8 @@
     "./mocks": "./mocks/index.ts"
   },
   "scripts": {
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@repo/contracts": "workspace:*",
