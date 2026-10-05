@@ -1,8 +1,21 @@
-import { mkdtempSync, rmSync } from 'node:fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { type Database, openDatabase } from '@repo/db';
-import { feedRow, project, session, turn } from '@repo/db/schema';
+import {
+  blob,
+  blobRef,
+  feedRow,
+  project,
+  session,
+  turn,
+} from '@repo/db/schema';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { type ActorRefFrom, createActor, waitFor } from 'xstate';
 import { type FeedRowWrite, writeJobs } from '../services/feed/writer-job';
@@ -265,6 +278,33 @@ describe('Engine restart recovery', () => {
     await interruptEngine();
     await startEngine();
     expect(rowsAtReady.at(-1)).toEqual(repaired);
+  });
+
+  it('deletes blobs no prompt refers to once they are over a day old', async () => {
+    const database =
+      engine.getSnapshot().context.database ?? expect.unreachable();
+    const blobsFolder = join(home, 'blobs');
+    mkdirSync(blobsFolder);
+    const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    for (const [id, createdAt] of [
+      ['old-unused', dayAgo - 60_000],
+      ['old-used', dayAgo - 60_000],
+      ['new-unused', Date.now()],
+    ] as const) {
+      writeFileSync(join(blobsFolder, id), id);
+      database
+        .insert(blob)
+        .values({ id, mime: 'image/png', bytes: 2, createdAt })
+        .run();
+    }
+    database
+      .insert(blobRef)
+      .values({ blobId: 'old-used', sessionId: 'session-1' })
+      .run();
+    await interruptEngine();
+    await startEngine();
+
+    expect(readdirSync(blobsFolder).sort()).toEqual(['new-unused', 'old-used']);
   });
 
   it('rolls back every repair and fails without serving when a Session write fails', async () => {

@@ -1,8 +1,9 @@
-import { mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { request } from 'node:http';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { maxBlobUploadBytes } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { WebSocket } from 'ws';
@@ -69,6 +70,9 @@ const systemInfoStatus = (headers: Record<string, string> = {}) =>
     outgoing.end();
   });
 
+const readdirSafe = (folder: string) =>
+  existsSync(folder) ? readdirSync(folder) : [];
+
 const options = () => ({
   home,
   port,
@@ -134,6 +138,38 @@ describe('http server', () => {
     expect(await response.json()).toMatchObject({
       result: { data: { epoch: 0, rows: [], startCursor: null } },
     });
+  });
+
+  it('stores an upload sent as multipart FormData over HTTP', async () => {
+    const form = new FormData();
+    form.set('file', new Blob(['png'], { type: 'image/png' }), 'image.png');
+    const response = await fetch(`http://127.0.0.1:${port}/trpc/blob.upload`, {
+      method: 'POST',
+      body: form,
+    });
+    const { result } = (await response.json()) as {
+      result: { data: { blobId: string; bytes: number } };
+    };
+
+    expect(response.status).toBe(200);
+    expect(result.data).toMatchObject({ bytes: 3 });
+    expect(result.data.blobId).toMatch(/^[0-9a-f]{64}$/);
+    const stored = await fetch(
+      `http://127.0.0.1:${port}/blobs/${result.data.blobId}`,
+    );
+    expect(await stored.text()).toBe('png');
+  });
+
+  it('refuses an upload over 20 MB before reading all of it', async () => {
+    const form = new FormData();
+    form.set('file', new Blob([new Uint8Array(maxBlobUploadBytes + 1)]));
+    const response = await fetch(`http://127.0.0.1:${port}/trpc/blob.upload`, {
+      method: 'POST',
+      body: form,
+    });
+
+    expect(response.status).toBe(413);
+    expect(readdirSafe(join(home, 'blobs'))).toEqual([]);
   });
 
   it('refuses a call from another origin over the WebSocket and over HTTP', async () => {
