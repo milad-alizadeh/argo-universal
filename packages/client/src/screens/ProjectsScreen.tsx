@@ -17,6 +17,7 @@ import { Icon } from '#components/Icon';
 import { LoadError } from '#components/LoadError';
 import { ProjectsList } from '#components/ProjectsList';
 import { ProjectsLoading } from '#components/ProjectsLoading';
+import { Screen } from '#components/Screen';
 import { Button } from '#primitives/button';
 import {
   DropdownMenu,
@@ -80,7 +81,7 @@ export function ProjectsScreen() {
   }
 
   return (
-    <View
+    <Screen
       className="relative flex-1 bg-background wide:bg-sidebar"
       style={{ minHeight: 0 }}
     >
@@ -220,6 +221,6 @@ export function ProjectsScreen() {
           </Text>
         </Button>
       </View>
-    </View>
+    </Screen>
   );
 }

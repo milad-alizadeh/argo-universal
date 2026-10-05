@@ -23,6 +23,7 @@ export {
   PullRequestIndicator,
   type PullRequestIndicatorProps,
 } from './components/PullRequestIndicator';
+export { Screen, type ScreenProps } from './components/Screen';
 export { SessionRow, type SessionRowProps } from './components/SessionRow';
 export {
   SettingsList,
