@@ -4,6 +4,7 @@ import type {
   FeedSubscribeOutput,
 } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
+import { unreachableServices } from '../../mocks';
 import { appRouter } from '../root';
 import type { Services } from '../services';
 import { createCallerFactory } from '../trpc';
@@ -30,20 +31,15 @@ const page: FeedPageOutput = {
   staleCursor: false,
 };
 
-function servicesWith(feed: Partial<Services['feed']>): Services {
-  return {
-    system: {
-      info: () => expect.unreachable(),
-      clock: () => expect.unreachable(),
-    },
+const servicesWith = (feed: Partial<Services['feed']>) =>
+  unreachableServices({
     feed: {
       page: () => page,
       row: () => row,
       subscribe: async function* () {},
       ...feed,
     },
-  };
-}
+  });
 
 const collect = async (updates: AsyncIterable<FeedSubscribeOutput>) => {
   const received: FeedSubscribeOutput[] = [];

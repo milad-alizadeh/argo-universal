@@ -1,6 +1,3 @@
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { appRouter } from '@repo/api';
 import type {
   AgentMessage,
@@ -9,10 +6,11 @@ import type {
   FeedSyncPoint,
   SessionUpdate,
 } from '@repo/contracts';
-import { type Database, openDatabase } from '@repo/db';
-import { project, session } from '@repo/db/schema';
+import type { Database } from '@repo/db';
+import { session } from '@repo/db/schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { type Actor, createActor, fromPromise, setup } from 'xstate';
+import { openTestDatabase } from '../../../mocks/database';
 import { createSystemService } from '../system';
 import { feedMachine } from './feed-machine';
 import { readWrittenRow, toFeedRowWrite } from './feed-row';
@@ -20,8 +18,8 @@ import { createFeedService } from './feed-service';
 import { writeJobs } from './writer-job';
 import { writerMachine } from './writer-machine';
 
-let directory: string;
 let database: Database;
+let removeDatabase: () => void;
 let host: Actor<ReturnType<typeof hostMachine>>;
 let controller: AbortController;
 
@@ -136,23 +134,7 @@ const summary = (outputs: FeedSubscribeOutput[]) =>
 beforeEach(() => {
   vi.useFakeTimers();
   controller = new AbortController();
-  directory = mkdtempSync(join(tmpdir(), 'argo-feed-'));
-  database = openDatabase(join(directory, 'argo.db'));
-  database
-    .insert(project)
-    .values({ id: 'project-1', path: '/project', name: 'project' })
-    .run();
-  database
-    .insert(session)
-    .values({
-      id: 'session-1',
-      projectId: 'project-1',
-      agent: 'mock',
-      checkoutPath: '/project',
-      projectionVersion: 1,
-      epoch: 3,
-    })
-    .run();
+  ({ database, remove: removeDatabase } = openTestDatabase({ epoch: 3 }));
   writeJobs(database, [
     {
       type: 'feedRows',
@@ -168,8 +150,7 @@ beforeEach(() => {
 afterEach(() => {
   controller.abort();
   host?.stop();
-  database.$client.close();
-  rmSync(directory, { recursive: true, force: true });
+  removeDatabase();
   vi.useRealTimers();
 });
 

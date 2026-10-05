@@ -1,5 +1,6 @@
 import type { AddressInfo } from 'node:net';
-import { appRouter, type Services } from '@repo/api';
+import { appRouter } from '@repo/api';
+import { unreachableServices } from '@repo/api/mocks';
 import { QueryClient, QueryObserver } from '@tanstack/react-query';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -8,7 +9,7 @@ import { waitFor } from 'xstate';
 import { type ConnectionActor, openConnection } from './open-connection';
 
 let pid = 4242;
-const services: Services = {
+const services = unreachableServices({
   system: {
     info: () => ({
       version: '1.2.3',
@@ -17,12 +18,7 @@ const services: Services = {
     }),
     clock: async function* () {},
   },
-  feed: {
-    page: () => expect.unreachable(),
-    row: () => expect.unreachable(),
-    subscribe: () => expect.unreachable(),
-  },
-};
+});
 
 const closers: (() => unknown)[] = [];
 afterEach(async () => {

@@ -1,7 +1,7 @@
 import type { ClockTick, SystemInfo } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
+import { unreachableServices } from '../../mocks';
 import { appRouter } from '../root';
-import type { Services } from '../services';
 import { createCallerFactory } from '../trpc';
 
 const createCaller = createCallerFactory(appRouter);
@@ -12,21 +12,15 @@ const systemInfo: SystemInfo = {
   pid: 4242,
 };
 
-function servicesWith(ticks: ClockTick[]): Services {
-  return {
+const servicesWith = (ticks: ClockTick[]) =>
+  unreachableServices({
     system: {
       info: () => systemInfo,
       clock: async function* () {
         yield* ticks;
       },
     },
-    feed: {
-      page: () => expect.unreachable(),
-      row: () => expect.unreachable(),
-      subscribe: () => expect.unreachable(),
-    },
-  };
-}
+  });
 
 describe('system router', () => {
   it('answers system.info from the system service', async () => {
