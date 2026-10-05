@@ -317,7 +317,7 @@ export function ComposerModelControl({
           {supportsEffort && effortLabel && (
             <Text
               selectable={false}
-              className="select-none text-sm text-muted-foreground shrink-0"
+              className="select-none text-sm font-normal text-muted-foreground shrink-0"
               numberOfLines={1}
             >
               {effortLabel}
@@ -592,7 +592,7 @@ export function ComposerCheckoutControl({
             onPress={() =>
               checkout.onNewWorktreeChange?.(!checkout.newWorktree)
             }
-            className="select-none text-xs font-normal text-muted-foreground"
+            className="select-none text-xs font-medium text-muted-foreground"
           >
             New worktree
           </Label>
@@ -615,7 +615,10 @@ export function ComposerCheckoutControl({
               as={GitBranchIcon}
               className="size-3.5 text-muted-foreground"
             />
-            <Text selectable={false} className="select-none text-xs">
+            <Text
+              selectable={false}
+              className="select-none text-xs font-mono font-normal"
+            >
               {checkout.newWorktree || !checkout.onBranchChange
                 ? checkout.branch === 'main'
                   ? 'Main'

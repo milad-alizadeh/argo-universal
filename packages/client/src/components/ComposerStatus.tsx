@@ -224,7 +224,7 @@ export function ComposerStatusControls({
               </Text>
               <Text
                 selectable={false}
-                className="select-none text-xs text-muted-foreground"
+                className="select-none text-xs font-normal text-muted-foreground"
               >
                 {status.usage.limits[0]?.usedPercent}%
               </Text>

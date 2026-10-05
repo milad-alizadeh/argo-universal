@@ -291,7 +291,7 @@ export function Composer({
                       </View>
                       <Text
                         selectable={false}
-                        className="select-none text-base wide:text-sm"
+                        className="select-none text-sm leading-5 font-normal"
                       >
                         {item.label}
                       </Text>

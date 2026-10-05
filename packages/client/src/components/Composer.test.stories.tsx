@@ -27,10 +27,90 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 async function settleViewport() {
+  await document.fonts.ready;
   await new Promise<void>((resolve) =>
     requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
   );
 }
+
+export const Typography: Story = {
+  play: async ({ canvas, userEvent }) => {
+    const { page } = await import('vitest/browser');
+    for (const width of [390, 1440]) {
+      await page.viewport(width, 844);
+      await settleViewport();
+      const trigger = canvas.getByRole('button', { name: 'Model and effort' });
+      const model = within(trigger).getByText('Opus 5.5', { exact: true });
+      const effort = within(trigger).getByText('Medium', { exact: true });
+      const input = canvas.getByRole('textbox', { name: 'Message' });
+      for (const [element, weight, size, lineHeight] of [
+        [model, '500', '14px', '20px'],
+        [effort, '400', '14px', '20px'],
+        [
+          input,
+          '400',
+          width < 720 ? '16px' : '14px',
+          width < 720 ? '24px' : '20px',
+        ],
+      ] as const) {
+        const style = getComputedStyle(element);
+        await document.fonts.load(`${weight} 14px ${style.fontFamily}`);
+        await document.fonts.ready;
+        await expect(style.fontFamily).toContain('SF Pro Text');
+        await expect(style.fontWeight).toBe(weight);
+        await expect(style.fontSize).toBe(size);
+        await expect(style.lineHeight).toBe(lineHeight);
+      }
+      await expect(
+        getComputedStyle(canvas.getByText('54%', { exact: true })).fontWeight,
+      ).toBe('400');
+      if (width >= 720) {
+        await expect(
+          getComputedStyle(canvas.getByText('New worktree', { exact: true }))
+            .fontWeight,
+        ).toBe('500');
+        const branch = getComputedStyle(
+          canvas.getByText('Main', { exact: true }),
+        );
+        await expect(branch.fontFamily).toContain('monospace');
+        await expect(branch.fontWeight).toBe('400');
+      }
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Attach images' }),
+      );
+      const attachment = await within(document.body).findByRole('button', {
+        name: width >= 720 ? 'Files and Folder' : 'Camera',
+      });
+      const label = within(attachment).getByText(
+        width >= 720 ? 'Files and Folder' : 'Camera',
+        { exact: true },
+      );
+      const style = getComputedStyle(label);
+      await expect(style.fontWeight).toBe('400');
+      await expect(style.fontSize).toBe('14px');
+      await expect(style.lineHeight).toBe('20px');
+      await userEvent.keyboard('{Escape}');
+    }
+  },
+};
+
+export const ThemeFontLoading: Story = {
+  globals: { themeId: 'vercel' },
+  play: async ({ canvas }) => {
+    const input = canvas.getByRole('textbox', { name: 'Message' });
+    await waitFor(() =>
+      expect(getComputedStyle(input).fontFamily).toContain('Geist'),
+    );
+    const style = getComputedStyle(input);
+    const faces = await document.fonts.load(
+      `400 ${style.fontSize} ${style.fontFamily}`,
+    );
+    await settleViewport();
+    await expect(faces.length).toBeGreaterThan(0);
+    for (const face of faces) await expect(face.status).toBe('loaded');
+    await expect(document.fonts.status).toBe('loaded');
+  },
+};
 
 export const Empty: Story = {
   play: async ({ canvas }) => {
