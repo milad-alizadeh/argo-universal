@@ -7,6 +7,7 @@ import {
   multipleProjects,
   projectsListProps,
 } from '../../mocks/projects-list-mock';
+import { ProjectsNewSessionPreview } from '../../mocks/projects-new-session-preview';
 import { ProjectsPaginationPreview } from '../../mocks/projects-pagination-preview';
 import { ProjectsList, type ProjectsListProps } from './ProjectsList';
 
@@ -59,9 +60,9 @@ export const OnEndReached: Story = {
   render: (args) => <ProjectsPaginationPreview {...args} />,
 };
 
-export const OnNewSession: Story = variations([
-  { label: 'New Session in Project', props: {} },
-]);
+export const OnNewSession: Story = {
+  render: (args) => <ProjectsNewSessionPreview {...args} />,
+};
 export const OnProjectSettings: Story = variations([
   { label: 'Open Project settings', props: {} },
 ]);
