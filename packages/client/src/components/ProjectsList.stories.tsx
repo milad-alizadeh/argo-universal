@@ -1,8 +1,10 @@
+import { archivedSessions } from '@repo/api/mocks';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
 import {
+  firstPageSessions,
   multipleProjects,
   projectsListProps,
 } from '../../mocks/projects-list-mock';
@@ -15,6 +17,8 @@ const meta = {
     ...projectsListProps,
     onSelect: action('select Session'),
     onEndReached: action('load next page'),
+    onNewSession: action('new Session in Project'),
+    onProjectSettings: action('Project settings'),
   },
 } satisfies Meta<typeof ProjectsList>;
 export default meta;
@@ -27,7 +31,7 @@ function variations(
       <Variations>
         {values.map(({ label, props }) => (
           <Variation key={label} label={label}>
-            <View style={{ height: 320 }}>
+            <View className="w-full wide:w-shell-list" style={{ height: 320 }}>
               <ProjectsList {...args} {...props} />
             </View>
           </Variation>
@@ -41,32 +45,27 @@ export const Projects: Story = variations([
   { label: 'Multiple Projects', props: { projects: multipleProjects } },
   { label: 'No Projects', props: { projects: [] } },
 ]);
-export const Agents: Story = variations([
-  { label: 'Agent logos', props: {} },
-  { label: 'No registered Agents', props: { agents: [] } },
-]);
-export const Sessions: Story = variations([
-  { label: 'Populated', props: {} },
-  { label: 'Empty', props: { sessions: [] } },
-]);
 export const Query: Story = variations([
   { label: 'No search', props: {} },
   { label: 'No matching Sessions', props: { query: 'xyz', sessions: [] } },
 ]);
 export const Archived: Story = variations([
-  { label: 'Active', props: {} },
+  {
+    label: 'Archived Sessions',
+    props: { archived: true, sessions: archivedSessions.sessions },
+  },
   { label: 'No archived Sessions', props: { archived: true, sessions: [] } },
 ]);
-export const SelectedSessionId: Story = variations([
-  { label: 'No selection', props: {} },
+export const OnEndReached: Story = variations([
   {
-    label: 'Selected Session',
-    props: { selectedSessionId: projectsListProps.sessions[0]?.sessionId },
+    label: 'Loading more Sessions',
+    props: { sessions: firstPageSessions, isFetchingNextPage: true },
   },
 ]);
-export const OnSelect: Story = variations([
-  { label: 'Select a Session', props: {} },
+
+export const OnNewSession: Story = variations([
+  { label: 'New Session in Project', props: {} },
 ]);
-export const OnEndReached: Story = variations([
-  { label: 'Scroll to request the next page', props: {} },
+export const OnProjectSettings: Story = variations([
+  { label: 'Open Project settings', props: {} },
 ]);

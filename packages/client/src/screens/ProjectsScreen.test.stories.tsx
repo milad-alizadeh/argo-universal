@@ -1,10 +1,11 @@
-import { archivedSessions, sessionRows } from '@repo/api/mocks';
+import { archivedSessions, projectsList, sessionRows } from '@repo/api/mocks';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
 import {
   largeSessionListMocks,
   multipleProjectsMocks,
   nextPageFailureMocks,
+  nextPageLoadingMocks,
 } from '../../mocks/projects-list-mock';
 import { ProjectsScreenPreview } from '../../mocks/projects-screen-preview';
 import {
@@ -65,7 +66,7 @@ export const ProjectCollapse: Story = {
         ),
       );
       const heading = canvas.getByRole('button', {
-        name: /Example Project, .* Sessions/,
+        name: 'Example Project',
       });
       await expect(heading).toHaveAttribute('aria-expanded', 'false');
       await userEvent.click(heading);
@@ -195,6 +196,26 @@ export const Navigation: Story = {
       await expect(recorder.destinations).toEqual([
         { to: 'session', id: 'agent-one:session-running' },
       ]);
+      const heading = canvas.getByRole('button', { name: 'Example Project' });
+      await userEvent.hover(heading);
+      recorder.reset();
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'New Session in Example Project' }),
+      );
+      await expect(recorder.destinations).toEqual([
+        { to: 'new-session', projectId: projectsList[0]?.id },
+      ]);
+      await userEvent.hover(heading);
+      recorder.reset();
+      await userEvent.click(
+        canvas.getByRole('button', {
+          name: 'Project settings for Example Project',
+        }),
+      );
+      await expect(recorder.destinations).toEqual([
+        { to: 'settings-project', name: 'Example Project' },
+      ]);
+      await expect(heading).toHaveAttribute('aria-expanded', 'true');
     }),
 };
 export const LargeList: Story = {
@@ -297,5 +318,18 @@ export const ScrollFade: Story = {
       await waitFor(() =>
         expect(canvas.queryByTestId('scroll-fade-top')).toBeNull(),
       );
+    }),
+};
+
+export const NextPageLoading: Story = {
+  parameters: { trpc: nextPageLoadingMocks },
+  play: async ({ canvas }) =>
+    eachLayout(async () => {
+      await expect(
+        await canvas.findByRole('progressbar', {
+          name: 'Loading more Sessions',
+        }),
+      ).toBeVisible();
+      await expect(canvas.getByText('Build the settings screen')).toBeVisible();
     }),
 };

@@ -2,7 +2,7 @@ import { createContext, type ReactNode, useContext } from 'react';
 
 export type NavigationDestination =
   | { to: 'sessions' }
-  | { to: 'new-session' }
+  | { to: 'new-session'; projectId?: string }
   | { to: 'session'; id: string }
   | { to: 'issues' }
   | { to: 'atlas' }

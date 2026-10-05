@@ -13,7 +13,16 @@ export const navigate: Navigate = (destination) => {
       });
       return;
     case 'new-session':
-      router.push('/sessions/new');
+      router.push({
+        pathname: '/sessions/new',
+        params: { projectId: destination.projectId },
+      });
+      return;
+    case 'settings-project':
+      router.push({
+        pathname: '/settings/projects/[name]',
+        params: { name: destination.name },
+      });
       return;
     default:
       throw new Error(`Unsupported Sessions destination: ${destination.to}`);

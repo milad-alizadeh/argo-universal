@@ -172,8 +172,15 @@ export function ProjectsScreen() {
           projects={projects.data ?? []}
           agents={agents.data ?? []}
           sessions={rows}
+          isFetchingNextPage={sessions.isFetchingNextPage}
           query={query}
           archived={archived}
+          onNewSession={(projectId) =>
+            navigate({ to: 'new-session', projectId })
+          }
+          onProjectSettings={(name) =>
+            navigate({ to: 'settings-project', name })
+          }
           onSelect={(id) => navigate({ to: 'session', id })}
           onEndReached={() => {
             if (sessions.hasNextPage && !sessions.isFetching)

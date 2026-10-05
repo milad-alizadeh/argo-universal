@@ -4,18 +4,24 @@ import type {
   ProjectsListOutput,
   SessionInfo,
 } from '@repo/contracts';
-import { FolderIcon, FolderOpenIcon } from 'phosphor-react-native';
+import {
+  DotsThreeIcon,
+  FolderIcon,
+  FolderOpenIcon,
+  PlusIcon,
+} from 'phosphor-react-native';
 import { useId, useMemo, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, View } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useResolveClassNames } from 'uniwind';
+import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
 import { Text, TextClassContext } from '#primitives/text';
 import { Icon } from './Icon';
 import { SessionRow } from './SessionRow';
 
 type Entry =
-  | { kind: 'project'; id: string; name: string; count: number }
+  | { kind: 'project'; id: string; projectId: string; name: string }
   | { kind: 'session'; id: string; session: SessionInfo }
   | { kind: 'empty'; id: string };
 
@@ -28,6 +34,9 @@ export interface ProjectsListProps {
   selectedSessionId?: string;
   onSelect: (id: string) => void;
   onEndReached: () => void;
+  isFetchingNextPage?: boolean;
+  onNewSession?: (projectId: string) => void;
+  onProjectSettings?: (projectName: string) => void;
 }
 
 export function ProjectsList({
@@ -39,6 +48,9 @@ export function ProjectsList({
   selectedSessionId,
   onSelect,
   onEndReached,
+  isFetchingNextPage = false,
+  onNewSession,
+  onProjectSettings,
 }: ProjectsListProps) {
   const gradientId = useId();
   const { backgroundColor } = useResolveClassNames(
@@ -76,7 +88,7 @@ export function ProjectsList({
         kind: 'project',
         id: `project:${project.id}`,
         name: project.name,
-        count: group.length,
+        projectId: project.id,
       });
       if (collapsed.has(`project:${project.id}`)) continue;
       if (group.length === 0)
@@ -89,7 +101,7 @@ export function ProjectsList({
 
   return (
     <View
-      className="relative flex-1 overflow-hidden"
+      className="relative flex-1 overflow-hidden bg-background wide:bg-sidebar web:select-none web:[&_*]:select-none!"
       style={{ minHeight: 0 }}
       onLayout={({ nativeEvent }) => {
         scroll.current.viewport = nativeEvent.layout.height;
@@ -112,10 +124,23 @@ export function ProjectsList({
         data={entries}
         keyExtractor={(entry) => entry.id}
         estimatedItemSize={76}
+        ItemSeparatorComponent={ProjectEntrySeparator}
         recycleItems={false}
         extraData={{ agents, collapsed, selectedSessionId }}
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          isFetchingNextPage ? (
+            <View className="h-10 items-center justify-center">
+              <ActivityIndicator
+                role="progressbar"
+                accessibilityLabel="Loading more Sessions"
+                colorClassName="accent-muted-foreground"
+                size="small"
+              />
+            </View>
+          ) : null
+        }
         ListEmptyComponent={
           <View className="items-center gap-1 px-4 py-8">
             <Text className="text-center text-sm font-medium">
@@ -155,15 +180,16 @@ export function ProjectsList({
             );
           const isCollapsed = collapsed.has(item.id);
           return (
-            <Button
-              variant="ghost"
-              accessibilityLabel={
-                isCollapsed ? `${item.name}, ${item.count} Sessions` : item.name
+            <ProjectHeading
+              name={item.name}
+              collapsed={isCollapsed}
+              onNewSession={
+                onNewSession && (() => onNewSession(item.projectId))
               }
-              accessibilityState={{ expanded: !isCollapsed }}
-              aria-expanded={!isCollapsed}
-              className="h-10 sm:h-10 wide:h-8 wide:sm:h-8 justify-start gap-2 rounded-md pl-2.5 pr-1 py-1"
-              onPress={() =>
+              onProjectSettings={
+                onProjectSettings && (() => onProjectSettings(item.name))
+              }
+              onToggle={() =>
                 setCollapsed((current) => {
                   const next = new Set(current);
                   if (next.has(item.id)) next.delete(item.id);
@@ -171,25 +197,7 @@ export function ProjectsList({
                   return next;
                 })
               }
-            >
-              <TextClassContext.Provider value={undefined}>
-                <Icon
-                  as={isCollapsed ? FolderIcon : FolderOpenIcon}
-                  className="size-4 text-muted-foreground wide:text-foreground"
-                />
-                <Text
-                  numberOfLines={1}
-                  className="min-w-0 flex-1 text-base leading-6 font-semibold wide:text-sm wide:leading-5 wide:font-medium"
-                >
-                  {item.name}
-                </Text>
-                {isCollapsed && (
-                  <Text className="pr-1.5 text-xs text-muted-foreground">
-                    {item.count}
-                  </Text>
-                )}
-              </TextClassContext.Provider>
-            </Button>
+            />
           );
         }}
       />
@@ -245,4 +253,92 @@ export function ProjectsList({
       )}
     </View>
   );
+}
+
+function ProjectHeading({
+  name,
+  collapsed,
+  onToggle,
+  onNewSession,
+  onProjectSettings,
+}: {
+  name: string;
+  collapsed: boolean;
+  onToggle: () => void;
+  onNewSession?: () => void;
+  onProjectSettings?: () => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const actionsVisible = Platform.OS !== 'web' || hovered || focused;
+  const interactionEvents = {
+    onHoverIn: () => setHovered(true),
+    onHoverOut: () => setHovered(false),
+    onFocus: () => setFocused(true),
+    onBlur: () => setFocused(false),
+  };
+  return (
+    <Pressable
+      onHoverIn={() => setHovered(true)}
+      onHoverOut={() => setHovered(false)}
+      className={cn(
+        'h-10 wide:h-8 flex-row items-center rounded-md pr-1',
+        (hovered || focused) && 'bg-sidebar-accent',
+      )}
+    >
+      <Button
+        variant="ghost"
+        accessibilityLabel={name}
+        accessibilityState={{ expanded: !collapsed }}
+        aria-expanded={!collapsed}
+        className="h-full sm:h-full min-w-0 flex-1 justify-start gap-2 pl-2.5 pr-2 py-1 hover:bg-transparent dark:hover:bg-transparent web:has-[>svg]:pl-2.5 web:has-[>svg]:pr-2"
+        onPress={onToggle}
+        {...interactionEvents}
+      >
+        <TextClassContext.Provider value={undefined}>
+          <Icon
+            as={collapsed ? FolderIcon : FolderOpenIcon}
+            className="size-4 text-muted-foreground wide:text-foreground"
+          />
+          <Text
+            numberOfLines={1}
+            className="min-w-0 flex-1 text-base leading-6 font-semibold wide:text-sm wide:leading-5 wide:font-medium"
+          >
+            {name}
+          </Text>
+        </TextClassContext.Provider>
+      </Button>
+      <View
+        className={cn(
+          'flex-row items-center gap-0.5',
+          !actionsVisible && 'opacity-0',
+        )}
+      >
+        <Button
+          variant="ghost"
+          accessibilityLabel={`Project settings for ${name}`}
+          className="size-6 sm:size-6 rounded-sm p-0 web:has-[>svg]:px-0"
+          onPress={onProjectSettings}
+          disabled={!onProjectSettings}
+          {...interactionEvents}
+        >
+          <Icon as={DotsThreeIcon} className="size-3.5 text-foreground" />
+        </Button>
+        <Button
+          variant="ghost"
+          accessibilityLabel={`New Session in ${name}`}
+          className="size-6 sm:size-6 rounded-sm p-0 web:has-[>svg]:px-0"
+          onPress={onNewSession}
+          disabled={!onNewSession}
+          {...interactionEvents}
+        >
+          <Icon as={PlusIcon} className="size-3.5 text-foreground" />
+        </Button>
+      </View>
+    </Pressable>
+  );
+}
+
+function ProjectEntrySeparator() {
+  return <View className="h-0 wide:h-0.5" />;
 }

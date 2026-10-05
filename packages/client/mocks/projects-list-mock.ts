@@ -5,7 +5,7 @@ import {
   sessionRows,
 } from '@repo/api/mocks';
 import { sessionListMocks } from './session-list-mock';
-import type { Fixtures } from './trpc-mock-link';
+import { type Fixtures, pending } from './trpc-mock-link';
 
 export const projectsListProps = {
   projects: projectsList,
@@ -40,4 +40,13 @@ export const nextPageFailureMocks = {
     if (cursor) throw new Error('Next page unavailable');
     return { sessions: [sessionRows.running], nextCursor: 'next-page' };
   },
+} satisfies Fixtures;
+
+export const firstPageSessions = [sessionRows.running, sessionRows.idle];
+export const nextPageLoadingMocks = {
+  ...sessionListMocks,
+  'session.list': ({ cursor }) =>
+    cursor
+      ? pending()()
+      : { sessions: firstPageSessions, nextCursor: 'next-page' },
 } satisfies Fixtures;

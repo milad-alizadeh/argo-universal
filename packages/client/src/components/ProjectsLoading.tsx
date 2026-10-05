@@ -2,7 +2,11 @@ import { View } from 'react-native';
 
 export function ProjectsLoading() {
   return (
-    <View role="status" accessibilityLabel="Loading Sessions" className="px-2">
+    <View
+      role="status"
+      accessibilityLabel="Loading Sessions"
+      className="px-2 wide:gap-0.5"
+    >
       <View className="h-10 wide:h-8 flex-row items-center gap-2 px-2.5">
         <View className="size-4 rounded-sm bg-foreground/5" />
         <View className="h-2.5 w-26 rounded-sm bg-foreground/5" />
