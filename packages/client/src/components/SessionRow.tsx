@@ -68,9 +68,11 @@ export function SessionRow({
   );
   const statusStyle = useBlinkingStatus(
     session.status === 'running' || session.status === 'needs_input',
+    status.className,
   );
   const subagentsStatusStyle = useBlinkingStatus(
     !subagentsFailed && session.subagents.running > 0,
+    'bg-success',
   );
   const markBorder = selected
     ? 'border-sidebar-accent'
@@ -98,15 +100,19 @@ export function SessionRow({
             color={color}
           />
         </Animated.View>
-        <Animated.View
-          testID="session-status"
-          style={statusStyle}
+        <View
+          testID="session-status-container"
           className={cn(
             'absolute -right-1 -top-0.5 size-2.5 rounded-full border-2',
-            status.className,
             markBorder,
           )}
-        />
+        >
+          <Animated.View
+            testID="session-status"
+            style={statusStyle}
+            className={cn('size-full rounded-full', status.className)}
+          />
+        </View>
       </View>
       <View className="min-w-0 flex-1 gap-0.5">
         <Text
@@ -127,7 +133,7 @@ export function SessionRow({
               accessibilityLabel={`Plan: ${plan.done} of ${plan.total} complete`}
               className="shrink-0 flex-row items-center gap-1.5"
             >
-              <View className="w-session-plan flex-row gap-0.5">
+              <View className="w-session-plan shrink-0 flex-row gap-0.5">
                 {Array.from({ length: plan.total }, (_, index) => (
                   <View
                     key={index}
@@ -155,15 +161,22 @@ export function SessionRow({
                   className="size-3.5 text-muted-foreground"
                 />
                 {(subagentsFailed || session.subagents.running > 0) && (
-                  <Animated.View
-                    testID="subagents-status"
-                    style={subagentsStatusStyle}
+                  <View
+                    testID="subagents-status-container"
                     className={cn(
                       'absolute -right-0.75 -top-0.75 size-2 rounded-full border-2',
-                      subagentsFailed ? 'bg-destructive' : 'bg-success',
                       markBorder,
                     )}
-                  />
+                  >
+                    <Animated.View
+                      testID="subagents-status"
+                      style={subagentsStatusStyle}
+                      className={cn(
+                        'size-full rounded-full',
+                        subagentsFailed ? 'bg-destructive' : 'bg-success',
+                      )}
+                    />
+                  </View>
                 )}
               </View>
               <Text className="text-xs font-normal leading-4 text-muted-foreground">
@@ -180,7 +193,10 @@ export function SessionRow({
           )}
           <View
             testID="session-issue-slot"
-            className="h-4 w-session-issue shrink-0 flex-row items-center gap-1"
+            className={cn(
+              'h-4 shrink-0 flex-row items-center gap-1',
+              !issue && 'w-session-issue',
+            )}
           >
             {issue && (
               <SessionMetadata
@@ -193,7 +209,10 @@ export function SessionRow({
           </View>
           <View
             testID="session-pull-request-slot"
-            className="h-4 w-session-pull-request shrink-0 flex-row items-center gap-1"
+            className={cn(
+              'h-4 shrink-0 flex-row items-center gap-1',
+              !pullRequest && 'w-session-pull-request',
+            )}
           >
             {pullRequest && (
               <SessionMetadata
@@ -210,15 +229,32 @@ export function SessionRow({
   );
 }
 
-function useBlinkingStatus(active: boolean) {
+function useBlinkingStatus(active: boolean, className: string) {
+  const { backgroundColor } = useResolveClassNames(className);
   const opacity = useSharedValue(1);
   useEffect(() => {
     opacity.value = active
-      ? withRepeat(withTiming(0, { duration: 500 }), -1, true)
+      ? withRepeat(withTiming(0.45, { duration: 650 }), -1, true)
       : 1;
     return () => cancelAnimation(opacity);
   }, [active, opacity]);
-  return useAnimatedStyle(() => ({ opacity: opacity.value }), [opacity]);
+  return useAnimatedStyle(
+    () => ({
+      opacity: opacity.value,
+      boxShadow: active
+        ? [
+            {
+              offsetX: 0,
+              offsetY: 0,
+              blurRadius: 4,
+              spreadDistance: 0,
+              color: backgroundColor,
+            },
+          ]
+        : [],
+    }),
+    [opacity, active, backgroundColor],
+  );
 }
 
 const issueIcon =
@@ -264,6 +300,7 @@ function SessionMetadata({
       className="flex-row items-center gap-1"
     >
       <SvgXml
+        className="size-3.5 shrink-0"
         xml={`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${icon}</svg>`}
         width={14}
         height={14}

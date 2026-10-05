@@ -53,6 +53,57 @@ export const PaperRowDimensions: Story = {
   },
 };
 
+export const PaperMetadataDimensions: Story = {
+  args: {
+    session: sessionRowMocks.finishedSubagents,
+    issue: { number: 96 },
+    pullRequest: { number: 44, status: 'merged' },
+  },
+  play: async ({ canvas }) => {
+    const { page } = await import('vitest/browser');
+    for (const width of [390, 1440]) {
+      await page.viewport(width, 844);
+      const groups = [
+        canvas.getByLabelText('Plan: 5 of 5 complete'),
+        canvas.getByLabelText('Subagents: 3, 0 running'),
+        canvas.getByLabelText('Issue #96'),
+        canvas.getByLabelText('merged PR #44'),
+      ];
+      await expect(canvas.getByText('5/5')).toBeVisible();
+      for (const text of ['5/5', '3', '#96', '#44']) {
+        const style = getComputedStyle(canvas.getByText(text, { exact: true }));
+        await expect(style.fontSize).toBe('12px');
+        await expect(style.lineHeight).toBe('16px');
+        await expect(style.fontWeight).toBe('400');
+      }
+      for (const group of groups.slice(1)) {
+        const icon = group.querySelector('svg');
+        if (!icon) throw new Error('Missing metadata icon');
+        await expect(icon.getBoundingClientRect().width).toBe(14);
+        await expect(icon.getBoundingClientRect().height).toBe(14);
+        await expect(getComputedStyle(group).gap).toBe('4px');
+      }
+      const bar = groups[0]?.firstElementChild;
+      if (!bar) throw new Error('Missing Plan bar');
+      await expect(bar.getBoundingClientRect().width).toBe(40);
+      await expect(bar.getBoundingClientRect().height).toBe(4);
+      await expect(getComputedStyle(bar).gap).toBe('2px');
+      await expect(getComputedStyle(bar.parentElement as Element).gap).toBe(
+        '6px',
+      );
+      for (let index = 1; index < groups.length; index++) {
+        const previous = groups[index - 1]?.getBoundingClientRect();
+        const current = groups[index]?.getBoundingClientRect();
+        if (!previous || !current) throw new Error('Missing metadata group');
+        await expect(current.left - previous.right).toBe(12);
+        await expect(current.top + current.height / 2).toBe(
+          previous.top + previous.height / 2,
+        );
+      }
+    }
+  },
+};
+
 export const PaperAgentSymbols: Story = {
   render: (args) => (
     <>
@@ -192,6 +243,25 @@ export const StatusMotion: Story = {
     await waitFor(() =>
       expect(getComputedStyle(waitingDot).opacity).not.toBe(waitingOpacity),
     );
+    for (const dot of [runningDot, waitingDot]) {
+      await expect(
+        Number(getComputedStyle(dot).opacity),
+      ).toBeGreaterThanOrEqual(0.45);
+      await expect(getComputedStyle(dot).boxShadow).not.toBe('none');
+      await expect(getComputedStyle(dot).boxShadow).toContain(
+        getComputedStyle(dot).backgroundColor,
+      );
+      const container = dot.parentElement;
+      if (!container) throw new Error('Missing status container');
+      await expect(getComputedStyle(container).boxShadow).toBe('none');
+      await expect(getComputedStyle(container).opacity).toBe('1');
+      await expect(getComputedStyle(dot).borderWidth).toBe('0px');
+      const bounds = container.getBoundingClientRect();
+      const logoBounds = container.parentElement?.getBoundingClientRect();
+      if (!logoBounds) throw new Error('Missing status container');
+      await expect(bounds.top).toBeLessThan(logoBounds.top);
+      await expect(bounds.right).toBeGreaterThan(logoBounds.right);
+    }
     await expect(getComputedStyle(runningLogo).opacity).toBe('1');
     await expect(getComputedStyle(waitingLogo).transform).toBe(waitingRotation);
     for (const [name, label] of [
@@ -307,3 +377,8 @@ export const LongTitleSelectedDark: Story = {
 };
 export const ArchivedDark: Story = { ...Archived, globals: { mode: 'dark' } };
 export const MetadataDark: Story = { ...Metadata, globals: { mode: 'dark' } };
+
+export const PaperMetadataDimensionsDark: Story = {
+  ...PaperMetadataDimensions,
+  globals: { mode: 'dark' },
+};
