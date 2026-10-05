@@ -22,7 +22,7 @@ describe('Claude config options', () => {
       model: 'default',
       effort: 'default',
     });
-    expect(toConfigOptions(models, values)).toEqual([
+    expect(toConfigOptions(models, values)).toMatchObject([
       {
         type: 'select',
         configId: 'mode',
@@ -112,4 +112,48 @@ describe('Claude config options', () => {
       ),
     ).toBeUndefined();
   });
+});
+
+it('marks Plan and dangerous modes and keeps per-model support flags', () => {
+  const options = toConfigOptions(models, startingValues(models, []));
+  expect(options).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        configId: 'mode',
+        options: expect.arrayContaining([
+          expect.objectContaining({
+            value: 'plan',
+            _meta: { argo: { icon: 'ClipboardList', tone: 'planning' } },
+          }),
+          expect.objectContaining({
+            value: 'bypassPermissions',
+            _meta: { argo: { icon: 'ShieldOff', tone: 'dangerous' } },
+          }),
+        ]),
+      }),
+      expect.objectContaining({
+        configId: 'model',
+        options: expect.arrayContaining([
+          expect.objectContaining({
+            value: 'default',
+            _meta: {
+              argo: expect.objectContaining({
+                supportsEffort: true,
+                supportsAutoMode: true,
+              }),
+            },
+          }),
+          expect.objectContaining({
+            value: 'haiku',
+            _meta: {
+              argo: expect.objectContaining({
+                supportsEffort: false,
+                supportsAutoMode: false,
+              }),
+            },
+          }),
+        ]),
+      }),
+    ]),
+  );
 });

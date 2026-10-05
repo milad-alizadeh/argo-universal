@@ -10,6 +10,8 @@ import { project } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
+import { notImplemented } from '../not-implemented';
+
 const run = promisify(execFile);
 const gitLine = z.string().trim().min(1);
 let rejectedShapes = 0;
@@ -55,6 +57,7 @@ export async function seedProject(
 
 export function createProjectService(database: Database): ProjectsService {
   return {
+    branches: notImplemented,
     list: async () =>
       Promise.all(
         database

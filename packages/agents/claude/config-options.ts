@@ -15,6 +15,13 @@ const modeNames = {
   bypassPermissions: 'Bypass permissions',
 } satisfies Partial<Record<PermissionMode, string>>;
 type Mode = keyof typeof modeNames;
+const modeMetadata = {
+  default: { icon: 'ShieldCheck', tone: 'safe' },
+  acceptEdits: { icon: 'Pencil', tone: 'moderate' },
+  plan: { icon: 'ClipboardList', tone: 'planning' },
+  auto: { icon: 'Sparkles', tone: 'moderate' },
+  bypassPermissions: { icon: 'ShieldOff', tone: 'dangerous' },
+} as const;
 
 // `default` leaves the choice to the CLI: its default model, or the model's default effort.
 export const DEFAULT_VALUE = 'default';
@@ -95,6 +102,7 @@ export function toConfigOptions(
       options: modesFor(model).map((mode) => ({
         value: mode,
         name: modeNames[mode],
+        _meta: { argo: modeMetadata[mode] },
       })),
     },
     {
@@ -106,6 +114,15 @@ export function toConfigOptions(
       options: models.map((option) => ({
         value: option.value,
         name: option.displayName,
+        _meta: {
+          argo: {
+            supportsEffort: option.supportsEffort ?? false,
+            supportedEffortLevels: option.supportedEffortLevels ?? [],
+            supportsAdaptiveThinking: option.supportsAdaptiveThinking ?? false,
+            supportsFastMode: option.supportsFastMode ?? false,
+            supportsAutoMode: option.supportsAutoMode ?? false,
+          },
+        },
         ...(option.description ? { description: option.description } : {}),
       })),
     },
