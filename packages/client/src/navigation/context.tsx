@@ -6,6 +6,11 @@ export type NavigationDestination =
   | { to: 'session'; id: string }
   | { to: 'issues' }
   | { to: 'atlas' }
+  | { to: 'settings-projects' }
+  | { to: 'settings-agents' }
+  | { to: 'settings-devices' }
+  | { to: 'settings-appearance' }
+  | { to: 'settings-notifications' }
   | { to: 'settings-accounts' }
   | { to: 'settings-project'; name: string }
   | { to: 'settings-connection' }
