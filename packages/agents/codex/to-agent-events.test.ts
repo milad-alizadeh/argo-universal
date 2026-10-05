@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { AgentEvent, FeedUpdate } from '../src/agent-events';
+import type { VendorMessage } from './messages';
 import { initialMappingState, toAgentEvents } from './to-agent-events';
 
 const recording = (name: string) =>
@@ -13,16 +14,17 @@ const recording = (name: string) =>
       'utf8',
     ),
   ).payload.messages;
-const mapRecording = (name: string) => {
+const mapMessages = (messages: VendorMessage[]) => {
   let state = initialMappingState();
   const events: AgentEvent[] = [];
-  for (const message of recording(name)) {
+  for (const message of messages) {
     const mapped = toAgentEvents(message, state);
     state = mapped.mappingState;
     events.push(...mapped.events);
   }
   return events;
 };
+const mapRecording = (name: string) => mapMessages(recording(name));
 const settledRows = (events: AgentEvent[]): FeedUpdate[] =>
   events.flatMap((event) =>
     event.type === 'agent.feed' &&
@@ -133,7 +135,6 @@ it('ends the recorded interrupted Turn and settles its unfinished command', () =
 });
 
 it('reconciles a thought summary with its final record and drops raw thought text once a summary streams', () => {
-  let mappingState = initialMappingState();
   const messages = [
     { method: 'turn/started', params: { turn: { id: 'thought-turn' } } },
     {
@@ -174,14 +175,7 @@ it('reconciles a thought summary with its final record and drops raw thought tex
       },
     },
   ];
-  const events = messages.flatMap((message) => {
-    const mapped = toAgentEvents(
-      message as Parameters<typeof toAgentEvents>[0],
-      mappingState,
-    );
-    mappingState = mapped.mappingState;
-    return mapped.events;
-  });
+  const events = mapMessages(messages as VendorMessage[]);
   expect(settledRows(events)).toEqual([
     {
       id: 'thought',

@@ -1,7 +1,7 @@
 import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { agentAdapters } from '@repo/agents';
+import { type AgentAdapter, agentAdapters } from '@repo/agents';
 import { appRouter, type Services } from '@repo/api';
 import { createMockAdapter } from '@repo/mocks/agent';
 import { mockClis } from '@repo/mocks/cli';
@@ -12,9 +12,54 @@ import { createServerServices } from '../services/server-services';
 import type { HttpServerOptions } from './http-server';
 import { engineMachine } from './machine';
 
+function startEngine({
+  database,
+  adapter,
+  home = '/unused',
+  closeDatabase = () => {},
+}: {
+  database: ReturnType<typeof openTestDatabase>['database'];
+  adapter: AgentAdapter;
+  home?: string;
+  closeDatabase?: () => void;
+}) {
+  let services: Services | undefined;
+  const machine = engineMachine.provide({
+    actors: {
+      openDatabase: fromPromise(async () => database),
+      processSignals: fromCallback(() => {}),
+      startHttpServer: fromPromise(
+        async ({ input }: { input: HttpServerOptions }) => {
+          services = createServerServices(input);
+          return { close: async () => {} };
+        },
+      ),
+    },
+    actions: { log: () => {}, sendToSupervisor: () => {}, closeDatabase },
+  });
+  const engine = createActor(machine, {
+    input: {
+      home,
+      port: 7337,
+      version: '1',
+      startedAt: new Date().toISOString(),
+      adapters: [adapter],
+    },
+  }).start();
+  return {
+    engine,
+    createCaller: async () => {
+      await waitFor(engine, (snapshot) =>
+        snapshot.matches({ live: 'running' }),
+      );
+      if (!services) throw new Error('No services');
+      return appRouter.createCaller({ services });
+    },
+  };
+}
+
 it('serves live Session procedures and drains their Feed before closing the database', async () => {
   const { database, remove } = openTestDatabase();
-  let services: Services | undefined;
   let closedDatabase = false;
   const adapter = createMockAdapter({
     stream: (stream) => {
@@ -36,38 +81,15 @@ it('serves live Session procedures and drains their Feed before closing the data
       });
     },
   });
-  const machine = engineMachine.provide({
-    actors: {
-      openDatabase: fromPromise(async () => database),
-      processSignals: fromCallback(() => {}),
-      startHttpServer: fromPromise(
-        async ({ input }: { input: HttpServerOptions }) => {
-          services = createServerServices(input);
-          return { close: async () => {} };
-        },
-      ),
-    },
-    actions: {
-      log: () => {},
-      sendToSupervisor: () => {},
-      closeDatabase: () => {
-        closedDatabase = true;
-      },
+  const { engine, createCaller } = startEngine({
+    database,
+    adapter,
+    closeDatabase: () => {
+      closedDatabase = true;
     },
   });
-  const engine = createActor(machine, {
-    input: {
-      home: '/unused',
-      port: 7337,
-      version: '1',
-      startedAt: new Date().toISOString(),
-      adapters: [adapter],
-    },
-  }).start();
   try {
-    await waitFor(engine, (snapshot) => snapshot.matches({ live: 'running' }));
-    if (!services) throw new Error('No services');
-    const caller = appRouter.createCaller({ services });
+    const caller = await createCaller();
     const { messageId } = await caller.session.prompt({
       sessionId: 'session-1',
       prompt: [{ type: 'text', text: 'Hi' }],
@@ -114,39 +136,13 @@ it.each(agentAdapters)(
       { agent: adapter.agent, checkoutPath: directory },
       directory,
     );
-    let services: Services | undefined;
-    const machine = engineMachine.provide({
-      actors: {
-        openDatabase: fromPromise(async () => database),
-        processSignals: fromCallback(() => {}),
-        startHttpServer: fromPromise(
-          async ({ input }: { input: HttpServerOptions }) => {
-            services = createServerServices(input);
-            return { close: async () => {} };
-          },
-        ),
-      },
-      actions: {
-        log: () => {},
-        sendToSupervisor: () => {},
-        closeDatabase: () => {},
-      },
+    const { engine, createCaller } = startEngine({
+      database,
+      adapter,
+      home: directory,
     });
-    const engine = createActor(machine, {
-      input: {
-        home: directory,
-        port: 7337,
-        version: '1',
-        startedAt: new Date().toISOString(),
-        adapters: [adapter],
-      },
-    }).start();
     try {
-      await waitFor(engine, (snapshot) =>
-        snapshot.matches({ live: 'running' }),
-      );
-      if (!services) throw new Error('No services');
-      const caller = appRouter.createCaller({ services });
+      const caller = await createCaller();
       const { messageId } = await caller.session.prompt({
         sessionId: 'session-1',
         prompt: [{ type: 'text', text: 'Edit the files and run a command.' }],

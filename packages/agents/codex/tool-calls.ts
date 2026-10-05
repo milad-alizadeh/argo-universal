@@ -35,14 +35,46 @@ const changeOf = ({ path, kind, diff }: FileUpdateChange): DiffChange => {
 };
 const destinationPath = (change: FileUpdateChange) =>
   (change.kind.type === 'update' && change.kind.move_path) || change.path;
+const quotePath = (filePath: string) => {
+  // biome-ignore lint/suspicious/noControlCharactersInRegex: Git pathnames encode control characters with octal escapes.
+  const escaped = filePath.replace(/[\x00-\x20"\\\x7f]/g, (character) => {
+    if (character === '"' || character === '\\') return `\\${character}`;
+    return `\\${character.charCodeAt(0).toString(8).padStart(3, '0')}`;
+  });
+  if (escaped === filePath) return filePath;
+  return `"${escaped}"`;
+};
 const patchOf = (change: FileUpdateChange) => {
   const oldPath = change.path.replace(/^\//, '');
   const newPath = destinationPath(change).replace(/^\//, '');
-  const header = `diff --git a/${oldPath} b/${newPath}\n--- ${change.kind.type === 'add' ? '/dev/null' : `a/${oldPath}`}\n+++ ${change.kind.type === 'delete' ? '/dev/null' : `b/${newPath}`}\n`;
-  if (change.kind.type === 'update') return header + change.diff;
-  const lines = change.diff.replace(/\n$/, '').split('\n');
+  const oldFile = quotePath(`a/${oldPath}`);
+  const newFile = quotePath(`b/${newPath}`);
+  const header = `diff --git ${oldFile} ${newFile}\n`;
+  if (change.kind.type === 'update') {
+    const rename =
+      oldPath === newPath
+        ? ''
+        : `rename from ${quotePath(oldPath)}\nrename to ${quotePath(newPath)}\n`;
+    if (!change.diff) return rename ? header + rename : '';
+    return `${header}${rename}--- ${oldFile}\n+++ ${newFile}\n${change.diff}`;
+  }
   const adding = change.kind.type === 'add';
-  return `${header}@@ -${adding ? '0,0' : `1,${lines.length}`} +${adding ? `1,${lines.length}` : '0,0'} @@\n${lines.map((line) => (adding ? '+' : '-') + line).join('\n')}\n`;
+  const mode = adding ? 'new' : 'deleted';
+  const metadata = `${mode} file mode 100644\n`;
+  if (!change.diff) return header + metadata;
+  const lines = change.diff.split('\n');
+  const finalNewline = lines.at(-1) === '';
+  if (finalNewline) lines.pop();
+  const oldMarker = adding ? '/dev/null' : oldFile;
+  const newMarker = adding ? newFile : '/dev/null';
+  const range = `1,${lines.length}`;
+  const oldRange = adding ? '0,0' : range;
+  const newRange = adding ? range : '0,0';
+  const sign = adding ? '+' : '-';
+  const body = lines.map((line) => sign + line).join('\n');
+  let patch = `${header}${metadata}--- ${oldMarker}\n+++ ${newMarker}\n@@ -${oldRange} +${newRange} @@\n${body}\n`;
+  if (!finalNewline) patch += '\\ No newline at end of file\n';
+  return patch;
 };
 
 export function toToolCall(

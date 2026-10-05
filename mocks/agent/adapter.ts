@@ -16,7 +16,10 @@ export interface MockAgentStream {
 }
 
 export interface MockAgentScript {
-  connect?: (input: AgentConnectInput) => Promise<AgentReady>;
+  connect?: (
+    input: AgentConnectInput,
+    signal: AbortSignal,
+  ) => Promise<AgentReady>;
   stream?: (stream: MockAgentStream) => undefined | (() => void);
   stop?: (input: AgentConnectInput) => Promise<void>;
 }
@@ -42,8 +45,8 @@ export const createMockAdapter = (
   agent,
   initialMappingState: () => null,
   toAgentEvents: (event, mappingState) => ({ events: [event], mappingState }),
-  async connect(input, listener) {
-    const ready = await connect(input);
+  async connect(input, listener, signal) {
+    const ready = await connect(input, signal);
     const handlers: ((command: VendorCommand) => void)[] = [];
     const cleanup = stream({
       input,

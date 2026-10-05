@@ -4,11 +4,11 @@ Every Agent has the same lifecycle: start or resume the vendor session, wait for
 
 An adapter is an `AgentAdapter` in the registry, `agentAdapters`. The registry finds it by the Session's `agent` id with `findAgentAdapter` and passes it to the Session, which passes it to the Agent machine it invokes, so the Agent machine is not built per registry. It has three parts, and none of them imports XState:
 
-- `connect(input, listener)` starts or resumes the vendor session. It resolves to a `VendorSession`, which holds the ready data (`vendorSessionId`, `configOptions`, `capabilities`, `continuedOutside`) and a `run(command)` method that runs one Session command. The listener takes vendor messages, Agent events that need no mapping, and a failure.
+- `connect(input, listener, signal)` starts or resumes the vendor session. It resolves to a `VendorSession`, which holds the ready data (`vendorSessionId`, `configOptions`, `capabilities`, `continuedOutside`) and a `run(command)` method that runs one Session command. The listener takes vendor messages, Agent events that need no mapping, and a failure. The Agent machine aborts the signal when stopping, so startup and pending commands can release their resources before they resolve.
 - `toAgentEvents(message, mappingState)` is a pure function that turns one vendor message into Agent events. Its `mappingState` lives in the Agent machine's `vendorSession` actor, which maps each message as it arrives.
 - `initialMappingState()`.
 
-The Agent machine runs commands one at a time and in order, so a config change lands before the prompt that follows it. It finds the start and end of a Turn in the Agent events, so no adapter decides a lifecycle transition. A vendor session reports `capabilities` with its ready data, because what a Session can do depends on that session, not only on the vendor. Biome stops an adapter from importing `xstate`.
+The Agent machine runs ordinary commands one at a time and in order, so a config change lands before the prompt that follows it. Cancel and stop interrupt pending commands. It finds the start and end of a Turn in the Agent events, so no adapter decides a lifecycle transition. A vendor session reports `capabilities` with its ready data, because what a Session can do depends on that session, not only on the vendor. Biome stops an adapter from importing `xstate`.
 
 Inside an adapter, the vendor SDK's TypeScript types describe vendor messages. The adapter does not parse them with Zod. The Feed checks every change an adapter makes against the contract's `SessionUpdate` schema, in `feed-change.ts`, and rejects, logs and counts one that does not match. That is the one check at the boundary between an adapter and the Server.
 

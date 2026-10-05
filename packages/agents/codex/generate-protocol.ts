@@ -80,7 +80,6 @@ try {
       source = source.replace(new RegExp(`\\b${name}\\b`, 'g'), replacement);
     declarations.push(
       source
-        .replace(/import type .* from "[^"]+";\n/g, '')
         .replace(/\/\*[\s\S]*?\*\//g, '')
         .replace(/^\/\/.*\n/gm, '')
         .trim(),

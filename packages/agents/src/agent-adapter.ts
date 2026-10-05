@@ -23,7 +23,7 @@ export interface VendorSessionListener<Message> {
 
 export type VendorCommand = Exclude<AgentCommand, { type: 'agent.stop' }>;
 
-// One live vendor session. The Agent machine runs one command at a time, in order.
+// One live vendor session. Ordinary commands run in order; cancel and stop can interrupt them.
 export interface VendorSession {
   ready: AgentReady;
   run(command: VendorCommand): Promise<void>;
@@ -43,6 +43,8 @@ export interface AgentAdapter<Message = unknown, MappingState = unknown> {
   connect(
     input: AgentConnectInput,
     listener: VendorSessionListener<Message>,
+    // Aborts startup and pending commands when the Agent machine stops.
+    signal: AbortSignal,
   ): Promise<VendorSession>;
   initialMappingState(): MappingState;
   // Pure, so recordings can drive it (ADR-0006).

@@ -8,27 +8,47 @@ import type { VendorMessage } from './messages';
 import { openAppServer } from './open-app-server';
 import type { Model, ModelListResponse, TurnStartParams } from './protocol.gen';
 
+const createVendorTurn = () => ({
+  id: null as string | null,
+  identity: Promise.withResolvers<string | null>(),
+  completion: Promise.withResolvers<void>(),
+});
+
 export async function connect(
   input: AgentConnectInput,
   listener: VendorSessionListener<VendorMessage>,
+  signal: AbortSignal,
 ): Promise<VendorSession> {
+  signal.throwIfAborted();
   let vendorSessionId = input.vendorSessionId;
-  let activeVendorTurnId: string | null = null;
-  let endedTurnId: string | null = null;
+  let activeTurn: ReturnType<typeof createVendorTurn> | null = null;
   const server = openAppServer(
     input.cwd,
     (message) => {
       const notification = message as VendorMessage;
       if (notification.params?.threadId !== vendorSessionId) return;
-      if (notification.method === 'turn/started')
-        activeVendorTurnId = notification.params.turn.id;
+      if (notification.method === 'turn/started') {
+        if (
+          !activeTurn ||
+          (activeTurn.id !== null &&
+            activeTurn.id !== notification.params.turn.id)
+        )
+          activeTurn = createVendorTurn();
+        activeTurn.id = notification.params.turn.id;
+        activeTurn.identity.resolve(activeTurn.id);
+      }
       listener.message(notification);
-      if (notification.method === 'turn/completed') {
-        endedTurnId = notification.params.turn.id;
-        if (endedTurnId === activeVendorTurnId) activeVendorTurnId = null;
+      if (
+        notification.method === 'turn/completed' &&
+        activeTurn?.id === notification.params.turn.id
+      ) {
+        activeTurn.identity.resolve(null);
+        activeTurn.completion.resolve();
+        activeTurn = null;
       }
     },
     listener.failed,
+    signal,
   );
   try {
     await server.request('initialize', {
@@ -64,35 +84,51 @@ export async function connect(
       : await server.request('thread/start', settings);
     vendorSessionId = started.thread.id;
     const prompt = async (content: TurnStartParams['input']) => {
+      const turn = createVendorTurn();
+      activeTurn = turn;
       const fullAccess = values.mode === 'fullAccess';
-      const result = await server.request('turn/start', {
-        threadId: started.thread.id,
-        input: content,
-        model: values.model,
-        effort: values.effort,
-        summary: 'detailed',
-        approvalPolicy: fullAccess ? 'never' : 'on-request',
-        sandboxPolicy: fullAccess
-          ? { type: 'dangerFullAccess' }
-          : {
-              type: 'workspaceWrite',
-              writableRoots: [],
-              networkAccess: false,
-              excludeTmpdirEnvVar: false,
-              excludeSlashTmp: false,
-            },
-        collaborationMode: {
-          mode: values.mode === 'plan' ? 'plan' : 'default',
-          settings: {
+      try {
+        const response = server
+          .request('turn/start', {
+            threadId: started.thread.id,
+            input: content,
             model: values.model,
-            reasoning_effort: values.effort,
-            developer_instructions: null,
-          },
-        },
-      });
-      // A notification can precede the RPC response, or finish the Turn before it arrives.
-      if (result.turn.status === 'inProgress' && result.turn.id !== endedTurnId)
-        activeVendorTurnId = result.turn.id;
+            effort: values.effort,
+            summary: 'detailed',
+            approvalPolicy: fullAccess ? 'never' : 'on-request',
+            sandboxPolicy: fullAccess
+              ? { type: 'dangerFullAccess' }
+              : {
+                  type: 'workspaceWrite',
+                  writableRoots: [],
+                  networkAccess: false,
+                  excludeTmpdirEnvVar: false,
+                  excludeSlashTmp: false,
+                },
+            collaborationMode: {
+              mode: values.mode === 'plan' ? 'plan' : 'default',
+              settings: {
+                model: values.model,
+                reasoning_effort: values.effort,
+                developer_instructions: null,
+              },
+            },
+          })
+          .then((result) => {
+            // A completed Turn's late response must not replace the next Turn's identity.
+            if (activeTurn !== turn) return;
+            if (result.turn.status === 'inProgress') {
+              turn.id = result.turn.id;
+              turn.identity.resolve(turn.id);
+            } else {
+              turn.completion.resolve();
+              activeTurn = null;
+            }
+          });
+        await Promise.race([response, turn.completion.promise]);
+      } finally {
+        turn.identity.resolve(null);
+      }
     };
     return {
       ready: {
@@ -118,13 +154,17 @@ export async function connect(
               ),
             );
             return;
-          case 'agent.cancel':
-            if (activeVendorTurnId)
+          case 'agent.cancel': {
+            const turn = activeTurn;
+            if (!turn) return;
+            const turnId = await turn.identity.promise;
+            if (turnId && activeTurn === turn)
               await server.request('turn/interrupt', {
                 threadId: started.thread.id,
-                turnId: activeVendorTurnId,
+                turnId,
               });
             return;
+          }
           case 'agent.setConfigOption': {
             const next = changeValue(models, values, command);
             if (!next) return;

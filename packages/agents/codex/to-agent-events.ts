@@ -2,10 +2,11 @@ import type { TurnUsage } from '@repo/contracts';
 import type { AgentMapping } from '../src/agent-adapter';
 import type { AgentEvent, FeedChange, FeedUpdate } from '../src/agent-events';
 import type { VendorMessage } from './messages';
-import type { ThreadItem, TokenUsageBreakdown } from './protocol.gen';
-import { toToolCall } from './tool-calls';
+import type { ThreadItem, TokenUsageBreakdown, Turn } from './protocol.gen';
+import { type ToolCallRow, toToolCall } from './tool-calls';
 
 type TextKind = 'agent_message' | 'agent_thought';
+type TextRow = Extract<FeedUpdate, { sessionUpdate: TextKind }>;
 export interface MappingState {
   vendorTurnId: string | null;
   openRows: Record<string, TextKind | 'tool_call_update'>;
@@ -30,7 +31,7 @@ const textRow = (
   kind: TextKind,
   text: string,
   state: 'open' | 'settled',
-): FeedUpdate => ({
+): TextRow => ({
   id,
   sessionUpdate: kind,
   messageId: id,
@@ -97,70 +98,15 @@ export function toAgentEvents(
       },
     };
   }
-  const vendorTurnId =
-    message.method === 'turn/completed'
-      ? message.params.turn.id
-      : 'turnId' in message.params
-        ? message.params.turnId
-        : null;
-  if (vendorTurnId !== mappingState.vendorTurnId || vendorTurnId === null)
+  let vendorTurnId: string | undefined;
+  if (message.method === 'turn/completed')
+    vendorTurnId = message.params.turn.id;
+  else if ('turnId' in message.params) vendorTurnId = message.params.turnId;
+  if (!vendorTurnId || vendorTurnId !== mappingState.vendorTurnId)
     return dropped(mappingState);
   switch (message.method) {
-    case 'turn/completed': {
-      const { turn } = message.params;
-      const stopReason =
-        turn.status === 'interrupted'
-          ? 'cancelled'
-          : turn.status === 'failed'
-            ? 'error'
-            : 'end_turn';
-      const unfinished = Object.entries(mappingState.openRows).map(
-        ([id, kind]) =>
-          feed({
-            type: 'patch',
-            id,
-            set: {
-              state: 'settled',
-              ...(kind === 'tool_call_update'
-                ? {
-                    status: stopReason === 'cancelled' ? 'cancelled' : 'failed',
-                  }
-                : {}),
-            },
-          }),
-      );
-      const ended: AgentEvent = {
-        type: 'agent.turnEnded',
-        stopReason,
-        ...(mappingState.totalUsage
-          ? {
-              usage: usageOf(
-                mappingState.totalUsage,
-                mappingState.startingUsage,
-              ),
-            }
-          : {}),
-        ...(turn.error
-          ? {
-              error: {
-                code: -32603,
-                message: turn.error.message,
-                data: {
-                  info: turn.error.codexErrorInfo,
-                  details: turn.error.additionalDetails,
-                },
-              },
-            }
-          : {}),
-      };
-      return {
-        events: [...unfinished, ended],
-        mappingState: {
-          ...initialMappingState(),
-          totalUsage: mappingState.totalUsage,
-        },
-      };
-    }
+    case 'turn/completed':
+      return endTurn(message.params.turn, mappingState);
     case 'item/started':
     case 'item/completed':
       return mapItem(
@@ -187,13 +133,12 @@ export function toAgentEvents(
       if (mappingState.openRows[itemId] !== 'agent_thought')
         return dropped(mappingState);
       const previous = mappingState.summaryIndexes[itemId];
-      const events: AgentEvent[] =
-        previous === undefined
-          ? [upsert(textRow(itemId, 'agent_thought', '', 'open'))]
-          : [];
-      const text =
-        (previous !== undefined && summaryIndex > previous ? '\n\n' : '') +
-        delta;
+      const events: AgentEvent[] = [];
+      if (previous === undefined)
+        events.push(upsert(textRow(itemId, 'agent_thought', '', 'open')));
+      let text = delta;
+      if (previous !== undefined && summaryIndex > previous)
+        text = `\n\n${delta}`;
       events.push(
         feed({ type: 'append', id: itemId, field: 'content.0.text', text }),
       );
@@ -219,19 +164,17 @@ export function toAgentEvents(
       );
     case 'thread/tokenUsage/updated': {
       const { tokenUsage } = message.params;
+      const events: AgentEvent[] = [];
+      if (tokenUsage.modelContextWindow !== null)
+        events.push({
+          type: 'agent.usage',
+          usage: {
+            used: tokenUsage.last.totalTokens,
+            size: tokenUsage.modelContextWindow,
+          },
+        });
       return {
-        events:
-          tokenUsage.modelContextWindow === null
-            ? []
-            : [
-                {
-                  type: 'agent.usage',
-                  usage: {
-                    used: tokenUsage.last.totalTokens,
-                    size: tokenUsage.modelContextWindow,
-                  },
-                },
-              ],
+        events,
         mappingState: {
           ...mappingState,
           totalUsage: tokenUsage.total,
@@ -246,22 +189,57 @@ export function toAgentEvents(
   }
 }
 
+function endTurn(
+  turn: Turn,
+  mappingState: MappingState,
+): AgentMapping<MappingState> {
+  const ended: Extract<AgentEvent, { type: 'agent.turnEnded' }> = {
+    type: 'agent.turnEnded',
+    stopReason: 'end_turn',
+  };
+  if (turn.status === 'interrupted') ended.stopReason = 'cancelled';
+  else if (turn.status === 'failed') ended.stopReason = 'error';
+  if (mappingState.totalUsage)
+    ended.usage = usageOf(mappingState.totalUsage, mappingState.startingUsage);
+  if (turn.error)
+    ended.error = {
+      code: -32603,
+      message: turn.error.message,
+      data: {
+        info: turn.error.codexErrorInfo,
+        details: turn.error.additionalDetails,
+      },
+    };
+  const unfinished = Object.entries(mappingState.openRows).map(([id, kind]) => {
+    const set: Record<string, unknown> = { state: 'settled' };
+    if (kind === 'tool_call_update')
+      set.status = ended.stopReason === 'cancelled' ? 'cancelled' : 'failed';
+    return feed({ type: 'patch', id, set });
+  });
+  return {
+    events: [...unfinished, ended],
+    mappingState: {
+      ...initialMappingState(),
+      totalUsage: mappingState.totalUsage,
+    },
+  };
+}
+
 function appendText(
   id: string,
   text: string,
   field: string,
   mappingState: MappingState,
 ): AgentMapping<MappingState> {
-  return id in mappingState.openRows
-    ? { events: [feed({ type: 'append', id, field, text })], mappingState }
-    : dropped(mappingState);
+  if (!(id in mappingState.openRows)) return dropped(mappingState);
+  return { events: [feed({ type: 'append', id, field, text })], mappingState };
 }
 function mapItem(
   item: ThreadItem,
   state: 'open' | 'settled',
   mappingState: MappingState,
 ): AgentMapping<MappingState> {
-  let row: FeedUpdate;
+  let row: TextRow | ToolCallRow;
   switch (item.type) {
     case 'agentMessage':
       row = textRow(item.id, 'agent_message', item.text, state);
@@ -283,6 +261,6 @@ function mapItem(
   }
   const openRows = { ...mappingState.openRows };
   if (state === 'settled') delete openRows[item.id];
-  else openRows[item.id] = row.sessionUpdate as TextKind | 'tool_call_update';
+  else openRows[item.id] = row.sessionUpdate;
   return { events: [upsert(row)], mappingState: { ...mappingState, openRows } };
 }

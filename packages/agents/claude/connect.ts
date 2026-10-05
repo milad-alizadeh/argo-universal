@@ -48,14 +48,25 @@ function findExecutable(environment: NodeJS.ProcessEnv) {
 
 // The prompts of one Session, as the streaming input `query()` reads.
 function createPromptQueue() {
-  const waiting: SDKUserMessage[] = [];
+  const waiting: {
+    message: SDKUserMessage;
+    dispatched: PromiseWithResolvers<void>;
+  }[] = [];
   let wake: (() => void) | null = null;
+  let dispatching: PromiseWithResolvers<void> | null = null;
   let ended = false;
   async function* prompts(): AsyncGenerator<SDKUserMessage> {
     while (true) {
       const next = waiting.shift();
-      if (next) yield next;
-      else if (ended) return;
+      if (next) {
+        dispatching = next.dispatched;
+        try {
+          yield next.message;
+        } finally {
+          next.dispatched.resolve();
+          dispatching = null;
+        }
+      } else if (ended) return;
       else await new Promise<void>((resolve) => (wake = resolve));
     }
   }
@@ -66,11 +77,15 @@ function createPromptQueue() {
   return {
     prompts: prompts(),
     push: (message: SDKUserMessage) => {
-      waiting.push(message);
+      const dispatched = Promise.withResolvers<void>();
+      waiting.push({ message, dispatched });
       notify();
+      return dispatched.promise;
     },
     end: () => {
       ended = true;
+      dispatching?.resolve();
+      for (const { dispatched } of waiting.splice(0)) dispatched.resolve();
       notify();
     },
   };
@@ -86,11 +101,14 @@ const toVendorContent = (content: AgentCommandOf<'agent.prompt'>['content']) =>
 export async function connect(
   input: AgentConnectInput,
   listener: VendorSessionListener<SDKMessage>,
+  signal: AbortSignal,
 ): Promise<VendorSession> {
+  signal.throwIfAborted();
   const resuming = input.vendorSessionId;
   const vendorSessionId = resuming ?? randomUUID();
   let stderrTail = '';
   let stopping = false;
+  const controller = new AbortController();
   const withStderr = (error: unknown) => {
     const tail = stderrTail.trim();
     return tail ? `${describeError(error)}\n${tail}` : describeError(error);
@@ -98,6 +116,7 @@ export async function connect(
 
   const { ANTHROPIC_API_KEY: _apiKey, ...environment } = process.env;
   const options: Options = {
+    abortController: controller,
     permissionMode: CLI_START.mode,
     cwd: input.cwd,
     ...(resuming ? { resume: resuming } : { sessionId: vendorSessionId }),
@@ -119,7 +138,16 @@ export async function connect(
       `Claude has no transcript for Session ${resuming} in ${input.cwd}.`,
     );
 
+  signal.throwIfAborted();
+
   const queue = createPromptQueue();
+  let promptDispatched = Promise.resolve();
+  const abort = () => {
+    stopping = true;
+    queue.end();
+    controller.abort();
+  };
+  signal.addEventListener('abort', abort, { once: true });
   const vendor = query({ prompt: queue.prompts, options });
 
   // Sends the vendor the values that differ from the ones it runs with.
@@ -142,6 +170,7 @@ export async function connect(
     values = startingValues(models, input.configOptions);
     await applyValues(CLI_START, values);
   } catch (error) {
+    signal.removeEventListener('abort', abort);
     queue.end();
     vendor.close();
     throw new Error(withStderr(error));
@@ -165,6 +194,8 @@ export async function connect(
       if (!stopping) listener.failed(withStderr('The Claude CLI exited.'));
     } catch (error) {
       if (!stopping) listener.failed(withStderr(error));
+    } finally {
+      queue.end();
     }
   })();
 
@@ -178,7 +209,7 @@ export async function connect(
     run: async (command) => {
       switch (command.type) {
         case 'agent.prompt':
-          return queue.push({
+          promptDispatched = queue.push({
             type: 'user',
             message: {
               role: 'user',
@@ -187,7 +218,10 @@ export async function connect(
             parent_tool_use_id: null,
             origin: { kind: 'human' },
           });
+          return promptDispatched;
         case 'agent.cancel':
+          await promptDispatched;
+          if (stopping) return;
           await vendor.interrupt();
           return;
         case 'agent.setConfigOption': {
@@ -208,6 +242,7 @@ export async function connect(
       }
     },
     stop: async () => {
+      signal.removeEventListener('abort', abort);
       stopping = true;
       queue.end();
       vendor.close();
