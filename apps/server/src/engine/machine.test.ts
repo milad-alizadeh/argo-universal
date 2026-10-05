@@ -1,5 +1,6 @@
 import type { Database } from '@repo/db';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ActorRefFrom } from 'xstate';
 import {
   type Actor,
   type AnyEventObject,
@@ -18,6 +19,8 @@ import {
   type TestPath,
   toDirectedGraph,
 } from 'xstate/graph';
+import type { writerMachine } from '../services/feed/writer-machine';
+import type { RegistryActorRef } from '../services/sessions/registry-machine';
 import type { EngineMessage } from '../supervisor/engine-message';
 import type { HttpServer, HttpServerOptions } from './http-server';
 import { engineMachine } from './machine';
@@ -46,6 +49,12 @@ let openDatabaseCalls: PendingCall<{ home: string }, Database>[];
 let recoveryCalls: PendingCall<{ database: Database }, void>[];
 let startHttpServerCalls: PendingCall<HttpServerOptions, HttpServer>[];
 let closeHttpServerCalls: PendingCall<{ server: HttpServer | null }, void>[];
+let stopSessionsCalls: PendingCall<{ sessions: RegistryActorRef }, void>[];
+let drainWriterCalls: PendingCall<
+  { writer: ActorRefFrom<typeof writerMachine> },
+  void
+>[];
+let logs: string[];
 let processSignals: { send: (event: AnyEventObject) => void; live: boolean };
 let messages: EngineMessage[];
 let databaseCloses: number;
@@ -69,6 +78,8 @@ const machine = engineMachine.provide({
     recoverAfterRestart: createPromiseMock(() => recoveryCalls),
     startHttpServer: createPromiseMock(() => startHttpServerCalls),
     closeHttpServer: createPromiseMock(() => closeHttpServerCalls),
+    stopSessions: createPromiseMock(() => stopSessionsCalls),
+    drainWriter: createPromiseMock(() => drainWriterCalls),
     processSignals: fromCallback(({ sendBack }) => {
       const signals = { send: sendBack, live: true };
       processSignals = signals;
@@ -81,7 +92,9 @@ const machine = engineMachine.provide({
     sendToSupervisor: (_, message) => {
       messages.push(message);
     },
-    log: () => {},
+    log: (_, params) => {
+      logs.push(params.line);
+    },
   },
 });
 type EngineSnapshot = SnapshotFrom<typeof machine>;
@@ -130,6 +143,14 @@ const payloads: Record<string, AnyEventObject> = {
     type: 'xstate.error.actor.closeHttpServer',
     error: closeError,
     actorId: 'closeHttpServer',
+  },
+  'xstate.error.actor.stopSessions': {
+    type: 'xstate.error.actor.stopSessions',
+    error: new Error('stop failed'),
+  },
+  'xstate.error.actor.drainWriter': {
+    type: 'xstate.error.actor.drainWriter',
+    error: new Error('drain failed'),
   },
   'engine.stop': { type: 'engine.stop', reason: 'SIGTERM' },
 };
@@ -190,6 +211,23 @@ const executors: Record<string, EventExecutor<EngineSnapshot, EngineEvent>> = {
     settle(() => latest(closeHttpServerCalls).resolve()),
   'xstate.error.actor.closeHttpServer': () =>
     settle(() => latest(closeHttpServerCalls).reject(closeError)),
+  'xstate.done.actor.stopSessions': () =>
+    settle(() => latest(stopSessionsCalls).resolve()),
+  'xstate.error.actor.stopSessions': () =>
+    settle(() => latest(stopSessionsCalls).reject(new Error('stop failed'))),
+  'xstate.done.actor.drainWriter': () =>
+    settle(() => latest(drainWriterCalls).resolve()),
+  'xstate.error.actor.drainWriter': () =>
+    settle(() => latest(drainWriterCalls).reject(new Error('drain failed'))),
+  'xstate.after.httpCloseLimit.engine.live.stopping.closingHttp': () => {
+    vi.advanceTimersByTime(5000);
+  },
+  'xstate.after.sessionStopLimit.engine.live.stopping.stoppingSessions': () => {
+    vi.advanceTimersByTime(10000);
+  },
+  'xstate.after.writerDrainLimit.engine.live.stopping.drainingWriter': () => {
+    vi.advanceTimersByTime(5000);
+  },
   'xstate.after.heartbeatInterval.engine.live.running': () => {
     const sent = messages.length;
     vi.advanceTimersByTime(heartbeatIntervalMs - 1);
@@ -245,6 +283,7 @@ const states: Record<string, (snapshot: EngineSnapshot) => void> = {
           version: '1.2.3',
           startedAt: input.startedAt,
           database: mockDatabase,
+          sessions: expect.anything(),
         },
       }),
     ]);
@@ -258,16 +297,28 @@ const states: Record<string, (snapshot: EngineSnapshot) => void> = {
     );
     expect(databaseCloses).toBe(0);
   },
-  stopping: (snapshot) => {
+  'live.stopping.closingHttp': (snapshot) => {
     expectModelState(snapshot);
     expect(closeHttpServerCalls).toEqual([
       expect.objectContaining({ input: { server: snapshot.context.server } }),
     ]);
     expect(databaseCloses).toBe(0);
-    // No heartbeat while closing, even if the Supervisor waits.
-    const sent = messages.length;
-    vi.advanceTimersByTime(heartbeatIntervalMs * 5);
-    expect(messages).toHaveLength(sent);
+    expect(stopSessionsCalls).toEqual([]);
+    expect(drainWriterCalls).toEqual([]);
+    expect(engine.system.get('sessions')).toBeDefined();
+    expect(engine.system.get('databaseWriter')).toBeDefined();
+  },
+  'live.stopping.stoppingSessions': (snapshot) => {
+    expectModelState(snapshot);
+    expect(stopSessionsCalls).toHaveLength(1);
+    expect(drainWriterCalls).toEqual([]);
+    expect(databaseCloses).toBe(0);
+    expect(engine.system.get('databaseWriter')).toBeDefined();
+  },
+  'live.stopping.drainingWriter': (snapshot) => {
+    expectModelState(snapshot);
+    expect(drainWriterCalls).toHaveLength(1);
+    expect(databaseCloses).toBe(0);
   },
   stopped: (snapshot) => expectExit(snapshot, 0),
   failed: (snapshot) => expectExit(snapshot, 1),
@@ -290,6 +341,9 @@ beforeEach(() => {
   recoveryCalls = [];
   startHttpServerCalls = [];
   closeHttpServerCalls = [];
+  stopSessionsCalls = [];
+  drainWriterCalls = [];
+  logs = [];
   messages = [];
   databaseCloses = 0;
 });

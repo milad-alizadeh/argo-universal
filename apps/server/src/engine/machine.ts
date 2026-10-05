@@ -1,7 +1,13 @@
 import { appendFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { type Database, openDatabase } from '@repo/db';
-import { assign, fromPromise, setup } from 'xstate';
+import { type ActorRefFrom, assign, fromPromise, setup, waitFor } from 'xstate';
+import { writerMachine } from '../services/feed/writer-machine';
+import {
+  type RegistryActorRef,
+  type RegistryInput,
+  registryMachine,
+} from '../services/sessions/registry-machine';
 import type { EngineMessage } from '../supervisor/engine-message';
 import {
   type HttpServer,
@@ -11,7 +17,14 @@ import {
 import { type EngineStop, processSignals } from './process-signals';
 import { recoverAfterRestart } from './recovery';
 
-export interface EngineInput {
+function writeEngineLog(home: string, line: string) {
+  const stamped = `${new Date().toISOString()} engine ${process.pid}: ${line}`;
+  console.log(stamped);
+  mkdirSync(join(home, 'logs'), { recursive: true });
+  appendFileSync(join(home, 'logs', 'engine.log'), `${stamped}\n`);
+}
+
+export interface EngineInput extends Pick<RegistryInput, 'adapters'> {
   home: string;
   port: number;
   version: string;
@@ -39,9 +52,35 @@ export const engineMachine = setup({
     recoverAfterRestart: fromPromise<void, { database: Database }>(
       async ({ input }) => recoverAfterRestart(input.database),
     ),
-    startHttpServer: fromPromise<HttpServer, HttpServerOptions>(({ input }) =>
-      startHttpServer(input),
+    databaseWriter: writerMachine,
+    sessions: registryMachine,
+    startHttpServer: fromPromise<HttpServer, HttpServerOptions>(
+      async ({ input, signal }) => {
+        const server = await startHttpServer(input);
+        if (signal.aborted) await server.close();
+        return server;
+      },
     ),
+    stopSessions: fromPromise<void, { sessions: RegistryActorRef }>(
+      async ({ input, signal }) => {
+        input.sessions.send({ type: 'sessions.stopAll' });
+        await waitFor(
+          input.sessions,
+          (snapshot) => snapshot.status === 'done',
+          { timeout: Infinity, signal },
+        );
+      },
+    ),
+    drainWriter: fromPromise<
+      void,
+      { writer: ActorRefFrom<typeof writerMachine> }
+    >(async ({ input, signal }) => {
+      input.writer.send({ type: 'writer.drain' });
+      await waitFor(input.writer, (snapshot) => snapshot.status === 'done', {
+        timeout: Infinity,
+        signal,
+      });
+    }),
     closeHttpServer: fromPromise<void, { server: HttpServer | null }>(
       async ({ input }) => input.server?.close(),
     ),
@@ -52,16 +91,19 @@ export const engineMachine = setup({
       process.send?.(message);
     },
     log: ({ context }, params: { line: string }) => {
-      const stamped = `${new Date().toISOString()} engine ${process.pid}: ${params.line}`;
-      console.log(stamped);
-      mkdirSync(join(context.home, 'logs'), { recursive: true });
-      appendFileSync(join(context.home, 'logs', 'engine.log'), `${stamped}\n`);
+      writeEngineLog(context.home, params.line);
     },
     closeDatabase: ({ context }) => {
       context.database?.$client.close();
     },
   },
-  delays: { heartbeatInterval: 1000 },
+  guards: { hasFailure: ({ context }) => context.failure !== null },
+  delays: {
+    heartbeatInterval: 1000,
+    httpCloseLimit: 5000,
+    sessionStopLimit: 10000,
+    writerDrainLimit: 5000,
+  },
 }).createMachine({
   id: 'engine',
   context: ({ input }) => ({
@@ -92,7 +134,7 @@ export const engineMachine = setup({
       },
       on: {
         'engine.stop': {
-          target: 'stopping',
+          target: 'stopped',
           actions: {
             type: 'log',
             params: ({ event }) => ({ line: `stopping: ${event.reason}` }),
@@ -120,7 +162,7 @@ export const engineMachine = setup({
       },
       on: {
         'engine.stop': {
-          target: 'stopping',
+          target: 'stopped',
           actions: {
             type: 'log',
             params: ({ event }) => ({ line: `stopping: ${event.reason}` }),
@@ -129,10 +171,31 @@ export const engineMachine = setup({
       },
     },
     live: {
+      invoke: [
+        {
+          id: 'databaseWriter',
+          systemId: 'databaseWriter',
+          src: 'databaseWriter',
+          input: ({ context }) => ({
+            database: context.database as Database,
+            log: (line: string) => writeEngineLog(context.home, line),
+          }),
+        },
+        {
+          id: 'sessions',
+          systemId: 'sessions',
+          src: 'sessions',
+          input: ({ context }) => ({
+            database: context.database as Database,
+            runtimeDirectory: context.home,
+            adapters: context.adapters,
+          }),
+        },
+      ],
       initial: 'listening',
       on: {
         'engine.stop': {
-          target: 'stopping',
+          target: '.stopping',
           actions: {
             type: 'log',
             params: ({ event }) => ({ line: `stopping: ${event.reason}` }),
@@ -144,7 +207,8 @@ export const engineMachine = setup({
           invoke: {
             id: 'startHttpServer',
             src: 'startHttpServer',
-            input: ({ context }) => ({
+            input: ({ context, self }) => ({
+              sessions: self.system.get('sessions') as RegistryActorRef,
               home: context.home,
               port: context.port,
               version: context.version,
@@ -193,22 +257,107 @@ export const engineMachine = setup({
             },
           },
         },
-      },
-    },
-    // A second signal while closing is ignored; the Supervisor kills an Engine that takes too long.
-    stopping: {
-      invoke: {
-        id: 'closeHttpServer',
-        src: 'closeHttpServer',
-        input: ({ context }) => ({ server: context.server }),
-        onDone: { target: 'stopped' },
-        onError: {
-          target: 'failed',
-          actions: assign({
-            failure: ({ event }) => `could not close: ${String(event.error)}`,
-          }),
+        stopping: {
+          initial: 'closingHttp',
+          on: { 'engine.stop': {} },
+          states: {
+            closingHttp: {
+              invoke: {
+                id: 'closeHttpServer',
+                src: 'closeHttpServer',
+                input: ({ context }) => ({ server: context.server }),
+                onDone: { target: 'stoppingSessions' },
+                onError: {
+                  target: 'stoppingSessions',
+                  actions: assign({
+                    failure: ({ event }) =>
+                      `could not close: ${String(event.error)}`,
+                  }),
+                },
+              },
+              after: {
+                httpCloseLimit: {
+                  target: 'stoppingSessions',
+                  actions: {
+                    type: 'log',
+                    params: {
+                      line: 'HTTP close limit reached; stopping Sessions',
+                    },
+                  },
+                },
+              },
+            },
+            stoppingSessions: {
+              invoke: {
+                id: 'stopSessions',
+                src: 'stopSessions',
+                input: ({ self }) => ({
+                  sessions: self.system.get('sessions') as RegistryActorRef,
+                }),
+                onDone: { target: 'drainingWriter' },
+                onError: {
+                  target: 'drainingWriter',
+                  actions: {
+                    type: 'log',
+                    params: ({ event }) => ({
+                      line: `could not stop Sessions: ${String(event.error)}`,
+                    }),
+                  },
+                },
+              },
+              after: {
+                sessionStopLimit: {
+                  target: 'drainingWriter',
+                  actions: {
+                    type: 'log',
+                    params: {
+                      line: 'Session stop limit reached; draining the writer',
+                    },
+                  },
+                },
+              },
+            },
+            drainingWriter: {
+              invoke: {
+                id: 'drainWriter',
+                src: 'drainWriter',
+                input: ({ self }) => ({
+                  writer: self.system.get('databaseWriter') as ActorRefFrom<
+                    typeof writerMachine
+                  >,
+                }),
+                onDone: { target: '#engine.finishing' },
+                onError: {
+                  target: '#engine.finishing',
+                  actions: {
+                    type: 'log',
+                    params: ({ event }) => ({
+                      line: `could not drain the writer: ${String(event.error)}`,
+                    }),
+                  },
+                },
+              },
+              after: {
+                writerDrainLimit: {
+                  target: '#engine.finishing',
+                  actions: {
+                    type: 'log',
+                    params: {
+                      line: 'Writer drain limit reached; closing the database',
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       },
+    },
+    finishing: {
+      always: [
+        { guard: 'hasFailure', target: 'failed' },
+        { target: 'stopped' },
+      ],
     },
     stopped: { type: 'final', entry: [{ type: 'closeDatabase' }] },
     failed: {

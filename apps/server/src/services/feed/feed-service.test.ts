@@ -1,4 +1,5 @@
 import { appRouter } from '@repo/api';
+import { unreachableServices } from '@repo/api/mocks';
 import type {
   FeedChange,
   FeedSubscribeOutput,
@@ -61,6 +62,7 @@ const caller = () =>
   appRouter.createCaller(
     {
       services: {
+        ...unreachableServices(),
         system: createSystemService({ version: '0.0.0', startedAt: '' }),
         feed: createFeedService({
           database,

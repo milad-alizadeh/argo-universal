@@ -3,6 +3,15 @@ import type { SnapshotFrom } from 'xstate';
 import type { feedMachine } from '../feed/feed-machine';
 import type { sessionMachine } from './session-machine';
 
+export function isSessionReady(session: SnapshotFrom<typeof sessionMachine>) {
+  return (
+    session.context.capabilities !== null &&
+    !session.matches({ open: { live: 'starting' } }) &&
+    !session.matches({ open: { live: 'closing' } }) &&
+    !session.matches({ open: 'flushing' })
+  );
+}
+
 export function toSessionSnapshot(
   session: SnapshotFrom<typeof sessionMachine> | null,
   feed: {

@@ -6,12 +6,18 @@ import { join } from 'node:path';
 import type { Database } from '@repo/db';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { WebSocket } from 'ws';
+import { createActor } from 'xstate';
 import { openTestDatabase } from '../../mocks/database';
+import {
+  type RegistryActorRef,
+  registryMachine,
+} from '../services/sessions/registry-machine';
 import { startHttpServer } from './http-server';
 
 let home: string;
 let port: number;
 let database: Database;
+let sessions: RegistryActorRef;
 let removeDatabase: () => void;
 let closeServer: () => Promise<void>;
 
@@ -69,18 +75,21 @@ const options = () => ({
   version: '1.2.3',
   startedAt: '2026-10-03T00:00:00.000Z',
   database,
+  sessions,
 });
 
 beforeEach(async () => {
   home = mkdtempSync(join(tmpdir(), 'server-http-server-'));
   port = await findFreePort();
   ({ database, remove: removeDatabase } = openTestDatabase());
+  sessions = createActor(registryMachine, { input: { database } }).start();
   ({ close: closeServer } = await startHttpServer(options()));
 });
 
 afterEach(async () => {
   vi.restoreAllMocks();
   await closeServer();
+  sessions.stop();
   removeDatabase();
   rmSync(home, { recursive: true, force: true });
 });
