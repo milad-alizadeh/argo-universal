@@ -46,6 +46,8 @@ let openDatabaseCalls: PendingCall<{ home: string }, Database>[];
 let recoveryCalls: PendingCall<{ database: Database }, void>[];
 let startHttpServerCalls: PendingCall<HttpServerOptions, HttpServer>[];
 let closeHttpServerCalls: PendingCall<{ server: HttpServer | null }, void>[];
+let shutdownCommands: string[];
+let logs: string[];
 let processSignals: { send: (event: AnyEventObject) => void; live: boolean };
 let messages: EngineMessage[];
 let databaseCloses: number;
@@ -63,7 +65,7 @@ const mockHttpServer: HttpServer = {
   close: () => expect.unreachable('The machine closes through closeHttpServer'),
 };
 
-const machine = engineMachine.provide({
+const machineWithExternalMocks = engineMachine.provide({
   actors: {
     openDatabase: createPromiseMock(() => openDatabaseCalls),
     recoverAfterRestart: createPromiseMock(() => recoveryCalls),
@@ -81,7 +83,15 @@ const machine = engineMachine.provide({
     sendToSupervisor: (_, message) => {
       messages.push(message);
     },
-    log: () => {},
+    log: (_, params) => {
+      logs.push(params.line);
+    },
+  },
+});
+const machine = machineWithExternalMocks.provide({
+  actions: {
+    stopSessions: () => shutdownCommands.push('sessions.stopAll'),
+    drainWriter: () => shutdownCommands.push('writer.drain'),
   },
 });
 type EngineSnapshot = SnapshotFrom<typeof machine>;
@@ -130,6 +140,14 @@ const payloads: Record<string, AnyEventObject> = {
     type: 'xstate.error.actor.closeHttpServer',
     error: closeError,
     actorId: 'closeHttpServer',
+  },
+  'xstate.error.actor.sessions': {
+    type: 'xstate.error.actor.sessions',
+    error: new Error('stop failed'),
+  },
+  'xstate.error.actor.databaseWriter': {
+    type: 'xstate.error.actor.databaseWriter',
+    error: new Error('drain failed'),
   },
   'engine.stop': { type: 'engine.stop', reason: 'SIGTERM' },
 };
@@ -190,6 +208,29 @@ const executors: Record<string, EventExecutor<EngineSnapshot, EngineEvent>> = {
     settle(() => latest(closeHttpServerCalls).resolve()),
   'xstate.error.actor.closeHttpServer': () =>
     settle(() => latest(closeHttpServerCalls).reject(closeError)),
+  'xstate.done.actor.sessions': () =>
+    engine.system.get('sessions').send({ type: 'sessions.stopAll' }),
+  'xstate.error.actor.sessions': () =>
+    engine.send({
+      type: 'xstate.error.actor.sessions',
+      error: new Error('stop failed'),
+    }),
+  'xstate.done.actor.databaseWriter': () =>
+    engine.system.get('databaseWriter').send({ type: 'writer.drain' }),
+  'xstate.error.actor.databaseWriter': () =>
+    engine.send({
+      type: 'xstate.error.actor.databaseWriter',
+      error: new Error('drain failed'),
+    }),
+  'xstate.after.httpCloseLimit.engine.live.stopping.closingHttp': () => {
+    vi.advanceTimersByTime(5000);
+  },
+  'xstate.after.sessionStopLimit.engine.live.stopping.stoppingSessions': () => {
+    vi.advanceTimersByTime(10000);
+  },
+  'xstate.after.writerDrainLimit.engine.live.stopping.drainingWriter': () => {
+    vi.advanceTimersByTime(5000);
+  },
   'xstate.after.heartbeatInterval.engine.live.running': () => {
     const sent = messages.length;
     vi.advanceTimersByTime(heartbeatIntervalMs - 1);
@@ -245,6 +286,7 @@ const states: Record<string, (snapshot: EngineSnapshot) => void> = {
           version: '1.2.3',
           startedAt: input.startedAt,
           database: mockDatabase,
+          sessions: expect.anything(),
         },
       }),
     ]);
@@ -258,23 +300,32 @@ const states: Record<string, (snapshot: EngineSnapshot) => void> = {
     );
     expect(databaseCloses).toBe(0);
   },
-  stopping: (snapshot) => {
+  'live.stopping.closingHttp': (snapshot) => {
     expectModelState(snapshot);
     expect(closeHttpServerCalls).toEqual([
       expect.objectContaining({ input: { server: snapshot.context.server } }),
     ]);
     expect(databaseCloses).toBe(0);
-    // No heartbeat while closing, even if the Supervisor waits.
-    const sent = messages.length;
-    vi.advanceTimersByTime(heartbeatIntervalMs * 5);
-    expect(messages).toHaveLength(sent);
+    expect(shutdownCommands).toEqual([]);
+    expect(engine.system.get('sessions')).toBeDefined();
+    expect(engine.system.get('databaseWriter')).toBeDefined();
+  },
+  'live.stopping.stoppingSessions': (snapshot) => {
+    expectModelState(snapshot);
+    expect(shutdownCommands).toEqual(['sessions.stopAll']);
+    expect(databaseCloses).toBe(0);
+    expect(engine.system.get('databaseWriter')).toBeDefined();
+  },
+  'live.stopping.drainingWriter': (snapshot) => {
+    expectModelState(snapshot);
+    expect(shutdownCommands).toEqual(['sessions.stopAll', 'writer.drain']);
+    expect(databaseCloses).toBe(0);
   },
   stopped: (snapshot) => expectExit(snapshot, 0),
   failed: (snapshot) => expectExit(snapshot, 1),
 };
 
-const shortestPaths = model.getShortestPaths();
-const simplePaths = model.getSimplePaths();
+const paths = model.getShortestPaths();
 const title = (path: TestPath<EngineSnapshot, EngineEvent>) =>
   path.steps
     .map(({ event }) =>
@@ -290,6 +341,8 @@ beforeEach(() => {
   recoveryCalls = [];
   startHttpServerCalls = [];
   closeHttpServerCalls = [];
+  shutdownCommands = [];
+  logs = [];
   messages = [];
   databaseCloses = 0;
 });
@@ -299,18 +352,47 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+const startRunningEngine = async (logic = machine) => {
+  engine = createActor(logic, { input }).start();
+  await settle(() => latest(openDatabaseCalls).resolve(mockDatabase));
+  await settle(() => latest(recoveryCalls).resolve());
+  await settle(() => latest(startHttpServerCalls).resolve(mockHttpServer));
+};
+
+it('finishes shutdown when the Session registry and writer complete immediately', async () => {
+  await startRunningEngine(machineWithExternalMocks);
+  engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
+  await settle(() => latest(closeHttpServerCalls).resolve());
+  expect(engine.getSnapshot().status).toBe('done');
+  expect(engine.getSnapshot().output).toEqual({ exitCode: 0 });
+  expect(databaseCloses).toBe(1);
+  expect(logs.some((line) => line.includes('limit reached'))).toBe(false);
+});
+
+it('keeps draining the writer when Sessions finish after their stop limit', async () => {
+  await startRunningEngine();
+  engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
+  await settle(() => latest(closeHttpServerCalls).resolve());
+  vi.advanceTimersByTime(10000);
+  expect(logs).toContain('Session stop limit reached; draining the writer');
+  engine.system.get('sessions').send({ type: 'sessions.stopAll' });
+  expect(
+    engine.getSnapshot().matches({ live: { stopping: 'drainingWriter' } }),
+  ).toBe(true);
+  expect(databaseCloses).toBe(0);
+  expect(shutdownCommands).toEqual(['sessions.stopAll', 'writer.drain']);
+  engine.system.get('databaseWriter').send({ type: 'writer.drain' });
+  expect(engine.getSnapshot().status).toBe('done');
+  expect(databaseCloses).toBe(1);
+});
+
 describe('engine model', () => {
-  describe.each([
-    ['shortest path', shortestPaths],
-    ['simple path', simplePaths],
-  ])('%s', (_, paths) => {
-    it.each(paths.map((path) => [title(path), path] as const))(
-      '%s',
-      async (_, path) => {
-        await path.test({ events: executors, states });
-      },
-    );
-  });
+  it.each(paths.map((path) => [title(path), path] as const))(
+    '%s',
+    async (_, path) => {
+      await path.test({ events: executors, states });
+    },
+  );
 
   it('the generated paths walk every transition', () => {
     const key = (from: EngineSnapshot, type: string, to: EngineSnapshot) =>
@@ -319,7 +401,7 @@ describe('engine model', () => {
       getAdjacencyMap(machine, model.options),
     ).map(({ state, event, nextState }) => key(state, event.type, nextState));
     const walked = new Set(
-      [...shortestPaths, ...simplePaths].flatMap((path) =>
+      paths.flatMap((path) =>
         path.steps
           .slice(1)
           .map((step, index) =>

@@ -1,11 +1,11 @@
 import { createServer, type Server } from 'node:http';
 import { join } from 'node:path';
-import { appRouter, type Services } from '@repo/api';
+import { appRouter } from '@repo/api';
 import type { Database } from '@repo/db';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { WebSocketServer } from 'ws';
-import { createFeedService } from '../services/feed/feed-service';
-import { createSystemService } from '../services/system';
+import { createServerServices } from '../services/server-services';
+import type { RegistryActorRef } from '../services/sessions/registry-machine';
 import { createRequestGuard } from './request-guard';
 import { createRequestListener } from './request-listener';
 
@@ -15,6 +15,7 @@ export interface HttpServerOptions {
   version: string;
   startedAt: string;
   database: Database;
+  sessions: RegistryActorRef;
 }
 
 export interface HttpServer {
@@ -39,16 +40,7 @@ const closeServer = (server: Server) =>
 export async function startHttpServer(
   options: HttpServerOptions,
 ): Promise<HttpServer> {
-  const { version, startedAt } = options;
-  const services: Services = {
-    system: createSystemService({ version, startedAt }),
-    // Stored rows only until the Session registry runs open Sessions (spec 0002 section 5).
-    feed: createFeedService({
-      database: options.database,
-      findFeed: () => undefined,
-      findWriter: () => undefined,
-    }),
-  };
+  const services = createServerServices(options);
 
   const createContext = () => ({ services });
 
