@@ -4,6 +4,11 @@ export {
   type PhoneListHeaderProps,
 } from './components/PhoneListHeader';
 export {
+  PhoneShell,
+  type PhoneShellProps,
+  type ShellSection,
+} from './components/PhoneShell';
+export {
   type ConnectionState,
   useConnection,
   useConnectionState,

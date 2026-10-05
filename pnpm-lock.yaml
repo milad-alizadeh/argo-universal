@@ -401,6 +401,9 @@ catalogs:
     react-native:
       specifier: 0.86.3
       version: 0.86.3
+    react-native-drawer-layout:
+      specifier: 4.2.11
+      version: 4.2.11
     react-native-gesture-handler:
       specifier: ~2.32.0
       version: 2.32.0
@@ -998,6 +1001,9 @@ importers:
       phosphor-react-native:
         specifier: 'catalog:'
         version: 3.0.6(react-native-svg@15.15.4(react-native@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3))(react-native@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
+      react-native-drawer-layout:
+        specifier: 'catalog:'
+        version: 4.2.11(21aeac21c9a2ca77a2cfd94c2cecdefd)
       react-native-gesture-handler:
         specifier: 'catalog:'
         version: 2.32.0(react-native@0.86.3(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)

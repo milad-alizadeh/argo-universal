@@ -33,3 +33,15 @@ export const Title: Story = {
     </Variations>
   ),
 };
+
+export const AttentionCount: Story = {
+  render: (args) => (
+    <Variations>
+      {[0, 1, 100].map((count) => (
+        <Variation key={count} label={count > 99 ? '99+' : String(count)}>
+          <PhoneListHeader {...args} attentionCount={count} />
+        </Variation>
+      ))}
+    </Variations>
+  ),
+};

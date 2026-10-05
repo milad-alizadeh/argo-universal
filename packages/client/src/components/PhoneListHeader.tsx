@@ -8,6 +8,7 @@ import { Icon } from './Icon';
 
 export interface PhoneListHeaderProps {
   title: string;
+  attentionCount?: number;
   onMenu: () => void;
   onSearch: () => void;
   onFilter: () => void;
@@ -15,6 +16,7 @@ export interface PhoneListHeaderProps {
 
 export function PhoneListHeader({
   title,
+  attentionCount = 0,
   onMenu,
   onSearch,
   onFilter,
@@ -25,9 +27,17 @@ export function PhoneListHeader({
         variant="ghost"
         size="icon"
         accessibilityLabel="Open navigation"
+        accessibilityHint={
+          attentionCount > 0
+            ? `${attentionCount} Sessions need attention`
+            : undefined
+        }
         onPress={onMenu}
       >
         <Icon as={ListIcon} className="size-6" />
+        {attentionCount > 0 && (
+          <View className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-warning" />
+        )}
       </Button>
       <Text role="heading" aria-level={1} className="flex-1 text-xl font-bold">
         {title}
