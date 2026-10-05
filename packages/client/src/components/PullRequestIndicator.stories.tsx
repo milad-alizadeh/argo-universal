@@ -10,29 +10,26 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const PullRequestNumber: Story = {
-  name: 'Number',
+export const Overview: Story = {
+  name: 'PullRequestIndicator',
   render: (args) => (
     <Variations>
-      {[1, 44, 12345].map((number) => (
-        <Variation key={number} label={`#${number}`}>
-          <PullRequestIndicator {...args} number={number} />
+      {(
+        [
+          ['Open', 'open'],
+          ['Draft', 'draft'],
+          ['Merged', 'merged'],
+          ['Conflict', 'conflict'],
+          ['Closed', 'closed'],
+        ] as const
+      ).map(([label, status]) => (
+        <Variation key={status} label={label}>
+          <PullRequestIndicator {...args} status={status} />
         </Variation>
       ))}
-    </Variations>
-  ),
-};
-
-export const Status: Story = {
-  render: (args) => (
-    <Variations>
-      {(['open', 'draft', 'merged', 'conflict', 'closed'] as const).map(
-        (status) => (
-          <Variation key={status} label={status}>
-            <PullRequestIndicator {...args} status={status} />
-          </Variation>
-        ),
-      )}
+      <Variation label="Long number">
+        <PullRequestIndicator {...args} number={12345} />
+      </Variation>
     </Variations>
   ),
 };

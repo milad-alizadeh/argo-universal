@@ -29,19 +29,3 @@ export function Variations({
     <View className={cn('w-full max-w-xl gap-6', className)}>{children}</View>
   );
 }
-
-export function StorySections({
-  sections,
-}: {
-  sections: Record<string, () => ReactNode>;
-}) {
-  return (
-    <View className="w-full max-w-5xl gap-8 md:flex-row md:flex-wrap">
-      {Object.entries(sections).map(([label, render]) => (
-        <View key={label} className="w-full md:w-[48%]">
-          <Variation label={label}>{render()}</Variation>
-        </View>
-      ))}
-    </View>
-  );
-}

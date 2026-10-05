@@ -42,7 +42,7 @@ export const nextPageFailureMocks = {
   },
 } satisfies Fixtures;
 
-export const firstPageSessions = [sessionRows.running, sessionRows.idle];
+const firstPageSessions = [sessionRows.running, sessionRows.idle];
 export const nextPageLoadingMocks = {
   ...sessionListMocks,
   'session.list': ({ cursor }) =>

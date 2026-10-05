@@ -4,43 +4,10 @@ import { CheckIcon } from 'phosphor-react-native/src/icons/Check';
 import { HeartIcon } from 'phosphor-react-native/src/icons/Heart';
 import { MagnifyingGlassIcon } from 'phosphor-react-native/src/icons/MagnifyingGlass';
 import { PlusIcon } from 'phosphor-react-native/src/icons/Plus';
+import { View } from 'react-native';
 import { Button } from '#primitives/button';
-import {
-  StorySections,
-  Variation,
-  Variations,
-} from '../../mocks/primitive-story-variations';
+import { Variation, Variations } from '../../mocks/primitive-story-variations';
 import { Icon } from './Icon';
-
-function AsExamples() {
-  return (
-    <Variations>
-      {[
-        { label: 'Plus', icon: PlusIcon },
-        { label: 'Check', icon: CheckIcon },
-        { label: 'Search', icon: MagnifyingGlassIcon },
-      ].map(({ label, icon }) => (
-        <Variation key={label} label={label}>
-          <Button size="icon" aria-label={label}>
-            <Icon as={icon} />
-          </Button>
-        </Variation>
-      ))}
-    </Variations>
-  );
-}
-
-function SizeExamples() {
-  return (
-    <Variations>
-      {[16, 24, 32].map((size) => (
-        <Variation key={size} label={String(size)}>
-          <Icon as={PlusIcon} size={size} />
-        </Variation>
-      ))}
-    </Variations>
-  );
-}
 
 const weights: IconWeight[] = [
   'thin',
@@ -51,35 +18,6 @@ const weights: IconWeight[] = [
   'duotone',
 ];
 
-function WeightExamples() {
-  return (
-    <Variations>
-      {weights.map((weight) => (
-        <Variation key={weight} label={weight}>
-          <Icon as={HeartIcon} weight={weight} />
-        </Variation>
-      ))}
-    </Variations>
-  );
-}
-
-function ClassNameExamples() {
-  return (
-    <Variations>
-      {[
-        'text-foreground',
-        'text-muted-foreground',
-        'text-primary',
-        'text-destructive',
-      ].map((className) => (
-        <Variation key={className} label={className}>
-          <Icon as={HeartIcon} className={className} />
-        </Variation>
-      ))}
-    </Variations>
-  );
-}
-
 const meta = {
   title: 'Design System/Components/Icon',
   component: Icon,
@@ -89,19 +27,49 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
+export const Overview: Story = {
+  name: 'Icon',
   render: () => (
-    <StorySections
-      sections={{
-        As: AsExamples,
-        Size: SizeExamples,
-        Weight: WeightExamples,
-        ClassName: ClassNameExamples,
-      }}
-    />
+    <Variations>
+      <Variation label="Inside icon buttons">
+        <View className="flex-row gap-3">
+          {[
+            { label: 'Add', icon: PlusIcon },
+            { label: 'Confirm', icon: CheckIcon },
+            { label: 'Search', icon: MagnifyingGlassIcon },
+          ].map(({ label, icon }) => (
+            <Button key={label} size="icon" aria-label={label}>
+              <Icon as={icon} />
+            </Button>
+          ))}
+        </View>
+      </Variation>
+      <Variation label="Sizes: 16, 24 and 32">
+        <View className="flex-row items-center gap-3">
+          {[16, 24, 32].map((size) => (
+            <Icon key={size} as={PlusIcon} size={size} />
+          ))}
+        </View>
+      </Variation>
+      <Variation label={`Weights: ${weights.join(', ')}`}>
+        <View className="flex-row items-center gap-3">
+          {weights.map((weight) => (
+            <Icon key={weight} as={HeartIcon} weight={weight} />
+          ))}
+        </View>
+      </Variation>
+      <Variation label="Colors: foreground, muted, primary and destructive">
+        <View className="flex-row items-center gap-3">
+          {[
+            'text-foreground',
+            'text-muted-foreground',
+            'text-primary',
+            'text-destructive',
+          ].map((className) => (
+            <Icon key={className} as={HeartIcon} className={className} />
+          ))}
+        </View>
+      </Variation>
+    </Variations>
   ),
 };
-export const As: Story = { render: AsExamples };
-export const Size: Story = { render: SizeExamples };
-export const Weight: Story = { render: WeightExamples };
-export const ClassName: Story = { render: ClassNameExamples };

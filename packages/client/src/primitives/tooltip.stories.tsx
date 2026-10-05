@@ -26,4 +26,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = { render: () => <TooltipPreview /> };
+export const Overview: Story = {
+  name: 'Tooltip',
+  render: () => <TooltipPreview />,
+};

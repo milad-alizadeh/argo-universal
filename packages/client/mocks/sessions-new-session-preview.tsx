@@ -1,3 +1,4 @@
+import { sessionRows } from '@repo/api/mocks';
 import { useRef, useState } from 'react';
 import { View } from 'react-native';
 import {
@@ -15,26 +16,20 @@ export function SessionsNewSessionPreview(props: SessionsListProps) {
     props.onNewSession?.(projectId);
     setSessions((current) => [
       {
-        ...largeSessions[0]!,
+        ...sessionRows.idle,
         projectId,
         sessionId: `new-session-${number}`,
         title: `New Session ${number}`,
         activity: 'Session created',
-        activityAt: Date.now() + number,
+        activityAt: largeSessions.length + number,
       },
       ...current,
     ]);
   }
 
   return (
-    <View className="w-full wide:w-shell-list">
-      <View style={{ height: 480 }}>
-        <SessionsList
-          {...props}
-          sessions={sessions}
-          onNewSession={addSession}
-        />
-      </View>
+    <View className="w-full flex-1 wide:w-shell-list" style={{ minHeight: 0 }}>
+      <SessionsList {...props} sessions={sessions} onNewSession={addSession} />
     </View>
   );
 }

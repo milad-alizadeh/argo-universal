@@ -1,4 +1,3 @@
-import { archivedSessions } from '@repo/api/mocks';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
@@ -24,42 +23,42 @@ const meta = {
 } satisfies Meta<typeof SessionsList>;
 export default meta;
 type Story = StoryObj<typeof meta>;
-function variations(
-  values: { label: string; props: Partial<SessionsListProps> }[],
-): Story {
-  return {
-    render: (args) => (
-      <Variations>
-        {values.map(({ label, props }) => (
-          <Variation key={label} label={label}>
-            <View className="w-full wide:w-shell-list" style={{ height: 320 }}>
-              <SessionsList {...args} {...props} />
-            </View>
-          </Variation>
-        ))}
-      </Variations>
-    ),
-  };
-}
-export const Projects: Story = variations([
-  { label: 'One Project', props: {} },
-  { label: 'Multiple Projects', props: { projects: multipleProjects } },
-  { label: 'No Projects', props: { projects: [] } },
-]);
-export const Query: Story = variations([
-  { label: 'No matching Sessions', props: { query: 'xyz', sessions: [] } },
-]);
-export const Archived: Story = variations([
+
+const states: { label: string; props: Partial<SessionsListProps> }[] = [
   {
-    label: 'Archived Sessions',
-    props: { archived: true, sessions: archivedSessions.sessions },
+    label: 'Multiple Projects, one without Sessions',
+    props: {
+      projects: multipleProjects,
+      sessions: sessionsListProps.sessions.slice(0, 2),
+    },
   },
+  { label: 'No Projects', props: { projects: [] } },
+  { label: 'No matching Sessions', props: { query: 'xyz', sessions: [] } },
   { label: 'No archived Sessions', props: { archived: true, sessions: [] } },
-]);
-export const OnEndReached: Story = {
+];
+
+// Each frame bounds the virtualized list the way the Sessions screen does.
+export const States: Story = {
+  render: (args) => (
+    <Variations>
+      {states.map(({ label, props }) => (
+        <Variation key={label} label={label}>
+          <View className="w-full wide:w-shell-list" style={{ height: 320 }}>
+            <SessionsList {...args} {...props} />
+          </View>
+        </Variation>
+      ))}
+    </Variations>
+  ),
+};
+
+export const Pagination: Story = {
+  parameters: { screenPreview: true },
   render: (args) => <SessionsPaginationPreview {...args} />,
 };
 
-export const OnNewSession: Story = {
+export const NewSession: Story = {
+  name: 'New Session',
+  parameters: { screenPreview: true },
   render: (args) => <SessionsNewSessionPreview {...args} />,
 };

@@ -17,6 +17,7 @@ export default defineProject({
     maxWorkers: 2,
     sequence: { groupOrder: 1 },
     exclude: ['../../packages/client/src/primitives/**'],
+    setupFiles: ['./vitest.setup.ts'],
     browser: {
       enabled: true,
       headless: true,

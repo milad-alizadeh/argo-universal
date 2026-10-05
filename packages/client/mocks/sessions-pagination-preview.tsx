@@ -29,7 +29,7 @@ export function SessionsPaginationPreview(props: SessionsListProps) {
   }
 
   return (
-    <View className="w-full wide:w-shell-list" style={{ height: 480 }}>
+    <View className="w-full flex-1 wide:w-shell-list" style={{ minHeight: 0 }}>
       <SessionsList
         {...props}
         sessions={largeSessions.slice(0, visibleCount)}

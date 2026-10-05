@@ -1,10 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
-import {
-  StorySections,
-  Variation,
-  Variations,
-} from '../../mocks/primitive-story-variations';
+import { Variation, Variations } from '../../mocks/primitive-story-variations';
 import { Switch } from './switch';
 
 function CheckedExample({
@@ -24,28 +20,6 @@ function CheckedExample({
     />
   );
 }
-function CheckedExamples() {
-  return (
-    <Variations>
-      {[false, true].map((checked) => (
-        <Variation key={String(checked)} label={String(checked)}>
-          <CheckedExample initialChecked={checked} />
-        </Variation>
-      ))}
-    </Variations>
-  );
-}
-function DisabledExamples() {
-  return (
-    <Variations>
-      {[false, true].map((disabled) => (
-        <Variation key={String(disabled)} label={String(disabled)}>
-          <CheckedExample disabled={disabled} />
-        </Variation>
-      ))}
-    </Variations>
-  );
-}
 
 const meta = {
   title: 'Design System/Primitives/Switch',
@@ -54,12 +28,19 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
+export const Overview: Story = {
+  name: 'Switch',
   render: () => (
-    <StorySections
-      sections={{ Checked: CheckedExamples, Disabled: DisabledExamples }}
-    />
+    <Variations>
+      <Variation label="Off">
+        <CheckedExample />
+      </Variation>
+      <Variation label="On">
+        <CheckedExample initialChecked />
+      </Variation>
+      <Variation label="Disabled">
+        <CheckedExample disabled />
+      </Variation>
+    </Variations>
   ),
 };
-export const Checked: Story = { render: CheckedExamples };
-export const Disabled: Story = { render: DisabledExamples };

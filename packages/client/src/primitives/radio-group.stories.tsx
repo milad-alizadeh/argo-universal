@@ -1,11 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useId, useState } from 'react';
 import { View } from 'react-native';
-import {
-  StorySections,
-  Variation,
-  Variations,
-} from '../../mocks/primitive-story-variations';
+import { Variation, Variations } from '../../mocks/primitive-story-variations';
 import { Label } from './label';
 import { RadioGroup, RadioGroupItem } from './radio-group';
 
@@ -34,28 +30,6 @@ function RadioGroupExample({
     </RadioGroup>
   );
 }
-function ValueExamples() {
-  return (
-    <Variations>
-      {['default', 'comfortable', 'compact'].map((value) => (
-        <Variation key={value} label={value}>
-          <RadioGroupExample initialValue={value} />
-        </Variation>
-      ))}
-    </Variations>
-  );
-}
-function DisabledExamples() {
-  return (
-    <Variations>
-      {[false, true].map((disabled) => (
-        <Variation key={String(disabled)} label={String(disabled)}>
-          <RadioGroupExample disabled={disabled} />
-        </Variation>
-      ))}
-    </Variations>
-  );
-}
 
 const meta = {
   title: 'Design System/Primitives/Radio Group',
@@ -64,12 +38,16 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
+export const Overview: Story = {
+  name: 'Radio Group',
   render: () => (
-    <StorySections
-      sections={{ Value: ValueExamples, Disabled: DisabledExamples }}
-    />
+    <Variations>
+      <Variation label="Enabled">
+        <RadioGroupExample />
+      </Variation>
+      <Variation label="Disabled">
+        <RadioGroupExample disabled />
+      </Variation>
+    </Variations>
   ),
 };
-export const Value: Story = { render: ValueExamples };
-export const Disabled: Story = { render: DisabledExamples };

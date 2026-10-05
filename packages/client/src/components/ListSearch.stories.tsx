@@ -6,18 +6,13 @@ import { ListSearch } from './ListSearch';
 const meta = {
   title: 'Sessions/ListSearch',
   component: ListSearch,
+  parameters: { previewPadding: false },
   args: { title: 'Sessions', value: '', onChangeText: () => {} },
   render: function SearchPreview(args) {
     const [query, setQuery] = useState(args.value);
     return (
-      <View className="w-full max-w-96 rounded-md bg-background wide:bg-sidebar p-2">
-        <View className="flex-row items-center">
-          <ListSearch
-            title={args.title}
-            value={query}
-            onChangeText={setQuery}
-          />
-        </View>
+      <View className="h-11 w-full flex-row items-center bg-background px-2 wide:h-14 wide:w-shell-list wide:bg-sidebar">
+        <ListSearch title={args.title} value={query} onChangeText={setQuery} />
       </View>
     );
   },
@@ -25,4 +20,4 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Search: Story = {};
+export const Overview: Story = { name: 'ListSearch' };
