@@ -26,7 +26,7 @@ export function createServerServices(options: {
   const session = createSessionService(options);
   return {
     blob: { upload: notImplemented },
-    agents: createAgentService(options.sessions.getSnapshot().context.adapters),
+    agents: createAgentService(options.sessions),
     projects: createProjectService(options.database),
     system: createSystemService(options),
     session,

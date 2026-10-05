@@ -3,6 +3,12 @@ import { defineConfig, devices } from '@playwright/test';
 import type { AppOptions } from './fixtures';
 
 const repositoryRoot = path.resolve(import.meta.dirname, '..');
+// Beside the Server's home, so each run writes fresh mock Agent CLIs.
+const mockAgentDirectory = path.join(
+  import.meta.dirname,
+  'test-results',
+  'agent-bin',
+);
 
 export default defineConfig<AppOptions>({
   // Specs live in one folder per flow, e2e/<flow>/ (AGENTS.md).
@@ -38,7 +44,7 @@ export default defineConfig<AppOptions>({
     {
       name: 'Server',
       // The supervisor as desktop starts it; pnpm would report SIGTERM as a failure.
-      command: 'node --import tsx src/main.ts',
+      command: `node --import tsx ../../e2e/mock-agents.ts '${mockAgentDirectory}' && exec node --import tsx src/main.ts`,
       // The web export has the default Server URL, ws://127.0.0.1:7337, built in (spec section 8).
       url: 'http://127.0.0.1:7337/trpc/system.info',
       cwd: path.join(repositoryRoot, 'apps/server'),
@@ -49,6 +55,7 @@ export default defineConfig<AppOptions>({
           'test-results',
           'server-home',
         ),
+        PATH: [mockAgentDirectory, process.env.PATH ?? ''].join(path.delimiter),
       },
       // Never reuse a dev Server, which runs on the owner's ~/.argo.
       reuseExistingServer: false,

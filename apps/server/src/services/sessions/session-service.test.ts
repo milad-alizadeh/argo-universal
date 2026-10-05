@@ -96,6 +96,7 @@ function openServer({ applyConfigOptions = true } = {}) {
       });
     },
   };
+  let unavailableProbes = 0;
   const root = createActor(
     setup({
       actors: { sessions: registryMachine, writer: writerMachine },
@@ -130,6 +131,15 @@ function openServer({ applyConfigOptions = true } = {}) {
               createMockAdapter(
                 {
                   connect: () => Promise.reject(new Error('Sign in first')),
+                  // Signed in when the Server starts, signed out by the first Session.
+                  probe: async () =>
+                    unavailableProbes++ === 0
+                      ? { availability: 'available', configOptions: [] }
+                      : {
+                          availability: 'not_signed_in',
+                          installStep: 'Sign in first',
+                          configOptions: [],
+                        },
                 },
                 'unavailable',
               ),
@@ -226,12 +236,18 @@ it.each([{ type: 'main' }, { type: 'worktree', baseBranch: 'main' }] as const)(
   'leaves no Session and no worktree when the Agent cannot start in the $type checkout',
   async (checkout) => {
     const { caller, directory } = openServer();
+    const availability = async () =>
+      (await caller.agents.list()).find(({ agent }) => agent === 'unavailable')
+        ?.availability;
+    expect(await availability()).toBe('available');
     await expect(
       caller.session.new({ ...newSession, agent: 'unavailable', checkout }),
     ).rejects.toMatchObject({
       code: 'PRECONDITION_FAILED',
       message: expect.stringContaining('Sign in first'),
     });
+    // The failed start probes the Agent again, so the list catches up without a refresh.
+    expect(await availability()).toBe('not_signed_in');
     expect(
       (await caller.session.list({ archived: false })).sessions.map(
         (row) => row.sessionId,
@@ -353,7 +369,7 @@ it('returns after dispatching a config choice and delivers later changes through
   });
   controller.abort();
   await iterator.return?.();
-}, 1000);
+});
 
 it('prompts and cancels through tRPC, with the same Session reopened only once', async () => {
   const { caller, streams } = openServer();

@@ -51,6 +51,7 @@ const startEngine = async () => {
         port: 0,
         version: 'test',
         startedAt: new Date().toISOString(),
+        adapters: [],
       },
     },
   ).start();

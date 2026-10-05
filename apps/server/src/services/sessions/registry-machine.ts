@@ -12,6 +12,7 @@ import {
   type OutputFrom,
   setup,
 } from 'xstate';
+import { agentProbeMachine } from '../agents/agent-probe-machine';
 import type { SessionCreationInput } from './session-data';
 import { type SessionActorRef, sessionMachine } from './session-machine';
 
@@ -53,8 +54,17 @@ export const registryMachine = setup({
     context: {} as RegistryContext,
     events: {} as RegistryEvent,
   },
-  actors: { session: sessionMachine },
+  actors: { session: sessionMachine, agentProbe: agentProbeMachine },
   actions: {
+    // Each Agent is probed once at start, so the first `agents.list` rarely waits.
+    spawnAgentProbes: enqueueActions(({ context, enqueue }) => {
+      for (const adapter of context.adapters)
+        enqueue.spawnChild('agentProbe', {
+          id: `agentProbe:${adapter.agent}`,
+          systemId: `agentProbe:${adapter.agent}`,
+          input: { adapter },
+        });
+    }),
     openSession: assign(({ context, event, spawn }) => {
       assertEvent(event, ['sessions.create', 'sessions.open']);
       if (context.sessions[event.sessionId]) return {};
@@ -122,6 +132,7 @@ export const registryMachine = setup({
     adapters: input.adapters ?? agentAdapters,
     sessions: {},
   }),
+  entry: 'spawnAgentProbes',
   initial: 'running',
   on: { 'xstate.done.actor.*': { actions: 'removeSession' } },
   states: {

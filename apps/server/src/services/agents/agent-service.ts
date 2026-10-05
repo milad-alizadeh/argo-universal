@@ -1,27 +1,30 @@
-import type { AgentAdapter, AgentProbe } from '@repo/agents';
 import type { AgentsService } from '@repo/api';
+import { waitFor } from 'xstate';
+import type { RegistryActorRef } from '../sessions/registry-machine';
+import type { AgentProbeActorRef } from './agent-probe-machine';
 
-const PROBE_TIMEOUT = 20_000;
-
-// Probes every Agent on each call, so installing or signing in shows without a restart.
-export function createAgentService(
-  adapters: readonly AgentAdapter[],
-): AgentsService {
-  const probe = (adapter: AgentAdapter): Promise<AgentProbe> =>
-    adapter.probe(AbortSignal.timeout(PROBE_TIMEOUT)).catch((error) => ({
-      availability: 'unavailable',
-      installStep: `${adapter.label} did not start: ${error instanceof Error ? error.message : String(error)}`,
-      configOptions: [],
-    }));
+// Answers from each Agent's last probe; `refresh` probes them all again first.
+export function createAgentService(sessions: RegistryActorRef): AgentsService {
   return {
-    list: () =>
+    list: async (input) =>
       Promise.all(
-        adapters.map(async (adapter) => ({
-          agent: adapter.agent,
-          label: adapter.label,
-          logo: adapter.logo,
-          ...(await probe(adapter)),
-        })),
+        sessions.getSnapshot().context.adapters.map(async (adapter) => {
+          const probe = sessions.system.get(`agentProbe:${adapter.agent}`) as
+            | AgentProbeActorRef
+            | undefined;
+          if (!probe) throw new Error(`No probe for ${adapter.label}`);
+          if (input?.refresh) probe.send({ type: 'agentProbe.refresh' });
+          const { context } = await waitFor(probe, (snapshot) =>
+            snapshot.matches('probed'),
+          );
+          if (!context.probe) throw new Error(`No probe for ${adapter.label}`);
+          return {
+            agent: adapter.agent,
+            label: adapter.label,
+            logo: adapter.logo,
+            ...context.probe,
+          };
+        }),
       ),
   };
 }

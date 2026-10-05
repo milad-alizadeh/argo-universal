@@ -131,6 +131,11 @@ const sessionSetup = setup({
     addDiscardFailure: assign(({ context, event }) => ({
       failure: `${context.failure}\nThe Checkout was not removed: ${String('error' in event ? event.error : event)}`,
     })),
+    // An Agent that could not start may have been signed out or removed since its last probe.
+    refreshAgentProbe: enqueueActions(({ context, system, enqueue }) => {
+      const probe = system.get(`agentProbe:${context.input.adapter.agent}`);
+      if (probe) enqueue.sendTo(probe, { type: 'agentProbe.refresh' });
+    }),
     rememberReady: enqueueActions(({ context, event, enqueue }) => {
       assertEvent(event, 'agent.ready');
       if (context.stored)
@@ -392,7 +397,7 @@ const agentEnded = [
   {
     guard: 'isUnstored',
     target: '#session.discarding',
-    actions: 'rememberStartFailure',
+    actions: ['rememberStartFailure', 'refreshAgentProbe'],
   },
   {
     target: 'recovering',
