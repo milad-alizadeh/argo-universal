@@ -1,6 +1,12 @@
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 import { useWide } from '../src/navigation/use-wide';
 
 export function WideMock() {
-  return <Text>{useWide() ? 'Wide layout' : 'Phone layout'}</Text>;
+  const wide = useWide();
+  return (
+    <View>
+      <Text>{wide ? 'Wide layout' : 'Phone layout'}</Text>
+      <Text className="hidden wide:flex">Wide breakpoint</Text>
+    </View>
+  );
 }

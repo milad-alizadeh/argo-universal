@@ -1,5 +1,5 @@
-import { useWindowDimensions } from 'react-native';
+import { useResolveClassNames } from 'uniwind';
 
 export function useWide(): boolean {
-  return useWindowDimensions().width >= 720;
+  return useResolveClassNames('hidden wide:flex').display === 'flex';
 }

@@ -18,14 +18,18 @@ export const UpdatesAt720Pixels: Story = {
 
     await page.viewport(719, 900);
     await expect(await canvas.findByText('Phone layout')).toBeVisible();
+    await expect(canvas.getByText('Wide breakpoint')).not.toBeVisible();
 
     await page.viewport(720, 900);
     await expect(await canvas.findByText('Wide layout')).toBeVisible();
+    await expect(canvas.getByText('Wide breakpoint')).toBeVisible();
 
     await page.viewport(721, 900);
     await expect(await canvas.findByText('Wide layout')).toBeVisible();
+    await expect(canvas.getByText('Wide breakpoint')).toBeVisible();
 
     await page.viewport(719, 900);
     await expect(await canvas.findByText('Phone layout')).toBeVisible();
+    await expect(canvas.getByText('Wide breakpoint')).not.toBeVisible();
   },
 };
