@@ -156,18 +156,27 @@ export const SearchMorph: Story = {
   play: async ({ canvas, userEvent }) =>
     eachLayout(async () => {
       const surface = canvas.getByTestId('list-search-surface');
-      const measureTransition = () =>
-        new Promise<number[]>((resolve) => {
-          const widths: number[] = [];
-          const started = performance.now();
-          function measure() {
-            widths.push(surface.getBoundingClientRect().width);
-            if (performance.now() - started < 400)
+      const measureTransition = async (button: HTMLElement) => {
+        const samples = new Promise<number[]>((resolve) => {
+          button.addEventListener(
+            'click',
+            () => {
+              const widths: number[] = [];
+              const started = performance.now();
+              function measure() {
+                widths.push(surface.getBoundingClientRect().width);
+                if (performance.now() - started < 400)
+                  requestAnimationFrame(measure);
+                else resolve(widths);
+              }
               requestAnimationFrame(measure);
-            else resolve(widths);
-          }
-          requestAnimationFrame(measure);
+            },
+            { once: true },
+          );
         });
+        await userEvent.click(button);
+        return samples;
+      };
       await expect(canvas.queryByRole('textbox')).toBeNull();
       await waitFor(() =>
         expect(surface.getBoundingClientRect().width).toBeCloseTo(
@@ -178,13 +187,11 @@ export const SearchMorph: Story = {
         ),
       );
       const collapsedWidth = surface.getBoundingClientRect().width;
-      const expansion = measureTransition();
-      await userEvent.click(
+      const openingWidths = await measureTransition(
         canvas.getByRole('button', { name: 'Search Sessions' }),
       );
       const input = canvas.getByRole('textbox', { name: 'Search Sessions' });
       await waitFor(() => expect(input).toHaveFocus());
-      const openingWidths = await expansion;
       const expandedWidth = surface.getBoundingClientRect().width;
       await expect(expandedWidth).toBeGreaterThan(collapsedWidth * 3);
       await expect(
@@ -193,11 +200,9 @@ export const SearchMorph: Story = {
         ),
       ).toBe(true);
       await userEvent.type(input, 'settings');
-      const collapse = measureTransition();
-      await userEvent.click(
+      const closingWidths = await measureTransition(
         canvas.getByRole('button', { name: 'Close search' }),
       );
-      const closingWidths = await collapse;
       await expect(canvas.queryByRole('textbox')).toBeNull();
       await expect(
         closingWidths.some(
