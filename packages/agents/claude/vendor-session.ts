@@ -5,16 +5,16 @@ import {
   getSessionInfo,
   type Options,
   query,
+  type SDKMessage,
   type SDKUserMessage,
 } from '@anthropic-ai/claude-agent-sdk';
 import type { ContextUsage, SessionConfigOption } from '@repo/contracts';
-import { z } from 'zod';
 import type { AgentCommand, AgentInput } from '../src/agent-events';
 import {
   type ConfigValues,
   changeValue,
   DEFAULT_VALUE,
-  ModelInfo,
+  type ModelInfo,
   savedValues,
   startingValues,
   toConfigOptions,
@@ -25,10 +25,9 @@ export type VendorEvent =
   | {
       type: 'vendor.connected';
       vendorSessionId: string;
-      runId: string;
       configOptions: SessionConfigOption[];
     }
-  | { type: 'vendor.message'; message: unknown }
+  | { type: 'vendor.message'; message: SDKMessage }
   | { type: 'vendor.usage'; usage: ContextUsage }
   | {
       type: 'vendor.configOptionsChanged';
@@ -56,12 +55,6 @@ export interface VendorSessionInput {
 
 const EXECUTABLE = 'claude';
 const STDERR_TAIL_LENGTH = 2000;
-
-const InitializationResult = z.object({ models: z.array(ModelInfo) });
-const ContextUsageResult = z.object({
-  totalTokens: z.int(),
-  maxTokens: z.int(),
-});
 
 // The user's own `claude` from PATH, so Argo runs the CLI they signed in to.
 function findExecutable(environment: NodeJS.ProcessEnv) {
@@ -159,17 +152,11 @@ export function runVendorSession({ agent, send, receive }: VendorSessionInput) {
   let session: ReturnType<typeof query> | null = null;
 
   const sendUsage = async (vendor: ReturnType<typeof query>) => {
-    const reply = await vendor.getContextUsage({ detail: 'summary' });
-    const usage = ContextUsageResult.safeParse(reply);
-    // An unrecognised reply goes to the mapper, which reports and counts it.
-    send(
-      usage.success
-        ? {
-            type: 'vendor.usage',
-            usage: { used: usage.data.totalTokens, size: usage.data.maxTokens },
-          }
-        : { type: 'vendor.message', message: reply },
-    );
+    const usage = await vendor.getContextUsage({ detail: 'summary' });
+    send({
+      type: 'vendor.usage',
+      usage: { used: usage.totalTokens, size: usage.maxTokens },
+    });
   };
 
   // Sends the vendor the values that differ from the ones it runs with.
@@ -246,16 +233,12 @@ export function runVendorSession({ agent, send, receive }: VendorSessionInput) {
     if (stopping) return;
     const vendor = query({ prompt: queue.prompts, options });
     session = vendor;
-    const initialization = InitializationResult.parse(
-      await vendor.initializationResult(),
-    );
-    models = initialization.models;
+    models = (await vendor.initializationResult()).models;
     const starting = startingValues(models, agent.configOptions);
     await applyValues(vendor, requested, starting);
     send({
       type: 'vendor.connected',
       vendorSessionId,
-      runId: randomUUID(),
       configOptions: toConfigOptions(models, starting),
     });
     for await (const message of vendor) {

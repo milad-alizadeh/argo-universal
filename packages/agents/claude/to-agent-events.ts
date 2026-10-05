@@ -1,27 +1,20 @@
+import type {
+  SDKAssistantMessage,
+  SDKMessage,
+  SDKPartialAssistantMessage,
+  SDKResultMessage,
+  SDKUserMessage,
+  SDKUserMessageReplay,
+} from '@anthropic-ai/claude-agent-sdk';
 import type { StopReason, TurnUsage } from '@repo/contracts';
 import type { AgentEvent, FeedChange, FeedUpdate } from '../src/agent-events';
 import { type ToolCallRow, toolCallEnded, toolCallStarted } from './tool-calls';
-import {
-  type AssistantBlock,
-  AssistantMessage,
-  hiddenSystemSubtypes,
-  hiddenTypes,
-  MessageHeader,
-  NoticeMessage,
-  type ResultMessage,
-  ResultMessage as ResultMessageSchema,
-  StreamEvent,
-  ToolResultBlock,
-  UserMessage,
-} from './vendor-messages';
 
 type TextKind = 'agent_message' | 'agent_thought';
+type AssistantBlock = SDKAssistantMessage['message']['content'][number];
 
 // What `toAgentEvents` remembers between messages; plain data, so it can live in machine context.
 export interface MappingState {
-  // Prefixes ids of rows that the vendor gives no id, so they stay unique across runs of one Session.
-  idPrefix: string;
-  unrecognised: number;
   // Blocks seen per `message.id`, which gives a block's index without the stream.
   blockCounts: Record<string, number>;
   streamMessageId: string | null;
@@ -31,9 +24,7 @@ export interface MappingState {
   openToolCalls: Record<string, ToolCallRow>;
 }
 
-export const initialMappingState = (idPrefix: string): MappingState => ({
-  idPrefix,
-  unrecognised: 0,
+export const initialMappingState = (): MappingState => ({
   blockCounts: {},
   streamMessageId: null,
   openTextRows: {},
@@ -65,35 +56,6 @@ const textRow = (
   content: [{ type: 'text', text }],
 });
 
-const EXCERPT_LENGTH = 500;
-
-// Reports a message the adapter cannot read, as ADR-0012 asks: reject, report, count.
-function unrecognised(message: unknown, mappingState: MappingState): Mapped {
-  const count = mappingState.unrecognised + 1;
-  return {
-    events: [
-      upsert({
-        id: `${mappingState.idPrefix}:unrecognised:${count}`,
-        sessionUpdate: 'notice',
-        state: 'settled',
-        severity: 'warning',
-        title: 'Argo did not recognise a message from the Agent',
-        _meta: {
-          argo: {
-            unrecognised: {
-              excerpt: (JSON.stringify(message) ?? String(message)).slice(
-                0,
-                EXCERPT_LENGTH,
-              ),
-            },
-          },
-        },
-      }),
-    ],
-    mappingState: { ...mappingState, unrecognised: count },
-  };
-}
-
 const dropped = (mappingState: MappingState): Mapped => ({
   events: [],
   mappingState,
@@ -101,59 +63,46 @@ const dropped = (mappingState: MappingState): Mapped => ({
 
 // Maps one SDK message to Agent events (ADR-0006); pure, so recordings can drive it.
 export function toAgentEvents(
-  message: unknown,
+  message: SDKMessage,
   mappingState: MappingState,
 ): Mapped {
-  const header = MessageHeader.safeParse(message);
-  if (!header.success) return unrecognised(message, mappingState);
   // Subagent messages belong to issue 11e.
-  if (header.data.parent_tool_use_id) return dropped(mappingState);
-  const { type, subtype } = header.data;
-  if (hiddenTypes.has(type)) return dropped(mappingState);
-
-  const mapped = (() => {
-    switch (type) {
-      case 'stream_event':
-        return mapStreamEvent(message, mappingState);
-      case 'assistant':
-        return mapAssistant(message, mappingState);
-      case 'user':
-        return mapUser(message, mappingState);
-      case 'result':
-        return mapResult(message, mappingState);
-      case 'system':
-        if (subtype !== undefined && hiddenSystemSubtypes.has(subtype))
-          return dropped(mappingState);
-        return mapNotice(message, mappingState);
-      default:
-        return undefined;
-    }
-  })();
-  return mapped ?? unrecognised(message, mappingState);
+  if ('parent_tool_use_id' in message && message.parent_tool_use_id)
+    return dropped(mappingState);
+  switch (message.type) {
+    case 'stream_event':
+      return mapStreamEvent(message, mappingState);
+    case 'assistant':
+      return mapAssistant(message, mappingState);
+    case 'user':
+      return mapUser(message, mappingState);
+    case 'result':
+      return mapResult(message, mappingState);
+    case 'system':
+      return mapNotice(message, mappingState);
+    default:
+      return dropped(mappingState);
+  }
 }
 
 function mapStreamEvent(
-  message: unknown,
+  { event }: SDKPartialAssistantMessage,
   mappingState: MappingState,
-): Mapped | undefined {
-  const parsed = StreamEvent.safeParse(message);
-  if (!parsed.success) return undefined;
-  const { event } = parsed.data;
+): Mapped {
   const { streamMessageId } = mappingState;
   switch (event.type) {
     case 'message_start':
       return dropped({ ...mappingState, streamMessageId: event.message.id });
     case 'content_block_start': {
       const block = event.content_block;
-      const kind: TextKind | undefined =
-        block.type === 'text'
-          ? 'agent_message'
-          : block.type === 'thinking'
-            ? 'agent_thought'
-            : undefined;
-      if (!kind || streamMessageId === null) return dropped(mappingState);
+      if (
+        (block.type !== 'text' && block.type !== 'thinking') ||
+        streamMessageId === null
+      )
+        return dropped(mappingState);
+      const kind = block.type === 'text' ? 'agent_message' : 'agent_thought';
+      const text = block.type === 'text' ? block.text : block.thinking;
       const id = `${streamMessageId}#${event.index}`;
-      const text = String(block.text ?? block.thinking ?? '');
       return {
         events: [upsert(textRow(id, streamMessageId, kind, text, 'open'))],
         mappingState: {
@@ -164,7 +113,13 @@ function mapStreamEvent(
     }
     case 'content_block_delta': {
       const id = `${streamMessageId}#${event.index}`;
-      const text = event.delta.text ?? event.delta.thinking;
+      const { delta } = event;
+      const text =
+        delta.type === 'text_delta'
+          ? delta.text
+          : delta.type === 'thinking_delta'
+            ? delta.thinking
+            : '';
       if (!(id in mappingState.openTextRows) || !text)
         return dropped(mappingState);
       return {
@@ -178,12 +133,10 @@ function mapStreamEvent(
 }
 
 function mapAssistant(
-  message: unknown,
+  message: SDKAssistantMessage,
   mappingState: MappingState,
-): Mapped | undefined {
-  const parsed = AssistantMessage.safeParse(message);
-  if (!parsed.success) return undefined;
-  const { id: messageId, content } = parsed.data.message;
+): Mapped {
+  const { id: messageId, content } = message.message;
   let state = mappingState;
   const events: AgentEvent[] = [];
   for (const block of content) {
@@ -233,29 +186,20 @@ function mapBlock(
 
 // A user message carries Tool results; the Session writes the user's own prompt.
 function mapUser(
-  message: unknown,
+  message: SDKUserMessage | SDKUserMessageReplay,
   mappingState: MappingState,
-): Mapped | undefined {
-  const parsed = UserMessage.safeParse(message);
-  if (!parsed.success) return undefined;
-  const { content } = parsed.data.message;
-  if (parsed.data.isReplay || typeof content === 'string')
+): Mapped {
+  const { content } = message.message;
+  if ('isReplay' in message || typeof content === 'string')
     return dropped(mappingState);
   let state = mappingState;
   const events: AgentEvent[] = [];
   for (const block of content) {
     if (block.type !== 'tool_result') continue;
-    const result = ToolResultBlock.safeParse(block);
-    if (!result.success) {
-      const reported = unrecognised(block, state);
-      events.push(...reported.events);
-      state = reported.mappingState;
-      continue;
-    }
-    const row = state.openToolCalls[result.data.tool_use_id];
+    const row = state.openToolCalls[block.tool_use_id];
     if (!row) continue;
-    events.push(upsert(toolCallEnded(row, result.data, parsed.data)));
-    const { [result.data.tool_use_id]: _ended, ...openToolCalls } =
+    events.push(upsert(toolCallEnded(row, block, message)));
+    const { [block.tool_use_id]: _ended, ...openToolCalls } =
       state.openToolCalls;
     state = { ...state, openToolCalls };
   }
@@ -264,7 +208,7 @@ function mapUser(
 
 const TURN_ERROR_CODE = -32603;
 
-function stopReason(result: ResultMessage): StopReason {
+function stopReason(result: SDKResultMessage): StopReason {
   if (
     result.terminal_reason === 'aborted_streaming' ||
     result.terminal_reason === 'aborted_tools'
@@ -277,7 +221,7 @@ function stopReason(result: ResultMessage): StopReason {
     : 'end_turn';
 }
 
-function turnUsage({ usage }: ResultMessage): TurnUsage {
+function turnUsage({ usage }: SDKResultMessage): TurnUsage {
   const cachedReadTokens = usage.cache_read_input_tokens ?? 0;
   const cachedWriteTokens = usage.cache_creation_input_tokens ?? 0;
   const thoughtTokens = usage.output_tokens_details?.thinking_tokens;
@@ -297,12 +241,9 @@ function turnUsage({ usage }: ResultMessage): TurnUsage {
 
 // The result ends the Turn, and settles rows that never got their record or result.
 function mapResult(
-  message: unknown,
+  result: SDKResultMessage,
   mappingState: MappingState,
-): Mapped | undefined {
-  const parsed = ResultMessageSchema.safeParse(message);
-  if (!parsed.success) return undefined;
-  const result = parsed.data;
+): Mapped {
   const reason = stopReason(result);
   const settles = [
     ...Object.keys(mappingState.openTextRows).map((id) =>
@@ -317,7 +258,8 @@ function mapResult(
     ),
   ];
   const errorMessage =
-    result.result ?? result.errors?.join('\n') ?? 'The Turn failed.';
+    (result.subtype === 'success' ? result.result : result.errors.join('\n')) ||
+    'The Turn failed.';
   return {
     events: [
       ...settles,
@@ -340,53 +282,52 @@ function mapResult(
 }
 
 function mapNotice(
-  message: unknown,
+  message: Extract<SDKMessage, { type: 'system' }>,
   mappingState: MappingState,
-): Mapped | undefined {
-  const parsed = NoticeMessage.safeParse(message);
-  if (!parsed.success) return undefined;
-  const notice = parsed.data;
+): Mapped {
   const base = {
-    id: notice.uuid,
+    id: message.uuid,
     sessionUpdate: 'notice',
     state: 'settled',
   } as const;
   const update = ((): FeedUpdate | undefined => {
-    switch (notice.subtype) {
+    switch (message.subtype) {
       case 'api_retry':
         return {
           ...base,
           severity: 'warning',
-          title: `Retrying (${notice.attempt} of ${notice.max_retries})`,
+          title: `Retrying (${message.attempt} of ${message.max_retries})`,
           _meta: {
             argo: {
               retry: {
-                attempt: notice.attempt,
-                maxAttempts: notice.max_retries,
-                delayMs: notice.retry_delay_ms,
+                attempt: message.attempt,
+                maxAttempts: message.max_retries,
+                delayMs: message.retry_delay_ms,
               },
             },
           },
         };
       case 'local_command_output':
-        return { ...base, severity: 'info', title: notice.content };
+        return { ...base, severity: 'info', title: message.content };
       case 'informational':
         return {
           ...base,
-          severity: notice.level === 'warning' ? 'warning' : 'info',
-          title: notice.content,
+          severity: message.level === 'warning' ? 'warning' : 'info',
+          title: message.content,
         };
       case 'notification':
-        return { ...base, severity: 'info', title: notice.text };
+        return { ...base, severity: 'info', title: message.text };
       case 'hook_response':
-        return notice.outcome === 'error'
+        return message.outcome === 'error'
           ? {
               ...base,
               severity: 'warning',
-              title: `Hook ${notice.hook_name} failed`,
-              ...(notice.stderr ? { description: notice.stderr } : {}),
+              title: `Hook ${message.hook_name} failed`,
+              ...(message.stderr ? { description: message.stderr } : {}),
             }
           : undefined;
+      default:
+        return undefined;
     }
   })();
   return update

@@ -70,7 +70,7 @@ export const claudeMachine = setup({
   actions: {
     sendReady: enqueueActions(({ context, event, enqueue }) => {
       assertEvent(event, 'vendor.connected');
-      enqueue.assign({ mappingState: initialMappingState(event.runId) });
+      enqueue.assign({ mappingState: initialMappingState() });
       enqueue.sendTo(context.parent, {
         type: 'agent.ready',
         vendorSessionId: event.vendorSessionId,
@@ -127,7 +127,7 @@ export const claudeMachine = setup({
   id: 'claude',
   context: ({ input }) => ({
     ...input,
-    mappingState: initialMappingState(input.sessionId),
+    mappingState: initialMappingState(),
     failure: null,
   }),
   output: ({ context }) => ({ failure: context.failure }),

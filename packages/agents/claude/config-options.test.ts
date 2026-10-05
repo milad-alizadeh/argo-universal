@@ -10,6 +10,7 @@ const models: ModelInfo[] = [
   {
     value: 'default',
     displayName: 'Default (recommended)',
+    description: '',
     supportsEffort: true,
     supportedEffortLevels: ['low', 'high', 'max'],
     supportsAutoMode: true,

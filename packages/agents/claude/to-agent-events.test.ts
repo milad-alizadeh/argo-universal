@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import type { SDKMessage } from '@anthropic-ai/claude-agent-sdk';
 import { describe, expect, it } from 'vitest';
-import { z } from 'zod';
 import type { FeedChange, FeedUpdate } from '../src/agent-events';
 import {
   initialMappingState,
@@ -15,31 +15,21 @@ const RECORDINGS = path.join(
 );
 
 // The stdout frames of a recording, without the control frames that the SDK consumes itself.
-function recordedMessages(name: string): unknown[] {
+function recordedMessages(name: string): SDKMessage[] {
   const [version] = readdirSync(RECORDINGS);
-  const recording = z
-    .object({
-      payload: z.object({
-        output: z.array(z.looseObject({ type: z.string() })),
-      }),
-    })
-    .parse(
-      JSON.parse(
-        readFileSync(
-          path.join(RECORDINGS, `${version}`, `${name}.json`),
-          'utf8',
-        ),
-      ),
-    );
+  const recording: { payload: { output: { type: string }[] } } = JSON.parse(
+    readFileSync(path.join(RECORDINGS, `${version}`, `${name}.json`), 'utf8'),
+  );
   return recording.payload.output.filter(
     (frame) => !frame.type.startsWith('control_'),
-  );
+  ) as SDKMessage[];
 }
 
-function mapAll(messages: unknown[], start = initialMappingState('run-1')) {
+// Fixtures carry only the fields the mapping reads.
+function mapAll(messages: object[], start = initialMappingState()) {
   let mappingState: MappingState = start;
   const events = messages.flatMap((message) => {
-    const result = toAgentEvents(message, mappingState);
+    const result = toAgentEvents(message as SDKMessage, mappingState);
     mappingState = result.mappingState;
     return result.events;
   });
@@ -78,12 +68,9 @@ function foldRows(changes: FeedChange[]) {
   return [...rows.values()];
 }
 
-const isStreamEvent = (message: unknown) =>
-  z.object({ type: z.literal('stream_event') }).safeParse(message).success;
-
 describe('toAgentEvents on a Turn with edits and commands', () => {
   const messages = recordedMessages('edit-and-command');
-  const { events, mappingState } = mapAll(messages);
+  const { events } = mapAll(messages);
   const rows = foldRows(feedChanges(events));
 
   it('settles a thought, four Tool calls and the answer, in order', () => {
@@ -172,19 +159,13 @@ describe('toAgentEvents on a Turn with edits and commands', () => {
   });
 
   it('gives text rows message.id#blockIndex, the same with or without streaming', () => {
-    const firstMessage = z
-      .object({ message: z.object({ id: z.string() }) })
-      .parse(
-        messages.find(
-          (message) =>
-            z.object({ type: z.literal('assistant') }).safeParse(message)
-              .success,
-        ),
-      ).message.id;
-    expect(rows[0]?.id).toBe(`${firstMessage}#0`);
+    const firstMessage = messages.find(
+      (message) => message.type === 'assistant',
+    );
+    expect(rows[0]?.id).toBe(`${firstMessage?.message.id}#0`);
 
     const recordsOnly = mapAll(
-      messages.filter((message) => !isStreamEvent(message)),
+      messages.filter((message) => message.type !== 'stream_event'),
     );
     expect(foldRows(feedChanges(recordsOnly.events))).toEqual(rows);
   });
@@ -216,12 +197,11 @@ describe('toAgentEvents on a Turn with edits and commands', () => {
         cachedWriteTokens: expect.any(Number),
       },
     });
-    expect(mappingState.unrecognised).toBe(0);
   });
 });
 
 describe('toAgentEvents on an interrupted Turn', () => {
-  const { events, mappingState } = mapAll(recordedMessages('interrupt'));
+  const { events } = mapAll(recordedMessages('interrupt'));
   const rows = foldRows(feedChanges(events));
 
   it('cancels the running command and ends the Turn as cancelled', () => {
@@ -237,7 +217,6 @@ describe('toAgentEvents on an interrupted Turn', () => {
       type: 'agent.turnEnded',
       stopReason: 'cancelled',
     });
-    expect(mappingState.unrecognised).toBe(0);
   });
 });
 
@@ -399,76 +378,14 @@ describe('toAgentEvents on single messages', () => {
       'a known message Argo does not show',
       { type: 'rate_limit_event', uuid: 'rate-1', session_id: 'vendor-1' },
     ],
+    [
+      'a system message Argo does not show',
+      { type: 'system', subtype: 'task_progress', uuid: 'task-1' },
+    ],
   ])('drops %s', (_, message) => {
     expect(mapAll([message])).toEqual({
       events: [],
-      mappingState: initialMappingState('run-1'),
+      mappingState: initialMappingState(),
     });
-  });
-
-  it.each([
-    ['an unknown type', { type: 'hologram', uuid: 'x-1' }],
-    ['an unknown system subtype', { type: 'system', subtype: 'teleport' }],
-    ['a known type without its fields', { type: 'assistant', uuid: 'x-2' }],
-    ['a value that is not an object', 'stray text'],
-  ])('rejects, reports and counts %s', (_, message) => {
-    const { events, mappingState } = mapAll([message]);
-    expect(mappingState.unrecognised).toBe(1);
-    expect(feedChanges(events)).toEqual([
-      {
-        type: 'upsert',
-        update: {
-          id: 'run-1:unrecognised:1',
-          sessionUpdate: 'notice',
-          state: 'settled',
-          severity: 'warning',
-          title: 'Argo did not recognise a message from the Agent',
-          _meta: {
-            argo: {
-              unrecognised: { excerpt: JSON.stringify(message).slice(0, 500) },
-            },
-          },
-        },
-      },
-    ]);
-  });
-
-  it('reports a malformed Tool result and still ends the others in its message', () => {
-    const toolUse = (id: string) => ({
-      type: 'assistant',
-      message: {
-        id: `message-${id}`,
-        content: [
-          { type: 'tool_use', id, name: 'Bash', input: { command: 'ls' } },
-        ],
-      },
-    });
-    const { events, mappingState } = mapAll([
-      toolUse('tool-1'),
-      toolUse('tool-2'),
-      {
-        type: 'user',
-        message: {
-          content: [
-            { type: 'tool_result', content: 'no id' },
-            { type: 'tool_result', tool_use_id: 'tool-2', content: 'done' },
-          ],
-        },
-      },
-    ]);
-    expect(mappingState.unrecognised).toBe(1);
-    expect(Object.keys(mappingState.openToolCalls)).toEqual(['tool-1']);
-    expect(
-      foldRows(feedChanges(events)).map((row) => [
-        row.id,
-        row.sessionUpdate === 'tool_call_update'
-          ? row.status
-          : row.sessionUpdate,
-      ]),
-    ).toEqual([
-      ['tool-1', 'in_progress'],
-      ['tool-2', 'completed'],
-      ['run-1:unrecognised:1', 'notice'],
-    ]);
   });
 });

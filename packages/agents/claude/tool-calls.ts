@@ -1,40 +1,45 @@
-import type { ToolCallContent, ToolKind } from '@repo/contracts';
-import { z } from 'zod';
-import type { FeedUpdate } from '../src/agent-events';
 import type {
-  ToolResultBlock,
-  ToolUseBlock,
-  UserMessage,
-} from './vendor-messages';
+  SDKAssistantMessage,
+  SDKUserMessage,
+} from '@anthropic-ai/claude-agent-sdk';
+import type {
+  BashInput,
+  FileEditInput,
+  FileReadInput,
+  FileWriteInput,
+  FileWriteOutput,
+  GlobInput,
+  WebFetchInput,
+  WebSearchInput,
+} from '@anthropic-ai/claude-agent-sdk/sdk-tools';
+import type { ToolCallContent, ToolKind } from '@repo/contracts';
+import type { FeedUpdate } from '../src/agent-events';
 
 export type ToolCallRow = Extract<
   FeedUpdate,
   { sessionUpdate: 'tool_call_update' }
 >;
 
-const FilePath = z.object({ file_path: z.string() });
-const WriteInput = FilePath.extend({ content: z.string() });
-const EditInput = FilePath.extend({
-  old_string: z.string(),
-  new_string: z.string(),
-});
-const ReadInput = FilePath.extend({ offset: z.int().optional() });
-const BashInput = z.object({
-  command: z.string(),
-  description: z.string().optional(),
-});
-const Pattern = z.object({ pattern: z.string() });
-const WebFetchInput = z.object({ url: z.string() });
-const WebSearchInput = z.object({ query: z.string() });
+type ToolUseBlock = Extract<
+  SDKAssistantMessage['message']['content'][number],
+  { type: 'tool_use' }
+>;
+export type ToolResultBlock = Extract<
+  Exclude<SDKUserMessage['message']['content'], string>[number],
+  { type: 'tool_result' }
+>;
+
+// The CLI marks a Tool call the user refused here; the SDK types do not name the field.
+interface ToolResultMeta {
+  tool_result_meta?: { id: string; non_execution_kind: string }[];
+}
 
 type ToolShape = Pick<ToolCallRow, 'title' | 'kind' | 'content' | 'locations'>;
 
-// How each built-in tool reads; a tool with an unexpected input shows as `other`.
-const toolShapes: Record<string, (input: unknown) => ToolShape | undefined> = {
+// How each built-in tool reads; any other tool shows as `other`.
+const toolShapes: Record<string, (input: unknown) => ToolShape> = {
   Write: (input) => {
-    const parsed = WriteInput.safeParse(input);
-    if (!parsed.success) return undefined;
-    const path = parsed.data.file_path;
+    const { file_path: path, content } = input as FileWriteInput;
     return {
       title: `Write ${path}`,
       kind: 'edit',
@@ -42,15 +47,13 @@ const toolShapes: Record<string, (input: unknown) => ToolShape | undefined> = {
       content: [
         {
           type: 'diff',
-          changes: [{ operation: 'add', path, newText: parsed.data.content }],
+          changes: [{ operation: 'add', path, newText: content }],
         },
       ],
     };
   },
   Edit: (input) => {
-    const parsed = EditInput.safeParse(input);
-    if (!parsed.success) return undefined;
-    const path = parsed.data.file_path;
+    const { file_path: path, old_string, new_string } = input as FileEditInput;
     return {
       title: `Edit ${path}`,
       kind: 'edit',
@@ -62,8 +65,8 @@ const toolShapes: Record<string, (input: unknown) => ToolShape | undefined> = {
             {
               operation: 'modify',
               path,
-              oldText: parsed.data.old_string,
-              newText: parsed.data.new_string,
+              oldText: old_string,
+              newText: new_string,
             },
           ],
         },
@@ -71,10 +74,7 @@ const toolShapes: Record<string, (input: unknown) => ToolShape | undefined> = {
     };
   },
   Read: (input) => {
-    const parsed = ReadInput.safeParse(input);
-    if (!parsed.success) return undefined;
-    const path = parsed.data.file_path;
-    const line = parsed.data.offset;
+    const { file_path: path, offset: line } = input as FileReadInput;
     return {
       title: `Read ${path}`,
       kind: 'read',
@@ -83,9 +83,7 @@ const toolShapes: Record<string, (input: unknown) => ToolShape | undefined> = {
     };
   },
   Bash: (input) => {
-    const parsed = BashInput.safeParse(input);
-    if (!parsed.success) return undefined;
-    const { command, description } = parsed.data;
+    const { command, description } = input as BashInput;
     return {
       title: description ?? command,
       kind: 'execute',
@@ -94,18 +92,16 @@ const toolShapes: Record<string, (input: unknown) => ToolShape | undefined> = {
   },
   Grep: (input) => search('Grep', input),
   Glob: (input) => search('Glob', input),
-  WebFetch: (input) => {
-    const parsed = WebFetchInput.safeParse(input);
-    return parsed.success
-      ? { title: `Fetch ${parsed.data.url}`, kind: 'fetch', content: [] }
-      : undefined;
-  },
-  WebSearch: (input) => {
-    const parsed = WebSearchInput.safeParse(input);
-    return parsed.success
-      ? { title: `Search ${parsed.data.query}`, kind: 'fetch', content: [] }
-      : undefined;
-  },
+  WebFetch: (input) => ({
+    title: `Fetch ${(input as WebFetchInput).url}`,
+    kind: 'fetch',
+    content: [],
+  }),
+  WebSearch: (input) => ({
+    title: `Search ${(input as WebSearchInput).query}`,
+    kind: 'fetch',
+    content: [],
+  }),
   ExitPlanMode: () => ({
     title: 'Leave plan mode',
     kind: 'switch_mode',
@@ -113,12 +109,12 @@ const toolShapes: Record<string, (input: unknown) => ToolShape | undefined> = {
   }),
 };
 
-function search(name: string, input: unknown): ToolShape | undefined {
-  const parsed = Pattern.safeParse(input);
-  return parsed.success
-    ? { title: `${name} ${parsed.data.pattern}`, kind: 'search', content: [] }
-    : undefined;
-}
+// Grep's input names its pattern the same way as Glob's.
+const search = (name: string, input: unknown): ToolShape => ({
+  title: `${name} ${(input as GlobInput).pattern}`,
+  kind: 'search',
+  content: [],
+});
 
 // The open row for a Tool call the model asked for.
 export function toolCallStarted(block: ToolUseBlock): ToolCallRow {
@@ -142,21 +138,17 @@ export function toolCallStarted(block: ToolUseBlock): ToolCallRow {
 const resultText = (result: ToolResultBlock) =>
   typeof result.content === 'string'
     ? result.content
-    : (result.content ?? []).flatMap((block) => block.text ?? []).join('\n');
-
-// What the Write tool found at the path before it wrote.
-const WriteOutcome = z.object({
-  type: z.enum(['create', 'update']),
-  originalFile: z.string().nullable(),
-});
+    : (result.content ?? [])
+        .flatMap((block) => (block.type === 'text' ? [block.text] : []))
+        .join('\n');
 
 // The settled row for a Tool call once its result arrives.
 export function toolCallEnded(
   row: ToolCallRow,
   result: ToolResultBlock,
-  message: UserMessage,
+  message: SDKUserMessage,
 ): ToolCallRow {
-  const rejected = message.tool_result_meta?.some(
+  const rejected = (message as ToolResultMeta).tool_result_meta?.some(
     (meta) =>
       meta.id === result.tool_use_id &&
       meta.non_execution_kind === 'user-rejected',
@@ -167,10 +159,13 @@ export function toolCallEnded(
       ? 'failed'
       : 'completed';
   const output = rejected ? '' : resultText(result);
-  const writeOutcome = WriteOutcome.safeParse(message.tool_use_result);
+  // What the Write tool found at the path before it wrote.
+  const originalFile =
+    row.name === 'Write'
+      ? (message.tool_use_result as FileWriteOutput | undefined)?.originalFile
+      : undefined;
   const content = row.content.map((block): ToolCallContent => {
     if (block.type === 'terminal') return { ...block, output };
-    const originalFile = writeOutcome.data?.originalFile;
     if (block.type === 'diff' && typeof originalFile === 'string')
       return {
         ...block,

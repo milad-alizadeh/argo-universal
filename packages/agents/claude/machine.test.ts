@@ -1,3 +1,4 @@
+import type { SDKMessage } from '@anthropic-ai/claude-agent-sdk';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   type Actor,
@@ -72,20 +73,20 @@ const configOptions = [
 const connected: VendorEvent = {
   type: 'vendor.connected',
   vendorSessionId: 'vendor-1',
-  runId: 'run-1',
   configOptions,
 };
+// Only the fields the mapping reads.
 const answer = {
   type: 'assistant',
   message: { id: 'message-1', content: [{ type: 'text', text: 'Done.' }] },
-};
+} as SDKMessage;
 const result = {
   type: 'result',
   subtype: 'success',
   is_error: false,
   stop_reason: 'end_turn',
   usage: { input_tokens: 1, output_tokens: 2 },
-};
+} as SDKMessage;
 const usage = { used: 10, size: 100 };
 
 const events: ClaudeEvent[] = [

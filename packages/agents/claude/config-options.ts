@@ -1,19 +1,18 @@
+import type { EffortLevel, ModelInfo } from '@anthropic-ai/claude-agent-sdk';
 import type { SessionConfigOption } from '@repo/contracts';
 import { z } from 'zod';
 import type { AgentConfigValue } from '../src/agent-events';
 
-const EffortLevel = z.enum(['low', 'medium', 'high', 'xhigh', 'max']);
-type EffortLevel = z.infer<typeof EffortLevel>;
+export type { ModelInfo };
 
-export const ModelInfo = z.object({
-  value: z.string(),
-  displayName: z.string(),
-  description: z.string().optional(),
-  supportsEffort: z.boolean().optional(),
-  supportedEffortLevels: z.array(EffortLevel).optional(),
-  supportsAutoMode: z.boolean().optional(),
-});
-export type ModelInfo = z.infer<typeof ModelInfo>;
+// Checks a saved effort against the levels the SDK names.
+const SavedEffortLevel = z.enum([
+  'low',
+  'medium',
+  'high',
+  'xhigh',
+  'max',
+] satisfies EffortLevel[]);
 
 // The vendor's `PermissionMode` without `dontAsk`, which Argo does not offer.
 const PermissionMode = z.enum([
@@ -52,7 +51,7 @@ export function savedValues(saved: AgentConfigValue[]): ConfigValues {
   return {
     mode: PermissionMode.catch('default').parse(savedValue('mode')),
     model: z.string().catch(DEFAULT_VALUE).parse(savedValue('model')),
-    effort: EffortLevel.or(z.literal(DEFAULT_VALUE))
+    effort: SavedEffortLevel.or(z.literal(DEFAULT_VALUE))
       .catch(DEFAULT_VALUE)
       .parse(savedValue('effort')),
   };
