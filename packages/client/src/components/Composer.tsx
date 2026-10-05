@@ -69,10 +69,10 @@ export function Composer({
           contentContainerClassName="gap-3 px-4 pt-3"
         >
           {draft.images.map((image) => (
-            <View key={image.id} className="w-24 gap-1">
+            <View key={image.id} className="w-40 h-30 shrink-0">
               <View
                 className={cn(
-                  'relative w-24 h-18 overflow-hidden rounded-md border bg-muted',
+                  'group relative w-40 h-30 overflow-hidden rounded-md border bg-muted',
                   image.bytes > maximumImageBytes
                     ? 'border-destructive'
                     : 'border-border',
@@ -95,7 +95,12 @@ export function Composer({
                   variant="ghost"
                   size="icon"
                   disabled={inactive}
-                  className="absolute right-0 top-0 size-8 sm:size-8"
+                  className={cn(
+                    'absolute right-0 top-0 size-8 sm:size-8 active:bg-transparent dark:active:bg-transparent hover:bg-transparent dark:hover:bg-transparent web:wide:opacity-0',
+                    inactive
+                      ? 'web:wide:group-hover:opacity-50'
+                      : 'web:wide:group-hover:opacity-100 web:wide:focus-visible:opacity-100',
+                  )}
                   accessibilityLabel={`Remove ${image.name}`}
                   onPress={() =>
                     onDraftChange({
@@ -106,17 +111,11 @@ export function Composer({
                     })
                   }
                 >
-                  <View className="size-6 items-center justify-center rounded-sm border border-border bg-background">
-                    <Icon as={XIcon} className="size-3" />
+                  <View className="size-4.5 items-center justify-center rounded-sm bg-background">
+                    <Icon as={XIcon} className="size-2.5" />
                   </View>
                 </Button>
               </View>
-              <Text
-                className="text-xs leading-4 text-muted-foreground"
-                numberOfLines={1}
-              >
-                {image.name}
-              </Text>
             </View>
           ))}
         </ScrollView>
