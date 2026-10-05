@@ -46,7 +46,6 @@ export const Projects: Story = variations([
   { label: 'No Projects', props: { projects: [] } },
 ]);
 export const Query: Story = variations([
-  { label: 'No search', props: {} },
   { label: 'No matching Sessions', props: { query: 'xyz', sessions: [] } },
 ]);
 export const Archived: Story = variations([

@@ -10,8 +10,13 @@ import {
   FolderOpenIcon,
   PlusIcon,
 } from 'phosphor-react-native';
-import { useId, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useResolveClassNames } from 'uniwind';
 import { cn } from '#lib/utils';
@@ -58,6 +63,20 @@ export function ProjectsList({
   );
   const scroll = useRef({ offset: 0, content: 0, viewport: 0 });
   const [fades, setFades] = useState({ top: false, bottom: false });
+  const topFadeOpacity = useSharedValue(0);
+  const bottomFadeOpacity = useSharedValue(0);
+  useEffect(() => {
+    topFadeOpacity.value = withTiming(fades.top ? 1 : 0, { duration: 180 });
+    bottomFadeOpacity.value = withTiming(fades.bottom ? 1 : 0, {
+      duration: 180,
+    });
+  }, [fades.top, fades.bottom, topFadeOpacity, bottomFadeOpacity]);
+  const topFadeStyle = useAnimatedStyle(() => ({
+    opacity: topFadeOpacity.value,
+  }));
+  const bottomFadeStyle = useAnimatedStyle(() => ({
+    opacity: bottomFadeOpacity.value,
+  }));
   function updateFades() {
     const { offset, content, viewport } = scroll.current;
     const top = offset > 1;
@@ -201,56 +220,46 @@ export function ProjectsList({
           );
         }}
       />
-      {(['top', 'bottom'] as const).map(
-        (edge) =>
-          fades[edge] && (
-            <View
-              key={edge}
-              pointerEvents="none"
-              accessibilityElementsHidden
-              importantForAccessibility="no-hide-descendants"
-              testID={`scroll-fade-${edge}`}
-              className={
-                edge === 'top'
-                  ? 'absolute inset-x-0 top-0 h-8'
-                  : 'absolute inset-x-0 bottom-0 h-12'
-              }
-            >
-              <Svg width="100%" height="100%">
-                <Defs>
-                  <LinearGradient
-                    id={`${gradientId}-${edge}`}
-                    x1="0"
-                    y1={edge === 'top' ? '100%' : '0'}
-                    x2="0"
-                    y2={edge === 'top' ? '0' : '100%'}
-                  >
-                    <Stop
-                      offset="0"
-                      stopColor={backgroundColor}
-                      stopOpacity={0}
-                    />
-                    <Stop
-                      offset="0.5"
-                      stopColor={backgroundColor}
-                      stopOpacity={0.85}
-                    />
-                    <Stop
-                      offset="1"
-                      stopColor={backgroundColor}
-                      stopOpacity={1}
-                    />
-                  </LinearGradient>
-                </Defs>
-                <Rect
-                  width="100%"
-                  height="100%"
-                  fill={`url(#${gradientId}-${edge})`}
+      {(['top', 'bottom'] as const).map((edge) => (
+        <Animated.View
+          key={edge}
+          pointerEvents="none"
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+          testID={`scroll-fade-${edge}`}
+          style={edge === 'top' ? topFadeStyle : bottomFadeStyle}
+          className={
+            edge === 'top'
+              ? 'absolute inset-x-0 top-0 h-8'
+              : 'absolute inset-x-0 bottom-0 h-12'
+          }
+        >
+          <Svg width="100%" height="100%">
+            <Defs>
+              <LinearGradient
+                id={`${gradientId}-${edge}`}
+                x1="0"
+                y1={edge === 'top' ? '100%' : '0'}
+                x2="0"
+                y2={edge === 'top' ? '0' : '100%'}
+              >
+                <Stop offset="0" stopColor={backgroundColor} stopOpacity={0} />
+                <Stop
+                  offset="0.5"
+                  stopColor={backgroundColor}
+                  stopOpacity={0.85}
                 />
-              </Svg>
-            </View>
-          ),
-      )}
+                <Stop offset="1" stopColor={backgroundColor} stopOpacity={1} />
+              </LinearGradient>
+            </Defs>
+            <Rect
+              width="100%"
+              height="100%"
+              fill={`url(#${gradientId}-${edge})`}
+            />
+          </Svg>
+        </Animated.View>
+      ))}
     </View>
   );
 }
