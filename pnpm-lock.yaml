@@ -812,12 +812,21 @@ importers:
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.63.0
+      '@repo/desktop':
+        specifier: workspace:*
+        version: link:../apps/desktop
       '@repo/mocks':
         specifier: workspace:*
         version: link:../mocks
+      '@repo/server':
+        specifier: workspace:*
+        version: link:../apps/server
       '@repo/typescript':
         specifier: workspace:*
         version: link:../tooling/typescript
+      '@repo/universal-app':
+        specifier: workspace:*
+        version: link:../apps/universal-app
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.1

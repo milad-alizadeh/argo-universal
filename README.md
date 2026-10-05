@@ -21,7 +21,7 @@ Node 24 and pnpm 12. `pnpm install`, then:
 | `pnpm --filter @repo/universal-app android` | Builds and opens the Android development build. Run `adb reverse tcp:8081 tcp:8081` and `adb reverse tcp:7337 tcp:7337` first. |
 | `pnpm dev:storybook` | Opens the web Storybook. On device, pick "Open Storybook" in the dev menu. |
 | `pnpm quality` | Runs sherif, Biome, type checks, and Vitest. |
-| `pnpm test:e2e` | Runs Playwright on the web export. Build it first with `pnpm --filter @repo/universal-app build`. |
+| `pnpm test:e2e` | Builds the web export and runs Playwright on it; skips both when nothing they depend on changed. |
 | `pnpm test:e2e:electron` | Runs Playwright in Electron against the web export. |
 
 The Server keeps its data in `~/.argo`. Set `ARGO_HOME` to use another folder.

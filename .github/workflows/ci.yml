@@ -21,6 +21,10 @@ jobs:
     name: Quality and end-to-end tests
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    permissions:
+      contents: read
+      # The Vercel Remote Cache step trades GitHub's OIDC token for a short-lived Turborepo token.
+      id-token: write
     steps:
       - uses: actions/checkout@v7
 
@@ -39,12 +43,21 @@ jobs:
       - name: Install Playwright Chromium
         run: pnpm --filter @repo/e2e exec playwright install --with-deps chromium
 
+      # Shares turbo's task cache with every run and machine, so unchanged tasks replay instead of running; skipped until the TURBO_TEAM variable exists.
+      - name: Set up the Turborepo Remote Cache
+        if: ${{ vars.TURBO_TEAM != '' }}
+        uses: vercel/setup-turborepo-remote-cache-action@v1.1.0
+        with:
+          team: ${{ vars.TURBO_TEAM }}
+
       - name: Quality
         run: pnpm quality
 
+      # Through turbo, so an unchanged app restores dist/ from the cache.
       - name: Export the Expo web build
-        run: pnpm --filter @repo/universal-app build
+        run: pnpm exec turbo run build --filter=@repo/universal-app
 
+      # Replays from cache when nothing @repo/e2e depends on changed.
       - name: End-to-end tests (web)
         run: pnpm test:e2e
 
