@@ -142,8 +142,6 @@ export const Notice = z.strictObject({
           delayMs: z.int(),
         })
         .optional(),
-      // A vendor shape that the adapter did not recognise (ADR-0012).
-      unrecognised: z.strictObject({ excerpt: z.string() }).optional(),
     }),
   ),
 });

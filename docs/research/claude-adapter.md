@@ -72,7 +72,7 @@ The clean check comes before spawning: `getSessionInfo(id, {dir: cwd})` returns 
 
 ## 2. The stream and its validation
 
-`SDKMessage` is a union of about 40 shapes (`sdk.d.ts:5332`). Its doc says "Consumers should ignore types and subtypes they do not recognize" (`sdk.d.ts:5330`). ADR 0012 asks for more: an unrecognised shape becomes a notice with `_meta.argo.unrecognised` and is counted (`docs/adr/0012-only-human-typed-text-is-a-user-message.md:14`).
+`SDKMessage` is a union of about 40 shapes (`sdk.d.ts:5332`). Its doc says "Consumers should ignore types and subtypes they do not recognize" (`sdk.d.ts:5330`). The adapter drops a message type it does not map, and the Feed rejects, logs and counts a change that does not match the contract (ADR 0012, ADR 0015).
 
 **Zod at the boundary.** Discriminate on `type`, then on `subtype` for `system` and `result`. Use loose objects, so a new field does not reject a known shape. Reject and count only:
 

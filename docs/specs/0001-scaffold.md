@@ -290,7 +290,7 @@ Spec 0003 adds the kind `session_message` and `_meta.argo` fields on `tool_call_
 | `plan_update` | `{plan: {type: 'items', planId, entries: PlanEntry[]} \| {type: 'markdown', planId, content: string}}`. `_meta.argo` on a markdown plan: `{requestId?, filePath?}` |
 | `compaction_update` | `{compactionId, status: 'in_progress' \| 'completed' \| 'failed' \| 'cancelled', summary?}` |
 | `subagent_update` | `{subagentSessionId: <child Session id>, title?, subagentState?: 'running' \| 'idle' \| 'requires_action'}`. ACP's `sessionId` and `state` clash with the row's own fields, so both carry a `subagent` prefix. |
-| `notice` | `{severity: 'info' \| 'warning' \| 'error', title, description?}`. `_meta.argo`: `{retry?: {attempt, maxAttempts, delayMs}, unrecognised?: {excerpt}}` |
+| `notice` | `{severity: 'info' \| 'warning' \| 'error', title, description?}`. `_meta.argo`: `{retry?: {attempt, maxAttempts, delayMs}}` |
 | `task_update` | Argo extension: `{taskId, status: 'running' \| 'completed' \| 'failed' \| 'cancelled', title}` |
 
 Shared types:
