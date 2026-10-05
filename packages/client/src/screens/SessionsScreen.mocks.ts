@@ -5,8 +5,8 @@ const firstTick = Date.parse('2026-10-03T10:00:00.000Z');
 const sleep = (milliseconds: number) =>
   new Promise((resolve) => setTimeout(resolve, milliseconds));
 
-// Default fixture for each procedure that ProjectsScreen calls; a story overrides one at most.
-export const projectsScreenMocks = {
+// Default fixture for each procedure that SessionsScreen calls; a story overrides one at most.
+export const sessionsScreenMocks = {
   'system.info': () => ({
     version: '1.2.3',
     startedAt: '2026-10-03T09:00:00.000Z',

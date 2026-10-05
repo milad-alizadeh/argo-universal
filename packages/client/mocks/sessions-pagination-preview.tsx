@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import {
-  ProjectsList,
-  type ProjectsListProps,
-} from '../src/components/ProjectsList';
-import { largeSessions } from './projects-list-mock';
+  SessionsList,
+  type SessionsListProps,
+} from '../src/components/SessionsList';
+import { largeSessions } from './sessions-list-mock';
 
-export function ProjectsPaginationPreview(props: ProjectsListProps) {
+export function SessionsPaginationPreview(props: SessionsListProps) {
   const [visibleCount, setVisibleCount] = useState(20);
   const [loading, setLoading] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -30,7 +30,7 @@ export function ProjectsPaginationPreview(props: ProjectsListProps) {
 
   return (
     <View className="w-full wide:w-shell-list" style={{ height: 480 }}>
-      <ProjectsList
+      <SessionsList
         {...props}
         sessions={largeSessions.slice(0, visibleCount)}
         isFetchingNextPage={loading}

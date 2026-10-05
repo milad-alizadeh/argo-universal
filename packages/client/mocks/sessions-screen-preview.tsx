@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Platform, useWindowDimensions, View } from 'react-native';
 
-export function ProjectsScreenPreview({ children }: { children: ReactNode }) {
+export function SessionsScreenPreview({ children }: { children: ReactNode }) {
   const { height } = useWindowDimensions();
   return (
     <View

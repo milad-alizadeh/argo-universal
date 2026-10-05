@@ -1,17 +1,18 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
-import { ProjectsNewSessionPreview } from '../../mocks/projects-new-session-preview';
-import { projectsListProps } from '../../mocks/projects-list-mock';
-import { ProjectsList } from './ProjectsList';
+import { sessionsListProps } from '../../mocks/sessions-list-mock';
+import { SessionsNewSessionPreview } from '../../mocks/sessions-new-session-preview';
+import { SessionsPaginationPreview } from '../../mocks/sessions-pagination-preview';
+import { SessionsList } from './SessionsList';
 
 const onNewSession = fn();
 const onProjectSettings = fn();
 const meta = {
-  title: 'Tests/ProjectsList',
-  component: ProjectsList,
+  title: 'Tests/SessionsList',
+  component: SessionsList,
   args: {
-    ...projectsListProps,
+    ...sessionsListProps,
     onSelect: fn(),
     onEndReached: fn(),
     onNewSession,
@@ -19,14 +20,14 @@ const meta = {
   },
   render: (args) => (
     <View className="w-full wide:w-shell-list" style={{ height: 320 }}>
-      <ProjectsList {...args} />
+      <SessionsList {...args} />
     </View>
   ),
   beforeEach: () => {
     onNewSession.mockClear();
     onProjectSettings.mockClear();
   },
-} satisfies Meta<typeof ProjectsList>;
+} satisfies Meta<typeof SessionsList>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
@@ -52,7 +53,7 @@ export const ProjectActions: Story = {
     await expect(onProjectSettings).toHaveBeenCalledWith('Example Project');
     await userEvent.click(newSession);
     await expect(onNewSession).toHaveBeenCalledWith(
-      projectsListProps.projects[0]?.id,
+      sessionsListProps.projects[0]?.id,
     );
     await expect(heading).toHaveAttribute('aria-expanded', 'true');
     await userEvent.click(heading);
@@ -69,7 +70,7 @@ export const ProjectActionsDark: Story = {
 };
 
 export const InsertSessionOpaqueRows: Story = {
-  render: (args) => <ProjectsNewSessionPreview {...args} />,
+  render: (args) => <SessionsNewSessionPreview {...args} />,
   play: async ({ canvas, userEvent }) => {
     const heading = await canvas.findByRole('button', {
       name: 'Example Project',
@@ -120,9 +121,9 @@ export const InsertSessionOpaqueRowsDark: Story = {
 };
 
 export const ScrollFadePadding: Story = {
-  render: (args) => <ProjectsNewSessionPreview {...args} />,
+  render: (args) => <SessionsNewSessionPreview {...args} />,
   play: async ({ canvas }) => {
-    const scroll = canvas.getByTestId('projects-scroll');
+    const scroll = canvas.getByTestId('sessions-scroll');
     const topFade = canvas.getByTestId('scroll-fade-top');
     const bottomFade = canvas.getByTestId('scroll-fade-bottom');
     const surface = topFade.parentElement;
@@ -180,5 +181,40 @@ export const ScrollFadePadding: Story = {
 };
 export const ScrollFadePaddingDark: Story = {
   ...ScrollFadePadding,
+  globals: { mode: 'dark' },
+};
+
+export const PaginationSpinnerVisible: Story = {
+  render: (args) => <SessionsPaginationPreview {...args} />,
+  play: async ({ canvas }) => {
+    const scroll = await canvas.findByTestId('sessions-scroll');
+    await waitFor(() =>
+      expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight),
+    );
+    const initialHeight = scroll.scrollHeight;
+    scroll.scrollTop = initialHeight;
+    const spinner = await canvas.findByRole('progressbar', {
+      name: 'Loading more Sessions',
+    });
+    await waitFor(
+      () => {
+        const viewport = scroll.getBoundingClientRect();
+        const indicator = spinner.getBoundingClientRect();
+        expect(indicator.top).toBeGreaterThanOrEqual(viewport.top + 20);
+        expect(indicator.bottom).toBeLessThanOrEqual(viewport.bottom - 28);
+      },
+      { timeout: 1000 },
+    );
+    await waitFor(
+      () => expect(canvas.queryByRole('progressbar')).not.toBeInTheDocument(),
+      { timeout: 3000 },
+    );
+    await waitFor(() =>
+      expect(scroll.scrollHeight).toBeGreaterThan(initialHeight + 500),
+    );
+  },
+};
+export const PaginationSpinnerVisibleDark: Story = {
+  ...PaginationSpinnerVisible,
   globals: { mode: 'dark' },
 };

@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 
-export function ProjectsLoading() {
+export function SessionsLoading() {
   return (
     <View
       role="status"

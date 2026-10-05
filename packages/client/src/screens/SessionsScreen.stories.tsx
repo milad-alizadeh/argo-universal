@@ -1,21 +1,21 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { ProjectsScreenPreview } from '../../mocks/projects-screen-preview';
 import {
   emptySessionListMocks,
   sessionListMocks,
 } from '../../mocks/session-list-mock';
+import { SessionsScreenPreview } from '../../mocks/sessions-screen-preview';
 import { fails, pending } from '../../mocks/trpc-mock-link';
-import { ProjectsScreen } from './ProjectsScreen';
+import { SessionsScreen } from './SessionsScreen';
 
 const meta = {
-  component: ProjectsScreen,
+  component: SessionsScreen,
   parameters: { trpc: sessionListMocks, previewPadding: false },
   render: () => (
-    <ProjectsScreenPreview>
-      <ProjectsScreen />
-    </ProjectsScreenPreview>
+    <SessionsScreenPreview>
+      <SessionsScreen />
+    </SessionsScreenPreview>
   ),
-} satisfies Meta<typeof ProjectsScreen>;
+} satisfies Meta<typeof SessionsScreen>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 

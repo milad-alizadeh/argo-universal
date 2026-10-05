@@ -1,4 +1,4 @@
-import { LegendList } from '@legendapp/list';
+import { LegendList, type LegendListRef } from '@legendapp/list';
 import type {
   AgentsListOutput,
   ProjectsListOutput,
@@ -31,7 +31,7 @@ type Entry =
   | { kind: 'session'; id: string; session: SessionInfo }
   | { kind: 'empty'; id: string };
 
-export interface ProjectsListProps {
+export interface SessionsListProps {
   projects: ProjectsListOutput;
   agents: AgentsListOutput;
   sessions: SessionInfo[];
@@ -45,7 +45,7 @@ export interface ProjectsListProps {
   onProjectSettings?: (projectName: string) => void;
 }
 
-export function ProjectsList({
+export function SessionsList({
   projects,
   agents,
   sessions,
@@ -57,8 +57,14 @@ export function ProjectsList({
   isFetchingNextPage = false,
   onNewSession,
   onProjectSettings,
-}: ProjectsListProps) {
+}: SessionsListProps) {
   const gradientId = useId().replace(/:/g, '');
+  const list = useRef<LegendListRef>(null);
+  const atEnd = useRef(false);
+  const revealLoadingFooter = useRef(false);
+  useLayoutEffect(() => {
+    revealLoadingFooter.current = isFetchingNextPage && atEnd.current;
+  }, [isFetchingNextPage]);
   const { backgroundColor } = useResolveClassNames(
     'bg-background wide:bg-sidebar',
   );
@@ -108,12 +114,13 @@ export function ProjectsList({
 
   return (
     <View
-      className="relative flex-1 overflow-hidden bg-background wide:bg-sidebar web:select-none web:[&_*]:select-none! web:[&_[data-testid=projects-scroll]>div>div>div]:transition-[top,transform] web:[&_[data-testid=projects-scroll]>div>div>div]:duration-200"
+      className="relative flex-1 overflow-hidden bg-background wide:bg-sidebar web:select-none web:[&_*]:select-none! web:[&_[data-testid=sessions-scroll]>div>div>div]:transition-[top,transform] web:[&_[data-testid=sessions-scroll]>div>div>div]:duration-200"
       style={{ minHeight: 0 }}
     >
       <View className="flex-1" style={{ minHeight: 0 }}>
         <LegendList
-          testID="projects-scroll"
+          ref={list}
+          testID="sessions-scroll"
           style={{ flex: 1 }}
           contentContainerStyle={contentStyle}
           data={entries}
@@ -124,6 +131,20 @@ export function ProjectsList({
           extraData={{ agents, collapsed, selectedSessionId }}
           onEndReached={onEndReached}
           onEndReachedThreshold={0.5}
+          onScroll={({ nativeEvent }) => {
+            const { contentOffset, contentSize, layoutMeasurement } =
+              nativeEvent;
+            atEnd.current =
+              contentSize.height - contentOffset.y - layoutMeasurement.height <=
+              2;
+          }}
+          onContentSizeChange={() => {
+            if (!revealLoadingFooter.current) return;
+            revealLoadingFooter.current = false;
+            requestAnimationFrame(() => {
+              list.current?.scrollToEnd({ animated: false });
+            });
+          }}
           ListFooterComponent={
             isFetchingNextPage ? (
               <View className="h-24 items-center justify-center">

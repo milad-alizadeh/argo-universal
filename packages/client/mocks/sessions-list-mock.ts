@@ -7,7 +7,7 @@ import {
 import { sessionListMocks } from './session-list-mock';
 import { type Fixtures, pending } from './trpc-mock-link';
 
-export const projectsListProps = {
+export const sessionsListProps = {
   projects: projectsList,
   agents: agentsList,
   sessions: activeSessions.sessions,

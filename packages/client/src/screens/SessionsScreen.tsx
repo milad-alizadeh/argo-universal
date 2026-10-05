@@ -11,9 +11,9 @@ import { ConnectionBanner } from '#components/ConnectionBanner';
 import { Icon } from '#components/Icon';
 import { ListSearch } from '#components/ListSearch';
 import { LoadError } from '#components/LoadError';
-import { ProjectsList } from '#components/ProjectsList';
-import { ProjectsLoading } from '#components/ProjectsLoading';
 import { Screen } from '#components/Screen';
+import { SessionsList } from '#components/SessionsList';
+import { SessionsLoading } from '#components/SessionsLoading';
 import { Button } from '#primitives/button';
 import {
   DropdownMenu,
@@ -27,7 +27,7 @@ import { useNavigate } from '../navigation/context';
 import { useWide } from '../navigation/use-wide';
 import { useTRPC } from '../trpc/context';
 
-export function ProjectsScreen() {
+export function SessionsScreen() {
   const wide = useWide();
   const trpc = useTRPC();
   const navigate = useNavigate();
@@ -117,9 +117,9 @@ export function ProjectsScreen() {
           onRetry={retry}
         />
       ) : loading ? (
-        <ProjectsLoading />
+        <SessionsLoading />
       ) : (
-        <ProjectsList
+        <SessionsList
           projects={projects.data ?? []}
           agents={agents.data ?? []}
           sessions={rows}

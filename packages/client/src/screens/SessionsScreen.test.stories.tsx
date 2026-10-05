@@ -2,37 +2,37 @@ import { archivedSessions, projectsList, sessionRows } from '@repo/api/mocks';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
 import {
-  largeSessionListMocks,
-  multipleProjectsMocks,
-  nextPageFailureMocks,
-  nextPageLoadingMocks,
-} from '../../mocks/projects-list-mock';
-import { ProjectsScreenPreview } from '../../mocks/projects-screen-preview';
-import {
   emptySessionListMocks,
   sessionListMocks,
 } from '../../mocks/session-list-mock';
 import { createSessionListUpdatesMock } from '../../mocks/session-list-updates-mock';
+import {
+  largeSessionListMocks,
+  multipleProjectsMocks,
+  nextPageFailureMocks,
+  nextPageLoadingMocks,
+} from '../../mocks/sessions-list-mock';
+import { SessionsScreenPreview } from '../../mocks/sessions-screen-preview';
 import { fails, pending } from '../../mocks/trpc-mock-link';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
 import { applyTheme } from '../lib/theme';
-import { ProjectsScreen } from './ProjectsScreen';
+import { SessionsScreen } from './SessionsScreen';
 
 const recorder = createNavigationRecorder();
 const meta = {
-  title: 'Tests/ProjectsScreen',
-  component: ProjectsScreen,
+  title: 'Tests/SessionsScreen',
+  component: SessionsScreen,
   parameters: {
     trpc: sessionListMocks,
     previewPadding: false,
     navigation: recorder,
   },
   render: () => (
-    <ProjectsScreenPreview>
-      <ProjectsScreen />
-    </ProjectsScreenPreview>
+    <SessionsScreenPreview>
+      <SessionsScreen />
+    </SessionsScreenPreview>
   ),
-} satisfies Meta<typeof ProjectsScreen>;
+} satisfies Meta<typeof SessionsScreen>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
@@ -332,19 +332,23 @@ export const LiveUpdates: Story = {
         canvas.getByRole('button', { name: 'Newest activity, Running' }),
       ).toBeVisible(),
     );
-    await eachLayout(async () => {
-      const rows = canvas
-        .getAllByRole('button')
-        .filter((row) => row.getAttribute('aria-label')?.endsWith(', Running'))
-        .sort(
-          (a, b) =>
-            a.getBoundingClientRect().top - b.getBoundingClientRect().top,
-        );
-      await expect(rows.map((row) => row.getAttribute('aria-label'))).toEqual([
-        'Newest activity, Running',
-        'Build the settings screen, Running',
-      ]);
-    });
+    await eachLayout(async () =>
+      waitFor(() => {
+        const rows = canvas
+          .getAllByRole('button')
+          .filter((row) =>
+            row.getAttribute('aria-label')?.endsWith(', Running'),
+          )
+          .sort(
+            (a, b) =>
+              a.getBoundingClientRect().top - b.getBoundingClientRect().top,
+          );
+        expect(rows.map((row) => row.getAttribute('aria-label'))).toEqual([
+          'Newest activity, Running',
+          'Build the settings screen, Running',
+        ]);
+      }),
+    );
     liveUpdates.publish({
       type: 'removed',
       sessionId: sessionRows.running.sessionId,
@@ -372,23 +376,23 @@ export const NextPageFailure: Story = {
 export const ScrollFade: Story = {
   play: async ({ canvas }) =>
     eachLayout(async () => {
-      const scroll = await canvas.findByTestId('projects-scroll');
+      const scroll = await canvas.findByTestId('sessions-scroll');
       scroll.scrollTop = 0;
       await waitFor(() =>
         expect(canvas.getByTestId('scroll-fade-bottom')).toBeVisible(),
       );
-      await expect(canvas.queryByTestId('scroll-fade-top')).toBeNull();
+      await expect(canvas.getByTestId('scroll-fade-top')).toBeVisible();
       scroll.scrollTop = 200;
       await waitFor(() =>
         expect(canvas.getByTestId('scroll-fade-top')).toBeVisible(),
       );
       scroll.scrollTop = scroll.scrollHeight;
       await waitFor(() =>
-        expect(canvas.queryByTestId('scroll-fade-bottom')).toBeNull(),
+        expect(canvas.getByTestId('scroll-fade-bottom')).toBeVisible(),
       );
       scroll.scrollTop = 0;
       await waitFor(() =>
-        expect(canvas.queryByTestId('scroll-fade-top')).toBeNull(),
+        expect(canvas.getByTestId('scroll-fade-top')).toBeVisible(),
       );
     }),
 };

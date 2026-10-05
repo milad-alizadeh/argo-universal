@@ -5,27 +5,27 @@ import { action } from 'storybook/actions';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
 import {
   multipleProjects,
-  projectsListProps,
-} from '../../mocks/projects-list-mock';
-import { ProjectsNewSessionPreview } from '../../mocks/projects-new-session-preview';
-import { ProjectsPaginationPreview } from '../../mocks/projects-pagination-preview';
-import { ProjectsList, type ProjectsListProps } from './ProjectsList';
+  sessionsListProps,
+} from '../../mocks/sessions-list-mock';
+import { SessionsNewSessionPreview } from '../../mocks/sessions-new-session-preview';
+import { SessionsPaginationPreview } from '../../mocks/sessions-pagination-preview';
+import { SessionsList, type SessionsListProps } from './SessionsList';
 
 const meta = {
-  title: 'Sessions/ProjectsList',
-  component: ProjectsList,
+  title: 'Sessions/SessionsList',
+  component: SessionsList,
   args: {
-    ...projectsListProps,
+    ...sessionsListProps,
     onSelect: action('select Session'),
     onEndReached: action('load next page'),
     onNewSession: action('new Session in Project'),
     onProjectSettings: action('Project settings'),
   },
-} satisfies Meta<typeof ProjectsList>;
+} satisfies Meta<typeof SessionsList>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 function variations(
-  values: { label: string; props: Partial<ProjectsListProps> }[],
+  values: { label: string; props: Partial<SessionsListProps> }[],
 ): Story {
   return {
     render: (args) => (
@@ -33,7 +33,7 @@ function variations(
         {values.map(({ label, props }) => (
           <Variation key={label} label={label}>
             <View className="w-full wide:w-shell-list" style={{ height: 320 }}>
-              <ProjectsList {...args} {...props} />
+              <SessionsList {...args} {...props} />
             </View>
           </Variation>
         ))}
@@ -57,9 +57,9 @@ export const Archived: Story = variations([
   { label: 'No archived Sessions', props: { archived: true, sessions: [] } },
 ]);
 export const OnEndReached: Story = {
-  render: (args) => <ProjectsPaginationPreview {...args} />,
+  render: (args) => <SessionsPaginationPreview {...args} />,
 };
 
 export const OnNewSession: Story = {
-  render: (args) => <ProjectsNewSessionPreview {...args} />,
+  render: (args) => <SessionsNewSessionPreview {...args} />,
 };

@@ -1,17 +1,17 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
-import { ProjectsLoading } from './ProjectsLoading';
+import { SessionsLoading } from './SessionsLoading';
 
 const meta = {
-  title: 'Sessions/ProjectsLoading',
-  component: ProjectsLoading,
-} satisfies Meta<typeof ProjectsLoading>;
+  title: 'Sessions/SessionsLoading',
+  component: SessionsLoading,
+} satisfies Meta<typeof SessionsLoading>;
 export default meta;
 export const Default: StoryObj<typeof meta> = {
   render: () => (
     <Variations>
       <Variation label="Loading">
-        <ProjectsLoading />
+        <SessionsLoading />
       </Variation>
     </Variations>
   ),

@@ -1,12 +1,12 @@
 import { useRef, useState } from 'react';
 import { View } from 'react-native';
 import {
-  ProjectsList,
-  type ProjectsListProps,
-} from '../src/components/ProjectsList';
-import { largeSessions } from './projects-list-mock';
+  SessionsList,
+  type SessionsListProps,
+} from '../src/components/SessionsList';
+import { largeSessions } from './sessions-list-mock';
 
-export function ProjectsNewSessionPreview(props: ProjectsListProps) {
+export function SessionsNewSessionPreview(props: SessionsListProps) {
   const [sessions, setSessions] = useState(largeSessions.slice(0, 12));
   const nextNumber = useRef(1);
 
@@ -29,7 +29,7 @@ export function ProjectsNewSessionPreview(props: ProjectsListProps) {
   return (
     <View className="w-full wide:w-shell-list">
       <View style={{ height: 480 }}>
-        <ProjectsList
+        <SessionsList
           {...props}
           sessions={sessions}
           onNewSession={addSession}

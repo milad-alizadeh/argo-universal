@@ -17,14 +17,14 @@ Updated as new requests arrive. Completed entries describe implemented changes; 
 - [x] Fix and test the transparent animated row containers: opaque clipped row surfaces; light/dark insertion checked across 12 animation frames and final spacing; six targeted browser tests pass, including first/last row padding, gradient sizes, and gradient color matching in light and dark mode.
 - [x] Match hover effects for add Session, Project +, and … controls.
 - [x] Remove Project Session counts.
-- [x] Disable browser text selection in the Projects list.
+- [x] Disable browser text selection in SessionsList.
 - [x] Remove the invalid No registered Agents variation.
 - [x] Remove duplicate Sessions, Selected Session ID, and On Select stories.
 - [x] Remove On Project Settings from showcase stories; keep callback coverage in test stories because it has no distinct visual state.
 - [x] Show archived Sessions and no archived Sessions together; remove the Active comparison.
 - [x] Remove the redundant No search variation from Query.
-- [x] Show a spinner while the next page loads.
-- [x] Keep the bottom scroll fade visible during pagination loading, with footer space to show the spinner and fade together.
+- [ ] Fix the blind validation failure: the pagination spinner must be visible on the first scroll to the bottom, without another wheel gesture.
+- [ ] Keep the bottom scroll fade and pagination spinner visible together on the first loading gesture; independently replay in light and dark mode.
 - [x] Make On End Reached interactive: start with 20 rows, load 20 more after two seconds, stop at 100 rows.
 - [x] Add shared Screen with safe-area insets enabled by default and optional safeArea / edges overrides.
 - [x] Apply Screen to the Sessions screen.
@@ -36,6 +36,7 @@ Updated as new requests arrive. Completed entries describe implemented changes; 
 - [x] Add one dedicated interactive Search showcase for opening, typing, and collapsing the morphing search control, outside test stories.
 - [ ] Have a fresh blind sub-agent independently test every requested fix against live previews and report PASS / FAIL / UNVERIFIED with visual evidence and reproducible failures.
 - [x] Remove the close control’s hover background while search is expanded; keep the collapsed search trigger hover behavior.
+- [x] Rename ProjectsList → SessionsList, ProjectsScreen → SessionsScreen, and ProjectsLoading → SessionsLoading, including files, exports, mocks, story titles, and preview links.
 - [ ] User acceptance of the current changes.
 - [x] Update AGENTS.md Storybook rules: distinct valid visual states, no repeated default states or child-component coverage, callback checks without visual effects in test stories, and interactive pagination with enough rows, temporary loading, and appended results. Align the Paper guidance with these rules.
 - [ ] Final review when preparing the PR.
@@ -46,13 +47,15 @@ Updated as new requests arrive. Completed entries describe implemented changes; 
 
 - [SettingsList: single interactive Settings story](http://localhost:6007/?path=/story/settings-settingslist--settings)
 
-- [Projects list: design, hover controls, text selection, scroll fades](http://localhost:6007/?path=/story/sessions-projectslist--projects)
-- [Query: no matching Sessions](http://localhost:6007/?path=/story/sessions-projectslist--query)
-- [Archived: archived and empty states](http://localhost:6007/?path=/story/sessions-projectslist--archived)
-- [Pagination: scroll, spinner, and appended rows](http://localhost:6007/?path=/story/sessions-projectslist--on-end-reached)
-- [Loading screen: skeleton alignment](http://localhost:6007/?path=/story/screens-projectsscreen--loading)
-- [Loaded screen: safe-area integration](http://localhost:6007/?path=/story/screens-projectsscreen--loaded)
+- [Sessions list: design, hover controls, text selection, scroll fades](http://localhost:6007/?path=/story/sessions-sessionslist--projects)
+- [Query: no matching Sessions](http://localhost:6007/?path=/story/sessions-sessionslist--query)
+- [Archived: archived and empty states](http://localhost:6007/?path=/story/sessions-sessionslist--archived)
+- [New Session: Project + inserts a row with shift animation](http://localhost:6007/?path=/story/sessions-sessionslist--on-new-session)
+- [SessionsLoading: aligned skeletons](http://localhost:6007/?path=/story/sessions-sessionsloading--default)
+- [Pagination: scroll, spinner, and appended rows](http://localhost:6007/?path=/story/sessions-sessionslist--on-end-reached)
+- [Loading screen: skeleton alignment](http://localhost:6007/?path=/story/screens-sessionsscreen--loading)
+- [Loaded screen: safe-area integration](http://localhost:6007/?path=/story/screens-sessionsscreen--loaded)
 - [Screen: default safe areas and opt-out](http://localhost:6007/?path=/story/shared-screen--safe-area)
 - [Screen: edge overrides](http://localhost:6007/?path=/story/shared-screen--edges)
 
-On iOS, use the same story groups in the open Simulator: Screens → ProjectsScreen, Sessions → ProjectsList, and Shared → Screen.
+On iOS, use the same story groups in the open Simulator: Screens → SessionsScreen, Sessions → SessionsList / SessionsLoading, and Shared → Screen.

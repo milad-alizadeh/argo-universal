@@ -1,5 +1,5 @@
-import { ProjectsScreen } from '@repo/client';
+import { SessionsScreen } from '@repo/client';
 
 export default function ProjectsRoute() {
-  return <ProjectsScreen />;
+  return <SessionsScreen />;
 }
