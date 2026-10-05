@@ -1,6 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
+import {
+  delayFooterLayout,
+  getDelayedFooterLayouts,
+  installFooterLayoutDelay,
+} from '../../mocks/delayed-footer-layout';
 import { sessionsListProps } from '../../mocks/sessions-list-mock';
 import { SessionsNewSessionPreview } from '../../mocks/sessions-new-session-preview';
 import { SessionsPaginationPreview } from '../../mocks/sessions-pagination-preview';
@@ -28,8 +33,10 @@ const meta = {
     </View>
   ),
   beforeEach: () => {
+    const restoreResizeObserver = installFooterLayoutDelay();
     onNewSession.mockClear();
     onProjectSettings.mockClear();
+    return restoreResizeObserver;
   },
 } satisfies Meta<typeof SessionsList>;
 export default meta;
@@ -247,6 +254,7 @@ export const ScrollFadePaddingDark: Story = {
 };
 
 export const PaginationSpinnerVisible: Story = {
+  beforeEach: delayFooterLayout,
   render: (args) => <SessionsPaginationPreview {...args} />,
   play: async ({ canvas }) => {
     const scroll = await canvas.findByTestId('sessions-scroll');
@@ -258,6 +266,7 @@ export const PaginationSpinnerVisible: Story = {
     const spinner = await canvas.findByRole('progressbar', {
       name: 'Loading more Sessions',
     });
+    await waitFor(() => expect(getDelayedFooterLayouts()).toBeGreaterThan(0));
     await waitFor(
       () => {
         const viewport = scroll.getBoundingClientRect();

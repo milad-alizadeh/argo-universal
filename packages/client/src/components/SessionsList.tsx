@@ -1,8 +1,4 @@
-import {
-  LegendList,
-  type LegendListRef,
-  type LegendListRenderItemProps,
-} from '@legendapp/list';
+import { LegendList, type LegendListRenderItemProps } from '@legendapp/list';
 import type {
   AgentsListOutput,
   ProjectsListOutput,
@@ -21,6 +17,7 @@ import {
   ActivityIndicator,
   LayoutAnimation,
   Platform,
+  type ScrollView,
   View,
 } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
@@ -73,7 +70,7 @@ export function SessionsList({
   onProjectSettings,
 }: SessionsListProps) {
   const gradientId = useId().replace(/:/g, '');
-  const list = useRef<LegendListRef>(null);
+  const scrollView = useRef<ScrollView>(null);
   const atEnd = useRef(false);
   const revealLoadingFooter = useRef(false);
   useLayoutEffect(() => {
@@ -184,7 +181,7 @@ export function SessionsList({
     >
       <View className="flex-1" style={{ minHeight: 0 }}>
         <LegendList
-          ref={list}
+          refScrollView={scrollView}
           testID="sessions-scroll"
           style={{ flex: 1 }}
           contentContainerStyle={contentStyle}
@@ -207,7 +204,7 @@ export function SessionsList({
             if (!revealLoadingFooter.current) return;
             revealLoadingFooter.current = false;
             requestAnimationFrame(() => {
-              list.current?.scrollToEnd({ animated: false });
+              scrollView.current?.scrollToEnd({ animated: false });
             });
           }}
           ListFooterComponent={
