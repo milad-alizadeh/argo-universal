@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, waitFor } from 'storybook/test';
 import { PhoneShellMock } from '../../mocks/phone-shell-mock';
 
 const meta = {
@@ -95,65 +95,65 @@ export const MenuOpensAndSelectionClosesDrawer: Story = {
   },
 };
 
-export const AllAttentionAndSectionStates: Story = {
-  render: () => (
-    <View className="w-full gap-6">
-      {[0, 1, 100].map((attentionCount) => (
-        <View
-          key={attentionCount}
-          testID={`attention-${attentionCount}`}
-          className="h-[600px] w-full"
-        >
-          <PhoneShellMock attentionCount={attentionCount} />
-        </View>
-      ))}
-    </View>
-  ),
-  play: async ({ canvas, userEvent }) => {
-    const { page } = await import('vitest/browser');
-    for (const width of [390, 1024]) {
-      await page.viewport(width, 844);
-      for (const count of [0, 1, 100]) {
-        const shell = within(canvas.getByTestId(`attention-${count}`));
-        for (const section of ['Sessions', 'Issues', 'Atlas', 'Settings']) {
-          await userEvent.click(
-            shell.getByRole('button', { name: 'Open navigation' }),
-          );
-          const badge = shell.queryByLabelText(
-            `${count} ${count === 1 ? 'Session needs' : 'Sessions need'} attention`,
-          );
-          if (count === 0) await expect(badge).toBeNull();
-          else await expect(badge).toHaveTextContent(count > 99 ? '99+' : '1');
-          await userEvent.click(shell.getByRole('button', { name: section }));
-          await expect(
-            shell.getByRole('heading', { name: section }),
-          ).toBeVisible();
-          await userEvent.click(
-            shell.getByRole('button', { name: 'Open navigation' }),
-          );
-          await expect(
-            shell.getByRole('button', { name: section }),
-          ).toHaveAttribute('aria-selected', 'true');
-          await userEvent.click(
-            shell.getByRole('button', { name: 'Close navigation' }),
-          );
-          await expect(
-            shell.queryByRole('heading', { name: 'Argo' }),
-          ).toBeNull();
-          await userEvent.click(
-            shell.getByRole('button', { name: `Search ${section}` }),
-          );
-          await expect(shell.getByRole('status')).toHaveTextContent(
-            'Search opened',
-          );
-          await userEvent.click(
-            shell.getByRole('button', { name: `Filter ${section}` }),
-          );
-          await expect(shell.getByRole('status')).toHaveTextContent(
-            'Filter opened',
-          );
-        }
-      }
+const checkAttentionAndSectionStates: NonNullable<Story['play']> = async ({
+  canvas,
+  userEvent,
+  args,
+}) => {
+  const { page } = await import('vitest/browser');
+  const count = args.attentionCount ?? 1;
+  for (const width of [390, 1024]) {
+    await page.viewport(width, 844);
+    for (const section of ['Sessions', 'Issues', 'Atlas', 'Settings']) {
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Open navigation' }),
+      );
+      const badge = canvas.queryByLabelText(
+        `${count} ${count === 1 ? 'Session needs' : 'Sessions need'} attention`,
+      );
+      if (count === 0) await expect(badge).toBeNull();
+      else await expect(badge).toHaveTextContent(count > 99 ? '99+' : '1');
+      await userEvent.click(canvas.getByRole('button', { name: section }));
+      await expect(
+        canvas.getByRole('heading', { name: section }),
+      ).toBeVisible();
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Open navigation' }),
+      );
+      await expect(
+        canvas.getByRole('button', { name: section }),
+      ).toHaveAttribute('aria-selected', 'true');
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Close navigation' }),
+      );
+      await expect(canvas.queryByRole('heading', { name: 'Argo' })).toBeNull();
+      await userEvent.click(
+        canvas.getByRole('button', { name: `Search ${section}` }),
+      );
+      await expect(canvas.getByRole('status')).toHaveTextContent(
+        'Search opened',
+      );
+      await userEvent.click(
+        canvas.getByRole('button', { name: `Filter ${section}` }),
+      );
+      await expect(canvas.getByRole('status')).toHaveTextContent(
+        'Filter opened',
+      );
     }
-  },
+  }
+};
+
+export const NoAttention: Story = {
+  args: { attentionCount: 0 },
+  play: checkAttentionAndSectionStates,
+};
+
+export const OneAttention: Story = {
+  args: { attentionCount: 1 },
+  play: checkAttentionAndSectionStates,
+};
+
+export const OverflowAttention: Story = {
+  args: { attentionCount: 100 },
+  play: checkAttentionAndSectionStates,
 };

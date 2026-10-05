@@ -505,6 +505,16 @@ export const ContentUpdatesKeepAnActiveToggleRunning: Story = {
         canvas.getByTestId('desktop-list').getBoundingClientRect().width,
       ).toBe(300),
     );
+    await waitFor(() =>
+      expect(
+        canvas.getByTestId('desktop-detail').getBoundingClientRect().width,
+      ).toBe(
+        canvas.getByTestId('desktop-shell').getBoundingClientRect().width -
+          64 -
+          8 -
+          300,
+      ),
+    );
     const { vi } = await import('vitest');
     const animations = vi.spyOn(viewport, 'animate');
     try {
