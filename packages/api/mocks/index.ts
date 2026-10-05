@@ -11,6 +11,8 @@ export function unreachableServices(
   overrides: ServiceOverrides = {},
 ): Services {
   return {
+    agents: { list: unreachable('agents.list'), ...overrides.agents },
+    projects: { list: unreachable('projects.list'), ...overrides.projects },
     system: {
       info: unreachable('system.info'),
       clock: unreachable('system.clock'),
@@ -23,6 +25,9 @@ export function unreachableServices(
       ...overrides.feed,
     },
     session: {
+      list: unreachable('session.list'),
+      listUpdates: unreachable('session.listUpdates'),
+      counts: unreachable('session.counts'),
       new: unreachable('session.new'),
       prompt: unreachable('session.prompt'),
       cancel: unreachable('session.cancel'),
@@ -31,3 +36,5 @@ export function unreachableServices(
     },
   };
 }
+
+export * from './session-list';

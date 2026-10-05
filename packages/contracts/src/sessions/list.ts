@@ -4,9 +4,36 @@ import { sessionColumns } from '../columns';
 // Input of `session.list`, after ACP `ListSessionsRequest`, filtered by Project instead of `cwd`.
 export const SessionListInput = z.strictObject({
   projectId: sessionColumns.shape.projectId.optional(),
+  archived: z.boolean(),
+  query: z.string().optional(),
   cursor: z.string().optional(),
 });
 export type SessionListInput = z.infer<typeof SessionListInput>;
+
+export const SessionStatus = z.enum([
+  'needs_input',
+  'running',
+  'failed',
+  'unread',
+  'idle',
+]);
+export type SessionStatus = z.infer<typeof SessionStatus>;
+
+export const SessionTitleSource = z.enum(['user', 'agent', 'prompt']);
+export type SessionTitleSource = z.infer<typeof SessionTitleSource>;
+
+export const SessionCheckout = z.strictObject({
+  type: z.enum(['worktree', 'main']),
+  path: sessionColumns.shape.checkoutPath,
+  branch: sessionColumns.shape.checkoutBranch,
+});
+export type SessionCheckout = z.infer<typeof SessionCheckout>;
+
+export const SessionWorkCount = z.strictObject({
+  running: z.int(),
+  total: z.int(),
+});
+export type SessionWorkCount = z.infer<typeof SessionWorkCount>;
 
 // One Session in a list, after ACP `SessionInfo`: `session` columns under ACP names, times in Unix milliseconds.
 export const SessionInfo = z.strictObject({
@@ -17,7 +44,18 @@ export const SessionInfo = z.strictObject({
     parentSessionId: true,
   }).shape,
   cwd: sessionColumns.shape.checkoutPath,
-  title: z.string().optional(),
+  status: SessionStatus,
+  title: z.string(),
+  titleSource: SessionTitleSource,
+  activity: z.string(),
+  activityAt: z.int(),
+  checkout: SessionCheckout,
+  plan: z.strictObject({ done: z.int(), total: z.int() }).nullable(),
+  subagents: SessionWorkCount,
+  shells: SessionWorkCount,
+  archivedAt: z.int().nullable(),
+  issue: z.null(),
+  pullRequest: z.null(),
   createdAt: sessionColumns.shape.createdAt,
   updatedAt: sessionColumns.shape.updatedAt,
 });
