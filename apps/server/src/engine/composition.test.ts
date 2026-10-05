@@ -12,6 +12,7 @@ import { type AgentAdapter, agentAdapters } from '@repo/agents';
 import { appRouter, type Services } from '@repo/api';
 import type { SessionListUpdate } from '@repo/contracts';
 import { turn } from '@repo/db/schema';
+import { listBranches } from '@repo/git';
 import { createMockAdapter, type MockAgentStream } from '@repo/mocks/agent';
 import { mockClis } from '@repo/mocks/cli';
 import { eq } from 'drizzle-orm';
@@ -412,9 +413,17 @@ it('seeds the Project from ARGO_PROJECT_PATH at Engine startup', async () => {
     const caller = appRouter.createCaller({ services });
     const projects = await caller.projects.list();
     expect(projects).toHaveLength(1);
+    // CI checks out a detached HEAD, which defaults to the main checkout.
+    const { currentBranch } = await listBranches(process.cwd());
+    const root = execFileSync('git', ['rev-parse', '--show-toplevel'], {
+      encoding: 'utf8',
+    }).trim();
     expect(projects[0]).toMatchObject({
-      name: 'argo-universal',
-      checkoutChoice: { type: 'worktree', baseBranch: expect.any(String) },
+      name: path.basename(root),
+      checkoutChoice:
+        currentBranch === null
+          ? { type: 'main' }
+          : { type: 'worktree', baseBranch: currentBranch },
     });
     engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
     await waitFor(engine, (snapshot) => snapshot.status === 'done');
