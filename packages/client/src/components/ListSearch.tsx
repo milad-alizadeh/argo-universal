@@ -8,6 +8,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
 import { Input } from '#primitives/input';
 import { Text } from '#primitives/text';
@@ -130,7 +131,11 @@ export function ListSearch({ title, value, onChangeText }: ListSearchProps) {
       <Button
         variant="ghost"
         size="icon"
-        className="absolute right-0 size-11 sm:size-11 wide:size-8 wide:sm:size-8"
+        className={cn(
+          'absolute right-0 size-11 sm:size-11 wide:size-8 wide:sm:size-8',
+          searching &&
+            'web:hover:bg-transparent! web:dark:hover:bg-transparent!',
+        )}
         accessibilityLabel={searching ? 'Close search' : `Search ${title}`}
         accessibilityState={{ expanded: searching }}
         onPress={searching ? closeSearch : () => setSearching(true)}

@@ -34,6 +34,8 @@ Updated as new requests arrive. Completed entries describe implemented changes; 
 - [x] Keep one interactive SettingsList showcase story and remove redundant Projects, Agents, and Selected Destination stories.
 - [x] Have another sub-agent add a smooth morph animation when the search icon expands into the search field and collapses back. Preserve focus, filtering, clear, Escape, and reduced motion; two focused browser tests pass across phone/wide and light/dark.
 - [x] Add one dedicated interactive Search showcase for opening, typing, and collapsing the morphing search control, outside test stories.
+- [ ] Have a fresh blind sub-agent independently test every requested fix against live previews and report PASS / FAIL / UNVERIFIED with visual evidence and reproducible failures.
+- [x] Remove the close control’s hover background while search is expanded; keep the collapsed search trigger hover behavior.
 - [ ] User acceptance of the current changes.
 - [x] Update AGENTS.md Storybook rules: distinct valid visual states, no repeated default states or child-component coverage, callback checks without visual effects in test stories, and interactive pagination with enough rows, temporary loading, and appended results. Align the Paper guidance with these rules.
 - [ ] Final review when preparing the PR.
