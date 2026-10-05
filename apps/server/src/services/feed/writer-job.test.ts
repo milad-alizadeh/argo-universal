@@ -121,7 +121,10 @@ describe('writeJobs', () => {
       .values({ id: 'image-1', mime: 'image/png', bytes: 3 })
       .run();
     const job = {
-      ...feedRows([row({ sessionUpdate: 'user_message', state: 'settled' })], 1),
+      ...feedRows(
+        [row({ sessionUpdate: 'user_message', state: 'settled' })],
+        1,
+      ),
       blobIds: ['image-1', 'no-such-blob'],
     };
 
