@@ -1,6 +1,12 @@
 import type {} from './lib/reusables-compatibility';
 
 export {
+  Composer,
+  type ComposerDraft,
+  type ComposerImage,
+  type ComposerProps,
+} from './components/Composer';
+export {
   DesktopShell,
   type DesktopShellProps,
   type InspectorState,

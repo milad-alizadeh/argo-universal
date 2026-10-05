@@ -1,4 +1,6 @@
 @theme static {
+  --container-composer: 640px;
+  --blur-composer: 3px;
   --spacing-session-name: 34px;
   --breakpoint-wide: 720px;
   --font-sans:
