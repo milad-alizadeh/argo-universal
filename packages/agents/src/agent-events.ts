@@ -3,12 +3,22 @@ import type {
   ContextUsage,
   PendingElicitation,
   PendingPermission,
+  PermissionOption,
+  PlanMarkdown,
   RowAppend,
   RowPatch,
-  SessionConfigOption,
+  SessionInfo,
+  SessionNewInput,
+  SessionPromptInput,
+  SessionSetConfigOptionInput,
+  SessionSetConfigOptionOutput,
   SessionUpdate,
   StopReason,
   SubagentState,
+  TerminalExitStatus,
+  ToolCallTerminal,
+  ToolCallUpdate,
+  Turn,
   TurnError,
   TurnUsage,
 } from '@repo/contracts';
@@ -30,26 +40,30 @@ type WithoutEnvelope<Update> = Update extends SessionUpdate
 export type FeedUpdate = WithoutEnvelope<SessionUpdate>;
 export type FeedChange =
   | { type: 'upsert'; update: FeedUpdate }
-  | { type: 'append'; id: string; field: RowAppend['field']; text: string }
-  | { type: 'patch'; id: string; set: RowPatch['set'] };
+  | ({ type: 'append' } & Pick<RowAppend, 'id' | 'field' | 'text'>)
+  | ({ type: 'patch' } & Pick<RowPatch, 'id' | 'set'>);
 
 export interface AgentCapabilities {
   planApproval: 'continueTurn' | 'startTurn';
   stopShell: boolean;
 }
 
-export interface AgentConfigValue {
-  configId: string;
-  value: string | boolean;
-}
+export type AgentConfigValue = Pick<
+  SessionSetConfigOptionInput,
+  'configId' | 'value'
+>;
 
 export type AgentCommand =
-  | { type: 'agent.prompt'; turnId: string; content: ContentBlock[] }
+  | {
+      type: 'agent.prompt';
+      turnId: Turn['id'];
+      content: SessionPromptInput['prompt'];
+    }
   | { type: 'agent.cancel' }
   | {
       type: 'agent.answerPermission';
-      toolCallId: string;
-      optionId: string | null;
+      toolCallId: PendingPermission['toolCallId'];
+      optionId: PermissionOption['optionId'] | null;
       message?: string;
     }
   | {
@@ -60,33 +74,32 @@ export type AgentCommand =
   | ({ type: 'agent.setConfigOption' } & AgentConfigValue)
   | {
       type: 'agent.answerPlanProposal';
-      planId: string;
+      planId: PlanMarkdown['planId'];
       decision: 'approve';
-      turnId?: string;
+      turnId?: Turn['id'];
     }
   | {
       type: 'agent.answerPlanProposal';
-      planId: string;
+      planId: PlanMarkdown['planId'];
       decision: 'keep_planning';
       feedback: string;
-      turnId?: string;
+      turnId?: Turn['id'];
     }
-  | { type: 'agent.rename'; title: string }
-  | { type: 'agent.stopShell'; shellId: string }
+  | { type: 'agent.rename'; title: NonNullable<SessionInfo['title']> }
+  | { type: 'agent.stopShell'; shellId: AgentShell['id'] }
   | { type: 'agent.stop' };
 
-export interface AgentSubagent {
-  toolCallId: string;
+export interface AgentSubagent extends Pick<SessionInfo, 'title'> {
+  toolCallId: ToolCallUpdate['toolCallId'];
   vendorSessionId: string;
   prompt: ContentBlock[];
-  title?: string;
   role?: string;
   state: SubagentState;
   turn?: {
     vendorTurnId: string;
     model?: string;
-    startedAt: number;
-    endedAt?: number;
+    startedAt: Turn['startedAt'];
+    endedAt?: NonNullable<Turn['endedAt']>;
     stopReason?: StopReason;
     usage?: TurnUsage;
     error?: TurnError;
@@ -95,28 +108,35 @@ export interface AgentSubagent {
 
 export interface AgentShell {
   id: string;
-  toolCallId: string;
-  command: string;
-  cwd: string;
+  toolCallId: ToolCallUpdate['toolCallId'];
+  command: ToolCallTerminal['command'];
+  cwd: SessionInfo['cwd'];
   status: 'running' | 'exited' | 'stopped' | 'lost';
-  startedAt: number;
-  endedAt?: number;
-  exitCode?: number | null;
+  startedAt: Turn['startedAt'];
+  endedAt?: NonNullable<Turn['endedAt']>;
+  exitCode?: TerminalExitStatus['exitCode'] | null;
 }
 
 export type AgentEvent =
   | {
       type: 'agent.ready';
       vendorSessionId: string;
-      configOptions: SessionConfigOption[];
+      configOptions: SessionSetConfigOptionOutput['configOptions'];
       capabilities: AgentCapabilities;
       continuedOutside: boolean;
     }
-  | { type: 'agent.feed'; change: FeedChange; subagentToolCallId?: string }
+  | {
+      type: 'agent.feed';
+      change: FeedChange;
+      subagentToolCallId?: AgentSubagent['toolCallId'];
+    }
   | { type: 'agent.permissionRequested'; request: PendingPermission }
   | { type: 'agent.elicitationRequested'; request: PendingElicitation }
   | { type: 'agent.usage'; usage: ContextUsage }
-  | { type: 'agent.configOptionsChanged'; configOptions: SessionConfigOption[] }
+  | {
+      type: 'agent.configOptionsChanged';
+      configOptions: SessionSetConfigOptionOutput['configOptions'];
+    }
   | { type: 'agent.turnStarted' }
   | {
       type: 'agent.turnEnded';
@@ -124,17 +144,15 @@ export type AgentEvent =
       usage?: TurnUsage;
       error?: TurnError;
     }
-  | { type: 'agent.planProposed'; planId: string; content: string }
-  | { type: 'agent.titleChanged'; title: string }
+  | ({ type: 'agent.planProposed' } & Pick<PlanMarkdown, 'planId' | 'content'>)
+  | { type: 'agent.titleChanged'; title: NonNullable<SessionInfo['title']> }
   | { type: 'agent.subagentChanged'; subagent: AgentSubagent }
   | { type: 'agent.shellChanged'; shell: AgentShell }
-  | { type: 'agent.shellOutput'; shellId: string; text: string };
+  | { type: 'agent.shellOutput'; shellId: AgentShell['id']; text: string };
 
 export type AgentParent = ActorRef<Snapshot<unknown>, AgentEvent>;
 
-export interface AgentInput {
-  sessionId: string;
-  cwd: string;
+export interface AgentInput extends Pick<SessionInfo, 'sessionId' | 'cwd'> {
   vendorSessionId: string | null;
   configOptions: AgentConfigValue[];
   parent: AgentParent;
@@ -145,7 +163,7 @@ export interface AgentOutput {
 }
 
 export interface AgentAdapter<Machine extends AnyStateMachine> {
-  agent: string;
+  agent: SessionNewInput['agent'];
   capabilities: AgentCapabilities;
   machine: AgentCommand extends EventFromLogic<Machine>
     ? AgentInput extends InputFrom<Machine>
