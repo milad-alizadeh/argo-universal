@@ -1,6 +1,6 @@
 import { agentsList, sessionRows } from '@repo/api/mocks';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn } from 'storybook/test';
+import { expect, fn, waitFor } from 'storybook/test';
 import { sessionRowMocks } from '../../mocks/session-row-mock';
 import { SessionRow } from './SessionRow';
 
@@ -27,6 +27,88 @@ export const Running: Story = {
       });
       await userEvent.click(row);
       await expect(args.onSelect).toHaveBeenCalledWith('session-running');
+    }
+  },
+};
+
+export const PaperRowDimensions: Story = {
+  args: { session: sessionRowMocks.planAndSubagents },
+  play: async ({ canvas, canvasElement }) => {
+    const { page } = await import('vitest/browser');
+    for (const [width, height] of [
+      [390, 92],
+      [1440, 76],
+    ] as const) {
+      await page.viewport(width, 844);
+      const row = canvas.getByRole('button');
+      await expect(row).toBeVisible();
+      await waitFor(() =>
+        expect(
+          canvasElement
+            .querySelector('[role="button"]')
+            ?.getBoundingClientRect().height,
+        ).toBe(height),
+      );
+    }
+  },
+};
+
+export const PaperAgentSymbols: Story = {
+  render: (args) => (
+    <>
+      {agentsList.map((agent) => (
+        <SessionRow {...args} key={agent.agent} logo={agent.logo} />
+      ))}
+    </>
+  ),
+  play: async ({ canvasElement }) => {
+    await expect(
+      canvasElement.querySelectorAll('[data-testid="session-logo"] path')
+        .length,
+    ).toBe(2);
+  },
+};
+
+export const Archived: Story = {
+  args: { session: sessionRows.archived },
+  play: async ({ canvas }) => {
+    const { page } = await import('vitest/browser');
+    for (const width of [390, 1440]) {
+      await page.viewport(width, 844);
+      await expect(canvas.getByText('Archived', { exact: true })).toBeVisible();
+    }
+  },
+};
+
+export const Metadata: Story = {
+  render: (args) => (
+    <>
+      {(['open', 'draft', 'merged', 'conflict', 'closed'] as const).map(
+        (status) => (
+          <SessionRow
+            {...args}
+            key={status}
+            session={{ ...args.session, title: `${status} metadata` }}
+            issue={{ number: 128 }}
+            pullRequest={{ number: 45, status }}
+          />
+        ),
+      )}
+    </>
+  ),
+  play: async ({ canvas, userEvent, args }) => {
+    const { page } = await import('vitest/browser');
+    for (const width of [390, 1440]) {
+      await page.viewport(width, 844);
+      for (const status of ['open', 'draft', 'merged', 'conflict', 'closed']) {
+        await expect(canvas.getByLabelText(`${status} PR #45`)).toBeVisible();
+      }
+      await expect(canvas.getAllByLabelText('Issue #128')).toHaveLength(5);
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'open metadata, Running' }),
+      );
+      await expect(args.onSelect).toHaveBeenCalledWith(args.session.sessionId);
+      await expect(canvas.queryByRole('link')).not.toBeInTheDocument();
     }
   },
 };
@@ -175,3 +257,5 @@ export const LongTitleSelectedDark: Story = {
   ...LongTitleSelected,
   globals: { mode: 'dark' },
 };
+export const ArchivedDark: Story = { ...Archived, globals: { mode: 'dark' } };
+export const MetadataDark: Story = { ...Metadata, globals: { mode: 'dark' } };

@@ -5,10 +5,11 @@ import { Platform, ScrollView, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { applyTheme } from '../src/lib/theme';
+import { cn } from '../src/lib/utils';
 
 interface PreviewContext {
   globals: { themeId?: string; mode?: string };
-  parameters: { standalonePreview?: boolean };
+  parameters: { standalonePreview?: boolean; previewPadding?: boolean };
 }
 
 const initialMetrics = {
@@ -21,11 +22,13 @@ function ReusablesPreview({
   themeId,
   mode,
   standalone,
+  padding,
 }: {
   Story: ComponentType;
   themeId: ThemeId;
   mode: 'light' | 'dark';
   standalone: boolean;
+  padding: boolean;
 }) {
   useLayoutEffect(() => {
     applyTheme(themeId, mode);
@@ -34,13 +37,21 @@ function ReusablesPreview({
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider initialMetrics={initialMetrics}>
         {Platform.OS === 'web' ? (
-          <View className="min-h-full w-full items-center justify-center bg-background p-6">
+          <View
+            className={cn(
+              'min-h-full w-full items-center justify-center bg-background',
+              padding && 'p-6',
+            )}
+          >
             <Story />
           </View>
         ) : (
           <ScrollView
             className="flex-1 bg-background"
-            contentContainerClassName="grow items-center justify-center p-6"
+            contentContainerClassName={cn(
+              'grow items-center justify-center',
+              padding && 'p-6',
+            )}
           >
             <Story />
           </ScrollView>
@@ -64,6 +75,7 @@ export function withReusablesPreview(
       }
       mode={context.globals.mode === 'dark' ? 'dark' : 'light'}
       standalone={context.parameters.standalonePreview === true}
+      padding={context.parameters.previewPadding !== false}
     />
   );
 }
