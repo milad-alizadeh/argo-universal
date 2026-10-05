@@ -30,8 +30,9 @@ describe.each(agentAdapters)(
   '$agent adapter against its mock CLI',
   (adapter) => {
     const { agent } = adapter;
-    const mockCli = mockClis[agent];
-    if (!mockCli) throw new Error(`No mock CLI for ${agent}`);
+    const registeredCli = mockClis[agent];
+    if (!registeredCli) throw new Error(`No mock CLI for ${agent}`);
+    const mockCli = registeredCli;
 
     // Starts a Session whose vendor transcript, if any, belongs to `transcriptId`.
     async function startSession(
@@ -42,17 +43,17 @@ describe.each(agentAdapters)(
     ) {
       const bin = temporaryDirectory('argo-bin-');
       const cwd = temporaryDirectory('argo-project-');
-      await mockCli?.write(bin, { recording });
+      await mockCli.write(bin, { recording });
       const environment = {
         PATH: `${bin}${path.delimiter}${process.env.PATH ?? ''}`,
         MOCK_CLI_NOTIFICATIONS_FIRST: notificationsFirst ? '1' : '0',
-        ...mockCli?.writeTranscript(
+        ...mockCli.writeTranscript(
           temporaryDirectory('argo-vendor-'),
           cwd,
           transcriptId,
         ),
       };
-      for (const key of mockCli?.apiKeyVariables ?? [])
+      for (const key of mockCli.apiKeyVariables ?? [])
         vi.stubEnv(key, 'mock-api-key');
       for (const [key, value] of Object.entries(environment))
         vi.stubEnv(key, value);

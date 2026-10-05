@@ -508,6 +508,71 @@ describe('Agent machine', () => {
     expect(agent.getSnapshot().value).toBe('stopped');
   });
 
+  it('aborts a connection that has not become ready', async () => {
+    let connectionSignal: AbortSignal | undefined;
+    input.adapter = {
+      ...adapter,
+      connect: async (_, listener, signal) => {
+        connectionSignal = signal;
+        return new Promise((_, reject) => {
+          signal.addEventListener(
+            'abort',
+            () => {
+              listener.event(feed);
+              listener.failed(signal.reason);
+              reject(signal.reason);
+            },
+            { once: true },
+          );
+        });
+      },
+    };
+    start();
+    agent.send({ type: 'agent.stop' });
+    await settle();
+    expect(connectionSignal?.aborted).toBe(true);
+    expect(received).toEqual([]);
+    expect(agent.getSnapshot().value).toBe('stopped');
+    expect(agent.getSnapshot().output).toEqual({ failure: null });
+  });
+
+  it('stops a blocked prompt before queued controls can run', async () => {
+    input.adapter = {
+      ...adapter,
+      connect: async (_, listener, signal) => ({
+        ready,
+        run: async (command) => {
+          commands.push(command);
+          if (command.type !== 'agent.prompt') return;
+          listener.event({ type: 'agent.turnStarted' });
+          await new Promise((_, reject) => {
+            signal.addEventListener('abort', () => reject(signal.reason), {
+              once: true,
+            });
+          });
+        },
+        stop: async () => {
+          shutdowns += 1;
+        },
+      }),
+    };
+    start();
+    await settle();
+    agent.send(prompt);
+    await settle();
+    agent.send({
+      type: 'agent.setConfigOption',
+      configId: 'model',
+      value: 'careful',
+    });
+    agent.send({ type: 'agent.stop' });
+    await settle();
+    expect(commands).toEqual([prompt]);
+    expect(shutdowns).toBe(1);
+    expect(agent.getSnapshot().value).toBe('stopped');
+    expect(agent.getSnapshot().output).toEqual({ failure: null });
+  });
+
   it('fails when no adapter is registered for the Agent', async () => {
     input.adapter = findAgentAdapter('unknown', []);
     start();
@@ -530,5 +595,48 @@ describe('Agent machine', () => {
     agent.send(prompt);
     await settle();
     expect(commands).toEqual([setConfig, prompt]);
+  });
+
+  it('cancels a pending prompt after its earlier config and before its later controls', async () => {
+    const configured = Promise.withResolvers<void>();
+    const responded = Promise.withResolvers<void>();
+    const setConfig: AgentCommand = {
+      type: 'agent.setConfigOption',
+      configId: 'model',
+      value: 'careful',
+    };
+    const rename: AgentCommand = { type: 'agent.rename', title: 'Next title' };
+    input.adapter = {
+      ...adapter,
+      connect: async () => ({
+        ready,
+        run: async (command) => {
+          commands.push(command);
+          if (command.type === 'agent.setConfigOption')
+            await configured.promise;
+          if (command.type === 'agent.prompt') await responded.promise;
+        },
+        stop: async () => {},
+      }),
+    };
+    start();
+    await settle();
+    agent.send(setConfig);
+    agent.send(prompt);
+    agent.send(rename);
+    agent.send({ type: 'agent.cancel' });
+    await settle();
+    expect(commands).toEqual([setConfig]);
+    configured.resolve();
+    await settle();
+    expect(commands).toEqual([setConfig, prompt, { type: 'agent.cancel' }]);
+    responded.resolve();
+    await settle();
+    expect(commands).toEqual([
+      setConfig,
+      prompt,
+      { type: 'agent.cancel' },
+      rename,
+    ]);
   });
 });

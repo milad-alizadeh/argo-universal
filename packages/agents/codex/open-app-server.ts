@@ -38,6 +38,7 @@ export function openAppServer(
   cwd: string,
   onMessage: (message: { method: string; params: unknown }) => void,
   onFailure: (error: unknown) => void,
+  signal: AbortSignal,
 ) {
   const {
     OPENAI_API_KEY: _openaiKey,
@@ -147,8 +148,12 @@ export function openAppServer(
       clearTimeout(graceful);
       clearTimeout(forced);
       lines.close();
+      signal.removeEventListener('abort', abort);
     })();
     return closing;
   };
+  const abort = () => void close();
+  signal.addEventListener('abort', abort, { once: true });
+  if (signal.aborted) abort();
   return { request, notify: (method: string) => send({ method }), close };
 }

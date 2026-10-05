@@ -1,3 +1,4 @@
+import { writeFileSync } from 'node:fs';
 import { chmod, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { createInterface } from 'node:readline';
@@ -65,6 +66,8 @@ let crashed = false;
 
 // Reads one JSON message per stdin line, and exits when the caller closes stdin.
 export function serveJsonLines(handle: (message: unknown) => void) {
+  const processFile = process.env.MOCK_CLI_PROCESS_FILE;
+  if (processFile) writeFileSync(processFile, String(process.pid));
   createInterface({ input: process.stdin })
     .on('line', (line) => {
       if (!crashed) handle(JSON.parse(line));

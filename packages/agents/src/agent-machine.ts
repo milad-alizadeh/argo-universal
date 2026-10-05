@@ -41,6 +41,7 @@ function startVendorSession(
   sendBack: (event: VendorEvent) => void,
 ) {
   const fail = (error: unknown) => sendBack({ type: 'vendor.failed', error });
+  const controller = new AbortController();
   let mappingState = adapter.initialMappingState();
   // Events wait here until the machine has the ready data they depend on.
   let isReady = false;
@@ -48,22 +49,31 @@ function startVendorSession(
   let stopping: Promise<void> | undefined;
 
   const sendEvent = (event: AgentEvent) => {
+    if (controller.signal.aborted) return;
     if (isReady) sendBack({ type: 'vendor.event', event });
     else early.push(event);
   };
   // Resolves to null when starting fails, after reporting it.
   const starting = adapter
-    .connect(input, {
-      message: (message) => {
-        const mapped = adapter.toAgentEvents(message, mappingState);
-        mappingState = mapped.mappingState;
-        mapped.events.forEach(sendEvent);
+    .connect(
+      input,
+      {
+        message: (message) => {
+          if (controller.signal.aborted) return;
+          const mapped = adapter.toAgentEvents(message, mappingState);
+          mappingState = mapped.mappingState;
+          mapped.events.forEach(sendEvent);
+        },
+        event: sendEvent,
+        failed: (error) => {
+          if (!controller.signal.aborted) fail(error);
+        },
       },
-      event: sendEvent,
-      failed: fail,
-    })
+      controller.signal,
+    )
     .then(
       (session) => {
+        if (controller.signal.aborted) return session;
         sendBack({ type: 'vendor.ready', ready: session.ready });
         isReady = true;
         early.splice(0).forEach(sendEvent);
@@ -77,7 +87,10 @@ function startVendorSession(
 
   // Stops once, after starting settles.
   const stop = () => {
-    stopping ??= starting.then((session) => session?.stop());
+    if (!stopping) {
+      stopping = starting.then((session) => session?.stop());
+      controller.abort();
+    }
     return stopping;
   };
 
@@ -88,10 +101,12 @@ function startVendorSession(
         sendBack({ type: 'vendor.closed' });
         return;
       }
+      if (controller.signal.aborted) return;
       const session = await starting;
-      await session?.run(command);
+      if (!controller.signal.aborted) await session?.run(command);
     } catch (error) {
-      fail(error);
+      if (command.type === 'agent.stop' || !controller.signal.aborted)
+        fail(error);
     }
   };
 
@@ -115,9 +130,25 @@ export const agentMachine = setup({
     vendorSession: fromCallback<AgentCommand, VendorSessionInput, VendorEvent>(
       ({ input, receive, sendBack }) => {
         const session = startVendorSession(input, sendBack);
-        // Commands run in order, so a config change lands before the prompt that follows it.
+        // Ordinary commands run in order, so config changes land before the next prompt.
         let queue = Promise.resolve();
+        let beforeTurn = queue;
         receive((command) => {
+          if (command.type === 'agent.stop') {
+            void session.run(command);
+            return;
+          }
+          if (command.type === 'agent.cancel') {
+            // Cancel follows the Turn's earlier controls, without waiting for its prompt response.
+            void beforeTurn.then(() => session.run(command));
+            return;
+          }
+          if (
+            command.type === 'agent.prompt' ||
+            (command.type === 'agent.answerPlanProposal' &&
+              command.turnId !== undefined)
+          )
+            beforeTurn = queue;
           queue = queue.then(() => session.run(command));
         });
         return session.stop;

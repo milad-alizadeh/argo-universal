@@ -65,6 +65,10 @@ let threadId = messages.find((message) => message.params?.threadId)?.params
 let turnIndex = 0;
 let interruptedFrames: typeof messages | null = null;
 let activeTurnId: string | null = null;
+let withheldStartResponse: {
+  id: string | number | undefined;
+  result: { turn: unknown };
+} | null = null;
 
 // Read on request, so a version folder without a model list still serves Turns.
 function listModels(id: string | number | undefined) {
@@ -114,13 +118,37 @@ function startTurn(
   if (command >= 0) interruptedFrames = turn.slice(command + 1);
   activeTurnId = z.object({ id: z.string() }).parse(started.params?.turn).id;
   const frames = command >= 0 ? turn.slice(0, command + 1) : turn;
-  const before = notificationsFirst ? frames.indexOf(started) + 1 : 0;
+  if (process.env.MOCK_CLI_BLOCK_TURN_START === '1') {
+    replayTurn(frames.slice(0, frames.indexOf(started) + 1), null);
+    return;
+  }
+  const response = { id, result: { turn: started.params?.turn } };
   const crashAfter = environment.exitMidTurn
     ? (message: (typeof frames)[number]) => message === started
     : null;
+  if (
+    turnIndex === 1 &&
+    process.env.MOCK_CLI_TURN_RESPONSE_AFTER_NEXT_START === '1'
+  ) {
+    withheldStartResponse = response;
+    replayTurn(frames, crashAfter);
+    if (command < 0) activeTurnId = null;
+    return;
+  }
+  const before =
+    process.env.MOCK_CLI_COMPLETION_BEFORE_RESPONSE === '1'
+      ? frames.length
+      : notificationsFirst || withheldStartResponse
+        ? frames.indexOf(started) + 1
+        : 0;
   if (before && !replayTurn(frames.slice(0, before), crashAfter)) return;
-  send({ id, result: { turn: started.params?.turn } });
+  if (withheldStartResponse) {
+    send(withheldStartResponse);
+    withheldStartResponse = null;
+  }
+  send(response);
   replayTurn(frames.slice(before), crashAfter);
+  if (command < 0) activeTurnId = null;
 }
 
 serveJsonLines((line) => {
@@ -130,6 +158,7 @@ serveJsonLines((line) => {
     case 'initialized':
       return;
     case 'initialize':
+      if (process.env.MOCK_CLI_BLOCK_INITIALIZE === '1') return;
       return send({ id, result: {} });
     case 'account/read':
       return send({
@@ -180,6 +209,7 @@ serveJsonLines((line) => {
       send({ id, result: {} });
       replayTurn(interruptedFrames, null);
       interruptedFrames = null;
+      activeTurnId = null;
       return;
     case 'turn/start':
       return startTurn(

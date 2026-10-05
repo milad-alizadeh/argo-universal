@@ -221,6 +221,8 @@ serveJsonLines((line) => {
   if (input.type === 'user') return playTurn();
   if (input.type !== 'control_request') return;
   const subtype = input.request?.subtype;
+  if (subtype === 'initialize' && process.env.MOCK_CLI_BLOCK_INITIALIZE === '1')
+    return;
   const response = answer(subtype);
   send({
     type: 'control_response',
