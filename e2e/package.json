@@ -10,8 +10,11 @@
   },
   "devDependencies": {
     "@playwright/test": "catalog:",
+    "@repo/desktop": "workspace:*",
     "@repo/mocks": "workspace:*",
+    "@repo/server": "workspace:*",
     "@repo/typescript": "workspace:*",
+    "@repo/universal-app": "workspace:*",
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "zod": "catalog:"
