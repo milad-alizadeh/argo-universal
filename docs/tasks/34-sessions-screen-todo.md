@@ -11,6 +11,7 @@ Updated as new requests arrive. Completed entries describe implemented changes; 
 - [x] Show both edge fades automatically in the shared ProjectsList in every story, without scroll-position visibility gates.
 - [x] Make On New Session interactive: clicking the Project + inserts a new Session directly; use the existing Project control instead of a separate story button.
 - [x] Animate existing list rows shifting when Sessions are inserted or reordered.
+- [x] Fix the large row gaps caused by estimated animation offsets; animate the measured list positions instead.
 - [x] Match hover effects for add Session, Project +, and … controls.
 - [x] Remove Project Session counts.
 - [x] Disable browser text selection in the Projects list.

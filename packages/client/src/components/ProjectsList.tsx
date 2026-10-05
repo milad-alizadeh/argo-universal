@@ -18,7 +18,13 @@ import {
   useRef,
   useState,
 } from 'react';
-import { ActivityIndicator, Platform, Pressable, View } from 'react-native';
+import {
+  ActivityIndicator,
+  LayoutAnimation,
+  Platform,
+  Pressable,
+  View,
+} from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -64,7 +70,6 @@ export function ProjectsList({
   onNewSession,
   onProjectSettings,
 }: ProjectsListProps) {
-  const itemSizes = useRef(new Map<string, number>());
   const gradientId = useId();
   const { backgroundColor } = useResolveClassNames(
     'bg-background wide:bg-sidebar',
@@ -105,22 +110,18 @@ export function ProjectsList({
     return result;
   }, [projects, sessions, query, archived, collapsed]);
 
-  const sizesByKind = new Map<Entry['kind'], number>();
-  for (const entry of entries) {
-    const size = itemSizes.current.get(entry.id);
-    if (size !== undefined) sizesByKind.set(entry.kind, size);
-  }
-  let position = 0;
-  const positions = entries.map((entry) => {
-    const current = position;
-    position +=
-      itemSizes.current.get(entry.id) ?? sizesByKind.get(entry.kind) ?? 76;
-    return current;
-  });
+  const entryOrder = entries.map((entry) => entry.id).join('|');
+  const previousOrder = useRef(entryOrder);
+  useLayoutEffect(() => {
+    if (previousOrder.current !== entryOrder && Platform.OS !== 'web') {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    }
+    previousOrder.current = entryOrder;
+  }, [entryOrder]);
 
   return (
     <View
-      className="relative flex-1 overflow-hidden bg-background wide:bg-sidebar web:select-none web:[&_*]:select-none!"
+      className="relative flex-1 overflow-hidden bg-background wide:bg-sidebar web:select-none web:[&_*]:select-none! web:[&_[data-testid=projects-scroll]>div>div>div]:transition-[top,transform] web:[&_[data-testid=projects-scroll]>div>div>div]:duration-200"
       style={{ minHeight: 0 }}
     >
       <LegendList
@@ -130,9 +131,6 @@ export function ProjectsList({
         data={entries}
         keyExtractor={(entry) => entry.id}
         estimatedItemSize={76}
-        onItemSizeChanged={({ itemKey, size }) =>
-          itemSizes.current.set(itemKey, size)
-        }
         ItemSeparatorComponent={ProjectEntrySeparator}
         recycleItems={false}
         extraData={{ agents, collapsed, selectedSessionId }}
@@ -167,53 +165,46 @@ export function ProjectsList({
             )}
           </View>
         }
-        renderItem={({ item, index }) => {
-          function renderEntry() {
-            if (item.kind === 'empty')
-              return (
-                <Text className="pb-1 pl-session-name pr-1 text-xs leading-4 text-muted-foreground">
-                  No Sessions yet.
-                </Text>
-              );
-            if (item.kind === 'session')
-              return (
-                <SessionRow
-                  key={item.id}
-                  session={item.session}
-                  logo={
-                    agents.find((agent) => agent.agent === item.session.agent)
-                      ?.logo ?? ''
-                  }
-                  selected={selectedSessionId === item.id}
-                  onSelect={onSelect}
-                />
-              );
-            const isCollapsed = collapsed.has(item.id);
+        renderItem={({ item }) => {
+          if (item.kind === 'empty')
             return (
-              <ProjectHeading
-                name={item.name}
-                collapsed={isCollapsed}
-                onNewSession={
-                  onNewSession && (() => onNewSession(item.projectId))
+              <Text className="pb-1 pl-session-name pr-1 text-xs leading-4 text-muted-foreground">
+                No Sessions yet.
+              </Text>
+            );
+          if (item.kind === 'session')
+            return (
+              <SessionRow
+                key={item.id}
+                session={item.session}
+                logo={
+                  agents.find((agent) => agent.agent === item.session.agent)
+                    ?.logo ?? ''
                 }
-                onProjectSettings={
-                  onProjectSettings && (() => onProjectSettings(item.name))
-                }
-                onToggle={() =>
-                  setCollapsed((current) => {
-                    const next = new Set(current);
-                    if (next.has(item.id)) next.delete(item.id);
-                    else next.add(item.id);
-                    return next;
-                  })
-                }
+                selected={selectedSessionId === item.id}
+                onSelect={onSelect}
               />
             );
-          }
+          const isCollapsed = collapsed.has(item.id);
           return (
-            <AnimatedListEntry position={positions[index] ?? 0}>
-              {renderEntry()}
-            </AnimatedListEntry>
+            <ProjectHeading
+              name={item.name}
+              collapsed={isCollapsed}
+              onNewSession={
+                onNewSession && (() => onNewSession(item.projectId))
+              }
+              onProjectSettings={
+                onProjectSettings && (() => onProjectSettings(item.name))
+              }
+              onToggle={() =>
+                setCollapsed((current) => {
+                  const next = new Set(current);
+                  if (next.has(item.id)) next.delete(item.id);
+                  else next.add(item.id);
+                  return next;
+                })
+              }
+            />
           );
         }}
       />
@@ -259,29 +250,6 @@ export function ProjectsList({
       ))}
     </View>
   );
-}
-
-function AnimatedListEntry({
-  position,
-  children,
-}: {
-  position: number;
-  children: React.ReactNode;
-}) {
-  const previousPosition = useRef(position);
-  const shift = useSharedValue(0);
-  useLayoutEffect(() => {
-    const distance = previousPosition.current - position;
-    previousPosition.current = position;
-    if (distance !== 0) {
-      shift.value += distance;
-      shift.value = withTiming(0, { duration: 220 });
-    }
-  }, [position, shift]);
-  const style = useAnimatedStyle(() => ({
-    transform: [{ translateY: shift.value }],
-  }));
-  return <Animated.View style={style}>{children}</Animated.View>;
 }
 
 function ProjectHeading({
