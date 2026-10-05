@@ -222,6 +222,7 @@ const states: Record<string, (snapshot: EngineSnapshot) => void> = {
           port: 7337,
           version: '1.2.3',
           startedAt: input.startedAt,
+          database: mockDatabase,
         },
       }),
     ]);

@@ -1,10 +1,8 @@
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { type Database, openDatabase } from '@repo/db';
-import { feedRow, project, session, turn } from '@repo/db/schema';
+import type { Database } from '@repo/db';
+import { feedRow, session, turn } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { openTestDatabase } from '../../../mocks/database';
 import {
   describeJob,
   type FeedRowWrite,
@@ -12,8 +10,8 @@ import {
   writeJobs,
 } from './writer-job';
 
-let directory: string;
 let database: Database;
+let removeDatabase: () => void;
 
 const row = (overrides: Partial<FeedRowWrite> = {}): FeedRowWrite => ({
   id: 'row-1',
@@ -46,28 +44,10 @@ const selectTurn = () =>
   database.select().from(turn).where(eq(turn.id, 'turn-1')).get();
 
 beforeEach(() => {
-  directory = mkdtempSync(join(tmpdir(), 'argo-writer-'));
-  database = openDatabase(join(directory, 'argo.db'));
-  database
-    .insert(project)
-    .values({ id: 'project-1', path: '/project', name: 'project' })
-    .run();
-  database
-    .insert(session)
-    .values({
-      id: 'session-1',
-      projectId: 'project-1',
-      agent: 'mock',
-      checkoutPath: '/project',
-      projectionVersion: 1,
-    })
-    .run();
+  ({ database, remove: removeDatabase } = openTestDatabase());
 });
 
-afterEach(() => {
-  database.$client.close();
-  rmSync(directory, { recursive: true, force: true });
-});
+afterEach(() => removeDatabase());
 
 describe('writeJobs', () => {
   it('inserts Feed rows and sets the Session maxRevision', () => {

@@ -1,6 +1,7 @@
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { appRouter, type Services } from '@repo/api';
+import { appRouter } from '@repo/api';
+import { unreachableServices } from '@repo/api/mocks';
 import type { TRPCClient } from '@trpc/client';
 import { type AnyTRPCRouter, initTRPC } from '@trpc/server';
 import { createHTTPHandler } from '@trpc/server/adapters/standalone';
@@ -15,7 +16,7 @@ const systemInfo = {
   pid: 4242,
 };
 
-const services: Services = {
+const services = unreachableServices({
   system: {
     info: () => systemInfo,
     clock: async function* () {
@@ -23,7 +24,7 @@ const services: Services = {
       yield { now: '2026-10-03T00:00:01.000Z' };
     },
   },
-};
+});
 
 const closers: (() => void)[] = [];
 afterEach(() => {

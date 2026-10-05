@@ -3,7 +3,11 @@ import { join } from 'node:path';
 import { type Database, openDatabase } from '@repo/db';
 import { assign, fromPromise, setup } from 'xstate';
 import type { EngineMessage } from '../supervisor/engine-message';
-import { type HttpServer, startHttpServer } from './http-server';
+import {
+  type HttpServer,
+  type HttpServerOptions,
+  startHttpServer,
+} from './http-server';
 import { type EngineStop, processSignals } from './process-signals';
 
 export interface EngineInput {
@@ -31,7 +35,7 @@ export const engineMachine = setup({
     openDatabase: fromPromise<Database, { home: string }>(async ({ input }) =>
       openDatabase(join(input.home, 'argo.db')),
     ),
-    startHttpServer: fromPromise<HttpServer, EngineInput>(({ input }) =>
+    startHttpServer: fromPromise<HttpServer, HttpServerOptions>(({ input }) =>
       startHttpServer(input),
     ),
     closeHttpServer: fromPromise<void, { server: HttpServer | null }>(
@@ -113,6 +117,8 @@ export const engineMachine = setup({
               port: context.port,
               version: context.version,
               startedAt: context.startedAt,
+              // `openingDatabase` sets it before `serving`.
+              database: context.database as Database,
             }),
             onDone: {
               target: 'running',

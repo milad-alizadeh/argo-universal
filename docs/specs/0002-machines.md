@@ -188,7 +188,7 @@ Spec 0003 amends this: a parent Session also invokes one feed actor per Subagent
 `apps/server/src/services/feed/feed-machine.ts`. One per Session, invoked by the Session.
 
 - A `FeedChange` is `{type: 'upsert', update}`, `{type: 'append', id, field, text}`, or `{type: 'patch', id, set}`. An update with `state: 'settled'` settles its row.
-- `feed.change {change, turnId}` runs the pure function `applyFeedChange(feed, change, turnId) → {feed, streamEvents}`. It gives a new row the next `position`, raises `revision` by one for each change, and works out the `off` of an append. Open rows stay in the context.
+- `feed.change {change, turnId}` runs the pure function `applyFeedChange(feed, change, turnId) → {feed, streamEvents}`. It gives a new row the next `position`, raises `revision` by one for each change, and works out the `off` of an append. Open rows stay in the context. A change to a row that has left the context reads it back with `findWrittenRow` from the feed's input, from the writer's queue or the database, so the row keeps its `position`. Spec 0003's `proposalOutcome` reaches a settled plan row this way.
 - `active` has two parallel regions:
   - `stream`: `quiet`, then `batching` on a change. After 60 ms (`streamBatchDelay`), it emits `feed.batch {events}` with XState `emit` and goes back to `quiet`. The feed service listens with `feedRef.on('feed.batch', ...)` and sends `row.upsert`, `row.append`, and `row.patch` on `feed.subscribe`.
   - `store`: `clean`, then `dirty` on a change. A change that settles a row writes at once. Otherwise, after 1 second (`storeDelay`), it sends `writer.write` with the changed rows and the new `maxRevision`, drops the settled rows from the context, and goes back to `clean`.
