@@ -4,16 +4,12 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
-import {
-  MagnifyingGlassIcon,
-  NotePencilIcon,
-  SlidersHorizontalIcon,
-  XIcon,
-} from 'phosphor-react-native';
+import { NotePencilIcon, SlidersHorizontalIcon } from 'phosphor-react-native';
 import { useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { ConnectionBanner } from '#components/ConnectionBanner';
 import { Icon } from '#components/Icon';
+import { ListSearch } from '#components/ListSearch';
 import { LoadError } from '#components/LoadError';
 import { ProjectsList } from '#components/ProjectsList';
 import { ProjectsLoading } from '#components/ProjectsLoading';
@@ -26,7 +22,6 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '#primitives/dropdown-menu';
-import { Input } from '#primitives/input';
 import { Text } from '#primitives/text';
 import { useNavigate } from '../navigation/context';
 import { useWide } from '../navigation/use-wide';
@@ -37,7 +32,6 @@ export function ProjectsScreen() {
   const trpc = useTRPC();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [searching, setSearching] = useState(false);
   const [query, setQuery] = useState('');
   const [archived, setArchived] = useState(false);
   const projects = useQuery(trpc.projects.list.queryOptions());
@@ -70,10 +64,6 @@ export function ProjectsScreen() {
   );
   const error = projects.isError || agents.isError || sessions.isLoadingError;
   const loading = projects.isPending || agents.isPending || sessions.isPending;
-  function closeSearch() {
-    setSearching(false);
-    setQuery('');
-  }
   function retry() {
     void projects.refetch();
     void agents.refetch();
@@ -87,47 +77,7 @@ export function ProjectsScreen() {
     >
       <ConnectionBanner />
       <View className="h-11 wide:h-14 flex-row items-center gap-0.5 px-2">
-        {searching ? (
-          <View className="relative min-w-0 flex-1 justify-center">
-            <Input
-              autoFocus
-              accessibilityLabel="Search Sessions"
-              placeholder="Search Sessions"
-              value={query}
-              onChangeText={setQuery}
-              onKeyPress={({ nativeEvent }) => {
-                if (nativeEvent.key === 'Escape') closeSearch();
-              }}
-              className="h-8 sm:h-8 w-full pl-8 text-sm"
-            />
-            <View pointerEvents="none" className="absolute left-2.5">
-              <Icon
-                as={MagnifyingGlassIcon}
-                className="size-3.5 text-muted-foreground"
-              />
-            </View>
-          </View>
-        ) : (
-          <Text
-            role="heading"
-            aria-level={1}
-            className="min-w-0 flex-1 pl-2 text-xl wide:text-base font-semibold"
-          >
-            Sessions
-          </Text>
-        )}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-11 sm:size-11 wide:size-8 wide:sm:size-8"
-          accessibilityLabel={searching ? 'Close search' : 'Search Sessions'}
-          onPress={searching ? closeSearch : () => setSearching(true)}
-        >
-          <Icon
-            as={searching ? XIcon : MagnifyingGlassIcon}
-            className="size-5.5 wide:size-4 text-foreground wide:text-muted-foreground"
-          />
-        </Button>
+        <ListSearch title="Sessions" value={query} onChangeText={setQuery} />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button

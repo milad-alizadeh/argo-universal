@@ -151,6 +151,78 @@ export const Search: Story = {
       ).toBeVisible();
     }),
 };
+export const SearchMorph: Story = {
+  play: async ({ canvas, userEvent }) =>
+    eachLayout(async () => {
+      const surface = canvas.getByTestId('list-search-surface');
+      const measureTransition = () =>
+        new Promise<number[]>((resolve) => {
+          const widths: number[] = [];
+          const started = performance.now();
+          function measure() {
+            widths.push(surface.getBoundingClientRect().width);
+            if (performance.now() - started < 400)
+              requestAnimationFrame(measure);
+            else resolve(widths);
+          }
+          requestAnimationFrame(measure);
+        });
+      await expect(canvas.queryByRole('textbox')).toBeNull();
+      await waitFor(() =>
+        expect(surface.getBoundingClientRect().width).toBeCloseTo(
+          canvas
+            .getByRole('button', { name: 'Search Sessions' })
+            .getBoundingClientRect().width,
+          0,
+        ),
+      );
+      const collapsedWidth = surface.getBoundingClientRect().width;
+      const expansion = measureTransition();
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Search Sessions' }),
+      );
+      const input = canvas.getByRole('textbox', { name: 'Search Sessions' });
+      await waitFor(() => expect(input).toHaveFocus());
+      const openingWidths = await expansion;
+      const expandedWidth = surface.getBoundingClientRect().width;
+      await expect(expandedWidth).toBeGreaterThan(collapsedWidth * 3);
+      await expect(
+        openingWidths.some(
+          (width) => width > collapsedWidth + 1 && width < expandedWidth - 1,
+        ),
+      ).toBe(true);
+      await userEvent.type(input, 'settings');
+      const collapse = measureTransition();
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Close search' }),
+      );
+      const closingWidths = await collapse;
+      await expect(canvas.queryByRole('textbox')).toBeNull();
+      await expect(
+        closingWidths.some(
+          (width) => width > collapsedWidth + 1 && width < expandedWidth - 1,
+        ),
+      ).toBe(true);
+      await expect(surface.getBoundingClientRect().width).toBeCloseTo(
+        collapsedWidth,
+        0,
+      );
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Search Sessions' }),
+      );
+      await expect(
+        canvas.getByRole('textbox', { name: 'Search Sessions' }),
+      ).toHaveValue('');
+      await waitFor(() =>
+        expect(
+          canvas.getByRole('textbox', { name: 'Search Sessions' }),
+        ).toHaveFocus(),
+      );
+      await userEvent.keyboard('{Escape}');
+      await waitFor(() => expect(getComputedStyle(surface).opacity).toBe('0'));
+    }),
+};
+
 export const ArchivedFilter: Story = {
   play: async ({ canvas, userEvent }) =>
     eachLayout(async () => {
