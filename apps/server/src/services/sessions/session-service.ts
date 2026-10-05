@@ -3,6 +3,7 @@ import type { SessionService } from '@repo/api';
 import type { Database } from '@repo/db';
 import { TRPCError } from '@trpc/server';
 import { waitFor } from 'xstate';
+import { notImplemented } from '../not-implemented';
 import type { RegistryActorRef, RegistryCommand } from './registry-machine';
 import { sendSessionCommand } from './session-command';
 import { createSessionList } from './session-list';
@@ -71,15 +72,7 @@ export function createSessionService({
   return {
     ...createSessionList({ database, sessions }),
     openSession: open,
-    new: async (input) => {
-      const sessionId = createId();
-      send({ type: 'sessions.create', sessionId, ...input });
-      const actor = await ready(sessionId);
-      return {
-        sessionId,
-        configOptions: actor.getSnapshot().context.configOptions,
-      };
-    },
+    new: notImplemented,
     prompt: async ({ sessionId, prompt }) => {
       const actor = await open(sessionId);
       const turnId = createId();

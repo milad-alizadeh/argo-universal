@@ -164,12 +164,15 @@ serveJsonLines((line) => {
       return send({
         id,
         result: {
-          account: {
-            type:
-              process.env.OPENAI_API_KEY || process.env.CODEX_API_KEY
-                ? 'apiKey'
-                : (process.env.MOCK_CLI_ACCOUNT_TYPE ?? 'chatgpt'),
-          },
+          account:
+            environment.availability === 'not_signed_in'
+              ? null
+              : {
+                  type:
+                    process.env.OPENAI_API_KEY || process.env.CODEX_API_KEY
+                      ? 'apiKey'
+                      : (process.env.MOCK_CLI_ACCOUNT_TYPE ?? 'chatgpt'),
+                },
           requiresOpenaiAuth: true,
           workspaceRouting: null,
         },

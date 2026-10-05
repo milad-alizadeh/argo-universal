@@ -223,6 +223,19 @@ serveJsonLines((line) => {
   const subtype = input.request?.subtype;
   if (subtype === 'initialize' && process.env.MOCK_CLI_BLOCK_INITIALIZE === '1')
     return;
+  if (
+    subtype === 'initialize' &&
+    environment.availability === 'not_signed_in'
+  ) {
+    return send({
+      type: 'control_response',
+      response: {
+        subtype: 'error',
+        request_id: input.request_id,
+        error: 'Not signed in. Run claude auth login.',
+      },
+    });
+  }
   const response = answer(subtype);
   send({
     type: 'control_response',

@@ -109,42 +109,27 @@ function openServer({ applyConfigOptions = true } = {}) {
   return { caller, root, streams, configOptions, services, database };
 }
 
-it.each([
-  ['mock', 'small'],
-  ['alternate', 'large'],
-])(
-  'creates a Session with registered Agent %s and returns its config options',
-  async (agent, currentValue) => {
-    const { caller } = openServer();
-    const result = await caller.session.new({
+it('refuses New Session until atomic creation is implemented, leaving no empty Session', async () => {
+  const { caller } = openServer();
+  await expect(
+    caller.session.new({
       projectId: 'project-1',
-      agent,
-      checkout: 'main',
-    });
-    expect(result).toEqual({
-      sessionId: expect.any(String),
-      configOptions: [
-        expect.objectContaining({ configId: 'model', currentValue }),
-      ],
-    });
-    expect(
-      await caller.feed.page({
-        sessionId: result.sessionId,
-        direction: 'tail',
-      }),
-    ).toMatchObject({ rows: [] });
-  },
-);
+      agent: 'mock',
+      checkout: { type: 'main' },
+      configOptions: [],
+      prompt: [{ type: 'text', text: 'Build it' }],
+    }),
+  ).rejects.toMatchObject({ code: 'NOT_IMPLEMENTED' });
+  expect(await caller.session.list({ archived: false })).toMatchObject({
+    sessions: [expect.objectContaining({ sessionId: 'session-1' })],
+  });
+});
 
 it('returns after dispatching a config choice and delivers later changes through the Feed', async () => {
   const { caller, streams, configOptions, services } = openServer({
     applyConfigOptions: false,
   });
-  const { sessionId } = await caller.session.new({
-    projectId: 'project-1',
-    agent: 'mock',
-    checkout: 'main',
-  });
+  const sessionId = 'session-1';
   const controller = new AbortController();
   cleanups.push(() => controller.abort());
   const updates = services.feed.subscribe(
@@ -229,13 +214,6 @@ it('rejects unknown Sessions and input that breaks the contract', async () => {
   await expect(
     caller.session.prompt({ sessionId: 'session-1', prompt: [] }),
   ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
-  await expect(
-    caller.session.new({
-      projectId: 'project-1',
-      agent: 'unregistered',
-      checkout: 'main',
-    }),
-  ).rejects.toMatchObject({ code: 'CONFLICT' });
 });
 
 it('opens a stored Session when its Feed is subscribed, and sends its live config options', async () => {
@@ -275,25 +253,6 @@ it('removes a closed Session and resumes it with the stored Agent identity on th
   });
   expect(streams.get('session-1')?.input.vendorSessionId).toBe('vendor-1');
   expect(root.system.get('session:session-1')).not.toBe(first);
-});
-
-it('finishes stopping when a Session is still creating, and fails the pending creation call', async () => {
-  const { caller, root } = openServer();
-  const sessions = root.system.get('sessions');
-  const result = expect(
-    caller.session.new({
-      projectId: 'project-1',
-      agent: 'mock',
-      checkout: 'main',
-    }),
-  ).rejects.toMatchObject({ code: 'INTERNAL_SERVER_ERROR' });
-  await waitFor(
-    sessions,
-    (snapshot) => Object.keys(snapshot.context.sessions).length > 0,
-  );
-  sessions.send({ type: 'sessions.stopAll' });
-  await waitFor(sessions, (snapshot) => snapshot.status === 'done');
-  await result;
 });
 
 it('refuses commands for a Subagent while keeping its stored Feed readable', async () => {

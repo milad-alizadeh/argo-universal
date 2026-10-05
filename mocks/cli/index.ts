@@ -1,10 +1,18 @@
+import type { AgentCommandOf, AgentReady } from '@repo/agents';
+import { newSessionMock as claudeNewSessionMock } from './claude/new-session.ts';
 import { writeMockClaude } from './claude/write-mock-claude.ts';
 import { writeClaudeTranscript } from './claude/write-transcript.ts';
+import { newSessionMock as codexNewSessionMock } from './codex/new-session.ts';
 import { writeMockCodex } from './codex/write-mock-codex.ts';
 import { writeCodexTranscript } from './codex/write-transcript.ts';
 import type { MockCliOptions } from './mock-cli.ts';
 
 export interface MockCli {
+  newSessionMock(): {
+    configOptions: AgentReady['configOptions'];
+    configOptionsByModel: AgentReady['configOptions'][];
+    prompt: AgentCommandOf<'agent.prompt'>['content'];
+  };
   // Writes the mock CLI into `directory` under the name the adapter runs from PATH.
   write: (directory: string, options: MockCliOptions) => Promise<string>;
   // Recordings of a Turn with edits and commands, and of a Turn cancelled during a command.
@@ -26,6 +34,7 @@ export interface MockCli {
 export const mockClis: Record<string, MockCli> = {
   codex: {
     write: writeMockCodex,
+    newSessionMock: codexNewSessionMock,
     apiKeyVariables: ['OPENAI_API_KEY', 'CODEX_API_KEY'],
     connectionFailures: [
       {
@@ -38,6 +47,7 @@ export const mockClis: Record<string, MockCli> = {
   },
   claude: {
     write: writeMockClaude,
+    newSessionMock: claudeNewSessionMock,
     recordings: { turn: 'edit-and-command', cancelledTurn: 'interrupt' },
     writeTranscript: writeClaudeTranscript,
   },

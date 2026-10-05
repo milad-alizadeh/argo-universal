@@ -1,0 +1,1156 @@
+[
+  {
+    "agent": "agent-one",
+    "configOptions": [
+      {
+        "type": "select",
+        "configId": "mode",
+        "name": "Mode",
+        "category": "mode",
+        "currentValue": "default",
+        "options": [
+          {
+            "value": "default",
+            "name": "Ask before edits",
+            "_meta": {
+              "argo": {
+                "icon": "ShieldCheck",
+                "tone": "safe"
+              }
+            }
+          },
+          {
+            "value": "acceptEdits",
+            "name": "Accept edits",
+            "_meta": {
+              "argo": {
+                "icon": "Pencil",
+                "tone": "moderate"
+              }
+            }
+          },
+          {
+            "value": "plan",
+            "name": "Plan",
+            "_meta": {
+              "argo": {
+                "icon": "ClipboardList",
+                "tone": "planning"
+              }
+            }
+          },
+          {
+            "value": "auto",
+            "name": "Auto",
+            "_meta": {
+              "argo": {
+                "icon": "Sparkles",
+                "tone": "moderate"
+              }
+            }
+          },
+          {
+            "value": "bypassPermissions",
+            "name": "Bypass permissions",
+            "_meta": {
+              "argo": {
+                "icon": "ShieldOff",
+                "tone": "dangerous"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "configId": "model",
+        "name": "Model",
+        "category": "model",
+        "currentValue": "default",
+        "options": [
+          {
+            "value": "default",
+            "name": "Default (recommended)",
+            "_meta": {
+              "argo": {
+                "supportsEffort": true,
+                "supportedEffortLevels": [
+                  "low",
+                  "medium",
+                  "high",
+                  "xhigh",
+                  "max"
+                ],
+                "supportsAdaptiveThinking": true,
+                "supportsFastMode": true,
+                "supportsAutoMode": true
+              }
+            },
+            "description": "Opus 5.5 · Best for everyday, complex tasks"
+          },
+          {
+            "value": "haiku",
+            "name": "Haiku 4.5",
+            "_meta": {
+              "argo": {
+                "supportsEffort": false,
+                "supportedEffortLevels": [],
+                "supportsAdaptiveThinking": false,
+                "supportsFastMode": false,
+                "supportsAutoMode": false
+              }
+            },
+            "description": "Fastest for quick answers"
+          },
+          {
+            "value": "agent-one-opus-4-6",
+            "name": "Opus 4.6",
+            "_meta": {
+              "argo": {
+                "supportsEffort": true,
+                "supportedEffortLevels": ["low", "medium", "high", "max"],
+                "supportsAdaptiveThinking": true,
+                "supportsFastMode": false,
+                "supportsAutoMode": true
+              }
+            },
+            "description": "Best for everyday, complex tasks"
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "configId": "effort",
+        "name": "Effort",
+        "category": "thought_level",
+        "currentValue": "default",
+        "options": [
+          {
+            "value": "default",
+            "name": "Default"
+          },
+          {
+            "value": "low",
+            "name": "Low"
+          },
+          {
+            "value": "medium",
+            "name": "Medium"
+          },
+          {
+            "value": "high",
+            "name": "High"
+          },
+          {
+            "value": "xhigh",
+            "name": "Extra high"
+          },
+          {
+            "value": "max",
+            "name": "Max"
+          }
+        ]
+      }
+    ],
+    "configOptionsByModel": [
+      [
+        {
+          "type": "select",
+          "configId": "mode",
+          "name": "Mode",
+          "category": "mode",
+          "currentValue": "default",
+          "options": [
+            {
+              "value": "default",
+              "name": "Ask before edits",
+              "_meta": {
+                "argo": {
+                  "icon": "ShieldCheck",
+                  "tone": "safe"
+                }
+              }
+            },
+            {
+              "value": "acceptEdits",
+              "name": "Accept edits",
+              "_meta": {
+                "argo": {
+                  "icon": "Pencil",
+                  "tone": "moderate"
+                }
+              }
+            },
+            {
+              "value": "plan",
+              "name": "Plan",
+              "_meta": {
+                "argo": {
+                  "icon": "ClipboardList",
+                  "tone": "planning"
+                }
+              }
+            },
+            {
+              "value": "auto",
+              "name": "Auto",
+              "_meta": {
+                "argo": {
+                  "icon": "Sparkles",
+                  "tone": "moderate"
+                }
+              }
+            },
+            {
+              "value": "bypassPermissions",
+              "name": "Bypass permissions",
+              "_meta": {
+                "argo": {
+                  "icon": "ShieldOff",
+                  "tone": "dangerous"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "select",
+          "configId": "model",
+          "name": "Model",
+          "category": "model",
+          "currentValue": "default",
+          "options": [
+            {
+              "value": "default",
+              "name": "Default (recommended)",
+              "_meta": {
+                "argo": {
+                  "supportsEffort": true,
+                  "supportedEffortLevels": [
+                    "low",
+                    "medium",
+                    "high",
+                    "xhigh",
+                    "max"
+                  ],
+                  "supportsAdaptiveThinking": true,
+                  "supportsFastMode": true,
+                  "supportsAutoMode": true
+                }
+              },
+              "description": "Opus 5.5 · Best for everyday, complex tasks"
+            },
+            {
+              "value": "haiku",
+              "name": "Haiku 4.5",
+              "_meta": {
+                "argo": {
+                  "supportsEffort": false,
+                  "supportedEffortLevels": [],
+                  "supportsAdaptiveThinking": false,
+                  "supportsFastMode": false,
+                  "supportsAutoMode": false
+                }
+              },
+              "description": "Fastest for quick answers"
+            },
+            {
+              "value": "agent-one-opus-4-6",
+              "name": "Opus 4.6",
+              "_meta": {
+                "argo": {
+                  "supportsEffort": true,
+                  "supportedEffortLevels": ["low", "medium", "high", "max"],
+                  "supportsAdaptiveThinking": true,
+                  "supportsFastMode": false,
+                  "supportsAutoMode": true
+                }
+              },
+              "description": "Best for everyday, complex tasks"
+            }
+          ]
+        },
+        {
+          "type": "select",
+          "configId": "effort",
+          "name": "Effort",
+          "category": "thought_level",
+          "currentValue": "default",
+          "options": [
+            {
+              "value": "default",
+              "name": "Default"
+            },
+            {
+              "value": "low",
+              "name": "Low"
+            },
+            {
+              "value": "medium",
+              "name": "Medium"
+            },
+            {
+              "value": "high",
+              "name": "High"
+            },
+            {
+              "value": "xhigh",
+              "name": "Extra high"
+            },
+            {
+              "value": "max",
+              "name": "Max"
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "type": "select",
+          "configId": "mode",
+          "name": "Mode",
+          "category": "mode",
+          "currentValue": "default",
+          "options": [
+            {
+              "value": "default",
+              "name": "Ask before edits",
+              "_meta": {
+                "argo": {
+                  "icon": "ShieldCheck",
+                  "tone": "safe"
+                }
+              }
+            },
+            {
+              "value": "acceptEdits",
+              "name": "Accept edits",
+              "_meta": {
+                "argo": {
+                  "icon": "Pencil",
+                  "tone": "moderate"
+                }
+              }
+            },
+            {
+              "value": "plan",
+              "name": "Plan",
+              "_meta": {
+                "argo": {
+                  "icon": "ClipboardList",
+                  "tone": "planning"
+                }
+              }
+            },
+            {
+              "value": "bypassPermissions",
+              "name": "Bypass permissions",
+              "_meta": {
+                "argo": {
+                  "icon": "ShieldOff",
+                  "tone": "dangerous"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "select",
+          "configId": "model",
+          "name": "Model",
+          "category": "model",
+          "currentValue": "haiku",
+          "options": [
+            {
+              "value": "default",
+              "name": "Default (recommended)",
+              "_meta": {
+                "argo": {
+                  "supportsEffort": true,
+                  "supportedEffortLevels": [
+                    "low",
+                    "medium",
+                    "high",
+                    "xhigh",
+                    "max"
+                  ],
+                  "supportsAdaptiveThinking": true,
+                  "supportsFastMode": true,
+                  "supportsAutoMode": true
+                }
+              },
+              "description": "Opus 5.5 · Best for everyday, complex tasks"
+            },
+            {
+              "value": "haiku",
+              "name": "Haiku 4.5",
+              "_meta": {
+                "argo": {
+                  "supportsEffort": false,
+                  "supportedEffortLevels": [],
+                  "supportsAdaptiveThinking": false,
+                  "supportsFastMode": false,
+                  "supportsAutoMode": false
+                }
+              },
+              "description": "Fastest for quick answers"
+            },
+            {
+              "value": "agent-one-opus-4-6",
+              "name": "Opus 4.6",
+              "_meta": {
+                "argo": {
+                  "supportsEffort": true,
+                  "supportedEffortLevels": ["low", "medium", "high", "max"],
+                  "supportsAdaptiveThinking": true,
+                  "supportsFastMode": false,
+                  "supportsAutoMode": true
+                }
+              },
+              "description": "Best for everyday, complex tasks"
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "type": "select",
+          "configId": "mode",
+          "name": "Mode",
+          "category": "mode",
+          "currentValue": "default",
+          "options": [
+            {
+              "value": "default",
+              "name": "Ask before edits",
+              "_meta": {
+                "argo": {
+                  "icon": "ShieldCheck",
+                  "tone": "safe"
+                }
+              }
+            },
+            {
+              "value": "acceptEdits",
+              "name": "Accept edits",
+              "_meta": {
+                "argo": {
+                  "icon": "Pencil",
+                  "tone": "moderate"
+                }
+              }
+            },
+            {
+              "value": "plan",
+              "name": "Plan",
+              "_meta": {
+                "argo": {
+                  "icon": "ClipboardList",
+                  "tone": "planning"
+                }
+              }
+            },
+            {
+              "value": "auto",
+              "name": "Auto",
+              "_meta": {
+                "argo": {
+                  "icon": "Sparkles",
+                  "tone": "moderate"
+                }
+              }
+            },
+            {
+              "value": "bypassPermissions",
+              "name": "Bypass permissions",
+              "_meta": {
+                "argo": {
+                  "icon": "ShieldOff",
+                  "tone": "dangerous"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "select",
+          "configId": "model",
+          "name": "Model",
+          "category": "model",
+          "currentValue": "agent-one-opus-4-6",
+          "options": [
+            {
+              "value": "default",
+              "name": "Default (recommended)",
+              "_meta": {
+                "argo": {
+                  "supportsEffort": true,
+                  "supportedEffortLevels": [
+                    "low",
+                    "medium",
+                    "high",
+                    "xhigh",
+                    "max"
+                  ],
+                  "supportsAdaptiveThinking": true,
+                  "supportsFastMode": true,
+                  "supportsAutoMode": true
+                }
+              },
+              "description": "Opus 5.5 · Best for everyday, complex tasks"
+            },
+            {
+              "value": "haiku",
+              "name": "Haiku 4.5",
+              "_meta": {
+                "argo": {
+                  "supportsEffort": false,
+                  "supportedEffortLevels": [],
+                  "supportsAdaptiveThinking": false,
+                  "supportsFastMode": false,
+                  "supportsAutoMode": false
+                }
+              },
+              "description": "Fastest for quick answers"
+            },
+            {
+              "value": "agent-one-opus-4-6",
+              "name": "Opus 4.6",
+              "_meta": {
+                "argo": {
+                  "supportsEffort": true,
+                  "supportedEffortLevels": ["low", "medium", "high", "max"],
+                  "supportsAdaptiveThinking": true,
+                  "supportsFastMode": false,
+                  "supportsAutoMode": true
+                }
+              },
+              "description": "Best for everyday, complex tasks"
+            }
+          ]
+        },
+        {
+          "type": "select",
+          "configId": "effort",
+          "name": "Effort",
+          "category": "thought_level",
+          "currentValue": "default",
+          "options": [
+            {
+              "value": "default",
+              "name": "Default"
+            },
+            {
+              "value": "low",
+              "name": "Low"
+            },
+            {
+              "value": "medium",
+              "name": "Medium"
+            },
+            {
+              "value": "high",
+              "name": "High"
+            },
+            {
+              "value": "max",
+              "name": "Max"
+            }
+          ]
+        }
+      ]
+    ],
+    "prompt": [
+      {
+        "type": "text",
+        "text": "Name the dominant color in this image in one word. Do not use tools."
+      },
+      {
+        "type": "image",
+        "mimeType": "image/png",
+        "blob": {
+          "blobId": "5a8fb050318467b35e6b315bb1f8cb808a18a6eb6c87a9964a0108391094b9b4",
+          "mime": "image/png",
+          "bytes": 99,
+          "width": 32,
+          "height": 32
+        }
+      }
+    ]
+  },
+  {
+    "agent": "agent-two",
+    "configOptions": [
+      {
+        "type": "select",
+        "configId": "mode",
+        "name": "Mode",
+        "category": "mode",
+        "currentValue": "default",
+        "options": [
+          {
+            "value": "default",
+            "name": "Ask before edits",
+            "_meta": {
+              "argo": {
+                "icon": "ShieldCheck",
+                "tone": "safe"
+              }
+            }
+          },
+          {
+            "value": "plan",
+            "name": "Plan",
+            "_meta": {
+              "argo": {
+                "icon": "ClipboardList",
+                "tone": "planning"
+              }
+            }
+          },
+          {
+            "value": "fullAccess",
+            "name": "Full access",
+            "_meta": {
+              "argo": {
+                "icon": "ShieldOff",
+                "tone": "dangerous"
+              }
+            },
+            "description": "Runs without sandbox or permission requests."
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "configId": "model",
+        "name": "Model",
+        "category": "model",
+        "currentValue": "gpt-6-astra",
+        "options": [
+          {
+            "value": "gpt-6-astra",
+            "name": "GPT-6-Astra",
+            "description": "Frontier intelligence for the most demanding work.",
+            "_meta": {
+              "argo": {
+                "supportsEffort": true,
+                "supportedEffortLevels": [
+                  "low",
+                  "medium",
+                  "high",
+                  "xhigh",
+                  "max",
+                  "ultra"
+                ],
+                "supportsImages": true,
+                "supportsPersonality": false
+              }
+            }
+          },
+          {
+            "value": "gpt-6-luna",
+            "name": "GPT-6-Luna",
+            "description": "Fast and affordable model for easier tasks.",
+            "_meta": {
+              "argo": {
+                "supportsEffort": true,
+                "supportedEffortLevels": [
+                  "low",
+                  "medium",
+                  "high",
+                  "xhigh",
+                  "max"
+                ],
+                "supportsImages": true,
+                "supportsPersonality": false
+              }
+            }
+          },
+          {
+            "value": "gpt-5.5",
+            "name": "GPT-5.5",
+            "description": "Legacy coding model.",
+            "_meta": {
+              "argo": {
+                "supportsEffort": true,
+                "supportedEffortLevels": ["low", "medium", "high", "xhigh"],
+                "supportsImages": true,
+                "supportsPersonality": false
+              }
+            }
+          }
+        ]
+      },
+      {
+        "type": "select",
+        "configId": "effort",
+        "name": "Effort",
+        "category": "thought_level",
+        "currentValue": "medium",
+        "options": [
+          {
+            "value": "low",
+            "name": "low",
+            "description": "Fast responses with lighter reasoning"
+          },
+          {
+            "value": "medium",
+            "name": "medium",
+            "description": "Balances speed and reasoning depth for everyday tasks"
+          },
+          {
+            "value": "high",
+            "name": "high",
+            "description": "Greater reasoning depth for complex problems"
+          },
+          {
+            "value": "xhigh",
+            "name": "xhigh",
+            "description": "Extra high reasoning depth for complex problems"
+          },
+          {
+            "value": "max",
+            "name": "max",
+            "description": "Maximum reasoning depth for the hardest problems"
+          },
+          {
+            "value": "ultra",
+            "name": "ultra",
+            "description": "Maximum reasoning with automatic task delegation"
+          }
+        ]
+      }
+    ],
+    "configOptionsByModel": [
+      [
+        {
+          "type": "select",
+          "configId": "mode",
+          "name": "Mode",
+          "category": "mode",
+          "currentValue": "default",
+          "options": [
+            {
+              "value": "default",
+              "name": "Ask before edits",
+              "_meta": {
+                "argo": {
+                  "icon": "ShieldCheck",
+                  "tone": "safe"
+                }
+              }
+            },
+            {
+              "value": "plan",
+              "name": "Plan",
+              "_meta": {
+                "argo": {
+                  "icon": "ClipboardList",
+                  "tone": "planning"
+                }
+              }
+            },
+            {
+              "value": "fullAccess",
+              "name": "Full access",
+              "_meta": {
+                "argo": {
+                  "icon": "ShieldOff",
+                  "tone": "dangerous"
+                }
+              },
+              "description": "Runs without sandbox or permission requests."
+            }
+          ]
+        },
+        {
+          "type": "select",
+          "configId": "model",
+          "name": "Model",
+          "category": "model",
+          "currentValue": "gpt-6-astra",
+          "options": [
+            {
+              "value": "gpt-6-astra",
+              "name": "GPT-6-Astra",
+              "description": "Frontier intelligence for the most demanding work.",
+              "_meta": {
+                "argo": {
+                  "supportsEffort": true,
+                  "supportedEffortLevels": [
+                    "low",
+                    "medium",
+                    "high",
+                    "xhigh",
+                    "max",
+                    "ultra"
+                  ],
+                  "supportsImages": true,
+                  "supportsPersonality": false
+                }
+              }
+            },
+            {
+              "value": "gpt-6-luna",
+              "name": "GPT-6-Luna",
+              "description": "Fast and affordable model for easier tasks.",
+              "_meta": {
+                "argo": {
+                  "supportsEffort": true,
+                  "supportedEffortLevels": [
+                    "low",
+                    "medium",
+                    "high",
+                    "xhigh",
+                    "max"
+                  ],
+                  "supportsImages": true,
+                  "supportsPersonality": false
+                }
+              }
+            },
+            {
+              "value": "gpt-5.5",
+              "name": "GPT-5.5",
+              "description": "Legacy coding model.",
+              "_meta": {
+                "argo": {
+                  "supportsEffort": true,
+                  "supportedEffortLevels": ["low", "medium", "high", "xhigh"],
+                  "supportsImages": true,
+                  "supportsPersonality": false
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "select",
+          "configId": "effort",
+          "name": "Effort",
+          "category": "thought_level",
+          "currentValue": "medium",
+          "options": [
+            {
+              "value": "low",
+              "name": "low",
+              "description": "Fast responses with lighter reasoning"
+            },
+            {
+              "value": "medium",
+              "name": "medium",
+              "description": "Balances speed and reasoning depth for everyday tasks"
+            },
+            {
+              "value": "high",
+              "name": "high",
+              "description": "Greater reasoning depth for complex problems"
+            },
+            {
+              "value": "xhigh",
+              "name": "xhigh",
+              "description": "Extra high reasoning depth for complex problems"
+            },
+            {
+              "value": "max",
+              "name": "max",
+              "description": "Maximum reasoning depth for the hardest problems"
+            },
+            {
+              "value": "ultra",
+              "name": "ultra",
+              "description": "Maximum reasoning with automatic task delegation"
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "type": "select",
+          "configId": "mode",
+          "name": "Mode",
+          "category": "mode",
+          "currentValue": "default",
+          "options": [
+            {
+              "value": "default",
+              "name": "Ask before edits",
+              "_meta": {
+                "argo": {
+                  "icon": "ShieldCheck",
+                  "tone": "safe"
+                }
+              }
+            },
+            {
+              "value": "plan",
+              "name": "Plan",
+              "_meta": {
+                "argo": {
+                  "icon": "ClipboardList",
+                  "tone": "planning"
+                }
+              }
+            },
+            {
+              "value": "fullAccess",
+              "name": "Full access",
+              "_meta": {
+                "argo": {
+                  "icon": "ShieldOff",
+                  "tone": "dangerous"
+                }
+              },
+              "description": "Runs without sandbox or permission requests."
+            }
+          ]
+        },
+        {
+          "type": "select",
+          "configId": "model",
+          "name": "Model",
+          "category": "model",
+          "currentValue": "gpt-6-luna",
+          "options": [
+            {
+              "value": "gpt-6-astra",
+              "name": "GPT-6-Astra",
+              "description": "Frontier intelligence for the most demanding work.",
+              "_meta": {
+                "argo": {
+                  "supportsEffort": true,
+                  "supportedEffortLevels": [
+                    "low",
+                    "medium",
+                    "high",
+                    "xhigh",
+                    "max",
+                    "ultra"
+                  ],
+                  "supportsImages": true,
+                  "supportsPersonality": false
+                }
+              }
+            },
+            {
+              "value": "gpt-6-luna",
+              "name": "GPT-6-Luna",
+              "description": "Fast and affordable model for easier tasks.",
+              "_meta": {
+                "argo": {
+                  "supportsEffort": true,
+                  "supportedEffortLevels": [
+                    "low",
+                    "medium",
+                    "high",
+                    "xhigh",
+                    "max"
+                  ],
+                  "supportsImages": true,
+                  "supportsPersonality": false
+                }
+              }
+            },
+            {
+              "value": "gpt-5.5",
+              "name": "GPT-5.5",
+              "description": "Legacy coding model.",
+              "_meta": {
+                "argo": {
+                  "supportsEffort": true,
+                  "supportedEffortLevels": ["low", "medium", "high", "xhigh"],
+                  "supportsImages": true,
+                  "supportsPersonality": false
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "select",
+          "configId": "effort",
+          "name": "Effort",
+          "category": "thought_level",
+          "currentValue": "medium",
+          "options": [
+            {
+              "value": "low",
+              "name": "low",
+              "description": "Fast responses with lighter reasoning"
+            },
+            {
+              "value": "medium",
+              "name": "medium",
+              "description": "Balances speed and reasoning depth for everyday tasks"
+            },
+            {
+              "value": "high",
+              "name": "high",
+              "description": "Greater reasoning depth for complex problems"
+            },
+            {
+              "value": "xhigh",
+              "name": "xhigh",
+              "description": "Extra high reasoning depth for complex problems"
+            },
+            {
+              "value": "max",
+              "name": "max",
+              "description": "Maximum reasoning depth for the hardest problems"
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "type": "select",
+          "configId": "mode",
+          "name": "Mode",
+          "category": "mode",
+          "currentValue": "default",
+          "options": [
+            {
+              "value": "default",
+              "name": "Ask before edits",
+              "_meta": {
+                "argo": {
+                  "icon": "ShieldCheck",
+                  "tone": "safe"
+                }
+              }
+            },
+            {
+              "value": "plan",
+              "name": "Plan",
+              "_meta": {
+                "argo": {
+                  "icon": "ClipboardList",
+                  "tone": "planning"
+                }
+              }
+            },
+            {
+              "value": "fullAccess",
+              "name": "Full access",
+              "_meta": {
+                "argo": {
+                  "icon": "ShieldOff",
+                  "tone": "dangerous"
+                }
+              },
+              "description": "Runs without sandbox or permission requests."
+            }
+          ]
+        },
+        {
+          "type": "select",
+          "configId": "model",
+          "name": "Model",
+          "category": "model",
+          "currentValue": "gpt-5.5",
+          "options": [
+            {
+              "value": "gpt-6-astra",
+              "name": "GPT-6-Astra",
+              "description": "Frontier intelligence for the most demanding work.",
+              "_meta": {
+                "argo": {
+                  "supportsEffort": true,
+                  "supportedEffortLevels": [
+                    "low",
+                    "medium",
+                    "high",
+                    "xhigh",
+                    "max",
+                    "ultra"
+                  ],
+                  "supportsImages": true,
+                  "supportsPersonality": false
+                }
+              }
+            },
+            {
+              "value": "gpt-6-luna",
+              "name": "GPT-6-Luna",
+              "description": "Fast and affordable model for easier tasks.",
+              "_meta": {
+                "argo": {
+                  "supportsEffort": true,
+                  "supportedEffortLevels": [
+                    "low",
+                    "medium",
+                    "high",
+                    "xhigh",
+                    "max"
+                  ],
+                  "supportsImages": true,
+                  "supportsPersonality": false
+                }
+              }
+            },
+            {
+              "value": "gpt-5.5",
+              "name": "GPT-5.5",
+              "description": "Legacy coding model.",
+              "_meta": {
+                "argo": {
+                  "supportsEffort": true,
+                  "supportedEffortLevels": ["low", "medium", "high", "xhigh"],
+                  "supportsImages": true,
+                  "supportsPersonality": false
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "select",
+          "configId": "effort",
+          "name": "Effort",
+          "category": "thought_level",
+          "currentValue": "medium",
+          "options": [
+            {
+              "value": "low",
+              "name": "low",
+              "description": "Fast responses with lighter reasoning"
+            },
+            {
+              "value": "medium",
+              "name": "medium",
+              "description": "Balances speed and reasoning depth for everyday tasks"
+            },
+            {
+              "value": "high",
+              "name": "high",
+              "description": "Greater reasoning depth for complex problems"
+            },
+            {
+              "value": "xhigh",
+              "name": "xhigh",
+              "description": "Extra high reasoning depth for complex problems"
+            }
+          ]
+        }
+      ]
+    ],
+    "prompt": [
+      {
+        "type": "text",
+        "text": "Name the dominant color in this image in one word. Do not use tools."
+      },
+      {
+        "type": "image",
+        "mimeType": "image/png",
+        "blob": {
+          "blobId": "5a8fb050318467b35e6b315bb1f8cb808a18a6eb6c87a9964a0108391094b9b4",
+          "mime": "image/png",
+          "bytes": 99,
+          "width": 32,
+          "height": 32
+        }
+      }
+    ]
+  }
+]

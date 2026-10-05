@@ -1,6 +1,6 @@
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import type { SessionNewInput } from '@repo/contracts';
+import type { CheckoutChoice, SessionNewInput } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow, project, session } from '@repo/db/schema';
 import { type Checkout, createCheckout, removeCheckout } from '@repo/git';
@@ -10,11 +10,19 @@ import type { ActorRefFrom } from 'xstate';
 import { queuedFeedRows } from '../feed/feed-row';
 import type { writerMachine } from '../feed/writer-machine';
 
+// Internal creation remains separate until issue #40 implements the first prompt.
+export type SessionCreationInput = Pick<
+  SessionNewInput,
+  'projectId' | 'agent'
+> & {
+  checkout: CheckoutChoice;
+};
+
 export type SessionInput = {
   database: Database;
   runtimeDirectory?: string;
   sessionId: string;
-} & (({ kind: 'new' } & SessionNewInput) | { kind: 'existing' });
+} & (({ kind: 'new' } & SessionCreationInput) | { kind: 'existing' });
 export interface SessionData {
   sessionId: string;
   projectId: string;

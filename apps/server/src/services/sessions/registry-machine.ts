@@ -3,7 +3,6 @@ import {
   agentAdapters,
   findAgentAdapter,
 } from '@repo/agents';
-import type { SessionNewInput } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import {
   type ActorRefFrom,
@@ -13,6 +12,7 @@ import {
   type OutputFrom,
   setup,
 } from 'xstate';
+import type { SessionCreationInput } from './session-data';
 import { type SessionActorRef, sessionMachine } from './session-machine';
 
 export interface RegistryInput {
@@ -27,7 +27,7 @@ interface RegistryContext extends RegistryInput {
 }
 
 export type RegistryCommand =
-  | ({ type: 'sessions.create'; sessionId: string } & SessionNewInput)
+  | ({ type: 'sessions.create'; sessionId: string } & SessionCreationInput)
   | {
       type: 'sessions.open';
       sessionId: string;

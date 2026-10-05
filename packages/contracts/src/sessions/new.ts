@@ -1,22 +1,39 @@
 import { z } from 'zod';
 import { sessionColumns } from '../columns';
-import { SessionConfigOption } from './set-config-option';
+import { ImageContent, TextContent } from '../feed/content-block';
 
-// Where a new Session runs: its own worktree, or the Project's main checkout (ADR-0008).
+// Where a Session runs (ADR-0008).
 export const CheckoutChoice = z.enum(['worktree', 'main']);
 export type CheckoutChoice = z.infer<typeof CheckoutChoice>;
 
-// Input of `session.new`. `agent` is the id that an Agent adapter registers.
+export const SessionCheckoutChoice = z.discriminatedUnion('type', [
+  z.strictObject({
+    type: z.literal('worktree'),
+    baseBranch: z.string(),
+  }),
+  z.strictObject({ type: z.literal('main') }),
+]);
+export type SessionCheckoutChoice = z.infer<typeof SessionCheckoutChoice>;
+
+export const InitialConfigOption = z.strictObject({
+  configId: z.string(),
+  value: z.union([z.string(), z.boolean()]),
+});
+export type InitialConfigOption = z.infer<typeof InitialConfigOption>;
+
+// A Session is created and prompted in one call; no empty Session exists.
 export const SessionNewInput = z.strictObject({
   projectId: sessionColumns.shape.projectId,
   agent: sessionColumns.shape.agent,
-  checkout: CheckoutChoice,
+  checkout: SessionCheckoutChoice,
+  configOptions: z.array(InitialConfigOption),
+  prompt: z
+    .array(z.discriminatedUnion('type', [TextContent, ImageContent]))
+    .min(1),
 });
 export type SessionNewInput = z.infer<typeof SessionNewInput>;
 
-// Output of `session.new`, after ACP `NewSessionResponse`.
 export const SessionNewOutput = z.strictObject({
   sessionId: sessionColumns.shape.id,
-  configOptions: z.array(SessionConfigOption),
 });
 export type SessionNewOutput = z.infer<typeof SessionNewOutput>;

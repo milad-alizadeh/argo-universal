@@ -59,3 +59,33 @@ it('uses the catalog default when the saved model no longer exists and rejects a
     changeValue(models, values, { configId: 'effort', value: 'unknown' }),
   ).toBeUndefined();
 });
+
+it('marks Plan and dangerous modes and previews each model’s support flags', () => {
+  const options = toConfigOptions(models, startingValues(models, []));
+  expect(options).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        configId: 'mode',
+        options: expect.arrayContaining([
+          expect.objectContaining({
+            value: 'plan',
+            _meta: { argo: { icon: 'ClipboardList', tone: 'planning' } },
+          }),
+          expect.objectContaining({
+            value: 'fullAccess',
+            _meta: { argo: { icon: 'ShieldOff', tone: 'dangerous' } },
+          }),
+        ]),
+      }),
+      expect.objectContaining({
+        configId: 'model',
+        options: expect.arrayContaining([
+          expect.objectContaining({
+            value: 'gpt-6-astra',
+            _meta: { argo: expect.objectContaining({ supportsEffort: true }) },
+          }),
+        ]),
+      }),
+    ]),
+  );
+});
