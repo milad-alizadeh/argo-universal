@@ -79,8 +79,8 @@ export function SessionRow({
       aria-selected={selected}
       onPress={() => onSelect(session.sessionId)}
       className={cn(
-        'h-auto sm:h-auto w-full items-start justify-start gap-2 rounded-md px-2.5 py-3 wide:py-2',
-        selected && 'bg-sidebar-accent',
+        'h-auto sm:h-auto w-full items-start justify-start gap-2 rounded-md px-2.5 py-3 wide:py-2 bg-background wide:bg-sidebar dark:active:bg-accent web:dark:hover:bg-accent',
+        selected && 'bg-sidebar-accent wide:bg-sidebar-accent',
       )}
     >
       <TextClassContext.Provider value={undefined}>
