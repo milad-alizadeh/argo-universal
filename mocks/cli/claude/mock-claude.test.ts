@@ -27,6 +27,15 @@ const recordedFrames = (name: string) =>
     readRecording(findRecording(RECORDINGS, name), PRODUCER).payload,
   );
 
+// A recording of both pipes: what the SDK wrote to stdin, and what the CLI wrote to stdout.
+const recordedPipes = (name: string) =>
+  z
+    .object({ input: RecordedFrames, output: RecordedFrames })
+    .parse(readRecording(findRecording(RECORDINGS, name), PRODUCER).payload);
+
+const isControlResponse = (frame: { type: string }) =>
+  frame.type === 'control_response';
+
 const prompt = (text: string) => ({
   type: 'user',
   message: { role: 'user', content: text },
@@ -51,10 +60,14 @@ beforeEach(async () => {
 
 afterEach(() => rm(directory, { recursive: true, force: true }));
 
-const startClaude = async (recording: string, exitMidTurn = false) =>
+const startClaude = async (
+  recording: string,
+  exitMidTurn = false,
+  flags: string[] = [],
+) =>
   startLineProcess(
     await writeMockClaude(directory, { recording, exitMidTurn }),
-    SDK_FLAGS,
+    [...SDK_FLAGS, ...flags],
   );
 
 describe('claude recordings', () => {
@@ -167,5 +180,104 @@ describe('mock Claude CLI', () => {
     expect(await claude.exited).toBe(1);
     expect(claude.output.slice(1)).toEqual(frames.slice(0, 1));
     expect(claude.output.some((frame) => frame.type === 'result')).toBe(false);
+  });
+
+  it('replays a recorded Turn without its control responses, under the session id it was given', async () => {
+    const { output } = recordedPipes('edit-and-command');
+    const claude = await startClaude('edit-and-command', false, [
+      '--session-id',
+      'session-from-flags',
+    ]);
+
+    claude.send(prompt('Go.'));
+    const frames = await claude.until((frame) => frame.type === 'result');
+
+    const turn = output
+      .filter((frame) => !isControlResponse(frame))
+      .slice(0, frames.length);
+    expect(frames).toEqual(
+      turn.map((frame) =>
+        frame.session_id === undefined
+          ? frame
+          : { ...frame, session_id: 'session-from-flags' },
+      ),
+    );
+    claude.close();
+    expect(await claude.exited).toBe(0);
+  });
+
+  it('answers initialize and get_context_usage with the recorded answers', async () => {
+    const { input, output } = recordedPipes('edit-and-command');
+    const recordedAnswer = (subtype: string) => {
+      const request = input.find(
+        (frame) =>
+          frame.type === 'control_request' &&
+          z.object({ request: z.object({ subtype: z.string() }) }).parse(frame)
+            .request.subtype === subtype,
+      );
+      return output.find(
+        (frame) =>
+          isControlResponse(frame) &&
+          JSON.stringify(frame).includes(
+            `"request_id":"${request?.request_id}"`,
+          ),
+      );
+    };
+    const claude = await startClaude('edit-and-command');
+
+    for (const subtype of ['initialize', 'get_context_usage']) {
+      claude.send({
+        type: 'control_request',
+        request_id: `${subtype}-1`,
+        request: { subtype },
+      });
+      const answer = z
+        .object({ response: z.looseObject({ response: z.unknown() }) })
+        .parse(recordedAnswer(subtype));
+      expect(await claude.next()).toEqual({
+        type: 'control_response',
+        response: {
+          subtype: 'success',
+          request_id: `${subtype}-1`,
+          response: answer.response.response,
+        },
+      });
+    }
+    claude.close();
+    expect(await claude.exited).toBe(0);
+  });
+
+  it('holds the rest of an interrupted Turn until the interrupt arrives', async () => {
+    const claude = await startClaude('interrupt');
+
+    claude.send(prompt('Go.'));
+    await claude.until(
+      (frame) =>
+        frame.type === 'stream_event' &&
+        JSON.stringify(frame).includes('"message_stop"'),
+    );
+    claude.send({
+      type: 'control_request',
+      request_id: 'interrupt-1',
+      request: { subtype: 'interrupt' },
+    });
+
+    expect(await claude.next()).toMatchObject({
+      type: 'control_response',
+      response: { subtype: 'success', request_id: 'interrupt-1' },
+    });
+    expect(
+      await claude.until((frame) => frame.type === 'result'),
+    ).toContainEqual(
+      expect.objectContaining({
+        type: 'result',
+        terminal_reason: 'aborted_tools',
+      }),
+    );
+    expect(
+      claude.output.filter((frame) => frame.type === 'result'),
+    ).toHaveLength(1);
+    claude.close();
+    expect(await claude.exited).toBe(0);
   });
 });

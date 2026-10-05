@@ -432,6 +432,21 @@ Nothing here is copied until the owner agrees. Each item is a question.
 8. **`@path` expansion.** Should prompts go verbatim (`verbatimPrompts: true`)?
 9. **Stop limit.** `close()` can take about 7 s, against `agentStopLimit` of 5 s. Should the limit grow, or should the adapter send SIGKILL at 5 s?
 
+## Owner answers (2026-10-05)
+
+Given while building issue 25:
+
+- **Settings files** (question 1): all of them apply, as in the terminal. The adapter leaves `settingSources` at its default.
+- **Missing transcript** (question 2): the adapter fails with a clear error, after the `getSessionInfo` check.
+- **`@path` expansion** (question 8): prompts go verbatim.
+- **Stop limit** (question 9): `close()`, with `agentStopLimit` kept at 5 s.
+- **Shape**: as this note recommends. The adapter keeps one long-lived `query()`, passes `sessionId` up front and keeps the stderr tail. It calls `getContextUsage` after each `result`.
+- **Executable**: the adapter runs the user's own `claude` from PATH, not the CLI bundled with the SDK.
+- **Images** (old Argo item 7): wait for issue 3f.
+- **Vendor name**: `packages/agents/src/adapters.ts` lists every adapter. It is the one file outside an adapter's folder that names a vendor. Tests find each mock CLI by agent id in `mocks/cli/index.ts`.
+
+Questions 3 to 7 are still open. Until they are answered, `continuedOutside` is always false and `agent.turnStarted` is never sent.
+
 ## Not verified
 
 These items are not marked "Inferred." above:

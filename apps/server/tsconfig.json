@@ -1,4 +1,8 @@
 {
   "extends": "@repo/typescript/node.json",
+  // The tests import the mock CLIs, whose relative imports end in `.ts`.
+  "compilerOptions": {
+    "allowImportingTsExtensions": true
+  },
   "include": ["src", "mocks", "vitest.config.ts"]
 }
