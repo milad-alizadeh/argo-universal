@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./agent": "./agent/machine.ts",
     "./cli/*": "./cli/*.ts"
   },
   "scripts": {
@@ -11,6 +12,8 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@repo/agents": "workspace:*",
+    "xstate": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
