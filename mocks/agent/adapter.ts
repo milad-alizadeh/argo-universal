@@ -24,8 +24,9 @@ export interface MockAgentScript {
 // An adapter whose vendor messages are the Agent events a test scripts.
 export const createMockAdapter = (
   script: MockAgentScript,
+  agent = 'mock',
 ): AgentAdapter<MockAgentStreamEvent, null> => ({
-  agent: 'mock',
+  agent,
   initialMappingState: () => null,
   toAgentEvents: (event, mappingState) => ({ events: [event], mappingState }),
   async connect(input, listener) {

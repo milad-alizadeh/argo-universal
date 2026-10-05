@@ -4,6 +4,7 @@ import { describeJob, type WriterJob, writeJobs } from './writer-job';
 
 export interface WriterInput {
   database: Database;
+  log?: (line: string) => void;
 }
 
 interface WriterContext extends WriterInput {
@@ -47,8 +48,10 @@ export const writerMachine = setup({
       batchSize: 0,
     }),
     releaseBatch: assign({ batchSize: 0 }),
-    log: (_, params: { line: string }) => {
-      console.error(`databaseWriter: ${params.line}`);
+    log: ({ context }, params: { line: string }) => {
+      const line = `databaseWriter: ${params.line}`;
+      if (context.log) context.log(line);
+      else console.error(line);
     },
   },
   guards: {

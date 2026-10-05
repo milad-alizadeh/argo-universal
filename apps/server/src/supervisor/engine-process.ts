@@ -11,7 +11,8 @@ import {
 const engineEntry = fileURLToPath(
   new URL('../engine/main.ts', import.meta.url),
 );
-const killTimeoutMs = 5000;
+// Allow the Engine's HTTP close, Session stop, and writer drain limits, plus five seconds.
+const killTimeoutMs = 25_000;
 
 // Forks the Engine under tsx; in watch mode Node restarts it on a file change and relays its IPC messages.
 export const engineProcess = fromCallback<EngineCommand, { watch: boolean }>(

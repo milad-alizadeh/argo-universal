@@ -7,11 +7,12 @@ import type {
   SessionUpdate,
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
-import { feedRow, session } from '@repo/db/schema';
+import { feedRow } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
 import { and, asc, desc, eq, gt, lt } from 'drizzle-orm';
 import type { ActorRefFrom, Subscription } from 'xstate';
 import type { SessionActorRef } from '../sessions/session-machine';
+import { createSessionReader } from '../sessions/session-record';
 import { toSessionSnapshot } from '../sessions/session-snapshot';
 import type { FeedActorRef } from './feed-machine';
 import { fromFeedRow, queuedFeedRows, readWrittenRow } from './feed-row';
@@ -22,6 +23,7 @@ export interface FeedDeps {
   // The feed actor of an open Session; a closed Session has none.
   findFeed: (sessionId: string) => FeedActorRef | undefined;
   findSession?: (sessionId: string) => SessionActorRef | undefined;
+  openSession?: (sessionId: string) => Promise<SessionActorRef>;
   findWriter: () => ActorRefFrom<typeof writerMachine> | undefined;
 }
 
@@ -37,20 +39,7 @@ const newestById = (rows: Iterable<SessionUpdate>) => {
 
 export function createFeedService(deps: FeedDeps): FeedService {
   const { database } = deps;
-
-  const readSession = (sessionId: string) => {
-    const stored = database
-      .select({ epoch: session.epoch, maxRevision: session.maxRevision })
-      .from(session)
-      .where(eq(session.id, sessionId))
-      .get();
-    if (!stored)
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: `No Session ${sessionId}`,
-      });
-    return stored;
-  };
+  const readSession = createSessionReader(database);
 
   // Rows the database does not hold yet: queued in the writer, then held by the feed actor.
   const readUnsaved = (sessionId: string) => {
@@ -143,7 +132,8 @@ export function createFeedService(deps: FeedDeps): FeedService {
     { sessionId, after }: FeedSubscribeInput,
     signal: AbortSignal | undefined,
   ): AsyncGenerator<FeedSubscribeOutput> {
-    const { epoch, maxRevision } = readSession(sessionId);
+    const { epoch, maxRevision, parentSessionId } = readSession(sessionId);
+    if (parentSessionId === null) await deps.openSession?.(sessionId);
 
     const live: FeedSubscribeOutput[] = [];
     let wake: (() => void) | undefined;

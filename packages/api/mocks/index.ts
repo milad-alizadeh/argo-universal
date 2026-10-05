@@ -22,5 +22,12 @@ export function unreachableServices(
       subscribe: unreachable('feed.subscribe'),
       ...overrides.feed,
     },
+    session: {
+      new: unreachable('session.new'),
+      prompt: unreachable('session.prompt'),
+      cancel: unreachable('session.cancel'),
+      setConfigOption: unreachable('session.setConfigOption'),
+      ...overrides.session,
+    },
   };
 }
