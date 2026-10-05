@@ -1,3 +1,5 @@
+import type {} from './lib/reusables-compatibility';
+
 export {
   DesktopShell,
   type DesktopShellProps,

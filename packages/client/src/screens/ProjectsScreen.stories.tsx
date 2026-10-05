@@ -1,32 +1,34 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { ProjectsScreenPreview } from '../../mocks/projects-screen-preview';
+import {
+  emptySessionListMocks,
+  sessionListMocks,
+} from '../../mocks/session-list-mock';
 import { fails, pending } from '../../mocks/trpc-mock-link';
 import { ProjectsScreen } from './ProjectsScreen';
-import { projectsScreenMocks } from './ProjectsScreen.mocks';
 
 const meta = {
   component: ProjectsScreen,
-  parameters: { trpc: projectsScreenMocks },
+  parameters: { trpc: sessionListMocks, previewPadding: false },
+  render: () => (
+    <ProjectsScreenPreview>
+      <ProjectsScreen />
+    </ProjectsScreenPreview>
+  ),
 } satisfies Meta<typeof ProjectsScreen>;
-
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Loaded: Story = {};
-
 export const Loading: Story = {
-  parameters: { trpc: { 'system.info': pending() } },
+  parameters: { trpc: { 'session.list': pending() } },
 };
-
-// Named so it does not shadow the global Error.
+export const Empty: Story = { parameters: { trpc: emptySessionListMocks } };
 export const ErrorState: Story = {
   name: 'Error',
-  parameters: { trpc: { 'system.info': fails('Server is down') } },
+  parameters: { trpc: { 'session.list': fails('Server is down') } },
 };
-
 export const Reconnecting: Story = {
   parameters: { connection: 'reconnecting' },
 };
-
-export const Offline: Story = {
-  parameters: { connection: 'offline' },
-};
+export const Offline: Story = { parameters: { connection: 'offline' } };

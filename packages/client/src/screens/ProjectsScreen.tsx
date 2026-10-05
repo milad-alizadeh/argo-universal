@@ -1,59 +1,200 @@
-import { useQuery } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
+import {
+  MagnifyingGlassIcon,
+  PencilSimpleLineIcon,
+  SlidersHorizontalIcon,
+  XIcon,
+} from 'phosphor-react-native';
+import { useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { ConnectionBanner } from '#components/ConnectionBanner';
+import { Icon } from '#components/Icon';
+import { LoadError } from '#components/LoadError';
+import { ProjectsList } from '#components/ProjectsList';
+import { ProjectsLoading } from '#components/ProjectsLoading';
+import { Button } from '#primitives/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '#primitives/card';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from '#primitives/dropdown-menu';
+import { Input } from '#primitives/input';
 import { Text } from '#primitives/text';
+import { useNavigate } from '../navigation/context';
 import { useTRPC } from '../trpc/context';
 
-// Scaffold version: shows the Server's system.info and its live clock until milestone 1 lists Projects.
 export function ProjectsScreen() {
   const trpc = useTRPC();
-  const info = useQuery(trpc.system.info.queryOptions());
-  const clock = useSubscription(trpc.system.clock.subscriptionOptions());
-
-  return (
-    <View className="flex-1 bg-background">
-      <ConnectionBanner />
-      <View className="flex-1 items-center justify-center p-6">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Server</CardTitle>
-            <CardDescription>The local Argo Server</CardDescription>
-          </CardHeader>
-          <CardContent className="gap-3">
-            {info.isPending ? (
-              <Text className="text-muted-foreground">
-                Connecting to the Server…
-              </Text>
-            ) : info.isError ? (
-              <Text className="text-destructive">{info.error.message}</Text>
-            ) : (
-              <>
-                <Row label="Version" value={info.data.version} />
-                <Row label="Started" value={info.data.startedAt} />
-                <Row label="PID" value={String(info.data.pid)} />
-                <Row label="Clock" value={clock.data?.now ?? '…'} />
-              </>
-            )}
-          </CardContent>
-        </Card>
-      </View>
-    </View>
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [searching, setSearching] = useState(false);
+  const [query, setQuery] = useState('');
+  const [archived, setArchived] = useState(false);
+  const projects = useQuery(trpc.projects.list.queryOptions());
+  const agents = useQuery(trpc.agents.list.queryOptions());
+  const sessions = useInfiniteQuery(
+    trpc.session.list.infiniteQueryOptions(
+      { archived, query: query || undefined },
+      { getNextPageParam: (page) => page.nextCursor ?? undefined },
+    ),
   );
-}
+  useSubscription(
+    trpc.session.listUpdates.subscriptionOptions(undefined, {
+      onStarted: () => {
+        void queryClient.invalidateQueries(trpc.session.list.pathFilter());
+      },
+      onData: () => {
+        void queryClient.invalidateQueries(trpc.session.list.pathFilter());
+      },
+    }),
+  );
+  const rows = useMemo(
+    () => [
+      ...new Map(
+        sessions.data?.pages
+          .flatMap((page) => page.sessions)
+          .map((session) => [session.sessionId, session]),
+      ).values(),
+    ],
+    [sessions.data],
+  );
+  const error = projects.isError || agents.isError || sessions.isError;
+  const loading = projects.isPending || agents.isPending || sessions.isPending;
+  function closeSearch() {
+    setSearching(false);
+    setQuery('');
+  }
+  function retry() {
+    void projects.refetch();
+    void agents.refetch();
+    void sessions.refetch();
+  }
 
-function Row({ label, value }: { label: string; value: string }) {
   return (
-    <View className="flex-row justify-between gap-4">
-      <Text className="text-muted-foreground text-sm">{label}</Text>
-      <Text className="font-mono text-sm">{value}</Text>
+    <View
+      className="relative flex-1 bg-background wide:bg-sidebar"
+      style={{ minHeight: 0 }}
+    >
+      <ConnectionBanner />
+      <View className="h-11 wide:h-14 flex-row items-center gap-1 px-2">
+        {searching ? (
+          <Input
+            autoFocus
+            accessibilityLabel="Search Sessions"
+            placeholder="Search Sessions"
+            value={query}
+            onChangeText={setQuery}
+            onKeyPress={({ nativeEvent }) => {
+              if (nativeEvent.key === 'Escape') closeSearch();
+            }}
+            className="h-8 sm:h-8 min-w-0 flex-1 text-sm"
+          />
+        ) : (
+          <Text
+            role="heading"
+            aria-level={1}
+            className="min-w-0 flex-1 pl-2 text-xl wide:text-base font-semibold"
+          >
+            Sessions
+          </Text>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-11 sm:size-11 wide:size-8 wide:sm:size-8"
+          accessibilityLabel={searching ? 'Close search' : 'Search Sessions'}
+          onPress={searching ? closeSearch : () => setSearching(true)}
+        >
+          <Icon
+            as={searching ? XIcon : MagnifyingGlassIcon}
+            className="size-5 wide:size-4 text-muted-foreground"
+          />
+        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-11 sm:size-11 wide:size-8 wide:sm:size-8"
+              accessibilityLabel="Filter Sessions"
+            >
+              <Icon
+                as={SlidersHorizontalIcon}
+                className="size-5 wide:size-4 text-muted-foreground"
+              />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-60">
+            <DropdownMenuRadioGroup
+              value={archived ? 'archived' : 'active'}
+              onValueChange={(value) => setArchived(value === 'archived')}
+            >
+              <DropdownMenuRadioItem value="active">
+                <Text>Active</Text>
+              </DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="archived">
+                <Text>Archived</Text>
+              </DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </View>
+      <Text className="px-4 py-2 text-xs font-medium text-muted-foreground">
+        Projects
+      </Text>
+      {error && !loading ? (
+        <LoadError
+          title="Couldn't load Sessions"
+          description="The Server didn't respond. Check that it's running, then retry."
+          onRetry={retry}
+        />
+      ) : loading ? (
+        <ProjectsLoading />
+      ) : (
+        <ProjectsList
+          projects={projects.data ?? []}
+          agents={agents.data ?? []}
+          sessions={rows}
+          query={query}
+          archived={archived}
+          onSelect={(id) => navigate({ to: 'session', id })}
+          onEndReached={() => {
+            if (sessions.hasNextPage && !sessions.isFetching)
+              void sessions.fetchNextPage();
+          }}
+        />
+      )}
+      {sessions.isFetchNextPageError && (
+        <LoadError
+          title="Couldn't load more Sessions"
+          description="Try loading the next page again."
+          onRetry={() => {
+            void sessions.fetchNextPage();
+          }}
+        />
+      )}
+      <View className="absolute bottom-6 right-4 wide:static wide:border-t wide:border-border wide:p-3">
+        <Button
+          accessibilityLabel="New Session"
+          onPress={() => navigate({ to: 'new-session' })}
+          className="size-14 sm:size-14 rounded-full wide:h-9 wide:sm:h-9 wide:w-auto wide:self-start wide:flex-row wide:gap-2 wide:rounded-md wide:px-3"
+        >
+          <Icon
+            as={PencilSimpleLineIcon}
+            className="size-6 wide:size-4 text-primary-foreground"
+          />
+          <Text className="hidden wide:flex text-sm text-primary-foreground">
+            New Session
+          </Text>
+        </Button>
+      </View>
     </View>
   );
 }
