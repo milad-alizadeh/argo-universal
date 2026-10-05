@@ -20,6 +20,10 @@ export {
   type ShellSection,
 } from './components/PhoneShell';
 export {
+  ProjectHeading,
+  type ProjectHeadingProps,
+} from './components/ProjectHeading';
+export {
   PullRequestIndicator,
   type PullRequestIndicatorProps,
 } from './components/PullRequestIndicator';
