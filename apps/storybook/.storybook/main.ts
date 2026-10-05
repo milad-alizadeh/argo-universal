@@ -6,6 +6,7 @@ function getAbsolutePath(value: string) {
   return dirname(fileURLToPath(import.meta.resolve(`${value}/package.json`)));
 }
 const config: StorybookConfig = {
+  staticDirs: [{ from: '../../universal-app/public/fonts', to: '/fonts' }],
   // Screens live in @repo/client (ADR 0009); globs resolve from this .storybook folder.
   stories: ['../../../packages/client/src/**/*.stories.tsx'],
   addons: [
@@ -37,6 +38,9 @@ const config: StorybookConfig = {
       },
     };
     return mergeConfig(config, {
+      // Resolve public font URLs during CSS compilation; staticDirs copies the files.
+      publicDir: `${import.meta.dirname}/../../universal-app/public`,
+      build: { copyPublicDir: false },
       optimizeDeps: {
         include: [
           'react-native-svg',
