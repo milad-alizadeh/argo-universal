@@ -1,5 +1,6 @@
+import { agentMachine } from '@repo/agents';
 import type { Database } from '@repo/db';
-import { type AnyStateMachine, createActor, setup } from 'xstate';
+import { createActor, setup } from 'xstate';
 import type { FeedActorRef } from '../src/services/feed/feed-machine';
 import { createFeedService } from '../src/services/feed/feed-service';
 import { writerMachine } from '../src/services/feed/writer-machine';
@@ -11,7 +12,7 @@ import {
 export const firstPrompt: Extract<SessionCommand, { type: 'session.prompt' }> =
   { type: 'session.prompt', turnId: 'turn-1', content: [] };
 
-export function createSessionHost(database: Database, agent: AnyStateMachine) {
+export function createSessionHost(database: Database, agent = agentMachine) {
   const root = createActor(
     setup({
       actors: {

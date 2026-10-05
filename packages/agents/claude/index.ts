@@ -1,8 +1,15 @@
-import type { AgentAdapter } from '../src/agent-events';
-import { claudeCapabilities, claudeMachine } from './machine';
+import type { SDKMessage } from '@anthropic-ai/claude-agent-sdk';
+import type { AgentAdapter } from '../src/agent-adapter';
+import { connect } from './connect';
+import {
+  initialMappingState,
+  type MappingState,
+  toAgentEvents,
+} from './to-agent-events';
 
-export const claudeAdapter: AgentAdapter<typeof claudeMachine> = {
+export const claudeAdapter: AgentAdapter<SDKMessage, MappingState> = {
   agent: 'claude',
-  capabilities: claudeCapabilities,
-  machine: claudeMachine,
+  connect,
+  initialMappingState,
+  toAgentEvents,
 };

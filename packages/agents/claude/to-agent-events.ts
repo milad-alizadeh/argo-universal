@@ -85,6 +85,17 @@ export function toAgentEvents(
   }
 }
 
+type Delta = Extract<
+  SDKPartialAssistantMessage['event'],
+  { type: 'content_block_delta' }
+>['delta'];
+
+function deltaText(delta: Delta) {
+  if (delta.type === 'text_delta') return delta.text;
+  if (delta.type === 'thinking_delta') return delta.thinking;
+  return '';
+}
+
 function mapStreamEvent(
   { event }: SDKPartialAssistantMessage,
   mappingState: MappingState,
@@ -113,13 +124,7 @@ function mapStreamEvent(
     }
     case 'content_block_delta': {
       const id = `${streamMessageId}#${event.index}`;
-      const { delta } = event;
-      const text =
-        delta.type === 'text_delta'
-          ? delta.text
-          : delta.type === 'thinking_delta'
-            ? delta.thinking
-            : '';
+      const text = deltaText(event.delta);
       if (!(id in mappingState.openTextRows) || !text)
         return dropped(mappingState);
       return {

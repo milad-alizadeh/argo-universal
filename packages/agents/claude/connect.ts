@@ -1,0 +1,216 @@
+import { randomUUID } from 'node:crypto';
+import { accessSync, constants } from 'node:fs';
+import path from 'node:path';
+import {
+  getSessionInfo,
+  type Options,
+  query,
+  type SDKMessage,
+  type SDKUserMessage,
+} from '@anthropic-ai/claude-agent-sdk';
+import type {
+  AgentConnectInput,
+  AgentConnection,
+  AgentConnectionListener,
+} from '../src/agent-adapter';
+import type { AgentCapabilities, AgentCommand } from '../src/agent-events';
+import {
+  type ConfigValues,
+  changeValue,
+  DEFAULT_VALUE,
+  type ModelInfo,
+  savedValues,
+  startingValues,
+  toConfigOptions,
+} from './config-options';
+
+const claudeCapabilities: AgentCapabilities = {
+  planApproval: 'continueTurn',
+  stopShell: false,
+};
+
+const EXECUTABLE = 'claude';
+const STDERR_TAIL_LENGTH = 2000;
+
+// The user's own `claude` from PATH, so Argo runs the CLI they signed in to.
+function findExecutable(environment: NodeJS.ProcessEnv) {
+  for (const directory of (environment.PATH ?? '').split(path.delimiter)) {
+    const candidate = path.join(directory, EXECUTABLE);
+    try {
+      accessSync(candidate, constants.X_OK);
+      return candidate;
+    } catch {}
+  }
+  throw new Error(`No ${EXECUTABLE} executable on PATH.`);
+}
+
+// The prompts of one Session, as the streaming input `query()` reads.
+function createPromptQueue() {
+  const waiting: SDKUserMessage[] = [];
+  let wake: (() => void) | null = null;
+  let ended = false;
+  async function* prompts(): AsyncGenerator<SDKUserMessage> {
+    while (true) {
+      const next = waiting.shift();
+      if (next) yield next;
+      else if (ended) return;
+      else await new Promise<void>((resolve) => (wake = resolve));
+    }
+  }
+  const notify = () => {
+    wake?.();
+    wake = null;
+  };
+  return {
+    prompts: prompts(),
+    push: (message: SDKUserMessage) => {
+      waiting.push(message);
+      notify();
+    },
+    end: () => {
+      ended = true;
+      notify();
+    },
+  };
+}
+
+// Images and attachments are issue 3f; text goes as written.
+const toVendorContent = (
+  content: Extract<AgentCommand, { type: 'agent.prompt' }>['content'],
+) =>
+  content.flatMap((block) =>
+    block.type === 'text' ? [{ type: 'text' as const, text: block.text }] : [],
+  );
+
+const describeError = (error: unknown) =>
+  error instanceof Error ? error.message : String(error);
+
+// Starts or resumes one `query()` for the life of the Session.
+export async function connect(
+  input: AgentConnectInput,
+  listener: AgentConnectionListener<SDKMessage>,
+): Promise<AgentConnection> {
+  const vendorSessionId = input.vendorSessionId ?? randomUUID();
+  let stderrTail = '';
+  let stopping = false;
+  const withStderr = (error: unknown) => {
+    const tail = stderrTail.trim();
+    return tail ? `${describeError(error)}\n${tail}` : describeError(error);
+  };
+
+  const requested = savedValues(input.configOptions);
+  const { ANTHROPIC_API_KEY: _apiKey, ...environment } = process.env;
+  const options: Options = {
+    permissionMode: requested.mode,
+    ...(requested.model === DEFAULT_VALUE ? {} : { model: requested.model }),
+    ...(requested.effort === DEFAULT_VALUE ? {} : { effort: requested.effort }),
+    cwd: input.cwd,
+    ...(input.vendorSessionId
+      ? { resume: input.vendorSessionId }
+      : { sessionId: vendorSessionId }),
+    env: environment,
+    pathToClaudeCodeExecutable: findExecutable(environment),
+    allowDangerouslySkipPermissions: true,
+    includePartialMessages: true,
+    forwardSubagentText: true,
+    perTaskStopAffordance: true,
+    verbatimPrompts: true,
+    thinking: { type: 'adaptive', display: 'summarized' },
+    stderr: (text) => {
+      stderrTail = `${stderrTail}${text}`.slice(-STDERR_TAIL_LENGTH);
+    },
+  };
+
+  if (
+    input.vendorSessionId &&
+    !(await getSessionInfo(input.vendorSessionId, { dir: input.cwd }))
+  )
+    throw new Error(
+      `Claude has no transcript for Session ${input.vendorSessionId} in ${input.cwd}.`,
+    );
+
+  const queue = createPromptQueue();
+  const vendor = query({ prompt: queue.prompts, options });
+
+  // Sends the vendor the values that differ from the ones it runs with.
+  const applyValues = async (current: ConfigValues, next: ConfigValues) => {
+    if (next.model !== current.model)
+      await vendor.setModel(
+        next.model === DEFAULT_VALUE ? undefined : next.model,
+      );
+    if (next.mode !== current.mode) await vendor.setPermissionMode(next.mode);
+    if (next.effort !== current.effort)
+      await vendor.applyFlagSettings({
+        effortLevel: next.effort === DEFAULT_VALUE ? null : next.effort,
+      });
+  };
+
+  let models: ModelInfo[];
+  let values: ConfigValues;
+  try {
+    models = (await vendor.initializationResult()).models;
+    values = startingValues(models, input.configOptions);
+    await applyValues(requested, values);
+  } catch (error) {
+    queue.end();
+    vendor.close();
+    throw new Error(withStderr(error));
+  }
+
+  const sendUsage = async () => {
+    const usage = await vendor.getContextUsage({ detail: 'summary' });
+    listener.event({
+      type: 'agent.usage',
+      usage: { used: usage.totalTokens, size: usage.maxTokens },
+    });
+  };
+
+  const messages = (async () => {
+    try {
+      for await (const message of vendor) {
+        listener.message(message);
+        // A usage request that fails as the Session closes has nothing to report.
+        if (message.type === 'result') void sendUsage().catch(() => {});
+      }
+      if (!stopping) listener.failed(withStderr('The Claude CLI exited.'));
+    } catch (error) {
+      if (!stopping) listener.failed(withStderr(error));
+    }
+  })();
+
+  return {
+    ready: {
+      vendorSessionId,
+      configOptions: toConfigOptions(models, values),
+      capabilities: claudeCapabilities,
+      continuedOutside: false,
+    },
+    prompt: async ({ content }) =>
+      queue.push({
+        type: 'user',
+        message: { role: 'user', content: toVendorContent(content) },
+        parent_tool_use_id: null,
+        origin: { kind: 'human' },
+      }),
+    cancel: async () => {
+      await vendor.interrupt();
+    },
+    setConfigOption: async (command) => {
+      const next = changeValue(models, values, command);
+      if (!next) return;
+      const current = values;
+      values = next;
+      await applyValues(current, next);
+      listener.event({
+        type: 'agent.configOptionsChanged',
+        configOptions: toConfigOptions(models, next),
+      });
+    },
+    stop: async () => {
+      stopping = true;
+      queue.end();
+      vendor.close();
+      await messages;
+    },
+  };
+}

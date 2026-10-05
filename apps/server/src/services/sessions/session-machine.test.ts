@@ -102,11 +102,13 @@ it('runs one Turn and rejects a second prompt while it runs', async () => {
     sessionUpdate: 'user_message',
     content: [{ type: 'text', text: 'Hello' }],
   });
-  expect(commands).toContainEqual({
-    type: 'agent.prompt',
-    turnId: 'turn-1',
-    content: [{ type: 'text', text: 'Hello' }],
-  });
+  await vi.waitFor(() =>
+    expect(commands).toContainEqual({
+      type: 'agent.prompt',
+      turnId: 'turn-1',
+      content: [{ type: 'text', text: 'Hello' }],
+    }),
+  );
   expect(() =>
     sendSessionCommand(session, {
       type: 'session.prompt',
@@ -184,11 +186,13 @@ it('answers only the head Permission request and keeps other requests visible', 
   expect(
     toSessionSnapshot(session.getSnapshot(), feed.getSnapshot()),
   ).toMatchObject({ state: 'running', pendingElicitation: null });
-  expect(commands).toContainEqual({
-    type: 'agent.answerElicitation',
-    action: 'accept',
-    content: { file: 'README.md' },
-  });
+  await vi.waitFor(() =>
+    expect(commands).toContainEqual({
+      type: 'agent.answerElicitation',
+      action: 'accept',
+      content: { file: 'README.md' },
+    }),
+  );
   expect(() =>
     sendSessionCommand(session, {
       type: 'session.answerElicitation',
@@ -213,12 +217,18 @@ it('cancels queued requests and waits for the Agent to end the Turn', async () =
     },
   });
   sendSessionCommand(session, { type: 'session.cancel' });
-  expect(commands).toEqual(
-    expect.arrayContaining([
-      { type: 'agent.cancel' },
-      { type: 'agent.answerPermission', toolCallId: 'tool-1', optionId: null },
-      { type: 'agent.answerElicitation', action: 'cancel' },
-    ]),
+  await vi.waitFor(() =>
+    expect(commands).toEqual(
+      expect.arrayContaining([
+        { type: 'agent.cancel' },
+        {
+          type: 'agent.answerPermission',
+          toolCallId: 'tool-1',
+          optionId: null,
+        },
+        { type: 'agent.answerElicitation', action: 'cancel' },
+      ]),
+    ),
   );
   expect(
     toSessionSnapshot(session.getSnapshot(), feed.getSnapshot()),

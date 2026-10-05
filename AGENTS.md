@@ -33,7 +33,7 @@ One `GLOSSARY.md` and one `docs/adr/` folder at the repo root ("single-context")
 - Screens get tRPC from `useTRPC()` only.
 - Use full words in names, except domain acronyms and platform-fixed names.
 - Name code for what it does (`createTRPCClient`). The product name lives only in app config, environment variables, and UI text, so a rename stays small.
-- Validate outside data at its boundary with Zod. Reject, report, and count unrecognised shapes.
+- Validate outside data at its boundary with Zod. Reject, report, and count unrecognised shapes. A vendor SDK's TypeScript types describe its messages inside an adapter; the Feed checks every adapter change against the contract (ADR-0015).
 - Keep comments to one line unless a falsifiable fact needs more.
 
 <!-- BEGIN:turborepo-agent-rules -->

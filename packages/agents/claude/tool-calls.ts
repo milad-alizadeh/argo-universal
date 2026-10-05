@@ -142,22 +142,28 @@ const resultText = (result: ToolResultBlock) =>
         .flatMap((block) => (block.type === 'text' ? [block.text] : []))
         .join('\n');
 
+function endedStatus(
+  rejected: boolean,
+  result: ToolResultBlock,
+): ToolCallRow['status'] {
+  if (rejected) return 'cancelled';
+  if (result.is_error) return 'failed';
+  return 'completed';
+}
+
 // The settled row for a Tool call once its result arrives.
 export function toolCallEnded(
   row: ToolCallRow,
   result: ToolResultBlock,
   message: SDKUserMessage,
 ): ToolCallRow {
-  const rejected = (message as ToolResultMeta).tool_result_meta?.some(
-    (meta) =>
-      meta.id === result.tool_use_id &&
-      meta.non_execution_kind === 'user-rejected',
-  );
-  const status = rejected
-    ? 'cancelled'
-    : result.is_error
-      ? 'failed'
-      : 'completed';
+  const rejected =
+    (message as ToolResultMeta).tool_result_meta?.some(
+      (meta) =>
+        meta.id === result.tool_use_id &&
+        meta.non_execution_kind === 'user-rejected',
+    ) ?? false;
+  const status = endedStatus(rejected, result);
   const output = rejected ? '' : resultText(result);
   // What the Write tool found at the path before it wrote.
   const originalFile =

@@ -40,9 +40,9 @@ const temporaryDirectory = (prefix: string) => {
 const isIdle = (snapshot: SnapshotFrom<SessionActorRef>) =>
   snapshot.can({ type: 'session.prompt', turnId: 'next-turn', content: [] });
 
-describe.each(agentAdapters.map((adapter) => [adapter.agent, adapter]))(
+describe.each(agentAdapters.map((adapter) => adapter.agent))(
   '%s adapter against its mock CLI',
-  (agent, adapter) => {
+  (agent) => {
     const mockCli = mockClis[agent];
     if (!mockCli) throw new Error(`No mock CLI for ${agent}`);
 
@@ -68,10 +68,7 @@ describe.each(agentAdapters.map((adapter) => [adapter.agent, adapter]))(
         cwd,
       );
       cleanups.push(remove);
-      const { root, session, service, findFeed } = createSessionHost(
-        database,
-        adapter.machine,
-      );
+      const { root, session, service, findFeed } = createSessionHost(database);
       cleanups.push(() => root.stop());
       // Closing flushes every row to the database, where the Turn's rows are read back.
       const close = async () => {

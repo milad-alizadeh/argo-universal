@@ -1,9 +1,10 @@
-import type {
-  AgentCapabilities,
-  AgentCommand,
-  AgentEvent,
-  AgentInput,
-  AgentOutput,
+import {
+  type AgentCapabilities,
+  type AgentCommand,
+  type AgentEvent,
+  type AgentInput,
+  type AgentOutput,
+  agentMachine,
 } from '@repo/agents';
 import type {
   ContentBlock,
@@ -17,7 +18,6 @@ import type {
 } from '@repo/contracts';
 import {
   type ActorRefFrom,
-  type AnyStateMachine,
   assertEvent,
   assign,
   enqueueActions,
@@ -91,18 +91,7 @@ const sessionSetup = setup({
       }
     >(({ input }) => loadSession(input.session, input.writer)),
     feed: feedMachine,
-    // The registry provides the adapter's machine for each Session.
-    agent: setup({
-      types: {
-        input: {} as AgentInput,
-        events: {} as AgentCommand,
-        output: {} as AgentOutput,
-      },
-    }).createMachine({
-      initial: 'failed',
-      output: { failure: 'No Agent adapter provided' },
-      states: { failed: { type: 'final' } },
-    }) as AnyStateMachine,
+    agent: agentMachine,
   },
   actions: {
     rememberSession: assign((_, params: { data: SessionData }) => params.data),
@@ -441,6 +430,7 @@ export const sessionMachine = sessionSetup.createMachine({
               context: SessionContext;
               self: AgentInput['parent'];
             }) => ({
+              agent: context.agent,
               sessionId: context.sessionId,
               cwd: context.checkout.path,
               vendorSessionId: context.vendorSessionId,

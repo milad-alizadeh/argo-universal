@@ -21,7 +21,7 @@ A machine runs logic that waits on the outside world, runs a timer, or can be ca
 - Define each machine with `setup({types, actors, actions, guards, delays})`. Every effect, such as I/O, a process, or a log line, is a named actor or a named action in `setup`, so a test swaps it with `machine.provide`. Guards and `assign` stay pure.
 - Name a timer as a delay in `delays`, so tests drive it with fake timers.
 - Name events `<noun>.<verb>` in camel case, as `engine.ready` and `engine.stop` do. An event that a tRPC procedure sends is named after the procedure, such as `session.prompt`.
-- Outside data enters a machine only after the actor that reads it parses it with Zod. That actor reports and counts a shape it does not recognise.
+- Outside data enters a machine only after the actor that reads it parses it with Zod. That actor reports and counts a shape it does not recognise. A vendor SDK's own types describe its messages instead, and the Feed checks what an adapter makes of them against the contract (ADR 0015).
 - A child gets its parent's ref in its `input` and sends to it with `sendTo`, so both ends are typed. Use no `sendParent`.
 - Only `databaseWriter`, `sessions`, and each `session:<id>` have a `systemId`. Other actors find them with `system.get`.
 - A service that runs a command first checks `snapshot.can(event)`. If the machine would ignore the event, the procedure fails with tRPC `CONFLICT` and names the machine's state. Otherwise it sends the event. The service makes every new id, such as a Session or Turn id, and puts it in the event, so a procedure returns right after it sends.
@@ -39,8 +39,8 @@ Supervisor (process)
    │  └─ session:<id>            one per open Session (section 6)
    │     ├─ createSession / loadSession
    │     ├─ feed                 one per Session (section 8)
-   │     └─ agent                the adapter's machine (section 7)
-   │        └─ vendorStream
+   │     └─ agent                the one Agent machine (section 7)
+   │        └─ connection        the adapter's vendor session
    └─ startHttpServer            the services hold the `sessions` ref
 
 Spec 0003 adds a feed actor for each Subagent under its parent Session, and a tRPC client in the Electron main process.
@@ -72,7 +72,7 @@ The Engine machine (`apps/server/src/engine/machine.ts`) changes to this shape:
 - Context: the ref of each open Session, by Session id.
 - `sessions.create {sessionId, projectId, agent, checkout: 'main' | 'worktree'}` spawns `session:<sessionId>` with input `{kind: 'new', ...}`.
 - `sessions.open {sessionId, agent}` spawns `session:<sessionId>` with input `{kind: 'existing', sessionId}`, unless that Session is already open. The service reads `agent` from the `session` row first.
-- The registry provides the Session machine with the adapter's machine as its `agent` actor, chosen by `agent`. This is the only place that picks an adapter, and it picks from the adapters that `packages/agents` registers, never by a vendor name in the code.
+- The Session machine's `agent` actor is the one Agent machine, which picks the adapter by the Session's `agent` id from the adapters that `packages/agents` registers, never by a vendor name in the code (ADR 0015).
 - When a Session actor finishes, the registry removes its ref.
 - States: `running`, then `stopping` on `sessions.stopAll`, which sends `session.close` to every open Session and goes to `stopped` (final) once none is left.
 - The services find a Session with `system.get('session:<id>')` after they send `sessions.open`.
@@ -145,9 +145,9 @@ A Subagent has no Session actor of its own. It is a read-only child Session whos
 
 Spec 0003 amends this section: new Agent events, `message` on `agent.answerPermission`, `continuedOutside` on `agent.ready`, and Turns that the agent starts from `ready.idle` with no prompt.
 
-Each adapter in `packages/agents/<agent>/` has its own machine with the same events in and out. `packages/agents/src/agent-events.ts` holds those event types and the `AgentAdapter` type: `{agent, capabilities, machine}`. Shared code branches on `capabilities`.
+One Agent machine, `createAgentMachine` in `packages/agents/src/agent-machine.ts`, runs every adapter (ADR 0015). An adapter in `packages/agents/<agent>/` is plain functions, an `AgentAdapter` from `packages/agents/src/agent-adapter.ts`: `{agent, connect, initialMappingState, toAgentEvents}`. `packages/agents/src/agent-events.ts` holds the event types. Shared code branches on `capabilities`, which a connection reports with its ready data.
 
-Input: `{sessionId, cwd, vendorSessionId: string | null, configOptions, parent}`.
+Input: `{agent, sessionId, cwd, vendorSessionId: string | null, configOptions, parent}`.
 
 Events the Session sends:
 
@@ -168,16 +168,17 @@ Events the agent sends to `parent`:
 - `agent.configOptionsChanged {configOptions}`
 - `agent.turnEnded {stopReason, usage?, error?}`
 
-States, the same in every adapter:
+States:
 
-- `starting` invokes `connect`, which starts the vendor process or SDK session, and resumes `vendorSessionId` when it is set. Then `ready` sends `agent.ready`. An error goes to `failed`.
-- `ready` invokes `vendorStream`, a callback actor that parses each vendor message with Zod and sends it to the machine. It also keeps each open vendor request, such as a permission callback or a JSON-RPC request, by `toolCallId`, and answers it when the machine forwards the answer.
-  - `ready.idle`: `agent.prompt` sends the prompt to the vendor and goes to `ready.turn`.
-  - `ready.turn`: the vendor's end of the Turn sends `agent.turnEnded` and goes to `ready.idle`. `agent.cancel` asks the vendor to cancel and stays in `ready.turn` until the vendor ends the Turn.
-- `stopping` runs on `agent.stop` and closes the vendor process or SDK session. Then `stopped`.
-- `stopped` is final. `failed` is final, with the error in the output. An exit of the vendor process goes to `failed`.
+- The machine invokes `connection` for its whole life. It calls the adapter's `connect`, which starts or resumes the vendor session, resuming `vendorSessionId` when it is set. The connection runs Session commands one at a time, in order. A connection error goes to `failed`.
+- `starting`: when `connect` resolves, `ready` sends `agent.ready` with the connection's ready data.
+- `ready`: each vendor message goes through the adapter's `toAgentEvents`, and the Agent events it returns go to `parent`. The machine reads the start and end of a Turn from those events.
+  - `ready.idle`: `agent.prompt` sends the prompt to the connection and goes to `ready.turn`. So does `agent.turnStarted` from the adapter.
+  - `ready.turn`: `agent.turnEnded` goes to `ready.idle`. `agent.cancel` asks the connection to cancel and stays in `ready.turn` until the adapter ends the Turn.
+- `stopping` runs on `agent.stop`. It waits for `connect` if it has not resolved, then for the connection's `stop`. Then `stopped`.
+- `stopped` is final. `failed` is final, with the error in the output. An adapter reports the exit of its vendor process as a failure.
 
-The vendor calls in `connect`, `vendorStream`, and cancelling come from each adapter's research note, written in milestone 1. Turning a vendor message into Agent events is a pure function in the adapter, `toAgentEvents(message, mappingState) → {events, mappingState}`, tested against the recordings in `mocks/cli/<agent>/`. It follows ADR 0006 and ADR 0012.
+Each adapter's research note, written in milestone 1, says which vendor calls `connect` and the connection's methods make. Turning a vendor message into Agent events is a pure function in the adapter, `toAgentEvents(message, mappingState) → {events, mappingState}`, tested against the recordings in `mocks/cli/<agent>/`. It follows ADR 0006 and ADR 0012.
 
 ## 8. Feed actor and database writer
 
@@ -260,14 +261,14 @@ Context: `address`, `ownedPid` (the Supervisor this app started, or null), `spaw
 
 - Every machine has one `*.test.ts` file with model-based tests from `xstate/graph`. It uses `machine.provide` with mock actors and fake timers, and has a test that every transition was walked. Effects that the model cannot reach get example tests in the same file, as the Supervisor's file has now.
 - If `getSimplePaths` gives more than 1,000 paths for a machine, split the machine, or bound the walk with a filter and say why in the test file.
-- One composition test drives `sessions`, a Session, `feed`, and `databaseWriter` with a mock agent machine against a temp database. Each adapter also has a composition test driven by its recording in `mocks/cli/<agent>/`.
+- One composition test drives `sessions`, a Session, `feed`, and `databaseWriter` with the Agent machine and a mock adapter against a temp database. Each adapter also has a composition test driven by its recording in `mocks/cli/<agent>/`.
 - The client package gets a Vitest config with the `node` environment for `src/**/*.test.ts`. Components are tested only with play functions.
 
 ## 13. Dependencies
 
 These change spec 0001 section 4:
 
-- `agents` can import `xstate`.
+- `packages/agents/src` can import `xstate`. An adapter in `packages/agents/<agent>/` cannot (ADR 0015).
 - `client` can import `xstate` and `@xstate/react`.
 - `apps/desktop` can import `xstate`.
 - The catalog adds `@xstate/react` 6.1.0, which peers on `xstate ^5.28.0`.
@@ -275,7 +276,7 @@ These change spec 0001 section 4:
 ## 14. Order
 
 1. The App Connection (section 11) and the Electron Server connection (section 10). They replace scaffold code, so each is checked by the existing e2e tests.
-2. Milestone 1, in order: the database writer, the Feed actor, recovery, the Agent events and a mock agent machine, the Session machine, the registry, and the Engine changes. Then each adapter.
+2. Milestone 1, in order: the database writer, the Feed actor, recovery, the Agent events and a mock adapter, the Session machine, the registry, and the Engine changes. Then each adapter.
 
 ## 15. Development machine inspection
 
