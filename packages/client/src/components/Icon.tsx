@@ -13,7 +13,16 @@ export type IconProps = PhosphorIconProps & {
 };
 
 function IconComponent({ as: Component, ...props }: IconProps) {
-  return <Component {...props} />;
+  return (
+    <Component
+      {...props}
+      style={
+        typeof props.size === 'number'
+          ? [props.style, { width: props.size, height: props.size }]
+          : props.style
+      }
+    />
+  );
 }
 
 const StyledIcon = withUniwind(IconComponent, {

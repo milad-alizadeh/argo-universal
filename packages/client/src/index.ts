@@ -1,3 +1,8 @@
+export {
+  DesktopShell,
+  type DesktopShellProps,
+  type InspectorState,
+} from './components/DesktopShell';
 export { Icon, type IconProps } from './components/Icon';
 export {
   PhoneListHeader,

@@ -74,18 +74,25 @@ export function PhoneShell({
         variant="ghost"
         className={cn(
           'h-12 justify-start gap-3 px-3',
-          selectedSection === section && 'bg-sidebar',
+          selectedSection === section && 'bg-sidebar-accent',
         )}
         accessibilityLabel={title}
         accessibilityState={{ selected: selectedSection === section }}
         aria-selected={selectedSection === section}
         onPress={() => selectSection(section)}
       >
-        <Icon as={icon} className="size-6" />
-        <Text className="flex-1 text-base">{title}</Text>
+        <Icon as={icon} className="size-phone-shell-icon" />
+        <Text
+          className={cn(
+            'flex-1 text-base',
+            selectedSection === section && 'font-semibold',
+          )}
+        >
+          {title}
+        </Text>
         {section === 'sessions' && attentionCount > 0 && (
           <Badge
-            className="min-w-6 border-0 bg-warning px-1.5"
+            className="h-phone-shell-icon min-w-phone-shell-icon border-0 bg-warning px-1.5"
             accessibilityLabel={`${attentionCount} ${attentionCount === 1 ? 'Session needs' : 'Sessions need'} attention`}
           >
             <Text className="text-xs font-semibold text-warning-foreground">
