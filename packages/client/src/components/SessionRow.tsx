@@ -67,9 +67,9 @@ export function SessionRow({
     () => ({ transform: [{ rotate: `${logoRotation.value}deg` }] }),
     [logoRotation],
   );
-  const markBorder = selected
-    ? 'border-sidebar-accent'
-    : 'border-background wide:border-sidebar';
+  const markSurface = selected
+    ? 'border-sidebar-accent bg-sidebar-accent'
+    : 'border-background bg-background wide:border-sidebar wide:bg-sidebar';
 
   return (
     <Button
@@ -97,7 +97,7 @@ export function SessionRow({
           <StatusIndicator
             testID="session-status"
             status={session.status}
-            className={cn('absolute -right-1 -top-0.5', markBorder)}
+            className={cn('absolute -right-1 -top-0.5', markSurface)}
           />
         </View>
         <View className="min-w-0 flex-1 gap-0.5">
@@ -154,7 +154,7 @@ export function SessionRow({
                         size="small"
                         className={cn(
                           'absolute -right-0.75 -top-0.75',
-                          markBorder,
+                          markSurface,
                         )}
                       />
                     )}

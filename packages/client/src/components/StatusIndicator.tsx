@@ -71,7 +71,7 @@ export function StatusIndicator({
       testID={`${testID}-container`}
       accessibilityLabel={statusLabels[status]}
       className={cn(
-        'shrink-0 rounded-full border-2 border-background',
+        'shrink-0 rounded-full border-2 border-background bg-background',
         size === 'small' ? 'size-2' : 'size-2.5',
         className,
       )}

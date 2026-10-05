@@ -321,6 +321,9 @@ export const StatusMotion: Story = {
       if (!container) throw new Error('Missing status container');
       await expect(getComputedStyle(container).boxShadow).toBe('none');
       await expect(getComputedStyle(container).opacity).toBe('1');
+      await expect(getComputedStyle(container).backgroundColor).toBe(
+        getComputedStyle(container).borderTopColor,
+      );
       await expect(getComputedStyle(dot).borderWidth).toBe('0px');
       const bounds = container.getBoundingClientRect();
       const logoBounds = container.parentElement?.getBoundingClientRect();
@@ -421,6 +424,13 @@ export const LongTitleSelected: Story = {
         name: `${sessionRows.longTitle.title}, Idle`,
       });
       await expect(row).toHaveAttribute('aria-selected', 'true');
+      const container = row.querySelector(
+        '[data-testid="session-status-container"]',
+      );
+      if (!container) throw new Error('Missing status container');
+      await expect(getComputedStyle(container).backgroundColor).toBe(
+        getComputedStyle(container).borderTopColor,
+      );
       const title = canvas.getByText(sessionRows.longTitle.title);
       await expect(title).toBeVisible();
       await expect(title).toHaveStyle({ overflow: 'hidden' });

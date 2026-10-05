@@ -42,8 +42,11 @@ export const ClassName: Story = {
       <Variation label="Background border">
         <StatusIndicator {...args} />
       </Variation>
-      <Variation label="Selected border">
-        <StatusIndicator {...args} className="border-sidebar-accent" />
+      <Variation label="Selected surface">
+        <StatusIndicator
+          {...args}
+          className="border-sidebar-accent bg-sidebar-accent"
+        />
       </Variation>
     </Variations>
   ),
