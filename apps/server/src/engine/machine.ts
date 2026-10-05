@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { type Database, openDatabase } from '@repo/db';
 import { assign, fromPromise, sendTo, setup } from 'xstate';
 import { writerMachine } from '../services/feed/writer-machine';
+import { seedProject } from '../services/projects/project-service';
 import {
   type RegistryActorRef,
   type RegistryInput,
@@ -56,9 +57,16 @@ export const engineMachine = setup({
   },
   actors: {
     // `openDatabase` also runs the Drizzle migrations.
-    openDatabase: fromPromise<Database, { home: string }>(async ({ input }) =>
-      openDatabase(join(input.home, 'argo.db')),
-    ),
+    openDatabase: fromPromise<Database, { home: string }>(async ({ input }) => {
+      const database = openDatabase(join(input.home, 'argo.db'));
+      try {
+        await seedProject(database);
+        return database;
+      } catch (error) {
+        database.$client.close();
+        throw error;
+      }
+    }),
     recoverAfterRestart: fromPromise<void, { database: Database }>(
       async ({ input }) => recoverAfterRestart(input.database),
     ),

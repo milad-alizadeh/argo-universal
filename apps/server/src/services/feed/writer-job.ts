@@ -1,6 +1,6 @@
 import type { Database } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, gt, sql } from 'drizzle-orm';
 
 // A Feed row as a job carries it; the job's `sessionId` fills the column.
 export type FeedRowWrite = Omit<
@@ -15,6 +15,7 @@ export type WriterJob =
       sessionId: string;
       rows: FeedRowWrite[];
       maxRevision: number;
+      activityAt?: number;
     }
   | { type: 'turnInsert'; turn: typeof turn.$inferInsert }
   | {
@@ -61,8 +62,16 @@ export function writeJobs(database: Database, jobs: readonly WriterJob[]) {
               .run();
           transaction
             .update(session)
-            .set({ maxRevision: job.maxRevision })
-            .where(eq(session.id, job.sessionId))
+            .set({
+              maxRevision: job.maxRevision,
+              activityAt: job.activityAt ?? Date.now(),
+            })
+            .where(
+              and(
+                eq(session.id, job.sessionId),
+                gt(sql`${job.maxRevision}`, session.maxRevision),
+              ),
+            )
             .run();
           break;
         case 'turnInsert':
@@ -78,7 +87,14 @@ export function writeJobs(database: Database, jobs: readonly WriterJob[]) {
         case 'sessionRowUpdate':
           transaction
             .update(session)
-            .set(job.set)
+            .set({
+              ...job.set,
+              ...(job.set.maxRevision === undefined
+                ? {}
+                : {
+                    activityAt: sql`case when ${job.set.maxRevision} > ${session.maxRevision} then ${Date.now()} else ${session.activityAt} end`,
+                  }),
+            })
             .where(eq(session.id, job.id))
             .run();
           break;
