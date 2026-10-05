@@ -6,6 +6,8 @@ export {
   type ComposerImage,
   type ComposerProps,
 } from './components/Composer';
+export type { ComposerConfigurationProps } from './components/ComposerConfiguration';
+export type { ComposerStatusProps } from './components/ComposerStatus';
 export {
   DesktopShell,
   type DesktopShellProps,

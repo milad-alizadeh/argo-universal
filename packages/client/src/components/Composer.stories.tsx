@@ -17,6 +17,9 @@ const meta = {
     draft: { text: '', images: [] },
     onDraftChange: action('edit draft'),
     onAttachImages: action('attach images'),
+    onAttachFiles: action('attach files'),
+    onSelectSlashCommand: action('slash commands'),
+    onCreateGoal: action('create goal'),
     onSend: action('send prompt'),
   },
 } satisfies Meta<typeof Composer>;
@@ -78,6 +81,17 @@ export const Overview: Story = {
               draft={{ text: 'Match the spacing and colours.', images: [] }}
               disabled
             />
+          </Variation>
+          <Variation label="Turn running">
+            <ComposerMock
+              {...args}
+              sessionStarted
+              running
+              onStop={action('stop Turn')}
+            />
+          </Variation>
+          <Variation label="In a Session">
+            <ComposerMock {...args} sessionStarted />
           </Variation>
         </Variations>
       </View>

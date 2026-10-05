@@ -70,9 +70,10 @@
         "options": [
           {
             "value": "default",
-            "name": "Default (recommended)",
+            "name": "Opus 5.5 (recommended)",
             "_meta": {
               "argo": {
+                "shortName": "Opus 5.5",
                 "supportsEffort": true,
                 "supportedEffortLevels": [
                   "low",
@@ -93,6 +94,7 @@
             "name": "Haiku 4.5",
             "_meta": {
               "argo": {
+                "shortName": "Haiku 4.5",
                 "supportsEffort": false,
                 "supportedEffortLevels": [],
                 "supportsAdaptiveThinking": false,
@@ -107,6 +109,7 @@
             "name": "Opus 4.6",
             "_meta": {
               "argo": {
+                "shortName": "Opus 4.6",
                 "supportsEffort": true,
                 "supportedEffortLevels": ["low", "medium", "high", "max"],
                 "supportsAdaptiveThinking": true,
@@ -123,12 +126,8 @@
         "configId": "effort",
         "name": "Effort",
         "category": "thought_level",
-        "currentValue": "default",
+        "currentValue": "medium",
         "options": [
-          {
-            "value": "default",
-            "name": "Default"
-          },
           {
             "value": "low",
             "name": "Low"
@@ -222,9 +221,10 @@
           "options": [
             {
               "value": "default",
-              "name": "Default (recommended)",
+              "name": "Opus 5.5 (recommended)",
               "_meta": {
                 "argo": {
+                  "shortName": "Opus 5.5",
                   "supportsEffort": true,
                   "supportedEffortLevels": [
                     "low",
@@ -245,6 +245,7 @@
               "name": "Haiku 4.5",
               "_meta": {
                 "argo": {
+                  "shortName": "Haiku 4.5",
                   "supportsEffort": false,
                   "supportedEffortLevels": [],
                   "supportsAdaptiveThinking": false,
@@ -259,6 +260,7 @@
               "name": "Opus 4.6",
               "_meta": {
                 "argo": {
+                  "shortName": "Opus 4.6",
                   "supportsEffort": true,
                   "supportedEffortLevels": ["low", "medium", "high", "max"],
                   "supportsAdaptiveThinking": true,
@@ -275,12 +277,8 @@
           "configId": "effort",
           "name": "Effort",
           "category": "thought_level",
-          "currentValue": "default",
+          "currentValue": "medium",
           "options": [
-            {
-              "value": "default",
-              "name": "Default"
-            },
             {
               "value": "low",
               "name": "Low"
@@ -363,9 +361,10 @@
           "options": [
             {
               "value": "default",
-              "name": "Default (recommended)",
+              "name": "Opus 5.5 (recommended)",
               "_meta": {
                 "argo": {
+                  "shortName": "Opus 5.5",
                   "supportsEffort": true,
                   "supportedEffortLevels": [
                     "low",
@@ -386,6 +385,7 @@
               "name": "Haiku 4.5",
               "_meta": {
                 "argo": {
+                  "shortName": "Haiku 4.5",
                   "supportsEffort": false,
                   "supportedEffortLevels": [],
                   "supportsAdaptiveThinking": false,
@@ -400,6 +400,7 @@
               "name": "Opus 4.6",
               "_meta": {
                 "argo": {
+                  "shortName": "Opus 4.6",
                   "supportsEffort": true,
                   "supportedEffortLevels": ["low", "medium", "high", "max"],
                   "supportsAdaptiveThinking": true,
@@ -481,9 +482,10 @@
           "options": [
             {
               "value": "default",
-              "name": "Default (recommended)",
+              "name": "Opus 5.5 (recommended)",
               "_meta": {
                 "argo": {
+                  "shortName": "Opus 5.5",
                   "supportsEffort": true,
                   "supportedEffortLevels": [
                     "low",
@@ -504,6 +506,7 @@
               "name": "Haiku 4.5",
               "_meta": {
                 "argo": {
+                  "shortName": "Haiku 4.5",
                   "supportsEffort": false,
                   "supportedEffortLevels": [],
                   "supportsAdaptiveThinking": false,
@@ -518,6 +521,7 @@
               "name": "Opus 4.6",
               "_meta": {
                 "argo": {
+                  "shortName": "Opus 4.6",
                   "supportsEffort": true,
                   "supportedEffortLevels": ["low", "medium", "high", "max"],
                   "supportsAdaptiveThinking": true,
@@ -534,12 +538,8 @@
           "configId": "effort",
           "name": "Effort",
           "category": "thought_level",
-          "currentValue": "default",
+          "currentValue": "high",
           "options": [
-            {
-              "value": "default",
-              "name": "Default"
-            },
             {
               "value": "low",
               "name": "Low"

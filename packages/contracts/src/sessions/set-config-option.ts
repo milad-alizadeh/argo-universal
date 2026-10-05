@@ -6,6 +6,7 @@ const ConfigOptionMeta = z.looseObject({
   argo: z
     .looseObject({
       icon: z.string().optional(),
+      shortName: z.string().optional(),
       tone: z.enum(['planning', 'safe', 'moderate', 'dangerous']).optional(),
       supportsEffort: z.boolean().optional(),
       supportedEffortLevels: z.array(z.string()).optional(),

@@ -1,12 +1,16 @@
+import { newSessionCatalogs } from '@repo/api/mocks';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { expect, fn, within } from 'storybook/test';
+import { expect, fn, waitFor, within } from 'storybook/test';
 import {
   ComposerMock,
   composerImages,
   oversizedComposerImage,
 } from '../../mocks/composer-mock';
 import { Composer } from './Composer';
+
+const firstAgent = newSessionCatalogs.bothAvailable[0];
+if (!firstAgent) throw new Error('Composer needs a recorded Agent catalog.');
 
 const meta = {
   title: 'Tests/Composer',
@@ -22,11 +26,18 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+async function settleViewport() {
+  await new Promise<void>((resolve) =>
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+  );
+}
+
 export const Empty: Story = {
   play: async ({ canvas }) => {
     const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
+      await settleViewport();
       await expect(
         canvas.getByRole('textbox', { name: 'Message' }),
       ).toHaveValue('');
@@ -34,6 +45,29 @@ export const Empty: Story = {
       await expect(
         canvas.getByRole('button', { name: 'Attach images' }),
       ).toBeEnabled();
+      await expect(
+        canvas.getByRole('button', { name: 'Choose Agent' }),
+      ).not.toHaveTextContent('First Agent');
+      await expect(
+        canvas.getByRole('button', { name: 'Model and effort', hidden: true }),
+      ).not.toHaveTextContent('(recommended)');
+      await expect(canvas.getAllByTestId('composer-agent-icon')).toHaveLength(
+        1,
+      );
+      const model = canvas
+        .getByRole('button', { name: 'Model and effort' })
+        .getBoundingClientRect();
+      const mode = canvas
+        .getByRole('button', { name: 'Mode' })
+        .getBoundingClientRect();
+      await expect(model.right).toBeLessThanOrEqual(mode.left);
+      for (const text of canvas
+        .getByRole('button', { name: 'Model and effort' })
+        .querySelectorAll('[dir]')) {
+        await expect(text.scrollWidth).toBeLessThanOrEqual(
+          text.clientWidth + 1,
+        );
+      }
     }
   },
 };
@@ -43,6 +77,7 @@ export const Typing: Story = {
     const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
+      await settleViewport();
       const input = canvas.getByRole('textbox', { name: 'Message' });
       await userEvent.clear(input);
       await userEvent.type(input, 'Match the spacing.');
@@ -62,8 +97,14 @@ export const WithImages: Story = {
     const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
+      await settleViewport();
       await userEvent.click(
         canvas.getByRole('button', { name: 'Attach images' }),
+      );
+      await userEvent.click(
+        await within(document.body).findByRole('button', {
+          name: width >= 720 ? 'Files and Folder' : 'Photos',
+        }),
       );
       await expect(
         canvas.getByRole('img', { name: 'screenshot.png' }),
@@ -78,11 +119,56 @@ export const WithImages: Story = {
   },
 };
 
+export const AttachmentMenus: Story = {
+  args: {
+    onAttachCamera: fn(),
+    onAttachFiles: fn(),
+    onSelectSlashCommand: fn(),
+    onCreateGoal: fn(),
+  },
+  play: async ({ canvas, userEvent, args }) => {
+    const { page } = await import('vitest/browser');
+    const overlay = within(document.body);
+    for (const width of [390, 1440]) {
+      await page.viewport(width, 844);
+      await settleViewport();
+      const choices =
+        width < 720
+          ? ([
+              ['Camera', args.onAttachCamera],
+              ['Photos', args.onAttachImages],
+              ['Files', args.onAttachFiles],
+            ] as const)
+          : ([
+              ['Files and Folder', args.onAttachFiles],
+              ['Slash Commands', args.onSelectSlashCommand],
+              ['Goal', args.onCreateGoal],
+            ] as const);
+      for (const [label, callback] of choices) {
+        await userEvent.click(
+          canvas.getByRole('button', { name: 'Attach images' }),
+        );
+        await expect(
+          overlay.queryByRole('button', {
+            name: width < 720 ? 'Goal' : 'Camera',
+          }),
+        ).not.toBeInTheDocument();
+        await userEvent.click(
+          await overlay.findByRole('button', { name: label }),
+        );
+        await expect(callback).toHaveBeenCalled();
+        await expect(overlay.queryByRole('dialog')).not.toBeInTheDocument();
+      }
+    }
+  },
+};
+
 export const Multiline: Story = {
   play: async ({ canvas, userEvent, args }) => {
     const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
+      await settleViewport();
       const input = canvas.getByRole('textbox', { name: 'Message' });
       await userEvent.clear(input);
       await userEvent.type(
@@ -137,12 +223,20 @@ export const Sending: Story = {
     const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
+      await settleViewport();
       await expect(
         canvas.getByRole('progressbar', { name: 'Sending' }),
       ).toBeVisible();
       await expect(canvas.getByRole('textbox')).toHaveValue(
         'Match the spacing.',
       );
+      for (const circle of canvas
+        .getByRole('progressbar', { name: 'Sending' })
+        .querySelectorAll('circle')) {
+        const channels = getComputedStyle(circle).stroke.match(/\d+/g);
+        await expect(channels?.[0]).toBe(channels?.[1]);
+        await expect(channels?.[1]).toBe(channels?.[2]);
+      }
       await userEvent.type(canvas.getByRole('textbox'), 'Another prompt');
       await expect(canvas.getByRole('textbox')).toHaveValue(
         'Match the spacing.',
@@ -165,6 +259,7 @@ export const Disabled: Story = {
     const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
+      await settleViewport();
       await userEvent.type(canvas.getByRole('textbox'), 'Another prompt');
       await expect(canvas.getByRole('textbox')).toHaveValue(
         'Match the spacing.',
@@ -201,6 +296,7 @@ export const DraftsStayOnTheirDevice: Story = {
     const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
+      await settleViewport();
       const first = within(canvas.getByTestId('first-device'));
       const second = within(canvas.getByTestId('second-device'));
       await userEvent.clear(first.getByRole('textbox'));
@@ -213,6 +309,347 @@ export const DraftsStayOnTheirDevice: Story = {
       await expect(second.getByRole('textbox')).toHaveValue(
         'A different draft.',
       );
+    }
+  },
+};
+
+export const Pickers: Story = {
+  play: async ({ canvas, userEvent }) => {
+    const { page, userEvent: browserUserEvent } = await import(
+      'vitest/browser'
+    );
+    const overlay = within(document.body);
+    for (const width of [390, 1440]) {
+      await page.viewport(width, 844);
+      await settleViewport();
+      for (const agent of newSessionCatalogs.bothAvailable) {
+        await userEvent.click(
+          canvas.getByRole('button', { name: 'Choose Agent' }),
+        );
+        await userEvent.click(
+          await overlay.findByRole('button', { name: `Select ${agent.label}` }),
+        );
+        await userEvent.click(
+          canvas.getByRole('button', {
+            name: 'Model and effort',
+            hidden: true,
+          }),
+        );
+        const model = agent.configOptions.find(
+          (entry) => entry.category === 'model' && entry.type === 'select',
+        );
+        if (model?.type !== 'select')
+          throw new Error('Recorded catalog needs model options.');
+        const options = model.options.flatMap((entry) =>
+          'groupId' in entry ? entry.options : [entry],
+        );
+        const withoutEffort = options.find(
+          (entry) => entry._meta?.argo?.supportsEffort === false,
+        );
+        const withEffort = options.find(
+          (entry) =>
+            entry._meta?.argo?.supportsEffort &&
+            entry._meta.argo.supportedEffortLevels?.includes('high'),
+        );
+        if (agent.agent === firstAgent.agent) {
+          await expect(
+            await overlay.findByRole('slider', { name: 'Effort' }),
+          ).toHaveAttribute('aria-valuetext', 'Medium');
+        }
+        const effortSlider = overlay.queryByRole('slider', { name: 'Effort' });
+        if (effortSlider) {
+          const heading = overlay.getByText('Effort', { exact: true });
+          const sliderBounds = effortSlider.getBoundingClientRect();
+          const headingBounds = heading.getBoundingClientRect();
+          await expect(
+            Math.abs(sliderBounds.left - headingBounds.left),
+          ).toBeLessThan(1);
+          await expect(
+            Math.abs(sliderBounds.right - headingBounds.right),
+          ).toBeLessThan(1);
+          await expect(getComputedStyle(effortSlider).backgroundImage).not.toBe(
+            'none',
+          );
+          for (const label of overlay.getAllByRole('button', {
+            name: /^Set effort to /,
+          })) {
+            const text = label.querySelector('[dir]');
+            if (!text) throw new Error('Effort label is missing.');
+            await expect(getComputedStyle(text).userSelect).toBe('none');
+            await expect(text.scrollWidth).toBeLessThanOrEqual(
+              text.clientWidth + 1,
+            );
+            await expect(
+              text.getBoundingClientRect().height,
+            ).toBeLessThanOrEqual(
+              Number.parseFloat(getComputedStyle(text).lineHeight) + 1,
+            );
+          }
+        }
+        const fastModel = options.find(
+          (entry) => entry._meta?.argo?.supportsFastMode,
+        );
+        if (fastModel) {
+          await userEvent.click(
+            await overlay.findByRole('button', { name: fastModel.name }),
+          );
+          await userEvent.click(
+            await overlay.findByRole('switch', { name: 'Fast mode' }),
+          );
+          await expect(
+            await overlay.findByRole('switch', { name: 'Fast mode' }),
+          ).toBeChecked();
+          await expect(
+            within(
+              canvas.getByRole('button', {
+                name: 'Model and effort',
+                hidden: true,
+              }),
+            ).getByRole('img', { name: 'Fast mode enabled', hidden: true }),
+          ).toBeVisible();
+          const fastTrigger = canvas.getByRole('button', {
+            name: 'Model and effort',
+            hidden: true,
+          });
+          for (const text of fastTrigger.querySelectorAll('[dir]')) {
+            await expect(text.scrollWidth).toBeLessThanOrEqual(
+              text.clientWidth + 1,
+            );
+          }
+          const slowModel = options.find(
+            (entry) => !entry._meta?.argo?.supportsFastMode,
+          );
+          if (slowModel) {
+            await userEvent.click(
+              await overlay.findByRole('button', { name: slowModel.name }),
+            );
+            await expect(
+              overlay.queryByRole('switch', { name: 'Fast mode' }),
+            ).not.toBeInTheDocument();
+            await userEvent.click(
+              await overlay.findByRole('button', { name: fastModel.name }),
+            );
+            await expect(
+              await overlay.findByRole('switch', { name: 'Fast mode' }),
+            ).not.toBeChecked();
+          }
+        }
+        if (withEffort) {
+          await userEvent.click(
+            await overlay.findByRole('button', { name: withEffort.name }),
+          );
+          await userEvent.click(
+            await overlay.findByRole('button', {
+              name: /^Set effort to high$/i,
+            }),
+          );
+          await expect(
+            await overlay.findByRole('slider', { name: 'Effort' }),
+          ).toHaveAttribute('aria-valuetext', expect.stringMatching(/^high$/i));
+          const slider = overlay.getByRole('slider', { name: 'Effort' });
+          slider.focus();
+          await browserUserEvent.keyboard('{ArrowRight}');
+          await expect(
+            canvas.getByRole('button', {
+              name: 'Model and effort',
+              hidden: true,
+            }),
+          ).toHaveTextContent(slider.getAttribute('aria-valuetext') ?? '');
+          await expect(slider).not.toHaveAttribute(
+            'aria-valuetext',
+            expect.stringMatching(/^high$/i),
+          );
+        }
+        if (withoutEffort) {
+          await userEvent.click(
+            await overlay.findByRole('button', { name: withoutEffort.name }),
+          );
+          await expect(
+            overlay.queryByRole('slider', { name: 'Effort' }),
+          ).not.toBeInTheDocument();
+        }
+        await userEvent.keyboard('{Escape}');
+        await userEvent.click(canvas.getByRole('button', { name: 'Mode' }));
+        const mode = agent.configOptions.find(
+          (entry) => entry.category === 'mode' && entry.type === 'select',
+        );
+        if (mode?.type !== 'select')
+          throw new Error('Recorded catalog needs mode options.');
+        const dangerous = mode.options
+          .flatMap((entry) => ('groupId' in entry ? entry.options : [entry]))
+          .find((entry) => entry._meta?.argo?.tone === 'dangerous');
+        if (!dangerous)
+          throw new Error('Recorded catalog needs a dangerous mode.');
+        await userEvent.click(
+          await overlay.findByRole('button', { name: dangerous.name }),
+        );
+        await userEvent.click(canvas.getByRole('button', { name: 'Mode' }));
+        await expect(
+          await overlay.findByRole('button', { name: dangerous.name }),
+        ).toHaveAttribute('aria-pressed', 'true');
+        await userEvent.keyboard('{Escape}');
+      }
+    }
+  },
+};
+
+export const Checkout: Story = {
+  play: async ({ canvas, userEvent }) => {
+    const { page } = await import('vitest/browser');
+    const overlay = within(document.body);
+    for (const width of [390, 1440]) {
+      await page.viewport(width, 844);
+      await settleViewport();
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Base branch' }),
+      );
+      const search = await overlay.findByRole('textbox', {
+        name: 'Search branches',
+      });
+      await expect(getComputedStyle(search).outlineStyle).toBe('none');
+      await expect(search.getBoundingClientRect().width).toBeGreaterThan(200);
+      await userEvent.type(
+        await overlay.findByRole('textbox', { name: 'Search branches' }),
+        'release',
+      );
+      await expect(
+        overlay.queryByRole('button', { name: 'main' }),
+      ).not.toBeInTheDocument();
+      await userEvent.click(
+        await overlay.findByRole('button', { name: 'release' }),
+      );
+      await expect(
+        canvas.getByRole('button', { name: 'Base branch' }),
+      ).toHaveTextContent('release');
+      await userEvent.click(canvas.getByText('New worktree', { exact: true }));
+      await expect(
+        canvas.getByRole('button', { name: 'Base branch' }),
+      ).toBeDisabled();
+      await expect(
+        canvas.getByRole('button', { name: 'Base branch' }),
+      ).toHaveTextContent('Main');
+      await userEvent.click(canvas.getByText('New worktree', { exact: true }));
+      await expect(
+        canvas.getByRole('button', { name: 'Base branch' }),
+      ).toHaveTextContent('release');
+    }
+  },
+};
+
+export const SessionControls: Story = {
+  render: (args) => (
+    <ComposerMock {...args} sessionStarted running onStop={args.onStop} />
+  ),
+  args: { onStop: fn() },
+  play: async ({ canvas, userEvent, args }) => {
+    const { page } = await import('vitest/browser');
+    const overlay = within(document.body);
+    for (const width of [390, 1440]) {
+      await page.viewport(width, 844);
+      await settleViewport();
+      await expect(
+        canvas.queryByRole('button', { name: 'Choose Agent' }),
+      ).not.toBeInTheDocument();
+      const ring = canvas
+        .getByRole('button', { name: 'Context window' })
+        .querySelectorAll('circle');
+      await expect(ring).toHaveLength(2);
+      for (const circle of ring) {
+        await expect(getComputedStyle(circle).stroke).not.toBe('none');
+        await expect(getComputedStyle(circle).strokeWidth).toBe('2px');
+      }
+      await userEvent.click(canvas.getByRole('button', { name: 'Plan' }));
+      await waitFor(() =>
+        expect(
+          within(overlay.getByRole('dialog')).getByText(
+            'Update the shared controls',
+          ),
+        ).toBeVisible(),
+      );
+      await expect(
+        await overlay.findByRole('progressbar', {
+          name: 'Update the shared controls in progress',
+        }),
+      ).toBeVisible();
+      await userEvent.keyboard('{Escape}');
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Context window' }),
+      );
+      await waitFor(() =>
+        expect(overlay.getByText('Smart zone · below 20%')).toBeVisible(),
+      );
+      await userEvent.click(
+        await overlay.findByRole('button', { name: 'Compact' }),
+      );
+      await expect(
+        canvas.getByRole('button', { name: 'Context window' }),
+      ).toHaveTextContent('12k / 200k');
+      await userEvent.click(canvas.getByRole('button', { name: 'Usage' }));
+      await waitFor(() =>
+        expect(overlay.getByText('5-hour limit')).toBeVisible(),
+      );
+      await waitFor(() =>
+        expect(overlay.getByText('Weekly limit')).toBeVisible(),
+      );
+      await expect(
+        overlay.queryByText('Every Session on this account counts.'),
+      ).not.toBeInTheDocument();
+      await userEvent.keyboard('{Escape}');
+    }
+    await userEvent.click(canvas.getByRole('button', { name: 'Stop' }));
+    await expect(args.onStop).toHaveBeenCalledOnce();
+    await expect(
+      canvas.queryByRole('button', { name: 'Stop' }),
+    ).not.toBeInTheDocument();
+  },
+};
+
+export const RunningWithoutStop: Story = {
+  render: (args) => <ComposerMock {...args} sessionStarted running />,
+  args: { draft: { text: 'A draft during a Turn.', images: [] } },
+  play: async ({ canvas, args }) => {
+    await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
+    await expect(args.onSend).not.toHaveBeenCalled();
+  },
+};
+
+export const UnavailableAgents: Story = {
+  args: {
+    configuration: {
+      agents: [
+        ...newSessionCatalogs.oneNotInstalled,
+        ...newSessionCatalogs.oneNotSignedIn,
+      ].filter((entry) => entry.availability !== 'available'),
+      agent: firstAgent.agent,
+      configOptions: firstAgent.configOptions,
+      onConfigChange: fn(),
+      onAgentChange: fn(),
+      onAgentSetup: fn(),
+      checkout: { branch: 'main', branches: ['main'], newWorktree: true },
+    },
+  },
+  play: async ({ canvas, userEvent, args }) => {
+    const { page } = await import('vitest/browser');
+    const overlay = within(document.body);
+    for (const width of [390, 1440]) {
+      await page.viewport(width, 844);
+      await settleViewport();
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Choose Agent' }),
+      );
+      for (const agent of args.configuration?.agents ?? []) {
+        await expect(
+          await overlay.findByRole('button', { name: `Select ${agent.label}` }),
+        ).toBeDisabled();
+        await userEvent.click(
+          await overlay.findByRole('button', { name: `Set up ${agent.label}` }),
+        );
+        await expect(args.configuration?.onAgentSetup).toHaveBeenLastCalledWith(
+          agent.agent,
+        );
+      }
+      await expect(args.configuration?.onAgentChange).not.toHaveBeenCalled();
+      await userEvent.keyboard('{Escape}');
     }
   },
 };

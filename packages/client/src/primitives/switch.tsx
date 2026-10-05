@@ -4,12 +4,16 @@ import { cn } from '#lib/utils';
 
 function Switch({
   className,
+  size = 'default',
   ...props
-}: React.ComponentProps<typeof SwitchPrimitives.Root>) {
+}: React.ComponentProps<typeof SwitchPrimitives.Root> & {
+  size?: 'default' | 'small';
+}) {
   return (
     <SwitchPrimitives.Root
       className={cn(
-        'flex h-[1.15rem] w-8 shrink-0 flex-row items-center rounded-full border border-transparent shadow-sm shadow-black/5',
+        'flex shrink-0 flex-row items-center rounded-full border border-transparent shadow-sm shadow-black/5',
+        size === 'small' ? 'h-3.5 w-6' : 'h-[1.15rem] w-8',
         Platform.select({
           web: 'focus-visible:border-ring focus-visible:ring-ring/50 peer inline-flex outline-none transition-all focus-visible:ring-[3px] disabled:cursor-not-allowed',
         }),
@@ -21,12 +25,16 @@ function Switch({
     >
       <SwitchPrimitives.Thumb
         className={cn(
-          'bg-background size-4 rounded-full transition-transform',
+          'bg-background rounded-full transition-transform',
+          size === 'small' ? 'size-3' : 'size-4',
           Platform.select({
             web: 'pointer-events-none block ring-0',
           }),
           props.checked
-            ? 'dark:bg-primary-foreground translate-x-3.5'
+            ? cn(
+                'dark:bg-primary-foreground',
+                size === 'small' ? 'translate-x-2.5' : 'translate-x-3.5',
+              )
             : 'dark:bg-foreground translate-x-0',
         )}
       />
