@@ -145,7 +145,7 @@ A Subagent has no Session actor of its own. It is a read-only child Session whos
 
 Spec 0003 amends this section: new Agent events, `message` on `agent.answerPermission`, `continuedOutside` on `agent.ready`, and Turns that the agent starts from `ready.idle` with no prompt.
 
-One Agent machine, `createAgentMachine` in `packages/agents/src/agent-machine.ts`, runs every adapter (ADR 0015). An adapter in `packages/agents/<agent>/` is plain functions, an `AgentAdapter` from `packages/agents/src/agent-adapter.ts`: `{agent, connect, initialMappingState, toAgentEvents}`. `packages/agents/src/agent-events.ts` holds the event types. Shared code branches on `capabilities`, which a connection reports with its ready data.
+One Agent machine, `agentMachine` in `packages/agents/src/agent-machine.ts`, runs every adapter (ADR 0015). The Session machine passes it the adapter, found with `findAgentAdapter`. An adapter in `packages/agents/<agent>/` is plain functions, an `AgentAdapter` from `packages/agents/src/agent-adapter.ts`: `{agent, connect, initialMappingState, toAgentEvents}`. `packages/agents/src/agent-events.ts` holds the event types. Shared code branches on `capabilities`, which a connection reports with its ready data.
 
 Input: `{agent, sessionId, cwd, vendorSessionId: string | null, configOptions, parent}`.
 

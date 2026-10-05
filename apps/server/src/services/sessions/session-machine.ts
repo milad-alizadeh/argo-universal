@@ -5,6 +5,7 @@ import {
   type AgentInput,
   type AgentOutput,
   agentMachine,
+  findAgentAdapter,
 } from '@repo/agents';
 import type {
   ContentBlock,
@@ -430,7 +431,7 @@ export const sessionMachine = sessionSetup.createMachine({
               context: SessionContext;
               self: AgentInput['parent'];
             }) => ({
-              agent: context.agent,
+              adapter: findAgentAdapter(context.agent, context.input.adapters),
               sessionId: context.sessionId,
               cwd: context.checkout.path,
               vendorSessionId: context.vendorSessionId,

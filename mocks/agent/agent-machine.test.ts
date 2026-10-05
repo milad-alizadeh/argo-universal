@@ -1,8 +1,10 @@
-import type {
-  AgentCommand,
-  AgentConnectInput,
-  AgentEvent,
-  AgentInput,
+import {
+  type AgentCommand,
+  type AgentConnectInput,
+  type AgentEvent,
+  type AgentInput,
+  agentMachine,
+  findAgentAdapter,
 } from '@repo/agents';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -15,11 +17,11 @@ import {
 } from 'xstate';
 import { adjacencyMapToArray, getAdjacencyMap, TestModel } from 'xstate/graph';
 import {
-  createMockAgentMachine,
+  createMockAdapter,
   type MockAgentReady,
   type MockAgentStream,
   type MockAgentStreamEvent,
-} from './machine';
+} from './adapter';
 
 const ready: MockAgentReady = {
   type: 'agent.ready',
@@ -52,8 +54,8 @@ let cleanups: number;
 let shutdowns: number;
 let parent: AgentInput['parent'];
 let input: AgentInput;
-let agent: Actor<typeof machine>;
-const machine = createMockAgentMachine({
+let agent: Actor<typeof agentMachine>;
+const adapter = createMockAdapter({
   connect: (connectInput) => {
     inputs.push(connectInput);
     return connection.promise;
@@ -70,12 +72,12 @@ const machine = createMockAgentMachine({
     return shutdown.promise;
   },
 });
-type AgentSnapshot = SnapshotFrom<typeof machine>;
-type AgentMachineEvent = EventFromLogic<typeof machine>;
+type AgentSnapshot = SnapshotFrom<typeof agentMachine>;
+type AgentMachineEvent = EventFromLogic<typeof agentMachine>;
 
 const withoutType = ({ type: _type, ...rest }: MockAgentReady) => rest;
 const start = () => {
-  agent = createActor(machine, { input }).start();
+  agent = createActor(agentMachine, { input }).start();
 };
 const settle = async () => {
   await vi.advanceTimersByTimeAsync(0);
@@ -100,7 +102,7 @@ beforeEach(() => {
     }),
   ).start();
   input = {
-    agent: 'mock',
+    adapter,
     sessionId: 'session-1',
     cwd: '/project',
     vendorSessionId: null,
@@ -192,9 +194,9 @@ const eventKey = (event: AgentMachineEvent) => {
     return `${event.type}:${!!event.turnId}`;
   return event.type;
 };
-const model = new TestModel(machine, {
+const model = new TestModel(agentMachine, {
   input: {
-    agent: 'mock',
+    adapter,
     sessionId: 'model',
     cwd: '/project',
     vendorSessionId: null,
@@ -280,7 +282,7 @@ describe('Agent machine model', () => {
     ) =>
       `${JSON.stringify(from.value)} ${eventKey(event)} ${JSON.stringify(to.value)}`;
     const transitions = adjacencyMapToArray(
-      getAdjacencyMap(machine, model.options),
+      getAdjacencyMap(agentMachine, model.options),
     ).map(({ state, event, nextState }) => key(state, event, nextState));
     const walked = new Set(
       paths.flatMap((path) =>
@@ -469,14 +471,14 @@ describe('Agent machine', () => {
   });
 
   it('ends as failed when the stream cannot start', async () => {
-    const brokenMachine = createMockAgentMachine({
+    input.adapter = createMockAdapter({
       connect: async () => ready,
       stream: () => {
         throw new Error('stream unavailable');
       },
       stop: async () => {},
     });
-    agent = createActor(brokenMachine, { input });
+    agent = createActor(agentMachine, { input });
     const errors: unknown[] = [];
     agent.subscribe({ error: (error) => errors.push(error) });
     agent.start();
@@ -514,7 +516,7 @@ describe('Agent machine', () => {
   });
 
   it('fails when no adapter is registered for the Agent', async () => {
-    input.agent = 'unknown';
+    input.adapter = findAgentAdapter('unknown', []);
     start();
     await settle();
     expect(agent.getSnapshot().value).toBe('failed');

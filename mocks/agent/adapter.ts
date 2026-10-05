@@ -1,9 +1,8 @@
-import {
-  type AgentAdapter,
-  type AgentCommand,
-  type AgentConnectInput,
-  type AgentEvent,
-  createAgentMachine,
+import type {
+  AgentAdapter,
+  AgentCommand,
+  AgentConnectInput,
+  AgentEvent,
 } from '@repo/agents';
 
 export type MockAgentReady = Extract<AgentEvent, { type: 'agent.ready' }>;
@@ -58,6 +57,3 @@ export const createMockAdapter = (
     };
   },
 });
-
-export const createMockAgentMachine = (script: MockAgentScript) =>
-  createAgentMachine([createMockAdapter(script)]);

@@ -8,7 +8,6 @@ import type {
   RowAppend,
   RowPatch,
   SessionInfo,
-  SessionNewInput,
   SessionPromptInput,
   SessionSetConfigOptionInput,
   SessionSetConfigOptionOutput,
@@ -23,6 +22,7 @@ import type {
   TurnUsage,
 } from '@repo/contracts';
 import type { ActorRef, Snapshot } from 'xstate';
+import type { AgentAdapter } from './agent-adapter';
 
 // The Feed supplies these fields when it assigns a change to a Session and Turn.
 type FeedEnvelope = 'sessionId' | 'turnId' | 'position' | 'revision';
@@ -146,7 +146,7 @@ export type AgentEvent =
 export type AgentParent = ActorRef<Snapshot<unknown>, AgentEvent>;
 
 export interface AgentInput extends Pick<SessionInfo, 'sessionId' | 'cwd'> {
-  agent: SessionNewInput['agent'];
+  adapter: AgentAdapter;
   vendorSessionId: string | null;
   configOptions: AgentConfigValue[];
   parent: AgentParent;

@@ -1,5 +1,6 @@
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import type { AgentAdapter } from '@repo/agents';
 import type { SessionNewInput } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow, project, session } from '@repo/db/schema';
@@ -12,6 +13,8 @@ import type { writerMachine } from '../feed/writer-machine';
 
 export type SessionInput = {
   database: Database;
+  // The Agent adapters to pick from; the registry by default.
+  adapters?: readonly AgentAdapter[];
   runtimeDirectory?: string;
   sessionId: string;
 } & (({ kind: 'new' } & SessionNewInput) | { kind: 'existing' });

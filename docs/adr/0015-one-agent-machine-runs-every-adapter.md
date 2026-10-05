@@ -1,8 +1,8 @@
 # One Agent machine runs every adapter, and adapters are plain functions
 
-Every Agent has the same lifecycle: start or resume the vendor session, wait for a prompt, run a Turn, cancel it, stop. Spec 0002 first gave each adapter its own XState machine with these same states, so the Claude adapter and the mock Agent each carried a copy. One machine, `createAgentMachine` in `packages/agents/src`, now runs every adapter (owner, 2026-10-05).
+Every Agent has the same lifecycle: start or resume the vendor session, wait for a prompt, run a Turn, cancel it, stop. Spec 0002 first gave each adapter its own XState machine with these same states, so the Claude adapter and the mock Agent each carried a copy. One machine, `agentMachine` in `packages/agents/src`, now runs every adapter (owner, 2026-10-05).
 
-An adapter is an `AgentAdapter` in the registry, `agentAdapters`. The Agent machine finds it by the Session's `agent` id. It has three parts, and none of them imports XState:
+An adapter is an `AgentAdapter` in the registry, `agentAdapters`. The Session machine finds it by the Session's `agent` id with `findAgentAdapter`, and passes it to the Agent machine it invokes, so the Agent machine is not built per registry. It has three parts, and none of them imports XState:
 
 - `connect(input, listener)` starts or resumes the vendor session. It resolves to an `AgentConnection`, which holds the ready data (`vendorSessionId`, `configOptions`, `capabilities`, `continuedOutside`) and one async method per Session command. The listener takes vendor messages, Agent events that need no mapping, and a failure.
 - `toAgentEvents(message, mappingState)` is a pure function that turns one vendor message into Agent events. Its `mappingState` lives in the Agent machine's context.

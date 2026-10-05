@@ -1,12 +1,12 @@
 # Mock Agent
 
-`@repo/mocks/agent` exports `createMockAdapter`, an Agent adapter whose vendor messages are the Agent events a test scripts, and `createMockAgentMachine`, the one Agent machine (ADR 0015) running that adapter under the Agent id `mock`. The script has three hooks:
+`@repo/mocks/agent` exports `createMockAdapter`, an Agent adapter with the Agent id `mock` whose vendor messages are the Agent events a test scripts. The one Agent machine (ADR 0015) runs it like any other adapter. The script has three hooks:
 
 - `connect(input)` resolves the `agent.ready` event, or rejects to model a connection failure. Keep its promise pending to test startup and stopping during startup.
 - `stream(stream)` gets `send(event)`, `fail(error)`, and `receive(handler)`. Send typed Agent events whenever the test needs them, and register a handler to observe Session commands. Return a cleanup function to release anything the script starts.
 - `stop(input)` resolves when shutdown finishes, or rejects to model a shutdown failure. Keep it pending to test the Session's shutdown limit.
 
-The machine can be supplied as the Session machine's `agent` actor. Its model-based test in `machine.test.ts` walks every transition of the Agent machine.
+Pass it to a Session in the `adapters` input. The model-based test in `agent-machine.test.ts` walks every transition of the Agent machine with it.
 
 Agent payloads project the exported types from `@repo/contracts` for Feed changes, config values, Plan proposals, Session identity, permissions, and Turn fields. Capabilities, vendor identifiers, actor refs, and Shell lifecycle states remain adapter-owned. Optional end times omit the database's null value until work ends.
 

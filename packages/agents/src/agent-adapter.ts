@@ -11,7 +11,7 @@ export type AgentReady = Omit<
   'type'
 >;
 
-export type AgentConnectInput = Omit<AgentInput, 'agent' | 'parent'>;
+export type AgentConnectInput = Omit<AgentInput, 'adapter' | 'parent'>;
 
 // How a connection reports to the Agent machine; vendor messages go through `toAgentEvents`.
 export interface AgentConnectionListener<Message> {

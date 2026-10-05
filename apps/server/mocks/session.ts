@@ -1,4 +1,4 @@
-import { agentMachine } from '@repo/agents';
+import type { AgentAdapter } from '@repo/agents';
 import type { Database } from '@repo/db';
 import { createActor, setup } from 'xstate';
 import type { FeedActorRef } from '../src/services/feed/feed-machine';
@@ -12,11 +12,14 @@ import {
 export const firstPrompt: Extract<SessionCommand, { type: 'session.prompt' }> =
   { type: 'session.prompt', turnId: 'turn-1', content: [] };
 
-export function createSessionHost(database: Database, agent = agentMachine) {
+export function createSessionHost(
+  database: Database,
+  adapters?: readonly AgentAdapter[],
+) {
   const root = createActor(
     setup({
       actors: {
-        session: sessionMachine.provide({ actors: { agent } }),
+        session: sessionMachine,
         writer: writerMachine,
       },
     }).createMachine({
@@ -31,7 +34,12 @@ export function createSessionHost(database: Database, agent = agentMachine) {
           id: 'session',
           systemId: 'session:session-1',
           src: 'session',
-          input: { database, kind: 'existing', sessionId: 'session-1' },
+          input: {
+            database,
+            adapters,
+            kind: 'existing',
+            sessionId: 'session-1',
+          },
         },
       ],
     }),

@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./agent": "./agent/machine.ts",
+    "./agent": "./agent/adapter.ts",
     "./cli": "./cli/index.ts",
     "./cli/*": "./cli/*.ts"
   },

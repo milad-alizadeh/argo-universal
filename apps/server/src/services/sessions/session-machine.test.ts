@@ -1,6 +1,6 @@
-import type { AgentCommand, AgentEvent } from '@repo/agents';
+import { type AgentCommand, type AgentEvent, agentMachine } from '@repo/agents';
 import {
-  createMockAgentMachine,
+  createMockAdapter,
   type MockAgentScript,
   type MockAgentStream,
 } from '@repo/mocks/agent';
@@ -48,7 +48,7 @@ async function openSession(overrides: Partial<MockAgentScript> = {}) {
   cleanups.push(remove);
   const commands: AgentCommand[] = [];
   let stream: MockAgentStream | undefined;
-  const agent = createMockAgentMachine({
+  const adapter = createMockAdapter({
     connect: async () => ({
       type: 'agent.ready',
       vendorSessionId: 'vendor-1',
@@ -63,10 +63,9 @@ async function openSession(overrides: Partial<MockAgentScript> = {}) {
     stop: async () => {},
     ...overrides,
   });
-  const { root, session, service, findFeed } = createSessionHost(
-    database,
-    agent,
-  );
+  const { root, session, service, findFeed } = createSessionHost(database, [
+    adapter,
+  ]);
   cleanups.push(() => root.stop());
   await waitFor(session, (snapshot) => snapshot.can(firstPrompt));
   const feed = findFeed();
@@ -397,7 +396,7 @@ const ready: Extract<AgentEvent, { type: 'agent.ready' }> = {
   capabilities: { planApproval: 'continueTurn', stopShell: false },
   continuedOutside: false,
 };
-const mock = createMockAgentMachine({
+const adapter = createMockAdapter({
   connect: async () => ready,
   stream: (value) => {
     stream = value;
@@ -406,12 +405,12 @@ const mock = createMockAgentMachine({
     };
   },
   stop: () => new Promise(() => {}),
-}).provide({ actions: { sendReady: () => {} } });
+});
 const machine = sessionMachine.provide({
   actors: {
     createSession: fromPromise(() => new Promise(() => {})),
     loadSession: fromPromise(() => new Promise(() => {})),
-    agent: mock,
+    agent: agentMachine.provide({ actions: { sendReady: () => {} } }),
     feed: feedMachine.provide({
       actions: { sendToWriter: () => {}, log: () => {} },
     }),
@@ -486,9 +485,10 @@ const models = (['new', 'existing'] as const).map(
     new TestModel(logic, {
       input:
         kind === 'existing'
-          ? { database, kind, sessionId: 'session-1' }
+          ? { database, adapters: [adapter], kind, sessionId: 'session-1' }
           : {
               database,
+              adapters: [adapter],
               kind,
               sessionId: 'session-1',
               projectId: 'project-1',
@@ -617,7 +617,7 @@ it('attaches live Feed updates when a subscription starts while the Session load
   vi.useFakeTimers();
   const { database, remove } = openTestDatabase();
   cleanups.push(remove);
-  const agent = createMockAgentMachine({
+  const adapter = createMockAdapter({
     connect: async () => ready,
     stream: () => {},
     stop: async () => {},
@@ -626,7 +626,7 @@ it('attaches live Feed updates when a subscription starts while the Session load
     root,
     session: sessionActor,
     service,
-  } = createSessionHost(database, agent);
+  } = createSessionHost(database, [adapter]);
   cleanups.push(() => root.stop());
   const { updates } = subscribeToSession(service);
   expect((await updates.next()).value).toMatchObject({
