@@ -1,4 +1,8 @@
-import { type AgentAdapter, agentAdapters } from '@repo/agents';
+import {
+  type AgentAdapter,
+  agentAdapters,
+  findAgentAdapter,
+} from '@repo/agents';
 import type { SessionNewInput } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import {
@@ -61,7 +65,7 @@ export const registryMachine = setup({
         input: {
           database: context.database,
           runtimeDirectory: context.runtimeDirectory,
-          adapters: context.adapters,
+          adapter: findAgentAdapter(event.agent, context.adapters),
           sessionId: event.sessionId,
           ...(event.type === 'sessions.create'
             ? {

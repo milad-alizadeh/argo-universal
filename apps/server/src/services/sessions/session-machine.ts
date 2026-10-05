@@ -6,7 +6,6 @@ import {
   type AgentInput,
   type AgentOutput,
   agentMachine,
-  findAgentAdapter,
 } from '@repo/agents';
 import type {
   ContentBlock,
@@ -37,10 +36,8 @@ import {
   type SessionInput,
 } from './session-data';
 
-// The Session picks its Agent's adapter from these.
-export type SessionMachineInput = SessionInput & {
-  adapters: readonly AgentAdapter[];
-};
+// The registry passes the adapter for the Session's Agent.
+export type SessionMachineInput = SessionInput & { adapter: AgentAdapter };
 
 export type SessionCommand =
   | { type: 'session.prompt'; turnId: string; content: ContentBlock[] }
@@ -437,7 +434,7 @@ export const sessionMachine = sessionSetup.createMachine({
               context: SessionContext;
               self: AgentInput['parent'];
             }) => ({
-              adapter: findAgentAdapter(context.agent, context.input.adapters),
+              adapter: context.input.adapter,
               sessionId: context.sessionId,
               cwd: context.checkout.path,
               vendorSessionId: context.vendorSessionId,

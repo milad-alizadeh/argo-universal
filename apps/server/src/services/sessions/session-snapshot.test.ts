@@ -1,3 +1,4 @@
+import { createMockAdapter } from '@repo/mocks/agent';
 import { afterAll, expect, it } from 'vitest';
 import { createActor, type StateValue } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
@@ -7,7 +8,12 @@ import { toSessionSnapshot } from './session-snapshot';
 const { database, remove } = openTestDatabase();
 afterAll(remove);
 const context = createActor(sessionMachine, {
-  input: { database, adapters: [], kind: 'existing', sessionId: 'session-1' },
+  input: {
+    database,
+    adapter: createMockAdapter(),
+    kind: 'existing',
+    sessionId: 'session-1',
+  },
 }).getSnapshot().context;
 const rows: [StateValue, string][] = [
   ['entering', 'idle'],

@@ -163,12 +163,12 @@ const events = [
   ...commandExamples,
   { ...planAnswer, turnId: undefined },
   { type: 'agent.stop' },
-  { type: 'vendor.events', events: [{ type: 'agent.turnStarted' }] },
+  { type: 'vendor.event', event: { type: 'agent.turnStarted' } },
   {
-    type: 'vendor.events',
-    events: [{ type: 'agent.turnEnded', stopReason: 'end_turn' }],
+    type: 'vendor.event',
+    event: { type: 'agent.turnEnded', stopReason: 'end_turn' },
   },
-  { type: 'vendor.events', events: [feed] },
+  { type: 'vendor.event', event: feed },
   { type: 'vendor.ready', ready },
   {
     type: 'vendor.ready',
@@ -183,8 +183,7 @@ const events = [
 ] as AnyEventObject[] as AgentMachineEvent[];
 
 const eventKey = (event: AgentMachineEvent) => {
-  if (event.type === 'vendor.events')
-    return `${event.type}:${event.events.map(({ type }) => type)}`;
+  if (event.type === 'vendor.event') return `${event.type}:${event.event.type}`;
   if (event.type === 'agent.answerPlanProposal')
     return `${event.type}:${!!event.turnId}`;
   return event.type;
@@ -223,11 +222,10 @@ const executors = Object.fromEntries(
         await settle();
         if (command.type !== 'agent.stop')
           expect(commands).toEqual([...previousCommands, command]);
-      } else if (event.type === 'vendor.events') {
+      } else if (event.type === 'vendor.event') {
         const previousEvents = [...received];
-        for (const sent of event.events)
-          stream.send(sent as MockAgentStreamEvent);
-        expect(received).toEqual([...previousEvents, ...event.events]);
+        stream.send(event.event as MockAgentStreamEvent);
+        expect(received).toEqual([...previousEvents, event.event]);
       } else if (event.type === 'vendor.ready') {
         await connect(event.ready);
         expect(received).toEqual([{ type: 'agent.ready', ...event.ready }]);
@@ -472,7 +470,6 @@ describe('Agent machine', () => {
       stream: () => {
         throw new Error('stream unavailable');
       },
-      stop: async () => {},
     });
     agent = createActor(agentMachine, { input });
     const errors: unknown[] = [];

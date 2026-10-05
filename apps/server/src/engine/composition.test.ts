@@ -30,7 +30,6 @@ it('serves live Session procedures and drains their Feed before closing the data
           });
       });
     },
-    stop: async () => {},
   });
   const machine = engineMachine.provide({
     actors: {

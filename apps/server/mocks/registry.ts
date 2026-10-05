@@ -53,6 +53,4 @@ export const createRegistryModelMachine = (forGraph: boolean) =>
 
 export const registryModelAdapter = createMockAdapter({
   connect: () => new Promise(() => {}),
-  stream: () => undefined,
-  stop: async () => {},
 });

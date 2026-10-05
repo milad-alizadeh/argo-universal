@@ -27,9 +27,10 @@ const temporaryDirectory = (prefix: string) => {
 const isIdle = (snapshot: SnapshotFrom<SessionActorRef>) =>
   snapshot.can(firstPrompt);
 
-describe.each(agentAdapters.map((adapter) => adapter.agent))(
-  '%s adapter against its mock CLI',
-  (agent) => {
+describe.each(agentAdapters)(
+  '$agent adapter against its mock CLI',
+  (adapter) => {
+    const { agent } = adapter;
     const mockCli = mockClis[agent];
     if (!mockCli) throw new Error(`No mock CLI for ${agent}`);
 
@@ -57,7 +58,10 @@ describe.each(agentAdapters.map((adapter) => adapter.agent))(
         cwd,
       );
       cleanups.push(remove);
-      const { root, session, service, findFeed } = createSessionHost(database);
+      const { root, session, service, findFeed } = createSessionHost(
+        database,
+        adapter,
+      );
       cleanups.push(() => root.stop());
       // Closing flushes every row to the database, where the Turn's rows are read back.
       const close = async () => {

@@ -175,26 +175,37 @@ export async function connect(
       capabilities: { planApproval: 'continueTurn', stopShell: false },
       continuedOutside: false,
     },
-    prompt: async ({ content }) =>
-      queue.push({
-        type: 'user',
-        message: { role: 'user', content: toVendorContent(content) },
-        parent_tool_use_id: null,
-        origin: { kind: 'human' },
-      }),
-    cancel: async () => {
-      await vendor.interrupt();
-    },
-    setConfigOption: async (command) => {
-      const next = changeValue(models, values, command);
-      if (!next) return;
-      const current = values;
-      values = next;
-      await applyValues(current, next);
-      listener.event({
-        type: 'agent.configOptionsChanged',
-        configOptions: toConfigOptions(models, next),
-      });
+    run: async (command) => {
+      switch (command.type) {
+        case 'agent.prompt':
+          return queue.push({
+            type: 'user',
+            message: {
+              role: 'user',
+              content: toVendorContent(command.content),
+            },
+            parent_tool_use_id: null,
+            origin: { kind: 'human' },
+          });
+        case 'agent.cancel':
+          await vendor.interrupt();
+          return;
+        case 'agent.setConfigOption': {
+          const next = changeValue(models, values, command);
+          if (!next) return;
+          const current = values;
+          values = next;
+          await applyValues(current, next);
+          listener.event({
+            type: 'agent.configOptionsChanged',
+            configOptions: toConfigOptions(models, next),
+          });
+          return;
+        }
+        // Answers, renames and shell stops are not wired to the CLI yet.
+        default:
+          return;
+      }
     },
     stop: async () => {
       stopping = true;

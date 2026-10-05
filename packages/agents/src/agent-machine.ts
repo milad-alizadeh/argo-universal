@@ -1,6 +1,6 @@
 import {
+  assertEvent,
   assign,
-  enqueueActions,
   forwardTo,
   fromCallback,
   sendTo,
@@ -10,7 +10,6 @@ import type {
   AgentAdapter,
   AgentConnectInput,
   AgentReady,
-  VendorSession,
 } from './agent-adapter';
 import type {
   AgentCapabilities,
@@ -21,10 +20,11 @@ import type {
 } from './agent-events';
 import { describeError } from './describe-error';
 
+// Wrapped, because Agent event types share the `agent.` prefix with commands.
 type VendorEvent =
   | { type: 'vendor.ready'; ready: AgentReady }
-  | { type: 'vendor.events'; events: AgentEvent[] }
-  | { type: 'vendor.failed'; error: string }
+  | { type: 'vendor.event'; event: AgentEvent }
+  | { type: 'vendor.failed'; error: unknown }
   | { type: 'vendor.closed' };
 
 // The adapter and parent ref are behaviour, so an Agent snapshot is not persistable.
@@ -33,75 +33,47 @@ interface AgentContext extends AgentInput {
   failure: string | null;
 }
 
-interface VendorSessionInput {
-  adapter: AgentAdapter;
-  connectInput: AgentConnectInput;
-}
-
-type SessionCommand = Exclude<AgentCommand, { type: 'agent.stop' }>;
-
-function runCommand(session: VendorSession, command: SessionCommand) {
-  switch (command.type) {
-    case 'agent.prompt':
-      return session.prompt(command);
-    case 'agent.cancel':
-      return session.cancel(command);
-    case 'agent.setConfigOption':
-      return session.setConfigOption(command);
-    case 'agent.answerPermission':
-      return session.answerPermission?.(command);
-    case 'agent.answerElicitation':
-      return session.answerElicitation?.(command);
-    case 'agent.answerPlanProposal':
-      return session.answerPlanProposal?.(command);
-    case 'agent.rename':
-      return session.rename?.(command);
-    case 'agent.stopShell':
-      return session.stopShell?.(command);
-  }
-}
+type VendorSessionInput = AgentConnectInput & { adapter: AgentAdapter };
 
 // Starts the adapter's vendor session, maps its messages, and reports both as vendor events.
 function startVendorSession(
-  { adapter, connectInput }: VendorSessionInput,
+  { adapter, ...input }: VendorSessionInput,
   sendBack: (event: VendorEvent) => void,
 ) {
-  const fail = (error: unknown) =>
-    sendBack({ type: 'vendor.failed', error: describeError(error) });
+  const fail = (error: unknown) => sendBack({ type: 'vendor.failed', error });
   let mappingState = adapter.initialMappingState();
   // Events wait here until the machine has the ready data they depend on.
-  let early: AgentEvent[] | null = [];
+  let isReady = false;
+  const early: AgentEvent[] = [];
   let stopping: Promise<void> | undefined;
 
-  const sendEvents = (events: AgentEvent[]) => {
-    if (events.length === 0) return;
-    if (early) early.push(...events);
-    else sendBack({ type: 'vendor.events', events });
+  const sendEvent = (event: AgentEvent) => {
+    if (isReady) sendBack({ type: 'vendor.event', event });
+    else early.push(event);
   };
-  const connect = async () =>
-    adapter.connect(connectInput, {
+  // Resolves to null when starting fails, after reporting it.
+  const starting = adapter
+    .connect(input, {
       message: (message) => {
         const mapped = adapter.toAgentEvents(message, mappingState);
         mappingState = mapped.mappingState;
-        sendEvents(mapped.events);
+        mapped.events.forEach(sendEvent);
       },
-      event: (event) => sendEvents([event]),
-      failed: (error) => sendBack({ type: 'vendor.failed', error }),
-    });
-  // Resolves to null when starting fails, after reporting it.
-  const starting = connect().then(
-    (session) => {
-      sendBack({ type: 'vendor.ready', ready: session.ready });
-      const events = early ?? [];
-      early = null;
-      sendEvents(events);
-      return session;
-    },
-    (error: unknown) => {
-      if (!stopping) fail(error);
-      return null;
-    },
-  );
+      event: sendEvent,
+      failed: fail,
+    })
+    .then(
+      (session) => {
+        sendBack({ type: 'vendor.ready', ready: session.ready });
+        isReady = true;
+        early.splice(0).forEach(sendEvent);
+        return session;
+      },
+      (error: unknown) => {
+        if (!stopping) fail(error);
+        return null;
+      },
+    );
 
   // Stops once, after starting settles.
   const stop = () => {
@@ -117,7 +89,7 @@ function startVendorSession(
         return;
       }
       const session = await starting;
-      if (session) await runCommand(session, command);
+      await session?.run(command);
     } catch (error) {
       fail(error);
     }
@@ -126,28 +98,10 @@ function startVendorSession(
   return { run, stop: () => void stop().catch(() => {}) };
 }
 
-// The type of the last Turn boundary among these events, if any.
-const lastTurnBoundary = (events: AgentEvent[]) =>
-  events.findLast(
-    (event) =>
-      event.type === 'agent.turnStarted' || event.type === 'agent.turnEnded',
-  )?.type;
-
-const readyParams = ({ event }: { event: { ready: AgentReady } }) => ({
-  ready: event.ready,
-});
-const eventsParams = ({ event }: { event: { events: AgentEvent[] } }) => ({
-  events: event.events,
-});
-const toFailed = {
-  target: '.failed',
-  actions: {
-    type: 'rememberFailure',
-    params: ({ event }: { event: { error: unknown } }) => ({
-      error: event.error,
-    }),
-  },
-} as const;
+const isTurnEvent =
+  (type: 'agent.turnStarted' | 'agent.turnEnded') =>
+  ({ event }: { event: AgentCommand | VendorEvent }) =>
+    event.type === 'vendor.event' && event.event.type === type;
 
 // One machine runs every Agent; the Session passes in the adapter to run.
 export const agentMachine = setup({
@@ -171,27 +125,33 @@ export const agentMachine = setup({
     ),
   },
   actions: {
-    rememberReady: assign((_, params: { ready: AgentReady }) => ({
-      capabilities: params.ready.capabilities,
-    })),
+    rememberReady: assign(({ event }) => {
+      assertEvent(event, 'vendor.ready');
+      return { capabilities: event.ready.capabilities };
+    }),
     sendReady: sendTo(
       ({ context }) => context.parent,
-      (_, params: { ready: AgentReady }) =>
-        ({ type: 'agent.ready', ...params.ready }) satisfies AgentEvent,
+      ({ event }) => {
+        assertEvent(event, 'vendor.ready');
+        return { type: 'agent.ready', ...event.ready } satisfies AgentEvent;
+      },
     ),
-    sendEvents: enqueueActions(
-      ({ context, enqueue }, params: { events: AgentEvent[] }) => {
-        for (const event of params.events)
-          enqueue.sendTo(context.parent, event);
+    sendEvent: sendTo(
+      ({ context }) => context.parent,
+      ({ event }) => {
+        assertEvent(event, 'vendor.event');
+        return event.event;
       },
     ),
     sendCommand: forwardTo('vendorSession'),
     stopVendorSession: sendTo('vendorSession', {
       type: 'agent.stop',
     } satisfies AgentCommand),
-    rememberFailure: assign((_, params: { error: unknown }) => ({
-      failure: describeError(params.error),
-    })),
+    // Runs on `vendor.failed` and on the vendor session actor's error event.
+    rememberFailure: assign({
+      failure: ({ event }) =>
+        'error' in event ? describeError(event.error) : null,
+    }),
   },
   guards: {
     canStopShell: ({ context }) => context.capabilities?.stopShell === true,
@@ -199,10 +159,8 @@ export const agentMachine = setup({
       context.capabilities?.planApproval === 'startTurn' &&
       event.type === 'agent.answerPlanProposal' &&
       event.turnId !== undefined,
-    startsTurn: (_, params: { events: AgentEvent[] }) =>
-      lastTurnBoundary(params.events) === 'agent.turnStarted',
-    endsTurn: (_, params: { events: AgentEvent[] }) =>
-      lastTurnBoundary(params.events) === 'agent.turnEnded',
+    startsTurn: isTurnEvent('agent.turnStarted'),
+    endsTurn: isTurnEvent('agent.turnEnded'),
   },
 }).createMachine({
   id: 'agent',
@@ -211,31 +169,22 @@ export const agentMachine = setup({
   invoke: {
     id: 'vendorSession',
     src: 'vendorSession',
-    input: ({ context }) => ({
-      adapter: context.adapter,
-      connectInput: {
-        sessionId: context.sessionId,
-        cwd: context.cwd,
-        vendorSessionId: context.vendorSessionId,
-        configOptions: context.configOptions,
-      },
-    }),
-    onError: toFailed,
+    input: ({
+      context: { adapter, sessionId, cwd, vendorSessionId, configOptions },
+    }) => ({ adapter, sessionId, cwd, vendorSessionId, configOptions }),
+    onError: { target: '.failed', actions: 'rememberFailure' },
   },
   initial: 'starting',
   on: {
     'agent.stop': { target: '.stopping' },
-    'vendor.failed': toFailed,
+    'vendor.failed': { target: '.failed', actions: 'rememberFailure' },
   },
   states: {
     starting: {
       on: {
         'vendor.ready': {
           target: 'ready',
-          actions: [
-            { type: 'rememberReady', params: readyParams },
-            { type: 'sendReady', params: readyParams },
-          ],
+          actions: ['rememberReady', 'sendReady'],
         },
       },
     },
@@ -244,9 +193,7 @@ export const agentMachine = setup({
         'agent.setConfigOption': { actions: 'sendCommand' },
         'agent.rename': { actions: 'sendCommand' },
         'agent.stopShell': { guard: 'canStopShell', actions: 'sendCommand' },
-        'vendor.events': {
-          actions: { type: 'sendEvents', params: eventsParams },
-        },
+        'vendor.event': { actions: 'sendEvent' },
       },
       initial: 'idle',
       states: {
@@ -258,10 +205,10 @@ export const agentMachine = setup({
               target: 'turn',
               actions: 'sendCommand',
             },
-            'vendor.events': {
-              guard: { type: 'startsTurn', params: eventsParams },
+            'vendor.event': {
+              guard: 'startsTurn',
               target: 'turn',
-              actions: { type: 'sendEvents', params: eventsParams },
+              actions: 'sendEvent',
             },
           },
         },
@@ -271,10 +218,10 @@ export const agentMachine = setup({
             'agent.answerPermission': { actions: 'sendCommand' },
             'agent.answerElicitation': { actions: 'sendCommand' },
             'agent.answerPlanProposal': { actions: 'sendCommand' },
-            'vendor.events': {
-              guard: { type: 'endsTurn', params: eventsParams },
+            'vendor.event': {
+              guard: 'endsTurn',
               target: 'idle',
-              actions: { type: 'sendEvents', params: eventsParams },
+              actions: 'sendEvent',
             },
           },
         },

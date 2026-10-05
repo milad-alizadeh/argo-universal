@@ -14,31 +14,19 @@ export type AgentReady = Omit<
 export type AgentConnectInput = Omit<AgentInput, 'adapter' | 'parent'>;
 
 // How a vendor session reports to the Agent machine; vendor messages go through `toAgentEvents`.
+// A vendor session may report before `connect` resolves; the Agent machine holds those events until ready.
 export interface VendorSessionListener<Message> {
   message(message: Message): void;
   event(event: AgentEvent): void;
-  failed(error: string): void;
+  failed(error: unknown): void;
 }
 
-// One live vendor session. The Agent machine calls one method at a time, in order.
+export type VendorCommand = Exclude<AgentCommand, { type: 'agent.stop' }>;
+
+// One live vendor session. The Agent machine runs one command at a time, in order.
 export interface VendorSession {
   ready: AgentReady;
-  prompt(command: AgentCommandOf<'agent.prompt'>): Promise<void>;
-  cancel(command: AgentCommandOf<'agent.cancel'>): Promise<void>;
-  setConfigOption(
-    command: AgentCommandOf<'agent.setConfigOption'>,
-  ): Promise<void>;
-  answerPermission?(
-    command: AgentCommandOf<'agent.answerPermission'>,
-  ): Promise<void>;
-  answerElicitation?(
-    command: AgentCommandOf<'agent.answerElicitation'>,
-  ): Promise<void>;
-  answerPlanProposal?(
-    command: AgentCommandOf<'agent.answerPlanProposal'>,
-  ): Promise<void>;
-  rename?(command: AgentCommandOf<'agent.rename'>): Promise<void>;
-  stopShell?(command: AgentCommandOf<'agent.stopShell'>): Promise<void>;
+  run(command: VendorCommand): Promise<void>;
   // Resolves once the vendor session has closed.
   stop(): Promise<void>;
 }

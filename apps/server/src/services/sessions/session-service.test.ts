@@ -60,7 +60,6 @@ function openServer({ applyConfigOptions = true } = {}) {
           );
       });
     },
-    stop: async () => {},
   };
   const root = createActor(
     setup({

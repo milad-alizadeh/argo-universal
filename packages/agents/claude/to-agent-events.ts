@@ -32,8 +32,6 @@ export const initialMappingState = (): MappingState => ({
   openToolCalls: {},
 });
 
-type Mapped = AgentMapping<MappingState>;
-
 const feed = (change: FeedChange): AgentEvent => ({
   type: 'agent.feed',
   change,
@@ -54,7 +52,17 @@ const textRow = (
   content: [{ type: 'text', text }],
 });
 
-const dropped = (mappingState: MappingState): Mapped => ({
+// A text or thinking block as the row kind and text it becomes.
+const textOf = (
+  block:
+    | { type: 'text'; text: string }
+    | { type: 'thinking'; thinking: string },
+) =>
+  block.type === 'text'
+    ? { kind: 'agent_message' as const, text: block.text }
+    : { kind: 'agent_thought' as const, text: block.thinking };
+
+const dropped = (mappingState: MappingState): AgentMapping<MappingState> => ({
   events: [],
   mappingState,
 });
@@ -63,7 +71,7 @@ const dropped = (mappingState: MappingState): Mapped => ({
 export function toAgentEvents(
   message: SDKMessage,
   mappingState: MappingState,
-): Mapped {
+): AgentMapping<MappingState> {
   // Subagent messages belong to issue 11e.
   if ('parent_tool_use_id' in message && message.parent_tool_use_id)
     return dropped(mappingState);
@@ -97,7 +105,7 @@ function deltaText(delta: Delta) {
 function mapStreamEvent(
   { event }: SDKPartialAssistantMessage,
   mappingState: MappingState,
-): Mapped {
+): AgentMapping<MappingState> {
   const { streamMessageId } = mappingState;
   switch (event.type) {
     case 'message_start':
@@ -109,8 +117,7 @@ function mapStreamEvent(
         streamMessageId === null
       )
         return dropped(mappingState);
-      const kind = block.type === 'text' ? 'agent_message' : 'agent_thought';
-      const text = block.type === 'text' ? block.text : block.thinking;
+      const { kind, text } = textOf(block);
       const id = `${streamMessageId}#${event.index}`;
       return {
         events: [upsert(textRow(id, streamMessageId, kind, text, 'open'))],
@@ -138,7 +145,7 @@ function mapStreamEvent(
 function mapAssistant(
   message: SDKAssistantMessage,
   mappingState: MappingState,
-): Mapped {
+): AgentMapping<MappingState> {
   const { id: messageId, content } = message.message;
   let state = mappingState;
   const events: AgentEvent[] = [];
@@ -160,12 +167,11 @@ function mapBlock(
   rowId: string,
   messageId: string,
   mappingState: MappingState,
-): Mapped {
+): AgentMapping<MappingState> {
   switch (block.type) {
     case 'text':
     case 'thinking': {
-      const kind = block.type === 'text' ? 'agent_message' : 'agent_thought';
-      const text = block.type === 'text' ? block.text : block.thinking;
+      const { kind, text } = textOf(block);
       const { [rowId]: _settled, ...openTextRows } = mappingState.openTextRows;
       return {
         events: [upsert(textRow(rowId, messageId, kind, text, 'settled'))],
@@ -191,7 +197,7 @@ function mapBlock(
 function mapUser(
   message: SDKUserMessage | SDKUserMessageReplay,
   mappingState: MappingState,
-): Mapped {
+): AgentMapping<MappingState> {
   const { content } = message.message;
   if ('isReplay' in message || typeof content === 'string')
     return dropped(mappingState);
@@ -246,7 +252,7 @@ function turnUsage({ usage }: SDKResultMessage): TurnUsage {
 function mapResult(
   result: SDKResultMessage,
   mappingState: MappingState,
-): Mapped {
+): AgentMapping<MappingState> {
   const reason = stopReason(result);
   const settles = [
     ...Object.keys(mappingState.openTextRows).map((id) =>
@@ -282,7 +288,7 @@ function mapResult(
 function mapNotice(
   message: Extract<SDKMessage, { type: 'system' }>,
   mappingState: MappingState,
-): Mapped {
+): AgentMapping<MappingState> {
   const base = {
     id: message.uuid,
     sessionUpdate: 'notice',

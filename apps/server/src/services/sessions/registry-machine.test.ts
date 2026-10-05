@@ -41,7 +41,12 @@ const events: RegistryEvent[] = [
     {
       type: `xstate.snapshot.session:${sessionId}`,
       snapshot: createActor(sessionMachine, {
-        input: { kind: 'existing', database, adapters: [], sessionId },
+        input: {
+          kind: 'existing',
+          database,
+          adapter: registryModelAdapter,
+          sessionId,
+        },
       }).getSnapshot(),
     },
   ]),

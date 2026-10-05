@@ -1,9 +1,11 @@
-import { type AgentCommand, type AgentEvent, agentMachine } from '@repo/agents';
+import { type AgentCommand, agentMachine } from '@repo/agents';
 import {
   createMockAdapter,
   type MockAgentScript,
   type MockAgentStream,
+  type MockAgentStreamEvent,
   mockReady,
+  mockReadyEvent,
 } from '@repo/mocks/agent';
 import { afterAll, afterEach, expect, it, vi } from 'vitest';
 import {
@@ -53,12 +55,12 @@ async function openSession(overrides: Partial<MockAgentScript> = {}) {
       stream = value;
       value.receive((command) => commands.push(command));
     },
-    stop: async () => {},
     ...overrides,
   });
-  const { root, session, service, findFeed } = createSessionHost(database, [
+  const { root, session, service, findFeed } = createSessionHost(
+    database,
     adapter,
-  ]);
+  );
   cleanups.push(() => root.stop());
   await waitFor(session, (snapshot) => snapshot.can(firstPrompt));
   const feed = findFeed();
@@ -376,7 +378,7 @@ const data = {
   nextPosition: 0,
 };
 let stream: MockAgentStream | undefined;
-const ready = { type: 'agent.ready', ...mockReady } as const;
+const ready = mockReadyEvent;
 const adapter = createMockAdapter({
   stream: (value) => {
     stream = value;
@@ -465,10 +467,10 @@ const models = (['new', 'existing'] as const).map(
     new TestModel(logic, {
       input:
         kind === 'existing'
-          ? { database, adapters: [adapter], kind, sessionId: 'session-1' }
+          ? { database, adapter, kind, sessionId: 'session-1' }
           : {
               database,
-              adapters: [adapter],
+              adapter,
               kind,
               sessionId: 'session-1',
               projectId: 'project-1',
@@ -529,7 +531,7 @@ it.each(paths.map((path, index) => [index, path] as const))(
             event.type !== 'agent.ready' &&
             stream
           )
-            stream.send(event as Exclude<AgentEvent, { type: 'agent.ready' }>);
+            stream.send(event as MockAgentStreamEvent);
           else sessionActor.send(event);
           await vi.advanceTimersByTimeAsync(0);
         },
@@ -599,13 +601,12 @@ it('attaches live Feed updates when a subscription starts while the Session load
   cleanups.push(remove);
   const adapter = createMockAdapter({
     stream: () => {},
-    stop: async () => {},
   });
   const {
     root,
     session: sessionActor,
     service,
-  } = createSessionHost(database, [adapter]);
+  } = createSessionHost(database, adapter);
   cleanups.push(() => root.stop());
   const { updates } = subscribeToSession(service);
   expect((await updates.next()).value).toMatchObject({
