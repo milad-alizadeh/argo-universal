@@ -6,7 +6,11 @@ import type {
   ToolCallUpdate,
 } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
-import { applyFeedChange, type Feed } from './feed-change';
+import {
+  applyFeedChange,
+  type Feed,
+  type FeedStreamEvent,
+} from './feed-change';
 
 const message = (overrides: Partial<AgentMessage> = {}): AgentMessage => ({
   id: 'message-1#0',
@@ -51,234 +55,145 @@ const update = (row: SessionUpdate): FeedUpdate => {
 
 interface Accepted {
   name: string;
-  feed: Feed;
+  rows: SessionUpdate[];
   change: FeedChange;
-  turnId: string | null;
-  feedAfter: Feed;
-  streamEvents: unknown[];
+  turnId?: string | null;
+  // The changed row; the change takes revision 9.
+  rowAfter: SessionUpdate;
+  // Defaults to an upsert of `rowAfter`.
+  streamEvent?: FeedStreamEvent;
 }
 
 const accepted: Accepted[] = [
   {
     name: 'an upsert of a new row takes the next position and revision',
-    feed: feedWith(),
+    rows: [],
     change: {
       type: 'upsert',
       update: update(message({ content: [{ type: 'text', text: '' }] })),
     },
     turnId: 'turn-2',
-    feedAfter: {
-      ...feedWith(
-        message({
-          position: 5,
-          revision: 9,
-          turnId: 'turn-2',
-          content: [{ type: 'text', text: '' }],
-        }),
-      ),
-      maxRevision: 9,
-      nextPosition: 6,
-    },
-    streamEvents: [
-      {
-        type: 'row.upsert',
-        rev: 9,
-        row: message({
-          position: 5,
-          revision: 9,
-          turnId: 'turn-2',
-          content: [{ type: 'text', text: '' }],
-        }),
-      },
-    ],
+    rowAfter: message({
+      position: 5,
+      revision: 9,
+      turnId: 'turn-2',
+      content: [{ type: 'text', text: '' }],
+    }),
   },
   {
     name: 'an upsert of an open row replaces it and keeps its position and Turn',
-    feed: feedWith(message()),
+    rows: [message()],
     change: {
       type: 'upsert',
       update: update(message({ content: [{ type: 'text', text: 'Hi' }] })),
     },
     turnId: 'turn-2',
-    feedAfter: {
-      ...feedWith(
-        message({ revision: 9, content: [{ type: 'text', text: 'Hi' }] }),
-      ),
-      maxRevision: 9,
-    },
-    streamEvents: [
-      {
-        type: 'row.upsert',
-        rev: 9,
-        row: message({ revision: 9, content: [{ type: 'text', text: 'Hi' }] }),
-      },
-    ],
+    rowAfter: message({ revision: 9, content: [{ type: 'text', text: 'Hi' }] }),
   },
   {
     name: 'an upsert with state settled settles the row',
-    feed: feedWith(message()),
-    change: {
-      type: 'upsert',
-      update: update(message({ state: 'settled' })),
-    },
-    turnId: 'turn-1',
-    feedAfter: {
-      ...feedWith(message({ revision: 9, state: 'settled' })),
-      maxRevision: 9,
-    },
-    streamEvents: [
-      {
-        type: 'row.upsert',
-        rev: 9,
-        row: message({ revision: 9, state: 'settled' }),
-      },
-    ],
+    rows: [message()],
+    change: { type: 'upsert', update: update(message({ state: 'settled' })) },
+    rowAfter: message({ revision: 9, state: 'settled' }),
   },
   {
     name: 'a row made outside a Turn has no Turn',
-    feed: feedWith(),
-    change: {
-      type: 'upsert',
-      update: update(message({ state: 'settled' })),
-    },
+    rows: [],
+    change: { type: 'upsert', update: update(message({ state: 'settled' })) },
     turnId: null,
-    feedAfter: {
-      ...feedWith(
-        message({ position: 5, revision: 9, turnId: null, state: 'settled' }),
-      ),
-      maxRevision: 9,
-      nextPosition: 6,
-    },
-    streamEvents: [
-      {
-        type: 'row.upsert',
-        rev: 9,
-        row: message({
-          position: 5,
-          revision: 9,
-          turnId: null,
-          state: 'settled',
-        }),
-      },
-    ],
+    rowAfter: message({
+      position: 5,
+      revision: 9,
+      turnId: null,
+      state: 'settled',
+    }),
   },
   {
     name: 'an append adds text at the offset of the string it names',
-    feed: feedWith(message()),
+    rows: [message()],
     change: {
       type: 'append',
       id: 'message-1#0',
       field: 'content.0.text',
       text: ', world',
     },
-    turnId: 'turn-1',
-    feedAfter: {
-      ...feedWith(
-        message({
-          revision: 9,
-          content: [{ type: 'text', text: 'Hello, world' }],
-        }),
-      ),
-      maxRevision: 9,
+    rowAfter: message({
+      revision: 9,
+      content: [{ type: 'text', text: 'Hello, world' }],
+    }),
+    streamEvent: {
+      type: 'row.append',
+      rev: 9,
+      id: 'message-1#0',
+      field: 'content.0.text',
+      off: 5,
+      text: ', world',
     },
-    streamEvents: [
-      {
-        type: 'row.append',
-        rev: 9,
-        id: 'message-1#0',
-        field: 'content.0.text',
-        off: 5,
-        text: ', world',
-      },
-    ],
   },
   {
     name: 'an append reaches terminal output inside Tool call content',
-    feed: feedWith(message(), command()),
+    rows: [message(), command()],
     change: {
       type: 'append',
       id: 'tool-1',
       field: 'content.0.output',
       text: 'done\n',
     },
-    turnId: 'turn-1',
-    feedAfter: {
-      ...feedWith(
-        message(),
-        command({
-          revision: 9,
-          content: [
-            { type: 'terminal', command: 'pnpm test', output: 'ok\ndone\n' },
-          ],
-        }),
-      ),
-      maxRevision: 9,
+    rowAfter: command({
+      revision: 9,
+      content: [
+        { type: 'terminal', command: 'pnpm test', output: 'ok\ndone\n' },
+      ],
+    }),
+    streamEvent: {
+      type: 'row.append',
+      rev: 9,
+      id: 'tool-1',
+      field: 'content.0.output',
+      off: 3,
+      text: 'done\n',
     },
-    streamEvents: [
-      {
-        type: 'row.append',
-        rev: 9,
-        id: 'tool-1',
-        field: 'content.0.output',
-        off: 3,
-        text: 'done\n',
-      },
-    ],
   },
   {
     name: 'a patch replaces top-level fields',
-    feed: feedWith(command()),
+    rows: [command()],
     change: { type: 'patch', id: 'tool-1', set: { status: 'completed' } },
-    turnId: 'turn-1',
-    feedAfter: {
-      ...feedWith(command({ revision: 9, status: 'completed' })),
-      maxRevision: 9,
+    rowAfter: command({ revision: 9, status: 'completed' }),
+    streamEvent: {
+      type: 'row.patch',
+      rev: 9,
+      id: 'tool-1',
+      set: { status: 'completed' },
     },
-    streamEvents: [
-      { type: 'row.patch', rev: 9, id: 'tool-1', set: { status: 'completed' } },
-    ],
   },
   {
     name: 'a patch with state settled settles the row',
-    feed: feedWith(command()),
+    rows: [command()],
     change: {
       type: 'patch',
       id: 'tool-1',
       set: { status: 'failed', state: 'settled' },
     },
-    turnId: 'turn-1',
-    feedAfter: {
-      ...feedWith(command({ revision: 9, status: 'failed', state: 'settled' })),
-      maxRevision: 9,
+    rowAfter: command({ revision: 9, status: 'failed', state: 'settled' }),
+    streamEvent: {
+      type: 'row.patch',
+      rev: 9,
+      id: 'tool-1',
+      set: { status: 'failed', state: 'settled' },
     },
-    streamEvents: [
-      {
-        type: 'row.patch',
-        rev: 9,
-        id: 'tool-1',
-        set: { status: 'failed', state: 'settled' },
-      },
-    ],
   },
   {
     name: 'a patch to a settled row, which keeps its place',
-    feed: feedWith(message({ state: 'settled' })),
+    rows: [message({ state: 'settled' })],
     change: { type: 'patch', id: 'message-1#0', set: { messageId: 'plan-1' } },
     turnId: 'turn-2',
-    feedAfter: {
-      ...feedWith(
-        message({ revision: 9, state: 'settled', messageId: 'plan-1' }),
-      ),
-      maxRevision: 9,
+    rowAfter: message({ revision: 9, state: 'settled', messageId: 'plan-1' }),
+    streamEvent: {
+      type: 'row.patch',
+      rev: 9,
+      id: 'message-1#0',
+      set: { messageId: 'plan-1' },
     },
-    streamEvents: [
-      {
-        type: 'row.patch',
-        rev: 9,
-        id: 'message-1#0',
-        set: { messageId: 'plan-1' },
-      },
-    ],
   },
 ];
 
@@ -370,21 +285,28 @@ const rejected: Rejected[] = [
 describe('applyFeedChange', () => {
   it.each(accepted)(
     '$name',
-    ({ feed, change, turnId, feedAfter, streamEvents }) => {
+    ({ rows, change, turnId = 'turn-1', rowAfter, streamEvent }) => {
+      const feed = feedWith(...rows);
       expect(applyFeedChange(feed, change, turnId)).toEqual({
-        feed: feedAfter,
-        streamEvents,
-        rejection: null,
+        feed: {
+          ...feed,
+          maxRevision: 9,
+          nextPosition: rowAfter.id in feed.rows ? 5 : 6,
+          rows: { ...feed.rows, [rowAfter.id]: rowAfter },
+        },
+        streamEvent: streamEvent ?? {
+          type: 'row.upsert',
+          rev: 9,
+          row: rowAfter,
+        },
       });
     },
   );
 
   it.each(rejected)('rejects $name', ({ feed, change, rejection }) => {
-    const result = applyFeedChange(feed, change, 'turn-1');
-
-    expect(result.feed).toBe(feed);
-    expect(result.streamEvents).toEqual([]);
-    expect(result.rejection).toMatch(rejection);
+    expect(applyFeedChange(feed, change, 'turn-1')).toEqual({
+      rejection: expect.stringMatching(rejection),
+    });
   });
 
   it('raises the revision by one for each change', () => {
@@ -402,8 +324,9 @@ describe('applyFeedChange', () => {
     const revisions: number[] = [];
     for (const change of changes) {
       const result = applyFeedChange(feed, change, 'turn-1');
+      if ('rejection' in result) throw new Error(result.rejection);
       feed = result.feed;
-      revisions.push(...result.streamEvents.map((event) => event.rev));
+      revisions.push(result.streamEvent.rev);
     }
 
     expect(revisions).toEqual([9, 10, 11, 12]);

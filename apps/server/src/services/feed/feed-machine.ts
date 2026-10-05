@@ -1,4 +1,5 @@
 import type { FeedChange, SessionUpdate } from '@repo/contracts';
+import type { session } from '@repo/db/schema';
 import {
   type ActorRefFrom,
   assertEvent,
@@ -19,10 +20,10 @@ import type { WriterJob } from './writer-job';
 import type { WriterEvent } from './writer-machine';
 
 // What the Session reads from its `session` row when it opens.
-export interface FeedInput {
+export interface FeedInput
+  extends Pick<typeof session.$inferSelect, 'epoch' | 'maxRevision'> {
   sessionId: string;
-  epoch: number;
-  maxRevision: number;
+  // One past the highest stored position.
   nextPosition: number;
   // A row that has left memory, as last handed to the database writer.
   findWrittenRow: (id: string) => SessionUpdate | undefined;
@@ -91,7 +92,7 @@ export const feedMachine = setup({
           });
           return;
         }
-      const { feed, streamEvents, rejection } = applyFeedChange(
+      const result = applyFeedChange(
         {
           sessionId,
           maxRevision,
@@ -101,16 +102,20 @@ export const feedMachine = setup({
         event.change,
         event.turnId,
       );
-      if (rejection !== null) {
-        enqueue.raise({ type: 'feed.changeRejected', reason: rejection });
+      if ('rejection' in result) {
+        enqueue.raise({
+          type: 'feed.changeRejected',
+          reason: result.rejection,
+        });
         return;
       }
+      const { feed, streamEvent } = result;
       enqueue.assign({
         ...feed,
         changedRowIds: context.changedRowIds.includes(id)
           ? context.changedRowIds
           : [...context.changedRowIds, id],
-        streamEvents: [...context.streamEvents, ...streamEvents],
+        streamEvents: [...context.streamEvents, streamEvent],
       });
       enqueue.raise({
         type: 'feed.changeApplied',
@@ -173,10 +178,9 @@ export const feedMachine = setup({
             'countRejectedChange',
             {
               type: 'log',
-              params: ({ event }) => {
-                assertEvent(event, 'feed.changeRejected');
-                return { line: `rejected a change: ${event.reason}` };
-              },
+              params: ({ event }) => ({
+                line: `rejected a change: ${event.reason}`,
+              }),
             },
           ],
         },

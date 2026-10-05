@@ -1,7 +1,7 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { openDatabase } from '@repo/db';
+import { type Database, openDatabase } from '@repo/db';
 import { project, session } from '@repo/db/schema';
 
 // A database in a new temp directory holding `project-1` and its Session `session-1`; `remove` closes and deletes it.
@@ -14,6 +14,21 @@ export function openTestDatabase(
     .insert(project)
     .values({ id: 'project-1', path: '/project', name: 'project' })
     .run();
+  insertSession(database, sessionValues);
+  return {
+    database,
+    remove: () => {
+      database.$client.close();
+      rmSync(directory, { recursive: true, force: true });
+    },
+  };
+}
+
+// A Session of `project-1`, `session-1` unless `values` names another.
+export function insertSession(
+  database: Database,
+  values: Partial<typeof session.$inferInsert> = {},
+) {
   database
     .insert(session)
     .values({
@@ -22,14 +37,7 @@ export function openTestDatabase(
       agent: 'mock',
       checkoutPath: '/project',
       projectionVersion: 1,
-      ...sessionValues,
+      ...values,
     })
     .run();
-  return {
-    database,
-    remove: () => {
-      database.$client.close();
-      rmSync(directory, { recursive: true, force: true });
-    },
-  };
 }

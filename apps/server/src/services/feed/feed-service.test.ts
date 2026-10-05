@@ -1,16 +1,15 @@
 import { appRouter } from '@repo/api';
 import type {
-  AgentMessage,
   FeedChange,
   FeedSubscribeOutput,
   FeedSyncPoint,
   SessionUpdate,
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
-import { session } from '@repo/db/schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { type Actor, createActor, fromPromise, setup } from 'xstate';
-import { openTestDatabase } from '../../../mocks/database';
+import { insertSession, openTestDatabase } from '../../../mocks/database';
+import { storedMessage as message } from '../../../mocks/feed';
 import { createSystemService } from '../system';
 import { feedMachine } from './feed-machine';
 import { readWrittenRow, toFeedRowWrite } from './feed-row';
@@ -22,19 +21,6 @@ let database: Database;
 let removeDatabase: () => void;
 let host: Actor<ReturnType<typeof hostMachine>>;
 let controller: AbortController;
-
-// A stored message row at `position`, last changed at `revision`.
-const message = (position: number, revision = position + 1): AgentMessage => ({
-  id: `message-${position}#0`,
-  sessionId: 'session-1',
-  position,
-  revision,
-  turnId: 'turn-1',
-  state: 'settled',
-  sessionUpdate: 'agent_message',
-  messageId: `message-${position}`,
-  content: [{ type: 'text', text: `Message ${position}` }],
-});
 
 // The Engine's writer and one Session's feed actor in one actor system, as the Engine will run them.
 const hostMachine = (writer = writerMachine) =>
@@ -106,10 +92,11 @@ const appendText = (id: string, text: string): FeedChange => ({
   text,
 });
 
-const subscribe = async (after: FeedSyncPoint | null) =>
-  (await caller().feed.subscribe({ sessionId: 'session-1', after }))[
-    Symbol.asyncIterator
-  ]();
+const subscribe = async (
+  after: FeedSyncPoint | null,
+  sessionId = 'session-1',
+) =>
+  (await caller().feed.subscribe({ sessionId, after }))[Symbol.asyncIterator]();
 const take = async (
   iterator: AsyncIterator<FeedSubscribeOutput>,
   count: number,
@@ -228,16 +215,7 @@ describe('feed.page', () => {
   });
 
   it('pages a Session with no rows', async () => {
-    database
-      .insert(session)
-      .values({
-        id: 'session-2',
-        projectId: 'project-1',
-        agent: 'mock',
-        checkoutPath: '/project',
-        projectionVersion: 1,
-      })
-      .run();
+    insertSession(database, { id: 'session-2' });
 
     expect(
       await caller().feed.page({ sessionId: 'session-2', direction: 'tail' }),
@@ -255,6 +233,26 @@ describe('feed.page', () => {
     await expect(
       caller().feed.page({ sessionId: 'session-9', direction: 'tail' }),
     ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+  });
+
+  it('keeps the place of a stored row that a change brings back', async () => {
+    sendChange({
+      type: 'patch',
+      id: 'message-3#0',
+      set: { messageId: 'plan-3' },
+    });
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(
+      await caller().feed.page({
+        sessionId: 'session-1',
+        direction: 'tail',
+        limit: 2,
+      }),
+    ).toMatchObject({
+      maxRevision: 6,
+      rows: [{ ...message(3), revision: 6, messageId: 'plan-3' }, message(4)],
+    });
   });
 
   it('reads rows that the feed actor wrote through the database writer', async () => {
@@ -283,30 +281,6 @@ describe('feed.page', () => {
           content: [{ type: 'text', text: 'Hi' }],
         },
       ],
-    });
-  });
-});
-
-describe('a change to a stored row', () => {
-  beforeEach(() => startHost());
-
-  it('keeps its place', async () => {
-    sendChange({
-      type: 'patch',
-      id: 'message-3#0',
-      set: { messageId: 'plan-3' },
-    });
-    await vi.advanceTimersByTimeAsync(0);
-
-    expect(
-      await caller().feed.page({
-        sessionId: 'session-1',
-        direction: 'tail',
-        limit: 2,
-      }),
-    ).toMatchObject({
-      maxRevision: 6,
-      rows: [{ ...message(3), revision: 6, messageId: 'plan-3' }, message(4)],
     });
   });
 });
@@ -425,9 +399,7 @@ describe('feed.subscribe', () => {
 
   it('fails with NOT_FOUND for an unknown Session', async () => {
     startHost();
-    const updates = (
-      await caller().feed.subscribe({ sessionId: 'session-9', after: null })
-    )[Symbol.asyncIterator]();
+    const updates = await subscribe(null, 'session-9');
 
     await expect(updates.next()).rejects.toMatchObject({ code: 'NOT_FOUND' });
   });

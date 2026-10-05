@@ -1,6 +1,7 @@
 import type { FeedService } from '@repo/api';
 import type {
   FeedPageInput,
+  FeedRowInput,
   FeedSubscribeInput,
   FeedSubscribeOutput,
   SessionUpdate,
@@ -100,7 +101,7 @@ export function createFeedService(deps: FeedDeps): FeedService {
     };
   };
 
-  const row = ({ sessionId, id }: { sessionId: string; id: string }) => {
+  const row = ({ sessionId, id }: FeedRowInput) => {
     readSession(sessionId);
     // The feed actor holds the newest version of a row it has in memory.
     const newest =
@@ -114,6 +115,27 @@ export function createFeedService(deps: FeedDeps): FeedService {
     return newest;
   };
 
+  // Every row changed after `from`, stored or not, once each in revision order, and the revision they reach.
+  const catchUp = (sessionId: string, from: number, maxRevision: number) => {
+    const unsaved = readUnsaved(sessionId);
+    const stored = database
+      .select()
+      .from(feedRow)
+      .where(and(eq(feedRow.sessionId, sessionId), gt(feedRow.revision, from)))
+      .orderBy(asc(feedRow.revision))
+      .all()
+      .map((stored) => fromFeedRow(sessionId, stored));
+    return {
+      rows: [
+        ...newestById([
+          ...stored,
+          ...unsaved.rows.filter((row) => row.revision > from),
+        ]).values(),
+      ].sort((a, b) => a.revision - b.revision),
+      caughtUpTo: Math.max(maxRevision, unsaved.maxRevision),
+    };
+  };
+
   // Sends every row changed after `after`, then the feed actor's batches. With no sync point, or after `reset` for a new epoch, it skips stored rows, which the App pages.
   async function* subscribe(
     { sessionId, after }: FeedSubscribeInput,
@@ -121,7 +143,6 @@ export function createFeedService(deps: FeedDeps): FeedService {
   ): AsyncGenerator<FeedSubscribeOutput> {
     const { epoch, maxRevision } = readSession(sessionId);
 
-    // Listening before reading means no batch falls between the two; the revision drops what both carry.
     const live: FeedStreamEvent[] = [];
     let wake: (() => void) | undefined;
     const listener = deps.findFeed(sessionId)?.on('feed.batch', (batch) => {
@@ -134,26 +155,11 @@ export function createFeedService(deps: FeedDeps): FeedService {
     try {
       const reset = after !== null && after.epoch !== epoch;
       const from = after === null || reset ? maxRevision : after.revision;
-      const unsaved = readUnsaved(sessionId);
-      const stored = database
-        .select()
-        .from(feedRow)
-        .where(
-          and(eq(feedRow.sessionId, sessionId), gt(feedRow.revision, from)),
-        )
-        .orderBy(asc(feedRow.revision))
-        .all()
-        .map((stored) => fromFeedRow(sessionId, stored));
-      const caughtUpTo = Math.max(maxRevision, unsaved.maxRevision);
-      const changed = [
-        ...newestById([
-          ...stored,
-          ...unsaved.rows.filter((row) => row.revision > from),
-        ]).values(),
-      ].sort((a, b) => a.revision - b.revision);
+      // A waiting batch can carry changes the catch-up already holds; their revision drops them.
+      const { rows, caughtUpTo } = catchUp(sessionId, from, maxRevision);
 
       if (reset) yield { type: 'reset', epoch };
-      for (const row of changed)
+      for (const row of rows)
         yield { type: 'row.upsert', rev: row.revision, row };
 
       while (!signal?.aborted) {

@@ -19,6 +19,9 @@ const withoutEnvelope = {
   revision: true,
   turnId: true,
 } as const;
+export const feedSetFields = Object.keys(withoutEnvelope) as Array<
+  keyof typeof withoutEnvelope
+>;
 
 // A Session update as an Agent reports it: a row without the fields the Feed actor sets.
 export const FeedUpdate = z.discriminatedUnion('sessionUpdate', [

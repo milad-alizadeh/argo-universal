@@ -1,9 +1,11 @@
 import {
   type FeedChange,
+  feedSetFields,
   type RowAppend,
   type RowPatch,
   type RowUpsert,
   SessionUpdate,
+  type SessionUpdateKind,
 } from '@repo/contracts';
 import { z } from 'zod';
 
@@ -20,28 +22,17 @@ export interface Feed {
 // What `feed.subscribe` sends for one change.
 export type FeedStreamEvent = RowUpsert | RowAppend | RowPatch;
 
-export interface FeedChangeResult {
-  feed: Feed;
-  streamEvents: FeedStreamEvent[];
-  // Why the change was refused; a refused change leaves `feed` as it was.
-  rejection: string | null;
-}
+// A refused change says why and leaves the Feed as it was.
+export type FeedChangeResult =
+  | { feed: Feed; streamEvent: FeedStreamEvent }
+  | { rejection: string };
 
-// The Feed sets these, so a patch or an append cannot; `state` is the row's own.
-const envelopeFields = new Set([
+// The Feed sets these, and a row keeps its id and kind, so a patch or an append cannot change them; `state` is the row's own.
+const envelopeFields = new Set<string>([
+  ...feedSetFields,
   'id',
-  'sessionId',
-  'position',
-  'revision',
-  'turnId',
   'sessionUpdate',
 ]);
-
-const reject = (feed: Feed, rejection: string): FeedChangeResult => ({
-  feed,
-  streamEvents: [],
-  rejection,
-});
 
 // The value at a dotted path such as `content.0.text`, or undefined when the path leads nowhere.
 function readField(value: unknown, path: readonly string[]): unknown {
@@ -91,15 +82,14 @@ export function applyFeedChange(
   const revision = feed.maxRevision + 1;
 
   const accept = (
-    candidate: Record<string, unknown> & { sessionUpdate: string },
+    candidate: Record<string, unknown> & { sessionUpdate: SessionUpdateKind },
     toStreamEvent: (row: SessionUpdate) => FeedStreamEvent,
   ): FeedChangeResult => {
     const row = SessionUpdate.safeParse(candidate);
     if (!row.success)
-      return reject(
-        feed,
-        `row ${id} does not match ${candidate.sessionUpdate}: ${z.prettifyError(row.error)}`,
-      );
+      return {
+        rejection: `row ${id} does not match ${candidate.sessionUpdate}: ${z.prettifyError(row.error)}`,
+      };
     return {
       feed: {
         ...feed,
@@ -107,18 +97,16 @@ export function applyFeedChange(
         nextPosition: existing ? feed.nextPosition : feed.nextPosition + 1,
         rows: { ...feed.rows, [id]: row.data },
       },
-      streamEvents: [toStreamEvent(row.data)],
-      rejection: null,
+      streamEvent: toStreamEvent(row.data),
     };
   };
 
   switch (change.type) {
     case 'upsert': {
       if (existing && existing.sessionUpdate !== change.update.sessionUpdate)
-        return reject(
-          feed,
-          `row ${id} is ${existing.sessionUpdate}, not ${change.update.sessionUpdate}`,
-        );
+        return {
+          rejection: `row ${id} is ${existing.sessionUpdate}, not ${change.update.sessionUpdate}`,
+        };
       return accept(
         {
           ...change.update,
@@ -131,13 +119,13 @@ export function applyFeedChange(
       );
     }
     case 'append': {
-      if (!existing) return reject(feed, `no row ${id}`);
+      if (!existing) return { rejection: `no row ${id}` };
       const path = change.field.split('.');
       if (envelopeFields.has(path[0] ?? ''))
-        return reject(feed, `${change.field} of row ${id} is set by the Feed`);
+        return { rejection: `${change.field} of row ${id} is set by the Feed` };
       const current = readField(existing, path);
       if (typeof current !== 'string')
-        return reject(feed, `${change.field} of row ${id} is not a string`);
+        return { rejection: `${change.field} of row ${id} is not a string` };
       return accept(
         {
           ...(writeField(
@@ -158,12 +146,14 @@ export function applyFeedChange(
       );
     }
     case 'patch': {
-      if (!existing) return reject(feed, `no row ${id}`);
+      if (!existing) return { rejection: `no row ${id}` };
       const envelopeField = Object.keys(change.set).find((key) =>
         envelopeFields.has(key),
       );
       if (envelopeField)
-        return reject(feed, `${envelopeField} of row ${id} is set by the Feed`);
+        return {
+          rejection: `${envelopeField} of row ${id} is set by the Feed`,
+        };
       return accept({ ...existing, ...change.set, revision }, () => ({
         type: 'row.patch',
         rev: revision,

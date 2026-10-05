@@ -3,11 +3,12 @@ import type { Database } from '@repo/db';
 import { feedRow } from '@repo/db/schema';
 import { and, eq } from 'drizzle-orm';
 import type { ActorRefFrom } from 'xstate';
+import { z } from 'zod';
 import type { FeedRowWrite, WriterJob } from './writer-job';
 import type { writerMachine } from './writer-machine';
 
 type WriterRef = ActorRefFrom<typeof writerMachine>;
-type FeedRowsJob = Extract<WriterJob, { type: 'feedRows' }>;
+export type FeedRowsJob = Extract<WriterJob, { type: 'feedRows' }>;
 
 // The shape version of `payload` in the rows this Server writes.
 const payloadVersion = 1;
@@ -36,22 +37,16 @@ export function toFeedRowWrite(row: SessionUpdate): FeedRowWrite {
   };
 }
 
-// A stored row as a Session update, checked against its kind.
+// A stored row as a Session update, checked against its kind; a row from another payload version, or with envelope fields in its payload, fails.
 export function fromFeedRow(
   sessionId: string,
-  row: Pick<
-    FeedRowWrite,
-    | 'id'
-    | 'position'
-    | 'revision'
-    | 'turnId'
-    | 'state'
-    | 'sessionUpdate'
-    | 'payload'
-  >,
+  row: FeedRowWrite,
 ): SessionUpdate {
-  return SessionUpdate.parse({
-    ...(row.payload as object),
+  if (row.payloadVersion !== payloadVersion)
+    throw new Error(
+      `row ${row.id} has payload version ${row.payloadVersion}, not ${payloadVersion}`,
+    );
+  const envelope = {
     id: row.id,
     sessionId,
     position: row.position,
@@ -59,7 +54,13 @@ export function fromFeedRow(
     turnId: row.turnId ?? null,
     state: row.state,
     sessionUpdate: row.sessionUpdate,
-  });
+  };
+  const payload = z.record(z.string(), z.unknown()).parse(row.payload);
+  const clash = Object.keys(payload).find((key) =>
+    Object.hasOwn(envelope, key),
+  );
+  if (clash) throw new Error(`row ${row.id} has ${clash} in its payload`);
+  return SessionUpdate.parse({ ...payload, ...envelope });
 }
 
 // The jobs of a Session's rows that the database writer holds until they commit.
@@ -71,6 +72,16 @@ export function queuedFeedRows(
     (job): job is FeedRowsJob =>
       job.type === 'feedRows' && job.sessionId === sessionId,
   );
+}
+
+// The newest version of a row in jobs that have not committed.
+export function findQueuedRow(
+  jobs: readonly FeedRowsJob[],
+  sessionId: string,
+  id: string,
+): SessionUpdate | undefined {
+  const row = jobs.flatMap((job) => job.rows).findLast((row) => row.id === id);
+  return row && fromFeedRow(sessionId, row);
 }
 
 // The newest version of a row the feed actor handed to the database writer, queued or stored.
@@ -85,11 +96,12 @@ export function readWrittenRow({
   sessionId: string;
   id: string;
 }): SessionUpdate | undefined {
-  const queued = queuedFeedRows(writer, sessionId)
-    .flatMap((job) => job.rows)
-    .filter((row) => row.id === id)
-    .at(-1);
-  if (queued) return fromFeedRow(sessionId, queued);
+  const queued = findQueuedRow(
+    queuedFeedRows(writer, sessionId),
+    sessionId,
+    id,
+  );
+  if (queued) return queued;
   const stored = database
     .select()
     .from(feedRow)

@@ -17,15 +17,14 @@ import {
 } from 'xstate/graph';
 import type { FeedStreamEvent } from './feed-change';
 import { feedMachine } from './feed-machine';
-import { fromFeedRow } from './feed-row';
-import type { WriterJob } from './writer-job';
+import { type FeedRowsJob, findQueuedRow } from './feed-row';
 
 // Spec 0002 section 8: a batch every 60 ms, and open rows written after 1 second.
 const streamBatchDelayMs = 60;
 const storeDelayMs = 1000;
 
 let batches: FeedStreamEvent[][];
-let jobs: Extract<WriterJob, { type: 'feedRows' }>[];
+let jobs: FeedRowsJob[];
 let logLines: string[];
 let feed: Actor<typeof machine>;
 
@@ -49,13 +48,7 @@ const input = {
   maxRevision: 0,
   nextPosition: 0,
   // Rows the mocked writer received come back to a later change.
-  findWrittenRow: (id: string) => {
-    const row = jobs
-      .flatMap((job) => job.rows)
-      .filter((written) => written.id === id)
-      .at(-1);
-    return row && fromFeedRow('session-1', row);
-  },
+  findWrittenRow: (id: string) => findQueuedRow(jobs, 'session-1', id),
 };
 
 // xstate/graph runs no actions, so the model's writer keeps nothing to give back; the example tests cover written rows.
@@ -174,10 +167,12 @@ const executors: Record<
       batches.push(batch);
     });
   },
-  'feed.change': ({ event }) => feed.send(event),
-  'feed.flush': ({ event }) => feed.send(event),
-  [streamBatchDelayEvent]: ({ event }) => feed.send(event),
-  [storeDelayEvent]: ({ event }) => feed.send(event),
+  ...Object.fromEntries(
+    events.map(({ type }) => [
+      type,
+      ({ event }: { event: FeedMachineEvent }) => feed.send(event),
+    ]),
+  ),
 };
 
 // Each accepted change streams once and in order, and the newest version of each row is written or waits to be.

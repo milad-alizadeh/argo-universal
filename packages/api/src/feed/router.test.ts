@@ -32,14 +32,7 @@ const page: FeedPageOutput = {
 };
 
 const servicesWith = (feed: Partial<Services['feed']>) =>
-  unreachableServices({
-    feed: {
-      page: () => page,
-      row: () => row,
-      subscribe: async function* () {},
-      ...feed,
-    },
-  });
+  unreachableServices({ feed });
 
 const collect = async (updates: AsyncIterable<FeedSubscribeOutput>) => {
   const received: FeedSubscribeOutput[] = [];
