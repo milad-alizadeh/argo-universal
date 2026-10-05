@@ -4,13 +4,13 @@ import { TicketIcon } from 'phosphor-react-native/src/icons/Ticket';
 import { TreeStructureIcon } from 'phosphor-react-native/src/icons/TreeStructure';
 import { type ReactNode, useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
-import { Drawer } from 'react-native-drawer-layout';
 import { useCSSVariable, useResolveClassNames } from 'uniwind';
 import { cn } from '#lib/utils';
 import { Badge } from '#primitives/badge';
 import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
 import { Icon } from './Icon';
+import { PhoneDrawer } from './PhoneDrawer';
 import { PhoneListHeader } from './PhoneListHeader';
 import { PhoneShellCard } from './PhoneShellCard';
 
@@ -103,16 +103,12 @@ export function PhoneShell({
       className="flex-1 overflow-hidden bg-shell-chrome"
       onLayout={({ nativeEvent }) => setLayout(nativeEvent.layout)}
     >
-      <Drawer
+      <PhoneDrawer
         open={drawerOpen}
         onOpen={() => onDrawerOpenChange(true)}
         onClose={() => onDrawerOpenChange(false)}
-        drawerType="back"
-        drawerPosition="left"
-        configureGestureHandler={(gesture) => gesture.failOffsetY([-24, 24])}
-        drawerStyle={[chrome, { width: offset }]}
-        overlayStyle={{ backgroundColor: 'transparent' }}
-        overlayAccessibilityLabel="Close navigation"
+        width={offset}
+        surfaceStyle={chrome}
         layout={layout}
         renderDrawerContent={() => (
           <View
@@ -143,7 +139,7 @@ export function PhoneShell({
           />
           {children}
         </PhoneShellCard>
-      </Drawer>
+      </PhoneDrawer>
     </View>
   );
 }
