@@ -11,7 +11,15 @@ export function recoverAfterRestart(database: Database) {
   database.transaction((transaction) => {
     transaction
       .update(turn)
-      .set({ status: 'ended', stopReason: 'error', endedAt: Date.now() })
+      .set({
+        status: 'ended',
+        stopReason: 'error',
+        error: {
+          code: 'interrupted',
+          message: 'The Server stopped during the Turn',
+        },
+        endedAt: Date.now(),
+      })
       .where(eq(turn.status, 'running'))
       .run();
 
@@ -80,7 +88,7 @@ export function recoverAfterRestart(database: Database) {
     for (const [sessionId, maxRevision] of revisions)
       transaction
         .update(session)
-        .set({ maxRevision })
+        .set({ maxRevision, activityAt: Date.now() })
         .where(eq(session.id, sessionId))
         .run();
   });

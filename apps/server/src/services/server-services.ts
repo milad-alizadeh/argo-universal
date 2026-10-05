@@ -5,6 +5,7 @@ import type { FeedActorRef } from './feed/feed-machine';
 import { createFeedService } from './feed/feed-service';
 import type { writerMachine } from './feed/writer-machine';
 import { notImplemented } from './not-implemented';
+import { createProjectService } from './projects/project-service';
 import type { RegistryActorRef } from './sessions/registry-machine';
 import type { SessionActorRef } from './sessions/session-machine';
 import { createSessionService } from './sessions/session-service';
@@ -24,7 +25,7 @@ export function createServerServices(options: {
   const session = createSessionService(options);
   return {
     agents: { list: notImplemented },
-    projects: { list: notImplemented },
+    projects: createProjectService(options.database),
     system: createSystemService(options),
     session,
     feed: createFeedService({

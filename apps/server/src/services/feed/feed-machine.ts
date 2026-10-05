@@ -23,6 +23,7 @@ import type { WriterEvent } from './writer-machine';
 export interface FeedInput
   extends Pick<typeof session.$inferSelect, 'epoch' | 'maxRevision'> {
   sessionId: string;
+  activityAt?: number;
   // One past the highest stored position.
   nextPosition: number;
   // A row that has left memory, as last handed to the database writer.
@@ -32,6 +33,7 @@ export interface FeedInput
 export interface FeedContext
   extends Feed,
     Pick<FeedInput, 'epoch' | 'findWrittenRow'> {
+  activityAt: number;
   // Rows changed since the last write, in the order they first changed.
   changedRowIds: string[];
   // Stream events waiting for the next batch.
@@ -60,6 +62,7 @@ const rowsJob = ({ context }: { context: FeedContext }) => ({
       return row ? [toFeedRowWrite(row)] : [];
     }),
     maxRevision: context.maxRevision,
+    activityAt: context.activityAt,
   } satisfies WriterJob,
 });
 
@@ -112,6 +115,7 @@ export const feedMachine = setup({
       const { feed, streamEvent } = result;
       enqueue.assign({
         ...feed,
+        activityAt: Date.now(),
         changedRowIds: context.changedRowIds.includes(id)
           ? context.changedRowIds
           : [...context.changedRowIds, id],
@@ -162,6 +166,7 @@ export const feedMachine = setup({
   id: 'feed',
   context: ({ input }) => ({
     ...input,
+    activityAt: input.activityAt ?? 0,
     rows: {},
     changedRowIds: [],
     streamEvents: [],

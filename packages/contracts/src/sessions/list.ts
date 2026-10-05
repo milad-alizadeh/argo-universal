@@ -20,7 +20,7 @@ export const SessionStatus = z.enum([
 ]);
 export type SessionStatus = z.infer<typeof SessionStatus>;
 
-export const SessionTitleSource = z.enum(['user', 'agent', 'prompt']);
+export const SessionTitleSource = sessionColumns.shape.titleSource;
 export type SessionTitleSource = z.infer<typeof SessionTitleSource>;
 
 export const SessionCheckout = z.strictObject({
@@ -48,15 +48,15 @@ export const SessionInfo = z.strictObject({
   sessionId: sessionColumns.shape.id,
   cwd: sessionColumns.shape.checkoutPath,
   status: SessionStatus,
-  title: z.string(),
+  title: sessionColumns.shape.title,
   titleSource: SessionTitleSource,
   activity: z.string(),
-  activityAt: z.int(),
+  activityAt: sessionColumns.shape.activityAt,
   checkout: SessionCheckout,
   plan: z.strictObject({ done: z.int(), total: z.int() }).nullable(),
   subagents: SessionWorkCount,
   shells: SessionWorkCount,
-  archivedAt: z.int().nullable(),
+  archivedAt: sessionColumns.shape.archivedAt,
   issue: z.null(),
   pullRequest: z.null(),
 });

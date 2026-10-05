@@ -326,6 +326,7 @@ describe('feed', () => {
     vi.advanceTimersByTime(500);
     feed.send(openTool);
     feed.send(appendText);
+    const activityAt = Date.now();
     vi.advanceTimersByTime(storeDelayMs - 500 - 1);
     expect(jobs).toEqual([]);
 
@@ -343,6 +344,7 @@ describe('feed', () => {
           expect.objectContaining({ id: 'tool-1', position: 1, revision: 2 }),
         ],
         maxRevision: 3,
+        activityAt,
       },
     ]);
     expect(Object.keys(feed.getSnapshot().context.rows)).toEqual([

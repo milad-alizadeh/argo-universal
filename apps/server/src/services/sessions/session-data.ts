@@ -23,6 +23,7 @@ export interface SessionData {
   checkout: Checkout;
   epoch: number;
   maxRevision: number;
+  activityAt: number;
   nextPosition: number;
 }
 
@@ -51,6 +52,7 @@ export async function createSession(input: SessionInput): Promise<SessionData> {
         checkoutPath: checkout.path,
         checkoutBranch: checkout.branch,
         projectionVersion: 1,
+        activityAt: Date.now(),
       })
       .run();
   } catch (error) {
@@ -92,6 +94,10 @@ export async function loadSession(
     maxRevision: Math.max(
       row.maxRevision,
       ...queued.map((job) => job.maxRevision),
+    ),
+    activityAt: Math.max(
+      row.activityAt,
+      ...queued.map((job) => job.activityAt ?? row.activityAt),
     ),
     nextPosition:
       Math.max(

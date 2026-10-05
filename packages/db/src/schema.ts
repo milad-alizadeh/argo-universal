@@ -52,12 +52,20 @@ export const project = snakeCase.table('project', {
   createdAt: timestamp(),
 });
 
+export const sessionTitleSources = ['user', 'agent', 'prompt'] as const;
+
 export const session = snakeCase.table('session', {
   id: text().primaryKey(),
   projectId: text()
     .notNull()
     .references(() => project.id, { onDelete: 'cascade' }),
   agent: text().notNull(),
+  title: text().notNull().default(''),
+  titleSource: text({ enum: sessionTitleSources }).notNull().default('prompt'),
+  archivedAt: integer(),
+  seenRevision: integer().notNull().default(0),
+  activityAt: integer().notNull().default(0),
+  failure: text(),
   vendorSessionId: text(),
   parentSessionId: text().references((): AnySQLiteColumn => session.id, {
     onDelete: 'set null',

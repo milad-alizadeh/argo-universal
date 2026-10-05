@@ -24,7 +24,10 @@ const row = (overrides: Partial<FeedRowWrite> = {}): FeedRowWrite => ({
   payloadVersion: 1,
   ...overrides,
 });
-const feedRows = (rows: FeedRowWrite[], maxRevision: number): WriterJob => ({
+const feedRows = (
+  rows: FeedRowWrite[],
+  maxRevision: number,
+): Extract<WriterJob, { type: 'feedRows' }> => ({
   type: 'feedRows',
   sessionId: 'session-1',
   rows,
@@ -68,6 +71,16 @@ describe('writeJobs', () => {
       }),
     ]);
     expect(selectSession()?.maxRevision).toBe(2);
+  });
+
+  it('stamps activity when revisions advance and preserves it for repeated or older batches', () => {
+    writeJobs(database, [{ ...feedRows([row()], 1), activityAt: 100 }]);
+    expect(selectSession()).toMatchObject({ maxRevision: 1, activityAt: 100 });
+    writeJobs(database, [{ ...feedRows([], 1), activityAt: 200 }]);
+    writeJobs(database, [{ ...feedRows([], 0), activityAt: 300 }]);
+    expect(selectSession()).toMatchObject({ maxRevision: 1, activityAt: 100 });
+    writeJobs(database, [{ ...feedRows([], 2), activityAt: 400 }]);
+    expect(selectSession()).toMatchObject({ maxRevision: 2, activityAt: 400 });
   });
 
   it('updates a Feed row it wrote before, by id, and keeps its position', () => {

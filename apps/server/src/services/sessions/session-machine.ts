@@ -104,19 +104,18 @@ const sessionSetup = setup({
     })),
     rememberReady: enqueueActions(({ context, event, enqueue }) => {
       assertEvent(event, 'agent.ready');
-      if (context.vendorSessionId === null)
-        enqueue.sendTo(
-          ({ system }) =>
-            system.get('databaseWriter') as ActorRefFrom<typeof writerMachine>,
-          {
-            type: 'writer.write',
-            job: {
-              type: 'sessionRowUpdate',
-              id: context.sessionId,
-              set: { vendorSessionId: event.vendorSessionId },
-            },
+      enqueue.sendTo(
+        ({ system }) =>
+          system.get('databaseWriter') as ActorRefFrom<typeof writerMachine>,
+        {
+          type: 'writer.write',
+          job: {
+            type: 'sessionRowUpdate',
+            id: context.sessionId,
+            set: { vendorSessionId: event.vendorSessionId, failure: null },
           },
-        );
+        },
+      );
       enqueue.assign({
         vendorSessionId: event.vendorSessionId,
         capabilities: event.capabilities,
@@ -284,7 +283,22 @@ const sessionSetup = setup({
         },
       });
     }),
-    giveUp: assign({ failure: 'The Agent stopped three times in ten minutes' }),
+    giveUp: enqueueActions(({ context, enqueue }) => {
+      const failure = 'The Agent stopped three times in ten minutes';
+      enqueue.assign({ failure });
+      enqueue.sendTo(
+        ({ system }) =>
+          system.get('databaseWriter') as ActorRefFrom<typeof writerMachine>,
+        {
+          type: 'writer.write',
+          job: {
+            type: 'sessionRowUpdate',
+            id: context.sessionId,
+            set: { failure },
+          },
+        },
+      );
+    }),
     cancelNotice: sendTo('feed', ({ context }) => ({
       type: 'feed.change',
       turnId: context.activeTurnId,
@@ -363,6 +377,7 @@ export const sessionMachine = sessionSetup.createMachine({
     checkout: { path: '', branch: null },
     epoch: 0,
     maxRevision: 0,
+    activityAt: 0,
     nextPosition: 0,
     capabilities: null,
     activeTurnId: null,
@@ -408,6 +423,7 @@ export const sessionMachine = sessionSetup.createMachine({
           sessionId: context.sessionId,
           epoch: context.epoch,
           maxRevision: context.maxRevision,
+          activityAt: context.activityAt,
           nextPosition: context.nextPosition,
           findWrittenRow: (id) =>
             readWrittenRow({

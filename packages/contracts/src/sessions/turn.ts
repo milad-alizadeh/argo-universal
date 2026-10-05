@@ -10,7 +10,7 @@ export type TurnStatus = z.infer<typeof TurnStatus>;
 
 // ACP `Error`, the error a Turn ended with.
 export const TurnError = z.strictObject({
-  code: z.int(),
+  code: z.union([z.int(), z.literal('interrupted')]),
   message: z.string(),
   data: z.unknown().optional(),
 });
