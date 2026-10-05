@@ -7,6 +7,7 @@ Argo for iOS, Android, web, and macOS: one Expo app, an Electron shell, and a lo
 - Words: `GLOSSARY.md`. Use its terms in code, docs, and messages.
 - Decisions: `docs/adr/`. Name any ADR that your change contradicts, and ask before you contradict it.
 - Specs: `docs/specs/`. Build a spec as written. When it is unclear or wrong, stop and ask.
+- Storybook: before authoring stories or testing UI components, read `docs/agents/storybook.md`.
 - Designs: Paper. Before you edit a Paper file or build UI from one, read `docs/agents/paper.md`. It holds until Paper ships component instances.
 
 ## Agent skills
@@ -29,8 +30,6 @@ One `GLOSSARY.md` and one `docs/adr/` folder at the repo root ("single-context")
 - Claude and Codex Sessions draw the same UI. Parity is part of every Session change.
 - End-to-end tests mock only the Agent CLI, with mocks in `mocks/cli/<agent>/`.
 - Test assets live outside `src/`: `e2e/<flow>/`, `mocks/`, `tools/`. Call them mocks.
-- Test components with Storybook play functions in `*.test.stories.tsx`, which run in the browser. Plain Vitest tests non-UI code only.
-- Showcase components in Storybook with one story per prop, named for that prop, displaying its variations together through the shared `Variation` and `Variations` helpers.
 - Every XState machine has model-based tests from `xstate/graph` that walk all of its transitions.
 - Screens get tRPC from `useTRPC()` only.
 - Use full words in names, except domain acronyms and platform-fixed names.

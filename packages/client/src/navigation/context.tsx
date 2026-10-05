@@ -2,10 +2,15 @@ import { createContext, type ReactNode, useContext } from 'react';
 
 export type NavigationDestination =
   | { to: 'sessions' }
-  | { to: 'new-session' }
+  | { to: 'new-session'; projectId?: string }
   | { to: 'session'; id: string }
   | { to: 'issues' }
   | { to: 'atlas' }
+  | { to: 'settings-projects' }
+  | { to: 'settings-agents' }
+  | { to: 'settings-devices' }
+  | { to: 'settings-appearance' }
+  | { to: 'settings-notifications' }
   | { to: 'settings-accounts' }
   | { to: 'settings-project'; name: string }
   | { to: 'settings-connection' }

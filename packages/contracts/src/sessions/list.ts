@@ -8,6 +8,7 @@ export const SessionListInput = z.strictObject({
   archived: z.boolean(),
   query: z.string().optional(),
   cursor: z.string().optional(),
+  direction: z.literal('forward').optional(),
 });
 export type SessionListInput = z.infer<typeof SessionListInput>;
 

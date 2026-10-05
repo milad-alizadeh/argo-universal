@@ -1,3 +1,5 @@
+import type {} from './lib/reusables-compatibility';
+
 export {
   DesktopShell,
   type DesktopShellProps,
@@ -18,9 +20,14 @@ export {
   type ShellSection,
 } from './components/PhoneShell';
 export {
+  ProjectHeading,
+  type ProjectHeadingProps,
+} from './components/ProjectHeading';
+export {
   PullRequestIndicator,
   type PullRequestIndicatorProps,
 } from './components/PullRequestIndicator';
+export { Screen, type ScreenProps } from './components/Screen';
 export { SessionRow, type SessionRowProps } from './components/SessionRow';
 export {
   SettingsList,
@@ -48,14 +55,15 @@ export {
   AccountsScreen,
   AtlasScreen,
   IssuesScreen,
+  NewSessionScreen,
   ProjectSettingsScreen,
   type ProjectSettingsScreenProps,
 } from './screens/PlaceholderScreens';
-export { ProjectsScreen } from './screens/ProjectsScreen';
 export {
   SessionScreen,
   type SessionScreenProps,
 } from './screens/SessionScreen';
+export { SessionsScreen } from './screens/SessionsScreen';
 export { AppProviders, type AppProvidersProps } from './trpc/app-providers';
 export { TRPCProvider, useTRPC, useTRPCClient } from './trpc/context';
 export { createTRPCClient, type TRPCClient } from './trpc/create-trpc-client';

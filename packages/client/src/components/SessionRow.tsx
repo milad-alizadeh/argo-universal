@@ -1,6 +1,6 @@
 import type { SessionInfo } from '@repo/contracts';
 import { RobotIcon } from 'phosphor-react-native';
-import { useEffect } from 'react';
+import { memo, useEffect } from 'react';
 import { View } from 'react-native';
 import Animated, {
   cancelAnimation,
@@ -34,7 +34,7 @@ export interface SessionRowProps {
   onSelect: (sessionId: string) => void;
 }
 
-export function SessionRow({
+export const SessionRow = memo(function SessionRow({
   session,
   logo,
   selected = false,
@@ -79,8 +79,8 @@ export function SessionRow({
       aria-selected={selected}
       onPress={() => onSelect(session.sessionId)}
       className={cn(
-        'h-auto sm:h-auto w-full items-start justify-start gap-2 rounded-md px-2.5 py-3 wide:py-2',
-        selected && 'bg-sidebar-accent',
+        'h-auto sm:h-auto w-full items-start justify-start gap-2 rounded-md px-2.5 py-3 wide:py-2 bg-background wide:bg-sidebar dark:active:bg-accent web:dark:hover:bg-accent',
+        selected && 'bg-sidebar-accent wide:bg-sidebar-accent',
       )}
     >
       <TextClassContext.Provider value={undefined}>
@@ -193,4 +193,4 @@ export function SessionRow({
       </TextClassContext.Provider>
     </Button>
   );
-}
+});

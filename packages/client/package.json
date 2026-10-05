@@ -17,6 +17,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@legendapp/list": "catalog:",
     "@repo/contracts": "workspace:*",
     "@repo/uniwind": "workspace:*",
     "@rn-primitives/accordion": "catalog:",

@@ -9,7 +9,11 @@ import { cn } from '../src/lib/utils';
 
 interface PreviewContext {
   globals: { themeId?: string; mode?: string };
-  parameters: { standalonePreview?: boolean; previewPadding?: boolean };
+  parameters: {
+    standalonePreview?: boolean;
+    previewPadding?: boolean;
+    screenPreview?: boolean;
+  };
 }
 
 const initialMetrics = {
@@ -23,12 +27,14 @@ function ReusablesPreview({
   mode,
   standalone,
   padding,
+  screen,
 }: {
   Story: ComponentType;
   themeId: ThemeId;
   mode: 'light' | 'dark';
   standalone: boolean;
   padding: boolean;
+  screen: boolean;
 }) {
   useLayoutEffect(() => {
     applyTheme(themeId, mode);
@@ -36,7 +42,11 @@ function ReusablesPreview({
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider initialMetrics={initialMetrics}>
-        {Platform.OS === 'web' ? (
+        {screen ? (
+          <View className="flex-1 w-full min-h-0 bg-background web:h-screen web:flex-none">
+            <Story />
+          </View>
+        ) : Platform.OS === 'web' ? (
           <View
             className={cn(
               'min-h-full w-full items-center justify-center bg-background',
@@ -76,6 +86,7 @@ export function withReusablesPreview(
       mode={context.globals.mode === 'dark' ? 'dark' : 'light'}
       standalone={context.parameters.standalonePreview === true}
       padding={context.parameters.previewPadding !== false}
+      screen={context.parameters.screenPreview === true}
     />
   );
 }
