@@ -160,6 +160,54 @@ export const StatusParity: Story = {
   },
 };
 
+export const StatusMotion: Story = {
+  ...StatusParity,
+  play: async ({ canvas }) => {
+    const running = canvas.getByRole('button', {
+      name: 'First Agent: Build the settings screen, Running',
+    });
+    const waiting = canvas.getByRole('button', {
+      name: 'First Agent: Review the proposed change, Needs input',
+    });
+    const runningLogo = running.querySelector(
+      '[data-testid="session-logo"]',
+    )?.parentElement;
+    const waitingLogo = waiting.querySelector(
+      '[data-testid="session-logo"]',
+    )?.parentElement;
+    if (!runningLogo || !waitingLogo) throw new Error('Missing Agent logo');
+    const rotation = getComputedStyle(runningLogo).transform;
+    const waitingRotation = getComputedStyle(waitingLogo).transform;
+    const runningDot = running.querySelector('[data-testid="session-status"]');
+    const waitingDot = waiting.querySelector('[data-testid="session-status"]');
+    if (!runningDot || !waitingDot) throw new Error('Missing Session status');
+    const runningOpacity = getComputedStyle(runningDot).opacity;
+    const waitingOpacity = getComputedStyle(waitingDot).opacity;
+    await waitFor(() =>
+      expect(getComputedStyle(runningLogo).transform).not.toBe(rotation),
+    );
+    await waitFor(() =>
+      expect(getComputedStyle(runningDot).opacity).not.toBe(runningOpacity),
+    );
+    await waitFor(() =>
+      expect(getComputedStyle(waitingDot).opacity).not.toBe(waitingOpacity),
+    );
+    await expect(getComputedStyle(runningLogo).opacity).toBe('1');
+    await expect(getComputedStyle(waitingLogo).transform).toBe(waitingRotation);
+    for (const [name, label] of [
+      ['Fix the failing build', 'Failed'],
+      ['New results to review', 'Unread'],
+      ['Finished work', 'Idle'],
+    ]) {
+      const dot = canvas
+        .getByRole('button', { name: `First Agent: ${name}, ${label}` })
+        .querySelector('[data-testid="session-status"]');
+      if (!dot) throw new Error('Missing Session status');
+      await expect(getComputedStyle(dot).opacity).toBe('1');
+    }
+  },
+};
+
 export const PlanAndSubagents: Story = {
   args: {
     session: sessionRowMocks.planAndSubagents,

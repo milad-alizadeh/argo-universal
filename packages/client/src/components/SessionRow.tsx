@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { View } from 'react-native';
 import Animated, {
   cancelAnimation,
+  Easing,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -50,17 +51,26 @@ export function SessionRow({
   const { color } = useResolveClassNames('text-foreground');
   const status = statusAppearance[session.status];
   const plan = session.plan;
-  const logoOpacity = useSharedValue(1);
+  const logoRotation = useSharedValue(0);
   useEffect(() => {
-    logoOpacity.value =
+    logoRotation.value =
       session.status === 'running'
-        ? withRepeat(withTiming(0.6, { duration: 1000 }), -1, true)
-        : 1;
-    return () => cancelAnimation(logoOpacity);
-  }, [session.status, logoOpacity]);
+        ? withRepeat(
+            withTiming(360, { duration: 3000, easing: Easing.linear }),
+            -1,
+          )
+        : 0;
+    return () => cancelAnimation(logoRotation);
+  }, [session.status, logoRotation]);
   const logoStyle = useAnimatedStyle(
-    () => ({ opacity: logoOpacity.value }),
-    [logoOpacity],
+    () => ({ transform: [{ rotate: `${logoRotation.value}deg` }] }),
+    [logoRotation],
+  );
+  const statusStyle = useBlinkingStatus(
+    session.status === 'running' || session.status === 'needs_input',
+  );
+  const subagentsStatusStyle = useBlinkingStatus(
+    !subagentsFailed && session.subagents.running > 0,
   );
   const markBorder = selected
     ? 'border-sidebar-accent'
@@ -88,8 +98,9 @@ export function SessionRow({
             color={color}
           />
         </Animated.View>
-        <View
+        <Animated.View
           testID="session-status"
+          style={statusStyle}
           className={cn(
             'absolute -right-1 -top-0.5 size-2.5 rounded-full border-2',
             status.className,
@@ -144,8 +155,9 @@ export function SessionRow({
                   className="size-3.5 text-muted-foreground"
                 />
                 {(subagentsFailed || session.subagents.running > 0) && (
-                  <View
+                  <Animated.View
                     testID="subagents-status"
+                    style={subagentsStatusStyle}
                     className={cn(
                       'absolute -right-0.75 -top-0.75 size-2 rounded-full border-2',
                       subagentsFailed ? 'bg-destructive' : 'bg-success',
@@ -196,6 +208,17 @@ export function SessionRow({
       </View>
     </Button>
   );
+}
+
+function useBlinkingStatus(active: boolean) {
+  const opacity = useSharedValue(1);
+  useEffect(() => {
+    opacity.value = active
+      ? withRepeat(withTiming(0, { duration: 500 }), -1, true)
+      : 1;
+    return () => cancelAnimation(opacity);
+  }, [active, opacity]);
+  return useAnimatedStyle(() => ({ opacity: opacity.value }), [opacity]);
 }
 
 const issueIcon =
