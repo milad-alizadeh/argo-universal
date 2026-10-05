@@ -3,10 +3,10 @@ import type {
   AgentCommand,
   AgentConnectInput,
   AgentEvent,
+  AgentReady,
 } from '@repo/agents';
 
-export type MockAgentReady = Extract<AgentEvent, { type: 'agent.ready' }>;
-export type MockAgentStreamEvent = Exclude<AgentEvent, MockAgentReady>;
+export type MockAgentStreamEvent = Exclude<AgentEvent, { type: 'agent.ready' }>;
 
 export interface MockAgentStream {
   input: AgentConnectInput;
@@ -16,23 +16,30 @@ export interface MockAgentStream {
 }
 
 export interface MockAgentScript {
-  connect: (input: AgentConnectInput) => Promise<MockAgentReady>;
+  connect?: (input: AgentConnectInput) => Promise<AgentReady>;
   stream: (stream: MockAgentStream) => undefined | (() => void);
   stop: (input: AgentConnectInput) => Promise<void>;
 }
 
+export const mockReady: AgentReady = {
+  vendorSessionId: 'vendor-1',
+  configOptions: [],
+  capabilities: { planApproval: 'continueTurn', stopShell: false },
+  continuedOutside: false,
+};
+
 // An adapter whose vendor messages are the Agent events a test scripts.
 export const createMockAdapter = (
-  script: MockAgentScript,
+  { connect = async () => mockReady, stream, stop }: MockAgentScript,
   agent = 'mock',
 ): AgentAdapter<MockAgentStreamEvent, null> => ({
   agent,
   initialMappingState: () => null,
   toAgentEvents: (event, mappingState) => ({ events: [event], mappingState }),
   async connect(input, listener) {
-    const { type: _type, ...ready } = await script.connect(input);
+    const ready = await connect(input);
     const handlers: ((command: AgentCommand) => void)[] = [];
-    const cleanup = script.stream({
+    const cleanup = stream({
       input,
       send: listener.message,
       fail: (error) => listener.failed(String(error)),
@@ -44,7 +51,7 @@ export const createMockAdapter = (
     return {
       ready,
       prompt: forward,
-      cancel: () => forward({ type: 'agent.cancel' }),
+      cancel: forward,
       setConfigOption: forward,
       answerPermission: forward,
       answerElicitation: forward,
@@ -53,7 +60,7 @@ export const createMockAdapter = (
       stopShell: forward,
       stop: async () => {
         cleanup?.();
-        await script.stop(input);
+        await stop(input);
       },
     };
   },

@@ -3,6 +3,7 @@ import {
   type AgentConnectInput,
   type AgentEvent,
   type AgentInput,
+  type AgentReady,
   agentMachine,
   findAgentAdapter,
 } from '@repo/agents';
@@ -18,13 +19,11 @@ import {
 import { adjacencyMapToArray, getAdjacencyMap, TestModel } from 'xstate/graph';
 import {
   createMockAdapter,
-  type MockAgentReady,
   type MockAgentStream,
   type MockAgentStreamEvent,
 } from './adapter';
 
-const ready: MockAgentReady = {
-  type: 'agent.ready',
+const ready: AgentReady = {
   vendorSessionId: 'vendor-session-1',
   configOptions: [
     {
@@ -38,14 +37,11 @@ const ready: MockAgentReady = {
   capabilities: { planApproval: 'continueTurn', stopShell: true },
   continuedOutside: false,
 };
+const readyEvent = { type: 'agent.ready', ...ready } as const;
 const failure = new Error('process exited');
-const deferred = <Value>() => {
-  const { promise, resolve, reject } = Promise.withResolvers<Value>();
-  return { promise, resolve, reject };
-};
 
-let connection: ReturnType<typeof deferred<MockAgentReady>>;
-let shutdown: ReturnType<typeof deferred<void>>;
+let connection: PromiseWithResolvers<AgentReady>;
+let shutdown: PromiseWithResolvers<void>;
 let stream: MockAgentStream;
 let received: AgentEvent[];
 let commands: AgentCommand[];
@@ -75,7 +71,6 @@ const adapter = createMockAdapter({
 type AgentSnapshot = SnapshotFrom<typeof agentMachine>;
 type AgentMachineEvent = EventFromLogic<typeof agentMachine>;
 
-const withoutType = ({ type: _type, ...rest }: MockAgentReady) => rest;
 const start = () => {
   agent = createActor(agentMachine, { input }).start();
 };
@@ -89,8 +84,8 @@ const connect = async (result = ready) => {
 
 beforeEach(() => {
   vi.useFakeTimers();
-  connection = deferred();
-  shutdown = deferred();
+  connection = Promise.withResolvers();
+  shutdown = Promise.withResolvers();
   received = [];
   commands = [];
   inputs = [];
@@ -163,33 +158,33 @@ const feed: MockAgentStreamEvent = {
   },
 };
 
-// Connection events drive the graph; the executors produce each one through the scripted adapter.
+// Vendor events drive the graph; the executors produce each one through the scripted adapter.
 const events = [
   ...commandExamples,
   { ...planAnswer, turnId: undefined },
   { type: 'agent.stop' },
-  { type: 'connection.message', message: { type: 'agent.turnStarted' } },
+  { type: 'vendor.events', events: [{ type: 'agent.turnStarted' }] },
   {
-    type: 'connection.message',
-    message: { type: 'agent.turnEnded', stopReason: 'end_turn' },
+    type: 'vendor.events',
+    events: [{ type: 'agent.turnEnded', stopReason: 'end_turn' }],
   },
-  { type: 'connection.message', message: feed },
-  { type: 'connection.ready', ready: withoutType(ready) },
+  { type: 'vendor.events', events: [feed] },
+  { type: 'vendor.ready', ready },
   {
-    type: 'connection.ready',
+    type: 'vendor.ready',
     ready: {
-      ...withoutType(ready),
+      ...ready,
       capabilities: { planApproval: 'startTurn', stopShell: false },
     },
   },
-  { type: 'connection.failed', error: failure.message },
-  { type: 'connection.closed' },
-  { type: 'xstate.error.actor.connection', error: failure },
+  { type: 'vendor.failed', error: failure.message },
+  { type: 'vendor.closed' },
+  { type: 'xstate.error.actor.vendorSession', error: failure },
 ] as AnyEventObject[] as AgentMachineEvent[];
 
 const eventKey = (event: AgentMachineEvent) => {
-  if (event.type === 'connection.message')
-    return `${event.type}:${(event.message as AgentEvent).type}`;
+  if (event.type === 'vendor.events')
+    return `${event.type}:${event.events.map(({ type }) => type)}`;
   if (event.type === 'agent.answerPlanProposal')
     return `${event.type}:${!!event.turnId}`;
   return event.type;
@@ -210,7 +205,7 @@ const model = new TestModel(agentMachine, {
   serializeState: (snapshot, event, previous) =>
     JSON.stringify({
       value: snapshot.value,
-      planApproval: snapshot.context.ready?.capabilities.planApproval,
+      planApproval: snapshot.context.capabilities?.planApproval,
       failure: snapshot.context.failure,
       via: event && `${JSON.stringify(previous?.value)} ${eventKey(event)}`,
     }),
@@ -228,21 +223,22 @@ const executors = Object.fromEntries(
         await settle();
         if (command.type !== 'agent.stop')
           expect(commands).toEqual([...previousCommands, command]);
-      } else if (event.type === 'connection.message') {
+      } else if (event.type === 'vendor.events') {
         const previousEvents = [...received];
-        stream.send(event.message as MockAgentStreamEvent);
-        expect(received).toEqual([...previousEvents, event.message]);
-      } else if (event.type === 'connection.ready') {
-        await connect({ type: 'agent.ready', ...event.ready });
+        for (const sent of event.events)
+          stream.send(sent as MockAgentStreamEvent);
+        expect(received).toEqual([...previousEvents, ...event.events]);
+      } else if (event.type === 'vendor.ready') {
+        await connect(event.ready);
         expect(received).toEqual([{ type: 'agent.ready', ...event.ready }]);
-      } else if (event.type === 'connection.failed') {
+      } else if (event.type === 'vendor.failed') {
         if (state.matches('starting')) connection.reject(failure);
         else if (state.matches('stopping')) {
           connection.resolve(ready);
           shutdown.reject(failure);
         } else stream.fail(failure.message);
         await settle();
-      } else if (event.type === 'connection.closed') {
+      } else if (event.type === 'vendor.closed') {
         connection.resolve(ready);
         shutdown.resolve();
         await settle();
@@ -340,7 +336,7 @@ describe('Agent machine', () => {
     });
     expect(received).toEqual([
       {
-        ...ready,
+        ...readyEvent,
         vendorSessionId: 'existing-vendor-session',
         continuedOutside: true,
       },
@@ -359,7 +355,7 @@ describe('Agent machine', () => {
     await settle();
     expect(commands).toEqual([prompt, { type: 'agent.cancel' }]);
     expect(agent.getSnapshot().value).toEqual({ ready: 'turn' });
-    expect(received).toEqual([ready]);
+    expect(received).toEqual([readyEvent]);
     stream.send({ type: 'agent.turnEnded', stopReason: 'cancelled' });
     expect(agent.getSnapshot().value).toEqual({ ready: 'idle' });
     expect(cleanups).toBe(0);
@@ -456,7 +452,7 @@ describe('Agent machine', () => {
       },
     ];
     for (const change of changes) stream.send(change);
-    expect(received).toEqual([ready, ...changes]);
+    expect(received).toEqual([readyEvent, ...changes]);
     expect(agent.getSnapshot().value).toEqual({ ready: 'idle' });
     stream.send({
       type: 'agent.shellOutput',
@@ -498,7 +494,7 @@ describe('Agent machine', () => {
     expect(cleanups).toBe(1);
     expect(agent.getSnapshot().value).toBe('stopping');
     stream.send(feed);
-    expect(received).toEqual([ready]);
+    expect(received).toEqual([readyEvent]);
     shutdown.resolve();
     await settle();
     expect(agent.getSnapshot().output).toEqual({ failure: null });

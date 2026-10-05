@@ -1,10 +1,6 @@
+import type { ModelInfo } from '@anthropic-ai/claude-agent-sdk';
 import { describe, expect, it } from 'vitest';
-import {
-  changeValue,
-  type ModelInfo,
-  startingValues,
-  toConfigOptions,
-} from './config-options';
+import { changeValue, startingValues, toConfigOptions } from './config-options';
 
 const models: ModelInfo[] = [
   {

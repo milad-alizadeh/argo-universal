@@ -7,7 +7,7 @@ import { toSessionSnapshot } from './session-snapshot';
 const { database, remove } = openTestDatabase();
 afterAll(remove);
 const context = createActor(sessionMachine, {
-  input: { database, kind: 'existing', sessionId: 'session-1' },
+  input: { database, adapters: [], kind: 'existing', sessionId: 'session-1' },
 }).getSnapshot().context;
 const rows: [StateValue, string][] = [
   ['entering', 'idle'],

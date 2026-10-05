@@ -7,9 +7,10 @@ import {
   createMockAdapter,
   type MockAgentScript,
   type MockAgentStream,
+  mockReady,
 } from '@repo/mocks/agent';
 import { afterEach, expect, it } from 'vitest';
-import { createActor, fromPromise, setup, waitFor } from 'xstate';
+import { createActor, setup, waitFor } from 'xstate';
 import { insertSession, openTestDatabase } from '#mocks/database';
 import { writerMachine } from '../feed/writer-machine';
 import { createServerServices } from '../server-services';
@@ -39,13 +40,7 @@ function openServer({ applyConfigOptions = true } = {}) {
     },
   ];
   const streams = new Map<string, MockAgentStream>();
-  const ready = {
-    type: 'agent.ready' as const,
-    vendorSessionId: 'vendor-1',
-    configOptions,
-    capabilities: { planApproval: 'continueTurn' as const, stopShell: false },
-    continuedOutside: false,
-  };
+  const ready = { ...mockReady, configOptions };
   const script: MockAgentScript = {
     connect: async () => ready,
     stream: (stream) => {

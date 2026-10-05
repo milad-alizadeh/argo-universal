@@ -1,8 +1,4 @@
-import {
-  type AgentAdapter,
-  type AgentOutput,
-  agentAdapters,
-} from '@repo/agents';
+import { type AgentAdapter, agentAdapters } from '@repo/agents';
 import type { SessionNewInput } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import {
@@ -10,6 +6,7 @@ import {
   assertEvent,
   assign,
   enqueueActions,
+  type OutputFrom,
   setup,
 } from 'xstate';
 import { type SessionActorRef, sessionMachine } from './session-machine';
@@ -39,7 +36,7 @@ type RegistryEvent =
   | {
       type: `xstate.done.actor.${string}`;
       actorId: string;
-      output: AgentOutput;
+      output: OutputFrom<typeof sessionMachine>;
     }
   | {
       type: `xstate.snapshot.${string}`;
@@ -67,20 +64,19 @@ export const registryMachine = setup({
           adapters: context.adapters,
           sessionId: event.sessionId,
           ...(event.type === 'sessions.create'
-            ? ({
+            ? {
                 kind: 'new',
                 projectId: event.projectId,
                 agent: event.agent,
                 checkout: event.checkout,
-              } as const)
-            : ({ kind: 'existing' } as const)),
+              }
+            : { kind: 'existing' }),
         },
       });
       return { sessions: { ...context.sessions, [event.sessionId]: session } };
     }),
     removeSession: enqueueActions(({ context, event, enqueue }) => {
-      if (!event.type.startsWith('xstate.done.actor.') || !('actorId' in event))
-        return;
+      if (!('actorId' in event)) return;
       enqueue.stopChild(event.actorId);
       enqueue.assign({
         sessions: Object.fromEntries(
@@ -96,18 +92,18 @@ export const registryMachine = setup({
     }),
     closeReadySession: enqueueActions(({ context, event, enqueue }) => {
       if (!('snapshot' in event)) return;
-      const session = context.sessions[event.snapshot.context.sessionId];
-      const snapshot = session?.getSnapshot();
+      const { snapshot } = event;
+      const session = context.sessions[snapshot.context.sessionId];
       if (
         session &&
-        snapshot?.can({ type: 'session.close' }) &&
+        snapshot.can({ type: 'session.close' }) &&
         !snapshot.matches({ open: { live: 'closing' } })
       )
         enqueue.sendTo(session, { type: 'session.close' });
     }),
   },
   guards: {
-    registeredAgent: ({ context, event }) =>
+    isRegisteredAgent: ({ context, event }) =>
       (event.type === 'sessions.create' || event.type === 'sessions.open') &&
       context.adapters.some((adapter) => adapter.agent === event.agent),
     noSessions: ({ context }) => Object.keys(context.sessions).length === 0,
@@ -124,8 +120,11 @@ export const registryMachine = setup({
   states: {
     running: {
       on: {
-        'sessions.create': { guard: 'registeredAgent', actions: 'openSession' },
-        'sessions.open': { guard: 'registeredAgent', actions: 'openSession' },
+        'sessions.create': {
+          guard: 'isRegisteredAgent',
+          actions: 'openSession',
+        },
+        'sessions.open': { guard: 'isRegisteredAgent', actions: 'openSession' },
         'sessions.stopAll': { target: 'stopping' },
       },
     },

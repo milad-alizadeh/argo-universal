@@ -3,6 +3,7 @@ import {
   createMockAdapter,
   type MockAgentScript,
   type MockAgentStream,
+  mockReady,
 } from '@repo/mocks/agent';
 import { afterAll, afterEach, expect, it, vi } from 'vitest';
 import {
@@ -24,8 +25,7 @@ import { type FeedActorRef, feedMachine } from '../feed/feed-machine';
 import type { createFeedService } from '../feed/feed-service';
 import type { WriterEvent } from '../feed/writer-machine';
 import { sendSessionCommand } from './session-command';
-import type { SessionInput } from './session-data';
-import { sessionMachine } from './session-machine';
+import { type SessionMachineInput, sessionMachine } from './session-machine';
 import { toSessionSnapshot } from './session-snapshot';
 
 const cleanups: (() => void)[] = [];
@@ -49,13 +49,6 @@ async function openSession(overrides: Partial<MockAgentScript> = {}) {
   const commands: AgentCommand[] = [];
   let stream: MockAgentStream | undefined;
   const adapter = createMockAdapter({
-    connect: async () => ({
-      type: 'agent.ready',
-      vendorSessionId: 'vendor-1',
-      configOptions: [],
-      capabilities: { planApproval: 'continueTurn', stopShell: false },
-      continuedOutside: false,
-    }),
     stream: (value) => {
       stream = value;
       value.receive((command) => commands.push(command));
@@ -311,13 +304,7 @@ it('restarts the Agent with its vendor Session and gives up after three crashes 
   const { session, service, currentStream } = await openSession({
     connect: async (input) => {
       resumed.push(input.vendorSessionId);
-      return {
-        type: 'agent.ready',
-        vendorSessionId: 'vendor-1',
-        configOptions: [],
-        capabilities: { planApproval: 'continueTurn', stopShell: false },
-        continuedOutside: false,
-      };
+      return mockReady;
     },
   });
   sendSessionCommand(session, firstPrompt);
@@ -389,15 +376,8 @@ const data = {
   nextPosition: 0,
 };
 let stream: MockAgentStream | undefined;
-const ready: Extract<AgentEvent, { type: 'agent.ready' }> = {
-  type: 'agent.ready',
-  vendorSessionId: 'vendor-1',
-  configOptions: [],
-  capabilities: { planApproval: 'continueTurn', stopShell: false },
-  continuedOutside: false,
-};
+const ready = { type: 'agent.ready', ...mockReady } as const;
 const adapter = createMockAdapter({
-  connect: async () => ready,
   stream: (value) => {
     stream = value;
     return () => {
@@ -478,7 +458,7 @@ const key = (snapshot: SessionSnapshot | undefined) =>
 const logic = machine as unknown as ActorLogic<
   SessionSnapshot,
   SessionEvent,
-  SessionInput
+  SessionMachineInput
 >;
 const models = (['new', 'existing'] as const).map(
   (kind) =>
@@ -618,7 +598,6 @@ it('attaches live Feed updates when a subscription starts while the Session load
   const { database, remove } = openTestDatabase();
   cleanups.push(remove);
   const adapter = createMockAdapter({
-    connect: async () => ready,
     stream: () => {},
     stop: async () => {},
   });

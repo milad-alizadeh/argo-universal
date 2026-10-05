@@ -1,4 +1,4 @@
-import type { AgentAdapter } from '@repo/agents';
+import { type AgentAdapter, agentAdapters } from '@repo/agents';
 import type { Database } from '@repo/db';
 import { createActor, setup } from 'xstate';
 import type { FeedActorRef } from '../src/services/feed/feed-machine';
@@ -14,7 +14,7 @@ export const firstPrompt: Extract<SessionCommand, { type: 'session.prompt' }> =
 
 export function createSessionHost(
   database: Database,
-  adapters?: readonly AgentAdapter[],
+  adapters: readonly AgentAdapter[] = agentAdapters,
 ) {
   const root = createActor(
     setup({

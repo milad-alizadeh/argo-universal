@@ -12,13 +12,6 @@ it('serves live Session procedures and drains their Feed before closing the data
   let services: Services | undefined;
   let closedDatabase = false;
   const adapter = createMockAdapter({
-    connect: async () => ({
-      type: 'agent.ready',
-      vendorSessionId: 'vendor-1',
-      configOptions: [],
-      capabilities: { planApproval: 'continueTurn', stopShell: false },
-      continuedOutside: false,
-    }),
     stream: (stream) => {
       stream.receive((command) => {
         if (command.type === 'agent.prompt')

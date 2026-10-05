@@ -5,31 +5,18 @@ import { agentAdapters } from '@repo/agents';
 import type { SessionUpdate } from '@repo/contracts';
 import { session as sessionTable } from '@repo/db/schema';
 import { mockClis } from '@repo/mocks/cli';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { type SnapshotFrom, toPromise, waitFor } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
-import { createSessionHost } from '#mocks/session';
+import { createSessionHost, firstPrompt } from '#mocks/session';
 import { sendSessionCommand } from './session-command';
 import type { SessionActorRef } from './session-machine';
 
 const cleanups: (() => void)[] = [];
 afterEach(() => {
   for (const cleanup of cleanups.splice(0).reverse()) cleanup();
+  vi.unstubAllEnvs();
 });
-
-// Sets environment variables for one test.
-function setEnvironment(values: Record<string, string>) {
-  const previous = Object.fromEntries(
-    Object.keys(values).map((key) => [key, process.env[key]]),
-  );
-  Object.assign(process.env, values);
-  cleanups.push(() => {
-    for (const [key, value] of Object.entries(previous)) {
-      if (value === undefined) delete process.env[key];
-      else process.env[key] = value;
-    }
-  });
-}
 
 const temporaryDirectory = (prefix: string) => {
   const directory = realpathSync(mkdtempSync(path.join(tmpdir(), prefix)));
@@ -38,7 +25,7 @@ const temporaryDirectory = (prefix: string) => {
 };
 
 const isIdle = (snapshot: SnapshotFrom<SessionActorRef>) =>
-  snapshot.can({ type: 'session.prompt', turnId: 'next-turn', content: [] });
+  snapshot.can(firstPrompt);
 
 describe.each(agentAdapters.map((adapter) => adapter.agent))(
   '%s adapter against its mock CLI',
@@ -55,14 +42,16 @@ describe.each(agentAdapters.map((adapter) => adapter.agent))(
       const bin = temporaryDirectory('argo-bin-');
       const cwd = temporaryDirectory('argo-project-');
       await mockCli?.write(bin, { recording });
-      setEnvironment({
+      const environment = {
         PATH: `${bin}${path.delimiter}${process.env.PATH ?? ''}`,
         ...mockCli?.writeTranscript(
           temporaryDirectory('argo-vendor-'),
           cwd,
           transcriptId,
         ),
-      });
+      };
+      for (const [key, value] of Object.entries(environment))
+        vi.stubEnv(key, value);
       const { database, remove } = openTestDatabase(
         { agent, checkoutPath: cwd, vendorSessionId },
         cwd,

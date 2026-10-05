@@ -26,7 +26,7 @@ The scratchpad is `/private/tmp/claude-501/-Users-milad-Developer-argo-universal
 
 ## Proposed shape in one paragraph
 
-Hold one long-lived `query()` per Session, fed by an async queue of user messages. Argo chooses the vendor id: a new Session passes `sessionId: randomUUID()`, and every later start passes `resume`. Pass `permissionMode` explicitly. Hold `canUseTool` promises by `toolUseID`. Permission requests, AskUserQuestion and ExitPlanMode all arrive there. Turn on `includePartialMessages`, `forwardSubagentText` and `perTaskStopAffordance`. Parse every message with Zod at the boundary.
+Hold one long-lived `query()` per Session, fed by an async queue of user messages. Argo chooses the vendor id: a new Session passes `sessionId: randomUUID()`, and every later start passes `resume`. Pass `permissionMode` explicitly. Hold `canUseTool` promises by `toolUseID`. Permission requests, AskUserQuestion and ExitPlanMode all arrive there. Turn on `includePartialMessages`, `forwardSubagentText` and `perTaskStopAffordance`. The SDK's types describe each message; the Feed checks the result against the contract (ADR-0015, which replaced the Zod plan below).
 
 ## 1. Starting a Session
 

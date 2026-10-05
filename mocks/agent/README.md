@@ -2,7 +2,7 @@
 
 `@repo/mocks/agent` exports `createMockAdapter`, an Agent adapter with the Agent id `mock` whose vendor messages are the Agent events a test scripts. The one Agent machine (ADR 0015) runs it like any other adapter. The script has three hooks:
 
-- `connect(input)` resolves the `agent.ready` event, or rejects to model a connection failure. Keep its promise pending to test startup and stopping during startup.
+- `connect(input)` resolves the ready data, `mockReady` by default, or rejects to model a failed start. Keep its promise pending to test startup and stopping during startup.
 - `stream(stream)` gets `send(event)`, `fail(error)`, and `receive(handler)`. Send typed Agent events whenever the test needs them, and register a handler to observe Session commands. Return a cleanup function to release anything the script starts.
 - `stop(input)` resolves when shutdown finishes, or rejects to model a shutdown failure. Keep it pending to test the Session's shutdown limit.
 

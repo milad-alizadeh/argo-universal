@@ -6,9 +6,7 @@ import type {
 import type { SessionConfigOption } from '@repo/contracts';
 import type { AgentConfigValue } from '../src/agent-events';
 
-export type { ModelInfo };
-
-// The SDK names its modes only as a type, so the list and its names are Argo's; `dontAsk` is not offered.
+// The SDK names its modes only as a type, so this list and its names are ours; `dontAsk` is not offered.
 const modeNames = {
   default: 'Ask before edits',
   acceptEdits: 'Accept edits',
@@ -65,7 +63,7 @@ export function startingValues(
   });
 }
 
-// The values after the user picks one option, or undefined for a value Argo did not offer.
+// The values after the user picks one option, or undefined for a value that was not offered.
 export function changeValue(
   models: ModelInfo[],
   values: ConfigValues,

@@ -7,13 +7,14 @@ import type {
   SDKUserMessageReplay,
 } from '@anthropic-ai/claude-agent-sdk';
 import type { StopReason, TurnUsage } from '@repo/contracts';
+import type { AgentMapping } from '../src/agent-adapter';
 import type { AgentEvent, FeedChange, FeedUpdate } from '../src/agent-events';
 import { type ToolCallRow, toolCallEnded, toolCallStarted } from './tool-calls';
 
 type TextKind = 'agent_message' | 'agent_thought';
 type AssistantBlock = SDKAssistantMessage['message']['content'][number];
 
-// What `toAgentEvents` remembers between messages; plain data, so it can live in machine context.
+// What `toAgentEvents` remembers between messages, until the Turn's result clears it.
 export interface MappingState {
   // Blocks seen per `message.id`, which gives a block's index without the stream.
   blockCounts: Record<string, number>;
@@ -31,10 +32,7 @@ export const initialMappingState = (): MappingState => ({
   openToolCalls: {},
 });
 
-interface Mapped {
-  events: AgentEvent[];
-  mappingState: MappingState;
-}
+type Mapped = AgentMapping<MappingState>;
 
 const feed = (change: FeedChange): AgentEvent => ({
   type: 'agent.feed',
@@ -277,12 +275,7 @@ function mapResult(
           : {}),
       },
     ],
-    mappingState: {
-      ...mappingState,
-      streamMessageId: null,
-      openTextRows: {},
-      openToolCalls: {},
-    },
+    mappingState: initialMappingState(),
   };
 }
 

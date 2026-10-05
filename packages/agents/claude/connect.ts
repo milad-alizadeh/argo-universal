@@ -3,30 +3,26 @@ import { accessSync, constants } from 'node:fs';
 import path from 'node:path';
 import {
   getSessionInfo,
+  type ModelInfo,
   type Options,
   query,
   type SDKMessage,
   type SDKUserMessage,
 } from '@anthropic-ai/claude-agent-sdk';
 import type {
+  AgentCommandOf,
   AgentConnectInput,
-  AgentConnection,
-  AgentConnectionListener,
+  VendorSession,
+  VendorSessionListener,
 } from '../src/agent-adapter';
-import type { AgentCapabilities, AgentCommand } from '../src/agent-events';
+import { describeError } from '../src/describe-error';
 import {
   type ConfigValues,
   changeValue,
   DEFAULT_VALUE,
-  type ModelInfo,
   startingValues,
   toConfigOptions,
 } from './config-options';
-
-const claudeCapabilities: AgentCapabilities = {
-  planApproval: 'continueTurn',
-  stopShell: false,
-};
 
 // The values the CLI starts with; the saved ones follow once its model list can check them.
 const CLI_START: ConfigValues = {
@@ -38,7 +34,7 @@ const CLI_START: ConfigValues = {
 const EXECUTABLE = 'claude';
 const STDERR_TAIL_LENGTH = 2000;
 
-// The user's own `claude` from PATH, so Argo runs the CLI they signed in to.
+// The user's own `claude` from PATH, the CLI they signed in to.
 function findExecutable(environment: NodeJS.ProcessEnv) {
   for (const directory of (environment.PATH ?? '').split(path.delimiter)) {
     const candidate = path.join(directory, EXECUTABLE);
@@ -81,22 +77,18 @@ function createPromptQueue() {
 }
 
 // Images and attachments are issue 3f; text goes as written.
-const toVendorContent = (
-  content: Extract<AgentCommand, { type: 'agent.prompt' }>['content'],
-) =>
+const toVendorContent = (content: AgentCommandOf<'agent.prompt'>['content']) =>
   content.flatMap((block) =>
     block.type === 'text' ? [{ type: 'text' as const, text: block.text }] : [],
   );
 
-const describeError = (error: unknown) =>
-  error instanceof Error ? error.message : String(error);
-
 // Starts or resumes one `query()` for the life of the Session.
 export async function connect(
   input: AgentConnectInput,
-  listener: AgentConnectionListener<SDKMessage>,
-): Promise<AgentConnection> {
-  const vendorSessionId = input.vendorSessionId ?? randomUUID();
+  listener: VendorSessionListener<SDKMessage>,
+): Promise<VendorSession> {
+  const resuming = input.vendorSessionId;
+  const vendorSessionId = resuming ?? randomUUID();
   let stderrTail = '';
   let stopping = false;
   const withStderr = (error: unknown) => {
@@ -108,9 +100,7 @@ export async function connect(
   const options: Options = {
     permissionMode: CLI_START.mode,
     cwd: input.cwd,
-    ...(input.vendorSessionId
-      ? { resume: input.vendorSessionId }
-      : { sessionId: vendorSessionId }),
+    ...(resuming ? { resume: resuming } : { sessionId: vendorSessionId }),
     env: environment,
     pathToClaudeCodeExecutable: findExecutable(environment),
     allowDangerouslySkipPermissions: true,
@@ -124,12 +114,9 @@ export async function connect(
     },
   };
 
-  if (
-    input.vendorSessionId &&
-    !(await getSessionInfo(input.vendorSessionId, { dir: input.cwd }))
-  )
+  if (resuming && !(await getSessionInfo(resuming, { dir: input.cwd })))
     throw new Error(
-      `Claude has no transcript for Session ${input.vendorSessionId} in ${input.cwd}.`,
+      `Claude has no transcript for Session ${resuming} in ${input.cwd}.`,
     );
 
   const queue = createPromptQueue();
@@ -185,7 +172,7 @@ export async function connect(
     ready: {
       vendorSessionId,
       configOptions: toConfigOptions(models, values),
-      capabilities: claudeCapabilities,
+      capabilities: { planApproval: 'continueTurn', stopShell: false },
       continuedOutside: false,
     },
     prompt: async ({ content }) =>

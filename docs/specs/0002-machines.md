@@ -40,7 +40,7 @@ Supervisor (process)
    │     ├─ createSession / loadSession
    │     ├─ feed                 one per Session (section 8)
    │     └─ agent                the one Agent machine (section 7)
-   │        └─ connection        the adapter's vendor session
+   │        └─ vendorSession     the adapter's vendor session
    └─ startHttpServer            the services hold the `sessions` ref
 
 Spec 0003 adds a feed actor for each Subagent under its parent Session, and a tRPC client in the Electron main process.
@@ -72,7 +72,7 @@ The Engine machine (`apps/server/src/engine/machine.ts`) changes to this shape:
 - Context: the ref of each open Session, by Session id.
 - `sessions.create {sessionId, projectId, agent, checkout: 'main' | 'worktree'}` spawns `session:<sessionId>` with input `{kind: 'new', ...}`.
 - `sessions.open {sessionId, agent}` spawns `session:<sessionId>` with input `{kind: 'existing', sessionId}`, unless that Session is already open. The service reads `agent` from the `session` row first.
-- The Session machine's `agent` actor is the one Agent machine, which picks the adapter by the Session's `agent` id from the adapters that `packages/agents` registers, never by a vendor name in the code (ADR 0015).
+- The Session machine's `agent` actor is the one Agent machine. The Session picks the adapter by its `agent` id from the adapters that `packages/agents` registers, never by a vendor name in the code, and passes it in (ADR 0015).
 - When a Session actor finishes, the registry removes its ref.
 - States: `running`, then `stopping` on `sessions.stopAll`, which sends `session.close` to every open Session and goes to `stopped` (final) once none is left.
 - The services find a Session with `system.get('session:<id>')` after they send `sessions.open`.
@@ -145,9 +145,9 @@ A Subagent has no Session actor of its own. It is a read-only child Session whos
 
 Spec 0003 amends this section: new Agent events, `message` on `agent.answerPermission`, `continuedOutside` on `agent.ready`, and Turns that the agent starts from `ready.idle` with no prompt.
 
-One Agent machine, `agentMachine` in `packages/agents/src/agent-machine.ts`, runs every adapter (ADR 0015). The Session machine passes it the adapter, found with `findAgentAdapter`. An adapter in `packages/agents/<agent>/` is plain functions, an `AgentAdapter` from `packages/agents/src/agent-adapter.ts`: `{agent, connect, initialMappingState, toAgentEvents}`. `packages/agents/src/agent-events.ts` holds the event types. Shared code branches on `capabilities`, which a connection reports with its ready data.
+One Agent machine, `agentMachine` in `packages/agents/src/agent-machine.ts`, runs every adapter (ADR 0015). The Session machine passes it the adapter, found with `findAgentAdapter`. An adapter in `packages/agents/<agent>/` is plain functions, an `AgentAdapter` from `packages/agents/src/agent-adapter.ts`: `{agent, connect, initialMappingState, toAgentEvents}`. `packages/agents/src/agent-events.ts` holds the event types. Shared code branches on `capabilities`, which a vendor session reports with its ready data.
 
-Input: `{agent, sessionId, cwd, vendorSessionId: string | null, configOptions, parent}`.
+Input: `{adapter, sessionId, cwd, vendorSessionId: string | null, configOptions, parent}`.
 
 Events the Session sends:
 
@@ -170,15 +170,16 @@ Events the agent sends to `parent`:
 
 States:
 
-- The machine invokes `connection` for its whole life. It calls the adapter's `connect`, which starts or resumes the vendor session, resuming `vendorSessionId` when it is set. The connection runs Session commands one at a time, in order. A connection error goes to `failed`.
-- `starting`: when `connect` resolves, `ready` sends `agent.ready` with the connection's ready data.
-- `ready`: each vendor message goes through the adapter's `toAgentEvents`, and the Agent events it returns go to `parent`. The machine reads the start and end of a Turn from those events.
-  - `ready.idle`: `agent.prompt` sends the prompt to the connection and goes to `ready.turn`. So does `agent.turnStarted` from the adapter.
-  - `ready.turn`: `agent.turnEnded` goes to `ready.idle`. `agent.cancel` asks the connection to cancel and stays in `ready.turn` until the adapter ends the Turn.
-- `stopping` runs on `agent.stop`. It waits for `connect` if it has not resolved, then for the connection's `stop`. Then `stopped`.
+- The machine invokes `vendorSession` for its whole life. It calls the adapter's `connect`, which starts or resumes the vendor session, resuming `vendorSessionId` when it is set. The actor runs Session commands one at a time, in order. A vendor session error goes to `failed`.
+- The actor passes each vendor message through the adapter's `toAgentEvents` and keeps the `mappingState`. Events that arrive before `connect` resolves wait until the ready data is sent.
+- `starting`: when `connect` resolves, `ready` sends `agent.ready` with the vendor session's ready data.
+- `ready`: the Agent events go to `parent`. The machine reads the start and end of a Turn from them.
+  - `ready.idle`: `agent.prompt` sends the prompt to the vendor session and goes to `ready.turn`. So does `agent.turnStarted` from the adapter.
+  - `ready.turn`: `agent.turnEnded` goes to `ready.idle`. `agent.cancel` asks the vendor session to cancel and stays in `ready.turn` until the adapter ends the Turn.
+- `stopping` runs on `agent.stop`. It waits for `connect` if it has not resolved, then for the vendor session's `stop`. Then `stopped`.
 - `stopped` is final. `failed` is final, with the error in the output. An adapter reports the exit of its vendor process as a failure.
 
-Each adapter's research note, written in milestone 1, says which vendor calls `connect` and the connection's methods make. Turning a vendor message into Agent events is a pure function in the adapter, `toAgentEvents(message, mappingState) → {events, mappingState}`, tested against the recordings in `mocks/cli/<agent>/`. It follows ADR 0006 and ADR 0012.
+Each adapter's research note, written in milestone 1, says which vendor calls `connect` and the vendor session's methods make. Turning a vendor message into Agent events is a pure function in the adapter, `toAgentEvents(message, mappingState) → {events, mappingState}`, tested against the recordings in `mocks/cli/<agent>/`. It follows ADR 0006 and ADR 0012.
 
 ## 8. Feed actor and database writer
 

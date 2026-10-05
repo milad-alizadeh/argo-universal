@@ -14,6 +14,6 @@ const missingAdapter = (agent: string): AgentAdapter => ({
 
 export const findAgentAdapter = (
   agent: string,
-  adapters: readonly AgentAdapter[] = agentAdapters,
+  adapters: readonly AgentAdapter[],
 ) =>
   adapters.find((adapter) => adapter.agent === agent) ?? missingAdapter(agent);

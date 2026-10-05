@@ -1,4 +1,5 @@
 import {
+  type AgentAdapter,
   type AgentCapabilities,
   type AgentCommand,
   type AgentEvent,
@@ -36,6 +37,11 @@ import {
   type SessionInput,
 } from './session-data';
 
+// The Session picks its Agent's adapter from these.
+export type SessionMachineInput = SessionInput & {
+  adapters: readonly AgentAdapter[];
+};
+
 export type SessionCommand =
   | { type: 'session.prompt'; turnId: string; content: ContentBlock[] }
   | {
@@ -62,7 +68,7 @@ type SessionEvent =
   | { type: 'xstate.done.actor.agent'; output: AgentOutput }
   | { type: 'xstate.error.actor.agent'; error: unknown };
 export interface SessionContext extends SessionData {
-  input: SessionInput;
+  input: SessionMachineInput;
   capabilities: AgentCapabilities | null;
   activeTurnId: string | null;
   usage: ContextUsage | null;
@@ -75,7 +81,7 @@ export interface SessionContext extends SessionData {
 
 const sessionSetup = setup({
   types: {
-    input: {} as SessionInput,
+    input: {} as SessionMachineInput,
     context: {} as SessionContext,
     events: {} as SessionEvent,
     output: {} as AgentOutput,
