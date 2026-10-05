@@ -1,0 +1,17 @@
+{
+  "source": "https://cdn.openai.com/brand/OpenAI-Logos-2025.zip",
+  "retrievedAt": "2026-10-05",
+  "files": [
+    {
+      "file": "openai-blossom-black.svg",
+      "archivePath": "OpenAI-logos(new)/SVGs/OpenAI-black-monoblossom.svg",
+      "sha256": "7be72f1fea831d3ba81a545cee79b7e0ae69449d5d7837c9571ccbfb4aa1e00b"
+    },
+    {
+      "file": "openai-blossom-white.svg",
+      "archivePath": "OpenAI-logos(new)/SVGs/OpenAI-white-monoblossom.svg",
+      "sha256": "b94ea61d860fae6f82f43571f36f17111fcf5d348e8e9cc22ae4b441c7560011"
+    }
+  ],
+  "note": "The public OpenAI logo kit contains the OpenAI Blossom, not a separate Codex mark."
+}
