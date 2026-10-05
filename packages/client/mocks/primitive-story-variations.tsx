@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
+import { cn } from '../src/lib/utils';
 import { Text } from '../src/primitives/text';
 
 export function Variation({
@@ -17,8 +18,16 @@ export function Variation({
   );
 }
 
-export function Variations({ children }: { children: ReactNode }) {
-  return <View className="w-full max-w-xl gap-6">{children}</View>;
+export function Variations({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <View className={cn('w-full max-w-xl gap-6', className)}>{children}</View>
+  );
 }
 
 export function StorySections({

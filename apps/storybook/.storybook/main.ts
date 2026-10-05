@@ -38,7 +38,12 @@ const config: StorybookConfig = {
     };
     return mergeConfig(config, {
       optimizeDeps: {
-        include: ['react-native-svg', 'expo-haptics'],
+        include: [
+          'react-native-svg',
+          '@repo/client > expo-haptics',
+          '@repo/client > react-native-drawer-layout',
+          'storybook/actions',
+        ],
         rolldownOptions: { plugins: [expoDeclarationImports] },
       },
       resolve: {

@@ -11,6 +11,10 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --spacing-hairline: hairlineWidth();
+  --spacing-phone-drawer: 300px;
+  --spacing-phone-drawer-peek: 64px;
+  --shadow-card:
+    0 1px 2px #0000000f, 0 0 40px -8px #00000024, 0 16px 32px -16px #00000014;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md:
     0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
@@ -47,6 +51,13 @@
       --color-chart-3: hsl(197 37% 24%);
       --color-chart-4: hsl(43 74% 66%);
       --color-chart-5: hsl(27 87% 67%);
+      --color-warning: oklch(66.6% 0.179 58.3);
+      --color-warning-foreground: hsl(0 0% 100%);
+      --color-sidebar: oklch(97.5% 0 0);
+      --color-shell-chrome: oklch(94% 0 0);
+      --shadow-card:
+        0 1px 2px #0000000f, 0 0 40px -8px #00000024,
+        0 16px 32px -16px #00000014;
     }
     @variant dark {
       --color-background: hsl(0 0% 3.9%);
@@ -72,11 +83,19 @@
       --color-chart-3: hsl(30 80% 55%);
       --color-chart-4: hsl(280 65% 60%);
       --color-chart-5: hsl(340 75% 55%);
+      --color-warning: oklch(76.9% 0.188 70.08);
+      --color-warning-foreground: hsl(0 0% 3.9%);
+      --color-sidebar: oklch(20.5% 0 0);
+      --color-shell-chrome: oklch(14.5% 0 0);
+      --shadow-card: 0 0 40px -8px #ffffff24, 0 16px 32px -16px #ffffff14;
     }
   }
 }
 
 @layer utilities {
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
   .shadow-sm {
     box-shadow:
       var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000),
