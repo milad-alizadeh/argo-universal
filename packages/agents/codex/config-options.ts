@@ -7,6 +7,12 @@ const modeNames = {
   plan: 'Plan',
   fullAccess: 'Full access',
 };
+const modeMetadata = {
+  default: { icon: 'ShieldCheck', tone: 'safe' },
+  plan: { icon: 'ClipboardList', tone: 'planning' },
+  fullAccess: { icon: 'ShieldOff', tone: 'dangerous' },
+} as const;
+
 export interface ConfigValues {
   model: string;
   effort: ReasoningEffort;
@@ -64,6 +70,7 @@ export function toConfigOptions(
       options: Object.entries(modeNames).map(([value, name]) => ({
         value,
         name,
+        _meta: { argo: modeMetadata[value as ConfigValues['mode']] },
         ...(value === 'fullAccess'
           ? { description: 'Runs without sandbox or permission requests.' }
           : {}),
@@ -79,6 +86,16 @@ export function toConfigOptions(
         value: model.model,
         name: model.displayName,
         description: model.description,
+        _meta: {
+          argo: {
+            supportsEffort: model.supportedReasoningEfforts.length > 0,
+            supportedEffortLevels: model.supportedReasoningEfforts.map(
+              (option) => option.reasoningEffort,
+            ),
+            supportsImages: model.inputModalities.includes('image'),
+            supportsPersonality: model.supportsPersonality,
+          },
+        },
       })),
     },
     {

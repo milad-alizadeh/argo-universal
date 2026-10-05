@@ -1,6 +1,6 @@
 import { TRPCError } from '@trpc/server';
 
-// Contract procedures become operational in issues #35 and #40.
+// Contract procedures become operational in issue #41.
 export function notImplemented(): never {
   throw new TRPCError({
     code: 'NOT_IMPLEMENTED',

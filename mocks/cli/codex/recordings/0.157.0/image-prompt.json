@@ -1,0 +1,508 @@
+{
+  "producer": "codex-app-server",
+  "version": "0.157.0",
+  "recordedAt": "2026-10-05T17:37:27.541Z",
+  "payload": {
+    "input": [
+      {
+        "id": 4,
+        "method": "turn/start",
+        "params": {
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "input": [
+            {
+              "type": "text",
+              "text": "Name the dominant color in this image in one word. Do not use tools.",
+              "text_elements": []
+            },
+            {
+              "type": "image",
+              "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKklEQVR4nGN4piFHU8QwasGoBaMWjFowasGoBaMWjFowasGoBaMWDBULANahsD1zXuJAAAAAAElFTkSuQmCC"
+            }
+          ],
+          "model": "gpt-6-astra"
+        }
+      }
+    ],
+    "messages": [
+      {
+        "method": "warning",
+        "params": {
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "message": "running async SessionEnd hook synchronously in /user/.codex/config.toml"
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "warning",
+        "params": {
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "message": "running async SessionEnd hook synchronously in /user/.codex/config.toml"
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "warning",
+        "params": {
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "message": "running async SessionEnd hook synchronously in /user/.codex/config.toml"
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "warning",
+        "params": {
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "message": "running async SessionEnd hook synchronously in /user/.codex/config.toml"
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "warning",
+        "params": {
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "message": "running async SessionEnd hook synchronously in /user/.codex/config.toml"
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "warning",
+        "params": {
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "message": "running async SessionEnd hook synchronously in /user/.codex/config.toml"
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "warning",
+        "params": {
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "message": "running async SessionEnd hook synchronously in /user/.codex/config.toml"
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "mcpServer/startupStatus/updated",
+        "params": {
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "name": "cua_repl",
+          "status": "starting",
+          "error": null,
+          "failureReason": null
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "mcpServer/startupStatus/updated",
+        "params": {
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "name": "paper",
+          "status": "starting",
+          "error": null,
+          "failureReason": null
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "mcpServer/startupStatus/updated",
+        "params": {
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "name": "node_repl",
+          "status": "starting",
+          "error": null,
+          "failureReason": null
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "mcpServer/startupStatus/updated",
+        "params": {
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "name": "codex_apps",
+          "status": "starting",
+          "error": null,
+          "failureReason": null
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "mcpServer/startupStatus/updated",
+        "params": {
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "name": "paper",
+          "status": "ready",
+          "error": null,
+          "failureReason": null
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "thread/status/changed",
+        "params": {
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "status": {
+            "type": "active",
+            "activeFlags": []
+          }
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "turn/started",
+        "params": {
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "turn": {
+            "id": "01a10d24-432a-79d0-8cea-c3e19adf6a7c",
+            "items": [],
+            "itemsView": "notLoaded",
+            "status": "inProgress",
+            "error": null,
+            "startedAt": 1791221842,
+            "completedAt": null,
+            "durationMs": null
+          }
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "mcpServer/startupStatus/updated",
+        "params": {
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "name": "node_repl",
+          "status": "ready",
+          "error": null,
+          "failureReason": null
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "mcpServer/startupStatus/updated",
+        "params": {
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "name": "cua_repl",
+          "status": "ready",
+          "error": null,
+          "failureReason": null
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "mcpServer/startupStatus/updated",
+        "params": {
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "name": "codex_apps",
+          "status": "ready",
+          "error": null,
+          "failureReason": null
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "hook/started",
+        "params": {
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "turnId": "01a10d24-432a-79d0-8cea-c3e19adf6a7c",
+          "run": {
+            "id": "session-start:60:/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "eventName": "sessionStart",
+            "handlerType": "command",
+            "executionMode": "sync",
+            "scope": "thread",
+            "sourcePath": "/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "source": "plugin",
+            "displayOrder": 60,
+            "status": "running",
+            "statusMessage": null,
+            "startedAt": 1791221844,
+            "completedAt": null,
+            "durationMs": null,
+            "entries": []
+          }
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "hook/completed",
+        "params": {
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "turnId": "01a10d24-432a-79d0-8cea-c3e19adf6a7c",
+          "run": {
+            "id": "session-start:60:/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "eventName": "sessionStart",
+            "handlerType": "command",
+            "executionMode": "sync",
+            "scope": "thread",
+            "sourcePath": "/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "source": "plugin",
+            "displayOrder": 60,
+            "status": "completed",
+            "statusMessage": null,
+            "startedAt": 1791221844,
+            "completedAt": 1791221844,
+            "durationMs": 22,
+            "entries": []
+          }
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "hook/started",
+        "params": {
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "turnId": "01a10d24-432a-79d0-8cea-c3e19adf6a7c",
+          "run": {
+            "id": "user-prompt-submit:61:/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "eventName": "userPromptSubmit",
+            "handlerType": "command",
+            "executionMode": "sync",
+            "scope": "turn",
+            "sourcePath": "/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "source": "plugin",
+            "displayOrder": 61,
+            "status": "running",
+            "statusMessage": null,
+            "startedAt": 1791221844,
+            "completedAt": null,
+            "durationMs": null,
+            "entries": []
+          }
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "hook/completed",
+        "params": {
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "turnId": "01a10d24-432a-79d0-8cea-c3e19adf6a7c",
+          "run": {
+            "id": "user-prompt-submit:61:/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "eventName": "userPromptSubmit",
+            "handlerType": "command",
+            "executionMode": "sync",
+            "scope": "turn",
+            "sourcePath": "/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "source": "plugin",
+            "displayOrder": 61,
+            "status": "completed",
+            "statusMessage": null,
+            "startedAt": 1791221844,
+            "completedAt": 1791221844,
+            "durationMs": 30,
+            "entries": []
+          }
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "item/started",
+        "params": {
+          "item": {
+            "type": "userMessage",
+            "id": "01a10d24-4c0c-7ec2-8fb4-8ac7266dac84",
+            "clientId": null,
+            "content": [
+              {
+                "type": "text",
+                "text": "Name the dominant color in this image in one word. Do not use tools.",
+                "text_elements": []
+              },
+              {
+                "type": "image",
+                "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKklEQVR4nGN4piFHU8QwasGoBaMWjFowasGoBaMWjFowasGoBaMWDBULANahsD1zXuJAAAAAAElFTkSuQmCC",
+                "detail": null
+              }
+            ]
+          },
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "turnId": "01a10d24-432a-79d0-8cea-c3e19adf6a7c",
+          "startedAtMs": 1791221845005
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "item/completed",
+        "params": {
+          "item": {
+            "type": "userMessage",
+            "id": "01a10d24-4c0c-7ec2-8fb4-8ac7266dac84",
+            "clientId": null,
+            "content": [
+              {
+                "type": "text",
+                "text": "Name the dominant color in this image in one word. Do not use tools.",
+                "text_elements": []
+              },
+              {
+                "type": "image",
+                "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKklEQVR4nGN4piFHU8QwasGoBaMWjFowasGoBaMWjFowasGoBaMWDBULANahsD1zXuJAAAAAAElFTkSuQmCC",
+                "detail": null
+              }
+            ]
+          },
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "turnId": "01a10d24-432a-79d0-8cea-c3e19adf6a7c",
+          "completedAtMs": 1791221845006
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "item/started",
+        "params": {
+          "item": {
+            "type": "agentMessage",
+            "id": "msg_0adb8b528915a791016ac3e0575a1c8191b8b2de11cb9afdd8",
+            "text": "",
+            "phase": "final_answer",
+            "memoryCitation": null,
+            "delivery": null,
+            "questions": null
+          },
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "turnId": "01a10d24-432a-79d0-8cea-c3e19adf6a7c",
+          "startedAtMs": 1791221847374
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "turnId": "01a10d24-432a-79d0-8cea-c3e19adf6a7c",
+          "itemId": "msg_0adb8b528915a791016ac3e0575a1c8191b8b2de11cb9afdd8",
+          "delta": "Red"
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "item/completed",
+        "params": {
+          "item": {
+            "type": "agentMessage",
+            "id": "msg_0adb8b528915a791016ac3e0575a1c8191b8b2de11cb9afdd8",
+            "text": "Red",
+            "phase": "final_answer",
+            "memoryCitation": null,
+            "delivery": null,
+            "questions": null
+          },
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "turnId": "01a10d24-432a-79d0-8cea-c3e19adf6a7c",
+          "completedAtMs": 1791221847376
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "thread/tokenUsage/updated",
+        "params": {
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "turnId": "01a10d24-432a-79d0-8cea-c3e19adf6a7c",
+          "tokenUsage": {
+            "total": {
+              "totalTokens": 17385,
+              "inputTokens": 17380,
+              "cachedInputTokens": 0,
+              "cacheWriteInputTokens": 0,
+              "outputTokens": 5,
+              "reasoningOutputTokens": 0
+            },
+            "last": {
+              "totalTokens": 17385,
+              "inputTokens": 17380,
+              "cachedInputTokens": 0,
+              "cacheWriteInputTokens": 0,
+              "outputTokens": 5,
+              "reasoningOutputTokens": 0
+            },
+            "modelContextWindow": 258400
+          }
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "hook/started",
+        "params": {
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "turnId": "01a10d24-432a-79d0-8cea-c3e19adf6a7c",
+          "run": {
+            "id": "stop:62:/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "eventName": "stop",
+            "handlerType": "command",
+            "executionMode": "sync",
+            "scope": "turn",
+            "sourcePath": "/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "source": "plugin",
+            "displayOrder": 62,
+            "status": "running",
+            "statusMessage": null,
+            "startedAt": 1791221847,
+            "completedAt": null,
+            "durationMs": null,
+            "entries": []
+          }
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "hook/completed",
+        "params": {
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "turnId": "01a10d24-432a-79d0-8cea-c3e19adf6a7c",
+          "run": {
+            "id": "stop:62:/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "eventName": "stop",
+            "handlerType": "command",
+            "executionMode": "sync",
+            "scope": "turn",
+            "sourcePath": "/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "source": "plugin",
+            "displayOrder": 62,
+            "status": "completed",
+            "statusMessage": null,
+            "startedAt": 1791221847,
+            "completedAt": 1791221847,
+            "durationMs": 20,
+            "entries": []
+          }
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "thread/status/changed",
+        "params": {
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "status": {
+            "type": "idle"
+          }
+        },
+        "emittedAtMs": 1791221847540
+      },
+      {
+        "method": "turn/completed",
+        "params": {
+          "threadId": "01a10d24-41bc-7f00-94f3-36dc712e0d60",
+          "turn": {
+            "id": "01a10d24-432a-79d0-8cea-c3e19adf6a7c",
+            "items": [
+              {
+                "type": "agentMessage",
+                "id": "msg_0adb8b528915a791016ac3e0575a1c8191b8b2de11cb9afdd8",
+                "text": "Red",
+                "phase": "final_answer",
+                "memoryCitation": null,
+                "delivery": null,
+                "questions": null
+              }
+            ],
+            "itemsView": "summary",
+            "status": "completed",
+            "error": null,
+            "startedAt": 1791221842,
+            "completedAt": 1791221847,
+            "durationMs": 4735
+          }
+        },
+        "emittedAtMs": 1791221847540
+      }
+    ]
+  }
+}

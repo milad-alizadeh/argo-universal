@@ -1,11 +1,30 @@
 import { z } from 'zod';
 import { sessionColumns } from '../columns';
 
+// ACP extension fields are kept; Argo's known fields are checked at this boundary.
+const ConfigOptionMeta = z.looseObject({
+  argo: z
+    .looseObject({
+      icon: z.string().optional(),
+      tone: z.enum(['planning', 'safe', 'moderate', 'dangerous']).optional(),
+      supportsEffort: z.boolean().optional(),
+      supportedEffortLevels: z.array(z.string()).optional(),
+      supportsImages: z.boolean().optional(),
+      supportsAdaptiveThinking: z.boolean().optional(),
+      supportsFastMode: z.boolean().optional(),
+      supportsAutoMode: z.boolean().optional(),
+      supportsPersonality: z.boolean().optional(),
+      heldUntilNextTurn: z.boolean().optional(),
+    })
+    .optional(),
+});
+
 // ACP v2 `SessionConfigSelectOption`.
 export const SessionConfigSelectOption = z.strictObject({
   value: z.string(),
   name: z.string(),
   description: z.string().optional(),
+  _meta: ConfigOptionMeta.optional(),
 });
 export type SessionConfigSelectOption = z.infer<
   typeof SessionConfigSelectOption
@@ -14,18 +33,30 @@ export type SessionConfigSelectOption = z.infer<
 // ACP v2 `SessionConfigSelectGroup`.
 export const SessionConfigSelectGroup = z.strictObject({
   groupId: z.string(),
+  _meta: ConfigOptionMeta.optional(),
   name: z.string(),
   options: z.array(SessionConfigSelectOption),
 });
 export type SessionConfigSelectGroup = z.infer<typeof SessionConfigSelectGroup>;
 
-// Mode, model, and effort (`thought_level`) are the categories Argo shows.
-export const SessionConfigOptionCategory = z.enum([
+const knownCategories = new Set([
   'mode',
   'model',
   'model_config',
   'thought_level',
 ]);
+let unknownCategories = 0;
+
+// Unknown categories are kept for ACP extensions and counted on boundary validation.
+export const SessionConfigOptionCategory = z.string().transform((category) => {
+  if (!knownCategories.has(category)) {
+    unknownCategories += 1;
+  }
+  return category;
+});
+export function getConfigOptionDiagnostics() {
+  return { unknownCategories };
+}
 export type SessionConfigOptionCategory = z.infer<
   typeof SessionConfigOptionCategory
 >;
@@ -34,6 +65,7 @@ const configOptionBase = {
   configId: z.string(),
   name: z.string(),
   description: z.string().optional(),
+  _meta: ConfigOptionMeta.optional(),
   category: SessionConfigOptionCategory.optional(),
 };
 

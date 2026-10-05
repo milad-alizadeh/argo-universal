@@ -1,6 +1,7 @@
 import type { Services } from '@repo/api';
 import type { Database } from '@repo/db';
 import type { ActorRefFrom } from 'xstate';
+import { createAgentService } from './agents/agent-service';
 import type { FeedActorRef } from './feed/feed-machine';
 import { createFeedService } from './feed/feed-service';
 import type { writerMachine } from './feed/writer-machine';
@@ -24,7 +25,8 @@ export function createServerServices(options: {
       | undefined;
   const session = createSessionService(options);
   return {
-    agents: { list: notImplemented },
+    blob: { upload: notImplemented },
+    agents: createAgentService(options.sessions),
     projects: createProjectService(options.database),
     system: createSystemService(options),
     session,

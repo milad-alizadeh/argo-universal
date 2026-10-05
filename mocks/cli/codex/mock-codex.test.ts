@@ -112,7 +112,7 @@ describe('mock Codex CLI', () => {
     expect(await codex.exited).toBe(0);
   });
 
-  it.each(['file-change', 'reply', 'edit-and-command'])(
+  it.each(['file-change', 'reply', 'edit-and-command', 'image-prompt'])(
     'replays %s after turn/start',
     async (recording) => {
       const messages = wireMessages(recording);
@@ -152,7 +152,7 @@ describe('mock Codex CLI', () => {
     expect(await codex.exited).toBe(0);
   });
 
-  it.each(['file-change', 'reply', 'edit-and-command'])(
+  it.each(['file-change', 'reply', 'edit-and-command', 'image-prompt'])(
     'exits right after turn/started in %s, to stand in for a crash',
     async (recording) => {
       const messages = wireMessages(recording);
@@ -234,6 +234,17 @@ it('can replay turn/started before the response that supplies its vendor Turn id
   expect(output[1]).toMatchObject({
     id: 3,
     result: { turn: expect.objectContaining({ id: expect.any(String) }) },
+  });
+  codex.close();
+  expect(await codex.exited).toBe(0);
+});
+
+it('reports an absent account when not signed in', async () => {
+  const codex = await startAppServer({ availability: 'not_signed_in' });
+  codex.send({ id: 5, method: 'account/read', params: {} });
+  expect(await codex.next()).toMatchObject({
+    id: 5,
+    result: { account: null, requiresOpenaiAuth: true },
   });
   codex.close();
   expect(await codex.exited).toBe(0);

@@ -190,7 +190,8 @@ The procedures are named after ACP methods, and the existing contracts carry the
 - `session.changes {sessionId}` returns the Checkout's changed files, and `session.diff {sessionId, path}` returns one file's unified diff.
 - `session.subagents {sessionId}` returns `Subagent[]`, and `session.shells {sessionId}` returns `Shell[]`. Both update through the Session snapshot.
 - `shell.output {sessionId, shellId, after?}` is a subscription that sends the stored output, then new output as it arrives. `session.stopShell {sessionId, shellId}` stops one.
-- `agents.list` returns each registered Agent: `{agent, label, logo, availability, installStep?, configOptions}`.
+- `agents.list {refresh?}` returns each registered Agent: `{agent, label, logo, availability, installStep?, configOptions}`.
+  - The Server probes each Agent once when it starts and answers from that probe. `refresh` probes every Agent again first, for the Settings Agent pages. A Session whose Agent cannot start probes that Agent again too. A call during a probe waits for it rather than starting another (owner, 2026-10-05).
   - `availability` is `available`, `not_installed`, `not_signed_in` or `unavailable`.
   - `logo` is SVG text from the adapter, so no screen names a vendor.
   - `configOptions` is the template for the New Session composer.

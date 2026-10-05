@@ -390,7 +390,8 @@ const adapter = createMockAdapter({
 });
 const machine = sessionMachine.provide({
   actors: {
-    createSession: fromPromise(() => new Promise(() => {})),
+    createCheckout: fromPromise(() => new Promise(() => {})),
+    discardCheckout: fromPromise(() => new Promise(() => {})),
     loadSession: fromPromise(() => new Promise(() => {})),
     agent: agentMachine.provide({ actions: { sendReady: () => {} } }),
     feed: feedMachine.provide({
@@ -402,8 +403,10 @@ const machine = sessionMachine.provide({
 type SessionSnapshot = SnapshotFrom<typeof machine>;
 type SessionEvent = EventFromLogic<typeof machine>;
 const events = [
-  { type: 'xstate.done.actor.createSession', output: data },
-  { type: 'xstate.error.actor.createSession', error: 'Could not create' },
+  { type: 'xstate.done.actor.createCheckout', output: data },
+  { type: 'xstate.error.actor.createCheckout', error: 'Could not create' },
+  { type: 'xstate.done.actor.discardCheckout' },
+  { type: 'xstate.error.actor.discardCheckout', error: 'Could not remove' },
   { type: 'xstate.done.actor.loadSession', output: data },
   { type: 'xstate.error.actor.loadSession', error: 'Could not load' },
   ready,
@@ -456,6 +459,7 @@ const key = (snapshot: SessionSnapshot | undefined) =>
     permissions: snapshot.context.permissionQueue.length,
     elicitation: snapshot.context.pendingElicitation !== null,
     crashes: snapshot.context.agentCrashes.length,
+    stored: snapshot.context.stored,
   });
 const logic = machine as unknown as ActorLogic<
   SessionSnapshot,
@@ -475,7 +479,10 @@ const models = (['new', 'existing'] as const).map(
               sessionId: 'session-1',
               projectId: 'project-1',
               agent: 'mock',
-              checkout: 'main',
+              checkout: { type: 'main' },
+              configOptions: [],
+              prompt: [{ type: 'text', text: 'Build it' }],
+              turnId: 'turn-1',
             },
       events,
       // Two queued requests cover both queue branches; snapshot equality bounds crash timestamps and repeated Turns.

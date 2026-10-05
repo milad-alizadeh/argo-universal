@@ -182,29 +182,32 @@ describe('mock Claude CLI', () => {
     expect(claude.output.some((frame) => frame.type === 'result')).toBe(false);
   });
 
-  it('replays a recorded Turn without its control responses, under the session id it was given', async () => {
-    const { output } = recordedPipes('edit-and-command');
-    const claude = await startClaude('edit-and-command', false, [
-      '--session-id',
-      'session-from-flags',
-    ]);
+  it.each(['edit-and-command', 'image-prompt'])(
+    'replays %s without its control responses, under the session id it was given',
+    async (recording) => {
+      const { output } = recordedPipes(recording);
+      const claude = await startClaude(recording, false, [
+        '--session-id',
+        'session-from-flags',
+      ]);
 
-    claude.send(prompt('Go.'));
-    const frames = await claude.until((frame) => frame.type === 'result');
+      claude.send(prompt('Go.'));
+      const frames = await claude.until((frame) => frame.type === 'result');
 
-    const turn = output
-      .filter((frame) => !isControlResponse(frame))
-      .slice(0, frames.length);
-    expect(frames).toEqual(
-      turn.map((frame) =>
-        frame.session_id === undefined
-          ? frame
-          : { ...frame, session_id: 'session-from-flags' },
-      ),
-    );
-    claude.close();
-    expect(await claude.exited).toBe(0);
-  });
+      const turn = output
+        .filter((frame) => !isControlResponse(frame))
+        .slice(0, frames.length);
+      expect(frames).toEqual(
+        turn.map((frame) =>
+          frame.session_id === undefined
+            ? frame
+            : { ...frame, session_id: 'session-from-flags' },
+        ),
+      );
+      claude.close();
+      expect(await claude.exited).toBe(0);
+    },
+  );
 
   it('answers initialize and get_context_usage with the recorded answers', async () => {
     const { input, output } = recordedPipes('edit-and-command');
@@ -280,4 +283,27 @@ describe('mock Claude CLI', () => {
     claude.close();
     expect(await claude.exited).toBe(0);
   });
+});
+
+it('answers initialize with an account that has no subscription when not signed in', async () => {
+  const executable = await writeMockClaude(directory, {
+    recording: 'edit-and-command',
+    availability: 'not_signed_in',
+  });
+  const claude = startLineProcess(executable, SDK_FLAGS);
+  claude.send({
+    type: 'control_request',
+    request_id: 'initialize-1',
+    request: { subtype: 'initialize' },
+  });
+  expect(await claude.next()).toMatchObject({
+    type: 'control_response',
+    response: {
+      subtype: 'success',
+      request_id: 'initialize-1',
+      response: expect.objectContaining({ account: {} }),
+    },
+  });
+  claude.close();
+  expect(await claude.exited).toBe(0);
 });

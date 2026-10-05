@@ -1,6 +1,4 @@
 import { randomUUID } from 'node:crypto';
-import { accessSync, constants } from 'node:fs';
-import path from 'node:path';
 import {
   getSessionInfo,
   type ModelInfo,
@@ -16,6 +14,8 @@ import type {
   VendorSessionListener,
 } from '../src/agent-adapter';
 import { describeError } from '../src/describe-error';
+import { findExecutable } from '../src/find-executable';
+import { usesSubscription } from './account';
 import {
   type ConfigValues,
   changeValue,
@@ -31,23 +31,17 @@ const CLI_START: ConfigValues = {
   effort: DEFAULT_VALUE,
 };
 
-const EXECUTABLE = 'claude';
+export const EXECUTABLE = 'claude';
 const STDERR_TAIL_LENGTH = 2000;
 
-// The user's own `claude` from PATH, the CLI they signed in to.
-function findExecutable(environment: NodeJS.ProcessEnv) {
-  for (const directory of (environment.PATH ?? '').split(path.delimiter)) {
-    const candidate = path.join(directory, EXECUTABLE);
-    try {
-      accessSync(candidate, constants.X_OK);
-      return candidate;
-    } catch {}
-  }
-  throw new Error(`No ${EXECUTABLE} executable on PATH.`);
+// Without an API key, so the CLI runs on the user's subscription (ADR-0004).
+export function cliEnvironment() {
+  const { ANTHROPIC_API_KEY: _apiKey, ...environment } = process.env;
+  return environment;
 }
 
 // The prompts of one Session, as the streaming input `query()` reads.
-function createPromptQueue() {
+export function createPromptQueue() {
   const waiting: {
     message: SDKUserMessage;
     dispatched: PromiseWithResolvers<void>;
@@ -114,14 +108,16 @@ export async function connect(
     return tail ? `${describeError(error)}\n${tail}` : describeError(error);
   };
 
-  const { ANTHROPIC_API_KEY: _apiKey, ...environment } = process.env;
+  const environment = cliEnvironment();
+  const executable = findExecutable(EXECUTABLE, environment);
+  if (!executable) throw new Error(`No ${EXECUTABLE} executable on PATH.`);
   const options: Options = {
     abortController: controller,
     permissionMode: CLI_START.mode,
     cwd: input.cwd,
     ...(resuming ? { resume: resuming } : { sessionId: vendorSessionId }),
     env: environment,
-    pathToClaudeCodeExecutable: findExecutable(environment),
+    pathToClaudeCodeExecutable: executable,
     allowDangerouslySkipPermissions: true,
     includePartialMessages: true,
     forwardSubagentText: true,
@@ -166,7 +162,12 @@ export async function connect(
   let models: ModelInfo[];
   let values: ConfigValues;
   try {
-    models = (await vendor.initializationResult()).models;
+    const initialization = await vendor.initializationResult();
+    if (!usesSubscription(initialization.account))
+      throw new Error(
+        'Sign in to Claude with a Claude subscription to start a Session.',
+      );
+    models = initialization.models;
     values = startingValues(models, input.configOptions);
     await applyValues(CLI_START, values);
   } catch (error) {

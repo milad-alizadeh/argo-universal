@@ -82,7 +82,9 @@ beforeEach(async () => {
   home = mkdtempSync(join(tmpdir(), 'server-http-server-'));
   port = await findFreePort();
   ({ database, remove: removeDatabase } = openTestDatabase());
-  sessions = createActor(registryMachine, { input: { database } }).start();
+  sessions = createActor(registryMachine, {
+    input: { database, adapters: [] },
+  }).start();
   ({ close: closeServer } = await startHttpServer(options()));
 });
 
