@@ -78,10 +78,6 @@ export const Selected: Story = {
   ),
 };
 
-export const OnSelect: Story = {
-  args: { selected: true },
-};
-
 export const Issue: Story = {
   render: (args) => (
     <Variations>

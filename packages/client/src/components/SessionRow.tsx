@@ -15,7 +15,7 @@ import { useResolveClassNames } from 'uniwind';
 import { cn } from '#lib/utils';
 import { Badge } from '#primitives/badge';
 import { Button } from '#primitives/button';
-import { Text } from '#primitives/text';
+import { Text, TextClassContext } from '#primitives/text';
 import { Icon } from './Icon';
 import { IssueIndicator, type IssueIndicatorProps } from './IssueIndicator';
 import {
@@ -45,6 +45,13 @@ export function SessionRow({
 }: SessionRowProps) {
   const { color } = useResolveClassNames('text-foreground');
   const plan = session.plan;
+  const hasMetadata = Boolean(
+    (plan && plan.total > 0) ||
+      session.subagents.total > 0 ||
+      session.archivedAt !== null ||
+      issue ||
+      pullRequest,
+  );
   const logoRotation = useSharedValue(0);
   useEffect(() => {
     logoRotation.value =
@@ -76,109 +83,114 @@ export function SessionRow({
         selected && 'bg-sidebar-accent',
       )}
     >
-      <View className="relative h-6 w-4 shrink-0 items-center justify-center wide:h-5">
-        <Animated.View className="w-full" style={logoStyle}>
-          <SvgXml
-            testID="session-logo"
-            xml={logo}
-            width="100%"
-            height="16"
-            color={color}
+      <TextClassContext.Provider value={undefined}>
+        <View className="relative h-6 w-4 shrink-0 items-center justify-center wide:h-5">
+          <Animated.View className="w-full" style={logoStyle}>
+            <SvgXml
+              testID="session-logo"
+              xml={logo}
+              width="100%"
+              height="16"
+              color={color}
+            />
+          </Animated.View>
+          <StatusIndicator
+            testID="session-status"
+            status={session.status}
+            className={cn('absolute -right-1 -top-0.5', markBorder)}
           />
-        </Animated.View>
-        <StatusIndicator
-          testID="session-status"
-          status={session.status}
-          className={cn('absolute -right-1 -top-0.5', markBorder)}
-        />
-      </View>
-      <View className="min-w-0 flex-1 gap-0.5">
-        <Text
-          numberOfLines={1}
-          className="text-base font-medium leading-6 wide:text-sm wide:leading-5"
-        >
-          {session.title}
-        </Text>
-        <Text
-          numberOfLines={1}
-          className="text-sm font-normal leading-5 text-muted-foreground wide:text-xs wide:leading-4"
-        >
-          {session.activity}
-        </Text>
-        <View className="min-h-5 flex-row flex-wrap items-center gap-x-3 gap-y-1 pt-1">
-          {plan && plan.total > 0 && (
-            <View
-              accessibilityLabel={`Plan: ${plan.done} of ${plan.total} complete`}
-              className="shrink-0 flex-row items-center gap-1.5"
-            >
-              <View className="w-session-plan shrink-0 flex-row gap-0.5">
-                {Array.from({ length: plan.total }, (_, index) => (
-                  <View
-                    key={index}
-                    className={cn(
-                      'h-1 min-w-0 flex-1 rounded-full bg-foreground/15',
-                      index < plan.done && 'bg-muted-foreground',
-                      index === plan.done && 'bg-foreground',
-                    )}
-                  />
-                ))}
-              </View>
-              <Text className="text-xs font-normal leading-4 text-muted-foreground">
-                {plan.done}/{plan.total}
-              </Text>
-            </View>
-          )}
-          {session.subagents.total > 0 && (
-            <View
-              accessibilityLabel={`Subagents: ${session.subagents.total}, ${session.subagents.running} running`}
-              className="shrink-0 flex-row items-center gap-1"
-            >
-              <View className="relative size-3.5">
-                <Icon
-                  as={RobotIcon}
-                  className="size-3.5 text-muted-foreground"
-                />
-                {(subagentsFailed || session.subagents.running > 0) && (
-                  <StatusIndicator
-                    testID="subagents-status"
-                    status={subagentsFailed ? 'failed' : 'running'}
-                    size="small"
-                    className={cn('absolute -right-0.75 -top-0.75', markBorder)}
-                  />
-                )}
-              </View>
-              <Text className="text-xs font-normal leading-4 text-muted-foreground">
-                {session.subagents.total}
-              </Text>
-            </View>
-          )}
-          {session.archivedAt !== null && (
-            <Badge variant="secondary" className="py-0">
-              <Text className="text-xs font-normal leading-4 text-muted-foreground">
-                Archived
-              </Text>
-            </Badge>
-          )}
-          <View
-            testID="session-issue-slot"
-            className={cn(
-              'h-4 shrink-0 flex-row items-center gap-1',
-              !issue && 'w-session-issue',
-            )}
-          >
-            {issue && <IssueIndicator {...issue} />}
-          </View>
-          <View
-            testID="session-pull-request-slot"
-            className={cn(
-              'h-4 shrink-0 flex-row items-center gap-1',
-              !pullRequest && 'w-session-pull-request',
-            )}
-          >
-            {pullRequest && <PullRequestIndicator {...pullRequest} />}
-          </View>
         </View>
-      </View>
+        <View className="min-w-0 flex-1 gap-0.5">
+          <Text
+            numberOfLines={1}
+            className="text-base font-medium leading-6 wide:text-sm wide:leading-5"
+          >
+            {session.title}
+          </Text>
+          <Text
+            numberOfLines={1}
+            className="text-sm font-normal leading-5 text-muted-foreground wide:text-xs wide:leading-4"
+          >
+            {session.activity}
+          </Text>
+          {hasMetadata && (
+            <View className="min-h-5 flex-row flex-wrap items-center gap-x-3 gap-y-1 pt-1">
+              {plan && plan.total > 0 && (
+                <View
+                  accessibilityLabel={`Plan: ${plan.done} of ${plan.total} complete`}
+                  className="shrink-0 flex-row items-center gap-1.5"
+                >
+                  <View className="w-session-plan shrink-0 flex-row gap-0.5">
+                    {Array.from({ length: plan.total }, (_, index) => (
+                      <View
+                        key={index}
+                        className={cn(
+                          'h-1 min-w-0 flex-1 rounded-full bg-foreground/15',
+                          index < plan.done && 'bg-muted-foreground',
+                          index === plan.done && 'bg-foreground',
+                        )}
+                      />
+                    ))}
+                  </View>
+                  <Text className="text-xs font-normal leading-4 text-muted-foreground">
+                    {plan.done}/{plan.total}
+                  </Text>
+                </View>
+              )}
+              {session.subagents.total > 0 && (
+                <View
+                  accessibilityLabel={`Subagents: ${session.subagents.total}, ${session.subagents.running} running`}
+                  className="shrink-0 flex-row items-center gap-1"
+                >
+                  <View className="relative size-3.5">
+                    <Icon
+                      as={RobotIcon}
+                      className="size-3.5 text-muted-foreground"
+                    />
+                    {(subagentsFailed || session.subagents.running > 0) && (
+                      <StatusIndicator
+                        testID="subagents-status"
+                        status={subagentsFailed ? 'failed' : 'running'}
+                        size="small"
+                        className={cn(
+                          'absolute -right-0.75 -top-0.75',
+                          markBorder,
+                        )}
+                      />
+                    )}
+                  </View>
+                  <Text className="text-xs font-normal leading-4 text-muted-foreground">
+                    {session.subagents.total}
+                  </Text>
+                </View>
+              )}
+              {session.archivedAt !== null && (
+                <Badge variant="secondary" className="py-0">
+                  <Text className="text-xs font-normal leading-4 text-muted-foreground">
+                    Archived
+                  </Text>
+                </Badge>
+              )}
+              {issue && (
+                <View
+                  testID="session-issue-slot"
+                  className="h-4 shrink-0 flex-row items-center"
+                >
+                  <IssueIndicator {...issue} />
+                </View>
+              )}
+              {pullRequest && (
+                <View
+                  testID="session-pull-request-slot"
+                  className="h-4 shrink-0 flex-row items-center"
+                >
+                  <PullRequestIndicator {...pullRequest} />
+                </View>
+              )}
+            </View>
+          )}
+        </View>
+      </TextClassContext.Provider>
     </Button>
   );
 }

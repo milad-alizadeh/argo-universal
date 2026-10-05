@@ -164,6 +164,72 @@ export const Metadata: Story = {
   },
 };
 
+export const PullRequestWithoutOtherMetadata: Story = {
+  args: {
+    session: sessionRows.idle,
+    pullRequest: { number: 45, status: 'open' },
+  },
+  play: async ({ canvas }) => {
+    const { page } = await import('vitest/browser');
+    for (const width of [390, 1440]) {
+      await page.viewport(width, 844);
+      const title = canvas.getByText(sessionRows.idle.title);
+      const pullRequest = canvas.getByLabelText('open PR #45');
+      await expect(pullRequest).toBeVisible();
+      await expect(pullRequest.getBoundingClientRect().left).toBe(
+        title.getBoundingClientRect().left,
+      );
+    }
+  },
+};
+
+export const PullRequestWithoutOtherMetadataDark: Story = {
+  ...PullRequestWithoutOtherMetadata,
+  globals: { mode: 'dark' },
+};
+
+export const StableTextWhenPressed: Story = {
+  args: {
+    session: sessionRowMocks.planAndSubagents,
+    issue: { number: 128 },
+    pullRequest: { number: 45, status: 'merged' },
+  },
+  play: async ({ canvas, args }) => {
+    const { page, userEvent } = await import('vitest/browser');
+    await page.viewport(1440, 844);
+    const row = canvas.getByRole('button');
+    const texts = [
+      args.session.title,
+      args.session.activity,
+      '2/5',
+      '3',
+      '#128',
+      '#45',
+    ].map((text) => canvas.getByText(text, { exact: true }));
+    const before = texts.map((text) => getComputedStyle(text).color);
+    let during = Promise.resolve<string[]>([]);
+    row.addEventListener(
+      'mousedown',
+      () => {
+        during = new Promise((resolve) => {
+          setTimeout(
+            () => resolve(texts.map((text) => getComputedStyle(text).color)),
+            100,
+          );
+        });
+      },
+      { once: true },
+    );
+    await userEvent.click(row, { delay: 200 });
+    await expect(await during).toEqual(before);
+  },
+};
+
+export const StableTextWhenPressedDark: Story = {
+  ...StableTextWhenPressed,
+  globals: { mode: 'dark' },
+};
+
 const states = {
   needsInput: 'Needs input',
   running: 'Running',
@@ -302,16 +368,26 @@ export const NoPlanOrSubagents: Story = {
   args: { session: sessionRows.idle },
   play: async ({ canvas }) => {
     const { page } = await import('vitest/browser');
-    for (const width of [390, 1440]) {
+    for (const [width, height] of [
+      [390, 70],
+      [1440, 54],
+    ] as const) {
       await page.viewport(width, 844);
+      await waitFor(() =>
+        expect(canvas.getByRole('button').getBoundingClientRect().height).toBe(
+          height,
+        ),
+      );
       await expect(canvas.queryByLabelText(/^Plan:/)).not.toBeInTheDocument();
       await expect(
         canvas.queryByLabelText(/^Subagents:/),
       ).not.toBeInTheDocument();
-      await expect(canvas.getByTestId('session-issue-slot')).toBeVisible();
       await expect(
-        canvas.getByTestId('session-pull-request-slot'),
-      ).toBeVisible();
+        canvas.queryByTestId('session-issue-slot'),
+      ).not.toBeInTheDocument();
+      await expect(
+        canvas.queryByTestId('session-pull-request-slot'),
+      ).not.toBeInTheDocument();
     }
   },
 };
