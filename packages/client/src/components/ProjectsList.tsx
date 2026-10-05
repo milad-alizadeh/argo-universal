@@ -67,10 +67,19 @@ export function ProjectsList({
   const bottomFadeOpacity = useSharedValue(0);
   useEffect(() => {
     topFadeOpacity.value = withTiming(fades.top ? 1 : 0, { duration: 180 });
-    bottomFadeOpacity.value = withTiming(fades.bottom ? 1 : 0, {
-      duration: 180,
-    });
-  }, [fades.top, fades.bottom, topFadeOpacity, bottomFadeOpacity]);
+    bottomFadeOpacity.value = withTiming(
+      fades.bottom || isFetchingNextPage ? 1 : 0,
+      {
+        duration: 180,
+      },
+    );
+  }, [
+    fades.top,
+    fades.bottom,
+    isFetchingNextPage,
+    topFadeOpacity,
+    bottomFadeOpacity,
+  ]);
   const topFadeStyle = useAnimatedStyle(() => ({
     opacity: topFadeOpacity.value,
   }));
@@ -150,7 +159,7 @@ export function ProjectsList({
         onEndReachedThreshold={0.5}
         ListFooterComponent={
           isFetchingNextPage ? (
-            <View className="h-10 items-center justify-center">
+            <View className="h-24 items-center justify-center">
               <ActivityIndicator
                 role="progressbar"
                 accessibilityLabel="Loading more Sessions"

@@ -16,6 +16,7 @@ Updated as new requests arrive. Completed entries describe implemented changes; 
 - [x] Show archived Sessions and no archived Sessions together; remove the Active comparison.
 - [x] Remove the redundant No search variation from Query.
 - [x] Show a spinner while the next page loads.
+- [x] Keep the bottom scroll fade visible during pagination loading, with footer space to show the spinner and fade together.
 - [x] Make On End Reached interactive: start with 20 rows, load 20 more after two seconds, stop at 100 rows.
 - [x] Add shared Screen with safe-area insets enabled by default and optional safeArea / edges overrides.
 - [x] Apply Screen to the Sessions screen.
