@@ -21,3 +21,29 @@
     font-family: var(--font-sans);
   }
 }
+
+@property --projects-fade-top {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 1;
+}
+
+@property --projects-fade-bottom {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 1;
+}
+
+@utility projects-scroll-fade {
+  mask-image: linear-gradient(
+    to bottom,
+    rgb(0 0 0 / var(--projects-fade-top)) 0,
+    black 32px,
+    black calc(100% - 48px),
+    rgb(0 0 0 / var(--projects-fade-bottom)) 100%
+  );
+  mask-repeat: no-repeat;
+  transition-property: --projects-fade-top, --projects-fade-bottom;
+  transition-duration: 180ms;
+  transition-timing-function: ease-in-out;
+}

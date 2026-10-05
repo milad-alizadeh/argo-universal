@@ -74,11 +74,29 @@ export function ProjectsList({
   const { backgroundColor } = useResolveClassNames(
     'bg-background wide:bg-sidebar',
   );
-  const fadeOpacity = useSharedValue(0);
+  const scrollMetrics = useRef({ offset: 0, content: 0, viewport: 0 });
+  const [fades, setFades] = useState({ top: false, bottom: false });
+  function updateFades() {
+    const { offset, content, viewport } = scrollMetrics.current;
+    const top = offset > 1;
+    const bottom = viewport > 0 && content - viewport - offset > 1;
+    setFades((current) =>
+      current.top === top && current.bottom === bottom
+        ? current
+        : { top, bottom },
+    );
+  }
+  const topOpacity = useSharedValue(0);
+  const bottomOpacity = useSharedValue(0);
+  const bottomVisible = fades.bottom || isFetchingNextPage;
   useEffect(() => {
-    fadeOpacity.value = withTiming(1, { duration: 180 });
-  }, [fadeOpacity]);
-  const fadeStyle = useAnimatedStyle(() => ({ opacity: fadeOpacity.value }));
+    topOpacity.value = withTiming(fades.top ? 1 : 0, { duration: 180 });
+    bottomOpacity.value = withTiming(bottomVisible ? 1 : 0, { duration: 180 });
+  }, [fades.top, bottomVisible, topOpacity, bottomOpacity]);
+  const topFadeStyle = useAnimatedStyle(() => ({ opacity: topOpacity.value }));
+  const bottomFadeStyle = useAnimatedStyle(() => ({
+    opacity: bottomOpacity.value,
+  }));
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const contentStyle = useResolveClassNames('px-2 pb-24 wide:pb-2');
   const entries = useMemo(() => {
@@ -121,15 +139,37 @@ export function ProjectsList({
 
   return (
     <View
-      className="relative flex-1 overflow-hidden bg-background wide:bg-sidebar web:select-none web:[&_*]:select-none! web:[&_[data-testid=projects-scroll]>div>div>div]:transition-[top,transform] web:[&_[data-testid=projects-scroll]>div>div>div]:duration-200"
+      className={cn(
+        'relative flex-1 overflow-hidden bg-background wide:bg-sidebar web:select-none web:[&_*]:select-none! web:projects-scroll-fade web:[&_[data-testid=projects-scroll]>div>div>div]:transition-[top,transform] web:[&_[data-testid=projects-scroll]>div>div>div]:duration-200',
+        fades.top
+          ? 'web:[--projects-fade-top:0]'
+          : 'web:[--projects-fade-top:1]',
+        bottomVisible
+          ? 'web:[--projects-fade-bottom:0]'
+          : 'web:[--projects-fade-bottom:1]',
+      )}
       style={{ minHeight: 0 }}
     >
-      <View
-        className="flex-1 web:[mask-image:linear-gradient(to_bottom,transparent_0px,black_32px,black_calc(100%_-_48px),transparent_100%)] web:[mask-repeat:no-repeat]"
-        style={{ minHeight: 0 }}
-      >
+      <View className="flex-1" style={{ minHeight: 0 }}>
         <LegendList
           testID="projects-scroll"
+          onLayout={({ nativeEvent }) => {
+            scrollMetrics.current.viewport = nativeEvent.layout.height;
+            updateFades();
+          }}
+          onContentSizeChange={(_width, height) => {
+            scrollMetrics.current.content = height;
+            updateFades();
+          }}
+          onScroll={({ nativeEvent }) => {
+            scrollMetrics.current = {
+              offset: Math.max(0, nativeEvent.contentOffset.y),
+              content: nativeEvent.contentSize.height,
+              viewport: nativeEvent.layoutMeasurement.height,
+            };
+            updateFades();
+          }}
+          scrollEventThrottle={16}
           style={{ flex: 1 }}
           contentContainerStyle={contentStyle}
           data={entries}
@@ -222,7 +262,7 @@ export function ProjectsList({
             importantForAccessibility="no-hide-descendants"
             testID={`scroll-fade-${edge}`}
             style={[
-              fadeStyle,
+              edge === 'top' ? topFadeStyle : bottomFadeStyle,
               {
                 position: 'absolute',
                 left: 0,
