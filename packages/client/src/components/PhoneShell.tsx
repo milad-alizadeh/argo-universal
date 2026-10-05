@@ -1,5 +1,6 @@
 import { type ReactNode, useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCSSVariable, useResolveClassNames } from 'uniwind';
 import { cn } from '#lib/utils';
 import { Badge } from '#primitives/badge';
@@ -53,6 +54,7 @@ export function PhoneShell({
     Math.max(0, layout.width - visibleScreenWidth),
   );
   const chrome = useResolveClassNames('bg-shell-chrome');
+  const { top } = useSafeAreaInsets();
 
   function selectSection(section: ShellSection) {
     onSectionChange(section);
@@ -122,6 +124,7 @@ export function PhoneShell({
             aria-hidden={!drawerOpen}
             accessibilityElementsHidden={!drawerOpen}
           >
+            <View style={{ height: top }} />
             <View className="h-14 justify-center px-6">
               <Text
                 role="heading"
@@ -140,6 +143,7 @@ export function PhoneShell({
         )}
       >
         <PhoneShellCard drawerOpen={drawerOpen}>
+          <View style={{ height: top }} />
           <PhoneListHeader
             title={shellSections[selectedSection].title}
             attentionCount={attentionCount}
