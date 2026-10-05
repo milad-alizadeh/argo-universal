@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { feedRowColumns, sessionColumns } from '../columns';
 import { SessionSnapshot } from '../sessions/snapshot';
+import { FeedAppend, FeedPatch } from './change';
 import { SessionUpdate } from './session-update';
 
 // The point an App has synced to; `null` asks for everything (ADR-0007).
@@ -24,23 +25,18 @@ export const RowUpsert = z.strictObject({
 });
 export type RowUpsert = z.infer<typeof RowUpsert>;
 
-// Text appended to one field of an open row; the App applies it only when `off` equals that field's length.
-export const RowAppend = z.strictObject({
+// Text appended to the string at `field`, a dotted path such as `content.0.text`; the App applies it only when `off` equals that string's length.
+export const RowAppend = FeedAppend.extend({
   type: z.literal('row.append'),
   rev: feedRowColumns.shape.revision,
-  id: feedRowColumns.shape.id,
-  field: z.string(),
   off: z.int(),
-  text: z.string(),
 });
 export type RowAppend = z.infer<typeof RowAppend>;
 
 // Top-level fields of a row that changed.
-export const RowPatch = z.strictObject({
+export const RowPatch = FeedPatch.extend({
   type: z.literal('row.patch'),
   rev: feedRowColumns.shape.revision,
-  id: feedRowColumns.shape.id,
-  set: z.record(z.string(), z.unknown()),
 });
 export type RowPatch = z.infer<typeof RowPatch>;
 

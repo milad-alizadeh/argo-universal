@@ -323,7 +323,7 @@ These amend spec 0002 section 6.
 These amend spec 0002 sections 5 and 8.
 
 - `sessions.open` refuses a Subagent's id with `CONFLICT`, and so does every command for one. A Subagent is read-only.
-- `feed.subscribe` for a Subagent sends its stored rows. While its parent is open, the parent's feed actor for that Subagent sends live changes. While the parent is closed, nothing changes, so nothing is sent. Subscribing does not open the parent.
+- `feed.page` serves a Subagent's stored rows, and `feed.subscribe` its changes, as for a Session (spec 0001 section 6). While its parent is open, the parent's feed actor for that Subagent sends live changes. While the parent is closed, nothing changes, so nothing is sent. Subscribing does not open the parent.
 
 ### Database
 

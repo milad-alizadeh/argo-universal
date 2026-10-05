@@ -3,12 +3,16 @@ import { request } from 'node:http';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import type { Database } from '@repo/db';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { WebSocket } from 'ws';
+import { openTestDatabase } from '../../mocks/database';
 import { startHttpServer } from './http-server';
 
 let home: string;
 let port: number;
+let database: Database;
+let removeDatabase: () => void;
 let closeServer: () => Promise<void>;
 
 const findFreePort = () =>
@@ -64,17 +68,20 @@ const options = () => ({
   port,
   version: '1.2.3',
   startedAt: '2026-10-03T00:00:00.000Z',
+  database,
 });
 
 beforeEach(async () => {
   home = mkdtempSync(join(tmpdir(), 'server-http-server-'));
   port = await findFreePort();
+  ({ database, remove: removeDatabase } = openTestDatabase());
   ({ close: closeServer } = await startHttpServer(options()));
 });
 
 afterEach(async () => {
   vi.restoreAllMocks();
   await closeServer();
+  removeDatabase();
   rmSync(home, { recursive: true, force: true });
 });
 
@@ -103,6 +110,18 @@ describe('http server', () => {
           pid: process.pid,
         },
       },
+    });
+  });
+
+  it('answers feed.page from the database', async () => {
+    const input = encodeURIComponent(
+      JSON.stringify({ sessionId: 'session-1', direction: 'tail' }),
+    );
+    const response = await fetch(
+      `http://127.0.0.1:${port}/trpc/feed.page?input=${input}`,
+    );
+    expect(await response.json()).toMatchObject({
+      result: { data: { epoch: 0, rows: [], startCursor: null } },
     });
   });
 

@@ -1,4 +1,4 @@
 {
   "extends": "@repo/typescript/node.json",
-  "include": ["src", "vitest.config.ts"]
+  "include": ["src", "mocks", "vitest.config.ts"]
 }
