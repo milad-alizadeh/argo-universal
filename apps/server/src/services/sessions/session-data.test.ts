@@ -32,7 +32,7 @@ const newSession = {
   turnId: 'turn-1',
   projectId: 'project-1',
   agent: 'mock',
-  configOptions: [],
+  configOptions: [{ configId: 'model', value: 'large' }],
   prompt: [{ type: 'text' as const, text: 'Build it' }],
 };
 
