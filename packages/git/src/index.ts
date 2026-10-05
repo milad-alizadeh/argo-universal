@@ -48,12 +48,51 @@ export interface Checkout {
   branch: string | null;
 }
 
+// Where a Session runs: a new worktree from a local branch, or the main checkout (ADR-0008).
+export type CheckoutChoice =
+  | { type: 'worktree'; baseBranch: string }
+  | { type: 'main' };
+
+const branchRef = z.string().startsWith('refs/heads/').min(12);
+const branchList = z.array(branchRef);
+
+// The Project's local branches, and the branch HEAD is on, or null when detached.
+export async function listBranches(
+  projectPath: string,
+): Promise<{ branches: string[]; currentBranch: string | null }> {
+  const git = (...arguments_: string[]) =>
+    run('git', ['-C', projectPath, ...arguments_]);
+  const { stdout } = await git(
+    'for-each-ref',
+    '--format=%(refname)',
+    'refs/heads/',
+  );
+  const head = await git('symbolic-ref', '--quiet', 'HEAD').then(
+    ({ stdout }) => stdout.trim(),
+    () => null,
+  );
+  const listed = branchList.safeParse(stdout.split('\n').filter(Boolean));
+  const current = branchRef.nullable().safeParse(head);
+  if (!listed.success || !current.success) {
+    rejectedResponses += 1;
+    console.error(
+      `git: rejected branch list response (${rejectedResponses} rejected)`,
+    );
+    throw new Error('Unrecognised git branch list response');
+  }
+  const short = (ref: string) => ref.slice('refs/heads/'.length);
+  return {
+    branches: listed.data.map(short),
+    currentBranch: current.data === null ? null : short(current.data),
+  };
+}
+
 // The Project may have been registered through any of its working trees.
 export async function createCheckout(input: {
   projectPath: string;
   projectId: string;
   sessionId: string;
-  choice: 'main' | 'worktree';
+  choice: CheckoutChoice;
   runtimeDirectory: string;
 }): Promise<Checkout> {
   const git = async (...arguments_: string[]) =>
@@ -61,7 +100,7 @@ export async function createCheckout(input: {
   const main = readMainCheckout(
     await git('worktree', 'list', '--porcelain', '-z'),
   );
-  if (input.choice === 'main') return main;
+  if (input.choice.type === 'main') return main;
   for (const segment of [input.projectId, input.sessionId])
     if (!/^[a-zA-Z0-9_-]+$/.test(segment))
       throw new Error('Invalid Checkout path segment');
@@ -73,15 +112,24 @@ export async function createCheckout(input: {
   );
   const branch = `argo/${input.sessionId}`;
   await mkdir(dirname(checkoutPath), { recursive: true });
-  await git('worktree', 'add', '-b', branch, checkoutPath);
+  // A full ref keeps the base a local branch, and never an option.
+  await git(
+    'worktree',
+    'add',
+    '-b',
+    branch,
+    checkoutPath,
+    `refs/heads/${input.choice.baseBranch}`,
+  );
   return { path: checkoutPath, branch };
 }
 
-export async function removeCheckout(
+// Removes a worktree that no Turn ran in, with its new branch; a dirty worktree is refused.
+export async function discardCheckout(
   projectPath: string,
   checkout: Checkout,
 ): Promise<void> {
   await run('git', ['-C', projectPath, 'worktree', 'remove', checkout.path]);
   if (checkout.branch)
-    await run('git', ['-C', projectPath, 'branch', '-d', checkout.branch]);
+    await run('git', ['-C', projectPath, 'branch', '-D', checkout.branch]);
 }

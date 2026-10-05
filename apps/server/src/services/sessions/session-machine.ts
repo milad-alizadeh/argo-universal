@@ -30,10 +30,13 @@ import { feedMachine } from '../feed/feed-machine';
 import { readWrittenRow } from '../feed/feed-row';
 import type { writerMachine } from '../feed/writer-machine';
 import {
-  createSession,
+  createSessionCheckout,
+  discardSessionCheckout,
   loadSession,
+  type NewSessionInput,
   type SessionData,
   type SessionInput,
+  toSessionInsert,
 } from './session-data';
 
 // The registry passes the adapter for the Session's Agent.
@@ -74,7 +77,18 @@ export interface SessionContext extends SessionData {
   configOptions: SessionConfigOption[];
   agentCrashes: number[];
   failure: string | null;
+  // False for a new Session until its Agent is ready and its row is written.
+  stored: boolean;
 }
+
+const writer = ({ system }: { system: { get: (id: string) => unknown } }) =>
+  system.get('databaseWriter') as ActorRefFrom<typeof writerMachine>;
+
+// The model the Agent runs with, which a Turn records.
+const currentModel = (configOptions: SessionConfigOption[]) => {
+  const model = configOptions.find((option) => option.category === 'model');
+  return model?.type === 'select' ? model.currentValue : null;
+};
 
 const sessionSetup = setup({
   types: {
@@ -84,9 +98,13 @@ const sessionSetup = setup({
     output: {} as AgentOutput,
   },
   actors: {
-    createSession: fromPromise<SessionData, SessionInput>(({ input }) =>
-      createSession(input),
+    createCheckout: fromPromise<SessionData, NewSessionInput>(({ input }) =>
+      createSessionCheckout(input),
     ),
+    discardCheckout: fromPromise<
+      void,
+      { session: NewSessionInput; checkout: SessionData['checkout'] }
+    >(({ input }) => discardSessionCheckout(input.session, input.checkout)),
     loadSession: fromPromise<
       SessionData,
       {
@@ -102,64 +120,82 @@ const sessionSetup = setup({
     rememberFailure: assign((_, params: { error: unknown }) => ({
       failure: String(params.error),
     })),
+    rememberStartFailure: assign(({ event }) => ({
+      failure:
+        event.type === 'xstate.error.actor.agent'
+          ? String(event.error)
+          : event.type === 'xstate.done.actor.agent' && event.output.failure
+            ? event.output.failure
+            : 'The Session closed before its Agent started',
+    })),
+    addDiscardFailure: assign(({ context, event }) => ({
+      failure: `${context.failure}\nThe Checkout was not removed: ${String('error' in event ? event.error : event)}`,
+    })),
     rememberReady: enqueueActions(({ context, event, enqueue }) => {
       assertEvent(event, 'agent.ready');
-      enqueue.sendTo(
-        ({ system }) =>
-          system.get('databaseWriter') as ActorRefFrom<typeof writerMachine>,
-        {
+      if (context.stored)
+        enqueue.sendTo(writer, {
           type: 'writer.write',
           job: {
             type: 'sessionRowUpdate',
             id: context.sessionId,
             set: { vendorSessionId: event.vendorSessionId, failure: null },
           },
-        },
-      );
+        });
       enqueue.assign({
         vendorSessionId: event.vendorSessionId,
         capabilities: event.capabilities,
         configOptions: event.configOptions,
       });
     }),
-    startTurn: enqueueActions(({ context, event, enqueue }) => {
-      assertEvent(event, 'session.prompt');
-      enqueue.assign({ activeTurnId: event.turnId });
-      enqueue.sendTo(
-        ({ system }) =>
-          system.get('databaseWriter') as ActorRefFrom<typeof writerMachine>,
-        {
+    // Writes the new Session's row once its Agent is ready, so no empty Session exists.
+    storeSession: enqueueActions(({ context, enqueue }) => {
+      if (context.input.kind !== 'new') return;
+      enqueue.assign({ stored: true });
+      enqueue.sendTo(writer, {
+        type: 'writer.write',
+        job: toSessionInsert(context.input, context),
+      });
+    }),
+    startTurn: enqueueActions(
+      (
+        { context, enqueue },
+        params: { turnId: string; content: ContentBlock[] },
+      ) => {
+        enqueue.assign({ activeTurnId: params.turnId });
+        enqueue.sendTo(writer, {
           type: 'writer.write',
           job: {
             type: 'turnInsert',
             turn: {
-              id: event.turnId,
+              id: params.turnId,
               sessionId: context.sessionId,
               status: 'running',
+              model: currentModel(context.configOptions),
             },
           },
-        },
-      );
-      enqueue.sendTo('feed', {
-        type: 'feed.change',
-        turnId: event.turnId,
-        change: {
-          type: 'upsert',
-          update: {
-            id: `${event.turnId}:user`,
-            sessionUpdate: 'user_message',
-            messageId: `${event.turnId}:user`,
-            state: 'settled',
-            content: event.content,
+        });
+        enqueue.sendTo('feed', {
+          type: 'feed.change',
+          turnId: params.turnId,
+          change: {
+            type: 'upsert',
+            update: {
+              id: `${params.turnId}:user`,
+              sessionUpdate: 'user_message',
+              messageId: `${params.turnId}:user`,
+              state: 'settled',
+              content: params.content,
+            },
           },
-        },
-      });
-      enqueue.sendTo('agent', {
-        type: 'agent.prompt',
-        turnId: event.turnId,
-        content: event.content,
-      } satisfies AgentCommand);
-    }),
+        });
+        enqueue.sendTo('agent', {
+          type: 'agent.prompt',
+          turnId: params.turnId,
+          content: params.content,
+        } satisfies AgentCommand);
+      },
+    ),
     endTurn: enqueueActions(
       (
         { context, enqueue },
@@ -170,26 +206,20 @@ const sessionSetup = setup({
         },
       ) => {
         if (context.activeTurnId)
-          enqueue.sendTo(
-            ({ system }) =>
-              system.get('databaseWriter') as ActorRefFrom<
-                typeof writerMachine
-              >,
-            {
-              type: 'writer.write',
-              job: {
-                type: 'turnUpdate',
-                id: context.activeTurnId,
-                set: {
-                  status: 'ended',
-                  stopReason: params.stopReason,
-                  endedAt: Date.now(),
-                  usage: params.usage ?? null,
-                  error: params.error ?? null,
-                },
+          enqueue.sendTo(writer, {
+            type: 'writer.write',
+            job: {
+              type: 'turnUpdate',
+              id: context.activeTurnId,
+              set: {
+                status: 'ended',
+                stopReason: params.stopReason,
+                endedAt: Date.now(),
+                usage: params.usage ?? null,
+                error: params.error ?? null,
               },
             },
-          );
+          });
         enqueue.assign({
           activeTurnId: null,
           permissionQueue: [],
@@ -286,18 +316,14 @@ const sessionSetup = setup({
     giveUp: enqueueActions(({ context, enqueue }) => {
       const failure = 'The Agent stopped three times in ten minutes';
       enqueue.assign({ failure });
-      enqueue.sendTo(
-        ({ system }) =>
-          system.get('databaseWriter') as ActorRefFrom<typeof writerMachine>,
-        {
-          type: 'writer.write',
-          job: {
-            type: 'sessionRowUpdate',
-            id: context.sessionId,
-            set: { failure },
-          },
+      enqueue.sendTo(writer, {
+        type: 'writer.write',
+        job: {
+          type: 'sessionRowUpdate',
+          id: context.sessionId,
+          set: { failure },
         },
-      );
+      });
     }),
     cancelNotice: sendTo('feed', ({ context }) => ({
       type: 'feed.change',
@@ -317,6 +343,7 @@ const sessionSetup = setup({
   },
   guards: {
     isNew: ({ context }) => context.input.kind === 'new',
+    isUnstored: ({ context }) => !context.stored,
     isPermissionHead: ({ context, event }) =>
       event.type === 'session.answerPermission' &&
       context.permissionQueue[0]?.toolCallId === event.toolCallId,
@@ -353,6 +380,29 @@ const sessionEntryOutcome = {
   },
 } as const;
 
+// The prompt that `session.new` carried in; only a new Session is ever unstored.
+const firstTurn = ({ context }: { context: SessionContext }) => {
+  if (context.input.kind !== 'new')
+    throw new Error('Only a new Session has a first Turn');
+  return { turnId: context.input.turnId, content: context.input.prompt };
+};
+
+// An Agent that ends before its Session is stored discards the Session; a stored one recovers.
+const agentEnded = [
+  {
+    guard: 'isUnstored',
+    target: '#session.discarding',
+    actions: 'rememberStartFailure',
+  },
+  {
+    target: 'recovering',
+    actions: [
+      'recordCrash',
+      { type: 'endTurn', params: { stopReason: 'error' } },
+    ],
+  },
+] as const;
+
 const endedTurn = {
   type: 'endTurn',
   params: ({
@@ -387,6 +437,7 @@ export const sessionMachine = sessionSetup.createMachine({
     configOptions: [],
     agentCrashes: [],
     failure: null,
+    stored: input.kind === 'existing',
   }),
   output: ({ context }) => ({ failure: context.failure }),
   initial: 'entering',
@@ -396,9 +447,9 @@ export const sessionMachine = sessionSetup.createMachine({
     },
     creating: {
       invoke: {
-        id: 'createSession',
-        src: 'createSession',
-        input: ({ context }) => context.input,
+        id: 'createCheckout',
+        src: 'createCheckout',
+        input: ({ context }) => context.input as NewSessionInput,
         ...sessionEntryOutcome,
       },
     },
@@ -454,26 +505,18 @@ export const sessionMachine = sessionSetup.createMachine({
               sessionId: context.sessionId,
               cwd: context.checkout.path,
               vendorSessionId: context.vendorSessionId,
-              configOptions: context.configOptions.map((option) => ({
-                configId: option.configId,
-                value: option.currentValue,
-              })),
+              // A new Session starts with the choices `session.new` carried.
+              configOptions:
+                !context.stored && context.input.kind === 'new'
+                  ? context.input.configOptions
+                  : context.configOptions.map((option) => ({
+                      configId: option.configId,
+                      value: option.currentValue,
+                    })),
               parent: self,
             }),
-            onDone: {
-              target: 'recovering',
-              actions: [
-                'recordCrash',
-                { type: 'endTurn', params: { stopReason: 'error' } },
-              ],
-            },
-            onError: {
-              target: 'recovering',
-              actions: [
-                'recordCrash',
-                { type: 'endTurn', params: { stopReason: 'error' } },
-              ],
-            },
+            onDone: agentEnded,
+            onError: agentEnded,
           },
           initial: 'starting',
           on: {
@@ -485,12 +528,37 @@ export const sessionMachine = sessionSetup.createMachine({
           states: {
             starting: {
               on: {
-                'agent.ready': { target: 'idle', actions: 'rememberReady' },
+                'agent.ready': [
+                  {
+                    guard: 'isUnstored',
+                    target: 'running',
+                    actions: [
+                      'rememberReady',
+                      'storeSession',
+                      { type: 'startTurn', params: firstTurn },
+                    ],
+                  },
+                  { target: 'idle', actions: 'rememberReady' },
+                ],
+                'session.close': {
+                  guard: 'isUnstored',
+                  target: '#session.discarding',
+                  actions: 'rememberStartFailure',
+                },
               },
             },
             idle: {
               on: {
-                'session.prompt': { target: 'running', actions: 'startTurn' },
+                'session.prompt': {
+                  target: 'running',
+                  actions: {
+                    type: 'startTurn',
+                    params: ({ event }) => ({
+                      turnId: event.turnId,
+                      content: event.content,
+                    }),
+                  },
+                },
                 'session.setConfigOption': { actions: 'forwardConfig' },
               },
             },
@@ -571,6 +639,19 @@ export const sessionMachine = sessionSetup.createMachine({
           entry: 'flushFeed',
           after: { feedFlushLimit: '#session.closed' },
         },
+      },
+    },
+    // A new Session whose Agent never started leaves no worktree behind.
+    discarding: {
+      invoke: {
+        id: 'discardCheckout',
+        src: 'discardCheckout',
+        input: ({ context }) => ({
+          session: context.input as NewSessionInput,
+          checkout: context.checkout,
+        }),
+        onDone: { target: 'closed' },
+        onError: { target: 'closed', actions: 'addDiscardFailure' },
       },
     },
     closed: { type: 'final' },

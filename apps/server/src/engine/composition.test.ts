@@ -1,4 +1,11 @@
-import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  realpathSync,
+  rmSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { type AgentAdapter, agentAdapters } from '@repo/agents';
@@ -7,6 +14,7 @@ import type { SessionListUpdate } from '@repo/contracts';
 import { turn } from '@repo/db/schema';
 import { createMockAdapter, type MockAgentStream } from '@repo/mocks/agent';
 import { mockClis } from '@repo/mocks/cli';
+import { eq } from 'drizzle-orm';
 import { expect, it, vi } from 'vitest';
 import type { ActorRefFrom } from 'xstate';
 import { createActor, fromCallback, fromPromise, waitFor } from 'xstate';
@@ -542,3 +550,261 @@ it('publishes stored list changes, changes counts only when needed, and aborts a
     remove();
   }
 });
+
+// A temp root holding a Project whose `feature` branch is one commit ahead of `main`, a mock CLI folder and the Engine's home.
+function createNewSessionRoot() {
+  const root = realpathSync(mkdtempSync(path.join(tmpdir(), 'argo-new-')));
+  const project = path.join(root, 'project');
+  const bin = path.join(root, 'bin');
+  const home = path.join(root, 'home');
+  for (const directory of [project, bin, home]) mkdirSync(directory);
+  const git = (...arguments_: string[]) =>
+    execFileSync('git', arguments_, { cwd: project, encoding: 'utf8' }).trim();
+  const commit = (message: string) =>
+    git(
+      '-c',
+      'user.name=Test',
+      '-c',
+      'user.email=test@example.com',
+      'commit',
+      '-q',
+      '--allow-empty',
+      '-m',
+      message,
+    );
+  git('init', '-q', '--initial-branch=main');
+  commit('Initial');
+  git('switch', '-q', '-c', 'feature');
+  commit('Feature');
+  git('switch', '-q', 'main');
+  return {
+    project,
+    bin,
+    home,
+    git,
+    remove: () => rmSync(root, { recursive: true, force: true }),
+  };
+}
+
+const findMockCli = (agent: string) => {
+  const mockCli = mockClis[agent];
+  if (!mockCli) throw new Error(`No mock CLI for ${agent}`);
+  return mockCli;
+};
+
+it.each(
+  agentAdapters.flatMap((adapter) =>
+    (
+      [{ type: 'worktree', baseBranch: 'feature' }, { type: 'main' }] as const
+    ).map((checkout) => ({ adapter, agent: adapter.agent, checkout })),
+  ),
+)(
+  'starts a $agent Session in the $checkout.type checkout and runs its first Turn in one call',
+  async ({ adapter, checkout }) => {
+    const root = createNewSessionRoot();
+    const mockCli = findMockCli(adapter.agent);
+    await mockCli.write(root.bin, { recording: mockCli.recordings.turn });
+    vi.stubEnv('PATH', `${root.bin}${path.delimiter}${process.env.PATH ?? ''}`);
+    const { database, remove } = openTestDatabase({}, root.project);
+    const { engine, createCaller } = startEngine({
+      database,
+      adapter,
+      home: root.home,
+    });
+    try {
+      const caller = await createCaller();
+      const { sessionId } = await caller.session.new({
+        projectId: 'project-1',
+        agent: adapter.agent,
+        checkout,
+        configOptions: [],
+        prompt: [
+          {
+            type: 'text',
+            text: 'Edit the files and run a command.\nKeep it short.',
+          },
+        ],
+      });
+      const listed = (await caller.session.list({ archived: false })).sessions;
+      const created = listed.find((row) => row.sessionId === sessionId);
+      expect(created).toMatchObject({
+        agent: adapter.agent,
+        title: 'Edit the files and run a command.',
+        titleSource: 'prompt',
+        checkout:
+          checkout.type === 'main'
+            ? { type: 'main', path: root.project, branch: 'main' }
+            : {
+                type: 'worktree',
+                path: path.join(root.home, 'worktrees', 'project-1', sessionId),
+                branch: `argo/${sessionId}`,
+              },
+      });
+      expect(
+        execFileSync('git', ['log', '-1', '--format=%s'], {
+          cwd: created?.checkout.path,
+          encoding: 'utf8',
+        }).trim(),
+      ).toBe(checkout.type === 'main' ? 'Initial' : 'Feature');
+      expect(await caller.projects.list()).toEqual([
+        expect.objectContaining({ checkoutChoice: checkout }),
+      ]);
+      await expect
+        .poll(
+          async () => {
+            const { rows } = await caller.feed.page({
+              sessionId,
+              direction: 'tail',
+            });
+            return (
+              rows.at(-1)?.sessionUpdate === 'agent_message' &&
+              rows.at(-1)?.state === 'settled'
+            );
+          },
+          { timeout: 10000 },
+        )
+        .toBe(true);
+      const { rows } = await caller.feed.page({ sessionId, direction: 'tail' });
+      expect(rows[0]).toMatchObject({
+        sessionUpdate: 'user_message',
+        content: [
+          {
+            type: 'text',
+            text: 'Edit the files and run a command.\nKeep it short.',
+          },
+        ],
+      });
+      expect(new Set(rows.map((row) => row.turnId)).size).toBe(1);
+      expect(
+        database.select().from(turn).where(eq(turn.sessionId, sessionId)).all(),
+      ).toEqual([
+        expect.objectContaining({
+          id: rows[0]?.turnId,
+          model: expect.any(String),
+        }),
+      ]);
+      engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
+      await waitFor(engine, (snapshot) => snapshot.status === 'done');
+      expect(engine.getSnapshot().output).toEqual({ exitCode: 0 });
+    } finally {
+      engine.stop();
+      remove();
+      vi.unstubAllEnvs();
+      root.remove();
+    }
+  },
+);
+
+it.each(
+  agentAdapters.flatMap((adapter) =>
+    (['available', 'not_installed', 'not_signed_in'] as const).map(
+      (availability) => ({ adapter, agent: adapter.agent, availability }),
+    ),
+  ),
+)(
+  'reports $agent as $availability with its install step and New Session options',
+  async ({ adapter, availability }) => {
+    const root = createNewSessionRoot();
+    const mockCli = findMockCli(adapter.agent);
+    await mockCli.write(root.bin, { recording: 'image-prompt', availability });
+    // Only the mock folder, so an absent mock is an absent Agent.
+    vi.stubEnv('PATH', root.bin);
+    const { database, remove } = openTestDatabase({}, root.project);
+    const { engine, createCaller } = startEngine({
+      database,
+      adapter,
+      home: root.home,
+    });
+    try {
+      const caller = await createCaller();
+      const [information, ...others] = await caller.agents.list();
+      expect(others).toEqual([]);
+      expect(information).toMatchObject({
+        agent: adapter.agent,
+        label: expect.any(String),
+        logo: expect.stringContaining('<svg'),
+        availability,
+      });
+      if (availability === 'available') {
+        expect(information?.installStep).toBeUndefined();
+        expect(information?.configOptions).toEqual(
+          expect.arrayContaining(
+            ['mode', 'model', 'thought_level'].map((category) =>
+              expect.objectContaining({ category }),
+            ),
+          ),
+        );
+      } else {
+        expect(information?.installStep).toEqual(expect.any(String));
+        expect(information?.configOptions).toEqual([]);
+      }
+    } finally {
+      engine.stop();
+      remove();
+      vi.unstubAllEnvs();
+      root.remove();
+    }
+  },
+);
+
+it.each(
+  agentAdapters.flatMap((adapter) =>
+    (['not_installed', 'not_signed_in'] as const).map((availability) => ({
+      adapter,
+      agent: adapter.agent,
+      availability,
+    })),
+  ),
+)(
+  'refuses a $agent Session whose Agent is $availability, leaving no Session, worktree or branch',
+  async ({ adapter, availability }) => {
+    const root = createNewSessionRoot();
+    const mockCli = findMockCli(adapter.agent);
+    await mockCli.write(root.bin, {
+      recording: mockCli.recordings.turn,
+      availability,
+    });
+    // Git stays on PATH; any installed copy of the Agent's CLI does not.
+    const otherDirectories = (process.env.PATH ?? '')
+      .split(path.delimiter)
+      .filter((directory) => !existsSync(path.join(directory, adapter.agent)));
+    vi.stubEnv('PATH', [root.bin, ...otherDirectories].join(path.delimiter));
+    const { database, remove } = openTestDatabase({}, root.project);
+    const { engine, createCaller } = startEngine({
+      database,
+      adapter,
+      home: root.home,
+    });
+    try {
+      const caller = await createCaller();
+      await expect(
+        caller.session.new({
+          projectId: 'project-1',
+          agent: adapter.agent,
+          checkout: { type: 'worktree', baseBranch: 'feature' },
+          configOptions: [],
+          prompt: [{ type: 'text', text: 'Hello' }],
+        }),
+      ).rejects.toMatchObject({ code: 'PRECONDITION_FAILED' });
+      expect(
+        (await caller.session.list({ archived: false })).sessions.map(
+          (row) => row.sessionId,
+        ),
+      ).toEqual(['session-1']);
+      expect(root.git('worktree', 'list', '--porcelain')).not.toContain(
+        root.home,
+      );
+      expect(root.git('branch', '--list', 'argo/*')).toBe('');
+      expect(await caller.projects.list()).toEqual([
+        expect.objectContaining({
+          checkoutChoice: { type: 'worktree', baseBranch: 'main' },
+        }),
+      ]);
+    } finally {
+      engine.stop();
+      remove();
+      vi.unstubAllEnvs();
+      root.remove();
+    }
+  },
+);

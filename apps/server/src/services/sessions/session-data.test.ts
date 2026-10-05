@@ -1,22 +1,45 @@
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import type { SessionNewInput } from '@repo/contracts';
+import { project, session } from '@repo/db/schema';
+import { eq } from 'drizzle-orm';
 import { afterEach, expect, it, vi } from 'vitest';
 import { createActor, fromPromise } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
 import { storedMessage } from '#mocks/feed';
 import { toFeedRowWrite } from '../feed/feed-row';
+import { writeJobs } from '../feed/writer-job';
 import { writerMachine } from '../feed/writer-machine';
-import { createSession, loadSession } from './session-data';
+import {
+  createSessionCheckout,
+  discardSessionCheckout,
+  loadSession,
+  titleFromPrompt,
+  toSessionInsert,
+} from './session-data';
 
 const cleanups: (() => void)[] = [];
 afterEach(() => {
   for (const cleanup of cleanups.splice(0).reverse()) cleanup();
 });
 
-it.each(['main', 'worktree'] as const)(
-  'creates and reloads a Session in the %s Checkout with a line break in its path',
+const newSession = {
+  kind: 'new' as const,
+  sessionId: 'new-session',
+  turnId: 'turn-1',
+  projectId: 'project-1',
+  agent: 'mock',
+  configOptions: [],
+  prompt: [{ type: 'text' as const, text: 'Build it' }],
+};
+
+it.each([
+  { type: 'main' },
+  { type: 'worktree', baseBranch: 'feature' },
+] as const)(
+  'creates, stores and reloads a Session in the $type Checkout with a line break in its path',
   async (checkout) => {
     const directory = realpathSync(
       mkdtempSync(join(tmpdir(), 'session-checkout-\n')),
@@ -27,54 +50,119 @@ it.each(['main', 'worktree'] as const)(
         cwd: directory,
         encoding: 'utf8',
       }).trim();
+    const commit = (message: string) =>
+      git(
+        '-c',
+        'user.name=Test',
+        '-c',
+        'user.email=test@example.com',
+        'commit',
+        '--allow-empty',
+        '-m',
+        message,
+      );
     git('init', '--initial-branch=main');
-    git(
-      '-c',
-      'user.name=Test',
-      '-c',
-      'user.email=test@example.com',
-      'commit',
-      '--allow-empty',
-      '-m',
-      'Initial',
-    );
+    commit('Initial');
+    git('branch', 'feature');
+    git('switch', '-q', 'feature');
+    commit('Feature');
+    git('switch', '-q', 'main');
     const { database, remove } = openTestDatabase({}, directory);
     cleanups.push(remove);
-    const created = await createSession({
+    const input = {
+      ...newSession,
       database,
       runtimeDirectory: join(directory, '.argo'),
-      sessionId: 'new-session',
-      kind: 'new',
-      projectId: 'project-1',
-      agent: 'mock',
       checkout,
-    });
+    };
+    const created = await createSessionCheckout(input);
+    expect(
+      database
+        .select()
+        .from(session)
+        .where(eq(session.id, 'new-session'))
+        .get(),
+    ).toBeUndefined();
+    writeJobs(database, [
+      toSessionInsert(input, { ...created, vendorSessionId: 'vendor-1' }),
+    ]);
     expect(
       await loadSession({
         database,
         sessionId: 'new-session',
         kind: 'existing',
       }),
-    ).toEqual(created);
+    ).toEqual({ ...created, vendorSessionId: 'vendor-1' });
     expect(created).toMatchObject({
       sessionId: 'new-session',
       vendorSessionId: null,
       epoch: 0,
       maxRevision: 0,
       nextPosition: 0,
-      checkout: { branch: checkout === 'main' ? 'main' : 'argo/new-session' },
+      checkout: {
+        branch: checkout.type === 'main' ? 'main' : 'argo/new-session',
+      },
     });
     expect(
-      execFileSync('git', ['branch', '--show-current'], {
+      database
+        .select()
+        .from(session)
+        .where(eq(session.id, 'new-session'))
+        .get(),
+    ).toMatchObject({ title: 'Build it', titleSource: 'prompt' });
+    expect(
+      database.select().from(project).where(eq(project.id, 'project-1')).get(),
+    ).toMatchObject({ checkoutChoice: checkout });
+    const checkoutGit = (...arguments_: string[]) =>
+      execFileSync('git', arguments_, {
         cwd: created.checkout.path,
         encoding: 'utf8',
-      }).trim(),
-    ).toBe(created.checkout.branch);
+      }).trim();
+    expect(checkoutGit('branch', '--show-current')).toBe(
+      created.checkout.branch,
+    );
+    expect(checkoutGit('log', '-1', '--format=%s')).toBe(
+      checkout.type === 'main' ? 'Initial' : 'Feature',
+    );
     expect(created.checkout.path).toBe(
-      checkout === 'main'
+      checkout.type === 'main'
         ? directory
         : join(directory, '.argo/worktrees/project-1/new-session'),
     );
+    await discardSessionCheckout(input, created.checkout);
+    expect(existsSync(created.checkout.path)).toBe(checkout.type === 'main');
+    expect(git('branch', '--list', 'argo/*')).toBe('');
+  },
+);
+
+it.each([
+  [
+    [{ type: 'text', text: '  \n  Fix the build\nThen test it' }],
+    'Fix the build',
+  ],
+  [
+    [
+      { type: 'text', text: 'One line' },
+      { type: 'text', text: 'Two' },
+    ],
+    'One line',
+  ],
+  [
+    [
+      {
+        type: 'image',
+        mimeType: 'image/png',
+        blob: { blobId: 'image-1', mime: 'image/png', bytes: 3 },
+      },
+      { type: 'text', text: 'What is this?' },
+    ],
+    'What is this?',
+  ],
+  [[], ''],
+] satisfies [SessionNewInput['prompt'], string][])(
+  'titles the prompt %j as %j',
+  (prompt, title) => {
+    expect(titleFromPrompt(prompt)).toBe(title);
   },
 );
 
@@ -124,13 +212,11 @@ it('rejects an unknown Session or Project', async () => {
     loadSession({ database, sessionId: 'missing', kind: 'existing' }),
   ).rejects.toThrow('No Session missing');
   await expect(
-    createSession({
+    createSessionCheckout({
+      ...newSession,
       database,
-      sessionId: 'new-session',
-      kind: 'new',
       projectId: 'missing',
-      agent: 'mock',
-      checkout: 'main',
+      checkout: { type: 'main' },
     }),
   ).rejects.toThrow('No Project missing');
 });
@@ -144,13 +230,10 @@ it('rejects and reports a git response that has no working Checkout', async () =
   const report = vi.spyOn(console, 'error').mockImplementation(() => {});
   cleanups.push(() => report.mockRestore());
   await expect(
-    createSession({
+    createSessionCheckout({
+      ...newSession,
       database,
-      kind: 'new',
-      projectId: 'project-1',
-      sessionId: 'new-session',
-      agent: 'mock',
-      checkout: 'main',
+      checkout: { type: 'main' },
     }),
   ).rejects.toThrow('Unrecognised git worktree list response');
   expect(report).toHaveBeenCalledWith(

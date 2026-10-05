@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
 import { describeError } from '../src/describe-error';
+import { EXECUTABLE } from './handshake';
 import type {
   GetAccountParams,
   GetAccountResponse,
@@ -45,7 +46,7 @@ export function openAppServer(
     CODEX_API_KEY: _codexKey,
     ...environment
   } = process.env;
-  const child = spawn('codex', ['app-server', '--listen', 'stdio://'], {
+  const child = spawn(EXECUTABLE, ['app-server', '--listen', 'stdio://'], {
     cwd,
     env: environment,
     stdio: 'pipe',

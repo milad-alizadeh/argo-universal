@@ -2,6 +2,7 @@ import type {
   AgentAdapter,
   AgentConnectInput,
   AgentEvent,
+  AgentProbe,
   AgentReady,
   VendorCommand,
 } from '@repo/agents';
@@ -22,6 +23,7 @@ export interface MockAgentScript {
   ) => Promise<AgentReady>;
   stream?: (stream: MockAgentStream) => undefined | (() => void);
   stop?: (input: AgentConnectInput) => Promise<void>;
+  probe?: (signal: AbortSignal) => Promise<AgentProbe>;
 }
 
 export const mockReady: AgentReady = {
@@ -39,10 +41,14 @@ export const createMockAdapter = (
     connect = async () => mockReady,
     stream = () => undefined,
     stop = async () => {},
+    probe = async () => ({ availability: 'available', configOptions: [] }),
   }: MockAgentScript = {},
   agent = 'mock',
 ): AgentAdapter<MockAgentStreamEvent, null> => ({
   agent,
+  label: agent,
+  logo: '<svg xmlns="http://www.w3.org/2000/svg"/>',
+  probe,
   initialMappingState: () => null,
   toAgentEvents: (event, mappingState) => ({ events: [event], mappingState }),
   async connect(input, listener, signal) {

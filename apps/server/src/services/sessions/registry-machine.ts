@@ -73,6 +73,9 @@ export const registryMachine = setup({
                 projectId: event.projectId,
                 agent: event.agent,
                 checkout: event.checkout,
+                configOptions: event.configOptions,
+                prompt: event.prompt,
+                turnId: event.turnId,
               }
             : { kind: 'existing' }),
         },

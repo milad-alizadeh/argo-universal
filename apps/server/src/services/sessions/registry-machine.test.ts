@@ -30,7 +30,10 @@ const events: RegistryEvent[] = [
       sessionId,
       projectId: 'project-1',
       agent: 'mock',
-      checkout: 'main',
+      checkout: { type: 'main' },
+      configOptions: [],
+      prompt: [{ type: 'text', text: 'Build it' }],
+      turnId: `turn-${sessionId}`,
     },
     { type: 'sessions.open', sessionId, agent: 'mock' },
     {

@@ -1,9 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import type { SessionService } from '@repo/api';
 import type { Database } from '@repo/db';
+import { project } from '@repo/db/schema';
+import { listBranches } from '@repo/git';
 import { TRPCError } from '@trpc/server';
-import { waitFor } from 'xstate';
-import { notImplemented } from '../not-implemented';
+import { eq } from 'drizzle-orm';
+import { type ActorRefFrom, waitFor } from 'xstate';
+import type { writerMachine } from '../feed/writer-machine';
 import type { RegistryActorRef, RegistryCommand } from './registry-machine';
 import { sendSessionCommand } from './session-command';
 import { createSessionList } from './session-list';
@@ -69,10 +72,81 @@ export function createSessionService({
     });
     return ready(sessionId);
   };
+  // Resolves once the writer has committed the new Session's row, so every read finds it.
+  const written = async (sessionId: string) => {
+    const writer = sessions.system.get('databaseWriter') as
+      | ActorRefFrom<typeof writerMachine>
+      | undefined;
+    const queued = (
+      snapshot: ReturnType<NonNullable<typeof writer>['getSnapshot']>,
+    ) =>
+      snapshot.context.queue.some(
+        (job) => job.type === 'sessionInsert' && job.session.id === sessionId,
+      );
+    if (!writer) return;
+    const snapshot = await waitFor(
+      writer,
+      (snapshot) => snapshot.status !== 'active' || !queued(snapshot),
+      { timeout: Infinity },
+    );
+    if (queued(snapshot))
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: `Session ${sessionId} was not stored`,
+      });
+  };
   return {
     ...createSessionList({ database, sessions }),
     openSession: open,
-    new: notImplemented,
+    new: async (input) => {
+      const stored = database
+        .select({ path: project.path })
+        .from(project)
+        .where(eq(project.id, input.projectId))
+        .get();
+      if (!stored)
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: `No Project ${input.projectId}`,
+        });
+      if (
+        input.checkout.type === 'worktree' &&
+        !(await listBranches(stored.path)).branches.includes(
+          input.checkout.baseBranch,
+        )
+      )
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `No local branch ${input.checkout.baseBranch}`,
+        });
+      const sessionId = createId();
+      send({
+        type: 'sessions.create',
+        sessionId,
+        turnId: createId(),
+        ...input,
+      });
+      const actor = sessions.system.get(`session:${sessionId}`) as
+        | SessionActorRef
+        | undefined;
+      if (!actor)
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Session ${sessionId} did not open`,
+        });
+      const snapshot = await waitFor(
+        actor,
+        (snapshot) => snapshot.status !== 'active' || snapshot.context.stored,
+        { timeout: Infinity },
+      );
+      if (!snapshot.context.stored)
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message: snapshot.context.failure ?? `Session ${sessionId} closed`,
+        });
+      await written(sessionId);
+      return { sessionId };
+    },
     prompt: async ({ sessionId, prompt }) => {
       const actor = await open(sessionId);
       const turnId = createId();

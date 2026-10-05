@@ -49,6 +49,8 @@ export const project = snakeCase.table('project', {
   id: text().primaryKey(),
   path: text().notNull().unique(),
   name: text().notNull(),
+  // The New Session checkout the user chose last, as JSON; null until the first Session.
+  checkoutChoice: text({ mode: 'json' }),
   createdAt: timestamp(),
 });
 
@@ -89,6 +91,7 @@ export const turn = snakeCase.table('turn', {
   stopReason: text({ enum: stopReasons }),
   error: text({ mode: 'json' }),
   usage: text({ mode: 'json' }),
+  model: text(),
   startedAt: timestamp(),
   endedAt: integer(),
 });
