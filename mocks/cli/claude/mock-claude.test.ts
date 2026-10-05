@@ -285,7 +285,7 @@ describe('mock Claude CLI', () => {
   });
 });
 
-it('reports that sign-in is required when not signed in', async () => {
+it('answers initialize with an account that has no subscription when not signed in', async () => {
   const executable = await writeMockClaude(directory, {
     recording: 'edit-and-command',
     availability: 'not_signed_in',
@@ -299,9 +299,9 @@ it('reports that sign-in is required when not signed in', async () => {
   expect(await claude.next()).toMatchObject({
     type: 'control_response',
     response: {
-      subtype: 'error',
+      subtype: 'success',
       request_id: 'initialize-1',
-      error: 'Not signed in. Run claude auth login.',
+      response: expect.objectContaining({ account: {} }),
     },
   });
   claude.close();

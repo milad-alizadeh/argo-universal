@@ -174,7 +174,7 @@ const initializeResponse = {
   output_style: 'default',
   available_output_styles: ['default'],
   models: [],
-  account: {},
+  account: { subscriptionType: 'Claude Max', apiProvider: 'firstParty' },
   pending_permission_requests: [],
   pending_user_dialog_requests: [],
 };
@@ -216,6 +216,14 @@ const answer = (subtype: string | undefined) =>
         ? initializeResponse
         : undefined;
 
+// A CLI nobody signed in to still starts, with an account that has no subscription.
+const signedOut = (subtype: string | undefined, response: unknown) =>
+  subtype === 'initialize' &&
+  environment.availability === 'not_signed_in' &&
+  typeof response === 'object'
+    ? { ...response, account: {} }
+    : response;
+
 serveJsonLines((line) => {
   const input = Input.parse(line);
   if (input.type === 'user') return playTurn();
@@ -223,20 +231,7 @@ serveJsonLines((line) => {
   const subtype = input.request?.subtype;
   if (subtype === 'initialize' && process.env.MOCK_CLI_BLOCK_INITIALIZE === '1')
     return;
-  if (
-    subtype === 'initialize' &&
-    environment.availability === 'not_signed_in'
-  ) {
-    return send({
-      type: 'control_response',
-      response: {
-        subtype: 'error',
-        request_id: input.request_id,
-        error: 'Not signed in. Run claude auth login.',
-      },
-    });
-  }
-  const response = answer(subtype);
+  const response = signedOut(subtype, answer(subtype));
   send({
     type: 'control_response',
     response:

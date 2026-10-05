@@ -598,7 +598,10 @@
                 "supportsAutoMode": true
               }
             ],
-            "account": {},
+            "account": {
+              "subscriptionType": "Claude Max",
+              "apiProvider": "firstParty"
+            },
             "pid": 29442,
             "current_permission_mode": "default",
             "feedback_mode": {

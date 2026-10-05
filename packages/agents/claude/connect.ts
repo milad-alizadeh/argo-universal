@@ -15,6 +15,7 @@ import type {
 } from '../src/agent-adapter';
 import { describeError } from '../src/describe-error';
 import { findExecutable } from '../src/find-executable';
+import { usesSubscription } from './account';
 import {
   type ConfigValues,
   changeValue,
@@ -161,7 +162,12 @@ export async function connect(
   let models: ModelInfo[];
   let values: ConfigValues;
   try {
-    models = (await vendor.initializationResult()).models;
+    const initialization = await vendor.initializationResult();
+    if (!usesSubscription(initialization.account))
+      throw new Error(
+        'Sign in to Claude with a Claude subscription to start a Session.',
+      );
+    models = initialization.models;
     values = startingValues(models, input.configOptions);
     await applyValues(CLI_START, values);
   } catch (error) {

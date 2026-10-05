@@ -3,10 +3,9 @@ import { query, type SDKUserMessage } from '@anthropic-ai/claude-agent-sdk';
 import type { AgentProbe } from '../src/agent-adapter';
 import { describeError } from '../src/describe-error';
 import { findExecutable } from '../src/find-executable';
+import { usesSubscription } from './account';
 import { startingValues, toConfigOptions } from './config-options';
 import { cliEnvironment, EXECUTABLE } from './connect';
-
-const SIGN_IN_FAILURE = /sign(?:ed)? ?in|log ?in|auth/i;
 
 export async function probe(signal: AbortSignal): Promise<AgentProbe> {
   const environment = cliEnvironment();
@@ -41,24 +40,24 @@ export async function probe(signal: AbortSignal): Promise<AgentProbe> {
     },
   });
   try {
-    const { models } = await vendor.initializationResult();
+    const { models, account } = await vendor.initializationResult();
+    if (!usesSubscription(account))
+      return {
+        availability: 'not_signed_in',
+        installStep:
+          'Run claude in a terminal and sign in with /login using a Claude subscription',
+        configOptions: [],
+      };
     return {
       availability: 'available',
       configOptions: toConfigOptions(models, startingValues(models, [])),
     };
   } catch (error) {
-    const reason = describeError(error);
-    return SIGN_IN_FAILURE.test(reason)
-      ? {
-          availability: 'not_signed_in',
-          installStep: 'Run claude in a terminal and sign in with /login',
-          configOptions: [],
-        }
-      : {
-          availability: 'unavailable',
-          installStep: `Claude did not start: ${reason}`,
-          configOptions: [],
-        };
+    return {
+      availability: 'unavailable',
+      installStep: `Claude did not start: ${describeError(error)}`,
+      configOptions: [],
+    };
   } finally {
     signal.removeEventListener('abort', abort);
     finished.resolve();
