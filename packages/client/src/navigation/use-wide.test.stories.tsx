@@ -1,0 +1,31 @@
+import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { expect } from 'storybook/test';
+import { WideMock } from '../../mocks/wide-mock';
+
+const meta = {
+  title: 'Tests/UseWide',
+  component: WideMock,
+  // Resizing uses Vitest's browser runner, so this story is only for tests.
+  tags: ['!dev'],
+} satisfies Meta<typeof WideMock>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const UpdatesAt720Pixels: Story = {
+  play: async ({ canvas }) => {
+    const { page } = await import('vitest/browser');
+
+    await page.viewport(719, 900);
+    await expect(await canvas.findByText('Phone layout')).toBeVisible();
+
+    await page.viewport(720, 900);
+    await expect(await canvas.findByText('Wide layout')).toBeVisible();
+
+    await page.viewport(721, 900);
+    await expect(await canvas.findByText('Wide layout')).toBeVisible();
+
+    await page.viewport(719, 900);
+    await expect(await canvas.findByText('Phone layout')).toBeVisible();
+  },
+};

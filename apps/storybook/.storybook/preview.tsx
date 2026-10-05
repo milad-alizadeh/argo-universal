@@ -1,11 +1,15 @@
-import { withReusablesPreview, withTrpcMocks } from '@repo/client/mocks';
+import {
+  withNavigationMocks,
+  withReusablesPreview,
+  withTrpcMocks,
+} from '@repo/client/mocks';
 import { themes } from '@repo/uniwind/themes';
 import type { Preview } from '@storybook/react-native-web-vite';
 import '../global.css';
 
 const preview: Preview = {
   // Stories get tRPC fixtures from parameters.trpc (ADR 0010).
-  decorators: [withReusablesPreview, withTrpcMocks],
+  decorators: [withReusablesPreview, withTrpcMocks, withNavigationMocks],
   initialGlobals: { themeId: 'default', mode: 'light' },
   globalTypes: {
     themeId: {

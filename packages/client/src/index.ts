@@ -5,6 +5,14 @@ export {
   useConnectionState,
 } from './connection/context';
 export { applyTheme } from './lib/theme';
+export {
+  type Navigate,
+  type NavigationDestination,
+  NavigationProvider,
+  type NavigationProviderProps,
+  useNavigate,
+} from './navigation/context';
+export { useWide } from './navigation/use-wide';
 export { ProjectsScreen } from './screens/ProjectsScreen';
 export {
   SessionScreen,
