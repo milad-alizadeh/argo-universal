@@ -10,14 +10,7 @@ import {
   FolderOpenIcon,
   PlusIcon,
 } from 'phosphor-react-native';
-import {
-  useEffect,
-  useId,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   LayoutAnimation,
@@ -25,11 +18,6 @@ import {
   Pressable,
   View,
 } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useResolveClassNames } from 'uniwind';
 import { cn } from '#lib/utils';
@@ -74,31 +62,12 @@ export function ProjectsList({
   const { backgroundColor } = useResolveClassNames(
     'bg-background wide:bg-sidebar',
   );
-  const scrollMetrics = useRef({ offset: 0, content: 0, viewport: 0 });
-  const [fades, setFades] = useState({ top: false, bottom: false });
-  function updateFades() {
-    const { offset, content, viewport } = scrollMetrics.current;
-    const top = offset > 1;
-    const bottom = viewport > 0 && content - viewport - offset > 1;
-    setFades((current) =>
-      current.top === top && current.bottom === bottom
-        ? current
-        : { top, bottom },
-    );
-  }
-  const topOpacity = useSharedValue(0);
-  const bottomOpacity = useSharedValue(0);
-  const bottomVisible = fades.bottom || isFetchingNextPage;
-  useEffect(() => {
-    topOpacity.value = withTiming(fades.top ? 1 : 0, { duration: 180 });
-    bottomOpacity.value = withTiming(bottomVisible ? 1 : 0, { duration: 180 });
-  }, [fades.top, bottomVisible, topOpacity, bottomOpacity]);
-  const topFadeStyle = useAnimatedStyle(() => ({ opacity: topOpacity.value }));
-  const bottomFadeStyle = useAnimatedStyle(() => ({
-    opacity: bottomOpacity.value,
-  }));
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
-  const contentStyle = useResolveClassNames('px-2 pb-24 wide:pb-2');
+  const contentStyle = {
+    paddingHorizontal: 8,
+    paddingTop: 32,
+    paddingBottom: 48,
+  };
   const entries = useMemo(() => {
     const groups = new Map<string, SessionInfo[]>();
     for (const session of sessions) {
@@ -139,37 +108,12 @@ export function ProjectsList({
 
   return (
     <View
-      className={cn(
-        'relative flex-1 overflow-hidden bg-background wide:bg-sidebar web:select-none web:[&_*]:select-none! web:projects-scroll-fade web:[&_[data-testid=projects-scroll]>div>div>div]:transition-[top,transform] web:[&_[data-testid=projects-scroll]>div>div>div]:duration-200',
-        fades.top
-          ? 'web:[--projects-fade-top:0]'
-          : 'web:[--projects-fade-top:1]',
-        bottomVisible
-          ? 'web:[--projects-fade-bottom:0]'
-          : 'web:[--projects-fade-bottom:1]',
-      )}
+      className="relative flex-1 overflow-hidden bg-background wide:bg-sidebar web:select-none web:[&_*]:select-none! web:projects-scroll-fade web:[&_[data-testid=projects-scroll]>div>div>div]:transition-[top,transform] web:[&_[data-testid=projects-scroll]>div>div>div]:duration-200"
       style={{ minHeight: 0 }}
     >
       <View className="flex-1" style={{ minHeight: 0 }}>
         <LegendList
           testID="projects-scroll"
-          onLayout={({ nativeEvent }) => {
-            scrollMetrics.current.viewport = nativeEvent.layout.height;
-            updateFades();
-          }}
-          onContentSizeChange={(_width, height) => {
-            scrollMetrics.current.content = height;
-            updateFades();
-          }}
-          onScroll={({ nativeEvent }) => {
-            scrollMetrics.current = {
-              offset: Math.max(0, nativeEvent.contentOffset.y),
-              content: nativeEvent.contentSize.height,
-              viewport: nativeEvent.layoutMeasurement.height,
-            };
-            updateFades();
-          }}
-          scrollEventThrottle={16}
           style={{ flex: 1 }}
           contentContainerStyle={contentStyle}
           data={entries}
@@ -218,16 +162,25 @@ export function ProjectsList({
               );
             if (item.kind === 'session')
               return (
-                <SessionRow
-                  key={item.id}
-                  session={item.session}
-                  logo={
-                    agents.find((agent) => agent.agent === item.session.agent)
-                      ?.logo ?? ''
-                  }
-                  selected={selectedSessionId === item.id}
-                  onSelect={onSelect}
-                />
+                <View
+                  testID="session-row-surface"
+                  className={cn(
+                    'overflow-hidden bg-background wide:bg-sidebar',
+                    selectedSessionId === item.id &&
+                      'bg-sidebar-accent wide:bg-sidebar-accent',
+                  )}
+                >
+                  <SessionRow
+                    key={item.id}
+                    session={item.session}
+                    logo={
+                      agents.find((agent) => agent.agent === item.session.agent)
+                        ?.logo ?? ''
+                    }
+                    selected={selectedSessionId === item.id}
+                    onSelect={onSelect}
+                  />
+                </View>
               );
             const isCollapsed = collapsed.has(item.id);
             return (
@@ -255,14 +208,13 @@ export function ProjectsList({
       </View>
       {Platform.OS !== 'web' &&
         (['top', 'bottom'] as const).map((edge) => (
-          <Animated.View
+          <View
             key={edge}
             pointerEvents="none"
             accessibilityElementsHidden
             importantForAccessibility="no-hide-descendants"
             testID={`scroll-fade-${edge}`}
             style={[
-              edge === 'top' ? topFadeStyle : bottomFadeStyle,
               {
                 position: 'absolute',
                 left: 0,
@@ -305,7 +257,7 @@ export function ProjectsList({
                 fill={`url(#${gradientId}-${edge})`}
               />
             </Svg>
-          </Animated.View>
+          </View>
         ))}
     </View>
   );

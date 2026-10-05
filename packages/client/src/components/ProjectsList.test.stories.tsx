@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
+import { ProjectsNewSessionPreview } from '../../mocks/projects-new-session-preview';
 import { projectsListProps } from '../../mocks/projects-list-mock';
 import { ProjectsList } from './ProjectsList';
 
@@ -64,5 +65,90 @@ export const ProjectActions: Story = {
 };
 export const ProjectActionsDark: Story = {
   ...ProjectActions,
+  globals: { mode: 'dark' },
+};
+
+export const InsertSessionOpaqueRows: Story = {
+  render: (args) => <ProjectsNewSessionPreview {...args} />,
+  play: async ({ canvas, userEvent }) => {
+    const heading = await canvas.findByRole('button', {
+      name: 'Example Project',
+    });
+    await userEvent.hover(heading);
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'New Session in Example Project' }),
+    );
+    const inserted = await canvas.findByRole('button', {
+      name: 'New Session 1, Idle',
+    });
+    const existing = canvas.getByRole('button', {
+      name: 'Large Session 0, Idle',
+    });
+    function assertOpaqueRow(button: HTMLElement) {
+      const surface = button.parentElement;
+      if (!surface) throw new Error('Missing Session row surface');
+      const color = getComputedStyle(surface).backgroundColor;
+      expect(
+        color,
+        'The animated row surface must be opaque, not only its button',
+      ).not.toBe('rgba(0, 0, 0, 0)');
+      expect(color).not.toBe('transparent');
+      expect(getComputedStyle(surface).opacity).toBe('1');
+      expect(getComputedStyle(surface).overflow).toBe('hidden');
+    }
+    assertOpaqueRow(inserted);
+    assertOpaqueRow(existing);
+    for (let frame = 0; frame < 12; frame++) {
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => resolve()),
+      );
+      assertOpaqueRow(inserted);
+      assertOpaqueRow(existing);
+    }
+    await waitFor(() => {
+      const newRectangle = inserted.getBoundingClientRect();
+      const oldRectangle = existing.getBoundingClientRect();
+      expect(newRectangle.bottom).toBeLessThanOrEqual(oldRectangle.top + 1);
+    });
+    await userEvent.hover(inserted);
+    assertOpaqueRow(inserted);
+  },
+};
+export const InsertSessionOpaqueRowsDark: Story = {
+  ...InsertSessionOpaqueRows,
+  globals: { mode: 'dark' },
+};
+
+export const ScrollFadePadding: Story = {
+  render: (args) => <ProjectsNewSessionPreview {...args} />,
+  play: async ({ canvas }) => {
+    const scroll = canvas.getByTestId('projects-scroll');
+    const heading = await canvas.findByRole('button', {
+      name: 'Example Project',
+    });
+    await waitFor(() => {
+      expect(
+        heading.getBoundingClientRect().top -
+          scroll.getBoundingClientRect().top,
+      ).toBeGreaterThanOrEqual(31);
+    });
+    scroll.scrollTop = scroll.scrollHeight;
+    const last = await canvas.findByRole('button', {
+      name: 'Large Session 11, Idle',
+    });
+    await waitFor(() => {
+      scroll.scrollTop = scroll.scrollHeight;
+      const viewportBottom = scroll.getBoundingClientRect().bottom;
+      expect(
+        viewportBottom - last.getBoundingClientRect().bottom,
+      ).toBeGreaterThanOrEqual(47);
+      expect(last.getBoundingClientRect().bottom).toBeGreaterThan(
+        scroll.getBoundingClientRect().top,
+      );
+    });
+  },
+};
+export const ScrollFadePaddingDark: Story = {
+  ...ScrollFadePadding,
   globals: { mode: 'dark' },
 };
