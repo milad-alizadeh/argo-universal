@@ -9,6 +9,7 @@ Updated as new requests arrive. Completed entries describe implemented changes; 
 - [x] Add top and bottom scroll fades to the LegendList.
 - [x] Animate fade visibility changes rather than snapping (180 ms).
 - [x] Show both edge fades automatically in the shared ProjectsList in every story, without scroll-position visibility gates.
+- [x] Fade content completely at the exact top and bottom edges: browser alpha mask; native gradients pinned above the list, using the list background color.
 - [x] Make On New Session interactive: clicking the Project + inserts a new Session directly; use the existing Project control instead of a separate story button.
 - [x] Animate existing list rows shifting when Sessions are inserted or reordered.
 - [x] Fix the large row gaps caused by estimated animation offsets; animate the measured list positions instead.
