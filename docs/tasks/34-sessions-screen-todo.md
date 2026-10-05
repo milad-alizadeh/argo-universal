@@ -42,6 +42,8 @@ Updated as new requests arrive. Completed entries describe implemented changes; 
 - [x] Update AGENTS.md Storybook rules: distinct valid visual states, no repeated default states or child-component coverage, callback checks without visual effects in test stories, and interactive pagination with enough rows, temporary loading, and appended results. Align the Paper guidance with these rules.
 - [x] Clarify AGENTS.md Storybook rules: every screen has a full presentation story; visibly identical stories are duplicates; callback-only cases and assertions belong in test stories; presentation and functionality tests are separate.
 - [x] Make child-state ownership explicit: a state already presented by a child, such as a selected row, gets no separate parent story or parent variation.
+- [x] Consolidate all Storybook guidance with writing-for-agents: presentation/test separation, screen coverage, unique states and child ownership, useful interaction, viewport/theme controls, faithful wrappers, isolated state, stable mocks, web/iOS parity, and observable test outcomes.
+- [x] Move Storybook rules to docs/agents/storybook.md; AGENTS.md contains only a pointer triggered by story authoring or UI component testing.
 - [ ] Final review when preparing the PR.
 
 Independent results and native coverage limits: [validation report](34-blind-validation.md).
