@@ -1,17 +1,23 @@
 import '../../global.css';
 
-import { AppProviders, NavigationProvider, useConnection } from '@repo/client';
+import {
+  AppProviders,
+  type Navigate,
+  NavigationProvider,
+  useConnection,
+} from '@repo/client';
 import { createBrowserMachineInspection } from '@repo/machine-log/browser';
 import { PortalHost } from '@rn-primitives/portal';
 import { registerDevMenuItems } from 'expo-dev-client';
-import { router, Stack } from 'expo-router';
+import { type Href, router, Stack } from 'expo-router';
 import { ThemeProvider } from 'expo-router/react-navigation';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { AppState, Platform } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useUniwind } from 'uniwind';
-import { navigate } from '@/lib/navigation';
 import { useNavigationTheme } from '@/lib/theme';
+import { hrefFor } from '@/navigation/routes';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -53,32 +59,32 @@ const inspection = createBrowserMachineInspection({
   writeLine: (line) => console.log(line.trimEnd()),
 });
 
+// Screens in @repo/client navigate through this.
+const navigate: Navigate = (destination) =>
+  router.navigate(hrefFor(destination) as Href);
+
 export default function RootLayout() {
   const { theme } = useUniwind();
   const navigationTheme = useNavigationTheme();
 
   return (
-    <AppProviders serverUrl={serverUrl} inspect={inspection.inspect}>
-      <ForegroundSignal />
-      <NavigationProvider navigate={navigate}>
+    // The phone drawer's gestures need this root.
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AppProviders serverUrl={serverUrl} inspect={inspection.inspect}>
+        <ForegroundSignal />
         <ThemeProvider value={navigationTheme}>
           <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
-          <Stack>
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="sessions/new"
-              options={{ title: 'New Session' }}
-            />
-            <Stack.Screen name="sessions/[id]" options={{ title: 'Session' }} />
-            <Stack.Screen
-              name="(dev)/storybook"
-              options={{ headerShown: false }}
-            />
-          </Stack>
+          <NavigationProvider navigate={navigate}>
+            {/* Storybook stays outside the shell. */}
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(shell)" />
+              <Stack.Screen name="(dev)/storybook" />
+            </Stack>
+          </NavigationProvider>
           <PortalHost />
         </ThemeProvider>
-      </NavigationProvider>
-    </AppProviders>
+      </AppProviders>
+    </GestureHandlerRootView>
   );
 }
 

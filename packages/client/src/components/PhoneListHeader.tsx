@@ -1,6 +1,8 @@
+import { ImpactFeedbackStyle, impactAsync } from 'expo-haptics';
 import { ListIcon } from 'phosphor-react-native/src/icons/List';
 import { MagnifyingGlassIcon } from 'phosphor-react-native/src/icons/MagnifyingGlass';
 import { SlidersHorizontalIcon } from 'phosphor-react-native/src/icons/SlidersHorizontal';
+import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
@@ -12,6 +14,8 @@ export interface PhoneListHeaderProps {
   onMenu: () => void;
   onSearch: () => void;
   onFilter: () => void;
+  // The row after ☰; without it, the title with search and filter.
+  children?: ReactNode;
 }
 
 export function PhoneListHeader({
@@ -20,6 +24,7 @@ export function PhoneListHeader({
   onMenu,
   onSearch,
   onFilter,
+  children,
 }: PhoneListHeaderProps) {
   return (
     <View className="h-11 flex-row items-center px-2">
@@ -33,39 +38,49 @@ export function PhoneListHeader({
             ? `${attentionCount} Sessions need attention`
             : undefined
         }
-        onPress={onMenu}
+        onPress={() => {
+          void impactAsync(ImpactFeedbackStyle.Light);
+          onMenu();
+        }}
       >
         <Icon as={ListIcon} className="size-phone-shell-icon" />
         {attentionCount > 0 && (
           <View className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-warning" />
         )}
       </Button>
-      <Text
-        role="heading"
-        aria-level={1}
-        className="min-w-0 flex-1 pl-1 text-xl font-semibold"
-        numberOfLines={1}
-      >
-        {title}
-      </Text>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="size-11 sm:size-11"
-        accessibilityLabel={`Search ${title}`}
-        onPress={onSearch}
-      >
-        <Icon as={MagnifyingGlassIcon} className="size-phone-shell-icon" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="size-11 sm:size-11"
-        accessibilityLabel={`Filter ${title}`}
-        onPress={onFilter}
-      >
-        <Icon as={SlidersHorizontalIcon} className="size-phone-shell-icon" />
-      </Button>
+      {children ?? (
+        <>
+          <Text
+            role="heading"
+            aria-level={1}
+            className="min-w-0 flex-1 pl-1 text-xl font-semibold"
+            numberOfLines={1}
+          >
+            {title}
+          </Text>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-11 sm:size-11"
+            accessibilityLabel={`Search ${title}`}
+            onPress={onSearch}
+          >
+            <Icon as={MagnifyingGlassIcon} className="size-phone-shell-icon" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-11 sm:size-11"
+            accessibilityLabel={`Filter ${title}`}
+            onPress={onFilter}
+          >
+            <Icon
+              as={SlidersHorizontalIcon}
+              className="size-phone-shell-icon"
+            />
+          </Button>
+        </>
+      )}
     </View>
   );
 }

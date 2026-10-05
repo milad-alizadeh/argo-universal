@@ -19,6 +19,40 @@ export function AccountsScreen() {
   );
 }
 
+export function ProjectsSettingsScreen() {
+  return (
+    <Placeholder title="Projects" description="Projects will appear here." />
+  );
+}
+
+export function AgentsSettingsScreen() {
+  return <Placeholder title="Agents" description="Agents will appear here." />;
+}
+
+export function DevicesScreen() {
+  return (
+    <Placeholder title="Devices" description="Devices will appear here." />
+  );
+}
+
+export function AppearanceScreen() {
+  return (
+    <Placeholder
+      title="Appearance"
+      description="Appearance will appear here."
+    />
+  );
+}
+
+export function NotificationsScreen() {
+  return (
+    <Placeholder
+      title="Notifications"
+      description="Notifications will appear here."
+    />
+  );
+}
+
 export interface ProjectSettingsScreenProps {
   name: string;
 }
@@ -28,6 +62,19 @@ export function ProjectSettingsScreen({ name }: ProjectSettingsScreenProps) {
     <Placeholder
       title="Project settings"
       description={`Settings for ${name} will appear here.`}
+    />
+  );
+}
+
+export interface AgentSettingsScreenProps {
+  agent: string;
+}
+
+export function AgentSettingsScreen({ agent }: AgentSettingsScreenProps) {
+  return (
+    <Placeholder
+      title="Agent"
+      description={`Settings for ${agent} will appear here.`}
     />
   );
 }

@@ -1,5 +1,6 @@
 import { type ReactNode, useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCSSVariable, useResolveClassNames } from 'uniwind';
 import { cn } from '#lib/utils';
 import { Badge } from '#primitives/badge';
@@ -21,6 +22,11 @@ export interface PhoneShellProps {
   onSectionChange: (section: ShellSection) => void;
   onSearch: () => void;
   onFilter: () => void;
+  // The list's own header row after ☰, when it has one.
+  header?: ReactNode;
+  // False when the screens inside draw their own header row.
+  showListHeader?: boolean;
+  swipeEnabled?: boolean;
   children: ReactNode;
 }
 
@@ -32,6 +38,9 @@ export function PhoneShell({
   onSectionChange,
   onSearch,
   onFilter,
+  header,
+  showListHeader = true,
+  swipeEnabled = true,
   children,
 }: PhoneShellProps) {
   const drawerWidth = Number.parseFloat(
@@ -50,6 +59,7 @@ export function PhoneShell({
     Math.max(0, layout.width - visibleScreenWidth),
   );
   const chrome = useResolveClassNames('bg-shell-chrome');
+  const { top } = useSafeAreaInsets();
 
   function selectSection(section: ShellSection) {
     onSectionChange(section);
@@ -73,6 +83,7 @@ export function PhoneShell({
       >
         <Icon
           as={icon}
+          weight={selectedSection === section ? 'fill' : 'regular'}
           className={cn(
             'size-phone-shell-icon',
             selectedSection !== section && 'text-muted-foreground',
@@ -113,12 +124,14 @@ export function PhoneShell({
         width={offset}
         surfaceStyle={chrome}
         layout={layout}
+        swipeEnabled={swipeEnabled}
         renderDrawerContent={() => (
           <View
             className="flex-1 py-3"
             aria-hidden={!drawerOpen}
             accessibilityElementsHidden={!drawerOpen}
           >
+            <View style={{ height: top }} />
             <View className="h-14 justify-center px-6">
               <Text
                 role="heading"
@@ -137,13 +150,20 @@ export function PhoneShell({
         )}
       >
         <PhoneShellCard drawerOpen={drawerOpen}>
-          <PhoneListHeader
-            title={shellSections[selectedSection].title}
-            attentionCount={attentionCount}
-            onMenu={() => onDrawerOpenChange(true)}
-            onSearch={onSearch}
-            onFilter={onFilter}
-          />
+          {showListHeader && (
+            <>
+              <View style={{ height: top }} />
+              <PhoneListHeader
+                title={shellSections[selectedSection].title}
+                attentionCount={attentionCount}
+                onMenu={() => onDrawerOpenChange(true)}
+                onSearch={onSearch}
+                onFilter={onFilter}
+              >
+                {header}
+              </PhoneListHeader>
+            </>
+          )}
           {children}
         </PhoneShellCard>
       </PhoneDrawer>

@@ -4,7 +4,7 @@ test('Sessions loads from the Server, filters, and opens New Session', async ({
   page,
 }) => {
   await expect(
-    page.getByRole('heading', { name: 'Sessions', exact: true }),
+    page.getByRole('heading', { name: 'Sessions', level: 1, exact: true }),
   ).toBeVisible();
   await expect(
     page.getByText('No Sessions yet.', { exact: true }),

@@ -7,11 +7,8 @@ const meta = {
   title: 'Screens/SessionsScreen',
   component: SessionsScreen,
   parameters: { trpc: sessionListMocks, screenPreview: true },
-  render: () => (
-    <SessionsScreenPreview>
-      <SessionsScreen />
-    </SessionsScreenPreview>
-  ),
+  args: { query: '', archived: false },
+  render: () => <SessionsScreenPreview />,
 } satisfies Meta<typeof SessionsScreen>;
 export default meta;
 

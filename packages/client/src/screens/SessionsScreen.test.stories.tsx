@@ -27,11 +27,8 @@ const meta = {
     screenPreview: true,
     navigation: recorder,
   },
-  render: () => (
-    <SessionsScreenPreview>
-      <SessionsScreen />
-    </SessionsScreenPreview>
-  ),
+  args: { query: '', archived: false },
+  render: () => <SessionsScreenPreview />,
 } satisfies Meta<typeof SessionsScreen>;
 export default meta;
 type Story = StoryObj<typeof meta>;

@@ -1,6 +1,10 @@
 import type {} from './lib/reusables-compatibility';
 
 export {
+  DesktopLayout,
+  type DesktopLayoutProps,
+} from './components/DesktopLayout';
+export {
   DesktopShell,
   type DesktopShellProps,
   type InspectorState,
@@ -10,6 +14,7 @@ export {
   IssueIndicator,
   type IssueIndicatorProps,
 } from './components/IssueIndicator';
+export { PhoneLayout, type PhoneLayoutProps } from './components/PhoneLayout';
 export {
   PhoneListHeader,
   type PhoneListHeaderProps,
@@ -51,14 +56,26 @@ export {
   useNavigate,
 } from './navigation/context';
 export { useWide } from './navigation/use-wide';
+export { ConnectionScreen } from './screens/ConnectionScreen';
 export {
   AccountsScreen,
+  AgentSettingsScreen,
+  type AgentSettingsScreenProps,
+  AgentsSettingsScreen,
+  AppearanceScreen,
   AtlasScreen,
+  DevicesScreen,
   IssuesScreen,
   NewSessionScreen,
+  NotificationsScreen,
   ProjectSettingsScreen,
   type ProjectSettingsScreenProps,
+  ProjectsSettingsScreen,
 } from './screens/PlaceholderScreens';
+export {
+  SectionRootScreen,
+  type SectionRootScreenProps,
+} from './screens/SectionRootScreen';
 export {
   SessionScreen,
   type SessionScreenProps,

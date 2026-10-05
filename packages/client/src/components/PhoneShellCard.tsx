@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { ViewStyle } from 'react-native';
+import { useWindowDimensions, type ViewStyle } from 'react-native';
 import { useDrawerProgress } from 'react-native-drawer-layout';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useResolveClassNames } from 'uniwind';
@@ -14,11 +14,13 @@ export function PhoneShellCard({ children }: PhoneShellCardProps) {
   const { marginTop, borderRadius } = useResolveClassNames(
     'mt-3 rounded-xl',
   ) as ViewStyle;
-  const inset = Number(marginTop);
   const radius = Number(borderRadius);
-  const animatedStyle = useAnimatedStyle(() => ({
-    marginTop: inset * progress.value,
-    marginBottom: inset * progress.value,
+  // Scaling about the left edge insets the card top and bottom by mt-3 without a layout pass.
+  const shrink = (2 * Number(marginTop)) / useWindowDimensions().height;
+  const scaleStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: 1 - shrink * progress.value }],
+  }));
+  const cornerStyle = useAnimatedStyle(() => ({
     borderRadius: radius * progress.value,
   }));
 
@@ -26,9 +28,15 @@ export function PhoneShellCard({ children }: PhoneShellCardProps) {
     <Animated.View
       testID="phone-shell-card"
       className="flex-1 bg-card shadow-card"
-      style={animatedStyle}
+      style={[{ transformOrigin: 'left center' }, scaleStyle, cornerStyle]}
     >
-      {children}
+      {/* Clips the screens inside, whose own backgrounds would square the corners. */}
+      <Animated.View
+        className="flex-1 overflow-hidden bg-card"
+        style={cornerStyle}
+      >
+        {children}
+      </Animated.View>
     </Animated.View>
   );
 }

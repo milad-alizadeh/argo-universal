@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { DrawerProgressContext } from 'react-native-drawer-layout';
 import ReanimatedDrawerLayout, {
   type DrawerLayoutMethods,
+  DrawerLockMode,
   DrawerType,
 } from 'react-native-gesture-handler/ReanimatedDrawerLayout';
 import type { PhoneDrawerProps } from './PhoneDrawer';
@@ -13,6 +14,7 @@ export function PhoneDrawer({
   onClose,
   width,
   surfaceStyle,
+  swipeEnabled = true,
   renderDrawerContent,
   children,
 }: PhoneDrawerProps) {
@@ -34,6 +36,9 @@ export function PhoneDrawer({
       <ReanimatedDrawerLayout
         ref={drawer}
         drawerType={DrawerType.BACK}
+        drawerLockMode={
+          swipeEnabled ? DrawerLockMode.UNLOCKED : DrawerLockMode.LOCKED_CLOSED
+        }
         drawerWidth={width}
         drawerBackgroundColor={String(surfaceStyle.backgroundColor)}
         overlayColor="transparent"

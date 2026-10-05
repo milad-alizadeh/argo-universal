@@ -27,13 +27,78 @@ import { useNavigate } from '../navigation/context';
 import { useWide } from '../navigation/use-wide';
 import { useTRPC } from '../trpc/context';
 
-export function SessionsScreen() {
+export interface SessionsFilter {
+  query: string;
+  onQueryChange: (query: string) => void;
+  archived: boolean;
+  onArchivedChange: (archived: boolean) => void;
+}
+
+// The search and Active or Archived filter that the list header and the list share.
+export function useSessionsFilter(): SessionsFilter {
+  const [query, setQuery] = useState('');
+  const [archived, setArchived] = useState(false);
+  return {
+    query,
+    onQueryChange: setQuery,
+    archived,
+    onArchivedChange: setArchived,
+  };
+}
+
+// The Sessions part of the shell's list header row: the title with search, and the filter.
+export function SessionsHeader({
+  query,
+  onQueryChange,
+  archived,
+  onArchivedChange,
+}: SessionsFilter) {
+  return (
+    <>
+      <ListSearch title="Sessions" value={query} onChangeText={onQueryChange} />
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-11 sm:size-11 wide:size-8 wide:sm:size-8"
+            accessibilityLabel="Filter Sessions"
+          >
+            <Icon
+              as={SlidersHorizontalIcon}
+              className="size-5.5 wide:size-4 text-foreground wide:text-muted-foreground"
+            />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-60">
+          <DropdownMenuRadioGroup
+            value={archived ? 'archived' : 'active'}
+            onValueChange={(value) => onArchivedChange(value === 'archived')}
+          >
+            <DropdownMenuRadioItem value="active">
+              <Text>Active</Text>
+            </DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="archived">
+              <Text>Archived</Text>
+            </DropdownMenuRadioItem>
+          </DropdownMenuRadioGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
+  );
+}
+
+export interface SessionsScreenProps {
+  query: string;
+  archived: boolean;
+}
+
+// The Sessions list below the shell's header row: phone full screen, or the wide window's sidebar.
+export function SessionsScreen({ query, archived }: SessionsScreenProps) {
   const wide = useWide();
   const trpc = useTRPC();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [query, setQuery] = useState('');
-  const [archived, setArchived] = useState(false);
   const projects = useQuery(trpc.projects.list.queryOptions());
   const agents = useQuery(trpc.agents.list.queryOptions());
   const sessions = useInfiniteQuery(
@@ -88,41 +153,11 @@ export function SessionsScreen() {
 
   return (
     <Screen
+      edges={['bottom']}
       className="relative flex-1 bg-background wide:bg-sidebar"
       style={{ minHeight: 0 }}
     >
       <ConnectionBanner />
-      <View className="h-11 wide:h-14 flex-row items-center gap-0.5 px-2">
-        <ListSearch title="Sessions" value={query} onChangeText={setQuery} />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-11 sm:size-11 wide:size-8 wide:sm:size-8"
-              accessibilityLabel="Filter Sessions"
-            >
-              <Icon
-                as={SlidersHorizontalIcon}
-                className="size-5.5 wide:size-4 text-foreground wide:text-muted-foreground"
-              />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-60">
-            <DropdownMenuRadioGroup
-              value={archived ? 'archived' : 'active'}
-              onValueChange={(value) => setArchived(value === 'archived')}
-            >
-              <DropdownMenuRadioItem value="active">
-                <Text>Active</Text>
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="archived">
-                <Text>Archived</Text>
-              </DropdownMenuRadioItem>
-            </DropdownMenuRadioGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </View>
       <Text className="h-8 pl-4.5 pr-3 py-2 text-xs leading-4 font-medium text-muted-foreground">
         Projects
       </Text>
