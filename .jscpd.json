@@ -1,0 +1,16 @@
+{
+  "threshold": 0,
+  "minTokens": 50,
+  "minLines": 5,
+  "format": ["typescript", "tsx", "javascript"],
+  "reporters": ["console"],
+  "absolute": true,
+  "ignore": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/.vite/**",
+    "**/.expo/**",
+    "**/*.stories.tsx",
+    "packages/client/src/primitives/**"
+  ]
+}
