@@ -120,14 +120,13 @@ const sessionSetup = setup({
     rememberFailure: assign((_, params: { error: unknown }) => ({
       failure: String(params.error),
     })),
-    rememberStartFailure: assign(({ event }) => ({
-      failure:
-        event.type === 'xstate.error.actor.agent'
-          ? String(event.error)
-          : event.type === 'xstate.done.actor.agent' && event.output.failure
-            ? event.output.failure
-            : 'The Session closed before its Agent started',
-    })),
+    rememberStartFailure: assign(({ event }) => {
+      if (event.type === 'xstate.error.actor.agent')
+        return { failure: String(event.error) };
+      if (event.type === 'xstate.done.actor.agent' && event.output.failure)
+        return { failure: event.output.failure };
+      return { failure: 'The Session closed before its Agent started' };
+    }),
     addDiscardFailure: assign(({ context, event }) => ({
       failure: `${context.failure}\nThe Checkout was not removed: ${String('error' in event ? event.error : event)}`,
     })),
