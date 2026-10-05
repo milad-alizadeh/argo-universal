@@ -40,6 +40,7 @@ Updated as new requests arrive. Completed entries describe implemented changes; 
 - [x] Match the iOS search field to web: field height, icon/text alignment, placeholder and entered-text typography. Directly verified placeholder and typed-text screenshots in the iPhone Simulator and phone web preview; browser Search / SearchMorph and client typecheck pass.
 - [ ] User acceptance of the current changes.
 - [x] Update AGENTS.md Storybook rules: distinct valid visual states, no repeated default states or child-component coverage, callback checks without visual effects in test stories, and interactive pagination with enough rows, temporary loading, and appended results. Align the Paper guidance with these rules.
+- [x] Clarify AGENTS.md Storybook rules: every screen has a full presentation story; visibly identical stories are duplicates; callback-only cases and assertions belong in test stories; presentation and functionality tests are separate.
 - [ ] Final review when preparing the PR.
 
 Independent results and native coverage limits: [validation report](34-blind-validation.md).
