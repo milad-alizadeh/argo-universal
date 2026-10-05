@@ -22,10 +22,11 @@ export function PhoneListHeader({
   onFilter,
 }: PhoneListHeaderProps) {
   return (
-    <View className="h-16 flex-row items-center gap-2 px-3">
+    <View className="h-11 flex-row items-center px-2">
       <Button
         variant="ghost"
         size="icon"
+        className="size-11 sm:size-11"
         accessibilityLabel="Open navigation"
         accessibilityHint={
           attentionCount > 0
@@ -34,29 +35,36 @@ export function PhoneListHeader({
         }
         onPress={onMenu}
       >
-        <Icon as={ListIcon} className="size-6" />
+        <Icon as={ListIcon} className="size-phone-shell-icon" />
         {attentionCount > 0 && (
           <View className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-warning" />
         )}
       </Button>
-      <Text role="heading" aria-level={1} className="flex-1 text-xl font-bold">
+      <Text
+        role="heading"
+        aria-level={1}
+        className="min-w-0 flex-1 pl-1 text-xl font-semibold"
+        numberOfLines={1}
+      >
         {title}
       </Text>
       <Button
         variant="ghost"
         size="icon"
+        className="size-11 sm:size-11"
         accessibilityLabel={`Search ${title}`}
         onPress={onSearch}
       >
-        <Icon as={MagnifyingGlassIcon} className="size-6" />
+        <Icon as={MagnifyingGlassIcon} className="size-phone-shell-icon" />
       </Button>
       <Button
         variant="ghost"
         size="icon"
+        className="size-11 sm:size-11"
         accessibilityLabel={`Filter ${title}`}
         onPress={onFilter}
       >
-        <Icon as={SlidersHorizontalIcon} className="size-6" />
+        <Icon as={SlidersHorizontalIcon} className="size-phone-shell-icon" />
       </Button>
     </View>
   );

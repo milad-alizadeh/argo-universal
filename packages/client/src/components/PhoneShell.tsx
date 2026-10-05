@@ -1,7 +1,3 @@
-import { ChatsIcon } from 'phosphor-react-native/src/icons/Chats';
-import { GearSixIcon } from 'phosphor-react-native/src/icons/GearSix';
-import { TicketIcon } from 'phosphor-react-native/src/icons/Ticket';
-import { TreeStructureIcon } from 'phosphor-react-native/src/icons/TreeStructure';
 import { type ReactNode, useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
 import { useCSSVariable, useResolveClassNames } from 'uniwind';
@@ -13,15 +9,9 @@ import { Icon } from './Icon';
 import { PhoneDrawer } from './PhoneDrawer';
 import { PhoneListHeader } from './PhoneListHeader';
 import { PhoneShellCard } from './PhoneShellCard';
+import { type ShellSection, shellSections } from './shell-sections';
 
-const sections = {
-  sessions: { title: 'Sessions', icon: ChatsIcon },
-  issues: { title: 'Issues', icon: TicketIcon },
-  atlas: { title: 'Atlas', icon: TreeStructureIcon },
-  settings: { title: 'Settings', icon: GearSixIcon },
-} as const;
-
-export type ShellSection = keyof typeof sections;
+export type { ShellSection } from './shell-sections';
 
 export interface PhoneShellProps {
   selectedSection: ShellSection;
@@ -67,13 +57,13 @@ export function PhoneShell({
   }
 
   function sectionButton(section: ShellSection) {
-    const { title, icon } = sections[section];
+    const { title, icon } = shellSections[section];
     return (
       <Button
         key={section}
         variant="ghost"
         className={cn(
-          'h-12 justify-start gap-3 px-3',
+          'h-12 sm:h-12 justify-start gap-3 px-3',
           selectedSection === section && 'bg-sidebar',
         )}
         accessibilityLabel={title}
@@ -81,11 +71,24 @@ export function PhoneShell({
         aria-selected={selectedSection === section}
         onPress={() => selectSection(section)}
       >
-        <Icon as={icon} className="size-6" />
-        <Text className="flex-1 text-base">{title}</Text>
+        <Icon
+          as={icon}
+          className={cn(
+            'size-phone-shell-icon',
+            selectedSection !== section && 'text-muted-foreground',
+          )}
+        />
+        <Text
+          className={cn(
+            'flex-1 text-base',
+            selectedSection === section ? 'font-semibold' : 'font-normal',
+          )}
+        >
+          {title}
+        </Text>
         {section === 'sessions' && attentionCount > 0 && (
           <Badge
-            className="min-w-6 border-0 bg-warning px-1.5"
+            className="h-phone-shell-icon min-w-phone-shell-icon border-0 bg-warning px-1.5"
             accessibilityLabel={`${attentionCount} ${attentionCount === 1 ? 'Session needs' : 'Sessions need'} attention`}
           >
             <Text className="text-xs font-semibold text-warning-foreground">
@@ -116,8 +119,12 @@ export function PhoneShell({
             aria-hidden={!drawerOpen}
             accessibilityElementsHidden={!drawerOpen}
           >
-            <View className="h-16 justify-center px-6">
-              <Text role="heading" aria-level={2} className="text-xl font-bold">
+            <View className="h-14 justify-center px-6">
+              <Text
+                role="heading"
+                aria-level={2}
+                className="text-xl font-semibold"
+              >
                 Argo
               </Text>
             </View>
@@ -131,7 +138,7 @@ export function PhoneShell({
       >
         <PhoneShellCard drawerOpen={drawerOpen}>
           <PhoneListHeader
-            title={sections[selectedSection].title}
+            title={shellSections[selectedSection].title}
             attentionCount={attentionCount}
             onMenu={() => onDrawerOpenChange(true)}
             onSearch={onSearch}
