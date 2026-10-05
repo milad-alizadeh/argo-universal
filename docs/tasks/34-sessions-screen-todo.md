@@ -22,6 +22,7 @@ Updated as new requests arrive. Completed entries describe implemented changes; 
 - [x] Keep web Storybook and iOS Storybook open while working.
 - [x] Refresh the web preview with the latest changes.
 - [ ] User acceptance of the current changes.
+- [ ] At the end, update AGENTS.md Storybook rules: distinct valid visual states, no repeated default states or child-component coverage, callback checks in test stories, and interactive pagination with enough rows, temporary loading, and appended results.
 - [ ] Final review when preparing the PR.
 
 ## Where to see changes
