@@ -14,10 +14,18 @@ export function ProjectsLoading() {
         ['w-32', 'w-22', 'w-18'],
       ].map(([title, activity, metadata], index) => (
         <View key={index} className="flex-row gap-2 px-2.5 py-3 wide:py-2">
-          <View className="size-4 rounded-full bg-foreground/5" />
+          <View className="h-6 wide:h-5 w-4 items-center justify-center shrink-0">
+            <View
+              testID="session-skeleton-icon"
+              className="size-4 rounded-full bg-foreground/5"
+            />
+          </View>
           <View className="flex-1 gap-0.5">
             <View className="h-6 wide:h-5 justify-center">
-              <View className={`h-2.5 rounded-sm bg-foreground/5 ${title}`} />
+              <View
+                testID="session-skeleton-title"
+                className={`h-2.5 rounded-sm bg-foreground/5 ${title}`}
+              />
             </View>
             <View className="h-5 wide:h-4 justify-center">
               <View className={`h-2 rounded-sm bg-foreground/5 ${activity}`} />

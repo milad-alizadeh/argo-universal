@@ -50,6 +50,7 @@ export {
   AccountsScreen,
   AtlasScreen,
   IssuesScreen,
+  NewSessionScreen,
   ProjectSettingsScreen,
   type ProjectSettingsScreenProps,
 } from './screens/PlaceholderScreens';

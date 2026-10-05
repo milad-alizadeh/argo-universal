@@ -6,7 +6,7 @@ import {
 import { useSubscription } from '@trpc/tanstack-react-query';
 import {
   MagnifyingGlassIcon,
-  PencilSimpleLineIcon,
+  NotePencilIcon,
   SlidersHorizontalIcon,
   XIcon,
 } from 'phosphor-react-native';
@@ -85,19 +85,27 @@ export function ProjectsScreen() {
       style={{ minHeight: 0 }}
     >
       <ConnectionBanner />
-      <View className="h-11 wide:h-14 flex-row items-center gap-1 px-2">
+      <View className="h-11 wide:h-14 flex-row items-center gap-0.5 px-2">
         {searching ? (
-          <Input
-            autoFocus
-            accessibilityLabel="Search Sessions"
-            placeholder="Search Sessions"
-            value={query}
-            onChangeText={setQuery}
-            onKeyPress={({ nativeEvent }) => {
-              if (nativeEvent.key === 'Escape') closeSearch();
-            }}
-            className="h-8 sm:h-8 min-w-0 flex-1 text-sm"
-          />
+          <View className="relative min-w-0 flex-1 justify-center">
+            <Input
+              autoFocus
+              accessibilityLabel="Search Sessions"
+              placeholder="Search Sessions"
+              value={query}
+              onChangeText={setQuery}
+              onKeyPress={({ nativeEvent }) => {
+                if (nativeEvent.key === 'Escape') closeSearch();
+              }}
+              className="h-8 sm:h-8 w-full pl-8 text-sm"
+            />
+            <View pointerEvents="none" className="absolute left-2.5">
+              <Icon
+                as={MagnifyingGlassIcon}
+                className="size-3.5 text-muted-foreground"
+              />
+            </View>
+          </View>
         ) : (
           <Text
             role="heading"
@@ -116,7 +124,7 @@ export function ProjectsScreen() {
         >
           <Icon
             as={searching ? XIcon : MagnifyingGlassIcon}
-            className="size-5 wide:size-4 text-muted-foreground"
+            className="size-5.5 wide:size-4 text-foreground wide:text-muted-foreground"
           />
         </Button>
         <DropdownMenu>
@@ -129,7 +137,7 @@ export function ProjectsScreen() {
             >
               <Icon
                 as={SlidersHorizontalIcon}
-                className="size-5 wide:size-4 text-muted-foreground"
+                className="size-5.5 wide:size-4 text-foreground wide:text-muted-foreground"
               />
             </Button>
           </DropdownMenuTrigger>
@@ -148,7 +156,7 @@ export function ProjectsScreen() {
           </DropdownMenuContent>
         </DropdownMenu>
       </View>
-      <Text className="px-4 py-2 text-xs font-medium text-muted-foreground">
+      <Text className="h-8 pl-4.5 pr-3 py-2 text-xs leading-4 font-medium text-muted-foreground">
         Projects
       </Text>
       {error && !loading ? (
@@ -184,7 +192,7 @@ export function ProjectsScreen() {
       )}
       <View
         className={
-          wide ? 'border-t border-border p-3' : 'absolute bottom-6 right-4'
+          wide ? 'h-16 justify-center px-3' : 'absolute bottom-6 right-4'
         }
       >
         <Button
@@ -197,8 +205,8 @@ export function ProjectsScreen() {
           }
         >
           <Icon
-            as={PencilSimpleLineIcon}
-            className="size-6 wide:size-4 text-primary-foreground"
+            as={NotePencilIcon}
+            className="size-5.5 wide:size-4 text-primary-foreground"
           />
           <Text className="hidden wide:flex text-sm text-primary-foreground">
             New Session

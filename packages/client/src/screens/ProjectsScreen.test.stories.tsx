@@ -84,6 +84,16 @@ export const Loading: Story = {
       await expect(
         canvas.getByRole('button', { name: 'New Session' }),
       ).toBeEnabled();
+      const icons = canvas.getAllByTestId('session-skeleton-icon');
+      const titles = canvas.getAllByTestId('session-skeleton-title');
+      for (const [index, icon] of icons.entries()) {
+        const circle = icon.getBoundingClientRect();
+        const line = titles[index]?.getBoundingClientRect();
+        if (!line) throw new Error('Missing skeleton title');
+        await expect(
+          Math.abs(circle.top + circle.height / 2 - line.top - line.height / 2),
+        ).toBeLessThan(1);
+      }
     }),
 };
 export const Empty: Story = {
@@ -264,4 +274,28 @@ export const NextPageFailure: Story = {
       1,
     );
   },
+};
+
+export const ScrollFade: Story = {
+  play: async ({ canvas }) =>
+    eachLayout(async () => {
+      const scroll = await canvas.findByTestId('projects-scroll');
+      scroll.scrollTop = 0;
+      await waitFor(() =>
+        expect(canvas.getByTestId('scroll-fade-bottom')).toBeVisible(),
+      );
+      await expect(canvas.queryByTestId('scroll-fade-top')).toBeNull();
+      scroll.scrollTop = 200;
+      await waitFor(() =>
+        expect(canvas.getByTestId('scroll-fade-top')).toBeVisible(),
+      );
+      scroll.scrollTop = scroll.scrollHeight;
+      await waitFor(() =>
+        expect(canvas.queryByTestId('scroll-fade-bottom')).toBeNull(),
+      );
+      scroll.scrollTop = 0;
+      await waitFor(() =>
+        expect(canvas.queryByTestId('scroll-fade-top')).toBeNull(),
+      );
+    }),
 };

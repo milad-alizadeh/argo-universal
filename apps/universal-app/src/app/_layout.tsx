@@ -1,6 +1,6 @@
 import '../../global.css';
 
-import { AppProviders, useConnection } from '@repo/client';
+import { AppProviders, NavigationProvider, useConnection } from '@repo/client';
 import { createBrowserMachineInspection } from '@repo/machine-log/browser';
 import { PortalHost } from '@rn-primitives/portal';
 import { registerDevMenuItems } from 'expo-dev-client';
@@ -10,6 +10,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { AppState, Platform } from 'react-native';
 import { useUniwind } from 'uniwind';
+import { navigate } from '@/lib/navigation';
 import { useNavigationTheme } from '@/lib/theme';
 
 export {
@@ -59,18 +60,24 @@ export default function RootLayout() {
   return (
     <AppProviders serverUrl={serverUrl} inspect={inspection.inspect}>
       <ForegroundSignal />
-      <ThemeProvider value={navigationTheme}>
-        <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
-        <Stack>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="sessions/[id]" options={{ title: 'Session' }} />
-          <Stack.Screen
-            name="(dev)/storybook"
-            options={{ headerShown: false }}
-          />
-        </Stack>
-        <PortalHost />
-      </ThemeProvider>
+      <NavigationProvider navigate={navigate}>
+        <ThemeProvider value={navigationTheme}>
+          <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
+          <Stack>
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="sessions/new"
+              options={{ title: 'New Session' }}
+            />
+            <Stack.Screen name="sessions/[id]" options={{ title: 'Session' }} />
+            <Stack.Screen
+              name="(dev)/storybook"
+              options={{ headerShown: false }}
+            />
+          </Stack>
+          <PortalHost />
+        </ThemeProvider>
+      </NavigationProvider>
     </AppProviders>
   );
 }
