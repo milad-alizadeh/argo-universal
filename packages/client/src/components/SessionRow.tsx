@@ -1,6 +1,6 @@
 import type { SessionInfo } from '@repo/contracts';
 import { RobotIcon } from 'phosphor-react-native';
-import { useEffect } from 'react';
+import { memo, useEffect } from 'react';
 import { View } from 'react-native';
 import Animated, {
   cancelAnimation,
@@ -34,7 +34,7 @@ export interface SessionRowProps {
   onSelect: (sessionId: string) => void;
 }
 
-export function SessionRow({
+export const SessionRow = memo(function SessionRow({
   session,
   logo,
   selected = false,
@@ -193,4 +193,4 @@ export function SessionRow({
       </TextClassContext.Provider>
     </Button>
   );
-}
+});

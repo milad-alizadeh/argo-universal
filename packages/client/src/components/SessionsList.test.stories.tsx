@@ -4,6 +4,10 @@ import { expect, fn, waitFor } from 'storybook/test';
 import { sessionsListProps } from '../../mocks/sessions-list-mock';
 import { SessionsNewSessionPreview } from '../../mocks/sessions-new-session-preview';
 import { SessionsPaginationPreview } from '../../mocks/sessions-pagination-preview';
+import {
+  createSessionsRenderingMock,
+  SessionsRenderingPreview,
+} from '../../mocks/sessions-rendering-preview';
 import { SessionsList } from './SessionsList';
 
 const onNewSession = fn();
@@ -30,6 +34,40 @@ const meta = {
 } satisfies Meta<typeof SessionsList>;
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+const renderingMock = createSessionsRenderingMock();
+export const MemoizedRows: Story = {
+  beforeEach: () => renderingMock.reset(),
+  render: (args) => <SessionsRenderingPreview {...args} mock={renderingMock} />,
+  play: async ({ canvas, userEvent }) => {
+    await canvas.findByRole('button', { name: 'Unchanged Session, Idle' });
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+    );
+    const activityReads = renderingMock.getActivityReads();
+    expect(activityReads).toBeGreaterThan(0);
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Selectable Session, Idle' }),
+    );
+    await waitFor(() =>
+      expect(
+        canvas.getByRole('button', { name: 'Selectable Session, Idle' }),
+      ).toHaveAttribute('aria-selected', 'true'),
+    );
+    expect(
+      renderingMock.getActivityReads(),
+      'Selecting another row must not recompute unchanged row content',
+    ).toBe(activityReads);
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Update Session' }),
+    );
+    await canvas.findByText('Session activity updated');
+    expect(
+      renderingMock.getActivityReads(),
+      'Updating another Session must not recompute unchanged row content',
+    ).toBe(activityReads);
+  },
+};
 
 export const ProjectActions: Story = {
   play: async ({ canvas, userEvent }) => {

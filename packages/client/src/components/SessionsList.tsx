@@ -1,10 +1,22 @@
-import { LegendList, type LegendListRef } from '@legendapp/list';
+import {
+  LegendList,
+  type LegendListRef,
+  type LegendListRenderItemProps,
+} from '@legendapp/list';
 import type {
   AgentsListOutput,
   ProjectsListOutput,
   SessionInfo,
 } from '@repo/contracts';
-import { useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  memo,
+  useCallback,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   ActivityIndicator,
   LayoutAnimation,
@@ -16,12 +28,22 @@ import { useResolveClassNames } from 'uniwind';
 import { cn } from '#lib/utils';
 import { Text } from '#primitives/text';
 import { ProjectHeading } from './ProjectHeading';
-import { SessionRow } from './SessionRow';
+import { SessionRow, type SessionRowProps } from './SessionRow';
 
 type Entry =
   | { kind: 'project'; id: string; projectId: string; name: string }
   | { kind: 'session'; id: string; session: SessionInfo }
   | { kind: 'empty'; id: string };
+
+const contentStyle = {
+  paddingHorizontal: 8,
+  paddingTop: 20,
+  paddingBottom: 28,
+};
+
+function entryKey(entry: Entry) {
+  return entry.id;
+}
 
 export interface SessionsListProps {
   projects: ProjectsListOutput;
@@ -61,11 +83,6 @@ export function SessionsList({
     'bg-background wide:bg-sidebar',
   );
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
-  const contentStyle = {
-    paddingHorizontal: 8,
-    paddingTop: 20,
-    paddingBottom: 28,
-  };
   const entries = useMemo(() => {
     const groups = new Map<string, SessionInfo[]>();
     for (const session of sessions) {
@@ -95,6 +112,62 @@ export function SessionsList({
     return result;
   }, [projects, sessions, query, archived, collapsed]);
 
+  const agentLogos = useMemo(
+    () => new Map(agents.map((agent) => [agent.agent, agent.logo])),
+    [agents],
+  );
+  const extraData = useMemo(
+    () => ({ agents, collapsed, selectedSessionId }),
+    [agents, collapsed, selectedSessionId],
+  );
+  const toggleProject = useCallback((id: string) => {
+    setCollapsed((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+  const renderItem = useCallback(
+    ({ item }: LegendListRenderItemProps<Entry>) => {
+      if (item.kind === 'empty')
+        return (
+          <Text className="pb-1 pl-session-name pr-1 text-xs leading-4 text-muted-foreground">
+            No Sessions yet.
+          </Text>
+        );
+      if (item.kind === 'session')
+        return (
+          <SessionListRow
+            session={item.session}
+            logo={agentLogos.get(item.session.agent) ?? ''}
+            selected={selectedSessionId === item.id}
+            onSelect={onSelect}
+          />
+        );
+      return (
+        <ProjectListHeading
+          id={item.id}
+          projectId={item.projectId}
+          name={item.name}
+          collapsed={collapsed.has(item.id)}
+          onToggle={toggleProject}
+          onNewSession={onNewSession}
+          onProjectSettings={onProjectSettings}
+        />
+      );
+    },
+    [
+      agentLogos,
+      collapsed,
+      selectedSessionId,
+      onSelect,
+      toggleProject,
+      onNewSession,
+      onProjectSettings,
+    ],
+  );
+
   const entryOrder = entries.map((entry) => entry.id).join('|');
   const previousOrder = useRef(entryOrder);
   useLayoutEffect(() => {
@@ -116,11 +189,11 @@ export function SessionsList({
           style={{ flex: 1 }}
           contentContainerStyle={contentStyle}
           data={entries}
-          keyExtractor={(entry) => entry.id}
+          keyExtractor={entryKey}
           estimatedItemSize={76}
           ItemSeparatorComponent={ProjectEntrySeparator}
           recycleItems={false}
-          extraData={{ agents, collapsed, selectedSessionId }}
+          extraData={extraData}
           onEndReached={onEndReached}
           onEndReachedThreshold={0.5}
           onScroll={({ nativeEvent }) => {
@@ -166,56 +239,7 @@ export function SessionsList({
               )}
             </View>
           }
-          renderItem={({ item }) => {
-            if (item.kind === 'empty')
-              return (
-                <Text className="pb-1 pl-session-name pr-1 text-xs leading-4 text-muted-foreground">
-                  No Sessions yet.
-                </Text>
-              );
-            if (item.kind === 'session')
-              return (
-                <View
-                  testID="session-row-surface"
-                  className={cn(
-                    'overflow-hidden bg-background wide:bg-sidebar',
-                    selectedSessionId === item.id &&
-                      'bg-sidebar-accent wide:bg-sidebar-accent',
-                  )}
-                >
-                  <SessionRow
-                    key={item.id}
-                    session={item.session}
-                    logo={
-                      agents.find((agent) => agent.agent === item.session.agent)
-                        ?.logo ?? ''
-                    }
-                    selected={selectedSessionId === item.id}
-                    onSelect={onSelect}
-                  />
-                </View>
-              );
-            const isCollapsed = collapsed.has(item.id);
-            return (
-              <ProjectHeading
-                name={item.name}
-                collapsed={isCollapsed}
-                addLabel={`New Session in ${item.name}`}
-                onAdd={onNewSession && (() => onNewSession(item.projectId))}
-                onProjectSettings={
-                  onProjectSettings && (() => onProjectSettings(item.name))
-                }
-                onToggle={() =>
-                  setCollapsed((current) => {
-                    const next = new Set(current);
-                    if (next.has(item.id)) next.delete(item.id);
-                    else next.add(item.id);
-                    return next;
-                  })
-                }
-              />
-            );
-          }}
+          renderItem={renderItem}
         />
       </View>
       {(['top', 'bottom'] as const).map((edge) => (
@@ -277,3 +301,67 @@ export function SessionsList({
 function ProjectEntrySeparator() {
   return <View className="h-0 wide:h-0.5" />;
 }
+
+const SessionListRow = memo(function SessionListRow({
+  session,
+  logo,
+  selected,
+  onSelect,
+}: Pick<SessionRowProps, 'session' | 'logo' | 'selected' | 'onSelect'>) {
+  return (
+    <View
+      testID="session-row-surface"
+      className={cn(
+        'overflow-hidden bg-background wide:bg-sidebar',
+        selected && 'bg-sidebar-accent wide:bg-sidebar-accent',
+      )}
+    >
+      <SessionRow
+        session={session}
+        logo={logo}
+        selected={selected}
+        onSelect={onSelect}
+      />
+    </View>
+  );
+});
+
+interface ProjectListHeadingProps {
+  id: string;
+  projectId: string;
+  name: string;
+  collapsed: boolean;
+  onToggle: (id: string) => void;
+  onNewSession?: SessionsListProps['onNewSession'];
+  onProjectSettings?: SessionsListProps['onProjectSettings'];
+}
+
+const ProjectListHeading = memo(function ProjectListHeading({
+  id,
+  projectId,
+  name,
+  collapsed,
+  onToggle,
+  onNewSession,
+  onProjectSettings,
+}: ProjectListHeadingProps) {
+  const toggle = useCallback(() => onToggle(id), [id, onToggle]);
+  const addSession = useCallback(
+    () => onNewSession?.(projectId),
+    [onNewSession, projectId],
+  );
+  const openSettings = useCallback(
+    () => onProjectSettings?.(name),
+    [onProjectSettings, name],
+  );
+  return (
+    <ProjectHeading
+      name={name}
+      collapsed={collapsed}
+      addLabel={`New Session in ${name}`}
+      onToggle={toggle}
+      onAdd={onNewSession ? addSession : undefined}
+      onProjectSettings={onProjectSettings ? openSettings : undefined}
+    />
+  );
+});

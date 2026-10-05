@@ -5,7 +5,7 @@ import {
 } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { NotePencilIcon, SlidersHorizontalIcon } from 'phosphor-react-native';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { ConnectionBanner } from '#components/ConnectionBanner';
 import { Icon } from '#components/Icon';
@@ -62,6 +62,22 @@ export function SessionsScreen() {
     ],
     [sessions.data],
   );
+  const selectSession = useCallback(
+    (id: string) => navigate({ to: 'session', id }),
+    [navigate],
+  );
+  const newSession = useCallback(
+    (projectId: string) => navigate({ to: 'new-session', projectId }),
+    [navigate],
+  );
+  const projectSettings = useCallback(
+    (name: string) => navigate({ to: 'settings-project', name }),
+    [navigate],
+  );
+  const fetchNextPage = sessions.fetchNextPage;
+  const loadMore = useCallback(() => {
+    if (sessions.hasNextPage && !sessions.isFetching) void fetchNextPage();
+  }, [sessions.hasNextPage, sessions.isFetching, fetchNextPage]);
   const error = projects.isError || agents.isError || sessions.isLoadingError;
   const loading = projects.isPending || agents.isPending || sessions.isPending;
   function retry() {
@@ -126,17 +142,10 @@ export function SessionsScreen() {
           isFetchingNextPage={sessions.isFetchingNextPage}
           query={query}
           archived={archived}
-          onNewSession={(projectId) =>
-            navigate({ to: 'new-session', projectId })
-          }
-          onProjectSettings={(name) =>
-            navigate({ to: 'settings-project', name })
-          }
-          onSelect={(id) => navigate({ to: 'session', id })}
-          onEndReached={() => {
-            if (sessions.hasNextPage && !sessions.isFetching)
-              void sessions.fetchNextPage();
-          }}
+          onNewSession={newSession}
+          onProjectSettings={projectSettings}
+          onSelect={selectSession}
+          onEndReached={loadMore}
         />
       )}
       {sessions.isFetchNextPageError && (

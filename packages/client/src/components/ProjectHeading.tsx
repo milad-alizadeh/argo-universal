@@ -4,7 +4,7 @@ import {
   FolderOpenIcon,
   PlusIcon,
 } from 'phosphor-react-native';
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
@@ -20,7 +20,7 @@ export interface ProjectHeadingProps {
   onProjectSettings?: () => void;
 }
 
-export function ProjectHeading({
+export const ProjectHeading = memo(function ProjectHeading({
   name,
   collapsed,
   onToggle,
@@ -97,4 +97,4 @@ export function ProjectHeading({
       </View>
     </Pressable>
   );
-}
+});
