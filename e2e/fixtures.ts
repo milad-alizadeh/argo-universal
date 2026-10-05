@@ -5,6 +5,7 @@ import { createServer } from 'node:net';
 import path from 'node:path';
 import { test as base, _electron as electron } from '@playwright/test';
 import { z } from 'zod';
+import { writeMockAgents } from './mock-agents';
 
 export type AppOptions = { appTarget: 'web' | 'electron' };
 
@@ -58,6 +59,7 @@ export const test = base.extend<AppOptions>({
 
     // Desktop starts its own Server in a fresh home on a free port, so it never meets the web project's Server.
     const home = testInfo.outputPath('server-home');
+    const agentPath = await writeMockAgents(testInfo.outputPath('agent-bin'));
     const {
       ARGO_EXPO_WEB_URL: _webDevelopmentUrl,
       ELECTRON_RUN_AS_NODE: _runAsNode,
@@ -71,6 +73,7 @@ export const test = base.extend<AppOptions>({
         ...environment,
         ARGO_HOME: home,
         ARGO_SERVER_PORT: String(await findFreePort()),
+        PATH: agentPath,
       },
     });
     try {

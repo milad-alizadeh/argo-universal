@@ -1,4 +1,4 @@
-import type { SessionNewInput } from '@repo/contracts';
+import type { AgentInfo, SessionNewInput } from '@repo/contracts';
 import type { AgentCommand, AgentEvent, AgentInput } from './agent-events';
 
 export type AgentCommandOf<Type extends AgentCommand['type']> = Extract<
@@ -36,9 +36,20 @@ export interface AgentMapping<MappingState> {
   mappingState: MappingState;
 }
 
+// What `agents.list` shows for an Agent before any Session starts.
+export type AgentProbe = Pick<
+  AgentInfo,
+  'availability' | 'installStep' | 'configOptions'
+>;
+
 // An Agent adapter is plain functions; the one Agent machine owns the lifecycle.
 export interface AgentAdapter<Message = unknown, MappingState = unknown> {
   agent: SessionNewInput['agent'];
+  label: AgentInfo['label'];
+  // SVG text, so no screen names a vendor.
+  logo: AgentInfo['logo'];
+  // Starts the Agent briefly to learn whether it can run a Session, and the options a New Session offers; rejects when it does not start.
+  probe(signal: AbortSignal): Promise<AgentProbe>;
   // Starts or resumes the vendor session, and resolves when it is ready for a prompt.
   connect(
     input: AgentConnectInput,

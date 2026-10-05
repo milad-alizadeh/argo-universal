@@ -1,5 +1,9 @@
 {
   "extends": "@repo/typescript/node.json",
+  // The fixtures import the mock CLIs, whose relative imports end in `.ts`.
+  "compilerOptions": {
+    "allowImportingTsExtensions": true
+  },
   "include": ["**/*.ts"],
   "exclude": ["node_modules", "test-results", "playwright-report"]
 }

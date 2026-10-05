@@ -812,6 +812,9 @@ importers:
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.63.0
+      '@repo/mocks':
+        specifier: workspace:*
+        version: link:../mocks
       '@repo/typescript':
         specifier: workspace:*
         version: link:../tooling/typescript

@@ -10,6 +10,12 @@ export const AgentAvailability = z.enum([
 ]);
 export type AgentAvailability = z.infer<typeof AgentAvailability>;
 
+// `refresh` probes every Agent again rather than answering from the last probe.
+export const AgentsListInput = z
+  .strictObject({ refresh: z.boolean().optional() })
+  .optional();
+export type AgentsListInput = z.infer<typeof AgentsListInput>;
+
 export const AgentInfo = z.strictObject({
   agent: sessionColumns.shape.agent,
   label: z.string(),

@@ -11,6 +11,9 @@ export const agentAdapters: readonly AgentAdapter[] = [
 // Stands in for an Agent with no adapter, so its Session fails with the reason.
 const missingAdapter = (agent: string): AgentAdapter => ({
   agent,
+  label: agent,
+  logo: '',
+  probe: async () => ({ availability: 'unavailable', configOptions: [] }),
   connect: () => Promise.reject(new Error(`No Agent adapter for ${agent}.`)),
   initialMappingState: () => null,
   toAgentEvents: (_, mappingState) => ({ events: [], mappingState }),

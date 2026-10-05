@@ -26,6 +26,8 @@ const session = setup({
 export const createRegistryModelMachine = (forGraph: boolean) =>
   registryMachine.provide({
     actions: {
+      // Graph traversal would register each Agent's probe once per branch.
+      ...(forGraph ? { spawnAgentProbes: () => {} } : {}),
       openSession: assign(({ context, event, spawn }) => {
         assertEvent(event, ['sessions.create', 'sessions.open']);
         if (context.sessions[event.sessionId]) return {};

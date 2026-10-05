@@ -16,6 +16,8 @@ import type {
   TurnStartResponse,
 } from './protocol.gen';
 
+export const EXECUTABLE = 'codex';
+
 interface Requests {
   initialize: [InitializeParams, InitializeResponse];
   'account/read': [GetAccountParams, GetAccountResponse];
@@ -45,7 +47,7 @@ export function openAppServer(
     CODEX_API_KEY: _codexKey,
     ...environment
   } = process.env;
-  const child = spawn('codex', ['app-server', '--listen', 'stdio://'], {
+  const child = spawn(EXECUTABLE, ['app-server', '--listen', 'stdio://'], {
     cwd,
     env: environment,
     stdio: 'pipe',

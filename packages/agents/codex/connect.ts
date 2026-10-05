@@ -4,9 +4,10 @@ import type {
   VendorSessionListener,
 } from '../src/agent-adapter';
 import { changeValue, startingValues, toConfigOptions } from './config-options';
+import { initialize, readModels, usesChatGpt } from './handshake';
 import type { VendorMessage } from './messages';
 import { openAppServer } from './open-app-server';
-import type { Model, ModelListResponse, TurnStartParams } from './protocol.gen';
+import type { TurnStartParams } from './protocol.gen';
 
 const createVendorTurn = () => ({
   id: null as string | null,
@@ -51,24 +52,9 @@ export async function connect(
     signal,
   );
   try {
-    await server.request('initialize', {
-      clientInfo: { name: 'argo', title: 'Argo', version: '0.0.0' },
-      capabilities: { experimentalApi: true, requestAttestation: false },
-    });
-    server.notify('initialized');
-    const { account } = await server.request('account/read', {});
-    if (account?.type !== 'chatgpt')
+    if (!usesChatGpt(await initialize(server)))
       throw new Error('Sign in to Codex with ChatGPT to start a Session.');
-    const models: Model[] = [];
-    let cursor: string | null = null;
-    do {
-      const page: ModelListResponse = await server.request(
-        'model/list',
-        cursor ? { cursor } : {},
-      );
-      models.push(...page.data.filter((model) => !model.hidden));
-      cursor = page.nextCursor;
-    } while (cursor);
+    const models = await readModels(server);
     let values = startingValues(models, input.configOptions);
     const settings = {
       cwd: input.cwd,

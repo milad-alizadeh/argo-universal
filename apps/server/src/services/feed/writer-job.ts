@@ -1,5 +1,5 @@
 import type { Database } from '@repo/db';
-import { feedRow, session, turn } from '@repo/db/schema';
+import { feedRow, project, session, turn } from '@repo/db/schema';
 import { and, eq, gt, sql } from 'drizzle-orm';
 
 // A Feed row as a job carries it; the job's `sessionId` fills the column.
@@ -16,6 +16,11 @@ export type WriterJob =
       rows: FeedRowWrite[];
       maxRevision: number;
       activityAt?: number;
+    }
+  | {
+      type: 'sessionInsert';
+      session: typeof session.$inferInsert;
+      checkoutChoice: NonNullable<typeof project.$inferInsert.checkoutChoice>;
     }
   | { type: 'turnInsert'; turn: typeof turn.$inferInsert }
   | {
@@ -74,6 +79,14 @@ export function writeJobs(database: Database, jobs: readonly WriterJob[]) {
             )
             .run();
           break;
+        case 'sessionInsert':
+          transaction.insert(session).values(job.session).run();
+          transaction
+            .update(project)
+            .set({ checkoutChoice: job.checkoutChoice })
+            .where(eq(project.id, job.session.projectId))
+            .run();
+          break;
         case 'turnInsert':
           transaction.insert(turn).values(job.turn).run();
           break;
@@ -108,6 +121,8 @@ export function describeJob(job: WriterJob): string {
   switch (job.type) {
     case 'feedRows':
       return `Feed rows ${job.rows.map((row) => row.id).join(', ')} of Session ${job.sessionId} at maxRevision ${job.maxRevision}`;
+    case 'sessionInsert':
+      return `insert Session ${job.session.id} of Project ${job.session.projectId}`;
     case 'turnInsert':
       return `insert Turn ${job.turn.id} of Session ${job.turn.sessionId}`;
     case 'turnUpdate':
