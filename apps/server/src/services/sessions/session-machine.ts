@@ -1,9 +1,11 @@
-import type {
-  AgentCapabilities,
-  AgentCommand,
-  AgentEvent,
-  AgentInput,
-  AgentOutput,
+import {
+  type AgentAdapter,
+  type AgentCapabilities,
+  type AgentCommand,
+  type AgentEvent,
+  type AgentInput,
+  type AgentOutput,
+  agentMachine,
 } from '@repo/agents';
 import type {
   ContentBlock,
@@ -17,7 +19,6 @@ import type {
 } from '@repo/contracts';
 import {
   type ActorRefFrom,
-  type AnyStateMachine,
   assertEvent,
   assign,
   enqueueActions,
@@ -34,6 +35,9 @@ import {
   type SessionData,
   type SessionInput,
 } from './session-data';
+
+// The registry passes the adapter for the Session's Agent.
+export type SessionMachineInput = SessionInput & { adapter: AgentAdapter };
 
 export type SessionCommand =
   | { type: 'session.prompt'; turnId: string; content: ContentBlock[] }
@@ -61,7 +65,7 @@ type SessionEvent =
   | { type: 'xstate.done.actor.agent'; output: AgentOutput }
   | { type: 'xstate.error.actor.agent'; error: unknown };
 export interface SessionContext extends SessionData {
-  input: SessionInput;
+  input: SessionMachineInput;
   capabilities: AgentCapabilities | null;
   activeTurnId: string | null;
   usage: ContextUsage | null;
@@ -74,7 +78,7 @@ export interface SessionContext extends SessionData {
 
 const sessionSetup = setup({
   types: {
-    input: {} as SessionInput,
+    input: {} as SessionMachineInput,
     context: {} as SessionContext,
     events: {} as SessionEvent,
     output: {} as AgentOutput,
@@ -91,18 +95,7 @@ const sessionSetup = setup({
       }
     >(({ input }) => loadSession(input.session, input.writer)),
     feed: feedMachine,
-    // The registry provides the adapter's machine for each Session.
-    agent: setup({
-      types: {
-        input: {} as AgentInput,
-        events: {} as AgentCommand,
-        output: {} as AgentOutput,
-      },
-    }).createMachine({
-      initial: 'failed',
-      output: { failure: 'No Agent adapter provided' },
-      states: { failed: { type: 'final' } },
-    }) as AnyStateMachine,
+    agent: agentMachine,
   },
   actions: {
     rememberSession: assign((_, params: { data: SessionData }) => params.data),
@@ -441,6 +434,7 @@ export const sessionMachine = sessionSetup.createMachine({
               context: SessionContext;
               self: AgentInput['parent'];
             }) => ({
+              adapter: context.input.adapter,
               sessionId: context.sessionId,
               cwd: context.checkout.path,
               vendorSessionId: context.vendorSessionId,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { storedMessage } from '../../../mocks/feed';
+import { storedMessage } from '#mocks/feed';
 import { fromFeedRow, toFeedRowWrite } from './feed-row';
 
 const message = storedMessage(0);

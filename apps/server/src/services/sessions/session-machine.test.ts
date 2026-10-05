@@ -1,8 +1,11 @@
-import type { AgentCommand, AgentEvent } from '@repo/agents';
+import { type AgentCommand, agentMachine } from '@repo/agents';
 import {
-  createMockAgentMachine,
+  createMockAdapter,
   type MockAgentScript,
   type MockAgentStream,
+  type MockAgentStreamEvent,
+  mockReady,
+  mockReadyEvent,
 } from '@repo/mocks/agent';
 import { afterAll, afterEach, expect, it, vi } from 'vitest';
 import {
@@ -17,15 +20,14 @@ import {
   waitFor,
 } from 'xstate';
 import { adjacencyMapToArray, getAdjacencyMap, TestModel } from 'xstate/graph';
-import { openTestDatabase } from '../../../mocks/database';
-import { messageChange } from '../../../mocks/feed';
-import { createSessionHost, firstPrompt } from '../../../mocks/session';
+import { openTestDatabase } from '#mocks/database';
+import { messageChange } from '#mocks/feed';
+import { createSessionHost, firstPrompt } from '#mocks/session';
 import { type FeedActorRef, feedMachine } from '../feed/feed-machine';
 import type { createFeedService } from '../feed/feed-service';
 import type { WriterEvent } from '../feed/writer-machine';
 import { sendSessionCommand } from './session-command';
-import type { SessionInput } from './session-data';
-import { sessionMachine } from './session-machine';
+import { type SessionMachineInput, sessionMachine } from './session-machine';
 import { toSessionSnapshot } from './session-snapshot';
 
 const cleanups: (() => void)[] = [];
@@ -48,24 +50,16 @@ async function openSession(overrides: Partial<MockAgentScript> = {}) {
   cleanups.push(remove);
   const commands: AgentCommand[] = [];
   let stream: MockAgentStream | undefined;
-  const agent = createMockAgentMachine({
-    connect: async () => ({
-      type: 'agent.ready',
-      vendorSessionId: 'vendor-1',
-      configOptions: [],
-      capabilities: { planApproval: 'continueTurn', stopShell: false },
-      continuedOutside: false,
-    }),
+  const adapter = createMockAdapter({
     stream: (value) => {
       stream = value;
       value.receive((command) => commands.push(command));
     },
-    stop: async () => {},
     ...overrides,
   });
   const { root, session, service, findFeed } = createSessionHost(
     database,
-    agent,
+    adapter,
   );
   cleanups.push(() => root.stop());
   await waitFor(session, (snapshot) => snapshot.can(firstPrompt));
@@ -102,11 +96,13 @@ it('runs one Turn and rejects a second prompt while it runs', async () => {
     sessionUpdate: 'user_message',
     content: [{ type: 'text', text: 'Hello' }],
   });
-  expect(commands).toContainEqual({
-    type: 'agent.prompt',
-    turnId: 'turn-1',
-    content: [{ type: 'text', text: 'Hello' }],
-  });
+  await vi.waitFor(() =>
+    expect(commands).toContainEqual({
+      type: 'agent.prompt',
+      turnId: 'turn-1',
+      content: [{ type: 'text', text: 'Hello' }],
+    }),
+  );
   expect(() =>
     sendSessionCommand(session, {
       type: 'session.prompt',
@@ -184,11 +180,13 @@ it('answers only the head Permission request and keeps other requests visible', 
   expect(
     toSessionSnapshot(session.getSnapshot(), feed.getSnapshot()),
   ).toMatchObject({ state: 'running', pendingElicitation: null });
-  expect(commands).toContainEqual({
-    type: 'agent.answerElicitation',
-    action: 'accept',
-    content: { file: 'README.md' },
-  });
+  await vi.waitFor(() =>
+    expect(commands).toContainEqual({
+      type: 'agent.answerElicitation',
+      action: 'accept',
+      content: { file: 'README.md' },
+    }),
+  );
   expect(() =>
     sendSessionCommand(session, {
       type: 'session.answerElicitation',
@@ -213,12 +211,18 @@ it('cancels queued requests and waits for the Agent to end the Turn', async () =
     },
   });
   sendSessionCommand(session, { type: 'session.cancel' });
-  expect(commands).toEqual(
-    expect.arrayContaining([
-      { type: 'agent.cancel' },
-      { type: 'agent.answerPermission', toolCallId: 'tool-1', optionId: null },
-      { type: 'agent.answerElicitation', action: 'cancel' },
-    ]),
+  await vi.waitFor(() =>
+    expect(commands).toEqual(
+      expect.arrayContaining([
+        { type: 'agent.cancel' },
+        {
+          type: 'agent.answerPermission',
+          toolCallId: 'tool-1',
+          optionId: null,
+        },
+        { type: 'agent.answerElicitation', action: 'cancel' },
+      ]),
+    ),
   );
   expect(
     toSessionSnapshot(session.getSnapshot(), feed.getSnapshot()),
@@ -302,13 +306,7 @@ it('restarts the Agent with its vendor Session and gives up after three crashes 
   const { session, service, currentStream } = await openSession({
     connect: async (input) => {
       resumed.push(input.vendorSessionId);
-      return {
-        type: 'agent.ready',
-        vendorSessionId: 'vendor-1',
-        configOptions: [],
-        capabilities: { planApproval: 'continueTurn', stopShell: false },
-        continuedOutside: false,
-      };
+      return mockReady;
     },
   });
   sendSessionCommand(session, firstPrompt);
@@ -380,15 +378,8 @@ const data = {
   nextPosition: 0,
 };
 let stream: MockAgentStream | undefined;
-const ready: Extract<AgentEvent, { type: 'agent.ready' }> = {
-  type: 'agent.ready',
-  vendorSessionId: 'vendor-1',
-  configOptions: [],
-  capabilities: { planApproval: 'continueTurn', stopShell: false },
-  continuedOutside: false,
-};
-const mock = createMockAgentMachine({
-  connect: async () => ready,
+const ready = mockReadyEvent;
+const adapter = createMockAdapter({
   stream: (value) => {
     stream = value;
     return () => {
@@ -396,12 +387,12 @@ const mock = createMockAgentMachine({
     };
   },
   stop: () => new Promise(() => {}),
-}).provide({ actions: { sendReady: () => {} } });
+});
 const machine = sessionMachine.provide({
   actors: {
     createSession: fromPromise(() => new Promise(() => {})),
     loadSession: fromPromise(() => new Promise(() => {})),
-    agent: mock,
+    agent: agentMachine.provide({ actions: { sendReady: () => {} } }),
     feed: feedMachine.provide({
       actions: { sendToWriter: () => {}, log: () => {} },
     }),
@@ -469,16 +460,17 @@ const key = (snapshot: SessionSnapshot | undefined) =>
 const logic = machine as unknown as ActorLogic<
   SessionSnapshot,
   SessionEvent,
-  SessionInput
+  SessionMachineInput
 >;
 const models = (['new', 'existing'] as const).map(
   (kind) =>
     new TestModel(logic, {
       input:
         kind === 'existing'
-          ? { database, kind, sessionId: 'session-1' }
+          ? { database, adapter, kind, sessionId: 'session-1' }
           : {
               database,
+              adapter,
               kind,
               sessionId: 'session-1',
               projectId: 'project-1',
@@ -539,7 +531,7 @@ it.each(paths.map((path, index) => [index, path] as const))(
             event.type !== 'agent.ready' &&
             stream
           )
-            stream.send(event as Exclude<AgentEvent, { type: 'agent.ready' }>);
+            stream.send(event as MockAgentStreamEvent);
           else sessionActor.send(event);
           await vi.advanceTimersByTimeAsync(0);
         },
@@ -607,16 +599,14 @@ it('attaches live Feed updates when a subscription starts while the Session load
   vi.useFakeTimers();
   const { database, remove } = openTestDatabase();
   cleanups.push(remove);
-  const agent = createMockAgentMachine({
-    connect: async () => ready,
+  const adapter = createMockAdapter({
     stream: () => {},
-    stop: async () => {},
   });
   const {
     root,
     session: sessionActor,
     service,
-  } = createSessionHost(database, agent);
+  } = createSessionHost(database, adapter);
   cleanups.push(() => root.stop());
   const { updates } = subscribeToSession(service);
   expect((await updates.next()).value).toMatchObject({

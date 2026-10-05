@@ -1,8 +1,8 @@
 import { appRouter, type Services } from '@repo/api';
-import { createMockAgentMachine } from '@repo/mocks/agent';
+import { createMockAdapter } from '@repo/mocks/agent';
 import { expect, it } from 'vitest';
 import { createActor, fromCallback, fromPromise, waitFor } from 'xstate';
-import { openTestDatabase } from '../../mocks/database';
+import { openTestDatabase } from '#mocks/database';
 import { createServerServices } from '../services/server-services';
 import type { HttpServerOptions } from './http-server';
 import { engineMachine } from './machine';
@@ -11,14 +11,7 @@ it('serves live Session procedures and drains their Feed before closing the data
   const { database, remove } = openTestDatabase();
   let services: Services | undefined;
   let closedDatabase = false;
-  const agent = createMockAgentMachine({
-    connect: async () => ({
-      type: 'agent.ready',
-      vendorSessionId: 'vendor-1',
-      configOptions: [],
-      capabilities: { planApproval: 'continueTurn', stopShell: false },
-      continuedOutside: false,
-    }),
+  const adapter = createMockAdapter({
     stream: (stream) => {
       stream.receive((command) => {
         if (command.type === 'agent.prompt')
@@ -37,7 +30,6 @@ it('serves live Session procedures and drains their Feed before closing the data
           });
       });
     },
-    stop: async () => {},
   });
   const machine = engineMachine.provide({
     actors: {
@@ -64,13 +56,7 @@ it('serves live Session procedures and drains their Feed before closing the data
       port: 7337,
       version: '1',
       startedAt: new Date().toISOString(),
-      adapters: [
-        {
-          agent: 'mock',
-          capabilities: { planApproval: 'continueTurn', stopShell: false },
-          machine: agent,
-        },
-      ],
+      adapters: [adapter],
     },
   }).start();
   try {

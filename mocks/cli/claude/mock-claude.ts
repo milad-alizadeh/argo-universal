@@ -34,6 +34,17 @@ const Input = z.looseObject({
   request: z.looseObject({ subtype: z.string() }).optional(),
 });
 
+const ControlResponse = z.looseObject({
+  type: z.literal('control_response'),
+  response: z.looseObject({ request_id: z.string(), response: z.unknown() }),
+});
+
+// A `.jsonl` recording holds stdout frames; a `.json` one may hold both pipes.
+const Payload = z.union([
+  z.array(Frame),
+  z.object({ input: z.array(Input), output: z.array(Frame) }),
+]);
+
 const environment = readMockCliEnvironment();
 const recording = readRecording(environment.recordingFile, PRODUCER);
 
@@ -42,10 +53,54 @@ if (process.argv.includes('--version')) {
   process.exit(0);
 }
 
-const frames = z.array(Frame).parse(recording.payload);
+const payload = Payload.parse(recording.payload);
+const pipes = Array.isArray(payload) ? { input: [], output: payload } : payload;
+
+// The recorded answer to each control request, keyed by the request's subtype.
+const requestSubtypes = new Map(
+  pipes.input.flatMap((input) =>
+    input.request_id && input.request
+      ? [[input.request_id, input.request.subtype] as const]
+      : [],
+  ),
+);
+const recordedAnswers = new Map<string, unknown>();
+const INTERRUPT_POINT = { type: 'mock.interruptPoint' } as const;
+const frames: Frame[] = [];
+for (const frame of pipes.output) {
+  const response = ControlResponse.safeParse(frame);
+  if (!response.success) {
+    frames.push(frame);
+    continue;
+  }
+  const subtype = requestSubtypes.get(response.data.response.request_id);
+  if (subtype && !recordedAnswers.has(subtype))
+    recordedAnswers.set(subtype, response.data.response.response);
+  // A Turn pauses where the CLI answered an interrupt, until the mock gets one.
+  if (subtype === 'interrupt') frames.push(INTERRUPT_POINT);
+}
+
+// Frames after a Turn's `result`, such as the idle state, belong to that Turn.
 const turns = splitTurns(frames, (frame) => frame.type === 'result');
+const lastTurn = turns.at(-1);
+const turnBefore = turns.at(-2);
+if (lastTurn && turnBefore && !lastTurn.some((f) => f.type === 'result')) {
+  turnBefore.push(...lastTurn);
+  turns.pop();
+}
+
+// The SDK names the vendor session with `--session-id` or `--resume`.
+const flagValue = (flag: string) => {
+  const index = process.argv.indexOf(flag);
+  return index === -1 ? undefined : process.argv[index + 1];
+};
 const sessionId =
-  frames.find((frame) => frame.session_id)?.session_id ?? randomUUID();
+  flagValue('--session-id') ??
+  flagValue('--resume') ??
+  frames.find((frame) => frame.session_id)?.session_id ??
+  randomUUID();
+const withSession = (frame: Frame) =>
+  frame.session_id === undefined ? frame : { ...frame, session_id: sessionId };
 const assistantFrames = (turnFrames: Frame[]) =>
   turnFrames.flatMap((frame) => {
     const assistant = AssistantFrame.safeParse(frame);
@@ -126,6 +181,21 @@ const initializeResponse = {
 
 const isInit = (frame: Frame) =>
   frame.type === 'system' && frame.subtype === 'init';
+const crashAfter = environment.exitMidTurn
+  ? (frame: Frame) => !isInit(frame)
+  : null;
+
+// The frames of the running Turn held back until an interrupt arrives.
+let heldFrames: Frame[] = [];
+
+function replay(turn: Frame[]) {
+  const pause = turn.indexOf(INTERRUPT_POINT);
+  const now = pause === -1 ? turn : turn.slice(0, pause);
+  heldFrames = pause === -1 ? [] : turn.slice(pause + 1);
+  const finished = replayTurn(now.map(withSession), crashAfter);
+  if (finished && pause === -1 && !turn.some((f) => f.type === 'result'))
+    send(withSession(resultFrame(turn)));
+}
 
 function playTurn() {
   const turn = turns[turnIndex++];
@@ -134,29 +204,34 @@ function playTurn() {
     return;
   }
   if (!turn.some(isInit)) send(initFrame());
-  const crashAfter = environment.exitMidTurn
-    ? (frame: Frame) => !isInit(frame)
-    : null;
-  if (replayTurn(turn, crashAfter) && turn.at(-1)?.type !== 'result')
-    send(resultFrame(turn));
+  replay(turn);
 }
+
+const answer = (subtype: string | undefined) =>
+  subtype === undefined
+    ? undefined
+    : recordedAnswers.has(subtype)
+      ? recordedAnswers.get(subtype)
+      : subtype === 'initialize'
+        ? initializeResponse
+        : undefined;
 
 serveJsonLines((line) => {
   const input = Input.parse(line);
   if (input.type === 'user') return playTurn();
   if (input.type !== 'control_request') return;
   const subtype = input.request?.subtype;
-  const response =
-    subtype === 'initialize'
-      ? {
-          subtype: 'success',
-          request_id: input.request_id,
-          response: initializeResponse,
-        }
-      : {
-          subtype: 'error',
-          request_id: input.request_id,
-          error: `The recording does not answer ${subtype}.`,
-        };
-  send({ type: 'control_response', response });
+  const response = answer(subtype);
+  send({
+    type: 'control_response',
+    response:
+      response === undefined
+        ? {
+            subtype: 'error',
+            request_id: input.request_id,
+            error: `The recording does not answer ${subtype}.`,
+          }
+        : { subtype: 'success', request_id: input.request_id, response },
+  });
+  if (subtype === 'interrupt' && heldFrames.length > 0) replay(heldFrames);
 });

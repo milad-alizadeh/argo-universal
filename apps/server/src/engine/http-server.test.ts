@@ -7,7 +7,7 @@ import type { Database } from '@repo/db';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { WebSocket } from 'ws';
 import { createActor } from 'xstate';
-import { openTestDatabase } from '../../mocks/database';
+import { openTestDatabase } from '#mocks/database';
 import {
   type RegistryActorRef,
   registryMachine,

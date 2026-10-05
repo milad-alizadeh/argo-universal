@@ -2,16 +2,16 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { AgentInput } from '@repo/agents';
 import { appRouter } from '@repo/api';
 import {
-  createMockAgentMachine,
-  type MockAgentReady,
+  createMockAdapter,
+  type MockAgentScript,
   type MockAgentStream,
+  mockReady,
 } from '@repo/mocks/agent';
 import { afterEach, expect, it } from 'vitest';
-import { createActor, fromPromise, setup, waitFor } from 'xstate';
-import { insertSession, openTestDatabase } from '../../../mocks/database';
+import { createActor, setup, waitFor } from 'xstate';
+import { insertSession, openTestDatabase } from '#mocks/database';
 import { writerMachine } from '../feed/writer-machine';
 import { createServerServices } from '../server-services';
 import { registryMachine } from './registry-machine';
@@ -40,14 +40,8 @@ function openServer({ applyConfigOptions = true } = {}) {
     },
   ];
   const streams = new Map<string, MockAgentStream>();
-  const ready = {
-    type: 'agent.ready' as const,
-    vendorSessionId: 'vendor-1',
-    configOptions,
-    capabilities: { planApproval: 'continueTurn' as const, stopShell: false },
-    continuedOutside: false,
-  };
-  const agent = createMockAgentMachine({
+  const ready = { ...mockReady, configOptions };
+  const script: MockAgentScript = {
     connect: async () => ready,
     stream: (stream) => {
       streams.set(stream.input.sessionId, stream);
@@ -66,8 +60,7 @@ function openServer({ applyConfigOptions = true } = {}) {
           );
       });
     },
-    stop: async () => {},
-  });
+  };
   const root = createActor(
     setup({
       actors: { sessions: registryMachine, writer: writerMachine },
@@ -80,35 +73,24 @@ function openServer({ applyConfigOptions = true } = {}) {
           input: {
             database,
             adapters: [
-              {
-                agent: 'mock',
-                capabilities: {
-                  planApproval: 'continueTurn',
-                  stopShell: false,
+              createMockAdapter(script),
+              createMockAdapter(
+                {
+                  ...script,
+                  connect: async () => ({
+                    ...ready,
+                    configOptions: configOptions.map((option) => ({
+                      ...option,
+                      currentValue: 'large',
+                    })),
+                    capabilities: {
+                      planApproval: 'startTurn',
+                      stopShell: true,
+                    },
+                  }),
                 },
-                machine: agent,
-              },
-              {
-                agent: 'alternate',
-                capabilities: { planApproval: 'startTurn', stopShell: true },
-                machine: agent.provide({
-                  actors: {
-                    connect: fromPromise<MockAgentReady, AgentInput>(
-                      async () => ({
-                        ...ready,
-                        configOptions: configOptions.map((option) => ({
-                          ...option,
-                          currentValue: 'large',
-                        })),
-                        capabilities: {
-                          planApproval: 'startTurn' as const,
-                          stopShell: true,
-                        },
-                      }),
-                    ),
-                  },
-                }),
-              },
+                'alternate',
+              ),
             ],
           },
         },

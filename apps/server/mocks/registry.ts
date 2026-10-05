@@ -1,4 +1,4 @@
-import { createMockAgentMachine } from '@repo/mocks/agent';
+import { createMockAdapter } from '@repo/mocks/agent';
 import { assertEvent, assign, createActor, setup } from 'xstate';
 import { registryMachine } from '../src/services/sessions/registry-machine';
 import type { SessionInput } from '../src/services/sessions/session-data';
@@ -51,12 +51,6 @@ export const createRegistryModelMachine = (forGraph: boolean) =>
     },
   });
 
-export const registryModelAdapter = {
-  agent: 'mock',
-  capabilities: { planApproval: 'continueTurn' as const, stopShell: false },
-  machine: createMockAgentMachine({
-    connect: () => new Promise(() => {}),
-    stream: () => undefined,
-    stop: async () => {},
-  }),
-};
+export const registryModelAdapter = createMockAdapter({
+  connect: () => new Promise(() => {}),
+});

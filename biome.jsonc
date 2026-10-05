@@ -35,6 +35,24 @@
   },
   "overrides": [
     {
+      // An adapter is plain functions; the one Agent machine in packages/agents/src owns the lifecycle.
+      "includes": ["packages/agents/*/**", "!packages/agents/src/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "xstate": "Adapters are plain functions; see ADR-0015."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
       // Uniwind themes repeat each variable per @variant and use its own CSS functions, such as hairlineWidth().
       "includes": ["tooling/uniwind/*.css"],
       "linter": {

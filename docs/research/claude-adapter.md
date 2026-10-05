@@ -26,7 +26,7 @@ The scratchpad is `/private/tmp/claude-501/-Users-milad-Developer-argo-universal
 
 ## Proposed shape in one paragraph
 
-Hold one long-lived `query()` per Session, fed by an async queue of user messages. Argo chooses the vendor id: a new Session passes `sessionId: randomUUID()`, and every later start passes `resume`. Pass `permissionMode` explicitly. Hold `canUseTool` promises by `toolUseID`. Permission requests, AskUserQuestion and ExitPlanMode all arrive there. Turn on `includePartialMessages`, `forwardSubagentText` and `perTaskStopAffordance`. Parse every message with Zod at the boundary.
+Hold one long-lived `query()` per Session, fed by an async queue of user messages. Argo chooses the vendor id: a new Session passes `sessionId: randomUUID()`, and every later start passes `resume`. Pass `permissionMode` explicitly. Hold `canUseTool` promises by `toolUseID`. Permission requests, AskUserQuestion and ExitPlanMode all arrive there. Turn on `includePartialMessages`, `forwardSubagentText` and `perTaskStopAffordance`. The SDK's types describe each message; the Feed checks the result against the contract (ADR-0015, which replaced the Zod plan below).
 
 ## 1. Starting a Session
 
@@ -72,7 +72,7 @@ The clean check comes before spawning: `getSessionInfo(id, {dir: cwd})` returns 
 
 ## 2. The stream and its validation
 
-`SDKMessage` is a union of about 40 shapes (`sdk.d.ts:5332`). Its doc says "Consumers should ignore types and subtypes they do not recognize" (`sdk.d.ts:5330`). ADR 0012 asks for more: an unrecognised shape becomes a notice with `_meta.argo.unrecognised` and is counted (`docs/adr/0012-only-human-typed-text-is-a-user-message.md:14`).
+`SDKMessage` is a union of about 40 shapes (`sdk.d.ts:5332`). Its doc says "Consumers should ignore types and subtypes they do not recognize" (`sdk.d.ts:5330`). The adapter drops a message type it does not map, and the Feed rejects, logs and counts a change that does not match the contract (ADR 0012, ADR 0015).
 
 **Zod at the boundary.** Discriminate on `type`, then on `subtype` for `system` and `result`. Use loose objects, so a new field does not reject a known shape. Reject and count only:
 
@@ -431,6 +431,21 @@ Nothing here is copied until the owner agrees. Each item is a question.
 7. **Plan limits.** Should `rate_limit_event` reach the UI?
 8. **`@path` expansion.** Should prompts go verbatim (`verbatimPrompts: true`)?
 9. **Stop limit.** `close()` can take about 7 s, against `agentStopLimit` of 5 s. Should the limit grow, or should the adapter send SIGKILL at 5 s?
+
+## Owner answers (2026-10-05)
+
+Given while building issue 25:
+
+- **Settings files** (question 1): all of them apply, as in the terminal. The adapter leaves `settingSources` at its default.
+- **Missing transcript** (question 2): the adapter fails with a clear error, after the `getSessionInfo` check.
+- **`@path` expansion** (question 8): prompts go verbatim.
+- **Stop limit** (question 9): `close()`, with `agentStopLimit` kept at 5 s.
+- **Shape**: as this note recommends. The adapter keeps one long-lived `query()`, passes `sessionId` up front and keeps the stderr tail. It calls `getContextUsage` after each `result`.
+- **Executable**: the adapter runs the user's own `claude` from PATH, not the CLI bundled with the SDK.
+- **Images** (old Argo item 7): wait for issue 3f.
+- **Vendor name**: `packages/agents/src/adapters.ts` lists every adapter. It is the one file outside an adapter's folder that names a vendor. Tests find each mock CLI by agent id in `mocks/cli/index.ts`.
+
+Questions 3 to 7 are still open. Until they are answered, `continuedOutside` is always false and `agent.turnStarted` is never sent.
 
 ## Not verified
 

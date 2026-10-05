@@ -6,11 +6,11 @@ import {
   type SnapshotFrom,
 } from 'xstate';
 import { adjacencyMapToArray, getAdjacencyMap, TestModel } from 'xstate/graph';
-import { openTestDatabase } from '../../../mocks/database';
+import { openTestDatabase } from '#mocks/database';
 import {
   createRegistryModelMachine,
   registryModelAdapter,
-} from '../../../mocks/registry';
+} from '#mocks/registry';
 import type { RegistryInput } from './registry-machine';
 import { sessionMachine } from './session-machine';
 
@@ -41,7 +41,12 @@ const events: RegistryEvent[] = [
     {
       type: `xstate.snapshot.session:${sessionId}`,
       snapshot: createActor(sessionMachine, {
-        input: { kind: 'existing', database, sessionId },
+        input: {
+          kind: 'existing',
+          database,
+          adapter: registryModelAdapter,
+          sessionId,
+        },
       }).getSnapshot(),
     },
   ]),
