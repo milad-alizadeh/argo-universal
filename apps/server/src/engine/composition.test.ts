@@ -437,7 +437,10 @@ it('uses the newest Turn for failures and excludes interrupted Turns from Failed
         sessionId: 'interrupted',
         status: 'ended',
         stopReason: 'error',
-        error: { code: 'interrupted' },
+        error: {
+          code: 'interrupted',
+          message: 'The Server stopped during the Turn',
+        },
         startedAt: 1,
       },
       {

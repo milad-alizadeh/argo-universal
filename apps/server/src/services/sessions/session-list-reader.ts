@@ -1,9 +1,13 @@
-import { SessionInfo, type SessionUpdate } from '@repo/contracts';
+import {
+  SessionInfo,
+  SessionRecord,
+  type SessionUpdate,
+  Turn,
+} from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
 import { and, desc, eq, sql } from 'drizzle-orm';
-import { createSelectSchema } from 'drizzle-orm/zod';
 import type { ActorRefFrom } from 'xstate';
 import { z } from 'zod';
 import type { FeedActorRef } from '../feed/feed-machine';
@@ -12,8 +16,8 @@ import type { writerMachine } from '../feed/writer-machine';
 import type { RegistryActorRef } from './registry-machine';
 import { deriveSessionStatus } from './session-status';
 
-const storedSession = createSelectSchema(session);
-const storedTurn = createSelectSchema(turn);
+const storedSession = SessionRecord;
+const storedTurn = Turn;
 const interruptedError = z.object({ code: z.literal('interrupted') });
 
 export function createSessionListReader(options: {

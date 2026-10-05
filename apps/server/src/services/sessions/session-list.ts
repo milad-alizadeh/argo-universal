@@ -1,3 +1,4 @@
+import { EventEmitter, on } from 'node:events';
 import type { SessionService } from '@repo/api';
 import type {
   SessionCounts,
@@ -6,11 +7,11 @@ import type {
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { TRPCError } from '@trpc/server';
-import type { ActorRefFrom, Subscription } from 'xstate';
+import { type ActorRefFrom, createActor } from 'xstate';
 import { z } from 'zod';
-import type { FeedActorRef } from '../feed/feed-machine';
 import type { writerMachine } from '../feed/writer-machine';
 import type { RegistryActorRef } from './registry-machine';
+import { sessionListMachine } from './session-list-machine';
 import { createSessionListReader } from './session-list-reader';
 
 const cursorSchema = z.strictObject({
@@ -102,76 +103,35 @@ export function createSessionList(options: {
     signal: AbortSignal | undefined,
     changes: (rows: ReturnType<typeof readAll>) => Value[],
   ): AsyncGenerator<Value> {
-    const queue: Value[] = [];
-    const feeds = new Map<FeedActorRef, Subscription>();
-    let wake: (() => void) | undefined;
-    let scheduled = false;
-    let finished = false;
-    let failure: unknown;
-    const refresh = () => {
-      if (finished || signal?.aborted) return;
-      try {
-        const current = new Set<FeedActorRef>();
-        for (const actor of Object.values(
-          sessions.getSnapshot().context.sessions,
-        )) {
-          const feed = actor.getSnapshot().children.feed as
-            | FeedActorRef
-            | undefined;
-          if (feed) {
-            current.add(feed);
-            if (!feeds.has(feed)) feeds.set(feed, feed.subscribe(schedule));
-          }
-        }
-        for (const [feed, listener] of feeds)
-          if (!current.has(feed)) {
-            listener.unsubscribe();
-            feeds.delete(feed);
-          }
-        queue.push(...changes(readAll()));
-      } catch (error) {
-        failure = error;
-        finished = true;
-      }
-      wake?.();
-    };
-    const schedule = () => {
-      if (scheduled || finished) return;
-      scheduled = true;
-      queueMicrotask(() => {
-        scheduled = false;
-        refresh();
-      });
-    };
-    const end = () => {
-      finished = true;
-      wake?.();
-    };
-    const registryListener = sessions.subscribe({
-      next: schedule,
-      complete: end,
+    const events = new EventEmitter();
+    const controller = new AbortController();
+    const actor = createActor(sessionListMachine, {
+      input: { sessions, writer: writer(), readRows: readAll },
     });
-    const writerListener = writer()?.subscribe(schedule);
-    signal?.addEventListener('abort', end);
+    const rowsListener = actor.on('list.rows', ({ rows }) => {
+      for (const change of changes(rows)) events.emit('change', change);
+    });
+    const completion = actor.subscribe({ complete: () => controller.abort() });
+    const abort = () => {
+      actor.send({ type: 'list.stop' });
+      controller.abort();
+    };
+    signal?.addEventListener('abort', abort);
+    const stream = on(events, 'change', { signal: controller.signal });
     try {
-      refresh();
-      while (!signal?.aborted && !finished) {
-        if (queue.length) {
-          yield queue.shift() as Value;
-          continue;
-        }
-        await new Promise<void>((resolve) => {
-          wake = resolve;
-        });
-        wake = undefined;
-      }
-      if (failure) throw failure;
+      if (signal?.aborted) return;
+      actor.start();
+      for await (const [change] of stream) yield change as Value;
+    } catch (error) {
+      const snapshot = actor.getSnapshot();
+      if (snapshot.matches('failed')) throw snapshot.context.failure;
+      if (!controller.signal.aborted) throw error;
     } finally {
-      finished = true;
-      registryListener.unsubscribe();
-      writerListener?.unsubscribe();
-      for (const listener of feeds.values()) listener.unsubscribe();
-      signal?.removeEventListener('abort', end);
+      actor.stop();
+      rowsListener.unsubscribe();
+      completion.unsubscribe();
+      signal?.removeEventListener('abort', abort);
+      controller.abort();
     }
   }
   return {

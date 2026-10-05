@@ -14,7 +14,10 @@ export function recoverAfterRestart(database: Database) {
       .set({
         status: 'ended',
         stopReason: 'error',
-        error: { code: 'interrupted' },
+        error: {
+          code: 'interrupted',
+          message: 'The Server stopped during the Turn',
+        },
         endedAt: Date.now(),
       })
       .where(eq(turn.status, 'running'))
