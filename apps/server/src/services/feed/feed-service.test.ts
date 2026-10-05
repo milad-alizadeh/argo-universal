@@ -105,7 +105,7 @@ const take = async (
   while (values.length < count) {
     const next = await iterator.next();
     if (next.done) break;
-    values.push(next.value);
+    if (next.value.type !== 'snapshot') values.push(next.value);
   }
   return values;
 };
@@ -392,6 +392,10 @@ describe('feed.subscribe', () => {
       'upsert message-3#0 @4',
       'upsert message-4#0 @5',
     ]);
+    expect((await updates.next()).value).toMatchObject({
+      type: 'snapshot',
+      snapshot: { state: 'idle' },
+    });
     const next = updates.next();
     controller.abort();
     expect(await next).toMatchObject({ done: true });
