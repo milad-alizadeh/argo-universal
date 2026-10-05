@@ -4,12 +4,17 @@ import { sessionListMocks } from './session-list-mock';
 import type { Fixtures } from './trpc-mock-link';
 
 export function createSessionListUpdatesMock() {
-  let sessions: SessionInfo[] = [
+  const initialSessions = (): SessionInfo[] => [
     { ...sessionRows.running, activityAt: 200 },
     { ...sessionRows.idle, activityAt: 100 },
   ];
+  let sessions = initialSessions();
   let send: ((update: SessionListUpdate) => void) | undefined;
   return {
+    reset() {
+      sessions = initialSessions();
+      send = undefined;
+    },
     publish(update: SessionListUpdate) {
       sessions = sessions.filter(
         (session) =>
@@ -36,11 +41,20 @@ export function createSessionListUpdatesMock() {
         while (!signal.aborted) {
           const update = await new Promise<SessionListUpdate | undefined>(
             (resolve) => {
-              const abort = () => resolve(undefined);
-              send = (value) => {
+              const cleanup = () => {
                 signal.removeEventListener('abort', abort);
+                if (send === deliver) send = undefined;
+              };
+              const abort = () => {
+                cleanup();
+                resolve(undefined);
+              };
+              const deliver = (value: SessionListUpdate) => {
+                cleanup();
                 resolve(value);
               };
+              if (signal.aborted) return resolve(undefined);
+              send = deliver;
               signal.addEventListener('abort', abort, { once: true });
             },
           );

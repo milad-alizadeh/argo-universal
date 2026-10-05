@@ -75,15 +75,31 @@ export const InsertSessionOpaqueRows: Story = {
     const heading = await canvas.findByRole('button', {
       name: 'Example Project',
     });
+    const existing = canvas.getByRole('button', {
+      name: 'Large Session 0, Idle',
+    });
     await userEvent.hover(heading);
+    await waitFor(() => {
+      const firstRow = existing.getBoundingClientRect();
+      const project = heading.getBoundingClientRect();
+      expect(Math.abs(firstRow.top - project.bottom)).toBeLessThanOrEqual(3);
+    });
+    const initialTop = existing.getBoundingClientRect().top;
+    const positions = [initialTop];
+    const movement = new Promise<void>((resolve) => {
+      const started = performance.now();
+      function sample() {
+        positions.push(existing.getBoundingClientRect().top);
+        if (performance.now() - started < 600) requestAnimationFrame(sample);
+        else resolve();
+      }
+      requestAnimationFrame(sample);
+    });
     await userEvent.click(
       canvas.getByRole('button', { name: 'New Session in Example Project' }),
     );
     const inserted = await canvas.findByRole('button', {
       name: 'New Session 1, Idle',
-    });
-    const existing = canvas.getByRole('button', {
-      name: 'Large Session 0, Idle',
     });
     function assertOpaqueRow(button: HTMLElement) {
       const surface = button.parentElement;
@@ -105,12 +121,20 @@ export const InsertSessionOpaqueRows: Story = {
       );
       assertOpaqueRow(inserted);
       assertOpaqueRow(existing);
+      positions.push(existing.getBoundingClientRect().top);
     }
     await waitFor(() => {
       const newRectangle = inserted.getBoundingClientRect();
       const oldRectangle = existing.getBoundingClientRect();
       expect(newRectangle.bottom).toBeLessThanOrEqual(oldRectangle.top + 1);
     });
+    await movement;
+    const finalTop = existing.getBoundingClientRect().top;
+    expect(finalTop - initialTop).toBeGreaterThan(20);
+    expect(
+      positions.some((top) => top > initialTop + 1 && top < finalTop - 1),
+      'Existing rows must pass through intermediate positions, not jump',
+    ).toBe(true);
     await userEvent.hover(inserted);
     assertOpaqueRow(inserted);
   },

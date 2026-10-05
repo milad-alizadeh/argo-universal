@@ -25,6 +25,7 @@ const meta = {
   parameters: {
     trpc: sessionListMocks,
     previewPadding: false,
+    screenPreview: true,
     navigation: recorder,
   },
   render: () => (
@@ -312,6 +313,7 @@ export const MultipleProjects: Story = {
 
 const liveUpdates = createSessionListUpdatesMock();
 export const LiveUpdates: Story = {
+  beforeEach: () => liveUpdates.reset(),
   parameters: { trpc: liveUpdates.fixtures },
   play: async ({ canvas }) => {
     await waitFor(() =>

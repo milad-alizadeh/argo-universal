@@ -44,7 +44,8 @@ Updated as new requests arrive. Completed entries describe implemented changes; 
 - [x] Make child-state ownership explicit: a state already presented by a child, such as a selected row, gets no separate parent story or parent variation.
 - [x] Consolidate all Storybook guidance with writing-for-agents: presentation/test separation, screen coverage, unique states and child ownership, useful interaction, viewport/theme controls, faithful wrappers, isolated state, stable mocks, web/iOS parity, and observable test outcomes.
 - [x] Move Storybook rules to docs/agents/storybook.md; AGENTS.md contains only a pointer triggered by story authoring or UI component testing.
-- [ ] Final review when preparing the PR.
+- [x] Resolve final PR review findings: remove duplicate parent/error showcases, fill the screen preview viewport, reset live-update mocks between visits, and assert intermediate animation movement.
+- [x] Final review when preparing the PR: separate standards/spec reviews completed; five standards findings resolved, 28 targeted browser tests pass. Physical-device performance and memory acceptance remain outstanding.
 
 Independent results and native coverage limits: [validation report](34-blind-validation.md).
 
@@ -60,7 +61,6 @@ Independent results and native coverage limits: [validation report](34-blind-val
 - [New Session: Project + inserts a row with shift animation](http://localhost:6007/?path=/story/sessions-sessionslist--on-new-session)
 - [SessionsLoading: aligned skeletons](http://localhost:6007/?path=/story/sessions-sessionsloading--default)
 - [Pagination: scroll, spinner, and appended rows](http://localhost:6007/?path=/story/sessions-sessionslist--on-end-reached)
-- [Loading screen: skeleton alignment](http://localhost:6007/?path=/story/screens-sessionsscreen--loading)
 - [Loaded screen: safe-area integration](http://localhost:6007/?path=/story/screens-sessionsscreen--loaded)
 - [Screen: default safe areas and opt-out](http://localhost:6007/?path=/story/shared-screen--safe-area)
 - [Screen: edge overrides](http://localhost:6007/?path=/story/shared-screen--edges)

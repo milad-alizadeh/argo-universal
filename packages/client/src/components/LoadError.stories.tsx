@@ -15,37 +15,18 @@ const meta = {
 } satisfies Meta<typeof LoadError>;
 export default meta;
 type Story = StoryObj<typeof meta>;
-export const Title: Story = {
+export const Failure: Story = {
   render: (args) => (
     <Variations>
-      {["Couldn't load Sessions", "Couldn't load more Sessions"].map(
-        (title) => (
-          <Variation key={title} label={title}>
-            <LoadError {...args} title={title} />
-          </Variation>
-        ),
-      )}
-    </Variations>
-  ),
-};
-export const Description: Story = {
-  render: (args) => (
-    <Variations>
-      {[args.description, 'Try loading the next page again.'].map(
-        (description) => (
-          <Variation key={description} label={description}>
-            <LoadError {...args} description={description} />
-          </Variation>
-        ),
-      )}
-    </Variations>
-  ),
-};
-export const OnRetry: Story = {
-  render: (args) => (
-    <Variations>
-      <Variation label="Retry action">
+      <Variation label="Initial loading failed">
         <LoadError {...args} />
+      </Variation>
+      <Variation label="Next page failed">
+        <LoadError
+          {...args}
+          title="Couldn't load more Sessions"
+          description="Try loading the next page again."
+        />
       </Variation>
     </Variations>
   ),
