@@ -82,7 +82,7 @@ export type AgentCommand =
   | { type: 'agent.stopShell'; shellId: AgentShell['id'] }
   | { type: 'agent.stop' };
 
-export interface AgentSubagent extends Pick<SessionInfo, 'title'> {
+export interface AgentSubagent extends Partial<Pick<SessionInfo, 'title'>> {
   toolCallId: ToolCallUpdate['toolCallId'];
   vendorSessionId: string;
   prompt: ContentBlock[];

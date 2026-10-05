@@ -1,0 +1,21 @@
+{
+  "source": "https://anthropic.com/press-kit",
+  "retrievedAt": "2026-10-05",
+  "files": [
+    {
+      "file": "claude-spark.svg",
+      "archivePath": "Anthropic media resources/Anthropic logos/Claude logos/3 Claude Spark/SVG/Claude Spark - Clay.svg",
+      "sha256": "6d53db4be375e899c937c26cf16684a80d6e869b1928d72b37748bef2560e219"
+    },
+    {
+      "file": "claude-code-slate.svg",
+      "archivePath": "Anthropic media resources/Anthropic logos/Claude logos/2 Claude Code logo/SVG/Claude Code logo - Slate.svg",
+      "sha256": "d8a00c51cd1a31e85f8ca264f89617894d4c2ed9c72e71ccdc00f84bcca7a6a3"
+    },
+    {
+      "file": "claude-code-ivory.svg",
+      "archivePath": "Anthropic media resources/Anthropic logos/Claude logos/2 Claude Code logo/SVG/Claude Code logo - Ivory.svg",
+      "sha256": "809cf3443fa244db49ca8af919eb93080eb496da11a6800011b25d7c7752178b"
+    }
+  ]
+}
