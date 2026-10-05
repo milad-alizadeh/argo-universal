@@ -6,6 +6,7 @@ export type NavigationDestination =
   | { to: 'session'; id: string }
   | { to: 'issues' }
   | { to: 'atlas' }
+  | { to: 'settings' }
   | { to: 'settings-accounts' }
   | { to: 'settings-project'; name: string }
   | { to: 'settings-connection' }

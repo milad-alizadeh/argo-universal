@@ -1,4 +1,8 @@
 export {
+  DesktopLayout,
+  type DesktopLayoutProps,
+} from './components/DesktopLayout';
+export {
   DesktopShell,
   type DesktopShellProps,
   type InspectorState,
@@ -12,6 +16,10 @@ export {
   PhoneListHeader,
   type PhoneListHeaderProps,
 } from './components/PhoneListHeader';
+export {
+  PhoneSectionsLayout,
+  type PhoneSectionsLayoutProps,
+} from './components/PhoneSectionsLayout';
 export {
   PhoneShell,
   type PhoneShellProps,
@@ -43,19 +51,25 @@ export {
   type NavigationProviderProps,
   useNavigate,
 } from './navigation/context';
+export { sectionOf } from './navigation/sections';
 export { useWide } from './navigation/use-wide';
+export { ConnectionScreen } from './screens/ConnectionScreen';
 export {
   AccountsScreen,
+  AgentSettingsScreen,
+  type AgentSettingsScreenProps,
   AtlasScreen,
   IssuesScreen,
+  NewSessionScreen,
   ProjectSettingsScreen,
   type ProjectSettingsScreenProps,
 } from './screens/PlaceholderScreens';
-export { ProjectsScreen } from './screens/ProjectsScreen';
 export {
   SessionScreen,
   type SessionScreenProps,
 } from './screens/SessionScreen';
+export { SessionsScreen } from './screens/SessionsScreen';
+export { SettingsScreen } from './screens/SettingsScreen';
 export { AppProviders, type AppProvidersProps } from './trpc/app-providers';
 export { TRPCProvider, useTRPC, useTRPCClient } from './trpc/context';
 export { createTRPCClient, type TRPCClient } from './trpc/create-trpc-client';

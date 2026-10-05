@@ -1,14 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
 import { fails, pending } from '../../mocks/trpc-mock-link';
-import { ProjectsScreen } from './ProjectsScreen';
-import { projectsScreenMocks } from './ProjectsScreen.mocks';
+import { ConnectionScreen } from './ConnectionScreen';
+import { connectionScreenMocks } from './ConnectionScreen.mocks';
 
 const meta = {
-  title: 'Tests/ProjectsScreen',
-  component: ProjectsScreen,
-  parameters: { trpc: projectsScreenMocks },
-} satisfies Meta<typeof ProjectsScreen>;
+  title: 'Tests/ConnectionScreen',
+  component: ConnectionScreen,
+  parameters: { trpc: connectionScreenMocks },
+} satisfies Meta<typeof ConnectionScreen>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

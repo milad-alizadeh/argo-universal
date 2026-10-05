@@ -1,8 +1,13 @@
 import { expect, serverVersion, test } from '../fixtures';
 
-test('the Projects screen shows the Server version and a ticking clock', async ({
+test('the Connection page shows the Server version and a ticking clock', async ({
   page,
 }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.getByRole('button', { name: 'Connection', exact: true }).click();
+  await expect(page).toHaveURL(/\/settings\/connection$/);
+
   // Each row shows its label and, next to it, its value.
   const rowValue = (label: string) =>
     page

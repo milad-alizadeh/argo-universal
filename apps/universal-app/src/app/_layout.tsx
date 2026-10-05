@@ -1,16 +1,22 @@
 import '../../global.css';
 
-import { AppProviders, useConnection } from '@repo/client';
+import {
+  AppProviders,
+  type Navigate,
+  NavigationProvider,
+  useConnection,
+} from '@repo/client';
 import { createBrowserMachineInspection } from '@repo/machine-log/browser';
 import { PortalHost } from '@rn-primitives/portal';
 import { registerDevMenuItems } from 'expo-dev-client';
-import { router, Stack } from 'expo-router';
+import { type Href, router, Stack } from 'expo-router';
 import { ThemeProvider } from 'expo-router/react-navigation';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { AppState, Platform } from 'react-native';
 import { useUniwind } from 'uniwind';
 import { useNavigationTheme } from '@/lib/theme';
+import { pathFor } from '@/navigation/paths';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -52,6 +58,10 @@ const inspection = createBrowserMachineInspection({
   writeLine: (line) => console.log(line.trimEnd()),
 });
 
+// Screens in @repo/client navigate through this; the paths come from the route tree.
+const navigate: Navigate = (destination) =>
+  router.navigate(pathFor(destination) as Href);
+
 export default function RootLayout() {
   const { theme } = useUniwind();
   const navigationTheme = useNavigationTheme();
@@ -61,14 +71,13 @@ export default function RootLayout() {
       <ForegroundSignal />
       <ThemeProvider value={navigationTheme}>
         <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
-        <Stack>
-          <Stack.Screen name="index" options={{ title: 'Projects' }} />
-          <Stack.Screen name="sessions/[id]" options={{ title: 'Session' }} />
-          <Stack.Screen
-            name="(dev)/storybook"
-            options={{ headerShown: false }}
-          />
-        </Stack>
+        <NavigationProvider navigate={navigate}>
+          {/* Storybook stays outside the shell. */}
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(shell)" />
+            <Stack.Screen name="(dev)/storybook" />
+          </Stack>
+        </NavigationProvider>
         <PortalHost />
       </ThemeProvider>
     </AppProviders>

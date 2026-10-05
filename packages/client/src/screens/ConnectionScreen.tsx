@@ -12,8 +12,8 @@ import {
 import { Text } from '#primitives/text';
 import { useTRPC } from '../trpc/context';
 
-// Scaffold version: shows the Server's system.info and its live clock until milestone 1 lists Projects.
-export function ProjectsScreen() {
+// Placeholder until the Connection page is built: the Server's system.info and its live clock.
+export function ConnectionScreen() {
   const trpc = useTRPC();
   const info = useQuery(trpc.system.info.queryOptions());
   const clock = useSubscription(trpc.system.clock.subscriptionOptions());

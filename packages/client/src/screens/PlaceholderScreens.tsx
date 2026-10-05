@@ -28,6 +28,28 @@ export function ProjectSettingsScreen({ name }: ProjectSettingsScreenProps) {
   );
 }
 
+export function NewSessionScreen() {
+  return (
+    <Placeholder
+      title="New Session"
+      description="Starting a Session will appear here."
+    />
+  );
+}
+
+export interface AgentSettingsScreenProps {
+  agent: string;
+}
+
+export function AgentSettingsScreen({ agent }: AgentSettingsScreenProps) {
+  return (
+    <Placeholder
+      title="Agent"
+      description={`Settings for ${agent} will appear here.`}
+    />
+  );
+}
+
 function Placeholder({
   title,
   description,
