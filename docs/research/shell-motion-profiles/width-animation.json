@@ -1,0 +1,55 @@
+{
+  "label": "width-animation",
+  "viewport": [1440, 900],
+  "stressRows": 450,
+  "toggles": 24,
+  "frameTimings": [
+    {
+      "panel": "sidebar",
+      "frames": 355,
+      "p50": 16.699999999999818,
+      "p95": 16.700000000000728,
+      "p99": 16.800000000000182,
+      "maximum": 83.30000000000018,
+      "framesOver25ms": 2
+    },
+    {
+      "panel": "Inspector",
+      "frames": 359,
+      "p50": 16.69999999999891,
+      "p95": 16.700000000000728,
+      "p99": 16.80000000000109,
+      "maximum": 33.29999999999927,
+      "framesOver25ms": 1
+    }
+  ],
+  "metrics": {
+    "LayoutCount": 476,
+    "RecalcStyleCount": 624,
+    "LayoutDuration": 0.49430599999999997,
+    "RecalcStyleDuration": 0.040080000000000005,
+    "TaskDuration": 1.840604
+  },
+  "trace": {
+    "Layout": {
+      "count": 476,
+      "milliseconds": 489.435
+    },
+    "UpdateLayoutTree": {
+      "count": 624,
+      "milliseconds": 40.271
+    },
+    "Paint": {
+      "count": 1504,
+      "milliseconds": 117.627
+    },
+    "RasterTask": {
+      "count": 7112,
+      "milliseconds": 1159.892
+    },
+    "CompositeLayers": {
+      "count": 0,
+      "milliseconds": 0
+    }
+  }
+}

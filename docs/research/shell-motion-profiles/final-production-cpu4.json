@@ -1,0 +1,59 @@
+{
+  "label": "final-production-cpu4",
+  "throttle": 4,
+  "origin": "http://localhost:6009",
+  "browserVersion": "153.0.8010.12",
+  "warmupToggles": 4,
+  "viewport": [1440, 900],
+  "stressRows": 450,
+  "toggles": 24,
+  "frameTimings": [
+    {
+      "panel": "sidebar",
+      "frames": 291,
+      "p50": 16.699999999999818,
+      "p95": 16.80000000000109,
+      "p99": 133.39999999999964,
+      "maximum": 166.6999999999989,
+      "framesOver25ms": 14
+    },
+    {
+      "panel": "Inspector",
+      "frames": 287,
+      "p50": 16.69999999999891,
+      "p95": 16.80000000000109,
+      "p99": 133.39999999999964,
+      "maximum": 200,
+      "framesOver25ms": 13
+    }
+  ],
+  "metrics": {
+    "LayoutCount": 24,
+    "RecalcStyleCount": 568,
+    "LayoutDuration": 0.147428,
+    "RecalcStyleDuration": 0.36370899999999995,
+    "TaskDuration": 4.644957
+  },
+  "trace": {
+    "Layout": {
+      "count": 24,
+      "milliseconds": 146.273
+    },
+    "UpdateLayoutTree": {
+      "count": 568,
+      "milliseconds": 364.044
+    },
+    "Paint": {
+      "count": 288,
+      "milliseconds": 95.097
+    },
+    "RasterTask": {
+      "count": 9677,
+      "milliseconds": 852.476
+    },
+    "CompositeLayers": {
+      "count": 0,
+      "milliseconds": 0
+    }
+  }
+}

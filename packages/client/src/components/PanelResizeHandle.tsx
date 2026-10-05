@@ -32,7 +32,7 @@ export function PanelResizeHandle({
   return (
     <View
       {...responder.panHandlers}
-      className={`absolute ${edge === 'left' ? '-left-1' : '-right-1'} bottom-0 top-shell-header z-10 w-2`}
+      className={`absolute ${edge === 'left' ? '-left-1' : '-right-1'} bottom-0 top-shell-bar z-10 w-2`}
       accessible
       accessibilityLabel={label}
       accessibilityRole="adjustable"

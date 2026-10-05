@@ -1,0 +1,56 @@
+{
+  "label": "compositor-motion",
+  "throttle": 1,
+  "viewport": [1440, 900],
+  "stressRows": 450,
+  "toggles": 24,
+  "frameTimings": [
+    {
+      "panel": "sidebar",
+      "frames": 358,
+      "p50": 16.699999999999818,
+      "p95": 16.700000000000728,
+      "p99": 16.800000000000182,
+      "maximum": 66.59999999999991,
+      "framesOver25ms": 1
+    },
+    {
+      "panel": "Inspector",
+      "frames": 360,
+      "p50": 16.69999999999891,
+      "p95": 16.700000000000728,
+      "p99": 16.799999999999272,
+      "maximum": 16.80000000000109,
+      "framesOver25ms": 0
+    }
+  ],
+  "metrics": {
+    "LayoutCount": 24,
+    "RecalcStyleCount": 572,
+    "LayoutDuration": 0.025375999999999996,
+    "RecalcStyleDuration": 0.06643900000000001,
+    "TaskDuration": 0.9969819999999999
+  },
+  "trace": {
+    "Layout": {
+      "count": 24,
+      "milliseconds": 25.19
+    },
+    "UpdateLayoutTree": {
+      "count": 572,
+      "milliseconds": 66.46
+    },
+    "Paint": {
+      "count": 237,
+      "milliseconds": 16.533
+    },
+    "RasterTask": {
+      "count": 9697,
+      "milliseconds": 1083.643
+    },
+    "CompositeLayers": {
+      "count": 0,
+      "milliseconds": 0
+    }
+  }
+}

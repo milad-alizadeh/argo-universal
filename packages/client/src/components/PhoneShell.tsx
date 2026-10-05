@@ -63,19 +63,25 @@ export function PhoneShell({
         key={section}
         variant="ghost"
         className={cn(
-          'h-12 justify-start gap-3 px-3',
-          selectedSection === section && 'bg-sidebar-accent',
+          'h-12 sm:h-12 justify-start gap-3 px-3',
+          selectedSection === section && 'bg-sidebar',
         )}
         accessibilityLabel={title}
         accessibilityState={{ selected: selectedSection === section }}
         aria-selected={selectedSection === section}
         onPress={() => selectSection(section)}
       >
-        <Icon as={icon} className="size-phone-shell-icon" />
+        <Icon
+          as={icon}
+          className={cn(
+            'size-phone-shell-icon',
+            selectedSection !== section && 'text-muted-foreground',
+          )}
+        />
         <Text
           className={cn(
             'flex-1 text-base',
-            selectedSection === section && 'font-semibold',
+            selectedSection === section ? 'font-semibold' : 'font-normal',
           )}
         >
           {title}
@@ -113,8 +119,12 @@ export function PhoneShell({
             aria-hidden={!drawerOpen}
             accessibilityElementsHidden={!drawerOpen}
           >
-            <View className="h-16 justify-center px-6">
-              <Text role="heading" aria-level={2} className="text-xl font-bold">
+            <View className="h-14 justify-center px-6">
+              <Text
+                role="heading"
+                aria-level={2}
+                className="text-xl font-semibold"
+              >
                 Argo
               </Text>
             </View>

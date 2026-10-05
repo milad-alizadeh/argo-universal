@@ -29,16 +29,14 @@ export function DesktopShellMock({
       onSectionChange={setSection}
       inspectorState={inspection}
       onInspectorStateChange={setInspection}
-      inspectorHeader={
-        <Text className="text-base font-semibold">Inspector</Text>
-      }
+      inspectorHeader={<Text className="text-sm font-semibold">Inspector</Text>}
       inspector={
         <View className="p-4">
           <Text testID="inspector-content">{title} Inspector</Text>
         </View>
       }
       listHeader={
-        <Text role="heading" aria-level={2} className="text-xl font-bold">
+        <Text role="heading" aria-level={2} className="text-base font-semibold">
           {title}
         </Text>
       }

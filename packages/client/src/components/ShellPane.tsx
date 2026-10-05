@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect, useRef } from 'react';
+import { View } from 'react-native';
 import Animated, {
   Easing,
   ReduceMotion,
@@ -7,9 +8,13 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-interface ShellPaneProps {
+export interface ShellPaneProps {
   testID: string;
   width: number;
+  offset: number;
+  contentWidth?: number;
+  card?: boolean;
+  overlay?: ReactNode;
   hidden: boolean;
   transitionKey: string;
   children: ReactNode;
@@ -18,10 +23,19 @@ interface ShellPaneProps {
 export function ShellPane({
   testID,
   width,
+  contentWidth,
+  card,
   hidden,
   transitionKey,
+  overlay,
   children,
 }: ShellPaneProps) {
+  const lastContentWidth = useRef(contentWidth ?? width);
+  const stableContentWidth =
+    contentWidth ?? (width > 0 ? width : lastContentWidth.current);
+  useEffect(() => {
+    lastContentWidth.current = stableContentWidth;
+  }, [stableContentWidth]);
   const animatedWidth = useSharedValue(width);
   const previousTransition = useRef(transitionKey);
   useEffect(() => {
@@ -52,7 +66,22 @@ export function ShellPane({
       aria-hidden={hidden}
       {...{ inert: hidden }}
     >
-      {children}
+      {card && (
+        <View
+          pointerEvents="none"
+          className="absolute bottom-0 left-0 right-0 top-shell-bar rounded-xl bg-card shadow-card"
+        />
+      )}
+      <View className="flex-1 overflow-hidden">
+        <View
+          testID={`${testID}-content`}
+          className="flex-1"
+          style={{ width: stableContentWidth }}
+        >
+          {children}
+        </View>
+      </View>
+      {overlay}
     </Animated.View>
   );
 }

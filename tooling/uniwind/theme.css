@@ -14,13 +14,10 @@
   --spacing-phone-drawer: 300px;
   --spacing-phone-drawer-peek: 64px;
   --spacing-phone-shell-icon: 22px;
-  --spacing-shell-rail: 64px;
-  --spacing-shell-header: 64px;
+  --spacing-shell-bar: 64px;
   --spacing-shell-list: 300px;
   --spacing-shell-inspector: 380px;
   --spacing-shell-inset: 8px;
-  --spacing-shell-detail-minimum: 360px;
-  --spacing-shell-list-maximum: 460px;
   --shadow-card:
     0 1px 2px #0000000f, 0 0 40px -8px #00000024, 0 16px 32px -16px #00000014;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
