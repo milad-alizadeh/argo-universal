@@ -2,7 +2,6 @@ import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { agentAdapters } from '@repo/agents';
-import type { SessionUpdate } from '@repo/contracts';
 import { session as sessionTable } from '@repo/db/schema';
 import { mockClis } from '@repo/mocks/cli';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -39,18 +38,22 @@ describe.each(agentAdapters)(
       recording: string,
       vendorSessionId: string | null,
       transcriptId: string,
+      notificationsFirst = false,
     ) {
       const bin = temporaryDirectory('argo-bin-');
       const cwd = temporaryDirectory('argo-project-');
       await mockCli?.write(bin, { recording });
       const environment = {
         PATH: `${bin}${path.delimiter}${process.env.PATH ?? ''}`,
+        MOCK_CLI_NOTIFICATIONS_FIRST: notificationsFirst ? '1' : '0',
         ...mockCli?.writeTranscript(
           temporaryDirectory('argo-vendor-'),
           cwd,
           transcriptId,
         ),
       };
+      for (const key of mockCli?.apiKeyVariables ?? [])
+        vi.stubEnv(key, 'mock-api-key');
       for (const [key, value] of Object.entries(environment))
         vi.stubEnv(key, value);
       const { database, remove } = openTestDatabase(
@@ -85,11 +88,13 @@ describe.each(agentAdapters)(
     async function openSession(
       recording: string,
       vendorSessionId: string | null = null,
+      notificationsFirst = false,
     ) {
       const started = await startSession(
         recording,
         vendorSessionId,
         vendorSessionId ?? crypto.randomUUID(),
+        notificationsFirst,
       );
       await waitFor(started.session, isIdle, { timeout: 10_000 });
       return started;
@@ -102,37 +107,46 @@ describe.each(agentAdapters)(
         content: [{ type: 'text', text: 'Edit the files and run a command.' }],
       });
 
-    it('runs a Turn with a thought, edits, a command and an answer, then stops', async () => {
-      const { session, close } = await openSession(mockCli.recordings.turn);
-      const vendorSessionId = session.getSnapshot().context.vendorSessionId;
-      prompt(session);
-      await waitFor(session, isIdle, { timeout: 10_000 });
-      await waitFor(session, (snapshot) => snapshot.context.usage !== null, {
-        timeout: 10_000,
-      });
+    it.each([false, true])(
+      'runs a Turn with edits, a command and an answer, then stops (notifications first: %s)',
+      async (notificationsFirst) => {
+        const { session, close } = await openSession(
+          mockCli.recordings.turn,
+          null,
+          notificationsFirst,
+        );
+        const vendorSessionId = session.getSnapshot().context.vendorSessionId;
+        prompt(session);
+        await waitFor(session, isIdle, { timeout: 10_000 });
+        await waitFor(session, (snapshot) => snapshot.context.usage !== null, {
+          timeout: 10_000,
+        });
 
-      const { output, rows, storedSession } = await close();
-      expect(output).toEqual({ failure: null });
-      expect(storedSession?.vendorSessionId).toBe(vendorSessionId);
-      expect(
-        rows.map((row: SessionUpdate) => [
-          row.sessionUpdate,
-          row.state,
-          row.sessionUpdate === 'tool_call_update'
-            ? `${row.kind}:${row.status}`
-            : null,
-        ]),
-      ).toEqual([
-        ['user_message', 'settled', null],
-        ['agent_thought', 'settled', null],
-        ['tool_call_update', 'settled', 'edit:completed'],
-        ['tool_call_update', 'settled', 'read:completed'],
-        ['tool_call_update', 'settled', 'edit:completed'],
-        ['tool_call_update', 'settled', 'execute:completed'],
-        ['agent_message', 'settled', null],
-      ]);
-      expect(rows.every((row) => row.turnId === 'turn-1')).toBe(true);
-    });
+        const { output, rows, storedSession } = await close();
+        expect(output).toEqual({ failure: null });
+        expect(storedSession?.vendorSessionId).toBe(vendorSessionId);
+        expect(rows.every((row) => row.state === 'settled')).toBe(true);
+        expect(
+          rows.filter((row) => row.sessionUpdate === 'user_message'),
+        ).toHaveLength(1);
+        expect(rows).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              sessionUpdate: 'tool_call_update',
+              kind: 'edit',
+              status: 'completed',
+            }),
+            expect.objectContaining({
+              sessionUpdate: 'tool_call_update',
+              kind: 'execute',
+              status: 'completed',
+            }),
+          ]),
+        );
+        expect(rows.at(-1)).toMatchObject({ sessionUpdate: 'agent_message' });
+        expect(rows.every((row) => row.turnId === 'turn-1')).toBe(true);
+      },
+    );
 
     it('cancels a Turn during a command', async () => {
       const { session, findFeed, close } = await openSession(
@@ -155,14 +169,12 @@ describe.each(agentAdapters)(
       const { output, rows } = await close();
       expect(output).toEqual({ failure: null });
       expect(
-        rows.map((row) =>
-          row.sessionUpdate === 'tool_call_update'
-            ? [row.sessionUpdate, row.state, row.status]
-            : [row.sessionUpdate, row.state],
-        ),
+        rows.filter((row) => row.sessionUpdate === 'user_message'),
+      ).toHaveLength(1);
+      expect(
+        rows.filter((row) => row.sessionUpdate === 'tool_call_update'),
       ).toEqual([
-        ['user_message', 'settled'],
-        ['tool_call_update', 'settled', 'cancelled'],
+        expect.objectContaining({ state: 'settled', status: 'cancelled' }),
       ]);
     });
 
@@ -179,6 +191,24 @@ describe.each(agentAdapters)(
       await waitFor(session, isIdle, { timeout: 10_000 });
       expect((await close()).output).toEqual({ failure: null });
     });
+
+    it.each(mockCli.connectionFailures ?? [])(
+      'rejects an unsupported connection with $message',
+      async (failure) => {
+        for (const [key, value] of Object.entries(failure.environment))
+          vi.stubEnv(key, value);
+        const { session } = await startSession(
+          mockCli.recordings.turn,
+          null,
+          crypto.randomUUID(),
+        );
+        const agentActor = session.getSnapshot().children.agent;
+        if (!agentActor) throw new Error('No Agent');
+        expect(await toPromise(agentActor)).toEqual({
+          failure: expect.stringContaining(failure.message),
+        });
+      },
+    );
 
     it('fails with a clear error when the stored vendor Session has no transcript', async () => {
       const { session } = await startSession(

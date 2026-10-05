@@ -26,3 +26,7 @@ const crashing = await writeMockCodex(directory, { recording: 'file-change', exi
 | `model-list` | The `model/list` answer, read when a caller asks |
 
 These come from old Argo (codex-app-server 0.157.0). The recordings that spec 0003 lists under Testing Decisions join them.
+
+`edit-and-command.json` and `interrupt.json` were recorded from the real 0.157.0 app-server on 2026-10-05. The first changes `app.txt`, creates `notes.md`, prints the files and answers `done`. The second interrupts `sleep 30` after its command starts. The catalog default model was selected because the user's configured default was unavailable to the account. The app-server emitted no reasoning items in these captures, even with high effort and detailed summaries; the converter's thought tests use protocol-shaped examples at the same pure-function seam.
+
+The temporary Checkout path is normalized to `/repo` and the user home to `/user`; capture timestamps are retained in recordings and removed for replay. The mock holds an interrupted recording at the command start until `turn/interrupt` arrives. `write-transcript.ts` gives `thread/resume` the saved identity to check and lets the composition tests cover a missing transcript.

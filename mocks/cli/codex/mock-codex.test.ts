@@ -112,7 +112,7 @@ describe('mock Codex CLI', () => {
     expect(await codex.exited).toBe(0);
   });
 
-  it.each(['file-change', 'reply'])(
+  it.each(['file-change', 'reply', 'edit-and-command'])(
     'replays %s after turn/start',
     async (recording) => {
       const messages = wireMessages(recording);
@@ -152,7 +152,7 @@ describe('mock Codex CLI', () => {
     expect(await codex.exited).toBe(0);
   });
 
-  it.each(['file-change', 'reply'])(
+  it.each(['file-change', 'reply', 'edit-and-command'])(
     'exits right after turn/started in %s, to stand in for a crash',
     async (recording) => {
       const messages = wireMessages(recording);
@@ -168,7 +168,7 @@ describe('mock Codex CLI', () => {
     },
   );
 
-  it.each(['thread/fork', 'turn/interrupt'])(
+  it.each(['thread/fork'])(
     'rejects %s, which the recording cannot answer',
     async (method) => {
       const codex = await startAppServer();
@@ -183,4 +183,58 @@ describe('mock Codex CLI', () => {
       expect(await codex.exited).toBe(0);
     },
   );
+});
+
+it('holds the recorded interrupted Turn until the caller interrupts its command', async () => {
+  const messages = wireMessages('interrupt');
+  const codex = await startAppServer({ recording: 'interrupt' });
+  await startTurn(codex, messages[0]?.params.threadId);
+  const prefix = await codex.until(
+    (message) =>
+      message.method === 'item/started' &&
+      (message.params as { item?: { type?: string } })?.item?.type ===
+        'commandExecution',
+  );
+  expect(prefix.some((message) => message.method === 'turn/completed')).toBe(
+    false,
+  );
+  codex.send({
+    id: 4,
+    method: 'turn/interrupt',
+    params: {
+      threadId: messages[0]?.params.threadId,
+      turnId: (
+        messages.find((message) => message.method === 'turn/started')?.params
+          .turn as { id: string }
+      )?.id,
+    },
+  });
+  const output = await codex.until(
+    (message) => message.method === 'turn/completed',
+  );
+  expect(output[0]).toEqual({ id: 4, result: {} });
+  expect([...prefix.slice(1), ...output.slice(1)]).toEqual(messages);
+  codex.close();
+  expect(await codex.exited).toBe(0);
+});
+
+it('can replay turn/started before the response that supplies its vendor Turn id', async () => {
+  const codex = await startAppServer();
+  codex.send({ id: 2, method: 'thread/start', params: {} });
+  await codex.next();
+  codex.send({
+    id: 3,
+    method: 'turn/start',
+    params: { notificationsFirst: true },
+  });
+  const output = await codex.until(
+    (message) => message.method === 'turn/completed',
+  );
+  expect(output[0]).toMatchObject({ method: 'turn/started' });
+  expect(output[1]).toMatchObject({
+    id: 3,
+    result: { turn: expect.objectContaining({ id: expect.any(String) }) },
+  });
+  codex.close();
+  expect(await codex.exited).toBe(0);
 });

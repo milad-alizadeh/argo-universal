@@ -1,0 +1,397 @@
+{
+  "producer": "codex-app-server",
+  "version": "0.157.0",
+  "recordedAt": "2026-10-05T03:47:59.655Z",
+  "payload": {
+    "producer": "codex-cli 0.157.0 app-server",
+    "messages": [
+      {
+        "method": "thread/status/changed",
+        "params": {
+          "threadId": "01a10a2c-978e-7893-b73b-c3ecfa41651b",
+          "status": {
+            "type": "active",
+            "activeFlags": []
+          }
+        },
+        "emittedAtMs": 1791172074984
+      },
+      {
+        "method": "turn/started",
+        "params": {
+          "threadId": "01a10a2c-978e-7893-b73b-c3ecfa41651b",
+          "turn": {
+            "id": "01a10a2c-ddd9-76e0-a25a-6d56b5227635",
+            "items": [],
+            "itemsView": "notLoaded",
+            "status": "inProgress",
+            "error": null,
+            "startedAt": 1791172074,
+            "completedAt": null,
+            "durationMs": null
+          }
+        },
+        "emittedAtMs": 1791172074985
+      },
+      {
+        "method": "hook/started",
+        "params": {
+          "threadId": "01a10a2c-978e-7893-b73b-c3ecfa41651b",
+          "turnId": "01a10a2c-ddd9-76e0-a25a-6d56b5227635",
+          "run": {
+            "id": "user-prompt-submit:61:/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "eventName": "userPromptSubmit",
+            "handlerType": "command",
+            "executionMode": "sync",
+            "scope": "turn",
+            "sourcePath": "/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "source": "plugin",
+            "displayOrder": 61,
+            "status": "running",
+            "statusMessage": null,
+            "startedAt": 1791172075,
+            "completedAt": null,
+            "durationMs": null,
+            "entries": []
+          }
+        },
+        "emittedAtMs": 1791172075036
+      },
+      {
+        "method": "hook/completed",
+        "params": {
+          "threadId": "01a10a2c-978e-7893-b73b-c3ecfa41651b",
+          "turnId": "01a10a2c-ddd9-76e0-a25a-6d56b5227635",
+          "run": {
+            "id": "user-prompt-submit:61:/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "eventName": "userPromptSubmit",
+            "handlerType": "command",
+            "executionMode": "sync",
+            "scope": "turn",
+            "sourcePath": "/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "source": "plugin",
+            "displayOrder": 61,
+            "status": "completed",
+            "statusMessage": null,
+            "startedAt": 1791172075,
+            "completedAt": 1791172075,
+            "durationMs": 16,
+            "entries": []
+          }
+        },
+        "emittedAtMs": 1791172075061
+      },
+      {
+        "method": "item/started",
+        "params": {
+          "item": {
+            "type": "userMessage",
+            "id": "01a10a2c-de30-7850-bb99-c1a24a912cc9",
+            "clientId": null,
+            "content": [
+              {
+                "type": "text",
+                "text": "Run sleep 30 in a shell command. Do not start subagents. Reply done when it finishes.",
+                "text_elements": []
+              }
+            ]
+          },
+          "threadId": "01a10a2c-978e-7893-b73b-c3ecfa41651b",
+          "turnId": "01a10a2c-ddd9-76e0-a25a-6d56b5227635",
+          "startedAtMs": 1791172075062
+        },
+        "emittedAtMs": 1791172075063
+      },
+      {
+        "method": "item/completed",
+        "params": {
+          "item": {
+            "type": "userMessage",
+            "id": "01a10a2c-de30-7850-bb99-c1a24a912cc9",
+            "clientId": null,
+            "content": [
+              {
+                "type": "text",
+                "text": "Run sleep 30 in a shell command. Do not start subagents. Reply done when it finishes.",
+                "text_elements": []
+              }
+            ]
+          },
+          "threadId": "01a10a2c-978e-7893-b73b-c3ecfa41651b",
+          "turnId": "01a10a2c-ddd9-76e0-a25a-6d56b5227635",
+          "completedAtMs": 1791172075062
+        },
+        "emittedAtMs": 1791172075065
+      },
+      {
+        "method": "item/started",
+        "params": {
+          "item": {
+            "type": "agentMessage",
+            "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+            "text": "",
+            "phase": "commentary",
+            "memoryCitation": null,
+            "delivery": null,
+            "questions": null
+          },
+          "threadId": "01a10a2c-978e-7893-b73b-c3ecfa41651b",
+          "turnId": "01a10a2c-ddd9-76e0-a25a-6d56b5227635",
+          "startedAtMs": 1791172077021
+        },
+        "emittedAtMs": 1791172077021
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a10a2c-978e-7893-b73b-c3ecfa41651b",
+          "turnId": "01a10a2c-ddd9-76e0-a25a-6d56b5227635",
+          "itemId": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+          "delta": "I"
+        },
+        "emittedAtMs": 1791172077025
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a10a2c-978e-7893-b73b-c3ecfa41651b",
+          "turnId": "01a10a2c-ddd9-76e0-a25a-6d56b5227635",
+          "itemId": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+          "delta": "’ll"
+        },
+        "emittedAtMs": 1791172077150
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a10a2c-978e-7893-b73b-c3ecfa41651b",
+          "turnId": "01a10a2c-ddd9-76e0-a25a-6d56b5227635",
+          "itemId": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+          "delta": " run"
+        },
+        "emittedAtMs": 1791172077150
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a10a2c-978e-7893-b73b-c3ecfa41651b",
+          "turnId": "01a10a2c-ddd9-76e0-a25a-6d56b5227635",
+          "itemId": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+          "delta": " `"
+        },
+        "emittedAtMs": 1791172077150
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a10a2c-978e-7893-b73b-c3ecfa41651b",
+          "turnId": "01a10a2c-ddd9-76e0-a25a-6d56b5227635",
+          "itemId": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+          "delta": "sleep"
+        },
+        "emittedAtMs": 1791172077184
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a10a2c-978e-7893-b73b-c3ecfa41651b",
+          "turnId": "01a10a2c-ddd9-76e0-a25a-6d56b5227635",
+          "itemId": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+          "delta": " "
+        },
+        "emittedAtMs": 1791172077244
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a10a2c-978e-7893-b73b-c3ecfa41651b",
+          "turnId": "01a10a2c-ddd9-76e0-a25a-6d56b5227635",
+          "itemId": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+          "delta": "30"
+        },
+        "emittedAtMs": 1791172077248
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a10a2c-978e-7893-b73b-c3ecfa41651b",
+          "turnId": "01a10a2c-ddd9-76e0-a25a-6d56b5227635",
+          "itemId": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+          "delta": "`"
+        },
+        "emittedAtMs": 1791172077341
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a10a2c-978e-7893-b73b-c3ecfa41651b",
+          "turnId": "01a10a2c-ddd9-76e0-a25a-6d56b5227635",
+          "itemId": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+          "delta": " and"
+        },
+        "emittedAtMs": 1791172077341
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a10a2c-978e-7893-b73b-c3ecfa41651b",
+          "turnId": "01a10a2c-ddd9-76e0-a25a-6d56b5227635",
+          "itemId": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+          "delta": " wait"
+        },
+        "emittedAtMs": 1791172077381
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a10a2c-978e-7893-b73b-c3ecfa41651b",
+          "turnId": "01a10a2c-ddd9-76e0-a25a-6d56b5227635",
+          "itemId": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+          "delta": " for"
+        },
+        "emittedAtMs": 1791172077436
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a10a2c-978e-7893-b73b-c3ecfa41651b",
+          "turnId": "01a10a2c-ddd9-76e0-a25a-6d56b5227635",
+          "itemId": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+          "delta": " it"
+        },
+        "emittedAtMs": 1791172077463
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a10a2c-978e-7893-b73b-c3ecfa41651b",
+          "turnId": "01a10a2c-ddd9-76e0-a25a-6d56b5227635",
+          "itemId": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+          "delta": " to"
+        },
+        "emittedAtMs": 1791172077517
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a10a2c-978e-7893-b73b-c3ecfa41651b",
+          "turnId": "01a10a2c-ddd9-76e0-a25a-6d56b5227635",
+          "itemId": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+          "delta": " finish"
+        },
+        "emittedAtMs": 1791172077522
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a10a2c-978e-7893-b73b-c3ecfa41651b",
+          "turnId": "01a10a2c-ddd9-76e0-a25a-6d56b5227635",
+          "itemId": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+          "delta": "."
+        },
+        "emittedAtMs": 1791172077582
+      },
+      {
+        "method": "item/completed",
+        "params": {
+          "item": {
+            "type": "agentMessage",
+            "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+            "text": "I’ll run `sleep 30` and wait for it to finish.",
+            "phase": "commentary",
+            "memoryCitation": null,
+            "delivery": null,
+            "questions": null
+          },
+          "threadId": "01a10a2c-978e-7893-b73b-c3ecfa41651b",
+          "turnId": "01a10a2c-ddd9-76e0-a25a-6d56b5227635",
+          "completedAtMs": 1791172078104
+        },
+        "emittedAtMs": 1791172078107
+      },
+      {
+        "method": "item/started",
+        "params": {
+          "item": {
+            "type": "commandExecution",
+            "id": "exec-74ec3292-520b-4563-82d4-09f95eed79de",
+            "pluginId": null,
+            "scriptPath": null,
+            "command": "/bin/zsh -lc 'sleep 30'",
+            "cwd": "/repo",
+            "processId": "15805",
+            "source": "unifiedExecStartup",
+            "status": "inProgress",
+            "commandActions": [
+              {
+                "type": "unknown",
+                "command": "sleep 30"
+              }
+            ],
+            "aggregatedOutput": null,
+            "exitCode": null,
+            "durationMs": null
+          },
+          "threadId": "01a10a2c-978e-7893-b73b-c3ecfa41651b",
+          "turnId": "01a10a2c-ddd9-76e0-a25a-6d56b5227635",
+          "startedAtMs": 1791172079446
+        },
+        "emittedAtMs": 1791172079446
+      },
+      {
+        "method": "thread/tokenUsage/updated",
+        "params": {
+          "threadId": "01a10a2c-978e-7893-b73b-c3ecfa41651b",
+          "turnId": "01a10a2c-ddd9-76e0-a25a-6d56b5227635",
+          "tokenUsage": {
+            "total": {
+              "totalTokens": 87883,
+              "inputTokens": 87613,
+              "cachedInputTokens": 67072,
+              "cacheWriteInputTokens": 0,
+              "outputTokens": 270,
+              "reasoningOutputTokens": 0
+            },
+            "last": {
+              "totalTokens": 19905,
+              "inputTokens": 19848,
+              "cachedInputTokens": 16896,
+              "cacheWriteInputTokens": 0,
+              "outputTokens": 57,
+              "reasoningOutputTokens": 0
+            },
+            "modelContextWindow": 258400
+          }
+        },
+        "emittedAtMs": 1791172079449
+      },
+      {
+        "method": "thread/status/changed",
+        "params": {
+          "threadId": "01a10a2c-978e-7893-b73b-c3ecfa41651b",
+          "status": {
+            "type": "idle"
+          }
+        },
+        "emittedAtMs": 1791172079454
+      },
+      {
+        "method": "turn/completed",
+        "params": {
+          "threadId": "01a10a2c-978e-7893-b73b-c3ecfa41651b",
+          "turn": {
+            "id": "01a10a2c-ddd9-76e0-a25a-6d56b5227635",
+            "items": [],
+            "itemsView": "notLoaded",
+            "status": "interrupted",
+            "error": null,
+            "startedAt": 1791172074,
+            "completedAt": 1791172079,
+            "durationMs": 4470
+          }
+        },
+        "emittedAtMs": 1791172079454
+      }
+    ]
+  }
+}
