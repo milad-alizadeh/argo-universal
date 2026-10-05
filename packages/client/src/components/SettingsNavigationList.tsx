@@ -1,12 +1,5 @@
-import { SettingsList } from '#components/SettingsList';
 import { type NavigationDestination, useNavigate } from '../navigation/context';
-import { useWide } from '../navigation/use-wide';
-import { AccountsScreen } from './PlaceholderScreens';
-
-// The `/settings` section root: its list on a phone, and Accounts beside the sidebar list on a wide window.
-export function SettingsScreen() {
-  return useWide() ? <AccountsScreen /> : <SettingsNavigationList />;
-}
+import { SettingsList } from './SettingsList';
 
 export interface SettingsNavigationListProps {
   selectedDestination?: NavigationDestination;

@@ -16,7 +16,7 @@ import { useEffect } from 'react';
 import { AppState, Platform } from 'react-native';
 import { useUniwind } from 'uniwind';
 import { useNavigationTheme } from '@/lib/theme';
-import { pathFor } from '@/navigation/paths';
+import { hrefFor } from '@/navigation/routes';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -58,9 +58,9 @@ const inspection = createBrowserMachineInspection({
   writeLine: (line) => console.log(line.trimEnd()),
 });
 
-// Screens in @repo/client navigate through this; the paths come from the route tree.
+// Screens in @repo/client navigate through this.
 const navigate: Navigate = (destination) =>
-  router.navigate(pathFor(destination) as Href);
+  router.navigate(hrefFor(destination) as Href);
 
 export default function RootLayout() {
   const { theme } = useUniwind();

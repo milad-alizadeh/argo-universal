@@ -2,20 +2,16 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect } from 'storybook/test';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
-import { Text } from '../primitives/text';
-import { PhoneSectionsLayout } from './PhoneSectionsLayout';
+import { PhoneSectionScreen } from './PhoneSectionScreen';
 
 const recorder = createNavigationRecorder();
 const meta = {
-  title: 'Tests/PhoneSectionsLayout',
-  component: PhoneSectionsLayout,
-  args: {
-    section: 'sessions',
-    children: <Text testID="list-content">List</Text>,
-  },
+  title: 'Tests/PhoneSectionScreen',
+  component: PhoneSectionScreen,
+  args: { section: 'sessions' },
   render: (args) => (
     <View className="h-[796px] w-full">
-      <PhoneSectionsLayout {...args} />
+      <PhoneSectionScreen {...args} />
     </View>
   ),
   parameters: { navigation: recorder },
@@ -24,13 +20,15 @@ const meta = {
     const { page } = await import('vitest/browser');
     await page.viewport(390, 844);
   },
-} satisfies Meta<typeof PhoneSectionsLayout>;
+} satisfies Meta<typeof PhoneSectionScreen>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const DrawerOpensSectionLists: Story = {
   play: async ({ canvas, userEvent }) => {
-    await expect(await canvas.findByTestId('list-content')).toBeVisible();
+    await expect(
+      await canvas.findByText('Sessions list will appear here.'),
+    ).toBeVisible();
     await expect(
       canvas.getByRole('heading', { name: 'Sessions', level: 1 }),
     ).toBeVisible();
@@ -45,6 +43,18 @@ export const DrawerOpensSectionLists: Story = {
     await expect(recorder.destinations).toEqual([
       { to: 'settings' },
       { to: 'atlas' },
+    ]);
+  },
+};
+
+export const SettingsListOpensItsPages: Story = {
+  args: { section: 'settings' },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Connection' }),
+    );
+    await expect(recorder.destinations).toEqual([
+      { to: 'settings-connection' },
     ]);
   },
 };

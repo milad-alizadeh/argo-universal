@@ -42,3 +42,24 @@ test('crossing 720 px swaps the shell and keeps the URL and the open detail', as
   await expect(page).toHaveURL(/\/settings$/);
   await expect(page.getByText('Accounts will appear here.')).toBeVisible();
 });
+
+test('Back from a page opened on its own returns to its section list', async ({
+  page,
+  appTarget,
+}) => {
+  test.skip(appTarget === 'electron', 'Electron opens only the app root');
+  await page.setViewportSize(phone);
+  // `expo serve` serves the single-page export only at `/`, so the App starts from a rewritten URL instead.
+  await page.addInitScript(
+    "if (location.pathname === '/') history.replaceState(null, '', '/settings/connection')",
+  );
+  await page.reload();
+  await expect(page.getByText('Version', { exact: true })).toBeVisible();
+
+  await page.getByRole('link', { name: /back/i }).click();
+  await expect(page).toHaveURL(/\/settings$/);
+  await expect(page.getByTestId('phone-shell')).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Settings', level: 1 }),
+  ).toBeVisible();
+});

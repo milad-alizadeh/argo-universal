@@ -1,5 +1,4 @@
 import { type ReactNode, useState } from 'react';
-import { View } from 'react-native';
 import { Text } from '#primitives/text';
 import { type NavigationDestination, useNavigate } from '../navigation/context';
 import {
@@ -7,9 +6,8 @@ import {
   sectionDestination,
   sectionOf,
 } from '../navigation/sections';
-import { SessionsList } from '../screens/SessionsScreen';
-import { SettingsNavigationList } from '../screens/SettingsScreen';
 import { DesktopShell, type InspectorState } from './DesktopShell';
+import { SectionList } from './SectionList';
 import { shellSections } from './shell-sections';
 
 export interface DesktopLayoutProps {
@@ -41,17 +39,7 @@ export function DesktopLayout({ destination, children }: DesktopLayoutProps) {
           {title}
         </Text>
       }
-      list={
-        section === 'sessions' ? (
-          <SessionsList />
-        ) : section === 'settings' ? (
-          <SettingsNavigationList selectedDestination={detail} />
-        ) : (
-          <View className="p-6">
-            <Text variant="muted">{title} list will appear here.</Text>
-          </View>
-        )
-      }
+      list={<SectionList section={section} selectedDestination={detail} />}
       detailHeader={
         <Text
           role="heading"

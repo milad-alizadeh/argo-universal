@@ -31,7 +31,9 @@ type Story = StoryObj<typeof meta>;
 export const RailOpensSectionLists: Story = {
   play: async ({ canvas, userEvent }) => {
     await expect(await canvas.findByTestId('detail-content')).toBeVisible();
-    await expect(canvas.getByText('Sessions will appear here.')).toBeVisible();
+    await expect(
+      canvas.getByText('Sessions list will appear here.'),
+    ).toBeVisible();
     for (const section of ['Issues', 'Atlas', 'Settings', 'Sessions'])
       await userEvent.click(
         canvas.getByRole('button', { name: new RegExp(`^${section}$`) }),

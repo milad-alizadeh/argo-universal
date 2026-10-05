@@ -17,10 +17,6 @@ export {
   type PhoneListHeaderProps,
 } from './components/PhoneListHeader';
 export {
-  PhoneSectionsLayout,
-  type PhoneSectionsLayoutProps,
-} from './components/PhoneSectionsLayout';
-export {
   PhoneShell,
   type PhoneShellProps,
   type ShellSection,
@@ -51,7 +47,6 @@ export {
   type NavigationProviderProps,
   useNavigate,
 } from './navigation/context';
-export { sectionOf } from './navigation/sections';
 export { useWide } from './navigation/use-wide';
 export { ConnectionScreen } from './screens/ConnectionScreen';
 export {
@@ -65,11 +60,13 @@ export {
   type ProjectSettingsScreenProps,
 } from './screens/PlaceholderScreens';
 export {
+  SectionRootScreen,
+  type SectionRootScreenProps,
+} from './screens/SectionRootScreen';
+export {
   SessionScreen,
   type SessionScreenProps,
 } from './screens/SessionScreen';
-export { SessionsScreen } from './screens/SessionsScreen';
-export { SettingsScreen } from './screens/SettingsScreen';
 export { AppProviders, type AppProvidersProps } from './trpc/app-providers';
 export { TRPCProvider, useTRPC, useTRPCClient } from './trpc/context';
 export { createTRPCClient, type TRPCClient } from './trpc/create-trpc-client';

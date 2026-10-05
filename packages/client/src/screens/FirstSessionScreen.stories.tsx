@@ -4,12 +4,12 @@ import {
   sessionListMocks,
 } from '../../mocks/session-list-mock';
 import { pending } from '../../mocks/trpc-mock-link';
-import { SessionsScreen } from './SessionsScreen';
+import { FirstSessionScreen } from './FirstSessionScreen';
 
 const meta = {
-  component: SessionsScreen,
+  component: FirstSessionScreen,
   parameters: { trpc: sessionListMocks },
-} satisfies Meta<typeof SessionsScreen>;
+} satisfies Meta<typeof FirstSessionScreen>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 

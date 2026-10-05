@@ -1,31 +1,24 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { Text } from '../primitives/text';
-import { PhoneSectionsLayout } from './PhoneSectionsLayout';
+import { sessionListMocks } from '../../mocks/session-list-mock';
+import { SectionRootScreen } from './SectionRootScreen';
 
 const meta = {
-  title: 'Shell/PhoneSectionsLayout',
-  component: PhoneSectionsLayout,
+  component: SectionRootScreen,
   argTypes: {
     section: {
       control: 'select',
       options: ['sessions', 'issues', 'atlas', 'settings'],
     },
   },
-  args: {
-    section: 'sessions',
-    children: (
-      <View className="flex-1 p-6">
-        <Text variant="muted">List</Text>
-      </View>
-    ),
-  },
+  args: { section: 'sessions' },
   render: (args) => (
     <View className="h-[796px] w-full">
-      <PhoneSectionsLayout {...args} />
+      <SectionRootScreen {...args} />
     </View>
   ),
-} satisfies Meta<typeof PhoneSectionsLayout>;
+  parameters: { trpc: sessionListMocks },
+} satisfies Meta<typeof SectionRootScreen>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 

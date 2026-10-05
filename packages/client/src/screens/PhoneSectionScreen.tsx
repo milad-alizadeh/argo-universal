@@ -1,19 +1,16 @@
-import { type ReactNode, useState } from 'react';
+import { useState } from 'react';
+import { PhoneShell } from '../components/PhoneShell';
+import { SectionList } from '../components/SectionList';
+import type { ShellSection } from '../components/shell-sections';
 import { useNavigate } from '../navigation/context';
 import { sectionDestination } from '../navigation/sections';
-import { PhoneShell } from './PhoneShell';
-import type { ShellSection } from './shell-sections';
 
-export interface PhoneSectionsLayoutProps {
+export interface PhoneSectionScreenProps {
   section: ShellSection;
-  children: ReactNode;
 }
 
-// The phone's drawer of sections around the open section's list.
-export function PhoneSectionsLayout({
-  section,
-  children,
-}: PhoneSectionsLayoutProps) {
+// A phone section root: the drawer of sections around the section's list.
+export function PhoneSectionScreen({ section }: PhoneSectionScreenProps) {
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
   return (
@@ -27,7 +24,7 @@ export function PhoneSectionsLayout({
       onSearch={() => {}}
       onFilter={() => {}}
     >
-      {children}
+      <SectionList section={section} />
     </PhoneShell>
   );
 }
