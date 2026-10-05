@@ -9,6 +9,7 @@ import {
   startHttpServer,
 } from './http-server';
 import { type EngineStop, processSignals } from './process-signals';
+import { recoverAfterRestart } from './recovery';
 
 export interface EngineInput {
   home: string;
@@ -34,6 +35,9 @@ export const engineMachine = setup({
     // `openDatabase` also runs the Drizzle migrations.
     openDatabase: fromPromise<Database, { home: string }>(async ({ input }) =>
       openDatabase(join(input.home, 'argo.db')),
+    ),
+    recoverAfterRestart: fromPromise<void, { database: Database }>(
+      async ({ input }) => recoverAfterRestart(input.database),
     ),
     startHttpServer: fromPromise<HttpServer, HttpServerOptions>(({ input }) =>
       startHttpServer(input),
@@ -75,7 +79,7 @@ export const engineMachine = setup({
         src: 'openDatabase',
         input: ({ context }) => ({ home: context.home }),
         onDone: {
-          target: 'serving',
+          target: 'recovering',
           actions: assign({ database: ({ event }) => event.output }),
         },
         onError: {
@@ -96,7 +100,35 @@ export const engineMachine = setup({
         },
       },
     },
-    serving: {
+    recovering: {
+      invoke: {
+        id: 'recoverAfterRestart',
+        src: 'recoverAfterRestart',
+        input: ({ context }) => {
+          if (!context.database)
+            throw new Error('Recovery requires an open database');
+          return { database: context.database };
+        },
+        onDone: { target: 'live' },
+        onError: {
+          target: 'failed',
+          actions: assign({
+            failure: ({ event }) =>
+              `could not recover after restart: ${String(event.error)}`,
+          }),
+        },
+      },
+      on: {
+        'engine.stop': {
+          target: 'stopping',
+          actions: {
+            type: 'log',
+            params: ({ event }) => ({ line: `stopping: ${event.reason}` }),
+          },
+        },
+      },
+    },
+    live: {
       initial: 'listening',
       on: {
         'engine.stop': {
@@ -117,7 +149,7 @@ export const engineMachine = setup({
               port: context.port,
               version: context.version,
               startedAt: context.startedAt,
-              // `openingDatabase` sets it before `serving`.
+              // `openingDatabase` sets it before `recovering` and `live`.
               database: context.database as Database,
             }),
             onDone: {

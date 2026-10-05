@@ -43,6 +43,7 @@ const createPromiseMock = <TOutput, TInput>(
   );
 
 let openDatabaseCalls: PendingCall<{ home: string }, Database>[];
+let recoveryCalls: PendingCall<{ database: Database }, void>[];
 let startHttpServerCalls: PendingCall<HttpServerOptions, HttpServer>[];
 let closeHttpServerCalls: PendingCall<{ server: HttpServer | null }, void>[];
 let processSignals: { send: (event: AnyEventObject) => void; live: boolean };
@@ -65,6 +66,7 @@ const mockHttpServer: HttpServer = {
 const machine = engineMachine.provide({
   actors: {
     openDatabase: createPromiseMock(() => openDatabaseCalls),
+    recoverAfterRestart: createPromiseMock(() => recoveryCalls),
     startHttpServer: createPromiseMock(() => startHttpServerCalls),
     closeHttpServer: createPromiseMock(() => closeHttpServerCalls),
     processSignals: fromCallback(({ sendBack }) => {
@@ -92,12 +94,18 @@ const input = {
   startedAt: '2026-10-03T00:00:00.000Z',
 };
 const openError = new Error('database is locked');
+const recoveryError = new Error('repair failed');
 const listenError = Object.assign(new Error('listen EADDRINUSE'), {
   code: 'EADDRINUSE',
 });
 const closeError = new Error('close failed');
 // Done and error events of invoked actors are not in the machine's event type, but the model drives them.
 const payloads: Record<string, AnyEventObject> = {
+  'xstate.error.actor.recoverAfterRestart': {
+    type: 'xstate.error.actor.recoverAfterRestart',
+    error: recoveryError,
+    actorId: 'recoverAfterRestart',
+  },
   'xstate.done.actor.openDatabase': {
     type: 'xstate.done.actor.openDatabase',
     output: mockDatabase,
@@ -170,6 +178,10 @@ const executors: Record<string, EventExecutor<EngineSnapshot, EngineEvent>> = {
     settle(() => latest(openDatabaseCalls).resolve(mockDatabase)),
   'xstate.error.actor.openDatabase': () =>
     settle(() => latest(openDatabaseCalls).reject(openError)),
+  'xstate.done.actor.recoverAfterRestart': () =>
+    settle(() => latest(recoveryCalls).resolve()),
+  'xstate.error.actor.recoverAfterRestart': () =>
+    settle(() => latest(recoveryCalls).reject(recoveryError)),
   'xstate.done.actor.startHttpServer': () =>
     settle(() => latest(startHttpServerCalls).resolve(mockHttpServer)),
   'xstate.error.actor.startHttpServer': () =>
@@ -178,7 +190,7 @@ const executors: Record<string, EventExecutor<EngineSnapshot, EngineEvent>> = {
     settle(() => latest(closeHttpServerCalls).resolve()),
   'xstate.error.actor.closeHttpServer': () =>
     settle(() => latest(closeHttpServerCalls).reject(closeError)),
-  'xstate.after.heartbeatInterval.engine.serving.running': () => {
+  'xstate.after.heartbeatInterval.engine.live.running': () => {
     const sent = messages.length;
     vi.advanceTimersByTime(heartbeatIntervalMs - 1);
     expect(messages).toHaveLength(sent);
@@ -195,6 +207,7 @@ const expectModelState = (expected: EngineSnapshot) => {
   expect(actual.status).toBe(expected.status);
   expect(actual.context.database).toBe(expected.context.database);
   expect(actual.context.server).toBe(expected.context.server);
+  expect(actual.context.failure).toBe(expected.context.failure);
 };
 // Final states close the database they opened, stop listening for signals, and exit with a code.
 const expectExit = (snapshot: EngineSnapshot, exitCode: number) => {
@@ -213,7 +226,16 @@ const states: Record<string, (snapshot: EngineSnapshot) => void> = {
     expect(messages).toEqual([]);
     expect(processSignals.live).toBe(true);
   },
-  'serving.listening': (snapshot) => {
+  recovering: (snapshot) => {
+    expectModelState(snapshot);
+    expect(recoveryCalls).toEqual([
+      expect.objectContaining({ input: { database: mockDatabase } }),
+    ]);
+    expect(startHttpServerCalls).toEqual([]);
+    expect(messages).toEqual([]);
+    expect(databaseCloses).toBe(0);
+  },
+  'live.listening': (snapshot) => {
     expectModelState(snapshot);
     expect(startHttpServerCalls).toEqual([
       expect.objectContaining({
@@ -228,7 +250,7 @@ const states: Record<string, (snapshot: EngineSnapshot) => void> = {
     ]);
     expect(messages).toEqual([]);
   },
-  'serving.running': (snapshot) => {
+  'live.running': (snapshot) => {
     expectModelState(snapshot);
     expect(messages[0]).toEqual({ type: 'ready', port: 7337 });
     expect(messages.slice(1)).toEqual(
@@ -265,6 +287,7 @@ const title = (path: TestPath<EngineSnapshot, EngineEvent>) =>
 beforeEach(() => {
   vi.useFakeTimers();
   openDatabaseCalls = [];
+  recoveryCalls = [];
   startHttpServerCalls = [];
   closeHttpServerCalls = [];
   messages = [];
