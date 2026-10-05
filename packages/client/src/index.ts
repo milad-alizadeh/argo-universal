@@ -5,6 +5,10 @@ export {
 } from './components/DesktopShell';
 export { Icon, type IconProps } from './components/Icon';
 export {
+  IssueIndicator,
+  type IssueIndicatorProps,
+} from './components/IssueIndicator';
+export {
   PhoneListHeader,
   type PhoneListHeaderProps,
 } from './components/PhoneListHeader';
@@ -14,9 +18,18 @@ export {
   type ShellSection,
 } from './components/PhoneShell';
 export {
+  PullRequestIndicator,
+  type PullRequestIndicatorProps,
+} from './components/PullRequestIndicator';
+export { SessionRow, type SessionRowProps } from './components/SessionRow';
+export {
   SettingsList,
   type SettingsListProps,
 } from './components/SettingsList';
+export {
+  StatusIndicator,
+  type StatusIndicatorProps,
+} from './components/StatusIndicator';
 export {
   type ConnectionState,
   useConnection,
