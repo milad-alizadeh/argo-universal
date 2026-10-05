@@ -21,14 +21,3 @@
     font-family: var(--font-sans);
   }
 }
-
-@utility projects-scroll-fade {
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0,
-    black 20px,
-    black calc(100% - 28px),
-    transparent 100%
-  );
-  mask-repeat: no-repeat;
-}

@@ -8,9 +8,8 @@ Updated as new requests arrive. Completed entries describe implemented changes; 
 - [x] Vertically center skeleton circles with their first lines.
 - [x] Add top and bottom scroll fades to the LegendList.
 - [x] Keep both shared scroll fades fixed in every story; add 20 px top padding and 28 px bottom padding so boundary rows can scroll fully beyond the gradients (replaces fade visibility toggling).
-- [x] Fade content completely at the exact top and bottom edges: gradients use the exact list background color on web and native, with the browser mask preserving a seamless outer edge.
+- [x] Keep the list surface opaque: fade only scrolling content into the exact list background color; remove the alpha mask that exposed the white page. Light/dark regression tests confirm the surface has no mask.
 - [x] Shorten both fades to 20 px top / 28 px bottom, with matching padding and list surface colors.
-- [x] Apply the browser fade to the entire list surface, including its solid background, so no hard top or bottom rectangle edge remains while the fade is active.
 - [x] Make On New Session interactive: clicking the Project + inserts a new Session directly; use the existing Project control instead of a separate story button.
 - [x] Animate existing list rows shifting when Sessions are inserted or reordered.
 - [x] Fix the large row gaps caused by estimated animation offsets; animate the measured list positions instead.
@@ -31,11 +30,19 @@ Updated as new requests arrive. Completed entries describe implemented changes; 
 - [x] Apply Screen to the Sessions screen.
 - [x] Keep web Storybook and iOS Storybook open while working.
 - [x] Refresh the web preview with the latest changes.
+- [x] Have a sub-agent match SettingsList to the linked Paper design (node 1GEA-0); ten targeted browser tests pass across phone/wide and light/dark.
+- [x] Keep one interactive SettingsList showcase story and remove redundant Projects, Agents, and Selected Destination stories.
+- [x] Have another sub-agent add a smooth morph animation when the search icon expands into the search field and collapses back. Preserve focus, filtering, clear, Escape, and reduced motion; two focused browser tests pass across phone/wide and light/dark.
+- [x] Add one dedicated interactive Search showcase for opening, typing, and collapsing the morphing search control, outside test stories.
 - [ ] User acceptance of the current changes.
-- [ ] At the end, update AGENTS.md Storybook rules: distinct valid visual states, no repeated default states or child-component coverage, callback checks without visual effects in test stories, and interactive pagination with enough rows, temporary loading, and appended results.
+- [x] Update AGENTS.md Storybook rules: distinct valid visual states, no repeated default states or child-component coverage, callback checks without visual effects in test stories, and interactive pagination with enough rows, temporary loading, and appended results. Align the Paper guidance with these rules.
 - [ ] Final review when preparing the PR.
 
 ## Where to see changes
+
+- [Search: dedicated interactive morph showcase](http://localhost:6007/?path=/story/sessions-listsearch--search)
+
+- [SettingsList: single interactive Settings story](http://localhost:6007/?path=/story/settings-settingslist--settings)
 
 - [Projects list: design, hover controls, text selection, scroll fades](http://localhost:6007/?path=/story/sessions-projectslist--projects)
 - [Query: no matching Sessions](http://localhost:6007/?path=/story/sessions-projectslist--query)

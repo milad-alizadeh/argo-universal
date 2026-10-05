@@ -30,7 +30,10 @@ One `GLOSSARY.md` and one `docs/adr/` folder at the repo root ("single-context")
 - End-to-end tests mock only the Agent CLI, with mocks in `mocks/cli/<agent>/`.
 - Test assets live outside `src/`: `e2e/<flow>/`, `mocks/`, `tools/`. Call them mocks.
 - Test components with Storybook play functions in `*.test.stories.tsx`, which run in the browser. Plain Vitest tests non-UI code only.
-- Showcase components in Storybook with one story per prop, named for that prop, displaying its variations together through the shared `Variation` and `Variations` helpers.
+- Showcase each distinct visual state once in `*.stories.tsx`, using shared `Variation` and `Variations` helpers when comparing states. Omit repeated default states and states already covered by child component stories.
+- Put props and callbacks without a distinct visual effect only in `*.test.stories.tsx`. An interactive showcase must change the rendered UI, such as adding a Session or changing the selected row.
+- Use valid product states and enough content to exercise scrolling. Pagination showcases start with scrollable rows, show a temporary spinner, and append rows when loading finishes.
+- SettingsList has one interactive `Settings` showcase; demonstrate selection by clicking its rows.
 - Every XState machine has model-based tests from `xstate/graph` that walk all of its transitions.
 - Screens get tRPC from `useTRPC()` only.
 - Use full words in names, except domain acronyms and platform-fixed names.

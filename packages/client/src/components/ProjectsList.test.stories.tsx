@@ -127,6 +127,10 @@ export const ScrollFadePadding: Story = {
     const bottomFade = canvas.getByTestId('scroll-fade-bottom');
     const surface = topFade.parentElement;
     if (!surface) throw new Error('Missing list surface');
+    expect(
+      getComputedStyle(surface).maskImage,
+      'The list surface must stay opaque instead of revealing the page behind it',
+    ).toBe('none');
     const surfaceColor = getComputedStyle(surface).backgroundColor;
     const colorCanvas = document.createElement('canvas');
     colorCanvas.width = colorCanvas.height = 1;
