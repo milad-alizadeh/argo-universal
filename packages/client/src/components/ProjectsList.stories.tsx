@@ -4,10 +4,10 @@ import { View } from 'react-native';
 import { action } from 'storybook/actions';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
 import {
-  firstPageSessions,
   multipleProjects,
   projectsListProps,
 } from '../../mocks/projects-list-mock';
+import { ProjectsPaginationPreview } from '../../mocks/projects-pagination-preview';
 import { ProjectsList, type ProjectsListProps } from './ProjectsList';
 
 const meta = {
@@ -55,12 +55,9 @@ export const Archived: Story = variations([
   },
   { label: 'No archived Sessions', props: { archived: true, sessions: [] } },
 ]);
-export const OnEndReached: Story = variations([
-  {
-    label: 'Loading more Sessions',
-    props: { sessions: firstPageSessions, isFetchingNextPage: true },
-  },
-]);
+export const OnEndReached: Story = {
+  render: (args) => <ProjectsPaginationPreview {...args} />,
+};
 
 export const OnNewSession: Story = variations([
   { label: 'New Session in Project', props: {} },
