@@ -64,7 +64,6 @@ export function createSessionService({
       type: 'sessions.open',
       sessionId,
       agent: row.agent,
-      parentSessionId: row.parentSessionId,
     });
     return ready(sessionId);
   };

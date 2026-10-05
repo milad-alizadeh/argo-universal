@@ -1,7 +1,7 @@
 import { appendFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { type Database, openDatabase } from '@repo/db';
-import { type ActorRefFrom, assign, fromPromise, setup, waitFor } from 'xstate';
+import { assign, fromPromise, sendTo, setup } from 'xstate';
 import { writerMachine } from '../services/feed/writer-machine';
 import {
   type RegistryActorRef,
@@ -37,11 +37,21 @@ interface EngineContext extends EngineInput {
   failure: string | null;
 }
 
+type EngineEvent =
+  | EngineStop
+  | {
+      type: 'xstate.done.actor.sessions' | 'xstate.done.actor.databaseWriter';
+    }
+  | {
+      type: 'xstate.error.actor.sessions' | 'xstate.error.actor.databaseWriter';
+      error: unknown;
+    };
+
 export const engineMachine = setup({
   types: {
     input: {} as EngineInput,
     context: {} as EngineContext,
-    events: {} as EngineStop,
+    events: {} as EngineEvent,
     output: {} as { exitCode: number },
   },
   actors: {
@@ -61,32 +71,14 @@ export const engineMachine = setup({
         return server;
       },
     ),
-    stopSessions: fromPromise<void, { sessions: RegistryActorRef }>(
-      async ({ input, signal }) => {
-        input.sessions.send({ type: 'sessions.stopAll' });
-        await waitFor(
-          input.sessions,
-          (snapshot) => snapshot.status === 'done',
-          { timeout: Infinity, signal },
-        );
-      },
-    ),
-    drainWriter: fromPromise<
-      void,
-      { writer: ActorRefFrom<typeof writerMachine> }
-    >(async ({ input, signal }) => {
-      input.writer.send({ type: 'writer.drain' });
-      await waitFor(input.writer, (snapshot) => snapshot.status === 'done', {
-        timeout: Infinity,
-        signal,
-      });
-    }),
     closeHttpServer: fromPromise<void, { server: HttpServer | null }>(
       async ({ input }) => input.server?.close(),
     ),
     processSignals,
   },
   actions: {
+    stopSessions: sendTo('sessions', { type: 'sessions.stopAll' }),
+    drainWriter: sendTo('databaseWriter', { type: 'writer.drain' }),
     sendToSupervisor: (_, message: EngineMessage) => {
       process.send?.(message);
     },
@@ -288,14 +280,10 @@ export const engineMachine = setup({
               },
             },
             stoppingSessions: {
-              invoke: {
-                id: 'stopSessions',
-                src: 'stopSessions',
-                input: ({ self }) => ({
-                  sessions: self.system.get('sessions') as RegistryActorRef,
-                }),
-                onDone: { target: 'drainingWriter' },
-                onError: {
+              entry: 'stopSessions',
+              on: {
+                'xstate.done.actor.sessions': { target: 'drainingWriter' },
+                'xstate.error.actor.sessions': {
                   target: 'drainingWriter',
                   actions: {
                     type: 'log',
@@ -318,16 +306,12 @@ export const engineMachine = setup({
               },
             },
             drainingWriter: {
-              invoke: {
-                id: 'drainWriter',
-                src: 'drainWriter',
-                input: ({ self }) => ({
-                  writer: self.system.get('databaseWriter') as ActorRefFrom<
-                    typeof writerMachine
-                  >,
-                }),
-                onDone: { target: '#engine.finishing' },
-                onError: {
+              entry: 'drainWriter',
+              on: {
+                'xstate.done.actor.databaseWriter': {
+                  target: '#engine.finishing',
+                },
+                'xstate.error.actor.databaseWriter': {
                   target: '#engine.finishing',
                   actions: {
                     type: 'log',

@@ -32,7 +32,6 @@ export type RegistryCommand =
       type: 'sessions.open';
       sessionId: string;
       agent: string;
-      parentSessionId?: string | null;
     }
   | { type: 'sessions.stopAll' };
 
@@ -117,7 +116,6 @@ export const registryMachine = setup({
   guards: {
     registeredAgent: ({ context, event }) =>
       (event.type === 'sessions.create' || event.type === 'sessions.open') &&
-      (event.type !== 'sessions.open' || !event.parentSessionId) &&
       context.adapters.some((adapter) => adapter.agent === event.agent),
     noSessions: ({ context }) => Object.keys(context.sessions).length === 0,
   },
