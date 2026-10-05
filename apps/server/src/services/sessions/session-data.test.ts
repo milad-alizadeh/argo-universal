@@ -9,6 +9,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { createActor, fromPromise } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
 import { storedMessage } from '#mocks/feed';
+import { initTestRepository } from '#mocks/git';
 import { toFeedRowWrite } from '../feed/feed-row';
 import { writeJobs } from '../feed/writer-job';
 import { writerMachine } from '../feed/writer-machine';
@@ -45,28 +46,7 @@ it.each([
       mkdtempSync(join(tmpdir(), 'session-checkout-\n')),
     );
     cleanups.push(() => rmSync(directory, { recursive: true, force: true }));
-    const git = (...arguments_: string[]) =>
-      execFileSync('git', arguments_, {
-        cwd: directory,
-        encoding: 'utf8',
-      }).trim();
-    const commit = (message: string) =>
-      git(
-        '-c',
-        'user.name=Test',
-        '-c',
-        'user.email=test@example.com',
-        'commit',
-        '--allow-empty',
-        '-m',
-        message,
-      );
-    git('init', '--initial-branch=main');
-    commit('Initial');
-    git('branch', 'feature');
-    git('switch', '-q', 'feature');
-    commit('Feature');
-    git('switch', '-q', 'main');
+    const git = initTestRepository(directory);
     const { database, remove } = openTestDatabase({}, directory);
     cleanups.push(remove);
     const input = {
@@ -75,14 +55,14 @@ it.each([
       runtimeDirectory: join(directory, '.argo'),
       checkout,
     };
-    const created = await createSessionCheckout(input);
-    expect(
+    const readStoredSession = () =>
       database
         .select()
         .from(session)
         .where(eq(session.id, 'new-session'))
-        .get(),
-    ).toBeUndefined();
+        .get();
+    const created = await createSessionCheckout(input);
+    expect(readStoredSession()).toBeUndefined();
     writeJobs(database, [
       toSessionInsert(input, { ...created, vendorSessionId: 'vendor-1' }),
     ]);
@@ -103,21 +83,15 @@ it.each([
         branch: checkout.type === 'main' ? 'main' : 'argo/new-session',
       },
     });
-    expect(
-      database
-        .select()
-        .from(session)
-        .where(eq(session.id, 'new-session'))
-        .get(),
-    ).toMatchObject({ title: 'Build it', titleSource: 'prompt' });
+    expect(readStoredSession()).toMatchObject({
+      title: 'Build it',
+      titleSource: 'prompt',
+    });
     expect(
       database.select().from(project).where(eq(project.id, 'project-1')).get(),
     ).toMatchObject({ checkoutChoice: checkout });
     const checkoutGit = (...arguments_: string[]) =>
-      execFileSync('git', arguments_, {
-        cwd: created.checkout.path,
-        encoding: 'utf8',
-      }).trim();
+      git('-C', created.checkout.path, ...arguments_);
     expect(checkoutGit('branch', '--show-current')).toBe(
       created.checkout.branch,
     );

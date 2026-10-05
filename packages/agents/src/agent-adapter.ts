@@ -48,7 +48,7 @@ export interface AgentAdapter<Message = unknown, MappingState = unknown> {
   label: AgentInfo['label'];
   // SVG text, so no screen names a vendor.
   logo: AgentInfo['logo'];
-  // Starts the Agent briefly to learn whether it can run a Session, and the options a New Session offers.
+  // Starts the Agent briefly to learn whether it can run a Session, and the options a New Session offers; rejects when it does not start.
   probe(signal: AbortSignal): Promise<AgentProbe>;
   // Starts or resumes the vendor session, and resolves when it is ready for a prompt.
   connect(

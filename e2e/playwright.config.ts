@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
 import type { AppOptions } from './fixtures';
+import { mockAgentPath } from './mock-agents';
 
 const repositoryRoot = path.resolve(import.meta.dirname, '..');
 // Beside the Server's home, so each run writes fresh mock Agent CLIs.
@@ -55,7 +56,7 @@ export default defineConfig<AppOptions>({
           'test-results',
           'server-home',
         ),
-        PATH: [mockAgentDirectory, process.env.PATH ?? ''].join(path.delimiter),
+        PATH: mockAgentPath(mockAgentDirectory),
       },
       // Never reuse a dev Server, which runs on the owner's ~/.argo.
       reuseExistingServer: false,

@@ -1,10 +1,9 @@
 import { homedir } from 'node:os';
 import type { AgentProbe } from '../src/agent-adapter';
-import { describeError } from '../src/describe-error';
 import { findExecutable } from '../src/find-executable';
 import { startingValues, toConfigOptions } from './config-options';
-import { EXECUTABLE, initialize, readModels } from './handshake';
-import { openAppServer } from './open-app-server';
+import { initialize, readModels, usesChatGpt } from './handshake';
+import { EXECUTABLE, openAppServer } from './open-app-server';
 
 export async function probe(signal: AbortSignal): Promise<AgentProbe> {
   if (!findExecutable(EXECUTABLE, process.env))
@@ -20,7 +19,7 @@ export async function probe(signal: AbortSignal): Promise<AgentProbe> {
     signal,
   );
   try {
-    if (!(await initialize(server)).signedIn)
+    if (!usesChatGpt(await initialize(server)))
       return {
         availability: 'not_signed_in',
         installStep: 'Run codex login and sign in with ChatGPT',
@@ -30,12 +29,6 @@ export async function probe(signal: AbortSignal): Promise<AgentProbe> {
     return {
       availability: 'available',
       configOptions: toConfigOptions(models, startingValues(models, [])),
-    };
-  } catch (error) {
-    return {
-      availability: 'unavailable',
-      installStep: `Codex did not start: ${describeError(error)}`,
-      configOptions: [],
     };
   } finally {
     await server.close();

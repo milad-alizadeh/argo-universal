@@ -1,7 +1,6 @@
 import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
 import { describeError } from '../src/describe-error';
-import { EXECUTABLE } from './handshake';
 import type {
   GetAccountParams,
   GetAccountResponse,
@@ -16,6 +15,8 @@ import type {
   TurnStartParams,
   TurnStartResponse,
 } from './protocol.gen';
+
+export const EXECUTABLE = 'codex';
 
 interface Requests {
   initialize: [InitializeParams, InitializeResponse];

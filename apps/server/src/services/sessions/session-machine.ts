@@ -26,6 +26,7 @@ import {
   sendTo,
   setup,
 } from 'xstate';
+import { agentProbeId } from '../agents/agent-probe-machine';
 import { feedMachine } from '../feed/feed-machine';
 import { readWrittenRow } from '../feed/feed-row';
 import type { writerMachine } from '../feed/writer-machine';
@@ -132,7 +133,7 @@ const sessionSetup = setup({
     })),
     // An Agent that could not start may have been signed out or removed since its last probe.
     refreshAgentProbe: enqueueActions(({ context, system, enqueue }) => {
-      const probe = system.get(`agentProbe:${context.input.adapter.agent}`);
+      const probe = system.get(agentProbeId(context.input.adapter.agent));
       if (probe) enqueue.sendTo(probe, { type: 'agentProbe.refresh' });
     }),
     rememberReady: enqueueActions(({ context, event, enqueue }) => {

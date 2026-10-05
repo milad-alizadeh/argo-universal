@@ -63,21 +63,25 @@ const defaultCheckoutChoice = async (path: string) => {
     : { type: 'worktree' as const, baseBranch: currentBranch };
 };
 
+// The Project's path, or NOT_FOUND for an unknown Project.
+export function readProjectPath(database: Database, projectId: string) {
+  const stored = database
+    .select({ path: project.path })
+    .from(project)
+    .where(eq(project.id, projectId))
+    .get();
+  if (!stored)
+    throw new TRPCError({
+      code: 'NOT_FOUND',
+      message: `No Project ${projectId}`,
+    });
+  return stored.path;
+}
+
 export function createProjectService(database: Database): ProjectsService {
   return {
-    branches: async ({ projectId }) => {
-      const stored = database
-        .select({ path: project.path })
-        .from(project)
-        .where(eq(project.id, projectId))
-        .get();
-      if (!stored)
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: `No Project ${projectId}`,
-        });
-      return listBranches(stored.path);
-    },
+    branches: async ({ projectId }) =>
+      listBranches(readProjectPath(database, projectId)),
     list: async () =>
       Promise.all(
         database

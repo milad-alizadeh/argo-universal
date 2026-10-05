@@ -1,7 +1,7 @@
 import type { AgentsService } from '@repo/api';
 import { waitFor } from 'xstate';
 import type { RegistryActorRef } from '../sessions/registry-machine';
-import type { AgentProbeActorRef } from './agent-probe-machine';
+import { type AgentProbeActorRef, agentProbeId } from './agent-probe-machine';
 
 // Answers from each Agent's last probe; `refresh` probes them all again first.
 export function createAgentService(sessions: RegistryActorRef): AgentsService {
@@ -9,7 +9,7 @@ export function createAgentService(sessions: RegistryActorRef): AgentsService {
     list: async (input) =>
       Promise.all(
         sessions.getSnapshot().context.adapters.map(async (adapter) => {
-          const probe = sessions.system.get(`agentProbe:${adapter.agent}`) as
+          const probe = sessions.system.get(agentProbeId(adapter.agent)) as
             | AgentProbeActorRef
             | undefined;
           if (!probe) throw new Error(`No probe for ${adapter.label}`);

@@ -12,7 +12,7 @@ import {
   type OutputFrom,
   setup,
 } from 'xstate';
-import { agentProbeMachine } from '../agents/agent-probe-machine';
+import { agentProbeId, agentProbeMachine } from '../agents/agent-probe-machine';
 import type { SessionCreationInput } from './session-data';
 import { type SessionActorRef, sessionMachine } from './session-machine';
 
@@ -60,8 +60,8 @@ export const registryMachine = setup({
     spawnAgentProbes: enqueueActions(({ context, enqueue }) => {
       for (const adapter of context.adapters)
         enqueue.spawnChild('agentProbe', {
-          id: `agentProbe:${adapter.agent}`,
-          systemId: `agentProbe:${adapter.agent}`,
+          id: agentProbeId(adapter.agent),
+          systemId: agentProbeId(adapter.agent),
           input: { adapter },
         });
     }),

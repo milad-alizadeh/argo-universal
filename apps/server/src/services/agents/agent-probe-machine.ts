@@ -12,11 +12,10 @@ interface AgentProbeContext extends AgentProbeInput {
 
 export type AgentProbeEvent = { type: 'agentProbe.refresh' };
 
-const unavailable = (adapter: AgentAdapter, reason: string): AgentProbe => ({
-  availability: 'unavailable',
-  installStep: `${adapter.label} did not start: ${reason}`,
-  configOptions: [],
-});
+// The system id under which each Agent's probe runs.
+export const agentProbeId = (agent: string) => `agentProbe:${agent}`;
+
+const probeTimeout = 20_000;
 
 // Holds one Agent's last probe, so `agents.list` answers without starting its CLI.
 export const agentProbeMachine = setup({
@@ -34,8 +33,15 @@ export const agentProbeMachine = setup({
     rememberProbe: assign({
       probe: (_, params: { probe: AgentProbe }) => params.probe,
     }),
+    rememberUnavailable: assign({
+      probe: ({ context }, params: { reason: string }) => ({
+        availability: 'unavailable' as const,
+        installStep: `${context.adapter.label} did not start: ${params.reason}`,
+        configOptions: [],
+      }),
+    }),
   },
-  delays: { probeTimeout: 20_000 },
+  delays: { probeTimeout },
 }).createMachine({
   id: 'agentProbe',
   context: ({ input }) => ({ ...input, probe: null }),
@@ -57,14 +63,12 @@ export const agentProbeMachine = setup({
         onError: {
           target: 'probed',
           actions: {
-            type: 'rememberProbe',
-            params: ({ context, event }) => ({
-              probe: unavailable(
-                context.adapter,
+            type: 'rememberUnavailable',
+            params: ({ event }) => ({
+              reason:
                 event.error instanceof Error
                   ? event.error.message
                   : String(event.error),
-              ),
             }),
           },
         },
@@ -73,13 +77,10 @@ export const agentProbeMachine = setup({
         probeTimeout: {
           target: 'probed',
           actions: {
-            type: 'rememberProbe',
-            params: ({ context }) => ({
-              probe: unavailable(
-                context.adapter,
-                'no answer within 20 seconds',
-              ),
-            }),
+            type: 'rememberUnavailable',
+            params: {
+              reason: `no answer within ${probeTimeout / 1000} seconds`,
+            },
           },
         },
       },

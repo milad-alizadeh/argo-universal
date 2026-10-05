@@ -1,8 +1,7 @@
-import { execFileSync } from 'node:child_process';
 import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { VendorCommand } from '@repo/agents';
+import type { AgentProbe, VendorCommand } from '@repo/agents';
 import { appRouter } from '@repo/api';
 import type { SessionNewInput } from '@repo/contracts';
 import { turn } from '@repo/db/schema';
@@ -16,6 +15,7 @@ import { eq } from 'drizzle-orm';
 import { afterEach, expect, it, vi } from 'vitest';
 import { createActor, setup, waitFor } from 'xstate';
 import { insertSession, openTestDatabase } from '#mocks/database';
+import { initTestRepository } from '#mocks/git';
 import { writerMachine } from '../feed/writer-machine';
 import { createServerServices } from '../server-services';
 import { registryMachine } from './registry-machine';
@@ -30,21 +30,7 @@ function openServer({ applyConfigOptions = true } = {}) {
     mkdtempSync(join(tmpdir(), 'session-service-')),
   );
   cleanups.push(() => rmSync(directory, { recursive: true, force: true }));
-  const git = (...arguments_: string[]) =>
-    execFileSync('git', arguments_, { cwd: directory });
-  git('init', '-q', '--initial-branch=main');
-  git(
-    '-c',
-    'user.name=Test',
-    '-c',
-    'user.email=test@example.com',
-    'commit',
-    '-q',
-    '--allow-empty',
-    '-m',
-    'Initial',
-  );
-  git('branch', 'feature');
+  const git = initTestRepository(directory);
   const { database, remove } = openTestDatabase({}, directory);
   cleanups.push(remove);
   const configOptions = [
@@ -96,7 +82,6 @@ function openServer({ applyConfigOptions = true } = {}) {
       });
     },
   };
-  let unavailableProbes = 0;
   const root = createActor(
     setup({
       actors: { sessions: registryMachine, writer: writerMachine },
@@ -132,14 +117,17 @@ function openServer({ applyConfigOptions = true } = {}) {
                 {
                   connect: () => Promise.reject(new Error('Sign in first')),
                   // Signed in when the Server starts, signed out by the first Session.
-                  probe: async () =>
-                    unavailableProbes++ === 0
-                      ? { availability: 'available', configOptions: [] }
-                      : {
-                          availability: 'not_signed_in',
-                          installStep: 'Sign in first',
-                          configOptions: [],
-                        },
+                  probe: vi
+                    .fn<() => Promise<AgentProbe>>()
+                    .mockResolvedValueOnce({
+                      availability: 'available',
+                      configOptions: [],
+                    })
+                    .mockResolvedValue({
+                      availability: 'not_signed_in',
+                      installStep: 'Sign in first',
+                      configOptions: [],
+                    }),
                 },
                 'unavailable',
               ),
@@ -166,7 +154,7 @@ function openServer({ applyConfigOptions = true } = {}) {
     configOptions,
     services,
     database,
-    directory,
+    git,
   };
 }
 
@@ -235,7 +223,7 @@ it('creates the Checkout, starts the Agent with the chosen options and runs the 
 it.each([{ type: 'main' }, { type: 'worktree', baseBranch: 'main' }] as const)(
   'leaves no Session and no worktree when the Agent cannot start in the $type checkout',
   async (checkout) => {
-    const { caller, directory } = openServer();
+    const { caller, git } = openServer();
     const availability = async () =>
       (await caller.agents.list()).find(({ agent }) => agent === 'unavailable')
         ?.availability;
@@ -254,17 +242,9 @@ it.each([{ type: 'main' }, { type: 'worktree', baseBranch: 'main' }] as const)(
       ),
     ).toEqual(['session-1']);
     expect(
-      execFileSync('git', ['worktree', 'list', '--porcelain'], {
-        cwd: directory,
-        encoding: 'utf8',
-      }).match(/^worktree /gm),
+      git('worktree', 'list', '--porcelain').match(/^worktree /gm),
     ).toHaveLength(1);
-    expect(
-      execFileSync('git', ['branch', '--list', 'argo/*'], {
-        cwd: directory,
-        encoding: 'utf8',
-      }),
-    ).toBe('');
+    expect(git('branch', '--list', 'argo/*')).toBe('');
     expect(await caller.projects.list()).toEqual([
       expect.objectContaining({
         checkoutChoice: { type: 'worktree', baseBranch: 'main' },
@@ -290,14 +270,12 @@ it('refuses a New Session for an unknown Project, base branch or Agent', async (
 });
 
 it('lists local branches with the current one, and null when HEAD is detached', async () => {
-  const { caller, directory } = openServer();
+  const { caller, git } = openServer();
   expect(await caller.projects.branches({ projectId: 'project-1' })).toEqual({
     branches: ['feature', 'main'],
     currentBranch: 'main',
   });
-  execFileSync('git', ['switch', '-q', '--detach', 'feature'], {
-    cwd: directory,
-  });
+  git('switch', '-q', '--detach', 'feature');
   expect(await caller.projects.branches({ projectId: 'project-1' })).toEqual({
     branches: ['feature', 'main'],
     currentBranch: null,
@@ -308,16 +286,14 @@ it('lists local branches with the current one, and null when HEAD is detached', 
 });
 
 it('defaults the checkout choice to a worktree from the current branch, and the main checkout when HEAD is detached', async () => {
-  const { caller, directory } = openServer();
+  const { caller, git } = openServer();
   const checkoutChoice = async () =>
     (await caller.projects.list())[0]?.checkoutChoice;
   expect(await checkoutChoice()).toEqual({
     type: 'worktree',
     baseBranch: 'main',
   });
-  execFileSync('git', ['switch', '-q', '--detach', 'feature'], {
-    cwd: directory,
-  });
+  git('switch', '-q', '--detach', 'feature');
   expect(await checkoutChoice()).toEqual({ type: 'main' });
 });
 

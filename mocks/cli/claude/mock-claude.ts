@@ -207,22 +207,14 @@ function playTurn() {
   replay(turn);
 }
 
-const answer = (subtype: string | undefined) =>
-  subtype === undefined
-    ? undefined
-    : recordedAnswers.has(subtype)
-      ? recordedAnswers.get(subtype)
-      : subtype === 'initialize'
-        ? initializeResponse
-        : undefined;
-
-// A CLI nobody signed in to still starts, with an account that has no subscription.
-const signedOut = (subtype: string | undefined, response: unknown) =>
-  subtype === 'initialize' &&
-  environment.availability === 'not_signed_in' &&
-  typeof response === 'object'
-    ? { ...response, account: {} }
-    : response;
+function answer(subtype: string | undefined) {
+  if (subtype === undefined) return undefined;
+  if (subtype !== 'initialize') return recordedAnswers.get(subtype);
+  const response = recordedAnswers.get(subtype) ?? initializeResponse;
+  // A CLI nobody signed in to still starts, with an account that has no subscription.
+  if (environment.availability !== 'not_signed_in') return response;
+  return { ...(response as Record<string, unknown>), account: {} };
+}
 
 serveJsonLines((line) => {
   const input = Input.parse(line);
@@ -231,7 +223,7 @@ serveJsonLines((line) => {
   const subtype = input.request?.subtype;
   if (subtype === 'initialize' && process.env.MOCK_CLI_BLOCK_INITIALIZE === '1')
     return;
-  const response = signedOut(subtype, answer(subtype));
+  const response = answer(subtype);
   send({
     type: 'control_response',
     response:

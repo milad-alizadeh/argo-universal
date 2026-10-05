@@ -1,11 +1,10 @@
 import { homedir } from 'node:os';
-import { query, type SDKUserMessage } from '@anthropic-ai/claude-agent-sdk';
+import { query } from '@anthropic-ai/claude-agent-sdk';
 import type { AgentProbe } from '../src/agent-adapter';
-import { describeError } from '../src/describe-error';
 import { findExecutable } from '../src/find-executable';
 import { usesSubscription } from './account';
 import { startingValues, toConfigOptions } from './config-options';
-import { cliEnvironment, EXECUTABLE } from './connect';
+import { cliEnvironment, createPromptQueue, EXECUTABLE } from './connect';
 
 export async function probe(signal: AbortSignal): Promise<AgentProbe> {
   const environment = cliEnvironment();
@@ -21,17 +20,9 @@ export async function probe(signal: AbortSignal): Promise<AgentProbe> {
   const abort = () => controller.abort();
   signal.addEventListener('abort', abort, { once: true });
   // The CLI starts on a prompt stream that sends nothing and ends with the probe.
-  const finished = Promise.withResolvers<void>();
-  const prompts: AsyncIterable<SDKUserMessage> = {
-    [Symbol.asyncIterator]: () => ({
-      next: async () => {
-        await finished.promise;
-        return { done: true, value: undefined };
-      },
-    }),
-  };
+  const queue = createPromptQueue();
   const vendor = query({
-    prompt: prompts,
+    prompt: queue.prompts,
     options: {
       abortController: controller,
       cwd: homedir(),
@@ -52,15 +43,9 @@ export async function probe(signal: AbortSignal): Promise<AgentProbe> {
       availability: 'available',
       configOptions: toConfigOptions(models, startingValues(models, [])),
     };
-  } catch (error) {
-    return {
-      availability: 'unavailable',
-      installStep: `Claude did not start: ${describeError(error)}`,
-      configOptions: [],
-    };
   } finally {
     signal.removeEventListener('abort', abort);
-    finished.resolve();
+    queue.end();
     vendor.close();
   }
 }

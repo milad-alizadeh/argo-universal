@@ -11,7 +11,7 @@ An adapter is an `AgentAdapter` in the registry, `agentAdapters`. The registry f
 It also describes its Agent before any Session starts, for `agents.list` and the New Session composer (spec 0003; owner, 2026-10-05):
 
 - `label` names the Agent in the UI, and `logo` is its SVG text, so no screen names a vendor.
-- `probe(signal)` starts the vendor CLI briefly and resolves to the Agent's `availability`, its `installStep`, and the `configOptions` a New Session offers. The Server aborts the signal after a timeout. A probe applies the same sign-in rule as `connect`, so an Agent that `agents.list` shows as available can start a Session.
+- `probe(signal)` starts the vendor CLI briefly and resolves to the Agent's `availability`, its `installStep`, and the `configOptions` a New Session offers. It rejects when the CLI does not start, and the Server reports that as `unavailable`. The Server aborts the signal after a timeout. A probe applies the same sign-in rule as `connect`, so an Agent that `agents.list` shows as available can start a Session.
 
 The Agent machine runs ordinary commands one at a time and in order, so a config change lands before the prompt that follows it. Cancel and stop interrupt pending commands. It finds the start and end of a Turn in the Agent events, so no adapter decides a lifecycle transition. A vendor session reports `capabilities` with its ready data, because what a Session can do depends on that session, not only on the vendor. Biome stops an adapter from importing `xstate`.
 

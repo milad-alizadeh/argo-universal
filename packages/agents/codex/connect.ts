@@ -4,7 +4,7 @@ import type {
   VendorSessionListener,
 } from '../src/agent-adapter';
 import { changeValue, startingValues, toConfigOptions } from './config-options';
-import { initialize, readModels } from './handshake';
+import { initialize, readModels, usesChatGpt } from './handshake';
 import type { VendorMessage } from './messages';
 import { openAppServer } from './open-app-server';
 import type { TurnStartParams } from './protocol.gen';
@@ -52,7 +52,7 @@ export async function connect(
     signal,
   );
   try {
-    if (!(await initialize(server)).signedIn)
+    if (!usesChatGpt(await initialize(server)))
       throw new Error('Sign in to Codex with ChatGPT to start a Session.');
     const models = await readModels(server);
     let values = startingValues(models, input.configOptions);

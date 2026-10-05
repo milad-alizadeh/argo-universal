@@ -43,15 +43,14 @@ it('probes each Agent once at start and answers later lists from that probe', as
 });
 
 it('probes every Agent again on refresh', async () => {
-  const answers: AgentProbe[] = [
-    {
+  const probe = vi
+    .fn<() => Promise<AgentProbe>>()
+    .mockResolvedValueOnce({
       availability: 'not_signed_in',
       installStep: 'Sign in',
       configOptions: [],
-    },
-    available,
-  ];
-  const probe = vi.fn(async () => answers.shift() ?? available);
+    })
+    .mockResolvedValue(available);
   const other = vi.fn(async () => available);
   const agents = startAgents(probe, other);
   expect((await agents.list())[0]?.availability).toBe('not_signed_in');

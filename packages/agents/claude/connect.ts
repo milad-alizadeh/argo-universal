@@ -41,7 +41,7 @@ export function cliEnvironment() {
 }
 
 // The prompts of one Session, as the streaming input `query()` reads.
-function createPromptQueue() {
+export function createPromptQueue() {
   const waiting: {
     message: SDKUserMessage;
     dispatched: PromiseWithResolvers<void>;

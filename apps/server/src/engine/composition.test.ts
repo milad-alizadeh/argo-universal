@@ -20,6 +20,7 @@ import { expect, it, vi } from 'vitest';
 import type { ActorRefFrom } from 'xstate';
 import { createActor, fromCallback, fromPromise, waitFor } from 'xstate';
 import { insertSession, openTestDatabase } from '#mocks/database';
+import { initTestRepository } from '#mocks/git';
 import type { writerMachine } from '../services/feed/writer-machine';
 import { createServerServices } from '../services/server-services';
 import type { HttpServerOptions } from './http-server';
@@ -560,46 +561,49 @@ it('publishes stored list changes, changes counts only when needed, and aborts a
   }
 });
 
-// A temp root holding a Project whose `feature` branch is one commit ahead of `main`, a mock CLI folder and the Engine's home.
-function createNewSessionRoot() {
+// An Engine on a Project whose `feature` branch is one commit ahead of `main`, with the Agent's mock CLI on PATH; `close` stops it and deletes everything.
+async function startNewSessionEngine(
+  adapter: AgentAdapter,
+  {
+    recording,
+    availability,
+    searchPath = (bin) => `${bin}${path.delimiter}${process.env.PATH ?? ''}`,
+  }: {
+    recording?: string;
+    availability?: 'available' | 'not_installed' | 'not_signed_in';
+    searchPath?: (bin: string) => string;
+  } = {},
+) {
   const root = realpathSync(mkdtempSync(path.join(tmpdir(), 'argo-new-')));
   const project = path.join(root, 'project');
   const bin = path.join(root, 'bin');
   const home = path.join(root, 'home');
   for (const directory of [project, bin, home]) mkdirSync(directory);
-  const git = (...arguments_: string[]) =>
-    execFileSync('git', arguments_, { cwd: project, encoding: 'utf8' }).trim();
-  const commit = (message: string) =>
-    git(
-      '-c',
-      'user.name=Test',
-      '-c',
-      'user.email=test@example.com',
-      'commit',
-      '-q',
-      '--allow-empty',
-      '-m',
-      message,
-    );
-  git('init', '-q', '--initial-branch=main');
-  commit('Initial');
-  git('switch', '-q', '-c', 'feature');
-  commit('Feature');
-  git('switch', '-q', 'main');
+  const git = initTestRepository(project);
+  const mockCli = mockClis[adapter.agent];
+  if (!mockCli) throw new Error(`No mock CLI for ${adapter.agent}`);
+  await mockCli.write(bin, {
+    recording: recording ?? mockCli.recordings.turn,
+    availability,
+  });
+  vi.stubEnv('PATH', searchPath(bin));
+  const { database, remove } = openTestDatabase({}, project);
+  const { engine, createCaller } = startEngine({ database, adapter, home });
   return {
     project,
-    bin,
     home,
     git,
-    remove: () => rmSync(root, { recursive: true, force: true }),
+    database,
+    engine,
+    createCaller,
+    close: () => {
+      engine.stop();
+      remove();
+      vi.unstubAllEnvs();
+      rmSync(root, { recursive: true, force: true });
+    },
   };
 }
-
-const findMockCli = (agent: string) => {
-  const mockCli = mockClis[agent];
-  if (!mockCli) throw new Error(`No mock CLI for ${agent}`);
-  return mockCli;
-};
 
 it.each(
   agentAdapters.flatMap((adapter) =>
@@ -610,16 +614,8 @@ it.each(
 )(
   'starts a $agent Session in the $checkout.type checkout and runs its first Turn in one call',
   async ({ adapter, checkout }) => {
-    const root = createNewSessionRoot();
-    const mockCli = findMockCli(adapter.agent);
-    await mockCli.write(root.bin, { recording: mockCli.recordings.turn });
-    vi.stubEnv('PATH', `${root.bin}${path.delimiter}${process.env.PATH ?? ''}`);
-    const { database, remove } = openTestDatabase({}, root.project);
-    const { engine, createCaller } = startEngine({
-      database,
-      adapter,
-      home: root.home,
-    });
+    const root = await startNewSessionEngine(adapter);
+    const { database, engine, createCaller } = root;
     try {
       const caller = await createCaller();
       const { sessionId } = await caller.session.new({
@@ -696,10 +692,7 @@ it.each(
       await waitFor(engine, (snapshot) => snapshot.status === 'done');
       expect(engine.getSnapshot().output).toEqual({ exitCode: 0 });
     } finally {
-      engine.stop();
-      remove();
-      vi.unstubAllEnvs();
-      root.remove();
+      root.close();
     }
   },
 );
@@ -713,19 +706,14 @@ it.each(
 )(
   'reports $agent as $availability with its install step and New Session options',
   async ({ adapter, availability }) => {
-    const root = createNewSessionRoot();
-    const mockCli = findMockCli(adapter.agent);
-    await mockCli.write(root.bin, { recording: 'image-prompt', availability });
-    // Only the mock folder, so an absent mock is an absent Agent.
-    vi.stubEnv('PATH', root.bin);
-    const { database, remove } = openTestDatabase({}, root.project);
-    const { engine, createCaller } = startEngine({
-      database,
-      adapter,
-      home: root.home,
+    const root = await startNewSessionEngine(adapter, {
+      recording: 'image-prompt',
+      availability,
+      // Only the mock folder, so an absent mock is an absent Agent.
+      searchPath: (bin) => bin,
     });
     try {
-      const caller = await createCaller();
+      const caller = await root.createCaller();
       const [information, ...others] = await caller.agents.list();
       expect(others).toEqual([]);
       expect(information).toMatchObject({
@@ -748,10 +736,7 @@ it.each(
         expect(information?.configOptions).toEqual([]);
       }
     } finally {
-      engine.stop();
-      remove();
-      vi.unstubAllEnvs();
-      root.remove();
+      root.close();
     }
   },
 );
@@ -767,25 +752,16 @@ it.each(
 )(
   'refuses a $agent Session whose Agent is $availability, leaving no Session, worktree or branch',
   async ({ adapter, availability }) => {
-    const root = createNewSessionRoot();
-    const mockCli = findMockCli(adapter.agent);
-    await mockCli.write(root.bin, {
-      recording: mockCli.recordings.turn,
-      availability,
-    });
     // Git stays on PATH; any installed copy of the Agent's CLI does not.
     const otherDirectories = (process.env.PATH ?? '')
       .split(path.delimiter)
       .filter((directory) => !existsSync(path.join(directory, adapter.agent)));
-    vi.stubEnv('PATH', [root.bin, ...otherDirectories].join(path.delimiter));
-    const { database, remove } = openTestDatabase({}, root.project);
-    const { engine, createCaller } = startEngine({
-      database,
-      adapter,
-      home: root.home,
+    const root = await startNewSessionEngine(adapter, {
+      availability,
+      searchPath: (bin) => [bin, ...otherDirectories].join(path.delimiter),
     });
     try {
-      const caller = await createCaller();
+      const caller = await root.createCaller();
       await expect(
         caller.session.new({
           projectId: 'project-1',
@@ -810,10 +786,7 @@ it.each(
         }),
       ]);
     } finally {
-      engine.stop();
-      remove();
-      vi.unstubAllEnvs();
-      root.remove();
+      root.close();
     }
   },
 );

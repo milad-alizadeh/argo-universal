@@ -1,11 +1,13 @@
 import type { openAppServer } from './open-app-server';
-import type { Model, ModelListResponse } from './protocol.gen';
+import type { Account, Model, ModelListResponse } from './protocol.gen';
 
 type AppServer = ReturnType<typeof openAppServer>;
 
-export const EXECUTABLE = 'codex';
+// A ChatGPT login, not an API key or a cloud provider (ADR-0004).
+export const usesChatGpt = (account: Account | null) =>
+  account?.type === 'chatgpt';
 
-// Initialises the app server and reports whether it runs on a ChatGPT account (ADR-0004).
+// Initialises the app server and resolves to the account it runs on.
 export async function initialize(server: AppServer) {
   await server.request('initialize', {
     clientInfo: { name: 'argo', title: 'Argo', version: '0.0.0' },
@@ -13,7 +15,7 @@ export async function initialize(server: AppServer) {
   });
   server.notify('initialized');
   const { account } = await server.request('account/read', {});
-  return { signedIn: account?.type === 'chatgpt' };
+  return account;
 }
 
 // Every page of the model list, without the hidden models.

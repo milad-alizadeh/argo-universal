@@ -68,11 +68,12 @@ export async function createSessionCheckout(
 
 // The first line of the prompt's text, which titles the Session until the Agent names it.
 export function titleFromPrompt(prompt: SessionNewInput['prompt']): string {
-  for (const block of prompt)
-    if (block.type === 'text')
-      for (const line of block.text.split('\n'))
-        if (line.trim()) return line.trim();
-  return '';
+  return (
+    prompt
+      .flatMap((block) => (block.type === 'text' ? block.text.split('\n') : []))
+      .map((line) => line.trim())
+      .find(Boolean) ?? ''
+  );
 }
 
 // The writer job that stores the Session and remembers its checkout choice on the Project.
