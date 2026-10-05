@@ -65,8 +65,8 @@ export function ProjectsList({
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const contentStyle = {
     paddingHorizontal: 8,
-    paddingTop: 32,
-    paddingBottom: 48,
+    paddingTop: 20,
+    paddingBottom: 28,
   };
   const entries = useMemo(() => {
     const groups = new Map<string, SessionInfo[]>();
@@ -206,59 +206,58 @@ export function ProjectsList({
           }}
         />
       </View>
-      {Platform.OS !== 'web' &&
-        (['top', 'bottom'] as const).map((edge) => (
-          <View
-            key={edge}
-            pointerEvents="none"
-            accessibilityElementsHidden
-            importantForAccessibility="no-hide-descendants"
-            testID={`scroll-fade-${edge}`}
-            style={[
-              {
-                position: 'absolute',
-                left: 0,
-                right: 0,
-                zIndex: 10,
-                height: edge === 'top' ? 32 : 48,
-                ...(edge === 'top' ? { top: 0 } : { bottom: 0 }),
-              },
-            ]}
-          >
-            <Svg width="100%" height="100%">
-              <Defs>
-                <LinearGradient
-                  id={`${gradientId}-${edge}`}
-                  x1="0"
-                  y1="0%"
-                  x2="0"
-                  y2="100%"
-                >
-                  <Stop
-                    offset="0"
-                    stopColor={backgroundColor}
-                    stopOpacity={edge === 'top' ? 1 : 0}
-                  />
-                  <Stop
-                    offset="0.5"
-                    stopColor={backgroundColor}
-                    stopOpacity={0.85}
-                  />
-                  <Stop
-                    offset="1"
-                    stopColor={backgroundColor}
-                    stopOpacity={edge === 'top' ? 0 : 1}
-                  />
-                </LinearGradient>
-              </Defs>
-              <Rect
-                width="100%"
-                height="100%"
-                fill={`url(#${gradientId}-${edge})`}
-              />
-            </Svg>
-          </View>
-        ))}
+      {(['top', 'bottom'] as const).map((edge) => (
+        <View
+          key={edge}
+          pointerEvents="none"
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+          testID={`scroll-fade-${edge}`}
+          style={[
+            {
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              zIndex: 10,
+              height: edge === 'top' ? 20 : 28,
+              ...(edge === 'top' ? { top: 0 } : { bottom: 0 }),
+            },
+          ]}
+        >
+          <Svg width="100%" height="100%">
+            <Defs>
+              <LinearGradient
+                id={`${gradientId}-${edge}`}
+                x1="0"
+                y1="0%"
+                x2="0"
+                y2="100%"
+              >
+                <Stop
+                  offset="0"
+                  stopColor={backgroundColor}
+                  stopOpacity={edge === 'top' ? 1 : 0}
+                />
+                <Stop
+                  offset="0.5"
+                  stopColor={backgroundColor}
+                  stopOpacity={0.85}
+                />
+                <Stop
+                  offset="1"
+                  stopColor={backgroundColor}
+                  stopOpacity={edge === 'top' ? 0 : 1}
+                />
+              </LinearGradient>
+            </Defs>
+            <Rect
+              width="100%"
+              height="100%"
+              fill={`url(#${gradientId}-${edge})`}
+            />
+          </Svg>
+        </View>
+      ))}
     </View>
   );
 }

@@ -26,8 +26,8 @@
   mask-image: linear-gradient(
     to bottom,
     transparent 0,
-    black 32px,
-    black calc(100% - 48px),
+    black 20px,
+    black calc(100% - 28px),
     transparent 100%
   );
   mask-repeat: no-repeat;

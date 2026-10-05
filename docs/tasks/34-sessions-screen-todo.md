@@ -7,14 +7,15 @@ Updated as new requests arrive. Completed entries describe implemented changes; 
 - [x] Have another sub-agent compare the Projects list to Paper.
 - [x] Vertically center skeleton circles with their first lines.
 - [x] Add top and bottom scroll fades to the LegendList.
-- [x] Keep both shared scroll fades fixed in every story; add 32 px top padding and 48 px bottom padding so boundary rows can scroll fully beyond the gradients (replaces fade visibility toggling).
-- [x] Fade content completely at the exact top and bottom edges: browser alpha mask; native gradients pinned above the list, using the list background color.
+- [x] Keep both shared scroll fades fixed in every story; add 20 px top padding and 28 px bottom padding so boundary rows can scroll fully beyond the gradients (replaces fade visibility toggling).
+- [x] Fade content completely at the exact top and bottom edges: gradients use the exact list background color on web and native, with the browser mask preserving a seamless outer edge.
+- [x] Shorten both fades to 20 px top / 28 px bottom, with matching padding and list surface colors.
 - [x] Apply the browser fade to the entire list surface, including its solid background, so no hard top or bottom rectangle edge remains while the fade is active.
 - [x] Make On New Session interactive: clicking the Project + inserts a new Session directly; use the existing Project control instead of a separate story button.
 - [x] Animate existing list rows shifting when Sessions are inserted or reordered.
 - [x] Fix the large row gaps caused by estimated animation offsets; animate the measured list positions instead.
 - [x] Give Session rows solid list-colored backgrounds, including dark hover and pressed states, so animated rows cover text beneath them.
-- [x] Fix and test the transparent animated row containers: opaque clipped row surfaces; light/dark insertion checked across 12 animation frames and final spacing; six targeted browser tests pass, including first/last row padding in light and dark mode.
+- [x] Fix and test the transparent animated row containers: opaque clipped row surfaces; light/dark insertion checked across 12 animation frames and final spacing; six targeted browser tests pass, including first/last row padding, gradient sizes, and gradient color matching in light and dark mode.
 - [x] Match hover effects for add Session, Project +, and … controls.
 - [x] Remove Project Session counts.
 - [x] Disable browser text selection in the Projects list.

@@ -123,6 +123,32 @@ export const ScrollFadePadding: Story = {
   render: (args) => <ProjectsNewSessionPreview {...args} />,
   play: async ({ canvas }) => {
     const scroll = canvas.getByTestId('projects-scroll');
+    const topFade = canvas.getByTestId('scroll-fade-top');
+    const bottomFade = canvas.getByTestId('scroll-fade-bottom');
+    const surface = topFade.parentElement;
+    if (!surface) throw new Error('Missing list surface');
+    const surfaceColor = getComputedStyle(surface).backgroundColor;
+    const colorCanvas = document.createElement('canvas');
+    colorCanvas.width = colorCanvas.height = 1;
+    const context = colorCanvas.getContext('2d');
+    if (!context) throw new Error('Missing browser color context');
+    function colorPixel(color: string) {
+      if (!context) throw new Error('Missing browser color context');
+      context.clearRect(0, 0, 1, 1);
+      context.fillStyle = color;
+      context.fillRect(0, 0, 1, 1);
+      return Array.from(context.getImageData(0, 0, 1, 1).data);
+    }
+    for (const fade of [topFade, bottomFade]) {
+      const stops = fade.querySelectorAll('stop');
+      expect(stops.length).toBeGreaterThan(0);
+      for (const stop of stops)
+        expect(colorPixel(getComputedStyle(stop).stopColor)).toEqual(
+          colorPixel(surfaceColor),
+        );
+    }
+    expect(topFade.getBoundingClientRect().height).toBe(20);
+    expect(bottomFade.getBoundingClientRect().height).toBe(28);
     const heading = await canvas.findByRole('button', {
       name: 'Example Project',
     });
@@ -130,7 +156,7 @@ export const ScrollFadePadding: Story = {
       expect(
         heading.getBoundingClientRect().top -
           scroll.getBoundingClientRect().top,
-      ).toBeGreaterThanOrEqual(31);
+      ).toBeGreaterThanOrEqual(19);
     });
     scroll.scrollTop = scroll.scrollHeight;
     const last = await canvas.findByRole('button', {
@@ -141,7 +167,7 @@ export const ScrollFadePadding: Story = {
       const viewportBottom = scroll.getBoundingClientRect().bottom;
       expect(
         viewportBottom - last.getBoundingClientRect().bottom,
-      ).toBeGreaterThanOrEqual(47);
+      ).toBeGreaterThanOrEqual(27);
       expect(last.getBoundingClientRect().bottom).toBeGreaterThan(
         scroll.getBoundingClientRect().top,
       );
