@@ -11,9 +11,11 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@repo/agents": "workspace:*",
     "@repo/api": "workspace:*",
     "@repo/contracts": "workspace:*",
     "@repo/db": "workspace:*",
+    "@repo/git": "workspace:*",
     "@repo/machine-log": "workspace:*",
     "@statelyai/inspect": "catalog:",
     "@trpc/server": "catalog:",
@@ -24,6 +26,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@repo/mocks": "workspace:*",
     "@repo/typescript": "workspace:*",
     "@types/node": "catalog:",
     "@types/ws": "catalog:",

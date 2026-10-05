@@ -10,8 +10,9 @@ import type { Database } from '@repo/db';
 import { feedRow, session } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
 import { and, asc, desc, eq, gt, lt } from 'drizzle-orm';
-import type { ActorRefFrom } from 'xstate';
-import type { FeedStreamEvent } from './feed-change';
+import type { ActorRefFrom, Subscription } from 'xstate';
+import type { SessionActorRef } from '../sessions/session-machine';
+import { toSessionSnapshot } from '../sessions/session-snapshot';
 import type { FeedActorRef } from './feed-machine';
 import { fromFeedRow, queuedFeedRows, readWrittenRow } from './feed-row';
 import type { writerMachine } from './writer-machine';
@@ -20,6 +21,7 @@ export interface FeedDeps {
   database: Database;
   // The feed actor of an open Session; a closed Session has none.
   findFeed: (sessionId: string) => FeedActorRef | undefined;
+  findSession?: (sessionId: string) => SessionActorRef | undefined;
   findWriter: () => ActorRefFrom<typeof writerMachine> | undefined;
 }
 
@@ -143,12 +145,37 @@ export function createFeedService(deps: FeedDeps): FeedService {
   ): AsyncGenerator<FeedSubscribeOutput> {
     const { epoch, maxRevision } = readSession(sessionId);
 
-    const live: FeedStreamEvent[] = [];
+    const live: FeedSubscribeOutput[] = [];
     let wake: (() => void) | undefined;
-    const listener = deps.findFeed(sessionId)?.on('feed.batch', (batch) => {
-      live.push(...batch.events);
+    let feed: FeedActorRef | undefined;
+    let listener: Subscription | undefined;
+    let feedListener: Subscription | undefined;
+    const sessionActor = deps.findSession?.(sessionId);
+    let lastSnapshot = '';
+    const snapshotChanged = () => {
+      const nextFeed = deps.findFeed(sessionId);
+      if (nextFeed && nextFeed !== feed) {
+        listener?.unsubscribe();
+        feedListener?.unsubscribe();
+        feed = nextFeed;
+        listener = feed.on('feed.batch', (batch) => {
+          live.push(...batch.events);
+          wake?.();
+        });
+        feedListener = feed.subscribe(snapshotChanged);
+      }
+      const snapshot = toSessionSnapshot(
+        sessionActor?.getSnapshot() ?? null,
+        feed?.getSnapshot() ?? { context: { epoch, maxRevision } },
+      );
+      const serialized = JSON.stringify(snapshot);
+      if (serialized === lastSnapshot) return;
+      lastSnapshot = serialized;
+      live.push({ type: 'snapshot', snapshot });
       wake?.();
-    });
+    };
+    const sessionListener = sessionActor?.subscribe(snapshotChanged);
+    snapshotChanged();
     const wakeOnAbort = () => wake?.();
     signal?.addEventListener('abort', wakeOnAbort);
 
@@ -165,7 +192,11 @@ export function createFeedService(deps: FeedDeps): FeedService {
       while (!signal?.aborted) {
         const event = live.shift();
         if (event) {
-          if (event.rev > caughtUpTo) yield event;
+          if (
+            event.type === 'snapshot' ||
+            (event.type !== 'reset' && event.rev > caughtUpTo)
+          )
+            yield event;
           continue;
         }
         await new Promise<void>((resolve) => {
@@ -175,6 +206,8 @@ export function createFeedService(deps: FeedDeps): FeedService {
       }
     } finally {
       listener?.unsubscribe();
+      sessionListener?.unsubscribe();
+      feedListener?.unsubscribe();
       signal?.removeEventListener('abort', wakeOnAbort);
     }
   }
