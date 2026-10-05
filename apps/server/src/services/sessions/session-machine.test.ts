@@ -17,9 +17,9 @@ import {
   waitFor,
 } from 'xstate';
 import { adjacencyMapToArray, getAdjacencyMap, TestModel } from 'xstate/graph';
-import { openTestDatabase } from '../../../mocks/database';
-import { messageChange } from '../../../mocks/feed';
-import { createSessionHost, firstPrompt } from '../../../mocks/session';
+import { openTestDatabase } from '#mocks/database';
+import { messageChange } from '#mocks/feed';
+import { createSessionHost, firstPrompt } from '#mocks/session';
 import { type FeedActorRef, feedMachine } from '../feed/feed-machine';
 import type { createFeedService } from '../feed/feed-service';
 import type { WriterEvent } from '../feed/writer-machine';

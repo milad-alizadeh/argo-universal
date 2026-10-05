@@ -19,7 +19,6 @@ import {
   changeValue,
   DEFAULT_VALUE,
   type ModelInfo,
-  savedValues,
   startingValues,
   toConfigOptions,
 } from './config-options';
@@ -27,6 +26,13 @@ import {
 const claudeCapabilities: AgentCapabilities = {
   planApproval: 'continueTurn',
   stopShell: false,
+};
+
+// The values the CLI starts with; the saved ones follow once its model list can check them.
+const CLI_START: ConfigValues = {
+  mode: 'default',
+  model: DEFAULT_VALUE,
+  effort: DEFAULT_VALUE,
 };
 
 const EXECUTABLE = 'claude';
@@ -98,12 +104,9 @@ export async function connect(
     return tail ? `${describeError(error)}\n${tail}` : describeError(error);
   };
 
-  const requested = savedValues(input.configOptions);
   const { ANTHROPIC_API_KEY: _apiKey, ...environment } = process.env;
   const options: Options = {
-    permissionMode: requested.mode,
-    ...(requested.model === DEFAULT_VALUE ? {} : { model: requested.model }),
-    ...(requested.effort === DEFAULT_VALUE ? {} : { effort: requested.effort }),
+    permissionMode: CLI_START.mode,
     cwd: input.cwd,
     ...(input.vendorSessionId
       ? { resume: input.vendorSessionId }
@@ -150,7 +153,7 @@ export async function connect(
   try {
     models = (await vendor.initializationResult()).models;
     values = startingValues(models, input.configOptions);
-    await applyValues(requested, values);
+    await applyValues(CLI_START, values);
   } catch (error) {
     queue.end();
     vendor.close();

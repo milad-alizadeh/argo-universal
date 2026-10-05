@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./agent": "./agent/machine.ts",
+    "./cli": "./cli/index.ts",
     "./cli/*": "./cli/*.ts"
   },
   "scripts": {

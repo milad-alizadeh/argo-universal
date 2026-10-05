@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import type { Database } from '@repo/db';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { WebSocket } from 'ws';
-import { openTestDatabase } from '../../mocks/database';
+import { openTestDatabase } from '#mocks/database';
 import { startHttpServer } from './http-server';
 
 let home: string;

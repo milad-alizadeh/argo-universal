@@ -4,11 +4,11 @@ import path from 'node:path';
 import { agentAdapters } from '@repo/agents';
 import type { SessionUpdate } from '@repo/contracts';
 import { session as sessionTable } from '@repo/db/schema';
-import { mockClis } from '@repo/mocks/cli/index';
+import { mockClis } from '@repo/mocks/cli';
 import { afterEach, describe, expect, it } from 'vitest';
 import { type SnapshotFrom, toPromise, waitFor } from 'xstate';
-import { openTestDatabase } from '../../../mocks/database';
-import { createSessionHost } from '../../../mocks/session';
+import { openTestDatabase } from '#mocks/database';
+import { createSessionHost } from '#mocks/session';
 import { sendSessionCommand } from './session-command';
 import type { SessionActorRef } from './session-machine';
 

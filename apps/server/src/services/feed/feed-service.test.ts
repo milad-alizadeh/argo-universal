@@ -8,8 +8,8 @@ import type {
 import type { Database } from '@repo/db';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { type Actor, createActor, fromPromise, setup } from 'xstate';
-import { insertSession, openTestDatabase } from '../../../mocks/database';
-import { storedMessage as message } from '../../../mocks/feed';
+import { insertSession, openTestDatabase } from '#mocks/database';
+import { storedMessage as message } from '#mocks/feed';
 import { createSystemService } from '../system';
 import { feedMachine } from './feed-machine';
 import { readWrittenRow, toFeedRowWrite } from './feed-row';

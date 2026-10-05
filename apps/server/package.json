@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "imports": {
+    "#mocks/*": "./mocks/*.ts"
+  },
   "scripts": {
     "check-types": "tsc --noEmit",
     "dev": "tsx src/main.ts --watch",

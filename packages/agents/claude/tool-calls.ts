@@ -135,21 +135,33 @@ export function toolCallStarted(block: ToolUseBlock): ToolCallRow {
   };
 }
 
-const resultText = (result: ToolResultBlock) =>
-  typeof result.content === 'string'
-    ? result.content
-    : (result.content ?? [])
-        .flatMap((block) => (block.type === 'text' ? [block.text] : []))
-        .join('\n');
-
-function endedStatus(
-  rejected: boolean,
-  result: ToolResultBlock,
-): ToolCallRow['status'] {
-  if (rejected) return 'cancelled';
-  if (result.is_error) return 'failed';
-  return 'completed';
+function resultText(result: ToolResultBlock) {
+  if (typeof result.content === 'string') return result.content;
+  return (result.content ?? [])
+    .flatMap((block) => (block.type === 'text' ? [block.text] : []))
+    .join('\n');
 }
+
+function userRejected(message: SDKUserMessage, toolCallId: string) {
+  const meta = (message as ToolResultMeta).tool_result_meta ?? [];
+  return meta.some(
+    (entry) =>
+      entry.id === toolCallId && entry.non_execution_kind === 'user-rejected',
+  );
+}
+
+// What the Write tool found at the path before it wrote; null for a new file.
+function overwrittenText(row: ToolCallRow, message: SDKUserMessage) {
+  if (row.name !== 'Write') return null;
+  const output = message.tool_use_result as FileWriteOutput | undefined;
+  return output?.originalFile ?? null;
+}
+
+const settled = (
+  row: ToolCallRow,
+  status: ToolCallRow['status'],
+  content: ToolCallContent[],
+): ToolCallRow => ({ ...row, state: 'settled', status, content });
 
 // The settled row for a Tool call once its result arrives.
 export function toolCallEnded(
@@ -157,43 +169,29 @@ export function toolCallEnded(
   result: ToolResultBlock,
   message: SDKUserMessage,
 ): ToolCallRow {
-  const rejected =
-    (message as ToolResultMeta).tool_result_meta?.some(
-      (meta) =>
-        meta.id === result.tool_use_id &&
-        meta.non_execution_kind === 'user-rejected',
-    ) ?? false;
-  const status = endedStatus(rejected, result);
+  const rejected = userRejected(message, result.tool_use_id);
   const output = rejected ? '' : resultText(result);
-  // What the Write tool found at the path before it wrote.
-  const originalFile =
-    row.name === 'Write'
-      ? (message.tool_use_result as FileWriteOutput | undefined)?.originalFile
-      : undefined;
+  const oldText = overwrittenText(row, message);
+
   const content = row.content.map((block): ToolCallContent => {
     if (block.type === 'terminal') return { ...block, output };
-    if (block.type === 'diff' && typeof originalFile === 'string')
-      return {
-        ...block,
-        changes: block.changes.map((change) => ({
-          ...change,
-          operation: 'modify',
-          oldText: originalFile,
-        })),
-      };
-    return block;
+    if (block.type !== 'diff' || oldText === null) return block;
+    const changes = block.changes.map((change) => ({
+      ...change,
+      operation: 'modify' as const,
+      oldText,
+    }));
+    return { ...block, changes };
   });
-  const showsOutput = content.some((block) => block.type === 'terminal');
-  return {
-    ...row,
-    state: 'settled',
-    status,
-    content:
-      status === 'failed' && !showsOutput
-        ? [
-            ...content,
-            { type: 'content', content: { type: 'text', text: output } },
-          ]
-        : content,
+
+  if (rejected) return settled(row, 'cancelled', content);
+  if (!result.is_error) return settled(row, 'completed', content);
+  // A failed call shows its error, unless a terminal already shows the output.
+  if (content.some((block) => block.type === 'terminal'))
+    return settled(row, 'failed', content);
+  const error: ToolCallContent = {
+    type: 'content',
+    content: { type: 'text', text: output },
   };
+  return settled(row, 'failed', [...content, error]);
 }

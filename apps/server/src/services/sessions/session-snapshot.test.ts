@@ -1,6 +1,6 @@
 import { afterAll, expect, it } from 'vitest';
 import { createActor, type StateValue } from 'xstate';
-import { openTestDatabase } from '../../../mocks/database';
+import { openTestDatabase } from '#mocks/database';
 import { sessionMachine } from './session-machine';
 import { toSessionSnapshot } from './session-snapshot';
 

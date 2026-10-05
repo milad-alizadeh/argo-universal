@@ -858,9 +858,6 @@ importers:
       xstate:
         specifier: 'catalog:'
         version: 5.33.2
-      zod:
-        specifier: 'catalog:'
-        version: 4.6.5
     devDependencies:
       '@repo/typescript':
         specifier: workspace:*

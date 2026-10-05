@@ -10,6 +10,7 @@ import {
 } from 'xstate';
 import type {
   AgentAdapter,
+  AgentConnectInput,
   AgentConnection,
   AgentReady,
 } from './agent-adapter';
@@ -34,14 +35,18 @@ interface AgentContext extends AgentInput {
 }
 
 interface ConnectionInput {
-  agent: AgentInput;
+  agent: AgentInput['agent'];
+  adapter: AgentAdapter | undefined;
+  connectInput: AgentConnectInput;
   parent: ActorRef<Snapshot<unknown>, ConnectionEvent>;
 }
 
 const describeError = (error: unknown) =>
   error instanceof Error ? error.message : String(error);
 
-function runCommand(connection: AgentConnection, command: AgentCommand) {
+type SessionCommand = Exclude<AgentCommand, { type: 'agent.stop' }>;
+
+function runCommand(connection: AgentConnection, command: SessionCommand) {
   switch (command.type) {
     case 'agent.prompt':
       return connection.prompt(command);
@@ -59,9 +64,62 @@ function runCommand(connection: AgentConnection, command: AgentCommand) {
       return connection.rename?.(command);
     case 'agent.stopShell':
       return connection.stopShell?.(command);
-    case 'agent.stop':
-      return connection.stop();
   }
+}
+
+// Opens the adapter's connection, and reports what happens to it as connection events.
+function openConnection({
+  agent,
+  adapter,
+  connectInput,
+  parent,
+}: ConnectionInput) {
+  const send = (event: ConnectionEvent) => parent.send(event);
+  const fail = (error: unknown) =>
+    send({ type: 'connection.failed', error: describeError(error) });
+  let stopping: Promise<void> | undefined;
+
+  const connect = async () => {
+    if (!adapter) throw new Error(`No Agent adapter for ${agent}.`);
+    return adapter.connect(connectInput, {
+      message: (message) => send({ type: 'connection.message', message }),
+      event: (event) => send({ type: 'connection.events', events: [event] }),
+      failed: (error) => send({ type: 'connection.failed', error }),
+    });
+  };
+  // Resolves to null when connecting fails, after reporting it.
+  const connecting = connect().then(
+    (connection) => {
+      send({ type: 'connection.ready', ready: connection.ready });
+      return connection;
+    },
+    (error: unknown) => {
+      if (!stopping) fail(error);
+      return null;
+    },
+  );
+
+  // Stops once, after connecting settles.
+  const stop = () => {
+    stopping ??= connecting.then((connection) => connection?.stop());
+    return stopping;
+  };
+
+  const run = async (command: AgentCommand) => {
+    try {
+      if (command.type === 'agent.stop') {
+        await stop();
+        send({ type: 'connection.closed' });
+        return;
+      }
+      const connection = await connecting;
+      if (connection) await runCommand(connection, command);
+    } catch (error) {
+      fail(error);
+    }
+  };
+
+  return { run, stop: () => void stop().catch(() => {}) };
 }
 
 // Whether a Turn runs after these events, given whether one ran before them.
@@ -89,59 +147,13 @@ export function createAgentMachine(adapters: readonly AgentAdapter[]) {
     actors: {
       connection: fromCallback<AgentCommand, ConnectionInput>(
         ({ input, receive }) => {
-          const {
-            agent: id,
-            sessionId,
-            cwd,
-            vendorSessionId,
-            configOptions,
-          } = input.agent;
-          const connectInput = {
-            sessionId,
-            cwd,
-            vendorSessionId,
-            configOptions,
-          };
-          const send = (event: ConnectionEvent) => input.parent.send(event);
-          const adapter = adapterFor(id);
-          let stopped = false;
-          const connecting = adapter
-            ? adapter.connect(connectInput, {
-                message: (message) =>
-                  send({ type: 'connection.message', message }),
-                event: (event) =>
-                  send({ type: 'connection.events', events: [event] }),
-                failed: (error) => send({ type: 'connection.failed', error }),
-              })
-            : Promise.reject(new Error(`No Agent adapter for ${id}.`));
-          const fail = (error: unknown) =>
-            send({ type: 'connection.failed', error: describeError(error) });
-          connecting.then(
-            (connection) =>
-              send({ type: 'connection.ready', ready: connection.ready }),
-            (error: unknown) => {
-              if (!stopped) fail(error);
-            },
-          );
-
+          const connection = openConnection(input);
           // Commands run in order, so a config change lands before the prompt that follows it.
-          let commands = Promise.resolve();
+          let queue = Promise.resolve();
           receive((command) => {
-            if (command.type === 'agent.stop') stopped = true;
-            commands = commands
-              .then(async () => {
-                if (command.type !== 'agent.stop')
-                  return runCommand(await connecting, command);
-                await (await connecting.catch(() => null))?.stop();
-                send({ type: 'connection.closed' });
-              })
-              .catch(fail);
+            queue = queue.then(() => connection.run(command));
           });
-          return () => {
-            if (stopped) return;
-            stopped = true;
-            connecting.then((connection) => connection.stop()).catch(() => {});
-          };
+          return connection.stop;
         },
       ),
     },
@@ -218,7 +230,17 @@ export function createAgentMachine(adapters: readonly AgentAdapter[]) {
     invoke: {
       id: 'connection',
       src: 'connection',
-      input: ({ context, self }) => ({ agent: context, parent: self }),
+      input: ({ context, self }) => ({
+        agent: context.agent,
+        adapter: adapterFor(context.agent),
+        connectInput: {
+          sessionId: context.sessionId,
+          cwd: context.cwd,
+          vendorSessionId: context.vendorSessionId,
+          configOptions: context.configOptions,
+        },
+        parent: self,
+      }),
       onError: {
         target: '.failed',
         actions: {

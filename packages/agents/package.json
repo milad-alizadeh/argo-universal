@@ -13,8 +13,7 @@
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "catalog:",
     "@repo/contracts": "workspace:*",
-    "xstate": "catalog:",
-    "zod": "catalog:"
+    "xstate": "catalog:"
   },
   "devDependencies": {
     "@repo/typescript": "workspace:*",

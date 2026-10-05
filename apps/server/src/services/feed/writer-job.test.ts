@@ -2,7 +2,7 @@ import type { Database } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { openTestDatabase } from '../../../mocks/database';
+import { openTestDatabase } from '#mocks/database';
 import {
   describeJob,
   type FeedRowWrite,

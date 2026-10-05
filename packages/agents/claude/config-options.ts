@@ -1,102 +1,92 @@
-import type { EffortLevel, ModelInfo } from '@anthropic-ai/claude-agent-sdk';
+import type {
+  EffortLevel,
+  ModelInfo,
+  PermissionMode,
+} from '@anthropic-ai/claude-agent-sdk';
 import type { SessionConfigOption } from '@repo/contracts';
-import { z } from 'zod';
 import type { AgentConfigValue } from '../src/agent-events';
 
 export type { ModelInfo };
 
-// Checks a saved effort against the levels the SDK names.
-const SavedEffortLevel = z.enum([
-  'low',
-  'medium',
-  'high',
-  'xhigh',
-  'max',
-] satisfies EffortLevel[]);
-
-// The vendor's `PermissionMode` without `dontAsk`, which Argo does not offer.
-const PermissionMode = z.enum([
-  'default',
-  'acceptEdits',
-  'plan',
-  'auto',
-  'bypassPermissions',
-]);
-type PermissionMode = z.infer<typeof PermissionMode>;
-
-const modeNames: Record<PermissionMode, string> = {
+// The SDK names its modes only as a type, so the list and its names are Argo's; `dontAsk` is not offered.
+const modeNames = {
   default: 'Ask before edits',
   acceptEdits: 'Accept edits',
   plan: 'Plan',
   auto: 'Auto',
   bypassPermissions: 'Bypass permissions',
-};
+} satisfies Partial<Record<PermissionMode, string>>;
+type Mode = keyof typeof modeNames;
 
 // `default` leaves the choice to the CLI: its default model, or the model's default effort.
 export const DEFAULT_VALUE = 'default';
 
 export interface ConfigValues {
-  mode: PermissionMode;
+  mode: Mode;
   model: string;
   effort: EffortLevel | typeof DEFAULT_VALUE;
 }
+type Wanted = Record<keyof ConfigValues, unknown>;
 
-const findModel = (models: ModelInfo[], value: string) =>
+const findModel = (models: ModelInfo[], value: unknown) =>
   models.find((model) => model.value === value);
 
-// The saved values, before the model list can check them.
-export function savedValues(saved: AgentConfigValue[]): ConfigValues {
-  const savedValue = (configId: string) =>
-    saved.find((option) => option.configId === configId)?.value;
+// Models and their effort levels come from the CLI's model list.
+const modesFor = (model: ModelInfo | undefined) =>
+  (Object.keys(modeNames) as Mode[]).filter(
+    (mode) => mode !== 'auto' || model?.supportsAutoMode,
+  );
+const effortLevelsFor = (model: ModelInfo | undefined) =>
+  (model?.supportsEffort && model.supportedEffortLevels) || [];
+
+// The wanted values that the model allows; anything else falls back to the default.
+function allowedValues(models: ModelInfo[], wanted: Wanted): ConfigValues {
+  const model = findModel(models, wanted.model);
   return {
-    mode: PermissionMode.catch('default').parse(savedValue('mode')),
-    model: z.string().catch(DEFAULT_VALUE).parse(savedValue('model')),
-    effort: SavedEffortLevel.or(z.literal(DEFAULT_VALUE))
-      .catch(DEFAULT_VALUE)
-      .parse(savedValue('effort')),
+    mode: modesFor(model).find((mode) => mode === wanted.mode) ?? 'default',
+    model: model?.value ?? DEFAULT_VALUE,
+    effort:
+      effortLevelsFor(model).find((level) => level === wanted.effort) ??
+      DEFAULT_VALUE,
   };
 }
 
-// The values to start with: the saved ones the models still allow, else the defaults.
+// The saved values the models still allow, else the defaults.
 export function startingValues(
   models: ModelInfo[],
   saved: AgentConfigValue[],
 ): ConfigValues {
-  const values = savedValues(saved);
+  const savedValue = (configId: string) =>
+    saved.find((option) => option.configId === configId)?.value;
   return allowedValues(models, {
-    ...values,
-    model: findModel(models, values.model) ? values.model : DEFAULT_VALUE,
+    mode: savedValue('mode'),
+    model: savedValue('model'),
+    effort: savedValue('effort'),
   });
 }
 
-// Drops a mode or effort that the chosen model does not support.
-function allowedValues(
+// The values after the user picks one option, or undefined for a value Argo did not offer.
+export function changeValue(
   models: ModelInfo[],
   values: ConfigValues,
-): ConfigValues {
-  const model = findModel(models, values.model);
-  return {
-    ...values,
-    mode:
-      values.mode === 'auto' && !model?.supportsAutoMode
-        ? 'default'
-        : values.mode,
-    effort:
-      values.effort !== DEFAULT_VALUE &&
-      !model?.supportedEffortLevels?.includes(values.effort)
-        ? DEFAULT_VALUE
-        : values.effort,
-  };
+  change: AgentConfigValue,
+): ConfigValues | undefined {
+  if (!(change.configId in values)) return undefined;
+  const configId = change.configId as keyof ConfigValues;
+  const next = allowedValues(models, { ...values, [configId]: change.value });
+  return next[configId] === change.value ? next : undefined;
 }
+
+const effortName = (level: EffortLevel) =>
+  level === 'xhigh'
+    ? 'Extra high'
+    : `${level.charAt(0).toUpperCase()}${level.slice(1)}`;
 
 export function toConfigOptions(
   models: ModelInfo[],
   values: ConfigValues,
 ): SessionConfigOption[] {
   const model = findModel(models, values.model);
-  const modes = PermissionMode.options.filter(
-    (mode) => mode !== 'auto' || model?.supportsAutoMode,
-  );
   const options: SessionConfigOption[] = [
     {
       type: 'select',
@@ -104,7 +94,10 @@ export function toConfigOptions(
       name: 'Mode',
       category: 'mode',
       currentValue: values.mode,
-      options: modes.map((mode) => ({ value: mode, name: modeNames[mode] })),
+      options: modesFor(model).map((mode) => ({
+        value: mode,
+        name: modeNames[mode],
+      })),
     },
     {
       type: 'select',
@@ -119,44 +112,18 @@ export function toConfigOptions(
       })),
     },
   ];
-  const levels = model?.supportsEffort ? model.supportedEffortLevels : [];
-  if (!levels?.length) return options;
-  return [
-    ...options,
-    {
-      type: 'select',
-      configId: 'effort',
-      name: 'Effort',
-      category: 'thought_level',
-      currentValue: values.effort,
-      options: [
-        { value: DEFAULT_VALUE, name: 'Default' },
-        ...levels.map((level) => ({
-          value: level,
-          name: level === 'xhigh' ? 'Extra high' : capitalise(level),
-        })),
-      ],
-    },
-  ];
-}
-
-const capitalise = (word: string) =>
-  `${word.charAt(0).toUpperCase()}${word.slice(1)}`;
-
-// The values after the user picks one option, or undefined for a value Argo did not offer.
-export function changeValue(
-  models: ModelInfo[],
-  values: ConfigValues,
-  change: AgentConfigValue,
-): ConfigValues | undefined {
-  const offered = toConfigOptions(models, values).find(
-    (option) => option.configId === change.configId,
-  );
-  if (offered?.type !== 'select' || typeof change.value !== 'string')
-    return undefined;
-  const choices = offered.options.flatMap((option) =>
-    'value' in option ? [option.value] : [],
-  );
-  if (!choices.includes(change.value)) return undefined;
-  return allowedValues(models, { ...values, [change.configId]: change.value });
+  const levels = effortLevelsFor(model);
+  if (levels.length === 0) return options;
+  const effort: SessionConfigOption = {
+    type: 'select',
+    configId: 'effort',
+    name: 'Effort',
+    category: 'thought_level',
+    currentValue: values.effort,
+    options: [
+      { value: DEFAULT_VALUE, name: 'Default' },
+      ...levels.map((level) => ({ value: level, name: effortName(level) })),
+    ],
+  };
+  return [...options, effort];
 }
