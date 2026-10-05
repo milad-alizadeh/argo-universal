@@ -35,6 +35,15 @@
   },
   "overrides": [
     {
+      // Brand-kit SVGs stay byte-for-byte original; rendering components provide accessible labels.
+      "includes": ["packages/agents/*/assets/*.svg"],
+      "linter": {
+        "rules": {
+          "a11y": { "noSvgWithoutTitle": "off" }
+        }
+      }
+    },
+    {
       // An adapter is plain functions; the one Agent machine in packages/agents/src owns the lifecycle.
       "includes": ["packages/agents/*/**", "!packages/agents/src/**"],
       "linter": {
