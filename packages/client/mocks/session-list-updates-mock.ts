@@ -36,10 +36,12 @@ export function createSessionListUpdatesMock() {
         while (!signal.aborted) {
           const update = await new Promise<SessionListUpdate | undefined>(
             (resolve) => {
-              send = resolve;
-              signal.addEventListener('abort', () => resolve(undefined), {
-                once: true,
-              });
+              const abort = () => resolve(undefined);
+              send = (value) => {
+                signal.removeEventListener('abort', abort);
+                resolve(value);
+              };
+              signal.addEventListener('abort', abort, { once: true });
             },
           );
           if (!update) return;

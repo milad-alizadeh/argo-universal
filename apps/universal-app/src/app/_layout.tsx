@@ -62,7 +62,7 @@ export default function RootLayout() {
       <ThemeProvider value={navigationTheme}>
         <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
         <Stack>
-          <Stack.Screen name="index" options={{ title: 'Projects' }} />
+          <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="sessions/[id]" options={{ title: 'Session' }} />
           <Stack.Screen
             name="(dev)/storybook"

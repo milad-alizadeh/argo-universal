@@ -1,6 +1,11 @@
-import { archivedSessions, projectsList, sessionRows } from '@repo/api/mocks';
+import { archivedSessions, sessionRows } from '@repo/api/mocks';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
+import {
+  largeSessionListMocks,
+  multipleProjectsMocks,
+  nextPageFailureMocks,
+} from '../../mocks/projects-list-mock';
 import { ProjectsScreenPreview } from '../../mocks/projects-screen-preview';
 import {
   emptySessionListMocks,
@@ -182,21 +187,8 @@ export const Navigation: Story = {
       ]);
     }),
 };
-const project = projectsList[0];
-if (!project) throw new Error('Missing Project mock');
-const largeSessions = Array.from({ length: 2000 }, (_, index) => ({
-  ...sessionRows.idle,
-  sessionId: `large-${index}`,
-  title: `Large Session ${index}`,
-  activityAt: 2000 - index,
-  status: 'idle' as const,
-}));
 export const LargeList: Story = {
-  parameters: {
-    trpc: {
-      'session.list': () => ({ sessions: largeSessions, nextCursor: null }),
-    },
-  },
+  parameters: { trpc: largeSessionListMocks },
   play: async ({ canvas, canvasElement }) =>
     eachLayout(async () => {
       await expect(await canvas.findByText('Large Session 0')).toBeVisible();
@@ -207,14 +199,7 @@ export const LargeList: Story = {
     }),
 };
 export const MultipleProjects: Story = {
-  parameters: {
-    trpc: {
-      'projects.list': () => [
-        ...projectsList,
-        { ...project, id: 'project-empty', name: 'Empty Project' },
-      ],
-    },
-  },
+  parameters: { trpc: multipleProjectsMocks },
   play: async ({ canvas }) =>
     eachLayout(async () => {
       await expect(await canvas.findByText('Empty Project')).toBeVisible();
@@ -247,7 +232,11 @@ export const LiveUpdates: Story = {
     await eachLayout(async () => {
       const rows = canvas
         .getAllByRole('button')
-        .filter((row) => row.getAttribute('aria-label')?.endsWith(', Running'));
+        .filter((row) => row.getAttribute('aria-label')?.endsWith(', Running'))
+        .sort(
+          (a, b) =>
+            a.getBoundingClientRect().top - b.getBoundingClientRect().top,
+        );
       await expect(rows.map((row) => row.getAttribute('aria-label'))).toEqual([
         'Newest activity, Running',
         'Build the settings screen, Running',
@@ -259,6 +248,20 @@ export const LiveUpdates: Story = {
     });
     await waitFor(() =>
       expect(canvas.queryByText('Build the settings screen')).toBeNull(),
+    );
+  },
+};
+
+export const NextPageFailure: Story = {
+  parameters: { trpc: nextPageFailureMocks },
+  play: async ({ canvas }) => {
+    await expect(
+      await canvas.findByText("Couldn't load more Sessions"),
+    ).toBeVisible();
+    await expect(canvas.getByText('Build the settings screen')).toBeVisible();
+    await expect(canvas.queryByText("Couldn't load Sessions")).toBeNull();
+    await expect(canvas.getAllByRole('button', { name: 'Retry' })).toHaveLength(
+      1,
     );
   },
 };

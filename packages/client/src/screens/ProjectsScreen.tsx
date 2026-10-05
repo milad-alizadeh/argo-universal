@@ -28,9 +28,11 @@ import {
 import { Input } from '#primitives/input';
 import { Text } from '#primitives/text';
 import { useNavigate } from '../navigation/context';
+import { useWide } from '../navigation/use-wide';
 import { useTRPC } from '../trpc/context';
 
 export function ProjectsScreen() {
+  const wide = useWide();
   const trpc = useTRPC();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -65,7 +67,7 @@ export function ProjectsScreen() {
     ],
     [sessions.data],
   );
-  const error = projects.isError || agents.isError || sessions.isError;
+  const error = projects.isError || agents.isError || sessions.isLoadingError;
   const loading = projects.isPending || agents.isPending || sessions.isPending;
   function closeSearch() {
     setSearching(false);
@@ -180,11 +182,19 @@ export function ProjectsScreen() {
           }}
         />
       )}
-      <View className="absolute bottom-6 right-4 wide:static wide:border-t wide:border-border wide:p-3">
+      <View
+        className={
+          wide ? 'border-t border-border p-3' : 'absolute bottom-6 right-4'
+        }
+      >
         <Button
           accessibilityLabel="New Session"
           onPress={() => navigate({ to: 'new-session' })}
-          className="size-14 sm:size-14 rounded-full wide:h-9 wide:sm:h-9 wide:w-auto wide:self-start wide:flex-row wide:gap-2 wide:rounded-md wide:px-3"
+          className={
+            wide
+              ? 'h-9 sm:h-9 self-start flex-row gap-2 rounded-md px-3'
+              : 'size-14 sm:size-14 rounded-full'
+          }
         >
           <Icon
             as={PencilSimpleLineIcon}
