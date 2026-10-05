@@ -1,9 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import {
-  StorySections,
-  Variation,
-  Variations,
-} from '../../mocks/primitive-story-variations';
+import { Variation, Variations } from '../../mocks/primitive-story-variations';
 import {
   Accordion,
   AccordionContent,
@@ -61,28 +57,6 @@ function AccordionExample({
     </Accordion>
   );
 }
-function TypeExamples() {
-  return (
-    <Variations>
-      {(['single', 'multiple'] as const).map((type) => (
-        <Variation key={type} label={type}>
-          <AccordionExample type={type} />
-        </Variation>
-      ))}
-    </Variations>
-  );
-}
-function DisabledExamples() {
-  return (
-    <Variations>
-      {[false, true].map((disabled) => (
-        <Variation key={String(disabled)} label={String(disabled)}>
-          <AccordionExample disabled={disabled} />
-        </Variation>
-      ))}
-    </Variations>
-  );
-}
 
 const meta = {
   title: 'Design System/Primitives/Accordion',
@@ -91,12 +65,19 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
+export const Overview: Story = {
+  name: 'Accordion',
   render: () => (
-    <StorySections
-      sections={{ Type: TypeExamples, Disabled: DisabledExamples }}
-    />
+    <Variations>
+      <Variation label="Single open item">
+        <AccordionExample type="single" />
+      </Variation>
+      <Variation label="Multiple open items">
+        <AccordionExample type="multiple" />
+      </Variation>
+      <Variation label="Disabled">
+        <AccordionExample disabled />
+      </Variation>
+    </Variations>
   ),
 };
-export const Type: Story = { render: TypeExamples };
-export const Disabled: Story = { render: DisabledExamples };

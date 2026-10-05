@@ -1,72 +1,23 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { PlusIcon } from 'phosphor-react-native/src/icons/Plus';
+import type { ComponentProps } from 'react';
 import { View } from 'react-native';
-import {
-  StorySections,
-  Variation,
-  Variations,
-} from '../../mocks/primitive-story-variations';
+import { Variation, Variations } from '../../mocks/primitive-story-variations';
 import { Button } from './button';
 import { Icon } from './icon';
 import { Text } from './text';
 
-function VariantExamples() {
-  return (
-    <Variations>
-      {(
-        [
-          'default',
-          'destructive',
-          'outline',
-          'secondary',
-          'ghost',
-          'link',
-        ] as const
-      ).map((variant) => (
-        <Variation key={variant} label={variant}>
-          <View className="flex-row">
-            <Button variant={variant}>
-              <Text>Button</Text>
-            </Button>
-          </View>
-        </Variation>
-      ))}
-    </Variations>
-  );
-}
-function SizeExamples() {
-  return (
-    <Variations>
-      {(['default', 'sm', 'lg', 'icon'] as const).map((size) => (
-        <Variation key={size} label={size}>
-          <View className="flex-row">
-            <Button
-              size={size}
-              accessibilityLabel={size === 'icon' ? 'Add' : 'Button'}
-            >
-              {size === 'icon' ? <Icon as={PlusIcon} /> : <Text>Button</Text>}
-            </Button>
-          </View>
-        </Variation>
-      ))}
-    </Variations>
-  );
-}
-function DisabledExamples() {
-  return (
-    <Variations>
-      {[false, true].map((disabled) => (
-        <Variation key={String(disabled)} label={String(disabled)}>
-          <View className="flex-row">
-            <Button disabled={disabled}>
-              <Text>Button</Text>
-            </Button>
-          </View>
-        </Variation>
-      ))}
-    </Variations>
-  );
-}
+const buttons: { label: string; props: ComponentProps<typeof Button> }[] = [
+  { label: 'Default', props: {} },
+  { label: 'Destructive', props: { variant: 'destructive' } },
+  { label: 'Outline', props: { variant: 'outline' } },
+  { label: 'Secondary', props: { variant: 'secondary' } },
+  { label: 'Ghost', props: { variant: 'ghost' } },
+  { label: 'Link', props: { variant: 'link' } },
+  { label: 'Small', props: { size: 'sm' } },
+  { label: 'Large', props: { size: 'lg' } },
+  { label: 'Disabled', props: { disabled: true } },
+];
 
 const meta = {
   title: 'Design System/Primitives/Button',
@@ -75,17 +26,26 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
+export const Overview: Story = {
+  name: 'Button',
   render: () => (
-    <StorySections
-      sections={{
-        Variant: VariantExamples,
-        Size: SizeExamples,
-        Disabled: DisabledExamples,
-      }}
-    />
+    <Variations>
+      {buttons.map(({ label, props }) => (
+        <Variation key={label} label={label}>
+          <View className="flex-row">
+            <Button {...props}>
+              <Text>Button</Text>
+            </Button>
+          </View>
+        </Variation>
+      ))}
+      <Variation label="Icon">
+        <View className="flex-row">
+          <Button size="icon" accessibilityLabel="Add">
+            <Icon as={PlusIcon} />
+          </Button>
+        </View>
+      </Variation>
+    </Variations>
   ),
 };
-export const Variant: Story = { render: VariantExamples };
-export const Size: Story = { render: SizeExamples };
-export const Disabled: Story = { render: DisabledExamples };

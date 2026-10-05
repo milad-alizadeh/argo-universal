@@ -24,7 +24,6 @@ const meta = {
   component: SessionsScreen,
   parameters: {
     trpc: sessionListMocks,
-    previewPadding: false,
     screenPreview: true,
     navigation: recorder,
   },
@@ -408,11 +407,18 @@ export const NextPageLoading: Story = {
   parameters: { trpc: nextPageLoadingMocks },
   play: async ({ canvas }) =>
     eachLayout(async () => {
-      await expect(
-        await canvas.findByRole('progressbar', {
-          name: 'Loading more Sessions',
-        }),
-      ).toBeVisible();
+      const spinner = await canvas.findByRole('progressbar', {
+        name: 'Loading more Sessions',
+      });
+      await expect(spinner).toBeVisible();
+      await waitFor(() => {
+        const viewport = canvas
+          .getByTestId('sessions-scroll')
+          .getBoundingClientRect();
+        const indicator = spinner.getBoundingClientRect();
+        expect(indicator.top).toBeGreaterThanOrEqual(viewport.top);
+        expect(indicator.bottom).toBeLessThanOrEqual(viewport.bottom);
+      });
       await expect(canvas.getByText('Build the settings screen')).toBeVisible();
     }),
 };

@@ -6,8 +6,14 @@ import { AspectRatio } from './aspect-ratio';
 function RatioExamples() {
   return (
     <Variations>
-      {[1, 4 / 3, 16 / 9].map((ratio) => (
-        <Variation key={ratio} label={String(ratio)}>
+      {(
+        [
+          ['1:1', 1],
+          ['4:3', 4 / 3],
+          ['16:9', 16 / 9],
+        ] as const
+      ).map(([label, ratio]) => (
+        <Variation key={label} label={label}>
           <AspectRatio ratio={ratio}>
             <View className="h-full w-full rounded-md bg-muted" />
           </AspectRatio>
@@ -23,4 +29,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = { render: RatioExamples };
+export const Overview: Story = {
+  name: 'Aspect Ratio',
+  render: RatioExamples,
+};

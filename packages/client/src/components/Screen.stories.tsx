@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { Text } from '#primitives/text';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
 import { ScreenPreview } from '../../mocks/screen-preview';
-import { Screen } from './Screen';
+import { Screen, type ScreenProps } from './Screen';
 
 const meta = { title: 'Shared/Screen', component: Screen } satisfies Meta<
   typeof Screen
@@ -11,16 +11,20 @@ const meta = { title: 'Shared/Screen', component: Screen } satisfies Meta<
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const SafeArea: Story = {
+export const Overview: Story = {
+  name: 'Screen',
   render: (args) => (
     <Variations>
-      {[true, false].map((safeArea) => (
-        <Variation
-          key={String(safeArea)}
-          label={safeArea ? 'Default safe-area insets' : 'Insets disabled'}
-        >
+      {(
+        [
+          { label: 'Default safe-area insets', props: {} },
+          { label: 'Bottom inset only', props: { edges: ['bottom'] } },
+          { label: 'Insets disabled', props: { safeArea: false } },
+        ] satisfies { label: string; props: Partial<ScreenProps> }[]
+      ).map(({ label, props }) => (
+        <Variation key={label} label={label}>
           <ScreenPreview>
-            <Screen {...args} safeArea={safeArea} className="bg-sidebar">
+            <Screen {...args} {...props} className="bg-sidebar">
               <View className="flex-1 items-center justify-center bg-background">
                 <Text>Screen content</Text>
               </View>
@@ -28,21 +32,6 @@ export const SafeArea: Story = {
           </ScreenPreview>
         </Variation>
       ))}
-    </Variations>
-  ),
-};
-export const Edges: Story = {
-  render: (args) => (
-    <Variations>
-      <Variation label="Bottom inset only">
-        <ScreenPreview>
-          <Screen {...args} edges={['bottom']} className="bg-sidebar">
-            <View className="flex-1 items-center justify-center bg-background">
-              <Text>Screen content</Text>
-            </View>
-          </Screen>
-        </ScreenPreview>
-      </Variation>
     </Variations>
   ),
 };

@@ -115,6 +115,7 @@ export const ProjectActionsDark: Story = {
 };
 
 export const InsertSessionOpaqueRows: Story = {
+  parameters: { screenPreview: true },
   render: (args) => <SessionsNewSessionPreview {...args} />,
   play: async ({ canvas, userEvent }) => {
     const heading = await canvas.findByRole('button', {
@@ -190,6 +191,7 @@ export const InsertSessionOpaqueRowsDark: Story = {
 };
 
 export const ScrollFadePadding: Story = {
+  parameters: { screenPreview: true },
   render: (args) => <SessionsNewSessionPreview {...args} />,
   play: async ({ canvas }) => {
     const scroll = canvas.getByTestId('sessions-scroll');
@@ -255,6 +257,7 @@ export const ScrollFadePaddingDark: Story = {
 
 export const PaginationSpinnerVisible: Story = {
   beforeEach: delayFooterLayout,
+  parameters: { screenPreview: true },
   render: (args) => <SessionsPaginationPreview {...args} />,
   play: async ({ canvas }) => {
     const scroll = await canvas.findByTestId('sessions-scroll');

@@ -12,33 +12,21 @@ const meta = {
     onSearch: action('search'),
     onFilter: action('filter'),
   },
-  argTypes: {
-    onMenu: { action: 'open navigation' },
-    onSearch: { action: 'search' },
-    onFilter: { action: 'filter' },
-  },
 } satisfies Meta<typeof PhoneListHeader>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Title: Story = {
+export const Overview: Story = {
+  name: 'PhoneListHeader',
   render: (args) => (
     <Variations>
-      {['Sessions', 'Issues', 'Atlas', 'Settings'].map((title) => (
-        <Variation key={title} label={title}>
-          <PhoneListHeader {...args} title={title} />
-        </Variation>
-      ))}
-    </Variations>
-  ),
-};
-
-export const AttentionCount: Story = {
-  render: (args) => (
-    <Variations>
-      {[0, 1, 100].map((count) => (
-        <Variation key={count} label={count > 99 ? '99+' : String(count)}>
+      {[
+        { label: 'No attention', count: 0 },
+        { label: 'One Session needs attention', count: 1 },
+        { label: 'More than 99 need attention', count: 100 },
+      ].map(({ label, count }) => (
+        <Variation key={label} label={label}>
           <PhoneListHeader {...args} attentionCount={count} />
         </Variation>
       ))}

@@ -1,10 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
-import {
-  StorySections,
-  Variation,
-  Variations,
-} from '../../mocks/primitive-story-variations';
+import { Variation, Variations } from '../../mocks/primitive-story-variations';
 import {
   Select,
   SelectContent,
@@ -50,42 +46,6 @@ function SelectExample({
     </Select>
   );
 }
-function SizeExamples() {
-  return (
-    <Variations>
-      {(['default', 'sm'] as const).map((size) => (
-        <Variation key={size} label={size}>
-          <SelectExample size={size} />
-        </Variation>
-      ))}
-    </Variations>
-  );
-}
-function DisabledExamples() {
-  return (
-    <Variations>
-      {[false, true].map((disabled) => (
-        <Variation key={String(disabled)} label={String(disabled)}>
-          <SelectExample disabled={disabled} />
-        </Variation>
-      ))}
-    </Variations>
-  );
-}
-function ValueExamples() {
-  return (
-    <Variations>
-      <Variation label="Empty">
-        <SelectExample />
-      </Variation>
-      {fruits.map((value) => (
-        <Variation key={value.value} label={value.label}>
-          <SelectExample initialValue={value} />
-        </Variation>
-      ))}
-    </Variations>
-  );
-}
 
 const meta = {
   title: 'Design System/Primitives/Select',
@@ -94,17 +54,22 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
+export const Overview: Story = {
+  name: 'Select',
   render: () => (
-    <StorySections
-      sections={{
-        Size: SizeExamples,
-        Disabled: DisabledExamples,
-        Value: ValueExamples,
-      }}
-    />
+    <Variations>
+      <Variation label="Placeholder">
+        <SelectExample />
+      </Variation>
+      <Variation label="Selected">
+        <SelectExample initialValue={fruits[0]} />
+      </Variation>
+      <Variation label="Small">
+        <SelectExample size="sm" />
+      </Variation>
+      <Variation label="Disabled">
+        <SelectExample disabled />
+      </Variation>
+    </Variations>
   ),
 };
-export const Size: Story = { render: SizeExamples };
-export const Disabled: Story = { render: DisabledExamples };
-export const Value: Story = { render: ValueExamples };

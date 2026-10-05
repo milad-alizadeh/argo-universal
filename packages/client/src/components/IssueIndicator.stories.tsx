@@ -10,15 +10,16 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const IssueNumber: Story = {
-  name: 'Number',
+export const Overview: Story = {
+  name: 'IssueIndicator',
   render: () => (
     <Variations>
-      {[1, 96, 12345].map((number) => (
-        <Variation key={number} label={`#${number}`}>
-          <IssueIndicator number={number} />
-        </Variation>
-      ))}
+      <Variation label="Short number">
+        <IssueIndicator number={96} />
+      </Variation>
+      <Variation label="Long number">
+        <IssueIndicator number={12345} />
+      </Variation>
     </Variations>
   ),
 };

@@ -2,11 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { TextBIcon } from 'phosphor-react-native/src/icons/TextB';
 import { useState } from 'react';
 import { View } from 'react-native';
-import {
-  StorySections,
-  Variation,
-  Variations,
-} from '../../mocks/primitive-story-variations';
+import { Variation, Variations } from '../../mocks/primitive-story-variations';
 import { Toggle, ToggleIcon } from './toggle';
 
 function ToggleExample({
@@ -36,50 +32,6 @@ function ToggleExample({
     </View>
   );
 }
-function VariantExamples() {
-  return (
-    <Variations>
-      {(['default', 'outline'] as const).map((variant) => (
-        <Variation key={variant} label={variant}>
-          <ToggleExample variant={variant} />
-        </Variation>
-      ))}
-    </Variations>
-  );
-}
-function SizeExamples() {
-  return (
-    <Variations>
-      {(['default', 'sm', 'lg'] as const).map((size) => (
-        <Variation key={size} label={size}>
-          <ToggleExample size={size} />
-        </Variation>
-      ))}
-    </Variations>
-  );
-}
-function DisabledExamples() {
-  return (
-    <Variations>
-      {[false, true].map((disabled) => (
-        <Variation key={String(disabled)} label={String(disabled)}>
-          <ToggleExample disabled={disabled} />
-        </Variation>
-      ))}
-    </Variations>
-  );
-}
-function PressedExamples() {
-  return (
-    <Variations>
-      {[false, true].map((pressed) => (
-        <Variation key={String(pressed)} label={String(pressed)}>
-          <ToggleExample initialPressed={pressed} />
-        </Variation>
-      ))}
-    </Variations>
-  );
-}
 
 const meta = {
   title: 'Design System/Primitives/Toggle',
@@ -88,19 +40,28 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
+export const Overview: Story = {
+  name: 'Toggle',
   render: () => (
-    <StorySections
-      sections={{
-        Variant: VariantExamples,
-        Size: SizeExamples,
-        Disabled: DisabledExamples,
-        Pressed: PressedExamples,
-      }}
-    />
+    <Variations>
+      <Variation label="Off">
+        <ToggleExample />
+      </Variation>
+      <Variation label="Pressed">
+        <ToggleExample initialPressed />
+      </Variation>
+      <Variation label="Outline">
+        <ToggleExample variant="outline" />
+      </Variation>
+      <Variation label="Small">
+        <ToggleExample size="sm" />
+      </Variation>
+      <Variation label="Large">
+        <ToggleExample size="lg" />
+      </Variation>
+      <Variation label="Disabled">
+        <ToggleExample disabled />
+      </Variation>
+    </Variations>
   ),
 };
-export const Variant: Story = { render: VariantExamples };
-export const Size: Story = { render: SizeExamples };
-export const Disabled: Story = { render: DisabledExamples };
-export const Pressed: Story = { render: PressedExamples };

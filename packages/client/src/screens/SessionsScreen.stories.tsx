@@ -6,11 +6,7 @@ import { SessionsScreen } from './SessionsScreen';
 const meta = {
   title: 'Screens/SessionsScreen',
   component: SessionsScreen,
-  parameters: {
-    trpc: sessionListMocks,
-    previewPadding: false,
-    screenPreview: true,
-  },
+  parameters: { trpc: sessionListMocks, screenPreview: true },
   render: () => (
     <SessionsScreenPreview>
       <SessionsScreen />
@@ -18,10 +14,5 @@ const meta = {
   ),
 } satisfies Meta<typeof SessionsScreen>;
 export default meta;
-type Story = StoryObj<typeof meta>;
 
-export const Loaded: Story = {};
-export const Reconnecting: Story = {
-  parameters: { connection: 'reconnecting' },
-};
-export const Offline: Story = { parameters: { connection: 'offline' } };
+export const Overview: StoryObj<typeof meta> = { name: 'SessionsScreen' };

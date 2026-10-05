@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { View } from 'react-native';
 import { action } from 'storybook/actions';
 import { DesktopShellMock } from '../../mocks/desktop-shell-mock';
 import { DesktopShell, type DesktopShellProps } from './DesktopShell';
@@ -7,6 +6,7 @@ import { DesktopShell, type DesktopShellProps } from './DesktopShell';
 const meta = {
   title: 'Shell/DesktopShell',
   component: DesktopShell,
+  parameters: { screenPreview: true },
   argTypes: {
     showInspectorControls: { control: false, table: { disable: true } },
     selectedSection: {
@@ -20,11 +20,7 @@ const meta = {
     sidebarShown: { control: 'boolean' },
     attentionCount: { control: 'number' },
   },
-  render: (args) => (
-    <View className="h-[600px] w-full">
-      <DesktopShellMock {...args} />
-    </View>
-  ),
+  render: (args) => <DesktopShellMock {...args} />,
   args: {
     showInspectorControls: false,
     selectedSection: 'sessions',
@@ -46,7 +42,5 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const SelectedSection: Story = {};
-export const SidebarShown: Story = { args: { sidebarShown: false } };
-export const InspectorState: Story = { args: { inspectorState: 'open' } };
-export const AttentionCount: Story = { args: { attentionCount: 100 } };
+// The rail and dividers drive the shell; controls set the section, sidebar, Inspector and attention count.
+export const Overview: Story = { name: 'DesktopShell' };

@@ -10,7 +10,8 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Status: Story = {
+export const Overview: Story = {
+  name: 'StatusIndicator',
   render: (args) => (
     <Variations>
       {(['running', 'needs_input', 'failed', 'unread', 'idle'] as const).map(
@@ -20,29 +21,10 @@ export const Status: Story = {
           </Variation>
         ),
       )}
-    </Variations>
-  ),
-};
-
-export const Size: Story = {
-  render: (args) => (
-    <Variations>
-      {(['default', 'small'] as const).map((size) => (
-        <Variation key={size} label={size}>
-          <StatusIndicator {...args} size={size} />
-        </Variation>
-      ))}
-    </Variations>
-  ),
-};
-
-export const ClassName: Story = {
-  render: (args) => (
-    <Variations>
-      <Variation label="Background border">
-        <StatusIndicator {...args} />
+      <Variation label="Small">
+        <StatusIndicator {...args} size="small" />
       </Variation>
-      <Variation label="Selected surface">
+      <Variation label="On a selected surface">
         <StatusIndicator
           {...args}
           className="border-sidebar-accent bg-sidebar-accent"
