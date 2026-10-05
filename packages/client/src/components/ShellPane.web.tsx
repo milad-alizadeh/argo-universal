@@ -17,6 +17,9 @@ export function ShellPane({
   children,
 }: ShellPaneProps) {
   const viewport = useRef<HTMLDivElement>(null);
+  const frame = useRef<HTMLDivElement>(null);
+  // Content that reflows with the pane needs real width; a transform would move it twice.
+  const reflows = contentWidth === undefined;
   const surface = useRef<HTMLDivElement>(null);
   const motion = useRef<Animation[]>([]);
   const previous = useRef({
@@ -46,7 +49,11 @@ export function ShellPane({
     );
     let currentWidth = last.width;
     let currentOffset = last.offset;
-    if (running) {
+    if (running && reflows && frame.current) {
+      const style = getComputedStyle(frame.current);
+      currentWidth = Number.parseFloat(style.width);
+      currentOffset += new DOMMatrixReadOnly(style.transform).m41;
+    } else if (running) {
       const style = getComputedStyle(element);
       currentWidth =
         last.frameWidth -
@@ -64,33 +71,50 @@ export function ShellPane({
       !matchMedia('(prefers-reduced-motion: reduce)').matches
     ) {
       const translation = currentOffset - offset;
-      motion.current.push(
-        element.animate(
-          [
-            {
-              transform: `translateX(${translation}px)`,
-              clipPath: `inset(0 ${Math.max(0, frameWidth - currentWidth)}px 0 0)`,
-            },
-            {
-              transform: 'translateX(0px)',
-              clipPath: `inset(0 ${Math.max(0, frameWidth - width)}px 0 0)`,
-            },
-          ],
-          timing,
-        ),
-      );
-      if (surface.current) {
+      if (reflows && frame.current) {
         motion.current.push(
-          surface.current.animate(
+          frame.current.animate(
             [
               {
-                transform: `translateX(${translation}px) scaleX(${currentWidth / surfaceWidth})`,
+                width: `${currentWidth}px`,
+                transform: `translateX(${translation}px)`,
               },
-              { transform: `translateX(0px) scaleX(${width / surfaceWidth})` },
+              { width: `${width}px`, transform: 'translateX(0px)' },
             ],
             timing,
           ),
         );
+      } else {
+        motion.current.push(
+          element.animate(
+            [
+              {
+                transform: `translateX(${translation}px)`,
+                clipPath: `inset(0 ${Math.max(0, frameWidth - currentWidth)}px 0 0)`,
+              },
+              {
+                transform: 'translateX(0px)',
+                clipPath: `inset(0 ${Math.max(0, frameWidth - width)}px 0 0)`,
+              },
+            ],
+            timing,
+          ),
+        );
+        if (surface.current) {
+          motion.current.push(
+            surface.current.animate(
+              [
+                {
+                  transform: `translateX(${translation}px) scaleX(${currentWidth / surfaceWidth})`,
+                },
+                {
+                  transform: `translateX(0px) scaleX(${width / surfaceWidth})`,
+                },
+              ],
+              timing,
+            ),
+          );
+        }
       }
     }
     previous.current = {
@@ -108,6 +132,7 @@ export function ShellPane({
     frameWidth,
     surfaceWidth,
     animate,
+    reflows,
   ]);
 
   useLayoutEffect(
@@ -125,37 +150,63 @@ export function ShellPane({
       aria-hidden={hidden}
       inert={hidden}
     >
-      {card && (
+      {reflows ? (
         <div
-          ref={surface}
-          className="absolute bottom-0 left-0 top-shell-bar rounded-xl bg-card shadow-card"
-          style={{
-            width: surfaceWidth,
-            transformOrigin: 'left center',
-            transform: `scaleX(${width / surfaceWidth})`,
-            willChange: 'transform',
-            pointerEvents: 'none',
-          }}
-        />
-      )}
-      <div
-        ref={viewport}
-        data-testid={`${testID}-viewport`}
-        className="absolute bottom-0 left-0 top-0 overflow-hidden"
-        style={{
-          width: frameWidth,
-          clipPath: `inset(0 ${Math.max(0, frameWidth - width)}px 0 0)`,
-          willChange: 'transform, clip-path',
-        }}
-      >
-        <View
-          testID={`${testID}-content`}
-          className="flex-1 h-full"
-          style={{ width: stableContentWidth }}
+          ref={frame}
+          className="absolute bottom-0 left-0 top-0"
+          style={{ width, willChange: 'transform, width' }}
         >
-          {children}
-        </View>
-      </div>
+          {card && (
+            <div
+              className="absolute bottom-0 left-0 right-0 top-shell-bar rounded-xl bg-card shadow-card"
+              style={{ pointerEvents: 'none' }}
+            />
+          )}
+          <div
+            ref={viewport}
+            data-testid={`${testID}-viewport`}
+            className="absolute inset-0 overflow-hidden"
+          >
+            <View testID={`${testID}-content`} className="flex-1 h-full w-full">
+              {children}
+            </View>
+          </div>
+        </div>
+      ) : (
+        <>
+          {card && (
+            <div
+              ref={surface}
+              className="absolute bottom-0 left-0 top-shell-bar rounded-xl bg-card shadow-card"
+              style={{
+                width: surfaceWidth,
+                transformOrigin: 'left center',
+                transform: `scaleX(${width / surfaceWidth})`,
+                willChange: 'transform',
+                pointerEvents: 'none',
+              }}
+            />
+          )}
+          <div
+            ref={viewport}
+            data-testid={`${testID}-viewport`}
+            className="absolute bottom-0 left-0 top-0 overflow-hidden"
+            style={{
+              width: frameWidth,
+              clipPath: `inset(0 ${Math.max(0, frameWidth - width)}px 0 0)`,
+              willChange: 'transform, clip-path',
+            }}
+          >
+            <View
+              testID={`${testID}-content`}
+              className="flex-1 h-full"
+              style={{ width: stableContentWidth }}
+            >
+              {children}
+            </View>
+          </div>
+        </>
+      )}
       {header && (
         <div
           className="absolute left-0 right-0 top-0 h-shell-bar"

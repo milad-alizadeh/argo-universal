@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { PhoneShell } from '../components/PhoneShell';
 import { useSectionList } from '../components/SectionList';
 import type { ShellSection } from '../components/shell-sections';
-import { useNavigate } from '../navigation/context';
+import { useDrawerHandover, useNavigate } from '../navigation/context';
 import { sectionDestination } from '../navigation/sections';
 
 export interface PhoneSectionScreenProps {
@@ -12,7 +12,17 @@ export interface PhoneSectionScreenProps {
 // A phone section root: the drawer of sections around the section's list.
 export function PhoneSectionScreen({ section }: PhoneSectionScreenProps) {
   const navigate = useNavigate();
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const drawerHandover = useDrawerHandover();
+  const [drawerOpen, setDrawerOpen] = useState(() => drawerHandover.current);
+  useEffect(() => {
+    if (!drawerHandover.current) return;
+    // Wait a frame so the drawer has drawn open before it animates shut.
+    const frame = requestAnimationFrame(() => {
+      drawerHandover.current = false;
+      setDrawerOpen(false);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [drawerHandover]);
   const { header, list } = useSectionList(section);
   return (
     <PhoneShell
@@ -20,7 +30,11 @@ export function PhoneSectionScreen({ section }: PhoneSectionScreenProps) {
       attentionCount={0}
       drawerOpen={drawerOpen}
       onDrawerOpenChange={setDrawerOpen}
-      onSectionChange={(next) => navigate(sectionDestination(next))}
+      onSectionChange={(next) => {
+        if (next === section) return;
+        drawerHandover.current = true;
+        navigate(sectionDestination(next));
+      }}
       // Search and filter arrive with the Sessions list screen.
       onSearch={() => {}}
       onFilter={() => {}}
