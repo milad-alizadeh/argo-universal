@@ -1,46 +1,32 @@
-import { useEffect, useState } from 'react';
-import { PhoneShell } from '../components/PhoneShell';
+import { View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useOpenDrawer } from '../components/PhoneLayout';
+import { PhoneListHeader } from '../components/PhoneListHeader';
 import { useSectionList } from '../components/SectionList';
-import type { ShellSection } from '../components/shell-sections';
-import { useDrawerHandover, useNavigate } from '../navigation/context';
-import { sectionDestination } from '../navigation/sections';
+import { type ShellSection, shellSections } from '../components/shell-sections';
 
 export interface PhoneSectionScreenProps {
   section: ShellSection;
 }
 
-// A phone section root: the drawer of sections around the section's list.
+// A phone section root: ☰ and the list's header row over the section's list, inside PhoneLayout's drawer.
 export function PhoneSectionScreen({ section }: PhoneSectionScreenProps) {
-  const navigate = useNavigate();
-  const drawerHandover = useDrawerHandover();
-  const [drawerOpen, setDrawerOpen] = useState(() => drawerHandover.current);
-  useEffect(() => {
-    if (!drawerHandover.current) return;
-    // Wait a frame so the drawer has drawn open before it animates shut.
-    const frame = requestAnimationFrame(() => {
-      drawerHandover.current = false;
-      setDrawerOpen(false);
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [drawerHandover]);
+  const openDrawer = useOpenDrawer();
+  const { top } = useSafeAreaInsets();
   const { header, list } = useSectionList(section);
   return (
-    <PhoneShell
-      selectedSection={section}
-      attentionCount={0}
-      drawerOpen={drawerOpen}
-      onDrawerOpenChange={setDrawerOpen}
-      onSectionChange={(next) => {
-        if (next === section) return;
-        drawerHandover.current = true;
-        navigate(sectionDestination(next));
-      }}
-      // Search and filter arrive with the Sessions list screen.
-      onSearch={() => {}}
-      onFilter={() => {}}
-      header={header}
-    >
+    <View className="flex-1 bg-card">
+      <View style={{ height: top }} />
+      <PhoneListHeader
+        title={shellSections[section].title}
+        onMenu={openDrawer}
+        // Search and filter arrive with the Sessions list screen.
+        onSearch={() => {}}
+        onFilter={() => {}}
+      >
+        {header}
+      </PhoneListHeader>
       {list}
-    </PhoneShell>
+    </View>
   );
 }

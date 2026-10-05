@@ -24,6 +24,9 @@ export interface PhoneShellProps {
   onFilter: () => void;
   // The list's own header row after ☰, when it has one.
   header?: ReactNode;
+  // False when the screens inside draw their own header row.
+  showListHeader?: boolean;
+  swipeEnabled?: boolean;
   children: ReactNode;
 }
 
@@ -36,6 +39,8 @@ export function PhoneShell({
   onSearch,
   onFilter,
   header,
+  showListHeader = true,
+  swipeEnabled = true,
   children,
 }: PhoneShellProps) {
   const drawerWidth = Number.parseFloat(
@@ -78,6 +83,7 @@ export function PhoneShell({
       >
         <Icon
           as={icon}
+          weight={selectedSection === section ? 'fill' : 'regular'}
           className={cn(
             'size-phone-shell-icon',
             selectedSection !== section && 'text-muted-foreground',
@@ -118,6 +124,7 @@ export function PhoneShell({
         width={offset}
         surfaceStyle={chrome}
         layout={layout}
+        swipeEnabled={swipeEnabled}
         renderDrawerContent={() => (
           <View
             className="flex-1 py-3"
@@ -143,16 +150,20 @@ export function PhoneShell({
         )}
       >
         <PhoneShellCard drawerOpen={drawerOpen}>
-          <View style={{ height: top }} />
-          <PhoneListHeader
-            title={shellSections[selectedSection].title}
-            attentionCount={attentionCount}
-            onMenu={() => onDrawerOpenChange(true)}
-            onSearch={onSearch}
-            onFilter={onFilter}
-          >
-            {header}
-          </PhoneListHeader>
+          {showListHeader && (
+            <>
+              <View style={{ height: top }} />
+              <PhoneListHeader
+                title={shellSections[selectedSection].title}
+                attentionCount={attentionCount}
+                onMenu={() => onDrawerOpenChange(true)}
+                onSearch={onSearch}
+                onFilter={onFilter}
+              >
+                {header}
+              </PhoneListHeader>
+            </>
+          )}
           {children}
         </PhoneShellCard>
       </PhoneDrawer>

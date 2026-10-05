@@ -1,3 +1,4 @@
+import { ImpactFeedbackStyle, impactAsync } from 'expo-haptics';
 import { ListIcon } from 'phosphor-react-native/src/icons/List';
 import { MagnifyingGlassIcon } from 'phosphor-react-native/src/icons/MagnifyingGlass';
 import { SlidersHorizontalIcon } from 'phosphor-react-native/src/icons/SlidersHorizontal';
@@ -37,7 +38,10 @@ export function PhoneListHeader({
             ? `${attentionCount} Sessions need attention`
             : undefined
         }
-        onPress={onMenu}
+        onPress={() => {
+          void impactAsync(ImpactFeedbackStyle.Light);
+          onMenu();
+        }}
       >
         <Icon as={ListIcon} className="size-phone-shell-icon" />
         {attentionCount > 0 && (

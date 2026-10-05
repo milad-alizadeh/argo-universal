@@ -1,20 +1,45 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { useState } from 'react';
 import { View } from 'react-native';
 import { expect } from 'storybook/test';
 import { sessionListMocks } from '../../mocks/session-list-mock';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
+import { PhoneLayout } from '../components/PhoneLayout';
+import type { ShellSection } from '../components/shell-sections';
+import {
+  type NavigationDestination,
+  NavigationProvider,
+} from '../navigation/context';
+import { sectionDestination, sectionOf } from '../navigation/sections';
 import { PhoneSectionScreen } from './PhoneSectionScreen';
 
 const recorder = createNavigationRecorder();
+
+// Follows each navigation, so the drawer closes over the next section as in the app.
+function NavigatingPhoneLayout({ section }: { section: ShellSection }) {
+  const [destination, setDestination] = useState<NavigationDestination>(
+    sectionDestination(section),
+  );
+  return (
+    <NavigationProvider
+      navigate={(next) => {
+        recorder.navigate(next);
+        setDestination(next);
+      }}
+    >
+      <View className="h-[796px] w-full">
+        <PhoneLayout destination={destination}>
+          <PhoneSectionScreen section={sectionOf(destination)} />
+        </PhoneLayout>
+      </View>
+    </NavigationProvider>
+  );
+}
 const meta = {
   title: 'Tests/PhoneSectionScreen',
   component: PhoneSectionScreen,
   args: { section: 'sessions' },
-  render: (args) => (
-    <View className="h-[796px] w-full">
-      <PhoneSectionScreen {...args} />
-    </View>
-  ),
+  render: (args) => <NavigatingPhoneLayout section={args.section} />,
   parameters: { navigation: recorder, trpc: sessionListMocks },
   beforeEach: async () => {
     recorder.reset();

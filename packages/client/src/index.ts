@@ -14,6 +14,7 @@ export {
   IssueIndicator,
   type IssueIndicatorProps,
 } from './components/IssueIndicator';
+export { PhoneLayout, type PhoneLayoutProps } from './components/PhoneLayout';
 export {
   PhoneListHeader,
   type PhoneListHeaderProps,

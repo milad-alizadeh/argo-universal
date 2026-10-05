@@ -1,10 +1,4 @@
-import {
-  createContext,
-  type ReactNode,
-  type RefObject,
-  useContext,
-  useRef,
-} from 'react';
+import { createContext, type ReactNode, useContext } from 'react';
 
 export type NavigationDestination =
   | { to: 'sessions' }
@@ -26,10 +20,6 @@ export type NavigationDestination =
 export type Navigate = (destination: NavigationDestination) => void;
 
 const NavigateContext = createContext<Navigate | null>(null);
-// True while a section picked from the phone drawer mounts, so its drawer starts open and animates shut.
-const DrawerHandoverContext = createContext<RefObject<boolean>>({
-  current: false,
-});
 
 export interface NavigationProviderProps {
   navigate: Navigate;
@@ -40,18 +30,11 @@ export function NavigationProvider({
   navigate,
   children,
 }: NavigationProviderProps) {
-  const drawerHandover = useRef(false);
   return (
     <NavigateContext.Provider value={navigate}>
-      <DrawerHandoverContext.Provider value={drawerHandover}>
-        {children}
-      </DrawerHandoverContext.Provider>
+      {children}
     </NavigateContext.Provider>
   );
-}
-
-export function useDrawerHandover(): RefObject<boolean> {
-  return useContext(DrawerHandoverContext);
 }
 
 export function useNavigate(): Navigate {

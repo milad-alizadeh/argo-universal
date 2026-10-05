@@ -185,6 +185,8 @@ export function SessionsList({
           testID="sessions-scroll"
           style={{ flex: 1 }}
           contentContainerStyle={contentStyle}
+          // On iOS it scrolls by the fade's top padding on mount, then snaps back.
+          maintainVisibleContentPosition={false}
           data={entries}
           keyExtractor={entryKey}
           estimatedItemSize={76}

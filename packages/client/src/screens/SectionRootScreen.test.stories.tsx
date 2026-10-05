@@ -25,7 +25,9 @@ export const WideOpensTheFirstPage: Story = {
     await expect(
       await canvas.findByText('Accounts will appear here.'),
     ).toBeVisible();
-    await expect(canvas.queryByTestId('phone-shell')).toBeNull();
+    await expect(
+      canvas.queryByRole('button', { name: 'Open navigation' }),
+    ).toBeNull();
   },
 };
 
@@ -33,7 +35,9 @@ export const PhoneShowsTheList: Story = {
   play: async ({ canvas }) => {
     const { page } = await import('vitest/browser');
     await page.viewport(390, 844);
-    await expect(await canvas.findByTestId('phone-shell')).toBeVisible();
+    await expect(
+      await canvas.findByRole('button', { name: 'Open navigation' }),
+    ).toBeVisible();
     await expect(
       canvas.getByRole('button', { name: 'Connection' }),
     ).toBeVisible();
