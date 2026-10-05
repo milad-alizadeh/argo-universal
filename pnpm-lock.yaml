@@ -899,6 +899,9 @@ importers:
 
   packages/client:
     dependencies:
+      '@repo/contracts':
+        specifier: workspace:*
+        version: link:../contracts
       '@repo/uniwind':
         specifier: workspace:*
         version: link:../../tooling/uniwind

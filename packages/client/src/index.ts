@@ -13,6 +13,7 @@ export {
   type PhoneShellProps,
   type ShellSection,
 } from './components/PhoneShell';
+export { SessionRow, type SessionRowProps } from './components/SessionRow';
 export {
   SettingsList,
   type SettingsListProps,
