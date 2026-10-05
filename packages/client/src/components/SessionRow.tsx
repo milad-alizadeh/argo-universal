@@ -145,7 +145,7 @@ export function SessionRow({
                 />
                 {(subagentsFailed || session.subagents.running > 0) && (
                   <View
-                    testID="subagents-running"
+                    testID="subagents-status"
                     className={cn(
                       'absolute -right-0.75 -top-0.75 size-2 rounded-full border-2',
                       subagentsFailed ? 'bg-destructive' : 'bg-success',

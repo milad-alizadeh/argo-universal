@@ -175,7 +175,7 @@ export const PlanAndSubagents: Story = {
       await expect(
         canvas.getByLabelText('Subagents: 3, 2 running'),
       ).toBeVisible();
-      await expect(canvas.getByTestId('subagents-running')).toBeVisible();
+      await expect(canvas.getByTestId('subagents-status')).toBeVisible();
     }
   },
 };
@@ -211,7 +211,7 @@ export const FinishedSubagents: Story = {
         canvas.getByLabelText('Subagents: 3, 0 running'),
       ).toBeVisible();
       await expect(
-        canvas.queryByTestId('subagents-running'),
+        canvas.queryByTestId('subagents-status'),
       ).not.toBeInTheDocument();
     }
   },
