@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { sessionColumns } from '../columns';
+import { CheckoutChoice } from './new';
 
 // Input of `session.list`, after ACP `ListSessionsRequest`, filtered by Project instead of `cwd`.
 export const SessionListInput = z.strictObject({
@@ -23,7 +24,7 @@ export const SessionTitleSource = z.enum(['user', 'agent', 'prompt']);
 export type SessionTitleSource = z.infer<typeof SessionTitleSource>;
 
 export const SessionCheckout = z.strictObject({
-  type: z.enum(['worktree', 'main']),
+  type: CheckoutChoice,
   path: sessionColumns.shape.checkoutPath,
   branch: sessionColumns.shape.checkoutBranch,
 });
@@ -37,12 +38,14 @@ export type SessionWorkCount = z.infer<typeof SessionWorkCount>;
 
 // One Session in a list, after ACP `SessionInfo`: `session` columns under ACP names, times in Unix milliseconds.
 export const SessionInfo = z.strictObject({
-  sessionId: sessionColumns.shape.id,
   ...sessionColumns.pick({
     projectId: true,
     agent: true,
     parentSessionId: true,
+    createdAt: true,
+    updatedAt: true,
   }).shape,
+  sessionId: sessionColumns.shape.id,
   cwd: sessionColumns.shape.checkoutPath,
   status: SessionStatus,
   title: z.string(),
@@ -56,8 +59,6 @@ export const SessionInfo = z.strictObject({
   archivedAt: z.int().nullable(),
   issue: z.null(),
   pullRequest: z.null(),
-  createdAt: sessionColumns.shape.createdAt,
-  updatedAt: sessionColumns.shape.updatedAt,
 });
 export type SessionInfo = z.infer<typeof SessionInfo>;
 
