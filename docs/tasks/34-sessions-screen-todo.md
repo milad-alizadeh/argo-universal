@@ -23,8 +23,8 @@ Updated as new requests arrive. Completed entries describe implemented changes; 
 - [x] Remove On Project Settings from showcase stories; keep callback coverage in test stories because it has no distinct visual state.
 - [x] Show archived Sessions and no archived Sessions together; remove the Active comparison.
 - [x] Remove the redundant No search variation from Query.
-- [ ] Fix the blind validation failure: the pagination spinner must be visible on the first scroll to the bottom, without another wheel gesture.
-- [ ] Keep the bottom scroll fade and pagination spinner visible together on the first loading gesture; independently replay in light and dark mode.
+- [x] Fix the blind validation failure: the pagination spinner must be visible on the first scroll to the bottom, without another wheel gesture.
+- [x] Keep the bottom scroll fade and pagination spinner visible together on the first loading gesture; independent single-wheel replay passed in light and dark mode.
 - [x] Make On End Reached interactive: start with 20 rows, load 20 more after two seconds, stop at 100 rows.
 - [x] Add shared Screen with safe-area insets enabled by default and optional safeArea / edges overrides.
 - [x] Apply Screen to the Sessions screen.
@@ -34,12 +34,15 @@ Updated as new requests arrive. Completed entries describe implemented changes; 
 - [x] Keep one interactive SettingsList showcase story and remove redundant Projects, Agents, and Selected Destination stories.
 - [x] Have another sub-agent add a smooth morph animation when the search icon expands into the search field and collapses back. Preserve focus, filtering, clear, Escape, and reduced motion; two focused browser tests pass across phone/wide and light/dark.
 - [x] Add one dedicated interactive Search showcase for opening, typing, and collapsing the morphing search control, outside test stories.
-- [ ] Have a fresh blind sub-agent independently test every requested fix against live previews and report PASS / FAIL / UNVERIFIED with visual evidence and reproducible failures.
+- [x] Have a fresh blind sub-agent independently test every requested fix against live previews and report PASS / FAIL / UNVERIFIED with visual evidence and reproducible failures.
 - [x] Remove the close control’s hover background while search is expanded; keep the collapsed search trigger hover behavior.
 - [x] Rename ProjectsList → SessionsList, ProjectsScreen → SessionsScreen, and ProjectsLoading → SessionsLoading, including files, exports, mocks, story titles, and preview links.
+- [x] Match the iOS search field to web: field height, icon/text alignment, placeholder and entered-text typography. Directly verified placeholder and typed-text screenshots in the iPhone Simulator and phone web preview; browser Search / SearchMorph and client typecheck pass.
 - [ ] User acceptance of the current changes.
 - [x] Update AGENTS.md Storybook rules: distinct valid visual states, no repeated default states or child-component coverage, callback checks without visual effects in test stories, and interactive pagination with enough rows, temporary loading, and appended results. Align the Paper guidance with these rules.
 - [ ] Final review when preparing the PR.
+
+Independent results and native coverage limits: [validation report](34-blind-validation.md).
 
 ## Where to see changes
 

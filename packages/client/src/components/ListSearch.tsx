@@ -8,6 +8,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { useResolveClassNames } from 'uniwind';
 import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
 import { Input } from '#primitives/input';
@@ -25,6 +26,7 @@ export function ListSearch({ title, value, onChangeText }: ListSearchProps) {
   const wide = useWide();
   const buttonSize = wide ? 32 : 44;
   const iconSize = wide ? 16 : 22;
+  const placeholderStyle = useResolveClassNames('text-muted-foreground');
   const [searching, setSearching] = useState(false);
   const [width, setWidth] = useState(buttonSize);
   const input = useRef<TextInput>(null);
@@ -112,20 +114,21 @@ export function ListSearch({ title, value, onChangeText }: ListSearchProps) {
         importantForAccessibility={searching ? 'auto' : 'no-hide-descendants'}
         {...{ inert: !searching }}
         className="absolute right-0 h-8 justify-center overflow-hidden border border-input bg-background dark:bg-input/30"
-        style={surfaceStyle}
+        style={[{ top: (buttonSize - 32) / 2 }, surfaceStyle]}
       >
         <Input
           ref={input}
           editable={searching}
           accessibilityLabel={`Search ${title}`}
           placeholder={`Search ${title}`}
+          placeholderTextColor={placeholderStyle.color}
           value={value}
           onChangeText={onChangeText}
           onKeyPress={({ nativeEvent }) => {
             if (nativeEvent.key === 'Escape') closeSearch();
           }}
-          className="h-8 sm:h-8 w-full rounded-none border-0 bg-transparent dark:bg-transparent pl-8 text-sm shadow-none focus-visible:ring-0"
-          style={{ paddingRight: buttonSize }}
+          className="h-8 sm:h-8 w-full rounded-none border-0 bg-transparent dark:bg-transparent pl-8 py-0 text-sm leading-5 ios:leading-none font-normal shadow-none focus-visible:ring-0"
+          style={{ paddingRight: buttonSize, textAlignVertical: 'center' }}
         />
       </Animated.View>
       <Button

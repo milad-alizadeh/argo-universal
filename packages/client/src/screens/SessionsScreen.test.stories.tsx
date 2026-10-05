@@ -127,7 +127,7 @@ export const Search: Story = {
         canvas.getByRole('button', { name: 'Search Sessions' }),
       );
       const input = canvas.getByRole('textbox', { name: 'Search Sessions' });
-      await expect(input).toHaveFocus();
+      await waitFor(() => expect(input).toHaveFocus());
       await userEvent.type(input, 'settings');
       await expect(
         (await canvas.findAllByText('Build the settings screen'))[0],
