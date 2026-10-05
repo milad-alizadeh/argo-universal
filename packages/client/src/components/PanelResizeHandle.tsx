@@ -7,6 +7,7 @@ export interface PanelResizeHandleProps {
   minimum: number;
   maximum: number;
   direction: 1 | -1;
+  edge?: 'left' | 'right';
   onChange: (width: number) => void;
 }
 
@@ -16,6 +17,7 @@ export function PanelResizeHandle({
   minimum,
   maximum,
   direction,
+  edge = 'right',
   onChange,
 }: PanelResizeHandleProps) {
   const startingWidth = useRef(value);
@@ -25,17 +27,12 @@ export function PanelResizeHandle({
       startingWidth.current = value;
     },
     onPanResponderMove: (_event, gesture) =>
-      onChange(
-        Math.max(
-          minimum,
-          Math.min(maximum, startingWidth.current + gesture.dx * direction),
-        ),
-      ),
+      onChange(startingWidth.current + gesture.dx * direction),
   });
   return (
     <View
       {...responder.panHandlers}
-      className="absolute -right-1 bottom-0 top-shell-header z-10 w-2"
+      className={`absolute ${edge === 'left' ? '-left-1' : '-right-1'} bottom-0 top-shell-header z-10 w-2`}
       accessible
       accessibilityLabel={label}
       accessibilityRole="adjustable"

@@ -286,3 +286,82 @@ export const TogglesAnimateAndPreserveContent: Story = {
     await expect(canvas.getByTestId('detail-content')).toBe(detailContent);
   },
 };
+
+export const DragToCollapseExpandAndReopen: Story = {
+  play: async ({ canvas, userEvent }) => {
+    const { page } = await import('vitest/browser');
+    await page.viewport(1440, 844);
+    const drag = async (name: string, distance: number) => {
+      const divider = canvas.getByRole('separator', { name });
+      const start = divider.getBoundingClientRect();
+      await userEvent.pointer([
+        {
+          target: divider,
+          coords: { clientX: start.x + 4, clientY: start.y + 100 },
+          keys: '[MouseLeft>]',
+        },
+        {
+          target: divider,
+          coords: { clientX: start.x + 4 + distance, clientY: start.y + 100 },
+        },
+        { keys: '[/MouseLeft]' },
+      ]);
+    };
+    await waitFor(() =>
+      expect(
+        canvas.getByTestId('desktop-list').getBoundingClientRect().width,
+      ).toBe(300),
+    );
+    await drag('Resize sidebar', -220);
+    await expect(
+      canvas.getByRole('button', { name: 'Show sidebar' }),
+    ).toBeVisible();
+    await waitFor(() =>
+      expect(
+        canvas.getByTestId('desktop-list').getBoundingClientRect().width,
+      ).toBe(0),
+    );
+    await drag('Resize sidebar', 220);
+    await expect(
+      canvas.getByRole('button', { name: 'Hide sidebar' }),
+    ).toBeVisible();
+    await waitFor(() =>
+      expect(
+        canvas.getByTestId('desktop-list').getBoundingClientRect().width,
+      ).toBe(300),
+    );
+    await drag('Resize Inspector', -240);
+    await expect(
+      canvas.getByRole('button', { name: 'Close Inspector' }),
+    ).toBeVisible();
+    await waitFor(() =>
+      expect(
+        canvas.getByTestId('desktop-inspector').getBoundingClientRect().width,
+      ).toBe(380),
+    );
+    await drag('Resize Inspector', -700);
+    await waitFor(() =>
+      expect(
+        canvas.getByTestId('desktop-detail').getBoundingClientRect().width,
+      ).toBe(0),
+    );
+    await drag('Resize Inspector', 400);
+    await expect(
+      canvas.getByRole('button', { name: 'Expand Inspector' }),
+    ).toBeVisible();
+    await waitFor(() =>
+      expect(
+        canvas.getByTestId('desktop-detail').getBoundingClientRect().width,
+      ).toBeGreaterThan(350),
+    );
+    await drag('Resize Inspector', 800);
+    await expect(
+      canvas.getByRole('button', { name: 'Open Inspector' }),
+    ).toBeVisible();
+    await waitFor(() =>
+      expect(
+        canvas.getByTestId('desktop-inspector').getBoundingClientRect().width,
+      ).toBe(0),
+    );
+  },
+};

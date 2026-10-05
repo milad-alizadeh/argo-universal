@@ -1,10 +1,6 @@
 import { ArrowsInSimpleIcon } from 'phosphor-react-native/src/icons/ArrowsInSimple';
 import { ArrowsOutSimpleIcon } from 'phosphor-react-native/src/icons/ArrowsOutSimple';
-import { ChatsIcon } from 'phosphor-react-native/src/icons/Chats';
-import { GearSixIcon } from 'phosphor-react-native/src/icons/GearSix';
 import { SidebarSimpleIcon } from 'phosphor-react-native/src/icons/SidebarSimple';
-import { TicketIcon } from 'phosphor-react-native/src/icons/Ticket';
-import { TreeStructureIcon } from 'phosphor-react-native/src/icons/TreeStructure';
 import { XIcon } from 'phosphor-react-native/src/icons/X';
 import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
@@ -15,8 +11,8 @@ import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
 import { Icon } from './Icon';
 import { PanelResizeHandle } from './PanelResizeHandle';
-import type { ShellSection } from './PhoneShell';
 import { ShellPane } from './ShellPane';
+import { type ShellSection, shellSections } from './shell-sections';
 
 export interface DesktopShellProps {
   selectedSection: ShellSection;
@@ -35,13 +31,6 @@ export interface DesktopShellProps {
 }
 
 export type InspectorState = 'closed' | 'open' | 'expanded';
-
-const sections = {
-  sessions: { title: 'Sessions', icon: ChatsIcon },
-  issues: { title: 'Issues', icon: TicketIcon },
-  atlas: { title: 'Atlas', icon: TreeStructureIcon },
-  settings: { title: 'Settings', icon: GearSixIcon },
-} as const;
 
 export function DesktopShell({
   selectedSection,
@@ -107,8 +96,37 @@ export function DesktopShell({
       : visibleInspectorWidth
     : 0;
 
+  function resizeList(nextWidth: number) {
+    if (nextWidth < listWidth / 2) {
+      onSidebarShownChange(false);
+      return;
+    }
+    setPreferredListWidth(
+      Math.max(listWidth, Math.min(listMaximum, listLimit, nextWidth)),
+    );
+    if (!sidebarShown) onSidebarShownChange(true);
+  }
+
+  function resizeInspector(nextWidth: number) {
+    if (nextWidth < inspectorWidth / 2) {
+      onInspectorStateChange('closed');
+      return;
+    }
+    if (nextWidth > availableWidth - detailMinimum / 2) {
+      onInspectorStateChange('expanded');
+      return;
+    }
+    setPreferredInspectorWidth(
+      Math.max(
+        inspectorWidth,
+        Math.min(availableWidth - detailMinimum, nextWidth),
+      ),
+    );
+    if (!inspectorOpen || inspectorExpanded) onInspectorStateChange('open');
+  }
+
   function sectionButton(section: ShellSection) {
-    const { title, icon } = sections[section];
+    const { title, icon } = shellSections[section];
     return (
       <Button
         key={section}
@@ -165,6 +183,18 @@ export function DesktopShell({
         <View className="flex-1" />
         {sectionButton('settings')}
       </View>
+      {!sidebarShown && listLimit > listWidth && (
+        <View className="absolute left-shell-rail top-0 bottom-shell-inset z-10">
+          <PanelResizeHandle
+            label="Resize sidebar"
+            value={0}
+            minimum={0}
+            maximum={Math.min(listMaximum, listLimit)}
+            direction={1}
+            onChange={resizeList}
+          />
+        </View>
+      )}
       <View className="min-w-0 flex-1 flex-row pb-shell-inset pr-shell-inset">
         <View
           pointerEvents="none"
@@ -188,7 +218,7 @@ export function DesktopShell({
               minimum={Math.min(listWidth, listLimit)}
               maximum={Math.min(listMaximum, listLimit)}
               direction={1}
-              onChange={setPreferredListWidth}
+              onChange={resizeList}
             />
           )}
         </ShellPane>
@@ -209,14 +239,14 @@ export function DesktopShell({
           <View className="min-h-0 flex-1 overflow-hidden rounded-xl bg-card shadow-card">
             {children}
           </View>
-          {inspectorOpen && !inspectorExpanded && (
+          {!inspectorOpen && (
             <PanelResizeHandle
               label="Resize Inspector"
-              value={visibleInspectorWidth}
-              minimum={inspectorWidth}
-              maximum={Math.max(inspectorWidth, availableWidth - detailMinimum)}
+              value={0}
+              minimum={0}
+              maximum={availableWidth}
               direction={-1}
-              onChange={setPreferredInspectorWidth}
+              onChange={resizeInspector}
             />
           )}
         </ShellPane>
@@ -264,6 +294,17 @@ export function DesktopShell({
             </View>
           </View>
           <View className="min-h-0 flex-1 overflow-hidden">{inspector}</View>
+          {inspectorOpen && (
+            <PanelResizeHandle
+              label="Resize Inspector"
+              edge="left"
+              value={inspectorTargetWidth}
+              minimum={0}
+              maximum={availableWidth}
+              direction={-1}
+              onChange={resizeInspector}
+            />
+          )}
         </ShellPane>
       </View>
     </View>

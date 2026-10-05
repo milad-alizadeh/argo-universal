@@ -1,7 +1,3 @@
-import { ChatsIcon } from 'phosphor-react-native/src/icons/Chats';
-import { GearSixIcon } from 'phosphor-react-native/src/icons/GearSix';
-import { TicketIcon } from 'phosphor-react-native/src/icons/Ticket';
-import { TreeStructureIcon } from 'phosphor-react-native/src/icons/TreeStructure';
 import { type ReactNode, useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
 import { useCSSVariable, useResolveClassNames } from 'uniwind';
@@ -13,15 +9,9 @@ import { Icon } from './Icon';
 import { PhoneDrawer } from './PhoneDrawer';
 import { PhoneListHeader } from './PhoneListHeader';
 import { PhoneShellCard } from './PhoneShellCard';
+import { type ShellSection, shellSections } from './shell-sections';
 
-const sections = {
-  sessions: { title: 'Sessions', icon: ChatsIcon },
-  issues: { title: 'Issues', icon: TicketIcon },
-  atlas: { title: 'Atlas', icon: TreeStructureIcon },
-  settings: { title: 'Settings', icon: GearSixIcon },
-} as const;
-
-export type ShellSection = keyof typeof sections;
+export type { ShellSection } from './shell-sections';
 
 export interface PhoneShellProps {
   selectedSection: ShellSection;
@@ -67,7 +57,7 @@ export function PhoneShell({
   }
 
   function sectionButton(section: ShellSection) {
-    const { title, icon } = sections[section];
+    const { title, icon } = shellSections[section];
     return (
       <Button
         key={section}
@@ -138,7 +128,7 @@ export function PhoneShell({
       >
         <PhoneShellCard drawerOpen={drawerOpen}>
           <PhoneListHeader
-            title={sections[selectedSection].title}
+            title={shellSections[selectedSection].title}
             attentionCount={attentionCount}
             onMenu={() => onDrawerOpenChange(true)}
             onSearch={onSearch}

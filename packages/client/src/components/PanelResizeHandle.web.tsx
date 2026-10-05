@@ -7,6 +7,7 @@ export function PanelResizeHandle({
   minimum,
   maximum,
   direction,
+  edge = 'right',
   onChange,
 }: PanelResizeHandleProps) {
   const drag = useRef<{
@@ -14,8 +15,7 @@ export function PanelResizeHandle({
     position: number;
     width: number;
   } | null>(null);
-  const resize = (width: number) =>
-    onChange(Math.max(minimum, Math.min(maximum, width)));
+  const resize = (width: number) => onChange(width);
   return (
     <hr
       aria-label={label}
@@ -24,7 +24,7 @@ export function PanelResizeHandle({
       aria-valuemax={maximum}
       aria-valuenow={Math.round(value)}
       tabIndex={0}
-      className="m-0 border-0 absolute -right-1 bottom-0 top-shell-header z-10 w-2 cursor-col-resize touch-none select-none outline-none focus-visible:bg-ring/30 hover:bg-border/40"
+      className={`m-0 border-0 absolute ${edge === 'left' ? '-left-1' : '-right-1'} bottom-0 top-shell-header z-10 w-2 cursor-col-resize touch-none select-none outline-none focus-visible:bg-ring/30 hover:bg-border/40`}
       onPointerDown={(event) => {
         drag.current = {
           pointer: event.pointerId,

@@ -3,6 +3,7 @@ import type {
   IconProps as PhosphorIconProps,
 } from 'phosphor-react-native';
 import { useContext } from 'react';
+import { StyleSheet } from 'react-native';
 import { withUniwind } from 'uniwind';
 import { cn } from '#lib/utils';
 import { TextClassContext } from '#primitives/text';
@@ -13,14 +14,19 @@ export type IconProps = PhosphorIconProps & {
 };
 
 function IconComponent({ as: Component, ...props }: IconProps) {
+  const size =
+    typeof props.size === 'number'
+      ? props.size
+      : props.size?.endsWith('px')
+        ? Number.parseFloat(props.size)
+        : undefined;
   return (
     <Component
       {...props}
-      style={
-        typeof props.size === 'number'
-          ? [props.style, { width: props.size, height: props.size }]
-          : props.style
-      }
+      style={{
+        ...StyleSheet.flatten(props.style),
+        ...(size === undefined ? {} : { width: size, height: size }),
+      }}
     />
   );
 }
