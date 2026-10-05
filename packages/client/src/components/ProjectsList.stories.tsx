@@ -63,6 +63,3 @@ export const OnEndReached: Story = {
 export const OnNewSession: Story = {
   render: (args) => <ProjectsNewSessionPreview {...args} />,
 };
-export const OnProjectSettings: Story = variations([
-  { label: 'Open Project settings', props: {} },
-]);

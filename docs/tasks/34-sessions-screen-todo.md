@@ -17,6 +17,7 @@ Updated as new requests arrive. Completed entries describe implemented changes; 
 - [x] Disable browser text selection in the Projects list.
 - [x] Remove the invalid No registered Agents variation.
 - [x] Remove duplicate Sessions, Selected Session ID, and On Select stories.
+- [x] Remove On Project Settings from showcase stories; keep callback coverage in test stories because it has no distinct visual state.
 - [x] Show archived Sessions and no archived Sessions together; remove the Active comparison.
 - [x] Remove the redundant No search variation from Query.
 - [x] Show a spinner while the next page loads.
@@ -27,7 +28,7 @@ Updated as new requests arrive. Completed entries describe implemented changes; 
 - [x] Keep web Storybook and iOS Storybook open while working.
 - [x] Refresh the web preview with the latest changes.
 - [ ] User acceptance of the current changes.
-- [ ] At the end, update AGENTS.md Storybook rules: distinct valid visual states, no repeated default states or child-component coverage, callback checks in test stories, and interactive pagination with enough rows, temporary loading, and appended results.
+- [ ] At the end, update AGENTS.md Storybook rules: distinct valid visual states, no repeated default states or child-component coverage, callback checks without visual effects in test stories, and interactive pagination with enough rows, temporary loading, and appended results.
 - [ ] Final review when preparing the PR.
 
 ## Where to see changes
