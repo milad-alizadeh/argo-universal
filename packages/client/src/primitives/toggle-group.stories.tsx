@@ -3,11 +3,7 @@ import { TextBIcon } from 'phosphor-react-native/src/icons/TextB';
 import { TextItalicIcon } from 'phosphor-react-native/src/icons/TextItalic';
 import { TextUnderlineIcon } from 'phosphor-react-native/src/icons/TextUnderline';
 import { useState } from 'react';
-import {
-  StorySections,
-  Variation,
-  Variations,
-} from '../../mocks/primitive-story-variations';
+import { Variation, Variations } from '../../mocks/primitive-story-variations';
 import { ToggleGroup, ToggleGroupIcon, ToggleGroupItem } from './toggle-group';
 
 function ToggleGroupExample({
@@ -54,50 +50,6 @@ function ToggleGroupExample({
     />
   );
 }
-function TypeExamples() {
-  return (
-    <Variations>
-      {(['single', 'multiple'] as const).map((type) => (
-        <Variation key={type} label={type}>
-          <ToggleGroupExample type={type} />
-        </Variation>
-      ))}
-    </Variations>
-  );
-}
-function VariantExamples() {
-  return (
-    <Variations>
-      {(['default', 'outline'] as const).map((variant) => (
-        <Variation key={variant} label={variant}>
-          <ToggleGroupExample variant={variant} />
-        </Variation>
-      ))}
-    </Variations>
-  );
-}
-function SizeExamples() {
-  return (
-    <Variations>
-      {(['default', 'sm', 'lg'] as const).map((size) => (
-        <Variation key={size} label={size}>
-          <ToggleGroupExample size={size} />
-        </Variation>
-      ))}
-    </Variations>
-  );
-}
-function DisabledExamples() {
-  return (
-    <Variations>
-      {[false, true].map((disabled) => (
-        <Variation key={String(disabled)} label={String(disabled)}>
-          <ToggleGroupExample disabled={disabled} />
-        </Variation>
-      ))}
-    </Variations>
-  );
-}
 
 const meta = {
   title: 'Design System/Primitives/Toggle Group',
@@ -106,19 +58,28 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
+export const Overview: Story = {
+  name: 'Toggle Group',
   render: () => (
-    <StorySections
-      sections={{
-        Type: TypeExamples,
-        Variant: VariantExamples,
-        Size: SizeExamples,
-        Disabled: DisabledExamples,
-      }}
-    />
+    <Variations>
+      <Variation label="Single selection">
+        <ToggleGroupExample type="single" />
+      </Variation>
+      <Variation label="Multiple selection">
+        <ToggleGroupExample type="multiple" />
+      </Variation>
+      <Variation label="Outline">
+        <ToggleGroupExample variant="outline" />
+      </Variation>
+      <Variation label="Small">
+        <ToggleGroupExample size="sm" />
+      </Variation>
+      <Variation label="Large">
+        <ToggleGroupExample size="lg" />
+      </Variation>
+      <Variation label="Disabled">
+        <ToggleGroupExample disabled />
+      </Variation>
+    </Variations>
   ),
 };
-export const Type: Story = { render: TypeExamples };
-export const Variant: Story = { render: VariantExamples };
-export const Size: Story = { render: SizeExamples };
-export const Disabled: Story = { render: DisabledExamples };

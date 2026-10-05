@@ -215,4 +215,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = { render: () => <MenubarPreview /> };
+export const Overview: Story = {
+  name: 'Menubar',
+  render: () => <MenubarPreview />,
+};

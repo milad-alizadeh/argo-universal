@@ -201,7 +201,9 @@ export function DesktopShell({
         >
           <View className="h-shell-bar" />
           <View className="min-h-0 flex-1 overflow-hidden">
-            <View className="h-14 justify-center px-4">{listHeader}</View>
+            <View className="h-14 flex-row items-center gap-0.5 px-2">
+              {listHeader}
+            </View>
             {list}
           </View>
         </ShellPane>

@@ -13,7 +13,20 @@ const destinations: [NavigationDestination, string[], object][] = [
   [{ to: 'issues' }, ['(shell)', 'issues'], {}],
   [{ to: 'atlas' }, ['(shell)', 'atlas'], {}],
   [{ to: 'settings' }, ['(shell)', 'settings', 'index'], {}],
+  [
+    { to: 'settings-projects' },
+    ['(shell)', 'settings', 'projects', 'index'],
+    {},
+  ],
+  [{ to: 'settings-agents' }, ['(shell)', 'settings', 'agents', 'index'], {}],
   [{ to: 'settings-accounts' }, ['(shell)', 'settings', 'accounts'], {}],
+  [{ to: 'settings-devices' }, ['(shell)', 'settings', 'devices'], {}],
+  [{ to: 'settings-appearance' }, ['(shell)', 'settings', 'appearance'], {}],
+  [
+    { to: 'settings-notifications' },
+    ['(shell)', 'settings', 'notifications'],
+    {},
+  ],
   [{ to: 'settings-connection' }, ['(shell)', 'settings', 'connection'], {}],
   [
     { to: 'settings-project', name: 'example project' },

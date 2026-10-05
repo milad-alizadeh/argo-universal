@@ -1,9 +1,9 @@
 import { createServer, type Server } from 'node:http';
-import { join } from 'node:path';
 import { appRouter } from '@repo/api';
 import type { Database } from '@repo/db';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { WebSocketServer } from 'ws';
+import { blobsFolderIn } from '../services/blob/blob-service';
 import { createServerServices } from '../services/server-services';
 import type { RegistryActorRef } from '../services/sessions/registry-machine';
 import { createRequestGuard } from './request-guard';
@@ -40,7 +40,8 @@ const closeServer = (server: Server) =>
 export async function startHttpServer(
   options: HttpServerOptions,
 ): Promise<HttpServer> {
-  const services = createServerServices(options);
+  const blobsFolder = blobsFolderIn(options.home);
+  const services = createServerServices({ ...options, blobsFolder });
 
   const createContext = () => ({ services });
 
@@ -48,7 +49,7 @@ export async function startHttpServer(
   const server = createServer(
     createRequestListener({
       guard,
-      blobsFolder: join(options.home, 'blobs'),
+      blobsFolder,
       router: appRouter,
       createContext,
     }),

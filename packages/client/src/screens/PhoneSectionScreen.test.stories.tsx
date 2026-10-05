@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect } from 'storybook/test';
+import { sessionListMocks } from '../../mocks/session-list-mock';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
 import { PhoneSectionScreen } from './PhoneSectionScreen';
 
@@ -14,7 +15,7 @@ const meta = {
       <PhoneSectionScreen {...args} />
     </View>
   ),
-  parameters: { navigation: recorder },
+  parameters: { navigation: recorder, trpc: sessionListMocks },
   beforeEach: async () => {
     recorder.reset();
     const { page } = await import('vitest/browser');
@@ -26,12 +27,16 @@ type Story = StoryObj<typeof meta>;
 
 export const DrawerOpensSectionLists: Story = {
   play: async ({ canvas, userEvent }) => {
+    // ☰ and the Sessions list's search and filter share one header row.
     await expect(
-      await canvas.findByText('Sessions list will appear here.'),
+      await canvas.findByRole('button', { name: 'Search Sessions' }),
     ).toBeVisible();
     await expect(
-      canvas.getByRole('heading', { name: 'Sessions', level: 1 }),
+      canvas.getByRole('button', { name: 'Filter Sessions' }),
     ).toBeVisible();
+    await expect(
+      canvas.getAllByRole('heading', { name: 'Sessions', level: 1 }),
+    ).toHaveLength(1);
     for (const section of ['Settings', 'Atlas']) {
       await userEvent.click(
         canvas.getByRole('button', { name: 'Open navigation' }),

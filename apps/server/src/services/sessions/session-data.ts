@@ -1,12 +1,13 @@
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import type { SessionNewInput } from '@repo/contracts';
+import { InitialConfigOption, type SessionNewInput } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow, project, session } from '@repo/db/schema';
 import { type Checkout, createCheckout, discardCheckout } from '@repo/git';
 import { eq, max } from 'drizzle-orm';
 import { createSelectSchema } from 'drizzle-orm/zod';
 import type { ActorRefFrom } from 'xstate';
+import { z } from 'zod';
 import { queuedFeedRows } from '../feed/feed-row';
 import type { WriterJob } from '../feed/writer-job';
 import type { writerMachine } from '../feed/writer-machine';
@@ -26,6 +27,8 @@ export interface SessionData {
   agent: string;
   vendorSessionId: string | null;
   checkout: Checkout;
+  // The values the Agent connects with: the `session.new` choices, then whatever the Agent last reported.
+  configValues: InitialConfigOption[];
   epoch: number;
   maxRevision: number;
   activityAt: number;
@@ -59,6 +62,7 @@ export async function createSessionCheckout(
     agent: input.agent,
     vendorSessionId: null,
     checkout,
+    configValues: input.configOptions,
     epoch: 0,
     maxRevision: 0,
     activityAt: Date.now(),
@@ -92,6 +96,7 @@ export function toSessionInsert(
       vendorSessionId: data.vendorSessionId,
       checkoutPath: data.checkout.path,
       checkoutBranch: data.checkout.branch,
+      configValues: data.configValues,
       projectionVersion: 1,
       activityAt: data.activityAt,
     },
@@ -107,6 +112,8 @@ export async function discardSessionCheckout(
   if (input.checkout.type === 'worktree')
     await discardCheckout(readProjectPath(input), checkout);
 }
+
+const storedConfigValues = z.array(InitialConfigOption);
 
 export async function loadSession(
   input: SessionInput,
@@ -135,6 +142,7 @@ export async function loadSession(
     agent: row.agent,
     vendorSessionId: row.vendorSessionId,
     checkout: { path: row.checkoutPath, branch: row.checkoutBranch },
+    configValues: storedConfigValues.parse(row.configValues),
     epoch: row.epoch,
     maxRevision: Math.max(
       row.maxRevision,

@@ -34,6 +34,9 @@ export const PhoneListAndDetail: Story = {
       canvas.getByRole('button', { name: 'Back to Settings' }),
     );
     await userEvent.click(
+      await canvas.findByRole('button', { name: 'Projects' }),
+    );
+    await userEvent.click(
       await canvas.findByRole('button', {
         name: 'example-project',
       }),
@@ -59,6 +62,7 @@ export const SidebarListAndDetail: Story = {
     await expect(
       canvas.getByRole('button', { name: 'Accounts' }),
     ).toHaveAttribute('aria-selected', 'true');
+    await userEvent.click(canvas.getByRole('button', { name: 'Projects' }));
     await userEvent.click(
       canvas.getByRole('button', { name: 'example-project' }),
     );
@@ -66,12 +70,13 @@ export const SidebarListAndDetail: Story = {
       await canvas.findByText('Settings for example-project will appear here.'),
     ).toBeVisible();
     await expect(
-      canvas.getByRole('button', { name: 'example-project' }),
+      canvas.getByRole('button', { name: 'Projects' }),
     ).toHaveAttribute('aria-selected', 'true');
     await expect(
       canvas.getByRole('button', { name: 'Accounts' }),
     ).toBeVisible();
     await expect(recorder.destinations).toEqual([
+      { to: 'settings-projects' },
       { to: 'settings-project', name: 'example-project' },
     ]);
   },

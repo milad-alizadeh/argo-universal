@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { expect } from 'storybook/test';
+import { expect, waitFor } from 'storybook/test';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
 import { SettingsList } from './SettingsList';
 
@@ -11,6 +11,9 @@ const meta = {
   args: {
     projects: [{ name: 'example-project' }],
     agents: [{ agent: 'example-agent', label: 'Example Agent' }],
+    serverName: "Milad's Mac mini",
+    accountState: 'GitHub',
+    deviceCount: 2,
     onSelect: recorder.navigate,
   },
   render: (args) => (
@@ -30,31 +33,58 @@ export const AllGroupsNavigate: Story = {
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       recorder.reset();
-      for (const group of ['Projects', 'Server', 'Agents', 'App']) {
+      for (const group of [
+        "Server · Milad's Mac mini",
+        width === 390 ? 'This iPhone' : 'This Mac',
+      ]) {
         await expect(
-          canvas.getByRole('heading', { name: group }),
+          await canvas.findByRole('heading', { name: group }),
         ).toBeVisible();
       }
       for (const name of [
-        'example-project',
+        'Projects',
+        'Agents',
         'Accounts',
         'Connection',
-        'Example Agent',
+        'Appearance',
       ]) {
         await userEvent.click(canvas.getByRole('button', { name }));
       }
       await expect(recorder.destinations).toEqual([
-        { to: 'settings-project', name: 'example-project' },
+        { to: 'settings-projects' },
+        { to: 'settings-agents' },
         { to: 'settings-accounts' },
         { to: 'settings-connection' },
-        { to: 'settings-agent', agent: 'example-agent' },
+        { to: 'settings-appearance' },
       ]);
-      await expect(
-        canvas.getByRole('button', { name: 'Appearance' }),
-      ).toBeDisabled();
-      await expect(
-        canvas.getByRole('button', { name: 'Notifications' }),
-      ).toBeDisabled();
+      const projects = canvas.getByRole('button', { name: 'Projects' });
+      await expect(projects.getBoundingClientRect().height).toBe(
+        width === 390 ? 44 : 32,
+      );
+      const label = canvas.getByText('Projects', { exact: true });
+      await expect(getComputedStyle(label).fontSize).toBe(
+        width === 390 ? '16px' : '14px',
+      );
+      await expect(getComputedStyle(label).lineHeight).toBe(
+        width === 390 ? '24px' : '20px',
+      );
+      if (width === 390) {
+        await expect(
+          canvas.queryByRole('button', { name: 'Devices' }),
+        ).toBeNull();
+        await expect(
+          canvas.queryByRole('button', { name: 'Notifications' }),
+        ).toBeNull();
+      } else {
+        await userEvent.click(canvas.getByRole('button', { name: 'Devices' }));
+        await userEvent.click(
+          canvas.getByRole('button', { name: 'Notifications' }),
+        );
+        await expect(recorder.destinations.slice(-2)).toEqual([
+          { to: 'settings-devices' },
+          { to: 'settings-notifications' },
+        ]);
+      }
     }
   },
 };
@@ -66,11 +96,16 @@ export const WaitingForData: Story = {
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       await expect(
-        canvas.getByText('Projects will appear here.'),
+        canvas.getByRole('button', { name: 'Projects' }),
       ).toBeVisible();
       await expect(
-        canvas.getByText('Registered Agents will appear here.'),
+        canvas.getByRole('button', { name: 'Agents' }),
       ).toBeVisible();
+      await expect(canvas.getAllByText('0', { exact: true })).toHaveLength(2);
+      await expect(canvas.queryByText('Projects will appear here.')).toBeNull();
+      await expect(
+        canvas.queryByText('Registered Agents will appear here.'),
+      ).toBeNull();
       await expect(
         canvas.getByRole('button', { name: 'Accounts' }),
       ).toBeVisible();
@@ -85,5 +120,36 @@ export const AllGroupsNavigateDark: Story = {
 
 export const WaitingForDataDark: Story = {
   ...WaitingForData,
+  globals: { mode: 'dark' },
+};
+
+export const ChildSelectionAndAttention: Story = {
+  args: {
+    selectedDestination: { to: 'settings-project', name: 'example-project' },
+    projectsNeedAttention: true,
+    agentsNeedAttention: true,
+  },
+  play: async ({ canvas }) => {
+    const { page } = await import('vitest/browser');
+    for (const width of [390, 1440]) {
+      await page.viewport(width, 844);
+      await waitFor(() =>
+        expect(
+          canvas.getByRole('button', { name: 'Projects' }),
+        ).toHaveAttribute('aria-selected', width === 390 ? 'false' : 'true'),
+      );
+      for (const kind of ['projects', 'agents']) {
+        const dot = canvas.getByTestId(`settings-${kind}-attention`);
+        await expect(dot).toBeVisible();
+        await expect(dot.getBoundingClientRect().width).toBe(8);
+        await expect(dot.getBoundingClientRect().height).toBe(8);
+      }
+      await expect(canvas.queryByText('1', { exact: true })).toBeNull();
+    }
+  },
+};
+
+export const ChildSelectionAndAttentionDark: Story = {
+  ...ChildSelectionAndAttention,
   globals: { mode: 'dark' },
 };

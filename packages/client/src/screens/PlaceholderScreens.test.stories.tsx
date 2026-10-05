@@ -4,7 +4,7 @@ import { expect, waitFor } from 'storybook/test';
 import { SettingsListMock } from '../../mocks/settings-list-mock';
 
 const meta = {
-  title: 'Tests/Placeholders',
+  title: 'Tests/PlaceholderScreens',
   component: SettingsListMock,
   render: (args) => (
     <View className="h-[796px] w-full">

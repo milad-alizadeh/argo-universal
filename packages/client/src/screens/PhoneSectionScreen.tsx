@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { PhoneShell } from '../components/PhoneShell';
-import { SectionList } from '../components/SectionList';
+import { useSectionList } from '../components/SectionList';
 import type { ShellSection } from '../components/shell-sections';
 import { useNavigate } from '../navigation/context';
 import { sectionDestination } from '../navigation/sections';
@@ -13,6 +13,7 @@ export interface PhoneSectionScreenProps {
 export function PhoneSectionScreen({ section }: PhoneSectionScreenProps) {
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const { header, list } = useSectionList(section);
   return (
     <PhoneShell
       selectedSection={section}
@@ -23,8 +24,9 @@ export function PhoneSectionScreen({ section }: PhoneSectionScreenProps) {
       // Search and filter arrive with the Sessions list screen.
       onSearch={() => {}}
       onFilter={() => {}}
+      header={header}
     >
-      <SectionList section={section} />
+      {list}
     </PhoneShell>
   );
 }

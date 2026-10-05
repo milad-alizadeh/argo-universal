@@ -2,11 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { CaretUpDownIcon } from 'phosphor-react-native/src/icons/CaretUpDown';
 import { useState } from 'react';
 import { View } from 'react-native';
-import {
-  StorySections,
-  Variation,
-  Variations,
-} from '../../mocks/primitive-story-variations';
+import { Variation, Variations } from '../../mocks/primitive-story-variations';
 import { Button } from './button';
 import {
   Collapsible,
@@ -59,28 +55,6 @@ function CollapsibleExample({
     </Collapsible>
   );
 }
-function OpenExamples() {
-  return (
-    <Variations>
-      {[false, true].map((open) => (
-        <Variation key={String(open)} label={String(open)}>
-          <CollapsibleExample initialOpen={open} />
-        </Variation>
-      ))}
-    </Variations>
-  );
-}
-function DisabledExamples() {
-  return (
-    <Variations>
-      {[false, true].map((disabled) => (
-        <Variation key={String(disabled)} label={String(disabled)}>
-          <CollapsibleExample disabled={disabled} />
-        </Variation>
-      ))}
-    </Variations>
-  );
-}
 
 const meta = {
   title: 'Design System/Primitives/Collapsible',
@@ -89,12 +63,19 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
+export const Overview: Story = {
+  name: 'Collapsible',
   render: () => (
-    <StorySections
-      sections={{ Open: OpenExamples, Disabled: DisabledExamples }}
-    />
+    <Variations>
+      <Variation label="Closed">
+        <CollapsibleExample />
+      </Variation>
+      <Variation label="Open">
+        <CollapsibleExample initialOpen />
+      </Variation>
+      <Variation label="Disabled">
+        <CollapsibleExample disabled />
+      </Variation>
+    </Variations>
   ),
 };
-export const Open: Story = { render: OpenExamples };
-export const Disabled: Story = { render: DisabledExamples };

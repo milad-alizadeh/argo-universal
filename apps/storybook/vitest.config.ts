@@ -14,7 +14,10 @@ export default defineProject({
   ],
   test: {
     name: 'storybook',
+    maxWorkers: 2,
+    sequence: { groupOrder: 1 },
     exclude: ['../../packages/client/src/primitives/**'],
+    setupFiles: ['./vitest.setup.ts'],
     browser: {
       enabled: true,
       headless: true,

@@ -22,10 +22,12 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Session: Story = {
+// The Paper list covers both Agents, Issue and pull request metadata, a failed Subagent, and selection on wide layouts.
+export const Overview: Story = {
+  name: 'SessionRow',
   render: (args) => (
     <Variations>
-      <Variation label="Paper · Session list">
+      <Variation label="Paper Session list">
         <SessionRowListMock
           sessions={paperSessionRows}
           metadata={paperSessionMetadata}
@@ -33,7 +35,7 @@ export const Session: Story = {
           onSelect={args.onSelect}
         />
       </Variation>
-      <Variation label="Other Session states">
+      <Variation label="Unread, long title and archived">
         <SessionRowListMock
           sessions={[
             sessionRows.unread,
@@ -43,82 +45,6 @@ export const Session: Story = {
           onSelect={args.onSelect}
         />
       </Variation>
-    </Variations>
-  ),
-};
-
-export const Logo: Story = {
-  render: (args) => (
-    <Variations>
-      {agentsList.map((agent) => (
-        <Variation key={agent.agent} label={agent.label}>
-          <SessionRow
-            {...args}
-            logo={agent.logo}
-            session={{ ...args.session, agent: agent.agent }}
-          />
-        </Variation>
-      ))}
-    </Variations>
-  ),
-};
-
-export const Selected: Story = {
-  render: (args) => (
-    <Variations>
-      {[false, true].map((selected) => (
-        <Variation
-          key={String(selected)}
-          label={selected ? 'Selected' : 'Unselected'}
-        >
-          <SessionRow {...args} selected={selected} />
-        </Variation>
-      ))}
-    </Variations>
-  ),
-};
-
-export const Issue: Story = {
-  render: (args) => (
-    <Variations>
-      {[undefined, { number: 128 }].map((issue) => (
-        <Variation
-          key={issue?.number ?? 'none'}
-          label={issue ? 'Issue' : 'No Issue'}
-        >
-          <SessionRow {...args} issue={issue} />
-        </Variation>
-      ))}
-    </Variations>
-  ),
-};
-
-export const PullRequest: Story = {
-  render: (args) => (
-    <Variations>
-      {(['open', 'draft', 'merged', 'conflict', 'closed'] as const).map(
-        (status) => (
-          <Variation key={status} label={status}>
-            <SessionRow {...args} pullRequest={{ number: 45, status }} />
-          </Variation>
-        ),
-      )}
-    </Variations>
-  ),
-};
-
-export const SubagentsFailed: Story = {
-  args: { session: paperSessionRows[2] },
-  render: (args) => (
-    <Variations>
-      {[false, true].map((subagentsFailed) => (
-        <Variation
-          key={String(subagentsFailed)}
-          label={subagentsFailed ? 'Failed Subagent' : 'Finished Subagents'}
-        >
-          <SessionRow {...args} subagentsFailed={subagentsFailed} />
-        </Variation>
-      ))}
     </Variations>
   ),
 };

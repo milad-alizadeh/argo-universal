@@ -1,4 +1,9 @@
 {
   "extends": "@repo/typescript/react-native.json",
-  "include": [".storybook", "vitest.config.ts", "vitest.shims.d.ts"]
+  "include": [
+    ".storybook",
+    "vitest.config.ts",
+    "vitest.setup.ts",
+    "vitest.shims.d.ts"
+  ]
 }

@@ -85,6 +85,13 @@ export interface SessionContext extends SessionData {
 const writer = ({ system }: { system: { get: (id: string) => unknown } }) =>
   system.get('databaseWriter') as ActorRefFrom<typeof writerMachine>;
 
+// The values an Agent reconnects with, read from the options it last reported.
+const toConfigValues = (configOptions: SessionConfigOption[]) =>
+  configOptions.map((option) => ({
+    configId: option.configId,
+    value: option.currentValue,
+  }));
+
 // The model the Agent runs with, which a Turn records.
 const currentModel = (configOptions: SessionConfigOption[]) => {
   const model = configOptions.find((option) => option.category === 'model');
@@ -144,13 +151,18 @@ const sessionSetup = setup({
           job: {
             type: 'sessionRowUpdate',
             id: context.sessionId,
-            set: { vendorSessionId: event.vendorSessionId, failure: null },
+            set: {
+              vendorSessionId: event.vendorSessionId,
+              failure: null,
+              configValues: toConfigValues(event.configOptions),
+            },
           },
         });
       enqueue.assign({
         vendorSessionId: event.vendorSessionId,
         capabilities: event.capabilities,
         configOptions: event.configOptions,
+        configValues: toConfigValues(event.configOptions),
       });
     }),
     // Writes the new Session's row once its Agent is ready, so no empty Session exists.
@@ -244,9 +256,20 @@ const sessionSetup = setup({
       assertEvent(event, 'agent.usage');
       return { usage: event.usage };
     }),
-    rememberConfig: assign(({ event }) => {
+    // Stores the values too, so a Session resumed after a restart keeps its model and mode.
+    rememberConfig: enqueueActions(({ context, event, enqueue }) => {
       assertEvent(event, 'agent.configOptionsChanged');
-      return { configOptions: event.configOptions };
+      const configValues = toConfigValues(event.configOptions);
+      if (context.stored)
+        enqueue.sendTo(writer, {
+          type: 'writer.write',
+          job: {
+            type: 'sessionRowUpdate',
+            id: context.sessionId,
+            set: { configValues },
+          },
+        });
+      enqueue.assign({ configOptions: event.configOptions, configValues });
     }),
     forwardConfig: sendTo('agent', ({ event }) => {
       assertEvent(event, 'session.setConfigOption');
@@ -430,6 +453,7 @@ export const sessionMachine = sessionSetup.createMachine({
     agent: input.kind === 'new' ? input.agent : '',
     vendorSessionId: null,
     checkout: { path: '', branch: null },
+    configValues: [],
     epoch: 0,
     maxRevision: 0,
     activityAt: 0,
@@ -510,14 +534,7 @@ export const sessionMachine = sessionSetup.createMachine({
               sessionId: context.sessionId,
               cwd: context.checkout.path,
               vendorSessionId: context.vendorSessionId,
-              // A new Session starts with the choices `session.new` carried.
-              configOptions:
-                !context.stored && context.input.kind === 'new'
-                  ? context.input.configOptions
-                  : context.configOptions.map((option) => ({
-                      configId: option.configId,
-                      value: option.currentValue,
-                    })),
+              configOptions: context.configValues,
               parent: self,
             }),
             onDone: agentEnded,

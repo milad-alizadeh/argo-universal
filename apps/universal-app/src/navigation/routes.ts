@@ -8,10 +8,15 @@ const routes = {
   issues: '/issues',
   atlas: '/atlas',
   settings: '/settings',
+  'settings-projects': '/settings/projects',
+  'settings-agents': '/settings/agents',
   'settings-accounts': '/settings/accounts',
   'settings-connection': '/settings/connection',
   'settings-project': '/settings/projects/[name]',
   'settings-agent': '/settings/agents/[agent]',
+  'settings-devices': '/settings/devices',
+  'settings-appearance': '/settings/appearance',
+  'settings-notifications': '/settings/notifications',
 } as const satisfies Record<NavigationDestination['to'], string>;
 
 type Route = keyof typeof routes;

@@ -7,7 +7,7 @@ import {
   sectionOf,
 } from '../navigation/sections';
 import { DesktopShell, type InspectorState } from './DesktopShell';
-import { SectionList } from './SectionList';
+import { useSectionList } from './SectionList';
 import { shellSections } from './shell-sections';
 
 export interface DesktopLayoutProps {
@@ -26,6 +26,7 @@ export function DesktopLayout({ destination, children }: DesktopLayoutProps) {
   // A wide window shows Accounts beside the Settings list.
   const detail: NavigationDestination =
     destination.to === 'settings' ? { to: 'settings-accounts' } : destination;
+  const { header, list } = useSectionList(section, detail);
 
   return (
     <DesktopShell
@@ -35,11 +36,17 @@ export function DesktopLayout({ destination, children }: DesktopLayoutProps) {
       onSidebarShownChange={setSidebarShown}
       onSectionChange={(next) => navigate(sectionDestination(next))}
       listHeader={
-        <Text role="heading" aria-level={2} className="text-base font-semibold">
-          {title}
-        </Text>
+        header ?? (
+          <Text
+            role="heading"
+            aria-level={2}
+            className="pl-2 text-base font-semibold"
+          >
+            {title}
+          </Text>
+        )
       }
-      list={<SectionList section={section} selectedDestination={detail} />}
+      list={list}
       detailHeader={
         <Text
           role="heading"

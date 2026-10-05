@@ -13,6 +13,8 @@ export default function SettingsLayout() {
         name="index"
         options={{ title: 'Settings', headerShown: false }}
       />
+      <Stack.Screen name="projects/index" options={{ title: 'Projects' }} />
+      <Stack.Screen name="agents/index" options={{ title: 'Agents' }} />
       <Stack.Screen name="accounts" options={{ title: 'Accounts' }} />
       <Stack.Screen name="connection" options={{ title: 'Connection' }} />
       <Stack.Screen
@@ -20,6 +22,9 @@ export default function SettingsLayout() {
         options={{ title: 'Project settings' }}
       />
       <Stack.Screen name="agents/[agent]" options={{ title: 'Agent' }} />
+      <Stack.Screen name="devices" options={{ title: 'Devices' }} />
+      <Stack.Screen name="appearance" options={{ title: 'Appearance' }} />
+      <Stack.Screen name="notifications" options={{ title: 'Notifications' }} />
     </Stack>
   );
 }

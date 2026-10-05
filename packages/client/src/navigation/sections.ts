@@ -36,6 +36,16 @@ export function destinationTitle(destination: NavigationDestination): string {
       return 'Atlas';
     case 'settings':
       return 'Settings';
+    case 'settings-projects':
+      return 'Projects';
+    case 'settings-agents':
+      return 'Agents';
+    case 'settings-devices':
+      return 'Devices';
+    case 'settings-appearance':
+      return 'Appearance';
+    case 'settings-notifications':
+      return 'Notifications';
     case 'settings-accounts':
       return 'Accounts';
     case 'settings-connection':

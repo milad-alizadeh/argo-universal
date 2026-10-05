@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect } from 'storybook/test';
+import { sessionListMocks } from '../../mocks/session-list-mock';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
 import { Text } from '../primitives/text';
 import { DesktopLayout } from './DesktopLayout';
@@ -18,7 +19,7 @@ const meta = {
       <DesktopLayout {...args} />
     </View>
   ),
-  parameters: { navigation: recorder },
+  parameters: { navigation: recorder, trpc: sessionListMocks },
   beforeEach: async () => {
     recorder.reset();
     const { page } = await import('vitest/browser');
@@ -31,9 +32,16 @@ type Story = StoryObj<typeof meta>;
 export const RailOpensSectionLists: Story = {
   play: async ({ canvas, userEvent }) => {
     await expect(await canvas.findByTestId('detail-content')).toBeVisible();
+    // The Sessions list puts its search and filter in the sidebar's one header row.
     await expect(
-      canvas.getByText('Sessions list will appear here.'),
+      await canvas.findByRole('button', { name: 'Search Sessions' }),
     ).toBeVisible();
+    await expect(
+      canvas.getByRole('button', { name: 'Filter Sessions' }),
+    ).toBeVisible();
+    await expect(
+      canvas.getAllByRole('heading', { name: 'Sessions', level: 1 }),
+    ).toHaveLength(1);
     for (const section of ['Issues', 'Atlas', 'Settings', 'Sessions'])
       await userEvent.click(
         canvas.getByRole('button', { name: new RegExp(`^${section}$`) }),

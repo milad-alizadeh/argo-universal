@@ -25,7 +25,7 @@ An audit is done when every item below is checked and each difference is listed 
 - Every copy matches its master's `get_jsx`, apart from the allowed changes.
 - Every Paper token from `get_tokens` exists in `theme.css` with the same value.
 - Every master names a code component, built or planned.
-- Every master's states match its component's stories, one story per prop.
+- Every master's Storybook coverage follows the [Storybook rules](storybook.md).
 
 ## Paper gotchas
 

@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { View } from 'react-native';
 import { action } from 'storybook/actions';
 import { PhoneShellMock } from '../../mocks/phone-shell-mock';
 import { PhoneShell } from './PhoneShell';
@@ -7,6 +6,7 @@ import { PhoneShell } from './PhoneShell';
 const meta = {
   title: 'Shell/PhoneShell',
   component: PhoneShell,
+  parameters: { screenPreview: true },
   argTypes: {
     selectedSection: {
       control: 'select',
@@ -15,11 +15,7 @@ const meta = {
     attentionCount: { control: 'number' },
     drawerOpen: { control: 'boolean' },
   },
-  render: (args) => (
-    <View className="h-[600px] w-full">
-      <PhoneShellMock {...args} />
-    </View>
-  ),
+  render: (args) => <PhoneShellMock {...args} />,
   args: {
     selectedSection: 'sessions',
     attentionCount: 1,
@@ -35,8 +31,5 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const SelectedSection: Story = { args: { drawerOpen: true } };
-export const AttentionCount: Story = {
-  args: { attentionCount: 100, drawerOpen: true },
-};
-export const DrawerOpen: Story = { args: { drawerOpen: true } };
+// The menu button opens the drawer; controls set the section, attention count and drawer.
+export const Overview: Story = { name: 'PhoneShell' };

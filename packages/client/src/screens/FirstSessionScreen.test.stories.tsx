@@ -26,8 +26,6 @@ export const OpensFirstActiveSession: Story = {
 export const OpensNewSessionWithoutSessions: Story = {
   parameters: { trpc: emptySessionListMocks },
   play: async ({ canvas }) => {
-    await expect(
-      await canvas.findByText('Starting a Session will appear here.'),
-    ).toBeVisible();
+    await expect(await canvas.findByText('Start new work here.')).toBeVisible();
   },
 };

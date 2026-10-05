@@ -141,6 +141,8 @@ function openServer({ applyConfigOptions = true } = {}) {
   const sessions = root.system.get('sessions');
   const services = createServerServices({
     database,
+    // These tests never upload, so no blob reaches the folder.
+    blobsFolder: '/no-uploads',
     sessions,
     version: '1',
     startedAt: new Date().toISOString(),
@@ -425,6 +427,33 @@ it('removes a closed Session and resumes it with the stored Agent identity on th
   });
   expect(streams.get('session-1')?.input.vendorSessionId).toBe('vendor-1');
   expect(root.system.get('session:session-1')).not.toBe(first);
+});
+
+it('resumes a closed Session with the config it last ran with', async () => {
+  const { caller, root, streams } = openServer();
+  const { sessionId } = await caller.session.new(newSession);
+  await caller.session.cancel({ sessionId });
+  await caller.session.setConfigOption({
+    sessionId,
+    configId: 'model',
+    type: 'id',
+    value: 'small',
+  });
+  const first = root.system.get(`session:${sessionId}`);
+  await vi.waitFor(() =>
+    expect(first.getSnapshot().context.configOptions).toMatchObject([
+      { currentValue: 'small' },
+    ]),
+  );
+  first.send({ type: 'session.close' });
+  await waitFor(first, (snapshot) => snapshot.status === 'done');
+  await caller.session.prompt({
+    sessionId,
+    prompt: [{ type: 'text', text: 'Resume' }],
+  });
+  expect(streams.get(sessionId)?.input.configOptions).toEqual([
+    { configId: 'model', value: 'small' },
+  ]);
 });
 
 it('refuses commands for a Subagent while keeping its stored Feed readable', async () => {

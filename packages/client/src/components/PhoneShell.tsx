@@ -21,6 +21,8 @@ export interface PhoneShellProps {
   onSectionChange: (section: ShellSection) => void;
   onSearch: () => void;
   onFilter: () => void;
+  // The list's own header row after ☰, when it has one.
+  header?: ReactNode;
   children: ReactNode;
 }
 
@@ -32,6 +34,7 @@ export function PhoneShell({
   onSectionChange,
   onSearch,
   onFilter,
+  header,
   children,
 }: PhoneShellProps) {
   const drawerWidth = Number.parseFloat(
@@ -143,7 +146,9 @@ export function PhoneShell({
             onMenu={() => onDrawerOpenChange(true)}
             onSearch={onSearch}
             onFilter={onFilter}
-          />
+          >
+            {header}
+          </PhoneListHeader>
           {children}
         </PhoneShellCard>
       </PhoneDrawer>

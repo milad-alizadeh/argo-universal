@@ -1,0 +1,1 @@
+ALTER TABLE `session` ADD `config_values` text DEFAULT '[]' NOT NULL;

@@ -60,8 +60,7 @@ export function SettingsListMock({
       selectedDestination={selectedDestination}
       onSelect={(next) => {
         navigate(next);
-        if (next.to === 'settings-accounts' || next.to === 'settings-project')
-          setDestination(next);
+        setDestination(next);
       }}
     />
   );
@@ -70,8 +69,66 @@ export function SettingsListMock({
       <IssuesScreen />
     ) : page === 'atlas' ? (
       <AtlasScreen />
+    ) : selectedDestination?.to === 'settings-projects' ? (
+      <View className="gap-2 p-4">
+        <Text role="heading">Projects</Text>
+        {settingsListMocks.projects.map(({ name }) => (
+          <Button
+            key={name}
+            variant="ghost"
+            accessibilityLabel={name}
+            onPress={() => {
+              const next: NavigationDestination = {
+                to: 'settings-project',
+                name,
+              };
+              navigate(next);
+              setDestination(next);
+            }}
+          >
+            <Text>{name}</Text>
+          </Button>
+        ))}
+      </View>
+    ) : selectedDestination?.to === 'settings-agents' ? (
+      <View className="gap-2 p-4">
+        <Text role="heading">Agents</Text>
+        {settingsListMocks.agents.map(({ agent, label }) => (
+          <Button
+            key={agent}
+            variant="ghost"
+            accessibilityLabel={label}
+            onPress={() => {
+              const next: NavigationDestination = {
+                to: 'settings-agent',
+                agent,
+              };
+              navigate(next);
+              setDestination(next);
+            }}
+          >
+            <Text>{label}</Text>
+          </Button>
+        ))}
+      </View>
     ) : selectedDestination?.to === 'settings-project' ? (
       <ProjectSettingsScreen name={selectedDestination.name} />
+    ) : selectedDestination?.to === 'settings-agent' ? (
+      <Text className="p-6">
+        Settings for {selectedDestination.agent} will appear here.
+      </Text>
+    ) : selectedDestination &&
+      selectedDestination.to !== 'settings-accounts' ? (
+      <Text className="p-6">
+        {selectedDestination.to === 'settings-connection'
+          ? 'Connection'
+          : selectedDestination.to === 'settings-devices'
+            ? 'Devices'
+            : selectedDestination.to === 'settings-appearance'
+              ? 'Appearance'
+              : 'Notifications'}{' '}
+        will appear here.
+      </Text>
     ) : (
       <AccountsScreen />
     );
