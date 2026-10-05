@@ -69,41 +69,11 @@ export function ProjectsList({
   const { backgroundColor } = useResolveClassNames(
     'bg-background wide:bg-sidebar',
   );
-  const scroll = useRef({ offset: 0, content: 0, viewport: 0 });
-  const [fades, setFades] = useState({ top: false, bottom: false });
-  const topFadeOpacity = useSharedValue(0);
-  const bottomFadeOpacity = useSharedValue(0);
+  const fadeOpacity = useSharedValue(0);
   useEffect(() => {
-    topFadeOpacity.value = withTiming(fades.top ? 1 : 0, { duration: 180 });
-    bottomFadeOpacity.value = withTiming(
-      fades.bottom || isFetchingNextPage ? 1 : 0,
-      {
-        duration: 180,
-      },
-    );
-  }, [
-    fades.top,
-    fades.bottom,
-    isFetchingNextPage,
-    topFadeOpacity,
-    bottomFadeOpacity,
-  ]);
-  const topFadeStyle = useAnimatedStyle(() => ({
-    opacity: topFadeOpacity.value,
-  }));
-  const bottomFadeStyle = useAnimatedStyle(() => ({
-    opacity: bottomFadeOpacity.value,
-  }));
-  function updateFades() {
-    const { offset, content, viewport } = scroll.current;
-    const top = offset > 1;
-    const bottom = viewport > 0 && content - viewport - offset > 1;
-    setFades((current) =>
-      current.top === top && current.bottom === bottom
-        ? current
-        : { top, bottom },
-    );
-  }
+    fadeOpacity.value = withTiming(1, { duration: 180 });
+  }, [fadeOpacity]);
+  const fadeStyle = useAnimatedStyle(() => ({ opacity: fadeOpacity.value }));
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const contentStyle = useResolveClassNames('px-2 pb-24 wide:pb-2');
   const entries = useMemo(() => {
@@ -152,22 +122,9 @@ export function ProjectsList({
     <View
       className="relative flex-1 overflow-hidden bg-background wide:bg-sidebar web:select-none web:[&_*]:select-none!"
       style={{ minHeight: 0 }}
-      onLayout={({ nativeEvent }) => {
-        scroll.current.viewport = nativeEvent.layout.height;
-        updateFades();
-      }}
     >
       <LegendList
         testID="projects-scroll"
-        onContentSizeChange={(_width, height) => {
-          scroll.current.content = height;
-          updateFades();
-        }}
-        onScroll={({ nativeEvent }) => {
-          scroll.current.offset = Math.max(0, nativeEvent.contentOffset.y);
-          updateFades();
-        }}
-        scrollEventThrottle={16}
         style={{ flex: 1 }}
         contentContainerStyle={contentStyle}
         data={entries}
@@ -267,7 +224,7 @@ export function ProjectsList({
           accessibilityElementsHidden
           importantForAccessibility="no-hide-descendants"
           testID={`scroll-fade-${edge}`}
-          style={edge === 'top' ? topFadeStyle : bottomFadeStyle}
+          style={fadeStyle}
           className={
             edge === 'top'
               ? 'absolute inset-x-0 top-0 h-8'
