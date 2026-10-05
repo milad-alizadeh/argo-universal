@@ -84,6 +84,8 @@ catalog:
   expo-splash-screen: ~57.0.9
   expo-status-bar: ~57.0.1
   expo-system-ui: ~57.0.4
+  jscpd: 5.4.0
+  knip: 6.39.0
   playwright: 1.63.0
   phosphor-react-native: 3.0.6
   react: 19.2.3

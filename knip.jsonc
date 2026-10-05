@@ -1,0 +1,33 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "workspaces": {
+    "apps/desktop": {
+      // Knip has no Electron Forge plugin, so forge.config.mts and the Vite `build` entries it names by string are listed by hand.
+      "entry": [
+        "forge.config.mts",
+        "vite.main.config.mts",
+        "vite.preload.config.mts",
+        "src/main/main.ts",
+        "src/preload/preload.ts"
+      ],
+      // A shell builtin in the dev and start scripts, not an npm binary.
+      "ignoreBinaries": ["unset"]
+    },
+    "apps/universal-app": {
+      // Native modules the app must list itself so Expo autolinks them; phosphor-react-native and Expo Router reach them at runtime.
+      "ignoreDependencies": ["expo-font", "react-native-svg", "expo-updates"]
+    },
+    "apps/storybook": {
+      // Peers of @repo/client's primitives, listed here so the Storybook Vite build resolves them.
+      "ignoreDependencies": [
+        "react-native-gesture-handler",
+        "react-native-safe-area-context",
+        "react-native-svg"
+      ]
+    },
+    "packages/client": {
+      // Vendored react-native-reusables components keep the kit's full export surface; screens pick from it.
+      "ignore": ["src/primitives/**"]
+    }
+  }
+}

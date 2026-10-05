@@ -13,6 +13,8 @@
     "dev:storybook": "pnpm --filter @repo/storybook storybook",
     "format": "biome check --write .",
     "postinstall": "sherif",
+    "quality:dead-code": "knip --no-progress --max-issues 0",
+    "quality:duplication": "jscpd --config .jscpd.json apps packages tooling tools e2e mocks",
     "quality": "sherif && biome check . && turbo run check-types && vitest run",
     "sherif": "sherif",
     "test": "vitest run",
@@ -22,6 +24,8 @@
   "devDependencies": {
     "@biomejs/biome": "catalog:",
     "@repo/biome": "workspace:*",
+    "jscpd": "catalog:",
+    "knip": "catalog:",
     "sherif": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:",
