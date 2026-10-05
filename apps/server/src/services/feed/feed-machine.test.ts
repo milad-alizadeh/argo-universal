@@ -345,12 +345,36 @@ describe('feed', () => {
         ],
         maxRevision: 3,
         activityAt,
+        blobIds: [],
       },
     ]);
     expect(Object.keys(feed.getSnapshot().context.rows)).toEqual([
       'message-1#0',
       'tool-1',
     ]);
+  });
+
+  it('names the blobs a prompt shows in its job', () => {
+    feed.send(
+      change({
+        type: 'upsert',
+        update: {
+          id: 'prompt-1',
+          state: 'settled',
+          sessionUpdate: 'user_message',
+          messageId: 'prompt-1',
+          content: [
+            {
+              type: 'image',
+              mimeType: 'image/png',
+              blob: { blobId: 'image-1', mime: 'image/png', bytes: 3 },
+            },
+          ],
+        },
+      }),
+    );
+
+    expect(jobs).toEqual([expect.objectContaining({ blobIds: ['image-1'] })]);
   });
 
   it('writes at once when a row settles, and keeps only open rows', () => {

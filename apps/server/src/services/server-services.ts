@@ -2,10 +2,10 @@ import type { Services } from '@repo/api';
 import type { Database } from '@repo/db';
 import type { ActorRefFrom } from 'xstate';
 import { createAgentService } from './agents/agent-service';
+import { createBlobService } from './blob/blob-service';
 import type { FeedActorRef } from './feed/feed-machine';
 import { createFeedService } from './feed/feed-service';
 import type { writerMachine } from './feed/writer-machine';
-import { notImplemented } from './not-implemented';
 import { createProjectService } from './projects/project-service';
 import type { RegistryActorRef } from './sessions/registry-machine';
 import type { SessionActorRef } from './sessions/session-machine';
@@ -14,6 +14,7 @@ import { createSystemService } from './system';
 
 export function createServerServices(options: {
   database: Database;
+  blobsFolder: string;
   sessions: RegistryActorRef;
   version: string;
   startedAt: string;
@@ -25,7 +26,7 @@ export function createServerServices(options: {
       | undefined;
   const session = createSessionService(options);
   return {
-    blob: { upload: notImplemented },
+    blob: createBlobService(options),
     agents: createAgentService(options.sessions),
     projects: createProjectService(options.database),
     system: createSystemService(options),

@@ -1,5 +1,5 @@
 import type { Database } from '@repo/db';
-import { feedRow, session, turn } from '@repo/db/schema';
+import { blob, blobRef, feedRow, session, turn } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { openTestDatabase } from '#mocks/database';
@@ -113,6 +113,26 @@ describe('writeJobs', () => {
       }),
     ]);
     expect(selectSession()?.maxRevision).toBe(3);
+  });
+
+  it('records the blobs a job names that are stored, once per Session', () => {
+    database
+      .insert(blob)
+      .values({ id: 'image-1', mime: 'image/png', bytes: 3 })
+      .run();
+    const job = {
+      ...feedRows(
+        [row({ sessionUpdate: 'user_message', state: 'settled' })],
+        1,
+      ),
+      blobIds: ['image-1', 'no-such-blob'],
+    };
+
+    writeJobs(database, [job, { ...job, maxRevision: 2 }]);
+
+    expect(database.select().from(blobRef).all()).toEqual([
+      { blobId: 'image-1', sessionId: 'session-1' },
+    ]);
   });
 
   it('inserts a Turn, then updates it', () => {

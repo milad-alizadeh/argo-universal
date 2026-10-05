@@ -15,7 +15,7 @@ import {
   type Feed,
   type FeedStreamEvent,
 } from './feed-change';
-import { toFeedRowWrite } from './feed-row';
+import { promptBlobIds, toFeedRowWrite } from './feed-row';
 import type { WriterJob } from './writer-job';
 import type { WriterEvent } from './writer-machine';
 
@@ -53,18 +53,22 @@ type FeedInternalEvent = FeedChangeApplied | FeedChangeRejected;
 export type FeedBatch = { type: 'feed.batch'; events: FeedStreamEvent[] };
 
 // Every changed row with the newest revision, as one job for the database writer.
-const rowsJob = ({ context }: { context: FeedContext }) => ({
-  job: {
-    type: 'feedRows',
-    sessionId: context.sessionId,
-    rows: context.changedRowIds.flatMap((id) => {
-      const row = context.rows[id];
-      return row ? [toFeedRowWrite(row)] : [];
-    }),
-    maxRevision: context.maxRevision,
-    activityAt: context.activityAt,
-  } satisfies WriterJob,
-});
+const rowsJob = ({ context }: { context: FeedContext }) => {
+  const rows = context.changedRowIds.flatMap((id) => {
+    const row = context.rows[id];
+    return row ? [row] : [];
+  });
+  return {
+    job: {
+      type: 'feedRows',
+      sessionId: context.sessionId,
+      rows: rows.map(toFeedRowWrite),
+      maxRevision: context.maxRevision,
+      activityAt: context.activityAt,
+      blobIds: promptBlobIds(rows),
+    } satisfies WriterJob,
+  };
+};
 
 const writeRows = [
   { type: 'sendToWriter', params: rowsJob },

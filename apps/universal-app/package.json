@@ -13,6 +13,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo/ui": "catalog:",
     "@gorhom/bottom-sheet": "catalog:",
     "@react-native-async-storage/async-storage": "catalog:",
     "@react-native-community/datetimepicker": "catalog:",
