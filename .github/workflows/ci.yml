@@ -46,8 +46,6 @@ jobs:
       # Shares turbo's task cache with every run and machine, so unchanged tasks replay instead of running; skipped until the TURBO_TEAM variable exists.
       - name: Set up the Turborepo Remote Cache
         if: ${{ vars.TURBO_TEAM != '' }}
-        # Until Vercel accepts this repo's OIDC token, runs fall back to turbo's local cache and still check everything.
-        continue-on-error: true
         uses: vercel/setup-turborepo-remote-cache-action@v1.1.0
         with:
           team: ${{ vars.TURBO_TEAM }}
