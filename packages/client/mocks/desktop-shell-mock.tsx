@@ -1,10 +1,18 @@
+import { DotsThreeIcon } from 'phosphor-react-native/src/icons/DotsThree';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import {
   DesktopShell,
   type DesktopShellProps,
 } from '../src/components/DesktopShell';
+import { Icon } from '../src/components/Icon';
 import { Button } from '../src/primitives/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../src/primitives/dropdown-menu';
 import { Text } from '../src/primitives/text';
 
 export function DesktopShellMock({
@@ -12,7 +20,8 @@ export function DesktopShellMock({
   attentionCount = 1,
   sidebarShown = true,
   inspectorState = 'closed',
-}: Partial<DesktopShellProps>) {
+  showInspectorControls = false,
+}: Partial<DesktopShellProps> & { showInspectorControls?: boolean }) {
   const [section, setSection] = useState(selectedSection);
   const [shown, setShown] = useState(sidebarShown);
   const [inspection, setInspection] = useState(inspectorState);
@@ -21,57 +30,81 @@ export function DesktopShellMock({
   useEffect(() => setInspection(inspectorState), [inspectorState]);
   const title = section.charAt(0).toUpperCase() + section.slice(1);
   return (
-    <DesktopShell
-      selectedSection={section}
-      attentionCount={attentionCount}
-      sidebarShown={shown}
-      onSidebarShownChange={setShown}
-      onSectionChange={setSection}
-      inspectorState={inspection}
-      onInspectorStateChange={setInspection}
-      inspectorHeader={<Text className="text-sm font-semibold">Inspector</Text>}
-      inspector={
-        <View className="p-4">
-          <Text testID="inspector-content">{title} Inspector</Text>
-        </View>
-      }
-      listHeader={
-        <Text role="heading" aria-level={2} className="text-base font-semibold">
-          {title}
-        </Text>
-      }
-      list={
-        <View className="p-4">
-          <Text testID="list-content">{title} list</Text>
-        </View>
-      }
-      detailHeader={
-        <View className="flex-row items-center gap-2">
+    <View className="flex-1">
+      <DesktopShell
+        selectedSection={section}
+        attentionCount={attentionCount}
+        sidebarShown={shown}
+        onSidebarShownChange={setShown}
+        onSectionChange={setSection}
+        inspectorState={inspection}
+        onInspectorStateChange={setInspection}
+        inspectorHeader={
+          <Text className="text-sm font-semibold">Inspector</Text>
+        }
+        inspector={
+          <View className="p-4">
+            <Text testID="inspector-content">{title} Inspector</Text>
+          </View>
+        }
+        listHeader={
           <Text
             role="heading"
             aria-level={2}
-            className="min-w-0 flex-1 text-base font-semibold"
+            className="text-base font-semibold"
+          >
+            {title}
+          </Text>
+        }
+        list={
+          <View className="p-4">
+            <Text testID="list-content">{title} list</Text>
+          </View>
+        }
+        detailHeader={
+          <Text
+            role="heading"
+            aria-level={2}
+            className="text-base font-semibold"
             numberOfLines={1}
           >
             {title} detail
           </Text>
-          {inspection === 'closed' && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="min-w-0 shrink"
-              accessibilityLabel="Open Inspector"
-              onPress={() => setInspection('open')}
-            >
-              <Text numberOfLines={1}>Changed files</Text>
-            </Button>
-          )}
+        }
+        detailActions={
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="size-8 p-0 sm:size-8"
+                accessibilityLabel="More actions"
+              >
+                <Icon
+                  as={DotsThreeIcon}
+                  className="size-4 text-muted-foreground"
+                />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem>
+                <Text>Example action</Text>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        }
+      >
+        <View className="flex-1 p-4">
+          <Text testID="detail-content">{title} detail</Text>
         </View>
-      }
-    >
-      <View className="flex-1 p-4">
-        <Text testID="detail-content">{title} detail</Text>
-      </View>
-    </DesktopShell>
+      </DesktopShell>
+      {showInspectorControls && (
+        <Button
+          accessibilityLabel="Open Inspector"
+          onPress={() => setInspection('open')}
+        >
+          <Text>Open Inspector</Text>
+        </Button>
+      )}
+    </View>
   );
 }

@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { PanResponder, View } from 'react-native';
 
 export interface PanelResizeHandleProps {
@@ -8,6 +8,7 @@ export interface PanelResizeHandleProps {
   maximum: number;
   direction: 1 | -1;
   edge?: 'left' | 'right';
+  onDragStateChange?: (dragging: boolean) => void;
   onChange: (width: number) => void;
 }
 
@@ -19,16 +20,29 @@ export function PanelResizeHandle({
   direction,
   edge = 'right',
   onChange,
+  onDragStateChange,
 }: PanelResizeHandleProps) {
   const startingWidth = useRef(value);
-  const responder = PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onPanResponderGrant: () => {
-      startingWidth.current = value;
-    },
-    onPanResponderMove: (_event, gesture) =>
-      onChange(startingWidth.current + gesture.dx * direction),
-  });
+  const current = useRef({ value, direction, onChange, onDragStateChange });
+  current.current = { value, direction, onChange, onDragStateChange };
+  const responder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onPanResponderGrant: () => {
+          startingWidth.current = current.current.value;
+          current.current.onDragStateChange?.(true);
+        },
+        onPanResponderRelease: () => current.current.onDragStateChange?.(false),
+        onPanResponderTerminate: () =>
+          current.current.onDragStateChange?.(false),
+        onPanResponderMove: (_event, gesture) =>
+          current.current.onChange(
+            startingWidth.current + gesture.dx * current.current.direction,
+          ),
+      }),
+    [current, startingWidth],
+  );
   return (
     <View
       {...responder.panHandlers}

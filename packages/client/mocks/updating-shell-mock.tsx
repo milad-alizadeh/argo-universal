@@ -8,7 +8,7 @@ export function UpdatingShellMock() {
   const [attentionCount, setAttentionCount] = useState(1);
   return (
     <View className="h-[700px] w-full">
-      <DesktopShellMock attentionCount={attentionCount} />
+      <DesktopShellMock attentionCount={attentionCount} showInspectorControls />
       <Button
         accessibilityLabel="Update attention"
         onPress={() => setAttentionCount(2)}

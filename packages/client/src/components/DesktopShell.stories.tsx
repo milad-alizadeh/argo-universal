@@ -2,12 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
 import { DesktopShellMock } from '../../mocks/desktop-shell-mock';
-import { DesktopShell } from './DesktopShell';
+import { DesktopShell, type DesktopShellProps } from './DesktopShell';
 
 const meta = {
   title: 'Shell/DesktopShell',
   component: DesktopShell,
   argTypes: {
+    showInspectorControls: { control: false, table: { disable: true } },
     selectedSection: {
       control: 'select',
       options: ['sessions', 'issues', 'atlas', 'settings'],
@@ -25,6 +26,7 @@ const meta = {
     </View>
   ),
   args: {
+    showInspectorControls: false,
     selectedSection: 'sessions',
     attentionCount: 1,
     sidebarShown: true,
@@ -39,7 +41,7 @@ const meta = {
     onSidebarShownChange: action('sidebar changed'),
     onInspectorStateChange: action('Inspector changed'),
   },
-} satisfies Meta<typeof DesktopShell>;
+} satisfies Meta<DesktopShellProps & { showInspectorControls?: boolean }>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

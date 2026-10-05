@@ -16,7 +16,7 @@ await session.send('Performance.enable');
 await session.send('Emulation.setCPUThrottlingRate', { rate: throttle });
 await mkdir('/tmp/argo-shell-profile', { recursive: true });
 await page.goto(
-  `${origin}/iframe.html?id=shell-desktopshell--selected-section&viewMode=story`,
+  `${origin}/iframe.html?id=shell-desktopshell--selected-section&viewMode=story&args=showInspectorControls:true`,
 );
 await page.getByRole('button', { name: 'Hide sidebar' }).waitFor();
 await page.waitForTimeout(500);

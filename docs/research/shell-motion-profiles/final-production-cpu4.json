@@ -10,46 +10,46 @@
   "frameTimings": [
     {
       "panel": "sidebar",
-      "frames": 291,
+      "frames": 347,
       "p50": 16.699999999999818,
       "p95": 16.80000000000109,
-      "p99": 133.39999999999964,
-      "maximum": 166.6999999999989,
-      "framesOver25ms": 14
+      "p99": 33.399999999999636,
+      "maximum": 50,
+      "framesOver25ms": 13
     },
     {
       "panel": "Inspector",
-      "frames": 287,
+      "frames": 346,
       "p50": 16.69999999999891,
       "p95": 16.80000000000109,
-      "p99": 133.39999999999964,
-      "maximum": 200,
-      "framesOver25ms": 13
+      "p99": 33.30000000000109,
+      "maximum": 33.399999999999636,
+      "framesOver25ms": 14
     }
   ],
   "metrics": {
     "LayoutCount": 24,
-    "RecalcStyleCount": 568,
-    "LayoutDuration": 0.147428,
-    "RecalcStyleDuration": 0.36370899999999995,
-    "TaskDuration": 4.644957
+    "RecalcStyleCount": 499,
+    "LayoutDuration": 0.061745,
+    "RecalcStyleDuration": 0.20962199999999998,
+    "TaskDuration": 2.1606309999999995
   },
   "trace": {
     "Layout": {
       "count": 24,
-      "milliseconds": 146.273
+      "milliseconds": 61.037
     },
     "UpdateLayoutTree": {
-      "count": 568,
-      "milliseconds": 364.044
+      "count": 499,
+      "milliseconds": 210.212
     },
     "Paint": {
-      "count": 288,
-      "milliseconds": 95.097
+      "count": 354,
+      "milliseconds": 50.819
     },
     "RasterTask": {
-      "count": 9677,
-      "milliseconds": 852.476
+      "count": 9250,
+      "milliseconds": 1009.168
     },
     "CompositeLayers": {
       "count": 0,

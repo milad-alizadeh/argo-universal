@@ -3,6 +3,9 @@ import { View } from 'react-native';
 
 export interface ShellHeaderContentProps {
   inset: number;
+  animate?: boolean;
+  position?: number;
+  transitionKey?: string;
   testID: string;
   children: ReactNode;
 }

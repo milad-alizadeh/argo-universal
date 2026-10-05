@@ -11,8 +11,9 @@ export function ShellPane({
   contentWidth,
   hidden,
   transitionKey,
+  animate = true,
   card,
-  overlay,
+  header,
   children,
 }: ShellPaneProps) {
   const viewport = useRef<HTMLDivElement>(null);
@@ -57,6 +58,7 @@ export function ShellPane({
     for (const animation of motion.current) animation.cancel();
     motion.current = [];
     if (
+      animate &&
       last.transitionKey !== transitionKey &&
       (currentWidth !== width || currentOffset !== offset) &&
       !matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -105,6 +107,7 @@ export function ShellPane({
     transitionKey,
     frameWidth,
     surfaceWidth,
+    animate,
   ]);
 
   useLayoutEffect(
@@ -153,7 +156,14 @@ export function ShellPane({
           {children}
         </View>
       </div>
-      {overlay}
+      {header && (
+        <div
+          className="absolute left-0 right-0 top-0 h-shell-bar"
+          style={{ visibility: hidden ? 'hidden' : 'visible' }}
+        >
+          {header}
+        </div>
+      )}
     </div>
   );
 }

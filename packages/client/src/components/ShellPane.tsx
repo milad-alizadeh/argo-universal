@@ -14,9 +14,10 @@ export interface ShellPaneProps {
   offset: number;
   contentWidth?: number;
   card?: boolean;
-  overlay?: ReactNode;
   hidden: boolean;
   transitionKey: string;
+  animate?: boolean;
+  header?: ReactNode;
   children: ReactNode;
 }
 
@@ -27,7 +28,8 @@ export function ShellPane({
   card,
   hidden,
   transitionKey,
-  overlay,
+  animate = true,
+  header,
   children,
 }: ShellPaneProps) {
   const lastContentWidth = useRef(contentWidth ?? width);
@@ -40,7 +42,7 @@ export function ShellPane({
   const previousTransition = useRef(transitionKey);
   useEffect(() => {
     animatedWidth.value =
-      previousTransition.current === transitionKey
+      !animate || previousTransition.current === transitionKey
         ? width
         : withTiming(width, {
             duration: 280,
@@ -48,7 +50,7 @@ export function ShellPane({
             reduceMotion: ReduceMotion.System,
           });
     previousTransition.current = transitionKey;
-  }, [animatedWidth, width, transitionKey]);
+  }, [animatedWidth, width, transitionKey, animate]);
   const animatedStyle = useAnimatedStyle(
     () => ({
       width: animatedWidth.value,
@@ -81,7 +83,14 @@ export function ShellPane({
           {children}
         </View>
       </View>
-      {overlay}
+      {header && (
+        <View
+          className="absolute left-0 right-0 top-0 h-shell-bar"
+          style={{ opacity: hidden ? 0 : 1 }}
+        >
+          {header}
+        </View>
+      )}
     </Animated.View>
   );
 }

@@ -5,15 +5,14 @@ import { XIcon } from 'phosphor-react-native/src/icons/X';
 import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
-import { cn } from '#lib/utils';
-import { Badge } from '#primitives/badge';
 import { Button } from '#primitives/button';
-import { Text } from '#primitives/text';
+import { DesktopRail } from './DesktopRail';
 import { Icon } from './Icon';
 import { PanelResizeHandle } from './PanelResizeHandle';
+import { ShellHeaderActions } from './ShellHeaderActions';
 import { ShellHeaderContent } from './ShellHeaderContent';
 import { ShellPane } from './ShellPane';
-import { type ShellSection, shellSections } from './shell-sections';
+import type { ShellSection } from './shell-sections';
 
 export interface DesktopShellProps {
   selectedSection: ShellSection;
@@ -24,6 +23,7 @@ export interface DesktopShellProps {
   listHeader: ReactNode;
   list: ReactNode;
   detailHeader: ReactNode;
+  detailActions?: ReactNode;
   children: ReactNode;
   inspectorState: InspectorState;
   onInspectorStateChange: (state: InspectorState) => void;
@@ -42,6 +42,7 @@ export function DesktopShell({
   listHeader,
   list,
   detailHeader,
+  detailActions,
   children,
   inspectorState,
   onInspectorStateChange,
@@ -66,6 +67,7 @@ export function DesktopShell({
   const [preferredInspectorWidth, setPreferredInspectorWidth] =
     useState(inspectorWidth);
   const [width, setWidth] = useState(0);
+  const [resizing, setResizing] = useState(false);
   const usableWidth = Math.max(0, width - railWidth - inset);
   const listLimit = Math.max(
     0,
@@ -122,43 +124,6 @@ export function DesktopShell({
     if (!inspectorOpen || inspectorExpanded) onInspectorStateChange('open');
   }
 
-  function sectionButton(section: ShellSection) {
-    const { title, icon } = shellSections[section];
-    return (
-      <Button
-        key={section}
-        variant="ghost"
-        className={cn(
-          'size-10 sm:size-10 rounded-md p-0',
-          selectedSection === section &&
-            'border border-border bg-card shadow-sm',
-        )}
-        accessibilityLabel={title}
-        accessibilityState={{ selected: selectedSection === section }}
-        aria-selected={selectedSection === section}
-        onPress={() => onSectionChange(section)}
-      >
-        <Icon
-          as={icon}
-          className={cn(
-            'size-5',
-            selectedSection !== section && 'text-muted-foreground',
-          )}
-        />
-        {section === 'sessions' && attentionCount > 0 && (
-          <Badge
-            className="absolute -right-1 -top-1 min-w-4 border-0 bg-warning px-1 py-0"
-            accessibilityLabel={`${attentionCount} ${attentionCount === 1 ? 'Session needs' : 'Sessions need'} attention`}
-          >
-            <Text className="text-[10px] font-semibold text-warning-foreground">
-              {attentionCount > 99 ? '99+' : attentionCount}
-            </Text>
-          </Badge>
-        )}
-      </Button>
-    );
-  }
-
   return (
     <View
       testID="desktop-shell"
@@ -178,26 +143,48 @@ export function DesktopShell({
           />
         </Button>
       </View>
-      <View testID="desktop-rail" className="w-shell-bar items-center pb-3">
-        <View className="h-shell-bar" />
-        <View className="gap-1">
-          {(['sessions', 'issues', 'atlas'] as const).map(sectionButton)}
-        </View>
-        <View className="flex-1" />
-        {sectionButton('settings')}
-      </View>
-      {!sidebarShown && listLimit > listWidth && (
-        <View className="absolute left-shell-bar top-0 bottom-shell-inset z-10">
+      <DesktopRail
+        selectedSection={selectedSection}
+        attentionCount={attentionCount}
+        onSectionChange={onSectionChange}
+      />
+      {listLimit > listWidth && (
+        <View
+          className="absolute top-0 bottom-shell-inset z-40"
+          style={{ left: railWidth + (sidebarShown ? visibleListWidth : 0) }}
+        >
           <PanelResizeHandle
             label="Resize sidebar"
-            value={0}
+            value={sidebarShown ? visibleListWidth : 0}
             minimum={0}
             maximum={Math.min(listMaximum, listLimit)}
             direction={1}
             onChange={resizeList}
+            onDragStateChange={setResizing}
           />
         </View>
       )}
+      <View
+        className="absolute top-0 bottom-shell-inset z-30"
+        style={{
+          left:
+            railWidth +
+            usableWidth -
+            inspectorTargetWidth +
+            (inspectorExpanded && sidebarShown ? 4 : 0),
+        }}
+      >
+        <PanelResizeHandle
+          label="Resize Inspector"
+          edge="left"
+          value={inspectorTargetWidth}
+          minimum={0}
+          maximum={availableWidth}
+          direction={-1}
+          onChange={resizeInspector}
+          onDragStateChange={setResizing}
+        />
+      </View>
       <View className="min-w-0 flex-1 flex-row pb-shell-inset pr-shell-inset">
         <View
           pointerEvents="none"
@@ -210,19 +197,7 @@ export function DesktopShell({
           contentWidth={visibleListWidth}
           hidden={!sidebarShown}
           transitionKey={transitionKey}
-          overlay={
-            sidebarShown &&
-            listLimit > listWidth && (
-              <PanelResizeHandle
-                label="Resize sidebar"
-                value={visibleListWidth}
-                minimum={Math.min(listWidth, listLimit)}
-                maximum={Math.min(listMaximum, listLimit)}
-                direction={1}
-                onChange={resizeList}
-              />
-            )
-          }
+          animate={!resizing}
         >
           <View className="h-shell-bar" />
           <View className="min-h-0 flex-1 overflow-hidden">
@@ -237,27 +212,30 @@ export function DesktopShell({
           width={Math.max(0, availableWidth - inspectorTargetWidth)}
           hidden={inspectorExpanded}
           transitionKey={transitionKey}
-          overlay={
-            !inspectorOpen && (
-              <PanelResizeHandle
-                label="Resize Inspector"
-                value={0}
-                minimum={0}
-                maximum={availableWidth}
-                direction={-1}
-                onChange={resizeInspector}
-              />
-            )
+          animate={!resizing}
+          header={
+            <View className="h-shell-bar flex-row items-center gap-2 px-4">
+              <ShellHeaderContent
+                testID="desktop-detail-title"
+                animate={!resizing}
+                position={sidebarShown ? visibleListWidth : 32}
+                transitionKey={transitionKey}
+                inset={sidebarShown ? 0 : 32}
+              >
+                {detailHeader}
+              </ShellHeaderContent>
+              <ShellHeaderActions
+                testID="desktop-detail-actions"
+                position={railWidth + usableWidth - inspectorTargetWidth}
+                transitionKey={transitionKey}
+                animate={!resizing}
+              >
+                {detailActions}
+              </ShellHeaderActions>
+            </View>
           }
         >
-          <View className="h-shell-bar overflow-hidden flex-row items-center gap-2 px-4">
-            <ShellHeaderContent
-              testID="desktop-detail-title"
-              inset={sidebarShown ? 0 : 32}
-            >
-              {detailHeader}
-            </ShellHeaderContent>
-          </View>
+          <View className="h-shell-bar" />
           <View className="min-h-0 flex-1 overflow-hidden rounded-xl">
             {children}
           </View>
@@ -268,57 +246,62 @@ export function DesktopShell({
           width={inspectorTargetWidth}
           hidden={!inspectorOpen}
           transitionKey={transitionKey}
-          overlay={
-            inspectorOpen && (
-              <PanelResizeHandle
-                label="Resize Inspector"
-                edge="left"
-                value={inspectorTargetWidth}
-                minimum={0}
-                maximum={availableWidth}
-                direction={-1}
-                onChange={resizeInspector}
-              />
-            )
+          animate={!resizing}
+          header={
+            <View className="h-shell-bar flex-row items-center gap-2 pl-4 pr-1">
+              <ShellHeaderContent
+                testID="desktop-inspector-title"
+                animate={!resizing}
+                position={
+                  usableWidth -
+                  inspectorTargetWidth +
+                  (!sidebarShown && inspectorExpanded ? 32 : 0)
+                }
+                transitionKey={transitionKey}
+                inset={!sidebarShown && inspectorExpanded ? 32 : 0}
+              >
+                {inspectorHeader}
+              </ShellHeaderContent>
+              <ShellHeaderActions
+                testID="desktop-inspector-actions"
+                position={railWidth + usableWidth}
+                transitionKey={transitionKey}
+                animate={!resizing}
+              >
+                <Button
+                  variant="ghost"
+                  className="size-8 p-0 sm:size-8"
+                  accessibilityLabel={
+                    inspectorExpanded ? 'Restore Inspector' : 'Expand Inspector'
+                  }
+                  onPress={() =>
+                    onInspectorStateChange(
+                      inspectorExpanded ? 'open' : 'expanded',
+                    )
+                  }
+                >
+                  <Icon
+                    as={
+                      inspectorExpanded
+                        ? ArrowsInSimpleIcon
+                        : ArrowsOutSimpleIcon
+                    }
+                    className="size-4 text-muted-foreground"
+                  />
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="size-8 p-0 sm:size-8"
+                  accessibilityLabel="Close Inspector"
+                  onPress={() => onInspectorStateChange('closed')}
+                >
+                  <Icon as={XIcon} className="size-4 text-muted-foreground" />
+                </Button>
+              </ShellHeaderActions>
+            </View>
           }
         >
-          <View className="h-shell-bar overflow-hidden flex-row items-center gap-2 pl-4 pr-1">
-            <ShellHeaderContent
-              testID="desktop-inspector-title"
-              inset={!sidebarShown && inspectorExpanded ? 32 : 0}
-            >
-              {inspectorHeader}
-            </ShellHeaderContent>
-            <View className="flex-row items-center gap-0.5">
-              <Button
-                variant="ghost"
-                className="size-8 p-0 sm:size-8"
-                accessibilityLabel={
-                  inspectorExpanded ? 'Restore Inspector' : 'Expand Inspector'
-                }
-                onPress={() =>
-                  onInspectorStateChange(
-                    inspectorExpanded ? 'open' : 'expanded',
-                  )
-                }
-              >
-                <Icon
-                  as={
-                    inspectorExpanded ? ArrowsInSimpleIcon : ArrowsOutSimpleIcon
-                  }
-                  className="size-4 text-muted-foreground"
-                />
-              </Button>
-              <Button
-                variant="ghost"
-                className="size-8 p-0 sm:size-8"
-                accessibilityLabel="Close Inspector"
-                onPress={() => onInspectorStateChange('closed')}
-              >
-                <Icon as={XIcon} className="size-4 text-muted-foreground" />
-              </Button>
-            </View>
-          </View>
+          <View className="h-shell-bar" />
           <View className="min-h-0 flex-1 overflow-hidden">{inspector}</View>
         </ShellPane>
       </View>

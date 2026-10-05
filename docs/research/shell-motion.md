@@ -46,7 +46,7 @@ The acceptance claim should be bounded: measured smooth motion in the recorded e
 
 ## Implemented desktop motion and measured results
 
-`ShellPane.web.tsx` commits the target pane width once. A browser-scheduled Web Animations API transition translates a fixed-width viewport and animates its inset clip; only the separate Card surface scales. Sidebar text retains its open width and all panes stay mounted. `ShellHeaderContent.web.tsx` translates the title by the old-to-new inset difference, avoiding the jump when the header starts reserving room for the sidebar toggle. Interrupted animations restart from their current rendered position. Resize handles live outside the animated clip and drag updates remain immediate. The iOS PhoneDrawer retains its Gesture Handler implementation.
+`ShellPane.web.tsx` commits the target pane width once. A browser-scheduled Web Animations API transition translates a fixed-width viewport and animates its inset clip; only the separate Card surface scales. Sidebar text retains its open width and all panes stay mounted. `ShellPane` keeps the header outside the translated body viewport. Flex layout anchors its trailing actions to the actual right edge. The leading title translates by the pane-origin and toggle-inset difference; trailing actions translate only when the right edge moves. Main header actions remain mounted when the Inspector opens. Interrupted animations restart from their current rendered position. Persistent resize handles live outside the animated clip and preserve pointer capture across close, reopen, and expansion. Drag state disables animations, including at snap thresholds; button toggles use the eased transition. The iOS PhoneDrawer retains its Gesture Handler implementation.
 
 Run `node tools/profile-shell.mjs <label> <cpu-rate> <origin>` against a built Storybook to reproduce the benchmark. The tool records Chrome timeline traces, Performance metrics, and requestAnimationFrame intervals without reading layout every frame. It adds 450 text rows, warms four toggles, then measures 12 sidebar and 12 Inspector toggles. Raw traces are written under `/tmp/argo-shell-profile`; compact summaries are saved alongside this note.
 
@@ -55,15 +55,15 @@ Measured on 2026-10-05 in headless Chromium 153.0.8010.12 at 1440 × 900:
 | Measurement across 24 toggles | Original width animation, development | Final browser animation, production | Final production, 4× CPU throttling |
 | --- | ---: | ---: | ---: |
 | Layout events | 476 | 24 | 24 |
-| Layout time | 494 ms | 27 ms | 147 ms |
-| Paint events | 1,504 | 288 | 288 |
-| Paint time | 118 ms | 17 ms | 95 ms |
-| Raster tasks | 7,112 | 9,810 | 9,677 |
-| Raster task time | 1,160 ms | 706 ms | 852 ms |
-| Sidebar p95 frame interval | 16.7 ms | 16.7 ms | 16.8 ms |
-| Inspector p95 frame interval | 16.7 ms | 16.7 ms | 16.8 ms |
-| Sampled frame intervals over 25 ms | 3 | 0 / 725 | 27 / 578 |
-| Maximum sampled interval | 83.3 ms | 16.8 ms | 200 ms |
+| Layout time | 494 ms | 14 ms | 62 ms |
+| Paint events | 1,504 | 354 | 354 |
+| Paint time | 118 ms | 12 ms | 51 ms |
+| Raster tasks | 7,112 | 9,789 | 9,250 |
+| Raster task time | 1,160 ms | 847 ms | 1,009 ms |
+| Sidebar p95 frame interval | 16.7 ms | 16.8 ms | 16.8 ms |
+| Inspector p95 frame interval | 16.7 ms | 16.8 ms | 16.8 ms |
+| Sampled frame intervals over 25 ms | 3 / 714 | 0 / 723 | 27 / 693 |
+| Maximum sampled interval | 83.3 ms | 16.8 ms | 50.0 ms |
 
 The baseline ran in development without the later warmup; it is not a controlled production-to-production frame-rate comparison. A development run of the browser implementation also measured 24 layout events and 237 paints, confirming the large reduction before changing build mode. The final title animation adds paint events but preserves one layout event per toggle. Raster task count increased, even though total raster time decreased in these runs. Layer promotion therefore is not equivalent to eliminating raster work.
 
