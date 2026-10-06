@@ -12,6 +12,10 @@ out/
 # Testing
 coverage/
 
+# Local visual verification evidence
+/e2e/**/screenshots/
+/e2e/**/audits/
+
 # Local env files
 .env
 .env*.local
