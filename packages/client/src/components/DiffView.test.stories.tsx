@@ -47,19 +47,13 @@ export const InspectorFileShowsEveryLine: Story = {
           getComputedStyle(canvas.getByText(count)).textDecorationLine,
         ).toBe('none');
       }
-      const headerContainer = header.parentElement;
-      if (!headerContainer) throw new Error('Missing diff header');
+      // The path button fills the header up to the copy button, so there is no dead space to miss.
+      const copyBounds = canvas
+        .getByRole('button', { name: 'Copy path' })
+        .getBoundingClientRect();
       const buttonBounds = header.getBoundingClientRect();
-      const countsBounds = canvas.getByText('+60').getBoundingClientRect();
-      await expect(buttonBounds.right).toBeLessThan(countsBounds.left - 10);
-      const containerBounds = headerContainer.getBoundingClientRect();
-      await page.elementLocator(headerContainer).click({
-        position: {
-          x:
-            (buttonBounds.right + countsBounds.left) / 2 - containerBounds.left,
-          y: containerBounds.height / 2,
-        },
-      });
+      await expect(buttonBounds.right).toBeLessThanOrEqual(copyBounds.left);
+      await expect(copyBounds.left - buttonBounds.right).toBeLessThanOrEqual(8);
       await expect(header).toHaveAttribute('aria-expanded', 'true');
       const numberColors: string[] = [];
       for (const [text, sign] of [

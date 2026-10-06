@@ -1,6 +1,19 @@
 import { expect } from 'storybook/test';
 
-// The first opaque surface under the middle of a fade, skipping the scrolled content it covers.
+const colorCanvas = document.createElement('canvas');
+colorCanvas.width = colorCanvas.height = 1;
+
+// Draws a colour to one pixel so any CSS colour syntax compares equal, without touching the page.
+function pixel(color: string) {
+  const context = colorCanvas.getContext('2d', { willReadFrequently: true });
+  if (!context) throw new Error('Missing canvas context');
+  context.clearRect(0, 0, 1, 1);
+  context.fillStyle = color;
+  context.fillRect(0, 0, 1, 1);
+  return Array.from(context.getImageData(0, 0, 1, 1).data);
+}
+
+// The first opaque surface hit under the middle of a fade, skipping the scrolled content it covers.
 function surfaceBehind(fade: Element) {
   const box = fade.getBoundingClientRect();
   const scroll = fade.parentElement?.querySelector(
@@ -12,24 +25,20 @@ function surfaceBehind(fade: Element) {
   )) {
     if (fade.contains(element) || scroll?.contains(element)) continue;
     const color = getComputedStyle(element).backgroundColor;
-    if (color !== 'rgba(0, 0, 0, 0)' && color !== 'transparent') return color;
+    if (pixel(color)[3] === 255) return color;
   }
   throw new Error('No surface behind the fade');
 }
 
-// Every gradient stop of a scroll fade is the colour actually showing behind it.
-export function expectFadeColor(fade: Element) {
-  const surfaceColor = surfaceBehind(fade);
+// Every gradient stop of a scroll fade is the colour of the surface behind it; pass the surface when it ignores pointer events.
+export function expectFadeColor(fade: Element, surface?: Element) {
+  const surfaceColor = surface
+    ? getComputedStyle(surface).backgroundColor
+    : surfaceBehind(fade);
   const stops = fade.querySelectorAll('stop');
   expect(stops.length).toBe(3);
-  const probe = document.createElement('div');
-  document.body.append(probe);
-  try {
-    for (const stop of stops) {
-      probe.style.color = stop.getAttribute('stop-color') ?? '';
-      expect(getComputedStyle(probe).color).toBe(surfaceColor);
-    }
-  } finally {
-    probe.remove();
-  }
+  for (const stop of stops)
+    expect(pixel(stop.getAttribute('stop-color') ?? '')).toEqual(
+      pixel(surfaceColor),
+    );
 }

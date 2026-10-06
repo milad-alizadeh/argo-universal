@@ -184,6 +184,7 @@ export function DesktopShell({
       </View>
       <View className="min-w-0 flex-1 flex-row pb-shell-inset pr-shell-inset">
         <View
+          testID="desktop-panel"
           pointerEvents="none"
           className="absolute bottom-shell-inset left-0 right-shell-inset top-shell-bar rounded-xl bg-sidebar"
         />

@@ -734,7 +734,7 @@ export const InspectorFadesIntoTheAppBackground: Story = {
       expect(fade.getBoundingClientRect().top).toBeGreaterThanOrEqual(
         title.getBoundingClientRect().bottom - 1,
       );
-      expectFadeColor(fade);
+      expectFadeColor(fade, canvas.getByTestId('desktop-panel'));
     });
   },
 };
