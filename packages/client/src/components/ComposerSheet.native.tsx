@@ -53,32 +53,32 @@ export function ComposerSheet({
         onDismiss={onClosed}
         statusBarTranslucent
       >
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <BottomSheet
-              index={0}
-              enableDynamicSizing
-              enablePanDownToClose
-              maxDynamicContentSize={height * 0.85}
-              onClose={() => onOpenChange(false)}
-              backdropComponent={backdrop}
-              backgroundStyle={background}
-              handleStyle={{ paddingTop: 6, paddingBottom: 8 }}
-              handleIndicatorStyle={handle}
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <BottomSheet
+            index={0}
+            enableDynamicSizing
+            enablePanDownToClose
+            maxDynamicContentSize={height * 0.85}
+            onClose={() => onOpenChange(false)}
+            backdropComponent={backdrop}
+            backgroundStyle={background}
+            handleStyle={{ paddingTop: 6, paddingBottom: 8 }}
+            handleIndicatorStyle={handle}
+          >
+            <BottomSheetScrollView
+              keyboardShouldPersistTaps="handled"
+              role="dialog"
+              accessibilityLabel={label}
+              accessibilityViewIsModal
+              onAccessibilityEscape={() => onOpenChange(false)}
+              contentContainerStyle={{
+                paddingBottom: Math.max(32, insets.bottom),
+              }}
             >
-              <BottomSheetScrollView
-                keyboardShouldPersistTaps="handled"
-                role="dialog"
-                accessibilityLabel={label}
-                accessibilityViewIsModal
-                onAccessibilityEscape={() => onOpenChange(false)}
-                contentContainerStyle={{
-                  paddingBottom: Math.max(32, insets.bottom),
-                }}
-              >
-                {children}
-              </BottomSheetScrollView>
-            </BottomSheet>
-          </GestureHandlerRootView>
+              {children}
+            </BottomSheetScrollView>
+          </BottomSheet>
+        </GestureHandlerRootView>
       </Modal>
     </Dialog>
   );
