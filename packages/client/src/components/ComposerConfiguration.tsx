@@ -10,10 +10,10 @@ import {
   CaretRightIcon,
   CheckIcon,
   ClipboardTextIcon,
+  FolderIcon,
   GitBranchIcon,
   HourglassSimpleIcon,
   LightningIcon,
-  MagnifyingGlassIcon,
   PencilIcon,
   ShieldCheckIcon,
   ShieldWarningIcon,
@@ -21,17 +21,16 @@ import {
   WarningIcon,
 } from 'phosphor-react-native';
 import { useState } from 'react';
-import { useWindowDimensions, View } from 'react-native';
+import { View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import { withUniwind } from 'uniwind';
 import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
-import { Input } from '#primitives/input';
 import { Label } from '#primitives/label';
-import { Slider } from '#primitives/slider';
 import { Switch } from '#primitives/switch';
 import { Text } from '#primitives/text';
 import { useWide } from '../navigation/use-wide';
+import { Slider } from '../primitives/slider';
 import { ComposerPopover } from './ComposerPopover';
 import { Icon } from './Icon';
 
@@ -54,8 +53,6 @@ export interface ComposerConfigurationProps {
     onBranchChange?: (branch: string) => void;
     onNewWorktreeChange?: (enabled: boolean) => void;
     path?: string;
-    onOpenFolder?: () => void;
-    onOpenTerminal?: () => void;
   };
 }
 
@@ -98,6 +95,7 @@ function Logo({ agent, size = 14 }: { agent?: AgentInfo; size?: number }) {
       className="text-foreground"
       width={size}
       height={size}
+      style={{ width: size, height: size }}
     />
   ) : null;
 }
@@ -226,7 +224,11 @@ function AgentChoices({
           onSelect();
         }}
       >
-        <Logo agent={agent} size={16} />
+        {wide && (
+          <View className="size-4 items-center justify-center">
+            <Logo agent={agent} size={14} />
+          </View>
+        )}
         <View className="flex-1 min-w-0 gap-0.5">
           <Text
             selectable={false}
@@ -255,7 +257,7 @@ function AgentChoices({
         <Button
           variant="ghost"
           accessibilityLabel={`Set up ${agent.label}`}
-          className="h-7 sm:h-7 ml-8 px-2 justify-start"
+          className="h-7 sm:h-7 py-0 ml-8 px-2 justify-start"
           onPress={() => configuration.onAgentSetup?.(agent.agent)}
         >
           <Text selectable={false} className="select-none text-xs">
@@ -413,9 +415,9 @@ function EffortControl({
                   configuration.onConfigChange(effort.configId, choice.value)
                 }
                 className={cn(
-                  'h-4 sm:h-4 px-0 py-0 active:bg-transparent hover:bg-transparent dark:hover:bg-transparent',
-                  index === 0 && '-ml-1.5',
-                  index === effortChoices.length - 1 && '-mr-1.5',
+                  'h-4 sm:h-4 native:w-16 px-0 py-0 active:bg-transparent hover:bg-transparent dark:hover:bg-transparent',
+                  index === 0 && '-ml-1.5 justify-start',
+                  index === effortChoices.length - 1 && '-mr-1.5 justify-end',
                 )}
               >
                 <Text
@@ -637,7 +639,7 @@ export function ComposerAgentModelControl({
   configuration: ComposerConfigurationProps;
   disabled: boolean;
 }) {
-  const compact = useWindowDimensions().width < 360;
+  const wide = useWide();
   const model = selection(configuration, 'model');
   const current = choices(model).find(
     (choice) => choice.value === model?.currentValue,
@@ -660,31 +662,35 @@ export function ComposerAgentModelControl({
           variant="ghost"
           disabled={disabled}
           accessibilityLabel="Agent and model"
-          className="h-7 sm:h-7 px-1.5 has-[>svg]:px-1.5 gap-1 shrink min-w-0"
+          className="h-7 sm:h-7 py-0 px-1.5 has-[>svg]:px-1.5 gap-1.5 shrink min-w-0"
         >
-          <Logo agent={agent} size={16} />
+          {wide && (
+            <View className="size-4 items-center justify-center">
+              <Logo agent={agent} size={14} />
+            </View>
+          )}
           <Text
             selectable={false}
             numberOfLines={1}
             className={cn(
               'select-none text-sm leading-5 font-normal min-w-0 shrink',
-              compact && 'hidden',
             )}
           >
             {modelName(current)}
           </Text>
-          {current?._meta?.argo?.supportsEffort !== false && effortLabel && (
-            <Text
-              selectable={false}
-              className={cn(
-                'select-none text-sm leading-5 font-normal text-muted-foreground shrink-0',
-                compact && 'hidden',
-              )}
-              numberOfLines={1}
-            >
-              {effortLabel}
-            </Text>
-          )}
+          {wide &&
+            current?._meta?.argo?.supportsEffort !== false &&
+            effortLabel && (
+              <Text
+                selectable={false}
+                className={cn(
+                  'select-none text-sm leading-5 font-normal text-muted-foreground shrink-0',
+                )}
+                numberOfLines={1}
+              >
+                {effortLabel}
+              </Text>
+            )}
           {configuration.fastMode && (
             <View
               accessible
@@ -694,7 +700,12 @@ export function ComposerAgentModelControl({
               <Icon as={LightningIcon} weight="fill" className="size-4" />
             </View>
           )}
-          <Icon as={CaretDownIcon} className="size-3 text-muted-foreground" />
+          {wide && (
+            <Icon
+              as={CaretDownIcon}
+              className="size-3 -ml-0.5 text-muted-foreground"
+            />
+          )}
         </Button>
       }
     >
@@ -723,12 +734,12 @@ export function ComposerModeControl({
           variant="ghost"
           disabled={disabled}
           accessibilityLabel="Mode"
-          className="h-11 sm:h-11 wide:h-7 wide:sm:h-7 px-2.5 wide:px-1.5 has-[>svg]:px-2.5 wide:has-[>svg]:px-1.5 gap-1"
+          className="h-7 sm:h-7 py-0 w-7 wide:w-auto p-0 wide:px-1.5 has-[>svg]:px-0 wide:has-[>svg]:px-1.5 gap-1.5"
         >
           <Icon
             as={configurationIcon(current?._meta?.argo?.icon)}
             className={cn(
-              'size-4 text-foreground',
+              'size-4 text-muted-foreground',
               current?._meta?.argo?.tone === 'dangerous' && 'text-destructive',
             )}
           />
@@ -736,13 +747,15 @@ export function ComposerModeControl({
             selectable={false}
             className={cn(
               'select-none',
-              'hidden wide:flex text-sm font-normal',
+              'hidden wide:flex text-sm leading-5 font-normal text-muted-foreground',
               current?._meta?.argo?.tone === 'dangerous' && 'text-destructive',
             )}
           >
             {current?.name.replace(/\s*\(recommended\)\s*$/i, '')}
           </Text>
-          <Icon as={CaretDownIcon} className="size-3 text-muted-foreground" />
+          <View className="hidden wide:flex -ml-0.5">
+            <Icon as={CaretDownIcon} className="size-3 text-muted-foreground" />
+          </View>
         </Button>
       }
     >
@@ -783,6 +796,39 @@ export function ComposerModeControl({
   );
 }
 
+function CheckoutContents({
+  checkout,
+  disabled,
+  close,
+}: {
+  checkout: ComposerConfigurationProps['checkout'];
+  disabled: boolean;
+  close: () => void;
+}) {
+  return (
+    <View className="p-1 gap-0.5">
+      {[false, true].map((newWorktree) => (
+        <Choice
+          key={String(newWorktree)}
+          label={newWorktree ? 'New worktree' : 'Local'}
+          selected={checkout.newWorktree === newWorktree}
+          leading={
+            <Icon
+              as={newWorktree ? GitBranchIcon : FolderIcon}
+              className="size-4 text-muted-foreground"
+            />
+          }
+          onPress={() => {
+            if (disabled) return;
+            checkout.onNewWorktreeChange?.(newWorktree);
+            close();
+          }}
+        />
+      ))}
+    </View>
+  );
+}
+
 export function ComposerCheckoutControl({
   checkout,
   disabled,
@@ -790,207 +836,80 @@ export function ComposerCheckoutControl({
   checkout: ComposerConfigurationProps['checkout'];
   disabled: boolean;
 }) {
-  const [search, setSearch] = useState('');
-  const mainCheckout = !!checkout.onBranchChange && !checkout.newWorktree;
+  const wide = useWide();
+  const created = !!checkout.path;
+  const editable = !created && !!checkout.onNewWorktreeChange;
+  if (created || !editable)
+    return (
+      <View className="h-7 max-w-full wide:max-w-96 min-w-0 px-1.5 flex-row items-center gap-1.5">
+        <Icon
+          as={checkout.newWorktree ? GitBranchIcon : FolderIcon}
+          className="size-4 text-muted-foreground"
+        />
+        <Text
+          selectable={false}
+          numberOfLines={1}
+          className="select-none min-w-0 shrink text-xs leading-4 font-normal font-mono"
+        >
+          {checkout.newWorktree
+            ? checkout.path
+                ?.replace(/[\\/]+$/, '')
+                .split(/[\\/]/)
+                .pop() || checkout.branch.toLowerCase()
+            : 'Local'}
+        </Text>
+      </View>
+    );
   return (
-    <View className="flex-row items-center gap-1">
-      {checkout.onNewWorktreeChange && (
-        <View className="h-7 px-1.5 flex-row gap-1 items-center">
-          <Switch
-            size="small"
-            accessibilityLabel="New worktree"
-            disabled={disabled}
-            checked={checkout.newWorktree}
-            onCheckedChange={checkout.onNewWorktreeChange}
+    <ComposerPopover
+      label={checkout.onBranchChange ? 'Base branch' : 'Checkout'}
+      trigger={
+        <Button
+          variant="ghost"
+          disabled={disabled}
+          accessibilityLabel={
+            checkout.onBranchChange ? 'Base branch' : 'Checkout'
+          }
+          className={cn(
+            'h-6 sm:h-6 py-0 px-2.5 has-[>svg]:px-2.5 gap-1.5 rounded-full border border-border bg-card',
+            wide
+              ? 'h-7 sm:h-7 px-1.5 has-[>svg]:px-1.5 pr-0.25 has-[>svg]:pr-0.25 rounded-md border-0 bg-transparent shadow-none'
+              : 'shadow-composer',
+          )}
+        >
+          <Icon
+            as={checkout.newWorktree ? GitBranchIcon : FolderIcon}
+            className="size-4 text-muted-foreground"
           />
-          <Label
-            disabled={disabled}
-            onPress={() =>
-              checkout.onNewWorktreeChange?.(!checkout.newWorktree)
-            }
-            className={cn(
-              'select-none text-xs font-normal',
-              checkout.newWorktree
-                ? 'text-foreground'
-                : 'text-muted-foreground',
-            )}
-          >
-            New worktree
-          </Label>
-        </View>
-      )}
-      <ComposerPopover
-        label={checkout.onBranchChange ? 'Base branch' : 'Checkout'}
-        trigger={
-          <Button
-            variant="ghost"
-            disabled={
-              disabled || (!!checkout.onBranchChange && !checkout.newWorktree)
-            }
-            accessibilityLabel={
-              checkout.onBranchChange ? 'Base branch' : 'Checkout'
-            }
-            className={cn(
-              'h-7 sm:h-7 px-1.5 has-[>svg]:px-1.5 gap-1',
-              mainCheckout && !disabled && 'opacity-100',
-            )}
-          >
-            <Icon
-              as={GitBranchIcon}
-              className="size-3.5 text-muted-foreground"
-            />
-            {checkout.onBranchChange && (
-              <Text
-                selectable={false}
-                className="select-none text-xs font-normal text-muted-foreground"
-              >
-                {mainCheckout ? 'on' : 'from'}
-              </Text>
-            )}
+          {editable && (
             <Text
               selectable={false}
-              className={cn(
-                'select-none text-xs font-mono font-normal',
-                mainCheckout && 'text-muted-foreground',
-              )}
+              className="select-none text-xs leading-4 font-normal text-muted-foreground"
             >
-              {checkout.newWorktree || !checkout.onBranchChange
-                ? checkout.branch.toLowerCase()
-                : 'main'}
+              {checkout.newWorktree ? 'New worktree' : 'Local'}
             </Text>
-            {checkout.onBranchChange && checkout.newWorktree && (
-              <Icon
-                as={CaretDownIcon}
-                className="size-3 text-muted-foreground"
-              />
-            )}
-          </Button>
-        }
-      >
-        {(close) =>
-          checkout.onBranchChange ? (
-            <View className="pb-2 wide:pb-0">
-              <View className="h-10 flex-row items-center px-3 gap-2 border-b border-border">
-                <Icon
-                  as={MagnifyingGlassIcon}
-                  className="size-3.5 text-muted-foreground"
-                />
-                <Input
-                  accessibilityLabel="Search branches"
-                  placeholder="Find a branch…"
-                  value={search}
-                  onChangeText={setSearch}
-                  className="flex-1 min-w-0 h-10 sm:h-10 border-0 rounded-none shadow-none px-0 web:focus-visible:ring-0 web:focus-visible:border-transparent"
-                />
-              </View>
-              <View className="wide:p-1 wide:gap-0.5">
-                {[...checkout.branches]
-                  .sort(
-                    (left, right) =>
-                      Number(right === checkout.currentBranch) -
-                      Number(left === checkout.currentBranch),
-                  )
-                  .filter((branch) =>
-                    branch.toLowerCase().includes(search.toLowerCase()),
-                  )
-                  .map((branch) => (
-                    <Button
-                      key={branch}
-                      variant="ghost"
-                      accessibilityLabel={branch.toLowerCase()}
-                      aria-pressed={branch === checkout.branch}
-                      accessibilityState={{
-                        selected: branch === checkout.branch,
-                      }}
-                      className={cn(
-                        'min-h-15 wide:min-h-8 h-auto sm:h-auto px-4 has-[>svg]:px-4 wide:px-2 wide:has-[>svg]:px-2 gap-3 wide:gap-2 justify-start rounded-none wide:rounded-sm',
-                        branch === checkout.branch && 'bg-accent',
-                      )}
-                      onPress={() => {
-                        checkout.onBranchChange?.(branch);
-                        setSearch('');
-                        close();
-                      }}
-                    >
-                      <Icon
-                        as={GitBranchIcon}
-                        className="size-3.5 text-muted-foreground"
-                      />
-                      <Text
-                        selectable={false}
-                        className="select-none flex-1 text-base wide:text-xs wide:leading-4 font-mono"
-                      >
-                        {branch.toLowerCase()}
-                      </Text>
-                      {branch === checkout.currentBranch && (
-                        <Text
-                          selectable={false}
-                          className="select-none text-xs text-muted-foreground"
-                        >
-                          current
-                        </Text>
-                      )}
-                      {branch === checkout.branch && (
-                        <Icon as={CheckIcon} className="size-3.5" />
-                      )}
-                    </Button>
-                  ))}
-                {!checkout.branches.some((branch) =>
-                  branch.toLowerCase().includes(search.toLowerCase()),
-                ) && (
-                  <Text
-                    selectable={false}
-                    className="select-none p-4 text-sm text-muted-foreground"
-                  >
-                    No branches found.
-                  </Text>
-                )}
-              </View>
-            </View>
-          ) : (
-            <View className="p-4 gap-3">
-              <Text
-                selectable={false}
-                className="select-none text-sm font-medium"
-              >
-                Checkout
-              </Text>
-              <Text
-                selectable={false}
-                className="select-none text-sm text-muted-foreground"
-              >
-                {checkout.path ?? checkout.branch.toLowerCase()}
-              </Text>
-              {checkout.onOpenFolder && (
-                <Button
-                  variant="ghost"
-                  onPress={() => {
-                    checkout.onOpenFolder?.();
-                    close();
-                  }}
-                >
-                  <Text selectable={false} className="select-none">
-                    Open in Finder
-                  </Text>
-                </Button>
-              )}
-              {checkout.onOpenTerminal && (
-                <Button
-                  variant="ghost"
-                  onPress={() => {
-                    checkout.onOpenTerminal?.();
-                    close();
-                  }}
-                >
-                  <Text selectable={false} className="select-none">
-                    Open in terminal
-                  </Text>
-                </Button>
-              )}
-            </View>
-          )
-        }
-      </ComposerPopover>
-    </View>
+          )}
+          {!editable && (
+            <Text
+              selectable={false}
+              className="select-none text-xs leading-4 font-normal font-mono"
+            >
+              {checkout.branch.toLowerCase()}
+            </Text>
+          )}
+          {wide && editable && (
+            <Icon as={CaretDownIcon} className="size-3 text-muted-foreground" />
+          )}
+        </Button>
+      }
+    >
+      {(close) => (
+        <CheckoutContents
+          checkout={checkout}
+          disabled={disabled}
+          close={close}
+        />
+      )}
+    </ComposerPopover>
   );
 }

@@ -3,17 +3,27 @@ import {
   ArrowsInLineVerticalIcon,
   CaretUpIcon,
   CheckIcon,
-  GaugeIcon,
+  ClockCountdownIcon,
   ListChecksIcon,
   RobotIcon,
   TerminalIcon,
 } from 'phosphor-react-native';
-import { ActivityIndicator, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Platform, ScrollView, View } from 'react-native';
+import Animated, {
+  cancelAnimation,
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
 import { withUniwind } from 'uniwind';
 import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
+import { useWide } from '../navigation/use-wide';
 import { ComposerGlyph } from './ComposerGlyph';
 import { ComposerPopover } from './ComposerPopover';
 import { Icon } from './Icon';
@@ -92,7 +102,7 @@ function ContextRing({ percent }: { percent: number }) {
           strokeClassName={percent < 20 ? 'bg-success' : 'bg-warning'}
           strokeWidth={2}
           strokeLinecap="round"
-          strokeDasharray={`${(circumference * Math.max(0, Math.min(100, percent))) / 100} ${circumference}`}
+          strokeDasharray={`${(circumference * Math.max(0, Math.min(100, 100 - percent))) / 100} ${circumference}`}
           transform="rotate(-90 7 7)"
         />
       </Svg>
@@ -113,57 +123,72 @@ export function ComposerPlan({
   disabled: boolean;
 }) {
   const done = entries.filter((entry) => entry.status === 'completed').length;
-  return (
-    <ComposerPopover
-      label="Plan"
-      width={420}
-      trigger={
-        <Button
-          variant="ghost"
-          disabled={disabled}
-          accessibilityLabel="Plan"
-          className="h-7 sm:h-7 px-0 has-[>svg]:px-0 gap-1 wide:gap-2 wide:w-full justify-start"
-        >
-          <Icon
-            as={ListChecksIcon}
-            className="size-3.5 text-muted-foreground"
+  const wide = useWide();
+  const [expanded, setExpanded] = useState(false);
+  const trigger = (
+    <Button
+      variant="ghost"
+      disabled={disabled}
+      accessibilityLabel="Plan"
+      accessibilityState={{ expanded: wide ? expanded : undefined }}
+      aria-expanded={wide ? expanded : undefined}
+      onPress={wide ? () => setExpanded(!expanded) : undefined}
+      className={cn(
+        'h-6 sm:h-6 py-0 px-2.5 gap-1.5 rounded-full border border-border bg-card',
+        wide
+          ? 'h-8 sm:h-8 py-0 w-full pl-2 pr-1.5 rounded-none border-0 bg-transparent shadow-none justify-start'
+          : 'shadow-composer',
+      )}
+    >
+      <View className="flex-row gap-0.5">
+        {entries.map((entry, index) => (
+          <View
+            key={`${index}:${entry.content}`}
+            className={cn(
+              'w-1.5 wide:w-3.5 h-1 rounded-xs bg-border',
+              entry.status === 'completed' && 'bg-foreground',
+            )}
           />
-          <View className="flex-row gap-0.5">
-            {entries.map((entry) => (
-              <View
-                key={entry.content}
-                className={cn(
-                  'w-1.5 wide:w-3.5 h-1 rounded-xs bg-border',
-                  entry.status === 'completed' && 'bg-foreground',
-                )}
-              />
-            ))}
-          </View>
-          <Text
-            selectable={false}
-            className="select-none hidden wide:flex text-xs font-normal text-muted-foreground"
-          >
-            Plan
-          </Text>
-          <Text
-            selectable={false}
-            className="select-none pl-0.5 wide:pl-0 text-xs text-muted-foreground font-normal"
-          >
-            {done}/{entries.length}
-          </Text>
+        ))}
+      </View>
+      <Text
+        selectable={false}
+        className={cn(
+          'select-none text-xs leading-4 font-normal',
+          wide && 'text-muted-foreground',
+        )}
+      >
+        {wide ? `Plan ${done}/${entries.length}` : 'Plan'}
+      </Text>
+      {wide && (
+        <>
           <Text
             selectable={false}
             numberOfLines={1}
-            className="select-none hidden wide:flex flex-1 min-w-0 text-xs leading-4 font-normal text-foreground"
+            className="select-none flex-1 min-w-0 text-xs leading-4 font-normal text-foreground"
           >
             {entries.find((entry) => entry.status === 'in_progress')?.content}
           </Text>
-          <View className="hidden wide:flex">
-            <Icon as={CaretUpIcon} className="size-3 text-muted-foreground" />
-          </View>
-        </Button>
-      }
-    >
+          <Icon
+            as={CaretUpIcon}
+            className={cn(
+              'size-3 text-muted-foreground',
+              expanded && 'rotate-180',
+            )}
+          />
+        </>
+      )}
+    </Button>
+  );
+  if (wide)
+    return (
+      <View>
+        {trigger}
+        {expanded && <PlanSteps entries={entries} />}
+      </View>
+    );
+  return (
+    <ComposerPopover label="Plan" width={420} trigger={trigger}>
       {() => (
         <View>
           <View className="px-4 py-3 gap-1.5">
@@ -191,50 +216,123 @@ export function ComposerPlan({
               </Text>
             </View>
           </View>
-          <View className="py-1 border-t border-border">
-            {entries.map((entry) => (
-              <View
-                key={entry.content}
-                className="flex-row items-start px-4 py-2 gap-2.5"
-              >
-                <View className="w-3.5 h-5 shrink-0 items-center justify-center">
-                  {entry.status === 'in_progress' ? (
-                    <ActivityIndicator
-                      size={14}
-                      colorClassName="accent-muted-foreground"
-                      accessibilityLabel={`${entry.content} in progress`}
-                      className="size-3.5"
-                    />
-                  ) : entry.status === 'completed' ? (
-                    <Icon
-                      as={CheckIcon}
-                      className="size-3.5 text-muted-foreground"
-                    />
-                  ) : (
-                    <ComposerGlyph
-                      name="pending"
-                      size={14}
-                      className="text-ring"
-                    />
-                  )}
-                </View>
-                <Text
-                  selectable={false}
-                  className={cn(
-                    'select-none',
-                    'flex-1 text-sm leading-5 font-normal',
-                    entry.status !== 'in_progress' && 'text-muted-foreground',
-                  )}
-                >
-                  {entry.content}
-                </Text>
-              </View>
-            ))}
-          </View>
+          <PlanSteps entries={entries} />
         </View>
       )}
     </ComposerPopover>
   );
+}
+
+function NativePlanSpinner({ label }: { label: string }) {
+  const rotation = useSharedValue(0);
+  useEffect(() => {
+    rotation.value = withRepeat(
+      withTiming(360, { duration: 750, easing: Easing.linear }),
+      -1,
+    );
+    return () => cancelAnimation(rotation);
+  }, [rotation]);
+  const style = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${rotation.value}deg` }],
+  }));
+  return (
+    <View role="progressbar" accessibilityLabel={label} className="size-3.5">
+      <Animated.View style={style} className="size-3.5">
+        <Svg width={14} height={14} viewBox="0 0 32 32">
+          <ThemedCircle
+            cx={16}
+            cy={16}
+            r={14}
+            fill="none"
+            strokeWidth={4}
+            strokeClassName="bg-muted-foreground"
+            opacity={0.2}
+          />
+          <ThemedCircle
+            cx={16}
+            cy={16}
+            r={14}
+            fill="none"
+            strokeWidth={4}
+            strokeClassName="bg-muted-foreground"
+            strokeDasharray={80}
+            strokeDashoffset={60}
+          />
+        </Svg>
+      </Animated.View>
+    </View>
+  );
+}
+
+function PlanSteps({ entries }: { entries: PlanEntry[] }) {
+  const wide = useWide();
+  const steps = (
+    <View className={wide ? 'px-1 pb-2' : 'pb-1 border-t border-border'}>
+      {entries.map((entry) => (
+        <View
+          key={entry.content}
+          className={cn(
+            'flex-row items-start px-4 wide:pl-1 wide:pr-0.5 py-2 gap-2.5 wide:gap-1.5',
+            wide &&
+              entry.status === 'in_progress' &&
+              'rounded-md bg-foreground/5',
+          )}
+        >
+          <View className="w-3.5 wide:w-4 h-5 wide:h-4 shrink-0 items-center justify-center">
+            {entry.status === 'in_progress' &&
+            Platform.OS !== 'web' &&
+            !wide ? (
+              <NativePlanSpinner label={`${entry.content} in progress`} />
+            ) : entry.status === 'in_progress' ? (
+              <ActivityIndicator
+                size={wide ? 16 : 14}
+                colorClassName="accent-muted-foreground wide:accent-foreground"
+                accessibilityLabel={`${entry.content} in progress`}
+                className="size-3.5 wide:size-4"
+              />
+            ) : entry.status === 'completed' ? (
+              <Icon
+                as={CheckIcon}
+                className="size-3.5 wide:size-4 text-muted-foreground"
+              />
+            ) : wide ? (
+              <Svg
+                width={16}
+                height={16}
+                style={{ width: 16, height: 16 }}
+                viewBox="0 0 16 16"
+              >
+                <ThemedCircle
+                  cx={8}
+                  cy={8}
+                  r={6.25}
+                  fill="none"
+                  strokeClassName="bg-muted-foreground"
+                  strokeWidth={1.5}
+                />
+              </Svg>
+            ) : (
+              <ComposerGlyph name="pending" size={14} className="text-ring" />
+            )}
+          </View>
+          <Text
+            selectable={false}
+            className={cn(
+              'select-none',
+              'flex-1 min-w-0 text-sm leading-5 wide:text-xs wide:leading-4 font-normal',
+              (entry.status === 'completed' ||
+                (!wide && entry.status === 'pending')) &&
+                'text-muted-foreground',
+              wide && entry.status === 'in_progress' && 'font-medium',
+            )}
+          >
+            {entry.content}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+  return wide ? <ScrollView className="max-h-66">{steps}</ScrollView> : steps;
 }
 
 export function ComposerStatusControls({
@@ -260,9 +358,12 @@ export function ComposerStatusControls({
               variant="ghost"
               disabled={disabled}
               accessibilityLabel="Usage"
-              className="h-7 sm:h-7 px-1 has-[>svg]:px-1 wide:px-1.5 wide:has-[>svg]:px-1.5 gap-1"
+              className="h-7 sm:h-7 py-0 w-7 wide:w-auto px-0 has-[>svg]:px-0 wide:px-1.5 wide:has-[>svg]:px-1.5 gap-1.5"
             >
-              <Icon as={GaugeIcon} className="size-3.5 text-muted-foreground" />
+              <Icon
+                as={ClockCountdownIcon}
+                className="size-4 text-muted-foreground"
+              />
               <Text
                 selectable={false}
                 className="select-none hidden wide:flex text-xs font-normal text-foreground"
@@ -271,7 +372,7 @@ export function ComposerStatusControls({
               </Text>
               <Text
                 selectable={false}
-                className="select-none text-xs font-normal text-muted-foreground"
+                className="select-none hidden wide:flex text-xs font-normal text-muted-foreground"
               >
                 {status.usage.limits[0]?.usedPercent}%
               </Text>
@@ -329,7 +430,7 @@ export function ComposerStatusControls({
               variant="ghost"
               disabled={disabled}
               accessibilityLabel="Context window"
-              className="h-7 sm:h-7 px-1 has-[>svg]:px-1 wide:px-1.5 wide:has-[>svg]:px-1.5 gap-1"
+              className="h-7 sm:h-7 py-0 w-7 wide:w-auto px-0 has-[>svg]:px-0 wide:px-1.5 wide:has-[>svg]:px-1.5 gap-1.5"
             >
               <ContextRing percent={percent} />
               <Text
@@ -338,7 +439,7 @@ export function ComposerStatusControls({
               >
                 Context
               </Text>
-              <View className="flex-row">
+              <View className="hidden wide:flex flex-row">
                 <Text
                   selectable={false}
                   className="select-none text-xs leading-4 font-normal text-muted-foreground"
@@ -445,7 +546,7 @@ export function ComposerStatusControls({
                 </Text>
                 <Button
                   variant="outline"
-                  className="h-7 sm:h-7 rounded-md gap-1.5 px-2.5 has-[>svg]:px-2.5"
+                  className="h-7 sm:h-7 py-0 rounded-md gap-1.5 px-2.5 has-[>svg]:px-2.5"
                   onPress={() => {
                     context.onCompact();
                     close();
@@ -464,39 +565,45 @@ export function ComposerStatusControls({
           )}
         </ComposerPopover>
       )}
-      {(status.subagents || status.shells) && (
-        <View className="wide:hidden flex-row items-center border-l border-border pl-1">
-          {(
-            [
-              ['Subagents', RobotIcon, status.subagents],
-              ['Shells', TerminalIcon, status.shells],
-            ] as const
-          ).map(
-            ([label, icon, work]) =>
-              work && (
-                <Button
-                  key={label}
-                  variant="ghost"
-                  disabled={disabled}
-                  accessibilityLabel={`${label}: ${work.count}`}
-                  onPress={work.onPress}
-                  className="h-7 sm:h-7 px-1 has-[>svg]:px-1 gap-1"
-                >
-                  <Icon as={icon} className="size-3.5" />
-                  <Text
-                    selectable={false}
-                    className={cn(
-                      'select-none text-xs leading-4 font-normal text-muted-foreground',
-                      work.running && 'text-success',
-                    )}
-                  >
-                    {work.count}
-                  </Text>
-                </Button>
-              ),
-          )}
-        </View>
-      )}
     </View>
+  );
+}
+
+export function ComposerWorkChips({
+  status,
+  disabled,
+}: {
+  status: ComposerStatusProps;
+  disabled: boolean;
+}) {
+  return (
+    <>
+      {(
+        [
+          ['Agents', RobotIcon, status.subagents],
+          ['Shells', TerminalIcon, status.shells],
+        ] as const
+      ).map(
+        ([label, icon, work]) =>
+          work && (
+            <Button
+              key={label}
+              variant="ghost"
+              disabled={disabled}
+              accessibilityLabel={`${label}: ${work.count}`}
+              onPress={work.onPress}
+              className="h-6 sm:h-6 py-0 px-2.5 has-[>svg]:px-2.5 gap-1.5 rounded-full border border-border bg-card shadow-composer"
+            >
+              <Icon as={icon} className="size-4 text-muted-foreground" />
+              <Text
+                selectable={false}
+                className="select-none text-xs leading-4 font-normal"
+              >
+                {work.count} {label}
+              </Text>
+            </Button>
+          ),
+      )}
+    </>
   );
 }

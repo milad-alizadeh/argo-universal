@@ -199,8 +199,6 @@ export function ComposerMock(
             ...(props.sessionStarted
               ? {
                   path: '/Developer/project/.worktrees/session',
-                  onOpenFolder: () => {},
-                  onOpenTerminal: () => {},
                 }
               : {}),
           },

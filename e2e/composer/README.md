@@ -2,7 +2,37 @@
 
 Source: [current Paper Session page](https://app.paper.design/file/01M44G6AG3HPXGPPPMKS9S3H8J/p-3-0), inspected on 6 October 2026. Composer master `322-0`, Agent/model menu master `282I-0`, attachments master `1X2P-0`, overlays master `23CG-0`. Paper token hash: `2737d693`.
 
-## Implemented and checked in the browser
+## Latest desktop and phone redesign
+
+- [x] Set the toolbar Agent logo's actual SVG to 14 px, preventing the shared button SVG rule from enlarging it; match the visible Usage artwork.
+
+- [x] Preserve the Attach button's original 16 × 28 px layout; only its hover/press highlight becomes a centred 28 × 28 px square.
+- [x] Revert the extra Usage left padding; keep its original 2 px inset and the 10 px right envelope padding.
+- [x] Add 10 px right padding to the desktop bottom envelope so its checkout chevron aligns with the Send arrow.
+- [x] Add folder / Git branch icons to Local / New worktree menu choices and the selected trigger.
+- [x] Replace the old checkout Switch/search/branch menu with just **Local** and **New worktree** choices.
+- [x] Allow created worktree names up to 384 px on desktop, three times their earlier maximum, before truncation.
+- [x] Once created, render the worktree directory name as read-only text on desktop and phone, even if callbacks remain.
+- [x] Remove the existing Session checkout popup with path/Finder/terminal actions.
+- [x] Keep the desktop checkout trigger flat, without a box shadow.
+- [x] Give the bottom desktop envelope the same deep shadow as the main Composer.
+- [x] Use the circular web-style spinner for the native mobile Plan step only.
+- [x] Carefully analyze current canonical desktop/phone states, source values, tokens and drift: [analysis](redesign/analysis.md).
+- [x] Apply the new three-part card, Plan tray and phone chip shadow.
+- [x] Match 80 px card layout, 14/20 draft typography, toolbar padding/gaps and glyph sizes.
+- [x] Match desktop Agent/Model lanes, muted Mode controls and 7 px tray/footer insets.
+- [x] Expand desktop Plan steps inside its tray, never a desktop popover.
+- [x] Replace phone envelope with centred Plan/Agents or checkout chips.
+- [x] Use phone Model-only trigger and icon-only Usage, Context and Mode without chevrons.
+- [x] Cap the editor at four lines; longer drafts scroll inside on web and iOS.
+- [x] Preserve all image, error, adapter, menu, slider and scrolling interactions.
+- [x] Open and visually check updated Storybook desktop/phone previews.
+- [x] Open and visually check Composer and sheets in the iOS simulator.
+- [x] Run final tests/typechecks, update screenshots and draft PR, commit/push.
+
+Current evidence: [desktop expanded Plan and envelope](redesign/screenshots/storybook-desktop-expanded.jpg), [simplified checkout menu with icons](redesign/screenshots/storybook-checkout-menu.jpg), [iOS checkout choices](redesign/screenshots/ios-checkout-menu.jpg), [phone overview](redesign/screenshots/storybook-phone-light.jpg), [iOS created worktree](redesign/screenshots/ios-created-checkout.jpg), [iOS circular Plan spinner](redesign/screenshots/ios-plan.jpg), [native Model/Fast/Effort](redesign/screenshots/ios-settings.jpg), and [four-line native scrolling](redesign/screenshots/ios-four-lines-scrolled.jpg).
+
+## Previous design, implemented and checked in the browser
 
 - [x] Follow the current Paper masters, including desktop dropdowns and phone bottom sheets.
 - [x] Keep image errors short and on one line.
@@ -69,7 +99,7 @@ Each auditor starts without implementation history and compares current Paper wi
 
 ## Remaining
 
-- [ ] Verify current native sheets on Android. The earlier emulator run loaded this branch from Metro 8091 and accepted `argo://storybook`, but did not prove sheet rendering or interaction. At the latest read-only check the active device points to another Metro on 8090 and shows its loading screen; it was left untouched. Native sheets, gestures and safe-area layout remain unverified.
+- [ ] Verify current native sheets on Android. The earlier emulator run loaded this branch from Metro 8091 and accepted `argo://storybook`, but did not prove sheet rendering or interaction. At the latest read-only check the active device points to another Metro on 8090 and shows its loading screen; it was left untouched. Android sheets, gestures and safe-area layout remain unverified.
 - [ ] Resolve the proposed split for queued Turns, questionnaires, and file upload/retry states newly shown in Paper. Issue #37 covers text and images and requires proposing a split when scope grows. These features are not implemented by this change.
 - [ ] Resume code review only after every requested item is handled. The owner explicitly paused it; PR #136 remains draft.
 

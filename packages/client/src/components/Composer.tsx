@@ -13,7 +13,6 @@ import {
   ScrollView,
   View,
 } from 'react-native';
-import { useResolveClassNames } from 'uniwind';
 import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
@@ -31,6 +30,7 @@ import {
   ComposerPlan,
   ComposerStatusControls,
   type ComposerStatusProps,
+  ComposerWorkChips,
 } from './ComposerStatus';
 import { Icon } from './Icon';
 
@@ -82,8 +82,10 @@ export function Composer({
   disabled = false,
 }: ComposerProps) {
   const wide = useWide();
-  const [textHeight, setTextHeight] = useState<number>();
-  const sendingColor = useResolveClassNames('text-primary-foreground').color;
+  const [attachHighlighted, setAttachHighlighted] = useState(false);
+  const [textHeight, setTextHeight] = useState(
+    Math.min(4, draft.text.split('\n').length) * 20,
+  );
   const inactive = sending || disabled;
   const showStop = configuration?.turnRunning && onStop;
   const oversized = draft.images.filter(
@@ -96,20 +98,42 @@ export function Composer({
     (draft.text.trim().length > 0 || draft.images.length > 0);
   return (
     <View className="w-full max-w-composer items-center">
-      {status?.plan && status.plan.length > 0 && (
-        <View className="self-stretch mx-3 -mb-3 pb-3 rounded-t-lg border border-b-0 border-border bg-sidebar/80 shadow-sm web:backdrop-blur-composer web:backdrop-saturate-110">
-          <View className="h-9 wide:h-8 flex-row items-center px-2 wide:px-3 gap-2">
-            <View className="wide:flex-1 min-w-0 shrink-0">
-              <ComposerPlan entries={status.plan} disabled={inactive} />
-            </View>
-            <View className="flex-1 wide:hidden" />
-            <View className="wide:hidden">
-              <ComposerStatusControls status={status} disabled={inactive} />
-            </View>
+      {!wide &&
+        (configuration?.checkout.onNewWorktreeChange ||
+          configuration?.checkout.path ||
+          status?.plan?.length ||
+          status?.subagents ||
+          status?.shells) && (
+          <View className="min-h-7 max-w-full mb-1 flex-row flex-wrap items-center justify-center gap-2">
+            {configuration?.checkout.onNewWorktreeChange ? (
+              <ComposerCheckoutControl
+                checkout={configuration.checkout}
+                disabled={inactive}
+              />
+            ) : (
+              <>
+                {configuration?.checkout.path && (
+                  <ComposerCheckoutControl
+                    checkout={configuration.checkout}
+                    disabled={inactive}
+                  />
+                )}
+                {!!status?.plan?.length && (
+                  <ComposerPlan entries={status.plan} disabled={inactive} />
+                )}
+                {status && (
+                  <ComposerWorkChips status={status} disabled={inactive} />
+                )}
+              </>
+            )}
           </View>
+        )}
+      {wide && !!status?.plan?.length && (
+        <View className="self-stretch mx-1.75 -mb-3 pb-3 rounded-t-lg border border-b-0 border-border bg-sidebar/80 shadow-composer web:backdrop-blur-composer web:backdrop-saturate-110">
+          <ComposerPlan entries={status.plan} disabled={inactive} />
         </View>
       )}
-      <View className="w-full rounded-xl border border-border bg-background/80 shadow-sm web:backdrop-blur-composer web:backdrop-saturate-110 z-10">
+      <View className="w-full rounded-xl border border-border bg-background/80 shadow-composer web:backdrop-blur-composer web:backdrop-saturate-110 z-10">
         {draft.images.length > 0 && (
           <ScrollView
             horizontal
@@ -185,7 +209,7 @@ export function Composer({
             </Text>
           </View>
         )}
-        <View className="px-4 pt-3 pb-1 wide:pb-2">
+        <View className="px-4 pt-3 pb-2">
           <Textarea
             accessibilityLabel="Message"
             placeholder={placeholder}
@@ -193,18 +217,24 @@ export function Composer({
             value={draft.text}
             editable={!inactive}
             onChangeText={(text) => onDraftChange({ ...draft, text })}
-            numberOfLines={Platform.OS === 'web' ? 1 : undefined}
+            numberOfLines={Platform.OS === 'web' ? 1 : 4}
+            scrollEnabled={Platform.OS === 'web' || textHeight >= 80}
             onContentSizeChange={(event) =>
-              setTextHeight(event.nativeEvent.contentSize.height)
+              setTextHeight(
+                Math.max(
+                  20,
+                  Math.min(80, event.nativeEvent.contentSize.height),
+                ),
+              )
             }
             style={Platform.OS === 'web' ? undefined : { height: textHeight }}
-            className="min-h-6 wide:min-h-5 border-0 rounded-none bg-transparent dark:bg-transparent p-0 text-base wide:text-sm leading-6 wide:leading-5 shadow-none web:resize-none web:focus-visible:ring-0"
+            className="min-h-5 max-h-20 web:overflow-y-auto border-0 rounded-none bg-transparent dark:bg-transparent p-0 text-sm leading-5 shadow-none web:resize-none web:focus-visible:ring-0"
           />
         </View>
-        <View className="flex-row items-center justify-between gap-2 pl-1 pr-2 wide:px-2.5 wide:pb-2.5">
+        <View className="flex-row items-center justify-between gap-2 pl-3.75 pr-2.5 pb-2.5">
           <View
             pointerEvents={inactive ? 'none' : 'auto'}
-            className={cn('min-w-0 flex-1 flex-row items-center gap-0.5')}
+            className={cn('min-w-0 flex-1 flex-row items-center gap-1')}
           >
             <ComposerPopover
               label="Attach"
@@ -214,13 +244,27 @@ export function Composer({
                   variant="ghost"
                   size="icon"
                   disabled={inactive}
-                  className="size-11 sm:size-11 wide:size-7 wide:sm:size-7"
+                  className="h-7 sm:h-7 w-4 sm:w-4 mr-1.5 p-0 hover:bg-transparent active:bg-transparent dark:hover:bg-transparent dark:active:bg-transparent"
+                  onHoverIn={() => setAttachHighlighted(true)}
+                  onHoverOut={() => setAttachHighlighted(false)}
+                  onPressIn={() => setAttachHighlighted(true)}
+                  onPressOut={() => setAttachHighlighted(false)}
+                  hitSlop={8}
                   accessibilityLabel="Attach images"
                 >
-                  <Icon
-                    as={PlusIcon}
-                    className="size-4 text-muted-foreground"
+                  <View
+                    pointerEvents="none"
+                    className={cn(
+                      'absolute -left-1.5 top-0 size-7 rounded-md z-0',
+                      attachHighlighted && !inactive && 'bg-accent',
+                    )}
                   />
+                  <View className="relative z-10 size-4">
+                    <Icon
+                      as={PlusIcon}
+                      className="size-4 text-muted-foreground"
+                    />
+                  </View>
                 </Button>
               }
             >
@@ -308,8 +352,11 @@ export function Composer({
                 disabled={inactive}
               />
             )}
+            {!wide && status && (
+              <ComposerStatusControls status={status} disabled={inactive} />
+            )}
           </View>
-          <View className="flex-row items-center gap-1">
+          <View className="flex-row items-center gap-2.5">
             {configuration && (
               <ComposerModeControl
                 configuration={configuration}
@@ -342,7 +389,6 @@ export function Composer({
                   size={16}
                   role="progressbar"
                   colorClassName="accent-primary-foreground"
-                  color={sendingColor}
                   className="size-4"
                 />
               ) : (
@@ -355,14 +401,13 @@ export function Composer({
           </View>
         </View>
       </View>
-      {(configuration || status) && (
+      {wide && (configuration || status) && (
         <View
           className={cn(
-            'h-11 self-stretch mx-3 -mt-3 pt-3 rounded-b-lg border border-t-0 border-border bg-sidebar/80 shadow-sm web:backdrop-blur-composer web:backdrop-saturate-110',
-            status?.plan?.length && 'hidden wide:flex',
+            'h-11 self-stretch mx-1.75 -mt-3 pt-3 pr-2.5 rounded-b-lg border border-t-0 border-border bg-sidebar/80 shadow-composer web:backdrop-blur-composer web:backdrop-saturate-110',
           )}
         >
-          <View className="flex-1 min-h-0 flex-row items-center px-1.5">
+          <View className="flex-1 min-h-0 flex-row items-center pl-0.5 gap-1">
             {status && (
               <View className={status.plan?.length ? 'hidden wide:flex' : ''}>
                 <ComposerStatusControls status={status} disabled={inactive} />

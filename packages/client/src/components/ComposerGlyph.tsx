@@ -1,5 +1,9 @@
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
-import { useResolveClassNames } from 'uniwind';
+import { withUniwind } from 'uniwind';
+
+const ThemedSvg = withUniwind(Svg, {
+  stroke: { fromClassName: 'className', styleProperty: 'color' },
+});
 
 const drawings = {
   remove: <Path d="m6 6 12 12M18 6 6 18" />,
@@ -37,21 +41,20 @@ export function ComposerGlyph({
   size: number;
   className?: string;
 }) {
-  const color = useResolveClassNames(className).color;
   return (
-    <Svg
+    <ThemedSvg
       accessible={false}
       width={size}
       height={size}
       style={{ width: size, height: size }}
       viewBox={name === 'pending' ? '0 0 18 18' : '0 0 24 24'}
       fill="none"
-      stroke={color}
+      className={className}
       strokeWidth={name === 'remove' ? 2 : name === 'warning' ? 1.7 : 1.5}
       strokeLinecap="round"
       strokeLinejoin="round"
     >
       {drawings[name]}
-    </Svg>
+    </ThemedSvg>
   );
 }
