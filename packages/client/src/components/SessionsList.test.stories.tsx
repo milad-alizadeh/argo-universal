@@ -13,6 +13,7 @@ import {
   createSessionsRenderingMock,
   SessionsRenderingPreview,
 } from '../../mocks/sessions-rendering-preview';
+import { scrollFadeHeight } from './ScrollFade';
 import { SessionsList } from './SessionsList';
 
 const onNewSession = fn();
@@ -244,8 +245,10 @@ export const ScrollFadePadding: Story = {
           colorPixel(surfaceColor),
         );
     }
-    expect(topFade.getBoundingClientRect().height).toBe(20);
-    expect(bottomFade.getBoundingClientRect().height).toBe(28);
+    expect(topFade.getBoundingClientRect().height).toBe(scrollFadeHeight.top);
+    expect(bottomFade.getBoundingClientRect().height).toBe(
+      scrollFadeHeight.bottom,
+    );
     scroll.scrollTop = scroll.scrollHeight;
     const last = await canvas.findByRole('button', {
       name: 'Large Session 11, Idle',

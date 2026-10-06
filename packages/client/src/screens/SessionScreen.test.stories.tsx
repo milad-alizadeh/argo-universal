@@ -146,6 +146,11 @@ export const PagesOlderRows: Story = {
 export const JumpsToLatest: Story = {
   parameters: { trpc: arrivingRowSessionMocks },
   play: async ({ canvas }) => {
+    // A phone's height, whatever size the story before it left behind.
+    if ('__vitest_browser__' in globalThis) {
+      const { page } = await import('vitest/browser');
+      await page.viewport(widths.phone, 844);
+    }
     const scroll = await canvas.findByTestId('feed-scroll');
     const feed = within(scroll);
     const atEnd = () =>

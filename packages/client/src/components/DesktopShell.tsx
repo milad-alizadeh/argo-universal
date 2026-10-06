@@ -5,10 +5,12 @@ import { XIcon } from 'phosphor-react-native/src/icons/X';
 import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
+import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
 import { DesktopRail } from './DesktopRail';
 import { Icon } from './Icon';
 import { PanelResizeHandle } from './PanelResizeHandle';
+import { ScrollFadeView } from './ScrollFade';
 import { ShellHeaderActions } from './ShellHeaderActions';
 import { ShellHeaderContent } from './ShellHeaderContent';
 import { ShellPane } from './ShellPane';
@@ -182,6 +184,7 @@ export function DesktopShell({
       </View>
       <View className="min-w-0 flex-1 flex-row pb-shell-inset pr-shell-inset">
         <View
+          testID="desktop-panel"
           pointerEvents="none"
           className="absolute bottom-shell-inset left-0 right-shell-inset top-shell-bar rounded-xl bg-sidebar"
         />
@@ -299,7 +302,17 @@ export function DesktopShell({
           }
         >
           <View className="h-shell-bar" />
-          <View className="min-h-0 flex-1 overflow-hidden">{inspector}</View>
+          <ScrollFadeView
+            testID="desktop-inspector-scroll"
+            className={cn(
+              'overflow-hidden',
+              inspectorExpanded ? 'rounded-xl' : 'rounded-r-xl',
+            )}
+            contentContainerClassName="grow"
+            surfaceClassName="bg-sidebar"
+          >
+            {inspector}
+          </ScrollFadeView>
         </ShellPane>
       </View>
     </View>
