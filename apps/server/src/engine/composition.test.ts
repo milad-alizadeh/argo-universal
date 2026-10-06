@@ -110,7 +110,7 @@ it.each(liveHeaderMocks)(
           if (next.done) throw new Error('Feed subscription ended');
           if (
             next.value.type === 'snapshot' &&
-            next.value.snapshot.liveHeader === expected
+            next.value.snapshot.liveHeader?.text === expected
           )
             break;
         }
@@ -147,7 +147,13 @@ it.each(liveHeaderMocks)(
       )[Symbol.asyncIterator]();
       expect((await reconnect.next()).value).toMatchObject({
         type: 'snapshot',
-        snapshot: { liveHeader: 'Retrying (2 of 5)' },
+        snapshot: {
+          liveHeader: {
+            text: 'Retrying (2 of 5)',
+            source: { type: 'retry' },
+            startedAt: expect.any(Number),
+          },
+        },
       });
       for (const row of progress) {
         sendRow(retry);

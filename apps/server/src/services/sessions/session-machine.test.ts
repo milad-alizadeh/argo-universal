@@ -550,16 +550,22 @@ it.each(paths.map((path, index) => [index, path] as const))(
         '*': (expected) => {
           const actual = sessionActor.getSnapshot();
           const feed = actual.children.feed as FeedActorRef | undefined;
-          const { epoch, maxRevision, ...projection } = toSessionSnapshot(
-            expected,
-            { context: expected.context },
-          );
+          const { epoch, maxRevision, liveHeader, ...projection } =
+            toSessionSnapshot(expected, { context: expected.context });
+          // The model was built on real time and the walk runs on fake timers, so only a Turn start's presence matches.
           expect(
             toSessionSnapshot(
               actual,
               feed?.getSnapshot() ?? { context: { epoch, maxRevision } },
             ),
-          ).toMatchObject(projection);
+          ).toMatchObject({
+            ...projection,
+            liveHeader: liveHeader && {
+              ...liveHeader,
+              startedAt:
+                liveHeader.startedAt === null ? null : expect.any(Number),
+            },
+          });
         },
       },
     });

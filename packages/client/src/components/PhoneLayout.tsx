@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import { type NavigationDestination, useNavigate } from '../navigation/context';
 import { sectionDestination, sectionOf } from '../navigation/sections';
 import { PhoneShell, type ShellSection } from './PhoneShell';
+import { useAttentionCount } from './use-attention-count';
 
 export interface PhoneLayoutProps {
   destination: NavigationDestination;
@@ -12,6 +13,7 @@ export interface PhoneLayoutProps {
 // The phone's shell: one drawer for every section, so picking a section animates it shut over the new list.
 export function PhoneLayout({ destination, children }: PhoneLayoutProps) {
   const navigate = useNavigate();
+  const attentionCount = useAttentionCount();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const section = sectionOf(destination);
   const atSectionRoot = destination.to === sectionDestination(section).to;
@@ -26,7 +28,7 @@ export function PhoneLayout({ destination, children }: PhoneLayoutProps) {
   return (
     <PhoneShell
       selectedSection={section}
-      attentionCount={0}
+      attentionCount={attentionCount}
       drawerOpen={drawerOpen}
       onDrawerOpenChange={(open) => {
         if (!open && deferClose.current) deferClose.current = false;

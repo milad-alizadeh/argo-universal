@@ -820,7 +820,104 @@
       "configOptions": [],
       "maxRevision": 33,
       "epoch": 0
-    }
+    },
+    "liveHeaders": [
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Editing /project/notes.md",
+        "source": {
+          "type": "tool_call",
+          "toolCallId": "toolu_01FDakYHkWn7oMZW8hWNVddc"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Reading /project/hello.txt",
+        "source": {
+          "type": "tool_call",
+          "toolCallId": "toolu_01SxWPoiSEcuefwQ7yYCUMf7"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Editing /project/hello.txt",
+        "source": {
+          "type": "tool_call",
+          "toolCallId": "toolu_017jjekVKPQW8pQZNYRFNzF6"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Show hello.txt and short git status",
+        "source": {
+          "type": "tool_call",
+          "toolCallId": "toolu_01G161bUEDoix223h77wg2HL"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Awaiting approval",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Waiting for your answer",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Plan ready",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Retrying (2 of 5)",
+        "source": {
+          "type": "retry"
+        },
+        "startedAt": 1791277200000
+      }
+    ]
   },
   {
     "agent": "agent-1",
@@ -992,7 +1089,59 @@
       "configOptions": [],
       "maxRevision": 3,
       "epoch": 0
-    }
+    },
+    "liveHeaders": [
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Wait 20 seconds then print done",
+        "source": {
+          "type": "tool_call",
+          "toolCallId": "toolu_01RmbdAbVKQQdXJSR61Rrkz3"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Awaiting approval",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Waiting for your answer",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Plan ready",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Retrying (2 of 5)",
+        "source": {
+          "type": "retry"
+        },
+        "startedAt": 1791277200000
+      }
+    ]
   },
   {
     "agent": "agent-1",
@@ -1102,7 +1251,16 @@
       "configOptions": [],
       "maxRevision": 3,
       "epoch": 0
-    }
+    },
+    "liveHeaders": [
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      }
+    ]
   },
   {
     "agent": "agent-1",
@@ -1313,7 +1471,16 @@
       "configOptions": [],
       "maxRevision": 6,
       "epoch": 0
-    }
+    },
+    "liveHeaders": [
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      }
+    ]
   },
   {
     "agent": "agent-1",
@@ -1950,7 +2117,16 @@
       "configOptions": [],
       "maxRevision": 62,
       "epoch": 0
-    }
+    },
+    "liveHeaders": [
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      }
+    ]
   },
   {
     "agent": "agent-2",
@@ -2693,7 +2869,89 @@
       "configOptions": [],
       "maxRevision": 22,
       "epoch": 0
-    }
+    },
+    "liveHeaders": [
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Reading /repo/app.txt",
+        "source": {
+          "type": "tool_call",
+          "toolCallId": "exec-2fe50f79-a80c-4d3a-96a9-97ff33a9ad2b"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Editing /repo/app.txt",
+        "source": {
+          "type": "tool_call",
+          "toolCallId": "exec-0de82514-551d-45d0-a5a2-b9e0133283d7"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Running /bin/zsh -lc 'cat app.txt notes.md'",
+        "source": {
+          "type": "tool_call",
+          "toolCallId": "exec-f27ca824-f7d7-4709-a913-310e66957673"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Awaiting approval",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Waiting for your answer",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Plan ready",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Retrying (2 of 5)",
+        "source": {
+          "type": "retry"
+        },
+        "startedAt": 1791277200000
+      }
+    ]
   },
   {
     "agent": "agent-2",
@@ -3058,7 +3316,59 @@
       "configOptions": [],
       "maxRevision": 20,
       "epoch": 0
-    }
+    },
+    "liveHeaders": [
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Running /bin/zsh -lc 'sleep 30'",
+        "source": {
+          "type": "tool_call",
+          "toolCallId": "exec-74ec3292-520b-4563-82d4-09f95eed79de"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Awaiting approval",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Waiting for your answer",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Plan ready",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Retrying (2 of 5)",
+        "source": {
+          "type": "retry"
+        },
+        "startedAt": 1791277200000
+      }
+    ]
   },
   {
     "agent": "agent-2",
@@ -3232,7 +3542,16 @@
       "configOptions": [],
       "maxRevision": 6,
       "epoch": 0
-    }
+    },
+    "liveHeaders": [
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      }
+    ]
   },
   {
     "agent": "agent-2",
@@ -3387,7 +3706,16 @@
       "configOptions": [],
       "maxRevision": 4,
       "epoch": 0
-    }
+    },
+    "liveHeaders": [
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      }
+    ]
   },
   {
     "agent": "agent-2",
@@ -5144,7 +5472,16 @@
       "configOptions": [],
       "maxRevision": 202,
       "epoch": 0
-    }
+    },
+    "liveHeaders": [
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      }
+    ]
   },
   {
     "agent": "agent-2",
@@ -5735,6 +6072,1477 @@
       "configOptions": [],
       "maxRevision": 21,
       "epoch": 0
-    }
+    },
+    "liveHeaders": [
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Running /bin/zsh -lc \"printf 'Preparing checks\\\\nChecking files\\\\nhello Argo\\\\n M hello.txt\\\\n?? notes.md\\\\n'\"",
+        "source": {
+          "type": "tool_call",
+          "toolCallId": "exec-d1cd36f9-088c-4cc5-bc2a-9f1ae304fa01"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Running /bin/zsh -lc \"printf 'Starting checks\\\\nChecking input\\\\nMissing input\\\\nCommand failed\\\\nExit requested\\\\n'; exit 2\"",
+        "source": {
+          "type": "tool_call",
+          "toolCallId": "exec-112e4e7b-378b-486a-b2d7-37a5852fa056"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Awaiting approval",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Waiting for your answer",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Plan ready",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Retrying (2 of 5)",
+        "source": {
+          "type": "retry"
+        },
+        "startedAt": 1791277200000
+      }
+    ]
+  },
+  {
+    "agent": "agent-2",
+    "recording": "edit-states",
+    "rows": [
+      {
+        "id": "turn-1:user",
+        "sessionId": "agent-2-edit-states",
+        "position": 0,
+        "revision": 1,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "user_message",
+        "messageId": "turn-1:user",
+        "content": [
+          {
+            "type": "text",
+            "text": "Use apply_patch to replace every one of the 60 lines in large.txt: change \"old value N\" to \"new value N\" for N=1 through 60. Delete legacy.txt in the same patch. You may read the files but do not use a shell to edit them. Reply done."
+          }
+        ]
+      },
+      {
+        "id": "msg_0131cf667490cc8f016ac4f1c5fe5c87d2b8eb7417864349ca",
+        "sessionId": "agent-2-edit-states",
+        "position": 1,
+        "revision": 17,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "agent_message",
+        "messageId": "msg_0131cf667490cc8f016ac4f1c5fe5c87d2b8eb7417864349ca",
+        "content": [
+          {
+            "type": "text",
+            "text": "I’ll check the files, then apply both changes in one patch.\n"
+          }
+        ]
+      },
+      {
+        "id": "exec-4f983dc1-a5b4-4387-ae57-a7cdb65677da",
+        "sessionId": "agent-2-edit-states",
+        "position": 2,
+        "revision": 19,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "tool_call_update",
+        "toolCallId": "exec-4f983dc1-a5b4-4387-ae57-a7cdb65677da",
+        "title": "/bin/zsh -lc \"pwd && rg --files -g 'AGENTS.md' -g 'large.txt' -g 'legacy.txt' && cat large.txt && cat legacy.txt\"",
+        "name": "commandExecution",
+        "kind": "execute",
+        "status": "completed",
+        "content": [
+          {
+            "type": "terminal",
+            "command": "/bin/zsh -lc \"pwd && rg --files -g 'AGENTS.md' -g 'large.txt' -g 'legacy.txt' && cat large.txt && cat legacy.txt\"",
+            "cwd": "/repo",
+            "output": "/private/repo\nlegacy.txt\nlarge.txt\nold value 1\nold value 2\nold value 3\nold value 4\nold value 5\nold value 6\nold value 7\nold value 8\nold value 9\nold value 10\nold value 11\nold value 12\nold value 13\nold value 14\nold value 15\nold value 16\nold value 17\nold value 18\nold value 19\nold value 20\nold value 21\nold value 22\nold value 23\nold value 24\nold value 25\nold value 26\nold value 27\nold value 28\nold value 29\nold value 30\nold value 31\nold value 32\nold value 33\nold value 34\nold value 35\nold value 36\nold value 37\nold value 38\nold value 39\nold value 40\nold value 41\nold value 42\nold value 43\nold value 44\nold value 45\nold value 46\nold value 47\nold value 48\nold value 49\nold value 50\nold value 51\nold value 52\nold value 53\nold value 54\nold value 55\nold value 56\nold value 57\nold value 58\nold value 59\nold value 60\nfirst legacy line\nsecond legacy line\nthird legacy line\n",
+            "exitStatus": {
+              "exitCode": 0
+            }
+          }
+        ],
+        "rawInput": {
+          "command": "/bin/zsh -lc \"pwd && rg --files -g 'AGENTS.md' -g 'large.txt' -g 'legacy.txt' && cat large.txt && cat legacy.txt\"",
+          "cwd": "/repo",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "pwd && rg --files -g 'AGENTS.md' -g 'large.txt' -g 'legacy.txt' && cat large.txt && cat legacy.txt"
+            }
+          ]
+        },
+        "rawOutput": {
+          "durationMs": 0,
+          "exitCode": 0
+        },
+        "_meta": {
+          "argo": {
+            "commandActions": [
+              {
+                "type": "unknown",
+                "command": "pwd && rg --files -g 'AGENTS.md' -g 'large.txt' -g 'legacy.txt' && cat large.txt && cat legacy.txt"
+              }
+            ],
+            "startedAt": 1791291847788,
+            "endedAt": 1791291847788
+          }
+        }
+      },
+      {
+        "id": "exec-8e85aae8-a658-474c-86cf-11a023e9249b",
+        "sessionId": "agent-2-edit-states",
+        "position": 3,
+        "revision": 21,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "tool_call_update",
+        "toolCallId": "exec-8e85aae8-a658-474c-86cf-11a023e9249b",
+        "title": "Edit /repo/large.txt, /repo/legacy.txt",
+        "name": "fileChange",
+        "kind": "edit",
+        "status": "completed",
+        "content": [
+          {
+            "type": "diff",
+            "changes": [
+              {
+                "operation": "modify",
+                "path": "/repo/large.txt"
+              },
+              {
+                "operation": "delete",
+                "path": "/repo/legacy.txt",
+                "oldText": "first legacy line\nsecond legacy line\nthird legacy line\n"
+              }
+            ],
+            "patch": {
+              "format": "git_patch",
+              "text": "diff --git a/repo/large.txt b/repo/large.txt\n--- a/repo/large.txt\n+++ b/repo/large.txt\n@@ -1,60 +1,60 @@\n-old value 1\n-old value 2\n-old value 3\n-old value 4\n-old value 5\n-old value 6\n-old value 7\n-old value 8\n-old value 9\n-old value 10\n-old value 11\n-old value 12\n-old value 13\n-old value 14\n-old value 15\n-old value 16\n-old value 17\n-old value 18\n-old value 19\n-old value 20\n-old value 21\n-old value 22\n-old value 23\n-old value 24\n-old value 25\n-old value 26\n-old value 27\n-old value 28\n-old value 29\n-old value 30\n-old value 31\n-old value 32\n-old value 33\n-old value 34\n-old value 35\n-old value 36\n-old value 37\n-old value 38\n-old value 39\n-old value 40\n-old value 41\n-old value 42\n-old value 43\n-old value 44\n-old value 45\n-old value 46\n-old value 47\n-old value 48\n-old value 49\n-old value 50\n-old value 51\n-old value 52\n-old value 53\n-old value 54\n-old value 55\n-old value 56\n-old value 57\n-old value 58\n-old value 59\n-old value 60\n+new value 1\n+new value 2\n+new value 3\n+new value 4\n+new value 5\n+new value 6\n+new value 7\n+new value 8\n+new value 9\n+new value 10\n+new value 11\n+new value 12\n+new value 13\n+new value 14\n+new value 15\n+new value 16\n+new value 17\n+new value 18\n+new value 19\n+new value 20\n+new value 21\n+new value 22\n+new value 23\n+new value 24\n+new value 25\n+new value 26\n+new value 27\n+new value 28\n+new value 29\n+new value 30\n+new value 31\n+new value 32\n+new value 33\n+new value 34\n+new value 35\n+new value 36\n+new value 37\n+new value 38\n+new value 39\n+new value 40\n+new value 41\n+new value 42\n+new value 43\n+new value 44\n+new value 45\n+new value 46\n+new value 47\n+new value 48\n+new value 49\n+new value 50\n+new value 51\n+new value 52\n+new value 53\n+new value 54\n+new value 55\n+new value 56\n+new value 57\n+new value 58\n+new value 59\n+new value 60\ndiff --git a/repo/legacy.txt b/repo/legacy.txt\ndeleted file mode 100644\n--- a/repo/legacy.txt\n+++ /dev/null\n@@ -1,3 +0,0 @@\n-first legacy line\n-second legacy line\n-third legacy line\n"
+            }
+          }
+        ],
+        "locations": [
+          {
+            "path": "/repo/large.txt"
+          },
+          {
+            "path": "/repo/legacy.txt"
+          }
+        ],
+        "_meta": {
+          "argo": {
+            "startedAt": 1791291863053,
+            "endedAt": 1791291863126
+          }
+        }
+      },
+      {
+        "id": "msg_0131cf667490cc8f016ac4f1e8a77c87d2a59559e840264dcf",
+        "sessionId": "agent-2-edit-states",
+        "position": 4,
+        "revision": 24,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "agent_message",
+        "messageId": "msg_0131cf667490cc8f016ac4f1e8a77c87d2a59559e840264dcf",
+        "content": [
+          {
+            "type": "text",
+            "text": "done"
+          }
+        ]
+      }
+    ],
+    "stream": [
+      {
+        "type": "row.upsert",
+        "rev": 1,
+        "row": {
+          "id": "turn-1:user",
+          "sessionId": "agent-2-edit-states",
+          "position": 0,
+          "revision": 1,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "user_message",
+          "messageId": "turn-1:user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Use apply_patch to replace every one of the 60 lines in large.txt: change \"old value N\" to \"new value N\" for N=1 through 60. Delete legacy.txt in the same patch. You may read the files but do not use a shell to edit them. Reply done."
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 2,
+        "row": {
+          "id": "msg_0131cf667490cc8f016ac4f1c5fe5c87d2b8eb7417864349ca",
+          "sessionId": "agent-2-edit-states",
+          "position": 1,
+          "revision": 2,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_0131cf667490cc8f016ac4f1c5fe5c87d2b8eb7417864349ca",
+          "content": [
+            {
+              "type": "text",
+              "text": ""
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.append",
+        "rev": 3,
+        "id": "msg_0131cf667490cc8f016ac4f1c5fe5c87d2b8eb7417864349ca",
+        "field": "content.0.text",
+        "off": 0,
+        "text": "I"
+      },
+      {
+        "type": "row.append",
+        "rev": 4,
+        "id": "msg_0131cf667490cc8f016ac4f1c5fe5c87d2b8eb7417864349ca",
+        "field": "content.0.text",
+        "off": 1,
+        "text": "’ll"
+      },
+      {
+        "type": "row.append",
+        "rev": 5,
+        "id": "msg_0131cf667490cc8f016ac4f1c5fe5c87d2b8eb7417864349ca",
+        "field": "content.0.text",
+        "off": 4,
+        "text": " check"
+      },
+      {
+        "type": "row.append",
+        "rev": 6,
+        "id": "msg_0131cf667490cc8f016ac4f1c5fe5c87d2b8eb7417864349ca",
+        "field": "content.0.text",
+        "off": 10,
+        "text": " the"
+      },
+      {
+        "type": "row.append",
+        "rev": 7,
+        "id": "msg_0131cf667490cc8f016ac4f1c5fe5c87d2b8eb7417864349ca",
+        "field": "content.0.text",
+        "off": 14,
+        "text": " files"
+      },
+      {
+        "type": "row.append",
+        "rev": 8,
+        "id": "msg_0131cf667490cc8f016ac4f1c5fe5c87d2b8eb7417864349ca",
+        "field": "content.0.text",
+        "off": 20,
+        "text": ","
+      },
+      {
+        "type": "row.append",
+        "rev": 9,
+        "id": "msg_0131cf667490cc8f016ac4f1c5fe5c87d2b8eb7417864349ca",
+        "field": "content.0.text",
+        "off": 21,
+        "text": " then"
+      },
+      {
+        "type": "row.append",
+        "rev": 10,
+        "id": "msg_0131cf667490cc8f016ac4f1c5fe5c87d2b8eb7417864349ca",
+        "field": "content.0.text",
+        "off": 26,
+        "text": " apply"
+      },
+      {
+        "type": "row.append",
+        "rev": 11,
+        "id": "msg_0131cf667490cc8f016ac4f1c5fe5c87d2b8eb7417864349ca",
+        "field": "content.0.text",
+        "off": 32,
+        "text": " both"
+      },
+      {
+        "type": "row.append",
+        "rev": 12,
+        "id": "msg_0131cf667490cc8f016ac4f1c5fe5c87d2b8eb7417864349ca",
+        "field": "content.0.text",
+        "off": 37,
+        "text": " changes"
+      },
+      {
+        "type": "row.append",
+        "rev": 13,
+        "id": "msg_0131cf667490cc8f016ac4f1c5fe5c87d2b8eb7417864349ca",
+        "field": "content.0.text",
+        "off": 45,
+        "text": " in"
+      },
+      {
+        "type": "row.append",
+        "rev": 14,
+        "id": "msg_0131cf667490cc8f016ac4f1c5fe5c87d2b8eb7417864349ca",
+        "field": "content.0.text",
+        "off": 48,
+        "text": " one"
+      },
+      {
+        "type": "row.append",
+        "rev": 15,
+        "id": "msg_0131cf667490cc8f016ac4f1c5fe5c87d2b8eb7417864349ca",
+        "field": "content.0.text",
+        "off": 52,
+        "text": " patch"
+      },
+      {
+        "type": "row.append",
+        "rev": 16,
+        "id": "msg_0131cf667490cc8f016ac4f1c5fe5c87d2b8eb7417864349ca",
+        "field": "content.0.text",
+        "off": 58,
+        "text": ".\n"
+      },
+      {
+        "type": "row.upsert",
+        "rev": 17,
+        "row": {
+          "id": "msg_0131cf667490cc8f016ac4f1c5fe5c87d2b8eb7417864349ca",
+          "sessionId": "agent-2-edit-states",
+          "position": 1,
+          "revision": 17,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_0131cf667490cc8f016ac4f1c5fe5c87d2b8eb7417864349ca",
+          "content": [
+            {
+              "type": "text",
+              "text": "I’ll check the files, then apply both changes in one patch.\n"
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 18,
+        "row": {
+          "id": "exec-4f983dc1-a5b4-4387-ae57-a7cdb65677da",
+          "sessionId": "agent-2-edit-states",
+          "position": 2,
+          "revision": 18,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "exec-4f983dc1-a5b4-4387-ae57-a7cdb65677da",
+          "title": "/bin/zsh -lc \"pwd && rg --files -g 'AGENTS.md' -g 'large.txt' -g 'legacy.txt' && cat large.txt && cat legacy.txt\"",
+          "name": "commandExecution",
+          "kind": "execute",
+          "status": "in_progress",
+          "content": [
+            {
+              "type": "terminal",
+              "command": "/bin/zsh -lc \"pwd && rg --files -g 'AGENTS.md' -g 'large.txt' -g 'legacy.txt' && cat large.txt && cat legacy.txt\"",
+              "cwd": "/repo",
+              "output": ""
+            }
+          ],
+          "rawInput": {
+            "command": "/bin/zsh -lc \"pwd && rg --files -g 'AGENTS.md' -g 'large.txt' -g 'legacy.txt' && cat large.txt && cat legacy.txt\"",
+            "cwd": "/repo",
+            "commandActions": [
+              {
+                "type": "unknown",
+                "command": "pwd && rg --files -g 'AGENTS.md' -g 'large.txt' -g 'legacy.txt' && cat large.txt && cat legacy.txt"
+              }
+            ]
+          },
+          "rawOutput": {
+            "durationMs": null,
+            "exitCode": null
+          },
+          "_meta": {
+            "argo": {
+              "commandActions": [
+                {
+                  "type": "unknown",
+                  "command": "pwd && rg --files -g 'AGENTS.md' -g 'large.txt' -g 'legacy.txt' && cat large.txt && cat legacy.txt"
+                }
+              ],
+              "startedAt": 1791291847788
+            }
+          }
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 19,
+        "row": {
+          "id": "exec-4f983dc1-a5b4-4387-ae57-a7cdb65677da",
+          "sessionId": "agent-2-edit-states",
+          "position": 2,
+          "revision": 19,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "exec-4f983dc1-a5b4-4387-ae57-a7cdb65677da",
+          "title": "/bin/zsh -lc \"pwd && rg --files -g 'AGENTS.md' -g 'large.txt' -g 'legacy.txt' && cat large.txt && cat legacy.txt\"",
+          "name": "commandExecution",
+          "kind": "execute",
+          "status": "completed",
+          "content": [
+            {
+              "type": "terminal",
+              "command": "/bin/zsh -lc \"pwd && rg --files -g 'AGENTS.md' -g 'large.txt' -g 'legacy.txt' && cat large.txt && cat legacy.txt\"",
+              "cwd": "/repo",
+              "output": "/private/repo\nlegacy.txt\nlarge.txt\nold value 1\nold value 2\nold value 3\nold value 4\nold value 5\nold value 6\nold value 7\nold value 8\nold value 9\nold value 10\nold value 11\nold value 12\nold value 13\nold value 14\nold value 15\nold value 16\nold value 17\nold value 18\nold value 19\nold value 20\nold value 21\nold value 22\nold value 23\nold value 24\nold value 25\nold value 26\nold value 27\nold value 28\nold value 29\nold value 30\nold value 31\nold value 32\nold value 33\nold value 34\nold value 35\nold value 36\nold value 37\nold value 38\nold value 39\nold value 40\nold value 41\nold value 42\nold value 43\nold value 44\nold value 45\nold value 46\nold value 47\nold value 48\nold value 49\nold value 50\nold value 51\nold value 52\nold value 53\nold value 54\nold value 55\nold value 56\nold value 57\nold value 58\nold value 59\nold value 60\nfirst legacy line\nsecond legacy line\nthird legacy line\n",
+              "exitStatus": {
+                "exitCode": 0
+              }
+            }
+          ],
+          "rawInput": {
+            "command": "/bin/zsh -lc \"pwd && rg --files -g 'AGENTS.md' -g 'large.txt' -g 'legacy.txt' && cat large.txt && cat legacy.txt\"",
+            "cwd": "/repo",
+            "commandActions": [
+              {
+                "type": "unknown",
+                "command": "pwd && rg --files -g 'AGENTS.md' -g 'large.txt' -g 'legacy.txt' && cat large.txt && cat legacy.txt"
+              }
+            ]
+          },
+          "rawOutput": {
+            "durationMs": 0,
+            "exitCode": 0
+          },
+          "_meta": {
+            "argo": {
+              "commandActions": [
+                {
+                  "type": "unknown",
+                  "command": "pwd && rg --files -g 'AGENTS.md' -g 'large.txt' -g 'legacy.txt' && cat large.txt && cat legacy.txt"
+                }
+              ],
+              "startedAt": 1791291847788,
+              "endedAt": 1791291847788
+            }
+          }
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 20,
+        "row": {
+          "id": "exec-8e85aae8-a658-474c-86cf-11a023e9249b",
+          "sessionId": "agent-2-edit-states",
+          "position": 3,
+          "revision": 20,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "exec-8e85aae8-a658-474c-86cf-11a023e9249b",
+          "title": "Edit /repo/large.txt, /repo/legacy.txt",
+          "name": "fileChange",
+          "kind": "edit",
+          "status": "in_progress",
+          "content": [
+            {
+              "type": "diff",
+              "changes": [
+                {
+                  "operation": "modify",
+                  "path": "/repo/large.txt"
+                },
+                {
+                  "operation": "delete",
+                  "path": "/repo/legacy.txt",
+                  "oldText": "first legacy line\nsecond legacy line\nthird legacy line\n"
+                }
+              ],
+              "patch": {
+                "format": "git_patch",
+                "text": "diff --git a/repo/large.txt b/repo/large.txt\n--- a/repo/large.txt\n+++ b/repo/large.txt\n@@ -1,60 +1,60 @@\n-old value 1\n-old value 2\n-old value 3\n-old value 4\n-old value 5\n-old value 6\n-old value 7\n-old value 8\n-old value 9\n-old value 10\n-old value 11\n-old value 12\n-old value 13\n-old value 14\n-old value 15\n-old value 16\n-old value 17\n-old value 18\n-old value 19\n-old value 20\n-old value 21\n-old value 22\n-old value 23\n-old value 24\n-old value 25\n-old value 26\n-old value 27\n-old value 28\n-old value 29\n-old value 30\n-old value 31\n-old value 32\n-old value 33\n-old value 34\n-old value 35\n-old value 36\n-old value 37\n-old value 38\n-old value 39\n-old value 40\n-old value 41\n-old value 42\n-old value 43\n-old value 44\n-old value 45\n-old value 46\n-old value 47\n-old value 48\n-old value 49\n-old value 50\n-old value 51\n-old value 52\n-old value 53\n-old value 54\n-old value 55\n-old value 56\n-old value 57\n-old value 58\n-old value 59\n-old value 60\n+new value 1\n+new value 2\n+new value 3\n+new value 4\n+new value 5\n+new value 6\n+new value 7\n+new value 8\n+new value 9\n+new value 10\n+new value 11\n+new value 12\n+new value 13\n+new value 14\n+new value 15\n+new value 16\n+new value 17\n+new value 18\n+new value 19\n+new value 20\n+new value 21\n+new value 22\n+new value 23\n+new value 24\n+new value 25\n+new value 26\n+new value 27\n+new value 28\n+new value 29\n+new value 30\n+new value 31\n+new value 32\n+new value 33\n+new value 34\n+new value 35\n+new value 36\n+new value 37\n+new value 38\n+new value 39\n+new value 40\n+new value 41\n+new value 42\n+new value 43\n+new value 44\n+new value 45\n+new value 46\n+new value 47\n+new value 48\n+new value 49\n+new value 50\n+new value 51\n+new value 52\n+new value 53\n+new value 54\n+new value 55\n+new value 56\n+new value 57\n+new value 58\n+new value 59\n+new value 60\ndiff --git a/repo/legacy.txt b/repo/legacy.txt\ndeleted file mode 100644\n--- a/repo/legacy.txt\n+++ /dev/null\n@@ -1,3 +0,0 @@\n-first legacy line\n-second legacy line\n-third legacy line\n"
+              }
+            }
+          ],
+          "locations": [
+            {
+              "path": "/repo/large.txt"
+            },
+            {
+              "path": "/repo/legacy.txt"
+            }
+          ],
+          "_meta": {
+            "argo": {
+              "startedAt": 1791291863053
+            }
+          }
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 21,
+        "row": {
+          "id": "exec-8e85aae8-a658-474c-86cf-11a023e9249b",
+          "sessionId": "agent-2-edit-states",
+          "position": 3,
+          "revision": 21,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "exec-8e85aae8-a658-474c-86cf-11a023e9249b",
+          "title": "Edit /repo/large.txt, /repo/legacy.txt",
+          "name": "fileChange",
+          "kind": "edit",
+          "status": "completed",
+          "content": [
+            {
+              "type": "diff",
+              "changes": [
+                {
+                  "operation": "modify",
+                  "path": "/repo/large.txt"
+                },
+                {
+                  "operation": "delete",
+                  "path": "/repo/legacy.txt",
+                  "oldText": "first legacy line\nsecond legacy line\nthird legacy line\n"
+                }
+              ],
+              "patch": {
+                "format": "git_patch",
+                "text": "diff --git a/repo/large.txt b/repo/large.txt\n--- a/repo/large.txt\n+++ b/repo/large.txt\n@@ -1,60 +1,60 @@\n-old value 1\n-old value 2\n-old value 3\n-old value 4\n-old value 5\n-old value 6\n-old value 7\n-old value 8\n-old value 9\n-old value 10\n-old value 11\n-old value 12\n-old value 13\n-old value 14\n-old value 15\n-old value 16\n-old value 17\n-old value 18\n-old value 19\n-old value 20\n-old value 21\n-old value 22\n-old value 23\n-old value 24\n-old value 25\n-old value 26\n-old value 27\n-old value 28\n-old value 29\n-old value 30\n-old value 31\n-old value 32\n-old value 33\n-old value 34\n-old value 35\n-old value 36\n-old value 37\n-old value 38\n-old value 39\n-old value 40\n-old value 41\n-old value 42\n-old value 43\n-old value 44\n-old value 45\n-old value 46\n-old value 47\n-old value 48\n-old value 49\n-old value 50\n-old value 51\n-old value 52\n-old value 53\n-old value 54\n-old value 55\n-old value 56\n-old value 57\n-old value 58\n-old value 59\n-old value 60\n+new value 1\n+new value 2\n+new value 3\n+new value 4\n+new value 5\n+new value 6\n+new value 7\n+new value 8\n+new value 9\n+new value 10\n+new value 11\n+new value 12\n+new value 13\n+new value 14\n+new value 15\n+new value 16\n+new value 17\n+new value 18\n+new value 19\n+new value 20\n+new value 21\n+new value 22\n+new value 23\n+new value 24\n+new value 25\n+new value 26\n+new value 27\n+new value 28\n+new value 29\n+new value 30\n+new value 31\n+new value 32\n+new value 33\n+new value 34\n+new value 35\n+new value 36\n+new value 37\n+new value 38\n+new value 39\n+new value 40\n+new value 41\n+new value 42\n+new value 43\n+new value 44\n+new value 45\n+new value 46\n+new value 47\n+new value 48\n+new value 49\n+new value 50\n+new value 51\n+new value 52\n+new value 53\n+new value 54\n+new value 55\n+new value 56\n+new value 57\n+new value 58\n+new value 59\n+new value 60\ndiff --git a/repo/legacy.txt b/repo/legacy.txt\ndeleted file mode 100644\n--- a/repo/legacy.txt\n+++ /dev/null\n@@ -1,3 +0,0 @@\n-first legacy line\n-second legacy line\n-third legacy line\n"
+              }
+            }
+          ],
+          "locations": [
+            {
+              "path": "/repo/large.txt"
+            },
+            {
+              "path": "/repo/legacy.txt"
+            }
+          ],
+          "_meta": {
+            "argo": {
+              "startedAt": 1791291863053,
+              "endedAt": 1791291863126
+            }
+          }
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 22,
+        "row": {
+          "id": "msg_0131cf667490cc8f016ac4f1e8a77c87d2a59559e840264dcf",
+          "sessionId": "agent-2-edit-states",
+          "position": 4,
+          "revision": 22,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_0131cf667490cc8f016ac4f1e8a77c87d2a59559e840264dcf",
+          "content": [
+            {
+              "type": "text",
+              "text": ""
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.append",
+        "rev": 23,
+        "id": "msg_0131cf667490cc8f016ac4f1e8a77c87d2a59559e840264dcf",
+        "field": "content.0.text",
+        "off": 0,
+        "text": "done"
+      },
+      {
+        "type": "row.upsert",
+        "rev": 24,
+        "row": {
+          "id": "msg_0131cf667490cc8f016ac4f1e8a77c87d2a59559e840264dcf",
+          "sessionId": "agent-2-edit-states",
+          "position": 4,
+          "revision": 24,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_0131cf667490cc8f016ac4f1e8a77c87d2a59559e840264dcf",
+          "content": [
+            {
+              "type": "text",
+              "text": "done"
+            }
+          ]
+        }
+      },
+      {
+        "type": "snapshot",
+        "snapshot": {
+          "state": "idle",
+          "liveHeader": null,
+          "activeTurnId": null,
+          "usage": null,
+          "pendingPermission": null,
+          "pendingElicitation": null,
+          "configOptions": [],
+          "maxRevision": 24,
+          "epoch": 0
+        }
+      }
+    ],
+    "snapshot": {
+      "state": "idle",
+      "liveHeader": null,
+      "activeTurnId": null,
+      "usage": null,
+      "pendingPermission": null,
+      "pendingElicitation": null,
+      "configOptions": [],
+      "maxRevision": 24,
+      "epoch": 0
+    },
+    "liveHeaders": [
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Running /bin/zsh -lc \"pwd && rg --files -g 'AGENTS.md' -g 'large.txt' -g 'legacy.txt' && cat large.txt && cat legacy.txt\"",
+        "source": {
+          "type": "tool_call",
+          "toolCallId": "exec-4f983dc1-a5b4-4387-ae57-a7cdb65677da"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Editing /repo/large.txt",
+        "source": {
+          "type": "tool_call",
+          "toolCallId": "exec-8e85aae8-a658-474c-86cf-11a023e9249b"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Awaiting approval",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Waiting for your answer",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Plan ready",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Retrying (2 of 5)",
+        "source": {
+          "type": "retry"
+        },
+        "startedAt": 1791277200000
+      }
+    ]
+  },
+  {
+    "agent": "agent-2",
+    "recording": "edit-failure",
+    "rows": [
+      {
+        "id": "turn-1:user",
+        "sessionId": "agent-2-edit-failure",
+        "position": 0,
+        "revision": 1,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "user_message",
+        "messageId": "turn-1:user",
+        "content": [
+          {
+            "type": "text",
+            "text": "Use exactly one apply_patch request to update locked/file.txt, replacing the exact line \"old value\" with \"new value\". The directory is read-only to exercise the patch failure path. Do not change permissions, use a shell, or retry. Report the result."
+          }
+        ]
+      },
+      {
+        "id": "msg_0bea13ef7d87c6d8016ac4f815ce0887d2a7d490698506b198",
+        "sessionId": "agent-2-edit-failure",
+        "position": 1,
+        "revision": 18,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "agent_message",
+        "messageId": "msg_0bea13ef7d87c6d8016ac4f815ce0887d2a7d490698506b198",
+        "content": [
+          {
+            "type": "text",
+            "text": "I’ll make the single patch attempt and report the result without retrying."
+          }
+        ]
+      },
+      {
+        "id": "exec-60d2d2c1-3d13-48c6-b5c1-4874de28ef6b",
+        "sessionId": "agent-2-edit-failure",
+        "position": 2,
+        "revision": 20,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "tool_call_update",
+        "toolCallId": "exec-60d2d2c1-3d13-48c6-b5c1-4874de28ef6b",
+        "title": "Edit /repo/locked/file.txt",
+        "name": "fileChange",
+        "kind": "edit",
+        "status": "failed",
+        "content": [
+          {
+            "type": "diff",
+            "changes": [
+              {
+                "operation": "modify",
+                "path": "/repo/locked/file.txt"
+              }
+            ],
+            "patch": {
+              "format": "git_patch",
+              "text": "diff --git a/repo/locked/file.txt b/repo/locked/file.txt\n--- a/repo/locked/file.txt\n+++ b/repo/locked/file.txt\n@@ -1 +1 @@\n-old value\n+new value\n"
+            }
+          }
+        ],
+        "locations": [
+          {
+            "path": "/repo/locked/file.txt"
+          }
+        ],
+        "_meta": {
+          "argo": {
+            "startedAt": 1791293463720,
+            "endedAt": 1791293463764
+          }
+        }
+      },
+      {
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "sessionId": "agent-2-edit-failure",
+        "position": 3,
+        "revision": 53,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "agent_message",
+        "messageId": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "content": [
+          {
+            "type": "text",
+            "text": "The single patch attempt failed: `Failed to write file locked/file.txt`. No permissions were changed, no shell was used, and no retry was made."
+          }
+        ]
+      }
+    ],
+    "stream": [
+      {
+        "type": "row.upsert",
+        "rev": 1,
+        "row": {
+          "id": "turn-1:user",
+          "sessionId": "agent-2-edit-failure",
+          "position": 0,
+          "revision": 1,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "user_message",
+          "messageId": "turn-1:user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Use exactly one apply_patch request to update locked/file.txt, replacing the exact line \"old value\" with \"new value\". The directory is read-only to exercise the patch failure path. Do not change permissions, use a shell, or retry. Report the result."
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 2,
+        "row": {
+          "id": "msg_0bea13ef7d87c6d8016ac4f815ce0887d2a7d490698506b198",
+          "sessionId": "agent-2-edit-failure",
+          "position": 1,
+          "revision": 2,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_0bea13ef7d87c6d8016ac4f815ce0887d2a7d490698506b198",
+          "content": [
+            {
+              "type": "text",
+              "text": ""
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.append",
+        "rev": 3,
+        "id": "msg_0bea13ef7d87c6d8016ac4f815ce0887d2a7d490698506b198",
+        "field": "content.0.text",
+        "off": 0,
+        "text": "I"
+      },
+      {
+        "type": "row.append",
+        "rev": 4,
+        "id": "msg_0bea13ef7d87c6d8016ac4f815ce0887d2a7d490698506b198",
+        "field": "content.0.text",
+        "off": 1,
+        "text": "’ll"
+      },
+      {
+        "type": "row.append",
+        "rev": 5,
+        "id": "msg_0bea13ef7d87c6d8016ac4f815ce0887d2a7d490698506b198",
+        "field": "content.0.text",
+        "off": 4,
+        "text": " make"
+      },
+      {
+        "type": "row.append",
+        "rev": 6,
+        "id": "msg_0bea13ef7d87c6d8016ac4f815ce0887d2a7d490698506b198",
+        "field": "content.0.text",
+        "off": 9,
+        "text": " the"
+      },
+      {
+        "type": "row.append",
+        "rev": 7,
+        "id": "msg_0bea13ef7d87c6d8016ac4f815ce0887d2a7d490698506b198",
+        "field": "content.0.text",
+        "off": 13,
+        "text": " single"
+      },
+      {
+        "type": "row.append",
+        "rev": 8,
+        "id": "msg_0bea13ef7d87c6d8016ac4f815ce0887d2a7d490698506b198",
+        "field": "content.0.text",
+        "off": 20,
+        "text": " patch"
+      },
+      {
+        "type": "row.append",
+        "rev": 9,
+        "id": "msg_0bea13ef7d87c6d8016ac4f815ce0887d2a7d490698506b198",
+        "field": "content.0.text",
+        "off": 26,
+        "text": " attempt"
+      },
+      {
+        "type": "row.append",
+        "rev": 10,
+        "id": "msg_0bea13ef7d87c6d8016ac4f815ce0887d2a7d490698506b198",
+        "field": "content.0.text",
+        "off": 34,
+        "text": " and"
+      },
+      {
+        "type": "row.append",
+        "rev": 11,
+        "id": "msg_0bea13ef7d87c6d8016ac4f815ce0887d2a7d490698506b198",
+        "field": "content.0.text",
+        "off": 38,
+        "text": " report"
+      },
+      {
+        "type": "row.append",
+        "rev": 12,
+        "id": "msg_0bea13ef7d87c6d8016ac4f815ce0887d2a7d490698506b198",
+        "field": "content.0.text",
+        "off": 45,
+        "text": " the"
+      },
+      {
+        "type": "row.append",
+        "rev": 13,
+        "id": "msg_0bea13ef7d87c6d8016ac4f815ce0887d2a7d490698506b198",
+        "field": "content.0.text",
+        "off": 49,
+        "text": " result"
+      },
+      {
+        "type": "row.append",
+        "rev": 14,
+        "id": "msg_0bea13ef7d87c6d8016ac4f815ce0887d2a7d490698506b198",
+        "field": "content.0.text",
+        "off": 56,
+        "text": " without"
+      },
+      {
+        "type": "row.append",
+        "rev": 15,
+        "id": "msg_0bea13ef7d87c6d8016ac4f815ce0887d2a7d490698506b198",
+        "field": "content.0.text",
+        "off": 64,
+        "text": " retry"
+      },
+      {
+        "type": "row.append",
+        "rev": 16,
+        "id": "msg_0bea13ef7d87c6d8016ac4f815ce0887d2a7d490698506b198",
+        "field": "content.0.text",
+        "off": 70,
+        "text": "ing"
+      },
+      {
+        "type": "row.append",
+        "rev": 17,
+        "id": "msg_0bea13ef7d87c6d8016ac4f815ce0887d2a7d490698506b198",
+        "field": "content.0.text",
+        "off": 73,
+        "text": "."
+      },
+      {
+        "type": "row.upsert",
+        "rev": 18,
+        "row": {
+          "id": "msg_0bea13ef7d87c6d8016ac4f815ce0887d2a7d490698506b198",
+          "sessionId": "agent-2-edit-failure",
+          "position": 1,
+          "revision": 18,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_0bea13ef7d87c6d8016ac4f815ce0887d2a7d490698506b198",
+          "content": [
+            {
+              "type": "text",
+              "text": "I’ll make the single patch attempt and report the result without retrying."
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 19,
+        "row": {
+          "id": "exec-60d2d2c1-3d13-48c6-b5c1-4874de28ef6b",
+          "sessionId": "agent-2-edit-failure",
+          "position": 2,
+          "revision": 19,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "exec-60d2d2c1-3d13-48c6-b5c1-4874de28ef6b",
+          "title": "Edit /repo/locked/file.txt",
+          "name": "fileChange",
+          "kind": "edit",
+          "status": "in_progress",
+          "content": [
+            {
+              "type": "diff",
+              "changes": [
+                {
+                  "operation": "modify",
+                  "path": "/repo/locked/file.txt"
+                }
+              ],
+              "patch": {
+                "format": "git_patch",
+                "text": "diff --git a/repo/locked/file.txt b/repo/locked/file.txt\n--- a/repo/locked/file.txt\n+++ b/repo/locked/file.txt\n@@ -1 +1 @@\n-old value\n+new value\n"
+              }
+            }
+          ],
+          "locations": [
+            {
+              "path": "/repo/locked/file.txt"
+            }
+          ],
+          "_meta": {
+            "argo": {
+              "startedAt": 1791293463720
+            }
+          }
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 20,
+        "row": {
+          "id": "exec-60d2d2c1-3d13-48c6-b5c1-4874de28ef6b",
+          "sessionId": "agent-2-edit-failure",
+          "position": 2,
+          "revision": 20,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "exec-60d2d2c1-3d13-48c6-b5c1-4874de28ef6b",
+          "title": "Edit /repo/locked/file.txt",
+          "name": "fileChange",
+          "kind": "edit",
+          "status": "failed",
+          "content": [
+            {
+              "type": "diff",
+              "changes": [
+                {
+                  "operation": "modify",
+                  "path": "/repo/locked/file.txt"
+                }
+              ],
+              "patch": {
+                "format": "git_patch",
+                "text": "diff --git a/repo/locked/file.txt b/repo/locked/file.txt\n--- a/repo/locked/file.txt\n+++ b/repo/locked/file.txt\n@@ -1 +1 @@\n-old value\n+new value\n"
+              }
+            }
+          ],
+          "locations": [
+            {
+              "path": "/repo/locked/file.txt"
+            }
+          ],
+          "_meta": {
+            "argo": {
+              "startedAt": 1791293463720,
+              "endedAt": 1791293463764
+            }
+          }
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 21,
+        "row": {
+          "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+          "sessionId": "agent-2-edit-failure",
+          "position": 3,
+          "revision": 21,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+          "content": [
+            {
+              "type": "text",
+              "text": ""
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.append",
+        "rev": 22,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 0,
+        "text": "The"
+      },
+      {
+        "type": "row.append",
+        "rev": 23,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 3,
+        "text": " single"
+      },
+      {
+        "type": "row.append",
+        "rev": 24,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 10,
+        "text": " patch"
+      },
+      {
+        "type": "row.append",
+        "rev": 25,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 16,
+        "text": " attempt"
+      },
+      {
+        "type": "row.append",
+        "rev": 26,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 24,
+        "text": " failed"
+      },
+      {
+        "type": "row.append",
+        "rev": 27,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 31,
+        "text": ":"
+      },
+      {
+        "type": "row.append",
+        "rev": 28,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 32,
+        "text": " `"
+      },
+      {
+        "type": "row.append",
+        "rev": 29,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 34,
+        "text": "Failed"
+      },
+      {
+        "type": "row.append",
+        "rev": 30,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 40,
+        "text": " to"
+      },
+      {
+        "type": "row.append",
+        "rev": 31,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 43,
+        "text": " write"
+      },
+      {
+        "type": "row.append",
+        "rev": 32,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 49,
+        "text": " file"
+      },
+      {
+        "type": "row.append",
+        "rev": 33,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 54,
+        "text": " locked"
+      },
+      {
+        "type": "row.append",
+        "rev": 34,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 61,
+        "text": "/file"
+      },
+      {
+        "type": "row.append",
+        "rev": 35,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 66,
+        "text": ".txt"
+      },
+      {
+        "type": "row.append",
+        "rev": 36,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 70,
+        "text": "`."
+      },
+      {
+        "type": "row.append",
+        "rev": 37,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 72,
+        "text": " No"
+      },
+      {
+        "type": "row.append",
+        "rev": 38,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 75,
+        "text": " permissions"
+      },
+      {
+        "type": "row.append",
+        "rev": 39,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 87,
+        "text": " were"
+      },
+      {
+        "type": "row.append",
+        "rev": 40,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 92,
+        "text": " changed"
+      },
+      {
+        "type": "row.append",
+        "rev": 41,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 100,
+        "text": ","
+      },
+      {
+        "type": "row.append",
+        "rev": 42,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 101,
+        "text": " no"
+      },
+      {
+        "type": "row.append",
+        "rev": 43,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 104,
+        "text": " shell"
+      },
+      {
+        "type": "row.append",
+        "rev": 44,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 110,
+        "text": " was"
+      },
+      {
+        "type": "row.append",
+        "rev": 45,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 114,
+        "text": " used"
+      },
+      {
+        "type": "row.append",
+        "rev": 46,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 119,
+        "text": ","
+      },
+      {
+        "type": "row.append",
+        "rev": 47,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 120,
+        "text": " and"
+      },
+      {
+        "type": "row.append",
+        "rev": 48,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 124,
+        "text": " no"
+      },
+      {
+        "type": "row.append",
+        "rev": 49,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 127,
+        "text": " retry"
+      },
+      {
+        "type": "row.append",
+        "rev": 50,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 133,
+        "text": " was"
+      },
+      {
+        "type": "row.append",
+        "rev": 51,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 137,
+        "text": " made"
+      },
+      {
+        "type": "row.append",
+        "rev": 52,
+        "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+        "field": "content.0.text",
+        "off": 142,
+        "text": "."
+      },
+      {
+        "type": "row.upsert",
+        "rev": 53,
+        "row": {
+          "id": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+          "sessionId": "agent-2-edit-failure",
+          "position": 3,
+          "revision": 53,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_0bea13ef7d87c6d8016ac4f819875887d2af9614a58bf7f55c",
+          "content": [
+            {
+              "type": "text",
+              "text": "The single patch attempt failed: `Failed to write file locked/file.txt`. No permissions were changed, no shell was used, and no retry was made."
+            }
+          ]
+        }
+      },
+      {
+        "type": "snapshot",
+        "snapshot": {
+          "state": "idle",
+          "liveHeader": null,
+          "activeTurnId": null,
+          "usage": null,
+          "pendingPermission": null,
+          "pendingElicitation": null,
+          "configOptions": [],
+          "maxRevision": 53,
+          "epoch": 0
+        }
+      }
+    ],
+    "snapshot": {
+      "state": "idle",
+      "liveHeader": null,
+      "activeTurnId": null,
+      "usage": null,
+      "pendingPermission": null,
+      "pendingElicitation": null,
+      "configOptions": [],
+      "maxRevision": 53,
+      "epoch": 0
+    },
+    "liveHeaders": [
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Editing /repo/locked/file.txt",
+        "source": {
+          "type": "tool_call",
+          "toolCallId": "exec-60d2d2c1-3d13-48c6-b5c1-4874de28ef6b"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Awaiting approval",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Waiting for your answer",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Plan ready",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Retrying (2 of 5)",
+        "source": {
+          "type": "retry"
+        },
+        "startedAt": 1791277200000
+      }
+    ]
   }
 ]

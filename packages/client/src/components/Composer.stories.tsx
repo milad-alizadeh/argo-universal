@@ -4,6 +4,7 @@ import { action } from 'storybook/actions';
 import {
   ComposerMock,
   composerImages,
+  composerPlanDone,
   oversizedComposerImage,
 } from '../../mocks/composer-mock';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
@@ -105,6 +106,12 @@ export const Overview: Story = {
             </Variation>
             <Variation label="In a Session">
               <ComposerMock {...args} sessionStarted />
+            </Variation>
+            <Variation label="Plan done">
+              <ComposerMock {...args} sessionStarted plan={composerPlanDone} />
+            </Variation>
+            <Variation label="No Plan">
+              <ComposerMock {...args} sessionStarted plan={[]} />
             </Variation>
           </Variations>
         </View>

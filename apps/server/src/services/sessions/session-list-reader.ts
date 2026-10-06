@@ -174,6 +174,9 @@ export function createSessionListReader(options: {
           toLiveHeader(
             {
               activeTurnId,
+              activeTurnStartedAt:
+                live?.context.activeTurnStartedAt ??
+                (running ? (latestTurn?.startedAt ?? null) : null),
               permissionQueue: live?.context.permissionQueue ?? [],
               pendingElicitation: pendingElicitation ?? null,
             },
@@ -198,7 +201,7 @@ export function createSessionListReader(options: {
         if (needsInput) {
           activity = pendingPermission?.title ?? 'Waiting for your answer';
         } else if (running) {
-          activity = liveHeader ?? 'Working';
+          activity = liveHeader?.text ?? 'Working';
         } else {
           activity =
             message?.content

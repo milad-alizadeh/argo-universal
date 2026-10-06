@@ -141,8 +141,8 @@ export const ChildSelectionAndAttention: Story = {
       for (const kind of ['projects', 'agents']) {
         const dot = canvas.getByTestId(`settings-${kind}-attention`);
         await expect(dot).toBeVisible();
-        await expect(dot.getBoundingClientRect().width).toBe(8);
-        await expect(dot.getBoundingClientRect().height).toBe(8);
+        await expect(dot.getBoundingClientRect().width).toBe(6);
+        await expect(dot.getBoundingClientRect().height).toBe(6);
       }
       await expect(canvas.queryByText('1', { exact: true })).toBeNull();
     }

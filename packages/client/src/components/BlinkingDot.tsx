@@ -1,0 +1,59 @@
+import { useEffect } from 'react';
+import Animated, {
+  cancelAnimation,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
+import { useResolveClassNames } from 'uniwind';
+import { cn } from '#lib/utils';
+
+export interface BlinkingDotProps {
+  // A background class such as `bg-warning`; the glow takes the same colour.
+  colorClassName: string;
+  blinking?: boolean;
+  className?: string;
+  testID?: string;
+}
+
+// A status dot that blinks and glows while something is live or waits on you.
+export function BlinkingDot({
+  colorClassName,
+  blinking = true,
+  className,
+  testID,
+}: BlinkingDotProps) {
+  const { backgroundColor } = useResolveClassNames(colorClassName);
+  const opacity = useSharedValue(1);
+  useEffect(() => {
+    opacity.value = blinking
+      ? withRepeat(withTiming(0.45, { duration: 650 }), -1, true)
+      : 1;
+    return () => cancelAnimation(opacity);
+  }, [blinking, opacity]);
+  const style = useAnimatedStyle(
+    () => ({
+      opacity: opacity.value,
+      boxShadow: blinking
+        ? [
+            {
+              offsetX: 0,
+              offsetY: 0,
+              blurRadius: 4,
+              spreadDistance: 0,
+              color: backgroundColor,
+            },
+          ]
+        : [],
+    }),
+    [opacity, blinking, backgroundColor],
+  );
+  return (
+    <Animated.View
+      testID={testID}
+      style={style}
+      className={cn('rounded-full', colorClassName, className)}
+    />
+  );
+}

@@ -15,6 +15,13 @@ export type { ShellSection } from './shell-sections';
 
 const OpenDrawerContext = createContext<() => void>(() => {});
 
+const AttentionCountContext = createContext(0);
+
+// The shell's attention count, for ☰'s dot.
+export function useShellAttentionCount(): number {
+  return useContext(AttentionCountContext);
+}
+
 // Opens the phone shell's drawer from a section's header.
 export function useOpenDrawer(): () => void {
   return useContext(OpenDrawerContext);
@@ -148,7 +155,9 @@ export function PhoneShell({
       >
         <PhoneShellCard drawerOpen={drawerOpen}>
           <OpenDrawerContext.Provider value={() => onDrawerOpenChange(true)}>
-            {children}
+            <AttentionCountContext.Provider value={attentionCount}>
+              {children}
+            </AttentionCountContext.Provider>
           </OpenDrawerContext.Provider>
         </PhoneShellCard>
       </PhoneDrawer>

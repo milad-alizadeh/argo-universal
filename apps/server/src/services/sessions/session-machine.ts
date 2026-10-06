@@ -73,6 +73,8 @@ export interface SessionContext extends SessionData {
   input: SessionMachineInput;
   capabilities: AgentCapabilities | null;
   activeTurnId: string | null;
+  // When the running Turn started, in epoch milliseconds.
+  activeTurnStartedAt: number | null;
   usage: ContextUsage | null;
   permissionQueue: PendingPermission[];
   pendingElicitation: PendingElicitation | null;
@@ -180,7 +182,11 @@ const sessionSetup = setup({
         { context, enqueue },
         params: { turnId: string; content: ContentBlock[] },
       ) => {
-        enqueue.assign({ activeTurnId: params.turnId });
+        const startedAt = Date.now();
+        enqueue.assign({
+          activeTurnId: params.turnId,
+          activeTurnStartedAt: startedAt,
+        });
         enqueue.sendTo(writer, {
           type: 'writer.write',
           job: {
@@ -188,6 +194,7 @@ const sessionSetup = setup({
             turn: {
               id: params.turnId,
               sessionId: context.sessionId,
+              startedAt,
               status: 'running',
               model: currentModel(context.configOptions),
             },
@@ -231,6 +238,7 @@ const sessionSetup = setup({
           });
         enqueue.assign({
           activeTurnId: null,
+          activeTurnStartedAt: null,
           permissionQueue: [],
           pendingElicitation: null,
         });
@@ -452,6 +460,7 @@ export const sessionMachine = sessionSetup.createMachine({
     nextPosition: 0,
     capabilities: null,
     activeTurnId: null,
+    activeTurnStartedAt: null,
     usage: null,
     permissionQueue: [],
     pendingElicitation: null,

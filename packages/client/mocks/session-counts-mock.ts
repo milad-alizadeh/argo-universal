@@ -1,0 +1,20 @@
+import type { SessionCounts } from '@repo/contracts';
+import { sessionListMocks } from './session-list-mock';
+import { createSubscriptionPublisher } from './subscription-publisher';
+import type { Fixtures } from './trpc-mock-link';
+
+// A `session.counts` that starts at `initial` and sends each published count, as the Server does when a Session changes.
+export function createSessionCountsMock(initial: SessionCounts) {
+  const counts = createSubscriptionPublisher<SessionCounts>();
+  return {
+    reset: counts.reset,
+    publish: counts.publish,
+    fixtures: {
+      ...sessionListMocks,
+      'session.counts': async function* (_input, signal) {
+        yield initial;
+        yield* counts.subscribe(signal);
+      },
+    } satisfies Fixtures,
+  };
+}

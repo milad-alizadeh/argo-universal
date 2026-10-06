@@ -51,7 +51,7 @@ export function PhoneShellMock({
     >
       <ScreenHeader
         title={title}
-        left={<PhoneMenuButton attentionCount={attentionCount} />}
+        left={<PhoneMenuButton />}
         right={[
           <HeaderButton
             key="search"

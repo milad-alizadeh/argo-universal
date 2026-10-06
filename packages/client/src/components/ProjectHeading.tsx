@@ -61,8 +61,9 @@ export const ProjectHeading = memo(function ProjectHeading({
             className="text-muted-foreground wide:text-foreground"
           />
           <Text
+            selectable={false}
             numberOfLines={1}
-            className="min-w-0 flex-1 text-base leading-6 font-semibold wide:text-sm wide:leading-5 wide:font-medium"
+            className="select-none min-w-0 flex-1 text-base leading-6 font-semibold wide:text-sm wide:leading-5 wide:font-medium"
           >
             {name}
           </Text>

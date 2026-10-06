@@ -121,6 +121,7 @@ catalog:
   # Exact pin: XState may change types in minor releases (docs/research/xstate.md).
   xstate: 5.33.2
   zod: 4.6.5
+  diff: 9.0.0
 
 # `pnpm add` fails when a version is outside the catalog.
 catalogMode: strict

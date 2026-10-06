@@ -6,6 +6,7 @@ import {
   ComposerMock,
   composerImages,
   composerLongAgentCatalog,
+  composerPlanDone,
   oversizedComposerImage,
 } from '../../mocks/composer-mock';
 import { Composer } from './Composer';
@@ -1123,6 +1124,61 @@ export const EditorScrollsAfterFourLines: Story = {
     }
   },
 };
+
+export const PlanDone: Story = {
+  render: (args) => (
+    <ComposerMock {...args} sessionStarted plan={composerPlanDone} />
+  ),
+  play: async ({ canvas, userEvent }) => {
+    const { page } = await import('vitest/browser');
+    const overlay = within(document.body);
+    for (const width of [390, 1440]) {
+      await page.viewport(width, 844);
+      await settleViewport();
+      const plan = canvas.getByRole('button', { name: 'Plan' });
+      await expect(plan).toBeVisible();
+      if (width >= 720) await expect(plan).toHaveTextContent('Plan 3/3');
+      await userEvent.click(plan);
+      if (width < 720)
+        await waitFor(() =>
+          expect(overlay.getByText('3 of 3 done')).toBeVisible(),
+        );
+      else
+        await waitFor(() =>
+          expect(canvas.getByText('Verify phone and desktop')).toBeVisible(),
+        );
+      await expect(
+        overlay.queryByRole('progressbar', { name: /in progress$/ }),
+      ).not.toBeInTheDocument();
+      if (width < 720) await userEvent.keyboard('{Escape}');
+      else await userEvent.click(plan);
+    }
+  },
+};
+
+export const PlanDoneDark: Story = { ...PlanDone, globals: { mode: 'dark' } };
+
+export const NoPlan: Story = {
+  render: (args) => <ComposerMock {...args} sessionStarted plan={[]} />,
+  play: async ({ canvas }) => {
+    const { page } = await import('vitest/browser');
+    for (const width of [390, 1440]) {
+      await page.viewport(width, 844);
+      await settleViewport();
+      await expect(
+        canvas.getByRole('textbox', { name: 'Message' }),
+      ).toBeVisible();
+      await expect(
+        canvas.queryByRole('button', { name: 'Plan' }),
+      ).not.toBeInTheDocument();
+      await expect(
+        canvas.queryByTestId('composer-plan-steps'),
+      ).not.toBeInTheDocument();
+    }
+  },
+};
+
+export const NoPlanDark: Story = { ...NoPlan, globals: { mode: 'dark' } };
 
 export const PlanExpandsSmoothly: Story = {
   render: (args) => <ComposerMock {...args} sessionStarted />,
