@@ -73,7 +73,7 @@ export function SettingsList({
     if (attention) {
       rowStatus = (
         <View
-          className="size-2 shrink-0 rounded-full bg-warning"
+          className="size-1.5 shrink-0 rounded-full bg-warning"
           testID={`settings-${label.toLowerCase()}-attention`}
           accessibilityLabel={`${label} needs attention`}
         />

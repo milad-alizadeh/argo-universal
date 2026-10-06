@@ -1,5 +1,6 @@
 import {
   FeedSubscribeOutput,
+  LiveHeader,
   SessionSnapshot,
   SessionUpdate,
 } from '@repo/contracts';
@@ -12,6 +13,8 @@ export const FeedMock = z.strictObject({
   rows: z.array(SessionUpdate),
   stream: z.array(FeedSubscribeOutput),
   snapshot: SessionSnapshot,
+  // Each new live header the Server's producer gave while the Turns replayed.
+  liveHeaders: z.array(LiveHeader),
 });
 export type FeedMock = z.infer<typeof FeedMock>;
 

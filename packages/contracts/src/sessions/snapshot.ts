@@ -124,10 +124,28 @@ export const PendingElicitation = z.strictObject({
 });
 export type PendingElicitation = z.infer<typeof PendingElicitation>;
 
+// Which step of the live header order produced its text (spec 0003).
+export const LiveHeaderSource = z.discriminatedUnion('type', [
+  z.strictObject({ type: z.literal('request') }),
+  z.strictObject({ type: z.literal('retry') }),
+  z.strictObject({ type: z.literal('thought') }),
+  z.strictObject({ type: z.literal('tool_call'), toolCallId: z.string() }),
+  z.strictObject({ type: z.literal('working') }),
+]);
+export type LiveHeaderSource = z.infer<typeof LiveHeaderSource>;
+
+// One line for what the Agent is doing; `startedAt` is the running Turn's start, null when no Turn runs.
+export const LiveHeader = z.strictObject({
+  text: z.string(),
+  source: LiveHeaderSource,
+  startedAt: turnColumns.shape.startedAt.nullable(),
+});
+export type LiveHeader = z.infer<typeof LiveHeader>;
+
 // The live state of a Session that is not a Feed row. The Server holds it in memory, so only stored fields derive from columns (ADR 0013).
 export const SessionSnapshot = z.strictObject({
   state: SessionState,
-  liveHeader: z.string().nullable(),
+  liveHeader: LiveHeader.nullable(),
   activeTurnId: turnColumns.shape.id.nullable(),
   usage: ContextUsage.nullable(),
   pendingPermission: PendingPermission.nullable(),

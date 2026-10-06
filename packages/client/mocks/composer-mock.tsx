@@ -75,8 +75,18 @@ export const composerPlan: PlanEntry[] = [
   },
 ];
 
+export const composerPlanDone: PlanEntry[] = composerPlan.map((entry) => ({
+  ...entry,
+  status: 'completed',
+}));
+
 export function ComposerMock(
-  props: ComposerProps & { sessionStarted?: boolean; running?: boolean },
+  props: ComposerProps & {
+    sessionStarted?: boolean;
+    running?: boolean;
+    // Replaces the Session's Plan; an empty list means the Agent has none.
+    plan?: PlanEntry[];
+  },
 ) {
   const [draft, setDraft] = useState(props.draft);
   const [agent, setAgent] = useState(
@@ -125,7 +135,7 @@ export function ComposerMock(
           },
           ...(props.sessionStarted
             ? {
-                plan: composerPlan,
+                plan: props.plan ?? composerPlan,
                 subagents: { count: 2, running: true, onPress: () => {} },
                 shells: { count: 1, running: false, onPress: () => {} },
                 context: {

@@ -820,7 +820,104 @@
       "configOptions": [],
       "maxRevision": 33,
       "epoch": 0
-    }
+    },
+    "liveHeaders": [
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Editing /project/notes.md",
+        "source": {
+          "type": "tool_call",
+          "toolCallId": "toolu_01FDakYHkWn7oMZW8hWNVddc"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Reading /project/hello.txt",
+        "source": {
+          "type": "tool_call",
+          "toolCallId": "toolu_01SxWPoiSEcuefwQ7yYCUMf7"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Editing /project/hello.txt",
+        "source": {
+          "type": "tool_call",
+          "toolCallId": "toolu_017jjekVKPQW8pQZNYRFNzF6"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Show hello.txt and short git status",
+        "source": {
+          "type": "tool_call",
+          "toolCallId": "toolu_01G161bUEDoix223h77wg2HL"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Awaiting approval",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Waiting for your answer",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Plan ready",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Retrying (2 of 5)",
+        "source": {
+          "type": "retry"
+        },
+        "startedAt": 1791277200000
+      }
+    ]
   },
   {
     "agent": "agent-1",
@@ -992,7 +1089,59 @@
       "configOptions": [],
       "maxRevision": 3,
       "epoch": 0
-    }
+    },
+    "liveHeaders": [
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Wait 20 seconds then print done",
+        "source": {
+          "type": "tool_call",
+          "toolCallId": "toolu_01RmbdAbVKQQdXJSR61Rrkz3"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Awaiting approval",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Waiting for your answer",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Plan ready",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Retrying (2 of 5)",
+        "source": {
+          "type": "retry"
+        },
+        "startedAt": 1791277200000
+      }
+    ]
   },
   {
     "agent": "agent-1",
@@ -1102,7 +1251,16 @@
       "configOptions": [],
       "maxRevision": 3,
       "epoch": 0
-    }
+    },
+    "liveHeaders": [
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      }
+    ]
   },
   {
     "agent": "agent-1",
@@ -1313,7 +1471,16 @@
       "configOptions": [],
       "maxRevision": 6,
       "epoch": 0
-    }
+    },
+    "liveHeaders": [
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      }
+    ]
   },
   {
     "agent": "agent-1",
@@ -1950,7 +2117,16 @@
       "configOptions": [],
       "maxRevision": 62,
       "epoch": 0
-    }
+    },
+    "liveHeaders": [
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      }
+    ]
   },
   {
     "agent": "agent-2",
@@ -2693,7 +2869,89 @@
       "configOptions": [],
       "maxRevision": 22,
       "epoch": 0
-    }
+    },
+    "liveHeaders": [
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Reading /repo/app.txt",
+        "source": {
+          "type": "tool_call",
+          "toolCallId": "exec-2fe50f79-a80c-4d3a-96a9-97ff33a9ad2b"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Editing /repo/app.txt",
+        "source": {
+          "type": "tool_call",
+          "toolCallId": "exec-0de82514-551d-45d0-a5a2-b9e0133283d7"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Running /bin/zsh -lc 'cat app.txt notes.md'",
+        "source": {
+          "type": "tool_call",
+          "toolCallId": "exec-f27ca824-f7d7-4709-a913-310e66957673"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Awaiting approval",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Waiting for your answer",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Plan ready",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Retrying (2 of 5)",
+        "source": {
+          "type": "retry"
+        },
+        "startedAt": 1791277200000
+      }
+    ]
   },
   {
     "agent": "agent-2",
@@ -3058,7 +3316,59 @@
       "configOptions": [],
       "maxRevision": 20,
       "epoch": 0
-    }
+    },
+    "liveHeaders": [
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Running /bin/zsh -lc 'sleep 30'",
+        "source": {
+          "type": "tool_call",
+          "toolCallId": "exec-74ec3292-520b-4563-82d4-09f95eed79de"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Awaiting approval",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Waiting for your answer",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Plan ready",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Retrying (2 of 5)",
+        "source": {
+          "type": "retry"
+        },
+        "startedAt": 1791277200000
+      }
+    ]
   },
   {
     "agent": "agent-2",
@@ -3232,7 +3542,16 @@
       "configOptions": [],
       "maxRevision": 6,
       "epoch": 0
-    }
+    },
+    "liveHeaders": [
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      }
+    ]
   },
   {
     "agent": "agent-2",
@@ -3387,7 +3706,16 @@
       "configOptions": [],
       "maxRevision": 4,
       "epoch": 0
-    }
+    },
+    "liveHeaders": [
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      }
+    ]
   },
   {
     "agent": "agent-2",
@@ -5144,7 +5472,16 @@
       "configOptions": [],
       "maxRevision": 202,
       "epoch": 0
-    }
+    },
+    "liveHeaders": [
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      }
+    ]
   },
   {
     "agent": "agent-2",
@@ -5735,7 +6072,74 @@
       "configOptions": [],
       "maxRevision": 21,
       "epoch": 0
-    }
+    },
+    "liveHeaders": [
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Running /bin/zsh -lc \"printf 'Preparing checks\\\\nChecking files\\\\nhello Argo\\\\n M hello.txt\\\\n?? notes.md\\\\n'\"",
+        "source": {
+          "type": "tool_call",
+          "toolCallId": "exec-d1cd36f9-088c-4cc5-bc2a-9f1ae304fa01"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Running /bin/zsh -lc \"printf 'Starting checks\\\\nChecking input\\\\nMissing input\\\\nCommand failed\\\\nExit requested\\\\n'; exit 2\"",
+        "source": {
+          "type": "tool_call",
+          "toolCallId": "exec-112e4e7b-378b-486a-b2d7-37a5852fa056"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Awaiting approval",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Waiting for your answer",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Plan ready",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Retrying (2 of 5)",
+        "source": {
+          "type": "retry"
+        },
+        "startedAt": 1791277200000
+      }
+    ]
   },
   {
     "agent": "agent-2",
@@ -6344,7 +6748,74 @@
       "configOptions": [],
       "maxRevision": 24,
       "epoch": 0
-    }
+    },
+    "liveHeaders": [
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Running /bin/zsh -lc \"pwd && rg --files -g 'AGENTS.md' -g 'large.txt' -g 'legacy.txt' && cat large.txt && cat legacy.txt\"",
+        "source": {
+          "type": "tool_call",
+          "toolCallId": "exec-4f983dc1-a5b4-4387-ae57-a7cdb65677da"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Editing /repo/large.txt",
+        "source": {
+          "type": "tool_call",
+          "toolCallId": "exec-8e85aae8-a658-474c-86cf-11a023e9249b"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Awaiting approval",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Waiting for your answer",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Plan ready",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Retrying (2 of 5)",
+        "source": {
+          "type": "retry"
+        },
+        "startedAt": 1791277200000
+      }
+    ]
   },
   {
     "agent": "agent-2",
@@ -7020,6 +7491,58 @@
       "configOptions": [],
       "maxRevision": 53,
       "epoch": 0
-    }
+    },
+    "liveHeaders": [
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Editing /repo/locked/file.txt",
+        "source": {
+          "type": "tool_call",
+          "toolCallId": "exec-60d2d2c1-3d13-48c6-b5c1-4874de28ef6b"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Working",
+        "source": {
+          "type": "working"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Awaiting approval",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Waiting for your answer",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Plan ready",
+        "source": {
+          "type": "request"
+        },
+        "startedAt": 1791277200000
+      },
+      {
+        "text": "Retrying (2 of 5)",
+        "source": {
+          "type": "retry"
+        },
+        "startedAt": 1791277200000
+      }
+    ]
   }
 ]

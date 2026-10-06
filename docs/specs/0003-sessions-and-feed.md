@@ -224,7 +224,7 @@ The procedures are named after ACP methods, and the existing contracts carry the
 - `pendingElicitation` gains `requestId`, which the Session makes.
 - `changes: {files, additions, deletions}`: the uncommitted changes in the Checkout, for the chip.
 - `subagents: Subagent[]` and `shells: Shell[]`, so the buttons update live.
-- `liveHeader: string | null`.
+- `liveHeader: { text, source, startedAt } | null`. `source` names the step that produced `text` (`request`, `retry`, `thought`, `tool_call` with its `toolCallId`, `working`), and `startedAt` is the running Turn's start, so the app can show elapsed time.
 - `title`, `titleSource`, `checkout` and `archivedAt`.
 
 `state` stays `running`, `requires_action` or `idle`. A pending Plan proposal makes it `requires_action`. A Session with only running Shells or Subagents is `idle` for prompts.
