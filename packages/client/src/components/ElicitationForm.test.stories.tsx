@@ -37,6 +37,12 @@ function choice(width: number): Story {
         content: { 'Which color do you prefer?': 'Blue' },
       });
       await expect(canvas.getByText('You answered')).toBeVisible();
+      await expect(
+        canvas.queryByText('Color preference'),
+      ).not.toBeInTheDocument();
+      await expect(
+        canvas.getByText('Which color do you prefer?'),
+      ).toBeVisible();
       await expect(canvas.getByText('Blue', { exact: true })).toBeVisible();
       await expect(
         canvas.getByRole('textbox', { name: 'Message' }),

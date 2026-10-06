@@ -56,14 +56,9 @@ export function ElicitationOutcome({
                   });
             return (
               <View key={name} className="gap-1">
-                <Text className="text-xs leading-4 text-muted-foreground">
-                  {property.title ?? name}
+                <Text className="text-sm leading-5">
+                  {property.description ?? property.title ?? name}
                 </Text>
-                {property.description && (
-                  <Text className="text-sm leading-5">
-                    {property.description}
-                  </Text>
-                )}
                 {answers.map((text) => (
                   <Text
                     key={text}
