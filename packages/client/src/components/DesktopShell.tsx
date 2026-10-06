@@ -307,7 +307,6 @@ export function DesktopShell({
               'overflow-hidden',
               inspectorExpanded ? 'rounded-xl' : 'rounded-r-xl',
             )}
-            scrollClassName="flex-1"
             contentContainerClassName="grow"
             surfaceClassName="bg-sidebar"
           >

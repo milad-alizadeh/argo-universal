@@ -1,10 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { View } from 'react-native';
 import { action } from 'storybook/actions';
 import { DesktopShellMock } from '../../mocks/desktop-shell-mock';
-import { recordedFile } from '../../mocks/feed-edit-mock';
+import { InspectorFilesMock } from '../../mocks/inspector-files-mock';
 import { DesktopShell, type DesktopShellProps } from './DesktopShell';
-import { DiffView } from './DiffView';
 
 const meta = {
   title: 'Shell/DesktopShell',
@@ -53,19 +51,6 @@ export const InspectorFiles: Story = {
   name: 'Inspector files',
   args: {
     inspectorState: 'open',
-    inspector: (
-      <View>
-        {(
-          [
-            recordedFile('agent-2', 'edit-states'),
-            recordedFile('agent-1'),
-            recordedFile('agent-1', 'edit-and-command', 'add'),
-            recordedFile('agent-2', 'edit-states', 'delete'),
-          ] as const
-        ).map((file) => (
-          <DiffView key={file.path} file={file} />
-        ))}
-      </View>
-    ),
+    inspector: <InspectorFilesMock />,
   },
 };

@@ -46,7 +46,7 @@ function CodeLine({ line, inline }: { line: DiffLine; inline: boolean }) {
           lineStyles[line.kind].color,
         )}
       >
-        {lineStyles[line.kind].sign}
+        {line.kind === 'removed' ? '\u2212' : lineStyles[line.kind].sign}
       </Text>
       <Text
         className="shrink-0 pr-3 font-mono text-xs leading-5 text-foreground"

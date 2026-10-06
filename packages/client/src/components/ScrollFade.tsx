@@ -27,12 +27,9 @@ export const scrollFadeHeight = { top: 28, bottom: 36 } as const;
 
 // The ease iOS uses when a transparent header gains its scroll edge.
 const fadeEasing = Easing.bezier(0.25, 0.1, 0.25, 1);
-const fadeIn = FadeIn.duration(200)
-  .easing(fadeEasing)
-  .reduceMotion(ReduceMotion.System);
-const fadeOut = FadeOut.duration(200)
-  .easing(fadeEasing)
-  .reduceMotion(ReduceMotion.System);
+const [fadeIn, fadeOut] = [FadeIn, FadeOut].map((animation) =>
+  animation.duration(200).easing(fadeEasing).reduceMotion(ReduceMotion.System),
+);
 
 // A gradient from the surface colour to transparent where a list meets its edge; it fades in and out.
 export function ScrollFade({
@@ -126,15 +123,12 @@ export function useScrollFadeEdges() {
 export interface ScrollFadeViewProps extends ScrollViewProps {
   // The surface colour the content fades into, as for ScrollFade.
   surfaceClassName?: string;
-  // Classes for the scroll view itself; className sizes the frame around it.
-  scrollClassName?: string;
 }
 
 // A scroll view whose content fades under the header above it and the edge below it.
 export function ScrollFadeView({
   surfaceClassName,
   className,
-  scrollClassName,
   onScroll,
   onContentSizeChange,
   onLayout,
@@ -146,7 +140,7 @@ export function ScrollFadeView({
       <ScrollView
         scrollEventThrottle={16}
         {...props}
-        className={scrollClassName}
+        className="flex-1"
         onScroll={(event) => {
           fade.onScroll(event);
           onScroll?.(event);

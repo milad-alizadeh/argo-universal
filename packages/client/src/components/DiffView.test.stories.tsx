@@ -63,7 +63,7 @@ export const InspectorFileShowsEveryLine: Story = {
       await expect(header).toHaveAttribute('aria-expanded', 'true');
       const numberColors: string[] = [];
       for (const [text, sign] of [
-        ['old value 1', '-'],
+        ['old value 1', '\u2212'],
         ['new value 1', '+'],
       ] as const) {
         const row = canvas.getByText(text).parentElement;

@@ -3,9 +3,8 @@ import { View } from 'react-native';
 import { expect, screen, waitFor } from 'storybook/test';
 import { DesktopShellMock } from '../../mocks/desktop-shell-mock';
 import { expectFadeColor } from '../../mocks/fade-color';
-import { recordedFile } from '../../mocks/feed-edit-mock';
+import { InspectorFilesMock } from '../../mocks/inspector-files-mock';
 import { UpdatingShellMock } from '../../mocks/updating-shell-mock';
-import { DiffView } from './DiffView';
 
 const meta = {
   title: 'Tests/DesktopShell',
@@ -715,13 +714,7 @@ export const HeaderMenuDoesNotOpenInspector: Story = {
 export const InspectorFadesIntoTheAppBackground: Story = {
   args: {
     inspectorState: 'open',
-    inspector: (
-      <View>
-        <DiffView file={recordedFile('agent-2', 'edit-states')} />
-        <DiffView file={recordedFile('agent-1')} />
-        <DiffView file={recordedFile('agent-2', 'edit-states', 'delete')} />
-      </View>
-    ),
+    inspector: <InspectorFilesMock />,
   },
   play: async ({ canvas }) => {
     const { page } = await import('vitest/browser');
