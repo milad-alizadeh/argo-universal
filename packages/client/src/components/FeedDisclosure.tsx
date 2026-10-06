@@ -19,6 +19,8 @@ export interface FeedDisclosureProps {
   failed?: boolean;
   initialOpen?: boolean;
   trailing?: string;
+  awaitingApproval?: boolean;
+  denied?: boolean;
   children: ReactNode;
 }
 
@@ -29,6 +31,8 @@ export function FeedDisclosure({
   failed = false,
   initialOpen = false,
   trailing,
+  awaitingApproval = false,
+  denied = false,
   children,
 }: FeedDisclosureProps) {
   const [open, setOpen] = useState(initialOpen);
@@ -54,7 +58,7 @@ export function FeedDisclosure({
             />
           </View>
           <View className="min-w-0 shrink flex-row items-center gap-1">
-            {running ? (
+            {running && !awaitingApproval ? (
               <ShimmerText
                 text={title}
                 emphasized={hovered}
@@ -67,10 +71,19 @@ export function FeedDisclosure({
                 className={cn(
                   'min-w-0 shrink text-sm leading-5 text-muted-foreground',
                   hovered && 'text-foreground',
+                  awaitingApproval && 'text-warning',
+                  denied && 'line-through',
                 )}
               >
                 {title}
               </Text>
+            )}
+            {awaitingApproval && (
+              <View className="rounded-sm border border-warning/20 bg-warning/10 px-1.5">
+                <Text className="text-xs leading-4.5 text-warning">
+                  Awaiting approval
+                </Text>
+              </View>
             )}
             <DisclosureCaret
               open={open}

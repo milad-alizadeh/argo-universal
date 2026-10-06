@@ -40,7 +40,7 @@ export function ToolCallGroup({
     )
       return [activity];
     if (activity.type === 'tool_call' && activity.row.id === latest.id)
-      return [];
+      return latest._meta?.argo?.permissionOutcome ? [activity] : [];
     if (activity.type === 'exploration') {
       const remaining = activity.toolCalls.filter(
         (row) => row.id !== latest.id,
@@ -54,6 +54,7 @@ export function ToolCallGroup({
       label={running && latest ? toolCallTitle(latest) : group.title}
       icon={running && latest ? toolCallIcon(latest) : BookOpenIcon}
       running={running}
+      awaitingApproval={group.title === 'Awaiting approval'}
       initialOpen={initialOpen}
       trailing={running ? duration : undefined}
     >
