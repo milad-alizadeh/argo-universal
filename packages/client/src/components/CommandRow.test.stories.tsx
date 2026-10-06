@@ -25,15 +25,26 @@ export const Completed: Story = {
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       const row = canvas.getByRole('button', {
-        name: 'Ran cat hello.txt && git status --short',
+        name: 'Show hello.txt and short git status',
       });
       await expect(row).toBeVisible();
       await expect(canvas.getByText('0.3s')).toBeVisible();
+      await expect(canvas.getByText('Shell')).toBeVisible();
+      await expect(
+        canvas.getByText('$ cat hello.txt && git status --short', {
+          exact: false,
+        }),
+      ).toBeVisible();
+      await expect(row).not.toHaveTextContent(
+        'cat hello.txt && git status --short',
+      );
       await expect(canvas.getByText(/hello Argo/)).toBeVisible();
       await expect(row).toHaveAttribute('aria-expanded', 'false');
       await userEvent.click(row);
       await expect(
-        canvas.getByText('$ cat hello.txt && git status --short'),
+        canvas.getByText('$ cat hello.txt && git status --short', {
+          exact: false,
+        }),
       ).toBeVisible();
       await expect(canvas.getByText('Completed')).toBeVisible();
       await expect(canvas.getByText(completedCommand.title)).toBeVisible();
@@ -49,21 +60,23 @@ export const OutputDisclosure: Story = {
     const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
-      const row = canvas.getByRole('button');
+      const row = canvas.getByRole('button', { name: 'Ran command' });
       await expect(
-        canvas.queryByText(/^Preparing checks\nChecking files/, {
+        canvas.queryByText(/\nPreparing checks\nChecking files/, {
           normalizer: (value) => value,
         }),
       ).not.toBeInTheDocument();
       await expect(canvas.getByText('+2 lines')).toBeVisible();
+      await expect(canvas.getByText('Shell')).toBeVisible();
+      await expect(row).toHaveAccessibleName('Ran command');
       await expect(
-        canvas.getByText('hello Argo\n M hello.txt\n?? notes.md', {
+        canvas.getByText(/hello Argo\n M hello.txt\n\?\? notes.md$/, {
           normalizer: (value) => value,
         }),
       ).toBeVisible();
       await userEvent.click(row);
       await expect(
-        canvas.getByText(/^Preparing checks\nChecking files/, {
+        canvas.getByText(/\nPreparing checks\nChecking files/, {
           normalizer: (value) => value,
         }),
       ).toBeVisible();
@@ -81,17 +94,21 @@ export const Failed: Story = {
       await page.viewport(width, 844);
       const failure = canvas.getByText('exit 2 · 0s');
       await expect(failure).toBeVisible();
-      const label = canvas.getByText(/^Ran /);
+      const label = canvas.getByText('Ran command');
       await expect(getComputedStyle(failure).color).not.toBe(
         getComputedStyle(label).color,
       );
-      await userEvent.click(canvas.getByRole('button'));
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Ran command' }),
+      );
       const exit = canvas.getByText('Exit 2');
       await expect(exit).toBeVisible();
       await expect(getComputedStyle(exit).color).toBe(
         getComputedStyle(failure).color,
       );
-      await userEvent.click(canvas.getByRole('button'));
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Ran command' }),
+      );
     }
   },
 };
@@ -103,10 +120,19 @@ export const Running: Story = {
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       const row = canvas.getByRole('button', {
-        name: 'Running cat hello.txt && git status --short',
+        name: 'Show hello.txt and short git status',
       });
       await expect(row).toBeVisible();
       await expect(canvas.getByText('23s')).toBeVisible();
+      await expect(canvas.getByText('Shell')).toBeVisible();
+      await expect(
+        canvas.getByText('$ cat hello.txt && git status --short', {
+          exact: false,
+        }),
+      ).toBeVisible();
+      await expect(row).not.toHaveTextContent(
+        'cat hello.txt && git status --short',
+      );
       const spinner = canvas.getByRole('progressbar');
       const before = getComputedStyle(spinner).transform;
       await waitFor(() =>
@@ -133,8 +159,8 @@ export const AgentParity: Story = {
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       for (const label of [
-        'Ran cat hello.txt && git status --short',
-        "Ran /bin/zsh -lc 'cat app.txt notes.md'",
+        'Show hello.txt and short git status',
+        'Ran command',
       ]) {
         const row = canvas.getByRole('button', { name: label });
         await expect(row).toBeVisible();
@@ -153,7 +179,7 @@ export const Stopped: Story = {
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       const row = canvas.getByRole('button', {
-        name: 'Stopped sleep 20 && echo done',
+        name: 'Wait 20 seconds then print done',
       });
       await expect(row).toBeVisible();
       await expect(canvas.getByText('after 1.5s')).toBeVisible();

@@ -24,7 +24,7 @@ const recordedItemTypes: Record<string, string[]> = {
   'agent-2/image-prompt': ['row', 'row'],
   'agent-1/markdown-answer': ['row', 'thought', 'row'],
   'agent-2/markdown-answer': ['row', 'thought', 'row'],
-  'agent-2/command-outcomes': ['row', 'group', 'row'],
+  'agent-2/command-outcomes': ['row', 'row', 'group', 'row'],
 };
 
 function toolCalls(rows: SessionUpdate[]): ToolCallUpdate[] {

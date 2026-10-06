@@ -3,9 +3,10 @@ import { CheckIcon } from 'phosphor-react-native/src/icons/Check';
 import { TerminalWindowIcon } from 'phosphor-react-native/src/icons/TerminalWindow';
 import { XIcon } from 'phosphor-react-native/src/icons/X';
 import { useEffect, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 import { cn } from '#lib/utils';
 import { Text } from '#primitives/text';
+import { FeedCodeBlock } from './FeedCodeBlock';
 import { FeedDisclosure } from './FeedDisclosure';
 import { Icon } from './Icon';
 
@@ -48,6 +49,10 @@ export function CommandRow({ row, initialOpen, now }: CommandRowProps) {
   let action = 'Ran';
   if (stopped) action = 'Stopped';
   if (running) action = 'Running';
+  const title =
+    row.title && row.title !== terminal.command
+      ? row.title
+      : `${action} command`;
   const outputLines = terminal.output
     .replace(/\r\n/g, '\n')
     .replace(/\n$/, '')
@@ -55,7 +60,7 @@ export function CommandRow({ row, initialOpen, now }: CommandRowProps) {
   const hiddenLines = Math.max(0, outputLines.length - 3);
   return (
     <FeedDisclosure
-      label={`${action} ${terminal.command}`}
+      label={title}
       icon={TerminalWindowIcon}
       failed={failed}
       running={running}
@@ -73,34 +78,21 @@ export function CommandRow({ row, initialOpen, now }: CommandRowProps) {
         )
       }
       preview={
-        Boolean(terminal.output) && (
-          <View className="overflow-hidden rounded-xl border border-border bg-sidebar">
-            <CommandOutput
-              output={outputLines.slice(-3).join('\n')}
-              running={running}
-            />
-            {hiddenLines > 0 && (
+        <FeedCodeBlock
+          language="Shell"
+          code={commandCode(terminal.command, outputLines.slice(-3).join('\n'))}
+          footer={
+            hiddenLines > 0 && (
               <Text className="border-t border-border px-3 py-0.5 text-sm leading-5 text-muted-foreground">{`+${hiddenLines} lines`}</Text>
-            )}
-          </View>
-        )
+            )
+          }
+        />
       }
     >
-      <View className="gap-2">
-        {row.title !== terminal.command && (
-          <Text className="text-sm leading-5 text-muted-foreground">
-            {row.title}
-          </Text>
-        )}
-        <View className="overflow-hidden rounded-xl border border-border bg-sidebar">
-          <ScrollView
-            horizontal
-            className="w-full border-b border-border"
-            contentContainerClassName="px-3 py-2"
-          >
-            <Text className="font-mono text-xs leading-5 text-foreground">{`$ ${terminal.command}`}</Text>
-          </ScrollView>
-          <CommandOutput output={terminal.output} running={running} />
+      <FeedCodeBlock
+        language="Shell"
+        code={commandCode(terminal.command, outputLines.join('\n'))}
+        footer={
           <View className="flex-row items-center gap-1.5 px-3 pb-2">
             {!running && !stopped && (
               <Icon
@@ -120,33 +112,12 @@ export function CommandRow({ row, initialOpen, now }: CommandRowProps) {
               {outcome}
             </Text>
           </View>
-        </View>
-      </View>
+        }
+      />
     </FeedDisclosure>
   );
 }
 
-function CommandOutput({
-  output,
-  running,
-}: {
-  output: string;
-  running: boolean;
-}) {
-  return (
-    <ScrollView
-      horizontal
-      className="w-full"
-      contentContainerClassName="px-3 py-2"
-    >
-      <Text
-        className={cn(
-          'font-mono text-xs leading-5 text-foreground',
-          running && 'text-muted-foreground',
-        )}
-      >
-        {output}
-      </Text>
-    </ScrollView>
-  );
+function commandCode(command: string, output: string) {
+  return output ? `$ ${command}\n${output}` : `$ ${command}`;
 }

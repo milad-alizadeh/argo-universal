@@ -1,6 +1,6 @@
 import { setStringAsync } from 'expo-clipboard';
 import { CheckIcon, CopyIcon } from 'phosphor-react-native';
-import { useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { Platform, Pressable, ScrollView, View } from 'react-native';
 import { cn } from '#lib/utils';
 import { Text } from '#primitives/text';
@@ -9,12 +9,13 @@ import { Icon } from './Icon';
 export interface FeedCodeBlockProps {
   code: string;
   language?: string;
+  footer?: ReactNode;
 }
 
 const copiedForMs = 2000;
 
 // A fenced code block: its language, a Copy icon shown on hover, and code that scrolls sideways.
-export function FeedCodeBlock({ code, language }: FeedCodeBlockProps) {
+export function FeedCodeBlock({ code, language, footer }: FeedCodeBlockProps) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -58,6 +59,7 @@ export function FeedCodeBlock({ code, language }: FeedCodeBlockProps) {
           {code}
         </Text>
       </ScrollView>
+      {footer}
     </Pressable>
   );
 }

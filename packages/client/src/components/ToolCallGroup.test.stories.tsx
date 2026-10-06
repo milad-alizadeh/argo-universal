@@ -36,7 +36,7 @@ export const Settled: Story = {
       ).toBeVisible();
       await expect(
         canvas.getByRole('button', {
-          name: 'Ran cat hello.txt && git status --short',
+          name: 'Show hello.txt and short git status',
         }),
       ).toBeVisible();
       await userEvent.click(group);
@@ -59,11 +59,7 @@ export const Running: Story = {
       await expect(
         canvas.getByRole('button', { name: 'Explored' }),
       ).toBeVisible();
-      await expect(
-        canvas.queryByRole('button', {
-          name: 'Running cat hello.txt && git status --short',
-        }),
-      ).not.toBeInTheDocument();
+      await expect(canvas.queryByText('Shell')).not.toBeInTheDocument();
       await userEvent.click(group);
     }
   },
