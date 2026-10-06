@@ -24,10 +24,15 @@
       "passThroughEnv": ["PLAYWRIGHT_*"]
     },
     "test:electron": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "^package"],
       "outputs": ["playwright-report/**"],
       // xvfb-run hands Electron its display through XAUTHORITY.
       "passThroughEnv": ["PLAYWRIGHT_*", "XAUTHORITY"]
+    },
+    // Electron Forge's package; e2e launches Electron from .vite/build, so the 300 MB out/ stays out of the shared cache.
+    "package": {
+      "dependsOn": ["^transit"],
+      "outputs": [".vite/build/**"]
     },
     // No package has this script; it only carries dependency hashes so a change in a dependency misses its dependents' test cache.
     "transit": {
