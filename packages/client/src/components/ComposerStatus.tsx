@@ -5,6 +5,9 @@ import {
   CheckIcon,
   CircleIcon,
   GaugeIcon,
+  ListChecksIcon,
+  RobotIcon,
+  TerminalIcon,
 } from 'phosphor-react-native';
 import { ActivityIndicator, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
@@ -17,6 +20,8 @@ import { Icon } from './Icon';
 
 export interface ComposerStatusProps {
   plan?: PlanEntry[];
+  subagents?: { count: number; running: boolean; onPress: () => void };
+  shells?: { count: number; running: boolean; onPress: () => void };
   usage?: {
     limits: { label: string; usedPercent: number; resets: string }[];
   };
@@ -26,15 +31,17 @@ export interface ComposerStatusProps {
 function Meter({
   percent,
   warning = false,
+  className,
 }: {
   percent: number;
   warning?: boolean;
+  className?: string;
 }) {
   return (
     <View
       role="progressbar"
       accessibilityValue={{ min: 0, max: 100, now: percent }}
-      className="h-1.5 rounded-full bg-muted overflow-hidden"
+      className={cn('h-1.5 rounded-full bg-muted overflow-hidden', className)}
     >
       <View
         className={cn(
@@ -45,7 +52,7 @@ function Meter({
       />
       {warning && (
         <View
-          className="absolute top-0 bottom-0 w-px bg-background"
+          className="absolute top-0 bottom-0 w-0.5 bg-background"
           style={{ left: '20%' }}
         />
       )}
@@ -101,20 +108,24 @@ export function ComposerPlan({
   return (
     <ComposerPopover
       label="Plan"
-      width={360}
+      width={420}
       trigger={
         <Button
           variant="ghost"
           disabled={disabled}
           accessibilityLabel="Plan"
-          className="h-7 sm:h-7 px-1.5 gap-1.5 wide:w-full justify-start"
+          className="h-7 sm:h-7 px-0 has-[>svg]:px-0 gap-2 wide:w-full justify-start"
         >
+          <Icon
+            as={ListChecksIcon}
+            className="size-3.5 text-muted-foreground"
+          />
           <View className="flex-row gap-0.5">
             {entries.map((entry) => (
               <View
                 key={entry.content}
                 className={cn(
-                  'w-2 wide:w-3.5 h-1 rounded-xs bg-border',
+                  'w-1.5 wide:w-3.5 h-1 rounded-xs bg-border',
                   entry.status === 'completed' && 'bg-foreground',
                 )}
               />
@@ -122,68 +133,91 @@ export function ComposerPlan({
           </View>
           <Text
             selectable={false}
-            className="select-none hidden wide:flex text-xs"
+            className="select-none hidden wide:flex text-xs font-normal text-muted-foreground"
           >
             Plan
           </Text>
           <Text
             selectable={false}
-            className="select-none text-xs text-muted-foreground font-medium"
+            className="select-none text-xs text-muted-foreground font-normal"
           >
             {done}/{entries.length}
           </Text>
           <Text
             selectable={false}
             numberOfLines={1}
-            className="select-none hidden wide:flex flex-1 min-w-0 text-sm leading-5 text-foreground"
+            className="select-none hidden wide:flex flex-1 min-w-0 text-xs leading-4 font-normal text-foreground"
           >
             {entries.find((entry) => entry.status === 'in_progress')?.content}
           </Text>
-          <Icon
-            as={CaretUpIcon}
-            className="hidden wide:flex size-3.5 text-muted-foreground"
-          />
+          <View className="hidden wide:flex">
+            <Icon as={CaretUpIcon} className="size-3 text-muted-foreground" />
+          </View>
         </Button>
       }
     >
       {() => (
-        <View className="py-2 wide:p-4 gap-1">
-          <Text
-            selectable={false}
-            className="select-none px-4 wide:px-0 text-lg wide:text-sm font-semibold"
-          >
-            Plan
-          </Text>
-          {entries.map((entry) => (
-            <View
-              key={entry.content}
-              className="flex-row items-start px-4 wide:px-0 py-2 gap-3"
-            >
-              {entry.status === 'in_progress' ? (
-                <ActivityIndicator
-                  size="small"
-                  colorClassName="accent-muted-foreground"
-                  accessibilityLabel={`${entry.content} in progress`}
-                  className="size-4 mt-1"
-                />
-              ) : (
-                <Icon
-                  as={entry.status === 'completed' ? CheckIcon : CircleIcon}
-                  className="size-4 mt-1 text-muted-foreground"
-                />
-              )}
+        <View>
+          <View className="px-4 py-3 gap-1.5">
+            <View className="flex-row items-center gap-2">
+              <Icon
+                as={ListChecksIcon}
+                className="size-3.5 text-muted-foreground"
+              />
               <Text
                 selectable={false}
-                className={cn(
-                  'select-none',
-                  'flex-1 text-base wide:text-sm',
-                  entry.status === 'completed' && 'text-muted-foreground',
-                )}
+                className="select-none text-sm leading-5 font-medium"
               >
-                {entry.content}
+                Plan
               </Text>
             </View>
-          ))}
+            <View className="flex-row items-center gap-2">
+              <View className="w-16">
+                <Meter
+                  percent={(done / entries.length) * 100}
+                  className="h-1"
+                />
+              </View>
+              <Text
+                selectable={false}
+                className="select-none text-xs leading-4 text-muted-foreground"
+              >
+                {done} of {entries.length} done
+              </Text>
+            </View>
+          </View>
+          <View className="py-1 border-t border-border">
+            {entries.map((entry) => (
+              <View
+                key={entry.content}
+                className="flex-row items-start px-4 py-2 gap-2.5"
+              >
+                {entry.status === 'in_progress' ? (
+                  <ActivityIndicator
+                    size="small"
+                    colorClassName="accent-muted-foreground"
+                    accessibilityLabel={`${entry.content} in progress`}
+                    className="size-3.5 mt-0.5"
+                  />
+                ) : (
+                  <Icon
+                    as={entry.status === 'completed' ? CheckIcon : CircleIcon}
+                    className="size-3.5 mt-0.5 text-muted-foreground"
+                  />
+                )}
+                <Text
+                  selectable={false}
+                  className={cn(
+                    'select-none',
+                    'flex-1 text-sm leading-5 font-normal',
+                    entry.status === 'completed' && 'text-muted-foreground',
+                  )}
+                >
+                  {entry.content}
+                </Text>
+              </View>
+            ))}
+          </View>
         </View>
       )}
     </ComposerPopover>
@@ -203,7 +237,7 @@ export function ComposerStatusControls({
       ? Math.round((context.used / context.size) * 100)
       : 0;
   return (
-    <View className="flex-row gap-1 items-center">
+    <View className="flex-row gap-1 items-center min-w-0">
       {status.usage && (
         <ComposerPopover
           label="Usage"
@@ -213,12 +247,12 @@ export function ComposerStatusControls({
               variant="ghost"
               disabled={disabled}
               accessibilityLabel="Usage"
-              className="h-7 sm:h-7 px-1.5 gap-1"
+              className="h-7 sm:h-7 px-1 has-[>svg]:px-1 wide:px-1.5 wide:has-[>svg]:px-1.5 gap-1"
             >
               <Icon as={GaugeIcon} className="size-3.5 text-muted-foreground" />
               <Text
                 selectable={false}
-                className="select-none hidden wide:flex text-xs font-medium"
+                className="select-none hidden wide:flex text-xs font-normal text-foreground"
               >
                 Usage
               </Text>
@@ -236,7 +270,7 @@ export function ComposerStatusControls({
               <View className="px-4 gap-1 pb-3">
                 <Text
                   selectable={false}
-                  className="select-none text-lg wide:text-sm font-semibold"
+                  className="select-none text-sm leading-5 font-medium"
                 >
                   Usage
                 </Text>
@@ -249,13 +283,13 @@ export function ComposerStatusControls({
                   <View className="flex-row justify-between">
                     <Text
                       selectable={false}
-                      className="select-none text-base wide:text-sm"
+                      className="select-none text-sm leading-5 font-normal"
                     >
                       {limit.label}
                     </Text>
                     <Text
                       selectable={false}
-                      className="select-none text-base wide:text-sm font-semibold"
+                      className="select-none text-sm leading-5 font-medium"
                     >
                       {limit.usedPercent}%
                     </Text>
@@ -263,7 +297,7 @@ export function ComposerStatusControls({
                   <Meter percent={limit.usedPercent} />
                   <Text
                     selectable={false}
-                    className="select-none text-sm wide:text-xs text-muted-foreground"
+                    className="select-none text-xs leading-4 text-muted-foreground"
                   >
                     {limit.resets}
                   </Text>
@@ -282,46 +316,55 @@ export function ComposerStatusControls({
               variant="ghost"
               disabled={disabled}
               accessibilityLabel="Context window"
-              className="h-7 sm:h-7 px-1.5 gap-1"
+              className="h-7 sm:h-7 px-1 has-[>svg]:px-1 wide:px-1.5 wide:has-[>svg]:px-1.5 gap-1"
             >
               <ContextRing percent={percent} />
               <Text
                 selectable={false}
-                className="select-none hidden wide:flex text-xs font-medium"
+                className="select-none hidden wide:flex text-xs font-normal text-foreground"
               >
                 Context
               </Text>
-              <Text
-                selectable={false}
-                className="select-none text-xs text-muted-foreground"
-              >
-                {compactNumber(context.used)} / {compactNumber(context.size)}
-              </Text>
+              <View className="flex-row">
+                <Text
+                  selectable={false}
+                  className="select-none text-xs leading-4 font-normal text-muted-foreground"
+                >
+                  {compactNumber(context.used)}
+                </Text>
+                <Text
+                  selectable={false}
+                  className="select-none hidden wide:flex text-xs font-normal text-muted-foreground"
+                >
+                  {' '}
+                  / {compactNumber(context.size)}
+                </Text>
+              </View>
             </Button>
           }
         >
           {(close) => (
-            <View className="pt-1 wide:p-4 gap-3.5">
-              <View className="px-4 wide:px-0 gap-1">
+            <View className="p-4 gap-3.5">
+              <View className="px-0 gap-1">
                 <Text
                   selectable={false}
-                  className="select-none text-lg wide:text-sm font-semibold"
+                  className="select-none text-sm leading-5 font-medium"
                 >
                   Context window
                 </Text>
                 <Text
                   selectable={false}
-                  className="select-none text-sm wide:text-xs text-muted-foreground"
+                  className="select-none text-xs leading-4 text-muted-foreground"
                 >
                   Instructions, tools, files and the conversation the Agent
                   reads for its next reply.
                 </Text>
               </View>
-              <View className="px-4 wide:px-0 gap-2">
+              <View className="px-0 gap-2">
                 <View className="flex-row items-baseline gap-1">
                   <Text
                     selectable={false}
-                    className="select-none text-xl font-semibold"
+                    className="select-none text-xl leading-6 font-normal"
                   >
                     {compactNumber(context.used)}
                   </Text>
@@ -335,7 +378,7 @@ export function ComposerStatusControls({
                     selectable={false}
                     className={cn(
                       'select-none',
-                      'ml-auto text-xs font-medium',
+                      'ml-auto text-xs font-normal',
                       percent < 20 ? 'text-success' : 'text-warning',
                     )}
                   >
@@ -344,7 +387,7 @@ export function ComposerStatusControls({
                 </View>
                 <Meter percent={percent} warning />
               </View>
-              <View className="border-t border-border px-4 wide:px-0 py-4 wide:py-3 gap-3">
+              <View className="border-t border-border px-0 pt-3 gap-2">
                 {[
                   {
                     label: 'Smart zone · below 20%',
@@ -366,13 +409,13 @@ export function ComposerStatusControls({
                     <View className="flex-1 gap-0.5">
                       <Text
                         selectable={false}
-                        className="select-none text-base wide:text-xs font-medium"
+                        className="select-none text-xs leading-4 font-normal"
                       >
                         {zone.label}
                       </Text>
                       <Text
                         selectable={false}
-                        className="select-none text-sm wide:text-xs text-muted-foreground"
+                        className="select-none text-xs leading-4 text-muted-foreground"
                       >
                         {zone.explanation}
                       </Text>
@@ -380,16 +423,16 @@ export function ComposerStatusControls({
                   </View>
                 ))}
               </View>
-              <View className="px-4 wide:px-0 gap-3 wide:flex-row wide:items-center">
+              <View className="px-0 gap-3 flex-row items-center">
                 <Text
                   selectable={false}
-                  className="select-none wide:flex-1 text-sm wide:text-xs text-muted-foreground"
+                  className="select-none flex-1 text-xs leading-4 text-muted-foreground"
                 >
                   Compact before the next task.
                 </Text>
                 <Button
                   variant="outline"
-                  className="h-12 sm:h-12 wide:h-7 wide:sm:h-7 rounded-xl wide:rounded-md gap-1.5"
+                  className="h-7 sm:h-7 rounded-md gap-1.5 px-2.5 has-[>svg]:px-2.5"
                   onPress={() => {
                     context.onCompact();
                     close();
@@ -401,7 +444,7 @@ export function ComposerStatusControls({
                   />
                   <Text
                     selectable={false}
-                    className="select-none text-base wide:text-xs"
+                    className="select-none text-xs leading-4 font-medium"
                   >
                     Compact
                   </Text>
@@ -410,6 +453,39 @@ export function ComposerStatusControls({
             </View>
           )}
         </ComposerPopover>
+      )}
+      {(status.subagents || status.shells) && (
+        <View className="wide:hidden flex-row items-center border-l border-border pl-1">
+          {(
+            [
+              ['Subagents', RobotIcon, status.subagents],
+              ['Shells', TerminalIcon, status.shells],
+            ] as const
+          ).map(
+            ([label, icon, work]) =>
+              work && (
+                <Button
+                  key={label}
+                  variant="ghost"
+                  disabled={disabled}
+                  accessibilityLabel={`${label}: ${work.count}`}
+                  onPress={work.onPress}
+                  className="h-7 sm:h-7 px-1 has-[>svg]:px-1 gap-1"
+                >
+                  <Icon as={icon} className="size-3.5" />
+                  <Text
+                    selectable={false}
+                    className={cn(
+                      'select-none text-xs leading-4 font-normal text-muted-foreground',
+                      work.running && 'text-success',
+                    )}
+                  >
+                    {work.count}
+                  </Text>
+                </Button>
+              ),
+          )}
+        </View>
       )}
     </View>
   );

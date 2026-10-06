@@ -25,7 +25,7 @@ export function Slider({
     ((value - minimumValue) / (maximumValue - minimumValue)) * 100;
   const steps = Math.round((maximumValue - minimumValue) / step) + 1;
   return (
-    <View className="relative h-8 justify-center">
+    <View className="relative h-4 justify-center">
       <input
         type="range"
         min={minimumValue}
@@ -48,7 +48,11 @@ export function Slider({
         {Array.from({ length: steps }, (_, index) => (
           <View
             key={index}
-            className="size-1 rounded-full bg-ring"
+            className={
+              minimumValue + index * step < value
+                ? 'size-1 rounded-full bg-primary-foreground'
+                : 'size-1 rounded-full bg-ring'
+            }
             style={{ opacity: minimumValue + index * step === value ? 0 : 1 }}
           />
         ))}

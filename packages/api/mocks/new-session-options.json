@@ -10,28 +10,9 @@
         "currentValue": "default",
         "options": [
           {
-            "value": "default",
-            "name": "Ask before edits",
-            "_meta": {
-              "argo": {
-                "icon": "ShieldCheck",
-                "tone": "safe"
-              }
-            }
-          },
-          {
-            "value": "acceptEdits",
-            "name": "Accept edits",
-            "_meta": {
-              "argo": {
-                "icon": "Pencil",
-                "tone": "moderate"
-              }
-            }
-          },
-          {
             "value": "plan",
-            "name": "Plan",
+            "name": "Plan mode",
+            "description": "Reads and plans, changes nothing",
             "_meta": {
               "argo": {
                 "icon": "ClipboardList",
@@ -40,8 +21,31 @@
             }
           },
           {
+            "value": "default",
+            "name": "Ask first",
+            "description": "Asks before edits and commands",
+            "_meta": {
+              "argo": {
+                "icon": "ShieldWarning",
+                "tone": "safe"
+              }
+            }
+          },
+          {
+            "value": "acceptEdits",
+            "name": "Accept edits",
+            "description": "Edits files without asking, asks before commands",
+            "_meta": {
+              "argo": {
+                "icon": "Pencil",
+                "tone": "moderate"
+              }
+            }
+          },
+          {
             "value": "auto",
             "name": "Auto",
+            "description": "Automatically checks permissions for each action",
             "_meta": {
               "argo": {
                 "icon": "Sparkles",
@@ -52,6 +56,7 @@
           {
             "value": "bypassPermissions",
             "name": "Bypass permissions",
+            "description": "Runs everything without asking",
             "_meta": {
               "argo": {
                 "icon": "ShieldOff",
@@ -87,7 +92,7 @@
                 "supportsAutoMode": true
               }
             },
-            "description": "Opus 5.5 · Best for everyday, complex tasks"
+            "description": "Best for everyday, complex tasks"
           },
           {
             "value": "haiku",
@@ -161,28 +166,9 @@
           "currentValue": "default",
           "options": [
             {
-              "value": "default",
-              "name": "Ask before edits",
-              "_meta": {
-                "argo": {
-                  "icon": "ShieldCheck",
-                  "tone": "safe"
-                }
-              }
-            },
-            {
-              "value": "acceptEdits",
-              "name": "Accept edits",
-              "_meta": {
-                "argo": {
-                  "icon": "Pencil",
-                  "tone": "moderate"
-                }
-              }
-            },
-            {
               "value": "plan",
-              "name": "Plan",
+              "name": "Plan mode",
+              "description": "Reads and plans, changes nothing",
               "_meta": {
                 "argo": {
                   "icon": "ClipboardList",
@@ -191,8 +177,31 @@
               }
             },
             {
+              "value": "default",
+              "name": "Ask first",
+              "description": "Asks before edits and commands",
+              "_meta": {
+                "argo": {
+                  "icon": "ShieldWarning",
+                  "tone": "safe"
+                }
+              }
+            },
+            {
+              "value": "acceptEdits",
+              "name": "Accept edits",
+              "description": "Edits files without asking, asks before commands",
+              "_meta": {
+                "argo": {
+                  "icon": "Pencil",
+                  "tone": "moderate"
+                }
+              }
+            },
+            {
               "value": "auto",
               "name": "Auto",
+              "description": "Automatically checks permissions for each action",
               "_meta": {
                 "argo": {
                   "icon": "Sparkles",
@@ -203,6 +212,7 @@
             {
               "value": "bypassPermissions",
               "name": "Bypass permissions",
+              "description": "Runs everything without asking",
               "_meta": {
                 "argo": {
                   "icon": "ShieldOff",
@@ -238,7 +248,7 @@
                   "supportsAutoMode": true
                 }
               },
-              "description": "Opus 5.5 · Best for everyday, complex tasks"
+              "description": "Best for everyday, complex tasks"
             },
             {
               "value": "haiku",
@@ -311,28 +321,9 @@
           "currentValue": "default",
           "options": [
             {
-              "value": "default",
-              "name": "Ask before edits",
-              "_meta": {
-                "argo": {
-                  "icon": "ShieldCheck",
-                  "tone": "safe"
-                }
-              }
-            },
-            {
-              "value": "acceptEdits",
-              "name": "Accept edits",
-              "_meta": {
-                "argo": {
-                  "icon": "Pencil",
-                  "tone": "moderate"
-                }
-              }
-            },
-            {
               "value": "plan",
-              "name": "Plan",
+              "name": "Plan mode",
+              "description": "Reads and plans, changes nothing",
               "_meta": {
                 "argo": {
                   "icon": "ClipboardList",
@@ -341,8 +332,31 @@
               }
             },
             {
+              "value": "default",
+              "name": "Ask first",
+              "description": "Asks before edits and commands",
+              "_meta": {
+                "argo": {
+                  "icon": "ShieldWarning",
+                  "tone": "safe"
+                }
+              }
+            },
+            {
+              "value": "acceptEdits",
+              "name": "Accept edits",
+              "description": "Edits files without asking, asks before commands",
+              "_meta": {
+                "argo": {
+                  "icon": "Pencil",
+                  "tone": "moderate"
+                }
+              }
+            },
+            {
               "value": "bypassPermissions",
               "name": "Bypass permissions",
+              "description": "Runs everything without asking",
               "_meta": {
                 "argo": {
                   "icon": "ShieldOff",
@@ -378,7 +392,7 @@
                   "supportsAutoMode": true
                 }
               },
-              "description": "Opus 5.5 · Best for everyday, complex tasks"
+              "description": "Best for everyday, complex tasks"
             },
             {
               "value": "haiku",
@@ -422,28 +436,9 @@
           "currentValue": "default",
           "options": [
             {
-              "value": "default",
-              "name": "Ask before edits",
-              "_meta": {
-                "argo": {
-                  "icon": "ShieldCheck",
-                  "tone": "safe"
-                }
-              }
-            },
-            {
-              "value": "acceptEdits",
-              "name": "Accept edits",
-              "_meta": {
-                "argo": {
-                  "icon": "Pencil",
-                  "tone": "moderate"
-                }
-              }
-            },
-            {
               "value": "plan",
-              "name": "Plan",
+              "name": "Plan mode",
+              "description": "Reads and plans, changes nothing",
               "_meta": {
                 "argo": {
                   "icon": "ClipboardList",
@@ -452,8 +447,31 @@
               }
             },
             {
+              "value": "default",
+              "name": "Ask first",
+              "description": "Asks before edits and commands",
+              "_meta": {
+                "argo": {
+                  "icon": "ShieldWarning",
+                  "tone": "safe"
+                }
+              }
+            },
+            {
+              "value": "acceptEdits",
+              "name": "Accept edits",
+              "description": "Edits files without asking, asks before commands",
+              "_meta": {
+                "argo": {
+                  "icon": "Pencil",
+                  "tone": "moderate"
+                }
+              }
+            },
+            {
               "value": "auto",
               "name": "Auto",
+              "description": "Automatically checks permissions for each action",
               "_meta": {
                 "argo": {
                   "icon": "Sparkles",
@@ -464,6 +482,7 @@
             {
               "value": "bypassPermissions",
               "name": "Bypass permissions",
+              "description": "Runs everything without asking",
               "_meta": {
                 "argo": {
                   "icon": "ShieldOff",
@@ -499,7 +518,7 @@
                   "supportsAutoMode": true
                 }
               },
-              "description": "Opus 5.5 · Best for everyday, complex tasks"
+              "description": "Best for everyday, complex tasks"
             },
             {
               "value": "haiku",
@@ -589,24 +608,26 @@
         "currentValue": "default",
         "options": [
           {
-            "value": "default",
-            "name": "Ask before edits",
-            "_meta": {
-              "argo": {
-                "icon": "ShieldCheck",
-                "tone": "safe"
-              }
-            }
-          },
-          {
             "value": "plan",
-            "name": "Plan",
+            "name": "Plan mode",
             "_meta": {
               "argo": {
                 "icon": "ClipboardList",
                 "tone": "planning"
               }
-            }
+            },
+            "description": "Reads and plans, changes nothing"
+          },
+          {
+            "value": "default",
+            "name": "Ask first",
+            "_meta": {
+              "argo": {
+                "icon": "ShieldWarning",
+                "tone": "safe"
+              }
+            },
+            "description": "Asks before edits and commands"
           },
           {
             "value": "fullAccess",
@@ -691,32 +712,32 @@
         "options": [
           {
             "value": "low",
-            "name": "low",
+            "name": "Low",
             "description": "Fast responses with lighter reasoning"
           },
           {
             "value": "medium",
-            "name": "medium",
+            "name": "Medium",
             "description": "Balances speed and reasoning depth for everyday tasks"
           },
           {
             "value": "high",
-            "name": "high",
+            "name": "High",
             "description": "Greater reasoning depth for complex problems"
           },
           {
             "value": "xhigh",
-            "name": "xhigh",
+            "name": "Extra high",
             "description": "Extra high reasoning depth for complex problems"
           },
           {
             "value": "max",
-            "name": "max",
+            "name": "Max",
             "description": "Maximum reasoning depth for the hardest problems"
           },
           {
             "value": "ultra",
-            "name": "ultra",
+            "name": "Ultra",
             "description": "Maximum reasoning with automatic task delegation"
           }
         ]
@@ -732,24 +753,26 @@
           "currentValue": "default",
           "options": [
             {
-              "value": "default",
-              "name": "Ask before edits",
-              "_meta": {
-                "argo": {
-                  "icon": "ShieldCheck",
-                  "tone": "safe"
-                }
-              }
-            },
-            {
               "value": "plan",
-              "name": "Plan",
+              "name": "Plan mode",
               "_meta": {
                 "argo": {
                   "icon": "ClipboardList",
                   "tone": "planning"
                 }
-              }
+              },
+              "description": "Reads and plans, changes nothing"
+            },
+            {
+              "value": "default",
+              "name": "Ask first",
+              "_meta": {
+                "argo": {
+                  "icon": "ShieldWarning",
+                  "tone": "safe"
+                }
+              },
+              "description": "Asks before edits and commands"
             },
             {
               "value": "fullAccess",
@@ -834,32 +857,32 @@
           "options": [
             {
               "value": "low",
-              "name": "low",
+              "name": "Low",
               "description": "Fast responses with lighter reasoning"
             },
             {
               "value": "medium",
-              "name": "medium",
+              "name": "Medium",
               "description": "Balances speed and reasoning depth for everyday tasks"
             },
             {
               "value": "high",
-              "name": "high",
+              "name": "High",
               "description": "Greater reasoning depth for complex problems"
             },
             {
               "value": "xhigh",
-              "name": "xhigh",
+              "name": "Extra high",
               "description": "Extra high reasoning depth for complex problems"
             },
             {
               "value": "max",
-              "name": "max",
+              "name": "Max",
               "description": "Maximum reasoning depth for the hardest problems"
             },
             {
               "value": "ultra",
-              "name": "ultra",
+              "name": "Ultra",
               "description": "Maximum reasoning with automatic task delegation"
             }
           ]
@@ -874,24 +897,26 @@
           "currentValue": "default",
           "options": [
             {
-              "value": "default",
-              "name": "Ask before edits",
-              "_meta": {
-                "argo": {
-                  "icon": "ShieldCheck",
-                  "tone": "safe"
-                }
-              }
-            },
-            {
               "value": "plan",
-              "name": "Plan",
+              "name": "Plan mode",
               "_meta": {
                 "argo": {
                   "icon": "ClipboardList",
                   "tone": "planning"
                 }
-              }
+              },
+              "description": "Reads and plans, changes nothing"
+            },
+            {
+              "value": "default",
+              "name": "Ask first",
+              "_meta": {
+                "argo": {
+                  "icon": "ShieldWarning",
+                  "tone": "safe"
+                }
+              },
+              "description": "Asks before edits and commands"
             },
             {
               "value": "fullAccess",
@@ -976,27 +1001,27 @@
           "options": [
             {
               "value": "low",
-              "name": "low",
+              "name": "Low",
               "description": "Fast responses with lighter reasoning"
             },
             {
               "value": "medium",
-              "name": "medium",
+              "name": "Medium",
               "description": "Balances speed and reasoning depth for everyday tasks"
             },
             {
               "value": "high",
-              "name": "high",
+              "name": "High",
               "description": "Greater reasoning depth for complex problems"
             },
             {
               "value": "xhigh",
-              "name": "xhigh",
+              "name": "Extra high",
               "description": "Extra high reasoning depth for complex problems"
             },
             {
               "value": "max",
-              "name": "max",
+              "name": "Max",
               "description": "Maximum reasoning depth for the hardest problems"
             }
           ]
@@ -1011,24 +1036,26 @@
           "currentValue": "default",
           "options": [
             {
-              "value": "default",
-              "name": "Ask before edits",
-              "_meta": {
-                "argo": {
-                  "icon": "ShieldCheck",
-                  "tone": "safe"
-                }
-              }
-            },
-            {
               "value": "plan",
-              "name": "Plan",
+              "name": "Plan mode",
               "_meta": {
                 "argo": {
                   "icon": "ClipboardList",
                   "tone": "planning"
                 }
-              }
+              },
+              "description": "Reads and plans, changes nothing"
+            },
+            {
+              "value": "default",
+              "name": "Ask first",
+              "_meta": {
+                "argo": {
+                  "icon": "ShieldWarning",
+                  "tone": "safe"
+                }
+              },
+              "description": "Asks before edits and commands"
             },
             {
               "value": "fullAccess",
@@ -1113,22 +1140,22 @@
           "options": [
             {
               "value": "low",
-              "name": "low",
+              "name": "Low",
               "description": "Fast responses with lighter reasoning"
             },
             {
               "value": "medium",
-              "name": "medium",
+              "name": "Medium",
               "description": "Balances speed and reasoning depth for everyday tasks"
             },
             {
               "value": "high",
-              "name": "high",
+              "name": "High",
               "description": "Greater reasoning depth for complex problems"
             },
             {
               "value": "xhigh",
-              "name": "xhigh",
+              "name": "Extra high",
               "description": "Extra high reasoning depth for complex problems"
             }
           ]

@@ -8,15 +8,22 @@ import type { AgentConfigValue } from '../src/agent-events';
 
 // The SDK names its modes only as a type, so this list and its names are ours; `dontAsk` is not offered.
 const modeNames = {
-  default: 'Ask before edits',
+  plan: 'Plan mode',
+  default: 'Ask first',
   acceptEdits: 'Accept edits',
-  plan: 'Plan',
   auto: 'Auto',
   bypassPermissions: 'Bypass permissions',
 } satisfies Partial<Record<PermissionMode, string>>;
 type Mode = keyof typeof modeNames;
+const modeDescriptions = {
+  default: 'Asks before edits and commands',
+  acceptEdits: 'Edits files without asking, asks before commands',
+  plan: 'Reads and plans, changes nothing',
+  auto: 'Automatically checks permissions for each action',
+  bypassPermissions: 'Runs everything without asking',
+} satisfies Record<Mode, string>;
 const modeMetadata = {
-  default: { icon: 'ShieldCheck', tone: 'safe' },
+  default: { icon: 'ShieldWarning', tone: 'safe' },
   acceptEdits: { icon: 'Pencil', tone: 'moderate' },
   plan: { icon: 'ClipboardList', tone: 'planning' },
   auto: { icon: 'Sparkles', tone: 'moderate' },
@@ -137,6 +144,7 @@ export function toConfigOptions(
       options: modesFor(model).map((mode) => ({
         value: mode,
         name: modeNames[mode],
+        description: modeDescriptions[mode],
         _meta: { argo: modeMetadata[mode] },
       })),
     },
@@ -162,7 +170,15 @@ export function toConfigOptions(
             supportsAutoMode: option.supportsAutoMode ?? false,
           },
         },
-        ...(option.description ? { description: option.description } : {}),
+        ...(option.description
+          ? {
+              description:
+                option.value === DEFAULT_VALUE &&
+                option.description.startsWith(`${modelName(option)} · `)
+                  ? option.description.slice(modelName(option).length + 3)
+                  : option.description,
+            }
+          : {}),
       })),
     },
   ];

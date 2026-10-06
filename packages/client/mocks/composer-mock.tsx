@@ -111,6 +111,8 @@ export function ComposerMock(
           ...(props.sessionStarted
             ? {
                 plan: composerPlan,
+                subagents: { count: 2, running: true, onPress: () => {} },
+                shells: { count: 1, running: false, onPress: () => {} },
                 context: {
                   used: usedContext,
                   size: 200_000,

@@ -5,6 +5,8 @@ import type {
 } from '@repo/contracts';
 import {
   CaretDownIcon,
+  CaretLeftIcon,
+  CaretRightIcon,
   CheckIcon,
   ClipboardTextIcon,
   GitBranchIcon,
@@ -17,7 +19,7 @@ import {
   SparkleIcon,
 } from 'phosphor-react-native';
 import { useState } from 'react';
-import { View } from 'react-native';
+import { useWindowDimensions, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import { withUniwind } from 'uniwind';
 import { cn } from '#lib/utils';
@@ -104,9 +106,11 @@ function Choice({
   onPress,
   dangerous = false,
   leading,
+  accessibilityLabel,
 }: {
   selected: boolean;
   label: string;
+  accessibilityLabel?: string;
   description?: string;
   onPress: () => void;
   dangerous?: boolean;
@@ -115,23 +119,29 @@ function Choice({
   return (
     <Button
       variant="ghost"
-      accessibilityLabel={label}
+      accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ selected }}
       aria-pressed={selected}
       onPress={onPress}
       className={cn(
-        'min-h-15 wide:min-h-8 h-auto sm:h-auto justify-start gap-3 wide:gap-2 px-4 wide:px-2 py-2 wide:py-1.5 rounded-none wide:rounded-sm',
+        'min-h-11 wide:min-h-8 h-auto sm:h-auto justify-start gap-2.5 px-2 py-1.5 rounded-sm',
         'web:focus-visible:ring-0 web:focus-visible:bg-accent',
         selected && 'bg-accent',
+        description && 'min-h-13 wide:min-h-0',
+        leading && 'items-start py-2',
       )}
     >
-      {leading}
-      <View className="flex-1 min-w-0 gap-0.5">
+      {leading && (
+        <View className="h-5 w-4 shrink-0 items-center justify-center">
+          {leading}
+        </View>
+      )}
+      <View className={cn('flex-1 min-w-0 gap-0.5', leading && 'gap-0')}>
         <Text
           selectable={false}
           className={cn(
             'select-none',
-            'text-base wide:text-sm leading-6 wide:leading-5 font-medium',
+            'text-sm leading-5 font-normal',
             dangerous && 'text-destructive',
           )}
         >
@@ -140,140 +150,167 @@ function Choice({
         {description && (
           <Text
             selectable={false}
-            className="select-none text-sm wide:text-xs leading-5 wide:leading-4 text-muted-foreground"
+            className="select-none text-xs leading-4 font-normal text-muted-foreground"
           >
             {description}
           </Text>
         )}
       </View>
-      <View className="size-5 wide:size-4 items-center justify-center">
-        {selected && <Icon as={CheckIcon} className="size-5 wide:size-4" />}
+      <View
+        className={cn(
+          'size-3.5 items-center justify-center',
+          leading && 'h-5 w-4',
+        )}
+      >
+        {selected && <Icon as={CheckIcon} className="size-3.5" />}
       </View>
     </Button>
   );
 }
 
-export function ComposerAgentControl({
-  configuration,
-  disabled,
-}: {
-  configuration: ComposerConfigurationProps;
-  disabled: boolean;
-}) {
-  const wide = useWide();
-  const current = configuration.agents.find(
-    (agent) => agent.agent === configuration.agent,
-  );
-  if (!configuration.onAgentChange)
-    return (
-      <View className="w-6 h-8 items-center justify-center">
-        <Logo agent={current} />
-      </View>
-    );
+function modelName(choice?: SessionConfigSelectOption) {
   return (
-    <ComposerPopover
-      label="Agent"
-      trigger={
-        <Button
-          variant="ghost"
-          disabled={disabled}
-          accessibilityLabel="Choose Agent"
-          size="icon"
-          className="size-8 sm:size-8"
-        >
-          <Logo agent={current} />
-        </Button>
-      }
-    >
-      {(close) => (
-        <View className="py-2 wide:p-1">
-          <Text
-            selectable={false}
-            className="select-none px-4 wide:px-2 pt-1 pb-2 text-lg wide:text-xs font-semibold wide:font-medium text-foreground wide:text-muted-foreground"
-          >
-            Agent
-          </Text>
-          {configuration.agents.map((agent) => (
-            <View key={agent.agent} className="flex-row items-center gap-2">
-              <Button
-                variant="ghost"
-                disabled={agent.availability !== 'available'}
-                accessibilityLabel={`Select ${agent.label}`}
-                accessibilityState={{
-                  selected: agent.agent === configuration.agent,
-                }}
-                aria-pressed={agent.agent === configuration.agent}
-                onPress={() => {
-                  configuration.onAgentChange?.(agent.agent);
-                  close();
-                }}
-                className={cn(
-                  'flex-1 min-w-0 min-h-15 wide:min-h-13 h-auto sm:h-auto px-4 wide:px-2 py-2 justify-start gap-3 wide:gap-2.5 web:focus-visible:ring-0 web:focus-visible:bg-accent',
-                  agent.agent === configuration.agent && 'bg-accent',
-                )}
-              >
-                <View className="size-9 wide:size-4 items-center justify-center rounded-full bg-muted wide:bg-transparent">
-                  <Logo agent={agent} size={wide ? 16 : 20} />
-                </View>
-                <View className="flex-1 min-w-0 gap-0.5">
-                  <Text
-                    selectable={false}
-                    className="select-none text-base wide:text-sm leading-6 wide:leading-5 font-medium"
-                  >
-                    {agent.label}
-                  </Text>
-                  <Text
-                    selectable={false}
-                    className={cn(
-                      'select-none text-sm wide:text-xs leading-5 wide:leading-4 text-muted-foreground',
-                      agent.availability !== 'available' && 'text-warning',
-                    )}
-                  >
-                    {agent.availability === 'available'
-                      ? 'Ready'
-                      : agent.availability === 'not_signed_in'
-                        ? 'Not signed in'
-                        : agent.availability === 'not_installed'
-                          ? 'Not installed'
-                          : 'Unavailable'}
-                  </Text>
-                </View>
-                {agent.agent === configuration.agent && (
-                  <Icon as={CheckIcon} className="size-4.5 wide:size-3.5" />
-                )}
-              </Button>
-              {agent.availability !== 'available' &&
-                configuration.onAgentSetup && (
-                  <Button
-                    variant="outline"
-                    accessibilityLabel={`Set up ${agent.label}`}
-                    className="h-8 sm:h-8 wide:h-6 wide:sm:h-6 px-3 wide:px-2"
-                    onPress={() => configuration.onAgentSetup?.(agent.agent)}
-                  >
-                    <Text
-                      selectable={false}
-                      className="select-none text-sm wide:text-xs"
-                    >
-                      {agent.availability === 'not_signed_in'
-                        ? 'Sign in'
-                        : 'Install'}
-                    </Text>
-                  </Button>
-                )}
-            </View>
-          ))}
-        </View>
-      )}
-    </ComposerPopover>
+    choice?._meta?.argo?.shortName ??
+    choice?.name.replace(/\s*\(recommended\)\s*$/i, '') ??
+    ''
   );
 }
 
-export function ComposerModelControl({
+function MenuHeading({ children }: { children: string }) {
+  return (
+    <Text
+      selectable={false}
+      className="select-none px-2 py-1 text-xs leading-4 font-medium text-muted-foreground"
+    >
+      {children}
+    </Text>
+  );
+}
+
+function AgentChoices({
   configuration,
-  disabled,
+  onSelect,
 }: {
   configuration: ComposerConfigurationProps;
-  disabled: boolean;
+  onSelect: () => void;
+}) {
+  const agents = configuration.onAgentChange
+    ? configuration.agents
+    : configuration.agents.filter(
+        (agent) => agent.agent === configuration.agent,
+      );
+  return (
+    <View className="p-1 gap-0.5">
+      {agents.map((agent) => (
+        <View key={agent.agent}>
+          <Button
+            variant="ghost"
+            accessibilityLabel={`Select ${agent.label}`}
+            disabled={
+              !configuration.onAgentChange || agent.availability !== 'available'
+            }
+            accessibilityState={{
+              selected: agent.agent === configuration.agent,
+            }}
+            aria-pressed={agent.agent === configuration.agent}
+            className={cn(
+              'min-h-11 wide:min-h-8 h-auto sm:h-auto py-1.5 px-2 justify-start gap-2.5 wide:gap-2 web:focus-visible:ring-0 web:focus-visible:bg-accent',
+              configuration.onAgentChange &&
+                agent.agent === configuration.agent &&
+                'bg-accent',
+            )}
+            onPress={() => {
+              if (agent.agent !== configuration.agent)
+                configuration.onAgentChange?.(agent.agent);
+              onSelect();
+            }}
+          >
+            <Logo agent={agent} size={16} />
+            <View className="flex-1 min-w-0 gap-0.5">
+              <Text
+                selectable={false}
+                className="select-none text-sm leading-5 font-normal"
+              >
+                {agent.label}
+              </Text>
+              {agent.availability !== 'available' && (
+                <Text
+                  selectable={false}
+                  className="select-none text-xs leading-4 text-warning"
+                >
+                  {agent.availability === 'not_signed_in'
+                    ? 'Not signed in'
+                    : agent.availability === 'not_installed'
+                      ? 'Not installed'
+                      : 'Unavailable'}
+                </Text>
+              )}
+            </View>
+            {configuration.onAgentChange &&
+              agent.agent === configuration.agent && (
+                <Icon as={CheckIcon} className="size-3.5" />
+              )}
+          </Button>
+          {agent.availability !== 'available' && configuration.onAgentSetup && (
+            <Button
+              variant="ghost"
+              accessibilityLabel={`Set up ${agent.label}`}
+              className="h-7 sm:h-7 ml-8 px-2 justify-start"
+              onPress={() => configuration.onAgentSetup?.(agent.agent)}
+            >
+              <Text selectable={false} className="select-none text-xs">
+                {agent.availability === 'not_signed_in' ? 'Sign in' : 'Install'}
+              </Text>
+            </Button>
+          )}
+        </View>
+      ))}
+      {!configuration.onAgentChange && (
+        <Text
+          selectable={false}
+          className="select-none pl-8 pr-2 pb-1 text-xs leading-4 text-muted-foreground"
+        >
+          Start a new Session to switch Agent
+        </Text>
+      )}
+    </View>
+  );
+}
+
+function ModelChoices({
+  configuration,
+  onSelect,
+}: {
+  configuration: ComposerConfigurationProps;
+  onSelect: () => void;
+}) {
+  const model = selection(configuration, 'model');
+  if (!model) return null;
+  return (
+    <View className="p-1 gap-0.5">
+      {choices(model).map((choice) => (
+        <Choice
+          key={choice.value}
+          selected={choice.value === model.currentValue}
+          label={modelName(choice)}
+          accessibilityLabel={choice.name}
+          description={choice.description}
+          onPress={() => {
+            if (!choice._meta?.argo?.supportsFastMode)
+              configuration.onFastModeChange?.(false);
+            configuration.onConfigChange(model.configId, choice.value);
+            onSelect();
+          }}
+        />
+      ))}
+    </View>
+  );
+}
+
+function EffortControl({
+  configuration,
+}: {
+  configuration: ComposerConfigurationProps;
 }) {
   const model = selection(configuration, 'model');
   const effort = selection(configuration, 'thought_level');
@@ -282,42 +319,321 @@ export function ComposerModelControl({
   );
   const levels = current?._meta?.argo?.supportedEffortLevels;
   const effortChoices = choices(effort).filter(
-    (choice) =>
-      !levels || levels.includes(choice.value) || choice.value === 'default',
+    (choice) => !levels || levels.includes(choice.value),
   );
-  const selectedEffortIndex = effortChoices.findIndex(
-    (choice) => choice.value === effort?.currentValue,
+  if (
+    !effort ||
+    current?._meta?.argo?.supportsEffort === false ||
+    !effortChoices.length
+  )
+    return null;
+  const selectedIndex = Math.max(
+    0,
+    effortChoices.findIndex((choice) => choice.value === effort.currentValue),
   );
-  const supportsEffort =
-    current?._meta?.argo?.supportsEffort !== false && effortChoices.length > 0;
+  return (
+    <View className="border-t border-border px-3 pt-2.5 pb-3 gap-2.5">
+      <View className="gap-0.5">
+        <Text
+          selectable={false}
+          className="select-none text-xs leading-4 font-medium text-muted-foreground"
+        >
+          Effort
+        </Text>
+        <Text
+          selectable={false}
+          className="select-none text-xs leading-4 text-muted-foreground"
+        >
+          More effort trades speed for deeper reasoning.
+        </Text>
+      </View>
+      <View className="gap-1.5">
+        <Slider
+          accessibilityLabel="Effort"
+          valueLabel={effortChoices[selectedIndex]?.name ?? ''}
+          minimumValue={0}
+          maximumValue={Math.max(1, effortChoices.length - 1)}
+          step={1}
+          value={selectedIndex}
+          onValueChange={(index) => {
+            const choice = effortChoices[Math.round(index)];
+            if (choice)
+              configuration.onConfigChange(effort.configId, choice.value);
+          }}
+        />
+        <View className="flex-row justify-between">
+          {effortChoices.map((choice) => (
+            <Button
+              key={choice.value}
+              variant="ghost"
+              accessibilityLabel={`Set effort to ${choice.name}`}
+              aria-pressed={choice.value === effort.currentValue}
+              onPress={() =>
+                configuration.onConfigChange(effort.configId, choice.value)
+              }
+              className="h-4 sm:h-4 px-0 py-0 active:bg-transparent hover:bg-transparent dark:hover:bg-transparent"
+            >
+              <Text
+                selectable={false}
+                numberOfLines={1}
+                className={cn(
+                  'select-none text-xs leading-4 font-normal text-muted-foreground',
+                  choice.value === effort.currentValue && 'text-foreground',
+                )}
+              >
+                {choice.name}
+              </Text>
+            </Button>
+          ))}
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function FastModeControl({
+  configuration,
+}: {
+  configuration: ComposerConfigurationProps;
+}) {
+  const model = selection(configuration, 'model');
+  const current = choices(model).find(
+    (choice) => choice.value === model?.currentValue,
+  );
+  if (
+    !current?._meta?.argo?.supportsFastMode ||
+    !configuration.onFastModeChange
+  )
+    return null;
+  return (
+    <View className="p-1 border-t border-border">
+      <View className="min-h-11 wide:min-h-8 py-1.5 px-2 flex-row items-center gap-1">
+        <View className="flex-1 min-w-0 gap-0.5">
+          <Label
+            onPress={() =>
+              configuration.onFastModeChange?.(!configuration.fastMode)
+            }
+            className="select-none text-sm leading-5 font-normal"
+          >
+            Fast mode
+          </Label>
+          <Text
+            selectable={false}
+            className="select-none text-xs leading-4 text-muted-foreground"
+          >
+            Quicker replies from {modelName(current)}, at a higher cost
+          </Text>
+        </View>
+        <Switch
+          size="small"
+          accessibilityLabel="Fast mode"
+          checked={!!configuration.fastMode}
+          onCheckedChange={configuration.onFastModeChange}
+        />
+      </View>
+    </View>
+  );
+}
+
+function AgentModelMenu({
+  configuration,
+}: {
+  configuration: ComposerConfigurationProps;
+}) {
+  const wide = useWide();
+  const [page, setPage] = useState<'settings' | 'agent' | 'model'>('settings');
+  const agent = configuration.agents.find(
+    (entry) => entry.agent === configuration.agent,
+  );
+  const model = selection(configuration, 'model');
+  const current = choices(model).find(
+    (choice) => choice.value === model?.currentValue,
+  );
+  if (!wide && page !== 'settings')
+    return (
+      <View>
+        <View className="h-11 px-1 flex-row items-center border-y border-border">
+          <Button
+            variant="ghost"
+            size="icon"
+            accessibilityLabel="Back to Agent and model"
+            className="size-11 sm:size-11"
+            onPress={() => setPage('settings')}
+          >
+            <Icon as={CaretLeftIcon} className="size-4 text-muted-foreground" />
+          </Button>
+          <Text
+            selectable={false}
+            className="select-none flex-1 text-center text-sm leading-5 font-medium"
+          >
+            {page === 'agent' ? 'Agent' : 'Model'}
+          </Text>
+          <View className="size-11" />
+        </View>
+        {page === 'agent' ? (
+          <AgentChoices
+            configuration={configuration}
+            onSelect={() => setPage('settings')}
+          />
+        ) : (
+          <ModelChoices
+            configuration={configuration}
+            onSelect={() => setPage('settings')}
+          />
+        )}
+      </View>
+    );
+  return (
+    <View className="wide:flex-row">
+      {wide && (
+        <View className="w-43 shrink-0 border-r border-border bg-sidebar">
+          <View className="px-1 pt-1">
+            <MenuHeading>Agent</MenuHeading>
+          </View>
+          <AgentChoices configuration={configuration} onSelect={() => {}} />
+        </View>
+      )}
+      <View className="wide:flex-1 min-w-0">
+        {wide ? (
+          <>
+            <View className="px-1 pt-1">
+              <MenuHeading>Model</MenuHeading>
+            </View>
+            <ModelChoices configuration={configuration} onSelect={() => {}} />
+          </>
+        ) : (
+          <View className="p-1 gap-0.5 border-t border-border">
+            <Button
+              variant="ghost"
+              accessibilityLabel="Choose Agent"
+              disabled={!configuration.onAgentChange}
+              onPress={() => setPage('agent')}
+              className="h-11 sm:h-11 px-2 gap-2 justify-start"
+            >
+              <Text
+                selectable={false}
+                className="select-none flex-1 text-sm font-normal"
+              >
+                Agent
+              </Text>
+              <Logo agent={agent} />
+              <Text
+                selectable={false}
+                className="select-none text-sm font-normal text-muted-foreground"
+              >
+                {agent?.label}
+              </Text>
+              {configuration.onAgentChange && (
+                <Icon
+                  as={CaretRightIcon}
+                  className="size-3.5 text-muted-foreground"
+                />
+              )}
+            </Button>
+            {!configuration.onAgentChange && (
+              <Text
+                selectable={false}
+                className="select-none text-xs leading-4 text-muted-foreground px-2 pb-1"
+              >
+                Start a new Session to switch Agent
+              </Text>
+            )}
+            <Button
+              variant="ghost"
+              accessibilityLabel="Choose model"
+              onPress={() => setPage('model')}
+              className="h-11 sm:h-11 px-2 gap-2 justify-start"
+            >
+              <Text
+                selectable={false}
+                className="select-none flex-1 text-sm font-normal"
+              >
+                Model
+              </Text>
+              <Text
+                selectable={false}
+                className="select-none text-sm font-normal text-muted-foreground"
+              >
+                {modelName(current)}
+              </Text>
+              <Icon
+                as={CaretRightIcon}
+                className="size-3.5 text-muted-foreground"
+              />
+            </Button>
+          </View>
+        )}
+        <FastModeControl configuration={configuration} />
+        <EffortControl configuration={configuration} />
+        {configuration.turnRunning && (
+          <View className="flex-row gap-2 px-3 py-2.5 bg-muted border-t border-border">
+            <Icon
+              as={HourglassSimpleIcon}
+              className="size-3.5 text-muted-foreground"
+            />
+            <Text
+              selectable={false}
+              className="select-none flex-1 text-xs leading-4 text-muted-foreground"
+            >
+              A Turn is running. Changes apply from the next Turn.
+            </Text>
+          </View>
+        )}
+      </View>
+    </View>
+  );
+}
+
+export function ComposerAgentModelControl({
+  configuration,
+  disabled,
+}: {
+  configuration: ComposerConfigurationProps;
+  disabled: boolean;
+}) {
+  const compact = useWindowDimensions().width < 360;
+  const model = selection(configuration, 'model');
+  const current = choices(model).find(
+    (choice) => choice.value === model?.currentValue,
+  );
+  const effort = selection(configuration, 'thought_level');
   const effortLabel = choices(effort).find(
     (choice) => choice.value === effort?.currentValue,
   )?.name;
+  const agent = configuration.agents.find(
+    (entry) => entry.agent === configuration.agent,
+  );
   if (!model) return null;
   return (
     <ComposerPopover
-      label="Model and effort"
+      label="Agent and model"
+      width={580}
       className="shrink min-w-0"
-      width={Math.max(300, effortChoices.length * 56 + 24)}
       trigger={
         <Button
           variant="ghost"
           disabled={disabled}
-          accessibilityLabel="Model and effort"
-          className="h-8 sm:h-8 px-2 has-[>svg]:px-2 gap-1 wide:gap-1.5 shrink min-w-0"
+          accessibilityLabel="Agent and model"
+          className="h-7 sm:h-7 px-1.5 has-[>svg]:px-1.5 gap-1 shrink min-w-0"
         >
+          <Logo agent={agent} size={16} />
           <Text
             selectable={false}
             numberOfLines={1}
-            className="select-none text-sm font-medium min-w-0 shrink"
+            className={cn(
+              'select-none text-sm leading-5 font-normal min-w-0 shrink',
+              compact && 'hidden',
+            )}
           >
-            {current?._meta?.argo?.shortName ??
-              current?.name.replace(/\s*\(recommended\)\s*$/i, '')}
+            {modelName(current)}
           </Text>
-          {supportsEffort && effortLabel && (
+          {current?._meta?.argo?.supportsEffort !== false && effortLabel && (
             <Text
               selectable={false}
-              className="select-none text-sm font-normal text-muted-foreground shrink-0"
+              className={cn(
+                'select-none text-sm leading-5 font-normal text-muted-foreground shrink-0',
+                compact && 'hidden',
+              )}
               numberOfLines={1}
             >
               {effortLabel}
@@ -329,158 +645,14 @@ export function ComposerModelControl({
               accessibilityRole="image"
               accessibilityLabel="Fast mode enabled"
             >
-              <Icon as={LightningIcon} weight="fill" className="size-3.5" />
+              <Icon as={LightningIcon} weight="fill" className="size-4" />
             </View>
           )}
-          <Icon
-            as={CaretDownIcon}
-            className="size-3 wide:size-3.5 text-muted-foreground"
-          />
+          <Icon as={CaretDownIcon} className="size-3 text-muted-foreground" />
         </Button>
       }
     >
-      {() => (
-        <View className="pb-2 wide:pb-0">
-          <View className="flex-row items-center justify-between px-4 wide:px-3 pt-1 wide:pt-2 pb-2">
-            <Text
-              selectable={false}
-              className="select-none text-lg wide:text-xs leading-5.5 wide:leading-4 font-semibold wide:font-medium text-foreground wide:text-muted-foreground"
-            >
-              Model
-            </Text>
-            {current?._meta?.argo?.supportsFastMode &&
-              configuration.onFastModeChange && (
-                <Button
-                  variant={configuration.fastMode ? 'default' : 'outline'}
-                  accessibilityLabel="Fast mode"
-                  accessibilityRole="switch"
-                  role="switch"
-                  accessibilityState={{ checked: !!configuration.fastMode }}
-                  aria-checked={!!configuration.fastMode}
-                  className="h-8 sm:h-8 wide:h-5.5 wide:sm:h-5.5 rounded-full px-3 wide:px-2 gap-1"
-                  onPress={() =>
-                    configuration.onFastModeChange?.(!configuration.fastMode)
-                  }
-                >
-                  <Icon
-                    as={LightningIcon}
-                    className={cn(
-                      'size-3.5',
-                      configuration.fastMode
-                        ? 'text-primary-foreground'
-                        : 'text-muted-foreground',
-                    )}
-                  />
-                  <Text
-                    selectable={false}
-                    className="select-none text-sm wide:text-xs"
-                  >
-                    Fast
-                  </Text>
-                </Button>
-              )}
-          </View>
-          <View className="wide:p-1 gap-0.5">
-            {choices(model).map((choice) => (
-              <Choice
-                key={choice.value}
-                selected={choice.value === model.currentValue}
-                label={choice.name}
-                description={
-                  configuration.fastMode &&
-                  !choice._meta?.argo?.supportsFastMode
-                    ? 'No fast mode, turns it off'
-                    : choice.description
-                }
-                onPress={() => {
-                  if (!choice._meta?.argo?.supportsFastMode)
-                    configuration.onFastModeChange?.(false);
-                  configuration.onConfigChange(model.configId, choice.value);
-                }}
-              />
-            ))}
-          </View>
-          {supportsEffort && effort && (
-            <View className="border-t border-border px-4 wide:px-3 pt-4 wide:pt-3 pb-2 wide:pb-3 gap-3.5 wide:gap-2.5">
-              <View className="gap-0.5">
-                <Text
-                  selectable={false}
-                  className="select-none text-base wide:text-xs font-semibold wide:font-medium"
-                >
-                  Effort
-                </Text>
-                <Text
-                  selectable={false}
-                  className="select-none text-sm wide:text-xs text-muted-foreground"
-                >
-                  More effort trades speed for deeper reasoning.
-                </Text>
-              </View>
-              <View>
-                <Slider
-                  accessibilityLabel="Effort"
-                  valueLabel={effortLabel ?? effortChoices[0]?.name ?? ''}
-                  minimumValue={0}
-                  maximumValue={Math.max(1, effortChoices.length - 1)}
-                  step={1}
-                  value={Math.max(0, selectedEffortIndex)}
-                  onValueChange={(index) => {
-                    const choice = effortChoices[Math.round(index)];
-                    if (choice)
-                      configuration.onConfigChange(
-                        effort.configId,
-                        choice.value,
-                      );
-                  }}
-                />
-                <View className="flex-row justify-between">
-                  {effortChoices.map((choice) => (
-                    <Button
-                      key={choice.value}
-                      variant="ghost"
-                      accessibilityLabel={`Set effort to ${choice.name}`}
-                      aria-pressed={choice.value === effort.currentValue}
-                      onPress={() =>
-                        configuration.onConfigChange(
-                          effort.configId,
-                          choice.value,
-                        )
-                      }
-                      className="h-6 sm:h-6 px-0 py-0 active:bg-transparent hover:bg-transparent dark:hover:bg-transparent"
-                    >
-                      <Text
-                        selectable={false}
-                        numberOfLines={1}
-                        className={cn(
-                          'text-xs text-muted-foreground',
-                          choice.value === effort.currentValue &&
-                            'font-semibold text-foreground',
-                        )}
-                      >
-                        {choice.name}
-                      </Text>
-                    </Button>
-                  ))}
-                </View>
-              </View>
-            </View>
-          )}
-          {configuration.turnRunning && (
-            <View className="flex-row gap-2 p-3 bg-muted border-t border-border">
-              <Icon
-                as={HourglassSimpleIcon}
-                className="size-3.5 text-muted-foreground"
-              />
-              <Text
-                selectable={false}
-                className="select-none flex-1 text-xs text-muted-foreground"
-              >
-                A Turn is running. Changes apply from the next Turn.
-              </Text>
-            </View>
-          )}
-        </View>
-      )}
+      {() => <AgentModelMenu configuration={configuration} />}
     </ComposerPopover>
   );
 }
@@ -505,7 +677,7 @@ export function ComposerModeControl({
           variant="ghost"
           disabled={disabled}
           accessibilityLabel="Mode"
-          className="h-8 sm:h-8 px-2 has-[>svg]:px-2 gap-1 wide:gap-1.5"
+          className="h-11 sm:h-11 wide:h-7 wide:sm:h-7 px-2.5 wide:px-1.5 has-[>svg]:px-2.5 wide:has-[>svg]:px-1.5 gap-1"
         >
           <Icon
             as={configurationIcon(current?._meta?.argo?.icon)}
@@ -518,24 +690,21 @@ export function ComposerModeControl({
             selectable={false}
             className={cn(
               'select-none',
-              'hidden wide:flex text-sm font-medium',
+              'hidden wide:flex text-sm font-normal',
               current?._meta?.argo?.tone === 'dangerous' && 'text-destructive',
             )}
           >
             {current?.name.replace(/\s*\(recommended\)\s*$/i, '')}
           </Text>
-          <Icon
-            as={CaretDownIcon}
-            className="size-3 wide:size-3.5 text-muted-foreground"
-          />
+          <Icon as={CaretDownIcon} className="size-3 text-muted-foreground" />
         </Button>
       }
     >
       {(close) => (
-        <View className="py-2 wide:p-1">
+        <View className="p-1 gap-0.5">
           <Text
             selectable={false}
-            className="select-none px-4 wide:px-2 py-2 text-lg wide:text-xs font-semibold wide:font-medium"
+            className="select-none px-2 pt-1.5 pb-1 text-xs leading-4 font-medium text-muted-foreground"
           >
             Mode
           </Text>
@@ -550,7 +719,7 @@ export function ComposerModeControl({
                 <Icon
                   as={configurationIcon(choice._meta?.argo?.icon)}
                   className={cn(
-                    'size-5 wide:size-3.5 text-muted-foreground',
+                    'size-3.5 text-muted-foreground',
                     choice._meta?.argo?.tone === 'dangerous' &&
                       'text-destructive',
                   )}
@@ -577,9 +746,9 @@ export function ComposerCheckoutControl({
 }) {
   const [search, setSearch] = useState('');
   return (
-    <View className="flex-row items-center gap-2">
+    <View className="flex-row items-center gap-1">
       {checkout.onNewWorktreeChange && (
-        <View className="flex-row gap-2 items-center">
+        <View className="flex-row gap-1 items-center">
           <Switch
             size="small"
             accessibilityLabel="New worktree"
@@ -592,7 +761,7 @@ export function ComposerCheckoutControl({
             onPress={() =>
               checkout.onNewWorktreeChange?.(!checkout.newWorktree)
             }
-            className="select-none text-xs font-medium text-muted-foreground"
+            className="select-none text-xs font-normal text-foreground"
           >
             New worktree
           </Label>
@@ -609,7 +778,7 @@ export function ComposerCheckoutControl({
             accessibilityLabel={
               checkout.onBranchChange ? 'Base branch' : 'Checkout'
             }
-            className="h-7 sm:h-7 px-2 gap-1.5"
+            className="h-7 sm:h-7 px-1.5 has-[>svg]:px-1.5 gap-1"
           >
             <Icon
               as={GitBranchIcon}

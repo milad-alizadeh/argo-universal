@@ -14,6 +14,7 @@ if (!firstAgent) throw new Error('Composer needs a recorded Agent catalog.');
 
 const meta = {
   title: 'Tests/Composer',
+  globals: { themeId: 'default', mode: 'light' },
   component: Composer,
   render: (args) => <ComposerMock {...args} />,
   args: {
@@ -39,12 +40,12 @@ export const Typography: Story = {
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       await settleViewport();
-      const trigger = canvas.getByRole('button', { name: 'Model and effort' });
+      const trigger = canvas.getByRole('button', { name: 'Agent and model' });
       const model = within(trigger).getByText('Opus 5.5', { exact: true });
       const effort = within(trigger).getByText('Medium', { exact: true });
       const input = canvas.getByRole('textbox', { name: 'Message' });
       for (const [element, weight, size, lineHeight] of [
-        [model, '500', '14px', '20px'],
+        [model, '400', '14px', '20px'],
         [effort, '400', '14px', '20px'],
         [
           input,
@@ -68,7 +69,7 @@ export const Typography: Story = {
         await expect(
           getComputedStyle(canvas.getByText('New worktree', { exact: true }))
             .fontWeight,
-        ).toBe('500');
+        ).toBe('400');
         const branch = getComputedStyle(
           canvas.getByText('Main', { exact: true }),
         );
@@ -126,23 +127,23 @@ export const Empty: Story = {
         canvas.getByRole('button', { name: 'Attach images' }),
       ).toBeEnabled();
       await expect(
-        canvas.getByRole('button', { name: 'Choose Agent' }),
+        canvas.getByRole('button', { name: 'Agent and model' }),
       ).not.toHaveTextContent('First Agent');
       await expect(
-        canvas.getByRole('button', { name: 'Model and effort', hidden: true }),
+        canvas.getByRole('button', { name: 'Agent and model', hidden: true }),
       ).not.toHaveTextContent('(recommended)');
       await expect(canvas.getAllByTestId('composer-agent-icon')).toHaveLength(
         1,
       );
       const model = canvas
-        .getByRole('button', { name: 'Model and effort' })
+        .getByRole('button', { name: 'Agent and model' })
         .getBoundingClientRect();
       const mode = canvas
         .getByRole('button', { name: 'Mode' })
         .getBoundingClientRect();
       await expect(model.right).toBeLessThanOrEqual(mode.left);
       for (const text of canvas
-        .getByRole('button', { name: 'Model and effort' })
+        .getByRole('button', { name: 'Agent and model' })
         .querySelectorAll('[dir]')) {
         await expect(text.scrollWidth).toBeLessThanOrEqual(
           text.clientWidth + 1,
@@ -404,16 +405,14 @@ export const Pickers: Story = {
       await settleViewport();
       for (const agent of newSessionCatalogs.bothAvailable) {
         await userEvent.click(
-          canvas.getByRole('button', { name: 'Choose Agent' }),
+          canvas.getByRole('button', { name: 'Agent and model' }),
         );
+        if (width < 720)
+          await userEvent.click(
+            await overlay.findByRole('button', { name: 'Choose Agent' }),
+          );
         await userEvent.click(
           await overlay.findByRole('button', { name: `Select ${agent.label}` }),
-        );
-        await userEvent.click(
-          canvas.getByRole('button', {
-            name: 'Model and effort',
-            hidden: true,
-          }),
         );
         const model = agent.configOptions.find(
           (entry) => entry.category === 'model' && entry.type === 'select',
@@ -466,13 +465,22 @@ export const Pickers: Story = {
             );
           }
         }
+        const chooseModel = async (name: string) => {
+          if (width < 720)
+            await userEvent.click(
+              await overlay.findByRole('button', { name: 'Choose model' }),
+            );
+          await userEvent.click(await overlay.findByRole('button', { name }));
+          if (width < 720)
+            await expect(
+              await overlay.findByRole('button', { name: 'Choose model' }),
+            ).toBeVisible();
+        };
         const fastModel = options.find(
           (entry) => entry._meta?.argo?.supportsFastMode,
         );
         if (fastModel) {
-          await userEvent.click(
-            await overlay.findByRole('button', { name: fastModel.name }),
-          );
+          await chooseModel(fastModel.name);
           await userEvent.click(
             await overlay.findByRole('switch', { name: 'Fast mode' }),
           );
@@ -482,13 +490,13 @@ export const Pickers: Story = {
           await expect(
             within(
               canvas.getByRole('button', {
-                name: 'Model and effort',
+                name: 'Agent and model',
                 hidden: true,
               }),
             ).getByRole('img', { name: 'Fast mode enabled', hidden: true }),
           ).toBeVisible();
           const fastTrigger = canvas.getByRole('button', {
-            name: 'Model and effort',
+            name: 'Agent and model',
             hidden: true,
           });
           for (const text of fastTrigger.querySelectorAll('[dir]')) {
@@ -500,24 +508,18 @@ export const Pickers: Story = {
             (entry) => !entry._meta?.argo?.supportsFastMode,
           );
           if (slowModel) {
-            await userEvent.click(
-              await overlay.findByRole('button', { name: slowModel.name }),
-            );
+            await chooseModel(slowModel.name);
             await expect(
               overlay.queryByRole('switch', { name: 'Fast mode' }),
             ).not.toBeInTheDocument();
-            await userEvent.click(
-              await overlay.findByRole('button', { name: fastModel.name }),
-            );
+            await chooseModel(fastModel.name);
             await expect(
               await overlay.findByRole('switch', { name: 'Fast mode' }),
             ).not.toBeChecked();
           }
         }
         if (withEffort) {
-          await userEvent.click(
-            await overlay.findByRole('button', { name: withEffort.name }),
-          );
+          await chooseModel(withEffort.name);
           await userEvent.click(
             await overlay.findByRole('button', {
               name: /^Set effort to high$/i,
@@ -531,7 +533,7 @@ export const Pickers: Story = {
           await browserUserEvent.keyboard('{ArrowRight}');
           await expect(
             canvas.getByRole('button', {
-              name: 'Model and effort',
+              name: 'Agent and model',
               hidden: true,
             }),
           ).toHaveTextContent(slider.getAttribute('aria-valuetext') ?? '');
@@ -541,9 +543,7 @@ export const Pickers: Story = {
           );
         }
         if (withoutEffort) {
-          await userEvent.click(
-            await overlay.findByRole('button', { name: withoutEffort.name }),
-          );
+          await chooseModel(withoutEffort.name);
           await expect(
             overlay.queryByRole('slider', { name: 'Effort' }),
           ).not.toBeInTheDocument();
@@ -577,7 +577,7 @@ export const Checkout: Story = {
   play: async ({ canvas, userEvent }) => {
     const { page } = await import('vitest/browser');
     const overlay = within(document.body);
-    for (const width of [390, 1440]) {
+    for (const width of [1440]) {
       await page.viewport(width, 844);
       await settleViewport();
       await userEvent.click(
@@ -663,7 +663,7 @@ export const SessionControls: Story = {
       );
       await expect(
         canvas.getByRole('button', { name: 'Context window' }),
-      ).toHaveTextContent('12k / 200k');
+      ).toHaveTextContent(width < 720 ? '12k' : '12k / 200k');
       await userEvent.click(canvas.getByRole('button', { name: 'Usage' }));
       await waitFor(() =>
         expect(overlay.getByText('5-hour limit')).toBeVisible(),
@@ -715,8 +715,12 @@ export const UnavailableAgents: Story = {
       await page.viewport(width, 844);
       await settleViewport();
       await userEvent.click(
-        canvas.getByRole('button', { name: 'Choose Agent' }),
+        canvas.getByRole('button', { name: 'Agent and model' }),
       );
+      if (width < 720)
+        await userEvent.click(
+          await overlay.findByRole('button', { name: 'Choose Agent' }),
+        );
       for (const agent of args.configuration?.agents ?? []) {
         await expect(
           await overlay.findByRole('button', { name: `Select ${agent.label}` }),
@@ -731,5 +735,103 @@ export const UnavailableAgents: Story = {
       await expect(args.configuration?.onAgentChange).not.toHaveBeenCalled();
       await userEvent.keyboard('{Escape}');
     }
+  },
+};
+
+export const ResponsiveLayout: Story = {
+  render: (args) => <ComposerMock {...args} sessionStarted />,
+  play: async ({ canvas, userEvent }) => {
+    const { page } = await import('vitest/browser');
+    const overlay = within(document.body);
+    for (const width of [390, 1440]) {
+      await page.viewport(width, 844);
+      await settleViewport();
+      const input = canvas.getByRole('textbox', { name: 'Message' });
+      const card = input.parentElement?.parentElement;
+      if (!card) throw new Error('Composer card is missing.');
+      const bounds = card.getBoundingClientRect();
+      await expect(bounds.height).toBe(width < 720 ? 86 : 80);
+      const trigger = canvas.getByRole('button', { name: 'Agent and model' });
+      await expect(trigger.getBoundingClientRect().height).toBe(28);
+      await expect(
+        within(trigger).getAllByTestId('composer-agent-icon'),
+      ).toHaveLength(1);
+      await expect(
+        canvas.getByRole('button', { name: 'Mode' }).getBoundingClientRect()
+          .height,
+      ).toBe(width < 720 ? 44 : 28);
+      if (width < 720) {
+        await expect(
+          canvas.queryByRole('button', { name: 'Checkout' }),
+        ).not.toBeInTheDocument();
+        await expect(
+          canvas.getByRole('button', { name: 'Context window' }),
+        ).toHaveTextContent('34k');
+        await expect(
+          within(
+            canvas.getByRole('button', { name: 'Context window' }),
+          ).getByText('/ 200k'),
+        ).not.toBeVisible();
+        const work = canvas
+          .getByRole('button', { name: 'Shells: 1' })
+          .getBoundingClientRect();
+        const tray = canvas
+          .getByRole('button', { name: 'Plan' })
+          .getBoundingClientRect();
+        await expect(work.right).toBeLessThan(bounds.right - 12);
+        await expect(work.top).toBe(tray.top);
+      } else {
+        const context = canvas.getByRole('button', { name: 'Context window' });
+        const used = within(context).getByText('34k').getBoundingClientRect();
+        const size = within(context)
+          .getByText('/ 200k')
+          .getBoundingClientRect();
+        await expect(used.top).toBe(size.top);
+        await expect(size.left).toBeGreaterThanOrEqual(used.right);
+      }
+      await userEvent.click(trigger);
+      if (width < 720) {
+        await expect(
+          await overlay.findByRole('button', { name: 'Choose Agent' }),
+        ).toBeDisabled();
+        await userEvent.click(
+          await overlay.findByRole('button', { name: 'Choose model' }),
+        );
+        await expect(
+          await overlay.findByRole('button', {
+            name: 'Back to Agent and model',
+          }),
+        ).toBeVisible();
+        await userEvent.click(
+          overlay.getByRole('button', { name: 'Back to Agent and model' }),
+        );
+        await expect(
+          await overlay.findByRole('slider', { name: 'Effort' }),
+        ).toBeVisible();
+      } else {
+        await waitFor(() => {
+          expect(
+            overlay.getByRole('dialog').getBoundingClientRect().width,
+          ).toBe(580);
+          const agentHeading = overlay
+            .getByText('Agent', { exact: true })
+            .getBoundingClientRect();
+          const modelHeading = overlay
+            .getByText('Model', { exact: true })
+            .getBoundingClientRect();
+          expect(modelHeading.left - agentHeading.left).toBe(172);
+        });
+        await expect(
+          overlay.getByText('Start a new Session to switch Agent'),
+        ).toBeVisible();
+      }
+      await userEvent.keyboard('{Escape}');
+    }
+    await page.viewport(320, 844);
+    await settleViewport();
+    const compact = canvas.getByRole('button', { name: 'Agent and model' });
+    await expect(within(compact).getByText('Opus 5.5')).not.toBeVisible();
+    await expect(within(compact).getByText('Medium')).not.toBeVisible();
+    await expect(compact.getBoundingClientRect().width).toBe(44);
   },
 };

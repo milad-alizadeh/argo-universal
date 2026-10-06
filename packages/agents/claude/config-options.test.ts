@@ -31,9 +31,9 @@ describe('Claude config options', () => {
         category: 'mode',
         currentValue: 'default',
         options: [
-          { value: 'default', name: 'Ask before edits' },
+          { value: 'plan', name: 'Plan mode' },
+          { value: 'default', name: 'Ask first' },
           { value: 'acceptEdits', name: 'Accept edits' },
-          { value: 'plan', name: 'Plan' },
           { value: 'auto', name: 'Auto' },
           { value: 'bypassPermissions', name: 'Bypass permissions' },
         ],
@@ -175,6 +175,7 @@ it('resolves the CLI alias to a model name in the adapter', () => {
       {
         value: 'default',
         name: 'Opus 5.5 (recommended)',
+        description: 'Best for everyday, complex tasks',
         _meta: { argo: { shortName: 'Opus 5.5' } },
       },
       { value: 'haiku', _meta: { argo: { shortName: 'Haiku' } } },

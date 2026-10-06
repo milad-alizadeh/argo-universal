@@ -36,7 +36,7 @@ it('offers the recorded models and the selected model’s effort choices', () =>
         configId: 'effort',
         currentValue: 'high',
         options: expect.arrayContaining([
-          expect.objectContaining({ value: 'high' }),
+          expect.objectContaining({ value: 'high', name: 'High' }),
         ]),
       }),
     ]),

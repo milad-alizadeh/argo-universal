@@ -3,12 +3,17 @@ import type { AgentConfigValue } from '../src/agent-events';
 import type { Model, ReasoningEffort } from './protocol.gen';
 
 const modeNames = {
-  default: 'Ask before edits',
-  plan: 'Plan',
+  plan: 'Plan mode',
+  default: 'Ask first',
   fullAccess: 'Full access',
 };
+const modeDescriptions = {
+  default: 'Asks before edits and commands',
+  plan: 'Reads and plans, changes nothing',
+  fullAccess: 'Runs without sandbox or permission requests.',
+};
 const modeMetadata = {
-  default: { icon: 'ShieldCheck', tone: 'safe' },
+  default: { icon: 'ShieldWarning', tone: 'safe' },
   plan: { icon: 'ClipboardList', tone: 'planning' },
   fullAccess: { icon: 'ShieldOff', tone: 'dangerous' },
 } as const;
@@ -71,9 +76,7 @@ export function toConfigOptions(
         value,
         name,
         _meta: { argo: modeMetadata[value as ConfigValues['mode']] },
-        ...(value === 'fullAccess'
-          ? { description: 'Runs without sandbox or permission requests.' }
-          : {}),
+        description: modeDescriptions[value as ConfigValues['mode']],
       })),
     },
     {
@@ -108,7 +111,10 @@ export function toConfigOptions(
         modelFor(models, values.model)?.supportedReasoningEfforts ?? []
       ).map((option) => ({
         value: option.reasoningEffort,
-        name: option.reasoningEffort,
+        name:
+          option.reasoningEffort === 'xhigh'
+            ? 'Extra high'
+            : `${option.reasoningEffort.charAt(0).toUpperCase()}${option.reasoningEffort.slice(1)}`,
         description: option.description,
       })),
     },

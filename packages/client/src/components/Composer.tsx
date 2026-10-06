@@ -25,11 +25,10 @@ import { Text } from '#primitives/text';
 import { Textarea } from '#primitives/textarea';
 import { useWide } from '../navigation/use-wide';
 import {
-  ComposerAgentControl,
+  ComposerAgentModelControl,
   ComposerCheckoutControl,
   type ComposerConfigurationProps,
   ComposerModeControl,
-  ComposerModelControl,
 } from './ComposerConfiguration';
 import { ComposerPopover } from './ComposerPopover';
 import {
@@ -103,18 +102,18 @@ export function Composer({
     <View className="w-full max-w-composer items-center">
       {status?.plan && status.plan.length > 0 && (
         <View className="self-stretch mx-3 -mb-3 pb-3 rounded-t-lg border border-b-0 border-border bg-sidebar/80 web:backdrop-blur-composer web:backdrop-saturate-110">
-          <View className="h-10 wide:h-9 flex-row items-center px-2 gap-1">
-            <View className="wide:flex-1 min-w-0">
+          <View className="h-9 wide:h-8 flex-row items-center px-2 wide:px-3 gap-2">
+            <View className="wide:flex-1 min-w-0 shrink-0">
               <ComposerPlan entries={status.plan} disabled={inactive} />
             </View>
-            <View className="flex-1" />
+            <View className="flex-1 wide:hidden" />
             <View className="wide:hidden">
               <ComposerStatusControls status={status} disabled={inactive} />
             </View>
           </View>
         </View>
       )}
-      <View className="w-full rounded-xl border border-input/80 bg-background/80 shadow-md web:backdrop-blur-composer web:backdrop-saturate-110 z-10">
+      <View className="w-full rounded-xl border border-border bg-background/80 shadow-sm web:backdrop-blur-composer web:backdrop-saturate-110 z-10">
         {draft.images.length > 0 && (
           <ScrollView
             horizontal
@@ -187,11 +186,11 @@ export function Composer({
             </Text>
           </View>
         )}
-        <View className="min-h-12 wide:min-h-14 px-4 pt-3 pb-1.5">
+        <View className="px-4 pt-3 pb-1 wide:pb-2">
           <Textarea
             accessibilityLabel="Message"
             placeholder={placeholder}
-            placeholderTextColorClassName="accent-muted-foreground"
+            placeholderTextColorClassName="accent-muted-foreground/70"
             value={draft.text}
             editable={!inactive}
             onChangeText={(text) => onDraftChange({ ...draft, text })}
@@ -203,7 +202,7 @@ export function Composer({
             className="min-h-6 wide:min-h-5 border-0 rounded-none bg-transparent dark:bg-transparent p-0 text-base wide:text-sm leading-6 wide:leading-5 shadow-none web:resize-none web:focus-visible:ring-0"
           />
         </View>
-        <View className="flex-row items-center justify-between gap-2 p-2">
+        <View className="flex-row items-center justify-between gap-2 pl-1 pr-2 wide:px-2.5 wide:pb-2.5">
           <View
             pointerEvents={inactive ? 'none' : 'auto'}
             className={cn('min-w-0 flex-1 flex-row items-center gap-0.5')}
@@ -216,7 +215,7 @@ export function Composer({
                   variant="ghost"
                   size="icon"
                   disabled={inactive}
-                  className="size-8 sm:size-8"
+                  className="size-11 sm:size-11 wide:size-7 wide:sm:size-7"
                   accessibilityLabel="Attach images"
                 >
                   <Icon
@@ -227,7 +226,7 @@ export function Composer({
               }
             >
               {(close) => (
-                <View className="pt-1 pb-2 wide:p-1">
+                <View className="p-1">
                   {(wide
                     ? [
                         {
@@ -277,16 +276,16 @@ export function Composer({
                       variant="ghost"
                       accessibilityLabel={item.label}
                       disabled={!item.onPress}
-                      className="h-14 sm:h-14 wide:h-11 wide:sm:h-11 rounded-none wide:rounded-sm px-4 wide:px-3 gap-3 justify-start"
+                      className="h-12 sm:h-12 wide:h-11 wide:sm:h-11 rounded-sm px-3 gap-3 justify-start"
                       onPress={() => {
                         close();
                         item.onPress?.();
                       }}
                     >
-                      <View className="size-9 wide:w-5 wide:h-4.5 rounded-full bg-muted wide:bg-transparent items-center justify-center">
+                      <View className="w-5 h-4.5 items-center justify-center">
                         <Icon
                           as={item.icon}
-                          className="size-5 wide:size-4.5 text-foreground"
+                          className="size-4.5 text-foreground"
                         />
                       </View>
                       <Text
@@ -301,16 +300,10 @@ export function Composer({
               )}
             </ComposerPopover>
             {configuration && (
-              <>
-                <ComposerAgentControl
-                  configuration={configuration}
-                  disabled={inactive}
-                />
-                <ComposerModelControl
-                  configuration={configuration}
-                  disabled={inactive}
-                />
-              </>
+              <ComposerAgentModelControl
+                configuration={configuration}
+                disabled={inactive}
+              />
             )}
           </View>
           <View className="flex-row items-center gap-1">
@@ -359,8 +352,13 @@ export function Composer({
         </View>
       </View>
       {(configuration || status) && (
-        <View className="self-stretch mx-3 -mt-3 pt-3 rounded-b-lg border border-t-0 border-border bg-sidebar/80 web:backdrop-blur-composer web:backdrop-saturate-110">
-          <View className="min-h-9 flex-row items-center px-2">
+        <View
+          className={cn(
+            'self-stretch mx-3 -mt-3 pt-3 rounded-b-lg border border-t-0 border-border bg-sidebar/80 web:backdrop-blur-composer web:backdrop-saturate-110',
+            status?.plan?.length && 'hidden wide:flex',
+          )}
+        >
+          <View className="h-8 flex-row items-center px-1.5">
             {status && (
               <View className={status.plan?.length ? 'hidden wide:flex' : ''}>
                 <ComposerStatusControls status={status} disabled={inactive} />
@@ -368,10 +366,12 @@ export function Composer({
             )}
             <View className="flex-1" />
             {configuration && (
-              <ComposerCheckoutControl
-                checkout={configuration.checkout}
-                disabled={inactive}
-              />
+              <View className="hidden wide:flex">
+                <ComposerCheckoutControl
+                  checkout={configuration.checkout}
+                  disabled={inactive}
+                />
+              </View>
             )}
           </View>
         </View>

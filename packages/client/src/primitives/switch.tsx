@@ -13,7 +13,7 @@ function Switch({
     <SwitchPrimitives.Root
       className={cn(
         'flex shrink-0 flex-row items-center rounded-full border border-transparent shadow-sm shadow-black/5',
-        size === 'small' ? 'h-3.5 w-6' : 'h-[1.15rem] w-8',
+        size === 'small' ? 'h-4 w-6.5 p-0.5 border-0' : 'h-[1.15rem] w-8',
         Platform.select({
           web: 'focus-visible:border-ring focus-visible:ring-ring/50 peer inline-flex outline-none transition-all focus-visible:ring-[3px] disabled:cursor-not-allowed',
         }),
