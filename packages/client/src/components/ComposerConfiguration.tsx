@@ -537,7 +537,7 @@ function AgentModelMenu({
   return (
     <View className="wide:flex-row">
       {wide && (
-        <View className="w-43 shrink-0 min-h-0 border-r border-border bg-sidebar">
+        <View className="w-43 shrink-0 min-h-0 bg-sidebar">
           <View className="px-1 pt-1">
             <MenuHeading>Agent</MenuHeading>
           </View>

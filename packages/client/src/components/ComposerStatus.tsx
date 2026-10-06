@@ -422,10 +422,7 @@ export function ComposerStatusControls({
                 </Text>
               </View>
               {status.usage?.limits.map((limit) => (
-                <View
-                  key={limit.label}
-                  className="px-4 py-3 gap-1.5 border-t border-border"
-                >
+                <View key={limit.label} className="px-4 py-3 gap-1.5">
                   <View className="flex-row justify-between">
                     <Text
                       selectable={false}
@@ -533,7 +530,7 @@ export function ComposerStatusControls({
                 </View>
                 <Meter percent={percent} warning />
               </View>
-              <View className="border-t border-border px-0 pt-3 gap-2">
+              <View className="px-0 pt-3 gap-2">
                 {[
                   {
                     label: 'Smart zone · below 20%',
