@@ -804,6 +804,7 @@
           "usage": null,
           "pendingPermission": null,
           "pendingElicitation": null,
+          "pendingPlanProposal": null,
           "configOptions": [],
           "maxRevision": 33,
           "epoch": 0
@@ -817,6 +818,7 @@
       "usage": null,
       "pendingPermission": null,
       "pendingElicitation": null,
+      "pendingPlanProposal": null,
       "configOptions": [],
       "maxRevision": 33,
       "epoch": 0
@@ -1073,6 +1075,7 @@
           "usage": null,
           "pendingPermission": null,
           "pendingElicitation": null,
+          "pendingPlanProposal": null,
           "configOptions": [],
           "maxRevision": 3,
           "epoch": 0
@@ -1086,6 +1089,7 @@
       "usage": null,
       "pendingPermission": null,
       "pendingElicitation": null,
+      "pendingPlanProposal": null,
       "configOptions": [],
       "maxRevision": 3,
       "epoch": 0
@@ -1235,6 +1239,7 @@
           "usage": null,
           "pendingPermission": null,
           "pendingElicitation": null,
+          "pendingPlanProposal": null,
           "configOptions": [],
           "maxRevision": 3,
           "epoch": 0
@@ -1248,6 +1253,7 @@
       "usage": null,
       "pendingPermission": null,
       "pendingElicitation": null,
+      "pendingPlanProposal": null,
       "configOptions": [],
       "maxRevision": 3,
       "epoch": 0
@@ -1455,6 +1461,7 @@
           "usage": null,
           "pendingPermission": null,
           "pendingElicitation": null,
+          "pendingPlanProposal": null,
           "configOptions": [],
           "maxRevision": 6,
           "epoch": 0
@@ -1468,6 +1475,7 @@
       "usage": null,
       "pendingPermission": null,
       "pendingElicitation": null,
+      "pendingPlanProposal": null,
       "configOptions": [],
       "maxRevision": 6,
       "epoch": 0
@@ -2101,6 +2109,7 @@
           "usage": null,
           "pendingPermission": null,
           "pendingElicitation": null,
+          "pendingPlanProposal": null,
           "configOptions": [],
           "maxRevision": 62,
           "epoch": 0
@@ -2114,6 +2123,7 @@
       "usage": null,
       "pendingPermission": null,
       "pendingElicitation": null,
+      "pendingPlanProposal": null,
       "configOptions": [],
       "maxRevision": 62,
       "epoch": 0
@@ -2853,6 +2863,7 @@
           "usage": null,
           "pendingPermission": null,
           "pendingElicitation": null,
+          "pendingPlanProposal": null,
           "configOptions": [],
           "maxRevision": 22,
           "epoch": 0
@@ -2866,6 +2877,7 @@
       "usage": null,
       "pendingPermission": null,
       "pendingElicitation": null,
+      "pendingPlanProposal": null,
       "configOptions": [],
       "maxRevision": 22,
       "epoch": 0
@@ -3300,6 +3312,7 @@
           "usage": null,
           "pendingPermission": null,
           "pendingElicitation": null,
+          "pendingPlanProposal": null,
           "configOptions": [],
           "maxRevision": 20,
           "epoch": 0
@@ -3313,6 +3326,7 @@
       "usage": null,
       "pendingPermission": null,
       "pendingElicitation": null,
+      "pendingPlanProposal": null,
       "configOptions": [],
       "maxRevision": 20,
       "epoch": 0
@@ -3526,6 +3540,7 @@
           "usage": null,
           "pendingPermission": null,
           "pendingElicitation": null,
+          "pendingPlanProposal": null,
           "configOptions": [],
           "maxRevision": 6,
           "epoch": 0
@@ -3539,6 +3554,7 @@
       "usage": null,
       "pendingPermission": null,
       "pendingElicitation": null,
+      "pendingPlanProposal": null,
       "configOptions": [],
       "maxRevision": 6,
       "epoch": 0
@@ -3690,6 +3706,7 @@
           "usage": null,
           "pendingPermission": null,
           "pendingElicitation": null,
+          "pendingPlanProposal": null,
           "configOptions": [],
           "maxRevision": 4,
           "epoch": 0
@@ -3703,6 +3720,7 @@
       "usage": null,
       "pendingPermission": null,
       "pendingElicitation": null,
+      "pendingPlanProposal": null,
       "configOptions": [],
       "maxRevision": 4,
       "epoch": 0
@@ -5456,6 +5474,7 @@
           "usage": null,
           "pendingPermission": null,
           "pendingElicitation": null,
+          "pendingPlanProposal": null,
           "configOptions": [],
           "maxRevision": 202,
           "epoch": 0
@@ -5469,6 +5488,7 @@
       "usage": null,
       "pendingPermission": null,
       "pendingElicitation": null,
+      "pendingPlanProposal": null,
       "configOptions": [],
       "maxRevision": 202,
       "epoch": 0
@@ -6056,6 +6076,7 @@
           "usage": null,
           "pendingPermission": null,
           "pendingElicitation": null,
+          "pendingPlanProposal": null,
           "configOptions": [],
           "maxRevision": 21,
           "epoch": 0
@@ -6069,6 +6090,7 @@
       "usage": null,
       "pendingPermission": null,
       "pendingElicitation": null,
+      "pendingPlanProposal": null,
       "configOptions": [],
       "maxRevision": 21,
       "epoch": 0
@@ -6732,6 +6754,7 @@
           "usage": null,
           "pendingPermission": null,
           "pendingElicitation": null,
+          "pendingPlanProposal": null,
           "configOptions": [],
           "maxRevision": 24,
           "epoch": 0
@@ -6745,6 +6768,7 @@
       "usage": null,
       "pendingPermission": null,
       "pendingElicitation": null,
+      "pendingPlanProposal": null,
       "configOptions": [],
       "maxRevision": 24,
       "epoch": 0
@@ -7475,6 +7499,7 @@
           "usage": null,
           "pendingPermission": null,
           "pendingElicitation": null,
+          "pendingPlanProposal": null,
           "configOptions": [],
           "maxRevision": 53,
           "epoch": 0
@@ -7488,6 +7513,7 @@
       "usage": null,
       "pendingPermission": null,
       "pendingElicitation": null,
+      "pendingPlanProposal": null,
       "configOptions": [],
       "maxRevision": 53,
       "epoch": 0

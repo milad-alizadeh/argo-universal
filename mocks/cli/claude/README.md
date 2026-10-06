@@ -48,3 +48,13 @@ Feed mocks are generated from these recordings through `toAgentEvents` and the r
 `image-prompt` was captured from the real CLI on 2026-10-05. Its input includes the 32 × 32 red PNG in `../red-square.png`, and its output identifies the color. The temporary Checkout path and user home are replaced by `/repo` and `/user`; the account is replaced by a Claude Max account with no email or organization. It records image handling by the CLI; the Server's upload and prompt conversion remain issue #41.
 
 `new-session.ts` takes representatives of distinct effort sets from the recorded catalog and runs the real config-option converter. Shared Storybook mocks use neutral Agent and model identities. Regenerate them from the repo root with `pnpm --filter @repo/server exec tsx ../../tools/generate-new-session-mocks.mts`.
+
+## Answering request recordings
+
+`permission`, `elicitation`, `plan-approved` and `plan-kept-planning` were captured from the real CLI on 2026-10-06 in temporary Checkouts. They keep both the requests and the replies that answered them. Checkout and home paths are normalized to `/repo` and `/user`; account and startup catalog traffic are excluded.
+
+The capture uses claude-cli 2.1.286 over stream-json. `Write` asks for Permission, `AskUserQuestion` asks for a color, and `ExitPlanMode` carries the markdown proposal. Approve allows the request; Keep planning denies it with recorded feedback. The latter recording includes a revised proposal after the feedback.
+
+`request-answer.ts` reads the real replies. The pure Agent converters map the requests and Plan rows. Shared pending and answered mocks are built through those converters and the Server's Feed validator, with a deterministic Session request id and clock. Answered states show the continuing Turn, including the Permission outcome or Plan outcome and any feedback a person typed. Server issues #57 and #58 wire these procedures to live Sessions.
+
+Regenerate with `pnpm --filter @repo/server exec tsx ../../tools/generate-request-mocks.mts`, then format `packages/api/mocks/request-recordings.json` with Biome. Shared mocks are exported as `recordedRequestMocks` from `@repo/api/mocks` for the request cards.

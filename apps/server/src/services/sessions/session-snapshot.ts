@@ -49,6 +49,7 @@ export function toSessionSnapshot(
     usage: context.usage,
     pendingPermission: context.permissionQueue[0] ?? null,
     pendingElicitation: context.pendingElicitation,
+    pendingPlanProposal: null,
     configOptions: context.configOptions,
     maxRevision: feed.context.maxRevision,
     epoch: feed.context.epoch,

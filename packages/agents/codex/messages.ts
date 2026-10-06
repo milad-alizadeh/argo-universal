@@ -1,11 +1,14 @@
 import type {
   AgentMessageDeltaNotification,
   CommandExecutionOutputDeltaNotification,
+  CommandExecutionRequestApprovalParams,
+  FileChangeRequestApprovalParams,
   ItemCompletedNotification,
   ItemStartedNotification,
   ReasoningSummaryTextDeltaNotification,
   ReasoningTextDeltaNotification,
   ThreadTokenUsageUpdatedNotification,
+  ToolRequestUserInputParams,
   TurnCompletedNotification,
   TurnStartedNotification,
 } from './protocol.gen';
@@ -13,6 +16,21 @@ import type {
 // The notification families this first-Turn adapter maps; other families are dropped (ADR-0015).
 export type VendorMessage = ReceivedMessage &
   (
+    | {
+        method: 'item/commandExecution/requestApproval';
+        id: string | number;
+        params: CommandExecutionRequestApprovalParams;
+      }
+    | {
+        method: 'item/fileChange/requestApproval';
+        id: string | number;
+        params: FileChangeRequestApprovalParams;
+      }
+    | {
+        method: 'item/tool/requestUserInput';
+        id: string | number;
+        params: ToolRequestUserInputParams;
+      }
     | { method: 'turn/started'; params: TurnStartedNotification }
     | { method: 'turn/completed'; params: TurnCompletedNotification }
     | { method: 'item/started'; params: ItemStartedNotification }

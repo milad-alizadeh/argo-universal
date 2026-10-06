@@ -1,5 +1,6 @@
 import type {
   SDKAssistantMessage,
+  SDKControlRequest,
   SDKMessage,
   SDKPartialAssistantMessage,
   SDKResultMessage,
@@ -9,11 +10,14 @@ import type {
 import type { StopReason, TurnUsage } from '@repo/contracts';
 import type { AgentMapping } from '../src/agent-adapter';
 import type { AgentEvent, FeedChange, FeedUpdate } from '../src/agent-events';
+import { toRequestEvents } from './request-events';
 import { type ToolCallRow, toolCallEnded, toolCallStarted } from './tool-calls';
 
 type TextKind = 'agent_message' | 'agent_thought';
 type AssistantBlock = SDKAssistantMessage['message']['content'][number];
-export type VendorMessage = SDKMessage & { receivedAt?: number };
+export type VendorMessage = (SDKMessage | SDKControlRequest) & {
+  receivedAt?: number;
+};
 
 // What `toAgentEvents` remembers between messages, until the Turn's result clears it.
 export interface MappingState {
@@ -79,6 +83,8 @@ export function toAgentEvents(
   if ('parent_tool_use_id' in message && message.parent_tool_use_id)
     return dropped(mappingState);
   switch (message.type) {
+    case 'control_request':
+      return { events: toRequestEvents(message), mappingState };
     case 'stream_event':
       return mapStreamEvent(message, mappingState);
     case 'assistant':

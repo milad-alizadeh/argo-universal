@@ -18,26 +18,37 @@ export const ContextUsage = z.strictObject({
 });
 export type ContextUsage = z.infer<typeof ContextUsage>;
 
-export const PermissionOptionKind = z.enum([
-  'allow_once',
-  'allow_always',
-  'reject_once',
-  'reject_always',
-]);
+export const PermissionOptionKind = z.enum(['allow_once', 'reject_once']);
 export type PermissionOptionKind = z.infer<typeof PermissionOptionKind>;
 
-export const PermissionOption = z.strictObject({
-  optionId: z.string(),
-  name: z.string(),
-  kind: PermissionOptionKind,
-});
+export const PermissionOption = z
+  .strictObject({
+    optionId: PermissionOptionKind,
+    name: z.string(),
+    kind: PermissionOptionKind,
+  })
+  .refine(
+    (option) => option.optionId === option.kind,
+    'The option id must match its kind',
+  );
 export type PermissionOption = z.infer<typeof PermissionOption>;
+
+export const permissionOptions: PermissionOption[] = [
+  { optionId: 'allow_once', name: 'Allow once', kind: 'allow_once' },
+  { optionId: 'reject_once', name: 'Deny', kind: 'reject_once' },
+];
 
 // A Permission request, after ACP `session/request_permission`.
 export const PendingPermission = z.strictObject({
   toolCallId: z.string(),
   title: z.string(),
-  options: z.array(PermissionOption),
+  options: z
+    .array(PermissionOption)
+    .length(2)
+    .refine(
+      (options) => new Set(options.map((option) => option.optionId)).size === 2,
+      'Offer allow_once and reject_once exactly once',
+    ),
 });
 export type PendingPermission = z.infer<typeof PendingPermission>;
 
@@ -117,12 +128,19 @@ export type ElicitationSchema = z.infer<typeof ElicitationSchema>;
 
 // An Elicitation, after ACP `elicitation/create` in form mode, scoped to this Session.
 export const PendingElicitation = z.strictObject({
+  requestId: z.string(),
   mode: z.literal('form'),
   message: z.string(),
   requestedSchema: ElicitationSchema,
   toolCallId: z.string().optional(),
 });
 export type PendingElicitation = z.infer<typeof PendingElicitation>;
+
+export const PendingPlanProposal = z.strictObject({
+  planId: z.string(),
+  content: z.string(),
+});
+export type PendingPlanProposal = z.infer<typeof PendingPlanProposal>;
 
 // Which step of the live header order produced its text (spec 0003).
 export const LiveHeaderSource = z.discriminatedUnion('type', [
@@ -150,6 +168,7 @@ export const SessionSnapshot = z.strictObject({
   usage: ContextUsage.nullable(),
   pendingPermission: PendingPermission.nullable(),
   pendingElicitation: PendingElicitation.nullable(),
+  pendingPlanProposal: PendingPlanProposal.nullable(),
   configOptions: z.array(SessionConfigOption),
   maxRevision: sessionColumns.shape.maxRevision,
   epoch: sessionColumns.shape.epoch,

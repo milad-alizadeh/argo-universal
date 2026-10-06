@@ -21,7 +21,11 @@ export function feedEvents(name: string) {
   return recordedFeedEvents(
     { initialMappingState, toAgentEvents },
     frames
-      .filter((frame) => !frame.type.startsWith('control_'))
+      .filter(
+        (frame) =>
+          !frame.type.startsWith('control_') ||
+          frame.type === 'control_request',
+      )
       .map((frame) => ({
         ...frame,
         receivedAt: frame.emittedAtMs,

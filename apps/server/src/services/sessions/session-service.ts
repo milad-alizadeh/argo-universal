@@ -99,6 +99,25 @@ export function createSessionService({
   return {
     ...createSessionList({ database, sessions }),
     openSession: open,
+    // Issues #57 and #58 implement the answer behavior after the contract slice.
+    answerPermission: async () => {
+      throw new TRPCError({
+        code: 'NOT_IMPLEMENTED',
+        message: 'Permission answers are not implemented yet',
+      });
+    },
+    answerElicitation: async () => {
+      throw new TRPCError({
+        code: 'NOT_IMPLEMENTED',
+        message: 'Elicitation answers are not implemented yet',
+      });
+    },
+    answerPlanProposal: async () => {
+      throw new TRPCError({
+        code: 'NOT_IMPLEMENTED',
+        message: 'Plan proposal answers are not implemented yet',
+      });
+    },
     new: async (input) => {
       const projectPath = readProjectPath(database, input.projectId);
       if (

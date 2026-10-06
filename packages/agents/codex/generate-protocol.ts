@@ -26,6 +26,9 @@ const roots = [
   'v2/TurnStartedNotification',
   'v2/TurnCompletedNotification',
   'v2/ThreadTokenUsageUpdatedNotification',
+  'v2/CommandExecutionRequestApprovalParams',
+  'v2/FileChangeRequestApprovalParams',
+  'v2/ToolRequestUserInputParams',
 ];
 try {
   const version = execFileSync('codex', ['--version'], {

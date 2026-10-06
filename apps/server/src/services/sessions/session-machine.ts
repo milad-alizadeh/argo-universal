@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import {
   type AgentAdapter,
   type AgentCapabilities,
@@ -49,7 +50,7 @@ export type SessionCommand =
   | {
       type: 'session.answerPermission';
       toolCallId: string;
-      optionId: string | null;
+      optionId: PendingPermission['options'][number]['optionId'] | null;
     }
   | {
       type: 'session.answerElicitation';
@@ -281,7 +282,9 @@ const sessionSetup = setup({
     }),
     rememberElicitation: assign(({ event }) => {
       assertEvent(event, 'agent.elicitationRequested');
-      return { pendingElicitation: event.request };
+      return {
+        pendingElicitation: { ...event.request, requestId: randomUUID() },
+      };
     }),
     answerPermission: sendTo('agent', ({ event }) => {
       assertEvent(event, 'session.answerPermission');
