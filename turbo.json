@@ -1,6 +1,7 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
   "ui": "tui",
+  // No cacheDir, so every worktree of a clone shares the main worktree's .turbo/cache (Turborepo caching guide).
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

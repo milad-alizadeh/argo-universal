@@ -2,6 +2,7 @@ import path from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
 import type { AppOptions } from './fixtures';
 import { mockAgentPath } from './mock-agents';
+import { findFreePort } from './own-server';
 
 const repositoryRoot = path.resolve(import.meta.dirname, '..');
 // Beside the Server's home, so each run writes fresh mock Agent CLIs.
@@ -10,6 +11,18 @@ const mockAgentDirectory = path.join(
   'test-results',
   'agent-bin',
 );
+
+// Free ports per run, so runs in several worktrees never meet; workers inherit them from the runner, which loads this file first.
+process.env.ARGO_E2E_SERVER_PORT ??= String(await findFreePort());
+const serverPort = process.env.ARGO_E2E_SERVER_PORT;
+while (
+  !process.env.ARGO_E2E_WEB_PORT ||
+  process.env.ARGO_E2E_WEB_PORT === serverPort
+) {
+  process.env.ARGO_E2E_WEB_PORT = String(await findFreePort());
+}
+const webPort = process.env.ARGO_E2E_WEB_PORT;
+const webUrl = `http://127.0.0.1:${webPort}`;
 
 export default defineConfig<AppOptions>({
   // Specs live in one folder per flow, e2e/<flow>/ (AGENTS.md).
@@ -22,7 +35,7 @@ export default defineConfig<AppOptions>({
   reporter: [['html', { open: 'never' }]],
   use: {
     // The Server binds 127.0.0.1 only, so the App is served there too (spec section 5).
-    baseURL: 'http://127.0.0.1:8081',
+    baseURL: webUrl,
 
     trace: 'on-first-retry',
   },
@@ -46,8 +59,8 @@ export default defineConfig<AppOptions>({
       name: 'Server',
       // The supervisor as desktop starts it; pnpm would report SIGTERM as a failure.
       command: `node --import tsx ../../e2e/mock-agents.ts '${mockAgentDirectory}' && exec node --import tsx src/main.ts`,
-      // The web export has the default Server URL, ws://127.0.0.1:7337, built in (spec section 8).
-      url: 'http://127.0.0.1:7337/trpc/system.info',
+      // The page fixture points the web App at this Server's port (fixtures.ts).
+      url: `http://127.0.0.1:${serverPort}/trpc/system.info`,
       cwd: path.join(repositoryRoot, 'apps/server'),
       // Playwright empties test-results before it starts web servers, so each run gets a fresh home.
       env: {
@@ -56,6 +69,7 @@ export default defineConfig<AppOptions>({
           'test-results',
           'server-home',
         ),
+        ARGO_SERVER_PORT: serverPort,
         PATH: mockAgentPath(mockAgentDirectory),
       },
       // Never reuse a dev Server, which runs on the owner's ~/.argo.
@@ -65,8 +79,8 @@ export default defineConfig<AppOptions>({
     },
     {
       name: 'Web',
-      command: 'pnpm --filter @repo/universal-app exec expo serve --port 8081',
-      url: 'http://127.0.0.1:8081',
+      command: `pnpm --filter @repo/universal-app exec expo serve --port ${webPort}`,
+      url: webUrl,
       cwd: repositoryRoot,
       reuseExistingServer: false,
       gracefulShutdown: { signal: 'SIGTERM', timeout: 5_000 },

@@ -4,7 +4,10 @@ import path from 'node:path';
 import type { Page } from '@playwright/test';
 import { mockClis } from '@repo/mocks/cli';
 import { z } from 'zod';
-import { expect, test } from '../fixtures';
+import { expect, ownServerSkipReason, test } from '../fixtures';
+
+// Every test here starts its own Server; skipping before fixtures spares an Electron launch per test.
+test.skip(({ appTarget }) => appTarget !== 'web', ownServerSkipReason);
 
 const phone = { width: 390, height: 844 };
 // The Agent ids the Server registers, so no test names a vendor (AGENTS.md).
@@ -35,8 +38,10 @@ async function query<Output>(
   input: unknown,
   output: z.ZodType<Output>,
 ) {
+  // A reused keep-alive socket can meet the Server closing it after 5 s idle; Playwright retries only ECONNRESET.
   const response = await page.request.get(
     `${httpUrl}/trpc/${procedure}?input=${encodeURIComponent(JSON.stringify(input))}`,
+    { maxRetries: 2 },
   );
   expect(response.ok()).toBe(true);
   return z

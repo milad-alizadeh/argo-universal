@@ -2,10 +2,14 @@ import { readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
-import { test as base, _electron as electron } from '@playwright/test';
+import {
+  test as base,
+  _electron as electron,
+  type Page,
+} from '@playwright/test';
 import { z } from 'zod';
 import { type MockAgents, writeMockAgents } from './mock-agents';
-import { findFreePort, startOwnServer } from './own-server';
+import { findFreePort, serverUrlFor, startOwnServer } from './own-server';
 
 export type AppOptions = { appTarget: 'web' | 'electron' };
 
@@ -34,6 +38,22 @@ const readServerPid = async (home: string) => {
   return text === null ? null : ServerProcess.parse(JSON.parse(text)).pid;
 };
 
+// The App prefers the Server URL the desktop preload sets over its built-in one, so tests can point it at any port.
+const pointAppAtServer = (page: Page, serverUrl: string) =>
+  page.addInitScript((url) => {
+    Object.assign(globalThis, { argo: { serverUrl: url } });
+  }, serverUrl);
+
+export const ownServerSkipReason =
+  'The desktop app starts its own Server, so its Agents cannot change per test';
+
+// The web project's Server runs on a port chosen per run (playwright.config.ts).
+const webProjectServerUrl = () => {
+  const port = process.env.ARGO_E2E_SERVER_PORT;
+  if (!port) throw new Error('playwright.config.ts sets ARGO_E2E_SERVER_PORT');
+  return serverUrlFor(port);
+};
+
 type OwnServer = Awaited<ReturnType<typeof startOwnServer>>;
 
 export const test = base.extend<
@@ -44,10 +64,9 @@ export const test = base.extend<
 >({
   appTarget: ['web', { option: true }],
   ownServer: async ({ appTarget, page }, use, testInfo) => {
-    test.skip(
-      appTarget !== 'web',
-      'The desktop app starts its own Server, so its Agents cannot change per test',
-    );
+    test.skip(appTarget !== 'web', ownServerSkipReason);
+    // Starting a Server compiles it with tsx, which takes seconds when several runs share the machine.
+    test.slow();
     let server: OwnServer | undefined;
     try {
       await use(async (agents = {}) => {
@@ -56,10 +75,7 @@ export const test = base.extend<
           testInfo.outputPath('own-server'),
           agents,
         );
-        // The App reads the Server URL the desktop preload would give it.
-        await page.addInitScript((serverUrl) => {
-          Object.assign(globalThis, { argo: { serverUrl } });
-        }, server.serverUrl);
+        await pointAppAtServer(page, server.serverUrl);
         await page.goto('/');
         return server;
       });
@@ -69,6 +85,7 @@ export const test = base.extend<
   },
   page: async ({ appTarget, page }, use, testInfo) => {
     if (appTarget === 'web') {
+      await pointAppAtServer(page, webProjectServerUrl());
       await page.goto('/');
       await use(page);
       return;
@@ -90,6 +107,9 @@ export const test = base.extend<
         ...environment,
         ARGO_HOME: home,
         ARGO_SERVER_PORT: String(await findFreePort()),
+        // Its own app data, so parallel launches each get the single-instance lock.
+        ARGO_USER_DATA_DIRECTORY: testInfo.outputPath('user-data'),
+        ARGO_BACKGROUND: '1',
         PATH: agentPath,
       },
     });
