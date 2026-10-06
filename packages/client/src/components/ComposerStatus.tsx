@@ -10,7 +10,7 @@ import {
 } from 'phosphor-react-native';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Platform, ScrollView, View } from 'react-native';
+import { Platform, ScrollView, View } from 'react-native';
 import Animated, {
   cancelAnimation,
   Easing,
@@ -26,7 +26,7 @@ import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
 import { useWide } from '../navigation/use-wide';
 import { ComposerPopover } from './ComposerPopover';
-import { Icon } from './Icon';
+import { Icon, IconSpinner } from './Icon';
 
 export interface ComposerStatusProps {
   plan?: PlanEntry[];
@@ -79,33 +79,30 @@ const ThemedCircle = withUniwind(Circle, {
 function ContextRing({ percent }: { percent: number }) {
   const circumference = 2 * Math.PI * 5.5;
   return (
-    <View className="size-3.5 shrink-0">
-      <Svg
-        width={14}
-        height={14}
-        style={{ width: 14, height: 14 }}
-        viewBox="0 0 14 14"
-      >
-        <ThemedCircle
-          cx={7}
-          cy={7}
-          r={5.5}
-          fill="none"
-          strokeClassName="bg-border"
-          strokeWidth={2}
-        />
-        <ThemedCircle
-          cx={7}
-          cy={7}
-          r={5.5}
-          fill="none"
-          strokeClassName={percent < 20 ? 'bg-success' : 'bg-warning'}
-          strokeWidth={2}
-          strokeLinecap="round"
-          strokeDasharray={`${(circumference * Math.max(0, Math.min(100, 100 - percent))) / 100} ${circumference}`}
-          transform="rotate(-90 7 7)"
-        />
-      </Svg>
+    <View className="size-icon-md shrink-0 items-center justify-center">
+      <View className="size-icon-mark">
+        <Svg width="100%" height="100%" viewBox="0 0 14 14">
+          <ThemedCircle
+            cx={7}
+            cy={7}
+            r={5.5}
+            fill="none"
+            strokeClassName="bg-border"
+            strokeWidth={2}
+          />
+          <ThemedCircle
+            cx={7}
+            cy={7}
+            r={5.5}
+            fill="none"
+            strokeClassName={percent < 20 ? 'bg-success' : 'bg-warning'}
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeDasharray={`${(circumference * Math.max(0, Math.min(100, 100 - percent))) / 100} ${circumference}`}
+            transform="rotate(-90 7 7)"
+          />
+        </Svg>
+      </View>
     </View>
   );
 }
@@ -186,9 +183,10 @@ export function ComposerPlan({
             {entries.find((entry) => entry.status === 'in_progress')?.content}
           </Text>
           <Icon
+            size="sm"
             as={CaretUpIcon}
             className={cn(
-              'size-3 text-muted-foreground web:transition-transform web:duration-200',
+              'text-muted-foreground web:transition-transform web:duration-200',
               !expanded && 'rotate-180',
             )}
           />
@@ -225,7 +223,7 @@ export function ComposerPlan({
         <View>
           <View className="px-4 py-3 gap-1.5">
             <View className="flex-row items-center gap-2">
-              <Icon as={ListChecksIcon} className="size-4 text-foreground" />
+              <Icon as={ListChecksIcon} className="text-foreground" />
               <Text
                 selectable={false}
                 className="select-none text-sm leading-5 font-medium"
@@ -269,9 +267,13 @@ function NativePlanSpinner({ label }: { label: string }) {
     [rotation],
   );
   return (
-    <View role="progressbar" accessibilityLabel={label} className="size-3.5">
-      <Animated.View style={style} className="size-3.5">
-        <Svg width={14} height={14} viewBox="0 0 32 32">
+    <View
+      role="progressbar"
+      accessibilityLabel={label}
+      className="size-icon-md"
+    >
+      <Animated.View style={style} className="size-icon-md">
+        <Svg width="100%" height="100%" viewBox="0 0 32 32">
           <ThemedCircle
             cx={16}
             cy={16}
@@ -300,7 +302,7 @@ function NativePlanSpinner({ label }: { label: string }) {
 function PlanSteps({ entries }: { entries: PlanEntry[] }) {
   const wide = useWide();
   const steps = (
-    <View className={wide ? 'px-1 pb-2' : 'pb-1 border-t border-border'}>
+    <View className={wide ? 'px-1 pb-2' : 'pb-1'}>
       {entries.map((entry) => {
         let stepIndicator: ReactNode;
         if (entry.status === 'in_progress' && Platform.OS !== 'web' && !wide) {
@@ -309,37 +311,29 @@ function PlanSteps({ entries }: { entries: PlanEntry[] }) {
           );
         } else if (entry.status === 'in_progress') {
           stepIndicator = (
-            <ActivityIndicator
-              size={wide ? 16 : 14}
+            <IconSpinner
               colorClassName="accent-muted-foreground wide:accent-foreground"
               accessibilityLabel={`${entry.content} in progress`}
-              className="size-3.5 wide:size-4"
             />
           );
         } else if (entry.status === 'completed') {
           stepIndicator = (
-            <Icon
-              as={CheckIcon}
-              className="size-3.5 wide:size-4 text-muted-foreground"
-            />
+            <Icon as={CheckIcon} className="text-muted-foreground" />
           );
         } else {
           stepIndicator = (
-            <Svg
-              width={wide ? 16 : 14}
-              height={wide ? 16 : 14}
-              style={{ width: wide ? 16 : 14, height: wide ? 16 : 14 }}
-              viewBox="0 0 32 32"
-            >
-              <ThemedCircle
-                cx={16}
-                cy={16}
-                r={14}
-                fill="none"
-                strokeClassName="bg-ring wide:bg-muted-foreground"
-                strokeWidth={4}
-              />
-            </Svg>
+            <View className="size-icon-md">
+              <Svg width="100%" height="100%" viewBox="0 0 32 32">
+                <ThemedCircle
+                  cx={16}
+                  cy={16}
+                  r={14}
+                  fill="none"
+                  strokeClassName="bg-ring wide:bg-muted-foreground"
+                  strokeWidth={4}
+                />
+              </Svg>
+            </View>
           );
         }
         return (
@@ -352,7 +346,7 @@ function PlanSteps({ entries }: { entries: PlanEntry[] }) {
                 'rounded-md bg-foreground/5',
             )}
           >
-            <View className="w-3.5 wide:w-4 h-5 wide:h-4 shrink-0 items-center justify-center">
+            <View className="h-5 wide:h-4 shrink-0 justify-center">
               {stepIndicator}
             </View>
             <Text
@@ -401,10 +395,7 @@ export function ComposerStatusControls({
               accessibilityLabel="Usage"
               className="h-7 sm:h-7 py-0 w-7 wide:w-auto px-0 has-[>svg]:px-0 wide:px-1.5 wide:has-[>svg]:px-1.5 gap-1.5"
             >
-              <Icon
-                as={ClockCountdownIcon}
-                className="size-4 text-muted-foreground"
-              />
+              <Icon as={ClockCountdownIcon} className="text-muted-foreground" />
               <Text
                 selectable={false}
                 className="select-none hidden wide:flex text-xs font-normal text-foreground"
@@ -431,10 +422,7 @@ export function ComposerStatusControls({
                 </Text>
               </View>
               {status.usage?.limits.map((limit) => (
-                <View
-                  key={limit.label}
-                  className="px-4 py-3 gap-1.5 border-t border-border"
-                >
+                <View key={limit.label} className="px-4 py-3 gap-1.5">
                   <View className="flex-row justify-between">
                     <Text
                       selectable={false}
@@ -542,7 +530,7 @@ export function ComposerStatusControls({
                 </View>
                 <Meter percent={percent} warning />
               </View>
-              <View className="border-t border-border px-0 pt-3 gap-2">
+              <View className="px-0 pt-3 gap-2">
                 {[
                   {
                     label: 'Smart zone · below 20%',
@@ -593,7 +581,7 @@ export function ComposerStatusControls({
                     close();
                   }}
                 >
-                  <Icon as={ArrowsInLineVerticalIcon} className="size-3.5" />
+                  <Icon as={ArrowsInLineVerticalIcon} />
                   <Text
                     selectable={false}
                     className="select-none text-xs leading-4 font-medium"
@@ -635,7 +623,7 @@ export function ComposerWorkChips({
               onPress={work.onPress}
               className="h-6 sm:h-6 py-0 px-2.5 has-[>svg]:px-2.5 gap-1.5 rounded-full border border-border bg-card shadow-composer"
             >
-              <Icon as={icon} className="size-4 text-muted-foreground" />
+              <Icon as={icon} className="text-muted-foreground" />
               <Text
                 selectable={false}
                 className="select-none text-xs leading-4 font-normal"

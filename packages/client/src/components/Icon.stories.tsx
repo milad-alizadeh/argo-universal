@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { IconWeight } from 'phosphor-react-native';
+import { CaretRightIcon } from 'phosphor-react-native/src/icons/CaretRight';
 import { CheckIcon } from 'phosphor-react-native/src/icons/Check';
 import { HeartIcon } from 'phosphor-react-native/src/icons/Heart';
 import { MagnifyingGlassIcon } from 'phosphor-react-native/src/icons/MagnifyingGlass';
@@ -44,11 +45,11 @@ export const Overview: Story = {
           ))}
         </View>
       </Variation>
-      <Variation label="Sizes: 16, 24 and 32">
+      <Variation label="Sizes: sm 12 for carets, md 16 by default, lg 20 for phone shell controls">
         <View className="flex-row items-center gap-3">
-          {[16, 24, 32].map((size) => (
-            <Icon key={size} as={PlusIcon} size={size} />
-          ))}
+          <Icon as={CaretRightIcon} size="sm" />
+          <Icon as={PlusIcon} size="md" />
+          <Icon as={PlusIcon} size="lg" />
         </View>
       </Variation>
       <Variation label={`Weights: ${weights.join(', ')}`}>

@@ -21,6 +21,7 @@ export function DesktopShellMock({
   sidebarShown = true,
   inspectorState = 'closed',
   showInspectorControls = false,
+  inspector,
 }: Partial<DesktopShellProps> & { showInspectorControls?: boolean }) {
   const [section, setSection] = useState(selectedSection);
   const [shown, setShown] = useState(sidebarShown);
@@ -43,9 +44,11 @@ export function DesktopShellMock({
           <Text className="text-sm font-semibold">Inspector</Text>
         }
         inspector={
-          <View className="p-4">
-            <Text testID="inspector-content">{title} Inspector</Text>
-          </View>
+          inspector ?? (
+            <View className="p-4">
+              <Text testID="inspector-content">{title} Inspector</Text>
+            </View>
+          )
         }
         listHeader={
           <Text

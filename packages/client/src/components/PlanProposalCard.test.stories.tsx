@@ -245,6 +245,58 @@ export const Answered: Story = {
   },
 };
 
+export const AnswerCollapsesExpansion: Story = {
+  args: { proposal: longPlanProposal },
+  render: (args) => <PlanProposalPreview {...args} retainProposalAfterAnswer />,
+  play: async ({ canvas, userEvent, args }) => {
+    const overlay = within(document.body);
+    for (const width of [390, 1440]) {
+      await settleViewport(width);
+      for (const decision of ['approve', 'keep_planning']) {
+        await userEvent.click(
+          canvas.getByRole('button', { name: 'Expand plan' }),
+        );
+        const dialog = await overlay.findByRole('dialog', {
+          name: 'Expanded plan',
+        });
+        const panel = within(dialog);
+        if (decision === 'keep_planning') {
+          await userEvent.click(
+            panel.getByRole('button', { name: 'Keep planning' }),
+          );
+          await userEvent.clear(panel.getByRole('textbox'));
+          await userEvent.type(
+            panel.getByRole('textbox'),
+            planProposalFeedback,
+          );
+        }
+        await userEvent.click(
+          panel.getByRole('button', {
+            name: decision === 'approve' ? 'Approve' : 'Keep planning',
+          }),
+        );
+        await waitFor(() =>
+          expect(
+            overlay.queryByRole('dialog', { name: 'Expanded plan' }),
+          ).not.toBeInTheDocument(),
+        );
+        await expect(canvas.getByText('Approve this plan?')).toBeVisible();
+        await expect(
+          canvas.getByTestId('plan-proposal-scroll').getBoundingClientRect()
+            .height,
+        ).toBe(280);
+        if (decision === 'keep_planning') {
+          await expect(canvas.getByRole('textbox')).toHaveValue(
+            planProposalFeedback,
+          );
+          await userEvent.click(canvas.getByRole('button', { name: 'Back' }));
+        }
+      }
+    }
+    await expect(args.onAnswer).toHaveBeenCalledTimes(4);
+  },
+};
+
 export const ShortPlanDark: Story = { ...ShortPlan, globals: { mode: 'dark' } };
 export const LongPlanDark: Story = { ...LongPlan, globals: { mode: 'dark' } };
 export const ExpandedDark: Story = { ...Expanded, globals: { mode: 'dark' } };

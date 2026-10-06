@@ -76,7 +76,7 @@ export function WorkingMark() {
     return () => cancelAnimation(step);
   }, [reducedMotion, step]);
   return (
-    <View testID="working-mark" className="size-4 shrink-0">
+    <View testID="working-mark" className="size-icon-md shrink-0">
       {cells.map(([left, top], index) => (
         <Cell
           key={`${left}:${top}`}

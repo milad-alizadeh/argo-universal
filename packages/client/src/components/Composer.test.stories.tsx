@@ -709,9 +709,16 @@ export const CreatedCheckoutIsReadOnly: Story = {
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       await settleViewport();
-      const name = canvas.getByText('created-worktree', { exact: true });
-      await expect(name.scrollWidth).toBeLessThanOrEqual(name.clientWidth);
-      await userEvent.click(name);
+      if (width < 720) {
+        await expect(
+          canvas.queryByText('created-worktree', { exact: true }),
+        ).not.toBeInTheDocument();
+      } else {
+        const name = canvas.getByText('created-worktree', { exact: true });
+        await expect(name).toBeVisible();
+        await expect(name.scrollWidth).toBeLessThanOrEqual(name.clientWidth);
+        await userEvent.click(name);
+      }
       await expect(
         canvas.queryByRole('button', { name: 'Checkout' }),
       ).not.toBeInTheDocument();
@@ -784,13 +791,12 @@ export const SessionControls: Story = {
         name: 'Update the shared controls in progress',
       });
       await expect(spinner).toBeVisible();
-      const expectedSize = width < 720 ? '14px' : '16px';
       await expect(
         getComputedStyle(spinner.firstElementChild as Element).width,
-      ).toBe(expectedSize);
+      ).toBe('16px');
       await expect(
         getComputedStyle(spinner.firstElementChild as Element).height,
-      ).toBe(expectedSize);
+      ).toBe('16px');
       const spinnerColor = getComputedStyle(
         overlay
           .getAllByText(

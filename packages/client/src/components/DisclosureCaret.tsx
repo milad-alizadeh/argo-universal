@@ -28,13 +28,11 @@ export function DisclosureCaret({
     [rotation],
   );
   return (
-    <Animated.View
-      style={style}
-      className="size-3.5 shrink-0 items-center justify-center"
-    >
+    <Animated.View style={style} className="shrink-0">
       <Icon
+        size="sm"
         as={CaretRightIcon}
-        className={cn('size-3.5 text-muted-foreground', className)}
+        className={cn('text-muted-foreground', className)}
       />
     </Animated.View>
   );

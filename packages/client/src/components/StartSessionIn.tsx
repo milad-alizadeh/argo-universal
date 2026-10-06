@@ -61,7 +61,7 @@ export function StartSessionIn({
               : 'h-10 sm:h-10 px-4 has-[>svg]:px-4 rounded-md',
           )}
         >
-          <Icon as={FolderIcon} className="size-4 text-muted-foreground" />
+          <Icon as={FolderIcon} className="text-muted-foreground" />
           <Text
             selectable={false}
             numberOfLines={1}
@@ -70,8 +70,9 @@ export function StartSessionIn({
             {project?.name ?? 'Choose a Project'}
           </Text>
           <Icon
+            size="sm"
             as={CaretDownIcon}
-            className="-ml-0.5 size-3 text-muted-foreground"
+            className="-ml-0.5 text-muted-foreground"
           />
         </Button>
       }
@@ -95,7 +96,7 @@ export function StartSessionIn({
         wide ? 'h-7 px-1.5' : 'h-10 px-4',
       )}
     >
-      <Icon as={MonitorIcon} className="size-4 text-muted-foreground" />
+      <Icon as={MonitorIcon} className="text-muted-foreground" />
       <Text numberOfLines={1} className="text-sm leading-5 text-foreground">
         {serverName}
       </Text>
@@ -145,7 +146,7 @@ export function StartSessionIn({
           >
             <Icon
               as={checkout.newWorktree ? GitBranchIcon : FolderIcon}
-              className="size-4 text-muted-foreground"
+              className="text-muted-foreground"
             />
             <Text
               selectable={false}
@@ -162,8 +163,9 @@ export function StartSessionIn({
               </Text>
             )}
             <Icon
+              size="sm"
               as={CaretDownIcon}
-              className="-ml-0.5 size-3 text-muted-foreground"
+              className="-ml-0.5 text-muted-foreground"
             />
           </Button>
         }
@@ -204,10 +206,7 @@ export function ProjectPicker({
     <View className="p-1">
       <View className="py-1">
         <View className="h-8 flex-row items-center gap-1.5 rounded-md px-2">
-          <Icon
-            as={MagnifyingGlassIcon}
-            className="size-4 text-muted-foreground"
-          />
+          <Icon as={MagnifyingGlassIcon} className="text-muted-foreground" />
           <Input
             accessibilityLabel="Find a Project"
             placeholder="Find a Project…"
@@ -236,10 +235,7 @@ export function ProjectPicker({
               )}
             >
               <View className="h-5 shrink-0 justify-center">
-                <Icon
-                  as={FolderIcon}
-                  className="size-4 text-muted-foreground"
-                />
+                <Icon as={FolderIcon} className="text-muted-foreground" />
               </View>
               <View className="min-w-0 flex-1 gap-0.5">
                 <Text
@@ -259,7 +255,7 @@ export function ProjectPicker({
               </View>
               <View className="h-5 w-4 shrink-0 items-center justify-center">
                 {selected && (
-                  <Icon as={CheckIcon} className="size-4 text-foreground" />
+                  <Icon as={CheckIcon} className="text-foreground" />
                 )}
               </View>
             </Button>

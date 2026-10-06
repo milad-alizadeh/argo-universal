@@ -82,7 +82,7 @@ export function SessionsFilterMenu({
           <Button variant="ghost" size="icon" className="size-8 sm:size-8">
             <Icon
               as={SlidersHorizontalIcon}
-              className="size-4 text-muted-foreground"
+              className="text-muted-foreground"
             />
           </Button>
         ) : (
@@ -248,10 +248,7 @@ export function SessionsScreen({ query, archived }: SessionsScreenProps) {
           onPress={() => navigate({ to: 'new-session' })}
           className="h-9 sm:h-9 self-start flex-row gap-2 rounded-md px-3"
         >
-          <Icon
-            as={NotePencilIcon}
-            className="size-4 text-primary-foreground"
-          />
+          <Icon as={NotePencilIcon} className="text-primary-foreground" />
           <Text className="text-sm text-primary-foreground">New Session</Text>
         </Button>
       </View>

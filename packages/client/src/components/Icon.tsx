@@ -3,49 +3,82 @@ import type {
   IconProps as PhosphorIconProps,
 } from 'phosphor-react-native';
 import { useContext } from 'react';
-import { StyleSheet } from 'react-native';
-import { withUniwind } from 'uniwind';
+import {
+  ActivityIndicator,
+  type ActivityIndicatorProps,
+  StyleSheet,
+} from 'react-native';
+import { useCSSVariable, withUniwind } from 'uniwind';
 import { cn } from '#lib/utils';
 import { TextClassContext } from '#primitives/text';
 
-export type IconProps = PhosphorIconProps & {
+// sm for chevrons, carets and check marks; md for every other icon; lg for phone shell controls and the desktop rail.
+export const iconSizeClasses = {
+  sm: 'size-icon-sm',
+  md: 'size-icon-md',
+  lg: 'size-icon-lg',
+} as const;
+
+export type IconSize = keyof typeof iconSizeClasses;
+
+// Phosphor and ActivityIndicator take a number, so this is the one place a variant becomes pixels.
+export function useIconPixels(size: IconSize) {
+  const pixels = useCSSVariable(`--spacing-icon-${size}`);
+  return typeof pixels === 'number'
+    ? pixels
+    : Number.parseFloat(String(pixels));
+}
+
+export type IconProps = Omit<PhosphorIconProps, 'size'> & {
   as: PhosphorIcon;
+  size?: IconSize;
   className?: string;
 };
 
-function IconComponent({ as: Component, ...props }: IconProps) {
-  let size: number | undefined;
-  if (typeof props.size === 'number') size = props.size;
-  else if (props.size?.endsWith('px')) size = Number.parseFloat(props.size);
+function IconComponent({
+  as: Component,
+  pixels,
+  style,
+  ...props
+}: Omit<IconProps, 'size'> & { pixels: number }) {
   return (
     <Component
       {...props}
-      style={{
-        ...StyleSheet.flatten(props.style),
-        ...(size === undefined ? {} : { width: size, height: size }),
-      }}
+      size={pixels}
+      style={{ ...StyleSheet.flatten(style), width: pixels, height: pixels }}
     />
   );
 }
 
 const StyledIcon = withUniwind(IconComponent, {
-  size: {
-    fromClassName: 'className',
-    styleProperty: 'width',
-  },
   color: {
     fromClassName: 'className',
     styleProperty: 'color',
   },
 });
 
-export function Icon({ className, weight = 'regular', ...props }: IconProps) {
+export function Icon({
+  className,
+  size = 'md',
+  weight = 'regular',
+  ...props
+}: IconProps) {
   const textClass = useContext(TextClassContext);
+  const pixels = useIconPixels(size);
   return (
     <StyledIcon
-      className={cn('size-5 text-foreground', textClass, className)}
+      className={cn('text-foreground', textClass, className)}
+      pixels={pixels}
       weight={weight}
       {...props}
     />
   );
+}
+
+export function IconSpinner({
+  size = 'md',
+  ...props
+}: Omit<ActivityIndicatorProps, 'size'> & { size?: IconSize }) {
+  const pixels = useIconPixels(size);
+  return <ActivityIndicator {...props} size={pixels} />;
 }

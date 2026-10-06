@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
 import { DesktopShellMock } from '../../mocks/desktop-shell-mock';
+import { InspectorFilesMock } from '../../mocks/inspector-files-mock';
 import { DesktopShell, type DesktopShellProps } from './DesktopShell';
 
 const meta = {
@@ -44,3 +45,12 @@ type Story = StoryObj<typeof meta>;
 
 // The rail and dividers drive the shell; controls set the section, sidebar, Inspector and attention count.
 export const Overview: Story = { name: 'DesktopShell' };
+
+// Changed files in the Inspector: one list of file headers and lines that fades under the toolbar.
+export const InspectorFiles: Story = {
+  name: 'Inspector files',
+  args: {
+    inspectorState: 'open',
+    inspector: <InspectorFilesMock />,
+  },
+};

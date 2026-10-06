@@ -168,10 +168,7 @@ export function toFeedView(
     } else if (row.sessionUpdate === 'tool_call_update') {
       const awaitingPermission =
         row.toolCallId === snapshot.pendingPermission?.toolCallId;
-      const displayedRow = awaitingPermission
-        ? { ...row, title: 'Awaiting approval' }
-        : row;
-      toolCalls.push(displayedRow);
+      toolCalls.push(row);
       const actions = explorationActions(row);
       if (isRunning(row)) {
         if (awaitingPermission) {
@@ -201,7 +198,11 @@ export function toFeedView(
         }
         exploration.toolCalls.push(row);
       } else {
-        activities.push({ type: 'tool_call', row: displayedRow });
+        activities.push({
+          type: 'tool_call',
+          row,
+          ...(awaitingPermission ? { awaitingApproval: true } : {}),
+        });
         if (!actions.length) exploration = undefined;
       }
     } else {

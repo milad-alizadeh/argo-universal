@@ -53,7 +53,7 @@ function RetryIcon() {
   );
   return (
     <Animated.View testID="live-header-retry" style={style}>
-      <Icon as={ArrowClockwiseIcon} className="size-4 text-muted-foreground" />
+      <Icon as={ArrowClockwiseIcon} className="text-muted-foreground" />
     </Animated.View>
   );
 }
@@ -73,12 +73,12 @@ function SourceIcon({
     case 'working':
       return <WorkingMark />;
     case 'thought':
-      return <Icon as={BrainIcon} className="size-4 text-muted-foreground" />;
+      return <Icon as={BrainIcon} className="text-muted-foreground" />;
     case 'tool_call':
       return (
         <Icon
           as={toolCall ? toolCallIcon(toolCall) : WrenchIcon}
-          className="size-4 text-muted-foreground"
+          className="text-muted-foreground"
         />
       );
   }

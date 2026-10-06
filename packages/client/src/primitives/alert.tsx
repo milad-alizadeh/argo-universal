@@ -38,7 +38,6 @@ function Alert({
           <Icon
             as={icon}
             className={cn(
-              'size-4',
               variant === 'destructive' && 'text-destructive',
               iconClassName,
             )}

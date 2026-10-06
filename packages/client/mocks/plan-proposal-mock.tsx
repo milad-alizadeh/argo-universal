@@ -33,7 +33,10 @@ export const planProposalFeedback =
   planProposalMocks.find(({ answer }) => answer.decision === 'keep_planning')
     ?.answer.feedback ?? '';
 
-export function PlanProposalPreview(props: PlanProposalCardProps) {
+export function PlanProposalPreview({
+  retainProposalAfterAnswer = false,
+  ...props
+}: PlanProposalCardProps & { retainProposalAfterAnswer?: boolean }) {
   const [draft, setDraft] = useState<ComposerDraft>({
     text: 'Keep my draft',
     images: [],
@@ -65,7 +68,7 @@ export function PlanProposalPreview(props: PlanProposalCardProps) {
             onAttachImages={() => {}}
             onSend={() => {}}
             planProposal={
-              answer
+              answer && !retainProposalAfterAnswer
                 ? undefined
                 : {
                     ...props,

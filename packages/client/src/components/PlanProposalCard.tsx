@@ -53,14 +53,14 @@ function PlanProposalInteraction({
   const [feedback, setFeedback] = useState('');
   const [expanded, setExpanded] = useState(false);
   const submit = () => {
-    if (answered) return;
+    if (answered || (planning && !feedback.trim())) return;
+    setExpanded(false);
     if (planning) {
-      if (feedback.trim())
-        onAnswer({
-          planId: proposal.planId,
-          decision: 'keep_planning',
-          feedback,
-        });
+      onAnswer({
+        planId: proposal.planId,
+        decision: 'keep_planning',
+        feedback,
+      });
     } else onAnswer({ planId: proposal.planId, decision: 'approve' });
   };
   const back = () => {
@@ -97,10 +97,7 @@ function PlanProposalInteraction({
       >
         <View className={expanded ? 'px-4 pt-2 pb-2 wide:pt-4' : undefined}>
           <View className="flex-row items-center gap-1.5">
-            <Icon
-              as={MapTrifoldIcon}
-              className="size-4 text-muted-foreground"
-            />
+            <Icon as={MapTrifoldIcon} className="text-muted-foreground" />
             <Text className="min-w-0 flex-1 text-sm leading-5.5 font-semibold">
               Approve this plan?
             </Text>
@@ -113,7 +110,7 @@ function PlanProposalInteraction({
             >
               <Icon
                 as={expanded ? ArrowsInSimpleIcon : ArrowsOutSimpleIcon}
-                className="size-4 text-muted-foreground"
+                className="text-muted-foreground"
               />
             </Button>
           </View>
@@ -147,7 +144,7 @@ function PlanProposalInteraction({
       >
         {answered && (
           <View className="flex-1 flex-row items-center gap-1.5 px-2">
-            <Icon as={InfoIcon} className="size-3.5 text-muted-foreground" />
+            <Icon as={InfoIcon} className="text-muted-foreground" />
             <Text className="text-sm leading-5 text-muted-foreground">
               Already answered on another device
             </Text>
@@ -175,7 +172,7 @@ function PlanProposalInteraction({
                 <View className="size-5 rounded-sm items-center justify-center bg-primary-foreground/15">
                   <Icon
                     as={ArrowElbowDownLeftIcon}
-                    className="size-4 text-primary-foreground"
+                    className="text-primary-foreground"
                   />
                 </View>
               )}

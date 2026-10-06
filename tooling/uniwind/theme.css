@@ -28,6 +28,10 @@
   --spacing-8: 32px;
   --spacing-10: 40px;
   --spacing-12: 48px;
+  --spacing-icon-sm: 12px;
+  --spacing-icon-mark: 14px;
+  --spacing-icon-md: 16px;
+  --spacing-icon-lg: 20px;
   --leading-4: 16px;
   --leading-4_5: 18px;
   --leading-5: 20px;
@@ -43,7 +47,7 @@
   --spacing-hairline: hairlineWidth();
   --spacing-phone-drawer: 300px;
   --spacing-phone-drawer-peek: 64px;
-  --spacing-phone-shell-icon: 22px;
+  --spacing-phone-shell-badge: 20px;
   --spacing-shell-bar: 64px;
   --spacing-shell-list: 300px;
   --spacing-shell-inspector: 380px;
