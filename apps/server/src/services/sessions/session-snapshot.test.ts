@@ -4,7 +4,7 @@ import { createActor, type StateValue } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
 import { liveHeaderMocks } from '#mocks/live-header';
 import { sessionMachine } from './session-machine';
-import { toSessionSnapshot } from './session-snapshot';
+import { noChanges, toSessionSnapshot } from './session-snapshot';
 
 const { database, remove } = openTestDatabase();
 afterAll(remove);
@@ -43,6 +43,7 @@ it.each(rows)('maps %j to %s', (value, state) => {
     pendingPermission: null,
     pendingElicitation: null,
     configOptions: [],
+    changes: noChanges,
     epoch: 2,
     maxRevision: 7,
   });
@@ -93,6 +94,7 @@ it('projects the live context and the Feed revision without changing either', ()
     pendingPermission: permission,
     pendingElicitation: elicitation,
     configOptions: [config],
+    changes: noChanges,
     epoch: 3,
     maxRevision: 9,
   });

@@ -5,6 +5,7 @@ import {
   userMessageChange,
 } from '../apps/server/src/services/feed/feed-change.ts';
 import { toLiveHeader } from '../apps/server/src/services/sessions/live-header.ts';
+import { noChanges } from '../apps/server/src/services/sessions/session-snapshot.ts';
 import { mockClis } from '../mocks/cli/index.ts';
 import { agentAdapters } from '../packages/agents/src/adapters.ts';
 import type { SessionUpdate } from '../packages/contracts/src/feed/session-update.ts';
@@ -144,6 +145,7 @@ const mocks = agentAdapters.flatMap(({ agent }, index) => {
       pendingPermission: null,
       pendingElicitation: null,
       configOptions: [],
+      changes: noChanges,
       epoch: 0,
       maxRevision: feed.maxRevision,
     });

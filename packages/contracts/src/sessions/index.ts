@@ -1,4 +1,5 @@
 export * from './cancel';
+export * from './changes';
 export * from './close';
 export * from './counts';
 export * from './delete';

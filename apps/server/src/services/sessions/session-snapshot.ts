@@ -1,8 +1,19 @@
-import type { SessionSnapshot, SessionUpdate } from '@repo/contracts';
+import type {
+  ChangesSummary,
+  SessionSnapshot,
+  SessionUpdate,
+} from '@repo/contracts';
 import type { SnapshotFrom } from 'xstate';
 import type { feedMachine } from '../feed/feed-machine';
 import { toLiveHeader } from './live-header';
 import type { sessionMachine } from './session-machine';
+
+// The Checkout's changes are computed in #74.
+export const noChanges: ChangesSummary = {
+  files: 0,
+  additions: 0,
+  deletions: 0,
+};
 
 export function isSessionReady(session: SnapshotFrom<typeof sessionMachine>) {
   return (
@@ -50,6 +61,7 @@ export function toSessionSnapshot(
     pendingPermission: context.permissionQueue[0] ?? null,
     pendingElicitation: context.pendingElicitation,
     configOptions: context.configOptions,
+    changes: noChanges,
     maxRevision: feed.context.maxRevision,
     epoch: feed.context.epoch,
   };

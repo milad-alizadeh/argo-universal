@@ -1,3 +1,4 @@
+export { createChangesMocks } from './changes-mock';
 export { createFeedMocks, recordedFeedMocks } from './feed-mock';
 export {
   newSessionMocks,
