@@ -137,7 +137,6 @@ export function Composer({
     <View className="w-full max-w-composer items-center">
       {!wide &&
         ((phoneCheckout && configuration?.checkout.onNewWorktreeChange) ||
-          configuration?.checkout.path ||
           status?.plan?.length ||
           status?.subagents ||
           status?.shells) && (
@@ -149,12 +148,6 @@ export function Composer({
               />
             ) : (
               <>
-                {configuration?.checkout.path && (
-                  <ComposerCheckoutControl
-                    checkout={configuration.checkout}
-                    disabled={inactive}
-                  />
-                )}
                 {!!status?.plan?.length && (
                   <ComposerPlan entries={status.plan} disabled={inactive} />
                 )}
