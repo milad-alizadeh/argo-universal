@@ -12,7 +12,7 @@ import { cn } from '#lib/utils';
 function Collapsible({
   children,
   ...props
-}: React.ComponentProps<typeof CollapsiblePrimitive.Root>) {
+}: Omit<React.ComponentProps<typeof CollapsiblePrimitive.Root>, 'asChild'>) {
   if (Platform.OS === 'web')
     return (
       <CollapsiblePrimitive.Root {...props}>
@@ -41,7 +41,7 @@ function CollapsibleContent({
   children,
   className,
   ...props
-}: React.ComponentProps<typeof CollapsiblePrimitive.Content>) {
+}: Omit<React.ComponentProps<typeof CollapsiblePrimitive.Content>, 'asChild'>) {
   if (Platform.OS === 'web') {
     return (
       <CollapsiblePrimitive.Content
