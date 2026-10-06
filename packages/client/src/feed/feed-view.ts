@@ -8,6 +8,7 @@ import type {
 
 export interface FeedToolCall {
   type: 'tool_call';
+  awaitingApproval?: boolean;
   row: ToolCallUpdate;
 }
 

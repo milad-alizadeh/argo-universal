@@ -221,9 +221,7 @@ describe('toFeedView', () => {
           id: row.id,
           title: 'Awaiting approval',
           state: 'open',
-          items: [
-            { type: 'tool_call', row: { ...row, title: 'Awaiting approval' } },
-          ],
+          items: [{ type: 'tool_call', row, awaitingApproval: true }],
         },
       ]);
       const answered: ToolCallUpdate = {

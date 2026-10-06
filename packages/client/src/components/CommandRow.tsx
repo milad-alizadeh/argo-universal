@@ -8,16 +8,24 @@ import { Text } from '#primitives/text';
 import { toolCallTitle } from '../feed/tool-call-title';
 import { useToolCallDuration } from '../feed/use-tool-call-duration';
 import { FeedCodeBlock } from './FeedCodeBlock';
-import { FeedDisclosure } from './FeedDisclosure';
 import { Icon } from './Icon';
+import { ToolCallDisclosure } from './ToolCallDisclosure';
 
 export interface CommandRowProps {
   row: ToolCallUpdate;
   initialOpen?: boolean;
   now?: number;
+  permissionMessage?: string;
+  awaitingApproval?: boolean;
 }
 
-export function CommandRow({ row, initialOpen, now }: CommandRowProps) {
+export function CommandRow({
+  row,
+  initialOpen,
+  now,
+  permissionMessage,
+  awaitingApproval = false,
+}: CommandRowProps) {
   const running = row.status === 'pending' || row.status === 'in_progress';
   const stopped = row.status === 'cancelled';
   const duration = useToolCallDuration(row, now);
@@ -48,13 +56,16 @@ export function CommandRow({ row, initialOpen, now }: CommandRowProps) {
   if (failed) status = [failureStatus, duration].filter(Boolean).join(' · ');
   const output = terminal.output.replace(/\r\n/g, '\n').replace(/\n$/, '');
   return (
-    <FeedDisclosure
-      label={toolCallTitle(row)}
+    <ToolCallDisclosure
+      label={toolCallTitle(row, awaitingApproval)}
       icon={TerminalWindowIcon}
       failed={failed}
       running={running}
       initialOpen={initialOpen}
-      trailing={status}
+      trailing={awaitingApproval ? undefined : status}
+      awaitingApproval={awaitingApproval}
+      permissionOutcome={row._meta?.argo?.permissionOutcome}
+      permissionMessage={permissionMessage}
     >
       <FeedCodeBlock
         language="Shell"
@@ -78,7 +89,7 @@ export function CommandRow({ row, initialOpen, now }: CommandRowProps) {
           </View>
         }
       />
-    </FeedDisclosure>
+    </ToolCallDisclosure>
   );
 }
 

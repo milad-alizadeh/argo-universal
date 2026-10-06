@@ -3,15 +3,22 @@ import { View } from 'react-native';
 import { Text } from '#primitives/text';
 import { toolCallTitle } from '../feed/tool-call-title';
 import { FeedCodeBlock } from './FeedCodeBlock';
-import { FeedDisclosure } from './FeedDisclosure';
+import { ToolCallDisclosure } from './ToolCallDisclosure';
 import { toolCallIcon } from './tool-call-icon';
 
 export interface ToolCallRowProps {
   row: ToolCallUpdate;
   initialOpen?: boolean;
+  permissionMessage?: string;
+  awaitingApproval?: boolean;
 }
 
-export function ToolCallRow({ row, initialOpen }: ToolCallRowProps) {
+export function ToolCallRow({
+  row,
+  initialOpen,
+  permissionMessage,
+  awaitingApproval = false,
+}: ToolCallRowProps) {
   const path =
     row._meta?.argo?.commandActions?.find((action) => action.path)?.path ??
     row.locations?.[0]?.path;
@@ -29,12 +36,15 @@ export function ToolCallRow({ row, initialOpen }: ToolCallRowProps) {
     })
     .join('\n');
   return (
-    <FeedDisclosure
-      label={toolCallTitle(row)}
+    <ToolCallDisclosure
+      label={toolCallTitle(row, awaitingApproval)}
       icon={toolCallIcon(row)}
       running={row.status === 'pending' || row.status === 'in_progress'}
       failed={row.status === 'failed'}
       initialOpen={initialOpen}
+      awaitingApproval={awaitingApproval}
+      permissionOutcome={row._meta?.argo?.permissionOutcome}
+      permissionMessage={permissionMessage}
     >
       <FeedCodeBlock
         language={path?.split('/').at(-1) ?? 'Output'}
@@ -49,6 +59,6 @@ export function ToolCallRow({ row, initialOpen }: ToolCallRowProps) {
           ) : undefined
         }
       />
-    </FeedDisclosure>
+    </ToolCallDisclosure>
   );
 }
