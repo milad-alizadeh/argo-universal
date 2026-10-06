@@ -25,6 +25,15 @@ const windowOrigin = webDevelopmentUrl
   ? originOf(webDevelopmentUrl)
   : appOrigin;
 
+// Tests give each launch its own app data, so launches neither share the single-instance lock nor touch the owner's.
+const userDataDirectory = process.env.ARGO_USER_DATA_DIRECTORY;
+if (userDataDirectory) app.setPath('userData', userDataDirectory);
+// Tests open the window hidden and keep the app out of the Dock, so a run never takes focus.
+const runsInBackground = process.env.ARGO_BACKGROUND === '1';
+if (runsInBackground && process.platform === 'darwin') {
+  app.setActivationPolicy('accessory');
+}
+
 registerAppScheme();
 
 const serverUrl = (address: ServerAddress) => `ws://127.0.0.1:${address.port}`;
@@ -46,7 +55,10 @@ const createWindow = (url: string) => {
   const mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
+    show: !runsInBackground,
     webPreferences: {
+      // A hidden window would otherwise throttle timers and animations.
+      backgroundThrottling: !runsInBackground,
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
       nodeIntegration: false,

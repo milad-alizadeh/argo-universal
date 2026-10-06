@@ -119,6 +119,7 @@ export const SecondAgentStreaming: Story = {
 export const CopyCode: Story = {
   play: async ({ canvas, userEvent }) => {
     const { vi } = await import('vitest');
+    const { page } = await import('vitest/browser');
     const copied: string[] = [];
     const clipboard = vi
       .spyOn(navigator.clipboard, 'writeText')
@@ -126,8 +127,9 @@ export const CopyCode: Story = {
     try {
       await settleViewport(1440);
       const copy = canvas.getByRole('button', { name: 'Copy code' });
+      await page.elementLocator(copy).unhover();
       await expect(getComputedStyle(copy).opacity).toBe('0');
-      await userEvent.hover(canvas.getByText('tsx'));
+      await page.elementLocator(canvas.getByText('tsx')).hover();
       await waitFor(() => expect(getComputedStyle(copy).opacity).toBe('1'));
       for (const width of widths) {
         await settleViewport(width);

@@ -29,6 +29,8 @@ const mocks = agentAdapters.flatMap(({ agent }, index) => {
   ];
   if (cli.recordings.commandOutcomes)
     recordings.push(cli.recordings.commandOutcomes);
+  if (cli.recordings.editStates) recordings.push(cli.recordings.editStates);
+  if (cli.recordings.editFailure) recordings.push(cli.recordings.editFailure);
   return recordings.map((recording) => {
     const sessionId = `agent-${index + 1}-${recording}`;
     let feed: Feed = { sessionId, maxRevision: 0, nextPosition: 0, rows: {} };
