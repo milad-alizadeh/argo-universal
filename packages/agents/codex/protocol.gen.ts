@@ -670,6 +670,8 @@ proposedNetworkPolicyAmendments?: Array<NetworkPolicyAmendment> | null,
 
 availableDecisions?: Array<CommandExecutionApprovalDecision> | null, };
 
+export type CommandExecutionRequestApprovalResponse = { decision: CommandExecutionApprovalDecision, };
+
 export type FileChangeRequestApprovalParams = { threadId: string, turnId: string, itemId: string,
 
 startedAtMs: number,
@@ -678,6 +680,10 @@ reason?: string | null,
 
 grantRoot?: string | null, };
 
+export type FileChangeApprovalDecision = "accept" | "acceptForSession" | "decline" | "cancel";
+
+export type FileChangeRequestApprovalResponse = { decision: FileChangeApprovalDecision, };
+
 export type ToolRequestUserInputOption = { label: string, description: string, };
 
 export type ToolRequestUserInputQuestion = { id: string, header: string, question: string, isOther: boolean, isSecret: boolean, options: Array<ToolRequestUserInputOption> | null, };
@@ -685,3 +691,7 @@ export type ToolRequestUserInputQuestion = { id: string, header: string, questio
 export type ToolRequestUserInputParams = { threadId: string, turnId: string, itemId: string, questions: Array<ToolRequestUserInputQuestion>, isBlocking: boolean,
 
 autoResolutionMs: number | null, };
+
+export type ToolRequestUserInputAnswer = { answers: Array<string>, };
+
+export type ToolRequestUserInputResponse = { answers: { [key in string]?: ToolRequestUserInputAnswer }, };

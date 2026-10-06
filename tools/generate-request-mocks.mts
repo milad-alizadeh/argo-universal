@@ -73,7 +73,16 @@ const mocks = agentAdapters.flatMap(({ agent }, index) => {
     const prompt = cli.recordedPrompt(recording);
     if (!prompt) throw new Error('Recording has no prompt');
     apply(userMessageChange('turn-1', prompt));
-    for (const event of cli.feedEvents(recording)) {
+    const events = cli.feedEvents(recording);
+    const planEventIndex = events.findIndex(
+      (event) => event.type === 'agent.planProposed',
+    );
+    const startsAnswerTurn =
+      planEventIndex >= 0 &&
+      events
+        .slice(planEventIndex + 1)
+        .some((event) => event.type === 'agent.turnStarted');
+    for (const event of events) {
       if (event.type === 'agent.feed') apply(event.change);
       if (event.type === 'agent.permissionRequested') {
         pendingPermission = event.request;
@@ -85,11 +94,7 @@ const mocks = agentAdapters.flatMap(({ agent }, index) => {
       }
       if (event.type === 'agent.planProposed') {
         pendingPlanProposal = { planId: event.planId, content: event.content };
-        if (
-          recordedAnswer.type === 'plan' &&
-          recordedAnswer.continuation === 'startTurn'
-        )
-          turnId = null;
+        if (startsAnswerTurn) turnId = null;
         break;
       }
     }
@@ -168,7 +173,7 @@ const mocks = agentAdapters.flatMap(({ agent }, index) => {
           },
         },
       });
-      if (recordedAnswer.continuation === 'startTurn') turnId = 'turn-2';
+      if (startsAnswerTurn) turnId = 'turn-2';
       if (input.decision === 'keep_planning')
         apply(
           userMessageChange(`${turnId}:feedback`, [

@@ -13,7 +13,7 @@ export type RecordedRequestAnswer =
       AgentCommandOf<'agent.answerElicitation'>,
       'action' | 'content'
     >)
-  | ({ type: 'plan'; continuation: 'continueTurn' | 'startTurn' } & (
+  | ({ type: 'plan' } & (
       | { decision: 'approve'; feedback?: string }
       | { decision: 'keep_planning'; feedback: string }
     ));

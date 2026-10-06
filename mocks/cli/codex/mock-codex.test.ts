@@ -4,12 +4,13 @@ import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import type { VendorMessage } from '../../../packages/agents/codex/messages.ts';
 import { startLineProcess } from '../line-process.ts';
 import type { MockCliOptions } from '../mock-cli.ts';
 import {
   findRecording,
   readRecording,
+  recordedFrames,
   recordingFiles,
   recordingVersion,
 } from '../recording.ts';
@@ -19,27 +20,15 @@ const PRODUCER = 'codex-app-server';
 const RECORDINGS = path.join(import.meta.dirname, 'recordings');
 const VERSION = recordingVersion(RECORDINGS);
 
-const RecordedTurns = z.object({
-  messages: z.array(
-    z.looseObject({
-      method: z.string(),
-      params: z.looseObject({
-        threadId: z.string(),
-        turn: z.looseObject({ id: z.string() }).optional(),
-      }),
-      emittedAtMs: z.number(),
-    }),
-  ),
-});
-
 const recordedPayload = (name: string) =>
   readRecording(findRecording(RECORDINGS, name), PRODUCER).payload;
 
 // The wire messages of a recording, without the time each was captured.
 const wireMessages = (name: string) =>
-  RecordedTurns.parse(recordedPayload(name)).messages.map(
-    ({ emittedAtMs: _, ...message }) => message,
-  );
+  recordedFrames<VendorMessage & { emittedAtMs?: number }>(
+    recordedPayload(name),
+    'messages',
+  ).map(({ emittedAtMs: _, ...message }) => message);
 
 let directory: string;
 
@@ -128,7 +117,12 @@ describe('mock Codex CLI', () => {
 
       expect(output[0]).toEqual({
         id: 3,
-        result: { turn: started?.params.turn },
+        result: {
+          turn:
+            started?.method === 'turn/started'
+              ? started.params.turn
+              : undefined,
+        },
       });
       expect(output.slice(1)).toEqual(messages);
       codex.close();
@@ -203,10 +197,8 @@ it('holds the recorded interrupted Turn until the caller interrupts its command'
     method: 'turn/interrupt',
     params: {
       threadId: messages[0]?.params.threadId,
-      turnId: (
-        messages.find((message) => message.method === 'turn/started')?.params
-          .turn as { id: string }
-      )?.id,
+      turnId: messages.find((message) => message.method === 'turn/started')
+        ?.params.turn.id,
     },
   });
   const output = await codex.until(

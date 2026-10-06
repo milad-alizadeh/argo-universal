@@ -1,6 +1,5 @@
 import type {
   SDKAssistantMessage,
-  SDKControlRequest,
   SDKMessage,
   SDKPartialAssistantMessage,
   SDKResultMessage,
@@ -10,15 +9,12 @@ import type {
 import type { StopReason, TurnUsage } from '@repo/contracts';
 import type { AgentMapping } from '../src/agent-adapter';
 import type { AgentEvent, FeedChange, FeedUpdate } from '../src/agent-events';
+import type { VendorMessage } from './messages';
 import { toRequestEvents } from './request-events';
 import { type ToolCallRow, toolCallEnded, toolCallStarted } from './tool-calls';
 
 type TextKind = 'agent_message' | 'agent_thought';
 type AssistantBlock = SDKAssistantMessage['message']['content'][number];
-export type VendorMessage = (SDKMessage | SDKControlRequest) & {
-  receivedAt?: number;
-};
-
 // What `toAgentEvents` remembers between messages, until the Turn's result clears it.
 export interface MappingState {
   // Blocks seen per `message.id`, which gives a block's index without the stream.

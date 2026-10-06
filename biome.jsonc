@@ -53,8 +53,39 @@
               "level": "error",
               "options": {
                 "paths": {
-                  "xstate": "Adapters are plain functions; see ADR-0015."
-                }
+                  "xstate": "Adapters are plain functions; see ADR-0015.",
+                  "zod": "Use vendor SDK or generated protocol types; the Feed validates adapter changes (ADR-0015)."
+                },
+                "patterns": [
+                  {
+                    "group": ["zod/*"],
+                    "message": "Use vendor SDK or generated protocol types (ADR-0015)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      // Recording converters and mock CLIs use the same vendor types as their adapters.
+      "includes": ["mocks/cli/claude/**", "mocks/cli/codex/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "zod": "Use vendor SDK or generated protocol types; validate generic recording and transport envelopes in mocks/cli (ADR-0015)."
+                },
+                "patterns": [
+                  {
+                    "group": ["zod/*"],
+                    "message": "Use vendor SDK or generated protocol types (ADR-0015)."
+                  }
+                ]
               }
             }
           }
