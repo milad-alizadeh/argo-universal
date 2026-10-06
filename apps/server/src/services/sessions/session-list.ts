@@ -64,15 +64,13 @@ export function createSessionList(options: {
             (row.activityAt === cursor.activityAt &&
               row.sessionId < cursor.sessionId)),
       )
-      .sort(
-        (first, second) =>
-          second.activityAt - first.activityAt ||
-          (first.sessionId < second.sessionId
-            ? 1
-            : first.sessionId > second.sessionId
-              ? -1
-              : 0),
-      );
+      .sort((first, second) => {
+        const activityOrder = second.activityAt - first.activityAt;
+        if (activityOrder) return activityOrder;
+        if (first.sessionId < second.sessionId) return 1;
+        if (first.sessionId > second.sessionId) return -1;
+        return 0;
+      });
     const page = rows.slice(0, pageSize);
     const last = page.at(-1);
     return {

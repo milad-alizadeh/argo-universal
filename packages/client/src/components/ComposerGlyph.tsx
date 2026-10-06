@@ -41,6 +41,9 @@ export function ComposerGlyph({
   size: number;
   className?: string;
 }) {
+  let strokeWidth = 1.5;
+  if (name === 'remove') strokeWidth = 2;
+  else if (name === 'warning') strokeWidth = 1.7;
   return (
     <ThemedSvg
       accessible={false}
@@ -50,7 +53,7 @@ export function ComposerGlyph({
       viewBox={name === 'pending' ? '0 0 18 18' : '0 0 24 24'}
       fill="none"
       className={className}
-      strokeWidth={name === 'remove' ? 2 : name === 'warning' ? 1.7 : 1.5}
+      strokeWidth={strokeWidth}
       strokeLinecap="round"
       strokeLinejoin="round"
     >

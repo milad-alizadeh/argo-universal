@@ -14,12 +14,9 @@ export type IconProps = PhosphorIconProps & {
 };
 
 function IconComponent({ as: Component, ...props }: IconProps) {
-  const size =
-    typeof props.size === 'number'
-      ? props.size
-      : props.size?.endsWith('px')
-        ? Number.parseFloat(props.size)
-        : undefined;
+  let size: number | undefined;
+  if (typeof props.size === 'number') size = props.size;
+  else if (props.size?.endsWith('px')) size = Number.parseFloat(props.size);
   return (
     <Component
       {...props}

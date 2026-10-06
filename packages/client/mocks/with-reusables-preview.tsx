@@ -1,5 +1,6 @@
 import { type ThemeId, themes } from '@repo/uniwind/themes';
 import { PortalHost } from '@rn-primitives/portal';
+import type { ReactNode } from 'react';
 import { type ComponentType, useLayoutEffect } from 'react';
 import { Platform, ScrollView, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -39,33 +40,41 @@ function ReusablesPreview({
   useLayoutEffect(() => {
     applyTheme(themeId, mode);
   }, [themeId, mode]);
+  let preview: ReactNode;
+  if (screen) {
+    preview = (
+      <View className="flex-1 w-full min-h-0 bg-background web:h-screen web:flex-none">
+        <Story />
+      </View>
+    );
+  } else if (Platform.OS === 'web') {
+    preview = (
+      <View
+        className={cn(
+          'min-h-full w-full items-center justify-center bg-background',
+          padding && 'p-6',
+        )}
+      >
+        <Story />
+      </View>
+    );
+  } else {
+    preview = (
+      <ScrollView
+        className="flex-1 bg-background"
+        contentContainerClassName={cn(
+          'grow items-center justify-center',
+          padding && 'p-6',
+        )}
+      >
+        <Story />
+      </ScrollView>
+    );
+  }
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider initialMetrics={initialMetrics}>
-        {screen ? (
-          <View className="flex-1 w-full min-h-0 bg-background web:h-screen web:flex-none">
-            <Story />
-          </View>
-        ) : Platform.OS === 'web' ? (
-          <View
-            className={cn(
-              'min-h-full w-full items-center justify-center bg-background',
-              padding && 'p-6',
-            )}
-          >
-            <Story />
-          </View>
-        ) : (
-          <ScrollView
-            className="flex-1 bg-background"
-            contentContainerClassName={cn(
-              'grow items-center justify-center',
-              padding && 'p-6',
-            )}
-          >
-            <Story />
-          </ScrollView>
-        )}
+        {preview}
         {standalone && <PortalHost />}
       </SafeAreaProvider>
     </GestureHandlerRootView>

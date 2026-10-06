@@ -8,6 +8,7 @@ import {
   RobotIcon,
   TerminalIcon,
 } from 'phosphor-react-native';
+import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, ScrollView, View } from 'react-native';
 import Animated, {
@@ -300,66 +301,76 @@ function PlanSteps({ entries }: { entries: PlanEntry[] }) {
   const wide = useWide();
   const steps = (
     <View className={wide ? 'px-1 pb-2' : 'pb-1 border-t border-border'}>
-      {entries.map((entry) => (
-        <View
-          key={entry.content}
-          className={cn(
-            'flex-row items-start px-4 wide:pl-1 wide:pr-0.5 py-2 gap-2.5 wide:gap-1.5',
-            wide &&
-              entry.status === 'in_progress' &&
-              'rounded-md bg-foreground/5',
-          )}
-        >
-          <View className="w-3.5 wide:w-4 h-5 wide:h-4 shrink-0 items-center justify-center">
-            {entry.status === 'in_progress' &&
-            Platform.OS !== 'web' &&
-            !wide ? (
-              <NativePlanSpinner label={`${entry.content} in progress`} />
-            ) : entry.status === 'in_progress' ? (
-              <ActivityIndicator
-                size={wide ? 16 : 14}
-                colorClassName="accent-muted-foreground wide:accent-foreground"
-                accessibilityLabel={`${entry.content} in progress`}
-                className="size-3.5 wide:size-4"
+      {entries.map((entry) => {
+        let stepIndicator: ReactNode;
+        if (entry.status === 'in_progress' && Platform.OS !== 'web' && !wide) {
+          stepIndicator = (
+            <NativePlanSpinner label={`${entry.content} in progress`} />
+          );
+        } else if (entry.status === 'in_progress') {
+          stepIndicator = (
+            <ActivityIndicator
+              size={wide ? 16 : 14}
+              colorClassName="accent-muted-foreground wide:accent-foreground"
+              accessibilityLabel={`${entry.content} in progress`}
+              className="size-3.5 wide:size-4"
+            />
+          );
+        } else if (entry.status === 'completed') {
+          stepIndicator = (
+            <Icon
+              as={CheckIcon}
+              className="size-3.5 wide:size-4 text-muted-foreground"
+            />
+          );
+        } else {
+          stepIndicator = (
+            <Svg
+              width={wide ? 16 : 14}
+              height={wide ? 16 : 14}
+              style={{ width: wide ? 16 : 14, height: wide ? 16 : 14 }}
+              viewBox="0 0 32 32"
+            >
+              <ThemedCircle
+                cx={16}
+                cy={16}
+                r={14}
+                fill="none"
+                strokeClassName="bg-ring wide:bg-muted-foreground"
+                strokeWidth={4}
               />
-            ) : entry.status === 'completed' ? (
-              <Icon
-                as={CheckIcon}
-                className="size-3.5 wide:size-4 text-muted-foreground"
-              />
-            ) : (
-              <Svg
-                width={wide ? 16 : 14}
-                height={wide ? 16 : 14}
-                style={{ width: wide ? 16 : 14, height: wide ? 16 : 14 }}
-                viewBox="0 0 32 32"
-              >
-                <ThemedCircle
-                  cx={16}
-                  cy={16}
-                  r={14}
-                  fill="none"
-                  strokeClassName="bg-ring wide:bg-muted-foreground"
-                  strokeWidth={4}
-                />
-              </Svg>
-            )}
-          </View>
-          <Text
-            selectable={false}
+            </Svg>
+          );
+        }
+        return (
+          <View
+            key={entry.content}
             className={cn(
-              'select-none',
-              'flex-1 min-w-0 text-sm leading-5 wide:text-xs wide:leading-4 font-normal',
-              (entry.status === 'completed' ||
-                (!wide && entry.status === 'pending')) &&
-                'text-muted-foreground',
-              wide && entry.status === 'in_progress' && 'font-medium',
+              'flex-row items-start px-4 wide:pl-1 wide:pr-0.5 py-2 gap-2.5 wide:gap-1.5',
+              wide &&
+                entry.status === 'in_progress' &&
+                'rounded-md bg-foreground/5',
             )}
           >
-            {entry.content}
-          </Text>
-        </View>
-      ))}
+            <View className="w-3.5 wide:w-4 h-5 wide:h-4 shrink-0 items-center justify-center">
+              {stepIndicator}
+            </View>
+            <Text
+              selectable={false}
+              className={cn(
+                'select-none',
+                'flex-1 min-w-0 text-sm leading-5 wide:text-xs wide:leading-4 font-normal',
+                (entry.status === 'completed' ||
+                  (!wide && entry.status === 'pending')) &&
+                  'text-muted-foreground',
+                wide && entry.status === 'in_progress' && 'font-medium',
+              )}
+            >
+              {entry.content}
+            </Text>
+          </View>
+        );
+      })}
     </View>
   );
   return wide ? <ScrollView className="max-h-66">{steps}</ScrollView> : steps;

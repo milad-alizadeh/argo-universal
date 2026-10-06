@@ -238,11 +238,9 @@ const title = (path: TestPath<FeedSnapshot, FeedMachineEvent>) =>
     .map(({ event }) => {
       if (event.type !== 'feed.change')
         return event.type.replace(/^xstate\.after\.(\w+)\..*$/, 'after $1');
-      return event.change.type === 'upsert'
-        ? 'open'
-        : event.change.type === 'append'
-          ? 'append'
-          : 'settle';
+      if (event.change.type === 'upsert') return 'open';
+      if (event.change.type === 'append') return 'append';
+      return 'settle';
     })
     .join(' → ');
 

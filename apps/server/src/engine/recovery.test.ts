@@ -235,22 +235,20 @@ describe('Engine restart recovery', () => {
         'failed-tool',
         'cancelled-tool',
         'settled-pending-tool',
-      ].map((id, index) =>
-        expect.objectContaining({
+      ].map((id, index) => {
+        let status = 'failed';
+        if (id === 'completed-tool') status = 'completed';
+        else if (id === 'cancelled-tool') status = 'cancelled';
+        return expect.objectContaining({
           id,
           state: 'settled',
           revision: 22 + index,
           payload: expect.objectContaining({
-            status:
-              id === 'completed-tool'
-                ? 'completed'
-                : id === 'cancelled-tool'
-                  ? 'cancelled'
-                  : 'failed',
+            status,
             rawInput: { path: '/project/file' },
           }),
-        }),
-      ),
+        });
+      }),
       expect.objectContaining({
         id: 'settled-completed-tool',
         state: 'settled',

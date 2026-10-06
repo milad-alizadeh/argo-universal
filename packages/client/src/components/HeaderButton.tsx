@@ -28,6 +28,9 @@ export function HeaderButton({
   ...props
 }: HeaderButtonProps) {
   const narrow = paired || hasLiquidGlass;
+  let hitSlop: ButtonProps['hitSlop'];
+  if (hasLiquidGlass) hitSlop = 10;
+  else if (paired) hitSlop = { left: 6, right: 6 };
   return (
     <Button
       variant="ghost"
@@ -44,7 +47,7 @@ export function HeaderButton({
             ),
       )}
       // Keeps a 44pt touch target.
-      hitSlop={hasLiquidGlass ? 10 : paired ? { left: 6, right: 6 } : undefined}
+      hitSlop={hitSlop}
       accessibilityLabel={accessibilityLabel}
       {...props}
     >
