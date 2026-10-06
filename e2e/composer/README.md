@@ -4,6 +4,8 @@ Source: [current Paper Session page](https://app.paper.design/file/01M44G6AG3HPX
 
 ## Latest desktop and phone redesign
 
+- [x] Match the visible pending Plan circle diameter/stroke to the loading spinner on desktop and phone.
+- [x] Animate desktop Plan envelope expansion and collapse instead of snapping its height.
 - [x] Set the toolbar Agent logo's actual SVG to 14 px, preventing the shared button SVG rule from enlarging it; match the visible Usage artwork.
 
 - [x] Preserve the Attach button's original 16 × 28 px layout; only its hover/press highlight becomes a centred 28 × 28 px square.
@@ -28,7 +30,7 @@ Source: [current Paper Session page](https://app.paper.design/file/01M44G6AG3HPX
 - [x] Preserve all image, error, adapter, menu, slider and scrolling interactions.
 - [x] Open and visually check updated Storybook desktop/phone previews.
 - [x] Open and visually check Composer and sheets in the iOS simulator.
-- [x] Run final tests/typechecks, update screenshots and draft PR, commit/push.
+- [x] Run final tests/typechecks, update screenshots and PR, commit/push.
 
 Current evidence: [desktop expanded Plan and envelope](redesign/screenshots/storybook-desktop-expanded.jpg), [simplified checkout menu with icons](redesign/screenshots/storybook-checkout-menu.jpg), [iOS checkout choices](redesign/screenshots/ios-checkout-menu.jpg), [phone overview](redesign/screenshots/storybook-phone-light.jpg), [iOS created worktree](redesign/screenshots/ios-created-checkout.jpg), [iOS circular Plan spinner](redesign/screenshots/ios-plan.jpg), [native Model/Fast/Effort](redesign/screenshots/ios-settings.jpg), and [four-line native scrolling](redesign/screenshots/ios-four-lines-scrolled.jpg).
 
@@ -101,6 +103,6 @@ Each auditor starts without implementation history and compares current Paper wi
 
 - [ ] Verify current native sheets on Android. The earlier emulator run loaded this branch from Metro 8091 and accepted `argo://storybook`, but did not prove sheet rendering or interaction. At the latest read-only check the active device points to another Metro on 8090 and shows its loading screen; it was left untouched. Android sheets, gestures and safe-area layout remain unverified.
 - [ ] Resolve the proposed split for queued Turns, questionnaires, and file upload/retry states newly shown in Paper. Issue #37 covers text and images and requires proposing a split when scope grows. These features are not implemented by this change.
-- [ ] Resume code review only after every requested item is handled. The owner explicitly paused it; PR #136 remains draft.
+- [ ] Resume code review only after every requested item is handled. The owner explicitly paused agent code review, then approved the UI and requested PR #136 be submitted for review.
 
 The Composer takes controlled props. Session screen integration and external action wiring belong to #39.

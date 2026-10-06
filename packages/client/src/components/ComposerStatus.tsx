@@ -24,7 +24,6 @@ import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
 import { useWide } from '../navigation/use-wide';
-import { ComposerGlyph } from './ComposerGlyph';
 import { ComposerPopover } from './ComposerPopover';
 import { Icon } from './Icon';
 
@@ -125,6 +124,22 @@ export function ComposerPlan({
   const done = entries.filter((entry) => entry.status === 'completed').length;
   const wide = useWide();
   const [expanded, setExpanded] = useState(false);
+  const [stepsHeight, setStepsHeight] = useState(0);
+  const revealHeight = useSharedValue(0);
+  useEffect(() => {
+    revealHeight.value = withTiming(expanded ? stepsHeight : 0, {
+      duration: 200,
+      easing: Easing.out(Easing.cubic),
+    });
+    return () => cancelAnimation(revealHeight);
+  }, [expanded, stepsHeight, revealHeight]);
+  const revealStyle = useAnimatedStyle(
+    () => ({
+      height: revealHeight.value,
+      opacity: revealHeight.value === 0 ? 0 : 1,
+    }),
+    [revealHeight],
+  );
   const trigger = (
     <Button
       variant="ghost"
@@ -172,8 +187,8 @@ export function ComposerPlan({
           <Icon
             as={CaretUpIcon}
             className={cn(
-              'size-3 text-muted-foreground',
-              expanded && 'rotate-180',
+              'size-3 text-muted-foreground web:transition-transform web:duration-200',
+              !expanded && 'rotate-180',
             )}
           />
         </>
@@ -184,7 +199,23 @@ export function ComposerPlan({
     return (
       <View>
         {trigger}
-        {expanded && <PlanSteps entries={entries} />}
+        <Animated.View
+          testID="composer-plan-steps"
+          aria-hidden={!expanded}
+          accessibilityElementsHidden={!expanded}
+          pointerEvents={expanded ? 'auto' : 'none'}
+          style={revealStyle}
+          className="overflow-hidden"
+        >
+          <View
+            className="absolute top-0 left-0 right-0"
+            onLayout={(event) =>
+              setStepsHeight(Math.min(264, event.nativeEvent.layout.height))
+            }
+          >
+            <PlanSteps entries={entries} />
+          </View>
+        </Animated.View>
       </View>
     );
   return (
@@ -232,9 +263,10 @@ function NativePlanSpinner({ label }: { label: string }) {
     );
     return () => cancelAnimation(rotation);
   }, [rotation]);
-  const style = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotation.value}deg` }],
-  }));
+  const style = useAnimatedStyle(
+    () => ({ transform: [{ rotate: `${rotation.value}deg` }] }),
+    [rotation],
+  );
   return (
     <View role="progressbar" accessibilityLabel={label} className="size-3.5">
       <Animated.View style={style} className="size-3.5">
@@ -295,24 +327,22 @@ function PlanSteps({ entries }: { entries: PlanEntry[] }) {
                 as={CheckIcon}
                 className="size-3.5 wide:size-4 text-muted-foreground"
               />
-            ) : wide ? (
+            ) : (
               <Svg
-                width={16}
-                height={16}
-                style={{ width: 16, height: 16 }}
-                viewBox="0 0 16 16"
+                width={wide ? 16 : 14}
+                height={wide ? 16 : 14}
+                style={{ width: wide ? 16 : 14, height: wide ? 16 : 14 }}
+                viewBox="0 0 32 32"
               >
                 <ThemedCircle
-                  cx={8}
-                  cy={8}
-                  r={6.25}
+                  cx={16}
+                  cy={16}
+                  r={14}
                   fill="none"
-                  strokeClassName="bg-muted-foreground"
-                  strokeWidth={1.5}
+                  strokeClassName="bg-ring wide:bg-muted-foreground"
+                  strokeWidth={4}
                 />
               </Svg>
-            ) : (
-              <ComposerGlyph name="pending" size={14} className="text-ring" />
             )}
           </View>
           <Text

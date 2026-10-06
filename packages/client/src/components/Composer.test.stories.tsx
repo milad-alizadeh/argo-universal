@@ -732,9 +732,9 @@ export const SessionControls: Story = {
         await waitFor(() => expect(overlay.getByRole('dialog')).toBeVisible());
       else {
         await expect(overlay.queryByRole('dialog')).not.toBeInTheDocument();
-        await expect(
-          canvas.getByText('Verify phone and desktop'),
-        ).toBeVisible();
+        await waitFor(() =>
+          expect(canvas.getByText('Verify phone and desktop')).toBeVisible(),
+        );
         await expect(
           canvas.getByRole('button', { name: 'Plan' }),
         ).toHaveAttribute('aria-expanded', 'true');
@@ -766,9 +766,11 @@ export const SessionControls: Story = {
       if (width < 720) await userEvent.keyboard('{Escape}');
       else {
         await userEvent.click(canvas.getByRole('button', { name: 'Plan' }));
-        await expect(
-          canvas.queryByText('Verify phone and desktop'),
-        ).not.toBeInTheDocument();
+        await waitFor(() =>
+          expect(
+            canvas.queryByText('Verify phone and desktop'),
+          ).not.toBeVisible(),
+        );
       }
       await userEvent.click(
         canvas.getByRole('button', { name: 'Context window' }),
@@ -1087,6 +1089,66 @@ export const EditorScrollsAfterFourLines: Story = {
       const { userEvent: browserUserEvent } = await import('vitest/browser');
       await browserUserEvent.wheel(input, { delta: { y: 200 } });
       await waitFor(() => expect(input.scrollTop).toBeGreaterThan(0));
+    }
+  },
+};
+
+export const PlanExpandsSmoothly: Story = {
+  render: (args) => <ComposerMock {...args} sessionStarted />,
+  play: async ({ canvas, userEvent }) => {
+    const { page } = await import('vitest/browser');
+    await page.viewport(1440, 844);
+    await settleViewport();
+    const panel = canvas.getByTestId('composer-plan-steps');
+    const heights: number[] = [];
+    let collecting = true;
+    const sample = () => {
+      heights.push(panel.getBoundingClientRect().height);
+      if (collecting) requestAnimationFrame(sample);
+    };
+    requestAnimationFrame(sample);
+    try {
+      await userEvent.click(canvas.getByRole('button', { name: 'Plan' }));
+      await waitFor(() =>
+        expect(panel.getBoundingClientRect().height).toBe(104),
+      );
+      await expect(heights.some((height) => height > 0 && height < 104)).toBe(
+        true,
+      );
+      const pending = canvas
+        .getByText('Verify phone and desktop')
+        .parentElement?.querySelector('svg');
+      const spinner = canvas
+        .getByRole('progressbar', {
+          name: 'Update the shared controls in progress',
+        })
+        .querySelector('svg');
+      if (!pending || !spinner) throw new Error('Plan circles are missing.');
+      await expect(pending.getAttribute('viewBox')).toBe(
+        spinner.getAttribute('viewBox'),
+      );
+      for (const dimension of ['width', 'height'] as const) {
+        await expect(getComputedStyle(pending)[dimension]).toBe(
+          getComputedStyle(spinner)[dimension],
+        );
+      }
+      await expect(pending.querySelector('circle')?.getAttribute('r')).toBe(
+        spinner.querySelector('circle')?.getAttribute('r'),
+      );
+      await expect(
+        pending.querySelector('circle')?.getAttribute('stroke-width'),
+      ).toBe(spinner.querySelector('circle')?.getAttribute('stroke-width'));
+      heights.length = 0;
+      await userEvent.click(canvas.getByRole('button', { name: 'Plan' }));
+      await waitFor(() => expect(panel.getBoundingClientRect().height).toBe(0));
+      await expect(heights.some((height) => height > 0 && height < 104)).toBe(
+        true,
+      );
+      await waitFor(() =>
+        expect(canvas.getByText('Verify phone and desktop')).not.toBeVisible(),
+      );
+    } finally {
+      collecting = false;
     }
   },
 };
