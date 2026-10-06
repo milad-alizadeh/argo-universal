@@ -4,7 +4,9 @@ import {
   recordedFeedMocks,
 } from '@repo/api/mocks';
 import type { SessionSnapshot, SessionUpdate } from '@repo/contracts';
+import { recordedMock, recordedUserMessage } from './feed-message-mock';
 import { createFeedMocks } from './feed-mock';
+import { createSubscriptionPublisher } from './subscription-publisher';
 import { type Fixtures, pending } from './trpc-mock-link';
 
 const catalogAgent = (() => {
@@ -13,16 +15,8 @@ const catalogAgent = (() => {
   return agent;
 })();
 
-function recorded(agent: string, recording: string) {
-  const mock = recordedFeedMocks.find(
-    (mock) => mock.agent === agent && mock.recording === recording,
-  );
-  if (!mock) throw new Error(`No recorded Feed ${agent}/${recording}`);
-  return mock;
-}
-
 // The tail page holds every row, so the subscription sends only this snapshot.
-function settled(
+function wholeTail(
   mock: FeedMock,
   snapshot: Partial<SessionSnapshot> = {},
 ): FeedMock {
@@ -50,7 +44,7 @@ function sessionMocks(mock: FeedMock): Fixtures {
   };
 }
 
-const commands = recorded('agent-1', 'edit-and-command');
+const commands = recordedMock('agent-1', 'edit-and-command');
 const recordedHeader = commands.liveHeaders.findLast(
   (header) => header.startedAt !== null && header.source.type === 'tool_call',
 );
@@ -60,33 +54,38 @@ export const runningHeader = recordedHeader;
 // A clock four minutes and twelve seconds into the running Turn.
 export const sessionNow = (runningHeader.startedAt ?? 0) + 252_000;
 
-const runningFeed = settled(commands, {
+const runningFeed = wholeTail(commands, {
   state: 'running',
   liveHeader: runningHeader,
   activeTurnId: 'turn-running',
 });
 export const runningSessionMocks = sessionMocks(runningFeed);
 
-const idleFeed = settled(recorded('agent-2', 'markdown-answer'));
+const idleFeed = wholeTail(recordedMock('agent-2', 'markdown-answer'));
 export const idleSessionMocks = sessionMocks(idleFeed);
 
 export const emptySessionMocks = sessionMocks(
-  settled({ ...commands, rows: [] }, { title: 'New Session', maxRevision: 0 }),
+  wholeTail(
+    { ...commands, rows: [] },
+    { title: 'New Session', maxRevision: 0 },
+  ),
 );
 
 // Only the oldest page holds this recording, and only the arriving row holds the other, so their text marks each one.
-const oldest = recorded('agent-2', 'compaction');
-const arriving = recorded('agent-2', 'command-outcomes');
+const oldest = recordedMock('agent-2', 'compaction');
+const arriving = recordedMock('agent-2', 'command-outcomes');
 
-function messageText(mock: FeedMock, kind: 'user_message' | 'agent_message') {
-  const row = mock.rows.find((row) => row.sessionUpdate === kind);
-  const [block] = row && 'content' in row ? row.content : [];
-  if (block?.type !== 'text') throw new Error(`No ${kind} recorded`);
+function textOf(row: { content: readonly { type: string; text?: string }[] }) {
+  const [block] = row.content;
+  if (block?.type !== 'text' || block.text === undefined)
+    throw new Error('Recorded message has no text');
   return block.text;
 }
 
 // The Long Feed's first message, which only the oldest page holds.
-export const oldestMessage = messageText(oldest, 'user_message');
+export const oldestMessage = textOf(
+  recordedUserMessage('agent-2', 'compaction'),
+);
 
 // Each recording's rows as one more copy, with ids and positions after the copies before it.
 const copyRows = (mock: FeedMock, copy: number) =>
@@ -103,7 +102,7 @@ const repeated = Array.from({ length: 7 }, () =>
 ).flat();
 const longRows = [oldest, ...repeated].flatMap(copyRows);
 
-const longFeed = settled(
+const longFeed = wholeTail(
   { ...commands, rows: longRows },
   { maxRevision: Math.max(...longRows.map((row) => row.revision)) },
 );
@@ -119,12 +118,14 @@ export const loadingOlderSessionMocks: Fixtures = {
 };
 
 // The row the Agent sends while the reader is scrolled up.
-export const arrivingMessage = messageText(arriving, 'agent_message');
-const lastRow = longRows.at(-1);
+// Its first message, since plain text matches exactly where the last one ends in `done`, which other recordings send too.
 const message = arriving.rows.find(
   (row) => row.sessionUpdate === 'agent_message',
 );
-if (!lastRow || !message) throw new Error('No arriving message recorded');
+const lastRow = longRows.at(-1);
+if (message?.sessionUpdate !== 'agent_message' || !lastRow)
+  throw new Error('No arriving message recorded');
+export const arrivingMessage = textOf(message);
 const arrivingRow: SessionUpdate = {
   ...message,
   id: 'arriving-row',
@@ -132,24 +133,22 @@ const arrivingRow: SessionUpdate = {
   revision: longFeed.snapshot.maxRevision + 1,
 };
 
-let releaseArrivingRow = () => {};
+const arrivals = createSubscriptionPublisher<SessionUpdate>();
 // Sends the arriving row, once a test has scrolled away from the end.
-export const sendArrivingRow = () => releaseArrivingRow();
+export const sendArrivingRow = () => arrivals.publish(arrivingRow);
 
 export const arrivingRowSessionMocks: Fixtures = {
   ...longSessionMocks,
-  'feed.subscribe': async function* () {
-    releaseArrivingRow = () => {};
+  'feed.subscribe': async function* (_input, signal) {
     yield { type: 'snapshot', snapshot: longFeed.snapshot };
-    await new Promise<void>((resolve) => {
-      releaseArrivingRow = resolve;
-    });
-    yield { type: 'row.upsert', rev: arrivingRow.revision, row: arrivingRow };
+    for await (const row of arrivals.subscribe(signal))
+      yield { type: 'row.upsert', rev: row.revision, row };
   },
 };
-
+const runningFeedMocks = createFeedMocks(runningFeed);
+const idleFeedMocks = createFeedMocks(idleFeed);
 const feedFor = ({ sessionId }: { sessionId: string }) =>
-  createFeedMocks(sessionId === 'session-2' ? idleFeed : runningFeed);
+  sessionId === 'session-2' ? idleFeedMocks : runningFeedMocks;
 
 // `session-1` is the running recording and `session-2` the idle one, so a story can switch between them.
 export const twoSessionMocks: Fixtures = {

@@ -9,7 +9,7 @@ import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { Composer, type ComposerDraft } from '#components/Composer';
 import { Feed } from '#components/Feed';
 import { LoadError } from '#components/LoadError';
-import { keyboardAvoiding, Screen } from '#components/Screen';
+import { keyboardAvoidingStyle, Screen } from '#components/Screen';
 import { ScrollFade } from '#components/ScrollFade';
 import {
   SessionHeader,
@@ -115,7 +115,7 @@ function SessionView({ sessionId, now }: { sessionId: string; now?: number }) {
         automaticOffset
         // Above an open keyboard the Composer keeps the 16 it has from the screen's sides.
         keyboardVerticalOffset={16}
-        style={keyboardAvoiding}
+        style={keyboardAvoidingStyle}
       >
         <Feed
           items={view.items}

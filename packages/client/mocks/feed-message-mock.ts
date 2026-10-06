@@ -20,7 +20,7 @@ export function recordedImageUrl(blob: BlobRef) {
   return recorded ? redSquareDataUrl : '';
 }
 
-function recordedMock(agent: MockAgent, recording: string): FeedMock {
+export function recordedMock(agent: MockAgent, recording: string): FeedMock {
   const mock = recordedFeedMocks.find(
     (mock) => mock.agent === agent && mock.recording === recording,
   );

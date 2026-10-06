@@ -280,7 +280,7 @@ Fields that ACP lacks go in `_meta.argo` (ADR 0006):
   - Rule 7: an edit's diff expands inline on a phone and opens in the Inspector on a wide window.
   - Rule 8: there is no "N files changed" card. The Changed files chip replaces it.
   - Rule 10: the final answer shows in full like any Agent message, with no actions under it.
-  - Rule 11: the Plan is a sticky panel on a wide window and a popover from the header on a phone. It is never a Feed row.
+  - Rule 11: the Plan is a sticky panel on a wide window and in the composer's status row on a phone. It is never a Feed row.
   - Rule 15: a pending Permission request is a card in the composer's place, not inline. Its Tool call row reads "Awaiting approval" until answered, then keeps a one-line outcome. Elicitations and Plan proposals use the same card place.
   - Rule 16: a Subagent row opens the Subagent's Feed, in the Inspector on a wide window and in a page sheet on a phone. The Subagents button's list replaces the panel, grouped into Running and Finished.
   - Rule 17: there is no Goal UI in this milestone.

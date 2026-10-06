@@ -90,7 +90,7 @@ function readAtPath(value: unknown, path: readonly string[]): unknown {
   return current;
 }
 
-function writeText(
+function writeAtPath(
   value: unknown,
   [key, ...rest]: readonly string[],
   text: string,
@@ -98,11 +98,11 @@ function writeText(
   if (key === undefined) return text;
   if (Array.isArray(value)) {
     const copy = [...value];
-    copy[Number(key)] = writeText(value[Number(key)], rest, text);
+    copy[Number(key)] = writeAtPath(value[Number(key)], rest, text);
     return copy;
   }
   const record = value as Record<string, unknown>;
-  return { ...record, [key]: writeText(record[key], rest, text) };
+  return { ...record, [key]: writeAtPath(record[key], rest, text) };
 }
 
 function replaceRow(
@@ -160,7 +160,7 @@ export function applyFeedEvent(
     feed: replaceRow(
       feed,
       {
-        ...(writeText(known, path, current + event.text) as SessionUpdate),
+        ...(writeAtPath(known, path, current + event.text) as SessionUpdate),
         revision: event.rev,
       },
       event.rev,

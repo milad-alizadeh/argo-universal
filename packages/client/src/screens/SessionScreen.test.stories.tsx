@@ -53,6 +53,14 @@ async function eachLayout(
   applyTheme('default', 'light');
 }
 
+// At a phone's size the Feed overflows a screen, so the reader can scroll away from the end.
+async function settlePhone() {
+  if ('__vitest_browser__' in globalThis) await settleViewport(widths.phone);
+}
+
+const atEnd = (scroll: HTMLElement) =>
+  scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 2;
+
 function inViewport(element: Element) {
   const box = element.getBoundingClientRect();
   return (
@@ -149,19 +157,16 @@ export const PagesOlderRows: Story = {
 export const JumpsToLatest: Story = {
   parameters: { trpc: arrivingRowSessionMocks },
   play: async ({ canvas }) => {
-    // At a phone's size the Feed overflows a screen, so the reader can scroll away from the end.
-    if ('__vitest_browser__' in globalThis) await settleViewport(widths.phone);
+    await settlePhone();
     const scroll = await canvas.findByTestId('feed-scroll');
     const feed = within(scroll);
-    const atEnd = () =>
-      scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 2;
-    await waitFor(() => expect(atEnd()).toBe(true));
+    await waitFor(() => expect(atEnd(scroll)).toBe(true));
     await expect(
       canvas.queryByRole('button', { name: /Jump to latest/ }),
     ).toBeNull();
     // The Feed settles at the end as it opens, so the reader scrolls up until it stays up.
     await waitFor(async () => {
-      if (atEnd()) {
+      if (atEnd(scroll)) {
         scroll.scrollTop -= scroll.clientHeight;
         scroll.dispatchEvent(new Event('scroll'));
       }
@@ -185,7 +190,7 @@ export const JumpsToLatest: Story = {
       Math.abs(reading.getBoundingClientRect().top - readingAt),
     ).toBeLessThan(2);
     jump.click();
-    await waitFor(() => expect(atEnd()).toBe(true));
+    await waitFor(() => expect(atEnd(scroll)).toBe(true));
     await expect(await feed.findByText(arrivingMessage)).toBeVisible();
     await waitFor(() =>
       expect(
@@ -198,11 +203,9 @@ export const JumpsToLatest: Story = {
 export const KeepsPlaceWhenRowOpens: Story = {
   parameters: { trpc: longSessionMocks },
   play: async ({ canvas }) => {
-    if ('__vitest_browser__' in globalThis) await settleViewport(widths.phone);
+    await settlePhone();
     const scroll = await canvas.findByTestId('feed-scroll');
-    const atEnd = () =>
-      scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 2;
-    await waitFor(() => expect(atEnd()).toBe(true));
+    await waitFor(() => expect(atEnd(scroll)).toBe(true));
     // Away from the end, opening a row grows the Feed below it and leaves the rows above where they were.
     const closedRowInView = () => {
       const view = scroll.getBoundingClientRect();
@@ -213,42 +216,52 @@ export const KeepsPlaceWhenRowOpens: Story = {
           return top > view.top + 40 && top < view.top + view.height / 2;
         });
     };
+    // The reader scrolls up until the Feed stops following the end.
+    await waitFor(async () => {
+      if (atEnd(scroll)) {
+        scroll.scrollTop -= scroll.clientHeight;
+        scroll.dispatchEvent(new Event('scroll'));
+      }
+      await expect(
+        canvas.getByRole('button', { name: 'Jump to latest' }),
+      ).toBeVisible();
+    });
     // Reads back a third of a screen at a time until a closed row sits in the top half.
-    let trigger: HTMLElement | undefined;
-    await waitFor(
+    const trigger = await waitFor(
       () => {
-        trigger = closedRowInView();
-        if (!trigger) {
-          scroll.scrollTop -= scroll.clientHeight / 3;
-          scroll.dispatchEvent(new Event('scroll'));
-        }
-        expect(trigger).toBeDefined();
+        const found = closedRowInView();
+        if (found) return found;
+        scroll.scrollTop -= scroll.clientHeight / 3;
+        scroll.dispatchEvent(new Event('scroll'));
+        throw new Error('No closed row in view');
       },
       { timeout: 5000, interval: 100 },
     );
-    if (!trigger) throw new Error('No closed row in view');
-    // A reader opens a row they have read, so the rows around it have measured.
-    let settledAt = -1;
-    await waitFor(
-      () => {
-        const top = trigger?.getBoundingClientRect().top ?? 0;
-        const still = top === settledAt;
-        settledAt = top;
-        expect(still).toBe(true);
-      },
-      { timeout: 5000, interval: 250 },
-    );
     const triggerAt = trigger.getBoundingClientRect().top;
+    // The trigger's collapsible, which grows as it opens.
+    const collapsible = trigger.parentElement;
+    if (!collapsible) throw new Error('No collapsible around the row');
+    const heightBefore = collapsible.offsetHeight;
     trigger.click();
     await waitFor(() =>
       expect(trigger).toHaveAttribute('aria-expanded', 'true'),
     );
-    // Long enough for the open animation to finish.
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    // Once the row stops growing, the open has finished.
+    let heightAt = heightBefore;
+    await waitFor(
+      () => {
+        const height = collapsible.offsetHeight;
+        const still = height > heightBefore && height === heightAt;
+        heightAt = height;
+        expect(still).toBe(true);
+      },
+      { timeout: 5000, interval: 250 },
+    );
+    // Legend rounds the scroll on each layout pass while the row grows, which leaves it at most a few pixels off.
     await expect(
       Math.abs(trigger.getBoundingClientRect().top - triggerAt),
-    ).toBeLessThan(2);
-    await expect(atEnd()).toBe(false);
+    ).toBeLessThanOrEqual(3);
+    await expect(atEnd(scroll)).toBe(false);
   },
 };
 
@@ -256,7 +269,7 @@ export const SwitchesSessions: Story = {
   parameters: { trpc: twoSessionMocks },
   render: (args) => <SessionSwitchPreview {...args} />,
   play: async ({ canvas }) => {
-    if ('__vitest_browser__' in globalThis) await settleViewport(widths.phone);
+    await settlePhone();
     await canvas.findByRole('heading', { name: /^Think briefly first/ });
     await expect(canvas.getByRole('button', { name: 'Stop' })).toBeVisible();
     switchSession('session-2');

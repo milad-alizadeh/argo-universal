@@ -5,7 +5,7 @@ import { View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { Composer, type ComposerDraft } from '#components/Composer';
 import { LoadError } from '#components/LoadError';
-import { keyboardAvoiding, Screen } from '#components/Screen';
+import { keyboardAvoidingStyle, Screen } from '#components/Screen';
 import { StartSessionIn } from '#components/StartSessionIn';
 import { Text } from '#primitives/text';
 import { useConnectionState } from '../connection/context';
@@ -142,7 +142,7 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
       <KeyboardAvoidingView
         behavior="padding"
         automaticOffset
-        style={keyboardAvoiding}
+        style={keyboardAvoidingStyle}
       >
         <View className="flex-1 items-center justify-center px-6 pb-10">
           {wide && (

@@ -14,6 +14,9 @@ import {
 // Rows per page (ADR-0007 pages by position): long enough that paging rarely shows while reading back.
 const pageSize = 150;
 
+// A fetch the hook keeps in its own state, so the query cache never holds it.
+const fetchedOnce = { staleTime: 0, gcTime: 0 };
+
 // A Session's Feed rows and snapshot: the newest page, older pages on request, and live changes after them (ADR 0007).
 export function useSessionFeed(sessionId: string) {
   const trpc = useTRPC();
@@ -35,7 +38,6 @@ export function useSessionFeed(sessionId: string) {
   const [syncPoint, setSyncPoint] = useState<FeedSyncPoint | null>(null);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const olderInFlight = useRef(false);
-  const rowsInFlight = useRef(new Set<string>());
 
   useEffect(() => {
     if (!tail.data) return;
@@ -48,13 +50,10 @@ export function useSessionFeed(sessionId: string) {
 
   const fetchRow = useCallback(
     async (id: string) => {
-      if (rowsInFlight.current.has(id)) return;
-      rowsInFlight.current.add(id);
       try {
         const row = await queryClient.fetchQuery({
           ...trpc.feed.row.queryOptions({ sessionId, id }),
-          staleTime: 0,
-          gcTime: 0,
+          ...fetchedOnce,
         });
         update(
           applyFeedEvent(feedRef.current, {
@@ -65,8 +64,6 @@ export function useSessionFeed(sessionId: string) {
         );
       } catch {
         // The row keeps its last revision until a later change fetches it again.
-      } finally {
-        rowsInFlight.current.delete(id);
       }
     },
     [queryClient, trpc, sessionId, update],
@@ -108,8 +105,7 @@ export function useSessionFeed(sessionId: string) {
           limit: pageSize,
           epoch,
         }),
-        staleTime: 0,
-        gcTime: 0,
+        ...fetchedOnce,
       });
       update(receiveOlder(feedRef.current, page));
     } catch {

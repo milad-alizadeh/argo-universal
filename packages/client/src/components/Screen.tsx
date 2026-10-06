@@ -5,7 +5,7 @@ import { cn } from '#lib/utils';
 const allEdges: readonly Edge[] = ['top', 'right', 'bottom', 'left'];
 
 // The KeyboardAvoidingView's style: it follows the keyboard frame by frame on both phones; `automaticOffset` measures the view on screen, below any header.
-export const keyboardAvoiding = { flex: 1, minHeight: 0 };
+export const keyboardAvoidingStyle = { flex: 1, minHeight: 0 };
 
 export interface ScreenProps extends ViewProps {
   safeArea?: boolean;

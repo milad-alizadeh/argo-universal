@@ -11,6 +11,7 @@ import {
 import { Platform, View } from 'react-native';
 import Animated, {
   cancelAnimation,
+  Easing,
   ReduceMotion,
   runOnJS,
   useAnimatedStyle,
@@ -92,8 +93,7 @@ function CollapsibleContent({
 
 const duration = 200;
 // Reanimated's default `withTiming` curve, so both paths move alike.
-const easeInOut = (fraction: number) =>
-  fraction < 0.5 ? 2 * fraction * fraction : 1 - (-2 * fraction + 2) ** 2 / 2;
+const easeInOut = Easing.inOut(Easing.quad);
 
 function SyncedContent({
   children,
@@ -190,13 +190,13 @@ function NativeContent({
       setMounted(true);
       if (height.value > 0)
         progress.value = withTiming(1, {
-          duration: 200,
+          duration,
           reduceMotion: ReduceMotion.System,
         });
     } else {
       progress.value = withTiming(
         0,
-        { duration: 200, reduceMotion: ReduceMotion.System },
+        { duration, reduceMotion: ReduceMotion.System },
         (finished) => {
           if (finished && !forceMount) {
             runOnJS(unmountClosedContent)();
@@ -228,7 +228,7 @@ function NativeContent({
             height.value = event.nativeEvent.layout.height;
             if (open && firstMeasurement)
               progress.value = withTiming(1, {
-                duration: 200,
+                duration,
                 reduceMotion: ReduceMotion.System,
               });
           }}
