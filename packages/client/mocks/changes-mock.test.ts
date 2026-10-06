@@ -15,7 +15,9 @@ describe.each(Object.entries(changesMocks))('the %s changes mock', (name) => {
       });
       const [diff] = toFileDiffs({
         type: 'diff',
-        changes: [file],
+        changes: [
+          { operation: file.operation, path: file.path, oldPath: file.oldPath },
+        ],
         patch,
       });
       expect(diff?.added).toBe(file.additions ?? 0);

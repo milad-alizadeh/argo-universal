@@ -99,8 +99,9 @@ function toChangesMock(changes: Change[]): ChangesMock {
   };
 }
 
-const range = (length: number, line: (index: number) => string) =>
-  Array.from({ length }, (_, index) => line(index + 1));
+// Counts from 1, as line and file numbers do.
+const range = <Item>(length: number, item: (number: number) => Item) =>
+  Array.from({ length }, (_, index) => item(index + 1));
 
 const fewFiles: Change[] = [
   {
@@ -169,20 +170,19 @@ const fewFiles: Change[] = [
   },
 ];
 
-const manyFiles: Change[] = range(60, (index) => String(index)).map(
-  (index) => ({
+const manyFiles: Change[] = range(
+  60,
+  (number): Change => ({
     operation: 'modify',
-    path: `packages/feature-${index.padStart(2, '0')}/src/index.ts`,
+    path: `packages/feature-${String(number).padStart(2, '0')}/src/index.ts`,
     hunks: [
       {
         oldStart: 1,
         newStart: 1,
         lines: [
           "-export const name = 'feature';",
-          `+export const name = 'feature-${index}';`,
-          ...(Number(index) % 3 === 0
-            ? [`+export const order = ${index};`]
-            : []),
+          `+export const name = 'feature-${number}';`,
+          ...(number % 3 === 0 ? [`+export const order = ${number};`] : []),
           'export default name;',
         ],
       },

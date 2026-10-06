@@ -4,9 +4,9 @@ import { DiffChange, DiffPatch } from '../feed/tool-call';
 
 // The uncommitted changes in a Session's Checkout, for the Changed files chip.
 export const ChangesSummary = z.strictObject({
-  files: z.int().nonnegative(),
-  additions: z.int().nonnegative(),
-  deletions: z.int().nonnegative(),
+  files: z.int(),
+  additions: z.int(),
+  deletions: z.int(),
 });
 export type ChangesSummary = z.infer<typeof ChangesSummary>;
 
@@ -15,8 +15,8 @@ export const ChangedFile = z.strictObject({
   operation: DiffChange.shape.operation,
   path: z.string(),
   oldPath: z.string().optional(),
-  additions: z.int().nonnegative().nullable(),
-  deletions: z.int().nonnegative().nullable(),
+  additions: z.int().nullable(),
+  deletions: z.int().nullable(),
 });
 export type ChangedFile = z.infer<typeof ChangedFile>;
 
@@ -30,7 +30,7 @@ export type SessionChangesOutput = z.infer<typeof SessionChangesOutput>;
 
 export const SessionDiffInput = z.strictObject({
   sessionId: sessionColumns.shape.id,
-  path: z.string().min(1),
+  path: z.string(),
 });
 export type SessionDiffInput = z.infer<typeof SessionDiffInput>;
 

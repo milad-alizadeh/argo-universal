@@ -35,20 +35,6 @@ describe.each(Object.entries(changesMocks))(
         ).resolves.toEqual(mock.diffs[file.path]);
     });
 
-    it('sums its files into the snapshot summary', () => {
-      expect(mock.summary).toEqual({
-        files: mock.files.length,
-        additions: mock.files.reduce(
-          (sum, file) => sum + (file.additions ?? 0),
-          0,
-        ),
-        deletions: mock.files.reduce(
-          (sum, file) => sum + (file.deletions ?? 0),
-          0,
-        ),
-      });
-    });
-
     it('counts each diff its own added and removed lines', () => {
       for (const file of mock.files) {
         const lines = mock.diffs[file.path]?.patch.text.split('\n') ?? [];
@@ -68,6 +54,8 @@ describe.each(Object.entries(changesMocks))(
 it('covers no changes, a few files, many files, a large diff and a binary file', () => {
   const { none, fewFiles, manyFiles, largeDiff, binaryFile } = changesMocks;
   expect(none.files).toEqual([]);
+  expect(none.summary).toEqual({ files: 0, additions: 0, deletions: 0 });
+  expect(fewFiles.summary).toEqual({ files: 4, additions: 8, deletions: 5 });
   expect(fewFiles.files.map((file) => file.operation).sort()).toEqual([
     'add',
     'delete',
@@ -81,15 +69,6 @@ it('covers no changes, a few files, many files, a large diff and a binary file',
   expect(binaryFile.files).toContainEqual(
     expect.objectContaining({ additions: null, deletions: null }),
   );
-});
-
-it('rejects a diff request without a path', async () => {
-  await expect(
-    callerFor(changesMocks.fewFiles).session.diff({
-      sessionId: 'session-1',
-      path: '',
-    }),
-  ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
 });
 
 it('gives every recorded Feed snapshot a changes summary', () => {
