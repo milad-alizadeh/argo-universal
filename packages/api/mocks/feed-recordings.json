@@ -160,7 +160,8 @@
         "_meta": {
           "argo": {
             "startedAt": 1791165776295,
-            "endedAt": 1791165776582
+            "endedAt": 1791165776582,
+            "description": "Show hello.txt and short git status"
           }
         }
       },
@@ -588,7 +589,8 @@
           },
           "_meta": {
             "argo": {
-              "startedAt": 1791165776295
+              "startedAt": 1791165776295,
+              "description": "Show hello.txt and short git status"
             }
           }
         }
@@ -623,7 +625,8 @@
           "_meta": {
             "argo": {
               "startedAt": 1791165776295,
-              "endedAt": 1791165776582
+              "endedAt": 1791165776582,
+              "description": "Show hello.txt and short git status"
             }
           }
         }
@@ -798,7 +801,8 @@
         "_meta": {
           "argo": {
             "startedAt": 1791165781825,
-            "endedAt": 1791165783338
+            "endedAt": 1791165783338,
+            "description": "Wait 20 seconds then print done"
           }
         }
       }
@@ -833,7 +837,8 @@
           },
           "_meta": {
             "argo": {
-              "startedAt": 1791165781825
+              "startedAt": 1791165781825,
+              "description": "Wait 20 seconds then print done"
             }
           }
         }
@@ -868,7 +873,8 @@
           "_meta": {
             "argo": {
               "startedAt": 1791165781825,
-              "endedAt": 1791165783338
+              "endedAt": 1791165783338,
+              "description": "Wait 20 seconds then print done"
             }
           }
         }
