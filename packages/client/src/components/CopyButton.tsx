@@ -1,0 +1,46 @@
+import { setStringAsync } from 'expo-clipboard';
+import { CheckIcon, CopyIcon } from 'phosphor-react-native';
+import { useEffect, useState } from 'react';
+import { Platform, Pressable } from 'react-native';
+import { cn } from '#lib/utils';
+import { Icon } from './Icon';
+
+export interface CopyButtonProps {
+  value: string;
+  label: string;
+  // On web, stay hidden until the surrounding code block is hovered.
+  revealOnHover?: boolean;
+}
+
+// Copies a value and shows a check for two seconds.
+export function CopyButton({
+  value,
+  label,
+  revealOnHover = false,
+}: CopyButtonProps) {
+  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    if (!copied) return;
+    const timeout = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(timeout);
+  }, [copied]);
+  return (
+    <Pressable
+      role="button"
+      aria-label={copied ? 'Copied' : label}
+      onPress={() => setStringAsync(value).then(() => setCopied(true))}
+      className={cn(
+        'size-[22px] shrink-0 items-center justify-center rounded-sm',
+        revealOnHover &&
+          Platform.select({
+            web: cn('code-block-copy', copied && 'is-copied'),
+          }),
+      )}
+    >
+      <Icon
+        as={copied ? CheckIcon : CopyIcon}
+        className="text-muted-foreground"
+      />
+    </Pressable>
+  );
+}

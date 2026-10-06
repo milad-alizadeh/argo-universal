@@ -2,7 +2,10 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, screen, waitFor } from 'storybook/test';
 import { DesktopShellMock } from '../../mocks/desktop-shell-mock';
+import { expectFadeColor } from '../../mocks/fade-color';
+import { recordedFile } from '../../mocks/feed-edit-mock';
 import { UpdatingShellMock } from '../../mocks/updating-shell-mock';
+import { DiffView } from './DiffView';
 
 const meta = {
   title: 'Tests/DesktopShell',
@@ -705,5 +708,40 @@ export const HeaderMenuDoesNotOpenInspector: Story = {
       'true',
     );
     await userEvent.keyboard('{Escape}');
+  },
+};
+
+// The Inspector scrolls as a whole and fades under its toolbar into the panel behind it.
+export const InspectorFadesIntoTheAppBackground: Story = {
+  args: {
+    inspectorState: 'open',
+    inspector: (
+      <View>
+        <DiffView file={recordedFile('agent-2', 'edit-states')} />
+        <DiffView file={recordedFile('agent-1')} />
+        <DiffView file={recordedFile('agent-2', 'edit-states', 'delete')} />
+      </View>
+    ),
+  },
+  play: async ({ canvas }) => {
+    const { page } = await import('vitest/browser');
+    await page.viewport(1440, 844);
+    const inspector = await canvas.findByTestId('desktop-inspector-scroll');
+    await waitFor(() =>
+      expect(inspector.scrollHeight).toBeGreaterThan(inspector.clientHeight),
+    );
+    inspector.scrollTop = 60;
+    const title = canvas.getByTestId('desktop-inspector-title');
+    await waitFor(() => {
+      const fade = inspector.parentElement?.querySelector(
+        ':scope > [data-testid="scroll-fade-top"]',
+      );
+      expect(fade).toBeTruthy();
+      if (!fade) return;
+      expect(fade.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+        title.getBoundingClientRect().bottom - 1,
+      );
+      expectFadeColor(fade);
+    });
   },
 };

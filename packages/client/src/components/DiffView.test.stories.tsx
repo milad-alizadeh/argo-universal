@@ -21,7 +21,8 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const LargeDiffScrollsInsideTheBox: Story = {
+// In the Inspector a file shows every line; the Inspector scrolls, not the file.
+export const InspectorFileShowsEveryLine: Story = {
   play: async ({ canvas }) => {
     if (process.env.NODE_ENV !== 'test') return;
     const { page } = await import('vitest/browser');
@@ -32,11 +33,16 @@ export const LargeDiffScrollsInsideTheBox: Story = {
         name: 'Diff for /repo/large.txt',
       });
       await expect(
-        getComputedStyle(within(header).getByText('/repo/large.txt'))
-          .userSelect,
+        getComputedStyle(within(header).getByText('large.txt')).userSelect,
       ).toBe('none');
+      await expect(within(header).getByText('large.txt')).toHaveClass(
+        'font-semibold',
+      );
+      await expect(
+        canvas.getByRole('button', { name: 'Copy path' }),
+      ).toBeVisible();
       await page.elementLocator(header).hover();
-      for (const count of ['+60', '-60']) {
+      for (const count of ['+60', '\u221260']) {
         await expect(
           getComputedStyle(canvas.getByText(count)).textDecorationLine,
         ).toBe('none');
@@ -70,18 +76,9 @@ export const LargeDiffScrollsInsideTheBox: Story = {
       }
       await expect(numberColors[0]).not.toBe(numberColors[1]);
       const box = canvas.getByTestId('diff-scroll');
-      await expect(getComputedStyle(box).maxHeight).toBe(
-        width < 720 ? '300px' : '400px',
-      );
-      await expect(box.clientHeight).toBe(width < 720 ? 300 : 400);
-      await expect(box.scrollHeight).toBeGreaterThan(box.clientHeight);
-      box.scrollTop = box.scrollHeight;
-      await waitFor(() => expect(box.scrollTop).toBeGreaterThan(0));
-      await waitFor(() =>
-        expect(
-          canvas.getByText('new value 60').getBoundingClientRect().bottom,
-        ).toBeLessThanOrEqual(box.getBoundingClientRect().bottom + 1),
-      );
+      await expect(getComputedStyle(box).maxHeight).toBe('none');
+      await expect(box.scrollHeight).toBe(box.clientHeight);
+      await expect(box.clientHeight).toBe(120 * 20);
       await expect(
         canvas.getByRole('button', { name: 'Diff for /repo/large.txt' }),
       ).toBeVisible();

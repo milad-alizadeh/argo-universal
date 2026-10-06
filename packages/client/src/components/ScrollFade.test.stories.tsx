@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
+import { expectFadeColor } from '../../mocks/fade-color';
 import { ScrollFadePreview } from '../../mocks/scroll-fade-preview';
 import { ScrollFadeView } from './ScrollFade';
 
@@ -44,18 +45,7 @@ export const FadesMatchSurface: Story = {
     const scroll = await canvas.findByTestId('scroll-fade-scroll');
     scroll.scrollTop = 120;
     const top = await canvas.findByTestId('scroll-fade-top');
-    const surface = scroll.closest('.bg-sidebar') ?? scroll.parentElement;
-    if (!surface) throw new Error('Missing panel surface');
-    const surfaceColor = getComputedStyle(surface).backgroundColor;
-    const stops = top.querySelectorAll('stop');
-    expect(stops.length).toBe(3);
-    const probe = document.createElement('div');
-    document.body.append(probe);
-    for (const stop of stops) {
-      probe.style.color = stop.getAttribute('stop-color') ?? '';
-      expect(getComputedStyle(probe).color).toBe(surfaceColor);
-    }
-    probe.remove();
+    expectFadeColor(top);
   },
 };
 

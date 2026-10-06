@@ -6,6 +6,7 @@ import { Collapsible, CollapsibleContent } from '#primitives/collapsible';
 import { Text, TextClassContext } from '#primitives/text';
 import type { DiffLine, FileDiff } from '../feed/file-diff';
 import { CodeBlockHeader } from './CodeBlockHeader';
+import { CopyButton } from './CopyButton';
 import { DisclosureCaret } from './DisclosureCaret';
 
 export interface DiffViewProps {
@@ -57,6 +58,70 @@ function CodeLine({ line, inline }: { line: DiffLine; inline: boolean }) {
   );
 }
 
+// The Inspector's file header: folder muted, file name strong, then copy and the change counts.
+function FileHeader({
+  file,
+  open,
+  onOpenChange,
+}: {
+  file: FileDiff;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const slash = file.path.lastIndexOf('/');
+  const folder = file.path.slice(0, slash + 1);
+  const name = file.path.slice(slash + 1);
+  return (
+    <View className="h-9 flex-row items-center gap-2 bg-muted pr-3 pl-2">
+      <Button
+        variant="link"
+        className="h-5 min-w-0 flex-1 justify-start gap-2 rounded-none p-0 sm:h-5 has-[>svg]:px-0"
+        aria-label={`Diff for ${file.path}`}
+        aria-expanded={open}
+        onPress={() => onOpenChange(!open)}
+      >
+        <TextClassContext.Provider value="select-none no-underline">
+          <DisclosureCaret open={open} />
+          <View className="min-w-0 flex-1 flex-row items-center overflow-hidden">
+            <Text
+              selectable={false}
+              numberOfLines={1}
+              ellipsizeMode="head"
+              className="min-w-0 shrink font-mono text-xs leading-4 text-muted-foreground web:[direction:rtl] web:text-left"
+            >
+              {Platform.OS === 'web' ? `\u2066${folder}\u2069` : folder}
+            </Text>
+            <Text
+              selectable={false}
+              numberOfLines={1}
+              className="shrink-0 font-mono text-xs font-semibold leading-4 text-foreground"
+            >
+              {name}
+            </Text>
+          </View>
+        </TextClassContext.Provider>
+      </Button>
+      <CopyButton value={file.path} label="Copy path" />
+      {file.added > 0 && (
+        <Text
+          selectable={false}
+          className="select-none font-mono text-xs font-normal leading-4 text-success"
+        >
+          +{file.added}
+        </Text>
+      )}
+      {file.removed > 0 && (
+        <Text
+          selectable={false}
+          className="select-none font-mono text-xs font-normal leading-4 text-destructive"
+        >
+          {`\u2212${file.removed}`}
+        </Text>
+      )}
+    </View>
+  );
+}
+
 // The same hunk rendering is used inline in the Feed and under a file header in the Inspector.
 export function DiffView({ file, inline = false }: DiffViewProps) {
   const [showAll, setShowAll] = useState(false);
@@ -91,43 +156,13 @@ export function DiffView({ file, inline = false }: DiffViewProps) {
       testID="diff-view"
     >
       {inline && <CodeBlockHeader title={file.path} code={patchText} />}
-      {!inline && (
-        <View className="h-9 flex-row items-center gap-2 border-b border-border bg-muted pr-3 pl-2">
-          <Button
-            variant="link"
-            className="h-5 max-w-full shrink justify-start gap-2 rounded-none p-0 sm:h-5 has-[>svg]:px-0"
-            aria-label={`Diff for ${file.path}`}
-            aria-expanded={open}
-            onPress={() => setOpen(!open)}
-          >
-            <TextClassContext.Provider value="select-none no-underline">
-              <DisclosureCaret open={open} />
-              <Text
-                selectable={false}
-                numberOfLines={1}
-                className="min-w-0 shrink font-mono text-xs leading-4 text-foreground"
-              >
-                {file.path}
-              </Text>
-            </TextClassContext.Provider>
-          </Button>
-          <View className="flex-1" />
-          <Text
-            selectable={false}
-            className="select-none font-mono text-xs font-normal leading-4 text-success"
-          >
-            +{file.added}
-          </Text>
-          <Text
-            selectable={false}
-            className="select-none font-mono text-xs font-normal leading-4 text-destructive"
-          >
-            -{file.removed}
-          </Text>
-        </View>
-      )}
+      {!inline && <FileHeader file={file} open={open} onOpenChange={setOpen} />}
       <CollapsibleContent>
-        <ScrollView className="max-h-75 wide:max-h-100" testID="diff-scroll">
+        <ScrollView
+          className={inline ? 'max-h-75 wide:max-h-100' : undefined}
+          scrollEnabled={inline}
+          testID="diff-scroll"
+        >
           <ScrollView
             horizontal
             className="min-w-0 grow-0 shrink-0"
