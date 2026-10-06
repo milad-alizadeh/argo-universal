@@ -114,12 +114,10 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
   // Until the current branch loads, a new worktree has no base to start from.
   const branchReady =
     project?.checkoutChoice.type !== 'main' || branches.data !== undefined;
-  const error =
-    agent && !agentReady
-      ? agent.installStep
-      : start.error
-        ? `Couldn't start the Session. ${start.error.message}`
-        : undefined;
+  const startError = start.error
+    ? `Couldn't start the Session. ${start.error.message}`
+    : undefined;
+  const error = agent && !agentReady ? agent.installStep : startError;
   const checkout = {
     branch: baseBranch,
     newWorktree: worktree,
