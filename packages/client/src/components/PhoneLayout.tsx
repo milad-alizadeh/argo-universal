@@ -1,21 +1,8 @@
-import {
-  createContext,
-  type ReactNode,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { Platform } from 'react-native';
 import { type NavigationDestination, useNavigate } from '../navigation/context';
 import { sectionDestination, sectionOf } from '../navigation/sections';
-import { PhoneShell } from './PhoneShell';
-
-const OpenDrawerContext = createContext<() => void>(() => {});
-
-// Opens the phone shell's drawer from a section's header row.
-export function useOpenDrawer(): () => void {
-  return useContext(OpenDrawerContext);
-}
+import { PhoneShell, type ShellSection } from './PhoneShell';
 
 export interface PhoneLayoutProps {
   destination: NavigationDestination;
@@ -30,33 +17,41 @@ export function PhoneLayout({ destination, children }: PhoneLayoutProps) {
   const atSectionRoot = destination.to === sectionDestination(section).to;
   // Mounting the next section stalls the first frame, so a picked section's drawer shuts once it has mounted.
   const deferClose = useRef(false);
+  const pendingSection = useRef<ShellSection | null>(null);
   useEffect(() => {
     const frame = requestAnimationFrame(() => setDrawerOpen(false));
     return () => cancelAnimationFrame(frame);
   }, [section]);
 
   return (
-    <OpenDrawerContext.Provider value={() => setDrawerOpen(true)}>
-      <PhoneShell
-        selectedSection={section}
-        attentionCount={0}
-        drawerOpen={drawerOpen}
-        onDrawerOpenChange={(open) => {
-          if (!open && deferClose.current) deferClose.current = false;
-          else setDrawerOpen(open);
-        }}
-        onSectionChange={(next) => {
-          if (next === section) return;
-          deferClose.current = true;
-          navigate(sectionDestination(next));
-        }}
-        onSearch={() => {}}
-        onFilter={() => {}}
-        showListHeader={false}
-        swipeEnabled={atSectionRoot}
-      >
-        {children}
-      </PhoneShell>
-    </OpenDrawerContext.Provider>
+    <PhoneShell
+      selectedSection={section}
+      attentionCount={0}
+      drawerOpen={drawerOpen}
+      onDrawerOpenChange={(open) => {
+        if (!open && deferClose.current) deferClose.current = false;
+        else setDrawerOpen(open);
+      }}
+      onDrawerClosed={() => {
+        const next = pendingSection.current;
+        pendingSection.current = null;
+        if (next) navigate(sectionDestination(next));
+      }}
+      onSectionChange={(next) => {
+        if (next === section) return;
+        if (opensAfterClose) {
+          pendingSection.current = next;
+          return;
+        }
+        deferClose.current = true;
+        navigate(sectionDestination(next));
+      }}
+      swipeEnabled={atSectionRoot}
+    >
+      {children}
+    </PhoneShell>
   );
 }
+
+// UIKit measures a stack's safe area while the drawer has the card scaled, so iOS mounts a picked section once the card is full size.
+const opensAfterClose = Platform.OS === 'ios';

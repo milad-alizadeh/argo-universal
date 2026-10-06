@@ -1,5 +1,6 @@
 import { useWide } from '@repo/client';
 import { Slot, Stack } from 'expo-router';
+import { PhoneStack } from '@/navigation/phone-stack';
 
 // On a phone, a Settings page opened directly still has the Settings list below it to go back to.
 export const unstable_settings = { anchor: 'index' };
@@ -8,11 +9,8 @@ export default function SettingsLayout() {
   // A wide window draws the list in the sidebar and one page beside it, so nothing stacks.
   if (useWide()) return <Slot />;
   return (
-    <Stack>
-      <Stack.Screen
-        name="index"
-        options={{ title: 'Settings', headerShown: false }}
-      />
+    <PhoneStack>
+      <Stack.Screen name="index" options={{ title: 'Settings' }} />
       <Stack.Screen name="projects/index" options={{ title: 'Projects' }} />
       <Stack.Screen name="agents/index" options={{ title: 'Agents' }} />
       <Stack.Screen name="accounts" options={{ title: 'Accounts' }} />
@@ -25,6 +23,6 @@ export default function SettingsLayout() {
       <Stack.Screen name="devices" options={{ title: 'Devices' }} />
       <Stack.Screen name="appearance" options={{ title: 'Appearance' }} />
       <Stack.Screen name="notifications" options={{ title: 'Notifications' }} />
-    </Stack>
+    </PhoneStack>
   );
 }

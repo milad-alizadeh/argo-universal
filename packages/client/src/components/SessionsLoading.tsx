@@ -6,7 +6,7 @@ export function SessionsLoading() {
       role="status"
       accessibilityLabel="Loading Sessions"
       // Matches the list's content padding so the rows don't shift when Sessions load.
-      className="px-2 pt-5 wide:gap-0.5"
+      className="px-gutter-list pt-5 wide:gap-0.5 wide:px-2"
     >
       <View className="h-10 wide:h-8 flex-row items-center gap-2 px-2.5">
         <View className="size-4 rounded-sm bg-foreground/5" />

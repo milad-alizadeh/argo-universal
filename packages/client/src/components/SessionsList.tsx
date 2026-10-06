@@ -6,8 +6,8 @@ import type {
 } from '@repo/contracts';
 import {
   memo,
+  type ReactElement,
   useCallback,
-  useId,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -20,11 +20,13 @@ import {
   type ScrollView,
   View,
 } from 'react-native';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
-import { useResolveClassNames } from 'uniwind';
+import { useCSSVariable } from 'uniwind';
+import { hasLiquidGlass } from '#lib/native-header';
 import { cn } from '#lib/utils';
 import { Text } from '#primitives/text';
+import { useWide } from '../navigation/use-wide';
 import { ProjectHeading } from './ProjectHeading';
+import { ScrollFade } from './ScrollFade';
 import { SessionRow, type SessionRowProps } from './SessionRow';
 
 type Entry =
@@ -54,6 +56,8 @@ export interface SessionsListProps {
   isFetchingNextPage?: boolean;
   onNewSession?: (projectId: string) => void;
   onProjectSettings?: (projectName: string) => void;
+  // Scrolls with the rows, above the first Project.
+  header?: ReactElement;
 }
 
 export function SessionsList({
@@ -68,17 +72,25 @@ export function SessionsList({
   isFetchingNextPage = false,
   onNewSession,
   onProjectSettings,
+  header,
 }: SessionsListProps) {
-  const gradientId = useId().replace(/:/g, '');
+  const wide = useWide();
+  // A phone list sits at the screen's list inset, like every other phone list.
+  const screenList = Number.parseFloat(
+    String(useCSSVariable('--spacing-gutter-list')),
+  );
+  const phoneContentStyle = useMemo(
+    () => ({ ...contentStyle, paddingHorizontal: screenList }),
+    [screenList],
+  );
   const scrollView = useRef<ScrollView>(null);
   const atEnd = useRef(false);
   const revealLoadingFooter = useRef(false);
   useLayoutEffect(() => {
     revealLoadingFooter.current = isFetchingNextPage && atEnd.current;
   }, [isFetchingNextPage]);
-  const { backgroundColor } = useResolveClassNames(
-    'bg-background wide:bg-sidebar',
-  );
+  // The top fade shows once content has scrolled under the header.
+  const [scrolled, setScrolled] = useState(false);
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const entries = useMemo(() => {
     const groups = new Map<string, SessionInfo[]>();
@@ -184,7 +196,7 @@ export function SessionsList({
           refScrollView={scrollView}
           testID="sessions-scroll"
           style={{ flex: 1 }}
-          contentContainerStyle={contentStyle}
+          contentContainerStyle={wide ? contentStyle : phoneContentStyle}
           // On iOS it scrolls by the fade's top padding on mount, then snaps back.
           maintainVisibleContentPosition={false}
           data={entries}
@@ -195,9 +207,16 @@ export function SessionsList({
           extraData={extraData}
           onEndReached={onEndReached}
           onEndReachedThreshold={0.5}
+          contentInsetAdjustmentBehavior="automatic"
+          ListHeaderComponent={header}
           onScroll={({ nativeEvent }) => {
-            const { contentOffset, contentSize, layoutMeasurement } =
-              nativeEvent;
+            const {
+              contentInset,
+              contentOffset,
+              contentSize,
+              layoutMeasurement,
+            } = nativeEvent;
+            setScrolled(contentOffset.y + (contentInset?.top ?? 0) > 0);
             atEnd.current =
               contentSize.height - contentOffset.y - layoutMeasurement.height <=
               2;
@@ -241,61 +260,15 @@ export function SessionsList({
           renderItem={renderItem}
         />
       </View>
-      {(['top', 'bottom'] as const).map((edge) => (
-        <View
-          key={edge}
-          pointerEvents="none"
-          accessibilityElementsHidden
-          importantForAccessibility="no-hide-descendants"
-          testID={`scroll-fade-${edge}`}
-          style={[
-            {
-              position: 'absolute',
-              left: 0,
-              right: 0,
-              zIndex: 10,
-              height: edge === 'top' ? 20 : 28,
-              ...(edge === 'top' ? { top: 0 } : { bottom: 0 }),
-            },
-          ]}
-        >
-          <Svg width="100%" height="100%">
-            <Defs>
-              <LinearGradient
-                id={`${gradientId}-${edge}`}
-                x1="0"
-                y1="0%"
-                x2="0"
-                y2="100%"
-              >
-                <Stop
-                  offset="0"
-                  stopColor={backgroundColor}
-                  stopOpacity={edge === 'top' ? 1 : 0}
-                />
-                <Stop
-                  offset="0.5"
-                  stopColor={backgroundColor}
-                  stopOpacity={0.85}
-                />
-                <Stop
-                  offset="1"
-                  stopColor={backgroundColor}
-                  stopOpacity={edge === 'top' ? 0 : 1}
-                />
-              </LinearGradient>
-            </Defs>
-            <Rect
-              width="100%"
-              height="100%"
-              fill={`url(#${gradientId}-${edge})`}
-            />
-          </Svg>
-        </View>
-      ))}
+      {scrolled && !hasLiquidGlass && (
+        <ScrollFade edge="top" className={fadeSurface} />
+      )}
+      <ScrollFade edge="bottom" className={fadeSurface} />
     </View>
   );
 }
+
+const fadeSurface = 'bg-background wide:bg-sidebar';
 
 function ProjectEntrySeparator() {
   return <View className="h-0 wide:h-0.5" />;

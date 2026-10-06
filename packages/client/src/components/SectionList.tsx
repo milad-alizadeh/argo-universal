@@ -1,18 +1,22 @@
 import type { ReactNode } from 'react';
-import { View } from 'react-native';
+import { ScrollView } from 'react-native';
 import { Text } from '#primitives/text';
 import type { NavigationDestination } from '../navigation/context';
+import type { ScreenHeaderProps } from '../navigation/screen-header';
 import {
   SessionsHeader,
   SessionsScreen,
+  sessionsHeaderItems,
   useSessionsFilter,
 } from '../screens/SessionsScreen';
 import { SettingsNavigationList } from './SettingsNavigationList';
 import { type ShellSection, shellSections } from './shell-sections';
 
 export interface SectionList {
-  // The list's own part of the shell's header row, when it has one.
+  // The list's own part of the wide window's header row, when it has one.
   header?: ReactNode;
+  // The list's trailing items and search in a phone's native header.
+  phoneHeader?: Pick<ScreenHeaderProps, 'right' | 'search'>;
   list: ReactNode;
 }
 
@@ -25,6 +29,13 @@ export function useSectionList(
   if (section === 'sessions')
     return {
       header: <SessionsHeader {...sessionsFilter} />,
+      phoneHeader: {
+        right: sessionsHeaderItems(sessionsFilter),
+        search: {
+          placeholder: 'Search Sessions',
+          onChangeText: sessionsFilter.onQueryChange,
+        },
+      },
       list: (
         <SessionsScreen
           query={sessionsFilter.query}
@@ -41,11 +52,15 @@ export function useSectionList(
   // Placeholders until each section's list screen is built.
   return {
     list: (
-      <View className="flex-1 p-6">
+      // Insets itself below a transparent header.
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerClassName="px-gutter py-6"
+      >
         <Text variant="muted">
           {shellSections[section].title} list will appear here.
         </Text>
-      </View>
+      </ScrollView>
     ),
   };
 }

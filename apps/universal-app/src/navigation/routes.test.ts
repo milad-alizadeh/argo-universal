@@ -10,8 +10,8 @@ const destinations: [NavigationDestination, string[], object][] = [
     ['(shell)', '(sessions)', 'sessions', '[id]'],
     {},
   ],
-  [{ to: 'issues' }, ['(shell)', 'issues'], {}],
-  [{ to: 'atlas' }, ['(shell)', 'atlas'], {}],
+  [{ to: 'issues' }, ['(shell)', 'issues', 'index'], {}],
+  [{ to: 'atlas' }, ['(shell)', 'atlas', 'index'], {}],
   [{ to: 'settings' }, ['(shell)', 'settings', 'index'], {}],
   [
     { to: 'settings-projects' },
