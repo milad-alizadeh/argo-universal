@@ -53,7 +53,7 @@ export function FeedDisclosure({
     [rotation],
   );
   return (
-    <Collapsible open={open} onOpenChange={setOpen} className="w-full gap-2">
+    <Collapsible open={open} onOpenChange={setOpen} className="w-full">
       <CollapsibleTrigger
         accessibilityLabel={label}
         className="min-h-5 flex-row items-center gap-1.5"
@@ -90,7 +90,7 @@ export function FeedDisclosure({
           </Animated.View>
         </View>
       </CollapsibleTrigger>
-      <CollapsibleContent>{children}</CollapsibleContent>
+      <CollapsibleContent className="pt-2">{children}</CollapsibleContent>
     </Collapsible>
   );
 }
