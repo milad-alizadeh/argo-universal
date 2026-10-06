@@ -29,7 +29,7 @@ Source: [current Paper Session page](https://app.paper.design/file/01M44G6AG3HPX
 
 ## Remaining
 
-- [ ] Verify current native sheets on Android. The task's emulator package-manager calls timed out; after restarting with software rendering the package service is unavailable and boot has not completed. Other tasks' devices and Metro servers were left alone.
+- [ ] Verify current native sheets on Android. After restarting with software rendering, the task's emulator booted, connected to this branch's Metro on port 8091, loaded its JavaScript bundle and accepted `argo://storybook`. The available UI tool cannot target its window, so sheet interactions and the visible story remain unverified. Other tasks' devices and Metro servers were left alone.
 - [ ] Resolve the proposed split for queued Turns, questionnaires, and file upload/retry states newly shown in Paper. Issue #37 covers text and images and requires proposing a split when scope grows. These features are not implemented by this change.
 - [ ] Resume code review only after every requested item is handled. The owner explicitly paused it; PR #136 remains draft.
 
