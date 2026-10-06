@@ -1,10 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { ConnectionContext } from '../connection/context';
 import {
   type ConnectionInspection,
   openConnection,
 } from '../connection/open-connection';
+import { BlobUrlContext, serverBlobUrl } from './blob-url';
 import { TRPCProvider } from './context';
 
 export interface AppProvidersProps {
@@ -23,6 +24,7 @@ export function AppProviders({
 }: AppProvidersProps) {
   const [queryClient] = useState(() => new QueryClient());
   const [connection, setConnection] = useState<Connection | null>(null);
+  const blobUrl = useMemo(() => serverBlobUrl(serverUrl), [serverUrl]);
 
   // An effect owns the Connection, so unmounting closes it and StrictMode's remount opens a fresh one.
   useEffect(() => {
@@ -38,7 +40,9 @@ export function AppProviders({
     <QueryClientProvider client={queryClient}>
       <TRPCProvider trpcClient={connection.client} queryClient={queryClient}>
         <ConnectionContext.Provider value={connection.connection}>
-          {children}
+          <BlobUrlContext.Provider value={blobUrl}>
+            {children}
+          </BlobUrlContext.Provider>
         </ConnectionContext.Provider>
       </TRPCProvider>
     </QueryClientProvider>

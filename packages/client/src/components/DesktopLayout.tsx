@@ -1,3 +1,4 @@
+import { PortalHost } from '@rn-primitives/portal';
 import { type ReactNode, useState } from 'react';
 import { Text } from '#primitives/text';
 import { type NavigationDestination, useNavigate } from '../navigation/context';
@@ -8,6 +9,7 @@ import {
 } from '../navigation/sections';
 import { DesktopShell, type InspectorState } from './DesktopShell';
 import { useSectionList } from './SectionList';
+import { detailActionsHost, detailHeaderHost } from './SessionHeader';
 import { shellSections } from './shell-sections';
 import { useAttentionCount } from './use-attention-count';
 
@@ -50,14 +52,24 @@ export function DesktopLayout({ destination, children }: DesktopLayoutProps) {
       }
       list={list}
       detailHeader={
-        <Text
-          role="heading"
-          aria-level={2}
-          className="text-sm font-semibold"
-          numberOfLines={1}
-        >
-          {destinationTitle(detail)}
-        </Text>
+        // A Session draws its own title and status here.
+        detail.to === 'session' ? (
+          <PortalHost name={detailHeaderHost} />
+        ) : (
+          <Text
+            role="heading"
+            aria-level={2}
+            className="text-sm font-semibold"
+            numberOfLines={1}
+          >
+            {destinationTitle(detail)}
+          </Text>
+        )
+      }
+      detailActions={
+        detail.to === 'session' ? (
+          <PortalHost name={detailActionsHost} />
+        ) : undefined
       }
       inspectorState={inspectorState}
       onInspectorStateChange={setInspectorState}

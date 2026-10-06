@@ -15,6 +15,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { AppState, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { useUniwind } from 'uniwind';
 import { useNavigationTheme } from '@/lib/theme';
 import { hrefFor } from '@/navigation/routes';
@@ -72,20 +73,23 @@ export default function RootLayout() {
   return (
     // The phone drawer's gestures need this root.
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AppProviders serverUrl={serverUrl} inspect={inspection.inspect}>
-        <ForegroundSignal />
-        <ThemeProvider value={navigationTheme}>
-          <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
-          <NavigationProvider navigate={navigate}>
-            {/* Storybook stays outside the shell. */}
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="(shell)" />
-              <Stack.Screen name="(dev)/storybook" />
-            </Stack>
-          </NavigationProvider>
-          <PortalHost />
-        </ThemeProvider>
-      </AppProviders>
+      {/* Screens follow the keyboard frame by frame through this. */}
+      <KeyboardProvider>
+        <AppProviders serverUrl={serverUrl} inspect={inspection.inspect}>
+          <ForegroundSignal />
+          <ThemeProvider value={navigationTheme}>
+            <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
+            <NavigationProvider navigate={navigate}>
+              {/* Storybook stays outside the shell. */}
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(shell)" />
+                <Stack.Screen name="(dev)/storybook" />
+              </Stack>
+            </NavigationProvider>
+            <PortalHost />
+          </ThemeProvider>
+        </AppProviders>
+      </KeyboardProvider>
     </GestureHandlerRootView>
   );
 }

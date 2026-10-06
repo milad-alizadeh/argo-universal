@@ -7,12 +7,14 @@ export interface ScrollFadeProps {
   edge: 'top' | 'bottom';
   // The surface colour the content fades into.
   className?: string;
+  height?: number;
 }
 
 // A short gradient from the surface colour to transparent where a list meets its edge.
 export function ScrollFade({
   edge,
   className = 'bg-background',
+  height,
 }: ScrollFadeProps) {
   const gradientId = `${useId().replace(/:/g, '')}-${edge}`;
   const { backgroundColor } = useResolveClassNames(className);
@@ -27,7 +29,7 @@ export function ScrollFade({
         left: 0,
         right: 0,
         zIndex: 10,
-        height: edge === 'top' ? 20 : 28,
+        height: height ?? (edge === 'top' ? 20 : 28),
         ...(edge === 'top' ? { top: 0 } : { bottom: 0 }),
       }}
     >

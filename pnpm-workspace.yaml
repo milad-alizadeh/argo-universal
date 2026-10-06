@@ -9,7 +9,7 @@ packages:
 
 # Every shared dependency is pinned here; packages refer to it as "catalog:" (spec section 2).
 catalog:
-  "@legendapp/list": 2.0.19
+  "@legendapp/list": 3.6.0
   "@anthropic-ai/claude-agent-sdk": 0.3.289
   "@biomejs/biome": 2.5.15
   "@chromatic-com/storybook": 5.4.0
@@ -100,6 +100,7 @@ catalog:
   react-native: 0.86.3
   react-native-drawer-layout: 4.2.11
   react-native-gesture-handler: ~2.32.0
+  react-native-keyboard-controller: 1.21.9
   react-native-reanimated: 4.5.1
   react-native-safe-area-context: ~5.7.0
   react-native-screens: ~4.26.0

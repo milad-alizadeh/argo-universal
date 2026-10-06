@@ -1,3 +1,4 @@
+import type { SessionSnapshot } from '@repo/contracts';
 import type { AgentAdapter } from '@repo/agents';
 import type { Database } from '@repo/db';
 import { createActor, setup } from 'xstate';
@@ -11,6 +12,17 @@ import {
 
 export const firstPrompt: Extract<SessionCommand, { type: 'session.prompt' }> =
   { type: 'session.prompt', turnId: 'turn-1', content: [] };
+
+// The stored row's part of a snapshot, for tests that build snapshots by hand.
+export const sessionRecord: Pick<
+  SessionSnapshot,
+  'agent' | 'title' | 'titleSource' | 'checkout'
+> = {
+  agent: 'agent-1',
+  title: 'Fix the flaky test',
+  titleSource: 'prompt',
+  checkout: { type: 'main', path: '/repo', branch: 'main' },
+};
 
 export function createSessionHost(database: Database, adapter: AgentAdapter) {
   const root = createActor(

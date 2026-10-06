@@ -163,6 +163,8 @@ export function createFeedService(deps: FeedDeps): FeedService {
           epoch,
           maxRevision,
         };
+        // Re-read each time, so a new title reaches the App.
+        const record = readSession(sessionId);
         const snapshot = toSessionSnapshot(session, {
           context: {
             ...feedContext,
@@ -174,7 +176,7 @@ export function createFeedService(deps: FeedDeps): FeedService {
               rows: 'rows' in feedContext ? feedContext.rows : {},
             }),
           },
-        });
+        }, record);
         const serialized = JSON.stringify(snapshot);
         if (serialized === lastSnapshot) return;
         lastSnapshot = serialized;

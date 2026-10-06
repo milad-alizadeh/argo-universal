@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { sessionColumns, turnColumns } from '../columns';
+import { SessionInfo } from './list';
 import { SessionConfigOption } from './set-config-option';
 
 export const SessionState = z.enum(['running', 'idle', 'requires_action']);
@@ -144,6 +145,12 @@ export type LiveHeader = z.infer<typeof LiveHeader>;
 
 // The live state of a Session that is not a Feed row. The Server holds it in memory, so only stored fields derive from columns (ADR 0013).
 export const SessionSnapshot = z.strictObject({
+  ...SessionInfo.pick({
+    agent: true,
+    title: true,
+    titleSource: true,
+    checkout: true,
+  }).shape,
   state: SessionState,
   liveHeader: LiveHeader.nullable(),
   activeTurnId: turnColumns.shape.id.nullable(),

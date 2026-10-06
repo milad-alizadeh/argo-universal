@@ -1,28 +1,26 @@
-import type {
-  BlobRef,
-  SessionConfigOption,
-  SessionNewInput,
-} from '@repo/contracts';
+import type { SessionConfigOption, SessionNewInput } from '@repo/contracts';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, View } from 'react-native';
+import { useState } from 'react';
+import { View } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { Composer, type ComposerDraft } from '#components/Composer';
 import { LoadError } from '#components/LoadError';
 import { Screen } from '#components/Screen';
 import { StartSessionIn } from '#components/StartSessionIn';
-import { pickImages } from '#lib/pick-images';
 import { Text } from '#primitives/text';
 import { useConnectionState } from '../connection/context';
+import { useImageDraft } from '../lib/use-image-draft';
 import { useNavigate } from '../navigation/context';
 import { useWide } from '../navigation/use-wide';
 import { useTRPC } from '../trpc/context';
+
+// Follows the keyboard frame by frame on both phones; `automaticOffset` measures the view on screen, below any header.
+const keyboardAvoiding = { flex: 1, minHeight: 0 };
 
 export interface NewSessionScreenProps {
   // The Project whose heading + opened this page.
   projectId?: string;
 }
-
-const emptyDraft: ComposerDraft = { text: '', images: [] };
 
 function withValue(
   option: SessionConfigOption,
@@ -50,9 +48,8 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
     Record<string, string | boolean>
   >({});
   const [newWorktree, setNewWorktree] = useState<boolean>();
-  const [draft, setDraft] = useState(emptyDraft);
-  // The file behind each attached image, by its id in the draft.
-  const imageFiles = useRef(new Map<string, Blob>());
+  const { draft, changeDraft, attachImages, toPrompt, upload } =
+    useImageDraft();
 
   const project =
     projects.data?.find((entry) => entry.id === chosenProjectId) ??
@@ -76,7 +73,6 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
       ? project.checkoutChoice.baseBranch
       : (branches.data?.currentBranch ?? 'main');
 
-  const upload = useMutation(trpc.blob.upload.mutationOptions());
   const start = useMutation(
     trpc.session.new.mutationOptions({
       onSuccess: ({ sessionId }) =>
@@ -91,46 +87,11 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
     start.reset();
   };
 
-  async function attachImages() {
-    const picked = await pickImages();
-    for (const { image, file } of picked)
-      imageFiles.current.set(image.id, file);
-    setDraft((current) => ({
-      ...current,
-      images: [...current.images, ...picked.map(({ image }) => image)],
-    }));
-  }
-
-  // Keeps a file only while its image is in the draft.
-  function changeDraft(next: ComposerDraft) {
-    const kept = new Set(next.images.map((image) => image.id));
-    for (const id of imageFiles.current.keys())
-      if (!kept.has(id)) imageFiles.current.delete(id);
-    setDraft(next);
-  }
-
-  // Uploads each image, in draft order; undefined once an upload fails, which `upload.error` shows.
-  async function uploadImages(
-    sent: ComposerDraft,
-  ): Promise<BlobRef[] | undefined> {
-    const references: BlobRef[] = [];
-    for (const image of sent.images) {
-      const file = imageFiles.current.get(image.id);
-      if (!file) throw new Error(`No file for the attached ${image.name}`);
-      const form = new FormData();
-      form.append('file', file, image.name);
-      const reference = await upload.mutateAsync(form).catch(() => undefined);
-      if (!reference) return undefined;
-      references.push(reference);
-    }
-    return references;
-  }
-
   async function send(sent: ComposerDraft) {
     if (!project || !agent) return;
     resetErrors();
-    const images = await uploadImages(sent);
-    if (!images) return;
+    const prompt = await toPrompt(sent);
+    if (!prompt) return;
     const input: SessionNewInput = {
       projectId: project.id,
       agent: agent.agent,
@@ -139,16 +100,7 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
         configId,
         value: currentValue,
       })),
-      prompt: [
-        ...(sent.text.trim()
-          ? [{ type: 'text' as const, text: sent.text }]
-          : []),
-        ...images.map((blob) => ({
-          type: 'image' as const,
-          mimeType: blob.mime,
-          blob,
-        })),
-      ],
+      prompt,
     };
     start.mutate(input);
   }
@@ -191,9 +143,9 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
   return (
     <Screen edges={['bottom']}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        className="flex-1"
-        style={{ minHeight: 0 }}
+        behavior="padding"
+        automaticOffset
+        style={keyboardAvoiding}
       >
         <View className="flex-1 items-center justify-center px-6 pb-10">
           {wide && (

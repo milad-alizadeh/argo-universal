@@ -4,6 +4,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
 } from 'react';
@@ -13,12 +14,22 @@ import Animated, {
   ReduceMotion,
   runOnJS,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
 import { cn } from '#lib/utils';
 
-const NativeOpenContext = createContext(false);
+const OpenContext = createContext(false);
+
+// Set inside a list that places rows from their measured size, such as the Feed: the height then steps from JS and re-measures the row each frame, so the rows below move with it.
+interface CollapsibleLayoutSync {
+  syncLayout: () => void;
+  // Called with true as a collapsible starts to open or close and false once it stops, so the list can tell a reader's toggle from new content.
+  onMotion: (moving: boolean) => void;
+}
+const CollapsibleLayoutSyncContext =
+  createContext<CollapsibleLayoutSync | null>(null);
 
 function Collapsible({
   children,
@@ -29,19 +40,8 @@ function Collapsible({
 }: Omit<React.ComponentProps<typeof CollapsiblePrimitive.Root>, 'asChild'>) {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
   const open = controlledOpen ?? uncontrolledOpen;
-  if (Platform.OS === 'web')
-    return (
-      <CollapsiblePrimitive.Root
-        {...props}
-        open={controlledOpen}
-        defaultOpen={defaultOpen}
-        onOpenChange={onOpenChange}
-      >
-        {children}
-      </CollapsiblePrimitive.Root>
-    );
   return (
-    <NativeOpenContext.Provider value={open}>
+    <OpenContext.Provider value={open}>
       <CollapsiblePrimitive.Root
         {...props}
         open={open}
@@ -52,7 +52,7 @@ function Collapsible({
       >
         {children}
       </CollapsiblePrimitive.Root>
-    </NativeOpenContext.Provider>
+    </OpenContext.Provider>
   );
 }
 
@@ -63,6 +63,13 @@ function CollapsibleContent({
   className,
   ...props
 }: Omit<React.ComponentProps<typeof CollapsiblePrimitive.Content>, 'asChild'>) {
+  const layoutSync = useContext(CollapsibleLayoutSyncContext);
+  if (layoutSync)
+    return (
+      <SyncedContent {...props} className={className} layoutSync={layoutSync}>
+        {children}
+      </SyncedContent>
+    );
   if (Platform.OS === 'web') {
     return (
       <CollapsiblePrimitive.Content
@@ -83,13 +90,91 @@ function CollapsibleContent({
   );
 }
 
+const duration = 200;
+// Reanimated's default `withTiming` curve, so both paths move alike.
+const easeInOut = (t: number) =>
+  t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+
+function SyncedContent({
+  children,
+  className,
+  forceMount,
+  layoutSync: { syncLayout, onMotion },
+  ...props
+}: Omit<
+  React.ComponentProps<typeof CollapsiblePrimitive.Content>,
+  'asChild'
+> & { layoutSync: CollapsibleLayoutSync }) {
+  const open = useContext(OpenContext);
+  const reducedMotion = useReducedMotion();
+  const [height, setHeight] = useState(0);
+  const [progress, setProgress] = useState(open ? 1 : 0);
+  const current = useRef(progress);
+  current.current = progress;
+  useEffect(() => {
+    const target = open ? 1 : 0;
+    // Opening waits for the first measurement, which sets the height to grow to.
+    if (open && height === 0) return;
+    if (reducedMotion) {
+      setProgress(target);
+      return;
+    }
+    const from = current.current;
+    const span = Math.abs(target - from) * duration;
+    if (!span) {
+      setProgress(target);
+      return;
+    }
+    onMotion(true);
+    let moving = true;
+    const started = performance.now();
+    let frame = requestAnimationFrame(function step(time) {
+      const t = Math.min((time - started) / span, 1);
+      setProgress(from + (target - from) * easeInOut(t));
+      if (t < 1) frame = requestAnimationFrame(step);
+      else {
+        moving = false;
+        onMotion(false);
+      }
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      if (moving) onMotion(false);
+    };
+  }, [open, height, reducedMotion, onMotion]);
+  // Before paint, so the list moves the rows below in the same frame.
+  useLayoutEffect(() => {
+    syncLayout();
+  }, [progress, height, syncLayout]);
+  if (!open && progress === 0 && !forceMount) return null;
+  return (
+    <CollapsiblePrimitive.Content {...props} forceMount asChild>
+      <View
+        style={{ height: height * progress, overflow: 'hidden' }}
+        pointerEvents={open ? 'auto' : 'none'}
+        aria-hidden={!open}
+        accessibilityElementsHidden={!open}
+        importantForAccessibility={open ? 'auto' : 'no-hide-descendants'}
+      >
+        <View
+          className={className}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0 }}
+          onLayout={(event) => setHeight(event.nativeEvent.layout.height)}
+        >
+          {children}
+        </View>
+      </View>
+    </CollapsiblePrimitive.Content>
+  );
+}
+
 function NativeContent({
   children,
   className,
   forceMount,
   ...props
 }: Omit<React.ComponentProps<typeof CollapsiblePrimitive.Content>, 'asChild'>) {
-  const open = useContext(NativeOpenContext);
+  const open = useContext(OpenContext);
   const [mounted, setMounted] = useState(open || !!forceMount);
   const height = useSharedValue(0);
   const progress = useSharedValue(open ? 1 : 0);
@@ -155,4 +240,9 @@ function NativeContent({
   );
 }
 
-export { Collapsible, CollapsibleContent, CollapsibleTrigger };
+export {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleLayoutSyncContext,
+  CollapsibleTrigger,
+};

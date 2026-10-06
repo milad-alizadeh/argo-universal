@@ -5,6 +5,8 @@ import {
   userMessageChange,
 } from '../apps/server/src/services/feed/feed-change.ts';
 import { toLiveHeader } from '../apps/server/src/services/sessions/live-header.ts';
+import { titleFromPrompt } from '../apps/server/src/services/sessions/session-data.ts';
+import { toSessionCheckout } from '../apps/server/src/services/sessions/session-record.ts';
 import { mockClis } from '../mocks/cli/index.ts';
 import { agentAdapters } from '../packages/agents/src/adapters.ts';
 import type { SessionUpdate } from '../packages/contracts/src/feed/session-update.ts';
@@ -137,6 +139,15 @@ const mocks = agentAdapters.flatMap(({ agent }, index) => {
       apply(event.change);
     }
     const snapshot = SessionSnapshot.parse({
+      agent: `agent-${index + 1}`,
+      // What the Server stores for a new worktree Session: the prompt's first line titles it.
+      title: (prompt && titleFromPrompt(prompt)) || recording,
+      titleSource: 'prompt',
+      checkout: toSessionCheckout({
+        id: sessionId,
+        checkoutPath: `/Users/me/argo/.argo/worktrees/${sessionId}`,
+        checkoutBranch: `argo/${sessionId}`,
+      }),
       state: turnId === null ? 'idle' : 'running',
       liveHeader: header(),
       activeTurnId: turnId,

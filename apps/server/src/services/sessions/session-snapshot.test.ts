@@ -3,6 +3,7 @@ import { afterAll, expect, it } from 'vitest';
 import { createActor, type StateValue } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
 import { liveHeaderMocks } from '#mocks/live-header';
+import { sessionRecord } from '#mocks/session';
 import { sessionMachine } from './session-machine';
 import { toSessionSnapshot } from './session-snapshot';
 
@@ -34,8 +35,13 @@ const rows: [StateValue, string][] = [
 it.each(rows)('maps %j to %s', (value, state) => {
   const snapshot = sessionMachine.resolveState({ value, context });
   expect(
-    toSessionSnapshot(snapshot, { context: { epoch: 2, maxRevision: 7 } }),
+    toSessionSnapshot(
+      snapshot,
+      { context: { epoch: 2, maxRevision: 7 } },
+      sessionRecord,
+    ),
   ).toEqual({
+    ...sessionRecord,
     state,
     liveHeader: null,
     activeTurnId: null,
@@ -80,8 +86,13 @@ it('projects the live context and the Feed revision without changing either', ()
     },
   });
   expect(
-    toSessionSnapshot(snapshot, { context: { epoch: 3, maxRevision: 9 } }),
+    toSessionSnapshot(
+      snapshot,
+      { context: { epoch: 3, maxRevision: 9 } },
+      sessionRecord,
+    ),
   ).toEqual({
+    ...sessionRecord,
     state: 'requires_action',
     liveHeader: {
       text: 'Awaiting approval',
@@ -120,7 +131,7 @@ it.each(liveHeaderMocks)(
             },
           },
         },
-      }).liveHeader?.text,
+      }, sessionRecord).liveHeader?.text,
     ).toBe('Reading spec.md');
   },
 );

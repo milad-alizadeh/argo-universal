@@ -1,4 +1,7 @@
-import { LegendList, type LegendListRenderItemProps } from '@legendapp/list';
+import {
+  LegendList,
+  type LegendListRenderItemProps,
+} from '@legendapp/list/react-native';
 import type {
   AgentsListOutput,
   ProjectsListOutput,
@@ -24,6 +27,7 @@ import { useCSSVariable } from 'uniwind';
 import { hasLiquidGlass } from '#lib/native-header';
 import { cn } from '#lib/utils';
 import { Text } from '#primitives/text';
+import { listTestId } from '../lib/list-test-id';
 import { useWide } from '../navigation/use-wide';
 import { ProjectHeading } from './ProjectHeading';
 import { ScrollFade } from './ScrollFade';
@@ -202,7 +206,7 @@ export function SessionsList({
       <View className="flex-1" style={{ minHeight: 0 }}>
         <LegendList
           refScrollView={scrollView}
-          testID="sessions-scroll"
+          {...listTestId('sessions-scroll')}
           style={{ flex: 1 }}
           contentContainerStyle={wide ? contentStyle : phoneContentStyle}
           // On iOS it scrolls by the fade's top padding on mount, then snaps back.

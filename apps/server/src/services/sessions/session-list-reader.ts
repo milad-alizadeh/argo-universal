@@ -16,6 +16,7 @@ import type { writerMachine } from '../feed/writer-machine';
 import { toLiveHeader } from './live-header';
 import { readLiveHeaderRows } from './live-header-rows';
 import type { RegistryActorRef } from './registry-machine';
+import { toSessionCheckout } from './session-record';
 import { deriveSessionStatus } from './session-status';
 
 const storedSession = SessionRecord;
@@ -224,12 +225,7 @@ export function createSessionListReader(options: {
             status,
             activity,
             activityAt: row.activityAt,
-            checkout: {
-              type:
-                row.checkoutBranch === `argo/${row.id}` ? 'worktree' : 'main',
-              path: row.checkoutPath,
-              branch: row.checkoutBranch,
-            },
+            checkout: toSessionCheckout(row),
             plan:
               plan?.plan.type === 'items'
                 ? {
