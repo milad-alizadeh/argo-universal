@@ -22,6 +22,7 @@ const recordedItemTypes: Record<string, string[]> = {
   'agent-2/compaction': ['row', 'row'],
   'agent-1/image-prompt': ['thought', 'row'],
   'agent-2/image-prompt': ['row'],
+  'agent-2/command-outcomes': ['row', 'group', 'row'],
 };
 
 function toolCalls(rows: SessionUpdate[]): ToolCallUpdate[] {
