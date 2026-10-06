@@ -133,15 +133,17 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
         className="flex-1"
         style={{ minHeight: 0 }}
       >
-        <View className="flex-1 items-center justify-center px-6">
+        <View className="flex-1 items-center justify-center px-6 pb-10">
           {wide && (
-            <Text
-              role="heading"
-              aria-level={1}
-              className="text-center text-base leading-6 font-semibold"
-            >
-              What should we work on?
-            </Text>
+            <View className="w-full max-w-composer gap-2 px-4">
+              <Text
+                role="heading"
+                aria-level={1}
+                className="text-[32px] leading-[38px] tracking-[-0.025em] font-semibold text-foreground"
+              >
+                What should we work on?
+              </Text>
+            </View>
           )}
         </View>
         <View className="items-center px-4 pb-2 wide:px-6">
