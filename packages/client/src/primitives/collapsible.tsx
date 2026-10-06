@@ -1,7 +1,15 @@
 import * as CollapsiblePrimitive from '@rn-primitives/collapsible';
-import { createContext, useContext, useEffect, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { Platform, View } from 'react-native';
 import Animated, {
+  cancelAnimation,
   ReduceMotion,
   runOnJS,
   useAnimatedStyle,
@@ -85,6 +93,13 @@ function NativeContent({
   const [mounted, setMounted] = useState(open || !!forceMount);
   const height = useSharedValue(0);
   const progress = useSharedValue(open ? 1 : 0);
+  const visibility = useRef({ open, forceMount });
+  visibility.current = { open, forceMount };
+  const unmountClosedContent = useCallback(() => {
+    if (visibility.current.open || visibility.current.forceMount) return;
+    height.value = 0;
+    setMounted(false);
+  }, [height]);
   useEffect(() => {
     if (open) {
       setMounted(true);
@@ -99,13 +114,13 @@ function NativeContent({
         { duration: 200, reduceMotion: ReduceMotion.System },
         (finished) => {
           if (finished && !forceMount) {
-            height.value = 0;
-            runOnJS(setMounted)(false);
+            runOnJS(unmountClosedContent)();
           }
         },
       );
     }
-  }, [open, forceMount, height, progress]);
+    return () => cancelAnimation(progress);
+  }, [open, forceMount, height, progress, unmountClosedContent]);
   const style = useAnimatedStyle(
     () => ({ height: height.value * progress.value, overflow: 'hidden' }),
     [height, progress],
@@ -116,6 +131,7 @@ function NativeContent({
       <Animated.View
         style={style}
         pointerEvents={open ? 'auto' : 'none'}
+        aria-hidden={!open}
         accessibilityElementsHidden={!open}
         importantForAccessibility={open ? 'auto' : 'no-hide-descendants'}
       >
