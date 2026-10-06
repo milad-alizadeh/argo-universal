@@ -5,6 +5,7 @@ import {
   userMessageChange,
 } from '../apps/server/src/services/feed/feed-change.ts';
 import { toLiveHeader } from '../apps/server/src/services/sessions/live-header.ts';
+import { noChanges } from '../apps/server/src/services/sessions/session-snapshot.ts';
 import { mockClis } from '../mocks/cli/index.ts';
 import { agentAdapters } from '../packages/agents/src/adapters.ts';
 import type { RequestAnswer } from '../packages/api/mocks/requests.ts';
@@ -56,6 +57,7 @@ const mocks = agentAdapters.flatMap(({ agent }, index) => {
         pendingElicitation,
         pendingPlanProposal,
         configOptions: [],
+        changes: noChanges,
         epoch: 0,
         maxRevision: feed.maxRevision,
         liveHeader: toLiveHeader(

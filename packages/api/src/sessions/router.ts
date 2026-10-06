@@ -7,7 +7,11 @@ import {
   SessionAnswerPlanProposalOutput,
   SessionCancelInput,
   SessionCancelOutput,
+  SessionChangesInput,
+  SessionChangesOutput,
   SessionCounts,
+  SessionDiffInput,
+  SessionDiffOutput,
   SessionListInput,
   SessionListOutput,
   SessionListUpdate,
@@ -67,4 +71,12 @@ export const sessionRouter = router({
     .mutation(({ ctx, input }) =>
       ctx.services.session.answerPlanProposal(input),
     ),
+  changes: publicProcedure
+    .input(SessionChangesInput)
+    .output(SessionChangesOutput)
+    .query(({ ctx, input }) => ctx.services.session.changes(input)),
+  diff: publicProcedure
+    .input(SessionDiffInput)
+    .output(SessionDiffOutput)
+    .query(({ ctx, input }) => ctx.services.session.diff(input)),
 });

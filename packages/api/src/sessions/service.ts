@@ -7,7 +7,11 @@ import type {
   SessionAnswerPlanProposalOutput,
   SessionCancelInput,
   SessionCancelOutput,
+  SessionChangesInput,
+  SessionChangesOutput,
   SessionCounts,
+  SessionDiffInput,
+  SessionDiffOutput,
   SessionListInput,
   SessionListOutput,
   SessionListUpdate,
@@ -41,4 +45,6 @@ export interface SessionService {
   setConfigOption(
     input: SessionSetConfigOptionInput,
   ): Promise<SessionSetConfigOptionOutput>;
+  changes(input: SessionChangesInput): Promise<SessionChangesOutput>;
+  diff(input: SessionDiffInput): Promise<SessionDiffOutput>;
 }

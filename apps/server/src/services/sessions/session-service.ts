@@ -5,6 +5,7 @@ import { listBranches } from '@repo/git';
 import { TRPCError } from '@trpc/server';
 import { type ActorRefFrom, type SnapshotFrom, waitFor } from 'xstate';
 import type { writerMachine } from '../feed/writer-machine';
+import { notImplemented } from '../not-implemented';
 import { readProjectPath } from '../projects/project-service';
 import type { RegistryActorRef, RegistryCommand } from './registry-machine';
 import { sendSessionCommand } from './session-command';
@@ -118,6 +119,8 @@ export function createSessionService({
         message: 'Plan proposal answers are not implemented yet',
       });
     },
+    changes: notImplemented,
+    diff: notImplemented,
     new: async (input) => {
       const projectPath = readProjectPath(database, input.projectId);
       if (

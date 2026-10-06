@@ -107,6 +107,11 @@
         "pendingElicitation": null,
         "pendingPlanProposal": null,
         "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
         "maxRevision": 4,
         "epoch": 0
       }
@@ -214,6 +219,11 @@
         "pendingElicitation": null,
         "pendingPlanProposal": null,
         "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
         "maxRevision": 5,
         "epoch": 0
       }
@@ -339,6 +349,11 @@
         },
         "pendingPlanProposal": null,
         "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
         "maxRevision": 4,
         "epoch": 0
       }
@@ -444,6 +459,11 @@
         "pendingElicitation": null,
         "pendingPlanProposal": null,
         "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
         "maxRevision": 4,
         "epoch": 0
       }
@@ -599,6 +619,11 @@
           "content": "# Plan: create hello.txt\n\n## Context\nCreate a file `hello.txt` containing the text `hello` in the working directory.\n\n## Steps\n1. Write `hello.txt` in `/repo` with the content `hello`.\n\n## Verification\nRead the file and confirm it contains `hello`.\n"
         },
         "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
         "maxRevision": 7,
         "epoch": 0
       }
@@ -757,6 +782,11 @@
         "pendingElicitation": null,
         "pendingPlanProposal": null,
         "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
         "maxRevision": 8,
         "epoch": 0
       }
@@ -912,6 +942,11 @@
           "content": "# Plan: create hello.txt\n\n**Context:** Create a file `hello.txt` containing the word \"hello\" in the working directory.\n\n**Steps**\n1. Write `hello.txt` in `/repo` with the content `hello`.\n\n**Verification:** Read the file and confirm it contains `hello`.\n"
         },
         "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
         "maxRevision": 7,
         "epoch": 0
       }
@@ -1087,6 +1122,11 @@
         "pendingElicitation": null,
         "pendingPlanProposal": null,
         "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
         "maxRevision": 9,
         "epoch": 0
       }
@@ -1207,6 +1247,11 @@
         "pendingElicitation": null,
         "pendingPlanProposal": null,
         "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
         "maxRevision": 15,
         "epoch": 0
       }
@@ -1321,6 +1366,11 @@
         "pendingElicitation": null,
         "pendingPlanProposal": null,
         "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
         "maxRevision": 16,
         "epoch": 0
       }
@@ -1391,6 +1441,11 @@
         },
         "pendingPlanProposal": null,
         "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
         "maxRevision": 1,
         "epoch": 0
       }
@@ -1440,6 +1495,11 @@
         "pendingElicitation": null,
         "pendingPlanProposal": null,
         "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
         "maxRevision": 1,
         "epoch": 0
       }
@@ -1499,6 +1559,11 @@
           "content": "Create `hello.txt` in the current directory containing `hello`, then verify its contents.\n"
         },
         "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
         "maxRevision": 2,
         "epoch": 0
       }
@@ -1564,6 +1629,11 @@
         "pendingElicitation": null,
         "pendingPlanProposal": null,
         "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
         "maxRevision": 3,
         "epoch": 0
       }
@@ -1623,6 +1693,11 @@
           "content": "Create `hello.txt` in the current directory containing `hello`. Verify its contents.\n"
         },
         "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
         "maxRevision": 2,
         "epoch": 0
       }
@@ -1705,6 +1780,11 @@
         "pendingElicitation": null,
         "pendingPlanProposal": null,
         "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
         "maxRevision": 4,
         "epoch": 0
       }

@@ -41,11 +41,14 @@ export function unreachableServices(
       answerPlanProposal: unreachable('session.answerPlanProposal'),
 
       setConfigOption: unreachable('session.setConfigOption'),
+      changes: unreachable('session.changes'),
+      diff: unreachable('session.diff'),
       ...overrides.session,
     },
   };
 }
 
+export * from './changes';
 export * from './feed';
 export * from './new-session';
 export * from './requests';
