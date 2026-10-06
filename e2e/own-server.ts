@@ -1,11 +1,9 @@
-import { type ChildProcess, execFile, spawn } from 'node:child_process';
-import { mkdir } from 'node:fs/promises';
+import { type ChildProcess, spawn } from 'node:child_process';
 import { createServer } from 'node:net';
 import path from 'node:path';
-import { promisify } from 'node:util';
 import { type MockAgents, writeMockAgents } from './mock-agents';
+import { createProjectRepository } from './project-repository';
 
-const run = promisify(execFile);
 const serverDirectory = path.resolve(import.meta.dirname, '../apps/server');
 
 export const findFreePort = () =>
@@ -21,23 +19,6 @@ export const findFreePort = () =>
       );
     });
   });
-
-// A git repository with one commit on `main`, which the Server seeds as its Project.
-async function createProject(directory: string) {
-  await mkdir(directory, { recursive: true });
-  const git = (...arguments_: string[]) =>
-    run('git', ['-C', directory, ...arguments_]);
-  await git('init', '--initial-branch=main');
-  await git(
-    '-c',
-    'user.name=Argo',
-    '-c',
-    'user.email=argo@example.com',
-    'commit',
-    '--allow-empty',
-    '--message=Start',
-  );
-}
 
 async function waitUntilReady(url: string, server: ChildProcess) {
   const deadline = Date.now() + 30_000;
@@ -58,7 +39,7 @@ async function waitUntilReady(url: string, server: ChildProcess) {
 export async function startOwnServer(directory: string, agents: MockAgents) {
   const agentDirectory = path.join(directory, 'agent-bin');
   const projectPath = path.join(directory, 'project');
-  await createProject(projectPath);
+  await createProjectRepository(projectPath);
   await writeMockAgents(agentDirectory, agents);
   const port = await findFreePort();
   // No inherited PATH, so a real Agent CLI on this machine never stands in for a missing mock.

@@ -1,6 +1,7 @@
 import { sessionRows } from '@repo/api/mocks';
 import type { SessionInfo, SessionListUpdate } from '@repo/contracts';
 import { sessionListMocks } from './session-list-mock';
+import { createSubscriptionPublisher } from './subscription-publisher';
 import type { Fixtures } from './trpc-mock-link';
 
 export function createSessionListUpdatesMock() {
@@ -9,11 +10,11 @@ export function createSessionListUpdatesMock() {
     { ...sessionRows.idle, activityAt: 100 },
   ];
   let sessions = initialSessions();
-  let send: ((update: SessionListUpdate) => void) | undefined;
+  const updates = createSubscriptionPublisher<SessionListUpdate>();
   return {
     reset() {
       sessions = initialSessions();
-      send = undefined;
+      updates.reset();
     },
     publish(update: SessionListUpdate) {
       sessions = sessions.filter(
@@ -24,7 +25,7 @@ export function createSessionListUpdatesMock() {
             : update.sessionId),
       );
       if (update.type === 'changed') sessions.push(update.session);
-      send?.(update);
+      updates.publish(update);
     },
     fixtures: {
       ...sessionListMocks,
@@ -37,31 +38,7 @@ export function createSessionListUpdatesMock() {
         ),
         nextCursor: null,
       }),
-      'session.listUpdates': async function* (_input, signal) {
-        while (!signal.aborted) {
-          const update = await new Promise<SessionListUpdate | undefined>(
-            (resolve) => {
-              const cleanup = () => {
-                signal.removeEventListener('abort', abort);
-                if (send === deliver) send = undefined;
-              };
-              const abort = () => {
-                cleanup();
-                resolve(undefined);
-              };
-              const deliver = (value: SessionListUpdate) => {
-                cleanup();
-                resolve(value);
-              };
-              if (signal.aborted) return resolve(undefined);
-              send = deliver;
-              signal.addEventListener('abort', abort, { once: true });
-            },
-          );
-          if (!update) return;
-          yield update;
-        }
-      },
+      'session.listUpdates': (_input, signal) => updates.subscribe(signal),
     } satisfies Fixtures,
   };
 }

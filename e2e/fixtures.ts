@@ -6,6 +6,7 @@ import { test as base, _electron as electron } from '@playwright/test';
 import { z } from 'zod';
 import { type MockAgents, writeMockAgents } from './mock-agents';
 import { findFreePort, startOwnServer } from './own-server';
+import { createProjectRepository } from './project-repository';
 
 export type AppOptions = { appTarget: 'web' | 'electron' };
 
@@ -91,6 +92,9 @@ export const test = base.extend<
         ARGO_HOME: home,
         ARGO_SERVER_PORT: String(await findFreePort()),
         PATH: agentPath,
+        ARGO_PROJECT_PATH: await createProjectRepository(
+          testInfo.outputPath('project'),
+        ),
       },
     });
     try {
