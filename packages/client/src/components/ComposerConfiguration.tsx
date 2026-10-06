@@ -503,7 +503,7 @@ function AgentModelMenu({
   if (!wide && page !== 'settings')
     return (
       <View>
-        <View className="h-11 px-1 flex-row items-center border-b border-border">
+        <View className="h-11 px-1 flex-row items-center">
           <Button
             variant="ghost"
             size="icon"
