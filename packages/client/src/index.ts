@@ -61,6 +61,7 @@ export { hasLiquidGlass } from './lib/native-header';
 export { applyTheme } from './lib/theme';
 export {
   type Navigate,
+  type NavigateOptions,
   type NavigationDestination,
   NavigationProvider,
   type NavigationProviderProps,
@@ -76,6 +77,10 @@ export {
 export { useWide } from './navigation/use-wide';
 export { ConnectionScreen } from './screens/ConnectionScreen';
 export {
+  NewSessionScreen,
+  type NewSessionScreenProps,
+} from './screens/NewSessionScreen';
+export {
   AccountsScreen,
   AgentSettingsScreen,
   type AgentSettingsScreenProps,
@@ -84,7 +89,6 @@ export {
   AtlasScreen,
   DevicesScreen,
   IssuesScreen,
-  NewSessionScreen,
   NotificationsScreen,
   ProjectSettingsScreen,
   type ProjectSettingsScreenProps,

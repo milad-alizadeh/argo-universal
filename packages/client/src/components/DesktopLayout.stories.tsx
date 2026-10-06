@@ -8,15 +8,16 @@ const meta = {
   component: DesktopLayout,
   args: {
     destination: { to: 'sessions' },
-    children: (
-      <View className="flex-1 p-4">
-        <Text>Detail</Text>
-      </View>
-    ),
+    // JSX in args breaks on-device Storybook's arg inference, so render draws the detail.
+    children: null,
   },
   render: (args) => (
     <View className="h-[600px] w-full">
-      <DesktopLayout {...args} />
+      <DesktopLayout {...args}>
+        <View className="flex-1 p-4">
+          <Text>Detail</Text>
+        </View>
+      </DesktopLayout>
     </View>
   ),
 } satisfies Meta<typeof DesktopLayout>;

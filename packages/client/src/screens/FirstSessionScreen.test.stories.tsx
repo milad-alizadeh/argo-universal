@@ -1,6 +1,7 @@
 import { activeSessions } from '@repo/api/mocks';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
+import { newSessionMocks } from '../../mocks/new-session-mock';
 import {
   emptySessionListMocks,
   sessionListMocks,
@@ -24,8 +25,10 @@ export const OpensFirstActiveSession: Story = {
 };
 
 export const OpensNewSessionWithoutSessions: Story = {
-  parameters: { trpc: emptySessionListMocks },
+  parameters: { trpc: { ...emptySessionListMocks, ...newSessionMocks } },
   play: async ({ canvas }) => {
-    await expect(await canvas.findByText('Start new work here.')).toBeVisible();
+    await expect(
+      await canvas.findByRole('textbox', { name: 'Message' }),
+    ).toBeVisible();
   },
 };

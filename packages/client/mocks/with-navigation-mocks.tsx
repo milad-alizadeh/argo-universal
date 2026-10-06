@@ -9,17 +9,25 @@ import { ScreenHeaderMock } from './screen-header-mock';
 
 export interface NavigationRecorder {
   readonly destinations: readonly NavigationDestination[];
+  // The destinations that replaced the current page.
+  readonly replacements: readonly NavigationDestination[];
   navigate: Navigate;
   reset(): void;
 }
 
 export function createNavigationRecorder(): NavigationRecorder {
   const destinations: NavigationDestination[] = [];
+  const replacements: NavigationDestination[] = [];
   return {
     destinations,
-    navigate: (destination) => destinations.push(destination),
+    replacements,
+    navigate: (destination, options) => {
+      destinations.push(destination);
+      if (options?.replace) replacements.push(destination);
+    },
     reset: () => {
       destinations.length = 0;
+      replacements.length = 0;
     },
   };
 }

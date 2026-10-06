@@ -40,6 +40,6 @@ test('Sessions loads from the Server, filters, and opens New Session', async ({
 
   await page.getByRole('button', { name: 'New Session', exact: true }).click();
   await expect(
-    page.getByText('Start new work here.', { exact: true }),
+    page.getByText('Start the Session in', { exact: true }),
   ).toBeVisible();
 });

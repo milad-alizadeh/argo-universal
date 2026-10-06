@@ -64,6 +64,12 @@ export interface ComposerProps {
   placeholder?: string;
   sending?: boolean;
   disabled?: boolean;
+  // False when Send can't work but the draft stays editable, as while the Connection is down.
+  sendable?: boolean;
+  // Shown in the Composer's warning line, as when a New Session fails to start.
+  error?: string;
+  // False when the page draws the checkout itself, as New Session does on a phone.
+  phoneCheckout?: boolean;
 }
 
 export function Composer({
@@ -81,6 +87,9 @@ export function Composer({
   placeholder = 'Message the Agent…',
   sending = false,
   disabled = false,
+  sendable = true,
+  error,
+  phoneCheckout = true,
 }: ComposerProps) {
   const wide = useWide();
   const [attachHighlighted, setAttachHighlighted] = useState(false);
@@ -94,6 +103,7 @@ export function Composer({
   );
   const canSend =
     !inactive &&
+    sendable &&
     !configuration?.turnRunning &&
     oversized.length === 0 &&
     (draft.text.trim().length > 0 || draft.images.length > 0);
@@ -120,13 +130,13 @@ export function Composer({
   return (
     <View className="w-full max-w-composer items-center">
       {!wide &&
-        (configuration?.checkout.onNewWorktreeChange ||
+        ((phoneCheckout && configuration?.checkout.onNewWorktreeChange) ||
           configuration?.checkout.path ||
           status?.plan?.length ||
           status?.subagents ||
           status?.shells) && (
           <View className="min-h-7 max-w-full mb-1 flex-row flex-wrap items-center justify-center gap-2">
-            {configuration?.checkout.onNewWorktreeChange ? (
+            {phoneCheckout && configuration?.checkout.onNewWorktreeChange ? (
               <ComposerCheckoutControl
                 checkout={configuration.checkout}
                 disabled={inactive}
@@ -214,22 +224,11 @@ export function Composer({
           </ScrollView>
         )}
         {oversized.length > 0 && (
-          <View role="alert" className="mx-4 mt-2 flex-row items-center gap-2">
-            <View className="size-3 mt-0.5">
-              <ComposerGlyph
-                name="warning"
-                size={12}
-                className="text-destructive"
-              />
-            </View>
-            <Text
-              className="min-w-0 flex-1 text-xs leading-4 text-destructive"
-              numberOfLines={1}
-            >
-              Image exceeds 20 MB.
-            </Text>
-          </View>
+          <ComposerWarning numberOfLines={1}>
+            Image exceeds 20 MB.
+          </ComposerWarning>
         )}
+        {error && <ComposerWarning>{error}</ComposerWarning>}
         <View className="px-4 pt-3 pb-2">
           <Textarea
             accessibilityLabel="Message"
@@ -431,6 +430,28 @@ export function Composer({
           </View>
         </View>
       )}
+    </View>
+  );
+}
+
+function ComposerWarning({
+  numberOfLines,
+  children,
+}: {
+  numberOfLines?: number;
+  children: string;
+}) {
+  return (
+    <View role="alert" className="mx-4 mt-2 flex-row items-start gap-2">
+      <View className="size-3 mt-0.5">
+        <ComposerGlyph name="warning" size={12} className="text-destructive" />
+      </View>
+      <Text
+        className="min-w-0 flex-1 text-xs leading-4 text-destructive"
+        numberOfLines={numberOfLines}
+      >
+        {children}
+      </Text>
     </View>
   );
 }

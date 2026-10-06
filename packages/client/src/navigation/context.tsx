@@ -17,7 +17,15 @@ export type NavigationDestination =
   | { to: 'settings-connection' }
   | { to: 'settings-agent'; agent: string };
 
-export type Navigate = (destination: NavigationDestination) => void;
+export interface NavigateOptions {
+  // Swaps out the current page, so Back skips it.
+  replace?: boolean;
+}
+
+export type Navigate = (
+  destination: NavigationDestination,
+  options?: NavigateOptions,
+) => void;
 
 const NavigateContext = createContext<Navigate | null>(null);
 

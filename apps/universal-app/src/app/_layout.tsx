@@ -60,8 +60,10 @@ const inspection = createBrowserMachineInspection({
 });
 
 // Screens in @repo/client navigate through this.
-const navigate: Navigate = (destination) =>
-  router.navigate(hrefFor(destination) as Href);
+const navigate: Navigate = (destination, options) =>
+  options?.replace
+    ? router.replace(hrefFor(destination) as Href)
+    : router.navigate(hrefFor(destination) as Href);
 
 export default function RootLayout() {
   const { theme } = useUniwind();
