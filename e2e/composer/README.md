@@ -22,6 +22,8 @@ Source: [current Paper Session page](https://app.paper.design/file/01M44G6AG3HPX
 - [x] Use phone settings, Agent and Model pages with back navigation; keep the Session Agent fixed after starting.
 - [x] Match desktop and phone attachment choices separately.
 - [x] Match Plan and Context trays, including optional phone Subagents and Shells counts.
+- [x] Remove the blue focus outline from the actual desktop popup wrapper, keep the Plan spinner at 14 px, and mute pending steps to match Paper.
+- [x] Resolve the Context ring's grey track and coloured arc from theme tokens; keep `34k / 200k` on one line. Verify the rendered light and dark previews, including keyboard focus: [light](screenshots/latest-paper/storybook-status-light.jpg), [dark](screenshots/latest-paper/storybook-status-dark.jpg).
 - [x] Capture all existing Composer states at phone and wide widths in light and dark: [screenshots](screenshots/latest-paper).
 - [x] Pass the 17 Composer browser plays and both adapter configuration test files (32 tests).
 - [x] Pass Client, Storybook and Agents type checks, formatting, and lint.

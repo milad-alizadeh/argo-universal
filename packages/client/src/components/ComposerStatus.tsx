@@ -60,7 +60,10 @@ function Meter({
   );
 }
 const ThemedCircle = withUniwind(Circle, {
-  stroke: { fromClassName: 'className', styleProperty: 'color' },
+  stroke: {
+    fromClassName: 'strokeClassName',
+    styleProperty: 'backgroundColor',
+  },
 });
 
 function ContextRing({ percent }: { percent: number }) {
@@ -73,7 +76,7 @@ function ContextRing({ percent }: { percent: number }) {
           cy={7}
           r={5.5}
           fill="none"
-          className="text-border"
+          strokeClassName="bg-border"
           strokeWidth={2}
         />
         <ThemedCircle
@@ -81,7 +84,7 @@ function ContextRing({ percent }: { percent: number }) {
           cy={7}
           r={5.5}
           fill="none"
-          className={percent < 20 ? 'text-success' : 'text-warning'}
+          strokeClassName={percent < 20 ? 'bg-success' : 'bg-warning'}
           strokeWidth={2}
           strokeLinecap="round"
           strokeDasharray={`${(circumference * Math.max(0, Math.min(100, percent))) / 100} ${circumference}`}
@@ -194,7 +197,7 @@ export function ComposerPlan({
               >
                 {entry.status === 'in_progress' ? (
                   <ActivityIndicator
-                    size="small"
+                    size={14}
                     colorClassName="accent-muted-foreground"
                     accessibilityLabel={`${entry.content} in progress`}
                     className="size-3.5 mt-0.5"
@@ -210,7 +213,7 @@ export function ComposerPlan({
                   className={cn(
                     'select-none',
                     'flex-1 text-sm leading-5 font-normal',
-                    entry.status === 'completed' && 'text-muted-foreground',
+                    entry.status !== 'in_progress' && 'text-muted-foreground',
                   )}
                 >
                   {entry.content}

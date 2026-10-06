@@ -646,11 +646,24 @@ export const SessionControls: Story = {
           ),
         ).toBeVisible(),
       );
+      const spinner = await overlay.findByRole('progressbar', {
+        name: 'Update the shared controls in progress',
+      });
+      await expect(spinner).toBeVisible();
+      // Measure the rotating element before its transform enlarges the bounding box.
       await expect(
-        await overlay.findByRole('progressbar', {
-          name: 'Update the shared controls in progress',
-        }),
-      ).toBeVisible();
+        getComputedStyle(spinner.firstElementChild as Element).width,
+      ).toBe('14px');
+      await expect(
+        getComputedStyle(spinner.firstElementChild as Element).height,
+      ).toBe('14px');
+      if (width >= 720) {
+        await userEvent.tab();
+        await expect(overlay.getByRole('dialog')).toHaveFocus();
+        await expect(
+          getComputedStyle(overlay.getByRole('dialog')).outlineStyle,
+        ).toBe('none');
+      }
       await userEvent.keyboard('{Escape}');
       await userEvent.click(
         canvas.getByRole('button', { name: 'Context window' }),

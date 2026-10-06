@@ -6,6 +6,10 @@
 }
 
 @layer base {
+  /* The primitive focuses its outer Radix wrapper rather than the styled content. */
+  :where([role="dialog"]:has(> .composer-popover)) {
+    outline: none;
+  }
   input,
   textarea {
     font-family: var(--font-sans);
