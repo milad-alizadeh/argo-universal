@@ -6,6 +6,7 @@ import type {
   SessionUpdate,
   ToolCallUpdate,
 } from '@repo/contracts';
+import { permissionOptions } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import { toFeedView } from './to-feed-view';
 
@@ -211,7 +212,7 @@ describe('toFeedView', () => {
         pendingPermission: {
           toolCallId: row.toolCallId,
           title: 'Allow read?',
-          options: [],
+          options: permissionOptions,
         },
       };
       expect(toFeedView([row], pending).items).toEqual([
@@ -230,7 +231,7 @@ describe('toFeedView', () => {
         _meta: {
           argo: {
             ...recorded._meta?.argo,
-            permissionOutcome: { outcome: 'selected', optionId: 'allow' },
+            permissionOutcome: { outcome: 'selected', optionId: 'allow_once' },
           },
         },
       };

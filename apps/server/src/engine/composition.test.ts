@@ -10,11 +10,17 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { type AgentAdapter, agentAdapters } from '@repo/agents';
 import { appRouter, type Services } from '@repo/api';
-import type { SessionListUpdate, SessionUpdate } from '@repo/contracts';
+import type {
+  SessionListUpdate,
+  SessionSnapshot,
+  SessionUpdate,
+} from '@repo/contracts';
+import { permissionOptions } from '@repo/contracts';
 import { feedRow, turn } from '@repo/db/schema';
 import { listBranches } from '@repo/git';
 import { createMockAdapter, type MockAgentStream } from '@repo/mocks/agent';
 import { mockClis } from '@repo/mocks/cli';
+import { readRequestAnswers } from '@repo/mocks/cli/request-answer';
 import { eq } from 'drizzle-orm';
 import { expect, it, vi } from 'vitest';
 import type { ActorRefFrom } from 'xstate';
@@ -178,7 +184,7 @@ it.each(liveHeaderMocks)(
         request: {
           toolCallId: command.toolCallId,
           title: 'Allow tests?',
-          options: [],
+          options: permissionOptions,
         },
       });
       expect(
@@ -501,7 +507,7 @@ it('sends live list changes and attention/running counts through request and Tur
       request: {
         toolCallId: 'permission',
         title: 'Run a command',
-        options: [],
+        options: permissionOptions,
       },
     });
     expect((await counts.next()).value).toEqual({ attention: 1, running: 1 });
@@ -785,6 +791,97 @@ async function startNewSessionEngine(
   };
 }
 
+async function readSnapshot(
+  createCaller: Awaited<
+    ReturnType<typeof startNewSessionEngine>
+  >['createCaller'],
+  sessionId: string,
+): Promise<SessionSnapshot> {
+  const controller = new AbortController();
+  const caller = await createCaller(controller.signal);
+  const updates = (await caller.feed.subscribe({ sessionId, after: null }))[
+    Symbol.asyncIterator
+  ]();
+  try {
+    for await (const update of { [Symbol.asyncIterator]: () => updates })
+      if (update.type === 'snapshot') return update.snapshot;
+    throw new Error('No Session snapshot');
+  } finally {
+    controller.abort();
+    await updates.return?.();
+  }
+}
+
+it.each(
+  agentAdapters.flatMap((adapter) =>
+    [false, true].map((delayedResponse) => ({
+      adapter,
+      agent: adapter.agent,
+      delayedResponse,
+    })),
+  ),
+)(
+  'answers a $agent Permission request once through tRPC (prompt response delayed: $delayedResponse)',
+  async ({ adapter, delayedResponse }) => {
+    vi.stubEnv(
+      'MOCK_CLI_REQUEST_BEFORE_START_RESPONSE',
+      delayedResponse ? '1' : '0',
+    );
+    const root = await startNewSessionEngine(adapter, {
+      recording: 'permission',
+    });
+    try {
+      const caller = await root.createCaller();
+      const { sessionId } = await caller.session.new({
+        projectId: 'project-1',
+        agent: adapter.agent,
+        checkout: { type: 'main' },
+        configOptions: [],
+        prompt: [{ type: 'text', text: 'Run the command' }],
+      });
+      await expect
+        .poll(
+          async () =>
+            (await readSnapshot(root.createCaller, sessionId))
+              .pendingPermission,
+        )
+        .not.toBeNull();
+      const request = (await readSnapshot(root.createCaller, sessionId))
+        .pendingPermission;
+      if (!request) throw new Error('No Permission request');
+      expect(request.options).toEqual(permissionOptions);
+      const answer = {
+        sessionId,
+        toolCallId: request.toolCallId,
+        optionId: 'allow_once' as const,
+      };
+      expect(await caller.session.answerPermission(answer)).toEqual({});
+      await expect(
+        caller.session.answerPermission(answer),
+      ).rejects.toMatchObject({
+        code: 'CONFLICT',
+        message: 'already answered',
+      });
+      await expect
+        .poll(
+          async () => (await readSnapshot(root.createCaller, sessionId)).state,
+        )
+        .toBe('idle');
+      expect(
+        await caller.feed.row({ sessionId, id: request.toolCallId }),
+      ).toMatchObject({
+        _meta: {
+          argo: {
+            permissionOutcome: { outcome: 'selected', optionId: 'allow_once' },
+          },
+        },
+      });
+    } finally {
+      root.close();
+    }
+  },
+);
+
 it.each(
   agentAdapters.flatMap((adapter) =>
     (
@@ -966,6 +1063,376 @@ it.each(
         }),
       ]);
     } finally {
+      root.close();
+    }
+  },
+);
+
+it.each(agentAdapters)(
+  'delivers a $agent rejection to its CLI without losing unsupported feedback',
+  async (adapter) => {
+    const root = await startNewSessionEngine(adapter, {
+      recording: 'permission',
+    });
+    const file = path.join(root.home, 'answers.jsonl');
+    vi.stubEnv('MOCK_CLI_REQUEST_ANSWERS', file);
+    try {
+      const caller = await root.createCaller();
+      const { sessionId } = await caller.session.new({
+        projectId: 'project-1',
+        agent: adapter.agent,
+        checkout: { type: 'main' },
+        configOptions: [],
+        prompt: [{ type: 'text', text: 'Run the command' }],
+      });
+      await expect
+        .poll(
+          async () =>
+            (await readSnapshot(root.createCaller, sessionId))
+              .pendingPermission,
+        )
+        .not.toBeNull();
+      const pending = (await readSnapshot(root.createCaller, sessionId))
+        .pendingPermission;
+      if (!pending) throw new Error('No Permission request');
+      const answer = {
+        sessionId,
+        toolCallId: pending.toolCallId,
+        optionId: 'reject_once' as const,
+        message: 'Use a read-only command instead',
+      };
+      const supportsFeedback =
+        mockClis[adapter.agent]?.supportsPermissionFeedback;
+      if (!supportsFeedback) {
+        await expect(
+          caller.session.answerPermission(answer),
+        ).rejects.toMatchObject({
+          code: 'BAD_REQUEST',
+          message: 'The Agent does not support Permission feedback',
+        });
+        expect(
+          (await readSnapshot(root.createCaller, sessionId)).pendingPermission,
+        ).toEqual(pending);
+      }
+      await caller.session.answerPermission(
+        supportsFeedback ? answer : { ...answer, message: undefined },
+      );
+      await expect
+        .poll(() => readRequestAnswers(file))
+        .toEqual([
+          {
+            type: 'permission',
+            optionId: 'reject_once',
+            ...(supportsFeedback ? { message: answer.message } : {}),
+          },
+        ]);
+      await expect
+        .poll(
+          async () => (await readSnapshot(root.createCaller, sessionId)).state,
+        )
+        .toBe('idle');
+      expect(
+        await caller.feed.row({ sessionId, id: pending.toolCallId }),
+      ).toMatchObject({
+        _meta: {
+          argo: {
+            permissionOutcome: { outcome: 'selected', optionId: 'reject_once' },
+          },
+        },
+      });
+    } finally {
+      root.close();
+    }
+  },
+);
+
+it.each(agentAdapters)(
+  'answers a $agent Elicitation once through tRPC',
+  async (adapter) => {
+    const root = await startNewSessionEngine(adapter, {
+      recording: 'elicitation',
+    });
+    const file = path.join(root.home, 'answers.jsonl');
+    vi.stubEnv('MOCK_CLI_REQUEST_ANSWERS', file);
+    try {
+      const caller = await root.createCaller();
+      const { sessionId } = await caller.session.new({
+        projectId: 'project-1',
+        agent: adapter.agent,
+        checkout: { type: 'main' },
+        configOptions: [],
+        prompt: [{ type: 'text', text: 'Ask me a question' }],
+      });
+      await expect
+        .poll(
+          async () =>
+            (await readSnapshot(root.createCaller, sessionId))
+              .pendingElicitation,
+        )
+        .not.toBeNull();
+      const pending = (await readSnapshot(root.createCaller, sessionId))
+        .pendingElicitation;
+      if (!pending) throw new Error('No Elicitation');
+      const recorded =
+        mockClis[adapter.agent]?.recordedRequestAnswer('elicitation');
+      if (recorded?.type !== 'elicitation')
+        throw new Error('No recorded Elicitation answer');
+      const answer = {
+        sessionId,
+        requestId: pending.requestId,
+        action: recorded.action,
+        content: recorded.content,
+      };
+      await expect(
+        caller.session.answerElicitation({
+          ...answer,
+          requestId: 'stale-request',
+        }),
+      ).rejects.toMatchObject({
+        code: 'CONFLICT',
+        message: 'already answered',
+      });
+      expect(
+        (await readSnapshot(root.createCaller, sessionId)).pendingElicitation,
+      ).toEqual(pending);
+      const field = Object.keys(recorded.content ?? {})[0];
+      if (!field) throw new Error('No recorded answer field');
+      await expect(
+        caller.session.answerElicitation({
+          ...answer,
+          content: { [field]: 42 },
+        }),
+      ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
+      expect(
+        (await readSnapshot(root.createCaller, sessionId)).pendingElicitation,
+      ).toEqual(pending);
+      const results = await Promise.allSettled([
+        caller.session.answerElicitation(answer),
+        caller.session.answerElicitation(answer),
+      ]);
+      expect(
+        results.filter((result) => result.status === 'fulfilled'),
+      ).toHaveLength(1);
+      expect(
+        results.find((result) => result.status === 'rejected'),
+      ).toMatchObject({
+        reason: { code: 'CONFLICT', message: 'already answered' },
+      });
+      await expect.poll(() => readRequestAnswers(file)).toEqual([recorded]);
+      await expect
+        .poll(
+          async () => (await readSnapshot(root.createCaller, sessionId)).state,
+        )
+        .toBe('idle');
+      await expect(
+        caller.session.answerElicitation(answer),
+      ).rejects.toMatchObject({
+        code: 'CONFLICT',
+        message: 'already answered',
+      });
+    } finally {
+      root.close();
+    }
+  },
+);
+
+it.each(
+  agentAdapters.flatMap((adapter) =>
+    (['decline', 'cancel'] as const).map((action) => ({
+      adapter,
+      agent: adapter.agent,
+      action,
+    })),
+  ),
+)(
+  '$action answers a $agent Elicitation without accepting its form',
+  async ({ adapter, action }) => {
+    const root = await startNewSessionEngine(adapter, {
+      recording: 'elicitation',
+    });
+    const file = path.join(root.home, 'answers.jsonl');
+    vi.stubEnv('MOCK_CLI_REQUEST_ANSWERS', file);
+    try {
+      const caller = await root.createCaller();
+      const { sessionId } = await caller.session.new({
+        projectId: 'project-1',
+        agent: adapter.agent,
+        checkout: { type: 'main' },
+        configOptions: [],
+        prompt: [{ type: 'text', text: 'Ask me a question' }],
+      });
+      await expect
+        .poll(
+          async () =>
+            (await readSnapshot(root.createCaller, sessionId))
+              .pendingElicitation,
+        )
+        .not.toBeNull();
+      const pending = (await readSnapshot(root.createCaller, sessionId))
+        .pendingElicitation;
+      if (!pending) throw new Error('No Elicitation');
+      await caller.session.answerElicitation({
+        sessionId,
+        requestId: pending.requestId,
+        action,
+      });
+      await expect
+        .poll(() => readRequestAnswers(file))
+        .toEqual([{ type: 'elicitation', action }]);
+      await expect
+        .poll(
+          async () => (await readSnapshot(root.createCaller, sessionId)).state,
+        )
+        .toBe('idle');
+      await expect(
+        caller.session.answerElicitation({
+          sessionId,
+          requestId: pending.requestId,
+          action: 'accept',
+          content: {},
+        }),
+      ).rejects.toMatchObject({
+        code: 'CONFLICT',
+        message: 'already answered',
+      });
+    } finally {
+      root.close();
+    }
+  },
+);
+
+it.each(
+  agentAdapters.flatMap((adapter) =>
+    ['permission', 'elicitation'].map((recording) => ({
+      adapter,
+      agent: adapter.agent,
+      recording,
+    })),
+  ),
+)(
+  'cancels a $agent Turn with a pending $recording and refuses a late answer',
+  async ({ adapter, recording }) => {
+    const root = await startNewSessionEngine(adapter, { recording });
+    try {
+      const caller = await root.createCaller();
+      const { sessionId } = await caller.session.new({
+        projectId: 'project-1',
+        agent: adapter.agent,
+        checkout: { type: 'main' },
+        configOptions: [],
+        prompt: [{ type: 'text', text: 'Wait for my answer' }],
+      });
+      await expect
+        .poll(
+          async () => (await readSnapshot(root.createCaller, sessionId)).state,
+        )
+        .toBe('requires_action');
+      const before = await readSnapshot(root.createCaller, sessionId);
+      await caller.session.cancel({ sessionId });
+      await expect
+        .poll(
+          async () => (await readSnapshot(root.createCaller, sessionId)).state,
+        )
+        .toBe('idle');
+      expect(await readSnapshot(root.createCaller, sessionId)).toMatchObject({
+        pendingPermission: null,
+        pendingElicitation: null,
+      });
+      if (before.pendingPermission) {
+        await expect(
+          caller.session.answerPermission({
+            sessionId,
+            toolCallId: before.pendingPermission.toolCallId,
+            optionId: 'allow_once',
+          }),
+        ).rejects.toMatchObject({
+          code: 'CONFLICT',
+          message: 'already answered',
+        });
+        expect(
+          await caller.feed.row({
+            sessionId,
+            id: before.pendingPermission.toolCallId,
+          }),
+        ).toMatchObject({
+          _meta: { argo: { permissionOutcome: { outcome: 'cancelled' } } },
+        });
+      }
+      if (before.pendingElicitation)
+        await expect(
+          caller.session.answerElicitation({
+            sessionId,
+            requestId: before.pendingElicitation.requestId,
+            action: 'accept',
+            content: {},
+          }),
+        ).rejects.toMatchObject({
+          code: 'CONFLICT',
+          message: 'already answered',
+        });
+    } finally {
+      root.close();
+    }
+  },
+);
+
+it.each(
+  agentAdapters.flatMap((adapter) =>
+    ['permission', 'elicitation'].map((recording) => ({
+      adapter,
+      agent: adapter.agent,
+      recording,
+    })),
+  ),
+)(
+  'keeps a $agent $recording request answerable after two days',
+  async ({ adapter, recording }) => {
+    const root = await startNewSessionEngine(adapter, { recording });
+    const file = path.join(root.home, 'answers.jsonl');
+    vi.stubEnv('MOCK_CLI_REQUEST_ANSWERS', file);
+    try {
+      const caller = await root.createCaller();
+      const { sessionId } = await caller.session.new({
+        projectId: 'project-1',
+        agent: adapter.agent,
+        checkout: { type: 'main' },
+        configOptions: [],
+        prompt: [{ type: 'text', text: 'Wait for my answer' }],
+      });
+      await expect
+        .poll(
+          async () => (await readSnapshot(root.createCaller, sessionId)).state,
+        )
+        .toBe('requires_action');
+      const before = await readSnapshot(root.createCaller, sessionId);
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+      await vi.advanceTimersByTimeAsync(2 * 24 * 60 * 60 * 1000);
+      expect(await readSnapshot(root.createCaller, sessionId)).toMatchObject({
+        state: 'requires_action',
+        pendingPermission: before.pendingPermission,
+        pendingElicitation: before.pendingElicitation,
+      });
+      expect(readRequestAnswers(file)).toEqual([]);
+      vi.useRealTimers();
+      if (before.pendingPermission)
+        await caller.session.answerPermission({
+          sessionId,
+          toolCallId: before.pendingPermission.toolCallId,
+          optionId: 'allow_once',
+        });
+      if (before.pendingElicitation)
+        await caller.session.answerElicitation({
+          sessionId,
+          requestId: before.pendingElicitation.requestId,
+          action: 'decline',
+        });
+      await expect
+        .poll(
+          async () => (await readSnapshot(root.createCaller, sessionId)).state,
+        )
+        .toBe('idle');
+    } finally {
+      vi.useRealTimers();
       root.close();
     }
   },

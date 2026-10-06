@@ -37,6 +37,7 @@ export type FeedChange =
   | ({ type: 'patch' } & Pick<RowPatch, 'id' | 'set'>);
 
 export interface AgentCapabilities {
+  permissionFeedback?: boolean;
   planApproval: 'continueTurn' | 'startTurn';
   stopShell: boolean;
 }
@@ -124,7 +125,10 @@ export type AgentEvent =
       subagentToolCallId?: AgentSubagent['toolCallId'];
     }
   | { type: 'agent.permissionRequested'; request: PendingPermission }
-  | { type: 'agent.elicitationRequested'; request: PendingElicitation }
+  | {
+      type: 'agent.elicitationRequested';
+      request: Omit<PendingElicitation, 'requestId'>;
+    }
   | { type: 'agent.usage'; usage: ContextUsage }
   | {
       type: 'agent.configOptionsChanged';

@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import {
   type AgentAdapter,
   type AgentCapabilities,
@@ -10,6 +11,7 @@ import {
 import type {
   ContentBlock,
   ContextUsage,
+  FeedChange,
   PendingElicitation,
   PendingPermission,
   SessionConfigOption,
@@ -49,7 +51,8 @@ export type SessionCommand =
   | {
       type: 'session.answerPermission';
       toolCallId: string;
-      optionId: string | null;
+      optionId: PendingPermission['options'][number]['optionId'] | null;
+      message?: string;
     }
   | {
       type: 'session.answerElicitation';
@@ -100,6 +103,24 @@ const currentModel = (configOptions: SessionConfigOption[]) => {
   const model = configOptions.find((option) => option.category === 'model');
   return model?.type === 'select' ? model.currentValue : null;
 };
+
+const permissionOutcomeChange = (
+  toolCallId: string,
+  optionId: string | null,
+): FeedChange => ({
+  type: 'patch',
+  id: toolCallId,
+  set: {
+    _meta: {
+      argo: {
+        permissionOutcome:
+          optionId === null
+            ? { outcome: 'cancelled' }
+            : { outcome: 'selected', optionId },
+      },
+    },
+  },
+});
 
 const sessionSetup = setup({
   types: {
@@ -281,14 +302,22 @@ const sessionSetup = setup({
     }),
     rememberElicitation: assign(({ event }) => {
       assertEvent(event, 'agent.elicitationRequested');
-      return { pendingElicitation: event.request };
-    }),
-    answerPermission: sendTo('agent', ({ event }) => {
-      assertEvent(event, 'session.answerPermission');
       return {
+        pendingElicitation: { ...event.request, requestId: randomUUID() },
+      };
+    }),
+    answerPermission: enqueueActions(({ context, event, enqueue }) => {
+      assertEvent(event, 'session.answerPermission');
+      const change = permissionOutcomeChange(event.toolCallId, event.optionId);
+      enqueue.sendTo('feed', {
+        type: 'feed.change',
+        turnId: context.activeTurnId,
+        change,
+      });
+      enqueue.sendTo('agent', {
         ...event,
         type: 'agent.answerPermission',
-      } satisfies AgentCommand;
+      } satisfies AgentCommand);
     }),
     removePermission: assign({
       permissionQueue: ({ context }) => context.permissionQueue.slice(1),
@@ -302,12 +331,19 @@ const sessionSetup = setup({
     }),
     removeElicitation: assign({ pendingElicitation: null }),
     cancelRequests: enqueueActions(({ context, enqueue }) => {
-      for (const request of context.permissionQueue)
+      for (const request of context.permissionQueue) {
+        const change = permissionOutcomeChange(request.toolCallId, null);
+        enqueue.sendTo('feed', {
+          type: 'feed.change',
+          turnId: context.activeTurnId,
+          change,
+        });
         enqueue.sendTo('agent', {
           type: 'agent.answerPermission',
           toolCallId: request.toolCallId,
           optionId: null,
         } satisfies AgentCommand);
+      }
       if (context.pendingElicitation)
         enqueue.sendTo('agent', {
           type: 'agent.answerElicitation',

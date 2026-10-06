@@ -1,50 +1,29 @@
 // A stand-in `claude` that the Agent SDK drives over stream-json. Each prompt replays the next recorded Turn.
 import { randomUUID } from 'node:crypto';
-import { z } from 'zod';
+import type {
+  AskUserQuestionInput,
+  PermissionResult,
+  SDKAssistantMessage,
+  SDKControlInitializeResponse,
+  SDKControlRequest,
+  SDKControlResponse,
+  SDKMessage,
+  SDKResultMessage,
+  SDKSystemMessage,
+} from '../../../packages/agents/claude/messages.ts';
 import {
   readMockCliEnvironment,
   replayTurn,
   send,
   serveJsonLines,
 } from '../mock-cli.ts';
-import { readRecording, splitTurns } from '../recording.ts';
+import { readRecording, recordedFrames, splitTurns } from '../recording.ts';
+import { recordRequestAnswer } from '../request-answer.ts';
 
 const PRODUCER = 'claude-cli';
 
-const Frame = z.looseObject({
-  type: z.string(),
-  subtype: z.string().optional(),
-  session_id: z.string().optional(),
-});
-type Frame = z.infer<typeof Frame>;
-
-const AssistantFrame = z.looseObject({
-  type: z.literal('assistant'),
-  message: z.looseObject({
-    model: z.string(),
-    content: z.array(
-      z.looseObject({ type: z.string(), text: z.string().optional() }),
-    ),
-  }),
-});
-
-const Input = z.looseObject({
-  type: z.string(),
-  request_id: z.string().optional(),
-  request: z.looseObject({ subtype: z.string() }).optional(),
-});
-
-const ControlResponse = z.looseObject({
-  type: z.literal('control_response'),
-  response: z.looseObject({ request_id: z.string(), response: z.unknown() }),
-});
-
-// A `.jsonl` recording holds stdout frames; a `.json` one may hold both pipes.
-const Payload = z.union([
-  z.array(Frame),
-  z.object({ input: z.array(Input), output: z.array(Frame) }),
-]);
-
+type Frame = SDKMessage | SDKControlRequest | typeof INTERRUPT_POINT;
+type Output = SDKMessage | SDKControlRequest | SDKControlResponse;
 const environment = readMockCliEnvironment();
 const recording = readRecording(environment.recordingFile, PRODUCER);
 
@@ -53,13 +32,19 @@ if (process.argv.includes('--version')) {
   process.exit(0);
 }
 
-const payload = Payload.parse(recording.payload);
-const pipes = Array.isArray(payload) ? { input: [], output: payload } : payload;
-
+const pipes = {
+  input: Array.isArray(recording.payload)
+    ? []
+    : recordedFrames<SDKMessage | SDKControlRequest>(
+        recording.payload,
+        'input',
+      ),
+  output: recordedFrames<Output>(recording.payload, 'output'),
+};
 // The recorded answer to each control request, keyed by the request's subtype.
 const requestSubtypes = new Map(
   pipes.input.flatMap((input) =>
-    input.request_id && input.request
+    input.type === 'control_request'
       ? [[input.request_id, input.request.subtype] as const]
       : [],
   ),
@@ -68,14 +53,17 @@ const recordedAnswers = new Map<string, unknown>();
 const INTERRUPT_POINT = { type: 'mock.interruptPoint' } as const;
 const frames: Frame[] = [];
 for (const frame of pipes.output) {
-  const response = ControlResponse.safeParse(frame);
-  if (!response.success) {
+  if (frame.type !== 'control_response') {
     frames.push(frame);
     continue;
   }
-  const subtype = requestSubtypes.get(response.data.response.request_id);
-  if (subtype && !recordedAnswers.has(subtype))
-    recordedAnswers.set(subtype, response.data.response.response);
+  const subtype = requestSubtypes.get(frame.response.request_id);
+  if (
+    frame.response.subtype === 'success' &&
+    subtype &&
+    !recordedAnswers.has(subtype)
+  )
+    recordedAnswers.set(subtype, frame.response.response);
   // A Turn pauses where the CLI answered an interrupt, until the mock gets one.
   if (subtype === 'interrupt') frames.push(INTERRUPT_POINT);
 }
@@ -97,19 +85,19 @@ const flagValue = (flag: string) => {
 const sessionId =
   flagValue('--session-id') ??
   flagValue('--resume') ??
-  frames.find((frame) => frame.session_id)?.session_id ??
+  frames.find((frame): frame is SDKMessage => 'session_id' in frame)
+    ?.session_id ??
   randomUUID();
 const withSession = (frame: Frame) =>
-  frame.session_id === undefined ? frame : { ...frame, session_id: sessionId };
+  'session_id' in frame ? { ...frame, session_id: sessionId } : frame;
 const assistantFrames = (turnFrames: Frame[]) =>
-  turnFrames.flatMap((frame) => {
-    const assistant = AssistantFrame.safeParse(frame);
-    return assistant.success ? [assistant.data] : [];
-  });
+  turnFrames.filter(
+    (frame): frame is SDKAssistantMessage => frame.type === 'assistant',
+  );
 let turnIndex = 0;
 
 // The CLI's `system/init`, written when a recorded Turn lacks one.
-const initFrame = () => ({
+const initFrame = (): SDKSystemMessage => ({
   type: 'system',
   subtype: 'init',
   apiKeySource: 'none',
@@ -129,7 +117,7 @@ const initFrame = () => ({
 
 // The fields every `result` frame carries, zeroed because a mock spends nothing.
 const resultFields = () => ({
-  type: 'result',
+  type: 'result' as const,
   duration_ms: 0,
   duration_api_ms: 0,
   num_turns: 1,
@@ -139,7 +127,18 @@ const resultFields = () => ({
     output_tokens: 0,
     cache_creation_input_tokens: 0,
     cache_read_input_tokens: 0,
-  },
+    cache_creation: {
+      ephemeral_1h_input_tokens: 0,
+      ephemeral_5m_input_tokens: 0,
+    },
+    fallback_credit: null,
+    inference_geo: '',
+    iterations: [],
+    output_tokens_details: { thinking_tokens: 0 },
+    server_tool_use: { web_fetch_requests: 0, web_search_requests: 0 },
+    service_tier: 'standard',
+    speed: 'standard',
+  } satisfies SDKResultMessage['usage'],
   modelUsage: {},
   permission_denials: [],
   uuid: randomUUID(),
@@ -147,36 +146,35 @@ const resultFields = () => ({
 });
 
 // The CLI's `result`, written when a recorded Turn lacks one.
-const resultFrame = (turn: Frame[]) => ({
+const resultFrame = (turn: Frame[]): SDKResultMessage => ({
   ...resultFields(),
-  subtype: 'success',
+  subtype: 'success' as const,
   is_error: false,
   result:
     assistantFrames(turn)
       .flatMap((frame) => frame.message.content)
-      .findLast((block) => block.text !== undefined)?.text ?? '',
+      .filter((block) => block.type === 'text')
+      .at(-1)?.text ?? '',
   stop_reason: 'end_turn',
 });
 
 // Ends a prompt past the recording's last Turn as a failed Turn, which a crash never writes.
-const noTurnFrame = (turnNumber: number) => ({
+const noTurnFrame = (turnNumber: number): SDKResultMessage => ({
   ...resultFields(),
-  subtype: 'error_during_execution',
+  subtype: 'error_during_execution' as const,
   is_error: true,
   errors: [`The recording has no Turn ${turnNumber}.`],
   stop_reason: null,
 });
 
 // The answer to the SDK's `initialize`, with no commands, agents or models of its own.
-const initializeResponse = {
+const initializeResponse: SDKControlInitializeResponse = {
   commands: [],
   agents: [],
   output_style: 'default',
   available_output_styles: ['default'],
   models: [],
   account: { subscriptionType: 'Claude Max', apiProvider: 'firstParty' },
-  pending_permission_requests: [],
-  pending_user_dialog_requests: [],
 };
 
 const isInit = (frame: Frame) =>
@@ -187,10 +185,22 @@ const crashAfter = environment.exitMidTurn
 
 // The frames of the running Turn held back until an interrupt arrives.
 let heldFrames: Frame[] = [];
+let pendingRequestId: string | null = null;
+let pendingRequest: SDKControlRequest | null = null;
 
 function replay(turn: Frame[]) {
-  const pause = turn.indexOf(INTERRUPT_POINT);
-  const now = pause === -1 ? turn : turn.slice(0, pause);
+  const pause = turn.findIndex(
+    (frame) =>
+      frame === INTERRUPT_POINT ||
+      (frame.type === 'control_request' &&
+        frame.request.subtype === 'can_use_tool'),
+  );
+  const request = turn[pause];
+  pendingRequestId =
+    request?.type === 'control_request' ? request.request_id : null;
+  pendingRequest = request?.type === 'control_request' ? request : null;
+  const now =
+    pause === -1 ? turn : turn.slice(0, pause + (pendingRequestId ? 1 : 0));
   heldFrames = pause === -1 ? [] : turn.slice(pause + 1);
   const finished = replayTurn(now.map(withSession), crashAfter);
   if (finished && pause === -1 && !turn.some((f) => f.type === 'result'))
@@ -216,11 +226,50 @@ function answer(subtype: string | undefined) {
   return { ...(response as Record<string, unknown>), account: {} };
 }
 
-serveJsonLines((line) => {
-  const input = Input.parse(line);
+serveJsonLines<Output>((input) => {
+  if (input.type === 'control_response') {
+    if (
+      input.response.request_id === pendingRequestId &&
+      input.response.subtype === 'success'
+    ) {
+      const result = input.response.response as PermissionResult;
+      if (
+        pendingRequest?.request.subtype === 'can_use_tool' &&
+        pendingRequest.request.tool_name !== 'AskUserQuestion'
+      )
+        recordRequestAnswer(
+          result.behavior === 'allow'
+            ? { type: 'permission', optionId: 'allow_once' }
+            : {
+                type: 'permission',
+                optionId: 'reject_once',
+                message: result.message,
+              },
+        );
+      if (
+        pendingRequest?.request.subtype === 'can_use_tool' &&
+        pendingRequest.request.tool_name === 'AskUserQuestion'
+      ) {
+        const deniedAction =
+          result.behavior === 'deny' && result.interrupt ? 'cancel' : 'decline';
+        recordRequestAnswer({
+          type: 'elicitation',
+          action: result.behavior === 'allow' ? 'accept' : deniedAction,
+          ...(result.behavior === 'allow'
+            ? {
+                content: result.updatedInput
+                  ?.answers as AskUserQuestionInput['answers'],
+              }
+            : {}),
+        });
+      }
+      replay(heldFrames);
+    }
+    return;
+  }
   if (input.type === 'user') return playTurn();
   if (input.type !== 'control_request') return;
-  const subtype = input.request?.subtype;
+  const subtype = input.request.subtype;
   if (subtype === 'initialize' && process.env.MOCK_CLI_BLOCK_INITIALIZE === '1')
     return;
   const response = answer(subtype);

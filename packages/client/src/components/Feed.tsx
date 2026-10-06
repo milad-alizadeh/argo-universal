@@ -100,7 +100,7 @@ function JumpToLatest({
         onPress={onPress}
         className="size-8 items-center justify-center rounded-full border border-border bg-card shadow-[0_1px_2px_#0000000f,0_4px_12px_-4px_#00000014] active:opacity-70"
       >
-        <Icon as={ArrowDownIcon} size={16} className="text-foreground" />
+        <Icon as={ArrowDownIcon} className="text-foreground" />
         {unread && (
           <View className="absolute -top-px -right-px size-[9px] rounded-full border-2 border-card bg-info" />
         )}

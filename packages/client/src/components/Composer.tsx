@@ -7,13 +7,7 @@ import {
 } from 'phosphor-react-native';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  Image,
-  Platform,
-  ScrollView,
-  View,
-} from 'react-native';
+import { Image, Platform, ScrollView, View } from 'react-native';
 import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
@@ -33,7 +27,7 @@ import {
   type ComposerStatusProps,
   ComposerWorkChips,
 } from './ComposerStatus';
-import { Icon } from './Icon';
+import { Icon, IconSpinner } from './Icon';
 
 const maximumImageBytes = 20 * 1024 * 1024;
 
@@ -114,17 +108,15 @@ export function Composer({
     );
   } else if (sending) {
     sendButtonContent = (
-      <ActivityIndicator
+      <IconSpinner
         accessibilityLabel="Sending"
-        size={16}
         role="progressbar"
         colorClassName="accent-primary-foreground"
-        className="size-4"
       />
     );
   } else {
     sendButtonContent = (
-      <Icon as={ArrowUpIcon} className="size-4 text-primary-foreground" />
+      <Icon as={ArrowUpIcon} className="text-primary-foreground" />
     );
   }
   return (
@@ -214,8 +206,8 @@ export function Composer({
                       })
                     }
                   >
-                    <View className="size-4.5 items-center justify-center rounded-sm bg-background">
-                      <ComposerGlyph name="remove" size={10} />
+                    <View className="size-5 items-center justify-center rounded-sm bg-background">
+                      <ComposerGlyph name="remove" size="sm" />
                     </View>
                   </Button>
                 </View>
@@ -279,11 +271,8 @@ export function Composer({
                       attachHighlighted && !inactive && 'bg-accent',
                     )}
                   />
-                  <View className="relative z-10 size-4">
-                    <Icon
-                      as={PlusIcon}
-                      className="size-4 text-muted-foreground"
-                    />
+                  <View className="relative z-10">
+                    <Icon as={PlusIcon} className="text-muted-foreground" />
                   </View>
                 </Button>
               }
@@ -342,14 +331,11 @@ export function Composer({
                       className="h-12 sm:h-12 wide:h-11 wide:sm:h-11 rounded-sm px-3 gap-3 justify-start"
                       onPress={() => close(item.onPress)}
                     >
-                      <View className="size-8 rounded-full bg-muted wide:w-5 wide:h-4.5 wide:rounded-none wide:bg-transparent items-center justify-center">
+                      <View className="size-8 rounded-full bg-muted wide:size-auto wide:rounded-none wide:bg-transparent items-center justify-center">
                         {'glyph' in item ? (
-                          <ComposerGlyph name={item.glyph} size={18} />
+                          <ComposerGlyph name={item.glyph} />
                         ) : (
-                          <Icon
-                            as={item.icon}
-                            className="size-4.5 text-foreground"
-                          />
+                          <Icon as={item.icon} className="text-foreground" />
                         )}
                       </View>
                       <Text
@@ -440,9 +426,7 @@ function ComposerWarning({
 }) {
   return (
     <View role="alert" className="mx-4 mt-2 flex-row items-start gap-2">
-      <View className="size-3 mt-0.5">
-        <ComposerGlyph name="warning" size={12} className="text-destructive" />
-      </View>
+      <ComposerGlyph name="warning" className="text-destructive" />
       <Text
         className="min-w-0 flex-1 text-xs leading-4 text-destructive"
         numberOfLines={numberOfLines}

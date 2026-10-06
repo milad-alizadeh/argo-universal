@@ -163,20 +163,22 @@ export function createFeedService(deps: FeedDeps): FeedService {
           epoch,
           maxRevision,
         };
-        // Re-read each time, so a new title reaches the App.
-        const record = readSession(sessionId);
-        const snapshot = toSessionSnapshot(session, {
-          context: {
-            ...feedContext,
-            rows: readLiveHeaderRows({
-              database,
-              writer: deps.findWriter(),
-              sessionId,
-              turnId: session?.context.activeTurnId ?? null,
-              rows: 'rows' in feedContext ? feedContext.rows : {},
-            }),
+        const snapshot = toSessionSnapshot(
+          session,
+          {
+            context: {
+              ...feedContext,
+              rows: readLiveHeaderRows({
+                database,
+                writer: deps.findWriter(),
+                sessionId,
+                turnId: session?.context.activeTurnId ?? null,
+                rows: 'rows' in feedContext ? feedContext.rows : {},
+              }),
+            },
           },
-        }, record);
+          readSession(sessionId),
+        );
         const serialized = JSON.stringify(snapshot);
         if (serialized === lastSnapshot) return;
         lastSnapshot = serialized;

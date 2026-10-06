@@ -102,15 +102,13 @@ export function SettingsList({
         aria-selected={selected}
         onPress={() => onSelect(destination)}
       >
-        <View className="size-4.5 shrink-0 items-center justify-center wide:size-4">
-          <Icon
-            as={icon}
-            className={cn(
-              'size-4.5 text-muted-foreground wide:size-4',
-              selected && 'text-foreground',
-            )}
-          />
-        </View>
+        <Icon
+          as={icon}
+          className={cn(
+            'shrink-0 text-muted-foreground',
+            selected && 'text-foreground',
+          )}
+        />
         <Text
           className="min-w-0 flex-1 text-base leading-6 font-normal wide:text-sm wide:leading-5"
           numberOfLines={1}

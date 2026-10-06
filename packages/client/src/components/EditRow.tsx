@@ -61,7 +61,6 @@ function FileEdit({
         >
           <Icon
             as={nested ? fileTypeIcon(file.path) : editIcons[file.operation]}
-            size={16}
             className={cn('shrink-0', nested && 'text-muted-foreground')}
           />
           <View className="min-w-0 shrink flex-row items-center gap-1">
@@ -116,11 +115,7 @@ export function EditRow({ row }: EditRowProps) {
       .join(' ');
     return (
       <View className="min-h-5 flex-row items-center gap-1.5">
-        <Icon
-          as={PencilSimpleIcon}
-          size={16}
-          className="shrink-0 text-destructive"
-        />
+        <Icon as={PencilSimpleIcon} className="shrink-0 text-destructive" />
         <Text className="text-sm font-normal leading-5 text-destructive">
           Couldn't edit
         </Text>
@@ -150,11 +145,7 @@ export function EditRow({ row }: EditRowProps) {
         aria-expanded={expanded}
         onPress={() => setExpanded(!expanded)}
       >
-        <Icon
-          as={PencilSimpleIcon}
-          size={16}
-          className="text-muted-foreground"
-        />
+        <Icon as={PencilSimpleIcon} className="text-muted-foreground" />
         <Text
           selectable={false}
           className="select-none text-sm font-normal leading-5 text-muted-foreground"

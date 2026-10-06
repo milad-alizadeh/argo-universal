@@ -3,9 +3,11 @@ import {
   getSessionInfo,
   type ModelInfo,
   type Options,
+  type PermissionResult,
   query,
   type SDKUserMessage,
 } from '@anthropic-ai/claude-agent-sdk';
+import type { AskUserQuestionInput } from '@anthropic-ai/claude-agent-sdk/sdk-tools';
 import type {
   AgentCommandOf,
   AgentConnectInput,
@@ -13,6 +15,7 @@ import type {
   VendorSessionListener,
 } from '../src/agent-adapter';
 import { describeError } from '../src/describe-error';
+import { toQuestionAnswers } from '../src/elicitation-form';
 import { findExecutable } from '../src/find-executable';
 import { usesSubscription } from './account';
 import {
@@ -22,7 +25,7 @@ import {
   startingValues,
   toConfigOptions,
 } from './config-options';
-import type { VendorMessage } from './to-agent-events';
+import type { VendorMessage } from './messages';
 
 // The values the CLI starts with; the saved ones follow once its model list can check them.
 const CLI_START: ConfigValues = {
@@ -103,6 +106,15 @@ export async function connect(
   let stderrTail = '';
   let stopping = false;
   const controller = new AbortController();
+  const toolRequests = new Map<string, (answer: PermissionResult) => void>();
+  let elicitation: { toolUseId: string; input: AskUserQuestionInput } | null =
+    null;
+  const cancelToolRequests = () => {
+    for (const resolve of toolRequests.values())
+      resolve({ behavior: 'deny', message: 'Request cancelled' });
+    toolRequests.clear();
+    elicitation = null;
+  };
   const withStderr = (error: unknown) => {
     const tail = stderrTail.trim();
     return tail ? `${describeError(error)}\n${tail}` : describeError(error);
@@ -123,6 +135,40 @@ export async function connect(
     forwardSubagentText: true,
     perTaskStopAffordance: true,
     verbatimPrompts: true,
+    canUseTool: (toolName, toolInput, options) => {
+      if (toolName === 'ExitPlanMode')
+        return Promise.resolve({
+          behavior: 'deny',
+          message: 'Request answers are not implemented yet',
+        });
+      const answer = Promise.withResolvers<PermissionResult>();
+      if (toolName === 'AskUserQuestion')
+        elicitation = {
+          toolUseId: options.toolUseID,
+          input: toolInput as unknown as AskUserQuestionInput,
+        };
+      toolRequests.set(options.toolUseID, answer.resolve);
+      const cancel = () => {
+        toolRequests.delete(options.toolUseID);
+        if (elicitation?.toolUseId === options.toolUseID) elicitation = null;
+        answer.resolve({ behavior: 'deny', message: 'Request cancelled' });
+      };
+      options.signal.addEventListener('abort', cancel, { once: true });
+      listener.message({
+        type: 'control_request',
+        request_id: options.requestId,
+        request: {
+          subtype: 'can_use_tool',
+          tool_name: toolName,
+          input: toolInput,
+          tool_use_id: options.toolUseID,
+        },
+      });
+      if (options.signal.aborted) cancel();
+      return answer.promise.finally(() =>
+        options.signal.removeEventListener('abort', cancel),
+      );
+    },
     thinking: { type: 'adaptive', display: 'summarized' },
     stderr: (text) => {
       stderrTail = `${stderrTail}${text}`.slice(-STDERR_TAIL_LENGTH);
@@ -141,6 +187,7 @@ export async function connect(
   const abort = () => {
     stopping = true;
     queue.end();
+    cancelToolRequests();
     controller.abort();
   };
   signal.addEventListener('abort', abort, { once: true });
@@ -204,7 +251,11 @@ export async function connect(
     ready: {
       vendorSessionId,
       configOptions: toConfigOptions(models, values),
-      capabilities: { planApproval: 'continueTurn', stopShell: false },
+      capabilities: {
+        planApproval: 'continueTurn',
+        stopShell: false,
+        permissionFeedback: true,
+      },
       continuedOutside: false,
     },
     run: async (command) => {
@@ -237,7 +288,53 @@ export async function connect(
           });
           return;
         }
-        // Answers, renames and shell stops are not wired to the CLI yet.
+        case 'agent.answerPermission': {
+          const resolve = toolRequests.get(command.toolCallId);
+          toolRequests.delete(command.toolCallId);
+          resolve?.(
+            command.optionId === 'allow_once'
+              ? { behavior: 'allow' }
+              : {
+                  behavior: 'deny',
+                  message:
+                    command.optionId === null
+                      ? 'Request cancelled'
+                      : (command.message ?? 'Rejected by user'),
+                },
+          );
+          return;
+        }
+        case 'agent.answerElicitation': {
+          const request = elicitation;
+          if (!request) return;
+          elicitation = null;
+          const resolve = toolRequests.get(request.toolUseId);
+          toolRequests.delete(request.toolUseId);
+          const answers: AskUserQuestionInput['answers'] = Object.fromEntries(
+            Object.entries(
+              toQuestionAnswers(
+                command.action === 'accept' ? command.content : undefined,
+              ),
+            ).map(([id, value]) => [id, value.join(', ')]),
+          );
+          resolve?.(
+            command.action === 'accept'
+              ? {
+                  behavior: 'allow',
+                  updatedInput: { ...request.input, answers },
+                }
+              : {
+                  behavior: 'deny',
+                  message:
+                    command.action === 'cancel'
+                      ? 'Request cancelled'
+                      : 'User declined to answer',
+                  interrupt: command.action === 'cancel',
+                },
+          );
+          return;
+        }
+        // Plan answers, renames and Shell stops belong to later slices.
         default:
           return;
       }
@@ -246,6 +343,7 @@ export async function connect(
       signal.removeEventListener('abort', abort);
       stopping = true;
       queue.end();
+      cancelToolRequests();
       vendor.close();
       await messages;
     },

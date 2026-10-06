@@ -10,6 +10,7 @@ import type {
   FileWriteInput,
   FileWriteOutput,
   GlobInput,
+  GrepInput,
   WebFetchInput,
   WebSearchInput,
 } from '@anthropic-ai/claude-agent-sdk/sdk-tools';
@@ -91,8 +92,8 @@ const toolShapes: Record<string, (input: unknown) => ToolShape> = {
       content: [{ type: 'terminal', command, output: '' }],
     };
   },
-  Grep: (input) => search('Grep', input),
-  Glob: (input) => search('Glob', input),
+  Grep: (input) => search('Grep', (input as GrepInput).pattern),
+  Glob: (input) => search('Glob', (input as GlobInput).pattern),
   WebFetch: (input) => ({
     title: `Fetch ${(input as WebFetchInput).url}`,
     kind: 'fetch',
@@ -110,9 +111,8 @@ const toolShapes: Record<string, (input: unknown) => ToolShape> = {
   }),
 };
 
-// Grep's input names its pattern the same way as Glob's.
-const search = (name: string, input: unknown): ToolShape => ({
-  title: `${name} ${(input as GlobInput).pattern}`,
+const search = (name: string, pattern: string): ToolShape => ({
+  title: `${name} ${pattern}`,
   kind: 'search',
   content: [],
 });

@@ -1,4 +1,8 @@
+export * from './answer-elicitation';
+export * from './answer-permission';
+export * from './answer-plan-proposal';
 export * from './cancel';
+export * from './changes';
 export * from './close';
 export * from './counts';
 export * from './delete';
@@ -7,6 +11,7 @@ export * from './list-updates';
 export * from './new';
 export * from './prompt';
 export * from './record';
+export * from './rename';
 export * from './set-config-option';
 export * from './snapshot';
 export * from './turn';

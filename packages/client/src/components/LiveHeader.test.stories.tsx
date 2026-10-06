@@ -9,6 +9,7 @@ import {
   retryHeader,
   workingHeader,
 } from '../../mocks/live-header-mock';
+import { settleViewport } from '../../mocks/settle-viewport';
 import { LiveHeader } from './LiveHeader';
 
 const meta = {
@@ -36,9 +37,8 @@ export const EveryStep: Story = {
     </>
   ),
   play: async ({ canvas }) => {
-    const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+      await settleViewport(width);
       const rows = canvas.getAllByRole('status');
       await expect(rows).toHaveLength(liveHeaderSteps.length);
       const working = rows[
@@ -65,7 +65,9 @@ export const EveryStep: Story = {
         } else {
           const icon = row.querySelector('svg');
           if (!icon) throw new Error(`${text} has no icon.`);
-          await expect(getComputedStyle(icon).width).toBe('16px');
+          await waitFor(() =>
+            expect(getComputedStyle(icon).width).toBe('16px'),
+          );
           await expect(getComputedStyle(icon).color).not.toBe(
             textColor(working),
           );

@@ -13,10 +13,7 @@ export function IssueIndicator({ number }: IssueIndicatorProps) {
       accessibilityLabel={`Issue #${number}`}
       className="flex-row items-center gap-1"
     >
-      <Icon
-        as={TicketIcon}
-        className="size-3.5 shrink-0 text-muted-foreground"
-      />
+      <Icon as={TicketIcon} className="shrink-0 text-muted-foreground" />
       <Text className="text-xs font-normal leading-4 text-muted-foreground">
         #{number}
       </Text>

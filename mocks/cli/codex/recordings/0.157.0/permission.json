@@ -1,0 +1,943 @@
+{
+  "producer": "codex-app-server",
+  "version": "0.157.0",
+  "recordedAt": "2026-10-06T14:41:55.098Z",
+  "payload": {
+    "input": [
+      {
+        "id": 4,
+        "method": "turn/start",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "input": [
+            {
+              "type": "text",
+              "text": "Run exactly one shell command to write recording-ready into a file /tmp/argo54-permission-output.txt outside the workspace. Request escalated permission explicitly for the command. Do not use other tools, then reply done.",
+              "text_elements": []
+            }
+          ],
+          "model": "gpt-6-astra",
+          "effort": "low",
+          "approvalPolicy": "on-request",
+          "sandboxPolicy": {
+            "type": "readOnly"
+          },
+          "collaborationMode": {
+            "mode": "default",
+            "settings": {
+              "model": "gpt-6-astra",
+              "reasoning_effort": "low",
+              "developer_instructions": null
+            }
+          }
+        }
+      },
+      {
+        "id": 0,
+        "result": {
+          "decision": "accept"
+        }
+      }
+    ],
+    "messages": [
+      {
+        "method": "warning",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "message": "running async SessionEnd hook synchronously in /user/.codex/config.toml"
+        },
+        "emittedAtMs": 1791297705615
+      },
+      {
+        "method": "warning",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "message": "running async SessionEnd hook synchronously in /user/.codex/config.toml"
+        },
+        "emittedAtMs": 1791297705615
+      },
+      {
+        "method": "warning",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "message": "running async SessionEnd hook synchronously in /user/.codex/config.toml"
+        },
+        "emittedAtMs": 1791297705615
+      },
+      {
+        "method": "warning",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "message": "running async SessionEnd hook synchronously in /user/.codex/config.toml"
+        },
+        "emittedAtMs": 1791297705615
+      },
+      {
+        "method": "warning",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "message": "running async SessionEnd hook synchronously in /user/.codex/config.toml"
+        },
+        "emittedAtMs": 1791297705615
+      },
+      {
+        "method": "warning",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "message": "running async SessionEnd hook synchronously in /user/.codex/config.toml"
+        },
+        "emittedAtMs": 1791297705617
+      },
+      {
+        "method": "warning",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "message": "running async SessionEnd hook synchronously in /user/.codex/config.toml"
+        },
+        "emittedAtMs": 1791297705617
+      },
+      {
+        "method": "mcpServer/startupStatus/updated",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "name": "node_repl",
+          "status": "starting",
+          "error": null,
+          "failureReason": null
+        },
+        "emittedAtMs": 1791297705617
+      },
+      {
+        "method": "mcpServer/startupStatus/updated",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "name": "paper",
+          "status": "starting",
+          "error": null,
+          "failureReason": null
+        },
+        "emittedAtMs": 1791297705617
+      },
+      {
+        "method": "mcpServer/startupStatus/updated",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "name": "cua_repl",
+          "status": "starting",
+          "error": null,
+          "failureReason": null
+        },
+        "emittedAtMs": 1791297705617
+      },
+      {
+        "method": "mcpServer/startupStatus/updated",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "name": "codex_apps",
+          "status": "starting",
+          "error": null,
+          "failureReason": null
+        },
+        "emittedAtMs": 1791297705617
+      },
+      {
+        "method": "mcpServer/startupStatus/updated",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "name": "paper",
+          "status": "ready",
+          "error": null,
+          "failureReason": null
+        },
+        "emittedAtMs": 1791297705617
+      },
+      {
+        "method": "thread/settings/updated",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "threadSettings": {
+            "disabledPluginIds": [],
+            "cwd": "/repo",
+            "approvalPolicy": "on-request",
+            "approvalsReviewer": "user",
+            "sandboxPolicy": {
+              "type": "readOnly",
+              "networkAccess": false
+            },
+            "activePermissionProfile": null,
+            "model": "gpt-6-astra",
+            "modelProvider": "openai",
+            "serviceTier": "priority",
+            "effort": "low",
+            "summary": null,
+            "collaborationMode": {
+              "mode": "default",
+              "settings": {
+                "model": "gpt-6-astra",
+                "reasoning_effort": "low",
+                "developer_instructions": "# Collaboration Mode: Default\n\nYou are now in Default mode. Any previous instructions for other modes (e.g. Plan mode) are no longer active.\n\nYour active mode changes only when new developer instructions with a different `<collaboration_mode>...</collaboration_mode>` change it; user requests or tool descriptions do not change mode by themselves. Known mode names are Default and Plan.\n\n## request_user_input availability\n\nUse the `request_user_input` tool only when it is listed in the available tools for this turn.\n\nIn Default mode, strongly prefer making reasonable assumptions and executing the user's request rather than stopping to ask questions.\n\nUse the `request_user_input` tool only for optional questions where the answer would materially improve the quality of the work.\n\nIf `request_user_input` returns no answers, continue with best judgment instead of asking again or treating the turn as blocked.\n\nNever use the `request_user_input` tool for permission requests or permission-related escalations.\n\nIf explicit user input is required for another reason before progress can safely continue, do not use the `request_user_input` tool. Ask the user directly with one concise plain-text question instead. Never write a multiple choice question as a textual assistant message.\n"
+              }
+            },
+            "multiAgentMode": "explicitRequestOnly",
+            "personality": "pragmatic"
+          }
+        },
+        "emittedAtMs": 1791297705659
+      },
+      {
+        "method": "thread/status/changed",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "status": {
+            "type": "active",
+            "activeFlags": []
+          }
+        },
+        "emittedAtMs": 1791297705665
+      },
+      {
+        "method": "turn/started",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turn": {
+            "id": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+            "items": [],
+            "itemsView": "notLoaded",
+            "status": "inProgress",
+            "error": null,
+            "startedAt": 1791297705,
+            "completedAt": null,
+            "durationMs": null
+          }
+        },
+        "emittedAtMs": 1791297705665
+      },
+      {
+        "method": "mcpServer/startupStatus/updated",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "name": "node_repl",
+          "status": "ready",
+          "error": null,
+          "failureReason": null
+        },
+        "emittedAtMs": 1791297705804
+      },
+      {
+        "method": "mcpServer/startupStatus/updated",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "name": "cua_repl",
+          "status": "ready",
+          "error": null,
+          "failureReason": null
+        },
+        "emittedAtMs": 1791297705904
+      },
+      {
+        "method": "mcpServer/startupStatus/updated",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "name": "codex_apps",
+          "status": "ready",
+          "error": null,
+          "failureReason": null
+        },
+        "emittedAtMs": 1791297706785
+      },
+      {
+        "method": "hook/started",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "run": {
+            "id": "session-start:60:/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "eventName": "sessionStart",
+            "handlerType": "command",
+            "executionMode": "sync",
+            "scope": "thread",
+            "sourcePath": "/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "source": "plugin",
+            "displayOrder": 60,
+            "status": "running",
+            "statusMessage": null,
+            "startedAt": 1791297710,
+            "completedAt": null,
+            "durationMs": null,
+            "entries": []
+          }
+        },
+        "emittedAtMs": 1791297710017
+      },
+      {
+        "method": "hook/completed",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "run": {
+            "id": "session-start:60:/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "eventName": "sessionStart",
+            "handlerType": "command",
+            "executionMode": "sync",
+            "scope": "thread",
+            "sourcePath": "/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "source": "plugin",
+            "displayOrder": 60,
+            "status": "completed",
+            "statusMessage": null,
+            "startedAt": 1791297710,
+            "completedAt": 1791297710,
+            "durationMs": 54,
+            "entries": []
+          }
+        },
+        "emittedAtMs": 1791297710085
+      },
+      {
+        "method": "hook/started",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "run": {
+            "id": "user-prompt-submit:61:/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "eventName": "userPromptSubmit",
+            "handlerType": "command",
+            "executionMode": "sync",
+            "scope": "turn",
+            "sourcePath": "/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "source": "plugin",
+            "displayOrder": 61,
+            "status": "running",
+            "statusMessage": null,
+            "startedAt": 1791297710,
+            "completedAt": null,
+            "durationMs": null,
+            "entries": []
+          }
+        },
+        "emittedAtMs": 1791297710089
+      },
+      {
+        "method": "hook/completed",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "run": {
+            "id": "user-prompt-submit:61:/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "eventName": "userPromptSubmit",
+            "handlerType": "command",
+            "executionMode": "sync",
+            "scope": "turn",
+            "sourcePath": "/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "source": "plugin",
+            "displayOrder": 61,
+            "status": "completed",
+            "statusMessage": null,
+            "startedAt": 1791297710,
+            "completedAt": 1791297710,
+            "durationMs": 105,
+            "entries": []
+          }
+        },
+        "emittedAtMs": 1791297710184
+      },
+      {
+        "method": "item/started",
+        "params": {
+          "item": {
+            "type": "userMessage",
+            "id": "01a111a9-e861-7092-90fd-95a2542ba5d8",
+            "clientId": null,
+            "content": [
+              {
+                "type": "text",
+                "text": "Run exactly one shell command to write recording-ready into a file /tmp/argo54-permission-output.txt outside the workspace. Request escalated permission explicitly for the command. Do not use other tools, then reply done.",
+                "text_elements": []
+              }
+            ]
+          },
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "startedAtMs": 1791297710178
+        },
+        "emittedAtMs": 1791297710187
+      },
+      {
+        "method": "item/completed",
+        "params": {
+          "item": {
+            "type": "userMessage",
+            "id": "01a111a9-e861-7092-90fd-95a2542ba5d8",
+            "clientId": null,
+            "content": [
+              {
+                "type": "text",
+                "text": "Run exactly one shell command to write recording-ready into a file /tmp/argo54-permission-output.txt outside the workspace. Request escalated permission explicitly for the command. Do not use other tools, then reply done.",
+                "text_elements": []
+              }
+            ]
+          },
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "completedAtMs": 1791297710179
+        },
+        "emittedAtMs": 1791297710187
+      },
+      {
+        "method": "item/started",
+        "params": {
+          "item": {
+            "type": "agentMessage",
+            "id": "msg_07f07b883e28b2ea016ac508b0625c87d2a7cd5ffd0d40f2d6",
+            "text": "",
+            "phase": "commentary",
+            "memoryCitation": null,
+            "delivery": null,
+            "questions": null
+          },
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "startedAtMs": 1791297712356
+        },
+        "emittedAtMs": 1791297712357
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "itemId": "msg_07f07b883e28b2ea016ac508b0625c87d2a7cd5ffd0d40f2d6",
+          "delta": "I"
+        },
+        "emittedAtMs": 1791297712362
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "itemId": "msg_07f07b883e28b2ea016ac508b0625c87d2a7cd5ffd0d40f2d6",
+          "delta": "’ll"
+        },
+        "emittedAtMs": 1791297712371
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "itemId": "msg_07f07b883e28b2ea016ac508b0625c87d2a7cd5ffd0d40f2d6",
+          "delta": " request"
+        },
+        "emittedAtMs": 1791297712389
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "itemId": "msg_07f07b883e28b2ea016ac508b0625c87d2a7cd5ffd0d40f2d6",
+          "delta": " escal"
+        },
+        "emittedAtMs": 1791297712421
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "itemId": "msg_07f07b883e28b2ea016ac508b0625c87d2a7cd5ffd0d40f2d6",
+          "delta": "ated"
+        },
+        "emittedAtMs": 1791297712421
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "itemId": "msg_07f07b883e28b2ea016ac508b0625c87d2a7cd5ffd0d40f2d6",
+          "delta": " permission"
+        },
+        "emittedAtMs": 1791297712427
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "itemId": "msg_07f07b883e28b2ea016ac508b0625c87d2a7cd5ffd0d40f2d6",
+          "delta": " for"
+        },
+        "emittedAtMs": 1791297712434
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "itemId": "msg_07f07b883e28b2ea016ac508b0625c87d2a7cd5ffd0d40f2d6",
+          "delta": " the"
+        },
+        "emittedAtMs": 1791297712439
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "itemId": "msg_07f07b883e28b2ea016ac508b0625c87d2a7cd5ffd0d40f2d6",
+          "delta": " file"
+        },
+        "emittedAtMs": 1791297712454
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "itemId": "msg_07f07b883e28b2ea016ac508b0625c87d2a7cd5ffd0d40f2d6",
+          "delta": " write"
+        },
+        "emittedAtMs": 1791297712456
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "itemId": "msg_07f07b883e28b2ea016ac508b0625c87d2a7cd5ffd0d40f2d6",
+          "delta": ".\n"
+        },
+        "emittedAtMs": 1791297712463
+      },
+      {
+        "method": "item/completed",
+        "params": {
+          "item": {
+            "type": "agentMessage",
+            "id": "msg_07f07b883e28b2ea016ac508b0625c87d2a7cd5ffd0d40f2d6",
+            "text": "I’ll request escalated permission for the file write.\n",
+            "phase": "commentary",
+            "memoryCitation": null,
+            "delivery": null,
+            "questions": null
+          },
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "completedAtMs": 1791297712486
+        },
+        "emittedAtMs": 1791297712487
+      },
+      {
+        "method": "hook/started",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "run": {
+            "id": "permission-request:58:/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json:exec-47aa717a-33f8-4b74-8f4d-da0ab38091de",
+            "eventName": "permissionRequest",
+            "handlerType": "command",
+            "executionMode": "sync",
+            "scope": "turn",
+            "sourcePath": "/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "source": "plugin",
+            "displayOrder": 58,
+            "status": "running",
+            "statusMessage": null,
+            "startedAt": 1791297713,
+            "completedAt": null,
+            "durationMs": null,
+            "entries": []
+          }
+        },
+        "emittedAtMs": 1791297713307
+      },
+      {
+        "method": "hook/completed",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "run": {
+            "id": "permission-request:58:/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json:exec-47aa717a-33f8-4b74-8f4d-da0ab38091de",
+            "eventName": "permissionRequest",
+            "handlerType": "command",
+            "executionMode": "sync",
+            "scope": "turn",
+            "sourcePath": "/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "source": "plugin",
+            "displayOrder": 58,
+            "status": "completed",
+            "statusMessage": null,
+            "startedAt": 1791297713,
+            "completedAt": 1791297713,
+            "durationMs": 22,
+            "entries": []
+          }
+        },
+        "emittedAtMs": 1791297713325
+      },
+      {
+        "method": "thread/status/changed",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "status": {
+            "type": "active",
+            "activeFlags": ["waitingOnApproval"]
+          }
+        },
+        "emittedAtMs": 1791297713340
+      },
+      {
+        "method": "item/started",
+        "params": {
+          "item": {
+            "type": "commandExecution",
+            "id": "exec-47aa717a-33f8-4b74-8f4d-da0ab38091de",
+            "pluginId": null,
+            "scriptPath": null,
+            "command": "/bin/zsh -lc \"printf 'recording-ready' > /tmp/argo54-permission-output.txt\"",
+            "cwd": "/repo",
+            "processId": null,
+            "source": "agent",
+            "status": "inProgress",
+            "commandActions": [
+              {
+                "type": "unknown",
+                "command": "printf 'recording-ready' > /tmp/argo54-permission-output.txt"
+              }
+            ],
+            "aggregatedOutput": null,
+            "exitCode": null,
+            "durationMs": null
+          },
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "startedAtMs": 1791297713337
+        },
+        "emittedAtMs": 1791297713340
+      },
+      {
+        "method": "item/commandExecution/requestApproval",
+        "id": 0,
+        "params": {
+          "kind": "command",
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "itemId": "exec-47aa717a-33f8-4b74-8f4d-da0ab38091de",
+          "startedAtMs": 1791297713328,
+          "environmentId": "local",
+          "reason": "May I write recording-ready to /tmp/argo54-permission-output.txt outside the workspace?",
+          "command": "/bin/zsh -lc \"printf 'recording-ready' > /tmp/argo54-permission-output.txt\"",
+          "cwd": "/repo",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "printf 'recording-ready' > /tmp/argo54-permission-output.txt"
+            }
+          ],
+          "proposedExecpolicyAmendment": [
+            "/bin/zsh",
+            "-lc",
+            "printf 'recording-ready' > /tmp/argo54-permission-output.txt"
+          ],
+          "availableDecisions": [
+            "accept",
+            {
+              "acceptWithExecpolicyAmendment": {
+                "execpolicy_amendment": [
+                  "/bin/zsh",
+                  "-lc",
+                  "printf 'recording-ready' > /tmp/argo54-permission-output.txt"
+                ]
+              }
+            },
+            "cancel"
+          ]
+        },
+        "emittedAtMs": 1791297713340
+      },
+      {
+        "method": "serverRequest/resolved",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "requestId": 0
+        },
+        "emittedAtMs": 1791297713344
+      },
+      {
+        "method": "thread/status/changed",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "status": {
+            "type": "active",
+            "activeFlags": []
+          }
+        },
+        "emittedAtMs": 1791297713353
+      },
+      {
+        "method": "item/completed",
+        "params": {
+          "item": {
+            "type": "commandExecution",
+            "id": "exec-47aa717a-33f8-4b74-8f4d-da0ab38091de",
+            "pluginId": null,
+            "scriptPath": null,
+            "command": "/bin/zsh -lc \"printf 'recording-ready' > /tmp/argo54-permission-output.txt\"",
+            "cwd": "/repo",
+            "processId": "35169",
+            "source": "unifiedExecStartup",
+            "status": "completed",
+            "commandActions": [
+              {
+                "type": "unknown",
+                "command": "printf 'recording-ready' > /tmp/argo54-permission-output.txt"
+              }
+            ],
+            "aggregatedOutput": null,
+            "exitCode": 0,
+            "durationMs": 0
+          },
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "completedAtMs": 1791297713415
+        },
+        "emittedAtMs": 1791297713422
+      },
+      {
+        "method": "hook/started",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "run": {
+            "id": "post-tool-use:59:/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json:exec-47aa717a-33f8-4b74-8f4d-da0ab38091de",
+            "eventName": "postToolUse",
+            "handlerType": "command",
+            "executionMode": "sync",
+            "scope": "turn",
+            "sourcePath": "/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "source": "plugin",
+            "displayOrder": 59,
+            "status": "running",
+            "statusMessage": null,
+            "startedAt": 1791297713,
+            "completedAt": null,
+            "durationMs": null,
+            "entries": []
+          }
+        },
+        "emittedAtMs": 1791297713444
+      },
+      {
+        "method": "hook/completed",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "run": {
+            "id": "post-tool-use:59:/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json:exec-47aa717a-33f8-4b74-8f4d-da0ab38091de",
+            "eventName": "postToolUse",
+            "handlerType": "command",
+            "executionMode": "sync",
+            "scope": "turn",
+            "sourcePath": "/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "source": "plugin",
+            "displayOrder": 59,
+            "status": "completed",
+            "statusMessage": null,
+            "startedAt": 1791297713,
+            "completedAt": 1791297713,
+            "durationMs": 63,
+            "entries": []
+          }
+        },
+        "emittedAtMs": 1791297713487
+      },
+      {
+        "method": "thread/tokenUsage/updated",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "tokenUsage": {
+            "total": {
+              "totalTokens": 19769,
+              "inputTokens": 19686,
+              "cachedInputTokens": 0,
+              "cacheWriteInputTokens": 0,
+              "outputTokens": 83,
+              "reasoningOutputTokens": 0
+            },
+            "last": {
+              "totalTokens": 19769,
+              "inputTokens": 19686,
+              "cachedInputTokens": 0,
+              "cacheWriteInputTokens": 0,
+              "outputTokens": 83,
+              "reasoningOutputTokens": 0
+            },
+            "modelContextWindow": 258400
+          }
+        },
+        "emittedAtMs": 1791297713496
+      },
+      {
+        "method": "item/started",
+        "params": {
+          "item": {
+            "type": "agentMessage",
+            "id": "msg_07f07b883e28b2ea016ac508b2eac887d2ab3baf0c9c835a6b",
+            "text": "",
+            "phase": "final_answer",
+            "memoryCitation": null,
+            "delivery": null,
+            "questions": null
+          },
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "startedAtMs": 1791297714910
+        },
+        "emittedAtMs": 1791297714910
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "itemId": "msg_07f07b883e28b2ea016ac508b2eac887d2ab3baf0c9c835a6b",
+          "delta": "done"
+        },
+        "emittedAtMs": 1791297714910
+      },
+      {
+        "method": "item/completed",
+        "params": {
+          "item": {
+            "type": "agentMessage",
+            "id": "msg_07f07b883e28b2ea016ac508b2eac887d2ab3baf0c9c835a6b",
+            "text": "done",
+            "phase": "final_answer",
+            "memoryCitation": null,
+            "delivery": null,
+            "questions": null
+          },
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "completedAtMs": 1791297714996
+        },
+        "emittedAtMs": 1791297714996
+      },
+      {
+        "method": "thread/tokenUsage/updated",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "tokenUsage": {
+            "total": {
+              "totalTokens": 39566,
+              "inputTokens": 39478,
+              "cachedInputTokens": 19456,
+              "cacheWriteInputTokens": 0,
+              "outputTokens": 88,
+              "reasoningOutputTokens": 0
+            },
+            "last": {
+              "totalTokens": 19797,
+              "inputTokens": 19792,
+              "cachedInputTokens": 19456,
+              "cacheWriteInputTokens": 0,
+              "outputTokens": 5,
+              "reasoningOutputTokens": 0
+            },
+            "modelContextWindow": 258400
+          }
+        },
+        "emittedAtMs": 1791297715022
+      },
+      {
+        "method": "hook/started",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "run": {
+            "id": "stop:62:/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "eventName": "stop",
+            "handlerType": "command",
+            "executionMode": "sync",
+            "scope": "turn",
+            "sourcePath": "/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "source": "plugin",
+            "displayOrder": 62,
+            "status": "running",
+            "statusMessage": null,
+            "startedAt": 1791297715,
+            "completedAt": null,
+            "durationMs": null,
+            "entries": []
+          }
+        },
+        "emittedAtMs": 1791297715023
+      },
+      {
+        "method": "hook/completed",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turnId": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+          "run": {
+            "id": "stop:62:/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "eventName": "stop",
+            "handlerType": "command",
+            "executionMode": "sync",
+            "scope": "turn",
+            "sourcePath": "/user/.codex/plugins/cache/codex-warp/warp/0.4.2/hooks/hooks.json",
+            "source": "plugin",
+            "displayOrder": 62,
+            "status": "completed",
+            "statusMessage": null,
+            "startedAt": 1791297715,
+            "completedAt": 1791297715,
+            "durationMs": 24,
+            "entries": []
+          }
+        },
+        "emittedAtMs": 1791297715098
+      },
+      {
+        "method": "thread/status/changed",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "status": {
+            "type": "idle"
+          }
+        },
+        "emittedAtMs": 1791297715098
+      },
+      {
+        "method": "turn/completed",
+        "params": {
+          "threadId": "01a111a9-d4a3-70b1-ac5c-e536b9f609dc",
+          "turn": {
+            "id": "01a111a9-d69d-7dc3-b6e3-9e5461d6f266",
+            "items": [
+              {
+                "type": "agentMessage",
+                "id": "msg_07f07b883e28b2ea016ac508b2eac887d2ab3baf0c9c835a6b",
+                "text": "done",
+                "phase": "final_answer",
+                "memoryCitation": null,
+                "delivery": null,
+                "questions": null
+              }
+            ],
+            "itemsView": "summary",
+            "status": "completed",
+            "error": null,
+            "startedAt": 1791297705,
+            "completedAt": 1791297715,
+            "durationMs": 9439
+          }
+        },
+        "emittedAtMs": 1791297715098
+      }
+    ]
+  }
+}

@@ -1,10 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import type { SessionService } from '@repo/api';
+import { createElicitationAnswerSchema } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { listBranches } from '@repo/git';
 import { TRPCError } from '@trpc/server';
 import { type ActorRefFrom, type SnapshotFrom, waitFor } from 'xstate';
 import type { writerMachine } from '../feed/writer-machine';
+import { notImplemented } from '../not-implemented';
 import { readProjectPath } from '../projects/project-service';
 import type { RegistryActorRef, RegistryCommand } from './registry-machine';
 import { sendSessionCommand } from './session-command';
@@ -99,6 +101,64 @@ export function createSessionService({
   return {
     ...createSessionList({ database, sessions }),
     openSession: open,
+    answerPermission: async ({ sessionId, toolCallId, optionId, message }) => {
+      const actor = await open(sessionId);
+      const request = actor.getSnapshot().context.permissionQueue[0];
+      if (request?.toolCallId !== toolCallId)
+        throw new TRPCError({ code: 'CONFLICT', message: 'already answered' });
+      if (!request.options.some((option) => option.optionId === optionId))
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'The Agent did not offer that option',
+        });
+      if (
+        optionId === 'reject_once' &&
+        message &&
+        actor.getSnapshot().context.capabilities?.permissionFeedback === false
+      )
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'The Agent does not support Permission feedback',
+        });
+      sendSessionCommand(actor, {
+        type: 'session.answerPermission',
+        toolCallId,
+        optionId,
+        message,
+      });
+      return {};
+    },
+    answerElicitation: async ({ sessionId, requestId, action, content }) => {
+      const actor = await open(sessionId);
+      const request = actor.getSnapshot().context.pendingElicitation;
+      if (request?.requestId !== requestId)
+        throw new TRPCError({ code: 'CONFLICT', message: 'already answered' });
+      if (action === 'accept') {
+        const answer = createElicitationAnswerSchema(
+          request.requestedSchema,
+        ).safeParse(content ?? {});
+        if (!answer.success)
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'The answer does not match the Elicitation form',
+            cause: answer.error,
+          });
+      }
+      sendSessionCommand(actor, {
+        type: 'session.answerElicitation',
+        action,
+        content,
+      });
+      return {};
+    },
+    answerPlanProposal: async () => {
+      throw new TRPCError({
+        code: 'NOT_IMPLEMENTED',
+        message: 'Plan proposal answers are not implemented yet',
+      });
+    },
+    changes: notImplemented,
+    diff: notImplemented,
     new: async (input) => {
       const projectPath = readProjectPath(database, input.projectId);
       if (
@@ -140,6 +200,13 @@ export function createSessionService({
         content: prompt,
       });
       return { messageId: `${turnId}:user` };
+    },
+    // Title persistence and Agent commands are issue #66.
+    rename: async () => {
+      throw new TRPCError({
+        code: 'NOT_IMPLEMENTED',
+        message: 'Session rename is not implemented yet',
+      });
     },
     cancel: async ({ sessionId }) => {
       sendSessionCommand(await open(sessionId), { type: 'session.cancel' });

@@ -29,7 +29,7 @@ export function PullRequestIndicator({
     >
       <Icon
         as={appearance.icon}
-        className={cn('size-3.5 shrink-0', appearance.className)}
+        className={cn('shrink-0', appearance.className)}
       />
       <Text
         className={cn('text-xs font-normal leading-4', appearance.className)}

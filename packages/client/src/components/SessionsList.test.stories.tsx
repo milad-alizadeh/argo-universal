@@ -194,6 +194,11 @@ export const ScrollFadePadding: Story = {
   parameters: { screenPreview: true },
   render: (args) => <SessionsNewSessionPreview {...args} />,
   play: async ({ canvas }) => {
+    // At a phone's size twelve Sessions overflow the list, so it can scroll.
+    if ('__vitest_browser__' in globalThis) {
+      const { page } = await import('vitest/browser');
+      await page.viewport(390, 844);
+    }
     const scroll = canvas.getByTestId('sessions-scroll');
     const heading = await canvas.findByRole('button', {
       name: 'Example Project',
@@ -206,7 +211,11 @@ export const ScrollFadePadding: Story = {
     });
     // The top fade waits until content has scrolled under the header.
     expect(canvas.queryByTestId('scroll-fade-top')).toBeNull();
-    scroll.scrollTop = 40;
+    // Until the rows measure, the list is not yet tall enough to scroll.
+    await waitFor(() => {
+      scroll.scrollTop = 40;
+      expect(scroll.scrollTop).toBeGreaterThan(0);
+    });
     const topFade = await canvas.findByTestId('scroll-fade-top');
     const bottomFade = canvas.getByTestId('scroll-fade-bottom');
     const surface = topFade.parentElement;

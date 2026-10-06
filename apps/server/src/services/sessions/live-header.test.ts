@@ -1,3 +1,4 @@
+import { permissionOptions } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import { liveHeaderMocks } from '#mocks/live-header';
 import { type LiveHeaderInput, toLiveHeader } from './live-header';
@@ -10,6 +11,7 @@ const running: LiveHeaderInput = {
   activeTurnStartedAt: 1_000,
   permissionQueue: [],
   pendingElicitation: null,
+  pendingPlanProposal: null,
 };
 
 describe.each(liveHeaderMocks)(
@@ -59,7 +61,7 @@ describe.each(liveHeaderMocks)(
               {
                 toolCallId: command.toolCallId,
                 title: 'Allow command?',
-                options: [],
+                options: permissionOptions,
               },
             ],
           },
@@ -73,6 +75,7 @@ describe.each(liveHeaderMocks)(
         session: {
           ...running,
           pendingElicitation: {
+            requestId: 'request-1',
             mode: 'form' as const,
             message: 'Which file?',
             requestedSchema: { properties: {} },

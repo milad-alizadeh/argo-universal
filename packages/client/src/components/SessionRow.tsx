@@ -84,13 +84,13 @@ export const SessionRow = memo(function SessionRow({
       )}
     >
       <TextClassContext.Provider value={undefined}>
-        <View className="relative h-6 w-4 shrink-0 items-center justify-center wide:h-5">
-          <Animated.View className="w-full" style={logoStyle}>
+        <View className="relative h-6 shrink-0 items-center justify-center wide:h-5">
+          <Animated.View className="size-icon-md" style={logoStyle}>
             <SvgXml
               testID="session-logo"
               xml={logo}
               width="100%"
-              height="16"
+              height="100%"
               color={color}
             />
           </Animated.View>
@@ -142,11 +142,8 @@ export const SessionRow = memo(function SessionRow({
                   accessibilityLabel={`Subagents: ${session.subagents.total}, ${session.subagents.running} running`}
                   className="shrink-0 flex-row items-center gap-1"
                 >
-                  <View className="relative size-3.5">
-                    <Icon
-                      as={RobotIcon}
-                      className="size-3.5 text-muted-foreground"
-                    />
+                  <View className="relative">
+                    <Icon as={RobotIcon} className="text-muted-foreground" />
                     {(subagentsFailed || session.subagents.running > 0) && (
                       <StatusIndicator
                         testID="subagents-status"

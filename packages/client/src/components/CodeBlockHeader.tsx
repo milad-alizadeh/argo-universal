@@ -35,7 +35,6 @@ export function CodeBlockHeader({
       >
         <Icon
           as={copied ? CheckIcon : CopyIcon}
-          size={14}
           className="text-muted-foreground"
         />
       </Pressable>
