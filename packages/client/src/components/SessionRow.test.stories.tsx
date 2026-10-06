@@ -79,8 +79,8 @@ export const PaperMetadataDimensions: Story = {
       for (const group of groups.slice(1)) {
         const icon = group.querySelector('svg');
         if (!icon) throw new Error('Missing metadata icon');
-        await expect(icon.getBoundingClientRect().width).toBe(14);
-        await expect(icon.getBoundingClientRect().height).toBe(14);
+        await expect(icon.getBoundingClientRect().width).toBe(16);
+        await expect(icon.getBoundingClientRect().height).toBe(16);
         await expect(getComputedStyle(group).gap).toBe('4px');
       }
       const bar = groups[0]?.firstElementChild;

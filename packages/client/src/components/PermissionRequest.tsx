@@ -70,7 +70,8 @@ export function PermissionRequest({
         <View className="flex-row items-center gap-1.5">
           <Icon
             as={TerminalWindowIcon}
-            className="size-4 shrink-0 text-muted-foreground"
+            size="md"
+            className="shrink-0 text-muted-foreground"
           />
           <Text className="min-w-0 flex-1 text-sm font-semibold leading-5.5">
             {request.title}

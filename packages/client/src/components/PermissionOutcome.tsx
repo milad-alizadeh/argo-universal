@@ -23,10 +23,13 @@ export function PermissionOutcome({
   const label = message ? `You denied: “${message}”` : 'You denied';
   return (
     <View className="flex-row items-start gap-1.5">
-      <View className="size-4 h-5 shrink-0 justify-center">
+      <View
+        className={`${allowed ? 'w-icon-sm' : 'w-icon-md'} h-5 shrink-0 justify-center`}
+      >
         <Icon
           as={allowed ? CheckIcon : XIcon}
-          className="size-4 text-muted-foreground"
+          size={allowed ? 'sm' : 'md'}
+          className="text-muted-foreground"
         />
       </View>
       <Text className="min-w-0 flex-1 text-sm leading-5 text-muted-foreground">

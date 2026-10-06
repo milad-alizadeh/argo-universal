@@ -5,6 +5,7 @@ import {
   userMessageChange,
 } from '../apps/server/src/services/feed/feed-change.ts';
 import { toLiveHeader } from '../apps/server/src/services/sessions/live-header.ts';
+import { titleFromPrompt } from '../apps/server/src/services/sessions/session-data.ts';
 import { noChanges } from '../apps/server/src/services/sessions/session-snapshot.ts';
 import { mockClis } from '../mocks/cli/index.ts';
 import { agentAdapters } from '../packages/agents/src/adapters.ts';
@@ -47,6 +48,8 @@ const mocks = agentAdapters.flatMap(({ agent }, index) => {
     const state = () => ({
       rows: Object.values(feed.rows),
       snapshot: SessionSnapshot.parse({
+        title: titleFromPrompt(prompt),
+        titleSource: 'prompt',
         state:
           pendingPermission || pendingElicitation || pendingPlanProposal
             ? 'requires_action'

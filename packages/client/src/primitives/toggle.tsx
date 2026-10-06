@@ -72,9 +72,7 @@ function ToggleIcon({
   ...props
 }: React.ComponentProps<typeof Icon>) {
   const textClass = React.useContext(TextClassContext);
-  return (
-    <Icon className={cn('size-4 shrink-0', textClass, className)} {...props} />
-  );
+  return <Icon className={cn('shrink-0', textClass, className)} {...props} />;
 }
 
 export { Toggle, ToggleIcon, toggleVariants };

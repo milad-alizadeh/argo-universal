@@ -47,16 +47,14 @@ export function FeedDisclosure({
           onHoverOut={() => setHovered(false)}
           className="min-h-5 max-w-full self-start flex-row items-center gap-1.5"
         >
-          <View className="size-4 shrink-0 items-center justify-center">
-            <Icon
-              as={icon}
-              className={cn(
-                'size-4 text-muted-foreground',
-                failed && 'text-destructive',
-                hovered && 'text-foreground',
-              )}
-            />
-          </View>
+          <Icon
+            as={icon}
+            className={cn(
+              'shrink-0 text-muted-foreground',
+              failed && 'text-destructive',
+              hovered && 'text-foreground',
+            )}
+          />
           <View className="min-w-0 shrink flex-row items-center gap-1">
             {running && !awaitingApproval ? (
               <ShimmerText

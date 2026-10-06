@@ -3,11 +3,17 @@ import type {
   VendorSession,
   VendorSessionListener,
 } from '../src/agent-adapter';
+import { toQuestionAnswers } from '../src/elicitation-form';
 import { changeValue, startingValues, toConfigOptions } from './config-options';
 import { initialize, readModels, usesChatGpt } from './handshake';
 import type { VendorMessage } from './messages';
 import { openAppServer } from './open-app-server';
-import type { TurnStartParams } from './protocol.gen';
+import type {
+  CommandExecutionRequestApprovalResponse,
+  FileChangeRequestApprovalResponse,
+  ToolRequestUserInputResponse,
+  TurnStartParams,
+} from './protocol.gen';
 
 const createVendorTurn = () => ({
   id: null as string | null,
@@ -23,11 +29,33 @@ export async function connect(
   signal.throwIfAborted();
   let vendorSessionId = input.vendorSessionId;
   let activeTurn: ReturnType<typeof createVendorTurn> | null = null;
+  const permissions = new Map<
+    string,
+    Extract<
+      VendorMessage,
+      {
+        method:
+          | 'item/commandExecution/requestApproval'
+          | 'item/fileChange/requestApproval';
+      }
+    >
+  >();
+  let elicitation: Extract<
+    VendorMessage,
+    { method: 'item/tool/requestUserInput' }
+  > | null = null;
   const server = openAppServer(
     input.cwd,
     (message) => {
       const notification = message as VendorMessage;
       if (notification.params?.threadId !== vendorSessionId) return;
+      if (
+        notification.method === 'item/commandExecution/requestApproval' ||
+        notification.method === 'item/fileChange/requestApproval'
+      )
+        permissions.set(notification.params.itemId, notification);
+      if (notification.method === 'item/tool/requestUserInput')
+        elicitation = notification;
       if (notification.method === 'turn/started') {
         if (
           !activeTurn ||
@@ -46,6 +74,8 @@ export async function connect(
         activeTurn.identity.resolve(null);
         activeTurn.completion.resolve();
         activeTurn = null;
+        permissions.clear();
+        elicitation = null;
       }
     },
     listener.failed,
@@ -120,7 +150,11 @@ export async function connect(
       ready: {
         vendorSessionId,
         configOptions: toConfigOptions(models, values),
-        capabilities: { planApproval: 'startTurn', stopShell: false },
+        capabilities: {
+          planApproval: 'startTurn',
+          stopShell: false,
+          permissionFeedback: false,
+        },
         continuedOutside: false,
       },
       run: async (command) => {
@@ -161,7 +195,49 @@ export async function connect(
             });
             return;
           }
-          // Request answers, titles, images and Shells belong to their later slices.
+          case 'agent.answerPermission': {
+            const request = permissions.get(command.toolCallId);
+            if (!request) return;
+            permissions.delete(command.toolCallId);
+            const result:
+              | CommandExecutionRequestApprovalResponse
+              | FileChangeRequestApprovalResponse = {
+              decision: 'decline',
+            };
+            if (command.optionId === 'allow_once') result.decision = 'accept';
+            if (command.optionId === null) result.decision = 'cancel';
+            server.respond(request.id, result);
+            return;
+          }
+          case 'agent.answerElicitation': {
+            const request = elicitation;
+            if (!request) return;
+            elicitation = null;
+            if (command.action === 'cancel' && request.params.isBlocking) {
+              await server.request('turn/interrupt', {
+                threadId: started.thread.id,
+                turnId: request.params.turnId,
+              });
+              return;
+            }
+            const answers: ToolRequestUserInputResponse = {
+              answers: Object.fromEntries(
+                Object.entries(
+                  toQuestionAnswers(
+                    command.action === 'accept' ? command.content : undefined,
+                  ),
+                ).map(([id, answers]) => [id, { answers }]),
+              ),
+            };
+            server.respond(
+              request.id,
+              command.action === 'accept'
+                ? answers
+                : ({ answers: {} } satisfies ToolRequestUserInputResponse),
+            );
+            return;
+          }
+          // Plan answers, titles, images and Shells belong to their later slices.
           default:
             return;
         }

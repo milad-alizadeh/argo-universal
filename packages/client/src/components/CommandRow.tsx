@@ -75,10 +75,7 @@ export function CommandRow({
             {!running && !stopped && (
               <Icon
                 as={failed ? XIcon : CheckIcon}
-                className={cn(
-                  'size-3.5 text-success',
-                  failed && 'text-destructive',
-                )}
+                className={cn('text-success', failed && 'text-destructive')}
               />
             )}
             <Text

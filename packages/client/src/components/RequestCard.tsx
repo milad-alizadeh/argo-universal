@@ -41,7 +41,11 @@ export function RequestAction({
       <Text className="text-sm leading-5 font-medium">{children}</Text>
       {primary && (
         <View className="hidden wide:flex size-5 items-center justify-center rounded-sm bg-primary-foreground/15">
-          <Icon as={KeyReturnIcon} className="size-4 text-primary-foreground" />
+          <Icon
+            as={KeyReturnIcon}
+            size="md"
+            className="text-primary-foreground"
+          />
         </View>
       )}
     </Button>
@@ -54,7 +58,11 @@ export function AlreadyAnswered({ reason }: { reason: string }) {
       role="status"
       className="min-h-8 min-w-0 flex-1 flex-row items-center gap-1.5 px-2"
     >
-      <Icon as={InfoIcon} className="size-4 shrink-0 text-muted-foreground" />
+      <Icon
+        as={InfoIcon}
+        size="md"
+        className="shrink-0 text-muted-foreground"
+      />
       <Text className="min-w-0 flex-1 text-sm leading-5">{reason}</Text>
     </View>
   );

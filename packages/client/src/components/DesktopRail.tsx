@@ -37,9 +37,10 @@ const SectionButton = memo(function SectionButton({
       onPress={() => onSectionChange(section)}
     >
       <Icon
+        size="lg"
         as={icon}
         weight={selected ? 'fill' : 'regular'}
-        className={cn('size-5', !selected && 'text-muted-foreground')}
+        className={cn(!selected && 'text-muted-foreground')}
       />
       {section === 'sessions' && attentionCount > 0 && (
         <Badge

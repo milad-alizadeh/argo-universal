@@ -5,6 +5,7 @@ import {
 } from './claude/feed.ts';
 import { newSessionMock as claudeNewSessionMock } from './claude/new-session.ts';
 import { recordedRequestAnswer as claudeRequestAnswer } from './claude/request-answer.ts';
+import { recordedTitle } from './claude/titles.ts';
 import { writeMockClaude } from './claude/write-mock-claude.ts';
 import { writeClaudeTranscript } from './claude/write-transcript.ts';
 import {
@@ -19,6 +20,8 @@ import type { MockCliOptions } from './mock-cli.ts';
 import type { RecordedRequestAnswer } from './request-answer.ts';
 
 export interface MockCli {
+  supportsPermissionFeedback: boolean;
+  recordedTitle?: () => string;
   recordedRequestAnswer(recording: string): RecordedRequestAnswer;
   feedEvents(recording: string): AgentEvent[];
   // The first prompt a recording sent, or undefined when it holds none.
@@ -56,6 +59,7 @@ export interface MockCli {
 // Each Agent adapter's mock CLI, by the id the adapter registers.
 export const mockClis: Record<string, MockCli> = {
   codex: {
+    supportsPermissionFeedback: false,
     recordedRequestAnswer: codexRequestAnswer,
     feedEvents: codexFeedEvents,
     recordedPrompt: codexRecordedPrompt,
@@ -78,6 +82,8 @@ export const mockClis: Record<string, MockCli> = {
     writeTranscript: writeCodexTranscript,
   },
   claude: {
+    supportsPermissionFeedback: true,
+    recordedTitle,
     recordedRequestAnswer: claudeRequestAnswer,
     feedEvents: claudeFeedEvents,
     recordedPrompt: claudeRecordedPrompt,

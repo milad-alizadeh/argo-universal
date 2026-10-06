@@ -163,18 +163,22 @@ export function createFeedService(deps: FeedDeps): FeedService {
           epoch,
           maxRevision,
         };
-        const snapshot = toSessionSnapshot(session, {
-          context: {
-            ...feedContext,
-            rows: readLiveHeaderRows({
-              database,
-              writer: deps.findWriter(),
-              sessionId,
-              turnId: session?.context.activeTurnId ?? null,
-              rows: 'rows' in feedContext ? feedContext.rows : {},
-            }),
+        const snapshot = toSessionSnapshot(
+          session,
+          {
+            context: {
+              ...feedContext,
+              rows: readLiveHeaderRows({
+                database,
+                writer: deps.findWriter(),
+                sessionId,
+                turnId: session?.context.activeTurnId ?? null,
+                rows: 'rows' in feedContext ? feedContext.rows : {},
+              }),
+            },
           },
-        });
+          readSession(sessionId),
+        );
         const serialized = JSON.stringify(snapshot);
         if (serialized === lastSnapshot) return;
         lastSnapshot = serialized;

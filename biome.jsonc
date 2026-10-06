@@ -35,6 +35,11 @@
   },
   "overrides": [
     {
+      // Icons take a named size (sm, md or lg) instead of a number or size-* class.
+      "includes": ["packages/client/src/**"],
+      "plugins": ["./tooling/biome/icon-size.grit"]
+    },
+    {
       // Brand-kit SVGs stay byte-for-byte original; rendering components provide accessible labels.
       "includes": ["packages/agents/*/assets/*.svg"],
       "linter": {

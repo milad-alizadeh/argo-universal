@@ -1,6 +1,8 @@
 // A stand-in `claude` that the Agent SDK drives over stream-json. Each prompt replays the next recorded Turn.
 import { randomUUID } from 'node:crypto';
 import type {
+  AskUserQuestionInput,
+  PermissionResult,
   SDKAssistantMessage,
   SDKControlInitializeResponse,
   SDKControlRequest,
@@ -16,6 +18,7 @@ import {
   serveJsonLines,
 } from '../mock-cli.ts';
 import { readRecording, recordedFrames, splitTurns } from '../recording.ts';
+import { recordRequestAnswer } from '../request-answer.ts';
 
 const PRODUCER = 'claude-cli';
 
@@ -182,10 +185,22 @@ const crashAfter = environment.exitMidTurn
 
 // The frames of the running Turn held back until an interrupt arrives.
 let heldFrames: Frame[] = [];
+let pendingRequestId: string | null = null;
+let pendingRequest: SDKControlRequest | null = null;
 
 function replay(turn: Frame[]) {
-  const pause = turn.indexOf(INTERRUPT_POINT);
-  const now = pause === -1 ? turn : turn.slice(0, pause);
+  const pause = turn.findIndex(
+    (frame) =>
+      frame === INTERRUPT_POINT ||
+      (frame.type === 'control_request' &&
+        frame.request.subtype === 'can_use_tool'),
+  );
+  const request = turn[pause];
+  pendingRequestId =
+    request?.type === 'control_request' ? request.request_id : null;
+  pendingRequest = request?.type === 'control_request' ? request : null;
+  const now =
+    pause === -1 ? turn : turn.slice(0, pause + (pendingRequestId ? 1 : 0));
   heldFrames = pause === -1 ? [] : turn.slice(pause + 1);
   const finished = replayTurn(now.map(withSession), crashAfter);
   if (finished && pause === -1 && !turn.some((f) => f.type === 'result'))
@@ -211,7 +226,47 @@ function answer(subtype: string | undefined) {
   return { ...(response as Record<string, unknown>), account: {} };
 }
 
-serveJsonLines<SDKMessage | SDKControlRequest>((input) => {
+serveJsonLines<Output>((input) => {
+  if (input.type === 'control_response') {
+    if (
+      input.response.request_id === pendingRequestId &&
+      input.response.subtype === 'success'
+    ) {
+      const result = input.response.response as PermissionResult;
+      if (
+        pendingRequest?.request.subtype === 'can_use_tool' &&
+        pendingRequest.request.tool_name !== 'AskUserQuestion'
+      )
+        recordRequestAnswer(
+          result.behavior === 'allow'
+            ? { type: 'permission', optionId: 'allow_once' }
+            : {
+                type: 'permission',
+                optionId: 'reject_once',
+                message: result.message,
+              },
+        );
+      if (
+        pendingRequest?.request.subtype === 'can_use_tool' &&
+        pendingRequest.request.tool_name === 'AskUserQuestion'
+      ) {
+        const deniedAction =
+          result.behavior === 'deny' && result.interrupt ? 'cancel' : 'decline';
+        recordRequestAnswer({
+          type: 'elicitation',
+          action: result.behavior === 'allow' ? 'accept' : deniedAction,
+          ...(result.behavior === 'allow'
+            ? {
+                content: result.updatedInput
+                  ?.answers as AskUserQuestionInput['answers'],
+              }
+            : {}),
+        });
+      }
+      replay(heldFrames);
+    }
+    return;
+  }
   if (input.type === 'user') return playTurn();
   if (input.type !== 'control_request') return;
   const subtype = input.request.subtype;

@@ -84,16 +84,18 @@ const ThemedLogo = withUniwind(SvgXml, {
   color: { fromClassName: 'className', styleProperty: 'color' },
 });
 
-function Logo({ agent, size = 14 }: { agent?: AgentInfo; size?: number }) {
+function Logo({ agent }: { agent?: AgentInfo }) {
   return agent ? (
-    <ThemedLogo
-      testID="composer-agent-icon"
-      xml={agent.logo}
-      className="text-foreground"
-      width={size}
-      height={size}
-      style={{ width: size, height: size }}
-    />
+    <View className="size-icon-md shrink-0 items-center justify-center">
+      <View testID="composer-agent-icon" className="size-icon-mark">
+        <ThemedLogo
+          xml={agent.logo}
+          className="text-foreground"
+          width="100%"
+          height="100%"
+        />
+      </View>
+    </View>
   ) : null;
 }
 function Choice({
@@ -155,11 +157,11 @@ function Choice({
       </View>
       <View
         className={cn(
-          'size-3.5 items-center justify-center',
-          leading && 'h-5 w-4',
+          'size-icon-md items-center justify-center',
+          leading && 'h-5',
         )}
       >
-        {selected && <Icon as={CheckIcon} className="size-3.5" />}
+        {selected && <Icon as={CheckIcon} />}
       </View>
     </Button>
   );
@@ -230,11 +232,7 @@ function AgentChoices({
             onSelect();
           }}
         >
-          {wide && (
-            <View className="size-4 items-center justify-center">
-              <Logo agent={agent} size={14} />
-            </View>
-          )}
+          {wide && <Logo agent={agent} />}
           <View className="flex-1 min-w-0 gap-0.5">
             <Text
               selectable={false}
@@ -252,9 +250,7 @@ function AgentChoices({
             )}
           </View>
           {configuration.onAgentChange &&
-            agent.agent === configuration.agent && (
-              <Icon as={CheckIcon} className="size-3.5" />
-            )}
+            agent.agent === configuration.agent && <Icon as={CheckIcon} />}
         </Button>
         {agent.availability !== 'available' && configuration.onAgentSetup && (
           <Button
@@ -369,7 +365,7 @@ function EffortControl({
     effortChoices.findIndex((choice) => choice.value === effort.currentValue),
   );
   return (
-    <View className="border-t border-border px-3 pt-2.5 pb-3 gap-2.5">
+    <View className="px-3 pt-2.5 pb-3 gap-2.5">
       <View className="gap-0.5">
         <Text
           selectable={false}
@@ -461,7 +457,7 @@ function FastModeControl({
   )
     return null;
   return (
-    <View className="p-1 border-t border-border">
+    <View className="p-1">
       <View className="min-h-11 wide:min-h-8 py-1.5 px-2 flex-row items-center gap-1">
         <View className="flex-1 min-w-0 gap-0.5">
           <Label
@@ -507,7 +503,7 @@ function AgentModelMenu({
   if (!wide && page !== 'settings')
     return (
       <View>
-        <View className="h-11 px-1 flex-row items-center border-b border-border">
+        <View className="h-11 px-1 flex-row items-center">
           <Button
             variant="ghost"
             size="icon"
@@ -515,7 +511,7 @@ function AgentModelMenu({
             className="size-11 sm:size-11"
             onPress={() => setPage('settings')}
           >
-            <Icon as={CaretLeftIcon} className="size-4.5 text-foreground" />
+            <Icon size="lg" as={CaretLeftIcon} className="text-foreground" />
           </Button>
           <Text
             selectable={false}
@@ -541,7 +537,7 @@ function AgentModelMenu({
   return (
     <View className="wide:flex-row">
       {wide && (
-        <View className="w-43 shrink-0 min-h-0 border-r border-border bg-sidebar">
+        <View className="w-43 shrink-0 min-h-0 bg-sidebar">
           <View className="px-1 pt-1">
             <MenuHeading>Agent</MenuHeading>
           </View>
@@ -557,7 +553,7 @@ function AgentModelMenu({
             <ModelChoices configuration={configuration} onSelect={() => {}} />
           </>
         ) : (
-          <View className="p-1 gap-0.5 border-t border-border">
+          <View className="p-1 gap-0.5">
             <Button
               variant="ghost"
               accessibilityLabel="Choose Agent"
@@ -580,8 +576,9 @@ function AgentModelMenu({
               </Text>
               {configuration.onAgentChange && (
                 <Icon
+                  size="sm"
                   as={CaretRightIcon}
-                  className="size-3.5 text-muted-foreground"
+                  className="-ml-0.5 text-muted-foreground"
                 />
               )}
             </Button>
@@ -612,8 +609,9 @@ function AgentModelMenu({
                 {modelName(current)}
               </Text>
               <Icon
+                size="sm"
                 as={CaretRightIcon}
-                className="size-3.5 text-muted-foreground"
+                className="-ml-0.5 text-muted-foreground"
               />
             </Button>
           </View>
@@ -621,11 +619,8 @@ function AgentModelMenu({
         <FastModeControl configuration={configuration} />
         <EffortControl configuration={configuration} />
         {configuration.turnRunning && (
-          <View className="flex-row gap-2 px-3 py-2.5 bg-muted border-t border-border">
-            <Icon
-              as={HourglassSimpleIcon}
-              className="size-3.5 text-muted-foreground"
-            />
+          <View className="flex-row gap-2 px-3 py-2.5 bg-muted">
+            <Icon as={HourglassSimpleIcon} className="text-muted-foreground" />
             <Text
               selectable={false}
               className="select-none flex-1 text-xs leading-4 text-muted-foreground"
@@ -671,11 +666,7 @@ export function ComposerAgentModelControl({
           accessibilityLabel="Agent and model"
           className="h-7 sm:h-7 py-0 px-1.5 has-[>svg]:px-1.5 gap-1.5 shrink min-w-0"
         >
-          {wide && (
-            <View className="size-4 items-center justify-center">
-              <Logo agent={agent} size={14} />
-            </View>
-          )}
+          {wide && <Logo agent={agent} />}
           <Text
             selectable={false}
             numberOfLines={1}
@@ -704,13 +695,14 @@ export function ComposerAgentModelControl({
               accessibilityRole="image"
               accessibilityLabel="Fast mode enabled"
             >
-              <Icon as={LightningIcon} weight="fill" className="size-4" />
+              <Icon as={LightningIcon} weight="fill" />
             </View>
           )}
           {wide && (
             <Icon
+              size="sm"
               as={CaretDownIcon}
-              className="size-3 -ml-0.5 text-muted-foreground"
+              className="-ml-0.5 text-muted-foreground"
             />
           )}
         </Button>
@@ -746,7 +738,7 @@ export function ComposerModeControl({
           <Icon
             as={configurationIcon(current?._meta?.argo?.icon)}
             className={cn(
-              'size-4 text-muted-foreground',
+              'text-muted-foreground',
               current?._meta?.argo?.tone === 'dangerous' && 'text-destructive',
             )}
           />
@@ -761,7 +753,11 @@ export function ComposerModeControl({
             {current?.name.replace(/\s*\(recommended\)\s*$/i, '')}
           </Text>
           <View className="hidden wide:flex -ml-0.5">
-            <Icon as={CaretDownIcon} className="size-3 text-muted-foreground" />
+            <Icon
+              size="sm"
+              as={CaretDownIcon}
+              className="text-muted-foreground"
+            />
           </View>
         </Button>
       }
@@ -785,7 +781,7 @@ export function ComposerModeControl({
                 <Icon
                   as={configurationIcon(choice._meta?.argo?.icon)}
                   className={cn(
-                    'size-4 text-foreground',
+                    'text-foreground',
                     choice._meta?.argo?.tone === 'dangerous' &&
                       'text-destructive',
                   )}
@@ -822,7 +818,7 @@ export function CheckoutContents({
           leading={
             <Icon
               as={newWorktree ? GitBranchIcon : FolderIcon}
-              className="size-4 text-muted-foreground"
+              className="text-muted-foreground"
             />
           }
           onPress={() => {
@@ -851,7 +847,7 @@ export function ComposerCheckoutControl({
       <View className="h-7 max-w-full wide:max-w-96 min-w-0 px-1.5 flex-row items-center gap-1.5">
         <Icon
           as={checkout.newWorktree ? GitBranchIcon : FolderIcon}
-          className="size-4 text-muted-foreground"
+          className="text-muted-foreground"
         />
         <Text
           selectable={false}
@@ -884,7 +880,7 @@ export function ComposerCheckoutControl({
         >
           <Icon
             as={checkout.newWorktree ? GitBranchIcon : FolderIcon}
-            className="size-4 text-muted-foreground"
+            className="text-muted-foreground"
           />
           <Text
             selectable={false}
@@ -893,7 +889,11 @@ export function ComposerCheckoutControl({
             {checkout.newWorktree ? 'New worktree' : 'Local'}
           </Text>
           {wide && (
-            <Icon as={CaretDownIcon} className="size-3 text-muted-foreground" />
+            <Icon
+              size="sm"
+              as={CaretDownIcon}
+              className="text-muted-foreground"
+            />
           )}
         </Button>
       }

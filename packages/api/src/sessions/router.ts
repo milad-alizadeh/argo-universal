@@ -19,6 +19,8 @@ import {
   SessionNewOutput,
   SessionPromptInput,
   SessionPromptOutput,
+  SessionRenameInput,
+  SessionRenameOutput,
   SessionSetConfigOptionInput,
   SessionSetConfigOptionOutput,
 } from '@repo/contracts';
@@ -47,6 +49,10 @@ export const sessionRouter = router({
     .input(SessionPromptInput)
     .output(SessionPromptOutput)
     .mutation(({ ctx, input }) => ctx.services.session.prompt(input)),
+  rename: publicProcedure
+    .input(SessionRenameInput)
+    .output(SessionRenameOutput)
+    .mutation(({ ctx, input }) => ctx.services.session.rename(input)),
   cancel: publicProcedure
     .input(SessionCancelInput)
     .output(SessionCancelOutput)
