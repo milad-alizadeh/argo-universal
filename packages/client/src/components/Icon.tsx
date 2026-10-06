@@ -8,7 +8,7 @@ import {
   type ActivityIndicatorProps,
   StyleSheet,
 } from 'react-native';
-import { useResolveClassNames, withUniwind } from 'uniwind';
+import { useCSSVariable, withUniwind } from 'uniwind';
 import { cn } from '#lib/utils';
 import { TextClassContext } from '#primitives/text';
 
@@ -22,9 +22,11 @@ export const iconSizeClasses = {
 export type IconSize = keyof typeof iconSizeClasses;
 
 // Phosphor and ActivityIndicator take a number, so this is the one place a variant becomes pixels.
-function useIconPixels(size: IconSize) {
-  const { width } = useResolveClassNames(iconSizeClasses[size]);
-  return typeof width === 'number' ? width : Number.parseFloat(String(width));
+export function useIconPixels(size: IconSize) {
+  const pixels = useCSSVariable(`--spacing-icon-${size}`);
+  return typeof pixels === 'number'
+    ? pixels
+    : Number.parseFloat(String(pixels));
 }
 
 export type IconProps = Omit<PhosphorIconProps, 'size'> & {
