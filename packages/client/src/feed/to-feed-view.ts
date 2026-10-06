@@ -136,12 +136,15 @@ export function toFeedView(
         : row;
       toolCalls.push(displayedRow);
       const actions = explorationActions(row);
-      if (isRunning(row))
-        liveTitle = awaitingPermission
-          ? 'Awaiting approval'
-          : actions.length && !row._meta?.argo?.permissionOutcome
-            ? 'Exploring'
-            : row.title || row.name || 'Working';
+      if (isRunning(row)) {
+        if (awaitingPermission) {
+          liveTitle = 'Awaiting approval';
+        } else if (actions.length && !row._meta?.argo?.permissionOutcome) {
+          liveTitle = 'Exploring';
+        } else {
+          liveTitle = row.title || row.name || 'Working';
+        }
+      }
       if (
         actions.length &&
         row.status !== 'failed' &&
