@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { storedMessage } from '#mocks/feed';
-import { fromFeedRow, toFeedRowWrite } from './feed-row';
+import { fromFeedRow, promptBlobIds, toFeedRowWrite } from './feed-row';
 
 const message = storedMessage(0);
 
@@ -26,5 +26,29 @@ describe('fromFeedRow', () => {
         payload: { ...(row.payload as object), position: 9 },
       }),
     ).toThrow('row message-0#0 has position in its payload');
+  });
+});
+
+describe('promptBlobIds', () => {
+  it('lists each blob a prompt shows once and skips other rows', () => {
+    const image = (blobId: string) => ({
+      type: 'image' as const,
+      mimeType: 'image/png',
+      blob: { blobId, mime: 'image/png', bytes: 3 },
+    });
+    const prompt = (id: string, blobIds: string[]) => ({
+      ...message,
+      id,
+      sessionUpdate: 'user_message' as const,
+      content: [{ type: 'text' as const, text: 'Look' }, ...blobIds.map(image)],
+    });
+
+    expect(
+      promptBlobIds([
+        prompt('prompt-1', ['image-1', 'image-2']),
+        prompt('prompt-2', ['image-1']),
+        { ...message, content: [image('reply-image')] },
+      ]),
+    ).toEqual(['image-1', 'image-2']);
   });
 });

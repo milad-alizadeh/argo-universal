@@ -13,6 +13,19 @@ export type FeedRowsJob = Extract<WriterJob, { type: 'feedRows' }>;
 // The shape version of `payload` in the rows this Server writes.
 const payloadVersion = 1;
 
+// The blobs that the prompt rows among `rows` show, each once.
+export const promptBlobIds = (rows: readonly SessionUpdate[]) => [
+  ...new Set(
+    rows.flatMap((row) =>
+      row.sessionUpdate === 'user_message'
+        ? row.content.flatMap((block) =>
+            block.type === 'image' ? [block.blob.blobId] : [],
+          )
+        : [],
+    ),
+  ),
+];
+
 // A row as the `feed_row` table stores it: the envelope in columns, the rest in `payload`.
 export function toFeedRowWrite(row: SessionUpdate): FeedRowWrite {
   const {

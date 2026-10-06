@@ -1,6 +1,13 @@
 import type { Database } from '@repo/db';
-import { feedRow, project, session, turn } from '@repo/db/schema';
-import { and, eq, gt, sql } from 'drizzle-orm';
+import {
+  blob,
+  blobRef,
+  feedRow,
+  project,
+  session,
+  turn,
+} from '@repo/db/schema';
+import { and, eq, gt, inArray, sql } from 'drizzle-orm';
 
 // A Feed row as a job carries it; the job's `sessionId` fills the column.
 export type FeedRowWrite = Omit<
@@ -16,6 +23,8 @@ export type WriterJob =
       rows: FeedRowWrite[];
       maxRevision: number;
       activityAt?: number;
+      // The blobs the job's prompt rows show.
+      blobIds?: string[];
     }
   | {
       type: 'sessionInsert';
@@ -53,7 +62,7 @@ export function writeJobs(database: Database, jobs: readonly WriterJob[]) {
   database.transaction((transaction) => {
     for (const job of jobs) {
       switch (job.type) {
-        case 'feedRows':
+        case 'feedRows': {
           if (job.rows.length > 0)
             transaction
               .insert(feedRow)
@@ -64,6 +73,21 @@ export function writeJobs(database: Database, jobs: readonly WriterJob[]) {
                 target: [feedRow.sessionId, feedRow.id],
                 set: feedRowUpdate,
               })
+              .run();
+          // A ref keeps a blob from cleanup; a prompt naming no stored blob adds none.
+          if (job.blobIds?.length)
+            transaction
+              .insert(blobRef)
+              .select(
+                transaction
+                  .select({
+                    blobId: blob.id,
+                    sessionId: sql<string>`${job.sessionId}`.as('session_id'),
+                  })
+                  .from(blob)
+                  .where(inArray(blob.id, job.blobIds)),
+              )
+              .onConflictDoNothing()
               .run();
           transaction
             .update(session)
@@ -79,6 +103,7 @@ export function writeJobs(database: Database, jobs: readonly WriterJob[]) {
             )
             .run();
           break;
+        }
         case 'sessionInsert':
           transaction.insert(session).values(job.session).run();
           transaction

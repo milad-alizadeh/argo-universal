@@ -1,45 +1,148 @@
 import {
+  keepPreviousData,
   useInfiniteQuery,
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { NotePencilIcon, SlidersHorizontalIcon } from 'phosphor-react-native';
-import { useCallback, useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { type ReactNode, useCallback, useMemo, useState } from 'react';
+import { Platform, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ConnectionBanner } from '#components/ConnectionBanner';
+import { HeaderButton } from '#components/HeaderButton';
 import { Icon } from '#components/Icon';
 import { ListSearch } from '#components/ListSearch';
 import { LoadError } from '#components/LoadError';
 import { Screen } from '#components/Screen';
 import { SessionsList } from '#components/SessionsList';
 import { SessionsLoading } from '#components/SessionsLoading';
+import { hasLiquidGlass } from '#lib/native-header';
 import { Button } from '#primitives/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from '#primitives/dropdown-menu';
 import { Text } from '#primitives/text';
+// Relative, so Metro picks the .ios file.
+import { ChoiceMenu } from '../components/ChoiceMenu';
+import { FloatingActionButton } from '../components/FloatingActionButton';
 import { useNavigate } from '../navigation/context';
 import { useWide } from '../navigation/use-wide';
 import { useTRPC } from '../trpc/context';
 
-export function SessionsScreen() {
+export interface SessionsFilter {
+  query: string;
+  onQueryChange: (query: string) => void;
+  archived: boolean;
+  onArchivedChange: (archived: boolean) => void;
+}
+
+// The search and Active or Archived filter that the list header and the list share.
+export function useSessionsFilter(): SessionsFilter {
+  const [query, setQuery] = useState('');
+  const [archived, setArchived] = useState(false);
+  return {
+    query,
+    onQueryChange: setQuery,
+    archived,
+    onArchivedChange: setArchived,
+  };
+}
+
+// The Sessions part of the wide window's list header row: the title with search, and the filter.
+export function SessionsHeader(filter: SessionsFilter) {
+  return (
+    <>
+      <ListSearch
+        title="Sessions"
+        value={filter.query}
+        onChangeText={filter.onQueryChange}
+      />
+      <SessionsFilterMenu {...filter} />
+    </>
+  );
+}
+
+const sessionsFilterChoices = [
+  { value: 'active', label: 'Active' },
+  { value: 'archived', label: 'Archived' },
+] as const;
+
+// Active or Archived; on a phone the trigger is a native header item with a dot while Archived shows.
+export function SessionsFilterMenu({
+  archived,
+  onArchivedChange,
+}: Pick<SessionsFilter, 'archived' | 'onArchivedChange'>) {
+  const wide = useWide();
+  return (
+    <ChoiceMenu
+      accessibilityLabel="Filter Sessions"
+      value={archived ? 'archived' : 'active'}
+      choices={sessionsFilterChoices}
+      onValueChange={(value) => onArchivedChange(value === 'archived')}
+      trigger={
+        wide ? (
+          <Button variant="ghost" size="icon" className="size-8 sm:size-8">
+            <Icon
+              as={SlidersHorizontalIcon}
+              className="size-4 text-muted-foreground"
+            />
+          </Button>
+        ) : (
+          <HeaderButton
+            icon={SlidersHorizontalIcon}
+            paired
+            dot={archived ? 'filter' : undefined}
+            accessibilityLabel="Filter Sessions"
+          />
+        )
+      }
+    />
+  );
+}
+
+// A phone's trailing header items, each its own button: the filter, then New Session on iOS, where it replaces the floating button.
+export function sessionsHeaderItems(filter: SessionsFilter) {
+  return [
+    <SessionsFilterMenu key="filter" {...filter} />,
+    ...(newSessionInHeader
+      ? [<NewSessionHeaderButton key="new-session" />]
+      : []),
+  ];
+}
+
+function NewSessionHeaderButton() {
+  const navigate = useNavigate();
+  return (
+    <HeaderButton
+      icon={NotePencilIcon}
+      paired
+      accessibilityLabel="New Session"
+      onPress={() => navigate({ to: 'new-session' })}
+    />
+  );
+}
+
+const newSessionInHeader = Platform.OS === 'ios';
+
+export interface SessionsScreenProps {
+  query: string;
+  archived: boolean;
+}
+
+// The Sessions list below the shell's header row: phone full screen, or the wide window's sidebar.
+export function SessionsScreen({ query, archived }: SessionsScreenProps) {
   const wide = useWide();
   const trpc = useTRPC();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [query, setQuery] = useState('');
-  const [archived, setArchived] = useState(false);
   const projects = useQuery(trpc.projects.list.queryOptions());
   const agents = useQuery(trpc.agents.list.queryOptions());
   const sessions = useInfiniteQuery(
     trpc.session.list.infiniteQueryOptions(
       { archived, query: query || undefined },
-      { getNextPageParam: (page) => page.nextCursor ?? undefined },
+      {
+        getNextPageParam: (page) => page.nextCursor ?? undefined,
+        // Typing a search keeps the last results up instead of flashing the skeleton.
+        placeholderData: keepPreviousData,
+      },
     ),
   );
   useSubscription(
@@ -86,54 +189,36 @@ export function SessionsScreen() {
     void sessions.refetch();
   }
 
+  const listTop = (
+    <>
+      <ConnectionBanner />
+      <Text className="h-8 pl-gutter pr-3 py-2 wide:pl-4.5 text-xs leading-4 font-medium text-muted-foreground">
+        Projects
+      </Text>
+    </>
+  );
+
   return (
     <Screen
+      edges={['bottom']}
       className="relative flex-1 bg-background wide:bg-sidebar"
       style={{ minHeight: 0 }}
     >
-      <ConnectionBanner />
-      <View className="h-11 wide:h-14 flex-row items-center gap-0.5 px-2">
-        <ListSearch title="Sessions" value={query} onChangeText={setQuery} />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-11 sm:size-11 wide:size-8 wide:sm:size-8"
-              accessibilityLabel="Filter Sessions"
-            >
-              <Icon
-                as={SlidersHorizontalIcon}
-                className="size-5.5 wide:size-4 text-foreground wide:text-muted-foreground"
-              />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-60">
-            <DropdownMenuRadioGroup
-              value={archived ? 'archived' : 'active'}
-              onValueChange={(value) => setArchived(value === 'archived')}
-            >
-              <DropdownMenuRadioItem value="active">
-                <Text>Active</Text>
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="archived">
-                <Text>Archived</Text>
-              </DropdownMenuRadioItem>
-            </DropdownMenuRadioGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </View>
-      <Text className="h-8 pl-4.5 pr-3 py-2 text-xs leading-4 font-medium text-muted-foreground">
-        Projects
-      </Text>
+      {wide && listTop}
       {error && !loading ? (
-        <LoadError
-          title="Couldn't load Sessions"
-          description="The Server didn't respond. Check that it's running, then retry."
-          onRetry={retry}
-        />
+        <BelowHeader>
+          {!wide && listTop}
+          <LoadError
+            title="Couldn't load Sessions"
+            description="The Server didn't respond. Check that it's running, then retry."
+            onRetry={retry}
+          />
+        </BelowHeader>
       ) : loading ? (
-        <SessionsLoading />
+        <BelowHeader>
+          {!wide && listTop}
+          <SessionsLoading />
+        </BelowHeader>
       ) : (
         <SessionsList
           projects={projects.data ?? []}
@@ -146,6 +231,12 @@ export function SessionsScreen() {
           onProjectSettings={projectSettings}
           onSelect={selectSession}
           onEndReached={loadMore}
+          // On a phone the rows scroll under the header, so what sits above them scrolls too.
+          header={
+            wide ? undefined : (
+              <View className="-mx-gutter-list -mt-5">{listTop}</View>
+            )
+          }
         />
       )}
       {sessions.isFetchNextPageError && (
@@ -157,29 +248,40 @@ export function SessionsScreen() {
           }}
         />
       )}
-      <View
-        className={
-          wide ? 'h-16 justify-center px-3' : 'absolute bottom-6 right-4'
-        }
-      >
-        <Button
-          accessibilityLabel="New Session"
-          onPress={() => navigate({ to: 'new-session' })}
-          className={
-            wide
-              ? 'h-9 sm:h-9 self-start flex-row gap-2 rounded-md px-3'
-              : 'size-14 sm:size-14 rounded-full'
-          }
-        >
-          <Icon
-            as={NotePencilIcon}
-            className="size-5.5 wide:size-4 text-primary-foreground"
+      {wide ? (
+        <View className="h-16 justify-center px-3">
+          <Button
+            accessibilityLabel="New Session"
+            onPress={() => navigate({ to: 'new-session' })}
+            className="h-9 sm:h-9 self-start flex-row gap-2 rounded-md px-3"
+          >
+            <Icon
+              as={NotePencilIcon}
+              className="size-4 text-primary-foreground"
+            />
+            <Text className="text-sm text-primary-foreground">New Session</Text>
+          </Button>
+        </View>
+      ) : newSessionInHeader ? null : (
+        <View className="absolute bottom-6 right-4">
+          <FloatingActionButton
+            accessibilityLabel="New Session"
+            icon={NotePencilIcon}
+            onPress={() => navigate({ to: 'new-session' })}
           />
-          <Text className="hidden wide:flex text-sm text-primary-foreground">
-            New Session
-          </Text>
-        </Button>
-      </View>
+        </View>
+      )}
     </Screen>
+  );
+}
+
+// Keeps content that doesn't scroll out from under a transparent header.
+function BelowHeader({ children }: { children: ReactNode }) {
+  const wide = useWide();
+  if (!hasLiquidGlass || wide) return <>{children}</>;
+  return (
+    <SafeAreaView edges={['top']} style={{ flex: 1, minHeight: 0 }}>
+      {children}
+    </SafeAreaView>
   );
 }

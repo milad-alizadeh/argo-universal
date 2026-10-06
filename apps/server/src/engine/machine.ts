@@ -2,6 +2,10 @@ import { appendFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { type Database, openDatabase } from '@repo/db';
 import { assign, fromPromise, sendTo, setup } from 'xstate';
+import {
+  blobsFolderIn,
+  removeUnusedBlobs,
+} from '../services/blob/blob-service';
 import { writerMachine } from '../services/feed/writer-machine';
 import { seedProject } from '../services/projects/project-service';
 import {
@@ -67,9 +71,13 @@ export const engineMachine = setup({
         throw error;
       }
     }),
-    recoverAfterRestart: fromPromise<void, { database: Database }>(
-      async ({ input }) => recoverAfterRestart(input.database),
-    ),
+    recoverAfterRestart: fromPromise<
+      void,
+      { database: Database; blobsFolder: string }
+    >(async ({ input }) => {
+      recoverAfterRestart(input.database);
+      await removeUnusedBlobs(input);
+    }),
     databaseWriter: writerMachine,
     sessions: registryMachine,
     startHttpServer: fromPromise<HttpServer, HttpServerOptions>(
@@ -149,7 +157,10 @@ export const engineMachine = setup({
         input: ({ context }) => {
           if (!context.database)
             throw new Error('Recovery requires an open database');
-          return { database: context.database };
+          return {
+            database: context.database,
+            blobsFolder: blobsFolderIn(context.home),
+          };
         },
         onDone: { target: 'live' },
         onError: {

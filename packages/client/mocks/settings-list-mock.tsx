@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 import { DesktopShell } from '../src/components/DesktopShell';
+import { PhoneMenuButton } from '../src/components/PhoneMenuButton';
 import { PhoneShell, type ShellSection } from '../src/components/PhoneShell';
 import { SettingsList } from '../src/components/SettingsList';
+import { shellSections } from '../src/components/shell-sections';
 import {
   type NavigationDestination,
   useNavigate,
 } from '../src/navigation/context';
+import { ScreenHeader } from '../src/navigation/screen-header';
 import { useWide } from '../src/navigation/use-wide';
 import { Button } from '../src/primitives/button';
 import { Text } from '../src/primitives/text';
@@ -188,9 +191,11 @@ export function SettingsListMock({
       drawerOpen={drawerOpen}
       onDrawerOpenChange={setDrawerOpen}
       onSectionChange={selectSection}
-      onSearch={() => {}}
-      onFilter={() => {}}
     >
+      <ScreenHeader
+        title={shellSections[section].title}
+        left={<PhoneMenuButton />}
+      />
       {section === 'settings' ? list : detail}
     </PhoneShell>
   );

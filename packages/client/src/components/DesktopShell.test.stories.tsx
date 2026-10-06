@@ -499,7 +499,9 @@ export const ContentUpdatesKeepAnActiveToggleRunning: Story = {
   play: async ({ canvas, userEvent }) => {
     const { page } = await import('vitest/browser');
     await page.viewport(1440, 844);
-    const viewport = canvas.getByTestId('desktop-detail-viewport');
+    // The detail pane animates the frame around its viewport.
+    const frame = canvas.getByTestId('desktop-detail-viewport')
+      .parentElement as HTMLElement;
     await waitFor(() =>
       expect(
         canvas.getByTestId('desktop-list').getBoundingClientRect().width,
@@ -516,7 +518,7 @@ export const ContentUpdatesKeepAnActiveToggleRunning: Story = {
       ),
     );
     const { vi } = await import('vitest');
-    const animations = vi.spyOn(viewport, 'animate');
+    const animations = vi.spyOn(frame, 'animate');
     try {
       await userEvent.click(
         canvas.getByRole('button', { name: 'Open Inspector' }),
@@ -525,20 +527,20 @@ export const ContentUpdatesKeepAnActiveToggleRunning: Story = {
         expect(animations.mock.results.length).toBeGreaterThan(0),
       );
       const activeAnimation = animations.mock.results[0]?.value as Animation;
-      const frameWidth = viewport.getBoundingClientRect().width;
+      const started = animations.mock.calls.length;
       await userEvent.click(
         canvas.getByRole('button', { name: 'Update attention' }),
       );
       await expect(
         canvas.getByLabelText('2 Sessions need attention'),
       ).toBeVisible();
-      await expect(viewport.getBoundingClientRect().width).toBe(frameWidth);
+      await expect(animations.mock.calls.length).toBe(started);
       if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
         await expect(activeAnimation?.playState).not.toBe('idle');
       }
       await waitFor(() =>
         expect(
-          viewport
+          frame
             .getAnimations()
             .some((animation) => animation.playState === 'running'),
         ).toBe(false),

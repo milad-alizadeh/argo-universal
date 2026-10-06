@@ -9,19 +9,24 @@ export {
 export type { ComposerConfigurationProps } from './components/ComposerConfiguration';
 export type { ComposerStatusProps } from './components/ComposerStatus';
 export {
+  DesktopLayout,
+  type DesktopLayoutProps,
+} from './components/DesktopLayout';
+export {
   DesktopShell,
   type DesktopShellProps,
   type InspectorState,
 } from './components/DesktopShell';
+export {
+  HeaderButton,
+  type HeaderButtonProps,
+} from './components/HeaderButton';
 export { Icon, type IconProps } from './components/Icon';
 export {
   IssueIndicator,
   type IssueIndicatorProps,
 } from './components/IssueIndicator';
-export {
-  PhoneListHeader,
-  type PhoneListHeaderProps,
-} from './components/PhoneListHeader';
+export { PhoneLayout, type PhoneLayoutProps } from './components/PhoneLayout';
 export {
   PhoneShell,
   type PhoneShellProps,
@@ -50,6 +55,7 @@ export {
   useConnection,
   useConnectionState,
 } from './connection/context';
+export { hasLiquidGlass } from './lib/native-header';
 export { applyTheme } from './lib/theme';
 export {
   type Navigate,
@@ -58,15 +64,34 @@ export {
   type NavigationProviderProps,
   useNavigate,
 } from './navigation/context';
+export {
+  ScreenHeader,
+  type ScreenHeaderProps,
+  ScreenHeaderProvider,
+  type ScreenHeaderProviderProps,
+  type ScreenHeaderSearch,
+} from './navigation/screen-header';
 export { useWide } from './navigation/use-wide';
+export { ConnectionScreen } from './screens/ConnectionScreen';
 export {
   AccountsScreen,
+  AgentSettingsScreen,
+  type AgentSettingsScreenProps,
+  AgentsSettingsScreen,
+  AppearanceScreen,
   AtlasScreen,
+  DevicesScreen,
   IssuesScreen,
   NewSessionScreen,
+  NotificationsScreen,
   ProjectSettingsScreen,
   type ProjectSettingsScreenProps,
+  ProjectsSettingsScreen,
 } from './screens/PlaceholderScreens';
+export {
+  SectionRootScreen,
+  type SectionRootScreenProps,
+} from './screens/SectionRootScreen';
 export {
   SessionScreen,
   type SessionScreenProps,

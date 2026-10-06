@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { createServer } from 'node:net';
@@ -15,7 +16,15 @@ const electronPath = createRequire(path.join(desktopDirectory, 'package.json'))(
   'electron',
 ) as string;
 
+const ServerPackage = z.object({ version: z.string() });
 const ServerProcess = z.object({ pid: z.int() });
+
+// The version the Server reports in system.info.
+export const serverVersion = ServerPackage.parse(
+  JSON.parse(
+    readFileSync(path.join(repositoryRoot, 'apps/server/package.json'), 'utf8'),
+  ),
+).version;
 
 const findFreePort = () =>
   new Promise<number>((resolve, reject) => {

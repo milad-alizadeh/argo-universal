@@ -27,11 +27,8 @@ const meta = {
     screenPreview: true,
     navigation: recorder,
   },
-  render: () => (
-    <SessionsScreenPreview>
-      <SessionsScreen />
-    </SessionsScreenPreview>
-  ),
+  args: { query: '', archived: false },
+  render: () => <SessionsScreenPreview />,
 } satisfies Meta<typeof SessionsScreen>;
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -44,6 +41,9 @@ async function eachLayout(assertion: () => Promise<void>) {
   const { page } = await import('vitest/browser');
   for (const width of [390, 1440]) {
     await page.viewport(width, 844);
+    // Crossing the wide breakpoint swaps the header controls, so let React settle first.
+    for (let frame = 0; frame < 2; frame++)
+      await new Promise((resolve) => requestAnimationFrame(resolve));
     for (const mode of ['light', 'dark'] as const) {
       applyTheme('default', mode);
       await assertion();
@@ -387,7 +387,9 @@ export const ScrollFade: Story = {
       await waitFor(() =>
         expect(canvas.getByTestId('scroll-fade-bottom')).toBeVisible(),
       );
-      await expect(canvas.getByTestId('scroll-fade-top')).toBeVisible();
+      await waitFor(() =>
+        expect(canvas.queryByTestId('scroll-fade-top')).toBeNull(),
+      );
       scroll.scrollTop = 200;
       await waitFor(() =>
         expect(canvas.getByTestId('scroll-fade-top')).toBeVisible(),
@@ -398,7 +400,7 @@ export const ScrollFade: Story = {
       );
       scroll.scrollTop = 0;
       await waitFor(() =>
-        expect(canvas.getByTestId('scroll-fade-top')).toBeVisible(),
+        expect(canvas.queryByTestId('scroll-fade-top')).toBeNull(),
       );
     }),
 };

@@ -44,7 +44,10 @@ function startEngine({
       processSignals: fromCallback(() => {}),
       startHttpServer: fromPromise(
         async ({ input }: { input: HttpServerOptions }) => {
-          services = createServerServices(input);
+          services = createServerServices({
+            ...input,
+            blobsFolder: path.join(input.home, 'blobs'),
+          });
           return { close: async () => {} };
         },
       ),
@@ -391,7 +394,10 @@ it('seeds the Project from ARGO_PROJECT_PATH at Engine startup', async () => {
         processSignals: fromCallback(() => {}),
         startHttpServer: fromPromise(
           async ({ input }: { input: HttpServerOptions }) => {
-            services = createServerServices(input);
+            services = createServerServices({
+              ...input,
+              blobsFolder: path.join(input.home, 'blobs'),
+            });
             return { close: async () => {} };
           },
         ),

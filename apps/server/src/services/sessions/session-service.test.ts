@@ -141,6 +141,8 @@ function openServer({ applyConfigOptions = true } = {}) {
   const sessions = root.system.get('sessions');
   const services = createServerServices({
     database,
+    // These tests never upload, so no blob reaches the folder.
+    blobsFolder: '/no-uploads',
     sessions,
     version: '1',
     startedAt: new Date().toISOString(),

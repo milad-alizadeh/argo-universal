@@ -6,6 +6,7 @@ import type {
 } from 'node:http';
 import { join } from 'node:path';
 import { pipeline } from 'node:stream/promises';
+import { maxBlobUploadBytes } from '@repo/contracts';
 import type { AnyTRPCRouter, inferRouterContext } from '@trpc/server';
 import { createHTTPHandler } from '@trpc/server/adapters/standalone';
 import { z } from 'zod';
@@ -21,6 +22,8 @@ export interface RequestListenerOptions<Router extends AnyTRPCRouter> {
 // A blob id is the sha256 of its content, so it cannot name a path outside the blobs folder.
 const BlobId = z.string().regex(/^[0-9a-f]{64}$/);
 const blobUrlPattern = /^\/blobs\/([^/?]*)(\?.*)?$/;
+// The largest upload plus room for its multipart headers; tRPC stops reading a longer body.
+const maxBodySize = maxBlobUploadBytes + 64 * 1024;
 
 const openBlob = (path: string) =>
   open(path).catch((error: NodeJS.ErrnoException) => {
@@ -83,6 +86,7 @@ export function createRequestListener<Router extends AnyTRPCRouter>(
     router: options.router,
     createContext: options.createContext,
     basePath: '/trpc/',
+    maxBodySize,
   });
 
   const handleBlob = (

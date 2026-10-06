@@ -19,6 +19,40 @@ export function AccountsScreen() {
   );
 }
 
+export function ProjectsSettingsScreen() {
+  return (
+    <Placeholder title="Projects" description="Projects will appear here." />
+  );
+}
+
+export function AgentsSettingsScreen() {
+  return <Placeholder title="Agents" description="Agents will appear here." />;
+}
+
+export function DevicesScreen() {
+  return (
+    <Placeholder title="Devices" description="Devices will appear here." />
+  );
+}
+
+export function AppearanceScreen() {
+  return (
+    <Placeholder
+      title="Appearance"
+      description="Appearance will appear here."
+    />
+  );
+}
+
+export function NotificationsScreen() {
+  return (
+    <Placeholder
+      title="Notifications"
+      description="Notifications will appear here."
+    />
+  );
+}
+
 export interface ProjectSettingsScreenProps {
   name: string;
 }
@@ -32,6 +66,19 @@ export function ProjectSettingsScreen({ name }: ProjectSettingsScreenProps) {
   );
 }
 
+export interface AgentSettingsScreenProps {
+  agent: string;
+}
+
+export function AgentSettingsScreen({ agent }: AgentSettingsScreenProps) {
+  return (
+    <Placeholder
+      title="Agent"
+      description={`Settings for ${agent} will appear here.`}
+    />
+  );
+}
+
 function Placeholder({
   title,
   description,
@@ -40,7 +87,7 @@ function Placeholder({
   description: string;
 }) {
   return (
-    <View className="flex-1 items-center justify-center gap-2 bg-background p-6">
+    <View className="flex-1 items-center justify-center gap-2 bg-background px-gutter py-6">
       <Text role="heading" aria-level={1} variant="h3">
         {title}
       </Text>

@@ -15,11 +15,11 @@
     "postinstall": "sherif",
     "quality:dead-code": "knip --no-progress --max-issues 0",
     "quality:duplication": "jscpd --config .jscpd.json apps packages tooling tools e2e mocks",
-    "quality": "sherif && biome check . && turbo run check-types && vitest run",
+    "quality": "sherif && biome check . && turbo run check-types test --continue=dependencies-successful",
     "sherif": "sherif",
     "test": "vitest run",
-    "test:e2e": "pnpm --filter @repo/e2e test:web",
-    "test:e2e:electron": "pnpm --filter @repo/e2e test:electron"
+    "test:e2e": "turbo run test:web --filter=@repo/e2e",
+    "test:e2e:electron": "turbo run test:electron --filter=@repo/e2e"
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:",

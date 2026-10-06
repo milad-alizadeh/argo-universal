@@ -1,5 +1,6 @@
-import { type ReactNode, useState } from 'react';
+import { createContext, type ReactNode, useContext, useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCSSVariable, useResolveClassNames } from 'uniwind';
 import { cn } from '#lib/utils';
 import { Badge } from '#primitives/badge';
@@ -7,20 +8,26 @@ import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
 import { Icon } from './Icon';
 import { PhoneDrawer } from './PhoneDrawer';
-import { PhoneListHeader } from './PhoneListHeader';
 import { PhoneShellCard } from './PhoneShellCard';
 import { type ShellSection, shellSections } from './shell-sections';
 
 export type { ShellSection } from './shell-sections';
+
+const OpenDrawerContext = createContext<() => void>(() => {});
+
+// Opens the phone shell's drawer from a section's header.
+export function useOpenDrawer(): () => void {
+  return useContext(OpenDrawerContext);
+}
 
 export interface PhoneShellProps {
   selectedSection: ShellSection;
   attentionCount: number;
   drawerOpen: boolean;
   onDrawerOpenChange: (open: boolean) => void;
+  onDrawerClosed?: () => void;
   onSectionChange: (section: ShellSection) => void;
-  onSearch: () => void;
-  onFilter: () => void;
+  swipeEnabled?: boolean;
   children: ReactNode;
 }
 
@@ -29,9 +36,9 @@ export function PhoneShell({
   attentionCount,
   drawerOpen,
   onDrawerOpenChange,
+  onDrawerClosed,
   onSectionChange,
-  onSearch,
-  onFilter,
+  swipeEnabled = true,
   children,
 }: PhoneShellProps) {
   const drawerWidth = Number.parseFloat(
@@ -50,6 +57,7 @@ export function PhoneShell({
     Math.max(0, layout.width - visibleScreenWidth),
   );
   const chrome = useResolveClassNames('bg-shell-chrome');
+  const { top } = useSafeAreaInsets();
 
   function selectSection(section: ShellSection) {
     onSectionChange(section);
@@ -73,6 +81,7 @@ export function PhoneShell({
       >
         <Icon
           as={icon}
+          weight={selectedSection === section ? 'fill' : 'regular'}
           className={cn(
             'size-phone-shell-icon',
             selectedSection !== section && 'text-muted-foreground',
@@ -110,15 +119,18 @@ export function PhoneShell({
         open={drawerOpen}
         onOpen={() => onDrawerOpenChange(true)}
         onClose={() => onDrawerOpenChange(false)}
+        onClosed={onDrawerClosed}
         width={offset}
         surfaceStyle={chrome}
         layout={layout}
+        swipeEnabled={swipeEnabled}
         renderDrawerContent={() => (
           <View
             className="flex-1 py-3"
             aria-hidden={!drawerOpen}
             accessibilityElementsHidden={!drawerOpen}
           >
+            <View style={{ height: top }} />
             <View className="h-14 justify-center px-6">
               <Text
                 role="heading"
@@ -137,14 +149,9 @@ export function PhoneShell({
         )}
       >
         <PhoneShellCard drawerOpen={drawerOpen}>
-          <PhoneListHeader
-            title={shellSections[selectedSection].title}
-            attentionCount={attentionCount}
-            onMenu={() => onDrawerOpenChange(true)}
-            onSearch={onSearch}
-            onFilter={onFilter}
-          />
-          {children}
+          <OpenDrawerContext.Provider value={() => onDrawerOpenChange(true)}>
+            {children}
+          </OpenDrawerContext.Provider>
         </PhoneShellCard>
       </PhoneDrawer>
     </View>

@@ -5,6 +5,10 @@
     0 1px 2px #0000000f, 0 0 32px -8px #0000001a, 0 12px 24px -12px #0000000f;
   --shadow-sheet: 0 -8px 32px -8px #00000014;
   --spacing-session-name: 34px;
+  /* A phone screen's side padding, the same on every screen and platform. */
+  --spacing-gutter: 20px;
+  /* A list's inset, as its rows pad their content 10px more for the highlight. */
+  --spacing-gutter-list: 10px;
   --breakpoint-wide: 720px;
   --font-sans:
     "SF Pro Text", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;

@@ -43,7 +43,10 @@ const createPromiseMock = <TOutput, TInput>(
   );
 
 let openDatabaseCalls: PendingCall<{ home: string }, Database>[];
-let recoveryCalls: PendingCall<{ database: Database }, void>[];
+let recoveryCalls: PendingCall<
+  { database: Database; blobsFolder: string },
+  void
+>[];
 let startHttpServerCalls: PendingCall<HttpServerOptions, HttpServer>[];
 let closeHttpServerCalls: PendingCall<{ server: HttpServer | null }, void>[];
 let shutdownCommands: string[];
@@ -272,7 +275,9 @@ const states: Record<string, (snapshot: EngineSnapshot) => void> = {
   recovering: (snapshot) => {
     expectModelState(snapshot);
     expect(recoveryCalls).toEqual([
-      expect.objectContaining({ input: { database: mockDatabase } }),
+      expect.objectContaining({
+        input: { database: mockDatabase, blobsFolder: '/unused/blobs' },
+      }),
     ]);
     expect(startHttpServerCalls).toEqual([]);
     expect(messages).toEqual([]);

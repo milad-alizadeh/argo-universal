@@ -74,7 +74,7 @@ export function SettingsList({
       <Pressable
         role="button"
         className={cn(
-          'h-11 shrink-0 flex-row items-center gap-2 rounded-md pl-2 pr-3 wide:h-8 wide:pl-2.5 wide:pr-2 active:bg-sidebar-accent web:hover:bg-sidebar-accent web:focus-visible:bg-sidebar-accent',
+          'h-11 shrink-0 flex-row items-center gap-2 rounded-md pl-2.5 pr-3 wide:h-8 wide:pl-2.5 wide:pr-2 active:bg-sidebar-accent web:hover:bg-sidebar-accent web:focus-visible:bg-sidebar-accent',
           selected && 'bg-sidebar-accent',
         )}
         accessibilityLabel={label}
@@ -118,7 +118,7 @@ export function SettingsList({
   return (
     <ScrollView
       className="flex-1 web:select-none web:[&_*]:select-none!"
-      contentContainerClassName="px-2 pt-2 pb-4 wide:pt-0 wide:pb-3"
+      contentContainerClassName="px-gutter-list pt-2 pb-4 wide:px-2 wide:pt-0 wide:pb-3"
     >
       <Group title={serverName ? `Server · ${serverName}` : 'Server'}>
         {row(
@@ -174,7 +174,7 @@ export function SettingsList({
 function Group({ title, children }: { title: string; children: ReactNode }) {
   return (
     <View className="wide:gap-0.5">
-      <View className="h-9 shrink-0 justify-center pl-2 wide:h-8 wide:pl-2.5 wide:pr-1">
+      <View className="h-9 shrink-0 justify-center pl-2.5 wide:h-8 wide:pr-1">
         <Text
           role="heading"
           aria-level={2}

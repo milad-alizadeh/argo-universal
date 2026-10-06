@@ -1,0 +1,25 @@
+import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { View } from 'react-native';
+import { sessionListMocks } from '../../mocks/session-list-mock';
+import { SectionRootScreen } from './SectionRootScreen';
+
+const meta = {
+  component: SectionRootScreen,
+  argTypes: {
+    section: {
+      control: 'select',
+      options: ['sessions', 'issues', 'atlas', 'settings'],
+    },
+  },
+  args: { section: 'sessions' },
+  render: (args) => (
+    <View className="h-[796px] w-full">
+      <SectionRootScreen {...args} />
+    </View>
+  ),
+  parameters: { trpc: sessionListMocks },
+} satisfies Meta<typeof SectionRootScreen>;
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Section: Story = { args: { section: 'settings' } };

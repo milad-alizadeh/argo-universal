@@ -25,6 +25,14 @@
         "react-native-svg"
       ]
     },
+    "e2e": {
+      // Listed so Turborepo hashes the Server, App, and Desktop into the e2e tasks; the specs reach them over HTTP and Electron, not imports.
+      "ignoreDependencies": [
+        "@repo/desktop",
+        "@repo/server",
+        "@repo/universal-app"
+      ]
+    },
     "packages/client": {
       // Vendored react-native-reusables components keep the kit's full export surface; screens pick from it.
       "ignore": ["src/primitives/**"]
