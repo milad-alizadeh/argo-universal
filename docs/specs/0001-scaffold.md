@@ -369,6 +369,7 @@ The Session's current Plan is not stored. A query reads it from the newest `plan
 - In production, a custom `app://` protocol serves the Expo web export from `apps/universal-app/dist`. In dev, the window loads the Expo web dev URL.
 - On launch, make sure a Supervisor runs: reuse the one whose PID in `~/.argo/server.json` is alive, of any version, or start `apps/server` detached. On quit, stop it only if this app started it. Spec 0003 amends this: when that Supervisor has a running Turn, the app asks whether to keep Sessions going, and the main process gets a tRPC client to read the counts. Electron never calls `/health`; spec 0002 section 10 has the machine.
 - Preload exposes `window.argo = {serverUrl, window: {minimize, maximize, close}}` and nothing else.
+- Two environment variables serve tests: `ARGO_USER_DATA_DIRECTORY` replaces Electron's `userData` folder before the single-instance lock, so parallel launches each get the lock; `ARGO_BACKGROUND=1` opens the window hidden and keeps the app out of the Dock, so a run never takes focus.
 
 ### Web Storybook
 
