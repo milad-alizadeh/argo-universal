@@ -50,10 +50,8 @@ export function recordedPrompt(name: string) {
     path.join(import.meta.dirname, 'recordings'),
     name,
   );
-  const payload = InputPayload.safeParse(
-    readRecording(file, 'claude-cli').payload,
-  );
-  const frame = payload.data?.input
+  const payload = InputPayload.parse(readRecording(file, 'claude-cli').payload);
+  const frame = payload.input
     .map((input) => UserFrame.safeParse(input).data)
     .find((user) => user !== undefined);
   if (!frame) return undefined;

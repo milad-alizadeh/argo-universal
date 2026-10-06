@@ -25,7 +25,7 @@ export function recordedImage(mimeType: string, base64: string): PromptBlock {
   };
 }
 
-// A `data:` URL image, the way Codex recordings send one.
+// A `data:` URL image, as some Agents record one.
 export function recordedDataUrlImage(url: string): PromptBlock {
   const match = /^data:([^;]+);base64,(.*)$/.exec(url);
   if (!match?.[1] || match[2] === undefined)
