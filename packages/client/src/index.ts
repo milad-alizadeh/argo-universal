@@ -18,6 +18,8 @@ export {
   type DesktopShellProps,
   type InspectorState,
 } from './components/DesktopShell';
+export { DiffView, type DiffViewProps } from './components/DiffView';
+export { EditRow, type EditRowProps } from './components/EditRow';
 export {
   HeaderButton,
   type HeaderButtonProps,
@@ -62,6 +64,7 @@ export {
   useConnectionState,
 } from './connection/context';
 export type * from './feed/feed-view';
+export { type FileDiff, toFileDiffs } from './feed/file-diff';
 export { toFeedView } from './feed/to-feed-view';
 export { hasLiquidGlass } from './lib/native-header';
 export { applyTheme } from './lib/theme';

@@ -25,6 +25,8 @@ const recordedItemTypes: Record<string, string[]> = {
   'agent-1/markdown-answer': ['row', 'thought', 'row'],
   'agent-2/markdown-answer': ['row', 'thought', 'row'],
   'agent-2/command-outcomes': ['row', 'row', 'group', 'row'],
+  'agent-2/edit-states': ['row', 'row', 'group', 'row'],
+  'agent-2/edit-failure': ['row', 'row', 'tool_call', 'row'],
 };
 
 function toolCalls(rows: SessionUpdate[]): ToolCallUpdate[] {
