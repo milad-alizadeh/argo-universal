@@ -3,7 +3,6 @@ import {
   ArrowsInLineVerticalIcon,
   CaretUpIcon,
   CheckIcon,
-  CircleIcon,
   GaugeIcon,
   ListChecksIcon,
   RobotIcon,
@@ -15,6 +14,7 @@ import { withUniwind } from 'uniwind';
 import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
+import { ComposerGlyph } from './ComposerGlyph';
 import { ComposerPopover } from './ComposerPopover';
 import { Icon } from './Icon';
 
@@ -70,7 +70,12 @@ function ContextRing({ percent }: { percent: number }) {
   const circumference = 2 * Math.PI * 5.5;
   return (
     <View className="size-3.5 shrink-0">
-      <Svg width={14} height={14} viewBox="0 0 14 14">
+      <Svg
+        width={14}
+        height={14}
+        style={{ width: 14, height: 14 }}
+        viewBox="0 0 14 14"
+      >
         <ThemedCircle
           cx={7}
           cy={7}
@@ -117,7 +122,7 @@ export function ComposerPlan({
           variant="ghost"
           disabled={disabled}
           accessibilityLabel="Plan"
-          className="h-7 sm:h-7 px-0 has-[>svg]:px-0 gap-2 wide:w-full justify-start"
+          className="h-7 sm:h-7 px-0 has-[>svg]:px-0 gap-1 wide:gap-2 wide:w-full justify-start"
         >
           <Icon
             as={ListChecksIcon}
@@ -142,7 +147,7 @@ export function ComposerPlan({
           </Text>
           <Text
             selectable={false}
-            className="select-none text-xs text-muted-foreground font-normal"
+            className="select-none pl-0.5 wide:pl-0 text-xs text-muted-foreground font-normal"
           >
             {done}/{entries.length}
           </Text>
@@ -163,10 +168,7 @@ export function ComposerPlan({
         <View>
           <View className="px-4 py-3 gap-1.5">
             <View className="flex-row items-center gap-2">
-              <Icon
-                as={ListChecksIcon}
-                className="size-3.5 text-muted-foreground"
-              />
+              <Icon as={ListChecksIcon} className="size-4 text-foreground" />
               <Text
                 selectable={false}
                 className="select-none text-sm leading-5 font-medium"
@@ -195,19 +197,27 @@ export function ComposerPlan({
                 key={entry.content}
                 className="flex-row items-start px-4 py-2 gap-2.5"
               >
-                {entry.status === 'in_progress' ? (
-                  <ActivityIndicator
-                    size={14}
-                    colorClassName="accent-muted-foreground"
-                    accessibilityLabel={`${entry.content} in progress`}
-                    className="size-3.5 mt-0.5"
-                  />
-                ) : (
-                  <Icon
-                    as={entry.status === 'completed' ? CheckIcon : CircleIcon}
-                    className="size-3.5 mt-0.5 text-muted-foreground"
-                  />
-                )}
+                <View className="w-3.5 h-5 shrink-0 items-center justify-center">
+                  {entry.status === 'in_progress' ? (
+                    <ActivityIndicator
+                      size={14}
+                      colorClassName="accent-muted-foreground"
+                      accessibilityLabel={`${entry.content} in progress`}
+                      className="size-3.5"
+                    />
+                  ) : entry.status === 'completed' ? (
+                    <Icon
+                      as={CheckIcon}
+                      className="size-3.5 text-muted-foreground"
+                    />
+                  ) : (
+                    <ComposerGlyph
+                      name="pending"
+                      size={14}
+                      className="text-ring"
+                    />
+                  )}
+                </View>
                 <Text
                   selectable={false}
                   className={cn(
@@ -281,7 +291,7 @@ export function ComposerStatusControls({
               {status.usage?.limits.map((limit) => (
                 <View
                   key={limit.label}
-                  className="p-4 gap-2 border-t border-border"
+                  className="px-4 py-3 gap-1.5 border-t border-border"
                 >
                   <View className="flex-row justify-between">
                     <Text
@@ -292,7 +302,7 @@ export function ComposerStatusControls({
                     </Text>
                     <Text
                       selectable={false}
-                      className="select-none text-sm leading-5 font-medium"
+                      className="select-none text-sm leading-5 font-normal"
                     >
                       {limit.usedPercent}%
                     </Text>
@@ -348,7 +358,7 @@ export function ComposerStatusControls({
         >
           {(close) => (
             <View className="p-4 gap-3.5">
-              <View className="px-0 gap-1">
+              <View className="px-0 gap-0.5">
                 <Text
                   selectable={false}
                   className="select-none text-sm leading-5 font-medium"
@@ -367,7 +377,7 @@ export function ComposerStatusControls({
                 <View className="flex-row items-baseline gap-1">
                   <Text
                     selectable={false}
-                    className="select-none text-xl leading-6 font-normal"
+                    className="select-none text-xl leading-6 font-normal tracking-[-0.01em]"
                   >
                     {compactNumber(context.used)}
                   </Text>
@@ -441,10 +451,7 @@ export function ComposerStatusControls({
                     close();
                   }}
                 >
-                  <Icon
-                    as={ArrowsInLineVerticalIcon}
-                    className="size-4 wide:size-3.5"
-                  />
+                  <Icon as={ArrowsInLineVerticalIcon} className="size-3.5" />
                   <Text
                     selectable={false}
                     className="select-none text-xs leading-4 font-medium"

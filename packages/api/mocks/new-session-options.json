@@ -59,7 +59,7 @@
             "description": "Runs everything without asking",
             "_meta": {
               "argo": {
-                "icon": "ShieldOff",
+                "icon": "WarningTriangle",
                 "tone": "dangerous"
               }
             }
@@ -215,7 +215,7 @@
               "description": "Runs everything without asking",
               "_meta": {
                 "argo": {
-                  "icon": "ShieldOff",
+                  "icon": "WarningTriangle",
                   "tone": "dangerous"
                 }
               }
@@ -359,7 +359,7 @@
               "description": "Runs everything without asking",
               "_meta": {
                 "argo": {
-                  "icon": "ShieldOff",
+                  "icon": "WarningTriangle",
                   "tone": "dangerous"
                 }
               }
@@ -485,7 +485,7 @@
               "description": "Runs everything without asking",
               "_meta": {
                 "argo": {
-                  "icon": "ShieldOff",
+                  "icon": "WarningTriangle",
                   "tone": "dangerous"
                 }
               }
@@ -634,7 +634,7 @@
             "name": "Full access",
             "_meta": {
               "argo": {
-                "icon": "ShieldOff",
+                "icon": "WarningTriangle",
                 "tone": "dangerous"
               }
             },
@@ -779,7 +779,7 @@
               "name": "Full access",
               "_meta": {
                 "argo": {
-                  "icon": "ShieldOff",
+                  "icon": "WarningTriangle",
                   "tone": "dangerous"
                 }
               },
@@ -923,7 +923,7 @@
               "name": "Full access",
               "_meta": {
                 "argo": {
-                  "icon": "ShieldOff",
+                  "icon": "WarningTriangle",
                   "tone": "dangerous"
                 }
               },
@@ -1062,7 +1062,7 @@
               "name": "Full access",
               "_meta": {
                 "argo": {
-                  "icon": "ShieldOff",
+                  "icon": "WarningTriangle",
                   "tone": "dangerous"
                 }
               },

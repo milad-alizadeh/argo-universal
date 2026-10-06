@@ -13,11 +13,12 @@ import {
   GitBranchIcon,
   HourglassSimpleIcon,
   LightningIcon,
+  MagnifyingGlassIcon,
   PencilIcon,
   ShieldCheckIcon,
-  ShieldSlashIcon,
   ShieldWarningIcon,
   SparkleIcon,
+  WarningIcon,
 } from 'phosphor-react-native';
 import { useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
@@ -81,7 +82,7 @@ function configurationIcon(name?: string) {
       Pencil: PencilIcon,
       ClipboardList: ClipboardTextIcon,
       Sparkles: SparkleIcon,
-      ShieldOff: ShieldSlashIcon,
+      WarningTriangle: WarningIcon,
     }[name ?? ''] ?? ShieldWarningIcon
   );
 }
@@ -214,7 +215,7 @@ function AgentChoices({
         }}
         aria-pressed={agent.agent === configuration.agent}
         className={cn(
-          'min-h-11 wide:min-h-8 h-auto sm:h-auto py-1.5 px-2 justify-start gap-2.5 wide:gap-2 web:focus-visible:ring-0 web:focus-visible:bg-accent',
+          'min-h-11 wide:min-h-8 h-auto sm:h-auto py-1.5 px-2 has-[>svg]:px-2 rounded-sm justify-start gap-2.5 wide:gap-2 web:focus-visible:ring-0 web:focus-visible:bg-accent',
           configuration.onAgentChange &&
             agent.agent === configuration.agent &&
             'bg-accent',
@@ -278,7 +279,11 @@ function AgentChoices({
         <LegendList
           testID="composer-agents-scroll"
           style={{ position: 'absolute', inset: 0 }}
-          contentContainerStyle={{ padding: 4 }}
+          contentContainerStyle={{
+            paddingHorizontal: 4,
+            paddingTop: 2,
+            paddingBottom: 4,
+          }}
           data={agents}
           keyExtractor={(agent) => agent.agent}
           renderItem={({ item }) => renderAgent(item)}
@@ -313,7 +318,7 @@ function ModelChoices({
   const model = selection(configuration, 'model');
   if (!model) return null;
   return (
-    <View className="p-1 gap-0.5">
+    <View className="p-1 wide:pt-0.5 gap-0.5">
       {choices(model).map((choice) => (
         <Choice
           key={choice.value}
@@ -387,29 +392,44 @@ function EffortControl({
               configuration.onConfigChange(effort.configId, choice.value);
           }}
         />
-        <View className="flex-row justify-between">
-          {effortChoices.map((choice) => (
-            <Button
+        <View className="flex-row justify-between px-1.5">
+          {effortChoices.map((choice, index) => (
+            <View
               key={choice.value}
-              variant="ghost"
-              accessibilityLabel={`Set effort to ${choice.name}`}
-              aria-pressed={choice.value === effort.currentValue}
-              onPress={() =>
-                configuration.onConfigChange(effort.configId, choice.value)
-              }
-              className="h-4 sm:h-4 px-0 py-0 active:bg-transparent hover:bg-transparent dark:hover:bg-transparent"
+              className={cn(
+                'w-1 overflow-visible',
+                index === 0
+                  ? 'items-start'
+                  : index === effortChoices.length - 1
+                    ? 'items-end'
+                    : 'items-center',
+              )}
             >
-              <Text
-                selectable={false}
-                numberOfLines={1}
+              <Button
+                variant="ghost"
+                accessibilityLabel={`Set effort to ${choice.name}`}
+                aria-pressed={choice.value === effort.currentValue}
+                onPress={() =>
+                  configuration.onConfigChange(effort.configId, choice.value)
+                }
                 className={cn(
-                  'select-none text-xs leading-4 font-normal text-muted-foreground',
-                  choice.value === effort.currentValue && 'text-foreground',
+                  'h-4 sm:h-4 px-0 py-0 active:bg-transparent hover:bg-transparent dark:hover:bg-transparent',
+                  index === 0 && '-ml-1.5',
+                  index === effortChoices.length - 1 && '-mr-1.5',
                 )}
               >
-                {choice.name}
-              </Text>
-            </Button>
+                <Text
+                  selectable={false}
+                  numberOfLines={1}
+                  className={cn(
+                    'select-none text-xs leading-4 font-normal text-muted-foreground',
+                    choice.value === effort.currentValue && 'text-foreground',
+                  )}
+                >
+                  {choice.name}
+                </Text>
+              </Button>
+            </View>
           ))}
         </View>
       </View>
@@ -478,7 +498,7 @@ function AgentModelMenu({
   if (!wide && page !== 'settings')
     return (
       <View>
-        <View className="h-11 px-1 flex-row items-center border-y border-border">
+        <View className="h-11 px-1 flex-row items-center border-b border-border">
           <Button
             variant="ghost"
             size="icon"
@@ -486,7 +506,7 @@ function AgentModelMenu({
             className="size-11 sm:size-11"
             onPress={() => setPage('settings')}
           >
-            <Icon as={CaretLeftIcon} className="size-4 text-muted-foreground" />
+            <Icon as={CaretLeftIcon} className="size-4.5 text-foreground" />
           </Button>
           <Text
             selectable={false}
@@ -708,7 +728,7 @@ export function ComposerModeControl({
           <Icon
             as={configurationIcon(current?._meta?.argo?.icon)}
             className={cn(
-              'size-3.5 text-foreground',
+              'size-4 text-foreground',
               current?._meta?.argo?.tone === 'dangerous' && 'text-destructive',
             )}
           />
@@ -745,7 +765,7 @@ export function ComposerModeControl({
                 <Icon
                   as={configurationIcon(choice._meta?.argo?.icon)}
                   className={cn(
-                    'size-3.5 text-muted-foreground',
+                    'size-4 text-foreground',
                     choice._meta?.argo?.tone === 'dangerous' &&
                       'text-destructive',
                   )}
@@ -771,10 +791,11 @@ export function ComposerCheckoutControl({
   disabled: boolean;
 }) {
   const [search, setSearch] = useState('');
+  const mainCheckout = !!checkout.onBranchChange && !checkout.newWorktree;
   return (
     <View className="flex-row items-center gap-1">
       {checkout.onNewWorktreeChange && (
-        <View className="flex-row gap-1 items-center">
+        <View className="h-7 px-1.5 flex-row gap-1 items-center">
           <Switch
             size="small"
             accessibilityLabel="New worktree"
@@ -787,7 +808,12 @@ export function ComposerCheckoutControl({
             onPress={() =>
               checkout.onNewWorktreeChange?.(!checkout.newWorktree)
             }
-            className="select-none text-xs font-normal text-foreground"
+            className={cn(
+              'select-none text-xs font-normal',
+              checkout.newWorktree
+                ? 'text-foreground'
+                : 'text-muted-foreground',
+            )}
           >
             New worktree
           </Label>
@@ -804,24 +830,38 @@ export function ComposerCheckoutControl({
             accessibilityLabel={
               checkout.onBranchChange ? 'Base branch' : 'Checkout'
             }
-            className="h-7 sm:h-7 px-1.5 has-[>svg]:px-1.5 gap-1"
+            className={cn(
+              'h-7 sm:h-7 px-1.5 has-[>svg]:px-1.5 gap-1',
+              mainCheckout && !disabled && 'opacity-100',
+            )}
           >
             <Icon
               as={GitBranchIcon}
               className="size-3.5 text-muted-foreground"
             />
+            {checkout.onBranchChange && (
+              <Text
+                selectable={false}
+                className="select-none text-xs font-normal text-muted-foreground"
+              >
+                {mainCheckout ? 'on' : 'from'}
+              </Text>
+            )}
             <Text
               selectable={false}
-              className="select-none text-xs font-mono font-normal"
+              className={cn(
+                'select-none text-xs font-mono font-normal',
+                mainCheckout && 'text-muted-foreground',
+              )}
             >
               {checkout.newWorktree || !checkout.onBranchChange
                 ? checkout.branch.toLowerCase()
                 : 'main'}
             </Text>
-            {checkout.onBranchChange && (
+            {checkout.onBranchChange && checkout.newWorktree && (
               <Icon
                 as={CaretDownIcon}
-                className="size-2.5 text-muted-foreground"
+                className="size-3 text-muted-foreground"
               />
             )}
           </Button>
@@ -829,15 +869,21 @@ export function ComposerCheckoutControl({
       >
         {(close) =>
           checkout.onBranchChange ? (
-            <View className="pb-2 wide:pb-1">
-              <Input
-                accessibilityLabel="Search branches"
-                placeholder="Search branches…"
-                value={search}
-                onChangeText={setSearch}
-                className="h-10 sm:h-10 border-0 rounded-none shadow-none px-3 web:focus-visible:ring-0 web:focus-visible:border-transparent"
-              />
-              <View className="wide:px-1">
+            <View className="pb-2 wide:pb-0">
+              <View className="h-10 flex-row items-center px-3 gap-2 border-b border-border">
+                <Icon
+                  as={MagnifyingGlassIcon}
+                  className="size-3.5 text-muted-foreground"
+                />
+                <Input
+                  accessibilityLabel="Search branches"
+                  placeholder="Find a branch…"
+                  value={search}
+                  onChangeText={setSearch}
+                  className="flex-1 min-w-0 h-10 sm:h-10 border-0 rounded-none shadow-none px-0 web:focus-visible:ring-0 web:focus-visible:border-transparent"
+                />
+              </View>
+              <View className="wide:p-1 wide:gap-0.5">
                 {[...checkout.branches]
                   .sort(
                     (left, right) =>
@@ -856,7 +902,10 @@ export function ComposerCheckoutControl({
                       accessibilityState={{
                         selected: branch === checkout.branch,
                       }}
-                      className="min-h-15 wide:min-h-8 h-auto sm:h-auto px-4 wide:px-2 gap-3 wide:gap-2 justify-start rounded-none wide:rounded-sm"
+                      className={cn(
+                        'min-h-15 wide:min-h-8 h-auto sm:h-auto px-4 has-[>svg]:px-4 wide:px-2 wide:has-[>svg]:px-2 gap-3 wide:gap-2 justify-start rounded-none wide:rounded-sm',
+                        branch === checkout.branch && 'bg-accent',
+                      )}
                       onPress={() => {
                         checkout.onBranchChange?.(branch);
                         setSearch('');

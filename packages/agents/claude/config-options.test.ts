@@ -128,7 +128,7 @@ it('marks Plan and dangerous modes and keeps per-model support flags', () => {
           }),
           expect.objectContaining({
             value: 'bypassPermissions',
-            _meta: { argo: { icon: 'ShieldOff', tone: 'dangerous' } },
+            _meta: { argo: { icon: 'WarningTriangle', tone: 'dangerous' } },
           }),
         ]),
       }),

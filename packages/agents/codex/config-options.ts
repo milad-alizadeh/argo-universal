@@ -15,7 +15,7 @@ const modeDescriptions = {
 const modeMetadata = {
   default: { icon: 'ShieldWarning', tone: 'safe' },
   plan: { icon: 'ClipboardList', tone: 'planning' },
-  fullAccess: { icon: 'ShieldOff', tone: 'dangerous' },
+  fullAccess: { icon: 'WarningTriangle', tone: 'dangerous' },
 } as const;
 
 export interface ConfigValues {

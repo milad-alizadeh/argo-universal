@@ -1,14 +1,9 @@
 import {
   ArrowUpIcon,
-  CameraIcon,
   CodeIcon,
   FolderIcon,
-  ImageIcon,
-  PaperclipIcon,
   PlusIcon,
   TargetIcon,
-  WarningCircleIcon,
-  XIcon,
 } from 'phosphor-react-native';
 import { useState } from 'react';
 import {
@@ -30,6 +25,7 @@ import {
   type ComposerConfigurationProps,
   ComposerModeControl,
 } from './ComposerConfiguration';
+import { ComposerGlyph } from './ComposerGlyph';
 import { ComposerPopover } from './ComposerPopover';
 import {
   ComposerPlan,
@@ -101,7 +97,7 @@ export function Composer({
   return (
     <View className="w-full max-w-composer items-center">
       {status?.plan && status.plan.length > 0 && (
-        <View className="self-stretch mx-3 -mb-3 pb-3 rounded-t-lg border border-b-0 border-border bg-sidebar/80 web:backdrop-blur-composer web:backdrop-saturate-110">
+        <View className="self-stretch mx-3 -mb-3 pb-3 rounded-t-lg border border-b-0 border-border bg-sidebar/80 shadow-sm web:backdrop-blur-composer web:backdrop-saturate-110">
           <View className="h-9 wide:h-8 flex-row items-center px-2 wide:px-3 gap-2">
             <View className="wide:flex-1 min-w-0 shrink-0">
               <ComposerPlan entries={status.plan} disabled={inactive} />
@@ -164,7 +160,7 @@ export function Composer({
                     }
                   >
                     <View className="size-4.5 items-center justify-center rounded-sm bg-background">
-                      <Icon as={XIcon} className="size-2.5" />
+                      <ComposerGlyph name="remove" size={10} />
                     </View>
                   </Button>
                 </View>
@@ -173,11 +169,14 @@ export function Composer({
           </ScrollView>
         )}
         {oversized.length > 0 && (
-          <View role="alert" className="mx-4 mt-2 flex-row items-start gap-2">
-            <Icon
-              as={WarningCircleIcon}
-              className="size-3 text-destructive mt-0.5"
-            />
+          <View role="alert" className="mx-4 mt-2 flex-row items-center gap-2">
+            <View className="size-3 mt-0.5">
+              <ComposerGlyph
+                name="warning"
+                size={12}
+                className="text-destructive"
+              />
+            </View>
             <Text
               className="min-w-0 flex-1 text-xs leading-4 text-destructive"
               numberOfLines={1}
@@ -250,21 +249,21 @@ export function Composer({
                           ? [
                               {
                                 label: 'Camera',
-                                icon: CameraIcon,
+                                glyph: 'camera' as const,
                                 onPress: onAttachCamera,
                               },
                             ]
                           : []),
                         {
                           label: 'Photos',
-                          icon: ImageIcon,
+                          glyph: 'photos' as const,
                           onPress: onAttachImages,
                         },
                         ...(onAttachFiles
                           ? [
                               {
                                 label: 'Files',
-                                icon: PaperclipIcon,
+                                glyph: 'files' as const,
                                 onPress: onAttachFiles,
                               },
                             ]
@@ -282,11 +281,15 @@ export function Composer({
                         item.onPress?.();
                       }}
                     >
-                      <View className="w-5 h-4.5 items-center justify-center">
-                        <Icon
-                          as={item.icon}
-                          className="size-4.5 text-foreground"
-                        />
+                      <View className="size-8 rounded-full bg-muted wide:w-5 wide:h-4.5 wide:rounded-none wide:bg-transparent items-center justify-center">
+                        {'glyph' in item ? (
+                          <ComposerGlyph name={item.glyph} size={18} />
+                        ) : (
+                          <Icon
+                            as={item.icon}
+                            className="size-4.5 text-foreground"
+                          />
+                        )}
                       </View>
                       <Text
                         selectable={false}
@@ -317,6 +320,7 @@ export function Composer({
               size="icon"
               className={cn(
                 'size-7 sm:size-7 rounded-full',
+                !showStop && 'wide:shadow-none!',
                 (sending || showStop) && 'opacity-100',
                 !canSend && !sending && !showStop && 'opacity-35',
               )}
@@ -354,11 +358,11 @@ export function Composer({
       {(configuration || status) && (
         <View
           className={cn(
-            'self-stretch mx-3 -mt-3 pt-3 rounded-b-lg border border-t-0 border-border bg-sidebar/80 web:backdrop-blur-composer web:backdrop-saturate-110',
+            'h-11 self-stretch mx-3 -mt-3 pt-3 rounded-b-lg border border-t-0 border-border bg-sidebar/80 shadow-sm web:backdrop-blur-composer web:backdrop-saturate-110',
             status?.plan?.length && 'hidden wide:flex',
           )}
         >
-          <View className="h-8 flex-row items-center px-1.5">
+          <View className="flex-1 min-h-0 flex-row items-center px-1.5">
             {status && (
               <View className={status.plan?.length ? 'hidden wide:flex' : ''}>
                 <ComposerStatusControls status={status} disabled={inactive} />

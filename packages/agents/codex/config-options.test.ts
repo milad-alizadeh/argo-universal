@@ -73,7 +73,7 @@ it('marks Plan and dangerous modes and previews each model’s support flags', (
           }),
           expect.objectContaining({
             value: 'fullAccess',
-            _meta: { argo: { icon: 'ShieldOff', tone: 'dangerous' } },
+            _meta: { argo: { icon: 'WarningTriangle', tone: 'dangerous' } },
           }),
         ]),
       }),

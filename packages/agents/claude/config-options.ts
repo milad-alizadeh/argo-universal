@@ -27,7 +27,7 @@ const modeMetadata = {
   acceptEdits: { icon: 'Pencil', tone: 'moderate' },
   plan: { icon: 'ClipboardList', tone: 'planning' },
   auto: { icon: 'Sparkles', tone: 'moderate' },
-  bypassPermissions: { icon: 'ShieldOff', tone: 'dangerous' },
+  bypassPermissions: { icon: 'WarningTriangle', tone: 'dangerous' },
 } as const;
 
 // `default` identifies the recommended model; supported effort defaults resolve to a concrete level.

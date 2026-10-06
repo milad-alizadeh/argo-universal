@@ -43,7 +43,7 @@ export function Slider({
       />
       <View
         pointerEvents="none"
-        className="absolute left-2 right-2 flex-row justify-between"
+        className="absolute left-1.5 right-1.5 flex-row justify-between"
       >
         {Array.from({ length: steps }, (_, index) => (
           <View

@@ -1,6 +1,6 @@
 # Composer design checklist
 
-Source: [current Paper Session page](https://app.paper.design/file/01M44G6AG3HPXGPPPMKS9S3H8J/p-3-0), inspected on 6 October 2026. Composer master `322-0`, Agent/model menu master `282I-0`, attachments master `1X2P-0`, overlays master `23CG-0`. Paper token hash: `36197a80`.
+Source: [current Paper Session page](https://app.paper.design/file/01M44G6AG3HPXGPPPMKS9S3H8J/p-3-0), inspected on 6 October 2026. Composer master `322-0`, Agent/model menu master `282I-0`, attachments master `1X2P-0`, overlays master `23CG-0`. Paper token hash: `2737d693`.
 
 ## Implemented and checked in the browser
 
@@ -30,9 +30,46 @@ Source: [current Paper Session page](https://app.paper.design/file/01M44G6AG3HPX
 - [x] Pass Client, Storybook and Agents type checks, formatting, and lint.
 - [x] Pass the full suite: 3,644 tests, 94 files passed and one skipped (`vitest run --maxWorkers=2 --testTimeout=15000`). Four Server tests had timed out at five seconds in the earlier run; both affected files also passed their isolated recheck.
 
+## Sequential blind design audits
+
+Each auditor starts without implementation history and compares current Paper with rendered Storybook, including spacing, typography, colours, tokens, icons and interactions. These visual audits are separate from the paused code review.
+
+- [x] Audit 1: Composer shell, editor, images and toolbar — [independent report](audits/blind-shell.md), four visual differences and font fallback token drift recorded for correction.
+- [x] Audit 2: Dropdowns, sheets and configuration controls — [independent report](audits/blind-menus.md), nine visual differences recorded for correction; Agent scrolling and phone navigation verified.
+- [x] Audit 3: Footer, Plan, Context and Usage — [independent report](audits/blind-status.md), ten findings recorded; the sheet inset duplicates audit 2.
+- [x] Fix all 22 distinct visual findings and token drift, verify the corrections, and attach each independent report with before/after evidence: [resolution report](audits/corrections.md).
+
+### Corrections found by the blind audits
+
+- [x] Match the toolbar Mode icon's 16 px size.
+- [x] Match the oversized-image warning vector and vertical alignment.
+- [x] Match the remove-image cross vector.
+- [x] Remove the extra desktop Send shadow while keeping the phone and Stop shadow.
+- [x] Match Paper's sans and mono font fallback tokens.
+- [x] Give the selected branch a full-row background.
+- [x] Restore branch search icon/divider and branch row padding/gaps.
+- [x] Align effort labels with slider steps.
+- [x] Correct Agent row padding and corner radius.
+- [x] Correct desktop menu heading-to-row spacing.
+- [x] Restore phone attachment icon plates and text alignment.
+- [x] Correct phone Back arrow size/colour and header border.
+- [x] Correct Mode choice icon size/colour and dangerous-mode icon.
+- [x] Match the web phone sheet's 34 px bottom inset.
+
+- [x] Keep the actual Context SVG at 14 px despite shared Button SVG sizing.
+- [x] Match Usage row padding, 6 px gaps, 79 px height and normal percentage weight.
+- [x] Match the Plan header's 16 px foreground icon.
+- [x] Center Plan row glyphs in 14 × 20 px slots and match the pending circle vector/token.
+- [x] Match phone Plan group gaps and count padding.
+- [x] Match Context header gap and total letter spacing.
+- [x] Restore tray/footer shadows and the 44 px footer height.
+- [x] Match worktree off/on labels, colours, branch wording and chevron treatment.
+- [x] Keep the phone Compact icon at 14 px.
+- [x] Restore Paper's explicit fractional spacing and line-height token aliases.
+
 ## Remaining
 
-- [ ] Verify current native sheets on Android. After restarting with software rendering, the task's emulator booted, connected to this branch's Metro on port 8091, loaded its JavaScript bundle and accepted `argo://storybook`. The available UI tool cannot target its window, so sheet interactions and the visible story remain unverified. Other tasks' devices and Metro servers were left alone.
+- [ ] Verify current native sheets on Android. The earlier emulator run loaded this branch from Metro 8091 and accepted `argo://storybook`, but did not prove sheet rendering or interaction. At the latest read-only check the active device points to another Metro on 8090 and shows its loading screen; it was left untouched. Native sheets, gestures and safe-area layout remain unverified.
 - [ ] Resolve the proposed split for queued Turns, questionnaires, and file upload/retry states newly shown in Paper. Issue #37 covers text and images and requires proposing a split when scope grows. These features are not implemented by this change.
 - [ ] Resume code review only after every requested item is handled. The owner explicitly paused it; PR #136 remains draft.
 

@@ -438,6 +438,16 @@ export const Pickers: Story = {
         }
         const effortSlider = overlay.queryByRole('slider', { name: 'Effort' });
         if (effortSlider) {
+          await Promise.all(
+            overlay
+              .getByRole('dialog')
+              .getAnimations({ subtree: true })
+              .filter(
+                (animation) =>
+                  animation.effect?.getTiming().iterations !== Infinity,
+              )
+              .map((animation) => animation.finished),
+          );
           const heading = overlay.getByText('Effort', { exact: true });
           const sliderBounds = effortSlider.getBoundingClientRect();
           const headingBounds = heading.getBoundingClientRect();
@@ -450,9 +460,20 @@ export const Pickers: Story = {
           await expect(getComputedStyle(effortSlider).backgroundImage).not.toBe(
             'none',
           );
-          for (const label of overlay.getAllByRole('button', {
+          const labels = overlay.getAllByRole('button', {
             name: /^Set effort to /,
-          })) {
+          });
+          for (const [index, label] of labels.entries()) {
+            if (index > 0 && index < labels.length - 1) {
+              const bounds = label.getBoundingClientRect();
+              const stepCenter =
+                sliderBounds.left +
+                8 +
+                ((sliderBounds.width - 16) * index) / (labels.length - 1);
+              await expect(
+                Math.abs(bounds.left + bounds.width / 2 - stepCenter),
+              ).toBeLessThan(0.5);
+            }
             const text = label.querySelector('[dir]');
             if (!text) throw new Error('Effort label is missing.');
             await expect(getComputedStyle(text).userSelect).toBe('none');
@@ -587,6 +608,10 @@ export const Checkout: Story = {
       const search = await overlay.findByRole('textbox', {
         name: 'Search branches',
       });
+      await expect(
+        getComputedStyle(overlay.getByRole('button', { name: /^main$/ }))
+          .backgroundColor,
+      ).toBe('rgb(245, 245, 245)');
       await expect(getComputedStyle(search).outlineStyle).toBe('none');
       await expect(search.getBoundingClientRect().width).toBeGreaterThan(200);
       await userEvent.type(
@@ -639,6 +664,12 @@ export const SessionControls: Story = {
         await expect(getComputedStyle(circle).stroke).not.toBe('none');
         await expect(getComputedStyle(circle).strokeWidth).toBe('2px');
       }
+      const contextSvg = canvas
+        .getByRole('button', { name: 'Context window' })
+        .querySelector('svg');
+      if (!contextSvg) throw new Error('Context ring is missing.');
+      await expect(getComputedStyle(contextSvg).width).toBe('14px');
+      await expect(getComputedStyle(contextSvg).height).toBe('14px');
       await userEvent.click(canvas.getByRole('button', { name: 'Plan' }));
       await waitFor(() =>
         expect(
