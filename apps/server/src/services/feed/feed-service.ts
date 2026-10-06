@@ -11,6 +11,7 @@ import { feedRow } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
 import { and, asc, desc, eq, gt, lt } from 'drizzle-orm';
 import type { ActorRefFrom, Subscription } from 'xstate';
+import { readLiveHeaderRows } from '../sessions/live-header-rows';
 import type { SessionActorRef } from '../sessions/session-machine';
 import { createSessionReader } from '../sessions/session-record';
 import { toSessionSnapshot } from '../sessions/session-snapshot';
@@ -142,34 +143,58 @@ export function createFeedService(deps: FeedDeps): FeedService {
     let feedListener: Subscription | undefined;
     const sessionActor = deps.findSession?.(sessionId);
     let lastSnapshot = '';
+    let snapshotFailure: { error: unknown } | undefined;
     const snapshotChanged = () => {
-      const nextFeed = deps.findFeed(sessionId);
-      if (nextFeed && nextFeed !== feed) {
-        listener?.unsubscribe();
-        feedListener?.unsubscribe();
-        feed = nextFeed;
-        listener = feed.on('feed.batch', (batch) => {
-          live.push(...batch.events);
-          wake?.();
+      if (snapshotFailure) return;
+      try {
+        const nextFeed = deps.findFeed(sessionId);
+        if (nextFeed && nextFeed !== feed) {
+          listener?.unsubscribe();
+          feedListener?.unsubscribe();
+          feed = nextFeed;
+          listener = feed.on('feed.batch', (batch) => {
+            live.push(...batch.events);
+            wake?.();
+          });
+          feedListener = feed.subscribe(snapshotChanged);
+        }
+        const session = sessionActor?.getSnapshot() ?? null;
+        const feedContext = feed?.getSnapshot().context ?? {
+          epoch,
+          maxRevision,
+        };
+        const snapshot = toSessionSnapshot(session, {
+          context: {
+            ...feedContext,
+            rows: readLiveHeaderRows({
+              database,
+              writer: deps.findWriter(),
+              sessionId,
+              turnId: session?.context.activeTurnId ?? null,
+              rows: 'rows' in feedContext ? feedContext.rows : {},
+            }),
+          },
         });
-        feedListener = feed.subscribe(snapshotChanged);
+        const serialized = JSON.stringify(snapshot);
+        if (serialized === lastSnapshot) return;
+        lastSnapshot = serialized;
+        live.push({ type: 'snapshot', snapshot });
+        wake?.();
+      } catch (error) {
+        snapshotFailure = { error };
+        wake?.();
       }
-      const snapshot = toSessionSnapshot(
-        sessionActor?.getSnapshot() ?? null,
-        feed?.getSnapshot() ?? { context: { epoch, maxRevision } },
-      );
-      const serialized = JSON.stringify(snapshot);
-      if (serialized === lastSnapshot) return;
-      lastSnapshot = serialized;
-      live.push({ type: 'snapshot', snapshot });
-      wake?.();
     };
     const sessionListener = sessionActor?.subscribe(snapshotChanged);
     snapshotChanged();
     const wakeOnAbort = () => wake?.();
     signal?.addEventListener('abort', wakeOnAbort);
+    const throwSnapshotFailure = () => {
+      if (snapshotFailure) throw snapshotFailure.error;
+    };
 
     try {
+      throwSnapshotFailure();
       const reset = after !== null && after.epoch !== epoch;
       const from = after === null || reset ? maxRevision : after.revision;
       // A waiting batch can carry changes the catch-up already holds; their revision drops them.
@@ -180,6 +205,7 @@ export function createFeedService(deps: FeedDeps): FeedService {
         yield { type: 'row.upsert', rev: row.revision, row };
 
       while (!signal?.aborted) {
+        throwSnapshotFailure();
         const event = live.shift();
         if (event) {
           if (

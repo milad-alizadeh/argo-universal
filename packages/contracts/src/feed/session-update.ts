@@ -84,6 +84,8 @@ export const ToolCallUpdate = z.strictObject({
       startedAt: z.int().optional(),
       endedAt: z.int().optional(),
       shellId: z.string().optional(),
+      // Distinguishes an Agent description from the adapter's generated title.
+      titleIsDescription: z.boolean().optional(),
     }),
   ),
 });
