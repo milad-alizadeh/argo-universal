@@ -6,6 +6,7 @@ import type { FeedActivity, FeedGroup } from '../feed/feed-view';
 import { toolCallTitle } from '../feed/tool-call-title';
 import { useToolCallDuration } from '../feed/use-tool-call-duration';
 import { FeedDisclosure } from './FeedDisclosure';
+import { toolCallIcon } from './tool-call-icon';
 
 export interface ToolCallGroupProps {
   group: FeedGroup;
@@ -33,7 +34,12 @@ export function ToolCallGroup({
   const duration = useToolCallDuration(latest, now);
   const running = group.state === 'open';
   const items = group.items.flatMap<FeedActivity>((activity) => {
-    if (!running || !latest) return [activity];
+    if (
+      !running ||
+      !latest ||
+      (latest.status !== 'pending' && latest.status !== 'in_progress')
+    )
+      return [activity];
     if (activity.type === 'tool_call' && activity.row.id === latest.id)
       return [];
     if (activity.type === 'exploration') {
@@ -46,8 +52,8 @@ export function ToolCallGroup({
   });
   return (
     <FeedDisclosure
-      label={latest ? toolCallTitle(latest) : group.title}
-      icon={BookOpenIcon}
+      label={running && latest ? toolCallTitle(latest) : group.title}
+      icon={running && latest ? toolCallIcon(latest) : BookOpenIcon}
       running={running}
       initialOpen={initialOpen}
       trailing={

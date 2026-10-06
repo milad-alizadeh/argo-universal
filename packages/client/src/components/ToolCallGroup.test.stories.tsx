@@ -27,7 +27,7 @@ export const Settled: Story = {
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       const group = canvas.getByRole('button', {
-        name: 'Show hello.txt and short git status',
+        name: 'Ran 1 command, Read 1 file',
       });
       await expect(group).toBeVisible();
       await expect(
@@ -41,7 +41,7 @@ export const Settled: Story = {
         canvas.getAllByRole('button', {
           name: 'Show hello.txt and short git status',
         }),
-      ).toHaveLength(2);
+      ).toHaveLength(1);
       await userEvent.click(group);
       await waitFor(() =>
         expect(
@@ -64,6 +64,7 @@ export const Running: Story = {
       await expect(group).toBeVisible();
       await expect(canvas.queryByRole('progressbar')).not.toBeInTheDocument();
       await expectShimmerMovement(group);
+      await expect(group.querySelectorAll('svg')).toHaveLength(2);
       await expect(within(group).getByText('23s')).toBeVisible();
       await userEvent.click(group);
       await expect(
@@ -85,6 +86,22 @@ export const Running: Story = {
   },
 };
 
+export const OpenCompletedHistory: Story = {
+  args: { group: { ...toolCallGroupMock.group, state: 'open' } },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(
+      canvas.getByRole('button', {
+        name: 'Show hello.txt and short git status',
+      }),
+    );
+    await expect(
+      canvas.getAllByRole('button', {
+        name: 'Show hello.txt and short git status',
+      }),
+    ).toHaveLength(2);
+  },
+};
+
 export const AgentParity: Story = {
   render: (args) => (
     <>
@@ -97,12 +114,9 @@ export const AgentParity: Story = {
     const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
-      const groups = [
-        canvas.getByRole('button', {
-          name: 'Show hello.txt and short git status',
-        }),
-        canvas.getByRole('button', { name: 'Ran command' }),
-      ];
+      const groups = canvas.getAllByRole('button', {
+        name: 'Ran 1 command, Read 1 file',
+      });
       for (const group of groups) await userEvent.click(group);
       await expect(
         canvas.getByRole('button', { name: 'Read /project/hello.txt' }),

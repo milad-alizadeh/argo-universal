@@ -161,7 +161,7 @@ describe('toFeedView', () => {
               {
                 type: 'group',
                 id: first.id,
-                title: 'ran commands',
+                title: 'Ran 2 commands',
                 state: 'settled',
                 items: [
                   { type: 'tool_call', row: first },
@@ -291,7 +291,7 @@ describe('toFeedView', () => {
     ({ rows, snapshot }) => {
       const view = toFeedView(rows, snapshot);
       expect(view.items.find((item) => item.type === 'group')).toMatchObject({
-        title: 'Edited a file, Read files, ran commands',
+        title: 'Ran 1 command, Read 1 file, Edited 2 files',
         state: 'settled',
         items: expect.arrayContaining([
           expect.objectContaining({ type: 'exploration', title: 'Explored' }),
@@ -299,6 +299,25 @@ describe('toFeedView', () => {
         ]),
       });
       expect(view.plan).toBeNull();
+    },
+  );
+
+  it.each(workMocks)(
+    'summarizes commands and affected files by category for $agent',
+    ({ rows, snapshot }) => {
+      const calls = toolCalls(rows);
+      const command = commandRow(rows);
+      const secondCommand: ToolCallUpdate = {
+        ...command,
+        id: 'second-command',
+        toolCallId: 'second-command',
+        position: Math.max(...calls.map((row) => row.position)) + 1,
+      };
+      const view = toFeedView([...calls, secondCommand], snapshot);
+      expect(view.items.find((item) => item.type === 'group')).toMatchObject({
+        title: 'Ran 2 commands, Read 1 file, Edited 2 files',
+        state: 'settled',
+      });
     },
   );
 
@@ -381,7 +400,7 @@ describe('toFeedView', () => {
         {
           type: 'group',
           id: 'first-read',
-          title: 'Read files',
+          title: 'Read 2 files',
           state: 'settled',
           items: [
             {

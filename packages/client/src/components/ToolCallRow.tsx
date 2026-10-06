@@ -1,10 +1,10 @@
 import type { ToolCallUpdate } from '@repo/contracts';
-import { BookOpenIcon } from 'phosphor-react-native/src/icons/BookOpen';
 import { View } from 'react-native';
 import { Text } from '#primitives/text';
 import { toolCallTitle } from '../feed/tool-call-title';
 import { FeedCodeBlock } from './FeedCodeBlock';
 import { FeedDisclosure } from './FeedDisclosure';
+import { toolCallIcon } from './tool-call-icon';
 
 export interface ToolCallRowProps {
   row: ToolCallUpdate;
@@ -31,7 +31,7 @@ export function ToolCallRow({ row, initialOpen }: ToolCallRowProps) {
   return (
     <FeedDisclosure
       label={toolCallTitle(row)}
-      icon={BookOpenIcon}
+      icon={toolCallIcon(row)}
       running={row.status === 'pending' || row.status === 'in_progress'}
       failed={row.status === 'failed'}
       initialOpen={initialOpen}

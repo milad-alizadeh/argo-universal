@@ -58,17 +58,15 @@ export function FeedDisclosure({
         accessibilityLabel={label}
         className="min-h-5 flex-row items-center gap-1.5"
       >
-        {!running && (
-          <View className="size-4 shrink-0">
-            <Icon
-              as={icon}
-              className={cn(
-                'size-4 text-muted-foreground',
-                failed && 'text-destructive',
-              )}
-            />
-          </View>
-        )}
+        <View className="size-4 shrink-0">
+          <Icon
+            as={icon}
+            className={cn(
+              'size-4 text-muted-foreground',
+              failed && 'text-destructive',
+            )}
+          />
+        </View>
         <View className="min-w-0 flex-1 flex-row items-center gap-1">
           {running ? (
             <ShimmerText
