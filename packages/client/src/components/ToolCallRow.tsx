@@ -3,20 +3,21 @@ import { View } from 'react-native';
 import { Text } from '#primitives/text';
 import { toolCallTitle } from '../feed/tool-call-title';
 import { FeedCodeBlock } from './FeedCodeBlock';
-import { FeedDisclosure } from './FeedDisclosure';
-import { PermissionOutcome } from './PermissionOutcome';
+import { ToolCallDisclosure } from './ToolCallDisclosure';
 import { toolCallIcon } from './tool-call-icon';
 
 export interface ToolCallRowProps {
   row: ToolCallUpdate;
   initialOpen?: boolean;
   permissionMessage?: string;
+  awaitingApproval?: boolean;
 }
 
 export function ToolCallRow({
   row,
   initialOpen,
   permissionMessage,
+  awaitingApproval = false,
 }: ToolCallRowProps) {
   const path =
     row._meta?.argo?.commandActions?.find((action) => action.path)?.path ??
@@ -35,39 +36,29 @@ export function ToolCallRow({
     })
     .join('\n');
   return (
-    <View className="gap-1">
-      <FeedDisclosure
-        label={toolCallTitle(row)}
-        icon={toolCallIcon(row)}
-        running={row.status === 'pending' || row.status === 'in_progress'}
-        failed={row.status === 'failed'}
-        initialOpen={initialOpen}
-        awaitingApproval={row.title === 'Awaiting approval'}
-        denied={
-          row._meta?.argo?.permissionOutcome?.outcome === 'selected' &&
-          row._meta.argo.permissionOutcome.optionId === 'reject_once'
+    <ToolCallDisclosure
+      label={toolCallTitle(row, awaitingApproval)}
+      icon={toolCallIcon(row)}
+      running={row.status === 'pending' || row.status === 'in_progress'}
+      failed={row.status === 'failed'}
+      initialOpen={initialOpen}
+      awaitingApproval={awaitingApproval}
+      permissionOutcome={row._meta?.argo?.permissionOutcome}
+      permissionMessage={permissionMessage}
+    >
+      <FeedCodeBlock
+        language={path?.split('/').at(-1) ?? 'Output'}
+        code={output}
+        footer={
+          row.status === 'failed' || row.status === 'cancelled' ? (
+            <View className="px-3 pb-2">
+              <Text className="text-sm text-muted-foreground">
+                {row.status === 'failed' ? 'Failed' : 'Stopped'}
+              </Text>
+            </View>
+          ) : undefined
         }
-      >
-        <FeedCodeBlock
-          language={path?.split('/').at(-1) ?? 'Output'}
-          code={output}
-          footer={
-            row.status === 'failed' || row.status === 'cancelled' ? (
-              <View className="px-3 pb-2">
-                <Text className="text-sm text-muted-foreground">
-                  {row.status === 'failed' ? 'Failed' : 'Stopped'}
-                </Text>
-              </View>
-            ) : undefined
-          }
-        />
-      </FeedDisclosure>
-      {row._meta?.argo?.permissionOutcome && (
-        <PermissionOutcome
-          outcome={row._meta.argo.permissionOutcome}
-          message={permissionMessage}
-        />
-      )}
-    </View>
+      />
+    </ToolCallDisclosure>
   );
 }

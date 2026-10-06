@@ -8,15 +8,15 @@ import { Text } from '#primitives/text';
 import { toolCallTitle } from '../feed/tool-call-title';
 import { useToolCallDuration } from '../feed/use-tool-call-duration';
 import { FeedCodeBlock } from './FeedCodeBlock';
-import { FeedDisclosure } from './FeedDisclosure';
 import { Icon } from './Icon';
-import { PermissionOutcome } from './PermissionOutcome';
+import { ToolCallDisclosure } from './ToolCallDisclosure';
 
 export interface CommandRowProps {
   row: ToolCallUpdate;
   initialOpen?: boolean;
   now?: number;
   permissionMessage?: string;
+  awaitingApproval?: boolean;
 }
 
 export function CommandRow({
@@ -24,6 +24,7 @@ export function CommandRow({
   initialOpen,
   now,
   permissionMessage,
+  awaitingApproval = false,
 }: CommandRowProps) {
   const running = row.status === 'pending' || row.status === 'in_progress';
   const stopped = row.status === 'cancelled';
@@ -55,53 +56,43 @@ export function CommandRow({
   if (failed) status = [failureStatus, duration].filter(Boolean).join(' · ');
   const output = terminal.output.replace(/\r\n/g, '\n').replace(/\n$/, '');
   return (
-    <View className="gap-1">
-      <FeedDisclosure
-        label={toolCallTitle(row)}
-        icon={TerminalWindowIcon}
-        failed={failed}
-        running={running}
-        initialOpen={initialOpen}
-        trailing={status}
-        awaitingApproval={row.title === 'Awaiting approval'}
-        denied={
-          row._meta?.argo?.permissionOutcome?.outcome === 'selected' &&
-          row._meta.argo.permissionOutcome.optionId === 'reject_once'
-        }
-      >
-        <FeedCodeBlock
-          language="Shell"
-          code={commandCode(terminal.command, output)}
-          footer={
-            <View className="flex-row items-center gap-1.5 px-3 pb-2">
-              {!running && !stopped && (
-                <Icon
-                  as={failed ? XIcon : CheckIcon}
-                  className={cn(
-                    'size-3.5 text-success',
-                    failed && 'text-destructive',
-                  )}
-                />
-              )}
-              <Text
+    <ToolCallDisclosure
+      label={toolCallTitle(row, awaitingApproval)}
+      icon={TerminalWindowIcon}
+      failed={failed}
+      running={running}
+      initialOpen={initialOpen}
+      trailing={awaitingApproval ? undefined : status}
+      awaitingApproval={awaitingApproval}
+      permissionOutcome={row._meta?.argo?.permissionOutcome}
+      permissionMessage={permissionMessage}
+    >
+      <FeedCodeBlock
+        language="Shell"
+        code={commandCode(terminal.command, output)}
+        footer={
+          <View className="flex-row items-center gap-1.5 px-3 pb-2">
+            {!running && !stopped && (
+              <Icon
+                as={failed ? XIcon : CheckIcon}
                 className={cn(
-                  'font-mono text-xs leading-5 text-muted-foreground',
+                  'size-3.5 text-success',
                   failed && 'text-destructive',
                 )}
-              >
-                {outcome}
-              </Text>
-            </View>
-          }
-        />
-      </FeedDisclosure>
-      {row._meta?.argo?.permissionOutcome && (
-        <PermissionOutcome
-          outcome={row._meta.argo.permissionOutcome}
-          message={permissionMessage}
-        />
-      )}
-    </View>
+              />
+            )}
+            <Text
+              className={cn(
+                'font-mono text-xs leading-5 text-muted-foreground',
+                failed && 'text-destructive',
+              )}
+            >
+              {outcome}
+            </Text>
+          </View>
+        }
+      />
+    </ToolCallDisclosure>
   );
 }
 

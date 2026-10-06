@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import type { FeedActivity, FeedGroup } from '../feed/feed-view';
 import { toolCallTitle } from '../feed/tool-call-title';
 import { useToolCallDuration } from '../feed/use-tool-call-duration';
-import { FeedDisclosure } from './FeedDisclosure';
+import { ToolCallDisclosure } from './ToolCallDisclosure';
 import { toolCallIcon } from './tool-call-icon';
 
 export interface ToolCallGroupProps {
@@ -40,7 +40,7 @@ export function ToolCallGroup({
     )
       return [activity];
     if (activity.type === 'tool_call' && activity.row.id === latest.id)
-      return latest._meta?.argo?.permissionOutcome ? [activity] : [];
+      return [];
     if (activity.type === 'exploration') {
       const remaining = activity.toolCalls.filter(
         (row) => row.id !== latest.id,
@@ -49,14 +49,27 @@ export function ToolCallGroup({
     }
     return [activity];
   });
+  const livePermission =
+    running &&
+    latest &&
+    (latest.status === 'pending' || latest.status === 'in_progress')
+      ? latest._meta?.argo?.permissionOutcome
+      : undefined;
   return (
-    <FeedDisclosure
-      label={running && latest ? toolCallTitle(latest) : group.title}
+    <ToolCallDisclosure
+      permissionOutcome={livePermission}
+      label={
+        running && latest
+          ? toolCallTitle(latest, group.title === 'Awaiting approval')
+          : group.title
+      }
       icon={running && latest ? toolCallIcon(latest) : BookOpenIcon}
       running={running}
       awaitingApproval={group.title === 'Awaiting approval'}
       initialOpen={initialOpen}
-      trailing={running ? duration : undefined}
+      trailing={
+        running && group.title !== 'Awaiting approval' ? duration : undefined
+      }
     >
       <View className="gap-2 pb-1">
         {items.map((activity) => (
@@ -69,6 +82,6 @@ export function ToolCallGroup({
           </View>
         ))}
       </View>
-    </FeedDisclosure>
+    </ToolCallDisclosure>
   );
 }

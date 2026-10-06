@@ -1,7 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
-import { PermissionRequestPreview } from '../../mocks/request-preview';
+import {
+  PermissionFeedPreview,
+  PermissionRequestPreview,
+} from '../../mocks/request-preview';
 import { PermissionOutcome } from './PermissionOutcome';
 
 const meta = {
@@ -25,10 +28,11 @@ export const Overview: StoryObj<typeof meta> = {
         <Variation label="Already answered">
           <PermissionRequestPreview alreadyAnswered="Already answered on another device" />
         </Variation>
+        <Variation label="Awaiting approval">
+          <PermissionFeedPreview />
+        </Variation>
         <Variation label="Allowed once">
-          <PermissionOutcome
-            outcome={{ outcome: 'selected', optionId: 'allow_once' }}
-          />
+          <PermissionFeedPreview answered />
         </Variation>
         <Variation label="Denied">
           <PermissionOutcome

@@ -1,6 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
-import { PermissionRequestPreview } from '../../mocks/request-preview';
+import {
+  PermissionFeedPreview,
+  PermissionRequestPreview,
+  permissionMocks,
+} from '../../mocks/request-preview';
 import { settleViewport } from '../../mocks/settle-viewport';
 
 const meta = {
@@ -124,3 +128,53 @@ function conflict(width: number): Story {
 }
 export const ConflictPhone = conflict(390);
 export const ConflictWide = conflict(1440);
+
+function permissionFeed(
+  width: number,
+  recording: number,
+  answered: boolean,
+): Story {
+  const mock = permissionMocks[recording];
+  if (!mock) throw new Error('Permission coverage needs both #54 recordings.');
+  return {
+    render: () => <PermissionFeedPreview mock={mock} answered={answered} />,
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
+      if (answered) {
+        await expect(canvas.getByText('You allowed this once')).toBeVisible();
+        await userEvent.click(canvas.getByRole('button'));
+        await expect(canvas.getAllByText('You allowed this once')).toHaveLength(
+          1,
+        );
+        await userEvent.click(canvas.getByRole('button'));
+        await expect(canvas.getByText('You allowed this once')).toBeVisible();
+      } else {
+        const row = mock.pending.rows.find(
+          (row) =>
+            row.sessionUpdate === 'tool_call_update' &&
+            row.toolCallId ===
+              mock.pending.snapshot.pendingPermission?.toolCallId,
+        );
+        if (row?.sessionUpdate !== 'tool_call_update')
+          throw new Error('Recording needs the pending Tool call.');
+        await expect(
+          canvas.getByText('Awaiting approval', { exact: true }),
+        ).toBeVisible();
+        await expect(
+          canvas.getAllByText('Awaiting approval', { exact: true }),
+        ).toHaveLength(1);
+        await expect(
+          canvas.getByRole('button', { name: row.title }),
+        ).toBeVisible();
+      }
+    },
+  };
+}
+export const FirstAgentApprovalPhone = permissionFeed(390, 0, false);
+export const FirstAgentApprovalWide = permissionFeed(1440, 0, false);
+export const SecondAgentApprovalPhone = permissionFeed(390, 1, false);
+export const SecondAgentApprovalWide = permissionFeed(1440, 1, false);
+export const FirstAgentOutcomePhone = permissionFeed(390, 0, true);
+export const FirstAgentOutcomeWide = permissionFeed(1440, 0, true);
+export const SecondAgentOutcomePhone = permissionFeed(390, 1, true);
+export const SecondAgentOutcomeWide = permissionFeed(1440, 1, true);

@@ -140,3 +140,118 @@ function conflict(width: number): Story {
 }
 export const ConflictPhone = conflict(390);
 export const ConflictWide = conflict(1440);
+
+function emptyAnswers(width: number): Story {
+  return {
+    args: {
+      request: {
+        ...fieldsRequest,
+        requestedSchema: {
+          properties: {
+            options: {
+              type: 'array',
+              title: 'Options',
+              minItems: 0,
+              default: [],
+              items: { type: 'string', enum: ['One'] },
+            },
+            choice: {
+              type: 'string',
+              title: 'Choice',
+              oneOf: [
+                { const: '', title: 'None' },
+                { const: 'Blue', title: 'Blue' },
+              ],
+            },
+            optional: { type: 'string', title: 'Optional' },
+            'detail.name': {
+              type: 'string',
+              title: 'Detail',
+              default: 'release',
+            },
+          },
+          required: ['options', 'choice'],
+        },
+      },
+    },
+    play: async ({ canvas, userEvent, args }) => {
+      await settleViewport(width);
+      await userEvent.click(canvas.getByRole('button', { name: /^Choice/ }));
+      await userEvent.click(
+        await within(document.body).findByRole('option', { name: 'None' }),
+      );
+      await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
+      await expect(args.onAnswer).toHaveBeenCalledWith({
+        action: 'accept',
+        content: { options: [], choice: '', 'detail.name': 'release' },
+      });
+      await expect(canvas.getByText('None', { exact: true })).toBeVisible();
+    },
+  };
+}
+export const EmptyAnswersPhone = emptyAnswers(390);
+export const EmptyAnswersWide = emptyAnswers(1440);
+
+function dateFormats(width: number): Story {
+  return {
+    args: {
+      request: {
+        ...fieldsRequest,
+        requestedSchema: {
+          properties: {
+            date: { type: 'string', title: 'Date', format: 'date' },
+            time: {
+              type: 'string',
+              title: 'Date and time',
+              format: 'date-time',
+            },
+          },
+          required: ['date', 'time'],
+        },
+      },
+      values: { date: '2026-02-30', time: '2026-10-06' },
+    },
+    play: async ({ canvas, userEvent, args }) => {
+      await settleViewport(width);
+      await expect(canvas.getByText('Enter a valid date.')).toBeVisible();
+      await expect(
+        canvas.getByText('Enter a valid date and time.'),
+      ).toBeVisible();
+      const date = canvas.getByRole('textbox', { name: /^Date$/ });
+      await userEvent.clear(date);
+      await userEvent.type(date, '2024-02-29T12:00:00Z');
+      await expect(canvas.getByText('Enter a valid date.')).toBeVisible();
+      await userEvent.clear(date);
+      await userEvent.type(date, '2024-02-29');
+      const time = canvas.getByRole('textbox', { name: 'Date and time' });
+      await userEvent.clear(time);
+      await userEvent.type(time, '2026-10-06T12:30:00+01:00');
+      await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
+      await expect(args.onAnswer).toHaveBeenCalledWith({
+        action: 'accept',
+        content: { date: '2024-02-29', time: '2026-10-06T12:30:00+01:00' },
+      });
+    },
+  };
+}
+export const DateFormatsPhone = dateFormats(390);
+export const DateFormatsWide = dateFormats(1440);
+
+export const InvalidSchema: Story = {
+  args: {
+    request: {
+      ...fieldsRequest,
+      requestedSchema: {
+        properties: { value: { type: 'string', title: 'Value', pattern: '[' } },
+      },
+    },
+  },
+  play: async ({ canvas, userEvent, args }) => {
+    await expect(
+      canvas.getByText('The Agent provided an invalid form.'),
+    ).toBeVisible();
+    await expect(canvas.getByRole('button', { name: 'Submit' })).toBeDisabled();
+    await userEvent.click(canvas.getByRole('button', { name: 'Dismiss' }));
+    await expect(args.onAnswer).toHaveBeenCalledWith({ action: 'cancel' });
+  },
+};

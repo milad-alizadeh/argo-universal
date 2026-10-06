@@ -1,10 +1,8 @@
 import { type RequestMock, recordedRequestMocks } from '@repo/api/mocks';
 import type { PendingElicitation } from '@repo/contracts';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { TRPCClientError } from '@trpc/client';
-import { useSubscription } from '@trpc/tanstack-react-query';
 import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
+import { CommandRow } from '../src/components/CommandRow';
 import { Composer, type ComposerDraft } from '../src/components/Composer';
 import {
   type ElicitationAnswer,
@@ -17,11 +15,9 @@ import {
   type PermissionAnswer,
   PermissionRequest,
 } from '../src/components/PermissionRequest';
+import { ToolCallGroup } from '../src/components/ToolCallGroup';
 import { ToolCallRow } from '../src/components/ToolCallRow';
 import { toFeedView } from '../src/feed/to-feed-view';
-import { useTRPC } from '../src/trpc/context';
-import { createFeedMocks } from './feed-mock';
-import type { Fixtures } from './trpc-mock-link';
 
 export const permissionMocks = recordedRequestMocks.filter(
   (mock) => mock.recording === 'permission',
@@ -159,7 +155,6 @@ export function ElicitationFormPreview({
   source?: string;
   onAnswer?: (answer: ElicitationAnswer) => void;
 }) {
-  const [values, setValues] = useState(initialValues);
   const [answer, setAnswer] = useState<ElicitationAnswer>();
   return (
     <RequestFrame>
@@ -171,8 +166,7 @@ export function ElicitationFormPreview({
       ) : (
         <ElicitationForm
           request={request}
-          values={values}
-          onValuesChange={setValues}
+          initialValues={initialValues}
           onAnswer={(next) => {
             onAnswer?.(next);
             setAnswer(next);
@@ -185,155 +179,41 @@ export function ElicitationFormPreview({
   );
 }
 
-export function createRequestFixtures(
-  mock: RequestMock,
-  conflict = false,
-): Fixtures & { reset: () => void } {
-  let state = mock.pending;
-  const feedMocks = () =>
-    createFeedMocks({
-      agent: mock.agent,
-      recording: mock.recording,
-      rows: state.rows,
-      snapshot: state.snapshot,
-      stream: [],
-      liveHeaders: [],
-    });
-  const answer = () => {
-    if (conflict)
-      throw TRPCClientError.from({
-        error: {
-          message: 'Already answered on another device',
-          code: -32009,
-          data: { code: 'CONFLICT', httpStatus: 409 },
-        },
-      });
-    state = mock.answered;
-    return {};
-  };
-  return {
-    reset: () => {
-      state = mock.pending;
-    },
-    'feed.page': (input, signal) => {
-      const page = feedMocks()['feed.page'];
-      if (!page) throw new Error('Recording needs a Feed page.');
-      return page(input, signal);
-    },
-    'feed.subscribe': async function* () {
-      yield { type: 'snapshot', snapshot: state.snapshot };
-    },
-    'session.answerPermission': (input) => {
-      if (
-        input.sessionId !== mock.answer.input.sessionId ||
-        input.toolCallId !== mock.pending.snapshot.pendingPermission?.toolCallId
-      )
-        throw new Error('Answer must address the recorded Permission request.');
-      return answer();
-    },
-    'session.answerElicitation': (input) => {
-      if (
-        input.sessionId !== mock.answer.input.sessionId ||
-        input.requestId !== mock.pending.snapshot.pendingElicitation?.requestId
-      )
-        throw new Error('Answer must address the recorded Elicitation.');
-      return answer();
-    },
-  };
-}
-
-// A request region on recorded data; the complete Session screen belongs to #52.
-export function RequestAnsweringPreview({ mock }: { mock: RequestMock }) {
-  const trpc = useTRPC();
-  const sessionId = mock.answer.input.sessionId;
-  const page = useQuery(
-    trpc.feed.page.queryOptions({ sessionId, direction: 'before' }),
+export function PermissionFeedPreview({
+  mock = permissionMock,
+  answered = false,
+}: {
+  mock?: RequestMock;
+  answered?: boolean;
+}) {
+  const state = answered ? mock.answered : mock.pending;
+  const groups = toFeedView(state.rows, state.snapshot).items.filter(
+    (item) => item.type === 'group',
   );
-  const subscription = useSubscription(
-    trpc.feed.subscribe.subscriptionOptions({ sessionId, after: null }),
-  );
-  const [elicitationAnswer, setElicitationAnswer] =
-    useState<ElicitationAnswer>();
-  const [denialMessage, setDenialMessage] = useState<string>();
-  const [values, setValues] = useState<ElicitationValues>({});
-  const permission = useMutation(
-    trpc.session.answerPermission.mutationOptions({
-      onSuccess: () => void page.refetch(),
-    }),
-  );
-  const elicitation = useMutation(
-    trpc.session.answerElicitation.mutationOptions({
-      onSuccess: () => void page.refetch(),
-    }),
-  );
-  const snapshot =
-    subscription.data?.type === 'snapshot'
-      ? subscription.data.snapshot
-      : undefined;
-  if (!snapshot || !page.data) return null;
-  const request = snapshot.pendingPermission;
-  const form = snapshot.pendingElicitation;
-  const answered = permission.isSuccess || elicitation.isSuccess;
-  const error = permission.error ?? elicitation.error;
-  const conflict = error?.data?.code === 'CONFLICT' ? error.message : undefined;
-  const displayedRows = toFeedView(
-    page.data.rows,
-    answered ? mock.answered.snapshot : snapshot,
-  ).items.flatMap((item) => (item.type === 'group' ? item.items : [item]));
-  let bottom: ReactNode = <ResumedComposer />;
-  if (!answered && request) {
-    bottom = (
-      <PermissionRequest
-        request={request}
-        denialMessage={denialMessage}
-        onDenialMessageChange={setDenialMessage}
-        submitting={permission.isPending}
-        alreadyAnswered={conflict}
-        error={conflict ? undefined : error?.message}
-        onAnswer={(answer) => {
-          permission.mutate({
-            sessionId,
-            toolCallId: request.toolCallId,
-            ...answer,
-          });
-        }}
-      />
-    );
-  } else if (!answered && form) {
-    bottom = (
-      <ElicitationForm
-        request={form}
-        values={values}
-        onValuesChange={setValues}
-        submitting={elicitation.isPending}
-        alreadyAnswered={conflict}
-        error={conflict ? undefined : error?.message}
-        onAnswer={(answer) => {
-          setElicitationAnswer(answer);
-          elicitation.mutate({
-            sessionId,
-            requestId: form.requestId,
-            ...answer,
-          });
-        }}
-      />
-    );
-  }
   return (
-    <RequestFrame>
-      <View className="gap-8">
-        <View className="gap-3">
-          {displayedRows.flatMap((item) =>
-            item.type === 'tool_call'
-              ? [<ToolCallRow key={item.row.id} row={item.row} />]
-              : [],
-          )}
-          {elicitation.isSuccess && form && elicitationAnswer && (
-            <ElicitationOutcome request={form} answer={elicitationAnswer} />
-          )}
-        </View>
-        {bottom}
-      </View>
-    </RequestFrame>
+    <View className="w-full gap-4">
+      {groups.map((group) => (
+        <ToolCallGroup
+          key={group.id}
+          group={group}
+          renderActivity={(activity) => {
+            if (activity.type !== 'tool_call') return null;
+            return activity.row.content.some(
+              (block) => block.type === 'terminal',
+            ) ? (
+              <CommandRow
+                row={activity.row}
+                awaitingApproval={activity.awaitingApproval}
+              />
+            ) : (
+              <ToolCallRow
+                row={activity.row}
+                awaitingApproval={activity.awaitingApproval}
+              />
+            );
+          }}
+        />
+      ))}
+    </View>
   );
 }
