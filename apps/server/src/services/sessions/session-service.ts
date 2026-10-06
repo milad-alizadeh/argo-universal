@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { SessionService } from '@repo/api';
+import { createElicitationAnswerSchema } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { listBranches } from '@repo/git';
 import { TRPCError } from '@trpc/server';
@@ -7,7 +8,6 @@ import { type ActorRefFrom, type SnapshotFrom, waitFor } from 'xstate';
 import type { writerMachine } from '../feed/writer-machine';
 import { notImplemented } from '../not-implemented';
 import { readProjectPath } from '../projects/project-service';
-import { validateElicitationAnswer } from './elicitation-answer';
 import type { RegistryActorRef, RegistryCommand } from './registry-machine';
 import { sendSessionCommand } from './session-command';
 import { createSessionList } from './session-list';
@@ -133,8 +133,17 @@ export function createSessionService({
       const request = actor.getSnapshot().context.pendingElicitation;
       if (request?.requestId !== requestId)
         throw new TRPCError({ code: 'CONFLICT', message: 'already answered' });
-      if (action === 'accept')
-        validateElicitationAnswer(request.requestedSchema, content);
+      if (action === 'accept') {
+        const answer = createElicitationAnswerSchema(
+          request.requestedSchema,
+        ).safeParse(content ?? {});
+        if (!answer.success)
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'The answer does not match the Elicitation form',
+            cause: answer.error,
+          });
+      }
       sendSessionCommand(actor, {
         type: 'session.answerElicitation',
         action,
