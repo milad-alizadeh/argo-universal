@@ -158,6 +158,7 @@ On a phone, the app uses a drawer of sections, and detail screens push full scre
 96. As a user, I want Issues, Atlas, Accounts and Project settings to show placeholders, so that the app's shape is in place before they are built.
 97. As a user, I want Settings to show the Agents with their status, and the Server Connection, so that I can see why something doesn't work.
 98. As a developer, I want every detail URL to open the same thing on every platform, and a section URL to open its list, plus its first detail beside it on a wide window, so that links work everywhere.
+99. As a developer, I want to expand a long Plan proposal to read all of it, so that I can review the whole plan before I answer.
 
 ## Implementation Decisions
 
@@ -387,6 +388,7 @@ These come from the UI map agreed on 2026-10-03.
   - On a phone, it keeps four things: back, the status mark with the title, a Plan button showing done out of total when a Plan exists, and ⋯. The ⋯ menu holds "Changed files · n", Rename and Archive.
   - On a wide window, it shows the title and its state (click the title to rename), the checkout path and branch, the Subagents and Shells buttons, the Changed files chip, ⋯, and the Inspector toggles.
 - **Session bottom.** It shows exactly one of: the composer, a request card (Permission request, Elicitation or Plan proposal), or the "Archived · read-only" banner.
+- **Plan proposal card.** The plan scrolls inside the card under its title, capped at 280 px high, and Approve and Keep planning stay visible. An expand button beside the title shows the whole plan with the same title and buttons: on a wide window the card fills the main content over the Feed, and on a phone it opens as a native page sheet on iOS and full screen on Android and narrow web. Collapsing, or answering, returns to the card. Keep planning opens a required feedback field in the card.
 - **Plan.** On a wide window, a sticky panel at the top of the Feed. On a phone, a popover from the header's Plan button.
 - **Changed files.** On a wide window, the chip opens the file list in the Inspector, which can expand to the full width. On a phone, ⋯ then "Changed files · n" opens a popover.
 - **Subagents and Shells.** Two buttons, each with a count that is green while anything runs and grey once all have ended. Each opens a list grouped into Running and Finished, and each row shows model · duration · tokens. On a wide window the buttons sit at the top right of the header, and an item opens in the Inspector. On a phone they are pills above the composer, and an item opens in a page sheet. A Subagent row in the Feed opens the same place.
