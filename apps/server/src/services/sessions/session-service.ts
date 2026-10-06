@@ -163,6 +163,13 @@ export function createSessionService({
       });
       return { messageId: `${turnId}:user` };
     },
+    // Title persistence and Agent commands are issue #66.
+    rename: async () => {
+      throw new TRPCError({
+        code: 'NOT_IMPLEMENTED',
+        message: 'Session rename is not implemented yet',
+      });
+    },
     cancel: async ({ sessionId }) => {
       sendSessionCommand(await open(sessionId), { type: 'session.cancel' });
       return {};

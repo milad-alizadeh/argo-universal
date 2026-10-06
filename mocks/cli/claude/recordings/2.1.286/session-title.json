@@ -1,0 +1,67 @@
+{
+  "producer": "claude-cli",
+  "version": "2.1.286",
+  "recordedAt": "2026-10-06",
+  "payload": {
+    "description": "We are investigating a reconnect bug in the Session list. Reply with one short sentence and do not use any tools.",
+    "input": [
+      {
+        "type": "control_request",
+        "request_id": "e2d4e535-0de0-4421-94ed-0f0abc9ec3ba",
+        "request": {
+          "subtype": "generate_session_title",
+          "description": "We are investigating a reconnect bug in the Session list. Reply with one short sentence and do not use any tools.",
+          "persist": true
+        }
+      },
+      {
+        "type": "control_request",
+        "request_id": "d412aee2-435d-49b8-81a1-4564836e9c47",
+        "request": {
+          "subtype": "rename_session",
+          "title": "Session list reconnect investigation",
+          "source": "host",
+          "session_id": "10c71a87-8cc0-4097-b855-aacd9fb0b8f2"
+        }
+      }
+    ],
+    "output": [
+      {
+        "type": "control_response",
+        "response": {
+          "subtype": "success",
+          "request_id": "e2d4e535-0de0-4421-94ed-0f0abc9ec3ba",
+          "response": {
+            "title": "Session list reconnect bug"
+          }
+        }
+      },
+      {
+        "type": "system",
+        "subtype": "session_title_changed",
+        "title": "Session list reconnect investigation",
+        "uuid": "001884f2-d57c-4682-b1c7-69e8a3343897",
+        "session_id": "10c71a87-8cc0-4097-b855-aacd9fb0b8f2"
+      },
+      {
+        "type": "control_response",
+        "response": {
+          "subtype": "success",
+          "request_id": "d412aee2-435d-49b8-81a1-4564836e9c47"
+        }
+      }
+    ],
+    "transcript": [
+      {
+        "type": "ai-title",
+        "aiTitle": "Session list reconnect bug",
+        "sessionId": "10c71a87-8cc0-4097-b855-aacd9fb0b8f2"
+      },
+      {
+        "type": "custom-title",
+        "customTitle": "Session list reconnect investigation",
+        "sessionId": "10c71a87-8cc0-4097-b855-aacd9fb0b8f2"
+      }
+    ]
+  }
+}

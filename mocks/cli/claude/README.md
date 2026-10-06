@@ -25,6 +25,7 @@ const crashing = await writeMockClaude(directory, { recording: 'task-plan', exit
 
 | Recording | What it holds |
 |---|---|
+| `session-title` | A generated `ai-title` transcript record, then a host rename with `session_title_changed` and a `custom-title` record |
 | `task-plan` | A Turn of TaskCreate and TaskUpdate calls |
 | `text-stream` | Streamed text deltas |
 | `lifecycle` | Hook and `command_lifecycle` frames |
@@ -48,6 +49,10 @@ Feed mocks are generated from these recordings through `toAgentEvents` and the r
 `image-prompt` was captured from the real CLI on 2026-10-05. Its input includes the 32 × 32 red PNG in `../red-square.png`, and its output identifies the color. The temporary Checkout path and user home are replaced by `/repo` and `/user`; the account is replaced by a Claude Max account with no email or organization. It records image handling by the CLI; the Server's upload and prompt conversion remain issue #41.
 
 `new-session.ts` takes representatives of distinct effort sets from the recorded catalog and runs the real config-option converter. Shared Storybook mocks use neutral Agent and model identities. Regenerate them from the repo root with `pnpm --filter @repo/server exec tsx ../../tools/generate-new-session-mocks.mts`.
+
+`session-title` was captured from the installed 2.1.286 executable on 2026-10-06 in a temporary Checkout. After a short Turn, a `generate_session_title` control request with `persist: true` produced the title and saved an `ai-title` transcript record, without a title-change stream event. Resuming that Session and sending `rename_session` with `source: host` emitted `system/session_title_changed` and saved a `custom-title` record. The recording keeps the control inputs, their responses, the event and both title records; conversation and account frames are excluded. The installed SDK does not expose this title event in its `SDKMessage` types. Issue #66 owns passing titles through and reading the transcript fallback.
+
+Regenerate the neutral Agent title mock with `pnpm --filter @repo/server exec tsx ../../tools/generate-session-title-mocks.mts`. `sessionTitleMocks` combines it with prompt, user and long-title states for both Agents.
 
 ## Answering request recordings
 

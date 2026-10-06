@@ -78,6 +78,8 @@
         }
       ],
       "snapshot": {
+        "title": "Use Write exactly once to create hello.txt containing recording-ready. Then reply done. Do not use other tools.",
+        "titleSource": "prompt",
         "state": "requires_action",
         "liveHeader": {
           "text": "Awaiting approval",
@@ -204,6 +206,8 @@
         }
       ],
       "snapshot": {
+        "title": "Use Write exactly once to create hello.txt containing recording-ready. Then reply done. Do not use other tools.",
+        "titleSource": "prompt",
         "state": "running",
         "liveHeader": {
           "text": "Editing /repo/hello.txt",
@@ -307,6 +311,8 @@
         }
       ],
       "snapshot": {
+        "title": "Before doing anything, use AskUserQuestion to ask which color I prefer: Blue or Green. Then reply with my choice. Do not use other tools.",
+        "titleSource": "prompt",
         "state": "requires_action",
         "liveHeader": {
           "text": "Waiting for your answer",
@@ -444,6 +450,8 @@
         }
       ],
       "snapshot": {
+        "title": "Before doing anything, use AskUserQuestion to ask which color I prefer: Blue or Green. Then reply with my choice. Do not use other tools.",
+        "titleSource": "prompt",
         "state": "running",
         "liveHeader": {
           "text": "AskUserQuestion",
@@ -602,6 +610,8 @@
         }
       ],
       "snapshot": {
+        "title": "Create a very short plan for making a file called hello.txt that contains hello. Use ExitPlanMode to propose the plan for approval. After approval, only say ready; do not implement or run commands.",
+        "titleSource": "prompt",
         "state": "requires_action",
         "liveHeader": {
           "text": "Plan ready",
@@ -767,6 +777,8 @@
         }
       ],
       "snapshot": {
+        "title": "Create a very short plan for making a file called hello.txt that contains hello. Use ExitPlanMode to propose the plan for approval. After approval, only say ready; do not implement or run commands.",
+        "titleSource": "prompt",
         "state": "running",
         "liveHeader": {
           "text": "Switching mode",
@@ -925,6 +937,8 @@
         }
       ],
       "snapshot": {
+        "title": "Create a very short plan for making a file called hello.txt that contains hello. Use ExitPlanMode to propose the plan for approval. After feedback, acknowledge it in one sentence, without calling any more tools.",
+        "titleSource": "prompt",
         "state": "requires_action",
         "liveHeader": {
           "text": "Plan ready",
@@ -1107,6 +1121,8 @@
         }
       ],
       "snapshot": {
+        "title": "Create a very short plan for making a file called hello.txt that contains hello. Use ExitPlanMode to propose the plan for approval. After feedback, acknowledge it in one sentence, without calling any more tools.",
+        "titleSource": "prompt",
         "state": "running",
         "liveHeader": {
           "text": "Switching mode",
@@ -1218,6 +1234,8 @@
         }
       ],
       "snapshot": {
+        "title": "Run exactly one shell command to write recording-ready into a file /tmp/argo54-permission-output.txt outside the workspace. Request escalated permission explicitly for the command. Do not use other tools, then reply done.",
+        "titleSource": "prompt",
         "state": "requires_action",
         "liveHeader": {
           "text": "Awaiting approval",
@@ -1351,6 +1369,8 @@
         }
       ],
       "snapshot": {
+        "title": "Run exactly one shell command to write recording-ready into a file /tmp/argo54-permission-output.txt outside the workspace. Request escalated permission explicitly for the command. Do not use other tools, then reply done.",
+        "titleSource": "prompt",
         "state": "running",
         "liveHeader": {
           "text": "Running /bin/zsh -lc \"printf 'recording-ready' > /tmp/argo54-permission-output.txt\"",
@@ -1399,6 +1419,8 @@
         }
       ],
       "snapshot": {
+        "title": "Use request_user_input to ask which color I prefer, with options Blue and Green. Then acknowledge my choice, without using any other tools.",
+        "titleSource": "prompt",
         "state": "requires_action",
         "liveHeader": {
           "text": "Waiting for your answer",
@@ -1481,6 +1503,8 @@
         }
       ],
       "snapshot": {
+        "title": "Use request_user_input to ask which color I prefer, with options Blue and Green. Then acknowledge my choice, without using any other tools.",
+        "titleSource": "prompt",
         "state": "running",
         "liveHeader": {
           "text": "Working",
@@ -1542,6 +1566,8 @@
         }
       ],
       "snapshot": {
+        "title": "Propose a very short plan for creating hello.txt containing hello. Do not inspect files or ask questions. Return your proposal inside a proposed_plan block.",
+        "titleSource": "prompt",
         "state": "requires_action",
         "liveHeader": {
           "text": "Plan ready",
@@ -1615,6 +1641,8 @@
         }
       ],
       "snapshot": {
+        "title": "Propose a very short plan for creating hello.txt containing hello. Do not inspect files or ask questions. Return your proposal inside a proposed_plan block.",
+        "titleSource": "prompt",
         "state": "running",
         "liveHeader": {
           "text": "Working",
@@ -1676,6 +1704,8 @@
         }
       ],
       "snapshot": {
+        "title": "Propose a very short plan for creating hello.txt containing hello. Do not inspect files or ask questions. Return your proposal inside a proposed_plan block.",
+        "titleSource": "prompt",
         "state": "requires_action",
         "liveHeader": {
           "text": "Plan ready",
@@ -1766,6 +1796,8 @@
         }
       ],
       "snapshot": {
+        "title": "Propose a very short plan for creating hello.txt containing hello. Do not inspect files or ask questions. Return your proposal inside a proposed_plan block.",
+        "titleSource": "prompt",
         "state": "running",
         "liveHeader": {
           "text": "Working",
