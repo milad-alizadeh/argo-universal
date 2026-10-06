@@ -6,7 +6,6 @@ import {
 } from '../apps/server/src/services/feed/feed-change.ts';
 import { toLiveHeader } from '../apps/server/src/services/sessions/live-header.ts';
 import { titleFromPrompt } from '../apps/server/src/services/sessions/session-data.ts';
-import { toSessionCheckout } from '../apps/server/src/services/sessions/session-record.ts';
 import { noChanges } from '../apps/server/src/services/sessions/session-snapshot.ts';
 import { mockClis } from '../mocks/cli/index.ts';
 import { agentAdapters } from '../packages/agents/src/adapters.ts';
@@ -20,6 +19,7 @@ import {
   type PendingPlanProposal,
   SessionSnapshot,
 } from '../packages/contracts/src/sessions/snapshot.ts';
+import { worktreeCheckout } from './mock-checkout.mts';
 
 const recordings = [
   'permission',
@@ -52,11 +52,7 @@ const mocks = agentAdapters.flatMap(({ agent }, index) => {
         agent: `agent-${index + 1}`,
         title: titleFromPrompt(prompt),
         titleSource: 'prompt',
-        checkout: toSessionCheckout({
-          id: sessionId,
-          checkoutPath: `/Users/me/argo/.argo/worktrees/${sessionId}`,
-          checkoutBranch: `argo/${sessionId}`,
-        }),
+        checkout: worktreeCheckout(sessionId),
         state:
           pendingPermission || pendingElicitation || pendingPlanProposal
             ? 'requires_action'

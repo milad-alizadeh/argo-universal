@@ -122,8 +122,10 @@ function FeedEnd() {
 const followEnd = { on: { dataChange: true, layout: true, itemLayout: true } };
 // While a reader opens or closes a collapsible it holds still, so opening one at the end grows below instead of scrolling the page up.
 const holdEnd = { on: { dataChange: true, layout: true } };
-// Older rows paging in above keep the reader's place.
+// Older rows paging in above keep the reader's place, and so do rows above that measure as the reader scrolls.
 const keepPosition = { data: true };
+// While a collapsible moves only the rows below it shift, so measuring rows needs no correction.
+const holdPosition = { data: true, size: false };
 
 // In screens from the end: only a reader at the very end is followed.
 const endThreshold = 0.02;
@@ -285,7 +287,7 @@ export function Feed({
           // Rows measure taller than estimated and streaming text grows them; at the end, the Feed stays there.
           maintainScrollAtEnd={holding ? holdEnd : followEnd}
           maintainScrollAtEndThreshold={endThreshold}
-          maintainVisibleContentPosition={keepPosition}
+          maintainVisibleContentPosition={holding ? holdPosition : keepPosition}
           // Older rows load two screens ahead of the top, and rows draw a screen beyond the view, so reading back never waits.
           onStartReached={onStartReached}
           onStartReachedThreshold={startThreshold}

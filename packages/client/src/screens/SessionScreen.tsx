@@ -95,6 +95,7 @@ function SessionView({ sessionId, now }: { sessionId: string; now?: number }) {
   if (!ready || !snapshot || !view) return <Screen edges={['bottom']} />;
 
   const running = snapshot.state !== 'idle';
+  const fadeHeight = wide ? 64 : 88;
   const startedAt = snapshot.liveHeader?.startedAt ?? null;
   let sendError: string | undefined;
   if (prompt.error) sendError = `Couldn't send. ${prompt.error.message}`;
@@ -135,13 +136,10 @@ function SessionView({ sessionId, now }: { sessionId: string; now?: number }) {
           {/* On a phone the fade starts higher, so the pills above the Composer sit on a quiet surface. */}
           <View
             pointerEvents="none"
-            className="absolute inset-x-0 -top-6 h-[88px] wide:top-0 wide:h-16"
+            className="absolute inset-x-0 -top-6 wide:top-0"
+            style={{ height: fadeHeight }}
           >
-            <ScrollFade
-              edge="bottom"
-              className="bg-card"
-              height={wide ? 64 : 88}
-            />
+            <ScrollFade edge="bottom" className="bg-card" height={fadeHeight} />
           </View>
           <Composer
             draft={draft}

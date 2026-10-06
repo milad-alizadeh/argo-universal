@@ -12,8 +12,13 @@ import {
   runningSessionMocks,
   sendArrivingRow,
   sessionNow,
+  twoSessionMocks,
 } from '../../mocks/session-screen-mock';
 import { SessionScreenPreview } from '../../mocks/session-screen-preview';
+import {
+  SessionSwitchPreview,
+  switchSession,
+} from '../../mocks/session-switch-preview';
 import { settleViewport } from '../../mocks/settle-viewport';
 import { applyTheme } from '../lib/theme';
 import { SessionScreen } from './SessionScreen';
@@ -45,6 +50,7 @@ async function eachLayout(
       await assertion(layout);
     }
   }
+  applyTheme('default', 'light');
 }
 
 function inViewport(element: Element) {
@@ -186,6 +192,85 @@ export const JumpsToLatest: Story = {
         canvas.queryByRole('button', { name: /Jump to latest/ }),
       ).toBeNull(),
     );
+  },
+};
+
+export const KeepsPlaceWhenRowOpens: Story = {
+  parameters: { trpc: longSessionMocks },
+  play: async ({ canvas }) => {
+    if ('__vitest_browser__' in globalThis) await settleViewport(widths.phone);
+    const scroll = await canvas.findByTestId('feed-scroll');
+    const atEnd = () =>
+      scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 2;
+    await waitFor(() => expect(atEnd()).toBe(true));
+    // Away from the end, opening a row grows the Feed below it and leaves the rows above where they were.
+    const closedRowInView = () => {
+      const view = scroll.getBoundingClientRect();
+      return within(scroll)
+        .queryAllByRole('button', { expanded: false })
+        .find((button) => {
+          const { top } = button.getBoundingClientRect();
+          return top > view.top + 40 && top < view.top + view.height / 2;
+        });
+    };
+    // Reads back a third of a screen at a time until a closed row sits in the top half.
+    let trigger: HTMLElement | undefined;
+    await waitFor(
+      () => {
+        trigger = closedRowInView();
+        if (!trigger) {
+          scroll.scrollTop -= scroll.clientHeight / 3;
+          scroll.dispatchEvent(new Event('scroll'));
+        }
+        expect(trigger).toBeDefined();
+      },
+      { timeout: 5000, interval: 100 },
+    );
+    if (!trigger) throw new Error('No closed row in view');
+    // A reader opens a row they have read, so the rows around it have measured.
+    let settledAt = -1;
+    await waitFor(
+      () => {
+        const top = trigger?.getBoundingClientRect().top ?? 0;
+        const still = top === settledAt;
+        settledAt = top;
+        expect(still).toBe(true);
+      },
+      { timeout: 5000, interval: 250 },
+    );
+    const triggerAt = trigger.getBoundingClientRect().top;
+    trigger.click();
+    await waitFor(() =>
+      expect(trigger).toHaveAttribute('aria-expanded', 'true'),
+    );
+    // Long enough for the open animation to finish.
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    await expect(
+      Math.abs(trigger.getBoundingClientRect().top - triggerAt),
+    ).toBeLessThan(2);
+    await expect(atEnd()).toBe(false);
+  },
+};
+
+export const SwitchesSessions: Story = {
+  parameters: { trpc: twoSessionMocks },
+  render: (args) => <SessionSwitchPreview {...args} />,
+  play: async ({ canvas }) => {
+    if ('__vitest_browser__' in globalThis) await settleViewport(widths.phone);
+    await canvas.findByRole('heading', { name: /^Think briefly first/ });
+    await expect(canvas.getByRole('button', { name: 'Stop' })).toBeVisible();
+    switchSession('session-2');
+    // The next Session opens at its own newest row, with none of the last one's rows or state.
+    await canvas.findByRole('heading', { name: /^Without using any tools/ });
+    await expect(canvas.queryByText(/^Think briefly first/)).toBeNull();
+    await expect(canvas.queryByRole('button', { name: 'Stop' })).toBeNull();
+    await expect(canvas.queryByRole('status')).toBeNull();
+    await waitFor(() =>
+      expect(inViewport(canvas.getByText('Redraws'))).toBe(true),
+    );
+    await expect(
+      canvas.queryByRole('button', { name: /Jump to latest/ }),
+    ).toBeNull();
   },
 };
 

@@ -83,7 +83,7 @@
         "titleSource": "prompt",
         "checkout": {
           "type": "worktree",
-          "path": "/Users/me/argo/.argo/worktrees/agent-1-permission",
+          "path": "/repo/.argo/worktrees/agent-1-permission",
           "branch": "argo/agent-1-permission"
         },
         "state": "requires_action",
@@ -217,7 +217,7 @@
         "titleSource": "prompt",
         "checkout": {
           "type": "worktree",
-          "path": "/Users/me/argo/.argo/worktrees/agent-1-permission",
+          "path": "/repo/.argo/worktrees/agent-1-permission",
           "branch": "argo/agent-1-permission"
         },
         "state": "running",
@@ -328,7 +328,7 @@
         "titleSource": "prompt",
         "checkout": {
           "type": "worktree",
-          "path": "/Users/me/argo/.argo/worktrees/agent-1-elicitation",
+          "path": "/repo/.argo/worktrees/agent-1-elicitation",
           "branch": "argo/agent-1-elicitation"
         },
         "state": "requires_action",
@@ -473,7 +473,7 @@
         "titleSource": "prompt",
         "checkout": {
           "type": "worktree",
-          "path": "/Users/me/argo/.argo/worktrees/agent-1-elicitation",
+          "path": "/repo/.argo/worktrees/agent-1-elicitation",
           "branch": "argo/agent-1-elicitation"
         },
         "state": "running",
@@ -639,7 +639,7 @@
         "titleSource": "prompt",
         "checkout": {
           "type": "worktree",
-          "path": "/Users/me/argo/.argo/worktrees/agent-1-plan-approved",
+          "path": "/repo/.argo/worktrees/agent-1-plan-approved",
           "branch": "argo/agent-1-plan-approved"
         },
         "state": "requires_action",
@@ -812,7 +812,7 @@
         "titleSource": "prompt",
         "checkout": {
           "type": "worktree",
-          "path": "/Users/me/argo/.argo/worktrees/agent-1-plan-approved",
+          "path": "/repo/.argo/worktrees/agent-1-plan-approved",
           "branch": "argo/agent-1-plan-approved"
         },
         "state": "running",
@@ -978,7 +978,7 @@
         "titleSource": "prompt",
         "checkout": {
           "type": "worktree",
-          "path": "/Users/me/argo/.argo/worktrees/agent-1-plan-kept-planning",
+          "path": "/repo/.argo/worktrees/agent-1-plan-kept-planning",
           "branch": "argo/agent-1-plan-kept-planning"
         },
         "state": "requires_action",
@@ -1168,7 +1168,7 @@
         "titleSource": "prompt",
         "checkout": {
           "type": "worktree",
-          "path": "/Users/me/argo/.argo/worktrees/agent-1-plan-kept-planning",
+          "path": "/repo/.argo/worktrees/agent-1-plan-kept-planning",
           "branch": "argo/agent-1-plan-kept-planning"
         },
         "state": "running",
@@ -1287,7 +1287,7 @@
         "titleSource": "prompt",
         "checkout": {
           "type": "worktree",
-          "path": "/Users/me/argo/.argo/worktrees/agent-2-permission",
+          "path": "/repo/.argo/worktrees/agent-2-permission",
           "branch": "argo/agent-2-permission"
         },
         "state": "requires_action",
@@ -1428,7 +1428,7 @@
         "titleSource": "prompt",
         "checkout": {
           "type": "worktree",
-          "path": "/Users/me/argo/.argo/worktrees/agent-2-permission",
+          "path": "/repo/.argo/worktrees/agent-2-permission",
           "branch": "argo/agent-2-permission"
         },
         "state": "running",
@@ -1484,7 +1484,7 @@
         "titleSource": "prompt",
         "checkout": {
           "type": "worktree",
-          "path": "/Users/me/argo/.argo/worktrees/agent-2-elicitation",
+          "path": "/repo/.argo/worktrees/agent-2-elicitation",
           "branch": "argo/agent-2-elicitation"
         },
         "state": "requires_action",
@@ -1574,7 +1574,7 @@
         "titleSource": "prompt",
         "checkout": {
           "type": "worktree",
-          "path": "/Users/me/argo/.argo/worktrees/agent-2-elicitation",
+          "path": "/repo/.argo/worktrees/agent-2-elicitation",
           "branch": "argo/agent-2-elicitation"
         },
         "state": "running",
@@ -1643,7 +1643,7 @@
         "titleSource": "prompt",
         "checkout": {
           "type": "worktree",
-          "path": "/Users/me/argo/.argo/worktrees/agent-2-plan-approved",
+          "path": "/repo/.argo/worktrees/agent-2-plan-approved",
           "branch": "argo/agent-2-plan-approved"
         },
         "state": "requires_action",
@@ -1724,7 +1724,7 @@
         "titleSource": "prompt",
         "checkout": {
           "type": "worktree",
-          "path": "/Users/me/argo/.argo/worktrees/agent-2-plan-approved",
+          "path": "/repo/.argo/worktrees/agent-2-plan-approved",
           "branch": "argo/agent-2-plan-approved"
         },
         "state": "running",
@@ -1793,7 +1793,7 @@
         "titleSource": "prompt",
         "checkout": {
           "type": "worktree",
-          "path": "/Users/me/argo/.argo/worktrees/agent-2-plan-kept-planning",
+          "path": "/repo/.argo/worktrees/agent-2-plan-kept-planning",
           "branch": "argo/agent-2-plan-kept-planning"
         },
         "state": "requires_action",
@@ -1891,7 +1891,7 @@
         "titleSource": "prompt",
         "checkout": {
           "type": "worktree",
-          "path": "/Users/me/argo/.argo/worktrees/agent-2-plan-kept-planning",
+          "path": "/repo/.argo/worktrees/agent-2-plan-kept-planning",
           "branch": "argo/agent-2-plan-kept-planning"
         },
         "state": "running",

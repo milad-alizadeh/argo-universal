@@ -6,7 +6,6 @@ import {
 } from '../apps/server/src/services/feed/feed-change.ts';
 import { toLiveHeader } from '../apps/server/src/services/sessions/live-header.ts';
 import { titleFromPrompt } from '../apps/server/src/services/sessions/session-data.ts';
-import { toSessionCheckout } from '../apps/server/src/services/sessions/session-record.ts';
 import { noChanges } from '../apps/server/src/services/sessions/session-snapshot.ts';
 import { mockClis } from '../mocks/cli/index.ts';
 import { agentAdapters } from '../packages/agents/src/adapters.ts';
@@ -16,6 +15,7 @@ import {
   permissionOptions,
   SessionSnapshot,
 } from '../packages/contracts/src/sessions/snapshot.ts';
+import { worktreeCheckout } from './mock-checkout.mts';
 
 // A fixed Turn start, so the live headers and their elapsed times stay the same on every run.
 const turnStartedAt = Date.UTC(2026, 9, 6, 9, 0, 0);
@@ -150,11 +150,7 @@ const mocks = agentAdapters.flatMap(({ agent }, index) => {
       // What the Server stores for a new worktree Session: the prompt's first line titles it.
       title: (prompt && titleFromPrompt(prompt)) || recording,
       titleSource: 'prompt',
-      checkout: toSessionCheckout({
-        id: sessionId,
-        checkoutPath: `/Users/me/argo/.argo/worktrees/${sessionId}`,
-        checkoutBranch: `argo/${sessionId}`,
-      }),
+      checkout: worktreeCheckout(sessionId),
       state: turnId === null ? 'idle' : 'running',
       liveHeader: header(),
       activeTurnId: turnId,

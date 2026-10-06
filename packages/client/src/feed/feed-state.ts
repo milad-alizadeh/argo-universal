@@ -81,7 +81,7 @@ export function receiveOlder(feed: FeedState, page: FeedPageOutput): FeedState {
 }
 
 // The string at a dotted path such as `content.0.text`.
-function readText(value: unknown, path: readonly string[]): unknown {
+function readAtPath(value: unknown, path: readonly string[]): unknown {
   let current = value;
   for (const key of path) {
     if (current === null || typeof current !== 'object') return undefined;
@@ -153,7 +153,7 @@ export function applyFeedEvent(
       ),
     };
   const path = event.field.split('.');
-  const current = readText(known, path);
+  const current = readAtPath(known, path);
   if (typeof current !== 'string' || current.length !== event.off)
     return { feed, fetchRow: event.id };
   return {

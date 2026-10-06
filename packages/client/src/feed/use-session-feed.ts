@@ -1,8 +1,8 @@
 import type { FeedSyncPoint, SessionSnapshot } from '@repo/contracts';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useTRPC, useTRPCClient } from '../trpc/context';
+import { useTRPC } from '../trpc/context';
 import {
   applyFeedEvent,
   emptyFeed,
@@ -11,13 +11,13 @@ import {
   receiveTail,
 } from './feed-state';
 
-// Rows per page: long enough that paging rarely shows while reading back.
+// Rows per page (ADR-0007 pages by position): long enough that paging rarely shows while reading back.
 const pageSize = 150;
 
 // A Session's Feed rows and snapshot: the newest page, older pages on request, and live changes after them (ADR 0007).
 export function useSessionFeed(sessionId: string) {
   const trpc = useTRPC();
-  const client = useTRPCClient();
+  const queryClient = useQueryClient();
   const tail = useQuery(
     trpc.feed.page.queryOptions(
       { sessionId, direction: 'tail', limit: pageSize },
@@ -51,7 +51,11 @@ export function useSessionFeed(sessionId: string) {
       if (rowsInFlight.current.has(id)) return;
       rowsInFlight.current.add(id);
       try {
-        const row = await client.feed.row.query({ sessionId, id });
+        const row = await queryClient.fetchQuery({
+          ...trpc.feed.row.queryOptions({ sessionId, id }),
+          staleTime: 0,
+          gcTime: 0,
+        });
         update(
           applyFeedEvent(feedRef.current, {
             type: 'row.upsert',
@@ -59,11 +63,13 @@ export function useSessionFeed(sessionId: string) {
             row,
           }).feed,
         );
+      } catch {
+        // The row keeps its last revision until a later change fetches it again.
       } finally {
         rowsInFlight.current.delete(id);
       }
     },
-    [client, sessionId, update],
+    [queryClient, trpc, sessionId, update],
   );
 
   const { refetch } = tail;
@@ -94,19 +100,25 @@ export function useSessionFeed(sessionId: string) {
     olderInFlight.current = true;
     setLoadingOlder(true);
     try {
-      const page = await client.feed.page.query({
-        sessionId,
-        direction: 'before',
-        cursor: startCursor,
-        limit: pageSize,
-        epoch,
+      const page = await queryClient.fetchQuery({
+        ...trpc.feed.page.queryOptions({
+          sessionId,
+          direction: 'before',
+          cursor: startCursor,
+          limit: pageSize,
+          epoch,
+        }),
+        staleTime: 0,
+        gcTime: 0,
       });
       update(receiveOlder(feedRef.current, page));
+    } catch {
+      // The rows stay as they were; the reader asks again by scrolling back to the top.
     } finally {
       olderInFlight.current = false;
       setLoadingOlder(false);
     }
-  }, [client, sessionId, update]);
+  }, [queryClient, trpc, sessionId, update]);
 
   return {
     feed,
