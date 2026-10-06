@@ -30,6 +30,7 @@ export const Settled: Story = {
         name: 'Ran 1 command, Read 1 file',
       });
       await expect(group).toBeVisible();
+      await expect(within(group).queryByText('0.3s')).not.toBeInTheDocument();
       await expect(
         canvas.queryAllByRole('button', { name: /^Read / }),
       ).toHaveLength(0);

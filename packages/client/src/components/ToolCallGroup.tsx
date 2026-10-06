@@ -57,6 +57,7 @@ export function ToolCallGroup({
       running={running}
       initialOpen={initialOpen}
       trailing={
+        running &&
         duration && (
           <Text className="shrink-0 text-sm leading-5 text-muted-foreground">
             {duration}
