@@ -14,7 +14,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '#primitives/collapsible';
-import { Text } from '#primitives/text';
+import { Text, TextClassContext } from '#primitives/text';
 import { Icon } from './Icon';
 import { ShimmerText } from './ShimmerText';
 
@@ -38,6 +38,7 @@ export function FeedDisclosure({
   children,
 }: FeedDisclosureProps) {
   const [open, setOpen] = useState(initialOpen);
+  const [hovered, setHovered] = useState(false);
   const rotation = useDerivedValue(
     () =>
       withTiming(open ? 90 : 0, {
@@ -54,42 +55,55 @@ export function FeedDisclosure({
   );
   return (
     <Collapsible open={open} onOpenChange={setOpen} className="w-full">
-      <CollapsibleTrigger
-        accessibilityLabel={label}
-        className="min-h-5 flex-row items-center gap-1.5"
-      >
-        <View className="size-4 shrink-0">
-          <Icon
-            as={icon}
-            className={cn(
-              'size-4 text-muted-foreground',
-              failed && 'text-destructive',
-            )}
-          />
-        </View>
-        <View className="min-w-0 flex-1 flex-row items-center gap-1">
-          {running ? (
-            <ShimmerText
-              text={label}
-              className="min-w-0 shrink text-sm leading-5 text-foreground"
-            />
-          ) : (
-            <Text
-              numberOfLines={1}
-              className="min-w-0 shrink text-sm leading-5 text-muted-foreground"
-            >
-              {label}
-            </Text>
-          )}
-          {trailing}
-          <Animated.View style={style} className="size-3.5 shrink-0">
+      <TextClassContext.Provider value="select-none">
+        <CollapsibleTrigger
+          accessibilityLabel={label}
+          onHoverIn={() => setHovered(true)}
+          onHoverOut={() => setHovered(false)}
+          className="min-h-5 flex-row items-center gap-1.5"
+        >
+          <View className="size-4 shrink-0">
             <Icon
-              as={CaretRightIcon}
-              className="size-3.5 text-muted-foreground"
+              as={icon}
+              className={cn(
+                'size-4 text-muted-foreground',
+                hovered && 'text-foreground',
+                failed && 'text-destructive',
+              )}
             />
-          </Animated.View>
-        </View>
-      </CollapsibleTrigger>
+          </View>
+          <View className="min-w-0 flex-1 flex-row items-center gap-1">
+            {running ? (
+              <ShimmerText
+                text={label}
+                emphasized={hovered}
+                className="min-w-0 shrink text-sm leading-5 text-foreground"
+              />
+            ) : (
+              <Text
+                numberOfLines={1}
+                selectable={false}
+                className={cn(
+                  'min-w-0 shrink text-sm leading-5 text-muted-foreground',
+                  hovered && 'text-foreground',
+                )}
+              >
+                {label}
+              </Text>
+            )}
+            {trailing}
+            <Animated.View style={style} className="size-3.5 shrink-0">
+              <Icon
+                as={CaretRightIcon}
+                className={cn(
+                  'size-3.5 text-muted-foreground',
+                  hovered && 'text-foreground',
+                )}
+              />
+            </Animated.View>
+          </View>
+        </CollapsibleTrigger>
+      </TextClassContext.Provider>
       <CollapsibleContent className="pt-2">{children}</CollapsibleContent>
     </Collapsible>
   );

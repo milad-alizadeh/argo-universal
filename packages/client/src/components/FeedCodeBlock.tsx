@@ -55,7 +55,10 @@ export function FeedCodeBlock({ code, language, footer }: FeedCodeBlockProps) {
         </Pressable>
       </View>
       <ScrollView horizontal contentContainerClassName="px-3 py-2">
-        <Text className="font-mono text-xs leading-5 text-foreground">
+        <Text
+          selectable
+          className="font-mono text-xs leading-5 text-foreground"
+        >
           {code}
         </Text>
       </ScrollView>

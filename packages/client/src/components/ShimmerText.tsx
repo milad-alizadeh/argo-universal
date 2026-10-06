@@ -14,9 +14,11 @@ import { Text } from '#primitives/text';
 export function ShimmerText({
   text,
   className,
+  emphasized = false,
 }: {
   text: string;
   className?: string;
+  emphasized?: boolean;
 }) {
   const position = useSharedValue(-8);
   const reducedMotion = useReducedMotion();
@@ -34,7 +36,7 @@ export function ShimmerText({
     return () => cancelAnimation(position);
   }, [characters.length, reducedMotion, position]);
   return (
-    <Text numberOfLines={1} className={className}>
+    <Text numberOfLines={1} selectable={false} className={className}>
       {reducedMotion
         ? text
         : characters.map((character, index) => (
@@ -43,6 +45,7 @@ export function ShimmerText({
               character={character}
               index={index}
               position={position}
+              emphasized={emphasized}
             />
           ))}
     </Text>
@@ -53,20 +56,24 @@ function ShimmerCharacter({
   character,
   index,
   position,
+  emphasized,
 }: {
   character: string;
   index: number;
   position: SharedValue<number>;
+  emphasized: boolean;
 }) {
   const style = useAnimatedStyle(
     () => ({
       opacity:
-        0.45 + 0.55 * Math.max(0, 1 - Math.abs(index - position.value) / 8),
+        (emphasized ? 0.7 : 0.45) +
+        (emphasized ? 0.3 : 0.55) *
+          Math.max(0, 1 - Math.abs(index - position.value) / 8),
     }),
-    [index, position],
+    [emphasized, index, position],
   );
   return (
-    <Animated.Text accessible={false} style={style}>
+    <Animated.Text accessible={false} selectable={false} style={style}>
       {character}
     </Animated.Text>
   );
