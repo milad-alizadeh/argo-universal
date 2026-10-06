@@ -26,7 +26,7 @@ import { cn } from '#lib/utils';
 import { Text } from '#primitives/text';
 import { useWide } from '../navigation/use-wide';
 import { ProjectHeading } from './ProjectHeading';
-import { ScrollFade } from './ScrollFade';
+import { ScrollFade, useScrollFadeEdges } from './ScrollFade';
 import { SessionRow, type SessionRowProps } from './SessionRow';
 
 type Entry =
@@ -90,7 +90,7 @@ export function SessionsList({
     revealLoadingFooter.current = isFetchingNextPage && atEnd.current;
   }, [isFetchingNextPage]);
   // The top fade shows once content has scrolled under the header.
-  const [scrolled, setScrolled] = useState(false);
+  const scrollFade = useScrollFadeEdges();
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const entries = useMemo(() => {
     const groups = new Map<string, SessionInfo[]>();
@@ -217,14 +217,10 @@ export function SessionsList({
           onEndReachedThreshold={0.5}
           contentInsetAdjustmentBehavior="automatic"
           ListHeaderComponent={header}
-          onScroll={({ nativeEvent }) => {
-            const {
-              contentInset,
-              contentOffset,
-              contentSize,
-              layoutMeasurement,
-            } = nativeEvent;
-            setScrolled(contentOffset.y + (contentInset?.top ?? 0) > 0);
+          onScroll={(event) => {
+            scrollFade.onScroll(event);
+            const { contentOffset, contentSize, layoutMeasurement } =
+              event.nativeEvent;
             atEnd.current =
               contentSize.height - contentOffset.y - layoutMeasurement.height <=
               2;
@@ -264,7 +260,7 @@ export function SessionsList({
           renderItem={renderItem}
         />
       </View>
-      {scrolled && !hasLiquidGlass && (
+      {scrollFade.edges.top && !hasLiquidGlass && (
         <ScrollFade edge="top" className={fadeSurface} />
       )}
       <ScrollFade edge="bottom" className={fadeSurface} />

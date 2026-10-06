@@ -365,7 +365,7 @@ function EffortControl({
     effortChoices.findIndex((choice) => choice.value === effort.currentValue),
   );
   return (
-    <View className="border-t border-border px-3 pt-2.5 pb-3 gap-2.5">
+    <View className="px-3 pt-2.5 pb-3 gap-2.5">
       <View className="gap-0.5">
         <Text
           selectable={false}
@@ -457,7 +457,7 @@ function FastModeControl({
   )
     return null;
   return (
-    <View className="p-1 border-t border-border">
+    <View className="p-1">
       <View className="min-h-11 wide:min-h-8 py-1.5 px-2 flex-row items-center gap-1">
         <View className="flex-1 min-w-0 gap-0.5">
           <Label
@@ -553,7 +553,7 @@ function AgentModelMenu({
             <ModelChoices configuration={configuration} onSelect={() => {}} />
           </>
         ) : (
-          <View className="p-1 gap-0.5 border-t border-border">
+          <View className="p-1 gap-0.5">
             <Button
               variant="ghost"
               accessibilityLabel="Choose Agent"
@@ -619,7 +619,7 @@ function AgentModelMenu({
         <FastModeControl configuration={configuration} />
         <EffortControl configuration={configuration} />
         {configuration.turnRunning && (
-          <View className="flex-row gap-2 px-3 py-2.5 bg-muted border-t border-border">
+          <View className="flex-row gap-2 px-3 py-2.5 bg-muted">
             <Icon as={HourglassSimpleIcon} className="text-muted-foreground" />
             <Text
               selectable={false}

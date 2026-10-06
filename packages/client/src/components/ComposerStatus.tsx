@@ -302,7 +302,7 @@ function NativePlanSpinner({ label }: { label: string }) {
 function PlanSteps({ entries }: { entries: PlanEntry[] }) {
   const wide = useWide();
   const steps = (
-    <View className={wide ? 'px-1 pb-2' : 'pb-1 border-t border-border'}>
+    <View className={wide ? 'px-1 pb-2' : 'pb-1'}>
       {entries.map((entry) => {
         let stepIndicator: ReactNode;
         if (entry.status === 'in_progress' && Platform.OS !== 'web' && !wide) {
