@@ -1,3 +1,4 @@
+import { sessionRows } from '@repo/api/mocks';
 import { createMockAdapter } from '@repo/mocks/agent';
 import { afterAll, expect, it } from 'vitest';
 import { createActor, type StateValue } from 'xstate';
@@ -34,8 +35,14 @@ const rows: [StateValue, string][] = [
 it.each(rows)('maps %j to %s', (value, state) => {
   const snapshot = sessionMachine.resolveState({ value, context });
   expect(
-    toSessionSnapshot(snapshot, { context: { epoch: 2, maxRevision: 7 } }),
+    toSessionSnapshot(
+      snapshot,
+      { context: { epoch: 2, maxRevision: 7 } },
+      sessionRows.idle,
+    ),
   ).toEqual({
+    title: 'Finished work',
+    titleSource: 'agent',
     state,
     liveHeader: null,
     activeTurnId: null,
@@ -80,8 +87,14 @@ it('projects the live context and the Feed revision without changing either', ()
     },
   });
   expect(
-    toSessionSnapshot(snapshot, { context: { epoch: 3, maxRevision: 9 } }),
+    toSessionSnapshot(
+      snapshot,
+      { context: { epoch: 3, maxRevision: 9 } },
+      sessionRows.idle,
+    ),
   ).toEqual({
+    title: 'Finished work',
+    titleSource: 'agent',
     state: 'requires_action',
     liveHeader: {
       text: 'Awaiting approval',
@@ -107,20 +120,40 @@ it.each(liveHeaderMocks)(
       context: { ...context, activeTurnId: 'turn-1' },
     });
     expect(
-      toSessionSnapshot(snapshot, {
-        context: {
-          epoch: 0,
-          maxRevision: command.revision,
-          rows: {
-            [command.id]: {
-              ...command,
-              kind: 'read',
-              locations: [{ path: 'spec.md' }],
-              _meta: undefined,
+      toSessionSnapshot(
+        snapshot,
+        {
+          context: {
+            epoch: 0,
+            maxRevision: command.revision,
+            rows: {
+              [command.id]: {
+                ...command,
+                kind: 'read',
+                locations: [{ path: 'spec.md' }],
+                _meta: undefined,
+              },
             },
           },
         },
-      }).liveHeader?.text,
+        sessionRows.idle,
+      ).liveHeader?.text,
     ).toBe('Reading spec.md');
+  },
+);
+
+it.each(['prompt', 'agent', 'user'] as const)(
+  'projects a stored %s title even without a Session actor',
+  (titleSource) => {
+    expect(
+      toSessionSnapshot(
+        null,
+        { context: { epoch: 0, maxRevision: 0 } },
+        { title: 'Session list reconnect investigation', titleSource },
+      ),
+    ).toMatchObject({
+      title: 'Session list reconnect investigation',
+      titleSource,
+    });
   },
 );

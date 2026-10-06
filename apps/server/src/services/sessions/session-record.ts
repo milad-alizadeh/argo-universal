@@ -5,6 +5,8 @@ import { TRPCError } from '@trpc/server';
 import { eq } from 'drizzle-orm';
 
 const sessionRecord = SessionInfo.pick({
+  title: true,
+  titleSource: true,
   agent: true,
   parentSessionId: true,
 }).extend(SessionSnapshot.pick({ epoch: true, maxRevision: true }).shape);
@@ -14,6 +16,8 @@ export function createSessionReader(database: Database) {
   return (sessionId: string) => {
     const stored = database
       .select({
+        title: session.title,
+        titleSource: session.titleSource,
         agent: session.agent,
         parentSessionId: session.parentSessionId,
         epoch: session.epoch,

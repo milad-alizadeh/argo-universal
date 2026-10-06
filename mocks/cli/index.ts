@@ -4,6 +4,7 @@ import {
   recordedPrompt as claudeRecordedPrompt,
 } from './claude/feed.ts';
 import { newSessionMock as claudeNewSessionMock } from './claude/new-session.ts';
+import { recordedTitle } from './claude/titles.ts';
 import { writeMockClaude } from './claude/write-mock-claude.ts';
 import { writeClaudeTranscript } from './claude/write-transcript.ts';
 import {
@@ -16,6 +17,7 @@ import { writeCodexTranscript } from './codex/write-transcript.ts';
 import type { MockCliOptions } from './mock-cli.ts';
 
 export interface MockCli {
+  recordedTitle?: () => string;
   feedEvents(recording: string): AgentEvent[];
   // The first prompt a recording sent, or undefined when it holds none.
   recordedPrompt(
@@ -73,6 +75,7 @@ export const mockClis: Record<string, MockCli> = {
     writeTranscript: writeCodexTranscript,
   },
   claude: {
+    recordedTitle,
     feedEvents: claudeFeedEvents,
     recordedPrompt: claudeRecordedPrompt,
     write: writeMockClaude,

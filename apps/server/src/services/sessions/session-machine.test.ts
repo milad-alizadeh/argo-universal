@@ -1,4 +1,5 @@
 import { type AgentCommand, agentMachine } from '@repo/agents';
+import { sessionRows } from '@repo/api/mocks';
 import {
   createMockAdapter,
   type MockAgentScript,
@@ -87,7 +88,11 @@ it('runs one Turn and rejects a second prompt while it runs', async () => {
     content: [{ type: 'text', text: 'Hello' }],
   });
   expect(
-    toSessionSnapshot(session.getSnapshot(), feed.getSnapshot()),
+    toSessionSnapshot(
+      session.getSnapshot(),
+      feed.getSnapshot(),
+      sessionRows.idle,
+    ),
   ).toMatchObject({ state: 'running', activeTurnId: 'turn-1' });
   expect(
     service.row({ sessionId: 'session-1', id: 'turn-1:user' }),
@@ -112,7 +117,11 @@ it('runs one Turn and rejects a second prompt while it runs', async () => {
   ).toThrow(expect.objectContaining({ code: 'CONFLICT' }));
   stream.send({ type: 'agent.turnEnded', stopReason: 'end_turn' });
   expect(
-    toSessionSnapshot(session.getSnapshot(), feed.getSnapshot()),
+    toSessionSnapshot(
+      session.getSnapshot(),
+      feed.getSnapshot(),
+      sessionRows.idle,
+    ),
   ).toMatchObject({ state: 'idle', activeTurnId: null });
 });
 
@@ -140,7 +149,11 @@ it('answers only the head Permission request and keeps other requests visible', 
     },
   });
   expect(
-    toSessionSnapshot(session.getSnapshot(), feed.getSnapshot()),
+    toSessionSnapshot(
+      session.getSnapshot(),
+      feed.getSnapshot(),
+      sessionRows.idle,
+    ),
   ).toMatchObject({
     state: 'requires_action',
     pendingPermission: request,
@@ -159,7 +172,11 @@ it('answers only the head Permission request and keeps other requests visible', 
     optionId: 'allow',
   });
   expect(
-    toSessionSnapshot(session.getSnapshot(), feed.getSnapshot()),
+    toSessionSnapshot(
+      session.getSnapshot(),
+      feed.getSnapshot(),
+      sessionRows.idle,
+    ),
   ).toMatchObject({
     state: 'requires_action',
     pendingPermission: { toolCallId: 'tool-2' },
@@ -170,7 +187,11 @@ it('answers only the head Permission request and keeps other requests visible', 
     optionId: 'allow',
   });
   expect(
-    toSessionSnapshot(session.getSnapshot(), feed.getSnapshot()),
+    toSessionSnapshot(
+      session.getSnapshot(),
+      feed.getSnapshot(),
+      sessionRows.idle,
+    ),
   ).toMatchObject({ state: 'requires_action', pendingPermission: null });
   sendSessionCommand(session, {
     type: 'session.answerElicitation',
@@ -178,7 +199,11 @@ it('answers only the head Permission request and keeps other requests visible', 
     content: { file: 'README.md' },
   });
   expect(
-    toSessionSnapshot(session.getSnapshot(), feed.getSnapshot()),
+    toSessionSnapshot(
+      session.getSnapshot(),
+      feed.getSnapshot(),
+      sessionRows.idle,
+    ),
   ).toMatchObject({ state: 'running', pendingElicitation: null });
   await vi.waitFor(() =>
     expect(commands).toContainEqual({
@@ -225,7 +250,11 @@ it('cancels queued requests and waits for the Agent to end the Turn', async () =
     ),
   );
   expect(
-    toSessionSnapshot(session.getSnapshot(), feed.getSnapshot()),
+    toSessionSnapshot(
+      session.getSnapshot(),
+      feed.getSnapshot(),
+      sessionRows.idle,
+    ),
   ).toMatchObject({
     state: 'running',
     activeTurnId: 'turn-1',
@@ -234,7 +263,11 @@ it('cancels queued requests and waits for the Agent to end the Turn', async () =
   });
   stream.send({ type: 'agent.turnEnded', stopReason: 'cancelled' });
   expect(
-    toSessionSnapshot(session.getSnapshot(), feed.getSnapshot()),
+    toSessionSnapshot(
+      session.getSnapshot(),
+      feed.getSnapshot(),
+      sessionRows.idle,
+    ),
   ).toMatchObject({ state: 'idle', activeTurnId: null });
 });
 
@@ -551,12 +584,17 @@ it.each(paths.map((path, index) => [index, path] as const))(
           const actual = sessionActor.getSnapshot();
           const feed = actual.children.feed as FeedActorRef | undefined;
           const { epoch, maxRevision, liveHeader, ...projection } =
-            toSessionSnapshot(expected, { context: expected.context });
+            toSessionSnapshot(
+              expected,
+              { context: expected.context },
+              sessionRows.idle,
+            );
           // The model was built on real time and the walk runs on fake timers, so only a Turn start's presence matches.
           expect(
             toSessionSnapshot(
               actual,
               feed?.getSnapshot() ?? { context: { epoch, maxRevision } },
+              sessionRows.idle,
             ),
           ).toMatchObject({
             ...projection,

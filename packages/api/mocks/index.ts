@@ -36,6 +36,7 @@ export function unreachableServices(
       new: unreachable('session.new'),
       prompt: unreachable('session.prompt'),
       cancel: unreachable('session.cancel'),
+      rename: unreachable('session.rename'),
       setConfigOption: unreachable('session.setConfigOption'),
       ...overrides.session,
     },
@@ -45,3 +46,4 @@ export function unreachableServices(
 export * from './feed';
 export * from './new-session';
 export * from './session-list';
+export * from './session-titles';

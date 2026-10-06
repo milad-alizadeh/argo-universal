@@ -5,6 +5,7 @@ import {
   userMessageChange,
 } from '../apps/server/src/services/feed/feed-change.ts';
 import { toLiveHeader } from '../apps/server/src/services/sessions/live-header.ts';
+import { titleFromPrompt } from '../apps/server/src/services/sessions/session-data.ts';
 import { mockClis } from '../mocks/cli/index.ts';
 import { agentAdapters } from '../packages/agents/src/adapters.ts';
 import type { SessionUpdate } from '../packages/contracts/src/feed/session-update.ts';
@@ -137,6 +138,8 @@ const mocks = agentAdapters.flatMap(({ agent }, index) => {
       apply(event.change);
     }
     const snapshot = SessionSnapshot.parse({
+      title: titleFromPrompt(prompt ?? []),
+      titleSource: 'prompt',
       state: turnId === null ? 'idle' : 'running',
       liveHeader: header(),
       activeTurnId: turnId,

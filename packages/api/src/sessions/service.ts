@@ -9,6 +9,8 @@ import type {
   SessionNewOutput,
   SessionPromptInput,
   SessionPromptOutput,
+  SessionRenameInput,
+  SessionRenameOutput,
   SessionSetConfigOptionInput,
   SessionSetConfigOptionOutput,
 } from '@repo/contracts';
@@ -21,6 +23,7 @@ export interface SessionService {
   counts(signal: AbortSignal | undefined): AsyncIterable<SessionCounts>;
   new: (input: SessionNewInput) => Promise<SessionNewOutput>;
   prompt(input: SessionPromptInput): Promise<SessionPromptOutput>;
+  rename(input: SessionRenameInput): Promise<SessionRenameOutput>;
   cancel(input: SessionCancelInput): Promise<SessionCancelOutput>;
   setConfigOption(
     input: SessionSetConfigOptionInput,
