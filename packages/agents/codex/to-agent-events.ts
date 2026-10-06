@@ -3,6 +3,7 @@ import type { AgentMapping } from '../src/agent-adapter';
 import type { AgentEvent, FeedChange, FeedUpdate } from '../src/agent-events';
 import type { VendorMessage } from './messages';
 import type { ThreadItem, TokenUsageBreakdown, Turn } from './protocol.gen';
+import { toRequestEvents } from './request-events';
 import { type ToolCallRow, toToolCall } from './tool-calls';
 
 type TextKind = 'agent_message' | 'agent_thought';
@@ -107,6 +108,8 @@ export function toAgentEvents(
   else if ('turnId' in message.params) vendorTurnId = message.params.turnId;
   if (!vendorTurnId || vendorTurnId !== mappingState.vendorTurnId)
     return dropped(mappingState);
+  const requests = toRequestEvents(message);
+  if (requests.length) return { events: requests, mappingState };
   switch (message.method) {
     case 'turn/completed':
       return endTurn(message.params.turn, mappingState, message.receivedAt);
@@ -254,6 +257,20 @@ function mapItem(
     | ToolCallRow
     | Extract<FeedUpdate, { sessionUpdate: 'compaction_update' }>;
   switch (item.type) {
+    case 'plan':
+      if (state === 'open') return dropped(mappingState);
+      return {
+        mappingState,
+        events: [
+          upsert({
+            id: item.id,
+            sessionUpdate: 'plan_update',
+            state,
+            plan: { type: 'markdown', planId: item.id, content: item.text },
+          }),
+          { type: 'agent.planProposed', planId: item.id, content: item.text },
+        ],
+      };
     case 'contextCompaction':
       row = {
         id: item.id,

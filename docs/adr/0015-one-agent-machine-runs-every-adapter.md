@@ -15,7 +15,7 @@ It also describes its Agent before any Session starts, for `agents.list` and the
 
 The Agent machine runs ordinary commands one at a time and in order, so a config change lands before the prompt that follows it. Cancel and stop interrupt pending commands. It finds the start and end of a Turn in the Agent events, so no adapter decides a lifecycle transition. A vendor session reports `capabilities` with its ready data, because what a Session can do depends on that session, not only on the vendor. Biome stops an adapter from importing `xstate`.
 
-Inside an adapter, the vendor SDK's TypeScript types describe vendor messages. The adapter does not parse them with Zod. The Feed checks every change an adapter makes against the contract's `SessionUpdate` schema, in `feed-change.ts`, and rejects, logs and counts one that does not match. That is the one check at the boundary between an adapter and the Server.
+Inside an adapter and its CLI mocks, the vendor SDK's TypeScript types or generated protocol types describe vendor messages. Recording converters and mock CLIs use the same types. Shared recording and transport readers validate their generic envelopes with Zod; vendor directories use SDK types, with Biome enforcing the import boundary. The Feed checks every change an adapter makes against the contract's `SessionUpdate` schema, in `feed-change.ts`, and rejects, logs and counts one that does not match. That is the one check at the boundary between an adapter and the Server.
 
 This follows old Argo's ADR-0047, which replaced its per-vendor machines with async clients and one generic session machine. Paseo has the same split between generic and vendor code, without XState.
 

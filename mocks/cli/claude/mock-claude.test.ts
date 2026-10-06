@@ -4,9 +4,14 @@ import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { z } from 'zod';
+import type {
+  SDKControlRequest,
+  SDKControlResponse,
+  SDKMessage,
+} from '../../../packages/agents/claude/messages.ts';
 import { startLineProcess } from '../line-process.ts';
 import {
+  recordedFrames as captureFrames,
   findRecording,
   readRecording,
   recordingFiles,
@@ -18,20 +23,26 @@ const PRODUCER = 'claude-cli';
 const RECORDINGS = path.join(import.meta.dirname, 'recordings');
 const VERSION = recordingVersion(RECORDINGS);
 
-const RecordedFrames = z.array(
-  z.looseObject({ type: z.string(), session_id: z.string().optional() }),
-);
-
 const recordedFrames = (name: string) =>
-  RecordedFrames.parse(
+  captureFrames<SDKMessage>(
     readRecording(findRecording(RECORDINGS, name), PRODUCER).payload,
+    'output',
   );
 
 // A recording of both pipes: what the SDK wrote to stdin, and what the CLI wrote to stdout.
-const recordedPipes = (name: string) =>
-  z
-    .object({ input: RecordedFrames, output: RecordedFrames })
-    .parse(readRecording(findRecording(RECORDINGS, name), PRODUCER).payload);
+const recordedPipes = (name: string) => {
+  const payload = readRecording(
+    findRecording(RECORDINGS, name),
+    PRODUCER,
+  ).payload;
+  return {
+    input: captureFrames<SDKMessage | SDKControlRequest>(payload, 'input'),
+    output: captureFrames<SDKMessage | SDKControlRequest | SDKControlResponse>(
+      payload,
+      'output',
+    ),
+  };
+};
 
 const isControlResponse = (frame: { type: string }) =>
   frame.type === 'control_response';
@@ -199,9 +210,9 @@ describe('mock Claude CLI', () => {
         .slice(0, frames.length);
       expect(frames).toEqual(
         turn.map((frame) =>
-          frame.session_id === undefined
-            ? frame
-            : { ...frame, session_id: 'session-from-flags' },
+          'session_id' in frame
+            ? { ...frame, session_id: 'session-from-flags' }
+            : frame,
         ),
       );
       claude.close();
@@ -214,15 +225,13 @@ describe('mock Claude CLI', () => {
     const recordedAnswer = (subtype: string) => {
       const request = input.find(
         (frame) =>
-          frame.type === 'control_request' &&
-          z.object({ request: z.object({ subtype: z.string() }) }).parse(frame)
-            .request.subtype === subtype,
+          frame.type === 'control_request' && frame.request.subtype === subtype,
       );
       return output.find(
         (frame) =>
           isControlResponse(frame) &&
           JSON.stringify(frame).includes(
-            `"request_id":"${request?.request_id}"`,
+            `"request_id":"${request?.type === 'control_request' ? request.request_id : undefined}"`,
           ),
       );
     };
@@ -234,9 +243,12 @@ describe('mock Claude CLI', () => {
         request_id: `${subtype}-1`,
         request: { subtype },
       });
-      const answer = z
-        .object({ response: z.looseObject({ response: z.unknown() }) })
-        .parse(recordedAnswer(subtype));
+      const answer = recordedAnswer(subtype);
+      if (
+        answer?.type !== 'control_response' ||
+        answer.response.subtype !== 'success'
+      )
+        throw new Error(`No recorded answer for ${subtype}`);
       expect(await claude.next()).toEqual({
         type: 'control_response',
         response: {

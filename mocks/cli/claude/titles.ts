@@ -1,23 +1,31 @@
 import path from 'node:path';
-import { z } from 'zod';
-import { findRecording, readRecording } from '../recording.ts';
+import type {
+  SDKControlResponse,
+  SDKMessage,
+} from '../../../packages/agents/claude/messages.ts';
+import { findRecording, readRecording, recordedFrames } from '../recording.ts';
 
-// The generated title saved by the real CLI after generate_session_title with persist enabled.
+// The real CLI's response to generate_session_title with persist enabled.
 export function recordedTitle() {
   const file = findRecording(
     path.join(import.meta.dirname, 'recordings'),
     'session-title',
   );
-  const payload = z
-    .object({ transcript: z.array(z.unknown()) })
-    .parse(readRecording(file, 'claude-cli').payload);
-  const titleRecord = z.object({
-    type: z.literal('ai-title'),
-    aiTitle: z.string(),
-  });
-  const title = payload.transcript
-    .map((record) => titleRecord.safeParse(record).data)
-    .find((record) => record !== undefined);
-  if (!title) throw new Error('Missing recorded Agent title');
-  return title.aiTitle;
+  const { payload } = readRecording(file, 'claude-cli');
+  const response = recordedFrames<SDKMessage | SDKControlResponse>(
+    payload,
+    'output',
+  ).find(
+    (frame) =>
+      frame.type === 'control_response' &&
+      frame.response.subtype === 'success' &&
+      typeof frame.response.response?.title === 'string',
+  );
+  if (
+    response?.type !== 'control_response' ||
+    response.response.subtype !== 'success' ||
+    typeof response.response.response?.title !== 'string'
+  )
+    throw new Error('Missing recorded Agent title');
+  return response.response.response.title;
 }

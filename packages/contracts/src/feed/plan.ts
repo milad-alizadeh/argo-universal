@@ -42,6 +42,7 @@ export const PlanMarkdown = z.strictObject({
         .strictObject({
           requestId: z.string().optional(),
           filePath: z.string().optional(),
+          proposalOutcome: z.enum(['approved', 'kept_planning']).optional(),
         })
         .optional(),
     })

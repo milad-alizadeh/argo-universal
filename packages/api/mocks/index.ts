@@ -37,13 +37,21 @@ export function unreachableServices(
       prompt: unreachable('session.prompt'),
       cancel: unreachable('session.cancel'),
       rename: unreachable('session.rename'),
+      answerPermission: unreachable('session.answerPermission'),
+      answerElicitation: unreachable('session.answerElicitation'),
+      answerPlanProposal: unreachable('session.answerPlanProposal'),
+
       setConfigOption: unreachable('session.setConfigOption'),
+      changes: unreachable('session.changes'),
+      diff: unreachable('session.diff'),
       ...overrides.session,
     },
   };
 }
 
+export * from './changes';
 export * from './feed';
 export * from './new-session';
+export * from './requests';
 export * from './session-list';
 export * from './session-titles';

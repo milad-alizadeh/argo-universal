@@ -22,7 +22,7 @@ import {
   startingValues,
   toConfigOptions,
 } from './config-options';
-import type { VendorMessage } from './to-agent-events';
+import type { VendorMessage } from './messages';
 
 // The values the CLI starts with; the saved ones follow once its model list can check them.
 const CLI_START: ConfigValues = {

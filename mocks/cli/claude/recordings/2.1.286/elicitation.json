@@ -1,0 +1,1376 @@
+{
+  "producer": "claude-cli",
+  "version": "2.1.286",
+  "recordedAt": "2026-10-06T14:36:46.109Z",
+  "payload": {
+    "input": [
+      {
+        "type": "control_request",
+        "request_id": "initialize-1",
+        "request": {
+          "subtype": "initialize"
+        }
+      },
+      {
+        "type": "user",
+        "message": {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Before doing anything, use AskUserQuestion to ask which color I prefer: Blue or Green. Then reply with my choice. Do not use other tools."
+            }
+          ]
+        },
+        "parent_tool_use_id": null,
+        "session_id": ""
+      },
+      {
+        "type": "control_response",
+        "response": {
+          "subtype": "success",
+          "request_id": "6f284f0d-8d65-40cc-9b2a-70f96004e7cd",
+          "response": {
+            "behavior": "allow",
+            "updatedInput": {
+              "questions": [
+                {
+                  "question": "Which color do you prefer?",
+                  "header": "Color preference",
+                  "options": [
+                    {
+                      "label": "Blue",
+                      "description": "A cool, calming blue tone"
+                    },
+                    {
+                      "label": "Green",
+                      "description": "A fresh, natural green tone"
+                    }
+                  ],
+                  "multiSelect": false
+                }
+              ],
+              "answers": {
+                "Which color do you prefer?": "Blue"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "output": [
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "message_start",
+          "message": {
+            "model": "claude-haiku-4-5-20251001",
+            "id": "msg_011Cfm9nA4wC3AkH4B2pRkQc",
+            "type": "message",
+            "role": "assistant",
+            "content": [],
+            "container": null,
+            "stop_reason": null,
+            "stop_sequence": null,
+            "stop_details": null,
+            "usage": {
+              "input_tokens": 10,
+              "cache_creation_input_tokens": 7391,
+              "cache_read_input_tokens": 14811,
+              "cache_creation": {
+                "ephemeral_5m_input_tokens": 0,
+                "ephemeral_1h_input_tokens": 7391
+              },
+              "output_tokens": 4,
+              "service_tier": "standard",
+              "inference_geo": "not_available"
+            },
+            "input_transformations": [],
+            "diagnostics": null,
+            "context_management": null
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "0e0c3728-e300-4003-b0c9-1fc1aac97ad5",
+        "ttft_ms": 724,
+        "thinking_display": "updates"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_start",
+          "index": 0,
+          "content_block": {
+            "type": "thinking",
+            "thinking": "",
+            "signature": ""
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "d3916f70-9708-4dc3-b43f-536c1c3a3e09",
+        "thinking_display": "updates"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 0,
+          "delta": {
+            "type": "thinking_delta",
+            "thinking": "",
+            "estimated_tokens": 50
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "9a684ce0-a01e-487f-a5d9-cfe4898a0019",
+        "thinking_display": "updates"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 0,
+          "delta": {
+            "type": "thinking_delta",
+            "thinking": "",
+            "estimated_tokens": null
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "944a1e81-5734-4a0d-8d8c-bdd38fbd70b3",
+        "thinking_display": "updates"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 0,
+          "delta": {
+            "type": "signature_delta",
+            "signature": "Eq4ECtABCBIYAipAgLObVY1PgSxtuMUr4zmiohUnBoHe7ip+nCAw0QgsasPuNhs7Z8lOVh1TzDfYLMQ6qlTQqgisr3k5e1pFkgEC4DIZY2xhdWRlLWhhaWt1LTQtNS0yMDI1MTAwMTgAQgh0aGlua2luZ1okM2EwMDNhZDgtN2M0Ni00ZDc1LTkxMzgtZGJkNmJjNGU5MjI2chBOmcB5QeDuyh4rVPljwpw2iAEBmgEbChljbGF1ZGUtaGFpa3UtNC01LTIwMjUxMDAxqAH6jpTWBrABAhIMetj1nTow/AUkzgx+Ggw+YD92ULus3SwEulkiMF1sLhsvYECkDaRLZlVg3aQYkRoTY9ZMKQ+80deNSLs6SZEUJNGuPDd5m/iTMwY/KCqKAq4ZmG6cZMPCo5WIPpzGcqjsHuN5zOHeTy76JcJtQ1+OQSApLgZf1FXTRBzl0GmkLU1p8Iay4mmCJzmTaWJrMIt+dqMnySQ07HeDD/1I3OvwHBEi7PFcSQmQy4vZjGEIpR84MzSy+Mv22BHM4KxTxXYpKUaR5W2GbAyvWd1GiBCbQbOQ8PvLwp61lVNz7eqq+C1JhlPKQdh7xHYFF3sN39L3mZpGDxwW6KdewY+MkEAIBRFTa0LA6WYd/uoghyA8SYuKz1plw4qDWilSFRFao/qewOjjZs1+2CVUGCcr0LNPiq1etGXOACCBNwVcLA6Fao3YuzeqgtR9RomuZRb9iGCY30RJNL0/ZxsNGAE="
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "a80b34b5-aea3-4bb8-a1c3-5292529cab95"
+      },
+      {
+        "type": "assistant",
+        "message": {
+          "model": "claude-haiku-4-5-20251001",
+          "id": "msg_011Cfm9nA4wC3AkH4B2pRkQc",
+          "type": "message",
+          "role": "assistant",
+          "content": [
+            {
+              "type": "thinking",
+              "thinking": "",
+              "signature": "Eq4ECtABCBIYAipAgLObVY1PgSxtuMUr4zmiohUnBoHe7ip+nCAw0QgsasPuNhs7Z8lOVh1TzDfYLMQ6qlTQqgisr3k5e1pFkgEC4DIZY2xhdWRlLWhhaWt1LTQtNS0yMDI1MTAwMTgAQgh0aGlua2luZ1okM2EwMDNhZDgtN2M0Ni00ZDc1LTkxMzgtZGJkNmJjNGU5MjI2chBOmcB5QeDuyh4rVPljwpw2iAEBmgEbChljbGF1ZGUtaGFpa3UtNC01LTIwMjUxMDAxqAH6jpTWBrABAhIMetj1nTow/AUkzgx+Ggw+YD92ULus3SwEulkiMF1sLhsvYECkDaRLZlVg3aQYkRoTY9ZMKQ+80deNSLs6SZEUJNGuPDd5m/iTMwY/KCqKAq4ZmG6cZMPCo5WIPpzGcqjsHuN5zOHeTy76JcJtQ1+OQSApLgZf1FXTRBzl0GmkLU1p8Iay4mmCJzmTaWJrMIt+dqMnySQ07HeDD/1I3OvwHBEi7PFcSQmQy4vZjGEIpR84MzSy+Mv22BHM4KxTxXYpKUaR5W2GbAyvWd1GiBCbQbOQ8PvLwp61lVNz7eqq+C1JhlPKQdh7xHYFF3sN39L3mZpGDxwW6KdewY+MkEAIBRFTa0LA6WYd/uoghyA8SYuKz1plw4qDWilSFRFao/qewOjjZs1+2CVUGCcr0LNPiq1etGXOACCBNwVcLA6Fao3YuzeqgtR9RomuZRb9iGCY30RJNL0/ZxsNGAE="
+            }
+          ],
+          "container": null,
+          "stop_reason": null,
+          "stop_sequence": null,
+          "stop_details": null,
+          "usage": {
+            "input_tokens": 10,
+            "cache_creation_input_tokens": 7391,
+            "cache_read_input_tokens": 14811,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 7391
+            },
+            "output_tokens": 4,
+            "service_tier": "standard",
+            "inference_geo": "not_available"
+          },
+          "input_transformations": [],
+          "diagnostics": null,
+          "context_management": null
+        },
+        "parent_tool_use_id": null,
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "uuid": "26e7eabe-dbec-4ebf-a66e-47c9237b63e9",
+        "timestamp": "2026-10-06T14:36:42.365Z",
+        "request_id": "req_011Cfm9n9pYaJvzBnyzqYUmC"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_stop",
+          "index": 0
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "162e379f-a92a-4bfb-86e9-98a72035e4f0"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_start",
+          "index": 1,
+          "content_block": {
+            "type": "tool_use",
+            "id": "toolu_019JkonAUeBbCmif2RviSrJu",
+            "name": "AskUserQuestion",
+            "input": {},
+            "caller": {
+              "type": "direct"
+            }
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "14474bd0-082e-4e45-895d-b27119d57b64"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": ""
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "a17c3e0d-7738-41cc-b97f-a8ed2188f89f"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "{\"questions\": ["
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "f199812a-fca9-4c85-a056-4d274c18d706"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "\n  {"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "9e70e5eb-1a8d-4fe5-b7f9-8abb34403544"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "\n    \"question"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "47c773dc-fafb-4153-beed-37eb0bb4cd11"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "\": \"Which"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "304063bb-28be-4260-b514-9ae539fa912b"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": " color do you prefer"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "1c1f0320-7fb2-426a-b706-6fec77a2fb2a"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "?"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "fda14e3c-9e66-43f7-914f-dfbcb3a7066c"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "\",\n    \""
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "49bb5f36-19a6-4244-b3b8-e8e28cbe27dd"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "header"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "9cb9a52c-bc9d-498f-9ddd-5083ecf2a9a4"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "\": \"Color preference"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "edf099d7-7702-4de1-90b4-83670abaf559"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "\",\n    \""
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "e9192f45-ecdc-421c-86c2-6939ac298989"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "options\": ["
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "6fd2bcb6-fb94-4056-8a70-5d3c64c1a210"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "\n      {"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "98dc7b2f-08e2-42e2-b051-b395427cccef"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "\n        \"label"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "87bbd4f5-f3c1-4203-93bc-3c5a896aad96"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "\": \"Blue\","
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "e592a148-84a2-43a5-8088-84cdfdbde4ce"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "\n        \"description"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "72919e1f-7e05-459e-84ed-91ad94ccdbe5"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "\": \"A"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "7117bc49-9b26-4543-bfd6-58b621169488"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": " cool"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "6491a9ef-dcfa-4f76-8e58-cce0272d98b2"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": ", calming blue"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "a2d71f20-baaa-4a29-b87b-bec4bb9d286c"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": " tone"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "695fab6a-ad6d-439c-9746-063ae39cb9a0"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "\"\n      },"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "09686d27-76f0-4463-a400-a27cb712e268"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "\n      {"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "254c8db1-949a-4678-b797-b669b3e23091"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "\n        \"label\":"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "d97de818-2881-4946-bdd2-a658ecd791bc"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": " \"Green\","
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "ebc58779-dc0e-4364-b405-bdc2340aa7d4"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "\n        \"description\":"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "b666bb69-a6cd-4ece-9507-3b2e3184ef47"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": " \"A fresh"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "96416612-a221-4306-91fe-c3a0ded13d46"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": ", natural"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "4ac13b46-7b63-4fbe-9dcc-1d75b79889d0"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": " green tone\""
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "698a6987-b8d0-4f72-ae88-3c64f01dcc22"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "\n      }\n    "
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "f1695bc6-38dd-466b-b3bb-340732e31cb9"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "],"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "eb437a0a-64ce-40a0-ba33-d1aab0803fc9"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "\n    \"multi"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "6896e955-9845-4b0f-8b5b-b3ecad91d0d6"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "Select"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "ccc8d402-56d2-4552-b720-1b11a8b0f22a"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "\": false"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "e0b59c69-979d-4000-a095-e668d361ffe5"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "\n  }"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "0a512eb9-e7d4-4cf7-8d34-5daf3e53411c"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "\n]"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "df0f10cf-e4ec-4502-a8e6-bbcd97341349"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "input_json_delta",
+            "partial_json": "}"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "ee6461ca-3034-4919-b2a8-7949a2ceb53c"
+      },
+      {
+        "type": "assistant",
+        "message": {
+          "model": "claude-haiku-4-5-20251001",
+          "id": "msg_011Cfm9nA4wC3AkH4B2pRkQc",
+          "type": "message",
+          "role": "assistant",
+          "content": [
+            {
+              "type": "tool_use",
+              "id": "toolu_019JkonAUeBbCmif2RviSrJu",
+              "name": "AskUserQuestion",
+              "input": {
+                "questions": [
+                  {
+                    "question": "Which color do you prefer?",
+                    "header": "Color preference",
+                    "options": [
+                      {
+                        "label": "Blue",
+                        "description": "A cool, calming blue tone"
+                      },
+                      {
+                        "label": "Green",
+                        "description": "A fresh, natural green tone"
+                      }
+                    ],
+                    "multiSelect": false
+                  }
+                ]
+              },
+              "caller": {
+                "type": "direct"
+              }
+            }
+          ],
+          "container": null,
+          "stop_reason": null,
+          "stop_sequence": null,
+          "stop_details": null,
+          "usage": {
+            "input_tokens": 10,
+            "cache_creation_input_tokens": 7391,
+            "cache_read_input_tokens": 14811,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 7391
+            },
+            "output_tokens": 4,
+            "service_tier": "standard",
+            "inference_geo": "not_available"
+          },
+          "input_transformations": [],
+          "diagnostics": null,
+          "context_management": null
+        },
+        "parent_tool_use_id": null,
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "uuid": "d4208fd7-085d-4455-bd40-79c6fb2b64f1",
+        "timestamp": "2026-10-06T14:36:43.421Z",
+        "request_id": "req_011Cfm9n9pYaJvzBnyzqYUmC",
+        "wire_tool_inputs": {
+          "toolu_019JkonAUeBbCmif2RviSrJu": {
+            "questions": [
+              {
+                "question": "Which color do you prefer?",
+                "header": "Color preference",
+                "options": [
+                  {
+                    "label": "Blue",
+                    "description": "A cool, calming blue tone"
+                  },
+                  {
+                    "label": "Green",
+                    "description": "A fresh, natural green tone"
+                  }
+                ],
+                "multiSelect": false
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "control_request",
+        "request_id": "6f284f0d-8d65-40cc-9b2a-70f96004e7cd",
+        "request": {
+          "subtype": "can_use_tool",
+          "tool_name": "AskUserQuestion",
+          "display_name": "AskUserQuestion",
+          "input": {
+            "questions": [
+              {
+                "question": "Which color do you prefer?",
+                "header": "Color preference",
+                "options": [
+                  {
+                    "label": "Blue",
+                    "description": "A cool, calming blue tone"
+                  },
+                  {
+                    "label": "Green",
+                    "description": "A fresh, natural green tone"
+                  }
+                ],
+                "multiSelect": false
+              }
+            ]
+          },
+          "tool_use_id": "toolu_019JkonAUeBbCmif2RviSrJu",
+          "requires_user_interaction": true
+        }
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_stop",
+          "index": 1
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "b40004e7-fd28-486e-bc9c-6b0bf23eb1d6"
+      },
+      {
+        "type": "user",
+        "message": {
+          "role": "user",
+          "content": [
+            {
+              "type": "tool_result",
+              "content": "Your questions have been answered: \"Which color do you prefer?\"=\"Blue\". You can now continue with these answers in mind.",
+              "tool_use_id": "toolu_019JkonAUeBbCmif2RviSrJu"
+            }
+          ]
+        },
+        "parent_tool_use_id": null,
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "uuid": "0b867b68-0ab9-4123-ba61-d700c99965ff",
+        "timestamp": "2026-10-06T14:36:43.431Z",
+        "tool_use_result": {
+          "questions": [
+            {
+              "question": "Which color do you prefer?",
+              "header": "Color preference",
+              "options": [
+                {
+                  "label": "Blue",
+                  "description": "A cool, calming blue tone"
+                },
+                {
+                  "label": "Green",
+                  "description": "A fresh, natural green tone"
+                }
+              ],
+              "multiSelect": false
+            }
+          ],
+          "answers": {
+            "Which color do you prefer?": "Blue"
+          }
+        }
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "message_delta",
+          "delta": {
+            "stop_reason": "tool_use",
+            "stop_sequence": null,
+            "stop_details": null,
+            "container": null
+          },
+          "usage": {
+            "input_tokens": 10,
+            "cache_creation_input_tokens": 7391,
+            "cache_read_input_tokens": 14811,
+            "output_tokens": 224,
+            "output_tokens_details": {
+              "thinking_tokens": 66
+            },
+            "iterations": [
+              {
+                "input_tokens": 10,
+                "output_tokens": 224,
+                "cache_read_input_tokens": 14811,
+                "cache_creation_input_tokens": 7391,
+                "cache_creation": {
+                  "ephemeral_5m_input_tokens": 0,
+                  "ephemeral_1h_input_tokens": 7391
+                },
+                "type": "message"
+              }
+            ]
+          },
+          "context_management": {
+            "applied_edits": []
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "2c1c12d8-bd6c-4515-982f-80d5489b366d"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "message_stop"
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "1b596acc-b7a4-4128-9169-0a61809cb8f7"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "message_start",
+          "message": {
+            "model": "claude-haiku-4-5-20251001",
+            "id": "msg_011Cfm9nM4E9ZF9e5DYATKhj",
+            "type": "message",
+            "role": "assistant",
+            "content": [],
+            "container": null,
+            "stop_reason": null,
+            "stop_sequence": null,
+            "stop_details": null,
+            "usage": {
+              "input_tokens": 8,
+              "cache_creation_input_tokens": 1132,
+              "cache_read_input_tokens": 22202,
+              "cache_creation": {
+                "ephemeral_5m_input_tokens": 0,
+                "ephemeral_1h_input_tokens": 1132
+              },
+              "output_tokens": 1,
+              "service_tier": "standard",
+              "inference_geo": "not_available"
+            },
+            "input_transformations": [],
+            "diagnostics": null,
+            "context_management": null
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "d4ffeba8-cf38-40c2-9f3e-adb3c66d5bbc",
+        "ttft_ms": 532,
+        "thinking_display": "updates"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_start",
+          "index": 0,
+          "content_block": {
+            "type": "thinking",
+            "thinking": "",
+            "signature": ""
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "155b487a-36b7-43fc-92d7-7d5dfde37830",
+        "thinking_display": "updates"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 0,
+          "delta": {
+            "type": "thinking_delta",
+            "thinking": "",
+            "estimated_tokens": 50
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "fb8c1085-9e22-4616-8b5e-b358cee88a9a",
+        "thinking_display": "updates"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 0,
+          "delta": {
+            "type": "thinking_delta",
+            "thinking": "",
+            "estimated_tokens": null
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "2c44918a-c846-41a1-8ce8-50872fe6ec2e",
+        "thinking_display": "updates"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 0,
+          "delta": {
+            "type": "signature_delta",
+            "signature": "EvoECtABCBIYAipAKO5nI1+qLUFg9vNe83DapqMUWOtMHXsydrtKVdvzMPr5rRGUd9wrBf4IhF1L5z/k+GHRH3NxNQsitjWXcM9eTjIZY2xhdWRlLWhhaWt1LTQtNS0yMDI1MTAwMTgAQgh0aGlua2luZ1okM2EwMDNhZDgtN2M0Ni00ZDc1LTkxMzgtZGJkNmJjNGU5MjI2chBOmcB5QeDuyh4rVPljwpw2iAEBmgEbChljbGF1ZGUtaGFpa3UtNC01LTIwMjUxMDAxqAH9jpTWBrABAhIMjHRJd57YRMELCVSaGgxVfZrTVWrpUVhbPlwiMJMLXc2VBLoDag0JGjjsVw0WFRsO7PZYpH+YrtLTM958TG+VwwMmqZqBOzuvyFUvdSrWAlStikGJPxb2fyZVX8rwKtPEjT/wEYjQkTjbUrGK4fHxvdLu0bqlbDakEQsZeTJ+7XBzobPjdsm8+5z0wxdtqsrT89Eu/uAjkNcEdl5A4K5tbgRps2OibCPwfCPz1vAJnIrAUvdJduk5VqJGF3YadelXye10vp2KSK9g5BX4tsyhINO/XSPf9SVqgX9L4sQsh0j4vD7R7kw4q40La/FUCALm52b7sO7K0/6+lgD3aixQkdKTCqtotduRRdIRBYD9ivN4aTMSt/aXLjUAMpfxgLP9mHQrt+vh1aVkWD9FblKounW3Mo3onFgmsDU2AscPtpNz3sovAsbzWDTQ1UT3CyMkFAyFJ7xFIEHUtQjP4rqF+1HuRPtMCfcyME19wUeFqU/vI01urBaLrP98AyjPT46GMtxhjYdlHOId/a794zqktxVRTedgt8bR1qC/Vp3WOvFOZJz3+RgB"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "242135ca-7b1f-4849-8cb4-920d93bff992"
+      },
+      {
+        "type": "assistant",
+        "message": {
+          "model": "claude-haiku-4-5-20251001",
+          "id": "msg_011Cfm9nM4E9ZF9e5DYATKhj",
+          "type": "message",
+          "role": "assistant",
+          "content": [
+            {
+              "type": "thinking",
+              "thinking": "",
+              "signature": "EvoECtABCBIYAipAKO5nI1+qLUFg9vNe83DapqMUWOtMHXsydrtKVdvzMPr5rRGUd9wrBf4IhF1L5z/k+GHRH3NxNQsitjWXcM9eTjIZY2xhdWRlLWhhaWt1LTQtNS0yMDI1MTAwMTgAQgh0aGlua2luZ1okM2EwMDNhZDgtN2M0Ni00ZDc1LTkxMzgtZGJkNmJjNGU5MjI2chBOmcB5QeDuyh4rVPljwpw2iAEBmgEbChljbGF1ZGUtaGFpa3UtNC01LTIwMjUxMDAxqAH9jpTWBrABAhIMjHRJd57YRMELCVSaGgxVfZrTVWrpUVhbPlwiMJMLXc2VBLoDag0JGjjsVw0WFRsO7PZYpH+YrtLTM958TG+VwwMmqZqBOzuvyFUvdSrWAlStikGJPxb2fyZVX8rwKtPEjT/wEYjQkTjbUrGK4fHxvdLu0bqlbDakEQsZeTJ+7XBzobPjdsm8+5z0wxdtqsrT89Eu/uAjkNcEdl5A4K5tbgRps2OibCPwfCPz1vAJnIrAUvdJduk5VqJGF3YadelXye10vp2KSK9g5BX4tsyhINO/XSPf9SVqgX9L4sQsh0j4vD7R7kw4q40La/FUCALm52b7sO7K0/6+lgD3aixQkdKTCqtotduRRdIRBYD9ivN4aTMSt/aXLjUAMpfxgLP9mHQrt+vh1aVkWD9FblKounW3Mo3onFgmsDU2AscPtpNz3sovAsbzWDTQ1UT3CyMkFAyFJ7xFIEHUtQjP4rqF+1HuRPtMCfcyME19wUeFqU/vI01urBaLrP98AyjPT46GMtxhjYdlHOId/a794zqktxVRTedgt8bR1qC/Vp3WOvFOZJz3+RgB"
+            }
+          ],
+          "container": null,
+          "stop_reason": null,
+          "stop_sequence": null,
+          "stop_details": null,
+          "usage": {
+            "input_tokens": 8,
+            "cache_creation_input_tokens": 1132,
+            "cache_read_input_tokens": 22202,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 1132
+            },
+            "output_tokens": 1,
+            "service_tier": "standard",
+            "inference_geo": "not_available"
+          },
+          "input_transformations": [],
+          "diagnostics": null,
+          "context_management": null
+        },
+        "parent_tool_use_id": null,
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "uuid": "df3930a8-79d9-45dc-9c44-f0732894535e",
+        "timestamp": "2026-10-06T14:36:45.082Z",
+        "request_id": "req_011Cfm9nLqq8Vz7UV1yKzLh7"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_stop",
+          "index": 0
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "25a5fcce-0b9f-4ee6-a801-86a4a956848b"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_start",
+          "index": 1,
+          "content_block": {
+            "type": "text",
+            "text": ""
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "09fdc3f8-b5d2-41c8-b8e5-68f72cd94132"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "text_delta",
+            "text": "You"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "9a4b358a-1653-41ec-8559-960bd638be99"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "text_delta",
+            "text": " prefer"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "d6abae59-d4eb-4ba0-940f-830565c5e82f"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "text_delta",
+            "text": " **Blue**"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "ad741dd8-dff7-4f17-acb8-de83f67424f3"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "text_delta",
+            "text": "!"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "5863356d-a3d1-4c1c-86e9-21f0b2ac4fad"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_delta",
+          "index": 1,
+          "delta": {
+            "type": "text_delta",
+            "text": " 🔵"
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "c246f1ba-7fcc-4047-8376-d73a69d4592a"
+      },
+      {
+        "type": "assistant",
+        "message": {
+          "model": "claude-haiku-4-5-20251001",
+          "id": "msg_011Cfm9nM4E9ZF9e5DYATKhj",
+          "type": "message",
+          "role": "assistant",
+          "content": [
+            {
+              "type": "text",
+              "text": "You prefer **Blue**! 🔵"
+            }
+          ],
+          "container": null,
+          "stop_reason": null,
+          "stop_sequence": null,
+          "stop_details": null,
+          "usage": {
+            "input_tokens": 8,
+            "cache_creation_input_tokens": 1132,
+            "cache_read_input_tokens": 22202,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 1132
+            },
+            "output_tokens": 1,
+            "service_tier": "standard",
+            "inference_geo": "not_available"
+          },
+          "input_transformations": [],
+          "diagnostics": null,
+          "context_management": null
+        },
+        "parent_tool_use_id": null,
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "uuid": "ed297cdb-e69a-4586-9a80-00279c69c7af",
+        "timestamp": "2026-10-06T14:36:45.212Z",
+        "request_id": "req_011Cfm9nLqq8Vz7UV1yKzLh7"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "content_block_stop",
+          "index": 1
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "354bc674-f80a-42d5-b0a5-ec241c869141"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "message_delta",
+          "delta": {
+            "stop_reason": "end_turn",
+            "stop_sequence": null,
+            "stop_details": null,
+            "container": null
+          },
+          "usage": {
+            "input_tokens": 8,
+            "cache_creation_input_tokens": 1132,
+            "cache_read_input_tokens": 22202,
+            "output_tokens": 105,
+            "output_tokens_details": {
+              "thinking_tokens": 89
+            },
+            "iterations": [
+              {
+                "input_tokens": 8,
+                "output_tokens": 105,
+                "cache_read_input_tokens": 22202,
+                "cache_creation_input_tokens": 1132,
+                "cache_creation": {
+                  "ephemeral_5m_input_tokens": 0,
+                  "ephemeral_1h_input_tokens": 1132
+                },
+                "type": "message"
+              }
+            ]
+          },
+          "context_management": {
+            "applied_edits": []
+          }
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "9b29d6ec-850d-4c0e-88fb-2fe452e27b64"
+      },
+      {
+        "type": "stream_event",
+        "event": {
+          "type": "message_stop"
+        },
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "parent_tool_use_id": null,
+        "uuid": "296d9768-acac-4b6b-998c-b75f070e2e54"
+      },
+      {
+        "duration_api_ms": 4344,
+        "stop_reason": "end_turn",
+        "session_id": "ef46766a-b55b-48a1-aae7-b0fe2b0b9760",
+        "total_cost_usd": 0.0224103,
+        "usage": {
+          "input_tokens": 18,
+          "cache_creation_input_tokens": 8523,
+          "cache_read_input_tokens": 37013,
+          "output_tokens": 329,
+          "output_tokens_details": {
+            "thinking_tokens": 155
+          },
+          "server_tool_use": {
+            "web_search_requests": 0,
+            "web_fetch_requests": 0
+          },
+          "service_tier": "standard",
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 8523,
+            "ephemeral_5m_input_tokens": 0
+          },
+          "inference_geo": "not_available",
+          "iterations": [
+            {
+              "input_tokens": 8,
+              "output_tokens": 105,
+              "cache_read_input_tokens": 22202,
+              "cache_creation_input_tokens": 1132,
+              "cache_creation": {
+                "ephemeral_5m_input_tokens": 0,
+                "ephemeral_1h_input_tokens": 1132
+              },
+              "type": "message"
+            }
+          ],
+          "speed": "standard",
+          "fallback_credit": null
+        },
+        "modelUsage": {
+          "claude-haiku-4-5-20251001": {
+            "inputTokens": 18,
+            "outputTokens": 329,
+            "cacheReadInputTokens": 37013,
+            "cacheCreationInputTokens": 8523,
+            "webSearchRequests": 0,
+            "costUSD": 0.0224103,
+            "contextWindow": 200000,
+            "maxOutputTokens": 32000,
+            "thinkingTokens": 155,
+            "canonicalModel": "claude-haiku-4-5",
+            "provider": "firstParty",
+            "costBasis": "list"
+          }
+        },
+        "permission_denials": [],
+        "terminal_reason": "completed",
+        "fast_mode_state": "off",
+        "fast_mode_disabled_reason": "sdk_opt_in_required",
+        "subagent_stats": {
+          "spawned": 0,
+          "requested": {
+            "background": 0,
+            "foreground": 0,
+            "unset": 0
+          },
+          "started_in_background": 0,
+          "max_depth": 0,
+          "spawned_by_subagents": 0,
+          "completed": 0,
+          "failed": 0,
+          "killed": {
+            "parent": 0,
+            "user": 0,
+            "system": 0
+          },
+          "refused": {
+            "depth_limit": 0,
+            "concurrency_limit": 0,
+            "budget": 0
+          },
+          "by_type": {}
+        },
+        "is_error": false,
+        "num_turns": 2,
+        "subtype": "success",
+        "api_error_status": null,
+        "result": "You prefer **Blue**! 🔵",
+        "ttft_ms": 1626,
+        "type": "result",
+        "duration_ms": 4481,
+        "uuid": "2259cf60-c861-4407-8e05-4a1fe76585f1",
+        "ttft_stream_ms": 843,
+        "time_to_request_ms": 119,
+        "first_content_frame_ms": 844,
+        "queued_turn_count": 0,
+        "result_index": 0
+      }
+    ]
+  }
+}

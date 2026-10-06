@@ -30,6 +30,14 @@ platformFamily: string,
 
 platformOs: string, };
 
+export type ModelListParams = {
+
+cursor?: string | null,
+
+limit?: number | null,
+
+includeHidden?: boolean | null, };
+
 export type InputModality = "text" | "image" | "audio";
 
 export type ReasoningEffort = string;
@@ -582,6 +590,8 @@ export type TurnStartResponse = { turn: Turn, };
 
 export type TurnInterruptParams = { threadId: string, turnId: string, };
 
+export type TurnInterruptResponse = Record<string, never>;
+
 export type ItemStartedNotification = { item: ThreadItem, threadId: string, turnId: string,
 
 startedAtMs: number, };
@@ -607,3 +617,91 @@ export type TokenUsageBreakdown = { totalTokens: number, inputTokens: number, ca
 export type ThreadTokenUsage = { total: TokenUsageBreakdown, last: TokenUsageBreakdown, modelContextWindow: number | null, };
 
 export type ThreadTokenUsageUpdatedNotification = { threadId: string, turnId: string, tokenUsage: ThreadTokenUsage, };
+
+export type FileSystemAccessMode = "read" | "write" | "deny";
+
+export type FileSystemSpecialPath = { "kind": "root" } | { "kind": "minimal" } | { "kind": "project_roots", subpath: LegacyAppPathString | null, } | { "kind": "tmpdir" } | { "kind": "slash_tmp" } | { "kind": "unknown", path: string, subpath: LegacyAppPathString | null, };
+
+export type FileSystemPath = { "type": "path", path: LegacyAppPathString, } | { "type": "glob_pattern", pattern: string, } | { "type": "special", value: FileSystemSpecialPath, };
+
+export type FileSystemSandboxEntry = { path: FileSystemPath, access: FileSystemAccessMode, };
+
+export type AdditionalFileSystemPermissions = {
+
+read: Array<LegacyAppPathString> | null,
+
+write: Array<LegacyAppPathString> | null, globScanMaxDepth?: number, entries?: Array<FileSystemSandboxEntry>, };
+
+export type AdditionalNetworkPermissions = { enabled: boolean | null, };
+
+export type AdditionalPermissionProfile = {
+
+network: AdditionalNetworkPermissions | null, fileSystem: AdditionalFileSystemPermissions | null, };
+
+export type ExecPolicyAmendment = Array<string>;
+
+export type NetworkPolicyRuleAction = "allow" | "deny";
+
+export type NetworkPolicyAmendment = { host: string, action: NetworkPolicyRuleAction, };
+
+export type CommandExecutionApprovalDecision = "accept" | "acceptForSession" | { "acceptWithExecpolicyAmendment": { execpolicy_amendment: ExecPolicyAmendment, } } | { "applyNetworkPolicyAmendment": { network_policy_amendment: NetworkPolicyAmendment, } } | "decline" | "cancel";
+
+export type CommandExecutionApprovalKind = "command" | "writeStdin";
+
+export type NetworkApprovalProtocol = "http" | "https" | "socks5Tcp" | "socks5Udp";
+
+export type NetworkApprovalContext = { host: string, protocol: NetworkApprovalProtocol, };
+
+export type CommandExecutionRequestApprovalParams = {
+
+kind: CommandExecutionApprovalKind, threadId: string, turnId: string, itemId: string,
+
+startedAtMs: number,
+
+approvalId?: string | null,
+
+environmentId: string | null,
+
+reason?: string | null,
+
+networkApprovalContext?: NetworkApprovalContext | null,
+
+command?: string | null,
+
+cwd?: LegacyAppPathString | null,
+
+commandActions?: Array<CommandAction> | null,
+
+additionalPermissions?: AdditionalPermissionProfile | null,
+
+proposedExecpolicyAmendment?: ExecPolicyAmendment | null,
+
+proposedNetworkPolicyAmendments?: Array<NetworkPolicyAmendment> | null,
+
+availableDecisions?: Array<CommandExecutionApprovalDecision> | null, };
+
+export type CommandExecutionRequestApprovalResponse = { decision: CommandExecutionApprovalDecision, };
+
+export type FileChangeRequestApprovalParams = { threadId: string, turnId: string, itemId: string,
+
+startedAtMs: number,
+
+reason?: string | null,
+
+grantRoot?: string | null, };
+
+export type FileChangeApprovalDecision = "accept" | "acceptForSession" | "decline" | "cancel";
+
+export type FileChangeRequestApprovalResponse = { decision: FileChangeApprovalDecision, };
+
+export type ToolRequestUserInputOption = { label: string, description: string, };
+
+export type ToolRequestUserInputQuestion = { id: string, header: string, question: string, isOther: boolean, isSecret: boolean, options: Array<ToolRequestUserInputOption> | null, };
+
+export type ToolRequestUserInputParams = { threadId: string, turnId: string, itemId: string, questions: Array<ToolRequestUserInputQuestion>, isBlocking: boolean,
+
+autoResolutionMs: number | null, };
+
+export type ToolRequestUserInputAnswer = { answers: Array<string>, };
+
+export type ToolRequestUserInputResponse = { answers: { [key in string]?: ToolRequestUserInputAnswer }, };

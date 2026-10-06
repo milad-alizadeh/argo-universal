@@ -11,6 +11,7 @@ import path from 'node:path';
 import { type AgentAdapter, agentAdapters } from '@repo/agents';
 import { appRouter, type Services } from '@repo/api';
 import type { SessionListUpdate, SessionUpdate } from '@repo/contracts';
+import { permissionOptions } from '@repo/contracts';
 import { feedRow, turn } from '@repo/db/schema';
 import { listBranches } from '@repo/git';
 import { createMockAdapter, type MockAgentStream } from '@repo/mocks/agent';
@@ -178,7 +179,7 @@ it.each(liveHeaderMocks)(
         request: {
           toolCallId: command.toolCallId,
           title: 'Allow tests?',
-          options: [],
+          options: permissionOptions,
         },
       });
       expect(
@@ -501,7 +502,7 @@ it('sends live list changes and attention/running counts through request and Tur
       request: {
         toolCallId: 'permission',
         title: 'Run a command',
-        options: [],
+        options: permissionOptions,
       },
     });
     expect((await counts.next()).value).toEqual({ attention: 1, running: 1 });

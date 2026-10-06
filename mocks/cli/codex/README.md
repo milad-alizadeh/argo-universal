@@ -51,3 +51,13 @@ The temporary Checkout path is normalized to `/repo` and the user home to `/user
 `edit-states` was captured from the real 0.157.0 app-server on 2026-10-06 in a temporary Checkout. One patch replaces 60 lines in `large.txt` and deletes the three-line `legacy.txt`. It keeps Turn and item notifications, normalizes the Checkout and user paths, and excludes startup and account traffic. These recordings supply issue #50’s large and deleted-file states.
 
 `edit-failure` was captured from the real 0.157.0 app-server on 2026-10-06 in a temporary Checkout. It attempts one valid patch against a read-only file, records the write failure without retrying, and normalizes paths as above. It supplies the failed Edit row through the real converter and Feed validator.
+
+## Answering request recordings
+
+`permission`, `elicitation`, `plan-approved` and `plan-kept-planning` were captured from the real CLI on 2026-10-06 in temporary Checkouts. They keep both the requests and the replies that answered them. Checkout and home paths are normalized to `/repo` and `/user`; account and startup catalog traffic are excluded.
+
+The capture uses codex-app-server 0.157.0. A command outside the read-only Checkout asks for Permission, `request_user_input` asks for a color, and a plan-mode Turn emits a dedicated `plan` item. The next `turn/start` records the decision: default mode after Approve, or plan mode with feedback after Keep planning.
+
+`request-answer.ts` reads the real replies. The pure Agent converters map the requests and Plan rows. Shared pending and answered mocks are built through those converters and the Server's Feed validator, with a deterministic Session request id and clock. Answered states show the continuing Turn, including the Permission outcome or Plan outcome and any feedback a person typed. Server issues #57 and #58 wire these procedures to live Sessions.
+
+Regenerate with `pnpm --filter @repo/server exec tsx ../../tools/generate-request-mocks.mts`, then format `packages/api/mocks/request-recordings.json` with Biome. Shared mocks are exported as `recordedRequestMocks` from `@repo/api/mocks` for the request cards.

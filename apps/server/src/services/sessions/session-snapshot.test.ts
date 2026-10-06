@@ -1,11 +1,12 @@
 import { sessionRows } from '@repo/api/mocks';
+import { permissionOptions } from '@repo/contracts';
 import { createMockAdapter } from '@repo/mocks/agent';
 import { afterAll, expect, it } from 'vitest';
 import { createActor, type StateValue } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
 import { liveHeaderMocks } from '#mocks/live-header';
 import { sessionMachine } from './session-machine';
-import { toSessionSnapshot } from './session-snapshot';
+import { noChanges, toSessionSnapshot } from './session-snapshot';
 
 const { database, remove } = openTestDatabase();
 afterAll(remove);
@@ -49,7 +50,9 @@ it.each(rows)('maps %j to %s', (value, state) => {
     usage: null,
     pendingPermission: null,
     pendingElicitation: null,
+    pendingPlanProposal: null,
     configOptions: [],
+    changes: noChanges,
     epoch: 2,
     maxRevision: 7,
   });
@@ -59,9 +62,10 @@ it('projects the live context and the Feed revision without changing either', ()
   const permission = {
     toolCallId: 'tool-1',
     title: 'Run a command',
-    options: [],
+    options: permissionOptions,
   };
   const elicitation = {
+    requestId: 'request-1',
     mode: 'form' as const,
     message: 'Which file?',
     requestedSchema: { properties: {} },
@@ -105,7 +109,9 @@ it('projects the live context and the Feed revision without changing either', ()
     usage,
     pendingPermission: permission,
     pendingElicitation: elicitation,
+    pendingPlanProposal: null,
     configOptions: [config],
+    changes: noChanges,
     epoch: 3,
     maxRevision: 9,
   });

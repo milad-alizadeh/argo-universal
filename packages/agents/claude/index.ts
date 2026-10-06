@@ -1,12 +1,12 @@
 import { readFileSync } from 'node:fs';
 import type { AgentAdapter } from '../src/agent-adapter';
 import { connect } from './connect';
+import type { VendorMessage } from './messages';
 import { probe } from './probe';
 import {
   initialMappingState,
   type MappingState,
   toAgentEvents,
-  type VendorMessage,
 } from './to-agent-events';
 
 export const claudeAdapter: AgentAdapter<VendorMessage, MappingState> = {

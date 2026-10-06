@@ -1,44 +1,33 @@
 // A stand-in `codex app-server` over JSON-RPC. Each `turn/start` replays the next recorded Turn.
-import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { z } from 'zod';
+import type { VendorMessage } from '../../../packages/agents/codex/messages.ts';
+import type {
+  ThreadResumeParams,
+  TurnInterruptParams,
+  TurnStartParams,
+  TurnStartResponse,
+} from '../../../packages/agents/codex/protocol.gen.ts';
 import {
   readMockCliEnvironment,
+  readMockTranscript,
   replayTurn,
   send,
   serveJsonLines,
 } from '../mock-cli.ts';
-import { findRecording, readRecording, splitTurns } from '../recording.ts';
+import {
+  findRecording,
+  readRecording,
+  recordedFrames,
+  splitTurns,
+} from '../recording.ts';
 
 const PRODUCER = 'codex-app-server';
 // JSON-RPC error codes.
 const METHOD_NOT_FOUND = -32601;
 const INTERNAL_ERROR = -32603;
 
-const RecordedMessage = z.looseObject({
-  method: z.string(),
-  params: z
-    .looseObject({
-      threadId: z.string().optional(),
-      turn: z.unknown().optional(),
-    })
-    .optional(),
-  emittedAtMs: z.number().optional(),
-});
-const RecordedTurns = z.looseObject({ messages: z.array(RecordedMessage) });
-
-const Request = z.looseObject({
-  id: z.union([z.string(), z.number()]).optional(),
-  method: z.string().optional(),
-  params: z
-    .looseObject({
-      threadId: z.string().optional(),
-      turnId: z.string().optional(),
-      notificationsFirst: z.boolean().optional(),
-    })
-    .optional(),
-});
-
+// The transport owns method and correlation; each request payload uses generated protocol types.
+type Request = { id?: string | number; method?: string; params?: unknown };
 const environment = readMockCliEnvironment();
 const recording = readRecording(environment.recordingFile, PRODUCER);
 const [command] = process.argv.slice(2);
@@ -53,21 +42,24 @@ if (command !== 'app-server') {
 }
 
 // The capture time is the recorder's, not part of the wire message.
-const messages = RecordedTurns.parse(recording.payload).messages.map(
-  ({ emittedAtMs: _, ...message }) => message,
-);
+const messages = recordedFrames<VendorMessage & { emittedAtMs?: number }>(
+  recording.payload,
+  'messages',
+).map(({ emittedAtMs: _, ...message }) => message);
 const turns = splitTurns(
   messages,
   (message) => message.method === 'turn/completed',
 );
-let threadId = messages.find((message) => message.params?.threadId)?.params
-  ?.threadId;
+const recordedThreadId = messages.find((message) => message.params.threadId)
+  ?.params.threadId;
+if (!recordedThreadId) throw new Error('The recording has no thread id.');
+let threadId = recordedThreadId;
 let turnIndex = 0;
 let interruptedFrames: typeof messages | null = null;
 let activeTurnId: string | null = null;
 let withheldStartResponse: {
   id: string | number | undefined;
-  result: { turn: unknown };
+  result: TurnStartResponse;
 } | null = null;
 
 // Read on request, so a version folder without a model list still serves Turns.
@@ -87,10 +79,13 @@ function startTurn(
   id: string | number | undefined,
   notificationsFirst = false,
 ) {
-  const turn = turns[turnIndex++]?.map((message) => ({
-    ...message,
-    params: { ...message.params, threadId },
-  }));
+  const turn = turns[turnIndex++]?.map(
+    (message) =>
+      ({
+        ...message,
+        params: { ...message.params, threadId },
+      }) as VendorMessage,
+  );
   const started = turn?.find((message) => message.method === 'turn/started');
   if (turn === undefined || started === undefined) {
     send({
@@ -106,17 +101,16 @@ function startTurn(
   const final = turn.at(-1);
   const interrupted =
     final?.method === 'turn/completed' &&
-    (final.params?.turn as { status?: string })?.status === 'interrupted';
+    final.params.turn.status === 'interrupted';
   const command = interrupted
     ? turn.findIndex(
         (message) =>
           message.method === 'item/started' &&
-          (message.params as { item?: { type?: string } })?.item?.type ===
-            'commandExecution',
+          message.params.item.type === 'commandExecution',
       )
     : -1;
   if (command >= 0) interruptedFrames = turn.slice(command + 1);
-  activeTurnId = z.object({ id: z.string() }).parse(started.params?.turn).id;
+  activeTurnId = started.params.turn.id;
   const frames = command >= 0 ? turn.slice(0, command + 1) : turn;
   if (process.env.MOCK_CLI_BLOCK_TURN_START === '1') {
     replayTurn(frames.slice(0, frames.indexOf(started) + 1), null);
@@ -151,8 +145,7 @@ function startTurn(
   if (command < 0) activeTurnId = null;
 }
 
-serveJsonLines((line) => {
-  const { id, method, params } = Request.parse(line);
+serveJsonLines<Request>(({ id, method, params }) => {
   switch (method) {
     case undefined:
     case 'initialized':
@@ -183,24 +176,21 @@ serveJsonLines((line) => {
       return send({ id, result: { thread: { id: threadId } } });
     case 'thread/resume': {
       const file = process.env.MOCK_CLI_TRANSCRIPT;
-      const stored = file
-        ? z
-            .object({ vendorSessionId: z.string() })
-            .parse(JSON.parse(readFileSync(file, 'utf8')))
-        : null;
-      if (!stored || stored.vendorSessionId !== params?.threadId)
+      const stored = file ? readMockTranscript(file) : null;
+      const resume = params as ThreadResumeParams;
+      if (!stored || stored.vendorSessionId !== resume?.threadId)
         return send({
           id,
           error: {
             code: INTERNAL_ERROR,
-            message: `Codex has no transcript for Session ${params?.threadId}.`,
+            message: `Codex has no transcript for Session ${resume?.threadId}.`,
           },
         });
       threadId = stored.vendorSessionId;
       return send({ id, result: { thread: { id: threadId } } });
     }
     case 'turn/interrupt':
-      if (params?.turnId !== activeTurnId)
+      if ((params as TurnInterruptParams)?.turnId !== activeTurnId)
         return send({
           id,
           error: {
@@ -217,7 +207,8 @@ serveJsonLines((line) => {
     case 'turn/start':
       return startTurn(
         id,
-        params?.notificationsFirst ||
+        (params as TurnStartParams & { notificationsFirst?: boolean })
+          ?.notificationsFirst ||
           process.env.MOCK_CLI_NOTIFICATIONS_FIRST === '1',
       );
     default:
