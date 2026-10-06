@@ -36,7 +36,7 @@ it('offers the recorded models and the selected model’s effort choices', () =>
         configId: 'effort',
         currentValue: 'high',
         options: expect.arrayContaining([
-          expect.objectContaining({ value: 'high' }),
+          expect.objectContaining({ value: 'high', name: 'High' }),
         ]),
       }),
     ]),
@@ -73,7 +73,7 @@ it('marks Plan and dangerous modes and previews each model’s support flags', (
           }),
           expect.objectContaining({
             value: 'fullAccess',
-            _meta: { argo: { icon: 'ShieldOff', tone: 'dangerous' } },
+            _meta: { argo: { icon: 'WarningTriangle', tone: 'dangerous' } },
           }),
         ]),
       }),

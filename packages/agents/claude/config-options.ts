@@ -8,22 +8,29 @@ import type { AgentConfigValue } from '../src/agent-events';
 
 // The SDK names its modes only as a type, so this list and its names are ours; `dontAsk` is not offered.
 const modeNames = {
-  default: 'Ask before edits',
+  plan: 'Plan mode',
+  default: 'Ask first',
   acceptEdits: 'Accept edits',
-  plan: 'Plan',
   auto: 'Auto',
   bypassPermissions: 'Bypass permissions',
 } satisfies Partial<Record<PermissionMode, string>>;
 type Mode = keyof typeof modeNames;
+const modeDescriptions = {
+  default: 'Asks before edits and commands',
+  acceptEdits: 'Edits files without asking, asks before commands',
+  plan: 'Reads and plans, changes nothing',
+  auto: 'Automatically checks permissions for each action',
+  bypassPermissions: 'Runs everything without asking',
+} satisfies Record<Mode, string>;
 const modeMetadata = {
-  default: { icon: 'ShieldCheck', tone: 'safe' },
+  default: { icon: 'ShieldWarning', tone: 'safe' },
   acceptEdits: { icon: 'Pencil', tone: 'moderate' },
   plan: { icon: 'ClipboardList', tone: 'planning' },
   auto: { icon: 'Sparkles', tone: 'moderate' },
-  bypassPermissions: { icon: 'ShieldOff', tone: 'dangerous' },
+  bypassPermissions: { icon: 'WarningTriangle', tone: 'dangerous' },
 } as const;
 
-// `default` leaves the choice to the CLI: its default model, or the model's default effort.
+// `default` identifies the recommended model; supported effort defaults resolve to a concrete level.
 export const DEFAULT_VALUE = 'default';
 
 export interface ConfigValues {
@@ -44,15 +51,50 @@ const modesFor = (model: ModelInfo | undefined) =>
 const effortLevelsFor = (model: ModelInfo | undefined) =>
   (model?.supportsEffort && model.supportedEffortLevels) || [];
 
+function modelName(model: ModelInfo): string {
+  if (model.value !== DEFAULT_VALUE) return model.displayName;
+  if (model.description.includes(' · '))
+    return model.description.split(' · ')[0]?.trim() || model.displayName;
+  const resolved = model.resolvedModel?.match(
+    /claude-([a-z]+)-(\d+)(?:-(\d{1,2}))?/,
+  );
+  if (resolved)
+    return `${resolved[1]?.charAt(0).toUpperCase()}${resolved[1]?.slice(1)} ${resolved[2]}${resolved[3] ? `.${resolved[3]}` : ''}`;
+  return model.displayName.replace(/\s*\(recommended\)\s*$/i, '');
+}
+
+// Claude Code model-config: Opus/Sonnet 5.5 use medium, Opus 4.7 uses xhigh, others use high.
+function defaultEffort(
+  model: ModelInfo | undefined,
+): EffortLevel | typeof DEFAULT_VALUE {
+  const levels = effortLevelsFor(model);
+  if (!model || levels.length === 0) return DEFAULT_VALUE;
+  const name = `${model.resolvedModel ?? ''} ${modelName(model)}`
+    .toLowerCase()
+    .replaceAll('-', ' ');
+  const preferred = /(?:opus|sonnet) 5[ .]5\b/.test(name)
+    ? 'medium'
+    : /opus 4[ .]7\b/.test(name)
+      ? 'xhigh'
+      : 'high';
+  return (
+    levels.find((level) => level === preferred) ??
+    levels.find((level) => level === 'high') ??
+    levels[0] ??
+    DEFAULT_VALUE
+  );
+}
+
 // The wanted values that the model allows; anything else falls back to the default.
 function allowedValues(models: ModelInfo[], wanted: Wanted): ConfigValues {
-  const model = findModel(models, wanted.model);
+  const model =
+    findModel(models, wanted.model) ?? findModel(models, DEFAULT_VALUE);
   return {
     mode: modesFor(model).find((mode) => mode === wanted.mode) ?? 'default',
     model: model?.value ?? DEFAULT_VALUE,
     effort:
       effortLevelsFor(model).find((level) => level === wanted.effort) ??
-      DEFAULT_VALUE,
+      defaultEffort(model),
   };
 }
 
@@ -102,6 +144,7 @@ export function toConfigOptions(
       options: modesFor(model).map((mode) => ({
         value: mode,
         name: modeNames[mode],
+        description: modeDescriptions[mode],
         _meta: { argo: modeMetadata[mode] },
       })),
     },
@@ -113,9 +156,13 @@ export function toConfigOptions(
       currentValue: values.model,
       options: models.map((option) => ({
         value: option.value,
-        name: option.displayName,
+        name:
+          option.value === DEFAULT_VALUE
+            ? `${modelName(option)} (recommended)`
+            : modelName(option),
         _meta: {
           argo: {
+            shortName: modelName(option),
             supportsEffort: option.supportsEffort ?? false,
             supportedEffortLevels: option.supportedEffortLevels ?? [],
             supportsAdaptiveThinking: option.supportsAdaptiveThinking ?? false,
@@ -123,7 +170,15 @@ export function toConfigOptions(
             supportsAutoMode: option.supportsAutoMode ?? false,
           },
         },
-        ...(option.description ? { description: option.description } : {}),
+        ...(option.description
+          ? {
+              description:
+                option.value === DEFAULT_VALUE &&
+                option.description.startsWith(`${modelName(option)} · `)
+                  ? option.description.slice(modelName(option).length + 3)
+                  : option.description,
+            }
+          : {}),
       })),
     },
   ];
@@ -134,11 +189,9 @@ export function toConfigOptions(
     configId: 'effort',
     name: 'Effort',
     category: 'thought_level',
-    currentValue: values.effort,
-    options: [
-      { value: DEFAULT_VALUE, name: 'Default' },
-      ...levels.map((level) => ({ value: level, name: effortName(level) })),
-    ],
+    currentValue:
+      values.effort === DEFAULT_VALUE ? defaultEffort(model) : values.effort,
+    options: levels.map((level) => ({ value: level, name: effortName(level) })),
   };
   return [...options, effort];
 }

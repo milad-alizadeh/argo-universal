@@ -169,7 +169,7 @@ export async function connect(
       );
     models = initialization.models;
     values = startingValues(models, input.configOptions);
-    await applyValues(CLI_START, values);
+    await applyValues(startingValues(models, []), values);
   } catch (error) {
     signal.removeEventListener('abort', abort);
     queue.end();

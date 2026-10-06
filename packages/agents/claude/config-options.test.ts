@@ -6,9 +6,10 @@ const models: ModelInfo[] = [
   {
     value: 'default',
     displayName: 'Default (recommended)',
-    description: '',
+    description: 'Opus 5.5 · Best for everyday, complex tasks',
+    resolvedModel: 'claude-opus-5-5',
     supportsEffort: true,
-    supportedEffortLevels: ['low', 'high', 'max'],
+    supportedEffortLevels: ['low', 'medium', 'high', 'max'],
     supportsAutoMode: true,
   },
   { value: 'haiku', displayName: 'Haiku', description: 'Fastest' },
@@ -20,7 +21,7 @@ describe('Claude config options', () => {
     expect(values).toEqual({
       mode: 'default',
       model: 'default',
-      effort: 'default',
+      effort: 'medium',
     });
     expect(toConfigOptions(models, values)).toMatchObject([
       {
@@ -30,9 +31,9 @@ describe('Claude config options', () => {
         category: 'mode',
         currentValue: 'default',
         options: [
-          { value: 'default', name: 'Ask before edits' },
+          { value: 'plan', name: 'Plan mode' },
+          { value: 'default', name: 'Ask first' },
           { value: 'acceptEdits', name: 'Accept edits' },
-          { value: 'plan', name: 'Plan' },
           { value: 'auto', name: 'Auto' },
           { value: 'bypassPermissions', name: 'Bypass permissions' },
         ],
@@ -44,7 +45,7 @@ describe('Claude config options', () => {
         category: 'model',
         currentValue: 'default',
         options: [
-          { value: 'default', name: 'Default (recommended)' },
+          { value: 'default', name: 'Opus 5.5 (recommended)' },
           { value: 'haiku', name: 'Haiku', description: 'Fastest' },
         ],
       },
@@ -53,10 +54,10 @@ describe('Claude config options', () => {
         configId: 'effort',
         name: 'Effort',
         category: 'thought_level',
-        currentValue: 'default',
+        currentValue: 'medium',
         options: [
-          { value: 'default', name: 'Default' },
           { value: 'low', name: 'Low' },
+          { value: 'medium', name: 'Medium' },
           { value: 'high', name: 'High' },
           { value: 'max', name: 'Max' },
         ],
@@ -78,7 +79,7 @@ describe('Claude config options', () => {
         { configId: 'mode', value: 'dontAsk' },
         { configId: 'effort', value: 'extreme' },
       ]),
-    ).toEqual({ model: 'default', mode: 'default', effort: 'default' });
+    ).toEqual({ model: 'default', mode: 'default', effort: 'medium' });
   });
 
   it('drops auto mode and effort for a model without them', () => {
@@ -127,7 +128,7 @@ it('marks Plan and dangerous modes and keeps per-model support flags', () => {
           }),
           expect.objectContaining({
             value: 'bypassPermissions',
-            _meta: { argo: { icon: 'ShieldOff', tone: 'dangerous' } },
+            _meta: { argo: { icon: 'WarningTriangle', tone: 'dangerous' } },
           }),
         ]),
       }),
@@ -156,4 +157,57 @@ it('marks Plan and dangerous modes and keeps per-model support flags', () => {
       }),
     ]),
   );
+});
+
+it('resolves the CLI alias to a model name in the adapter', () => {
+  const catalog = [
+    {
+      ...models[0],
+      description: 'Opus 5.5 · Best for everyday, complex tasks',
+    },
+    models[1],
+  ] as ModelInfo[];
+  const model = toConfigOptions(catalog, startingValues(catalog, [])).find(
+    (option) => option.category === 'model',
+  );
+  expect(model).toMatchObject({
+    options: [
+      {
+        value: 'default',
+        name: 'Opus 5.5 (recommended)',
+        description: 'Best for everyday, complex tasks',
+        _meta: { argo: { shortName: 'Opus 5.5' } },
+      },
+      { value: 'haiku', _meta: { argo: { shortName: 'Haiku' } } },
+    ],
+  });
+});
+
+it.each([
+  ['claude-opus-5-5', 'medium'],
+  ['claude-sonnet-5-5', 'medium'],
+  ['claude-opus-4-7', 'xhigh'],
+  ['claude-opus-4-6', 'high'],
+])('maps the default effort for %s to %s', (resolvedModel, effort) => {
+  const catalog = [
+    {
+      ...models[0],
+      resolvedModel,
+      description: '',
+      supportedEffortLevels: ['low', 'medium', 'high', 'xhigh', 'max'],
+    },
+  ] as ModelInfo[];
+  const values = startingValues(catalog, [
+    { configId: 'effort', value: 'default' },
+  ]);
+  expect(values.effort).toBe(effort);
+  const option = toConfigOptions(catalog, values).find(
+    (entry) => entry.category === 'thought_level',
+  );
+  expect(option).toMatchObject({ currentValue: effort });
+  if (option?.type !== 'select') throw new Error('Missing effort options');
+  expect(option.options).not.toContainEqual({
+    value: 'default',
+    name: 'Default',
+  });
 });

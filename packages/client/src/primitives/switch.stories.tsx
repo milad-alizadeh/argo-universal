@@ -6,13 +6,16 @@ import { Switch } from './switch';
 function CheckedExample({
   initialChecked = false,
   disabled = false,
+  size,
 }: {
   initialChecked?: boolean;
   disabled?: boolean;
+  size?: 'default' | 'small';
 }) {
   const [checked, setChecked] = useState(initialChecked);
   return (
     <Switch
+      size={size}
       checked={checked}
       onCheckedChange={setChecked}
       disabled={disabled}
@@ -37,6 +40,12 @@ export const Overview: Story = {
       </Variation>
       <Variation label="On">
         <CheckedExample initialChecked />
+      </Variation>
+      <Variation label="Small off">
+        <CheckedExample size="small" />
+      </Variation>
+      <Variation label="Small on">
+        <CheckedExample size="small" initialChecked />
       </Variation>
       <Variation label="Disabled">
         <CheckedExample disabled />

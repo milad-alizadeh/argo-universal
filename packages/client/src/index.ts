@@ -1,6 +1,14 @@
 import type {} from './lib/reusables-compatibility';
 
 export {
+  Composer,
+  type ComposerDraft,
+  type ComposerImage,
+  type ComposerProps,
+} from './components/Composer';
+export type { ComposerConfigurationProps } from './components/ComposerConfiguration';
+export type { ComposerStatusProps } from './components/ComposerStatus';
+export {
   DesktopLayout,
   type DesktopLayoutProps,
 } from './components/DesktopLayout';
