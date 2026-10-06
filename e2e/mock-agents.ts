@@ -1,17 +1,27 @@
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { mockClis } from '@repo/mocks/cli';
+import type { MockCliOptions } from '@repo/mocks/cli/mock-cli';
 
 // A PATH that finds the mock Agent CLIs in `directory` first.
 export const mockAgentPath = (directory: string) =>
   [directory, process.env.PATH ?? ''].join(path.delimiter);
 
+// Each Agent's mock CLI options by Agent id; an Agent left out replays its usual Turn.
+export type MockAgents = Record<string, Partial<MockCliOptions>>;
+
 // Writes every Agent's mock CLI into `directory` and returns its PATH, so an e2e Server never starts a real Agent CLI (AGENTS.md).
-export async function writeMockAgents(directory: string) {
+export async function writeMockAgents(
+  directory: string,
+  agents: MockAgents = {},
+) {
   await mkdir(directory, { recursive: true });
   await Promise.all(
-    Object.values(mockClis).map((mockCli) =>
-      mockCli.write(directory, { recording: mockCli.recordings.turn }),
+    Object.entries(mockClis).map(([agent, mockCli]) =>
+      mockCli.write(directory, {
+        recording: mockCli.recordings.turn,
+        ...agents[agent],
+      }),
     ),
   );
   return mockAgentPath(directory);

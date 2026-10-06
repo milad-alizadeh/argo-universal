@@ -101,15 +101,27 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
     }));
   }
 
-  // Uploads each image, in draft order, for the prompt's image blocks.
-  async function uploadImages(sent: ComposerDraft): Promise<BlobRef[]> {
+  // Keeps a file only while its image is in the draft.
+  function changeDraft(next: ComposerDraft) {
+    const kept = new Set(next.images.map((image) => image.id));
+    for (const id of imageFiles.current.keys())
+      if (!kept.has(id)) imageFiles.current.delete(id);
+    setDraft(next);
+  }
+
+  // Uploads each image, in draft order; undefined once an upload fails, which `upload.error` shows.
+  async function uploadImages(
+    sent: ComposerDraft,
+  ): Promise<BlobRef[] | undefined> {
     const references: BlobRef[] = [];
     for (const image of sent.images) {
       const file = imageFiles.current.get(image.id);
-      if (!file) throw new Error(`${image.name} is no longer available`);
+      if (!file) throw new Error(`No file for the attached ${image.name}`);
       const form = new FormData();
       form.append('file', file, image.name);
-      references.push(await upload.mutateAsync(form));
+      const reference = await upload.mutateAsync(form).catch(() => undefined);
+      if (!reference) return undefined;
+      references.push(reference);
     }
     return references;
   }
@@ -117,12 +129,8 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
   async function send(sent: ComposerDraft) {
     if (!project || !agent) return;
     resetErrors();
-    let images: BlobRef[];
-    try {
-      images = await uploadImages(sent);
-    } catch {
-      return;
-    }
+    const images = await uploadImages(sent);
+    if (!images) return;
     const input: SessionNewInput = {
       projectId: project.id,
       agent: agent.agent,
@@ -166,11 +174,12 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
   // Until the current branch loads, a new worktree has no base to start from.
   const branchReady =
     project?.checkoutChoice.type !== 'main' || branches.data !== undefined;
+  // One Send fails at most one of the two steps.
   let startError: string | undefined;
-  if (upload.error)
-    startError = `Couldn't upload the image. ${upload.error.message}`;
   if (start.error)
     startError = `Couldn't start the Session. ${start.error.message}`;
+  else if (upload.error)
+    startError = `Couldn't upload the image. ${upload.error.message}`;
   const sending = upload.isPending || start.isPending;
   const error = agent && !agentReady ? agent.installStep : startError;
   const checkout = {
@@ -217,7 +226,7 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
         <View className="items-center px-4 pb-4 wide:px-6">
           <Composer
             draft={draft}
-            onDraftChange={setDraft}
+            onDraftChange={changeDraft}
             onAttachImages={() => void attachImages()}
             onSend={(sent) => void send(sent)}
             placeholder=""

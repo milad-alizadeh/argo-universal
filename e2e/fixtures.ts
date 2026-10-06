@@ -4,8 +4,8 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import { test as base, _electron as electron } from '@playwright/test';
 import { z } from 'zod';
-import { writeMockAgents } from './mock-agents';
-import { findFreePort, type MockAgents, startOwnServer } from './own-server';
+import { type MockAgents, writeMockAgents } from './mock-agents';
+import { findFreePort, startOwnServer } from './own-server';
 
 export type AppOptions = { appTarget: 'web' | 'electron' };
 
@@ -48,14 +48,14 @@ export const test = base.extend<
       appTarget !== 'web',
       'The desktop app starts its own Server, so its Agents cannot change per test',
     );
-    const servers: OwnServer[] = [];
+    let server: OwnServer | undefined;
     try {
       await use(async (agents = {}) => {
-        const server = await startOwnServer(
-          testInfo.outputPath(`own-server-${servers.length}`),
+        if (server) throw new Error('A test starts one Server of its own');
+        server = await startOwnServer(
+          testInfo.outputPath('own-server'),
           agents,
         );
-        servers.push(server);
         // The App reads the Server URL the desktop preload would give it.
         await page.addInitScript((serverUrl) => {
           Object.assign(globalThis, { argo: { serverUrl } });
@@ -64,7 +64,7 @@ export const test = base.extend<
         return server;
       });
     } finally {
-      await Promise.all(servers.map((server) => server.stop()));
+      await server?.stop();
     }
   },
   page: async ({ appTarget, page }, use, testInfo) => {

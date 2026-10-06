@@ -3,14 +3,10 @@ import { mkdir } from 'node:fs/promises';
 import { createServer } from 'node:net';
 import path from 'node:path';
 import { promisify } from 'node:util';
-import { mockClis } from '@repo/mocks/cli';
-import type { MockCliOptions } from '@repo/mocks/cli/mock-cli';
+import { type MockAgents, writeMockAgents } from './mock-agents';
 
 const run = promisify(execFile);
 const serverDirectory = path.resolve(import.meta.dirname, '../apps/server');
-
-// Each Agent's mock CLI options by Agent id; an Agent left out replays its usual Turn.
-export type MockAgents = Record<string, Partial<MockCliOptions>>;
 
 export const findFreePort = () =>
   new Promise<number>((resolve, reject) => {
@@ -62,16 +58,8 @@ async function waitUntilReady(url: string, server: ChildProcess) {
 export async function startOwnServer(directory: string, agents: MockAgents) {
   const agentDirectory = path.join(directory, 'agent-bin');
   const projectPath = path.join(directory, 'project');
-  await mkdir(agentDirectory, { recursive: true });
   await createProject(projectPath);
-  await Promise.all(
-    Object.entries(mockClis).map(([agent, mockCli]) =>
-      mockCli.write(agentDirectory, {
-        recording: mockCli.recordings.turn,
-        ...agents[agent],
-      }),
-    ),
-  );
+  await writeMockAgents(agentDirectory, agents);
   const port = await findFreePort();
   // No inherited PATH, so a real Agent CLI on this machine never stands in for a missing mock.
   const server = spawn(process.execPath, ['--import', 'tsx', 'src/main.ts'], {
@@ -99,10 +87,5 @@ export async function startOwnServer(directory: string, agents: MockAgents) {
     await stop();
     throw error;
   }
-  return {
-    serverUrl: `ws://127.0.0.1:${port}`,
-    httpUrl,
-    projectPath,
-    stop,
-  };
+  return { serverUrl: `ws://127.0.0.1:${port}`, httpUrl, stop };
 }

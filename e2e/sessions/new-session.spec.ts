@@ -2,34 +2,70 @@ import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Page } from '@playwright/test';
+import { mockClis } from '@repo/mocks/cli';
+import { z } from 'zod';
 import { expect, test } from '../fixtures';
 
 const phone = { width: 390, height: 844 };
-const agents = [
-  { agent: 'claude', label: 'Claude' },
-  { agent: 'codex', label: 'Codex' },
-] as const;
+// The Agent ids the Server registers, so no test names a vendor (AGENTS.md).
+const agentIds = Object.keys(mockClis);
 const imagePath = path.resolve(
   import.meta.dirname,
   '../../mocks/cli/red-square.png',
 );
 
-type FeedRow = { sessionUpdate: string; content?: unknown[] };
+const AgentsList = z.array(
+  z.object({
+    agent: z.string(),
+    label: z.string(),
+    installStep: z.string().optional(),
+  }),
+);
+const FeedPage = z.object({
+  rows: z.array(
+    z.object({ sessionUpdate: z.string(), content: z.array(z.unknown()) }),
+  ),
+});
 
-// The Session's first Feed rows, read from the Server as any client reads them.
-async function readFeed(page: Page, httpUrl: string, sessionId: string) {
-  const input = encodeURIComponent(
-    JSON.stringify({ sessionId, direction: 'tail' }),
-  );
+// Calls a tRPC query over HTTP, as any client may, and checks the answer's shape.
+async function query<Output>(
+  page: Page,
+  httpUrl: string,
+  procedure: string,
+  input: unknown,
+  output: z.ZodType<Output>,
+) {
   const response = await page.request.get(
-    `${httpUrl}/trpc/feed.page?input=${input}`,
+    `${httpUrl}/trpc/${procedure}?input=${encodeURIComponent(JSON.stringify(input))}`,
   );
   expect(response.ok()).toBe(true);
-  const body = (await response.json()) as {
-    result: { data: { rows: FeedRow[] } };
-  };
-  return body.result.data.rows;
+  return z
+    .object({ result: z.object({ data: output }) })
+    .parse(await response.json()).result.data;
 }
+
+const readAgents = (page: Page, httpUrl: string) =>
+  query(page, httpUrl, 'agents.list', {}, AgentsList);
+
+async function readAgent(page: Page, httpUrl: string, agent: string) {
+  const found = (await readAgents(page, httpUrl)).find(
+    (entry) => entry.agent === agent,
+  );
+  if (!found) throw new Error(`The Server has no Agent ${agent}`);
+  return found;
+}
+
+// The Session's Session updates, newest page, read from the Server.
+const readFeed = async (page: Page, httpUrl: string, sessionId: string) =>
+  (
+    await query(
+      page,
+      httpUrl,
+      'feed.page',
+      { sessionId, direction: 'tail' },
+      FeedPage,
+    )
+  ).rows;
 
 async function chooseAgent(page: Page, label: string) {
   await page.getByRole('button', { name: 'Agent and model' }).click();
@@ -58,13 +94,14 @@ async function openNewSession(page: Page) {
   await expect(page.getByRole('textbox', { name: 'Message' })).toBeVisible();
 }
 
-for (const { agent, label } of agents) {
-  test(`${label}: a text prompt starts a Session, and Back returns to the list`, async ({
+for (const agent of agentIds) {
+  test(`${agent}: a text prompt starts a Session, and Back returns to the list`, async ({
     page,
     ownServer,
   }) => {
     await page.setViewportSize(phone);
     const { httpUrl } = await ownServer();
+    const { label } = await readAgent(page, httpUrl, agent);
     await openNewSession(page);
     await chooseAgent(page, label);
     await page
@@ -89,7 +126,7 @@ for (const { agent, label } of agents) {
     ).toHaveCount(0);
   });
 
-  test(`${label}: an image prompt uploads the image and starts a Session`, async ({
+  test(`${agent}: an image prompt uploads the image and starts a Session`, async ({
     page,
     ownServer,
   }) => {
@@ -97,6 +134,7 @@ for (const { agent, label } of agents) {
     const { httpUrl } = await ownServer({
       [agent]: { recording: 'image-prompt' },
     });
+    const { label } = await readAgent(page, httpUrl, agent);
     await openNewSession(page);
     await chooseAgent(page, label);
     await page.getByRole('button', { name: 'Attach images' }).click();
@@ -151,31 +189,26 @@ test('the checkout choice is remembered for the next New Session', async ({
 });
 
 const steps = {
-  not_installed: {
-    status: 'Not installed',
-    setup: 'Install',
-    claude: 'Install Claude Code: npm install -g @anthropic-ai/claude-code',
-  },
-  not_signed_in: {
-    status: 'Not signed in',
-    setup: 'Sign in',
-    claude:
-      'Run claude in a terminal and sign in with /login using a Claude subscription',
-  },
+  not_installed: { status: 'Not installed', setup: 'Install' },
+  not_signed_in: { status: 'Not signed in', setup: 'Sign in' },
 } as const;
 
 for (const availability of ['not_installed', 'not_signed_in'] as const) {
-  const { status, claude } = steps[availability];
+  const { status } = steps[availability];
   test(`with every Agent ${status.toLowerCase()}, New Session shows the first Agent's step`, async ({
     page,
     ownServer,
   }) => {
     await page.setViewportSize(phone);
-    await ownServer(
-      Object.fromEntries(agents.map(({ agent }) => [agent, { availability }])),
+    const { httpUrl } = await ownServer(
+      Object.fromEntries(agentIds.map((agent) => [agent, { availability }])),
     );
+    const [first, ...rest] = await readAgents(page, httpUrl);
+    // Every Agent reports a step of its own.
+    for (const agent of [first, ...rest])
+      expect(agent?.installStep).toBeTruthy();
     await openNewSession(page);
-    await expect(page.getByRole('alert')).toHaveText(claude);
+    await expect(page.getByRole('alert')).toHaveText(first?.installStep ?? '');
     await expect(
       page.getByRole('textbox', { name: 'Message' }),
     ).not.toBeEditable();
@@ -183,32 +216,29 @@ for (const availability of ['not_installed', 'not_signed_in'] as const) {
   });
 }
 
-for (const [unavailable, availability] of [
-  [agents[0], 'not_installed'],
-  [agents[1], 'not_signed_in'],
+// One Agent unavailable while the other is ready, each variant on a different Agent.
+for (const [index, availability] of [
+  [0, 'not_installed'],
+  [1, 'not_signed_in'],
 ] as const) {
+  const agent = agentIds[index] ?? '';
   const { status, setup } = steps[availability];
-  test(`${unavailable.label} ${status.toLowerCase()}: the Agent picker marks it and opens its setup`, async ({
+  test(`${agent} ${status.toLowerCase()}: the Agent picker marks it and opens its setup`, async ({
     page,
     ownServer,
   }) => {
     await page.setViewportSize(phone);
-    await ownServer({ [unavailable.agent]: { availability } });
+    const { httpUrl } = await ownServer({ [agent]: { availability } });
+    const { label } = await readAgent(page, httpUrl, agent);
     await openNewSession(page);
     await page.getByRole('button', { name: 'Agent and model' }).click();
     await page.getByRole('button', { name: 'Choose Agent' }).click();
-    const select = page.getByRole('button', {
-      name: `Select ${unavailable.label}`,
-    });
+    const select = page.getByRole('button', { name: `Select ${label}` });
     await expect(select).toContainText(status);
     await expect(select).toBeDisabled();
-    const setUp = page.getByRole('button', {
-      name: `Set up ${unavailable.label}`,
-    });
+    const setUp = page.getByRole('button', { name: `Set up ${label}` });
     await expect(setUp).toHaveText(setup);
     await setUp.click();
-    await expect(page).toHaveURL(
-      new RegExp(`/settings/agents/${unavailable.agent}$`),
-    );
+    await expect(page).toHaveURL(new RegExp(`/settings/agents/${agent}$`));
   });
 }
