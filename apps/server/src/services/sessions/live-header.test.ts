@@ -71,8 +71,8 @@ describe.each(liveHeaderMocks)(
         toLiveHeader(running, [
           {
             ...command,
-            title: 'Check the whole suite',
-            _meta: { argo: { titleIsDescription: true } },
+            title: 'Generated command title',
+            _meta: { argo: { description: 'Check the whole suite' } },
           },
         ]),
       ).toBe('Check the whole suite');

@@ -126,9 +126,8 @@ export function toolCallStarted(
     kind: 'other' satisfies ToolKind,
     content: [],
   };
-  const titleIsDescription =
-    block.name === 'Bash' &&
-    Boolean((block.input as BashInput).description?.trim());
+  const description =
+    block.name === 'Bash' ? (block.input as BashInput).description : undefined;
   return {
     id: block.id,
     sessionUpdate: 'tool_call_update',
@@ -138,13 +137,13 @@ export function toolCallStarted(
     status: 'in_progress',
     rawInput: block.input,
     ...shape,
-    ...(timestamp === undefined && !titleIsDescription
+    ...(timestamp === undefined && !description?.trim()
       ? {}
       : {
           _meta: {
             argo: {
               ...(timestamp === undefined ? {} : { startedAt: timestamp }),
-              ...(titleIsDescription ? { titleIsDescription: true } : {}),
+              ...(description?.trim() ? { description } : {}),
             },
           },
         }),

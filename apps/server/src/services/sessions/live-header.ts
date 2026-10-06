@@ -95,8 +95,8 @@ export function toLiveHeader(
     )
     .toSorted((first, second) => first.position - second.position)
     .at(-1);
-  if (tool?._meta?.argo?.titleIsDescription && tool.title.trim())
-    return tool.title;
+  const description = tool?._meta?.argo?.description;
+  if (description?.trim()) return description;
   if (tool) return toolKindLabel(tool) ?? (tool.name?.trim() || 'Working');
   return 'Working';
 }

@@ -161,7 +161,7 @@
           "argo": {
             "startedAt": 1791165776295,
             "endedAt": 1791165776582,
-            "titleIsDescription": true
+            "description": "Show hello.txt and short git status"
           }
         }
       },
@@ -590,7 +590,7 @@
           "_meta": {
             "argo": {
               "startedAt": 1791165776295,
-              "titleIsDescription": true
+              "description": "Show hello.txt and short git status"
             }
           }
         }
@@ -626,7 +626,7 @@
             "argo": {
               "startedAt": 1791165776295,
               "endedAt": 1791165776582,
-              "titleIsDescription": true
+              "description": "Show hello.txt and short git status"
             }
           }
         }
@@ -802,7 +802,7 @@
           "argo": {
             "startedAt": 1791165781825,
             "endedAt": 1791165783338,
-            "titleIsDescription": true
+            "description": "Wait 20 seconds then print done"
           }
         }
       }
@@ -838,7 +838,7 @@
           "_meta": {
             "argo": {
               "startedAt": 1791165781825,
-              "titleIsDescription": true
+              "description": "Wait 20 seconds then print done"
             }
           }
         }
@@ -874,7 +874,7 @@
             "argo": {
               "startedAt": 1791165781825,
               "endedAt": 1791165783338,
-              "titleIsDescription": true
+              "description": "Wait 20 seconds then print done"
             }
           }
         }
