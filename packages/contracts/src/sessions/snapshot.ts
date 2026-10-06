@@ -127,6 +127,7 @@ export type PendingElicitation = z.infer<typeof PendingElicitation>;
 // The live state of a Session that is not a Feed row. The Server holds it in memory, so only stored fields derive from columns (ADR 0013).
 export const SessionSnapshot = z.strictObject({
   state: SessionState,
+  liveHeader: z.string().nullable(),
   activeTurnId: turnColumns.shape.id.nullable(),
   usage: ContextUsage.nullable(),
   pendingPermission: PendingPermission.nullable(),

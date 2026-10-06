@@ -42,6 +42,8 @@ export function toSessionSnapshot(
         : 'idle';
   return {
     state,
+    // Issue #47 supplies the live header; the contract is nullable until then.
+    liveHeader: null,
     activeTurnId: context.activeTurnId,
     usage: context.usage,
     pendingPermission: context.permissionQueue[0] ?? null,

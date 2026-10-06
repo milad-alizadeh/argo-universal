@@ -1,0 +1,2437 @@
+[
+  {
+    "agent": "agent-1",
+    "recording": "edit-and-command",
+    "rows": [
+      {
+        "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
+        "sessionId": "agent-1-edit-and-command",
+        "position": 0,
+        "revision": 13,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "agent_thought",
+        "messageId": "msg_011CfiGV55PC6jDNmPmEHy8D",
+        "content": [
+          {
+            "type": "text",
+            "text": "I should read hello.txt before editing it, so I'll write notes.md and read hello.txt at the same time.\n\n"
+          }
+        ]
+      },
+      {
+        "id": "toolu_01FDakYHkWn7oMZW8hWNVddc",
+        "sessionId": "agent-1-edit-and-command",
+        "position": 1,
+        "revision": 15,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "tool_call_update",
+        "toolCallId": "toolu_01FDakYHkWn7oMZW8hWNVddc",
+        "title": "Write /project/notes.md",
+        "name": "Write",
+        "kind": "edit",
+        "status": "completed",
+        "content": [
+          {
+            "type": "diff",
+            "changes": [
+              {
+                "operation": "add",
+                "path": "/project/notes.md",
+                "newText": "# Todo\n\n- [ ] Update greeting in hello.txt\n- [ ] Review git status\n"
+              }
+            ]
+          }
+        ],
+        "locations": [
+          {
+            "path": "/project/notes.md"
+          }
+        ],
+        "rawInput": {
+          "file_path": "/project/notes.md",
+          "content": "# Todo\n\n- [ ] Update greeting in hello.txt\n- [ ] Review git status\n"
+        },
+        "_meta": {
+          "argo": {
+            "startedAt": 1791165772266,
+            "endedAt": 1791165772285
+          }
+        }
+      },
+      {
+        "id": "toolu_01SxWPoiSEcuefwQ7yYCUMf7",
+        "sessionId": "agent-1-edit-and-command",
+        "position": 2,
+        "revision": 17,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "tool_call_update",
+        "toolCallId": "toolu_01SxWPoiSEcuefwQ7yYCUMf7",
+        "title": "Read /project/hello.txt",
+        "name": "Read",
+        "kind": "read",
+        "status": "completed",
+        "content": [],
+        "locations": [
+          {
+            "path": "/project/hello.txt"
+          }
+        ],
+        "rawInput": {
+          "file_path": "/project/hello.txt"
+        },
+        "_meta": {
+          "argo": {
+            "startedAt": 1791165772949,
+            "endedAt": 1791165772955
+          }
+        }
+      },
+      {
+        "id": "toolu_017jjekVKPQW8pQZNYRFNzF6",
+        "sessionId": "agent-1-edit-and-command",
+        "position": 3,
+        "revision": 19,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "tool_call_update",
+        "toolCallId": "toolu_017jjekVKPQW8pQZNYRFNzF6",
+        "title": "Edit /project/hello.txt",
+        "name": "Edit",
+        "kind": "edit",
+        "status": "completed",
+        "content": [
+          {
+            "type": "diff",
+            "changes": [
+              {
+                "operation": "modify",
+                "path": "/project/hello.txt",
+                "oldText": "hello world",
+                "newText": "hello Argo"
+              }
+            ]
+          }
+        ],
+        "locations": [
+          {
+            "path": "/project/hello.txt"
+          }
+        ],
+        "rawInput": {
+          "replace_all": false,
+          "file_path": "/project/hello.txt",
+          "old_string": "hello world",
+          "new_string": "hello Argo"
+        },
+        "_meta": {
+          "argo": {
+            "startedAt": 1791165775075,
+            "endedAt": 1791165775085
+          }
+        }
+      },
+      {
+        "id": "toolu_01G161bUEDoix223h77wg2HL",
+        "sessionId": "agent-1-edit-and-command",
+        "position": 4,
+        "revision": 21,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "tool_call_update",
+        "toolCallId": "toolu_01G161bUEDoix223h77wg2HL",
+        "title": "Show hello.txt and short git status",
+        "name": "Bash",
+        "kind": "execute",
+        "status": "completed",
+        "content": [
+          {
+            "type": "terminal",
+            "command": "cat hello.txt && git status --short",
+            "output": "hello Argo\n M hello.txt\n?? notes.md"
+          }
+        ],
+        "rawInput": {
+          "command": "cat hello.txt && git status --short",
+          "description": "Show hello.txt and short git status"
+        },
+        "_meta": {
+          "argo": {
+            "startedAt": 1791165776295,
+            "endedAt": 1791165776582
+          }
+        }
+      },
+      {
+        "id": "msg_011CfiGVZY9Xg3EPrTZnMaR5#0",
+        "sessionId": "agent-1-edit-and-command",
+        "position": 5,
+        "revision": 32,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "agent_message",
+        "messageId": "msg_011CfiGVZY9Xg3EPrTZnMaR5",
+        "content": [
+          {
+            "type": "text",
+            "text": "I created `notes.md` with a two-item todo list and changed `hello.txt` to read \"hello Argo\", and git status shows `hello.txt` as modified and `notes.md` as a new untracked file."
+          }
+        ]
+      }
+    ],
+    "stream": [
+      {
+        "type": "row.upsert",
+        "rev": 1,
+        "row": {
+          "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
+          "sessionId": "agent-1-edit-and-command",
+          "position": 0,
+          "revision": 1,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "agent_thought",
+          "messageId": "msg_011CfiGV55PC6jDNmPmEHy8D",
+          "content": [
+            {
+              "type": "text",
+              "text": ""
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.append",
+        "rev": 2,
+        "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
+        "field": "content.0.text",
+        "off": 0,
+        "text": "I"
+      },
+      {
+        "type": "row.append",
+        "rev": 3,
+        "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
+        "field": "content.0.text",
+        "off": 1,
+        "text": " should"
+      },
+      {
+        "type": "row.append",
+        "rev": 4,
+        "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
+        "field": "content.0.text",
+        "off": 8,
+        "text": " read"
+      },
+      {
+        "type": "row.append",
+        "rev": 5,
+        "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
+        "field": "content.0.text",
+        "off": 13,
+        "text": " h"
+      },
+      {
+        "type": "row.append",
+        "rev": 6,
+        "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
+        "field": "content.0.text",
+        "off": 15,
+        "text": "ello.txt before edit"
+      },
+      {
+        "type": "row.append",
+        "rev": 7,
+        "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
+        "field": "content.0.text",
+        "off": 35,
+        "text": "ing it, so I'll write"
+      },
+      {
+        "type": "row.append",
+        "rev": 8,
+        "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
+        "field": "content.0.text",
+        "off": 56,
+        "text": " not"
+      },
+      {
+        "type": "row.append",
+        "rev": 9,
+        "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
+        "field": "content.0.text",
+        "off": 60,
+        "text": "es.md and read"
+      },
+      {
+        "type": "row.append",
+        "rev": 10,
+        "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
+        "field": "content.0.text",
+        "off": 74,
+        "text": " hello.txt at"
+      },
+      {
+        "type": "row.append",
+        "rev": 11,
+        "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
+        "field": "content.0.text",
+        "off": 87,
+        "text": " the same time."
+      },
+      {
+        "type": "row.append",
+        "rev": 12,
+        "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
+        "field": "content.0.text",
+        "off": 102,
+        "text": "\n\n"
+      },
+      {
+        "type": "row.upsert",
+        "rev": 13,
+        "row": {
+          "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
+          "sessionId": "agent-1-edit-and-command",
+          "position": 0,
+          "revision": 13,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "agent_thought",
+          "messageId": "msg_011CfiGV55PC6jDNmPmEHy8D",
+          "content": [
+            {
+              "type": "text",
+              "text": "I should read hello.txt before editing it, so I'll write notes.md and read hello.txt at the same time.\n\n"
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 14,
+        "row": {
+          "id": "toolu_01FDakYHkWn7oMZW8hWNVddc",
+          "sessionId": "agent-1-edit-and-command",
+          "position": 1,
+          "revision": 14,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "toolu_01FDakYHkWn7oMZW8hWNVddc",
+          "title": "Write /project/notes.md",
+          "name": "Write",
+          "kind": "edit",
+          "status": "in_progress",
+          "content": [
+            {
+              "type": "diff",
+              "changes": [
+                {
+                  "operation": "add",
+                  "path": "/project/notes.md",
+                  "newText": "# Todo\n\n- [ ] Update greeting in hello.txt\n- [ ] Review git status\n"
+                }
+              ]
+            }
+          ],
+          "locations": [
+            {
+              "path": "/project/notes.md"
+            }
+          ],
+          "rawInput": {
+            "file_path": "/project/notes.md",
+            "content": "# Todo\n\n- [ ] Update greeting in hello.txt\n- [ ] Review git status\n"
+          },
+          "_meta": {
+            "argo": {
+              "startedAt": 1791165772266
+            }
+          }
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 15,
+        "row": {
+          "id": "toolu_01FDakYHkWn7oMZW8hWNVddc",
+          "sessionId": "agent-1-edit-and-command",
+          "position": 1,
+          "revision": 15,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "toolu_01FDakYHkWn7oMZW8hWNVddc",
+          "title": "Write /project/notes.md",
+          "name": "Write",
+          "kind": "edit",
+          "status": "completed",
+          "content": [
+            {
+              "type": "diff",
+              "changes": [
+                {
+                  "operation": "add",
+                  "path": "/project/notes.md",
+                  "newText": "# Todo\n\n- [ ] Update greeting in hello.txt\n- [ ] Review git status\n"
+                }
+              ]
+            }
+          ],
+          "locations": [
+            {
+              "path": "/project/notes.md"
+            }
+          ],
+          "rawInput": {
+            "file_path": "/project/notes.md",
+            "content": "# Todo\n\n- [ ] Update greeting in hello.txt\n- [ ] Review git status\n"
+          },
+          "_meta": {
+            "argo": {
+              "startedAt": 1791165772266,
+              "endedAt": 1791165772285
+            }
+          }
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 16,
+        "row": {
+          "id": "toolu_01SxWPoiSEcuefwQ7yYCUMf7",
+          "sessionId": "agent-1-edit-and-command",
+          "position": 2,
+          "revision": 16,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "toolu_01SxWPoiSEcuefwQ7yYCUMf7",
+          "title": "Read /project/hello.txt",
+          "name": "Read",
+          "kind": "read",
+          "status": "in_progress",
+          "content": [],
+          "locations": [
+            {
+              "path": "/project/hello.txt"
+            }
+          ],
+          "rawInput": {
+            "file_path": "/project/hello.txt"
+          },
+          "_meta": {
+            "argo": {
+              "startedAt": 1791165772949
+            }
+          }
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 17,
+        "row": {
+          "id": "toolu_01SxWPoiSEcuefwQ7yYCUMf7",
+          "sessionId": "agent-1-edit-and-command",
+          "position": 2,
+          "revision": 17,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "toolu_01SxWPoiSEcuefwQ7yYCUMf7",
+          "title": "Read /project/hello.txt",
+          "name": "Read",
+          "kind": "read",
+          "status": "completed",
+          "content": [],
+          "locations": [
+            {
+              "path": "/project/hello.txt"
+            }
+          ],
+          "rawInput": {
+            "file_path": "/project/hello.txt"
+          },
+          "_meta": {
+            "argo": {
+              "startedAt": 1791165772949,
+              "endedAt": 1791165772955
+            }
+          }
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 18,
+        "row": {
+          "id": "toolu_017jjekVKPQW8pQZNYRFNzF6",
+          "sessionId": "agent-1-edit-and-command",
+          "position": 3,
+          "revision": 18,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "toolu_017jjekVKPQW8pQZNYRFNzF6",
+          "title": "Edit /project/hello.txt",
+          "name": "Edit",
+          "kind": "edit",
+          "status": "in_progress",
+          "content": [
+            {
+              "type": "diff",
+              "changes": [
+                {
+                  "operation": "modify",
+                  "path": "/project/hello.txt",
+                  "oldText": "hello world",
+                  "newText": "hello Argo"
+                }
+              ]
+            }
+          ],
+          "locations": [
+            {
+              "path": "/project/hello.txt"
+            }
+          ],
+          "rawInput": {
+            "replace_all": false,
+            "file_path": "/project/hello.txt",
+            "old_string": "hello world",
+            "new_string": "hello Argo"
+          },
+          "_meta": {
+            "argo": {
+              "startedAt": 1791165775075
+            }
+          }
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 19,
+        "row": {
+          "id": "toolu_017jjekVKPQW8pQZNYRFNzF6",
+          "sessionId": "agent-1-edit-and-command",
+          "position": 3,
+          "revision": 19,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "toolu_017jjekVKPQW8pQZNYRFNzF6",
+          "title": "Edit /project/hello.txt",
+          "name": "Edit",
+          "kind": "edit",
+          "status": "completed",
+          "content": [
+            {
+              "type": "diff",
+              "changes": [
+                {
+                  "operation": "modify",
+                  "path": "/project/hello.txt",
+                  "oldText": "hello world",
+                  "newText": "hello Argo"
+                }
+              ]
+            }
+          ],
+          "locations": [
+            {
+              "path": "/project/hello.txt"
+            }
+          ],
+          "rawInput": {
+            "replace_all": false,
+            "file_path": "/project/hello.txt",
+            "old_string": "hello world",
+            "new_string": "hello Argo"
+          },
+          "_meta": {
+            "argo": {
+              "startedAt": 1791165775075,
+              "endedAt": 1791165775085
+            }
+          }
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 20,
+        "row": {
+          "id": "toolu_01G161bUEDoix223h77wg2HL",
+          "sessionId": "agent-1-edit-and-command",
+          "position": 4,
+          "revision": 20,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "toolu_01G161bUEDoix223h77wg2HL",
+          "title": "Show hello.txt and short git status",
+          "name": "Bash",
+          "kind": "execute",
+          "status": "in_progress",
+          "content": [
+            {
+              "type": "terminal",
+              "command": "cat hello.txt && git status --short",
+              "output": ""
+            }
+          ],
+          "rawInput": {
+            "command": "cat hello.txt && git status --short",
+            "description": "Show hello.txt and short git status"
+          },
+          "_meta": {
+            "argo": {
+              "startedAt": 1791165776295
+            }
+          }
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 21,
+        "row": {
+          "id": "toolu_01G161bUEDoix223h77wg2HL",
+          "sessionId": "agent-1-edit-and-command",
+          "position": 4,
+          "revision": 21,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "toolu_01G161bUEDoix223h77wg2HL",
+          "title": "Show hello.txt and short git status",
+          "name": "Bash",
+          "kind": "execute",
+          "status": "completed",
+          "content": [
+            {
+              "type": "terminal",
+              "command": "cat hello.txt && git status --short",
+              "output": "hello Argo\n M hello.txt\n?? notes.md"
+            }
+          ],
+          "rawInput": {
+            "command": "cat hello.txt && git status --short",
+            "description": "Show hello.txt and short git status"
+          },
+          "_meta": {
+            "argo": {
+              "startedAt": 1791165776295,
+              "endedAt": 1791165776582
+            }
+          }
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 22,
+        "row": {
+          "id": "msg_011CfiGVZY9Xg3EPrTZnMaR5#0",
+          "sessionId": "agent-1-edit-and-command",
+          "position": 5,
+          "revision": 22,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_011CfiGVZY9Xg3EPrTZnMaR5",
+          "content": [
+            {
+              "type": "text",
+              "text": ""
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.append",
+        "rev": 23,
+        "id": "msg_011CfiGVZY9Xg3EPrTZnMaR5#0",
+        "field": "content.0.text",
+        "off": 0,
+        "text": "I created `notes.md`"
+      },
+      {
+        "type": "row.append",
+        "rev": 24,
+        "id": "msg_011CfiGVZY9Xg3EPrTZnMaR5#0",
+        "field": "content.0.text",
+        "off": 20,
+        "text": " with a two-item todo list"
+      },
+      {
+        "type": "row.append",
+        "rev": 25,
+        "id": "msg_011CfiGVZY9Xg3EPrTZnMaR5#0",
+        "field": "content.0.text",
+        "off": 46,
+        "text": " and changed `hello.tx"
+      },
+      {
+        "type": "row.append",
+        "rev": 26,
+        "id": "msg_011CfiGVZY9Xg3EPrTZnMaR5#0",
+        "field": "content.0.text",
+        "off": 68,
+        "text": "t` to read \"hello"
+      },
+      {
+        "type": "row.append",
+        "rev": 27,
+        "id": "msg_011CfiGVZY9Xg3EPrTZnMaR5#0",
+        "field": "content.0.text",
+        "off": 85,
+        "text": " Argo\", and git status shows"
+      },
+      {
+        "type": "row.append",
+        "rev": 28,
+        "id": "msg_011CfiGVZY9Xg3EPrTZnMaR5#0",
+        "field": "content.0.text",
+        "off": 113,
+        "text": " `hello.txt` as"
+      },
+      {
+        "type": "row.append",
+        "rev": 29,
+        "id": "msg_011CfiGVZY9Xg3EPrTZnMaR5#0",
+        "field": "content.0.text",
+        "off": 128,
+        "text": " modified and `notes.md"
+      },
+      {
+        "type": "row.append",
+        "rev": 30,
+        "id": "msg_011CfiGVZY9Xg3EPrTZnMaR5#0",
+        "field": "content.0.text",
+        "off": 151,
+        "text": "` as a"
+      },
+      {
+        "type": "row.append",
+        "rev": 31,
+        "id": "msg_011CfiGVZY9Xg3EPrTZnMaR5#0",
+        "field": "content.0.text",
+        "off": 157,
+        "text": " new untracked file."
+      },
+      {
+        "type": "row.upsert",
+        "rev": 32,
+        "row": {
+          "id": "msg_011CfiGVZY9Xg3EPrTZnMaR5#0",
+          "sessionId": "agent-1-edit-and-command",
+          "position": 5,
+          "revision": 32,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_011CfiGVZY9Xg3EPrTZnMaR5",
+          "content": [
+            {
+              "type": "text",
+              "text": "I created `notes.md` with a two-item todo list and changed `hello.txt` to read \"hello Argo\", and git status shows `hello.txt` as modified and `notes.md` as a new untracked file."
+            }
+          ]
+        }
+      },
+      {
+        "type": "snapshot",
+        "snapshot": {
+          "state": "idle",
+          "liveHeader": null,
+          "activeTurnId": null,
+          "usage": null,
+          "pendingPermission": null,
+          "pendingElicitation": null,
+          "configOptions": [],
+          "maxRevision": 32,
+          "epoch": 0
+        }
+      }
+    ],
+    "snapshot": {
+      "state": "idle",
+      "liveHeader": null,
+      "activeTurnId": null,
+      "usage": null,
+      "pendingPermission": null,
+      "pendingElicitation": null,
+      "configOptions": [],
+      "maxRevision": 32,
+      "epoch": 0
+    }
+  },
+  {
+    "agent": "agent-1",
+    "recording": "interrupt",
+    "rows": [
+      {
+        "id": "toolu_01RmbdAbVKQQdXJSR61Rrkz3",
+        "sessionId": "agent-1-interrupt",
+        "position": 0,
+        "revision": 2,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "tool_call_update",
+        "toolCallId": "toolu_01RmbdAbVKQQdXJSR61Rrkz3",
+        "title": "Wait 20 seconds then print done",
+        "name": "Bash",
+        "kind": "execute",
+        "status": "cancelled",
+        "content": [
+          {
+            "type": "terminal",
+            "command": "sleep 20 && echo done",
+            "output": ""
+          }
+        ],
+        "rawInput": {
+          "command": "sleep 20 && echo done",
+          "description": "Wait 20 seconds then print done"
+        },
+        "_meta": {
+          "argo": {
+            "startedAt": 1791165781825,
+            "endedAt": 1791165783338
+          }
+        }
+      }
+    ],
+    "stream": [
+      {
+        "type": "row.upsert",
+        "rev": 1,
+        "row": {
+          "id": "toolu_01RmbdAbVKQQdXJSR61Rrkz3",
+          "sessionId": "agent-1-interrupt",
+          "position": 0,
+          "revision": 1,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "toolu_01RmbdAbVKQQdXJSR61Rrkz3",
+          "title": "Wait 20 seconds then print done",
+          "name": "Bash",
+          "kind": "execute",
+          "status": "in_progress",
+          "content": [
+            {
+              "type": "terminal",
+              "command": "sleep 20 && echo done",
+              "output": ""
+            }
+          ],
+          "rawInput": {
+            "command": "sleep 20 && echo done",
+            "description": "Wait 20 seconds then print done"
+          },
+          "_meta": {
+            "argo": {
+              "startedAt": 1791165781825
+            }
+          }
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 2,
+        "row": {
+          "id": "toolu_01RmbdAbVKQQdXJSR61Rrkz3",
+          "sessionId": "agent-1-interrupt",
+          "position": 0,
+          "revision": 2,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "toolu_01RmbdAbVKQQdXJSR61Rrkz3",
+          "title": "Wait 20 seconds then print done",
+          "name": "Bash",
+          "kind": "execute",
+          "status": "cancelled",
+          "content": [
+            {
+              "type": "terminal",
+              "command": "sleep 20 && echo done",
+              "output": ""
+            }
+          ],
+          "rawInput": {
+            "command": "sleep 20 && echo done",
+            "description": "Wait 20 seconds then print done"
+          },
+          "_meta": {
+            "argo": {
+              "startedAt": 1791165781825,
+              "endedAt": 1791165783338
+            }
+          }
+        }
+      },
+      {
+        "type": "snapshot",
+        "snapshot": {
+          "state": "idle",
+          "liveHeader": null,
+          "activeTurnId": null,
+          "usage": null,
+          "pendingPermission": null,
+          "pendingElicitation": null,
+          "configOptions": [],
+          "maxRevision": 2,
+          "epoch": 0
+        }
+      }
+    ],
+    "snapshot": {
+      "state": "idle",
+      "liveHeader": null,
+      "activeTurnId": null,
+      "usage": null,
+      "pendingPermission": null,
+      "pendingElicitation": null,
+      "configOptions": [],
+      "maxRevision": 2,
+      "epoch": 0
+    }
+  },
+  {
+    "agent": "agent-1",
+    "recording": "compaction",
+    "rows": [
+      {
+        "id": "msg_011CfkKdghbD12zmKxJT5uFC#0",
+        "sessionId": "agent-1-compaction",
+        "position": 0,
+        "revision": 1,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "agent_message",
+        "messageId": "msg_011CfkKdghbD12zmKxJT5uFC",
+        "content": [
+          {
+            "type": "text",
+            "text": "OK"
+          }
+        ]
+      },
+      {
+        "id": "6d8abfff-ea69-4c66-b642-d445f9060d16",
+        "sessionId": "agent-1-compaction",
+        "position": 1,
+        "revision": 3,
+        "turnId": "turn-2",
+        "state": "settled",
+        "sessionUpdate": "compaction_update",
+        "compactionId": "6d8abfff-ea69-4c66-b642-d445f9060d16",
+        "status": "completed"
+      }
+    ],
+    "stream": [
+      {
+        "type": "row.upsert",
+        "rev": 1,
+        "row": {
+          "id": "msg_011CfkKdghbD12zmKxJT5uFC#0",
+          "sessionId": "agent-1-compaction",
+          "position": 0,
+          "revision": 1,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_011CfkKdghbD12zmKxJT5uFC",
+          "content": [
+            {
+              "type": "text",
+              "text": "OK"
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 2,
+        "row": {
+          "id": "6d8abfff-ea69-4c66-b642-d445f9060d16",
+          "sessionId": "agent-1-compaction",
+          "position": 1,
+          "revision": 2,
+          "turnId": "turn-2",
+          "state": "open",
+          "sessionUpdate": "compaction_update",
+          "compactionId": "6d8abfff-ea69-4c66-b642-d445f9060d16",
+          "status": "in_progress"
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 3,
+        "row": {
+          "id": "6d8abfff-ea69-4c66-b642-d445f9060d16",
+          "sessionId": "agent-1-compaction",
+          "position": 1,
+          "revision": 3,
+          "turnId": "turn-2",
+          "state": "settled",
+          "sessionUpdate": "compaction_update",
+          "compactionId": "6d8abfff-ea69-4c66-b642-d445f9060d16",
+          "status": "completed"
+        }
+      },
+      {
+        "type": "snapshot",
+        "snapshot": {
+          "state": "idle",
+          "liveHeader": null,
+          "activeTurnId": null,
+          "usage": null,
+          "pendingPermission": null,
+          "pendingElicitation": null,
+          "configOptions": [],
+          "maxRevision": 3,
+          "epoch": 0
+        }
+      }
+    ],
+    "snapshot": {
+      "state": "idle",
+      "liveHeader": null,
+      "activeTurnId": null,
+      "usage": null,
+      "pendingPermission": null,
+      "pendingElicitation": null,
+      "configOptions": [],
+      "maxRevision": 3,
+      "epoch": 0
+    }
+  },
+  {
+    "agent": "agent-1",
+    "recording": "image-prompt",
+    "rows": [
+      {
+        "id": "msg_011CfjVkGq181Ld87UngQJn2#0",
+        "sessionId": "agent-1-image-prompt",
+        "position": 0,
+        "revision": 2,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "agent_thought",
+        "messageId": "msg_011CfjVkGq181Ld87UngQJn2",
+        "content": [
+          {
+            "type": "text",
+            "text": ""
+          }
+        ]
+      },
+      {
+        "id": "msg_011CfjVkGq181Ld87UngQJn2#1",
+        "sessionId": "agent-1-image-prompt",
+        "position": 1,
+        "revision": 5,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "agent_message",
+        "messageId": "msg_011CfjVkGq181Ld87UngQJn2",
+        "content": [
+          {
+            "type": "text",
+            "text": "Red"
+          }
+        ]
+      }
+    ],
+    "stream": [
+      {
+        "type": "row.upsert",
+        "rev": 1,
+        "row": {
+          "id": "msg_011CfjVkGq181Ld87UngQJn2#0",
+          "sessionId": "agent-1-image-prompt",
+          "position": 0,
+          "revision": 1,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "agent_thought",
+          "messageId": "msg_011CfjVkGq181Ld87UngQJn2",
+          "content": [
+            {
+              "type": "text",
+              "text": ""
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 2,
+        "row": {
+          "id": "msg_011CfjVkGq181Ld87UngQJn2#0",
+          "sessionId": "agent-1-image-prompt",
+          "position": 0,
+          "revision": 2,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "agent_thought",
+          "messageId": "msg_011CfjVkGq181Ld87UngQJn2",
+          "content": [
+            {
+              "type": "text",
+              "text": ""
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 3,
+        "row": {
+          "id": "msg_011CfjVkGq181Ld87UngQJn2#1",
+          "sessionId": "agent-1-image-prompt",
+          "position": 1,
+          "revision": 3,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_011CfjVkGq181Ld87UngQJn2",
+          "content": [
+            {
+              "type": "text",
+              "text": ""
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.append",
+        "rev": 4,
+        "id": "msg_011CfjVkGq181Ld87UngQJn2#1",
+        "field": "content.0.text",
+        "off": 0,
+        "text": "Red"
+      },
+      {
+        "type": "row.upsert",
+        "rev": 5,
+        "row": {
+          "id": "msg_011CfjVkGq181Ld87UngQJn2#1",
+          "sessionId": "agent-1-image-prompt",
+          "position": 1,
+          "revision": 5,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_011CfjVkGq181Ld87UngQJn2",
+          "content": [
+            {
+              "type": "text",
+              "text": "Red"
+            }
+          ]
+        }
+      },
+      {
+        "type": "snapshot",
+        "snapshot": {
+          "state": "idle",
+          "liveHeader": null,
+          "activeTurnId": null,
+          "usage": null,
+          "pendingPermission": null,
+          "pendingElicitation": null,
+          "configOptions": [],
+          "maxRevision": 5,
+          "epoch": 0
+        }
+      }
+    ],
+    "snapshot": {
+      "state": "idle",
+      "liveHeader": null,
+      "activeTurnId": null,
+      "usage": null,
+      "pendingPermission": null,
+      "pendingElicitation": null,
+      "configOptions": [],
+      "maxRevision": 5,
+      "epoch": 0
+    }
+  },
+  {
+    "agent": "agent-2",
+    "recording": "edit-and-command",
+    "rows": [
+      {
+        "id": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
+        "sessionId": "agent-2-edit-and-command",
+        "position": 0,
+        "revision": 12,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "agent_message",
+        "messageId": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
+        "content": [
+          {
+            "type": "text",
+            "text": "I’ll update both files and check their contents."
+          }
+        ]
+      },
+      {
+        "id": "exec-2fe50f79-a80c-4d3a-96a9-97ff33a9ad2b",
+        "sessionId": "agent-2-edit-and-command",
+        "position": 1,
+        "revision": 14,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "tool_call_update",
+        "toolCallId": "exec-2fe50f79-a80c-4d3a-96a9-97ff33a9ad2b",
+        "title": "/bin/zsh -lc 'cat app.txt'",
+        "name": "commandExecution",
+        "kind": "execute",
+        "status": "completed",
+        "content": [
+          {
+            "type": "terminal",
+            "command": "/bin/zsh -lc 'cat app.txt'",
+            "cwd": "/repo",
+            "output": "alpha\nbeta\n",
+            "exitStatus": {
+              "exitCode": 0
+            }
+          }
+        ],
+        "rawInput": {
+          "command": "/bin/zsh -lc 'cat app.txt'",
+          "cwd": "/repo",
+          "commandActions": [
+            {
+              "type": "read",
+              "command": "cat app.txt",
+              "name": "app.txt",
+              "path": "/repo/app.txt"
+            }
+          ]
+        },
+        "rawOutput": {
+          "durationMs": 0,
+          "exitCode": 0
+        },
+        "_meta": {
+          "argo": {
+            "commandActions": [
+              {
+                "type": "read",
+                "command": "cat app.txt",
+                "path": "/repo/app.txt"
+              }
+            ],
+            "startedAt": 1791172062416,
+            "endedAt": 1791172062416
+          }
+        }
+      },
+      {
+        "id": "exec-0de82514-551d-45d0-a5a2-b9e0133283d7",
+        "sessionId": "agent-2-edit-and-command",
+        "position": 2,
+        "revision": 16,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "tool_call_update",
+        "toolCallId": "exec-0de82514-551d-45d0-a5a2-b9e0133283d7",
+        "title": "Edit /repo/app.txt, /repo/notes.md",
+        "name": "fileChange",
+        "kind": "edit",
+        "status": "completed",
+        "content": [
+          {
+            "type": "diff",
+            "changes": [
+              {
+                "operation": "modify",
+                "path": "/repo/app.txt"
+              },
+              {
+                "operation": "add",
+                "path": "/repo/notes.md",
+                "newText": "hello\n"
+              }
+            ],
+            "patch": {
+              "format": "git_patch",
+              "text": "diff --git a/repo/app.txt b/repo/app.txt\n--- a/repo/app.txt\n+++ b/repo/app.txt\n@@ -1,2 +1,2 @@\n alpha\n-beta\n+gamma\ndiff --git a/repo/notes.md b/repo/notes.md\nnew file mode 100644\n--- /dev/null\n+++ b/repo/notes.md\n@@ -0,0 +1,1 @@\n+hello\n"
+            }
+          }
+        ],
+        "locations": [
+          {
+            "path": "/repo/app.txt"
+          },
+          {
+            "path": "/repo/notes.md"
+          }
+        ],
+        "_meta": {
+          "argo": {
+            "startedAt": 1791172069158,
+            "endedAt": 1791172069246
+          }
+        }
+      },
+      {
+        "id": "exec-f27ca824-f7d7-4709-a913-310e66957673",
+        "sessionId": "agent-2-edit-and-command",
+        "position": 3,
+        "revision": 18,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "tool_call_update",
+        "toolCallId": "exec-f27ca824-f7d7-4709-a913-310e66957673",
+        "title": "/bin/zsh -lc 'cat app.txt notes.md'",
+        "name": "commandExecution",
+        "kind": "execute",
+        "status": "completed",
+        "content": [
+          {
+            "type": "terminal",
+            "command": "/bin/zsh -lc 'cat app.txt notes.md'",
+            "cwd": "/repo",
+            "output": "alpha\ngamma\nhello\n",
+            "exitStatus": {
+              "exitCode": 0
+            }
+          }
+        ],
+        "rawInput": {
+          "command": "/bin/zsh -lc 'cat app.txt notes.md'",
+          "cwd": "/repo",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "cat app.txt notes.md"
+            }
+          ]
+        },
+        "rawOutput": {
+          "durationMs": 0,
+          "exitCode": 0
+        },
+        "_meta": {
+          "argo": {
+            "commandActions": [
+              {
+                "type": "unknown",
+                "command": "cat app.txt notes.md"
+              }
+            ],
+            "startedAt": 1791172072705,
+            "endedAt": 1791172072705
+          }
+        }
+      },
+      {
+        "id": "msg_0bf8e37c87213e10016ac31dea8ee087d28e520b9c3b995409",
+        "sessionId": "agent-2-edit-and-command",
+        "position": 4,
+        "revision": 21,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "agent_message",
+        "messageId": "msg_0bf8e37c87213e10016ac31dea8ee087d28e520b9c3b995409",
+        "content": [
+          {
+            "type": "text",
+            "text": "done"
+          }
+        ]
+      }
+    ],
+    "stream": [
+      {
+        "type": "row.upsert",
+        "rev": 1,
+        "row": {
+          "id": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
+          "sessionId": "agent-2-edit-and-command",
+          "position": 0,
+          "revision": 1,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
+          "content": [
+            {
+              "type": "text",
+              "text": ""
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.append",
+        "rev": 2,
+        "id": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
+        "field": "content.0.text",
+        "off": 0,
+        "text": "I"
+      },
+      {
+        "type": "row.append",
+        "rev": 3,
+        "id": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
+        "field": "content.0.text",
+        "off": 1,
+        "text": "’ll"
+      },
+      {
+        "type": "row.append",
+        "rev": 4,
+        "id": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
+        "field": "content.0.text",
+        "off": 4,
+        "text": " update"
+      },
+      {
+        "type": "row.append",
+        "rev": 5,
+        "id": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
+        "field": "content.0.text",
+        "off": 11,
+        "text": " both"
+      },
+      {
+        "type": "row.append",
+        "rev": 6,
+        "id": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
+        "field": "content.0.text",
+        "off": 16,
+        "text": " files"
+      },
+      {
+        "type": "row.append",
+        "rev": 7,
+        "id": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
+        "field": "content.0.text",
+        "off": 22,
+        "text": " and"
+      },
+      {
+        "type": "row.append",
+        "rev": 8,
+        "id": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
+        "field": "content.0.text",
+        "off": 26,
+        "text": " check"
+      },
+      {
+        "type": "row.append",
+        "rev": 9,
+        "id": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
+        "field": "content.0.text",
+        "off": 32,
+        "text": " their"
+      },
+      {
+        "type": "row.append",
+        "rev": 10,
+        "id": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
+        "field": "content.0.text",
+        "off": 38,
+        "text": " contents"
+      },
+      {
+        "type": "row.append",
+        "rev": 11,
+        "id": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
+        "field": "content.0.text",
+        "off": 47,
+        "text": "."
+      },
+      {
+        "type": "row.upsert",
+        "rev": 12,
+        "row": {
+          "id": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
+          "sessionId": "agent-2-edit-and-command",
+          "position": 0,
+          "revision": 12,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
+          "content": [
+            {
+              "type": "text",
+              "text": "I’ll update both files and check their contents."
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 13,
+        "row": {
+          "id": "exec-2fe50f79-a80c-4d3a-96a9-97ff33a9ad2b",
+          "sessionId": "agent-2-edit-and-command",
+          "position": 1,
+          "revision": 13,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "exec-2fe50f79-a80c-4d3a-96a9-97ff33a9ad2b",
+          "title": "/bin/zsh -lc 'cat app.txt'",
+          "name": "commandExecution",
+          "kind": "execute",
+          "status": "in_progress",
+          "content": [
+            {
+              "type": "terminal",
+              "command": "/bin/zsh -lc 'cat app.txt'",
+              "cwd": "/repo",
+              "output": ""
+            }
+          ],
+          "rawInput": {
+            "command": "/bin/zsh -lc 'cat app.txt'",
+            "cwd": "/repo",
+            "commandActions": [
+              {
+                "type": "read",
+                "command": "cat app.txt",
+                "name": "app.txt",
+                "path": "/repo/app.txt"
+              }
+            ]
+          },
+          "rawOutput": {
+            "durationMs": null,
+            "exitCode": null
+          },
+          "_meta": {
+            "argo": {
+              "commandActions": [
+                {
+                  "type": "read",
+                  "command": "cat app.txt",
+                  "path": "/repo/app.txt"
+                }
+              ],
+              "startedAt": 1791172062416
+            }
+          }
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 14,
+        "row": {
+          "id": "exec-2fe50f79-a80c-4d3a-96a9-97ff33a9ad2b",
+          "sessionId": "agent-2-edit-and-command",
+          "position": 1,
+          "revision": 14,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "exec-2fe50f79-a80c-4d3a-96a9-97ff33a9ad2b",
+          "title": "/bin/zsh -lc 'cat app.txt'",
+          "name": "commandExecution",
+          "kind": "execute",
+          "status": "completed",
+          "content": [
+            {
+              "type": "terminal",
+              "command": "/bin/zsh -lc 'cat app.txt'",
+              "cwd": "/repo",
+              "output": "alpha\nbeta\n",
+              "exitStatus": {
+                "exitCode": 0
+              }
+            }
+          ],
+          "rawInput": {
+            "command": "/bin/zsh -lc 'cat app.txt'",
+            "cwd": "/repo",
+            "commandActions": [
+              {
+                "type": "read",
+                "command": "cat app.txt",
+                "name": "app.txt",
+                "path": "/repo/app.txt"
+              }
+            ]
+          },
+          "rawOutput": {
+            "durationMs": 0,
+            "exitCode": 0
+          },
+          "_meta": {
+            "argo": {
+              "commandActions": [
+                {
+                  "type": "read",
+                  "command": "cat app.txt",
+                  "path": "/repo/app.txt"
+                }
+              ],
+              "startedAt": 1791172062416,
+              "endedAt": 1791172062416
+            }
+          }
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 15,
+        "row": {
+          "id": "exec-0de82514-551d-45d0-a5a2-b9e0133283d7",
+          "sessionId": "agent-2-edit-and-command",
+          "position": 2,
+          "revision": 15,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "exec-0de82514-551d-45d0-a5a2-b9e0133283d7",
+          "title": "Edit /repo/app.txt, /repo/notes.md",
+          "name": "fileChange",
+          "kind": "edit",
+          "status": "in_progress",
+          "content": [
+            {
+              "type": "diff",
+              "changes": [
+                {
+                  "operation": "modify",
+                  "path": "/repo/app.txt"
+                },
+                {
+                  "operation": "add",
+                  "path": "/repo/notes.md",
+                  "newText": "hello\n"
+                }
+              ],
+              "patch": {
+                "format": "git_patch",
+                "text": "diff --git a/repo/app.txt b/repo/app.txt\n--- a/repo/app.txt\n+++ b/repo/app.txt\n@@ -1,2 +1,2 @@\n alpha\n-beta\n+gamma\ndiff --git a/repo/notes.md b/repo/notes.md\nnew file mode 100644\n--- /dev/null\n+++ b/repo/notes.md\n@@ -0,0 +1,1 @@\n+hello\n"
+              }
+            }
+          ],
+          "locations": [
+            {
+              "path": "/repo/app.txt"
+            },
+            {
+              "path": "/repo/notes.md"
+            }
+          ],
+          "_meta": {
+            "argo": {
+              "startedAt": 1791172069158
+            }
+          }
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 16,
+        "row": {
+          "id": "exec-0de82514-551d-45d0-a5a2-b9e0133283d7",
+          "sessionId": "agent-2-edit-and-command",
+          "position": 2,
+          "revision": 16,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "exec-0de82514-551d-45d0-a5a2-b9e0133283d7",
+          "title": "Edit /repo/app.txt, /repo/notes.md",
+          "name": "fileChange",
+          "kind": "edit",
+          "status": "completed",
+          "content": [
+            {
+              "type": "diff",
+              "changes": [
+                {
+                  "operation": "modify",
+                  "path": "/repo/app.txt"
+                },
+                {
+                  "operation": "add",
+                  "path": "/repo/notes.md",
+                  "newText": "hello\n"
+                }
+              ],
+              "patch": {
+                "format": "git_patch",
+                "text": "diff --git a/repo/app.txt b/repo/app.txt\n--- a/repo/app.txt\n+++ b/repo/app.txt\n@@ -1,2 +1,2 @@\n alpha\n-beta\n+gamma\ndiff --git a/repo/notes.md b/repo/notes.md\nnew file mode 100644\n--- /dev/null\n+++ b/repo/notes.md\n@@ -0,0 +1,1 @@\n+hello\n"
+              }
+            }
+          ],
+          "locations": [
+            {
+              "path": "/repo/app.txt"
+            },
+            {
+              "path": "/repo/notes.md"
+            }
+          ],
+          "_meta": {
+            "argo": {
+              "startedAt": 1791172069158,
+              "endedAt": 1791172069246
+            }
+          }
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 17,
+        "row": {
+          "id": "exec-f27ca824-f7d7-4709-a913-310e66957673",
+          "sessionId": "agent-2-edit-and-command",
+          "position": 3,
+          "revision": 17,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "exec-f27ca824-f7d7-4709-a913-310e66957673",
+          "title": "/bin/zsh -lc 'cat app.txt notes.md'",
+          "name": "commandExecution",
+          "kind": "execute",
+          "status": "in_progress",
+          "content": [
+            {
+              "type": "terminal",
+              "command": "/bin/zsh -lc 'cat app.txt notes.md'",
+              "cwd": "/repo",
+              "output": ""
+            }
+          ],
+          "rawInput": {
+            "command": "/bin/zsh -lc 'cat app.txt notes.md'",
+            "cwd": "/repo",
+            "commandActions": [
+              {
+                "type": "unknown",
+                "command": "cat app.txt notes.md"
+              }
+            ]
+          },
+          "rawOutput": {
+            "durationMs": null,
+            "exitCode": null
+          },
+          "_meta": {
+            "argo": {
+              "commandActions": [
+                {
+                  "type": "unknown",
+                  "command": "cat app.txt notes.md"
+                }
+              ],
+              "startedAt": 1791172072705
+            }
+          }
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 18,
+        "row": {
+          "id": "exec-f27ca824-f7d7-4709-a913-310e66957673",
+          "sessionId": "agent-2-edit-and-command",
+          "position": 3,
+          "revision": 18,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "exec-f27ca824-f7d7-4709-a913-310e66957673",
+          "title": "/bin/zsh -lc 'cat app.txt notes.md'",
+          "name": "commandExecution",
+          "kind": "execute",
+          "status": "completed",
+          "content": [
+            {
+              "type": "terminal",
+              "command": "/bin/zsh -lc 'cat app.txt notes.md'",
+              "cwd": "/repo",
+              "output": "alpha\ngamma\nhello\n",
+              "exitStatus": {
+                "exitCode": 0
+              }
+            }
+          ],
+          "rawInput": {
+            "command": "/bin/zsh -lc 'cat app.txt notes.md'",
+            "cwd": "/repo",
+            "commandActions": [
+              {
+                "type": "unknown",
+                "command": "cat app.txt notes.md"
+              }
+            ]
+          },
+          "rawOutput": {
+            "durationMs": 0,
+            "exitCode": 0
+          },
+          "_meta": {
+            "argo": {
+              "commandActions": [
+                {
+                  "type": "unknown",
+                  "command": "cat app.txt notes.md"
+                }
+              ],
+              "startedAt": 1791172072705,
+              "endedAt": 1791172072705
+            }
+          }
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 19,
+        "row": {
+          "id": "msg_0bf8e37c87213e10016ac31dea8ee087d28e520b9c3b995409",
+          "sessionId": "agent-2-edit-and-command",
+          "position": 4,
+          "revision": 19,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_0bf8e37c87213e10016ac31dea8ee087d28e520b9c3b995409",
+          "content": [
+            {
+              "type": "text",
+              "text": ""
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.append",
+        "rev": 20,
+        "id": "msg_0bf8e37c87213e10016ac31dea8ee087d28e520b9c3b995409",
+        "field": "content.0.text",
+        "off": 0,
+        "text": "done"
+      },
+      {
+        "type": "row.upsert",
+        "rev": 21,
+        "row": {
+          "id": "msg_0bf8e37c87213e10016ac31dea8ee087d28e520b9c3b995409",
+          "sessionId": "agent-2-edit-and-command",
+          "position": 4,
+          "revision": 21,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_0bf8e37c87213e10016ac31dea8ee087d28e520b9c3b995409",
+          "content": [
+            {
+              "type": "text",
+              "text": "done"
+            }
+          ]
+        }
+      },
+      {
+        "type": "snapshot",
+        "snapshot": {
+          "state": "idle",
+          "liveHeader": null,
+          "activeTurnId": null,
+          "usage": null,
+          "pendingPermission": null,
+          "pendingElicitation": null,
+          "configOptions": [],
+          "maxRevision": 21,
+          "epoch": 0
+        }
+      }
+    ],
+    "snapshot": {
+      "state": "idle",
+      "liveHeader": null,
+      "activeTurnId": null,
+      "usage": null,
+      "pendingPermission": null,
+      "pendingElicitation": null,
+      "configOptions": [],
+      "maxRevision": 21,
+      "epoch": 0
+    }
+  },
+  {
+    "agent": "agent-2",
+    "recording": "interrupt",
+    "rows": [
+      {
+        "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+        "sessionId": "agent-2-interrupt",
+        "position": 0,
+        "revision": 17,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "agent_message",
+        "messageId": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+        "content": [
+          {
+            "type": "text",
+            "text": "I’ll run `sleep 30` and wait for it to finish."
+          }
+        ]
+      },
+      {
+        "id": "exec-74ec3292-520b-4563-82d4-09f95eed79de",
+        "sessionId": "agent-2-interrupt",
+        "position": 1,
+        "revision": 19,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "tool_call_update",
+        "toolCallId": "exec-74ec3292-520b-4563-82d4-09f95eed79de",
+        "title": "/bin/zsh -lc 'sleep 30'",
+        "name": "commandExecution",
+        "kind": "execute",
+        "status": "cancelled",
+        "content": [
+          {
+            "type": "terminal",
+            "command": "/bin/zsh -lc 'sleep 30'",
+            "cwd": "/repo",
+            "output": ""
+          }
+        ],
+        "rawInput": {
+          "command": "/bin/zsh -lc 'sleep 30'",
+          "cwd": "/repo",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "sleep 30"
+            }
+          ]
+        },
+        "rawOutput": {
+          "durationMs": null,
+          "exitCode": null
+        },
+        "_meta": {
+          "argo": {
+            "commandActions": [
+              {
+                "type": "unknown",
+                "command": "sleep 30"
+              }
+            ],
+            "startedAt": 1791172079446,
+            "endedAt": 1791172079454
+          }
+        }
+      }
+    ],
+    "stream": [
+      {
+        "type": "row.upsert",
+        "rev": 1,
+        "row": {
+          "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+          "sessionId": "agent-2-interrupt",
+          "position": 0,
+          "revision": 1,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+          "content": [
+            {
+              "type": "text",
+              "text": ""
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.append",
+        "rev": 2,
+        "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+        "field": "content.0.text",
+        "off": 0,
+        "text": "I"
+      },
+      {
+        "type": "row.append",
+        "rev": 3,
+        "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+        "field": "content.0.text",
+        "off": 1,
+        "text": "’ll"
+      },
+      {
+        "type": "row.append",
+        "rev": 4,
+        "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+        "field": "content.0.text",
+        "off": 4,
+        "text": " run"
+      },
+      {
+        "type": "row.append",
+        "rev": 5,
+        "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+        "field": "content.0.text",
+        "off": 8,
+        "text": " `"
+      },
+      {
+        "type": "row.append",
+        "rev": 6,
+        "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+        "field": "content.0.text",
+        "off": 10,
+        "text": "sleep"
+      },
+      {
+        "type": "row.append",
+        "rev": 7,
+        "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+        "field": "content.0.text",
+        "off": 15,
+        "text": " "
+      },
+      {
+        "type": "row.append",
+        "rev": 8,
+        "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+        "field": "content.0.text",
+        "off": 16,
+        "text": "30"
+      },
+      {
+        "type": "row.append",
+        "rev": 9,
+        "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+        "field": "content.0.text",
+        "off": 18,
+        "text": "`"
+      },
+      {
+        "type": "row.append",
+        "rev": 10,
+        "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+        "field": "content.0.text",
+        "off": 19,
+        "text": " and"
+      },
+      {
+        "type": "row.append",
+        "rev": 11,
+        "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+        "field": "content.0.text",
+        "off": 23,
+        "text": " wait"
+      },
+      {
+        "type": "row.append",
+        "rev": 12,
+        "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+        "field": "content.0.text",
+        "off": 28,
+        "text": " for"
+      },
+      {
+        "type": "row.append",
+        "rev": 13,
+        "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+        "field": "content.0.text",
+        "off": 32,
+        "text": " it"
+      },
+      {
+        "type": "row.append",
+        "rev": 14,
+        "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+        "field": "content.0.text",
+        "off": 35,
+        "text": " to"
+      },
+      {
+        "type": "row.append",
+        "rev": 15,
+        "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+        "field": "content.0.text",
+        "off": 38,
+        "text": " finish"
+      },
+      {
+        "type": "row.append",
+        "rev": 16,
+        "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+        "field": "content.0.text",
+        "off": 45,
+        "text": "."
+      },
+      {
+        "type": "row.upsert",
+        "rev": 17,
+        "row": {
+          "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+          "sessionId": "agent-2-interrupt",
+          "position": 0,
+          "revision": 17,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+          "content": [
+            {
+              "type": "text",
+              "text": "I’ll run `sleep 30` and wait for it to finish."
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 18,
+        "row": {
+          "id": "exec-74ec3292-520b-4563-82d4-09f95eed79de",
+          "sessionId": "agent-2-interrupt",
+          "position": 1,
+          "revision": 18,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "exec-74ec3292-520b-4563-82d4-09f95eed79de",
+          "title": "/bin/zsh -lc 'sleep 30'",
+          "name": "commandExecution",
+          "kind": "execute",
+          "status": "in_progress",
+          "content": [
+            {
+              "type": "terminal",
+              "command": "/bin/zsh -lc 'sleep 30'",
+              "cwd": "/repo",
+              "output": ""
+            }
+          ],
+          "rawInput": {
+            "command": "/bin/zsh -lc 'sleep 30'",
+            "cwd": "/repo",
+            "commandActions": [
+              {
+                "type": "unknown",
+                "command": "sleep 30"
+              }
+            ]
+          },
+          "rawOutput": {
+            "durationMs": null,
+            "exitCode": null
+          },
+          "_meta": {
+            "argo": {
+              "commandActions": [
+                {
+                  "type": "unknown",
+                  "command": "sleep 30"
+                }
+              ],
+              "startedAt": 1791172079446
+            }
+          }
+        }
+      },
+      {
+        "type": "row.patch",
+        "rev": 19,
+        "id": "exec-74ec3292-520b-4563-82d4-09f95eed79de",
+        "set": {
+          "state": "settled",
+          "status": "cancelled",
+          "_meta": {
+            "argo": {
+              "commandActions": [
+                {
+                  "type": "unknown",
+                  "command": "sleep 30"
+                }
+              ],
+              "startedAt": 1791172079446,
+              "endedAt": 1791172079454
+            }
+          }
+        }
+      },
+      {
+        "type": "snapshot",
+        "snapshot": {
+          "state": "idle",
+          "liveHeader": null,
+          "activeTurnId": null,
+          "usage": null,
+          "pendingPermission": null,
+          "pendingElicitation": null,
+          "configOptions": [],
+          "maxRevision": 19,
+          "epoch": 0
+        }
+      }
+    ],
+    "snapshot": {
+      "state": "idle",
+      "liveHeader": null,
+      "activeTurnId": null,
+      "usage": null,
+      "pendingPermission": null,
+      "pendingElicitation": null,
+      "configOptions": [],
+      "maxRevision": 19,
+      "epoch": 0
+    }
+  },
+  {
+    "agent": "agent-2",
+    "recording": "compaction",
+    "rows": [
+      {
+        "id": "msg_0353e591c5cede90016ac47382522c87d2a31912a66592a7c5",
+        "sessionId": "agent-2-compaction",
+        "position": 0,
+        "revision": 3,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "agent_message",
+        "messageId": "msg_0353e591c5cede90016ac47382522c87d2a31912a66592a7c5",
+        "content": [
+          {
+            "type": "text",
+            "text": "OK"
+          }
+        ]
+      },
+      {
+        "id": "01a10f63-35db-7062-a47d-ebd815c1bea2",
+        "sessionId": "agent-2-compaction",
+        "position": 1,
+        "revision": 5,
+        "turnId": "turn-2",
+        "state": "settled",
+        "sessionUpdate": "compaction_update",
+        "compactionId": "01a10f63-35db-7062-a47d-ebd815c1bea2",
+        "status": "completed"
+      }
+    ],
+    "stream": [
+      {
+        "type": "row.upsert",
+        "rev": 1,
+        "row": {
+          "id": "msg_0353e591c5cede90016ac47382522c87d2a31912a66592a7c5",
+          "sessionId": "agent-2-compaction",
+          "position": 0,
+          "revision": 1,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_0353e591c5cede90016ac47382522c87d2a31912a66592a7c5",
+          "content": [
+            {
+              "type": "text",
+              "text": ""
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.append",
+        "rev": 2,
+        "id": "msg_0353e591c5cede90016ac47382522c87d2a31912a66592a7c5",
+        "field": "content.0.text",
+        "off": 0,
+        "text": "OK"
+      },
+      {
+        "type": "row.upsert",
+        "rev": 3,
+        "row": {
+          "id": "msg_0353e591c5cede90016ac47382522c87d2a31912a66592a7c5",
+          "sessionId": "agent-2-compaction",
+          "position": 0,
+          "revision": 3,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_0353e591c5cede90016ac47382522c87d2a31912a66592a7c5",
+          "content": [
+            {
+              "type": "text",
+              "text": "OK"
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 4,
+        "row": {
+          "id": "01a10f63-35db-7062-a47d-ebd815c1bea2",
+          "sessionId": "agent-2-compaction",
+          "position": 1,
+          "revision": 4,
+          "turnId": "turn-2",
+          "state": "open",
+          "sessionUpdate": "compaction_update",
+          "compactionId": "01a10f63-35db-7062-a47d-ebd815c1bea2",
+          "status": "in_progress"
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 5,
+        "row": {
+          "id": "01a10f63-35db-7062-a47d-ebd815c1bea2",
+          "sessionId": "agent-2-compaction",
+          "position": 1,
+          "revision": 5,
+          "turnId": "turn-2",
+          "state": "settled",
+          "sessionUpdate": "compaction_update",
+          "compactionId": "01a10f63-35db-7062-a47d-ebd815c1bea2",
+          "status": "completed"
+        }
+      },
+      {
+        "type": "snapshot",
+        "snapshot": {
+          "state": "idle",
+          "liveHeader": null,
+          "activeTurnId": null,
+          "usage": null,
+          "pendingPermission": null,
+          "pendingElicitation": null,
+          "configOptions": [],
+          "maxRevision": 5,
+          "epoch": 0
+        }
+      }
+    ],
+    "snapshot": {
+      "state": "idle",
+      "liveHeader": null,
+      "activeTurnId": null,
+      "usage": null,
+      "pendingPermission": null,
+      "pendingElicitation": null,
+      "configOptions": [],
+      "maxRevision": 5,
+      "epoch": 0
+    }
+  },
+  {
+    "agent": "agent-2",
+    "recording": "image-prompt",
+    "rows": [
+      {
+        "id": "msg_0adb8b528915a791016ac3e0575a1c8191b8b2de11cb9afdd8",
+        "sessionId": "agent-2-image-prompt",
+        "position": 0,
+        "revision": 3,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "agent_message",
+        "messageId": "msg_0adb8b528915a791016ac3e0575a1c8191b8b2de11cb9afdd8",
+        "content": [
+          {
+            "type": "text",
+            "text": "Red"
+          }
+        ]
+      }
+    ],
+    "stream": [
+      {
+        "type": "row.upsert",
+        "rev": 1,
+        "row": {
+          "id": "msg_0adb8b528915a791016ac3e0575a1c8191b8b2de11cb9afdd8",
+          "sessionId": "agent-2-image-prompt",
+          "position": 0,
+          "revision": 1,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_0adb8b528915a791016ac3e0575a1c8191b8b2de11cb9afdd8",
+          "content": [
+            {
+              "type": "text",
+              "text": ""
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.append",
+        "rev": 2,
+        "id": "msg_0adb8b528915a791016ac3e0575a1c8191b8b2de11cb9afdd8",
+        "field": "content.0.text",
+        "off": 0,
+        "text": "Red"
+      },
+      {
+        "type": "row.upsert",
+        "rev": 3,
+        "row": {
+          "id": "msg_0adb8b528915a791016ac3e0575a1c8191b8b2de11cb9afdd8",
+          "sessionId": "agent-2-image-prompt",
+          "position": 0,
+          "revision": 3,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_0adb8b528915a791016ac3e0575a1c8191b8b2de11cb9afdd8",
+          "content": [
+            {
+              "type": "text",
+              "text": "Red"
+            }
+          ]
+        }
+      },
+      {
+        "type": "snapshot",
+        "snapshot": {
+          "state": "idle",
+          "liveHeader": null,
+          "activeTurnId": null,
+          "usage": null,
+          "pendingPermission": null,
+          "pendingElicitation": null,
+          "configOptions": [],
+          "maxRevision": 3,
+          "epoch": 0
+        }
+      }
+    ],
+    "snapshot": {
+      "state": "idle",
+      "liveHeader": null,
+      "activeTurnId": null,
+      "usage": null,
+      "pendingPermission": null,
+      "pendingElicitation": null,
+      "configOptions": [],
+      "maxRevision": 3,
+      "epoch": 0
+    }
+  }
+]

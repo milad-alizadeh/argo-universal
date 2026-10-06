@@ -42,5 +42,6 @@ export function unreachableServices(
   };
 }
 
+export * from './feed';
 export * from './new-session';
 export * from './session-list';
