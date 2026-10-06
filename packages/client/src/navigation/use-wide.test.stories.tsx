@@ -18,26 +18,38 @@ const layoutUpdate = { timeout: 3000 };
 export const UpdatesAt720Pixels: Story = {
   play: async ({ canvas }) => {
     const { page } = await import('vitest/browser');
+    const resize = async (width: number) => {
+      await page.viewport(width, 900);
+      console.info('[DEBUG-wide-ci]', {
+        requestedWidth: width,
+        innerWidth: window.innerWidth,
+        clientWidth: document.documentElement.clientWidth,
+        parentWidth: window.parent.innerWidth,
+        mediaMatches: window.matchMedia('(min-width: 720px)').matches,
+        breakpointDisplay: getComputedStyle(canvas.getByText('Wide breakpoint'))
+          .display,
+      });
+    };
 
-    await page.viewport(719, 900);
+    await resize(719);
     await expect(
       await canvas.findByText('Phone layout', {}, layoutUpdate),
     ).toBeVisible();
     await expect(canvas.getByText('Wide breakpoint')).not.toBeVisible();
 
-    await page.viewport(720, 900);
+    await resize(720);
     await expect(
       await canvas.findByText('Wide layout', {}, layoutUpdate),
     ).toBeVisible();
     await expect(canvas.getByText('Wide breakpoint')).toBeVisible();
 
-    await page.viewport(721, 900);
+    await resize(721);
     await expect(
       await canvas.findByText('Wide layout', {}, layoutUpdate),
     ).toBeVisible();
     await expect(canvas.getByText('Wide breakpoint')).toBeVisible();
 
-    await page.viewport(719, 900);
+    await resize(719);
     await expect(
       await canvas.findByText('Phone layout', {}, layoutUpdate),
     ).toBeVisible();
