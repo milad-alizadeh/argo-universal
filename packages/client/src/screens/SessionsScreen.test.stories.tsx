@@ -41,6 +41,9 @@ async function eachLayout(assertion: () => Promise<void>) {
   const { page } = await import('vitest/browser');
   for (const width of [390, 1440]) {
     await page.viewport(width, 844);
+    // Crossing the wide breakpoint swaps the header controls, so let React settle first.
+    for (let frame = 0; frame < 2; frame++)
+      await new Promise((resolve) => requestAnimationFrame(resolve));
     for (const mode of ['light', 'dark'] as const) {
       applyTheme('default', mode);
       await assertion();

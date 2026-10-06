@@ -118,7 +118,7 @@ export function SettingsList({
   return (
     <ScrollView
       className="flex-1 web:select-none web:[&_*]:select-none!"
-      contentContainerClassName="px-screen-list pt-2 pb-4 wide:px-2 wide:pt-0 wide:pb-3"
+      contentContainerClassName="px-gutter-list pt-2 pb-4 wide:px-2 wide:pt-0 wide:pb-3"
     >
       <Group title={serverName ? `Server · ${serverName}` : 'Server'}>
         {row(

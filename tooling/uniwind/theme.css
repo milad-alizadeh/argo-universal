@@ -1,9 +1,9 @@
 @theme static {
   --spacing-session-name: 34px;
   /* A phone screen's side padding, the same on every screen and platform. */
-  --spacing-screen: 20px;
+  --spacing-gutter: 20px;
   /* A list's inset, as its rows pad their content 10px more for the highlight. */
-  --spacing-screen-list: 10px;
+  --spacing-gutter-list: 10px;
   --breakpoint-wide: 720px;
   --font-sans:
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,

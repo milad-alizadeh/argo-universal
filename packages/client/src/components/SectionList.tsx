@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { View } from 'react-native';
+import { ScrollView } from 'react-native';
 import { Text } from '#primitives/text';
 import type { NavigationDestination } from '../navigation/context';
 import type { ScreenHeaderProps } from '../navigation/screen-header';
@@ -52,11 +52,15 @@ export function useSectionList(
   // Placeholders until each section's list screen is built.
   return {
     list: (
-      <View className="flex-1 px-screen py-6">
+      // Insets itself below a transparent header.
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerClassName="px-gutter py-6"
+      >
         <Text variant="muted">
           {shellSections[section].title} list will appear here.
         </Text>
-      </View>
+      </ScrollView>
     ),
   };
 }

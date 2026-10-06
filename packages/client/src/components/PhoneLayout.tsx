@@ -1,7 +1,8 @@
 import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { Platform } from 'react-native';
 import { type NavigationDestination, useNavigate } from '../navigation/context';
 import { sectionDestination, sectionOf } from '../navigation/sections';
-import { PhoneShell } from './PhoneShell';
+import { PhoneShell, type ShellSection } from './PhoneShell';
 
 export interface PhoneLayoutProps {
   destination: NavigationDestination;
@@ -16,6 +17,7 @@ export function PhoneLayout({ destination, children }: PhoneLayoutProps) {
   const atSectionRoot = destination.to === sectionDestination(section).to;
   // Mounting the next section stalls the first frame, so a picked section's drawer shuts once it has mounted.
   const deferClose = useRef(false);
+  const pendingSection = useRef<ShellSection | null>(null);
   useEffect(() => {
     const frame = requestAnimationFrame(() => setDrawerOpen(false));
     return () => cancelAnimationFrame(frame);
@@ -30,8 +32,17 @@ export function PhoneLayout({ destination, children }: PhoneLayoutProps) {
         if (!open && deferClose.current) deferClose.current = false;
         else setDrawerOpen(open);
       }}
+      onDrawerClosed={() => {
+        const next = pendingSection.current;
+        pendingSection.current = null;
+        if (next) navigate(sectionDestination(next));
+      }}
       onSectionChange={(next) => {
         if (next === section) return;
+        if (opensAfterClose) {
+          pendingSection.current = next;
+          return;
+        }
         deferClose.current = true;
         navigate(sectionDestination(next));
       }}
@@ -41,3 +52,6 @@ export function PhoneLayout({ destination, children }: PhoneLayoutProps) {
     </PhoneShell>
   );
 }
+
+// UIKit measures a stack's safe area while the drawer has the card scaled, so iOS mounts a picked section once the card is full size.
+const opensAfterClose = Platform.OS === 'ios';

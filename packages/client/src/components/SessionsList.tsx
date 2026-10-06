@@ -77,7 +77,7 @@ export function SessionsList({
   const wide = useWide();
   // A phone list sits at the screen's list inset, like every other phone list.
   const screenList = Number.parseFloat(
-    String(useCSSVariable('--spacing-screen-list')),
+    String(useCSSVariable('--spacing-gutter-list')),
   );
   const phoneContentStyle = useMemo(
     () => ({ ...contentStyle, paddingHorizontal: screenList }),

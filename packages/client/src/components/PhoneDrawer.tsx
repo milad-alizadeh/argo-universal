@@ -6,6 +6,8 @@ export interface PhoneDrawerProps {
   open: boolean;
   onOpen: () => void;
   onClose: () => void;
+  // Fires once the drawer has finished closing.
+  onClosed?: () => void;
   width: number;
   surfaceStyle: ViewStyle;
   layout: { width: number; height: number };
@@ -18,6 +20,7 @@ export interface PhoneDrawerProps {
 export function PhoneDrawer({
   width,
   surfaceStyle: _surfaceStyle,
+  onClosed: _onClosed,
   swipeEnabled = true,
   ...props
 }: PhoneDrawerProps) {

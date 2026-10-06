@@ -192,7 +192,7 @@ export function SessionsScreen({ query, archived }: SessionsScreenProps) {
   const listTop = (
     <>
       <ConnectionBanner />
-      <Text className="h-8 pl-screen pr-3 py-2 wide:pl-4.5 text-xs leading-4 font-medium text-muted-foreground">
+      <Text className="h-8 pl-gutter pr-3 py-2 wide:pl-4.5 text-xs leading-4 font-medium text-muted-foreground">
         Projects
       </Text>
     </>
@@ -234,7 +234,7 @@ export function SessionsScreen({ query, archived }: SessionsScreenProps) {
           // On a phone the rows scroll under the header, so what sits above them scrolls too.
           header={
             wide ? undefined : (
-              <View className="-mx-screen-list -mt-5">{listTop}</View>
+              <View className="-mx-gutter-list -mt-5">{listTop}</View>
             )
           }
         />
