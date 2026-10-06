@@ -62,7 +62,7 @@ export function FeedDisclosure({
           onHoverOut={() => setHovered(false)}
           className="min-h-5 flex-row items-center gap-1.5"
         >
-          <View className="relative top-px size-4 shrink-0 items-center justify-center">
+          <View className="size-4 shrink-0 items-center justify-center">
             <Icon
               as={icon}
               className={cn(
@@ -94,7 +94,7 @@ export function FeedDisclosure({
             {trailing}
             <Animated.View
               style={style}
-              className="relative top-px size-3.5 shrink-0 items-center justify-center"
+              className="size-3.5 shrink-0 items-center justify-center"
             >
               <Icon
                 as={CaretRightIcon}
