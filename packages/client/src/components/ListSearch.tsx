@@ -150,13 +150,15 @@ export function ListSearch({ title, value, onChangeText }: ListSearchProps) {
         >
           <Icon
             as={MagnifyingGlassIcon}
-            className="size-5.5 wide:size-4 text-foreground wide:text-muted-foreground"
+            size={wide ? 'md' : 'lg'}
+            className="text-foreground wide:text-muted-foreground"
           />
         </Animated.View>
         <Animated.View style={closeStyle}>
           <Icon
             as={XIcon}
-            className="size-5.5 wide:size-4 text-foreground wide:text-muted-foreground"
+            size={wide ? 'md' : 'lg'}
+            className="text-foreground wide:text-muted-foreground"
           />
         </Animated.View>
       </Button>

@@ -80,12 +80,10 @@ export function PhoneShell({
         onPress={() => selectSection(section)}
       >
         <Icon
+          size="lg"
           as={icon}
           weight={selectedSection === section ? 'fill' : 'regular'}
-          className={cn(
-            'size-phone-shell-icon',
-            selectedSection !== section && 'text-muted-foreground',
-          )}
+          className={cn(selectedSection !== section && 'text-muted-foreground')}
         />
         <Text
           className={cn(
@@ -97,7 +95,7 @@ export function PhoneShell({
         </Text>
         {section === 'sessions' && attentionCount > 0 && (
           <Badge
-            className="h-phone-shell-icon min-w-phone-shell-icon border-0 bg-warning px-1.5"
+            className="h-phone-shell-badge min-w-phone-shell-badge border-0 bg-warning px-1.5"
             accessibilityLabel={`${attentionCount} ${attentionCount === 1 ? 'Session needs' : 'Sessions need'} attention`}
           >
             <Text className="text-xs font-semibold text-warning-foreground">

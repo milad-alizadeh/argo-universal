@@ -39,8 +39,8 @@ function Checkbox({
         )}
       >
         <Icon
+          size="sm"
           as={CheckIcon}
-          size={12}
           className={cn('text-primary-foreground', iconClassName)}
         />
       </CheckboxPrimitive.Indicator>

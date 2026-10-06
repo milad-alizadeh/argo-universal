@@ -49,7 +49,6 @@ export function FeedCodeBlock({ code, language, footer }: FeedCodeBlockProps) {
         >
           <Icon
             as={copied ? CheckIcon : CopyIcon}
-            size={14}
             className="text-muted-foreground"
           />
         </Pressable>

@@ -58,7 +58,7 @@ export const ProjectHeading = memo(function ProjectHeading({
         <TextClassContext.Provider value={undefined}>
           <Icon
             as={collapsed ? FolderIcon : FolderOpenIcon}
-            className="size-4 text-muted-foreground wide:text-foreground"
+            className="text-muted-foreground wide:text-foreground"
           />
           <Text
             numberOfLines={1}
@@ -82,7 +82,7 @@ export const ProjectHeading = memo(function ProjectHeading({
           disabled={!onProjectSettings}
           {...interactionEvents}
         >
-          <Icon as={DotsThreeIcon} className="size-3.5 text-foreground" />
+          <Icon as={DotsThreeIcon} className="text-foreground" />
         </Button>
         <Button
           variant="ghost"
@@ -92,7 +92,7 @@ export const ProjectHeading = memo(function ProjectHeading({
           disabled={!onAdd}
           {...interactionEvents}
         >
-          <Icon as={PlusIcon} className="size-3.5 text-foreground" />
+          <Icon as={PlusIcon} className="text-foreground" />
         </Button>
       </View>
     </Pressable>

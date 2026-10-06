@@ -1,0 +1,17 @@
+language js
+
+or {
+  `<$name $props />`,
+  `<$name $props>$_</$name>`
+} as $icon where {
+  $name <: or {
+    `Icon`,
+    `IconSpinner`,
+    `ComposerGlyph`
+  },
+  $props <: contains or {
+    r"(?s)size=\{\s*[0-9].*",
+    r"(?s)className=.*(?:^|[^-\w])size-.*"
+  },
+  register_diagnostic(span=$icon, message="Icons take a named size: sm, md or lg. Remove numeric sizes and size-* classes.")
+}

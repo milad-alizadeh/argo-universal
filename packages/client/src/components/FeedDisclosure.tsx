@@ -63,16 +63,14 @@ export function FeedDisclosure({
           onHoverOut={() => setHovered(false)}
           className="min-h-5 flex-row items-center gap-1.5"
         >
-          <View className="size-4 shrink-0 items-center justify-center">
-            <Icon
-              as={icon}
-              className={cn(
-                'size-4 text-muted-foreground',
-                failed && 'text-destructive',
-                hovered && 'text-foreground',
-              )}
-            />
-          </View>
+          <Icon
+            as={icon}
+            className={cn(
+              'shrink-0 text-muted-foreground',
+              failed && 'text-destructive',
+              hovered && 'text-foreground',
+            )}
+          />
           <View className="min-w-0 flex-1 flex-row items-center gap-1">
             {running ? (
               <ShimmerText
@@ -92,14 +90,12 @@ export function FeedDisclosure({
                 {title}
               </Text>
             )}
-            <Animated.View
-              style={style}
-              className="size-3.5 shrink-0 items-center justify-center"
-            >
+            <Animated.View style={style} className="shrink-0">
               <Icon
+                size="sm"
                 as={CaretRightIcon}
                 className={cn(
-                  'size-3.5 text-muted-foreground',
+                  'text-muted-foreground',
                   hovered && 'text-foreground',
                 )}
               />

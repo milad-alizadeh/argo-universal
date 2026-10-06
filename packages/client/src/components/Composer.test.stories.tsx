@@ -775,13 +775,12 @@ export const SessionControls: Story = {
         name: 'Update the shared controls in progress',
       });
       await expect(spinner).toBeVisible();
-      const expectedSize = width < 720 ? '14px' : '16px';
       await expect(
         getComputedStyle(spinner.firstElementChild as Element).width,
-      ).toBe(expectedSize);
+      ).toBe('16px');
       await expect(
         getComputedStyle(spinner.firstElementChild as Element).height,
-      ).toBe(expectedSize);
+      ).toBe('16px');
       const spinnerColor = getComputedStyle(
         overlay
           .getAllByText(

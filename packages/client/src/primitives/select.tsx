@@ -64,9 +64,10 @@ function SelectTrigger({
     >
       <>{children}</>
       <Icon
+        size="sm"
         as={CaretDownIcon}
         aria-hidden={true}
-        className="text-muted-foreground size-4"
+        className="text-muted-foreground"
       />
     </SelectPrimitive.Trigger>
   );
@@ -178,12 +179,9 @@ function SelectItem({
       )}
       {...props}
     >
-      <View className="absolute right-2 flex size-3.5 items-center justify-center">
+      <View className="absolute right-2 flex size-icon-md items-center justify-center">
         <SelectPrimitive.ItemIndicator>
-          <Icon
-            as={CheckIcon}
-            className="text-muted-foreground size-4 shrink-0"
-          />
+          <Icon as={CheckIcon} className="text-muted-foreground shrink-0" />
         </SelectPrimitive.ItemIndicator>
       </View>
       <SelectPrimitive.ItemText className="text-foreground group-active:text-accent-foreground select-none text-sm" />
@@ -226,7 +224,7 @@ function SelectScrollUpButton({
       )}
       {...props}
     >
-      <Icon as={CaretUpIcon} className="size-4" />
+      <Icon size="sm" as={CaretUpIcon} />
     </SelectPrimitive.ScrollUpButton>
   );
 }
@@ -250,7 +248,7 @@ function SelectScrollDownButton({
       )}
       {...props}
     >
-      <Icon as={CaretDownIcon} className="size-4" />
+      <Icon size="sm" as={CaretDownIcon} />
     </SelectPrimitive.ScrollDownButton>
   );
 }

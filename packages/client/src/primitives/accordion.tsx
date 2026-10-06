@@ -106,8 +106,8 @@ function AccordionTrigger({
             <>{children}</>
             <Animated.View style={chevronStyle}>
               <Icon
+                size="sm"
                 as={CaretDownIcon}
-                size={16}
                 className={cn(
                   'text-muted-foreground shrink-0',
                   Platform.select({
