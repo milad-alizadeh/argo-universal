@@ -174,7 +174,7 @@ On a phone, the app uses a drawer of sections, and detail screens push full scre
 The procedures are named after ACP methods, and the existing contracts carry them. This milestone adds or changes:
 
 - `session.new {projectId, agent, checkout, configOptions, prompt}` returns `{sessionId}`. A Session is created and prompted in one call, so no empty Session exists.
-  - `checkout` is `{type: 'worktree', baseBranch}` or `{type: 'main'}`.
+  - `checkout` is `{type: 'worktree', baseBranch}` or `{type: 'main'}`. The composer picks only the type; the client fills `baseBranch` from the Project's base branch setting.
   - `configOptions` is `{configId, value}[]`.
   - `prompt` is `ContentBlock[]`: text and images.
   - The Server stores the checkout choice on the Project, so the next New Session starts with it.
@@ -195,7 +195,7 @@ The procedures are named after ACP methods, and the existing contracts carry the
   - `availability` is `available`, `not_installed`, `not_signed_in` or `unavailable`.
   - `logo` is SVG text from the adapter, so no screen names a vendor.
   - `configOptions` is the template for the New Session composer.
-- `projects.list` returns the one Project with its `checkoutChoice`. `projects.branches {projectId}` returns its local branches and the current one, which is the default base branch.
+- `projects.list` returns the one Project with its `checkoutChoice`. `projects.branches {projectId}` returns its local branches and the current one. The current one is the base branch until the Project's base branch setting is built.
 - The Feed procedures from spec 0001 section 6 are built as written. `feed.page` and `feed.subscribe` also serve Subagents.
 - `blob.upload` is a mutation whose input is `FormData` with one file. It stores the file as a content-addressed blob and returns its `BlobRef`, which `session.new` and `session.prompt` then put in an image `ContentBlock`. It is the only call over HTTP (see "Server transport").
 
