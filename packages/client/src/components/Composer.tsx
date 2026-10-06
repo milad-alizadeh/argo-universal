@@ -340,10 +340,7 @@ export function Composer({
                       accessibilityLabel={item.label}
                       disabled={!item.onPress}
                       className="h-12 sm:h-12 wide:h-11 wide:sm:h-11 rounded-sm px-3 gap-3 justify-start"
-                      onPress={() => {
-                        close();
-                        item.onPress?.();
-                      }}
+                      onPress={() => close(item.onPress)}
                     >
                       <View className="size-8 rounded-full bg-muted wide:w-5 wide:h-4.5 wide:rounded-none wide:bg-transparent items-center justify-center">
                         {'glyph' in item ? (

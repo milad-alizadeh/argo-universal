@@ -1,6 +1,6 @@
 import { useRootContext } from '@rn-primitives/popover';
 import type { ReactElement, ReactNode } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useResolveClassNames } from 'uniwind';
 import type { ButtonProps } from '#primitives/button';
 import { Popover, PopoverContent, PopoverTrigger } from '#primitives/popover';
@@ -11,14 +11,17 @@ function PopoverPanel({
   children,
   disabled,
 }: {
-  children: (close: () => void) => ReactNode;
+  children: (close: (after?: () => void) => void) => ReactNode;
   disabled?: boolean;
 }) {
   const { onOpenChange } = useRootContext();
   useEffect(() => {
     if (disabled) onOpenChange(false);
   }, [disabled, onOpenChange]);
-  return children(() => onOpenChange(false));
+  return children((after) => {
+    onOpenChange(false);
+    after?.();
+  });
 }
 
 export function ComposerPopover({
@@ -32,21 +35,32 @@ export function ComposerPopover({
   label: string;
   width?: number;
   className?: string;
-  children: (close: () => void) => ReactNode;
+  // `after` runs once the overlay has left the screen, so it may present a system picker.
+  children: (close: (after?: () => void) => void) => ReactNode;
 }) {
   const wide = useWide();
   const layout = useResolveClassNames(className ?? '');
   const [open, setOpen] = useState(false);
+  const afterClose = useRef<(() => void) | undefined>(undefined);
   useEffect(() => {
     if (trigger.props.disabled) setOpen(false);
   }, [trigger.props.disabled]);
-  const content = children(() => setOpen(false));
+  const content = children((after) => {
+    afterClose.current = after;
+    setOpen(false);
+  });
+  const closed = () => {
+    const after = afterClose.current;
+    afterClose.current = undefined;
+    after?.();
+  };
   if (!wide)
     return (
       <ComposerSheet
         style={layout}
         open={open}
         onOpenChange={setOpen}
+        onClosed={closed}
         trigger={trigger}
         label={label}
       >
