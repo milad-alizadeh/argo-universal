@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/utils';
 import { Text } from '#primitives/text';
+import { toolCallTitle } from '../feed/tool-call-title';
 import { FeedCodeBlock } from './FeedCodeBlock';
 import { FeedDisclosure } from './FeedDisclosure';
 import { Icon } from './Icon';
@@ -39,16 +40,13 @@ export function CommandRow({ row, initialOpen, now }: CommandRowProps) {
   const failureStatus = exitCode !== undefined ? `exit ${exitCode}` : 'failed';
   let status = duration;
   let outcome = 'Completed';
-  let action = 'Ran';
   switch (row.status) {
     case 'pending':
     case 'in_progress':
       outcome = 'Running';
-      action = 'Running';
       break;
     case 'cancelled':
       outcome = 'Stopped';
-      action = 'Stopped';
       if (duration) status = `after ${duration}`;
       break;
     case 'failed':
@@ -59,14 +57,10 @@ export function CommandRow({ row, initialOpen, now }: CommandRowProps) {
   }
   if (exitCode !== undefined && !running) outcome = `Exit ${exitCode}`;
   if (failed) status = [failureStatus, duration].filter(Boolean).join(' · ');
-  const title =
-    row.title && row.title !== terminal.command
-      ? row.title
-      : `${action} command`;
   const output = terminal.output.replace(/\r\n/g, '\n').replace(/\n$/, '');
   return (
     <FeedDisclosure
-      label={title}
+      label={toolCallTitle(row)}
       icon={TerminalWindowIcon}
       failed={failed}
       running={running}

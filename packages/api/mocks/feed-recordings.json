@@ -89,7 +89,15 @@
         "name": "Read",
         "kind": "read",
         "status": "completed",
-        "content": [],
+        "content": [
+          {
+            "type": "content",
+            "content": {
+              "type": "text",
+              "text": "hello world\n"
+            }
+          }
+        ],
         "locations": [
           {
             "path": "/project/hello.txt"
@@ -484,7 +492,15 @@
           "name": "Read",
           "kind": "read",
           "status": "completed",
-          "content": [],
+          "content": [
+            {
+              "type": "content",
+              "content": {
+                "type": "text",
+                "text": "hello world\n"
+              }
+            }
+          ],
           "locations": [
             {
               "path": "/project/hello.txt"

@@ -109,3 +109,20 @@ export const toolCallGroupMock =
 function missingRecordedState(state: string): never {
   throw new Error(`Recording needs ${state}`);
 }
+
+export const readMocks = toolCallGroupMocks.map(({ agent, exploration }) => ({
+  agent,
+  row: exploration.toolCalls[0] ?? missingRecordedState('a file read'),
+}));
+export const completedRead =
+  readMocks[0]?.row ?? missingRecordedState('a file read');
+export const runningRead =
+  recordedFeedMocks
+    .flatMap((mock) => mock.stream)
+    .flatMap((event) => ('row' in event ? [event.row] : []))
+    .find(
+      (row): row is ToolCallUpdate =>
+        row.sessionUpdate === 'tool_call_update' &&
+        row.toolCallId === completedRead.toolCallId &&
+        row.status === 'in_progress',
+    ) ?? missingRecordedState('a running file read');

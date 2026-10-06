@@ -1,15 +1,11 @@
 import type { Icon as PhosphorIcon } from 'phosphor-react-native';
-import { CaretDownIcon } from 'phosphor-react-native/src/icons/CaretDown';
 import { CaretRightIcon } from 'phosphor-react-native/src/icons/CaretRight';
-import { CircleNotchIcon } from 'phosphor-react-native/src/icons/CircleNotch';
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
 import Animated, {
-  cancelAnimation,
-  Easing,
+  ReduceMotion,
   useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
+  useDerivedValue,
   withTiming,
 } from 'react-native-reanimated';
 import { cn } from '#lib/utils';
@@ -20,6 +16,7 @@ import {
 } from '#primitives/collapsible';
 import { Text } from '#primitives/text';
 import { Icon } from './Icon';
+import { ShimmerText } from './ShimmerText';
 
 export interface FeedDisclosureProps {
   label: string;
@@ -41,16 +38,14 @@ export function FeedDisclosure({
   children,
 }: FeedDisclosureProps) {
   const [open, setOpen] = useState(initialOpen);
-  const rotation = useSharedValue(0);
-  useEffect(() => {
-    rotation.value = running
-      ? withRepeat(
-          withTiming(360, { duration: 750, easing: Easing.linear }),
-          -1,
-        )
-      : 0;
-    return () => cancelAnimation(rotation);
-  }, [running, rotation]);
+  const rotation = useDerivedValue(
+    () =>
+      withTiming(open ? 90 : 0, {
+        duration: 200,
+        reduceMotion: ReduceMotion.System,
+      }),
+    [open],
+  );
   const style = useAnimatedStyle(
     () => ({
       transform: [{ rotate: `${rotation.value}deg` }],
@@ -63,36 +58,38 @@ export function FeedDisclosure({
         accessibilityLabel={label}
         className="min-h-5 flex-row items-center gap-1.5"
       >
-        <Animated.View
-          role={running ? 'progressbar' : undefined}
-          accessibilityLabel={running ? label : undefined}
-          style={running ? style : undefined}
-          className="size-4 shrink-0"
-        >
-          <Icon
-            as={running ? CircleNotchIcon : icon}
-            className={cn(
-              'size-4 text-muted-foreground',
-              running && 'text-foreground',
-              failed && 'text-destructive',
-            )}
-          />
-        </Animated.View>
+        {!running && (
+          <View className="size-4 shrink-0">
+            <Icon
+              as={icon}
+              className={cn(
+                'size-4 text-muted-foreground',
+                failed && 'text-destructive',
+              )}
+            />
+          </View>
+        )}
         <View className="min-w-0 flex-1 flex-row items-center gap-1">
-          <Text
-            numberOfLines={1}
-            className={cn(
-              'min-w-0 shrink text-sm leading-5 text-muted-foreground',
-              running && 'text-foreground',
-            )}
-          >
-            {label}
-          </Text>
+          {running ? (
+            <ShimmerText
+              text={label}
+              className="min-w-0 shrink text-sm leading-5 text-foreground"
+            />
+          ) : (
+            <Text
+              numberOfLines={1}
+              className="min-w-0 shrink text-sm leading-5 text-muted-foreground"
+            >
+              {label}
+            </Text>
+          )}
           {trailing}
-          <Icon
-            as={open ? CaretDownIcon : CaretRightIcon}
-            className="size-3.5 shrink-0 text-muted-foreground"
-          />
+          <Animated.View style={style} className="size-3.5 shrink-0">
+            <Icon
+              as={CaretRightIcon}
+              className="size-3.5 text-muted-foreground"
+            />
+          </Animated.View>
         </View>
       </CollapsibleTrigger>
       <CollapsibleContent>{children}</CollapsibleContent>

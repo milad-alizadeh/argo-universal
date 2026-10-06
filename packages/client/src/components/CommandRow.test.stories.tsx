@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
+import { expectShimmerMovement } from '../../mocks/expect-shimmer';
 import {
   commandMocks,
   commandNow,
@@ -51,7 +52,9 @@ export const Completed: Story = {
       await expect(canvas.getByText(completedCommand.title)).toBeVisible();
       await userEvent.click(row);
       await expect(row).toHaveAttribute('aria-expanded', 'false');
-      await expect(canvas.queryByText('Shell')).not.toBeInTheDocument();
+      await waitFor(() =>
+        expect(canvas.queryByText('Shell')).not.toBeInTheDocument(),
+      );
     }
   },
 };
@@ -84,6 +87,9 @@ export const OutputDisclosure: Story = {
       ).toBeVisible();
       await expect(canvas.getByText('Exit 0')).toBeVisible();
       await userEvent.click(row);
+      await waitFor(() =>
+        expect(canvas.queryByText('Shell')).not.toBeInTheDocument(),
+      );
     }
   },
 };
@@ -135,11 +141,8 @@ export const Running: Story = {
       await expect(row).not.toHaveTextContent(
         'cat hello.txt && git status --short',
       );
-      const spinner = canvas.getByRole('progressbar');
-      const before = getComputedStyle(spinner).transform;
-      await waitFor(() =>
-        expect(getComputedStyle(spinner).transform).not.toBe(before),
-      );
+      await expect(canvas.queryByRole('progressbar')).not.toBeInTheDocument();
+      await expectShimmerMovement(row);
       await userEvent.click(row);
       await expect(canvas.getByText('Shell')).toBeVisible();
       await expect(
@@ -150,6 +153,9 @@ export const Running: Story = {
       await expect(canvas.queryByText('Completed')).not.toBeInTheDocument();
       await expect(canvas.getByText('Running')).toBeVisible();
       await userEvent.click(row);
+      await waitFor(() =>
+        expect(canvas.queryByText('Shell')).not.toBeInTheDocument(),
+      );
     }
   },
 };
@@ -196,6 +202,9 @@ export const Stopped: Story = {
       await expect(canvas.queryByText('Completed')).not.toBeInTheDocument();
       await expect(canvas.getByText(stoppedCommand.title)).toBeVisible();
       await userEvent.click(row);
+      await waitFor(() =>
+        expect(canvas.queryByText('Shell')).not.toBeInTheDocument(),
+      );
     }
   },
 };

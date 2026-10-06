@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect } from 'storybook/test';
+import { expect, waitFor } from 'storybook/test';
+import { expectShimmerMovement } from '../../mocks/expect-shimmer';
 import { renderRecordedActivity } from '../../mocks/tool-call-group-preview';
 import {
   toolCallGroupMock,
@@ -24,22 +25,27 @@ export const Settled: Story = {
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       const group = canvas.getByRole('button', {
-        name: 'Read files, ran commands',
+        name: 'Show hello.txt and short git status',
       });
       await expect(group).toBeVisible();
       await expect(
-        canvas.queryByRole('button', { name: 'Explored' }),
-      ).not.toBeInTheDocument();
+        canvas.queryAllByRole('button', { name: /^Read / }),
+      ).toHaveLength(0);
       await userEvent.click(group);
       await expect(
-        canvas.getByRole('button', { name: 'Explored' }),
+        canvas.getByRole('button', { name: 'Read /project/hello.txt' }),
       ).toBeVisible();
       await expect(
-        canvas.getByRole('button', {
+        canvas.getAllByRole('button', {
           name: 'Show hello.txt and short git status',
         }),
-      ).toBeVisible();
+      ).toHaveLength(2);
       await userEvent.click(group);
+      await waitFor(() =>
+        expect(
+          canvas.queryAllByRole('button', { name: /^Read / }),
+        ).toHaveLength(0),
+      );
     }
   },
 };
@@ -54,13 +60,19 @@ export const Running: Story = {
         name: 'Show hello.txt and short git status',
       });
       await expect(group).toBeVisible();
-      await expect(canvas.getByRole('progressbar')).toBeVisible();
+      await expect(canvas.queryByRole('progressbar')).not.toBeInTheDocument();
+      await expectShimmerMovement(group);
       await userEvent.click(group);
       await expect(
-        canvas.getByRole('button', { name: 'Explored' }),
+        canvas.getByRole('button', { name: 'Read /project/hello.txt' }),
       ).toBeVisible();
       await expect(canvas.queryByText('Shell')).not.toBeInTheDocument();
       await userEvent.click(group);
+      await waitFor(() =>
+        expect(
+          canvas.queryAllByRole('button', { name: /^Read / }),
+        ).toHaveLength(0),
+      );
     }
   },
 };
@@ -77,15 +89,26 @@ export const AgentParity: Story = {
     const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
-      const groups = canvas.getAllByRole('button', {
-        name: 'Read files, ran commands',
-      });
-      await expect(groups).toHaveLength(2);
+      const groups = [
+        canvas.getByRole('button', {
+          name: 'Show hello.txt and short git status',
+        }),
+        canvas.getByRole('button', { name: 'Ran command' }),
+      ];
       for (const group of groups) await userEvent.click(group);
       await expect(
-        canvas.getAllByRole('button', { name: 'Explored' }),
-      ).toHaveLength(2);
+        canvas.getByRole('button', { name: 'Read /project/hello.txt' }),
+      ).toBeVisible();
+      await expect(
+        canvas.getByRole('button', { name: 'Read /repo/app.txt' }),
+      ).toBeVisible();
+      await expect(canvas.queryByText('Explored')).not.toBeInTheDocument();
       for (const group of groups) await userEvent.click(group);
+      await waitFor(() =>
+        expect(
+          canvas.queryAllByRole('button', { name: /^Read / }),
+        ).toHaveLength(0),
+      );
     }
   },
 };

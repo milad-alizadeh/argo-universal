@@ -18,7 +18,6 @@ export {
   type DesktopShellProps,
   type InspectorState,
 } from './components/DesktopShell';
-export { ExploredRow, type ExploredRowProps } from './components/ExploredRow';
 export {
   HeaderButton,
   type HeaderButtonProps,
@@ -56,6 +55,7 @@ export {
   ToolCallGroup,
   type ToolCallGroupProps,
 } from './components/ToolCallGroup';
+export { ToolCallRow, type ToolCallRowProps } from './components/ToolCallRow';
 export {
   type ConnectionState,
   useConnection,
