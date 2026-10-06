@@ -25,7 +25,7 @@ const modeDescriptions = {
 const modeMetadata = {
   default: { icon: 'ShieldWarning', tone: 'safe' },
   acceptEdits: { icon: 'Pencil', tone: 'moderate' },
-  plan: { icon: 'ClipboardList', tone: 'planning' },
+  plan: { icon: 'MapTrifold', tone: 'planning' },
   auto: { icon: 'Sparkles', tone: 'moderate' },
   bypassPermissions: { icon: 'WarningTriangle', tone: 'dangerous' },
 } as const;

@@ -15,7 +15,7 @@
             "description": "Reads and plans, changes nothing",
             "_meta": {
               "argo": {
-                "icon": "ClipboardList",
+                "icon": "MapTrifold",
                 "tone": "planning"
               }
             }
@@ -171,7 +171,7 @@
               "description": "Reads and plans, changes nothing",
               "_meta": {
                 "argo": {
-                  "icon": "ClipboardList",
+                  "icon": "MapTrifold",
                   "tone": "planning"
                 }
               }
@@ -326,7 +326,7 @@
               "description": "Reads and plans, changes nothing",
               "_meta": {
                 "argo": {
-                  "icon": "ClipboardList",
+                  "icon": "MapTrifold",
                   "tone": "planning"
                 }
               }
@@ -441,7 +441,7 @@
               "description": "Reads and plans, changes nothing",
               "_meta": {
                 "argo": {
-                  "icon": "ClipboardList",
+                  "icon": "MapTrifold",
                   "tone": "planning"
                 }
               }
@@ -612,7 +612,7 @@
             "name": "Plan mode",
             "_meta": {
               "argo": {
-                "icon": "ClipboardList",
+                "icon": "MapTrifold",
                 "tone": "planning"
               }
             },
@@ -757,7 +757,7 @@
               "name": "Plan mode",
               "_meta": {
                 "argo": {
-                  "icon": "ClipboardList",
+                  "icon": "MapTrifold",
                   "tone": "planning"
                 }
               },
@@ -901,7 +901,7 @@
               "name": "Plan mode",
               "_meta": {
                 "argo": {
-                  "icon": "ClipboardList",
+                  "icon": "MapTrifold",
                   "tone": "planning"
                 }
               },
@@ -1040,7 +1040,7 @@
               "name": "Plan mode",
               "_meta": {
                 "argo": {
-                  "icon": "ClipboardList",
+                  "icon": "MapTrifold",
                   "tone": "planning"
                 }
               },

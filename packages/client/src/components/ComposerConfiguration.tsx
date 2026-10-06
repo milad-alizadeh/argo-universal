@@ -9,11 +9,11 @@ import {
   CaretLeftIcon,
   CaretRightIcon,
   CheckIcon,
-  ClipboardTextIcon,
   FolderIcon,
   GitBranchIcon,
   HourglassSimpleIcon,
   LightningIcon,
+  MapTrifoldIcon,
   PencilIcon,
   ShieldCheckIcon,
   ShieldWarningIcon,
@@ -47,10 +47,7 @@ export interface ComposerConfigurationProps {
   turnRunning?: boolean;
   checkout: {
     branch: string;
-    currentBranch?: string;
-    branches: string[];
     newWorktree: boolean;
-    onBranchChange?: (branch: string) => void;
     onNewWorktreeChange?: (enabled: boolean) => void;
     path?: string;
   };
@@ -77,7 +74,7 @@ function configurationIcon(name?: string) {
     {
       ShieldCheck: ShieldCheckIcon,
       Pencil: PencilIcon,
-      ClipboardList: ClipboardTextIcon,
+      MapTrifold: MapTrifoldIcon,
       Sparkles: SparkleIcon,
       WarningTriangle: WarningIcon,
     }[name ?? ''] ?? ShieldWarningIcon
@@ -862,14 +859,12 @@ export function ComposerCheckoutControl({
     );
   return (
     <ComposerPopover
-      label={checkout.onBranchChange ? 'Base branch' : 'Checkout'}
+      label="Checkout"
       trigger={
         <Button
           variant="ghost"
           disabled={disabled}
-          accessibilityLabel={
-            checkout.onBranchChange ? 'Base branch' : 'Checkout'
-          }
+          accessibilityLabel="Checkout"
           className={cn(
             'h-6 sm:h-6 py-0 px-2.5 has-[>svg]:px-2.5 gap-1.5 rounded-full border border-border bg-card',
             wide
@@ -881,23 +876,13 @@ export function ComposerCheckoutControl({
             as={checkout.newWorktree ? GitBranchIcon : FolderIcon}
             className="size-4 text-muted-foreground"
           />
-          {editable && (
-            <Text
-              selectable={false}
-              className="select-none text-xs leading-4 font-normal text-muted-foreground"
-            >
-              {checkout.newWorktree ? 'New worktree' : 'Local'}
-            </Text>
-          )}
-          {!editable && (
-            <Text
-              selectable={false}
-              className="select-none text-xs leading-4 font-normal font-mono"
-            >
-              {checkout.branch.toLowerCase()}
-            </Text>
-          )}
-          {wide && editable && (
+          <Text
+            selectable={false}
+            className="select-none text-xs leading-4 font-normal text-muted-foreground"
+          >
+            {checkout.newWorktree ? 'New worktree' : 'Local'}
+          </Text>
+          {wide && (
             <Icon as={CaretDownIcon} className="size-3 text-muted-foreground" />
           )}
         </Button>

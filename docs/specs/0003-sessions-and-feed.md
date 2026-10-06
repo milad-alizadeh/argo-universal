@@ -39,7 +39,7 @@ On a phone, the app uses a drawer of sections, and detail screens push full scre
 7. As a developer, I want Plan in the same Mode picker for both Agents, so that I don't need to know that Codex calls it something else.
 8. As a developer, I want dangerous modes shown in red, so that I don't pick full access by accident.
 9. As a developer, I want each new Session in its own worktree by default, so that two Sessions never edit the same files.
-10. As a developer, I want to choose the branch a new worktree starts from, or the Project's main checkout instead, so that I can build on the work I mean.
+10. As a developer, I want to run a new Session in a new worktree or in the Project's main checkout (Local), and to set in Project Settings the base branch new worktrees start from, so that I can build on the work I mean.
 11. As a developer, I want Argo to remember my checkout choice per Project, so that I don't pick it every time.
 12. As a developer, I want the Session to start only when I send the first prompt, so that empty Sessions never pile up.
 13. As a developer, I want my first prompt to hold text and images, so that I can show the Agent a screenshot.
@@ -390,7 +390,7 @@ These come from the UI map agreed on 2026-10-03.
 - **Changed files.** On a wide window, the chip opens the file list in the Inspector, which can expand to the full width. On a phone, ⋯ then "Changed files · n" opens a popover.
 - **Subagents and Shells.** Two buttons, each with a count that is green while anything runs and grey once all have ended. Each opens a list grouped into Running and Finished, and each row shows model · duration · tokens. On a wide window the buttons sit at the top right of the header, and an item opens in the Inspector. On a phone they are pills above the composer, and an item opens in a page sheet. A Subagent row in the Feed opens the same place.
 - **Archive.** Archiving a Session that has uncommitted files asks first in a popover. Archiving shows a toast with Undo, and the Session moves to the Archived filter with the read-only banner.
-- **New Session.** "Start the Session in" rows for Server and Project sit above the composer. Server has one entry until the app supports more machines. The composer holds the Agent, model, mode, effort and checkout: a worktree from a branch, or the main checkout. The wide window shows the heading "What should we work on?". Sending replaces the New Session page with the Session.
+- **New Session.** "Start the Session in" rows for Server and Project sit above the composer. Server has one entry until the app supports more machines. The composer holds the Agent, model, mode, effort and checkout: New worktree, or Local (the main checkout). The base branch for new worktrees is a Project Setting. The wide window shows the heading "What should we work on?". Sending replaces the New Session page with the Session.
 - **Settings.** The list has four groups: Projects, Server (Accounts and Connection), Agents (Claude and Codex), and App (Appearance and Notifications). This milestone builds Connection and the Agent pages, which show availability and the install step. The rest are placeholders.
 - React Native Reusables primitives replace the prototype's hand-made ones. No size, spacing or colour comes from the prototype or the map.
 - What is copied from old Argo's rail, sidebar, Inspector, composer and Session row is decided with the owner, piece by piece, in the UI work for each slice.
