@@ -10,6 +10,7 @@ import {
 import { z } from 'zod';
 import { type MockAgents, writeMockAgents } from './mock-agents';
 import { findFreePort, serverUrlFor, startOwnServer } from './own-server';
+import { createProjectRepository } from './project-repository';
 
 export type AppOptions = { appTarget: 'web' | 'electron' };
 
@@ -111,6 +112,9 @@ export const test = base.extend<
         ARGO_USER_DATA_DIRECTORY: testInfo.outputPath('user-data'),
         ARGO_BACKGROUND: '1',
         PATH: agentPath,
+        ARGO_PROJECT_PATH: await createProjectRepository(
+          testInfo.outputPath('project'),
+        ),
       },
     });
     try {

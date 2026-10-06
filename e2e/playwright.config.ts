@@ -11,6 +11,11 @@ const mockAgentDirectory = path.join(
   'test-results',
   'agent-bin',
 );
+const projectDirectory = path.join(
+  import.meta.dirname,
+  'test-results',
+  'project',
+);
 
 // Free ports per run, so runs in several worktrees never meet; workers inherit them from the runner, which loads this file first.
 process.env.ARGO_E2E_SERVER_PORT ??= String(await findFreePort());
@@ -58,7 +63,7 @@ export default defineConfig<AppOptions>({
     {
       name: 'Server',
       // The supervisor as desktop starts it; pnpm would report SIGTERM as a failure.
-      command: `node --import tsx ../../e2e/mock-agents.ts '${mockAgentDirectory}' && exec node --import tsx src/main.ts`,
+      command: `node --import tsx ../../e2e/mock-agents.ts '${mockAgentDirectory}' && node --import tsx ../../e2e/project-repository.ts '${projectDirectory}' && exec node --import tsx src/main.ts`,
       // The page fixture points the web App at this Server's port (fixtures.ts).
       url: `http://127.0.0.1:${serverPort}/trpc/system.info`,
       cwd: path.join(repositoryRoot, 'apps/server'),
@@ -71,6 +76,7 @@ export default defineConfig<AppOptions>({
         ),
         ARGO_SERVER_PORT: serverPort,
         PATH: mockAgentPath(mockAgentDirectory),
+        ARGO_PROJECT_PATH: projectDirectory,
       },
       // Never reuse a dev Server, which runs on the owner's ~/.argo.
       reuseExistingServer: false,

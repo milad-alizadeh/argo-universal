@@ -1,12 +1,11 @@
-import { type ChildProcess, execFile, spawn } from 'node:child_process';
-import { mkdir, readFile } from 'node:fs/promises';
+import { type ChildProcess, spawn } from 'node:child_process';
+import { readFile } from 'node:fs/promises';
 import { createServer } from 'node:net';
 import path from 'node:path';
-import { promisify } from 'node:util';
 import { z } from 'zod';
 import { type MockAgents, writeMockAgents } from './mock-agents';
+import { createProjectRepository } from './project-repository';
 
-const run = promisify(execFile);
 const serverDirectory = path.resolve(import.meta.dirname, '../apps/server');
 
 export const serverUrlFor = (port: number | string) => `ws://127.0.0.1:${port}`;
@@ -24,23 +23,6 @@ export const findFreePort = () =>
       );
     });
   });
-
-// A git repository with one commit on `main`, which the Server seeds as its Project.
-async function createProject(directory: string) {
-  await mkdir(directory, { recursive: true });
-  const git = (...arguments_: string[]) =>
-    run('git', ['-C', directory, ...arguments_]);
-  await git('init', '--initial-branch=main');
-  await git(
-    '-c',
-    'user.name=Argo',
-    '-c',
-    'user.email=argo@example.com',
-    'commit',
-    '--allow-empty',
-    '--message=Start',
-  );
-}
 
 const ServerFile = z.object({ port: z.int() });
 const portTakenPattern = /EADDRINUSE/;
@@ -73,7 +55,7 @@ export async function startOwnServer(directory: string, agents: MockAgents) {
   const agentDirectory = path.join(directory, 'agent-bin');
   const projectPath = path.join(directory, 'project');
   const home = path.join(directory, 'server-home');
-  await createProject(projectPath);
+  await createProjectRepository(projectPath);
   await writeMockAgents(agentDirectory, agents);
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     const port = await findFreePort();
