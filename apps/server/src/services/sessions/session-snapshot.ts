@@ -24,6 +24,7 @@ export function toSessionSnapshot(
 ): SessionSnapshot {
   const context = session?.context ?? {
     activeTurnId: null,
+    activeTurnStartedAt: null,
     usage: null,
     permissionQueue: [],
     pendingElicitation: null,

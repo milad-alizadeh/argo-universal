@@ -1,18 +1,20 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
 import { expectShimmerMovement } from '../../mocks/expect-shimmer';
-import { liveHeaderNow, liveHeaderSteps } from '../../mocks/live-header-mock';
+import {
+  liveHeaderElapsed,
+  liveHeaderNow,
+  liveHeaderSteps,
+  requestHeader,
+  retryHeader,
+  workingHeader,
+} from '../../mocks/live-header-mock';
 import { LiveHeader } from './LiveHeader';
 
 const meta = {
   title: 'Tests/LiveHeader',
   component: LiveHeader,
-  args: {
-    text: 'Awaiting approval',
-    source: { type: 'request' },
-    startedAt: liveHeaderNow - 134_000,
-    now: liveHeaderNow,
-  },
+  args: { liveHeader: requestHeader, now: liveHeaderNow },
 } satisfies Meta<typeof LiveHeader>;
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -23,12 +25,11 @@ const textColor = (row: HTMLElement) =>
 export const EveryStep: Story = {
   render: () => (
     <>
-      {liveHeaderSteps.map(({ step, text, source, startedAt }) => (
+      {liveHeaderSteps.map(({ step, liveHeader, toolCall }) => (
         <LiveHeader
           key={step}
-          text={text}
-          source={source}
-          startedAt={startedAt}
+          liveHeader={liveHeader}
+          toolCall={toolCall}
           now={liveHeaderNow}
         />
       ))}
@@ -40,11 +41,14 @@ export const EveryStep: Story = {
       await page.viewport(width, 844);
       const rows = canvas.getAllByRole('status');
       await expect(rows).toHaveLength(liveHeaderSteps.length);
-      const working = rows.at(-1) as HTMLElement;
-      for (const [
-        index,
-        { text, elapsed, source },
-      ] of liveHeaderSteps.entries()) {
+      const working = rows[
+        liveHeaderSteps.findIndex(
+          (step) => step.liveHeader.source.type === 'working',
+        )
+      ] as HTMLElement;
+      for (const [index, { liveHeader }] of liveHeaderSteps.entries()) {
+        const { text, source } = liveHeader;
+        const elapsed = liveHeaderElapsed;
         const row = rows[index] as HTMLElement;
         await expect(row).toBeVisible();
         await expect(row).toHaveAccessibleName(`${text} ${elapsed}`);
@@ -54,7 +58,11 @@ export const EveryStep: Story = {
         await expect(shimmering).toBe(source.type !== 'request');
         if (source.type === 'request')
           await expect(textColor(row)).not.toBe(textColor(working));
-        else {
+        else if (source.type === 'working') {
+          const mark = row.querySelector('[data-testid="working-mark"]');
+          if (!mark) throw new Error(`${text} has no Working mark.`);
+          await expect(mark.getBoundingClientRect().width).toBe(16);
+        } else {
           const icon = row.querySelector('svg');
           if (!icon) throw new Error(`${text} has no icon.`);
           await expect(getComputedStyle(icon).width).toBe('16px');
@@ -73,7 +81,7 @@ export const EveryStepDark: Story = {
 };
 
 export const ElapsedTimeShimmers: Story = {
-  args: { source: { type: 'working' }, text: 'Running pnpm typecheck' },
+  args: { liveHeader: workingHeader },
   play: async ({ canvas }) => {
     const row = canvas.getByRole('status');
     await expectShimmerMovement(row, '2m 14s');
@@ -104,15 +112,17 @@ export const RequestDotBlinks: Story = {
     await expect(getComputedStyle(dot).boxShadow).toContain(
       getComputedStyle(dot).backgroundColor,
     );
-    await expect(dot.getBoundingClientRect().width).toBe(8);
+    // The same 6px dot as SessionRow's status.
+    await expect(dot.getBoundingClientRect().width).toBe(6);
   },
 };
 
 export const LongTextKeepsOneLine: Story = {
   args: {
-    text: 'Checking how rows merge after a reconnect when the Server restarts mid-Turn and the phone was asleep',
-    source: { type: 'working' },
-    startedAt: liveHeaderNow - 18_000,
+    liveHeader: {
+      ...workingHeader,
+      text: liveHeaderSteps.map((step) => step.liveHeader.text).join(' '),
+    },
   },
   play: async ({ canvas }) => {
     const { page } = await import('vitest/browser');
@@ -129,13 +139,52 @@ export const LongTextKeepsOneLine: Story = {
 };
 
 export const ClockTicks: Story = {
-  args: { source: { type: 'working' }, text: 'Working', now: undefined },
-  render: (args) => <LiveHeader {...args} startedAt={Date.now() - 5_000} />,
+  args: { now: undefined },
+  render: (args) => (
+    <LiveHeader
+      {...args}
+      liveHeader={{ ...workingHeader, startedAt: Date.now() - 5_000 }}
+    />
+  ),
   play: async ({ canvas }) => {
     const row = canvas.getByRole('status');
     await expect(row).toHaveAccessibleName('Working 5s');
     await waitFor(() => expect(row).toHaveAccessibleName('Working 6s'), {
       timeout: 2500,
     });
+  },
+};
+
+export const WorkingMarkWalks: Story = {
+  args: { liveHeader: workingHeader },
+  play: async ({ canvas }) => {
+    const cells = canvas.getAllByTestId('working-mark-cell');
+    await expect(cells).toHaveLength(9);
+    const opacities = () =>
+      cells.map((cell) => getComputedStyle(cell).opacity).join();
+    const first = opacities();
+    await waitFor(() => expect(opacities()).not.toBe(first));
+    for (const cell of cells)
+      await expect(cell.getBoundingClientRect().width).toBeCloseTo(3.4, 1);
+  },
+};
+
+export const RetryIconSpins: Story = {
+  args: { liveHeader: retryHeader },
+  play: async ({ canvas }) => {
+    const spinner = canvas.getByTestId('live-header-retry');
+    const transform = getComputedStyle(spinner).transform;
+    await waitFor(() =>
+      expect(getComputedStyle(spinner).transform).not.toBe(transform),
+    );
+  },
+};
+
+export const NoTurnHidesTime: Story = {
+  args: { liveHeader: { ...requestHeader, startedAt: null } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('status')).toHaveAccessibleName(
+      requestHeader.text,
+    );
   },
 };

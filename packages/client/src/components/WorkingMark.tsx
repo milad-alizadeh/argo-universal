@@ -1,0 +1,92 @@
+import { useEffect } from 'react';
+import { View } from 'react-native';
+import Animated, {
+  cancelAnimation,
+  Easing,
+  type SharedValue,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
+
+const stepMilliseconds = 150;
+const fadeSteps = 400 / stepMilliseconds;
+const restingOpacity = 0.18;
+
+// Cell offsets in px, clockwise round the edge from top left, then the centre.
+const cells = [
+  [2, 2],
+  [6.3, 2],
+  [10.6, 2],
+  [10.6, 6.3],
+  [10.6, 10.6],
+  [6.3, 10.6],
+  [2, 10.6],
+  [2, 6.3],
+  [6.3, 6.3],
+] as const;
+
+function Cell({
+  index,
+  left,
+  top,
+  step,
+  still,
+}: {
+  index: number;
+  left: number;
+  top: number;
+  step: SharedValue<number>;
+  still: boolean;
+}) {
+  const style = useAnimatedStyle(() => {
+    if (still) return { opacity: 0.4 };
+    const sinceLit = (step.value - index + cells.length) % cells.length;
+    return {
+      opacity:
+        sinceLit < fadeSteps
+          ? 1 - (1 - restingOpacity) * (sinceLit / fadeSteps)
+          : restingOpacity,
+    };
+  }, [index, step, still]);
+  return (
+    <Animated.View
+      testID="working-mark-cell"
+      style={[{ left, top, width: 3.4, height: 3.4, borderRadius: 0.8 }, style]}
+      className="absolute bg-muted-foreground"
+    />
+  );
+}
+
+// Paper's Working mark: a 3×3 grid where one cell at a time lights and fades.
+export function WorkingMark() {
+  const step = useSharedValue(0);
+  const reducedMotion = useReducedMotion();
+  useEffect(() => {
+    if (!reducedMotion)
+      step.value = withRepeat(
+        withTiming(cells.length, {
+          duration: cells.length * stepMilliseconds,
+          easing: Easing.linear,
+        }),
+        -1,
+      );
+    return () => cancelAnimation(step);
+  }, [reducedMotion, step]);
+  return (
+    <View testID="working-mark" className="size-4 shrink-0">
+      {cells.map(([left, top], index) => (
+        <Cell
+          key={`${left}:${top}`}
+          index={index}
+          left={left}
+          top={top}
+          step={step}
+          still={reducedMotion}
+        />
+      ))}
+    </View>
+  );
+}

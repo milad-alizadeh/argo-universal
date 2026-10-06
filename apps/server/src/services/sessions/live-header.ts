@@ -1,4 +1,6 @@
 import type {
+  LiveHeader,
+  LiveHeaderSource,
   PendingElicitation,
   PendingPermission,
   SessionUpdate,
@@ -7,6 +9,7 @@ import type {
 
 export interface LiveHeaderInput {
   activeTurnId: string | null;
+  activeTurnStartedAt: number | null;
   permissionQueue: readonly PendingPermission[];
   pendingElicitation: PendingElicitation | null;
   pendingPlanProposal?: { planId: string; content: string } | null;
@@ -62,10 +65,18 @@ function toolKindLabel(tool: ToolCallUpdate): string | null {
 export function toLiveHeader(
   session: LiveHeaderInput,
   rows: readonly SessionUpdate[],
-): string | null {
-  if (session.permissionQueue.length) return 'Awaiting approval';
-  if (session.pendingElicitation) return 'Waiting for your answer';
-  if (session.pendingPlanProposal) return 'Plan ready';
+): LiveHeader | null {
+  const header = (text: string, source: LiveHeaderSource): LiveHeader => ({
+    text,
+    source,
+    startedAt: session.activeTurnStartedAt,
+  });
+  const request = { type: 'request' } as const;
+  if (session.permissionQueue.length)
+    return header('Awaiting approval', request);
+  if (session.pendingElicitation)
+    return header('Waiting for your answer', request);
+  if (session.pendingPlanProposal) return header('Plan ready', request);
   if (session.activeTurnId === null) return null;
   const current = rows
     .filter((row) => row.turnId === session.activeTurnId)
@@ -73,7 +84,10 @@ export function toLiveHeader(
   const latest = current.at(-1);
   const retry =
     latest?.sessionUpdate === 'notice' ? latest._meta?.argo?.retry : undefined;
-  if (retry) return `Retrying (${retry.attempt} of ${retry.maxAttempts})`;
+  if (retry)
+    return header(`Retrying (${retry.attempt} of ${retry.maxAttempts})`, {
+      type: 'retry',
+    });
   const thought = current
     .filter((row) => row.sessionUpdate === 'agent_thought')
     .toSorted((first, second) => first.position - second.position)
@@ -86,7 +100,7 @@ export function toLiveHeader(
   const title = [...thoughtText.matchAll(/^\s*\*\*([^\n]+?)\*\*\s*$/gm)]
     .at(-1)?.[1]
     ?.trim();
-  if (title) return title;
+  if (title) return header(title, { type: 'thought' });
   const tool = current
     .filter(
       (row): row is ToolCallUpdate =>
@@ -95,8 +109,12 @@ export function toLiveHeader(
     )
     .toSorted((first, second) => first.position - second.position)
     .at(-1);
-  const description = tool?._meta?.argo?.description;
-  if (description?.trim()) return description;
-  if (tool) return toolKindLabel(tool) ?? (tool.name?.trim() || 'Working');
-  return 'Working';
+  if (!tool) return header('Working', { type: 'working' });
+  const text =
+    tool._meta?.argo?.description?.trim() ||
+    toolKindLabel(tool) ||
+    tool.name?.trim();
+  return text
+    ? header(text, { type: 'tool_call', toolCallId: tool.toolCallId })
+    : header('Working', { type: 'working' });
 }

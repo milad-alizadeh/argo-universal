@@ -1,86 +1,52 @@
-import type { LiveHeaderProps } from '../src/components/LiveHeader';
-import { runningCommand } from './tool-call-mock';
+import { recordedFeedMocks } from '@repo/api/mocks';
+import type { LiveHeader, ToolCallUpdate } from '@repo/contracts';
 
-export const liveHeaderNow = Date.UTC(2026, 9, 6, 9, 0, 0);
+// Every live header the Server's producer gave over the recorded Turns, once per text.
+export const liveHeaderSteps = recordedFeedMocks
+  .flatMap((mock) =>
+    mock.liveHeaders.map((liveHeader) => ({
+      step: `${mock.agent} ${mock.recording}: ${liveHeader.text}`,
+      liveHeader,
+      toolCall: toolCallFor(liveHeader, mock.rows),
+    })),
+  )
+  .filter(
+    (step, index, steps) =>
+      steps.findIndex(
+        (other) => other.liveHeader.text === step.liveHeader.text,
+      ) === index,
+  );
 
-const ago = (seconds: number) => liveHeaderNow - seconds * 1000;
+function toolCallFor(
+  liveHeader: LiveHeader,
+  rows: (typeof recordedFeedMocks)[number]['rows'],
+) {
+  const { source } = liveHeader;
+  if (source.type !== 'tool_call') return undefined;
+  return rows.findLast(
+    (row): row is ToolCallUpdate =>
+      row.sessionUpdate === 'tool_call_update' &&
+      row.toolCallId === source.toolCallId,
+  );
+}
 
-const searchCall = { ...runningCommand, kind: 'search' as const, _meta: {} };
-const namedCall = { ...runningCommand, kind: 'other' as const, _meta: {} };
+const startedAt = liveHeaderSteps[0]?.liveHeader.startedAt;
+if (!startedAt) throw new Error('Recordings need a running Turn');
 
-// Each live header step from spec 0003, in the order the Server picks them.
-export const liveHeaderSteps = [
-  {
-    step: 'Permission request',
-    text: 'Awaiting approval',
-    source: { type: 'request' },
-    startedAt: ago(134),
-    elapsed: '2m 14s',
-  },
-  {
-    step: 'Elicitation',
-    text: 'Waiting for your answer',
-    source: { type: 'request' },
-    startedAt: ago(134),
-    elapsed: '2m 14s',
-  },
-  {
-    step: 'Plan proposal',
-    text: 'Plan ready',
-    source: { type: 'request' },
-    startedAt: ago(134),
-    elapsed: '2m 14s',
-  },
-  {
-    step: 'Retry',
-    text: 'Retrying (2 of 5)',
-    source: { type: 'retry' },
-    startedAt: ago(41),
-    elapsed: '41s',
-  },
-  {
-    step: 'Thought title',
-    text: 'Checking how rows merge after a reconnect',
-    source: { type: 'thought' },
-    startedAt: ago(18),
-    elapsed: '18s',
-  },
-  {
-    step: 'Tool call title',
-    text: 'Show hello.txt and short git status',
-    source: { type: 'tool_call', row: runningCommand },
-    startedAt: ago(12),
-    elapsed: '12s',
-  },
-  {
-    step: 'Tool call kind',
-    text: 'Running pnpm typecheck',
-    source: { type: 'tool_call', row: runningCommand },
-    startedAt: ago(8),
-    elapsed: '8s',
-  },
-  {
-    step: 'Tool call kind, search',
-    text: 'Searching files',
-    source: { type: 'tool_call', row: searchCall },
-    startedAt: ago(63),
-    elapsed: '1m 03s',
-  },
-  {
-    step: 'Tool call name',
-    text: 'mcp__github__search_issues',
-    source: { type: 'tool_call', row: namedCall },
-    startedAt: ago(27),
-    elapsed: '27s',
-  },
-  {
-    step: 'Working',
-    text: 'Working',
-    source: { type: 'working' },
-    startedAt: ago(3),
-    elapsed: '3s',
-  },
-] as const satisfies (Omit<LiveHeaderProps, 'now'> & {
-  step: string;
-  elapsed: string;
-})[];
+// 2m 14s into the recorded Turns, so every step shows the same elapsed time.
+export const liveHeaderElapsed = '2m 14s';
+export const liveHeaderNow = startedAt + 134_000;
+
+export const workingHeader =
+  liveHeaderSteps.find((step) => step.liveHeader.source.type === 'working')
+    ?.liveHeader ?? missingStep('working');
+export const requestHeader =
+  liveHeaderSteps.find((step) => step.liveHeader.source.type === 'request')
+    ?.liveHeader ?? missingStep('request');
+export const retryHeader =
+  liveHeaderSteps.find((step) => step.liveHeader.source.type === 'retry')
+    ?.liveHeader ?? missingStep('retry');
+
+function missingStep(type: string): never {
+  throw new Error(`Recordings need a ${type} live header`);
+}

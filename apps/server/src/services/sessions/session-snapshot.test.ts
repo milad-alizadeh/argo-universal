@@ -72,6 +72,7 @@ it('projects the live context and the Feed revision without changing either', ()
     context: {
       ...context,
       activeTurnId: 'turn-1',
+      activeTurnStartedAt: 1_000,
       usage,
       permissionQueue: [permission, { ...permission, toolCallId: 'tool-2' }],
       pendingElicitation: elicitation,
@@ -82,7 +83,11 @@ it('projects the live context and the Feed revision without changing either', ()
     toSessionSnapshot(snapshot, { context: { epoch: 3, maxRevision: 9 } }),
   ).toEqual({
     state: 'requires_action',
-    liveHeader: 'Awaiting approval',
+    liveHeader: {
+      text: 'Awaiting approval',
+      source: { type: 'request' },
+      startedAt: 1_000,
+    },
     activeTurnId: 'turn-1',
     usage,
     pendingPermission: permission,
@@ -115,7 +120,7 @@ it.each(liveHeaderMocks)(
             },
           },
         },
-      }).liveHeader,
+      }).liveHeader?.text,
     ).toBe('Reading spec.md');
   },
 );
