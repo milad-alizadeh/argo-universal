@@ -69,6 +69,13 @@ export const MenuOpensAndSelectionClosesDrawer: Story = {
         const closedPosition = canvas
           .getByTestId('phone-shell')
           .getBoundingClientRect().left;
+        // The previous selection's close animation must settle before the menu button is clicked.
+        await waitFor(() =>
+          expect(content.getBoundingClientRect().left).toBeCloseTo(
+            closedPosition,
+            0,
+          ),
+        );
         await userEvent.click(
           canvas.getByRole('button', { name: 'Open navigation' }),
         );
