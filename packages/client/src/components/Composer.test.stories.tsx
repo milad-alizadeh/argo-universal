@@ -5,6 +5,7 @@ import { expect, fn, waitFor, within } from 'storybook/test';
 import {
   ComposerMock,
   composerImages,
+  composerLongAgentCatalog,
   oversizedComposerImage,
 } from '../../mocks/composer-mock';
 import { Composer } from './Composer';
@@ -703,6 +704,64 @@ export const RunningWithoutStop: Story = {
   play: async ({ canvas, args }) => {
     await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
     await expect(args.onSend).not.toHaveBeenCalled();
+  },
+};
+
+export const ScrollableAgentCatalog: Story = {
+  args: {
+    configuration: {
+      agents: composerLongAgentCatalog,
+      agent: 'development-agent-1',
+      configOptions: firstAgent.configOptions,
+      onConfigChange: fn(),
+      onAgentChange: fn(),
+      checkout: { branch: 'main', branches: ['main'], newWorktree: true },
+    },
+  },
+  play: async ({ canvas, userEvent, args }) => {
+    const { page } = await import('vitest/browser');
+    await page.viewport(1440, 844);
+    await settleViewport();
+    const overlay = within(document.body);
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Agent and model' }),
+    );
+    const scroll = await overlay.findByTestId('composer-agents-scroll');
+    await waitFor(() => {
+      expect(scroll.clientHeight).toBeGreaterThan(100);
+      expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight);
+    });
+    const menu = overlay.getByRole('dialog');
+    await Promise.all(
+      menu
+        .getAnimations({ subtree: true })
+        .map((animation) => animation.finished),
+    );
+    await waitFor(() =>
+      expect(menu.getBoundingClientRect().width).toBeCloseTo(580),
+    );
+    const heading = overlay.getByText('Agent', { exact: true });
+    const headingTop = heading.getBoundingClientRect().top;
+    const menuHeight = menu.getBoundingClientRect().height;
+    await expect(menuHeight).toBeLessThan(700);
+    scroll.scrollTop = scroll.scrollHeight;
+    const lastAgent = await overlay.findByRole('button', {
+      name: 'Select Agent 40',
+    });
+    await waitFor(() => {
+      const item = lastAgent.getBoundingClientRect();
+      const viewport = scroll.getBoundingClientRect();
+      expect(item.top).toBeGreaterThanOrEqual(viewport.top);
+      expect(item.bottom).toBeLessThanOrEqual(viewport.bottom);
+      expect(heading.getBoundingClientRect().top).toBeCloseTo(headingTop);
+      expect(menu.getBoundingClientRect().height).toBeCloseTo(menuHeight);
+    });
+    await userEvent.click(lastAgent);
+    await expect(args.configuration?.onAgentChange).toHaveBeenCalledWith(
+      'development-agent-40',
+    );
+    await expect(overlay.getByText('Model', { exact: true })).toBeVisible();
+    await userEvent.keyboard('{Escape}');
   },
 };
 

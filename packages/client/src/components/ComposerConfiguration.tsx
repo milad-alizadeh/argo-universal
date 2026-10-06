@@ -1,3 +1,4 @@
+import { LegendList } from '@legendapp/list';
 import type {
   AgentInfo,
   SessionConfigOption,
@@ -194,87 +195,112 @@ function AgentChoices({
   configuration: ComposerConfigurationProps;
   onSelect: () => void;
 }) {
+  const wide = useWide();
   const agents = configuration.onAgentChange
     ? configuration.agents
     : configuration.agents.filter(
         (agent) => agent.agent === configuration.agent,
       );
-  return (
-    <View className="p-1 gap-0.5">
-      {agents.map((agent) => (
-        <View key={agent.agent}>
-          <Button
-            variant="ghost"
-            accessibilityLabel={`Select ${agent.label}`}
-            disabled={
-              !configuration.onAgentChange || agent.availability !== 'available'
-            }
-            accessibilityState={{
-              selected: agent.agent === configuration.agent,
-            }}
-            aria-pressed={agent.agent === configuration.agent}
-            className={cn(
-              'min-h-11 wide:min-h-8 h-auto sm:h-auto py-1.5 px-2 justify-start gap-2.5 wide:gap-2 web:focus-visible:ring-0 web:focus-visible:bg-accent',
-              configuration.onAgentChange &&
-                agent.agent === configuration.agent &&
-                'bg-accent',
-            )}
-            onPress={() => {
-              if (agent.agent !== configuration.agent)
-                configuration.onAgentChange?.(agent.agent);
-              onSelect();
-            }}
+  const renderAgent = (agent: AgentInfo) => (
+    <View key={agent.agent}>
+      <Button
+        variant="ghost"
+        accessibilityLabel={`Select ${agent.label}`}
+        disabled={
+          !configuration.onAgentChange || agent.availability !== 'available'
+        }
+        accessibilityState={{
+          selected: agent.agent === configuration.agent,
+        }}
+        aria-pressed={agent.agent === configuration.agent}
+        className={cn(
+          'min-h-11 wide:min-h-8 h-auto sm:h-auto py-1.5 px-2 justify-start gap-2.5 wide:gap-2 web:focus-visible:ring-0 web:focus-visible:bg-accent',
+          configuration.onAgentChange &&
+            agent.agent === configuration.agent &&
+            'bg-accent',
+        )}
+        onPress={() => {
+          if (agent.agent !== configuration.agent)
+            configuration.onAgentChange?.(agent.agent);
+          onSelect();
+        }}
+      >
+        <Logo agent={agent} size={16} />
+        <View className="flex-1 min-w-0 gap-0.5">
+          <Text
+            selectable={false}
+            className="select-none text-sm leading-5 font-normal"
           >
-            <Logo agent={agent} size={16} />
-            <View className="flex-1 min-w-0 gap-0.5">
-              <Text
-                selectable={false}
-                className="select-none text-sm leading-5 font-normal"
-              >
-                {agent.label}
-              </Text>
-              {agent.availability !== 'available' && (
-                <Text
-                  selectable={false}
-                  className="select-none text-xs leading-4 text-warning"
-                >
-                  {agent.availability === 'not_signed_in'
-                    ? 'Not signed in'
-                    : agent.availability === 'not_installed'
-                      ? 'Not installed'
-                      : 'Unavailable'}
-                </Text>
-              )}
-            </View>
-            {configuration.onAgentChange &&
-              agent.agent === configuration.agent && (
-                <Icon as={CheckIcon} className="size-3.5" />
-              )}
-          </Button>
-          {agent.availability !== 'available' && configuration.onAgentSetup && (
-            <Button
-              variant="ghost"
-              accessibilityLabel={`Set up ${agent.label}`}
-              className="h-7 sm:h-7 ml-8 px-2 justify-start"
-              onPress={() => configuration.onAgentSetup?.(agent.agent)}
+            {agent.label}
+          </Text>
+          {agent.availability !== 'available' && (
+            <Text
+              selectable={false}
+              className="select-none text-xs leading-4 text-warning"
             >
-              <Text selectable={false} className="select-none text-xs">
-                {agent.availability === 'not_signed_in' ? 'Sign in' : 'Install'}
-              </Text>
-            </Button>
+              {agent.availability === 'not_signed_in'
+                ? 'Not signed in'
+                : agent.availability === 'not_installed'
+                  ? 'Not installed'
+                  : 'Unavailable'}
+            </Text>
           )}
         </View>
-      ))}
-      {!configuration.onAgentChange && (
-        <Text
-          selectable={false}
-          className="select-none pl-8 pr-2 pb-1 text-xs leading-4 text-muted-foreground"
+        {configuration.onAgentChange && agent.agent === configuration.agent && (
+          <Icon as={CheckIcon} className="size-3.5" />
+        )}
+      </Button>
+      {agent.availability !== 'available' && configuration.onAgentSetup && (
+        <Button
+          variant="ghost"
+          accessibilityLabel={`Set up ${agent.label}`}
+          className="h-7 sm:h-7 ml-8 px-2 justify-start"
+          onPress={() => configuration.onAgentSetup?.(agent.agent)}
         >
-          Start a new Session to switch Agent
-        </Text>
+          <Text selectable={false} className="select-none text-xs">
+            {agent.availability === 'not_signed_in' ? 'Sign in' : 'Install'}
+          </Text>
+        </Button>
       )}
     </View>
   );
+  const footer = !configuration.onAgentChange ? (
+    <Text
+      selectable={false}
+      className="select-none pl-8 pr-2 pb-1 text-xs leading-4 text-muted-foreground"
+    >
+      Start a new Session to switch Agent
+    </Text>
+  ) : null;
+  if (wide)
+    return (
+      <View className="relative flex-1 min-h-0">
+        <LegendList
+          testID="composer-agents-scroll"
+          style={{ position: 'absolute', inset: 0 }}
+          contentContainerStyle={{ padding: 4 }}
+          data={agents}
+          keyExtractor={(agent) => agent.agent}
+          renderItem={({ item }) => renderAgent(item)}
+          estimatedItemSize={34}
+          ItemSeparatorComponent={AgentSeparator}
+          ListFooterComponent={footer}
+          extraData={configuration}
+          recycleItems={false}
+          keyboardShouldPersistTaps="handled"
+        />
+      </View>
+    );
+  return (
+    <View className="p-1 gap-0.5">
+      {agents.map(renderAgent)}
+      {footer}
+    </View>
+  );
+}
+
+function AgentSeparator() {
+  return <View className="h-0.5" />;
 }
 
 function ModelChoices({
@@ -486,7 +512,7 @@ function AgentModelMenu({
   return (
     <View className="wide:flex-row">
       {wide && (
-        <View className="w-43 shrink-0 border-r border-border bg-sidebar">
+        <View className="w-43 shrink-0 min-h-0 border-r border-border bg-sidebar">
           <View className="px-1 pt-1">
             <MenuHeading>Agent</MenuHeading>
           </View>

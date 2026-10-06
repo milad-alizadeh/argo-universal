@@ -4,7 +4,11 @@ import {
   newSessionInputs,
   newSessionOptions,
 } from '@repo/api/mocks';
-import type { PlanEntry, SessionConfigOption } from '@repo/contracts';
+import type {
+  AgentInfo,
+  PlanEntry,
+  SessionConfigOption,
+} from '@repo/contracts';
 import { useState } from 'react';
 import {
   Composer,
@@ -14,6 +18,19 @@ import {
 
 const imageUri =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKklEQVR4nGN4piFHU8QwasGoBaMWjFowasGoBaMWjFowasGoBaMWDBULANahsD1zXuJAAAAAAElFTkSuQmCC';
+
+export const composerLongAgentCatalog: AgentInfo[] = Array.from(
+  { length: 40 },
+  (_, index) => {
+    const agent = newSessionCatalogs.bothAvailable[0];
+    if (!agent) throw new Error('Composer needs an available Agent mock.');
+    return {
+      ...agent,
+      agent: `development-agent-${index + 1}`,
+      label: `Agent ${String(index + 1).padStart(2, '0')}`,
+    };
+  },
+);
 
 export const composerImages: ComposerImage[] = newSessionInputs.flatMap(
   ({ agent, prompt }) =>
