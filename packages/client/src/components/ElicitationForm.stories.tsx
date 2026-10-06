@@ -42,6 +42,18 @@ export const Overview: StoryObj<typeof meta> = {
             }
           />
         </Variation>
+        <Variation label="Dismissed form">
+          <ElicitationOutcome
+            request={elicitationRequest}
+            answer={{ action: 'cancel' }}
+          />
+        </Variation>
+        <Variation label="Declined form">
+          <ElicitationOutcome
+            request={elicitationRequest}
+            answer={{ action: 'decline' }}
+          />
+        </Variation>
         <Variation label="Already answered">
           <ElicitationFormPreview alreadyAnswered="Already answered on another device" />
         </Variation>
