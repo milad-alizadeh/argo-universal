@@ -13,6 +13,7 @@ import {
   createSessionsRenderingMock,
   SessionsRenderingPreview,
 } from '../../mocks/sessions-rendering-preview';
+import { settleViewport } from '../../mocks/settle-viewport';
 import { scrollFadeHeight } from './ScrollFade';
 import { SessionsList } from './SessionsList';
 
@@ -196,10 +197,7 @@ export const ScrollFadePadding: Story = {
   render: (args) => <SessionsNewSessionPreview {...args} />,
   play: async ({ canvas }) => {
     // At a phone's size twelve Sessions overflow the list, so it can scroll.
-    if ('__vitest_browser__' in globalThis) {
-      const { page } = await import('vitest/browser');
-      await page.viewport(390, 844);
-    }
+    if ('__vitest_browser__' in globalThis) await settleViewport(390);
     const scroll = canvas.getByTestId('sessions-scroll');
     const heading = await canvas.findByRole('button', {
       name: 'Example Project',

@@ -92,8 +92,8 @@ function CollapsibleContent({
 
 const duration = 200;
 // Reanimated's default `withTiming` curve, so both paths move alike.
-const easeInOut = (t: number) =>
-  t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+const easeInOut = (fraction: number) =>
+  fraction < 0.5 ? 2 * fraction * fraction : 1 - (-2 * fraction + 2) ** 2 / 2;
 
 function SyncedContent({
   children,
@@ -129,9 +129,9 @@ function SyncedContent({
     let moving = true;
     const started = performance.now();
     let frame = requestAnimationFrame(function step(time) {
-      const t = Math.min((time - started) / span, 1);
-      setProgress(from + (target - from) * easeInOut(t));
-      if (t < 1) frame = requestAnimationFrame(step);
+      const elapsed = Math.min((time - started) / span, 1);
+      setProgress(from + (target - from) * easeInOut(elapsed));
+      if (elapsed < 1) frame = requestAnimationFrame(step);
       else {
         moving = false;
         onMotion(false);

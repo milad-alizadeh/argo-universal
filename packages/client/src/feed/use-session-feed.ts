@@ -35,6 +35,7 @@ export function useSessionFeed(sessionId: string) {
   const [syncPoint, setSyncPoint] = useState<FeedSyncPoint | null>(null);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const olderInFlight = useRef(false);
+  const rowsInFlight = useRef(new Set<string>());
 
   useEffect(() => {
     if (!tail.data) return;
@@ -47,14 +48,20 @@ export function useSessionFeed(sessionId: string) {
 
   const fetchRow = useCallback(
     async (id: string) => {
-      const row = await client.feed.row.query({ sessionId, id });
-      update(
-        applyFeedEvent(feedRef.current, {
-          type: 'row.upsert',
-          rev: row.revision,
-          row,
-        }).feed,
-      );
+      if (rowsInFlight.current.has(id)) return;
+      rowsInFlight.current.add(id);
+      try {
+        const row = await client.feed.row.query({ sessionId, id });
+        update(
+          applyFeedEvent(feedRef.current, {
+            type: 'row.upsert',
+            rev: row.revision,
+            row,
+          }).feed,
+        );
+      } finally {
+        rowsInFlight.current.delete(id);
+      }
     },
     [client, sessionId, update],
   );

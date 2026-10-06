@@ -24,10 +24,10 @@ import { Platform, Pressable, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { CollapsibleLayoutSyncContext } from '#primitives/collapsible';
 import { Text } from '#primitives/text';
-import type { FeedViewItem } from '../feed/feed-view';
+import { type FeedViewItem, feedItemKey } from '../feed/feed-view';
 import { listTestId } from '../lib/list-test-id';
 import { useWide } from '../navigation/use-wide';
-import { FeedItem, feedItemKey, isDrawnFeedItem } from './FeedItem';
+import { FeedItem, isDrawnFeedItem } from './FeedItem';
 import { Icon } from './Icon';
 import { LiveHeader } from './LiveHeader';
 import { ShimmerText } from './ShimmerText';
@@ -220,7 +220,8 @@ export function Feed({
         if (within) setUnread(false);
       });
   }, [ready]);
-  const lastKey = entries.at(-1) && entryKey(entries.at(-1) as FeedEntry);
+  const last = entries.at(-1);
+  const lastKey = last && entryKey(last);
   const seenLastKey = useRef(lastKey);
   useEffect(() => {
     if (lastKey === seenLastKey.current) return;

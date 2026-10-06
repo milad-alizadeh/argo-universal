@@ -5,7 +5,7 @@ import { View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { Composer, type ComposerDraft } from '#components/Composer';
 import { LoadError } from '#components/LoadError';
-import { Screen } from '#components/Screen';
+import { keyboardAvoiding, Screen } from '#components/Screen';
 import { StartSessionIn } from '#components/StartSessionIn';
 import { Text } from '#primitives/text';
 import { useConnectionState } from '../connection/context';
@@ -13,9 +13,6 @@ import { useImageDraft } from '../lib/use-image-draft';
 import { useNavigate } from '../navigation/context';
 import { useWide } from '../navigation/use-wide';
 import { useTRPC } from '../trpc/context';
-
-// Follows the keyboard frame by frame on both phones; `automaticOffset` measures the view on screen, below any header.
-const keyboardAvoiding = { flex: 1, minHeight: 0 };
 
 export interface NewSessionScreenProps {
   // The Project whose heading + opened this page.

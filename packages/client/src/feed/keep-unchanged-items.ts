@@ -1,4 +1,4 @@
-import type { FeedView, FeedViewItem } from './feed-view';
+import { type FeedView, type FeedViewItem, feedItemKey } from './feed-view';
 
 const sameList = <Value>(
   first: readonly Value[],
@@ -56,12 +56,6 @@ export function keepUnchangedItems(
   return { ...next, items: next.items.map(reuse) };
 }
 
-function itemKey(item: FeedViewItem): string {
-  const id =
-    item.type === 'group' || item.type === 'exploration'
-      ? item.id
-      : item.row.id;
-  return `${item.type}:${id}`;
-}
+const itemKey = (item: FeedViewItem) => `${item.type}:${feedItemKey(item)}`;
 
 const withKey = (item: FeedViewItem) => [itemKey(item), item] as const;

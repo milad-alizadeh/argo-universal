@@ -17,8 +17,6 @@ const sessionRecord = SessionInfo.pick({
   SessionSnapshot.pick({
     epoch: true,
     maxRevision: true,
-    title: true,
-    titleSource: true,
     checkout: true,
   }).shape,
 );

@@ -9,7 +9,7 @@ import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { Composer, type ComposerDraft } from '#components/Composer';
 import { Feed } from '#components/Feed';
 import { LoadError } from '#components/LoadError';
-import { Screen } from '#components/Screen';
+import { keyboardAvoiding, Screen } from '#components/Screen';
 import { ScrollFade } from '#components/ScrollFade';
 import {
   SessionHeader,
@@ -23,9 +23,6 @@ import { useNavigate } from '../navigation/context';
 import { useWide } from '../navigation/use-wide';
 import { useBlobUrl } from '../trpc/blob-url';
 import { useTRPC } from '../trpc/context';
-
-// Follows the keyboard frame by frame on both phones; `automaticOffset` measures the view on screen, below any header.
-const keyboardAvoiding = { flex: 1, minHeight: 0 };
 
 export interface SessionScreenProps {
   id: string;
@@ -124,7 +121,7 @@ function SessionView({ sessionId, now }: { sessionId: string; now?: number }) {
           liveHeader={snapshot.liveHeader}
           liveToolCall={liveToolCall(feed.rows, snapshot)}
           loadingOlder={loadingOlder}
-          onStartReached={() => void loadOlder()}
+          onStartReached={loadOlder}
           imageUrl={imageUrl}
           emptyDetail={snapshot.checkout.branch ?? undefined}
           now={now}

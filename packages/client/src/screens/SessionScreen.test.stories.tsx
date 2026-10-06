@@ -14,6 +14,7 @@ import {
   sessionNow,
 } from '../../mocks/session-screen-mock';
 import { SessionScreenPreview } from '../../mocks/session-screen-preview';
+import { settleViewport } from '../../mocks/settle-viewport';
 import { applyTheme } from '../lib/theme';
 import { SessionScreen } from './SessionScreen';
 
@@ -37,12 +38,8 @@ async function eachLayout(
     await assertion('phone');
     return;
   }
-  const { page } = await import('vitest/browser');
   for (const layout of ['phone', 'wide'] as const) {
-    await page.viewport(widths[layout], 844);
-    // Crossing the wide breakpoint swaps the header, so let React settle first.
-    for (let frame = 0; frame < 2; frame++)
-      await new Promise((resolve) => requestAnimationFrame(resolve));
+    await settleViewport(widths[layout]);
     for (const mode of ['light', 'dark'] as const) {
       applyTheme('default', mode);
       await assertion(layout);
@@ -146,11 +143,8 @@ export const PagesOlderRows: Story = {
 export const JumpsToLatest: Story = {
   parameters: { trpc: arrivingRowSessionMocks },
   play: async ({ canvas }) => {
-    // A phone's height, whatever size the story before it left behind.
-    if ('__vitest_browser__' in globalThis) {
-      const { page } = await import('vitest/browser');
-      await page.viewport(widths.phone, 844);
-    }
+    // At a phone's size the Feed overflows a screen, so the reader can scroll away from the end.
+    if ('__vitest_browser__' in globalThis) await settleViewport(widths.phone);
     const scroll = await canvas.findByTestId('feed-scroll');
     const feed = within(scroll);
     const atEnd = () =>

@@ -1,3 +1,4 @@
+import type { SessionStatus } from '@repo/contracts';
 import { Portal } from '@rn-primitives/portal';
 import { DotsThreeIcon, GitPullRequestIcon } from 'phosphor-react-native';
 import { View } from 'react-native';
@@ -16,7 +17,10 @@ import { StatusIndicator, statusLabels } from './StatusIndicator';
 export const detailHeaderHost = 'detail-header';
 export const detailActionsHost = 'detail-actions';
 
-export type SessionHeaderStatus = 'running' | 'needs_input' | 'idle';
+export type SessionHeaderStatus = Extract<
+  SessionStatus,
+  'running' | 'needs_input' | 'idle'
+>;
 
 export interface SessionHeaderProps {
   title: string;
