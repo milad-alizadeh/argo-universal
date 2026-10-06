@@ -2433,5 +2433,560 @@
       "maxRevision": 3,
       "epoch": 0
     }
+  },
+  {
+    "agent": "agent-2",
+    "recording": "command-outcomes",
+    "rows": [
+      {
+        "id": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+        "sessionId": "agent-2-command-outcomes",
+        "position": 0,
+        "revision": 13,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "agent_message",
+        "messageId": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+        "content": [
+          {
+            "type": "text",
+            "text": "I’ll run the two commands separately, as requested."
+          }
+        ]
+      },
+      {
+        "id": "exec-d1cd36f9-088c-4cc5-bc2a-9f1ae304fa01",
+        "sessionId": "agent-2-command-outcomes",
+        "position": 1,
+        "revision": 15,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "tool_call_update",
+        "toolCallId": "exec-d1cd36f9-088c-4cc5-bc2a-9f1ae304fa01",
+        "title": "/bin/zsh -lc \"printf 'Preparing checks\\\\nChecking files\\\\nhello Argo\\\\n M hello.txt\\\\n?? notes.md\\\\n'\"",
+        "name": "commandExecution",
+        "kind": "execute",
+        "status": "completed",
+        "content": [
+          {
+            "type": "terminal",
+            "command": "/bin/zsh -lc \"printf 'Preparing checks\\\\nChecking files\\\\nhello Argo\\\\n M hello.txt\\\\n?? notes.md\\\\n'\"",
+            "cwd": "/repo",
+            "output": "Preparing checks\nChecking files\nhello Argo\n M hello.txt\n?? notes.md\n",
+            "exitStatus": {
+              "exitCode": 0
+            }
+          }
+        ],
+        "rawInput": {
+          "command": "/bin/zsh -lc \"printf 'Preparing checks\\\\nChecking files\\\\nhello Argo\\\\n M hello.txt\\\\n?? notes.md\\\\n'\"",
+          "cwd": "/repo",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "printf 'Preparing checks\\nChecking files\\nhello Argo\\n M hello.txt\\n?? notes.md\\n'"
+            }
+          ]
+        },
+        "rawOutput": {
+          "durationMs": 0,
+          "exitCode": 0
+        },
+        "_meta": {
+          "argo": {
+            "commandActions": [
+              {
+                "type": "unknown",
+                "command": "printf 'Preparing checks\\nChecking files\\nhello Argo\\n M hello.txt\\n?? notes.md\\n'"
+              }
+            ],
+            "startedAt": 1791266386627,
+            "endedAt": 1791266386627
+          }
+        }
+      },
+      {
+        "id": "exec-112e4e7b-378b-486a-b2d7-37a5852fa056",
+        "sessionId": "agent-2-command-outcomes",
+        "position": 2,
+        "revision": 17,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "tool_call_update",
+        "toolCallId": "exec-112e4e7b-378b-486a-b2d7-37a5852fa056",
+        "title": "/bin/zsh -lc \"printf 'Starting checks\\\\nChecking input\\\\nMissing input\\\\nCommand failed\\\\nExit requested\\\\n'; exit 2\"",
+        "name": "commandExecution",
+        "kind": "execute",
+        "status": "failed",
+        "content": [
+          {
+            "type": "terminal",
+            "command": "/bin/zsh -lc \"printf 'Starting checks\\\\nChecking input\\\\nMissing input\\\\nCommand failed\\\\nExit requested\\\\n'; exit 2\"",
+            "cwd": "/repo",
+            "output": "Starting checks\nChecking input\nMissing input\nCommand failed\nExit requested\n",
+            "exitStatus": {
+              "exitCode": 2
+            }
+          }
+        ],
+        "rawInput": {
+          "command": "/bin/zsh -lc \"printf 'Starting checks\\\\nChecking input\\\\nMissing input\\\\nCommand failed\\\\nExit requested\\\\n'; exit 2\"",
+          "cwd": "/repo",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "printf 'Starting checks\\nChecking input\\nMissing input\\nCommand failed\\nExit requested\\n'; exit 2"
+            }
+          ]
+        },
+        "rawOutput": {
+          "durationMs": 0,
+          "exitCode": 2
+        },
+        "_meta": {
+          "argo": {
+            "commandActions": [
+              {
+                "type": "unknown",
+                "command": "printf 'Starting checks\\nChecking input\\nMissing input\\nCommand failed\\nExit requested\\n'; exit 2"
+              }
+            ],
+            "startedAt": 1791266389216,
+            "endedAt": 1791266389216
+          }
+        }
+      },
+      {
+        "id": "msg_01c48ae52f3f6e50016ac48e5742e887d282022b79d36f83e8",
+        "sessionId": "agent-2-command-outcomes",
+        "position": 3,
+        "revision": 20,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "agent_message",
+        "messageId": "msg_01c48ae52f3f6e50016ac48e5742e887d282022b79d36f83e8",
+        "content": [
+          {
+            "type": "text",
+            "text": "done"
+          }
+        ]
+      }
+    ],
+    "stream": [
+      {
+        "type": "row.upsert",
+        "rev": 1,
+        "row": {
+          "id": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+          "sessionId": "agent-2-command-outcomes",
+          "position": 0,
+          "revision": 1,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+          "content": [
+            {
+              "type": "text",
+              "text": ""
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.append",
+        "rev": 2,
+        "id": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+        "field": "content.0.text",
+        "off": 0,
+        "text": "I"
+      },
+      {
+        "type": "row.append",
+        "rev": 3,
+        "id": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+        "field": "content.0.text",
+        "off": 1,
+        "text": "’ll"
+      },
+      {
+        "type": "row.append",
+        "rev": 4,
+        "id": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+        "field": "content.0.text",
+        "off": 4,
+        "text": " run"
+      },
+      {
+        "type": "row.append",
+        "rev": 5,
+        "id": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+        "field": "content.0.text",
+        "off": 8,
+        "text": " the"
+      },
+      {
+        "type": "row.append",
+        "rev": 6,
+        "id": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+        "field": "content.0.text",
+        "off": 12,
+        "text": " two"
+      },
+      {
+        "type": "row.append",
+        "rev": 7,
+        "id": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+        "field": "content.0.text",
+        "off": 16,
+        "text": " commands"
+      },
+      {
+        "type": "row.append",
+        "rev": 8,
+        "id": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+        "field": "content.0.text",
+        "off": 25,
+        "text": " separately"
+      },
+      {
+        "type": "row.append",
+        "rev": 9,
+        "id": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+        "field": "content.0.text",
+        "off": 36,
+        "text": ","
+      },
+      {
+        "type": "row.append",
+        "rev": 10,
+        "id": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+        "field": "content.0.text",
+        "off": 37,
+        "text": " as"
+      },
+      {
+        "type": "row.append",
+        "rev": 11,
+        "id": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+        "field": "content.0.text",
+        "off": 40,
+        "text": " requested"
+      },
+      {
+        "type": "row.append",
+        "rev": 12,
+        "id": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+        "field": "content.0.text",
+        "off": 50,
+        "text": "."
+      },
+      {
+        "type": "row.upsert",
+        "rev": 13,
+        "row": {
+          "id": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+          "sessionId": "agent-2-command-outcomes",
+          "position": 0,
+          "revision": 13,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+          "content": [
+            {
+              "type": "text",
+              "text": "I’ll run the two commands separately, as requested."
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 14,
+        "row": {
+          "id": "exec-d1cd36f9-088c-4cc5-bc2a-9f1ae304fa01",
+          "sessionId": "agent-2-command-outcomes",
+          "position": 1,
+          "revision": 14,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "exec-d1cd36f9-088c-4cc5-bc2a-9f1ae304fa01",
+          "title": "/bin/zsh -lc \"printf 'Preparing checks\\\\nChecking files\\\\nhello Argo\\\\n M hello.txt\\\\n?? notes.md\\\\n'\"",
+          "name": "commandExecution",
+          "kind": "execute",
+          "status": "in_progress",
+          "content": [
+            {
+              "type": "terminal",
+              "command": "/bin/zsh -lc \"printf 'Preparing checks\\\\nChecking files\\\\nhello Argo\\\\n M hello.txt\\\\n?? notes.md\\\\n'\"",
+              "cwd": "/repo",
+              "output": ""
+            }
+          ],
+          "rawInput": {
+            "command": "/bin/zsh -lc \"printf 'Preparing checks\\\\nChecking files\\\\nhello Argo\\\\n M hello.txt\\\\n?? notes.md\\\\n'\"",
+            "cwd": "/repo",
+            "commandActions": [
+              {
+                "type": "unknown",
+                "command": "printf 'Preparing checks\\nChecking files\\nhello Argo\\n M hello.txt\\n?? notes.md\\n'"
+              }
+            ]
+          },
+          "rawOutput": {
+            "durationMs": null,
+            "exitCode": null
+          },
+          "_meta": {
+            "argo": {
+              "commandActions": [
+                {
+                  "type": "unknown",
+                  "command": "printf 'Preparing checks\\nChecking files\\nhello Argo\\n M hello.txt\\n?? notes.md\\n'"
+                }
+              ],
+              "startedAt": 1791266386627
+            }
+          }
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 15,
+        "row": {
+          "id": "exec-d1cd36f9-088c-4cc5-bc2a-9f1ae304fa01",
+          "sessionId": "agent-2-command-outcomes",
+          "position": 1,
+          "revision": 15,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "exec-d1cd36f9-088c-4cc5-bc2a-9f1ae304fa01",
+          "title": "/bin/zsh -lc \"printf 'Preparing checks\\\\nChecking files\\\\nhello Argo\\\\n M hello.txt\\\\n?? notes.md\\\\n'\"",
+          "name": "commandExecution",
+          "kind": "execute",
+          "status": "completed",
+          "content": [
+            {
+              "type": "terminal",
+              "command": "/bin/zsh -lc \"printf 'Preparing checks\\\\nChecking files\\\\nhello Argo\\\\n M hello.txt\\\\n?? notes.md\\\\n'\"",
+              "cwd": "/repo",
+              "output": "Preparing checks\nChecking files\nhello Argo\n M hello.txt\n?? notes.md\n",
+              "exitStatus": {
+                "exitCode": 0
+              }
+            }
+          ],
+          "rawInput": {
+            "command": "/bin/zsh -lc \"printf 'Preparing checks\\\\nChecking files\\\\nhello Argo\\\\n M hello.txt\\\\n?? notes.md\\\\n'\"",
+            "cwd": "/repo",
+            "commandActions": [
+              {
+                "type": "unknown",
+                "command": "printf 'Preparing checks\\nChecking files\\nhello Argo\\n M hello.txt\\n?? notes.md\\n'"
+              }
+            ]
+          },
+          "rawOutput": {
+            "durationMs": 0,
+            "exitCode": 0
+          },
+          "_meta": {
+            "argo": {
+              "commandActions": [
+                {
+                  "type": "unknown",
+                  "command": "printf 'Preparing checks\\nChecking files\\nhello Argo\\n M hello.txt\\n?? notes.md\\n'"
+                }
+              ],
+              "startedAt": 1791266386627,
+              "endedAt": 1791266386627
+            }
+          }
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 16,
+        "row": {
+          "id": "exec-112e4e7b-378b-486a-b2d7-37a5852fa056",
+          "sessionId": "agent-2-command-outcomes",
+          "position": 2,
+          "revision": 16,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "exec-112e4e7b-378b-486a-b2d7-37a5852fa056",
+          "title": "/bin/zsh -lc \"printf 'Starting checks\\\\nChecking input\\\\nMissing input\\\\nCommand failed\\\\nExit requested\\\\n'; exit 2\"",
+          "name": "commandExecution",
+          "kind": "execute",
+          "status": "in_progress",
+          "content": [
+            {
+              "type": "terminal",
+              "command": "/bin/zsh -lc \"printf 'Starting checks\\\\nChecking input\\\\nMissing input\\\\nCommand failed\\\\nExit requested\\\\n'; exit 2\"",
+              "cwd": "/repo",
+              "output": ""
+            }
+          ],
+          "rawInput": {
+            "command": "/bin/zsh -lc \"printf 'Starting checks\\\\nChecking input\\\\nMissing input\\\\nCommand failed\\\\nExit requested\\\\n'; exit 2\"",
+            "cwd": "/repo",
+            "commandActions": [
+              {
+                "type": "unknown",
+                "command": "printf 'Starting checks\\nChecking input\\nMissing input\\nCommand failed\\nExit requested\\n'; exit 2"
+              }
+            ]
+          },
+          "rawOutput": {
+            "durationMs": null,
+            "exitCode": null
+          },
+          "_meta": {
+            "argo": {
+              "commandActions": [
+                {
+                  "type": "unknown",
+                  "command": "printf 'Starting checks\\nChecking input\\nMissing input\\nCommand failed\\nExit requested\\n'; exit 2"
+                }
+              ],
+              "startedAt": 1791266389216
+            }
+          }
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 17,
+        "row": {
+          "id": "exec-112e4e7b-378b-486a-b2d7-37a5852fa056",
+          "sessionId": "agent-2-command-outcomes",
+          "position": 2,
+          "revision": 17,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "exec-112e4e7b-378b-486a-b2d7-37a5852fa056",
+          "title": "/bin/zsh -lc \"printf 'Starting checks\\\\nChecking input\\\\nMissing input\\\\nCommand failed\\\\nExit requested\\\\n'; exit 2\"",
+          "name": "commandExecution",
+          "kind": "execute",
+          "status": "failed",
+          "content": [
+            {
+              "type": "terminal",
+              "command": "/bin/zsh -lc \"printf 'Starting checks\\\\nChecking input\\\\nMissing input\\\\nCommand failed\\\\nExit requested\\\\n'; exit 2\"",
+              "cwd": "/repo",
+              "output": "Starting checks\nChecking input\nMissing input\nCommand failed\nExit requested\n",
+              "exitStatus": {
+                "exitCode": 2
+              }
+            }
+          ],
+          "rawInput": {
+            "command": "/bin/zsh -lc \"printf 'Starting checks\\\\nChecking input\\\\nMissing input\\\\nCommand failed\\\\nExit requested\\\\n'; exit 2\"",
+            "cwd": "/repo",
+            "commandActions": [
+              {
+                "type": "unknown",
+                "command": "printf 'Starting checks\\nChecking input\\nMissing input\\nCommand failed\\nExit requested\\n'; exit 2"
+              }
+            ]
+          },
+          "rawOutput": {
+            "durationMs": 0,
+            "exitCode": 2
+          },
+          "_meta": {
+            "argo": {
+              "commandActions": [
+                {
+                  "type": "unknown",
+                  "command": "printf 'Starting checks\\nChecking input\\nMissing input\\nCommand failed\\nExit requested\\n'; exit 2"
+                }
+              ],
+              "startedAt": 1791266389216,
+              "endedAt": 1791266389216
+            }
+          }
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 18,
+        "row": {
+          "id": "msg_01c48ae52f3f6e50016ac48e5742e887d282022b79d36f83e8",
+          "sessionId": "agent-2-command-outcomes",
+          "position": 3,
+          "revision": 18,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_01c48ae52f3f6e50016ac48e5742e887d282022b79d36f83e8",
+          "content": [
+            {
+              "type": "text",
+              "text": ""
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.append",
+        "rev": 19,
+        "id": "msg_01c48ae52f3f6e50016ac48e5742e887d282022b79d36f83e8",
+        "field": "content.0.text",
+        "off": 0,
+        "text": "done"
+      },
+      {
+        "type": "row.upsert",
+        "rev": 20,
+        "row": {
+          "id": "msg_01c48ae52f3f6e50016ac48e5742e887d282022b79d36f83e8",
+          "sessionId": "agent-2-command-outcomes",
+          "position": 3,
+          "revision": 20,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_01c48ae52f3f6e50016ac48e5742e887d282022b79d36f83e8",
+          "content": [
+            {
+              "type": "text",
+              "text": "done"
+            }
+          ]
+        }
+      },
+      {
+        "type": "snapshot",
+        "snapshot": {
+          "state": "idle",
+          "liveHeader": null,
+          "activeTurnId": null,
+          "usage": null,
+          "pendingPermission": null,
+          "pendingElicitation": null,
+          "configOptions": [],
+          "maxRevision": 20,
+          "epoch": 0
+        }
+      }
+    ],
+    "snapshot": {
+      "state": "idle",
+      "liveHeader": null,
+      "activeTurnId": null,
+      "usage": null,
+      "pendingPermission": null,
+      "pendingElicitation": null,
+      "configOptions": [],
+      "maxRevision": 20,
+      "epoch": 0
+    }
   }
 ]

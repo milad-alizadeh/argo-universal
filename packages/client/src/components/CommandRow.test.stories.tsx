@@ -7,6 +7,7 @@ import {
   failedCommand,
   longOutputCommand,
   runningCommand,
+  stoppedCommand,
 } from '../../mocks/tool-call-mock';
 import { CommandRow } from './CommandRow';
 
@@ -35,6 +36,7 @@ export const Completed: Story = {
         canvas.getByText('$ cat hello.txt && git status --short'),
       ).toBeVisible();
       await expect(canvas.getByText('Completed')).toBeVisible();
+      await expect(canvas.getByText(completedCommand.title)).toBeVisible();
       await userEvent.click(row);
       await expect(row).toHaveAttribute('aria-expanded', 'false');
     }
@@ -49,7 +51,9 @@ export const OutputDisclosure: Story = {
       await page.viewport(width, 844);
       const row = canvas.getByRole('button');
       await expect(
-        canvas.queryByText(/Preparing checks/),
+        canvas.queryByText(/^Preparing checks\nChecking files/, {
+          normalizer: (value) => value,
+        }),
       ).not.toBeInTheDocument();
       await expect(canvas.getByText('+2 lines')).toBeVisible();
       await expect(
@@ -58,7 +62,11 @@ export const OutputDisclosure: Story = {
         }),
       ).toBeVisible();
       await userEvent.click(row);
-      await expect(canvas.getByText(/Preparing checks/)).toBeVisible();
+      await expect(
+        canvas.getByText(/^Preparing checks\nChecking files/, {
+          normalizer: (value) => value,
+        }),
+      ).toBeVisible();
       await expect(canvas.getByText('Exit 0')).toBeVisible();
       await userEvent.click(row);
     }
@@ -71,9 +79,9 @@ export const Failed: Story = {
     const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
-      const failure = canvas.getByText('exit 2 · 0.3s');
+      const failure = canvas.getByText('exit 2 · 0s');
       await expect(failure).toBeVisible();
-      const label = canvas.getByText('Ran cat hello.txt && git status --short');
+      const label = canvas.getByText(/^Ran /);
       await expect(getComputedStyle(failure).color).not.toBe(
         getComputedStyle(label).color,
       );
@@ -138,6 +146,26 @@ export const AgentParity: Story = {
   },
 };
 
+export const Stopped: Story = {
+  args: { row: stoppedCommand },
+  play: async ({ canvas, userEvent }) => {
+    const { page } = await import('vitest/browser');
+    for (const width of [390, 1440]) {
+      await page.viewport(width, 844);
+      const row = canvas.getByRole('button', {
+        name: 'Stopped sleep 20 && echo done',
+      });
+      await expect(row).toBeVisible();
+      await expect(canvas.getByText('after 1.5s')).toBeVisible();
+      await userEvent.click(row);
+      await expect(canvas.getByText('Stopped', { exact: true })).toBeVisible();
+      await expect(canvas.queryByText('Completed')).not.toBeInTheDocument();
+      await expect(canvas.getByText(stoppedCommand.title)).toBeVisible();
+      await userEvent.click(row);
+    }
+  },
+};
+
 export const CompletedDark: Story = { ...Completed, globals: { mode: 'dark' } };
 export const OutputDisclosureDark: Story = {
   ...OutputDisclosure,
@@ -149,3 +177,4 @@ export const AgentParityDark: Story = {
   ...AgentParity,
   globals: { mode: 'dark' },
 };
+export const StoppedDark: Story = { ...Stopped, globals: { mode: 'dark' } };

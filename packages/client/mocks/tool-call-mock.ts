@@ -21,30 +21,29 @@ export const commandMocks = recordedFeedMocks
 export const completedCommand =
   commandMocks[0]?.row ?? missingRecordedState('a command');
 
-// Test-only variants retain the recorded command; terminal outcomes exercise missing capture states.
-export const longOutputCommand: ToolCallUpdate = {
-  ...completedCommand,
-  content: completedCommand.content.map((content) =>
-    content.type === 'terminal'
-      ? {
-          ...content,
-          output:
-            'Preparing checks\nChecking files\nhello Argo\n M hello.txt\n?? notes.md\n',
-          exitStatus: { exitCode: 0 },
-        }
-      : content,
-  ),
-};
+const commandOutcomes = recordedFeedMocks
+  .filter((mock) => mock.recording === 'command-outcomes')
+  .flatMap((mock) => mock.rows)
+  .filter(
+    (row): row is ToolCallUpdate => row.sessionUpdate === 'tool_call_update',
+  );
 
-export const failedCommand: ToolCallUpdate = {
-  ...longOutputCommand,
-  status: 'failed',
-  content: longOutputCommand.content.map((content) =>
-    content.type === 'terminal'
-      ? { ...content, exitStatus: { exitCode: 2 } }
-      : content,
-  ),
-};
+export const longOutputCommand =
+  commandOutcomes.find((row) => row.status === 'completed') ??
+  missingRecordedState('long output');
+
+export const failedCommand =
+  commandOutcomes.find((row) => row.status === 'failed') ??
+  missingRecordedState('a failed command');
+
+export const stoppedCommand =
+  recordedFeedMocks
+    .filter((mock) => mock.recording === 'interrupt')
+    .flatMap((mock) => mock.rows)
+    .find(
+      (row): row is ToolCallUpdate =>
+        row.sessionUpdate === 'tool_call_update' && row.status === 'cancelled',
+    ) ?? missingRecordedState('a stopped command');
 
 export const runningCommand =
   recordedFeedMocks

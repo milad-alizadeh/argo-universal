@@ -27,7 +27,6 @@ export interface FeedDisclosureProps {
   running?: boolean;
   failed?: boolean;
   initialOpen?: boolean;
-  description?: string;
   trailing?: ReactNode;
   preview?: ReactNode;
   children: ReactNode;
@@ -39,7 +38,6 @@ export function FeedDisclosure({
   running = false,
   failed = false,
   initialOpen = false,
-  description,
   trailing,
   preview,
   children,
@@ -65,7 +63,6 @@ export function FeedDisclosure({
     <Collapsible open={open} onOpenChange={setOpen} className="w-full gap-2">
       <CollapsibleTrigger
         accessibilityLabel={label}
-        accessibilityHint={description}
         className="min-h-5 flex-row items-center gap-1.5"
       >
         <Animated.View

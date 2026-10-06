@@ -66,6 +66,12 @@
 
 @layer theme {
   :root {
+    @variant ios {
+      --font-mono: Menlo;
+    }
+    @variant android {
+      --font-mono: monospace;
+    }
     @variant light {
       --color-background: var(--color-white);
       --color-foreground: var(--color-neutral-950);

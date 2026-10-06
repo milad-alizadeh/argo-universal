@@ -17,6 +17,7 @@ export interface CommandRowProps {
 
 export function CommandRow({ row, initialOpen, now }: CommandRowProps) {
   const running = row.status === 'pending' || row.status === 'in_progress';
+  const stopped = row.status === 'cancelled';
   const [clock, setClock] = useState(Date.now);
   useEffect(() => {
     if (!running || now !== undefined) return;
@@ -35,13 +36,18 @@ export function CommandRow({ row, initialOpen, now }: CommandRowProps) {
   const failed =
     row.status === 'failed' || (exitCode !== undefined && exitCode !== 0);
   const failureStatus = exitCode !== undefined ? `exit ${exitCode}` : 'failed';
-  const status = failed
-    ? [failureStatus, duration].filter(Boolean).join(' · ')
-    : duration;
+  let status = duration;
+  if (stopped && duration) status = `after ${duration}`;
+  if (failed) status = [failureStatus, duration].filter(Boolean).join(' · ');
   let outcome = 'Completed';
+  if (stopped) outcome = 'Stopped';
+  if (failed) outcome = 'Failed';
   if (terminal.exitStatus?.exitCode !== undefined)
     outcome = `Exit ${terminal.exitStatus.exitCode}`;
   if (running) outcome = 'Running';
+  let action = 'Ran';
+  if (stopped) action = 'Stopped';
+  if (running) action = 'Running';
   const outputLines = terminal.output
     .replace(/\r\n/g, '\n')
     .replace(/\n$/, '')
@@ -49,8 +55,7 @@ export function CommandRow({ row, initialOpen, now }: CommandRowProps) {
   const hiddenLines = Math.max(0, outputLines.length - 3);
   return (
     <FeedDisclosure
-      label={`${running ? 'Running' : 'Ran'} ${terminal.command}`}
-      description={row.title}
+      label={`${action} ${terminal.command}`}
       icon={TerminalWindowIcon}
       failed={failed}
       running={running}
@@ -70,15 +75,10 @@ export function CommandRow({ row, initialOpen, now }: CommandRowProps) {
       preview={
         Boolean(terminal.output) && (
           <View className="overflow-hidden rounded-xl border border-border bg-sidebar">
-            <ScrollView
-              horizontal
-              className="w-full"
-              contentContainerClassName="px-3 py-2"
-            >
-              <Text className="font-mono text-xs leading-5 text-foreground">
-                {outputLines.slice(-3).join('\n')}
-              </Text>
-            </ScrollView>
+            <CommandOutput
+              output={outputLines.slice(-3).join('\n')}
+              running={running}
+            />
             {hiddenLines > 0 && (
               <Text className="border-t border-border px-3 py-0.5 text-sm leading-5 text-muted-foreground">{`+${hiddenLines} lines`}</Text>
             )}
@@ -86,37 +86,67 @@ export function CommandRow({ row, initialOpen, now }: CommandRowProps) {
         )
       }
     >
-      <View className="overflow-hidden rounded-xl border border-border bg-sidebar">
-        <Text className="border-b border-border px-3 py-2 font-mono text-xs leading-5 text-foreground">{`$ ${terminal.command}`}</Text>
-        <ScrollView
-          horizontal
-          className="w-full"
-          contentContainerClassName="px-3 py-2"
-        >
-          <Text className="font-mono text-xs leading-5 text-foreground">
-            {terminal.output}
+      <View className="gap-2">
+        {row.title !== terminal.command && (
+          <Text className="text-sm leading-5 text-muted-foreground">
+            {row.title}
           </Text>
-        </ScrollView>
-        <View className="flex-row items-center gap-1.5 px-3 pb-2">
-          {!running && (
-            <Icon
-              as={failed ? XIcon : CheckIcon}
+        )}
+        <View className="overflow-hidden rounded-xl border border-border bg-sidebar">
+          <ScrollView
+            horizontal
+            className="w-full border-b border-border"
+            contentContainerClassName="px-3 py-2"
+          >
+            <Text className="font-mono text-xs leading-5 text-foreground">{`$ ${terminal.command}`}</Text>
+          </ScrollView>
+          <CommandOutput output={terminal.output} running={running} />
+          <View className="flex-row items-center gap-1.5 px-3 pb-2">
+            {!running && !stopped && (
+              <Icon
+                as={failed ? XIcon : CheckIcon}
+                className={cn(
+                  'size-3.5 text-success',
+                  failed && 'text-destructive',
+                )}
+              />
+            )}
+            <Text
               className={cn(
-                'size-3.5 text-success',
+                'text-sm leading-5 text-muted-foreground',
                 failed && 'text-destructive',
               )}
-            />
-          )}
-          <Text
-            className={cn(
-              'text-sm leading-5 text-muted-foreground',
-              failed && 'text-destructive',
-            )}
-          >
-            {outcome}
-          </Text>
+            >
+              {outcome}
+            </Text>
+          </View>
         </View>
       </View>
     </FeedDisclosure>
+  );
+}
+
+function CommandOutput({
+  output,
+  running,
+}: {
+  output: string;
+  running: boolean;
+}) {
+  return (
+    <ScrollView
+      horizontal
+      className="w-full"
+      contentContainerClassName="px-3 py-2"
+    >
+      <Text
+        className={cn(
+          'font-mono text-xs leading-5 text-foreground',
+          running && 'text-muted-foreground',
+        )}
+      >
+        {output}
+      </Text>
+    </ScrollView>
   );
 }

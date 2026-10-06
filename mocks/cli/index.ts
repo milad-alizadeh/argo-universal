@@ -19,7 +19,7 @@ export interface MockCli {
   // Writes the mock CLI into `directory` under the name the adapter runs from PATH.
   write: (directory: string, options: MockCliOptions) => Promise<string>;
   // Recordings of a Turn with edits and commands, and of a Turn cancelled during a command.
-  recordings: { turn: string; cancelledTurn: string };
+  recordings: { turn: string; cancelledTurn: string; commandOutcomes?: string };
   apiKeyVariables?: string[];
   connectionFailures?: {
     environment: Record<string, string>;
@@ -46,7 +46,11 @@ export const mockClis: Record<string, MockCli> = {
         message: 'Sign in to Codex with ChatGPT',
       },
     ],
-    recordings: { turn: 'edit-and-command', cancelledTurn: 'interrupt' },
+    recordings: {
+      turn: 'edit-and-command',
+      cancelledTurn: 'interrupt',
+      commandOutcomes: 'command-outcomes',
+    },
     writeTranscript: writeCodexTranscript,
   },
   claude: {
