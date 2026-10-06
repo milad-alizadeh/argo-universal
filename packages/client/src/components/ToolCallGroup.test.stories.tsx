@@ -64,9 +64,9 @@ export const Running: Story = {
       });
       await expect(group).toBeVisible();
       await expect(canvas.queryByRole('progressbar')).not.toBeInTheDocument();
-      await expectShimmerMovement(group);
+      await expectShimmerMovement(group, '23s');
       await expect(group.querySelectorAll('svg')).toHaveLength(2);
-      await expect(within(group).getByText('23s')).toBeVisible();
+      await expect(group).toHaveTextContent('short git status 23s');
       await userEvent.click(group);
       await expect(
         canvas.getByRole('button', { name: 'Read /project/hello.txt' }),
@@ -151,7 +151,7 @@ export const RunningRead: Story = {
       const header = canvas.getByRole('button', {
         name: 'Read /project/hello.txt',
       });
-      await expect(within(header).getByText('23s')).toBeVisible();
+      await expect(header).toHaveTextContent('Read /project/hello.txt 23s');
       await userEvent.click(header);
       await expect(
         canvas.getAllByRole('button', { name: 'Read /project/hello.txt' }),

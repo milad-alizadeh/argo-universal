@@ -29,7 +29,7 @@ export const Completed: Story = {
         name: 'Show hello.txt and short git status',
       });
       await expect(row).toBeVisible();
-      await expect(canvas.getByText('0.3s')).toBeVisible();
+      await expect(row).toHaveTextContent('short git status 0.3s');
       await expect(canvas.queryByText('Shell')).not.toBeInTheDocument();
       await expect(
         canvas.queryByText('$ cat hello.txt && git status --short', {
@@ -49,7 +49,7 @@ export const Completed: Story = {
         }),
       ).toBeVisible();
       await expect(canvas.getByText('Completed')).toBeVisible();
-      await expect(canvas.getByText(completedCommand.title)).toBeVisible();
+      await expect(row).toHaveTextContent(completedCommand.title);
       await userEvent.click(row);
       await expect(row).toHaveAttribute('aria-expanded', 'false');
       await waitFor(() =>
@@ -100,18 +100,14 @@ export const Failed: Story = {
     const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
-      const failure = canvas.getByText('exit 2 · 0s');
+      const failure = canvas.getByText('Ran command exit 2 · 0s');
       await expect(failure).toBeVisible();
-      const label = canvas.getByText('Ran command');
-      await expect(getComputedStyle(failure).color).not.toBe(
-        getComputedStyle(label).color,
-      );
       await userEvent.click(
         canvas.getByRole('button', { name: 'Ran command' }),
       );
       const exit = canvas.getByText('Exit 2');
       await expect(exit).toBeVisible();
-      await expect(getComputedStyle(exit).color).toBe(
+      await expect(getComputedStyle(exit).color).not.toBe(
         getComputedStyle(failure).color,
       );
       await userEvent.click(
@@ -131,7 +127,7 @@ export const Running: Story = {
         name: 'Show hello.txt and short git status',
       });
       await expect(row).toBeVisible();
-      await expect(canvas.getByText('23s')).toBeVisible();
+      await expect(row).toHaveTextContent('short git status 23s');
       await expect(canvas.queryByText('Shell')).not.toBeInTheDocument();
       await expect(
         canvas.queryByText('$ cat hello.txt && git status --short', {
@@ -142,7 +138,7 @@ export const Running: Story = {
         'cat hello.txt && git status --short',
       );
       await expect(canvas.queryByRole('progressbar')).not.toBeInTheDocument();
-      await expectShimmerMovement(row);
+      await expectShimmerMovement(row, '23s');
       await userEvent.click(row);
       await expect(canvas.getByText('Shell')).toBeVisible();
       await expect(
@@ -196,11 +192,11 @@ export const Stopped: Story = {
         name: 'Wait 20 seconds then print done',
       });
       await expect(row).toBeVisible();
-      await expect(canvas.getByText('after 1.5s')).toBeVisible();
+      await expect(row).toHaveTextContent('done after 1.5s');
       await userEvent.click(row);
       await expect(canvas.getByText('Stopped', { exact: true })).toBeVisible();
       await expect(canvas.queryByText('Completed')).not.toBeInTheDocument();
-      await expect(canvas.getByText(stoppedCommand.title)).toBeVisible();
+      await expect(row).toHaveTextContent(stoppedCommand.title);
       await userEvent.click(row);
       await waitFor(() =>
         expect(canvas.queryByText('Shell')).not.toBeInTheDocument(),

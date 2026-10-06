@@ -1,7 +1,6 @@
 import { BookOpenIcon } from 'phosphor-react-native/src/icons/BookOpen';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { Text } from '#primitives/text';
 import type { FeedActivity, FeedGroup } from '../feed/feed-view';
 import { toolCallTitle } from '../feed/tool-call-title';
 import { useToolCallDuration } from '../feed/use-tool-call-duration';
@@ -56,14 +55,7 @@ export function ToolCallGroup({
       icon={running && latest ? toolCallIcon(latest) : BookOpenIcon}
       running={running}
       initialOpen={initialOpen}
-      trailing={
-        running &&
-        duration && (
-          <Text className="shrink-0 text-sm leading-5 text-muted-foreground">
-            {duration}
-          </Text>
-        )
-      }
+      trailing={running ? duration : undefined}
     >
       <View className="gap-2 pb-1">
         {items.map((activity) => (

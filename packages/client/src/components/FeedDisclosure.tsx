@@ -24,7 +24,7 @@ export interface FeedDisclosureProps {
   running?: boolean;
   failed?: boolean;
   initialOpen?: boolean;
-  trailing?: ReactNode;
+  trailing?: string;
   children: ReactNode;
 }
 
@@ -39,6 +39,7 @@ export function FeedDisclosure({
 }: FeedDisclosureProps) {
   const [open, setOpen] = useState(initialOpen);
   const [hovered, setHovered] = useState(false);
+  const title = trailing ? `${label} ${trailing}` : label;
   const rotation = useDerivedValue(
     () =>
       withTiming(open ? 90 : 0, {
@@ -67,15 +68,15 @@ export function FeedDisclosure({
               as={icon}
               className={cn(
                 'size-4 text-muted-foreground',
-                hovered && 'text-foreground',
                 failed && 'text-destructive',
+                hovered && 'text-foreground',
               )}
             />
           </View>
           <View className="min-w-0 flex-1 flex-row items-center gap-1">
             {running ? (
               <ShimmerText
-                text={label}
+                text={title}
                 emphasized={hovered}
                 className="min-w-0 shrink text-sm leading-5 text-foreground"
               />
@@ -88,10 +89,9 @@ export function FeedDisclosure({
                   hovered && 'text-foreground',
                 )}
               >
-                {label}
+                {title}
               </Text>
             )}
-            {trailing}
             <Animated.View
               style={style}
               className="size-3.5 shrink-0 items-center justify-center"

@@ -54,18 +54,7 @@ export function CommandRow({ row, initialOpen, now }: CommandRowProps) {
       failed={failed}
       running={running}
       initialOpen={initialOpen}
-      trailing={
-        status && (
-          <Text
-            className={cn(
-              'shrink-0 text-sm leading-5 text-muted-foreground',
-              failed && 'text-destructive',
-            )}
-          >
-            {status}
-          </Text>
-        )
-      }
+      trailing={status}
     >
       <FeedCodeBlock
         language="Shell"
@@ -83,7 +72,7 @@ export function CommandRow({ row, initialOpen, now }: CommandRowProps) {
             )}
             <Text
               className={cn(
-                'text-sm leading-5 text-muted-foreground',
+                'font-mono text-xs leading-5 text-muted-foreground',
                 failed && 'text-destructive',
               )}
             >
