@@ -13,6 +13,7 @@ out/
 coverage/
 
 # Local visual verification evidence
+/e2e/composer/
 /e2e/**/screenshots/
 /e2e/**/audits/
 
