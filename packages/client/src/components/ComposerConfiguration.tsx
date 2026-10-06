@@ -793,7 +793,7 @@ export function ComposerModeControl({
   );
 }
 
-function CheckoutContents({
+export function CheckoutContents({
   checkout,
   disabled,
   close,

@@ -7,6 +7,7 @@ const systemInfo = {
   version: '1.2.3',
   startedAt: '2026-10-03T00:00:00.000Z',
   pid: 4242,
+  name: "Milad's Mac mini",
 };
 
 describe('trpcMockLink', () => {

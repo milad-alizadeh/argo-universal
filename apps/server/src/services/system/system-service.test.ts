@@ -12,11 +12,12 @@ describe('system service', () => {
     vi.useRealTimers();
   });
 
-  it('reports the version, start time, and process id', () => {
+  it('reports the version, start time, process id, and computer name', () => {
     expect(createSystemService(deps).info()).toEqual({
       version: '1.2.3',
       startedAt: '2026-10-03T00:00:00.000Z',
       pid: process.pid,
+      name: expect.stringMatching(/\S/),
     });
   });
 

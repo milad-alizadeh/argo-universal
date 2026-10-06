@@ -1,8 +1,10 @@
 import {
   type AgentsListOutput,
   type ProjectsBranchesOutput,
+  type ProjectsListOutput,
   SessionConfigOption,
   SessionNewInput,
+  type SystemInfo,
 } from '@repo/contracts';
 import { z } from 'zod';
 import recordedOptions from './new-session-options.json';
@@ -82,3 +84,22 @@ export const newSessionInputs: SessionNewInput[] = newSessionOptions.map(
     prompt,
   }),
 );
+
+// A second Project, kept on its main checkout, for the Project picker.
+export const newSessionProjects: ProjectsListOutput = [
+  ...projectsList,
+  {
+    id: 'project-2',
+    name: 'Landing Page',
+    path: '/projects/landing-page',
+    createdAt: (projectsList[0]?.createdAt ?? 0) + 1,
+    checkoutChoice: { type: 'main' },
+  },
+];
+
+export const serverInfo: SystemInfo = {
+  version: '1.2.3',
+  startedAt: '2026-10-03T09:00:00.000Z',
+  pid: 4242,
+  name: "Milad's Mac mini",
+};

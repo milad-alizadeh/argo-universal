@@ -2,12 +2,14 @@ import {
   newSessionBranches,
   newSessionCatalogs,
   newSessionInputs,
-  projectsList,
+  newSessionProjects,
+  serverInfo,
 } from '@repo/api/mocks';
-import type { Fixtures } from './trpc-mock-link';
+import { type Fixtures, fails, pending } from './trpc-mock-link';
 
 export const newSessionMocks = {
-  'projects.list': () => projectsList,
+  'system.info': () => serverInfo,
+  'projects.list': () => newSessionProjects,
   'projects.branches': () => newSessionBranches,
   'agents.list': () => newSessionCatalogs.bothAvailable,
   'blob.upload': () => {
@@ -28,4 +30,16 @@ export const notInstalledNewSessionMocks = {
 export const notSignedInNewSessionMocks = {
   ...newSessionMocks,
   'agents.list': () => newSessionCatalogs.oneNotSignedIn,
+} satisfies Fixtures;
+
+export const sendingNewSessionMocks = {
+  ...newSessionMocks,
+  'session.new': pending(),
+} satisfies Fixtures;
+
+export const failedStartMessage = 'The Agent exited before its first Turn.';
+
+export const failedStartNewSessionMocks = {
+  ...newSessionMocks,
+  'session.new': fails(failedStartMessage),
 } satisfies Fixtures;

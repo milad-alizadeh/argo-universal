@@ -15,6 +15,7 @@ const services = unreachableServices({
       version: '1.2.3',
       startedAt: '2026-10-03T00:00:00.000Z',
       pid,
+      name: "Milad's Mac mini",
     }),
     clock: async function* () {},
   },

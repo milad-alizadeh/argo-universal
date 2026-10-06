@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { View } from 'react-native';
 import { useTRPC } from '../trpc/context';
-import { NewSessionScreen } from './PlaceholderScreens';
+import { NewSessionScreen } from './NewSessionScreen';
 import { SessionScreen } from './SessionScreen';
 
 // The wide window's `/`: the first active Session, or New Session when there is none.

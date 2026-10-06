@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { newSessionMocks } from '../../mocks/new-session-mock';
 import {
   emptySessionListMocks,
   sessionListMocks,
@@ -15,7 +16,7 @@ type Story = StoryObj<typeof meta>;
 
 export const WithSessions: Story = {};
 export const WithoutSessions: Story = {
-  parameters: { trpc: emptySessionListMocks },
+  parameters: { trpc: { ...emptySessionListMocks, ...newSessionMocks } },
 };
 export const Loading: Story = {
   parameters: { trpc: { ...sessionListMocks, 'session.list': pending() } },

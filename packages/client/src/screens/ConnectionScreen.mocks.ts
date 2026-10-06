@@ -11,6 +11,7 @@ export const connectionScreenMocks = {
     version: '1.2.3',
     startedAt: '2026-10-03T09:00:00.000Z',
     pid: 4242,
+    name: "Milad's Mac mini",
   }),
   'system.clock': async function* (_input, signal) {
     for (let second = 0; !signal.aborted; second++) {

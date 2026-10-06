@@ -1,10 +1,6 @@
 import { View } from 'react-native';
 import { Text } from '#primitives/text';
 
-export function NewSessionScreen() {
-  return <Placeholder title="New Session" description="Start new work here." />;
-}
-
 export function IssuesScreen() {
   return <Placeholder title="Issues" description="Issues will appear here." />;
 }

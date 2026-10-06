@@ -123,6 +123,7 @@ describe('http server', () => {
           version: '1.2.3',
           startedAt: '2026-10-03T00:00:00.000Z',
           pid: process.pid,
+          name: expect.any(String),
         },
       },
     });
