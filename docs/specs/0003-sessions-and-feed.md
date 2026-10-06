@@ -53,7 +53,7 @@ On a phone, the app uses a drawer of sections, and detail screens push full scre
 18. As a developer, I want Agent messages shown in full, so that I can read every answer.
 19. As a developer, I want Agent thoughts collapsed into "Thinking" and then "Thought for 4s", so that reasoning doesn't bury the answer.
 20. As a developer, I want consecutive Tool calls merged into one group with a short title, so that a burst of work reads as one step.
-21. As a developer, I want reads, searches, listings and read-only shell commands merged into one "Explored" line, so that looking around takes one line.
+21. As a developer, I want reads, searches and listings identified by the Agent's metadata merged into one "Explored" line. Shell commands without that metadata keep their own rows and the Agent's description.
 22. As a developer, I want each command row to show the command, its duration and its exit code in red on failure, so that I see what failed at a glance.
 23. As a developer, I want a collapsed command row to show the last three lines of output, so that I get the gist without expanding it.
 24. As a developer, I want each edit row to show the path and the lines added and removed, so that I see the size of a change.
@@ -250,7 +250,7 @@ These come from the research note's proposed model.
 
 Fields that ACP lacks go in `_meta.argo` (ADR 0006):
 
-- `tool_call_update`: `commandActions[]`, each `{type: 'read' | 'search' | 'list' | 'unknown', command, path?, query?}`, plus `startedAt`, `endedAt` and `shellId?`. Codex sends command actions. The adapters for other Agents fill them with one shared command parser in the agents package, which names no vendor.
+- `tool_call_update`: optional `commandActions[]`, each `{type: 'read' | 'search' | 'list' | 'unknown', command, path?, query?}`, plus `startedAt`, `endedAt` and `shellId?`. Adapters map command actions only when the Agent supplies them. Otherwise, they omit `commandActions`. Keep the Agent's tool description as the title. Do not parse shell command text or descriptions to infer action types or paths.
 - `subagent_update`: `toolCallId`, `action` (`spawn`, `message`, `wait` or `close`), `prompt` and `result`.
 - `plan_update` of type `markdown` that was proposed: `proposalOutcome` (`approved` or `kept_planning`) once answered.
 - A new kind, `session_message`, is the first row of a Subagent's Feed: the prompt its parent sent, with `_meta.argo.senderSessionId`. It is not a `user_message`, because no human typed it (ADR 0012).
@@ -275,6 +275,7 @@ Fields that ACP lacks go in `_meta.argo` (ADR 0006):
   - Rule 1: there is no Turn fold.
   - Rule 2: the live header follows the order above.
   - Rule 4: group titles have no counts, and no "· N failed". A failed call shows red in its own row.
+  - Rule 5: exploration uses the Agent's supplied tool kinds or command actions. A shell command without explicit read, search or list metadata keeps its own command row and description.
   - Rule 7: an edit's diff expands inline on a phone and opens in the Inspector on a wide window.
   - Rule 8: there is no "N files changed" card. The Changed files chip replaces it.
   - Rule 10: the final answer shows in full like any Agent message, with no actions under it.
@@ -429,7 +430,6 @@ A good test checks what a user or a caller sees, through the highest seam that r
    - `toFeedView`, with rows built from both Agents' recordings, so parity is checked in one place
    - the live header function
    - each adapter's `toAgentEvents`, including Claude's block counting for row ids
-   - the shared command parser
    - `toSessionSnapshot`
    - the list status derivation
 5. **Storybook play functions** in `*.test.stories.tsx` for every screen and component. Screens get tRPC fixtures at the link, and components get props (ADR 0010). They cover the row states, the Feed groups, the request cards, the pickers, and navigation. Navigation is checked through the `useNavigate()` recorder. The Feed fixtures come from recordings run through the real converter, never from hand-written rows. The existing Projects screen and app providers stories are the prior art.
