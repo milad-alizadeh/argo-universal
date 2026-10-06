@@ -124,7 +124,7 @@ it('marks Plan and dangerous modes and keeps per-model support flags', () => {
         options: expect.arrayContaining([
           expect.objectContaining({
             value: 'plan',
-            _meta: { argo: { icon: 'ClipboardList', tone: 'planning' } },
+            _meta: { argo: { icon: 'MapTrifold', tone: 'planning' } },
           }),
           expect.objectContaining({
             value: 'bypassPermissions',

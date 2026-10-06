@@ -87,9 +87,7 @@ export function ComposerMock(
     catalog?.configOptions ?? [],
   );
   const [fastMode, setFastMode] = useState(false);
-  const [branch, setBranch] = useState(
-    newSessionBranches.currentBranch ?? 'main',
-  );
+  const branch = newSessionBranches.currentBranch ?? 'main';
   const [newWorktree, setNewWorktree] = useState(true);
   const [running, setRunning] = useState(props.running ?? false);
   const [usedContext, setUsedContext] = useState(34_000);
@@ -189,10 +187,7 @@ export function ComposerMock(
           },
           checkout: {
             branch,
-            currentBranch: newSessionBranches.currentBranch ?? undefined,
-            branches: newSessionBranches.branches,
             newWorktree,
-            onBranchChange: props.sessionStarted ? undefined : setBranch,
             onNewWorktreeChange: props.sessionStarted
               ? undefined
               : setNewWorktree,

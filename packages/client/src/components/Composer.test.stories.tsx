@@ -568,6 +568,11 @@ export const Pickers: Story = {
           await expect(
             overlay.queryByRole('slider', { name: 'Effort' }),
           ).not.toBeInTheDocument();
+          await expect(
+            canvas
+              .getByRole('button', { name: 'Agent and model', hidden: true })
+              .textContent?.trim(),
+          ).toBe(withoutEffort.name.replace(/\s*\(recommended\)/i, ''));
         }
         await userEvent.keyboard('{Escape}');
         await userEvent.click(canvas.getByRole('button', { name: 'Mode' }));
@@ -576,14 +581,49 @@ export const Pickers: Story = {
         );
         if (mode?.type !== 'select')
           throw new Error('Recorded catalog needs mode options.');
-        const dangerous = mode.options
-          .flatMap((entry) => ('groupId' in entry ? entry.options : [entry]))
-          .find((entry) => entry._meta?.argo?.tone === 'dangerous');
-        if (!dangerous)
-          throw new Error('Recorded catalog needs a dangerous mode.');
+        const modes = mode.options.flatMap((entry) =>
+          'groupId' in entry ? entry.options : [entry],
+        );
+        const dangerous = modes.find(
+          (entry) => entry._meta?.argo?.tone === 'dangerous',
+        );
+        const planning = modes.find(
+          (entry) => entry._meta?.argo?.tone === 'planning',
+        );
+        if (!dangerous || !planning)
+          throw new Error('Recorded catalog needs Plan and dangerous modes.');
+        const labelColor = (name: string) =>
+          getComputedStyle(
+            within(overlay.getByRole('button', { name })).getByText(name),
+          ).color;
+        const planMode = await overlay.findByRole('button', {
+          name: planning.name,
+        });
+        await waitFor(() => expect(planMode).toBeVisible());
+        await expect(
+          within(planMode).getByTestId(
+            'phosphor-react-native-map-trifold-regular',
+          ),
+        ).toBeInTheDocument();
+        const red = labelColor(dangerous.name);
+        await expect(labelColor(planning.name)).not.toBe(red);
         await userEvent.click(
           await overlay.findByRole('button', { name: dangerous.name }),
         );
+        await waitFor(() =>
+          expect(overlay.queryByRole('dialog')).not.toBeInTheDocument(),
+        );
+        const modeTrigger = canvas.getByRole('button', { name: 'Mode' });
+        const glyph = modeTrigger.querySelector('svg path');
+        if (!glyph) throw new Error('Mode trigger icon is missing.');
+        await expect(getComputedStyle(glyph).fill).toBe(red);
+        if (width >= 720)
+          await waitFor(() =>
+            expect(
+              getComputedStyle(within(modeTrigger).getByText(dangerous.name))
+                .color,
+            ).toBe(red),
+          );
         await userEvent.click(canvas.getByRole('button', { name: 'Mode' }));
         await expect(
           await overlay.findByRole('button', { name: dangerous.name }),
@@ -601,7 +641,7 @@ export const Checkout: Story = {
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       await settleViewport();
-      const trigger = canvas.getByRole('button', { name: 'Base branch' });
+      const trigger = canvas.getByRole('button', { name: 'Checkout' });
       if (width >= 720) {
         await expect(trigger.className).not.toContain('shadow-composer');
         const caret = trigger.lastElementChild?.getBoundingClientRect();
@@ -656,10 +696,8 @@ export const CreatedCheckoutIsReadOnly: Story = {
       onConfigChange: fn(),
       checkout: {
         branch: 'main',
-        branches: ['main', 'release'],
         newWorktree: true,
         path: '/Developer/project/.worktrees/created-worktree',
-        onBranchChange: fn(),
         onNewWorktreeChange: fn(),
       },
     },
@@ -674,9 +712,6 @@ export const CreatedCheckoutIsReadOnly: Story = {
       await expect(name.scrollWidth).toBeLessThanOrEqual(name.clientWidth);
       await userEvent.click(name);
       await expect(
-        canvas.queryByRole('button', { name: 'Base branch' }),
-      ).not.toBeInTheDocument();
-      await expect(
         canvas.queryByRole('button', { name: 'Checkout' }),
       ).not.toBeInTheDocument();
       await expect(
@@ -685,9 +720,6 @@ export const CreatedCheckoutIsReadOnly: Story = {
       await expect(
         overlay.queryByRole('switch', { name: 'New worktree' }),
       ).not.toBeInTheDocument();
-      await expect(
-        args.configuration?.checkout.onBranchChange,
-      ).not.toHaveBeenCalled();
       await expect(
         args.configuration?.checkout.onNewWorktreeChange,
       ).not.toHaveBeenCalled();
@@ -828,7 +860,7 @@ export const ScrollableAgentCatalog: Story = {
       configOptions: firstAgent.configOptions,
       onConfigChange: fn(),
       onAgentChange: fn(),
-      checkout: { branch: 'main', branches: ['main'], newWorktree: true },
+      checkout: { branch: 'main', newWorktree: true },
     },
   },
   play: async ({ canvas, userEvent, args }) => {
@@ -890,7 +922,7 @@ export const UnavailableAgents: Story = {
       onConfigChange: fn(),
       onAgentChange: fn(),
       onAgentSetup: fn(),
-      checkout: { branch: 'main', branches: ['main'], newWorktree: true },
+      checkout: { branch: 'main', newWorktree: true },
     },
   },
   play: async ({ canvas, userEvent, args }) => {
