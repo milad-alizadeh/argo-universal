@@ -1,5 +1,6 @@
 import type {
   AgentThought,
+  Notice,
   Plan,
   SessionUpdate,
   ToolCallUpdate,
@@ -23,7 +24,16 @@ export interface FeedExploration {
   toolCalls: ToolCallUpdate[];
 }
 
-export type FeedActivity = FeedToolCall | FeedThought | FeedExploration;
+export interface FeedNotice {
+  type: 'row';
+  row: Notice;
+}
+
+export type FeedActivity =
+  | FeedToolCall
+  | FeedThought
+  | FeedExploration
+  | FeedNotice;
 
 export interface FeedGroup {
   type: 'group';
