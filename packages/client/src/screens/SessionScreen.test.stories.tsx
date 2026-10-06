@@ -169,13 +169,21 @@ export const JumpsToLatest: Story = {
         canvas.getByRole('button', { name: 'Jump to latest' }),
       ).toBeVisible();
     });
-    // A row arriving while the reader is away leaves them where they are.
-    const readingAt = scroll.scrollTop;
+    // A row arriving while the reader is away leaves what they read where it was; rows above may still measure, so compare the screen, not scrollTop.
+    const view = scroll.getBoundingClientRect();
+    const reading = document.elementFromPoint(
+      view.left + view.width / 2,
+      view.top + view.height / 2,
+    );
+    if (!reading) throw new Error('Nothing in view');
+    const readingAt = reading.getBoundingClientRect().top;
     sendArrivingRow();
     const jump = await canvas.findByRole('button', {
       name: 'Jump to latest, new rows',
     });
-    await expect(scroll.scrollTop).toBe(readingAt);
+    await expect(
+      Math.abs(reading.getBoundingClientRect().top - readingAt),
+    ).toBeLessThan(2);
     jump.click();
     await waitFor(() => expect(atEnd()).toBe(true));
     await expect(await feed.findByText(arrivingMessage)).toBeVisible();
