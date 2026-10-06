@@ -1,5 +1,4 @@
 import { readFileSync } from 'node:fs';
-import type { SDKMessage } from '@anthropic-ai/claude-agent-sdk';
 import type { AgentAdapter } from '../src/agent-adapter';
 import { connect } from './connect';
 import { probe } from './probe';
@@ -7,9 +6,10 @@ import {
   initialMappingState,
   type MappingState,
   toAgentEvents,
+  type VendorMessage,
 } from './to-agent-events';
 
-export const claudeAdapter: AgentAdapter<SDKMessage, MappingState> = {
+export const claudeAdapter: AgentAdapter<VendorMessage, MappingState> = {
   agent: 'claude',
   label: 'Claude',
   logo: readFileSync(

@@ -112,13 +112,13 @@ const take = async (
   return values;
 };
 const summary = (outputs: FeedSubscribeOutput[]) =>
-  outputs.map((output) =>
-    output.type === 'row.upsert'
-      ? `upsert ${output.row.id} @${output.rev}`
-      : output.type === 'row.append'
-        ? `append ${output.id} +${output.text} at ${output.off} @${output.rev}`
-        : output.type,
-  );
+  outputs.map((output) => {
+    if (output.type === 'row.upsert')
+      return `upsert ${output.row.id} @${output.rev}`;
+    if (output.type === 'row.append')
+      return `append ${output.id} +${output.text} at ${output.off} @${output.rev}`;
+    return output.type;
+  });
 
 beforeEach(() => {
   vi.useFakeTimers();

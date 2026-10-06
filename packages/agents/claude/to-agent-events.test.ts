@@ -41,6 +41,68 @@ const feedChanges = (events: ReturnType<typeof mapAll>['events']) =>
     event.type === 'agent.feed' ? [event.change] : [],
   );
 
+it('reconciles the recorded compacting status and boundary into one Compaction row', () => {
+  const changes = feedChanges(mapAll(recordedMessages('compaction')).events);
+  const compactions = changes.flatMap((change) =>
+    change.type === 'upsert' &&
+    change.update.sessionUpdate === 'compaction_update'
+      ? [change.update]
+      : [],
+  );
+  expect(compactions).toEqual([
+    {
+      id: '6d8abfff-ea69-4c66-b642-d445f9060d16',
+      compactionId: '6d8abfff-ea69-4c66-b642-d445f9060d16',
+      sessionUpdate: 'compaction_update',
+      state: 'open',
+      status: 'in_progress',
+    },
+    {
+      id: '6d8abfff-ea69-4c66-b642-d445f9060d16',
+      compactionId: '6d8abfff-ea69-4c66-b642-d445f9060d16',
+      sessionUpdate: 'compaction_update',
+      state: 'settled',
+      status: 'completed',
+    },
+  ]);
+});
+
+it('keeps the Agent’s Bash description and timestamps without inventing command actions', () => {
+  const rows = foldRows(
+    feedChanges(mapAll(recordedMessages('edit-and-command')).events),
+  );
+  const command = rows.find(
+    (row) => row.sessionUpdate === 'tool_call_update' && row.kind === 'execute',
+  );
+  expect(command).toMatchObject({
+    title: 'Show hello.txt and short git status',
+    _meta: { argo: { startedAt: 1791165776295, endedAt: 1791165776582 } },
+  });
+  if (command?.sessionUpdate !== 'tool_call_update')
+    throw new Error('Missing recorded command');
+  expect(command._meta?.argo).not.toHaveProperty('commandActions');
+});
+
+it('uses the transport receipt time when an interrupted Tool call has no final result', () => {
+  const messages = recordedMessages('interrupt')
+    .filter((message) => message.type !== 'user')
+    .map((message) =>
+      message.type === 'result'
+        ? { ...message, receivedAt: 1791165784000 }
+        : message,
+    );
+  const rows = foldRows(feedChanges(mapAll(messages).events));
+  expect(rows).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        sessionUpdate: 'tool_call_update',
+        status: 'cancelled',
+        _meta: { argo: expect.objectContaining({ endedAt: 1791165784000 }) },
+      }),
+    ]),
+  );
+});
+
 // Applies Feed changes the way the Feed actor does, to see the rows they leave.
 function foldRows(changes: FeedChange[]) {
   const rows = new Map<string, FeedUpdate>();

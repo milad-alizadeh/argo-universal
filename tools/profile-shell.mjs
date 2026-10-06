@@ -77,14 +77,10 @@ for (const panel of ['sidebar', 'Inspector']) {
           requestAnimationFrame(frame);
         }),
     );
-    const name =
-      panel === 'sidebar'
-        ? toggle % 2
-          ? 'Show sidebar'
-          : 'Hide sidebar'
-        : toggle % 2
-          ? 'Close Inspector'
-          : 'Open Inspector';
+    let name = '';
+    if (panel === 'sidebar')
+      name = toggle % 2 ? 'Show sidebar' : 'Hide sidebar';
+    else name = toggle % 2 ? 'Close Inspector' : 'Open Inspector';
     await page.getByRole('button', { name, exact: true }).click();
     intervals.push(...(await sampling));
   }

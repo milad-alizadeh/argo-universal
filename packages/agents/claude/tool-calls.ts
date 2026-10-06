@@ -117,7 +117,10 @@ const search = (name: string, input: unknown): ToolShape => ({
 });
 
 // The open row for a Tool call the model asked for.
-export function toolCallStarted(block: ToolUseBlock): ToolCallRow {
+export function toolCallStarted(
+  block: ToolUseBlock,
+  timestamp?: number,
+): ToolCallRow {
   const shape = toolShapes[block.name]?.(block.input) ?? {
     title: block.name,
     kind: 'other' satisfies ToolKind,
@@ -132,6 +135,9 @@ export function toolCallStarted(block: ToolUseBlock): ToolCallRow {
     status: 'in_progress',
     rawInput: block.input,
     ...shape,
+    ...(timestamp === undefined
+      ? {}
+      : { _meta: { argo: { startedAt: timestamp } } }),
   };
 }
 
@@ -167,8 +173,19 @@ const settled = (
 export function toolCallEnded(
   row: ToolCallRow,
   result: ToolResultBlock,
-  message: SDKUserMessage,
+  message: SDKUserMessage & { receivedAt?: number },
 ): ToolCallRow {
+  const endedAt =
+    message.timestamp === undefined
+      ? message.receivedAt
+      : Date.parse(message.timestamp);
+  if (endedAt !== undefined)
+    row = {
+      ...row,
+      _meta: {
+        argo: { ...row._meta?.argo, endedAt },
+      },
+    };
   const rejected = userRejected(message, result.tool_use_id);
   const output = rejected ? '' : resultText(result);
   const oldText = overwrittenText(row, message);

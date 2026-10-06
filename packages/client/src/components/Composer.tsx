@@ -5,6 +5,7 @@ import {
   PlusIcon,
   TargetIcon,
 } from 'phosphor-react-native';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -106,6 +107,26 @@ export function Composer({
     !configuration?.turnRunning &&
     oversized.length === 0 &&
     (draft.text.trim().length > 0 || draft.images.length > 0);
+  let sendButtonContent: ReactNode;
+  if (showStop) {
+    sendButtonContent = (
+      <View className="size-2.5 rounded-xs bg-primary-foreground" />
+    );
+  } else if (sending) {
+    sendButtonContent = (
+      <ActivityIndicator
+        accessibilityLabel="Sending"
+        size={16}
+        role="progressbar"
+        colorClassName="accent-primary-foreground"
+        className="size-4"
+      />
+    );
+  } else {
+    sendButtonContent = (
+      <Icon as={ArrowUpIcon} className="size-4 text-primary-foreground" />
+    );
+  }
   return (
     <View className="w-full max-w-composer items-center">
       {!wide &&
@@ -380,22 +401,7 @@ export function Composer({
                 if (canSend) onSend(draft);
               }}
             >
-              {showStop ? (
-                <View className="size-2.5 rounded-xs bg-primary-foreground" />
-              ) : sending ? (
-                <ActivityIndicator
-                  accessibilityLabel="Sending"
-                  size={16}
-                  role="progressbar"
-                  colorClassName="accent-primary-foreground"
-                  className="size-4"
-                />
-              ) : (
-                <Icon
-                  as={ArrowUpIcon}
-                  className="size-4 text-primary-foreground"
-                />
-              )}
+              {sendButtonContent}
             </Button>
           </View>
         </View>

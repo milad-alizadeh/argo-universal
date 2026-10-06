@@ -197,73 +197,80 @@ function AgentChoices({
     : configuration.agents.filter(
         (agent) => agent.agent === configuration.agent,
       );
-  const renderAgent = (agent: AgentInfo) => (
-    <View key={agent.agent}>
-      <Button
-        variant="ghost"
-        accessibilityLabel={`Select ${agent.label}`}
-        disabled={
-          !configuration.onAgentChange || agent.availability !== 'available'
-        }
-        accessibilityState={{
-          selected: agent.agent === configuration.agent,
-        }}
-        aria-pressed={agent.agent === configuration.agent}
-        className={cn(
-          'min-h-11 wide:min-h-8 h-auto sm:h-auto py-1.5 px-2 has-[>svg]:px-2 rounded-sm justify-start gap-2.5 wide:gap-2 web:focus-visible:ring-0 web:focus-visible:bg-accent',
-          configuration.onAgentChange &&
-            agent.agent === configuration.agent &&
-            'bg-accent',
-        )}
-        onPress={() => {
-          if (agent.agent !== configuration.agent)
-            configuration.onAgentChange?.(agent.agent);
-          onSelect();
-        }}
-      >
-        {wide && (
-          <View className="size-4 items-center justify-center">
-            <Logo agent={agent} size={14} />
-          </View>
-        )}
-        <View className="flex-1 min-w-0 gap-0.5">
-          <Text
-            selectable={false}
-            className="select-none text-sm leading-5 font-normal"
-          >
-            {agent.label}
-          </Text>
-          {agent.availability !== 'available' && (
-            <Text
-              selectable={false}
-              className="select-none text-xs leading-4 text-warning"
-            >
-              {agent.availability === 'not_signed_in'
-                ? 'Not signed in'
-                : agent.availability === 'not_installed'
-                  ? 'Not installed'
-                  : 'Unavailable'}
-            </Text>
-          )}
-        </View>
-        {configuration.onAgentChange && agent.agent === configuration.agent && (
-          <Icon as={CheckIcon} className="size-3.5" />
-        )}
-      </Button>
-      {agent.availability !== 'available' && configuration.onAgentSetup && (
+  const renderAgent = (agent: AgentInfo) => {
+    let availabilityLabel: string;
+    if (agent.availability === 'not_signed_in') {
+      availabilityLabel = 'Not signed in';
+    } else if (agent.availability === 'not_installed') {
+      availabilityLabel = 'Not installed';
+    } else {
+      availabilityLabel = 'Unavailable';
+    }
+    return (
+      <View key={agent.agent}>
         <Button
           variant="ghost"
-          accessibilityLabel={`Set up ${agent.label}`}
-          className="h-7 sm:h-7 py-0 ml-8 px-2 justify-start"
-          onPress={() => configuration.onAgentSetup?.(agent.agent)}
+          accessibilityLabel={`Select ${agent.label}`}
+          disabled={
+            !configuration.onAgentChange || agent.availability !== 'available'
+          }
+          accessibilityState={{
+            selected: agent.agent === configuration.agent,
+          }}
+          aria-pressed={agent.agent === configuration.agent}
+          className={cn(
+            'min-h-11 wide:min-h-8 h-auto sm:h-auto py-1.5 px-2 has-[>svg]:px-2 rounded-sm justify-start gap-2.5 wide:gap-2 web:focus-visible:ring-0 web:focus-visible:bg-accent',
+            configuration.onAgentChange &&
+              agent.agent === configuration.agent &&
+              'bg-accent',
+          )}
+          onPress={() => {
+            if (agent.agent !== configuration.agent)
+              configuration.onAgentChange?.(agent.agent);
+            onSelect();
+          }}
         >
-          <Text selectable={false} className="select-none text-xs">
-            {agent.availability === 'not_signed_in' ? 'Sign in' : 'Install'}
-          </Text>
+          {wide && (
+            <View className="size-4 items-center justify-center">
+              <Logo agent={agent} size={14} />
+            </View>
+          )}
+          <View className="flex-1 min-w-0 gap-0.5">
+            <Text
+              selectable={false}
+              className="select-none text-sm leading-5 font-normal"
+            >
+              {agent.label}
+            </Text>
+            {agent.availability !== 'available' && (
+              <Text
+                selectable={false}
+                className="select-none text-xs leading-4 text-warning"
+              >
+                {availabilityLabel}
+              </Text>
+            )}
+          </View>
+          {configuration.onAgentChange &&
+            agent.agent === configuration.agent && (
+              <Icon as={CheckIcon} className="size-3.5" />
+            )}
         </Button>
-      )}
-    </View>
-  );
+        {agent.availability !== 'available' && configuration.onAgentSetup && (
+          <Button
+            variant="ghost"
+            accessibilityLabel={`Set up ${agent.label}`}
+            className="h-7 sm:h-7 py-0 ml-8 px-2 justify-start"
+            onPress={() => configuration.onAgentSetup?.(agent.agent)}
+          >
+            <Text selectable={false} className="select-none text-xs">
+              {agent.availability === 'not_signed_in' ? 'Sign in' : 'Install'}
+            </Text>
+          </Button>
+        )}
+      </View>
+    );
+  };
   const footer = !configuration.onAgentChange ? (
     <Text
       selectable={false}
@@ -392,44 +399,47 @@ function EffortControl({
           }}
         />
         <View className="flex-row justify-between px-1.5">
-          {effortChoices.map((choice, index) => (
-            <View
-              key={choice.value}
-              className={cn(
-                'w-1 overflow-visible',
-                index === 0
-                  ? 'items-start'
-                  : index === effortChoices.length - 1
-                    ? 'items-end'
-                    : 'items-center',
-              )}
-            >
-              <Button
-                variant="ghost"
-                accessibilityLabel={`Set effort to ${choice.name}`}
-                aria-pressed={choice.value === effort.currentValue}
-                onPress={() =>
-                  configuration.onConfigChange(effort.configId, choice.value)
-                }
-                className={cn(
-                  'h-4 sm:h-4 native:w-16 px-0 py-0 active:bg-transparent hover:bg-transparent dark:hover:bg-transparent',
-                  index === 0 && '-ml-1.5 justify-start',
-                  index === effortChoices.length - 1 && '-mr-1.5 justify-end',
-                )}
+          {effortChoices.map((choice, index) => {
+            let effortAlignment: string;
+            if (index === 0) {
+              effortAlignment = 'items-start';
+            } else if (index === effortChoices.length - 1) {
+              effortAlignment = 'items-end';
+            } else {
+              effortAlignment = 'items-center';
+            }
+            return (
+              <View
+                key={choice.value}
+                className={cn('w-1 overflow-visible', effortAlignment)}
               >
-                <Text
-                  selectable={false}
-                  numberOfLines={1}
+                <Button
+                  variant="ghost"
+                  accessibilityLabel={`Set effort to ${choice.name}`}
+                  aria-pressed={choice.value === effort.currentValue}
+                  onPress={() =>
+                    configuration.onConfigChange(effort.configId, choice.value)
+                  }
                   className={cn(
-                    'select-none text-xs leading-4 font-normal text-muted-foreground',
-                    choice.value === effort.currentValue && 'text-foreground',
+                    'h-4 sm:h-4 native:w-16 px-0 py-0 active:bg-transparent hover:bg-transparent dark:hover:bg-transparent',
+                    index === 0 && '-ml-1.5 justify-start',
+                    index === effortChoices.length - 1 && '-mr-1.5 justify-end',
                   )}
                 >
-                  {choice.name}
-                </Text>
-              </Button>
-            </View>
-          ))}
+                  <Text
+                    selectable={false}
+                    numberOfLines={1}
+                    className={cn(
+                      'select-none text-xs leading-4 font-normal text-muted-foreground',
+                      choice.value === effort.currentValue && 'text-foreground',
+                    )}
+                  >
+                    {choice.name}
+                  </Text>
+                </Button>
+              </View>
+            );
+          })}
         </View>
       </View>
     </View>

@@ -48,13 +48,12 @@ export function SettingsList({
   notificationsState = 'On',
 }: SettingsListProps) {
   const wide = useWide();
-  const device =
-    deviceName ??
-    (wide
-      ? 'This Mac'
-      : Platform.OS === 'android'
-        ? 'This device'
-        : 'This iPhone');
+  let device = deviceName;
+  if (device === undefined || device === null) {
+    if (wide) device = 'This Mac';
+    else if (Platform.OS === 'android') device = 'This device';
+    else device = 'This iPhone';
+  }
 
   function row(
     label: string,
@@ -70,6 +69,27 @@ export function SettingsList({
           selectedDestination?.to === 'settings-project') ||
         (destination.to === 'settings-agents' &&
           selectedDestination?.to === 'settings-agent'));
+    let rowStatus: ReactNode;
+    if (attention) {
+      rowStatus = (
+        <View
+          className="size-2 shrink-0 rounded-full bg-warning"
+          testID={`settings-${label.toLowerCase()}-attention`}
+          accessibilityLabel={`${label} needs attention`}
+        />
+      );
+    } else if (state !== undefined) {
+      rowStatus = (
+        <Text
+          className="shrink-0 text-sm leading-5 text-muted-foreground wide:text-xs wide:leading-4"
+          numberOfLines={1}
+        >
+          {state}
+        </Text>
+      );
+    } else {
+      rowStatus = null;
+    }
     return (
       <Pressable
         role="button"
@@ -97,20 +117,7 @@ export function SettingsList({
         >
           {label}
         </Text>
-        {attention ? (
-          <View
-            className="size-2 shrink-0 rounded-full bg-warning"
-            testID={`settings-${label.toLowerCase()}-attention`}
-            accessibilityLabel={`${label} needs attention`}
-          />
-        ) : state !== undefined ? (
-          <Text
-            className="shrink-0 text-sm leading-5 text-muted-foreground wide:text-xs wide:leading-4"
-            numberOfLines={1}
-          >
-            {state}
-          </Text>
-        ) : null}
+        {rowStatus}
       </Pressable>
     );
   }

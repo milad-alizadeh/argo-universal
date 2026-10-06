@@ -186,6 +186,14 @@ export function SessionsList({
     previousOrder.current = entryOrder;
   }, [entryOrder]);
 
+  let emptyTitle: string;
+  if (query) {
+    emptyTitle = 'No matching Sessions';
+  } else if (archived) {
+    emptyTitle = 'No archived Sessions';
+  } else {
+    emptyTitle = 'No Projects yet';
+  }
   return (
     <View
       className="relative flex-1 overflow-hidden bg-background wide:bg-sidebar web:select-none web:[&_*]:select-none! web:[&_[data-testid=sessions-scroll]>div>div>div]:transition-[top,transform] web:[&_[data-testid=sessions-scroll]>div>div>div]:duration-200"
@@ -243,11 +251,7 @@ export function SessionsList({
           ListEmptyComponent={
             <View className="items-center gap-1 px-4 py-8">
               <Text className="text-center text-sm font-medium">
-                {query
-                  ? 'No matching Sessions'
-                  : archived
-                    ? 'No archived Sessions'
-                    : 'No Projects yet'}
+                {emptyTitle}
               </Text>
               {query && (
                 <Text className="text-center text-xs text-muted-foreground">

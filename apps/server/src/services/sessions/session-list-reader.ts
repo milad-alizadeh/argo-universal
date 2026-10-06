@@ -179,6 +179,19 @@ export function createSessionListReader(options: {
         const children = rows.filter(
           (child) => child.parentSessionId === row.id,
         );
+        let activity: string;
+        if (needsInput) {
+          activity = pendingPermission?.title ?? 'Waiting for your answer';
+        } else if (running) {
+          activity = tool?.status === 'in_progress' ? tool.title : 'Working';
+        } else {
+          activity =
+            message?.content
+              .filter((block) => block.type === 'text')
+              .map((block) => block.text)
+              .join('\n')
+              .split('\n')[0] ?? '';
+        }
         const information = validate(() =>
           SessionInfo.parse({
             sessionId: row.id,
@@ -191,17 +204,7 @@ export function createSessionListReader(options: {
             title: row.title,
             titleSource: row.titleSource,
             status,
-            activity: needsInput
-              ? (pendingPermission?.title ?? 'Waiting for your answer')
-              : running
-                ? tool?.status === 'in_progress'
-                  ? tool.title
-                  : 'Working'
-                : (message?.content
-                    .filter((block) => block.type === 'text')
-                    .map((block) => block.text)
-                    .join('\n')
-                    .split('\n')[0] ?? ''),
+            activity,
             activityAt: row.activityAt,
             checkout: {
               type:

@@ -1,13 +1,16 @@
-import type { AgentCommandOf, AgentReady } from '@repo/agents';
+import type { AgentCommandOf, AgentEvent, AgentReady } from '@repo/agents';
+import { feedEvents as claudeFeedEvents } from './claude/feed.ts';
 import { newSessionMock as claudeNewSessionMock } from './claude/new-session.ts';
 import { writeMockClaude } from './claude/write-mock-claude.ts';
 import { writeClaudeTranscript } from './claude/write-transcript.ts';
+import { feedEvents as codexFeedEvents } from './codex/feed.ts';
 import { newSessionMock as codexNewSessionMock } from './codex/new-session.ts';
 import { writeMockCodex } from './codex/write-mock-codex.ts';
 import { writeCodexTranscript } from './codex/write-transcript.ts';
 import type { MockCliOptions } from './mock-cli.ts';
 
 export interface MockCli {
+  feedEvents(recording: string): AgentEvent[];
   newSessionMock(): {
     configOptions: AgentReady['configOptions'];
     configOptionsByModel: AgentReady['configOptions'][];
@@ -33,6 +36,7 @@ export interface MockCli {
 // Each Agent adapter's mock CLI, by the id the adapter registers.
 export const mockClis: Record<string, MockCli> = {
   codex: {
+    feedEvents: codexFeedEvents,
     write: writeMockCodex,
     newSessionMock: codexNewSessionMock,
     apiKeyVariables: ['OPENAI_API_KEY', 'CODEX_API_KEY'],
@@ -46,6 +50,7 @@ export const mockClis: Record<string, MockCli> = {
     writeTranscript: writeCodexTranscript,
   },
   claude: {
+    feedEvents: claudeFeedEvents,
     write: writeMockClaude,
     newSessionMock: claudeNewSessionMock,
     recordings: { turn: 'edit-and-command', cancelledTurn: 'interrupt' },

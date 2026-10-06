@@ -4,6 +4,7 @@ import { feedRowColumns } from '../columns';
 import { ContentBlock } from './content-block';
 import { Plan } from './plan';
 import {
+  CommandAction,
   PermissionOutcome,
   ToolCallContent,
   ToolCallLocation,
@@ -79,6 +80,10 @@ export const ToolCallUpdate = z.strictObject({
     z.strictObject({
       truncated: z.boolean().optional(),
       permissionOutcome: PermissionOutcome.optional(),
+      commandActions: z.array(CommandAction).optional(),
+      startedAt: z.int().optional(),
+      endedAt: z.int().optional(),
+      shellId: z.string().optional(),
     }),
   ),
 });

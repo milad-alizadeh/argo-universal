@@ -9,10 +9,11 @@ type TextKind = 'agent_message' | 'agent_thought';
 type TextRow = Extract<FeedUpdate, { sessionUpdate: TextKind }>;
 export interface MappingState {
   vendorTurnId: string | null;
-  openRows: Record<string, TextKind | 'tool_call_update'>;
+  openRows: Record<string, TextKind | 'tool_call_update' | 'compaction_update'>;
   summaryIndexes: Record<string, number>;
   totalUsage: TokenUsageBreakdown | null;
   startingUsage: TokenUsageBreakdown | null;
+  toolMetadata: Record<string, ToolCallRow['_meta']>;
 }
 export const initialMappingState = (): MappingState => ({
   vendorTurnId: null,
@@ -20,6 +21,7 @@ export const initialMappingState = (): MappingState => ({
   summaryIndexes: {},
   totalUsage: null,
   startingUsage: null,
+  toolMetadata: {},
 });
 const feed = (change: FeedChange): AgentEvent => ({
   type: 'agent.feed',
@@ -95,6 +97,7 @@ export function toAgentEvents(
         startingUsage: mappingState.totalUsage,
         openRows: {},
         summaryIndexes: {},
+        toolMetadata: {},
       },
     };
   }
@@ -106,13 +109,16 @@ export function toAgentEvents(
     return dropped(mappingState);
   switch (message.method) {
     case 'turn/completed':
-      return endTurn(message.params.turn, mappingState);
+      return endTurn(message.params.turn, mappingState, message.receivedAt);
     case 'item/started':
     case 'item/completed':
       return mapItem(
         message.params.item,
         message.method === 'item/started' ? 'open' : 'settled',
         mappingState,
+        message.method === 'item/started'
+          ? (message.params.startedAtMs ?? message.receivedAt)
+          : (message.params.completedAtMs ?? message.receivedAt),
       );
     case 'item/agentMessage/delta':
       return appendText(
@@ -192,6 +198,7 @@ export function toAgentEvents(
 function endTurn(
   turn: Turn,
   mappingState: MappingState,
+  endedAt?: number,
 ): AgentMapping<MappingState> {
   const ended: Extract<AgentEvent, { type: 'agent.turnEnded' }> = {
     type: 'agent.turnEnded',
@@ -212,8 +219,10 @@ function endTurn(
     };
   const unfinished = Object.entries(mappingState.openRows).map(([id, kind]) => {
     const set: Record<string, unknown> = { state: 'settled' };
-    if (kind === 'tool_call_update')
+    if (kind === 'tool_call_update' || kind === 'compaction_update')
       set.status = ended.stopReason === 'cancelled' ? 'cancelled' : 'failed';
+    if (kind === 'tool_call_update' && endedAt !== undefined)
+      set._meta = { argo: { ...mappingState.toolMetadata[id]?.argo, endedAt } };
     return feed({ type: 'patch', id, set });
   });
   return {
@@ -238,9 +247,22 @@ function mapItem(
   item: ThreadItem,
   state: 'open' | 'settled',
   mappingState: MappingState,
+  timestamp: number | undefined,
 ): AgentMapping<MappingState> {
-  let row: TextRow | ToolCallRow;
+  let row:
+    | TextRow
+    | ToolCallRow
+    | Extract<FeedUpdate, { sessionUpdate: 'compaction_update' }>;
   switch (item.type) {
+    case 'contextCompaction':
+      row = {
+        id: item.id,
+        compactionId: item.id,
+        sessionUpdate: 'compaction_update',
+        state,
+        status: state === 'open' ? 'in_progress' : 'completed',
+      };
+      break;
     case 'agentMessage':
       row = textRow(item.id, 'agent_message', item.text, state);
       break;
@@ -253,14 +275,31 @@ function mapItem(
       );
       break;
     case 'fileChange':
-    case 'commandExecution':
+    case 'commandExecution': {
       row = toToolCall(item, state);
+      const metadata = {
+        ...mappingState.toolMetadata[item.id]?.argo,
+        ...row._meta?.argo,
+      };
+      if (timestamp !== undefined) {
+        if (state === 'open') metadata.startedAt = timestamp;
+        else metadata.endedAt = timestamp;
+      }
+      row._meta = { argo: metadata };
       break;
+    }
     default:
       return dropped(mappingState);
   }
   const openRows = { ...mappingState.openRows };
+  const toolMetadata = { ...mappingState.toolMetadata };
+  if (row.sessionUpdate === 'tool_call_update' && state === 'open')
+    toolMetadata[item.id] = row._meta;
   if (state === 'settled') delete openRows[item.id];
   else openRows[item.id] = row.sessionUpdate;
-  return { events: [upsert(row)], mappingState: { ...mappingState, openRows } };
+  if (state === 'settled') delete toolMetadata[item.id];
+  return {
+    events: [upsert(row)],
+    mappingState: { ...mappingState, openRows, toolMetadata },
+  };
 }

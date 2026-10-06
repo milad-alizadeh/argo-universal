@@ -135,12 +135,12 @@ function startTurn(
     if (command < 0) activeTurnId = null;
     return;
   }
-  const before =
-    process.env.MOCK_CLI_COMPLETION_BEFORE_RESPONSE === '1'
-      ? frames.length
-      : notificationsFirst || withheldStartResponse
-        ? frames.indexOf(started) + 1
-        : 0;
+  let before = 0;
+  if (process.env.MOCK_CLI_COMPLETION_BEFORE_RESPONSE === '1') {
+    before = frames.length;
+  } else if (notificationsFirst || withheldStartResponse) {
+    before = frames.indexOf(started) + 1;
+  }
   if (before && !replayTurn(frames.slice(0, before), crashAfter)) return;
   if (withheldStartResponse) {
     send(withheldStartResponse);
