@@ -72,7 +72,7 @@ export const Typography: Story = {
             .fontWeight,
         ).toBe('400');
         const branch = getComputedStyle(
-          canvas.getByText('Main', { exact: true }),
+          canvas.getByText('main', { exact: true }),
         );
         await expect(branch.fontFamily).toContain('monospace');
         await expect(branch.fontWeight).toBe('400');
@@ -608,7 +608,7 @@ export const Checkout: Story = {
       ).toBeDisabled();
       await expect(
         canvas.getByRole('button', { name: 'Base branch' }),
-      ).toHaveTextContent('Main');
+      ).toHaveTextContent('main');
       await userEvent.click(canvas.getByText('New worktree', { exact: true }));
       await expect(
         canvas.getByRole('button', { name: 'Base branch' }),

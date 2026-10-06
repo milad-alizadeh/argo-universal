@@ -9,7 +9,7 @@ Source: [current Paper Session page](https://app.paper.design/file/01M44G6AG3HPX
 - [x] Use monochrome sending spinners and a spinner for a Plan step in progress.
 - [x] Match Composer surfaces, borders, shadows, and button dimensions; keep the Context ring visible.
 - [x] Match SF Pro Text, text sizes and weights; await font readiness and verify theme font loading.
-- [x] Keep the checkout label **Main**.
+- [x] Display branch labels in lowercase, including **main**, in the checkout control and branch choices: [preview](screenshots/latest-paper/checkout-lowercase.jpg).
 - [x] Use the original reusable Switch geometry, with a smaller variation; clicking **New worktree** toggles it.
 - [x] Remove the branch search focus outline.
 - [x] Remove the Usage subtitle.

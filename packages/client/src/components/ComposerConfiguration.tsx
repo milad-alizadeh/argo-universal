@@ -815,10 +815,8 @@ export function ComposerCheckoutControl({
               className="select-none text-xs font-mono font-normal"
             >
               {checkout.newWorktree || !checkout.onBranchChange
-                ? checkout.branch === 'main'
-                  ? 'Main'
-                  : checkout.branch
-                : 'Main'}
+                ? checkout.branch.toLowerCase()
+                : 'main'}
             </Text>
             {checkout.onBranchChange && (
               <Icon
@@ -853,7 +851,7 @@ export function ComposerCheckoutControl({
                     <Button
                       key={branch}
                       variant="ghost"
-                      accessibilityLabel={branch}
+                      accessibilityLabel={branch.toLowerCase()}
                       aria-pressed={branch === checkout.branch}
                       accessibilityState={{
                         selected: branch === checkout.branch,
@@ -873,7 +871,7 @@ export function ComposerCheckoutControl({
                         selectable={false}
                         className="select-none flex-1 text-base wide:text-xs wide:leading-4 font-mono"
                       >
-                        {branch}
+                        {branch.toLowerCase()}
                       </Text>
                       {branch === checkout.currentBranch && (
                         <Text
@@ -912,7 +910,7 @@ export function ComposerCheckoutControl({
                 selectable={false}
                 className="select-none text-sm text-muted-foreground"
               >
-                {checkout.path ?? checkout.branch}
+                {checkout.path ?? checkout.branch.toLowerCase()}
               </Text>
               {checkout.onOpenFolder && (
                 <Button
