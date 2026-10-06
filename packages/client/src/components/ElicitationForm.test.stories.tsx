@@ -1,9 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, within } from 'storybook/test';
 import {
+  dateFormatsRequest,
+  dateFormatsValues,
   ElicitationFormPreview,
+  emptyAnswersRequest,
   fieldsRequest,
   fieldsValues,
+  invalidSchemaRequest,
 } from '../../mocks/request-preview';
 import { settleViewport } from '../../mocks/settle-viewport';
 
@@ -143,37 +147,7 @@ export const ConflictWide = conflict(1440);
 
 function emptyAnswers(width: number): Story {
   return {
-    args: {
-      request: {
-        ...fieldsRequest,
-        requestedSchema: {
-          properties: {
-            options: {
-              type: 'array',
-              title: 'Options',
-              minItems: 0,
-              default: [],
-              items: { type: 'string', enum: ['One'] },
-            },
-            choice: {
-              type: 'string',
-              title: 'Choice',
-              oneOf: [
-                { const: '', title: 'None' },
-                { const: 'Blue', title: 'Blue' },
-              ],
-            },
-            optional: { type: 'string', title: 'Optional' },
-            'detail.name': {
-              type: 'string',
-              title: 'Detail',
-              default: 'release',
-            },
-          },
-          required: ['options', 'choice'],
-        },
-      },
-    },
+    args: { request: emptyAnswersRequest },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
       await userEvent.click(canvas.getByRole('button', { name: /^Choice/ }));
@@ -194,23 +168,7 @@ export const EmptyAnswersWide = emptyAnswers(1440);
 
 function dateFormats(width: number): Story {
   return {
-    args: {
-      request: {
-        ...fieldsRequest,
-        requestedSchema: {
-          properties: {
-            date: { type: 'string', title: 'Date', format: 'date' },
-            time: {
-              type: 'string',
-              title: 'Date and time',
-              format: 'date-time',
-            },
-          },
-          required: ['date', 'time'],
-        },
-      },
-      values: { date: '2026-02-30', time: '2026-10-06' },
-    },
+    args: { request: dateFormatsRequest, values: dateFormatsValues },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
       await expect(canvas.getByText('Enter a valid date.')).toBeVisible();
@@ -238,14 +196,7 @@ export const DateFormatsPhone = dateFormats(390);
 export const DateFormatsWide = dateFormats(1440);
 
 export const InvalidSchema: Story = {
-  args: {
-    request: {
-      ...fieldsRequest,
-      requestedSchema: {
-        properties: { value: { type: 'string', title: 'Value', pattern: '[' } },
-      },
-    },
-  },
+  args: { request: invalidSchemaRequest },
   play: async ({ canvas, userEvent, args }) => {
     await expect(
       canvas.getByText('The Agent provided an invalid form.'),
@@ -255,3 +206,24 @@ export const InvalidSchema: Story = {
     await expect(args.onAnswer).toHaveBeenCalledWith({ action: 'cancel' });
   },
 };
+
+function clearOptionalNumber(width: number): Story {
+  return {
+    args: { request: fieldsRequest, values: fieldsValues },
+    play: async ({ canvas, userEvent, args }) => {
+      await settleViewport(width);
+      await userEvent.clear(canvas.getByRole('textbox', { name: 'Estimate' }));
+      await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
+      await expect(args.onAnswer).toHaveBeenCalledWith({
+        action: 'accept',
+        content: {
+          title: 'Drafts vanish after a reconnect',
+          team: 'Mobile',
+          notify: true,
+        },
+      });
+    },
+  };
+}
+export const ClearOptionalNumberPhone = clearOptionalNumber(390);
+export const ClearOptionalNumberWide = clearOptionalNumber(1440);

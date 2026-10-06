@@ -79,8 +79,8 @@ export function createElicitationSchema(
         if (value === undefined) return [];
         const number =
           (property.type === 'number' || property.type === 'integer') &&
-          typeof value === 'string' &&
-          value.trim();
+          typeof value === 'string';
+        if (number && !value.trim()) return [];
         return [[name, number ? Number(value) : value]];
       }),
     );

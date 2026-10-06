@@ -62,6 +62,52 @@ export const fieldsValues: ElicitationValues = {
   notify: true,
 };
 
+export const emptyAnswersRequest: PendingElicitation = {
+  ...fieldsRequest,
+  requestedSchema: {
+    properties: {
+      options: {
+        type: 'array',
+        title: 'Options',
+        minItems: 0,
+        default: [],
+        items: { type: 'string', enum: ['One'] },
+      },
+      choice: {
+        type: 'string',
+        title: 'Choice',
+        oneOf: [
+          { const: '', title: 'None' },
+          { const: 'Blue', title: 'Blue' },
+        ],
+      },
+      optional: { type: 'string', title: 'Optional' },
+      'detail.name': { type: 'string', title: 'Detail', default: 'release' },
+    },
+    required: ['options', 'choice'],
+  },
+};
+export const dateFormatsRequest: PendingElicitation = {
+  ...fieldsRequest,
+  requestedSchema: {
+    properties: {
+      date: { type: 'string', title: 'Date', format: 'date' },
+      time: { type: 'string', title: 'Date and time', format: 'date-time' },
+    },
+    required: ['date', 'time'],
+  },
+};
+export const dateFormatsValues: ElicitationValues = {
+  date: '2026-02-30',
+  time: '2026-10-06',
+};
+export const invalidSchemaRequest: PendingElicitation = {
+  ...fieldsRequest,
+  requestedSchema: {
+    properties: { value: { type: 'string', title: 'Value', pattern: '[' } },
+  },
+};
+
 export function RequestFrame({ children }: { children: ReactNode }) {
   return (
     <View className="w-full items-center p-4 wide:px-6">
