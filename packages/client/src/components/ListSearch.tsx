@@ -14,7 +14,7 @@ import { Button } from '#primitives/button';
 import { Input } from '#primitives/input';
 import { Text } from '#primitives/text';
 import { useWide } from '../navigation/use-wide';
-import { Icon } from './Icon';
+import { Icon, useIconPixels } from './Icon';
 
 interface ListSearchProps {
   title: string;
@@ -25,7 +25,8 @@ interface ListSearchProps {
 export function ListSearch({ title, value, onChangeText }: ListSearchProps) {
   const wide = useWide();
   const buttonSize = wide ? 32 : 44;
-  const iconSize = wide ? 16 : 22;
+  const iconSize = useIconPixels(wide ? 'md' : 'lg');
+  const fieldIconSize = useIconPixels('md');
   const placeholderStyle = useResolveClassNames('text-muted-foreground');
   const [searching, setSearching] = useState(false);
   const [width, setWidth] = useState(buttonSize);
@@ -65,10 +66,10 @@ export function ListSearch({ title, value, onChangeText }: ListSearchProps) {
     () => ({
       transform: [
         { translateX: -(width - buttonSize / 2 - 17) * progress.value },
-        { scale: 1 + (14 / iconSize - 1) * progress.value },
+        { scale: 1 + (fieldIconSize / iconSize - 1) * progress.value },
       ],
     }),
-    [buttonSize, iconSize, width, progress],
+    [buttonSize, iconSize, fieldIconSize, width, progress],
   );
   const closeStyle = useAnimatedStyle(
     () => ({
@@ -150,13 +151,15 @@ export function ListSearch({ title, value, onChangeText }: ListSearchProps) {
         >
           <Icon
             as={MagnifyingGlassIcon}
-            className="size-5.5 wide:size-4 text-foreground wide:text-muted-foreground"
+            size={wide ? 'md' : 'lg'}
+            className="text-foreground wide:text-muted-foreground"
           />
         </Animated.View>
         <Animated.View style={closeStyle}>
           <Icon
             as={XIcon}
-            className="size-5.5 wide:size-4 text-foreground wide:text-muted-foreground"
+            size={wide ? 'md' : 'lg'}
+            className="text-foreground wide:text-muted-foreground"
           />
         </Animated.View>
       </Button>

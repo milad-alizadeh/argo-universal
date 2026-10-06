@@ -135,10 +135,7 @@ export function DesktopShell({
           accessibilityLabel={sidebarShown ? 'Hide sidebar' : 'Show sidebar'}
           onPress={() => onSidebarShownChange(!sidebarShown)}
         >
-          <Icon
-            as={SidebarSimpleIcon}
-            className="size-4 text-muted-foreground"
-          />
+          <Icon as={SidebarSimpleIcon} className="text-muted-foreground" />
         </Button>
       </View>
       <DesktopRail
@@ -286,7 +283,7 @@ export function DesktopShell({
                         ? ArrowsInSimpleIcon
                         : ArrowsOutSimpleIcon
                     }
-                    className="size-4 text-muted-foreground"
+                    className="text-muted-foreground"
                   />
                 </Button>
                 <Button
@@ -295,7 +292,7 @@ export function DesktopShell({
                   accessibilityLabel="Close Inspector"
                   onPress={() => onInspectorStateChange('closed')}
                 >
-                  <Icon as={XIcon} className="size-4 text-muted-foreground" />
+                  <Icon as={XIcon} className="text-muted-foreground" />
                 </Button>
               </ShellHeaderActions>
             </View>

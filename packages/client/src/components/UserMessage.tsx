@@ -108,13 +108,6 @@ function Thumbnail({
         className="h-[84px] w-[120px] shrink-0 overflow-hidden rounded-lg border border-border bg-muted"
       >
         <Image source={source} resizeMode="cover" className="size-full" />
-        {label && (
-          <View className="absolute bottom-1.5 left-1.5 rounded-sm bg-background/85 px-1.5 py-1">
-            <Text className="font-mono text-xs leading-4 text-muted-foreground">
-              {label}
-            </Text>
-          </View>
-        )}
       </Pressable>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="w-auto gap-0 overflow-hidden p-0 sm:max-w-none">
@@ -152,10 +145,9 @@ function ReferenceChip({ reference }: { reference: Reference }) {
     <View className="h-[26px] flex-row items-center gap-1.5 rounded-md border border-border bg-card px-2">
       <Icon
         as={isFolder(reference) ? FolderIcon : FileIcon}
-        size={14}
         className="text-muted-foreground"
       />
-      <Text className="font-sans text-xs leading-4 text-foreground">
+      <Text className="font-sans text-sm leading-5 text-foreground">
         {referenceName(reference)}
       </Text>
     </View>

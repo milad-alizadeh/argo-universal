@@ -67,8 +67,9 @@ function DropdownMenuSubTrigger({
       >
         <>{children}</>
         <Icon
+          size="sm"
           as={icon}
-          className={cn('text-foreground size-4 shrink-0', iconClassName)}
+          className={cn('text-foreground shrink-0', iconClassName)}
         />
       </DropdownMenuPrimitive.SubTrigger>
     </TextClassContext.Provider>
@@ -212,12 +213,12 @@ function DropdownMenuCheckboxItem({
         )}
         {...props}
       >
-        <View className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+        <View className="absolute left-2 flex size-icon-md items-center justify-center">
           <DropdownMenuPrimitive.ItemIndicator>
             <Icon
               as={CheckIcon}
               className={cn(
-                'text-foreground size-4',
+                'text-foreground',
                 Platform.select({ web: 'pointer-events-none' }),
               )}
             />
@@ -249,7 +250,7 @@ function DropdownMenuRadioItem({
         )}
         {...props}
       >
-        <View className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+        <View className="absolute left-2 flex size-icon-md items-center justify-center">
           <DropdownMenuPrimitive.ItemIndicator>
             <View className="bg-foreground h-2 w-2 rounded-full" />
           </DropdownMenuPrimitive.ItemIndicator>

@@ -106,7 +106,7 @@ function DialogContent({
             <Icon
               as={XIcon}
               className={cn(
-                'text-accent-foreground web:pointer-events-none size-4 shrink-0',
+                'text-accent-foreground web:pointer-events-none shrink-0',
               )}
             />
             <Text className="sr-only">Close</Text>
