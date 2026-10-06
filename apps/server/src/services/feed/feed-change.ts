@@ -107,6 +107,26 @@ export function applyFeedChange(
       return {
         rejection: `row ${id} does not match ${candidate.sessionUpdate}: ${z.prettifyError(row.error)}`,
       };
+    if (
+      existing?.sessionUpdate === 'tool_call_update' &&
+      row.data.sessionUpdate === 'tool_call_update' &&
+      (existing._meta?.argo?.permissionOutcome ||
+        row.data._meta?.argo?.permissionOutcome)
+    )
+      row.data = {
+        ...row.data,
+        _meta: {
+          ...existing._meta,
+          ...row.data._meta,
+          argo: {
+            ...existing._meta?.argo,
+            ...row.data._meta?.argo,
+            permissionOutcome:
+              existing._meta?.argo?.permissionOutcome ??
+              row.data._meta?.argo?.permissionOutcome,
+          },
+        },
+      };
     return {
       feed: {
         ...feed,
@@ -171,11 +191,13 @@ export function applyFeedChange(
         return {
           rejection: `${envelopeField} of row ${id} is set by the Feed`,
         };
-      return accept({ ...existing, ...change.set, revision }, () => ({
+      return accept({ ...existing, ...change.set, revision }, (row) => ({
         type: 'row.patch',
         rev: revision,
         id,
-        set: change.set,
+        set: Object.hasOwn(change.set, '_meta')
+          ? { ...change.set, _meta: row._meta }
+          : change.set,
       }));
     }
   }

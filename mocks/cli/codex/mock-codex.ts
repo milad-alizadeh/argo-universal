@@ -2,7 +2,10 @@
 import path from 'node:path';
 import type { VendorMessage } from '../../../packages/agents/codex/messages.ts';
 import type {
+  CommandExecutionRequestApprovalResponse,
+  FileChangeRequestApprovalResponse,
   ThreadResumeParams,
+  ToolRequestUserInputResponse,
   TurnInterruptParams,
   TurnStartParams,
   TurnStartResponse,
@@ -20,6 +23,7 @@ import {
   recordedFrames,
   splitTurns,
 } from '../recording.ts';
+import { recordRequestAnswer } from '../request-answer.ts';
 
 const PRODUCER = 'codex-app-server';
 // JSON-RPC error codes.
@@ -27,7 +31,12 @@ const METHOD_NOT_FOUND = -32601;
 const INTERNAL_ERROR = -32603;
 
 // The transport owns method and correlation; each request payload uses generated protocol types.
-type Request = { id?: string | number; method?: string; params?: unknown };
+type Request = {
+  id?: string | number;
+  method?: string;
+  params?: unknown;
+  result?: unknown;
+};
 const environment = readMockCliEnvironment();
 const recording = readRecording(environment.recordingFile, PRODUCER);
 const [command] = process.argv.slice(2);
@@ -57,6 +66,25 @@ let threadId = recordedThreadId;
 let turnIndex = 0;
 let interruptedFrames: typeof messages | null = null;
 let activeTurnId: string | null = null;
+let heldRequestId: string | number | null = null;
+let heldRequest: VendorMessage | null = null;
+let requestFrames: typeof messages = [];
+
+function replayRequestFrames(
+  frames: typeof messages,
+  crashAfter: ((message: VendorMessage) => boolean) | null,
+) {
+  const index = frames.findIndex((frame) => 'id' in frame);
+  const request = frames[index];
+  heldRequestId = request && 'id' in request ? request.id : null;
+  heldRequest = request ?? null;
+  requestFrames = index < 0 ? [] : frames.slice(index + 1);
+  const completed = replayTurn(
+    index < 0 ? frames : frames.slice(0, index + 1),
+    crashAfter,
+  );
+  if (completed && index < 0) activeTurnId = null;
+}
 let withheldStartResponse: {
   id: string | number | undefined;
   result: TurnStartResponse;
@@ -129,6 +157,11 @@ function startTurn(
     if (command < 0) activeTurnId = null;
     return;
   }
+  if (process.env.MOCK_CLI_REQUEST_BEFORE_START_RESPONSE === '1') {
+    withheldStartResponse = response;
+    replayRequestFrames(frames, crashAfter);
+    return;
+  }
   let before = 0;
   if (process.env.MOCK_CLI_COMPLETION_BEFORE_RESPONSE === '1') {
     before = frames.length;
@@ -141,13 +174,53 @@ function startTurn(
     withheldStartResponse = null;
   }
   send(response);
-  replayTurn(frames.slice(before), crashAfter);
-  if (command < 0) activeTurnId = null;
+  if (command >= 0) replayTurn(frames.slice(before), crashAfter);
+  else replayRequestFrames(frames.slice(before), crashAfter);
 }
 
-serveJsonLines<Request>(({ id, method, params }) => {
+serveJsonLines<Request>(({ id, method, params, result }) => {
   switch (method) {
     case undefined:
+      if (id === heldRequestId) {
+        if (
+          heldRequest?.method === 'item/commandExecution/requestApproval' ||
+          heldRequest?.method === 'item/fileChange/requestApproval'
+        ) {
+          const answer = result as
+            | CommandExecutionRequestApprovalResponse
+            | FileChangeRequestApprovalResponse;
+          recordRequestAnswer({
+            type: 'permission',
+            optionId:
+              answer.decision === 'accept' ? 'allow_once' : 'reject_once',
+          });
+        }
+        if (heldRequest?.method === 'item/tool/requestUserInput') {
+          const answer = result as ToolRequestUserInputResponse;
+          recordRequestAnswer(
+            Object.keys(answer.answers).length
+              ? {
+                  type: 'elicitation',
+                  action: 'accept',
+                  content: Object.fromEntries(
+                    Object.entries(answer.answers).map(([key, value]) => [
+                      key,
+                      value?.answers.length === 1
+                        ? value.answers[0]
+                        : value?.answers,
+                    ]),
+                  ),
+                }
+              : { type: 'elicitation', action: 'decline' },
+          );
+        }
+        if (withheldStartResponse) {
+          send(withheldStartResponse);
+          withheldStartResponse = null;
+        }
+        replayRequestFrames(requestFrames, null);
+      }
+      return;
     case 'initialized':
       return;
     case 'initialize':
@@ -198,6 +271,26 @@ serveJsonLines<Request>(({ id, method, params }) => {
             message: 'The vendor Turn id does not match.',
           },
         });
+      if (heldRequest?.method === 'item/tool/requestUserInput') {
+        recordRequestAnswer({ type: 'elicitation', action: 'cancel' });
+        const completed = requestFrames.find(
+          (message) => message.method === 'turn/completed',
+        );
+        send({ id, result: {} });
+        if (completed?.method === 'turn/completed')
+          send({
+            ...completed,
+            params: {
+              ...completed.params,
+              turn: { ...completed.params.turn, status: 'interrupted' },
+            },
+          } satisfies VendorMessage);
+        heldRequestId = null;
+        heldRequest = null;
+        requestFrames = [];
+        activeTurnId = null;
+        return;
+      }
       if (!interruptedFrames) return send({ id, result: {} });
       send({ id, result: {} });
       replayTurn(interruptedFrames, null);

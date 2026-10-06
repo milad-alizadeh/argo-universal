@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { SessionService } from '@repo/api';
+import { createElicitationAnswerSchema } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { listBranches } from '@repo/git';
 import { TRPCError } from '@trpc/server';
@@ -100,18 +101,55 @@ export function createSessionService({
   return {
     ...createSessionList({ database, sessions }),
     openSession: open,
-    // Issues #57 and #58 implement the answer behavior after the contract slice.
-    answerPermission: async () => {
-      throw new TRPCError({
-        code: 'NOT_IMPLEMENTED',
-        message: 'Permission answers are not implemented yet',
+    answerPermission: async ({ sessionId, toolCallId, optionId, message }) => {
+      const actor = await open(sessionId);
+      const request = actor.getSnapshot().context.permissionQueue[0];
+      if (request?.toolCallId !== toolCallId)
+        throw new TRPCError({ code: 'CONFLICT', message: 'already answered' });
+      if (!request.options.some((option) => option.optionId === optionId))
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'The Agent did not offer that option',
+        });
+      if (
+        optionId === 'reject_once' &&
+        message &&
+        actor.getSnapshot().context.capabilities?.permissionFeedback === false
+      )
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'The Agent does not support Permission feedback',
+        });
+      sendSessionCommand(actor, {
+        type: 'session.answerPermission',
+        toolCallId,
+        optionId,
+        message,
       });
+      return {};
     },
-    answerElicitation: async () => {
-      throw new TRPCError({
-        code: 'NOT_IMPLEMENTED',
-        message: 'Elicitation answers are not implemented yet',
+    answerElicitation: async ({ sessionId, requestId, action, content }) => {
+      const actor = await open(sessionId);
+      const request = actor.getSnapshot().context.pendingElicitation;
+      if (request?.requestId !== requestId)
+        throw new TRPCError({ code: 'CONFLICT', message: 'already answered' });
+      if (action === 'accept') {
+        const answer = createElicitationAnswerSchema(
+          request.requestedSchema,
+        ).safeParse(content ?? {});
+        if (!answer.success)
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'The answer does not match the Elicitation form',
+            cause: answer.error,
+          });
+      }
+      sendSessionCommand(actor, {
+        type: 'session.answerElicitation',
+        action,
+        content,
       });
+      return {};
     },
     answerPlanProposal: async () => {
       throw new TRPCError({
