@@ -147,7 +147,7 @@ function ReferenceChip({ reference }: { reference: Reference }) {
         as={isFolder(reference) ? FolderIcon : FileIcon}
         className="text-muted-foreground"
       />
-      <Text className="font-sans text-xs leading-4 text-foreground">
+      <Text className="font-sans text-sm leading-5 text-foreground">
         {referenceName(reference)}
       </Text>
     </View>
