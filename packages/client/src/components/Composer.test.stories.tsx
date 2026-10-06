@@ -1179,6 +1179,8 @@ export const NoPlan: Story = {
   },
 };
 
+export const NoPlanDark: Story = { ...NoPlan, globals: { mode: 'dark' } };
+
 export const PlanExpandsSmoothly: Story = {
   render: (args) => <ComposerMock {...args} sessionStarted />,
   play: async ({ canvas, userEvent }) => {
