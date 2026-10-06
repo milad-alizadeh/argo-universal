@@ -119,7 +119,7 @@ const prompt: AgentCommand = {
 const permissionAnswer: AgentCommand = {
   type: 'agent.answerPermission',
   toolCallId: 'tool-1',
-  optionId: 'reject',
+  optionId: 'reject_once' as const,
   message: 'Use a read-only command',
 };
 const elicitationAnswer: AgentCommand = {
@@ -384,8 +384,16 @@ describe('Agent machine', () => {
           toolCallId: 'tool-1',
           title: 'Write file',
           options: [
-            { optionId: 'allow', name: 'Allow once', kind: 'allow_once' },
-            { optionId: 'reject', name: 'Deny', kind: 'reject_once' },
+            {
+              optionId: 'allow_once' as const,
+              name: 'Allow once',
+              kind: 'allow_once',
+            },
+            {
+              optionId: 'reject_once' as const,
+              name: 'Deny',
+              kind: 'reject_once',
+            },
           ],
         },
       },

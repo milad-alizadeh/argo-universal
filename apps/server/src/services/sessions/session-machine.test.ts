@@ -1,4 +1,5 @@
 import { type AgentCommand, agentMachine } from '@repo/agents';
+import { permissionOptions } from '@repo/contracts';
 import {
   createMockAdapter,
   type MockAgentScript,
@@ -122,9 +123,7 @@ it('answers only the head Permission request and keeps other requests visible', 
   const request = {
     toolCallId: 'tool-1',
     title: 'Read a file',
-    options: [
-      { optionId: 'allow', name: 'Allow', kind: 'allow_once' as const },
-    ],
+    options: permissionOptions,
   };
   stream.send({ type: 'agent.permissionRequested', request });
   stream.send({
@@ -150,13 +149,13 @@ it('answers only the head Permission request and keeps other requests visible', 
     sendSessionCommand(session, {
       type: 'session.answerPermission',
       toolCallId: 'tool-2',
-      optionId: 'allow',
+      optionId: 'allow_once' as const,
     }),
   ).toThrow(expect.objectContaining({ code: 'CONFLICT' }));
   sendSessionCommand(session, {
     type: 'session.answerPermission',
     toolCallId: 'tool-1',
-    optionId: 'allow',
+    optionId: 'allow_once' as const,
   });
   expect(
     toSessionSnapshot(session.getSnapshot(), feed.getSnapshot()),
@@ -167,7 +166,7 @@ it('answers only the head Permission request and keeps other requests visible', 
   sendSessionCommand(session, {
     type: 'session.answerPermission',
     toolCallId: 'tool-2',
-    optionId: 'allow',
+    optionId: 'allow_once' as const,
   });
   expect(
     toSessionSnapshot(session.getSnapshot(), feed.getSnapshot()),
@@ -200,7 +199,11 @@ it('cancels queued requests and waits for the Agent to end the Turn', async () =
   sendSessionCommand(session, firstPrompt);
   stream.send({
     type: 'agent.permissionRequested',
-    request: { toolCallId: 'tool-1', title: 'Run a command', options: [] },
+    request: {
+      toolCallId: 'tool-1',
+      title: 'Run a command',
+      options: permissionOptions,
+    },
   });
   stream.send({
     type: 'agent.elicitationRequested',
@@ -231,6 +234,7 @@ it('cancels queued requests and waits for the Agent to end the Turn', async () =
     activeTurnId: 'turn-1',
     pendingPermission: null,
     pendingElicitation: null,
+    pendingPlanProposal: null,
   });
   stream.send({ type: 'agent.turnEnded', stopReason: 'cancelled' });
   expect(
@@ -414,7 +418,11 @@ const events = [
   { type: 'session.setConfigOption', configId: 'mode', value: 'plan' },
   {
     type: 'agent.permissionRequested',
-    request: { toolCallId: 'tool-1', title: 'Read', options: [] },
+    request: {
+      toolCallId: 'tool-1',
+      title: 'Read',
+      options: permissionOptions,
+    },
   },
   { type: 'session.answerPermission', toolCallId: 'tool-1', optionId: null },
   {
@@ -560,6 +568,10 @@ it.each(paths.map((path, index) => [index, path] as const))(
             ),
           ).toMatchObject({
             ...projection,
+            pendingElicitation: projection.pendingElicitation && {
+              ...projection.pendingElicitation,
+              requestId: expect.any(String),
+            },
             liveHeader: liveHeader && {
               ...liveHeader,
               startedAt:

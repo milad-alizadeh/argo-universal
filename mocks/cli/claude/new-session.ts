@@ -1,28 +1,27 @@
-import { readFileSync } from 'node:fs';
 import {
   startingValues,
   toConfigOptions,
 } from '../../../packages/agents/claude/config-options';
+import type {
+  SDKControlInitializeResponse,
+  SDKControlResponse,
+} from '../../../packages/agents/claude/messages';
 import { recordedImagePrompt } from '../image';
+import { readRecording, recordedFrames } from '../recording';
 
-const recording: {
-  payload: {
-    output: {
-      type: string;
-      response?: {
-        response: { models: Parameters<typeof toConfigOptions>[0] };
-      };
-    }[];
-  };
-} = JSON.parse(
-  readFileSync(
-    new URL('./recordings/2.1.286/image-prompt.json', import.meta.url),
-    'utf8',
-  ),
-);
-const recordedModels = recording.payload.output.find(
-  (frame) => frame.type === 'control_response',
-)?.response?.response.models;
+const initialization = recordedFrames<SDKControlResponse>(
+  readRecording(
+    fileURLToPath(
+      new URL('./recordings/2.1.286/image-prompt.json', import.meta.url),
+    ),
+    'claude-cli',
+  ).payload,
+  'output',
+).find((frame) => frame.type === 'control_response');
+const recordedModels =
+  initialization?.response.subtype === 'success'
+    ? (initialization.response.response as SDKControlInitializeResponse).models
+    : undefined;
 if (!recordedModels) throw new Error('Image recording has no model catalog');
 const efforts = new Set<string>();
 const models = recordedModels.filter((model) => {
@@ -44,3 +43,5 @@ export function newSessionMock() {
     prompt: recordedImagePrompt,
   };
 }
+
+import { fileURLToPath } from 'node:url';

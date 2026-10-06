@@ -5,6 +5,14 @@ import { z } from 'zod';
 // What one recording holds. Its folder names the CLI version it was recorded from.
 export type Recording = { version: string; payload: unknown };
 
+// Validate the recording envelope here; vendor converters use their SDK's frame types (ADR-0015).
+export function recordedFrames<Frame>(payload: unknown, pipe: string): Frame[] {
+  const frames = Array.isArray(payload)
+    ? payload
+    : z.record(z.string(), z.unknown()).parse(payload)[pipe];
+  return z.array(z.looseObject({})).parse(frames) as Frame[];
+}
+
 const envelope = (producer: string, version: string) =>
   z.object({
     producer: z.literal(producer),

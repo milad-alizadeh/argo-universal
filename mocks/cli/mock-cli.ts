@@ -1,4 +1,4 @@
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { chmod, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { createInterface } from 'node:readline';
@@ -77,12 +77,12 @@ export const send = (message: unknown) =>
 let crashed = false;
 
 // Reads one JSON message per stdin line, and exits when the caller closes stdin.
-export function serveJsonLines(handle: (message: unknown) => void) {
+export function serveJsonLines<Frame>(handle: (message: Frame) => void) {
   const processFile = process.env.MOCK_CLI_PROCESS_FILE;
   if (processFile) writeFileSync(processFile, String(process.pid));
   createInterface({ input: process.stdin })
     .on('line', (line) => {
-      if (!crashed) handle(JSON.parse(line));
+      if (!crashed) handle(z.looseObject({}).parse(JSON.parse(line)) as Frame);
     })
     .on('close', () => {
       if (!crashed) process.exit(0);
@@ -105,4 +105,11 @@ export function replayTurn<Frame>(
     }
   }
   return true;
+}
+
+// The transcript marker belongs to the mock harness, not either vendor protocol.
+export function readMockTranscript(file: string) {
+  return z
+    .object({ vendorSessionId: z.string() })
+    .parse(JSON.parse(readFileSync(file, 'utf8')));
 }

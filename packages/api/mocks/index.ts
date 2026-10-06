@@ -36,6 +36,10 @@ export function unreachableServices(
       new: unreachable('session.new'),
       prompt: unreachable('session.prompt'),
       cancel: unreachable('session.cancel'),
+      answerPermission: unreachable('session.answerPermission'),
+      answerElicitation: unreachable('session.answerElicitation'),
+      answerPlanProposal: unreachable('session.answerPlanProposal'),
+
       setConfigOption: unreachable('session.setConfigOption'),
       changes: unreachable('session.changes'),
       diff: unreachable('session.diff'),
@@ -47,4 +51,5 @@ export function unreachableServices(
 export * from './changes';
 export * from './feed';
 export * from './new-session';
+export * from './requests';
 export * from './session-list';

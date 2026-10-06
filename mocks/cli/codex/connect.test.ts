@@ -12,6 +12,7 @@ import { agentMachine } from '@repo/agents';
 import { afterEach, expect, it, vi } from 'vitest';
 import { createActor, fromCallback, waitFor } from 'xstate';
 import { codexAdapter } from '../../../packages/agents/codex/index';
+import type { VendorMessage } from '../../../packages/agents/codex/messages';
 import { findRecording } from '../recording';
 import { writeMockCodex } from './write-mock-codex';
 
@@ -45,15 +46,23 @@ it('starts another Turn before a cancelled Turn receives its late start response
   );
   const envelope = JSON.parse(readFileSync(source, 'utf8')) as {
     payload: {
-      messages: { params: { turn?: { id: string }; item?: { id: string } } }[];
+      messages: VendorMessage[];
     };
   };
   const identifiers = new Set(
-    envelope.payload.messages.flatMap(({ params }) =>
-      [params.turn?.id, params.item?.id].filter(
-        (id): id is string => id !== undefined,
-      ),
-    ),
+    envelope.payload.messages.flatMap((message) => {
+      if (
+        message.method === 'turn/started' ||
+        message.method === 'turn/completed'
+      )
+        return [message.params.turn.id];
+      if (
+        message.method === 'item/started' ||
+        message.method === 'item/completed'
+      )
+        return [message.params.item.id];
+      return [];
+    }),
   );
   const next = envelope.payload.messages.map((message) => {
     let text = JSON.stringify(message);

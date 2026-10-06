@@ -1,5 +1,4 @@
 import path from 'node:path';
-import { z } from 'zod';
 import type { VendorMessage } from '../../../packages/agents/codex/messages.ts';
 import {
   initialMappingState,
@@ -7,19 +6,16 @@ import {
 } from '../../../packages/agents/codex/to-agent-events.ts';
 import { recordedFeedEvents } from '../feed.ts';
 import { recordedDataUrlImage } from '../image.ts';
-import { findRecording, readRecording } from '../recording.ts';
-
-const Payload = z.object({
-  messages: z.array(z.looseObject({ method: z.string() })),
-});
+import { findRecording, readRecording, recordedFrames } from '../recording.ts';
 
 export function feedEvents(name: string) {
   const file = findRecording(
     path.join(import.meta.dirname, 'recordings'),
     name,
   );
-  const { messages } = Payload.parse(
+  const messages = recordedFrames<VendorMessage & { emittedAtMs?: number }>(
     readRecording(file, 'codex-app-server').payload,
+    'messages',
   );
   return recordedFeedEvents(
     { initialMappingState, toAgentEvents },
@@ -30,36 +26,31 @@ export function feedEvents(name: string) {
   );
 }
 
-const UserMessageItem = z.object({
-  method: z.literal('item/completed'),
-  params: z.object({
-    item: z.object({
-      type: z.literal('userMessage'),
-      content: z.array(
-        z.discriminatedUnion('type', [
-          z.object({ type: z.literal('text'), text: z.string() }),
-          z.object({ type: z.literal('image'), url: z.string() }),
-        ]),
-      ),
-    }),
-  }),
-});
-
 // The first prompt the recording's Turns hold, or undefined without one.
 export function recordedPrompt(name: string) {
   const file = findRecording(
     path.join(import.meta.dirname, 'recordings'),
     name,
   );
-  const { messages } = Payload.parse(
+  const messages = recordedFrames<VendorMessage & { emittedAtMs?: number }>(
     readRecording(file, 'codex-app-server').payload,
+    'messages',
   );
-  const item = messages
-    .map((message) => UserMessageItem.safeParse(message).data)
-    .find((message) => message !== undefined)?.params.item;
-  return item?.content.map((block) =>
-    block.type === 'text'
-      ? { type: 'text' as const, text: block.text }
-      : recordedDataUrlImage(block.url),
+  const completed = messages.find(
+    (message) =>
+      message.method === 'item/completed' &&
+      message.params.item.type === 'userMessage',
   );
+  if (
+    completed?.method !== 'item/completed' ||
+    completed.params.item.type !== 'userMessage'
+  )
+    return undefined;
+  return completed.params.item.content.flatMap((block) => {
+    if (block.type === 'text')
+      return [{ type: 'text' as const, text: block.text }];
+    if (block.type === 'image' && 'url' in block)
+      return [recordedDataUrlImage(block.url)];
+    throw new Error(`Unsupported recorded prompt block: ${block.type}`);
+  });
 }

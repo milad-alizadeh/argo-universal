@@ -1,4 +1,10 @@
 import {
+  SessionAnswerElicitationInput,
+  SessionAnswerElicitationOutput,
+  SessionAnswerPermissionInput,
+  SessionAnswerPermissionOutput,
+  SessionAnswerPlanProposalInput,
+  SessionAnswerPlanProposalOutput,
   SessionCancelInput,
   SessionCancelOutput,
   SessionChangesInput,
@@ -49,6 +55,22 @@ export const sessionRouter = router({
     .input(SessionSetConfigOptionInput)
     .output(SessionSetConfigOptionOutput)
     .mutation(({ ctx, input }) => ctx.services.session.setConfigOption(input)),
+  answerPermission: publicProcedure
+    .input(SessionAnswerPermissionInput)
+    .output(SessionAnswerPermissionOutput)
+    .mutation(({ ctx, input }) => ctx.services.session.answerPermission(input)),
+  answerElicitation: publicProcedure
+    .input(SessionAnswerElicitationInput)
+    .output(SessionAnswerElicitationOutput)
+    .mutation(({ ctx, input }) =>
+      ctx.services.session.answerElicitation(input),
+    ),
+  answerPlanProposal: publicProcedure
+    .input(SessionAnswerPlanProposalInput)
+    .output(SessionAnswerPlanProposalOutput)
+    .mutation(({ ctx, input }) =>
+      ctx.services.session.answerPlanProposal(input),
+    ),
   changes: publicProcedure
     .input(SessionChangesInput)
     .output(SessionChangesOutput)

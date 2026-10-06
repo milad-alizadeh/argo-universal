@@ -1,0 +1,1793 @@
+[
+  {
+    "agent": "agent-1",
+    "recording": "permission",
+    "pending": {
+      "rows": [
+        {
+          "id": "turn-1:user",
+          "sessionId": "agent-1-permission",
+          "position": 0,
+          "revision": 1,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "user_message",
+          "messageId": "turn-1:user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Use Write exactly once to create hello.txt containing recording-ready. Then reply done. Do not use other tools."
+            }
+          ]
+        },
+        {
+          "id": "msg_011Cfm9kV5NqPoYV1v5McNvg#0",
+          "sessionId": "agent-1-permission",
+          "position": 1,
+          "revision": 3,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "agent_thought",
+          "messageId": "msg_011Cfm9kV5NqPoYV1v5McNvg",
+          "content": [
+            {
+              "type": "text",
+              "text": ""
+            }
+          ]
+        },
+        {
+          "id": "toolu_01LSiwg6TrLU21EM7iVh2aS1",
+          "sessionId": "agent-1-permission",
+          "position": 2,
+          "revision": 4,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "toolu_01LSiwg6TrLU21EM7iVh2aS1",
+          "title": "Write /repo/hello.txt",
+          "name": "Write",
+          "kind": "edit",
+          "status": "in_progress",
+          "content": [
+            {
+              "type": "diff",
+              "changes": [
+                {
+                  "operation": "add",
+                  "path": "/repo/hello.txt",
+                  "newText": "recording-ready"
+                }
+              ]
+            }
+          ],
+          "locations": [
+            {
+              "path": "/repo/hello.txt"
+            }
+          ],
+          "rawInput": {
+            "file_path": "/repo/hello.txt",
+            "content": "recording-ready"
+          },
+          "_meta": {
+            "argo": {
+              "startedAt": 1791297380809
+            }
+          }
+        }
+      ],
+      "snapshot": {
+        "state": "requires_action",
+        "liveHeader": {
+          "text": "Awaiting approval",
+          "source": {
+            "type": "request"
+          },
+          "startedAt": 1791277200000
+        },
+        "activeTurnId": "turn-1",
+        "usage": null,
+        "pendingPermission": {
+          "toolCallId": "toolu_01LSiwg6TrLU21EM7iVh2aS1",
+          "title": "Write",
+          "options": [
+            {
+              "optionId": "allow_once",
+              "name": "Allow once",
+              "kind": "allow_once"
+            },
+            {
+              "optionId": "reject_once",
+              "name": "Deny",
+              "kind": "reject_once"
+            }
+          ]
+        },
+        "pendingElicitation": null,
+        "pendingPlanProposal": null,
+        "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
+        "maxRevision": 4,
+        "epoch": 0
+      }
+    },
+    "answer": {
+      "procedure": "answerPermission",
+      "input": {
+        "sessionId": "agent-1-permission",
+        "toolCallId": "toolu_01LSiwg6TrLU21EM7iVh2aS1",
+        "optionId": "allow_once"
+      }
+    },
+    "answered": {
+      "rows": [
+        {
+          "id": "turn-1:user",
+          "sessionId": "agent-1-permission",
+          "position": 0,
+          "revision": 1,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "user_message",
+          "messageId": "turn-1:user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Use Write exactly once to create hello.txt containing recording-ready. Then reply done. Do not use other tools."
+            }
+          ]
+        },
+        {
+          "id": "msg_011Cfm9kV5NqPoYV1v5McNvg#0",
+          "sessionId": "agent-1-permission",
+          "position": 1,
+          "revision": 3,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "agent_thought",
+          "messageId": "msg_011Cfm9kV5NqPoYV1v5McNvg",
+          "content": [
+            {
+              "type": "text",
+              "text": ""
+            }
+          ]
+        },
+        {
+          "id": "toolu_01LSiwg6TrLU21EM7iVh2aS1",
+          "sessionId": "agent-1-permission",
+          "position": 2,
+          "revision": 5,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "toolu_01LSiwg6TrLU21EM7iVh2aS1",
+          "title": "Write /repo/hello.txt",
+          "name": "Write",
+          "kind": "edit",
+          "status": "in_progress",
+          "content": [
+            {
+              "type": "diff",
+              "changes": [
+                {
+                  "operation": "add",
+                  "path": "/repo/hello.txt",
+                  "newText": "recording-ready"
+                }
+              ]
+            }
+          ],
+          "locations": [
+            {
+              "path": "/repo/hello.txt"
+            }
+          ],
+          "rawInput": {
+            "file_path": "/repo/hello.txt",
+            "content": "recording-ready"
+          },
+          "_meta": {
+            "argo": {
+              "permissionOutcome": {
+                "outcome": "selected",
+                "optionId": "allow_once"
+              },
+              "startedAt": 1791297380809
+            }
+          }
+        }
+      ],
+      "snapshot": {
+        "state": "running",
+        "liveHeader": {
+          "text": "Editing /repo/hello.txt",
+          "source": {
+            "type": "tool_call",
+            "toolCallId": "toolu_01LSiwg6TrLU21EM7iVh2aS1"
+          },
+          "startedAt": 1791277200000
+        },
+        "activeTurnId": "turn-1",
+        "usage": null,
+        "pendingPermission": null,
+        "pendingElicitation": null,
+        "pendingPlanProposal": null,
+        "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
+        "maxRevision": 5,
+        "epoch": 0
+      }
+    }
+  },
+  {
+    "agent": "agent-1",
+    "recording": "elicitation",
+    "pending": {
+      "rows": [
+        {
+          "id": "turn-1:user",
+          "sessionId": "agent-1-elicitation",
+          "position": 0,
+          "revision": 1,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "user_message",
+          "messageId": "turn-1:user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Before doing anything, use AskUserQuestion to ask which color I prefer: Blue or Green. Then reply with my choice. Do not use other tools."
+            }
+          ]
+        },
+        {
+          "id": "msg_011Cfm9nA4wC3AkH4B2pRkQc#0",
+          "sessionId": "agent-1-elicitation",
+          "position": 1,
+          "revision": 3,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "agent_thought",
+          "messageId": "msg_011Cfm9nA4wC3AkH4B2pRkQc",
+          "content": [
+            {
+              "type": "text",
+              "text": ""
+            }
+          ]
+        },
+        {
+          "id": "toolu_019JkonAUeBbCmif2RviSrJu",
+          "sessionId": "agent-1-elicitation",
+          "position": 2,
+          "revision": 4,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "toolu_019JkonAUeBbCmif2RviSrJu",
+          "title": "AskUserQuestion",
+          "name": "AskUserQuestion",
+          "kind": "other",
+          "status": "in_progress",
+          "content": [],
+          "rawInput": {
+            "questions": [
+              {
+                "question": "Which color do you prefer?",
+                "header": "Color preference",
+                "options": [
+                  {
+                    "label": "Blue",
+                    "description": "A cool, calming blue tone"
+                  },
+                  {
+                    "label": "Green",
+                    "description": "A fresh, natural green tone"
+                  }
+                ],
+                "multiSelect": false
+              }
+            ]
+          },
+          "_meta": {
+            "argo": {
+              "startedAt": 1791297403421
+            }
+          }
+        }
+      ],
+      "snapshot": {
+        "state": "requires_action",
+        "liveHeader": {
+          "text": "Waiting for your answer",
+          "source": {
+            "type": "request"
+          },
+          "startedAt": 1791277200000
+        },
+        "activeTurnId": "turn-1",
+        "usage": null,
+        "pendingPermission": null,
+        "pendingElicitation": {
+          "requestId": "request-1",
+          "mode": "form",
+          "message": "Which color do you prefer?",
+          "requestedSchema": {
+            "type": "object",
+            "properties": {
+              "Which color do you prefer?": {
+                "title": "Color preference",
+                "description": "Which color do you prefer?",
+                "type": "string",
+                "oneOf": [
+                  {
+                    "const": "Blue",
+                    "title": "Blue",
+                    "description": "A cool, calming blue tone"
+                  },
+                  {
+                    "const": "Green",
+                    "title": "Green",
+                    "description": "A fresh, natural green tone"
+                  }
+                ]
+              }
+            },
+            "required": ["Which color do you prefer?"]
+          },
+          "toolCallId": "toolu_019JkonAUeBbCmif2RviSrJu"
+        },
+        "pendingPlanProposal": null,
+        "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
+        "maxRevision": 4,
+        "epoch": 0
+      }
+    },
+    "answer": {
+      "procedure": "answerElicitation",
+      "input": {
+        "sessionId": "agent-1-elicitation",
+        "requestId": "request-1",
+        "action": "accept",
+        "content": {
+          "Which color do you prefer?": "Blue"
+        }
+      }
+    },
+    "answered": {
+      "rows": [
+        {
+          "id": "turn-1:user",
+          "sessionId": "agent-1-elicitation",
+          "position": 0,
+          "revision": 1,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "user_message",
+          "messageId": "turn-1:user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Before doing anything, use AskUserQuestion to ask which color I prefer: Blue or Green. Then reply with my choice. Do not use other tools."
+            }
+          ]
+        },
+        {
+          "id": "msg_011Cfm9nA4wC3AkH4B2pRkQc#0",
+          "sessionId": "agent-1-elicitation",
+          "position": 1,
+          "revision": 3,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "agent_thought",
+          "messageId": "msg_011Cfm9nA4wC3AkH4B2pRkQc",
+          "content": [
+            {
+              "type": "text",
+              "text": ""
+            }
+          ]
+        },
+        {
+          "id": "toolu_019JkonAUeBbCmif2RviSrJu",
+          "sessionId": "agent-1-elicitation",
+          "position": 2,
+          "revision": 4,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "toolu_019JkonAUeBbCmif2RviSrJu",
+          "title": "AskUserQuestion",
+          "name": "AskUserQuestion",
+          "kind": "other",
+          "status": "in_progress",
+          "content": [],
+          "rawInput": {
+            "questions": [
+              {
+                "question": "Which color do you prefer?",
+                "header": "Color preference",
+                "options": [
+                  {
+                    "label": "Blue",
+                    "description": "A cool, calming blue tone"
+                  },
+                  {
+                    "label": "Green",
+                    "description": "A fresh, natural green tone"
+                  }
+                ],
+                "multiSelect": false
+              }
+            ]
+          },
+          "_meta": {
+            "argo": {
+              "startedAt": 1791297403421
+            }
+          }
+        }
+      ],
+      "snapshot": {
+        "state": "running",
+        "liveHeader": {
+          "text": "AskUserQuestion",
+          "source": {
+            "type": "tool_call",
+            "toolCallId": "toolu_019JkonAUeBbCmif2RviSrJu"
+          },
+          "startedAt": 1791277200000
+        },
+        "activeTurnId": "turn-1",
+        "usage": null,
+        "pendingPermission": null,
+        "pendingElicitation": null,
+        "pendingPlanProposal": null,
+        "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
+        "maxRevision": 4,
+        "epoch": 0
+      }
+    }
+  },
+  {
+    "agent": "agent-1",
+    "recording": "plan-approved",
+    "pending": {
+      "rows": [
+        {
+          "id": "turn-1:user",
+          "sessionId": "agent-1-plan-approved",
+          "position": 0,
+          "revision": 1,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "user_message",
+          "messageId": "turn-1:user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Create a very short plan for making a file called hello.txt that contains hello. Use ExitPlanMode to propose the plan for approval. After approval, only say ready; do not implement or run commands."
+            }
+          ]
+        },
+        {
+          "id": "toolu_01YC6Sj5RzEKinggFecQsxMD",
+          "sessionId": "agent-1-plan-approved",
+          "position": 1,
+          "revision": 4,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "toolu_01YC6Sj5RzEKinggFecQsxMD",
+          "title": "Write /user/.claude/plans/create-a-very-short-adaptive-wolf.md",
+          "name": "Write",
+          "kind": "edit",
+          "status": "completed",
+          "content": [
+            {
+              "type": "diff",
+              "changes": [
+                {
+                  "operation": "add",
+                  "path": "/user/.claude/plans/create-a-very-short-adaptive-wolf.md",
+                  "newText": "# Plan: create hello.txt\n\n## Context\nCreate a file `hello.txt` containing the text `hello` in the working directory.\n\n## Steps\n1. Write `hello.txt` in `/repo` with the content `hello`.\n\n## Verification\nRead the file and confirm it contains `hello`.\n"
+                }
+              ]
+            }
+          ],
+          "locations": [
+            {
+              "path": "/user/.claude/plans/create-a-very-short-adaptive-wolf.md"
+            }
+          ],
+          "rawInput": {
+            "file_path": "/user/.claude/plans/create-a-very-short-adaptive-wolf.md",
+            "content": "# Plan: create hello.txt\n\n## Context\nCreate a file `hello.txt` containing the text `hello` in the working directory.\n\n## Steps\n1. Write `hello.txt` in `/repo` with the content `hello`.\n\n## Verification\nRead the file and confirm it contains `hello`.\n"
+          },
+          "_meta": {
+            "argo": {
+              "startedAt": 1791297403420,
+              "endedAt": 1791297403436
+            }
+          }
+        },
+        {
+          "id": "toolu_01PAYAcj4MEZzwRwvDkFTDyN",
+          "sessionId": "agent-1-plan-approved",
+          "position": 2,
+          "revision": 5,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "toolu_01PAYAcj4MEZzwRwvDkFTDyN",
+          "title": "ToolSearch",
+          "name": "ToolSearch",
+          "kind": "other",
+          "status": "completed",
+          "content": [],
+          "rawInput": {
+            "query": "select:ExitPlanMode",
+            "max_results": 1
+          },
+          "_meta": {
+            "argo": {
+              "startedAt": 1791297403426,
+              "endedAt": 1791297403440
+            }
+          }
+        },
+        {
+          "id": "toolu_01Vze3Fwq4hFH3VMrUKW9RxJ",
+          "sessionId": "agent-1-plan-approved",
+          "position": 3,
+          "revision": 6,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "toolu_01Vze3Fwq4hFH3VMrUKW9RxJ",
+          "title": "Leave plan mode",
+          "name": "ExitPlanMode",
+          "kind": "switch_mode",
+          "status": "in_progress",
+          "content": [],
+          "rawInput": {
+            "plan": "# Plan: create hello.txt\n\n## Context\nCreate a file `hello.txt` containing the text `hello` in the working directory.\n\n## Steps\n1. Write `hello.txt` in `/repo` with the content `hello`.\n\n## Verification\nRead the file and confirm it contains `hello`.\n",
+            "planFilePath": "/user/.claude/plans/create-a-very-short-adaptive-wolf.md"
+          },
+          "_meta": {
+            "argo": {
+              "startedAt": 1791297404832
+            }
+          }
+        },
+        {
+          "id": "toolu_01Vze3Fwq4hFH3VMrUKW9RxJ:plan",
+          "sessionId": "agent-1-plan-approved",
+          "position": 4,
+          "revision": 7,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "plan_update",
+          "plan": {
+            "type": "markdown",
+            "planId": "toolu_01Vze3Fwq4hFH3VMrUKW9RxJ:plan",
+            "content": "# Plan: create hello.txt\n\n## Context\nCreate a file `hello.txt` containing the text `hello` in the working directory.\n\n## Steps\n1. Write `hello.txt` in `/repo` with the content `hello`.\n\n## Verification\nRead the file and confirm it contains `hello`.\n",
+            "_meta": {
+              "argo": {
+                "requestId": "cbd38885-dd45-440d-9d71-f459a91110e1",
+                "filePath": "/user/.claude/plans/create-a-very-short-adaptive-wolf.md"
+              }
+            }
+          }
+        }
+      ],
+      "snapshot": {
+        "state": "requires_action",
+        "liveHeader": {
+          "text": "Plan ready",
+          "source": {
+            "type": "request"
+          },
+          "startedAt": 1791277200000
+        },
+        "activeTurnId": "turn-1",
+        "usage": null,
+        "pendingPermission": null,
+        "pendingElicitation": null,
+        "pendingPlanProposal": {
+          "planId": "toolu_01Vze3Fwq4hFH3VMrUKW9RxJ:plan",
+          "content": "# Plan: create hello.txt\n\n## Context\nCreate a file `hello.txt` containing the text `hello` in the working directory.\n\n## Steps\n1. Write `hello.txt` in `/repo` with the content `hello`.\n\n## Verification\nRead the file and confirm it contains `hello`.\n"
+        },
+        "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
+        "maxRevision": 7,
+        "epoch": 0
+      }
+    },
+    "answer": {
+      "procedure": "answerPlanProposal",
+      "input": {
+        "sessionId": "agent-1-plan-approved",
+        "planId": "toolu_01Vze3Fwq4hFH3VMrUKW9RxJ:plan",
+        "decision": "approve"
+      }
+    },
+    "answered": {
+      "rows": [
+        {
+          "id": "turn-1:user",
+          "sessionId": "agent-1-plan-approved",
+          "position": 0,
+          "revision": 1,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "user_message",
+          "messageId": "turn-1:user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Create a very short plan for making a file called hello.txt that contains hello. Use ExitPlanMode to propose the plan for approval. After approval, only say ready; do not implement or run commands."
+            }
+          ]
+        },
+        {
+          "id": "toolu_01YC6Sj5RzEKinggFecQsxMD",
+          "sessionId": "agent-1-plan-approved",
+          "position": 1,
+          "revision": 4,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "toolu_01YC6Sj5RzEKinggFecQsxMD",
+          "title": "Write /user/.claude/plans/create-a-very-short-adaptive-wolf.md",
+          "name": "Write",
+          "kind": "edit",
+          "status": "completed",
+          "content": [
+            {
+              "type": "diff",
+              "changes": [
+                {
+                  "operation": "add",
+                  "path": "/user/.claude/plans/create-a-very-short-adaptive-wolf.md",
+                  "newText": "# Plan: create hello.txt\n\n## Context\nCreate a file `hello.txt` containing the text `hello` in the working directory.\n\n## Steps\n1. Write `hello.txt` in `/repo` with the content `hello`.\n\n## Verification\nRead the file and confirm it contains `hello`.\n"
+                }
+              ]
+            }
+          ],
+          "locations": [
+            {
+              "path": "/user/.claude/plans/create-a-very-short-adaptive-wolf.md"
+            }
+          ],
+          "rawInput": {
+            "file_path": "/user/.claude/plans/create-a-very-short-adaptive-wolf.md",
+            "content": "# Plan: create hello.txt\n\n## Context\nCreate a file `hello.txt` containing the text `hello` in the working directory.\n\n## Steps\n1. Write `hello.txt` in `/repo` with the content `hello`.\n\n## Verification\nRead the file and confirm it contains `hello`.\n"
+          },
+          "_meta": {
+            "argo": {
+              "startedAt": 1791297403420,
+              "endedAt": 1791297403436
+            }
+          }
+        },
+        {
+          "id": "toolu_01PAYAcj4MEZzwRwvDkFTDyN",
+          "sessionId": "agent-1-plan-approved",
+          "position": 2,
+          "revision": 5,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "toolu_01PAYAcj4MEZzwRwvDkFTDyN",
+          "title": "ToolSearch",
+          "name": "ToolSearch",
+          "kind": "other",
+          "status": "completed",
+          "content": [],
+          "rawInput": {
+            "query": "select:ExitPlanMode",
+            "max_results": 1
+          },
+          "_meta": {
+            "argo": {
+              "startedAt": 1791297403426,
+              "endedAt": 1791297403440
+            }
+          }
+        },
+        {
+          "id": "toolu_01Vze3Fwq4hFH3VMrUKW9RxJ",
+          "sessionId": "agent-1-plan-approved",
+          "position": 3,
+          "revision": 6,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "toolu_01Vze3Fwq4hFH3VMrUKW9RxJ",
+          "title": "Leave plan mode",
+          "name": "ExitPlanMode",
+          "kind": "switch_mode",
+          "status": "in_progress",
+          "content": [],
+          "rawInput": {
+            "plan": "# Plan: create hello.txt\n\n## Context\nCreate a file `hello.txt` containing the text `hello` in the working directory.\n\n## Steps\n1. Write `hello.txt` in `/repo` with the content `hello`.\n\n## Verification\nRead the file and confirm it contains `hello`.\n",
+            "planFilePath": "/user/.claude/plans/create-a-very-short-adaptive-wolf.md"
+          },
+          "_meta": {
+            "argo": {
+              "startedAt": 1791297404832
+            }
+          }
+        },
+        {
+          "id": "toolu_01Vze3Fwq4hFH3VMrUKW9RxJ:plan",
+          "sessionId": "agent-1-plan-approved",
+          "position": 4,
+          "revision": 8,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "plan_update",
+          "plan": {
+            "type": "markdown",
+            "planId": "toolu_01Vze3Fwq4hFH3VMrUKW9RxJ:plan",
+            "content": "# Plan: create hello.txt\n\n## Context\nCreate a file `hello.txt` containing the text `hello` in the working directory.\n\n## Steps\n1. Write `hello.txt` in `/repo` with the content `hello`.\n\n## Verification\nRead the file and confirm it contains `hello`.\n",
+            "_meta": {
+              "argo": {
+                "requestId": "cbd38885-dd45-440d-9d71-f459a91110e1",
+                "filePath": "/user/.claude/plans/create-a-very-short-adaptive-wolf.md",
+                "proposalOutcome": "approved"
+              }
+            }
+          }
+        }
+      ],
+      "snapshot": {
+        "state": "running",
+        "liveHeader": {
+          "text": "Switching mode",
+          "source": {
+            "type": "tool_call",
+            "toolCallId": "toolu_01Vze3Fwq4hFH3VMrUKW9RxJ"
+          },
+          "startedAt": 1791277200000
+        },
+        "activeTurnId": "turn-1",
+        "usage": null,
+        "pendingPermission": null,
+        "pendingElicitation": null,
+        "pendingPlanProposal": null,
+        "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
+        "maxRevision": 8,
+        "epoch": 0
+      }
+    }
+  },
+  {
+    "agent": "agent-1",
+    "recording": "plan-kept-planning",
+    "pending": {
+      "rows": [
+        {
+          "id": "turn-1:user",
+          "sessionId": "agent-1-plan-kept-planning",
+          "position": 0,
+          "revision": 1,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "user_message",
+          "messageId": "turn-1:user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Create a very short plan for making a file called hello.txt that contains hello. Use ExitPlanMode to propose the plan for approval. After feedback, acknowledge it in one sentence, without calling any more tools."
+            }
+          ]
+        },
+        {
+          "id": "toolu_01QswQXUzbTYLz69Wd3f2maE",
+          "sessionId": "agent-1-plan-kept-planning",
+          "position": 1,
+          "revision": 3,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "toolu_01QswQXUzbTYLz69Wd3f2maE",
+          "title": "ToolSearch",
+          "name": "ToolSearch",
+          "kind": "other",
+          "status": "completed",
+          "content": [],
+          "rawInput": {
+            "query": "select:ExitPlanMode",
+            "max_results": 1
+          },
+          "_meta": {
+            "argo": {
+              "startedAt": 1791297380406,
+              "endedAt": 1791297380417
+            }
+          }
+        },
+        {
+          "id": "toolu_01MhAWu8nnzsD39dFn7C1ZfT",
+          "sessionId": "agent-1-plan-kept-planning",
+          "position": 2,
+          "revision": 5,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "toolu_01MhAWu8nnzsD39dFn7C1ZfT",
+          "title": "Write /user/.claude/plans/create-a-very-short-inherited-parasol.md",
+          "name": "Write",
+          "kind": "edit",
+          "status": "completed",
+          "content": [
+            {
+              "type": "diff",
+              "changes": [
+                {
+                  "operation": "add",
+                  "path": "/user/.claude/plans/create-a-very-short-inherited-parasol.md",
+                  "newText": "# Plan: create hello.txt\n\n**Context:** Create a file `hello.txt` containing the word \"hello\" in the working directory.\n\n**Steps**\n1. Write `hello.txt` in `/repo` with the content `hello`.\n\n**Verification:** Read the file and confirm it contains `hello`.\n"
+                }
+              ]
+            }
+          ],
+          "locations": [
+            {
+              "path": "/user/.claude/plans/create-a-very-short-inherited-parasol.md"
+            }
+          ],
+          "rawInput": {
+            "file_path": "/user/.claude/plans/create-a-very-short-inherited-parasol.md",
+            "content": "# Plan: create hello.txt\n\n**Context:** Create a file `hello.txt` containing the word \"hello\" in the working directory.\n\n**Steps**\n1. Write `hello.txt` in `/repo` with the content `hello`.\n\n**Verification:** Read the file and confirm it contains `hello`.\n"
+          },
+          "_meta": {
+            "argo": {
+              "startedAt": 1791297382455,
+              "endedAt": 1791297382462
+            }
+          }
+        },
+        {
+          "id": "toolu_013h47e1Ce6eDxQCGeE2P3t7",
+          "sessionId": "agent-1-plan-kept-planning",
+          "position": 3,
+          "revision": 6,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "toolu_013h47e1Ce6eDxQCGeE2P3t7",
+          "title": "Leave plan mode",
+          "name": "ExitPlanMode",
+          "kind": "switch_mode",
+          "status": "in_progress",
+          "content": [],
+          "rawInput": {
+            "plan": "# Plan: create hello.txt\n\n**Context:** Create a file `hello.txt` containing the word \"hello\" in the working directory.\n\n**Steps**\n1. Write `hello.txt` in `/repo` with the content `hello`.\n\n**Verification:** Read the file and confirm it contains `hello`.\n",
+            "planFilePath": "/user/.claude/plans/create-a-very-short-inherited-parasol.md"
+          },
+          "_meta": {
+            "argo": {
+              "startedAt": 1791297382490
+            }
+          }
+        },
+        {
+          "id": "toolu_013h47e1Ce6eDxQCGeE2P3t7:plan",
+          "sessionId": "agent-1-plan-kept-planning",
+          "position": 4,
+          "revision": 7,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "plan_update",
+          "plan": {
+            "type": "markdown",
+            "planId": "toolu_013h47e1Ce6eDxQCGeE2P3t7:plan",
+            "content": "# Plan: create hello.txt\n\n**Context:** Create a file `hello.txt` containing the word \"hello\" in the working directory.\n\n**Steps**\n1. Write `hello.txt` in `/repo` with the content `hello`.\n\n**Verification:** Read the file and confirm it contains `hello`.\n",
+            "_meta": {
+              "argo": {
+                "requestId": "93153437-51aa-44aa-ba10-294f97ba5181",
+                "filePath": "/user/.claude/plans/create-a-very-short-inherited-parasol.md"
+              }
+            }
+          }
+        }
+      ],
+      "snapshot": {
+        "state": "requires_action",
+        "liveHeader": {
+          "text": "Plan ready",
+          "source": {
+            "type": "request"
+          },
+          "startedAt": 1791277200000
+        },
+        "activeTurnId": "turn-1",
+        "usage": null,
+        "pendingPermission": null,
+        "pendingElicitation": null,
+        "pendingPlanProposal": {
+          "planId": "toolu_013h47e1Ce6eDxQCGeE2P3t7:plan",
+          "content": "# Plan: create hello.txt\n\n**Context:** Create a file `hello.txt` containing the word \"hello\" in the working directory.\n\n**Steps**\n1. Write `hello.txt` in `/repo` with the content `hello`.\n\n**Verification:** Read the file and confirm it contains `hello`.\n"
+        },
+        "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
+        "maxRevision": 7,
+        "epoch": 0
+      }
+    },
+    "answer": {
+      "procedure": "answerPlanProposal",
+      "input": {
+        "sessionId": "agent-1-plan-kept-planning",
+        "planId": "toolu_013h47e1Ce6eDxQCGeE2P3t7:plan",
+        "decision": "keep_planning",
+        "feedback": "Please include a verification step in the plan."
+      }
+    },
+    "answered": {
+      "rows": [
+        {
+          "id": "turn-1:user",
+          "sessionId": "agent-1-plan-kept-planning",
+          "position": 0,
+          "revision": 1,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "user_message",
+          "messageId": "turn-1:user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Create a very short plan for making a file called hello.txt that contains hello. Use ExitPlanMode to propose the plan for approval. After feedback, acknowledge it in one sentence, without calling any more tools."
+            }
+          ]
+        },
+        {
+          "id": "toolu_01QswQXUzbTYLz69Wd3f2maE",
+          "sessionId": "agent-1-plan-kept-planning",
+          "position": 1,
+          "revision": 3,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "toolu_01QswQXUzbTYLz69Wd3f2maE",
+          "title": "ToolSearch",
+          "name": "ToolSearch",
+          "kind": "other",
+          "status": "completed",
+          "content": [],
+          "rawInput": {
+            "query": "select:ExitPlanMode",
+            "max_results": 1
+          },
+          "_meta": {
+            "argo": {
+              "startedAt": 1791297380406,
+              "endedAt": 1791297380417
+            }
+          }
+        },
+        {
+          "id": "toolu_01MhAWu8nnzsD39dFn7C1ZfT",
+          "sessionId": "agent-1-plan-kept-planning",
+          "position": 2,
+          "revision": 5,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "toolu_01MhAWu8nnzsD39dFn7C1ZfT",
+          "title": "Write /user/.claude/plans/create-a-very-short-inherited-parasol.md",
+          "name": "Write",
+          "kind": "edit",
+          "status": "completed",
+          "content": [
+            {
+              "type": "diff",
+              "changes": [
+                {
+                  "operation": "add",
+                  "path": "/user/.claude/plans/create-a-very-short-inherited-parasol.md",
+                  "newText": "# Plan: create hello.txt\n\n**Context:** Create a file `hello.txt` containing the word \"hello\" in the working directory.\n\n**Steps**\n1. Write `hello.txt` in `/repo` with the content `hello`.\n\n**Verification:** Read the file and confirm it contains `hello`.\n"
+                }
+              ]
+            }
+          ],
+          "locations": [
+            {
+              "path": "/user/.claude/plans/create-a-very-short-inherited-parasol.md"
+            }
+          ],
+          "rawInput": {
+            "file_path": "/user/.claude/plans/create-a-very-short-inherited-parasol.md",
+            "content": "# Plan: create hello.txt\n\n**Context:** Create a file `hello.txt` containing the word \"hello\" in the working directory.\n\n**Steps**\n1. Write `hello.txt` in `/repo` with the content `hello`.\n\n**Verification:** Read the file and confirm it contains `hello`.\n"
+          },
+          "_meta": {
+            "argo": {
+              "startedAt": 1791297382455,
+              "endedAt": 1791297382462
+            }
+          }
+        },
+        {
+          "id": "toolu_013h47e1Ce6eDxQCGeE2P3t7",
+          "sessionId": "agent-1-plan-kept-planning",
+          "position": 3,
+          "revision": 6,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "toolu_013h47e1Ce6eDxQCGeE2P3t7",
+          "title": "Leave plan mode",
+          "name": "ExitPlanMode",
+          "kind": "switch_mode",
+          "status": "in_progress",
+          "content": [],
+          "rawInput": {
+            "plan": "# Plan: create hello.txt\n\n**Context:** Create a file `hello.txt` containing the word \"hello\" in the working directory.\n\n**Steps**\n1. Write `hello.txt` in `/repo` with the content `hello`.\n\n**Verification:** Read the file and confirm it contains `hello`.\n",
+            "planFilePath": "/user/.claude/plans/create-a-very-short-inherited-parasol.md"
+          },
+          "_meta": {
+            "argo": {
+              "startedAt": 1791297382490
+            }
+          }
+        },
+        {
+          "id": "toolu_013h47e1Ce6eDxQCGeE2P3t7:plan",
+          "sessionId": "agent-1-plan-kept-planning",
+          "position": 4,
+          "revision": 8,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "plan_update",
+          "plan": {
+            "type": "markdown",
+            "planId": "toolu_013h47e1Ce6eDxQCGeE2P3t7:plan",
+            "content": "# Plan: create hello.txt\n\n**Context:** Create a file `hello.txt` containing the word \"hello\" in the working directory.\n\n**Steps**\n1. Write `hello.txt` in `/repo` with the content `hello`.\n\n**Verification:** Read the file and confirm it contains `hello`.\n",
+            "_meta": {
+              "argo": {
+                "requestId": "93153437-51aa-44aa-ba10-294f97ba5181",
+                "filePath": "/user/.claude/plans/create-a-very-short-inherited-parasol.md",
+                "proposalOutcome": "kept_planning"
+              }
+            }
+          }
+        },
+        {
+          "id": "turn-1:feedback:user",
+          "sessionId": "agent-1-plan-kept-planning",
+          "position": 5,
+          "revision": 9,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "user_message",
+          "messageId": "turn-1:feedback:user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Please include a verification step in the plan."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "state": "running",
+        "liveHeader": {
+          "text": "Switching mode",
+          "source": {
+            "type": "tool_call",
+            "toolCallId": "toolu_013h47e1Ce6eDxQCGeE2P3t7"
+          },
+          "startedAt": 1791277200000
+        },
+        "activeTurnId": "turn-1",
+        "usage": null,
+        "pendingPermission": null,
+        "pendingElicitation": null,
+        "pendingPlanProposal": null,
+        "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
+        "maxRevision": 9,
+        "epoch": 0
+      }
+    }
+  },
+  {
+    "agent": "agent-2",
+    "recording": "permission",
+    "pending": {
+      "rows": [
+        {
+          "id": "turn-1:user",
+          "sessionId": "agent-2-permission",
+          "position": 0,
+          "revision": 1,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "user_message",
+          "messageId": "turn-1:user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Run exactly one shell command to write recording-ready into a file /tmp/argo54-permission-output.txt outside the workspace. Request escalated permission explicitly for the command. Do not use other tools, then reply done."
+            }
+          ]
+        },
+        {
+          "id": "msg_07f07b883e28b2ea016ac508b0625c87d2a7cd5ffd0d40f2d6",
+          "sessionId": "agent-2-permission",
+          "position": 1,
+          "revision": 14,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_07f07b883e28b2ea016ac508b0625c87d2a7cd5ffd0d40f2d6",
+          "content": [
+            {
+              "type": "text",
+              "text": "I’ll request escalated permission for the file write.\n"
+            }
+          ]
+        },
+        {
+          "id": "exec-47aa717a-33f8-4b74-8f4d-da0ab38091de",
+          "sessionId": "agent-2-permission",
+          "position": 2,
+          "revision": 15,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "exec-47aa717a-33f8-4b74-8f4d-da0ab38091de",
+          "title": "/bin/zsh -lc \"printf 'recording-ready' > /tmp/argo54-permission-output.txt\"",
+          "name": "commandExecution",
+          "kind": "execute",
+          "status": "in_progress",
+          "content": [
+            {
+              "type": "terminal",
+              "command": "/bin/zsh -lc \"printf 'recording-ready' > /tmp/argo54-permission-output.txt\"",
+              "cwd": "/repo",
+              "output": ""
+            }
+          ],
+          "rawInput": {
+            "command": "/bin/zsh -lc \"printf 'recording-ready' > /tmp/argo54-permission-output.txt\"",
+            "cwd": "/repo",
+            "commandActions": [
+              {
+                "type": "unknown",
+                "command": "printf 'recording-ready' > /tmp/argo54-permission-output.txt"
+              }
+            ]
+          },
+          "rawOutput": {
+            "durationMs": null,
+            "exitCode": null
+          },
+          "_meta": {
+            "argo": {
+              "commandActions": [
+                {
+                  "type": "unknown",
+                  "command": "printf 'recording-ready' > /tmp/argo54-permission-output.txt"
+                }
+              ],
+              "startedAt": 1791297713337
+            }
+          }
+        }
+      ],
+      "snapshot": {
+        "state": "requires_action",
+        "liveHeader": {
+          "text": "Awaiting approval",
+          "source": {
+            "type": "request"
+          },
+          "startedAt": 1791277200000
+        },
+        "activeTurnId": "turn-1",
+        "usage": null,
+        "pendingPermission": {
+          "toolCallId": "exec-47aa717a-33f8-4b74-8f4d-da0ab38091de",
+          "title": "May I write recording-ready to /tmp/argo54-permission-output.txt outside the workspace?",
+          "options": [
+            {
+              "optionId": "allow_once",
+              "name": "Allow once",
+              "kind": "allow_once"
+            },
+            {
+              "optionId": "reject_once",
+              "name": "Deny",
+              "kind": "reject_once"
+            }
+          ]
+        },
+        "pendingElicitation": null,
+        "pendingPlanProposal": null,
+        "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
+        "maxRevision": 15,
+        "epoch": 0
+      }
+    },
+    "answer": {
+      "procedure": "answerPermission",
+      "input": {
+        "sessionId": "agent-2-permission",
+        "toolCallId": "exec-47aa717a-33f8-4b74-8f4d-da0ab38091de",
+        "optionId": "allow_once"
+      }
+    },
+    "answered": {
+      "rows": [
+        {
+          "id": "turn-1:user",
+          "sessionId": "agent-2-permission",
+          "position": 0,
+          "revision": 1,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "user_message",
+          "messageId": "turn-1:user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Run exactly one shell command to write recording-ready into a file /tmp/argo54-permission-output.txt outside the workspace. Request escalated permission explicitly for the command. Do not use other tools, then reply done."
+            }
+          ]
+        },
+        {
+          "id": "msg_07f07b883e28b2ea016ac508b0625c87d2a7cd5ffd0d40f2d6",
+          "sessionId": "agent-2-permission",
+          "position": 1,
+          "revision": 14,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_07f07b883e28b2ea016ac508b0625c87d2a7cd5ffd0d40f2d6",
+          "content": [
+            {
+              "type": "text",
+              "text": "I’ll request escalated permission for the file write.\n"
+            }
+          ]
+        },
+        {
+          "id": "exec-47aa717a-33f8-4b74-8f4d-da0ab38091de",
+          "sessionId": "agent-2-permission",
+          "position": 2,
+          "revision": 16,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "tool_call_update",
+          "toolCallId": "exec-47aa717a-33f8-4b74-8f4d-da0ab38091de",
+          "title": "/bin/zsh -lc \"printf 'recording-ready' > /tmp/argo54-permission-output.txt\"",
+          "name": "commandExecution",
+          "kind": "execute",
+          "status": "in_progress",
+          "content": [
+            {
+              "type": "terminal",
+              "command": "/bin/zsh -lc \"printf 'recording-ready' > /tmp/argo54-permission-output.txt\"",
+              "cwd": "/repo",
+              "output": ""
+            }
+          ],
+          "rawInput": {
+            "command": "/bin/zsh -lc \"printf 'recording-ready' > /tmp/argo54-permission-output.txt\"",
+            "cwd": "/repo",
+            "commandActions": [
+              {
+                "type": "unknown",
+                "command": "printf 'recording-ready' > /tmp/argo54-permission-output.txt"
+              }
+            ]
+          },
+          "rawOutput": {
+            "durationMs": null,
+            "exitCode": null
+          },
+          "_meta": {
+            "argo": {
+              "permissionOutcome": {
+                "outcome": "selected",
+                "optionId": "allow_once"
+              },
+              "commandActions": [
+                {
+                  "type": "unknown",
+                  "command": "printf 'recording-ready' > /tmp/argo54-permission-output.txt"
+                }
+              ],
+              "startedAt": 1791297713337
+            }
+          }
+        }
+      ],
+      "snapshot": {
+        "state": "running",
+        "liveHeader": {
+          "text": "Running /bin/zsh -lc \"printf 'recording-ready' > /tmp/argo54-permission-output.txt\"",
+          "source": {
+            "type": "tool_call",
+            "toolCallId": "exec-47aa717a-33f8-4b74-8f4d-da0ab38091de"
+          },
+          "startedAt": 1791277200000
+        },
+        "activeTurnId": "turn-1",
+        "usage": null,
+        "pendingPermission": null,
+        "pendingElicitation": null,
+        "pendingPlanProposal": null,
+        "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
+        "maxRevision": 16,
+        "epoch": 0
+      }
+    }
+  },
+  {
+    "agent": "agent-2",
+    "recording": "elicitation",
+    "pending": {
+      "rows": [
+        {
+          "id": "turn-1:user",
+          "sessionId": "agent-2-elicitation",
+          "position": 0,
+          "revision": 1,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "user_message",
+          "messageId": "turn-1:user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Use request_user_input to ask which color I prefer, with options Blue and Green. Then acknowledge my choice, without using any other tools."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "state": "requires_action",
+        "liveHeader": {
+          "text": "Waiting for your answer",
+          "source": {
+            "type": "request"
+          },
+          "startedAt": 1791277200000
+        },
+        "activeTurnId": "turn-1",
+        "usage": null,
+        "pendingPermission": null,
+        "pendingElicitation": {
+          "requestId": "request-1",
+          "mode": "form",
+          "message": "Which color do you prefer?",
+          "requestedSchema": {
+            "type": "object",
+            "properties": {
+              "preferred_color": {
+                "title": "Color",
+                "description": "Which color do you prefer?",
+                "type": "string",
+                "oneOf": [
+                  {
+                    "const": "Blue",
+                    "title": "Blue",
+                    "description": "Choose blue."
+                  },
+                  {
+                    "const": "Green",
+                    "title": "Green",
+                    "description": "Choose green."
+                  }
+                ]
+              }
+            },
+            "required": ["preferred_color"]
+          },
+          "toolCallId": "call_wzMYhqck2UH591kUvjL5md8X"
+        },
+        "pendingPlanProposal": null,
+        "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
+        "maxRevision": 1,
+        "epoch": 0
+      }
+    },
+    "answer": {
+      "procedure": "answerElicitation",
+      "input": {
+        "sessionId": "agent-2-elicitation",
+        "requestId": "request-1",
+        "action": "accept",
+        "content": {
+          "preferred_color": "Blue"
+        }
+      }
+    },
+    "answered": {
+      "rows": [
+        {
+          "id": "turn-1:user",
+          "sessionId": "agent-2-elicitation",
+          "position": 0,
+          "revision": 1,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "user_message",
+          "messageId": "turn-1:user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Use request_user_input to ask which color I prefer, with options Blue and Green. Then acknowledge my choice, without using any other tools."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "state": "running",
+        "liveHeader": {
+          "text": "Working",
+          "source": {
+            "type": "working"
+          },
+          "startedAt": 1791277200000
+        },
+        "activeTurnId": "turn-1",
+        "usage": null,
+        "pendingPermission": null,
+        "pendingElicitation": null,
+        "pendingPlanProposal": null,
+        "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
+        "maxRevision": 1,
+        "epoch": 0
+      }
+    }
+  },
+  {
+    "agent": "agent-2",
+    "recording": "plan-approved",
+    "pending": {
+      "rows": [
+        {
+          "id": "turn-1:user",
+          "sessionId": "agent-2-plan-approved",
+          "position": 0,
+          "revision": 1,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "user_message",
+          "messageId": "turn-1:user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Propose a very short plan for creating hello.txt containing hello. Do not inspect files or ask questions. Return your proposal inside a proposed_plan block."
+            }
+          ]
+        },
+        {
+          "id": "01a111a5-34f0-7543-9452-f5ddc6b5f273-plan",
+          "sessionId": "agent-2-plan-approved",
+          "position": 1,
+          "revision": 2,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "plan_update",
+          "plan": {
+            "type": "markdown",
+            "planId": "01a111a5-34f0-7543-9452-f5ddc6b5f273-plan",
+            "content": "Create `hello.txt` in the current directory containing `hello`, then verify its contents.\n"
+          }
+        }
+      ],
+      "snapshot": {
+        "state": "requires_action",
+        "liveHeader": {
+          "text": "Plan ready",
+          "source": {
+            "type": "request"
+          },
+          "startedAt": null
+        },
+        "activeTurnId": null,
+        "usage": null,
+        "pendingPermission": null,
+        "pendingElicitation": null,
+        "pendingPlanProposal": {
+          "planId": "01a111a5-34f0-7543-9452-f5ddc6b5f273-plan",
+          "content": "Create `hello.txt` in the current directory containing `hello`, then verify its contents.\n"
+        },
+        "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
+        "maxRevision": 2,
+        "epoch": 0
+      }
+    },
+    "answer": {
+      "procedure": "answerPlanProposal",
+      "input": {
+        "sessionId": "agent-2-plan-approved",
+        "planId": "01a111a5-34f0-7543-9452-f5ddc6b5f273-plan",
+        "decision": "approve"
+      }
+    },
+    "answered": {
+      "rows": [
+        {
+          "id": "turn-1:user",
+          "sessionId": "agent-2-plan-approved",
+          "position": 0,
+          "revision": 1,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "user_message",
+          "messageId": "turn-1:user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Propose a very short plan for creating hello.txt containing hello. Do not inspect files or ask questions. Return your proposal inside a proposed_plan block."
+            }
+          ]
+        },
+        {
+          "id": "01a111a5-34f0-7543-9452-f5ddc6b5f273-plan",
+          "sessionId": "agent-2-plan-approved",
+          "position": 1,
+          "revision": 3,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "plan_update",
+          "plan": {
+            "type": "markdown",
+            "planId": "01a111a5-34f0-7543-9452-f5ddc6b5f273-plan",
+            "content": "Create `hello.txt` in the current directory containing `hello`, then verify its contents.\n",
+            "_meta": {
+              "argo": {
+                "proposalOutcome": "approved"
+              }
+            }
+          }
+        }
+      ],
+      "snapshot": {
+        "state": "running",
+        "liveHeader": {
+          "text": "Working",
+          "source": {
+            "type": "working"
+          },
+          "startedAt": 1791277200000
+        },
+        "activeTurnId": "turn-2",
+        "usage": null,
+        "pendingPermission": null,
+        "pendingElicitation": null,
+        "pendingPlanProposal": null,
+        "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
+        "maxRevision": 3,
+        "epoch": 0
+      }
+    }
+  },
+  {
+    "agent": "agent-2",
+    "recording": "plan-kept-planning",
+    "pending": {
+      "rows": [
+        {
+          "id": "turn-1:user",
+          "sessionId": "agent-2-plan-kept-planning",
+          "position": 0,
+          "revision": 1,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "user_message",
+          "messageId": "turn-1:user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Propose a very short plan for creating hello.txt containing hello. Do not inspect files or ask questions. Return your proposal inside a proposed_plan block."
+            }
+          ]
+        },
+        {
+          "id": "01a111a5-37a4-7012-a750-38819e761289-plan",
+          "sessionId": "agent-2-plan-kept-planning",
+          "position": 1,
+          "revision": 2,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "plan_update",
+          "plan": {
+            "type": "markdown",
+            "planId": "01a111a5-37a4-7012-a750-38819e761289-plan",
+            "content": "Create `hello.txt` in the current directory containing `hello`. Verify its contents.\n"
+          }
+        }
+      ],
+      "snapshot": {
+        "state": "requires_action",
+        "liveHeader": {
+          "text": "Plan ready",
+          "source": {
+            "type": "request"
+          },
+          "startedAt": null
+        },
+        "activeTurnId": null,
+        "usage": null,
+        "pendingPermission": null,
+        "pendingElicitation": null,
+        "pendingPlanProposal": {
+          "planId": "01a111a5-37a4-7012-a750-38819e761289-plan",
+          "content": "Create `hello.txt` in the current directory containing `hello`. Verify its contents.\n"
+        },
+        "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
+        "maxRevision": 2,
+        "epoch": 0
+      }
+    },
+    "answer": {
+      "procedure": "answerPlanProposal",
+      "input": {
+        "sessionId": "agent-2-plan-kept-planning",
+        "planId": "01a111a5-37a4-7012-a750-38819e761289-plan",
+        "decision": "keep_planning",
+        "feedback": "Please include a verification step in the plan."
+      }
+    },
+    "answered": {
+      "rows": [
+        {
+          "id": "turn-1:user",
+          "sessionId": "agent-2-plan-kept-planning",
+          "position": 0,
+          "revision": 1,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "user_message",
+          "messageId": "turn-1:user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Propose a very short plan for creating hello.txt containing hello. Do not inspect files or ask questions. Return your proposal inside a proposed_plan block."
+            }
+          ]
+        },
+        {
+          "id": "01a111a5-37a4-7012-a750-38819e761289-plan",
+          "sessionId": "agent-2-plan-kept-planning",
+          "position": 1,
+          "revision": 3,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "plan_update",
+          "plan": {
+            "type": "markdown",
+            "planId": "01a111a5-37a4-7012-a750-38819e761289-plan",
+            "content": "Create `hello.txt` in the current directory containing `hello`. Verify its contents.\n",
+            "_meta": {
+              "argo": {
+                "proposalOutcome": "kept_planning"
+              }
+            }
+          }
+        },
+        {
+          "id": "turn-2:feedback:user",
+          "sessionId": "agent-2-plan-kept-planning",
+          "position": 2,
+          "revision": 4,
+          "turnId": "turn-2",
+          "state": "settled",
+          "sessionUpdate": "user_message",
+          "messageId": "turn-2:feedback:user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Please include a verification step in the plan."
+            }
+          ]
+        }
+      ],
+      "snapshot": {
+        "state": "running",
+        "liveHeader": {
+          "text": "Working",
+          "source": {
+            "type": "working"
+          },
+          "startedAt": 1791277200000
+        },
+        "activeTurnId": "turn-2",
+        "usage": null,
+        "pendingPermission": null,
+        "pendingElicitation": null,
+        "pendingPlanProposal": null,
+        "configOptions": [],
+        "changes": {
+          "files": 0,
+          "additions": 0,
+          "deletions": 0
+        },
+        "maxRevision": 4,
+        "epoch": 0
+      }
+    }
+  }
+]

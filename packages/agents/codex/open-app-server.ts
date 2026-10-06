@@ -6,12 +6,14 @@ import type {
   GetAccountResponse,
   InitializeParams,
   InitializeResponse,
+  ModelListParams,
   ModelListResponse,
   ThreadResumeParams,
   ThreadResumeResponse,
   ThreadStartParams,
   ThreadStartResponse,
   TurnInterruptParams,
+  TurnInterruptResponse,
   TurnStartParams,
   TurnStartResponse,
 } from './protocol.gen';
@@ -21,11 +23,11 @@ export const EXECUTABLE = 'codex';
 interface Requests {
   initialize: [InitializeParams, InitializeResponse];
   'account/read': [GetAccountParams, GetAccountResponse];
-  'model/list': [{ cursor?: string }, ModelListResponse];
+  'model/list': [ModelListParams, ModelListResponse];
   'thread/start': [ThreadStartParams, ThreadStartResponse];
   'thread/resume': [ThreadResumeParams, ThreadResumeResponse];
   'turn/start': [TurnStartParams, TurnStartResponse];
-  'turn/interrupt': [TurnInterruptParams, Record<string, never>];
+  'turn/interrupt': [TurnInterruptParams, TurnInterruptResponse];
 }
 interface WireMessage {
   id?: string | number;

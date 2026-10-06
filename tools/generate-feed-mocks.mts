@@ -11,6 +11,7 @@ import { agentAdapters } from '../packages/agents/src/adapters.ts';
 import type { SessionUpdate } from '../packages/contracts/src/feed/session-update.ts';
 import {
   type LiveHeader,
+  permissionOptions,
   SessionSnapshot,
 } from '../packages/contracts/src/sessions/snapshot.ts';
 
@@ -79,13 +80,18 @@ const mocks = agentAdapters.flatMap(({ agent }, index) => {
       recordHeader(
         header({
           permissionQueue: [
-            { toolCallId: tool.toolCallId, title: tool.title, options: [] },
+            {
+              toolCallId: tool.toolCallId,
+              title: tool.title,
+              options: permissionOptions,
+            },
           ],
         }),
       );
       recordHeader(
         header({
           pendingElicitation: {
+            requestId: 'request-1',
             mode: 'form',
             message: tool.title,
             requestedSchema: { properties: {} },
@@ -144,6 +150,7 @@ const mocks = agentAdapters.flatMap(({ agent }, index) => {
       usage: null,
       pendingPermission: null,
       pendingElicitation: null,
+      pendingPlanProposal: null,
       configOptions: [],
       changes: noChanges,
       epoch: 0,

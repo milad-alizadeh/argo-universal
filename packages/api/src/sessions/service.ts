@@ -1,4 +1,10 @@
 import type {
+  SessionAnswerElicitationInput,
+  SessionAnswerElicitationOutput,
+  SessionAnswerPermissionInput,
+  SessionAnswerPermissionOutput,
+  SessionAnswerPlanProposalInput,
+  SessionAnswerPlanProposalOutput,
   SessionCancelInput,
   SessionCancelOutput,
   SessionChangesInput,
@@ -18,6 +24,16 @@ import type {
 } from '@repo/contracts';
 
 export interface SessionService {
+  answerPermission(
+    input: SessionAnswerPermissionInput,
+  ): Promise<SessionAnswerPermissionOutput>;
+  answerElicitation(
+    input: SessionAnswerElicitationInput,
+  ): Promise<SessionAnswerElicitationOutput>;
+  answerPlanProposal(
+    input: SessionAnswerPlanProposalInput,
+  ): Promise<SessionAnswerPlanProposalOutput>;
+
   list(input: SessionListInput): Promise<SessionListOutput>;
   listUpdates(
     signal: AbortSignal | undefined,
