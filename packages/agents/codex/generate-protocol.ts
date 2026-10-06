@@ -7,6 +7,7 @@ const directory = mkdtempSync(path.join(tmpdir(), 'agent-protocol-'));
 const roots = [
   'InitializeParams',
   'InitializeResponse',
+  'v2/ModelListParams',
   'v2/ModelListResponse',
   'v2/GetAccountParams',
   'v2/GetAccountResponse',
@@ -17,6 +18,7 @@ const roots = [
   'v2/TurnStartParams',
   'v2/TurnStartResponse',
   'v2/TurnInterruptParams',
+  'v2/TurnInterruptResponse',
   'v2/ItemStartedNotification',
   'v2/ItemCompletedNotification',
   'v2/AgentMessageDeltaNotification',

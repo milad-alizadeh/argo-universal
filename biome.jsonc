@@ -70,7 +70,7 @@
     },
     {
       // Recording converters and mock CLIs use the same vendor types as their adapters.
-      "includes": ["mocks/cli/claude/**", "mocks/cli/codex/**"],
+      "includes": ["mocks/cli/*/**"],
       "linter": {
         "rules": {
           "style": {

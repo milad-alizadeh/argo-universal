@@ -183,12 +183,13 @@ it('holds the recorded interrupted Turn until the caller interrupts its command'
   const messages = wireMessages('interrupt');
   const codex = await startAppServer({ recording: 'interrupt' });
   await startTurn(codex, messages[0]?.params.threadId);
-  const prefix = await codex.until(
-    (message) =>
+  const prefix = await codex.until((wireMessage) => {
+    const message = wireMessage as unknown as VendorMessage;
+    return (
       message.method === 'item/started' &&
-      (message.params as { item?: { type?: string } })?.item?.type ===
-        'commandExecution',
-  );
+      message.params.item.type === 'commandExecution'
+    );
+  });
   expect(prefix.some((message) => message.method === 'turn/completed')).toBe(
     false,
   );

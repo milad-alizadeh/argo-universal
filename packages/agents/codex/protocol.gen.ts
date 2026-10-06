@@ -30,6 +30,14 @@ platformFamily: string,
 
 platformOs: string, };
 
+export type ModelListParams = {
+
+cursor?: string | null,
+
+limit?: number | null,
+
+includeHidden?: boolean | null, };
+
 export type InputModality = "text" | "image" | "audio";
 
 export type ReasoningEffort = string;
@@ -581,6 +589,8 @@ cyberAccessProgram?: CyberAccessProgram | null, };
 export type TurnStartResponse = { turn: Turn, };
 
 export type TurnInterruptParams = { threadId: string, turnId: string, };
+
+export type TurnInterruptResponse = Record<string, never>;
 
 export type ItemStartedNotification = { item: ThreadItem, threadId: string, turnId: string,
 

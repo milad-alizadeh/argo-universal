@@ -1,4 +1,8 @@
 import type { SDKControlRequest } from '@anthropic-ai/claude-agent-sdk';
+import type {
+  AskUserQuestionInput,
+  ExitPlanModeInput,
+} from '@anthropic-ai/claude-agent-sdk/sdk-tools';
 import { permissionOptions } from '@repo/contracts';
 import type { AgentEvent } from '../src/agent-events';
 import { toElicitationForm } from '../src/elicitation-form';
@@ -7,7 +11,11 @@ export function toRequestEvents(message: SDKControlRequest): AgentEvent[] {
   const request = message.request;
   if (request.subtype !== 'can_use_tool') return [];
   if (request.tool_name === 'ExitPlanMode') {
-    const input = request.input as { plan: string; planFilePath?: string };
+    // The CLI records these Plan fields; ExitPlanModeInput leaves them as unknown extension keys.
+    const input = request.input as ExitPlanModeInput & {
+      plan: string;
+      planFilePath?: string;
+    };
     const planId = `${request.tool_use_id}:plan`;
     return [
       {
@@ -36,14 +44,7 @@ export function toRequestEvents(message: SDKControlRequest): AgentEvent[] {
     ];
   }
   if (request.tool_name === 'AskUserQuestion') {
-    const input = request.input as {
-      questions: {
-        question: string;
-        header: string;
-        options: { label: string; description: string }[];
-        multiSelect?: boolean;
-      }[];
-    };
+    const input = request.input as unknown as AskUserQuestionInput;
     return [
       {
         type: 'agent.elicitationRequested',

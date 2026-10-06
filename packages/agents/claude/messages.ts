@@ -15,6 +15,8 @@ export type {
   SDKUserMessage,
 } from '@anthropic-ai/claude-agent-sdk';
 
+export type { AskUserQuestionInput } from '@anthropic-ai/claude-agent-sdk/sdk-tools';
+
 export type VendorMessage = (SDKMessage | SDKControlRequest) & {
   receivedAt?: number;
 };

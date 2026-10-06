@@ -1,5 +1,6 @@
 import path from 'node:path';
 import type {
+  AskUserQuestionInput,
   PermissionResult,
   SDKControlRequest,
   SDKControlResponse,
@@ -55,9 +56,7 @@ export function recordedRequestAnswer(name: string): RecordedRequestAnswer {
       action: response.behavior === 'allow' ? 'accept' : 'decline',
       content:
         response.behavior === 'allow'
-          ? (response.updatedInput?.answers as
-              | Record<string, unknown>
-              | undefined)
+          ? (response.updatedInput?.answers as AskUserQuestionInput['answers'])
           : undefined,
     };
   return response.behavior === 'allow'

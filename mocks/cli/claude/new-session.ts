@@ -11,7 +11,9 @@ import { readRecording, recordedFrames } from '../recording';
 
 const initialization = recordedFrames<SDKControlResponse>(
   readRecording(
-    new URL('./recordings/2.1.286/image-prompt.json', import.meta.url).pathname,
+    fileURLToPath(
+      new URL('./recordings/2.1.286/image-prompt.json', import.meta.url),
+    ),
     'claude-cli',
   ).payload,
   'output',
@@ -41,3 +43,5 @@ export function newSessionMock() {
     prompt: recordedImagePrompt,
   };
 }
+
+import { fileURLToPath } from 'node:url';
