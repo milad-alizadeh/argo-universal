@@ -138,8 +138,12 @@ export const agentMachine = setup({
             void session.run(command);
             return;
           }
-          if (command.type === 'agent.cancel') {
-            // Cancel follows the Turn's earlier controls, without waiting for its prompt response.
+          if (
+            command.type === 'agent.cancel' ||
+            command.type === 'agent.answerPermission' ||
+            command.type === 'agent.answerElicitation'
+          ) {
+            // Request replies and cancel can release a pending prompt response.
             void beforeTurn.then(() => session.run(command));
             return;
           }

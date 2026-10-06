@@ -7,6 +7,7 @@ import { type ActorRefFrom, type SnapshotFrom, waitFor } from 'xstate';
 import type { writerMachine } from '../feed/writer-machine';
 import { notImplemented } from '../not-implemented';
 import { readProjectPath } from '../projects/project-service';
+import { validateElicitationAnswer } from './elicitation-answer';
 import type { RegistryActorRef, RegistryCommand } from './registry-machine';
 import { sendSessionCommand } from './session-command';
 import { createSessionList } from './session-list';
@@ -100,18 +101,46 @@ export function createSessionService({
   return {
     ...createSessionList({ database, sessions }),
     openSession: open,
-    // Issues #57 and #58 implement the answer behavior after the contract slice.
-    answerPermission: async () => {
-      throw new TRPCError({
-        code: 'NOT_IMPLEMENTED',
-        message: 'Permission answers are not implemented yet',
+    answerPermission: async ({ sessionId, toolCallId, optionId, message }) => {
+      const actor = await open(sessionId);
+      const request = actor.getSnapshot().context.permissionQueue[0];
+      if (request?.toolCallId !== toolCallId)
+        throw new TRPCError({ code: 'CONFLICT', message: 'already answered' });
+      if (!request.options.some((option) => option.optionId === optionId))
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'The Agent did not offer that option',
+        });
+      if (
+        optionId === 'reject_once' &&
+        message &&
+        actor.getSnapshot().context.capabilities?.permissionFeedback === false
+      )
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'The Agent does not support Permission feedback',
+        });
+      sendSessionCommand(actor, {
+        type: 'session.answerPermission',
+        toolCallId,
+        optionId,
+        message,
       });
+      return {};
     },
-    answerElicitation: async () => {
-      throw new TRPCError({
-        code: 'NOT_IMPLEMENTED',
-        message: 'Elicitation answers are not implemented yet',
+    answerElicitation: async ({ sessionId, requestId, action, content }) => {
+      const actor = await open(sessionId);
+      const request = actor.getSnapshot().context.pendingElicitation;
+      if (request?.requestId !== requestId)
+        throw new TRPCError({ code: 'CONFLICT', message: 'already answered' });
+      if (action === 'accept')
+        validateElicitationAnswer(request.requestedSchema, content);
+      sendSessionCommand(actor, {
+        type: 'session.answerElicitation',
+        action,
+        content,
       });
+      return {};
     },
     answerPlanProposal: async () => {
       throw new TRPCError({

@@ -40,7 +40,11 @@ interface WireMessage {
 // Owns the stdio transport and RPC correlation; vendor payloads use the generated types (ADR-0015).
 export function openAppServer(
   cwd: string,
-  onMessage: (message: { method: string; params: unknown }) => void,
+  onMessage: (message: {
+    method: string;
+    params: unknown;
+    id?: string | number;
+  }) => void,
   onFailure: (error: unknown) => void,
   signal: AbortSignal,
 ) {
@@ -96,15 +100,26 @@ export function openAppServer(
         throw new Error('Invalid app-server envelope.');
       if (typeof message.method === 'string') {
         if (message.id !== undefined) {
-          // Request cards are a later slice; never leave an unsupported request waiting forever.
-          send({
-            id: message.id,
-            error: {
-              code: -32601,
-              message: `Unsupported request: ${message.method}`,
-            },
-          });
-        } else onMessage({ method: message.method, params: message.params });
+          if (
+            message.method !== 'item/commandExecution/requestApproval' &&
+            message.method !== 'item/fileChange/requestApproval' &&
+            message.method !== 'item/tool/requestUserInput'
+          ) {
+            send({
+              id: message.id,
+              error: {
+                code: -32601,
+                message: `Unsupported request: ${message.method}`,
+              },
+            });
+            return;
+          }
+        }
+        onMessage({
+          method: message.method,
+          params: message.params,
+          id: message.id,
+        });
         return;
       }
       if (typeof message.id !== 'number') return;
@@ -159,5 +174,10 @@ export function openAppServer(
   const abort = () => void close();
   signal.addEventListener('abort', abort, { once: true });
   if (signal.aborted) abort();
-  return { request, notify: (method: string) => send({ method }), close };
+  return {
+    request,
+    respond: (id: string | number, result: unknown) => send({ id, result }),
+    notify: (method: string) => send({ method }),
+    close,
+  };
 }

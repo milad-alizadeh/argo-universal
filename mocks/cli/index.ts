@@ -19,6 +19,7 @@ import type { MockCliOptions } from './mock-cli.ts';
 import type { RecordedRequestAnswer } from './request-answer.ts';
 
 export interface MockCli {
+  supportsPermissionFeedback: boolean;
   recordedRequestAnswer(recording: string): RecordedRequestAnswer;
   feedEvents(recording: string): AgentEvent[];
   // The first prompt a recording sent, or undefined when it holds none.
@@ -56,6 +57,7 @@ export interface MockCli {
 // Each Agent adapter's mock CLI, by the id the adapter registers.
 export const mockClis: Record<string, MockCli> = {
   codex: {
+    supportsPermissionFeedback: false,
     recordedRequestAnswer: codexRequestAnswer,
     feedEvents: codexFeedEvents,
     recordedPrompt: codexRecordedPrompt,
@@ -78,6 +80,7 @@ export const mockClis: Record<string, MockCli> = {
     writeTranscript: writeCodexTranscript,
   },
   claude: {
+    supportsPermissionFeedback: true,
     recordedRequestAnswer: claudeRequestAnswer,
     feedEvents: claudeFeedEvents,
     recordedPrompt: claudeRecordedPrompt,
