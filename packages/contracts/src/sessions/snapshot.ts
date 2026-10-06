@@ -163,6 +163,8 @@ export type LiveHeader = z.infer<typeof LiveHeader>;
 
 // The live state of a Session that is not a Feed row. The Server holds it in memory, so only stored fields derive from columns (ADR 0013).
 export const SessionSnapshot = z.strictObject({
+  title: sessionColumns.shape.title,
+  titleSource: sessionColumns.shape.titleSource,
   state: SessionState,
   liveHeader: LiveHeader.nullable(),
   activeTurnId: turnColumns.shape.id.nullable(),

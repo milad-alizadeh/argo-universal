@@ -11,6 +11,7 @@ export * from './list-updates';
 export * from './new';
 export * from './prompt';
 export * from './record';
+export * from './rename';
 export * from './set-config-option';
 export * from './snapshot';
 export * from './turn';
