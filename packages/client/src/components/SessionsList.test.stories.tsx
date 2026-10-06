@@ -195,7 +195,19 @@ export const ScrollFadePadding: Story = {
   render: (args) => <SessionsNewSessionPreview {...args} />,
   play: async ({ canvas }) => {
     const scroll = canvas.getByTestId('sessions-scroll');
-    const topFade = canvas.getByTestId('scroll-fade-top');
+    const heading = await canvas.findByRole('button', {
+      name: 'Example Project',
+    });
+    await waitFor(() => {
+      expect(
+        heading.getBoundingClientRect().top -
+          scroll.getBoundingClientRect().top,
+      ).toBeGreaterThanOrEqual(19);
+    });
+    // The top fade waits until content has scrolled under the header.
+    expect(canvas.queryByTestId('scroll-fade-top')).toBeNull();
+    scroll.scrollTop = 40;
+    const topFade = await canvas.findByTestId('scroll-fade-top');
     const bottomFade = canvas.getByTestId('scroll-fade-bottom');
     const surface = topFade.parentElement;
     if (!surface) throw new Error('Missing list surface');
@@ -225,15 +237,6 @@ export const ScrollFadePadding: Story = {
     }
     expect(topFade.getBoundingClientRect().height).toBe(20);
     expect(bottomFade.getBoundingClientRect().height).toBe(28);
-    const heading = await canvas.findByRole('button', {
-      name: 'Example Project',
-    });
-    await waitFor(() => {
-      expect(
-        heading.getBoundingClientRect().top -
-          scroll.getBoundingClientRect().top,
-      ).toBeGreaterThanOrEqual(19);
-    });
     scroll.scrollTop = scroll.scrollHeight;
     const last = await canvas.findByRole('button', {
       name: 'Large Session 11, Idle',

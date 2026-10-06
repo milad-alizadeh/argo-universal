@@ -87,7 +87,7 @@ function Placeholder({
   description: string;
 }) {
   return (
-    <View className="flex-1 items-center justify-center gap-2 bg-background p-6">
+    <View className="flex-1 items-center justify-center gap-2 bg-background px-screen py-6">
       <Text role="heading" aria-level={1} variant="h3">
         {title}
       </Text>

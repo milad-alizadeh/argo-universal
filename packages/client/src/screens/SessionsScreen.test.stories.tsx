@@ -384,7 +384,9 @@ export const ScrollFade: Story = {
       await waitFor(() =>
         expect(canvas.getByTestId('scroll-fade-bottom')).toBeVisible(),
       );
-      await expect(canvas.getByTestId('scroll-fade-top')).toBeVisible();
+      await waitFor(() =>
+        expect(canvas.queryByTestId('scroll-fade-top')).toBeNull(),
+      );
       scroll.scrollTop = 200;
       await waitFor(() =>
         expect(canvas.getByTestId('scroll-fade-top')).toBeVisible(),
@@ -395,7 +397,7 @@ export const ScrollFade: Story = {
       );
       scroll.scrollTop = 0;
       await waitFor(() =>
-        expect(canvas.getByTestId('scroll-fade-top')).toBeVisible(),
+        expect(canvas.queryByTestId('scroll-fade-top')).toBeNull(),
       );
     }),
 };

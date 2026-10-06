@@ -17,6 +17,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@expo/ui": "catalog:",
     "@legendapp/list": "catalog:",
     "@repo/contracts": "workspace:*",
     "@repo/uniwind": "workspace:*",

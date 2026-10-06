@@ -4,6 +4,8 @@ import {
   type NavigationDestination,
   NavigationProvider,
 } from '../src/navigation/context';
+import { ScreenHeaderProvider } from '../src/navigation/screen-header';
+import { ScreenHeaderMock } from './screen-header-mock';
 
 export interface NavigationRecorder {
   readonly destinations: readonly NavigationDestination[];
@@ -48,7 +50,9 @@ function NavigationMocks({
   const [navigation] = useState(() => recorder ?? createNavigationRecorder());
   return (
     <NavigationProvider navigate={navigation.navigate}>
-      {children}
+      <ScreenHeaderProvider header={ScreenHeaderMock}>
+        {children}
+      </ScreenHeaderProvider>
     </NavigationProvider>
   );
 }

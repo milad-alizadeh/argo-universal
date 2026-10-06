@@ -1,7 +1,21 @@
+import {
+  MagnifyingGlassIcon,
+  SlidersHorizontalIcon,
+} from 'phosphor-react-native';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
+import { HeaderButton } from '../src/components/HeaderButton';
+import { PhoneMenuButton } from '../src/components/PhoneMenuButton';
 import { PhoneShell, type PhoneShellProps } from '../src/components/PhoneShell';
+import { shellSections } from '../src/components/shell-sections';
+import { ScreenHeader } from '../src/navigation/screen-header';
 import { Text } from '../src/primitives/text';
+
+export interface PhoneShellMockProps
+  extends Partial<Omit<PhoneShellProps, 'children'>> {
+  onSearch?: () => void;
+  onFilter?: () => void;
+}
 
 export function PhoneShellMock({
   selectedSection = 'sessions',
@@ -11,13 +25,14 @@ export function PhoneShellMock({
   onSectionChange,
   onSearch,
   onFilter,
-}: Partial<Omit<PhoneShellProps, 'children'>>) {
+}: PhoneShellMockProps) {
   const [section, setSection] = useState(selectedSection);
   const [open, setOpen] = useState(drawerOpen);
   const [action, setAction] = useState('');
 
   useEffect(() => setSection(selectedSection), [selectedSection]);
   useEffect(() => setOpen(drawerOpen), [drawerOpen]);
+  const { title } = shellSections[section];
 
   return (
     <PhoneShell
@@ -33,20 +48,38 @@ export function PhoneShellMock({
         setAction('');
         onSectionChange?.(nextSection);
       }}
-      onSearch={() => {
-        setAction('Search opened');
-        onSearch?.();
-      }}
-      onFilter={() => {
-        setAction('Filter opened');
-        onFilter?.();
-      }}
     >
+      <ScreenHeader
+        title={title}
+        left={<PhoneMenuButton attentionCount={attentionCount} />}
+        right={[
+          <HeaderButton
+            key="search"
+            icon={MagnifyingGlassIcon}
+            paired
+            accessibilityLabel={`Search ${title}`}
+            onPress={() => {
+              setAction('Search opened');
+              onSearch?.();
+            }}
+          />,
+          <HeaderButton
+            key="filter"
+            icon={SlidersHorizontalIcon}
+            paired
+            accessibilityLabel={`Filter ${title}`}
+            onPress={() => {
+              setAction('Filter opened');
+              onFilter?.();
+            }}
+          />,
+        ]}
+      />
       <View testID="phone-shell-content" className="flex-1 gap-3 p-6">
         <Text variant="muted">
           {section === 'sessions'
             ? 'Your Sessions appear here.'
-            : `${section.charAt(0).toUpperCase()}${section.slice(1)} will appear here.`}
+            : `${title} will appear here.`}
         </Text>
         {action ? <Text role="status">{action}</Text> : null}
       </View>

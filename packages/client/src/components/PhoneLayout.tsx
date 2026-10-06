@@ -1,21 +1,7 @@
-import {
-  createContext,
-  type ReactNode,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { type NavigationDestination, useNavigate } from '../navigation/context';
 import { sectionDestination, sectionOf } from '../navigation/sections';
 import { PhoneShell } from './PhoneShell';
-
-const OpenDrawerContext = createContext<() => void>(() => {});
-
-// Opens the phone shell's drawer from a section's header row.
-export function useOpenDrawer(): () => void {
-  return useContext(OpenDrawerContext);
-}
 
 export interface PhoneLayoutProps {
   destination: NavigationDestination;
@@ -36,27 +22,22 @@ export function PhoneLayout({ destination, children }: PhoneLayoutProps) {
   }, [section]);
 
   return (
-    <OpenDrawerContext.Provider value={() => setDrawerOpen(true)}>
-      <PhoneShell
-        selectedSection={section}
-        attentionCount={0}
-        drawerOpen={drawerOpen}
-        onDrawerOpenChange={(open) => {
-          if (!open && deferClose.current) deferClose.current = false;
-          else setDrawerOpen(open);
-        }}
-        onSectionChange={(next) => {
-          if (next === section) return;
-          deferClose.current = true;
-          navigate(sectionDestination(next));
-        }}
-        onSearch={() => {}}
-        onFilter={() => {}}
-        showListHeader={false}
-        swipeEnabled={atSectionRoot}
-      >
-        {children}
-      </PhoneShell>
-    </OpenDrawerContext.Provider>
+    <PhoneShell
+      selectedSection={section}
+      attentionCount={0}
+      drawerOpen={drawerOpen}
+      onDrawerOpenChange={(open) => {
+        if (!open && deferClose.current) deferClose.current = false;
+        else setDrawerOpen(open);
+      }}
+      onSectionChange={(next) => {
+        if (next === section) return;
+        deferClose.current = true;
+        navigate(sectionDestination(next));
+      }}
+      swipeEnabled={atSectionRoot}
+    >
+      {children}
+    </PhoneShell>
   );
 }

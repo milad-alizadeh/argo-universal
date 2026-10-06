@@ -9,16 +9,16 @@ export {
   type DesktopShellProps,
   type InspectorState,
 } from './components/DesktopShell';
+export {
+  HeaderButton,
+  type HeaderButtonProps,
+} from './components/HeaderButton';
 export { Icon, type IconProps } from './components/Icon';
 export {
   IssueIndicator,
   type IssueIndicatorProps,
 } from './components/IssueIndicator';
 export { PhoneLayout, type PhoneLayoutProps } from './components/PhoneLayout';
-export {
-  PhoneListHeader,
-  type PhoneListHeaderProps,
-} from './components/PhoneListHeader';
 export {
   PhoneShell,
   type PhoneShellProps,
@@ -47,6 +47,7 @@ export {
   useConnection,
   useConnectionState,
 } from './connection/context';
+export { hasLiquidGlass } from './lib/native-header';
 export { applyTheme } from './lib/theme';
 export {
   type Navigate,
@@ -55,6 +56,13 @@ export {
   type NavigationProviderProps,
   useNavigate,
 } from './navigation/context';
+export {
+  ScreenHeader,
+  type ScreenHeaderProps,
+  ScreenHeaderProvider,
+  type ScreenHeaderProviderProps,
+  type ScreenHeaderSearch,
+} from './navigation/screen-header';
 export { useWide } from './navigation/use-wide';
 export { ConnectionScreen } from './screens/ConnectionScreen';
 export {
