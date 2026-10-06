@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, waitFor } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 import { expectShimmerMovement } from '../../mocks/expect-shimmer';
 import { renderRecordedActivity } from '../../mocks/tool-call-group-preview';
 import {
+  runningRead,
   toolCallGroupMock,
   toolCallGroupMocks,
 } from '../../mocks/tool-call-mock';
@@ -14,6 +15,7 @@ const meta = {
   args: {
     group: toolCallGroupMock.group,
     renderActivity: renderRecordedActivity,
+    now: toolCallGroupMock.now,
   },
 } satisfies Meta<typeof ToolCallGroup>;
 export default meta;
@@ -62,10 +64,16 @@ export const Running: Story = {
       await expect(group).toBeVisible();
       await expect(canvas.queryByRole('progressbar')).not.toBeInTheDocument();
       await expectShimmerMovement(group);
+      await expect(within(group).getByText('23s')).toBeVisible();
       await userEvent.click(group);
       await expect(
         canvas.getByRole('button', { name: 'Read /project/hello.txt' }),
       ).toBeVisible();
+      await expect(
+        canvas.getAllByRole('button', {
+          name: 'Show hello.txt and short git status',
+        }),
+      ).toHaveLength(1);
       await expect(canvas.queryByText('Shell')).not.toBeInTheDocument();
       await userEvent.click(group);
       await waitFor(() =>
@@ -113,9 +121,39 @@ export const AgentParity: Story = {
   },
 };
 
+export const RunningRead: Story = {
+  args: {
+    group: {
+      ...toolCallGroupMock.running,
+      items: [{ ...toolCallGroupMock.exploration, toolCalls: [runningRead] }],
+    },
+    now: (runningRead._meta?.argo?.startedAt ?? 0) + 23000,
+  },
+  play: async ({ canvas, userEvent }) => {
+    const { page } = await import('vitest/browser');
+    for (const width of [390, 1440]) {
+      await page.viewport(width, 844);
+      const header = canvas.getByRole('button', {
+        name: 'Read /project/hello.txt',
+      });
+      await expect(within(header).getByText('23s')).toBeVisible();
+      await userEvent.click(header);
+      await expect(
+        canvas.getAllByRole('button', { name: 'Read /project/hello.txt' }),
+      ).toHaveLength(1);
+      await expect(canvas.queryByText('hello.txt', { exact: true })).toBeNull();
+      await userEvent.click(header);
+    }
+  },
+};
+
 export const SettledDark: Story = { ...Settled, globals: { mode: 'dark' } };
 export const RunningDark: Story = { ...Running, globals: { mode: 'dark' } };
 export const AgentParityDark: Story = {
   ...AgentParity,
+  globals: { mode: 'dark' },
+};
+export const RunningReadDark: Story = {
+  ...RunningRead,
   globals: { mode: 'dark' },
 };

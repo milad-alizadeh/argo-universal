@@ -22,12 +22,14 @@ export const Overview: Story = {
       <Variation label="Running group">
         <ToolCallGroup
           group={toolCallGroupMock.running}
+          now={toolCallGroupMock.now}
           renderActivity={renderRecordedActivity}
         />
       </Variation>
       <Variation label="Running group, expanded">
         <ToolCallGroup
           group={toolCallGroupMock.running}
+          now={toolCallGroupMock.now}
           renderActivity={renderRecordedActivity}
           initialOpen
         />

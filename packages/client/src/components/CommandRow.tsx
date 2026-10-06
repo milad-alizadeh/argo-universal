@@ -2,11 +2,11 @@ import type { ToolCallUpdate } from '@repo/contracts';
 import { CheckIcon } from 'phosphor-react-native/src/icons/Check';
 import { TerminalWindowIcon } from 'phosphor-react-native/src/icons/TerminalWindow';
 import { XIcon } from 'phosphor-react-native/src/icons/X';
-import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/utils';
 import { Text } from '#primitives/text';
 import { toolCallTitle } from '../feed/tool-call-title';
+import { useToolCallDuration } from '../feed/use-tool-call-duration';
 import { FeedCodeBlock } from './FeedCodeBlock';
 import { FeedDisclosure } from './FeedDisclosure';
 import { Icon } from './Icon';
@@ -20,19 +20,8 @@ export interface CommandRowProps {
 export function CommandRow({ row, initialOpen, now }: CommandRowProps) {
   const running = row.status === 'pending' || row.status === 'in_progress';
   const stopped = row.status === 'cancelled';
-  const [clock, setClock] = useState(Date.now);
-  useEffect(() => {
-    if (!running || now !== undefined) return;
-    const timer = setInterval(() => setClock(Date.now()), 1000);
-    return () => clearInterval(timer);
-  }, [running, now]);
+  const duration = useToolCallDuration(row, now);
   const terminal = row.content.find((content) => content.type === 'terminal');
-  const timing = row._meta?.argo;
-  const end = running ? (now ?? clock) : timing?.endedAt;
-  const duration =
-    timing?.startedAt !== undefined && end !== undefined
-      ? `${Number((Math.max(0, end - timing.startedAt) / 1000).toFixed(1))}s`
-      : undefined;
   if (!terminal) return null;
   const exitCode = terminal.exitStatus?.exitCode;
   const failed =
