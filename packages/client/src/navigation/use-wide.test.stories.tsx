@@ -12,24 +12,35 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+// CI runners can take over a second to redraw after a resize.
+const layoutUpdate = { timeout: 3000 };
+
 export const UpdatesAt720Pixels: Story = {
   play: async ({ canvas }) => {
     const { page } = await import('vitest/browser');
 
     await page.viewport(719, 900);
-    await expect(await canvas.findByText('Phone layout')).toBeVisible();
+    await expect(
+      await canvas.findByText('Phone layout', {}, layoutUpdate),
+    ).toBeVisible();
     await expect(canvas.getByText('Wide breakpoint')).not.toBeVisible();
 
     await page.viewport(720, 900);
-    await expect(await canvas.findByText('Wide layout')).toBeVisible();
+    await expect(
+      await canvas.findByText('Wide layout', {}, layoutUpdate),
+    ).toBeVisible();
     await expect(canvas.getByText('Wide breakpoint')).toBeVisible();
 
     await page.viewport(721, 900);
-    await expect(await canvas.findByText('Wide layout')).toBeVisible();
+    await expect(
+      await canvas.findByText('Wide layout', {}, layoutUpdate),
+    ).toBeVisible();
     await expect(canvas.getByText('Wide breakpoint')).toBeVisible();
 
     await page.viewport(719, 900);
-    await expect(await canvas.findByText('Phone layout')).toBeVisible();
+    await expect(
+      await canvas.findByText('Phone layout', {}, layoutUpdate),
+    ).toBeVisible();
     await expect(canvas.getByText('Wide breakpoint')).not.toBeVisible();
   },
 };
