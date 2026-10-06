@@ -28,7 +28,6 @@ export interface FeedDisclosureProps {
   failed?: boolean;
   initialOpen?: boolean;
   trailing?: ReactNode;
-  preview?: ReactNode;
   children: ReactNode;
 }
 
@@ -39,7 +38,6 @@ export function FeedDisclosure({
   failed = false,
   initialOpen = false,
   trailing,
-  preview,
   children,
 }: FeedDisclosureProps) {
   const [open, setOpen] = useState(initialOpen);
@@ -97,7 +95,6 @@ export function FeedDisclosure({
           />
         </View>
       </CollapsibleTrigger>
-      {!open && preview}
       <CollapsibleContent>{children}</CollapsibleContent>
     </Collapsible>
   );

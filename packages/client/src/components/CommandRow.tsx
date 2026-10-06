@@ -53,11 +53,7 @@ export function CommandRow({ row, initialOpen, now }: CommandRowProps) {
     row.title && row.title !== terminal.command
       ? row.title
       : `${action} command`;
-  const outputLines = terminal.output
-    .replace(/\r\n/g, '\n')
-    .replace(/\n$/, '')
-    .split('\n');
-  const hiddenLines = Math.max(0, outputLines.length - 3);
+  const output = terminal.output.replace(/\r\n/g, '\n').replace(/\n$/, '');
   return (
     <FeedDisclosure
       label={title}
@@ -77,21 +73,10 @@ export function CommandRow({ row, initialOpen, now }: CommandRowProps) {
           </Text>
         )
       }
-      preview={
-        <FeedCodeBlock
-          language="Shell"
-          code={commandCode(terminal.command, outputLines.slice(-3).join('\n'))}
-          footer={
-            hiddenLines > 0 && (
-              <Text className="border-t border-border px-3 py-0.5 text-sm leading-5 text-muted-foreground">{`+${hiddenLines} lines`}</Text>
-            )
-          }
-        />
-      }
     >
       <FeedCodeBlock
         language="Shell"
-        code={commandCode(terminal.command, outputLines.join('\n'))}
+        code={commandCode(terminal.command, output)}
         footer={
           <View className="flex-row items-center gap-1.5 px-3 pb-2">
             {!running && !stopped && (

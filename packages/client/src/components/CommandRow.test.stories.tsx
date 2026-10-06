@@ -29,18 +29,19 @@ export const Completed: Story = {
       });
       await expect(row).toBeVisible();
       await expect(canvas.getByText('0.3s')).toBeVisible();
-      await expect(canvas.getByText('Shell')).toBeVisible();
+      await expect(canvas.queryByText('Shell')).not.toBeInTheDocument();
       await expect(
-        canvas.getByText('$ cat hello.txt && git status --short', {
+        canvas.queryByText('$ cat hello.txt && git status --short', {
           exact: false,
         }),
-      ).toBeVisible();
+      ).not.toBeInTheDocument();
       await expect(row).not.toHaveTextContent(
         'cat hello.txt && git status --short',
       );
-      await expect(canvas.getByText(/hello Argo/)).toBeVisible();
+      await expect(canvas.queryByText(/hello Argo/)).not.toBeInTheDocument();
       await expect(row).toHaveAttribute('aria-expanded', 'false');
       await userEvent.click(row);
+      await expect(canvas.getByText('Shell')).toBeVisible();
       await expect(
         canvas.getByText('$ cat hello.txt && git status --short', {
           exact: false,
@@ -50,6 +51,7 @@ export const Completed: Story = {
       await expect(canvas.getByText(completedCommand.title)).toBeVisible();
       await userEvent.click(row);
       await expect(row).toHaveAttribute('aria-expanded', 'false');
+      await expect(canvas.queryByText('Shell')).not.toBeInTheDocument();
     }
   },
 };
@@ -66,15 +68,15 @@ export const OutputDisclosure: Story = {
           normalizer: (value) => value,
         }),
       ).not.toBeInTheDocument();
-      await expect(canvas.getByText('+2 lines')).toBeVisible();
-      await expect(canvas.getByText('Shell')).toBeVisible();
+      await expect(canvas.queryByText('Shell')).not.toBeInTheDocument();
       await expect(row).toHaveAccessibleName('Ran command');
       await expect(
-        canvas.getByText(/hello Argo\n M hello.txt\n\?\? notes.md$/, {
+        canvas.queryByText(/hello Argo\n M hello.txt\n\?\? notes.md$/, {
           normalizer: (value) => value,
         }),
-      ).toBeVisible();
+      ).not.toBeInTheDocument();
       await userEvent.click(row);
+      await expect(canvas.getByText('Shell')).toBeVisible();
       await expect(
         canvas.getByText(/\nPreparing checks\nChecking files/, {
           normalizer: (value) => value,
@@ -124,12 +126,12 @@ export const Running: Story = {
       });
       await expect(row).toBeVisible();
       await expect(canvas.getByText('23s')).toBeVisible();
-      await expect(canvas.getByText('Shell')).toBeVisible();
+      await expect(canvas.queryByText('Shell')).not.toBeInTheDocument();
       await expect(
-        canvas.getByText('$ cat hello.txt && git status --short', {
+        canvas.queryByText('$ cat hello.txt && git status --short', {
           exact: false,
         }),
-      ).toBeVisible();
+      ).not.toBeInTheDocument();
       await expect(row).not.toHaveTextContent(
         'cat hello.txt && git status --short',
       );
@@ -139,6 +141,12 @@ export const Running: Story = {
         expect(getComputedStyle(spinner).transform).not.toBe(before),
       );
       await userEvent.click(row);
+      await expect(canvas.getByText('Shell')).toBeVisible();
+      await expect(
+        canvas.getByText('$ cat hello.txt && git status --short', {
+          exact: false,
+        }),
+      ).toBeVisible();
       await expect(canvas.queryByText('Completed')).not.toBeInTheDocument();
       await expect(canvas.getByText('Running')).toBeVisible();
       await userEvent.click(row);
