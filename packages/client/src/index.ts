@@ -27,6 +27,7 @@ export {
   IssueIndicator,
   type IssueIndicatorProps,
 } from './components/IssueIndicator';
+export { LiveHeader, type LiveHeaderProps } from './components/LiveHeader';
 export { PhoneLayout, type PhoneLayoutProps } from './components/PhoneLayout';
 export {
   PhoneShell,

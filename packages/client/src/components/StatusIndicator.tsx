@@ -1,15 +1,7 @@
 import type { SessionInfo } from '@repo/contracts';
-import { useEffect } from 'react';
 import { View } from 'react-native';
-import Animated, {
-  cancelAnimation,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-} from 'react-native-reanimated';
-import { useResolveClassNames } from 'uniwind';
 import { cn } from '#lib/utils';
+import { BlinkingDot } from './BlinkingDot';
 
 export const statusLabels = {
   needs_input: 'Needs input',
@@ -41,31 +33,6 @@ export function StatusIndicator({
   testID = 'status-indicator',
 }: StatusIndicatorProps) {
   const active = status === 'running' || status === 'needs_input';
-  const { backgroundColor } = useResolveClassNames(statusColors[status]);
-  const opacity = useSharedValue(1);
-  useEffect(() => {
-    opacity.value = active
-      ? withRepeat(withTiming(0.45, { duration: 650 }), -1, true)
-      : 1;
-    return () => cancelAnimation(opacity);
-  }, [active, opacity]);
-  const lightStyle = useAnimatedStyle(
-    () => ({
-      opacity: opacity.value,
-      boxShadow: active
-        ? [
-            {
-              offsetX: 0,
-              offsetY: 0,
-              blurRadius: 4,
-              spreadDistance: 0,
-              color: backgroundColor,
-            },
-          ]
-        : [],
-    }),
-    [opacity, active, backgroundColor],
-  );
   return (
     <View
       testID={`${testID}-container`}
@@ -76,10 +43,11 @@ export function StatusIndicator({
         className,
       )}
     >
-      <Animated.View
+      <BlinkingDot
         testID={testID}
-        style={lightStyle}
-        className={cn('size-full rounded-full', statusColors[status])}
+        colorClassName={statusColors[status]}
+        blinking={active}
+        className="size-full"
       />
     </View>
   );
