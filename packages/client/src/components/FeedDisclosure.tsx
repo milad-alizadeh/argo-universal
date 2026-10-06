@@ -1,13 +1,6 @@
 import type { Icon as PhosphorIcon } from 'phosphor-react-native';
-import { CaretRightIcon } from 'phosphor-react-native/src/icons/CaretRight';
 import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
-import Animated, {
-  ReduceMotion,
-  useAnimatedStyle,
-  useDerivedValue,
-  withTiming,
-} from 'react-native-reanimated';
 import { cn } from '#lib/utils';
 import {
   Collapsible,
@@ -15,6 +8,7 @@ import {
   CollapsibleTrigger,
 } from '#primitives/collapsible';
 import { Text, TextClassContext } from '#primitives/text';
+import { DisclosureCaret } from './DisclosureCaret';
 import { Icon } from './Icon';
 import { ShimmerText } from './ShimmerText';
 
@@ -40,20 +34,6 @@ export function FeedDisclosure({
   const [open, setOpen] = useState(initialOpen);
   const [hovered, setHovered] = useState(false);
   const title = trailing ? `${label} ${trailing}` : label;
-  const rotation = useDerivedValue(
-    () =>
-      withTiming(open ? 90 : 0, {
-        duration: 200,
-        reduceMotion: ReduceMotion.System,
-      }),
-    [open],
-  );
-  const style = useAnimatedStyle(
-    () => ({
-      transform: [{ rotate: `${rotation.value}deg` }],
-    }),
-    [rotation],
-  );
   return (
     <Collapsible open={open} onOpenChange={setOpen} className="w-full">
       <TextClassContext.Provider value="select-none">
@@ -61,7 +41,7 @@ export function FeedDisclosure({
           accessibilityLabel={label}
           onHoverIn={() => setHovered(true)}
           onHoverOut={() => setHovered(false)}
-          className="min-h-5 flex-row items-center gap-1.5"
+          className="min-h-5 max-w-full self-start flex-row items-center gap-1.5"
         >
           <View className="size-4 shrink-0 items-center justify-center">
             <Icon
@@ -73,7 +53,7 @@ export function FeedDisclosure({
               )}
             />
           </View>
-          <View className="min-w-0 flex-1 flex-row items-center gap-1">
+          <View className="min-w-0 shrink flex-row items-center gap-1">
             {running ? (
               <ShimmerText
                 text={title}
@@ -92,18 +72,10 @@ export function FeedDisclosure({
                 {title}
               </Text>
             )}
-            <Animated.View
-              style={style}
-              className="size-3.5 shrink-0 items-center justify-center"
-            >
-              <Icon
-                as={CaretRightIcon}
-                className={cn(
-                  'size-3.5 text-muted-foreground',
-                  hovered && 'text-foreground',
-                )}
-              />
-            </Animated.View>
+            <DisclosureCaret
+              open={open}
+              className={hovered ? 'text-foreground' : undefined}
+            />
           </View>
         </CollapsibleTrigger>
       </TextClassContext.Provider>

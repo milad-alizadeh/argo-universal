@@ -25,3 +25,14 @@
     font-family: var(--font-sans);
   }
 }
+
+@media (hover: hover) {
+  .code-block-copy {
+    opacity: 0;
+  }
+  .code-block:hover .code-block-copy,
+  .code-block-copy:focus-visible,
+  .code-block-copy.is-copied {
+    opacity: 1;
+  }
+}

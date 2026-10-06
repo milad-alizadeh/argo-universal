@@ -26,6 +26,7 @@ One `GLOSSARY.md` and one `docs/adr/` folder at the repo root ("single-context")
 
 ## Rules that no tool checks
 
+- Put all evidence and images in the PR body; upload images with `gh pr create --attach` or `gh pr edit --attach`, never commit them to Git.
 - In source code, a vendor name (`claude`, `codex`) appears only inside `packages/agents/<agent>/`. Test mocks in `mocks/cli/<agent>/` carry it too. Shared code branches on capabilities that an adapter registers.
 - Claude and Codex Sessions draw the same UI. Parity is part of every Session change.
 - End-to-end tests mock only the Agent CLI, with mocks in `mocks/cli/<agent>/`.

@@ -29,7 +29,13 @@ export interface MockCli {
   // Writes the mock CLI into `directory` under the name the adapter runs from PATH.
   write: (directory: string, options: MockCliOptions) => Promise<string>;
   // Recordings of a Turn with edits and commands, and of a Turn cancelled during a command.
-  recordings: { turn: string; cancelledTurn: string; commandOutcomes?: string };
+  recordings: {
+    turn: string;
+    cancelledTurn: string;
+    commandOutcomes?: string;
+    editStates?: string;
+    editFailure?: string;
+  };
   apiKeyVariables?: string[];
   connectionFailures?: {
     environment: Record<string, string>;
@@ -61,6 +67,8 @@ export const mockClis: Record<string, MockCli> = {
       turn: 'edit-and-command',
       cancelledTurn: 'interrupt',
       commandOutcomes: 'command-outcomes',
+      editStates: 'edit-states',
+      editFailure: 'edit-failure',
     },
     writeTranscript: writeCodexTranscript,
   },
