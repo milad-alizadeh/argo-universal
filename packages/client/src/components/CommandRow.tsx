@@ -38,17 +38,27 @@ export function CommandRow({ row, initialOpen, now }: CommandRowProps) {
     row.status === 'failed' || (exitCode !== undefined && exitCode !== 0);
   const failureStatus = exitCode !== undefined ? `exit ${exitCode}` : 'failed';
   let status = duration;
-  if (stopped && duration) status = `after ${duration}`;
-  if (failed) status = [failureStatus, duration].filter(Boolean).join(' · ');
   let outcome = 'Completed';
-  if (stopped) outcome = 'Stopped';
-  if (failed) outcome = 'Failed';
-  if (terminal.exitStatus?.exitCode !== undefined)
-    outcome = `Exit ${terminal.exitStatus.exitCode}`;
-  if (running) outcome = 'Running';
   let action = 'Ran';
-  if (stopped) action = 'Stopped';
-  if (running) action = 'Running';
+  switch (row.status) {
+    case 'pending':
+    case 'in_progress':
+      outcome = 'Running';
+      action = 'Running';
+      break;
+    case 'cancelled':
+      outcome = 'Stopped';
+      action = 'Stopped';
+      if (duration) status = `after ${duration}`;
+      break;
+    case 'failed':
+      outcome = 'Failed';
+      break;
+    case 'completed':
+      break;
+  }
+  if (exitCode !== undefined && !running) outcome = `Exit ${exitCode}`;
+  if (failed) status = [failureStatus, duration].filter(Boolean).join(' · ');
   const title =
     row.title && row.title !== terminal.command
       ? row.title
