@@ -93,6 +93,7 @@ export const SettingsListOpensItsPages: Story = {
 
 export const DrawerBadgeFollowsSessionCounts: Story = {
   parameters: { trpc: counts.fixtures },
+  beforeEach: () => counts.reset(),
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(
       await canvas.findByRole('button', { name: 'Open navigation' }),

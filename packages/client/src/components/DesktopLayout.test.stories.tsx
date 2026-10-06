@@ -96,6 +96,7 @@ export const IssuesListPlaceholder: Story = {
 
 export const RailBadgeFollowsSessionCounts: Story = {
   parameters: { trpc: counts.fixtures },
+  beforeEach: () => counts.reset(),
   play: async ({ canvas }) => {
     await expect(
       await canvas.findByLabelText('1 Session needs attention'),
