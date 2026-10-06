@@ -1,9 +1,15 @@
 import type { AgentCommandOf, AgentEvent, AgentReady } from '@repo/agents';
-import { feedEvents as claudeFeedEvents } from './claude/feed.ts';
+import {
+  feedEvents as claudeFeedEvents,
+  recordedPrompt as claudeRecordedPrompt,
+} from './claude/feed.ts';
 import { newSessionMock as claudeNewSessionMock } from './claude/new-session.ts';
 import { writeMockClaude } from './claude/write-mock-claude.ts';
 import { writeClaudeTranscript } from './claude/write-transcript.ts';
-import { feedEvents as codexFeedEvents } from './codex/feed.ts';
+import {
+  feedEvents as codexFeedEvents,
+  recordedPrompt as codexRecordedPrompt,
+} from './codex/feed.ts';
 import { newSessionMock as codexNewSessionMock } from './codex/new-session.ts';
 import { writeMockCodex } from './codex/write-mock-codex.ts';
 import { writeCodexTranscript } from './codex/write-transcript.ts';
@@ -11,6 +17,10 @@ import type { MockCliOptions } from './mock-cli.ts';
 
 export interface MockCli {
   feedEvents(recording: string): AgentEvent[];
+  // The first prompt a recording sent, or undefined when it holds none.
+  recordedPrompt(
+    recording: string,
+  ): AgentCommandOf<'agent.prompt'>['content'] | undefined;
   newSessionMock(): {
     configOptions: AgentReady['configOptions'];
     configOptionsByModel: AgentReady['configOptions'][];
@@ -37,6 +47,7 @@ export interface MockCli {
 export const mockClis: Record<string, MockCli> = {
   codex: {
     feedEvents: codexFeedEvents,
+    recordedPrompt: codexRecordedPrompt,
     write: writeMockCodex,
     newSessionMock: codexNewSessionMock,
     apiKeyVariables: ['OPENAI_API_KEY', 'CODEX_API_KEY'],
@@ -51,6 +62,7 @@ export const mockClis: Record<string, MockCli> = {
   },
   claude: {
     feedEvents: claudeFeedEvents,
+    recordedPrompt: claudeRecordedPrompt,
     write: writeMockClaude,
     newSessionMock: claudeNewSessionMock,
     recordings: { turn: 'edit-and-command', cancelledTurn: 'interrupt' },

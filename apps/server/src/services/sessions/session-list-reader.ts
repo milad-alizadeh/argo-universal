@@ -7,12 +7,14 @@ import {
 import type { Database } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import type { ActorRefFrom } from 'xstate';
 import { z } from 'zod';
 import type { FeedActorRef } from '../feed/feed-machine';
 import { fromFeedRow, queuedFeedRows } from '../feed/feed-row';
 import type { writerMachine } from '../feed/writer-machine';
+import { toLiveHeader } from './live-header';
+import { readLiveHeaderRows } from './live-header-rows';
 import type { RegistryActorRef } from './registry-machine';
 import { deriveSessionStatus } from './session-status';
 
@@ -102,9 +104,7 @@ export function createSessionListReader(options: {
         const live = actor?.getSnapshot();
         const feed = live?.children.feed as FeedActorRef | undefined;
         const changes = [
-          ...(
-            ['agent_message', 'plan_update', 'tool_call_update'] as const
-          ).flatMap((kind) =>
+          ...(['agent_message', 'plan_update'] as const).flatMap((kind) =>
             database
               .select()
               .from(feedRow)
@@ -112,9 +112,6 @@ export function createSessionListReader(options: {
                 and(
                   eq(feedRow.sessionId, row.id),
                   eq(feedRow.sessionUpdate, kind),
-                  kind === 'tool_call_update'
-                    ? sql`json_extract(${feedRow.payload}, '$.status') = 'in_progress'`
-                    : undefined,
                 ),
               )
               .orderBy(desc(feedRow.position))
@@ -170,9 +167,27 @@ export function createSessionListReader(options: {
         const message = updates.findLast(
           (update) => update.sessionUpdate === 'agent_message',
         );
-        const tool = updates
-          .filter((update) => update.sessionUpdate === 'tool_call_update')
-          .findLast((update) => update.status === 'in_progress');
+        const activeTurnId =
+          live?.context.activeTurnId ??
+          (running ? (latestTurn?.id ?? null) : null);
+        const liveHeader = validate(() =>
+          toLiveHeader(
+            {
+              activeTurnId,
+              permissionQueue: live?.context.permissionQueue ?? [],
+              pendingElicitation: pendingElicitation ?? null,
+            },
+            Object.values(
+              readLiveHeaderRows({
+                database,
+                writer: writer(),
+                sessionId: row.id,
+                turnId: activeTurnId,
+                rows: feed?.getSnapshot().context.rows ?? {},
+              }),
+            ),
+          ),
+        );
         const plan = updates.findLast(
           (update) => update.sessionUpdate === 'plan_update',
         );
@@ -183,7 +198,7 @@ export function createSessionListReader(options: {
         if (needsInput) {
           activity = pendingPermission?.title ?? 'Waiting for your answer';
         } else if (running) {
-          activity = tool?.status === 'in_progress' ? tool.title : 'Working';
+          activity = liveHeader ?? 'Working';
         } else {
           activity =
             message?.content

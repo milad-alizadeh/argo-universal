@@ -4,10 +4,26 @@
     "recording": "edit-and-command",
     "rows": [
       {
-        "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
+        "id": "turn-1:user",
         "sessionId": "agent-1-edit-and-command",
         "position": 0,
-        "revision": 13,
+        "revision": 1,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "user_message",
+        "messageId": "turn-1:user",
+        "content": [
+          {
+            "type": "text",
+            "text": "Think briefly first. Then: create notes.md holding a two-item todo list, change \"world\" to \"Argo\" in hello.txt with the Edit tool, and run `cat hello.txt && git status --short` with Bash. Finish with one short sentence."
+          }
+        ]
+      },
+      {
+        "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
+        "sessionId": "agent-1-edit-and-command",
+        "position": 1,
+        "revision": 14,
         "turnId": "turn-1",
         "state": "settled",
         "sessionUpdate": "agent_thought",
@@ -22,8 +38,8 @@
       {
         "id": "toolu_01FDakYHkWn7oMZW8hWNVddc",
         "sessionId": "agent-1-edit-and-command",
-        "position": 1,
-        "revision": 15,
+        "position": 2,
+        "revision": 16,
         "turnId": "turn-1",
         "state": "settled",
         "sessionUpdate": "tool_call_update",
@@ -63,8 +79,8 @@
       {
         "id": "toolu_01SxWPoiSEcuefwQ7yYCUMf7",
         "sessionId": "agent-1-edit-and-command",
-        "position": 2,
-        "revision": 17,
+        "position": 3,
+        "revision": 18,
         "turnId": "turn-1",
         "state": "settled",
         "sessionUpdate": "tool_call_update",
@@ -92,8 +108,8 @@
       {
         "id": "toolu_017jjekVKPQW8pQZNYRFNzF6",
         "sessionId": "agent-1-edit-and-command",
-        "position": 3,
-        "revision": 19,
+        "position": 4,
+        "revision": 20,
         "turnId": "turn-1",
         "state": "settled",
         "sessionUpdate": "tool_call_update",
@@ -136,8 +152,8 @@
       {
         "id": "toolu_01G161bUEDoix223h77wg2HL",
         "sessionId": "agent-1-edit-and-command",
-        "position": 4,
-        "revision": 21,
+        "position": 5,
+        "revision": 22,
         "turnId": "turn-1",
         "state": "settled",
         "sessionUpdate": "tool_call_update",
@@ -160,15 +176,16 @@
         "_meta": {
           "argo": {
             "startedAt": 1791165776295,
-            "endedAt": 1791165776582
+            "endedAt": 1791165776582,
+            "description": "Show hello.txt and short git status"
           }
         }
       },
       {
         "id": "msg_011CfiGVZY9Xg3EPrTZnMaR5#0",
         "sessionId": "agent-1-edit-and-command",
-        "position": 5,
-        "revision": 32,
+        "position": 6,
+        "revision": 33,
         "turnId": "turn-1",
         "state": "settled",
         "sessionUpdate": "agent_message",
@@ -186,10 +203,30 @@
         "type": "row.upsert",
         "rev": 1,
         "row": {
-          "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
+          "id": "turn-1:user",
           "sessionId": "agent-1-edit-and-command",
           "position": 0,
           "revision": 1,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "user_message",
+          "messageId": "turn-1:user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Think briefly first. Then: create notes.md holding a two-item todo list, change \"world\" to \"Argo\" in hello.txt with the Edit tool, and run `cat hello.txt && git status --short` with Bash. Finish with one short sentence."
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 2,
+        "row": {
+          "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
+          "sessionId": "agent-1-edit-and-command",
+          "position": 1,
+          "revision": 2,
           "turnId": "turn-1",
           "state": "open",
           "sessionUpdate": "agent_thought",
@@ -204,7 +241,7 @@
       },
       {
         "type": "row.append",
-        "rev": 2,
+        "rev": 3,
         "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
         "field": "content.0.text",
         "off": 0,
@@ -212,7 +249,7 @@
       },
       {
         "type": "row.append",
-        "rev": 3,
+        "rev": 4,
         "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
         "field": "content.0.text",
         "off": 1,
@@ -220,7 +257,7 @@
       },
       {
         "type": "row.append",
-        "rev": 4,
+        "rev": 5,
         "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
         "field": "content.0.text",
         "off": 8,
@@ -228,7 +265,7 @@
       },
       {
         "type": "row.append",
-        "rev": 5,
+        "rev": 6,
         "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
         "field": "content.0.text",
         "off": 13,
@@ -236,7 +273,7 @@
       },
       {
         "type": "row.append",
-        "rev": 6,
+        "rev": 7,
         "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
         "field": "content.0.text",
         "off": 15,
@@ -244,7 +281,7 @@
       },
       {
         "type": "row.append",
-        "rev": 7,
+        "rev": 8,
         "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
         "field": "content.0.text",
         "off": 35,
@@ -252,7 +289,7 @@
       },
       {
         "type": "row.append",
-        "rev": 8,
+        "rev": 9,
         "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
         "field": "content.0.text",
         "off": 56,
@@ -260,7 +297,7 @@
       },
       {
         "type": "row.append",
-        "rev": 9,
+        "rev": 10,
         "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
         "field": "content.0.text",
         "off": 60,
@@ -268,7 +305,7 @@
       },
       {
         "type": "row.append",
-        "rev": 10,
+        "rev": 11,
         "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
         "field": "content.0.text",
         "off": 74,
@@ -276,7 +313,7 @@
       },
       {
         "type": "row.append",
-        "rev": 11,
+        "rev": 12,
         "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
         "field": "content.0.text",
         "off": 87,
@@ -284,7 +321,7 @@
       },
       {
         "type": "row.append",
-        "rev": 12,
+        "rev": 13,
         "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
         "field": "content.0.text",
         "off": 102,
@@ -292,12 +329,12 @@
       },
       {
         "type": "row.upsert",
-        "rev": 13,
+        "rev": 14,
         "row": {
           "id": "msg_011CfiGV55PC6jDNmPmEHy8D#0",
           "sessionId": "agent-1-edit-and-command",
-          "position": 0,
-          "revision": 13,
+          "position": 1,
+          "revision": 14,
           "turnId": "turn-1",
           "state": "settled",
           "sessionUpdate": "agent_thought",
@@ -312,12 +349,12 @@
       },
       {
         "type": "row.upsert",
-        "rev": 14,
+        "rev": 15,
         "row": {
           "id": "toolu_01FDakYHkWn7oMZW8hWNVddc",
           "sessionId": "agent-1-edit-and-command",
-          "position": 1,
-          "revision": 14,
+          "position": 2,
+          "revision": 15,
           "turnId": "turn-1",
           "state": "open",
           "sessionUpdate": "tool_call_update",
@@ -356,12 +393,12 @@
       },
       {
         "type": "row.upsert",
-        "rev": 15,
+        "rev": 16,
         "row": {
           "id": "toolu_01FDakYHkWn7oMZW8hWNVddc",
           "sessionId": "agent-1-edit-and-command",
-          "position": 1,
-          "revision": 15,
+          "position": 2,
+          "revision": 16,
           "turnId": "turn-1",
           "state": "settled",
           "sessionUpdate": "tool_call_update",
@@ -401,12 +438,12 @@
       },
       {
         "type": "row.upsert",
-        "rev": 16,
+        "rev": 17,
         "row": {
           "id": "toolu_01SxWPoiSEcuefwQ7yYCUMf7",
           "sessionId": "agent-1-edit-and-command",
-          "position": 2,
-          "revision": 16,
+          "position": 3,
+          "revision": 17,
           "turnId": "turn-1",
           "state": "open",
           "sessionUpdate": "tool_call_update",
@@ -433,12 +470,12 @@
       },
       {
         "type": "row.upsert",
-        "rev": 17,
+        "rev": 18,
         "row": {
           "id": "toolu_01SxWPoiSEcuefwQ7yYCUMf7",
           "sessionId": "agent-1-edit-and-command",
-          "position": 2,
-          "revision": 17,
+          "position": 3,
+          "revision": 18,
           "turnId": "turn-1",
           "state": "settled",
           "sessionUpdate": "tool_call_update",
@@ -466,12 +503,12 @@
       },
       {
         "type": "row.upsert",
-        "rev": 18,
+        "rev": 19,
         "row": {
           "id": "toolu_017jjekVKPQW8pQZNYRFNzF6",
           "sessionId": "agent-1-edit-and-command",
-          "position": 3,
-          "revision": 18,
+          "position": 4,
+          "revision": 19,
           "turnId": "turn-1",
           "state": "open",
           "sessionUpdate": "tool_call_update",
@@ -513,12 +550,12 @@
       },
       {
         "type": "row.upsert",
-        "rev": 19,
+        "rev": 20,
         "row": {
           "id": "toolu_017jjekVKPQW8pQZNYRFNzF6",
           "sessionId": "agent-1-edit-and-command",
-          "position": 3,
-          "revision": 19,
+          "position": 4,
+          "revision": 20,
           "turnId": "turn-1",
           "state": "settled",
           "sessionUpdate": "tool_call_update",
@@ -561,12 +598,12 @@
       },
       {
         "type": "row.upsert",
-        "rev": 20,
+        "rev": 21,
         "row": {
           "id": "toolu_01G161bUEDoix223h77wg2HL",
           "sessionId": "agent-1-edit-and-command",
-          "position": 4,
-          "revision": 20,
+          "position": 5,
+          "revision": 21,
           "turnId": "turn-1",
           "state": "open",
           "sessionUpdate": "tool_call_update",
@@ -588,19 +625,20 @@
           },
           "_meta": {
             "argo": {
-              "startedAt": 1791165776295
+              "startedAt": 1791165776295,
+              "description": "Show hello.txt and short git status"
             }
           }
         }
       },
       {
         "type": "row.upsert",
-        "rev": 21,
+        "rev": 22,
         "row": {
           "id": "toolu_01G161bUEDoix223h77wg2HL",
           "sessionId": "agent-1-edit-and-command",
-          "position": 4,
-          "revision": 21,
+          "position": 5,
+          "revision": 22,
           "turnId": "turn-1",
           "state": "settled",
           "sessionUpdate": "tool_call_update",
@@ -623,19 +661,20 @@
           "_meta": {
             "argo": {
               "startedAt": 1791165776295,
-              "endedAt": 1791165776582
+              "endedAt": 1791165776582,
+              "description": "Show hello.txt and short git status"
             }
           }
         }
       },
       {
         "type": "row.upsert",
-        "rev": 22,
+        "rev": 23,
         "row": {
           "id": "msg_011CfiGVZY9Xg3EPrTZnMaR5#0",
           "sessionId": "agent-1-edit-and-command",
-          "position": 5,
-          "revision": 22,
+          "position": 6,
+          "revision": 23,
           "turnId": "turn-1",
           "state": "open",
           "sessionUpdate": "agent_message",
@@ -650,7 +689,7 @@
       },
       {
         "type": "row.append",
-        "rev": 23,
+        "rev": 24,
         "id": "msg_011CfiGVZY9Xg3EPrTZnMaR5#0",
         "field": "content.0.text",
         "off": 0,
@@ -658,7 +697,7 @@
       },
       {
         "type": "row.append",
-        "rev": 24,
+        "rev": 25,
         "id": "msg_011CfiGVZY9Xg3EPrTZnMaR5#0",
         "field": "content.0.text",
         "off": 20,
@@ -666,7 +705,7 @@
       },
       {
         "type": "row.append",
-        "rev": 25,
+        "rev": 26,
         "id": "msg_011CfiGVZY9Xg3EPrTZnMaR5#0",
         "field": "content.0.text",
         "off": 46,
@@ -674,7 +713,7 @@
       },
       {
         "type": "row.append",
-        "rev": 26,
+        "rev": 27,
         "id": "msg_011CfiGVZY9Xg3EPrTZnMaR5#0",
         "field": "content.0.text",
         "off": 68,
@@ -682,7 +721,7 @@
       },
       {
         "type": "row.append",
-        "rev": 27,
+        "rev": 28,
         "id": "msg_011CfiGVZY9Xg3EPrTZnMaR5#0",
         "field": "content.0.text",
         "off": 85,
@@ -690,7 +729,7 @@
       },
       {
         "type": "row.append",
-        "rev": 28,
+        "rev": 29,
         "id": "msg_011CfiGVZY9Xg3EPrTZnMaR5#0",
         "field": "content.0.text",
         "off": 113,
@@ -698,7 +737,7 @@
       },
       {
         "type": "row.append",
-        "rev": 29,
+        "rev": 30,
         "id": "msg_011CfiGVZY9Xg3EPrTZnMaR5#0",
         "field": "content.0.text",
         "off": 128,
@@ -706,7 +745,7 @@
       },
       {
         "type": "row.append",
-        "rev": 30,
+        "rev": 31,
         "id": "msg_011CfiGVZY9Xg3EPrTZnMaR5#0",
         "field": "content.0.text",
         "off": 151,
@@ -714,7 +753,7 @@
       },
       {
         "type": "row.append",
-        "rev": 31,
+        "rev": 32,
         "id": "msg_011CfiGVZY9Xg3EPrTZnMaR5#0",
         "field": "content.0.text",
         "off": 157,
@@ -722,12 +761,12 @@
       },
       {
         "type": "row.upsert",
-        "rev": 32,
+        "rev": 33,
         "row": {
           "id": "msg_011CfiGVZY9Xg3EPrTZnMaR5#0",
           "sessionId": "agent-1-edit-and-command",
-          "position": 5,
-          "revision": 32,
+          "position": 6,
+          "revision": 33,
           "turnId": "turn-1",
           "state": "settled",
           "sessionUpdate": "agent_message",
@@ -750,7 +789,7 @@
           "pendingPermission": null,
           "pendingElicitation": null,
           "configOptions": [],
-          "maxRevision": 32,
+          "maxRevision": 33,
           "epoch": 0
         }
       }
@@ -763,7 +802,7 @@
       "pendingPermission": null,
       "pendingElicitation": null,
       "configOptions": [],
-      "maxRevision": 32,
+      "maxRevision": 33,
       "epoch": 0
     }
   },
@@ -772,10 +811,26 @@
     "recording": "interrupt",
     "rows": [
       {
-        "id": "toolu_01RmbdAbVKQQdXJSR61Rrkz3",
+        "id": "turn-1:user",
         "sessionId": "agent-1-interrupt",
         "position": 0,
-        "revision": 2,
+        "revision": 1,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "user_message",
+        "messageId": "turn-1:user",
+        "content": [
+          {
+            "type": "text",
+            "text": "Run the shell command `sleep 20 && echo done` with the Bash tool, then tell me what it printed."
+          }
+        ]
+      },
+      {
+        "id": "toolu_01RmbdAbVKQQdXJSR61Rrkz3",
+        "sessionId": "agent-1-interrupt",
+        "position": 1,
+        "revision": 3,
         "turnId": "turn-1",
         "state": "settled",
         "sessionUpdate": "tool_call_update",
@@ -798,7 +853,8 @@
         "_meta": {
           "argo": {
             "startedAt": 1791165781825,
-            "endedAt": 1791165783338
+            "endedAt": 1791165783338,
+            "description": "Wait 20 seconds then print done"
           }
         }
       }
@@ -808,10 +864,30 @@
         "type": "row.upsert",
         "rev": 1,
         "row": {
-          "id": "toolu_01RmbdAbVKQQdXJSR61Rrkz3",
+          "id": "turn-1:user",
           "sessionId": "agent-1-interrupt",
           "position": 0,
           "revision": 1,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "user_message",
+          "messageId": "turn-1:user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Run the shell command `sleep 20 && echo done` with the Bash tool, then tell me what it printed."
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 2,
+        "row": {
+          "id": "toolu_01RmbdAbVKQQdXJSR61Rrkz3",
+          "sessionId": "agent-1-interrupt",
+          "position": 1,
+          "revision": 2,
           "turnId": "turn-1",
           "state": "open",
           "sessionUpdate": "tool_call_update",
@@ -833,19 +909,20 @@
           },
           "_meta": {
             "argo": {
-              "startedAt": 1791165781825
+              "startedAt": 1791165781825,
+              "description": "Wait 20 seconds then print done"
             }
           }
         }
       },
       {
         "type": "row.upsert",
-        "rev": 2,
+        "rev": 3,
         "row": {
           "id": "toolu_01RmbdAbVKQQdXJSR61Rrkz3",
           "sessionId": "agent-1-interrupt",
-          "position": 0,
-          "revision": 2,
+          "position": 1,
+          "revision": 3,
           "turnId": "turn-1",
           "state": "settled",
           "sessionUpdate": "tool_call_update",
@@ -868,7 +945,8 @@
           "_meta": {
             "argo": {
               "startedAt": 1791165781825,
-              "endedAt": 1791165783338
+              "endedAt": 1791165783338,
+              "description": "Wait 20 seconds then print done"
             }
           }
         }
@@ -883,7 +961,7 @@
           "pendingPermission": null,
           "pendingElicitation": null,
           "configOptions": [],
-          "maxRevision": 2,
+          "maxRevision": 3,
           "epoch": 0
         }
       }
@@ -896,7 +974,7 @@
       "pendingPermission": null,
       "pendingElicitation": null,
       "configOptions": [],
-      "maxRevision": 2,
+      "maxRevision": 3,
       "epoch": 0
     }
   },
@@ -1015,10 +1093,37 @@
     "recording": "image-prompt",
     "rows": [
       {
-        "id": "msg_011CfjVkGq181Ld87UngQJn2#0",
+        "id": "turn-1:user",
         "sessionId": "agent-1-image-prompt",
         "position": 0,
-        "revision": 2,
+        "revision": 1,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "user_message",
+        "messageId": "turn-1:user",
+        "content": [
+          {
+            "type": "text",
+            "text": "Name the dominant color in this image in one word. Do not use tools."
+          },
+          {
+            "type": "image",
+            "mimeType": "image/png",
+            "blob": {
+              "blobId": "5a8fb050318467b35e6b315bb1f8cb808a18a6eb6c87a9964a0108391094b9b4",
+              "mime": "image/png",
+              "bytes": 99,
+              "width": 32,
+              "height": 32
+            }
+          }
+        ]
+      },
+      {
+        "id": "msg_011CfjVkGq181Ld87UngQJn2#0",
+        "sessionId": "agent-1-image-prompt",
+        "position": 1,
+        "revision": 3,
         "turnId": "turn-1",
         "state": "settled",
         "sessionUpdate": "agent_thought",
@@ -1033,8 +1138,8 @@
       {
         "id": "msg_011CfjVkGq181Ld87UngQJn2#1",
         "sessionId": "agent-1-image-prompt",
-        "position": 1,
-        "revision": 5,
+        "position": 2,
+        "revision": 6,
         "turnId": "turn-1",
         "state": "settled",
         "sessionUpdate": "agent_message",
@@ -1052,18 +1157,29 @@
         "type": "row.upsert",
         "rev": 1,
         "row": {
-          "id": "msg_011CfjVkGq181Ld87UngQJn2#0",
+          "id": "turn-1:user",
           "sessionId": "agent-1-image-prompt",
           "position": 0,
           "revision": 1,
           "turnId": "turn-1",
-          "state": "open",
-          "sessionUpdate": "agent_thought",
-          "messageId": "msg_011CfjVkGq181Ld87UngQJn2",
+          "state": "settled",
+          "sessionUpdate": "user_message",
+          "messageId": "turn-1:user",
           "content": [
             {
               "type": "text",
-              "text": ""
+              "text": "Name the dominant color in this image in one word. Do not use tools."
+            },
+            {
+              "type": "image",
+              "mimeType": "image/png",
+              "blob": {
+                "blobId": "5a8fb050318467b35e6b315bb1f8cb808a18a6eb6c87a9964a0108391094b9b4",
+                "mime": "image/png",
+                "bytes": 99,
+                "width": 32,
+                "height": 32
+              }
             }
           ]
         }
@@ -1074,10 +1190,10 @@
         "row": {
           "id": "msg_011CfjVkGq181Ld87UngQJn2#0",
           "sessionId": "agent-1-image-prompt",
-          "position": 0,
+          "position": 1,
           "revision": 2,
           "turnId": "turn-1",
-          "state": "settled",
+          "state": "open",
           "sessionUpdate": "agent_thought",
           "messageId": "msg_011CfjVkGq181Ld87UngQJn2",
           "content": [
@@ -1092,10 +1208,30 @@
         "type": "row.upsert",
         "rev": 3,
         "row": {
-          "id": "msg_011CfjVkGq181Ld87UngQJn2#1",
+          "id": "msg_011CfjVkGq181Ld87UngQJn2#0",
           "sessionId": "agent-1-image-prompt",
           "position": 1,
           "revision": 3,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "agent_thought",
+          "messageId": "msg_011CfjVkGq181Ld87UngQJn2",
+          "content": [
+            {
+              "type": "text",
+              "text": ""
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 4,
+        "row": {
+          "id": "msg_011CfjVkGq181Ld87UngQJn2#1",
+          "sessionId": "agent-1-image-prompt",
+          "position": 2,
+          "revision": 4,
           "turnId": "turn-1",
           "state": "open",
           "sessionUpdate": "agent_message",
@@ -1110,7 +1246,7 @@
       },
       {
         "type": "row.append",
-        "rev": 4,
+        "rev": 5,
         "id": "msg_011CfjVkGq181Ld87UngQJn2#1",
         "field": "content.0.text",
         "off": 0,
@@ -1118,12 +1254,12 @@
       },
       {
         "type": "row.upsert",
-        "rev": 5,
+        "rev": 6,
         "row": {
           "id": "msg_011CfjVkGq181Ld87UngQJn2#1",
           "sessionId": "agent-1-image-prompt",
-          "position": 1,
-          "revision": 5,
+          "position": 2,
+          "revision": 6,
           "turnId": "turn-1",
           "state": "settled",
           "sessionUpdate": "agent_message",
@@ -1146,7 +1282,7 @@
           "pendingPermission": null,
           "pendingElicitation": null,
           "configOptions": [],
-          "maxRevision": 5,
+          "maxRevision": 6,
           "epoch": 0
         }
       }
@@ -1159,7 +1295,644 @@
       "pendingPermission": null,
       "pendingElicitation": null,
       "configOptions": [],
-      "maxRevision": 5,
+      "maxRevision": 6,
+      "epoch": 0
+    }
+  },
+  {
+    "agent": "agent-1",
+    "recording": "markdown-answer",
+    "rows": [
+      {
+        "id": "turn-1:user",
+        "sessionId": "agent-1-markdown-answer",
+        "position": 0,
+        "revision": 1,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "user_message",
+        "messageId": "turn-1:user",
+        "content": [
+          {
+            "type": "text",
+            "text": "Without using any tools, explain in markdown why a Feed list re-renders every row when one row changes. Use exactly this shape: a level-2 heading, one short paragraph that mentions `feed.rows` and `revision` as inline code and links to [ADR 0007](https://example.com/adr/0007), a numbered list of three short steps, a tsx code block of two or three lines, a two-column table with a header row and two rows (Row state, Redraws), and one closing sentence. Keep the whole answer under 160 words."
+          }
+        ]
+      },
+      {
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#0",
+        "sessionId": "agent-1-markdown-answer",
+        "position": 1,
+        "revision": 3,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "agent_thought",
+        "messageId": "msg_011CfkR2EfPBjr2tY8mndCPu",
+        "content": [
+          {
+            "type": "text",
+            "text": ""
+          }
+        ]
+      },
+      {
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "sessionId": "agent-1-markdown-answer",
+        "position": 2,
+        "revision": 62,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "agent_message",
+        "messageId": "msg_011CfkR2EfPBjr2tY8mndCPu",
+        "content": [
+          {
+            "type": "text",
+            "text": "## Feed Re-rendering All Rows\n\nWhen `feed.rows` changes or the parent's `revision` counter increments, React can't differentiate individual rows without stable keys. See [ADR 0007](https://example.com/adr/0007) for key management guidelines. Each update triggers reconciliation of the entire list, causing unnecessary re-renders even when only one row changed.\n\n1. Parent component updates `feed.rows` or increments `revision`\n2. React re-renders the Feed component with new props\n3. All row components unmount and remount due to missing or unstable keys\n\n```tsx\nfeed.rows.map((row, index) => <Row key={index} data={row} />)\n// Each change causes all rows to re-render\n```\n\n| Row state | Redraws |\n|-----------|---------|\n| One row added | All rows |\n| One row updated | All rows |\n\nWithout stable keys or memoization, React can't preserve row identity across renders."
+          }
+        ]
+      }
+    ],
+    "stream": [
+      {
+        "type": "row.upsert",
+        "rev": 1,
+        "row": {
+          "id": "turn-1:user",
+          "sessionId": "agent-1-markdown-answer",
+          "position": 0,
+          "revision": 1,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "user_message",
+          "messageId": "turn-1:user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Without using any tools, explain in markdown why a Feed list re-renders every row when one row changes. Use exactly this shape: a level-2 heading, one short paragraph that mentions `feed.rows` and `revision` as inline code and links to [ADR 0007](https://example.com/adr/0007), a numbered list of three short steps, a tsx code block of two or three lines, a two-column table with a header row and two rows (Row state, Redraws), and one closing sentence. Keep the whole answer under 160 words."
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 2,
+        "row": {
+          "id": "msg_011CfkR2EfPBjr2tY8mndCPu#0",
+          "sessionId": "agent-1-markdown-answer",
+          "position": 1,
+          "revision": 2,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "agent_thought",
+          "messageId": "msg_011CfkR2EfPBjr2tY8mndCPu",
+          "content": [
+            {
+              "type": "text",
+              "text": ""
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 3,
+        "row": {
+          "id": "msg_011CfkR2EfPBjr2tY8mndCPu#0",
+          "sessionId": "agent-1-markdown-answer",
+          "position": 1,
+          "revision": 3,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "agent_thought",
+          "messageId": "msg_011CfkR2EfPBjr2tY8mndCPu",
+          "content": [
+            {
+              "type": "text",
+              "text": ""
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 4,
+        "row": {
+          "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+          "sessionId": "agent-1-markdown-answer",
+          "position": 2,
+          "revision": 4,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_011CfkR2EfPBjr2tY8mndCPu",
+          "content": [
+            {
+              "type": "text",
+              "text": ""
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.append",
+        "rev": 5,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 0,
+        "text": "##"
+      },
+      {
+        "type": "row.append",
+        "rev": 6,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 2,
+        "text": " Feed Re-rendering"
+      },
+      {
+        "type": "row.append",
+        "rev": 7,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 20,
+        "text": " All Rows"
+      },
+      {
+        "type": "row.append",
+        "rev": 8,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 29,
+        "text": "\n\nWhen `feed."
+      },
+      {
+        "type": "row.append",
+        "rev": 9,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 42,
+        "text": "rows` changes or"
+      },
+      {
+        "type": "row.append",
+        "rev": 10,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 58,
+        "text": " the parent's `"
+      },
+      {
+        "type": "row.append",
+        "rev": 11,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 73,
+        "text": "revision` counter incre"
+      },
+      {
+        "type": "row.append",
+        "rev": 12,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 96,
+        "text": "ments, React can"
+      },
+      {
+        "type": "row.append",
+        "rev": 13,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 112,
+        "text": "'t differentiate individual"
+      },
+      {
+        "type": "row.append",
+        "rev": 14,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 139,
+        "text": " rows without stable keys"
+      },
+      {
+        "type": "row.append",
+        "rev": 15,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 164,
+        "text": ". See [AD"
+      },
+      {
+        "type": "row.append",
+        "rev": 16,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 173,
+        "text": "R 0007"
+      },
+      {
+        "type": "row.append",
+        "rev": 17,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 179,
+        "text": "](https://example"
+      },
+      {
+        "type": "row.append",
+        "rev": 18,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 196,
+        "text": ".com/a"
+      },
+      {
+        "type": "row.append",
+        "rev": 19,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 202,
+        "text": "dr/0007"
+      },
+      {
+        "type": "row.append",
+        "rev": 20,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 209,
+        "text": ") for key management"
+      },
+      {
+        "type": "row.append",
+        "rev": 21,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 229,
+        "text": " guidelines. Each update"
+      },
+      {
+        "type": "row.append",
+        "rev": 22,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 253,
+        "text": " triggers reconciliation of"
+      },
+      {
+        "type": "row.append",
+        "rev": 23,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 280,
+        "text": " the entire list,"
+      },
+      {
+        "type": "row.append",
+        "rev": 24,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 297,
+        "text": " causing unnecessary re-"
+      },
+      {
+        "type": "row.append",
+        "rev": 25,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 321,
+        "text": "renders even when only"
+      },
+      {
+        "type": "row.append",
+        "rev": 26,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 343,
+        "text": " one row changed."
+      },
+      {
+        "type": "row.append",
+        "rev": 27,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 360,
+        "text": "\n\n1. Parent"
+      },
+      {
+        "type": "row.append",
+        "rev": 28,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 371,
+        "text": " component updates `feed"
+      },
+      {
+        "type": "row.append",
+        "rev": 29,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 395,
+        "text": ".rows` or"
+      },
+      {
+        "type": "row.append",
+        "rev": 30,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 404,
+        "text": " increments `revision"
+      },
+      {
+        "type": "row.append",
+        "rev": 31,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 425,
+        "text": "`\n2."
+      },
+      {
+        "type": "row.append",
+        "rev": 32,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 429,
+        "text": " React re-renders"
+      },
+      {
+        "type": "row.append",
+        "rev": 33,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 446,
+        "text": " the Feed component with"
+      },
+      {
+        "type": "row.append",
+        "rev": 34,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 470,
+        "text": " new props\n3"
+      },
+      {
+        "type": "row.append",
+        "rev": 35,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 482,
+        "text": ". All row components"
+      },
+      {
+        "type": "row.append",
+        "rev": 36,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 502,
+        "text": " unmount and rem"
+      },
+      {
+        "type": "row.append",
+        "rev": 37,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 518,
+        "text": "ount due to missing"
+      },
+      {
+        "type": "row.append",
+        "rev": 38,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 537,
+        "text": " or unstable keys"
+      },
+      {
+        "type": "row.append",
+        "rev": 39,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 554,
+        "text": "\n\n```tsx"
+      },
+      {
+        "type": "row.append",
+        "rev": 40,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 562,
+        "text": "\nfeed.rows."
+      },
+      {
+        "type": "row.append",
+        "rev": 41,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 573,
+        "text": "map((row,"
+      },
+      {
+        "type": "row.append",
+        "rev": 42,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 582,
+        "text": " index) => "
+      },
+      {
+        "type": "row.append",
+        "rev": 43,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 593,
+        "text": "<Row key={index"
+      },
+      {
+        "type": "row.append",
+        "rev": 44,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 608,
+        "text": "} data={row"
+      },
+      {
+        "type": "row.append",
+        "rev": 45,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 619,
+        "text": "} />)"
+      },
+      {
+        "type": "row.append",
+        "rev": 46,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 624,
+        "text": "\n// Each change causes"
+      },
+      {
+        "type": "row.append",
+        "rev": 47,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 646,
+        "text": " all rows to re"
+      },
+      {
+        "type": "row.append",
+        "rev": 48,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 661,
+        "text": "-render\n```"
+      },
+      {
+        "type": "row.append",
+        "rev": 49,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 672,
+        "text": "\n\n| Row state"
+      },
+      {
+        "type": "row.append",
+        "rev": 50,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 685,
+        "text": " | Redr"
+      },
+      {
+        "type": "row.append",
+        "rev": 51,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 692,
+        "text": "aws |\n|"
+      },
+      {
+        "type": "row.append",
+        "rev": 52,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 699,
+        "text": "-----------|---------|"
+      },
+      {
+        "type": "row.append",
+        "rev": 53,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 721,
+        "text": "\n| One row"
+      },
+      {
+        "type": "row.append",
+        "rev": 54,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 731,
+        "text": " added | All rows"
+      },
+      {
+        "type": "row.append",
+        "rev": 55,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 748,
+        "text": " |\n| One"
+      },
+      {
+        "type": "row.append",
+        "rev": 56,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 756,
+        "text": " row updated | All"
+      },
+      {
+        "type": "row.append",
+        "rev": 57,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 774,
+        "text": " rows |\n\nWithout"
+      },
+      {
+        "type": "row.append",
+        "rev": 58,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 790,
+        "text": " stable keys or m"
+      },
+      {
+        "type": "row.append",
+        "rev": 59,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 807,
+        "text": "emoization, React"
+      },
+      {
+        "type": "row.append",
+        "rev": 60,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 824,
+        "text": " can't preserve row"
+      },
+      {
+        "type": "row.append",
+        "rev": 61,
+        "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+        "field": "content.0.text",
+        "off": 843,
+        "text": " identity across renders."
+      },
+      {
+        "type": "row.upsert",
+        "rev": 62,
+        "row": {
+          "id": "msg_011CfkR2EfPBjr2tY8mndCPu#1",
+          "sessionId": "agent-1-markdown-answer",
+          "position": 2,
+          "revision": 62,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_011CfkR2EfPBjr2tY8mndCPu",
+          "content": [
+            {
+              "type": "text",
+              "text": "## Feed Re-rendering All Rows\n\nWhen `feed.rows` changes or the parent's `revision` counter increments, React can't differentiate individual rows without stable keys. See [ADR 0007](https://example.com/adr/0007) for key management guidelines. Each update triggers reconciliation of the entire list, causing unnecessary re-renders even when only one row changed.\n\n1. Parent component updates `feed.rows` or increments `revision`\n2. React re-renders the Feed component with new props\n3. All row components unmount and remount due to missing or unstable keys\n\n```tsx\nfeed.rows.map((row, index) => <Row key={index} data={row} />)\n// Each change causes all rows to re-render\n```\n\n| Row state | Redraws |\n|-----------|---------|\n| One row added | All rows |\n| One row updated | All rows |\n\nWithout stable keys or memoization, React can't preserve row identity across renders."
+            }
+          ]
+        }
+      },
+      {
+        "type": "snapshot",
+        "snapshot": {
+          "state": "idle",
+          "liveHeader": null,
+          "activeTurnId": null,
+          "usage": null,
+          "pendingPermission": null,
+          "pendingElicitation": null,
+          "configOptions": [],
+          "maxRevision": 62,
+          "epoch": 0
+        }
+      }
+    ],
+    "snapshot": {
+      "state": "idle",
+      "liveHeader": null,
+      "activeTurnId": null,
+      "usage": null,
+      "pendingPermission": null,
+      "pendingElicitation": null,
+      "configOptions": [],
+      "maxRevision": 62,
       "epoch": 0
     }
   },
@@ -1168,10 +1941,26 @@
     "recording": "edit-and-command",
     "rows": [
       {
-        "id": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
+        "id": "turn-1:user",
         "sessionId": "agent-2-edit-and-command",
         "position": 0,
-        "revision": 12,
+        "revision": 1,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "user_message",
+        "messageId": "turn-1:user",
+        "content": [
+          {
+            "type": "text",
+            "text": "Use apply_patch to change beta to gamma in app.txt and create notes.md containing hello. Then run cat app.txt notes.md in a shell command. Do not start subagents. Reply done."
+          }
+        ]
+      },
+      {
+        "id": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
+        "sessionId": "agent-2-edit-and-command",
+        "position": 1,
+        "revision": 13,
         "turnId": "turn-1",
         "state": "settled",
         "sessionUpdate": "agent_message",
@@ -1186,8 +1975,8 @@
       {
         "id": "exec-2fe50f79-a80c-4d3a-96a9-97ff33a9ad2b",
         "sessionId": "agent-2-edit-and-command",
-        "position": 1,
-        "revision": 14,
+        "position": 2,
+        "revision": 15,
         "turnId": "turn-1",
         "state": "settled",
         "sessionUpdate": "tool_call_update",
@@ -1240,8 +2029,8 @@
       {
         "id": "exec-0de82514-551d-45d0-a5a2-b9e0133283d7",
         "sessionId": "agent-2-edit-and-command",
-        "position": 2,
-        "revision": 16,
+        "position": 3,
+        "revision": 17,
         "turnId": "turn-1",
         "state": "settled",
         "sessionUpdate": "tool_call_update",
@@ -1288,8 +2077,8 @@
       {
         "id": "exec-f27ca824-f7d7-4709-a913-310e66957673",
         "sessionId": "agent-2-edit-and-command",
-        "position": 3,
-        "revision": 18,
+        "position": 4,
+        "revision": 19,
         "turnId": "turn-1",
         "state": "settled",
         "sessionUpdate": "tool_call_update",
@@ -1339,8 +2128,8 @@
       {
         "id": "msg_0bf8e37c87213e10016ac31dea8ee087d28e520b9c3b995409",
         "sessionId": "agent-2-edit-and-command",
-        "position": 4,
-        "revision": 21,
+        "position": 5,
+        "revision": 22,
         "turnId": "turn-1",
         "state": "settled",
         "sessionUpdate": "agent_message",
@@ -1358,10 +2147,30 @@
         "type": "row.upsert",
         "rev": 1,
         "row": {
-          "id": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
+          "id": "turn-1:user",
           "sessionId": "agent-2-edit-and-command",
           "position": 0,
           "revision": 1,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "user_message",
+          "messageId": "turn-1:user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Use apply_patch to change beta to gamma in app.txt and create notes.md containing hello. Then run cat app.txt notes.md in a shell command. Do not start subagents. Reply done."
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 2,
+        "row": {
+          "id": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
+          "sessionId": "agent-2-edit-and-command",
+          "position": 1,
+          "revision": 2,
           "turnId": "turn-1",
           "state": "open",
           "sessionUpdate": "agent_message",
@@ -1376,7 +2185,7 @@
       },
       {
         "type": "row.append",
-        "rev": 2,
+        "rev": 3,
         "id": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
         "field": "content.0.text",
         "off": 0,
@@ -1384,7 +2193,7 @@
       },
       {
         "type": "row.append",
-        "rev": 3,
+        "rev": 4,
         "id": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
         "field": "content.0.text",
         "off": 1,
@@ -1392,7 +2201,7 @@
       },
       {
         "type": "row.append",
-        "rev": 4,
+        "rev": 5,
         "id": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
         "field": "content.0.text",
         "off": 4,
@@ -1400,7 +2209,7 @@
       },
       {
         "type": "row.append",
-        "rev": 5,
+        "rev": 6,
         "id": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
         "field": "content.0.text",
         "off": 11,
@@ -1408,7 +2217,7 @@
       },
       {
         "type": "row.append",
-        "rev": 6,
+        "rev": 7,
         "id": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
         "field": "content.0.text",
         "off": 16,
@@ -1416,7 +2225,7 @@
       },
       {
         "type": "row.append",
-        "rev": 7,
+        "rev": 8,
         "id": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
         "field": "content.0.text",
         "off": 22,
@@ -1424,7 +2233,7 @@
       },
       {
         "type": "row.append",
-        "rev": 8,
+        "rev": 9,
         "id": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
         "field": "content.0.text",
         "off": 26,
@@ -1432,7 +2241,7 @@
       },
       {
         "type": "row.append",
-        "rev": 9,
+        "rev": 10,
         "id": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
         "field": "content.0.text",
         "off": 32,
@@ -1440,7 +2249,7 @@
       },
       {
         "type": "row.append",
-        "rev": 10,
+        "rev": 11,
         "id": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
         "field": "content.0.text",
         "off": 38,
@@ -1448,7 +2257,7 @@
       },
       {
         "type": "row.append",
-        "rev": 11,
+        "rev": 12,
         "id": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
         "field": "content.0.text",
         "off": 47,
@@ -1456,12 +2265,12 @@
       },
       {
         "type": "row.upsert",
-        "rev": 12,
+        "rev": 13,
         "row": {
           "id": "msg_0bf8e37c87213e10016ac31ddc815487d28d61c78d29a81833",
           "sessionId": "agent-2-edit-and-command",
-          "position": 0,
-          "revision": 12,
+          "position": 1,
+          "revision": 13,
           "turnId": "turn-1",
           "state": "settled",
           "sessionUpdate": "agent_message",
@@ -1476,12 +2285,12 @@
       },
       {
         "type": "row.upsert",
-        "rev": 13,
+        "rev": 14,
         "row": {
           "id": "exec-2fe50f79-a80c-4d3a-96a9-97ff33a9ad2b",
           "sessionId": "agent-2-edit-and-command",
-          "position": 1,
-          "revision": 13,
+          "position": 2,
+          "revision": 14,
           "turnId": "turn-1",
           "state": "open",
           "sessionUpdate": "tool_call_update",
@@ -1530,12 +2339,12 @@
       },
       {
         "type": "row.upsert",
-        "rev": 14,
+        "rev": 15,
         "row": {
           "id": "exec-2fe50f79-a80c-4d3a-96a9-97ff33a9ad2b",
           "sessionId": "agent-2-edit-and-command",
-          "position": 1,
-          "revision": 14,
+          "position": 2,
+          "revision": 15,
           "turnId": "turn-1",
           "state": "settled",
           "sessionUpdate": "tool_call_update",
@@ -1588,12 +2397,12 @@
       },
       {
         "type": "row.upsert",
-        "rev": 15,
+        "rev": 16,
         "row": {
           "id": "exec-0de82514-551d-45d0-a5a2-b9e0133283d7",
           "sessionId": "agent-2-edit-and-command",
-          "position": 2,
-          "revision": 15,
+          "position": 3,
+          "revision": 16,
           "turnId": "turn-1",
           "state": "open",
           "sessionUpdate": "tool_call_update",
@@ -1639,12 +2448,12 @@
       },
       {
         "type": "row.upsert",
-        "rev": 16,
+        "rev": 17,
         "row": {
           "id": "exec-0de82514-551d-45d0-a5a2-b9e0133283d7",
           "sessionId": "agent-2-edit-and-command",
-          "position": 2,
-          "revision": 16,
+          "position": 3,
+          "revision": 17,
           "turnId": "turn-1",
           "state": "settled",
           "sessionUpdate": "tool_call_update",
@@ -1691,12 +2500,12 @@
       },
       {
         "type": "row.upsert",
-        "rev": 17,
+        "rev": 18,
         "row": {
           "id": "exec-f27ca824-f7d7-4709-a913-310e66957673",
           "sessionId": "agent-2-edit-and-command",
-          "position": 3,
-          "revision": 17,
+          "position": 4,
+          "revision": 18,
           "turnId": "turn-1",
           "state": "open",
           "sessionUpdate": "tool_call_update",
@@ -1742,12 +2551,12 @@
       },
       {
         "type": "row.upsert",
-        "rev": 18,
+        "rev": 19,
         "row": {
           "id": "exec-f27ca824-f7d7-4709-a913-310e66957673",
           "sessionId": "agent-2-edit-and-command",
-          "position": 3,
-          "revision": 18,
+          "position": 4,
+          "revision": 19,
           "turnId": "turn-1",
           "state": "settled",
           "sessionUpdate": "tool_call_update",
@@ -1797,12 +2606,12 @@
       },
       {
         "type": "row.upsert",
-        "rev": 19,
+        "rev": 20,
         "row": {
           "id": "msg_0bf8e37c87213e10016ac31dea8ee087d28e520b9c3b995409",
           "sessionId": "agent-2-edit-and-command",
-          "position": 4,
-          "revision": 19,
+          "position": 5,
+          "revision": 20,
           "turnId": "turn-1",
           "state": "open",
           "sessionUpdate": "agent_message",
@@ -1817,7 +2626,7 @@
       },
       {
         "type": "row.append",
-        "rev": 20,
+        "rev": 21,
         "id": "msg_0bf8e37c87213e10016ac31dea8ee087d28e520b9c3b995409",
         "field": "content.0.text",
         "off": 0,
@@ -1825,12 +2634,12 @@
       },
       {
         "type": "row.upsert",
-        "rev": 21,
+        "rev": 22,
         "row": {
           "id": "msg_0bf8e37c87213e10016ac31dea8ee087d28e520b9c3b995409",
           "sessionId": "agent-2-edit-and-command",
-          "position": 4,
-          "revision": 21,
+          "position": 5,
+          "revision": 22,
           "turnId": "turn-1",
           "state": "settled",
           "sessionUpdate": "agent_message",
@@ -1853,7 +2662,7 @@
           "pendingPermission": null,
           "pendingElicitation": null,
           "configOptions": [],
-          "maxRevision": 21,
+          "maxRevision": 22,
           "epoch": 0
         }
       }
@@ -1866,7 +2675,7 @@
       "pendingPermission": null,
       "pendingElicitation": null,
       "configOptions": [],
-      "maxRevision": 21,
+      "maxRevision": 22,
       "epoch": 0
     }
   },
@@ -1875,10 +2684,26 @@
     "recording": "interrupt",
     "rows": [
       {
-        "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+        "id": "turn-1:user",
         "sessionId": "agent-2-interrupt",
         "position": 0,
-        "revision": 17,
+        "revision": 1,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "user_message",
+        "messageId": "turn-1:user",
+        "content": [
+          {
+            "type": "text",
+            "text": "Run sleep 30 in a shell command. Do not start subagents. Reply done when it finishes."
+          }
+        ]
+      },
+      {
+        "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+        "sessionId": "agent-2-interrupt",
+        "position": 1,
+        "revision": 18,
         "turnId": "turn-1",
         "state": "settled",
         "sessionUpdate": "agent_message",
@@ -1893,8 +2718,8 @@
       {
         "id": "exec-74ec3292-520b-4563-82d4-09f95eed79de",
         "sessionId": "agent-2-interrupt",
-        "position": 1,
-        "revision": 19,
+        "position": 2,
+        "revision": 20,
         "turnId": "turn-1",
         "state": "settled",
         "sessionUpdate": "tool_call_update",
@@ -1944,10 +2769,30 @@
         "type": "row.upsert",
         "rev": 1,
         "row": {
-          "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+          "id": "turn-1:user",
           "sessionId": "agent-2-interrupt",
           "position": 0,
           "revision": 1,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "user_message",
+          "messageId": "turn-1:user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Run sleep 30 in a shell command. Do not start subagents. Reply done when it finishes."
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 2,
+        "row": {
+          "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
+          "sessionId": "agent-2-interrupt",
+          "position": 1,
+          "revision": 2,
           "turnId": "turn-1",
           "state": "open",
           "sessionUpdate": "agent_message",
@@ -1962,7 +2807,7 @@
       },
       {
         "type": "row.append",
-        "rev": 2,
+        "rev": 3,
         "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
         "field": "content.0.text",
         "off": 0,
@@ -1970,7 +2815,7 @@
       },
       {
         "type": "row.append",
-        "rev": 3,
+        "rev": 4,
         "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
         "field": "content.0.text",
         "off": 1,
@@ -1978,7 +2823,7 @@
       },
       {
         "type": "row.append",
-        "rev": 4,
+        "rev": 5,
         "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
         "field": "content.0.text",
         "off": 4,
@@ -1986,7 +2831,7 @@
       },
       {
         "type": "row.append",
-        "rev": 5,
+        "rev": 6,
         "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
         "field": "content.0.text",
         "off": 8,
@@ -1994,7 +2839,7 @@
       },
       {
         "type": "row.append",
-        "rev": 6,
+        "rev": 7,
         "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
         "field": "content.0.text",
         "off": 10,
@@ -2002,7 +2847,7 @@
       },
       {
         "type": "row.append",
-        "rev": 7,
+        "rev": 8,
         "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
         "field": "content.0.text",
         "off": 15,
@@ -2010,7 +2855,7 @@
       },
       {
         "type": "row.append",
-        "rev": 8,
+        "rev": 9,
         "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
         "field": "content.0.text",
         "off": 16,
@@ -2018,7 +2863,7 @@
       },
       {
         "type": "row.append",
-        "rev": 9,
+        "rev": 10,
         "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
         "field": "content.0.text",
         "off": 18,
@@ -2026,7 +2871,7 @@
       },
       {
         "type": "row.append",
-        "rev": 10,
+        "rev": 11,
         "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
         "field": "content.0.text",
         "off": 19,
@@ -2034,7 +2879,7 @@
       },
       {
         "type": "row.append",
-        "rev": 11,
+        "rev": 12,
         "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
         "field": "content.0.text",
         "off": 23,
@@ -2042,7 +2887,7 @@
       },
       {
         "type": "row.append",
-        "rev": 12,
+        "rev": 13,
         "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
         "field": "content.0.text",
         "off": 28,
@@ -2050,7 +2895,7 @@
       },
       {
         "type": "row.append",
-        "rev": 13,
+        "rev": 14,
         "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
         "field": "content.0.text",
         "off": 32,
@@ -2058,7 +2903,7 @@
       },
       {
         "type": "row.append",
-        "rev": 14,
+        "rev": 15,
         "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
         "field": "content.0.text",
         "off": 35,
@@ -2066,7 +2911,7 @@
       },
       {
         "type": "row.append",
-        "rev": 15,
+        "rev": 16,
         "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
         "field": "content.0.text",
         "off": 38,
@@ -2074,7 +2919,7 @@
       },
       {
         "type": "row.append",
-        "rev": 16,
+        "rev": 17,
         "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
         "field": "content.0.text",
         "off": 45,
@@ -2082,12 +2927,12 @@
       },
       {
         "type": "row.upsert",
-        "rev": 17,
+        "rev": 18,
         "row": {
           "id": "msg_0bf8e37c87213e10016ac31ded0b7487d2824a94165670a8c7",
           "sessionId": "agent-2-interrupt",
-          "position": 0,
-          "revision": 17,
+          "position": 1,
+          "revision": 18,
           "turnId": "turn-1",
           "state": "settled",
           "sessionUpdate": "agent_message",
@@ -2102,12 +2947,12 @@
       },
       {
         "type": "row.upsert",
-        "rev": 18,
+        "rev": 19,
         "row": {
           "id": "exec-74ec3292-520b-4563-82d4-09f95eed79de",
           "sessionId": "agent-2-interrupt",
-          "position": 1,
-          "revision": 18,
+          "position": 2,
+          "revision": 19,
           "turnId": "turn-1",
           "state": "open",
           "sessionUpdate": "tool_call_update",
@@ -2153,7 +2998,7 @@
       },
       {
         "type": "row.patch",
-        "rev": 19,
+        "rev": 20,
         "id": "exec-74ec3292-520b-4563-82d4-09f95eed79de",
         "set": {
           "state": "settled",
@@ -2182,7 +3027,7 @@
           "pendingPermission": null,
           "pendingElicitation": null,
           "configOptions": [],
-          "maxRevision": 19,
+          "maxRevision": 20,
           "epoch": 0
         }
       }
@@ -2195,7 +3040,7 @@
       "pendingPermission": null,
       "pendingElicitation": null,
       "configOptions": [],
-      "maxRevision": 19,
+      "maxRevision": 20,
       "epoch": 0
     }
   },
@@ -2204,10 +3049,26 @@
     "recording": "compaction",
     "rows": [
       {
-        "id": "msg_0353e591c5cede90016ac47382522c87d2a31912a66592a7c5",
+        "id": "turn-1:user",
         "sessionId": "agent-2-compaction",
         "position": 0,
-        "revision": 3,
+        "revision": 1,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "user_message",
+        "messageId": "turn-1:user",
+        "content": [
+          {
+            "type": "text",
+            "text": "Remember this note: the sample project has a red square, a blue circle, and a green triangle. Reply with OK only."
+          }
+        ]
+      },
+      {
+        "id": "msg_0353e591c5cede90016ac47382522c87d2a31912a66592a7c5",
+        "sessionId": "agent-2-compaction",
+        "position": 1,
+        "revision": 4,
         "turnId": "turn-1",
         "state": "settled",
         "sessionUpdate": "agent_message",
@@ -2222,8 +3083,8 @@
       {
         "id": "01a10f63-35db-7062-a47d-ebd815c1bea2",
         "sessionId": "agent-2-compaction",
-        "position": 1,
-        "revision": 5,
+        "position": 2,
+        "revision": 6,
         "turnId": "turn-2",
         "state": "settled",
         "sessionUpdate": "compaction_update",
@@ -2236,10 +3097,30 @@
         "type": "row.upsert",
         "rev": 1,
         "row": {
-          "id": "msg_0353e591c5cede90016ac47382522c87d2a31912a66592a7c5",
+          "id": "turn-1:user",
           "sessionId": "agent-2-compaction",
           "position": 0,
           "revision": 1,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "user_message",
+          "messageId": "turn-1:user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Remember this note: the sample project has a red square, a blue circle, and a green triangle. Reply with OK only."
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 2,
+        "row": {
+          "id": "msg_0353e591c5cede90016ac47382522c87d2a31912a66592a7c5",
+          "sessionId": "agent-2-compaction",
+          "position": 1,
+          "revision": 2,
           "turnId": "turn-1",
           "state": "open",
           "sessionUpdate": "agent_message",
@@ -2254,7 +3135,7 @@
       },
       {
         "type": "row.append",
-        "rev": 2,
+        "rev": 3,
         "id": "msg_0353e591c5cede90016ac47382522c87d2a31912a66592a7c5",
         "field": "content.0.text",
         "off": 0,
@@ -2262,12 +3143,12 @@
       },
       {
         "type": "row.upsert",
-        "rev": 3,
+        "rev": 4,
         "row": {
           "id": "msg_0353e591c5cede90016ac47382522c87d2a31912a66592a7c5",
           "sessionId": "agent-2-compaction",
-          "position": 0,
-          "revision": 3,
+          "position": 1,
+          "revision": 4,
           "turnId": "turn-1",
           "state": "settled",
           "sessionUpdate": "agent_message",
@@ -2282,12 +3163,12 @@
       },
       {
         "type": "row.upsert",
-        "rev": 4,
+        "rev": 5,
         "row": {
           "id": "01a10f63-35db-7062-a47d-ebd815c1bea2",
           "sessionId": "agent-2-compaction",
-          "position": 1,
-          "revision": 4,
+          "position": 2,
+          "revision": 5,
           "turnId": "turn-2",
           "state": "open",
           "sessionUpdate": "compaction_update",
@@ -2297,12 +3178,12 @@
       },
       {
         "type": "row.upsert",
-        "rev": 5,
+        "rev": 6,
         "row": {
           "id": "01a10f63-35db-7062-a47d-ebd815c1bea2",
           "sessionId": "agent-2-compaction",
-          "position": 1,
-          "revision": 5,
+          "position": 2,
+          "revision": 6,
           "turnId": "turn-2",
           "state": "settled",
           "sessionUpdate": "compaction_update",
@@ -2320,7 +3201,7 @@
           "pendingPermission": null,
           "pendingElicitation": null,
           "configOptions": [],
-          "maxRevision": 5,
+          "maxRevision": 6,
           "epoch": 0
         }
       }
@@ -2333,7 +3214,7 @@
       "pendingPermission": null,
       "pendingElicitation": null,
       "configOptions": [],
-      "maxRevision": 5,
+      "maxRevision": 6,
       "epoch": 0
     }
   },
@@ -2342,10 +3223,37 @@
     "recording": "image-prompt",
     "rows": [
       {
-        "id": "msg_0adb8b528915a791016ac3e0575a1c8191b8b2de11cb9afdd8",
+        "id": "turn-1:user",
         "sessionId": "agent-2-image-prompt",
         "position": 0,
-        "revision": 3,
+        "revision": 1,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "user_message",
+        "messageId": "turn-1:user",
+        "content": [
+          {
+            "type": "text",
+            "text": "Name the dominant color in this image in one word. Do not use tools."
+          },
+          {
+            "type": "image",
+            "mimeType": "image/png",
+            "blob": {
+              "blobId": "5a8fb050318467b35e6b315bb1f8cb808a18a6eb6c87a9964a0108391094b9b4",
+              "mime": "image/png",
+              "bytes": 99,
+              "width": 32,
+              "height": 32
+            }
+          }
+        ]
+      },
+      {
+        "id": "msg_0adb8b528915a791016ac3e0575a1c8191b8b2de11cb9afdd8",
+        "sessionId": "agent-2-image-prompt",
+        "position": 1,
+        "revision": 4,
         "turnId": "turn-1",
         "state": "settled",
         "sessionUpdate": "agent_message",
@@ -2363,10 +3271,41 @@
         "type": "row.upsert",
         "rev": 1,
         "row": {
-          "id": "msg_0adb8b528915a791016ac3e0575a1c8191b8b2de11cb9afdd8",
+          "id": "turn-1:user",
           "sessionId": "agent-2-image-prompt",
           "position": 0,
           "revision": 1,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "user_message",
+          "messageId": "turn-1:user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Name the dominant color in this image in one word. Do not use tools."
+            },
+            {
+              "type": "image",
+              "mimeType": "image/png",
+              "blob": {
+                "blobId": "5a8fb050318467b35e6b315bb1f8cb808a18a6eb6c87a9964a0108391094b9b4",
+                "mime": "image/png",
+                "bytes": 99,
+                "width": 32,
+                "height": 32
+              }
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 2,
+        "row": {
+          "id": "msg_0adb8b528915a791016ac3e0575a1c8191b8b2de11cb9afdd8",
+          "sessionId": "agent-2-image-prompt",
+          "position": 1,
+          "revision": 2,
           "turnId": "turn-1",
           "state": "open",
           "sessionUpdate": "agent_message",
@@ -2381,7 +3320,7 @@
       },
       {
         "type": "row.append",
-        "rev": 2,
+        "rev": 3,
         "id": "msg_0adb8b528915a791016ac3e0575a1c8191b8b2de11cb9afdd8",
         "field": "content.0.text",
         "off": 0,
@@ -2389,12 +3328,12 @@
       },
       {
         "type": "row.upsert",
-        "rev": 3,
+        "rev": 4,
         "row": {
           "id": "msg_0adb8b528915a791016ac3e0575a1c8191b8b2de11cb9afdd8",
           "sessionId": "agent-2-image-prompt",
-          "position": 0,
-          "revision": 3,
+          "position": 1,
+          "revision": 4,
           "turnId": "turn-1",
           "state": "settled",
           "sessionUpdate": "agent_message",
@@ -2417,7 +3356,7 @@
           "pendingPermission": null,
           "pendingElicitation": null,
           "configOptions": [],
-          "maxRevision": 3,
+          "maxRevision": 4,
           "epoch": 0
         }
       }
@@ -2430,7 +3369,1764 @@
       "pendingPermission": null,
       "pendingElicitation": null,
       "configOptions": [],
-      "maxRevision": 3,
+      "maxRevision": 4,
+      "epoch": 0
+    }
+  },
+  {
+    "agent": "agent-2",
+    "recording": "markdown-answer",
+    "rows": [
+      {
+        "id": "turn-1:user",
+        "sessionId": "agent-2-markdown-answer",
+        "position": 0,
+        "revision": 1,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "user_message",
+        "messageId": "turn-1:user",
+        "content": [
+          {
+            "type": "text",
+            "text": "Without using any tools, explain in markdown why a Feed list re-renders every row when one row changes. Use exactly this shape: a level-2 heading, one short paragraph that mentions `feed.rows` and `revision` as inline code and links to [ADR 0007](https://example.com/adr/0007), a numbered list of three short steps, a tsx code block of two or three lines, a two-column table with a header row and two rows (Row state, Redraws), and one closing sentence. Keep the whole answer under 160 words."
+          }
+        ]
+      },
+      {
+        "id": "rs_0cb246ba6a1befb2016ac484448e8487d2ba4d95b9f9169ffd",
+        "sessionId": "agent-2-markdown-answer",
+        "position": 1,
+        "revision": 3,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "agent_thought",
+        "messageId": "rs_0cb246ba6a1befb2016ac484448e8487d2ba4d95b9f9169ffd",
+        "content": [
+          {
+            "type": "text",
+            "text": ""
+          }
+        ]
+      },
+      {
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "sessionId": "agent-2-markdown-answer",
+        "position": 2,
+        "revision": 202,
+        "turnId": "turn-1",
+        "state": "settled",
+        "sessionUpdate": "agent_message",
+        "messageId": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "content": [
+          {
+            "type": "text",
+            "text": "## Why every Feed row re-renders\n\nIf an update recreates the objects in `feed.rows` or passes a changed `revision` to every row, every row receives changed props, defeating shallow memoization; see [ADR 0007](https://example.com/adr/0007).\n\n1. One row changes, triggering a parent render.\n2. New row objects or a shared revision invalidate memoized props.\n3. React renders every affected row; stable keys preserve identity but do not prevent renders.\n\n```tsx\nconst rows = feed.rows.map(row => ({ ...row }));\nreturn rows.map(row => <FeedRow key={row.id} row={row} revision={revision} />);\n```\n\n| Property | Result |\n| --- | --- |\n| Row state | Preserved by stable keys |\n| Redraws | Every row renders; DOM changes may be limited |\n\nPreserve unchanged row references, memoize rows, and avoid passing a global revision to each row."
+          }
+        ]
+      }
+    ],
+    "stream": [
+      {
+        "type": "row.upsert",
+        "rev": 1,
+        "row": {
+          "id": "turn-1:user",
+          "sessionId": "agent-2-markdown-answer",
+          "position": 0,
+          "revision": 1,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "user_message",
+          "messageId": "turn-1:user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Without using any tools, explain in markdown why a Feed list re-renders every row when one row changes. Use exactly this shape: a level-2 heading, one short paragraph that mentions `feed.rows` and `revision` as inline code and links to [ADR 0007](https://example.com/adr/0007), a numbered list of three short steps, a tsx code block of two or three lines, a two-column table with a header row and two rows (Row state, Redraws), and one closing sentence. Keep the whole answer under 160 words."
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 2,
+        "row": {
+          "id": "rs_0cb246ba6a1befb2016ac484448e8487d2ba4d95b9f9169ffd",
+          "sessionId": "agent-2-markdown-answer",
+          "position": 1,
+          "revision": 2,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "agent_thought",
+          "messageId": "rs_0cb246ba6a1befb2016ac484448e8487d2ba4d95b9f9169ffd",
+          "content": [
+            {
+              "type": "text",
+              "text": ""
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 3,
+        "row": {
+          "id": "rs_0cb246ba6a1befb2016ac484448e8487d2ba4d95b9f9169ffd",
+          "sessionId": "agent-2-markdown-answer",
+          "position": 1,
+          "revision": 3,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "agent_thought",
+          "messageId": "rs_0cb246ba6a1befb2016ac484448e8487d2ba4d95b9f9169ffd",
+          "content": [
+            {
+              "type": "text",
+              "text": ""
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.upsert",
+        "rev": 4,
+        "row": {
+          "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+          "sessionId": "agent-2-markdown-answer",
+          "position": 2,
+          "revision": 4,
+          "turnId": "turn-1",
+          "state": "open",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+          "content": [
+            {
+              "type": "text",
+              "text": ""
+            }
+          ]
+        }
+      },
+      {
+        "type": "row.append",
+        "rev": 5,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 0,
+        "text": "##"
+      },
+      {
+        "type": "row.append",
+        "rev": 6,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 2,
+        "text": " Why"
+      },
+      {
+        "type": "row.append",
+        "rev": 7,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 6,
+        "text": " every"
+      },
+      {
+        "type": "row.append",
+        "rev": 8,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 12,
+        "text": " Feed"
+      },
+      {
+        "type": "row.append",
+        "rev": 9,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 17,
+        "text": " row"
+      },
+      {
+        "type": "row.append",
+        "rev": 10,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 21,
+        "text": " re"
+      },
+      {
+        "type": "row.append",
+        "rev": 11,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 24,
+        "text": "-r"
+      },
+      {
+        "type": "row.append",
+        "rev": 12,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 26,
+        "text": "enders"
+      },
+      {
+        "type": "row.append",
+        "rev": 13,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 32,
+        "text": "\n\n"
+      },
+      {
+        "type": "row.append",
+        "rev": 14,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 34,
+        "text": "If"
+      },
+      {
+        "type": "row.append",
+        "rev": 15,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 36,
+        "text": " an"
+      },
+      {
+        "type": "row.append",
+        "rev": 16,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 39,
+        "text": " update"
+      },
+      {
+        "type": "row.append",
+        "rev": 17,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 46,
+        "text": " recre"
+      },
+      {
+        "type": "row.append",
+        "rev": 18,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 52,
+        "text": "ates"
+      },
+      {
+        "type": "row.append",
+        "rev": 19,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 56,
+        "text": " the"
+      },
+      {
+        "type": "row.append",
+        "rev": 20,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 60,
+        "text": " objects"
+      },
+      {
+        "type": "row.append",
+        "rev": 21,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 68,
+        "text": " in"
+      },
+      {
+        "type": "row.append",
+        "rev": 22,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 71,
+        "text": " `"
+      },
+      {
+        "type": "row.append",
+        "rev": 23,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 73,
+        "text": "feed"
+      },
+      {
+        "type": "row.append",
+        "rev": 24,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 77,
+        "text": ".rows"
+      },
+      {
+        "type": "row.append",
+        "rev": 25,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 82,
+        "text": "`"
+      },
+      {
+        "type": "row.append",
+        "rev": 26,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 83,
+        "text": " or"
+      },
+      {
+        "type": "row.append",
+        "rev": 27,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 86,
+        "text": " passes"
+      },
+      {
+        "type": "row.append",
+        "rev": 28,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 93,
+        "text": " a"
+      },
+      {
+        "type": "row.append",
+        "rev": 29,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 95,
+        "text": " changed"
+      },
+      {
+        "type": "row.append",
+        "rev": 30,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 103,
+        "text": " `"
+      },
+      {
+        "type": "row.append",
+        "rev": 31,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 105,
+        "text": "revision"
+      },
+      {
+        "type": "row.append",
+        "rev": 32,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 113,
+        "text": "`"
+      },
+      {
+        "type": "row.append",
+        "rev": 33,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 114,
+        "text": " to"
+      },
+      {
+        "type": "row.append",
+        "rev": 34,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 117,
+        "text": " every"
+      },
+      {
+        "type": "row.append",
+        "rev": 35,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 123,
+        "text": " row"
+      },
+      {
+        "type": "row.append",
+        "rev": 36,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 127,
+        "text": ","
+      },
+      {
+        "type": "row.append",
+        "rev": 37,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 128,
+        "text": " every"
+      },
+      {
+        "type": "row.append",
+        "rev": 38,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 134,
+        "text": " row"
+      },
+      {
+        "type": "row.append",
+        "rev": 39,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 138,
+        "text": " receives"
+      },
+      {
+        "type": "row.append",
+        "rev": 40,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 147,
+        "text": " changed"
+      },
+      {
+        "type": "row.append",
+        "rev": 41,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 155,
+        "text": " props"
+      },
+      {
+        "type": "row.append",
+        "rev": 42,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 161,
+        "text": ","
+      },
+      {
+        "type": "row.append",
+        "rev": 43,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 162,
+        "text": " defeating"
+      },
+      {
+        "type": "row.append",
+        "rev": 44,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 172,
+        "text": " shallow"
+      },
+      {
+        "type": "row.append",
+        "rev": 45,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 180,
+        "text": " memo"
+      },
+      {
+        "type": "row.append",
+        "rev": 46,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 185,
+        "text": "ization"
+      },
+      {
+        "type": "row.append",
+        "rev": 47,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 192,
+        "text": ";"
+      },
+      {
+        "type": "row.append",
+        "rev": 48,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 193,
+        "text": " see"
+      },
+      {
+        "type": "row.append",
+        "rev": 49,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 197,
+        "text": " ["
+      },
+      {
+        "type": "row.append",
+        "rev": 50,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 199,
+        "text": "ADR"
+      },
+      {
+        "type": "row.append",
+        "rev": 51,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 202,
+        "text": " "
+      },
+      {
+        "type": "row.append",
+        "rev": 52,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 203,
+        "text": "000"
+      },
+      {
+        "type": "row.append",
+        "rev": 53,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 206,
+        "text": "7"
+      },
+      {
+        "type": "row.append",
+        "rev": 54,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 207,
+        "text": "]("
+      },
+      {
+        "type": "row.append",
+        "rev": 55,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 209,
+        "text": "https"
+      },
+      {
+        "type": "row.append",
+        "rev": 56,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 214,
+        "text": "://"
+      },
+      {
+        "type": "row.append",
+        "rev": 57,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 217,
+        "text": "example"
+      },
+      {
+        "type": "row.append",
+        "rev": 58,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 224,
+        "text": ".com"
+      },
+      {
+        "type": "row.append",
+        "rev": 59,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 228,
+        "text": "/"
+      },
+      {
+        "type": "row.append",
+        "rev": 60,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 229,
+        "text": "adr"
+      },
+      {
+        "type": "row.append",
+        "rev": 61,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 232,
+        "text": "/"
+      },
+      {
+        "type": "row.append",
+        "rev": 62,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 233,
+        "text": "000"
+      },
+      {
+        "type": "row.append",
+        "rev": 63,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 236,
+        "text": "7"
+      },
+      {
+        "type": "row.append",
+        "rev": 64,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 237,
+        "text": ").\n\n"
+      },
+      {
+        "type": "row.append",
+        "rev": 65,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 241,
+        "text": "1"
+      },
+      {
+        "type": "row.append",
+        "rev": 66,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 242,
+        "text": "."
+      },
+      {
+        "type": "row.append",
+        "rev": 67,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 243,
+        "text": " One"
+      },
+      {
+        "type": "row.append",
+        "rev": 68,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 247,
+        "text": " row"
+      },
+      {
+        "type": "row.append",
+        "rev": 69,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 251,
+        "text": " changes"
+      },
+      {
+        "type": "row.append",
+        "rev": 70,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 259,
+        "text": ","
+      },
+      {
+        "type": "row.append",
+        "rev": 71,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 260,
+        "text": " triggering"
+      },
+      {
+        "type": "row.append",
+        "rev": 72,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 271,
+        "text": " a"
+      },
+      {
+        "type": "row.append",
+        "rev": 73,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 273,
+        "text": " parent"
+      },
+      {
+        "type": "row.append",
+        "rev": 74,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 280,
+        "text": " render"
+      },
+      {
+        "type": "row.append",
+        "rev": 75,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 287,
+        "text": ".\n"
+      },
+      {
+        "type": "row.append",
+        "rev": 76,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 289,
+        "text": "2"
+      },
+      {
+        "type": "row.append",
+        "rev": 77,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 290,
+        "text": "."
+      },
+      {
+        "type": "row.append",
+        "rev": 78,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 291,
+        "text": " New"
+      },
+      {
+        "type": "row.append",
+        "rev": 79,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 295,
+        "text": " row"
+      },
+      {
+        "type": "row.append",
+        "rev": 80,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 299,
+        "text": " objects"
+      },
+      {
+        "type": "row.append",
+        "rev": 81,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 307,
+        "text": " or"
+      },
+      {
+        "type": "row.append",
+        "rev": 82,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 310,
+        "text": " a"
+      },
+      {
+        "type": "row.append",
+        "rev": 83,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 312,
+        "text": " shared"
+      },
+      {
+        "type": "row.append",
+        "rev": 84,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 319,
+        "text": " revision"
+      },
+      {
+        "type": "row.append",
+        "rev": 85,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 328,
+        "text": " invalidate"
+      },
+      {
+        "type": "row.append",
+        "rev": 86,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 339,
+        "text": " memo"
+      },
+      {
+        "type": "row.append",
+        "rev": 87,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 344,
+        "text": "ized"
+      },
+      {
+        "type": "row.append",
+        "rev": 88,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 348,
+        "text": " props"
+      },
+      {
+        "type": "row.append",
+        "rev": 89,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 354,
+        "text": ".\n"
+      },
+      {
+        "type": "row.append",
+        "rev": 90,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 356,
+        "text": "3"
+      },
+      {
+        "type": "row.append",
+        "rev": 91,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 357,
+        "text": "."
+      },
+      {
+        "type": "row.append",
+        "rev": 92,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 358,
+        "text": " React"
+      },
+      {
+        "type": "row.append",
+        "rev": 93,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 364,
+        "text": " renders"
+      },
+      {
+        "type": "row.append",
+        "rev": 94,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 372,
+        "text": " every"
+      },
+      {
+        "type": "row.append",
+        "rev": 95,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 378,
+        "text": " affected"
+      },
+      {
+        "type": "row.append",
+        "rev": 96,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 387,
+        "text": " row"
+      },
+      {
+        "type": "row.append",
+        "rev": 97,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 391,
+        "text": ";"
+      },
+      {
+        "type": "row.append",
+        "rev": 98,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 392,
+        "text": " stable"
+      },
+      {
+        "type": "row.append",
+        "rev": 99,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 399,
+        "text": " keys"
+      },
+      {
+        "type": "row.append",
+        "rev": 100,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 404,
+        "text": " preserve"
+      },
+      {
+        "type": "row.append",
+        "rev": 101,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 413,
+        "text": " identity"
+      },
+      {
+        "type": "row.append",
+        "rev": 102,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 422,
+        "text": " but"
+      },
+      {
+        "type": "row.append",
+        "rev": 103,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 426,
+        "text": " do"
+      },
+      {
+        "type": "row.append",
+        "rev": 104,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 429,
+        "text": " not"
+      },
+      {
+        "type": "row.append",
+        "rev": 105,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 433,
+        "text": " prevent"
+      },
+      {
+        "type": "row.append",
+        "rev": 106,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 441,
+        "text": " renders"
+      },
+      {
+        "type": "row.append",
+        "rev": 107,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 449,
+        "text": ".\n\n"
+      },
+      {
+        "type": "row.append",
+        "rev": 108,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 452,
+        "text": "```"
+      },
+      {
+        "type": "row.append",
+        "rev": 109,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 455,
+        "text": "tsx"
+      },
+      {
+        "type": "row.append",
+        "rev": 110,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 458,
+        "text": "\n"
+      },
+      {
+        "type": "row.append",
+        "rev": 111,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 459,
+        "text": "const"
+      },
+      {
+        "type": "row.append",
+        "rev": 112,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 464,
+        "text": " rows"
+      },
+      {
+        "type": "row.append",
+        "rev": 113,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 469,
+        "text": " ="
+      },
+      {
+        "type": "row.append",
+        "rev": 114,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 471,
+        "text": " feed"
+      },
+      {
+        "type": "row.append",
+        "rev": 115,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 476,
+        "text": ".rows"
+      },
+      {
+        "type": "row.append",
+        "rev": 116,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 481,
+        "text": ".map"
+      },
+      {
+        "type": "row.append",
+        "rev": 117,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 485,
+        "text": "(row"
+      },
+      {
+        "type": "row.append",
+        "rev": 118,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 489,
+        "text": " =>"
+      },
+      {
+        "type": "row.append",
+        "rev": 119,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 492,
+        "text": " ({"
+      },
+      {
+        "type": "row.append",
+        "rev": 120,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 495,
+        "text": " ..."
+      },
+      {
+        "type": "row.append",
+        "rev": 121,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 499,
+        "text": "row"
+      },
+      {
+        "type": "row.append",
+        "rev": 122,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 502,
+        "text": " }));\n"
+      },
+      {
+        "type": "row.append",
+        "rev": 123,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 508,
+        "text": "return"
+      },
+      {
+        "type": "row.append",
+        "rev": 124,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 514,
+        "text": " rows"
+      },
+      {
+        "type": "row.append",
+        "rev": 125,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 519,
+        "text": ".map"
+      },
+      {
+        "type": "row.append",
+        "rev": 126,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 523,
+        "text": "(row"
+      },
+      {
+        "type": "row.append",
+        "rev": 127,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 527,
+        "text": " =>"
+      },
+      {
+        "type": "row.append",
+        "rev": 128,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 530,
+        "text": " "
+      },
+      {
+        "type": "row.append",
+        "rev": 129,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 531,
+        "text": "<Feed"
+      },
+      {
+        "type": "row.append",
+        "rev": 130,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 536,
+        "text": "Row"
+      },
+      {
+        "type": "row.append",
+        "rev": 131,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 539,
+        "text": " key"
+      },
+      {
+        "type": "row.append",
+        "rev": 132,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 543,
+        "text": "={"
+      },
+      {
+        "type": "row.append",
+        "rev": 133,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 545,
+        "text": "row"
+      },
+      {
+        "type": "row.append",
+        "rev": 134,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 548,
+        "text": ".id"
+      },
+      {
+        "type": "row.append",
+        "rev": 135,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 551,
+        "text": "}"
+      },
+      {
+        "type": "row.append",
+        "rev": 136,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 552,
+        "text": " row"
+      },
+      {
+        "type": "row.append",
+        "rev": 137,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 556,
+        "text": "={"
+      },
+      {
+        "type": "row.append",
+        "rev": 138,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 558,
+        "text": "row"
+      },
+      {
+        "type": "row.append",
+        "rev": 139,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 561,
+        "text": "}"
+      },
+      {
+        "type": "row.append",
+        "rev": 140,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 562,
+        "text": " revision"
+      },
+      {
+        "type": "row.append",
+        "rev": 141,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 571,
+        "text": "={"
+      },
+      {
+        "type": "row.append",
+        "rev": 142,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 573,
+        "text": "revision"
+      },
+      {
+        "type": "row.append",
+        "rev": 143,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 581,
+        "text": "}"
+      },
+      {
+        "type": "row.append",
+        "rev": 144,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 582,
+        "text": " />);\n"
+      },
+      {
+        "type": "row.append",
+        "rev": 145,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 588,
+        "text": "``"
+      },
+      {
+        "type": "row.append",
+        "rev": 146,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 590,
+        "text": "`\n\n"
+      },
+      {
+        "type": "row.append",
+        "rev": 147,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 593,
+        "text": "|"
+      },
+      {
+        "type": "row.append",
+        "rev": 148,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 594,
+        "text": " Property"
+      },
+      {
+        "type": "row.append",
+        "rev": 149,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 603,
+        "text": " |"
+      },
+      {
+        "type": "row.append",
+        "rev": 150,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 605,
+        "text": " Result"
+      },
+      {
+        "type": "row.append",
+        "rev": 151,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 612,
+        "text": " |\n"
+      },
+      {
+        "type": "row.append",
+        "rev": 152,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 615,
+        "text": "|"
+      },
+      {
+        "type": "row.append",
+        "rev": 153,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 616,
+        "text": " ---"
+      },
+      {
+        "type": "row.append",
+        "rev": 154,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 620,
+        "text": " |"
+      },
+      {
+        "type": "row.append",
+        "rev": 155,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 622,
+        "text": " ---"
+      },
+      {
+        "type": "row.append",
+        "rev": 156,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 626,
+        "text": " |\n"
+      },
+      {
+        "type": "row.append",
+        "rev": 157,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 629,
+        "text": "|"
+      },
+      {
+        "type": "row.append",
+        "rev": 158,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 630,
+        "text": " Row"
+      },
+      {
+        "type": "row.append",
+        "rev": 159,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 634,
+        "text": " state"
+      },
+      {
+        "type": "row.append",
+        "rev": 160,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 640,
+        "text": " |"
+      },
+      {
+        "type": "row.append",
+        "rev": 161,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 642,
+        "text": " Pres"
+      },
+      {
+        "type": "row.append",
+        "rev": 162,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 647,
+        "text": "erved"
+      },
+      {
+        "type": "row.append",
+        "rev": 163,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 652,
+        "text": " by"
+      },
+      {
+        "type": "row.append",
+        "rev": 164,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 655,
+        "text": " stable"
+      },
+      {
+        "type": "row.append",
+        "rev": 165,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 662,
+        "text": " keys"
+      },
+      {
+        "type": "row.append",
+        "rev": 166,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 667,
+        "text": " |\n"
+      },
+      {
+        "type": "row.append",
+        "rev": 167,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 670,
+        "text": "|"
+      },
+      {
+        "type": "row.append",
+        "rev": 168,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 671,
+        "text": " Red"
+      },
+      {
+        "type": "row.append",
+        "rev": 169,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 675,
+        "text": "raw"
+      },
+      {
+        "type": "row.append",
+        "rev": 170,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 678,
+        "text": "s"
+      },
+      {
+        "type": "row.append",
+        "rev": 171,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 679,
+        "text": " |"
+      },
+      {
+        "type": "row.append",
+        "rev": 172,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 681,
+        "text": " Every"
+      },
+      {
+        "type": "row.append",
+        "rev": 173,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 687,
+        "text": " row"
+      },
+      {
+        "type": "row.append",
+        "rev": 174,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 691,
+        "text": " renders"
+      },
+      {
+        "type": "row.append",
+        "rev": 175,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 699,
+        "text": ";"
+      },
+      {
+        "type": "row.append",
+        "rev": 176,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 700,
+        "text": " DOM"
+      },
+      {
+        "type": "row.append",
+        "rev": 177,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 704,
+        "text": " changes"
+      },
+      {
+        "type": "row.append",
+        "rev": 178,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 712,
+        "text": " may"
+      },
+      {
+        "type": "row.append",
+        "rev": 179,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 716,
+        "text": " be"
+      },
+      {
+        "type": "row.append",
+        "rev": 180,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 719,
+        "text": " limited"
+      },
+      {
+        "type": "row.append",
+        "rev": 181,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 727,
+        "text": " |\n\n"
+      },
+      {
+        "type": "row.append",
+        "rev": 182,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 731,
+        "text": "Pres"
+      },
+      {
+        "type": "row.append",
+        "rev": 183,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 735,
+        "text": "erve"
+      },
+      {
+        "type": "row.append",
+        "rev": 184,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 739,
+        "text": " unchanged"
+      },
+      {
+        "type": "row.append",
+        "rev": 185,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 749,
+        "text": " row"
+      },
+      {
+        "type": "row.append",
+        "rev": 186,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 753,
+        "text": " references"
+      },
+      {
+        "type": "row.append",
+        "rev": 187,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 764,
+        "text": ","
+      },
+      {
+        "type": "row.append",
+        "rev": 188,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 765,
+        "text": " memo"
+      },
+      {
+        "type": "row.append",
+        "rev": 189,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 770,
+        "text": "ize"
+      },
+      {
+        "type": "row.append",
+        "rev": 190,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 773,
+        "text": " rows"
+      },
+      {
+        "type": "row.append",
+        "rev": 191,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 778,
+        "text": ","
+      },
+      {
+        "type": "row.append",
+        "rev": 192,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 779,
+        "text": " and"
+      },
+      {
+        "type": "row.append",
+        "rev": 193,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 783,
+        "text": " avoid"
+      },
+      {
+        "type": "row.append",
+        "rev": 194,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 789,
+        "text": " passing"
+      },
+      {
+        "type": "row.append",
+        "rev": 195,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 797,
+        "text": " a"
+      },
+      {
+        "type": "row.append",
+        "rev": 196,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 799,
+        "text": " global"
+      },
+      {
+        "type": "row.append",
+        "rev": 197,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 806,
+        "text": " revision"
+      },
+      {
+        "type": "row.append",
+        "rev": 198,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 815,
+        "text": " to"
+      },
+      {
+        "type": "row.append",
+        "rev": 199,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 818,
+        "text": " each"
+      },
+      {
+        "type": "row.append",
+        "rev": 200,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 823,
+        "text": " row"
+      },
+      {
+        "type": "row.append",
+        "rev": 201,
+        "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+        "field": "content.0.text",
+        "off": 827,
+        "text": "."
+      },
+      {
+        "type": "row.upsert",
+        "rev": 202,
+        "row": {
+          "id": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+          "sessionId": "agent-2-markdown-answer",
+          "position": 2,
+          "revision": 202,
+          "turnId": "turn-1",
+          "state": "settled",
+          "sessionUpdate": "agent_message",
+          "messageId": "msg_0cb246ba6a1befb2016ac4844a07a887d2ba8096ab4736d9d7",
+          "content": [
+            {
+              "type": "text",
+              "text": "## Why every Feed row re-renders\n\nIf an update recreates the objects in `feed.rows` or passes a changed `revision` to every row, every row receives changed props, defeating shallow memoization; see [ADR 0007](https://example.com/adr/0007).\n\n1. One row changes, triggering a parent render.\n2. New row objects or a shared revision invalidate memoized props.\n3. React renders every affected row; stable keys preserve identity but do not prevent renders.\n\n```tsx\nconst rows = feed.rows.map(row => ({ ...row }));\nreturn rows.map(row => <FeedRow key={row.id} row={row} revision={revision} />);\n```\n\n| Property | Result |\n| --- | --- |\n| Row state | Preserved by stable keys |\n| Redraws | Every row renders; DOM changes may be limited |\n\nPreserve unchanged row references, memoize rows, and avoid passing a global revision to each row."
+            }
+          ]
+        }
+      },
+      {
+        "type": "snapshot",
+        "snapshot": {
+          "state": "idle",
+          "liveHeader": null,
+          "activeTurnId": null,
+          "usage": null,
+          "pendingPermission": null,
+          "pendingElicitation": null,
+          "configOptions": [],
+          "maxRevision": 202,
+          "epoch": 0
+        }
+      }
+    ],
+    "snapshot": {
+      "state": "idle",
+      "liveHeader": null,
+      "activeTurnId": null,
+      "usage": null,
+      "pendingPermission": null,
+      "pendingElicitation": null,
+      "configOptions": [],
+      "maxRevision": 202,
       "epoch": 0
     }
   }

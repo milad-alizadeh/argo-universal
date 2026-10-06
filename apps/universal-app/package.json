@@ -26,6 +26,7 @@
     "@storybook/addon-ondevice-controls": "catalog:",
     "@storybook/react-native": "catalog:",
     "expo": "catalog:",
+    "expo-clipboard": "catalog:",
     "expo-constants": "catalog:",
     "expo-dev-client": "catalog:",
     "expo-file-system": "catalog:",

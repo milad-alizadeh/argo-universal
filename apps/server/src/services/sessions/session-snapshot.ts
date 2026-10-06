@@ -1,6 +1,7 @@
-import type { SessionSnapshot } from '@repo/contracts';
+import type { SessionSnapshot, SessionUpdate } from '@repo/contracts';
 import type { SnapshotFrom } from 'xstate';
 import type { feedMachine } from '../feed/feed-machine';
+import { toLiveHeader } from './live-header';
 import type { sessionMachine } from './session-machine';
 
 export function isSessionReady(session: SnapshotFrom<typeof sessionMachine>) {
@@ -18,7 +19,7 @@ export function toSessionSnapshot(
     context: Pick<
       SnapshotFrom<typeof feedMachine>['context'],
       'epoch' | 'maxRevision'
-    >;
+    > & { rows?: Record<string, SessionUpdate> };
   },
 ): SessionSnapshot {
   const context = session?.context ?? {
@@ -42,8 +43,7 @@ export function toSessionSnapshot(
   }
   return {
     state,
-    // Issue #47 supplies the live header; the contract is nullable until then.
-    liveHeader: null,
+    liveHeader: toLiveHeader(context, Object.values(feed.context.rows ?? {})),
     activeTurnId: context.activeTurnId,
     usage: context.usage,
     pendingPermission: context.permissionQueue[0] ?? null,

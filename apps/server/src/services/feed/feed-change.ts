@@ -1,5 +1,7 @@
 import {
+  type ContentBlock,
   type FeedChange,
+  type FeedUpsert,
   feedSetFields,
   type RowAppend,
   type RowPatch,
@@ -66,6 +68,21 @@ function writeField(
   const record = value as Record<string, unknown>;
   return { ...record, [key]: writeField(record[key], rest, text) };
 }
+
+// The prompt a person sent, written as the Turn's first row (ADR 0012).
+export const userMessageChange = (
+  turnId: string,
+  content: ContentBlock[],
+): FeedUpsert => ({
+  type: 'upsert',
+  update: {
+    id: `${turnId}:user`,
+    sessionUpdate: 'user_message',
+    messageId: `${turnId}:user`,
+    state: 'settled',
+    content,
+  },
+});
 
 // The id of the row a change touches.
 export const changedRowId = (change: FeedChange) =>
