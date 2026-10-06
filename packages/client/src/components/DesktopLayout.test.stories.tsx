@@ -1,12 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { expect } from 'storybook/test';
+import { expect, waitFor } from 'storybook/test';
+import { createSessionCountsMock } from '../../mocks/session-counts-mock';
 import { sessionListMocks } from '../../mocks/session-list-mock';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
 import { Text } from '../primitives/text';
 import { DesktopLayout } from './DesktopLayout';
 
 const recorder = createNavigationRecorder();
+const counts = createSessionCountsMock({ attention: 1, running: 1 });
 const meta = {
   title: 'Tests/DesktopLayout',
   component: DesktopLayout,
@@ -89,5 +91,22 @@ export const IssuesListPlaceholder: Story = {
     await expect(
       await canvas.findByText('Issues list will appear here.'),
     ).toBeVisible();
+  },
+};
+
+export const RailBadgeFollowsSessionCounts: Story = {
+  parameters: { trpc: counts.fixtures },
+  play: async ({ canvas }) => {
+    await expect(
+      await canvas.findByLabelText('1 Session needs attention'),
+    ).toHaveTextContent('1');
+    counts.publish({ attention: 3, running: 0 });
+    await expect(
+      await canvas.findByLabelText('3 Sessions need attention'),
+    ).toHaveTextContent('3');
+    counts.publish({ attention: 0, running: 0 });
+    await waitFor(() =>
+      expect(canvas.queryByLabelText(/need(s)? attention/)).toBeNull(),
+    );
   },
 };

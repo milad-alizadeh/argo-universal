@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { expect } from 'storybook/test';
+import { createSessionCountsMock } from '../../mocks/session-counts-mock';
 import { sessionListMocks } from '../../mocks/session-list-mock';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
 import { PhoneLayout } from '../components/PhoneLayout';
@@ -14,6 +15,7 @@ import { sectionDestination, sectionOf } from '../navigation/sections';
 import { PhoneSectionScreen } from './PhoneSectionScreen';
 
 const recorder = createNavigationRecorder();
+const counts = createSessionCountsMock({ attention: 1, running: 1 });
 
 // Follows each navigation, so the drawer closes over the next section as in the app.
 function NavigatingPhoneLayout({ section }: { section: ShellSection }) {
@@ -86,5 +88,21 @@ export const SettingsListOpensItsPages: Story = {
     await expect(recorder.destinations).toEqual([
       { to: 'settings-connection' },
     ]);
+  },
+};
+
+export const DrawerBadgeFollowsSessionCounts: Story = {
+  parameters: { trpc: counts.fixtures },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(
+      await canvas.findByRole('button', { name: 'Open navigation' }),
+    );
+    await expect(
+      await canvas.findByLabelText('1 Session needs attention'),
+    ).toHaveTextContent('1');
+    counts.publish({ attention: 2, running: 0 });
+    await expect(
+      await canvas.findByLabelText('2 Sessions need attention'),
+    ).toHaveTextContent('2');
   },
 };

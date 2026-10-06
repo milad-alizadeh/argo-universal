@@ -6,6 +6,7 @@ import path from 'node:path';
 import { test as base, _electron as electron } from '@playwright/test';
 import { z } from 'zod';
 import { writeMockAgents } from './mock-agents';
+import { createProjectRepository } from './project-repository';
 
 export type AppOptions = { appTarget: 'web' | 'electron' };
 
@@ -74,6 +75,9 @@ export const test = base.extend<AppOptions>({
         ARGO_HOME: home,
         ARGO_SERVER_PORT: String(await findFreePort()),
         PATH: agentPath,
+        ARGO_PROJECT_PATH: await createProjectRepository(
+          testInfo.outputPath('project'),
+        ),
       },
     });
     try {

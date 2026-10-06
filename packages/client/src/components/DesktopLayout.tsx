@@ -9,6 +9,7 @@ import {
 import { DesktopShell, type InspectorState } from './DesktopShell';
 import { useSectionList } from './SectionList';
 import { shellSections } from './shell-sections';
+import { useAttentionCount } from './use-attention-count';
 
 export interface DesktopLayoutProps {
   destination: NavigationDestination;
@@ -18,6 +19,7 @@ export interface DesktopLayoutProps {
 // The wide window's shell: the open section's list in the sidebar, and `children` in the detail pane.
 export function DesktopLayout({ destination, children }: DesktopLayoutProps) {
   const navigate = useNavigate();
+  const attentionCount = useAttentionCount();
   const [sidebarShown, setSidebarShown] = useState(true);
   const [inspectorState, setInspectorState] =
     useState<InspectorState>('closed');
@@ -31,7 +33,7 @@ export function DesktopLayout({ destination, children }: DesktopLayoutProps) {
   return (
     <DesktopShell
       selectedSection={section}
-      attentionCount={0}
+      attentionCount={attentionCount}
       sidebarShown={sidebarShown}
       onSidebarShownChange={setSidebarShown}
       onSectionChange={(next) => navigate(sectionDestination(next))}
