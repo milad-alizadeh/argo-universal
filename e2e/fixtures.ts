@@ -1,11 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
-import { createServer } from 'node:net';
 import path from 'node:path';
 import { test as base, _electron as electron } from '@playwright/test';
 import { z } from 'zod';
-import { writeMockAgents } from './mock-agents';
+import { type MockAgents, writeMockAgents } from './mock-agents';
+import { findFreePort, startOwnServer } from './own-server';
 import { createProjectRepository } from './project-repository';
 
 export type AppOptions = { appTarget: 'web' | 'electron' };
@@ -27,20 +27,6 @@ export const serverVersion = ServerPackage.parse(
   ),
 ).version;
 
-const findFreePort = () =>
-  new Promise<number>((resolve, reject) => {
-    const server = createServer();
-    server.once('error', reject);
-    server.listen(0, '127.0.0.1', () => {
-      const address = server.address();
-      server.close(() =>
-        typeof address === 'object' && address
-          ? resolve(address.port)
-          : reject(new Error('No free port')),
-      );
-    });
-  });
-
 // The supervisor removes server.json when it stops, so a file left behind names a Server still running.
 const readServerPid = async (home: string) => {
   const text = await readFile(path.join(home, 'server.json'), 'utf8').catch(
@@ -49,8 +35,39 @@ const readServerPid = async (home: string) => {
   return text === null ? null : ServerProcess.parse(JSON.parse(text)).pid;
 };
 
-export const test = base.extend<AppOptions>({
+type OwnServer = Awaited<ReturnType<typeof startOwnServer>>;
+
+export const test = base.extend<
+  AppOptions & {
+    // Opens the web App on a Server of the test's own, with the given mock Agent CLIs.
+    ownServer: (agents?: MockAgents) => Promise<OwnServer>;
+  }
+>({
   appTarget: ['web', { option: true }],
+  ownServer: async ({ appTarget, page }, use, testInfo) => {
+    test.skip(
+      appTarget !== 'web',
+      'The desktop app starts its own Server, so its Agents cannot change per test',
+    );
+    let server: OwnServer | undefined;
+    try {
+      await use(async (agents = {}) => {
+        if (server) throw new Error('A test starts one Server of its own');
+        server = await startOwnServer(
+          testInfo.outputPath('own-server'),
+          agents,
+        );
+        // The App reads the Server URL the desktop preload would give it.
+        await page.addInitScript((serverUrl) => {
+          Object.assign(globalThis, { argo: { serverUrl } });
+        }, server.serverUrl);
+        await page.goto('/');
+        return server;
+      });
+    } finally {
+      await server?.stop();
+    }
+  },
   page: async ({ appTarget, page }, use, testInfo) => {
     if (appTarget === 'web') {
       await page.goto('/');

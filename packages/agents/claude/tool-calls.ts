@@ -6,6 +6,7 @@ import type {
   BashInput,
   FileEditInput,
   FileReadInput,
+  FileReadOutput,
   FileWriteInput,
   FileWriteOutput,
   GlobInput,
@@ -211,7 +212,17 @@ export function toolCallEnded(
   });
 
   if (rejected) return settled(row, 'cancelled', content);
-  if (!result.is_error) return settled(row, 'completed', content);
+  if (!result.is_error) {
+    if (row.kind === 'read' || row.kind === 'search') {
+      const read = message.tool_use_result as FileReadOutput | undefined;
+      const text =
+        row.kind === 'read' && read?.type === 'text'
+          ? read.file.content
+          : output;
+      content.push({ type: 'content', content: { type: 'text', text } });
+    }
+    return settled(row, 'completed', content);
+  }
   // A failed call shows its error, unless a terminal already shows the output.
   if (content.some((block) => block.type === 'terminal'))
     return settled(row, 'failed', content);

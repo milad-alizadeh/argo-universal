@@ -1,5 +1,6 @@
 import * as DialogPrimitive from '@rn-primitives/dialog';
 import type { ReactElement, ReactNode } from 'react';
+import { useEffect } from 'react';
 import { ScrollView, type StyleProp, View, type ViewStyle } from 'react-native';
 import type { ButtonProps } from '#primitives/button';
 
@@ -7,6 +8,8 @@ export interface ComposerSheetProps {
   style?: StyleProp<ViewStyle>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  // Called once the sheet has left the screen after closing.
+  onClosed: () => void;
   trigger: ReactElement<ButtonProps>;
   label: string;
   children: ReactNode;
@@ -16,10 +19,14 @@ export function ComposerSheet({
   style,
   open,
   onOpenChange,
+  onClosed,
   trigger,
   label,
   children,
 }: ComposerSheetProps) {
+  useEffect(() => {
+    if (!open) onClosed();
+  }, [open, onClosed]);
   return (
     <DialogPrimitive.Root style={style} open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Trigger asChild disabled={trigger.props.disabled}>

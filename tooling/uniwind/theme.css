@@ -66,6 +66,13 @@
 
 @layer theme {
   :root {
+    @variant ios {
+      /* React Native resolves ui-monospace to SF Mono on iOS. */
+      --font-mono: ui-monospace;
+    }
+    @variant android {
+      --font-mono: monospace;
+    }
     @variant light {
       --color-background: var(--color-white);
       --color-foreground: var(--color-neutral-950);

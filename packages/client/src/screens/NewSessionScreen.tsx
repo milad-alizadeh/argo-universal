@@ -1,11 +1,16 @@
-import type { SessionConfigOption, SessionNewInput } from '@repo/contracts';
+import type {
+  BlobRef,
+  SessionConfigOption,
+  SessionNewInput,
+} from '@repo/contracts';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, View } from 'react-native';
 import { Composer, type ComposerDraft } from '#components/Composer';
 import { LoadError } from '#components/LoadError';
 import { Screen } from '#components/Screen';
 import { StartSessionIn } from '#components/StartSessionIn';
+import { pickImages } from '#lib/pick-images';
 import { Text } from '#primitives/text';
 import { useConnectionState } from '../connection/context';
 import { useNavigate } from '../navigation/context';
@@ -46,6 +51,8 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
   >({});
   const [newWorktree, setNewWorktree] = useState<boolean>();
   const [draft, setDraft] = useState(emptyDraft);
+  // The file behind each attached image, by its id in the draft.
+  const imageFiles = useRef(new Map<string, Blob>());
 
   const project =
     projects.data?.find((entry) => entry.id === chosenProjectId) ??
@@ -69,6 +76,7 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
       ? project.checkoutChoice.baseBranch
       : (branches.data?.currentBranch ?? 'main');
 
+  const upload = useMutation(trpc.blob.upload.mutationOptions());
   const start = useMutation(
     trpc.session.new.mutationOptions({
       onSuccess: ({ sessionId }) =>
@@ -78,8 +86,51 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
     }),
   );
 
-  function send(sent: ComposerDraft) {
+  const resetErrors = () => {
+    upload.reset();
+    start.reset();
+  };
+
+  async function attachImages() {
+    const picked = await pickImages();
+    for (const { image, file } of picked)
+      imageFiles.current.set(image.id, file);
+    setDraft((current) => ({
+      ...current,
+      images: [...current.images, ...picked.map(({ image }) => image)],
+    }));
+  }
+
+  // Keeps a file only while its image is in the draft.
+  function changeDraft(next: ComposerDraft) {
+    const kept = new Set(next.images.map((image) => image.id));
+    for (const id of imageFiles.current.keys())
+      if (!kept.has(id)) imageFiles.current.delete(id);
+    setDraft(next);
+  }
+
+  // Uploads each image, in draft order; undefined once an upload fails, which `upload.error` shows.
+  async function uploadImages(
+    sent: ComposerDraft,
+  ): Promise<BlobRef[] | undefined> {
+    const references: BlobRef[] = [];
+    for (const image of sent.images) {
+      const file = imageFiles.current.get(image.id);
+      if (!file) throw new Error(`No file for the attached ${image.name}`);
+      const form = new FormData();
+      form.append('file', file, image.name);
+      const reference = await upload.mutateAsync(form).catch(() => undefined);
+      if (!reference) return undefined;
+      references.push(reference);
+    }
+    return references;
+  }
+
+  async function send(sent: ComposerDraft) {
     if (!project || !agent) return;
+    resetErrors();
+    const images = await uploadImages(sent);
+    if (!images) return;
     const input: SessionNewInput = {
       projectId: project.id,
       agent: agent.agent,
@@ -88,7 +139,16 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
         configId,
         value: currentValue,
       })),
-      prompt: [{ type: 'text', text: sent.text }],
+      prompt: [
+        ...(sent.text.trim()
+          ? [{ type: 'text' as const, text: sent.text }]
+          : []),
+        ...images.map((blob) => ({
+          type: 'image' as const,
+          mimeType: blob.mime,
+          blob,
+        })),
+      ],
     };
     start.mutate(input);
   }
@@ -114,9 +174,13 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
   // Until the current branch loads, a new worktree has no base to start from.
   const branchReady =
     project?.checkoutChoice.type !== 'main' || branches.data !== undefined;
-  const startError = start.error
-    ? `Couldn't start the Session. ${start.error.message}`
-    : undefined;
+  // One Send fails at most one of the two steps.
+  let startError: string | undefined;
+  if (start.error)
+    startError = `Couldn't start the Session. ${start.error.message}`;
+  else if (upload.error)
+    startError = `Couldn't upload the image. ${upload.error.message}`;
+  const sending = upload.isPending || start.isPending;
   const error = agent && !agentReady ? agent.installStep : startError;
   const checkout = {
     branch: baseBranch,
@@ -153,20 +217,20 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
             onProjectChange={(id) => {
               setChosenProjectId(id);
               setNewWorktree(undefined);
-              start.reset();
+              resetErrors();
             }}
             checkout={checkout}
-            disabled={start.isPending}
+            disabled={sending}
           />
         </View>
         <View className="items-center px-4 pb-4 wide:px-6">
           <Composer
             draft={draft}
-            onDraftChange={setDraft}
-            onAttachImages={() => {}}
-            onSend={send}
+            onDraftChange={changeDraft}
+            onAttachImages={() => void attachImages()}
+            onSend={(sent) => void send(sent)}
             placeholder=""
-            sending={start.isPending}
+            sending={sending}
             disabled={!project || !agentReady || !branchReady}
             sendable={connected}
             error={error}
@@ -180,7 +244,7 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
               onAgentChange: (next) => {
                 setChosenAgent(next);
                 setConfigValues({});
-                start.reset();
+                resetErrors();
               },
               onAgentSetup: (setup) =>
                 navigate({ to: 'settings-agent', agent: setup }),

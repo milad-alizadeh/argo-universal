@@ -12,13 +12,16 @@ import { SessionSnapshot } from '../packages/contracts/src/sessions/snapshot.ts'
 const mocks = agentAdapters.flatMap(({ agent }, index) => {
   const cli = mockClis[agent];
   if (!cli) throw new Error('Missing Agent mock');
-  return [
+  const recordings = [
     'edit-and-command',
     'interrupt',
     'compaction',
     'image-prompt',
     'markdown-answer',
-  ].map((recording) => {
+  ];
+  if (cli.recordings.commandOutcomes)
+    recordings.push(cli.recordings.commandOutcomes);
+  return recordings.map((recording) => {
     const sessionId = `agent-${index + 1}-${recording}`;
     let feed: Feed = { sessionId, maxRevision: 0, nextPosition: 0, rows: {} };
     let turnNumber = 1;

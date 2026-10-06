@@ -55,19 +55,56 @@ function editsSeveralFiles(row: ToolCallUpdate): boolean {
 
 function groupTitle(toolCalls: ToolCallUpdate[]): string {
   const parts: string[] = [];
-  if (toolCalls.some((row) => ['edit', 'delete', 'move'].includes(row.kind)))
-    parts.push('Edited a file');
-  if (toolCalls.some((row) => explorationActions(row).length))
-    parts.push('Read files');
-  if (
-    toolCalls.some(
+  const add = (verb: string, count: number, noun: string) => {
+    if (count) parts.push(`${verb} ${count} ${noun}${count === 1 ? '' : 's'}`);
+  };
+  add(
+    'Ran',
+    toolCalls.filter(
       (row) => row.kind === 'execute' && !explorationActions(row).length,
-    )
-  )
-    parts.push('ran commands');
-  if (toolCalls.some((row) => row.kind === 'fetch'))
-    parts.push('Searched the web');
-  if (toolCalls.some((row) => row.kind === 'other')) parts.push('Called tools');
+    ).length,
+    'command',
+  );
+  const actions = toolCalls.flatMap(explorationActions);
+  const reads = actions.filter((action) => action.type === 'read');
+  const readFiles = new Set(
+    reads.flatMap((action) => (action.path ? [action.path] : [])),
+  );
+  add(
+    'Read',
+    readFiles.size + reads.filter((action) => !action.path).length,
+    'file',
+  );
+  const edits = toolCalls.filter((row) =>
+    ['edit', 'delete', 'move'].includes(row.kind),
+  );
+  const editedFiles = new Set<string>();
+  let editsWithoutPaths = 0;
+  for (const row of edits) {
+    const paths = new Set(row.locations?.map((location) => location.path));
+    for (const content of row.content)
+      if (content.type === 'diff')
+        for (const change of content.changes) paths.add(change.path);
+    if (!paths.size) editsWithoutPaths += 1;
+    for (const path of paths) editedFiles.add(path);
+  }
+  add('Edited', editedFiles.size + editsWithoutPaths, 'file');
+  add(
+    'Searched',
+    actions.filter((action) => action.type === 'search').length,
+    'time',
+  );
+  add(
+    'Listed',
+    actions.filter((action) => action.type === 'list').length,
+    'folder',
+  );
+  add(
+    'Searched the web',
+    toolCalls.filter((row) => row.kind === 'fetch').length,
+    'time',
+  );
+  add('Called', toolCalls.filter((row) => row.kind === 'other').length, 'tool');
   return parts.join(', ') || 'Worked';
 }
 

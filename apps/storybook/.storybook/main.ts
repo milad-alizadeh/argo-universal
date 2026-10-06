@@ -45,12 +45,17 @@ const config: StorybookConfig = {
       optimizeDeps: {
         include: [
           'react-native-svg',
+          '@repo/client > @rn-primitives/collapsible',
           '@repo/client > @legendapp/list',
           '@repo/client > expo-haptics',
+          '@repo/client > expo-image-picker',
           '@repo/client > react-native-drawer-layout',
           'storybook/actions',
         ],
-        rolldownOptions: { plugins: [expoDeclarationImports] },
+        rolldownOptions: {
+          plugins: [expoDeclarationImports],
+          moduleTypes: { '.ts': 'ts' },
+        },
       },
       resolve: {
         alias: {

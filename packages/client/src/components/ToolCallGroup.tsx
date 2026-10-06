@@ -1,0 +1,73 @@
+import { BookOpenIcon } from 'phosphor-react-native/src/icons/BookOpen';
+import type { ReactNode } from 'react';
+import { View } from 'react-native';
+import type { FeedActivity, FeedGroup } from '../feed/feed-view';
+import { toolCallTitle } from '../feed/tool-call-title';
+import { useToolCallDuration } from '../feed/use-tool-call-duration';
+import { FeedDisclosure } from './FeedDisclosure';
+import { toolCallIcon } from './tool-call-icon';
+
+export interface ToolCallGroupProps {
+  group: FeedGroup;
+  renderActivity: (activity: FeedActivity) => ReactNode;
+  initialOpen?: boolean;
+  now?: number;
+}
+
+export function ToolCallGroup({
+  group,
+  renderActivity,
+  initialOpen,
+  now,
+}: ToolCallGroupProps) {
+  const toolCalls = group.items.flatMap((activity) => {
+    if (activity.type === 'exploration') return activity.toolCalls;
+    if (activity.type === 'tool_call') return [activity.row];
+    return [];
+  });
+  const latest = toolCalls.reduce<(typeof toolCalls)[number] | undefined>(
+    (previous, row) =>
+      !previous || row.position > previous.position ? row : previous,
+    undefined,
+  );
+  const duration = useToolCallDuration(latest, now);
+  const running = group.state === 'open';
+  const items = group.items.flatMap<FeedActivity>((activity) => {
+    if (
+      !running ||
+      !latest ||
+      (latest.status !== 'pending' && latest.status !== 'in_progress')
+    )
+      return [activity];
+    if (activity.type === 'tool_call' && activity.row.id === latest.id)
+      return [];
+    if (activity.type === 'exploration') {
+      const remaining = activity.toolCalls.filter(
+        (row) => row.id !== latest.id,
+      );
+      return remaining.length ? [{ ...activity, toolCalls: remaining }] : [];
+    }
+    return [activity];
+  });
+  return (
+    <FeedDisclosure
+      label={running && latest ? toolCallTitle(latest) : group.title}
+      icon={running && latest ? toolCallIcon(latest) : BookOpenIcon}
+      running={running}
+      initialOpen={initialOpen}
+      trailing={running ? duration : undefined}
+    >
+      <View className="gap-2 pb-1">
+        {items.map((activity) => (
+          <View
+            key={
+              activity.type === 'exploration' ? activity.id : activity.row.id
+            }
+          >
+            {renderActivity(activity)}
+          </View>
+        ))}
+      </View>
+    </FeedDisclosure>
+  );
+}
