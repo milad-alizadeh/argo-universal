@@ -107,7 +107,7 @@ export function SessionHeader({
           className="size-8 sm:size-8"
           accessibilityLabel="More"
         >
-          <Icon as={DotsThreeIcon} className="size-4 text-foreground" />
+          <Icon as={DotsThreeIcon} className="text-foreground" />
         </Button>
       </Portal>
     </>

@@ -58,8 +58,6 @@ const config: StorybookConfig = {
         },
       },
       resolve: {
-        alias: {
-        },
         extensions: [
           '.web.tsx',
           '.web.ts',
