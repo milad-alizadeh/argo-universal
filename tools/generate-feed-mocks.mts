@@ -144,6 +144,7 @@ const mocks = agentAdapters.flatMap(({ agent }, index) => {
       pendingPermission: null,
       pendingElicitation: null,
       configOptions: [],
+      changes: { files: 0, additions: 0, deletions: 0 },
       epoch: 0,
       maxRevision: feed.maxRevision,
     });

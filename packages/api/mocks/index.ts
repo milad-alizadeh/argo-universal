@@ -37,11 +37,14 @@ export function unreachableServices(
       prompt: unreachable('session.prompt'),
       cancel: unreachable('session.cancel'),
       setConfigOption: unreachable('session.setConfigOption'),
+      changes: unreachable('session.changes'),
+      diff: unreachable('session.diff'),
       ...overrides.session,
     },
   };
 }
 
+export * from './changes';
 export * from './feed';
 export * from './new-session';
 export * from './session-list';

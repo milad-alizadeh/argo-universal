@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { sessionColumns, turnColumns } from '../columns';
+import { ChangesSummary } from './changes';
 import { SessionConfigOption } from './set-config-option';
 
 export const SessionState = z.enum(['running', 'idle', 'requires_action']);
@@ -151,6 +152,7 @@ export const SessionSnapshot = z.strictObject({
   pendingPermission: PendingPermission.nullable(),
   pendingElicitation: PendingElicitation.nullable(),
   configOptions: z.array(SessionConfigOption),
+  changes: ChangesSummary,
   maxRevision: sessionColumns.shape.maxRevision,
   epoch: sessionColumns.shape.epoch,
 });

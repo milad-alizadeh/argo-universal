@@ -50,6 +50,8 @@ export function toSessionSnapshot(
     pendingPermission: context.permissionQueue[0] ?? null,
     pendingElicitation: context.pendingElicitation,
     configOptions: context.configOptions,
+    // The Checkout's changes are computed in #74.
+    changes: { files: 0, additions: 0, deletions: 0 },
     maxRevision: feed.context.maxRevision,
     epoch: feed.context.epoch,
   };

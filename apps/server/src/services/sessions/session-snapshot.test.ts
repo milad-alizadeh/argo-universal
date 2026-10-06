@@ -43,6 +43,7 @@ it.each(rows)('maps %j to %s', (value, state) => {
     pendingPermission: null,
     pendingElicitation: null,
     configOptions: [],
+    changes: { files: 0, additions: 0, deletions: 0 },
     epoch: 2,
     maxRevision: 7,
   });
@@ -93,6 +94,7 @@ it('projects the live context and the Feed revision without changing either', ()
     pendingPermission: permission,
     pendingElicitation: elicitation,
     configOptions: [config],
+    changes: { files: 0, additions: 0, deletions: 0 },
     epoch: 3,
     maxRevision: 9,
   });
