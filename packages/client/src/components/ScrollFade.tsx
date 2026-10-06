@@ -7,6 +7,12 @@ import {
   type ScrollViewProps,
   View,
 } from 'react-native';
+import Animated, {
+  Easing,
+  FadeIn,
+  FadeOut,
+  ReduceMotion,
+} from 'react-native-reanimated';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useResolveClassNames } from 'uniwind';
 import { cn } from '#lib/utils';
@@ -17,7 +23,15 @@ export interface ScrollFadeProps {
   className?: string;
 }
 
-// A short gradient from the surface colour to transparent where a list meets its edge.
+export const scrollFadeHeight = { top: 28, bottom: 36 } as const;
+
+// The ease iOS uses when a transparent header gains its scroll edge.
+const fadeEasing = Easing.bezier(0.25, 0.1, 0.25, 1);
+const [fadeIn, fadeOut] = [FadeIn, FadeOut].map((animation) =>
+  animation.duration(200).easing(fadeEasing).reduceMotion(ReduceMotion.System),
+);
+
+// A gradient from the surface colour to transparent where a list meets its edge; it fades in and out.
 export function ScrollFade({
   edge,
   className = 'bg-background',
@@ -25,7 +39,9 @@ export function ScrollFade({
   const gradientId = `${useId().replace(/:/g, '')}-${edge}`;
   const { backgroundColor } = useResolveClassNames(className);
   return (
-    <View
+    <Animated.View
+      entering={fadeIn}
+      exiting={fadeOut}
       pointerEvents="none"
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
@@ -35,7 +51,7 @@ export function ScrollFade({
         left: 0,
         right: 0,
         zIndex: 10,
-        height: edge === 'top' ? 20 : 28,
+        height: scrollFadeHeight[edge],
         ...(edge === 'top' ? { top: 0 } : { bottom: 0 }),
       }}
     >
@@ -57,7 +73,7 @@ export function ScrollFade({
         </Defs>
         <Rect width="100%" height="100%" fill={`url(#${gradientId})`} />
       </Svg>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -124,6 +140,7 @@ export function ScrollFadeView({
       <ScrollView
         scrollEventThrottle={16}
         {...props}
+        className="flex-1"
         onScroll={(event) => {
           fade.onScroll(event);
           onScroll?.(event);

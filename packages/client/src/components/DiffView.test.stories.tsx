@@ -21,7 +21,8 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const LargeDiffScrollsInsideTheBox: Story = {
+// In the Inspector a file shows every line; the Inspector scrolls, not the file.
+export const InspectorFileShowsEveryLine: Story = {
   play: async ({ canvas }) => {
     if (process.env.NODE_ENV !== 'test') return;
     const { page } = await import('vitest/browser');
@@ -32,32 +33,31 @@ export const LargeDiffScrollsInsideTheBox: Story = {
         name: 'Diff for /repo/large.txt',
       });
       await expect(
-        getComputedStyle(within(header).getByText('/repo/large.txt'))
-          .userSelect,
+        getComputedStyle(within(header).getByText('large.txt')).userSelect,
       ).toBe('none');
+      await expect(within(header).getByText('large.txt')).toHaveClass(
+        'font-semibold',
+      );
+      await expect(
+        canvas.getByRole('button', { name: 'Copy path' }),
+      ).toBeVisible();
       await page.elementLocator(header).hover();
-      for (const count of ['+60', '-60']) {
+      for (const count of ['+60', '\u221260']) {
         await expect(
           getComputedStyle(canvas.getByText(count)).textDecorationLine,
         ).toBe('none');
       }
-      const headerContainer = header.parentElement;
-      if (!headerContainer) throw new Error('Missing diff header');
+      // The path button fills the header up to the copy button, so there is no dead space to miss.
+      const copyBounds = canvas
+        .getByRole('button', { name: 'Copy path' })
+        .getBoundingClientRect();
       const buttonBounds = header.getBoundingClientRect();
-      const countsBounds = canvas.getByText('+60').getBoundingClientRect();
-      await expect(buttonBounds.right).toBeLessThan(countsBounds.left - 10);
-      const containerBounds = headerContainer.getBoundingClientRect();
-      await page.elementLocator(headerContainer).click({
-        position: {
-          x:
-            (buttonBounds.right + countsBounds.left) / 2 - containerBounds.left,
-          y: containerBounds.height / 2,
-        },
-      });
+      await expect(buttonBounds.right).toBeLessThanOrEqual(copyBounds.left);
+      await expect(copyBounds.left - buttonBounds.right).toBeLessThanOrEqual(8);
       await expect(header).toHaveAttribute('aria-expanded', 'true');
       const numberColors: string[] = [];
       for (const [text, sign] of [
-        ['old value 1', '-'],
+        ['old value 1', '\u2212'],
         ['new value 1', '+'],
       ] as const) {
         const row = canvas.getByText(text).parentElement;
@@ -70,18 +70,9 @@ export const LargeDiffScrollsInsideTheBox: Story = {
       }
       await expect(numberColors[0]).not.toBe(numberColors[1]);
       const box = canvas.getByTestId('diff-scroll');
-      await expect(getComputedStyle(box).maxHeight).toBe(
-        width < 720 ? '300px' : '400px',
-      );
-      await expect(box.clientHeight).toBe(width < 720 ? 300 : 400);
-      await expect(box.scrollHeight).toBeGreaterThan(box.clientHeight);
-      box.scrollTop = box.scrollHeight;
-      await waitFor(() => expect(box.scrollTop).toBeGreaterThan(0));
-      await waitFor(() =>
-        expect(
-          canvas.getByText('new value 60').getBoundingClientRect().bottom,
-        ).toBeLessThanOrEqual(box.getBoundingClientRect().bottom + 1),
-      );
+      await expect(getComputedStyle(box).maxHeight).toBe('none');
+      await expect(box.scrollHeight).toBe(box.clientHeight);
+      await expect(box.clientHeight).toBe(120 * 20);
       await expect(
         canvas.getByRole('button', { name: 'Diff for /repo/large.txt' }),
       ).toBeVisible();
