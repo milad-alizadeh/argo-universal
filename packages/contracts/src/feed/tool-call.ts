@@ -24,6 +24,15 @@ export const ToolCallStatus = z.enum([
 ]);
 export type ToolCallStatus = z.infer<typeof ToolCallStatus>;
 
+// Only actions supplied by an Agent; shell text is never classified by the App.
+export const CommandAction = z.strictObject({
+  type: z.enum(['read', 'search', 'list', 'unknown']),
+  command: z.string(),
+  path: z.string().optional(),
+  query: z.string().optional(),
+});
+export type CommandAction = z.infer<typeof CommandAction>;
+
 export const ToolCallLocation = z.strictObject({
   path: z.string(),
   line: z.int().optional(),

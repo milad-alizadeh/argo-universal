@@ -1,7 +1,9 @@
 import { readFileSync } from 'node:fs';
+import type { CommandAction } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import type { AgentEvent, FeedUpdate } from '../src/agent-events';
 import type { VendorMessage } from './messages';
+import type { CommandAction as SuppliedCommandAction } from './protocol.gen';
 import { initialMappingState, toAgentEvents } from './to-agent-events';
 
 const recording = (name: string) =>
@@ -13,7 +15,12 @@ const recording = (name: string) =>
       ),
       'utf8',
     ),
-  ).payload.messages;
+  ).payload.messages.map(
+    (message: VendorMessage & { emittedAtMs?: number }) => ({
+      ...message,
+      receivedAt: message.emittedAtMs,
+    }),
+  );
 const mapMessages = (messages: VendorMessage[]) => {
   let state = initialMappingState();
   const events: AgentEvent[] = [];
@@ -25,6 +32,24 @@ const mapMessages = (messages: VendorMessage[]) => {
   return events;
 };
 const mapRecording = (name: string) => mapMessages(recording(name));
+const withCommandActions = (
+  commandActions: SuppliedCommandAction[],
+): VendorMessage[] =>
+  recording('edit-and-command').map((message: VendorMessage) => {
+    if (
+      (message.method === 'item/started' ||
+        message.method === 'item/completed') &&
+      message.params.item.type === 'commandExecution'
+    )
+      return {
+        ...message,
+        params: {
+          ...message.params,
+          item: { ...message.params.item, commandActions },
+        },
+      };
+    return message;
+  });
 const settledRows = (events: AgentEvent[]): FeedUpdate[] =>
   events.flatMap((event) =>
     event.type === 'agent.feed' &&
@@ -33,6 +58,117 @@ const settledRows = (events: AgentEvent[]): FeedUpdate[] =>
       ? [event.change.update]
       : [],
   );
+
+it('reconciles the recorded Compaction start and completion into one row', () => {
+  const events = mapRecording('compaction');
+  const rows = events.flatMap((event) =>
+    event.type === 'agent.feed' &&
+    event.change.type === 'upsert' &&
+    event.change.update.sessionUpdate === 'compaction_update'
+      ? [event.change.update]
+      : [],
+  );
+  expect(rows).toEqual([
+    {
+      id: '01a10f63-35db-7062-a47d-ebd815c1bea2',
+      compactionId: '01a10f63-35db-7062-a47d-ebd815c1bea2',
+      sessionUpdate: 'compaction_update',
+      state: 'open',
+      status: 'in_progress',
+    },
+    {
+      id: '01a10f63-35db-7062-a47d-ebd815c1bea2',
+      compactionId: '01a10f63-35db-7062-a47d-ebd815c1bea2',
+      sessionUpdate: 'compaction_update',
+      state: 'settled',
+      status: 'completed',
+    },
+  ]);
+});
+
+it('exposes only the command actions the Agent supplied, including unknown actions', () => {
+  const tools = settledRows(mapRecording('edit-and-command'))
+    .filter((row) => row.sessionUpdate === 'tool_call_update')
+    .filter((row) => row.kind === 'execute');
+  expect(tools).toEqual([
+    expect.objectContaining({
+      _meta: {
+        argo: expect.objectContaining({
+          commandActions: [
+            { type: 'read', command: 'cat app.txt', path: '/repo/app.txt' },
+          ],
+        }),
+      },
+    }),
+    expect.objectContaining({
+      _meta: {
+        argo: expect.objectContaining({
+          commandActions: [
+            { type: 'unknown', command: 'cat app.txt notes.md' },
+          ],
+        }),
+      },
+    }),
+  ]);
+});
+
+it('keeps the recorded Tool call start and end times', () => {
+  const tools = settledRows(mapRecording('edit-and-command'))
+    .filter((row) => row.sessionUpdate === 'tool_call_update')
+    .filter((row) => row.kind === 'execute');
+  expect(tools.map((row) => row._meta?.argo)).toEqual([
+    expect.objectContaining({
+      startedAt: 1791172062416,
+      endedAt: 1791172062416,
+    }),
+    expect.objectContaining({
+      startedAt: 1791172072705,
+      endedAt: 1791172072705,
+    }),
+  ]);
+});
+
+it('omits command actions when the Agent supplies none, even for a read-shaped command', () => {
+  const messages = withCommandActions([]);
+  const tools = settledRows(mapMessages(messages))
+    .filter((row) => row.sessionUpdate === 'tool_call_update')
+    .filter((row) => row.kind === 'execute');
+  expect(tools).toHaveLength(2);
+  for (const tool of tools)
+    expect(tool._meta?.argo).not.toHaveProperty('commandActions');
+});
+
+it.each([
+  {
+    supplied: { type: 'listFiles', command: 'ls', path: '/repo' },
+    expected: { type: 'list', command: 'ls', path: '/repo' },
+  },
+  {
+    supplied: {
+      type: 'search',
+      command: 'rg alpha',
+      query: 'alpha',
+      path: null,
+    },
+    expected: { type: 'search', command: 'rg alpha', query: 'alpha' },
+  },
+  {
+    supplied: { type: 'listFiles', command: 'ls', path: null },
+    expected: { type: 'list', command: 'ls' },
+  },
+] satisfies { supplied: SuppliedCommandAction; expected: CommandAction }[])(
+  'maps supplied $supplied.type metadata without inventing a missing path',
+  ({ supplied, expected }) => {
+    const messages = withCommandActions([supplied]);
+    const tools = settledRows(mapMessages(messages))
+      .filter((row) => row.sessionUpdate === 'tool_call_update')
+      .filter((row) => row.kind === 'execute');
+    expect(tools.map((tool) => tool._meta?.argo?.commandActions)).toEqual([
+      [expected],
+      [expected],
+    ]);
+  },
+);
 
 describe('recorded Turns', () => {
   it.each(['reply', 'file-change'])(
@@ -127,7 +263,33 @@ it('ends the recorded interrupted Turn and settles its unfinished command', () =
         type: 'agent.feed',
         change: expect.objectContaining({
           type: 'patch',
-          set: { state: 'settled', status: 'cancelled' },
+          set: expect.objectContaining({
+            state: 'settled',
+            status: 'cancelled',
+          }),
+        }),
+      }),
+    ]),
+  );
+});
+
+it('retains the recorded cancellation time when the Tool call never sends a final item', () => {
+  const events = mapRecording('interrupt');
+  expect(events).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        type: 'agent.feed',
+        change: expect.objectContaining({
+          type: 'patch',
+          set: expect.objectContaining({
+            _meta: {
+              argo: {
+                startedAt: 1791172079446,
+                endedAt: 1791172079454,
+                commandActions: [{ type: 'unknown', command: 'sleep 30' }],
+              },
+            },
+          }),
         }),
       }),
     ]),

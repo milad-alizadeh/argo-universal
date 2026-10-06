@@ -24,8 +24,13 @@ const crashing = await writeMockCodex(directory, { recording: 'file-change', exi
 | `reply` | A Turn with one Agent message |
 | `file-change` | A Turn with a file change and streamed Agent message deltas |
 | `model-list` | The `model/list` answer, read when a caller asks |
+| `compaction` | A short Turn followed by `thread/compact/start`, with a context Compaction start and completion |
 
 These come from old Argo (codex-app-server 0.157.0). The recordings that spec 0003 lists under Testing Decisions join them.
+
+`compaction` was captured from the real 0.157.0 app-server on 2026-10-06. A new temporary Checkout received a short shape-color note before `thread/compact/start`. The capture keeps Turn, item, text delta and usage notifications; account, hook and environment startup traffic are excluded, and paths are normalized. Compaction starts its own Turn and keeps one item id from start to completion.
+
+Feed mocks are generated from these recordings through `toAgentEvents` and the real Feed change validator. Regenerate with `pnpm --filter @repo/server exec tsx ../../tools/generate-feed-mocks.mts`, then format `packages/api/mocks/feed-recordings.json` with Biome.
 
 `edit-and-command.json` and `interrupt.json` were recorded from the real 0.157.0 app-server on 2026-10-05. The first changes `app.txt`, creates `notes.md`, prints the files and answers `done`. The second interrupts `sleep 30` after its command starts. The catalog default model was selected because the user's configured default was unavailable to the account. The app-server emitted no reasoning items in these captures, even with high effort and detailed summaries; the converter's thought tests use protocol-shaped examples at the same pure-function seam.
 

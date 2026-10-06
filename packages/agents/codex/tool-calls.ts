@@ -1,6 +1,14 @@
-import type { DiffChange, ToolCallStatus } from '@repo/contracts';
+import type {
+  CommandAction,
+  DiffChange,
+  ToolCallStatus,
+} from '@repo/contracts';
 import type { FeedUpdate } from '../src/agent-events';
-import type { FileUpdateChange, ThreadItem } from './protocol.gen';
+import type {
+  FileUpdateChange,
+  ThreadItem,
+  CommandAction as VendorCommandAction,
+} from './protocol.gen';
 
 export type ToolCallRow = Extract<
   FeedUpdate,
@@ -21,6 +29,14 @@ const statusOf = (status: ToolItem['status']): ToolCallStatus => {
       return status;
   }
 };
+const actionOf = (action: VendorCommandAction): CommandAction => ({
+  type: action.type === 'listFiles' ? 'list' : action.type,
+  command: action.command,
+  ...('path' in action && action.path !== null ? { path: action.path } : {}),
+  ...('query' in action && action.query !== null
+    ? { query: action.query }
+    : {}),
+});
 const changeOf = ({ path, kind, diff }: FileUpdateChange): DiffChange => {
   switch (kind.type) {
     case 'add':
@@ -100,6 +116,13 @@ export function toToolCall(
         commandActions: item.commandActions,
       },
       rawOutput: { durationMs: item.durationMs, exitCode: item.exitCode },
+      ...(item.commandActions.length
+        ? {
+            _meta: {
+              argo: { commandActions: item.commandActions.map(actionOf) },
+            },
+          }
+        : {}),
       content: [
         {
           type: 'terminal',

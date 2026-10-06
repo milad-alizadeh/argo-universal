@@ -13,6 +13,7 @@ import { type ToolCallRow, toolCallEnded, toolCallStarted } from './tool-calls';
 
 type TextKind = 'agent_message' | 'agent_thought';
 type AssistantBlock = SDKAssistantMessage['message']['content'][number];
+export type VendorMessage = SDKMessage & { receivedAt?: number };
 
 // What `toAgentEvents` remembers between messages, until the Turn's result clears it.
 export interface MappingState {
@@ -23,6 +24,7 @@ export interface MappingState {
   openTextRows: Record<string, TextKind>;
   // Tool calls that wait for their result, by Tool call id.
   openToolCalls: Record<string, ToolCallRow>;
+  compactionId: string | null;
 }
 
 export const initialMappingState = (): MappingState => ({
@@ -30,6 +32,7 @@ export const initialMappingState = (): MappingState => ({
   streamMessageId: null,
   openTextRows: {},
   openToolCalls: {},
+  compactionId: null,
 });
 
 const feed = (change: FeedChange): AgentEvent => ({
@@ -69,7 +72,7 @@ const dropped = (mappingState: MappingState): AgentMapping<MappingState> => ({
 
 // Maps one SDK message to Agent events (ADR-0006); pure, so recordings can drive it.
 export function toAgentEvents(
-  message: SDKMessage,
+  message: VendorMessage,
   mappingState: MappingState,
 ): AgentMapping<MappingState> {
   // Subagent messages belong to issue 11e.
@@ -143,7 +146,7 @@ function mapStreamEvent(
 }
 
 function mapAssistant(
-  message: SDKAssistantMessage,
+  message: SDKAssistantMessage & { receivedAt?: number },
   mappingState: MappingState,
 ): AgentMapping<MappingState> {
   const { id: messageId, content } = message.message;
@@ -155,7 +158,15 @@ function mapAssistant(
       ...state,
       blockCounts: { ...state.blockCounts, [messageId]: index + 1 },
     };
-    const mapped = mapBlock(block, `${messageId}#${index}`, messageId, state);
+    const mapped = mapBlock(
+      block,
+      `${messageId}#${index}`,
+      messageId,
+      state,
+      message.timestamp === undefined
+        ? message.receivedAt
+        : Date.parse(message.timestamp),
+    );
     events.push(...mapped.events);
     state = mapped.mappingState;
   }
@@ -167,6 +178,7 @@ function mapBlock(
   rowId: string,
   messageId: string,
   mappingState: MappingState,
+  timestamp?: number,
 ): AgentMapping<MappingState> {
   switch (block.type) {
     case 'text':
@@ -179,7 +191,7 @@ function mapBlock(
       };
     }
     case 'tool_use': {
-      const row = toolCallStarted(block);
+      const row = toolCallStarted(block, timestamp);
       return {
         events: [upsert(row)],
         mappingState: {
@@ -195,7 +207,7 @@ function mapBlock(
 
 // A user message carries Tool results; the Session writes the user's own prompt.
 function mapUser(
-  message: SDKUserMessage | SDKUserMessageReplay,
+  message: (SDKUserMessage | SDKUserMessageReplay) & { receivedAt?: number },
   mappingState: MappingState,
 ): AgentMapping<MappingState> {
   const { content } = message.message;
@@ -250,11 +262,20 @@ function turnUsage({ usage }: SDKResultMessage): TurnUsage {
 
 // The result ends the Turn, and settles rows that never got their record or result.
 function mapResult(
-  result: SDKResultMessage,
+  result: SDKResultMessage & { receivedAt?: number },
   mappingState: MappingState,
 ): AgentMapping<MappingState> {
   const reason = stopReason(result);
   const settles = [
+    ...(mappingState.compactionId === null
+      ? []
+      : [
+          compaction(
+            mappingState.compactionId,
+            'settled',
+            reason === 'cancelled' ? 'cancelled' : 'failed',
+          ),
+        ]),
     ...Object.keys(mappingState.openTextRows).map((id) =>
       feed({ type: 'patch', id, set: { state: 'settled' } }),
     ),
@@ -263,6 +284,13 @@ function mapResult(
         ...row,
         state: 'settled',
         status: reason === 'cancelled' ? 'cancelled' : 'failed',
+        ...(result.receivedAt === undefined
+          ? {}
+          : {
+              _meta: {
+                argo: { ...row._meta?.argo, endedAt: result.receivedAt },
+              },
+            }),
       }),
     ),
   ];
@@ -289,6 +317,29 @@ function mapNotice(
   message: Extract<SDKMessage, { type: 'system' }>,
   mappingState: MappingState,
 ): AgentMapping<MappingState> {
+  if (message.subtype === 'status' && message.status === 'compacting') {
+    const id = mappingState.compactionId ?? message.uuid;
+    return {
+      events: [compaction(id, 'open', 'in_progress')],
+      mappingState: { ...mappingState, compactionId: id },
+    };
+  }
+  if (message.subtype === 'compact_boundary') {
+    const id = mappingState.compactionId ?? message.uuid;
+    return {
+      events: [compaction(id, 'settled', 'completed')],
+      mappingState: { ...mappingState, compactionId: null },
+    };
+  }
+  if (
+    message.subtype === 'status' &&
+    message.compact_result === 'failed' &&
+    mappingState.compactionId !== null
+  )
+    return {
+      events: [compaction(mappingState.compactionId, 'settled', 'failed')],
+      mappingState: { ...mappingState, compactionId: null },
+    };
   const base = {
     id: message.uuid,
     sessionUpdate: 'notice',
@@ -337,4 +388,18 @@ function mapNotice(
   return update
     ? { events: [upsert(update)], mappingState }
     : dropped(mappingState);
+}
+
+function compaction(
+  id: string,
+  state: 'open' | 'settled',
+  status: Extract<FeedUpdate, { sessionUpdate: 'compaction_update' }>['status'],
+): AgentEvent {
+  return upsert({
+    id,
+    compactionId: id,
+    sessionUpdate: 'compaction_update',
+    state,
+    status,
+  });
 }

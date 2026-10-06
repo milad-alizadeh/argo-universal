@@ -38,7 +38,7 @@ export async function connect(
         activeTurn.id = notification.params.turn.id;
         activeTurn.identity.resolve(activeTurn.id);
       }
-      listener.message(notification);
+      listener.message({ ...notification, receivedAt: Date.now() });
       if (
         notification.method === 'turn/completed' &&
         activeTurn?.id === notification.params.turn.id

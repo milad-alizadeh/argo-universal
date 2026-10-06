@@ -55,6 +55,7 @@ export {
   useConnection,
   useConnectionState,
 } from './connection/context';
+export type * from './feed/feed-view';
 export { hasLiquidGlass } from './lib/native-header';
 export { applyTheme } from './lib/theme';
 export {

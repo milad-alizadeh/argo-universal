@@ -1,0 +1,307 @@
+{
+  "producer": "claude-cli",
+  "version": "2.1.286",
+  "recordedAt": "2026-10-06T04:05:28.215Z",
+  "payload": {
+    "output": [
+      {
+        "type": "assistant",
+        "message": {
+          "model": "claude-sonnet-5-5",
+          "id": "msg_011CfkKdghbD12zmKxJT5uFC",
+          "type": "message",
+          "role": "assistant",
+          "content": [
+            {
+              "type": "text",
+              "text": "OK"
+            }
+          ],
+          "container": null,
+          "stop_reason": null,
+          "stop_sequence": null,
+          "stop_details": null,
+          "usage": {
+            "input_tokens": 466,
+            "cache_creation_input_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "cache_creation": {
+              "ephemeral_5m_input_tokens": 0,
+              "ephemeral_1h_input_tokens": 0
+            },
+            "output_tokens": 4,
+            "service_tier": "standard",
+            "inference_geo": "not_available"
+          },
+          "input_transformations": [],
+          "diagnostics": null,
+          "context_management": null
+        },
+        "parent_tool_use_id": null,
+        "session_id": "6e478038-0580-40fd-8f8a-63ada82f98ee",
+        "uuid": "d55a149c-2369-4633-9b65-6edb66d9f28a",
+        "timestamp": "2026-10-06T04:05:19.509Z",
+        "request_id": "req_011CfkKdgUCWzyr1ggVzTRxZ"
+      },
+      {
+        "duration_api_ms": 1729,
+        "stop_reason": "end_turn",
+        "session_id": "6e478038-0580-40fd-8f8a-63ada82f98ee",
+        "total_cost_usd": 0.0019450000000000001,
+        "usage": {
+          "input_tokens": 466,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 0,
+          "output_tokens": 4,
+          "output_tokens_details": {
+            "thinking_tokens": 0
+          },
+          "server_tool_use": {
+            "web_search_requests": 0,
+            "web_fetch_requests": 0
+          },
+          "service_tier": "standard",
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 0
+          },
+          "inference_geo": "not_available",
+          "iterations": [
+            {
+              "input_tokens": 466,
+              "output_tokens": 4,
+              "cache_read_input_tokens": 0,
+              "cache_creation_input_tokens": 0,
+              "cache_creation": {
+                "ephemeral_5m_input_tokens": 0,
+                "ephemeral_1h_input_tokens": 0
+              },
+              "type": "message"
+            }
+          ],
+          "speed": "standard",
+          "fallback_credit": null
+        },
+        "modelUsage": {
+          "claude-haiku-4-5-20251001": {
+            "inputTokens": 918,
+            "outputTokens": 11,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0,
+            "webSearchRequests": 0,
+            "costUSD": 0.000973,
+            "contextWindow": 200000,
+            "maxOutputTokens": 32000,
+            "thinkingTokens": 0,
+            "canonicalModel": "claude-haiku-4-5",
+            "provider": "firstParty",
+            "costBasis": "list"
+          },
+          "claude-sonnet-5-5": {
+            "inputTokens": 466,
+            "outputTokens": 4,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0,
+            "webSearchRequests": 0,
+            "costUSD": 0.000972,
+            "contextWindow": 1000000,
+            "maxOutputTokens": 128000,
+            "thinkingTokens": 0,
+            "canonicalModel": "claude-sonnet-5-5",
+            "provider": "firstParty",
+            "costBasis": "list"
+          }
+        },
+        "permission_denials": [],
+        "terminal_reason": "completed",
+        "fast_mode_state": "off",
+        "fast_mode_disabled_reason": "sdk_opt_in_required",
+        "subagent_stats": {
+          "spawned": 0,
+          "requested": {
+            "background": 0,
+            "foreground": 0,
+            "unset": 0
+          },
+          "started_in_background": 0,
+          "max_depth": 0,
+          "spawned_by_subagents": 0,
+          "completed": 0,
+          "failed": 0,
+          "killed": {
+            "parent": 0,
+            "user": 0,
+            "system": 0
+          },
+          "refused": {
+            "depth_limit": 0,
+            "concurrency_limit": 0,
+            "budget": 0
+          },
+          "by_type": {}
+        },
+        "is_error": false,
+        "num_turns": 1,
+        "subtype": "success",
+        "api_error_status": null,
+        "result": "OK",
+        "ttft_ms": 1088,
+        "type": "result",
+        "duration_ms": 1102,
+        "uuid": "ba921b19-794b-4e8e-860f-bcd03be065e5",
+        "ttft_stream_ms": 1087,
+        "time_to_request_ms": 91,
+        "first_content_frame_ms": 1088,
+        "queued_turn_count": 0,
+        "result_index": 0
+      },
+      {
+        "type": "system",
+        "subtype": "status",
+        "status": "compacting",
+        "session_id": "6e478038-0580-40fd-8f8a-63ada82f98ee",
+        "uuid": "6d8abfff-ea69-4c66-b642-d445f9060d16"
+      },
+      {
+        "type": "system",
+        "subtype": "status",
+        "status": null,
+        "compact_result": "success",
+        "session_id": "6e478038-0580-40fd-8f8a-63ada82f98ee",
+        "uuid": "ab2a8ab7-5d6d-4061-a386-bc7caf742d3a"
+      },
+      {
+        "type": "system",
+        "subtype": "compact_boundary",
+        "session_id": "6e478038-0580-40fd-8f8a-63ada82f98ee",
+        "uuid": "c7e20f42-5f5b-4c85-8219-b1068ece5f71",
+        "compact_metadata": {
+          "trigger": "manual",
+          "pre_tokens": 470,
+          "post_tokens": 780,
+          "cumulative_dropped_tokens": 0,
+          "duration_ms": 7127
+        },
+        "logical_parent_uuid": "11bc082b-00d4-4776-bebc-7e50e187e2d9"
+      },
+      {
+        "type": "user",
+        "message": {
+          "role": "user",
+          "content": "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.\n\nSummary:\n1. Primary Request and Intent:\n   The user asked me to remember a note: \"the sample project has a red square, a blue circle, and a green triangle,\" and to reply with \"OK\" only. I did so. The user then requested this conversation summary (text only, no tool calls). No coding task has been requested yet.\n\n2. Key Technical Concepts:\n   - None so far. The only retained fact is the note about the sample project's shapes: a red square, a blue circle, and a green triangle.\n   - Environment: macOS (darwin, Darwin 25.5.0), zsh, working directory /repo (not a git repo). Date 2026-10-06.\n\n3. Files and Code Sections:\n   - No files were read, created, or modified.\n\n4. Errors and fixes:\n   - None.\n\n5. Problem Solving:\n   - No problems were encountered or solved. The only action was acknowledging the note.\n\n6. All user messages:\n   - \"Remember this note: the sample project has a red square, a blue circle, and a green triangle. Reply with OK only.\"\n   - A request for a text-only summary of the conversation (no tool calls), structured as an <analysis> block followed by a <summary> block with sections covering the primary request, technical concepts, files, errors, problem solving, user messages, pending tasks, current work, and next step.\n   - Constraint from the user's context: the user's email (milaadd@googlemail.com) is to be used only to identify the user (authorship, attribution, filtering their own work) and must never be sent to an unrelated service, such as in a request header, URL, or payload, unless the user explicitly asks.\n\n7. Pending Tasks:\n   - None.\n\n8. Current Work:\n   I had just acknowledged the note about the sample project (red square, blue circle, green triangle) with \"OK\". Then I was asked to produce this summary.\n\n9. Optional Next Step:\n   None. I will wait for the user's next instruction.\n\nIf you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /user/.claude/projects/-private-var-folders--z-yrg3s40d5k5cqgfnmffgq3l80000gn-T-feed-compaction-revCdU/6e478038-0580-40fd-8f8a-63ada82f98ee.jsonl\nContinue the conversation from where it left off without asking the user any further questions. Resume directly \u2014 do not acknowledge the summary, do not recap what was happening, do not preface with \"I'll continue\" or similar. Pick up the last task as if the break never happened."
+        },
+        "session_id": "6e478038-0580-40fd-8f8a-63ada82f98ee",
+        "parent_tool_use_id": null,
+        "uuid": "e6b3c176-a3e9-4b03-9f39-f7827b20dffd",
+        "timestamp": "2026-10-06T04:05:27.681Z",
+        "isReplay": false,
+        "isSynthetic": true
+      },
+      {
+        "type": "user",
+        "message": {
+          "role": "user",
+          "content": "<local-command-stdout>Compacted </local-command-stdout>"
+        },
+        "session_id": "6e478038-0580-40fd-8f8a-63ada82f98ee",
+        "parent_tool_use_id": null,
+        "uuid": "c9cfcbdb-35e6-4bbe-9c12-d7c2c4c559d5",
+        "timestamp": "2026-10-06T04:05:27.787Z",
+        "isReplay": true
+      },
+      {
+        "is_error": false,
+        "duration_api_ms": 0,
+        "num_turns": 0,
+        "stop_reason": null,
+        "session_id": "6e478038-0580-40fd-8f8a-63ada82f98ee",
+        "total_cost_usd": 0.016915,
+        "usage": {
+          "output_tokens_details": {
+            "thinking_tokens": 0
+          },
+          "input_tokens": 0,
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 0,
+          "output_tokens": 0,
+          "server_tool_use": {
+            "web_search_requests": 0,
+            "web_fetch_requests": 0
+          },
+          "service_tier": "standard",
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 0
+          },
+          "inference_geo": "",
+          "iterations": [],
+          "speed": "standard",
+          "fallback_credit": null
+        },
+        "modelUsage": {
+          "claude-haiku-4-5-20251001": {
+            "inputTokens": 918,
+            "outputTokens": 11,
+            "thinkingTokens": 0,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0,
+            "webSearchRequests": 0,
+            "costUSD": 0.000973,
+            "contextWindow": 200000,
+            "maxOutputTokens": 32000
+          },
+          "claude-sonnet-5-5": {
+            "inputTokens": 2931,
+            "outputTokens": 1008,
+            "thinkingTokens": 0,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0,
+            "webSearchRequests": 0,
+            "costUSD": 0.015941999999999998,
+            "contextWindow": 1000000,
+            "maxOutputTokens": 128000,
+            "canonicalModel": "claude-sonnet-5-5",
+            "provider": "firstParty",
+            "costBasis": "list"
+          }
+        },
+        "permission_denials": [],
+        "fast_mode_state": "off",
+        "fast_mode_disabled_reason": "sdk_opt_in_required",
+        "subagent_stats": {
+          "spawned": 0,
+          "requested": {
+            "background": 0,
+            "foreground": 0,
+            "unset": 0
+          },
+          "started_in_background": 0,
+          "max_depth": 0,
+          "spawned_by_subagents": 0,
+          "completed": 0,
+          "failed": 0,
+          "killed": {
+            "parent": 0,
+            "user": 0,
+            "system": 0
+          },
+          "refused": {
+            "depth_limit": 0,
+            "concurrency_limit": 0,
+            "budget": 0
+          },
+          "by_type": {}
+        },
+        "subtype": "success",
+        "result": "",
+        "local_command": "compact",
+        "type": "result",
+        "duration_ms": 7144,
+        "uuid": "8a143526-fa70-439e-9425-775b53ae023f",
+        "queued_turn_count": 0,
+        "result_index": 0
+      }
+    ],
+    "input": []
+  }
+}

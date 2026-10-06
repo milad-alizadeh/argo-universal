@@ -4,7 +4,6 @@ import {
   type ModelInfo,
   type Options,
   query,
-  type SDKMessage,
   type SDKUserMessage,
 } from '@anthropic-ai/claude-agent-sdk';
 import type {
@@ -23,6 +22,7 @@ import {
   startingValues,
   toConfigOptions,
 } from './config-options';
+import type { VendorMessage } from './to-agent-events';
 
 // The values the CLI starts with; the saved ones follow once its model list can check them.
 const CLI_START: ConfigValues = {
@@ -94,7 +94,7 @@ const toVendorContent = (content: AgentCommandOf<'agent.prompt'>['content']) =>
 // Starts or resumes one `query()` for the life of the Session.
 export async function connect(
   input: AgentConnectInput,
-  listener: VendorSessionListener<SDKMessage>,
+  listener: VendorSessionListener<VendorMessage>,
   signal: AbortSignal,
 ): Promise<VendorSession> {
   signal.throwIfAborted();
@@ -188,7 +188,7 @@ export async function connect(
   const messages = (async () => {
     try {
       for await (const message of vendor) {
-        listener.message(message);
+        listener.message({ ...message, receivedAt: Date.now() });
         // A usage request that fails as the Session closes has nothing to report.
         if (message.type === 'result') void sendUsage().catch(() => {});
       }

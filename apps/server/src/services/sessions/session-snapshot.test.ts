@@ -36,6 +36,7 @@ it.each(rows)('maps %j to %s', (value, state) => {
     toSessionSnapshot(snapshot, { context: { epoch: 2, maxRevision: 7 } }),
   ).toEqual({
     state,
+    liveHeader: null,
     activeTurnId: null,
     usage: null,
     pendingPermission: null,
@@ -80,6 +81,7 @@ it('projects the live context and the Feed revision without changing either', ()
     toSessionSnapshot(snapshot, { context: { epoch: 3, maxRevision: 9 } }),
   ).toEqual({
     state: 'requires_action',
+    liveHeader: null,
     activeTurnId: 'turn-1',
     usage,
     pendingPermission: permission,
