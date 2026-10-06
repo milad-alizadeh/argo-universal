@@ -198,6 +198,77 @@ export function SessionsScreen({ query, archived }: SessionsScreenProps) {
     </>
   );
 
+  let sessionContent: ReactNode;
+  if (error && !loading) {
+    sessionContent = (
+      <BelowHeader>
+        {!wide && listTop}
+        <LoadError
+          title="Couldn't load Sessions"
+          description="The Server didn't respond. Check that it's running, then retry."
+          onRetry={retry}
+        />
+      </BelowHeader>
+    );
+  } else if (loading) {
+    sessionContent = (
+      <BelowHeader>
+        {!wide && listTop}
+        <SessionsLoading />
+      </BelowHeader>
+    );
+  } else {
+    sessionContent = (
+      <SessionsList
+        projects={projects.data ?? []}
+        agents={agents.data ?? []}
+        sessions={rows}
+        isFetchingNextPage={sessions.isFetchingNextPage}
+        query={query}
+        archived={archived}
+        onNewSession={newSession}
+        onProjectSettings={projectSettings}
+        onSelect={selectSession}
+        onEndReached={loadMore}
+        // On a phone the rows scroll under the header, so what sits above them scrolls too.
+        header={
+          wide ? undefined : (
+            <View className="-mx-gutter-list -mt-5">{listTop}</View>
+          )
+        }
+      />
+    );
+  }
+  let newSessionControl: ReactNode;
+  if (wide) {
+    newSessionControl = (
+      <View className="h-16 justify-center px-3">
+        <Button
+          accessibilityLabel="New Session"
+          onPress={() => navigate({ to: 'new-session' })}
+          className="h-9 sm:h-9 self-start flex-row gap-2 rounded-md px-3"
+        >
+          <Icon
+            as={NotePencilIcon}
+            className="size-4 text-primary-foreground"
+          />
+          <Text className="text-sm text-primary-foreground">New Session</Text>
+        </Button>
+      </View>
+    );
+  } else if (newSessionInHeader) {
+    newSessionControl = null;
+  } else {
+    newSessionControl = (
+      <View className="absolute bottom-6 right-4">
+        <FloatingActionButton
+          accessibilityLabel="New Session"
+          icon={NotePencilIcon}
+          onPress={() => navigate({ to: 'new-session' })}
+        />
+      </View>
+    );
+  }
   return (
     <Screen
       edges={['bottom']}
@@ -205,40 +276,7 @@ export function SessionsScreen({ query, archived }: SessionsScreenProps) {
       style={{ minHeight: 0 }}
     >
       {wide && listTop}
-      {error && !loading ? (
-        <BelowHeader>
-          {!wide && listTop}
-          <LoadError
-            title="Couldn't load Sessions"
-            description="The Server didn't respond. Check that it's running, then retry."
-            onRetry={retry}
-          />
-        </BelowHeader>
-      ) : loading ? (
-        <BelowHeader>
-          {!wide && listTop}
-          <SessionsLoading />
-        </BelowHeader>
-      ) : (
-        <SessionsList
-          projects={projects.data ?? []}
-          agents={agents.data ?? []}
-          sessions={rows}
-          isFetchingNextPage={sessions.isFetchingNextPage}
-          query={query}
-          archived={archived}
-          onNewSession={newSession}
-          onProjectSettings={projectSettings}
-          onSelect={selectSession}
-          onEndReached={loadMore}
-          // On a phone the rows scroll under the header, so what sits above them scrolls too.
-          header={
-            wide ? undefined : (
-              <View className="-mx-gutter-list -mt-5">{listTop}</View>
-            )
-          }
-        />
-      )}
+      {sessionContent}
       {sessions.isFetchNextPageError && (
         <LoadError
           title="Couldn't load more Sessions"
@@ -248,29 +286,7 @@ export function SessionsScreen({ query, archived }: SessionsScreenProps) {
           }}
         />
       )}
-      {wide ? (
-        <View className="h-16 justify-center px-3">
-          <Button
-            accessibilityLabel="New Session"
-            onPress={() => navigate({ to: 'new-session' })}
-            className="h-9 sm:h-9 self-start flex-row gap-2 rounded-md px-3"
-          >
-            <Icon
-              as={NotePencilIcon}
-              className="size-4 text-primary-foreground"
-            />
-            <Text className="text-sm text-primary-foreground">New Session</Text>
-          </Button>
-        </View>
-      ) : newSessionInHeader ? null : (
-        <View className="absolute bottom-6 right-4">
-          <FloatingActionButton
-            accessibilityLabel="New Session"
-            icon={NotePencilIcon}
-            onPress={() => navigate({ to: 'new-session' })}
-          />
-        </View>
-      )}
+      {newSessionControl}
     </Screen>
   );
 }

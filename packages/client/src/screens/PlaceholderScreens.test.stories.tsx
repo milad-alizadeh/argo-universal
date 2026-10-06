@@ -20,10 +20,11 @@ const checkPlaceholder: NonNullable<Story['play']> = async ({
   args,
 }) => {
   const { page } = await import('vitest/browser');
-  const description =
-    args.page === 'project'
-      ? 'Settings for example-project will appear here.'
-      : `${args.page === 'issues' ? 'Issues' : args.page === 'atlas' ? 'Atlas' : 'Accounts'} will appear here.`;
+  let description = 'Accounts will appear here.';
+  if (args.page === 'project')
+    description = 'Settings for example-project will appear here.';
+  else if (args.page === 'issues') description = 'Issues will appear here.';
+  else if (args.page === 'atlas') description = 'Atlas will appear here.';
   for (const width of [390, 1440]) {
     await page.viewport(width, 844);
     await waitFor(() => expect(canvas.getByText(description)).toBeVisible());

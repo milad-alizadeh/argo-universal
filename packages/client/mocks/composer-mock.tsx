@@ -174,15 +174,14 @@ export function ComposerMock(
               }
             }
             setConfigOptions((previous) =>
-              previous.map((entry) =>
-                entry.configId === configId
-                  ? entry.type === 'select' && typeof value === 'string'
-                    ? { ...entry, currentValue: value }
-                    : entry.type === 'boolean' && typeof value === 'boolean'
-                      ? { ...entry, currentValue: value }
-                      : entry
-                  : entry,
-              ),
+              previous.map((entry) => {
+                if (entry.configId !== configId) return entry;
+                if (entry.type === 'select' && typeof value === 'string')
+                  return { ...entry, currentValue: value };
+                if (entry.type === 'boolean' && typeof value === 'boolean')
+                  return { ...entry, currentValue: value };
+                return entry;
+              }),
             );
           },
           checkout: {

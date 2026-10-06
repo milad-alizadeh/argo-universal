@@ -275,20 +275,19 @@ function mapItem(
       );
       break;
     case 'fileChange':
-    case 'commandExecution':
+    case 'commandExecution': {
       row = toToolCall(item, state);
-      row._meta = {
-        argo: {
-          ...mappingState.toolMetadata[item.id]?.argo,
-          ...row._meta?.argo,
-          ...(timestamp === undefined
-            ? {}
-            : state === 'open'
-              ? { startedAt: timestamp }
-              : { endedAt: timestamp }),
-        },
+      const metadata = {
+        ...mappingState.toolMetadata[item.id]?.argo,
+        ...row._meta?.argo,
       };
+      if (timestamp !== undefined) {
+        if (state === 'open') metadata.startedAt = timestamp;
+        else metadata.endedAt = timestamp;
+      }
+      row._meta = { argo: metadata };
       break;
+    }
     default:
       return dropped(mappingState);
   }

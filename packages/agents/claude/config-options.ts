@@ -72,11 +72,9 @@ function defaultEffort(
   const name = `${model.resolvedModel ?? ''} ${modelName(model)}`
     .toLowerCase()
     .replaceAll('-', ' ');
-  const preferred = /(?:opus|sonnet) 5[ .]5\b/.test(name)
-    ? 'medium'
-    : /opus 4[ .]7\b/.test(name)
-      ? 'xhigh'
-      : 'high';
+  let preferred = 'high';
+  if (/(?:opus|sonnet) 5[ .]5\b/.test(name)) preferred = 'medium';
+  else if (/opus 4[ .]7\b/.test(name)) preferred = 'xhigh';
   return (
     levels.find((level) => level === preferred) ??
     levels.find((level) => level === 'high') ??

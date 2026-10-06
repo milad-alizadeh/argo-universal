@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
+import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { ConnectionBanner } from '#components/ConnectionBanner';
 import {
@@ -18,6 +19,25 @@ export function ConnectionScreen() {
   const info = useQuery(trpc.system.info.queryOptions());
   const clock = useSubscription(trpc.system.clock.subscriptionOptions());
 
+  let serverInformation: ReactNode;
+  if (info.isPending) {
+    serverInformation = (
+      <Text className="text-muted-foreground">Connecting to the Server…</Text>
+    );
+  } else if (info.isError) {
+    serverInformation = (
+      <Text className="text-destructive">{info.error.message}</Text>
+    );
+  } else {
+    serverInformation = (
+      <>
+        <Row label="Version" value={info.data.version} />
+        <Row label="Started" value={info.data.startedAt} />
+        <Row label="PID" value={String(info.data.pid)} />
+        <Row label="Clock" value={clock.data?.now ?? '…'} />
+      </>
+    );
+  }
   return (
     <View className="flex-1 bg-background">
       <ConnectionBanner />
@@ -27,22 +47,7 @@ export function ConnectionScreen() {
             <CardTitle>Server</CardTitle>
             <CardDescription>The local Argo Server</CardDescription>
           </CardHeader>
-          <CardContent className="gap-3">
-            {info.isPending ? (
-              <Text className="text-muted-foreground">
-                Connecting to the Server…
-              </Text>
-            ) : info.isError ? (
-              <Text className="text-destructive">{info.error.message}</Text>
-            ) : (
-              <>
-                <Row label="Version" value={info.data.version} />
-                <Row label="Started" value={info.data.startedAt} />
-                <Row label="PID" value={String(info.data.pid)} />
-                <Row label="Clock" value={clock.data?.now ?? '…'} />
-              </>
-            )}
-          </CardContent>
+          <CardContent className="gap-3">{serverInformation}</CardContent>
         </Card>
       </View>
     </View>

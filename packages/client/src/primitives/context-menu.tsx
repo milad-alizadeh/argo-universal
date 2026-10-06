@@ -37,8 +37,9 @@ function ContextMenuSubTrigger({
   inset?: boolean;
 }) {
   const { open } = ContextMenuPrimitive.useSubContext();
-  const icon =
-    Platform.OS === 'web' ? CaretRightIcon : open ? CaretUpIcon : CaretDownIcon;
+  let icon = CaretDownIcon;
+  if (Platform.OS === 'web') icon = CaretRightIcon;
+  else if (open) icon = CaretUpIcon;
   return (
     <TextClassContext.Provider
       value={cn(

@@ -107,13 +107,16 @@ it.each([0, 100])(
           }),
         ),
       );
-      const snapshot = frames.find(
-        (frame) =>
-          frame.type === '@xstate.snapshot' &&
-          frame.sessionId === `engine:${process.pid}:${actor.sessionId}`,
-      );
-      expect(snapshot).toMatchObject({
-        snapshot: { value: 'serving', context: { attempts: 2 } },
+      const snapshot = await vi.waitFor(() => {
+        const frame = frames.find(
+          (frame) =>
+            frame.type === '@xstate.snapshot' &&
+            frame.sessionId === `engine:${process.pid}:${actor.sessionId}`,
+        );
+        expect(frame).toMatchObject({
+          snapshot: { value: 'serving', context: { attempts: 2 } },
+        });
+        return frame;
       });
       expect(snapshot).toEqual(
         expect.objectContaining({

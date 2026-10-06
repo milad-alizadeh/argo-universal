@@ -28,18 +28,18 @@ export function toSessionSnapshot(
     pendingElicitation: null,
     configOptions: [],
   };
-  const state =
+  let state: SessionSnapshot['state'] = 'idle';
+  if (
     session?.matches({ open: { live: { running: 'working' } } }) ||
     session?.matches({ open: { live: 'cancelling' } })
-      ? 'running'
-      : session?.matches({
-            open: { live: { running: 'awaitingPermission' } },
-          }) ||
-          session?.matches({
-            open: { live: { running: 'awaitingElicitation' } },
-          })
-        ? 'requires_action'
-        : 'idle';
+  ) {
+    state = 'running';
+  } else if (
+    session?.matches({ open: { live: { running: 'awaitingPermission' } } }) ||
+    session?.matches({ open: { live: { running: 'awaitingElicitation' } } })
+  ) {
+    state = 'requires_action';
+  }
   return {
     state,
     // Issue #47 supplies the live header; the contract is nullable until then.

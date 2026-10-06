@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { DesktopShell } from '../src/components/DesktopShell';
@@ -46,13 +47,20 @@ export function SettingsListMock({
   const [sidebarShown, setSidebarShown] = useState(true);
   const [destination, setDestination] = useState<
     NavigationDestination | undefined
-  >(() =>
-    page === 'accounts'
-      ? { to: 'settings-accounts' }
-      : page === 'project'
-        ? { to: 'settings-project', name: 'example-project' }
-        : undefined,
-  );
+  >(() => {
+    let initialDestination: NavigationDestination | undefined;
+    if (page === 'accounts') {
+      initialDestination = { to: 'settings-accounts' };
+    } else if (page === 'project') {
+      initialDestination = {
+        to: 'settings-project',
+        name: 'example-project',
+      };
+    } else {
+      initialDestination = undefined;
+    }
+    return initialDestination;
+  });
   const section = page === 'issues' || page === 'atlas' ? page : 'settings';
   const title = section.charAt(0).toUpperCase() + section.slice(1);
   const selectedDestination: NavigationDestination | undefined =
@@ -67,12 +75,13 @@ export function SettingsListMock({
       }}
     />
   );
-  const detail =
-    page === 'issues' ? (
-      <IssuesScreen />
-    ) : page === 'atlas' ? (
-      <AtlasScreen />
-    ) : selectedDestination?.to === 'settings-projects' ? (
+  let detail: ReactNode;
+  if (page === 'issues') {
+    detail = <IssuesScreen />;
+  } else if (page === 'atlas') {
+    detail = <AtlasScreen />;
+  } else if (selectedDestination?.to === 'settings-projects') {
+    detail = (
       <View className="gap-2 p-4">
         <Text role="heading">Projects</Text>
         {settingsListMocks.projects.map(({ name }) => (
@@ -93,7 +102,9 @@ export function SettingsListMock({
           </Button>
         ))}
       </View>
-    ) : selectedDestination?.to === 'settings-agents' ? (
+    );
+  } else if (selectedDestination?.to === 'settings-agents') {
+    detail = (
       <View className="gap-2 p-4">
         <Text role="heading">Agents</Text>
         {settingsListMocks.agents.map(({ agent, label }) => (
@@ -114,27 +125,30 @@ export function SettingsListMock({
           </Button>
         ))}
       </View>
-    ) : selectedDestination?.to === 'settings-project' ? (
-      <ProjectSettingsScreen name={selectedDestination.name} />
-    ) : selectedDestination?.to === 'settings-agent' ? (
+    );
+  } else if (selectedDestination?.to === 'settings-project') {
+    detail = <ProjectSettingsScreen name={selectedDestination.name} />;
+  } else if (selectedDestination?.to === 'settings-agent') {
+    detail = (
       <Text className="p-6">
         Settings for {selectedDestination.agent} will appear here.
       </Text>
-    ) : selectedDestination &&
-      selectedDestination.to !== 'settings-accounts' ? (
-      <Text className="p-6">
-        {selectedDestination.to === 'settings-connection'
-          ? 'Connection'
-          : selectedDestination.to === 'settings-devices'
-            ? 'Devices'
-            : selectedDestination.to === 'settings-appearance'
-              ? 'Appearance'
-              : 'Notifications'}{' '}
-        will appear here.
-      </Text>
-    ) : (
-      <AccountsScreen />
     );
+  } else if (
+    selectedDestination &&
+    selectedDestination.to !== 'settings-accounts'
+  ) {
+    let placeholderTitle = 'Notifications';
+    if (selectedDestination.to === 'settings-connection')
+      placeholderTitle = 'Connection';
+    else if (selectedDestination.to === 'settings-devices')
+      placeholderTitle = 'Devices';
+    else if (selectedDestination.to === 'settings-appearance')
+      placeholderTitle = 'Appearance';
+    detail = <Text className="p-6">{placeholderTitle} will appear here.</Text>;
+  } else {
+    detail = <AccountsScreen />;
+  }
 
   function selectSection(next: ShellSection) {
     navigate(next === 'settings' ? { to: 'settings-accounts' } : { to: next });

@@ -89,11 +89,9 @@ export function DesktopShell({
   );
 
   const transitionKey = `${sidebarShown}:${inspectorState}:${inspectorExpanded}`;
-  const inspectorTargetWidth = inspectorOpen
-    ? inspectorExpanded
-      ? availableWidth
-      : visibleInspectorWidth
-    : 0;
+  let inspectorTargetWidth = 0;
+  if (inspectorOpen && inspectorExpanded) inspectorTargetWidth = availableWidth;
+  else if (inspectorOpen) inspectorTargetWidth = visibleInspectorWidth;
 
   function resizeList(nextWidth: number) {
     if (nextWidth < listWidth / 2) {
