@@ -2,8 +2,8 @@ import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetScrollView,
 } from '@gorhom/bottom-sheet';
-import { useCallback } from 'react';
-import { Modal, useWindowDimensions } from 'react-native';
+import { useCallback, useEffect } from 'react';
+import { Modal, Platform, useWindowDimensions } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useResolveClassNames } from 'uniwind';
@@ -14,6 +14,7 @@ export function ComposerSheet({
   style,
   open,
   onOpenChange,
+  onClosed,
   trigger,
   label,
   children,
@@ -35,18 +36,23 @@ export function ComposerSheet({
     ),
     [],
   );
+  // iOS presents a picker on the top view controller, so wait until the Modal's has gone.
+  const dismissReported = Platform.OS === 'ios';
+  useEffect(() => {
+    if (!open && !dismissReported) onClosed();
+  }, [open, dismissReported, onClosed]);
   return (
     <Dialog style={style} open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild disabled={trigger.props.disabled}>
         {trigger}
       </DialogTrigger>
-      {open && (
-        <Modal
-          transparent
-          visible
-          onRequestClose={() => onOpenChange(false)}
-          statusBarTranslucent
-        >
+      <Modal
+        transparent
+        visible={open}
+        onRequestClose={() => onOpenChange(false)}
+        onDismiss={onClosed}
+        statusBarTranslucent
+      >
           <GestureHandlerRootView style={{ flex: 1 }}>
             <BottomSheet
               index={0}
@@ -73,8 +79,7 @@ export function ComposerSheet({
               </BottomSheetScrollView>
             </BottomSheet>
           </GestureHandlerRootView>
-        </Modal>
-      )}
+      </Modal>
     </Dialog>
   );
 }
