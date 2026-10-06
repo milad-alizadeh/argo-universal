@@ -2,6 +2,7 @@ import { writeFileSync } from 'node:fs';
 import {
   applyFeedChange,
   type Feed,
+  userMessageChange,
 } from '../apps/server/src/services/feed/feed-change.ts';
 import { mockClis } from '../mocks/cli/index.ts';
 import { agentAdapters } from '../packages/agents/src/adapters.ts';
@@ -16,6 +17,7 @@ const mocks = agentAdapters.flatMap(({ agent }, index) => {
     'interrupt',
     'compaction',
     'image-prompt',
+    'markdown-answer',
   ];
   if (cli.recordings.commandOutcomes)
     recordings.push(cli.recordings.commandOutcomes);
@@ -25,6 +27,16 @@ const mocks = agentAdapters.flatMap(({ agent }, index) => {
     let turnNumber = 1;
     let turnId: string | null = 'turn-1';
     const stream = [];
+    const apply = (change: Parameters<typeof applyFeedChange>[1]) => {
+      const result = applyFeedChange(feed, change, turnId);
+      if ('rejection' in result)
+        throw new Error(`${sessionId}: ${result.rejection}`);
+      feed = result.feed;
+      stream.push(result.streamEvent);
+    };
+    // The Session writes the prompt a person sent before the Agent answers, as it does in `startTurn`.
+    const prompt = cli.recordedPrompt(recording);
+    if (prompt) apply(userMessageChange('turn-1', prompt));
     for (const event of cli.feedEvents(recording)) {
       if (event.type === 'agent.turnStarted') {
         turnId = `turn-${turnNumber}`;
@@ -38,11 +50,7 @@ const mocks = agentAdapters.flatMap(({ agent }, index) => {
       if (event.type !== 'agent.feed') continue;
       // Some adapters report Turn starts at the connection boundary, outside the converter.
       turnId ??= `turn-${turnNumber}`;
-      const result = applyFeedChange(feed, event.change, turnId);
-      if ('rejection' in result)
-        throw new Error(`${sessionId}: ${result.rejection}`);
-      feed = result.feed;
-      stream.push(result.streamEvent);
+      apply(event.change);
     }
     const snapshot = SessionSnapshot.parse({
       state: turnId === null ? 'idle' : 'running',

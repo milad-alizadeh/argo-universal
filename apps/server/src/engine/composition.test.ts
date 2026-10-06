@@ -10,8 +10,8 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { type AgentAdapter, agentAdapters } from '@repo/agents';
 import { appRouter, type Services } from '@repo/api';
-import type { SessionListUpdate } from '@repo/contracts';
-import { turn } from '@repo/db/schema';
+import type { SessionListUpdate, SessionUpdate } from '@repo/contracts';
+import { feedRow, turn } from '@repo/db/schema';
 import { listBranches } from '@repo/git';
 import { createMockAdapter, type MockAgentStream } from '@repo/mocks/agent';
 import { mockClis } from '@repo/mocks/cli';
@@ -21,6 +21,7 @@ import type { ActorRefFrom } from 'xstate';
 import { createActor, fromCallback, fromPromise, waitFor } from 'xstate';
 import { insertSession, openTestDatabase } from '#mocks/database';
 import { initTestRepository } from '#mocks/git';
+import { liveHeaderMocks } from '#mocks/live-header';
 import type { writerMachine } from '../services/feed/writer-machine';
 import { createServerServices } from '../services/server-services';
 import type { HttpServerOptions } from './http-server';
@@ -74,6 +75,173 @@ function startEngine({
     },
   };
 }
+
+it.each(liveHeaderMocks)(
+  'shares live header and list activity for $agent after Feed writes',
+  async ({ command, thought, retry, progress }) => {
+    const { database, remove } = openTestDatabase();
+    let stream: MockAgentStream | undefined;
+    const adapter = createMockAdapter({
+      stream: (current) => {
+        stream = current;
+      },
+    });
+    const { engine, createCaller } = startEngine({ database, adapter });
+    const controller = new AbortController();
+    try {
+      const caller = await createCaller(controller.signal);
+      await caller.session.prompt({
+        sessionId: 'session-1',
+        prompt: [{ type: 'text', text: 'Check tests' }],
+      });
+      const subscription = (
+        await caller.feed.subscribe({ sessionId: 'session-1', after: null })
+      )[Symbol.asyncIterator]();
+      const expectActivity = async (expected: string) => {
+        await expect
+          .poll(
+            async () =>
+              (await caller.session.list({ archived: false })).sessions[0]
+                ?.activity,
+          )
+          .toBe(expected);
+        for (;;) {
+          const next = await subscription.next();
+          if (next.done) throw new Error('Feed subscription ended');
+          if (
+            next.value.type === 'snapshot' &&
+            next.value.snapshot.liveHeader === expected
+          )
+            break;
+        }
+      };
+      const sendRow = (row: SessionUpdate) => {
+        const {
+          sessionId: _sessionId,
+          turnId: _turnId,
+          position: _position,
+          revision: _revision,
+          ...update
+        } = row;
+        stream?.send({
+          type: 'agent.feed',
+          change: { type: 'upsert', update },
+        });
+      };
+      await expectActivity('Working');
+      sendRow({
+        ...command,
+        title: '',
+        kind: 'execute',
+        content: [{ type: 'terminal', command: 'pnpm test', output: '' }],
+        _meta: undefined,
+      });
+      await expectActivity('Running pnpm test');
+      sendRow(thought);
+      await expectActivity('Checking the tests');
+      sendRow(retry);
+      await expectActivity('Retrying (2 of 5)');
+      // Settled rows have left the Feed actor by now; a fresh subscription must retain the retry.
+      const reconnect = (
+        await caller.feed.subscribe({ sessionId: 'session-1', after: null })
+      )[Symbol.asyncIterator]();
+      expect((await reconnect.next()).value).toMatchObject({
+        type: 'snapshot',
+        snapshot: { liveHeader: 'Retrying (2 of 5)' },
+      });
+      for (const row of progress) {
+        sendRow(retry);
+        await expectActivity('Retrying (2 of 5)');
+        sendRow(row);
+        await expect
+          .poll(async () =>
+            (
+              await caller.feed.page({
+                sessionId: 'session-1',
+                direction: 'tail',
+              })
+            ).rows.some((stored) => stored.id === row.id),
+          )
+          .toBe(true);
+        await expectActivity('Checking the tests');
+      }
+      sendRow({ ...command, status: 'completed', state: 'settled' });
+      await expectActivity('Checking the tests');
+      stream?.send({
+        type: 'agent.permissionRequested',
+        request: {
+          toolCallId: command.toolCallId,
+          title: 'Allow tests?',
+          options: [],
+        },
+      });
+      expect(
+        (await caller.session.list({ archived: false })).sessions[0]?.activity,
+      ).toBe('Allow tests?');
+      stream?.send({ type: 'agent.turnEnded', stopReason: 'end_turn' });
+      await caller.session.prompt({
+        sessionId: 'session-1',
+        prompt: [{ type: 'text', text: 'Next Turn' }],
+      });
+      await expectActivity('Working');
+      controller.abort();
+      await subscription.return?.();
+      await reconnect.return?.();
+    } finally {
+      controller.abort();
+      engine.stop();
+      remove();
+    }
+  },
+);
+
+it('rejects malformed stored activity through the Feed subscription', async () => {
+  const { database, remove } = openTestDatabase();
+  let stream: MockAgentStream | undefined;
+  const adapter = createMockAdapter({
+    stream: (current) => {
+      stream = current;
+    },
+  });
+  const { engine, createCaller } = startEngine({ database, adapter });
+  const controller = new AbortController();
+  try {
+    const caller = await createCaller(controller.signal);
+    await caller.session.prompt({
+      sessionId: 'session-1',
+      prompt: [{ type: 'text', text: 'Check tests' }],
+    });
+    const subscription = (
+      await caller.feed.subscribe({ sessionId: 'session-1', after: null })
+    )[Symbol.asyncIterator]();
+    const initial = (await subscription.next()).value;
+    if (initial?.type !== 'snapshot')
+      throw new Error('Expected initial snapshot');
+    database
+      .insert(feedRow)
+      .values({
+        sessionId: 'session-1',
+        id: 'malformed',
+        position: 500,
+        revision: 500,
+        turnId: initial.snapshot.activeTurnId,
+        state: 'settled',
+        sessionUpdate: 'agent_thought',
+        payloadVersion: 1,
+        payload: { messageId: 'malformed', content: 'invalid' },
+      })
+      .run();
+    const rejected = expect(subscription.next()).rejects.toThrow(
+      'Unrecognised live-header Feed data',
+    );
+    stream?.send({ type: 'agent.usage', usage: { used: 10, size: 100 } });
+    await rejected;
+  } finally {
+    controller.abort();
+    engine.stop();
+    remove();
+  }
+});
 
 it('serves live Session procedures and drains their Feed before closing the database', async () => {
   const { database, remove } = openTestDatabase();

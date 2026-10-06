@@ -126,6 +126,8 @@ export function toolCallStarted(
     kind: 'other' satisfies ToolKind,
     content: [],
   };
+  const description =
+    block.name === 'Bash' ? (block.input as BashInput).description : undefined;
   return {
     id: block.id,
     sessionUpdate: 'tool_call_update',
@@ -135,9 +137,16 @@ export function toolCallStarted(
     status: 'in_progress',
     rawInput: block.input,
     ...shape,
-    ...(timestamp === undefined
+    ...(timestamp === undefined && !description?.trim()
       ? {}
-      : { _meta: { argo: { startedAt: timestamp } } }),
+      : {
+          _meta: {
+            argo: {
+              ...(timestamp === undefined ? {} : { startedAt: timestamp }),
+              ...(description?.trim() ? { description } : {}),
+            },
+          },
+        }),
   };
 }
 

@@ -14,14 +14,16 @@ const workMocks = recordedFeedMocks.filter(
 );
 
 const recordedItemTypes: Record<string, string[]> = {
-  'agent-1/edit-and-command': ['group', 'row'],
-  'agent-2/edit-and-command': ['row', 'group', 'row'],
-  'agent-1/interrupt': ['tool_call'],
-  'agent-2/interrupt': ['row', 'tool_call'],
+  'agent-1/edit-and-command': ['row', 'group', 'row'],
+  'agent-2/edit-and-command': ['row', 'row', 'group', 'row'],
+  'agent-1/interrupt': ['row', 'tool_call'],
+  'agent-2/interrupt': ['row', 'row', 'tool_call'],
   'agent-1/compaction': ['row', 'row'],
-  'agent-2/compaction': ['row', 'row'],
-  'agent-1/image-prompt': ['thought', 'row'],
-  'agent-2/image-prompt': ['row'],
+  'agent-2/compaction': ['row', 'row', 'row'],
+  'agent-1/image-prompt': ['row', 'thought', 'row'],
+  'agent-2/image-prompt': ['row', 'row'],
+  'agent-1/markdown-answer': ['row', 'thought', 'row'],
+  'agent-2/markdown-answer': ['row', 'thought', 'row'],
   'agent-2/command-outcomes': ['row', 'group', 'row'],
 };
 

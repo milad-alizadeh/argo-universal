@@ -84,6 +84,7 @@ export const ToolCallUpdate = z.strictObject({
       startedAt: z.int().optional(),
       endedAt: z.int().optional(),
       shellId: z.string().optional(),
+      description: z.string().optional(),
     }),
   ),
 });

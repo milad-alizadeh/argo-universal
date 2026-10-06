@@ -27,6 +27,7 @@ import {
   setup,
 } from 'xstate';
 import { agentProbeId } from '../agents/agent-probe-machine';
+import { userMessageChange } from '../feed/feed-change';
 import { feedMachine } from '../feed/feed-machine';
 import { readWrittenRow } from '../feed/feed-row';
 import type { writerMachine } from '../feed/writer-machine';
@@ -195,16 +196,7 @@ const sessionSetup = setup({
         enqueue.sendTo('feed', {
           type: 'feed.change',
           turnId: params.turnId,
-          change: {
-            type: 'upsert',
-            update: {
-              id: `${params.turnId}:user`,
-              sessionUpdate: 'user_message',
-              messageId: `${params.turnId}:user`,
-              state: 'settled',
-              content: params.content,
-            },
-          },
+          change: userMessageChange(params.turnId, params.content),
         });
         enqueue.sendTo('agent', {
           type: 'agent.prompt',
