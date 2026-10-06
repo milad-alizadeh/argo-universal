@@ -45,6 +45,7 @@ const config: StorybookConfig = {
       optimizeDeps: {
         include: [
           'react-native-svg',
+          '@repo/client > @rn-primitives/collapsible',
           '@repo/client > @legendapp/list',
           '@repo/client > expo-haptics',
           '@repo/client > expo-image-picker',

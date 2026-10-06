@@ -1,0 +1,23 @@
+import { View } from 'react-native';
+import { CommandRow } from '../src/components/CommandRow';
+import { ToolCallRow } from '../src/components/ToolCallRow';
+import type { FeedActivity } from '../src/feed/feed-view';
+
+export function renderRecordedActivity(activity: FeedActivity) {
+  if (activity.type === 'exploration')
+    return (
+      <View className="gap-2">
+        {activity.toolCalls.map((row) => (
+          <ToolCallRow key={row.id} row={row} />
+        ))}
+      </View>
+    );
+  if (activity.type === 'tool_call')
+    return (
+      <CommandRow
+        row={activity.row}
+        now={(activity.row._meta?.argo?.startedAt ?? 0) + 23000}
+      />
+    );
+  throw new Error('This recording needs only commands and exploration');
+}

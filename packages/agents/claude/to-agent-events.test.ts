@@ -185,6 +185,9 @@ describe('toAgentEvents on a Turn with edits and commands', () => {
         kind: 'read',
         status: 'completed',
         locations: [{ path: '/project/hello.txt' }],
+        content: [
+          { type: 'content', content: { type: 'text', text: 'hello world\n' } },
+        ],
       }),
       expect.objectContaining({
         name: 'Edit',

@@ -1,0 +1,484 @@
+{
+  "producer": "codex-app-server",
+  "version": "0.157.0",
+  "recordedAt": "2026-10-06T05:59:51.352Z",
+  "payload": {
+    "messages": [
+      {
+        "method": "turn/started",
+        "params": {
+          "threadId": "01a10fcb-dbe6-7863-80c3-1cfb78274786",
+          "turn": {
+            "id": "01a10fcb-dcd1-75f1-8cdd-d1cb846367f7",
+            "items": [],
+            "itemsView": "notLoaded",
+            "status": "inProgress",
+            "error": null,
+            "startedAt": 1791266381,
+            "completedAt": null,
+            "durationMs": null
+          }
+        },
+        "emittedAtMs": 1791266381104
+      },
+      {
+        "method": "item/started",
+        "params": {
+          "item": {
+            "type": "userMessage",
+            "id": "01a10fcb-e5a9-7923-904c-8bdad3780767",
+            "clientId": null,
+            "content": [
+              {
+                "type": "text",
+                "text": "For a UI recording, run exactly two shell commands separately in this empty directory. First: printf 'Preparing checks\\nChecking files\\nhello Argo\\n M hello.txt\\n?? notes.md\\n' . Second: printf 'Starting checks\\nChecking input\\nMissing input\\nCommand failed\\nExit requested\\n'; exit 2 . The second failure is intentional. Do not inspect files or retry. Answer done after both calls.",
+                "text_elements": []
+              }
+            ]
+          },
+          "threadId": "01a10fcb-dbe6-7863-80c3-1cfb78274786",
+          "turnId": "01a10fcb-dcd1-75f1-8cdd-d1cb846367f7",
+          "startedAtMs": 1791266383282
+        },
+        "emittedAtMs": 1791266383282
+      },
+      {
+        "method": "item/completed",
+        "params": {
+          "item": {
+            "type": "userMessage",
+            "id": "01a10fcb-e5a9-7923-904c-8bdad3780767",
+            "clientId": null,
+            "content": [
+              {
+                "type": "text",
+                "text": "For a UI recording, run exactly two shell commands separately in this empty directory. First: printf 'Preparing checks\\nChecking files\\nhello Argo\\n M hello.txt\\n?? notes.md\\n' . Second: printf 'Starting checks\\nChecking input\\nMissing input\\nCommand failed\\nExit requested\\n'; exit 2 . The second failure is intentional. Do not inspect files or retry. Answer done after both calls.",
+                "text_elements": []
+              }
+            ]
+          },
+          "threadId": "01a10fcb-dbe6-7863-80c3-1cfb78274786",
+          "turnId": "01a10fcb-dcd1-75f1-8cdd-d1cb846367f7",
+          "completedAtMs": 1791266383282
+        },
+        "emittedAtMs": 1791266383292
+      },
+      {
+        "method": "item/started",
+        "params": {
+          "item": {
+            "type": "agentMessage",
+            "id": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+            "text": "",
+            "phase": "commentary",
+            "memoryCitation": null,
+            "delivery": null,
+            "questions": null
+          },
+          "threadId": "01a10fcb-dbe6-7863-80c3-1cfb78274786",
+          "turnId": "01a10fcb-dcd1-75f1-8cdd-d1cb846367f7",
+          "startedAtMs": 1791266385331
+        },
+        "emittedAtMs": 1791266385333
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a10fcb-dbe6-7863-80c3-1cfb78274786",
+          "turnId": "01a10fcb-dcd1-75f1-8cdd-d1cb846367f7",
+          "itemId": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+          "delta": "I"
+        },
+        "emittedAtMs": 1791266385334
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a10fcb-dbe6-7863-80c3-1cfb78274786",
+          "turnId": "01a10fcb-dcd1-75f1-8cdd-d1cb846367f7",
+          "itemId": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+          "delta": "’ll"
+        },
+        "emittedAtMs": 1791266385334
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a10fcb-dbe6-7863-80c3-1cfb78274786",
+          "turnId": "01a10fcb-dcd1-75f1-8cdd-d1cb846367f7",
+          "itemId": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+          "delta": " run"
+        },
+        "emittedAtMs": 1791266385334
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a10fcb-dbe6-7863-80c3-1cfb78274786",
+          "turnId": "01a10fcb-dcd1-75f1-8cdd-d1cb846367f7",
+          "itemId": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+          "delta": " the"
+        },
+        "emittedAtMs": 1791266385334
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a10fcb-dbe6-7863-80c3-1cfb78274786",
+          "turnId": "01a10fcb-dcd1-75f1-8cdd-d1cb846367f7",
+          "itemId": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+          "delta": " two"
+        },
+        "emittedAtMs": 1791266385334
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a10fcb-dbe6-7863-80c3-1cfb78274786",
+          "turnId": "01a10fcb-dcd1-75f1-8cdd-d1cb846367f7",
+          "itemId": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+          "delta": " commands"
+        },
+        "emittedAtMs": 1791266385365
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a10fcb-dbe6-7863-80c3-1cfb78274786",
+          "turnId": "01a10fcb-dcd1-75f1-8cdd-d1cb846367f7",
+          "itemId": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+          "delta": " separately"
+        },
+        "emittedAtMs": 1791266385366
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a10fcb-dbe6-7863-80c3-1cfb78274786",
+          "turnId": "01a10fcb-dcd1-75f1-8cdd-d1cb846367f7",
+          "itemId": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+          "delta": ","
+        },
+        "emittedAtMs": 1791266385369
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a10fcb-dbe6-7863-80c3-1cfb78274786",
+          "turnId": "01a10fcb-dcd1-75f1-8cdd-d1cb846367f7",
+          "itemId": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+          "delta": " as"
+        },
+        "emittedAtMs": 1791266385373
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a10fcb-dbe6-7863-80c3-1cfb78274786",
+          "turnId": "01a10fcb-dcd1-75f1-8cdd-d1cb846367f7",
+          "itemId": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+          "delta": " requested"
+        },
+        "emittedAtMs": 1791266385496
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a10fcb-dbe6-7863-80c3-1cfb78274786",
+          "turnId": "01a10fcb-dcd1-75f1-8cdd-d1cb846367f7",
+          "itemId": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+          "delta": "."
+        },
+        "emittedAtMs": 1791266385497
+      },
+      {
+        "method": "item/completed",
+        "params": {
+          "item": {
+            "type": "agentMessage",
+            "id": "msg_01c48ae52f3f6e50016ac48e514a0087d2a8f1b9f5d79721a7",
+            "text": "I’ll run the two commands separately, as requested.",
+            "phase": "commentary",
+            "memoryCitation": null,
+            "delivery": null,
+            "questions": null
+          },
+          "threadId": "01a10fcb-dbe6-7863-80c3-1cfb78274786",
+          "turnId": "01a10fcb-dcd1-75f1-8cdd-d1cb846367f7",
+          "completedAtMs": 1791266385663
+        },
+        "emittedAtMs": 1791266385665
+      },
+      {
+        "method": "item/started",
+        "params": {
+          "item": {
+            "type": "commandExecution",
+            "id": "exec-d1cd36f9-088c-4cc5-bc2a-9f1ae304fa01",
+            "pluginId": null,
+            "scriptPath": null,
+            "command": "/bin/zsh -lc \"printf 'Preparing checks\\\\nChecking files\\\\nhello Argo\\\\n M hello.txt\\\\n?? notes.md\\\\n'\"",
+            "cwd": "/repo",
+            "processId": "59862",
+            "source": "unifiedExecStartup",
+            "status": "inProgress",
+            "commandActions": [
+              {
+                "type": "unknown",
+                "command": "printf 'Preparing checks\\nChecking files\\nhello Argo\\n M hello.txt\\n?? notes.md\\n'"
+              }
+            ],
+            "aggregatedOutput": null,
+            "exitCode": null,
+            "durationMs": null
+          },
+          "threadId": "01a10fcb-dbe6-7863-80c3-1cfb78274786",
+          "turnId": "01a10fcb-dcd1-75f1-8cdd-d1cb846367f7",
+          "startedAtMs": 1791266386627
+        },
+        "emittedAtMs": 1791266386628
+      },
+      {
+        "method": "item/completed",
+        "params": {
+          "item": {
+            "type": "commandExecution",
+            "id": "exec-d1cd36f9-088c-4cc5-bc2a-9f1ae304fa01",
+            "pluginId": null,
+            "scriptPath": null,
+            "command": "/bin/zsh -lc \"printf 'Preparing checks\\\\nChecking files\\\\nhello Argo\\\\n M hello.txt\\\\n?? notes.md\\\\n'\"",
+            "cwd": "/repo",
+            "processId": "59862",
+            "source": "unifiedExecStartup",
+            "status": "completed",
+            "commandActions": [
+              {
+                "type": "unknown",
+                "command": "printf 'Preparing checks\\nChecking files\\nhello Argo\\n M hello.txt\\n?? notes.md\\n'"
+              }
+            ],
+            "aggregatedOutput": "Preparing checks\nChecking files\nhello Argo\n M hello.txt\n?? notes.md\n",
+            "exitCode": 0,
+            "durationMs": 0
+          },
+          "threadId": "01a10fcb-dbe6-7863-80c3-1cfb78274786",
+          "turnId": "01a10fcb-dcd1-75f1-8cdd-d1cb846367f7",
+          "completedAtMs": 1791266386627
+        },
+        "emittedAtMs": 1791266386629
+      },
+      {
+        "method": "thread/tokenUsage/updated",
+        "params": {
+          "threadId": "01a10fcb-dbe6-7863-80c3-1cfb78274786",
+          "turnId": "01a10fcb-dcd1-75f1-8cdd-d1cb846367f7",
+          "tokenUsage": {
+            "total": {
+              "totalTokens": 17835,
+              "inputTokens": 17771,
+              "cachedInputTokens": 0,
+              "cacheWriteInputTokens": 0,
+              "outputTokens": 64,
+              "reasoningOutputTokens": 0
+            },
+            "last": {
+              "totalTokens": 17835,
+              "inputTokens": 17771,
+              "cachedInputTokens": 0,
+              "cacheWriteInputTokens": 0,
+              "outputTokens": 64,
+              "reasoningOutputTokens": 0
+            },
+            "modelContextWindow": 258400
+          }
+        },
+        "emittedAtMs": 1791266386671
+      },
+      {
+        "method": "item/started",
+        "params": {
+          "item": {
+            "type": "commandExecution",
+            "id": "exec-112e4e7b-378b-486a-b2d7-37a5852fa056",
+            "pluginId": null,
+            "scriptPath": null,
+            "command": "/bin/zsh -lc \"printf 'Starting checks\\\\nChecking input\\\\nMissing input\\\\nCommand failed\\\\nExit requested\\\\n'; exit 2\"",
+            "cwd": "/repo",
+            "processId": "70619",
+            "source": "unifiedExecStartup",
+            "status": "inProgress",
+            "commandActions": [
+              {
+                "type": "unknown",
+                "command": "printf 'Starting checks\\nChecking input\\nMissing input\\nCommand failed\\nExit requested\\n'; exit 2"
+              }
+            ],
+            "aggregatedOutput": null,
+            "exitCode": null,
+            "durationMs": null
+          },
+          "threadId": "01a10fcb-dbe6-7863-80c3-1cfb78274786",
+          "turnId": "01a10fcb-dcd1-75f1-8cdd-d1cb846367f7",
+          "startedAtMs": 1791266389216
+        },
+        "emittedAtMs": 1791266389218
+      },
+      {
+        "method": "item/completed",
+        "params": {
+          "item": {
+            "type": "commandExecution",
+            "id": "exec-112e4e7b-378b-486a-b2d7-37a5852fa056",
+            "pluginId": null,
+            "scriptPath": null,
+            "command": "/bin/zsh -lc \"printf 'Starting checks\\\\nChecking input\\\\nMissing input\\\\nCommand failed\\\\nExit requested\\\\n'; exit 2\"",
+            "cwd": "/repo",
+            "processId": "70619",
+            "source": "unifiedExecStartup",
+            "status": "failed",
+            "commandActions": [
+              {
+                "type": "unknown",
+                "command": "printf 'Starting checks\\nChecking input\\nMissing input\\nCommand failed\\nExit requested\\n'; exit 2"
+              }
+            ],
+            "aggregatedOutput": "Starting checks\nChecking input\nMissing input\nCommand failed\nExit requested\n",
+            "exitCode": 2,
+            "durationMs": 0
+          },
+          "threadId": "01a10fcb-dbe6-7863-80c3-1cfb78274786",
+          "turnId": "01a10fcb-dcd1-75f1-8cdd-d1cb846367f7",
+          "completedAtMs": 1791266389216
+        },
+        "emittedAtMs": 1791266389219
+      },
+      {
+        "method": "thread/tokenUsage/updated",
+        "params": {
+          "threadId": "01a10fcb-dbe6-7863-80c3-1cfb78274786",
+          "turnId": "01a10fcb-dcd1-75f1-8cdd-d1cb846367f7",
+          "tokenUsage": {
+            "total": {
+              "totalTokens": 35788,
+              "inputTokens": 35678,
+              "cachedInputTokens": 17536,
+              "cacheWriteInputTokens": 0,
+              "outputTokens": 110,
+              "reasoningOutputTokens": 0
+            },
+            "last": {
+              "totalTokens": 17953,
+              "inputTokens": 17907,
+              "cachedInputTokens": 17536,
+              "cacheWriteInputTokens": 0,
+              "outputTokens": 46,
+              "reasoningOutputTokens": 0
+            },
+            "modelContextWindow": 258400
+          }
+        },
+        "emittedAtMs": 1791266389268
+      },
+      {
+        "method": "item/started",
+        "params": {
+          "item": {
+            "type": "agentMessage",
+            "id": "msg_01c48ae52f3f6e50016ac48e5742e887d282022b79d36f83e8",
+            "text": "",
+            "phase": "final_answer",
+            "memoryCitation": null,
+            "delivery": null,
+            "questions": null
+          },
+          "threadId": "01a10fcb-dbe6-7863-80c3-1cfb78274786",
+          "turnId": "01a10fcb-dcd1-75f1-8cdd-d1cb846367f7",
+          "startedAtMs": 1791266391214
+        },
+        "emittedAtMs": 1791266391216
+      },
+      {
+        "method": "item/agentMessage/delta",
+        "params": {
+          "threadId": "01a10fcb-dbe6-7863-80c3-1cfb78274786",
+          "turnId": "01a10fcb-dcd1-75f1-8cdd-d1cb846367f7",
+          "itemId": "msg_01c48ae52f3f6e50016ac48e5742e887d282022b79d36f83e8",
+          "delta": "done"
+        },
+        "emittedAtMs": 1791266391220
+      },
+      {
+        "method": "item/completed",
+        "params": {
+          "item": {
+            "type": "agentMessage",
+            "id": "msg_01c48ae52f3f6e50016ac48e5742e887d282022b79d36f83e8",
+            "text": "done",
+            "phase": "final_answer",
+            "memoryCitation": null,
+            "delivery": null,
+            "questions": null
+          },
+          "threadId": "01a10fcb-dbe6-7863-80c3-1cfb78274786",
+          "turnId": "01a10fcb-dcd1-75f1-8cdd-d1cb846367f7",
+          "completedAtMs": 1791266391268
+        },
+        "emittedAtMs": 1791266391270
+      },
+      {
+        "method": "thread/tokenUsage/updated",
+        "params": {
+          "threadId": "01a10fcb-dbe6-7863-80c3-1cfb78274786",
+          "turnId": "01a10fcb-dcd1-75f1-8cdd-d1cb846367f7",
+          "tokenUsage": {
+            "total": {
+              "totalTokens": 53815,
+              "inputTokens": 53700,
+              "cachedInputTokens": 35328,
+              "cacheWriteInputTokens": 0,
+              "outputTokens": 115,
+              "reasoningOutputTokens": 0
+            },
+            "last": {
+              "totalTokens": 18027,
+              "inputTokens": 18022,
+              "cachedInputTokens": 17792,
+              "cacheWriteInputTokens": 0,
+              "outputTokens": 5,
+              "reasoningOutputTokens": 0
+            },
+            "modelContextWindow": 258400
+          }
+        },
+        "emittedAtMs": 1791266391302
+      },
+      {
+        "method": "turn/completed",
+        "params": {
+          "threadId": "01a10fcb-dbe6-7863-80c3-1cfb78274786",
+          "turn": {
+            "id": "01a10fcb-dcd1-75f1-8cdd-d1cb846367f7",
+            "items": [
+              {
+                "type": "agentMessage",
+                "id": "msg_01c48ae52f3f6e50016ac48e5742e887d282022b79d36f83e8",
+                "text": "done",
+                "phase": "final_answer",
+                "memoryCitation": null,
+                "delivery": null,
+                "questions": null
+              }
+            ],
+            "itemsView": "summary",
+            "status": "completed",
+            "error": null,
+            "startedAt": 1791266381,
+            "completedAt": 1791266391,
+            "durationMs": 10310
+          }
+        },
+        "emittedAtMs": 1791266391352
+      }
+    ]
+  }
+}

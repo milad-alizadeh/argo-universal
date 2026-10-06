@@ -1,5 +1,6 @@
 import type {} from './lib/reusables-compatibility';
 
+export { CommandRow, type CommandRowProps } from './components/CommandRow';
 export {
   Composer,
   type ComposerDraft,
@@ -50,6 +51,11 @@ export {
   StatusIndicator,
   type StatusIndicatorProps,
 } from './components/StatusIndicator';
+export {
+  ToolCallGroup,
+  type ToolCallGroupProps,
+} from './components/ToolCallGroup';
+export { ToolCallRow, type ToolCallRowProps } from './components/ToolCallRow';
 export {
   type ConnectionState,
   useConnection,
