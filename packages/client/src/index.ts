@@ -37,6 +37,12 @@ export {
   type ShellSection,
 } from './components/PhoneShell';
 export {
+  type PlanProposalAnswer,
+  PlanProposalCard,
+  type PlanProposalCardProps,
+} from './components/PlanProposalCard';
+export { PlanProposalRegion } from './components/PlanProposalRegion';
+export {
   ProjectHeading,
   type ProjectHeadingProps,
 } from './components/ProjectHeading';

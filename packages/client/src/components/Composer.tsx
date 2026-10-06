@@ -34,6 +34,10 @@ import {
   ComposerWorkChips,
 } from './ComposerStatus';
 import { Icon } from './Icon';
+import {
+  PlanProposalCard,
+  type PlanProposalCardProps,
+} from './PlanProposalCard';
 
 const maximumImageBytes = 20 * 1024 * 1024;
 
@@ -51,6 +55,7 @@ export interface ComposerDraft {
 
 export interface ComposerProps {
   draft: ComposerDraft;
+  planProposal?: PlanProposalCardProps;
   onDraftChange: (draft: ComposerDraft) => void;
   onAttachImages: () => void;
   onAttachCamera?: () => void;
@@ -74,6 +79,7 @@ export interface ComposerProps {
 
 export function Composer({
   draft,
+  planProposal,
   onDraftChange,
   onAttachImages,
   onAttachCamera,
@@ -159,250 +165,254 @@ export function Composer({
             )}
           </View>
         )}
-      {wide && !!status?.plan?.length && (
+      {wide && !planProposal && !!status?.plan?.length && (
         <View className="self-stretch mx-1.75 -mb-3 pb-3 rounded-t-lg border border-b-0 border-border bg-sidebar/80 shadow-composer web:backdrop-blur-composer web:backdrop-saturate-110">
           <ComposerPlan entries={status.plan} disabled={inactive} />
         </View>
       )}
-      <View className="w-full rounded-xl border border-border bg-background/80 shadow-composer web:backdrop-blur-composer web:backdrop-saturate-110 z-10">
-        {draft.images.length > 0 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerClassName="gap-3 px-4 pt-3"
-          >
-            {draft.images.map((image) => (
-              <View key={image.id} className="w-40 h-30 shrink-0">
-                <View
-                  className={cn(
-                    'group relative w-40 h-30 overflow-hidden rounded-md border bg-muted',
-                    image.bytes > maximumImageBytes
-                      ? 'border-destructive'
-                      : 'border-border',
-                  )}
-                >
+      {planProposal ? (
+        <PlanProposalCard {...planProposal} />
+      ) : (
+        <View className="w-full rounded-xl border border-border bg-background/80 shadow-composer web:backdrop-blur-composer web:backdrop-saturate-110 z-10">
+          {draft.images.length > 0 && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerClassName="gap-3 px-4 pt-3"
+            >
+              {draft.images.map((image) => (
+                <View key={image.id} className="w-40 h-30 shrink-0">
                   <View
-                    role="img"
-                    accessibilityLabel={image.name}
-                    className="w-full h-full"
+                    className={cn(
+                      'group relative w-40 h-30 overflow-hidden rounded-md border bg-muted',
+                      image.bytes > maximumImageBytes
+                        ? 'border-destructive'
+                        : 'border-border',
+                    )}
                   >
-                    <Image
-                      source={{ uri: image.uri }}
-                      aria-hidden
-                      accessibilityElementsHidden
-                      resizeMode="cover"
+                    <View
+                      role="img"
+                      accessibilityLabel={image.name}
                       className="w-full h-full"
-                    />
+                    >
+                      <Image
+                        source={{ uri: image.uri }}
+                        aria-hidden
+                        accessibilityElementsHidden
+                        resizeMode="cover"
+                        className="w-full h-full"
+                      />
+                    </View>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      disabled={inactive}
+                      className={cn(
+                        'absolute right-0 top-0 size-8 sm:size-8 active:bg-transparent dark:active:bg-transparent hover:bg-transparent dark:hover:bg-transparent web:wide:opacity-0',
+                        inactive
+                          ? 'web:wide:group-hover:opacity-50'
+                          : 'web:wide:group-hover:opacity-100 web:wide:focus-visible:opacity-100',
+                      )}
+                      accessibilityLabel={`Remove ${image.name}`}
+                      onPress={() =>
+                        onDraftChange({
+                          ...draft,
+                          images: draft.images.filter(
+                            (attached) => attached.id !== image.id,
+                          ),
+                        })
+                      }
+                    >
+                      <View className="size-4.5 items-center justify-center rounded-sm bg-background">
+                        <ComposerGlyph name="remove" size={10} />
+                      </View>
+                    </Button>
                   </View>
+                </View>
+              ))}
+            </ScrollView>
+          )}
+          {oversized.length > 0 && (
+            <ComposerWarning numberOfLines={1}>
+              Image exceeds 20 MB.
+            </ComposerWarning>
+          )}
+          {error && <ComposerWarning>{error}</ComposerWarning>}
+          <View className="px-4 pt-3 pb-2">
+            <Textarea
+              accessibilityLabel="Message"
+              placeholder={placeholder}
+              placeholderTextColorClassName="accent-muted-foreground/70"
+              value={draft.text}
+              editable={!inactive}
+              onChangeText={(text) => onDraftChange({ ...draft, text })}
+              numberOfLines={Platform.OS === 'web' ? 1 : 4}
+              scrollEnabled={Platform.OS === 'web' || textHeight >= 80}
+              onContentSizeChange={(event) =>
+                setTextHeight(
+                  Math.max(
+                    20,
+                    Math.min(80, event.nativeEvent.contentSize.height),
+                  ),
+                )
+              }
+              style={Platform.OS === 'web' ? undefined : { height: textHeight }}
+              className="min-h-5 max-h-20 web:overflow-y-auto border-0 rounded-none bg-transparent dark:bg-transparent p-0 text-sm leading-5 shadow-none web:resize-none web:focus-visible:ring-0"
+            />
+          </View>
+          <View className="flex-row items-center justify-between gap-2 pl-3.75 pr-2.5 pb-2.5">
+            <View
+              pointerEvents={inactive ? 'none' : 'auto'}
+              className={cn('min-w-0 flex-1 flex-row items-center gap-1')}
+            >
+              <ComposerPopover
+                label="Attach"
+                width={248}
+                trigger={
                   <Button
                     variant="ghost"
                     size="icon"
                     disabled={inactive}
-                    className={cn(
-                      'absolute right-0 top-0 size-8 sm:size-8 active:bg-transparent dark:active:bg-transparent hover:bg-transparent dark:hover:bg-transparent web:wide:opacity-0',
-                      inactive
-                        ? 'web:wide:group-hover:opacity-50'
-                        : 'web:wide:group-hover:opacity-100 web:wide:focus-visible:opacity-100',
-                    )}
-                    accessibilityLabel={`Remove ${image.name}`}
-                    onPress={() =>
-                      onDraftChange({
-                        ...draft,
-                        images: draft.images.filter(
-                          (attached) => attached.id !== image.id,
-                        ),
-                      })
-                    }
+                    className="h-7 sm:h-7 w-4 sm:w-4 mr-1.5 p-0 hover:bg-transparent active:bg-transparent dark:hover:bg-transparent dark:active:bg-transparent"
+                    onHoverIn={() => setAttachHighlighted(true)}
+                    onHoverOut={() => setAttachHighlighted(false)}
+                    onPressIn={() => setAttachHighlighted(true)}
+                    onPressOut={() => setAttachHighlighted(false)}
+                    hitSlop={8}
+                    accessibilityLabel="Attach images"
                   >
-                    <View className="size-4.5 items-center justify-center rounded-sm bg-background">
-                      <ComposerGlyph name="remove" size={10} />
+                    <View
+                      pointerEvents="none"
+                      className={cn(
+                        'absolute -left-1.5 top-0 size-7 rounded-md z-0',
+                        attachHighlighted && !inactive && 'bg-accent',
+                      )}
+                    />
+                    <View className="relative z-10 size-4">
+                      <Icon
+                        as={PlusIcon}
+                        className="size-4 text-muted-foreground"
+                      />
                     </View>
                   </Button>
-                </View>
-              </View>
-            ))}
-          </ScrollView>
-        )}
-        {oversized.length > 0 && (
-          <ComposerWarning numberOfLines={1}>
-            Image exceeds 20 MB.
-          </ComposerWarning>
-        )}
-        {error && <ComposerWarning>{error}</ComposerWarning>}
-        <View className="px-4 pt-3 pb-2">
-          <Textarea
-            accessibilityLabel="Message"
-            placeholder={placeholder}
-            placeholderTextColorClassName="accent-muted-foreground/70"
-            value={draft.text}
-            editable={!inactive}
-            onChangeText={(text) => onDraftChange({ ...draft, text })}
-            numberOfLines={Platform.OS === 'web' ? 1 : 4}
-            scrollEnabled={Platform.OS === 'web' || textHeight >= 80}
-            onContentSizeChange={(event) =>
-              setTextHeight(
-                Math.max(
-                  20,
-                  Math.min(80, event.nativeEvent.contentSize.height),
-                ),
-              )
-            }
-            style={Platform.OS === 'web' ? undefined : { height: textHeight }}
-            className="min-h-5 max-h-20 web:overflow-y-auto border-0 rounded-none bg-transparent dark:bg-transparent p-0 text-sm leading-5 shadow-none web:resize-none web:focus-visible:ring-0"
-          />
-        </View>
-        <View className="flex-row items-center justify-between gap-2 pl-3.75 pr-2.5 pb-2.5">
-          <View
-            pointerEvents={inactive ? 'none' : 'auto'}
-            className={cn('min-w-0 flex-1 flex-row items-center gap-1')}
-          >
-            <ComposerPopover
-              label="Attach"
-              width={248}
-              trigger={
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  disabled={inactive}
-                  className="h-7 sm:h-7 w-4 sm:w-4 mr-1.5 p-0 hover:bg-transparent active:bg-transparent dark:hover:bg-transparent dark:active:bg-transparent"
-                  onHoverIn={() => setAttachHighlighted(true)}
-                  onHoverOut={() => setAttachHighlighted(false)}
-                  onPressIn={() => setAttachHighlighted(true)}
-                  onPressOut={() => setAttachHighlighted(false)}
-                  hitSlop={8}
-                  accessibilityLabel="Attach images"
-                >
-                  <View
-                    pointerEvents="none"
-                    className={cn(
-                      'absolute -left-1.5 top-0 size-7 rounded-md z-0',
-                      attachHighlighted && !inactive && 'bg-accent',
-                    )}
-                  />
-                  <View className="relative z-10 size-4">
-                    <Icon
-                      as={PlusIcon}
-                      className="size-4 text-muted-foreground"
-                    />
-                  </View>
-                </Button>
-              }
-            >
-              {(close) => (
-                <View className="p-1">
-                  {(wide
-                    ? [
-                        {
-                          label: 'Files and Folder',
-                          icon: FolderIcon,
-                          onPress: onAttachFiles ?? onAttachImages,
-                        },
-                        {
-                          label: 'Slash Commands',
-                          icon: CodeIcon,
-                          onPress: onSelectSlashCommand,
-                        },
-                        {
-                          label: 'Goal',
-                          icon: TargetIcon,
-                          onPress: onCreateGoal,
-                        },
-                      ]
-                    : [
-                        ...(onAttachCamera
-                          ? [
-                              {
-                                label: 'Camera',
-                                glyph: 'camera' as const,
-                                onPress: onAttachCamera,
-                              },
-                            ]
-                          : []),
-                        {
-                          label: 'Photos',
-                          glyph: 'photos' as const,
-                          onPress: onAttachImages,
-                        },
-                        ...(onAttachFiles
-                          ? [
-                              {
-                                label: 'Files',
-                                glyph: 'files' as const,
-                                onPress: onAttachFiles,
-                              },
-                            ]
-                          : []),
-                      ]
-                  ).map((item) => (
-                    <Button
-                      key={item.label}
-                      variant="ghost"
-                      accessibilityLabel={item.label}
-                      disabled={!item.onPress}
-                      className="h-12 sm:h-12 wide:h-11 wide:sm:h-11 rounded-sm px-3 gap-3 justify-start"
-                      onPress={() => close(item.onPress)}
-                    >
-                      <View className="size-8 rounded-full bg-muted wide:w-5 wide:h-4.5 wide:rounded-none wide:bg-transparent items-center justify-center">
-                        {'glyph' in item ? (
-                          <ComposerGlyph name={item.glyph} size={18} />
-                        ) : (
-                          <Icon
-                            as={item.icon}
-                            className="size-4.5 text-foreground"
-                          />
-                        )}
-                      </View>
-                      <Text
-                        selectable={false}
-                        className="select-none text-sm leading-5 font-normal"
-                      >
-                        {item.label}
-                      </Text>
-                    </Button>
-                  ))}
-                </View>
-              )}
-            </ComposerPopover>
-            {configuration && (
-              <ComposerAgentModelControl
-                configuration={configuration}
-                disabled={inactive}
-              />
-            )}
-            {!wide && status && (
-              <ComposerStatusControls status={status} disabled={inactive} />
-            )}
-          </View>
-          <View className="flex-row items-center gap-2.5">
-            {configuration && (
-              <ComposerModeControl
-                configuration={configuration}
-                disabled={inactive}
-              />
-            )}
-            <Button
-              size="icon"
-              className={cn(
-                'size-7 sm:size-7 rounded-full',
-                !showStop && 'wide:shadow-none!',
-                (sending || showStop) && 'opacity-100',
-                !canSend && !sending && !showStop && 'opacity-35',
-              )}
-              accessibilityLabel={showStop ? 'Stop' : 'Send'}
-              disabled={showStop ? disabled : !canSend}
-              onPress={() => {
-                if (showStop) {
-                  onStop();
-                  return;
                 }
-                if (canSend) onSend(draft);
-              }}
-            >
-              {sendButtonContent}
-            </Button>
+              >
+                {(close) => (
+                  <View className="p-1">
+                    {(wide
+                      ? [
+                          {
+                            label: 'Files and Folder',
+                            icon: FolderIcon,
+                            onPress: onAttachFiles ?? onAttachImages,
+                          },
+                          {
+                            label: 'Slash Commands',
+                            icon: CodeIcon,
+                            onPress: onSelectSlashCommand,
+                          },
+                          {
+                            label: 'Goal',
+                            icon: TargetIcon,
+                            onPress: onCreateGoal,
+                          },
+                        ]
+                      : [
+                          ...(onAttachCamera
+                            ? [
+                                {
+                                  label: 'Camera',
+                                  glyph: 'camera' as const,
+                                  onPress: onAttachCamera,
+                                },
+                              ]
+                            : []),
+                          {
+                            label: 'Photos',
+                            glyph: 'photos' as const,
+                            onPress: onAttachImages,
+                          },
+                          ...(onAttachFiles
+                            ? [
+                                {
+                                  label: 'Files',
+                                  glyph: 'files' as const,
+                                  onPress: onAttachFiles,
+                                },
+                              ]
+                            : []),
+                        ]
+                    ).map((item) => (
+                      <Button
+                        key={item.label}
+                        variant="ghost"
+                        accessibilityLabel={item.label}
+                        disabled={!item.onPress}
+                        className="h-12 sm:h-12 wide:h-11 wide:sm:h-11 rounded-sm px-3 gap-3 justify-start"
+                        onPress={() => close(item.onPress)}
+                      >
+                        <View className="size-8 rounded-full bg-muted wide:w-5 wide:h-4.5 wide:rounded-none wide:bg-transparent items-center justify-center">
+                          {'glyph' in item ? (
+                            <ComposerGlyph name={item.glyph} size={18} />
+                          ) : (
+                            <Icon
+                              as={item.icon}
+                              className="size-4.5 text-foreground"
+                            />
+                          )}
+                        </View>
+                        <Text
+                          selectable={false}
+                          className="select-none text-sm leading-5 font-normal"
+                        >
+                          {item.label}
+                        </Text>
+                      </Button>
+                    ))}
+                  </View>
+                )}
+              </ComposerPopover>
+              {configuration && (
+                <ComposerAgentModelControl
+                  configuration={configuration}
+                  disabled={inactive}
+                />
+              )}
+              {!wide && status && (
+                <ComposerStatusControls status={status} disabled={inactive} />
+              )}
+            </View>
+            <View className="flex-row items-center gap-2.5">
+              {configuration && (
+                <ComposerModeControl
+                  configuration={configuration}
+                  disabled={inactive}
+                />
+              )}
+              <Button
+                size="icon"
+                className={cn(
+                  'size-7 sm:size-7 rounded-full',
+                  !showStop && 'wide:shadow-none!',
+                  (sending || showStop) && 'opacity-100',
+                  !canSend && !sending && !showStop && 'opacity-35',
+                )}
+                accessibilityLabel={showStop ? 'Stop' : 'Send'}
+                disabled={showStop ? disabled : !canSend}
+                onPress={() => {
+                  if (showStop) {
+                    onStop();
+                    return;
+                  }
+                  if (canSend) onSend(draft);
+                }}
+              >
+                {sendButtonContent}
+              </Button>
+            </View>
           </View>
         </View>
-      </View>
+      )}
       {wide && (configuration || status) && (
         <View
           className={cn(
