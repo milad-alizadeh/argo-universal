@@ -1,10 +1,12 @@
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  isRunning,
   readLiveServerAddress,
+  resolveHome,
   signalSupervisor,
   spawnSupervisor,
 } from './server-process';
@@ -27,6 +29,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.unstubAllEnvs();
   rmSync(home, { recursive: true, force: true });
 });
 
@@ -79,21 +82,19 @@ describe('spawnSupervisor', () => {
 
   it('stops reporting once the returned function runs', async () => {
     const reports: string[] = [];
-    let stopListening = () => {};
-    const exited = new Promise<void>((resolve) => {
-      stopListening = spawnSupervisor(
-        { home, serverDirectory: home },
-        {
-          spawned: () => {},
-          exited: (reason) => reports.push(reason),
+    let pid = 0;
+    const stopListening = spawnSupervisor(
+      { home, serverDirectory: home },
+      {
+        spawned: (value) => {
+          pid = value;
         },
-      );
-      // Node exits within this wait, as it does in the test above.
-      setTimeout(resolve, 2000);
-    });
+        exited: (reason) => reports.push(reason),
+      },
+    );
     stopListening();
 
-    await exited;
+    await expect.poll(() => isRunning(pid)).toBe(false);
 
     expect(reports).toEqual([]);
   });
@@ -105,4 +106,13 @@ describe('signalSupervisor', () => {
 
     expect(() => signalSupervisor(exited)).not.toThrow();
   });
+});
+
+it.each([
+  [undefined, join(homedir(), '.argo')],
+  ['', ''],
+  ['/tmp/server-runtime', '/tmp/server-runtime'],
+])('resolves ARGO_HOME %s to %s', (override, expected) => {
+  vi.stubEnv('ARGO_HOME', override);
+  expect(resolveHome()).toBe(expected);
 });

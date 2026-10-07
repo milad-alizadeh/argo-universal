@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import {
   type AgentAdapter,
   type AgentCapabilities,
@@ -44,7 +43,11 @@ import {
 } from './session-data';
 
 // The registry passes the adapter for the Session's Agent.
-export type SessionMachineInput = SessionInput & { adapter: AgentAdapter };
+export type SessionMachineInput = SessionInput & {
+  adapter: AgentAdapter;
+  now: () => number;
+  createId: () => string;
+};
 
 export type SessionCommand =
   | { type: 'session.prompt'; turnId: string; content: ContentBlock[] }
@@ -212,7 +215,7 @@ const sessionSetup = setup({
         { context, enqueue },
         params: { turnId: string; content: ContentBlock[] },
       ) => {
-        const startedAt = Date.now();
+        const startedAt = context.input.now();
         enqueue.assign({
           activeTurnId: params.turnId,
           activeTurnStartedAt: startedAt,
@@ -260,7 +263,7 @@ const sessionSetup = setup({
               set: {
                 status: 'ended',
                 stopReason: params.stopReason,
-                endedAt: Date.now(),
+                endedAt: context.input.now(),
                 usage: params.usage ?? null,
                 error: params.error ?? null,
               },
@@ -309,10 +312,13 @@ const sessionSetup = setup({
       assertEvent(event, 'agent.permissionRequested');
       return { permissionQueue: [...context.permissionQueue, event.request] };
     }),
-    rememberElicitation: assign(({ event }) => {
+    rememberElicitation: assign(({ context, event }) => {
       assertEvent(event, 'agent.elicitationRequested');
       return {
-        pendingElicitation: { ...event.request, requestId: randomUUID() },
+        pendingElicitation: {
+          ...event.request,
+          requestId: context.input.createId(),
+        },
       };
     }),
     answerPermission: enqueueActions(({ context, event, enqueue }) => {
@@ -365,7 +371,7 @@ const sessionSetup = setup({
     } satisfies AgentCommand),
     stopAgent: sendTo('agent', { type: 'agent.stop' } satisfies AgentCommand),
     recordCrash: enqueueActions(({ context, enqueue }) => {
-      const now = Date.now();
+      const now = context.input.now();
       const agentCrashes = [
         ...context.agentCrashes.filter((at) => at > now - crashWindowMs),
         now,
@@ -409,7 +415,7 @@ const sessionSetup = setup({
         change: {
           type: 'upsert',
           update: {
-            id: randomUUID(),
+            id: context.input.createId(),
             sessionUpdate: 'notice',
             state: 'settled',
             severity: 'warning',
@@ -592,6 +598,7 @@ export const sessionMachine = sessionSetup.createMachine({
           maxRevision: context.maxRevision,
           activityAt: context.activityAt,
           nextPosition: context.nextPosition,
+          now: context.input.now,
           findWrittenRow: (id) =>
             readWrittenRow({
               database: context.input.database,

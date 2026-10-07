@@ -101,6 +101,7 @@ describe('supervisor model', () => {
   type SupervisorEvent = EventFromLogic<typeof machine>;
 
   const input = {
+    now: () => 1000,
     home: '/unused',
     version: '1.2.3',
     startedAt: '2026-10-03T00:00:00.000Z',
@@ -176,9 +177,7 @@ describe('supervisor model', () => {
     const actual = supervisor.getSnapshot();
     expect(actual.value).toEqual(expected.value);
     expect(actual.status).toBe(expected.status);
-    expect(actual.context.crashTimes).toHaveLength(
-      expected.context.crashTimes.length,
-    );
+    expect(actual.context.crashTimes).toEqual(expected.context.crashTimes);
   };
   const ownAddress = {
     port: 7337,
@@ -282,6 +281,7 @@ describe('supervisor', () => {
       }),
       {
         input: {
+          now: () => Date.now(),
           home,
           version: '1.2.3',
           startedAt: '2026-10-03T00:00:00.000Z',

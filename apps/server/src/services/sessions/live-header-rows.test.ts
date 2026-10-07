@@ -131,7 +131,12 @@ it('keeps the earlier running Tool call after writer and memory overlays complet
         writeBatch: fromPromise(() => new Promise<void>(() => {})),
       },
     }),
-    { input: { database } },
+    {
+      input: {
+        now: () => Date.now(),
+        database,
+      },
+    },
   ).start();
   onTestFinished(() => {
     writer.stop();

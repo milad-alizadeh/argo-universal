@@ -1,8 +1,9 @@
 {
   "extends": "@repo/typescript/base.json",
-  // AbortSignal is a web global that tRPC subscriptions use; DOM types give it without Node APIs.
+  // DOM supplies subscription globals; Node types check the isolated server-runtime entry.
   "compilerOptions": {
-    "lib": ["es2025", "DOM"]
+    "lib": ["es2025", "DOM"],
+    "types": ["node"]
   },
   "include": ["src", "mocks"]
 }

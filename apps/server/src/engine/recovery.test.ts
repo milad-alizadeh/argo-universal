@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import {
   mkdirSync,
   mkdtempSync,
@@ -60,6 +61,8 @@ const startEngine = async () => {
     }),
     {
       input: {
+        now: () => Date.now(),
+        createId: randomUUID,
         home,
         port: 0,
         version: 'test',
