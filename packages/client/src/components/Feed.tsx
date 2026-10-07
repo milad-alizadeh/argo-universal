@@ -25,6 +25,7 @@ import { CollapsibleLayoutSyncContext } from '#primitives/collapsible';
 import { Text } from '#primitives/text';
 import { type FeedViewItem, feedItemKey } from '../feed/feed-view';
 import { listTestIdProps } from '../lib/list-test-id';
+import { motionDuration } from '../lib/motion';
 import { useWide } from '../navigation/use-wide';
 import { FeedItem, isDrawnFeedItem } from './FeedItem';
 import { Icon } from './Icon';
@@ -89,8 +90,8 @@ function JumpToLatest({
 }) {
   return (
     <Animated.View
-      entering={FadeIn.duration(150)}
-      exiting={FadeOut.duration(150)}
+      entering={FadeIn.duration(motionDuration.tooltipEnter)}
+      exiting={FadeOut.duration(motionDuration.exit)}
       className="absolute bottom-16 self-center"
     >
       <Pressable

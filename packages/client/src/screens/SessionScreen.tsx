@@ -50,6 +50,9 @@ function findLiveToolCall(
   );
 }
 
+// How far above the Composer the Feed fades out; a phone starts it higher, so the pills above the Composer sit on a quiet surface.
+const composerFadeHeight = { phone: 88, wide: 64 };
+
 // One Session: its header, its Feed, and the Composer pinned below. A new id starts every piece of state over.
 export function SessionScreen({ id, now }: SessionScreenProps) {
   return <SessionView key={id} sessionId={id} now={now} />;
@@ -101,7 +104,7 @@ function SessionView({ sessionId, now }: { sessionId: string; now?: number }) {
   if (!ready || !snapshot || !feedView) return <Screen edges={['bottom']} />;
 
   const turnRunning = snapshot.state !== 'idle';
-  const fadeHeight = wide ? 64 : 88;
+  const fadeHeight = wide ? composerFadeHeight.wide : composerFadeHeight.phone;
   const startedAt = snapshot.liveHeader?.startedAt ?? null;
   let sendError: string | undefined;
   if (promptSession.error)
@@ -140,7 +143,6 @@ function SessionView({ sessionId, now }: { sessionId: string; now?: number }) {
             pointerEvents="none"
             className="absolute inset-x-0 top-16 bottom-0 bg-card"
           />
-          {/* On a phone the fade starts higher, so the pills above the Composer sit on a quiet surface. */}
           <View
             pointerEvents="none"
             className="absolute inset-x-0 -top-6 wide:top-0"
