@@ -9,6 +9,7 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { setTimeout as wait } from 'node:timers/promises';
 import { type AgentAdapter, agentAdapters } from '@repo/agents';
 import { appRouter, type Services } from '@repo/api';
 import type {
@@ -41,6 +42,9 @@ import { engineMachine } from './machine';
 
 // The longest the teardown waits for the Engine's graceful stop.
 const gracefulStopLimit = 5_000;
+
+// A crash Notice can land after the Session first reports idle.
+const cancellationSettleWait = 200;
 
 // An Engine on a mock Agent; without `database` it opens and closes its real database in `home`. It stops itself when the test ends.
 function startEngine({
@@ -1341,6 +1345,16 @@ it.each(agentAdapters)(
       pendingPermission: null,
       pendingElicitation: null,
     });
+    await wait(cancellationSettleWait);
+    const { rows } = await caller.feed.page({ sessionId, direction: 'tail' });
+    expect(rows).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sessionUpdate: 'notice',
+          title: 'The Agent stopped unexpectedly',
+        }),
+      ]),
+    );
     await expect(
       caller.session.answerPermission({
         sessionId,
@@ -1393,6 +1407,16 @@ it.each(agentAdapters)(
       pendingPermission: null,
       pendingElicitation: null,
     });
+    await wait(cancellationSettleWait);
+    const { rows } = await caller.feed.page({ sessionId, direction: 'tail' });
+    expect(rows).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sessionUpdate: 'notice',
+          title: 'The Agent stopped unexpectedly',
+        }),
+      ]),
+    );
     await expect(
       caller.session.answerElicitation({
         sessionId,

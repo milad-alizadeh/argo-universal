@@ -233,7 +233,10 @@ function playTurn() {
 
 function answer(subtype: string | undefined) {
   if (subtype === undefined) return;
-  if (subtype !== 'initialize') return recordedAnswers.get(subtype);
+  if (subtype !== 'initialize')
+    return (
+      recordedAnswers.get(subtype) ?? (subtype === 'interrupt' ? {} : undefined)
+    );
   // The recording's answer to `initialize` is the CLI's own, matched by request id.
   const response =
     (recordedAnswers.get(subtype) as

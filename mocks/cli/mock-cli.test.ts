@@ -19,6 +19,7 @@ it('gives every scenario field its default when the variable is absent', () => {
     turnResponseAfterNextStart: false,
     requestBeforeStartResponse: false,
     completionBeforeResponse: false,
+    interruptError: 'none',
     notificationsFirst: false,
     account: 'subscription',
     transcriptFile: null,
