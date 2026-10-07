@@ -100,7 +100,6 @@
       // Debt list: files with a function over 120 lines, held at 250; a pull request adds an entry only with a one-line reason the reviewer accepts.
       "includes": [
         "apps/server/src/services/feed/feed-service.ts", // createFeedService 152: subscribe watches the Session snapshot itself until sessions offers a watcher.
-        "apps/server/src/services/sessions/session-list-reader.ts", // createSessionListReader 202, readAll 190, row map 139: shrinks when the list rules become a pure projection.
         "apps/server/src/services/sessions/session-service.ts", // createSessionService 170: the service's verbs share one closure, and each verb is short.
         "packages/agents/claude/connect.ts", // connect 199: one CLI process and its pending requests; the request bookkeeping moves to a helper in this file.
         "packages/agents/codex/connect.ts", // connect 183: one app server connection and its Turn records in one closure.
@@ -125,7 +124,6 @@
       // Debt list: files with a function over cognitive complexity 25, held at 65; a pull request adds an entry only with a one-line reason the reviewer accepts.
       "includes": [
         "apps/server/src/services/sessions/live-header.ts", // toolKindLabel 30: one label per tool kind, which stays as it is.
-        "apps/server/src/services/sessions/session-list-reader.ts", // row map 34: drops when the list rules become a pure, table-tested projection.
         "packages/agents/claude/connect.ts", // run 29: one case per Agent command.
         "packages/agents/codex/connect.ts", // run 34: one case per Agent command.
         "packages/agents/codex/to-agent-events.ts", // toAgentEvents 30: one case per vendor notification, which stays as it is.
