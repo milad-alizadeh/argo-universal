@@ -709,9 +709,16 @@ export const CreatedCheckoutIsReadOnly: Story = {
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       await settleViewport();
-      const name = canvas.getByText('created-worktree', { exact: true });
-      await expect(name.scrollWidth).toBeLessThanOrEqual(name.clientWidth);
-      await userEvent.click(name);
+      if (width < 720) {
+        await expect(
+          canvas.queryByText('created-worktree', { exact: true }),
+        ).not.toBeInTheDocument();
+      } else {
+        const name = canvas.getByText('created-worktree', { exact: true });
+        await expect(name).toBeVisible();
+        await expect(name.scrollWidth).toBeLessThanOrEqual(name.clientWidth);
+        await userEvent.click(name);
+      }
       await expect(
         canvas.queryByRole('button', { name: 'Checkout' }),
       ).not.toBeInTheDocument();
@@ -742,7 +749,15 @@ export const SessionControls: Story = {
       await expect(
         canvas.queryByRole('button', { name: 'Checkout' }),
       ).not.toBeInTheDocument();
-      await expect(canvas.getByText('session', { exact: true })).toBeVisible();
+      if (width < 720) {
+        await expect(
+          canvas.queryByText('session', { exact: true }),
+        ).not.toBeInTheDocument();
+      } else {
+        await expect(
+          canvas.getByText('session', { exact: true }),
+        ).toBeVisible();
+      }
       await expect(
         canvas.queryByRole('button', { name: 'Choose Agent' }),
       ).not.toBeInTheDocument();
@@ -1028,7 +1043,9 @@ export const ResponsiveLayout: Story = {
         await expect(work.right).toBeLessThan(bounds.right);
         await expect(work.top).toBeGreaterThanOrEqual(tray.top);
         await expect(work.bottom).toBeLessThanOrEqual(bounds.top);
-        await expect(canvas.getByText('session')).toBeVisible();
+        await expect(
+          canvas.queryByText('session', { exact: true }),
+        ).not.toBeInTheDocument();
       } else {
         const footer = card.parentElement?.lastElementChild;
         if (!footer) throw new Error('Composer footer is missing.');

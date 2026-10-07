@@ -12,7 +12,7 @@ import {
 } from '#lib/elicitation-schema';
 import { cn } from '#lib/utils';
 import { Text } from '#primitives/text';
-import { useWide } from '../navigation/use-wide';
+import { useContentWide } from './ContentLayout';
 import { ElicitationField } from './ElicitationField';
 import { Icon } from './Icon';
 import { AlreadyAnswered, RequestAction, RequestCard } from './RequestCard';
@@ -46,7 +46,7 @@ function RequestForm({
   alreadyAnswered,
   error: responseError,
 }: ElicitationFormProps) {
-  const wide = useWide();
+  const wide = useContentWide();
   const schema = useMemo(
     () => createElicitationSchema(request.requestedSchema),
     [request.requestedSchema],

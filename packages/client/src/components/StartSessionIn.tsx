@@ -13,12 +13,12 @@ import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
 import { Input } from '#primitives/input';
 import { Text } from '#primitives/text';
-import { useWide } from '../navigation/use-wide';
 import {
   CheckoutContents,
   type ComposerConfigurationProps,
 } from './ComposerConfiguration';
 import { ComposerPopover } from './ComposerPopover';
+import { useContentWide } from './ContentLayout';
 import { Icon } from './Icon';
 
 export interface StartSessionInProps {
@@ -28,12 +28,12 @@ export interface StartSessionInProps {
   projects: ProjectInfo[];
   projectId: string;
   onProjectChange: (projectId: string) => void;
-  // A phone draws the checkout here; a wide window keeps it in the Composer's envelope.
+  // A compact main column draws the checkout here; a wide column keeps it in the Composer's envelope.
   checkout: ComposerConfigurationProps['checkout'];
   disabled?: boolean;
 }
 
-// Where a New Session will run: the Server, the Project and, on a phone, the checkout.
+// Where a New Session will run: the Server, the Project and, in compact content, the checkout.
 export function StartSessionIn({
   serverName,
   serverConnected,
@@ -43,7 +43,7 @@ export function StartSessionIn({
   checkout,
   disabled = false,
 }: StartSessionInProps) {
-  const wide = useWide();
+  const wide = useContentWide();
   const project = projects.find((entry) => entry.id === projectId);
   const projectControl = (
     <ComposerPopover

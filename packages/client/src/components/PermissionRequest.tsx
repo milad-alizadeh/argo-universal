@@ -7,7 +7,7 @@ import { Platform, View } from 'react-native';
 import { cn } from '#lib/utils';
 import { Text } from '#primitives/text';
 import { Textarea } from '#primitives/textarea';
-import { useWide } from '../navigation/use-wide';
+import { useContentWide } from './ContentLayout';
 import { Icon } from './Icon';
 import { AlreadyAnswered, RequestAction, RequestCard } from './RequestCard';
 import { useRequestShortcuts } from './use-request-shortcuts';
@@ -40,7 +40,7 @@ export function PermissionRequest({
   alreadyAnswered,
   error,
 }: PermissionRequestProps) {
-  const wide = useWide();
+  const wide = useContentWide();
   const denying = denialMessage !== undefined;
   const inactive = submitting || !!alreadyAnswered;
   const answerLabel = denying ? 'Deny' : 'Allow once';
@@ -128,7 +128,9 @@ export function PermissionRequest({
           <>
             <RequestAction
               disabled={inactive}
-              className="flex-1 bg-secondary wide:flex-none wide:bg-transparent"
+              className={
+                wide ? 'flex-none bg-transparent' : 'flex-1 bg-secondary'
+              }
               onPress={() => onDenialMessageChange(denying ? undefined : '')}
             >
               {denying ? 'Back' : 'Deny'}
@@ -136,7 +138,7 @@ export function PermissionRequest({
             <RequestAction
               primary
               disabled={inactive}
-              className="flex-1 wide:flex-none"
+              className={wide ? 'flex-none' : 'flex-1'}
               onPress={answer}
             >
               {submitting ? 'Sending…' : answerLabel}
