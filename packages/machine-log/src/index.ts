@@ -62,7 +62,7 @@ function actorId(actor: ActorRefLike) {
 }
 
 export function createMachineLog(options: MachineLogOptions) {
-  if (!options.enabled) return undefined;
+  if (!options.enabled) return;
   let failed = false;
   return (inspection: InspectionEvent) => {
     if (

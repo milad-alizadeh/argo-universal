@@ -35,13 +35,19 @@ async function settleViewport(width: number) {
   );
 }
 
-async function expectType(
-  element: HTMLElement,
-  family: string,
-  size: string,
-  lineHeight: string,
+async function expectType({
+  element,
+  family,
+  size,
+  lineHeight,
   weight = '400',
-) {
+}: {
+  element: HTMLElement;
+  family: string;
+  size: string;
+  lineHeight: string;
+  weight?: string;
+}) {
   const style = getComputedStyle(element);
   await expect(style.fontFamily).toContain(family);
   await expect(style.fontSize).toBe(size);
@@ -57,31 +63,46 @@ function markdownPlay(heading: string, firstHeader: string) {
   }) => {
     for (const width of widths) {
       await settleViewport(width);
-      await expectType(
-        canvas.getByText(heading),
-        'SF Pro Text',
-        '16px',
-        '24px',
-        '600',
-      );
+      await expectType({
+        element: canvas.getByText(heading),
+        family: 'SF Pro Text',
+        size: '16px',
+        lineHeight: '24px',
+        weight: '600',
+      });
       const link = canvas.getByRole('link', { name: 'ADR 0007' });
-      await expectType(link, 'SF Pro Text', '14px', '22px');
+      await expectType({
+        element: link,
+        family: 'SF Pro Text',
+        size: '14px',
+        lineHeight: '22px',
+      });
       await expect(getComputedStyle(link).textDecorationLine).toBe('underline');
-      await expectType(
-        canvas.getAllByText('feed.rows')[0] as HTMLElement,
-        'SF Mono',
-        '12px',
-        '18px',
-      );
-      await expectType(canvas.getByText('1.'), 'SF Pro Text', '14px', '22px');
-      await expectType(canvas.getByText('tsx'), 'SF Mono', '12px', '20px');
-      await expectType(
-        canvas.getByText(firstHeader),
-        'SF Pro Text',
-        '14px',
-        '20px',
-        '600',
-      );
+      await expectType({
+        element: canvas.getAllByText('feed.rows')[0] as HTMLElement,
+        family: 'SF Mono',
+        size: '12px',
+        lineHeight: '18px',
+      });
+      await expectType({
+        element: canvas.getByText('1.'),
+        family: 'SF Pro Text',
+        size: '14px',
+        lineHeight: '22px',
+      });
+      await expectType({
+        element: canvas.getByText('tsx'),
+        family: 'SF Mono',
+        size: '12px',
+        lineHeight: '20px',
+      });
+      await expectType({
+        element: canvas.getByText(firstHeader),
+        family: 'SF Pro Text',
+        size: '14px',
+        lineHeight: '20px',
+        weight: '600',
+      });
       await expect(canvas.queryByTestId('streaming-caret')).toBeNull();
     }
   };

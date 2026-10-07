@@ -80,7 +80,7 @@ export function startLineProcess(executable: string, args: string[]) {
         const end = output.findIndex(
           (message, index) => index >= readCount && matches(message),
         );
-        if (end === -1) return undefined;
+        if (end === -1) return;
         const messages = output.slice(readCount, end + 1);
         readCount = end + 1;
         return messages;

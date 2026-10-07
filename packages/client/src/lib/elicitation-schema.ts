@@ -23,7 +23,7 @@ export function elicitationChoices(property: ElicitationPropertySchema) {
     return 'anyOf' in property.items
       ? property.items.anyOf
       : property.items.enum.map((value) => ({ const: value, title: value }));
-  return undefined;
+  return;
 }
 
 function errorMessage(error: ErrorObject, property: ElicitationPropertySchema) {
@@ -101,7 +101,7 @@ export function createElicitationSchema(
     validate: ({ value }: { value: ElicitationFormValues }) => {
       const errors: Record<string, string> = {};
       if (!check) return { form: schemaError, fields: errors };
-      if (check(content(value))) return undefined;
+      if (check(content(value))) return;
       for (const error of check.errors ?? []) {
         const name =
           error.keyword === 'required'

@@ -152,9 +152,7 @@ const start = () => {
 };
 
 // A second launch hands over to the first one, which shows its window, and quits.
-if (!app.requestSingleInstanceLock()) {
-  app.quit();
-} else {
+if (app.requestSingleInstanceLock()) {
   app.on('second-instance', () => {
     const window = BrowserWindow.getAllWindows()[0];
     if (!window) return;
@@ -164,6 +162,8 @@ if (!app.requestSingleInstanceLock()) {
   });
 
   void app.whenReady().then(start);
+} else {
+  app.quit();
 }
 
 // Quit waits for the Server machine, which stops the Supervisor only if this app started it.

@@ -218,7 +218,7 @@ function playTurn() {
 }
 
 function answer(subtype: string | undefined) {
-  if (subtype === undefined) return undefined;
+  if (subtype === undefined) return;
   if (subtype !== 'initialize') return recordedAnswers.get(subtype);
   const response = recordedAnswers.get(subtype) ?? initializeResponse;
   // A CLI nobody signed in to still starts, with an account that has no subscription.

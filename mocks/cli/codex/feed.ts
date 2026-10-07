@@ -45,7 +45,7 @@ export function recordedPrompt(name: string) {
     completed?.method !== 'item/completed' ||
     completed.params.item.type !== 'userMessage'
   )
-    return undefined;
+    return;
   return completed.params.item.content.flatMap((block) => {
     if (block.type === 'text')
       return [{ type: 'text' as const, text: block.text }];

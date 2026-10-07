@@ -31,13 +31,19 @@ const FeedPage = z.object({
 });
 
 // Calls a tRPC query over HTTP, as any client may, and checks the answer's shape.
-async function query<Output>(
-  page: Page,
-  httpUrl: string,
-  procedure: string,
-  input: unknown,
-  output: z.ZodType<Output>,
-) {
+async function query<Output>({
+  page,
+  httpUrl,
+  procedure,
+  input,
+  output,
+}: {
+  page: Page;
+  httpUrl: string;
+  procedure: string;
+  input: unknown;
+  output: z.ZodType<Output>;
+}) {
   // A reused keep-alive socket can meet the Server closing it after 5 s idle; Playwright retries only ECONNRESET.
   const response = await page.request.get(
     `${httpUrl}/trpc/${procedure}?input=${encodeURIComponent(JSON.stringify(input))}`,
@@ -50,7 +56,13 @@ async function query<Output>(
 }
 
 const readAgents = (page: Page, httpUrl: string) =>
-  query(page, httpUrl, 'agents.list', {}, AgentsList);
+  query({
+    page,
+    httpUrl,
+    procedure: 'agents.list',
+    input: {},
+    output: AgentsList,
+  });
 
 async function readAgent(page: Page, httpUrl: string, agent: string) {
   const found = (await readAgents(page, httpUrl)).find(
@@ -63,13 +75,13 @@ async function readAgent(page: Page, httpUrl: string, agent: string) {
 // The Session's Session updates, newest page, read from the Server.
 const readFeed = async (page: Page, httpUrl: string, sessionId: string) =>
   (
-    await query(
+    await query({
       page,
       httpUrl,
-      'feed.page',
-      { sessionId, direction: 'tail' },
-      FeedPage,
-    )
+      procedure: 'feed.page',
+      input: { sessionId, direction: 'tail' },
+      output: FeedPage,
+    })
   ).rows;
 
 async function chooseAgent(page: Page, label: string) {
