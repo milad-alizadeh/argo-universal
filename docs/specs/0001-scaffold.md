@@ -383,7 +383,7 @@ The Session's current Plan is not stored. A query reads it from the newest `plan
 |---|---|
 | `pnpm dev` | `turbo dev`: the Server (Supervisor with the Engine under Node's `--watch`), the universal app (`expo start` for web and Metro), and desktop. Desktop waits until `server.json` exists, the Server's `system.info` answers over HTTP, and the Expo web URL answers. |
 | `pnpm dev:storybook` | web Storybook only |
-| `pnpm quality` | `sherif`, `biome check --error-on-warnings`, `tsc` in every package, Vitest, and the Storybook Vitest tests |
+| `pnpm quality` | `sherif`, `biome check --error-on-warnings`, the comment check, `tsc` in every package, Vitest, and the Storybook Vitest tests |
 | `pnpm test:e2e` | Playwright `web` project against the Expo web export |
 | `pnpm test:e2e:electron` | Playwright `electron` project |
 | `pnpm db:generate` | Drizzle migration generation in `packages/db` |

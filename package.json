@@ -15,7 +15,7 @@
     "postinstall": "sherif",
     "quality:dead-code": "knip --no-progress --max-issues 0",
     "quality:duplication": "jscpd --config .jscpd.json apps packages tooling tools e2e mocks",
-    "quality": "sherif && biome check --error-on-warnings . && turbo run check-types test --continue=dependencies-successful",
+    "quality": "sherif && biome check --error-on-warnings . && node tools/check-comments.mts && turbo run check-types test --continue=dependencies-successful",
     "sherif": "sherif",
     "test": "vitest run",
     "test:e2e": "turbo run test:web --filter=@repo/e2e",
