@@ -23,11 +23,13 @@ import { cn } from '#lib/utils';
 
 const OpenContext = createContext(false);
 
-// Set inside a list that places rows from their measured size, such as the Feed: the height then steps from JS and re-measures the row each frame, so the rows below move with it.
+// Set inside a list that places rows from their measured size, such as the Feed: the height then steps from JS and resizes the row each frame, so the rows below move with it.
 interface CollapsibleLayoutSync {
   syncLayout: () => void;
   // Called with true as a collapsible starts to open or close and false once it stops, so the list can tell a reader's toggle from new content.
   onMotionChange: (moving: boolean) => void;
+  // Grows the row in the list by a height, in the same frame the content steps, so the rows below keep pace.
+  grow: (height: number) => void;
 }
 const CollapsibleLayoutSyncContext =
   createContext<CollapsibleLayoutSync | null>(null);
@@ -96,6 +98,11 @@ function CollapsibleContent({
 }
 
 const duration = 200;
+// Tall content takes longer, so each frame moves the rows below a short way.
+const durationPerPoint = 0.6;
+const longestDuration = 400;
+const durationFor = (height: number) =>
+  Math.min(longestDuration, Math.max(duration, height * durationPerPoint));
 // Reanimated's default `withTiming` curve, so both paths move alike.
 const easeInOut = Easing.inOut(Easing.quad);
 
@@ -103,7 +110,7 @@ function LayoutSyncedContent({
   children,
   className,
   forceMount,
-  layoutSync: { syncLayout, onMotionChange },
+  layoutSync: { syncLayout, onMotionChange, grow },
   ...props
 }: Omit<
   React.ComponentProps<typeof CollapsiblePrimitive.Content>,
@@ -124,7 +131,8 @@ function LayoutSyncedContent({
       return;
     }
     const from = latestProgress.current;
-    const remainingDuration = Math.abs(target - from) * duration;
+    const remainingDuration =
+      Math.abs(target - from) * durationFor(contentHeight);
     if (!remainingDuration) {
       setProgress(target);
       return;
@@ -137,7 +145,10 @@ function LayoutSyncedContent({
         (time - startTime) / remainingDuration,
         1,
       );
-      setProgress(from + (target - from) * easeInOut(elapsedFraction));
+      const nextProgress = from + (target - from) * easeInOut(elapsedFraction);
+      grow(contentHeight * (nextProgress - latestProgress.current));
+      latestProgress.current = nextProgress;
+      setProgress(nextProgress);
       if (elapsedFraction < 1) frame = requestAnimationFrame(step);
       else {
         moving = false;
@@ -148,16 +159,22 @@ function LayoutSyncedContent({
       cancelAnimationFrame(frame);
       if (moving) onMotionChange(false);
     };
-  }, [open, contentHeight, reducedMotion, onMotionChange]);
+  }, [open, contentHeight, reducedMotion, onMotionChange, grow]);
   // Before paint, so the list moves the rows below in the same frame.
   useLayoutEffect(() => {
     syncLayout();
   }, [progress, contentHeight, syncLayout]);
   if (!open && progress === 0 && !forceMount) return null;
+  // Open and still, the content takes its own height, so a collapsible nested in it resizes the row in the same layout.
+  const settled = open && progress === 1;
   return (
     <CollapsiblePrimitive.Content {...props} forceMount asChild>
       <View
-        style={{ height: contentHeight * progress, overflow: 'hidden' }}
+        style={
+          settled
+            ? undefined
+            : { height: contentHeight * progress, overflow: 'hidden' }
+        }
         pointerEvents={open ? 'auto' : 'none'}
         aria-hidden={!open}
         accessibilityElementsHidden={!open}
@@ -165,7 +182,7 @@ function LayoutSyncedContent({
       >
         <View
           className={className}
-          style={{ position: 'absolute', top: 0, left: 0, right: 0 }}
+          style={settled ? undefined : movingContentStyle}
           onLayout={(event) =>
             setContentHeight(event.nativeEvent.layout.height)
           }
@@ -176,6 +193,13 @@ function LayoutSyncedContent({
     </CollapsiblePrimitive.Content>
   );
 }
+
+const movingContentStyle = {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+} as const;
 
 function NativeContent({
   children,

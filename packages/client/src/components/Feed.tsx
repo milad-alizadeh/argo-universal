@@ -145,18 +145,26 @@ const columnClassName = 'w-full max-w-composer self-center';
 const fill = { flex: 1 };
 const fillShrinkable = { flex: 1, minHeight: 0 };
 
-// A row's collapsibles re-measure it each frame they move, so the list keeps the rows below in step.
+// A row's collapsibles resize it in the list each frame they move, so the rows below move in the same frame.
 function FeedRow({
+  itemKey,
   onMotionChange,
+  onGrow,
   children,
 }: {
+  itemKey: string;
   onMotionChange: (moving: boolean) => void;
+  onGrow: (itemKey: string, height: number) => void;
   children: ReactNode;
 }) {
   const syncLayout = useSyncLayout();
   const layoutSync = useMemo(
-    () => ({ syncLayout, onMotionChange }),
-    [syncLayout, onMotionChange],
+    () => ({
+      syncLayout,
+      onMotionChange,
+      grow: (height: number) => onGrow(itemKey, height),
+    }),
+    [syncLayout, onMotionChange, onGrow, itemKey],
   );
   return (
     <CollapsibleLayoutSyncContext.Provider value={layoutSync}>
@@ -285,6 +293,12 @@ function FeedList({
       setMovingCollapsibles((count) => count - 1);
     });
   }, []);
+  // Called in the same frame as the collapsible's own height, so React commits the row and the rows below together; Legend's measure lands a frame late on native.
+  const growRow = useCallback((itemKey: string, height: number) => {
+    const size = list.current?.getState().sizes.get(itemKey);
+    if (size === undefined) return;
+    list.current?.setItemSize(itemKey, { height: size + height, width: 0 });
+  }, []);
 
   // Legend keeps the first row fully in view still, so content added inside a row above the reader's line, the middle of the view, would push what they read down.
   const growthStarts = useRef(new Map<string, number>());
@@ -336,7 +350,11 @@ function FeedList({
   );
   const renderItem = useCallback(
     ({ item }: LegendListRenderItemProps<FeedEntry>) => (
-      <FeedRow onMotionChange={onMotionChange}>
+      <FeedRow
+        itemKey={entryKey(item)}
+        onMotionChange={onMotionChange}
+        onGrow={growRow}
+      >
         {item.type === 'live_header' ? (
           <LiveHeader
             liveHeader={item.liveHeader}
@@ -348,7 +366,7 @@ function FeedList({
         )}
       </FeedRow>
     ),
-    [imageUrl, now, onMotionChange],
+    [imageUrl, now, onMotionChange, growRow],
   );
 
   return (
