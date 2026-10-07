@@ -8,6 +8,7 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { expectEveryTransitionWalked } from '@repo/vitest/model-coverage';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   type Actor,
@@ -18,10 +19,8 @@ import {
   type SnapshotFrom,
 } from 'xstate';
 import {
-  adjacencyMapToArray,
   type DirectedGraphNode,
   type EventExecutor,
-  getAdjacencyMap,
   TestModel,
   type TestPath,
   toDirectedGraph,
@@ -249,31 +248,12 @@ describe('supervisor model', () => {
   });
 
   it('the generated paths walk every transition', () => {
-    const key = (
-      from: SupervisorSnapshot,
-      type: string,
-      to: SupervisorSnapshot,
-    ) => `${JSON.stringify(from.value)} ${type} ${JSON.stringify(to.value)}`;
-    const transitions = adjacencyMapToArray(
-      getAdjacencyMap(machine, model.options),
-    ).map(({ state, event, nextState }) => key(state, event.type, nextState));
-    const walked = new Set(
-      [...shortestPaths, ...simplePaths].flatMap((path) =>
-        path.steps
-          .slice(1)
-          .map((step, index) =>
-            key(
-              path.steps[index]?.state ?? expect.unreachable(),
-              step.event.type,
-              step.state,
-            ),
-          ),
-      ),
-    );
-    expect(transitions.length).toBeGreaterThan(0);
-    expect(transitions.filter((transition) => !walked.has(transition))).toEqual(
-      [],
-    );
+    expectEveryTransitionWalked({
+      models: [model],
+      paths: [...shortestPaths, ...simplePaths],
+      stateKey: (snapshot) => JSON.stringify(snapshot.value),
+      eventKey: (event) => event.type,
+    });
   });
 });
 

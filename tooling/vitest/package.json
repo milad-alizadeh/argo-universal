@@ -4,9 +4,14 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./model-coverage": "./model-coverage.ts",
     "./node": "./node.ts"
   },
+  "scripts": {
+    "test": "vitest run"
+  },
   "dependencies": {
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "xstate": "catalog:"
   }
 }
