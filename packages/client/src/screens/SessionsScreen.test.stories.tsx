@@ -1,5 +1,6 @@
 import {
   activeSessions,
+  agentsList,
   archivedSessions,
   projectsList,
   sessionRows,
@@ -575,3 +576,96 @@ function ReconnectingSessionsScreen() {
   reconnectConnection = useConnection();
   return <DesktopLayout destination={{ to: 'sessions' }}>{null}</DesktopLayout>;
 }
+
+const liveRetryCatalogs = agentsList.map((agent) => {
+  const row = activeSessions.sessions.find(
+    (session) =>
+      session.agent === agent.agent && session.title === sessionRows.idle.title,
+  );
+  if (!row)
+    throw new Error(
+      `Recorded catalog needs an idle Session for ${agent.label}.`,
+    );
+  return { row, updated: { ...row, title: `${row.title} — resumed` } };
+});
+
+function liveUpdatesRetry(width: number, agentIndex: 0 | 1): Story {
+  const catalog = liveRetryCatalogs[agentIndex];
+  if (!catalog) throw new Error('Recorded catalog needs both Agents.');
+  let calls = 0;
+  const mocks = {
+    ...sessionListMocks,
+    'session.list': () => ({
+      sessions: [calls > 1 ? catalog.updated : catalog.row],
+      nextCursor: null,
+    }),
+    'session.listUpdates': async function* () {
+      calls += 1;
+      if (calls === 1) fails('The live stream ended')();
+      yield { type: 'changed' as const, session: catalog.updated };
+    },
+  };
+  return {
+    beforeEach: () => {
+      calls = 0;
+    },
+    parameters: { trpc: mocks },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
+      const alert = await canvas.findByRole('alert');
+      await expect(alert).toHaveTextContent('Live updates stopped');
+      await expect(alert).toHaveTextContent(
+        'The Sessions shown may be out of date.',
+      );
+      await expect(canvas.getByText(catalog.row.title)).toBeVisible();
+      await expect(canvas.queryByText("Couldn't load Sessions")).toBeNull();
+      await expect(calls).toBe(1);
+      await userEvent.click(
+        within(alert).getByRole('button', { name: 'Retry' }),
+      );
+      await expect(
+        await canvas.findByText(catalog.updated.title),
+      ).toBeVisible();
+      await expect(canvas.queryByRole('alert')).toBeNull();
+      await expect(canvas.queryByText(catalog.row.title)).toBeNull();
+      await expect(calls).toBe(2);
+    },
+  };
+}
+export const LiveUpdatesRetryPhoneFirstAgent = liveUpdatesRetry(
+  layoutWidths.phone,
+  0,
+);
+export const LiveUpdatesRetryPhoneSecondAgent = liveUpdatesRetry(
+  layoutWidths.phone,
+  1,
+);
+export const LiveUpdatesRetryWideFirstAgent = liveUpdatesRetry(
+  layoutWidths.wide,
+  0,
+);
+export const LiveUpdatesRetryWideSecondAgent = liveUpdatesRetry(
+  layoutWidths.wide,
+  1,
+);
+
+export const OfflineDoesNotShowLiveUpdatesStopped: Story = {
+  parameters: {
+    connection: 'offline',
+    trpc: {
+      ...sessionListMocks,
+      'session.listUpdates': fails('The live stream ended'),
+    },
+  },
+  play: async ({ canvas }) =>
+    eachLayout(async () => {
+      await expect(
+        (await canvas.findAllByText(sessionRows.idle.title))[0],
+      ).toBeVisible();
+      await expect(canvas.getByRole('status')).toHaveTextContent(
+        'The Server is offline.',
+      );
+      await expect(canvas.queryByText('Live updates stopped')).toBeNull();
+      await expect(canvas.queryByRole('alert')).toBeNull();
+    }),
+};

@@ -42,3 +42,36 @@ export function insertSession(
     })
     .run();
 }
+
+// Counts executed reads at the real SQLite query port without replacing their results.
+export function countDatabaseReads(database: Database) {
+  const metrics = { queries: 0, rows: 0, sessionReads: 0 };
+  const chain = new Set(['select', 'from', 'where', 'orderBy', 'limit']);
+  const counted = <Value extends object>(
+    value: Value,
+    fromSession = false,
+  ): Value =>
+    new Proxy(value, {
+      get(target, property, receiver) {
+        const member = Reflect.get(target, property, receiver);
+        if (typeof member !== 'function') return member;
+        return (...arguments_: unknown[]) => {
+          const result = Reflect.apply(member, target, arguments_);
+          if (property === 'all' || property === 'get') {
+            metrics.queries += 1;
+            if (fromSession) metrics.sessionReads += 1;
+            metrics.rows += Array.isArray(result)
+              ? result.length
+              : Number(result !== undefined);
+          }
+          return chain.has(String(property))
+            ? counted(
+                result,
+                property === 'from' ? arguments_[0] === session : fromSession,
+              )
+            : result;
+        };
+      },
+    });
+  return { database: counted(database), metrics };
+}
