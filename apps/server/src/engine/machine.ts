@@ -107,10 +107,6 @@ export const engineMachine = setup({
     log: ({ context }, params: { line: string }) => {
       writeEngineLog(context.home, params.line);
     },
-    logStop: ({ context, event }) => {
-      if (event.type === 'engine.stop')
-        writeEngineLog(context.home, `stopping: ${event.reason}`);
-    },
     closeDatabase: ({ context }) => {
       context.database?.$client.close();
     },
@@ -133,7 +129,15 @@ export const engineMachine = setup({
   invoke: { id: 'processSignals', src: 'processSignals' },
   initial: 'openingDatabase',
   // `live` and `live.stopping` override this.
-  on: { 'engine.stop': { target: '.stopped', actions: 'logStop' } },
+  on: {
+    'engine.stop': {
+      target: '.stopped',
+      actions: {
+        type: 'log',
+        params: ({ event }) => ({ line: `stopping: ${event.reason}` }),
+      },
+    },
+  },
   states: {
     openingDatabase: {
       invoke: {
@@ -197,7 +201,13 @@ export const engineMachine = setup({
       ],
       initial: 'listening',
       on: {
-        'engine.stop': { target: '.stopping', actions: 'logStop' },
+        'engine.stop': {
+          target: '.stopping',
+          actions: {
+            type: 'log',
+            params: ({ event }) => ({ line: `stopping: ${event.reason}` }),
+          },
+        },
       },
       states: {
         listening: {
