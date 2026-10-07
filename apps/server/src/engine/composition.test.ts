@@ -4,8 +4,10 @@ import {
   mkdirSync,
   mkdtempSync,
   readdirSync,
+  readFileSync,
   realpathSync,
   rmSync,
+  writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -2086,6 +2088,96 @@ it('shares one coalesced list read for three subscribers across fifty changes', 
     vi.useRealTimers();
   }
 });
+
+for (const adapter of agentAdapters) {
+  it(`rejects a new ${adapter.agent} Session when CLI initialization exceeds agentStartLimit`, async () => {
+    stubScenario({ blockInitialize: true });
+    const root = await startNewSessionEngine(adapter);
+    const caller = await root.createCaller();
+    await expect(
+      caller.session.new({
+        projectId: 'project-1',
+        agent: adapter.agent,
+        checkout: { type: 'worktree', baseBranch: 'feature' },
+        configOptions: [],
+        prompt: [{ type: 'text', text: 'Start the Session' }],
+      }),
+    ).rejects.toMatchObject({
+      code: 'PRECONDITION_FAILED',
+      message:
+        'Agent startup exceeded agentStartLimit (10000 ms). Retry the Session.',
+    });
+    await expect
+      .poll(() => root.git('branch', '--list', 'argo/*').trim())
+      .toBe('');
+    expect(root.git('worktree', 'list')).not.toContain(root.home);
+    expect(
+      (await caller.session.list({ archived: false })).sessions,
+    ).not.toContainEqual(
+      expect.objectContaining({ title: 'Start the Session' }),
+    );
+    stubScenario({});
+    expect(
+      await caller.session.new({
+        projectId: 'project-1',
+        agent: adapter.agent,
+        checkout: { type: 'main' },
+        configOptions: [],
+        prompt: [{ type: 'text', text: 'Retry the Session' }],
+      }),
+    ).toEqual({ sessionId: expect.any(String) });
+  }, 15_000);
+
+  it(`rejects a new ${adapter.agent} Session when a Checkout hook exceeds checkoutLimit`, async () => {
+    const root = await startNewSessionEngine(adapter);
+    const marker = path.join(root.home, 'hook-started');
+    const hook = path.join(root.project, '.git', 'hooks', 'post-checkout');
+    writeFileSync(
+      hook,
+      [
+        '#!/bin/sh',
+        'checkout=$(/bin/pwd)',
+        `echo "$checkout" > '${marker}'`,
+        'while [ -d "$checkout" ]; do /bin/sleep 0.01; done',
+        '',
+      ].join('\n'),
+      { mode: 0o755 },
+    );
+    const caller = await root.createCaller();
+    const creation = caller.session.new({
+      projectId: 'project-1',
+      agent: adapter.agent,
+      checkout: { type: 'worktree', baseBranch: 'feature' },
+      configOptions: [],
+      prompt: [{ type: 'text', text: 'Wait for Checkout' }],
+    });
+    const rejected = expect(creation).rejects.toMatchObject({
+      code: 'PRECONDITION_FAILED',
+      message:
+        'Checkout creation exceeded checkoutLimit (10000 ms). Retry the Session.',
+    });
+    await expect.poll(() => existsSync(marker)).toBe(true);
+    const checkoutPath = readFileSync(marker, 'utf8').trim();
+    expect(checkoutPath).toContain(path.join(root.home, 'worktrees'));
+    expect(existsSync(checkoutPath)).toBe(true);
+    await rejected;
+    await expect.poll(() => existsSync(checkoutPath)).toBe(false);
+    await expect
+      .poll(() => root.git('branch', '--list', 'argo/*').trim())
+      .toBe('');
+    expect(root.git('worktree', 'list')).not.toContain(checkoutPath);
+    rmSync(hook);
+    expect(
+      await caller.session.new({
+        projectId: 'project-1',
+        agent: adapter.agent,
+        checkout: { type: 'worktree', baseBranch: 'feature' },
+        configOptions: [],
+        prompt: [{ type: 'text', text: 'Retry the Checkout' }],
+      }),
+    ).toEqual({ sessionId: expect.any(String) });
+  }, 15_000);
+}
 
 it('reads only the changed Session and pages the shared cache', async () => {
   const { database, remove } = openTestDatabase();

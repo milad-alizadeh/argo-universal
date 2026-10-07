@@ -14,7 +14,7 @@ import {
 } from '@repo/mocks/agent';
 import { eq } from 'drizzle-orm';
 import { afterEach, expect, it, vi } from 'vitest';
-import { createActor, setup, waitFor } from 'xstate';
+import { createActor, fromPromise, setup, waitFor } from 'xstate';
 import { insertSession, openTestDatabase } from '#mocks/database';
 import { initTestRepository } from '#mocks/git';
 import { writerMachine } from '../feed/writer-machine';
@@ -26,7 +26,10 @@ afterEach(() => {
   for (const cleanup of cleanups.splice(0).reverse()) cleanup();
 });
 
-function openServer({ applyConfigOptions = true } = {}) {
+function openServer({
+  applyConfigOptions = true,
+  writer = writerMachine,
+} = {}) {
   const directory = realpathSync(
     mkdtempSync(join(tmpdir(), 'session-service-')),
   );
@@ -85,7 +88,7 @@ function openServer({ applyConfigOptions = true } = {}) {
   };
   const root = createActor(
     setup({
-      actors: { sessions: registryMachine, writer: writerMachine },
+      actors: { sessions: registryMachine, writer },
     }).createMachine({
       invoke: [
         { src: 'writer', systemId: 'databaseWriter', input: { database } },
@@ -169,6 +172,52 @@ const newSession: SessionNewInput = {
   configOptions: [{ configId: 'model', value: 'large' }],
   prompt: [{ type: 'text', text: 'Build it\nand test it' }],
 };
+
+it('rejects a new Session when the writer keeps its insert queued for retry', async () => {
+  const writer = writerMachine.provide({
+    actors: {
+      writeBatch: fromPromise(async (): Promise<void> => {
+        throw new Error('database is locked');
+      }),
+    },
+    delays: { writeRetryDelay: 60_000 },
+    actions: { log: () => {} },
+  });
+  const { caller } = openServer({ writer });
+  await expect(caller.session.new(newSession)).rejects.toMatchObject({
+    code: 'INTERNAL_SERVER_ERROR',
+    message: expect.stringContaining(
+      'was not stored because the writer is retrying. Retry the Session.',
+    ),
+  });
+});
+
+it('rejects a new Session whose insert is queued behind another retrying job', async () => {
+  const writer = writerMachine.provide({
+    actors: {
+      writeBatch: fromPromise(async (): Promise<void> => {
+        throw new Error('another job cannot be written');
+      }),
+    },
+    delays: { writeRetryDelay: 60_000 },
+    actions: { log: () => {} },
+  });
+  const { caller, root } = openServer({ writer });
+  const databaseWriter = root.system.get('databaseWriter');
+  databaseWriter.send({
+    type: 'writer.write',
+    job: { type: 'turnUpdate', id: 'other-turn', set: { endedAt: 1 } },
+  });
+  await waitFor(databaseWriter, (snapshot) =>
+    snapshot.matches('waitingToRetry'),
+  );
+  await expect(caller.session.new(newSession)).rejects.toMatchObject({
+    code: 'INTERNAL_SERVER_ERROR',
+    message: expect.stringContaining(
+      'was not stored because the writer is retrying. Retry the Session.',
+    ),
+  });
+});
 
 it('creates the Checkout, starts the Agent with the chosen options and runs the first Turn in one call', async () => {
   const { caller, streams, database, commands } = openServer();

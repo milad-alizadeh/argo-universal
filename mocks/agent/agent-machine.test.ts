@@ -193,6 +193,7 @@ const events = [
   },
   { type: 'vendor.failed', error: failure.message },
   { type: 'vendor.closed' },
+  { type: 'xstate.after.agentStartLimit.agent.starting' },
   { type: 'xstate.error.actor.vendorSession', error: failure },
 ] as AnyEventObject[] as AgentMachineEvent[];
 
@@ -254,6 +255,8 @@ const executors = Object.fromEntries(
         connection.resolve(ready);
         shutdown.resolve();
         await settle();
+      } else if (event.type.startsWith('xstate.after.agentStartLimit')) {
+        await vi.advanceTimersByTimeAsync(10_000);
       } else {
         // A callback error is modelled here; the example below exercises a real throw.
         agent.send(event);
@@ -295,6 +298,17 @@ describe('Agent machine model', () => {
 });
 
 describe('Agent machine', () => {
+  it('ends startup with a retryable failure when the Agent does not initialize', async () => {
+    start();
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(agent.getSnapshot().status).toBe('done');
+    expect(agent.getSnapshot().output).toEqual({
+      failure:
+        'Agent startup exceeded agentStartLimit (10000 ms). Retry the Session.',
+    });
+    expect(received).toEqual([]);
+  });
+
   it('reports a rejected vendor message and maps the next message without losing its mapping state', async () => {
     const states: { mapped: number }[] = [];
     const nextMessage: MockAgentStreamEvent = {

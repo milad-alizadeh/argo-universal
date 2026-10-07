@@ -124,6 +124,23 @@ describe.each(agentAdapters)(
       },
     );
 
+    it('fails within agentStartLimit when the live CLI withholds initialization', async () => {
+      const { agent, events, processFile } = await start(adapter, {
+        scenario: { blockInitialize: true },
+      });
+      await expect.poll(() => existsSync(processFile), cliDeadline).toBe(true);
+      const processId = Number(readFileSync(processFile, 'utf8'));
+      await waitFor(agent, (snapshot) => snapshot.status === 'done', {
+        timeout: 11_000,
+      });
+      expect(agent.getSnapshot().output).toEqual({
+        failure:
+          'Agent startup exceeded agentStartLimit (10000 ms). Retry the Session.',
+      });
+      await expect.poll(() => isAlive(processId), cliDeadline).toBe(false);
+      expect(events).toEqual([]);
+    }, 15_000);
+
     it('stops while the live CLI is withholding initialization', async () => {
       const { agent, events, processFile, stop } = await start(adapter, {
         scenario: { blockInitialize: true },
