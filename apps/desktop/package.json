@@ -26,6 +26,7 @@
     "@electron-forge/shared-types": "catalog:",
     "@electron/fuses": "catalog:",
     "@repo/typescript": "workspace:*",
+    "@repo/vitest": "workspace:*",
     "@types/node": "catalog:",
     "electron": "catalog:",
     "typescript": "catalog:",

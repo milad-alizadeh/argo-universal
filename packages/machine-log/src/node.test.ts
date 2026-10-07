@@ -9,7 +9,6 @@ const homes: string[] = [];
 afterEach(() => {
   for (const home of homes.splice(0))
     rmSync(home, { recursive: true, force: true });
-  vi.unstubAllEnvs();
 });
 
 function temporaryHome() {

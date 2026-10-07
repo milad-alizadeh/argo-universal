@@ -20,7 +20,6 @@ const cleanups: (() => void | Promise<void>)[] = [];
 const cliDeadline = { timeout: 10_000 };
 afterEach(async () => {
   for (const cleanup of cleanups.splice(0).reverse()) await cleanup();
-  vi.unstubAllEnvs();
 });
 
 async function prepare(recording: string) {

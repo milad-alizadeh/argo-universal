@@ -93,7 +93,6 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  vi.restoreAllMocks();
   await closeServer();
   sessions.stop();
   removeDatabase();
@@ -214,5 +213,6 @@ describe('http server', () => {
     const closed = new Promise((resolve) => socket.once('close', resolve));
     await closeServer();
     await closed;
+    expect(socket.readyState).toBe(WebSocket.CLOSED);
   });
 });

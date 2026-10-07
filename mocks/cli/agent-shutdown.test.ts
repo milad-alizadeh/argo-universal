@@ -15,7 +15,6 @@ const cleanups: (() => void)[] = [];
 const cliDeadline = { timeout: 10_000 };
 afterEach(() => {
   for (const cleanup of cleanups.splice(0).reverse()) cleanup();
-  vi.unstubAllEnvs();
 });
 
 const isAlive = (processId: number) => {
