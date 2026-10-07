@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ContentBlock } from './content-block';
+import type { ToolCallUpdate } from './session-update';
 
 export const ToolKind = z.enum([
   'read',
@@ -24,6 +25,15 @@ export const ToolCallStatus = z.enum([
 ]);
 export type ToolCallStatus = z.infer<typeof ToolCallStatus>;
 
+export const runningToolCallStatuses: readonly [
+  ToolCallStatus,
+  ToolCallStatus,
+] = ['pending', 'in_progress'];
+
+export function isToolCallRunning(toolCall: ToolCallUpdate): boolean {
+  return runningToolCallStatuses.includes(toolCall.status);
+}
+
 // Only actions supplied by an Agent; shell text is never classified by the App.
 export const CommandAction = z.strictObject({
   type: z.enum(['read', 'search', 'list', 'unknown']),
@@ -32,6 +42,13 @@ export const CommandAction = z.strictObject({
   query: z.string().optional(),
 });
 export type CommandAction = z.infer<typeof CommandAction>;
+
+export function knownCommandActions(toolCall: ToolCallUpdate): CommandAction[] {
+  const actions = toolCall._meta?.argo?.commandActions;
+  return actions?.length && actions.every((action) => action.type !== 'unknown')
+    ? actions
+    : [];
+}
 
 export const ToolCallLocation = z.strictObject({
   path: z.string(),

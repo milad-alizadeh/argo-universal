@@ -1,3 +1,4 @@
+import { isToolCallRunning } from '@repo/contracts';
 import { BookOpenIcon } from 'phosphor-react-native/src/icons/BookOpen';
 import {
   type ReactNode,
@@ -74,12 +75,7 @@ export function ToolCallGroup({
   const duration = useToolCallDuration(latest, now);
   const running = group.state === 'open';
   const items = group.items.flatMap<FeedActivity>((activity) => {
-    if (
-      !running ||
-      !latest ||
-      (latest.status !== 'pending' && latest.status !== 'in_progress')
-    )
-      return [activity];
+    if (!running || !latest || !isToolCallRunning(latest)) return [activity];
     if (activity.type === 'tool_call' && activity.row.id === latest.id)
       return [];
     if (activity.type === 'exploration') {
@@ -92,9 +88,7 @@ export function ToolCallGroup({
   });
   const onActivitiesLayout = useGrowthAbove(group.id, items.map(activityKey));
   const livePermission =
-    running &&
-    latest &&
-    (latest.status === 'pending' || latest.status === 'in_progress')
+    running && latest && isToolCallRunning(latest)
       ? latest._meta?.argo?.permissionOutcome
       : undefined;
   return (
