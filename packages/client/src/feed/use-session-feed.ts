@@ -15,13 +15,13 @@ import {
 const pageSize = 150;
 
 // A fetch the hook keeps in its own state, so the query cache never holds it.
-const fetchedOnce = { staleTime: 0, gcTime: 0 };
+const uncached = { staleTime: 0, gcTime: 0 };
 
 // A Session's Feed rows and snapshot: the newest page, older pages on request, and live changes after them (ADR 0007).
 export function useSessionFeed(sessionId: string) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const tail = useQuery(
+  const newestPage = useQuery(
     trpc.feed.page.queryOptions(
       { sessionId, direction: 'tail', limit: pageSize },
       { staleTime: Number.POSITIVE_INFINITY, gcTime: 0 },
@@ -29,33 +29,36 @@ export function useSessionFeed(sessionId: string) {
   );
   const [feed, setFeed] = useState<FeedState>(emptyFeed);
   const feedRef = useRef(feed);
-  const update = useCallback((next: FeedState) => {
+  const replaceFeed = useCallback((next: FeedState) => {
     feedRef.current = next;
     setFeed(next);
   }, []);
   const [snapshot, setSnapshot] = useState<SessionSnapshot | null>(null);
-  // Fixed at the first tail, so a later page never restarts the subscription.
+  // Fixed at the first newest page, so a later page never restarts the subscription.
   const [syncPoint, setSyncPoint] = useState<FeedSyncPoint | null>(null);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const olderInFlight = useRef(false);
 
   useEffect(() => {
-    if (!tail.data) return;
-    update(mergeNewestPage(feedRef.current, tail.data));
+    if (!newestPage.data) return;
+    replaceFeed(mergeNewestPage(feedRef.current, newestPage.data));
     setSyncPoint(
-      (point) =>
-        point ?? { epoch: tail.data.epoch, revision: tail.data.maxRevision },
+      (current) =>
+        current ?? {
+          epoch: newestPage.data.epoch,
+          revision: newestPage.data.maxRevision,
+        },
     );
-  }, [tail.data, update]);
+  }, [newestPage.data, replaceFeed]);
 
   const fetchWholeRow = useCallback(
     async (id: string) => {
       try {
         const row = await queryClient.fetchQuery({
           ...trpc.feed.row.queryOptions({ sessionId, id }),
-          ...fetchedOnce,
+          ...uncached,
         });
-        update(
+        replaceFeed(
           applySubscriptionEvent(feedRef.current, {
             type: 'row.upsert',
             rev: row.revision,
@@ -66,10 +69,10 @@ export function useSessionFeed(sessionId: string) {
         // The row keeps its last revision until a later change fetches it again.
       }
     },
-    [queryClient, trpc, sessionId, update],
+    [queryClient, trpc, sessionId, replaceFeed],
   );
 
-  const { refetch } = tail;
+  const { refetch } = newestPage;
   useSubscription(
     trpc.feed.subscribe.subscriptionOptions(
       { sessionId, after: syncPoint },
@@ -81,7 +84,7 @@ export function useSessionFeed(sessionId: string) {
             return;
           }
           const result = applySubscriptionEvent(feedRef.current, event);
-          update(result.feed);
+          replaceFeed(result.feed);
           if (result.missingRowId) void fetchWholeRow(result.missingRowId);
           if (result.reset) void refetch();
         },
@@ -105,23 +108,23 @@ export function useSessionFeed(sessionId: string) {
           limit: pageSize,
           epoch,
         }),
-        ...fetchedOnce,
+        ...uncached,
       });
-      update(mergeOlderPage(feedRef.current, page));
+      replaceFeed(mergeOlderPage(feedRef.current, page));
     } catch {
       // The rows stay as they were; the reader asks again by scrolling back to the top.
     } finally {
       olderInFlight.current = false;
       setLoadingOlder(false);
     }
-  }, [queryClient, trpc, sessionId, update]);
+  }, [queryClient, trpc, sessionId, replaceFeed]);
 
   return {
     feed,
     snapshot,
     // The first page and the snapshot have both arrived.
     ready: feed.epoch !== null && snapshot !== null,
-    error: tail.error,
+    error: newestPage.error,
     retry: refetch,
     loadingOlder,
     loadOlder,

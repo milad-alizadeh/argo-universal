@@ -31,7 +31,7 @@ export interface SessionHeaderProps {
   now?: number;
 }
 
-const statusText = {
+const statusTextColor = {
   running: 'text-success',
   needs_input: 'text-warning',
   idle: 'text-muted-foreground',
@@ -48,7 +48,7 @@ function StatusLine({
       <View className="size-2 items-center justify-center">
         <StatusIndicator status={status} size="small" testID="session-status" />
       </View>
-      <Text className={cn('text-xs font-medium', statusText[status])}>
+      <Text className={cn('text-xs font-medium', statusTextColor[status])}>
         {statusLabels[status]}
       </Text>
       {startedAt !== null && (

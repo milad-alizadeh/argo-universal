@@ -14,6 +14,6 @@ export function useBlobUrl() {
 }
 
 // The Server serves blobs over HTTP beside tRPC, on its WebSocket address.
-export function serverBlobUrl(serverUrl: string): BlobUrl {
+export function createServerBlobUrl(serverUrl: string): BlobUrl {
   return (blob) => serverHttpUrl(serverUrl, `/blobs/${blob.blobId}`);
 }

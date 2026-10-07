@@ -5,7 +5,7 @@ import {
   loadingOlderSessionMocks,
   longSessionMocks,
   runningSessionMocks,
-  sessionNow,
+  runningTurnNow,
 } from '../../mocks/session-screen-mock';
 import { SessionScreenPreview } from '../../mocks/session-screen-preview';
 import { SessionScreen } from './SessionScreen';
@@ -14,7 +14,7 @@ const meta = {
   title: 'Screens/SessionScreen',
   component: SessionScreen,
   parameters: { trpc: runningSessionMocks, screenPreview: true },
-  args: { id: 'session-1', now: sessionNow },
+  args: { id: 'session-1', now: runningTurnNow },
   render: (args) => <SessionScreenPreview {...args} />,
 } satisfies Meta<typeof SessionScreen>;
 export default meta;

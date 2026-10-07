@@ -5,7 +5,7 @@ import {
   type ConnectionInspection,
   openConnection,
 } from '../connection/open-connection';
-import { BlobUrlContext, serverBlobUrl } from './blob-url';
+import { BlobUrlContext, createServerBlobUrl } from './blob-url';
 import { TRPCProvider } from './context';
 
 export interface AppProvidersProps {
@@ -24,7 +24,7 @@ export function AppProviders({
 }: AppProvidersProps) {
   const [queryClient] = useState(() => new QueryClient());
   const [connection, setConnection] = useState<Connection | null>(null);
-  const blobUrl = useMemo(() => serverBlobUrl(serverUrl), [serverUrl]);
+  const blobUrl = useMemo(() => createServerBlobUrl(serverUrl), [serverUrl]);
 
   // An effect owns the Connection, so unmounting closes it and StrictMode's remount opens a fresh one.
   useEffect(() => {

@@ -29,7 +29,7 @@ import { Button } from '#primitives/button';
 import { Label } from '#primitives/label';
 import { Switch } from '#primitives/switch';
 import { Text } from '#primitives/text';
-import { listTestId } from '../lib/list-test-id';
+import { listTestIdProps } from '../lib/list-test-id';
 import { useWide } from '../navigation/use-wide';
 import { Slider } from '../primitives/slider';
 import { ComposerPopover } from './ComposerPopover';
@@ -284,7 +284,7 @@ function AgentChoices({
     return (
       <View className="relative flex-1 min-h-0">
         <LegendList
-          {...listTestId('composer-agents-scroll')}
+          {...listTestIdProps('composer-agents-scroll')}
           style={{ position: 'absolute', inset: 0 }}
           contentContainerStyle={{
             paddingHorizontal: 4,

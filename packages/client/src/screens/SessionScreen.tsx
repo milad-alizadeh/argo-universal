@@ -37,7 +37,7 @@ const headerStatus = {
 } satisfies Record<SessionSnapshot['state'], SessionHeaderStatus>;
 
 // The Feed row a `tool_call` live header names.
-function liveToolCall(
+function findLiveToolCall(
   rows: readonly SessionUpdate[],
   snapshot: SessionSnapshot,
 ): ToolCallUpdate | undefined {
@@ -64,22 +64,28 @@ function SessionView({ sessionId, now }: { sessionId: string; now?: number }) {
   const { feed, snapshot, ready, error, retry, loadingOlder, loadOlder } =
     useSessionFeed(sessionId);
   const agents = useQuery(trpc.agents.list.queryOptions());
-  const { draft, changeDraft, attachImages, toPrompt, clear, upload } =
-    useImageDraft();
-  const prompt = useMutation(
-    trpc.session.prompt.mutationOptions({ onSuccess: clear }),
+  const {
+    draft,
+    changeDraft,
+    attachImages,
+    uploadDraftAsPrompt,
+    clearDraft,
+    imageUpload,
+  } = useImageDraft();
+  const promptSession = useMutation(
+    trpc.session.prompt.mutationOptions({ onSuccess: clearDraft }),
   );
-  const cancel = useMutation(trpc.session.cancel.mutationOptions());
+  const cancelTurn = useMutation(trpc.session.cancel.mutationOptions());
   const setConfigOption = useMutation(
     trpc.session.setConfigOption.mutationOptions(),
   );
-  const view = useFeedView(feed.rows, snapshot);
+  const feedView = useFeedView(feed.rows, snapshot);
 
-  async function send(sent: ComposerDraft) {
-    prompt.reset();
-    upload.reset();
-    const blocks = await toPrompt(sent);
-    if (blocks?.length) prompt.mutate({ sessionId, prompt: blocks });
+  async function sendDraft(sent: ComposerDraft) {
+    promptSession.reset();
+    imageUpload.reset();
+    const prompt = await uploadDraftAsPrompt(sent);
+    if (prompt?.length) promptSession.mutate({ sessionId, prompt });
   }
 
   if (error)
@@ -92,15 +98,16 @@ function SessionView({ sessionId, now }: { sessionId: string; now?: number }) {
         />
       </Screen>
     );
-  if (!ready || !snapshot || !view) return <Screen edges={['bottom']} />;
+  if (!ready || !snapshot || !feedView) return <Screen edges={['bottom']} />;
 
-  const running = snapshot.state !== 'idle';
+  const turnRunning = snapshot.state !== 'idle';
   const fadeHeight = wide ? 64 : 88;
   const startedAt = snapshot.liveHeader?.startedAt ?? null;
   let sendError: string | undefined;
-  if (prompt.error) sendError = `Couldn't send. ${prompt.error.message}`;
-  else if (upload.error)
-    sendError = `Couldn't upload the image. ${upload.error.message}`;
+  if (promptSession.error)
+    sendError = `Couldn't send. ${promptSession.error.message}`;
+  else if (imageUpload.error)
+    sendError = `Couldn't upload the image. ${imageUpload.error.message}`;
 
   return (
     <Screen edges={['bottom']}>
@@ -118,13 +125,13 @@ function SessionView({ sessionId, now }: { sessionId: string; now?: number }) {
         style={keyboardAvoidingStyle}
       >
         <Feed
-          items={view.items}
+          items={feedView.items}
           liveHeader={snapshot.liveHeader}
-          liveToolCall={liveToolCall(feed.rows, snapshot)}
+          liveToolCall={findLiveToolCall(feed.rows, snapshot)}
           loadingOlder={loadingOlder}
           onStartReached={loadOlder}
           imageUrl={imageUrl}
-          emptyBranch={snapshot.checkout.branch ?? undefined}
+          checkoutBranch={snapshot.checkout.branch ?? undefined}
           now={now}
         />
         {/* The bottom slot: the Composer until request cards and banners land. */}
@@ -145,14 +152,14 @@ function SessionView({ sessionId, now }: { sessionId: string; now?: number }) {
             draft={draft}
             onDraftChange={changeDraft}
             onAttachImages={() => void attachImages()}
-            onSend={(sent) => void send(sent)}
-            onStop={() => cancel.mutate({ sessionId })}
-            sending={upload.isPending || prompt.isPending}
+            onSend={(sent) => void sendDraft(sent)}
+            onStop={() => cancelTurn.mutate({ sessionId })}
+            sending={imageUpload.isPending || promptSession.isPending}
             sendable={connected}
             error={sendError}
             status={
-              view.plan?.type === 'items'
-                ? { plan: view.plan.entries }
+              feedView.plan?.type === 'items'
+                ? { plan: feedView.plan.entries }
                 : undefined
             }
             configuration={{
@@ -167,7 +174,7 @@ function SessionView({ sessionId, now }: { sessionId: string; now?: number }) {
                 ),
               onAgentSetup: (setup) =>
                 navigate({ to: 'settings-agent', agent: setup }),
-              turnRunning: running,
+              turnRunning,
               checkout: {
                 branch: snapshot.checkout.branch ?? '',
                 newWorktree: snapshot.checkout.type === 'worktree',

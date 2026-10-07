@@ -13,8 +13,8 @@ export function useImageDraft() {
   const [draft, setDraft] = useState(emptyDraft);
   // The file behind each attached image, by its id in the draft.
   const imageFiles = useRef(new Map<string, Blob>());
-  // All of a draft's images upload together, as one mutation, so `upload` reports them as one.
-  const upload = useMutation({
+  // All of a draft's images upload together, as one mutation, so `imageUpload` reports them as one.
+  const imageUpload = useMutation({
     mutationFn: (forms: FormData[]) =>
       Promise.all(forms.map((form) => client.blob.upload.mutate(form))),
   });
@@ -31,13 +31,13 @@ export function useImageDraft() {
 
   // Keeps a file only while its image is in the draft.
   function changeDraft(next: ComposerDraft) {
-    const kept = new Set(next.images.map((image) => image.id));
+    const keptImageIds = new Set(next.images.map((image) => image.id));
     for (const id of imageFiles.current.keys())
-      if (!kept.has(id)) imageFiles.current.delete(id);
+      if (!keptImageIds.has(id)) imageFiles.current.delete(id);
     setDraft(next);
   }
 
-  // Uploads the images at once, in draft order; undefined when any upload fails, which `upload.error` shows.
+  // Uploads the images at once, in draft order; undefined when any upload fails, which `imageUpload.error` shows.
   function uploadImages(sent: ComposerDraft): Promise<BlobRef[] | undefined> {
     const forms = sent.images.map((image) => {
       const file = imageFiles.current.get(image.id);
@@ -47,11 +47,11 @@ export function useImageDraft() {
       return form;
     });
     if (!forms.length) return Promise.resolve([]);
-    return upload.mutateAsync(forms).catch(() => undefined);
+    return imageUpload.mutateAsync(forms).catch(() => undefined);
   }
 
   // The draft as prompt blocks: its text, then each uploaded image.
-  async function toPrompt(
+  async function uploadDraftAsPrompt(
     sent: ComposerDraft,
   ): Promise<SessionNewInput['prompt'] | undefined> {
     const images = await uploadImages(sent);
@@ -70,8 +70,8 @@ export function useImageDraft() {
     draft,
     changeDraft,
     attachImages,
-    toPrompt,
-    clear: () => changeDraft(emptyDraft),
-    upload,
+    uploadDraftAsPrompt,
+    clearDraft: () => changeDraft(emptyDraft),
+    imageUpload,
   };
 }

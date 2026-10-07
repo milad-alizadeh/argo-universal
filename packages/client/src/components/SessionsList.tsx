@@ -27,7 +27,7 @@ import { useCSSVariable } from 'uniwind';
 import { hasLiquidGlass } from '#lib/native-header';
 import { cn } from '#lib/utils';
 import { Text } from '#primitives/text';
-import { listTestId } from '../lib/list-test-id';
+import { listTestIdProps } from '../lib/list-test-id';
 import { useWide } from '../navigation/use-wide';
 import { ProjectHeading } from './ProjectHeading';
 import { ScrollFade, useScrollFadeEdges } from './ScrollFade';
@@ -206,7 +206,7 @@ export function SessionsList({
       <View className="flex-1" style={{ minHeight: 0 }}>
         <LegendList
           refScrollView={scrollView}
-          {...listTestId('sessions-scroll')}
+          {...listTestIdProps('sessions-scroll')}
           style={{ flex: 1 }}
           contentContainerStyle={wide ? contentStyle : phoneContentStyle}
           // On iOS it scrolls by the fade's top padding on mount, then snaps back.

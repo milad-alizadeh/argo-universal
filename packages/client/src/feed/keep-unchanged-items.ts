@@ -3,10 +3,10 @@ import { type FeedView, type FeedViewItem, feedItemKey } from './feed-view';
 const sameList = <Value>(
   first: readonly Value[],
   second: readonly Value[],
-  same: (first: Value, second: Value) => boolean = Object.is,
+  isSame: (first: Value, second: Value) => boolean = Object.is,
 ) =>
   first.length === second.length &&
-  first.every((value, index) => same(value, second[index] as Value));
+  first.every((value, index) => isSame(value, second[index] as Value));
 
 // Rows are compared by reference: the Feed state replaces a row only when it changes.
 function sameItem(first: FeedViewItem, second: FeedViewItem): boolean {
@@ -36,26 +36,26 @@ export function keepUnchangedItems(
   next: FeedView,
 ): FeedView {
   if (!previous) return next;
-  const previousItems = new Map(previous.items.map(withKey));
-  const reuse = (item: FeedViewItem): FeedViewItem => {
-    const known = previousItems.get(itemKey(item));
-    if (known && sameItem(known, item)) return known;
-    if (item.type !== 'group' || known?.type !== 'group') return item;
+  const previousItems = new Map(previous.items.map(toKeyedEntry));
+  const keepIfUnchanged = (item: FeedViewItem): FeedViewItem => {
+    const previousItem = previousItems.get(itemKey(item));
+    if (previousItem && sameItem(previousItem, item)) return previousItem;
+    if (item.type !== 'group' || previousItem?.type !== 'group') return item;
     // A changed group still keeps its unchanged activities.
-    const activities = new Map(known.items.map(withKey));
+    const previousActivities = new Map(previousItem.items.map(toKeyedEntry));
     return {
       ...item,
       items: item.items.map((activity) => {
-        const knownActivity = activities.get(itemKey(activity));
-        return knownActivity && sameItem(knownActivity, activity)
-          ? (knownActivity as typeof activity)
+        const previousActivity = previousActivities.get(itemKey(activity));
+        return previousActivity && sameItem(previousActivity, activity)
+          ? (previousActivity as typeof activity)
           : activity;
       }),
     };
   };
-  return { ...next, items: next.items.map(reuse) };
+  return { ...next, items: next.items.map(keepIfUnchanged) };
 }
 
 const itemKey = (item: FeedViewItem) => `${item.type}:${feedItemKey(item)}`;
 
-const withKey = (item: FeedViewItem) => [itemKey(item), item] as const;
+const toKeyedEntry = (item: FeedViewItem) => [itemKey(item), item] as const;

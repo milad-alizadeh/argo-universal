@@ -9,13 +9,13 @@ export function useFeedView(
   rows: readonly SessionUpdate[],
   snapshot: SessionSnapshot | null,
 ): FeedView | null {
-  const previous = useRef<FeedView | null>(null);
+  const previousView = useRef<FeedView | null>(null);
   return useMemo(() => {
     if (!snapshot) return null;
-    previous.current = keepUnchangedItems(
-      previous.current,
+    previousView.current = keepUnchangedItems(
+      previousView.current,
       toFeedView(rows, snapshot),
     );
-    return previous.current;
+    return previousView.current;
   }, [rows, snapshot]);
 }

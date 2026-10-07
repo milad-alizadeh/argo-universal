@@ -27,7 +27,7 @@ const OpenContext = createContext(false);
 interface CollapsibleLayoutSync {
   syncLayout: () => void;
   // Called with true as a collapsible starts to open or close and false once it stops, so the list can tell a reader's toggle from new content.
-  onMotion: (moving: boolean) => void;
+  onMotionChange: (moving: boolean) => void;
 }
 const CollapsibleLayoutSyncContext =
   createContext<CollapsibleLayoutSync | null>(null);
@@ -67,9 +67,13 @@ function CollapsibleContent({
   const layoutSync = useContext(CollapsibleLayoutSyncContext);
   if (layoutSync)
     return (
-      <SyncedContent {...props} className={className} layoutSync={layoutSync}>
+      <LayoutSyncedContent
+        {...props}
+        className={className}
+        layoutSync={layoutSync}
+      >
         {children}
-      </SyncedContent>
+      </LayoutSyncedContent>
     );
   if (Platform.OS === 'web') {
     return (
@@ -95,11 +99,11 @@ const duration = 200;
 // Reanimated's default `withTiming` curve, so both paths move alike.
 const easeInOut = Easing.inOut(Easing.quad);
 
-function SyncedContent({
+function LayoutSyncedContent({
   children,
   className,
   forceMount,
-  layoutSync: { syncLayout, onMotion },
+  layoutSync: { syncLayout, onMotionChange },
   ...props
 }: Omit<
   React.ComponentProps<typeof CollapsiblePrimitive.Content>,
@@ -107,50 +111,53 @@ function SyncedContent({
 > & { layoutSync: CollapsibleLayoutSync }) {
   const open = useContext(OpenContext);
   const reducedMotion = useReducedMotion();
-  const [height, setHeight] = useState(0);
+  const [contentHeight, setContentHeight] = useState(0);
   const [progress, setProgress] = useState(open ? 1 : 0);
-  const current = useRef(progress);
-  current.current = progress;
+  const latestProgress = useRef(progress);
+  latestProgress.current = progress;
   useEffect(() => {
     const target = open ? 1 : 0;
     // Opening waits for the first measurement, which sets the height to grow to.
-    if (open && height === 0) return;
+    if (open && contentHeight === 0) return;
     if (reducedMotion) {
       setProgress(target);
       return;
     }
-    const from = current.current;
-    const span = Math.abs(target - from) * duration;
-    if (!span) {
+    const from = latestProgress.current;
+    const remainingDuration = Math.abs(target - from) * duration;
+    if (!remainingDuration) {
       setProgress(target);
       return;
     }
-    onMotion(true);
+    onMotionChange(true);
     let moving = true;
-    const started = performance.now();
+    const startTime = performance.now();
     let frame = requestAnimationFrame(function step(time) {
-      const elapsed = Math.min((time - started) / span, 1);
-      setProgress(from + (target - from) * easeInOut(elapsed));
-      if (elapsed < 1) frame = requestAnimationFrame(step);
+      const elapsedFraction = Math.min(
+        (time - startTime) / remainingDuration,
+        1,
+      );
+      setProgress(from + (target - from) * easeInOut(elapsedFraction));
+      if (elapsedFraction < 1) frame = requestAnimationFrame(step);
       else {
         moving = false;
-        onMotion(false);
+        onMotionChange(false);
       }
     });
     return () => {
       cancelAnimationFrame(frame);
-      if (moving) onMotion(false);
+      if (moving) onMotionChange(false);
     };
-  }, [open, height, reducedMotion, onMotion]);
+  }, [open, contentHeight, reducedMotion, onMotionChange]);
   // Before paint, so the list moves the rows below in the same frame.
   useLayoutEffect(() => {
     syncLayout();
-  }, [progress, height, syncLayout]);
+  }, [progress, contentHeight, syncLayout]);
   if (!open && progress === 0 && !forceMount) return null;
   return (
     <CollapsiblePrimitive.Content {...props} forceMount asChild>
       <View
-        style={{ height: height * progress, overflow: 'hidden' }}
+        style={{ height: contentHeight * progress, overflow: 'hidden' }}
         pointerEvents={open ? 'auto' : 'none'}
         aria-hidden={!open}
         accessibilityElementsHidden={!open}
@@ -159,7 +166,9 @@ function SyncedContent({
         <View
           className={className}
           style={{ position: 'absolute', top: 0, left: 0, right: 0 }}
-          onLayout={(event) => setHeight(event.nativeEvent.layout.height)}
+          onLayout={(event) =>
+            setContentHeight(event.nativeEvent.layout.height)
+          }
         >
           {children}
         </View>

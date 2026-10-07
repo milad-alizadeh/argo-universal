@@ -57,9 +57,9 @@ export function createSessionReader(database: Database) {
         code: 'NOT_FOUND',
         message: `No Session ${sessionId}`,
       });
-    const { id, checkoutPath, checkoutBranch, ...rest } = stored;
+    const { id, checkoutPath, checkoutBranch, ...otherColumns } = stored;
     const parsed = sessionRecord.safeParse({
-      ...rest,
+      ...otherColumns,
       checkout: toSessionCheckout({ id, checkoutPath, checkoutBranch }),
     });
     if (!parsed.success) {

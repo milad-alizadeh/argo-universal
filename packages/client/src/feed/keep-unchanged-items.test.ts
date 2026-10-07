@@ -9,14 +9,17 @@ const mocks = recordedFeedMocks.filter(
 );
 
 // A new revision of the row, as a `row.patch` brings it.
-function revise(rows: readonly SessionUpdate[], id: string): SessionUpdate[] {
+function bumpRevision(
+  rows: readonly SessionUpdate[],
+  id: string,
+): SessionUpdate[] {
   return rows.map((row) =>
     row.id === id ? { ...row, revision: row.revision + 1 } : row,
   );
 }
 
 // For each next item, whether it is the previous item's own object.
-const reused = (previous: readonly unknown[], next: readonly unknown[]) =>
+const keptObjects = (previous: readonly unknown[], next: readonly unknown[]) =>
   next.map((item, index) => item === previous[index]);
 
 describe('keepUnchangedItems', () => {
@@ -25,7 +28,7 @@ describe('keepUnchangedItems', () => {
     ({ rows, snapshot }) => {
       const previous = toFeedView(rows, snapshot);
       const next = keepUnchangedItems(previous, toFeedView(rows, snapshot));
-      expect(reused(previous.items, next.items)).toEqual(
+      expect(keptObjects(previous.items, next.items)).toEqual(
         previous.items.map(() => true),
       );
     },
@@ -49,17 +52,17 @@ describe('keepUnchangedItems', () => {
         throw new Error('Group needs a tool call');
       const changedId =
         changed.type === 'tool_call' ? changed.row.id : changed.id;
-      const changedRows = revise(rows, changedId);
+      const changedRows = bumpRevision(rows, changedId);
       const next = keepUnchangedItems(
         previous,
         toFeedView(changedRows, snapshot),
       );
-      expect(reused(previous.items, next.items)).toEqual(
+      expect(keptObjects(previous.items, next.items)).toEqual(
         previous.items.map((_, index) => index !== groupIndex),
       );
       const nextGroup = next.items[groupIndex];
       if (nextGroup?.type !== 'group') throw new Error('Group expected');
-      expect(reused(group.items, nextGroup.items)).toEqual(
+      expect(keptObjects(group.items, nextGroup.items)).toEqual(
         group.items.map((_, index) => index !== changedIndex),
       );
     },

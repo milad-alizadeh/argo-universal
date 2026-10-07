@@ -24,7 +24,7 @@ import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { CollapsibleLayoutSyncContext } from '#primitives/collapsible';
 import { Text } from '#primitives/text';
 import { type FeedViewItem, feedItemKey } from '../feed/feed-view';
-import { listTestId } from '../lib/list-test-id';
+import { listTestIdProps } from '../lib/list-test-id';
 import { useWide } from '../navigation/use-wide';
 import { FeedItem, isDrawnFeedItem } from './FeedItem';
 import { Icon } from './Icon';
@@ -43,7 +43,7 @@ export interface FeedProps {
   onStartReached: () => void;
   imageUrl: (blob: BlobRef) => string;
   // The checkout's branch, under the empty Feed's heading.
-  emptyBranch?: string;
+  checkoutBranch?: string;
   // Fixes the live header's clock, for stories and tests.
   now?: number;
 }
@@ -81,10 +81,10 @@ function EmptyFeed({ branch }: { branch?: string }) {
 
 // Shown while the reader is away from the end; the dot marks rows that arrived since.
 function JumpToLatest({
-  unread,
+  hasNewRows,
   onPress,
 }: {
-  unread: boolean;
+  hasNewRows: boolean;
   onPress: () => void;
 }) {
   return (
@@ -96,13 +96,13 @@ function JumpToLatest({
       <Pressable
         role="button"
         accessibilityLabel={
-          unread ? 'Jump to latest, new rows' : 'Jump to latest'
+          hasNewRows ? 'Jump to latest, new rows' : 'Jump to latest'
         }
         onPress={onPress}
         className="size-8 items-center justify-center rounded-full border border-border bg-card shadow-[0_1px_2px_#0000000f,0_4px_12px_-4px_#00000014] active:opacity-70"
       >
         <Icon as={ArrowDownIcon} className="text-foreground" />
-        {unread && (
+        {hasNewRows && (
           <View className="absolute -top-px -right-px size-[9px] rounded-full border-2 border-card bg-info" />
         )}
       </Pressable>
@@ -133,27 +133,27 @@ const endThreshold = 0.02;
 const startThreshold = 2;
 
 // One column as wide as the Composer, centred in the pane.
-const column = 'w-full max-w-composer self-center';
+const columnClassName = 'w-full max-w-composer self-center';
 
 const fill = { flex: 1 };
 const fillShrinkable = { flex: 1, minHeight: 0 };
 
 // A row's collapsibles re-measure it each frame they move, so the list keeps the rows below in step.
 function FeedRow({
-  onMotion,
+  onMotionChange,
   children,
 }: {
-  onMotion: (moving: boolean) => void;
+  onMotionChange: (moving: boolean) => void;
   children: ReactNode;
 }) {
   const syncLayout = useSyncLayout();
   const layoutSync = useMemo(
-    () => ({ syncLayout, onMotion }),
-    [syncLayout, onMotion],
+    () => ({ syncLayout, onMotionChange }),
+    [syncLayout, onMotionChange],
   );
   return (
     <CollapsibleLayoutSyncContext.Provider value={layoutSync}>
-      <View className={`${column} pb-4`}>{children}</View>
+      <View className={`${columnClassName} pb-4`}>{children}</View>
     </CollapsibleLayoutSyncContext.Provider>
   );
 }
@@ -175,26 +175,26 @@ export function Feed({
   items,
   liveHeader,
   liveToolCall,
-  emptyBranch,
+  checkoutBranch,
   ...props
 }: FeedProps) {
-  const drawn = useMemo(() => items.filter(isDrawnFeedItem), [items]);
+  const drawnItems = useMemo(() => items.filter(isDrawnFeedItem), [items]);
   const entries = useMemo<FeedEntry[]>(
     () =>
       liveHeader
         ? [
-            ...drawn,
+            ...drawnItems,
             { type: 'live_header', liveHeader, toolCall: liveToolCall },
           ]
-        : drawn,
-    [drawn, liveHeader, liveToolCall],
+        : drawnItems,
+    [drawnItems, liveHeader, liveToolCall],
   );
-  if (!entries.length) return <EmptyFeed branch={emptyBranch} />;
-  const newest = drawn.at(-1);
+  if (!entries.length) return <EmptyFeed branch={checkoutBranch} />;
+  const newestItem = drawnItems.at(-1);
   return (
     <FeedList
       entries={entries}
-      newestKey={newest ? feedItemKey(newest) : ''}
+      newestKey={newestItem ? feedItemKey(newestItem) : ''}
       {...props}
     />
   );
@@ -229,36 +229,38 @@ function FeedList({
   }, []);
 
   // The list asks for older rows once until the reader scrolls well away, so a reader still near the top asks again as each page lands.
-  const askOlderNearTop = useEffectEvent(() => {
+  const requestOlderIfNearTop = useEffectEvent(() => {
     if (list.current?.getState().isNearStart) onStartReached();
   });
-  const firstKey = entries[0] && entryKey(entries[0]);
-  useEffect(() => askOlderNearTop(), [firstKey]);
+  const oldestKey = entries[0] && entryKey(entries[0]);
+  useEffect(() => requestOlderIfNearTop(), [oldestKey]);
 
-  // The newest row's key when the reader left the end, or null while they are at it.
-  const [leftAt, setLeftAt] = useState<string | null>(null);
-  const onEndChange = useEffectEvent((within: boolean) =>
-    setLeftAt(within ? null : newestKey),
+  // Null while the reader is at the end.
+  const [newestKeyWhenLeftEnd, setNewestKeyWhenLeftEnd] = useState<
+    string | null
+  >(null);
+  const onAtEndChange = useEffectEvent((atEnd: boolean) =>
+    setNewestKeyWhenLeftEnd(atEnd ? null : newestKey),
   );
   useEffect(
     () =>
       list.current
         ?.getState()
-        .listen('isWithinMaintainScrollAtEndThreshold', onEndChange),
+        .listen('isWithinMaintainScrollAtEndThreshold', onAtEndChange),
     [],
   );
 
-  // How many collapsibles are opening or closing; while any are, the Feed holds still.
-  const [moving, setMoving] = useState(0);
-  const onMotion = useCallback((started: boolean) => {
+  // While any collapsible is opening or closing, the Feed holds still.
+  const [movingCollapsibles, setMovingCollapsibles] = useState(0);
+  const onMotionChange = useCallback((started: boolean) => {
     if (started) {
-      setMoving((count) => count + 1);
+      setMovingCollapsibles((count) => count + 1);
       return;
     }
     // A frame later, once the list has the final size: Legend checks the end only on scroll, so check it first, or the stale answer follows to the end.
     requestAnimationFrame(() => {
       list.current?.reportContentInset();
-      setMoving((count) => count - 1);
+      setMovingCollapsibles((count) => count - 1);
     });
   }, []);
 
@@ -268,7 +270,7 @@ function FeedList({
   );
   const renderItem = useCallback(
     ({ item }: LegendListRenderItemProps<FeedEntry>) => (
-      <FeedRow onMotion={onMotion}>
+      <FeedRow onMotionChange={onMotionChange}>
         {item.type === 'live_header' ? (
           <LiveHeader
             liveHeader={item.liveHeader}
@@ -280,14 +282,14 @@ function FeedList({
         )}
       </FeedRow>
     ),
-    [imageUrl, now, onMotion],
+    [imageUrl, now, onMotionChange],
   );
 
   return (
     <View style={fillShrinkable}>
       <LegendList
         ref={list}
-        {...listTestId('feed-scroll')}
+        {...listTestIdProps('feed-scroll')}
         style={fill}
         contentContainerStyle={wide ? wideContentStyle : phoneContentStyle}
         data={entries}
@@ -299,7 +301,7 @@ function FeedList({
         initialScrollIndex={initialIndex}
         alignItemsAtEnd
         // Rows measure taller than estimated and streaming text grows them; at the end, the Feed stays there.
-        maintainScrollAtEnd={moving ? holdEnd : followEnd}
+        maintainScrollAtEnd={movingCollapsibles ? holdEnd : followEnd}
         maintainScrollAtEndThreshold={endThreshold}
         maintainVisibleContentPosition={keepPosition}
         // Older rows load two screens ahead of the top, and rows draw a screen beyond the view, so reading back never waits.
@@ -311,8 +313,11 @@ function FeedList({
         keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
         keyboardShouldPersistTaps="handled"
       />
-      {leftAt !== null && (
-        <JumpToLatest unread={leftAt !== newestKey} onPress={jumpToLatest} />
+      {newestKeyWhenLeftEnd !== null && (
+        <JumpToLatest
+          hasNewRows={newestKeyWhenLeftEnd !== newestKey}
+          onPress={jumpToLatest}
+        />
       )}
       {/* Over the list, so keeping the reading position never scrolls it out of view. */}
       {loadingOlder && (

@@ -11,8 +11,8 @@ import {
   oldestMessage,
   runningHeader,
   runningSessionMocks,
+  runningTurnNow,
   sendArrivingRow,
-  sessionNow,
   twoSessionMocks,
 } from '../../mocks/session-screen-mock';
 import { SessionScreenPreview } from '../../mocks/session-screen-preview';
@@ -27,25 +27,25 @@ const meta = {
   title: 'Tests/SessionScreen',
   component: SessionScreen,
   parameters: { trpc: runningSessionMocks, screenPreview: true },
-  args: { id: 'session-1', now: sessionNow },
+  args: { id: 'session-1', now: runningTurnNow },
   render: (args) => <SessionScreenPreview {...args} />,
 } satisfies Meta<typeof SessionScreen>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 // At a phone's size the Feed overflows a screen, so the reader can scroll away from the end.
-async function settlePhone() {
+async function resizeToPhoneWidth() {
   if ('__vitest_browser__' in globalThis)
     await settleViewport(layoutWidths.phone);
 }
 
 // A loaded runner can take a few frames per scroll before the Feed answers.
-const scrollingAway = { timeout: 5000, interval: 100 };
+const scrollAwayWait = { timeout: 5000, interval: 100 };
 
-const atEnd = (scroll: HTMLElement) =>
-  scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 2;
+const scrolledToEnd = (feedScroll: HTMLElement) =>
+  feedScroll.scrollHeight - feedScroll.scrollTop - feedScroll.clientHeight < 2;
 
-function inViewport(element: Element) {
+function fullyInViewport(element: Element) {
   const box = element.getBoundingClientRect();
   return (
     box.height > 0 &&
@@ -98,7 +98,7 @@ export const Idle: Story = {
       await expect(canvas.queryByRole('button', { name: 'Stop' })).toBeNull();
       // The newest row sits at the bottom, above the Composer.
       await waitFor(() =>
-        expect(inViewport(canvas.getByText('Redraws'))).toBe(true),
+        expect(fullyInViewport(canvas.getByText('Redraws'))).toBe(true),
       );
     }),
 };
@@ -113,7 +113,7 @@ export const LoadingEarlier: Story = {
       const indicator = await canvas.findByRole('progressbar', {
         name: 'Loading earlier',
       });
-      await waitFor(() => expect(inViewport(indicator)).toBe(true));
+      await waitFor(() => expect(fullyInViewport(indicator)).toBe(true));
     });
   },
 };
@@ -141,40 +141,40 @@ export const PagesOlderRows: Story = {
 export const JumpsToLatest: Story = {
   parameters: { trpc: arrivingRowSessionMocks },
   play: async ({ canvas }) => {
-    await settlePhone();
+    await resizeToPhoneWidth();
     const scroll = await canvas.findByTestId('feed-scroll');
     const feed = within(scroll);
-    await waitFor(() => expect(atEnd(scroll)).toBe(true));
+    await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
     await expect(
       canvas.queryByRole('button', { name: /Jump to latest/ }),
     ).toBeNull();
     // The Feed settles at the end as it opens, so the reader scrolls up until it stays up.
     await waitFor(async () => {
-      if (atEnd(scroll)) {
+      if (scrolledToEnd(scroll)) {
         scroll.scrollTop -= scroll.clientHeight;
         scroll.dispatchEvent(new Event('scroll'));
       }
       await expect(
         canvas.getByRole('button', { name: 'Jump to latest' }),
       ).toBeVisible();
-    }, scrollingAway);
+    }, scrollAwayWait);
     // A row arriving while the reader is away leaves what they read where it was; rows above may still measure, so compare the screen, not scrollTop.
     const view = scroll.getBoundingClientRect();
-    const reading = document.elementFromPoint(
+    const elementInView = document.elementFromPoint(
       view.left + view.width / 2,
       view.top + view.height / 2,
     );
-    if (!reading) throw new Error('Nothing in view');
-    const readingAt = reading.getBoundingClientRect().top;
+    if (!elementInView) throw new Error('Nothing in view');
+    const elementInViewTop = elementInView.getBoundingClientRect().top;
     sendArrivingRow();
-    const jump = await canvas.findByRole('button', {
+    const jumpToLatest = await canvas.findByRole('button', {
       name: 'Jump to latest, new rows',
     });
     await expect(
-      Math.abs(reading.getBoundingClientRect().top - readingAt),
+      Math.abs(elementInView.getBoundingClientRect().top - elementInViewTop),
     ).toBeLessThan(2);
-    jump.click();
-    await waitFor(() => expect(atEnd(scroll)).toBe(true));
+    jumpToLatest.click();
+    await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
     await expect(await feed.findByText(arrivingMessage)).toBeVisible();
     await waitFor(() =>
       expect(
@@ -187,11 +187,11 @@ export const JumpsToLatest: Story = {
 export const KeepsPlaceWhenRowOpens: Story = {
   parameters: { trpc: longSessionMocks },
   play: async ({ canvas }) => {
-    await settlePhone();
+    await resizeToPhoneWidth();
     const scroll = await canvas.findByTestId('feed-scroll');
-    await waitFor(() => expect(atEnd(scroll)).toBe(true));
+    await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
     // Away from the end, opening a row grows the Feed below it and leaves the rows above where they were.
-    const closedRowInView = () => {
+    const closedRowInTopHalf = () => {
       const view = scroll.getBoundingClientRect();
       return within(scroll)
         .queryAllByRole('button', { expanded: false })
@@ -202,18 +202,18 @@ export const KeepsPlaceWhenRowOpens: Story = {
     };
     // The reader scrolls up until the Feed stops following the end.
     await waitFor(async () => {
-      if (atEnd(scroll)) {
+      if (scrolledToEnd(scroll)) {
         scroll.scrollTop -= scroll.clientHeight;
         scroll.dispatchEvent(new Event('scroll'));
       }
       await expect(
         canvas.getByRole('button', { name: 'Jump to latest' }),
       ).toBeVisible();
-    }, scrollingAway);
+    }, scrollAwayWait);
     // Reads back a third of a screen at a time until a closed row sits in the top half.
     const trigger = await waitFor(
       () => {
-        const found = closedRowInView();
+        const found = closedRowInTopHalf();
         if (found) return found;
         scroll.scrollTop -= scroll.clientHeight / 3;
         scroll.dispatchEvent(new Event('scroll'));
@@ -221,7 +221,7 @@ export const KeepsPlaceWhenRowOpens: Story = {
       },
       { timeout: 5000, interval: 100 },
     );
-    const triggerAt = trigger.getBoundingClientRect().top;
+    const triggerTop = trigger.getBoundingClientRect().top;
     // The trigger's collapsible, which grows as it opens.
     const collapsible = trigger.parentElement;
     if (!collapsible) throw new Error('No collapsible around the row');
@@ -231,21 +231,21 @@ export const KeepsPlaceWhenRowOpens: Story = {
       expect(trigger).toHaveAttribute('aria-expanded', 'true'),
     );
     // Once the row stops growing, the open has finished.
-    let heightAt = heightBefore;
+    let lastHeight = heightBefore;
     await waitFor(
       () => {
         const height = collapsible.offsetHeight;
-        const still = height > heightBefore && height === heightAt;
-        heightAt = height;
-        expect(still).toBe(true);
+        const stoppedGrowing = height > heightBefore && height === lastHeight;
+        lastHeight = height;
+        expect(stoppedGrowing).toBe(true);
       },
       { timeout: 5000, interval: 250 },
     );
     // Legend rounds the scroll on each layout pass while the row grows, which leaves it at most a few pixels off.
     await expect(
-      Math.abs(trigger.getBoundingClientRect().top - triggerAt),
+      Math.abs(trigger.getBoundingClientRect().top - triggerTop),
     ).toBeLessThanOrEqual(3);
-    await expect(atEnd(scroll)).toBe(false);
+    await expect(scrolledToEnd(scroll)).toBe(false);
   },
 };
 
@@ -253,7 +253,7 @@ export const SwitchesSessions: Story = {
   parameters: { trpc: twoSessionMocks },
   render: (args) => <SessionSwitchPreview {...args} />,
   play: async ({ canvas }) => {
-    await settlePhone();
+    await resizeToPhoneWidth();
     await canvas.findByRole('heading', { name: /^Think briefly first/ });
     await expect(canvas.getByRole('button', { name: 'Stop' })).toBeVisible();
     switchSession('session-2');
@@ -263,7 +263,7 @@ export const SwitchesSessions: Story = {
     await expect(canvas.queryByRole('button', { name: 'Stop' })).toBeNull();
     await expect(canvas.queryByRole('status')).toBeNull();
     await waitFor(() =>
-      expect(inViewport(canvas.getByText('Redraws'))).toBe(true),
+      expect(fullyInViewport(canvas.getByText('Redraws'))).toBe(true),
     );
     await expect(
       canvas.queryByRole('button', { name: /Jump to latest/ }),
