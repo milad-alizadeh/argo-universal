@@ -3,7 +3,7 @@ import type {
   SessionUpdate,
   ToolCallUpdate,
 } from '@repo/contracts';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { Composer, type ComposerDraft } from '#components/Composer';
@@ -18,6 +18,7 @@ import {
 import { useConnectionState } from '../connection/context';
 import { useFeedView } from '../feed/use-feed-view';
 import { useSessionFeed } from '../feed/use-session-feed';
+import { useAgents } from '../lib/use-agents';
 import { useImageDraft } from '../lib/use-image-draft';
 import { useNavigate } from '../navigation/context';
 import { useWide } from '../navigation/use-wide';
@@ -59,7 +60,6 @@ export function SessionScreen({ id, now }: SessionScreenProps) {
 }
 
 function SessionView({ sessionId, now }: { sessionId: string; now?: number }) {
-  const trpc = useTRPC();
   const navigate = useNavigate();
   const imageUrl = useBlobUrl();
   const connected = useConnectionState() === 'open';
@@ -76,7 +76,7 @@ function SessionView({ sessionId, now }: { sessionId: string; now?: number }) {
     loadingOlder,
     loadOlder,
   } = useSessionFeed(sessionId);
-  const agents = useQuery(trpc.agents.list.queryOptions());
+  const agents = useAgents();
   const {
     draft,
     changeDraft,
@@ -188,6 +188,7 @@ function SessionView({ sessionId, now }: { sessionId: string; now?: number }) {
                 ),
               onAgentSetup: (setup) =>
                 navigate({ to: 'settings-agent', agent: setup }),
+              onAgentRetry: agents.retry,
               turnRunning,
               checkout: {
                 branch: snapshot.checkout.branch ?? '',

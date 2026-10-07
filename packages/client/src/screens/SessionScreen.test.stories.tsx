@@ -5,6 +5,7 @@ import { expect, waitFor, within } from 'storybook/test';
 import { composerImages } from '../../mocks/composer-mock';
 import { eachLayout, layoutWidths } from '../../mocks/each-layout';
 import { createFeedMocks } from '../../mocks/feed-mock';
+import { agentProbeRequests } from '../../mocks/new-session-mock';
 import {
   arrivingMessage,
   arrivingRowSessionMocks,
@@ -22,6 +23,7 @@ import {
   splitGroupSessionMocks,
   splitGroupStepInTail,
   twoSessionMocks,
+  unavailableSessionCases,
 } from '../../mocks/session-screen-mock';
 import { SessionScreenPreview } from '../../mocks/session-screen-preview';
 import {
@@ -41,6 +43,79 @@ const meta = {
 } satisfies Meta<typeof SessionScreen>;
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+function unavailableAgentRetry(width: number, agentIndex: number): Story {
+  const recorded = unavailableSessionCases[agentIndex];
+  const other = newSessionCatalogs.bothAvailable.find(
+    (agent) => agent.agent !== recorded?.agent.agent,
+  );
+  if (!recorded || !other)
+    throw new Error(
+      'Recorded catalog needs two Agents for started Session recovery',
+    );
+  return {
+    parameters: { trpc: recorded.fixtures },
+    beforeEach: () => {
+      agentProbeRequests.length = 0;
+    },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
+      await userEvent.click(
+        await canvas.findByRole('button', { name: 'Agent and model' }),
+      );
+      const overlay = within(document.body);
+      if (width === layoutWidths.phone)
+        await userEvent.click(
+          await overlay.findByRole('button', { name: 'Choose Agent' }),
+        );
+      const current = await overlay.findByRole('button', {
+        name: `Select ${recorded.agent.label}`,
+      });
+      await waitFor(() => expect(current).toBeVisible());
+      await expect(current).toBeDisabled();
+      await expect(within(current).getByText(recorded.reason)).toBeVisible();
+      await expect(
+        overlay.queryByRole('button', { name: `Select ${other.label}` }),
+      ).not.toBeInTheDocument();
+      await userEvent.click(
+        overlay.getByRole('button', { name: `Retry ${recorded.agent.label}` }),
+      );
+      await waitFor(() =>
+        expect(
+          overlay.queryByText('Unavailable', { exact: true }),
+        ).not.toBeInTheDocument(),
+      );
+      await expect(
+        overlay.getByRole('button', { name: `Select ${recorded.agent.label}` }),
+      ).toBeDisabled();
+      await expect(
+        overlay.queryByText(recorded.reason),
+      ).not.toBeInTheDocument();
+      await expect(
+        overlay.queryByRole('button', { name: `Select ${other.label}` }),
+      ).not.toBeInTheDocument();
+      await expect(
+        agentProbeRequests.filter((input) => input?.refresh),
+      ).toEqual([{ refresh: true }]);
+    },
+  };
+}
+export const UnavailableAgentRetryPhoneFirstAgent = unavailableAgentRetry(
+  layoutWidths.phone,
+  0,
+);
+export const UnavailableAgentRetryPhoneSecondAgent = unavailableAgentRetry(
+  layoutWidths.phone,
+  1,
+);
+export const UnavailableAgentRetryWideFirstAgent = unavailableAgentRetry(
+  layoutWidths.wide,
+  0,
+);
+export const UnavailableAgentRetryWideSecondAgent = unavailableAgentRetry(
+  layoutWidths.wide,
+  1,
+);
 
 // At a phone's size the Feed overflows a screen, so the reader can scroll away from the end.
 async function resizeToPhoneWidth() {

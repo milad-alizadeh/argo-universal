@@ -1,4 +1,4 @@
-import type { SessionConfigOption } from '@repo/contracts';
+import type { ConfigOptionIcon, SessionConfigOption } from '@repo/contracts';
 import type { AgentConfigValue } from '../src/agent-events';
 import type { Model, ReasoningEffort } from './protocol.gen';
 
@@ -7,16 +7,20 @@ const modeNames = {
   default: 'Ask first',
   fullAccess: 'Full access',
 };
+type Mode = keyof typeof modeNames;
 const modeDescriptions = {
   default: 'Asks before edits and commands',
   plan: 'Reads and plans, changes nothing',
   fullAccess: 'Runs without sandbox or permission requests.',
-};
+} satisfies Record<Mode, string>;
 const modeMetadata = {
   default: { icon: 'ShieldWarning', tone: 'safe' },
   plan: { icon: 'MapTrifold', tone: 'planning' },
   fullAccess: { icon: 'WarningTriangle', tone: 'dangerous' },
-} as const;
+} satisfies Record<
+  Mode,
+  NonNullable<SessionConfigOption['_meta']>['argo'] & { icon: ConfigOptionIcon }
+>;
 
 export interface ConfigValues {
   model: string;
