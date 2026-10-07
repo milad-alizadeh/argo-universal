@@ -164,8 +164,22 @@ describe('connection model', () => {
     },
   };
 
-  const shortestPaths = model.getShortestPaths();
-  const simplePaths = model.getSimplePaths();
+  const shortestPaths = [
+    ...model.getShortestPaths(),
+    ...model.getPathsFromEvents([
+      { type: 'connection.attemptRequested' },
+      { type: 'connection.attemptRequested' },
+      { type: 'connection.lost', error: lostError },
+    ]),
+  ];
+  // Direct paths cover first-connect losses; simple paths cover later reconnect cycles.
+  const simplePaths = model.getSimplePaths({
+    filterEvents: (snapshot, event) =>
+      snapshot.can(event) &&
+      !(
+        linkState(snapshot) === 'connecting' && event.type === 'connection.lost'
+      ),
+  });
   const title = (path: TestPath<ConnectionSnapshot, ConnectionEvent>) =>
     path.steps
       .map(({ event }) =>
@@ -253,6 +267,18 @@ describe('connection', () => {
     loseOpenConnection();
 
     expect(waitForAllowedAttempt()).toBe(500);
+  });
+
+  it('a loss before the first open goes offline after offlineDelay', () => {
+    startConnection();
+    watcher.send({ type: 'connection.lost', error: lostError });
+
+    expect(linkState(connection.getSnapshot())).toBe('reconnecting');
+    vi.advanceTimersByTime(offlineDelayMs - 1);
+    expect(linkState(connection.getSnapshot())).toBe('reconnecting');
+    vi.advanceTimersByTime(1);
+    expect(linkState(connection.getSnapshot())).toBe('offline');
+    expect(refetches).toBe(0);
   });
 
   it('goes offline 10 seconds after the Connection is lost', () => {
