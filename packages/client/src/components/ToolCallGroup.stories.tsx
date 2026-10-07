@@ -26,9 +26,9 @@ export const Overview: Story = {
           renderActivity={renderRecordedActivity}
         />
       </Variation>
-      <Variation label="Running group, expanded">
+      <Variation label="Parallel calls: earlier command still running">
         <ToolCallGroup
-          group={toolCallGroupMock.running}
+          group={toolCallGroupMock.parallel}
           now={toolCallGroupMock.now}
           renderActivity={renderRecordedActivity}
           initialOpen

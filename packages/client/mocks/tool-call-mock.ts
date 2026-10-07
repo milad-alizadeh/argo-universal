@@ -94,11 +94,26 @@ export const toolCallGroupMocks = recordedFeedMocks
     if (!running) throw new Error('Recording needs a running group');
     const exploration = group.items.find((item) => item.type === 'exploration');
     if (!exploration) throw new Error('Recording needs exploration');
+    const read = exploration.toolCalls[0];
+    if (read?.status !== 'completed')
+      throw new Error(
+        'Recorded catalog needs a completed read for parallel calls',
+      );
+    const earlier = { ...active, position: 0 };
+    const later = { ...read, position: 1, turnId: earlier.turnId };
+    const parallel = toFeedView([earlier, later], mock.snapshot).items.find(
+      (item): item is FeedGroup => item.type === 'group',
+    );
+    if (!parallel)
+      throw new Error('Recorded catalog needs a parallel Tool call group');
     return {
       agent: mock.agent,
       group,
       running,
       exploration,
+      parallel,
+      earlier,
+      later,
       now: (active._meta?.argo?.startedAt ?? 0) + 23000,
     };
   });
