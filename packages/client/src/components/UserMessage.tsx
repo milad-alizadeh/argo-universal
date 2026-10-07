@@ -6,7 +6,7 @@ import type {
   UserMessage as UserMessageRow,
 } from '@repo/contracts';
 import { FileIcon, FolderIcon } from 'phosphor-react-native';
-import { memo, useLayoutEffect, useState } from 'react';
+import { memo, useLayoutEffect, useRef, useState } from 'react';
 import {
   Image,
   Pressable,
@@ -54,8 +54,12 @@ function Bubble({ text }: { text: string }) {
   const clamped = !expanded && fullHeight > shownHeight + 1;
   // "Show more" lands a layout after the bubble, which Legend List on the web misses until it next measures every row, so the Feed tells it.
   const syncLayout = useSyncLayout();
-  // biome-ignore lint/correctness/useExhaustiveDependencies(clamped): a change in clamping is the trigger, not a value the effect reads
-  useLayoutEffect(() => syncLayout(), [clamped, syncLayout]);
+  const syncedClamped = useRef<boolean | undefined>(undefined);
+  useLayoutEffect(() => {
+    if (syncedClamped.current === clamped) return;
+    syncedClamped.current = clamped;
+    syncLayout();
+  }, [clamped, syncLayout]);
   return (
     <View className="max-w-[70%] gap-0.5 rounded-xl bg-muted px-4 py-2.5">
       <View>

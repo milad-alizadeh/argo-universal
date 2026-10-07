@@ -2,8 +2,10 @@
 import path from 'node:path';
 import type { VendorMessage } from '../../../packages/agents/codex/messages.ts';
 import type {
+  Account,
   CommandExecutionRequestApprovalResponse,
   FileChangeRequestApprovalResponse,
+  GetAccountResponse,
   ThreadResumeParams,
   ToolRequestUserInputResponse,
   TurnInterruptParams,
@@ -228,19 +230,15 @@ serveJsonLines<Request>(({ id, method, params, result }) => {
         process.env.OPENAI_API_KEY ||
         process.env.CODEX_API_KEY ||
         environment.scenario.account === 'apiKey';
-      return send({
-        id,
-        result: {
-          account:
-            environment.availability === 'not_signed_in'
-              ? null
-              : {
-                  type: usesApiKey ? 'apiKey' : 'chatgpt',
-                },
-          requiresOpenaiAuth: true,
-          workspaceRouting: null,
-        },
-      });
+      const account: Account = usesApiKey
+        ? { type: 'apiKey' }
+        : { type: 'chatgpt', email: 'mock@example.com', planType: 'plus' };
+      const response: GetAccountResponse = {
+        account: environment.availability === 'not_signed_in' ? null : account,
+        requiresOpenaiAuth: true,
+        workspaceRouting: null,
+      };
+      return send({ id, result: response });
     }
     case 'model/list':
       return listModels(id);

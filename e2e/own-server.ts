@@ -8,13 +8,31 @@ import { createProjectRepository } from './project-repository';
 
 const serverDirectory = path.resolve(import.meta.dirname, '../apps/server');
 
-const serverUrlFor = (port: number | string) => `ws://127.0.0.1:${port}`;
+const serverHost = '127.0.0.1';
+const serverUrlFor = (port: number) => `ws://${serverHost}:${port}`;
+export const serverHttpUrl = (port: number) => `http://${serverHost}:${port}`;
+const serverStartMilliseconds = 30_000;
+const serverPollMilliseconds = 200;
+
+// Polls `check` until it settles on a value, and throws `timeoutMessage` once a Server has had its whole start time.
+export async function pollServer<T>(
+  check: () => Promise<T | undefined>,
+  timeoutMessage: (seconds: number) => string,
+) {
+  const deadline = Date.now() + serverStartMilliseconds;
+  while (Date.now() < deadline) {
+    const result = await check();
+    if (result !== undefined) return result;
+    await new Promise((resolve) => setTimeout(resolve, serverPollMilliseconds));
+  }
+  throw new Error(timeoutMessage(serverStartMilliseconds / 1000));
+}
 
 export const findFreePort = () =>
   new Promise<number>((resolve, reject) => {
     const server = createServer();
     server.once('error', reject);
-    server.listen(0, '127.0.0.1', () => {
+    server.listen(0, serverHost, () => {
       const address = server.address();
       server.close(() =>
         typeof address === 'object' && address
@@ -43,20 +61,20 @@ async function waitUntilReady({
   portTaken: () => boolean;
   stderrTail: () => string;
 }) {
-  const deadline = Date.now() + 30_000;
-  while (Date.now() < deadline) {
-    if (hasExited(server))
-      throw new Error(`${describeExit(server)}${withStderr(stderrTail())}`);
-    if (portTaken()) return false;
-    const text = await readFile(path.join(home, 'server.json'), 'utf8').catch(
-      () => null,
-    );
-    if (text !== null && ServerFile.parse(JSON.parse(text)).port === port)
-      return true;
-    await new Promise((resolve) => setTimeout(resolve, 200));
-  }
-  throw new Error(
-    `The Server did not start within 30 s${withStderr(stderrTail())}`,
+  return pollServer(
+    async () => {
+      if (hasExited(server))
+        throw new Error(`${describeExit(server)}${withStderr(stderrTail())}`);
+      if (portTaken()) return false;
+      const text = await readFile(path.join(home, 'server.json'), 'utf8').catch(
+        () => null,
+      );
+      if (text !== null && ServerFile.parse(JSON.parse(text)).port === port)
+        return true;
+      return;
+    },
+    (seconds) =>
+      `The Server did not start within ${seconds} s${withStderr(stderrTail())}`,
   );
 }
 
@@ -123,7 +141,7 @@ export async function startOwnServer(directory: string, agents: MockAgents) {
       ) {
         return {
           serverUrl: serverUrlFor(port),
-          httpUrl: `http://127.0.0.1:${port}`,
+          httpUrl: serverHttpUrl(port),
           stop,
         };
       }

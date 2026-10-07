@@ -9,7 +9,12 @@ import {
 } from '@playwright/test';
 import { z } from 'zod';
 import { type MockAgents, writeMockAgents } from './mock-agents';
-import { findFreePort, startOwnServer } from './own-server';
+import {
+  findFreePort,
+  pollServer,
+  serverHttpUrl,
+  startOwnServer,
+} from './own-server';
 import { createProjectRepository } from './project-repository';
 
 export type AppOptions = { appTarget: 'web' | 'electron' };
@@ -53,17 +58,16 @@ export type ServerOptions = {
 type App = { page: Page; httpUrl: string };
 
 // Polls system.info, so a test never calls a Server that is still starting.
-async function waitForServer(httpUrl: string) {
-  const deadline = Date.now() + 30_000;
-  while (Date.now() < deadline) {
-    const response = await fetch(`${httpUrl}/trpc/system.info`).catch(
-      () => null,
-    );
-    if (response?.ok) return;
-    await new Promise((resolve) => setTimeout(resolve, 200));
-  }
-  throw new Error('The Server did not answer within 30 s');
-}
+const waitForServer = (httpUrl: string) =>
+  pollServer(
+    async () => {
+      const response = await fetch(`${httpUrl}/trpc/system.info`).catch(
+        () => null,
+      );
+      return response?.ok ? true : undefined;
+    },
+    (seconds) => `The Server did not answer within ${seconds} s`,
+  );
 
 export const test = base.extend<
   AppOptions & ServerOptions & { app: App; server: { httpUrl: string } }
@@ -124,7 +128,7 @@ export const test = base.extend<
       },
     });
     try {
-      const httpUrl = `http://127.0.0.1:${port}`;
+      const httpUrl = serverHttpUrl(port);
       await waitForServer(httpUrl);
       await use({ page: await electronApp.firstWindow(), httpUrl });
     } finally {

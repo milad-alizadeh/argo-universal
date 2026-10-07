@@ -10,8 +10,7 @@ const maximumPathCount = 1000;
 
 type Walk<TSnapshot extends Snapshot<unknown>, TEvent extends EventObject> = {
   // The adjacency of every model is unioned; each of its edges must be walked.
-  // biome-ignore lint/suspicious/noExplicitAny: a model's input type does not matter here.
-  models: TestModel<TSnapshot, TEvent, any>[];
+  models: Pick<TestModel<TSnapshot, TEvent, unknown>, 'getAdjacencyMap'>[];
   // Every path the file walks, whatever generated it.
   paths: StatePath<TSnapshot, TEvent>[];
   // Each file keeps its own keys: they encode what its machine counts as the same state and event.

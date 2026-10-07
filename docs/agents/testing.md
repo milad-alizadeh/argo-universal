@@ -10,7 +10,7 @@ Read this before you write or change a test. Test stories also follow `docs/agen
   - Server behaviour a browser cannot reach: the composition test
   - a machine: its xstate/graph model test
   - a pure function: a table test beside it
-  - a component: play functions in `*.test.stories.tsx`; plain Vitest tests non-UI code only (spec 0002 §12)
+  - a component: play functions in `*.test.stories.tsx`; plain Vitest tests non-UI code only
 - Assert both ways: what must be there, and what must not.
 - Keep every assertion unconditional: an `if (found)` around `expect` switches the test off when it matters. Machine model tests and capability-parity loops are the exception.
 - Run on both Agents, or name the skip in the title with `it.skipIf`.
@@ -42,7 +42,7 @@ Use the first that fits:
 ## Machines
 
 - Walk every transition with xstate/graph.
-- The state-key exception: a test checks a machine's state names only in its model test (spec 0003, Testing Decisions). The model test's `stateKey` and `eventKey` name states and events because spec 0002 §12 walks paths over them. Keep each file's keys as they are: they encode what that machine counts as the same state.
+- The state-key exception: a test checks a machine's state names only in its model test; every other test asserts what the user or caller observes. The model test's `stateKey` and `eventKey` name states and events because xstate/graph walks its paths over them. Keep each file's keys as they are: they encode what that machine counts as the same state.
 
 ## Tables and repetition
 

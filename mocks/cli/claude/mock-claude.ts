@@ -234,17 +234,27 @@ function playTurn() {
 function answer(subtype: string | undefined) {
   if (subtype === undefined) return;
   if (subtype !== 'initialize') return recordedAnswers.get(subtype);
-  const response = recordedAnswers.get(subtype) ?? initializeResponse;
+  // The recording's answer to `initialize` is the CLI's own, matched by request id.
+  const response =
+    (recordedAnswers.get(subtype) as
+      | SDKControlInitializeResponse
+      | undefined) ?? initializeResponse;
+  return {
+    ...response,
+    account: signedInAccount(response.account),
+  } satisfies SDKControlInitializeResponse;
+}
+
+function signedInAccount(recorded: AccountInfo): AccountInfo {
   // A CLI nobody signed in to still starts, with an account that has no subscription.
-  if (environment.availability === 'not_signed_in')
-    return { ...(response as Record<string, unknown>), account: {} };
+  if (environment.availability === 'not_signed_in') return {};
   // A key that reaches the CLI, or a scenario that fakes one, replaces the subscription.
   if (
     process.env.ANTHROPIC_API_KEY ||
     environment.scenario.account === 'apiKey'
   )
-    return { ...(response as Record<string, unknown>), account: apiKeyAccount };
-  return response;
+    return apiKeyAccount;
+  return recorded;
 }
 
 serveJsonLines<Output>((input) => {

@@ -13,7 +13,7 @@ Before you add a function, file or module, check that it has all three:
 
 Then run the deletion test: inline it into its callers in your head. If they read no worse, it is *shallow*; keep it inlined.
 
-A helper with one caller lives in that caller's file, unexported, below the caller. A pure projection that needs table tests is the exception: it gets its own file beside its siblings, as `deriveSessionStatus` and `toSessionSnapshot` do in `apps/server/src/services/sessions/` (spec 0002 §1).
+A helper with one caller lives in that caller's file, unexported, below the caller. A pure projection that needs table tests is the exception: it gets its own file beside its siblings, as `deriveSessionStatus` and `toSessionSnapshot` do in `apps/server/src/services/sessions/`.
 
 ## When the complexity alarm fires
 

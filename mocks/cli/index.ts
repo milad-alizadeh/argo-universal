@@ -91,8 +91,13 @@ export const mockClis: Record<string, MockCli> = {
     writeTranscript: writeCodexTranscript,
   },
   claude: {
-    // Both reorder a JSON-RPC response against notifications, and Claude's streamed input gets no response to a user message.
-    unsupportedScenarios: ['notificationsFirst', 'requestBeforeStartResponse'],
+    // Each reorders a JSON-RPC response to a Turn's start, and Claude's streamed input gets no response to a user message.
+    unsupportedScenarios: [
+      'notificationsFirst',
+      'requestBeforeStartResponse',
+      'turnResponseAfterNextStart',
+      'completionBeforeResponse',
+    ],
     recordedTitle,
     recordedRequestAnswer: claudeRequestAnswer,
     feedEvents: claudeFeedEvents,
