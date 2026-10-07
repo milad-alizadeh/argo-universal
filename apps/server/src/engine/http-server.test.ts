@@ -87,7 +87,7 @@ beforeEach(async () => {
   port = await findFreePort();
   ({ database, remove: removeDatabase } = openTestDatabase());
   sessions = createActor(registryMachine, {
-    input: { database, adapters: [] },
+    input: { database, runtimeDirectory: home, adapters: [] },
   }).start();
   ({ close: closeServer } = await startHttpServer(options()));
 });

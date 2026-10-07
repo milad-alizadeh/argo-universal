@@ -41,3 +41,7 @@ Ask these of your diff before you finish:
 - Casts: is each `as` inside XState `setup`, on a vendor type after an envelope check, or on a correlated protocol response, with a one-line comment that says why?
 - Ids: is a branded type kept to ids that can be swapped by mistake?
 - Scope: does every option, parameter and abstraction have a caller today? Delete code nothing reaches, and put tidy-ups in their own PR.
+
+## Stored Session branch prefix
+
+The unexported Session branch prefix in `packages/git` is stored data. It is the one exception to the product-name rule in `AGENTS.md`. The prefix must survive a product rename so existing worktrees remain Session Checkouts.

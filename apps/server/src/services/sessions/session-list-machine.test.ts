@@ -14,12 +14,18 @@ import { openTestDatabase } from '#mocks/database';
 import { registryMachine } from './registry-machine';
 import { sessionListMachine } from './session-list-machine';
 
-const { database, remove } = openTestDatabase();
+const { database, directory: runtimeDirectory, remove } = openTestDatabase();
 afterAll(remove);
 const sessions = createActor(registryMachine, {
-  input: { database, adapters: [] },
+  input: { database, runtimeDirectory, adapters: [] },
 });
-const input = { sessions, writer: undefined, readRows: () => [] };
+const input = {
+  sessions,
+  writer: undefined,
+  readRows: () => [],
+  sessionIdsForJobs: () => [],
+  relatedSessionIds: (ids: readonly string[]) => [...ids],
+};
 const machine = sessionListMachine.provide({
   actors: { observe: fromCallback(() => {}) },
 });
@@ -30,6 +36,7 @@ const events = [
   { type: 'list.refresh' },
   { type: 'list.failed', error: 'Unavailable database' },
   { type: 'list.stop' },
+  { type: 'list.flush' },
   { type: 'xstate.after.listRefreshDelay.sessionList.active.pending' },
 ] as AnyEventObject[] as ListEvent[];
 const key = (snapshot: ListSnapshot) => JSON.stringify(snapshot.value);
