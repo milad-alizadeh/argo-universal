@@ -87,6 +87,60 @@ async function openSession(overrides: Partial<MockAgentScript> = {}) {
   };
 }
 
+it('keeps the Session running while rejected messages show warning Notices', async () => {
+  const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+  cleanups.push(() => {
+    log.mockRestore();
+  });
+  const { session, service, stream } = await openSession();
+  sendSessionCommand(session, firstPrompt);
+  stream.send({
+    type: 'agent.messageRejected',
+    reason: 'Unknown vendor message',
+  });
+  stream.send({
+    type: 'agent.messageRejected',
+    reason: 'Another unknown message',
+  });
+  stream.send({ type: 'agent.feed', change: messageChange('settled') });
+  const { rows } = await vi.waitFor(() => {
+    const page = service.page({
+      sessionId: 'session-1',
+      direction: 'tail',
+      limit: 40,
+    });
+    expect(
+      page.rows.filter((row) => row.sessionUpdate === 'notice'),
+    ).toHaveLength(2);
+    return page;
+  });
+  expect(rows.filter((row) => row.sessionUpdate === 'notice')).toEqual([
+    expect.objectContaining({
+      severity: 'warning',
+      title: 'The Agent sent an unrecognised message',
+      description: 'Unknown vendor message',
+    }),
+    expect.objectContaining({
+      severity: 'warning',
+      title: 'The Agent sent an unrecognised message',
+      description: 'Another unknown message',
+    }),
+  ]);
+  expect(session.getSnapshot().context.rejectedMessages).toBe(2);
+  expect(session.getSnapshot().context.failure).toBeNull();
+  expect(log).toHaveBeenNthCalledWith(
+    1,
+    'session session-1: rejected an Agent message: Unknown vendor message',
+  );
+  expect(log).toHaveBeenNthCalledWith(
+    2,
+    'session session-1: rejected an Agent message: Another unknown message',
+  );
+  expect(
+    rows.filter((row) => row.sessionUpdate === 'agent_message'),
+  ).toHaveLength(1);
+});
+
 it('runs one Turn and rejects a second prompt while it runs', async () => {
   const { session, feed, service, commands, stream } = await openSession();
   sendSessionCommand(session, {
@@ -441,7 +495,7 @@ const machine = sessionMachine.provide({
       actions: { sendToWriter: () => {}, log: () => {} },
     }),
   },
-  actions: { flushFeed: () => {} },
+  actions: { flushFeed: () => {}, logMessageRejected: () => {} },
 });
 type SessionSnapshot = SnapshotFrom<typeof machine>;
 type SessionEvent = EventFromLogic<typeof machine>;
@@ -478,6 +532,7 @@ const events = [
   { type: 'session.cancel' },
   { type: 'session.close' },
   { type: 'agent.usage', usage: { used: 10, size: 100 } },
+  { type: 'agent.messageRejected', reason: 'Unknown vendor message' },
   { type: 'agent.configOptionsChanged', configOptions: [] },
   {
     type: 'agent.feed',
@@ -596,6 +651,9 @@ it.each(paths.map((path, index) => [index, path] as const))(
       states: {
         '*': (expected) => {
           const actual = sessionActor.getSnapshot();
+          expect(actual.context.rejectedMessages).toBe(
+            expected.context.rejectedMessages,
+          );
           const feed = actual.children.feed as FeedActorRef | undefined;
           const { epoch, maxRevision, liveHeader, ...projection } =
             toSessionSnapshot(

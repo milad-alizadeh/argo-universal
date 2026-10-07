@@ -295,3 +295,51 @@ it.each([
     ).toHaveLength(endedTurns);
   },
 );
+
+it.each([
+  { description: 'unknown response id', frame: { id: 99999, result: {} } },
+  { description: 'missing id and method', frame: {} },
+  {
+    description: 'null response id',
+    frame: { id: null, error: { code: -32700, message: 'Parse error' } },
+  },
+  {
+    description: 'null request id',
+    frame: { id: null, method: 'item/tool/requestUserInput', params: {} },
+  },
+])('fails a connection with a $description frame', async ({ frame }) => {
+  const { directory, executable } = await prepare('elicitation');
+  writeFileSync(
+    executable,
+    [
+      `#!${process.execPath}`,
+      `process.stdout.write(${JSON.stringify(`${JSON.stringify(frame)}\n`)});`,
+      'process.stdin.resume();',
+      "process.stdin.on('end', () => process.exit(0));",
+    ].join('\n'),
+  );
+  const failures: unknown[] = [];
+  const controller = new AbortController();
+  cleanups.push(() => controller.abort());
+  await expect(
+    codexAdapter.connect(
+      {
+        sessionId: 'session',
+        cwd: directory,
+        vendorSessionId: null,
+        configOptions: [],
+      },
+      {
+        message: () => {},
+        event: () => {},
+        failed: (error) => failures.push(error),
+      },
+      controller.signal,
+    ),
+  ).rejects.toThrow('Unrecognised app-server message');
+  expect(failures).toEqual([
+    expect.objectContaining({
+      message: expect.stringContaining('Unrecognised app-server message'),
+    }),
+  ]);
+});
