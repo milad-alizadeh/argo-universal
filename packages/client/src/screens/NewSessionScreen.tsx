@@ -19,14 +19,15 @@ export interface NewSessionScreenProps {
   projectId?: string;
 }
 
-function withValue(
+// The option with the reader's choice as its current value, when the choice fits its type.
+function withChosenValue(
   option: SessionConfigOption,
-  value: string | boolean | undefined,
+  chosen: string | boolean | undefined,
 ): SessionConfigOption {
-  if (option.type === 'select' && typeof value === 'string')
-    return { ...option, currentValue: value };
-  if (option.type === 'boolean' && typeof value === 'boolean')
-    return { ...option, currentValue: value };
+  if (option.type === 'select' && typeof chosen === 'string')
+    return { ...option, currentValue: chosen };
+  if (option.type === 'boolean' && typeof chosen === 'boolean')
+    return { ...option, currentValue: chosen };
   return option;
 }
 
@@ -36,15 +37,15 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
   const trpc = useTRPC();
   const navigate = useNavigate();
   const connected = useConnectionState() === 'open';
-  const info = useQuery(trpc.system.info.queryOptions());
+  const serverInfo = useQuery(trpc.system.info.queryOptions());
   const projects = useQuery(trpc.projects.list.queryOptions());
   const agents = useQuery(trpc.agents.list.queryOptions());
   const [chosenProjectId, setChosenProjectId] = useState(projectId);
   const [chosenAgent, setChosenAgent] = useState<string>();
-  const [configValues, setConfigValues] = useState<
+  const [chosenConfigValues, setChosenConfigValues] = useState<
     Record<string, string | boolean>
   >({});
-  const [newWorktree, setNewWorktree] = useState<boolean>();
+  const [chosenNewWorktree, setChosenNewWorktree] = useState<boolean>();
   const { draft, changeDraft, attachImages, toPrompt, upload } =
     useImageDraft();
 
@@ -62,15 +63,16 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
     agents.data?.find((entry) => entry.availability === 'available') ??
     agents.data?.[0];
   const configOptions = (agent?.configOptions ?? []).map((option) =>
-    withValue(option, configValues[option.configId]),
+    withChosenValue(option, chosenConfigValues[option.configId]),
   );
-  const worktree = newWorktree ?? project?.checkoutChoice.type !== 'main';
+  const inNewWorktree =
+    chosenNewWorktree ?? project?.checkoutChoice.type !== 'main';
   const baseBranch =
     project?.checkoutChoice.type === 'worktree'
       ? project.checkoutChoice.baseBranch
       : (branches.data?.currentBranch ?? 'main');
 
-  const start = useMutation(
+  const newSession = useMutation(
     trpc.session.new.mutationOptions({
       onSuccess: ({ sessionId }) =>
         navigate({ to: 'session', id: sessionId }, { replace: true }),
@@ -79,62 +81,66 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
     }),
   );
 
-  const resetErrors = () => {
+  // Clears the last Send's upload or start error.
+  const clearSendErrors = () => {
     upload.reset();
-    start.reset();
+    newSession.reset();
   };
 
-  async function send(sent: ComposerDraft) {
+  async function startSession(sent: ComposerDraft) {
     if (!project || !agent) return;
-    resetErrors();
+    clearSendErrors();
     const prompt = await toPrompt(sent);
     if (!prompt) return;
     const input: SessionNewInput = {
       projectId: project.id,
       agent: agent.agent,
-      checkout: worktree ? { type: 'worktree', baseBranch } : { type: 'main' },
+      checkout: inNewWorktree
+        ? { type: 'worktree', baseBranch }
+        : { type: 'main' },
       configOptions: configOptions.map(({ configId, currentValue }) => ({
         configId,
         value: currentValue,
       })),
       prompt,
     };
-    start.mutate(input);
+    newSession.mutate(input);
   }
 
-  if (info.isError || projects.isError || agents.isError)
+  if (serverInfo.isError || projects.isError || agents.isError)
     return (
       <Screen edges={['bottom']} className="justify-center">
         <LoadError
           title="Couldn't load New Session"
           description="The Server didn't respond. Check that it's running, then retry."
           onRetry={() => {
-            void info.refetch();
+            void serverInfo.refetch();
             void projects.refetch();
             void agents.refetch();
           }}
         />
       </Screen>
     );
-  if (!info.data || !projects.data || !agents.data)
+  if (!serverInfo.data || !projects.data || !agents.data)
     return <Screen edges={['bottom']} />;
 
-  const agentReady = agent?.availability === 'available';
+  const agentAvailable = agent?.availability === 'available';
   // Until the current branch loads, a new worktree has no base to start from.
-  const branchReady =
+  const baseBranchLoaded =
     project?.checkoutChoice.type !== 'main' || branches.data !== undefined;
   // One Send fails at most one of the two steps.
-  let startError: string | undefined;
-  if (start.error)
-    startError = `Couldn't start the Session. ${start.error.message}`;
+  let sendError: string | undefined;
+  if (newSession.error)
+    sendError = `Couldn't start the Session. ${newSession.error.message}`;
   else if (upload.error)
-    startError = `Couldn't upload the image. ${upload.error.message}`;
-  const sending = upload.isPending || start.isPending;
-  const error = agent && !agentReady ? agent.installStep : startError;
+    sendError = `Couldn't upload the image. ${upload.error.message}`;
+  const sending = upload.isPending || newSession.isPending;
+  const composerError =
+    agent && !agentAvailable ? agent.installStep : sendError;
   const checkout = {
     branch: baseBranch,
-    newWorktree: worktree,
-    onNewWorktreeChange: setNewWorktree,
+    newWorktree: inNewWorktree,
+    onNewWorktreeChange: setChosenNewWorktree,
   };
 
   return (
@@ -161,14 +167,14 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
           className={wide ? 'items-center px-6 pb-2' : 'items-center px-4 pb-2'}
         >
           <StartSessionIn
-            serverName={info.data.name}
+            serverName={serverInfo.data.name}
             serverConnected={connected}
             projects={projects.data}
             projectId={project?.id ?? ''}
             onProjectChange={(id) => {
               setChosenProjectId(id);
-              setNewWorktree(undefined);
-              resetErrors();
+              setChosenNewWorktree(undefined);
+              clearSendErrors();
             }}
             checkout={checkout}
             disabled={sending}
@@ -181,23 +187,26 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
             draft={draft}
             onDraftChange={changeDraft}
             onAttachImages={() => void attachImages()}
-            onSend={(sent) => void send(sent)}
+            onSend={(sent) => void startSession(sent)}
             placeholder=""
             sending={sending}
-            disabled={!project || !agentReady || !branchReady}
+            disabled={!project || !agentAvailable || !baseBranchLoaded}
             sendable={connected}
-            error={error}
+            error={composerError}
             phoneCheckout={false}
             configuration={{
               agents: agents.data,
               agent: agent?.agent ?? '',
               configOptions,
               onConfigChange: (configId, value) =>
-                setConfigValues((values) => ({ ...values, [configId]: value })),
-              onAgentChange: (next) => {
-                setChosenAgent(next);
-                setConfigValues({});
-                resetErrors();
+                setChosenConfigValues((values) => ({
+                  ...values,
+                  [configId]: value,
+                })),
+              onAgentChange: (nextAgent) => {
+                setChosenAgent(nextAgent);
+                setChosenConfigValues({});
+                clearSendErrors();
               },
               onAgentSetup: (setup) =>
                 navigate({ to: 'settings-agent', agent: setup }),
