@@ -185,16 +185,18 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
 
   if (serverInfo.isError || projects.isError || agents.isError)
     return (
-      <Screen edges={['bottom']} className="justify-center">
-        <LoadError
-          title="Couldn't load New Session"
-          description="The Server didn't respond. Check that it's running, then retry."
-          onRetry={() => {
-            void serverInfo.refetch();
-            void projects.refetch();
-            void agents.refetch();
-          }}
-        />
+      <Screen edges={['bottom']}>
+        <View className="flex-1 justify-center">
+          <LoadError
+            title="Couldn't load New Session"
+            description="The Server didn't respond. Check that it's running, then retry."
+            onRetry={() => {
+              void serverInfo.refetch();
+              void projects.refetch();
+              void agents.refetch();
+            }}
+          />
+        </View>
       </Screen>
     );
   if (!serverInfo.data || !projects.data || !agents.data)

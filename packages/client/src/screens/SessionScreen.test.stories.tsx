@@ -21,6 +21,7 @@ import {
   switchSession,
 } from '../../mocks/session-switch-preview';
 import { settleViewport } from '../../mocks/settle-viewport';
+import type { Fixtures } from '../../mocks/trpc-mock-link';
 import { SessionScreen } from './SessionScreen';
 
 const meta = {
@@ -100,6 +101,14 @@ export const Idle: Story = {
       await waitFor(() =>
         expect(fullyInViewport(canvas.getByText('Redraws'))).toBe(true),
       );
+      // Rows keep the screen's side margin, however narrow the Feed.
+      const feedScroll = canvas.getByTestId('feed-scroll');
+      const feed = feedScroll.getBoundingClientRect();
+      const row = within(feedScroll)
+        .getByText('Why every Feed row re-renders')
+        .getBoundingClientRect();
+      await expect(row.left - feed.left).toBeGreaterThanOrEqual(16);
+      await expect(feed.right - row.right).toBeGreaterThanOrEqual(16);
     }),
 };
 
@@ -283,4 +292,35 @@ export const EmptyFeed: Story = {
         canvas.getByRole('textbox', { name: 'Message' }),
       ).toBeVisible();
     }),
+};
+
+const agentFailure = 'The Agent stopped three times in ten minutes';
+let openAttempts = 0;
+// The Server refuses the first open, as for a Session whose Agent failed, then opens it.
+const agentFailedMocks: Fixtures = {
+  ...idleSessionMocks,
+  'feed.subscribe': (input, signal) => {
+    openAttempts += 1;
+    if (openAttempts === 1) throw new Error(agentFailure);
+    return idleSessionMocks['feed.subscribe']?.(input, signal) as never;
+  },
+};
+
+export const AgentFailedToOpen: Story = {
+  parameters: { trpc: agentFailedMocks },
+  beforeEach: () => {
+    openAttempts = 0;
+  },
+  play: async ({ canvas, userEvent }) => {
+    const alert = await canvas.findByRole('alert');
+    await expect(alert).toHaveTextContent("Couldn't open the Session");
+    await expect(alert).toHaveTextContent(agentFailure);
+    // Centred on the screen, clear of a phone's header.
+    const box = alert.getBoundingClientRect();
+    await expect(box.top).toBeGreaterThan(window.innerHeight / 4);
+    await userEvent.click(within(alert).getByRole('button', { name: 'Retry' }));
+    await expect(
+      await canvas.findByRole('heading', { name: /^Without using any tools/ }),
+    ).toBeVisible();
+  },
 };

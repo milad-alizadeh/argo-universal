@@ -111,9 +111,9 @@ function JumpToLatest({
   );
 }
 
-// Stable objects, since Legend List lays out again whenever its content style changes.
-const phoneContentStyle = { paddingHorizontal: 16, paddingTop: 16 };
-const wideContentStyle = { paddingHorizontal: 24, paddingTop: 24 };
+// Stable objects, since Legend List lays out again whenever its content style changes. Rows hold the side padding, which Legend List drops on web.
+const phoneContentStyle = { paddingTop: 16 };
+const wideContentStyle = { paddingTop: 24 };
 
 // With the last row's own pb-4, Paper's 72 (wide 60) clear the Composer's overlap; a footer, since `alignItemsAtEnd` ignores bottom padding.
 function FeedEnd() {
@@ -154,7 +154,9 @@ function FeedRow({
   );
   return (
     <CollapsibleLayoutSyncContext.Provider value={layoutSync}>
-      <View className={`${columnClassName} pb-4`}>{children}</View>
+      <View className="px-4 wide:px-6">
+        <View className={`${columnClassName} pb-4`}>{children}</View>
+      </View>
     </CollapsibleLayoutSyncContext.Provider>
   );
 }
@@ -170,6 +172,19 @@ type FeedEntry =
 
 const entryKey = (entry: FeedEntry) =>
   entry.type === 'live_header' ? 'live-header' : feedItemKey(entry);
+
+// Dragging the Feed takes the keyboard down: with the finger on iOS, at once on Android. Web's list is a plain element, which takes neither.
+const keyboardProps = Platform.select({
+  ios: {
+    keyboardDismissMode: 'interactive',
+    keyboardShouldPersistTaps: 'handled',
+  },
+  android: {
+    keyboardDismissMode: 'on-drag',
+    keyboardShouldPersistTaps: 'handled',
+  },
+  default: {},
+} as const);
 
 // A Session's rows, oldest first: it opens at the newest, follows new rows while the reader is at the bottom, and keeps their place when older rows page in above.
 export function Feed({
@@ -310,9 +325,7 @@ function FeedList({
         onStartReachedThreshold={startThreshold}
         drawDistance={800}
         ListFooterComponent={FeedEnd}
-        // Dragging the Feed takes the keyboard down: with the finger on iOS, at once on Android.
-        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
-        keyboardShouldPersistTaps="handled"
+        {...keyboardProps}
       />
       {newestKeyWhenLeftEnd !== null && (
         <JumpToLatest

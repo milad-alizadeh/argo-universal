@@ -73,7 +73,7 @@ export function useSessionFeed(sessionId: string) {
   );
 
   const { refetch } = newestPage;
-  useSubscription(
+  const liveChanges = useSubscription(
     trpc.feed.subscribe.subscriptionOptions(
       { sessionId, after: syncPoint },
       {
@@ -126,6 +126,9 @@ export function useSessionFeed(sessionId: string) {
     ready: feed.epoch !== null && snapshot !== null,
     error: newestPage.error,
     retry: refetch,
+    // The Server refused to open the Session, such as when its Agent failed.
+    openError: liveChanges.error,
+    retryOpen: liveChanges.reset,
     loadingOlder,
     loadOlder,
   };

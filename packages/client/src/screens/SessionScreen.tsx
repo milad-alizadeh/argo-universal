@@ -64,8 +64,17 @@ function SessionView({ sessionId, now }: { sessionId: string; now?: number }) {
   const imageUrl = useBlobUrl();
   const connected = useConnectionState() === 'open';
   const wide = useWide();
-  const { feed, snapshot, ready, error, retry, loadingOlder, loadOlder } =
-    useSessionFeed(sessionId);
+  const {
+    feed,
+    snapshot,
+    ready,
+    error,
+    retry,
+    openError,
+    retryOpen,
+    loadingOlder,
+    loadOlder,
+  } = useSessionFeed(sessionId);
   const agents = useQuery(trpc.agents.list.queryOptions());
   const {
     draft,
@@ -93,12 +102,26 @@ function SessionView({ sessionId, now }: { sessionId: string; now?: number }) {
 
   if (error)
     return (
-      <Screen edges={['bottom']} className="justify-center">
-        <LoadError
-          title="Couldn't load the Session"
-          description="The Server didn't respond. Check that it's running, then retry."
-          onRetry={() => void retry()}
-        />
+      <Screen edges={['bottom']}>
+        <View className="flex-1 justify-center">
+          <LoadError
+            title="Couldn't load the Session"
+            description="The Server didn't respond. Check that it's running, then retry."
+            onRetry={() => void retry()}
+          />
+        </View>
+      </Screen>
+    );
+  if (openError)
+    return (
+      <Screen edges={['bottom']}>
+        <View className="flex-1 justify-center">
+          <LoadError
+            title="Couldn't open the Session"
+            description={openError.message}
+            onRetry={retryOpen}
+          />
+        </View>
       </Screen>
     );
   if (!ready || !snapshot || !feedView) return <Screen edges={['bottom']} />;
