@@ -89,6 +89,8 @@ export interface SessionContext extends SessionData {
   stored: boolean;
 }
 
+const checkoutLimit = 10_000;
+
 // The Session gives up on its Agent after this many crashes within the window.
 const crashWindowMs = 600_000;
 const maxCrashesInWindow = 3;
@@ -135,13 +137,15 @@ const sessionSetup = setup({
     output: {} as AgentOutput,
   },
   actors: {
-    createCheckout: fromPromise<SessionData, NewSessionInput>(({ input }) =>
-      createSessionCheckout(input),
+    createCheckout: fromPromise<SessionData, NewSessionInput>(
+      ({ input, signal }) => createSessionCheckout(input, signal),
     ),
     discardCheckout: fromPromise<
       void,
       { session: NewSessionInput; checkout: SessionData['checkout'] }
-    >(({ input }) => discardSessionCheckout(input.session, input.checkout)),
+    >(({ input, signal }) =>
+      discardSessionCheckout(input.session, input.checkout, signal),
+    ),
     loadSession: fromPromise<
       SessionData,
       {
@@ -449,6 +453,7 @@ const sessionSetup = setup({
       context.agentCrashes.length >= maxCrashesInWindow,
   },
   delays: {
+    checkoutLimit,
     cancelLimit: 10_000,
     agentStopLimit: 5_000,
     agentRestartDelay: 1_000,
@@ -546,6 +551,17 @@ export const sessionMachine = sessionSetup.createMachine({
       always: [{ guard: 'isNew', target: 'creating' }, { target: 'loading' }],
     },
     creating: {
+      after: {
+        checkoutLimit: {
+          target: 'closed',
+          actions: {
+            type: 'rememberFailure',
+            params: {
+              error: `Checkout creation exceeded checkoutLimit (${checkoutLimit} ms). Retry the Session.`,
+            },
+          },
+        },
+      },
       invoke: {
         id: 'createCheckout',
         src: 'createCheckout',

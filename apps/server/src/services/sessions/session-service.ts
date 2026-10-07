@@ -87,13 +87,18 @@ export function createSessionService({
       );
     const snapshot = await waitFor(
       writer,
-      (snapshot) => snapshot.status !== 'active' || !queued(snapshot),
+      (snapshot) =>
+        snapshot.status !== 'active' ||
+        !queued(snapshot) ||
+        snapshot.matches('waitingToRetry'),
       { timeout: Infinity },
     );
     if (queued(snapshot))
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
-        message: `Session ${sessionId} was not stored`,
+        message: snapshot.matches('waitingToRetry')
+          ? `Session ${sessionId} was not stored because the writer is retrying. Retry the Session.`
+          : `Session ${sessionId} was not stored`,
       });
   };
   return {

@@ -178,7 +178,7 @@ function listLoadFailure(width: number, agentIndex: 0 | 1): Story {
       trpc: {
         ...newSessionMocks,
         'agents.list': () => [catalog.agent],
-        'session.list': () => {
+        'session.list': async () => {
           calls += 1;
           if (calls === 1) fails('The Server did not respond')();
           return { sessions: [], nextCursor: null };
@@ -244,10 +244,10 @@ function sessionUpdateMocks(
     ...idleSessionMocks,
     ...updates.fixtures,
     'agents.list': () => [catalog.agent],
-    'session.list': (
+    'session.list': async (
       input: Parameters<(typeof updates.fixtures)['session.list']>[0],
     ) => {
-      const list = updates.fixtures['session.list'](input);
+      const list = await updates.fixtures['session.list'](input);
       return {
         ...list,
         sessions: list.sessions.map((session) => ({

@@ -6,7 +6,7 @@ import {
 } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { NotePencilIcon, SlidersHorizontalIcon } from 'phosphor-react-native';
-import { type ReactNode, useCallback, useMemo, useState } from 'react';
+import { type ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 import { Platform, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ConnectionBanner } from '#components/ConnectionBanner';
@@ -174,8 +174,9 @@ export function SessionsScreen({ query, archived }: SessionsScreenProps) {
   );
   const fetchNextPage = sessions.fetchNextPage;
   const loadMore = useCallback(() => {
-    if (sessions.hasNextPage && !sessions.isFetching) void fetchNextPage();
-  }, [sessions.hasNextPage, sessions.isFetching, fetchNextPage]);
+    if (sessions.hasNextPage && !sessions.isFetchingNextPage)
+      void fetchNextPage();
+  }, [sessions.hasNextPage, sessions.isFetchingNextPage, fetchNextPage]);
   const error = projects.isError || agents.isError || sessions.isLoadingError;
   const loading = projects.isPending || agents.isPending || sessions.isPending;
   function retry() {
@@ -301,20 +302,43 @@ function BelowHeader({ children }: { children: ReactNode }) {
   );
 }
 
-// Live list updates invalidate its pages and resume after Connection recovery.
+// Live list updates refetch its pages and resume after Connection recovery.
 function useSessionListUpdates() {
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
+  const refetch = useCoalescedListRefetch();
   const subscription = useSubscription(
     trpc.session.listUpdates.subscriptionOptions(undefined, {
-      onStarted: () => {
-        void queryClient.invalidateQueries(trpc.session.list.pathFilter());
-      },
-      onData: () => {
-        void queryClient.invalidateQueries(trpc.session.list.pathFilter());
-      },
+      onStarted: refetch,
+      onData: refetch,
     }),
   );
   useResubscribeOnReconnect(subscription);
   return subscription;
+}
+
+function useCoalescedListRefetch() {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const inFlight = useRef(false);
+  const trailing = useRef(false);
+  return useCallback(() => {
+    if (inFlight.current) {
+      trailing.current = true;
+      return;
+    }
+    const refetch = async () => {
+      inFlight.current = true;
+      try {
+        do {
+          trailing.current = false;
+          await queryClient.invalidateQueries(trpc.session.list.pathFilter(), {
+            cancelRefetch: false,
+          });
+        } while (trailing.current);
+      } finally {
+        inFlight.current = false;
+      }
+    };
+    void refetch();
+  }, [queryClient, trpc]);
 }

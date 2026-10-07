@@ -550,6 +550,7 @@ const events = [
   { type: 'xstate.done.actor.agent', output: { failure: null } },
   { type: 'xstate.error.actor.agent', error: 'Agent crashed' },
   { type: 'xstate.done.actor.feed' },
+  { type: 'xstate.after.checkoutLimit.session.creating' },
   { type: 'xstate.after.cancelLimit.session.open.live.cancelling' },
   { type: 'xstate.after.agentStopLimit.session.open.live.closing' },
   { type: 'xstate.after.agentRestartDelay.session.open.recovering' },
@@ -692,6 +693,32 @@ it.each(paths.map((path, index) => [index, path] as const))(
     });
   },
 );
+
+it('ends Checkout creation with a retryable failure when git does not finish', async () => {
+  vi.useFakeTimers();
+  const actor = createActor(machine, {
+    input: {
+      database,
+      runtimeDirectory,
+      adapter,
+      kind: 'new',
+      sessionId: 'session-blocked',
+      projectId: 'project-1',
+      agent: 'mock',
+      checkout: { type: 'worktree', baseBranch: 'main' },
+      configOptions: [],
+      prompt: [{ type: 'text', text: 'Build it' }],
+      turnId: 'turn-blocked',
+    },
+  }).start();
+  actors.push(actor);
+  await vi.advanceTimersByTimeAsync(10_000);
+  expect(actor.getSnapshot().status).toBe('done');
+  expect(actor.getSnapshot().output).toEqual({
+    failure:
+      'Checkout creation exceeded checkoutLimit (10000 ms). Retry the Session.',
+  });
+});
 
 it('the generated paths walk every reachable transition', () => {
   expect(
