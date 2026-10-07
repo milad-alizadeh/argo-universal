@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { appRouter } from '@repo/api';
 import { unreachableServices } from '@repo/api/mocks';
 import type {
@@ -52,6 +53,8 @@ const hostMachine = (writer = writerMachine) =>
         id: 'session',
         src: 'session',
         input: () => ({
+          now: () => Date.now(),
+          createId: randomUUID,
           database,
           runtimeDirectory,
           adapter: createMockAdapter(),
@@ -63,12 +66,16 @@ const hostMachine = (writer = writerMachine) =>
         id: 'databaseWriter',
         systemId: 'databaseWriter',
         src: 'writer',
-        input: () => ({ database }),
+        input: () => ({
+          now: () => Date.now(),
+          database,
+        }),
       },
       {
         id: 'feed',
         src: 'feed',
         input: {
+          now: () => Date.now(),
           sessionId: 'session-1',
           epoch: 3,
           maxRevision: 5,
@@ -479,12 +486,21 @@ it(
             id: 'databaseWriter',
             systemId: 'databaseWriter',
             src: 'writer',
-            input: { database },
+            input: {
+              now: () => Date.now(),
+              database,
+            },
           },
           {
             id: 'sessions',
             src: 'sessions',
-            input: { database, runtimeDirectory, adapters: [adapter] },
+            input: {
+              now: () => Date.now(),
+              createId: randomUUID,
+              database,
+              runtimeDirectory,
+              adapters: [adapter],
+            },
           },
         ],
       }),
@@ -589,12 +605,17 @@ it(
             id: 'databaseWriter',
             systemId: 'databaseWriter',
             src: 'writer',
-            input: { database },
+            input: {
+              now: () => Date.now(),
+              database,
+            },
           },
           {
             id: 'sessions',
             src: 'sessions',
             input: {
+              now: () => Date.now(),
+              createId: randomUUID,
               database,
               runtimeDirectory,
               adapters: [createMockAdapter()],

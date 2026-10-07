@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { turn } from '@repo/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { expect, it, onTestFinished, vi } from 'vitest';
@@ -30,7 +31,13 @@ it('reads one Session with a thousand Turns without fetching its history', () =>
     .run();
   const counted = countDatabaseReads(database);
   const sessions = createActor(registryMachine, {
-    input: { database, runtimeDirectory: directory, adapters: [] },
+    input: {
+      now: () => Date.now(),
+      createId: randomUUID,
+      database,
+      runtimeDirectory: directory,
+      adapters: [],
+    },
   });
   const read = createSessionListReader({
     database: counted.database,
@@ -61,7 +68,13 @@ it('reads the existence of a running Subagent Turn without fetching its history'
     .run();
   const counted = countDatabaseReads(database);
   const sessions = createActor(registryMachine, {
-    input: { database, runtimeDirectory: directory, adapters: [] },
+    input: {
+      now: () => Date.now(),
+      createId: randomUUID,
+      database,
+      runtimeDirectory: directory,
+      adapters: [],
+    },
   });
   const reader = createSessionListReader({
     database: counted.database,
@@ -113,7 +126,13 @@ it('excludes only the Subagent with a malformed latest Turn from its healthy par
     .where(eq(turn.id, 'bad-turn'))
     .run();
   const sessions = createActor(registryMachine, {
-    input: { database, runtimeDirectory: directory, adapters: [] },
+    input: {
+      now: () => Date.now(),
+      createId: randomUUID,
+      database,
+      runtimeDirectory: directory,
+      adapters: [],
+    },
   });
   const reader = createSessionListReader({
     database,
@@ -140,14 +159,25 @@ it('resolves a changed queued Turn through its earlier unwritten insertion', () 
     writerMachine.provide({
       actors: { writeBatch: fromPromise(() => batch.promise) },
     }),
-    { input: { database } },
+    {
+      input: {
+        now: () => Date.now(),
+        database,
+      },
+    },
   ).start();
   onTestFinished(() => {
     writer.stop();
     batch.resolve();
   });
   const sessions = createActor(registryMachine, {
-    input: { database, runtimeDirectory: directory, adapters: [] },
+    input: {
+      now: () => Date.now(),
+      createId: randomUUID,
+      database,
+      runtimeDirectory: directory,
+      adapters: [],
+    },
   });
   const reader = createSessionListReader({
     database,

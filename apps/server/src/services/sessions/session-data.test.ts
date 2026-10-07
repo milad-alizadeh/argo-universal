@@ -152,7 +152,12 @@ it('reloads Feed positions and the vendor Session from writes still queued', asy
     writerMachine.provide({
       actors: { writeBatch: fromPromise(() => new Promise(() => {})) },
     }),
-    { input: { database } },
+    {
+      input: {
+        now: () => Date.now(),
+        database,
+      },
+    },
   ).start();
   cleanups.push(() => writer.stop());
   writer.send({

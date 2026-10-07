@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { type AgentCommand, agentMachine } from '@repo/agents';
 import { sessionRows } from '@repo/api/mocks';
 import { permissionOptions } from '@repo/contracts';
@@ -579,6 +580,8 @@ const models = (['new', 'existing'] as const).map(
               database,
               runtimeDirectory,
               adapter,
+              now: () => 1000,
+              createId: () => 'request-model',
               kind,
               sessionId: 'session-1',
             }
@@ -586,6 +589,8 @@ const models = (['new', 'existing'] as const).map(
               database,
               runtimeDirectory,
               adapter,
+              now: () => 1000,
+              createId: () => 'request-model',
               kind,
               sessionId: 'session-1',
               projectId: 'project-1',
@@ -669,7 +674,6 @@ it.each(paths.map((path, index) => [index, path] as const))(
               { context: expected.context },
               sessionRows.idle,
             );
-          // The model was built on real time and the walk runs on fake timers, so only a Turn start's presence matches.
           expect(
             toSessionSnapshot(
               actual,
@@ -680,12 +684,11 @@ it.each(paths.map((path, index) => [index, path] as const))(
             ...projection,
             pendingElicitation: projection.pendingElicitation && {
               ...projection.pendingElicitation,
-              requestId: expect.any(String),
+              requestId: 'request-model',
             },
             liveHeader: liveHeader && {
               ...liveHeader,
-              startedAt:
-                liveHeader.startedAt === null ? null : expect.any(Number),
+              startedAt: liveHeader.startedAt === null ? null : 1000,
             },
           });
         },
@@ -698,6 +701,8 @@ it('ends Checkout creation with a retryable failure when git does not finish', a
   vi.useFakeTimers();
   const actor = createActor(machine, {
     input: {
+      now: () => Date.now(),
+      createId: randomUUID,
       database,
       runtimeDirectory,
       adapter,
