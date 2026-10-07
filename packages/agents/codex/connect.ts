@@ -52,22 +52,41 @@ export async function connect(
       }
     >
   >();
-  let elicitation: Extract<
+  const elicitations: Extract<
     VendorMessage,
     { method: 'item/tool/requestUserInput' }
-  > | null = null;
+  >[] = [];
+  const cancelRequests = () => {
+    for (const request of permissions.values())
+      server.respond(request, { decision: 'cancel' });
+    permissions.clear();
+    for (const request of elicitations.splice(0))
+      server.respond(request, { answers: {} });
+  };
+  signal.addEventListener('abort', cancelRequests, { once: true });
   const server = openAppServer(
     input.cwd,
     (message) => {
       const notification = message as VendorMessage;
-      if (notification.params?.threadId !== vendorSessionId) return;
       if (
         notification.method === 'item/commandExecution/requestApproval' ||
         notification.method === 'item/fileChange/requestApproval'
-      )
+      ) {
+        if (notification.params.threadId !== vendorSessionId) {
+          server.respond(notification, { decision: 'decline' });
+          return;
+        }
         permissions.set(notification.params.itemId, notification);
-      if (notification.method === 'item/tool/requestUserInput')
-        elicitation = notification;
+      }
+      if (notification.method === 'item/tool/requestUserInput') {
+        if (notification.params.threadId !== vendorSessionId) {
+          server.respond(notification, { answers: {} });
+          return;
+        }
+        elicitations.push(notification);
+        if (elicitations.length > 1) return;
+      }
+      if (notification.params?.threadId !== vendorSessionId) return;
       if (notification.method === 'turn/started') {
         if (
           !activeTurn ||
@@ -87,8 +106,7 @@ export async function connect(
         activeTurn.identity.resolve(null);
         activeTurn.completion.resolve();
         activeTurn = null;
-        permissions.clear();
-        elicitation = null;
+        cancelRequests();
       }
     },
     listener.failed,
@@ -203,8 +221,12 @@ export async function connect(
             );
             return;
           case 'agent.cancel': {
-            // A Turn that already ended needs no interrupt.
-            if (activeTurn) await interrupt(activeTurn);
+            try {
+              // A Turn that already ended needs no interrupt.
+              if (activeTurn) await interrupt(activeTurn);
+            } finally {
+              cancelRequests();
+            }
             return;
           }
           case 'agent.setConfigOption': {
@@ -228,16 +250,20 @@ export async function connect(
             };
             if (command.optionId === 'allow_once') result.decision = 'accept';
             if (command.optionId === null) result.decision = 'cancel';
-            server.respond(request.id, result);
+            server.respond(request, result);
             return;
           }
           case 'agent.answerElicitation': {
-            const request = elicitation;
+            const request = elicitations.shift();
             if (!request) return;
-            elicitation = null;
             if (command.action === 'cancel' && request.params.isBlocking) {
-              if (activeTurn?.id === request.params.turnId)
-                await interrupt(activeTurn);
+              try {
+                if (activeTurn?.id === request.params.turnId)
+                  await interrupt(activeTurn);
+              } finally {
+                server.respond(request, { answers: {} });
+                cancelRequests();
+              }
               return;
             }
             const answers: ToolRequestUserInputResponse = {
@@ -250,11 +276,13 @@ export async function connect(
               ),
             };
             server.respond(
-              request.id,
+              request,
               command.action === 'accept'
                 ? answers
                 : ({ answers: {} } satisfies ToolRequestUserInputResponse),
             );
+            if (elicitations[0])
+              listener.message({ ...elicitations[0], receivedAt: Date.now() });
             return;
           }
           case 'agent.answerPlanProposal':
@@ -267,9 +295,15 @@ export async function connect(
           }
         }
       },
-      stop: server.close,
+      stop: async () => {
+        signal.removeEventListener('abort', cancelRequests);
+        cancelRequests();
+        await server.close();
+      },
     };
   } catch (error) {
+    signal.removeEventListener('abort', cancelRequests);
+    cancelRequests();
     await server.close();
     throw error;
   }

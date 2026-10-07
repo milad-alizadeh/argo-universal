@@ -102,6 +102,7 @@ export const mockClis: Record<string, MockCli> = {
       'turnResponseAfterNextStart',
       'completionBeforeResponse',
       'malformedLine',
+      'otherThreadRequest',
     ],
     recordedTitle,
     recordedRequestAnswer: claudeRequestAnswer,
