@@ -11,7 +11,7 @@ describe.each(Object.entries(changesMocks))(
     it('draws each file diff with the counts the file list shows', () => {
       const files = fixtures['session.changes']();
       expect(files).toHaveLength(mock.summary.files);
-      for (const file of files) {
+      const diffs = files.map((file) => {
         const { patch } = fixtures['session.diff']({
           sessionId: 'session-1',
           path: file.path,
@@ -27,10 +27,18 @@ describe.each(Object.entries(changesMocks))(
           ],
           patch,
         });
+        return { file, diff };
+      });
+      for (const { file, diff } of diffs) {
         expect(diff?.added).toBe(file.additions ?? 0);
         expect(diff?.removed).toBe(file.deletions ?? 0);
-        if (file.additions === null) expect(diff?.hunks).toEqual([]);
       }
+      // A file without line counts is binary, so it draws no hunks.
+      expect(
+        diffs
+          .filter(({ file }) => file.additions === null)
+          .flatMap(({ diff }) => diff?.hunks ?? []),
+      ).toEqual([]);
     });
   },
 );

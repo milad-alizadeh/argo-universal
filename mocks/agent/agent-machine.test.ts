@@ -7,7 +7,7 @@ import {
   agentMachine,
   findAgentAdapter,
 } from '@repo/agents';
-import { expectEveryTransitionWalked } from '@repo/vitest/model-coverage';
+import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   type Actor,
@@ -278,12 +278,14 @@ describe('Agent machine model', () => {
   );
 
   it('the generated paths walk every transition', () => {
-    expectEveryTransitionWalked({
-      models: [model],
-      paths,
-      stateKey: (snapshot) => JSON.stringify(snapshot.value),
-      eventKey: eventKey,
-    });
+    expect(
+      unwalkedTransitions({
+        models: [model],
+        paths,
+        stateKey: (snapshot) => JSON.stringify(snapshot.value),
+        eventKey: eventKey,
+      }),
+    ).toEqual([]);
   });
 });
 

@@ -8,7 +8,7 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { expectEveryTransitionWalked } from '@repo/vitest/model-coverage';
+import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   type Actor,
@@ -248,12 +248,14 @@ describe('supervisor model', () => {
   });
 
   it('the generated paths walk every transition', () => {
-    expectEveryTransitionWalked({
-      models: [model],
-      paths: [...shortestPaths, ...simplePaths],
-      stateKey: (snapshot) => JSON.stringify(snapshot.value),
-      eventKey: (event) => event.type,
-    });
+    expect(
+      unwalkedTransitions({
+        models: [model],
+        paths: [...shortestPaths, ...simplePaths],
+        stateKey: (snapshot) => JSON.stringify(snapshot.value),
+        eventKey: (event) => event.type,
+      }),
+    ).toEqual([]);
   });
 });
 

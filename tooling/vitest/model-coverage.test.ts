@@ -5,7 +5,7 @@ import {
   type EventObject,
 } from 'xstate';
 import { TestModel } from 'xstate/graph';
-import { expectEveryTransitionWalked } from './model-coverage';
+import { unwalkedTransitions } from './model-coverage';
 
 const machine = createMachine({
   initial: 'idle',
@@ -26,28 +26,25 @@ const model = new TestModel(machine, {
   events: [{ type: 'start' }, { type: 'skip' }, { type: 'finish' }],
 });
 
-describe('expectEveryTransitionWalked', () => {
-  it('passes when the paths walk every transition', () => {
-    expectEveryTransitionWalked({
-      models: [model],
-      paths: model.getSimplePaths(),
-      stateKey,
-      eventKey,
-    });
+describe('unwalkedTransitions', () => {
+  it('finds none when the paths walk every transition', () => {
+    expect(
+      unwalkedTransitions({
+        models: [model],
+        paths: model.getSimplePaths(),
+        stateKey,
+        eventKey,
+      }),
+    ).toEqual([]);
   });
 
   it('names the transition that no path walks', () => {
     const paths = model
       .getSimplePaths()
       .filter((path) => !path.description.includes('skip'));
-    expect(() =>
-      expectEveryTransitionWalked({
-        models: [model],
-        paths,
-        stateKey,
-        eventKey,
-      }),
-    ).toThrow(/"idle" skip "done"/);
+    expect(
+      unwalkedTransitions({ models: [model], paths, stateKey, eventKey }),
+    ).toEqual(['"idle" skip "done"']);
   });
 
   it('unions the edges of several models', () => {
@@ -56,34 +53,24 @@ describe('expectEveryTransitionWalked', () => {
       filterEvents: active,
     });
     const paths = skipModel.getSimplePaths();
-    expect(() =>
-      expectEveryTransitionWalked({
-        models: [skipModel],
-        paths,
-        stateKey,
-        eventKey,
-      }),
-    ).not.toThrow();
-    expect(() =>
-      expectEveryTransitionWalked({
+    expect(
+      unwalkedTransitions({ models: [skipModel], paths, stateKey, eventKey }),
+    ).toEqual([]);
+    expect(
+      unwalkedTransitions({
         models: [skipModel, model],
         paths,
         stateKey,
         eventKey,
       }),
-    ).toThrow(/"idle" start "busy"/);
+    ).toEqual(['"idle" start "busy"', '"busy" finish "done"']);
   });
 
   it('fails when the models have no edges', () => {
     const empty = new TestModel(machine, { events: [], filterEvents: active });
     expect(() =>
-      expectEveryTransitionWalked({
-        models: [empty],
-        paths: [],
-        stateKey,
-        eventKey,
-      }),
-    ).toThrow();
+      unwalkedTransitions({ models: [empty], paths: [], stateKey, eventKey }),
+    ).toThrow('The models have no transitions to walk.');
   });
 
   it('fails at the path cap', () => {
@@ -91,12 +78,7 @@ describe('expectEveryTransitionWalked', () => {
     if (!path) throw new Error('The model has no paths.');
     const paths = Array.from({ length: 1000 }, () => path);
     expect(() =>
-      expectEveryTransitionWalked({
-        models: [model],
-        paths,
-        stateKey,
-        eventKey,
-      }),
-    ).toThrow();
+      unwalkedTransitions({ models: [model], paths, stateKey, eventKey }),
+    ).toThrow('1000 paths reach the cap of 1000');
   });
 });
