@@ -5,8 +5,10 @@ import { cn } from '#lib/utils';
 import { Button, type ButtonProps } from '#primitives/button';
 import { Icon } from './Icon';
 
-export interface HeaderButtonProps
-  extends Pick<ButtonProps, 'ref' | 'accessibilityState'> {
+export interface HeaderButtonProps extends Pick<
+  ButtonProps,
+  'ref' | 'accessibilityState'
+> {
   onPress?: () => void;
   icon: PhosphorIcon;
   accessibilityLabel: string;

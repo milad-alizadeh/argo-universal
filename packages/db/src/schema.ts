@@ -76,7 +76,9 @@ export const session = snakeCase.table('session', {
   checkoutBranch: text(),
   vendorRef: text({ mode: 'json' }),
   // The config values the Session last ran with, as JSON, so a resume keeps its model and mode.
-  configValues: text({ mode: 'json' }).notNull().default(sql`'[]'`),
+  configValues: text({ mode: 'json' })
+    .notNull()
+    .default(sql`'[]'`),
   epoch: integer().notNull().default(0),
   projectionVersion: integer().notNull(),
   maxRevision: integer().notNull().default(0),

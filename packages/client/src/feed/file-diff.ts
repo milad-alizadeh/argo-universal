@@ -12,8 +12,10 @@ export interface DiffHunk {
   lines: DiffLine[];
 }
 
-export interface FileDiff
-  extends Pick<DiffChange, 'path' | 'oldPath' | 'operation'> {
+export interface FileDiff extends Pick<
+  DiffChange,
+  'path' | 'oldPath' | 'operation'
+> {
   added: number;
   removed: number;
   hunks: DiffHunk[];

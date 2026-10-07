@@ -20,8 +20,10 @@ import type { WriterJob } from './writer-job';
 import type { WriterEvent } from './writer-machine';
 
 // What the Session reads from its `session` row when it opens.
-export interface FeedInput
-  extends Pick<typeof session.$inferSelect, 'epoch' | 'maxRevision'> {
+export interface FeedInput extends Pick<
+  typeof session.$inferSelect,
+  'epoch' | 'maxRevision'
+> {
   sessionId: string;
   activityAt?: number;
   // One past the highest stored position.
@@ -31,8 +33,7 @@ export interface FeedInput
 }
 
 export interface FeedContext
-  extends Feed,
-    Pick<FeedInput, 'epoch' | 'findWrittenRow'> {
+  extends Feed, Pick<FeedInput, 'epoch' | 'findWrittenRow'> {
   activityAt: number;
   // Rows changed since the last write, in the order they first changed.
   changedRowIds: string[];

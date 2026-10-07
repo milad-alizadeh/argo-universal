@@ -11,8 +11,9 @@ import { shellSections } from '../src/components/shell-sections';
 import { ScreenHeader } from '../src/navigation/screen-header';
 import { Text } from '../src/primitives/text';
 
-export interface PhoneShellMockProps
-  extends Partial<Omit<PhoneShellProps, 'children'>> {
+export interface PhoneShellMockProps extends Partial<
+  Omit<PhoneShellProps, 'children'>
+> {
   onSearch?: () => void;
   onFilter?: () => void;
 }

@@ -59,7 +59,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: story-failure-screenshots
-          path: '**/__screenshots__/'
+          path: "**/__screenshots__/"
           if-no-files-found: ignore
           retention-days: 30
 

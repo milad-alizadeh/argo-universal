@@ -170,25 +170,22 @@ const fewFiles: Change[] = [
   },
 ];
 
-const manyFiles: Change[] = range(
-  60,
-  (number): Change => ({
-    operation: 'modify',
-    path: `packages/feature-${String(number).padStart(2, '0')}/src/index.ts`,
-    hunks: [
-      {
-        oldStart: 1,
-        newStart: 1,
-        lines: [
-          "-export const name = 'feature';",
-          `+export const name = 'feature-${number}';`,
-          ...(number % 3 === 0 ? [`+export const order = ${number};`] : []),
-          'export default name;',
-        ],
-      },
-    ],
-  }),
-);
+const manyFiles: Change[] = range(60, (number): Change => ({
+  operation: 'modify',
+  path: `packages/feature-${String(number).padStart(2, '0')}/src/index.ts`,
+  hunks: [
+    {
+      oldStart: 1,
+      newStart: 1,
+      lines: [
+        "-export const name = 'feature';",
+        `+export const name = 'feature-${number}';`,
+        ...(number % 3 === 0 ? [`+export const order = ${number};`] : []),
+        'export default name;',
+      ],
+    },
+  ],
+}));
 
 const largeDiff: Change[] = [
   {

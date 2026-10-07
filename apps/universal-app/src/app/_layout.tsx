@@ -1,5 +1,4 @@
 import '../../global.css';
-
 import {
   AppProviders,
   type Navigate,

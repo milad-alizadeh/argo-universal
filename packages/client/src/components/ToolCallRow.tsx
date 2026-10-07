@@ -3,8 +3,8 @@ import { View } from 'react-native';
 import { Text } from '#primitives/text';
 import { toolCallTitle } from '../feed/tool-call-title';
 import { FeedCodeBlock } from './FeedCodeBlock';
-import { ToolCallDisclosure } from './ToolCallDisclosure';
 import { toolCallIcon } from './tool-call-icon';
+import { ToolCallDisclosure } from './ToolCallDisclosure';
 
 export interface ToolCallRowProps {
   row: ToolCallUpdate;

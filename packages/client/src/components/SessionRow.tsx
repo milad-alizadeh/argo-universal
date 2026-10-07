@@ -50,10 +50,10 @@ export const SessionRow = memo(function SessionRow({
   const plan = session.plan;
   const hasMetadata = Boolean(
     (plan && plan.total > 0) ||
-      session.subagents.total > 0 ||
-      session.archivedAt !== null ||
-      issue ||
-      pullRequest,
+    session.subagents.total > 0 ||
+    session.archivedAt !== null ||
+    issue ||
+    pullRequest,
   );
   const logoRotation = useSharedValue(0);
   useEffect(() => {
