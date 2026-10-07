@@ -3,7 +3,7 @@ import type {
   ModelInfo,
   PermissionMode,
 } from '@anthropic-ai/claude-agent-sdk';
-import type { SessionConfigOption } from '@repo/contracts';
+import type { ConfigOptionIcon, SessionConfigOption } from '@repo/contracts';
 import type { AgentConfigValue } from '../src/agent-events';
 
 // The SDK names its modes only as a type, so this list and its names are ours; `dontAsk` is not offered.
@@ -28,7 +28,10 @@ const modeMetadata = {
   plan: { icon: 'MapTrifold', tone: 'planning' },
   auto: { icon: 'Sparkles', tone: 'moderate' },
   bypassPermissions: { icon: 'WarningTriangle', tone: 'dangerous' },
-} as const;
+} satisfies Record<
+  Mode,
+  NonNullable<SessionConfigOption['_meta']>['argo'] & { icon: ConfigOptionIcon }
+>;
 
 // `default` identifies the recommended model; supported effort defaults resolve to a concrete level.
 export const DEFAULT_VALUE = 'default';

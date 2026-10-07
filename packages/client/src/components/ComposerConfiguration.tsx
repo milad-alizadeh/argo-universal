@@ -1,6 +1,8 @@
 import { LegendList } from '@legendapp/list/react-native';
 import type {
+  AgentAvailability,
   AgentInfo,
+  ConfigOptionIcon,
   SessionConfigOption,
   SessionConfigSelectOption,
 } from '@repo/contracts';
@@ -14,7 +16,6 @@ import {
   HourglassSimpleIcon,
   MapTrifoldIcon,
   PencilIcon,
-  ShieldCheckIcon,
   ShieldWarningIcon,
   SparkleIcon,
   WarningIcon,
@@ -41,6 +42,7 @@ export interface ComposerConfigurationProps {
   onConfigChange: (configId: string, value: string | boolean) => void;
   onAgentChange?: (agent: string) => void;
   onAgentSetup?: (agent: string) => void;
+  onAgentRetry?: () => void;
   turnRunning?: boolean;
   checkout: {
     branch: string;
@@ -88,17 +90,45 @@ function currentEffort(configuration: ComposerConfigurationProps) {
   };
 }
 
+const configurationIcons: Record<string, typeof ShieldWarningIcon> = {
+  ShieldWarning: ShieldWarningIcon,
+  Pencil: PencilIcon,
+  MapTrifold: MapTrifoldIcon,
+  Sparkles: SparkleIcon,
+  WarningTriangle: WarningIcon,
+} satisfies Record<ConfigOptionIcon, typeof ShieldWarningIcon>;
+const agentModelMenuWidth = 580;
+const agentMenuWidth = 280;
 function configurationIcon(name?: string) {
   return (
-    {
-      ShieldCheck: ShieldCheckIcon,
-      Pencil: PencilIcon,
-      MapTrifold: MapTrifoldIcon,
-      Sparkles: SparkleIcon,
-      WarningTriangle: WarningIcon,
-    }[name ?? ''] ?? ShieldWarningIcon
+    (name && Object.hasOwn(configurationIcons, name)
+      ? configurationIcons[name]
+      : undefined) ?? ShieldWarningIcon
   );
 }
+const agentAvailability = {
+  not_signed_in: {
+    label: 'Not signed in',
+    button: 'Sign in',
+    action: 'setup',
+    reason: false,
+  },
+  not_installed: {
+    label: 'Not installed',
+    button: 'Install',
+    action: 'setup',
+    reason: false,
+  },
+  unavailable: {
+    label: 'Unavailable',
+    button: 'Retry',
+    action: 'retry',
+    reason: true,
+  },
+} satisfies Record<
+  Exclude<AgentAvailability, 'available'>,
+  { label: string; button: string; action: 'setup' | 'retry'; reason: boolean }
+>;
 const ThemedLogo = withUniwind(SvgXml, {
   color: { fromClassName: 'className', styleProperty: 'color' },
 });
@@ -219,14 +249,15 @@ function AgentChoices({
         (agent) => agent.agent === configuration.agent,
       );
   const renderAgent = (agent: AgentInfo) => {
-    let availabilityLabel: string;
-    if (agent.availability === 'not_signed_in') {
-      availabilityLabel = 'Not signed in';
-    } else if (agent.availability === 'not_installed') {
-      availabilityLabel = 'Not installed';
-    } else {
-      availabilityLabel = 'Unavailable';
-    }
+    const availability =
+      agent.availability === 'available'
+        ? undefined
+        : agentAvailability[agent.availability];
+    const setup = configuration.onAgentSetup
+      ? () => configuration.onAgentSetup?.(agent.agent)
+      : undefined;
+    const onAvailabilityAction =
+      availability?.action === 'retry' ? configuration.onAgentRetry : setup;
     return (
       <View key={agent.agent}>
         <Button
@@ -259,27 +290,46 @@ function AgentChoices({
             >
               {agent.label}
             </Text>
-            {agent.availability !== 'available' && (
+            {availability && (
               <Text
                 selectable={false}
-                className="select-none text-xs leading-4 text-warning"
+                className={cn(
+                  'select-none text-xs leading-4',
+                  availability.reason
+                    ? 'text-muted-foreground'
+                    : 'text-warning',
+                )}
               >
-                {availabilityLabel}
+                {availability.label}
+              </Text>
+            )}
+            {availability?.reason && agent.installStep && (
+              <Text
+                selectable={false}
+                className="select-none text-xs leading-4 text-muted-foreground"
+              >
+                {agent.installStep}
               </Text>
             )}
           </View>
           {configuration.onAgentChange &&
             agent.agent === configuration.agent && <Icon as={CheckIcon} />}
         </Button>
-        {agent.availability !== 'available' && configuration.onAgentSetup && (
+        {availability && onAvailabilityAction && (
           <Button
             variant="ghost"
-            accessibilityLabel={`Set up ${agent.label}`}
+            accessibilityLabel={`${availability.action === 'retry' ? 'Retry' : 'Set up'} ${agent.label}`}
             className="h-7 sm:h-7 py-0 ml-8 px-2 justify-start"
-            onPress={() => configuration.onAgentSetup?.(agent.agent)}
+            onPress={onAvailabilityAction}
           >
-            <Text selectable={false} className="select-none text-xs">
-              {agent.availability === 'not_signed_in' ? 'Sign in' : 'Install'}
+            <Text
+              selectable={false}
+              className={cn(
+                'select-none text-xs',
+                availability.action === 'retry' && 'underline',
+              )}
+            >
+              {availability.button}
             </Text>
           </Button>
         )}
@@ -464,6 +514,13 @@ function AgentModelMenu({
   const current = choices(model).find(
     (choice) => choice.value === model?.currentValue,
   );
+  if (wide && !model)
+    return (
+      <View className="h-48 p-1">
+        <MenuHeading>Agent</MenuHeading>
+        <AgentChoices configuration={configuration} onSelect={() => {}} />
+      </View>
+    );
   if (!wide && page !== 'settings')
     return (
       <View>
@@ -521,7 +578,10 @@ function AgentModelMenu({
             <Button
               variant="ghost"
               accessibilityLabel="Choose Agent"
-              disabled={!configuration.onAgentChange}
+              disabled={
+                !configuration.onAgentChange &&
+                agent?.availability === 'available'
+              }
               onPress={() => setPage('agent')}
               className="h-11 sm:h-11 px-2 gap-2 justify-start"
             >
@@ -613,11 +673,11 @@ export function ComposerAgentModelControl({
   const agent = configuration.agents.find(
     (entry) => entry.agent === configuration.agent,
   );
-  if (!model) return null;
+  if (!model && !agent) return null;
   return (
     <ComposerPopover
       label="Agent and model"
-      width={580}
+      width={model ? agentModelMenuWidth : agentMenuWidth}
       className="shrink min-w-0"
       trigger={
         <Button
@@ -634,7 +694,7 @@ export function ComposerAgentModelControl({
               'select-none text-sm leading-5 font-normal min-w-0 shrink',
             )}
           >
-            {modelName(current)}
+            {modelName(current) || agent?.label}
           </Text>
           {wide &&
             current?._meta?.argo?.supportsEffort !== false &&
