@@ -14,7 +14,7 @@ import type { writerMachine } from './writer-machine';
 type WriterRef = ActorRefFrom<typeof writerMachine>;
 
 // The shape version of `payload` in the rows this Server writes.
-const payloadVersion = 1;
+export const payloadVersion = 1;
 
 // The blobs that the prompt rows among `rows` show, each once.
 export const promptBlobIds = (rows: readonly SessionUpdate[]) => [

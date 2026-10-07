@@ -18,7 +18,7 @@ import type {
   SessionUpdate,
 } from '@repo/contracts';
 import { permissionOptions } from '@repo/contracts';
-import { feedRow, turn } from '@repo/db/schema';
+import { feedRow, session, turn } from '@repo/db/schema';
 import { listBranches, sessionBranch } from '@repo/git';
 import { createMockAdapter, type MockAgentStream } from '@repo/mocks/agent';
 import { mockClis } from '@repo/mocks/cli';
@@ -27,7 +27,7 @@ import {
   mockCliScenarioEnvironment,
 } from '@repo/mocks/cli/mock-cli';
 import { readRequestAnswers } from '@repo/mocks/cli/request-answer';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import type { ActorRefFrom } from 'xstate';
 import { createActor, fromCallback, fromPromise, waitFor } from 'xstate';
@@ -249,7 +249,7 @@ it.each(liveHeaderMocks)(
   },
 );
 
-it('rejects malformed stored activity through the Feed subscription', async () => {
+it('keeps the Feed subscription open after malformed stored activity', async () => {
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
   let stream: MockAgentStream | undefined;
@@ -286,12 +286,171 @@ it('rejects malformed stored activity through the Feed subscription', async () =
       payload: { messageId: 'malformed', content: 'invalid' },
     })
     .run();
-  const rejected = expect(subscription.next()).rejects.toThrow(
-    'Unrecognised live-header Feed data',
-  );
+  const reported = vi.spyOn(console, 'error').mockImplementation(() => {});
+  onTestFinished(() => reported.mockRestore());
+  const next = subscription.next();
   stream?.send({ type: 'agent.usage', usage: { used: 10, size: 100 } });
-  await rejected;
+  await expect(next).resolves.toMatchObject({
+    done: false,
+    value: {
+      type: 'snapshot',
+      snapshot: {
+        usage: { used: 10, size: 100 },
+        liveHeader: { text: 'Working', source: { type: 'working' } },
+      },
+    },
+  });
+  expect(reported).toHaveBeenCalledWith(
+    'sessions: rejected live-header shape #1',
+    expect.anything(),
+  );
+  const following = subscription.next();
+  stream?.send({ type: 'agent.usage', usage: { used: 11, size: 100 } });
+  await expect(following).resolves.toMatchObject({
+    done: false,
+    value: { type: 'snapshot', snapshot: { usage: { used: 11, size: 100 } } },
+  });
+  await expect(
+    caller.feed.page({
+      sessionId: 'session-1',
+      direction: 'tail',
+      limit: 50,
+    }),
+  ).rejects.toThrow();
+  const catchUp = (
+    await caller.feed.subscribe({
+      sessionId: 'session-1',
+      after: { epoch: initial.snapshot.epoch, revision: 0 },
+    })
+  )[Symbol.asyncIterator]();
+  await expect(catchUp.next()).rejects.toThrow();
 });
+
+it.each(
+  agentAdapters.flatMap(({ agent }) =>
+    (['agent_message', 'plan_update', 'agent_thought'] as const).map(
+      (kind) => ({ agent, kind }),
+    ),
+  ),
+)(
+  'degrades only the Session with a malformed $kind row for $agent',
+  async ({ agent, kind }) => {
+    const { database, remove } = openTestDatabase({ agent });
+    onTestFinished(remove);
+    const reported = vi.spyOn(console, 'error').mockImplementation(() => {});
+    onTestFinished(() => reported.mockRestore());
+    const { createCaller } = startEngine({
+      database,
+      adapter: createMockAdapter({}, agent),
+    });
+    const caller = await createCaller();
+    insertSession(database, { id: 'healthy', agent });
+    database
+      .insert(turn)
+      .values({ id: 'running', sessionId: 'session-1', status: 'running' })
+      .run();
+    database
+      .insert(feedRow)
+      .values([
+        {
+          sessionId: 'healthy',
+          id: 'reply',
+          position: 0,
+          revision: 1,
+          state: 'settled',
+          sessionUpdate: 'agent_message',
+          payloadVersion: 1,
+          payload: {
+            messageId: 'reply',
+            content: [{ type: 'text', text: 'Healthy reply' }],
+          },
+        },
+        {
+          sessionId: 'session-1',
+          id: 'bad',
+          turnId: 'running',
+          position: 0,
+          revision: 1,
+          state: 'settled',
+          sessionUpdate: kind,
+          payloadVersion: 1,
+          payload: { messageId: 'bad', content: 'invalid', plan: 'invalid' },
+        },
+      ])
+      .run();
+    const result = await caller.session.list({ archived: false });
+    expect(result.sessions).toHaveLength(2);
+    expect(
+      result.sessions.find((row) => row.sessionId === 'session-1'),
+    ).toMatchObject({ activity: '', plan: null });
+    expect(
+      result.sessions.find((row) => row.sessionId === 'healthy'),
+    ).toMatchObject({ activity: 'Healthy reply' });
+    expect(
+      reported.mock.calls.some(([message]) =>
+        String(message).includes('rejected'),
+      ),
+    ).toBe(true);
+  },
+);
+
+it.each(agentAdapters.map(({ agent }) => agent))(
+  'drops only a malformed Session for %s',
+  async (agent) => {
+    const { database, remove } = openTestDatabase({ agent });
+    onTestFinished(remove);
+    const reported = vi.spyOn(console, 'error').mockImplementation(() => {});
+    onTestFinished(() => reported.mockRestore());
+    const { createCaller } = startEngine({
+      database,
+      adapter: createMockAdapter({}, agent),
+    });
+    const caller = await createCaller();
+    insertSession(database, { id: 'healthy', agent });
+    database
+      .update(session)
+      .set({ titleSource: sql`'invalid'` })
+      .where(eq(session.id, 'session-1'))
+      .run();
+    const result = await caller.session.list({ archived: false });
+    expect(result.sessions.map((row) => row.sessionId)).toEqual(['healthy']);
+    expect(reported).toHaveBeenCalledWith(
+      'sessions: rejected list shape #1',
+      expect.anything(),
+    );
+  },
+);
+
+it.each(agentAdapters.map(({ agent }) => agent))(
+  'drops only the Session with a malformed Turn for %s',
+  async (agent) => {
+    const { database, remove } = openTestDatabase({ agent });
+    onTestFinished(remove);
+    const reported = vi.spyOn(console, 'error').mockImplementation(() => {});
+    onTestFinished(() => reported.mockRestore());
+    const { createCaller } = startEngine({
+      database,
+      adapter: createMockAdapter({}, agent),
+    });
+    const caller = await createCaller();
+    insertSession(database, { id: 'healthy', agent });
+    database
+      .insert(turn)
+      .values({
+        id: 'bad-turn',
+        sessionId: 'session-1',
+        status: 'ended',
+        usage: { totalTokens: 'invalid' },
+      })
+      .run();
+    const result = await caller.session.list({ archived: false });
+    expect(result.sessions.map((row) => row.sessionId)).toEqual(['healthy']);
+    expect(reported).toHaveBeenCalledWith(
+      'sessions: rejected list shape #1',
+      expect.anything(),
+    );
+  },
+);
 
 it('serves live Session procedures and drains their Feed before closing the database', async () => {
   const { database, remove } = openTestDatabase();
