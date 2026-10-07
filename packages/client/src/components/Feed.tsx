@@ -184,6 +184,9 @@ type FeedEntry =
       toolCall?: ToolCallUpdate;
     };
 
+const entryType = (entry: FeedEntry) =>
+  entry.type === 'row' ? entry.row.sessionUpdate : entry.type;
+
 const entryKey = (entry: FeedEntry) =>
   entry.type === 'live_header' ? 'live-header' : feedItemKey(entry);
 
@@ -381,10 +384,10 @@ function FeedList({
           keyExtractor={entryKey}
           renderItem={renderItem}
           estimatedItemSize={48}
+          // Each kind keeps its own average size, so a row not yet measured lands near its real place.
+          getItemType={entryType}
           // Each row keeps its own expanded state, which a recycled row would inherit.
           recycleItems={false}
-          // Rows vary from one line to whole screens, so a row drawn at its estimated place would overlap its neighbours until it measures.
-          experimental_hideItemsUntilMeasured
           initialScrollIndex={initialIndex}
           alignItemsAtEnd
           // Rows measure taller than estimated and streaming text grows them; at the end, the Feed stays there.
