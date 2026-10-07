@@ -39,7 +39,8 @@ import {
 import { initTestRepository } from '#mocks/git';
 import { liveHeaderMocks } from '#mocks/live-header';
 import { feedMachine } from '../services/feed/feed-machine';
-import type { writerMachine } from '../services/feed/writer-machine';
+import { type WriterJob, writeJobs } from '../services/feed/writer-job';
+import { writerMachine } from '../services/feed/writer-machine';
 import { createServerServices } from '../services/server-services';
 import { registryMachine } from '../services/sessions/registry-machine';
 import type { SessionActorRef } from '../services/sessions/session-machine';
@@ -60,12 +61,14 @@ function startEngine({
   home = '/unused',
   closeDatabase = () => {},
   sessions = registryMachine,
+  databaseWriter = writerMachine,
 }: {
   database?: ReturnType<typeof openTestDatabase>['database'];
   adapter: AgentAdapter;
   home?: string;
   closeDatabase?: () => void;
   sessions?: typeof registryMachine;
+  databaseWriter?: typeof writerMachine;
 }) {
   let services: Services | undefined;
   const machine = engineMachine.provide({
@@ -73,6 +76,7 @@ function startEngine({
       ...(database && { openDatabase: fromPromise(async () => database) }),
       processSignals: fromCallback(() => {}),
       sessions,
+      databaseWriter,
       startHttpServer: fromPromise(
         async ({ input }: { input: HttpServerOptions }) => {
           services = createServerServices({
@@ -2078,6 +2082,234 @@ it('shares one coalesced list read for three subscribers across fifty changes', 
     expect(counted.metrics.sessionReads).toBe(1);
     controllers[3]?.abort();
     expect(await resumed.next()).toMatchObject({ done: true });
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+it('reads only the changed Session and pages the shared cache', async () => {
+  const { database, remove } = openTestDatabase();
+  onTestFinished(remove);
+  for (let index = 2; index <= 60; index++)
+    insertSession(database, { id: `session-${index}` });
+  const counted = countDatabaseReads(database);
+  const { engine, createCaller } = startEngine({
+    database: counted.database,
+    adapter: createMockAdapter(),
+  });
+  const controller = new AbortController();
+  onTestFinished(() => controller.abort());
+  const caller = await createCaller(controller.signal);
+  const updates = (await caller.session.listUpdates())[Symbol.asyncIterator]();
+  for (let index = 0; index < 60; index++)
+    expect((await updates.next()).value).toMatchObject({ type: 'changed' });
+  vi.useFakeTimers();
+  try {
+    await vi.advanceTimersByTimeAsync(100);
+    counted.metrics.queries = 0;
+    counted.metrics.rows = 0;
+    const changed = updates.next();
+    const writer: ActorRefFrom<typeof writerMachine> =
+      engine.system.get('databaseWriter');
+    writer.send({
+      type: 'writer.write',
+      job: {
+        type: 'sessionRowUpdate',
+        id: 'session-1',
+        set: { title: 'Changed alone', maxRevision: 1 },
+      },
+    });
+    await vi.advanceTimersByTimeAsync(100);
+    expect((await changed).value).toMatchObject({
+      type: 'changed',
+      session: { sessionId: 'session-1', title: 'Changed alone' },
+    });
+    expect(counted.metrics.queries).toBeLessThanOrEqual(5);
+    expect(counted.metrics.rows).toBeLessThanOrEqual(3);
+    counted.metrics.queries = 0;
+    const page = await caller.session.list({ archived: false });
+    expect(page.sessions[0]).toMatchObject({
+      sessionId: 'session-1',
+      title: 'Changed alone',
+      status: 'unread',
+    });
+    expect(page.sessions).toHaveLength(50);
+    expect(page.nextCursor).not.toBeNull();
+    const next = await caller.session.list({
+      archived: false,
+      cursor: page.nextCursor ?? undefined,
+    });
+    expect(next.sessions).toHaveLength(10);
+    expect(next.nextCursor).toBeNull();
+    expect(counted.metrics.queries).toBe(0);
+    controller.abort();
+    await updates.return?.();
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+it('initializes a fresh list after all watchers leave and unwatched data changes', async () => {
+  const { database, remove } = openTestDatabase();
+  onTestFinished(remove);
+  const { engine, createCaller } = startEngine({
+    database,
+    adapter: createMockAdapter(),
+  });
+  const controller = new AbortController();
+  onTestFinished(() => controller.abort());
+  const watchedCaller = await createCaller(controller.signal);
+  const caller = await createCaller();
+  const updates = (await watchedCaller.session.listUpdates())[
+    Symbol.asyncIterator
+  ]();
+  expect((await updates.next()).value).toMatchObject({
+    type: 'changed',
+    session: { title: '' },
+  });
+  controller.abort();
+  await updates.return?.();
+  const writer: ActorRefFrom<typeof writerMachine> =
+    engine.system.get('databaseWriter');
+  writer.send({
+    type: 'writer.write',
+    job: {
+      type: 'sessionRowUpdate',
+      id: 'session-1',
+      set: { title: 'Changed without watchers', maxRevision: 1 },
+    },
+  });
+  await waitFor(writer, (snapshot) => snapshot.context.queue.length === 0);
+  expect(
+    (await caller.session.list({ archived: false })).sessions,
+  ).toMatchObject([
+    {
+      sessionId: 'session-1',
+      title: 'Changed without watchers',
+      status: 'unread',
+    },
+  ]);
+});
+
+it('pages current queued activity before the list publication delay', async () => {
+  const { database, remove } = openTestDatabase();
+  onTestFinished(remove);
+  insertSession(database, { id: 'session-2', activityAt: 10 });
+  const counted = countDatabaseReads(database);
+  const batch = Promise.withResolvers<void>();
+  onTestFinished(() => batch.resolve());
+  const { engine, createCaller } = startEngine({
+    database: counted.database,
+    adapter: createMockAdapter(),
+    databaseWriter: writerMachine.provide({
+      actors: {
+        writeBatch: fromPromise<
+          void,
+          { database: Parameters<typeof writeJobs>[0]; jobs: WriterJob[] }
+        >(async ({ input }) => {
+          await batch.promise;
+          writeJobs(input.database, input.jobs);
+        }),
+      },
+    }),
+  });
+  const controller = new AbortController();
+  onTestFinished(() => controller.abort());
+  const caller = await createCaller(controller.signal);
+  const updates = (await caller.session.listUpdates())[Symbol.asyncIterator]();
+  await updates.next();
+  await updates.next();
+  vi.useFakeTimers();
+  try {
+    await vi.advanceTimersByTimeAsync(100);
+    const writer: ActorRefFrom<typeof writerMachine> =
+      engine.system.get('databaseWriter');
+    writer.send({
+      type: 'writer.write',
+      job: {
+        type: 'sessionRowUpdate',
+        id: 'session-1',
+        set: { title: 'Queued newest', maxRevision: 1 },
+        activityAt: 20,
+      },
+    });
+    expect(
+      (await caller.session.list({ archived: false })).sessions.map((row) => [
+        row.sessionId,
+        row.activityAt,
+      ]),
+    ).toEqual([
+      ['session-1', 20],
+      ['session-2', 10],
+    ]);
+    expect(writer.getSnapshot().context.queue).toHaveLength(1);
+    counted.metrics.sessionReads = 0;
+    batch.resolve();
+    await vi.advanceTimersByTimeAsync(100);
+    expect(writer.getSnapshot().context.queue).toHaveLength(0);
+    expect(counted.metrics.sessionReads).toBe(1);
+    expect(
+      (await caller.session.list({ archived: false })).sessions[0],
+    ).toMatchObject({ sessionId: 'session-1', activityAt: 20 });
+    controller.abort();
+    await updates.return?.();
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+it('updates a cached parent when its stored Subagent Turn changes', async () => {
+  const { database, remove } = openTestDatabase();
+  onTestFinished(remove);
+  insertSession(database, { id: 'child-1', parentSessionId: 'session-1' });
+  const { engine, createCaller } = startEngine({
+    database,
+    adapter: createMockAdapter(),
+  });
+  const controller = new AbortController();
+  onTestFinished(() => controller.abort());
+  const caller = await createCaller(controller.signal);
+  const updates = (await caller.session.listUpdates())[Symbol.asyncIterator]();
+  expect((await updates.next()).value).toMatchObject({
+    session: { subagents: { total: 1, running: 0 } },
+  });
+  vi.useFakeTimers();
+  try {
+    await vi.advanceTimersByTimeAsync(100);
+    const writer: ActorRefFrom<typeof writerMachine> =
+      engine.system.get('databaseWriter');
+    const running = updates.next();
+    writer.send({
+      type: 'writer.write',
+      job: {
+        type: 'turnInsert',
+        turn: {
+          id: 'child-turn',
+          sessionId: 'child-1',
+          status: 'running',
+          startedAt: 1,
+        },
+      },
+    });
+    await vi.advanceTimersByTimeAsync(100);
+    expect((await running).value).toMatchObject({
+      session: { sessionId: 'session-1', subagents: { total: 1, running: 1 } },
+    });
+    const stopped = updates.next();
+    writer.send({
+      type: 'writer.write',
+      job: {
+        type: 'turnUpdate',
+        id: 'child-turn',
+        set: { status: 'ended', endedAt: 2 },
+      },
+    });
+    await vi.advanceTimersByTimeAsync(100);
+    expect((await stopped).value).toMatchObject({
+      session: { sessionId: 'session-1', subagents: { total: 1, running: 0 } },
+    });
+    controller.abort();
+    await updates.return?.();
   } finally {
     vi.useRealTimers();
   }

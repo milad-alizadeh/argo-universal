@@ -84,19 +84,28 @@ export const session = snakeCase.table('session', {
   updatedAt: timestamp(),
 });
 
-export const turn = snakeCase.table('turn', {
-  id: text().primaryKey(),
-  sessionId: text()
-    .notNull()
-    .references(() => session.id, { onDelete: 'cascade' }),
-  status: text({ enum: turnStatuses }).notNull(),
-  stopReason: text({ enum: stopReasons }),
-  error: text({ mode: 'json' }),
-  usage: text({ mode: 'json' }),
-  model: text(),
-  startedAt: timestamp(),
-  endedAt: integer(),
-});
+export const turn = snakeCase.table(
+  'turn',
+  {
+    id: text().primaryKey(),
+    sessionId: text()
+      .notNull()
+      .references(() => session.id, { onDelete: 'cascade' }),
+    status: text({ enum: turnStatuses }).notNull(),
+    stopReason: text({ enum: stopReasons }),
+    error: text({ mode: 'json' }),
+    usage: text({ mode: 'json' }),
+    model: text(),
+    startedAt: timestamp(),
+    endedAt: integer(),
+  },
+  (table) => [
+    index('turn_session_id_started_at_index').on(
+      table.sessionId,
+      table.startedAt,
+    ),
+  ],
+);
 
 export const feedRow = snakeCase.table(
   'feed_row',
