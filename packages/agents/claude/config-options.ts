@@ -63,6 +63,13 @@ function modelName(model: ModelInfo): string {
   return model.displayName.replace(/\s*\(recommended\)\s*$/i, '');
 }
 
+const withoutModelPrefix = (model: ModelInfo, description: string) => {
+  const prefix = `${modelName(model)} · `;
+  return description.startsWith(prefix)
+    ? description.slice(prefix.length)
+    : description;
+};
+
 // Claude Code model-config: Opus/Sonnet 5.5 use medium, Opus 4.7 uses xhigh, others use high.
 function defaultEffort(
   model: ModelInfo | undefined,
@@ -171,9 +178,8 @@ export function toConfigOptions(
         ...(option.description
           ? {
               description:
-                option.value === DEFAULT_VALUE &&
-                option.description.startsWith(`${modelName(option)} · `)
-                  ? option.description.slice(modelName(option).length + 3)
+                option.value === DEFAULT_VALUE
+                  ? withoutModelPrefix(option, option.description)
                   : option.description,
             }
           : {}),

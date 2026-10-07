@@ -5,6 +5,7 @@ import Animated, {
   useDerivedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { motionDuration, quarterTurnDegrees } from '#lib/motion';
 import { cn } from '#lib/utils';
 import { Icon } from './Icon';
 
@@ -17,8 +18,8 @@ export function DisclosureCaret({
 }) {
   const rotation = useDerivedValue(
     () =>
-      withTiming(open ? 90 : 0, {
-        duration: 200,
+      withTiming(open ? quarterTurnDegrees : 0, {
+        duration: motionDuration.enter,
         reduceMotion: ReduceMotion.System,
       }),
     [open],

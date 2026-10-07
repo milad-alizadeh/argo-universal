@@ -9,6 +9,9 @@ import Animated, {
 import { useResolveClassNames } from 'uniwind';
 import { cn } from '#lib/utils';
 
+const dimmedOpacity = 0.45;
+const blinkMilliseconds = 650;
+
 export interface BlinkingDotProps {
   // A background class such as `bg-warning`; the glow takes the same colour.
   colorClassName: string;
@@ -28,7 +31,11 @@ export function BlinkingDot({
   const opacity = useSharedValue(1);
   useEffect(() => {
     opacity.value = blinking
-      ? withRepeat(withTiming(0.45, { duration: 650 }), -1, true)
+      ? withRepeat(
+          withTiming(dimmedOpacity, { duration: blinkMilliseconds }),
+          -1,
+          true,
+        )
       : 1;
     return () => cancelAnimation(opacity);
   }, [blinking, opacity]);

@@ -31,6 +31,9 @@ export interface TransportInput extends InspectorInput {
   parent: { send(event: InspectorEvent): void };
 }
 
+const maxConnectionAttempts = 20;
+const maxWaitingInspections = 200;
+
 export const inspectorMachine = setup({
   types: {
     input: {} as InspectorInput,
@@ -97,13 +100,15 @@ export const inspectorMachine = setup({
     ),
   },
   delays: { connectionLimit: 1000, retryDelay: 500 },
-  guards: { retryAvailable: ({ context }) => context.attempts < 20 },
+  guards: {
+    retryAvailable: ({ context }) => context.attempts < maxConnectionAttempts,
+  },
   actions: {
     countAttempt: assign({ attempts: ({ context }) => context.attempts + 1 }),
     rememberInspection: assign({
       waiting: ({ context, event }) =>
         event.type === 'inspection.record'
-          ? [...context.waiting, event.inspection].slice(-200)
+          ? [...context.waiting, event.inspection].slice(-maxWaitingInspections)
           : context.waiting,
     }),
     clearWaiting: assign({ waiting: [] }),

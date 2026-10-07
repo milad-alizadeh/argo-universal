@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { FadeIn, FadeOut, ReduceMotion } from 'react-native-reanimated';
 import { FullWindowOverlay as RNFullWindowOverlay } from 'react-native-screens';
+import { motionDuration } from '#lib/motion';
 import { cn } from '#lib/utils';
 import { Icon } from '#primitives/icon';
 import { NativeOnlyAnimatedView } from '#primitives/native-only-animated-view';
@@ -57,13 +58,21 @@ function DialogOverlay({
         asChild={Platform.OS !== 'web'}
       >
         <NativeOnlyAnimatedView
-          entering={FadeIn.duration(200).reduceMotion(ReduceMotion.System)}
-          exiting={FadeOut.duration(150).reduceMotion(ReduceMotion.System)}
+          entering={FadeIn.duration(motionDuration.enter).reduceMotion(
+            ReduceMotion.System,
+          )}
+          exiting={FadeOut.duration(motionDuration.exit).reduceMotion(
+            ReduceMotion.System,
+          )}
           as="Pressable"
         >
           <NativeOnlyAnimatedView
-            entering={FadeIn.delay(50).reduceMotion(ReduceMotion.System)}
-            exiting={FadeOut.duration(150).reduceMotion(ReduceMotion.System)}
+            entering={FadeIn.delay(motionDuration.enterDelay).reduceMotion(
+              ReduceMotion.System,
+            )}
+            exiting={FadeOut.duration(motionDuration.exit).reduceMotion(
+              ReduceMotion.System,
+            )}
           >
             <>{children}</>
           </NativeOnlyAnimatedView>

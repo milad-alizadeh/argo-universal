@@ -11,6 +11,14 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Text } from '#primitives/text';
 
+// How many characters the bright band spans on each side of its centre.
+const bandHalfWidth = 8;
+const sweepMilliseconds = 1600;
+const shimmerOpacity = {
+  plain: { resting: 0.45, highlight: 0.55 },
+  emphasized: { resting: 0.7, highlight: 0.3 },
+};
+
 export function ShimmerText({
   text,
   className,
@@ -20,15 +28,15 @@ export function ShimmerText({
   className?: string;
   emphasized?: boolean;
 }) {
-  const position = useSharedValue(-8);
+  const position = useSharedValue(-bandHalfWidth);
   const reducedMotion = useReducedMotion();
   const characters = Array.from(text);
   useEffect(() => {
-    position.value = -8;
+    position.value = -bandHalfWidth;
     if (!reducedMotion)
       position.value = withRepeat(
-        withTiming(characters.length + 8, {
-          duration: 1600,
+        withTiming(characters.length + bandHalfWidth, {
+          duration: sweepMilliseconds,
           easing: Easing.linear,
         }),
         -1,
@@ -63,14 +71,17 @@ function ShimmerCharacter({
   position: SharedValue<number>;
   emphasized: boolean;
 }) {
+  const { resting, highlight } = emphasized
+    ? shimmerOpacity.emphasized
+    : shimmerOpacity.plain;
   const style = useAnimatedStyle(
     () => ({
       opacity:
-        (emphasized ? 0.7 : 0.45) +
-        (emphasized ? 0.3 : 0.55) *
-          Math.max(0, 1 - Math.abs(index - position.value) / 8),
+        resting +
+        highlight *
+          Math.max(0, 1 - Math.abs(index - position.value) / bandHalfWidth),
     }),
-    [emphasized, index, position],
+    [resting, highlight, index, position],
   );
   return (
     <Animated.Text accessible={false} selectable={false} style={style}>

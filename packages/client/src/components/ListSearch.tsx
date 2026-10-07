@@ -2,19 +2,34 @@ import { MagnifyingGlassIcon, XIcon } from 'phosphor-react-native';
 import { useEffect, useRef, useState } from 'react';
 import { type TextInput, View } from 'react-native';
 import Animated, {
-  Easing,
   ReduceMotion,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
 import { useResolveClassNames } from 'uniwind';
+import {
+  bezierEasing,
+  easingCurve,
+  motionDuration,
+  quarterTurnDegrees,
+} from '#lib/motion';
 import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
 import { Input } from '#primitives/input';
 import { Text } from '#primitives/text';
 import { useWide } from '../navigation/use-wide';
 import { Icon, useIconPixels } from './Icon';
+
+const wideButtonSize = 32;
+const narrowButtonSize = 44;
+const fieldHeight = 32;
+const fieldRadius = 6;
+// Where the magnifier's centre settles inside the open field, from its left edge.
+const fieldIconCentre = 17;
+const titleShift = 8;
+const closeMilliseconds = 220;
+const closeIconStartScale = 0.6;
 
 interface ListSearchProps {
   title: string;
@@ -24,7 +39,7 @@ interface ListSearchProps {
 
 export function ListSearch({ title, value, onChangeText }: ListSearchProps) {
   const wide = useWide();
-  const buttonSize = wide ? 32 : 44;
+  const buttonSize = wide ? wideButtonSize : narrowButtonSize;
   const iconSize = useIconPixels(wide ? 'md' : 'lg');
   const fieldIconSize = useIconPixels('md');
   const placeholderStyle = useResolveClassNames('text-muted-foreground');
@@ -35,8 +50,8 @@ export function ListSearch({ title, value, onChangeText }: ListSearchProps) {
 
   useEffect(() => {
     progress.value = withTiming(searching ? 1 : 0, {
-      duration: searching ? 280 : 220,
-      easing: Easing.bezier(0.22, 1, 0.36, 1),
+      duration: searching ? motionDuration.shellPane : closeMilliseconds,
+      easing: bezierEasing(easingCurve.decelerate),
       reduceMotion: ReduceMotion.System,
     });
     if (!searching) {
@@ -50,14 +65,15 @@ export function ListSearch({ title, value, onChangeText }: ListSearchProps) {
   const titleStyle = useAnimatedStyle(
     () => ({
       opacity: 1 - progress.value,
-      transform: [{ translateX: -8 * progress.value }],
+      transform: [{ translateX: -titleShift * progress.value }],
     }),
     [progress],
   );
   const surfaceStyle = useAnimatedStyle(
     () => ({
       width: buttonSize + (width - buttonSize) * progress.value,
-      borderRadius: buttonSize / 2 + (6 - buttonSize / 2) * progress.value,
+      borderRadius:
+        buttonSize / 2 + (fieldRadius - buttonSize / 2) * progress.value,
       opacity: progress.value,
     }),
     [buttonSize, width, progress],
@@ -65,7 +81,10 @@ export function ListSearch({ title, value, onChangeText }: ListSearchProps) {
   const magnifierStyle = useAnimatedStyle(
     () => ({
       transform: [
-        { translateX: -(width - buttonSize / 2 - 17) * progress.value },
+        {
+          translateX:
+            -(width - buttonSize / 2 - fieldIconCentre) * progress.value,
+        },
         { scale: 1 + (fieldIconSize / iconSize - 1) * progress.value },
       ],
     }),
@@ -75,8 +94,11 @@ export function ListSearch({ title, value, onChangeText }: ListSearchProps) {
     () => ({
       opacity: progress.value,
       transform: [
-        { rotate: `${-90 * (1 - progress.value)}deg` },
-        { scale: 0.6 + 0.4 * progress.value },
+        { rotate: `${-quarterTurnDegrees * (1 - progress.value)}deg` },
+        {
+          scale:
+            closeIconStartScale + (1 - closeIconStartScale) * progress.value,
+        },
       ],
     }),
     [progress],
@@ -115,7 +137,7 @@ export function ListSearch({ title, value, onChangeText }: ListSearchProps) {
         importantForAccessibility={searching ? 'auto' : 'no-hide-descendants'}
         {...{ inert: !searching }}
         className="absolute right-0 h-8 justify-center overflow-hidden border border-input bg-background dark:bg-input/30"
-        style={[{ top: (buttonSize - 32) / 2 }, surfaceStyle]}
+        style={[{ top: (buttonSize - fieldHeight) / 2 }, surfaceStyle]}
       >
         <Input
           ref={input}

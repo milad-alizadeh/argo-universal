@@ -1,5 +1,7 @@
 import { View } from 'react-native';
 
+const fullPercent = 100;
+
 export interface SliderProps {
   value: number;
   minimumValue: number;
@@ -22,7 +24,7 @@ export function Slider({
   disabled,
 }: SliderProps) {
   const progress =
-    ((value - minimumValue) / (maximumValue - minimumValue)) * 100;
+    ((value - minimumValue) / (maximumValue - minimumValue)) * fullPercent;
   const steps = Math.round((maximumValue - minimumValue) / step) + 1;
   return (
     <View className="relative h-4 justify-center">

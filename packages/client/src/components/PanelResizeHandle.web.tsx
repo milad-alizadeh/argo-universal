@@ -1,6 +1,9 @@
 import { useRef } from 'react';
 import type { PanelResizeHandleProps } from './PanelResizeHandle';
 
+// How far one arrow key or accessibility action moves the edge, in points.
+const keyboardStep = 16;
+
 export function PanelResizeHandle({
   label,
   value,
@@ -56,7 +59,11 @@ export function PanelResizeHandle({
       onKeyDown={(event) => {
         if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
           event.preventDefault();
-          resize(value + (event.key === 'ArrowRight' ? 16 : -16) * direction);
+          resize(
+            value +
+              (event.key === 'ArrowRight' ? keyboardStep : -keyboardStep) *
+                direction,
+          );
         } else if (event.key === 'Home' || event.key === 'End') {
           event.preventDefault();
           resize(event.key === 'Home' ? minimum : maximum);

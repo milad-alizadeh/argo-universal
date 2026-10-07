@@ -6,12 +6,13 @@ import { z } from 'zod';
 
 const run = promisify(execFile);
 let rejectedResponses = 0;
+const branchRefPrefix = 'refs/heads/';
 // A local branch ref, read as the branch name.
 const branchName = z
   .string()
-  .startsWith('refs/heads/')
-  .min(12)
-  .transform((ref) => ref.slice('refs/heads/'.length));
+  .startsWith(branchRefPrefix)
+  .min(branchRefPrefix.length + 1)
+  .transform((ref) => ref.slice(branchRefPrefix.length));
 
 // Reports and counts a git answer this module does not recognise, then throws.
 const rejectResponse = (what: string, detail?: string): never => {

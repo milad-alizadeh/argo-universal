@@ -10,6 +10,9 @@ import { useResolveClassNames } from 'uniwind';
 import { Dialog, DialogTrigger } from '#primitives/dialog';
 import type { ComposerSheetProps } from './ComposerSheet';
 
+const maximumHeightFraction = 0.85;
+const minimumBottomPadding = 32;
+
 export function ComposerSheet({
   style,
   open,
@@ -58,7 +61,7 @@ export function ComposerSheet({
             index={0}
             enableDynamicSizing
             enablePanDownToClose
-            maxDynamicContentSize={height * 0.85}
+            maxDynamicContentSize={height * maximumHeightFraction}
             onClose={() => onOpenChange(false)}
             backdropComponent={backdrop}
             backgroundStyle={background}
@@ -72,7 +75,7 @@ export function ComposerSheet({
               accessibilityViewIsModal
               onAccessibilityEscape={() => onOpenChange(false)}
               contentContainerStyle={{
-                paddingBottom: Math.max(32, insets.bottom),
+                paddingBottom: Math.max(minimumBottomPadding, insets.bottom),
               }}
             >
               {children}

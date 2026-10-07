@@ -16,6 +16,7 @@ export type AgentProbeEvent = { type: 'agentProbe.refresh' };
 export const agentProbeId = (agent: string) => `agentProbe:${agent}`;
 
 const probeTimeout = 20_000;
+const millisecondsPerSecond = 1000;
 
 // Holds one Agent's last probe, so `agents.list` answers without starting its CLI.
 export const agentProbeMachine = setup({
@@ -79,7 +80,7 @@ export const agentProbeMachine = setup({
           actions: {
             type: 'rememberUnavailable',
             params: {
-              reason: `no answer within ${probeTimeout / 1000} seconds`,
+              reason: `no answer within ${probeTimeout / millisecondsPerSecond} seconds`,
             },
           },
         },

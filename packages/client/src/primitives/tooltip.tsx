@@ -8,6 +8,7 @@ import {
   ReduceMotion,
 } from 'react-native-reanimated';
 import { FullWindowOverlay as RNFullWindowOverlay } from 'react-native-screens';
+import { motionDuration } from '#lib/motion';
 import { cn } from '#lib/utils';
 import { NativeOnlyAnimatedView } from '#primitives/native-only-animated-view';
 import { TextClassContext } from '#primitives/text';
@@ -41,7 +42,7 @@ function TooltipContent({
                 ? FadeInDown.withInitialValues({
                     transform: [{ translateY: 3 }],
                   })
-                    .duration(150)
+                    .duration(motionDuration.tooltipEnter)
                     .reduceMotion(ReduceMotion.System)
                 : FadeInUp.withInitialValues({
                     transform: [{ translateY: -5 }],

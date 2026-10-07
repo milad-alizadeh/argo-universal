@@ -2,13 +2,16 @@ import { z } from 'zod';
 import { feedRowColumns, sessionColumns } from '../columns';
 import { SessionUpdate } from './session-update';
 
+const maximumPageRows = 200;
+const defaultPageRows = 40;
+
 // Input of `feed.page`: `tail` reads the newest rows, `before` reads rows older than `cursor` (a position) from `epoch`.
 export const FeedPageInput = z.strictObject({
   sessionId: sessionColumns.shape.id,
   direction: z.enum(['tail', 'before']),
   cursor: feedRowColumns.shape.position.optional(),
   epoch: sessionColumns.shape.epoch.optional(),
-  limit: z.int().min(1).max(200).default(40),
+  limit: z.int().min(1).max(maximumPageRows).default(defaultPageRows),
 });
 export type FeedPageInput = z.infer<typeof FeedPageInput>;
 
