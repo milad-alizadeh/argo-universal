@@ -383,6 +383,8 @@ function FeedList({
           estimatedItemSize={48}
           // Each row keeps its own expanded state, which a recycled row would inherit.
           recycleItems={false}
+          // Rows vary from one line to whole screens, so a row drawn at its estimated place would overlap its neighbours until it measures.
+          experimental_hideItemsUntilMeasured
           initialScrollIndex={initialIndex}
           alignItemsAtEnd
           // Rows measure taller than estimated and streaming text grows them; at the end, the Feed stays there.
