@@ -1,10 +1,9 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { type ActorRefFrom, createActor, type InspectionEvent } from 'xstate';
+import { type ActorRefFrom, createActor } from 'xstate';
 import { createTRPCClient } from '../trpc/create-trpc-client';
 import { connectionMachine } from './machine';
 
 export type ConnectionActor = ActorRefFrom<typeof connectionMachine>;
-export type ConnectionInspection = (inspection: InspectionEvent) => void;
 
 // Resolves once the machine allows the attempt, and rejects once the machine stops.
 function waitForAttempt(connection: ConnectionActor) {
@@ -32,11 +31,7 @@ function waitForAttempt(connection: ConnectionActor) {
 }
 
 // The App's Connection to the Server: a tRPC client whose WebSocket opens only when the Connection machine allows it.
-export function openConnection(
-  serverUrl: string,
-  queryClient: QueryClient,
-  inspect?: ConnectionInspection,
-) {
+export function openConnection(serverUrl: string, queryClient: QueryClient) {
   let connection: ConnectionActor | undefined;
   const trpc = createTRPCClient(serverUrl, async () => {
     // wsClient asks for its first URL while it is built, before `connection` below exists.
@@ -45,7 +40,6 @@ export function openConnection(
     await waitForAttempt(connection);
   });
   const started = createActor(connectionMachine, {
-    inspect,
     input: { webSocketClient: trpc.webSocketClient, queryClient },
   }).start();
   connection = started;

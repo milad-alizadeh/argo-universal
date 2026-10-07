@@ -93,9 +93,7 @@
         "tools/**",
         "apps/*/scripts/**",
         "apps/server/src/engine/machine.ts",
-        "apps/server/src/inspect-machines.ts",
-        "apps/server/src/supervisor/index.ts",
-        "apps/universal-app/src/app/_layout.tsx"
+        "apps/server/src/supervisor/index.ts"
       ],
       "rules": { "no-console": "off" }
     },
@@ -312,7 +310,7 @@
       }
     },
     {
-      // D3: the App declares @repo/machine-log for /browser, so the /node entry needs this ban.
+      // D3: the App never imports server-side packages.
       "files": ["apps/universal-app/**"],
       "rules": {
         "no-restricted-imports": [
@@ -326,12 +324,10 @@
                   "!@repo/client/**",
                   "!@repo/uniwind",
                   "!@repo/uniwind/**",
-                  "!@repo/machine-log",
-                  "!@repo/machine-log/browser",
                   "!@repo/vitest",
                   "!@repo/vitest/**"
                 ],
-                "message": "The App imports client, uniwind and the browser machine log, never server-side packages."
+                "message": "The App imports client and uniwind, never server-side packages."
               }
             ]
           }
@@ -473,12 +469,10 @@
                   "@repo/**",
                   "!@repo/contracts",
                   "!@repo/contracts/**",
-                  "!@repo/machine-log",
-                  "!@repo/machine-log/**",
                   "!@repo/vitest",
                   "!@repo/vitest/**"
                 ],
-                "message": "desktop imports only contracts and machine-log from the workspace."
+                "message": "desktop imports only contracts from the workspace."
               }
             ]
           }

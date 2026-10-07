@@ -1,7 +1,6 @@
 import { appendFileSync, mkdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { createNodeMachineInspection } from '@repo/machine-log/node';
 import { createActor } from 'xstate';
 import packageJson from '../../package.json' with { type: 'json' };
 import { supervisorMachine } from './machine';
@@ -16,12 +15,7 @@ export function startSupervisor(options: { watch: boolean }) {
     appendFileSync(logFile, `${stamped}\n`);
   };
 
-  const inspection = createNodeMachineInspection({
-    home,
-    processName: 'supervisor',
-  });
   const supervisor = createActor(supervisorMachine, {
-    inspect: inspection.inspect,
     input: {
       home,
       version: packageJson.version,
@@ -43,11 +37,9 @@ export function startSupervisor(options: { watch: boolean }) {
     },
     // The Engine process keeps the event loop alive until it exits, then Node exits with this code.
     complete: () => {
-      inspection.stop();
       process.exitCode = supervisor.getSnapshot().matches('failed') ? 1 : 0;
     },
     error: (error) => {
-      inspection.stop();
       log(`error: ${String(error)}`);
       process.exitCode = 1;
     },

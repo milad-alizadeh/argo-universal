@@ -127,7 +127,6 @@
     // complexity, max-lines-per-function, sonarjs/no-nested-template-literals, typescript/explicit-function-return-type
     { "files": ["packages/git/src/*"], "rules": { "complexity": "off", "max-lines-per-function": "off", "sonarjs/no-nested-template-literals": "off", "typescript/explicit-function-return-type": "off" } },
     // complexity, max-lines, max-lines-per-function, max-statements, no-console, sonarjs/cognitive-complexity, sonarjs/no-duplicate-string, typescript/consistent-type-assertions, typescript/explicit-function-return-type, typescript/no-base-to-string, vitest/require-mock-type-parameters
-    { "files": ["packages/machine-log/src/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "max-statements": "off", "no-console": "off", "sonarjs/cognitive-complexity": "off", "sonarjs/no-duplicate-string": "off", "typescript/consistent-type-assertions": "off", "typescript/explicit-function-return-type": "off", "typescript/no-base-to-string": "off", "vitest/require-mock-type-parameters": "off" } },
     // complexity, max-lines-per-function, typescript/explicit-function-return-type
     { "files": ["tooling/uniwind/*"], "rules": { "complexity": "off", "max-lines-per-function": "off", "typescript/explicit-function-return-type": "off" } },
     // max-lines-per-function, typescript/explicit-function-return-type

@@ -70,7 +70,6 @@ catalog:
   "@storybook/addon-vitest": 10.6.1
   "@storybook/react-native": 10.6.0
   "@storybook/react-native-web-vite": 10.6.1
-  "@statelyai/inspect": 0.7.2
   "@tailwindcss/vite": 4.3.3
   "@tanstack/react-form": 1.33.5
   ajv: 8.20.0
