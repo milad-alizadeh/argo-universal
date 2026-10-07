@@ -47,6 +47,8 @@ export interface MockCli {
     editFailure: string | null;
   };
   apiKeyVariables: string[];
+  // Whether the CLI takes a message with a rejected Permission request, as the adapter's permissionFeedback capability says.
+  permissionFeedback: boolean;
   // Scenario fields this mock has no analogue for, so a parity row skips them with the reason in its name.
   unsupportedScenarios: (keyof MockCliScenario)[];
   connectionFailures: {
@@ -72,6 +74,7 @@ export const mockClis: Record<string, MockCli> = {
     write: writeMockCodex,
     newSessionMock: codexNewSessionMock,
     apiKeyVariables: ['OPENAI_API_KEY', 'CODEX_API_KEY'],
+    permissionFeedback: false,
     connectionFailures: [
       {
         scenario: { account: 'apiKey' },
@@ -97,6 +100,7 @@ export const mockClis: Record<string, MockCli> = {
     write: writeMockClaude,
     newSessionMock: claudeNewSessionMock,
     apiKeyVariables: ['ANTHROPIC_API_KEY'],
+    permissionFeedback: true,
     connectionFailures: [
       {
         scenario: { account: 'apiKey' },
