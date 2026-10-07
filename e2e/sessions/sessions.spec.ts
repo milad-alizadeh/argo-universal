@@ -1,28 +1,18 @@
-import type { Page } from '@playwright/test';
 import { expect, test } from '../fixtures';
 
 // The badge's label for `count` Sessions, as the rail and the drawer word it.
 const attentionLabel = (count: number) =>
   `${count} ${count === 1 ? 'Session needs' : 'Sessions need'} attention`;
 
-// The rail's badge, read as a number; the web project's Server is shared, so tests compare counts rather than expect zero.
-async function readAttentionCount(page: Page) {
-  const badge = page.getByLabel(/^\d+ Sessions? needs? attention$/);
-  if ((await badge.count()) === 0) return 0;
-  return Number(await badge.textContent());
-}
-
 test('the Sessions list and badge follow a Session live, and search and the filter narrow it', async ({
   page,
-}, testInfo) => {
-  // A title of its own, so other tests' and earlier retries' Sessions never match.
-  const title = `Check the live list ${testInfo.project.name} ${testInfo.retry}`;
+}) => {
+  const title = 'Check the live list';
   const row = page.getByRole('button', { name: new RegExp(`^${title}, `) });
   await expect(
     page.getByRole('heading', { name: 'Sessions', level: 1, exact: true }),
   ).toBeVisible();
   await expect(page.getByTestId('desktop-shell')).toBeVisible();
-  const attentionBefore = await readAttentionCount(page);
 
   await page.getByRole('button', { name: 'New Session', exact: true }).click();
   await expect(
@@ -37,10 +27,10 @@ test('the Sessions list and badge follow a Session live, and search and the filt
   await expect(
     page.getByRole('button', { name: `${title}, Unread`, exact: true }),
   ).toBeVisible();
-  const attention = page.getByLabel(attentionLabel(attentionBefore + 1), {
+  const attention = page.getByLabel(attentionLabel(1), {
     exact: true,
   });
-  await expect(attention).toHaveText(String(attentionBefore + 1));
+  await expect(attention).toHaveText('1');
 
   await page
     .getByRole('button', { name: 'Search Sessions', exact: true })
@@ -74,5 +64,5 @@ test('the Sessions list and badge follow a Session live, and search and the filt
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('link', { name: /back/i }).click();
   await page.getByRole('button', { name: 'Open navigation' }).click();
-  await expect(attention).toHaveText(String(attentionBefore + 1));
+  await expect(attention).toHaveText('1');
 });

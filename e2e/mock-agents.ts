@@ -3,9 +3,9 @@ import path from 'node:path';
 import { mockClis } from '@repo/mocks/cli';
 import type { MockCliOptions } from '@repo/mocks/cli/mock-cli';
 
-// A PATH that finds the mock Agent CLIs in `directory` first.
+// A PATH with the mock Agent CLIs in `directory` and no inherited entries, so a real Agent CLI on this machine never stands in for a missing mock.
 export const mockAgentPath = (directory: string) =>
-  [directory, process.env.PATH ?? ''].join(path.delimiter);
+  [directory, '/usr/bin', '/bin'].join(path.delimiter);
 
 // Each Agent's mock CLI options by Agent id; an Agent left out replays its usual Turn.
 export type MockAgents = Record<string, Partial<MockCliOptions>>;

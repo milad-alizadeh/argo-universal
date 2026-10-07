@@ -4,10 +4,7 @@ import path from 'node:path';
 import type { Page } from '@playwright/test';
 import { mockClis } from '@repo/mocks/cli';
 import { z } from 'zod';
-import { expect, ownServerSkipReason, test } from '../fixtures';
-
-// Every test here starts its own Server; skipping before fixtures spares an Electron launch per test.
-test.skip(({ appTarget }) => appTarget !== 'web', ownServerSkipReason);
+import { expect, test } from '../fixtures';
 
 const phone = { width: 390, height: 844 };
 // The Agent ids the Server registers, so no test names a vendor (AGENTS.md).
@@ -102,11 +99,10 @@ async function openNewSession(page: Page) {
 for (const agent of agentIds) {
   test(`${agent}: a text prompt starts a Session, and Back returns to the list`, async ({
     page,
-    ownServer,
+    server,
   }) => {
     await page.setViewportSize(phone);
-    const { httpUrl } = await ownServer();
-    const { label } = await readAgent(page, httpUrl, agent);
+    const { label } = await readAgent(page, server.httpUrl, agent);
     await openNewSession(page);
     await chooseAgent(page, label);
     await page
@@ -114,7 +110,7 @@ for (const agent of agentIds) {
       .fill('Fix the flaky login test');
     const sessionId = await send(page);
 
-    const [prompt] = await readFeed(page, httpUrl, sessionId);
+    const [prompt] = await readFeed(page, server.httpUrl, sessionId);
     expect(prompt).toMatchObject({
       sessionUpdate: 'user_message',
       content: [{ type: 'text', text: 'Fix the flaky login test' }],
@@ -131,54 +127,55 @@ for (const agent of agentIds) {
     ).toHaveCount(0);
   });
 
-  test(`${agent}: an image prompt uploads the image and starts a Session`, async ({
-    page,
-    ownServer,
-  }) => {
-    await page.setViewportSize(phone);
-    const { httpUrl } = await ownServer({
-      [agent]: { recording: 'image-prompt' },
-    });
-    const { label } = await readAgent(page, httpUrl, agent);
-    await openNewSession(page);
-    await chooseAgent(page, label);
-    await page.getByRole('button', { name: 'Attach images' }).click();
-    const chooser = page.waitForEvent('filechooser');
-    await page.getByRole('button', { name: 'Photos' }).click();
-    await (await chooser).setFiles(imagePath);
-    await expect(
-      page.getByRole('img', { name: 'red-square.png' }),
-    ).toBeVisible();
-    await page
-      .getByRole('textbox', { name: 'Message' })
-      .fill('Name the dominant color in this image.');
-    const sessionId = await send(page);
+  test.describe(`${agent} with an image prompt recording`, () => {
+    test.use({ mockAgents: { [agent]: { recording: 'image-prompt' } } });
 
-    const image = await readFile(imagePath);
-    const blobId = createHash('sha256').update(image).digest('hex');
-    const [prompt] = await readFeed(page, httpUrl, sessionId);
-    expect(prompt).toMatchObject({
-      sessionUpdate: 'user_message',
-      content: [
-        { type: 'text', text: 'Name the dominant color in this image.' },
-        {
-          type: 'image',
-          mimeType: 'image/png',
-          blob: { blobId, mime: 'image/png', bytes: image.byteLength },
-        },
-      ],
+    test(`${agent}: an image prompt uploads the image and starts a Session`, async ({
+      page,
+      server,
+    }) => {
+      await page.setViewportSize(phone);
+      const { label } = await readAgent(page, server.httpUrl, agent);
+      await openNewSession(page);
+      await chooseAgent(page, label);
+      await page.getByRole('button', { name: 'Attach images' }).click();
+      const chooser = page.waitForEvent('filechooser');
+      await page.getByRole('button', { name: 'Photos' }).click();
+      await (await chooser).setFiles(imagePath);
+      await expect(
+        page.getByRole('img', { name: 'red-square.png' }),
+      ).toBeVisible();
+      await page
+        .getByRole('textbox', { name: 'Message' })
+        .fill('Name the dominant color in this image.');
+      const sessionId = await send(page);
+
+      const image = await readFile(imagePath);
+      const blobId = createHash('sha256').update(image).digest('hex');
+      const [prompt] = await readFeed(page, server.httpUrl, sessionId);
+      expect(prompt).toMatchObject({
+        sessionUpdate: 'user_message',
+        content: [
+          { type: 'text', text: 'Name the dominant color in this image.' },
+          {
+            type: 'image',
+            mimeType: 'image/png',
+            blob: { blobId, mime: 'image/png', bytes: image.byteLength },
+          },
+        ],
+      });
+      const stored = await page.request.get(
+        `${server.httpUrl}/blobs/${blobId}`,
+      );
+      expect(Buffer.from(await stored.body())).toEqual(image);
     });
-    const stored = await page.request.get(`${httpUrl}/blobs/${blobId}`);
-    expect(Buffer.from(await stored.body())).toEqual(image);
   });
 }
 
 test('the checkout choice is remembered for the next New Session', async ({
   page,
-  ownServer,
 }) => {
   await page.setViewportSize(phone);
-  await ownServer();
   await openNewSession(page);
   const checkout = page.getByRole('button', { name: 'Checkout' });
   await expect(checkout).toHaveText(/New worktree from\s*main/);
@@ -200,24 +197,31 @@ const steps = {
 
 for (const availability of ['not_installed', 'not_signed_in'] as const) {
   const { status } = steps[availability];
-  test(`with every Agent ${status.toLowerCase()}, New Session shows the first Agent's step`, async ({
-    page,
-    ownServer,
-  }) => {
-    await page.setViewportSize(phone);
-    const { httpUrl } = await ownServer(
-      Object.fromEntries(agentIds.map((agent) => [agent, { availability }])),
-    );
-    const [first, ...rest] = await readAgents(page, httpUrl);
-    // Every Agent reports a step of its own.
-    for (const agent of [first, ...rest])
-      expect(agent?.installStep).toBeTruthy();
-    await openNewSession(page);
-    await expect(page.getByRole('alert')).toHaveText(first?.installStep ?? '');
-    await expect(
-      page.getByRole('textbox', { name: 'Message' }),
-    ).not.toBeEditable();
-    await expect(page.getByRole('button', { name: 'Send' })).toBeDisabled();
+  test.describe(`with every Agent ${status.toLowerCase()}`, () => {
+    test.use({
+      mockAgents: Object.fromEntries(
+        agentIds.map((agent) => [agent, { availability }]),
+      ),
+    });
+
+    test(`New Session shows the first Agent's step`, async ({
+      page,
+      server,
+    }) => {
+      await page.setViewportSize(phone);
+      const [first, ...rest] = await readAgents(page, server.httpUrl);
+      // Every Agent reports a step of its own.
+      for (const agent of [first, ...rest])
+        expect(agent?.installStep).toBeTruthy();
+      await openNewSession(page);
+      await expect(page.getByRole('alert')).toHaveText(
+        first?.installStep ?? '',
+      );
+      await expect(
+        page.getByRole('textbox', { name: 'Message' }),
+      ).not.toBeEditable();
+      await expect(page.getByRole('button', { name: 'Send' })).toBeDisabled();
+    });
   });
 }
 
@@ -228,22 +232,25 @@ for (const [index, availability] of [
 ] as const) {
   const agent = agentIds[index] ?? '';
   const { status, setup } = steps[availability];
-  test(`${agent} ${status.toLowerCase()}: the Agent picker marks it and opens its setup`, async ({
-    page,
-    ownServer,
-  }) => {
-    await page.setViewportSize(phone);
-    const { httpUrl } = await ownServer({ [agent]: { availability } });
-    const { label } = await readAgent(page, httpUrl, agent);
-    await openNewSession(page);
-    await page.getByRole('button', { name: 'Agent and model' }).click();
-    await page.getByRole('button', { name: 'Choose Agent' }).click();
-    const select = page.getByRole('button', { name: `Select ${label}` });
-    await expect(select).toContainText(status);
-    await expect(select).toBeDisabled();
-    const setUp = page.getByRole('button', { name: `Set up ${label}` });
-    await expect(setUp).toHaveText(setup);
-    await setUp.click();
-    await expect(page).toHaveURL(new RegExp(`/settings/agents/${agent}$`));
+  test.describe(`${agent} ${status.toLowerCase()}`, () => {
+    test.use({ mockAgents: { [agent]: { availability } } });
+
+    test('the Agent picker marks it and opens its setup', async ({
+      page,
+      server,
+    }) => {
+      await page.setViewportSize(phone);
+      const { label } = await readAgent(page, server.httpUrl, agent);
+      await openNewSession(page);
+      await page.getByRole('button', { name: 'Agent and model' }).click();
+      await page.getByRole('button', { name: 'Choose Agent' }).click();
+      const select = page.getByRole('button', { name: `Select ${label}` });
+      await expect(select).toContainText(status);
+      await expect(select).toBeDisabled();
+      const setUp = page.getByRole('button', { name: `Set up ${label}` });
+      await expect(setUp).toHaveText(setup);
+      await setUp.click();
+      await expect(page).toHaveURL(new RegExp(`/settings/agents/${agent}$`));
+    });
   });
 }

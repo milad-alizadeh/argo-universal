@@ -3,12 +3,12 @@ import { readFile } from 'node:fs/promises';
 import { createServer } from 'node:net';
 import path from 'node:path';
 import { z } from 'zod';
-import { type MockAgents, writeMockAgents } from './mock-agents';
+import { type MockAgents, mockAgentPath, writeMockAgents } from './mock-agents';
 import { createProjectRepository } from './project-repository';
 
 const serverDirectory = path.resolve(import.meta.dirname, '../apps/server');
 
-export const serverUrlFor = (port: number | string) => `ws://127.0.0.1:${port}`;
+const serverUrlFor = (port: number | string) => `ws://127.0.0.1:${port}`;
 
 export const findFreePort = () =>
   new Promise<number>((resolve, reject) => {
@@ -76,7 +76,6 @@ export async function startOwnServer(directory: string, agents: MockAgents) {
   await writeMockAgents(agentDirectory, agents);
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     const port = await findFreePort();
-    // No inherited PATH, so a real Agent CLI on this machine never stands in for a missing mock.
     const server = spawn(process.execPath, ['--import', 'tsx', 'src/main.ts'], {
       cwd: serverDirectory,
       env: {
@@ -84,7 +83,7 @@ export async function startOwnServer(directory: string, agents: MockAgents) {
         ARGO_HOME: home,
         ARGO_SERVER_PORT: String(port),
         ARGO_PROJECT_PATH: projectPath,
-        PATH: [agentDirectory, '/usr/bin', '/bin'].join(path.delimiter),
+        PATH: mockAgentPath(agentDirectory),
       },
       stdio: ['ignore', 'pipe', 'pipe'],
     });
