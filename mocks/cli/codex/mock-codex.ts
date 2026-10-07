@@ -224,6 +224,7 @@ serveJsonLines<Request>(({ id, method, params, result }) => {
       return;
     case 'initialize':
       if (environment.scenario.blockInitialize) return;
+      if (environment.scenario.malformedLine) return send({ id, error: {} });
       return send({ id, result: {} });
     case 'account/read': {
       const usesApiKey =
