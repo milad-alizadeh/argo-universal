@@ -7,29 +7,33 @@ import {
   CollapsibleTrigger,
 } from '#primitives/collapsible';
 import { Text } from '#primitives/text';
+import { layoutWidths } from '../../mocks/each-layout';
+import { settleViewport } from '../../mocks/settle-viewport';
 
 const meta = { title: 'Tests/Collapsible' } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const AnimatedDisclosure: Story = {
-  render: () => (
-    <Collapsible>
-      <CollapsibleTrigger accessibilityLabel="Toggle details">
-        <Text>Toggle details</Text>
-      </CollapsibleTrigger>
-      <CollapsibleContent testID="animated-detail">
-        <View className="h-32">
-          <Text>Tool call detail</Text>
-        </View>
-      </CollapsibleContent>
-    </Collapsible>
-  ),
-  play: async ({ canvas, userEvent }) => {
-    const { page } = await import('vitest/browser');
-    for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+function animatedDisclosure(width: number): Story {
+  return {
+    render: () => (
+      <Collapsible>
+        <CollapsibleTrigger accessibilityLabel="Toggle details">
+          <Text>Toggle details</Text>
+        </CollapsibleTrigger>
+        <CollapsibleContent testID="animated-detail">
+          <View className="h-32">
+            <Text>Tool call detail</Text>
+          </View>
+        </CollapsibleContent>
+      </Collapsible>
+    ),
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
       const trigger = canvas.getByRole('button', { name: 'Toggle details' });
+      await expect(
+        canvas.queryByTestId('animated-detail'),
+      ).not.toBeInTheDocument();
       await userEvent.click(trigger);
       const detail = canvas.getByTestId('animated-detail');
       const opening = await heightsDuringTransition(detail);
@@ -48,9 +52,11 @@ export const AnimatedDisclosure: Story = {
       await waitFor(() =>
         expect(canvas.queryByTestId('animated-detail')).not.toBeInTheDocument(),
       );
-    }
-  },
-};
+    },
+  };
+}
+export const AnimatedDisclosurePhone = animatedDisclosure(layoutWidths.phone);
+export const AnimatedDisclosureWide = animatedDisclosure(layoutWidths.wide);
 
 async function heightsDuringTransition(element: HTMLElement) {
   const heights: number[] = [];
@@ -63,7 +69,12 @@ async function heightsDuringTransition(element: HTMLElement) {
   return heights;
 }
 
-export const AnimatedDisclosureDark: Story = {
-  ...AnimatedDisclosure,
-  globals: { mode: 'dark' },
+const dark = { globals: { mode: 'dark' } };
+export const AnimatedDisclosurePhoneDark: Story = {
+  ...AnimatedDisclosurePhone,
+  ...dark,
+};
+export const AnimatedDisclosureWideDark: Story = {
+  ...AnimatedDisclosureWide,
+  ...dark,
 };

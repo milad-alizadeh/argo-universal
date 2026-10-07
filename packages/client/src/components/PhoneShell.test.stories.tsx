@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
+import { layoutWidths } from '../../mocks/each-layout';
 import { PhoneShellMock } from '../../mocks/phone-shell-mock';
+import { settleViewport } from '../../mocks/settle-viewport';
 
 const meta = {
   title: 'Tests/PhoneShell',
@@ -56,11 +58,13 @@ export const CardHeightAnimatesWithDrawer: Story = {
   },
 };
 
-export const MenuOpensAndSelectionClosesDrawer: Story = {
-  play: async ({ canvas, userEvent }) => {
-    const { page } = await import('vitest/browser');
-    for (const width of [390, 1024]) {
-      await page.viewport(width, 844);
+// A width between the phone and wide layouts.
+const tabletWidth = 1024;
+
+function menuOpensAndSelectionClosesDrawer(width: number): Story {
+  return {
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
       for (const section of ['Sessions', 'Issues', 'Atlas', 'Settings']) {
         await expect(
           canvas.queryByRole('button', { name: 'Sessions' }),
@@ -98,69 +102,76 @@ export const MenuOpensAndSelectionClosesDrawer: Story = {
           canvas.queryByRole('heading', { name: 'Argo' }),
         ).toBeNull();
       }
-    }
-  },
-};
+    },
+  };
+}
+export const MenuOpensAndSelectionClosesDrawerPhone =
+  menuOpensAndSelectionClosesDrawer(layoutWidths.phone);
+export const MenuOpensAndSelectionClosesDrawerTablet =
+  menuOpensAndSelectionClosesDrawer(tabletWidth);
 
-const checkAttentionAndSectionStates: NonNullable<Story['play']> = async ({
-  canvas,
-  userEvent,
-  args,
-}) => {
-  const { page } = await import('vitest/browser');
-  const count = args.attentionCount ?? 1;
-  for (const width of [390, 1024]) {
-    await page.viewport(width, 844);
-    for (const section of ['Sessions', 'Issues', 'Atlas', 'Settings']) {
-      await userEvent.click(
-        canvas.getByRole('button', { name: 'Open navigation' }),
-      );
-      const badge = canvas.queryByLabelText(
-        `${count} ${count === 1 ? 'Session needs' : 'Sessions need'} attention`,
-      );
-      if (count === 0) await expect(badge).toBeNull();
-      else await expect(badge).toHaveTextContent(count > 99 ? '99+' : '1');
-      await userEvent.click(canvas.getByRole('button', { name: section }));
-      await expect(
-        canvas.getByRole('heading', { name: section }),
-      ).toBeVisible();
-      await userEvent.click(
-        canvas.getByRole('button', { name: 'Open navigation' }),
-      );
-      await expect(
-        canvas.getByRole('button', { name: section }),
-      ).toHaveAttribute('aria-selected', 'true');
-      await userEvent.click(
-        canvas.getByRole('button', { name: 'Close navigation' }),
-      );
-      await expect(canvas.queryByRole('heading', { name: 'Argo' })).toBeNull();
-      await userEvent.click(
-        canvas.getByRole('button', { name: `Search ${section}` }),
-      );
-      await expect(canvas.getByRole('status')).toHaveTextContent(
-        'Search opened',
-      );
-      await userEvent.click(
-        canvas.getByRole('button', { name: `Filter ${section}` }),
-      );
-      await expect(canvas.getByRole('status')).toHaveTextContent(
-        'Filter opened',
-      );
-    }
-  }
-};
+function attentionAndSectionStates(count: number, width: number): Story {
+  return {
+    args: { attentionCount: count },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
+      for (const section of ['Sessions', 'Issues', 'Atlas', 'Settings']) {
+        await userEvent.click(
+          canvas.getByRole('button', { name: 'Open navigation' }),
+        );
+        const badge = canvas.queryByLabelText(
+          `${count} ${count === 1 ? 'Session needs' : 'Sessions need'} attention`,
+        );
+        if (count === 0) await expect(badge).toBeNull();
+        else await expect(badge).toHaveTextContent(count > 99 ? '99+' : '1');
+        await userEvent.click(canvas.getByRole('button', { name: section }));
+        await expect(
+          canvas.getByRole('heading', { name: section }),
+        ).toBeVisible();
+        await userEvent.click(
+          canvas.getByRole('button', { name: 'Open navigation' }),
+        );
+        await expect(
+          canvas.getByRole('button', { name: section }),
+        ).toHaveAttribute('aria-selected', 'true');
+        await userEvent.click(
+          canvas.getByRole('button', { name: 'Close navigation' }),
+        );
+        await expect(
+          canvas.queryByRole('heading', { name: 'Argo' }),
+        ).toBeNull();
+        await userEvent.click(
+          canvas.getByRole('button', { name: `Search ${section}` }),
+        );
+        await expect(canvas.getByRole('status')).toHaveTextContent(
+          'Search opened',
+        );
+        await userEvent.click(
+          canvas.getByRole('button', { name: `Filter ${section}` }),
+        );
+        await expect(canvas.getByRole('status')).toHaveTextContent(
+          'Filter opened',
+        );
+      }
+    },
+  };
+}
 
-export const NoAttention: Story = {
-  args: { attentionCount: 0 },
-  play: checkAttentionAndSectionStates,
-};
-
-export const OneAttention: Story = {
-  args: { attentionCount: 1 },
-  play: checkAttentionAndSectionStates,
-};
-
-export const OverflowAttention: Story = {
-  args: { attentionCount: 100 },
-  play: checkAttentionAndSectionStates,
-};
+export const NoAttentionPhone = attentionAndSectionStates(
+  0,
+  layoutWidths.phone,
+);
+export const NoAttentionTablet = attentionAndSectionStates(0, tabletWidth);
+export const OneAttentionPhone = attentionAndSectionStates(
+  1,
+  layoutWidths.phone,
+);
+export const OneAttentionTablet = attentionAndSectionStates(1, tabletWidth);
+export const OverflowAttentionPhone = attentionAndSectionStates(
+  100,
+  layoutWidths.phone,
+);
+export const OverflowAttentionTablet = attentionAndSectionStates(
+  100,
+  tabletWidth,
+);

@@ -1,10 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
+import { layoutWidths } from '../../mocks/each-layout';
 import {
   recordedAgentMessage,
   streamingAgentMessage,
 } from '../../mocks/feed-message-mock';
+import { settleViewport } from '../../mocks/settle-viewport';
 import { AgentMessage } from './AgentMessage';
 
 const meta = {
@@ -24,16 +26,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const widths = [390, 1440];
-
-async function settleViewport(width: number) {
-  const { page } = await import('vitest/browser');
-  await page.viewport(width, 844);
-  await document.fonts.ready;
-  await new Promise<void>((resolve) =>
-    requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-  );
-}
+const widths = [layoutWidths.phone, layoutWidths.wide];
 
 async function expectType({
   element,
@@ -137,42 +130,53 @@ export const SecondAgentStreaming: Story = {
   },
 };
 
-export const CopyCode: Story = {
-  play: async ({ canvas, userEvent }) => {
-    const { vi } = await import('vitest');
+export const CopyCodeRevealsOnHover: Story = {
+  play: async ({ canvas }) => {
     const { page } = await import('vitest/browser');
-    const copied: string[] = [];
-    const clipboard = vi
-      .spyOn(navigator.clipboard, 'writeText')
-      .mockImplementation(async (text: string) => void copied.push(text));
-    try {
-      await settleViewport(1440);
-      const copy = canvas.getByRole('button', { name: 'Copy code' });
-      await page.elementLocator(copy).unhover();
-      await expect(getComputedStyle(copy).opacity).toBe('0');
-      await page.elementLocator(canvas.getByText('tsx')).hover();
-      await waitFor(() => expect(getComputedStyle(copy).opacity).toBe('1'));
-      for (const width of widths) {
+    await settleViewport(layoutWidths.wide);
+    const copy = canvas.getByRole('button', { name: 'Copy code' });
+    await page.elementLocator(copy).unhover();
+    await expect(getComputedStyle(copy).opacity).toBe('0');
+    await page.elementLocator(canvas.getByText('tsx')).hover();
+    await waitFor(() => expect(getComputedStyle(copy).opacity).toBe('1'));
+  },
+};
+
+function copyCode(width: number): Story {
+  return {
+    play: async ({ canvas, userEvent }) => {
+      const { vi } = await import('vitest');
+      const copied: string[] = [];
+      const clipboard = vi
+        .spyOn(navigator.clipboard, 'writeText')
+        .mockImplementation(async (text: string) => void copied.push(text));
+      try {
         await settleViewport(width);
-        await userEvent.click(
-          canvas.getByRole('button', { name: 'Copy code' }),
-        );
+        const copy = canvas.getByRole('button', { name: 'Copy code' });
+        await expect(
+          canvas.queryByRole('button', { name: 'Copied' }),
+        ).toBeNull();
+        await expect(copied).toEqual([]);
+        await userEvent.click(copy);
         await expect(
           await canvas.findByRole('button', { name: 'Copied' }),
         ).toBeVisible();
-        await expect(copied.at(-1)).toContain(
+        await expect(copied).toHaveLength(1);
+        await expect(copied[0]).toContain(
           'feed.rows.map((row, index) => <Row key={index} data={row} />)',
         );
         await waitFor(
           () => expect(canvas.getByRole('button', { name: 'Copy code' })),
           { timeout: 3000 },
         );
+      } finally {
+        clipboard.mockRestore();
       }
-    } finally {
-      clipboard.mockRestore();
-    }
-  },
-};
+    },
+  };
+}
+export const CopyCodePhone = copyCode(layoutWidths.phone);
+export const CopyCodeWide = copyCode(layoutWidths.wide);
 
 export const TableScrollsSideways: Story = {
   args: { row: recordedAgentMessage('agent-2', 'markdown-answer') },
