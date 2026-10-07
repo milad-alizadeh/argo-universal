@@ -39,6 +39,9 @@ async function settlePhone() {
     await settleViewport(layoutWidths.phone);
 }
 
+// A loaded runner can take a few frames per scroll before the Feed answers.
+const scrollingAway = { timeout: 5000, interval: 100 };
+
 const atEnd = (scroll: HTMLElement) =>
   scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 2;
 
@@ -154,7 +157,7 @@ export const JumpsToLatest: Story = {
       await expect(
         canvas.getByRole('button', { name: 'Jump to latest' }),
       ).toBeVisible();
-    });
+    }, scrollingAway);
     // A row arriving while the reader is away leaves what they read where it was; rows above may still measure, so compare the screen, not scrollTop.
     const view = scroll.getBoundingClientRect();
     const reading = document.elementFromPoint(
@@ -206,7 +209,7 @@ export const KeepsPlaceWhenRowOpens: Story = {
       await expect(
         canvas.getByRole('button', { name: 'Jump to latest' }),
       ).toBeVisible();
-    });
+    }, scrollingAway);
     // Reads back a third of a screen at a time until a closed row sits in the top half.
     const trigger = await waitFor(
       () => {
