@@ -16,12 +16,14 @@ export function createSessionListUpdatesMock(options?: {
           { ...sessionRows.idle, activityAt: 100 },
         ];
   let sessions = initialSessions();
+  let generation = 0;
   let held: ReturnType<typeof Promise.withResolvers<void>> | undefined;
   const calls = { list: 0, active: 0, nextPage: 0, delivered: 0 };
   const updates = createSubscriptionPublisher<SessionListUpdate>();
   return {
     calls,
     reset() {
+      generation += 1;
       held?.resolve();
       held = undefined;
       sessions = initialSessions();
@@ -49,6 +51,7 @@ export function createSessionListUpdatesMock(options?: {
     fixtures: {
       ...sessionListMocks,
       'session.list': async ({ projectId, archived, query, cursor }) => {
+        const current = generation;
         calls.list += 1;
         calls.active += 1;
         if (cursor) calls.nextPage += 1;
@@ -71,7 +74,7 @@ export function createSessionListUpdatesMock(options?: {
           await held?.promise;
           return result;
         } finally {
-          calls.active -= 1;
+          if (generation === current) calls.active -= 1;
         }
       },
       'session.listUpdates': async function* (_input, signal) {

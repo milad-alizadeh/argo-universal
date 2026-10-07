@@ -1,10 +1,12 @@
 // Feeds a subscription fixture: each published value goes to the open subscription, as the Server sends a change.
 export function createSubscriptionPublisher<Value>() {
   let active = false;
+  let generation = 0;
   const queued: Value[] = [];
   let send: ((value: Value) => void) | undefined;
   return {
     reset() {
+      generation += 1;
       send = undefined;
       active = false;
       queued.length = 0;
@@ -15,9 +17,10 @@ export function createSubscriptionPublisher<Value>() {
       else queued.push(value);
     },
     async *subscribe(signal: AbortSignal): AsyncGenerator<Value> {
+      const current = ++generation;
       active = true;
       try {
-        while (!signal.aborted) {
+        while (generation === current && !signal.aborted) {
           const value = queued.length
             ? queued.shift()
             : await new Promise<Value | undefined>((resolve) => {
@@ -41,8 +44,10 @@ export function createSubscriptionPublisher<Value>() {
           yield value;
         }
       } finally {
-        active = false;
-        queued.length = 0;
+        if (generation === current) {
+          active = false;
+          queued.length = 0;
+        }
       }
     },
   };

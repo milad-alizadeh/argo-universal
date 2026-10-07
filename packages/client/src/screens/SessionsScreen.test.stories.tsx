@@ -18,6 +18,7 @@ import {
   multipleProjectsMocks,
   nextPageFailureMocks,
   nextPageLoadingMocks,
+  streamingSessionCatalogs,
 } from '../../mocks/sessions-list-mock';
 import { SessionsScreenPreview } from '../../mocks/sessions-screen-preview';
 import { settleViewport } from '../../mocks/settle-viewport';
@@ -670,29 +671,8 @@ export const OfflineDoesNotShowLiveUpdatesStopped: Story = {
     }),
 };
 
-const streamingCatalogs = agentsList.map((agent) => {
-  const row = activeSessions.sessions.find(
-    (session) => session.agent === agent.agent && session.status === 'idle',
-  );
-  if (!row)
-    throw new Error(
-      `Recorded catalog needs an idle Session for ${agent.label}.`,
-    );
-  return {
-    row,
-    pages: Array.from({ length: 60 }, (_, index) => ({
-      ...row,
-      sessionId: `${row.sessionId}:page-${index}`,
-      title: `${agent.label} Session ${index}`,
-      activityAt: row.activityAt + 60 - index,
-    })),
-  };
-});
-if (streamingCatalogs.length !== 2)
-  throw new Error('Recorded catalog needs both Agents for streaming lists.');
-
 function burstRefetch(width: number, agentIndex: 0 | 1): Story {
-  const catalog = streamingCatalogs[agentIndex];
+  const catalog = streamingSessionCatalogs[agentIndex];
   if (!catalog) throw new Error('Recorded catalog needs both Agents.');
   const updates = createSessionListUpdatesMock({ sessions: [catalog.row] });
   const newestTitle = `${catalog.row.title} — update 30`;
@@ -737,7 +717,7 @@ export const BurstRefetchWideFirstAgent = burstRefetch(layoutWidths.wide, 0);
 export const BurstRefetchWideSecondAgent = burstRefetch(layoutWidths.wide, 1);
 
 function streamingPagination(width: number, agentIndex: 0 | 1): Story {
-  const catalog = streamingCatalogs[agentIndex];
+  const catalog = streamingSessionCatalogs[agentIndex];
   const first = catalog?.pages[0];
   const last = catalog?.pages.at(-1);
   if (!catalog || !first || !last)
