@@ -33,11 +33,16 @@ export function useSessionFeed(sessionId: string) {
     feedRef.current = next;
     setFeed(next);
   }, []);
+  const closed = useRef(false);
+  const [closureError, setClosureError] = useState<Error | null>(null);
   const [snapshot, setSnapshot] = useState<SessionSnapshot | null>(null);
-  // Fixed at the first newest page, so a later page never restarts the subscription.
+  // Pages advance the held revision without restarting live updates.
   const [syncPoint, setSyncPoint] = useState<FeedSyncPoint | null>(null);
-  const [loadingOlder, setLoadingOlder] = useState(false);
-  const olderInFlight = useRef(false);
+  const { loadingOlder, loadOlder } = useOlderPages({
+    sessionId,
+    feedRef,
+    replaceFeed,
+  });
 
   useEffect(() => {
     if (!newestPage.data) return;
@@ -79,6 +84,13 @@ export function useSessionFeed(sessionId: string) {
       {
         enabled: syncPoint !== null,
         onData: (event) => {
+          if (event.type === 'closed') {
+            closed.current = true;
+            setClosureError(
+              event.failure === null ? null : new Error(event.failure),
+            );
+            return;
+          }
           if (event.type === 'snapshot') {
             setSnapshot(event.snapshot);
             return;
@@ -92,6 +104,50 @@ export function useSessionFeed(sessionId: string) {
     ),
   );
 
+  const reset = liveChanges.reset;
+  const retryOpen = useCallback(() => {
+    closed.current = false;
+    setClosureError(null);
+    const held = feedRef.current;
+    if (held.epoch === null) return;
+    const next = { epoch: held.epoch, revision: held.revision };
+    // A changed input resets useSubscription after it commits; the same input needs an explicit reset.
+    if (syncPoint?.epoch === next.epoch && syncPoint.revision === next.revision)
+      reset();
+    else setSyncPoint(next);
+  }, [syncPoint, reset]);
+
+  return {
+    feed,
+    snapshot,
+    // The first page and the snapshot have both arrived.
+    ready: feed.epoch !== null && snapshot !== null,
+    error: newestPage.error,
+    retry: refetch,
+    // The Server refused to open the Session, such as when its Agent failed.
+    openError: closureError ?? liveChanges.error,
+    retryOpen,
+    resumeAfterCommand: () => {
+      if (closed.current) retryOpen();
+    },
+    loadingOlder,
+    loadOlder,
+  };
+}
+
+function useOlderPages({
+  sessionId,
+  feedRef,
+  replaceFeed,
+}: {
+  sessionId: string;
+  feedRef: { current: FeedState };
+  replaceFeed: (next: FeedState) => void;
+}) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const olderInFlight = useRef(false);
   // Pages the rows before the oldest held one, one request at a time.
   const loadOlder = useCallback(async () => {
     const { hasOlder, startCursor, epoch } = feedRef.current;
@@ -117,19 +173,7 @@ export function useSessionFeed(sessionId: string) {
       olderInFlight.current = false;
       setLoadingOlder(false);
     }
-  }, [queryClient, trpc, sessionId, replaceFeed]);
+  }, [queryClient, trpc, sessionId, replaceFeed, feedRef]);
 
-  return {
-    feed,
-    snapshot,
-    // The first page and the snapshot have both arrived.
-    ready: feed.epoch !== null && snapshot !== null,
-    error: newestPage.error,
-    retry: refetch,
-    // The Server refused to open the Session, such as when its Agent failed.
-    openError: liveChanges.error,
-    retryOpen: liveChanges.reset,
-    loadingOlder,
-    loadOlder,
-  };
+  return { loadingOlder, loadOlder };
 }

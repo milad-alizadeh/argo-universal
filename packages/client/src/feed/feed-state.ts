@@ -101,7 +101,7 @@ function replaceHeldRow(feed: FeedState, revised: SessionUpdate): FeedState {
 // Applies one `feed.subscribe` row event to the held window.
 export function applySubscriptionEvent(
   feed: FeedState,
-  event: Exclude<FeedSubscribeOutput, { type: 'snapshot' }>,
+  event: Exclude<FeedSubscribeOutput, { type: 'snapshot' | 'closed' }>,
 ): SubscriptionEventResult {
   if (event.type === 'reset')
     return { feed: { ...emptyFeed, epoch: event.epoch }, reset: true };

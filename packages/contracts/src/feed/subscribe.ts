@@ -53,6 +53,12 @@ export const FeedReset = z.strictObject({
 });
 export type FeedReset = z.infer<typeof FeedReset>;
 
+export const FeedClosed = z.strictObject({
+  type: z.literal('closed'),
+  failure: z.string().nullable(),
+});
+export type FeedClosed = z.infer<typeof FeedClosed>;
+
 // One value that the `feed.subscribe` subscription sends.
 export const FeedSubscribeOutput = z.discriminatedUnion('type', [
   RowUpsert,
@@ -60,5 +66,6 @@ export const FeedSubscribeOutput = z.discriminatedUnion('type', [
   RowPatch,
   FeedSnapshot,
   FeedReset,
+  FeedClosed,
 ]);
 export type FeedSubscribeOutput = z.infer<typeof FeedSubscribeOutput>;

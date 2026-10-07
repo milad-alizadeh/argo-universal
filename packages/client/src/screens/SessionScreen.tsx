@@ -72,6 +72,7 @@ function SessionView({ sessionId, now }: { sessionId: string; now?: number }) {
     retry,
     openError,
     retryOpen,
+    resumeAfterCommand,
     loadingOlder,
     loadOlder,
   } = useSessionFeed(sessionId);
@@ -80,25 +81,13 @@ function SessionView({ sessionId, now }: { sessionId: string; now?: number }) {
     draft,
     changeDraft,
     attachImages,
-    uploadDraftAsPrompt,
-    clearDraft,
     imageUpload,
-  } = useImageDraft();
-  const promptSession = useMutation(
-    trpc.session.prompt.mutationOptions({ onSuccess: clearDraft }),
-  );
-  const cancelTurn = useMutation(trpc.session.cancel.mutationOptions());
-  const setConfigOption = useMutation(
-    trpc.session.setConfigOption.mutationOptions(),
-  );
+    promptSession,
+    cancelTurn,
+    setConfigOption,
+    sendDraft,
+  } = useSessionCommands(sessionId, resumeAfterCommand);
   const feedView = useFeedView(feed.rows, snapshot);
-
-  async function sendDraft(sent: ComposerDraft) {
-    promptSession.reset();
-    imageUpload.reset();
-    const prompt = await uploadDraftAsPrompt(sent);
-    if (prompt?.length) promptSession.mutate({ sessionId, prompt });
-  }
 
   if (error)
     return (
@@ -212,4 +201,33 @@ function SessionView({ sessionId, now }: { sessionId: string; now?: number }) {
       </KeyboardAvoidingView>
     </Screen>
   );
+}
+
+// Draft uploads and successful commands resume a Feed that has closed.
+function useSessionCommands(sessionId: string, resumeAfterCommand: () => void) {
+  const trpc = useTRPC();
+  const { clearDraft, uploadDraftAsPrompt, ...draft } = useImageDraft();
+  const promptSession = useMutation(
+    trpc.session.prompt.mutationOptions({
+      onSuccess: () => {
+        clearDraft();
+        resumeAfterCommand();
+      },
+    }),
+  );
+  const cancelTurn = useMutation(
+    trpc.session.cancel.mutationOptions({ onSuccess: resumeAfterCommand }),
+  );
+  const setConfigOption = useMutation(
+    trpc.session.setConfigOption.mutationOptions({
+      onSuccess: resumeAfterCommand,
+    }),
+  );
+  async function sendDraft(sent: ComposerDraft) {
+    promptSession.reset();
+    draft.imageUpload.reset();
+    const prompt = await uploadDraftAsPrompt(sent);
+    if (prompt?.length) promptSession.mutate({ sessionId, prompt });
+  }
+  return { ...draft, promptSession, cancelTurn, setConfigOption, sendDraft };
 }
