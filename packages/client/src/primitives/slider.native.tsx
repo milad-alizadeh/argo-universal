@@ -6,7 +6,8 @@ import type { SliderProps } from './slider';
 const emptyThumb = {
   uri: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR4nGNgAAIAAAUAAXpeqz8AAAAASUVORK5CYII=',
 };
-const thumbSize = 16;
+const selectedThumbSize = 16;
+const unselectedThumbSize = 1;
 
 export function Slider({
   valueLabel,
@@ -38,14 +39,14 @@ export function Slider({
         maximumTrackTintColor={mutedColor}
         thumbTintColor={selected ? primaryColor : 'transparent'}
         thumbImage={selected ? undefined : emptyThumb}
-        thumbSize={thumbSize}
+        thumbSize={selected ? selectedThumbSize : unselectedThumbSize}
         tapToSeek
         style={{ width: '100%', height: 32 }}
       />
       {/* Slider 5.2 discards the native thumbImage when StepMarker is provided. */}
       <View
         pointerEvents="none"
-        className="absolute flex-row justify-between"
+        className="absolute z-10 flex-row justify-between"
         style={{ left: '5%', right: '5%' }}
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
