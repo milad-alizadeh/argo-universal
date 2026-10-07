@@ -119,20 +119,20 @@ export function EditRow({ row }: EditRowProps) {
         <Text className="text-sm font-normal leading-5 text-destructive">
           Couldn't edit
         </Text>
-        {path && (
+        {path ? (
           <FileName
             path={path}
             className="text-sm leading-5 text-muted-foreground"
           />
-        )}
-        {error && (
+        ) : null}
+        {error ? (
           <Text
             numberOfLines={1}
             className="min-w-0 shrink text-sm leading-5 text-muted-foreground"
           >
             · {error}
           </Text>
-        )}
+        ) : null}
       </View>
     );
   }

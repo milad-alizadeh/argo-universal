@@ -277,12 +277,12 @@ function EmptySessionsList({
       <Text className="text-center text-sm font-medium">
         {emptyListTitle(query, archived)}
       </Text>
-      {query && (
+      {query ? (
         <Text className="text-center text-xs text-muted-foreground">
           No {archived ? 'Archived' : 'Active'} Session has "{query}" in its
           title.
         </Text>
-      )}
+      ) : null}
     </View>
   );
 }
