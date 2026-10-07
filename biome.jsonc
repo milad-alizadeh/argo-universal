@@ -272,7 +272,9 @@
                       "!@repo/uniwind",
                       "!@repo/uniwind/**",
                       "!@repo/machine-log",
-                      "!@repo/machine-log/browser"
+                      "!@repo/machine-log/browser",
+                      "!@repo/vitest",
+                      "!@repo/vitest/**"
                     ],
                     "message": "The App imports client, uniwind and the browser machine log, never server-side packages (spec 0001 section 4)."
                   }
@@ -311,7 +313,9 @@
                     "group": [
                       "@repo/**",
                       "!@repo/contracts",
-                      "!@repo/contracts/**"
+                      "!@repo/contracts/**",
+                      "!@repo/vitest",
+                      "!@repo/vitest/**"
                     ],
                     "message": "api imports only contracts from the workspace (spec 0001 section 4)."
                   }
@@ -447,7 +451,9 @@
                       "!@repo/contracts",
                       "!@repo/contracts/**",
                       "!@repo/machine-log",
-                      "!@repo/machine-log/**"
+                      "!@repo/machine-log/**",
+                      "!@repo/vitest",
+                      "!@repo/vitest/**"
                     ],
                     "message": "desktop imports only contracts and machine-log from the workspace (spec 0001 section 4)."
                   }
