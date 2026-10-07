@@ -125,28 +125,14 @@ export function createSessionListReader(options: {
             ];
           case 'turnInsert':
             return [job.turn.sessionId];
-          case 'turnUpdate': {
-            const queued = jobs.find(
-              (queued) =>
-                queued.type === 'turnInsert' && queued.turn.id === job.id,
-            );
-            if (queued?.type === 'turnInsert') return [queued.turn.sessionId];
-            const live = Object.values(
-              sessions.getSnapshot().context.sessions,
-            ).find(
-              (actor) => actor.getSnapshot().context.activeTurnId === job.id,
-            );
-            if (live) return [live.getSnapshot().context.sessionId];
-            const stored = database
-              .select({ sessionId: turn.sessionId })
-              .from(turn)
-              .where(eq(turn.id, job.id))
-              .get();
-            const id =
-              stored &&
-              validate(() => SessionRecord.shape.id.parse(stored.sessionId));
-            return id ? [id] : [];
-          }
+          case 'turnUpdate':
+            return readTurnSessionIds({
+              database,
+              sessions,
+              jobs: [...jobs, ...(writer()?.getSnapshot().context.queue ?? [])],
+              turnId: job.id,
+              validate,
+            });
           default: {
             const unhandled: never = job;
             throw new Error(`Unhandled writer job ${unhandled}`);
@@ -164,6 +150,32 @@ export function createSessionListReader(options: {
     return [...ids];
   };
   return { readRows, sessionIdsForJobs, relatedSessionIds };
+}
+
+function readTurnSessionIds(input: {
+  database: Database;
+  sessions: RegistryActorRef;
+  jobs: readonly WriterJob[];
+  turnId: string;
+  validate: ListReadInput['validate'];
+}): string[] {
+  const queued = input.jobs.find(
+    (job) => job.type === 'turnInsert' && job.turn.id === input.turnId,
+  );
+  if (queued?.type === 'turnInsert') return [queued.turn.sessionId];
+  const live = Object.values(
+    input.sessions.getSnapshot().context.sessions,
+  ).find((actor) => actor.getSnapshot().context.activeTurnId === input.turnId);
+  if (live) return [live.getSnapshot().context.sessionId];
+  const stored = input.database
+    .select({ sessionId: turn.sessionId })
+    .from(turn)
+    .where(eq(turn.id, input.turnId))
+    .get();
+  const id =
+    stored &&
+    input.validate(() => SessionRecord.shape.id.parse(stored.sessionId));
+  return id ? [id] : [];
 }
 
 function readListSessions(
@@ -214,22 +226,18 @@ function readListTurns(
     job.type === 'turnUpdate' ? [job.id] : [],
   );
   const unchanged = updates.length ? notInArray(turn.id, updates) : undefined;
-  const runningTurn = alias(turn, 'running_turn');
-  const running = input.database
-    .select({ id: runningTurn.id })
-    .from(runningTurn)
-    .where(
-      and(
-        eq(runningTurn.sessionId, session.id),
-        eq(runningTurn.status, 'running'),
-        updates.length ? notInArray(runningTurn.id, updates) : undefined,
-      ),
-    )
-    .limit(1);
-  const runningIds = input.database
-    .select({ id: sql<string>`(${running})` })
-    .from(session)
-    .where(inArray(session.id, children));
+  const runningIds = readChildTurnIds({
+    database: input.database,
+    updates,
+    children,
+    running: true,
+  });
+  const latestIds = readChildTurnIds({
+    database: input.database,
+    updates,
+    children,
+    running: false,
+  });
   const rows = [
     ...input.database
       .select()
@@ -242,7 +250,7 @@ function readListTurns(
       ? input.database
           .select()
           .from(turn)
-          .where(inArray(turn.id, runningIds))
+          .where(or(inArray(turn.id, runningIds), inArray(turn.id, latestIds)))
           .all()
       : []),
     ...(updates.length
@@ -267,6 +275,33 @@ function readListTurns(
   return applyQueuedTurns(rows.flatMap(parseTurn), jobs)
     .filter((row) => ids.has(row.sessionId))
     .flatMap(parseTurn);
+}
+
+function readChildTurnIds(input: {
+  database: Database;
+  updates: string[];
+  children: string[];
+  running: boolean;
+}) {
+  const candidate = alias(turn, 'candidate_turn');
+  const latest = input.database
+    .select({ id: candidate.id })
+    .from(candidate)
+    .where(
+      and(
+        eq(candidate.sessionId, session.id),
+        input.running ? eq(candidate.status, 'running') : undefined,
+        input.updates.length
+          ? notInArray(candidate.id, input.updates)
+          : undefined,
+      ),
+    )
+    .orderBy(desc(candidate.startedAt), desc(candidate.id))
+    .limit(1);
+  return input.database
+    .select({ id: sql<string>`(${latest})` })
+    .from(session)
+    .where(inArray(session.id, input.children));
 }
 
 function readSessionInformation(
