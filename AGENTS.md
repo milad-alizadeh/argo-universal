@@ -12,6 +12,7 @@ Argo for iOS, Android, web, and macOS: one Expo app, an Electron shell, and a lo
 - Code shape: before you add a function, file or module, or answer the complexity alarm, read `docs/agents/code-shape.md`.
 - Tests: before you write or change a test, read `docs/agents/testing.md`.
 - Hooks: when a hook blocks you, or before you change a hook config or `tools/agent-hooks.mts`, read `docs/agents/hooks.md`.
+- Prickles: before you write or review code, read the pillar files in `docs/agents/prickles/`, the Prickles canon v2.0 verbatim (https://prickles.org, CC BY-NC 4.0). Where one conflicts with this file, an ADR or another `docs/agents/` doc, those win.
 
 ## Agent skills
 
