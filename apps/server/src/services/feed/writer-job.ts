@@ -1,3 +1,4 @@
+import { SessionRecord, Turn } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import {
   blob,
@@ -40,6 +41,7 @@ export type WriterJob =
   | {
       type: 'sessionRowUpdate';
       id: string;
+      activityAt?: number;
       set: Partial<
         Omit<typeof session.$inferInsert, 'id' | 'projectId' | 'createdAt'>
       >;
@@ -130,12 +132,16 @@ export function writeJobs(database: Database, jobs: readonly WriterJob[]) {
               ...(job.set.maxRevision === undefined
                 ? {}
                 : {
-                    activityAt: sql`case when ${job.set.maxRevision} > ${session.maxRevision} then ${Date.now()} else ${session.activityAt} end`,
+                    activityAt: sql`case when ${job.set.maxRevision} > ${session.maxRevision} then ${job.activityAt ?? Date.now()} else ${session.activityAt} end`,
                   }),
             })
             .where(eq(session.id, job.id))
             .run();
           break;
+        default: {
+          const unhandled: never = job;
+          throw new Error(`Unhandled writer job ${unhandled}`);
+        }
       }
     }
   });
@@ -154,5 +160,178 @@ export function describeJob(job: WriterJob): string {
       return `update Turn ${job.id}: ${Object.keys(job.set).join(', ')}`;
     case 'sessionRowUpdate':
       return `update Session ${job.id}: ${Object.keys(job.set).join(', ')}`;
+    default: {
+      const unhandled: never = job;
+      throw new Error(`Unhandled writer job ${unhandled}`);
+    }
+  }
+}
+
+export function applyQueuedSession({
+  row,
+  sessionId,
+  jobs,
+}: {
+  row: typeof session.$inferSelect | undefined;
+  sessionId: string;
+  jobs: readonly WriterJob[];
+}): SessionRecord | undefined {
+  let current = row && SessionRecord.parse(row);
+  for (const job of jobs) {
+    switch (job.type) {
+      case 'sessionRowUpdate':
+        if (!current || job.id !== sessionId) break;
+        current = SessionRecord.parse({
+          ...current,
+          ...job.set,
+          ...(job.set.maxRevision === undefined
+            ? {}
+            : {
+                activityAt:
+                  job.set.maxRevision > current.maxRevision
+                    ? (job.activityAt ?? current.activityAt)
+                    : current.activityAt,
+              }),
+        });
+        break;
+      case 'sessionInsert':
+        if (job.session.id === sessionId)
+          current = SessionRecord.parse({
+            title: '',
+            titleSource: 'prompt',
+            archivedAt: null,
+            seenRevision: 0,
+            activityAt: 0,
+            failure: null,
+            vendorSessionId: null,
+            parentSessionId: null,
+            checkoutBranch: null,
+            vendorRef: null,
+            configValues: [],
+            epoch: 0,
+            maxRevision: 0,
+            createdAt: 0,
+            updatedAt: 0,
+            ...job.session,
+          });
+        break;
+      case 'feedRows':
+        if (
+          current &&
+          job.sessionId === sessionId &&
+          job.maxRevision > current.maxRevision
+        )
+          current = {
+            ...current,
+            maxRevision: job.maxRevision,
+            activityAt: job.activityAt ?? current.activityAt,
+          };
+        break;
+      case 'turnInsert':
+      case 'turnUpdate':
+        break;
+      default: {
+        const unhandled: never = job;
+        throw new Error(`Unhandled writer job ${unhandled}`);
+      }
+    }
+  }
+  return current;
+}
+
+export function applyQueuedTurns(
+  rows: readonly Turn[],
+  jobs: readonly WriterJob[],
+): Turn[] {
+  const turns = new Map(rows.map((row) => [row.id, row]));
+  for (const job of jobs) {
+    switch (job.type) {
+      case 'turnInsert':
+        turns.set(
+          job.turn.id,
+          Turn.parse({
+            startedAt: 0,
+            endedAt: null,
+            error: null,
+            usage: null,
+            stopReason: null,
+            model: null,
+            ...job.turn,
+          }),
+        );
+        break;
+      case 'turnUpdate': {
+        const row = turns.get(job.id);
+        if (row) turns.set(job.id, Turn.parse({ ...row, ...job.set }));
+        break;
+      }
+      case 'sessionInsert':
+      case 'sessionRowUpdate':
+      case 'feedRows':
+        break;
+      default: {
+        const unhandled: never = job;
+        throw new Error(`Unhandled writer job ${unhandled}`);
+      }
+    }
+  }
+  return [...turns.values()];
+}
+
+export type FeedRowsJob = Extract<WriterJob, { type: 'feedRows' }>;
+
+export function queuedFeedRows(
+  jobs: readonly WriterJob[],
+  sessionId: string,
+): FeedRowsJob[] {
+  const rows: FeedRowsJob[] = [];
+  for (const job of jobs) {
+    switch (job.type) {
+      case 'feedRows':
+        if (job.sessionId === sessionId) rows.push(job);
+        break;
+      case 'sessionInsert':
+      case 'sessionRowUpdate':
+      case 'turnInsert':
+      case 'turnUpdate':
+        break;
+      default: {
+        const unhandled: never = job;
+        throw new Error(`Unhandled writer job ${unhandled}`);
+      }
+    }
+  }
+  return rows;
+}
+
+// Queue time is shared by reads and writes, including retries of the same job.
+export function stampWriterJob(job: WriterJob, now: number): WriterJob {
+  switch (job.type) {
+    case 'feedRows':
+      return { ...job, activityAt: job.activityAt ?? now };
+    case 'sessionInsert':
+      return {
+        ...job,
+        session: {
+          ...job.session,
+          createdAt: job.session.createdAt ?? now,
+          updatedAt: job.session.updatedAt ?? now,
+        },
+      };
+    case 'turnInsert':
+      return {
+        ...job,
+        turn: { ...job.turn, startedAt: job.turn.startedAt ?? now },
+      };
+    case 'sessionRowUpdate':
+      return job.set.maxRevision === undefined
+        ? job
+        : { ...job, activityAt: job.activityAt ?? now };
+    case 'turnUpdate':
+      return job;
+    default: {
+      const unhandled: never = job;
+      throw new Error(`Unhandled writer job ${unhandled}`);
+    }
   }
 }

@@ -4,8 +4,8 @@ import { feedRow } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
 import { and, desc, eq, gt, isNull, ne, or, sql } from 'drizzle-orm';
 import type { ActorRefFrom } from 'xstate';
-import { fromFeedRow, queuedFeedRows } from '../feed/feed-row';
-import type { FeedRowWrite } from '../feed/writer-job';
+import { fromFeedRow, newestRows } from '../feed/feed-row';
+import { type FeedRowWrite, queuedFeedRows } from '../feed/writer-job';
 import type { writerMachine } from '../feed/writer-machine';
 
 let rejectedShapes = 0;
@@ -45,18 +45,21 @@ export function readLiveHeaderRows({
   const stored = readStoredHeaderRows({ database, sessionId, turnId }).map(
     (row) => parseHeaderRow(sessionId, row),
   );
-  const queued = queuedFeedRows(writer, sessionId).flatMap((job) =>
+  const queued = queuedFeedRows(
+    writer?.getSnapshot().context.queue ?? [],
+    sessionId,
+  ).flatMap((job) =>
     job.rows
       .filter((row) => row.turnId === turnId)
       .map((row) => parseHeaderRow(sessionId, row)),
   );
-  const newest: Record<string, SessionUpdate> = {};
-  for (const row of [...stored, ...queued, ...Object.values(rows)]) {
-    if (row.turnId !== turnId) continue;
-    const known = newest[row.id];
-    if (!known || row.revision >= known.revision) newest[row.id] = row;
-  }
-  return newest;
+  return Object.fromEntries(
+    newestRows(
+      [...stored, ...queued, ...Object.values(rows)].filter(
+        (row) => row.turnId === turnId,
+      ),
+    ),
+  );
 }
 
 function readStoredHeaderRows({
