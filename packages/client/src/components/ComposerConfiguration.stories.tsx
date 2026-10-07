@@ -1,7 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { composerNoEffortSelections } from '../../mocks/composer-mock';
+import {
+  composerNoEffortSelections,
+  composerUnavailableConfigurations,
+} from '../../mocks/composer-mock';
 import { ComposerAgentModelControl } from './ComposerConfiguration';
 
 const configuration = composerNoEffortSelections[0];
@@ -15,7 +18,7 @@ const meta = {
 export default meta;
 
 export const NoEffortSelection: StoryObj<typeof meta> = {
-  name: 'ComposerConfiguration',
+  name: 'No effort selection',
   render: function NoEffortSelectionRender(args) {
     const [options, setOptions] = useState(args.configuration.configOptions);
     return (
@@ -43,3 +46,34 @@ export const NoEffortSelection: StoryObj<typeof meta> = {
     );
   },
 };
+
+const unavailableConfiguration = composerUnavailableConfigurations[0];
+if (!unavailableConfiguration)
+  throw new Error('Recorded catalog needs an unavailable Agent');
+export const UnavailableAgent: StoryObj<typeof meta> = {
+  name: 'Agent unavailable',
+  args: { configuration: unavailableConfiguration },
+  render: function UnavailableAgentRender(args) {
+    const [agents, setAgents] = useState(args.configuration.agents);
+    const [agent, setAgent] = useState(args.configuration.agent);
+    return (
+      <View className="p-4">
+        <ComposerAgentModelControl
+          {...args}
+          configuration={{
+            ...args.configuration,
+            agents,
+            agent,
+            configOptions:
+              agents.find((entry) => entry.agent === agent)?.configOptions ??
+              [],
+            onAgentChange: setAgent,
+            onAgentRetry: () => setAgents(newSessionCatalogs.bothAvailable),
+          }}
+        />
+      </View>
+    );
+  },
+};
+
+import { newSessionCatalogs } from '@repo/api/mocks';
