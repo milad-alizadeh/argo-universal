@@ -14,10 +14,10 @@ import { openTestDatabase } from '#mocks/database';
 import { registryMachine } from './registry-machine';
 import { sessionListMachine } from './session-list-machine';
 
-const { database, remove } = openTestDatabase();
+const { database, directory: runtimeDirectory, remove } = openTestDatabase();
 afterAll(remove);
 const sessions = createActor(registryMachine, {
-  input: { database, adapters: [] },
+  input: { database, runtimeDirectory, adapters: [] },
 });
 const input = {
   sessions,

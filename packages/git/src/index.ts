@@ -1,12 +1,13 @@
 import { execFile } from 'node:child_process';
-import { mkdir } from 'node:fs/promises';
-import { dirname, isAbsolute, join } from 'node:path';
+import { mkdir, realpath } from 'node:fs/promises';
+import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { promisify } from 'node:util';
 import { z } from 'zod';
 
 const run = promisify(execFile);
 let rejectedResponses = 0;
 const branchRefPrefix = 'refs/heads/';
+const sessionBranchPrefix = 'argo/';
 // A local branch ref, read as the branch name.
 const branchName = z
   .string()
@@ -64,6 +65,29 @@ export type CheckoutChoice =
   | { type: 'worktree'; baseBranch: string }
   | { type: 'main' };
 
+// Resolves a repository through any working tree or nested directory (ADR-0008).
+export async function readRepository(
+  path: string,
+): Promise<{ root: string; commonDirectory: string }> {
+  const directory = await realpath(path);
+  const responses = await Promise.all([
+    run('git', ['-C', directory, 'rev-parse', '--show-toplevel']),
+    run('git', ['-C', directory, 'rev-parse', '--git-common-dir']),
+  ]);
+  const paths = z
+    .tuple([
+      z.string().trim().min(1).refine(isAbsolute),
+      z.string().trim().min(1),
+    ])
+    .safeParse(responses.map(({ stdout }) => stdout));
+  if (!paths.success)
+    return rejectResponse('repository paths', paths.error.message);
+  return {
+    root: paths.data[0],
+    commonDirectory: await realpath(resolve(directory, paths.data[1])),
+  };
+}
+
 // The Project's local branches, and the branch HEAD is on, or null when detached.
 export async function listBranches(
   projectPath: string,
@@ -84,6 +108,11 @@ export async function listBranches(
   if (!listed.success || !current.success) return rejectResponse('branch list');
   return { branches: listed.data, currentBranch: current.data };
 }
+
+// The prefix is stored data and must survive a product rename.
+export const sessionBranch = (id: string) => `${sessionBranchPrefix}${id}`;
+export const isSessionBranch = (branch: string | null, id: string) =>
+  branch === sessionBranch(id);
 
 // The Project may have been registered through any of its working trees.
 export async function createCheckout(input: {
@@ -108,7 +137,7 @@ export async function createCheckout(input: {
     input.projectId,
     input.sessionId,
   );
-  const branch = `argo/${input.sessionId}`;
+  const branch = sessionBranch(input.sessionId);
   await mkdir(dirname(checkoutPath), { recursive: true });
   // A full ref keeps the base a local branch, and never an option.
   await git(

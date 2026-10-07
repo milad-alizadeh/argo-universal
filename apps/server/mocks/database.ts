@@ -18,6 +18,7 @@ export function openTestDatabase(
   insertSession(database, sessionValues);
   return {
     database,
+    directory,
     remove: () => {
       database.$client.close();
       rmSync(directory, { recursive: true, force: true });
