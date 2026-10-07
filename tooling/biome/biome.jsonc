@@ -13,8 +13,8 @@
   },
   "linter": {
     "enabled": true,
-    // Biome cannot read pnpm catalog versions, so domains are named here; React stays off until its 19 hits outside the primitives are fixed.
-    "domains": { "test": "recommended", "react": "none" },
+    // Biome cannot read pnpm catalog versions, so domains are named here.
+    "domains": { "test": "recommended", "react": "recommended" },
     "rules": {
       "preset": "recommended",
       "style": {
