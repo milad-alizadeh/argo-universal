@@ -9,7 +9,7 @@ import {
   mockReady,
   mockReadyEvent,
 } from '@repo/mocks/agent';
-import { expectEveryTransitionWalked } from '@repo/vitest/model-coverage';
+import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import { afterAll, afterEach, expect, it, vi } from 'vitest';
 import {
   type ActorLogic,
@@ -34,10 +34,15 @@ import { type SessionMachineInput, sessionMachine } from './session-machine';
 import { toSessionSnapshot } from './session-snapshot';
 
 const cleanups: (() => void)[] = [];
+// The model paths' actors, stopped after each path.
+const actors: { stop: () => void }[] = [];
 afterEach(() => {
   for (const cleanup of cleanups.splice(0).reverse()) cleanup();
+  for (const actor of actors.splice(0)) actor.stop();
   vi.useRealTimers();
 });
+// The model paths share one database, removed after the last test.
+afterAll(() => remove());
 
 function subscribeToSession(service: ReturnType<typeof createFeedService>) {
   const controller = new AbortController();
@@ -541,11 +546,6 @@ const models = (['new', 'existing'] as const).map(
     }),
 );
 const paths = models.flatMap((model) => model.getShortestPaths());
-const actors: { stop: () => void }[] = [];
-afterEach(() => {
-  for (const actor of actors.splice(0)) actor.stop();
-  vi.useRealTimers();
-});
 
 it.each(paths.map((path, index) => [index, path] as const))(
   'walks Session model path %i with the mock Agent',
@@ -624,15 +624,15 @@ it.each(paths.map((path, index) => [index, path] as const))(
 );
 
 it('the generated paths walk every reachable transition', () => {
-  expectEveryTransitionWalked({
-    models,
-    paths,
-    stateKey: (snapshot) => String(key(snapshot)),
-    eventKey: (event) => event.type,
-  });
+  expect(
+    unwalkedTransitions({
+      models,
+      paths,
+      stateKey: (snapshot) => String(key(snapshot)),
+      eventKey: (event) => event.type,
+    }),
+  ).toEqual([]);
 });
-
-afterAll(remove);
 
 it('attaches live Feed updates when a subscription starts while the Session loads', async () => {
   vi.useFakeTimers();

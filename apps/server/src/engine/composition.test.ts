@@ -784,69 +784,82 @@ async function readSnapshot(
   }
 }
 
-async function answersPermissionOnce(
-  adapter: AgentAdapter,
-  delayedResponse: boolean,
-) {
-  stubScenario({ requestBeforeStartResponse: delayedResponse });
-  const root = await startNewSessionEngine(adapter, {
-    recording: 'permission',
-  });
-  const caller = await root.createCaller();
-  const { sessionId } = await caller.session.new({
-    projectId: 'project-1',
-    agent: adapter.agent,
-    checkout: { type: 'main' },
-    configOptions: [],
-    prompt: [{ type: 'text', text: 'Run the command' }],
-  });
-  await expect
-    .poll(
-      async () =>
-        (await readSnapshot(root.createCaller, sessionId)).pendingPermission,
-    )
-    .not.toBeNull();
-  const request = (await readSnapshot(root.createCaller, sessionId))
-    .pendingPermission;
-  if (!request) throw new Error('No Permission request');
-  expect(request.options).toEqual(permissionOptions);
-  const answer = {
-    sessionId,
-    toolCallId: request.toolCallId,
-    optionId: 'allow_once' as const,
-  };
-  expect(await caller.session.answerPermission(answer)).toEqual({});
-  await expect(caller.session.answerPermission(answer)).rejects.toMatchObject({
-    code: 'CONFLICT',
-    message: 'already answered',
-  });
-  await expect
-    .poll(async () => (await readSnapshot(root.createCaller, sessionId)).state)
-    .toBe('idle');
-  expect(
-    await caller.feed.row({ sessionId, id: request.toolCallId }),
-  ).toMatchObject({
-    _meta: {
-      argo: {
-        permissionOutcome: { outcome: 'selected', optionId: 'allow_once' },
+const responseOrders = [
+  {
+    requestBeforeStartResponse: false,
+    title: 'prompt response delayed: false',
+  },
+  {
+    requestBeforeStartResponse: true,
+    title:
+      'prompt response delayed: true; skipped where the protocol has no prompt response to reorder',
+  },
+];
+for (const adapter of agentAdapters)
+  for (const { requestBeforeStartResponse, title } of responseOrders)
+    it.skipIf(
+      requestBeforeStartResponse &&
+        mockClis[adapter.agent]?.unsupportedScenarios.includes(
+          'requestBeforeStartResponse',
+        ),
+    )(
+      `answers a ${adapter.agent} Permission request once through tRPC (${title})`,
+      async () => {
+        stubScenario({ requestBeforeStartResponse });
+        const root = await startNewSessionEngine(adapter, {
+          recording: 'permission',
+        });
+        const caller = await root.createCaller();
+        const { sessionId } = await caller.session.new({
+          projectId: 'project-1',
+          agent: adapter.agent,
+          checkout: { type: 'main' },
+          configOptions: [],
+          prompt: [{ type: 'text', text: 'Run the command' }],
+        });
+        await expect
+          .poll(
+            async () =>
+              (await readSnapshot(root.createCaller, sessionId))
+                .pendingPermission,
+          )
+          .not.toBeNull();
+        const request = (await readSnapshot(root.createCaller, sessionId))
+          .pendingPermission;
+        if (!request) throw new Error('No Permission request');
+        expect(request.options).toEqual(permissionOptions);
+        const answer = {
+          sessionId,
+          toolCallId: request.toolCallId,
+          optionId: 'allow_once' as const,
+        };
+        expect(await caller.session.answerPermission(answer)).toEqual({});
+        await expect(
+          caller.session.answerPermission(answer),
+        ).rejects.toMatchObject({
+          code: 'CONFLICT',
+          message: 'already answered',
+        });
+        await expect
+          .poll(
+            async () =>
+              (await readSnapshot(root.createCaller, sessionId)).state,
+          )
+          .toBe('idle');
+        expect(
+          await caller.feed.row({ sessionId, id: request.toolCallId }),
+        ).toMatchObject({
+          _meta: {
+            argo: {
+              permissionOutcome: {
+                outcome: 'selected',
+                optionId: 'allow_once',
+              },
+            },
+          },
+        });
       },
-    },
-  });
-}
-
-for (const adapter of agentAdapters) {
-  const title = `answers a ${adapter.agent} Permission request once through tRPC`;
-  it(`${title} (prompt response delayed: false)`, () =>
-    answersPermissionOnce(adapter, false));
-  it.skipIf(
-    mockClis[adapter.agent]?.unsupportedScenarios.includes(
-      'requestBeforeStartResponse',
-    ),
-  )(
-    `${title} (prompt response delayed: true; skipped where the protocol has no prompt response to reorder)`,
-    () => answersPermissionOnce(adapter, true),
-  );
-}
+    );
 
 it.each(
   agentAdapters.flatMap((adapter) =>
@@ -938,13 +951,33 @@ it.each(
 
 it.each(
   agentAdapters.flatMap((adapter) =>
-    (['available', 'not_installed', 'not_signed_in'] as const).map(
-      (availability) => ({ adapter, agent: adapter.agent, availability }),
-    ),
+    (
+      [
+        {
+          availability: 'available',
+          installStep: undefined,
+          configOptions: expect.arrayContaining(
+            ['mode', 'model', 'thought_level'].map((category) =>
+              expect.objectContaining({ category }),
+            ),
+          ),
+        },
+        {
+          availability: 'not_installed',
+          installStep: expect.any(String),
+          configOptions: [],
+        },
+        {
+          availability: 'not_signed_in',
+          installStep: expect.any(String),
+          configOptions: [],
+        },
+      ] as const
+    ).map((row) => ({ adapter, agent: adapter.agent, ...row })),
   ),
 )(
   'reports $agent as $availability with its install step and New Session options',
-  async ({ adapter, availability }) => {
+  async ({ adapter, availability, installStep, configOptions }) => {
     const root = await startNewSessionEngine(adapter, {
       recording: 'image-prompt',
       availability,
@@ -960,19 +993,8 @@ it.each(
       logo: expect.stringContaining('<svg'),
       availability,
     });
-    if (availability === 'available') {
-      expect(information?.installStep).toBeUndefined();
-      expect(information?.configOptions).toEqual(
-        expect.arrayContaining(
-          ['mode', 'model', 'thought_level'].map((category) =>
-            expect.objectContaining({ category }),
-          ),
-        ),
-      );
-    } else {
-      expect(information?.installStep).toEqual(expect.any(String));
-      expect(information?.configOptions).toEqual([]);
-    }
+    expect(information?.installStep).toEqual(installStep);
+    expect(information?.configOptions).toEqual(configOptions);
   },
 );
 
@@ -1022,9 +1044,26 @@ it.each(
   },
 );
 
-it.each(agentAdapters)(
-  'delivers a $agent rejection to its CLI without losing unsupported feedback',
-  async (adapter) => {
+it.each(
+  agentAdapters.map((adapter) => {
+    const permissionFeedback =
+      mockClis[adapter.agent]?.permissionFeedback === true;
+    const message = 'Use a read-only command instead';
+    return {
+      adapter,
+      agent: adapter.agent,
+      permissionFeedback,
+      message: permissionFeedback ? message : undefined,
+      recordedAnswer: {
+        type: 'permission',
+        optionId: 'reject_once',
+        ...(permissionFeedback ? { message } : {}),
+      },
+    };
+  }),
+)(
+  'delivers a $agent rejection to its CLI, with feedback where the Agent takes it',
+  async ({ adapter, permissionFeedback, message, recordedAnswer }) => {
     const root = await startNewSessionEngine(adapter, {
       recording: 'permission',
     });
@@ -1047,40 +1086,21 @@ it.each(agentAdapters)(
     const pending = (await readSnapshot(root.createCaller, sessionId))
       .pendingPermission;
     if (!pending) throw new Error('No Permission request');
-    const answer = {
-      sessionId,
-      toolCallId: pending.toolCallId,
-      optionId: 'reject_once' as const,
-      message: 'Use a read-only command instead',
-    };
     const session = root.engine.system.get(`session:${sessionId}`) as
       | SessionActorRef
       | undefined;
-    const supportsFeedback =
-      session?.getSnapshot().context.capabilities?.permissionFeedback === true;
-    if (!supportsFeedback) {
-      await expect(
-        caller.session.answerPermission(answer),
-      ).rejects.toMatchObject({
-        code: 'BAD_REQUEST',
-        message: 'The Agent does not support Permission feedback',
-      });
-      expect(
-        (await readSnapshot(root.createCaller, sessionId)).pendingPermission,
-      ).toEqual(pending);
-    }
-    await caller.session.answerPermission(
-      supportsFeedback ? answer : { ...answer, message: undefined },
-    );
-    await expect
-      .poll(() => readRequestAnswers(file))
-      .toEqual([
-        {
-          type: 'permission',
-          optionId: 'reject_once',
-          ...(supportsFeedback ? { message: answer.message } : {}),
-        },
-      ]);
+    expect(
+      session?.getSnapshot().context.capabilities?.permissionFeedback,
+    ).toBe(permissionFeedback);
+    expect(
+      await caller.session.answerPermission({
+        sessionId,
+        toolCallId: pending.toolCallId,
+        optionId: 'reject_once',
+        message,
+      }),
+    ).toEqual({});
+    await expect.poll(() => readRequestAnswers(file)).toEqual([recordedAnswer]);
     await expect
       .poll(
         async () => (await readSnapshot(root.createCaller, sessionId)).state,
@@ -1095,6 +1115,53 @@ it.each(agentAdapters)(
         },
       },
     });
+  },
+);
+
+it.each(
+  agentAdapters
+    .filter((adapter) => mockClis[adapter.agent]?.permissionFeedback === false)
+    .map((adapter) => ({ adapter, agent: adapter.agent })),
+)(
+  'refuses rejection feedback $agent cannot take and keeps its Permission request pending',
+  async ({ adapter }) => {
+    const root = await startNewSessionEngine(adapter, {
+      recording: 'permission',
+    });
+    const file = path.join(root.home, 'answers.jsonl');
+    stubScenario({ requestAnswersFile: file });
+    const caller = await root.createCaller();
+    const { sessionId } = await caller.session.new({
+      projectId: 'project-1',
+      agent: adapter.agent,
+      checkout: { type: 'main' },
+      configOptions: [],
+      prompt: [{ type: 'text', text: 'Run the command' }],
+    });
+    await expect
+      .poll(
+        async () =>
+          (await readSnapshot(root.createCaller, sessionId)).pendingPermission,
+      )
+      .not.toBeNull();
+    const pending = (await readSnapshot(root.createCaller, sessionId))
+      .pendingPermission;
+    if (!pending) throw new Error('No Permission request');
+    await expect(
+      caller.session.answerPermission({
+        sessionId,
+        toolCallId: pending.toolCallId,
+        optionId: 'reject_once',
+        message: 'Use a read-only command instead',
+      }),
+    ).rejects.toMatchObject({
+      code: 'BAD_REQUEST',
+      message: 'The Agent does not support Permission feedback',
+    });
+    expect(
+      (await readSnapshot(root.createCaller, sessionId)).pendingPermission,
+    ).toEqual(pending);
+    expect(await readRequestAnswers(file)).toEqual([]);
   },
 );
 
@@ -1243,18 +1310,12 @@ it.each(
   },
 );
 
-it.each(
-  agentAdapters.flatMap((adapter) =>
-    ['permission', 'elicitation'].map((recording) => ({
-      adapter,
-      agent: adapter.agent,
-      recording,
-    })),
-  ),
-)(
-  'cancels a $agent Turn with a pending $recording and refuses a late answer',
-  async ({ adapter, recording }) => {
-    const root = await startNewSessionEngine(adapter, { recording });
+it.each(agentAdapters)(
+  'cancels a $agent Turn with a pending Permission request and refuses a late answer',
+  async (adapter) => {
+    const root = await startNewSessionEngine(adapter, {
+      recording: 'permission',
+    });
     const caller = await root.createCaller();
     const { sessionId } = await caller.session.new({
       projectId: 'project-1',
@@ -1269,6 +1330,7 @@ it.each(
       )
       .toBe('requires_action');
     const before = await readSnapshot(root.createCaller, sessionId);
+    if (!before.pendingPermission) throw new Error('No Permission request');
     await caller.session.cancel({ sessionId });
     await expect
       .poll(
@@ -1279,38 +1341,69 @@ it.each(
       pendingPermission: null,
       pendingElicitation: null,
     });
-    if (before.pendingPermission) {
-      await expect(
-        caller.session.answerPermission({
-          sessionId,
-          toolCallId: before.pendingPermission.toolCallId,
-          optionId: 'allow_once',
-        }),
-      ).rejects.toMatchObject({
-        code: 'CONFLICT',
-        message: 'already answered',
-      });
-      expect(
-        await caller.feed.row({
-          sessionId,
-          id: before.pendingPermission.toolCallId,
-        }),
-      ).toMatchObject({
-        _meta: { argo: { permissionOutcome: { outcome: 'cancelled' } } },
-      });
-    }
-    if (before.pendingElicitation)
-      await expect(
-        caller.session.answerElicitation({
-          sessionId,
-          requestId: before.pendingElicitation.requestId,
-          action: 'accept',
-          content: {},
-        }),
-      ).rejects.toMatchObject({
-        code: 'CONFLICT',
-        message: 'already answered',
-      });
+    await expect(
+      caller.session.answerPermission({
+        sessionId,
+        toolCallId: before.pendingPermission.toolCallId,
+        optionId: 'allow_once',
+      }),
+    ).rejects.toMatchObject({
+      code: 'CONFLICT',
+      message: 'already answered',
+    });
+    expect(
+      await caller.feed.row({
+        sessionId,
+        id: before.pendingPermission.toolCallId,
+      }),
+    ).toMatchObject({
+      _meta: { argo: { permissionOutcome: { outcome: 'cancelled' } } },
+    });
+  },
+);
+
+it.each(agentAdapters)(
+  'cancels a $agent Turn with a pending Elicitation and refuses a late answer',
+  async (adapter) => {
+    const root = await startNewSessionEngine(adapter, {
+      recording: 'elicitation',
+    });
+    const caller = await root.createCaller();
+    const { sessionId } = await caller.session.new({
+      projectId: 'project-1',
+      agent: adapter.agent,
+      checkout: { type: 'main' },
+      configOptions: [],
+      prompt: [{ type: 'text', text: 'Wait for my answer' }],
+    });
+    await expect
+      .poll(
+        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+      )
+      .toBe('requires_action');
+    const before = await readSnapshot(root.createCaller, sessionId);
+    if (!before.pendingElicitation) throw new Error('No Elicitation');
+    await caller.session.cancel({ sessionId });
+    await expect
+      .poll(
+        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+      )
+      .toBe('idle');
+    expect(await readSnapshot(root.createCaller, sessionId)).toMatchObject({
+      pendingPermission: null,
+      pendingElicitation: null,
+    });
+    await expect(
+      caller.session.answerElicitation({
+        sessionId,
+        requestId: before.pendingElicitation.requestId,
+        action: 'accept',
+        content: {},
+      }),
+    ).rejects.toMatchObject({
+      code: 'CONFLICT',
+      message: 'already answered',
+    });
   },
 );
 

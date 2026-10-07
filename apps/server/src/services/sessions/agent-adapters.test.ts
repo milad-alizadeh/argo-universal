@@ -112,51 +112,60 @@ describe.each(agentAdapters)(
         content: [{ type: 'text', text: 'Edit the files and run a command.' }],
       });
 
-    const runsATurnAndStops = async (notificationsFirst: boolean) => {
-      const { session, close } = await openSession(
-        mockCli.recordings.turn,
-        null,
-        { notificationsFirst },
+    const reorderings = [
+      { notificationsFirst: false, title: 'notifications first: false' },
+      {
+        notificationsFirst: true,
+        title:
+          'notifications first: true; skipped where the protocol has no prompt response to reorder',
+      },
+    ];
+    for (const { notificationsFirst, title } of reorderings)
+      it.skipIf(
+        notificationsFirst &&
+          mockCli.unsupportedScenarios.includes('notificationsFirst'),
+      )(
+        `runs a Turn with edits, a command and an answer, then stops (${title})`,
+        async () => {
+          const { session, close } = await openSession(
+            mockCli.recordings.turn,
+            null,
+            { notificationsFirst },
+          );
+          const vendorSessionId = session.getSnapshot().context.vendorSessionId;
+          prompt(session);
+          await waitFor(session, isIdle, { timeout: 10_000 });
+          await waitFor(
+            session,
+            (snapshot) => snapshot.context.usage !== null,
+            { timeout: 10_000 },
+          );
+
+          const { output, rows, storedSession } = await close();
+          expect(output).toEqual({ failure: null });
+          expect(storedSession?.vendorSessionId).toBe(vendorSessionId);
+          expect(rows.every((row) => row.state === 'settled')).toBe(true);
+          expect(
+            rows.filter((row) => row.sessionUpdate === 'user_message'),
+          ).toHaveLength(1);
+          expect(rows).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                sessionUpdate: 'tool_call_update',
+                kind: 'edit',
+                status: 'completed',
+              }),
+              expect.objectContaining({
+                sessionUpdate: 'tool_call_update',
+                kind: 'execute',
+                status: 'completed',
+              }),
+            ]),
+          );
+          expect(rows.at(-1)).toMatchObject({ sessionUpdate: 'agent_message' });
+          expect(rows.every((row) => row.turnId === 'turn-1')).toBe(true);
+        },
       );
-      const vendorSessionId = session.getSnapshot().context.vendorSessionId;
-      prompt(session);
-      await waitFor(session, isIdle, { timeout: 10_000 });
-      await waitFor(session, (snapshot) => snapshot.context.usage !== null, {
-        timeout: 10_000,
-      });
-
-      const { output, rows, storedSession } = await close();
-      expect(output).toEqual({ failure: null });
-      expect(storedSession?.vendorSessionId).toBe(vendorSessionId);
-      expect(rows.every((row) => row.state === 'settled')).toBe(true);
-      expect(
-        rows.filter((row) => row.sessionUpdate === 'user_message'),
-      ).toHaveLength(1);
-      expect(rows).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            sessionUpdate: 'tool_call_update',
-            kind: 'edit',
-            status: 'completed',
-          }),
-          expect.objectContaining({
-            sessionUpdate: 'tool_call_update',
-            kind: 'execute',
-            status: 'completed',
-          }),
-        ]),
-      );
-      expect(rows.at(-1)).toMatchObject({ sessionUpdate: 'agent_message' });
-      expect(rows.every((row) => row.turnId === 'turn-1')).toBe(true);
-    };
-
-    it('runs a Turn with edits, a command and an answer, then stops (notifications first: false)', () =>
-      runsATurnAndStops(false));
-
-    it.skipIf(mockCli.unsupportedScenarios.includes('notificationsFirst'))(
-      'runs a Turn with edits, a command and an answer, then stops (notifications first: true; skipped where the protocol has no prompt response to reorder)',
-      () => runsATurnAndStops(true),
-    );
 
     it('cancels a Turn during a command', async () => {
       const { session, findFeed, close } = await openSession(

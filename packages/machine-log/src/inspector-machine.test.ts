@@ -1,4 +1,4 @@
-import { expectEveryTransitionWalked } from '@repo/vitest/model-coverage';
+import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import {
   type Actor,
@@ -122,12 +122,14 @@ it.each(
 });
 
 it('the model walks every transition', () => {
-  expectEveryTransitionWalked({
-    models: [model],
-    paths: walkedPaths,
-    stateKey,
-    eventKey: (event) => event.type,
-  });
+  expect(
+    unwalkedTransitions({
+      models: [model],
+      paths: walkedPaths,
+      stateKey,
+      eventKey: (event) => event.type,
+    }),
+  ).toEqual([]);
 });
 
 it('waits 500 milliseconds between attempts and stops after 20 failures', () => {

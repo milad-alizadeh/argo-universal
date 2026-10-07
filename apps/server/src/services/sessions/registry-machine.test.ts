@@ -1,4 +1,4 @@
-import { expectEveryTransitionWalked } from '@repo/vitest/model-coverage';
+import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import { afterAll, afterEach, expect, it } from 'vitest';
 import {
   type AnyEventObject,
@@ -18,6 +18,7 @@ import { sessionMachine } from './session-machine';
 const registryModelMachine = createRegistryModelMachine(false);
 const registryGraphMachine = createRegistryModelMachine(true);
 const { database, remove } = openTestDatabase();
+afterAll(remove);
 const input: RegistryInput = {
   database,
   adapters: [registryModelAdapter],
@@ -113,12 +114,12 @@ it.each(paths.map((path, index) => [index, path] as const))(
 );
 
 it('the generated registry paths walk every transition', () => {
-  expectEveryTransitionWalked({
-    models: [model],
-    paths,
-    stateKey: key,
-    eventKey: (event) => event.type,
-  });
+  expect(
+    unwalkedTransitions({
+      models: [model],
+      paths,
+      stateKey: key,
+      eventKey: (event) => event.type,
+    }),
+  ).toEqual([]);
 });
-
-afterAll(remove);

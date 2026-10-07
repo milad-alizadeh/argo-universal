@@ -231,12 +231,28 @@
       "plugins": ["./tooling/biome/database-client.grit"]
     },
     {
-      // Unit tests mock only outside modules, and nothing is skipped; the other test-file rules come next, after their 16 fixes.
+      // Unit tests mock only outside modules, skip nothing, assert unconditionally and carry unique, valid titles.
       "includes": ["**/*.test.ts", "**/*.test.tsx"],
       "plugins": ["./tooling/biome/no-internal-mock.grit"],
       "linter": {
         "rules": {
-          "suspicious": { "noSkippedTests": "error" }
+          "suspicious": { "noSkippedTests": "error" },
+          "nursery": {
+            "noConditionalExpect": "error",
+            "noIdenticalTestTitle": "error",
+            "useExpect": "error",
+            "useValidTestTitle": "error",
+            "useTestHooksOnTop": "error"
+          }
+        }
+      }
+    },
+    {
+      // xstate/graph model tests assert per path, so a branch around expect is how they read the path.
+      "includes": ["**/*machine.test.ts"],
+      "linter": {
+        "rules": {
+          "nursery": { "noConditionalExpect": "off" }
         }
       }
     },
