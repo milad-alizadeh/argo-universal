@@ -3,6 +3,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useDeferredValue,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -116,7 +117,8 @@ function LayoutSyncedContent({
   React.ComponentProps<typeof CollapsiblePrimitive.Content>,
   'asChild'
 > & { layoutSync: CollapsibleLayoutSync }) {
-  const open = useContext(OpenContext);
+  // Deferred, so the trigger and its caret answer a tap in one cheap commit while the content mounts behind it.
+  const open = useDeferredValue(useContext(OpenContext));
   const reducedMotion = useReducedMotion();
   // A ref, so content resizing inside a still, open collapsible costs no render; a nested collapsible moving would otherwise render this one every frame.
   const contentHeight = useRef(0);
@@ -124,7 +126,18 @@ function LayoutSyncedContent({
   const [progress, setProgress] = useState(open ? 1 : 0);
   const latestProgress = useRef(progress);
   latestProgress.current = progress;
-  useEffect(() => {
+  const content = useRef<View>(null);
+  // Layout is ready once committed, so the opening content measures before paint instead of a frame later in `onLayout`.
+  useLayoutEffect(() => {
+    if (!open || measured) return;
+    content.current?.measure((_x, _y, _width, height) => {
+      if (!height) return;
+      contentHeight.current = height;
+      setMeasured(true);
+    });
+  }, [open, measured]);
+  // Before paint, so the first frame moves without waiting a frame for a passive effect.
+  useLayoutEffect(() => {
     const target = open ? 1 : 0;
     // Opening waits for the first measurement, which sets the height to grow to.
     if (open && !measured) return;
@@ -184,6 +197,7 @@ function LayoutSyncedContent({
         importantForAccessibility={open ? 'auto' : 'no-hide-descendants'}
       >
         <View
+          ref={content}
           className={className}
           style={settled ? undefined : movingContentStyle}
           onLayout={(event) => {
