@@ -26,8 +26,7 @@ execFileSync(
   'pnpm',
   [
     'exec',
-    'biome',
-    'format',
+    'oxfmt',
     '--write',
     fileURLToPath(
       new URL(

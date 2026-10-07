@@ -8,6 +8,7 @@ export default defineConfig({
       'apps/*/vitest.config.{ts,mts}',
       'mocks',
       'tooling/vitest',
+      'tooling/oxlint',
       'tools/vitest.config.mts',
     ],
     // The scaffold has no tests yet, and Vitest exits 1 when it finds none.

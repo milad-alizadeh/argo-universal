@@ -18,7 +18,7 @@ export function SessionsLoading() {
         ['w-49', 'w-33', 'w-26'],
         ['w-32', 'w-22', 'w-18'],
       ].map(([title, activity, metadata], index) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: a fixed skeleton list that never reorders or changes
+        // oxlint-disable-next-line react/no-array-index-key -- a fixed skeleton list that never reorders or changes
         <View key={index} className="flex-row gap-2 px-2.5 py-3 wide:py-2">
           <View className="h-6 wide:h-5 w-4 items-center justify-center shrink-0">
             <View

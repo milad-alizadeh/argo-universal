@@ -12,8 +12,16 @@ packages:
 # Every shared dependency is pinned here; packages refer to it as "catalog:".
 catalog:
   "@legendapp/list": 3.6.0
+  # Exact pins for the OXC toolchain and the ESLint plugins it runs as JS plugins, which are alpha; oxfmt is pre-1.0 (ADR-0017).
+  "@oxlint/plugins": 1.87.0
+  "@stylistic/eslint-plugin": 5.10.0
+  eslint-plugin-playwright: 2.12.1
+  eslint-plugin-sonarjs: 4.2.2
+  eslint-plugin-unicorn: 77.0.0
+  oxfmt: 0.72.0
+  oxlint: 1.87.0
+  oxlint-tsgolint: 7.0.2003
   "@anthropic-ai/claude-agent-sdk": 0.3.289
-  "@biomejs/biome": 2.5.15
   "@chromatic-com/storybook": 5.4.0
   "@electron-forge/cli": 8.0.1
   "@electron-forge/plugin-fuses": 8.0.1

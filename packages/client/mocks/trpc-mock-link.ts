@@ -88,7 +88,7 @@ const forever = new Promise<never>(() => {});
 export function pending(): () => never {
   return () =>
     ({
-      // biome-ignore lint/suspicious/noThenProperty: awaiting this value must hang, as a query that never answers does.
+      // oxlint-disable-next-line unicorn/no-thenable -- awaiting this value must hang, as a query that never answers does.
       then: (resolve: (value: never) => void) => forever.then(resolve),
       [Symbol.asyncIterator]: () => ({ next: () => forever }),
     }) as never;

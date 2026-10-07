@@ -1,0 +1,512 @@
+{
+  "$schema": "../../node_modules/oxlint/configuration_schema.json",
+  // Argo's rules on top of the Prickles pack (prickles.json): what Biome enforced before ADR-0017, and ADR-0016's applications.
+  // A rule here may be stricter than the pack, never looser; the pack's caps change only with the pack.
+  "plugins": [
+    "typescript",
+    "unicorn",
+    "jsx-a11y",
+    "import",
+    "react",
+    "vitest",
+    "oxc"
+  ],
+  "jsPlugins": [
+    "./plugin/index.ts",
+    { "name": "playwright", "specifier": "eslint-plugin-playwright" }
+  ],
+  // Biome's recommended set, which Argo ran before ADR-0017.
+  "categories": { "correctness": "error" },
+  "settings": { "react": { "version": "19.2.3" } },
+  "rules": {
+    // S5: Biome's noMagicNumbers exemptions, which ignore 0, 1, 2, 10, 24 and 60, indexes, enums, defaults and declarations.
+    "no-magic-numbers": [
+      "error",
+      {
+        "ignore": [-60, -24, -10, -2, -1, 0, 1, 2, 10, 24, 60],
+        "ignoreArrayIndexes": true,
+        "ignoreDefaultValues": true,
+        "ignoreClassFieldInitialValues": true,
+        "ignoreEnums": true,
+        "ignoreNumericLiteralTypes": true,
+        "ignoreReadonlyClassProperties": true,
+        "ignoreTypeIndexes": true
+      }
+    ],
+    // T2: no `!` and no `as` other than `as const`; stricter than the pack.
+    "typescript/no-non-null-assertion": "error",
+    "typescript/consistent-type-assertions": [
+      "error",
+      { "assertionStyle": "never" }
+    ],
+    "no-else-return": "error",
+    "no-lonely-if": "error",
+    "no-unneeded-ternary": "error",
+    "no-extra-boolean-cast": "error",
+    "no-constant-binary-expression": "error",
+    "typescript/prefer-for-of": "error",
+    "unicorn/prefer-at": "error",
+    "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "error",
+    "react/jsx-key": "error",
+    "react/no-array-index-key": "error",
+    "react/jsx-no-useless-fragment": "error",
+    "vitest/no-focused-tests": "error",
+    // Type-aware: `oxlint --type-aware` runs these through oxlint-tsgolint.
+    "typescript/no-floating-promises": "error",
+    "typescript/no-misused-promises": "error",
+    "typescript/switch-exhaustiveness-check": [
+      "error",
+      { "considerDefaultExhaustiveForUnions": true }
+    ],
+    // Vendor names stay in the adapter and mock CLI folders (ADR-0004).
+    "argo/vendor-name": "error",
+    "argo/json-parse-cast": "error",
+    "argo/mock-environment": "error",
+    "argo/database-client": "error",
+    // A relative path into packages/, tooling/ or apps/ skips package.json, pnpm isolation and exports (A2).
+    "argo/cross-package-import": "error",
+    // oxlint cannot resolve the re-exported members of @rn-primitives namespaces; tsc checks every namespace member.
+    "import/namespace": "off",
+    // React Native has no semantic HTML tags; `role` is how a View states its role.
+    "jsx-a11y/prefer-tag-over-role": "off"
+  },
+  "overrides": [
+    {
+      // Tests, stories and mocks state their inputs and expectations as literals.
+      "files": [
+        "**/*.test.*",
+        "**/*.stories.*",
+        "**/*.mocks.*",
+        "e2e/**",
+        "**/mocks/**",
+        "tools/**"
+      ],
+      "rules": { "no-magic-numbers": "off" }
+    },
+    {
+      // Tests, mocks, tools, app scripts and the four log sinks print to the terminal on purpose.
+      "files": [
+        "**/*.test.*",
+        "**/*.mocks.*",
+        "**/mocks/**",
+        "tools/**",
+        "apps/*/scripts/**",
+        "apps/server/src/engine/machine.ts",
+        "apps/server/src/inspect-machines.ts",
+        "apps/server/src/supervisor/index.ts",
+        "apps/universal-app/src/app/_layout.tsx"
+      ],
+      "rules": { "no-console": "off" }
+    },
+    {
+      // ADR-0016 (1): one global cap for test files. A describe callback holds its cases, so a test function may run to the 150-line file cap with 30 statements.
+      "files": ["**/*.test.*", "e2e/**/*.spec.ts"],
+      "rules": {
+        "max-lines-per-function": [
+          "error",
+          { "max": 150, "skipBlankLines": true, "skipComments": true }
+        ],
+        "max-statements": ["error", 30]
+      }
+    },
+    {
+      // ADR-0016 (2): `setup({ types: {} as … })` has no cast-free form in XState v5, and a statechart reads as one file.
+      "files": ["**/*machine.ts"],
+      "rules": {
+        "typescript/consistent-type-assertions": "off",
+        "max-lines": [
+          "error",
+          { "max": 300, "skipBlankLines": true, "skipComments": true }
+        ]
+      }
+    },
+    {
+      // Vendored react-native-reusables output; knip and jscpd exclude it too.
+      "files": ["packages/client/src/primitives/**"],
+      "rules": {
+        "no-else-return": "off",
+        "react/jsx-no-useless-fragment": "off",
+        "react/exhaustive-deps": "off",
+        "react/no-array-index-key": "off"
+      }
+    },
+    {
+      // Icons take a named size (sm, md or lg) instead of a number or size-* class.
+      "files": ["packages/client/src/**"],
+      "rules": { "argo/icon-size": "error" }
+    },
+    {
+      // Vendor names and vendor types belong in the adapter and mock CLI folders (ADR-0015).
+      "files": [
+        "packages/agents/claude/**",
+        "packages/agents/codex/**",
+        "mocks/cli/claude/**",
+        "mocks/cli/codex/**"
+      ],
+      "rules": { "argo/vendor-name": "off", "argo/json-parse-cast": "off" }
+    },
+    {
+      // The rule names the vendors it keeps out.
+      "files": ["tooling/oxlint/plugin/vendor-name*"],
+      "rules": { "argo/vendor-name": "off" }
+    },
+    {
+      // Mock CLI settings are read once, through readMockCliEnvironment() here.
+      "files": ["mocks/cli/mock-cli.ts"],
+      "rules": { "argo/mock-environment": "off" }
+    },
+    {
+      // Only packages/db opens SQLite.
+      "files": ["packages/db/**"],
+      "rules": { "argo/database-client": "off" }
+    },
+    {
+      "files": ["tools/**"],
+      "rules": { "argo/cross-package-import": "off" }
+    },
+    {
+      // Unit tests mock only outside modules, skip nothing, assert unconditionally and carry unique, valid titles.
+      "files": ["**/*.test.ts", "**/*.test.tsx", "**/*.test.mts"],
+      "rules": {
+        "argo/no-internal-mock": "error",
+        "vitest/no-disabled-tests": "error",
+        "vitest/no-conditional-expect": "error",
+        "vitest/no-identical-title": "error",
+        "vitest/expect-expect": "error",
+        "vitest/valid-title": "error",
+        "vitest/prefer-hooks-on-top": "error"
+      }
+    },
+    {
+      // xstate/graph model tests assert per path, so a branch around expect is how they read the path.
+      "files": ["**/*machine.test.ts"],
+      "rules": { "vitest/no-conditional-expect": "off" }
+    },
+    {
+      // Screens and components get tRPC from useTRPC() only (ADR-0009).
+      "files": [
+        "packages/client/src/screens/**",
+        "packages/client/src/components/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@trpc/client",
+                "message": "Screens get tRPC from useTRPC() only (ADR-0009)."
+              },
+              {
+                "name": "../trpc/create-trpc-client",
+                "message": "Screens get tRPC from useTRPC() only (ADR-0009)."
+              },
+              {
+                "name": "../trpc/context",
+                "importNames": ["useTRPCClient"],
+                "message": "Screens get tRPC from useTRPC() only (ADR-0009)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // End-to-end tests drive a real Server, mock only the Agent CLI and await every Playwright action (ADR-0011).
+      "files": ["e2e/**"],
+      "rules": {
+        "playwright/no-element-handle": "error",
+        "playwright/no-eval": "error",
+        "playwright/no-force-option": "error",
+        "playwright/missing-playwright-await": "error",
+        "playwright/no-networkidle": "error",
+        "playwright/no-page-pause": "error",
+        "playwright/no-useless-await": "error",
+        "playwright/no-wait-for-navigation": "error",
+        "playwright/no-wait-for-selector": "error",
+        "playwright/no-wait-for-timeout": "error",
+        "playwright/valid-describe-callback": "error",
+        // Playwright fixtures call `use`, which is not React's hook.
+        "react/rules-of-hooks": "off",
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "vitest",
+                "message": "End-to-end tests run in Playwright (ADR-0011)."
+              },
+              {
+                "name": "node:sqlite",
+                "message": "End-to-end tests check what a user sees, not the database (ADR-0011)."
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["@repo/**", "!@repo/mocks", "!@repo/mocks/**"],
+                "message": "End-to-end tests mock only the Agent CLI and import only @repo/mocks."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // Recording converters and mock CLIs use the same vendor types as their adapters (ADR-0015).
+      "files": ["mocks/cli/*/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "zod",
+                "message": "Use vendor SDK or generated protocol types; validate generic recording and transport envelopes in mocks/cli (ADR-0015)."
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["zod/*"],
+                "message": "Use vendor SDK or generated protocol types (ADR-0015)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // D1: contracts, api, the db schema and client/src never import Node APIs, node:sqlite and node:sea included.
+      "files": [
+        "packages/contracts/**",
+        "packages/api/**",
+        "packages/db/src/schema.ts",
+        "packages/db/src/schema/**",
+        "packages/client/src/**"
+      ],
+      "excludeFiles": ["**/*.test.*", "**/*.stories.*", "**/mocks/**"],
+      "rules": { "import/no-nodejs-modules": "error" }
+    },
+    {
+      // D4: client/src takes @repo/api with import type only; @repo/api is a devDependency for tests, so pnpm resolves a value import too.
+      "files": ["packages/client/src/**"],
+      "excludeFiles": ["**/*.test.*", "**/*.stories.*", "**/mocks/**"],
+      "rules": { "argo/api-type-only": "error" }
+    },
+    // D2, D3 and D5 to D11 repeat the workspace dependency allowlists that pnpm already enforces, so a package.json edit cannot quietly open them.
+    {
+      // D2: contracts declares @repo/db for /schema, so pnpm cannot stop the client import.
+      "files": ["packages/contracts/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@repo/**", "!@repo/db/schema"],
+                "message": "contracts imports only zod, drizzle-orm and @repo/db/schema, never the @repo/db client (ADR-0013)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // D3: the App declares @repo/machine-log for /browser, so the /node entry needs this ban.
+      "files": ["apps/universal-app/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/**",
+                  "!@repo/client",
+                  "!@repo/client/**",
+                  "!@repo/uniwind",
+                  "!@repo/uniwind/**",
+                  "!@repo/machine-log",
+                  "!@repo/machine-log/browser",
+                  "!@repo/vitest",
+                  "!@repo/vitest/**"
+                ],
+                "message": "The App imports client, uniwind and the browser machine log, never server-side packages."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // D5
+      "files": ["packages/api/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/**",
+                  "!@repo/contracts",
+                  "!@repo/contracts/**",
+                  "!@repo/vitest",
+                  "!@repo/vitest/**"
+                ],
+                "message": "api imports only contracts from the workspace."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // D6
+      "files": ["packages/db/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@repo/**"],
+                "message": "db imports no workspace package (ADR-0013)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // D8: adapters stay plain functions on vendor types (ADR-0015).
+      "files": ["packages/agents/*/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "xstate",
+                "message": "Adapters are plain functions; see ADR-0015."
+              },
+              {
+                "name": "zod",
+                "message": "Use vendor SDK or generated protocol types; the Feed validates adapter changes (ADR-0015)."
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["zod/*"],
+                "message": "Use vendor SDK or generated protocol types (ADR-0015)."
+              },
+              {
+                "group": [
+                  "@repo/**",
+                  "!@repo/contracts",
+                  "!@repo/contracts/**"
+                ],
+                "message": "agents imports only contracts from the workspace."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // D7, after D8 so that it replaces D8 for the Agent machine in agents/src.
+      "files": ["packages/git/**", "packages/agents/src/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/**",
+                  "!@repo/contracts",
+                  "!@repo/contracts/**"
+                ],
+                "message": "git and agents import only contracts from the workspace."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // D9
+      "files": ["apps/server/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/client",
+                  "@repo/client/**",
+                  "@repo/universal-app",
+                  "@repo/universal-app/**",
+                  "@repo/storybook",
+                  "@repo/storybook/**",
+                  "@repo/desktop",
+                  "@repo/desktop/**"
+                ],
+                "message": "The Server never imports client or an App."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // D10
+      "files": ["apps/desktop/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/**",
+                  "!@repo/contracts",
+                  "!@repo/contracts/**",
+                  "!@repo/machine-log",
+                  "!@repo/machine-log/**",
+                  "!@repo/vitest",
+                  "!@repo/vitest/**"
+                ],
+                "message": "desktop imports only contracts and machine-log from the workspace."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // D11
+      "files": ["apps/storybook/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/**",
+                  "!@repo/client",
+                  "!@repo/client/**",
+                  "!@repo/uniwind",
+                  "!@repo/uniwind/**"
+                ],
+                "message": "storybook imports only client and uniwind from the workspace."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
