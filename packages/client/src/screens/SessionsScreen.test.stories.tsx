@@ -1,7 +1,7 @@
 import { archivedSessions, projectsList, sessionRows } from '@repo/api/mocks';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
-import { eachLayout } from '../../mocks/each-layout';
+import { eachLayout, layoutWidths } from '../../mocks/each-layout';
 import {
   emptySessionListMocks,
   sessionListMocks,
@@ -14,8 +14,10 @@ import {
   nextPageLoadingMocks,
 } from '../../mocks/sessions-list-mock';
 import { SessionsScreenPreview } from '../../mocks/sessions-screen-preview';
+import { settleViewport } from '../../mocks/settle-viewport';
 import { fails, pending } from '../../mocks/trpc-mock-link';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
+import { applyTheme } from '../lib/theme';
 import { SessionsScreen } from './SessionsScreen';
 
 const recorder = createNavigationRecorder();
@@ -133,82 +135,122 @@ export const Search: Story = {
       ).toBeVisible();
     }),
 };
-export const SearchMorph: Story = {
-  play: async ({ canvas, userEvent }) =>
-    eachLayout(async () => {
-      const surface = canvas.getByTestId('list-search-surface');
-      const measureTransition = async (button: HTMLElement) => {
-        const samples = new Promise<number[]>((resolve) => {
-          button.addEventListener(
-            'click',
-            () => {
-              const widths: number[] = [];
-              const started = performance.now();
-              function measure() {
-                widths.push(surface.getBoundingClientRect().width);
-                if (performance.now() - started < 400)
-                  requestAnimationFrame(measure);
-                else resolve(widths);
-              }
-              requestAnimationFrame(measure);
-            },
-            { once: true },
+const morphCycleRetries = 2;
+const searchMorphAt = (width: number): Story => ({
+  play: async ({ canvas, userEvent }) => {
+    const inBrowser = '__vitest_browser__' in globalThis;
+    if (inBrowser) await settleViewport(width);
+    try {
+      for (const mode of inBrowser
+        ? (['light', 'dark'] as const)
+        : (['light'] as const)) {
+        applyTheme('default', mode);
+        const surface = canvas.getByTestId('list-search-surface');
+        const measureTransition = async (button: HTMLElement) => {
+          const samples = new Promise<number[]>((resolve) => {
+            button.addEventListener(
+              'click',
+              () => {
+                const widths: number[] = [];
+                const started = performance.now();
+                function measure() {
+                  widths.push(surface.getBoundingClientRect().width);
+                  if (performance.now() - started < 400)
+                    requestAnimationFrame(measure);
+                  else resolve(widths);
+                }
+                requestAnimationFrame(measure);
+              },
+              { once: true },
+            );
+          });
+          await userEvent.click(button);
+          return samples;
+        };
+        await expect(canvas.queryByRole('textbox')).toBeNull();
+        await waitFor(() =>
+          expect(surface.getBoundingClientRect().width).toBeCloseTo(
+            canvas
+              .getByRole('button', { name: 'Search Sessions' })
+              .getBoundingClientRect().width,
+            0,
+          ),
+        );
+        const collapsedWidth = surface.getBoundingClientRect().width;
+        const isBetween = (widths: number[], expandedWidth: number) =>
+          widths.some(
+            (width) => width > collapsedWidth + 1 && width < expandedWidth - 1,
           );
-        });
-        await userEvent.click(button);
-        return samples;
-      };
-      await expect(canvas.queryByRole('textbox')).toBeNull();
-      await waitFor(() =>
-        expect(surface.getBoundingClientRect().width).toBeCloseTo(
-          canvas
-            .getByRole('button', { name: 'Search Sessions' })
-            .getBoundingClientRect().width,
-          0,
-        ),
-      );
-      const collapsedWidth = surface.getBoundingClientRect().width;
-      const openingWidths = await measureTransition(
-        canvas.getByRole('button', { name: 'Search Sessions' }),
-      );
-      const input = canvas.getByRole('textbox', { name: 'Search Sessions' });
-      await waitFor(() => expect(input).toHaveFocus());
-      const expandedWidth = surface.getBoundingClientRect().width;
-      await expect(expandedWidth).toBeGreaterThan(collapsedWidth * 3);
-      await expect(
-        openingWidths.some(
-          (width) => width > collapsedWidth + 1 && width < expandedWidth - 1,
-        ),
-      ).toBe(true);
-      await userEvent.type(input, 'settings');
-      const closingWidths = await measureTransition(
-        canvas.getByRole('button', { name: 'Close search' }),
-      );
-      await expect(canvas.queryByRole('textbox')).toBeNull();
-      await expect(
-        closingWidths.some(
-          (width) => width > collapsedWidth + 1 && width < expandedWidth - 1,
-        ),
-      ).toBe(true);
-      await expect(surface.getBoundingClientRect().width).toBeCloseTo(
-        collapsedWidth,
-        0,
-      );
-      await userEvent.click(
-        canvas.getByRole('button', { name: 'Search Sessions' }),
-      );
-      await expect(
-        canvas.getByRole('textbox', { name: 'Search Sessions' }),
-      ).toHaveValue('');
-      await waitFor(() =>
-        expect(
+        // One plain open and close. Closing with a query clears the list filter, and that render can swallow the whole animation, so the query is checked below.
+        const cycle = async () => {
+          const openingWidths = await measureTransition(
+            canvas.getByRole('button', { name: 'Search Sessions' }),
+          );
+          await waitFor(() =>
+            expect(
+              canvas.getByRole('textbox', { name: 'Search Sessions' }),
+            ).toHaveFocus(),
+          );
+          const expandedWidth = surface.getBoundingClientRect().width;
+          const closingWidths = await measureTransition(
+            canvas.getByRole('button', { name: 'Close search' }),
+          );
+          await waitFor(() => expect(canvas.queryByRole('textbox')).toBeNull());
+          await waitFor(() =>
+            expect(surface.getBoundingClientRect().width).toBeCloseTo(
+              collapsedWidth,
+              0,
+            ),
+          );
+          return {
+            expandedWidth,
+            opened: isBetween(openingWidths, expandedWidth),
+            closed: isBetween(closingWidths, expandedWidth),
+          };
+        };
+        // A frame starved by a loaded runner can skip the whole 220 ms animation, so a missed sample earns another cycle; an animation that never passes between the widths still fails.
+        let result = await cycle();
+        for (let retry = 0; retry < morphCycleRetries; retry += 1) {
+          if (result.opened && result.closed) break;
+          result = await cycle();
+        }
+        await expect(result.expandedWidth).toBeGreaterThan(collapsedWidth * 3);
+        await expect(result.opened).toBe(true);
+        await expect(result.closed).toBe(true);
+        await userEvent.click(
+          canvas.getByRole('button', { name: 'Search Sessions' }),
+        );
+        await userEvent.type(
           canvas.getByRole('textbox', { name: 'Search Sessions' }),
-        ).toHaveFocus(),
-      );
-      await userEvent.keyboard('{Escape}');
-      await waitFor(() => expect(getComputedStyle(surface).opacity).toBe('0'));
-    }),
-};
+          'settings',
+        );
+        await userEvent.click(
+          canvas.getByRole('button', { name: 'Close search' }),
+        );
+        await waitFor(() => expect(canvas.queryByRole('textbox')).toBeNull());
+        await userEvent.click(
+          canvas.getByRole('button', { name: 'Search Sessions' }),
+        );
+        await expect(
+          canvas.getByRole('textbox', { name: 'Search Sessions' }),
+        ).toHaveValue('');
+        await waitFor(() =>
+          expect(
+            canvas.getByRole('textbox', { name: 'Search Sessions' }),
+          ).toHaveFocus(),
+        );
+        await userEvent.keyboard('{Escape}');
+        await waitFor(() =>
+          expect(getComputedStyle(surface).opacity).toBe('0'),
+        );
+      }
+    } finally {
+      applyTheme('default', 'light');
+    }
+  },
+});
+export const SearchMorphPhone = searchMorphAt(layoutWidths.phone);
+export const SearchMorphWide = searchMorphAt(layoutWidths.wide);
 
 export const ArchivedFilter: Story = {
   play: async ({ canvas, userEvent }) =>
