@@ -30,13 +30,19 @@ const attempts = 3;
 const STDERR_TAIL_LENGTH = 2000;
 
 // Ready once this Server's own home names its port; another run's Server on a shared port never counts.
-async function waitUntilReady(
-  home: string,
-  port: number,
-  server: ChildProcess,
-  portTaken: () => boolean,
-  stderrTail: () => string,
-) {
+async function waitUntilReady({
+  home,
+  port,
+  server,
+  portTaken,
+  stderrTail,
+}: {
+  home: string;
+  port: number;
+  server: ChildProcess;
+  portTaken: () => boolean;
+  stderrTail: () => string;
+}) {
   const deadline = Date.now() + 30_000;
   while (Date.now() < deadline) {
     if (hasExited(server))
@@ -107,13 +113,13 @@ export async function startOwnServer(directory: string, agents: MockAgents) {
     };
     try {
       if (
-        await waitUntilReady(
+        await waitUntilReady({
           home,
           port,
           server,
-          () => portTaken,
-          () => stderrTail,
-        )
+          portTaken: () => portTaken,
+          stderrTail: () => stderrTail,
+        })
       ) {
         return {
           serverUrl: serverUrlFor(port),
