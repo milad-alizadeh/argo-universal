@@ -14,7 +14,6 @@ import type { SessionActorRef } from './session-machine';
 const cleanups: (() => void)[] = [];
 afterEach(() => {
   for (const cleanup of cleanups.splice(0).reverse()) cleanup();
-  vi.unstubAllEnvs();
 });
 
 const temporaryDirectory = (prefix: string) => {

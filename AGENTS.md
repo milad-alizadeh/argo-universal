@@ -11,6 +11,7 @@ Argo for iOS, Android, web, and macOS: one Expo app, an Electron shell, and a lo
 - Designs: Paper. Before you edit a Paper file or build UI from one, read `docs/agents/paper.md`. It holds until Paper ships component instances.
 - Code shape: before you add a function, file or module, or answer the complexity alarm, read `docs/agents/code-shape.md`.
 - Tests: before you write or change a test, read `docs/agents/testing.md`.
+- Hooks: when a hook blocks you, or before you change a hook config or `tools/agent-hooks.mts`, read `docs/agents/hooks.md`.
 
 ## Agent skills
 

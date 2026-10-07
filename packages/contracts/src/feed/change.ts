@@ -53,6 +53,42 @@ export const FeedAppend = z.strictObject({
 });
 export type FeedAppend = z.infer<typeof FeedAppend>;
 
+// The value at a dotted path such as `content.0.text`, or undefined when the path leads nowhere.
+export function readFeedField(
+  value: unknown,
+  path: readonly string[],
+): unknown {
+  let current = value;
+  for (const key of path) {
+    if (Array.isArray(current) && /^\d+$/.test(key))
+      current = current[Number(key)];
+    else if (
+      current !== null &&
+      typeof current === 'object' &&
+      Object.hasOwn(current, key)
+    )
+      current = (current as Record<string, unknown>)[key];
+    else return undefined;
+  }
+  return current;
+}
+
+// A copy of `value` with `text` at a path that `readFeedField` resolved.
+export function writeFeedField(
+  value: unknown,
+  [key, ...rest]: readonly string[],
+  text: string,
+): unknown {
+  if (key === undefined) return text;
+  if (Array.isArray(value)) {
+    const copy = [...value];
+    copy[Number(key)] = writeFeedField(value[Number(key)], rest, text);
+    return copy;
+  }
+  const record = value as Record<string, unknown>;
+  return { ...record, [key]: writeFeedField(record[key], rest, text) };
+}
+
 // Top-level fields of a row to replace; `state: 'settled'` settles it.
 export const FeedPatch = z.strictObject({
   type: z.literal('patch'),
