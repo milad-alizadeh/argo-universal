@@ -1,5 +1,0 @@
-{
-  "extends": "@repo/typescript/node.json",
-  "compilerOptions": { "lib": ["ES2025", "DOM"] },
-  "include": ["src", "vitest.config.ts"]
-}
