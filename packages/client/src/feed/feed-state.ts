@@ -25,10 +25,10 @@ export const emptyFeed: FeedState = {
   startCursor: null,
 };
 
-export interface FeedEventResult {
+export interface SubscriptionEventResult {
   feed: FeedState;
   // A row the event could not be applied to; the App fetches it whole with `feed.row`.
-  fetchRow?: string;
+  missingRowId?: string;
   // The Server rebuilt the Feed; the App pages the tail again.
   reset?: true;
 }
@@ -37,11 +37,11 @@ const byPosition = (first: SessionUpdate, second: SessionUpdate) =>
   first.position - second.position;
 
 // Keeps the newer revision of each row, ordered by position.
-function merge(
-  rows: readonly SessionUpdate[],
+function keepNewerRevisions(
+  held: readonly SessionUpdate[],
   incoming: readonly SessionUpdate[],
 ): readonly SessionUpdate[] {
-  const byId = new Map(rows.map((row) => [row.id, row]));
+  const byId = new Map(held.map((row) => [row.id, row]));
   let changed = false;
   for (const row of incoming) {
     const known = byId.get(row.id);
@@ -49,29 +49,36 @@ function merge(
     byId.set(row.id, row);
     changed = true;
   }
-  return changed ? [...byId.values()].sort(byPosition) : rows;
+  return changed ? [...byId.values()].sort(byPosition) : held;
 }
 
 // The newest rows; a page from a new epoch replaces everything held.
-export function receiveTail(feed: FeedState, page: FeedPageOutput): FeedState {
-  const fresh = feed.epoch !== page.epoch;
-  const rows = merge(fresh ? [] : feed.rows, page.rows);
+export function mergeNewestPage(
+  feed: FeedState,
+  page: FeedPageOutput,
+): FeedState {
+  const newEpoch = feed.epoch !== page.epoch;
+  const rows = keepNewerRevisions(newEpoch ? [] : feed.rows, page.rows);
   return {
     epoch: page.epoch,
-    revision: fresh
+    revision: newEpoch
       ? page.maxRevision
       : Math.max(feed.revision, page.maxRevision),
     rows,
-    hasOlder: fresh || feed.rows.length === 0 ? page.hasOlder : feed.hasOlder,
+    hasOlder:
+      newEpoch || feed.rows.length === 0 ? page.hasOlder : feed.hasOlder,
     startCursor: rows[0]?.position ?? null,
   };
 }
 
 // Rows before the window; a stale cursor brings the tail of a new epoch instead.
-export function receiveOlder(feed: FeedState, page: FeedPageOutput): FeedState {
-  if (page.staleCursor) return receiveTail(emptyFeed, page);
+export function mergeOlderPage(
+  feed: FeedState,
+  page: FeedPageOutput,
+): FeedState {
+  if (page.staleCursor) return mergeNewestPage(emptyFeed, page);
   if (page.epoch !== feed.epoch) return feed;
-  const rows = merge(feed.rows, page.rows);
+  const rows = keepNewerRevisions(feed.rows, page.rows);
   return {
     ...feed,
     rows,
@@ -80,8 +87,8 @@ export function receiveOlder(feed: FeedState, page: FeedPageOutput): FeedState {
   };
 }
 
-// The string at a dotted path such as `content.0.text`.
-function readAtPath(value: unknown, path: readonly string[]): unknown {
+// The value at a path of keys such as `content.0.text`, or undefined when the path leaves the object.
+function valueAtPath(value: unknown, path: readonly string[]): unknown {
   let current = value;
   for (const key of path) {
     if (current === null || typeof current !== 'object') return undefined;
@@ -90,7 +97,8 @@ function readAtPath(value: unknown, path: readonly string[]): unknown {
   return current;
 }
 
-function writeAtPath(
+// A copy of the value with the text set at the path.
+function withTextAtPath(
   value: unknown,
   [key, ...rest]: readonly string[],
   text: string,
@@ -98,36 +106,33 @@ function writeAtPath(
   if (key === undefined) return text;
   if (Array.isArray(value)) {
     const copy = [...value];
-    copy[Number(key)] = writeAtPath(value[Number(key)], rest, text);
+    copy[Number(key)] = withTextAtPath(value[Number(key)], rest, text);
     return copy;
   }
   const record = value as Record<string, unknown>;
-  return { ...record, [key]: writeAtPath(record[key], rest, text) };
+  return { ...record, [key]: withTextAtPath(record[key], rest, text) };
 }
 
-function replaceRow(
-  feed: FeedState,
-  row: SessionUpdate,
-  rev: number,
-): FeedState {
+// Swaps in a held row's new revision.
+function replaceHeldRow(feed: FeedState, revised: SessionUpdate): FeedState {
   return {
     ...feed,
-    revision: Math.max(feed.revision, rev),
-    rows: feed.rows.map((known) => (known.id === row.id ? row : known)),
+    revision: Math.max(feed.revision, revised.revision),
+    rows: feed.rows.map((held) => (held.id === revised.id ? revised : held)),
   };
 }
 
 // Applies one `feed.subscribe` row event to the held window.
-export function applyFeedEvent(
+export function applySubscriptionEvent(
   feed: FeedState,
   event: Exclude<FeedSubscribeOutput, { type: 'snapshot' }>,
-): FeedEventResult {
+): SubscriptionEventResult {
   if (event.type === 'reset')
     return { feed: { ...emptyFeed, epoch: event.epoch }, reset: true };
   const revision = Math.max(feed.revision, event.rev);
   if (event.type === 'row.upsert') {
     // A row older than the window arrives with its page.
-    const older =
+    const beforeWindow =
       feed.hasOlder &&
       feed.startCursor !== null &&
       event.row.position < feed.startCursor;
@@ -135,35 +140,33 @@ export function applyFeedEvent(
       feed: {
         ...feed,
         revision,
-        rows: older ? feed.rows : merge(feed.rows, [event.row]),
-        startCursor: older
+        rows: beforeWindow
+          ? feed.rows
+          : keepNewerRevisions(feed.rows, [event.row]),
+        startCursor: beforeWindow
           ? feed.startCursor
           : Math.min(event.row.position, feed.startCursor ?? Infinity),
       },
     };
   }
   const known = feed.rows.find((row) => row.id === event.id);
-  if (!known) return { feed, fetchRow: event.id };
+  if (!known) return { feed, missingRowId: event.id };
   if (event.type === 'row.patch')
     return {
-      feed: replaceRow(
-        feed,
-        { ...known, ...event.set, revision: event.rev } as SessionUpdate,
-        event.rev,
-      ),
+      feed: replaceHeldRow(feed, {
+        ...known,
+        ...event.set,
+        revision: event.rev,
+      } as SessionUpdate),
     };
   const path = event.field.split('.');
-  const current = readAtPath(known, path);
-  if (typeof current !== 'string' || current.length !== event.off)
-    return { feed, fetchRow: event.id };
+  const heldText = valueAtPath(known, path);
+  if (typeof heldText !== 'string' || heldText.length !== event.off)
+    return { feed, missingRowId: event.id };
   return {
-    feed: replaceRow(
-      feed,
-      {
-        ...(writeAtPath(known, path, current + event.text) as SessionUpdate),
-        revision: event.rev,
-      },
-      event.rev,
-    ),
+    feed: replaceHeldRow(feed, {
+      ...(withTextAtPath(known, path, heldText + event.text) as SessionUpdate),
+      revision: event.rev,
+    }),
   };
 }

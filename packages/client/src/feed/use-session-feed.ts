@@ -4,11 +4,11 @@ import { useSubscription } from '@trpc/tanstack-react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTRPC } from '../trpc/context';
 import {
-  applyFeedEvent,
+  applySubscriptionEvent,
   emptyFeed,
   type FeedState,
-  receiveOlder,
-  receiveTail,
+  mergeNewestPage,
+  mergeOlderPage,
 } from './feed-state';
 
 // Rows per page (ADR-0007 pages by position): long enough that paging rarely shows while reading back.
@@ -41,14 +41,14 @@ export function useSessionFeed(sessionId: string) {
 
   useEffect(() => {
     if (!tail.data) return;
-    update(receiveTail(feedRef.current, tail.data));
+    update(mergeNewestPage(feedRef.current, tail.data));
     setSyncPoint(
       (point) =>
         point ?? { epoch: tail.data.epoch, revision: tail.data.maxRevision },
     );
   }, [tail.data, update]);
 
-  const fetchRow = useCallback(
+  const fetchWholeRow = useCallback(
     async (id: string) => {
       try {
         const row = await queryClient.fetchQuery({
@@ -56,7 +56,7 @@ export function useSessionFeed(sessionId: string) {
           ...fetchedOnce,
         });
         update(
-          applyFeedEvent(feedRef.current, {
+          applySubscriptionEvent(feedRef.current, {
             type: 'row.upsert',
             rev: row.revision,
             row,
@@ -80,9 +80,9 @@ export function useSessionFeed(sessionId: string) {
             setSnapshot(event.snapshot);
             return;
           }
-          const result = applyFeedEvent(feedRef.current, event);
+          const result = applySubscriptionEvent(feedRef.current, event);
           update(result.feed);
-          if (result.fetchRow) void fetchRow(result.fetchRow);
+          if (result.missingRowId) void fetchWholeRow(result.missingRowId);
           if (result.reset) void refetch();
         },
       },
@@ -107,7 +107,7 @@ export function useSessionFeed(sessionId: string) {
         }),
         ...fetchedOnce,
       });
-      update(receiveOlder(feedRef.current, page));
+      update(mergeOlderPage(feedRef.current, page));
     } catch {
       // The rows stay as they were; the reader asks again by scrolling back to the top.
     } finally {

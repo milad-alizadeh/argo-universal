@@ -2,11 +2,11 @@ import { recordedFeedMocks } from '@repo/api/mocks';
 import type { FeedPageOutput, FeedSubscribeOutput } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import {
-  applyFeedEvent,
+  applySubscriptionEvent,
   emptyFeed,
   type FeedState,
-  receiveOlder,
-  receiveTail,
+  mergeNewestPage,
+  mergeOlderPage,
 } from './feed-state';
 
 type RowEvent = Exclude<FeedSubscribeOutput, { type: 'snapshot' }>;
@@ -36,8 +36,8 @@ const rowEvents = (stream: readonly FeedSubscribeOutput[]) =>
 
 function replay(state: FeedState, events: readonly RowEvent[]) {
   return events.reduce((current, event) => {
-    const result = applyFeedEvent(current, event);
-    expect(result.fetchRow).toBeUndefined();
+    const result = applySubscriptionEvent(current, event);
+    expect(result.missingRowId).toBeUndefined();
     return result.feed;
   }, state);
 }
@@ -45,7 +45,7 @@ function replay(state: FeedState, events: readonly RowEvent[]) {
 describe.each(recordedFeedMocks)('$agent $recording', (mock) => {
   it('builds the recorded rows from the live stream alone', () => {
     const feed = replay(
-      receiveTail(emptyFeed, page([], 0)),
+      mergeNewestPage(emptyFeed, page([], 0)),
       rowEvents(mock.stream),
     );
     expect(feed.rows).toEqual(mock.rows);
@@ -53,12 +53,12 @@ describe.each(recordedFeedMocks)('$agent $recording', (mock) => {
   });
 
   it('pages every older row in before the newest, oldest first', () => {
-    let feed = receiveTail(
+    let feed = mergeNewestPage(
       emptyFeed,
       page(mock.rows, mock.snapshot.maxRevision, { limit: 1 }),
     );
     while (feed.hasOlder && feed.startCursor !== null)
-      feed = receiveOlder(
+      feed = mergeOlderPage(
         feed,
         page(mock.rows, mock.snapshot.maxRevision, {
           before: feed.startCursor,
@@ -78,7 +78,7 @@ const firstAppend = streamed.stream.findIndex(
   (event) => event.type === 'row.append',
 );
 const beforeAppend = replay(
-  receiveTail(emptyFeed, page([], 0)),
+  mergeNewestPage(emptyFeed, page([], 0)),
   rowEvents(streamed.stream.slice(0, firstAppend)),
 );
 const append = streamed.stream[firstAppend] as Extract<
@@ -86,35 +86,36 @@ const append = streamed.stream[firstAppend] as Extract<
   { type: 'row.append' }
 >;
 
-describe('applyFeedEvent', () => {
+describe('applySubscriptionEvent', () => {
   it('asks for the whole row when an append does not start where its text ends', () => {
-    const result = applyFeedEvent(beforeAppend, {
+    const result = applySubscriptionEvent(beforeAppend, {
       ...append,
       off: append.off + 1,
     });
-    expect(result.fetchRow).toBe(append.id);
+    expect(result.missingRowId).toBe(append.id);
     expect(result.feed.rows).toBe(beforeAppend.rows);
   });
 
   it('asks for the whole row when an append or a patch names a row it lacks', () => {
     expect(
-      applyFeedEvent(beforeAppend, { ...append, id: 'missing' }).fetchRow,
+      applySubscriptionEvent(beforeAppend, { ...append, id: 'missing' })
+        .missingRowId,
     ).toBe('missing');
     expect(
-      applyFeedEvent(beforeAppend, {
+      applySubscriptionEvent(beforeAppend, {
         type: 'row.patch',
         rev: append.rev,
         id: 'missing',
         set: { state: 'settled' },
-      }).fetchRow,
+      }).missingRowId,
     ).toBe('missing');
   });
 
   it('keeps a newer row when an older revision of it arrives', () => {
     const [row] = streamed.rows;
     if (!row) throw new Error('No row');
-    const feed = receiveTail(emptyFeed, page(streamed.rows, 9));
-    const stale = applyFeedEvent(feed, {
+    const feed = mergeNewestPage(emptyFeed, page(streamed.rows, 9));
+    const stale = applySubscriptionEvent(feed, {
       type: 'row.upsert',
       rev: row.revision - 1,
       row: { ...row, revision: row.revision - 1, state: 'open' },
@@ -123,13 +124,13 @@ describe('applyFeedEvent', () => {
   });
 
   it('leaves a row older than the paged window to paging', () => {
-    const feed = receiveTail(
+    const feed = mergeNewestPage(
       emptyFeed,
       page(streamed.rows, streamed.snapshot.maxRevision, { limit: 1 }),
     );
     const [oldest] = streamed.rows;
     if (!oldest) throw new Error('No row');
-    const result = applyFeedEvent(feed, {
+    const result = applySubscriptionEvent(feed, {
       type: 'row.upsert',
       rev: streamed.snapshot.maxRevision + 1,
       row: { ...oldest, revision: streamed.snapshot.maxRevision + 1 },
@@ -139,8 +140,8 @@ describe('applyFeedEvent', () => {
   });
 
   it('drops every row on a reset and waits for a new tail', () => {
-    const result = applyFeedEvent(
-      receiveTail(emptyFeed, page(streamed.rows, 9)),
+    const result = applySubscriptionEvent(
+      mergeNewestPage(emptyFeed, page(streamed.rows, 9)),
       { type: 'reset', epoch: 1 },
     );
     expect(result.feed).toEqual({ ...emptyFeed, epoch: 1 });
@@ -148,19 +149,27 @@ describe('applyFeedEvent', () => {
   });
 });
 
-describe('receiveOlder', () => {
+describe('mergeOlderPage', () => {
   it('ignores a page from another epoch', () => {
-    const feed = receiveTail(emptyFeed, page(streamed.rows, 9, { limit: 1 }));
+    const feed = mergeNewestPage(
+      emptyFeed,
+      page(streamed.rows, 9, { limit: 1 }),
+    );
     const older = {
       ...page(streamed.rows, 9, { before: feed.startCursor ?? 0 }),
       epoch: 4,
     };
-    expect(receiveOlder(feed, older)).toBe(feed);
+    expect(mergeOlderPage(feed, older)).toBe(feed);
   });
 
   it('starts over from a tail the Server sent for a stale cursor', () => {
-    const feed = receiveTail(emptyFeed, page(streamed.rows, 9, { limit: 1 }));
+    const feed = mergeNewestPage(
+      emptyFeed,
+      page(streamed.rows, 9, { limit: 1 }),
+    );
     const tail = { ...page(streamed.rows, 12), epoch: 2, staleCursor: true };
-    expect(receiveOlder(feed, tail)).toEqual(receiveTail(emptyFeed, tail));
+    expect(mergeOlderPage(feed, tail)).toEqual(
+      mergeNewestPage(emptyFeed, tail),
+    );
   });
 });
