@@ -44,6 +44,11 @@ const events: RegistryEvent[] = [
       output: { failure: null },
     },
     {
+      type: `xstate.error.actor.session:${sessionId}`,
+      actorId: `session:${sessionId}`,
+      error: new Error('Session actor failed'),
+    },
+    {
       type: `xstate.snapshot.session:${sessionId}`,
       snapshot: createActor(sessionMachine, {
         input: {
@@ -56,6 +61,11 @@ const events: RegistryEvent[] = [
     },
   ]),
   { type: 'sessions.stopAll' },
+  {
+    type: 'xstate.error.actor.agentProbe:mock',
+    actorId: 'agentProbe:mock',
+    error: new Error('Probe failed'),
+  },
 ];
 type RegistrySnapshot = SnapshotFrom<typeof registryModelMachine>;
 const key = (snapshot: RegistrySnapshot) =>
@@ -71,6 +81,7 @@ const model = new TestModel(registryGraphMachine, {
     snapshot.status === 'active' &&
     snapshot.can(event) &&
     (!('actorId' in event) ||
+      event.actorId.startsWith('agentProbe:') ||
       Object.values(snapshot.context.sessions).some(
         (session) => session.id === event.actorId,
       )),
@@ -93,10 +104,14 @@ it.each(paths.map((path, index) => [index, path] as const))(
         events.map(({ type }) => [
           type,
           ({ event }: { event: AnyEventObject }) => {
-            if ('actorId' in event) {
+            if ('actorId' in event && event.actorId.startsWith('session:')) {
               const session = registry.system.get(event.actorId);
               if (!session) throw new Error('No Session');
-              session.send({ type: 'mock.finish' });
+              session.send({
+                type: event.type.startsWith('xstate.error.')
+                  ? 'mock.fail'
+                  : 'mock.finish',
+              });
             } else registry.send(event as RegistryEvent);
           },
         ]),
@@ -122,4 +137,19 @@ it('the generated registry paths walk every transition', () => {
       eventKey: (event) => event.type,
     }),
   ).toEqual([]);
+});
+
+it('removes a failed Session while keeping another Session available', () => {
+  const errors: unknown[] = [];
+  registry = createActor(registryModelMachine, { input });
+  registry.subscribe({ error: (error) => errors.push(error) });
+  registry.start();
+  for (const sessionId of ['one', 'two'])
+    registry.send({ type: 'sessions.open', sessionId, agent: 'mock' });
+  registry.system.get('session:one').send({ type: 'mock.fail' });
+  expect(registry.getSnapshot().status).toBe('active');
+  expect(Object.keys(registry.getSnapshot().context.sessions)).toEqual(['two']);
+  expect(registry.system.get('session:one')).toBeUndefined();
+  expect(registry.system.get('session:two')).toBeDefined();
+  expect(errors).toEqual([]);
 });

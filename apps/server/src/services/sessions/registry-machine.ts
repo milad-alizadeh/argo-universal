@@ -44,6 +44,11 @@ type RegistryEvent =
       output: OutputFrom<typeof sessionMachine>;
     }
   | {
+      type: `xstate.error.actor.${string}`;
+      actorId: string;
+      error: unknown;
+    }
+  | {
       type: `xstate.snapshot.${string}`;
       snapshot: ReturnType<SessionActorRef['getSnapshot']>;
     };
@@ -103,6 +108,12 @@ export const registryMachine = setup({
         ),
       });
     }),
+    logActorFailure: ({ event }) => {
+      assertEvent(event, 'xstate.error.actor.*');
+      console.error(
+        `sessions: ${event.actorId} failed: ${String(event.error)}`,
+      );
+    },
     closeSessions: enqueueActions(({ context, enqueue }) => {
       for (const session of Object.values(context.sessions))
         enqueue.sendTo(session, { type: 'session.close' });
@@ -123,6 +134,8 @@ export const registryMachine = setup({
     isRegisteredAgent: ({ context, event }) =>
       (event.type === 'sessions.create' || event.type === 'sessions.open') &&
       context.adapters.some((adapter) => adapter.agent === event.agent),
+    isSessionFailure: ({ event }) =>
+      'actorId' in event && event.actorId.startsWith('session:'),
     noSessions: ({ context }) => Object.keys(context.sessions).length === 0,
   },
 }).createMachine({
@@ -134,7 +147,16 @@ export const registryMachine = setup({
   }),
   entry: 'spawnAgentProbes',
   initial: 'running',
-  on: { 'xstate.done.actor.*': { actions: 'removeSession' } },
+  on: {
+    'xstate.done.actor.*': { actions: 'removeSession' },
+    'xstate.error.actor.*': [
+      {
+        guard: 'isSessionFailure',
+        actions: ['logActorFailure', 'removeSession'],
+      },
+      { actions: 'logActorFailure' },
+    ],
+  },
   states: {
     running: {
       on: {

@@ -14,6 +14,7 @@ import type {
   VendorSession,
   VendorSessionListener,
 } from '../src/agent-adapter';
+import { UnsupportedCommandError } from '../src/agent-adapter';
 import { describeError } from '../src/describe-error';
 import { toQuestionAnswers } from '../src/elicitation-form';
 import { findExecutable } from '../src/find-executable';
@@ -273,6 +274,7 @@ export async function connect(
           return promptDispatched;
         case 'agent.cancel':
           await promptDispatched;
+          // Teardown already interrupts the vendor session.
           if (stopping) return;
           await vendor.interrupt();
           return;
@@ -334,9 +336,14 @@ export async function connect(
           );
           return;
         }
-        // Plan answers, renames and Shell stops belong to later slices.
-        default:
-          return;
+        case 'agent.answerPlanProposal':
+        case 'agent.rename':
+        case 'agent.stopShell':
+          throw new UnsupportedCommandError(command);
+        default: {
+          const unhandled: never = command;
+          throw new UnsupportedCommandError(unhandled);
+        }
       }
     },
     stop: async () => {

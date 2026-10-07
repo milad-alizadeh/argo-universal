@@ -156,7 +156,13 @@ export function createFeedService(deps: FeedDeps): FeedService {
             live.push(...batch.events);
             wake?.();
           });
-          feedListener = feed.subscribe(snapshotChanged);
+          feedListener = feed.subscribe({
+            next: snapshotChanged,
+            error: (error) => {
+              snapshotFailure = { error };
+              wake?.();
+            },
+          });
         }
         const session = sessionActor?.getSnapshot() ?? null;
         const feedContext = feed?.getSnapshot().context ?? {
@@ -189,7 +195,13 @@ export function createFeedService(deps: FeedDeps): FeedService {
         wake?.();
       }
     };
-    const sessionListener = sessionActor?.subscribe(snapshotChanged);
+    const sessionListener = sessionActor?.subscribe({
+      next: snapshotChanged,
+      error: (error) => {
+        snapshotFailure = { error };
+        wake?.();
+      },
+    });
     snapshotChanged();
     const wakeOnAbort = () => wake?.();
     signal?.addEventListener('abort', wakeOnAbort);

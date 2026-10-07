@@ -12,7 +12,7 @@ const crashing = await writeMockClaude(directory, { recording: 'task-plan', exit
 
 - `--version` prints the version of the recordings folder.
 - Frames carry the session id from `--session-id` or `--resume`, else the recording's own.
-- A control request gets the first answer the recording holds for its subtype. Without one, `initialize` gets an answer with no commands, agents or models and a subscription account, and any other request gets an error.
+- A control request gets the first answer the recording holds for its subtype. Without one, `initialize` gets an answer with no commands, agents or models and a subscription account, `interrupt` gets success, and any other request gets an error.
 - A `result` frame ends a Turn. A recording without one is a single Turn.
 - In a recording that was interrupted, the mock holds the rest of the Turn until an `interrupt` arrives.
 - A prompt past the last recorded Turn gets an error `result`, so it never looks like a crash.

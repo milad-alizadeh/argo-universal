@@ -46,7 +46,11 @@ export const sessionListMachine = setup({
               | undefined;
             if (feed) {
               current.add(feed);
-              if (!feeds.has(feed)) feeds.set(feed, feed.subscribe(refresh));
+              if (!feeds.has(feed))
+                feeds.set(
+                  feed,
+                  feed.subscribe({ next: refresh, error: refresh }),
+                );
             }
           }
           for (const [feed, listener] of feeds)
@@ -58,9 +62,13 @@ export const sessionListMachine = setup({
         };
         const registry = input.sessions.subscribe({
           next: connectFeeds,
+          error: (error) => sendBack({ type: 'list.failed', error }),
           complete: () => sendBack({ type: 'list.stop' }),
         });
-        const writer = input.writer?.subscribe(refresh);
+        const writer = input.writer?.subscribe({
+          next: refresh,
+          error: refresh,
+        });
         connectFeeds();
         return () => {
           registry.unsubscribe();

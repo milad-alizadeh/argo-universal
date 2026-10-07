@@ -125,7 +125,7 @@ describe('mock Claude CLI', () => {
     expect(await claude.exited).toBe(0);
   });
 
-  it('rejects a control request the recording cannot answer', async () => {
+  it('answers an interrupt when the recording has no interrupt answer', async () => {
     const claude = await startClaude('task-plan');
 
     claude.send({
@@ -136,7 +136,7 @@ describe('mock Claude CLI', () => {
 
     expect(await claude.next()).toMatchObject({
       type: 'control_response',
-      response: { subtype: 'error', request_id: 'interrupt-1' },
+      response: { subtype: 'success', request_id: 'interrupt-1', response: {} },
     });
     claude.close();
     expect(await claude.exited).toBe(0);
