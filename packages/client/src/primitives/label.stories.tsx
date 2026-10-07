@@ -9,7 +9,7 @@ function LabelPreview() {
   const [checked, setChecked] = React.useState(false);
 
   function onCheckedChange(checked: boolean) {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setChecked(checked);
   }
 
@@ -26,7 +26,7 @@ function LabelPreview() {
         htmlFor="terms-checkbox"
         onPress={Platform.select({
           native: () => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             setChecked((prev) => !prev);
           },
         })}

@@ -11,6 +11,9 @@
     "moduleResolution": "bundler",
     // Packages are checked with `tsc --noEmit` and run from source (spec section 2).
     "noEmit": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
     "noUncheckedIndexedAccess": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,

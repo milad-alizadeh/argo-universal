@@ -181,7 +181,7 @@ const settled = (
 
 // The settled row for a Tool call once its result arrives.
 export function toolCallEnded(
-  row: ToolCallRow,
+  startedRow: ToolCallRow,
   result: ToolResultBlock,
   message: SDKUserMessage & { receivedAt?: number },
 ): ToolCallRow {
@@ -189,13 +189,15 @@ export function toolCallEnded(
     message.timestamp === undefined
       ? message.receivedAt
       : Date.parse(message.timestamp);
-  if (endedAt !== undefined)
-    row = {
-      ...row,
-      _meta: {
-        argo: { ...row._meta?.argo, endedAt },
-      },
-    };
+  const row: ToolCallRow =
+    endedAt === undefined
+      ? startedRow
+      : {
+          ...startedRow,
+          _meta: {
+            argo: { ...startedRow._meta?.argo, endedAt },
+          },
+        };
   const rejected = userRejected(message, result.tool_use_id);
   const output = rejected ? '' : resultText(result);
   const oldText = overwrittenText(row, message);

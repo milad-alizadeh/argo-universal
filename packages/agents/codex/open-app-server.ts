@@ -103,21 +103,20 @@ export function openAppServer(
       if (message === null || typeof message !== 'object')
         throw new Error('Invalid app-server envelope.');
       if (typeof message.method === 'string') {
-        if (message.id !== undefined) {
-          if (
-            message.method !== 'item/commandExecution/requestApproval' &&
-            message.method !== 'item/fileChange/requestApproval' &&
-            message.method !== 'item/tool/requestUserInput'
-          ) {
-            send({
-              id: message.id,
-              error: {
-                code: -32601,
-                message: `Unsupported request: ${message.method}`,
-              },
-            });
-            return;
-          }
+        if (
+          message.id !== undefined &&
+          message.method !== 'item/commandExecution/requestApproval' &&
+          message.method !== 'item/fileChange/requestApproval' &&
+          message.method !== 'item/tool/requestUserInput'
+        ) {
+          send({
+            id: message.id,
+            error: {
+              code: -32601,
+              message: `Unsupported request: ${message.method}`,
+            },
+          });
+          return;
         }
         onMessage({
           method: message.method,
