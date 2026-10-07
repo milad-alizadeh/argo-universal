@@ -109,7 +109,10 @@ export function createSessionList(options: {
     const rowsListener = actor.on('list.rows', ({ rows }) => {
       for (const change of changes(rows)) events.emit('change', change);
     });
-    const completion = actor.subscribe({ complete: () => controller.abort() });
+    const completion = actor.subscribe({
+      complete: () => controller.abort(),
+      error: (error) => controller.abort(error),
+    });
     const abort = () => {
       actor.send({ type: 'list.stop' });
       controller.abort();
@@ -122,6 +125,7 @@ export function createSessionList(options: {
       for await (const [change] of stream) yield change as Value;
     } catch (error) {
       const snapshot = actor.getSnapshot();
+      if (snapshot.status === 'error') throw snapshot.error;
       if (snapshot.matches('failed')) throw snapshot.context.failure;
       if (!controller.signal.aborted) throw error;
     } finally {

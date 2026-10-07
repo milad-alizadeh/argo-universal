@@ -121,16 +121,12 @@ const start = () => {
   });
 
   // The failure dialog offers Retry and Quit.
-  let failed = false;
-  server.subscribe((snapshot) => {
-    const enteredFailed = snapshot.matches('failed') && !failed;
-    failed = snapshot.matches('failed');
-    if (!enteredFailed) return;
+  server.on('server.failed', ({ failure }) => {
     void dialog
       .showMessageBox({
         type: 'error',
         message: 'Argo could not start the Server',
-        detail: snapshot.context.failure ?? undefined,
+        detail: failure ?? undefined,
         buttons: ['Retry', 'Quit'],
         defaultId: 0,
         cancelId: 1,
@@ -139,6 +135,18 @@ const start = () => {
         if (response === 0) server.send({ type: 'server.retry' });
         else app.quit();
       });
+  });
+  server.subscribe({
+    error: (error) => {
+      void dialog
+        .showMessageBox({
+          type: 'error',
+          message: 'Argo could not start the Server',
+          detail: String(error),
+          buttons: ['Quit'],
+        })
+        .then(() => app.quit());
+    },
   });
   server.start();
   serverStarted = true;
@@ -168,6 +176,7 @@ if (app.requestSingleInstanceLock()) {
 
 // Quit waits for the Server machine, which stops the Supervisor only if this app started it.
 server.subscribe({
+  error: () => inspection.stop(),
   complete: () => {
     inspection.stop();
     app.quit();

@@ -558,6 +558,13 @@ export const sessionMachine = sessionSetup.createMachine({
             }),
         }),
         onDone: { target: 'closed' },
+        onError: {
+          target: 'closed',
+          actions: {
+            type: 'rememberFailure',
+            params: ({ event }) => ({ error: event.error }),
+          },
+        },
       },
       initial: 'live',
       states: {
