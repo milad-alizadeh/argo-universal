@@ -394,7 +394,6 @@ it.each(agentAdapters)(
     } finally {
       engine.stop();
       remove();
-      vi.unstubAllEnvs();
       rmSync(directory, { recursive: true, force: true });
     }
   },
@@ -616,7 +615,6 @@ it('seeds the Project from ARGO_PROJECT_PATH at Engine startup', async () => {
     await waitFor(engine, (snapshot) => snapshot.status === 'done');
   } finally {
     engine.stop();
-    vi.unstubAllEnvs();
     rmSync(directory, { recursive: true, force: true });
   }
 });
@@ -785,7 +783,6 @@ async function startNewSessionEngine(
     close: () => {
       engine.stop();
       remove();
-      vi.unstubAllEnvs();
       rmSync(root, { recursive: true, force: true });
     },
   };

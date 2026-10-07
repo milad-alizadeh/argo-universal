@@ -202,7 +202,6 @@ it('rejects and reports a git response that has no working Checkout', async () =
   const { database, remove } = openTestDatabase({}, directory);
   cleanups.push(remove);
   const report = vi.spyOn(console, 'error').mockImplementation(() => {});
-  cleanups.push(() => report.mockRestore());
   await expect(
     createSessionCheckout({
       ...newSession,

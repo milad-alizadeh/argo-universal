@@ -10,7 +10,8 @@
     "dev": "expo start",
     "ios": "expo run:ios",
     "start": "expo start",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "test": "vitest run"
   },
   "dependencies": {
     "@expo/ui": "catalog:",
@@ -56,8 +57,10 @@
   },
   "devDependencies": {
     "@repo/typescript": "workspace:*",
+    "@repo/vitest": "workspace:*",
     "@types/react": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "expo": {
     "install": {
