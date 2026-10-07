@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import { afterAll, expect, it } from 'vitest';
 import {
@@ -17,7 +18,13 @@ import { sessionListMachine } from './session-list-machine';
 const { database, directory: runtimeDirectory, remove } = openTestDatabase();
 afterAll(remove);
 const sessions = createActor(registryMachine, {
-  input: { database, runtimeDirectory, adapters: [] },
+  input: {
+    now: () => Date.now(),
+    createId: randomUUID,
+    database,
+    runtimeDirectory,
+    adapters: [],
+  },
 });
 const input = {
   sessions,

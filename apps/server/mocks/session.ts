@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -33,13 +34,18 @@ export function createSessionHost(database: Database, adapter: AgentAdapter) {
           id: 'databaseWriter',
           systemId: 'databaseWriter',
           src: 'writer',
-          input: { database },
+          input: {
+            now: () => Date.now(),
+            database,
+          },
         },
         {
           id: 'session',
           systemId: 'session:session-1',
           src: 'session',
           input: {
+            now: () => Date.now(),
+            createId: randomUUID,
             database,
             runtimeDirectory,
             adapter,

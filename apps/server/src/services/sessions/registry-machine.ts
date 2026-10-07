@@ -19,6 +19,8 @@ import { type SessionActorRef, sessionMachine } from './session-machine';
 export interface RegistryInput {
   database: Database;
   runtimeDirectory: string;
+  now: () => number;
+  createId: () => string;
   adapters?: readonly AgentAdapter[];
 }
 
@@ -80,6 +82,8 @@ export const registryMachine = setup({
         input: {
           database: context.database,
           runtimeDirectory: context.runtimeDirectory,
+          now: context.now,
+          createId: context.createId,
           adapter: findAgentAdapter(event.agent, context.adapters),
           sessionId: event.sessionId,
           ...(event.type === 'sessions.create'

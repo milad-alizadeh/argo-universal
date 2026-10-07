@@ -349,11 +349,12 @@
       }
     },
 
-    // D1: contracts, api, the db schema and client/src never import Node APIs; node-builtin-gap.grit adds node:sqlite and node:sea, which noNodejsModules misses; 0 hits.
+    // D1: contracts, universal API entries, the db schema and client/src never import Node APIs; node-builtin-gap.grit adds node:sqlite and node:sea, which noNodejsModules misses; 0 hits.
     {
       "includes": [
         "packages/contracts/**",
         "packages/api/**",
+        "!packages/api/src/server-runtime.mts",
         "packages/db/src/schema.ts",
         "packages/db/src/schema/**",
         "packages/client/src/**",
@@ -652,7 +653,7 @@
         }
       }
     },
-    // D10: desktop imports only contracts and machine-log from the workspace.
+    // D10: desktop imports only contracts, machine-log and the Node-only API server-runtime subpath.
     {
       "includes": [
         "apps/desktop/**",
@@ -672,12 +673,13 @@
                       "@repo/**",
                       "!@repo/contracts",
                       "!@repo/contracts/**",
+                      "!@repo/api/server-runtime",
                       "!@repo/machine-log",
                       "!@repo/machine-log/**",
                       "!@repo/vitest",
                       "!@repo/vitest/**"
                     ],
-                    "message": "desktop imports only contracts and machine-log from the workspace."
+                    "message": "desktop imports only contracts, machine-log and the Node-only API server-runtime subpath."
                   }
                 ],
                 "paths": {
@@ -708,12 +710,13 @@
                       "@repo/**",
                       "!@repo/contracts",
                       "!@repo/contracts/**",
+                      "!@repo/api/server-runtime",
                       "!@repo/machine-log",
                       "!@repo/machine-log/**",
                       "!@repo/vitest",
                       "!@repo/vitest/**"
                     ],
-                    "message": "desktop imports only contracts and machine-log from the workspace."
+                    "message": "desktop imports only contracts, machine-log and the Node-only API server-runtime subpath."
                   }
                 ]
               }
@@ -791,6 +794,42 @@
         "!**/mocks/**"
       ], // Tests, stories and mocks would add 34 hits, mostly describe-scoped helpers kept there on purpose.
       "plugins": ["./tooling/biome/function-scoping.grit"]
+    },
+
+    // Machines get their clock and ID generator from input; retain the Server import boundary.
+    {
+      "includes": ["apps/server/src/**/*machine.ts"],
+      "plugins": ["./tooling/biome/machine-clock.grit"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@repo/client",
+                      "@repo/client/**",
+                      "@repo/universal-app",
+                      "@repo/universal-app/**",
+                      "@repo/storybook",
+                      "@repo/storybook/**",
+                      "@repo/desktop",
+                      "@repo/desktop/**"
+                    ],
+                    "message": "The Server never imports client or an App."
+                  }
+                ],
+                "paths": {
+                  "node:crypto": "Machines receive createId through their input.",
+                  "node:child_process": "Apps run git through packages/git (ADR-0008); only the three process launchers open subprocesses."
+                }
+              }
+            }
+          }
+        }
+      }
     }
   ]
 }

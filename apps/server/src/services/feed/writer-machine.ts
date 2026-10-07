@@ -9,6 +9,7 @@ import {
 
 export interface WriterInput {
   database: Database;
+  now: () => number;
   log?: (line: string) => void;
 }
 
@@ -44,7 +45,7 @@ export const writerMachine = setup({
     enqueue: assign({
       queue: ({ context, event }) => {
         assertEvent(event, 'writer.write');
-        return [...context.queue, stampWriterJob(event.job, Date.now())];
+        return [...context.queue, stampWriterJob(event.job, context.now())];
       },
     }),
     takeBatch: assign({ batchSize: ({ context }) => context.queue.length }),

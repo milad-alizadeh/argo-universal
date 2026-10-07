@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import {
   existsSync,
   mkdirSync,
@@ -97,6 +98,8 @@ function startEngine({
   });
   const engine = createActor(machine, {
     input: {
+      now: () => Date.now(),
+      createId: randomUUID,
       home,
       port: 7337,
       version: '1',
