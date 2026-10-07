@@ -16,6 +16,7 @@ import {
   notSignedInNewSessionMocks,
   sendingNewSessionMocks,
 } from '../../mocks/new-session-mock';
+import { pending } from '../../mocks/trpc-mock-link';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
 import { ContentLayout } from '../components/ContentLayout';
 import { NewSessionScreen } from './NewSessionScreen';
@@ -311,14 +312,44 @@ export const Sending: Story = {
   },
 };
 
+// A local Project's new worktree starts from its current branch, so Send waits for it.
+export const WaitsForTheBaseBranch: Story = {
+  args: { projectId: landingProject.id },
+  parameters: {
+    trpc: { ...newSessionMocks, 'projects.branches': pending() },
+  },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Message' }),
+      'Update the hero copy',
+    );
+    await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
+  },
+};
+
+let agentsListCalls = 0;
+
 export const FailedStart: Story = {
-  parameters: { trpc: failedStartNewSessionMocks },
+  parameters: {
+    trpc: {
+      ...failedStartNewSessionMocks,
+      'agents.list': () => {
+        agentsListCalls += 1;
+        return newSessionCatalogs.bothAvailable;
+      },
+    },
+  },
   play: async ({ canvas, userEvent }) => {
     await userEvent.type(
       await canvas.findByRole('textbox', { name: 'Message' }),
       'Fix the flaky login test',
     );
+    const callsBeforeSend = agentsListCalls;
     await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
+    // A failed start can mean the Agent is no longer available, so the screen asks again.
+    await waitFor(() =>
+      expect(agentsListCalls).toBeGreaterThan(callsBeforeSend),
+    );
     await eachLayout(async () => {
       await expect(await canvas.findByRole('alert')).toHaveTextContent(
         `Couldn't start the Session. ${failedStartMessage}`,

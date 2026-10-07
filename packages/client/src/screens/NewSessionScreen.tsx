@@ -92,7 +92,6 @@ function useSessionChoices(projectId: string | undefined) {
     configOptions,
     inNewWorktree,
     baseBranch,
-    // Until the current branch loads, a new worktree has no base to start from.
     baseBranchLoaded:
       project?.checkoutChoice.type !== 'main' || branches.data !== undefined,
     settings,
@@ -182,7 +181,6 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
   const serverInfo = useQuery(trpc.system.info.queryOptions());
   const choices = useSessionChoices(projectId);
   const { projects, agents, project, agent } = choices;
-  // The Server probes an Agent that fails to start, so its availability may have changed.
   const send = useStartSession(() => void agents.refetch());
 
   if (serverInfo.isError || projects.isError || agents.isError)

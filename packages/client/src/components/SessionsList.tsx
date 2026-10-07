@@ -34,11 +34,7 @@ import { useWide } from '../navigation/use-wide';
 import { ProjectHeading } from './ProjectHeading';
 import { ScrollFade, useScrollFadeEdges } from './ScrollFade';
 import { SessionRow, type SessionRowProps } from './SessionRow';
-
-type Entry =
-  | { kind: 'project'; id: string; projectId: string; name: string }
-  | { kind: 'session'; id: string; session: SessionInfo }
-  | { kind: 'empty'; id: string };
+import { listEntries, type SessionsListEntry } from './sessions-list-entries';
 
 const contentStyle = {
   paddingHorizontal: 8,
@@ -46,7 +42,7 @@ const contentStyle = {
   paddingBottom: 28,
 };
 
-function entryKey(entry: Entry) {
+function entryKey(entry: SessionsListEntry) {
   return entry.id;
 }
 
@@ -64,43 +60,6 @@ export interface SessionsListProps {
   onProjectSettings?: (projectName: string) => void;
   // Scrolls with the rows, above the first Project.
   header?: ReactElement;
-}
-
-// Sessions under their Project, newest activity first; a collapsed Project shows only its heading.
-function listEntries(
-  projects: ProjectsListOutput,
-  sessions: SessionInfo[],
-  collapsed: ReadonlySet<string>,
-  // While searching or showing archived Sessions, a Project with none is left out.
-  hideEmptyProjects: boolean,
-): Entry[] {
-  const sessionsByProject = new Map<string, SessionInfo[]>();
-  for (const session of sessions) {
-    const projectSessions = sessionsByProject.get(session.projectId) ?? [];
-    projectSessions.push(session);
-    sessionsByProject.set(session.projectId, projectSessions);
-  }
-  const entries: Entry[] = [];
-  for (const project of projects) {
-    const projectSessions = (sessionsByProject.get(project.id) ?? []).sort(
-      (a, b) =>
-        b.activityAt - a.activityAt || a.sessionId.localeCompare(b.sessionId),
-    );
-    if (hideEmptyProjects && projectSessions.length === 0) continue;
-    const headingId = `project:${project.id}`;
-    entries.push({
-      kind: 'project',
-      id: headingId,
-      name: project.name,
-      projectId: project.id,
-    });
-    if (collapsed.has(headingId)) continue;
-    if (projectSessions.length === 0)
-      entries.push({ kind: 'empty', id: `empty:${project.id}` });
-    for (const session of projectSessions)
-      entries.push({ kind: 'session', id: session.sessionId, session });
-  }
-  return entries;
 }
 
 // Which Project headings are collapsed, and the toggle for one.
@@ -155,7 +114,7 @@ function useRevealLoadingFooter(isFetchingNextPage: boolean) {
 }
 
 // On native, rows that move, appear or leave animate into place.
-function useAnimateReorder(entries: Entry[]) {
+function useAnimateReorder(entries: SessionsListEntry[]) {
   const entryOrder = entries.map((entry) => entry.id).join('|');
   const previousOrder = useRef(entryOrder);
   useLayoutEffect(() => {
@@ -200,7 +159,7 @@ export function SessionsList({
     [agents, collapsed, selectedSessionId],
   );
   const renderItem = useCallback(
-    ({ item }: LegendListRenderItemProps<Entry>) => {
+    ({ item }: LegendListRenderItemProps<SessionsListEntry>) => {
       if (item.kind === 'empty') return <NoSessionsYet />;
       if (item.kind === 'session')
         return (

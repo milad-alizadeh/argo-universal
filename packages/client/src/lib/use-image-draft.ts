@@ -3,6 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 import type { ComposerDraft } from '#components/Composer';
 import { useTRPCClient } from '../trpc/context';
+import { draftPrompt } from './draft-prompt';
 import { pickImages } from './pick-images';
 
 const emptyDraft: ComposerDraft = { text: '', images: [] };
@@ -50,20 +51,12 @@ export function useImageDraft() {
     return imageUpload.mutateAsync(forms).catch(() => undefined);
   }
 
-  // The draft as prompt blocks: its text, then each uploaded image.
+  // Uploads the draft's images; undefined when any upload fails.
   async function uploadDraftAsPrompt(
     sent: ComposerDraft,
   ): Promise<SessionNewInput['prompt'] | undefined> {
     const images = await uploadImages(sent);
-    if (!images) return undefined;
-    return [
-      ...(sent.text.trim() ? [{ type: 'text' as const, text: sent.text }] : []),
-      ...images.map((blob) => ({
-        type: 'image' as const,
-        mimeType: blob.mime,
-        blob,
-      })),
-    ];
+    return images && draftPrompt(sent.text, images);
   }
 
   return {
