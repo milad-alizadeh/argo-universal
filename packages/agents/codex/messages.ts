@@ -2,35 +2,47 @@ import type {
   AgentMessageDeltaNotification,
   CommandExecutionOutputDeltaNotification,
   CommandExecutionRequestApprovalParams,
+  CommandExecutionRequestApprovalResponse,
   FileChangeRequestApprovalParams,
+  FileChangeRequestApprovalResponse,
   ItemCompletedNotification,
   ItemStartedNotification,
   ReasoningSummaryTextDeltaNotification,
   ReasoningTextDeltaNotification,
   ThreadTokenUsageUpdatedNotification,
   ToolRequestUserInputParams,
+  ToolRequestUserInputResponse,
   TurnCompletedNotification,
   TurnStartedNotification,
 } from './protocol.gen';
 
+export interface VendorRequests {
+  'item/commandExecution/requestApproval': [
+    CommandExecutionRequestApprovalParams,
+    CommandExecutionRequestApprovalResponse,
+  ];
+  'item/fileChange/requestApproval': [
+    FileChangeRequestApprovalParams,
+    FileChangeRequestApprovalResponse,
+  ];
+  'item/tool/requestUserInput': [
+    ToolRequestUserInputParams,
+    ToolRequestUserInputResponse,
+  ];
+}
+
+export type VendorRequest = {
+  [Method in keyof VendorRequests]: {
+    method: Method;
+    id: string | number;
+    params: VendorRequests[Method][0];
+  };
+}[keyof VendorRequests];
+
 // The notification families this first-Turn adapter maps; other families are dropped (ADR-0015).
 export type VendorMessage = ReceivedMessage &
   (
-    | {
-        method: 'item/commandExecution/requestApproval';
-        id: string | number;
-        params: CommandExecutionRequestApprovalParams;
-      }
-    | {
-        method: 'item/fileChange/requestApproval';
-        id: string | number;
-        params: FileChangeRequestApprovalParams;
-      }
-    | {
-        method: 'item/tool/requestUserInput';
-        id: string | number;
-        params: ToolRequestUserInputParams;
-      }
+    | VendorRequest
     | { method: 'turn/started'; params: TurnStartedNotification }
     | { method: 'turn/completed'; params: TurnCompletedNotification }
     | { method: 'item/started'; params: ItemStartedNotification }

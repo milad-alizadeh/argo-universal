@@ -193,6 +193,7 @@ const crashAfter = environment.exitMidTurn
 let heldFrames: Frame[] = [];
 let pendingRequestId: string | null = null;
 let pendingRequest: SDKControlRequest | null = null;
+const concurrentRequests = new Map<string, SDKControlRequest>();
 
 function replay(turn: Frame[]) {
   const pause = turn.findIndex(
@@ -208,6 +209,24 @@ function replay(turn: Frame[]) {
   const now =
     pause === -1 ? turn : turn.slice(0, pause + (pendingRequestId ? 1 : 0));
   heldFrames = pause === -1 ? [] : turn.slice(pause + 1);
+  if (
+    environment.scenario.concurrentQuestions &&
+    pendingRequest?.request.subtype === 'can_use_tool' &&
+    pendingRequest.request.tool_name === 'AskUserQuestion'
+  ) {
+    const second: SDKControlRequest = {
+      ...pendingRequest,
+      request_id: `${pendingRequest.request_id}-second`,
+      request: {
+        ...pendingRequest.request,
+        tool_use_id: `${pendingRequest.request.tool_use_id}-second`,
+      },
+    };
+    concurrentRequests.set(pendingRequest.request_id, pendingRequest);
+    concurrentRequests.set(second.request_id, second);
+    replayTurn([...now, second].map(withSession), crashAfter);
+    return;
+  }
   const finished = replayTurn(now.map(withSession), crashAfter);
   if (finished && pause === -1 && !turn.some((f) => f.type === 'result'))
     send(withSession(resultFrame(turn)));
@@ -262,6 +281,12 @@ function signedInAccount(recorded: AccountInfo): AccountInfo {
 
 serveJsonLines<Output>((input) => {
   if (input.type === 'control_response') {
+    if (concurrentRequests.has(input.response.request_id)) {
+      pendingRequest =
+        concurrentRequests.get(input.response.request_id) ?? null;
+      pendingRequestId = input.response.request_id;
+      concurrentRequests.delete(input.response.request_id);
+    }
     if (
       input.response.request_id === pendingRequestId &&
       input.response.subtype === 'success'
@@ -297,7 +322,7 @@ serveJsonLines<Output>((input) => {
             : {}),
         });
       }
-      replay(heldFrames);
+      if (concurrentRequests.size === 0) replay(heldFrames);
     }
     return;
   }

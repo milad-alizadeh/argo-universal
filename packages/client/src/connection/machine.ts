@@ -105,6 +105,7 @@ export const connectionMachine = setup({
         connecting: {
           on: {
             'connection.opened': { target: 'open', actions: 'resetAttempts' },
+            'connection.lost': { target: 'reconnecting' },
           },
         },
         open: {

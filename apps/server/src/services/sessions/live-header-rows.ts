@@ -1,65 +1,65 @@
 import type { SessionUpdate } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow } from '@repo/db/schema';
-import { TRPCError } from '@trpc/server';
 import { and, desc, eq, gt, isNull, ne, or, sql } from 'drizzle-orm';
 import type { ActorRefFrom } from 'xstate';
 import { fromFeedRow, newestRows } from '../feed/feed-row';
 import { type FeedRowWrite, queuedFeedRows } from '../feed/writer-job';
 import type { writerMachine } from '../feed/writer-machine';
 
-let rejectedShapes = 0;
-
-function parseHeaderRow(sessionId: string, row: FeedRowWrite): SessionUpdate {
-  try {
-    return fromFeedRow(sessionId, row);
-  } catch (error) {
-    rejectedShapes += 1;
-    console.error(
-      `sessions: rejected live-header shape #${rejectedShapes}`,
-      error,
-    );
-    throw new TRPCError({
-      code: 'INTERNAL_SERVER_ERROR',
-      message: 'Unrecognised live-header Feed data',
-      cause: error,
-    });
-  }
-}
-
 // Settled thoughts and retry Notices still inform the header after leaving Feed memory.
-export function readLiveHeaderRows({
+export function createLiveHeaderRowsReader({
   database,
-  writer,
-  sessionId,
-  turnId,
-  rows,
 }: {
   database: Database;
-  writer: ActorRefFrom<typeof writerMachine> | undefined;
-  sessionId: string;
-  turnId: string | null;
-  rows: Record<string, SessionUpdate>;
-}): Record<string, SessionUpdate> {
-  if (turnId === null) return {};
-  const stored = readStoredHeaderRows({ database, sessionId, turnId }).map(
-    (row) => parseHeaderRow(sessionId, row),
-  );
-  const queued = queuedFeedRows(
-    writer?.getSnapshot().context.queue ?? [],
+}) {
+  let rejectedShapes = 0;
+  return ({
+    writer,
     sessionId,
-  ).flatMap((job) =>
-    job.rows
-      .filter((row) => row.turnId === turnId)
-      .map((row) => parseHeaderRow(sessionId, row)),
-  );
-  return Object.fromEntries(
-    newestRows(
-      [...stored, ...queued, ...Object.values(rows)].filter(
-        (row) => row.turnId === turnId,
+    turnId,
+    rows,
+  }: {
+    writer: ActorRefFrom<typeof writerMachine> | undefined;
+    sessionId: string;
+    turnId: string | null;
+    rows: Record<string, SessionUpdate>;
+  }): { rows: Record<string, SessionUpdate>; rejected: boolean } => {
+    if (turnId === null) return { rows: {}, rejected: false };
+    const stored = readStoredHeaderRows({ database, sessionId, turnId });
+    const queued = queuedFeedRows(
+      writer?.getSnapshot().context.queue ?? [],
+      sessionId,
+    ).flatMap((job) => job.rows.filter((row) => row.turnId === turnId));
+    let rejected = false;
+    const parsed = [
+      ...new Map(
+        [...stored, ...queued].map((row) => [`${row.id}/${row.revision}`, row]),
+      ).values(),
+    ].flatMap((row) => {
+      try {
+        return [fromFeedRow(sessionId, row)];
+      } catch (error) {
+        rejected = true;
+        rejectedShapes += 1;
+        console.error(
+          `sessions: rejected live-header shape #${rejectedShapes}`,
+          error,
+        );
+        return [];
+      }
+    });
+    return {
+      rows: Object.fromEntries(
+        newestRows(
+          [...parsed, ...Object.values(rows)].filter(
+            (row) => row.turnId === turnId,
+          ),
+        ),
       ),
-    ),
-  );
+      rejected,
+    };
+  };
 }
 
 function readStoredHeaderRows({

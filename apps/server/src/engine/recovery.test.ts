@@ -16,7 +16,7 @@ import {
   session,
   turn,
 } from '@repo/db/schema';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { type ActorRefFrom, createActor, waitFor } from 'xstate';
 import { type FeedRowWrite, writeJobs } from '../services/feed/writer-job';
 import type { EngineMessage } from '../supervisor/engine-message';
@@ -389,7 +389,7 @@ describe('Engine restart recovery', () => {
     expect(readStoredRows()).toEqual(before);
   });
 
-  it('rejects and counts unrecognised Feed payloads without committing a partial repair', async () => {
+  it('settles and counts unrecognised Feed payloads before serving', async () => {
     const database =
       engine.getSnapshot().context.database ?? expect.unreachable();
     writeJobs(database, [
@@ -413,19 +413,65 @@ describe('Engine restart recovery', () => {
         type: 'feedRows',
         sessionId: 'session-2',
         maxRevision: 4,
-        rows: [{ ...messageRow('future-payload', 0, 4), payloadVersion: 2 }],
+        rows: [
+          {
+            ...toolRow({
+              id: 'future-payload',
+              position: 0,
+              revision: 4,
+              status: 'in_progress',
+              state: 'settled',
+            }),
+            payloadVersion: 2,
+          },
+        ],
       },
     ]);
-    const before = readRows(database);
-    await interruptEngine();
-    messages = [];
-    const failed = await startEngine();
-
-    expect(failed.output).toEqual({ exitCode: 1 });
-    expect(failed.context.failure).toContain(
-      'unrecognised Feed rows: 2 (session-1/invalid-message, session-2/future-payload)',
-    );
-    expect(messages).toEqual([]);
-    expect(readStoredRows()).toEqual(before);
+    const reported = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      await interruptEngine();
+      messages = [];
+      rowsAtReady = [];
+      const restarted = await startEngine();
+      expect(restarted.context.server).not.toBeNull();
+      expect(restarted.context.failure).toBeNull();
+      expect(messages).toContainEqual(
+        expect.objectContaining({ type: 'ready' }),
+      );
+      const repaired =
+        rowsAtReady[0] ?? expect.unreachable('The Engine did not report ready');
+      expect(
+        repaired.rows.map(({ id, revision, state }) => ({
+          id,
+          revision,
+          state,
+        })),
+      ).toEqual([
+        { id: 'valid-message', revision: 10, state: 'settled' },
+        { id: 'invalid-message', revision: 11, state: 'settled' },
+        { id: 'future-payload', revision: 5, state: 'settled' },
+      ]);
+      expect(repaired.rows[2]?.payload).toMatchObject({
+        status: 'failed',
+        rawInput: { path: '/project/file' },
+      });
+      expect(repaired.turns[0]).toMatchObject({
+        status: 'ended',
+        error: { code: 'interrupted' },
+      });
+      expect(repaired.sessions.map(({ maxRevision }) => maxRevision)).toEqual([
+        11, 5,
+      ]);
+      expect(reported).toHaveBeenCalledWith(
+        'recovery: rejected Feed shape #1 (session-1/invalid-message)',
+        expect.anything(),
+      );
+      expect(reported).toHaveBeenCalledWith(
+        'recovery: rejected Feed shape #2 (session-2/future-payload)',
+        expect.anything(),
+      );
+    } finally {
+      reported.mockRestore();
+    }
   });
 });

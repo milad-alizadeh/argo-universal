@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
 import { describeError } from '../src/describe-error';
+import type { VendorRequests } from './messages';
 import type {
   GetAccountParams,
   GetAccountResponse,
@@ -171,7 +172,10 @@ export function openAppServer(
   if (signal.aborted) abort();
   return {
     request,
-    respond: (id: string | number, result: unknown) => send({ id, result }),
+    respond: <Method extends keyof VendorRequests>(
+      request: { method: Method; id: string | number },
+      result: VendorRequests[Method][1],
+    ) => send({ id: request.id, result }),
     notify: (method: string) => send({ method }),
     close,
   };
