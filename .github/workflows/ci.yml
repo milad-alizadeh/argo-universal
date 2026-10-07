@@ -53,7 +53,7 @@ jobs:
       - name: Quality
         run: pnpm quality
 
-      # Vitest saves a failed story's screenshot in a __screenshots__ folder beside its test file.
+      # apps/storybook/vitest.setup.ts saves a failed story's screenshot in __screenshots__/failures beside its test file.
       - name: Upload the story failure screenshots
         if: ${{ failure() }}
         uses: actions/upload-artifact@v7
