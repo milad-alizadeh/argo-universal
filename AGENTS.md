@@ -24,18 +24,26 @@ The five default label names: `needs-triage`, `needs-info`, `ready-for-agent`, `
 
 One `GLOSSARY.md` and one `docs/adr/` folder at the repo root ("single-context"). See `docs/agents/domain.md`.
 
+## Rules Biome checks
+
+`pnpm quality` fails on each of these. Fix the code; never suppress them.
+
+- In source code, a vendor name (`claude`, `codex`) appears only inside `packages/agents/<agent>/`. Test mocks in `mocks/cli/<agent>/` carry it too. Shared code branches on capabilities that an adapter registers.
+- Screens and components get tRPC from `useTRPC()` only: no `@trpc/client`, no tRPC client factory, no `useTRPCClient`.
+- Only `packages/db` opens a database client.
+- Tests fake outside dependencies at their port, and never `vi.mock` a relative or `@repo/*` module.
+- End-to-end tests import no `vitest`, no `node:sqlite` and no `@repo/*` other than mocks. They await every action and never use `waitForTimeout`, `networkidle` or `force`.
+
 ## Rules that no tool checks
 
 - Put all evidence and images in the PR body; upload images with `gh pr create --attach` or `gh pr edit --attach`, never commit them to Git.
-- In source code, a vendor name (`claude`, `codex`) appears only inside `packages/agents/<agent>/`. Test mocks in `mocks/cli/<agent>/` carry it too. Shared code branches on capabilities that an adapter registers.
 - Claude and Codex Sessions draw the same UI. Parity is part of every Session change.
 - End-to-end tests mock only the Agent CLI, with mocks in `mocks/cli/<agent>/`.
 - Test assets live outside `src/`: `e2e/<flow>/`, `mocks/`, `tools/`. Call them mocks.
 - Every XState machine has model-based tests from `xstate/graph` that walk all of its transitions.
-- Screens get tRPC from `useTRPC()` only.
 - Use full words in names, except domain acronyms and platform-fixed names.
 - Name code for what it does (`createTRPCClient`). The product name lives only in app config, environment variables, and UI text, so a rename stays small.
-- Validate outside data at its boundary with Zod. Reject, report, and count unrecognised shapes. Before changing an adapter or its CLI mocks, read ADR-0015 and the installed SDK or generated protocol types; use those types for vendor payloads. The Feed checks every adapter change against the contract. Biome enforces the Zod import boundary.
+- Validate outside data at its boundary with Zod. Reject, report, and count unrecognised shapes. Before changing an adapter or its CLI mocks, read ADR-0015 and the installed SDK or generated protocol types; use those types for vendor payloads. The Feed checks every adapter change against the contract. Biome enforces the Zod import boundary, and flags a `JSON.parse(…) as` cast outside `packages/agents/<agent>/` and `mocks/cli/<agent>/`.
 - Keep comments to one line unless a falsifiable fact needs more.
 
 <!-- BEGIN:turborepo-agent-rules -->
