@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
+import { layoutWidths } from '../../mocks/each-layout';
+import { settleViewport } from '../../mocks/settle-viewport';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
 import { SettingsList } from './SettingsList';
 
@@ -27,15 +29,14 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const AllGroupsNavigate: Story = {
-  play: async ({ canvas, userEvent }) => {
-    const { page } = await import('vitest/browser');
-    for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
-      recorder.reset();
+function allGroupsNavigate(width: number): Story {
+  return {
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
+      await expect(recorder.destinations).toEqual([]);
       for (const group of [
         "Server · Milad's Mac mini",
-        width === 390 ? 'This iPhone' : 'This Mac',
+        width === layoutWidths.phone ? 'This iPhone' : 'This Mac',
       ]) {
         await expect(
           await canvas.findByRole('heading', { name: group }),
@@ -59,16 +60,16 @@ export const AllGroupsNavigate: Story = {
       ]);
       const projects = canvas.getByRole('button', { name: 'Projects' });
       await expect(projects.getBoundingClientRect().height).toBe(
-        width === 390 ? 44 : 32,
+        width === layoutWidths.phone ? 44 : 32,
       );
       const label = canvas.getByText('Projects', { exact: true });
       await expect(getComputedStyle(label).fontSize).toBe(
-        width === 390 ? '16px' : '14px',
+        width === layoutWidths.phone ? '16px' : '14px',
       );
       await expect(getComputedStyle(label).lineHeight).toBe(
-        width === 390 ? '24px' : '20px',
+        width === layoutWidths.phone ? '24px' : '20px',
       );
-      if (width === 390) {
+      if (width === layoutWidths.phone) {
         await expect(
           canvas.queryByRole('button', { name: 'Devices' }),
         ).toBeNull();
@@ -85,9 +86,11 @@ export const AllGroupsNavigate: Story = {
           { to: 'settings-notifications' },
         ]);
       }
-    }
-  },
-};
+    },
+  };
+}
+export const AllGroupsNavigatePhone = allGroupsNavigate(layoutWidths.phone);
+export const AllGroupsNavigateWide = allGroupsNavigate(layoutWidths.wide);
 
 export const WaitingForData: Story = {
   args: { projects: [], agents: [] },
@@ -113,8 +116,12 @@ export const WaitingForData: Story = {
   },
 };
 
-export const AllGroupsNavigateDark: Story = {
-  ...AllGroupsNavigate,
+export const AllGroupsNavigatePhoneDark: Story = {
+  ...AllGroupsNavigatePhone,
+  globals: { mode: 'dark' },
+};
+export const AllGroupsNavigateWideDark: Story = {
+  ...AllGroupsNavigateWide,
   globals: { mode: 'dark' },
 };
 

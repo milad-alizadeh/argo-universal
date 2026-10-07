@@ -1,3 +1,4 @@
+import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import type { QueryClient } from '@tanstack/react-query';
 import type { TRPCWebSocketClient } from '@trpc/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -11,17 +12,15 @@ import {
   type SnapshotFrom,
 } from 'xstate';
 import {
-  adjacencyMapToArray,
   type DirectedGraphNode,
   type EventExecutor,
-  getAdjacencyMap,
   TestModel,
   type TestPath,
   toDirectedGraph,
 } from 'xstate/graph';
 import { type ConnectionInput, connectionMachine } from './machine';
 
-// Spec 0002 section 11 numbers, written out so the model cannot grade itself.
+// Numbers written out so the model cannot grade itself.
 const offlineDelayMs = 10_000;
 const retryDelayMs = (attempts: number) =>
   Math.min(500 * 2 ** attempts, 30_000);
@@ -187,31 +186,14 @@ describe('connection model', () => {
   });
 
   it('the generated paths walk every transition', () => {
-    const key = (
-      from: ConnectionSnapshot,
-      type: string,
-      to: ConnectionSnapshot,
-    ) => `${JSON.stringify(from.value)} ${type} ${JSON.stringify(to.value)}`;
-    const transitions = adjacencyMapToArray(
-      getAdjacencyMap(modelLogic, model.options),
-    ).map(({ state, event, nextState }) => key(state, event.type, nextState));
-    const walked = new Set(
-      [...shortestPaths, ...simplePaths].flatMap((path) =>
-        path.steps
-          .slice(1)
-          .map((step, index) =>
-            key(
-              path.steps[index]?.state ?? expect.unreachable(),
-              step.event.type,
-              step.state,
-            ),
-          ),
-      ),
-    );
-    expect(transitions.length).toBeGreaterThan(0);
-    expect(transitions.filter((transition) => !walked.has(transition))).toEqual(
-      [],
-    );
+    expect(
+      unwalkedTransitions({
+        models: [model],
+        paths: [...shortestPaths, ...simplePaths],
+        stateKey: (snapshot) => JSON.stringify(snapshot.value),
+        eventKey: (event) => event.type,
+      }),
+    ).toEqual([]);
   });
 });
 

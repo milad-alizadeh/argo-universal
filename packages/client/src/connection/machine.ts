@@ -38,7 +38,7 @@ const isDown = and([
   not(stateIn({ link: 'open' })),
 ]);
 
-// Spec 0002 section 11: the App's Connection to the Server, and the timing of every attempt to open it.
+// The App's Connection to the Server, and the timing of every attempt to open it.
 export const connectionMachine = setup({
   types: {
     input: {} as ConnectionInput,

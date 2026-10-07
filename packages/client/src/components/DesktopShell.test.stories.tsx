@@ -3,9 +3,11 @@ import { View } from 'react-native';
 import { expect, fn, screen, waitFor, within } from 'storybook/test';
 import { ComposerMock } from '../../mocks/composer-mock';
 import { DesktopShellMock } from '../../mocks/desktop-shell-mock';
+import { layoutWidths } from '../../mocks/each-layout';
 import { expectFadeColor } from '../../mocks/fade-color';
 import { InspectorFilesMock } from '../../mocks/inspector-files-mock';
 import { shortPlanProposal } from '../../mocks/plan-proposal-mock';
+import { settleViewport } from '../../mocks/settle-viewport';
 import { UpdatingShellMock } from '../../mocks/updating-shell-mock';
 import { PlanProposalRegion } from './PlanProposalRegion';
 
@@ -183,11 +185,10 @@ export const ComposerUsesAvailableWidth: Story = {
   },
 };
 
-export const SectionsAndSidebar: Story = {
-  play: async ({ canvas, userEvent }) => {
-    const { page } = await import('vitest/browser');
-    for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+function sectionsAndSidebar(width: number): Story {
+  return {
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
       await waitFor(() =>
         expect(
           canvas.getByTestId('desktop-list').getBoundingClientRect().width,
@@ -238,56 +239,57 @@ export const SectionsAndSidebar: Story = {
         canvas.getByRole('button', { name: 'Show sidebar' }),
       );
       await expect(canvas.getByTestId('list-content')).toBeVisible();
-    }
-  },
-};
+    },
+  };
+}
+export const SectionsAndSidebarPhone = sectionsAndSidebar(layoutWidths.phone);
+export const SectionsAndSidebarWide = sectionsAndSidebar(layoutWidths.wide);
 
-export const InspectorTakesTheDetailAreaAndRestoresIt: Story = {
-  play: async ({ canvas, userEvent }) => {
-    const { page } = await import('vitest/browser');
-    await page.viewport(1440, 844);
-    await waitFor(() =>
-      expect(
-        canvas.getByTestId('desktop-list').getBoundingClientRect().width,
-      ).toBe(300),
-    );
-    const headerActions = canvas.getByTestId('desktop-detail-actions');
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Open Inspector' }),
-    );
-    await expect(canvas.getByTestId('desktop-detail-actions')).toBe(
-      headerActions,
-    );
-    await expect(
-      canvas.getByRole('button', { name: 'More actions' }),
-    ).toBeVisible();
-    await waitFor(() =>
-      expect(canvas.getByTestId('desktop-inspector')).toHaveAttribute(
-        'aria-hidden',
-        'false',
-      ),
-    );
-    await expect(canvas.getByTestId('inspector-content')).toBeVisible();
-    await expect(canvas.getByTestId('detail-content')).toBeVisible();
-    await waitFor(() =>
-      expect(
+function inspectorTakesTheDetailAreaAndRestoresIt(width: number): Story {
+  return {
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(layoutWidths.wide);
+      await waitFor(() =>
+        expect(
+          canvas.getByTestId('desktop-list').getBoundingClientRect().width,
+        ).toBe(300),
+      );
+      const headerActions = canvas.getByTestId('desktop-detail-actions');
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Open Inspector' }),
+      );
+      await expect(canvas.getByTestId('desktop-detail-actions')).toBe(
+        headerActions,
+      );
+      await expect(
+        canvas.getByRole('button', { name: 'More actions' }),
+      ).toBeVisible();
+      await waitFor(() =>
+        expect(canvas.getByTestId('desktop-inspector')).toHaveAttribute(
+          'aria-hidden',
+          'false',
+        ),
+      );
+      await expect(canvas.getByTestId('inspector-content')).toBeVisible();
+      await expect(canvas.getByTestId('detail-content')).toBeVisible();
+      await waitFor(() =>
+        expect(
+          canvas.getByRole('button', { name: 'Expand Inspector' }),
+        ).toBeVisible(),
+      );
+      await userEvent.click(
         canvas.getByRole('button', { name: 'Expand Inspector' }),
-      ).toBeVisible(),
-    );
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Expand Inspector' }),
-    );
-    await expect(canvas.getByTestId('desktop-detail')).toHaveAttribute(
-      'aria-hidden',
-      'true',
-    );
-    await expect(canvas.getByTestId('list-content')).toBeVisible();
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Restore Inspector' }),
-    );
-    await expect(canvas.getByTestId('detail-content')).toBeVisible();
-    for (const width of [720, 390]) {
-      await page.viewport(width, 844);
+      );
+      await expect(canvas.getByTestId('desktop-detail')).toHaveAttribute(
+        'aria-hidden',
+        'true',
+      );
+      await expect(canvas.getByTestId('list-content')).toBeVisible();
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Restore Inspector' }),
+      );
+      await expect(canvas.getByTestId('detail-content')).toBeVisible();
+      await settleViewport(width);
       await waitFor(() =>
         expect(canvas.getByTestId('desktop-detail')).toHaveAttribute(
           'aria-hidden',
@@ -313,21 +315,27 @@ export const InspectorTakesTheDetailAreaAndRestoresIt: Story = {
         canvas.getByRole('button', { name: 'Open Inspector' }),
       );
       await expect(canvas.getByTestId('inspector-content')).toBeVisible();
-    }
-    await page.viewport(1440, 844);
-    await waitFor(() =>
-      expect(canvas.getByTestId('detail-content')).toBeVisible(),
-    );
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Close Inspector' }),
-    );
-    await expect(canvas.getByTestId('desktop-inspector')).toHaveAttribute(
-      'aria-hidden',
-      'true',
-    );
-    await expect(canvas.getByTestId('detail-content')).toBeVisible();
-  },
-};
+      await settleViewport(layoutWidths.wide);
+      await waitFor(() =>
+        expect(canvas.getByTestId('detail-content')).toBeVisible(),
+      );
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Close Inspector' }),
+      );
+      await expect(canvas.getByTestId('desktop-inspector')).toHaveAttribute(
+        'aria-hidden',
+        'true',
+      );
+      await expect(canvas.getByTestId('detail-content')).toBeVisible();
+    },
+  };
+}
+// A width between the phone and wide layouts.
+const tabletWidth = 720;
+export const InspectorTakesTheDetailAreaAndRestoresItTablet =
+  inspectorTakesTheDetailAreaAndRestoresIt(tabletWidth);
+export const InspectorTakesTheDetailAreaAndRestoresItPhone =
+  inspectorTakesTheDetailAreaAndRestoresIt(layoutWidths.phone);
 
 export const DividersResizeAndRememberWidths: Story = {
   play: async ({ canvas, userEvent }) => {

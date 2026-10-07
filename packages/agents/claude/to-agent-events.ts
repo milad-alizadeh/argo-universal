@@ -35,19 +35,26 @@ export const initialMappingState = (): MappingState => ({
   compactionId: null,
 });
 
+// On the jscpd baseline: each adapter keeps its own row helpers, and a shared one would be shallow.
 const feed = (change: FeedChange): AgentEvent => ({
   type: 'agent.feed',
   change,
 });
 const upsert = (update: FeedUpdate) => feed({ type: 'upsert', update });
 
-const textRow = (
-  id: string,
-  messageId: string,
-  kind: TextKind,
-  text: string,
-  state: 'open' | 'settled',
-): FeedUpdate => ({
+const textRow = ({
+  id,
+  messageId,
+  kind,
+  text,
+  state,
+}: {
+  id: string;
+  messageId: string;
+  kind: TextKind;
+  text: string;
+  state: 'open' | 'settled';
+}): FeedUpdate => ({
   id,
   sessionUpdate: kind,
   state,
@@ -125,7 +132,17 @@ function mapStreamEvent(
       const { kind, text } = textOf(block);
       const id = `${streamMessageId}#${event.index}`;
       return {
-        events: [upsert(textRow(id, streamMessageId, kind, text, 'open'))],
+        events: [
+          upsert(
+            textRow({
+              id,
+              messageId: streamMessageId,
+              kind,
+              text,
+              state: 'open',
+            }),
+          ),
+        ],
         mappingState: {
           ...mappingState,
           openTextRows: { ...mappingState.openTextRows, [id]: kind },
@@ -160,35 +177,52 @@ function mapAssistant(
       ...state,
       blockCounts: { ...state.blockCounts, [messageId]: index + 1 },
     };
-    const mapped = mapBlock(
+    const mapped = mapBlock({
       block,
-      `${messageId}#${index}`,
+      rowId: `${messageId}#${index}`,
       messageId,
-      state,
-      message.timestamp === undefined
-        ? message.receivedAt
-        : Date.parse(message.timestamp),
-    );
+      mappingState: state,
+      timestamp:
+        message.timestamp === undefined
+          ? message.receivedAt
+          : Date.parse(message.timestamp),
+    });
     events.push(...mapped.events);
     state = mapped.mappingState;
   }
   return { events, mappingState: state };
 }
 
-function mapBlock(
-  block: AssistantBlock,
-  rowId: string,
-  messageId: string,
-  mappingState: MappingState,
-  timestamp?: number,
-): AgentMapping<MappingState> {
+function mapBlock({
+  block,
+  rowId,
+  messageId,
+  mappingState,
+  timestamp,
+}: {
+  block: AssistantBlock;
+  rowId: string;
+  messageId: string;
+  mappingState: MappingState;
+  timestamp?: number;
+}): AgentMapping<MappingState> {
   switch (block.type) {
     case 'text':
     case 'thinking': {
       const { kind, text } = textOf(block);
       const { [rowId]: _settled, ...openTextRows } = mappingState.openTextRows;
       return {
-        events: [upsert(textRow(rowId, messageId, kind, text, 'settled'))],
+        events: [
+          upsert(
+            textRow({
+              id: rowId,
+              messageId,
+              kind,
+              text,
+              state: 'settled',
+            }),
+          ),
+        ],
         mappingState: { ...mappingState, openTextRows },
       };
     }

@@ -1,0 +1,10 @@
+language js
+
+// Mock CLI settings are read once, through readMockCliEnvironment() in mocks/cli/mock-cli.ts.
+or {
+  `process.env.$name`,
+  `process.env[$name]`
+} as $read where {
+  $name <: r"['\"`]?MOCK_CLI_[\s\S]*",
+  register_diagnostic(span=$read, message="Read mock CLI settings through readMockCliEnvironment() in mocks/cli/mock-cli.ts, not from process.env, so a misspelt knob fails its schema.")
+}

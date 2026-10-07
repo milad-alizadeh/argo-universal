@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { Linking, ScrollView, Text as Span, View } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
+import { withOccurrenceKeys } from '#lib/occurrence-keys';
 import { cn } from '#lib/utils';
 import { Text } from '#primitives/text';
 import { FeedCodeBlock } from './FeedCodeBlock';
@@ -145,26 +146,28 @@ function List({ token, caret }: { token: Tokens.List; caret: boolean }) {
   const start = typeof token.start === 'number' ? token.start : 1;
   return (
     <View className={variant === 'proposal' ? 'gap-2' : 'gap-1'}>
-      {token.items.map((item, index) => (
-        <View key={`${index}-${item.raw}`} className="flex-row gap-2">
-          <Text
-            className={cn(
-              'w-4 shrink-0 font-sans text-sm',
-              variant === 'proposal'
-                ? 'leading-5 text-foreground'
-                : 'leading-5.5 text-muted-foreground',
-            )}
-          >
-            {token.ordered ? `${start + index}.` : '•'}
-          </Text>
-          <View className="min-w-0 flex-1 gap-1">
-            <Blocks
-              tokens={item.tokens}
-              caret={caret && index === token.items.length - 1}
-            />
+      {withOccurrenceKeys(token.items, (item) => item.raw).map(
+        ({ item, key }, index) => (
+          <View key={key} className="flex-row gap-2">
+            <Text
+              className={cn(
+                'w-4 shrink-0 font-sans text-sm',
+                variant === 'proposal'
+                  ? 'leading-5 text-foreground'
+                  : 'leading-5.5 text-muted-foreground',
+              )}
+            >
+              {token.ordered ? `${start + index}.` : '•'}
+            </Text>
+            <View className="min-w-0 flex-1 gap-1">
+              <Blocks
+                tokens={item.tokens}
+                caret={caret && index === token.items.length - 1}
+              />
+            </View>
           </View>
-        </View>
-      ))}
+        ),
+      )}
     </View>
   );
 }
@@ -175,11 +178,6 @@ function Table({ token }: { token: Tokens.Table }) {
     'font-mono leading-5 text-foreground',
     variant === 'proposal' ? 'text-sm' : 'text-xs',
   );
-  const cellClassName = (column: number) =>
-    cn(
-      'px-3 py-1.5',
-      column === 0 ? 'w-[180px] shrink-0' : 'min-w-[180px] flex-1',
-    );
   return (
     <View className="overflow-hidden rounded-xl border border-border">
       <ScrollView
@@ -189,50 +187,57 @@ function Table({ token }: { token: Tokens.Table }) {
       >
         <View className="flex-1">
           <View className="flex-row border-b border-border bg-sidebar">
-            {token.header.map((cell, column) => (
-              <View
-                key={`${column}-${cell.text}`}
-                className={cellClassName(column)}
-              >
-                <Text className="font-sans text-sm leading-5 font-semibold text-foreground">
-                  <InlineTokens
-                    tokens={cell.tokens}
-                    codeClassName={
-                      variant === 'proposal'
-                        ? proposalInlineCodeClassName
-                        : inlineCodeClassName
-                    }
-                  />
-                </Text>
-              </View>
-            ))}
+            {withOccurrenceKeys(token.header, (cell) => cell.text).map(
+              ({ item: cell, key }, column) => (
+                <View key={key} className={cellClassName(column)}>
+                  <Text className="font-sans text-sm leading-5 font-semibold text-foreground">
+                    <InlineTokens
+                      tokens={cell.tokens}
+                      codeClassName={
+                        variant === 'proposal'
+                          ? proposalInlineCodeClassName
+                          : inlineCodeClassName
+                      }
+                    />
+                  </Text>
+                </View>
+              ),
+            )}
           </View>
-          {token.rows.map((row, rowIndex) => (
+          {withOccurrenceKeys(token.rows, (row) =>
+            row.map((cell) => cell.text).join('|'),
+          ).map(({ item: row, key: rowKey }, rowIndex) => (
             <View
-              key={`${rowIndex}-${row.map((cell) => cell.text).join('|')}`}
+              key={rowKey}
               className={cn(
                 'flex-row',
                 rowIndex < token.rows.length - 1 && 'border-b border-border',
               )}
             >
-              {row.map((cell, column) => (
-                <View
-                  key={`${column}-${cell.text}`}
-                  className={cellClassName(column)}
-                >
-                  <Text className="font-sans text-sm leading-5 text-foreground">
-                    <InlineTokens
-                      tokens={cell.tokens}
-                      codeClassName={cellCodeClassName}
-                    />
-                  </Text>
-                </View>
-              ))}
+              {withOccurrenceKeys(row, (cell) => cell.text).map(
+                ({ item: cell, key }, column) => (
+                  <View key={key} className={cellClassName(column)}>
+                    <Text className="font-sans text-sm leading-5 text-foreground">
+                      <InlineTokens
+                        tokens={cell.tokens}
+                        codeClassName={cellCodeClassName}
+                      />
+                    </Text>
+                  </View>
+                ),
+              )}
             </View>
           ))}
         </View>
       </ScrollView>
     </View>
+  );
+}
+
+function cellClassName(column: number) {
+  return cn(
+    'px-3 py-1.5',
+    column === 0 ? 'w-[180px] shrink-0' : 'min-w-[180px] flex-1',
   );
 }
 
@@ -296,9 +301,12 @@ function Blocks({
   const blocks = (tokens ?? []).filter(
     (token) => token.type !== 'space' && token.type !== 'hr',
   );
-  const nodes: ReactNode[] = blocks.map((token, index) => (
+  const nodes: ReactNode[] = withOccurrenceKeys(
+    blocks,
+    (token) => token.raw,
+  ).map(({ item: token, key }, index) => (
     <Block
-      key={`${index}-${token.raw}`}
+      key={key}
       token={token}
       caret={caret && index === blocks.length - 1}
     />

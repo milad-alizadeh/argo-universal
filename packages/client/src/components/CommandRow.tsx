@@ -34,7 +34,7 @@ export function CommandRow({
   const exitCode = terminal.exitStatus?.exitCode;
   const failed =
     row.status === 'failed' || (exitCode !== undefined && exitCode !== 0);
-  const failureStatus = exitCode !== undefined ? `exit ${exitCode}` : 'failed';
+  const failureStatus = exitCode === undefined ? 'failed' : `exit ${exitCode}`;
   let status = duration;
   let outcome = 'Completed';
   switch (row.status) {

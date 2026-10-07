@@ -270,7 +270,7 @@ function AgentChoices({
     );
   };
   // In a View, since bare Text in a list footer is inline on web and pads only its first line.
-  const footer = !configuration.onAgentChange ? (
+  const footer = configuration.onAgentChange ? null : (
     <View className="pl-8 pr-2 pb-1">
       <Text
         selectable={false}
@@ -279,7 +279,7 @@ function AgentChoices({
         Start a new Session to switch Agent
       </Text>
     </View>
-  ) : null;
+  );
   if (wide)
     return (
       <View className="relative flex-1 min-h-0">

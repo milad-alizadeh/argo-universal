@@ -35,7 +35,7 @@
   },
   "overrides": [
     {
-      // Tests, stories and mocks state their inputs and expectations as literals.
+      // Tests, stories and mocks state their inputs and expectations as literals, and may be long.
       "includes": [
         "**/*.test.*",
         "**/*.stories.*",
@@ -46,7 +46,104 @@
       ],
       "linter": {
         "rules": {
-          "style": { "noMagicNumbers": "off" }
+          "style": { "noMagicNumbers": "off" },
+          "complexity": { "noExcessiveLinesPerFunction": "off" }
+        }
+      }
+    },
+    {
+      // Tests, mocks, tools and app scripts print to the terminal on purpose.
+      "includes": [
+        "**/*.test.*",
+        "**/*.mocks.*",
+        "**/mocks/**",
+        "tools/**",
+        "apps/*/scripts/**"
+      ],
+      "linter": {
+        "rules": {
+          "suspicious": { "noConsole": "off" }
+        }
+      }
+    },
+    {
+      // The four log sinks: the Engine log, the machine inspector notice, the Supervisor log and the App's machine log.
+      "includes": [
+        "apps/server/src/engine/machine.ts",
+        "apps/server/src/inspect-machines.ts",
+        "apps/server/src/supervisor/index.ts",
+        "apps/universal-app/src/app/_layout.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "suspicious": { "noConsole": "off" }
+        }
+      }
+    },
+    {
+      // Vendored react-native-reusables output; knip and jscpd already exclude it, and the React domain rules are off.
+      "includes": ["packages/client/src/primitives/**"],
+      "linter": {
+        "rules": {
+          "style": { "noUselessElse": "off" },
+          "complexity": {
+            "noUselessFragments": "off",
+            "noExcessiveLinesPerFunction": "off",
+            "noExcessiveCognitiveComplexity": "off"
+          },
+          "correctness": { "useExhaustiveDependencies": "off" },
+          "suspicious": { "noArrayIndexKey": "off" }
+        }
+      }
+    },
+    {
+      // Debt list: files with a function over 120 lines, held at 250; a pull request adds an entry only with a one-line reason the reviewer accepts.
+      "includes": [
+        "apps/server/src/services/feed/feed-service.ts", // createFeedService 152: subscribe watches the Session snapshot itself until sessions offers a watcher.
+        "apps/server/src/services/sessions/session-list-reader.ts", // createSessionListReader 202, readAll 190, row map 139: shrinks when the list rules become a pure projection.
+        "apps/server/src/services/sessions/session-service.ts", // createSessionService 170: the service's verbs share one closure, and each verb is short.
+        "packages/agents/claude/connect.ts", // connect 199: one CLI process and its pending requests; the request bookkeeping moves to a helper in this file.
+        "packages/agents/codex/connect.ts", // connect 183: one app server connection and its Turn records in one closure.
+        "packages/client/src/components/Composer.tsx", // Composer 241: the Composer's state and layout read top to bottom and stay together.
+        "packages/client/src/components/ComposerStatus.tsx", // ComposerStatusControls 140: every status control in one row, judged deep.
+        "packages/client/src/components/DesktopShell.tsx", // DesktopShell 202: the desktop geometry reads top to bottom and stays long.
+        "packages/client/src/components/ShellPane.web.tsx", // ShellPane 155: one FLIP transition that stays one function.
+        "packages/client/src/components/Feed.tsx" // FeedList 124: the keep-reading-place logic can move to a hook in this file.
+      ],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noExcessiveLinesPerFunction": {
+              "level": "error",
+              "options": { "maxLines": 250, "skipBlankLines": true }
+            }
+          }
+        }
+      }
+    },
+    {
+      // Debt list: files with a function over cognitive complexity 25, held at 65; a pull request adds an entry only with a one-line reason the reviewer accepts.
+      "includes": [
+        "apps/server/src/services/sessions/live-header.ts", // toolKindLabel 30: one label per tool kind, which stays as it is.
+        "apps/server/src/services/sessions/session-list-reader.ts", // row map 34: drops when the list rules become a pure, table-tested projection.
+        "packages/agents/claude/connect.ts", // run 29: one case per Agent command.
+        "packages/agents/codex/connect.ts", // run 34: one case per Agent command.
+        "packages/agents/codex/to-agent-events.ts", // toAgentEvents 30: one case per vendor notification, which stays as it is.
+        "packages/client/src/components/Composer.tsx", // Composer 42: drops when the send button state is derived once.
+        "packages/client/src/components/PlanProposalCard.tsx", // PlanProposalInteraction 30: one card's layout states in its markup.
+        "packages/client/src/feed/to-feed-view.ts", // toFeedView 47, explorationLines 26: the grouping decisions get names in this file.
+        "mocks/cli/claude/mock-claude.ts", // input handler 36: one branch per message type and pending request.
+        "mocks/cli/codex/mock-codex.ts", // input handler 45: one branch per message type and pending request.
+        "tools/generate-request-mocks.mts" // recording map 47: replays each recording into a Feed.
+      ],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noExcessiveCognitiveComplexity": {
+              "level": "error",
+              "options": { "maxAllowedComplexity": 65 }
+            }
+          }
         }
       }
     },
@@ -61,31 +158,6 @@
       "linter": {
         "rules": {
           "a11y": { "noSvgWithoutTitle": "off" }
-        }
-      }
-    },
-    {
-      // An adapter is plain functions; the one Agent machine in packages/agents/src owns the lifecycle.
-      "includes": ["packages/agents/*/**", "!packages/agents/src/**"],
-      "linter": {
-        "rules": {
-          "style": {
-            "noRestrictedImports": {
-              "level": "error",
-              "options": {
-                "paths": {
-                  "xstate": "Adapters are plain functions; see ADR-0015.",
-                  "zod": "Use vendor SDK or generated protocol types; the Feed validates adapter changes (ADR-0015)."
-                },
-                "patterns": [
-                  {
-                    "group": ["zod/*"],
-                    "message": "Use vendor SDK or generated protocol types (ADR-0015)."
-                  }
-                ]
-              }
-            }
-          }
         }
       }
     },
@@ -131,6 +203,415 @@
           "allowComments": true
         }
       }
+    },
+    {
+      // Vendor names stay in the adapter and mock CLI folders, where a JSON.parse cast is also allowed, as in codex/open-app-server.ts:102.
+      "includes": [
+        "**",
+        "!packages/agents/claude/**",
+        "!packages/agents/codex/**",
+        "!mocks/cli/claude/**",
+        "!mocks/cli/codex/**"
+      ],
+      "plugins": [
+        "./tooling/biome/vendor-name.grit",
+        "./tooling/biome/json-parse-cast.grit"
+      ]
+    },
+    {
+      // Mock CLI settings are read once, through readMockCliEnvironment() in mocks/cli/mock-cli.ts.
+      "includes": ["**", "!mocks/cli/mock-cli.ts"],
+      "plugins": ["./tooling/biome/mock-environment.grit"]
+    },
+    {
+      // Only packages/db opens SQLite.
+      "includes": ["**", "!packages/db/**"],
+      "plugins": ["./tooling/biome/database-client.grit"]
+    },
+    {
+      // Unit tests mock only outside modules, skip nothing, assert unconditionally and carry unique, valid titles.
+      "includes": ["**/*.test.ts", "**/*.test.tsx", "**/*.test.mts"],
+      "plugins": ["./tooling/biome/no-internal-mock.grit"],
+      "linter": {
+        "rules": {
+          "suspicious": { "noSkippedTests": "error" },
+          "nursery": {
+            "noConditionalExpect": "error",
+            "noIdenticalTestTitle": "error",
+            "useExpect": "error",
+            "useValidTestTitle": "error",
+            "useTestHooksOnTop": "error"
+          }
+        }
+      }
+    },
+    {
+      // xstate/graph model tests assert per path, so a branch around expect is how they read the path.
+      "includes": ["**/*machine.test.ts"],
+      "linter": {
+        "rules": {
+          "nursery": { "noConditionalExpect": "off" }
+        }
+      }
+    },
+    {
+      // Screens and components get tRPC from useTRPC() only; drop this block when Spec 0006's components and screens direction blocks are both on.
+      "includes": [
+        "packages/client/src/screens/**",
+        "packages/client/src/components/**"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "@trpc/client": "Screens get tRPC from useTRPC() only (AGENTS.md, ADR-0009).",
+                  "../trpc/create-trpc-client": "Screens get tRPC from useTRPC() only (AGENTS.md, ADR-0009).",
+                  "../trpc/context": {
+                    "importNames": ["useTRPCClient"],
+                    "message": "Screens get tRPC from useTRPC() only (AGENTS.md, ADR-0009)."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      // End-to-end tests drive a real Server and mock only the Agent CLI; the Playwright rules stay out of test stories.
+      "includes": ["e2e/**"],
+      "linter": {
+        "rules": {
+          "nursery": {
+            "noPlaywrightElementHandle": "error",
+            "noPlaywrightEval": "error",
+            "noPlaywrightForceOption": "error",
+            "noPlaywrightMissingAwait": "error",
+            "noPlaywrightNetworkidle": "error",
+            "noPlaywrightPagePause": "error",
+            "noPlaywrightUselessAwait": "error",
+            "noPlaywrightWaitForNavigation": "error",
+            "noPlaywrightWaitForSelector": "error",
+            "noPlaywrightWaitForTimeout": "error",
+            "usePlaywrightValidDescribeCallback": "error"
+          },
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "vitest": "End-to-end tests run in Playwright (ADR-0011).",
+                  "node:sqlite": "End-to-end tests check what a user sees, not the database (ADR-0011)."
+                },
+                "patterns": [
+                  {
+                    "group": ["@repo/**", "!@repo/mocks", "!@repo/mocks/**"],
+                    "message": "End-to-end tests mock only the Agent CLI and import only @repo/mocks (AGENTS.md)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+
+    // A relative path into packages/, tooling/ or apps/ skips package.json, pnpm isolation and exports; 1 hit: packages/client/mocks/native-token-values.test.ts:2 (A2-3: import @repo/uniwind/native-token-values).
+    {
+      "includes": ["**", "!tools/**"], // A2-7 drops this exclusion: 20 lines fire in tools/, and 4 more reach root mocks/, which this regex cannot see.
+      "plugins": ["./tooling/biome/cross-package-import.grit"]
+    },
+
+    // D1: contracts, api, the db schema and client/src never import Node APIs; node-builtin-gap.grit adds node:sqlite and node:sea, which noNodejsModules misses; 0 hits.
+    {
+      "includes": [
+        "packages/contracts/**",
+        "packages/api/**",
+        "packages/db/src/schema.ts",
+        "packages/db/src/schema/**",
+        "packages/client/src/**",
+        "!**/*.test.*",
+        "!**/*.stories.*",
+        "!**/mocks/**"
+      ],
+      "linter": { "rules": { "correctness": { "noNodejsModules": "error" } } },
+      "plugins": ["./tooling/biome/node-builtin-gap.grit"]
+    },
+
+    // D2: contracts imports zod, drizzle-orm and @repo/db/schema only; it declares @repo/db for /schema, so pnpm cannot stop the client import; 0 hits.
+    {
+      "includes": ["packages/contracts/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@repo/**", "!@repo/db/schema"],
+                    "message": "contracts imports only zod, drizzle-orm and @repo/db/schema, never the @repo/db client (ADR-0013)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+
+    // D3: the App never imports server-side packages; it declares @repo/machine-log for /browser, so the /node entry needs this ban; 0 hits.
+    {
+      "includes": ["apps/universal-app/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@repo/**",
+                      "!@repo/client",
+                      "!@repo/client/**",
+                      "!@repo/uniwind",
+                      "!@repo/uniwind/**",
+                      "!@repo/machine-log",
+                      "!@repo/machine-log/browser",
+                      "!@repo/vitest",
+                      "!@repo/vitest/**"
+                    ],
+                    "message": "The App imports client, uniwind and the browser machine log, never server-side packages."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+
+    // D4: client/src takes @repo/api with import type only; @repo/api is a devDependency for tests, so pnpm resolves a value import too; 0 hits.
+    {
+      "includes": [
+        "packages/client/src/**",
+        "!**/*.test.*",
+        "!**/*.stories.*",
+        "!**/mocks/**"
+      ],
+      "plugins": ["./tooling/biome/api-type-only.grit"]
+    },
+
+    // D5 to D11 repeat the workspace dependency allowlists that pnpm already enforces, so a package.json edit cannot quietly open them; 0 hits each.
+
+    // D5: api imports only contracts from the workspace.
+    {
+      "includes": ["packages/api/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@repo/**",
+                      "!@repo/contracts",
+                      "!@repo/contracts/**",
+                      "!@repo/vitest",
+                      "!@repo/vitest/**"
+                    ],
+                    "message": "api imports only contracts from the workspace."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    // D6: db imports no workspace package.
+    {
+      "includes": ["packages/db/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@repo/**"],
+                    "message": "db imports no workspace package (ADR-0013)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    // D7: git and agents/src import only contracts from the workspace.
+    {
+      "includes": ["packages/git/**", "packages/agents/src/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@repo/**",
+                      "!@repo/contracts",
+                      "!@repo/contracts/**"
+                    ],
+                    "message": "git and agents import only contracts from the workspace."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    // D8: replaces the step-1 adapter block; keeps its ADR-0015 bans on xstate, zod and zod/*, and adds the agents row.
+    {
+      "includes": ["packages/agents/*/**", "!packages/agents/src/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "xstate": "Adapters are plain functions; see ADR-0015.",
+                  "zod": "Use vendor SDK or generated protocol types; the Feed validates adapter changes (ADR-0015)."
+                },
+                "patterns": [
+                  {
+                    "group": ["zod/*"],
+                    "message": "Use vendor SDK or generated protocol types (ADR-0015)."
+                  },
+                  {
+                    "group": [
+                      "@repo/**",
+                      "!@repo/contracts",
+                      "!@repo/contracts/**"
+                    ],
+                    "message": "agents imports only contracts from the workspace."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    // D9: the Server never imports client or an App.
+    {
+      "includes": ["apps/server/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@repo/client",
+                      "@repo/client/**",
+                      "@repo/universal-app",
+                      "@repo/universal-app/**",
+                      "@repo/storybook",
+                      "@repo/storybook/**",
+                      "@repo/desktop",
+                      "@repo/desktop/**"
+                    ],
+                    "message": "The Server never imports client or an App."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    // D10: desktop imports only contracts and machine-log from the workspace.
+    {
+      "includes": ["apps/desktop/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@repo/**",
+                      "!@repo/contracts",
+                      "!@repo/contracts/**",
+                      "!@repo/machine-log",
+                      "!@repo/machine-log/**",
+                      "!@repo/vitest",
+                      "!@repo/vitest/**"
+                    ],
+                    "message": "desktop imports only contracts and machine-log from the workspace."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    // D11: storybook imports only client and uniwind from the workspace.
+    {
+      "includes": ["apps/storybook/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@repo/**",
+                      "!@repo/client",
+                      "!@repo/client/**",
+                      "!@repo/uniwind",
+                      "!@repo/uniwind/**"
+                    ],
+                    "message": "storybook imports only client and uniwind from the workspace."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+
+    // A nested function that uses nothing from the function around it moves up a scope; production only, at error; A2-3 fixes its 1 hit in the same PR: components/FeedMarkdown.tsx:178 (cellClassName in Table).
+    {
+      "includes": [
+        "packages/*/src/**",
+        "packages/agents/*/**",
+        "apps/*/src/**",
+        "!**/*.test.*",
+        "!**/*.stories.*",
+        "!**/mocks/**"
+      ], // Tests, stories and mocks would add 34 hits, mostly describe-scoped helpers kept there on purpose.
+      "plugins": ["./tooling/biome/function-scoping.grit"]
     }
   ]
 }

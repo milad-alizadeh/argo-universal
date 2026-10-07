@@ -22,7 +22,7 @@ function toolCallFor(
   rows: (typeof recordedFeedMocks)[number]['rows'],
 ) {
   const { source } = liveHeader;
-  if (source.type !== 'tool_call') return undefined;
+  if (source.type !== 'tool_call') return;
   return rows.findLast(
     (row): row is ToolCallUpdate =>
       row.sessionUpdate === 'tool_call_update' &&

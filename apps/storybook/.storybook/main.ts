@@ -16,7 +16,7 @@ const config: StorybookConfig = {
   ],
   typescript: { reactDocgen: false },
   framework: getAbsolutePath('@storybook/react-native-web-vite'),
-  // Uniwind styles the screens (spec section 9); the Vitest addon reuses this hook.
+  // Uniwind styles the screens; the Vitest addon reuses this hook.
   async viteFinal(config) {
     const { mergeConfig } = await import('vite');
     const { default: tailwindcss } = await import('@tailwindcss/vite');

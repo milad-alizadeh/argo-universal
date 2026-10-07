@@ -1,5 +1,6 @@
 import type { AgentProbe } from '@repo/agents';
 import { createMockAdapter } from '@repo/mocks/agent';
+import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import { afterEach, expect, it, vi } from 'vitest';
 import {
   type AnyEventObject,
@@ -9,7 +10,7 @@ import {
   type SnapshotFrom,
   waitFor,
 } from 'xstate';
-import { adjacencyMapToArray, getAdjacencyMap, TestModel } from 'xstate/graph';
+import { TestModel } from 'xstate/graph';
 import { agentProbeMachine } from './agent-probe-machine';
 
 afterEach(() => vi.useRealTimers());
@@ -75,28 +76,14 @@ it.each(paths.map((path, index) => [index, path] as const))(
 );
 
 it('the generated agent probe paths walk every transition', () => {
-  const edge = (from: ProbeSnapshot, type: string, to: ProbeSnapshot) =>
-    `${key(from)} ${type} ${key(to)}`;
-  const transitions = adjacencyMapToArray(
-    getAdjacencyMap(machine, model.options),
-  ).map(({ state, event, nextState }) => edge(state, event.type, nextState));
-  const walked = new Set(
-    paths.flatMap((path) =>
-      path.steps
-        .slice(1)
-        .map((step, index) =>
-          edge(
-            path.steps[index]?.state ?? expect.unreachable(),
-            step.event.type,
-            step.state,
-          ),
-        ),
-    ),
-  );
-  expect(transitions.length).toBeGreaterThan(0);
-  expect(transitions.filter((transition) => !walked.has(transition))).toEqual(
-    [],
-  );
+  expect(
+    unwalkedTransitions({
+      models: [model],
+      paths,
+      stateKey: key,
+      eventKey: (event) => event.type,
+    }),
+  ).toEqual([]);
 });
 
 it('shares a running probe with a refresh, and probes again once settled', async () => {

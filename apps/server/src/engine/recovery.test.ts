@@ -104,13 +104,19 @@ const messageRow = (
   sourceRef: { line: 7 },
 });
 
-const toolRow = (
-  id: string,
-  position: number,
-  revision: number,
-  status: string,
-  state: 'open' | 'settled' = 'open',
-): FeedRowWrite => ({
+const toolRow = ({
+  id,
+  position,
+  revision,
+  status,
+  state = 'open',
+}: {
+  id: string;
+  position: number;
+  revision: number;
+  status: string;
+  state?: 'open' | 'settled';
+}): FeedRowWrite => ({
   ...messageRow(id, position, revision),
   state,
   sessionUpdate: 'tool_call_update',
@@ -180,13 +186,50 @@ describe('Engine restart recovery', () => {
         maxRevision: 20,
         rows: [
           messageRow('message', 0, 2),
-          toolRow('pending-tool', 1, 4, 'pending'),
-          toolRow('running-tool', 2, 6, 'in_progress'),
-          toolRow('completed-tool', 3, 8, 'completed'),
-          toolRow('failed-tool', 4, 10, 'failed'),
-          toolRow('cancelled-tool', 5, 12, 'cancelled'),
-          toolRow('settled-pending-tool', 6, 14, 'pending', 'settled'),
-          toolRow('settled-completed-tool', 7, 16, 'completed', 'settled'),
+          toolRow({
+            id: 'pending-tool',
+            position: 1,
+            revision: 4,
+            status: 'pending',
+          }),
+          toolRow({
+            id: 'running-tool',
+            position: 2,
+            revision: 6,
+            status: 'in_progress',
+          }),
+          toolRow({
+            id: 'completed-tool',
+            position: 3,
+            revision: 8,
+            status: 'completed',
+          }),
+          toolRow({
+            id: 'failed-tool',
+            position: 4,
+            revision: 10,
+            status: 'failed',
+          }),
+          toolRow({
+            id: 'cancelled-tool',
+            position: 5,
+            revision: 12,
+            status: 'cancelled',
+          }),
+          toolRow({
+            id: 'settled-pending-tool',
+            position: 6,
+            revision: 14,
+            status: 'pending',
+            state: 'settled',
+          }),
+          toolRow({
+            id: 'settled-completed-tool',
+            position: 7,
+            revision: 16,
+            status: 'completed',
+            state: 'settled',
+          }),
         ],
       },
       {
@@ -317,7 +360,9 @@ describe('Engine restart recovery', () => {
         type: 'feedRows',
         sessionId: 'session-1',
         maxRevision: 9,
-        rows: [toolRow('tool', 0, 9, 'pending')],
+        rows: [
+          toolRow({ id: 'tool', position: 0, revision: 9, status: 'pending' }),
+        ],
       },
       {
         type: 'feedRows',

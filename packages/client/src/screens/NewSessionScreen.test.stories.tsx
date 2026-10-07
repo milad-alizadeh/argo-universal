@@ -7,7 +7,7 @@ import type { SessionNewInput } from '@repo/contracts';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, waitFor, within } from 'storybook/test';
-import { eachLayout } from '../../mocks/each-layout';
+import { eachLayout, layoutWidths } from '../../mocks/each-layout';
 import {
   failedStartMessage,
   failedStartNewSessionMocks,
@@ -16,6 +16,7 @@ import {
   notSignedInNewSessionMocks,
   sendingNewSessionMocks,
 } from '../../mocks/new-session-mock';
+import { settleViewport } from '../../mocks/settle-viewport';
 import { pending } from '../../mocks/trpc-mock-link';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
 import { ContentLayout } from '../components/ContentLayout';
@@ -49,6 +50,7 @@ const meta = {
 } satisfies Meta<typeof NewSessionScreen>;
 export default meta;
 type Story = StoryObj<typeof meta>;
+type Mode = 'light' | 'dark';
 
 const overlay = within(document.body);
 
@@ -109,21 +111,28 @@ export const Ready: Story = {
     }),
 };
 
-export const Reconnecting: Story = {
-  parameters: { connection: 'reconnecting' },
-  play: async ({ canvas, userEvent }) =>
-    eachLayout(async () => {
+function reconnecting(width: number, mode: Mode): Story {
+  return {
+    parameters: { connection: 'reconnecting' },
+    globals: { mode },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
       await expect(
         await canvas.findByRole('img', { name: 'Reconnecting' }),
       ).toBeVisible();
       await expect(canvas.getByText('Reconnecting…')).toBeVisible();
       const input = canvas.getByRole('textbox', { name: 'Message' });
-      await userEvent.clear(input);
+      await expect(input).toHaveValue('');
       await userEvent.type(input, 'Keep this draft');
       await expect(input).toHaveValue('Keep this draft');
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
-    }),
-};
+    },
+  };
+}
+export const ReconnectingPhoneLight = reconnecting(layoutWidths.phone, 'light');
+export const ReconnectingPhoneDark = reconnecting(layoutWidths.phone, 'dark');
+export const ReconnectingWideLight = reconnecting(layoutWidths.wide, 'light');
+export const ReconnectingWideDark = reconnecting(layoutWidths.wide, 'dark');
 
 export const SendReplacesThePage: Story = {
   args: { projectId: exampleProject.id },
@@ -152,44 +161,41 @@ export const SendReplacesThePage: Story = {
   },
 };
 
-export const SwitchProject: Story = {
-  play: async ({ canvas, userEvent }) =>
-    eachLayout(async () => {
-      await userEvent.click(
-        await canvas.findByRole('button', {
-          name: `Project: ${exampleProject.name}`,
-        }),
-      );
-      await userEvent.type(
-        await overlay.findByRole('textbox', { name: 'Find a Project' }),
-        'landing',
-      );
-      await expect(
-        overlay.queryByRole('button', { name: exampleProject.name }),
-      ).toBeNull();
-      await userEvent.click(
-        overlay.getByRole('button', { name: landingProject.name }),
-      );
-      await expect(
-        await canvas.findByRole('button', {
-          name: `Project: ${landingProject.name}`,
-        }),
-      ).toBeVisible();
-      // Switching Project loads its stored checkout: this one runs Local.
-      await expect(canvas.getByText('Local')).toBeVisible();
-      await userEvent.click(
-        canvas.getByRole('button', { name: `Project: ${landingProject.name}` }),
-      );
-      await userEvent.click(
-        await overlay.findByRole('button', { name: exampleProject.name }),
-      );
-      await expect(
-        await canvas.findByRole('button', {
-          name: `Project: ${exampleProject.name}`,
-        }),
-      ).toBeVisible();
-    }),
-};
+const switchProject = (width: number, mode: Mode): Story => ({
+  globals: { mode },
+  play: async ({ canvas, userEvent }) => {
+    await settleViewport(width);
+    await userEvent.click(
+      await canvas.findByRole('button', {
+        name: `Project: ${exampleProject.name}`,
+      }),
+    );
+    await userEvent.type(
+      await overlay.findByRole('textbox', { name: 'Find a Project' }),
+      'landing',
+    );
+    await expect(
+      overlay.queryByRole('button', { name: exampleProject.name }),
+    ).toBeNull();
+    await userEvent.click(
+      overlay.getByRole('button', { name: landingProject.name }),
+    );
+    await expect(
+      await canvas.findByRole('button', {
+        name: `Project: ${landingProject.name}`,
+      }),
+    ).toBeVisible();
+    // Switching Project loads its stored checkout: this one runs Local.
+    await expect(canvas.getByText('Local')).toBeVisible();
+  },
+});
+export const SwitchProjectPhoneLight = switchProject(
+  layoutWidths.phone,
+  'light',
+);
+export const SwitchProjectPhoneDark = switchProject(layoutWidths.phone, 'dark');
+export const SwitchProjectWideLight = switchProject(layoutWidths.wide, 'light');
+export const SwitchProjectWideDark = switchProject(layoutWidths.wide, 'dark');
 
 export const StartsOnTheChosenProject: Story = {
   args: { projectId: landingProject.id },
@@ -205,64 +211,92 @@ export const StartsOnTheChosenProject: Story = {
   },
 };
 
-async function expectAgentSetup(
-  canvas: ReturnType<typeof within>,
-  userEvent: {
-    click: (element: Element) => Promise<void>;
-    keyboard: (text: string) => Promise<void>;
-  },
-  wide: boolean,
+function agentSetup(
   availability: 'not_installed' | 'not_signed_in',
-) {
+  width: number,
+  mode: Mode,
+): Story {
   const catalog =
     availability === 'not_installed'
       ? newSessionCatalogs.oneNotInstalled
       : newSessionCatalogs.oneNotSignedIn;
   const agent = catalog.find((entry) => entry.availability === availability);
   if (!agent) throw new Error('Missing Agent mock.');
-  await userEvent.click(
-    await canvas.findByRole('button', { name: 'Agent and model' }),
-  );
-  if (!wide)
-    await userEvent.click(
-      await overlay.findByRole('button', { name: 'Choose Agent' }),
-    );
-  // The overlay closed at the last width can still be fading out, so look for a visible copy.
   const status =
     availability === 'not_installed' ? 'Not installed' : 'Not signed in';
-  await waitFor(() =>
-    expect(
-      overlay.getAllByText(status).some((element) => element.checkVisibility()),
-    ).toBe(true),
-  );
-  await expect(
-    overlay.getByRole('button', { name: `Select ${agent.label}` }),
-  ).toBeDisabled();
-  recorder.reset();
-  await userEvent.click(
-    overlay.getByRole('button', { name: `Set up ${agent.label}` }),
-  );
-  await expect(recorder.destinations).toEqual([
-    { to: 'settings-agent', agent: agent.agent },
-  ]);
-  await userEvent.keyboard('{Escape}');
+  return {
+    parameters: {
+      trpc:
+        availability === 'not_installed'
+          ? notInstalledNewSessionMocks
+          : notSignedInNewSessionMocks,
+    },
+    globals: { mode },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
+      await expect(overlay.queryByText(status)).toBeNull();
+      await userEvent.click(
+        await canvas.findByRole('button', { name: 'Agent and model' }),
+      );
+      if (width === layoutWidths.phone)
+        await userEvent.click(
+          await overlay.findByRole('button', { name: 'Choose Agent' }),
+        );
+      // The overlay fades in, so its status turns visible a few frames after it mounts.
+      await waitFor(() => expect(overlay.getByText(status)).toBeVisible());
+      await expect(
+        overlay.getByRole('button', { name: `Select ${agent.label}` }),
+      ).toBeDisabled();
+      await expect(recorder.destinations).toEqual([]);
+      await userEvent.click(
+        overlay.getByRole('button', { name: `Set up ${agent.label}` }),
+      );
+      await expect(recorder.destinations).toEqual([
+        { to: 'settings-agent', agent: agent.agent },
+      ]);
+    },
+  };
 }
-
-export const AgentNotInstalled: Story = {
-  parameters: { trpc: notInstalledNewSessionMocks },
-  play: async ({ canvas, userEvent }) =>
-    eachLayout((wide) =>
-      expectAgentSetup(canvas, userEvent, wide, 'not_installed'),
-    ),
-};
-
-export const AgentNotSignedIn: Story = {
-  parameters: { trpc: notSignedInNewSessionMocks },
-  play: async ({ canvas, userEvent }) =>
-    eachLayout((wide) =>
-      expectAgentSetup(canvas, userEvent, wide, 'not_signed_in'),
-    ),
-};
+export const AgentNotInstalledPhoneLight = agentSetup(
+  'not_installed',
+  layoutWidths.phone,
+  'light',
+);
+export const AgentNotInstalledPhoneDark = agentSetup(
+  'not_installed',
+  layoutWidths.phone,
+  'dark',
+);
+export const AgentNotInstalledWideLight = agentSetup(
+  'not_installed',
+  layoutWidths.wide,
+  'light',
+);
+export const AgentNotInstalledWideDark = agentSetup(
+  'not_installed',
+  layoutWidths.wide,
+  'dark',
+);
+export const AgentNotSignedInPhoneLight = agentSetup(
+  'not_signed_in',
+  layoutWidths.phone,
+  'light',
+);
+export const AgentNotSignedInPhoneDark = agentSetup(
+  'not_signed_in',
+  layoutWidths.phone,
+  'dark',
+);
+export const AgentNotSignedInWideLight = agentSetup(
+  'not_signed_in',
+  layoutWidths.wide,
+  'light',
+);
+export const AgentNotSignedInWideDark = agentSetup(
+  'not_signed_in',
+  layoutWidths.wide,
+  'dark',
+);
 
 export const NoAgentReady: Story = {
   parameters: {

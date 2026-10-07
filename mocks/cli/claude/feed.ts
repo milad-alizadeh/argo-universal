@@ -45,7 +45,7 @@ export function recordedPrompt(name: string) {
     readRecording(file, 'claude-cli').payload,
     'input',
   ).find((input) => input.type === 'user');
-  if (!frame) return undefined;
+  if (!frame) return;
   const { content } = frame.message;
   if (typeof content === 'string')
     return [{ type: 'text' as const, text: content }];

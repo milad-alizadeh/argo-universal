@@ -11,7 +11,7 @@ const crashing = await writeMockCodex(directory, { recording: 'file-change', exi
 ```
 
 - `--version` prints the version of the recordings folder.
-- The mock answers `initialize`, `model/list`, `thread/start` and `turn/start`. It rejects any other method, such as `turn/interrupt`, with `-32601`.
+- The mock answers `initialize`, `model/list`, `thread/start` and `turn/start`. It answers `turn/interrupt` and rejects any other method with `-32601`.
 - `thread/start` answers with the recording's thread id only.
 - A `turn/completed` message ends a Turn. A `turn/start` past the last recorded Turn gets a `-32603` error.
 
@@ -27,7 +27,7 @@ const crashing = await writeMockCodex(directory, { recording: 'file-change', exi
 | `compaction` | A short Turn followed by `thread/compact/start`, with a context Compaction start and completion |
 | `markdown-answer` | A Turn with no tools that streams a markdown answer: heading, inline code, link, numbered list, code block and table |
 
-These come from old Argo (codex-app-server 0.157.0). The recordings that spec 0003 lists under Testing Decisions join them.
+These come from old Argo (codex-app-server 0.157.0). Fresh recordings of each Session flow join them.
 
 `compaction` was captured from the real 0.157.0 app-server on 2026-10-06. A new temporary Checkout received a short shape-color note before `thread/compact/start`. The capture keeps Turn, item, text delta and usage notifications; account, hook and environment startup traffic are excluded, and paths are normalized. Compaction starts its own Turn and keeps one item id from start to completion.
 

@@ -1,7 +1,7 @@
 import { archivedSessions, projectsList, sessionRows } from '@repo/api/mocks';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
-import { eachLayout } from '../../mocks/each-layout';
+import { eachLayout, layoutWidths } from '../../mocks/each-layout';
 import {
   emptySessionListMocks,
   sessionListMocks,
@@ -14,6 +14,7 @@ import {
   nextPageLoadingMocks,
 } from '../../mocks/sessions-list-mock';
 import { SessionsScreenPreview } from '../../mocks/sessions-screen-preview';
+import { settleViewport } from '../../mocks/settle-viewport';
 import { fails, pending } from '../../mocks/trpc-mock-link';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
 import { SessionsScreen } from './SessionsScreen';
@@ -32,10 +33,13 @@ const meta = {
 } satisfies Meta<typeof SessionsScreen>;
 export default meta;
 type Story = StoryObj<typeof meta>;
+type Mode = 'light' | 'dark';
 
-export const ProjectCollapse: Story = {
-  play: async ({ canvas, userEvent }) =>
-    eachLayout(async () => {
+function projectCollapse(width: number, mode: Mode): Story {
+  return {
+    globals: { mode },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
       await expect(
         (await canvas.findAllByText('Build the settings screen'))[0],
       ).toBeVisible();
@@ -55,8 +59,25 @@ export const ProjectCollapse: Story = {
       await expect(
         (await canvas.findAllByText('Build the settings screen'))[0],
       ).toBeVisible();
-    }),
-};
+    },
+  };
+}
+export const ProjectCollapsePhoneLight = projectCollapse(
+  layoutWidths.phone,
+  'light',
+);
+export const ProjectCollapsePhoneDark = projectCollapse(
+  layoutWidths.phone,
+  'dark',
+);
+export const ProjectCollapseWideLight = projectCollapse(
+  layoutWidths.wide,
+  'light',
+);
+export const ProjectCollapseWideDark = projectCollapse(
+  layoutWidths.wide,
+  'dark',
+);
 export const Loading: Story = {
   parameters: { trpc: { 'session.list': pending() } },
   play: async ({ canvas }) =>
@@ -89,10 +110,12 @@ export const Empty: Story = {
       ).toBeVisible();
     }),
 };
-export const ErrorAndRetry: Story = {
-  parameters: { trpc: { 'session.list': fails('Server is down') } },
-  play: async ({ canvas, userEvent }) =>
-    eachLayout(async () => {
+function errorAndRetry(width: number, mode: Mode): Story {
+  return {
+    parameters: { trpc: { 'session.list': fails('Server is down') } },
+    globals: { mode },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
       await expect(
         await canvas.findByText("Couldn't load Sessions"),
       ).toBeVisible();
@@ -100,11 +123,22 @@ export const ErrorAndRetry: Story = {
       await expect(
         await canvas.findByText("Couldn't load Sessions"),
       ).toBeVisible();
-    }),
-};
-export const Search: Story = {
-  play: async ({ canvas, userEvent }) =>
-    eachLayout(async () => {
+    },
+  };
+}
+export const ErrorAndRetryPhoneLight = errorAndRetry(
+  layoutWidths.phone,
+  'light',
+);
+export const ErrorAndRetryPhoneDark = errorAndRetry(layoutWidths.phone, 'dark');
+export const ErrorAndRetryWideLight = errorAndRetry(layoutWidths.wide, 'light');
+export const ErrorAndRetryWideDark = errorAndRetry(layoutWidths.wide, 'dark');
+function search(width: number, mode: Mode): Story {
+  return {
+    globals: { mode },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
+      await expect(canvas.queryByRole('textbox')).toBeNull();
       await userEvent.click(
         canvas.getByRole('button', { name: 'Search Sessions' }),
       );
@@ -131,11 +165,18 @@ export const Search: Story = {
       await expect(
         await canvas.findByRole('heading', { name: 'Sessions' }),
       ).toBeVisible();
-    }),
-};
-export const SearchMorph: Story = {
-  play: async ({ canvas, userEvent }) =>
-    eachLayout(async () => {
+    },
+  };
+}
+export const SearchPhoneLight = search(layoutWidths.phone, 'light');
+export const SearchPhoneDark = search(layoutWidths.phone, 'dark');
+export const SearchWideLight = search(layoutWidths.wide, 'light');
+export const SearchWideDark = search(layoutWidths.wide, 'dark');
+function searchMorph(width: number, mode: Mode): Story {
+  return {
+    globals: { mode },
+    play: async ({ canvas, userEvent }) => {
+      if ('__vitest_browser__' in globalThis) await settleViewport(width);
       const surface = canvas.getByTestId('list-search-surface');
       const measureTransition = async (button: HTMLElement) => {
         const samples = new Promise<number[]>((resolve) => {
@@ -168,32 +209,42 @@ export const SearchMorph: Story = {
         ),
       );
       const collapsedWidth = surface.getBoundingClientRect().width;
+      // One plain open and close. Closing with a query clears the list filter, and that render can swallow the whole animation, so the query is checked below.
       const openingWidths = await measureTransition(
         canvas.getByRole('button', { name: 'Search Sessions' }),
       );
-      const input = canvas.getByRole('textbox', { name: 'Search Sessions' });
-      await waitFor(() => expect(input).toHaveFocus());
+      await waitFor(() =>
+        expect(
+          canvas.getByRole('textbox', { name: 'Search Sessions' }),
+        ).toHaveFocus(),
+      );
       const expandedWidth = surface.getBoundingClientRect().width;
       await expect(expandedWidth).toBeGreaterThan(collapsedWidth * 3);
-      await expect(
-        openingWidths.some(
-          (width) => width > collapsedWidth + 1 && width < expandedWidth - 1,
-        ),
-      ).toBe(true);
-      await userEvent.type(input, 'settings');
       const closingWidths = await measureTransition(
         canvas.getByRole('button', { name: 'Close search' }),
       );
-      await expect(canvas.queryByRole('textbox')).toBeNull();
-      await expect(
-        closingWidths.some(
-          (width) => width > collapsedWidth + 1 && width < expandedWidth - 1,
+      await waitFor(() => expect(canvas.queryByRole('textbox')).toBeNull());
+      await waitFor(() =>
+        expect(surface.getBoundingClientRect().width).toBeCloseTo(
+          collapsedWidth,
+          0,
         ),
-      ).toBe(true);
-      await expect(surface.getBoundingClientRect().width).toBeCloseTo(
-        collapsedWidth,
-        0,
       );
+      const isBetween = (width: number) =>
+        width > collapsedWidth + 1 && width < expandedWidth - 1;
+      await expect(openingWidths.some(isBetween)).toBe(true);
+      await expect(closingWidths.some(isBetween)).toBe(true);
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Search Sessions' }),
+      );
+      await userEvent.type(
+        canvas.getByRole('textbox', { name: 'Search Sessions' }),
+        'settings',
+      );
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Close search' }),
+      );
+      await waitFor(() => expect(canvas.queryByRole('textbox')).toBeNull());
       await userEvent.click(
         canvas.getByRole('button', { name: 'Search Sessions' }),
       );
@@ -207,21 +258,32 @@ export const SearchMorph: Story = {
       );
       await userEvent.keyboard('{Escape}');
       await waitFor(() => expect(getComputedStyle(surface).opacity).toBe('0'));
-    }),
-};
+    },
+  };
+}
+export const SearchMorphPhoneLight = searchMorph(layoutWidths.phone, 'light');
+export const SearchMorphPhoneDark = searchMorph(layoutWidths.phone, 'dark');
+export const SearchMorphWideLight = searchMorph(layoutWidths.wide, 'light');
+export const SearchMorphWideDark = searchMorph(layoutWidths.wide, 'dark');
 
-export const ArchivedFilter: Story = {
-  play: async ({ canvas, userEvent }) =>
-    eachLayout(async () => {
+function archivedFilter(width: number, mode: Mode): Story {
+  return {
+    globals: { mode },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
+      const archivedTitle = archivedSessions.sessions[0]?.title;
+      if (!archivedTitle) throw new Error('Missing archived Session mock');
+      await expect(
+        (await canvas.findAllByText('Build the settings screen'))[0],
+      ).toBeVisible();
+      await expect(canvas.queryByText(archivedTitle)).toBeNull();
       await userEvent.click(
         canvas.getByRole('button', { name: 'Filter Sessions' }),
       );
       await userEvent.click(
         within(document.body).getByRole('menuitemradio', { name: 'Archived' }),
       );
-      await expect(
-        await canvas.findByText(archivedSessions.sessions[0]?.title ?? ''),
-      ).toBeVisible();
+      await expect(await canvas.findByText(archivedTitle)).toBeVisible();
       await expect(
         canvas.queryAllByText('Build the settings screen'),
       ).toHaveLength(0);
@@ -234,11 +296,27 @@ export const ArchivedFilter: Story = {
       await expect(
         (await canvas.findAllByText('Build the settings screen'))[0],
       ).toBeVisible();
-    }),
-};
-export const Navigation: Story = {
-  play: async ({ canvas, userEvent }) =>
-    eachLayout(async () => {
+    },
+  };
+}
+export const ArchivedFilterPhoneLight = archivedFilter(
+  layoutWidths.phone,
+  'light',
+);
+export const ArchivedFilterPhoneDark = archivedFilter(
+  layoutWidths.phone,
+  'dark',
+);
+export const ArchivedFilterWideLight = archivedFilter(
+  layoutWidths.wide,
+  'light',
+);
+export const ArchivedFilterWideDark = archivedFilter(layoutWidths.wide, 'dark');
+function navigation(width: number, mode: Mode): Story {
+  return {
+    globals: { mode },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
       recorder.reset();
       await userEvent.click(
         canvas.getByRole('button', { name: 'New Session' }),
@@ -275,8 +353,13 @@ export const Navigation: Story = {
         { to: 'settings-project', name: 'Example Project' },
       ]);
       await expect(heading).toHaveAttribute('aria-expanded', 'true');
-    }),
-};
+    },
+  };
+}
+export const NavigationPhoneLight = navigation(layoutWidths.phone, 'light');
+export const NavigationPhoneDark = navigation(layoutWidths.phone, 'dark');
+export const NavigationWideLight = navigation(layoutWidths.wide, 'light');
+export const NavigationWideDark = navigation(layoutWidths.wide, 'dark');
 export const LargeList: Story = {
   parameters: { trpc: largeSessionListMocks },
   play: async ({ canvas, canvasElement }) =>

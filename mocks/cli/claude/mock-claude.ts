@@ -1,6 +1,7 @@
 // A stand-in `claude` that the Agent SDK drives over stream-json. Each prompt replays the next recorded Turn.
 import { randomUUID } from 'node:crypto';
 import type {
+  AccountInfo,
   AskUserQuestionInput,
   PermissionResult,
   SDKAssistantMessage,
@@ -177,6 +178,11 @@ const initializeResponse: SDKControlInitializeResponse = {
   account: { subscriptionType: 'Claude Max', apiProvider: 'firstParty' },
 };
 
+const apiKeyAccount: AccountInfo = {
+  apiKeySource: 'ANTHROPIC_API_KEY',
+  apiProvider: 'firstParty',
+};
+
 const isInit = (frame: Frame) =>
   frame.type === 'system' && frame.subtype === 'init';
 const crashAfter = environment.exitMidTurn
@@ -213,17 +219,42 @@ function playTurn() {
     send(noTurnFrame(turnIndex));
     return;
   }
+  // A CLI that has sent no frame of the Turn yet sends all of them after it answers `interrupt`.
+  if (environment.scenario.blockTurnStart) {
+    heldFrames = [
+      ...(turn.some(isInit) ? [] : [initFrame()]),
+      ...turn.filter((frame) => frame !== INTERRUPT_POINT),
+    ];
+    return;
+  }
   if (!turn.some(isInit)) send(initFrame());
   replay(turn);
 }
 
 function answer(subtype: string | undefined) {
-  if (subtype === undefined) return undefined;
+  if (subtype === undefined) return;
   if (subtype !== 'initialize') return recordedAnswers.get(subtype);
-  const response = recordedAnswers.get(subtype) ?? initializeResponse;
+  // The recording's answer to `initialize` is the CLI's own, matched by request id.
+  const response =
+    (recordedAnswers.get(subtype) as
+      | SDKControlInitializeResponse
+      | undefined) ?? initializeResponse;
+  return {
+    ...response,
+    account: signedInAccount(response.account),
+  } satisfies SDKControlInitializeResponse;
+}
+
+function signedInAccount(recorded: AccountInfo): AccountInfo {
   // A CLI nobody signed in to still starts, with an account that has no subscription.
-  if (environment.availability !== 'not_signed_in') return response;
-  return { ...(response as Record<string, unknown>), account: {} };
+  if (environment.availability === 'not_signed_in') return {};
+  // A key that reaches the CLI, or a scenario that fakes one, replaces the subscription.
+  if (
+    process.env.ANTHROPIC_API_KEY ||
+    environment.scenario.account === 'apiKey'
+  )
+    return apiKeyAccount;
+  return recorded;
 }
 
 serveJsonLines<Output>((input) => {
@@ -270,8 +301,7 @@ serveJsonLines<Output>((input) => {
   if (input.type === 'user') return playTurn();
   if (input.type !== 'control_request') return;
   const subtype = input.request.subtype;
-  if (subtype === 'initialize' && process.env.MOCK_CLI_BLOCK_INITIALIZE === '1')
-    return;
+  if (subtype === 'initialize' && environment.scenario.blockInitialize) return;
   const response = answer(subtype);
   send({
     type: 'control_response',

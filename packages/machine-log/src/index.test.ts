@@ -9,7 +9,6 @@ import { createMachineLog } from './index';
 
 afterEach(() => {
   vi.useRealTimers();
-  vi.restoreAllMocks();
 });
 
 it('writes a timestamped JSON line describing an actor snapshot', () => {

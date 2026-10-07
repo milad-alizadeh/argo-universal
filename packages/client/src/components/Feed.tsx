@@ -266,7 +266,12 @@ function FeedList({
     if (list.current?.getState().isNearStart) onStartReached();
   });
   const oldestKey = entries[0] && entryKey(entries[0]);
-  useEffect(() => requestOlderIfNearTop(), [oldestKey]);
+  const askedAtOldestKey = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (askedAtOldestKey.current === oldestKey) return;
+    askedAtOldestKey.current = oldestKey;
+    requestOlderIfNearTop();
+  }, [oldestKey]);
 
   // Null while the reader is at the end.
   const [newestKeyWhenLeftEnd, setNewestKeyWhenLeftEnd] = useState<

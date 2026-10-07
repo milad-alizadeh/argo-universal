@@ -1,0 +1,16 @@
+{
+  "name": "@repo/tools",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@repo/vitest": "workspace:*",
+    "vitest": "catalog:"
+  }
+}

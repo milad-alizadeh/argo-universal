@@ -1,0 +1,11 @@
+language js
+
+// Biome 2.5.15 noNodejsModules misses the prefix-only builtins node:sqlite and node:sea; drop this file when it knows them.
+or {
+  JsModuleSource() as $source,
+  `import($source)`,
+  `require($source)`
+} where {
+  $source <: r"['\"]node:(?:sqlite|sea)(?:/.*)?['\"]",
+  register_diagnostic(span=$source, message="This package never imports Node APIs (ADR-0013).")
+}

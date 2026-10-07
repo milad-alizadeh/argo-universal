@@ -8,7 +8,7 @@ const config: ForgeConfig = {
     asar: true,
   },
   rebuildConfig: {},
-  // Release packaging is out of scope (spec section 1), so the generated makers are removed.
+  // Release packaging is out of scope for now, so the generated makers are removed.
   makers: [],
   plugins: [
     new VitePlugin({

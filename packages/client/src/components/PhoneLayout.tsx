@@ -20,7 +20,10 @@ export function PhoneLayout({ destination, children }: PhoneLayoutProps) {
   // Mounting the next section stalls the first frame, so a picked section's drawer shuts once it has mounted.
   const deferClose = useRef(false);
   const pendingSection = useRef<ShellSection | null>(null);
+  const shownSection = useRef(section);
   useEffect(() => {
+    if (shownSection.current === section) return;
+    shownSection.current = section;
     const frame = requestAnimationFrame(() => setDrawerOpen(false));
     return () => cancelAnimationFrame(frame);
   }, [section]);

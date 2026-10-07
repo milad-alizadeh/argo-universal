@@ -1,0 +1,17 @@
+language js
+
+// A relative specifier that climbs into packages/, tooling/ or apps/ bypasses package.json, pnpm isolation and exports.
+or {
+  JsModuleSource() as $source,
+  `import($source)`,
+  `require($source)`
+} where {
+  $source <: r"['\"](?:\.\./)+(?:packages|tooling|apps)/.*",
+  // A mock CLI may reach its own Agent's adapter folder: mocks/cli/<agent>/ -> packages/agents/<agent>/ (AGENTS.md, ADR-0015).
+  not and {
+    $filename <: r".*/mocks/cli/([^/]+)/.*"($agent),
+    $source <: r"['\"](?:\.\./)+packages/agents/([^/]+)/.*"($target),
+    $agent <: $target
+  },
+  register_diagnostic(span=$source, message="Import another workspace package by its name and an exports entry, not by a relative path into packages/, tooling/ or apps/ (A2).")
+}

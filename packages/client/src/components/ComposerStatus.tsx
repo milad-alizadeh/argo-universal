@@ -22,6 +22,7 @@ import Animated, {
 import Svg, { Circle } from 'react-native-svg';
 import { withUniwind } from 'uniwind';
 import { fullTurnDegrees } from '#lib/motion';
+import { withOccurrenceKeys } from '#lib/occurrence-keys';
 import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
@@ -165,16 +166,18 @@ export function ComposerPlan({
       )}
     >
       <View className="flex-row gap-0.5">
-        {entries.map((entry, index) => (
-          <View
-            key={`${index}:${entry.content}`}
-            className={cn(
-              'h-1 rounded-xs bg-border',
-              wide ? 'w-3.5' : 'w-1.5',
-              entry.status === 'completed' && 'bg-foreground',
-            )}
-          />
-        ))}
+        {withOccurrenceKeys(entries, (entry) => entry.content).map(
+          ({ item: entry, key }) => (
+            <View
+              key={key}
+              className={cn(
+                'h-1 rounded-xs bg-border',
+                wide ? 'w-3.5' : 'w-1.5',
+                entry.status === 'completed' && 'bg-foreground',
+              )}
+            />
+          ),
+        )}
       </View>
       <Text
         selectable={false}

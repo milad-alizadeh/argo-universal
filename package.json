@@ -14,8 +14,8 @@
     "format": "biome check --write .",
     "postinstall": "sherif",
     "quality:dead-code": "knip --no-progress --max-issues 0",
-    "quality:duplication": "jscpd --config .jscpd.json apps packages tooling tools e2e mocks",
-    "quality": "sherif && biome check . && turbo run check-types test --continue=dependencies-successful",
+    "quality:duplication": "jscpd --config .jscpd.json --baseline .jscpd-baseline.json --fail-on-new-clones=0 apps packages tooling tools e2e mocks",
+    "quality": "sherif && biome check --error-on-warnings . && node tools/check-comments.mts && pnpm quality:duplication && turbo run check-types test --continue=dependencies-successful",
     "sherif": "sherif",
     "test": "vitest run",
     "test:e2e": "turbo run test:web --filter=@repo/e2e",
@@ -30,7 +30,8 @@
     "turbo": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "zod": "catalog:"
   },
   "packageManager": "pnpm@12.8.1",
   "engines": {

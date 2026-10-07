@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Platform, ScrollView, View } from 'react-native';
+import { withOccurrenceKeys } from '#lib/occurrence-keys';
 import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
 import { Collapsible, CollapsibleContent } from '#primitives/collapsible';
@@ -169,17 +170,18 @@ export function DiffView({ file, inline = false }: DiffViewProps) {
             contentContainerClassName="min-w-full"
           >
             <View className="min-w-full">
-              {visibleHunks.map((hunk, index) => (
-                <View key={`${hunk.header}-${index}`}>
-                  {hunk.lines.map((line, lineIndex) => (
-                    <CodeLine
-                      key={`${lineIndex}-${line.kind}`}
-                      line={line}
-                      inline={inline}
-                    />
-                  ))}
-                </View>
-              ))}
+              {withOccurrenceKeys(visibleHunks, (hunk) => hunk.header).map(
+                ({ item: hunk, key }) => (
+                  <View key={key}>
+                    {withOccurrenceKeys(
+                      hunk.lines,
+                      (line) => `${line.kind}:${line.text}`,
+                    ).map(({ item: line, key: lineKey }) => (
+                      <CodeLine key={lineKey} line={line} inline={inline} />
+                    ))}
+                  </View>
+                ),
+              )}
             </View>
           </ScrollView>
         </ScrollView>

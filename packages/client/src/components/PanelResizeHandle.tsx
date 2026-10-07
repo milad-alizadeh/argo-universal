@@ -44,7 +44,7 @@ export function PanelResizeHandle({
             startingWidth.current + gesture.dx * current.current.direction,
           ),
       }),
-    [current, startingWidth],
+    [],
   );
   return (
     <View

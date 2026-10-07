@@ -194,7 +194,7 @@ const waitingForSupervisorExit = (
     },
   });
 
-// Spec 0002 section 10: Electron makes sure a Supervisor runs, and on quit stops only one that it started.
+// Electron makes sure a Supervisor runs, and on quit stops only one that it started.
 export const serverConnectionMachine = serverSetup.createMachine({
   id: 'serverConnection',
   context: ({ input }) => ({

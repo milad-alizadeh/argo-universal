@@ -36,6 +36,7 @@ describe.each(Object.entries(changesMocks))(
     });
 
     it('counts each diff its own added and removed lines', () => {
+      expect(mock.summary.files).toBe(mock.files.length);
       for (const file of mock.files) {
         const lines = mock.diffs[file.path]?.patch.text.split('\n') ?? [];
         const binary = lines.some((line) => line.startsWith('Binary files '));

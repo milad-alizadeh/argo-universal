@@ -127,13 +127,16 @@ export const SessionRow = memo(function SessionRow({
                   className="shrink-0 flex-row items-center gap-1.5"
                 >
                   <View className="w-session-plan shrink-0 flex-row gap-0.5">
-                    {Array.from({ length: plan.total }, (_, index) => (
+                    {Array.from({ length: plan.total }, (_, index) => ({
+                      step: index + 1,
+                      position: index,
+                    })).map(({ step, position }) => (
                       <View
-                        key={index}
+                        key={step}
                         className={cn(
                           'h-1 min-w-0 flex-1 rounded-full bg-foreground/15',
-                          index < plan.done && 'bg-muted-foreground',
-                          index === plan.done && 'bg-foreground',
+                          position < plan.done && 'bg-muted-foreground',
+                          position === plan.done && 'bg-foreground',
                         )}
                       />
                     ))}

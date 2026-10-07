@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { View } from 'react-native';
 import type { ShellPaneProps } from './ShellPane';
 
@@ -27,14 +27,18 @@ export function ShellPane({
     offset,
     contentWidth: contentWidth ?? width,
     transitionKey,
-    frameWidth: width,
+    frameWidth: Math.max(width, contentWidth ?? width),
   });
   const stableContentWidth =
     contentWidth ?? (width > 0 ? width : previous.current.contentWidth);
-  const frameWidth = useMemo(
-    () => Math.max(width, previous.current.width, stableContentWidth),
-    [width, stableContentWidth, transitionKey],
-  );
+  // The frame keeps its width until the transition, width or content width changes, so a running animation's clip holds.
+  const unchanged =
+    previous.current.transitionKey === transitionKey &&
+    previous.current.width === width &&
+    previous.current.contentWidth === stableContentWidth;
+  const frameWidth = unchanged
+    ? previous.current.frameWidth
+    : Math.max(width, previous.current.width, stableContentWidth);
   const surfaceWidth = Math.max(
     1,
     width || previous.current.width || stableContentWidth,

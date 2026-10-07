@@ -1,5 +1,5 @@
+import { toNativeTokenValue } from '@repo/uniwind/native-token-values';
 import { describe, expect, it } from 'vitest';
-import { toNativeTokenValue } from '../../../tooling/uniwind/native-token-values';
 
 describe('native theme token values', () => {
   it('preserves radius geometry in native points', () => {

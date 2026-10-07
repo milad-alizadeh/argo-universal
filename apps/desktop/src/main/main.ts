@@ -38,7 +38,7 @@ registerAppScheme();
 
 const serverUrl = (address: ServerAddress) => `ws://127.0.0.1:${address.port}`;
 
-// Makes sure a Supervisor runs; on quit it stops only one that it started (spec 0002 section 10).
+// Makes sure a Supervisor runs; on quit it stops only one that it started.
 const home = resolveHome();
 const inspection = createNodeMachineInspection({
   home,
@@ -152,9 +152,7 @@ const start = () => {
 };
 
 // A second launch hands over to the first one, which shows its window, and quits.
-if (!app.requestSingleInstanceLock()) {
-  app.quit();
-} else {
+if (app.requestSingleInstanceLock()) {
   app.on('second-instance', () => {
     const window = BrowserWindow.getAllWindows()[0];
     if (!window) return;
@@ -164,6 +162,8 @@ if (!app.requestSingleInstanceLock()) {
   });
 
   void app.whenReady().then(start);
+} else {
+  app.quit();
 }
 
 // Quit waits for the Server machine, which stops the Supervisor only if this app started it.

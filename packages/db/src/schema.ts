@@ -9,7 +9,7 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/sqlite-core';
 
-// Table definitions only: no Node APIs, so contracts and the Apps can import this file (spec section 7).
+// Table definitions only: no Node APIs, so contracts and the Apps can import this file.
 
 export const sessionUpdateKinds = [
   'user_message',

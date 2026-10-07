@@ -9,6 +9,7 @@ import {
   mockReady,
   mockReadyEvent,
 } from '@repo/mocks/agent';
+import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import { afterAll, afterEach, expect, it, vi } from 'vitest';
 import {
   type ActorLogic,
@@ -21,7 +22,7 @@ import {
   setup,
   waitFor,
 } from 'xstate';
-import { adjacencyMapToArray, getAdjacencyMap, TestModel } from 'xstate/graph';
+import { TestModel } from 'xstate/graph';
 import { openTestDatabase } from '#mocks/database';
 import { messageChange } from '#mocks/feed';
 import { createSessionHost, firstPrompt } from '#mocks/session';
@@ -33,10 +34,15 @@ import { type SessionMachineInput, sessionMachine } from './session-machine';
 import { toSessionSnapshot } from './session-snapshot';
 
 const cleanups: (() => void)[] = [];
+// The model paths' actors, stopped after each path.
+const actors: { stop: () => void }[] = [];
 afterEach(() => {
   for (const cleanup of cleanups.splice(0).reverse()) cleanup();
+  for (const actor of actors.splice(0)) actor.stop();
   vi.useRealTimers();
 });
+// The model paths share one database, removed after the last test.
+afterAll(() => remove());
 
 function subscribeToSession(service: ReturnType<typeof createFeedService>) {
   const controller = new AbortController();
@@ -540,11 +546,6 @@ const models = (['new', 'existing'] as const).map(
     }),
 );
 const paths = models.flatMap((model) => model.getShortestPaths());
-const actors: { stop: () => void }[] = [];
-afterEach(() => {
-  for (const actor of actors.splice(0)) actor.stop();
-  vi.useRealTimers();
-});
 
 it.each(paths.map((path, index) => [index, path] as const))(
   'walks Session model path %i with the mock Agent',
@@ -623,40 +624,15 @@ it.each(paths.map((path, index) => [index, path] as const))(
 );
 
 it('the generated paths walk every reachable transition', () => {
-  const transitionKey = (
-    from: SessionSnapshot,
-    type: string,
-    to: SessionSnapshot,
-  ) => `${key(from)} ${type} ${key(to)}`;
-  const walked = new Set(
-    paths.flatMap((path) =>
-      path.steps
-        .slice(1)
-        .map((step, index) =>
-          transitionKey(
-            path.steps[index]?.state ?? expect.unreachable(),
-            step.event.type,
-            step.state,
-          ),
-        ),
-    ),
-  );
-  let transitionCount = 0;
-  for (const model of models) {
-    for (const edge of adjacencyMapToArray(
-      getAdjacencyMap(logic, model.options),
-    )) {
-      expect(
-        walked.has(transitionKey(edge.state, edge.event.type, edge.nextState)),
-      ).toBe(true);
-      transitionCount += 1;
-    }
-  }
-  expect(transitionCount).toBeGreaterThan(0);
-  expect(paths.length).toBeLessThan(1000);
+  expect(
+    unwalkedTransitions({
+      models,
+      paths,
+      stateKey: (snapshot) => String(key(snapshot)),
+      eventKey: (event) => event.type,
+    }),
+  ).toEqual([]);
 });
-
-afterAll(remove);
 
 it('attaches live Feed updates when a subscription starts while the Session loads', async () => {
   vi.useFakeTimers();

@@ -2,6 +2,9 @@ import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import { playwright } from '@vitest/browser-playwright';
 import { defineProject } from 'vitest/config';
 
+// Above the largest waitFor budget (15 s), so a slow waitFor fails with its own message.
+const STORY_TEST_TIMEOUT_MS = 30_000;
+
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 export default defineProject({
   plugins: [
@@ -15,6 +18,9 @@ export default defineProject({
   test: {
     name: 'storybook',
     maxWorkers: 2,
+    testTimeout: STORY_TEST_TIMEOUT_MS,
+    // Zero retries: a flaky story fails like a flaky end-to-end test.
+    retry: 0,
     sequence: { groupOrder: 1 },
     exclude: ['../../packages/client/src/primitives/**'],
     setupFiles: ['./vitest.setup.ts'],

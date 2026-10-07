@@ -19,7 +19,7 @@ const fruits = [
 function SelectExample({
   size = 'default',
   disabled = false,
-  initialValue = undefined,
+  initialValue,
 }: {
   size?: 'default' | 'sm';
   disabled?: boolean;

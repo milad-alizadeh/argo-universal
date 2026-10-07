@@ -1,6 +1,6 @@
 # One Agent machine runs every adapter, and adapters are plain functions
 
-Every Agent has the same lifecycle: start or resume the vendor session, wait for a prompt, run a Turn, cancel it, stop. Spec 0002 first gave each adapter its own XState machine with these same states, so the Claude adapter and the mock Agent each carried a copy. One machine, `agentMachine` in `packages/agents/src`, now runs every adapter (owner, 2026-10-05).
+Every Agent has the same lifecycle: start or resume the vendor session, wait for a prompt, run a Turn, cancel it, stop. The first design gave each adapter its own XState machine with these same states, so the Claude adapter and the mock Agent each carried a copy. One machine, `agentMachine` in `packages/agents/src`, now runs every adapter (owner, 2026-10-05).
 
 An adapter is an `AgentAdapter` in the registry, `agentAdapters`. The registry finds it by the Session's `agent` id with `findAgentAdapter` and passes it to the Session, which passes it to the Agent machine it invokes, so the Agent machine is not built per registry. It has three parts that run a Session, and none of them imports XState:
 
@@ -8,7 +8,7 @@ An adapter is an `AgentAdapter` in the registry, `agentAdapters`. The registry f
 - `toAgentEvents(message, mappingState)` is a pure function that turns one vendor message into Agent events. Its `mappingState` lives in the Agent machine's `vendorSession` actor, which maps each message as it arrives.
 - `initialMappingState()`.
 
-It also describes its Agent before any Session starts, for `agents.list` and the New Session composer (spec 0003; owner, 2026-10-05):
+It also describes its Agent before any Session starts, for `agents.list` and the New Session composer (owner, 2026-10-05):
 
 - `label` names the Agent in the UI, and `logo` is its SVG text, so no screen names a vendor.
 - `probe(signal)` starts the vendor CLI briefly and resolves to the Agent's `availability`, its `installStep`, and the `configOptions` a New Session offers. It rejects when the CLI does not start, and the Server reports that as `unavailable`. The Server aborts the signal after a timeout. A probe applies the same sign-in rule as `connect`, so an Agent that `agents.list` shows as available can start a Session.
@@ -21,6 +21,6 @@ This follows old Argo's ADR-0047, which replaced its per-vendor machines with as
 
 ## Considered Options
 
-- A machine per adapter, as spec 0002 first said. Replaced: the copies drift, every adapter needs its own model-based tests for the same states, and the Claude machine mapped each message twice to decide whether a Turn ended.
+- A machine per adapter, as first designed. Replaced: the copies drift, every adapter needs its own model-based tests for the same states, and the Claude machine mapped each message twice to decide whether a Turn ended.
 - A stateful class per vendor, as Paseo's `ClaudeAgentSession` is. Rejected: the mapping stays a pure function that recordings drive, with its state in the machine's context.
 - Zod schemas for every vendor message. Replaced: the SDK already types its messages, and the Feed checks the result against the contract.
