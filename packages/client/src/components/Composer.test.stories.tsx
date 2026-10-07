@@ -711,6 +711,21 @@ function checkout(width: number): Story {
       );
       await expect(trigger).toHaveTextContent('Local');
       await expect(trigger).not.toHaveTextContent('New worktree');
+      await userEvent.click(trigger);
+      await expect(
+        await overlay.findByRole('button', { name: /^Local$/ }),
+      ).toHaveAttribute('aria-pressed', 'true');
+      await expect(
+        overlay.getByRole('button', { name: /^New worktree$/ }),
+      ).toHaveAttribute('aria-pressed', 'false');
+      await userEvent.click(
+        overlay.getByRole('button', { name: /^New worktree$/ }),
+      );
+      await waitFor(() =>
+        expect(overlay.queryByRole('dialog')).not.toBeInTheDocument(),
+      );
+      await expect(trigger).toHaveTextContent('New worktree');
+      await expect(trigger).not.toHaveTextContent('Local');
     },
   };
 }
