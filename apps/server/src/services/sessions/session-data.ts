@@ -53,14 +53,18 @@ const readProjectPath = (input: NewSessionInput) => {
 // Creates the Checkout only; the Session row waits until its Agent is ready, so no empty Session exists.
 export async function createSessionCheckout(
   input: NewSessionInput,
+  signal?: AbortSignal,
 ): Promise<SessionData> {
-  const checkout = await createCheckout({
-    projectPath: readProjectPath(input),
-    projectId: input.projectId,
-    sessionId: input.sessionId,
-    choice: input.checkout,
-    runtimeDirectory: input.runtimeDirectory,
-  });
+  const checkout = await createCheckout(
+    {
+      projectPath: readProjectPath(input),
+      projectId: input.projectId,
+      sessionId: input.sessionId,
+      choice: input.checkout,
+      runtimeDirectory: input.runtimeDirectory,
+    },
+    signal,
+  );
   return {
     sessionId: input.sessionId,
     projectId: input.projectId,
@@ -113,9 +117,10 @@ export function toSessionInsert(
 export async function discardSessionCheckout(
   input: NewSessionInput,
   checkout: Checkout,
+  signal?: AbortSignal,
 ) {
   if (input.checkout.type === 'worktree')
-    await discardCheckout(readProjectPath(input), checkout);
+    await discardCheckout(readProjectPath(input), checkout, signal);
 }
 
 const storedConfigValues = z.array(InitialConfigOption);
