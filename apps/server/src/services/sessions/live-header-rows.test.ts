@@ -10,7 +10,7 @@ import { countDatabaseReads, openTestDatabase } from '#mocks/database';
 import { toFeedRowWrite } from '../feed/feed-row';
 import { writerMachine } from '../feed/writer-machine';
 import { toLiveHeader } from './live-header';
-import { readLiveHeaderRows } from './live-header-rows';
+import { createLiveHeaderRowsReader } from './live-header-rows';
 
 const tool: ToolCallUpdate = {
   id: 'tool-1',
@@ -94,13 +94,12 @@ it('reads a 500-row Turn with three bounded seeks after many settled Tool calls'
       .run();
   }
   const counted = countDatabaseReads(database);
-  const rows = readLiveHeaderRows({
-    database: counted.database,
+  const rows = createLiveHeaderRowsReader({ database: counted.database })({
     writer: undefined,
     sessionId: 'session-1',
     turnId: 'turn-1',
     rows: {},
-  });
+  }).rows;
   expect(counted.metrics.rows).toBeLessThanOrEqual(4);
   expect(counted.metrics.queries).toBeLessThanOrEqual(3);
   expect(Object.keys(rows).sort()).toEqual([
@@ -152,13 +151,12 @@ it('keeps the earlier running Tool call after writer and memory overlays complet
     status: 'completed' as const,
     state: 'settled' as const,
   };
-  const rows = readLiveHeaderRows({
-    database,
+  const rows = createLiveHeaderRowsReader({ database })({
     writer,
     sessionId: 'session-1',
     turnId: 'turn-1',
     rows: { 'tool-2': completed },
-  });
+  }).rows;
   expect(rows).toEqual({ 'tool-1': tool, 'tool-2': completed });
   expect(
     toLiveHeader(
@@ -198,13 +196,12 @@ it('excludes the newest thought when it belongs to an earlier Turn', () => {
       .run();
   const counted = countDatabaseReads(database);
   expect(
-    readLiveHeaderRows({
-      database: counted.database,
+    createLiveHeaderRowsReader({ database: counted.database })({
       writer: undefined,
       sessionId: 'session-1',
       turnId: 'turn-1',
       rows: {},
-    }),
+    }).rows,
   ).toEqual({ 'tool-1': { ...tool, revision: 2 } });
   expect(counted.metrics.queries).toBeLessThanOrEqual(3);
 });
@@ -214,13 +211,12 @@ it('reads no stored rows without an active Turn', () => {
   onTestFinished(remove);
   const counted = countDatabaseReads(database);
   expect(
-    readLiveHeaderRows({
-      database: counted.database,
+    createLiveHeaderRowsReader({ database: counted.database })({
       writer: undefined,
       sessionId: 'session-1',
       turnId: null,
       rows: { 'tool-1': tool },
-    }),
+    }).rows,
   ).toEqual({});
   expect(counted.metrics).toEqual({ queries: 0, rows: 0, sessionReads: 0 });
 });
