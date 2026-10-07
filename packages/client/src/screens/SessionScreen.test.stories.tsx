@@ -1,5 +1,9 @@
 import { newSessionCatalogs, recordedFeedMocks } from '@repo/api/mocks';
-import type { FeedSyncPoint, SessionUpdate } from '@repo/contracts';
+import type {
+  FeedSnapshot,
+  FeedSyncPoint,
+  SessionUpdate,
+} from '@repo/contracts';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
 import { composerImages } from '../../mocks/composer-mock';
@@ -29,6 +33,7 @@ import {
   switchSession,
 } from '../../mocks/session-switch-preview';
 import { settleViewport } from '../../mocks/settle-viewport';
+import { createSubscriptionPublisher } from '../../mocks/subscription-publisher';
 import { type Fixtures, fails } from '../../mocks/trpc-mock-link';
 import { SessionScreen } from './SessionScreen';
 
@@ -712,3 +717,171 @@ export const FailedUploadPhoneFirstAgent = failedUpload(layoutWidths.phone, 0);
 export const FailedUploadPhoneSecondAgent = failedUpload(layoutWidths.phone, 1);
 export const FailedUploadWideFirstAgent = failedUpload(layoutWidths.wide, 0);
 export const FailedUploadWideSecondAgent = failedUpload(layoutWidths.wide, 1);
+
+const heldChoiceCatalogs = newSessionCatalogs.bothAvailable.map(
+  (agent, index) => {
+    const recording = recordedFeedMocks.find(
+      (mock) =>
+        mock.agent === `agent-${index + 1}` &&
+        mock.recording === 'edit-and-command',
+    );
+    const model = agent.configOptions.find(
+      (option) => option.category === 'model',
+    );
+    const effort = agent.configOptions.find(
+      (option) => option.category === 'thought_level',
+    );
+    if (!recording || model?.type !== 'select' || effort?.type !== 'select')
+      throw new Error(
+        'Recorded catalog needs a Feed, model and effort for each Agent.',
+      );
+    const models = model.options.flatMap((choice) =>
+      'groupId' in choice ? choice.options : [choice],
+    );
+    const efforts = effort.options.flatMap((choice) =>
+      'groupId' in choice ? choice.options : [choice],
+    );
+    const current = models.find(
+      (choice) => choice.value === model.currentValue,
+    );
+    const levels = current?._meta?.argo?.supportedEffortLevels ?? [];
+    const narrower = models.find(
+      (choice) =>
+        choice._meta?.argo?.supportsEffort &&
+        levels.some(
+          (level) =>
+            !choice._meta?.argo?.supportedEffortLevels?.includes(level),
+        ),
+    );
+    const selected = efforts.find(
+      (choice) =>
+        choice.value !== effort.currentValue &&
+        levels.includes(choice.value) &&
+        !narrower?._meta?.argo?.supportedEffortLevels?.includes(choice.value),
+    );
+    if (!selected || !narrower)
+      throw new Error(
+        'Recorded catalog needs two model effort ranges and an effort outside the narrower range.',
+      );
+    return { agent, recording, selected, narrower };
+  },
+);
+
+function heldConfiguration(width: number, agentIndex: number): Story {
+  const catalog = heldChoiceCatalogs[agentIndex];
+  if (!catalog) throw new Error('Recorded catalog needs two Agents.');
+  const { agent, recording, selected, narrower } = catalog;
+  const initial = {
+    ...recording.snapshot,
+    agent: agent.agent,
+    configOptions: agent.configOptions,
+    state: 'running' as const,
+    activeTurnId: 'held-config-turn',
+    liveHeader: runningHeader,
+  };
+  let snapshot = initial;
+  const snapshots = createSubscriptionPublisher<FeedSnapshot>();
+  const mocks: Fixtures = {
+    ...runningSessionMocks,
+    ...createFeedMocks(recording),
+    'feed.subscribe': async function* (_, signal) {
+      yield { type: 'snapshot', snapshot };
+      yield* snapshots.subscribe(signal);
+    },
+    'session.setConfigOption': ({ configId, value }) => {
+      const configOptions = snapshot.configOptions.map((option) => {
+        if (
+          option.configId !== configId ||
+          option.type !== 'select' ||
+          typeof value !== 'string'
+        )
+          return option;
+        return {
+          ...option,
+          currentValue: value,
+          _meta: {
+            ...option._meta,
+            argo: { ...option._meta?.argo, heldUntilNextTurn: true },
+          },
+        };
+      });
+      snapshot = { ...snapshot, configOptions };
+      snapshots.publish({ type: 'snapshot', snapshot });
+      return { configOptions };
+    },
+  };
+  return {
+    parameters: { trpc: mocks },
+    beforeEach: () => {
+      snapshot = initial;
+      snapshots.reset();
+      return () => snapshots.reset();
+    },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
+      await userEvent.click(
+        await canvas.findByRole('button', { name: 'Agent and model' }),
+      );
+      const overlay = within(document.body);
+      await waitFor(() =>
+        expect(
+          overlay.getByText(
+            'A Turn is running. Changes apply from the next Turn.',
+          ),
+        ).toBeVisible(),
+      );
+      await userEvent.click(
+        await overlay.findByRole('button', {
+          name: `Set effort to ${selected.name}`,
+        }),
+      );
+      const slider = overlay.getByRole('slider', { name: 'Effort' });
+      await waitFor(() =>
+        expect(slider).toHaveAttribute('aria-valuetext', selected.name),
+      );
+      await expect(
+        overlay.getByRole('button', { name: `Set effort to ${selected.name}` }),
+      ).toHaveAttribute('aria-pressed', 'true');
+      if (width === layoutWidths.phone)
+        await userEvent.click(
+          overlay.getByRole('button', { name: 'Choose model' }),
+        );
+      await userEvent.click(
+        await overlay.findByRole('button', { name: narrower.name }),
+      );
+      await waitFor(() =>
+        expect(overlay.getByRole('slider', { name: 'Effort' })).toHaveAttribute(
+          'aria-valuetext',
+          'No selection',
+        ),
+      );
+      await expect(
+        overlay.queryByRole('button', {
+          name: `Set effort to ${selected.name}`,
+        }),
+      ).not.toBeInTheDocument();
+      await expect(
+        overlay.getByText(
+          'A Turn is running. Changes apply from the next Turn.',
+        ),
+      ).toBeVisible();
+    },
+  };
+}
+
+export const HeldConfigurationPhoneAgentOne = heldConfiguration(
+  layoutWidths.phone,
+  0,
+);
+export const HeldConfigurationWideAgentOne = heldConfiguration(
+  layoutWidths.wide,
+  0,
+);
+export const HeldConfigurationPhoneAgentTwo = heldConfiguration(
+  layoutWidths.phone,
+  1,
+);
+export const HeldConfigurationWideAgentTwo = heldConfiguration(
+  layoutWidths.wide,
+  1,
+);

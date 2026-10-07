@@ -360,7 +360,7 @@ it('defaults the checkout choice to a worktree from the current branch, and the 
   expect(await checkoutChoice()).toEqual({ type: 'main' });
 });
 
-it('returns after dispatching a config choice and delivers later changes through the Feed', async () => {
+it('returns the chosen config value and delivers later Agent changes through the Feed', async () => {
   const { caller, root, streams, configOptions, services } = openServer({
     applyConfigOptions: false,
   });
@@ -389,7 +389,11 @@ it('returns after dispatching a config choice and delivers later changes through
       value: 'large',
     }),
   ).toMatchObject({
-    configOptions: [{ configId: 'model', currentValue: 'small' }],
+    configOptions: [{ configId: 'model', currentValue: 'large' }],
+  });
+  expect((await iterator.next()).value).toMatchObject({
+    type: 'snapshot',
+    snapshot: { configOptions: [{ currentValue: 'large' }] },
   });
   const stream = streams.get(sessionId);
   stream?.send({

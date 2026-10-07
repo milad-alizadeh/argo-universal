@@ -2,6 +2,7 @@ import {
   type AgentAdapter,
   type AgentCapabilities,
   type AgentCommand,
+  type AgentConfigValue,
   type AgentEvent,
   type AgentInput,
   type AgentOutput,
@@ -85,6 +86,7 @@ export interface SessionContext extends SessionData {
   permissionQueue: PendingPermission[];
   pendingElicitation: PendingElicitation | null;
   configOptions: SessionConfigOption[];
+  heldConfigValues: AgentConfigValue[];
   agentCrashes: number[];
   rejectedMessages: number;
   failure: string | null;
@@ -197,7 +199,11 @@ const sessionSetup = setup({
       enqueue.assign({
         vendorSessionId: event.vendorSessionId,
         capabilities: event.capabilities,
-        configOptions: event.configOptions,
+        configOptions: keepHeldConfigChoices(
+          event.configOptions,
+          context.configOptions,
+          context.heldConfigValues,
+        ),
         configValues: toConfigValues(event.configOptions),
       });
     }),
@@ -215,6 +221,12 @@ const sessionSetup = setup({
         { context, enqueue },
         params: { turnId: string; content: ContentBlock[] },
       ) => {
+        for (const choice of context.heldConfigValues)
+          enqueue.sendTo('agent', {
+            type: 'agent.setConfigOption',
+            ...choice,
+          } satisfies AgentCommand);
+        enqueue.assign({ heldConfigValues: [] });
         const startedAt = context.input.now();
         enqueue.assign({
           activeTurnId: params.turnId,
@@ -302,11 +314,43 @@ const sessionSetup = setup({
             set: { configValues },
           },
         });
-      enqueue.assign({ configOptions: event.configOptions, configValues });
+      enqueue.assign({
+        configOptions: keepHeldConfigChoices(
+          event.configOptions,
+          context.configOptions,
+          context.heldConfigValues,
+        ),
+        configValues,
+      });
     }),
-    forwardConfig: sendTo('agent', ({ event }) => {
+    forwardConfig: enqueueActions(({ context, event, enqueue }) => {
       assertEvent(event, 'session.setConfigOption');
-      return { ...event, type: 'agent.setConfigOption' } satisfies AgentCommand;
+      enqueue.assign({
+        configOptions: chooseConfigValue(context.configOptions, event, false),
+        heldConfigValues: context.heldConfigValues.filter(
+          (choice) => choice.configId !== event.configId,
+        ),
+      });
+      enqueue.sendTo('agent', {
+        ...event,
+        type: 'agent.setConfigOption',
+      } satisfies AgentCommand);
+    }),
+    holdConfig: assign(({ context, event }) => {
+      assertEvent(event, 'session.setConfigOption');
+      const choice = { configId: event.configId, value: event.value };
+      const previous = context.heldConfigValues;
+      const heldConfigValues = previous.some(
+        (value) => value.configId === choice.configId,
+      )
+        ? previous.map((value) =>
+            value.configId === choice.configId ? choice : value,
+          )
+        : [...previous, choice];
+      return {
+        heldConfigValues,
+        configOptions: chooseConfigValue(context.configOptions, choice, true),
+      };
     }),
     queuePermission: assign(({ context, event }) => {
       assertEvent(event, 'agent.permissionRequested');
@@ -545,6 +589,7 @@ export const sessionMachine = sessionSetup.createMachine({
     permissionQueue: [],
     pendingElicitation: null,
     configOptions: [],
+    heldConfigValues: [],
     agentCrashes: [],
     rejectedMessages: 0,
     failure: null,
@@ -695,6 +740,7 @@ export const sessionMachine = sessionSetup.createMachine({
             running: {
               initial: 'working',
               on: {
+                'session.setConfigOption': { actions: 'holdConfig' },
                 'agent.permissionRequested': {
                   target: '.awaitingPermission',
                   actions: 'queuePermission',
@@ -729,7 +775,10 @@ export const sessionMachine = sessionSetup.createMachine({
             },
             cancelling: {
               entry: ['cancelAgent', 'cancelRequests'],
-              on: { 'agent.turnEnded': { target: 'idle', actions: endedTurn } },
+              on: {
+                'session.setConfigOption': { actions: 'holdConfig' },
+                'agent.turnEnded': { target: 'idle', actions: endedTurn },
+              },
               after: {
                 cancelLimit: {
                   target: '#session.open.recovering',
@@ -788,3 +837,44 @@ export const sessionMachine = sessionSetup.createMachine({
   },
 });
 export type SessionActorRef = ActorRefFrom<typeof sessionMachine>;
+
+function chooseConfigValue(
+  options: SessionConfigOption[],
+  choice: AgentConfigValue,
+  held: boolean,
+): SessionConfigOption[] {
+  return options.map((option) => {
+    if (option.configId !== choice.configId) return option;
+    const _meta = {
+      ...option._meta,
+      argo: { ...option._meta?.argo, heldUntilNextTurn: held },
+    };
+    if (option.type === 'boolean')
+      return typeof choice.value === 'boolean'
+        ? { ...option, currentValue: choice.value, _meta }
+        : option;
+    return typeof choice.value === 'string'
+      ? { ...option, currentValue: choice.value, _meta }
+      : option;
+  });
+}
+
+function keepHeldConfigChoices(
+  options: SessionConfigOption[],
+  previous: SessionConfigOption[],
+  held: AgentConfigValue[],
+): SessionConfigOption[] {
+  const awaitingApplication = previous.filter(
+    (option) =>
+      option._meta?.argo?.heldUntilNextTurn &&
+      !options.some(
+        (reported) =>
+          reported.configId === option.configId &&
+          reported.currentValue === option.currentValue,
+      ),
+  );
+  return [...toConfigValues(awaitingApplication), ...held].reduce(
+    (current, choice) => chooseConfigValue(current, choice, true),
+    options,
+  );
+}

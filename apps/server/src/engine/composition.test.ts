@@ -2409,3 +2409,110 @@ it('updates a cached parent when its stored Subagent Turn changes', async () => 
     vi.useRealTimers();
   }
 });
+
+it.each(agentAdapters)(
+  'holds a $agent model choice until the next Turn',
+  async (adapter) => {
+    const root = await startNewSessionEngine(adapter, {
+      recording: 'interrupt',
+    });
+    const caller = await root.createCaller();
+    const { sessionId } = await caller.session.new({
+      projectId: 'project-1',
+      agent: adapter.agent,
+      checkout: { type: 'main' },
+      configOptions: [],
+      prompt: [{ type: 'text', text: 'Ask before making a choice' }],
+    });
+    await expect
+      .poll(
+        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+      )
+      .toBe('running');
+    const before = await readSnapshot(root.createCaller, sessionId);
+    const model = before.configOptions.find(
+      (option) => option.category === 'model',
+    );
+    if (model?.type !== 'select')
+      throw new Error('Recorded catalog needs model choices.');
+    const choice = model.options
+      .flatMap((entry) => ('groupId' in entry ? entry.options : [entry]))
+      .find((entry) => entry.value !== model.currentValue);
+    if (!choice) throw new Error('Recorded catalog needs a second model.');
+    const configured = await caller.session
+      .setConfigOption({
+        sessionId,
+        configId: model.configId,
+        type: 'id',
+        value: choice.value,
+      })
+      .then(
+        (result) => ({ result, error: undefined }),
+        (error: unknown) => ({ result: undefined, error }),
+      );
+    const held = await readSnapshot(root.createCaller, sessionId);
+    await caller.session.cancel({ sessionId });
+    await expect
+      .poll(
+        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+      )
+      .toBe('idle');
+    const { messageId } = await caller.session.prompt({
+      sessionId,
+      prompt: [{ type: 'text', text: 'Use the held model' }],
+    });
+    await expect
+      .poll(
+        async () =>
+          (await caller.feed.page({ sessionId, direction: 'tail' })).rows.find(
+            (row) => row.id === messageId,
+          )?.turnId,
+      )
+      .toEqual(expect.any(String));
+    const rows = (await caller.feed.page({ sessionId, direction: 'tail' }))
+      .rows;
+    const nextTurnId = rows.find((row) => row.id === messageId)?.turnId;
+    expect(
+      root.database
+        .select()
+        .from(turn)
+        .where(eq(turn.sessionId, sessionId))
+        .all(),
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: nextTurnId, model: choice.value }),
+      ]),
+    );
+    expect(configured.error).toBeUndefined();
+    expect(configured.result?.configOptions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          configId: model.configId,
+          currentValue: choice.value,
+          _meta: expect.objectContaining({
+            argo: expect.objectContaining({ heldUntilNextTurn: true }),
+          }),
+        }),
+      ]),
+    );
+    expect(held).toMatchObject({
+      configOptions: configured.result?.configOptions,
+    });
+    await expect
+      .poll(
+        async () =>
+          (await readSnapshot(root.createCaller, sessionId)).configOptions.find(
+            (option) => option.configId === model.configId,
+          )?.currentValue,
+      )
+      .toBe(choice.value);
+    await expect
+      .poll(
+        async () =>
+          (await readSnapshot(root.createCaller, sessionId)).configOptions.find(
+            (option) => option.configId === model.configId,
+          )?._meta?.argo?.heldUntilNextTurn,
+      )
+      .not.toBe(true);
+  },
+);
