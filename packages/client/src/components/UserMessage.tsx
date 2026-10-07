@@ -14,6 +14,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { withOccurrenceKeys } from '#lib/occurrence-keys';
 import { Dialog, DialogContent, DialogTitle } from '#primitives/dialog';
 import { Text } from '#primitives/text';
 import { inlineCodeClassName } from './FeedMarkdown';
@@ -34,14 +35,15 @@ type Reference = Extract<ContentBlock, { type: 'resource_link' | 'resource' }>;
 
 // Text exactly as typed, with backtick spans drawn as inline code.
 function TypedText({ text }: { text: string }) {
-  return text.split(/(`[^`\n]+`)/).map((part, index) =>
-    part.length > 2 && part.startsWith('`') && part.endsWith('`') ? (
-      <Span key={index} className={inlineCodeClassName}>
-        {part.slice(1, -1)}
-      </Span>
-    ) : (
-      part
-    ),
+  return withOccurrenceKeys(text.split(/(`[^`\n]+`)/), (part) => part).map(
+    ({ item: part, key }) =>
+      part.length > 2 && part.startsWith('`') && part.endsWith('`') ? (
+        <Span key={key} className={inlineCodeClassName}>
+          {part.slice(1, -1)}
+        </Span>
+      ) : (
+        part
+      ),
   );
 }
 
@@ -52,6 +54,7 @@ function Bubble({ text }: { text: string }) {
   const clamped = !expanded && fullHeight > shownHeight + 1;
   // "Show more" lands a layout after the bubble, which Legend List on the web misses until it next measures every row, so the Feed tells it.
   const syncLayout = useSyncLayout();
+  // biome-ignore lint/correctness/useExhaustiveDependencies(clamped): a change in clamping is the trigger, not a value the effect reads
   useLayoutEffect(() => syncLayout(), [clamped, syncLayout]);
   return (
     <View className="max-w-[70%] gap-0.5 rounded-xl bg-muted px-4 py-2.5">
@@ -180,12 +183,11 @@ export const UserMessage = memo(function UserMessage({
     <View className="items-end gap-1.5">
       {references.length > 0 && (
         <View className="max-w-full flex-row flex-wrap justify-end gap-1.5">
-          {references.map((reference, index) => (
-            <ReferenceChip
-              key={`${index}-${referenceName(reference)}`}
-              reference={reference}
-            />
-          ))}
+          {withOccurrenceKeys(references, referenceName).map(
+            ({ item: reference, key }) => (
+              <ReferenceChip key={key} reference={reference} />
+            ),
+          )}
         </View>
       )}
       {images.length > 0 && (
