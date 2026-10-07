@@ -367,7 +367,10 @@
 
     // D2: contracts imports zod, drizzle-orm and @repo/db/schema only; it declares @repo/db for /schema, so pnpm cannot stop the client import; 0 hits.
     {
-      "includes": ["packages/contracts/**"],
+      "includes": [
+        "packages/contracts/**",
+        "!packages/contracts/vitest.config.ts"
+      ],
       "linter": {
         "rules": {
           "style": {

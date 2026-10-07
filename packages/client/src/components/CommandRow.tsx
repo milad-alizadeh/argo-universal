@@ -1,4 +1,4 @@
-import type { ToolCallUpdate } from '@repo/contracts';
+import { isToolCallRunning, type ToolCallUpdate } from '@repo/contracts';
 import { CheckIcon } from 'phosphor-react-native/src/icons/Check';
 import { TerminalWindowIcon } from 'phosphor-react-native/src/icons/TerminalWindow';
 import { XIcon } from 'phosphor-react-native/src/icons/X';
@@ -26,7 +26,7 @@ export function CommandRow({
   permissionMessage,
   awaitingApproval = false,
 }: CommandRowProps) {
-  const running = row.status === 'pending' || row.status === 'in_progress';
+  const running = isToolCallRunning(row);
   const stopped = row.status === 'cancelled';
   const duration = useToolCallDuration(row, now);
   const terminal = row.content.find((content) => content.type === 'terminal');
@@ -36,22 +36,11 @@ export function CommandRow({
     row.status === 'failed' || (exitCode !== undefined && exitCode !== 0);
   const failureStatus = exitCode === undefined ? 'failed' : `exit ${exitCode}`;
   let status = duration;
-  let outcome = 'Completed';
-  switch (row.status) {
-    case 'pending':
-    case 'in_progress':
-      outcome = 'Running';
-      break;
-    case 'cancelled':
-      outcome = 'Stopped';
-      if (duration) status = `after ${duration}`;
-      break;
-    case 'failed':
-      outcome = 'Failed';
-      break;
-    case 'completed':
-      break;
-  }
+  let outcome = running ? 'Running' : 'Completed';
+  if (stopped) {
+    outcome = 'Stopped';
+    if (duration) status = `after ${duration}`;
+  } else if (row.status === 'failed') outcome = 'Failed';
   if (exitCode !== undefined && !running) outcome = `Exit ${exitCode}`;
   if (failed) status = [failureStatus, duration].filter(Boolean).join(' · ');
   const output = terminal.output.replace(/\r\n/g, '\n').replace(/\n$/, '');
