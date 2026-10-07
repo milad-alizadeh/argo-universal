@@ -6,6 +6,8 @@ packages:
   - e2e
   # Mock CLIs and their recordings, as a package so Vitest and check-types reach them.
   - mocks
+  # Repository scripts and agent hooks, as a package so turbo runs their tests.
+  - tools
 
 # Every shared dependency is pinned here; packages refer to it as "catalog:".
 catalog:

@@ -33,6 +33,12 @@
         "@repo/universal-app"
       ]
     },
+    "tools": {
+      // Each script runs by path from a package script, a hook config or by hand.
+      "entry": ["*.{mts,mjs}"],
+      // profile-shell.mjs resolves Playwright from @repo/e2e on purpose.
+      "ignoreDependencies": ["@playwright/test"]
+    },
     "packages/client": {
       // Vendored react-native-reusables components keep the kit's full export surface; screens pick from it.
       "ignore": ["src/primitives/**"]
