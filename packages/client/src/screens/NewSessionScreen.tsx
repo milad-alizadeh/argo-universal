@@ -147,8 +147,14 @@ function sendErrorMessage(
 function useStartSession(onStartFailed: () => void) {
   const trpc = useTRPC();
   const navigate = useNavigate();
-  const { draft, changeDraft, attachImages, uploadDraftAsPrompt, imageUpload } =
-    useImageDraft();
+  const {
+    draft,
+    changeDraft,
+    attachImages,
+    uploadDraftAsPrompt,
+    imageUpload,
+    imageSelectionError,
+  } = useImageDraft();
   const newSession = useMutation(
     trpc.session.new.mutationOptions({
       onSuccess: ({ sessionId }) =>
@@ -176,7 +182,9 @@ function useStartSession(onStartFailed: () => void) {
     startSession,
     clearSendErrors,
     sending: imageUpload.isPending || newSession.isPending,
-    sendError: sendErrorMessage(newSession.error, imageUpload.error),
+    sendError:
+      imageSelectionError ??
+      sendErrorMessage(newSession.error, imageUpload.error),
   };
 }
 
