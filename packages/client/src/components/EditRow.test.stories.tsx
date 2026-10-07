@@ -16,13 +16,19 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-function editPlay(
-  path: string,
-  verb: string,
-  added: string | null,
-  removed: string | null,
-  line: string,
-): NonNullable<Story['play']> {
+function editPlay({
+  path,
+  verb,
+  added,
+  removed,
+  line,
+}: {
+  path: string;
+  verb: string;
+  added: string | null;
+  removed: string | null;
+  line: string;
+}): NonNullable<Story['play']> {
   return async ({ canvas, userEvent }) => {
     if (process.env.NODE_ENV !== 'test') return;
     for (const width of [390, 1440]) {
@@ -85,33 +91,63 @@ function editPlay(
 }
 
 export const SmallEdit: Story = {
-  play: editPlay('/project/hello.txt', 'Edited', '+1', '-1', 'hello Argo'),
+  play: editPlay({
+    path: '/project/hello.txt',
+    verb: 'Edited',
+    added: '+1',
+    removed: '-1',
+    line: 'hello Argo',
+  }),
 };
 export const SmallPatch: Story = {
   args: { row: recordedEdit('agent-2') },
-  play: editPlay('/repo/app.txt', 'Edited', '+1', '-1', 'gamma'),
+  play: editPlay({
+    path: '/repo/app.txt',
+    verb: 'Edited',
+    added: '+1',
+    removed: '-1',
+    line: 'gamma',
+  }),
 };
 export const NewFile: Story = {
   args: { row: recordedEdit('agent-1', 'edit-and-command', 'add') },
-  play: editPlay('/project/notes.md', 'Added', '+4', null, '# Todo'),
+  play: editPlay({
+    path: '/project/notes.md',
+    verb: 'Added',
+    added: '+4',
+    removed: null,
+    line: '# Todo',
+  }),
 };
 export const NewFileFromPatch: Story = {
   args: { row: recordedEdit('agent-2', 'edit-and-command', 'add') },
-  play: editPlay('/repo/notes.md', 'Added', '+1', null, 'hello'),
+  play: editPlay({
+    path: '/repo/notes.md',
+    verb: 'Added',
+    added: '+1',
+    removed: null,
+    line: 'hello',
+  }),
 };
 export const DeletedFile: Story = {
   args: { row: recordedEdit('agent-2', 'edit-states', 'delete') },
-  play: editPlay(
-    '/repo/legacy.txt',
-    'Deleted',
-    null,
-    '-3',
-    'first legacy line',
-  ),
+  play: editPlay({
+    path: '/repo/legacy.txt',
+    verb: 'Deleted',
+    added: null,
+    removed: '-3',
+    line: 'first legacy line',
+  }),
 };
 export const LargeDiff: Story = {
   args: { row: recordedEdit('agent-2', 'edit-states') },
-  play: editPlay('/repo/large.txt', 'Edited', '+60', '-60', 'old value 1'),
+  play: editPlay({
+    path: '/repo/large.txt',
+    verb: 'Edited',
+    added: '+60',
+    removed: '-60',
+    line: 'old value 1',
+  }),
 };
 
 export const FailedEdit: Story = {

@@ -36,7 +36,7 @@ const httpStatus = {
 
 const openBlob = (path: string) =>
   open(path).catch((error: NodeJS.ErrnoException) => {
-    if (error.code === 'ENOENT') return undefined;
+    if (error.code === 'ENOENT') return;
     throw error;
   });
 

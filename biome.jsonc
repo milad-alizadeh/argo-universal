@@ -35,7 +35,7 @@
   },
   "overrides": [
     {
-      // Tests, stories and mocks state their inputs and expectations as literals.
+      // Tests, stories and mocks state their inputs and expectations as literals, and may be long.
       "includes": [
         "**/*.test.*",
         "**/*.stories.*",
@@ -46,7 +46,37 @@
       ],
       "linter": {
         "rules": {
-          "style": { "noMagicNumbers": "off" }
+          "style": { "noMagicNumbers": "off" },
+          "complexity": { "noExcessiveLinesPerFunction": "off" }
+        }
+      }
+    },
+    {
+      // Tests, mocks, tools and app scripts print to the terminal on purpose.
+      "includes": [
+        "**/*.test.*",
+        "**/*.mocks.*",
+        "**/mocks/**",
+        "tools/**",
+        "apps/*/scripts/**"
+      ],
+      "linter": {
+        "rules": {
+          "suspicious": { "noConsole": "off" }
+        }
+      }
+    },
+    {
+      // The four log sinks: the Engine log, the machine inspector notice, the Supervisor log and the App's machine log.
+      "includes": [
+        "apps/server/src/engine/machine.ts",
+        "apps/server/src/inspect-machines.ts",
+        "apps/server/src/supervisor/index.ts",
+        "apps/universal-app/src/app/_layout.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "suspicious": { "noConsole": "off" }
         }
       }
     },
@@ -56,9 +86,66 @@
       "linter": {
         "rules": {
           "style": { "noUselessElse": "off" },
-          "complexity": { "noUselessFragments": "off" },
+          "complexity": {
+            "noUselessFragments": "off",
+            "noExcessiveLinesPerFunction": "off",
+            "noExcessiveCognitiveComplexity": "off"
+          },
           "correctness": { "useExhaustiveDependencies": "off" },
           "suspicious": { "noArrayIndexKey": "off" }
+        }
+      }
+    },
+    {
+      // Debt list: files with a function over 120 lines, held at 250; a pull request adds an entry only with a one-line reason the reviewer accepts.
+      "includes": [
+        "apps/server/src/services/feed/feed-service.ts", // createFeedService 152: subscribe watches the Session snapshot itself until sessions offers a watcher.
+        "apps/server/src/services/sessions/session-list-reader.ts", // createSessionListReader 202, readAll 190, row map 139: shrinks when the list rules become a pure projection.
+        "apps/server/src/services/sessions/session-service.ts", // createSessionService 170: the service's verbs share one closure, and each verb is short.
+        "packages/agents/claude/connect.ts", // connect 199: one CLI process and its pending requests; the request bookkeeping moves to a helper in this file.
+        "packages/agents/codex/connect.ts", // connect 183: one app server connection and its Turn records in one closure.
+        "packages/client/src/components/Composer.tsx", // Composer 241: the Composer's state and layout read top to bottom and stay together.
+        "packages/client/src/components/ComposerStatus.tsx", // ComposerStatusControls 140: every status control in one row, judged deep.
+        "packages/client/src/components/DesktopShell.tsx", // DesktopShell 202: the desktop geometry reads top to bottom and stays long.
+        "packages/client/src/components/ShellPane.web.tsx", // ShellPane 155: one FLIP transition that stays one function.
+        "packages/client/src/components/Feed.tsx" // FeedList 124: the keep-reading-place logic can move to a hook in this file.
+      ],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noExcessiveLinesPerFunction": {
+              "level": "error",
+              "options": { "maxLines": 250, "skipBlankLines": true }
+            }
+          }
+        }
+      }
+    },
+    {
+      // Debt list: files with a function over cognitive complexity 25, held at 65; a pull request adds an entry only with a one-line reason the reviewer accepts.
+      "includes": [
+        "apps/server/src/services/sessions/live-header.ts", // toolKindLabel 30: one label per tool kind, which stays as it is.
+        "apps/server/src/services/sessions/session-list-reader.ts", // row map 34: drops when the list rules become a pure, table-tested projection.
+        "packages/agents/claude/connect.ts", // run 29: one case per Agent command.
+        "packages/agents/codex/connect.ts", // run 34: one case per Agent command.
+        "packages/agents/codex/to-agent-events.ts", // toAgentEvents 30: one case per vendor notification, which stays as it is.
+        "packages/client/src/components/Composer.tsx", // Composer 42: drops when the send button state is derived once.
+        "packages/client/src/components/PlanProposalCard.tsx", // PlanProposalInteraction 30: one card's layout states in its markup.
+        "packages/client/src/feed/to-feed-view.ts", // toFeedView 47, explorationLines 26: the grouping decisions get names in this file.
+        "packages/client/src/components/Composer.test.stories.tsx", // Pickers play 65: splits into one story per viewport and Agent.
+        "packages/client/src/components/EditRow.test.stories.tsx", // editPlay 33: takes a summary flag instead of branching.
+        "mocks/cli/claude/mock-claude.ts", // input handler 36: one branch per message type and pending request.
+        "mocks/cli/codex/mock-codex.ts", // input handler 45: one branch per message type and pending request.
+        "tools/generate-request-mocks.mts" // recording map 47: replays each recording into a Feed.
+      ],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noExcessiveCognitiveComplexity": {
+              "level": "error",
+              "options": { "maxAllowedComplexity": 65 }
+            }
+          }
         }
       }
     },

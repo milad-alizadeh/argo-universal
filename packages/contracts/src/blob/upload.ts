@@ -11,9 +11,7 @@ export const BlobUploadInput = z
   )
   .refine((form) => {
     let entries = 0;
-    form.forEach(() => {
-      entries += 1;
-    });
+    for (const _ of form) entries += 1;
     return entries === 1 && form.get('file') instanceof Blob;
   }, 'Expected FormData with one file in the file field');
 export type BlobUploadInput = z.infer<typeof BlobUploadInput>;

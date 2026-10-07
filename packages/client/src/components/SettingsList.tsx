@@ -55,13 +55,19 @@ export function SettingsList({
     else device = 'This iPhone';
   }
 
-  function row(
-    label: string,
-    icon: PhosphorIcon,
-    destination: NavigationDestination,
-    state?: string,
+  function row({
+    label,
+    icon,
+    destination,
+    state,
     attention = false,
-  ) {
+  }: {
+    label: string;
+    icon: PhosphorIcon;
+    destination: NavigationDestination;
+    state?: string;
+    attention?: boolean;
+  }) {
     const selected =
       wide &&
       (destination.to === selectedDestination?.to ||
@@ -69,7 +75,7 @@ export function SettingsList({
           selectedDestination?.to === 'settings-project') ||
         (destination.to === 'settings-agents' &&
           selectedDestination?.to === 'settings-agent'));
-    let rowStatus: ReactNode;
+    let rowStatus: ReactNode = null;
     if (attention) {
       rowStatus = (
         <View
@@ -87,8 +93,6 @@ export function SettingsList({
           {state}
         </Text>
       );
-    } else {
-      rowStatus = null;
     }
     return (
       <Pressable
@@ -126,50 +130,55 @@ export function SettingsList({
       contentContainerClassName="px-gutter-list pt-2 pb-4 wide:px-2 wide:pt-0 wide:pb-3"
     >
       <Group title={serverName ? `Server · ${serverName}` : 'Server'}>
-        {row(
-          'Projects',
-          FolderIcon,
-          { to: 'settings-projects' },
-          String(projects.length),
-          projectsNeedAttention,
-        )}
-        {row(
-          'Agents',
-          RobotIcon,
-          { to: 'settings-agents' },
-          String(agents.length),
-          agentsNeedAttention,
-        )}
-        {row('Accounts', KeyIcon, { to: 'settings-accounts' }, accountState)}
-        {row(
-          'Connection',
-          HardDrivesIcon,
-          { to: 'settings-connection' },
-          connectionState ?? (wide ? 'This Mac' : 'Direct'),
-        )}
+        {row({
+          label: 'Projects',
+          icon: FolderIcon,
+          destination: { to: 'settings-projects' },
+          state: String(projects.length),
+          attention: projectsNeedAttention,
+        })}
+        {row({
+          label: 'Agents',
+          icon: RobotIcon,
+          destination: { to: 'settings-agents' },
+          state: String(agents.length),
+          attention: agentsNeedAttention,
+        })}
+        {row({
+          label: 'Accounts',
+          icon: KeyIcon,
+          destination: { to: 'settings-accounts' },
+          state: accountState,
+        })}
+        {row({
+          label: 'Connection',
+          icon: HardDrivesIcon,
+          destination: { to: 'settings-connection' },
+          state: connectionState ?? (wide ? 'This Mac' : 'Direct'),
+        })}
         {wide &&
-          row(
-            'Devices',
-            DeviceMobileIcon,
-            { to: 'settings-devices' },
-            deviceCount === undefined ? undefined : String(deviceCount),
-          )}
+          row({
+            label: 'Devices',
+            icon: DeviceMobileIcon,
+            destination: { to: 'settings-devices' },
+            state: deviceCount === undefined ? undefined : String(deviceCount),
+          })}
       </Group>
       <View className="pt-3">
         <Group title={device}>
-          {row(
-            'Appearance',
-            CircleHalfIcon,
-            { to: 'settings-appearance' },
-            appearanceState,
-          )}
+          {row({
+            label: 'Appearance',
+            icon: CircleHalfIcon,
+            destination: { to: 'settings-appearance' },
+            state: appearanceState,
+          })}
           {wide &&
-            row(
-              'Notifications',
-              BellIcon,
-              { to: 'settings-notifications' },
-              notificationsState,
-            )}
+            row({
+              label: 'Notifications',
+              icon: BellIcon,
+              destination: { to: 'settings-notifications' },
+              state: notificationsState,
+            })}
         </Group>
       </View>
     </ScrollView>

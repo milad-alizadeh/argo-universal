@@ -9,6 +9,8 @@ Argo for iOS, Android, web, and macOS: one Expo app, an Electron shell, and a lo
 - Specs: GitHub Issues, as transient briefs for implementation; never commit one. Build a spec as written. When it is unclear or wrong, stop and ask.
 - Storybook: before authoring stories or testing UI components, read `docs/agents/storybook.md`.
 - Designs: Paper. Before you edit a Paper file or build UI from one, read `docs/agents/paper.md`. It holds until Paper ships component instances.
+- Code shape: before you add a function, file or module, or answer the complexity alarm, read `docs/agents/code-shape.md`.
+- Tests: before you write or change a test, read `docs/agents/testing.md`.
 - Hooks: when a hook blocks you, or before you change a hook config or `tools/agent-hooks.mts`, read `docs/agents/hooks.md`.
 
 ## Agent skills
@@ -34,6 +36,7 @@ One `GLOSSARY.md` and one `docs/adr/` folder at the repo root ("single-context")
 - Only `packages/db` opens a database client.
 - Tests fake outside dependencies at their port, and never `vi.mock` a relative or `@repo/*` module.
 - End-to-end tests import no `vitest`, no `node:sqlite` and no `@repo/*` other than mocks. They await every action and never use `waitForTimeout`, `networkidle` or `force`.
+- A function over cognitive complexity 25 or with more than four parameters fails. Answer it with `docs/agents/code-shape.md`.
 
 ## Rules that no tool checks
 
