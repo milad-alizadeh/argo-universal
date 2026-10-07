@@ -9,6 +9,7 @@ import {
 import type {
   AgentAdapter,
   AgentConnectInput,
+  AgentMapping,
   AgentReady,
 } from './agent-adapter';
 import type {
@@ -60,7 +61,16 @@ function startVendorSession(
       {
         message: (message) => {
           if (controller.signal.aborted) return;
-          const mapped = adapter.toAgentEvents(message, mappingState);
+          let mapped: AgentMapping<unknown>;
+          try {
+            mapped = adapter.toAgentEvents(message, mappingState);
+          } catch (error) {
+            sendEvent({
+              type: 'agent.messageRejected',
+              reason: describeError(error),
+            });
+            return;
+          }
           mappingState = mapped.mappingState;
           mapped.events.forEach(sendEvent);
         },

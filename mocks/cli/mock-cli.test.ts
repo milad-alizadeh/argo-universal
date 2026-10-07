@@ -15,6 +15,7 @@ it('gives every scenario field its default when the variable is absent', () => {
   expect(readMockCliEnvironment().scenario).toEqual({
     processFile: null,
     blockInitialize: false,
+    malformedLine: false,
     blockTurnStart: false,
     turnResponseAfterNextStart: false,
     requestBeforeStartResponse: false,

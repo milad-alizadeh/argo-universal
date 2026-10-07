@@ -23,6 +23,7 @@ const SCENARIO_VARIABLE = 'MOCK_CLI_SCENARIO';
 const MockCliScenario = z.strictObject({
   processFile: z.string().nullable().default(null),
   blockInitialize: z.boolean().default(false),
+  malformedLine: z.boolean().default(false),
   blockTurnStart: z.boolean().default(false),
   turnResponseAfterNextStart: z.boolean().default(false),
   requestBeforeStartResponse: z.boolean().default(false),

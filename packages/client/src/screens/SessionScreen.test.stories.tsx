@@ -1,6 +1,9 @@
+import { newSessionCatalogs, recordedFeedMocks } from '@repo/api/mocks';
+import type { FeedSyncPoint, SessionUpdate } from '@repo/contracts';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
 import { eachLayout, layoutWidths } from '../../mocks/each-layout';
+import { createFeedMocks } from '../../mocks/feed-mock';
 import {
   arrivingMessage,
   arrivingRowSessionMocks,
@@ -446,3 +449,169 @@ export const AgentFailedToOpen: Story = {
     ).toBeVisible();
   },
 };
+
+const closureCatalogs = newSessionCatalogs.bothAvailable.map((agent, index) => {
+  const recording = recordedFeedMocks.find(
+    (mock) =>
+      mock.agent === `agent-${index + 1}` &&
+      mock.recording === 'edit-and-command',
+  );
+  const lastRow = recording?.rows.at(-1);
+  if (!recording || !lastRow)
+    throw new Error(`Recorded catalog needs a Feed for ${agent.label}.`);
+  const newest: SessionUpdate = {
+    id: 'newest-held',
+    sessionId: 'session-1',
+    turnId: 'held-turn',
+    position: lastRow.position + 1,
+    revision: recording.snapshot.maxRevision + 1,
+    state: 'settled',
+    sessionUpdate: 'agent_message',
+    messageId: 'newest-held',
+    content: [{ type: 'text', text: 'Newest held message' }],
+  };
+  const snapshot = {
+    ...recording.snapshot,
+    agent: agent.agent,
+    state: 'idle' as const,
+    activeTurnId: null,
+    liveHeader: null,
+    configOptions: agent.configOptions,
+  };
+  return {
+    newest,
+    snapshot,
+    mocks: createFeedMocks({ ...recording, snapshot }),
+  };
+});
+
+function closedFailure(width: number, agentIndex: 0 | 1): Story {
+  const catalog = closureCatalogs[agentIndex];
+  if (!catalog) throw new Error('Recorded catalog needs both Agents.');
+  const inputs: (FeedSyncPoint | null)[] = [];
+  const mocks: Fixtures = {
+    ...idleSessionMocks,
+    ...catalog.mocks,
+    'feed.subscribe': async function* ({ after }) {
+      inputs.push(after);
+      yield { type: 'snapshot', snapshot: catalog.snapshot };
+      if (inputs.length === 1) {
+        yield {
+          type: 'row.upsert',
+          row: catalog.newest,
+          rev: catalog.newest.revision,
+        };
+        yield { type: 'closed', failure: agentFailure };
+      }
+    },
+  };
+  return {
+    parameters: { trpc: mocks },
+    beforeEach: () => {
+      inputs.splice(0);
+    },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
+      const alert = await canvas.findByRole('alert');
+      await expect(alert).toHaveTextContent("Couldn't open the Session");
+      await expect(alert).toHaveTextContent(agentFailure);
+      await expect(
+        canvas.queryByRole('textbox', { name: 'Message' }),
+      ).toBeNull();
+      await userEvent.click(
+        within(alert).getByRole('button', { name: 'Retry' }),
+      );
+      await expect(
+        await canvas.findByText('Newest held message'),
+      ).toBeVisible();
+      await expect(canvas.queryByRole('alert')).toBeNull();
+      await expect(inputs).toHaveLength(2);
+      await expect(inputs[1]).toEqual({
+        epoch: catalog.snapshot.epoch,
+        revision: catalog.newest.revision,
+      });
+    },
+  };
+}
+
+export const ClosedFailurePhoneFirstAgent = closedFailure(
+  layoutWidths.phone,
+  0,
+);
+export const ClosedFailurePhoneSecondAgent = closedFailure(
+  layoutWidths.phone,
+  1,
+);
+export const ClosedFailureWideFirstAgent = closedFailure(layoutWidths.wide, 0);
+export const ClosedFailureWideSecondAgent = closedFailure(layoutWidths.wide, 1);
+
+function resumesClosedFeed(width: number, agentIndex: 0 | 1): Story {
+  const catalog = closureCatalogs[agentIndex];
+  if (!catalog) throw new Error('Recorded catalog needs both Agents.');
+  const inputs: (FeedSyncPoint | null)[] = [];
+  let prompts = 0;
+  const mocks: Fixtures = {
+    ...idleSessionMocks,
+    ...catalog.mocks,
+    'session.prompt': () => {
+      prompts += 1;
+      return { messageId: 'next-command' };
+    },
+    'feed.subscribe': async function* ({ after }) {
+      inputs.push(after);
+      yield { type: 'snapshot', snapshot: catalog.snapshot };
+      yield {
+        type: 'row.upsert',
+        row: catalog.newest,
+        rev: catalog.newest.revision,
+      };
+      if (inputs.length === 1) yield { type: 'closed', failure: null };
+    },
+  };
+  return {
+    parameters: { trpc: mocks },
+    beforeEach: () => {
+      inputs.splice(0);
+      prompts = 0;
+    },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
+      await expect(
+        await canvas.findByText('Newest held message'),
+      ).toBeVisible();
+      await expect(canvas.queryByRole('alert')).toBeNull();
+      await expect(inputs).toHaveLength(1);
+      await expect(prompts).toBe(0);
+      await userEvent.type(
+        canvas.getByRole('textbox', { name: 'Message' }),
+        'Continue the Session',
+      );
+      await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
+      await waitFor(() => expect(prompts).toBe(1));
+      await waitFor(() => expect(inputs).toHaveLength(2));
+      await expect(inputs[1]).toEqual({
+        epoch: catalog.snapshot.epoch,
+        revision: catalog.newest.revision,
+      });
+      await expect(canvas.getByText('Newest held message')).toBeVisible();
+      await expect(canvas.queryByRole('alert')).toBeNull();
+    },
+  };
+}
+
+export const ResumesClosedFeedPhoneFirstAgent = resumesClosedFeed(
+  layoutWidths.phone,
+  0,
+);
+export const ResumesClosedFeedPhoneSecondAgent = resumesClosedFeed(
+  layoutWidths.phone,
+  1,
+);
+export const ResumesClosedFeedWideFirstAgent = resumesClosedFeed(
+  layoutWidths.wide,
+  0,
+);
+export const ResumesClosedFeedWideSecondAgent = resumesClosedFeed(
+  layoutWidths.wide,
+  1,
+);

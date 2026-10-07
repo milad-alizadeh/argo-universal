@@ -23,6 +23,7 @@ import { Text } from '#primitives/text';
 // Relative, so Metro picks the .ios file.
 import { ChoiceMenu } from '../components/ChoiceMenu';
 import { FloatingActionButton } from '../components/FloatingActionButton';
+import { useResubscribeOnReconnect } from '../connection/context';
 import { useNavigate } from '../navigation/context';
 import { useWide } from '../navigation/use-wide';
 import { useTRPC } from '../trpc/context';
@@ -145,7 +146,7 @@ export function SessionsScreen({ query, archived }: SessionsScreenProps) {
       },
     ),
   );
-  useSubscription(
+  const listUpdates = useSubscription(
     trpc.session.listUpdates.subscriptionOptions(undefined, {
       onStarted: () => {
         void queryClient.invalidateQueries(trpc.session.list.pathFilter());
@@ -155,6 +156,7 @@ export function SessionsScreen({ query, archived }: SessionsScreenProps) {
       },
     }),
   );
+  useResubscribeOnReconnect(listUpdates);
   const rows = useMemo(
     () => [
       ...new Map(
