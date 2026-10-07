@@ -1,4 +1,9 @@
-import { archivedSessions, projectsList, sessionRows } from '@repo/api/mocks';
+import {
+  activeSessions,
+  archivedSessions,
+  projectsList,
+  sessionRows,
+} from '@repo/api/mocks';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
 import { eachLayout, layoutWidths } from '../../mocks/each-layout';
@@ -17,6 +22,9 @@ import { SessionsScreenPreview } from '../../mocks/sessions-screen-preview';
 import { settleViewport } from '../../mocks/settle-viewport';
 import { fails, pending } from '../../mocks/trpc-mock-link';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
+import { DesktopLayout } from '../components/DesktopLayout';
+import { useConnection } from '../connection/context';
+import type { ConnectionActor } from '../connection/open-connection';
 import { SessionsScreen } from './SessionsScreen';
 
 const recorder = createNavigationRecorder();
@@ -492,3 +500,78 @@ export const NextPageLoading: Story = {
       await expect(canvas.getByText('Build the settings screen')).toBeVisible();
     }),
 };
+
+let reconnectConnection: ConnectionActor | undefined;
+const reconnectCalls = { listUpdates: 0, counts: 0 };
+const recoveredTitle = 'Session updated after reconnect';
+const reconnectMocks = {
+  ...sessionListMocks,
+  'session.list': () => ({
+    ...activeSessions,
+    sessions: activeSessions.sessions.map((session) =>
+      session.title === sessionRows.idle.title && reconnectCalls.listUpdates > 1
+        ? { ...session, title: recoveredTitle }
+        : session,
+    ),
+  }),
+  'session.listUpdates': async function* () {
+    reconnectCalls.listUpdates += 1;
+    if (reconnectCalls.listUpdates === 1)
+      throw new Error('Live updates stopped');
+    yield {
+      type: 'changed' as const,
+      session: { ...sessionRows.idle, title: recoveredTitle },
+    };
+  },
+  'session.counts': async function* () {
+    reconnectCalls.counts += 1;
+    if (reconnectCalls.counts === 1) throw new Error('Live counts stopped');
+    yield { attention: 7, running: 0 };
+  },
+};
+export const ReconnectRestoresLiveSubscriptions: Story = {
+  parameters: { trpc: reconnectMocks },
+  beforeEach: () => {
+    reconnectConnection = undefined;
+    reconnectCalls.listUpdates = 0;
+    reconnectCalls.counts = 0;
+  },
+  render: () => <ReconnectingSessionsScreen />,
+  play: async ({ canvas }) => {
+    await settleViewport(layoutWidths.wide);
+    await expect(
+      (await canvas.findAllByText(sessionRows.idle.title ?? ''))[0],
+    ).toBeVisible();
+    await waitFor(() =>
+      expect(reconnectCalls).toEqual({ listUpdates: 1, counts: 1 }),
+    );
+    await expect(canvas.queryByText(recoveredTitle)).toBeNull();
+    await expect(
+      canvas.queryByLabelText('7 Sessions need attention'),
+    ).toBeNull();
+    if (!reconnectConnection)
+      throw new Error('Connection mock was not mounted');
+    reconnectConnection.send({
+      type: 'connection.lost',
+      error: new Error('Socket closed'),
+    });
+    await expect(
+      await canvas.findByText('Reconnecting to the Server…'),
+    ).toBeVisible();
+    reconnectConnection.send({ type: 'connection.opened' });
+    await waitFor(() =>
+      expect(reconnectCalls).toEqual({ listUpdates: 2, counts: 2 }),
+    );
+    await expect((await canvas.findAllByText(recoveredTitle))[0]).toBeVisible();
+    await expect(
+      await canvas.findByLabelText('7 Sessions need attention'),
+    ).toBeVisible();
+    await expect(canvas.queryByText('Reconnecting to the Server…')).toBeNull();
+    await expect(reconnectCalls).toEqual({ listUpdates: 2, counts: 2 });
+  },
+};
+
+function ReconnectingSessionsScreen() {
+  reconnectConnection = useConnection();
+  return <DesktopLayout destination={{ to: 'sessions' }}>{null}</DesktopLayout>;
+}

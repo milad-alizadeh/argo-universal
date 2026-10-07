@@ -24,7 +24,6 @@ export interface FeedDeps {
   // The feed actor of an open Session; a closed Session has none.
   findFeed: (sessionId: string) => FeedActorRef | undefined;
   findSession?: (sessionId: string) => SessionActorRef | undefined;
-  openSession?: (sessionId: string) => Promise<SessionActorRef>;
   findWriter: () => ActorRefFrom<typeof writerMachine> | undefined;
 }
 
@@ -134,7 +133,6 @@ export function createFeedService(deps: FeedDeps): FeedService {
     signal: AbortSignal | undefined,
   ): AsyncGenerator<FeedSubscribeOutput> {
     const { epoch, maxRevision, parentSessionId } = readSession(sessionId);
-    if (parentSessionId === null) await deps.openSession?.(sessionId);
 
     const live: FeedSubscribeOutput[] = [];
     let wake: (() => void) | undefined;
@@ -142,6 +140,8 @@ export function createFeedService(deps: FeedDeps): FeedService {
     let listener: Subscription | undefined;
     let feedListener: Subscription | undefined;
     const sessionActor = deps.findSession?.(sessionId);
+    let closed = !sessionActor && parentSessionId === null;
+    let failure = sessionActor?.getSnapshot().output?.failure ?? null;
     let lastSnapshot = '';
     let snapshotFailure: { error: unknown } | undefined;
     const snapshotChanged = () => {
@@ -197,6 +197,11 @@ export function createFeedService(deps: FeedDeps): FeedService {
     };
     const sessionListener = sessionActor?.subscribe({
       next: snapshotChanged,
+      complete: () => {
+        closed = true;
+        failure = sessionActor.getSnapshot().output?.failure ?? null;
+        wake?.();
+      },
       error: (error) => {
         snapshotFailure = { error };
         wake?.();
@@ -226,10 +231,14 @@ export function createFeedService(deps: FeedDeps): FeedService {
         if (event) {
           if (
             event.type === 'snapshot' ||
-            (event.type !== 'reset' && event.rev > caughtUpTo)
+            ('rev' in event && event.rev > caughtUpTo)
           )
             yield event;
           continue;
+        }
+        if (closed) {
+          yield { type: 'closed', failure };
+          return;
         }
         await new Promise<void>((resolve) => {
           wake = resolve;
