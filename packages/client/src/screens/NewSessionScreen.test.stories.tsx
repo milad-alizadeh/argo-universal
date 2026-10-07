@@ -6,16 +6,18 @@ import {
 import type { SessionNewInput } from '@repo/contracts';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, spyOn, waitFor, within } from 'storybook/test';
 import { composerImages } from '../../mocks/composer-mock';
 import { eachLayout, layoutWidths } from '../../mocks/each-layout';
 import {
+  agentProbeRequests,
   failedStartMessage,
   failedStartNewSessionMocks,
   newSessionMocks,
   notInstalledNewSessionMocks,
   notSignedInNewSessionMocks,
   sendingNewSessionMocks,
+  unavailableNewSessionMocks,
 } from '../../mocks/new-session-mock';
 import { settleViewport } from '../../mocks/settle-viewport';
 import { fails, pending } from '../../mocks/trpc-mock-link';
@@ -105,6 +107,82 @@ type Story = StoryObj<typeof meta>;
 type Mode = 'light' | 'dark';
 
 const overlay = within(document.body);
+
+function unavailableAgentRetry(width: number, agentIndex: number): Story {
+  const agent = newSessionCatalogs.bothUnavailable[agentIndex];
+  if (!agent?.installStep)
+    throw new Error('Recorded catalog needs an unavailable Agent reason');
+  return {
+    parameters: { trpc: unavailableNewSessionMocks },
+    beforeEach: () => {
+      agentProbeRequests.length = 0;
+    },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
+      await expect(
+        await canvas.findByRole('button', { name: 'Send' }),
+      ).toBeDisabled();
+      await userEvent.click(
+        await canvas.findByRole('button', { name: 'Agent and model' }),
+      );
+      if (width === layoutWidths.phone)
+        await userEvent.click(
+          await overlay.findByRole('button', { name: 'Choose Agent' }),
+        );
+      const row = await overlay.findByRole('button', {
+        name: `Select ${agent.label}`,
+      });
+      await waitFor(() => expect(row).toBeVisible());
+      await expect(row).toBeDisabled();
+      await expect(
+        within(row).getByText('Unavailable', { exact: true }),
+      ).toBeVisible();
+      await expect(within(row).getByText(agent.installStep)).toBeVisible();
+      const retry = overlay.getByRole('button', {
+        name: `Retry ${agent.label}`,
+      });
+      await expect(retry).toHaveTextContent('Retry');
+      await expect(
+        overlay.queryByText('Install', { exact: true }),
+      ).not.toBeInTheDocument();
+      await userEvent.click(retry);
+      await waitFor(() =>
+        expect(
+          overlay.getByRole('button', { name: `Select ${agent.label}` }),
+        ).toBeEnabled(),
+      );
+      await expect(
+        overlay.queryByText('Unavailable', { exact: true }),
+      ).not.toBeInTheDocument();
+      await expect(
+        overlay.queryByText(agent.installStep),
+      ).not.toBeInTheDocument();
+      await expect(
+        overlay.queryByRole('button', { name: `Retry ${agent.label}` }),
+      ).not.toBeInTheDocument();
+      await expect(
+        agentProbeRequests.filter((input) => input?.refresh),
+      ).toEqual([{ refresh: true }]);
+      await expect(recorder.destinations).toHaveLength(0);
+    },
+  };
+}
+export const UnavailableAgentRetryPhoneFirstAgent = unavailableAgentRetry(
+  layoutWidths.phone,
+  0,
+);
+export const UnavailableAgentRetryPhoneSecondAgent = unavailableAgentRetry(
+  layoutWidths.phone,
+  1,
+);
+export const UnavailableAgentRetryWideFirstAgent = unavailableAgentRetry(
+  layoutWidths.wide,
+  0,
+);
+export const UnavailableAgentRetryWideSecondAgent = unavailableAgentRetry(
+  layoutWidths.wide,
+  1,
+);
 
 export const NarrowMainColumn: Story = {
   render: () => (
@@ -630,3 +708,115 @@ export const FailedUploadPhoneFirstAgent = failedUpload(layoutWidths.phone, 0);
 export const FailedUploadPhoneSecondAgent = failedUpload(layoutWidths.phone, 1);
 export const FailedUploadWideFirstAgent = failedUpload(layoutWidths.wide, 0);
 export const FailedUploadWideSecondAgent = failedUpload(layoutWidths.wide, 1);
+
+function failedPick(width: number, agentIndex: 0 | 1): Story {
+  const catalog = uploadCatalogs[agentIndex];
+  if (!catalog) throw new Error('Recorded catalog needs both Agents.');
+  let calls = 0;
+  let restorePicker = () => {};
+  return {
+    beforeEach: () => {
+      restorePicker();
+      calls = 0;
+      return () => restorePicker();
+    },
+    parameters: {
+      trpc: {
+        ...newSessionMocks,
+        'agents.list': () => [catalog.agent],
+        'session.new': () => {
+          calls += 1;
+          return { sessionId: 'unexpected-session' };
+        },
+      },
+    },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
+      const bytes = await (await fetch(catalog.image.uri)).blob();
+      const attachImage = async (name: string) => {
+        await userEvent.click(
+          canvas.getByRole('button', { name: 'Attach images' }),
+        );
+        const menuName =
+          width === layoutWidths.wide ? 'Files and Folder' : 'Photos';
+        const menu = await within(document.body).findByRole('button', {
+          name: menuName,
+        });
+        await waitFor(() => expect(menu).toBeVisible());
+        await userEvent.click(menu);
+        await userEvent.upload(
+          await within(document.body).findByTestId('file-input'),
+          new File([bytes], name, { type: 'image/png' }),
+        );
+        await waitFor(() =>
+          expect(
+            within(document.body).queryByRole('button', { name: menuName }),
+          ).toBeNull(),
+        );
+      };
+      await userEvent.type(
+        await canvas.findByRole('textbox', { name: 'Message' }),
+        'Keep this draft while choosing images.',
+      );
+      await attachImage(catalog.image.name);
+      await expect(
+        await canvas.findByRole('img', { name: catalog.image.name }),
+      ).toBeVisible();
+      const picker = spyOn(URL, 'createObjectURL').mockImplementationOnce(
+        () => {
+          throw new Error('Image selection failed');
+        },
+      );
+      restorePicker = () => picker.mockRestore();
+      try {
+        await attachImage('failed-selection.png');
+        const alert = await canvas.findByRole('alert');
+        await expect(alert.textContent).toBe(
+          "Couldn't select images. Try again.",
+        );
+        await expect(alert).toBeVisible();
+        await expect(
+          canvas.getByRole('textbox', { name: 'Message' }),
+        ).toHaveValue('Keep this draft while choosing images.');
+        await expect(
+          canvas.getByRole('img', { name: catalog.image.name }),
+        ).toBeVisible();
+        await expect(
+          canvas.queryByRole('img', { name: 'failed-selection.png' }),
+        ).toBeNull();
+        await expect(
+          canvas.getAllByRole('button', { name: /^Remove / }),
+        ).toHaveLength(1);
+        await expect(
+          canvas.queryByRole('button', { name: 'Retry' }),
+        ).toBeNull();
+        await expect(calls).toBe(0);
+        await expect(picker).toHaveBeenCalledOnce();
+      } finally {
+        picker.mockRestore();
+      }
+      await attachImage('retry-selection.png');
+      await expect(
+        await canvas.findByRole('img', { name: 'retry-selection.png' }),
+      ).toBeVisible();
+      await expect(canvas.queryByRole('alert')).toBeNull();
+      await expect(
+        canvas.getByRole('img', { name: catalog.image.name }),
+      ).toBeVisible();
+      await expect(
+        canvas.queryByRole('img', { name: 'failed-selection.png' }),
+      ).toBeNull();
+      await expect(
+        canvas.getAllByRole('button', { name: /^Remove / }),
+      ).toHaveLength(2);
+      await expect(
+        canvas.getByRole('textbox', { name: 'Message' }),
+      ).toHaveValue('Keep this draft while choosing images.');
+      await expect(calls).toBe(0);
+    },
+  };
+}
+export const FailedPickPhoneFirstAgent = failedPick(layoutWidths.phone, 0);
+export const FailedPickPhoneSecondAgent = failedPick(layoutWidths.phone, 1);
+export const FailedPickWideFirstAgent = failedPick(layoutWidths.wide, 0);
+export const FailedPickWideSecondAgent = failedPick(layoutWidths.wide, 1);

@@ -31,6 +31,12 @@ const available: AgentsListOutput = agentsList.map((agent) => ({
 
 export const newSessionCatalogs = {
   bothAvailable: available,
+  bothUnavailable: available.map((agent) => ({
+    ...agent,
+    availability: 'unavailable' as const,
+    installStep: "CLI didn't start",
+    configOptions: [],
+  })),
   oneNotInstalled: available.map((agent, index) =>
     index === 0
       ? {

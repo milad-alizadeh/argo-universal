@@ -6,6 +6,7 @@ import {
 import type { SessionSnapshot, SessionUpdate } from '@repo/contracts';
 import { recordedFeedMock, recordedUserMessage } from './feed-message-mock';
 import { createFeedMocks } from './feed-mock';
+import { unavailableNewSessionMocks } from './new-session-mock';
 import { createSubscriptionPublisher } from './subscription-publisher';
 import { completedCommand } from './tool-call-mock';
 import { type Fixtures, pending } from './trpc-mock-link';
@@ -70,6 +71,33 @@ export const emptySessionMocks = createSessionMocks(
     { ...editAndCommandRecording, rows: [] },
     { title: 'New Session', maxRevision: 0 },
   ),
+);
+
+export const unavailableSessionCases = newSessionCatalogs.bothAvailable.map(
+  (agent, index) => {
+    const recording = recordedFeedMocks.find(
+      (mock) =>
+        mock.recording === 'markdown-answer' &&
+        mock.agent === `agent-${index + 1}`,
+    );
+    const unavailable = newSessionCatalogs.bothUnavailable[index];
+    if (!recording || !unavailable?.installStep)
+      throw new Error(
+        'Recorded catalog needs a started Session and unavailable reason for both Agents',
+      );
+    const feed = withWholeTail(recording, {
+      agent: agent.agent,
+      configOptions: agent.configOptions,
+    });
+    return {
+      agent,
+      reason: unavailable.installStep,
+      fixtures: {
+        ...createSessionMocks(feed),
+        'agents.list': unavailableNewSessionMocks['agents.list'],
+      } satisfies Fixtures,
+    };
+  },
 );
 
 // Only the oldest page holds this recording, and only the arriving row holds the other, so their text marks each one.

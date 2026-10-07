@@ -10,6 +10,7 @@ import { StartSessionIn } from '#components/StartSessionIn';
 import { Text } from '#primitives/text';
 import { useContentWide } from '../components/ContentLayout';
 import { useConnectionState } from '../connection/context';
+import { useAgents } from '../lib/use-agents';
 import { useImageDraft } from '../lib/use-image-draft';
 import { useNavigate } from '../navigation/context';
 import { useTRPC } from '../trpc/context';
@@ -38,7 +39,7 @@ function withChosenValue(
 function useSessionChoices(projectId: string | undefined) {
   const trpc = useTRPC();
   const projects = useQuery(trpc.projects.list.queryOptions());
-  const agents = useQuery(trpc.agents.list.queryOptions());
+  const agents = useAgents();
   const [chosenProjectId, setChosenProjectId] = useState(projectId);
   const [chosenAgent, setChosenAgent] = useState<string>();
   const [chosenConfigValues, setChosenConfigValues] = useState<
@@ -147,8 +148,14 @@ function sendErrorMessage(
 function useStartSession(onStartFailed: () => void) {
   const trpc = useTRPC();
   const navigate = useNavigate();
-  const { draft, changeDraft, attachImages, uploadDraftAsPrompt, imageUpload } =
-    useImageDraft();
+  const {
+    draft,
+    changeDraft,
+    attachImages,
+    uploadDraftAsPrompt,
+    imageUpload,
+    imageSelectionError,
+  } = useImageDraft();
   const newSession = useMutation(
     trpc.session.new.mutationOptions({
       onSuccess: ({ sessionId }) =>
@@ -176,7 +183,9 @@ function useStartSession(onStartFailed: () => void) {
     startSession,
     clearSendErrors,
     sending: imageUpload.isPending || newSession.isPending,
-    sendError: sendErrorMessage(newSession.error, imageUpload.error),
+    sendError:
+      imageSelectionError ??
+      sendErrorMessage(newSession.error, imageUpload.error),
   };
 }
 
@@ -287,6 +296,7 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
               },
               onAgentSetup: (setup) =>
                 navigate({ to: 'settings-agent', agent: setup }),
+              onAgentRetry: agents.retry,
               checkout,
             }}
           />

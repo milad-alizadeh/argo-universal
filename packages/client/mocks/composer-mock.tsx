@@ -94,6 +94,15 @@ export const composerNoEffortSelections = newSessionCatalogs.bothAvailable.map(
   }),
 );
 
+export const composerUnavailableConfigurations =
+  newSessionCatalogs.bothUnavailable.map((agent) => ({
+    agents: newSessionCatalogs.bothUnavailable,
+    agent: agent.agent,
+    configOptions: agent.configOptions,
+    onConfigChange: () => {},
+    checkout: { branch: 'main', newWorktree: false },
+  }));
+
 export function ComposerMock(
   props: ComposerProps & {
     sessionStarted?: boolean;
