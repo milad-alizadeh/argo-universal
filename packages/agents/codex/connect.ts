@@ -3,6 +3,7 @@ import type {
   VendorSession,
   VendorSessionListener,
 } from '../src/agent-adapter';
+import { UnsupportedCommandError } from '../src/agent-adapter';
 import { toQuestionAnswers } from '../src/elicitation-form';
 import { changeValue, startingValues, toConfigOptions } from './config-options';
 import { initialize, readModels, usesChatGpt } from './handshake';
@@ -202,6 +203,7 @@ export async function connect(
             );
             return;
           case 'agent.cancel': {
+            // A Turn that already ended needs no interrupt.
             if (activeTurn) await interrupt(activeTurn);
             return;
           }
@@ -255,9 +257,14 @@ export async function connect(
             );
             return;
           }
-          // Plan answers, titles, images and Shells belong to their later slices.
-          default:
-            return;
+          case 'agent.answerPlanProposal':
+          case 'agent.rename':
+          case 'agent.stopShell':
+            throw new UnsupportedCommandError(command);
+          default: {
+            const unhandled: never = command;
+            throw new UnsupportedCommandError(unhandled);
+          }
         }
       },
       stop: server.close,

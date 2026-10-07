@@ -4,7 +4,6 @@ import type {
   FeedRowInput,
   FeedSubscribeInput,
   FeedSubscribeOutput,
-  SessionUpdate,
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow } from '@repo/db/schema';
@@ -16,7 +15,8 @@ import type { SessionActorRef } from '../sessions/session-machine';
 import { createSessionReader } from '../sessions/session-record';
 import { toSessionSnapshot } from '../sessions/session-snapshot';
 import type { FeedActorRef } from './feed-machine';
-import { fromFeedRow, queuedFeedRows, readWrittenRow } from './feed-row';
+import { fromFeedRow, newestRows, readWrittenRow } from './feed-row';
+import { queuedFeedRows } from './writer-job';
 import type { writerMachine } from './writer-machine';
 
 export interface FeedDeps {
@@ -27,23 +27,16 @@ export interface FeedDeps {
   findWriter: () => ActorRefFrom<typeof writerMachine> | undefined;
 }
 
-// Keeps the newest version of each row.
-const newestById = (rows: Iterable<SessionUpdate>) => {
-  const newest = new Map<string, SessionUpdate>();
-  for (const row of rows) {
-    const known = newest.get(row.id);
-    if (!known || known.revision < row.revision) newest.set(row.id, row);
-  }
-  return newest;
-};
-
 export function createFeedService(deps: FeedDeps): FeedService {
   const { database } = deps;
   const readSession = createSessionReader(database);
 
   // Rows the database does not hold yet: queued in the writer, then held by the feed actor.
   const readUnsaved = (sessionId: string) => {
-    const jobs = queuedFeedRows(deps.findWriter(), sessionId);
+    const jobs = queuedFeedRows(
+      deps.findWriter()?.getSnapshot().context.queue ?? [],
+      sessionId,
+    );
     const feed = deps.findFeed(sessionId)?.getSnapshot().context;
     return {
       rows: [
@@ -118,7 +111,7 @@ export function createFeedService(deps: FeedDeps): FeedService {
       .map((stored) => fromFeedRow(sessionId, stored));
     return {
       rows: [
-        ...newestById([
+        ...newestRows([
           ...stored,
           ...unsaved.rows.filter((row) => row.revision > from),
         ]).values(),

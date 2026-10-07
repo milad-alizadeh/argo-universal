@@ -83,6 +83,7 @@ export interface SessionContext extends SessionData {
   pendingElicitation: PendingElicitation | null;
   configOptions: SessionConfigOption[];
   agentCrashes: number[];
+  rejectedMessages: number;
   failure: string | null;
   // False for a new Session until its Agent is ready and its row is written.
   stored: boolean;
@@ -393,6 +394,33 @@ const sessionSetup = setup({
         },
       });
     }),
+    countRejectedMessage: assign({
+      rejectedMessages: ({ context }) => context.rejectedMessages + 1,
+    }),
+    messageRejectedNotice: sendTo('feed', ({ context, event }) => {
+      assertEvent(event, 'agent.messageRejected');
+      return {
+        type: 'feed.change',
+        turnId: context.activeTurnId,
+        change: {
+          type: 'upsert',
+          update: {
+            id: randomUUID(),
+            sessionUpdate: 'notice',
+            state: 'settled',
+            severity: 'warning',
+            title: 'The Agent sent an unrecognised message',
+            description: event.reason,
+          },
+        },
+      };
+    }),
+    logMessageRejected: ({ context, event }) => {
+      assertEvent(event, 'agent.messageRejected');
+      console.error(
+        `session ${context.sessionId}: rejected an Agent message: ${event.reason}`,
+      );
+    },
     cancelNotice: sendTo('feed', ({ context }) => ({
       type: 'feed.change',
       turnId: context.activeTurnId,
@@ -507,6 +535,7 @@ export const sessionMachine = sessionSetup.createMachine({
     pendingElicitation: null,
     configOptions: [],
     agentCrashes: [],
+    rejectedMessages: 0,
     failure: null,
     stored: input.kind === 'existing',
   }),
@@ -592,6 +621,13 @@ export const sessionMachine = sessionSetup.createMachine({
           initial: 'starting',
           on: {
             'agent.feed': { actions: 'forwardFeed' },
+            'agent.messageRejected': {
+              actions: [
+                'countRejectedMessage',
+                'messageRejectedNotice',
+                'logMessageRejected',
+              ],
+            },
             'agent.usage': { actions: 'rememberUsage' },
             'agent.configOptionsChanged': { actions: 'rememberConfig' },
             'session.close': { target: '.closing' },

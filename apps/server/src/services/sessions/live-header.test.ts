@@ -161,6 +161,28 @@ describe.each(liveHeaderMocks)(
         ]),
       ).toBe('Working');
     });
+    it.each([
+      { status: 'in_progress' as const, expected: 'Checking second file' },
+      { status: 'completed' as const, expected: recordedHeader },
+    ])(
+      'falls back to the earlier running Tool call when the newer is $status',
+      ({ status, expected }) => {
+        expect(
+          headerText(running, [
+            command,
+            {
+              ...command,
+              id: 'newer-tool',
+              toolCallId: 'newer-tool',
+              position: command.position + 1,
+              revision: command.revision + 1,
+              status,
+              _meta: { argo: { description: 'Checking second file' } },
+            },
+          ]),
+        ).toBe(expected);
+      },
+    );
     it('uses supplied command actions without classifying shell text', () => {
       const tool = {
         ...command,

@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { storedMessage } from '#mocks/feed';
-import { fromFeedRow, promptBlobIds, toFeedRowWrite } from './feed-row';
+import {
+  fromFeedRow,
+  newestRows,
+  promptBlobIds,
+  toFeedRowWrite,
+} from './feed-row';
 
 const message = storedMessage(0);
 
@@ -51,4 +56,39 @@ describe('promptBlobIds', () => {
       ]),
     ).toEqual(['image-1', 'image-2']);
   });
+});
+
+it.each([
+  {
+    rule: 'keeps a higher revision over a later stale row',
+    rows: [
+      {
+        ...message,
+        revision: 3,
+        content: [{ type: 'text' as const, text: 'Newer' }],
+      },
+      { ...message, revision: 1 },
+    ],
+    text: 'Newer',
+    revision: 3,
+  },
+  {
+    rule: 'later input wins when revisions tie',
+    rows: [
+      message,
+      { ...message, content: [{ type: 'text' as const, text: 'In memory' }] },
+    ],
+    text: 'In memory',
+    revision: 1,
+  },
+])('$rule', ({ rows, text, revision }) => {
+  const original = structuredClone(rows);
+  expect([...newestRows(rows).values()]).toEqual([
+    {
+      ...message,
+      revision,
+      content: [{ type: 'text', text }],
+    },
+  ]);
+  expect(rows).toEqual(original);
 });
