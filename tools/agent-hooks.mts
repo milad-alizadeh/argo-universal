@@ -1,3 +1,4 @@
+// Read docs/agents/hooks.md before changing this script or the hook configs that run it.
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
@@ -12,6 +13,7 @@ const biome = path.join(root, 'node_modules/.bin/biome');
 const turbo = path.join(root, 'node_modules/.bin/turbo');
 const BLOCK_EXIT_CODE = 2;
 const OUTPUT_LINE_LIMIT = 60;
+const BLOCKED_HINT = 'docs/agents/hooks.md says what the hooks run.\n';
 const CHECKED_FILE = /\.(?:ts|tsx|mts|mjs|json|jsonc)$/;
 const TYPESCRIPT_FILE = /\.(?:ts|tsx|mts)$/;
 const PATCH_FILE_LINE = /^\*\*\* (?:Add File|Update File|Move to): (.+)$/;
@@ -90,7 +92,7 @@ function afterEdit(input: HookInput) {
     ...paths,
   ]);
   if (result.status === 0) return 0;
-  process.stderr.write(result.stderr);
+  process.stderr.write(`${result.stderr}${BLOCKED_HINT}`);
   return BLOCK_EXIT_CODE;
 }
 
@@ -140,7 +142,7 @@ function beforeStop(input: HookInput) {
     .map((check) => `${check.stdout}${check.stderr}`)
     .join('\n');
   process.stderr.write(
-    `${output.split('\n').slice(0, OUTPUT_LINE_LIMIT).join('\n')}\n`,
+    `${output.split('\n').slice(0, OUTPUT_LINE_LIMIT).join('\n')}\n${BLOCKED_HINT}`,
   );
   return BLOCK_EXIT_CODE;
 }

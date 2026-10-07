@@ -104,6 +104,7 @@ describe('after-edit', () => {
     const result = runHook('after-edit', fileEdit('scratch.ts'));
     expect(result.status).toBe(BLOCKED);
     expect(result.stderr).toContain('noExplicitAny');
+    expect(result.stderr).toContain('docs/agents/hooks.md');
   });
 
   it('reports the same finding from an apply_patch call', () => {

@@ -9,7 +9,6 @@ Argo for iOS, Android, web, and macOS: one Expo app, an Electron shell, and a lo
 - Specs: GitHub Issues, as transient briefs for implementation; never commit one. Build a spec as written. When it is unclear or wrong, stop and ask.
 - Storybook: before authoring stories or testing UI components, read `docs/agents/storybook.md`.
 - Designs: Paper. Before you edit a Paper file or build UI from one, read `docs/agents/paper.md`. It holds until Paper ships component instances.
-- Hooks: when a hook blocks you, or before you change a hook config or `tools/agent-hooks.mts`, read `docs/agents/hooks.md`.
 - Prickles: before you write or review code, read the pillar files in `docs/agents/prickles/`, the Prickles canon v2.0 verbatim (https://prickles.org, CC BY-NC 4.0). It wins over everything else here; ADR-0016 records how it applies where it cannot as written.
 
 ## Agent skills
