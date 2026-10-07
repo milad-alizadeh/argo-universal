@@ -21,6 +21,7 @@ export interface ScrollFadeProps {
   edge: 'top' | 'bottom';
   // The surface colour the content fades into.
   className?: string;
+  height?: number;
 }
 
 export const scrollFadeHeight = { top: 28, bottom: 36 } as const;
@@ -35,6 +36,7 @@ const [fadeIn, fadeOut] = [FadeIn, FadeOut].map((animation) =>
 export function ScrollFade({
   edge,
   className = 'bg-background',
+  height,
 }: ScrollFadeProps) {
   const gradientId = `${useId().replace(/:/g, '')}-${edge}`;
   const { backgroundColor } = useResolveClassNames(className);
@@ -51,7 +53,7 @@ export function ScrollFade({
         left: 0,
         right: 0,
         zIndex: 10,
-        height: scrollFadeHeight[edge],
+        height: height ?? scrollFadeHeight[edge],
         ...(edge === 'top' ? { top: 0 } : { bottom: 0 }),
       }}
     >

@@ -4,6 +4,7 @@ import { View, type ViewProps } from 'react-native';
 import { cn } from '#lib/utils';
 import { Button, type ButtonProps } from '#primitives/button';
 import { Text } from '#primitives/text';
+import { useContentWide } from './ContentLayout';
 import { Icon } from './Icon';
 
 export function RequestCard({
@@ -28,19 +29,25 @@ export function RequestAction({
   primary = false,
   ...props
 }: Omit<ButtonProps, 'children'> & { children: string; primary?: boolean }) {
+  const wide = useContentWide();
   return (
     <Button
       variant={primary ? 'default' : 'ghost'}
       {...props}
       className={cn(
-        'h-11 sm:h-11 rounded-lg px-4 wide:h-8 wide:sm:h-8 wide:rounded-md wide:px-3',
-        primary && 'wide:pr-1.5',
+        wide ? 'h-8 sm:h-8 rounded-md px-3' : 'h-11 sm:h-11 rounded-lg px-4',
+        primary && wide && 'pr-1.5',
         props.className,
       )}
     >
       <Text className="text-sm leading-5 font-medium">{children}</Text>
       {primary && (
-        <View className="hidden wide:flex size-5 items-center justify-center rounded-sm bg-primary-foreground/15">
+        <View
+          className={cn(
+            'size-5 items-center justify-center rounded-sm bg-primary-foreground/15',
+            !wide && 'hidden',
+          )}
+        >
           <Icon
             as={KeyReturnIcon}
             size="md"

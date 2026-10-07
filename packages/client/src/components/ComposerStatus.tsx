@@ -26,6 +26,7 @@ import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
 import { useWide } from '../navigation/use-wide';
 import { ComposerPopover } from './ComposerPopover';
+import { useContentWide } from './ContentLayout';
 import { Icon, IconSpinner } from './Icon';
 
 export interface ComposerStatusProps {
@@ -120,7 +121,7 @@ export function ComposerPlan({
   disabled: boolean;
 }) {
   const done = entries.filter((entry) => entry.status === 'completed').length;
-  const wide = useWide();
+  const wide = useContentWide();
   const [expanded, setExpanded] = useState(false);
   const [stepsHeight, setStepsHeight] = useState(0);
   const revealHeight = useSharedValue(0);
@@ -158,7 +159,8 @@ export function ComposerPlan({
           <View
             key={`${index}:${entry.content}`}
             className={cn(
-              'w-1.5 wide:w-3.5 h-1 rounded-xs bg-border',
+              'h-1 rounded-xs bg-border',
+              wide ? 'w-3.5' : 'w-1.5',
               entry.status === 'completed' && 'bg-foreground',
             )}
           />
@@ -377,6 +379,7 @@ export function ComposerStatusControls({
   status: ComposerStatusProps;
   disabled: boolean;
 }) {
+  const wide = useContentWide();
   const context = status.context;
   const percent =
     context && context.size > 0
@@ -393,18 +396,29 @@ export function ComposerStatusControls({
               variant="ghost"
               disabled={disabled}
               accessibilityLabel="Usage"
-              className="h-7 sm:h-7 py-0 w-7 wide:w-auto px-0 has-[>svg]:px-0 wide:px-1.5 wide:has-[>svg]:px-1.5 gap-1.5"
+              className={cn(
+                'h-7 sm:h-7 py-0 gap-1.5',
+                wide
+                  ? 'w-auto px-1.5 has-[>svg]:px-1.5'
+                  : 'w-7 px-0 has-[>svg]:px-0',
+              )}
             >
               <Icon as={ClockCountdownIcon} className="text-muted-foreground" />
               <Text
                 selectable={false}
-                className="select-none hidden wide:flex text-xs font-normal text-foreground"
+                className={cn(
+                  'select-none text-xs font-normal text-foreground',
+                  !wide && 'hidden',
+                )}
               >
                 Usage
               </Text>
               <Text
                 selectable={false}
-                className="select-none hidden wide:flex text-xs font-normal text-muted-foreground"
+                className={cn(
+                  'select-none text-xs font-normal text-muted-foreground',
+                  !wide && 'hidden',
+                )}
               >
                 {status.usage.limits[0]?.usedPercent}%
               </Text>
@@ -459,16 +473,24 @@ export function ComposerStatusControls({
               variant="ghost"
               disabled={disabled}
               accessibilityLabel="Context window"
-              className="h-7 sm:h-7 py-0 w-7 wide:w-auto px-0 has-[>svg]:px-0 wide:px-1.5 wide:has-[>svg]:px-1.5 gap-1.5"
+              className={cn(
+                'h-7 sm:h-7 py-0 gap-1.5',
+                wide
+                  ? 'w-auto px-1.5 has-[>svg]:px-1.5'
+                  : 'w-7 px-0 has-[>svg]:px-0',
+              )}
             >
               <ContextRing percent={percent} />
               <Text
                 selectable={false}
-                className="select-none hidden wide:flex text-xs font-normal text-foreground"
+                className={cn(
+                  'select-none text-xs font-normal text-foreground',
+                  !wide && 'hidden',
+                )}
               >
                 Context
               </Text>
-              <View className="hidden wide:flex flex-row">
+              <View className={cn('flex-row', !wide && 'hidden')}>
                 <Text
                   selectable={false}
                   className="select-none text-xs leading-4 font-normal text-muted-foreground"
@@ -477,7 +499,10 @@ export function ComposerStatusControls({
                 </Text>
                 <Text
                   selectable={false}
-                  className="select-none hidden wide:flex text-xs font-normal text-muted-foreground"
+                  className={cn(
+                    'select-none text-xs font-normal text-muted-foreground',
+                    !wide && 'hidden',
+                  )}
                 >
                   {' '}
                   / {compactNumber(context.size)}

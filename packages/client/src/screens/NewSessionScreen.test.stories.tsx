@@ -5,6 +5,7 @@ import {
 } from '@repo/api/mocks';
 import type { SessionNewInput } from '@repo/contracts';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { View } from 'react-native';
 import { expect, waitFor, within } from 'storybook/test';
 import {
   failedStartMessage,
@@ -15,6 +16,7 @@ import {
   sendingNewSessionMocks,
 } from '../../mocks/new-session-mock';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
+import { ContentLayout } from '../components/ContentLayout';
 import { applyTheme } from '../lib/theme';
 import { NewSessionScreen } from './NewSessionScreen';
 
@@ -48,6 +50,32 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const overlay = within(document.body);
+
+export const NarrowMainColumn: Story = {
+  render: () => (
+    <View className="h-full w-[600px]">
+      <ContentLayout>
+        <NewSessionScreen />
+      </ContentLayout>
+    </View>
+  ),
+  play: async ({ canvas, userEvent }) => {
+    const { page } = await import('vitest/browser');
+    await page.viewport(1440, 844);
+    const checkout = await canvas.findByRole('button', { name: 'Checkout' });
+    await expect(checkout).toBeVisible();
+    await expect(checkout).toHaveTextContent(/New worktree from\s*main/);
+    await expect(
+      canvas.getAllByRole('button', { name: 'Checkout' }),
+    ).toHaveLength(1);
+    await userEvent.click(checkout);
+    await userEvent.click(
+      await overlay.findByRole('button', { name: 'Local' }),
+    );
+    await expect(checkout).toHaveTextContent('Local');
+    await expect(window.innerWidth).toBe(1440);
+  },
+};
 
 async function settle() {
   await document.fonts.ready;

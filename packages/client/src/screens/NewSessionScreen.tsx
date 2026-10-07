@@ -12,9 +12,9 @@ import { Screen } from '#components/Screen';
 import { StartSessionIn } from '#components/StartSessionIn';
 import { pickImages } from '#lib/pick-images';
 import { Text } from '#primitives/text';
+import { useContentWide } from '../components/ContentLayout';
 import { useConnectionState } from '../connection/context';
 import { useNavigate } from '../navigation/context';
-import { useWide } from '../navigation/use-wide';
 import { useTRPC } from '../trpc/context';
 
 export interface NewSessionScreenProps {
@@ -37,7 +37,7 @@ function withValue(
 
 // Starts a Session: where it runs, then the Composer; sending replaces this page with the Session.
 export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
-  const wide = useWide();
+  const wide = useContentWide();
   const trpc = useTRPC();
   const navigate = useNavigate();
   const connected = useConnectionState() === 'open';
@@ -208,7 +208,9 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
             </View>
           )}
         </View>
-        <View className="items-center px-4 pb-2 wide:px-6">
+        <View
+          className={wide ? 'items-center px-6 pb-2' : 'items-center px-4 pb-2'}
+        >
           <StartSessionIn
             serverName={info.data.name}
             serverConnected={connected}
@@ -223,7 +225,9 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
             disabled={sending}
           />
         </View>
-        <View className="items-center px-4 pb-4 wide:px-6">
+        <View
+          className={wide ? 'items-center px-6 pb-4' : 'items-center px-4 pb-4'}
+        >
           <Composer
             draft={draft}
             onDraftChange={changeDraft}
