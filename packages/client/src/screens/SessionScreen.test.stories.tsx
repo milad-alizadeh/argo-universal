@@ -2,6 +2,7 @@ import { newSessionCatalogs, recordedFeedMocks } from '@repo/api/mocks';
 import type { FeedSyncPoint, SessionUpdate } from '@repo/contracts';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
+import { composerImages } from '../../mocks/composer-mock';
 import { eachLayout, layoutWidths } from '../../mocks/each-layout';
 import { createFeedMocks } from '../../mocks/feed-mock';
 import {
@@ -28,7 +29,7 @@ import {
   switchSession,
 } from '../../mocks/session-switch-preview';
 import { settleViewport } from '../../mocks/settle-viewport';
-import type { Fixtures } from '../../mocks/trpc-mock-link';
+import { type Fixtures, fails } from '../../mocks/trpc-mock-link';
 import { SessionScreen } from './SessionScreen';
 
 const meta = {
@@ -615,3 +616,99 @@ export const ResumesClosedFeedWideSecondAgent = resumesClosedFeed(
   layoutWidths.wide,
   1,
 );
+
+const uploadCatalogs = newSessionCatalogs.bothAvailable.map((agent, index) => {
+  const image = composerImages[index];
+  const recording = recordedFeedMocks.find(
+    (mock) => mock.agent === `agent-${index + 1}`,
+  );
+  if (!image || !recording)
+    throw new Error(
+      `Recorded catalog needs an image and a Feed for ${agent.label}.`,
+    );
+  const snapshot = {
+    ...recording.snapshot,
+    agent: agent.agent,
+    state: 'idle' as const,
+    activeTurnId: null,
+    liveHeader: null,
+    configOptions: agent.configOptions,
+  };
+  return {
+    agent,
+    image,
+    mocks: createFeedMocks({
+      ...recording,
+      snapshot,
+      stream: [{ type: 'snapshot', snapshot }],
+    }),
+  };
+});
+
+function failedUpload(width: number, agentIndex: 0 | 1): Story {
+  const catalog = uploadCatalogs[agentIndex];
+  if (!catalog) throw new Error('Recorded catalog needs both Agents.');
+  let calls = 0;
+  const failure = 'The Server could not store the image.';
+  return {
+    beforeEach: () => {
+      calls = 0;
+    },
+    parameters: {
+      trpc: {
+        ...idleSessionMocks,
+        ...catalog.mocks,
+        'agents.list': () => [catalog.agent],
+        'blob.upload': fails(failure),
+        'session.prompt': () => {
+          calls += 1;
+          return { messageId: 'unexpected-prompt' };
+        },
+      },
+    },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
+      const message = await canvas.findByRole('textbox', { name: 'Message' });
+      await userEvent.type(message, 'Name the dominant color in this image.');
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Attach images' }),
+      );
+      await userEvent.click(
+        await within(document.body).findByRole('button', {
+          name: width === layoutWidths.wide ? 'Files and Folder' : 'Photos',
+        }),
+      );
+      const file = new File(
+        [await (await fetch(catalog.image.uri)).blob()],
+        catalog.image.name,
+        { type: 'image/png' },
+      );
+      await userEvent.upload(
+        await within(document.body).findByTestId('file-input'),
+        file,
+      );
+      await expect(
+        await canvas.findByRole('img', { name: catalog.image.name }),
+      ).toBeVisible();
+      await expect(canvas.queryByRole('alert')).toBeNull();
+      await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
+      const alert = await canvas.findByRole('alert');
+      await expect(alert.textContent).toBe(
+        `Couldn't upload the image. ${failure}`,
+      );
+      await expect(alert).toBeVisible();
+      await expect(
+        canvas.getByRole('textbox', { name: 'Message' }),
+      ).toHaveValue('Name the dominant color in this image.');
+      await expect(
+        canvas.getByRole('img', { name: catalog.image.name }),
+      ).toBeVisible();
+      await expect(canvas.getByRole('button', { name: 'Send' })).toBeEnabled();
+      await expect(calls).toBe(0);
+    },
+  };
+}
+export const FailedUploadPhoneFirstAgent = failedUpload(layoutWidths.phone, 0);
+export const FailedUploadPhoneSecondAgent = failedUpload(layoutWidths.phone, 1);
+export const FailedUploadWideFirstAgent = failedUpload(layoutWidths.wide, 0);
+export const FailedUploadWideSecondAgent = failedUpload(layoutWidths.wide, 1);
