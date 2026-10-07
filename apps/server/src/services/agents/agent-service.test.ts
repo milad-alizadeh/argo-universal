@@ -6,7 +6,7 @@ import { openTestDatabase } from '#mocks/database';
 import { registryMachine } from '../sessions/registry-machine';
 import { createAgentService } from './agent-service';
 
-const { database, remove } = openTestDatabase();
+const { database, directory: runtimeDirectory, remove } = openTestDatabase();
 afterAll(remove);
 const cleanups: (() => void)[] = [];
 afterEach(() => {
@@ -18,7 +18,7 @@ function startAgents(...probes: (() => Promise<AgentProbe>)[]) {
     createMockAdapter({ probe }, `agent-${index + 1}`),
   );
   const sessions = createActor(registryMachine, {
-    input: { database, adapters },
+    input: { database, runtimeDirectory, adapters },
   }).start();
   cleanups.push(() => sessions.stop());
   return createAgentService(sessions);

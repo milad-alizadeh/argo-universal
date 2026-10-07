@@ -18,7 +18,7 @@ import { type SessionActorRef, sessionMachine } from './session-machine';
 
 export interface RegistryInput {
   database: Database;
-  runtimeDirectory?: string;
+  runtimeDirectory: string;
   adapters?: readonly AgentAdapter[];
 }
 

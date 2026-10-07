@@ -1,43 +1,18 @@
-import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { realpath } from 'node:fs/promises';
-import { basename, resolve } from 'node:path';
-import { promisify } from 'node:util';
+import { basename } from 'node:path';
 import type { ProjectsService } from '@repo/api';
 import { ProjectInfo } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { project } from '@repo/db/schema';
-import { listBranches } from '@repo/git';
+import { listBranches, readRepository } from '@repo/git';
 import { TRPCError } from '@trpc/server';
 import { eq } from 'drizzle-orm';
-import { z } from 'zod';
-
-const run = promisify(execFile);
-const gitLine = z.string().trim().min(1);
-let rejectedShapes = 0;
-const checked = <Value>(read: () => Value): Value => {
-  try {
-    return read();
-  } catch (error) {
-    rejectedShapes += 1;
-    console.error(`projects: rejected shape #${rejectedShapes}`, error);
-    throw error;
-  }
-};
-const git = async (path: string, ...arguments_: string[]) => {
-  const { stdout } = await run('git', ['-C', path, ...arguments_]);
-  return checked(() => gitLine.parse(stdout));
-};
 
 export async function seedProject(
   database: Database,
   path = process.env.ARGO_PROJECT_PATH ?? process.cwd(),
 ) {
-  const directory = await realpath(path);
-  const commonDirectory = await realpath(
-    resolve(directory, await git(directory, 'rev-parse', '--git-common-dir')),
-  );
-  const root = await git(directory, 'rev-parse', '--show-toplevel');
+  const { root, commonDirectory } = await readRepository(path);
   const existing = database
     .select()
     .from(project)
@@ -79,6 +54,7 @@ export function readProjectPath(database: Database, projectId: string) {
 }
 
 export function createProjectService(database: Database): ProjectsService {
+  let rejectedProjects = 0;
   return {
     branches: async ({ projectId }) =>
       listBranches(readProjectPath(database, projectId)),
@@ -91,7 +67,16 @@ export function createProjectService(database: Database): ProjectsService {
           .map(async (row) => {
             const checkoutChoice =
               row.checkoutChoice ?? (await defaultCheckoutChoice(row.path));
-            return checked(() => ProjectInfo.parse({ ...row, checkoutChoice }));
+            const result = ProjectInfo.safeParse({ ...row, checkoutChoice });
+            if (!result.success) {
+              rejectedProjects += 1;
+              console.error(
+                `projects: rejected shape #${rejectedProjects}`,
+                result.error,
+              );
+              throw result.error;
+            }
+            return result.data;
           }),
       ),
   };

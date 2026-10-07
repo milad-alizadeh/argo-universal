@@ -463,7 +463,7 @@ it('closes after the Agent stop limit even when the Agent does not stop', async 
   expect(session.getSnapshot().output).toEqual({ failure: null });
 });
 
-const { database, remove } = openTestDatabase();
+const { database, directory: runtimeDirectory, remove } = openTestDatabase();
 const data = {
   sessionId: 'session-1',
   projectId: 'project-1',
@@ -574,9 +574,16 @@ const models = (['new', 'existing'] as const).map(
     new TestModel(logic, {
       input:
         kind === 'existing'
-          ? { database, adapter, kind, sessionId: 'session-1' }
+          ? {
+              database,
+              runtimeDirectory,
+              adapter,
+              kind,
+              sessionId: 'session-1',
+            }
           : {
               database,
+              runtimeDirectory,
               adapter,
               kind,
               sessionId: 'session-1',
