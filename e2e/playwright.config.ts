@@ -21,19 +21,19 @@ export default defineConfig<AppOptions & ServerOptions>({
   // Never open the report server, so `pnpm test:e2e` ends on failure too.
   reporter: [['html', { open: 'never' }]],
   use: {
-    // The Server binds 127.0.0.1 only, so the App is served there too (spec section 5).
+    // The Server binds 127.0.0.1 only, so the App is served there too.
     baseURL: webUrl,
 
     trace: 'retain-on-first-failure',
   },
 
   projects: [
-    // The Expo web export in Chromium, against each test's own Server (spec section 10).
+    // The Expo web export in Chromium, against each test's own Server.
     {
       name: 'web',
       use: { ...devices['Desktop Chrome'], appTarget: 'web' },
     },
-    // The desktop app in production mode; it starts its own Server (spec section 9).
+    // The desktop app in production mode; it starts its own Server.
     {
       name: 'electron',
       use: { appTarget: 'electron' },

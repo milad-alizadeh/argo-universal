@@ -25,7 +25,7 @@ import {
   serverConnectionMachine,
 } from './server-machine';
 
-// Spec 0002 section 10 numbers, written out so the model cannot grade itself.
+// Numbers written out so the model cannot grade itself.
 const pollDelayMs = 200;
 const startLimitMs = 30_000;
 const stopLimitMs = 5000;

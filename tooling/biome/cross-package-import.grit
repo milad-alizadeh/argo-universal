@@ -13,5 +13,5 @@ or {
     $source <: r"['\"](?:\.\./)+packages/agents/([^/]+)/.*"($target),
     $agent <: $target
   },
-  register_diagnostic(span=$source, message="Import another workspace package by its name and an exports entry, not by a relative path into packages/, tooling/ or apps/ (A2, spec 0001 section 4).")
+  register_diagnostic(span=$source, message="Import another workspace package by its name and an exports entry, not by a relative path into packages/, tooling/ or apps/ (A2).")
 }

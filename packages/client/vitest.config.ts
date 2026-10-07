@@ -1,7 +1,7 @@
 import { nodeTest } from '@repo/vitest/node';
 import { defineProject } from 'vitest/config';
 
-// Plain Vitest runs non-UI code only; components are tested with play functions (spec 0002 section 12).
+// Plain Vitest runs non-UI code only; components are tested with play functions.
 export default defineProject({
   test: {
     ...nodeTest,

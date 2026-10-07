@@ -7,5 +7,5 @@ or {
   `require($source)`
 } where {
   $source <: r"['\"]node:(?:sqlite|sea)(?:/.*)?['\"]",
-  register_diagnostic(span=$source, message="This package never imports Node APIs (spec 0001 section 4, ADR-0013).")
+  register_diagnostic(span=$source, message="This package never imports Node APIs (ADR-0013).")
 }

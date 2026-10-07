@@ -27,7 +27,7 @@ const crashing = await writeMockCodex(directory, { recording: 'file-change', exi
 | `compaction` | A short Turn followed by `thread/compact/start`, with a context Compaction start and completion |
 | `markdown-answer` | A Turn with no tools that streams a markdown answer: heading, inline code, link, numbered list, code block and table |
 
-These come from old Argo (codex-app-server 0.157.0). The recordings that spec 0003 lists under Testing Decisions join them.
+These come from old Argo (codex-app-server 0.157.0). Fresh recordings of each Session flow join them.
 
 `compaction` was captured from the real 0.157.0 app-server on 2026-10-06. A new temporary Checkout received a short shape-color note before `thread/compact/start`. The capture keeps Turn, item, text delta and usage notifications; account, hook and environment startup traffic are excluded, and paths are normalized. Compaction starts its own Turn and keeps one item id from start to completion.
 

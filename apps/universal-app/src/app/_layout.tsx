@@ -38,7 +38,7 @@ if (__DEV__ && Platform.OS !== 'web') {
 
 declare global {
   interface Window {
-    // Set by the desktop preload script (spec section 9).
+    // Set by the desktop preload script.
     argo?: {
       serverUrl: string | null;
       window: { minimize(): void; maximize(): void; close(): void };
@@ -46,7 +46,7 @@ declare global {
   }
 }
 
-// Electron's preload gives the Server URL; elsewhere it comes from the environment (spec section 8).
+// Electron's preload gives the Server URL; elsewhere it comes from the environment.
 const serverUrl =
   globalThis.window?.argo?.serverUrl ??
   process.env.EXPO_PUBLIC_ARGO_SERVER_URL ??
@@ -94,7 +94,7 @@ export default function RootLayout() {
   );
 }
 
-// Coming to the foreground lets a waiting reconnect attempt go at once (spec 0002 section 11).
+// Coming to the foreground lets a waiting reconnect attempt go at once.
 function ForegroundSignal() {
   const connection = useConnection();
   useEffect(() => {

@@ -38,7 +38,7 @@ registerAppScheme();
 
 const serverUrl = (address: ServerAddress) => `ws://127.0.0.1:${address.port}`;
 
-// Makes sure a Supervisor runs; on quit it stops only one that it started (spec 0002 section 10).
+// Makes sure a Supervisor runs; on quit it stops only one that it started.
 const home = resolveHome();
 const inspection = createNodeMachineInspection({
   home,

@@ -13,7 +13,7 @@ import { type EventExecutor, TestModel, type TestPath } from 'xstate/graph';
 import type { WriterJob } from './writer-job';
 import { writerMachine } from './writer-machine';
 
-// Spec 0002 section 8: a failed batch is tried again after 1 second.
+// A failed batch is tried again after 1 second.
 const writeRetryDelayMs = 1000;
 
 interface WriteBatchCall {

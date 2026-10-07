@@ -34,7 +34,7 @@ const crashing = await writeMockClaude(directory, { recording: 'task-plan', exit
 | `compaction` | A short Turn followed by `/compact`: compacting status, success status and compact boundary |
 | `markdown-answer` | Both pipes of a Turn with no tools that streams a markdown answer: heading, inline code, link, numbered list, code block and table |
 
-`edit-and-command` and `interrupt` were recorded from claude-cli 2.1.286 through the Agent SDK on 2026-10-05, with account, paths and process ids replaced. The first three come from old Argo (claude-cli 2.1.286). None of them has a `system/init` or `result` frame, so the mock writes its own around each Turn. The recordings that spec 0003 lists under Testing Decisions replace them.
+`edit-and-command` and `interrupt` were recorded from claude-cli 2.1.286 through the Agent SDK on 2026-10-05, with account, paths and process ids replaced. The first three come from old Argo (claude-cli 2.1.286). None of them has a `system/init` or `result` frame, so the mock writes its own around each Turn. Fresh recordings of each Session flow replace them.
 
 `compaction` was captured through the Agent SDK using the installed 2.1.286 executable on 2026-10-06. A new temporary Checkout received a short shape-color note before `/compact`. The capture keeps SDK conversation and Compaction messages; catalog, account and rate-limit frames are excluded, and paths are normalized. The success status precedes the compact boundary, and both update the same Compaction started by the compacting status.
 

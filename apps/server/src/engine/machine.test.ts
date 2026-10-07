@@ -21,7 +21,7 @@ import type { EngineMessage } from '../supervisor/engine-message';
 import type { HttpServer, HttpServerOptions } from './http-server';
 import { engineMachine } from './machine';
 
-// Spec 0001 section 5: the Engine sends a heartbeat every second.
+// The Engine sends a heartbeat every second.
 const heartbeatIntervalMs = 1000;
 
 interface PendingCall<TInput, TOutput> {

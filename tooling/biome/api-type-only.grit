@@ -1,6 +1,6 @@
 language js
 
-// Spec 0001 section 4: client takes only types from @repo/api; a value import would bundle the server router into the App.
+// Client takes only types from @repo/api; a value import would bundle the server router into the App.
 or {
   or {
     JsImport() as $statement,
@@ -13,5 +13,5 @@ or {
   `require($source)`
 } where {
   $source <: r"['\"]@repo/api(?:/.*)?['\"]",
-  register_diagnostic(span=$source, message="client imports @repo/api only with `import type` (spec 0001 section 4); move runtime data to @repo/contracts, or keep it in a test, story or mock.")
+  register_diagnostic(span=$source, message="client imports @repo/api only with `import type`; move runtime data to @repo/contracts, or keep it in a test, story or mock.")
 }

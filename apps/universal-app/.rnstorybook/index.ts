@@ -10,5 +10,5 @@ const StorybookUIRoot = view.getStorybookUI({
   },
 });
 
-// Default export instead of registerRootComponent: the (dev)/storybook route renders it (spec section 9).
+// Default export instead of registerRootComponent: the (dev)/storybook route renders it.
 export default StorybookUIRoot;

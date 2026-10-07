@@ -97,7 +97,7 @@ export const FeedPatch = z.strictObject({
 });
 export type FeedPatch = z.infer<typeof FeedPatch>;
 
-// One change an Agent makes to a Session's Feed (spec 0002 section 8).
+// One change an Agent makes to a Session's Feed.
 export const FeedChange = z.discriminatedUnion('type', [
   FeedUpsert,
   FeedAppend,

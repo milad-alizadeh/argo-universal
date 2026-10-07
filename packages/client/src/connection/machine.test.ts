@@ -20,7 +20,7 @@ import {
 } from 'xstate/graph';
 import { type ConnectionInput, connectionMachine } from './machine';
 
-// Spec 0002 section 11 numbers, written out so the model cannot grade itself.
+// Numbers written out so the model cannot grade itself.
 const offlineDelayMs = 10_000;
 const retryDelayMs = (attempts: number) =>
   Math.min(500 * 2 ** attempts, 30_000);

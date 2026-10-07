@@ -6,7 +6,7 @@ Argo for iOS, Android, web, and macOS: one Expo app, an Electron shell, and a lo
 
 - Words: `GLOSSARY.md`. Use its terms in code, docs, and messages.
 - Decisions: `docs/adr/`. Name any ADR that your change contradicts, and ask before you contradict it.
-- Specs: `docs/specs/`. Build a spec as written. When it is unclear or wrong, stop and ask.
+- Specs: GitHub Issues, as transient briefs for implementation; never commit one. Build a spec as written. When it is unclear or wrong, stop and ask.
 - Storybook: before authoring stories or testing UI components, read `docs/agents/storybook.md`.
 - Designs: Paper. Before you edit a Paper file or build UI from one, read `docs/agents/paper.md`. It holds until Paper ships component instances.
 - Hooks: when a hook blocks you, or before you change a hook config or `tools/agent-hooks.mts`, read `docs/agents/hooks.md`.

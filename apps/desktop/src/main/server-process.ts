@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { ServerAddress } from '@repo/contracts';
 import type { z } from 'zod';
 
-// One-shot I/O for the Server connection machine; the machine owns every wait (spec 0002 section 10).
+// One-shot I/O for the Server connection machine; the machine owns every wait.
 
 let unrecognisedShapes = 0;
 const reportUnrecognised = (source: string, error: z.ZodError) => {
@@ -16,7 +16,7 @@ const reportUnrecognised = (source: string, error: z.ZodError) => {
   );
 };
 
-// ARGO_HOME overrides ~/.argo, as in the Server (spec section 5).
+// ARGO_HOME overrides ~/.argo, as in the Server.
 export const resolveHome = () =>
   process.env.ARGO_HOME ?? join(homedir(), '.argo');
 

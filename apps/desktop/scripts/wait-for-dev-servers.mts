@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { z } from 'zod';
 
-// `pnpm dev` starts the Server, Expo, and desktop together; desktop waits for the other two (spec section 10).
+// `pnpm dev` starts the Server, Expo, and desktop together; desktop waits for the other two.
 const serverFile = join(
   process.env.ARGO_HOME ?? join(homedir(), '.argo'),
   'server.json',

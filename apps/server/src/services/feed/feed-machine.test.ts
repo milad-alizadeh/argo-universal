@@ -14,7 +14,7 @@ import type { FeedStreamEvent } from './feed-change';
 import { feedMachine } from './feed-machine';
 import { type FeedRowsJob, findQueuedRow } from './feed-row';
 
-// Spec 0002 section 8: a batch every 60 ms, and open rows written after 1 second.
+// A batch every 60 ms, and open rows written after 1 second.
 const streamBatchDelayMs = 60;
 const storeDelayMs = 1000;
 

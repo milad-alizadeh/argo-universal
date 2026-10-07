@@ -1,4 +1,4 @@
-# Spec 0001 section 11: quality and web e2e on every pull request and push to main; Electron e2e on main and release/*.
+# Quality and web e2e on every pull request and push to main; Electron e2e on main and release/*.
 name: CI
 
 on:

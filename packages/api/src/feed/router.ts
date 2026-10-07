@@ -8,7 +8,7 @@ import {
 } from '@repo/contracts';
 import { publicProcedure, router, zAsyncIterable } from '../trpc';
 
-// The Feed procedures of spec 0001 section 6.
+// The Feed procedures.
 export const feedRouter = router({
   page: publicProcedure
     .input(FeedPageInput)

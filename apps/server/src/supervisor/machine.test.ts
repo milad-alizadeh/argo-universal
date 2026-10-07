@@ -28,7 +28,7 @@ import {
 import type { EngineCommand } from './engine-message';
 import { supervisorMachine } from './machine';
 
-// Spec 0001 section 5 numbers, written out so the model cannot grade itself.
+// Numbers written out so the model cannot grade itself.
 const readyTimeoutMs = 15_000;
 const heartbeatTimeoutMs = 5000;
 const maxCrashes = 10;

@@ -30,7 +30,7 @@
       "node_modules, dist, .vite, .expo": "Installed or build output, not our source.",
       "*.stories.tsx": "Stories repeat the same render shape by design.",
       "packages/client/src/primitives": "Primitives wrap the same platform component variant by variant.",
-      "tests, mocks, e2e, tools": "Not production logic; a new-clones-only gate for tests comes later (Spec 0004).",
+      "tests, mocks, e2e, tools": "Not production logic; a new-clones-only gate for tests comes later.",
       "generated files": "Fix the generator, not the output: *.gen.*, storybook.requires.ts, uniwind-types.d.ts, packages/db/drizzle."
     },
     "ignorePattern": "The api router and service name the same contracts in their import lists: a false positive.",

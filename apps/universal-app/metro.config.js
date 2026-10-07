@@ -17,7 +17,7 @@ const storybookConfig = withStorybook(config, {
   configPath: path.resolve(__dirname, '.rnstorybook'),
 });
 
-// Other wrappers go inside; withUniwindConfig must stay outermost (spec section 9).
+// Other wrappers go inside; withUniwindConfig must stay outermost.
 module.exports = withUniwindConfig(storybookConfig, {
   cssEntryFile: './global.css',
   dtsFile: './src/uniwind-types.d.ts',

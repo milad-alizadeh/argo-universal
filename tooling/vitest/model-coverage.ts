@@ -6,7 +6,7 @@ import {
   type TestModel,
 } from 'xstate/graph';
 
-// Spec 0002 section 12: more paths than this means a split or a filter.
+// More paths than this means a split or a filter.
 const maximumPathCount = 1000;
 
 type Walk<TSnapshot extends Snapshot<unknown>, TEvent extends EventObject> = {

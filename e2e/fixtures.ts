@@ -128,7 +128,7 @@ export const test = base.extend<
       await waitForServer(httpUrl);
       await use({ page: await electronApp.firstWindow(), httpUrl });
     } finally {
-      // Quitting stops the Server that desktop started (spec section 9).
+      // Quitting stops the Server that desktop started.
       await electronApp.close();
     }
     const leftoverPid = await readServerPid(home);

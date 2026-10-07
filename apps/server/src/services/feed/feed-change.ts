@@ -13,7 +13,7 @@ import {
 } from '@repo/contracts';
 import { z } from 'zod';
 
-// The part of a Session's Feed that the Feed actor holds in memory (spec 0002 section 8).
+// The part of a Session's Feed that the Feed actor holds in memory.
 export interface Feed {
   sessionId: string;
   // The revision of the newest change.

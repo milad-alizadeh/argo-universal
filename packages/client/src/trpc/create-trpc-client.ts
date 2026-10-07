@@ -14,7 +14,7 @@ export function createTRPCClient(
   beforeConnect: () => Promise<void> = async () => {},
 ) {
   const webSocketClient = trpc.createWSClient({
-    // `beforeConnect` waits out the retry delay, so the Connection machine can cut it short (spec 0002 section 11).
+    // `beforeConnect` waits out the retry delay, so the Connection machine can cut it short.
     url: async () => {
       await beforeConnect();
       return serverUrl;

@@ -8,7 +8,7 @@ Argo is a cockpit for coding agents. It runs Claude and Codex Sessions on your m
 - `apps/storybook`: the web Storybook
 - `e2e`: the Playwright specs for web and Electron
 
-Read `GLOSSARY.md` for the words and `docs/adr/` for the decisions. The first build is `docs/specs/0001-scaffold.md`.
+Read `GLOSSARY.md` for the words and `docs/adr/` for the decisions.
 
 ## Run it
 

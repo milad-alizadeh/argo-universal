@@ -15,7 +15,7 @@ export type FeedRowWrite = Omit<
   'sessionId' | 'createdAt' | 'updatedAt'
 >;
 
-// One unit of work for the database writer (spec 0002 section 8).
+// One unit of work for the database writer.
 export type WriterJob =
   | {
       type: 'feedRows';

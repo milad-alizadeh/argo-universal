@@ -144,7 +144,7 @@ export const PendingPlanProposal = z.strictObject({
 });
 export type PendingPlanProposal = z.infer<typeof PendingPlanProposal>;
 
-// Which step of the live header order produced its text (spec 0003).
+// Which step of the live header order produced its text.
 export const LiveHeaderSource = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('request') }),
   z.strictObject({ type: z.literal('retry') }),

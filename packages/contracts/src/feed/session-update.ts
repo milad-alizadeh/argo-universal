@@ -18,7 +18,7 @@ export type SessionUpdateKind = z.infer<typeof SessionUpdateKind>;
 export const SessionUpdateState = z.enum(sessionUpdateStates);
 export type SessionUpdateState = z.infer<typeof SessionUpdateState>;
 
-// Fields every Feed row carries, from the `feed_row` table (spec section 6, ADR-0007).
+// Fields every Feed row carries, from the `feed_row` table (ADR-0007).
 const envelope = feedRowColumns.pick({
   id: true,
   sessionId: true,
