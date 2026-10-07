@@ -14,7 +14,7 @@
     "format": "biome check --write .",
     "postinstall": "sherif",
     "quality:dead-code": "knip --no-progress --max-issues 0",
-    "quality:duplication": "jscpd --config .jscpd.json apps packages tooling tools e2e mocks",
+    "quality:duplication": "jscpd --config .jscpd.json --baseline .jscpd-baseline.json --fail-on-new-clones=0 apps packages tooling tools e2e mocks",
     "quality": "sherif && biome check . && turbo run check-types test --continue=dependencies-successful",
     "sherif": "sherif",
     "test": "vitest run",

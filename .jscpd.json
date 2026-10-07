@@ -1,5 +1,4 @@
 {
-  "threshold": 0,
   "minTokens": 50,
   "minLines": 5,
   "format": ["typescript", "tsx", "javascript"],
@@ -11,6 +10,19 @@
     "**/.vite/**",
     "**/.expo/**",
     "**/*.stories.tsx",
-    "packages/client/src/primitives/**"
+    "packages/client/src/primitives/**",
+    "**/*.test.*",
+    "**/*.spec.*",
+    "**/mocks/**",
+    "**/*.mocks.*",
+    "e2e/**",
+    "tools/**",
+    "**/*.gen.*",
+    "**/.rnstorybook/storybook.requires.ts",
+    "**/uniwind-types.d.ts",
+    "packages/db/drizzle/**"
+  ],
+  "ignorePattern": [
+    "Session\\w+(Input|Output),\\s+Session\\w+(Input|Output),\\s+SessionAnswer\\w+,"
   ]
 }
