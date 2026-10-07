@@ -20,6 +20,7 @@ export function PhoneLayout({ destination, children }: PhoneLayoutProps) {
   // Mounting the next section stalls the first frame, so a picked section's drawer shuts once it has mounted.
   const deferClose = useRef(false);
   const pendingSection = useRef<ShellSection | null>(null);
+  // biome-ignore lint/correctness/useExhaustiveDependencies(section): a picked section is the trigger to shut the drawer, not a value the effect reads
   useEffect(() => {
     const frame = requestAnimationFrame(() => setDrawerOpen(false));
     return () => cancelAnimationFrame(frame);

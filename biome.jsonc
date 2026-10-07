@@ -51,11 +51,14 @@
       }
     },
     {
-      // Vendored react-native-reusables output; knip and jscpd already exclude it.
+      // Vendored react-native-reusables output; knip and jscpd already exclude it, and the React domain rules are off.
       "includes": ["packages/client/src/primitives/**"],
       "linter": {
         "rules": {
-          "style": { "noUselessElse": "off" }
+          "style": { "noUselessElse": "off" },
+          "complexity": { "noUselessFragments": "off" },
+          "correctness": { "useExhaustiveDependencies": "off" },
+          "suspicious": { "noArrayIndexKey": "off" }
         }
       }
     },
