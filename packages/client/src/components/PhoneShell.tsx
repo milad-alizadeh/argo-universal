@@ -10,6 +10,7 @@ import { Icon } from './Icon';
 import { PhoneDrawer } from './PhoneDrawer';
 import { PhoneShellCard } from './PhoneShellCard';
 import { type ShellSection, shellSections } from './shell-sections';
+import { maximumAttentionBadgeCount } from './use-attention-count';
 
 export type { ShellSection } from './shell-sections';
 
@@ -106,7 +107,9 @@ export function PhoneShell({
             accessibilityLabel={`${attentionCount} ${attentionCount === 1 ? 'Session needs' : 'Sessions need'} attention`}
           >
             <Text className="text-xs font-semibold text-warning-foreground">
-              {attentionCount > 99 ? '99+' : attentionCount}
+              {attentionCount > maximumAttentionBadgeCount
+                ? `${maximumAttentionBadgeCount}+`
+                : attentionCount}
             </Text>
           </Badge>
         )}

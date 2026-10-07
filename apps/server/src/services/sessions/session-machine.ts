@@ -88,6 +88,10 @@ export interface SessionContext extends SessionData {
   stored: boolean;
 }
 
+// The Session gives up on its Agent after this many crashes within the window.
+const crashWindowMs = 600_000;
+const maxCrashesInWindow = 3;
+
 const writer = ({ system }: { system: { get: (id: string) => unknown } }) =>
   system.get('databaseWriter') as ActorRefFrom<typeof writerMachine>;
 
@@ -358,7 +362,7 @@ const sessionSetup = setup({
     recordCrash: enqueueActions(({ context, enqueue }) => {
       const now = Date.now();
       const agentCrashes = [
-        ...context.agentCrashes.filter((at) => at > now - 600_000),
+        ...context.agentCrashes.filter((at) => at > now - crashWindowMs),
         now,
       ];
       enqueue.assign({ agentCrashes });
@@ -413,7 +417,8 @@ const sessionSetup = setup({
       context.permissionQueue[0]?.toolCallId === event.toolCallId,
     hasPermission: ({ context }) => context.permissionQueue.length > 0,
     hasElicitation: ({ context }) => context.pendingElicitation !== null,
-    tooManyCrashes: ({ context }) => context.agentCrashes.length >= 3,
+    tooManyCrashes: ({ context }) =>
+      context.agentCrashes.length >= maxCrashesInWindow,
   },
   delays: {
     cancelLimit: 10_000,

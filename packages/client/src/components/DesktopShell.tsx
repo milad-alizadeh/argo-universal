@@ -33,6 +33,11 @@ export interface DesktopShellProps {
   inspector: ReactNode;
 }
 
+// With the sidebar hidden, a header title starts this far in, clear of the sidebar toggle.
+const hiddenSidebarTitleInset = 32;
+// The expanded Inspector's resize handle sits this far right when the sidebar shows.
+const expandedInspectorHandleShift = 4;
+
 export type InspectorState = 'closed' | 'open' | 'expanded';
 
 export function DesktopShell({
@@ -168,7 +173,9 @@ export function DesktopShell({
             railWidth +
             usableWidth -
             inspectorTargetWidth +
-            (inspectorExpanded && sidebarShown ? 4 : 0),
+            (inspectorExpanded && sidebarShown
+              ? expandedInspectorHandleShift
+              : 0),
         }}
       >
         <PanelResizeHandle
@@ -218,9 +225,11 @@ export function DesktopShell({
               <ShellHeaderContent
                 testID="desktop-detail-title"
                 animate={!resizing}
-                position={sidebarShown ? visibleListWidth : 32}
+                position={
+                  sidebarShown ? visibleListWidth : hiddenSidebarTitleInset
+                }
                 transitionKey={transitionKey}
-                inset={sidebarShown ? 0 : 32}
+                inset={sidebarShown ? 0 : hiddenSidebarTitleInset}
               >
                 {detailHeader}
               </ShellHeaderContent>
@@ -255,10 +264,16 @@ export function DesktopShell({
                 position={
                   usableWidth -
                   inspectorTargetWidth +
-                  (!sidebarShown && inspectorExpanded ? 32 : 0)
+                  (!sidebarShown && inspectorExpanded
+                    ? hiddenSidebarTitleInset
+                    : 0)
                 }
                 transitionKey={transitionKey}
-                inset={!sidebarShown && inspectorExpanded ? 32 : 0}
+                inset={
+                  !sidebarShown && inspectorExpanded
+                    ? hiddenSidebarTitleInset
+                    : 0
+                }
               >
                 {inspectorHeader}
               </ShellHeaderContent>

@@ -10,8 +10,9 @@ const serverFile = join(
   'server.json',
 );
 const webUrl = process.env.ARGO_EXPO_WEB_URL ?? 'http://localhost:8081';
-const timeoutMs = 5 * 60_000;
+const timeoutMs = 300_000;
 const requestTimeoutMs = 2000;
+const retryDelayMs = 500;
 
 // Plain Node cannot load @repo/contracts from source, so these copy the fields this script reads.
 const ServerAddress = z.object({ port: z.int() });
@@ -77,6 +78,6 @@ if (import.meta.main) {
       console.error(`Gave up waiting for ${serverFile} and ${webUrl}`);
       process.exit(1);
     }
-    await delay(500);
+    await delay(retryDelayMs);
   }
 }

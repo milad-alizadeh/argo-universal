@@ -6,6 +6,7 @@ import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
 import { Icon } from './Icon';
 import { type ShellSection, shellSections } from './shell-sections';
+import { maximumAttentionBadgeCount } from './use-attention-count';
 
 interface DesktopRailProps {
   selectedSection: ShellSection;
@@ -48,7 +49,9 @@ const SectionButton = memo(function SectionButton({
           accessibilityLabel={`${attentionCount} ${attentionCount === 1 ? 'Session needs' : 'Sessions need'} attention`}
         >
           <Text className="text-[10px] font-semibold text-warning-foreground">
-            {attentionCount > 99 ? '99+' : attentionCount}
+            {attentionCount > maximumAttentionBadgeCount
+              ? `${maximumAttentionBadgeCount}+`
+              : attentionCount}
           </Text>
         </Badge>
       )}

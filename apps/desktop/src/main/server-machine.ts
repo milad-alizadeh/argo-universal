@@ -49,6 +49,7 @@ export interface CheckRunningInput {
 const pollDelayMs = 200;
 const startLimitMs = 30_000;
 const stopLimitMs = 5000;
+const millisecondsPerSecond = 1000;
 
 const serverInput = ({ context }: { context: ServerContext }): ServerInput => ({
   home: context.home,
@@ -166,7 +167,7 @@ const waitingForSupervisorExit = (
         actions: {
           type: 'log',
           params: ({ context }) => ({
-            line: `the Supervisor (pid ${context.ownedPid}) did not stop in ${stopLimitMs / 1000} seconds`,
+            line: `the Supervisor (pid ${context.ownedPid}) did not stop in ${stopLimitMs / millisecondsPerSecond} seconds`,
           }),
         },
       },
@@ -251,7 +252,7 @@ export const serverConnectionMachine = serverSetup.createMachine({
               target: '#serverConnection.abandoning',
               actions: assign({
                 failure: ({ context }) =>
-                  `The Supervisor (pid ${context.ownedPid}) did not answer in ${startLimitMs / 1000} seconds`,
+                  `The Supervisor (pid ${context.ownedPid}) did not answer in ${startLimitMs / millisecondsPerSecond} seconds`,
               }),
             },
           },

@@ -9,6 +9,10 @@ import Animated, {
 } from 'react-native-reanimated';
 import { cn } from '#lib/utils';
 
+const fullPercent = 100;
+// The narrowest the native bar draws, so an empty bar still shows.
+const minimumPercent = 1;
+
 function Progress({
   className,
   value,
@@ -54,7 +58,7 @@ function WebIndicator({ value, className }: IndicatorProps) {
         'bg-primary h-full w-full flex-1 transition-all',
         className,
       )}
-      style={{ transform: `translateX(-${100 - (value ?? 0)}%)` }}
+      style={{ transform: `translateX(-${fullPercent - (value ?? 0)}%)` }}
     >
       <ProgressPrimitive.Indicator className={cn('h-full w-full', className)} />
     </View>
@@ -67,7 +71,12 @@ function NativeIndicator({ value, className }: IndicatorProps) {
   const indicator = useAnimatedStyle(() => {
     return {
       width: withSpring(
-        `${interpolate(progress.value, [0, 100], [1, 100], Extrapolation.CLAMP)}%`,
+        `${interpolate(
+          progress.value,
+          [0, fullPercent],
+          [minimumPercent, fullPercent],
+          Extrapolation.CLAMP,
+        )}%`,
         { overshootClamping: true },
       ),
     };

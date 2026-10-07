@@ -3,6 +3,7 @@ import * as React from 'react';
 import { Platform, View, type ViewProps } from 'react-native';
 import { FadeIn, FadeOut, ReduceMotion } from 'react-native-reanimated';
 import { FullWindowOverlay as RNFullWindowOverlay } from 'react-native-screens';
+import { motionDuration } from '#lib/motion';
 import { cn } from '#lib/utils';
 import { buttonTextVariants, buttonVariants } from '#primitives/button';
 import { NativeOnlyAnimatedView } from '#primitives/native-only-animated-view';
@@ -41,10 +42,12 @@ function AlertDialogOverlay({
         asChild={Platform.OS !== 'web'}
       >
         <NativeOnlyAnimatedView
-          entering={FadeIn.duration(200)
-            .delay(50)
+          entering={FadeIn.duration(motionDuration.enter)
+            .delay(motionDuration.enterDelay)
             .reduceMotion(ReduceMotion.System)}
-          exiting={FadeOut.duration(150).reduceMotion(ReduceMotion.System)}
+          exiting={FadeOut.duration(motionDuration.exit).reduceMotion(
+            ReduceMotion.System,
+          )}
           as="Pressable"
         >
           <>{children}</>

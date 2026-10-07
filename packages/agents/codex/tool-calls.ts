@@ -51,11 +51,13 @@ const changeOf = ({ path, kind, diff }: FileUpdateChange): DiffChange => {
 };
 const destinationPath = (change: FileUpdateChange) =>
   (change.kind.type === 'update' && change.kind.move_path) || change.path;
+const octalRadix = 8;
+const octalEscapeDigits = 3;
 const quotePath = (filePath: string) => {
   // biome-ignore lint/suspicious/noControlCharactersInRegex: Git pathnames encode control characters with octal escapes.
   const escaped = filePath.replace(/[\x00-\x20"\\\x7f]/g, (character) => {
     if (character === '"' || character === '\\') return `\\${character}`;
-    return `\\${character.charCodeAt(0).toString(8).padStart(3, '0')}`;
+    return `\\${character.charCodeAt(0).toString(octalRadix).padStart(octalEscapeDigits, '0')}`;
   });
   if (escaped === filePath) return filePath;
   return `"${escaped}"`;

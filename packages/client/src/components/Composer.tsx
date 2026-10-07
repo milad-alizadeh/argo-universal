@@ -29,7 +29,13 @@ import {
 } from './ComposerStatus';
 import { Icon, IconSpinner } from './Icon';
 
-const maximumImageBytes = 20 * 1024 * 1024;
+const bytesPerMebibyte = 1_048_576;
+const maximumImageMebibytes = 20;
+const maximumImageBytes = maximumImageMebibytes * bytesPerMebibyte;
+// The message field grows a line at a time up to this many lines, then scrolls.
+const maximumVisibleLines = 4;
+const lineHeight = 20;
+const maximumTextHeight = maximumVisibleLines * lineHeight;
 
 export interface ComposerImage {
   id: string;
@@ -88,7 +94,7 @@ export function Composer({
   const wide = useWide();
   const [attachHighlighted, setAttachHighlighted] = useState(false);
   const [textHeight, setTextHeight] = useState(
-    Math.min(4, draft.text.split('\n').length) * 20,
+    Math.min(maximumVisibleLines, draft.text.split('\n').length) * lineHeight,
   );
   const inactive = sending || disabled;
   const showStop = configuration?.turnRunning && onStop;
@@ -229,13 +235,18 @@ export function Composer({
             value={draft.text}
             editable={!inactive}
             onChangeText={(text) => onDraftChange({ ...draft, text })}
-            numberOfLines={Platform.OS === 'web' ? 1 : 4}
-            scrollEnabled={Platform.OS === 'web' || textHeight >= 80}
+            numberOfLines={Platform.OS === 'web' ? 1 : maximumVisibleLines}
+            scrollEnabled={
+              Platform.OS === 'web' || textHeight >= maximumTextHeight
+            }
             onContentSizeChange={(event) =>
               setTextHeight(
                 Math.max(
-                  20,
-                  Math.min(80, event.nativeEvent.contentSize.height),
+                  lineHeight,
+                  Math.min(
+                    maximumTextHeight,
+                    event.nativeEvent.contentSize.height,
+                  ),
                 ),
               )
             }

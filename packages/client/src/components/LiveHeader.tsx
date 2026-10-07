@@ -17,8 +17,9 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
+import { fullTurnDegrees } from '#lib/motion';
 import { Text } from '#primitives/text';
-import { formatElapsed } from '../feed/format-elapsed';
+import { formatElapsed, millisecondsPerSecond } from '../feed/format-elapsed';
 import { useClock } from '../feed/use-clock';
 import { Icon } from './Icon';
 import { ShimmerText } from './ShimmerText';
@@ -42,7 +43,10 @@ function RetryIcon() {
   useEffect(() => {
     if (!reducedMotion)
       rotation.value = withRepeat(
-        withTiming(360, { duration: 1000, easing: Easing.linear }),
+        withTiming(fullTurnDegrees, {
+          duration: millisecondsPerSecond,
+          easing: Easing.linear,
+        }),
         -1,
       );
     return () => cancelAnimation(rotation);

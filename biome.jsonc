@@ -35,6 +35,22 @@
   },
   "overrides": [
     {
+      // Tests, stories and mocks state their inputs and expectations as literals.
+      "includes": [
+        "**/*.test.*",
+        "**/*.stories.*",
+        "**/*.mocks.*",
+        "e2e/**",
+        "**/mocks/**",
+        "tools/**"
+      ],
+      "linter": {
+        "rules": {
+          "style": { "noMagicNumbers": "off" }
+        }
+      }
+    },
+    {
       // Icons take a named size (sm, md or lg) instead of a number or size-* class.
       "includes": ["packages/client/src/**"],
       "plugins": ["./tooling/biome/icon-size.grit"]

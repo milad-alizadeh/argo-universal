@@ -1,4 +1,5 @@
 import type { ToolCallUpdate } from '@repo/contracts';
+import { millisecondsPerSecond } from './format-elapsed';
 import { useClock } from './use-clock';
 
 export function useToolCallDuration(
@@ -10,6 +11,6 @@ export function useToolCallDuration(
   const timing = row?._meta?.argo;
   const end = running ? clock : timing?.endedAt;
   return timing?.startedAt !== undefined && end !== undefined
-    ? `${Number((Math.max(0, end - timing.startedAt) / 1000).toFixed(1))}s`
+    ? `${Number((Math.max(0, end - timing.startedAt) / millisecondsPerSecond).toFixed(1))}s`
     : undefined;
 }

@@ -12,6 +12,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { SvgXml } from 'react-native-svg';
 import { useResolveClassNames } from 'uniwind';
+import { fullTurnDegrees } from '#lib/motion';
 import { cn } from '#lib/utils';
 import { Badge } from '#primitives/badge';
 import { Button } from '#primitives/button';
@@ -33,6 +34,8 @@ export interface SessionRowProps {
   pullRequest?: PullRequestIndicatorProps;
   onSelect: (sessionId: string) => void;
 }
+
+const logoTurnMilliseconds = 3000;
 
 export const SessionRow = memo(function SessionRow({
   session,
@@ -57,7 +60,10 @@ export const SessionRow = memo(function SessionRow({
     logoRotation.value =
       session.status === 'running'
         ? withRepeat(
-            withTiming(360, { duration: 3000, easing: Easing.linear }),
+            withTiming(fullTurnDegrees, {
+              duration: logoTurnMilliseconds,
+              easing: Easing.linear,
+            }),
             -1,
           )
         : 0;

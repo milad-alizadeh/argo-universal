@@ -8,13 +8,13 @@ import {
   View,
 } from 'react-native';
 import Animated, {
-  Easing,
   FadeIn,
   FadeOut,
   ReduceMotion,
 } from 'react-native-reanimated';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useResolveClassNames } from 'uniwind';
+import { bezierEasing, easingCurve, motionDuration } from '#lib/motion';
 import { cn } from '#lib/utils';
 
 export interface ScrollFadeProps {
@@ -25,10 +25,12 @@ export interface ScrollFadeProps {
 
 export const scrollFadeHeight = { top: 28, bottom: 36 } as const;
 
-// The ease iOS uses when a transparent header gains its scroll edge.
-const fadeEasing = Easing.bezier(0.25, 0.1, 0.25, 1);
+const fadeEasing = bezierEasing(easingCurve.standard);
 const [fadeIn, fadeOut] = [FadeIn, FadeOut].map((animation) =>
-  animation.duration(200).easing(fadeEasing).reduceMotion(ReduceMotion.System),
+  animation
+    .duration(motionDuration.enter)
+    .easing(fadeEasing)
+    .reduceMotion(ReduceMotion.System),
 );
 
 // A gradient from the surface colour to transparent where a list meets its edge; it fades in and out.

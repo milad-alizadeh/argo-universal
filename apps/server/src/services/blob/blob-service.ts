@@ -8,7 +8,8 @@ import { blob, blobRef } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
 import { and, eq, lt, notExists, sql } from 'drizzle-orm';
 
-const unusedBlobAge = 24 * 60 * 60 * 1000;
+// One day in milliseconds.
+const unusedBlobAge = 86_400_000;
 
 // Where a Server home keeps its uploads (ADR-0005).
 export const blobsFolderIn = (home: string) => join(home, 'blobs');
@@ -22,15 +23,22 @@ const unlessMissing =
   };
 
 // The image types an Agent reads, known by their first bytes; a fetched Blob on iOS arrives as text/plain.
+const hasBytesAt = (bytes: Buffer, offset: number, expected: Buffer) =>
+  bytes.subarray(offset, offset + expected.length).equals(expected);
+// A WebP file is a RIFF container whose format tag follows the 4-byte tag and 4-byte size.
+const webpFormatOffset = 8;
 const imageSignatures: [mime: string, matches: (bytes: Buffer) => boolean][] = [
-  ['image/png', (bytes) => bytes.subarray(0, 4).toString('hex') === '89504e47'],
-  ['image/jpeg', (bytes) => bytes.subarray(0, 3).toString('hex') === 'ffd8ff'],
-  ['image/gif', (bytes) => bytes.subarray(0, 4).toString('latin1') === 'GIF8'],
+  [
+    'image/png',
+    (bytes) => hasBytesAt(bytes, 0, Buffer.from('89504e47', 'hex')),
+  ],
+  ['image/jpeg', (bytes) => hasBytesAt(bytes, 0, Buffer.from('ffd8ff', 'hex'))],
+  ['image/gif', (bytes) => hasBytesAt(bytes, 0, Buffer.from('GIF8', 'latin1'))],
   [
     'image/webp',
     (bytes) =>
-      bytes.subarray(0, 4).toString('latin1') === 'RIFF' &&
-      bytes.subarray(8, 12).toString('latin1') === 'WEBP',
+      hasBytesAt(bytes, 0, Buffer.from('RIFF', 'latin1')) &&
+      hasBytesAt(bytes, webpFormatOffset, Buffer.from('WEBP', 'latin1')),
   ],
 ];
 
