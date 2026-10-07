@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { type AgentCommand, agentMachine } from '@repo/agents';
 import { sessionRows } from '@repo/api/mocks';
-import { permissionOptions } from '@repo/contracts';
+import { permissionOptions, type SessionConfigOption } from '@repo/contracts';
 import {
   createMockAdapter,
   type MockAgentScript,
@@ -454,6 +454,112 @@ it('recovers when cancellation times out and writes a Notice for the Turn', asyn
   ).not.toThrow();
 });
 
+it('keeps the latest held choices through updates and cancellation, then applies them in order', async () => {
+  const options = [
+    {
+      configId: 'model',
+      name: 'Model',
+      category: 'model',
+      type: 'select',
+      currentValue: 'small',
+      options: [
+        { value: 'small', name: 'Small' },
+        { value: 'large', name: 'Large' },
+      ],
+    },
+    {
+      configId: 'mode',
+      name: 'Mode',
+      category: 'mode',
+      type: 'select',
+      currentValue: 'auto',
+      options: [
+        { value: 'auto', name: 'Auto' },
+        { value: 'plan', name: 'Plan' },
+      ],
+    },
+  ] satisfies SessionConfigOption[];
+  const { session, stream, commands } = await openSession({
+    connect: async () => ({ ...mockReady, configOptions: options }),
+  });
+  sendSessionCommand(session, firstPrompt);
+  await expect
+    .poll(() => commands)
+    .toEqual([{ ...firstPrompt, type: 'agent.prompt' }]);
+  for (const [configId, value] of [
+    ['model', 'large'],
+    ['mode', 'plan'],
+    ['model', 'small'],
+    ['model', 'large'],
+  ] as const)
+    sendSessionCommand(session, {
+      type: 'session.setConfigOption',
+      configId,
+      value,
+    });
+  stream.send({
+    type: 'agent.configOptionsChanged',
+    configOptions: options.map((option) => ({
+      ...option,
+      name: `Renamed ${option.name}`,
+    })),
+  });
+  expect(session.getSnapshot().context.configOptions).toMatchObject([
+    {
+      currentValue: 'large',
+      name: 'Renamed Model',
+      _meta: { argo: { heldUntilNextTurn: true } },
+    },
+    { currentValue: 'plan', _meta: { argo: { heldUntilNextTurn: true } } },
+  ]);
+  expect(commands).toEqual([{ ...firstPrompt, type: 'agent.prompt' }]);
+  sendSessionCommand(session, { type: 'session.cancel' });
+  sendSessionCommand(session, {
+    type: 'session.setConfigOption',
+    configId: 'mode',
+    value: 'auto',
+  });
+  stream.send({ type: 'agent.turnEnded', stopReason: 'cancelled' });
+  sendSessionCommand(session, {
+    type: 'session.prompt',
+    turnId: 'turn-2',
+    content: [],
+  });
+  await expect
+    .poll(() => commands)
+    .toEqual([
+      { ...firstPrompt, type: 'agent.prompt' },
+      { type: 'agent.cancel' },
+      { type: 'agent.setConfigOption', configId: 'model', value: 'large' },
+      { type: 'agent.setConfigOption', configId: 'mode', value: 'auto' },
+      { type: 'agent.prompt', turnId: 'turn-2', content: [] },
+    ]);
+  expect(session.getSnapshot().context.heldConfigValues).toEqual([]);
+  stream.send({ type: 'agent.configOptionsChanged', configOptions: options });
+  expect(session.getSnapshot().context.configOptions).toMatchObject([
+    { currentValue: 'large', _meta: { argo: { heldUntilNextTurn: true } } },
+    { currentValue: 'auto' },
+  ]);
+  expect(
+    session.getSnapshot().context.configOptions[1]?._meta?.argo
+      ?.heldUntilNextTurn,
+  ).not.toBe(true);
+  stream.send({
+    type: 'agent.configOptionsChanged',
+    configOptions: options.map((option) => ({
+      ...option,
+      currentValue: option.configId === 'model' ? 'large' : 'auto',
+    })),
+  });
+  expect(
+    session
+      .getSnapshot()
+      .context.configOptions.map(
+        (option) => option._meta?.argo?.heldUntilNextTurn,
+      ),
+  ).toEqual([undefined, undefined]);
+});
+
 it('closes after the Agent stop limit even when the Agent does not stop', async () => {
   vi.useFakeTimers();
   const { session } = await openSession({ stop: () => new Promise(() => {}) });
@@ -476,10 +582,12 @@ const data = {
   nextPosition: 0,
 };
 let stream: MockAgentStream | undefined;
+let modelCommands: AgentCommand[] = [];
 const ready = mockReadyEvent;
 const adapter = createMockAdapter({
   stream: (value) => {
     stream = value;
+    value.receive((command) => modelCommands.push(command));
     return () => {
       if (stream === value) stream = undefined;
     };
@@ -621,6 +729,7 @@ it.each(paths.map((path, index) => [index, path] as const))(
   async (_, path) => {
     vi.useFakeTimers();
     stream = undefined;
+    modelCommands = [];
     const input = path.steps[0]?.state.context.input;
     if (!input) throw new Error('No model input');
     // The model writer holds jobs so paths cannot alter the database.
@@ -644,6 +753,8 @@ it.each(paths.map((path, index) => [index, path] as const))(
       events.map(({ type }) => [
         type,
         async ({ event }: { event: SessionEvent }) => {
+          const before = sessionActor.getSnapshot();
+          const commandIndex = modelCommands.length;
           if (
             event.type.startsWith('agent.') &&
             event.type !== 'agent.ready' &&
@@ -652,6 +763,19 @@ it.each(paths.map((path, index) => [index, path] as const))(
             stream.send(event as MockAgentStreamEvent);
           else sessionActor.send(event);
           await vi.advanceTimersByTimeAsync(0);
+          if (
+            event.type === 'session.prompt' &&
+            before.can(event) &&
+            before.context.heldConfigValues.length
+          )
+            expect(modelCommands.slice(commandIndex)).toEqual([
+              {
+                type: 'agent.setConfigOption',
+                configId: 'mode',
+                value: 'plan',
+              },
+              { ...event, type: 'agent.prompt' },
+            ]);
           if (String(event.type) === 'xstate.error.actor.feed')
             expect(sessionActor.getSnapshot().output).toEqual({
               failure: 'Feed failed',
@@ -664,6 +788,9 @@ it.each(paths.map((path, index) => [index, path] as const))(
       states: {
         '*': (expected) => {
           const actual = sessionActor.getSnapshot();
+          expect(actual.context.heldConfigValues).toEqual(
+            expected.context.heldConfigValues,
+          );
           expect(actual.context.rejectedMessages).toBe(
             expected.context.rejectedMessages,
           );
