@@ -4,6 +4,10 @@ import path from 'node:path';
 import { agentAdapters } from '@repo/agents';
 import { session as sessionTable } from '@repo/db/schema';
 import { mockClis } from '@repo/mocks/cli';
+import {
+  type MockCliScenarioInput,
+  mockCliScenarioEnvironment,
+} from '@repo/mocks/cli/mock-cli';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { type SnapshotFrom, toPromise, waitFor } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
@@ -38,19 +42,20 @@ describe.each(agentAdapters)(
       recording: string,
       vendorSessionId: string | null,
       transcriptId: string,
-      notificationsFirst = false,
+      scenario: MockCliScenarioInput = {},
     ) {
       const bin = temporaryDirectory('argo-bin-');
       const cwd = temporaryDirectory('argo-project-');
       await mockCli.write(bin, { recording });
+      const transcript = mockCli.writeTranscript(
+        temporaryDirectory('argo-vendor-'),
+        cwd,
+        transcriptId,
+      );
       const environment = {
         PATH: `${bin}${path.delimiter}${process.env.PATH ?? ''}`,
-        MOCK_CLI_NOTIFICATIONS_FIRST: notificationsFirst ? '1' : '0',
-        ...mockCli.writeTranscript(
-          temporaryDirectory('argo-vendor-'),
-          cwd,
-          transcriptId,
-        ),
+        ...transcript.environment,
+        ...mockCliScenarioEnvironment({ ...scenario, ...transcript.scenario }),
       };
       for (const key of mockCli.apiKeyVariables ?? [])
         vi.stubEnv(key, 'mock-api-key');
@@ -88,13 +93,13 @@ describe.each(agentAdapters)(
     async function openSession(
       recording: string,
       vendorSessionId: string | null = null,
-      notificationsFirst = false,
+      scenario: MockCliScenarioInput = {},
     ) {
       const started = await startSession(
         recording,
         vendorSessionId,
         vendorSessionId ?? crypto.randomUUID(),
-        notificationsFirst,
+        scenario,
       );
       await waitFor(started.session, isIdle, { timeout: 10_000 });
       return started;
@@ -107,45 +112,50 @@ describe.each(agentAdapters)(
         content: [{ type: 'text', text: 'Edit the files and run a command.' }],
       });
 
-    it.each([false, true])(
-      'runs a Turn with edits, a command and an answer, then stops (notifications first: %s)',
-      async (notificationsFirst) => {
-        const { session, close } = await openSession(
-          mockCli.recordings.turn,
-          null,
-          notificationsFirst,
-        );
-        const vendorSessionId = session.getSnapshot().context.vendorSessionId;
-        prompt(session);
-        await waitFor(session, isIdle, { timeout: 10_000 });
-        await waitFor(session, (snapshot) => snapshot.context.usage !== null, {
-          timeout: 10_000,
-        });
+    const runsATurnAndStops = async (notificationsFirst: boolean) => {
+      const { session, close } = await openSession(
+        mockCli.recordings.turn,
+        null,
+        { notificationsFirst },
+      );
+      const vendorSessionId = session.getSnapshot().context.vendorSessionId;
+      prompt(session);
+      await waitFor(session, isIdle, { timeout: 10_000 });
+      await waitFor(session, (snapshot) => snapshot.context.usage !== null, {
+        timeout: 10_000,
+      });
 
-        const { output, rows, storedSession } = await close();
-        expect(output).toEqual({ failure: null });
-        expect(storedSession?.vendorSessionId).toBe(vendorSessionId);
-        expect(rows.every((row) => row.state === 'settled')).toBe(true);
-        expect(
-          rows.filter((row) => row.sessionUpdate === 'user_message'),
-        ).toHaveLength(1);
-        expect(rows).toEqual(
-          expect.arrayContaining([
-            expect.objectContaining({
-              sessionUpdate: 'tool_call_update',
-              kind: 'edit',
-              status: 'completed',
-            }),
-            expect.objectContaining({
-              sessionUpdate: 'tool_call_update',
-              kind: 'execute',
-              status: 'completed',
-            }),
-          ]),
-        );
-        expect(rows.at(-1)).toMatchObject({ sessionUpdate: 'agent_message' });
-        expect(rows.every((row) => row.turnId === 'turn-1')).toBe(true);
-      },
+      const { output, rows, storedSession } = await close();
+      expect(output).toEqual({ failure: null });
+      expect(storedSession?.vendorSessionId).toBe(vendorSessionId);
+      expect(rows.every((row) => row.state === 'settled')).toBe(true);
+      expect(
+        rows.filter((row) => row.sessionUpdate === 'user_message'),
+      ).toHaveLength(1);
+      expect(rows).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            sessionUpdate: 'tool_call_update',
+            kind: 'edit',
+            status: 'completed',
+          }),
+          expect.objectContaining({
+            sessionUpdate: 'tool_call_update',
+            kind: 'execute',
+            status: 'completed',
+          }),
+        ]),
+      );
+      expect(rows.at(-1)).toMatchObject({ sessionUpdate: 'agent_message' });
+      expect(rows.every((row) => row.turnId === 'turn-1')).toBe(true);
+    };
+
+    it('runs a Turn with edits, a command and an answer, then stops (notifications first: false)', () =>
+      runsATurnAndStops(false));
+
+    it.skipIf(mockCli.unsupportedScenarios.includes('notificationsFirst'))(
+      'runs a Turn with edits, a command and an answer, then stops (notifications first: true; skipped where the protocol has no prompt response to reorder)',
+      () => runsATurnAndStops(true),
     );
 
     it('cancels a Turn during a command', async () => {
@@ -195,12 +205,11 @@ describe.each(agentAdapters)(
     it.each(mockCli.connectionFailures ?? [])(
       'rejects an unsupported connection with $message',
       async (failure) => {
-        for (const [key, value] of Object.entries(failure.environment))
-          vi.stubEnv(key, value);
         const { session } = await startSession(
           mockCli.recordings.turn,
           null,
           crypto.randomUUID(),
+          failure.scenario,
         );
         const agentActor = session.getSnapshot().children.agent;
         if (!agentActor) throw new Error('No Agent');

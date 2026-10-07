@@ -213,6 +213,14 @@ function playTurn() {
     send(noTurnFrame(turnIndex));
     return;
   }
+  // A CLI that has sent no frame of the Turn yet sends all of them after it answers `interrupt`.
+  if (environment.scenario.blockTurnStart) {
+    heldFrames = [
+      ...(turn.some(isInit) ? [] : [initFrame()]),
+      ...turn.filter((frame) => frame !== INTERRUPT_POINT),
+    ];
+    return;
+  }
   if (!turn.some(isInit)) send(initFrame());
   replay(turn);
 }
@@ -270,8 +278,7 @@ serveJsonLines<Output>((input) => {
   if (input.type === 'user') return playTurn();
   if (input.type !== 'control_request') return;
   const subtype = input.request.subtype;
-  if (subtype === 'initialize' && process.env.MOCK_CLI_BLOCK_INITIALIZE === '1')
-    return;
+  if (subtype === 'initialize' && environment.scenario.blockInitialize) return;
   const response = answer(subtype);
   send({
     type: 'control_response',

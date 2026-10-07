@@ -16,7 +16,11 @@ import { newSessionMock as codexNewSessionMock } from './codex/new-session.ts';
 import { recordedRequestAnswer as codexRequestAnswer } from './codex/request-answer.ts';
 import { writeMockCodex } from './codex/write-mock-codex.ts';
 import { writeCodexTranscript } from './codex/write-transcript.ts';
-import type { MockCliOptions } from './mock-cli.ts';
+import type {
+  MockCliOptions,
+  MockCliScenario,
+  MockCliScenarioInput,
+} from './mock-cli.ts';
 import type { RecordedRequestAnswer } from './request-answer.ts';
 
 export interface MockCli {
@@ -44,22 +48,25 @@ export interface MockCli {
     editFailure?: string;
   };
   apiKeyVariables?: string[];
+  // Scenario fields this mock has no analogue for, so a parity row skips them with the reason in its name.
+  unsupportedScenarios: (keyof MockCliScenario)[];
   connectionFailures?: {
-    environment: Record<string, string>;
+    scenario: MockCliScenarioInput;
     message: string;
   }[];
-  // Writes the vendor transcript a resume reads, and returns the environment variables that point to it.
+  // Writes the vendor transcript a resume reads, and returns the real CLI variables and the scenario fragment that point to it.
   writeTranscript: (
     directory: string,
     cwd: string,
     vendorSessionId: string,
-  ) => Record<string, string>;
+  ) => { environment: Record<string, string>; scenario: MockCliScenarioInput };
 }
 
 // Each Agent adapter's mock CLI, by the id the adapter registers.
 export const mockClis: Record<string, MockCli> = {
   codex: {
     supportsPermissionFeedback: false,
+    unsupportedScenarios: [],
     recordedRequestAnswer: codexRequestAnswer,
     feedEvents: codexFeedEvents,
     recordedPrompt: codexRecordedPrompt,
@@ -68,7 +75,7 @@ export const mockClis: Record<string, MockCli> = {
     apiKeyVariables: ['OPENAI_API_KEY', 'CODEX_API_KEY'],
     connectionFailures: [
       {
-        environment: { MOCK_CLI_ACCOUNT_TYPE: 'apiKey' },
+        scenario: { account: 'apiKey' },
         message: 'Sign in to Codex with ChatGPT',
       },
     ],
@@ -83,6 +90,8 @@ export const mockClis: Record<string, MockCli> = {
   },
   claude: {
     supportsPermissionFeedback: true,
+    // Both reorder a JSON-RPC response against notifications, and Claude's streamed input gets no response to a user message.
+    unsupportedScenarios: ['notificationsFirst', 'requestBeforeStartResponse'],
     recordedTitle,
     recordedRequestAnswer: claudeRequestAnswer,
     feedEvents: claudeFeedEvents,

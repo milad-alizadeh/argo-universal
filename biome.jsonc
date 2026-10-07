@@ -131,6 +131,11 @@
       ]
     },
     {
+      // Mock CLI settings are read once, through readMockCliEnvironment() in mocks/cli/mock-cli.ts.
+      "includes": ["**", "!mocks/cli/mock-cli.ts"],
+      "plugins": ["./tooling/biome/mock-environment.grit"]
+    },
+    {
       // Only packages/db opens SQLite.
       "includes": ["**", "!packages/db/**"],
       "plugins": ["./tooling/biome/database-client.grit"]

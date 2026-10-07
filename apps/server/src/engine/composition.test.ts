@@ -20,6 +20,10 @@ import { feedRow, turn } from '@repo/db/schema';
 import { listBranches } from '@repo/git';
 import { createMockAdapter, type MockAgentStream } from '@repo/mocks/agent';
 import { mockClis } from '@repo/mocks/cli';
+import {
+  type MockCliScenarioInput,
+  mockCliScenarioEnvironment,
+} from '@repo/mocks/cli/mock-cli';
 import { readRequestAnswers } from '@repo/mocks/cli/request-answer';
 import { eq } from 'drizzle-orm';
 import { expect, it, vi } from 'vitest';
@@ -325,9 +329,15 @@ it.each(agentAdapters)(
       'PATH',
       `${directory}${path.delimiter}${process.env.PATH ?? ''}`,
     );
-    for (const [key, value] of Object.entries(
-      mockCli.writeTranscript(directory, directory, crypto.randomUUID()),
-    ))
+    const transcript = mockCli.writeTranscript(
+      directory,
+      directory,
+      crypto.randomUUID(),
+    );
+    for (const [key, value] of Object.entries({
+      ...transcript.environment,
+      ...mockCliScenarioEnvironment(transcript.scenario),
+    }))
       vi.stubEnv(key, value);
     const { database, remove } = openTestDatabase(
       { agent: adapter.agent, checkoutPath: directory },
@@ -745,6 +755,14 @@ it('publishes stored list changes, changes counts only when needed, and aborts a
   }
 });
 
+// Sets the whole scenario once, before the CLI starts.
+const useScenario = (scenario: MockCliScenarioInput) => {
+  for (const [key, value] of Object.entries(
+    mockCliScenarioEnvironment(scenario),
+  ))
+    vi.stubEnv(key, value);
+};
+
 // An Engine on a Project whose `feature` branch is one commit ahead of `main`, with the Agent's mock CLI on PATH; `close` stops it and deletes everything.
 async function startNewSessionEngine(
   adapter: AgentAdapter,
@@ -809,75 +827,77 @@ async function readSnapshot(
   }
 }
 
-it.each(
-  agentAdapters.flatMap((adapter) =>
-    [false, true].map((delayedResponse) => ({
-      adapter,
+async function answersPermissionOnce(
+  adapter: AgentAdapter,
+  delayedResponse: boolean,
+) {
+  useScenario({ requestBeforeStartResponse: delayedResponse });
+  const root = await startNewSessionEngine(adapter, {
+    recording: 'permission',
+  });
+  try {
+    const caller = await root.createCaller();
+    const { sessionId } = await caller.session.new({
+      projectId: 'project-1',
       agent: adapter.agent,
-      delayedResponse,
-    })),
-  ),
-)(
-  'answers a $agent Permission request once through tRPC (prompt response delayed: $delayedResponse)',
-  async ({ adapter, delayedResponse }) => {
-    vi.stubEnv(
-      'MOCK_CLI_REQUEST_BEFORE_START_RESPONSE',
-      delayedResponse ? '1' : '0',
-    );
-    const root = await startNewSessionEngine(adapter, {
-      recording: 'permission',
+      checkout: { type: 'main' },
+      configOptions: [],
+      prompt: [{ type: 'text', text: 'Run the command' }],
     });
-    try {
-      const caller = await root.createCaller();
-      const { sessionId } = await caller.session.new({
-        projectId: 'project-1',
-        agent: adapter.agent,
-        checkout: { type: 'main' },
-        configOptions: [],
-        prompt: [{ type: 'text', text: 'Run the command' }],
-      });
-      await expect
-        .poll(
-          async () =>
-            (await readSnapshot(root.createCaller, sessionId))
-              .pendingPermission,
-        )
-        .not.toBeNull();
-      const request = (await readSnapshot(root.createCaller, sessionId))
-        .pendingPermission;
-      if (!request) throw new Error('No Permission request');
-      expect(request.options).toEqual(permissionOptions);
-      const answer = {
-        sessionId,
-        toolCallId: request.toolCallId,
-        optionId: 'allow_once' as const,
-      };
-      expect(await caller.session.answerPermission(answer)).toEqual({});
-      await expect(
-        caller.session.answerPermission(answer),
-      ).rejects.toMatchObject({
+    await expect
+      .poll(
+        async () =>
+          (await readSnapshot(root.createCaller, sessionId)).pendingPermission,
+      )
+      .not.toBeNull();
+    const request = (await readSnapshot(root.createCaller, sessionId))
+      .pendingPermission;
+    if (!request) throw new Error('No Permission request');
+    expect(request.options).toEqual(permissionOptions);
+    const answer = {
+      sessionId,
+      toolCallId: request.toolCallId,
+      optionId: 'allow_once' as const,
+    };
+    expect(await caller.session.answerPermission(answer)).toEqual({});
+    await expect(caller.session.answerPermission(answer)).rejects.toMatchObject(
+      {
         code: 'CONFLICT',
         message: 'already answered',
-      });
-      await expect
-        .poll(
-          async () => (await readSnapshot(root.createCaller, sessionId)).state,
-        )
-        .toBe('idle');
-      expect(
-        await caller.feed.row({ sessionId, id: request.toolCallId }),
-      ).toMatchObject({
-        _meta: {
-          argo: {
-            permissionOutcome: { outcome: 'selected', optionId: 'allow_once' },
-          },
+      },
+    );
+    await expect
+      .poll(
+        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+      )
+      .toBe('idle');
+    expect(
+      await caller.feed.row({ sessionId, id: request.toolCallId }),
+    ).toMatchObject({
+      _meta: {
+        argo: {
+          permissionOutcome: { outcome: 'selected', optionId: 'allow_once' },
         },
-      });
-    } finally {
-      root.close();
-    }
-  },
-);
+      },
+    });
+  } finally {
+    root.close();
+  }
+}
+
+for (const adapter of agentAdapters) {
+  const title = `answers a ${adapter.agent} Permission request once through tRPC`;
+  it(`${title} (prompt response delayed: false)`, () =>
+    answersPermissionOnce(adapter, false));
+  it.skipIf(
+    mockClis[adapter.agent]?.unsupportedScenarios.includes(
+      'requestBeforeStartResponse',
+    ),
+  )(
+    `${title} (prompt response delayed: true; skipped where the protocol has no prompt response to reorder)`,
+    () => answersPermissionOnce(adapter, true),
+  );
+}
 
 it.each(
   agentAdapters.flatMap((adapter) =>
@@ -1072,7 +1092,7 @@ it.each(agentAdapters)(
       recording: 'permission',
     });
     const file = path.join(root.home, 'answers.jsonl');
-    vi.stubEnv('MOCK_CLI_REQUEST_ANSWERS', file);
+    useScenario({ requestAnswersFile: file });
     try {
       const caller = await root.createCaller();
       const { sessionId } = await caller.session.new({
@@ -1150,7 +1170,7 @@ it.each(agentAdapters)(
       recording: 'elicitation',
     });
     const file = path.join(root.home, 'answers.jsonl');
-    vi.stubEnv('MOCK_CLI_REQUEST_ANSWERS', file);
+    useScenario({ requestAnswersFile: file });
     try {
       const caller = await root.createCaller();
       const { sessionId } = await caller.session.new({
@@ -1248,7 +1268,7 @@ it.each(
       recording: 'elicitation',
     });
     const file = path.join(root.home, 'answers.jsonl');
-    vi.stubEnv('MOCK_CLI_REQUEST_ANSWERS', file);
+    useScenario({ requestAnswersFile: file });
     try {
       const caller = await root.createCaller();
       const { sessionId } = await caller.session.new({
@@ -1386,7 +1406,7 @@ it.each(
   async ({ adapter, recording }) => {
     const root = await startNewSessionEngine(adapter, { recording });
     const file = path.join(root.home, 'answers.jsonl');
-    vi.stubEnv('MOCK_CLI_REQUEST_ANSWERS', file);
+    useScenario({ requestAnswersFile: file });
     try {
       const caller = await root.createCaller();
       const { sessionId } = await caller.session.new({

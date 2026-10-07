@@ -140,7 +140,7 @@ function startTurn(
   if (command >= 0) interruptedFrames = turn.slice(command + 1);
   activeTurnId = started.params.turn.id;
   const frames = command >= 0 ? turn.slice(0, command + 1) : turn;
-  if (process.env.MOCK_CLI_BLOCK_TURN_START === '1') {
+  if (environment.scenario.blockTurnStart) {
     replayTurn(frames.slice(0, frames.indexOf(started) + 1), null);
     return;
   }
@@ -148,22 +148,19 @@ function startTurn(
   const crashAfter = environment.exitMidTurn
     ? (message: (typeof frames)[number]) => message === started
     : null;
-  if (
-    turnIndex === 1 &&
-    process.env.MOCK_CLI_TURN_RESPONSE_AFTER_NEXT_START === '1'
-  ) {
+  if (turnIndex === 1 && environment.scenario.turnResponseAfterNextStart) {
     withheldStartResponse = response;
     replayTurn(frames, crashAfter);
     if (command < 0) activeTurnId = null;
     return;
   }
-  if (process.env.MOCK_CLI_REQUEST_BEFORE_START_RESPONSE === '1') {
+  if (environment.scenario.requestBeforeStartResponse) {
     withheldStartResponse = response;
     replayRequestFrames(frames, crashAfter);
     return;
   }
   let before = 0;
-  if (process.env.MOCK_CLI_COMPLETION_BEFORE_RESPONSE === '1') {
+  if (environment.scenario.completionBeforeResponse) {
     before = frames.length;
   } else if (notificationsFirst || withheldStartResponse) {
     before = frames.indexOf(started) + 1;
@@ -224,9 +221,13 @@ serveJsonLines<Request>(({ id, method, params, result }) => {
     case 'initialized':
       return;
     case 'initialize':
-      if (process.env.MOCK_CLI_BLOCK_INITIALIZE === '1') return;
+      if (environment.scenario.blockInitialize) return;
       return send({ id, result: {} });
-    case 'account/read':
+    case 'account/read': {
+      const usesApiKey =
+        process.env.OPENAI_API_KEY ||
+        process.env.CODEX_API_KEY ||
+        environment.scenario.account === 'apiKey';
       return send({
         id,
         result: {
@@ -234,21 +235,19 @@ serveJsonLines<Request>(({ id, method, params, result }) => {
             environment.availability === 'not_signed_in'
               ? null
               : {
-                  type:
-                    process.env.OPENAI_API_KEY || process.env.CODEX_API_KEY
-                      ? 'apiKey'
-                      : (process.env.MOCK_CLI_ACCOUNT_TYPE ?? 'chatgpt'),
+                  type: usesApiKey ? 'apiKey' : 'chatgpt',
                 },
           requiresOpenaiAuth: true,
           workspaceRouting: null,
         },
       });
+    }
     case 'model/list':
       return listModels(id);
     case 'thread/start':
       return send({ id, result: { thread: { id: threadId } } });
     case 'thread/resume': {
-      const file = process.env.MOCK_CLI_TRANSCRIPT;
+      const file = environment.scenario.transcriptFile;
       const stored = file ? readMockTranscript(file) : null;
       const resume = params as ThreadResumeParams;
       if (!stored || stored.vendorSessionId !== resume?.threadId)
@@ -301,8 +300,7 @@ serveJsonLines<Request>(({ id, method, params, result }) => {
       return startTurn(
         id,
         (params as TurnStartParams & { notificationsFirst?: boolean })
-          ?.notificationsFirst ||
-          process.env.MOCK_CLI_NOTIFICATIONS_FIRST === '1',
+          ?.notificationsFirst || environment.scenario.notificationsFirst,
       );
     default:
       send({
