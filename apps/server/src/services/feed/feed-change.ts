@@ -39,15 +39,17 @@ const envelopeFields = new Set<string>([
 ]);
 
 // The prompt a person sent, written as the Turn's first row (ADR 0012).
+export const userMessageId = (turnId: string) => `${turnId}:user`;
+
 export const userMessageChange = (
   turnId: string,
   content: ContentBlock[],
 ): FeedUpsert => ({
   type: 'upsert',
   update: {
-    id: `${turnId}:user`,
+    id: userMessageId(turnId),
     sessionUpdate: 'user_message',
-    messageId: `${turnId}:user`,
+    messageId: userMessageId(turnId),
     state: 'settled',
     content,
   },

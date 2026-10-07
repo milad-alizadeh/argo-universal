@@ -125,6 +125,22 @@ describe('mock Claude CLI', () => {
     expect(await claude.exited).toBe(0);
   });
 
+  it('acknowledges a model choice for the SDK before another prompt', async () => {
+    const cli = await startClaude('interrupt');
+    const request = {
+      type: 'control_request',
+      request_id: 'set-model-1',
+      request: { subtype: 'set_model', model: 'opus' },
+    } satisfies SDKControlRequest;
+    cli.send(request);
+    expect(await cli.next()).toEqual({
+      type: 'control_response',
+      response: { subtype: 'success', request_id: 'set-model-1', response: {} },
+    } satisfies SDKControlResponse);
+    cli.close();
+    expect(await cli.exited).toBe(0);
+  });
+
   it('answers an interrupt when the recording has no interrupt answer', async () => {
     const claude = await startClaude('task-plan');
 

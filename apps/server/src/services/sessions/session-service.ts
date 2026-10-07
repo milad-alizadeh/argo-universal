@@ -5,6 +5,7 @@ import type { Database } from '@repo/db';
 import { listBranches } from '@repo/git';
 import { TRPCError } from '@trpc/server';
 import { type ActorRefFrom, type SnapshotFrom, waitFor } from 'xstate';
+import { userMessageId } from '../feed/feed-change';
 import type { writerMachine } from '../feed/writer-machine';
 import { notImplemented } from '../not-implemented';
 import { readProjectPath } from '../projects/project-service';
@@ -201,7 +202,7 @@ export function createSessionService({
         turnId,
         content: prompt,
       });
-      return { messageId: `${turnId}:user` };
+      return { messageId: userMessageId(turnId) };
     },
     // Title persistence and Agent commands are issue #66.
     rename: async () => {

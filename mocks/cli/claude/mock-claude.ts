@@ -252,6 +252,7 @@ function playTurn() {
 
 function answer(subtype: string | undefined) {
   if (subtype === undefined) return;
+  if (subtype === 'set_model') return {};
   if (subtype !== 'initialize')
     return (
       recordedAnswers.get(subtype) ?? (subtype === 'interrupt' ? {} : undefined)
