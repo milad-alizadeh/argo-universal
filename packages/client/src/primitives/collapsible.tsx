@@ -118,21 +118,23 @@ function LayoutSyncedContent({
 > & { layoutSync: CollapsibleLayoutSync }) {
   const open = useContext(OpenContext);
   const reducedMotion = useReducedMotion();
-  const [contentHeight, setContentHeight] = useState(0);
+  // A ref, so content resizing inside a still, open collapsible costs no render; a nested collapsible moving would otherwise render this one every frame.
+  const contentHeight = useRef(0);
+  const [measured, setMeasured] = useState(false);
   const [progress, setProgress] = useState(open ? 1 : 0);
   const latestProgress = useRef(progress);
   latestProgress.current = progress;
   useEffect(() => {
     const target = open ? 1 : 0;
     // Opening waits for the first measurement, which sets the height to grow to.
-    if (open && contentHeight === 0) return;
+    if (open && !measured) return;
     if (reducedMotion) {
       setProgress(target);
       return;
     }
     const from = latestProgress.current;
-    const remainingDuration =
-      Math.abs(target - from) * durationFor(contentHeight);
+    const height = contentHeight.current;
+    const remainingDuration = Math.abs(target - from) * durationFor(height);
     if (!remainingDuration) {
       setProgress(target);
       return;
@@ -146,7 +148,7 @@ function LayoutSyncedContent({
         1,
       );
       const nextProgress = from + (target - from) * easeInOut(elapsedFraction);
-      grow(contentHeight * (nextProgress - latestProgress.current));
+      grow(height * (nextProgress - latestProgress.current));
       latestProgress.current = nextProgress;
       setProgress(nextProgress);
       if (elapsedFraction < 1) frame = requestAnimationFrame(step);
@@ -159,11 +161,12 @@ function LayoutSyncedContent({
       cancelAnimationFrame(frame);
       if (moving) onMotionChange(false);
     };
-  }, [open, contentHeight, reducedMotion, onMotionChange, grow]);
-  // Before paint, so the list moves the rows below in the same frame.
+  }, [open, measured, reducedMotion, onMotionChange, grow]);
+  // `grow` moves the rows below each frame; once still, the list measures the row before paint.
+  const stillAt = progress === 0 || progress === 1 ? progress : null;
   useLayoutEffect(() => {
     syncLayout();
-  }, [progress, contentHeight, syncLayout]);
+  }, [stillAt, measured, syncLayout]);
   if (!open && progress === 0 && !forceMount) return null;
   // Open and still, the content takes its own height, so a collapsible nested in it resizes the row in the same layout.
   const settled = open && progress === 1;
@@ -173,7 +176,7 @@ function LayoutSyncedContent({
         style={
           settled
             ? undefined
-            : { height: contentHeight * progress, overflow: 'hidden' }
+            : { height: contentHeight.current * progress, overflow: 'hidden' }
         }
         pointerEvents={open ? 'auto' : 'none'}
         aria-hidden={!open}
@@ -183,9 +186,10 @@ function LayoutSyncedContent({
         <View
           className={className}
           style={settled ? undefined : movingContentStyle}
-          onLayout={(event) =>
-            setContentHeight(event.nativeEvent.layout.height)
-          }
+          onLayout={(event) => {
+            contentHeight.current = event.nativeEvent.layout.height;
+            setMeasured(true);
+          }}
         >
           {children}
         </View>
