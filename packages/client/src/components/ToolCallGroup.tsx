@@ -1,9 +1,16 @@
 import { BookOpenIcon } from 'phosphor-react-native/src/icons/BookOpen';
-import type { ReactNode } from 'react';
-import { View } from 'react-native';
+import {
+  type ReactNode,
+  useCallback,
+  useContext,
+  useLayoutEffect,
+  useRef,
+} from 'react';
+import { type LayoutChangeEvent, View } from 'react-native';
 import type { FeedActivity, FeedGroup } from '../feed/feed-view';
 import { toolCallTitle } from '../feed/tool-call-title';
 import { useToolCallDuration } from '../feed/use-tool-call-duration';
+import { FeedGrowthContext } from './feed-growth-context';
 import { ToolCallDisclosure } from './ToolCallDisclosure';
 import { toolCallIcon } from './tool-call-icon';
 
@@ -12,6 +19,40 @@ export interface ToolCallGroupProps {
   renderActivity: (activity: FeedActivity) => ReactNode;
   initialOpen?: boolean;
   now?: number;
+}
+
+const activityKey = (activity: FeedActivity) =>
+  activity.type === 'exploration' ? activity.id : activity.row.id;
+
+// Reports to the Feed when an older page brings activities before those already drawn, and how tall they measure.
+function useGrowthAbove(groupKey: string, keys: readonly string[]) {
+  const feedGrowth = useContext(FeedGrowthContext);
+  const drawnKeys = useRef(keys);
+  const height = useRef<number | null>(null);
+  const grewAbove = useRef(false);
+  useLayoutEffect(() => {
+    const [previousFirst] = drawnKeys.current;
+    const previousFirstAt =
+      previousFirst === undefined ? -1 : keys.indexOf(previousFirst);
+    if (
+      previousFirstAt > 0 &&
+      keys.length - previousFirstAt === drawnKeys.current.length
+    ) {
+      grewAbove.current = true;
+      feedGrowth?.willGrowAbove(groupKey);
+    }
+    drawnKeys.current = keys;
+  });
+  return useCallback(
+    (event: LayoutChangeEvent) => {
+      const previousHeight = height.current;
+      height.current = event.nativeEvent.layout.height;
+      if (!grewAbove.current || previousHeight === null) return;
+      grewAbove.current = false;
+      feedGrowth?.grewAbove(groupKey, height.current - previousHeight);
+    },
+    [groupKey, feedGrowth],
+  );
 }
 
 export function ToolCallGroup({
@@ -49,6 +90,7 @@ export function ToolCallGroup({
     }
     return [activity];
   });
+  const onActivitiesLayout = useGrowthAbove(group.id, items.map(activityKey));
   const livePermission =
     running &&
     latest &&
@@ -71,15 +113,9 @@ export function ToolCallGroup({
         running && group.title !== 'Awaiting approval' ? duration : undefined
       }
     >
-      <View className="gap-2 pb-1">
+      <View className="gap-2 pb-1" onLayout={onActivitiesLayout}>
         {items.map((activity) => (
-          <View
-            key={
-              activity.type === 'exploration' ? activity.id : activity.row.id
-            }
-          >
-            {renderActivity(activity)}
-          </View>
+          <View key={activityKey(activity)}>{renderActivity(activity)}</View>
         ))}
       </View>
     </ToolCallDisclosure>

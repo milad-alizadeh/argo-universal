@@ -1,19 +1,16 @@
-import type {
-  BlobRef,
-  SessionConfigOption,
-  SessionNewInput,
-} from '@repo/contracts';
+import type { SessionConfigOption, SessionNewInput } from '@repo/contracts';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, View } from 'react-native';
+import { useState } from 'react';
+import { View } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { Composer, type ComposerDraft } from '#components/Composer';
 import { LoadError } from '#components/LoadError';
-import { Screen } from '#components/Screen';
+import { keyboardAvoidingStyle, Screen } from '#components/Screen';
 import { StartSessionIn } from '#components/StartSessionIn';
-import { pickImages } from '#lib/pick-images';
 import { Text } from '#primitives/text';
 import { useContentWide } from '../components/ContentLayout';
 import { useConnectionState } from '../connection/context';
+import { useImageDraft } from '../lib/use-image-draft';
 import { useNavigate } from '../navigation/context';
 import { useTRPC } from '../trpc/context';
 
@@ -22,37 +19,32 @@ export interface NewSessionScreenProps {
   projectId?: string;
 }
 
-const emptyDraft: ComposerDraft = { text: '', images: [] };
+// What a new Session starts with, besides its prompt.
+type SessionSettings = Omit<SessionNewInput, 'prompt'>;
 
-function withValue(
+// The option with the reader's choice as its current value, when the choice fits its type.
+function withChosenValue(
   option: SessionConfigOption,
-  value: string | boolean | undefined,
+  chosen: string | boolean | undefined,
 ): SessionConfigOption {
-  if (option.type === 'select' && typeof value === 'string')
-    return { ...option, currentValue: value };
-  if (option.type === 'boolean' && typeof value === 'boolean')
-    return { ...option, currentValue: value };
+  if (option.type === 'select' && typeof chosen === 'string')
+    return { ...option, currentValue: chosen };
+  if (option.type === 'boolean' && typeof chosen === 'boolean')
+    return { ...option, currentValue: chosen };
   return option;
 }
 
-// Starts a Session: where it runs, then the Composer; sending replaces this page with the Session.
-export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
-  const wide = useContentWide();
+// The reader's choices of where and how the Session runs, over the Project's and Agents' defaults.
+function useSessionChoices(projectId: string | undefined) {
   const trpc = useTRPC();
-  const navigate = useNavigate();
-  const connected = useConnectionState() === 'open';
-  const info = useQuery(trpc.system.info.queryOptions());
   const projects = useQuery(trpc.projects.list.queryOptions());
   const agents = useQuery(trpc.agents.list.queryOptions());
   const [chosenProjectId, setChosenProjectId] = useState(projectId);
   const [chosenAgent, setChosenAgent] = useState<string>();
-  const [configValues, setConfigValues] = useState<
+  const [chosenConfigValues, setChosenConfigValues] = useState<
     Record<string, string | boolean>
   >({});
-  const [newWorktree, setNewWorktree] = useState<boolean>();
-  const [draft, setDraft] = useState(emptyDraft);
-  // The file behind each attached image, by its id in the draft.
-  const imageFiles = useRef(new Map<string, Blob>());
+  const [chosenNewWorktree, setChosenNewWorktree] = useState<boolean>();
 
   const project =
     projects.data?.find((entry) => entry.id === chosenProjectId) ??
@@ -68,187 +60,208 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
     agents.data?.find((entry) => entry.availability === 'available') ??
     agents.data?.[0];
   const configOptions = (agent?.configOptions ?? []).map((option) =>
-    withValue(option, configValues[option.configId]),
+    withChosenValue(option, chosenConfigValues[option.configId]),
   );
-  const worktree = newWorktree ?? project?.checkoutChoice.type !== 'main';
+  const inNewWorktree =
+    chosenNewWorktree ?? project?.checkoutChoice.type !== 'main';
   const baseBranch =
     project?.checkoutChoice.type === 'worktree'
       ? project.checkoutChoice.baseBranch
       : (branches.data?.currentBranch ?? 'main');
 
-  const upload = useMutation(trpc.blob.upload.mutationOptions());
-  const start = useMutation(
+  const settings: SessionSettings | undefined =
+    project && agent
+      ? {
+          projectId: project.id,
+          agent: agent.agent,
+          checkout: inNewWorktree
+            ? { type: 'worktree', baseBranch }
+            : { type: 'main' },
+          configOptions: configOptions.map(({ configId, currentValue }) => ({
+            configId,
+            value: currentValue,
+          })),
+        }
+      : undefined;
+
+  return {
+    projects,
+    agents,
+    project,
+    agent,
+    configOptions,
+    inNewWorktree,
+    baseBranch,
+    baseBranchLoaded:
+      project?.checkoutChoice.type !== 'main' || branches.data !== undefined,
+    settings,
+    // Another Project starts from its own checkout default.
+    chooseProject: (id: string) => {
+      setChosenProjectId(id);
+      setChosenNewWorktree(undefined);
+    },
+    // Another Agent starts from its own options.
+    chooseAgent: (nextAgent: string) => {
+      setChosenAgent(nextAgent);
+      setChosenConfigValues({});
+    },
+    chooseConfigValue: (configId: string, value: string | boolean) =>
+      setChosenConfigValues((values) => ({ ...values, [configId]: value })),
+    chooseNewWorktree: setChosenNewWorktree,
+  };
+}
+
+// One Send fails at most one of its two steps.
+function sendErrorMessage(
+  startError: { message: string } | null,
+  uploadError: { message: string } | null,
+): string | undefined {
+  if (startError) return `Couldn't start the Session. ${startError.message}`;
+  if (uploadError) return `Couldn't upload the image. ${uploadError.message}`;
+  return undefined;
+}
+
+// The Composer's draft, and the Send that uploads its images, starts the Session, and opens it in this page's place.
+function useStartSession(onStartFailed: () => void) {
+  const trpc = useTRPC();
+  const navigate = useNavigate();
+  const { draft, changeDraft, attachImages, uploadDraftAsPrompt, imageUpload } =
+    useImageDraft();
+  const newSession = useMutation(
     trpc.session.new.mutationOptions({
       onSuccess: ({ sessionId }) =>
         navigate({ to: 'session', id: sessionId }, { replace: true }),
-      // The Server probes an Agent that fails to start, so its availability may have changed.
-      onError: () => void agents.refetch(),
+      onError: onStartFailed,
     }),
   );
 
-  const resetErrors = () => {
-    upload.reset();
-    start.reset();
+  // Clears the last Send's upload or start error.
+  function clearSendErrors() {
+    imageUpload.reset();
+    newSession.reset();
+  }
+
+  async function startSession(sent: ComposerDraft, settings: SessionSettings) {
+    clearSendErrors();
+    const prompt = await uploadDraftAsPrompt(sent);
+    if (prompt) newSession.mutate({ ...settings, prompt });
+  }
+
+  return {
+    draft,
+    changeDraft,
+    attachImages,
+    startSession,
+    clearSendErrors,
+    sending: imageUpload.isPending || newSession.isPending,
+    sendError: sendErrorMessage(newSession.error, imageUpload.error),
   };
+}
 
-  async function attachImages() {
-    const picked = await pickImages();
-    for (const { image, file } of picked)
-      imageFiles.current.set(image.id, file);
-    setDraft((current) => ({
-      ...current,
-      images: [...current.images, ...picked.map(({ image }) => image)],
-    }));
-  }
+function NewSessionHeading() {
+  return (
+    <View className="w-full max-w-composer gap-2 px-4">
+      <Text
+        role="heading"
+        aria-level={1}
+        className="text-[32px] leading-[38px] tracking-[-0.025em] font-semibold text-foreground"
+      >
+        What should we work on?
+      </Text>
+    </View>
+  );
+}
 
-  // Keeps a file only while its image is in the draft.
-  function changeDraft(next: ComposerDraft) {
-    const kept = new Set(next.images.map((image) => image.id));
-    for (const id of imageFiles.current.keys())
-      if (!kept.has(id)) imageFiles.current.delete(id);
-    setDraft(next);
-  }
+// Starts a Session: where it runs, then the Composer; sending replaces this page with the Session.
+export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
+  const wide = useContentWide();
+  const trpc = useTRPC();
+  const navigate = useNavigate();
+  const connected = useConnectionState() === 'open';
+  const serverInfo = useQuery(trpc.system.info.queryOptions());
+  const choices = useSessionChoices(projectId);
+  const { projects, agents, project, agent } = choices;
+  const send = useStartSession(() => void agents.refetch());
 
-  // Uploads each image, in draft order; undefined once an upload fails, which `upload.error` shows.
-  async function uploadImages(
-    sent: ComposerDraft,
-  ): Promise<BlobRef[] | undefined> {
-    const references: BlobRef[] = [];
-    for (const image of sent.images) {
-      const file = imageFiles.current.get(image.id);
-      if (!file) throw new Error(`No file for the attached ${image.name}`);
-      const form = new FormData();
-      form.append('file', file, image.name);
-      const reference = await upload.mutateAsync(form).catch(() => undefined);
-      if (!reference) return undefined;
-      references.push(reference);
-    }
-    return references;
-  }
-
-  async function send(sent: ComposerDraft) {
-    if (!project || !agent) return;
-    resetErrors();
-    const images = await uploadImages(sent);
-    if (!images) return;
-    const input: SessionNewInput = {
-      projectId: project.id,
-      agent: agent.agent,
-      checkout: worktree ? { type: 'worktree', baseBranch } : { type: 'main' },
-      configOptions: configOptions.map(({ configId, currentValue }) => ({
-        configId,
-        value: currentValue,
-      })),
-      prompt: [
-        ...(sent.text.trim()
-          ? [{ type: 'text' as const, text: sent.text }]
-          : []),
-        ...images.map((blob) => ({
-          type: 'image' as const,
-          mimeType: blob.mime,
-          blob,
-        })),
-      ],
-    };
-    start.mutate(input);
-  }
-
-  if (info.isError || projects.isError || agents.isError)
+  if (serverInfo.isError || projects.isError || agents.isError)
     return (
-      <Screen edges={['bottom']} className="justify-center">
-        <LoadError
-          title="Couldn't load New Session"
-          description="The Server didn't respond. Check that it's running, then retry."
-          onRetry={() => {
-            void info.refetch();
-            void projects.refetch();
-            void agents.refetch();
-          }}
-        />
+      <Screen edges={['bottom']}>
+        <View className="flex-1 justify-center">
+          <LoadError
+            title="Couldn't load New Session"
+            description="The Server didn't respond. Check that it's running, then retry."
+            onRetry={() => {
+              void serverInfo.refetch();
+              void projects.refetch();
+              void agents.refetch();
+            }}
+          />
+        </View>
       </Screen>
     );
-  if (!info.data || !projects.data || !agents.data)
+  if (!serverInfo.data || !projects.data || !agents.data)
     return <Screen edges={['bottom']} />;
 
-  const agentReady = agent?.availability === 'available';
-  // Until the current branch loads, a new worktree has no base to start from.
-  const branchReady =
-    project?.checkoutChoice.type !== 'main' || branches.data !== undefined;
-  // One Send fails at most one of the two steps.
-  let startError: string | undefined;
-  if (start.error)
-    startError = `Couldn't start the Session. ${start.error.message}`;
-  else if (upload.error)
-    startError = `Couldn't upload the image. ${upload.error.message}`;
-  const sending = upload.isPending || start.isPending;
-  const error = agent && !agentReady ? agent.installStep : startError;
+  const agentAvailable = agent?.availability === 'available';
   const checkout = {
-    branch: baseBranch,
-    newWorktree: worktree,
-    onNewWorktreeChange: setNewWorktree,
+    branch: choices.baseBranch,
+    newWorktree: choices.inNewWorktree,
+    onNewWorktreeChange: choices.chooseNewWorktree,
   };
 
   return (
     <Screen edges={['bottom']}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        className="flex-1"
-        style={{ minHeight: 0 }}
+        behavior="padding"
+        automaticOffset
+        style={keyboardAvoidingStyle}
       >
         <View className="flex-1 items-center justify-center px-6 pb-10">
-          {wide && (
-            <View className="w-full max-w-composer gap-2 px-4">
-              <Text
-                role="heading"
-                aria-level={1}
-                className="text-[32px] leading-[38px] tracking-[-0.025em] font-semibold text-foreground"
-              >
-                What should we work on?
-              </Text>
-            </View>
-          )}
+          {wide && <NewSessionHeading />}
         </View>
         <View
           className={wide ? 'items-center px-6 pb-2' : 'items-center px-4 pb-2'}
         >
           <StartSessionIn
-            serverName={info.data.name}
+            serverName={serverInfo.data.name}
             serverConnected={connected}
             projects={projects.data}
             projectId={project?.id ?? ''}
             onProjectChange={(id) => {
-              setChosenProjectId(id);
-              setNewWorktree(undefined);
-              resetErrors();
+              choices.chooseProject(id);
+              send.clearSendErrors();
             }}
             checkout={checkout}
-            disabled={sending}
+            disabled={send.sending}
           />
         </View>
         <View
           className={wide ? 'items-center px-6 pb-4' : 'items-center px-4 pb-4'}
         >
           <Composer
-            draft={draft}
-            onDraftChange={changeDraft}
-            onAttachImages={() => void attachImages()}
-            onSend={(sent) => void send(sent)}
+            draft={send.draft}
+            onDraftChange={send.changeDraft}
+            onAttachImages={() => void send.attachImages()}
+            onSend={(sent) => {
+              if (choices.settings)
+                void send.startSession(sent, choices.settings);
+            }}
             placeholder=""
-            sending={sending}
-            disabled={!project || !agentReady || !branchReady}
+            sending={send.sending}
+            disabled={!project || !agentAvailable || !choices.baseBranchLoaded}
             sendable={connected}
-            error={error}
+            error={
+              agent && !agentAvailable ? agent.installStep : send.sendError
+            }
             phoneCheckout={false}
             configuration={{
               agents: agents.data,
               agent: agent?.agent ?? '',
-              configOptions,
-              onConfigChange: (configId, value) =>
-                setConfigValues((values) => ({ ...values, [configId]: value })),
-              onAgentChange: (next) => {
-                setChosenAgent(next);
-                setConfigValues({});
-                resetErrors();
+              configOptions: choices.configOptions,
+              onConfigChange: choices.chooseConfigValue,
+              onAgentChange: (nextAgent) => {
+                choices.chooseAgent(nextAgent);
+                send.clearSendErrors();
               },
               onAgentSetup: (setup) =>
                 navigate({ to: 'settings-agent', agent: setup }),

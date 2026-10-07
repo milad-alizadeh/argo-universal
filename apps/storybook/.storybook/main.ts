@@ -1,4 +1,3 @@
-import { createRequire } from 'node:module';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { StorybookConfig } from '@storybook/react-native-web-vite';
@@ -46,7 +45,8 @@ const config: StorybookConfig = {
         include: [
           'react-native-svg',
           '@repo/client > @rn-primitives/collapsible',
-          '@repo/client > @legendapp/list',
+          '@repo/client > @legendapp/list/react-native',
+          '@repo/client > react-native-keyboard-controller',
           '@repo/client > expo-haptics',
           '@repo/client > expo-image-picker',
           '@repo/client > react-native-drawer-layout',
@@ -58,12 +58,6 @@ const config: StorybookConfig = {
         },
       },
       resolve: {
-        alias: {
-          // Uniwind's web shim omits the ESM entry's unstable_batchedUpdates export.
-          '@legendapp/list': createRequire(
-            import.meta.resolve('@repo/client'),
-          ).resolve('@legendapp/list'),
-        },
         extensions: [
           '.web.tsx',
           '.web.ts',

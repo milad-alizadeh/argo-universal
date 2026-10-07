@@ -1,4 +1,4 @@
-import { LegendList } from '@legendapp/list';
+import { LegendList } from '@legendapp/list/react-native';
 import type {
   AgentInfo,
   SessionConfigOption,
@@ -29,6 +29,7 @@ import { Button } from '#primitives/button';
 import { Label } from '#primitives/label';
 import { Switch } from '#primitives/switch';
 import { Text } from '#primitives/text';
+import { listTestIdProps } from '../lib/list-test-id';
 import { useWide } from '../navigation/use-wide';
 import { Slider } from '../primitives/slider';
 import { ComposerPopover } from './ComposerPopover';
@@ -268,19 +269,22 @@ function AgentChoices({
       </View>
     );
   };
+  // In a View, since bare Text in a list footer is inline on web and pads only its first line.
   const footer = !configuration.onAgentChange ? (
-    <Text
-      selectable={false}
-      className="select-none pl-8 pr-2 pb-1 text-xs leading-4 text-muted-foreground"
-    >
-      Start a new Session to switch Agent
-    </Text>
+    <View className="pl-8 pr-2 pb-1">
+      <Text
+        selectable={false}
+        className="select-none text-xs leading-4 text-muted-foreground"
+      >
+        Start a new Session to switch Agent
+      </Text>
+    </View>
   ) : null;
   if (wide)
     return (
       <View className="relative flex-1 min-h-0">
         <LegendList
-          testID="composer-agents-scroll"
+          {...listTestIdProps('composer-agents-scroll')}
           style={{ position: 'absolute', inset: 0 }}
           contentContainerStyle={{
             paddingHorizontal: 4,

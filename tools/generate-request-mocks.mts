@@ -19,6 +19,7 @@ import {
   type PendingPlanProposal,
   SessionSnapshot,
 } from '../packages/contracts/src/sessions/snapshot.ts';
+import { worktreeCheckout } from './mock-checkout.mts';
 
 const recordings = [
   'permission',
@@ -48,8 +49,10 @@ const mocks = agentAdapters.flatMap(({ agent }, index) => {
     const state = () => ({
       rows: Object.values(feed.rows),
       snapshot: SessionSnapshot.parse({
+        agent: `agent-${index + 1}`,
         title: titleFromPrompt(prompt),
         titleSource: 'prompt',
+        checkout: worktreeCheckout(sessionId),
         state:
           pendingPermission || pendingElicitation || pendingPlanProposal
             ? 'requires_action'

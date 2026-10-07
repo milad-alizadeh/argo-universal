@@ -20,7 +20,10 @@ export function recordedImageUrl(blob: BlobRef) {
   return recorded ? redSquareDataUrl : '';
 }
 
-function recordedMock(agent: MockAgent, recording: string): FeedMock {
+export function recordedFeedMock(
+  agent: MockAgent,
+  recording: string,
+): FeedMock {
   const mock = recordedFeedMocks.find(
     (mock) => mock.agent === agent && mock.recording === recording,
   );
@@ -33,7 +36,7 @@ function recordedRow<Kind extends SessionUpdate['sessionUpdate']>(
   recording: string,
   kind: Kind,
 ) {
-  const row = recordedMock(agent, recording).rows.findLast(
+  const row = recordedFeedMock(agent, recording).rows.findLast(
     (row) => row.sessionUpdate === kind,
   );
   if (!row) throw new Error(`No ${kind} in ${agent}/${recording}`);
@@ -60,7 +63,7 @@ export function streamingAgentMessage(
   agent: MockAgent,
   recording: string,
 ): AgentMessage {
-  const mock = recordedMock(agent, recording);
+  const mock = recordedFeedMock(agent, recording);
   const settled = recordedAgentMessage(agent, recording);
   const fullLength = textLength(settled);
   let row: AgentMessage | undefined;

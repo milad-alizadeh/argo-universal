@@ -7,6 +7,7 @@ import type { SessionNewInput } from '@repo/contracts';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, waitFor, within } from 'storybook/test';
+import { eachLayout } from '../../mocks/each-layout';
 import {
   failedStartMessage,
   failedStartNewSessionMocks,
@@ -15,9 +16,9 @@ import {
   notSignedInNewSessionMocks,
   sendingNewSessionMocks,
 } from '../../mocks/new-session-mock';
+import { pending } from '../../mocks/trpc-mock-link';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
 import { ContentLayout } from '../components/ContentLayout';
-import { applyTheme } from '../lib/theme';
 import { NewSessionScreen } from './NewSessionScreen';
 
 const recorder = createNavigationRecorder();
@@ -76,29 +77,6 @@ export const NarrowMainColumn: Story = {
     await expect(window.innerWidth).toBe(1440);
   },
 };
-
-async function settle() {
-  await document.fonts.ready;
-  for (let frame = 0; frame < 2; frame++)
-    await new Promise((resolve) => requestAnimationFrame(resolve));
-}
-
-// Runs the assertion at phone and wide widths, in light and dark.
-async function eachLayout(assertion: (wide: boolean) => Promise<void>) {
-  const { page } = await import('vitest/browser');
-  try {
-    for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
-      await settle();
-      for (const mode of ['light', 'dark'] as const) {
-        applyTheme('default', mode);
-        await assertion(width >= 720);
-      }
-    }
-  } finally {
-    applyTheme('default', 'light');
-  }
-}
 
 export const Ready: Story = {
   play: async ({ canvas }) =>
@@ -334,14 +312,44 @@ export const Sending: Story = {
   },
 };
 
+// A local Project's new worktree starts from its current branch, so Send waits for it.
+export const WaitsForTheBaseBranch: Story = {
+  args: { projectId: landingProject.id },
+  parameters: {
+    trpc: { ...newSessionMocks, 'projects.branches': pending() },
+  },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.type(
+      await canvas.findByRole('textbox', { name: 'Message' }),
+      'Update the hero copy',
+    );
+    await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
+  },
+};
+
+let agentsListCalls = 0;
+
 export const FailedStart: Story = {
-  parameters: { trpc: failedStartNewSessionMocks },
+  parameters: {
+    trpc: {
+      ...failedStartNewSessionMocks,
+      'agents.list': () => {
+        agentsListCalls += 1;
+        return newSessionCatalogs.bothAvailable;
+      },
+    },
+  },
   play: async ({ canvas, userEvent }) => {
     await userEvent.type(
       await canvas.findByRole('textbox', { name: 'Message' }),
       'Fix the flaky login test',
     );
+    const callsBeforeSend = agentsListCalls;
     await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
+    // A failed start can mean the Agent is no longer available, so the screen asks again.
+    await waitFor(() =>
+      expect(agentsListCalls).toBeGreaterThan(callsBeforeSend),
+    );
     await eachLayout(async () => {
       await expect(await canvas.findByRole('alert')).toHaveTextContent(
         `Couldn't start the Session. ${failedStartMessage}`,

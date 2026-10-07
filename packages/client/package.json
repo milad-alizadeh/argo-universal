@@ -66,6 +66,7 @@
     "phosphor-react-native": "catalog:",
     "react-native-drawer-layout": "catalog:",
     "react-native-gesture-handler": "catalog:",
+    "react-native-keyboard-controller": "catalog:",
     "react-native-reanimated": "catalog:",
     "react-native-safe-area-context": "catalog:",
     "react-native-screens": "catalog:",

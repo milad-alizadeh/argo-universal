@@ -49,8 +49,9 @@ export const Overview: Story = { name: 'DesktopShell' };
 // Changed files in the Inspector: one list of file headers and lines that fades under the toolbar.
 export const InspectorFiles: Story = {
   name: 'Inspector files',
-  args: {
-    inspectorState: 'open',
-    inspector: <InspectorFilesMock />,
-  },
+  args: { inspectorState: 'open' },
+  // An element in args holds React internals, which Storybook walks as a cyclic arg until the native catalog hangs.
+  render: (args) => (
+    <DesktopShellMock {...args} inspector={<InspectorFilesMock />} />
+  ),
 };

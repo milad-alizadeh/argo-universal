@@ -4,7 +4,7 @@ import type { Fixtures } from './trpc-mock-link';
 export { recordedFeedMocks } from '@repo/api/mocks';
 
 // One recorded Feed at the tRPC link, for any Session screen story (ADR 0010).
-export function createFeedMocks(mock: FeedMock): Fixtures {
+export function createFeedMocks(mock: FeedMock) {
   return {
     'feed.page': ({ direction, cursor, limit = 40, epoch }) => {
       const staleCursor = epoch !== undefined && epoch !== mock.snapshot.epoch;
@@ -32,5 +32,5 @@ export function createFeedMocks(mock: FeedMock): Fixtures {
       for (const event of mock.stream)
         if (!('rev' in event) || event.rev > revision) yield event;
     },
-  };
+  } satisfies Fixtures;
 }

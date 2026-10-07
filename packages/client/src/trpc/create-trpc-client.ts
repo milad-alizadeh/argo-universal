@@ -1,9 +1,9 @@
 import type { AppRouter } from '@repo/api';
 import * as trpc from '@trpc/client';
 
-// tRPC over HTTP lives at /trpc/ on the Server's WebSocket address (ADR 0002).
-function toHttpUrl(serverUrl: string) {
-  const url = new URL('/trpc', serverUrl);
+// An HTTP route on the Server's WebSocket address, such as tRPC at /trpc (ADR 0002).
+export function serverHttpUrl(serverUrl: string, path: string) {
+  const url = new URL(path, serverUrl);
   url.protocol = url.protocol === 'wss:' ? 'https:' : 'http:';
   return url.toString();
 }
@@ -26,7 +26,7 @@ export function createTRPCClient(
     links: [
       trpc.splitLink({
         condition: (operation) => trpc.isNonJsonSerializable(operation.input),
-        true: trpc.httpLink({ url: toHttpUrl(serverUrl) }),
+        true: trpc.httpLink({ url: serverHttpUrl(serverUrl, '/trpc') }),
         false: trpc.wsLink<AppRouter>({ client: webSocketClient }),
       }),
     ],

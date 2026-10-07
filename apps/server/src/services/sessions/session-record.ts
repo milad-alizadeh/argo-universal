@@ -1,4 +1,8 @@
-import { SessionInfo, SessionSnapshot } from '@repo/contracts';
+import {
+  type SessionCheckout,
+  SessionInfo,
+  SessionSnapshot,
+} from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { session } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
@@ -9,7 +13,26 @@ const sessionRecord = SessionInfo.pick({
   titleSource: true,
   agent: true,
   parentSessionId: true,
-}).extend(SessionSnapshot.pick({ epoch: true, maxRevision: true }).shape);
+}).extend(
+  SessionSnapshot.pick({
+    epoch: true,
+    maxRevision: true,
+    checkout: true,
+  }).shape,
+);
+
+// A worktree Session runs on its own `argo/<id>` branch; any other branch is the main checkout.
+export function toSessionCheckout(row: {
+  id: string;
+  checkoutPath: SessionCheckout['path'];
+  checkoutBranch: SessionCheckout['branch'];
+}): SessionCheckout {
+  return {
+    type: row.checkoutBranch === `argo/${row.id}` ? 'worktree' : 'main',
+    path: row.checkoutPath,
+    branch: row.checkoutBranch,
+  };
+}
 
 export function createSessionReader(database: Database) {
   let rejectedRows = 0;
@@ -22,6 +45,9 @@ export function createSessionReader(database: Database) {
         parentSessionId: session.parentSessionId,
         epoch: session.epoch,
         maxRevision: session.maxRevision,
+        id: session.id,
+        checkoutPath: session.checkoutPath,
+        checkoutBranch: session.checkoutBranch,
       })
       .from(session)
       .where(eq(session.id, sessionId))
@@ -31,7 +57,11 @@ export function createSessionReader(database: Database) {
         code: 'NOT_FOUND',
         message: `No Session ${sessionId}`,
       });
-    const parsed = sessionRecord.safeParse(stored);
+    const { id, checkoutPath, checkoutBranch, ...otherColumns } = stored;
+    const parsed = sessionRecord.safeParse({
+      ...otherColumns,
+      checkout: toSessionCheckout({ id, checkoutPath, checkoutBranch }),
+    });
     if (!parsed.success) {
       rejectedRows += 1;
       console.error(

@@ -15,6 +15,7 @@ import {
   permissionOptions,
   SessionSnapshot,
 } from '../packages/contracts/src/sessions/snapshot.ts';
+import { worktreeCheckout } from './mock-checkout.mts';
 
 // A fixed Turn start, so the live headers and their elapsed times stay the same on every run.
 const turnStartedAt = Date.UTC(2026, 9, 6, 9, 0, 0);
@@ -145,8 +146,11 @@ const mocks = agentAdapters.flatMap(({ agent }, index) => {
       apply(event.change);
     }
     const snapshot = SessionSnapshot.parse({
-      title: titleFromPrompt(prompt ?? []),
+      agent: `agent-${index + 1}`,
+      // What the Server stores for a new worktree Session: the prompt's first line titles it.
+      title: (prompt && titleFromPrompt(prompt)) || recording,
       titleSource: 'prompt',
+      checkout: worktreeCheckout(sessionId),
       state: turnId === null ? 'idle' : 'running',
       liveHeader: header(),
       activeTurnId: turnId,

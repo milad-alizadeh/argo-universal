@@ -168,7 +168,7 @@ export function Composer({
       {planProposal ? (
         <PlanProposalCard {...planProposal} />
       ) : (
-        <View className="w-full rounded-xl border border-border bg-background/80 shadow-composer web:backdrop-blur-composer web:backdrop-saturate-110 z-10">
+        <View className="w-full rounded-xl border border-border bg-background/80 native:bg-background shadow-composer web:backdrop-blur-composer web:backdrop-saturate-110 z-10">
           {draft.images.length > 0 && (
             <ScrollView
               horizontal

@@ -45,7 +45,7 @@ function FileEdit({
   const [open, setOpen] = useState(false);
   const verb = verbs[file.operation];
   return (
-    <Collapsible open={open} className="gap-2">
+    <Collapsible open={open}>
       <Button
         variant="link"
         aria-label={`${verb} ${file.path}`}
@@ -86,7 +86,8 @@ function FileEdit({
           </View>
         </TextClassContext.Provider>
       </Button>
-      <CollapsibleContent>
+      {/* The space above opens with the content; a gap on the root would appear at once. */}
+      <CollapsibleContent className="pt-2">
         <DiffView key={file.path} file={file} inline />
       </CollapsibleContent>
     </Collapsible>
@@ -118,26 +119,26 @@ export function EditRow({ row }: EditRowProps) {
         <Text className="text-sm font-normal leading-5 text-destructive">
           Couldn't edit
         </Text>
-        {path && (
+        {path ? (
           <FileName
             path={path}
             className="text-sm leading-5 text-muted-foreground"
           />
-        )}
-        {error && (
+        ) : null}
+        {error ? (
           <Text
             numberOfLines={1}
             className="min-w-0 shrink text-sm leading-5 text-muted-foreground"
           >
             · {error}
           </Text>
-        )}
+        ) : null}
       </View>
     );
   }
   if (files.length === 1 && files[0]) return <FileEdit file={files[0]} />;
   return (
-    <Collapsible open={expanded} className="gap-2">
+    <Collapsible open={expanded}>
       <Button
         variant="link"
         className="h-5 max-w-full self-start justify-start gap-1.5 rounded-none p-0 sm:h-5 has-[>svg]:px-0"
@@ -153,7 +154,7 @@ export function EditRow({ row }: EditRowProps) {
         </Text>
         <DisclosureCaret open={expanded} />
       </Button>
-      <CollapsibleContent className="gap-2">
+      <CollapsibleContent className="gap-2 pt-2">
         {files.map((file) => (
           <FileEdit key={file.path} file={file} nested />
         ))}

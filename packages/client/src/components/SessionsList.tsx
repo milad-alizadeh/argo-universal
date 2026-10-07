@@ -1,4 +1,7 @@
-import { LegendList, type LegendListRenderItemProps } from '@legendapp/list';
+import {
+  LegendList,
+  type LegendListRenderItemProps,
+} from '@legendapp/list/react-native';
 import type {
   AgentsListOutput,
   ProjectsListOutput,
@@ -16,6 +19,8 @@ import {
 import {
   ActivityIndicator,
   LayoutAnimation,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
   Platform,
   type ScrollView,
   View,
@@ -24,15 +29,12 @@ import { useCSSVariable } from 'uniwind';
 import { hasLiquidGlass } from '#lib/native-header';
 import { cn } from '#lib/utils';
 import { Text } from '#primitives/text';
+import { listTestIdProps } from '../lib/list-test-id';
 import { useWide } from '../navigation/use-wide';
 import { ProjectHeading } from './ProjectHeading';
 import { ScrollFade, useScrollFadeEdges } from './ScrollFade';
 import { SessionRow, type SessionRowProps } from './SessionRow';
-
-type Entry =
-  | { kind: 'project'; id: string; projectId: string; name: string }
-  | { kind: 'session'; id: string; session: SessionInfo }
-  | { kind: 'empty'; id: string };
+import { listEntries, type SessionsListEntry } from './sessions-list-entries';
 
 const contentStyle = {
   paddingHorizontal: 8,
@@ -40,7 +42,7 @@ const contentStyle = {
   paddingBottom: 28,
 };
 
-function entryKey(entry: Entry) {
+function entryKey(entry: SessionsListEntry) {
   return entry.id;
 }
 
@@ -60,6 +62,69 @@ export interface SessionsListProps {
   header?: ReactElement;
 }
 
+// Which Project headings are collapsed, and the toggle for one.
+function useCollapsedProjects() {
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
+  const toggleProject = useCallback((id: string) => {
+    setCollapsed((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+  return { collapsed, toggleProject };
+}
+
+// A phone list sits at the screen's list inset, like every other phone list.
+function useContentStyle(wide: boolean) {
+  const screenListInset = Number.parseFloat(
+    String(useCSSVariable('--spacing-gutter-list')),
+  );
+  const phoneContentStyle = useMemo(
+    () => ({ ...contentStyle, paddingHorizontal: screenListInset }),
+    [screenListInset],
+  );
+  return wide ? contentStyle : phoneContentStyle;
+}
+
+// When the next page starts loading while the reader is at the end, scrolls the loading footer into view.
+function useRevealLoadingFooter(isFetchingNextPage: boolean) {
+  const scrollView = useRef<ScrollView>(null);
+  const atEnd = useRef(false);
+  const revealPending = useRef(false);
+  useLayoutEffect(() => {
+    revealPending.current = isFetchingNextPage && atEnd.current;
+  }, [isFetchingNextPage]);
+  return {
+    scrollView,
+    trackAtEnd: ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const { contentOffset, contentSize, layoutMeasurement } = nativeEvent;
+      atEnd.current =
+        contentSize.height - contentOffset.y - layoutMeasurement.height <= 2;
+    },
+    revealIfPending: () => {
+      if (!revealPending.current) return;
+      revealPending.current = false;
+      requestAnimationFrame(() => {
+        scrollView.current?.scrollToEnd({ animated: false });
+      });
+    },
+  };
+}
+
+// On native, rows that move, appear or leave animate into place.
+function useAnimateReorder(entries: SessionsListEntry[]) {
+  const entryOrder = entries.map((entry) => entry.id).join('|');
+  const previousOrder = useRef(entryOrder);
+  useLayoutEffect(() => {
+    if (previousOrder.current !== entryOrder && Platform.OS !== 'web') {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    }
+    previousOrder.current = entryOrder;
+  }, [entryOrder]);
+}
+
 export function SessionsList({
   projects,
   agents,
@@ -74,52 +139,16 @@ export function SessionsList({
   onProjectSettings,
   header,
 }: SessionsListProps) {
-  const wide = useWide();
-  // A phone list sits at the screen's list inset, like every other phone list.
-  const screenList = Number.parseFloat(
-    String(useCSSVariable('--spacing-gutter-list')),
-  );
-  const phoneContentStyle = useMemo(
-    () => ({ ...contentStyle, paddingHorizontal: screenList }),
-    [screenList],
-  );
-  const scrollView = useRef<ScrollView>(null);
-  const atEnd = useRef(false);
-  const revealLoadingFooter = useRef(false);
-  useLayoutEffect(() => {
-    revealLoadingFooter.current = isFetchingNextPage && atEnd.current;
-  }, [isFetchingNextPage]);
+  const contentContainerStyle = useContentStyle(useWide());
+  const loadingFooter = useRevealLoadingFooter(isFetchingNextPage);
   // The top fade shows once content has scrolled under the header.
   const scrollFade = useScrollFadeEdges();
-  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
-  const entries = useMemo(() => {
-    const groups = new Map<string, SessionInfo[]>();
-    for (const session of sessions) {
-      const group = groups.get(session.projectId) ?? [];
-      group.push(session);
-      groups.set(session.projectId, group);
-    }
-    const result: Entry[] = [];
-    for (const project of projects) {
-      const group = (groups.get(project.id) ?? []).sort(
-        (a, b) =>
-          b.activityAt - a.activityAt || a.sessionId.localeCompare(b.sessionId),
-      );
-      if ((query || archived) && group.length === 0) continue;
-      result.push({
-        kind: 'project',
-        id: `project:${project.id}`,
-        name: project.name,
-        projectId: project.id,
-      });
-      if (collapsed.has(`project:${project.id}`)) continue;
-      if (group.length === 0)
-        result.push({ kind: 'empty', id: `empty:${project.id}` });
-      for (const session of group)
-        result.push({ kind: 'session', id: session.sessionId, session });
-    }
-    return result;
-  }, [projects, sessions, query, archived, collapsed]);
+  const { collapsed, toggleProject } = useCollapsedProjects();
+  const entries = useMemo(
+    () => listEntries(projects, sessions, collapsed, !!query || archived),
+    [projects, sessions, query, archived, collapsed],
+  );
+  useAnimateReorder(entries);
 
   const agentLogos = useMemo(
     () => new Map(agents.map((agent) => [agent.agent, agent.logo])),
@@ -129,22 +158,9 @@ export function SessionsList({
     () => ({ agents, collapsed, selectedSessionId }),
     [agents, collapsed, selectedSessionId],
   );
-  const toggleProject = useCallback((id: string) => {
-    setCollapsed((current) => {
-      const next = new Set(current);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
   const renderItem = useCallback(
-    ({ item }: LegendListRenderItemProps<Entry>) => {
-      if (item.kind === 'empty')
-        return (
-          <Text className="pb-1 pl-session-name pr-1 text-xs leading-4 text-muted-foreground">
-            No Sessions yet.
-          </Text>
-        );
+    ({ item }: LegendListRenderItemProps<SessionsListEntry>) => {
+      if (item.kind === 'empty') return <NoSessionsYet />;
       if (item.kind === 'session')
         return (
           <SessionListRow
@@ -177,23 +193,6 @@ export function SessionsList({
     ],
   );
 
-  const entryOrder = entries.map((entry) => entry.id).join('|');
-  const previousOrder = useRef(entryOrder);
-  useLayoutEffect(() => {
-    if (previousOrder.current !== entryOrder && Platform.OS !== 'web') {
-      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    }
-    previousOrder.current = entryOrder;
-  }, [entryOrder]);
-
-  let emptyTitle: string;
-  if (query) {
-    emptyTitle = 'No matching Sessions';
-  } else if (archived) {
-    emptyTitle = 'No archived Sessions';
-  } else {
-    emptyTitle = 'No Projects yet';
-  }
   return (
     <View
       className="relative flex-1 overflow-hidden bg-background wide:bg-sidebar web:select-none web:[&_*]:select-none! web:[&_[data-testid=sessions-scroll]>div>div>div]:transition-[top,transform] web:[&_[data-testid=sessions-scroll]>div>div>div]:duration-200"
@@ -201,10 +200,10 @@ export function SessionsList({
     >
       <View className="flex-1" style={{ minHeight: 0 }}>
         <LegendList
-          refScrollView={scrollView}
-          testID="sessions-scroll"
+          refScrollView={loadingFooter.scrollView}
+          {...listTestIdProps('sessions-scroll')}
           style={{ flex: 1 }}
-          contentContainerStyle={wide ? contentStyle : phoneContentStyle}
+          contentContainerStyle={contentContainerStyle}
           // On iOS it scrolls by the fade's top padding on mount, then snaps back.
           maintainVisibleContentPosition={false}
           data={entries}
@@ -219,43 +218,14 @@ export function SessionsList({
           ListHeaderComponent={header}
           onScroll={(event) => {
             scrollFade.onScroll(event);
-            const { contentOffset, contentSize, layoutMeasurement } =
-              event.nativeEvent;
-            atEnd.current =
-              contentSize.height - contentOffset.y - layoutMeasurement.height <=
-              2;
+            loadingFooter.trackAtEnd(event);
           }}
-          onContentSizeChange={() => {
-            if (!revealLoadingFooter.current) return;
-            revealLoadingFooter.current = false;
-            requestAnimationFrame(() => {
-              scrollView.current?.scrollToEnd({ animated: false });
-            });
-          }}
+          onContentSizeChange={loadingFooter.revealIfPending}
           ListFooterComponent={
-            isFetchingNextPage ? (
-              <View className="h-24 items-center justify-center">
-                <ActivityIndicator
-                  role="progressbar"
-                  accessibilityLabel="Loading more Sessions"
-                  colorClassName="accent-muted-foreground"
-                  size="small"
-                />
-              </View>
-            ) : null
+            isFetchingNextPage ? <LoadingMoreSessions /> : null
           }
           ListEmptyComponent={
-            <View className="items-center gap-1 px-4 py-8">
-              <Text className="text-center text-sm font-medium">
-                {emptyTitle}
-              </Text>
-              {query && (
-                <Text className="text-center text-xs text-muted-foreground">
-                  No {archived ? 'Archived' : 'Active'} Session has "{query}" in
-                  its title.
-                </Text>
-              )}
-            </View>
+            <EmptySessionsList query={query} archived={archived} />
           }
           renderItem={renderItem}
         />
@@ -264,6 +234,55 @@ export function SessionsList({
         <ScrollFade edge="top" className={fadeSurface} />
       )}
       <ScrollFade edge="bottom" className={fadeSurface} />
+    </View>
+  );
+}
+
+function NoSessionsYet() {
+  return (
+    <Text className="pb-1 pl-session-name pr-1 text-xs leading-4 text-muted-foreground">
+      No Sessions yet.
+    </Text>
+  );
+}
+
+function LoadingMoreSessions() {
+  return (
+    <View className="h-24 items-center justify-center">
+      <ActivityIndicator
+        role="progressbar"
+        accessibilityLabel="Loading more Sessions"
+        colorClassName="accent-muted-foreground"
+        size="small"
+      />
+    </View>
+  );
+}
+
+function emptyListTitle(query: string, archived: boolean) {
+  if (query) return 'No matching Sessions';
+  if (archived) return 'No archived Sessions';
+  return 'No Projects yet';
+}
+
+function EmptySessionsList({
+  query,
+  archived,
+}: {
+  query: string;
+  archived: boolean;
+}) {
+  return (
+    <View className="items-center gap-1 px-4 py-8">
+      <Text className="text-center text-sm font-medium">
+        {emptyListTitle(query, archived)}
+      </Text>
+      {query ? (
+        <Text className="text-center text-xs text-muted-foreground">
+          No {archived ? 'Archived' : 'Active'} Session has "{query}" in its
+          title.
+        </Text>
+      ) : null}
     </View>
   );
 }

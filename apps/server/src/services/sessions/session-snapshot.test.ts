@@ -42,8 +42,10 @@ it.each(rows)('maps %j to %s', (value, state) => {
       sessionRows.idle,
     ),
   ).toEqual({
+    agent: sessionRows.idle.agent,
     title: 'Finished work',
     titleSource: 'agent',
+    checkout: sessionRows.idle.checkout,
     state,
     liveHeader: null,
     activeTurnId: null,
@@ -97,8 +99,10 @@ it('projects the live context and the Feed revision without changing either', ()
       sessionRows.idle,
     ),
   ).toEqual({
+    agent: sessionRows.idle.agent,
     title: 'Finished work',
     titleSource: 'agent',
+    checkout: sessionRows.idle.checkout,
     state: 'requires_action',
     liveHeader: {
       text: 'Awaiting approval',
@@ -155,7 +159,11 @@ it.each(['prompt', 'agent', 'user'] as const)(
       toSessionSnapshot(
         null,
         { context: { epoch: 0, maxRevision: 0 } },
-        { title: 'Session list reconnect investigation', titleSource },
+        {
+          ...sessionRows.idle,
+          title: 'Session list reconnect investigation',
+          titleSource,
+        },
       ),
     ).toMatchObject({
       title: 'Session list reconnect investigation',

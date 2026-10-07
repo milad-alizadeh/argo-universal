@@ -396,7 +396,12 @@ describe('feed.subscribe', () => {
     ]);
     expect((await updates.next()).value).toMatchObject({
       type: 'snapshot',
-      snapshot: { state: 'idle' },
+      snapshot: {
+        state: 'idle',
+        title: '',
+        titleSource: 'prompt',
+        checkout: { type: 'main', path: '/project', branch: null },
+      },
     });
     const next = updates.next();
     controller.abort();

@@ -32,7 +32,10 @@ export function toSessionSnapshot(
       'epoch' | 'maxRevision'
     > & { rows?: Record<string, SessionUpdate> };
   },
-  record: Pick<SessionSnapshot, 'title' | 'titleSource'>,
+  storedSession: Pick<
+    SessionSnapshot,
+    'agent' | 'title' | 'titleSource' | 'checkout'
+  >,
 ): SessionSnapshot {
   const context = session?.context ?? {
     activeTurnId: null,
@@ -55,8 +58,10 @@ export function toSessionSnapshot(
     state = 'requires_action';
   }
   return {
-    title: record.title,
-    titleSource: record.titleSource,
+    agent: storedSession.agent,
+    title: storedSession.title,
+    titleSource: storedSession.titleSource,
+    checkout: storedSession.checkout,
     state,
     liveHeader: toLiveHeader(context, Object.values(feed.context.rows ?? {})),
     activeTurnId: context.activeTurnId,
