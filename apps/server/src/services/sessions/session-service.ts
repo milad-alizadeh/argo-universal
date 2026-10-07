@@ -25,9 +25,7 @@ export function createSessionService({
   database,
   sessions,
   createId = randomUUID,
-}: SessionServiceOptions): SessionService & {
-  openSession: (sessionId: string) => Promise<SessionActorRef>;
-} {
+}: SessionServiceOptions): SessionService {
   const readSession = createSessionReader(database);
   const send = (command: RegistryCommand) => {
     const snapshot = sessions.getSnapshot();
@@ -100,7 +98,6 @@ export function createSessionService({
   };
   return {
     ...createSessionList({ database, sessions }),
-    openSession: open,
     answerPermission: async ({ sessionId, toolCallId, optionId, message }) => {
       const actor = await open(sessionId);
       const request = actor.getSnapshot().context.permissionQueue[0];

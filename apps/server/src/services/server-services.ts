@@ -34,7 +34,6 @@ export function createServerServices(options: {
     feed: createFeedService({
       database: options.database,
       findSession,
-      openSession: session.openSession,
       findFeed: (sessionId) =>
         findSession(sessionId)?.getSnapshot().children.feed as
           | FeedActorRef
