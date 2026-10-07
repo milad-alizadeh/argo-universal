@@ -1,7 +1,8 @@
 import { SessionInfo, SessionRecord, Turn } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, inArray, notInArray, or, sql } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/sqlite-core';
 import type { ActorRefFrom } from 'xstate';
 import type { FeedActorRef } from '../feed/feed-machine';
 import { fromFeedRow, newestRows } from '../feed/feed-row';
@@ -9,6 +10,7 @@ import {
   applyQueuedSession,
   applyQueuedTurns,
   queuedFeedRows,
+  type WriterJob,
 } from '../feed/writer-job';
 import type { writerMachine } from '../feed/writer-machine';
 import { createLiveHeaderRowsReader } from './live-header-rows';
@@ -40,7 +42,8 @@ export function createSessionListReader(options: {
       return undefined;
     }
   };
-  return () => {
+  const parents = new Map<string, string | null>();
+  const readRows = (sessionIds?: readonly string[]) => {
     const input = {
       database,
       writer: writer(),
@@ -48,57 +51,257 @@ export function createSessionListReader(options: {
       readLiveHeaderRows,
       rejectedSessions: new Set<string>(),
     };
-    const turns = readListTurns(input);
-    const rows = readListSessions(input).filter(
-      (row) => !input.rejectedSessions.has(row.id),
-    );
+    if (!sessionIds) parents.clear();
+    const ids = sessionIds && new Set(sessionIds);
+    if (ids)
+      for (const id of ids) {
+        const parent = parents.get(id);
+        if (parent) ids.add(parent);
+      }
+    let rows = readListSessions(input, ids && [...ids]);
+    const addedParents = new Set<string>();
+    for (const row of rows) {
+      parents.set(row.id, row.parentSessionId);
+      if (
+        ids?.has(row.id) &&
+        row.parentSessionId &&
+        !ids.has(row.parentSessionId)
+      )
+        addedParents.add(row.parentSessionId);
+    }
+    if (addedParents.size) {
+      for (const id of addedParents) ids?.add(id);
+      rows = [
+        ...new Map(
+          [...rows, ...readListSessions(input, [...addedParents])].map(
+            (row) => [row.id, row],
+          ),
+        ).values(),
+      ];
+    }
     return rows
-      .filter((row) => row.parentSessionId === null)
+      .filter(
+        (row) => row.parentSessionId === null && (!ids || ids.has(row.id)),
+      )
       .flatMap((row) => {
+        const children = rows.filter(
+          (child) => child.parentSessionId === row.id,
+        );
+        const turns = readListTurns(
+          input,
+          row.id,
+          children.map((child) => child.id),
+        );
+        if (input.rejectedSessions.has(row.id)) return [];
         const result = readSessionInformation({
           ...input,
           sessions,
           turns,
-          rows,
+          rows: children.filter(
+            (child) => !input.rejectedSessions.has(child.id),
+          ),
           row,
         });
         return result ? [result] : [];
       });
   };
-}
-
-function readListTurns(input: ListReadInput): Turn[] {
-  const { database, writer, validate, rejectedSessions } = input;
-  const parseTurn = (row: typeof turn.$inferSelect | Turn): Turn[] => {
-    const parsed = validate(() => Turn.parse(row));
-    if (!parsed) rejectedSessions.add(row.sessionId);
-    return parsed ? [parsed] : [];
+  const sessionIdsForJobs = (jobs: readonly WriterJob[]): string[] => [
+    ...new Set(
+      jobs.flatMap((job) => {
+        switch (job.type) {
+          case 'feedRows':
+            return [job.sessionId];
+          case 'sessionInsert':
+            return [
+              job.session.id,
+              ...(job.session.parentSessionId
+                ? [job.session.parentSessionId]
+                : []),
+            ];
+          case 'sessionRowUpdate':
+            return [
+              job.id,
+              ...(job.set.parentSessionId ? [job.set.parentSessionId] : []),
+            ];
+          case 'turnInsert':
+            return [job.turn.sessionId];
+          case 'turnUpdate':
+            return readTurnSessionIds({
+              database,
+              sessions,
+              jobs: [...jobs, ...(writer()?.getSnapshot().context.queue ?? [])],
+              turnId: job.id,
+              validate,
+            });
+          default: {
+            const unhandled: never = job;
+            throw new Error(`Unhandled writer job ${unhandled}`);
+          }
+        }
+      }),
+    ),
+  ];
+  const relatedSessionIds = (sessionIds: readonly string[]) => {
+    const ids = new Set(sessionIds);
+    for (const id of ids) {
+      const parent = parents.get(id);
+      if (parent) ids.add(parent);
+    }
+    return [...ids];
   };
-  const stored = database.select().from(turn).all().flatMap(parseTurn);
-  return applyQueuedTurns(
-    stored,
-    writer?.getSnapshot().context.queue ?? [],
-  ).flatMap(parseTurn);
+  return { readRows, sessionIdsForJobs, relatedSessionIds };
 }
 
-function readListSessions({
-  database,
-  writer,
-  validate,
-}: ListReadInput): SessionRecord[] {
-  const jobs = writer?.getSnapshot().context.queue ?? [];
-  return database
+function readTurnSessionIds(input: {
+  database: Database;
+  sessions: RegistryActorRef;
+  jobs: readonly WriterJob[];
+  turnId: string;
+  validate: ListReadInput['validate'];
+}): string[] {
+  const queued = input.jobs.find(
+    (job) => job.type === 'turnInsert' && job.turn.id === input.turnId,
+  );
+  if (queued?.type === 'turnInsert') return [queued.turn.sessionId];
+  const live = Object.values(
+    input.sessions.getSnapshot().context.sessions,
+  ).find((actor) => actor.getSnapshot().context.activeTurnId === input.turnId);
+  if (live) return [live.getSnapshot().context.sessionId];
+  const stored = input.database
+    .select({ sessionId: turn.sessionId })
+    .from(turn)
+    .where(eq(turn.id, input.turnId))
+    .get();
+  const id =
+    stored &&
+    input.validate(() => SessionRecord.shape.id.parse(stored.sessionId));
+  return id ? [id] : [];
+}
+
+function readListSessions(
+  input: ListReadInput,
+  sessionIds?: readonly string[],
+): SessionRecord[] {
+  const jobs = input.writer?.getSnapshot().context.queue ?? [];
+  const stored = input.database
     .select()
     .from(session)
-    .all()
-    .flatMap((row) => {
-      const parsed = validate(() =>
-        SessionRecord.parse(
-          applyQueuedSession({ row, sessionId: row.id, jobs }),
-        ),
-      );
-      return parsed ? [parsed] : [];
-    });
+    .where(
+      sessionIds
+        ? or(
+            inArray(session.id, sessionIds),
+            inArray(session.parentSessionId, sessionIds),
+          )
+        : undefined,
+    )
+    .all();
+  const rows = new Map(stored.map((row) => [row.id, row]));
+  const ids = new Set([
+    ...rows.keys(),
+    ...jobs.flatMap((job) =>
+      job.type === 'sessionInsert' &&
+      (!sessionIds ||
+        sessionIds.includes(job.session.id) ||
+        (job.session.parentSessionId &&
+          sessionIds.includes(job.session.parentSessionId)))
+        ? [job.session.id]
+        : [],
+    ),
+  ]);
+  return [...ids].flatMap((id) => {
+    const row = input.validate(() =>
+      applyQueuedSession({ row: rows.get(id), sessionId: id, jobs }),
+    );
+    return row ? [row] : [];
+  });
+}
+
+function readListTurns(
+  input: ListReadInput,
+  sessionId: string,
+  children: string[],
+): Turn[] {
+  const jobs = input.writer?.getSnapshot().context.queue ?? [];
+  const updates = jobs.flatMap((job) =>
+    job.type === 'turnUpdate' ? [job.id] : [],
+  );
+  const unchanged = updates.length ? notInArray(turn.id, updates) : undefined;
+  const runningIds = readChildTurnIds({
+    database: input.database,
+    updates,
+    children,
+    running: true,
+  });
+  const latestIds = readChildTurnIds({
+    database: input.database,
+    updates,
+    children,
+    running: false,
+  });
+  const rows = [
+    ...input.database
+      .select()
+      .from(turn)
+      .where(and(eq(turn.sessionId, sessionId), unchanged))
+      .orderBy(desc(turn.startedAt), desc(turn.id))
+      .limit(1)
+      .all(),
+    ...(children.length
+      ? input.database
+          .select()
+          .from(turn)
+          .where(or(inArray(turn.id, runningIds), inArray(turn.id, latestIds)))
+          .all()
+      : []),
+    ...(updates.length
+      ? input.database
+          .select()
+          .from(turn)
+          .where(
+            and(
+              inArray(turn.sessionId, [sessionId, ...children]),
+              inArray(turn.id, updates),
+            ),
+          )
+          .all()
+      : []),
+  ];
+  const ids = new Set([sessionId, ...children]);
+  const parseTurn = (row: typeof turn.$inferSelect | Turn): Turn[] => {
+    const parsed = input.validate(() => Turn.parse(row));
+    if (!parsed) input.rejectedSessions.add(row.sessionId);
+    return parsed ? [parsed] : [];
+  };
+  return applyQueuedTurns(rows.flatMap(parseTurn), jobs)
+    .filter((row) => ids.has(row.sessionId))
+    .flatMap(parseTurn);
+}
+
+function readChildTurnIds(input: {
+  database: Database;
+  updates: string[];
+  children: string[];
+  running: boolean;
+}) {
+  const candidate = alias(turn, 'candidate_turn');
+  const latest = input.database
+    .select({ id: candidate.id })
+    .from(candidate)
+    .where(
+      and(
+        eq(candidate.sessionId, session.id),
+        input.running ? eq(candidate.status, 'running') : undefined,
+        input.updates.length
+          ? notInArray(candidate.id, input.updates)
+          : undefined,
+      ),
+    )
+    .orderBy(desc(candidate.startedAt), desc(candidate.id))
+    .limit(1);
+  return input.database
+    .select({ id: sql<string>`(${latest})` })
+    .from(session)
+    .where(inArray(session.id, input.children));
 }
 
 function readSessionInformation(

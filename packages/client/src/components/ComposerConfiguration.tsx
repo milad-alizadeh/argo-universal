@@ -12,7 +12,6 @@ import {
   FolderIcon,
   GitBranchIcon,
   HourglassSimpleIcon,
-  LightningIcon,
   MapTrifoldIcon,
   PencilIcon,
   ShieldCheckIcon,
@@ -26,8 +25,6 @@ import { SvgXml } from 'react-native-svg';
 import { withUniwind } from 'uniwind';
 import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
-import { Label } from '#primitives/label';
-import { Switch } from '#primitives/switch';
 import { Text } from '#primitives/text';
 import { listTestIdProps } from '../lib/list-test-id';
 import { useWide } from '../navigation/use-wide';
@@ -44,8 +41,6 @@ export interface ComposerConfigurationProps {
   onConfigChange: (configId: string, value: string | boolean) => void;
   onAgentChange?: (agent: string) => void;
   onAgentSetup?: (agent: string) => void;
-  fastMode?: boolean;
-  onFastModeChange?: (enabled: boolean) => void;
   turnRunning?: boolean;
   checkout: {
     branch: string;
@@ -71,6 +66,28 @@ function selection(
       option.type === 'select' && option.category === category,
   );
 }
+function currentEffort(configuration: ComposerConfigurationProps) {
+  const model = selection(configuration, 'model');
+  const option = selection(configuration, 'thought_level');
+  const currentModel = choices(model).find(
+    (choice) => choice.value === model?.currentValue,
+  );
+  const levels = currentModel?._meta?.argo?.supportedEffortLevels;
+  const effortChoices =
+    currentModel?._meta?.argo?.supportsEffort === false
+      ? []
+      : choices(option).filter(
+          (choice) => !levels || levels.includes(choice.value),
+        );
+  return {
+    option,
+    choices: effortChoices,
+    selected: effortChoices.find(
+      (choice) => choice.value === option?.currentValue,
+    ),
+  };
+}
+
 function configurationIcon(name?: string) {
   return (
     {
@@ -334,8 +351,6 @@ function ModelChoices({
           accessibilityLabel={choice.name}
           description={choice.description}
           onPress={() => {
-            if (!choice._meta?.argo?.supportsFastMode)
-              configuration.onFastModeChange?.(false);
             configuration.onConfigChange(model.configId, choice.value);
             onSelect();
           }}
@@ -350,25 +365,13 @@ function EffortControl({
 }: {
   configuration: ComposerConfigurationProps;
 }) {
-  const model = selection(configuration, 'model');
-  const effort = selection(configuration, 'thought_level');
-  const current = choices(model).find(
-    (choice) => choice.value === model?.currentValue,
-  );
-  const levels = current?._meta?.argo?.supportedEffortLevels;
-  const effortChoices = choices(effort).filter(
-    (choice) => !levels || levels.includes(choice.value),
-  );
-  if (
-    !effort ||
-    current?._meta?.argo?.supportsEffort === false ||
-    !effortChoices.length
-  )
-    return null;
-  const selectedIndex = Math.max(
-    0,
-    effortChoices.findIndex((choice) => choice.value === effort.currentValue),
-  );
+  const {
+    option: effort,
+    choices: effortChoices,
+    selected,
+  } = currentEffort(configuration);
+  if (!effort || !effortChoices.length) return null;
+  const selectedIndex = selected ? effortChoices.indexOf(selected) : undefined;
   return (
     <View className="px-3 pt-2.5 pb-3 gap-2.5">
       <View className="gap-0.5">
@@ -376,7 +379,7 @@ function EffortControl({
           selectable={false}
           className="select-none text-xs leading-4 font-medium text-muted-foreground"
         >
-          Effort
+          {selected ? 'Effort' : 'No selection'}
         </Text>
         <Text
           selectable={false}
@@ -388,7 +391,7 @@ function EffortControl({
       <View className="gap-1.5">
         <Slider
           accessibilityLabel="Effort"
-          valueLabel={effortChoices[selectedIndex]?.name ?? ''}
+          valueLabel={selected?.name ?? 'No selection'}
           minimumValue={0}
           maximumValue={Math.max(1, effortChoices.length - 1)}
           step={1}
@@ -417,7 +420,7 @@ function EffortControl({
                 <Button
                   variant="ghost"
                   accessibilityLabel={`Set effort to ${choice.name}`}
-                  aria-pressed={choice.value === effort.currentValue}
+                  aria-pressed={choice === selected}
                   onPress={() =>
                     configuration.onConfigChange(effort.configId, choice.value)
                   }
@@ -432,7 +435,7 @@ function EffortControl({
                     numberOfLines={1}
                     className={cn(
                       'select-none text-xs leading-4 font-normal text-muted-foreground',
-                      choice.value === effort.currentValue && 'text-foreground',
+                      choice === selected && 'text-foreground',
                     )}
                   >
                     {choice.name}
@@ -442,50 +445,6 @@ function EffortControl({
             );
           })}
         </View>
-      </View>
-    </View>
-  );
-}
-
-function FastModeControl({
-  configuration,
-}: {
-  configuration: ComposerConfigurationProps;
-}) {
-  const model = selection(configuration, 'model');
-  const current = choices(model).find(
-    (choice) => choice.value === model?.currentValue,
-  );
-  if (
-    !current?._meta?.argo?.supportsFastMode ||
-    !configuration.onFastModeChange
-  )
-    return null;
-  return (
-    <View className="p-1">
-      <View className="min-h-11 wide:min-h-8 py-1.5 px-2 flex-row items-center gap-1">
-        <View className="flex-1 min-w-0 gap-0.5">
-          <Label
-            onPress={() =>
-              configuration.onFastModeChange?.(!configuration.fastMode)
-            }
-            className="select-none text-sm leading-5 font-normal"
-          >
-            Fast mode
-          </Label>
-          <Text
-            selectable={false}
-            className="select-none text-xs leading-4 text-muted-foreground"
-          >
-            Quicker replies from {modelName(current)}, at a higher cost
-          </Text>
-        </View>
-        <Switch
-          size="small"
-          accessibilityLabel="Fast mode"
-          checked={!!configuration.fastMode}
-          onCheckedChange={configuration.onFastModeChange}
-        />
       </View>
     </View>
   );
@@ -621,7 +580,6 @@ function AgentModelMenu({
             </Button>
           </View>
         )}
-        <FastModeControl configuration={configuration} />
         <EffortControl configuration={configuration} />
         {configuration.turnRunning && (
           <View className="flex-row gap-2 px-3 py-2.5 bg-muted">
@@ -651,10 +609,7 @@ export function ComposerAgentModelControl({
   const current = choices(model).find(
     (choice) => choice.value === model?.currentValue,
   );
-  const effort = selection(configuration, 'thought_level');
-  const effortLabel = choices(effort).find(
-    (choice) => choice.value === effort?.currentValue,
-  )?.name;
+  const effortLabel = currentEffort(configuration).selected?.name;
   const agent = configuration.agents.find(
     (entry) => entry.agent === configuration.agent,
   );
@@ -694,15 +649,6 @@ export function ComposerAgentModelControl({
                 {effortLabel}
               </Text>
             )}
-          {configuration.fastMode && (
-            <View
-              accessible
-              accessibilityRole="image"
-              accessibilityLabel="Fast mode enabled"
-            >
-              <Icon as={LightningIcon} weight="fill" />
-            </View>
-          )}
           {wide && (
             <Icon
               size="sm"

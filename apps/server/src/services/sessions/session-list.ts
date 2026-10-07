@@ -12,6 +12,7 @@ import { z } from 'zod';
 import type { writerMachine } from '../feed/writer-machine';
 import type { RegistryActorRef } from './registry-machine';
 import {
+  type SessionListMachineInput,
   type SessionListState,
   sessionListMachine,
 } from './session-list-machine';
@@ -32,12 +33,22 @@ export function createSessionList(options: {
     sessions.system.get('databaseWriter') as
       | ActorRefFrom<typeof writerMachine>
       | undefined;
-  const readAll = createSessionListReader({
+  const {
+    readRows: readAll,
+    sessionIdsForJobs,
+    relatedSessionIds,
+  } = createSessionListReader({
     database: options.database,
     sessions,
     writer,
   });
-  const watch = createSessionListWatch({ sessions, writer, readRows: readAll });
+  const { watch, readCachedRows } = createSessionListWatch({
+    sessions,
+    writer,
+    readRows: readAll,
+    sessionIdsForJobs,
+    relatedSessionIds,
+  });
   const list = async (input: SessionListInput) => {
     let cursor: z.infer<typeof cursorSchema> | undefined;
     if (input.cursor !== undefined) {
@@ -52,7 +63,7 @@ export function createSessionList(options: {
         });
       }
     }
-    const rows = readAll()
+    const rows = readCachedRows()
       .map((row) => row.information)
       .filter(
         (row) =>
@@ -140,14 +151,39 @@ function createSessionListWatch({
   sessions,
   writer,
   readRows,
-}: {
-  sessions: RegistryActorRef;
-  writer: () => ActorRefFrom<typeof writerMachine> | undefined;
-  readRows: () => SessionListState;
+  sessionIdsForJobs,
+  relatedSessionIds,
+}: Omit<SessionListMachineInput, 'writer'> & {
+  writer: () => SessionListMachineInput['writer'];
 }) {
   let sharedActor: ActorRefFrom<typeof sessionListMachine> | undefined;
   let references = 0;
-  return async function* watch<Value>(
+  const create = () =>
+    createActor(sessionListMachine, {
+      input: {
+        sessions,
+        writer: writer(),
+        readRows,
+        sessionIdsForJobs,
+        relatedSessionIds,
+      },
+    });
+  const readCachedRows = () => {
+    const actor = sharedActor ?? create().start();
+    try {
+      actor.send({ type: 'list.flush' });
+      const snapshot = actor.getSnapshot();
+      if (snapshot.status === 'error') throw snapshot.error;
+      if (snapshot.matches('failed')) throw snapshot.context.failure;
+      return snapshot.context.rows ?? [];
+    } finally {
+      if (!sharedActor) {
+        actor.send({ type: 'list.stop' });
+        actor.stop();
+      }
+    }
+  };
+  async function* watch<Value>(
     signal: AbortSignal | undefined,
     changes: (rows: SessionListState) => Value[],
   ): AsyncGenerator<Value> {
@@ -155,9 +191,7 @@ function createSessionListWatch({
     const events = new EventEmitter();
     const controller = new AbortController();
     const first = sharedActor === undefined;
-    sharedActor ??= createActor(sessionListMachine, {
-      input: { sessions, writer: writer(), readRows },
-    });
+    sharedActor ??= create();
     const actor = sharedActor;
     references += 1;
     const publish = (rows: SessionListState) => {
@@ -206,5 +240,6 @@ function createSessionListWatch({
       controller.abort();
       release();
     }
-  };
+  }
+  return { watch, readCachedRows };
 }
