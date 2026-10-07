@@ -94,19 +94,65 @@ function running(width: number): Story {
 export const RunningPhone = running(layoutWidths.phone);
 export const RunningWide = running(layoutWidths.wide);
 
+function parallelCalls(width: number, agentIndex: number): Story {
+  const recorded = toolCallGroupMocks[agentIndex];
+  if (!recorded)
+    throw new Error(
+      'Recorded catalog needs parallel Tool calls for both Agents',
+    );
+  const expectedTitle =
+    recorded.earlier.title ===
+    recorded.earlier.content.find((content) => content.type === 'terminal')
+      ?.command
+      ? 'Running command'
+      : recorded.earlier.title;
+  const read =
+    recorded.later._meta?.argo?.commandActions?.find(
+      (action) => action.type === 'read',
+    )?.path ?? recorded.later.locations?.[0]?.path;
+  if (!read) throw new Error('Recorded catalog needs a completed read path');
+  return {
+    args: { group: recorded.parallel, now: recorded.now },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
+      const header = canvas.getByRole('button', { name: expectedTitle });
+      await expect(header).toBeVisible();
+      await expect(header).toHaveTextContent('23s');
+      await expect(header).not.toHaveTextContent(recorded.later.title);
+      await userEvent.click(header);
+      await expect(
+        canvas.getAllByRole('button', { name: expectedTitle }),
+      ).toHaveLength(1);
+      await expect(
+        canvas.getByRole('button', { name: `Read ${read}` }),
+      ).toBeVisible();
+    },
+  };
+}
+export const ParallelCallsPhoneFirstAgent = parallelCalls(
+  layoutWidths.phone,
+  0,
+);
+export const ParallelCallsPhoneSecondAgent = parallelCalls(
+  layoutWidths.phone,
+  1,
+);
+export const ParallelCallsWideFirstAgent = parallelCalls(layoutWidths.wide, 0);
+export const ParallelCallsWideSecondAgent = parallelCalls(layoutWidths.wide, 1);
+
 export const OpenCompletedHistory: Story = {
   args: { group: { ...toolCallGroupMock.group, state: 'open' } },
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(
       canvas.getByRole('button', {
-        name: 'Show hello.txt and short git status',
+        name: 'Ran 1 command, Read 1 file',
       }),
     );
     await expect(
       canvas.getAllByRole('button', {
         name: 'Show hello.txt and short git status',
       }),
-    ).toHaveLength(2);
+    ).toHaveLength(1);
   },
 };
 
@@ -152,6 +198,8 @@ function runningReadGroup(width: number): Story {
     args: {
       group: {
         ...toolCallGroupMock.running,
+        state: 'open',
+        live: { toolCall: runningRead, awaitingApproval: false },
         items: [{ ...toolCallGroupMock.exploration, toolCalls: [runningRead] }],
       },
       now: (runningRead._meta?.argo?.startedAt ?? 0) + 23000,
