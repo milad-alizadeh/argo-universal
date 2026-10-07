@@ -1,9 +1,5 @@
 import { newSessionCatalogs, recordedFeedMocks } from '@repo/api/mocks';
-import type {
-  FeedSnapshot,
-  FeedSyncPoint,
-  SessionUpdate,
-} from '@repo/contracts';
+import type { FeedSnapshot, FeedSyncPoint } from '@repo/contracts';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, spyOn, waitFor, within } from 'storybook/test';
 import { composerImages } from '../../mocks/composer-mock';
@@ -13,6 +9,7 @@ import { agentProbeRequests } from '../../mocks/new-session-mock';
 import {
   arrivingMessage,
   arrivingRowSessionMocks,
+  closureCatalogs,
   emptySessionMocks,
   heldOlderPageSessionMocks,
   idleSessionMocks,
@@ -531,41 +528,6 @@ export const AgentFailedToOpen: Story = {
   },
 };
 
-const closureCatalogs = newSessionCatalogs.bothAvailable.map((agent, index) => {
-  const recording = recordedFeedMocks.find(
-    (mock) =>
-      mock.agent === `agent-${index + 1}` &&
-      mock.recording === 'edit-and-command',
-  );
-  const lastRow = recording?.rows.at(-1);
-  if (!recording || !lastRow)
-    throw new Error(`Recorded catalog needs a Feed for ${agent.label}.`);
-  const newest: SessionUpdate = {
-    id: 'newest-held',
-    sessionId: 'session-1',
-    turnId: 'held-turn',
-    position: lastRow.position + 1,
-    revision: recording.snapshot.maxRevision + 1,
-    state: 'settled',
-    sessionUpdate: 'agent_message',
-    messageId: 'newest-held',
-    content: [{ type: 'text', text: 'Newest held message' }],
-  };
-  const snapshot = {
-    ...recording.snapshot,
-    agent: agent.agent,
-    state: 'idle' as const,
-    activeTurnId: null,
-    liveHeader: null,
-    configOptions: agent.configOptions,
-  };
-  return {
-    newest,
-    snapshot,
-    mocks: createFeedMocks({ ...recording, snapshot }),
-  };
-});
-
 function closedFailure(width: number, agentIndex: 0 | 1): Story {
   const catalog = closureCatalogs[agentIndex];
   if (!catalog) throw new Error('Recorded catalog needs both Agents.');
@@ -602,9 +564,7 @@ function closedFailure(width: number, agentIndex: 0 | 1): Story {
       await userEvent.click(
         within(alert).getByRole('button', { name: 'Retry' }),
       );
-      await expect(
-        await canvas.findByText('Newest held message'),
-      ).toBeVisible();
+      await expect(await canvas.findByText(catalog.newestText)).toBeVisible();
       await expect(canvas.queryByRole('alert')).toBeNull();
       await expect(inputs).toHaveLength(2);
       await expect(inputs[1]).toEqual({
@@ -657,9 +617,7 @@ function resumesClosedFeed(width: number, agentIndex: 0 | 1): Story {
     },
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
-      await expect(
-        await canvas.findByText('Newest held message'),
-      ).toBeVisible();
+      await expect(await canvas.findByText(catalog.newestText)).toBeVisible();
       await expect(canvas.queryByRole('alert')).toBeNull();
       await expect(inputs).toHaveLength(1);
       await expect(prompts).toBe(0);
@@ -674,7 +632,7 @@ function resumesClosedFeed(width: number, agentIndex: 0 | 1): Story {
         epoch: catalog.snapshot.epoch,
         revision: catalog.newest.revision,
       });
-      await expect(canvas.getByText('Newest held message')).toBeVisible();
+      await expect(canvas.getByText(catalog.newestText)).toBeVisible();
       await expect(canvas.queryByRole('alert')).toBeNull();
     },
   };

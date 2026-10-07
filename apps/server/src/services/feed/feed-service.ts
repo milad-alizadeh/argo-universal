@@ -15,7 +15,13 @@ import type { SessionActorRef } from '../sessions/session-machine';
 import { createSessionReader } from '../sessions/session-record';
 import { toSessionSnapshot } from '../sessions/session-snapshot';
 import type { FeedActorRef } from './feed-machine';
-import { fromFeedRow, newestRows, readWrittenRow } from './feed-row';
+import {
+  decodeStoredFeedRow,
+  fromFeedRow,
+  newestRows,
+  readWrittenRow,
+  storedFeedColumns,
+} from './feed-row';
 import { queuedFeedRows } from './writer-job';
 import type { writerMachine } from './writer-machine';
 
@@ -61,7 +67,7 @@ export function createFeedService(deps: FeedDeps): FeedService {
     const cursor =
       input.direction === 'before' && !staleCursor ? input.cursor : undefined;
     const newestFirst = database
-      .select()
+      .select(storedFeedColumns)
       .from(feedRow)
       .where(
         and(
@@ -75,7 +81,7 @@ export function createFeedService(deps: FeedDeps): FeedService {
     const rows = newestFirst
       .slice(0, input.limit)
       .reverse()
-      .map((row) => fromFeedRow(input.sessionId, row));
+      .map((row) => fromFeedRow(input.sessionId, decodeStoredFeedRow(row)));
     return {
       epoch,
       maxRevision,
@@ -104,12 +110,12 @@ export function createFeedService(deps: FeedDeps): FeedService {
   const catchUp = (sessionId: string, from: number, maxRevision: number) => {
     const unsaved = readUnsaved(sessionId);
     const stored = database
-      .select()
+      .select(storedFeedColumns)
       .from(feedRow)
       .where(and(eq(feedRow.sessionId, sessionId), gt(feedRow.revision, from)))
       .orderBy(asc(feedRow.revision))
       .all()
-      .map((stored) => fromFeedRow(sessionId, stored));
+      .map((stored) => fromFeedRow(sessionId, decodeStoredFeedRow(stored)));
     return {
       rows: [
         ...newestRows([

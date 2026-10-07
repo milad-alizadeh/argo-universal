@@ -1925,18 +1925,25 @@ for (const adapter of agentAdapters)
       sessionId: 'session-broken',
       agent: adapter.agent,
     });
-    await waitFor(
-      registry,
-      (snapshot) =>
-        snapshot.context.sessions['session-broken']
-          ?.getSnapshot()
-          .matches({ open: { live: 'idle' } }) ?? false,
-    );
+    await expect
+      .poll(() =>
+        root.engine.system.get('session:session-broken')?.getSnapshot().can({
+          type: 'session.prompt',
+          turnId: 'readiness-check',
+          content: [],
+        }),
+      )
+      .toBe(true);
     const feed = (
       await caller.feed.subscribe({ sessionId: 'session-broken', after: null })
     )[Symbol.asyncIterator]();
     expect((await feed.next()).value).toMatchObject({ type: 'snapshot' });
-    const rejectedFeed = expect(feed.next()).rejects.toThrow(failure.message);
+    const rejectedFeed = expect(
+      (async () => {
+        for await (const event of { [Symbol.asyncIterator]: () => feed })
+          expect(event).toMatchObject({ type: 'snapshot' });
+      })(),
+    ).rejects.toThrow(failure.message);
     const engineErrors: unknown[] = [];
     root.engine.subscribe({ error: (error) => engineErrors.push(error) });
     await caller.session.prompt({
@@ -2514,5 +2521,232 @@ it.each(agentAdapters)(
           )?._meta?.argo?.heldUntilNextTurn,
       )
       .not.toBe(true);
+  },
+);
+
+it.each(agentAdapters)(
+  'shows the applied $agent effort after the next Turn clamps a held choice',
+  async (adapter) => {
+    const root = await startNewSessionEngine(adapter, {
+      recording: 'interrupt',
+    });
+    const caller = await root.createCaller();
+    const { sessionId } = await caller.session.new({
+      projectId: 'project-1',
+      agent: adapter.agent,
+      checkout: { type: 'main' },
+      configOptions: [],
+      prompt: [{ type: 'text', text: 'Hold my choices' }],
+    });
+    await expect
+      .poll(
+        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+      )
+      .toBe('running');
+    const before = await readSnapshot(root.createCaller, sessionId);
+    const model = before.configOptions.find(
+      (option) => option.category === 'model',
+    );
+    const effort = before.configOptions.find(
+      (option) => option.category === 'thought_level',
+    );
+    if (model?.type !== 'select' || effort?.type !== 'select')
+      throw new Error('Recorded catalog needs model and effort choices.');
+    const models = model.options.flatMap((entry) =>
+      'groupId' in entry ? entry.options : [entry],
+    );
+    const wide = models.find((entry) => entry.value === model.currentValue);
+    const levels = wide?._meta?.argo?.supportedEffortLevels ?? [];
+    const narrow = models.find(
+      (entry) =>
+        entry._meta?.argo?.supportsEffort &&
+        levels.some(
+          (level) => !entry._meta?.argo?.supportedEffortLevels?.includes(level),
+        ),
+    );
+    const unsupported = effort.options
+      .flatMap((entry) => ('groupId' in entry ? entry.options : [entry]))
+      .find(
+        (entry) =>
+          levels.includes(entry.value) &&
+          !narrow?._meta?.argo?.supportedEffortLevels?.includes(entry.value),
+      );
+    if (!wide || !narrow || !unsupported)
+      throw new Error('Recorded catalog needs a narrower model effort range.');
+    for (const [configId, value] of [
+      [model.configId, wide.value],
+      [effort.configId, unsupported.value],
+      [model.configId, narrow.value],
+    ] as const)
+      await caller.session.setConfigOption({
+        sessionId,
+        configId,
+        type: 'id',
+        value,
+      });
+    await caller.session.cancel({ sessionId });
+    await expect
+      .poll(
+        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+      )
+      .toBe('idle');
+    await caller.session.prompt({
+      sessionId,
+      prompt: [{ type: 'text', text: 'Run the narrower model' }],
+    });
+    await expect
+      .poll(async () => {
+        const snapshot = await readSnapshot(root.createCaller, sessionId);
+        return snapshot.configOptions.find(
+          (option) => option.configId === effort.configId,
+        )?._meta?.argo?.heldUntilNextTurn;
+      })
+      .not.toBe(true);
+    const after = await readSnapshot(root.createCaller, sessionId);
+    expect(
+      after.configOptions.find((option) => option.configId === model.configId)
+        ?.currentValue,
+    ).toBe(narrow.value);
+    const applied = after.configOptions.find(
+      (option) => option.configId === effort.configId,
+    )?.currentValue;
+    expect(applied).not.toBe(unsupported.value);
+    expect(narrow._meta?.argo?.supportedEffortLevels).toContain(applied);
+    expect(
+      after.configOptions.some(
+        (option) => option._meta?.argo?.heldUntilNextTurn,
+      ),
+    ).toBe(false);
+  },
+);
+
+it.each(
+  agentAdapters.flatMap(({ agent }) => [
+    {
+      agent,
+      table: session,
+      column: session.configValues,
+      id: 'session-1',
+      field: 'Session config values',
+    },
+    {
+      agent,
+      table: session,
+      column: session.vendorRef,
+      id: 'session-1',
+      field: 'Session vendor reference',
+    },
+    {
+      agent,
+      table: turn,
+      column: turn.usage,
+      id: 'bad-turn',
+      field: 'Turn usage',
+    },
+    {
+      agent,
+      table: turn,
+      column: turn.error,
+      id: 'bad-turn',
+      field: 'Turn error',
+    },
+  ]),
+)(
+  'drops only the Session with unreadable $field JSON for $agent',
+  async ({ agent, table, column, id }) => {
+    const { database, remove } = openTestDatabase({ agent });
+    onTestFinished(remove);
+    const reported = vi.spyOn(console, 'error').mockImplementation(() => {});
+    onTestFinished(() => reported.mockRestore());
+    const { createCaller } = startEngine({
+      database,
+      adapter: createMockAdapter({}, agent),
+    });
+    const caller = await createCaller();
+    insertSession(database, { id: 'healthy', agent });
+    database
+      .insert(turn)
+      .values({ id: 'bad-turn', sessionId: 'session-1', status: 'ended' })
+      .run();
+    database.run(
+      sql`update ${table} set ${sql.identifier(column.name)} = 'broken-json' where ${table.id} = ${id}`,
+    );
+    const result = await caller.session.list({ archived: false });
+    expect(result.sessions.map((row) => row.sessionId)).toEqual(['healthy']);
+    expect(reported).toHaveBeenCalledWith(
+      'sessions: rejected list shape #1',
+      expect.anything(),
+    );
+  },
+);
+
+it.each(
+  agentAdapters.flatMap(({ agent }) =>
+    (['agent_message', 'agent_thought', 'tool_call_update'] as const).flatMap(
+      (kind) => [
+        { agent, kind, column: feedRow.payload, field: 'payload' },
+        { agent, kind, column: feedRow.sourceRef, field: 'source reference' },
+      ],
+    ),
+  ),
+)(
+  'degrades only the Session with unreadable $kind $field JSON for $agent',
+  async ({ agent, kind, column }) => {
+    const { database, remove } = openTestDatabase({ agent });
+    onTestFinished(remove);
+    const reported = vi.spyOn(console, 'error').mockImplementation(() => {});
+    onTestFinished(() => reported.mockRestore());
+    const { createCaller } = startEngine({
+      database,
+      adapter: createMockAdapter({}, agent),
+    });
+    const caller = await createCaller();
+    insertSession(database, { id: 'healthy', agent });
+    database
+      .insert(turn)
+      .values({ id: 'running', sessionId: 'session-1', status: 'running' })
+      .run();
+    database
+      .insert(feedRow)
+      .values({
+        sessionId: 'session-1',
+        id: 'bad',
+        position: 0,
+        revision: 1,
+        turnId: 'running',
+        state: 'settled',
+        sessionUpdate: kind,
+        payloadVersion: 1,
+        payload: {
+          messageId: 'bad',
+          content: [{ type: 'text', text: 'A stored reply' }],
+          toolCallId: 'bad',
+          title: 'Read a file',
+          status: 'in_progress',
+          kind: 'read',
+        },
+      })
+      .run();
+    database.run(
+      sql`update ${feedRow} set ${sql.identifier(column.name)} = 'broken-json' where ${feedRow.id} = 'bad'`,
+    );
+    const result = await caller.session.list({ archived: false });
+    expect(result.sessions).toHaveLength(2);
+    expect(
+      result.sessions.find((row) => row.sessionId === 'session-1'),
+    ).toMatchObject({ activity: '', plan: null });
+    expect(result.sessions.map((row) => row.sessionId)).toContain('healthy');
+    expect(
+      reported.mock.calls.some(([message]) =>
+        String(message).includes('rejected'),
+      ),
+    ).toBe(true);
+    await expect(
+      caller.feed.page({
+        sessionId: 'session-1',
+        direction: 'tail',
+        limit: 50,
+      }),
+    ).rejects.toThrow();
   },
 );

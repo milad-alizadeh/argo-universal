@@ -2,14 +2,19 @@ import { runningToolCallStatuses } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
 import { and, eq, or, sql } from 'drizzle-orm';
-import { fromFeedRow, payloadVersion } from '../services/feed/feed-row';
+import {
+  decodeStoredFeedRow,
+  fromFeedRow,
+  payloadVersion,
+  storedFeedColumns,
+} from '../services/feed/feed-row';
 
 // Repairs the database before the Engine serves; any failure rolls back the whole repair.
 export function recoverAfterRestart(database: Database) {
-  const runningStatus = sql`json_extract(${feedRow.payload}, '$.status') in (${sql.join(
+  const runningStatus = sql`case when json_valid(${feedRow.payload}) then json_extract(${feedRow.payload}, '$.status') in (${sql.join(
     runningToolCallStatuses.map((status) => sql`${status}`),
     sql`, `,
-  )})`;
+  )}) else 0 end`;
   void database.transaction((transaction) => {
     transaction
       .update(turn)
@@ -26,13 +31,16 @@ export function recoverAfterRestart(database: Database) {
       .run();
 
     const rows = transaction
-      .select({ row: feedRow, maxRevision: session.maxRevision })
+      .select({ row: storedFeedColumns, maxRevision: session.maxRevision })
       .from(feedRow)
       .innerJoin(session, eq(feedRow.sessionId, session.id))
       .where(
         or(
           eq(feedRow.state, 'open'),
-          and(eq(feedRow.sessionUpdate, 'tool_call_update'), runningStatus),
+          and(
+            eq(feedRow.sessionUpdate, 'tool_call_update'),
+            or(runningStatus, sql`not json_valid(${feedRow.payload})`),
+          ),
         ),
       )
       .orderBy(feedRow.sessionId, feedRow.position)
@@ -42,7 +50,7 @@ export function recoverAfterRestart(database: Database) {
     let rejectedShapes = 0;
     for (const { row, maxRevision } of rows) {
       try {
-        fromFeedRow(row.sessionId, row);
+        fromFeedRow(row.sessionId, decodeStoredFeedRow(row));
       } catch (error) {
         rejectedShapes += 1;
         console.error(

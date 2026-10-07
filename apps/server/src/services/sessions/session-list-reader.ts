@@ -1,11 +1,25 @@
 import { SessionInfo, SessionRecord, Turn } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
-import { and, desc, eq, inArray, notInArray, or, sql } from 'drizzle-orm';
+import {
+  and,
+  desc,
+  eq,
+  getTableColumns,
+  inArray,
+  notInArray,
+  or,
+  sql,
+} from 'drizzle-orm';
 import { alias } from 'drizzle-orm/sqlite-core';
 import type { ActorRefFrom } from 'xstate';
 import type { FeedActorRef } from '../feed/feed-machine';
-import { fromFeedRow, newestRows } from '../feed/feed-row';
+import {
+  decodeStoredFeedRow,
+  fromFeedRow,
+  newestRows,
+  storedFeedColumns,
+} from '../feed/feed-row';
 import {
   applyQueuedSession,
   applyQueuedTurns,
@@ -16,6 +30,13 @@ import type { writerMachine } from '../feed/writer-machine';
 import { createLiveHeaderRowsReader } from './live-header-rows';
 import type { RegistryActorRef } from './registry-machine';
 import { latestTurnOf, toSessionInfo } from './session-info';
+import { decodeStoredSession, storedSessionColumns } from './session-record';
+
+const storedTurnColumns = {
+  ...getTableColumns(turn),
+  error: sql<unknown>`${turn.error}`,
+  usage: sql<unknown>`${turn.usage}`,
+};
 
 interface ListReadInput {
   database: Database;
@@ -184,7 +205,7 @@ function readListSessions(
 ): SessionRecord[] {
   const jobs = input.writer?.getSnapshot().context.queue ?? [];
   const stored = input.database
-    .select()
+    .select(storedSessionColumns)
     .from(session)
     .where(
       sessionIds
@@ -209,9 +230,14 @@ function readListSessions(
     ),
   ]);
   return [...ids].flatMap((id) => {
-    const row = input.validate(() =>
-      applyQueuedSession({ row: rows.get(id), sessionId: id, jobs }),
-    );
+    const row = input.validate(() => {
+      const stored = rows.get(id);
+      return applyQueuedSession({
+        row: stored && decodeStoredSession(stored),
+        sessionId: id,
+        jobs,
+      });
+    });
     return row ? [row] : [];
   });
 }
@@ -240,7 +266,7 @@ function readListTurns(
   });
   const rows = [
     ...input.database
-      .select()
+      .select(storedTurnColumns)
       .from(turn)
       .where(and(eq(turn.sessionId, sessionId), unchanged))
       .orderBy(desc(turn.startedAt), desc(turn.id))
@@ -248,14 +274,14 @@ function readListTurns(
       .all(),
     ...(children.length
       ? input.database
-          .select()
+          .select(storedTurnColumns)
           .from(turn)
           .where(or(inArray(turn.id, runningIds), inArray(turn.id, latestIds)))
           .all()
       : []),
     ...(updates.length
       ? input.database
-          .select()
+          .select(storedTurnColumns)
           .from(turn)
           .where(
             and(
@@ -267,14 +293,30 @@ function readListTurns(
       : []),
   ];
   const ids = new Set([sessionId, ...children]);
-  const parseTurn = (row: typeof turn.$inferSelect | Turn): Turn[] => {
-    const parsed = input.validate(() => Turn.parse(row));
+  const parseTurn = (
+    row: typeof turn.$inferSelect | Turn,
+    stored = false,
+  ): Turn[] => {
+    const parsed = input.validate(() =>
+      Turn.parse(
+        stored
+          ? {
+              ...row,
+              error: row.error === null ? null : JSON.parse(String(row.error)),
+              usage: row.usage === null ? null : JSON.parse(String(row.usage)),
+            }
+          : row,
+      ),
+    );
     if (!parsed) input.rejectedSessions.add(row.sessionId);
     return parsed ? [parsed] : [];
   };
-  return applyQueuedTurns(rows.flatMap(parseTurn), jobs)
+  return applyQueuedTurns(
+    rows.flatMap((row) => parseTurn(row, true)),
+    jobs,
+  )
     .filter((row) => ids.has(row.sessionId))
-    .flatMap(parseTurn);
+    .flatMap((row) => parseTurn(row));
 }
 
 function readChildTurnIds(input: {
@@ -329,7 +371,7 @@ function readSessionInformation(
   const changes = [
     ...(['agent_message', 'plan_update'] as const).flatMap((kind) =>
       database
-        .select()
+        .select(storedFeedColumns)
         .from(feedRow)
         .where(
           and(eq(feedRow.sessionId, row.id), eq(feedRow.sessionUpdate, kind)),
@@ -337,7 +379,9 @@ function readSessionInformation(
         .orderBy(desc(feedRow.position))
         .limit(1)
         .all()
-        .map((stored) => validate(() => fromFeedRow(row.id, stored))),
+        .map((stored) =>
+          validate(() => fromFeedRow(row.id, decodeStoredFeedRow(stored))),
+        ),
     ),
     ...queuedFeedRows(
       writer?.getSnapshot().context.queue ?? [],

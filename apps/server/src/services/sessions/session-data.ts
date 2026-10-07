@@ -16,6 +16,7 @@ import {
   type WriterJob,
 } from '../feed/writer-job';
 import type { writerMachine } from '../feed/writer-machine';
+import { decodeStoredSession, storedSessionColumns } from './session-record';
 
 // The first Turn's id travels with the creation, so the Session prompts as soon as it is stored.
 export type SessionCreationInput = SessionNewInput & { turnId: string };
@@ -130,13 +131,13 @@ export async function loadSession(
   writer?: ActorRefFrom<typeof writerMachine>,
 ): Promise<SessionData> {
   const stored = input.database
-    .select()
+    .select(storedSessionColumns)
     .from(session)
     .where(eq(session.id, input.sessionId))
     .get();
   const jobs = writer?.getSnapshot().context.queue ?? [];
   const pending = applyQueuedSession({
-    row: stored,
+    row: stored && decodeStoredSession(stored),
     sessionId: input.sessionId,
     jobs,
   });

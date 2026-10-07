@@ -467,196 +467,188 @@ describe('feed.subscribe', () => {
 
 const feedCloseDeadline = 1_000;
 
-it(
-  'ends a closed Session Feed after draining its last rows',
-  async () => {
-    vi.useRealTimers();
-    let stream: MockAgentStream | undefined;
-    const adapter = createMockAdapter({
-      stream: (current) => {
-        stream = current;
-      },
-    });
-    const root = createActor(
-      setup({
-        actors: { writer: writerMachine, sessions: registryMachine },
-      }).createMachine({
-        invoke: [
-          {
-            id: 'databaseWriter',
-            systemId: 'databaseWriter',
-            src: 'writer',
-            input: {
-              now: () => Date.now(),
-              database,
-            },
-          },
-          {
-            id: 'sessions',
-            src: 'sessions',
-            input: {
-              now: () => Date.now(),
-              createId: randomUUID,
-              database,
-              runtimeDirectory,
-              adapters: [adapter],
-            },
-          },
-        ],
-      }),
-    ).start();
-    onTestFinished(() => {
-      root.stop();
-    });
-    const sessions = root.getSnapshot().children.sessions;
-    if (!sessions) throw new Error('No Session registry');
-    const services = createServerServices({
-      database,
-      sessions,
-      blobsFolder: '/unused',
-      version: '1',
-      startedAt: '',
-    });
-    await services.session.prompt({
-      sessionId: 'session-1',
-      prompt: [{ type: 'text', text: 'Start a Turn' }],
-    });
-    const updates = services.feed
-      .subscribe(
-        { sessionId: 'session-1', after: { epoch: 3, revision: 5 } },
-        controller.signal,
-      )
-      [Symbol.asyncIterator]();
-    const first = await updates.next();
-    expect(first.done).toBe(false);
-    if (!stream) throw new Error('No Agent stream');
-    stream.send({
-      type: 'agent.feed',
-      change: openMessage('last-row', 'Last message'),
-    });
-    const sessionActor = sessions.getSnapshot().context.sessions['session-1'];
-    if (!sessionActor) throw new Error('No registered Session');
-    sessionActor.send({ type: 'session.close' });
-    const events: FeedSubscribeOutput[] = [];
-    for await (const event of { [Symbol.asyncIterator]: () => updates })
-      events.push(event);
-    expect(events.at(-1)).toEqual({ type: 'closed', failure: null });
-    expect(events).toContainEqual(
-      expect.objectContaining({
-        type: 'row.upsert',
-        row: expect.objectContaining({ id: 'last-row' }),
-      }),
-    );
-    expect(sessions.system.get('session:session-1')).toBeUndefined();
-    const heldRevision = Math.max(
-      5,
-      ...events.flatMap((event) => ('rev' in event ? [event.rev] : [])),
-    );
-    await services.session.prompt({
-      sessionId: 'session-1',
-      prompt: [{ type: 'text', text: 'Continue the Session' }],
-    });
-    const resumed = services.feed
-      .subscribe(
+it('ends a closed Session Feed after draining its last rows', async () => {
+  vi.useRealTimers();
+  let stream: MockAgentStream | undefined;
+  const adapter = createMockAdapter({
+    stream: (current) => {
+      stream = current;
+    },
+  });
+  const root = createActor(
+    setup({
+      actors: { writer: writerMachine, sessions: registryMachine },
+    }).createMachine({
+      invoke: [
         {
-          sessionId: 'session-1',
-          after: { epoch: 3, revision: heldRevision },
+          id: 'databaseWriter',
+          systemId: 'databaseWriter',
+          src: 'writer',
+          input: {
+            now: () => Date.now(),
+            database,
+          },
         },
+        {
+          id: 'sessions',
+          src: 'sessions',
+          input: {
+            now: () => Date.now(),
+            createId: randomUUID,
+            database,
+            runtimeDirectory,
+            adapters: [adapter],
+          },
+        },
+      ],
+    }),
+  ).start();
+  onTestFinished(() => {
+    root.stop();
+  });
+  const sessions = root.getSnapshot().children.sessions;
+  if (!sessions) throw new Error('No Session registry');
+  const services = createServerServices({
+    database,
+    sessions,
+    blobsFolder: '/unused',
+    version: '1',
+    startedAt: '',
+  });
+  await services.session.prompt({
+    sessionId: 'session-1',
+    prompt: [{ type: 'text', text: 'Start a Turn' }],
+  });
+  const updates = services.feed
+    .subscribe(
+      { sessionId: 'session-1', after: { epoch: 3, revision: 5 } },
+      controller.signal,
+    )
+    [Symbol.asyncIterator]();
+  const first = await updates.next();
+  expect(first.done).toBe(false);
+  if (!stream) throw new Error('No Agent stream');
+  stream.send({
+    type: 'agent.feed',
+    change: openMessage('last-row', 'Last message'),
+  });
+  const sessionActor = sessions.getSnapshot().context.sessions['session-1'];
+  if (!sessionActor) throw new Error('No registered Session');
+  sessionActor.send({ type: 'session.close' });
+  const events = await drainClosedFeed(updates);
+  expect(events.at(-1)).toEqual({ type: 'closed', failure: null });
+  expect(events).toContainEqual(
+    expect.objectContaining({
+      type: 'row.upsert',
+      row: expect.objectContaining({ id: 'last-row' }),
+    }),
+  );
+  expect(sessions.system.get('session:session-1')).toBeUndefined();
+  const heldRevision = Math.max(
+    5,
+    ...events.flatMap((event) => ('rev' in event ? [event.rev] : [])),
+  );
+  await services.session.prompt({
+    sessionId: 'session-1',
+    prompt: [{ type: 'text', text: 'Continue the Session' }],
+  });
+  const resumed = services.feed
+    .subscribe(
+      {
+        sessionId: 'session-1',
+        after: { epoch: 3, revision: heldRevision },
+      },
+      controller.signal,
+    )
+    [Symbol.asyncIterator]();
+  const resumedFirst = await resumed.next();
+  expect(resumedFirst.done).toBe(false);
+  if (!resumedFirst.value) throw new Error('No resumed Feed event');
+  const nextEvents: FeedSubscribeOutput[] = [resumedFirst.value];
+  stream.send({
+    type: 'agent.feed',
+    change: openMessage('next-row', 'Next message'),
+  });
+  for await (const event of { [Symbol.asyncIterator]: () => resumed }) {
+    nextEvents.push(event);
+    if (event.type === 'row.upsert' && event.row.id === 'next-row') break;
+  }
+  expect(nextEvents).toContainEqual(
+    expect.objectContaining({
+      type: 'row.upsert',
+      row: expect.objectContaining({ id: 'next-row' }),
+    }),
+  );
+  const nextRevisions = nextEvents.flatMap((event) =>
+    'rev' in event ? [event.rev] : [],
+  );
+  expect(nextRevisions.length).toBeGreaterThan(0);
+  expect(Math.min(...nextRevisions)).toBeGreaterThan(heldRevision);
+});
+
+it('reads a closed Session Feed without opening a Session', async () => {
+  vi.useRealTimers();
+  const root = createActor(
+    setup({
+      actors: { writer: writerMachine, sessions: registryMachine },
+    }).createMachine({
+      invoke: [
+        {
+          id: 'databaseWriter',
+          systemId: 'databaseWriter',
+          src: 'writer',
+          input: {
+            now: () => Date.now(),
+            database,
+          },
+        },
+        {
+          id: 'sessions',
+          src: 'sessions',
+          input: {
+            now: () => Date.now(),
+            createId: randomUUID,
+            database,
+            runtimeDirectory,
+            adapters: [createMockAdapter()],
+          },
+        },
+      ],
+    }),
+  ).start();
+  onTestFinished(() => {
+    root.stop();
+  });
+  const sessions = root.getSnapshot().children.sessions;
+  if (!sessions) throw new Error('No Session registry');
+  const services = createServerServices({
+    database,
+    sessions,
+    blobsFolder: '/unused',
+    version: '1',
+    startedAt: '',
+  });
+  const events = await drainClosedFeed(
+    services.feed
+      .subscribe(
+        { sessionId: 'session-1', after: { epoch: 3, revision: 3 } },
         controller.signal,
       )
-      [Symbol.asyncIterator]();
-    const resumedFirst = await resumed.next();
-    expect(resumedFirst.done).toBe(false);
-    if (!resumedFirst.value) throw new Error('No resumed Feed event');
-    const nextEvents: FeedSubscribeOutput[] = [resumedFirst.value];
-    stream.send({
-      type: 'agent.feed',
-      change: openMessage('next-row', 'Next message'),
-    });
-    for await (const event of { [Symbol.asyncIterator]: () => resumed }) {
-      nextEvents.push(event);
-      if (event.type === 'row.upsert' && event.row.id === 'next-row') break;
-    }
-    expect(nextEvents).toContainEqual(
-      expect.objectContaining({
-        type: 'row.upsert',
-        row: expect.objectContaining({ id: 'next-row' }),
-      }),
-    );
-    const nextRevisions = nextEvents.flatMap((event) =>
-      'rev' in event ? [event.rev] : [],
-    );
-    expect(nextRevisions.length).toBeGreaterThan(0);
-    expect(Math.min(...nextRevisions)).toBeGreaterThan(heldRevision);
-  },
-  feedCloseDeadline,
-);
-
-it(
-  'reads a closed Session Feed without opening a Session',
-  async () => {
-    vi.useRealTimers();
-    const root = createActor(
-      setup({
-        actors: { writer: writerMachine, sessions: registryMachine },
-      }).createMachine({
-        invoke: [
-          {
-            id: 'databaseWriter',
-            systemId: 'databaseWriter',
-            src: 'writer',
-            input: {
-              now: () => Date.now(),
-              database,
-            },
-          },
-          {
-            id: 'sessions',
-            src: 'sessions',
-            input: {
-              now: () => Date.now(),
-              createId: randomUUID,
-              database,
-              runtimeDirectory,
-              adapters: [createMockAdapter()],
-            },
-          },
-        ],
-      }),
-    ).start();
-    onTestFinished(() => {
-      root.stop();
-    });
-    const sessions = root.getSnapshot().children.sessions;
-    if (!sessions) throw new Error('No Session registry');
-    const services = createServerServices({
-      database,
-      sessions,
-      blobsFolder: '/unused',
-      version: '1',
-      startedAt: '',
-    });
-    const events: FeedSubscribeOutput[] = [];
-    for await (const event of services.feed.subscribe(
-      { sessionId: 'session-1', after: { epoch: 3, revision: 3 } },
-      controller.signal,
-    ))
-      events.push(event);
-    expect(events.map((event) => event.type)).toEqual([
-      'row.upsert',
-      'row.upsert',
-      'snapshot',
-      'closed',
-    ]);
-    expect(events.at(-1)).toEqual({ type: 'closed', failure: null });
-    expect(events[2]).toMatchObject({
-      snapshot: { state: 'idle', configOptions: [], maxRevision: 5 },
-    });
-    expect(Object.keys(sessions.getSnapshot().context.sessions)).toEqual([]);
-    expect(sessions.system.get('session:session-1')).toBeUndefined();
-  },
-  feedCloseDeadline,
-);
+      [Symbol.asyncIterator](),
+  );
+  expect(events.map((event) => event.type)).toEqual([
+    'row.upsert',
+    'row.upsert',
+    'snapshot',
+    'closed',
+  ]);
+  expect(events.at(-1)).toEqual({ type: 'closed', failure: null });
+  expect(events[2]).toMatchObject({
+    snapshot: { state: 'idle', configOptions: [], maxRevision: 5 },
+  });
+  expect(Object.keys(sessions.getSnapshot().context.sessions)).toEqual([]);
+  expect(sessions.system.get('session:session-1')).toBeUndefined();
+});
 
 it('keeps a Subagent Feed stream open until its caller aborts', async () => {
   startHost();
@@ -667,3 +659,29 @@ it('keeps a Subagent Feed stream open until its caller aborts', async () => {
   controller.abort();
   expect(await waiting).toMatchObject({ done: true });
 });
+
+async function drainClosedFeed(updates: AsyncIterator<FeedSubscribeOutput>) {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () =>
+        reject(
+          new Error(
+            `Feed did not close within feedCloseDeadline (${feedCloseDeadline} ms)`,
+          ),
+        ),
+      feedCloseDeadline,
+    );
+  });
+  const drained = (async () => {
+    const events: FeedSubscribeOutput[] = [];
+    for await (const event of { [Symbol.asyncIterator]: () => updates })
+      events.push(event);
+    return events;
+  })();
+  try {
+    return await Promise.race([drained, deadline]);
+  } finally {
+    clearTimeout(timer);
+  }
+}

@@ -201,7 +201,6 @@ const sessionSetup = setup({
         capabilities: event.capabilities,
         configOptions: keepHeldConfigChoices(
           event.configOptions,
-          context.configOptions,
           context.heldConfigValues,
         ),
         configValues: toConfigValues(event.configOptions),
@@ -317,7 +316,6 @@ const sessionSetup = setup({
       enqueue.assign({
         configOptions: keepHeldConfigChoices(
           event.configOptions,
-          context.configOptions,
           context.heldConfigValues,
         ),
         configValues,
@@ -861,19 +859,9 @@ function chooseConfigValue(
 
 function keepHeldConfigChoices(
   options: SessionConfigOption[],
-  previous: SessionConfigOption[],
   held: AgentConfigValue[],
 ): SessionConfigOption[] {
-  const awaitingApplication = previous.filter(
-    (option) =>
-      option._meta?.argo?.heldUntilNextTurn &&
-      !options.some(
-        (reported) =>
-          reported.configId === option.configId &&
-          reported.currentValue === option.currentValue,
-      ),
-  );
-  return [...toConfigValues(awaitingApplication), ...held].reduce(
+  return held.reduce(
     (current, choice) => chooseConfigValue(current, choice, true),
     options,
   );

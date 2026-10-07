@@ -203,6 +203,7 @@ it('rejects a new Session when the writer keeps its insert queued for retry', as
 });
 
 it('rejects a new Session whose insert is queued behind another retrying job', async () => {
+  const retryReported = vi.fn();
   const writer = writerMachine.provide({
     actors: {
       writeBatch: fromPromise(async (): Promise<void> => {
@@ -210,7 +211,7 @@ it('rejects a new Session whose insert is queued behind another retrying job', a
       }),
     },
     delays: { writeRetryDelay: 60_000 },
-    actions: { log: () => {} },
+    actions: { log: () => retryReported() },
   });
   const { caller, root } = openServer({ writer });
   const databaseWriter = root.system.get('databaseWriter');
@@ -218,9 +219,7 @@ it('rejects a new Session whose insert is queued behind another retrying job', a
     type: 'writer.write',
     job: { type: 'turnUpdate', id: 'other-turn', set: { endedAt: 1 } },
   });
-  await waitFor(databaseWriter, (snapshot) =>
-    snapshot.matches('waitingToRetry'),
-  );
+  await vi.waitFor(() => expect(retryReported).toHaveBeenCalledOnce());
   await expect(caller.session.new(newSession)).rejects.toMatchObject({
     code: 'INTERNAL_SERVER_ERROR',
     message: expect.stringContaining(

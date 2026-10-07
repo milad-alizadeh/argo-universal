@@ -537,7 +537,7 @@ it('keeps the latest held choices through updates and cancellation, then applies
   expect(session.getSnapshot().context.heldConfigValues).toEqual([]);
   stream.send({ type: 'agent.configOptionsChanged', configOptions: options });
   expect(session.getSnapshot().context.configOptions).toMatchObject([
-    { currentValue: 'large', _meta: { argo: { heldUntilNextTurn: true } } },
+    { currentValue: 'small' },
     { currentValue: 'auto' },
   ]);
   expect(
