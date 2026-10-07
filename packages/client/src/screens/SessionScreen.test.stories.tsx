@@ -5,6 +5,7 @@ import {
   arrivingMessage,
   arrivingRowSessionMocks,
   emptySessionMocks,
+  heldOlderPageSessionMocks,
   idleSessionMocks,
   loadingOlderSessionMocks,
   longSessionMocks,
@@ -13,6 +14,7 @@ import {
   runningSessionMocks,
   runningTurnNow,
   sendArrivingRow,
+  sendOlderPage,
   twoSessionMocks,
 } from '../../mocks/session-screen-mock';
 import { SessionScreenPreview } from '../../mocks/session-screen-preview';
@@ -44,6 +46,13 @@ const scrollAwayWait = { timeout: 15000, interval: 100 };
 
 const scrolledToEnd = (feedScroll: HTMLElement) =>
   feedScroll.scrollHeight - feedScroll.scrollTop - feedScroll.clientHeight < 2;
+
+// Scrolls up as a reader does on the web: the wheel turning up stops the Feed following the end, which setting scrollTop alone does not.
+function scrollUp(feedScroll: HTMLElement, distance: number) {
+  feedScroll.dispatchEvent(new WheelEvent('wheel', { deltaY: -distance }));
+  feedScroll.scrollTop = Math.max(0, feedScroll.scrollTop - distance);
+  feedScroll.dispatchEvent(new Event('scroll'));
+}
 
 function fullyInViewport(element: Element) {
   const box = element.getBoundingClientRect();
@@ -107,8 +116,7 @@ export const LoadingEarlier: Story = {
   parameters: { trpc: loadingOlderSessionMocks },
   play: async ({ canvas }) => {
     const scroll = await canvas.findByTestId('feed-scroll');
-    scroll.scrollTop = 0;
-    scroll.dispatchEvent(new Event('scroll'));
+    scrollUp(scroll, scroll.scrollTop);
     await eachLayout(async () => {
       const indicator = await canvas.findByRole('progressbar', {
         name: 'Loading earlier',
@@ -127,14 +135,82 @@ export const PagesOlderRows: Story = {
     // Reads back a screen at a time, as a reader does, until the oldest page has loaded and drawn.
     await waitFor(
       async () => {
-        scroll.scrollTop = Math.max(0, scroll.scrollTop - scroll.clientHeight);
-        scroll.dispatchEvent(new Event('scroll'));
+        scrollUp(scroll, scroll.clientHeight);
         await expect(feed.queryAllByText(oldestMessage).length).toBeGreaterThan(
           0,
         );
       },
       { timeout: 15000, interval: 100 },
     );
+  },
+};
+
+// The element at the middle of the Feed's view, and where its top is now.
+function markMiddleOfView(feedScroll: HTMLElement) {
+  const view = feedScroll.getBoundingClientRect();
+  const element = document.elementFromPoint(
+    view.left + view.width / 2,
+    view.top + view.height / 2,
+  );
+  if (!element) throw new Error('Nothing in view');
+  const top = element.getBoundingClientRect().top;
+  return { element, top };
+}
+
+// After two frames, the browser has sent its scroll and resize events and the Feed has answered them.
+const afterTwoFrames = () =>
+  new Promise<void>((resolve) =>
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+  );
+
+// Once rows in view stop measuring, the middle of the view holds the same element at the same place two frames apart.
+function markSettledMiddleOfView(feedScroll: HTMLElement) {
+  let lastMark = markMiddleOfView(feedScroll);
+  return waitFor(
+    async () => {
+      await afterTwoFrames();
+      const mark = markMiddleOfView(feedScroll);
+      const settled =
+        mark.element === lastMark.element && mark.top === lastMark.top;
+      lastMark = mark;
+      if (!settled) throw new Error('Rows in view are still measuring');
+      return mark;
+    },
+    { timeout: 5000 },
+  );
+}
+
+export const KeepsPlaceWhenOlderRowsLoad: Story = {
+  parameters: { trpc: heldOlderPageSessionMocks },
+  play: async ({ canvas }) => {
+    await resizeToPhoneWidth();
+    const scroll = await canvas.findByTestId('feed-scroll');
+    await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
+    // Reads back a screen at a time to the top; the page before is already on its way.
+    await waitFor(
+      () => {
+        scrollUp(scroll, scroll.clientHeight);
+        expect(scroll.scrollTop).toBe(0);
+      },
+      { timeout: 15000, interval: 100 },
+    );
+    await expect(
+      canvas.getByRole('progressbar', { name: 'Loading earlier' }),
+    ).toBeVisible();
+    // A screen down, past the top group, which an older page can extend.
+    scroll.scrollTop = scroll.clientHeight;
+    scroll.dispatchEvent(new Event('scroll'));
+    const marked = await markSettledMiddleOfView(scroll);
+    const heightBefore = scroll.scrollHeight;
+    sendOlderPage();
+    await waitFor(() =>
+      expect(scroll.scrollHeight).toBeGreaterThan(heightBefore),
+    );
+    // Older rows draw above what the reader is reading, which stays where it was once they measure.
+    await markSettledMiddleOfView(scroll);
+    await expect(
+      Math.abs(marked.element.getBoundingClientRect().top - marked.top),
+    ).toBeLessThan(2);
   },
 };
 
@@ -151,27 +227,20 @@ export const JumpsToLatest: Story = {
     // The Feed settles at the end as it opens, so the reader scrolls up until it stays up.
     await waitFor(async () => {
       if (scrolledToEnd(scroll)) {
-        scroll.scrollTop -= scroll.clientHeight;
-        scroll.dispatchEvent(new Event('scroll'));
+        scrollUp(scroll, scroll.clientHeight);
       }
       await expect(
         canvas.getByRole('button', { name: 'Jump to latest' }),
       ).toBeVisible();
     }, scrollAwayWait);
     // A row arriving while the reader is away leaves what they read where it was; rows above may still measure, so compare the screen, not scrollTop.
-    const view = scroll.getBoundingClientRect();
-    const elementInView = document.elementFromPoint(
-      view.left + view.width / 2,
-      view.top + view.height / 2,
-    );
-    if (!elementInView) throw new Error('Nothing in view');
-    const elementInViewTop = elementInView.getBoundingClientRect().top;
+    const marked = markMiddleOfView(scroll);
     sendArrivingRow();
     const jumpToLatest = await canvas.findByRole('button', {
       name: 'Jump to latest, new rows',
     });
     await expect(
-      Math.abs(elementInView.getBoundingClientRect().top - elementInViewTop),
+      Math.abs(marked.element.getBoundingClientRect().top - marked.top),
     ).toBeLessThan(2);
     jumpToLatest.click();
     await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
@@ -203,8 +272,7 @@ export const KeepsPlaceWhenRowOpens: Story = {
     // The reader scrolls up until the Feed stops following the end.
     await waitFor(async () => {
       if (scrolledToEnd(scroll)) {
-        scroll.scrollTop -= scroll.clientHeight;
-        scroll.dispatchEvent(new Event('scroll'));
+        scrollUp(scroll, scroll.clientHeight);
       }
       await expect(
         canvas.getByRole('button', { name: 'Jump to latest' }),
@@ -215,8 +283,7 @@ export const KeepsPlaceWhenRowOpens: Story = {
       () => {
         const found = closedRowInTopHalf();
         if (found) return found;
-        scroll.scrollTop -= scroll.clientHeight / 3;
-        scroll.dispatchEvent(new Event('scroll'));
+        scrollUp(scroll, scroll.clientHeight / 3);
         throw new Error('No closed row in view');
       },
       { timeout: 5000, interval: 100 },

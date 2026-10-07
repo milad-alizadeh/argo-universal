@@ -121,6 +121,23 @@ export const loadingOlderSessionMocks: Fixtures = {
     input.direction === 'before' ? pending()() : longFeedPage(input),
 };
 
+let releaseOlderPage = () => {};
+
+// Each older page waits until a test sends it, so the test can mark the reader's place first.
+export const heldOlderPageSessionMocks: Fixtures = {
+  ...longSessionMocks,
+  'feed.page': async (input) => {
+    if (input.direction === 'before')
+      await new Promise<void>((resolve) => {
+        releaseOlderPage = resolve;
+      });
+    return longFeedPage(input);
+  },
+};
+
+// Sends the older page the Feed is waiting for.
+export const sendOlderPage = () => releaseOlderPage();
+
 // The row the Agent sends while the reader is scrolled up.
 // Its first message, since plain text matches exactly where the last one ends in `done`, which other recordings send too.
 const arrivingAgentMessage = arrivingRecording.rows.find(
