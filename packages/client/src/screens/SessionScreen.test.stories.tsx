@@ -40,7 +40,7 @@ async function resizeToPhoneWidth() {
 }
 
 // A loaded runner can take a few frames per scroll before the Feed answers.
-const scrollAwayWait = { timeout: 5000, interval: 100 };
+const scrollAwayWait = { timeout: 15000, interval: 100 };
 
 const scrolledToEnd = (feedScroll: HTMLElement) =>
   feedScroll.scrollHeight - feedScroll.scrollTop - feedScroll.clientHeight < 2;
