@@ -23,7 +23,10 @@ import { Text } from '#primitives/text';
 // Relative, so Metro picks the .ios file.
 import { ChoiceMenu } from '../components/ChoiceMenu';
 import { FloatingActionButton } from '../components/FloatingActionButton';
-import { useResubscribeOnReconnect } from '../connection/context';
+import {
+  useConnectionState,
+  useResubscribeOnReconnect,
+} from '../connection/context';
 import { useNavigate } from '../navigation/context';
 import { useWide } from '../navigation/use-wide';
 import { useTRPC } from '../trpc/context';
@@ -133,7 +136,6 @@ export function SessionsScreen({ query, archived }: SessionsScreenProps) {
   const wide = useWide();
   const trpc = useTRPC();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const projects = useQuery(trpc.projects.list.queryOptions());
   const agents = useQuery(trpc.agents.list.queryOptions());
   const sessions = useInfiniteQuery(
@@ -146,17 +148,8 @@ export function SessionsScreen({ query, archived }: SessionsScreenProps) {
       },
     ),
   );
-  const listUpdates = useSubscription(
-    trpc.session.listUpdates.subscriptionOptions(undefined, {
-      onStarted: () => {
-        void queryClient.invalidateQueries(trpc.session.list.pathFilter());
-      },
-      onData: () => {
-        void queryClient.invalidateQueries(trpc.session.list.pathFilter());
-      },
-    }),
-  );
-  useResubscribeOnReconnect(listUpdates);
+  const listUpdates = useSessionListUpdates();
+  const connection = useConnectionState();
   const rows = useMemo(
     () => [
       ...new Map(
@@ -194,6 +187,13 @@ export function SessionsScreen({ query, archived }: SessionsScreenProps) {
   const listTop = (
     <>
       <ConnectionBanner />
+      {listUpdates.status === 'error' && connection === 'open' && (
+        <LoadError
+          title="Live updates stopped"
+          description="The Sessions shown may be out of date."
+          onRetry={listUpdates.reset}
+        />
+      )}
       <Text className="h-8 pl-gutter pr-3 py-2 wide:pl-4.5 text-xs leading-4 font-medium text-muted-foreground">
         Projects
       </Text>
@@ -299,4 +299,22 @@ function BelowHeader({ children }: { children: ReactNode }) {
       {children}
     </SafeAreaView>
   );
+}
+
+// Live list updates invalidate its pages and resume after Connection recovery.
+function useSessionListUpdates() {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const subscription = useSubscription(
+    trpc.session.listUpdates.subscriptionOptions(undefined, {
+      onStarted: () => {
+        void queryClient.invalidateQueries(trpc.session.list.pathFilter());
+      },
+      onData: () => {
+        void queryClient.invalidateQueries(trpc.session.list.pathFilter());
+      },
+    }),
+  );
+  useResubscribeOnReconnect(subscription);
+  return subscription;
 }
