@@ -30,12 +30,14 @@ export function createSessionListUpdatesMock() {
     fixtures: {
       ...sessionListMocks,
       'session.list': ({ archived, query }) => ({
-        sessions: sessions.filter(
-          (session) =>
-            Boolean(session.archivedAt !== null) === archived &&
-            (!query ||
-              session.title.toLowerCase().includes(query.toLowerCase())),
-        ),
+        sessions: sessions
+          .toSorted((a, b) => b.activityAt - a.activityAt)
+          .filter(
+            (session) =>
+              Boolean(session.archivedAt !== null) === archived &&
+              (!query ||
+                session.title.toLowerCase().includes(query.toLowerCase())),
+          ),
         nextCursor: null,
       }),
       'session.listUpdates': (_input, signal) => updates.subscribe(signal),
