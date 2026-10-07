@@ -10,7 +10,7 @@ import { feedRow } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
 import { and, asc, desc, eq, gt, lt } from 'drizzle-orm';
 import type { ActorRefFrom, Subscription } from 'xstate';
-import { readLiveHeaderRows } from '../sessions/live-header-rows';
+import { createLiveHeaderRowsReader } from '../sessions/live-header-rows';
 import type { SessionActorRef } from '../sessions/session-machine';
 import { createSessionReader } from '../sessions/session-record';
 import { toSessionSnapshot } from '../sessions/session-snapshot';
@@ -30,6 +30,7 @@ export interface FeedDeps {
 export function createFeedService(deps: FeedDeps): FeedService {
   const { database } = deps;
   const readSession = createSessionReader(database);
+  const readLiveHeaderRows = createLiveHeaderRowsReader({ database });
 
   // Rows the database does not hold yet: queued in the writer, then held by the feed actor.
   const readUnsaved = (sessionId: string) => {
@@ -168,12 +169,11 @@ export function createFeedService(deps: FeedDeps): FeedService {
             context: {
               ...feedContext,
               rows: readLiveHeaderRows({
-                database,
                 writer: deps.findWriter(),
                 sessionId,
                 turnId: session?.context.activeTurnId ?? null,
                 rows: 'rows' in feedContext ? feedContext.rows : {},
-              }),
+              }).rows,
             },
           },
           readSession(sessionId),
