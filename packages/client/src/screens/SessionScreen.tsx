@@ -82,6 +82,7 @@ function SessionView({ sessionId, now }: { sessionId: string; now?: number }) {
     changeDraft,
     attachImages,
     imageUpload,
+    imageSelectionError,
     promptSession,
     cancelTurn,
     setConfigOption,
@@ -119,7 +120,8 @@ function SessionView({ sessionId, now }: { sessionId: string; now?: number }) {
   const fadeHeight = wide ? composerFadeHeight.wide : composerFadeHeight.phone;
   const startedAt = snapshot.liveHeader?.startedAt ?? null;
   let sendError: string | undefined;
-  if (promptSession.error)
+  if (imageSelectionError) sendError = imageSelectionError;
+  else if (promptSession.error)
     sendError = `Couldn't send. ${promptSession.error.message}`;
   else if (imageUpload.error)
     sendError = `Couldn't upload the image. ${imageUpload.error.message}`;
