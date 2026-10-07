@@ -1,7 +1,9 @@
 import { agentsList, sessionRows } from '@repo/api/mocks';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor } from 'storybook/test';
+import { layoutWidths } from '../../mocks/each-layout';
 import { sessionRowMocks } from '../../mocks/session-row-mock';
+import { settleViewport } from '../../mocks/settle-viewport';
 import { SessionRow } from './SessionRow';
 
 const meta = {
@@ -16,20 +18,22 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Running: Story = {
-  play: async ({ canvas, userEvent, args }) => {
-    const { page } = await import('vitest/browser');
-    for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+function running(width: number): Story {
+  return {
+    play: async ({ canvas, userEvent, args }) => {
+      await settleViewport(width);
       await expect(canvas.getByText('Running the tests')).toBeVisible();
       const row = canvas.getByRole('button', {
         name: 'Build the settings screen, Running',
       });
+      await expect(args.onSelect).not.toHaveBeenCalled();
       await userEvent.click(row);
       await expect(args.onSelect).toHaveBeenCalledWith('session-running');
-    }
-  },
-};
+    },
+  };
+}
+export const RunningPhone = running(layoutWidths.phone);
+export const RunningWide = running(layoutWidths.wide);
 
 export const PaperRowDimensions: Story = {
   args: { session: sessionRowMocks.planAndSubagents },
@@ -131,38 +135,40 @@ export const Archived: Story = {
   },
 };
 
-export const Metadata: Story = {
-  render: (args) => (
-    <>
-      {(['open', 'draft', 'merged', 'conflict', 'closed'] as const).map(
-        (status) => (
-          <SessionRow
-            {...args}
-            key={status}
-            session={{ ...args.session, title: `${status} metadata` }}
-            issue={{ number: 128 }}
-            pullRequest={{ number: 45, status }}
-          />
-        ),
-      )}
-    </>
-  ),
-  play: async ({ canvas, userEvent, args }) => {
-    const { page } = await import('vitest/browser');
-    for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+function metadata(width: number): Story {
+  return {
+    render: (args) => (
+      <>
+        {(['open', 'draft', 'merged', 'conflict', 'closed'] as const).map(
+          (status) => (
+            <SessionRow
+              {...args}
+              key={status}
+              session={{ ...args.session, title: `${status} metadata` }}
+              issue={{ number: 128 }}
+              pullRequest={{ number: 45, status }}
+            />
+          ),
+        )}
+      </>
+    ),
+    play: async ({ canvas, userEvent, args }) => {
+      await settleViewport(width);
       for (const status of ['open', 'draft', 'merged', 'conflict', 'closed']) {
         await expect(canvas.getByLabelText(`${status} PR #45`)).toBeVisible();
       }
       await expect(canvas.getAllByLabelText('Issue #128')).toHaveLength(5);
+      await expect(args.onSelect).not.toHaveBeenCalled();
       await userEvent.click(
         canvas.getByRole('button', { name: 'open metadata, Running' }),
       );
       await expect(args.onSelect).toHaveBeenCalledWith(args.session.sessionId);
       await expect(canvas.queryByRole('link')).not.toBeInTheDocument();
-    }
-  },
-};
+    },
+  };
+}
+export const MetadataPhone = metadata(layoutWidths.phone);
+export const MetadataWide = metadata(layoutWidths.wide);
 
 export const PullRequestWithoutOtherMetadata: Story = {
   args: {
@@ -414,12 +420,11 @@ export const FinishedSubagents: Story = {
   },
 };
 
-export const LongTitleSelected: Story = {
-  args: { session: sessionRows.longTitle, selected: true },
-  play: async ({ canvas, userEvent, args }) => {
-    const { page } = await import('vitest/browser');
-    for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+function longTitleSelected(width: number): Story {
+  return {
+    args: { session: sessionRows.longTitle, selected: true },
+    play: async ({ canvas, userEvent, args }) => {
+      await settleViewport(width);
       const row = canvas.getByRole('button', {
         name: `${sessionRows.longTitle.title}, Idle`,
       });
@@ -434,17 +439,27 @@ export const LongTitleSelected: Story = {
       const title = canvas.getByText(sessionRows.longTitle.title);
       await expect(title).toBeVisible();
       await expect(title).toHaveStyle({ overflow: 'hidden' });
+      await expect(args.onSelect).not.toHaveBeenCalled();
       await userEvent.click(row);
       await expect(args.onSelect).toHaveBeenCalledWith('session-long-title');
-    }
-  },
-};
+    },
+  };
+}
+export const LongTitleSelectedPhone = longTitleSelected(layoutWidths.phone);
+export const LongTitleSelectedWide = longTitleSelected(layoutWidths.wide);
 
 export const StatusParityDark: Story = {
   ...StatusParity,
   globals: { mode: 'dark' },
 };
-export const RunningDark: Story = { ...Running, globals: { mode: 'dark' } };
+export const RunningPhoneDark: Story = {
+  ...RunningPhone,
+  globals: { mode: 'dark' },
+};
+export const RunningWideDark: Story = {
+  ...RunningWide,
+  globals: { mode: 'dark' },
+};
 export const PlanAndSubagentsDark: Story = {
   ...PlanAndSubagents,
   globals: { mode: 'dark' },
@@ -457,12 +472,23 @@ export const FinishedSubagentsDark: Story = {
   ...FinishedSubagents,
   globals: { mode: 'dark' },
 };
-export const LongTitleSelectedDark: Story = {
-  ...LongTitleSelected,
+export const LongTitleSelectedPhoneDark: Story = {
+  ...LongTitleSelectedPhone,
+  globals: { mode: 'dark' },
+};
+export const LongTitleSelectedWideDark: Story = {
+  ...LongTitleSelectedWide,
   globals: { mode: 'dark' },
 };
 export const ArchivedDark: Story = { ...Archived, globals: { mode: 'dark' } };
-export const MetadataDark: Story = { ...Metadata, globals: { mode: 'dark' } };
+export const MetadataPhoneDark: Story = {
+  ...MetadataPhone,
+  globals: { mode: 'dark' },
+};
+export const MetadataWideDark: Story = {
+  ...MetadataWide,
+  globals: { mode: 'dark' },
+};
 
 export const PaperMetadataDimensionsDark: Story = {
   ...PaperMetadataDimensions,

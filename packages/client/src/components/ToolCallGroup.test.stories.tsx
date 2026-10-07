@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
+import { layoutWidths } from '../../mocks/each-layout';
 import { expectShimmerMovement } from '../../mocks/expect-shimmer';
+import { settleViewport } from '../../mocks/settle-viewport';
 import { renderRecordedActivity } from '../../mocks/tool-call-group-preview';
 import {
   runningRead,
@@ -21,11 +23,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Settled: Story = {
-  play: async ({ canvas, userEvent }) => {
-    const { page } = await import('vitest/browser');
-    for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+function settled(width: number): Story {
+  return {
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
       const group = canvas.getByRole('button', {
         name: 'Ran 1 command, Read 1 file',
       });
@@ -49,16 +50,17 @@ export const Settled: Story = {
           canvas.queryAllByRole('button', { name: /^Read / }),
         ).toHaveLength(0),
       );
-    }
-  },
-};
+    },
+  };
+}
+export const SettledPhone = settled(layoutWidths.phone);
+export const SettledWide = settled(layoutWidths.wide);
 
-export const Running: Story = {
-  args: { group: toolCallGroupMock.running },
-  play: async ({ canvas, userEvent }) => {
-    const { page } = await import('vitest/browser');
-    for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+function running(width: number): Story {
+  return {
+    args: { group: toolCallGroupMock.running },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
       const group = canvas.getByRole('button', {
         name: 'Show hello.txt and short git status',
       });
@@ -67,6 +69,9 @@ export const Running: Story = {
       await expectShimmerMovement(group, '23s');
       await expect(group.querySelectorAll('svg')).toHaveLength(2);
       await expect(group).toHaveTextContent('short git status 23s');
+      await expect(
+        canvas.queryAllByRole('button', { name: /^Read / }),
+      ).toHaveLength(0);
       await userEvent.click(group);
       await expect(
         canvas.getByRole('button', { name: 'Read /project/hello.txt' }),
@@ -83,9 +88,11 @@ export const Running: Story = {
           canvas.queryAllByRole('button', { name: /^Read / }),
         ).toHaveLength(0),
       );
-    }
-  },
-};
+    },
+  };
+}
+export const RunningPhone = running(layoutWidths.phone);
+export const RunningWide = running(layoutWidths.wide);
 
 export const OpenCompletedHistory: Story = {
   args: { group: { ...toolCallGroupMock.group, state: 'open' } },
@@ -103,21 +110,23 @@ export const OpenCompletedHistory: Story = {
   },
 };
 
-export const AgentParity: Story = {
-  render: (args) => (
-    <>
-      {toolCallGroupMocks.map(({ agent, group }) => (
-        <ToolCallGroup {...args} key={agent} group={group} />
-      ))}
-    </>
-  ),
-  play: async ({ canvas, userEvent }) => {
-    const { page } = await import('vitest/browser');
-    for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+function agentParity(width: number): Story {
+  return {
+    render: (args) => (
+      <>
+        {toolCallGroupMocks.map(({ agent, group }) => (
+          <ToolCallGroup {...args} key={agent} group={group} />
+        ))}
+      </>
+    ),
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
       const groups = canvas.getAllByRole('button', {
         name: 'Ran 1 command, Read 1 file',
       });
+      await expect(
+        canvas.queryAllByRole('button', { name: /^Read / }),
+      ).toHaveLength(0);
       for (const group of groups) await userEvent.click(group);
       await expect(
         canvas.getByRole('button', { name: 'Read /project/hello.txt' }),
@@ -132,22 +141,23 @@ export const AgentParity: Story = {
           canvas.queryAllByRole('button', { name: /^Read / }),
         ).toHaveLength(0),
       );
-    }
-  },
-};
-
-export const RunningRead: Story = {
-  args: {
-    group: {
-      ...toolCallGroupMock.running,
-      items: [{ ...toolCallGroupMock.exploration, toolCalls: [runningRead] }],
     },
-    now: (runningRead._meta?.argo?.startedAt ?? 0) + 23000,
-  },
-  play: async ({ canvas, userEvent }) => {
-    const { page } = await import('vitest/browser');
-    for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+  };
+}
+export const AgentParityPhone = agentParity(layoutWidths.phone);
+export const AgentParityWide = agentParity(layoutWidths.wide);
+
+function runningReadGroup(width: number): Story {
+  return {
+    args: {
+      group: {
+        ...toolCallGroupMock.running,
+        items: [{ ...toolCallGroupMock.exploration, toolCalls: [runningRead] }],
+      },
+      now: (runningRead._meta?.argo?.startedAt ?? 0) + 23000,
+    },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
       const header = canvas.getByRole('button', {
         name: 'Read /project/hello.txt',
       });
@@ -157,18 +167,41 @@ export const RunningRead: Story = {
         canvas.getAllByRole('button', { name: 'Read /project/hello.txt' }),
       ).toHaveLength(1);
       await expect(canvas.queryByText('hello.txt', { exact: true })).toBeNull();
-      await userEvent.click(header);
-    }
-  },
-};
+    },
+  };
+}
+export const RunningReadPhone = runningReadGroup(layoutWidths.phone);
+export const RunningReadWide = runningReadGroup(layoutWidths.wide);
 
-export const SettledDark: Story = { ...Settled, globals: { mode: 'dark' } };
-export const RunningDark: Story = { ...Running, globals: { mode: 'dark' } };
-export const AgentParityDark: Story = {
-  ...AgentParity,
+export const SettledPhoneDark: Story = {
+  ...SettledPhone,
   globals: { mode: 'dark' },
 };
-export const RunningReadDark: Story = {
-  ...RunningRead,
+export const SettledWideDark: Story = {
+  ...SettledWide,
+  globals: { mode: 'dark' },
+};
+export const RunningPhoneDark: Story = {
+  ...RunningPhone,
+  globals: { mode: 'dark' },
+};
+export const RunningWideDark: Story = {
+  ...RunningWide,
+  globals: { mode: 'dark' },
+};
+export const AgentParityPhoneDark: Story = {
+  ...AgentParityPhone,
+  globals: { mode: 'dark' },
+};
+export const AgentParityWideDark: Story = {
+  ...AgentParityWide,
+  globals: { mode: 'dark' },
+};
+export const RunningReadPhoneDark: Story = {
+  ...RunningReadPhone,
+  globals: { mode: 'dark' },
+};
+export const RunningReadWideDark: Story = {
+  ...RunningReadWide,
   globals: { mode: 'dark' },
 };

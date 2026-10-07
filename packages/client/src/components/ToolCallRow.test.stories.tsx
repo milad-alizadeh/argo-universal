@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
+import { layoutWidths } from '../../mocks/each-layout';
+import { settleViewport } from '../../mocks/settle-viewport';
 import { completedRead, readMocks } from '../../mocks/tool-call-mock';
 import { ToolCallRow } from './ToolCallRow';
 
@@ -11,11 +13,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const ReadFile: Story = {
-  play: async ({ canvas, userEvent }) => {
-    const { page } = await import('vitest/browser');
-    for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+function readFile(width: number): Story {
+  return {
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
       const row = canvas.getByRole('button', {
         name: 'Read /project/hello.txt',
       });
@@ -34,39 +35,45 @@ export const ReadFile: Story = {
       await waitFor(() =>
         expect(canvas.queryByText(/hello world/)).not.toBeInTheDocument(),
       );
-    }
-  },
-};
+    },
+  };
+}
+export const ReadFilePhone = readFile(layoutWidths.phone);
+export const ReadFileWide = readFile(layoutWidths.wide);
 
-export const ReadFileDark: Story = { ...ReadFile, globals: { mode: 'dark' } };
-
-export const AgentParity: Story = {
-  render: () => (
-    <>
-      {readMocks.map(({ agent, row }) => (
-        <ToolCallRow key={agent} row={row} />
-      ))}
-    </>
-  ),
-  play: async ({ canvas, userEvent }) => {
-    const { page } = await import('vitest/browser');
-    for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+function agentParity(width: number): Story {
+  return {
+    render: () => (
+      <>
+        {readMocks.map(({ agent, row }) => (
+          <ToolCallRow key={agent} row={row} />
+        ))}
+      </>
+    ),
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
       for (const [label, output] of [
         ['Read /project/hello.txt', /hello world/],
         ['Read /repo/app.txt', /alpha\nbeta/],
       ] as const) {
         const row = canvas.getByRole('button', { name: label });
+        await expect(
+          canvas.queryByText(output, { normalizer: (value) => value }),
+        ).not.toBeInTheDocument();
         await userEvent.click(row);
         await expect(
           canvas.getByText(output, { normalizer: (value) => value }),
         ).toBeVisible();
         await userEvent.click(row);
       }
-    }
-  },
-};
-export const AgentParityDark: Story = {
-  ...AgentParity,
-  globals: { mode: 'dark' },
-};
+    },
+  };
+}
+export const AgentParityPhone = agentParity(layoutWidths.phone);
+export const AgentParityWide = agentParity(layoutWidths.wide);
+
+const dark = { globals: { mode: 'dark' } };
+export const ReadFilePhoneDark: Story = { ...ReadFilePhone, ...dark };
+export const ReadFileWideDark: Story = { ...ReadFileWide, ...dark };
+export const AgentParityPhoneDark: Story = { ...AgentParityPhone, ...dark };
+export const AgentParityWideDark: Story = { ...AgentParityWide, ...dark };

@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
 import { longCodeBlockTitle } from '../../mocks/code-block-title-mock';
+import { layoutWidths } from '../../mocks/each-layout';
 import { recordedFile } from '../../mocks/feed-edit-mock';
 import { settleViewport } from '../../mocks/settle-viewport';
 import { FeedCodeBlock } from './FeedCodeBlock';
@@ -67,16 +68,16 @@ export const LongTitleKeepsFilenameVisible: Story = {
   },
 };
 
-export const CopyIconFollowsCssHoverAndFocus: Story = {
-  render: (args) => (
-    <View className="p-4">
-      <FeedCodeBlock {...args} />
-    </View>
-  ),
-  play: async ({ canvas, userEvent }) => {
-    if (process.env.NODE_ENV !== 'test') return;
-    const { page } = await import('vitest/browser');
-    for (const width of [390, 1440]) {
+function copyIconFollowsCssHoverAndFocus(width: number): Story {
+  return {
+    render: (args) => (
+      <View className="p-4">
+        <FeedCodeBlock {...args} />
+      </View>
+    ),
+    play: async ({ canvas, userEvent }) => {
+      if (process.env.NODE_ENV !== 'test') return;
+      const { page } = await import('vitest/browser');
       await settleViewport(width);
       const copy = canvas.getByRole('button', { name: 'Copy code' });
       const box = canvas.getByTestId('code-scroll').parentElement;
@@ -87,10 +88,14 @@ export const CopyIconFollowsCssHoverAndFocus: Story = {
       await expect(getComputedStyle(copy).opacity).toBe('1');
       await page.elementLocator(box).unhover({ position: { x: 1, y: 1 } });
       await expect(getComputedStyle(copy).opacity).toBe('0');
+      await expect(copy).not.toHaveFocus();
       await userEvent.tab();
       await expect(copy).toHaveFocus();
       await expect(getComputedStyle(copy).opacity).toBe('1');
-      await userEvent.tab();
-    }
-  },
-};
+    },
+  };
+}
+export const CopyIconFollowsCssHoverAndFocusPhone =
+  copyIconFollowsCssHoverAndFocus(layoutWidths.phone);
+export const CopyIconFollowsCssHoverAndFocusWide =
+  copyIconFollowsCssHoverAndFocus(layoutWidths.wide);

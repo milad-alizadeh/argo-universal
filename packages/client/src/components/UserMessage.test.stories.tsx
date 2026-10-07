@@ -1,10 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, within } from 'storybook/test';
+import { layoutWidths } from '../../mocks/each-layout';
 import {
+  type MockAgent,
   recordedImageUrl,
   recordedUserMessage,
 } from '../../mocks/feed-message-mock';
+import { settleViewport } from '../../mocks/settle-viewport';
 import { UserMessage } from './UserMessage';
 
 const meta = {
@@ -27,16 +30,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const widths = [390, 1440];
-
-async function settleViewport(width: number) {
-  const { page } = await import('vitest/browser');
-  await page.viewport(width, 844);
-  await document.fonts.ready;
-  await new Promise<void>((resolve) =>
-    requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-  );
-}
+const widths = [layoutWidths.phone, layoutWidths.wide];
 
 export const InlineCode: Story = {
   play: async ({ canvas }) => {
@@ -67,16 +61,12 @@ export const InlineCode: Story = {
   },
 };
 
-export const FirstAgentOpensImage: Story = {
-  args: { row: recordedUserMessage('agent-1', 'image-prompt') },
-  play: async (context) => SecondAgentOpensImage.play?.(context),
-};
-
-export const SecondAgentOpensImage: Story = {
-  args: { row: recordedUserMessage('agent-2', 'image-prompt') },
-  play: async ({ canvas, userEvent }) => {
-    for (const width of widths) {
+function opensImage(agent: MockAgent, width: number): Story {
+  return {
+    args: { row: recordedUserMessage(agent, 'image-prompt') },
+    play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
+      await expect(within(document.body).queryByRole('dialog')).toBeNull();
       await userEvent.click(
         canvas.getByRole('button', { name: 'Open image, 32×32' }),
       );
@@ -85,19 +75,35 @@ export const SecondAgentOpensImage: Story = {
       await expect(image.getBoundingClientRect().width).toBeGreaterThan(120);
       await userEvent.keyboard('{Escape}');
       await expect(within(document.body).queryByRole('dialog')).toBeNull();
-    }
-  },
-};
+    },
+  };
+}
+export const FirstAgentOpensImagePhone = opensImage(
+  'agent-1',
+  layoutWidths.phone,
+);
+export const FirstAgentOpensImageWide = opensImage(
+  'agent-1',
+  layoutWidths.wide,
+);
+export const SecondAgentOpensImagePhone = opensImage(
+  'agent-2',
+  layoutWidths.phone,
+);
+export const SecondAgentOpensImageWide = opensImage(
+  'agent-2',
+  layoutWidths.wide,
+);
 
 // The long prompt passes four lines on a phone and fits on a wide screen.
 export const ShowMore: Story = {
   args: { row: recordedUserMessage('agent-2', 'markdown-answer') },
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(1440);
+    await settleViewport(layoutWidths.wide);
     await expect(
       canvas.queryByRole('button', { name: 'Show more' }),
     ).toBeNull();
-    await settleViewport(390);
+    await settleViewport(layoutWidths.phone);
     await userEvent.click(
       await canvas.findByRole('button', { name: 'Show more' }),
     );

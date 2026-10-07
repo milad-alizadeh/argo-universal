@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
+import { layoutWidths } from '../../mocks/each-layout';
 import { expectShimmerMovement } from '../../mocks/expect-shimmer';
+import { settleViewport } from '../../mocks/settle-viewport';
 import {
   commandMocks,
   commandNow,
@@ -20,11 +22,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Completed: Story = {
-  play: async ({ canvas, userEvent }) => {
-    const { page } = await import('vitest/browser');
-    for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+function completed(width: number): Story {
+  return {
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
       const row = canvas.getByRole('button', {
         name: 'Show hello.txt and short git status',
       });
@@ -55,16 +56,17 @@ export const Completed: Story = {
       await waitFor(() =>
         expect(canvas.queryByText('Shell')).not.toBeInTheDocument(),
       );
-    }
-  },
-};
+    },
+  };
+}
+export const CompletedPhone = completed(layoutWidths.phone);
+export const CompletedWide = completed(layoutWidths.wide);
 
-export const OutputDisclosure: Story = {
-  args: { row: longOutputCommand },
-  play: async ({ canvas, userEvent }) => {
-    const { page } = await import('vitest/browser');
-    for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+function outputDisclosure(width: number): Story {
+  return {
+    args: { row: longOutputCommand },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
       const row = canvas.getByRole('button', { name: 'Ran command' });
       await expect(
         canvas.queryByText(/\nPreparing checks\nChecking files/, {
@@ -90,18 +92,20 @@ export const OutputDisclosure: Story = {
       await waitFor(() =>
         expect(canvas.queryByText('Shell')).not.toBeInTheDocument(),
       );
-    }
-  },
-};
+    },
+  };
+}
+export const OutputDisclosurePhone = outputDisclosure(layoutWidths.phone);
+export const OutputDisclosureWide = outputDisclosure(layoutWidths.wide);
 
-export const Failed: Story = {
-  args: { row: failedCommand },
-  play: async ({ canvas, userEvent }) => {
-    const { page } = await import('vitest/browser');
-    for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+function failed(width: number): Story {
+  return {
+    args: { row: failedCommand },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
       const failure = canvas.getByText('Ran command exit 2 · 0s');
       await expect(failure).toBeVisible();
+      await expect(canvas.queryByText('Exit 2')).not.toBeInTheDocument();
       await userEvent.click(
         canvas.getByRole('button', { name: 'Ran command' }),
       );
@@ -110,19 +114,17 @@ export const Failed: Story = {
       await expect(getComputedStyle(exit).color).not.toBe(
         getComputedStyle(failure).color,
       );
-      await userEvent.click(
-        canvas.getByRole('button', { name: 'Ran command' }),
-      );
-    }
-  },
-};
+    },
+  };
+}
+export const FailedPhone = failed(layoutWidths.phone);
+export const FailedWide = failed(layoutWidths.wide);
 
-export const Running: Story = {
-  args: { row: runningCommand, now: commandNow },
-  play: async ({ canvas, userEvent }) => {
-    const { page } = await import('vitest/browser');
-    for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+function running(width: number): Story {
+  return {
+    args: { row: runningCommand, now: commandNow },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
       const row = canvas.getByRole('button', {
         name: 'Show hello.txt and short git status',
       });
@@ -152,42 +154,44 @@ export const Running: Story = {
       await waitFor(() =>
         expect(canvas.queryByText('Shell')).not.toBeInTheDocument(),
       );
-    }
-  },
-};
+    },
+  };
+}
+export const RunningPhone = running(layoutWidths.phone);
+export const RunningWide = running(layoutWidths.wide);
 
-export const AgentParity: Story = {
-  render: () => (
-    <>
-      {commandMocks.map(({ agent, row }) => (
-        <CommandRow key={agent} row={row} />
-      ))}
-    </>
-  ),
-  play: async ({ canvas, userEvent }) => {
-    const { page } = await import('vitest/browser');
-    for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+function agentParity(width: number): Story {
+  return {
+    render: () => (
+      <>
+        {commandMocks.map(({ agent, row }) => (
+          <CommandRow key={agent} row={row} />
+        ))}
+      </>
+    ),
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
       for (const label of [
         'Show hello.txt and short git status',
         'Ran command',
       ]) {
         const row = canvas.getByRole('button', { name: label });
         await expect(row).toBeVisible();
+        await expect(row).toHaveAttribute('aria-expanded', 'false');
         await userEvent.click(row);
         await expect(row).toHaveAttribute('aria-expanded', 'true');
-        await userEvent.click(row);
       }
-    }
-  },
-};
+    },
+  };
+}
+export const AgentParityPhone = agentParity(layoutWidths.phone);
+export const AgentParityWide = agentParity(layoutWidths.wide);
 
-export const Stopped: Story = {
-  args: { row: stoppedCommand },
-  play: async ({ canvas, userEvent }) => {
-    const { page } = await import('vitest/browser');
-    for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+function stopped(width: number): Story {
+  return {
+    args: { row: stoppedCommand },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
       const row = canvas.getByRole('button', {
         name: 'Wait 20 seconds then print done',
       });
@@ -201,19 +205,57 @@ export const Stopped: Story = {
       await waitFor(() =>
         expect(canvas.queryByText('Shell')).not.toBeInTheDocument(),
       );
-    }
-  },
-};
+    },
+  };
+}
+export const StoppedPhone = stopped(layoutWidths.phone);
+export const StoppedWide = stopped(layoutWidths.wide);
 
-export const CompletedDark: Story = { ...Completed, globals: { mode: 'dark' } };
-export const OutputDisclosureDark: Story = {
-  ...OutputDisclosure,
+export const CompletedPhoneDark: Story = {
+  ...CompletedPhone,
   globals: { mode: 'dark' },
 };
-export const FailedDark: Story = { ...Failed, globals: { mode: 'dark' } };
-export const RunningDark: Story = { ...Running, globals: { mode: 'dark' } };
-export const AgentParityDark: Story = {
-  ...AgentParity,
+export const CompletedWideDark: Story = {
+  ...CompletedWide,
   globals: { mode: 'dark' },
 };
-export const StoppedDark: Story = { ...Stopped, globals: { mode: 'dark' } };
+export const OutputDisclosurePhoneDark: Story = {
+  ...OutputDisclosurePhone,
+  globals: { mode: 'dark' },
+};
+export const OutputDisclosureWideDark: Story = {
+  ...OutputDisclosureWide,
+  globals: { mode: 'dark' },
+};
+export const FailedPhoneDark: Story = {
+  ...FailedPhone,
+  globals: { mode: 'dark' },
+};
+export const FailedWideDark: Story = {
+  ...FailedWide,
+  globals: { mode: 'dark' },
+};
+export const RunningPhoneDark: Story = {
+  ...RunningPhone,
+  globals: { mode: 'dark' },
+};
+export const RunningWideDark: Story = {
+  ...RunningWide,
+  globals: { mode: 'dark' },
+};
+export const AgentParityPhoneDark: Story = {
+  ...AgentParityPhone,
+  globals: { mode: 'dark' },
+};
+export const AgentParityWideDark: Story = {
+  ...AgentParityWide,
+  globals: { mode: 'dark' },
+};
+export const StoppedPhoneDark: Story = {
+  ...StoppedPhone,
+  globals: { mode: 'dark' },
+};
+export const StoppedWideDark: Story = {
+  ...StoppedWide,
+  globals: { mode: 'dark' },
+};
