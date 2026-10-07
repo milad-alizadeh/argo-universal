@@ -9,6 +9,7 @@ import Animated, {
 import { cn } from '#lib/utils';
 
 const duration = 1000;
+const dimmedOpacity = 0.5;
 
 function Skeleton({
   className,
@@ -17,7 +18,7 @@ function Skeleton({
   const sv = useSharedValue(1);
 
   React.useEffect(() => {
-    sv.value = withRepeat(withTiming(0.5, { duration }), -1, true);
+    sv.value = withRepeat(withTiming(dimmedOpacity, { duration }), -1, true);
   }, []);
 
   const style = useAnimatedStyle(

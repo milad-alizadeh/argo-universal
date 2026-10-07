@@ -16,7 +16,8 @@
     "rules": {
       "preset": "recommended",
       "style": {
-        "noNestedTernary": "error"
+        "noNestedTernary": "error",
+        "noMagicNumbers": "error"
       }
     }
   },

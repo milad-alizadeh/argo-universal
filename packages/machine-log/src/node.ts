@@ -4,6 +4,8 @@ import { createActor, type InspectionEvent } from 'xstate';
 import { createMachineLog } from './index';
 import { inspectorMachine } from './inspector-machine';
 
+const defaultInspectorPort = 8080;
+
 export interface NodeMachineLogOptions {
   home: string;
   processName: 'desktop' | 'supervisor' | 'engine';
@@ -44,7 +46,7 @@ export function createNodeMachineInspection(
   }
   const inspector = createActor(inspectorMachine, {
     input: {
-      port: options.inspectorPort ?? 8080,
+      port: options.inspectorPort ?? defaultInspectorPort,
       processName: options.processName,
       processId: process.pid,
     },

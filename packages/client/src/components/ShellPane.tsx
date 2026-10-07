@@ -1,12 +1,12 @@
 import { type ReactNode, useEffect, useRef } from 'react';
 import { View } from 'react-native';
 import Animated, {
-  Easing,
   ReduceMotion,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { bezierEasing, easingCurve, motionDuration } from '#lib/motion';
 
 export interface ShellPaneProps {
   testID: string;
@@ -45,8 +45,8 @@ export function ShellPane({
       !animate || previousTransition.current === transitionKey
         ? width
         : withTiming(width, {
-            duration: 280,
-            easing: Easing.bezier(0.22, 1, 0.36, 1),
+            duration: motionDuration.shellPane,
+            easing: bezierEasing(easingCurve.decelerate),
             reduceMotion: ReduceMotion.System,
           });
     previousTransition.current = transitionKey;

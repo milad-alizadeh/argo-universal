@@ -12,20 +12,26 @@ import Animated, {
 } from 'react-native-reanimated';
 
 const stepMilliseconds = 150;
-const fadeSteps = 400 / stepMilliseconds;
+const fadeMilliseconds = 400;
+const fadeSteps = fadeMilliseconds / stepMilliseconds;
 const restingOpacity = 0.18;
 
-// Cell offsets in px, clockwise round the edge from top left, then the centre.
+// Cell offsets in px along either axis.
+const near = 2;
+const middle = 6.3;
+const far = 10.6;
+
+// Cells clockwise round the edge from top left, then the centre.
 const cells = [
-  [2, 2],
-  [6.3, 2],
-  [10.6, 2],
-  [10.6, 6.3],
-  [10.6, 10.6],
-  [6.3, 10.6],
-  [2, 10.6],
-  [2, 6.3],
-  [6.3, 6.3],
+  [near, near],
+  [middle, near],
+  [far, near],
+  [far, middle],
+  [far, far],
+  [middle, far],
+  [near, far],
+  [near, middle],
+  [middle, middle],
 ] as const;
 
 function Cell({

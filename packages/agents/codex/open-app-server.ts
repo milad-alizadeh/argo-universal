@@ -37,6 +37,10 @@ interface WireMessage {
   error?: { code: number; message: string };
 }
 
+const stderrTailLength = 2000;
+const gracefulStopLimitMs = 3000;
+const forcedStopLimitMs = 5000;
+
 // Owns the stdio transport and RPC correlation; vendor payloads use the generated types (ADR-0015).
 export function openAppServer(
   cwd: string,
@@ -80,7 +84,7 @@ export function openAppServer(
     if (!stopping) onFailure(failure);
   };
   child.stderr.on('data', (text) => {
-    stderrTail = (stderrTail + text.toString()).slice(-2000);
+    stderrTail = (stderrTail + text.toString()).slice(-stderrTailLength);
   });
   child.on('error', fail);
   child.stdin.on('error', fail);
@@ -161,8 +165,11 @@ export function openAppServer(
           else process.kill(-child.pid, signal);
         } catch {}
       };
-      const graceful = setTimeout(() => terminate('SIGTERM'), 3000);
-      const forced = setTimeout(() => terminate('SIGKILL'), 5000);
+      const graceful = setTimeout(
+        () => terminate('SIGTERM'),
+        gracefulStopLimitMs,
+      );
+      const forced = setTimeout(() => terminate('SIGKILL'), forcedStopLimitMs);
       await exited;
       clearTimeout(graceful);
       clearTimeout(forced);

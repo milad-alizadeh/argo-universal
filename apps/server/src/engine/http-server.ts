@@ -22,6 +22,8 @@ export interface HttpServer {
   close: () => Promise<void>;
 }
 
+const forbiddenStatus = 403;
+
 const listen = (server: Server, port: number) =>
   new Promise<void>((resolve, reject) => {
     server.once('error', reject);
@@ -66,7 +68,7 @@ export async function startHttpServer(
           host: req.headers.host,
           origin: req.headers.origin,
         }),
-        403,
+        forbiddenStatus,
         'Forbidden',
       ),
   });

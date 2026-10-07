@@ -6,12 +6,14 @@ import { z } from 'zod';
 import packageJson from '../../package.json' with { type: 'json' };
 import { engineMachine } from './machine';
 
+const highestPort = 65_535;
+const defaultPort = 7337;
 const port = z.coerce
   .number()
   .int()
   .min(1)
-  .max(65535)
-  .parse(process.env.ARGO_SERVER_PORT ?? 7337);
+  .max(highestPort)
+  .parse(process.env.ARGO_SERVER_PORT ?? defaultPort);
 
 const home = process.env.ARGO_HOME ?? join(homedir(), '.argo');
 const inspection = createNodeMachineInspection({ home, processName: 'engine' });

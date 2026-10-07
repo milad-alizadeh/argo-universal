@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { BlobRef } from '../feed/content-block';
 
-// The largest file `blob.upload` stores (spec 0003, "Server transport").
-export const maxBlobUploadBytes = 20 * 1024 * 1024;
+// The largest file `blob.upload` stores, 20 MiB (spec 0003, "Server transport").
+export const maxBlobUploadBytes = 20_971_520;
 
 // One file in the `file` field; tRPC parses multipart input over HTTP.
 export const BlobUploadInput = z

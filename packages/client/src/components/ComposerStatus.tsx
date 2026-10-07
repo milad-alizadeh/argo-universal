@@ -21,6 +21,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
 import { withUniwind } from 'uniwind';
+import { fullTurnDegrees } from '#lib/motion';
 import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
@@ -28,6 +29,13 @@ import { useWide } from '../navigation/use-wide';
 import { ComposerPopover } from './ComposerPopover';
 import { useContentWide } from './ContentLayout';
 import { Icon, IconSpinner } from './Icon';
+
+const fullPercent = 100;
+// Context use below this percent is the Smart zone; at or above, the Dumb zone.
+const smartZonePercent = 20;
+const contextRingRadius = 5.5;
+const maximumPlanStepsHeight = 264;
+const spinnerTurnMilliseconds = 750;
 
 export interface ComposerStatusProps {
   plan?: PlanEntry[];
@@ -51,20 +59,20 @@ function Meter({
   return (
     <View
       role="progressbar"
-      accessibilityValue={{ min: 0, max: 100, now: percent }}
+      accessibilityValue={{ min: 0, max: fullPercent, now: percent }}
       className={cn('h-1.5 rounded-full bg-muted overflow-hidden', className)}
     >
       <View
         className={cn(
           'h-full rounded-full bg-foreground',
-          warning && (percent < 20 ? 'bg-success' : 'bg-warning'),
+          warning && (percent < smartZonePercent ? 'bg-success' : 'bg-warning'),
         )}
-        style={{ width: `${Math.max(0, Math.min(100, percent))}%` }}
+        style={{ width: `${Math.max(0, Math.min(fullPercent, percent))}%` }}
       />
       {warning && (
         <View
           className="absolute top-0 bottom-0 w-0.5 bg-background"
-          style={{ left: '20%' }}
+          style={{ left: `${smartZonePercent}%` }}
         />
       )}
     </View>
@@ -78,7 +86,7 @@ const ThemedCircle = withUniwind(Circle, {
 });
 
 function ContextRing({ percent }: { percent: number }) {
-  const circumference = 2 * Math.PI * 5.5;
+  const circumference = 2 * Math.PI * contextRingRadius;
   return (
     <View className="size-icon-md shrink-0 items-center justify-center">
       <View className="size-icon-mark">
@@ -86,7 +94,7 @@ function ContextRing({ percent }: { percent: number }) {
           <ThemedCircle
             cx={7}
             cy={7}
-            r={5.5}
+            r={contextRingRadius}
             fill="none"
             strokeClassName="bg-border"
             strokeWidth={2}
@@ -94,12 +102,14 @@ function ContextRing({ percent }: { percent: number }) {
           <ThemedCircle
             cx={7}
             cy={7}
-            r={5.5}
+            r={contextRingRadius}
             fill="none"
-            strokeClassName={percent < 20 ? 'bg-success' : 'bg-warning'}
+            strokeClassName={
+              percent < smartZonePercent ? 'bg-success' : 'bg-warning'
+            }
             strokeWidth={2}
             strokeLinecap="round"
-            strokeDasharray={`${(circumference * Math.max(0, Math.min(100, 100 - percent))) / 100} ${circumference}`}
+            strokeDasharray={`${(circumference * Math.max(0, Math.min(fullPercent, fullPercent - percent))) / fullPercent} ${circumference}`}
             transform="rotate(-90 7 7)"
           />
         </Svg>
@@ -211,7 +221,12 @@ export function ComposerPlan({
           <View
             className="absolute top-0 left-0 right-0"
             onLayout={(event) =>
-              setStepsHeight(Math.min(264, event.nativeEvent.layout.height))
+              setStepsHeight(
+                Math.min(
+                  maximumPlanStepsHeight,
+                  event.nativeEvent.layout.height,
+                ),
+              )
             }
           >
             <PlanSteps entries={entries} />
@@ -236,7 +251,7 @@ export function ComposerPlan({
             <View className="flex-row items-center gap-2">
               <View className="w-16">
                 <Meter
-                  percent={(done / entries.length) * 100}
+                  percent={(done / entries.length) * fullPercent}
                   className="h-1"
                 />
               </View>
@@ -259,7 +274,10 @@ function NativePlanSpinner({ label }: { label: string }) {
   const rotation = useSharedValue(0);
   useEffect(() => {
     rotation.value = withRepeat(
-      withTiming(360, { duration: 750, easing: Easing.linear }),
+      withTiming(fullTurnDegrees, {
+        duration: spinnerTurnMilliseconds,
+        easing: Easing.linear,
+      }),
       -1,
     );
     return () => cancelAnimation(rotation);
@@ -383,7 +401,7 @@ export function ComposerStatusControls({
   const context = status.context;
   const percent =
     context && context.size > 0
-      ? Math.round((context.used / context.size) * 100)
+      ? Math.round((context.used / context.size) * fullPercent)
       : 0;
   return (
     <View className="flex-row gap-1 items-center min-w-0">
@@ -547,10 +565,13 @@ export function ComposerStatusControls({
                     className={cn(
                       'select-none',
                       'ml-auto text-xs font-normal',
-                      percent < 20 ? 'text-success' : 'text-warning',
+                      percent < smartZonePercent
+                        ? 'text-success'
+                        : 'text-warning',
                     )}
                   >
-                    {percent}% · {percent < 20 ? 'Smart zone' : 'Dumb zone'}
+                    {percent}% ·{' '}
+                    {percent < smartZonePercent ? 'Smart zone' : 'Dumb zone'}
                   </Text>
                 </View>
                 <Meter percent={percent} warning />

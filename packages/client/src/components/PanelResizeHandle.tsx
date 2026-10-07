@@ -1,6 +1,9 @@
 import { useMemo, useRef } from 'react';
 import { PanResponder, View } from 'react-native';
 
+// How far one arrow key or accessibility action moves the edge, in points.
+const keyboardStep = 16;
+
 export interface PanelResizeHandleProps {
   label: string;
   value: number;
@@ -58,7 +61,10 @@ export function PanelResizeHandle({
             minimum,
             Math.min(
               maximum,
-              value + (nativeEvent.actionName === 'increment' ? 16 : -16),
+              value +
+                (nativeEvent.actionName === 'increment'
+                  ? keyboardStep
+                  : -keyboardStep),
             ),
           ),
         )

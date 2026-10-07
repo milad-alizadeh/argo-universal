@@ -34,6 +34,10 @@ const drawings = {
   ),
 };
 
+const defaultStrokeWidth = 1.5;
+const removeStrokeWidth = 2;
+const warningStrokeWidth = 1.7;
+
 export function ComposerGlyph({
   name,
   size = 'md',
@@ -43,9 +47,9 @@ export function ComposerGlyph({
   size?: IconSize;
   className?: string;
 }) {
-  let strokeWidth = 1.5;
-  if (name === 'remove') strokeWidth = 2;
-  else if (name === 'warning') strokeWidth = 1.7;
+  let strokeWidth = defaultStrokeWidth;
+  if (name === 'remove') strokeWidth = removeStrokeWidth;
+  else if (name === 'warning') strokeWidth = warningStrokeWidth;
   return (
     <View className={`${iconSizeClasses[size]} shrink-0`}>
       <ThemedSvg

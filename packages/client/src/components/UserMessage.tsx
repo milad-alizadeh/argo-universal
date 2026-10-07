@@ -25,6 +25,9 @@ export interface UserMessageProps {
 }
 
 const clampedLines = 4;
+// The opened image fills at most this share of the window.
+const openImageWidthFraction = 0.9;
+const openImageHeightFraction = 0.8;
 
 type Reference = Extract<ContentBlock, { type: 'resource_link' | 'resource' }>;
 
@@ -97,7 +100,10 @@ function Thumbnail({
     image.blob.width && image.blob.height
       ? image.blob.width / image.blob.height
       : 1;
-  const width = Math.min(window.width * 0.9, window.height * 0.8 * aspectRatio);
+  const width = Math.min(
+    window.width * openImageWidthFraction,
+    window.height * openImageHeightFraction * aspectRatio,
+  );
   const source = { uri: imageUrl(image.blob) };
   return (
     <>

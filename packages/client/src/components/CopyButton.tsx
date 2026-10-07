@@ -12,6 +12,8 @@ export interface CopyButtonProps {
   revealOnHover?: boolean;
 }
 
+const copiedMilliseconds = 2000;
+
 // Copies a value and shows a check for two seconds.
 export function CopyButton({
   value,
@@ -21,7 +23,7 @@ export function CopyButton({
   const [copied, setCopied] = useState(false);
   useEffect(() => {
     if (!copied) return;
-    const timeout = setTimeout(() => setCopied(false), 2000);
+    const timeout = setTimeout(() => setCopied(false), copiedMilliseconds);
     return () => clearTimeout(timeout);
   }, [copied]);
   return (

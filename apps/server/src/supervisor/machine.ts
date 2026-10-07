@@ -21,7 +21,7 @@ interface SupervisorContext extends SupervisorInput {
 type SupervisorEvent = EngineEvent | { type: 'server.stop' };
 
 const serverAddressFile = 'server.json';
-const crashWindowMs = 10 * 60_000;
+const crashWindowMs = 600_000;
 const maxCrashesInWindow = 10;
 const backoffBaseMs = 500;
 const backoffCapMs = 30_000;
