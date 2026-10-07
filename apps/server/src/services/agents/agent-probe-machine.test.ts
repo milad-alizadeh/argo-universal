@@ -1,6 +1,6 @@
 import type { AgentProbe } from '@repo/agents';
 import { createMockAdapter } from '@repo/mocks/agent';
-import { expectEveryTransitionWalked } from '@repo/vitest/model-coverage';
+import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import { afterEach, expect, it, vi } from 'vitest';
 import {
   type AnyEventObject,
@@ -76,12 +76,14 @@ it.each(paths.map((path, index) => [index, path] as const))(
 );
 
 it('the generated agent probe paths walk every transition', () => {
-  expectEveryTransitionWalked({
-    models: [model],
-    paths,
-    stateKey: key,
-    eventKey: (event) => event.type,
-  });
+  expect(
+    unwalkedTransitions({
+      models: [model],
+      paths,
+      stateKey: key,
+      eventKey: (event) => event.type,
+    }),
+  ).toEqual([]);
 });
 
 it('shares a running probe with a refresh, and probes again once settled', async () => {

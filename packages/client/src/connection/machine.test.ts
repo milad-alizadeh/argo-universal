@@ -1,4 +1,4 @@
-import { expectEveryTransitionWalked } from '@repo/vitest/model-coverage';
+import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import type { QueryClient } from '@tanstack/react-query';
 import type { TRPCWebSocketClient } from '@trpc/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -186,12 +186,14 @@ describe('connection model', () => {
   });
 
   it('the generated paths walk every transition', () => {
-    expectEveryTransitionWalked({
-      models: [model],
-      paths: [...shortestPaths, ...simplePaths],
-      stateKey: (snapshot) => JSON.stringify(snapshot.value),
-      eventKey: (event) => event.type,
-    });
+    expect(
+      unwalkedTransitions({
+        models: [model],
+        paths: [...shortestPaths, ...simplePaths],
+        stateKey: (snapshot) => JSON.stringify(snapshot.value),
+        eventKey: (event) => event.type,
+      }),
+    ).toEqual([]);
   });
 });
 

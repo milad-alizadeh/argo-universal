@@ -1,5 +1,5 @@
 import type { FeedChange } from '@repo/contracts';
-import { expectEveryTransitionWalked } from '@repo/vitest/model-coverage';
+import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   type Actor,
@@ -265,12 +265,14 @@ describe('feed model', () => {
   });
 
   it('the generated paths walk every transition', () => {
-    expectEveryTransitionWalked({
-      models: [transitionModel],
-      paths: [...shortestPaths, ...simplePaths],
-      stateKey: (snapshot) => JSON.stringify(snapshot.value),
-      eventKey: (event) => JSON.stringify(event),
-    });
+    expect(
+      unwalkedTransitions({
+        models: [transitionModel],
+        paths: [...shortestPaths, ...simplePaths],
+        stateKey: (snapshot) => JSON.stringify(snapshot.value),
+        eventKey: (event) => JSON.stringify(event),
+      }),
+    ).toEqual([]);
   });
 });
 

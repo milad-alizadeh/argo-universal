@@ -1,4 +1,3 @@
-import { expect } from 'vitest';
 import type { EventObject, Snapshot } from 'xstate';
 import {
   adjacencyMapToArray,
@@ -20,10 +19,11 @@ type Walk<TSnapshot extends Snapshot<unknown>, TEvent extends EventObject> = {
   eventKey: (event: TEvent) => string;
 };
 
-export function expectEveryTransitionWalked<
+// Each transition of the models that no path walks, as "from event to"; a test expects none.
+export function unwalkedTransitions<
   TSnapshot extends Snapshot<unknown>,
   TEvent extends EventObject,
->({ models, paths, stateKey, eventKey }: Walk<TSnapshot, TEvent>): void {
+>({ models, paths, stateKey, eventKey }: Walk<TSnapshot, TEvent>): string[] {
   const key = (from: TSnapshot, event: TEvent, to: TSnapshot) =>
     `${stateKey(from)} ${eventKey(event)} ${stateKey(to)}`;
   const edges = new Set(
@@ -42,7 +42,11 @@ export function expectEveryTransitionWalked<
       }),
     ),
   );
-  expect(edges.size).toBeGreaterThan(0);
-  expect([...edges].filter((edge) => !walked.has(edge))).toEqual([]);
-  expect(paths.length).toBeLessThan(maximumPathCount);
+  if (edges.size === 0)
+    throw new Error('The models have no transitions to walk.');
+  if (paths.length >= maximumPathCount)
+    throw new Error(
+      `${paths.length} paths reach the cap of ${maximumPathCount}; split the model or filter its events.`,
+    );
+  return [...edges].filter((edge) => !walked.has(edge));
 }

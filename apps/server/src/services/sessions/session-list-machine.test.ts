@@ -1,4 +1,4 @@
-import { expectEveryTransitionWalked } from '@repo/vitest/model-coverage';
+import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import { afterAll, expect, it } from 'vitest';
 import {
   type ActorLogic,
@@ -74,12 +74,14 @@ it.each(paths.map((path, index) => [index, path] as const))(
   },
 );
 it('the generated list subscription paths walk every transition', () => {
-  expectEveryTransitionWalked({
-    models: [model],
-    paths,
-    stateKey: key,
-    eventKey: (event) => event.type,
-  });
+  expect(
+    unwalkedTransitions({
+      models: [model],
+      paths,
+      stateKey: key,
+      eventKey: (event) => event.type,
+    }),
+  ).toEqual([]);
 });
 it('ends a subscription with the projection error when the stored data cannot be read', () => {
   const error = new Error('Unrecognised Session row');
