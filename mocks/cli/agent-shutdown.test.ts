@@ -10,6 +10,10 @@ import {
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createActor, fromCallback, waitFor } from 'xstate';
 import { mockClis } from './index.ts';
+import {
+  type MockCliScenarioInput,
+  mockCliScenarioEnvironment,
+} from './mock-cli.ts';
 
 const cleanups: (() => void)[] = [];
 const cliDeadline = { timeout: 10_000 };
@@ -26,7 +30,13 @@ const isAlive = (processId: number) => {
   }
 };
 
-async function start(adapter: AgentAdapter, missingExecutable = false) {
+async function start(
+  adapter: AgentAdapter,
+  { scenario = {}, missingExecutable = false } = {} as {
+    scenario?: MockCliScenarioInput;
+    missingExecutable?: boolean;
+  },
+) {
   const directory = mkdtempSync(path.join(tmpdir(), 'argo-agent-stop-'));
   cleanups.push(() => rmSync(directory, { recursive: true, force: true }));
   const mockCli = mockClis[adapter.agent];
@@ -37,7 +47,10 @@ async function start(adapter: AgentAdapter, missingExecutable = false) {
     });
   vi.stubEnv('PATH', directory);
   const processFile = path.join(directory, 'process-id');
-  vi.stubEnv('MOCK_CLI_PROCESS_FILE', processFile);
+  for (const [key, value] of Object.entries(
+    mockCliScenarioEnvironment({ ...scenario, processFile }),
+  ))
+    vi.stubEnv(key, value);
   const events: AgentEvent[] = [];
   const parent = createActor(
     fromCallback<AgentEvent>(({ receive }) =>
@@ -80,8 +93,9 @@ describe.each(agentAdapters)(
     it.each([false, true])(
       'cancels immediately after a prompt (response blocked: %s)',
       async (blocked) => {
-        vi.stubEnv('MOCK_CLI_BLOCK_TURN_START', blocked ? '1' : '0');
-        const { agent, events, stop } = await start(adapter);
+        const { agent, events, stop } = await start(adapter, {
+          scenario: { blockTurnStart: blocked },
+        });
         await waitFor(
           agent,
           (snapshot) => snapshot.matches({ ready: 'idle' }),
@@ -111,8 +125,9 @@ describe.each(agentAdapters)(
     );
 
     it('stops while the live CLI is withholding initialization', async () => {
-      vi.stubEnv('MOCK_CLI_BLOCK_INITIALIZE', '1');
-      const { agent, events, processFile, stop } = await start(adapter);
+      const { agent, events, processFile, stop } = await start(adapter, {
+        scenario: { blockInitialize: true },
+      });
       await expect.poll(() => existsSync(processFile), cliDeadline).toBe(true);
       expect(agent.getSnapshot().value).toBe('starting');
       await stop();
@@ -120,8 +135,9 @@ describe.each(agentAdapters)(
     });
 
     it('stops an active Turn, including a blocked prompt response', async () => {
-      vi.stubEnv('MOCK_CLI_BLOCK_TURN_START', '1');
-      const { agent, events, stop } = await start(adapter);
+      const { agent, stop } = await start(adapter, {
+        scenario: { blockTurnStart: true },
+      });
       await waitFor(agent, (snapshot) => snapshot.matches({ ready: 'idle' }), {
         timeout: 10_000,
       });
@@ -130,23 +146,18 @@ describe.each(agentAdapters)(
         turnId: 'turn-1',
         content: [{ type: 'text', text: 'Run a command.' }],
       });
-      await expect
-        .poll(
-          () =>
-            events.some(
-              (event) =>
-                event.type === 'agent.turnStarted' ||
-                event.type === 'agent.feed',
-            ),
-          cliDeadline,
-        )
-        .toBe(true);
+      // A CLI that has sent no frame of the Turn yet still has an active Turn.
+      await waitFor(agent, (snapshot) => snapshot.matches({ ready: 'turn' }), {
+        timeout: 10_000,
+      });
       expect(agent.getSnapshot().value).toEqual({ ready: 'turn' });
       await stop();
     });
 
     it('settles a missing executable without leaving a process', async () => {
-      const { agent, processFile } = await start(adapter, true);
+      const { agent, processFile } = await start(adapter, {
+        missingExecutable: true,
+      });
       await waitFor(agent, (snapshot) => snapshot.status === 'done', {
         timeout: 10_000,
       });

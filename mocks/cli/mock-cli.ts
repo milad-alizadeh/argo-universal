@@ -17,7 +17,33 @@ const RECORDING_VARIABLE = 'MOCK_CLI_RECORDING';
 const EXIT_MID_TURN_VARIABLE = 'MOCK_CLI_EXIT_MID_TURN';
 const AVAILABILITY_VARIABLE = 'MOCK_CLI_AVAILABILITY';
 
+const SCENARIO_VARIABLE = 'MOCK_CLI_SCENARIO';
+
+// Every test knob of a mock CLI, serialised into one variable. Names say what the mock does, never which vendor.
+const MockCliScenario = z.strictObject({
+  processFile: z.string().nullable().default(null),
+  blockInitialize: z.boolean().default(false),
+  blockTurnStart: z.boolean().default(false),
+  turnResponseAfterNextStart: z.boolean().default(false),
+  requestBeforeStartResponse: z.boolean().default(false),
+  completionBeforeResponse: z.boolean().default(false),
+  notificationsFirst: z.boolean().default(false),
+  account: z.enum(['subscription', 'apiKey']).default('subscription'),
+  transcriptFile: z.string().nullable().default(null),
+  requestAnswersFile: z.string().nullable().default(null),
+});
+export type MockCliScenario = z.output<typeof MockCliScenario>;
+export type MockCliScenarioInput = z.input<typeof MockCliScenario>;
+
+// Parses the scenario, so a bad field fails where a test writes it, and returns the variable that carries it.
+export function mockCliScenarioEnvironment(scenario: MockCliScenarioInput) {
+  return {
+    [SCENARIO_VARIABLE]: JSON.stringify(MockCliScenario.parse(scenario)),
+  };
+}
+
 const MockCliEnvironment = z.object({
+  [SCENARIO_VARIABLE]: z.string().optional(),
   [AVAILABILITY_VARIABLE]: z
     .enum(['available', 'not_signed_in'])
     .default('available'),
@@ -60,13 +86,16 @@ export async function writeMockCliShim({
   return executable;
 }
 
-// The recording and crash switch that the shim hands the mock CLI.
+// The only reader of MOCK_CLI_ settings: the shim's variables and the test scenario.
 export function readMockCliEnvironment() {
   const environment = MockCliEnvironment.parse(process.env);
   return {
     availability: environment[AVAILABILITY_VARIABLE],
     recordingFile: environment[RECORDING_VARIABLE],
     exitMidTurn: environment[EXIT_MID_TURN_VARIABLE] === '1',
+    scenario: MockCliScenario.parse(
+      JSON.parse(environment[SCENARIO_VARIABLE] ?? '{}'),
+    ),
   };
 }
 
@@ -78,7 +107,7 @@ let crashed = false;
 
 // Reads one JSON message per stdin line, and exits when the caller closes stdin.
 export function serveJsonLines<Frame>(handle: (message: Frame) => void) {
-  const processFile = process.env.MOCK_CLI_PROCESS_FILE;
+  const { processFile } = readMockCliEnvironment().scenario;
   if (processFile) writeFileSync(processFile, String(process.pid));
   createInterface({ input: process.stdin })
     .on('line', (line) => {

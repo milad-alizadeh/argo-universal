@@ -11,7 +11,7 @@ const crashing = await writeMockCodex(directory, { recording: 'file-change', exi
 ```
 
 - `--version` prints the version of the recordings folder.
-- The mock answers `initialize`, `model/list`, `thread/start` and `turn/start`. It rejects any other method, such as `turn/interrupt`, with `-32601`.
+- The mock answers `initialize`, `model/list`, `thread/start` and `turn/start`. It answers `turn/interrupt` and rejects any other method with `-32601`.
 - `thread/start` answers with the recording's thread id only.
 - A `turn/completed` message ends a Turn. A `turn/start` past the last recorded Turn gets a `-32603` error.
 

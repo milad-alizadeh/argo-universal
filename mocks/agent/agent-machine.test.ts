@@ -35,7 +35,11 @@ const ready: AgentReady = {
       options: [{ value: 'fast', name: 'Fast' }],
     },
   ],
-  capabilities: { planApproval: 'continueTurn', stopShell: true },
+  capabilities: {
+    permissionFeedback: true,
+    planApproval: 'continueTurn',
+    stopShell: true,
+  },
   continuedOutside: false,
 };
 const readyEvent = { type: 'agent.ready', ...ready } as const;
@@ -175,7 +179,11 @@ const events = [
     type: 'vendor.ready',
     ready: {
       ...ready,
-      capabilities: { planApproval: 'startTurn', stopShell: false },
+      capabilities: {
+        permissionFeedback: true,
+        planApproval: 'startTurn',
+        stopShell: false,
+      },
     },
   },
   { type: 'vendor.failed', error: failure.message },

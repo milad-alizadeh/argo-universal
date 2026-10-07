@@ -9,5 +9,5 @@ export function writeCodexTranscript(
 ) {
   const file = path.join(directory, 'transcript.json');
   writeFileSync(file, JSON.stringify({ vendorSessionId }));
-  return { MOCK_CLI_TRANSCRIPT: file };
+  return { environment: {}, scenario: { transcriptFile: file } };
 }

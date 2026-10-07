@@ -13,6 +13,10 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { createActor, fromCallback, waitFor } from 'xstate';
 import { codexAdapter } from '../../../packages/agents/codex/index';
 import type { VendorMessage } from '../../../packages/agents/codex/messages';
+import {
+  type MockCliScenarioInput,
+  mockCliScenarioEnvironment,
+} from '../mock-cli';
 import { findRecording } from '../recording';
 import { writeMockCodex } from './write-mock-codex';
 
@@ -21,6 +25,14 @@ const cliDeadline = { timeout: 10_000 };
 afterEach(async () => {
   for (const cleanup of cleanups.splice(0).reverse()) await cleanup();
 });
+
+// Sets the whole scenario once, before the CLI starts.
+const stubScenario = (scenario: MockCliScenarioInput) => {
+  for (const [key, value] of Object.entries(
+    mockCliScenarioEnvironment(scenario),
+  ))
+    vi.stubEnv(key, value);
+};
 
 async function prepare(recording: string) {
   const directory = mkdtempSync(path.join(tmpdir(), 'codex-cancel-'));
@@ -37,7 +49,7 @@ const prompt: AgentCommandOf<'agent.prompt'> = {
 };
 
 it('starts another Turn before a cancelled Turn receives its late start response', async () => {
-  vi.stubEnv('MOCK_CLI_TURN_RESPONSE_AFTER_NEXT_START', '1');
+  stubScenario({ turnResponseAfterNextStart: true });
   const { directory, executable } = await prepare('interrupt');
   const source = findRecording(
     path.join(import.meta.dirname, 'recordings'),
@@ -133,7 +145,7 @@ it('starts another Turn before a cancelled Turn receives its late start response
 });
 
 it('does not interrupt a completed Turn when its start response arrives afterward', async () => {
-  vi.stubEnv('MOCK_CLI_COMPLETION_BEFORE_RESPONSE', '1');
+  stubScenario({ completionBeforeResponse: true });
   const { directory } = await prepare('edit-and-command');
   const failures: unknown[] = [];
   const session: VendorSession = await codexAdapter.connect(
