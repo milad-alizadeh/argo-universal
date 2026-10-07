@@ -16,6 +16,7 @@ export function renderRecordedActivity(activity: FeedActivity) {
     return (
       <CommandRow
         row={activity.row}
+        awaitingApproval={activity.awaitingApproval}
         now={(activity.row._meta?.argo?.startedAt ?? 0) + 23000}
       />
     );

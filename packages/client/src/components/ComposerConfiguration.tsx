@@ -33,6 +33,7 @@ import { listTestId } from '../lib/list-test-id';
 import { useWide } from '../navigation/use-wide';
 import { Slider } from '../primitives/slider';
 import { ComposerPopover } from './ComposerPopover';
+import { useContentWide } from './ContentLayout';
 import { Icon } from './Icon';
 
 type SelectConfiguration = Extract<SessionConfigOption, { type: 'select' }>;
@@ -645,7 +646,7 @@ export function ComposerAgentModelControl({
   configuration: ComposerConfigurationProps;
   disabled: boolean;
 }) {
-  const wide = useWide();
+  const wide = useContentWide();
   const model = selection(configuration, 'model');
   const current = choices(model).find(
     (choice) => choice.value === model?.currentValue,
@@ -724,6 +725,7 @@ export function ComposerModeControl({
   configuration: ComposerConfigurationProps;
   disabled: boolean;
 }) {
+  const wide = useContentWide();
   const mode = selection(configuration, 'mode');
   const current = choices(mode).find(
     (choice) => choice.value === mode?.currentValue,
@@ -737,7 +739,12 @@ export function ComposerModeControl({
           variant="ghost"
           disabled={disabled}
           accessibilityLabel="Mode"
-          className="h-7 sm:h-7 py-0 w-7 wide:w-auto p-0 wide:px-1.5 has-[>svg]:px-0 wide:has-[>svg]:px-1.5 gap-1.5"
+          className={cn(
+            'h-7 sm:h-7 py-0 gap-1.5',
+            wide
+              ? 'w-auto px-1.5 has-[>svg]:px-1.5'
+              : 'w-7 p-0 has-[>svg]:px-0',
+          )}
         >
           <Icon
             as={configurationIcon(current?._meta?.argo?.icon)}
@@ -750,13 +757,14 @@ export function ComposerModeControl({
             selectable={false}
             className={cn(
               'select-none',
-              'hidden wide:flex text-sm leading-5 font-normal text-muted-foreground',
+              'text-sm leading-5 font-normal text-muted-foreground',
+              !wide && 'hidden',
               current?._meta?.argo?.tone === 'dangerous' && 'text-destructive',
             )}
           >
             {current?.name.replace(/\s*\(recommended\)\s*$/i, '')}
           </Text>
-          <View className="hidden wide:flex -ml-0.5">
+          <View className={cn('-ml-0.5', !wide && 'hidden')}>
             <Icon
               size="sm"
               as={CaretDownIcon}
@@ -843,12 +851,17 @@ export function ComposerCheckoutControl({
   checkout: ComposerConfigurationProps['checkout'];
   disabled: boolean;
 }) {
-  const wide = useWide();
+  const wide = useContentWide();
   const created = !!checkout.path;
   const editable = !created && !!checkout.onNewWorktreeChange;
   if (created || !editable)
     return (
-      <View className="h-7 max-w-full wide:max-w-96 min-w-0 px-1.5 flex-row items-center gap-1.5">
+      <View
+        className={cn(
+          'h-7 min-w-0 px-1.5 flex-row items-center gap-1.5',
+          wide ? 'max-w-96' : 'max-w-full',
+        )}
+      >
         <Icon
           as={checkout.newWorktree ? GitBranchIcon : FolderIcon}
           className="text-muted-foreground"

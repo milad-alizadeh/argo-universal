@@ -1,7 +1,10 @@
 import type { ToolCallUpdate } from '@repo/contracts';
 
-export function toolCallTitle(row: ToolCallUpdate): string {
-  if (row.title === 'Awaiting approval') return row.title;
+export function toolCallTitle(
+  row: ToolCallUpdate,
+  awaitingApproval = false,
+): string {
+  if (awaitingApproval) return row.title;
   const actions = row._meta?.argo?.commandActions;
   if (actions?.length && actions.every((action) => action.type !== 'unknown')) {
     return actions

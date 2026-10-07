@@ -1,5 +1,12 @@
 import { lexer, type Token, type Tokens } from 'marked';
-import { Fragment, memo, type ReactNode, useMemo } from 'react';
+import {
+  createContext,
+  Fragment,
+  memo,
+  type ReactNode,
+  useContext,
+  useMemo,
+} from 'react';
 import { Linking, ScrollView, Text as Span, View } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
 import { cn } from '#lib/utils';
@@ -10,7 +17,10 @@ export interface FeedMarkdownProps {
   text: string;
   // An open row ends its text with a caret.
   streaming?: boolean;
+  variant?: 'feed' | 'proposal';
 }
+
+const MarkdownVariant = createContext<'feed' | 'proposal'>('feed');
 
 export const inlineCodeClassName =
   'rounded-sm bg-foreground/5 px-1.5 py-px font-mono text-xs leading-4.5 text-foreground';
@@ -92,6 +102,11 @@ function InlineTokens({
   });
 }
 
+const proposalInlineCodeClassName = cn(
+  inlineCodeClassName,
+  'text-sm leading-5',
+);
+
 const proseClassName = 'font-sans text-sm leading-5.5 text-foreground';
 
 function Prose({
@@ -103,21 +118,43 @@ function Prose({
   caret: boolean;
   className?: string;
 }) {
+  const variant = useContext(MarkdownVariant);
   return (
-    <Text className={cn(proseClassName, className)}>
-      <InlineTokens tokens={tokens} />
+    <Text
+      className={cn(
+        proseClassName,
+        variant === 'proposal' && 'leading-5',
+        className,
+      )}
+    >
+      <InlineTokens
+        tokens={tokens}
+        codeClassName={
+          variant === 'proposal'
+            ? proposalInlineCodeClassName
+            : inlineCodeClassName
+        }
+      />
       {caret && <Caret />}
     </Text>
   );
 }
 
 function List({ token, caret }: { token: Tokens.List; caret: boolean }) {
+  const variant = useContext(MarkdownVariant);
   const start = typeof token.start === 'number' ? token.start : 1;
   return (
-    <View className="gap-1">
+    <View className={variant === 'proposal' ? 'gap-2' : 'gap-1'}>
       {token.items.map((item, index) => (
         <View key={`${index}-${item.raw}`} className="flex-row gap-2">
-          <Text className="w-4 shrink-0 font-sans text-sm leading-5.5 text-muted-foreground">
+          <Text
+            className={cn(
+              'w-4 shrink-0 font-sans text-sm',
+              variant === 'proposal'
+                ? 'leading-5 text-foreground'
+                : 'leading-5.5 text-muted-foreground',
+            )}
+          >
             {token.ordered ? `${start + index}.` : '•'}
           </Text>
           <View className="min-w-0 flex-1 gap-1">
@@ -133,7 +170,11 @@ function List({ token, caret }: { token: Tokens.List; caret: boolean }) {
 }
 
 function Table({ token }: { token: Tokens.Table }) {
-  const cellCodeClassName = 'font-mono text-xs leading-5 text-foreground';
+  const variant = useContext(MarkdownVariant);
+  const cellCodeClassName = cn(
+    'font-mono leading-5 text-foreground',
+    variant === 'proposal' ? 'text-sm' : 'text-xs',
+  );
   const cellClassName = (column: number) =>
     cn(
       'px-3 py-1.5',
@@ -154,7 +195,14 @@ function Table({ token }: { token: Tokens.Table }) {
                 className={cellClassName(column)}
               >
                 <Text className="font-sans text-sm leading-5 font-semibold text-foreground">
-                  <InlineTokens tokens={cell.tokens} />
+                  <InlineTokens
+                    tokens={cell.tokens}
+                    codeClassName={
+                      variant === 'proposal'
+                        ? proposalInlineCodeClassName
+                        : inlineCodeClassName
+                    }
+                  />
                 </Text>
               </View>
             ))}
@@ -189,13 +237,18 @@ function Table({ token }: { token: Tokens.Table }) {
 }
 
 function Block({ token, caret }: { token: Token; caret: boolean }) {
+  const variant = useContext(MarkdownVariant);
   switch (token.type) {
     case 'heading':
       return (
         <Prose
           tokens={token.tokens}
           caret={caret}
-          className="pt-1 text-base leading-6 font-semibold"
+          className={
+            variant === 'proposal'
+              ? 'font-semibold'
+              : 'pt-1 text-base leading-6 font-semibold'
+          }
         />
       );
     case 'paragraph':
@@ -207,7 +260,11 @@ function Block({ token, caret }: { token: Token; caret: boolean }) {
     case 'code':
       return (
         <View className="gap-2.5">
-          <FeedCodeBlock code={token.text} language={token.lang || undefined} />
+          <FeedCodeBlock
+            code={token.text}
+            language={token.lang || undefined}
+            textClassName={variant === 'proposal' ? 'text-sm' : undefined}
+          />
           {caret && <Caret />}
         </View>
       );
@@ -254,11 +311,14 @@ function Blocks({
 export const FeedMarkdown = memo(function FeedMarkdown({
   text,
   streaming = false,
+  variant = 'feed',
 }: FeedMarkdownProps) {
   const tokens = useMemo(() => lexer(text), [text]);
   return (
-    <View className="gap-2.5">
-      <Blocks tokens={tokens} caret={streaming} />
-    </View>
+    <MarkdownVariant.Provider value={variant}>
+      <View className={variant === 'proposal' ? 'gap-2' : 'gap-2.5'}>
+        <Blocks tokens={tokens} caret={streaming} />
+      </View>
+    </MarkdownVariant.Provider>
   );
 });

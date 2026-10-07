@@ -21,6 +21,16 @@ export {
 export { DiffView, type DiffViewProps } from './components/DiffView';
 export { EditRow, type EditRowProps } from './components/EditRow';
 export {
+  type ElicitationAnswer,
+  ElicitationForm,
+  type ElicitationFormProps,
+  type ElicitationValues,
+} from './components/ElicitationForm';
+export {
+  ElicitationOutcome,
+  type ElicitationOutcomeProps,
+} from './components/ElicitationOutcome';
+export {
   HeaderButton,
   type HeaderButtonProps,
 } from './components/HeaderButton';
@@ -30,12 +40,27 @@ export {
   type IssueIndicatorProps,
 } from './components/IssueIndicator';
 export { LiveHeader, type LiveHeaderProps } from './components/LiveHeader';
+export {
+  PermissionOutcome,
+  type PermissionOutcomeProps,
+} from './components/PermissionOutcome';
+export {
+  type PermissionAnswer,
+  PermissionRequest,
+  type PermissionRequestProps,
+} from './components/PermissionRequest';
 export { PhoneLayout, type PhoneLayoutProps } from './components/PhoneLayout';
 export {
   PhoneShell,
   type PhoneShellProps,
   type ShellSection,
 } from './components/PhoneShell';
+export {
+  type PlanProposalAnswer,
+  PlanProposalCard,
+  type PlanProposalCardProps,
+} from './components/PlanProposalCard';
+export { PlanProposalRegion } from './components/PlanProposalRegion';
 export {
   ProjectHeading,
   type ProjectHeadingProps,

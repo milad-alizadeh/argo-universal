@@ -8,10 +8,16 @@ export interface FeedCodeBlockProps {
   code: string;
   language?: string;
   footer?: ReactNode;
+  textClassName?: string;
 }
 
 // A fenced code block: its language, a Copy icon shown on hover, and code that scrolls sideways.
-export function FeedCodeBlock({ code, language, footer }: FeedCodeBlockProps) {
+export function FeedCodeBlock({
+  code,
+  language,
+  footer,
+  textClassName,
+}: FeedCodeBlockProps) {
   return (
     <View
       className={cn(
@@ -28,7 +34,10 @@ export function FeedCodeBlock({ code, language, footer }: FeedCodeBlockProps) {
         >
           <Text
             selectable
-            className="font-mono text-xs leading-5 text-foreground"
+            className={cn(
+              'font-mono text-xs leading-5 text-foreground',
+              textClassName,
+            )}
           >
             {code}
           </Text>

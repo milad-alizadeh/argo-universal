@@ -7,6 +7,7 @@ import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
+import { ContentLayout } from './ContentLayout';
 import { DesktopRail } from './DesktopRail';
 import { Icon } from './Icon';
 import { PanelResizeHandle } from './PanelResizeHandle';
@@ -236,9 +237,9 @@ export function DesktopShell({
           }
         >
           <View className="h-shell-bar" />
-          <View className="min-h-0 flex-1 overflow-hidden rounded-xl">
+          <ContentLayout className="overflow-hidden rounded-xl">
             {children}
-          </View>
+          </ContentLayout>
         </ShellPane>
         <ShellPane
           testID="desktop-inspector"
