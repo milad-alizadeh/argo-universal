@@ -1182,6 +1182,190 @@ it.each(
   },
 );
 
+for (const adapter of agentAdapters)
+  it
+    .skipIf(
+      mockClis[adapter.agent]?.unsupportedScenarios.includes(
+        'otherThreadRequest',
+      ),
+    )
+    .each([
+      {
+        recording: 'permission',
+        expected: { type: 'permission', optionId: 'reject_once' },
+      },
+      {
+        recording: 'elicitation',
+        expected: { type: 'elicitation', action: 'decline' },
+      },
+    ])(
+    `answers a ${adapter.agent} other-thread $recording request; skipped where requests have no thread id`,
+    async ({ recording, expected }) => {
+      const root = await startNewSessionEngine(adapter, { recording });
+      const file = path.join(root.home, 'answers.jsonl');
+      stubScenario({ otherThreadRequest: true, requestAnswersFile: file });
+      const caller = await root.createCaller();
+      const { sessionId } = await caller.session.new({
+        projectId: 'project-1',
+        agent: adapter.agent,
+        checkout: { type: 'main' },
+        configOptions: [],
+        prompt: [{ type: 'text', text: 'Run a Turn' }],
+      });
+      await expect.poll(() => readRequestAnswers(file)).toEqual([expected]);
+      await expect
+        .poll(
+          async () => (await readSnapshot(root.createCaller, sessionId)).state,
+        )
+        .toBe('idle');
+      expect(await readSnapshot(root.createCaller, sessionId)).toMatchObject({
+        pendingPermission: null,
+        pendingElicitation: null,
+      });
+    },
+  );
+
+it.each(agentAdapters)(
+  'cancel answers every $agent queued question',
+  async (adapter) => {
+    const root = await startNewSessionEngine(adapter, {
+      recording: 'elicitation',
+    });
+    const file = path.join(root.home, 'answers.jsonl');
+    stubScenario({ concurrentQuestions: true, requestAnswersFile: file });
+    const caller = await root.createCaller();
+    const { sessionId } = await caller.session.new({
+      projectId: 'project-1',
+      agent: adapter.agent,
+      checkout: { type: 'main' },
+      configOptions: [],
+      prompt: [{ type: 'text', text: 'Ask two questions' }],
+    });
+    await expect
+      .poll(
+        async () =>
+          (await readSnapshot(root.createCaller, sessionId)).pendingElicitation,
+      )
+      .not.toBeNull();
+    await caller.session.cancel({ sessionId });
+    await expect.poll(() => readRequestAnswers(file)).toHaveLength(2);
+    expect(await readRequestAnswers(file)).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ action: 'accept' })]),
+    );
+    await expect
+      .poll(
+        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+      )
+      .toBe('idle');
+    expect(
+      (await readSnapshot(root.createCaller, sessionId)).pendingElicitation,
+    ).toBeNull();
+  },
+);
+
+it.each(agentAdapters)(
+  'stop answers every $agent queued question',
+  async (adapter) => {
+    const root = await startNewSessionEngine(adapter, {
+      recording: 'elicitation',
+    });
+    const file = path.join(root.home, 'answers.jsonl');
+    stubScenario({ concurrentQuestions: true, requestAnswersFile: file });
+    const caller = await root.createCaller();
+    const { sessionId } = await caller.session.new({
+      projectId: 'project-1',
+      agent: adapter.agent,
+      checkout: { type: 'main' },
+      configOptions: [],
+      prompt: [{ type: 'text', text: 'Ask two questions' }],
+    });
+    await expect
+      .poll(
+        async () =>
+          (await readSnapshot(root.createCaller, sessionId)).pendingElicitation,
+      )
+      .not.toBeNull();
+    root.engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
+    await waitFor(root.engine, (snapshot) => snapshot.status === 'done', {
+      timeout: gracefulStopLimit,
+    });
+    expect(await readRequestAnswers(file)).toHaveLength(2);
+    expect(await readRequestAnswers(file)).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ action: 'accept' })]),
+    );
+    expect(root.engine.getSnapshot().output).toEqual({ exitCode: 0 });
+  },
+);
+
+it.each(agentAdapters)(
+  'shows two $agent questions in FIFO order and answers both',
+  async (adapter) => {
+    const root = await startNewSessionEngine(adapter, {
+      recording: 'elicitation',
+    });
+    const file = path.join(root.home, 'answers.jsonl');
+    stubScenario({ concurrentQuestions: true, requestAnswersFile: file });
+    const caller = await root.createCaller();
+    const { sessionId } = await caller.session.new({
+      projectId: 'project-1',
+      agent: adapter.agent,
+      checkout: { type: 'main' },
+      configOptions: [],
+      prompt: [{ type: 'text', text: 'Ask two questions' }],
+    });
+    await expect
+      .poll(
+        async () =>
+          (await readSnapshot(root.createCaller, sessionId)).pendingElicitation,
+      )
+      .not.toBeNull();
+    const first = (await readSnapshot(root.createCaller, sessionId))
+      .pendingElicitation;
+    if (!first) throw new Error('No first Elicitation');
+    expect(first.toolCallId).not.toContain('-second');
+    expect(await readRequestAnswers(file)).toEqual([]);
+    const recorded =
+      mockClis[adapter.agent]?.recordedRequestAnswer('elicitation');
+    if (recorded?.type !== 'elicitation')
+      throw new Error('No recorded Elicitation answer');
+    await caller.session.answerElicitation({
+      sessionId,
+      requestId: first.requestId,
+      action: 'accept',
+      content: recorded.content,
+    });
+    await expect
+      .poll(
+        async () =>
+          (await readSnapshot(root.createCaller, sessionId)).pendingElicitation
+            ?.toolCallId,
+      )
+      .toContain('-second');
+    const second = (await readSnapshot(root.createCaller, sessionId))
+      .pendingElicitation;
+    if (!second) throw new Error('No second Elicitation');
+    expect(second.requestId).not.toBe(first.requestId);
+    await expect.poll(() => readRequestAnswers(file)).toEqual([recorded]);
+    await caller.session.answerElicitation({
+      sessionId,
+      requestId: second.requestId,
+      action: 'accept',
+      content: recorded.content,
+    });
+    await expect
+      .poll(() => readRequestAnswers(file))
+      .toEqual([recorded, recorded]);
+    await expect
+      .poll(
+        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+      )
+      .toBe('idle');
+    expect(
+      (await readSnapshot(root.createCaller, sessionId)).pendingElicitation,
+    ).toBeNull();
+  },
+);
+
 it.each(agentAdapters)(
   'answers a $agent Elicitation once through tRPC',
   async (adapter) => {
