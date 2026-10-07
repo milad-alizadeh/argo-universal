@@ -1,4 +1,4 @@
-import type { ToolCallUpdate } from '@repo/contracts';
+import { isToolCallRunning, type ToolCallUpdate } from '@repo/contracts';
 import { millisecondsPerSecond } from './format-elapsed';
 import { useClock } from './use-clock';
 
@@ -6,7 +6,7 @@ export function useToolCallDuration(
   row: ToolCallUpdate | undefined,
   now?: number,
 ) {
-  const running = row?.status === 'pending' || row?.status === 'in_progress';
+  const running = row ? isToolCallRunning(row) : false;
   const clock = useClock(running, now);
   const timing = row?._meta?.argo;
   const end = running ? clock : timing?.endedAt;

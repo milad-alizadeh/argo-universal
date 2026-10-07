@@ -1,15 +1,16 @@
-import type {
-  CommandAction,
-  SessionSnapshot,
-  SessionUpdate,
-  ToolCallUpdate,
+import {
+  type CommandAction,
+  isToolCallRunning,
+  knownCommandActions,
+  type SessionSnapshot,
+  type SessionUpdate,
+  type ToolCallUpdate,
 } from '@repo/contracts';
 import type { FeedActivity, FeedExploration, FeedView } from './feed-view';
 
 function explorationActions(row: ToolCallUpdate): CommandAction[] {
-  const actions = row._meta?.argo?.commandActions;
-  if (actions?.length && actions.every((action) => action.type !== 'unknown'))
-    return actions;
+  const actions = knownCommandActions(row);
+  if (actions.length) return actions;
   if (row.kind === 'read' || row.kind === 'search')
     return [{ type: row.kind, command: '', path: row.locations?.[0]?.path }];
   return [];
@@ -38,10 +39,6 @@ function explorationLines(toolCalls: ToolCallUpdate[]): string[] {
     }
   }
   return lines;
-}
-
-function isRunning(row: ToolCallUpdate): boolean {
-  return row.status === 'pending' || row.status === 'in_progress';
 }
 
 function editsSeveralFiles(row: ToolCallUpdate): boolean {
@@ -126,7 +123,7 @@ export function toFeedView(
     for (const activity of activities)
       if (activity.type === 'exploration') {
         activity.lines = explorationLines(activity.toolCalls);
-        activity.title = activity.toolCalls.some(isRunning)
+        activity.title = activity.toolCalls.some(isToolCallRunning)
           ? 'Exploring'
           : 'Explored';
       }
@@ -170,7 +167,7 @@ export function toFeedView(
         row.toolCallId === snapshot.pendingPermission?.toolCallId;
       toolCalls.push(row);
       const actions = explorationActions(row);
-      if (isRunning(row)) {
+      if (isToolCallRunning(row)) {
         if (awaitingPermission) {
           liveTitle = 'Awaiting approval';
         } else if (actions.length && !row._meta?.argo?.permissionOutcome) {

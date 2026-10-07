@@ -1,3 +1,4 @@
+import { runningToolCallStatuses } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
 import { and, eq, or, sql } from 'drizzle-orm';
@@ -5,6 +6,10 @@ import { fromFeedRow, payloadVersion } from '../services/feed/feed-row';
 
 // Repairs the database before the Engine serves; any failure rolls back the whole repair.
 export function recoverAfterRestart(database: Database) {
+  const runningStatus = sql`json_extract(${feedRow.payload}, '$.status') in (${sql.join(
+    runningToolCallStatuses.map((status) => sql`${status}`),
+    sql`, `,
+  )})`;
   void database.transaction((transaction) => {
     transaction
       .update(turn)
@@ -27,10 +32,7 @@ export function recoverAfterRestart(database: Database) {
       .where(
         or(
           eq(feedRow.state, 'open'),
-          and(
-            eq(feedRow.sessionUpdate, 'tool_call_update'),
-            sql`json_extract(${feedRow.payload}, '$.status') in ('pending', 'in_progress')`,
-          ),
+          and(eq(feedRow.sessionUpdate, 'tool_call_update'), runningStatus),
         ),
       )
       .orderBy(feedRow.sessionId, feedRow.position)
@@ -62,7 +64,7 @@ export function recoverAfterRestart(database: Database) {
           revision,
           payload: sql`case
             when ${feedRow.sessionUpdate} = 'tool_call_update'
-              and json_extract(${feedRow.payload}, '$.status') in ('pending', 'in_progress')
+              and ${runningStatus}
             then json_set(${feedRow.payload}, '$.status', 'failed')
             else ${feedRow.payload} end`,
         })

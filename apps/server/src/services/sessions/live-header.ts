@@ -1,10 +1,12 @@
-import type {
-  LiveHeader,
-  LiveHeaderSource,
-  PendingElicitation,
-  PendingPermission,
-  SessionUpdate,
-  ToolCallUpdate,
+import {
+  isToolCallRunning,
+  knownCommandActions,
+  type LiveHeader,
+  type LiveHeaderSource,
+  type PendingElicitation,
+  type PendingPermission,
+  type SessionUpdate,
+  type ToolCallUpdate,
 } from '@repo/contracts';
 
 export interface LiveHeaderInput {
@@ -23,11 +25,7 @@ function toolKindLabel(tool: ToolCallUpdate): string | null {
     )[0];
   switch (tool.kind) {
     case 'execute': {
-      const actions = tool._meta?.argo?.commandActions;
-      const action =
-        actions?.length && actions.every((action) => action.type !== 'unknown')
-          ? actions[0]
-          : undefined;
+      const action = knownCommandActions(tool)[0];
       if (action?.type === 'read')
         return action.path ? `Reading ${action.path}` : 'Reading files';
       if (action?.type === 'search')
@@ -104,8 +102,7 @@ export function toLiveHeader(
   const tool = current
     .filter(
       (row): row is ToolCallUpdate =>
-        row.sessionUpdate === 'tool_call_update' &&
-        (row.status === 'in_progress' || row.status === 'pending'),
+        row.sessionUpdate === 'tool_call_update' && isToolCallRunning(row),
     )
     .toSorted((first, second) => first.position - second.position)
     .at(-1);
