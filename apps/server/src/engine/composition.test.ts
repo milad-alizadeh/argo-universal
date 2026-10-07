@@ -1565,6 +1565,21 @@ for (const adapter of agentAdapters)
     const caller = await root.createCaller(controller.signal);
     const list = (await caller.session.listUpdates())[Symbol.asyncIterator]();
     await list.next();
+    const registry: ActorRefFrom<typeof registryMachine> | undefined =
+      root.engine.system.get('sessions');
+    if (!registry) throw new Error('No Session registry');
+    registry.send({
+      type: 'sessions.open',
+      sessionId: 'session-broken',
+      agent: adapter.agent,
+    });
+    await waitFor(
+      registry,
+      (snapshot) =>
+        snapshot.context.sessions['session-broken']
+          ?.getSnapshot()
+          .matches({ open: { live: 'idle' } }) ?? false,
+    );
     const feed = (
       await caller.feed.subscribe({ sessionId: 'session-broken', after: null })
     )[Symbol.asyncIterator]();
