@@ -8,11 +8,12 @@ import { liveHeaderMocks } from '#mocks/live-header';
 import { sessionMachine } from './session-machine';
 import { noChanges, toSessionSnapshot } from './session-snapshot';
 
-const { database, remove } = openTestDatabase();
+const { database, directory: runtimeDirectory, remove } = openTestDatabase();
 afterAll(remove);
 const context = createActor(sessionMachine, {
   input: {
     database,
+    runtimeDirectory,
     adapter: createMockAdapter(),
     kind: 'existing',
     sessionId: 'session-1',

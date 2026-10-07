@@ -323,6 +323,32 @@
       "plugins": ["./tooling/biome/cross-package-import.grit"]
     },
 
+    // Apps launch processes only at these three boundaries; all git work stays in packages/git (ADR-0008).
+    {
+      "includes": [
+        "apps/**",
+        "!apps/server/src/supervisor/engine-process.ts",
+        "!apps/server/src/services/system/info.ts",
+        "!apps/desktop/src/main/server-process.ts",
+        "!**/*.test.*",
+        "!**/mocks/**"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "node:child_process": "Apps run git through packages/git (ADR-0008); only the three process launchers open subprocesses."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
     // D1: contracts, api, the db schema and client/src never import Node APIs; node-builtin-gap.grit adds node:sqlite and node:sea, which noNodejsModules misses; 0 hits.
     {
       "includes": [
@@ -363,7 +389,44 @@
 
     // D3: the App never imports server-side packages; it declares @repo/machine-log for /browser, so the /node entry needs this ban; 0 hits.
     {
-      "includes": ["apps/universal-app/**"],
+      "includes": ["apps/universal-app/**", "!**/*.test.*", "!**/mocks/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@repo/**",
+                      "!@repo/client",
+                      "!@repo/client/**",
+                      "!@repo/uniwind",
+                      "!@repo/uniwind/**",
+                      "!@repo/machine-log",
+                      "!@repo/machine-log/browser",
+                      "!@repo/vitest",
+                      "!@repo/vitest/**"
+                    ],
+                    "message": "The App imports client, uniwind and the browser machine log, never server-side packages."
+                  }
+                ],
+                "paths": {
+                  "node:child_process": "Apps run git through packages/git (ADR-0008); only the three process launchers open subprocesses."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    // Tests, mocks and process launchers keep the workspace import boundary.
+    {
+      "includes": [
+        "apps/universal-app/**/*.test.*",
+        "apps/universal-app/**/mocks/**"
+      ],
       "linter": {
         "rules": {
           "style": {
@@ -514,7 +577,51 @@
     },
     // D9: the Server never imports client or an App.
     {
-      "includes": ["apps/server/**"],
+      "includes": [
+        "apps/server/**",
+        "!**/*.test.*",
+        "!**/mocks/**",
+        "!apps/server/src/supervisor/engine-process.ts",
+        "!apps/server/src/services/system/info.ts"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@repo/client",
+                      "@repo/client/**",
+                      "@repo/universal-app",
+                      "@repo/universal-app/**",
+                      "@repo/storybook",
+                      "@repo/storybook/**",
+                      "@repo/desktop",
+                      "@repo/desktop/**"
+                    ],
+                    "message": "The Server never imports client or an App."
+                  }
+                ],
+                "paths": {
+                  "node:child_process": "Apps run git through packages/git (ADR-0008); only the three process launchers open subprocesses."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    // Tests, mocks and process launchers keep the workspace import boundary.
+    {
+      "includes": [
+        "apps/server/**/*.test.*",
+        "apps/server/**/mocks/**",
+        "apps/server/src/supervisor/engine-process.ts",
+        "apps/server/src/services/system/info.ts"
+      ],
       "linter": {
         "rules": {
           "style": {
@@ -544,7 +651,48 @@
     },
     // D10: desktop imports only contracts and machine-log from the workspace.
     {
-      "includes": ["apps/desktop/**"],
+      "includes": [
+        "apps/desktop/**",
+        "!**/*.test.*",
+        "!**/mocks/**",
+        "!apps/desktop/src/main/server-process.ts"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@repo/**",
+                      "!@repo/contracts",
+                      "!@repo/contracts/**",
+                      "!@repo/machine-log",
+                      "!@repo/machine-log/**",
+                      "!@repo/vitest",
+                      "!@repo/vitest/**"
+                    ],
+                    "message": "desktop imports only contracts and machine-log from the workspace."
+                  }
+                ],
+                "paths": {
+                  "node:child_process": "Apps run git through packages/git (ADR-0008); only the three process launchers open subprocesses."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    // Tests, mocks and process launchers keep the workspace import boundary.
+    {
+      "includes": [
+        "apps/desktop/**/*.test.*",
+        "apps/desktop/**/mocks/**",
+        "apps/desktop/src/main/server-process.ts"
+      ],
       "linter": {
         "rules": {
           "style": {
@@ -573,7 +721,37 @@
     },
     // D11: storybook imports only client and uniwind from the workspace.
     {
-      "includes": ["apps/storybook/**"],
+      "includes": ["apps/storybook/**", "!**/*.test.*", "!**/mocks/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@repo/**",
+                      "!@repo/client",
+                      "!@repo/client/**",
+                      "!@repo/uniwind",
+                      "!@repo/uniwind/**"
+                    ],
+                    "message": "storybook imports only client and uniwind from the workspace."
+                  }
+                ],
+                "paths": {
+                  "node:child_process": "Apps run git through packages/git (ADR-0008); only the three process launchers open subprocesses."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    // Tests, mocks and process launchers keep the workspace import boundary.
+    {
+      "includes": ["apps/storybook/**/*.test.*", "apps/storybook/**/mocks/**"],
       "linter": {
         "rules": {
           "style": {

@@ -1,5 +1,3 @@
-import { homedir } from 'node:os';
-import { join } from 'node:path';
 import {
   InitialConfigOption,
   type SessionNewInput,
@@ -24,7 +22,7 @@ export type SessionCreationInput = SessionNewInput & { turnId: string };
 
 export type SessionInput = {
   database: Database;
-  runtimeDirectory?: string;
+  runtimeDirectory: string;
   sessionId: string;
 } & (({ kind: 'new' } & SessionCreationInput) | { kind: 'existing' });
 export type NewSessionInput = Extract<SessionInput, { kind: 'new' }>;
@@ -61,7 +59,7 @@ export async function createSessionCheckout(
     projectId: input.projectId,
     sessionId: input.sessionId,
     choice: input.checkout,
-    runtimeDirectory: input.runtimeDirectory ?? join(homedir(), '.argo'),
+    runtimeDirectory: input.runtimeDirectory,
   });
   return {
     sessionId: input.sessionId,

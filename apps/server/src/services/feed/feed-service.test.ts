@@ -31,6 +31,7 @@ import { writeJobs } from './writer-job';
 import { writerMachine } from './writer-machine';
 
 let database: Database;
+let runtimeDirectory: string;
 let removeDatabase: () => void;
 let host: Actor<ReturnType<typeof hostMachine>>;
 let controller: AbortController;
@@ -52,6 +53,7 @@ const hostMachine = (writer = writerMachine) =>
         src: 'session',
         input: () => ({
           database,
+          runtimeDirectory,
           adapter: createMockAdapter(),
           kind: 'existing',
           sessionId: 'session-1',
@@ -157,7 +159,11 @@ const summary = (outputs: FeedSubscribeOutput[]) =>
 beforeEach(() => {
   vi.useFakeTimers();
   controller = new AbortController();
-  ({ database, remove: removeDatabase } = openTestDatabase({ epoch: 3 }));
+  ({
+    database,
+    directory: runtimeDirectory,
+    remove: removeDatabase,
+  } = openTestDatabase({ epoch: 3 }));
   writeJobs(database, [
     {
       type: 'feedRows',
@@ -478,7 +484,7 @@ it(
           {
             id: 'sessions',
             src: 'sessions',
-            input: { database, adapters: [adapter] },
+            input: { database, runtimeDirectory, adapters: [adapter] },
           },
         ],
       }),
@@ -588,7 +594,11 @@ it(
           {
             id: 'sessions',
             src: 'sessions',
-            input: { database, adapters: [createMockAdapter()] },
+            input: {
+              database,
+              runtimeDirectory,
+              adapters: [createMockAdapter()],
+            },
           },
         ],
       }),

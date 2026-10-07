@@ -19,7 +19,7 @@ import type {
 } from '@repo/contracts';
 import { permissionOptions } from '@repo/contracts';
 import { feedRow, turn } from '@repo/db/schema';
-import { listBranches } from '@repo/git';
+import { listBranches, sessionBranch } from '@repo/git';
 import { createMockAdapter, type MockAgentStream } from '@repo/mocks/agent';
 import { mockClis } from '@repo/mocks/cli';
 import {
@@ -918,7 +918,7 @@ it.each(
           : {
               type: 'worktree',
               path: path.join(root.home, 'worktrees', 'project-1', sessionId),
-              branch: `argo/${sessionId}`,
+              branch: sessionBranch(sessionId),
             },
     });
     expect(

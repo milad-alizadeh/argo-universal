@@ -17,10 +17,11 @@ import { sessionMachine } from './session-machine';
 
 const registryModelMachine = createRegistryModelMachine(false);
 const registryGraphMachine = createRegistryModelMachine(true);
-const { database, remove } = openTestDatabase();
+const { database, directory: runtimeDirectory, remove } = openTestDatabase();
 afterAll(remove);
 const input: RegistryInput = {
   database,
+  runtimeDirectory,
   adapters: [registryModelAdapter],
 };
 // Two ids exercise duplicate opens, removal with another Session left, and the last Session stopping.
@@ -54,6 +55,7 @@ const events: RegistryEvent[] = [
         input: {
           kind: 'existing',
           database,
+          runtimeDirectory,
           adapter: registryModelAdapter,
           sessionId,
         },

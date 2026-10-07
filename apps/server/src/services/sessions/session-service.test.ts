@@ -5,6 +5,7 @@ import type { AgentProbe, VendorCommand } from '@repo/agents';
 import { appRouter } from '@repo/api';
 import type { SessionNewInput } from '@repo/contracts';
 import { turn } from '@repo/db/schema';
+import { sessionBranch } from '@repo/git';
 import {
   createMockAdapter,
   type MockAgentScript,
@@ -207,7 +208,7 @@ it('creates the Checkout, starts the Agent with the chosen options and runs the 
       checkout: {
         type: 'worktree',
         path: expect.stringContaining(sessionId),
-        branch: `argo/${sessionId}`,
+        branch: sessionBranch(sessionId),
       },
     }),
   );
@@ -301,10 +302,18 @@ it('defaults the checkout choice to a worktree from the current branch, and the 
 });
 
 it('returns after dispatching a config choice and delivers later changes through the Feed', async () => {
-  const { caller, streams, configOptions, services } = openServer({
+  const { caller, root, streams, configOptions, services } = openServer({
     applyConfigOptions: false,
   });
   const sessionId = 'session-1';
+  root.system.get('sessions').send({
+    type: 'sessions.open',
+    sessionId,
+    agent: 'mock',
+  });
+  await waitFor(root.system.get(`session:${sessionId}`), (snapshot) =>
+    snapshot.can({ type: 'session.prompt', turnId: 'ready', content: [] }),
+  );
   const controller = new AbortController();
   cleanups.push(() => controller.abort());
   const updates = services.feed.subscribe(
@@ -391,8 +400,9 @@ it('rejects unknown Sessions and input that breaks the contract', async () => {
   ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
 });
 
-it('opens a stored Session when its Feed is subscribed, and sends its live config options', async () => {
-  const { services } = openServer();
+it('reads a stored Session snapshot without opening an actor when its Feed is subscribed', async () => {
+  const { root, services } = openServer();
+  expect(root.system.get('session:session-1')).toBeUndefined();
   const controller = new AbortController();
   cleanups.push(() => controller.abort());
   const caller = appRouter.createCaller(
@@ -406,8 +416,9 @@ it('opens a stored Session when its Feed is subscribed, and sends its live confi
   const iterator = updates[Symbol.asyncIterator]();
   expect((await iterator.next()).value).toMatchObject({
     type: 'snapshot',
-    snapshot: { configOptions: [{ configId: 'model', currentValue: 'small' }] },
+    snapshot: { configOptions: [] },
   });
+  expect(root.system.get('session:session-1')).toBeUndefined();
   controller.abort();
   await iterator.return?.();
 });
