@@ -36,7 +36,9 @@ type ServerEvent =
   | { type: 'server.retry' }
   | { type: 'app.quit' };
 
-export type ServerEmitted = { type: 'server.ready'; address: ServerAddress };
+export type ServerEmitted =
+  | { type: 'server.ready'; address: ServerAddress }
+  | { type: 'server.failed'; failure: string | null };
 
 export interface SpawnInput extends ServerInput {
   parent: ActorRef<Snapshot<unknown>, SupervisorReport>;
@@ -92,6 +94,9 @@ const serverSetup = setup({
     announceReady: enqueueActions(({ context, enqueue }) => {
       if (context.address)
         enqueue.emit({ type: 'server.ready', address: context.address });
+    }),
+    announceFailure: enqueueActions(({ context, enqueue }) => {
+      enqueue.emit({ type: 'server.failed', failure: context.failure });
     }),
     signalOwnedSupervisor: ({ context }) => {
       signalSupervisor(requireOwnedPid(context));
@@ -295,6 +300,7 @@ export const serverConnectionMachine = serverSetup.createMachine({
     abandoning: waitingForSupervisorExit('#serverConnection.failed'),
     ready: { entry: 'announceReady' },
     failed: {
+      entry: 'announceFailure',
       on: {
         'server.retry': [
           { guard: 'ownsSupervisor', target: 'retrying' },

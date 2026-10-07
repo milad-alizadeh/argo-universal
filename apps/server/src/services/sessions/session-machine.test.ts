@@ -452,6 +452,7 @@ const events = [
   { type: 'xstate.error.actor.discardCheckout', error: 'Could not remove' },
   { type: 'xstate.done.actor.loadSession', output: data },
   { type: 'xstate.error.actor.loadSession', error: 'Could not load' },
+  { type: 'xstate.error.actor.feed', error: 'Feed failed' },
   ready,
   { type: 'session.prompt', turnId: 'turn-1', content: [] },
   { type: 'session.setConfigOption', configId: 'mode', value: 'plan' },
@@ -583,6 +584,10 @@ it.each(paths.map((path, index) => [index, path] as const))(
             stream.send(event as MockAgentStreamEvent);
           else sessionActor.send(event);
           await vi.advanceTimersByTimeAsync(0);
+          if (String(event.type) === 'xstate.error.actor.feed')
+            expect(sessionActor.getSnapshot().output).toEqual({
+              failure: 'Feed failed',
+            });
         },
       ]),
     );

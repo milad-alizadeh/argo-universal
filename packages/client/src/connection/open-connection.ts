@@ -18,6 +18,10 @@ function waitForAttempt(connection: ConnectionActor) {
       resolve();
     });
     const stopped = connection.subscribe({
+      error: (error) => {
+        settled();
+        reject(error);
+      },
       complete: () => {
         settled();
         reject(new Error('The Connection is closed'));

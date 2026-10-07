@@ -33,9 +33,12 @@ import { createActor, fromCallback, fromPromise, waitFor } from 'xstate';
 import { insertSession, openTestDatabase } from '#mocks/database';
 import { initTestRepository } from '#mocks/git';
 import { liveHeaderMocks } from '#mocks/live-header';
+import { feedMachine } from '../services/feed/feed-machine';
 import type { writerMachine } from '../services/feed/writer-machine';
 import { createServerServices } from '../services/server-services';
+import { registryMachine } from '../services/sessions/registry-machine';
 import type { SessionActorRef } from '../services/sessions/session-machine';
+import { sessionMachine } from '../services/sessions/session-machine';
 import type { HttpServerOptions } from './http-server';
 import { engineMachine } from './machine';
 
@@ -48,17 +51,20 @@ function startEngine({
   adapter,
   home = '/unused',
   closeDatabase = () => {},
+  sessions = registryMachine,
 }: {
   database?: ReturnType<typeof openTestDatabase>['database'];
   adapter: AgentAdapter;
   home?: string;
   closeDatabase?: () => void;
+  sessions?: typeof registryMachine;
 }) {
   let services: Services | undefined;
   const machine = engineMachine.provide({
     actors: {
       ...(database && { openDatabase: fromPromise(async () => database) }),
       processSignals: fromCallback(() => {}),
+      sessions,
       startHttpServer: fromPromise(
         async ({ input }: { input: HttpServerOptions }) => {
           services = createServerServices({
@@ -729,8 +735,10 @@ async function startNewSessionEngine(
   {
     recording,
     availability,
+    sessions,
     searchPath = (bin) => `${bin}${path.delimiter}${process.env.PATH ?? ''}`,
   }: {
+    sessions?: typeof registryMachine;
     recording?: string;
     availability?: 'available' | 'not_installed' | 'not_signed_in';
     searchPath?: (bin: string) => string;
@@ -752,7 +760,12 @@ async function startNewSessionEngine(
   vi.stubEnv('PATH', searchPath(bin));
   const { database, remove } = openTestDatabase({}, project);
   onTestFinished(remove);
-  const { engine, createCaller } = startEngine({ database, adapter, home });
+  const { engine, createCaller } = startEngine({
+    database,
+    adapter,
+    home,
+    sessions,
+  });
   return {
     project,
     home,
@@ -1486,3 +1499,78 @@ it('stops a started Engine when the test finishes', () => {
   started = startEngine({ database, adapter: createMockAdapter() }).engine;
   expect(started.getSnapshot().status).toBe('active');
 });
+
+for (const adapter of agentAdapters)
+  it(`keeps other ${adapter.agent} Sessions usable after a Feed actor fails`, async () => {
+    const failure = new Error('Feed failed on its first change');
+    const sessions = registryMachine.provide({
+      actors: {
+        session: sessionMachine.provide({
+          actors: {
+            feed: feedMachine.provide({
+              actions: {
+                sendToWriter: ({ context, system }, { job }) => {
+                  if (context.sessionId === 'session-broken') throw failure;
+                  system
+                    .get('databaseWriter')
+                    .send({ type: 'writer.write', job });
+                },
+              },
+            }),
+          },
+        }),
+      },
+    });
+    const root = await startNewSessionEngine(adapter, { sessions });
+    insertSession(root.database, {
+      id: 'session-broken',
+      agent: adapter.agent,
+      checkoutPath: root.project,
+    });
+    insertSession(root.database, {
+      id: 'session-2',
+      agent: adapter.agent,
+      checkoutPath: root.project,
+    });
+    const controller = new AbortController();
+    onTestFinished(() => controller.abort());
+    const caller = await root.createCaller(controller.signal);
+    const list = (await caller.session.listUpdates())[Symbol.asyncIterator]();
+    await list.next();
+    const feed = (
+      await caller.feed.subscribe({ sessionId: 'session-broken', after: null })
+    )[Symbol.asyncIterator]();
+    expect((await feed.next()).value).toMatchObject({ type: 'snapshot' });
+    const rejectedFeed = expect(feed.next()).rejects.toThrow(failure.message);
+    const engineErrors: unknown[] = [];
+    root.engine.subscribe({ error: (error) => engineErrors.push(error) });
+    await caller.session.prompt({
+      sessionId: 'session-broken',
+      prompt: [{ type: 'text', text: 'First Session' }],
+    });
+    await rejectedFeed;
+    await expect
+      .poll(() => root.engine.system.get('session:session-broken'))
+      .toBeUndefined();
+    await caller.session.prompt({
+      sessionId: 'session-2',
+      prompt: [{ type: 'text', text: 'Finish this Turn' }],
+    });
+    await expect
+      .poll(async () => {
+        const snapshot = await readSnapshot(root.createCaller, 'session-2');
+        return snapshot.state;
+      })
+      .toBe('idle');
+    await expect
+      .poll(async () =>
+        (
+          await caller.feed.page({ sessionId: 'session-2', direction: 'tail' })
+        ).rows.some((row) => row.sessionUpdate === 'agent_message'),
+      )
+      .toBe(true);
+    expect(root.engine.getSnapshot().status).toBe('active');
+    expect(engineErrors).toEqual([]);
+    controller.abort();
+    await list.return?.();
+  });
