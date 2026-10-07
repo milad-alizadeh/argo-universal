@@ -1,7 +1,9 @@
-import type {
-  FeedPageOutput,
-  FeedSubscribeOutput,
-  SessionUpdate,
+import {
+  type FeedPageOutput,
+  type FeedSubscribeOutput,
+  readFeedField,
+  type SessionUpdate,
+  writeFeedField,
 } from '@repo/contracts';
 
 // The rows an App holds for one Session: a window of the newest rows, kept in sync by revision (ADR 0007).
@@ -87,32 +89,6 @@ export function mergeOlderPage(
   };
 }
 
-// The value at a path of keys such as `content.0.text`, or undefined when the path leaves the object.
-function valueAtPath(value: unknown, path: readonly string[]): unknown {
-  let current = value;
-  for (const key of path) {
-    if (current === null || typeof current !== 'object') return undefined;
-    current = (current as Record<string, unknown>)[key];
-  }
-  return current;
-}
-
-// A copy of the value with the text set at the path.
-function withTextAtPath(
-  value: unknown,
-  [key, ...rest]: readonly string[],
-  text: string,
-): unknown {
-  if (key === undefined) return text;
-  if (Array.isArray(value)) {
-    const copy = [...value];
-    copy[Number(key)] = withTextAtPath(value[Number(key)], rest, text);
-    return copy;
-  }
-  const record = value as Record<string, unknown>;
-  return { ...record, [key]: withTextAtPath(record[key], rest, text) };
-}
-
 // Swaps in a held row's new revision.
 function replaceHeldRow(feed: FeedState, revised: SessionUpdate): FeedState {
   return {
@@ -160,12 +136,12 @@ export function applySubscriptionEvent(
       } as SessionUpdate),
     };
   const path = event.field.split('.');
-  const heldText = valueAtPath(known, path);
+  const heldText = readFeedField(known, path);
   if (typeof heldText !== 'string' || heldText.length !== event.off)
     return { feed, missingRowId: event.id };
   return {
     feed: replaceHeldRow(feed, {
-      ...(withTextAtPath(known, path, heldText + event.text) as SessionUpdate),
+      ...(writeFeedField(known, path, heldText + event.text) as SessionUpdate),
       revision: event.rev,
     }),
   };

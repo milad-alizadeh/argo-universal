@@ -1,3 +1,4 @@
+// jscpd ignores this import list (`ignorePattern` in .jscpd.json): the router and service name the same contracts, a false positive.
 import type {
   SessionAnswerElicitationInput,
   SessionAnswerElicitationOutput,
