@@ -16,6 +16,7 @@ import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
 import { Textarea } from '#primitives/textarea';
 import { useWide } from '../navigation/use-wide';
+import { useContentWide } from './ContentLayout';
 import { FeedMarkdown } from './FeedMarkdown';
 import { Icon } from './Icon';
 import { PlanProposalExpansion } from './PlanProposalExpansion';
@@ -47,7 +48,8 @@ function PlanProposalInteraction({
   onAnswer,
   answered = false,
 }: PlanProposalCardProps) {
-  const wide = useWide();
+  const wide = useContentWide();
+  const windowWide = useWide();
   const card = useRef<View>(null);
   const [planning, setPlanning] = useState(false);
   const [feedback, setFeedback] = useState('');
@@ -78,12 +80,12 @@ function PlanProposalInteraction({
           'max-w-composer rounded-xl border border-input/80 bg-background/80 shadow-composer web:backdrop-blur-composer web:backdrop-saturate-110',
         expanded && 'flex-1 min-h-0',
         expanded &&
-          wide &&
+          windowWide &&
           'rounded-xl border border-input/80 bg-background shadow-composer',
-        expanded && !wide && 'bg-popover',
+        expanded && !windowWide && 'bg-popover',
       )}
     >
-      {expanded && !wide && (
+      {expanded && !windowWide && (
         <View className="items-center pt-1.5 pb-2" aria-hidden>
           <View className="w-9 h-1.25 rounded-full bg-muted-foreground/40" />
         </View>
@@ -95,7 +97,11 @@ function PlanProposalInteraction({
           answered && 'opacity-50',
         )}
       >
-        <View className={expanded ? 'px-4 pt-2 pb-2 wide:pt-4' : undefined}>
+        <View
+          className={
+            expanded ? cn('px-4 pb-2', windowWide ? 'pt-4' : 'pt-2') : undefined
+          }
+        >
           <View className="flex-row items-center gap-1.5">
             <Icon as={MapTrifoldIcon} className="text-muted-foreground" />
             <Text className="min-w-0 flex-1 text-sm leading-5.5 font-semibold">
@@ -139,7 +145,7 @@ function PlanProposalInteraction({
         className={cn(
           'flex-row items-center gap-1 px-2 pb-2 pt-3',
           planning || answered ? 'justify-between' : 'justify-end',
-          expanded && !wide && 'px-4',
+          expanded && !windowWide && 'px-4',
         )}
       >
         {answered && (
@@ -156,7 +162,12 @@ function PlanProposalInteraction({
               disabled={answered}
               onPress={() => setPlanning(!planning)}
               variant={wide ? 'ghost' : 'secondary'}
-              className="h-11 sm:h-11 flex-1 rounded-lg wide:h-8 wide:sm:h-8 wide:flex-none wide:rounded-md px-3"
+              className={cn(
+                'px-3',
+                wide
+                  ? 'h-8 sm:h-8 flex-none rounded-md'
+                  : 'h-11 sm:h-11 flex-1 rounded-lg',
+              )}
             >
               <Text className={planning ? 'text-muted-foreground' : undefined}>
                 {planning ? 'Back' : 'Keep planning'}
@@ -165,7 +176,12 @@ function PlanProposalInteraction({
             <Button
               onPress={submit}
               disabled={answered || (planning && !feedback.trim())}
-              className="h-11 sm:h-11 flex-1 rounded-lg wide:h-8 wide:sm:h-8 wide:flex-none wide:rounded-md pl-3 pr-3 wide:pr-1.5"
+              className={cn(
+                'pl-3',
+                wide
+                  ? 'h-8 sm:h-8 flex-none rounded-md pr-1.5'
+                  : 'h-11 sm:h-11 flex-1 rounded-lg pr-3',
+              )}
             >
               <Text>{planning ? 'Keep planning' : 'Approve'}</Text>
               {wide && (

@@ -1,10 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { expect, screen, waitFor } from 'storybook/test';
+import { expect, fn, screen, waitFor, within } from 'storybook/test';
+import { ComposerMock } from '../../mocks/composer-mock';
 import { DesktopShellMock } from '../../mocks/desktop-shell-mock';
 import { expectFadeColor } from '../../mocks/fade-color';
 import { InspectorFilesMock } from '../../mocks/inspector-files-mock';
+import { shortPlanProposal } from '../../mocks/plan-proposal-mock';
 import { UpdatingShellMock } from '../../mocks/updating-shell-mock';
+import { PlanProposalRegion } from './PlanProposalRegion';
 
 const meta = {
   title: 'Tests/DesktopShell',
@@ -18,6 +21,167 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+export const MainContentUsesAvailableWidth: Story = {
+  render: () => (
+    <View className="h-[700px] w-full">
+      <DesktopShellMock showInspectorControls>
+        <PlanProposalRegion testID="responsive-main-content">
+          <View className="flex-1" />
+          <View className="items-center px-4 pb-4">
+            <ComposerMock
+              sessionStarted
+              draft={{ text: 'Keep my draft', images: [] }}
+              onDraftChange={fn()}
+              onAttachImages={fn()}
+              onSend={fn()}
+              planProposal={{ proposal: shortPlanProposal, onAnswer: fn() }}
+            />
+          </View>
+        </PlanProposalRegion>
+      </DesktopShellMock>
+    </View>
+  ),
+  play: async ({ canvas, userEvent }) => {
+    const { page } = await import('vitest/browser');
+    await page.viewport(1440, 844);
+    const content = canvas.getByTestId('responsive-main-content');
+    const approve = () => canvas.getByRole('button', { name: 'Approve' });
+    await waitFor(() =>
+      expect(approve().getBoundingClientRect().height).toBe(32),
+    );
+    await expect(canvas.getByText('session', { exact: true })).toBeVisible();
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Open Inspector' }),
+    );
+    await waitFor(() =>
+      expect(content.getBoundingClientRect().width).toBeLessThan(720),
+    );
+    await waitFor(() =>
+      expect(approve().getBoundingClientRect().height).toBe(44),
+    );
+    await expect(
+      canvas.queryByText('session', { exact: true }),
+    ).not.toBeInTheDocument();
+    const keepPlanning = canvas.getByRole('button', { name: 'Keep planning' });
+    await expect(keepPlanning.getBoundingClientRect().width).toBe(
+      approve().getBoundingClientRect().width,
+    );
+    await expect(approve().getBoundingClientRect().right).toBeLessThanOrEqual(
+      content.getBoundingClientRect().right,
+    );
+    await userEvent.click(canvas.getByRole('button', { name: 'Expand plan' }));
+    const dialog = await within(document.body).findByRole('dialog', {
+      name: 'Expanded plan',
+    });
+    await expect(dialog.getBoundingClientRect().left).toBeGreaterThanOrEqual(
+      content.getBoundingClientRect().left,
+    );
+    await expect(dialog.getBoundingClientRect().right).toBeLessThanOrEqual(
+      content.getBoundingClientRect().right,
+    );
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: 'Collapse plan' }),
+    );
+    await userEvent.click(canvas.getByRole('button', { name: 'Hide sidebar' }));
+    await waitFor(() =>
+      expect(content.getBoundingClientRect().width).toBeGreaterThanOrEqual(720),
+    );
+    await waitFor(() =>
+      expect(approve().getBoundingClientRect().height).toBe(32),
+    );
+    await expect(canvas.getByText('session', { exact: true })).toBeVisible();
+    const inspectorDivider = canvas.getByRole('separator', {
+      name: 'Resize Inspector',
+    });
+    inspectorDivider.focus();
+    await userEvent.keyboard('{ArrowLeft}'.repeat(20));
+    await waitFor(() =>
+      expect(content.getBoundingClientRect().width).toBeLessThan(720),
+    );
+    await waitFor(() =>
+      expect(approve().getBoundingClientRect().height).toBe(44),
+    );
+    await userEvent.keyboard('{ArrowRight}'.repeat(20));
+    await waitFor(() =>
+      expect(content.getBoundingClientRect().width).toBeGreaterThanOrEqual(720),
+    );
+    await waitFor(() =>
+      expect(approve().getBoundingClientRect().height).toBe(32),
+    );
+    await userEvent.click(canvas.getByRole('button', { name: 'Show sidebar' }));
+    await waitFor(() =>
+      expect(approve().getBoundingClientRect().height).toBe(44),
+    );
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Close Inspector' }),
+    );
+    await waitFor(() =>
+      expect(approve().getBoundingClientRect().height).toBe(32),
+    );
+    await expect(window.innerWidth).toBe(1440);
+  },
+};
+
+export const ComposerUsesAvailableWidth: Story = {
+  args: {
+    children: (
+      <View
+        className="flex-1 justify-end px-4 pb-4"
+        testID="responsive-composer"
+      >
+        <ComposerMock
+          sessionStarted
+          draft={{ text: 'Keep my draft', images: [] }}
+          onDraftChange={fn()}
+          onAttachImages={fn()}
+          onSend={fn()}
+        />
+      </View>
+    ),
+  },
+  play: async ({ canvas, userEvent }) => {
+    const { page } = await import('vitest/browser');
+    await page.viewport(1440, 844);
+    const mode = canvas.getByRole('button', { name: 'Mode' });
+    await waitFor(() =>
+      expect(mode.getBoundingClientRect().width).toBeGreaterThan(28),
+    );
+    await expect(canvas.getByTestId('composer-agent-icon')).toBeVisible();
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Open Inspector' }),
+    );
+    await waitFor(() => expect(mode.getBoundingClientRect().width).toBe(28));
+    await expect(
+      canvas.queryByTestId('composer-agent-icon'),
+    ).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByText('session', { exact: true }),
+    ).not.toBeInTheDocument();
+    const content = canvas
+      .getByTestId('responsive-composer')
+      .getBoundingClientRect();
+    for (const name of ['Mode', 'Usage', 'Context window', 'Send']) {
+      const control = canvas
+        .getByRole('button', { name })
+        .getBoundingClientRect();
+      await expect(control.left).toBeGreaterThanOrEqual(content.left);
+      await expect(control.right).toBeLessThanOrEqual(content.right);
+    }
+    await expect(canvas.getByRole('textbox', { name: 'Message' })).toHaveValue(
+      'Keep my draft',
+    );
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Close Inspector' }),
+    );
+    await waitFor(() =>
+      expect(mode.getBoundingClientRect().width).toBeGreaterThan(28),
+    );
+    await expect(canvas.getByTestId('composer-agent-icon')).toBeVisible();
+    await expect(canvas.getByText('session', { exact: true })).toBeVisible();
+    await expect(window.innerWidth).toBe(1440);
+  },
+};
 
 export const SectionsAndSidebar: Story = {
   play: async ({ canvas, userEvent }) => {

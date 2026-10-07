@@ -22,6 +22,7 @@ export function DesktopShellMock({
   inspectorState = 'closed',
   showInspectorControls = false,
   inspector,
+  children,
 }: Partial<DesktopShellProps> & { showInspectorControls?: boolean }) {
   const [section, setSection] = useState(selectedSection);
   const [shown, setShown] = useState(sidebarShown);
@@ -96,9 +97,11 @@ export function DesktopShellMock({
           </DropdownMenu>
         }
       >
-        <View className="flex-1 p-4">
-          <Text testID="detail-content">{title} detail</Text>
-        </View>
+        {children ?? (
+          <View className="flex-1 p-4">
+            <Text testID="detail-content">{title} detail</Text>
+          </View>
+        )}
       </DesktopShell>
       {showInspectorControls && (
         <Button

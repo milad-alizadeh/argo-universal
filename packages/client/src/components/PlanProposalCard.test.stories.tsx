@@ -28,15 +28,15 @@ export const ShortPlan: Story = {
       await settleViewport(width);
       await expect(canvas.getByText('Approve this plan?')).toBeVisible();
       await expect(canvas.getByText(/then verify its contents/)).toBeVisible();
-      if (width === 390) {
-        await expect(
-          canvas.queryByText('session', { exact: true }),
-        ).not.toBeInTheDocument();
-      } else {
-        await expect(
-          canvas.getByText('session', { exact: true }),
-        ).toBeVisible();
-      }
+      await waitFor(() => {
+        if (width === 390) {
+          expect(
+            canvas.queryByText('session', { exact: true }),
+          ).not.toBeInTheDocument();
+        } else {
+          expect(canvas.getByText('session', { exact: true })).toBeVisible();
+        }
+      });
       await expect(canvas.getByText('hello.txt', { exact: true })).toHaveStyle({
         fontSize: '14px',
       });

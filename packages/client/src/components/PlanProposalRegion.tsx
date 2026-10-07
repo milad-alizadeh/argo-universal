@@ -1,7 +1,8 @@
 import { PortalHost } from '@rn-primitives/portal';
 import { createContext, type ReactNode, useId } from 'react';
-import { View, type ViewProps } from 'react-native';
+import type { ViewProps } from 'react-native';
 import { cn } from '#lib/utils';
+import { ContentLayout } from './ContentLayout';
 
 export const PlanProposalHost = createContext<string | undefined>(undefined);
 
@@ -14,10 +15,10 @@ export function PlanProposalRegion({
   const host = useId();
   return (
     <PlanProposalHost.Provider value={host}>
-      <View {...props} className={cn('relative flex-1 min-h-0', className)}>
+      <ContentLayout {...props} className={cn('relative', className)}>
         {children}
         <PortalHost name={host} />
-      </View>
+      </ContentLayout>
     </PlanProposalHost.Provider>
   );
 }

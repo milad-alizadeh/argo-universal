@@ -12,7 +12,6 @@ import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
 import { Textarea } from '#primitives/textarea';
-import { useWide } from '../navigation/use-wide';
 import {
   ComposerAgentModelControl,
   ComposerCheckoutControl,
@@ -27,6 +26,7 @@ import {
   type ComposerStatusProps,
   ComposerWorkChips,
 } from './ComposerStatus';
+import { useContentWide } from './ContentLayout';
 import { Icon, IconSpinner } from './Icon';
 import {
   PlanProposalCard,
@@ -91,7 +91,7 @@ export function Composer({
   error,
   phoneCheckout = true,
 }: ComposerProps) {
-  const wide = useWide();
+  const wide = useContentWide();
   const [attachHighlighted, setAttachHighlighted] = useState(false);
   const [textHeight, setTextHeight] = useState(
     Math.min(4, draft.text.split('\n').length) * 20,
@@ -376,7 +376,7 @@ export function Composer({
                 size="icon"
                 className={cn(
                   'size-7 sm:size-7 rounded-full',
-                  !showStop && 'wide:shadow-none!',
+                  !showStop && wide && 'shadow-none!',
                   (sending || showStop) && 'opacity-100',
                   !canSend && !sending && !showStop && 'opacity-35',
                 )}
@@ -404,13 +404,13 @@ export function Composer({
         >
           <View className="flex-1 min-h-0 flex-row items-center pl-0.5 gap-1">
             {status && (
-              <View className={status.plan?.length ? 'hidden wide:flex' : ''}>
+              <View>
                 <ComposerStatusControls status={status} disabled={inactive} />
               </View>
             )}
             <View className="flex-1" />
             {configuration && (
-              <View className="hidden wide:flex">
+              <View>
                 <ComposerCheckoutControl
                   checkout={configuration.checkout}
                   disabled={inactive}
