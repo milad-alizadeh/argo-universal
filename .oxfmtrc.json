@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
-  // Owner's style, as Biome wrote it before ADR-0017: two spaces, single quotes, 80 columns.
+  // Owner's style: two spaces, single quotes, 80 columns (ADR-0017).
   "useTabs": false,
   "tabWidth": 2,
   "printWidth": 80,
@@ -15,7 +15,7 @@
   "objectWrap": "preserve",
   "endOfLine": "lf",
   "sortPackageJson": false,
-  // Biome's organizeImports order: Node builtins, packages, `#` subpath imports, then relative paths, with no blank lines.
+  // One import block: Node builtins, packages, `#` subpath imports, then relative paths.
   "sortImports": {
     "newlinesBetween": false,
     "groups": [
@@ -28,7 +28,7 @@
   },
   "overrides": [
     {
-      // Biome kept double quotes in CSS, and YAML keeps the double quotes it was written with.
+      // CSS and YAML keep double quotes.
       "files": ["*.css", "*.yaml", "*.yml"],
       "options": { "singleQuote": false }
     },

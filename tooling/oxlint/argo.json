@@ -1,6 +1,6 @@
 {
   "$schema": "../../node_modules/oxlint/configuration_schema.json",
-  // Argo's rules on top of the Prickles pack (prickles.json): what Biome enforced before ADR-0017, and ADR-0016's applications.
+  // Argo's rules on top of the Prickles pack (prickles.json), and ADR-0016's applications; ADR-0017 says where each comes from.
   // A rule here may be stricter than the pack, never looser; the pack's caps change only with the pack.
   "plugins": [
     "typescript",
@@ -15,11 +15,11 @@
     "./plugin/index.ts",
     { "name": "playwright", "specifier": "eslint-plugin-playwright" }
   ],
-  // Biome's recommended set, which Argo ran before ADR-0017.
+  // Code that is outright wrong or useless.
   "categories": { "correctness": "error" },
   "settings": { "react": { "version": "19.2.3" } },
   "rules": {
-    // S5: Biome's noMagicNumbers exemptions, which ignore 0, 1, 2, 10, 24 and 60, indexes, enums, defaults and declarations.
+    // S5: 0, 1, 2, 10, 24 and 60, indexes, enums, defaults and declarations are not magic.
     "no-magic-numbers": [
       "error",
       {
