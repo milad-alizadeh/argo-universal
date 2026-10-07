@@ -31,6 +31,7 @@ export function ShellPane({
   });
   const stableContentWidth =
     contentWidth ?? (width > 0 ? width : previous.current.contentWidth);
+  // biome-ignore lint/correctness/useExhaustiveDependencies(transitionKey): a new transition is the trigger to recompute the frame width, not a value the memo reads
   const frameWidth = useMemo(
     () => Math.max(width, previous.current.width, stableContentWidth),
     [width, stableContentWidth, transitionKey],
