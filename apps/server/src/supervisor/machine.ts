@@ -26,6 +26,15 @@ const maxCrashesInWindow = 10;
 const backoffBaseMs = 500;
 const backoffCapMs = 30_000;
 
+// Remembers the port an Engine reports and publishes it in server.json.
+const rememberEngine = [
+  {
+    type: 'setPort',
+    params: ({ event }: { event: { port: number } }) => ({ port: event.port }),
+  },
+  { type: 'writeServerAddress' },
+] as const;
+
 export const supervisorMachine = setup({
   types: {
     input: {} as SupervisorInput,
@@ -107,10 +116,7 @@ export const supervisorMachine = setup({
       on: {
         'engine.ready': {
           target: 'running',
-          actions: [
-            { type: 'setPort', params: ({ event }) => ({ port: event.port }) },
-            { type: 'writeServerAddress' },
-          ],
+          actions: rememberEngine,
         },
         'engine.exit': { target: 'backingOff' },
       },
@@ -123,10 +129,7 @@ export const supervisorMachine = setup({
         'engine.ready': {
           target: 'running',
           reenter: true,
-          actions: [
-            { type: 'setPort', params: ({ event }) => ({ port: event.port }) },
-            { type: 'writeServerAddress' },
-          ],
+          actions: rememberEngine,
         },
         'engine.exit': { target: 'backingOff' },
       },
