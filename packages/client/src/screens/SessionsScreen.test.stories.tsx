@@ -669,3 +669,151 @@ export const OfflineDoesNotShowLiveUpdatesStopped: Story = {
       await expect(canvas.queryByRole('alert')).toBeNull();
     }),
 };
+
+const streamingCatalogs = agentsList.map((agent) => {
+  const row = activeSessions.sessions.find(
+    (session) => session.agent === agent.agent && session.status === 'idle',
+  );
+  if (!row)
+    throw new Error(
+      `Recorded catalog needs an idle Session for ${agent.label}.`,
+    );
+  return {
+    row,
+    pages: Array.from({ length: 60 }, (_, index) => ({
+      ...row,
+      sessionId: `${row.sessionId}:page-${index}`,
+      title: `${agent.label} Session ${index}`,
+      activityAt: row.activityAt + 60 - index,
+    })),
+  };
+});
+if (streamingCatalogs.length !== 2)
+  throw new Error('Recorded catalog needs both Agents for streaming lists.');
+
+function burstRefetch(width: number, agentIndex: 0 | 1): Story {
+  const catalog = streamingCatalogs[agentIndex];
+  if (!catalog) throw new Error('Recorded catalog needs both Agents.');
+  const updates = createSessionListUpdatesMock({ sessions: [catalog.row] });
+  const newestTitle = `${catalog.row.title} — update 30`;
+  return {
+    parameters: { trpc: updates.fixtures },
+    beforeEach: () => {
+      updates.reset();
+      return () => updates.reset();
+    },
+    play: async ({ canvas }) => {
+      await settleViewport(width);
+      await expect(await canvas.findByText(catalog.row.title)).toBeVisible();
+      await waitFor(() => expect(updates.calls.active).toBe(0));
+      const before = updates.calls.list;
+      updates.hold();
+      for (let index = 1; index <= 30; index++)
+        updates.publish({
+          type: 'changed',
+          session: {
+            ...catalog.row,
+            title: `${catalog.row.title} — update ${index}`,
+            activityAt: catalog.row.activityAt + index,
+          },
+        });
+      await waitFor(() => expect(updates.calls.delivered).toBe(30));
+      await expect(updates.calls.list - before).toBeLessThanOrEqual(2);
+      updates.release();
+      await expect(await canvas.findByText(newestTitle)).toBeVisible();
+      await waitFor(() => expect(updates.calls.active).toBe(0));
+      await expect(updates.calls.list - before).toBeGreaterThan(0);
+      await expect(updates.calls.list - before).toBeLessThanOrEqual(2);
+      await expect(canvas.queryByText(catalog.row.title)).toBeNull();
+      await expect(
+        canvas.queryByText(`${catalog.row.title} — update 1`),
+      ).toBeNull();
+    },
+  };
+}
+export const BurstRefetchPhoneFirstAgent = burstRefetch(layoutWidths.phone, 0);
+export const BurstRefetchPhoneSecondAgent = burstRefetch(layoutWidths.phone, 1);
+export const BurstRefetchWideFirstAgent = burstRefetch(layoutWidths.wide, 0);
+export const BurstRefetchWideSecondAgent = burstRefetch(layoutWidths.wide, 1);
+
+function streamingPagination(width: number, agentIndex: 0 | 1): Story {
+  const catalog = streamingCatalogs[agentIndex];
+  const first = catalog?.pages[0];
+  const last = catalog?.pages.at(-1);
+  if (!catalog || !first || !last)
+    throw new Error('Recorded catalog needs two pages for both Agents.');
+  const updates = createSessionListUpdatesMock({ sessions: catalog.pages });
+  const newestTitle = `${first.title} — streaming`;
+  return {
+    parameters: { trpc: updates.fixtures },
+    beforeEach: () => {
+      updates.reset();
+      return () => updates.reset();
+    },
+    play: async ({ canvas }) => {
+      await settleViewport(width);
+      await expect(await canvas.findByText(first.title)).toBeVisible();
+      await waitFor(() => expect(updates.calls.active).toBe(0));
+      await expect(updates.calls.nextPage).toBe(0);
+      await expect(canvas.queryByText(last.title)).toBeNull();
+      updates.hold();
+      updates.publish({
+        type: 'changed',
+        session: { ...first, status: 'running', activity: 'Streaming work' },
+      });
+      await waitFor(() => expect(updates.calls.delivered).toBe(1));
+      await waitFor(() => expect(updates.calls.active).toBe(1));
+      const scroll = canvas.getByTestId('sessions-scroll');
+      scroll.scrollTop = scroll.scrollHeight;
+      await waitFor(() => expect(updates.calls.nextPage).toBeGreaterThan(0));
+      const spinner = await canvas.findByRole('progressbar', {
+        name: 'Loading more Sessions',
+      });
+      await expect(spinner).toBeVisible();
+      await waitFor(() => {
+        scroll.scrollTop = scroll.scrollHeight;
+        const viewport = scroll.getBoundingClientRect();
+        const indicator = spinner.getBoundingClientRect();
+        expect(indicator.top).toBeGreaterThanOrEqual(viewport.top);
+        expect(indicator.bottom).toBeLessThanOrEqual(viewport.bottom);
+      });
+      updates.publish({
+        type: 'changed',
+        session: {
+          ...first,
+          status: 'running',
+          title: newestTitle,
+          activity: 'Still streaming work',
+        },
+      });
+      await waitFor(() => expect(updates.calls.delivered).toBe(2));
+      updates.release();
+      await waitFor(() => {
+        scroll.scrollTop = scroll.scrollHeight;
+        expect(canvas.getByText(last.title)).toBeVisible();
+      });
+      await waitFor(() => expect(updates.calls.active).toBe(0));
+      await expect(canvas.queryByRole('progressbar')).toBeNull();
+      scroll.scrollTop = 0;
+      await expect(await canvas.findByText(newestTitle)).toBeVisible();
+      await expect(canvas.queryByText(first.title)).toBeNull();
+      await expect(canvas.queryByRole('alert')).toBeNull();
+    },
+  };
+}
+export const StreamingPaginationPhoneFirstAgent = streamingPagination(
+  layoutWidths.phone,
+  0,
+);
+export const StreamingPaginationPhoneSecondAgent = streamingPagination(
+  layoutWidths.phone,
+  1,
+);
+export const StreamingPaginationWideFirstAgent = streamingPagination(
+  layoutWidths.wide,
+  0,
+);
+export const StreamingPaginationWideSecondAgent = streamingPagination(
+  layoutWidths.wide,
+  1,
+);
