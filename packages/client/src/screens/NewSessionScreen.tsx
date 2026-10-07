@@ -106,7 +106,29 @@ function useSessionChoices(projectId: string | undefined) {
       setChosenConfigValues({});
     },
     chooseConfigValue: (configId: string, value: string | boolean) =>
-      setChosenConfigValues((values) => ({ ...values, [configId]: value })),
+      setChosenConfigValues((values) => {
+        const next = { ...values, [configId]: value };
+        const option = configOptions.find(
+          (entry) => entry.configId === configId,
+        );
+        if (option?.category !== 'model' || option.type !== 'select')
+          return next;
+        const levels = option.options
+          .flatMap((entry) => ('groupId' in entry ? entry.options : [entry]))
+          .find((choice) => choice.value === value)?._meta
+          ?.argo?.supportedEffortLevels;
+        const effort = configOptions.find(
+          (entry) =>
+            entry.category === 'thought_level' && entry.type === 'select',
+        );
+        if (
+          effort?.type === 'select' &&
+          levels &&
+          !levels.includes(effort.currentValue)
+        )
+          delete next[effort.configId];
+        return next;
+      }),
     chooseNewWorktree: setChosenNewWorktree,
   };
 }

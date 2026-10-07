@@ -29,6 +29,57 @@ const firstAgent = newSessionCatalogs.bothAvailable[0];
 if (!exampleProject || !landingProject || !firstAgent)
   throw new Error('New Session needs two Projects and an Agent.');
 
+const effortModelCases = newSessionCatalogs.bothAvailable.map((agent) => {
+  const model = agent.configOptions.find(
+    (option) => option.category === 'model' && option.type === 'select',
+  );
+  const effort = agent.configOptions.find(
+    (option) => option.category === 'thought_level' && option.type === 'select',
+  );
+  const models =
+    model?.type === 'select'
+      ? model.options.flatMap((entry) =>
+          'groupId' in entry ? entry.options : [entry],
+        )
+      : [];
+  const efforts =
+    effort?.type === 'select'
+      ? effort.options.flatMap((entry) =>
+          'groupId' in entry ? entry.options : [entry],
+        )
+      : [];
+  const currentModel = models.find(
+    (choice) => choice.value === model?.currentValue,
+  );
+  const levels = currentModel?._meta?.argo?.supportedEffortLevels ?? [];
+  const nextModel = models.find((choice) => {
+    const supported = choice._meta?.argo?.supportedEffortLevels;
+    return (
+      supported?.length && levels.some((level) => !supported.includes(level))
+    );
+  });
+  const unsupported = efforts.find(
+    (choice) =>
+      levels.includes(choice.value) &&
+      !nextModel?._meta?.argo?.supportedEffortLevels?.includes(choice.value),
+  );
+  const defaultEffort = efforts.find(
+    (choice) => choice.value === effort?.currentValue,
+  );
+  if (
+    model?.type !== 'select' ||
+    effort?.type !== 'select' ||
+    !nextModel ||
+    !unsupported ||
+    !defaultEffort ||
+    !nextModel._meta?.argo?.supportedEffortLevels?.includes(defaultEffort.value)
+  )
+    throw new Error(
+      `Recorded catalog needs a default effort and models with differing effort levels for ${agent.label}.`,
+    );
+  return { agent, model, effort, nextModel, unsupported, defaultEffort };
+});
+
 const meta = {
   title: 'Tests/NewSessionScreen',
   component: NewSessionScreen,
@@ -413,3 +464,94 @@ export const LoadFailure: Story = {
     await expect(canvas.getByRole('button', { name: 'Retry' })).toBeVisible();
   },
 };
+
+function effortFollowsModel(width: number, agentIndex: number): Story {
+  const recorded = effortModelCases[agentIndex];
+  if (!recorded)
+    throw new Error(
+      'Recorded catalog needs two Agents with model effort levels.',
+    );
+  const { agent, model, effort, nextModel, unsupported, defaultEffort } =
+    recorded;
+  return {
+    parameters: { trpc: { 'agents.list': () => [agent] } },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
+      const trigger = await canvas.findByRole('button', {
+        name: 'Agent and model',
+      });
+      await userEvent.click(trigger);
+      await userEvent.click(
+        await overlay.findByRole('button', {
+          name: `Set effort to ${unsupported.name}`,
+        }),
+      );
+      await expect(
+        overlay.getByRole('slider', { name: 'Effort' }),
+      ).toHaveAttribute('aria-valuetext', unsupported.name);
+      if (width === layoutWidths.phone)
+        await userEvent.click(
+          overlay.getByRole('button', { name: 'Choose model' }),
+        );
+      await userEvent.click(
+        await overlay.findByRole('button', { name: nextModel.name }),
+      );
+      if (width === layoutWidths.wide) {
+        await expect(trigger).toHaveTextContent(defaultEffort.name);
+        await expect(trigger).not.toHaveTextContent(unsupported.name);
+      }
+      await expect(
+        await overlay.findByRole('button', {
+          name: `Set effort to ${defaultEffort.name}`,
+        }),
+      ).toHaveAttribute('aria-pressed', 'true');
+      await expect(
+        overlay.getByRole('slider', { name: 'Effort' }),
+      ).toHaveAttribute('aria-valuetext', defaultEffort.name);
+      await expect(
+        overlay.queryByRole('button', {
+          name: `Set effort to ${unsupported.name}`,
+        }),
+      ).not.toBeInTheDocument();
+      await expect(
+        overlay.queryByRole('switch', { name: 'Fast mode' }),
+      ).not.toBeInTheDocument();
+      await userEvent.keyboard('{Escape}');
+      await userEvent.type(
+        canvas.getByRole('textbox', { name: 'Message' }),
+        'Use this model and effort',
+      );
+      await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
+      await waitFor(() => expect(started).toHaveLength(1));
+      await expect(started[0]?.agent).toBe(agent.agent);
+      await expect(started[0]?.configOptions).toContainEqual({
+        configId: model.configId,
+        value: nextModel.value,
+      });
+      await expect(started[0]?.configOptions).toContainEqual({
+        configId: effort.configId,
+        value: defaultEffort.value,
+      });
+      await expect(started[0]?.configOptions).not.toContainEqual({
+        configId: effort.configId,
+        value: unsupported.value,
+      });
+    },
+  };
+}
+export const EffortFollowsModelPhoneFirstAgent = effortFollowsModel(
+  layoutWidths.phone,
+  0,
+);
+export const EffortFollowsModelPhoneSecondAgent = effortFollowsModel(
+  layoutWidths.phone,
+  1,
+);
+export const EffortFollowsModelWideFirstAgent = effortFollowsModel(
+  layoutWidths.wide,
+  0,
+);
+export const EffortFollowsModelWideSecondAgent = effortFollowsModel(
+  layoutWidths.wide,
+  1,
+);
