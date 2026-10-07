@@ -1,7 +1,7 @@
 import { SessionUpdate } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow } from '@repo/db/schema';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, getTableColumns, sql } from 'drizzle-orm';
 import type { ActorRefFrom } from 'xstate';
 import { z } from 'zod';
 import {
@@ -12,6 +12,21 @@ import {
 import type { writerMachine } from './writer-machine';
 
 type WriterRef = ActorRefFrom<typeof writerMachine>;
+
+export const storedFeedColumns = {
+  ...getTableColumns(feedRow),
+  payload: sql<unknown>`${feedRow.payload}`,
+  sourceRef: sql<unknown>`${feedRow.sourceRef}`,
+};
+
+export function decodeStoredFeedRow<Row extends FeedRowWrite>(row: Row): Row {
+  return {
+    ...row,
+    payload: JSON.parse(String(row.payload)),
+    sourceRef:
+      row.sourceRef === null ? null : JSON.parse(String(row.sourceRef)),
+  };
+}
 
 // The shape version of `payload` in the rows this Server writes.
 export const payloadVersion = 1;
@@ -111,11 +126,11 @@ export function readWrittenRow({
   );
   if (queued) return queued;
   const stored = database
-    .select()
+    .select(storedFeedColumns)
     .from(feedRow)
     .where(and(eq(feedRow.sessionId, sessionId), eq(feedRow.id, id)))
     .get();
-  return stored && fromFeedRow(sessionId, stored);
+  return stored && fromFeedRow(sessionId, decodeStoredFeedRow(stored));
 }
 
 // Higher revision wins; a tie goes to the later input (stored, queued, then in memory).

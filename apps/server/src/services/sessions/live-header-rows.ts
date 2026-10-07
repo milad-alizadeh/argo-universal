@@ -1,9 +1,15 @@
-import type { SessionUpdate } from '@repo/contracts';
+import { runningToolCallStatuses, type SessionUpdate } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow } from '@repo/db/schema';
 import { and, desc, eq, gt, isNull, ne, or, sql } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/sqlite-core';
 import type { ActorRefFrom } from 'xstate';
-import { fromFeedRow, newestRows } from '../feed/feed-row';
+import {
+  decodeStoredFeedRow,
+  fromFeedRow,
+  newestRows,
+  storedFeedColumns,
+} from '../feed/feed-row';
 import { type FeedRowWrite, queuedFeedRows } from '../feed/writer-job';
 import type { writerMachine } from '../feed/writer-machine';
 
@@ -27,6 +33,7 @@ export function createLiveHeaderRowsReader({
   }): { rows: Record<string, SessionUpdate>; rejected: boolean } => {
     if (turnId === null) return { rows: {}, rejected: false };
     const stored = readStoredHeaderRows({ database, sessionId, turnId });
+    const storedRows = new Set(stored);
     const queued = queuedFeedRows(
       writer?.getSnapshot().context.queue ?? [],
       sessionId,
@@ -38,7 +45,12 @@ export function createLiveHeaderRowsReader({
       ).values(),
     ].flatMap((row) => {
       try {
-        return [fromFeedRow(sessionId, row)];
+        return [
+          fromFeedRow(
+            sessionId,
+            storedRows.has(row) ? decodeStoredFeedRow(row) : row,
+          ),
+        ];
       } catch (error) {
         rejected = true;
         rejectedShapes += 1;
@@ -72,14 +84,14 @@ function readStoredHeaderRows({
   turnId: string;
 }): FeedRowWrite[] {
   const latest = database
-    .select()
+    .select(storedFeedColumns)
     .from(feedRow)
     .where(and(eq(feedRow.sessionId, sessionId), eq(feedRow.turnId, turnId)))
     .orderBy(desc(feedRow.revision))
     .limit(1)
     .all();
   const thought = database
-    .select()
+    .select(storedFeedColumns)
     .from(feedRow)
     .where(
       and(
@@ -103,8 +115,23 @@ function readStoredHeaderRows({
     )
     .orderBy(desc(feedRow.position))
     .limit(1);
+  const invalid = alias(feedRow, 'invalid_header_row');
+  const newestInvalid = database
+    .select({ position: invalid.position })
+    .from(invalid)
+    .where(
+      and(
+        eq(invalid.sessionId, sessionId),
+        eq(invalid.sessionUpdate, 'tool_call_update'),
+        eq(invalid.turnId, turnId),
+        gt(invalid.position, sql`coalesce((${previousTool}), -1)`),
+        sql`not json_valid(${invalid.payload})`,
+      ),
+    )
+    .orderBy(desc(invalid.position))
+    .limit(1);
   const tools = database
-    .select()
+    .select(storedFeedColumns)
     .from(feedRow)
     .where(
       and(
@@ -112,7 +139,11 @@ function readStoredHeaderRows({
         eq(feedRow.sessionUpdate, 'tool_call_update'),
         eq(feedRow.turnId, turnId),
         gt(feedRow.position, sql`coalesce((${previousTool}), -1)`),
-        sql`json_extract(${feedRow.payload}, '$.status') in ('pending', 'in_progress')`,
+        sql`case when json_valid(${feedRow.payload})
+          then json_extract(${feedRow.payload}, '$.status') in (${sql.join(
+            runningToolCallStatuses.map((status) => sql`${status}`),
+            sql`, `,
+          )}) else ${feedRow.position} = (${newestInvalid}) end`,
       ),
     )
     .orderBy(desc(feedRow.position))

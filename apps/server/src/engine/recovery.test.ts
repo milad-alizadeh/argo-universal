@@ -17,11 +17,23 @@ import {
   session,
   turn,
 } from '@repo/db/schema';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { sql } from 'drizzle-orm';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  onTestFinished,
+  vi,
+} from 'vitest';
 import { type ActorRefFrom, createActor, waitFor } from 'xstate';
+import { openTestDatabase } from '#mocks/database';
+import { storedFeedColumns } from '../services/feed/feed-row';
 import { type FeedRowWrite, writeJobs } from '../services/feed/writer-job';
 import type { EngineMessage } from '../supervisor/engine-message';
 import { engineMachine } from './machine';
+import { recoverAfterRestart } from './recovery';
 
 let home: string;
 let engine: ActorRefFrom<typeof engineMachine>;
@@ -478,3 +490,45 @@ describe('Engine restart recovery', () => {
     }
   });
 });
+
+it.each(
+  (['open', 'settled'] as const).flatMap((state) => [
+    { state, column: feedRow.payload, field: 'payload' },
+    { state, column: feedRow.sourceRef, field: 'source reference' },
+  ]),
+)(
+  'keeps recovery available with unreadable $field JSON on a $state row',
+  ({ state, column }) => {
+    const { database, remove } = openTestDatabase();
+    onTestFinished(remove);
+    const reported = vi.spyOn(console, 'error').mockImplementation(() => {});
+    onTestFinished(() => reported.mockRestore());
+    database
+      .insert(feedRow)
+      .values({
+        ...toolRow({
+          id: 'bad-json',
+          position: 0,
+          revision: 1,
+          status: 'in_progress',
+          state,
+        }),
+        sessionId: 'session-1',
+      })
+      .run();
+    database.run(
+      sql`update ${feedRow} set ${sql.identifier(column.name)} = 'broken-json' where ${feedRow.id} = 'bad-json'`,
+    );
+    expect(() => recoverAfterRestart(database)).not.toThrow();
+    const repaired = database.select(storedFeedColumns).from(feedRow).get();
+    expect(repaired).toMatchObject({
+      id: 'bad-json',
+      state: 'settled',
+      revision: 1,
+    });
+    expect(reported).toHaveBeenCalledWith(
+      'recovery: rejected Feed shape #1 (session-1/bad-json)',
+      expect.anything(),
+    );
+  },
+);

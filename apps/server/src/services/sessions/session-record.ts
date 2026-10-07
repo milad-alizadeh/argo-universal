@@ -7,7 +7,23 @@ import type { Database } from '@repo/db';
 import { session } from '@repo/db/schema';
 import { isSessionBranch } from '@repo/git';
 import { TRPCError } from '@trpc/server';
-import { eq } from 'drizzle-orm';
+import { eq, getTableColumns, sql } from 'drizzle-orm';
+
+// JSON is decoded per row at the reader boundary, after SQLite has returned the bounded result.
+export const storedSessionColumns = {
+  ...getTableColumns(session),
+  vendorRef: sql<unknown>`${session.vendorRef}`,
+  configValues: sql<unknown>`${session.configValues}`,
+};
+
+export function decodeStoredSession(row: typeof session.$inferSelect) {
+  return {
+    ...row,
+    vendorRef:
+      row.vendorRef === null ? null : JSON.parse(String(row.vendorRef)),
+    configValues: JSON.parse(String(row.configValues)),
+  };
+}
 
 const sessionRecord = SessionInfo.pick({
   title: true,
