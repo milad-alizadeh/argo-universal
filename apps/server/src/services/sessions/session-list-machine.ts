@@ -26,7 +26,10 @@ type SessionListEvent =
 export const sessionListMachine = setup({
   types: {
     input: {} as SessionListInput,
-    context: {} as SessionListInput & { failure: unknown },
+    context: {} as SessionListInput & {
+      failure: unknown;
+      rows: SessionListState | null;
+    },
     events: {} as SessionListEvent,
     emitted: {} as { type: 'list.rows'; rows: SessionListState },
   },
@@ -78,10 +81,13 @@ export const sessionListMachine = setup({
       },
     ),
   },
+  delays: { listRefreshDelay: 100 },
   actions: {
     publishRows: enqueueActions(({ context, enqueue }) => {
       try {
-        enqueue.emit({ type: 'list.rows', rows: context.readRows() });
+        const rows = context.readRows();
+        enqueue.assign({ rows });
+        enqueue.emit({ type: 'list.rows', rows });
       } catch (error) {
         enqueue.raise({ type: 'list.failed', error });
       }
@@ -93,14 +99,23 @@ export const sessionListMachine = setup({
   },
 }).createMachine({
   id: 'sessionList',
-  context: ({ input }) => ({ ...input, failure: null }),
+  context: ({ input }) => ({ ...input, failure: null, rows: null }),
   initial: 'active',
   states: {
     active: {
       invoke: { src: 'observe', input: ({ context }) => context },
       entry: 'publishRows',
+      initial: 'idle',
+      states: {
+        idle: { on: { 'list.refresh': { target: 'pending' } } },
+        pending: {
+          on: { 'list.refresh': {} },
+          after: {
+            listRefreshDelay: { target: 'idle', actions: 'publishRows' },
+          },
+        },
+      },
       on: {
-        'list.refresh': { actions: 'publishRows' },
         'list.failed': { target: 'failed', actions: 'rememberFailure' },
         'list.stop': { target: 'stopped' },
       },

@@ -3,38 +3,14 @@ import type {
   SessionUpdate,
   ToolCallUpdate,
 } from '@repo/contracts';
-import type { Database } from '@repo/db';
 import { feedRow } from '@repo/db/schema';
 import { expect, it, onTestFinished } from 'vitest';
 import { createActor, fromPromise } from 'xstate';
-import { openTestDatabase } from '#mocks/database';
+import { countDatabaseReads, openTestDatabase } from '#mocks/database';
 import { toFeedRowWrite } from '../feed/feed-row';
 import { writerMachine } from '../feed/writer-machine';
 import { toLiveHeader } from './live-header';
 import { readLiveHeaderRows } from './live-header-rows';
-
-function countDatabaseReads(database: Database) {
-  const metrics = { queries: 0, rows: 0 };
-  const chain = new Set(['select', 'from', 'where', 'orderBy', 'limit']);
-  const counted = <Value extends object>(value: Value): Value =>
-    new Proxy(value, {
-      get(target, property, receiver) {
-        const member = Reflect.get(target, property, receiver);
-        if (typeof member !== 'function') return member;
-        return (...arguments_: unknown[]) => {
-          const result = Reflect.apply(member, target, arguments_);
-          if (property === 'all' || property === 'get') {
-            metrics.queries += 1;
-            metrics.rows += Array.isArray(result)
-              ? result.length
-              : Number(result !== undefined);
-          }
-          return chain.has(String(property)) ? counted(result) : result;
-        };
-      },
-    });
-  return { database: counted(database), metrics };
-}
 
 const tool: ToolCallUpdate = {
   id: 'tool-1',
@@ -246,5 +222,5 @@ it('reads no stored rows without an active Turn', () => {
       rows: { 'tool-1': tool },
     }),
   ).toEqual({});
-  expect(counted.metrics).toEqual({ queries: 0, rows: 0 });
+  expect(counted.metrics).toEqual({ queries: 0, rows: 0, sessionReads: 0 });
 });

@@ -31,7 +31,11 @@ import { eq } from 'drizzle-orm';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import type { ActorRefFrom } from 'xstate';
 import { createActor, fromCallback, fromPromise, waitFor } from 'xstate';
-import { insertSession, openTestDatabase } from '#mocks/database';
+import {
+  countDatabaseReads,
+  insertSession,
+  openTestDatabase,
+} from '#mocks/database';
 import { initTestRepository } from '#mocks/git';
 import { liveHeaderMocks } from '#mocks/live-header';
 import { feedMachine } from '../services/feed/feed-machine';
@@ -1561,6 +1565,21 @@ for (const adapter of agentAdapters)
     const caller = await root.createCaller(controller.signal);
     const list = (await caller.session.listUpdates())[Symbol.asyncIterator]();
     await list.next();
+    const registry: ActorRefFrom<typeof registryMachine> | undefined =
+      root.engine.system.get('sessions');
+    if (!registry) throw new Error('No Session registry');
+    registry.send({
+      type: 'sessions.open',
+      sessionId: 'session-broken',
+      agent: adapter.agent,
+    });
+    await waitFor(
+      registry,
+      (snapshot) =>
+        snapshot.context.sessions['session-broken']
+          ?.getSnapshot()
+          .matches({ open: { live: 'idle' } }) ?? false,
+    );
     const feed = (
       await caller.feed.subscribe({ sessionId: 'session-broken', after: null })
     )[Symbol.asyncIterator]();
@@ -1598,3 +1617,125 @@ for (const adapter of agentAdapters)
     controller.abort();
     await list.return?.();
   });
+
+it('shares one coalesced list read for three subscribers across fifty changes', async () => {
+  const { database, remove } = openTestDatabase();
+  onTestFinished(remove);
+  const counted = countDatabaseReads(database);
+  const { engine, createCaller } = startEngine({
+    database: counted.database,
+    adapter: createMockAdapter(),
+  });
+  const controllers = [
+    new AbortController(),
+    new AbortController(),
+    new AbortController(),
+    new AbortController(),
+  ];
+  onTestFinished(() => {
+    for (const controller of controllers) controller.abort();
+  });
+  const firstCaller = await createCaller(controllers[0]?.signal);
+  const secondCaller = await createCaller(controllers[1]?.signal);
+  const countsCaller = await createCaller(controllers[2]?.signal);
+  const resumedCaller = await createCaller(controllers[3]?.signal);
+  vi.useFakeTimers();
+  try {
+    const first = (await firstCaller.session.listUpdates())[
+      Symbol.asyncIterator
+    ]();
+    const second = (await secondCaller.session.listUpdates())[
+      Symbol.asyncIterator
+    ]();
+    const counts = (await countsCaller.session.counts())[
+      Symbol.asyncIterator
+    ]();
+    expect((await first.next()).value).toMatchObject({
+      type: 'changed',
+      session: { sessionId: 'session-1' },
+    });
+    expect((await second.next()).value).toMatchObject({
+      type: 'changed',
+      session: { sessionId: 'session-1' },
+    });
+    expect((await counts.next()).value).toEqual({ attention: 0, running: 0 });
+    const initialReads = counted.metrics.sessionReads;
+    await vi.advanceTimersByTimeAsync(100);
+    counted.metrics.sessionReads = 0;
+    const firstChange = first.next();
+    const secondChange = second.next();
+    const nextCounts = counts.next();
+    const writer = engine.system.get('databaseWriter') as ActorRefFrom<
+      typeof writerMachine
+    >;
+    for (let index = 1; index <= 50; index += 1)
+      writer.send({
+        type: 'writer.write',
+        job: {
+          type: 'sessionRowUpdate',
+          id: 'session-1',
+          set: { title: `Change ${index}`, maxRevision: index },
+        },
+      });
+    await vi.advanceTimersByTimeAsync(99);
+    expect(counted.metrics.sessionReads).toBe(0);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(counted.metrics.sessionReads).toBe(1);
+    expect(initialReads).toBe(1);
+    expect((await firstChange).value).toMatchObject({
+      type: 'changed',
+      session: { title: 'Change 50', status: 'unread' },
+    });
+    expect((await secondChange).value).toMatchObject({
+      type: 'changed',
+      session: { title: 'Change 50', status: 'unread' },
+    });
+    expect((await nextCounts).value).toEqual({ attention: 1, running: 0 });
+    expect(await first.return?.()).toMatchObject({ done: true });
+    counted.metrics.sessionReads = 0;
+    const survivorChange = second.next();
+    const survivorCounts = counts.next();
+    writer.send({
+      type: 'writer.write',
+      job: {
+        type: 'sessionRowUpdate',
+        id: 'session-1',
+        set: { title: 'Survives one disconnect', seenRevision: 50 },
+      },
+    });
+    await vi.advanceTimersByTimeAsync(100);
+    expect(counted.metrics.sessionReads).toBe(1);
+    expect((await survivorChange).value).toMatchObject({
+      type: 'changed',
+      session: { title: 'Survives one disconnect' },
+    });
+    expect((await survivorCounts).value).toEqual({ attention: 0, running: 0 });
+    controllers[1]?.abort();
+    controllers[2]?.abort();
+    counted.metrics.sessionReads = 0;
+    writer.send({
+      type: 'writer.write',
+      job: {
+        type: 'sessionRowUpdate',
+        id: 'session-1',
+        set: { title: 'No subscribers' },
+      },
+    });
+    await vi.advanceTimersByTimeAsync(100);
+    expect(counted.metrics.sessionReads).toBe(0);
+    expect(await second.next()).toMatchObject({ done: true });
+    expect(await counts.next()).toMatchObject({ done: true });
+    const resumed = (await resumedCaller.session.listUpdates())[
+      Symbol.asyncIterator
+    ]();
+    expect((await resumed.next()).value).toMatchObject({
+      type: 'changed',
+      session: { title: 'No subscribers' },
+    });
+    expect(counted.metrics.sessionReads).toBe(1);
+    controllers[3]?.abort();
+    expect(await resumed.next()).toMatchObject({ done: true });
+  } finally {
+    vi.useRealTimers();
+  }
+});
