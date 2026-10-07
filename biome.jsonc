@@ -230,7 +230,7 @@
     },
     {
       // Unit tests mock only outside modules, skip nothing, assert unconditionally and carry unique, valid titles.
-      "includes": ["**/*.test.ts", "**/*.test.tsx"],
+      "includes": ["**/*.test.ts", "**/*.test.tsx", "**/*.test.mts"],
       "plugins": ["./tooling/biome/no-internal-mock.grit"],
       "linter": {
         "rules": {
