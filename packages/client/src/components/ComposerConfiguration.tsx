@@ -256,7 +256,7 @@ function AgentChoices({
     const setup = configuration.onAgentSetup
       ? () => configuration.onAgentSetup?.(agent.agent)
       : undefined;
-    const onSetup =
+    const onAvailabilityAction =
       availability?.action === 'retry' ? configuration.onAgentRetry : setup;
     return (
       <View key={agent.agent}>
@@ -315,12 +315,12 @@ function AgentChoices({
           {configuration.onAgentChange &&
             agent.agent === configuration.agent && <Icon as={CheckIcon} />}
         </Button>
-        {availability && onSetup && (
+        {availability && onAvailabilityAction && (
           <Button
             variant="ghost"
             accessibilityLabel={`${availability.action === 'retry' ? 'Retry' : 'Set up'} ${agent.label}`}
             className="h-7 sm:h-7 py-0 ml-8 px-2 justify-start"
-            onPress={onSetup}
+            onPress={onAvailabilityAction}
           >
             <Text
               selectable={false}
