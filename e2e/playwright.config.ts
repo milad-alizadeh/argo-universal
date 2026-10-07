@@ -34,7 +34,9 @@ export default defineConfig<AppOptions>({
   testDir: '.',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 1 : 0,
+  // A test that passes only on retry is a flake: it fails the run on CI, with its trace.
+  failOnFlakyTests: !!process.env.CI,
   workers: process.env.CI ? 1 : undefined,
   // Never open the report server, so `pnpm test:e2e` ends on failure too.
   reporter: [['html', { open: 'never' }]],
@@ -42,7 +44,7 @@ export default defineConfig<AppOptions>({
     // The Server binds 127.0.0.1 only, so the App is served there too (spec section 5).
     baseURL: webUrl,
 
-    trace: 'on-first-retry',
+    trace: 'retain-on-first-failure',
   },
 
   projects: [

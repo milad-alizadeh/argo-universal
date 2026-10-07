@@ -53,6 +53,16 @@ jobs:
       - name: Quality
         run: pnpm quality
 
+      # Vitest saves a failed story's screenshot in a __screenshots__ folder beside its test file.
+      - name: Upload the story failure screenshots
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: story-failure-screenshots
+          path: '**/__screenshots__/'
+          if-no-files-found: ignore
+          retention-days: 30
+
       # Through turbo, so an unchanged app restores dist/ from the cache.
       - name: Export the Expo web build
         run: pnpm exec turbo run build --filter=@repo/universal-app

@@ -27,6 +27,7 @@ export const findFreePort = () =>
 const ServerFile = z.object({ port: z.int() });
 const portTakenPattern = /EADDRINUSE/;
 const attempts = 3;
+const STDERR_TAIL_LENGTH = 2000;
 
 // Ready once this Server's own home names its port; another run's Server on a shared port never counts.
 async function waitUntilReady(
@@ -34,11 +35,12 @@ async function waitUntilReady(
   port: number,
   server: ChildProcess,
   portTaken: () => boolean,
+  stderrTail: () => string,
 ) {
   const deadline = Date.now() + 30_000;
   while (Date.now() < deadline) {
-    if (server.exitCode !== null)
-      throw new Error(`The Server exited with code ${server.exitCode}`);
+    if (hasExited(server))
+      throw new Error(`${describeExit(server)}${withStderr(stderrTail())}`);
     if (portTaken()) return false;
     const text = await readFile(path.join(home, 'server.json'), 'utf8').catch(
       () => null,
@@ -47,8 +49,23 @@ async function waitUntilReady(
       return true;
     await new Promise((resolve) => setTimeout(resolve, 200));
   }
-  throw new Error('The Server did not start within 30 s');
+  throw new Error(
+    `The Server did not start within 30 s${withStderr(stderrTail())}`,
+  );
 }
+
+const hasExited = (server: ChildProcess) =>
+  server.exitCode !== null || server.signalCode !== null;
+
+const describeExit = (server: ChildProcess) =>
+  server.signalCode === null
+    ? `The Server exited with code ${server.exitCode}`
+    : `The Server exited with signal ${server.signalCode}`;
+
+const withStderr = (tail: string) =>
+  tail === ''
+    ? ''
+    : `\nServer stderr (last ${STDERR_TAIL_LENGTH} characters):\n${tail}`;
 
 // Starts a Server with its own home, Project and mock Agent CLIs, so a test can change them without touching other tests.
 export async function startOwnServer(directory: string, agents: MockAgents) {
@@ -73,20 +90,32 @@ export async function startOwnServer(directory: string, agents: MockAgents) {
     });
     // Another process can take the port between findFreePort and the Engine's listen; the Supervisor then retries it forever.
     let portTaken = false;
+    let stderrTail = '';
     for (const stream of [server.stdout, server.stderr]) {
       stream.on('data', (chunk: Buffer) => {
         if (portTakenPattern.test(chunk.toString())) portTaken = true;
       });
     }
+    server.stderr.on('data', (chunk: Buffer) => {
+      stderrTail = (stderrTail + chunk.toString()).slice(-STDERR_TAIL_LENGTH);
+    });
     const stop = async () => {
-      if (server.exitCode !== null) return;
+      if (hasExited(server)) return;
       const exited = new Promise((resolve) => server.once('exit', resolve));
       // SIGTERM lets the supervisor stop the Engine and remove server.json.
       server.kill('SIGTERM');
       await exited;
     };
     try {
-      if (await waitUntilReady(home, port, server, () => portTaken)) {
+      if (
+        await waitUntilReady(
+          home,
+          port,
+          server,
+          () => portTaken,
+          () => stderrTail,
+        )
+      ) {
         return {
           serverUrl: serverUrlFor(port),
           httpUrl: `http://127.0.0.1:${port}`,
