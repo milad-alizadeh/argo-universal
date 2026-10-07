@@ -175,11 +175,6 @@ function Table({ token }: { token: Tokens.Table }) {
     'font-mono leading-5 text-foreground',
     variant === 'proposal' ? 'text-sm' : 'text-xs',
   );
-  const cellClassName = (column: number) =>
-    cn(
-      'px-3 py-1.5',
-      column === 0 ? 'w-[180px] shrink-0' : 'min-w-[180px] flex-1',
-    );
   return (
     <View className="overflow-hidden rounded-xl border border-border">
       <ScrollView
@@ -233,6 +228,13 @@ function Table({ token }: { token: Tokens.Table }) {
         </View>
       </ScrollView>
     </View>
+  );
+}
+
+function cellClassName(column: number) {
+  return cn(
+    'px-3 py-1.5',
+    column === 0 ? 'w-[180px] shrink-0' : 'min-w-[180px] flex-1',
   );
 }
 

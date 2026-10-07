@@ -59,7 +59,7 @@ const feedRowUpdate = {
 
 // Commits every job in order in one transaction; one failing job rolls back them all.
 export function writeJobs(database: Database, jobs: readonly WriterJob[]) {
-  database.transaction((transaction) => {
+  void database.transaction((transaction) => {
     for (const job of jobs) {
       switch (job.type) {
         case 'feedRows': {

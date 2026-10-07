@@ -33,7 +33,7 @@ function ContextMenuPreview() {
   const [radioValue, setRadioValue] = React.useState('pedro');
 
   function onLongPress() {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   }
 
   return (

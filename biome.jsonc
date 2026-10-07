@@ -51,6 +51,15 @@
       }
     },
     {
+      // Vendored react-native-reusables output; knip and jscpd already exclude it.
+      "includes": ["packages/client/src/primitives/**"],
+      "linter": {
+        "rules": {
+          "style": { "noUselessElse": "off" }
+        }
+      }
+    },
+    {
       // Icons take a named size (sm, md or lg) instead of a number or size-* class.
       "includes": ["packages/client/src/**"],
       "plugins": ["./tooling/biome/icon-size.grit"]
@@ -61,31 +70,6 @@
       "linter": {
         "rules": {
           "a11y": { "noSvgWithoutTitle": "off" }
-        }
-      }
-    },
-    {
-      // An adapter is plain functions; the one Agent machine in packages/agents/src owns the lifecycle.
-      "includes": ["packages/agents/*/**", "!packages/agents/src/**"],
-      "linter": {
-        "rules": {
-          "style": {
-            "noRestrictedImports": {
-              "level": "error",
-              "options": {
-                "paths": {
-                  "xstate": "Adapters are plain functions; see ADR-0015.",
-                  "zod": "Use vendor SDK or generated protocol types; the Feed validates adapter changes (ADR-0015)."
-                },
-                "patterns": [
-                  {
-                    "group": ["zod/*"],
-                    "message": "Use vendor SDK or generated protocol types (ADR-0015)."
-                  }
-                ]
-              }
-            }
-          }
         }
       }
     },
@@ -131,6 +115,394 @@
           "allowComments": true
         }
       }
+    },
+    {
+      // Vendor names stay in the adapter and mock CLI folders, where a JSON.parse cast is also allowed, as in codex/open-app-server.ts:102.
+      "includes": [
+        "**",
+        "!packages/agents/claude/**",
+        "!packages/agents/codex/**",
+        "!mocks/cli/claude/**",
+        "!mocks/cli/codex/**"
+      ],
+      "plugins": [
+        "./tooling/biome/vendor-name.grit",
+        "./tooling/biome/json-parse-cast.grit"
+      ]
+    },
+    {
+      // Only packages/db opens SQLite.
+      "includes": ["**", "!packages/db/**"],
+      "plugins": ["./tooling/biome/database-client.grit"]
+    },
+    {
+      // Unit tests mock only outside modules, and nothing is skipped; the other test-file rules come next, after their 16 fixes.
+      "includes": ["**/*.test.ts", "**/*.test.tsx"],
+      "plugins": ["./tooling/biome/no-internal-mock.grit"],
+      "linter": {
+        "rules": {
+          "suspicious": { "noSkippedTests": "error" }
+        }
+      }
+    },
+    {
+      // Screens and components get tRPC from useTRPC() only; drop this block when Spec 0006's components and screens direction blocks are both on.
+      "includes": [
+        "packages/client/src/screens/**",
+        "packages/client/src/components/**"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "@trpc/client": "Screens get tRPC from useTRPC() only (AGENTS.md, ADR-0009).",
+                  "../trpc/create-trpc-client": "Screens get tRPC from useTRPC() only (AGENTS.md, ADR-0009).",
+                  "../trpc/context": {
+                    "importNames": ["useTRPCClient"],
+                    "message": "Screens get tRPC from useTRPC() only (AGENTS.md, ADR-0009)."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      // End-to-end tests drive a real Server and mock only the Agent CLI; the Playwright rules stay out of test stories.
+      "includes": ["e2e/**"],
+      "linter": {
+        "rules": {
+          "nursery": {
+            "noPlaywrightElementHandle": "error",
+            "noPlaywrightEval": "error",
+            "noPlaywrightForceOption": "error",
+            "noPlaywrightMissingAwait": "error",
+            "noPlaywrightNetworkidle": "error",
+            "noPlaywrightPagePause": "error",
+            "noPlaywrightUselessAwait": "error",
+            "noPlaywrightWaitForNavigation": "error",
+            "noPlaywrightWaitForSelector": "error",
+            "noPlaywrightWaitForTimeout": "error",
+            "usePlaywrightValidDescribeCallback": "error"
+          },
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "vitest": "End-to-end tests run in Playwright (ADR-0011).",
+                  "node:sqlite": "End-to-end tests check what a user sees, not the database (ADR-0011)."
+                },
+                "patterns": [
+                  {
+                    "group": ["@repo/**", "!@repo/mocks", "!@repo/mocks/**"],
+                    "message": "End-to-end tests mock only the Agent CLI and import only @repo/mocks (AGENTS.md)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+
+    // A relative path into packages/, tooling/ or apps/ skips package.json, pnpm isolation and exports; 1 hit: packages/client/mocks/native-token-values.test.ts:2 (A2-3: import @repo/uniwind/native-token-values).
+    {
+      "includes": ["**", "!tools/**"], // A2-7 drops this exclusion: 20 lines fire in tools/, and 4 more reach root mocks/, which this regex cannot see.
+      "plugins": ["./tooling/biome/cross-package-import.grit"]
+    },
+
+    // D1: contracts, api, the db schema and client/src never import Node APIs; node-builtin-gap.grit adds node:sqlite and node:sea, which noNodejsModules misses; 0 hits.
+    {
+      "includes": [
+        "packages/contracts/**",
+        "packages/api/**",
+        "packages/db/src/schema.ts",
+        "packages/db/src/schema/**",
+        "packages/client/src/**",
+        "!**/*.test.*",
+        "!**/*.stories.*",
+        "!**/mocks/**"
+      ],
+      "linter": { "rules": { "correctness": { "noNodejsModules": "error" } } },
+      "plugins": ["./tooling/biome/node-builtin-gap.grit"]
+    },
+
+    // D2: contracts imports zod, drizzle-orm and @repo/db/schema only; it declares @repo/db for /schema, so pnpm cannot stop the client import; 0 hits.
+    {
+      "includes": ["packages/contracts/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@repo/**", "!@repo/db/schema"],
+                    "message": "contracts imports only zod, drizzle-orm and @repo/db/schema, never the @repo/db client (spec 0001 section 4, ADR-0013)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+
+    // D3: the App never imports server-side packages; it declares @repo/machine-log for /browser, so the /node entry needs this ban; 0 hits.
+    {
+      "includes": ["apps/universal-app/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@repo/**",
+                      "!@repo/client",
+                      "!@repo/client/**",
+                      "!@repo/uniwind",
+                      "!@repo/uniwind/**",
+                      "!@repo/machine-log",
+                      "!@repo/machine-log/browser",
+                      "!@repo/vitest",
+                      "!@repo/vitest/**"
+                    ],
+                    "message": "The App imports client, uniwind and the browser machine log, never server-side packages (spec 0001 section 4)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+
+    // D4: client/src takes @repo/api with import type only; @repo/api is a devDependency for tests, so pnpm resolves a value import too; 0 hits.
+    {
+      "includes": [
+        "packages/client/src/**",
+        "!**/*.test.*",
+        "!**/*.stories.*",
+        "!**/mocks/**"
+      ],
+      "plugins": ["./tooling/biome/api-type-only.grit"]
+    },
+
+    // D5 to D11 repeat spec 0001 section 4 allowlists that pnpm already enforces, so a package.json edit cannot quietly open them; 0 hits each.
+
+    // D5: api imports only contracts from the workspace.
+    {
+      "includes": ["packages/api/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@repo/**",
+                      "!@repo/contracts",
+                      "!@repo/contracts/**",
+                      "!@repo/vitest",
+                      "!@repo/vitest/**"
+                    ],
+                    "message": "api imports only contracts from the workspace (spec 0001 section 4)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    // D6: db imports no workspace package.
+    {
+      "includes": ["packages/db/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@repo/**"],
+                    "message": "db imports no workspace package (spec 0001 section 4, ADR-0013)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    // D7: git and agents/src import only contracts from the workspace.
+    {
+      "includes": ["packages/git/**", "packages/agents/src/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@repo/**",
+                      "!@repo/contracts",
+                      "!@repo/contracts/**"
+                    ],
+                    "message": "git and agents import only contracts from the workspace (spec 0001 section 4)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    // D8: replaces the step-1 adapter block; keeps its ADR-0015 bans on xstate, zod and zod/*, and adds the agents row.
+    {
+      "includes": ["packages/agents/*/**", "!packages/agents/src/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "xstate": "Adapters are plain functions; see ADR-0015.",
+                  "zod": "Use vendor SDK or generated protocol types; the Feed validates adapter changes (ADR-0015)."
+                },
+                "patterns": [
+                  {
+                    "group": ["zod/*"],
+                    "message": "Use vendor SDK or generated protocol types (ADR-0015)."
+                  },
+                  {
+                    "group": [
+                      "@repo/**",
+                      "!@repo/contracts",
+                      "!@repo/contracts/**"
+                    ],
+                    "message": "agents imports only contracts from the workspace (spec 0001 section 4)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    // D9: the Server never imports client or an App.
+    {
+      "includes": ["apps/server/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@repo/client",
+                      "@repo/client/**",
+                      "@repo/universal-app",
+                      "@repo/universal-app/**",
+                      "@repo/storybook",
+                      "@repo/storybook/**",
+                      "@repo/desktop",
+                      "@repo/desktop/**"
+                    ],
+                    "message": "The Server never imports client or an App (spec 0001 section 4)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    // D10: desktop imports only contracts and machine-log from the workspace.
+    {
+      "includes": ["apps/desktop/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@repo/**",
+                      "!@repo/contracts",
+                      "!@repo/contracts/**",
+                      "!@repo/machine-log",
+                      "!@repo/machine-log/**",
+                      "!@repo/vitest",
+                      "!@repo/vitest/**"
+                    ],
+                    "message": "desktop imports only contracts and machine-log from the workspace (spec 0001 section 4)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    // D11: storybook imports only client and uniwind from the workspace.
+    {
+      "includes": ["apps/storybook/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "@repo/**",
+                      "!@repo/client",
+                      "!@repo/client/**",
+                      "!@repo/uniwind",
+                      "!@repo/uniwind/**"
+                    ],
+                    "message": "storybook imports only client and uniwind from the workspace (spec 0001 section 4)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+
+    // A nested function that uses nothing from the function around it moves up a scope; production only, at error; A2-3 fixes its 1 hit in the same PR: components/FeedMarkdown.tsx:178 (cellClassName in Table).
+    {
+      "includes": [
+        "packages/*/src/**",
+        "packages/agents/*/**",
+        "apps/*/src/**",
+        "!**/*.test.*",
+        "!**/*.stories.*",
+        "!**/mocks/**"
+      ], // Tests, stories and mocks would add 34 hits, mostly describe-scoped helpers kept there on purpose.
+      "plugins": ["./tooling/biome/function-scoping.grit"]
     }
   ]
 }

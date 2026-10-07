@@ -1,0 +1,11 @@
+language js
+
+`$literal` where {
+  $literal <: or {
+    `'claude'`,
+    `'codex'`,
+    `"claude"`,
+    `"codex"`
+  },
+  register_diagnostic(span=$literal, message="A vendor name appears only inside packages/agents/<agent>/ and mocks/cli/<agent>/ (AGENTS.md, ADR-0004). Branch on a capability the adapter registers.")
+}
