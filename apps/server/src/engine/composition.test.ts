@@ -756,7 +756,7 @@ it('publishes stored list changes, changes counts only when needed, and aborts a
 });
 
 // Sets the whole scenario once, before the CLI starts.
-const useScenario = (scenario: MockCliScenarioInput) => {
+const stubScenario = (scenario: MockCliScenarioInput) => {
   for (const [key, value] of Object.entries(
     mockCliScenarioEnvironment(scenario),
   ))
@@ -831,7 +831,7 @@ async function answersPermissionOnce(
   adapter: AgentAdapter,
   delayedResponse: boolean,
 ) {
-  useScenario({ requestBeforeStartResponse: delayedResponse });
+  stubScenario({ requestBeforeStartResponse: delayedResponse });
   const root = await startNewSessionEngine(adapter, {
     recording: 'permission',
   });
@@ -1092,7 +1092,7 @@ it.each(agentAdapters)(
       recording: 'permission',
     });
     const file = path.join(root.home, 'answers.jsonl');
-    useScenario({ requestAnswersFile: file });
+    stubScenario({ requestAnswersFile: file });
     try {
       const caller = await root.createCaller();
       const { sessionId } = await caller.session.new({
@@ -1170,7 +1170,7 @@ it.each(agentAdapters)(
       recording: 'elicitation',
     });
     const file = path.join(root.home, 'answers.jsonl');
-    useScenario({ requestAnswersFile: file });
+    stubScenario({ requestAnswersFile: file });
     try {
       const caller = await root.createCaller();
       const { sessionId } = await caller.session.new({
@@ -1268,7 +1268,7 @@ it.each(
       recording: 'elicitation',
     });
     const file = path.join(root.home, 'answers.jsonl');
-    useScenario({ requestAnswersFile: file });
+    stubScenario({ requestAnswersFile: file });
     try {
       const caller = await root.createCaller();
       const { sessionId } = await caller.session.new({
@@ -1406,7 +1406,7 @@ it.each(
   async ({ adapter, recording }) => {
     const root = await startNewSessionEngine(adapter, { recording });
     const file = path.join(root.home, 'answers.jsonl');
-    useScenario({ requestAnswersFile: file });
+    stubScenario({ requestAnswersFile: file });
     try {
       const caller = await root.createCaller();
       const { sessionId } = await caller.session.new({

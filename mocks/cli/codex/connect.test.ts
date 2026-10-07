@@ -27,7 +27,7 @@ afterEach(async () => {
 });
 
 // Sets the whole scenario once, before the CLI starts.
-const useScenario = (scenario: MockCliScenarioInput) => {
+const stubScenario = (scenario: MockCliScenarioInput) => {
   for (const [key, value] of Object.entries(
     mockCliScenarioEnvironment(scenario),
   ))
@@ -49,7 +49,7 @@ const prompt: AgentCommandOf<'agent.prompt'> = {
 };
 
 it('starts another Turn before a cancelled Turn receives its late start response', async () => {
-  useScenario({ turnResponseAfterNextStart: true });
+  stubScenario({ turnResponseAfterNextStart: true });
   const { directory, executable } = await prepare('interrupt');
   const source = findRecording(
     path.join(import.meta.dirname, 'recordings'),
@@ -145,7 +145,7 @@ it('starts another Turn before a cancelled Turn receives its late start response
 });
 
 it('does not interrupt a completed Turn when its start response arrives afterward', async () => {
-  useScenario({ completionBeforeResponse: true });
+  stubScenario({ completionBeforeResponse: true });
   const { directory } = await prepare('edit-and-command');
   const failures: unknown[] = [];
   const session: VendorSession = await codexAdapter.connect(
