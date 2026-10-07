@@ -516,7 +516,7 @@ function AgentModelMenu({
   );
   if (wide && !model)
     return (
-      <View className="h-48 p-1">
+      <View className="h-60 p-1">
         <MenuHeading>Agent</MenuHeading>
         <AgentChoices configuration={configuration} onSelect={() => {}} />
       </View>

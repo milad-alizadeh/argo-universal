@@ -142,6 +142,22 @@ function unavailableAgentRetry(width: number, agentIndex: number): Story {
         name: `Retry ${agent.label}`,
       });
       await expect(retry).toHaveTextContent('Retry');
+      if (width === layoutWidths.wide)
+        await waitFor(() => {
+          const menu = overlay
+            .getByTestId('composer-agents-scroll')
+            .getBoundingClientRect();
+          for (const unavailable of newSessionCatalogs.bothUnavailable) {
+            const choice = overlay
+              .getByRole('button', { name: `Select ${unavailable.label}` })
+              .getBoundingClientRect();
+            const action = overlay
+              .getByRole('button', { name: `Retry ${unavailable.label}` })
+              .getBoundingClientRect();
+            expect(choice.top).toBeGreaterThanOrEqual(menu.top);
+            expect(action.bottom).toBeLessThanOrEqual(menu.bottom);
+          }
+        });
       await expect(
         overlay.queryByText('Install', { exact: true }),
       ).not.toBeInTheDocument();
