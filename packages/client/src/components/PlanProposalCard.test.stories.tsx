@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor, within } from 'storybook/test';
+import { layoutWidths } from '../../mocks/each-layout';
 import {
   longPlanProposal,
   PlanProposalPreview,
@@ -20,16 +21,16 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+const dark = { globals: { mode: 'dark' } };
+
 export const ShortPlan: Story = {
   play: async ({ canvas, userEvent }) => {
-    const { page } = await import('vitest/browser');
-    for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+    for (const width of [layoutWidths.phone, layoutWidths.wide]) {
       await settleViewport(width);
       await expect(canvas.getByText('Approve this plan?')).toBeVisible();
       await expect(canvas.getByText(/then verify its contents/)).toBeVisible();
       await waitFor(() => {
-        if (width === 390) {
+        if (width === layoutWidths.phone) {
           expect(
             canvas.queryByText('session', { exact: true }),
           ).not.toBeInTheDocument();
@@ -59,9 +60,7 @@ export const ShortPlan: Story = {
 export const LongPlan: Story = {
   args: { proposal: longPlanProposal },
   play: async ({ canvas }) => {
-    const { page } = await import('vitest/browser');
-    for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
+    for (const width of [layoutWidths.phone, layoutWidths.wide]) {
       await settleViewport(width);
       const scroll = canvas.getByTestId('plan-proposal-scroll');
       await waitFor(() => {
@@ -93,9 +92,9 @@ export const LongPlan: Story = {
   },
 };
 
-export const KeepPlanning: Story = {
-  play: async ({ canvas, userEvent }) => {
-    for (const width of [390, 1440]) {
+function keepPlanning(width: number): Story {
+  return {
+    play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       await userEvent.click(
         canvas.getByRole('button', { name: 'Keep planning' }),
@@ -111,19 +110,21 @@ export const KeepPlanning: Story = {
       await expect(
         canvas.getByRole('button', { name: 'Keep planning' }),
       ).toBeDisabled();
-      if (width === 1440) await userEvent.keyboard('{Escape}');
+      if (width === layoutWidths.wide) await userEvent.keyboard('{Escape}');
       else await userEvent.click(canvas.getByRole('button', { name: 'Back' }));
       await expect(canvas.queryByRole('textbox')).not.toBeInTheDocument();
       await expect(
         canvas.getByRole('button', { name: 'Approve' }),
       ).toBeEnabled();
-    }
-  },
-};
+    },
+  };
+}
+export const KeepPlanningPhone = keepPlanning(layoutWidths.phone);
+export const KeepPlanningWide = keepPlanning(layoutWidths.wide);
 
-export const KeepPlanningWithFeedback: Story = {
-  play: async ({ canvas, userEvent, args }) => {
-    for (const width of [390, 1440]) {
+function keepPlanningWithFeedback(width: number): Story {
+  return {
+    play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
       await userEvent.click(
         canvas.getByRole('button', { name: 'Keep planning' }),
@@ -131,13 +132,13 @@ export const KeepPlanningWithFeedback: Story = {
       const feedback = canvas.getByRole('textbox', {
         name: 'What should change in the plan?',
       });
-      await userEvent.clear(feedback);
       await userEvent.type(feedback, planProposalFeedback);
       await expect(
         canvas.getByRole('button', { name: 'Keep planning' }),
       ).toBeEnabled();
-      if (width === 390) {
+      if (width === layoutWidths.phone) {
         await userEvent.click(canvas.getByRole('button', { name: 'Back' }));
+        await expect(args.onAnswer).not.toHaveBeenCalled();
       } else {
         await userEvent.keyboard('{Enter}');
         await expect(canvas.getByRole('status')).toHaveTextContent(
@@ -149,14 +150,20 @@ export const KeepPlanningWithFeedback: Story = {
           feedback: planProposalFeedback,
         });
       }
-    }
-  },
-};
+    },
+  };
+}
+export const KeepPlanningWithFeedbackPhone = keepPlanningWithFeedback(
+  layoutWidths.phone,
+);
+export const KeepPlanningWithFeedbackWide = keepPlanningWithFeedback(
+  layoutWidths.wide,
+);
 
-export const Expanded: Story = {
-  args: { proposal: longPlanProposal },
-  play: async ({ canvas, userEvent }) => {
-    for (const width of [390, 1440]) {
+function expanded(width: number): Story {
+  return {
+    args: { proposal: longPlanProposal },
+    play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       await userEvent.click(
         canvas.getByRole('button', { name: 'Expand plan' }),
@@ -169,15 +176,15 @@ export const Expanded: Story = {
       await waitFor(() =>
         expect(scroll.getBoundingClientRect().height).toBeGreaterThan(280),
       );
-      if (width === 1440) {
+      if (width === layoutWidths.wide) {
         const main = canvas
           .getByTestId('plan-proposal-main-content')
           .getBoundingClientRect();
-        const expanded = dialog.getBoundingClientRect();
-        await expect(expanded.left).toBeGreaterThanOrEqual(main.left);
-        await expect(expanded.right).toBeLessThanOrEqual(main.right);
-        await expect(expanded.top).toBeGreaterThanOrEqual(main.top);
-        await expect(expanded.bottom).toBeLessThanOrEqual(main.bottom);
+        const expandedBounds = dialog.getBoundingClientRect();
+        await expect(expandedBounds.left).toBeGreaterThanOrEqual(main.left);
+        await expect(expandedBounds.right).toBeLessThanOrEqual(main.right);
+        await expect(expandedBounds.top).toBeGreaterThanOrEqual(main.top);
+        await expect(expandedBounds.bottom).toBeLessThanOrEqual(main.bottom);
       }
       const approve = panel.getByRole('button', { name: 'Approve' });
       const top = approve.getBoundingClientRect().top;
@@ -201,20 +208,22 @@ export const Expanded: Story = {
       await expect(
         canvas.getByRole('button', { name: 'Expand plan' }),
       ).toBeVisible();
-    }
-  },
-};
+    },
+  };
+}
+export const ExpandedPhone = expanded(layoutWidths.phone);
+export const ExpandedWide = expanded(layoutWidths.wide);
 
-export const Answered: Story = {
-  args: { answered: true },
-  play: async ({ canvas, userEvent, args }) => {
-    for (const width of [390, 1440]) {
+function answered(width: number): Story {
+  return {
+    args: { answered: true },
+    play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
       await expect(
         canvas.getByText('Already answered on another device'),
       ).toBeVisible();
-      // A loaded runner can draw the previous width's card for a few frames after the resize.
-      if (width === 390) {
+      // A loaded runner can draw the default viewport's card for a few frames after the resize.
+      if (width === layoutWidths.phone) {
         await waitFor(() =>
           expect(
             canvas.queryByRole('button', { name: 'Approve' }),
@@ -225,7 +234,7 @@ export const Answered: Story = {
         ).not.toBeInTheDocument();
       } else {
         await expect(
-          await canvas.findByRole('button', { name: 'Approve' }),
+          canvas.getByRole('button', { name: 'Approve' }),
         ).toBeDisabled();
         await expect(
           canvas.getByRole('button', { name: 'Keep planning' }),
@@ -243,17 +252,21 @@ export const Answered: Story = {
       await userEvent.click(
         within(dialog).getByRole('button', { name: 'Collapse plan' }),
       );
-    }
-    await expect(args.onAnswer).not.toHaveBeenCalled();
-  },
-};
+      await expect(args.onAnswer).not.toHaveBeenCalled();
+    },
+  };
+}
+export const AnsweredPhone = answered(layoutWidths.phone);
+export const AnsweredWide = answered(layoutWidths.wide);
 
-export const AnswerCollapsesExpansion: Story = {
-  args: { proposal: longPlanProposal },
-  render: (args) => <PlanProposalPreview {...args} retainProposalAfterAnswer />,
-  play: async ({ canvas, userEvent, args }) => {
-    const overlay = within(document.body);
-    for (const width of [390, 1440]) {
+function answerCollapsesExpansion(width: number): Story {
+  return {
+    args: { proposal: longPlanProposal },
+    render: (args) => (
+      <PlanProposalPreview {...args} retainProposalAfterAnswer />
+    ),
+    play: async ({ canvas, userEvent, args }) => {
+      const overlay = within(document.body);
       await settleViewport(width);
       for (const decision of ['approve', 'keep_planning']) {
         await userEvent.click(
@@ -267,7 +280,6 @@ export const AnswerCollapsesExpansion: Story = {
           await userEvent.click(
             panel.getByRole('button', { name: 'Keep planning' }),
           );
-          await userEvent.clear(panel.getByRole('textbox'));
           await userEvent.type(
             panel.getByRole('textbox'),
             planProposalFeedback,
@@ -288,30 +300,37 @@ export const AnswerCollapsesExpansion: Story = {
           canvas.getByTestId('plan-proposal-scroll').getBoundingClientRect()
             .height,
         ).toBe(280);
-        if (decision === 'keep_planning') {
-          await expect(canvas.getByRole('textbox')).toHaveValue(
-            planProposalFeedback,
-          );
-          await userEvent.click(canvas.getByRole('button', { name: 'Back' }));
-        }
       }
-    }
-    await expect(args.onAnswer).toHaveBeenCalledTimes(4);
-  },
-};
+      await expect(canvas.getByRole('textbox')).toHaveValue(
+        planProposalFeedback,
+      );
+      await expect(args.onAnswer).toHaveBeenCalledTimes(2);
+    },
+  };
+}
+export const AnswerCollapsesExpansionPhone = answerCollapsesExpansion(
+  layoutWidths.phone,
+);
+export const AnswerCollapsesExpansionWide = answerCollapsesExpansion(
+  layoutWidths.wide,
+);
 
-export const ShortPlanDark: Story = { ...ShortPlan, globals: { mode: 'dark' } };
-export const LongPlanDark: Story = { ...LongPlan, globals: { mode: 'dark' } };
-export const ExpandedDark: Story = { ...Expanded, globals: { mode: 'dark' } };
-export const KeepPlanningDark: Story = {
-  ...KeepPlanning,
-  globals: { mode: 'dark' },
+export const ShortPlanDark: Story = { ...ShortPlan, ...dark };
+export const LongPlanDark: Story = { ...LongPlan, ...dark };
+export const ExpandedPhoneDark: Story = { ...ExpandedPhone, ...dark };
+export const ExpandedWideDark: Story = { ...ExpandedWide, ...dark };
+export const KeepPlanningPhoneDark: Story = { ...KeepPlanningPhone, ...dark };
+export const KeepPlanningWideDark: Story = { ...KeepPlanningWide, ...dark };
+export const KeepPlanningWithFeedbackPhoneDark: Story = {
+  ...KeepPlanningWithFeedbackPhone,
+  ...dark,
 };
-export const KeepPlanningWithFeedbackDark: Story = {
-  ...KeepPlanningWithFeedback,
-  globals: { mode: 'dark' },
+export const KeepPlanningWithFeedbackWideDark: Story = {
+  ...KeepPlanningWithFeedbackWide,
+  ...dark,
 };
-export const AnsweredDark: Story = { ...Answered, globals: { mode: 'dark' } };
+export const AnsweredPhoneDark: Story = { ...AnsweredPhone, ...dark };
+export const AnsweredWideDark: Story = { ...AnsweredWide, ...dark };
 
 function recordedAnswer(index: number): Story {
   const mock = planProposalMocks[index];
@@ -319,7 +338,7 @@ function recordedAnswer(index: number): Story {
   return {
     args: { proposal: mock.proposal },
     play: async ({ canvas, userEvent, args }) => {
-      await settleViewport(index % 2 ? 1440 : 390);
+      await settleViewport(index % 2 ? layoutWidths.wide : layoutWidths.phone);
       await expect(canvas.getByText('Approve this plan?')).toBeVisible();
       if (mock.answer.decision === 'keep_planning') {
         await userEvent.click(
@@ -343,14 +362,13 @@ export const SecondRecordedAnswer: Story = recordedAnswer(1);
 export const ThirdRecordedAnswer: Story = recordedAnswer(2);
 export const FourthRecordedAnswer: Story = recordedAnswer(3);
 
-export const ExpandWhilePlanning: Story = {
-  play: async ({ canvas, userEvent }) => {
-    for (const width of [390, 1440]) {
+function expandWhilePlanning(width: number): Story {
+  return {
+    play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       await userEvent.click(
         canvas.getByRole('button', { name: 'Keep planning' }),
       );
-      await userEvent.clear(canvas.getByRole('textbox'));
       await userEvent.type(canvas.getByRole('textbox'), 'Keep this feedback');
       await userEvent.click(
         canvas.getByRole('button', { name: 'Expand plan' }),
@@ -385,6 +403,8 @@ export const ExpandWhilePlanning: Story = {
           }),
         ).not.toBeInTheDocument(),
       );
-    }
-  },
-};
+    },
+  };
+}
+export const ExpandWhilePlanningPhone = expandWhilePlanning(layoutWidths.phone);
+export const ExpandWhilePlanningWide = expandWhilePlanning(layoutWidths.wide);

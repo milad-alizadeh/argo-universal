@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, spyOn, waitFor, within } from 'storybook/test';
+import { layoutWidths } from '../../mocks/each-layout';
 import { recordedFile } from '../../mocks/feed-edit-mock';
 import { settleViewport } from '../../mocks/settle-viewport';
 import { DiffView } from './DiffView';
@@ -26,7 +27,7 @@ export const InspectorFileShowsEveryLine: Story = {
   play: async ({ canvas }) => {
     if (process.env.NODE_ENV !== 'test') return;
     const { page } = await import('vitest/browser');
-    for (const width of [390, 1440]) {
+    for (const width of [layoutWidths.phone, layoutWidths.wide]) {
       await settleViewport(width);
       await expect(canvas.queryByText(/@@/)).toBeNull();
       const header = canvas.getByRole('button', {
@@ -42,7 +43,7 @@ export const InspectorFileShowsEveryLine: Story = {
         canvas.getByRole('button', { name: 'Copy path' }),
       ).toBeVisible();
       await page.elementLocator(header).hover();
-      for (const count of ['+60', '\u221260']) {
+      for (const count of ['+60', '−60']) {
         await expect(
           getComputedStyle(canvas.getByText(count)).textDecorationLine,
         ).toBe('none');
@@ -57,7 +58,7 @@ export const InspectorFileShowsEveryLine: Story = {
       await expect(header).toHaveAttribute('aria-expanded', 'true');
       const numberColors: string[] = [];
       for (const [text, sign] of [
-        ['old value 1', '\u2212'],
+        ['old value 1', '−'],
         ['new value 1', '+'],
       ] as const) {
         const row = canvas.getByText(text).parentElement;
@@ -80,17 +81,18 @@ export const InspectorFileShowsEveryLine: Story = {
   },
 };
 
-export const InlinePreviewShowsAll: Story = {
-  args: { inline: true },
-  play: async ({ canvas, userEvent }) => {
-    if (process.env.NODE_ENV !== 'test') return;
-    const { page } = await import('vitest/browser');
-    const clipboard = spyOn(
-      navigator.clipboard,
-      'writeText',
-    ).mockResolvedValue();
-    try {
-      for (const width of [390, 1440]) {
+// One story per width, so the first width's "Show all" click never hides the button from the next.
+function inlinePreview(width: number): Story {
+  return {
+    args: { inline: true },
+    play: async ({ canvas, userEvent }) => {
+      if (process.env.NODE_ENV !== 'test') return;
+      const { page } = await import('vitest/browser');
+      const clipboard = spyOn(
+        navigator.clipboard,
+        'writeText',
+      ).mockResolvedValue();
+      try {
         await settleViewport(width);
         const title = canvas.getByTestId('code-block-title');
         await expect(title.textContent).toContain('/repo/large.txt');
@@ -109,13 +111,10 @@ export const InlinePreviewShowsAll: Story = {
         await expect(
           canvas.getByRole('button', { name: 'Copied' }),
         ).toBeVisible();
-        const showAll = canvas.queryByRole('button', {
-          name: 'Show all 120 lines',
-        });
-        if (showAll) {
-          await expect(canvas.queryByText('new value 60')).toBeNull();
-          await userEvent.click(showAll);
-        }
+        await expect(canvas.queryByText('new value 60')).toBeNull();
+        await userEvent.click(
+          canvas.getByRole('button', { name: 'Show all 120 lines' }),
+        );
         await expect(canvas.queryByText(/@@/)).toBeNull();
         const box = canvas.getByTestId('diff-scroll');
         await expect(box.scrollHeight).toBeGreaterThan(box.clientHeight);
@@ -125,9 +124,11 @@ export const InlinePreviewShowsAll: Story = {
           canvas.queryByRole('button', { name: 'Show all 120 lines' }),
         ).toBeNull();
         await expect(within(box).getByText('new value 60')).toBeVisible();
+      } finally {
+        clipboard.mockRestore();
       }
-    } finally {
-      clipboard.mockRestore();
-    }
-  },
-};
+    },
+  };
+}
+export const InlinePreviewShowsAllPhone = inlinePreview(layoutWidths.phone);
+export const InlinePreviewShowsAllWide = inlinePreview(layoutWidths.wide);

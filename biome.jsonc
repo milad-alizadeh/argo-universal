@@ -132,8 +132,6 @@
         "packages/client/src/components/Composer.tsx", // Composer 42: drops when the send button state is derived once.
         "packages/client/src/components/PlanProposalCard.tsx", // PlanProposalInteraction 30: one card's layout states in its markup.
         "packages/client/src/feed/to-feed-view.ts", // toFeedView 47, explorationLines 26: the grouping decisions get names in this file.
-        "packages/client/src/components/Composer.test.stories.tsx", // Pickers play 65: splits into one story per viewport and Agent.
-        "packages/client/src/components/EditRow.test.stories.tsx", // editPlay 33: takes a summary flag instead of branching.
         "mocks/cli/claude/mock-claude.ts", // input handler 36: one branch per message type and pending request.
         "mocks/cli/codex/mock-codex.ts", // input handler 45: one branch per message type and pending request.
         "tools/generate-request-mocks.mts" // recording map 47: replays each recording into a Feed.
