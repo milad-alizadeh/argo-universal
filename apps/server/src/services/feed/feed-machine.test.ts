@@ -12,7 +12,8 @@ import {
 import { type EventExecutor, TestModel, type TestPath } from 'xstate/graph';
 import type { FeedStreamEvent } from './feed-change';
 import { feedMachine } from './feed-machine';
-import { type FeedRowsJob, findQueuedRow } from './feed-row';
+import { findQueuedRow } from './feed-row';
+import type { FeedRowsJob } from './writer-job';
 
 // A batch every 60 ms, and open rows written after 1 second.
 const streamBatchDelayMs = 60;

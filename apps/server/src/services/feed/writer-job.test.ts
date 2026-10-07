@@ -1,11 +1,17 @@
+import { SessionRecord, Turn } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { blob, blobRef, feedRow, session, turn } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { openTestDatabase } from '#mocks/database';
+import { fromFeedRow } from './feed-row';
 import {
+  applyQueuedSession,
+  applyQueuedTurns,
   describeJob,
   type FeedRowWrite,
+  queuedFeedRows,
+  stampWriterJob,
   type WriterJob,
   writeJobs,
 } from './writer-job';
@@ -230,3 +236,249 @@ describe('describeJob', () => {
     expect(describeJob(job)).toBe(description);
   });
 });
+
+it('projects a queued Session row update exactly as its commit', () => {
+  const clock = vi.spyOn(Date, 'now').mockReturnValue(12000);
+  try {
+    const before = SessionRecord.parse(selectSession());
+    const original = structuredClone(before);
+    const jobs: WriterJob[] = [
+      {
+        type: 'sessionRowUpdate',
+        id: 'session-1',
+        activityAt: 12000,
+        set: {
+          vendorSessionId: 'vendor-resume',
+          epoch: 2,
+          maxRevision: 3,
+          activityAt: 999,
+        },
+      },
+    ];
+    const projected = applyQueuedSession({
+      row: before,
+      sessionId: 'session-1',
+      jobs,
+    });
+    writeJobs(database, jobs);
+    const data = SessionRecord.omit({ createdAt: true, updatedAt: true });
+    expect(data.parse(projected)).toEqual(data.parse(selectSession()));
+    expect(projected).toMatchObject({ activityAt: 12000, maxRevision: 3 });
+    expect(before).toEqual(original);
+  } finally {
+    clock.mockRestore();
+  }
+});
+
+it('projects a queued Session insert exactly as its commit', () => {
+  const jobs: WriterJob[] = [
+    {
+      type: 'sessionInsert',
+      checkoutChoice: 'main',
+      session: {
+        id: 'session-2',
+        projectId: 'project-1',
+        agent: 'mock',
+        checkoutPath: '/new',
+        projectionVersion: 1,
+        title: 'New Session',
+      },
+    },
+  ];
+  const original = structuredClone(jobs);
+  const projected = applyQueuedSession({
+    row: undefined,
+    sessionId: 'session-2',
+    jobs,
+  });
+  writeJobs(database, jobs);
+  const data = SessionRecord.omit({ createdAt: true, updatedAt: true });
+  expect(data.parse(projected)).toEqual(
+    data.parse(
+      database.select().from(session).where(eq(session.id, 'session-2')).get(),
+    ),
+  );
+  expect(jobs).toEqual(original);
+});
+
+it('projects a queued Turn insert exactly as its commit', () => {
+  const jobs: WriterJob[] = [
+    {
+      type: 'turnInsert',
+      turn: {
+        id: 'turn-1',
+        sessionId: 'session-1',
+        status: 'running',
+        startedAt: 12000,
+      },
+    },
+  ];
+  const projected = applyQueuedTurns([], jobs);
+  writeJobs(database, jobs);
+  expect(projected).toEqual([Turn.parse(selectTurn())]);
+});
+
+it('projects a queued Turn update exactly as its commit', () => {
+  database
+    .insert(turn)
+    .values({
+      id: 'turn-1',
+      sessionId: 'session-1',
+      status: 'running',
+      startedAt: 100,
+    })
+    .run();
+  const before = Turn.parse(selectTurn());
+  const original = structuredClone(before);
+  const jobs: WriterJob[] = [
+    {
+      type: 'turnUpdate',
+      id: 'turn-1',
+      set: {
+        status: 'ended',
+        stopReason: 'error',
+        endedAt: 200,
+        error: { code: 'interrupted', message: 'Stopped' },
+      },
+    },
+  ];
+  const projected = applyQueuedTurns([before], jobs);
+  writeJobs(database, jobs);
+  expect(projected).toEqual([Turn.parse(selectTurn())]);
+  expect(before).toEqual(original);
+});
+
+it('projects queued Feed rows and their Session revision exactly as their commit', () => {
+  const before = SessionRecord.parse(selectSession());
+  const jobs: WriterJob[] = [
+    {
+      ...feedRows(
+        [
+          row({
+            payload: {
+              messageId: 'message-1',
+              content: [{ type: 'text', text: 'Complete' }],
+            },
+          }),
+        ],
+        1,
+      ),
+      activityAt: 100,
+    },
+  ];
+  const projected = applyQueuedSession({
+    row: before,
+    sessionId: 'session-1',
+    jobs,
+  });
+  const rows = queuedFeedRows(jobs, 'session-1').flatMap((job) =>
+    job.rows.map((row) => fromFeedRow('session-1', row)),
+  );
+  writeJobs(database, jobs);
+  const data = SessionRecord.omit({ createdAt: true, updatedAt: true });
+  expect(data.parse(projected)).toEqual(data.parse(selectSession()));
+  expect(rows).toEqual(
+    selectRows().map((row) => fromFeedRow('session-1', row)),
+  );
+});
+
+it.each([
+  {
+    kind: 'Feed rows',
+    job: {
+      type: 'feedRows' as const,
+      sessionId: 'session-1',
+      rows: [],
+      maxRevision: 2,
+    },
+    expected: { activityAt: 12000, startedAt: null },
+  },
+  {
+    kind: 'Session revision',
+    job: {
+      type: 'sessionRowUpdate' as const,
+      id: 'session-1',
+      set: { maxRevision: 2 },
+    },
+    expected: { activityAt: 12000, startedAt: null },
+  },
+  {
+    kind: 'Turn insert',
+    job: {
+      type: 'turnInsert' as const,
+      turn: {
+        id: 'turn-1',
+        sessionId: 'session-1',
+        status: 'running' as const,
+      },
+    },
+    expected: { activityAt: 0, startedAt: 12000 },
+  },
+  {
+    kind: 'supplied Feed stamp',
+    job: {
+      type: 'feedRows' as const,
+      sessionId: 'session-1',
+      rows: [],
+      maxRevision: 2,
+      activityAt: 100,
+    },
+    expected: { activityAt: 100, startedAt: null },
+  },
+  {
+    kind: 'supplied Session stamp',
+    job: {
+      type: 'sessionRowUpdate' as const,
+      id: 'session-1',
+      set: { maxRevision: 2 },
+      activityAt: 200,
+    },
+    expected: { activityAt: 200, startedAt: null },
+  },
+  {
+    kind: 'supplied Turn stamp',
+    job: {
+      type: 'turnInsert' as const,
+      turn: {
+        id: 'turn-1',
+        sessionId: 'session-1',
+        status: 'running' as const,
+        startedAt: 300,
+      },
+    },
+    expected: { activityAt: 0, startedAt: 300 },
+  },
+])(
+  'keeps $kind times equal across repeated reads and commit',
+  ({ job, expected }) => {
+    const before = SessionRecord.parse(selectSession());
+    const jobs = [stampWriterJob(job, 12000)];
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(20000);
+    try {
+      expect({
+        activityAt: applyQueuedSession({
+          row: before,
+          sessionId: 'session-1',
+          jobs,
+        })?.activityAt,
+        startedAt: applyQueuedTurns([], jobs)[0]?.startedAt ?? null,
+      }).toEqual(expected);
+      clock.mockReturnValue(30000);
+      expect({
+        activityAt: applyQueuedSession({
+          row: before,
+          sessionId: 'session-1',
+          jobs,
+        })?.activityAt,
+        startedAt: applyQueuedTurns([], jobs)[0]?.startedAt ?? null,
+      }).toEqual(expected);
+      writeJobs(database, jobs);
+      expect({
+        activityAt: selectSession()?.activityAt,
+        startedAt: selectTurn()?.startedAt ?? null,
+      }).toEqual(expected);
+    } finally {
+      clock.mockRestore();
+    }
+  },
+);
