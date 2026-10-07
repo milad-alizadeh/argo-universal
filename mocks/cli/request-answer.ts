@@ -1,6 +1,7 @@
 import { appendFileSync, existsSync, readFileSync } from 'node:fs';
 import type { AgentCommandOf } from '@repo/agents';
 import { z } from 'zod';
+import { readMockCliEnvironment } from './mock-cli.ts';
 
 const RequestAnswer = z.discriminatedUnion('type', [
   z.object({
@@ -21,7 +22,7 @@ const RequestAnswer = z.discriminatedUnion('type', [
 ]);
 
 export function recordRequestAnswer(answer: RecordedRequestAnswer) {
-  const file = process.env.MOCK_CLI_REQUEST_ANSWERS;
+  const file = readMockCliEnvironment().scenario.requestAnswersFile;
   if (file) appendFileSync(file, `${JSON.stringify(answer)}\n`);
 }
 

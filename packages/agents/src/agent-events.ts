@@ -37,7 +37,7 @@ export type FeedChange =
   | ({ type: 'patch' } & Pick<RowPatch, 'id' | 'set'>);
 
 export interface AgentCapabilities {
-  permissionFeedback?: boolean;
+  permissionFeedback: boolean;
   planApproval: 'continueTurn' | 'startTurn';
   stopShell: boolean;
 }

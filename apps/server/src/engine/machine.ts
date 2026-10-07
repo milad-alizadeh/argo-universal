@@ -29,6 +29,12 @@ function writeEngineLog(home: string, line: string) {
   appendFileSync(join(home, 'logs', 'engine.log'), `${stamped}\n`);
 }
 
+// `openingDatabase` sets the database before `recovering` and `live` run.
+function openDatabaseOf(context: { database: Database | null }): Database {
+  if (!context.database) throw new Error('The database is not open');
+  return context.database;
+}
+
 export interface EngineInput extends Pick<RegistryInput, 'adapters'> {
   home: string;
   port: number;
@@ -122,6 +128,16 @@ export const engineMachine = setup({
   }),
   invoke: { id: 'processSignals', src: 'processSignals' },
   initial: 'openingDatabase',
+  // `live` and `live.stopping` override this.
+  on: {
+    'engine.stop': {
+      target: '.stopped',
+      actions: {
+        type: 'log',
+        params: ({ event }) => ({ line: `stopping: ${event.reason}` }),
+      },
+    },
+  },
   states: {
     openingDatabase: {
       invoke: {
@@ -140,25 +156,14 @@ export const engineMachine = setup({
           }),
         },
       },
-      on: {
-        'engine.stop': {
-          target: 'stopped',
-          actions: {
-            type: 'log',
-            params: ({ event }) => ({ line: `stopping: ${event.reason}` }),
-          },
-        },
-      },
     },
     recovering: {
       invoke: {
         id: 'recoverAfterRestart',
         src: 'recoverAfterRestart',
         input: ({ context }) => {
-          if (!context.database)
-            throw new Error('Recovery requires an open database');
           return {
-            database: context.database,
+            database: openDatabaseOf(context),
             blobsFolder: blobsFolderIn(context.home),
           };
         },
@@ -171,15 +176,6 @@ export const engineMachine = setup({
           }),
         },
       },
-      on: {
-        'engine.stop': {
-          target: 'stopped',
-          actions: {
-            type: 'log',
-            params: ({ event }) => ({ line: `stopping: ${event.reason}` }),
-          },
-        },
-      },
     },
     live: {
       invoke: [
@@ -188,7 +184,7 @@ export const engineMachine = setup({
           systemId: 'databaseWriter',
           src: 'databaseWriter',
           input: ({ context }) => ({
-            database: context.database as Database,
+            database: openDatabaseOf(context),
             log: (line: string) => writeEngineLog(context.home, line),
           }),
         },
@@ -197,7 +193,7 @@ export const engineMachine = setup({
           systemId: 'sessions',
           src: 'sessions',
           input: ({ context }) => ({
-            database: context.database as Database,
+            database: openDatabaseOf(context),
             runtimeDirectory: context.home,
             adapters: context.adapters,
           }),
@@ -224,8 +220,7 @@ export const engineMachine = setup({
               port: context.port,
               version: context.version,
               startedAt: context.startedAt,
-              // `openingDatabase` sets it before `recovering` and `live`.
-              database: context.database as Database,
+              database: openDatabaseOf(context),
             }),
             onDone: {
               target: 'running',

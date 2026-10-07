@@ -8,7 +8,7 @@ const payloadObject = z.record(z.string(), z.unknown());
 
 // Repairs the database before the Engine serves; any failure rolls back the whole repair.
 export function recoverAfterRestart(database: Database) {
-  database.transaction((transaction) => {
+  void database.transaction((transaction) => {
     transaction
       .update(turn)
       .set({

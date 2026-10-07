@@ -9,6 +9,7 @@ import {
   mockReady,
   mockReadyEvent,
 } from '@repo/mocks/agent';
+import { expectEveryTransitionWalked } from '@repo/vitest/model-coverage';
 import { afterAll, afterEach, expect, it, vi } from 'vitest';
 import {
   type ActorLogic,
@@ -21,7 +22,7 @@ import {
   setup,
   waitFor,
 } from 'xstate';
-import { adjacencyMapToArray, getAdjacencyMap, TestModel } from 'xstate/graph';
+import { TestModel } from 'xstate/graph';
 import { openTestDatabase } from '#mocks/database';
 import { messageChange } from '#mocks/feed';
 import { createSessionHost, firstPrompt } from '#mocks/session';
@@ -623,37 +624,12 @@ it.each(paths.map((path, index) => [index, path] as const))(
 );
 
 it('the generated paths walk every reachable transition', () => {
-  const transitionKey = (
-    from: SessionSnapshot,
-    type: string,
-    to: SessionSnapshot,
-  ) => `${key(from)} ${type} ${key(to)}`;
-  const walked = new Set(
-    paths.flatMap((path) =>
-      path.steps
-        .slice(1)
-        .map((step, index) =>
-          transitionKey(
-            path.steps[index]?.state ?? expect.unreachable(),
-            step.event.type,
-            step.state,
-          ),
-        ),
-    ),
-  );
-  let transitionCount = 0;
-  for (const model of models) {
-    for (const edge of adjacencyMapToArray(
-      getAdjacencyMap(logic, model.options),
-    )) {
-      expect(
-        walked.has(transitionKey(edge.state, edge.event.type, edge.nextState)),
-      ).toBe(true);
-      transitionCount += 1;
-    }
-  }
-  expect(transitionCount).toBeGreaterThan(0);
-  expect(paths.length).toBeLessThan(1000);
+  expectEveryTransitionWalked({
+    models,
+    paths,
+    stateKey: (snapshot) => String(key(snapshot)),
+    eventKey: (event) => event.type,
+  });
 });
 
 afterAll(remove);

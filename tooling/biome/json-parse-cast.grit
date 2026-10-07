@@ -1,0 +1,6 @@
+language js
+
+TsAsExpression(expression=$value) as $cast where {
+  $value <: `JSON.parse($_)`,
+  register_diagnostic(span=$cast, message="Parse outside data with a Zod schema at the boundary; do not cast JSON.parse (AGENTS.md). Only packages/agents/<agent>/ casts to vendor types (ADR-0015).")
+}

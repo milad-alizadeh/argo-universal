@@ -35,6 +35,7 @@ export const initialMappingState = (): MappingState => ({
   compactionId: null,
 });
 
+// On the jscpd baseline: each adapter keeps its own row helpers, and a shared one would be shallow.
 const feed = (change: FeedChange): AgentEvent => ({
   type: 'agent.feed',
   change,

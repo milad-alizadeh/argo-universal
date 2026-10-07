@@ -16,12 +16,15 @@ import { newSessionMock as codexNewSessionMock } from './codex/new-session.ts';
 import { recordedRequestAnswer as codexRequestAnswer } from './codex/request-answer.ts';
 import { writeMockCodex } from './codex/write-mock-codex.ts';
 import { writeCodexTranscript } from './codex/write-transcript.ts';
-import type { MockCliOptions } from './mock-cli.ts';
+import type {
+  MockCliOptions,
+  MockCliScenario,
+  MockCliScenarioInput,
+} from './mock-cli.ts';
 import type { RecordedRequestAnswer } from './request-answer.ts';
 
 export interface MockCli {
-  supportsPermissionFeedback: boolean;
-  recordedTitle?: () => string;
+  recordedTitle: (() => string) | null;
   recordedRequestAnswer(recording: string): RecordedRequestAnswer;
   feedEvents(recording: string): AgentEvent[];
   // The first prompt a recording sent, or undefined when it holds none.
@@ -39,27 +42,30 @@ export interface MockCli {
   recordings: {
     turn: string;
     cancelledTurn: string;
-    commandOutcomes?: string;
-    editStates?: string;
-    editFailure?: string;
+    commandOutcomes: string | null;
+    editStates: string | null;
+    editFailure: string | null;
   };
-  apiKeyVariables?: string[];
-  connectionFailures?: {
-    environment: Record<string, string>;
+  apiKeyVariables: string[];
+  // Scenario fields this mock has no analogue for, so a parity row skips them with the reason in its name.
+  unsupportedScenarios: (keyof MockCliScenario)[];
+  connectionFailures: {
+    scenario: MockCliScenarioInput;
     message: string;
   }[];
-  // Writes the vendor transcript a resume reads, and returns the environment variables that point to it.
+  // Writes the vendor transcript a resume reads, and returns the real CLI variables and the scenario fragment that point to it.
   writeTranscript: (
     directory: string,
     cwd: string,
     vendorSessionId: string,
-  ) => Record<string, string>;
+  ) => { environment: Record<string, string>; scenario: MockCliScenarioInput };
 }
 
 // Each Agent adapter's mock CLI, by the id the adapter registers.
 export const mockClis: Record<string, MockCli> = {
   codex: {
-    supportsPermissionFeedback: false,
+    unsupportedScenarios: [],
+    recordedTitle: null,
     recordedRequestAnswer: codexRequestAnswer,
     feedEvents: codexFeedEvents,
     recordedPrompt: codexRecordedPrompt,
@@ -68,7 +74,7 @@ export const mockClis: Record<string, MockCli> = {
     apiKeyVariables: ['OPENAI_API_KEY', 'CODEX_API_KEY'],
     connectionFailures: [
       {
-        environment: { MOCK_CLI_ACCOUNT_TYPE: 'apiKey' },
+        scenario: { account: 'apiKey' },
         message: 'Sign in to Codex with ChatGPT',
       },
     ],
@@ -82,14 +88,28 @@ export const mockClis: Record<string, MockCli> = {
     writeTranscript: writeCodexTranscript,
   },
   claude: {
-    supportsPermissionFeedback: true,
+    // Both reorder a JSON-RPC response against notifications, and Claude's streamed input gets no response to a user message.
+    unsupportedScenarios: ['notificationsFirst', 'requestBeforeStartResponse'],
     recordedTitle,
     recordedRequestAnswer: claudeRequestAnswer,
     feedEvents: claudeFeedEvents,
     recordedPrompt: claudeRecordedPrompt,
     write: writeMockClaude,
     newSessionMock: claudeNewSessionMock,
-    recordings: { turn: 'edit-and-command', cancelledTurn: 'interrupt' },
+    apiKeyVariables: ['ANTHROPIC_API_KEY'],
+    connectionFailures: [
+      {
+        scenario: { account: 'apiKey' },
+        message: 'Sign in to Claude with a Claude subscription',
+      },
+    ],
+    recordings: {
+      turn: 'edit-and-command',
+      cancelledTurn: 'interrupt',
+      commandOutcomes: null,
+      editStates: null,
+      editFailure: null,
+    },
     writeTranscript: writeClaudeTranscript,
   },
 };

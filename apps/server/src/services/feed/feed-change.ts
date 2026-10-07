@@ -6,8 +6,10 @@ import {
   type RowAppend,
   type RowPatch,
   type RowUpsert,
+  readFeedField,
   SessionUpdate,
   type SessionUpdateKind,
+  writeFeedField,
 } from '@repo/contracts';
 import { z } from 'zod';
 
@@ -35,39 +37,6 @@ const envelopeFields = new Set<string>([
   'id',
   'sessionUpdate',
 ]);
-
-// The value at a dotted path such as `content.0.text`, or undefined when the path leads nowhere.
-function readField(value: unknown, path: readonly string[]): unknown {
-  let current = value;
-  for (const key of path) {
-    if (Array.isArray(current) && /^\d+$/.test(key))
-      current = current[Number(key)];
-    else if (
-      current !== null &&
-      typeof current === 'object' &&
-      Object.hasOwn(current, key)
-    )
-      current = (current as Record<string, unknown>)[key];
-    else return undefined;
-  }
-  return current;
-}
-
-// A copy of `value` with `text` at a path that `readField` resolved.
-function writeField(
-  value: unknown,
-  [key, ...rest]: readonly string[],
-  text: string,
-): unknown {
-  if (key === undefined) return text;
-  if (Array.isArray(value)) {
-    const copy = [...value];
-    copy[Number(key)] = writeField(value[Number(key)], rest, text);
-    return copy;
-  }
-  const record = value as Record<string, unknown>;
-  return { ...record, [key]: writeField(record[key], rest, text) };
-}
 
 // The prompt a person sent, written as the Turn's first row (ADR 0012).
 export const userMessageChange = (
@@ -160,12 +129,12 @@ export function applyFeedChange(
       const path = change.field.split('.');
       if (envelopeFields.has(path[0] ?? ''))
         return { rejection: `${change.field} of row ${id} is set by the Feed` };
-      const current = readField(existing, path);
+      const current = readFeedField(existing, path);
       if (typeof current !== 'string')
         return { rejection: `${change.field} of row ${id} is not a string` };
       return accept(
         {
-          ...(writeField(
+          ...(writeFeedField(
             existing,
             path,
             current + change.text,

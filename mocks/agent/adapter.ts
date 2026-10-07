@@ -29,7 +29,11 @@ export interface MockAgentScript {
 export const mockReady: AgentReady = {
   vendorSessionId: 'vendor-1',
   configOptions: [],
-  capabilities: { planApproval: 'continueTurn', stopShell: false },
+  capabilities: {
+    permissionFeedback: true,
+    planApproval: 'continueTurn',
+    stopShell: false,
+  },
   continuedOutside: false,
 };
 

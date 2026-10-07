@@ -3,12 +3,10 @@ import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Duplex } from 'node:stream';
-import { afterEach, expect, it, vi } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { WebSocketServer } from 'ws';
 import { createActor, createMachine, fromPromise } from 'xstate';
 import { createNodeMachineInspection } from './node';
-
-afterEach(() => vi.unstubAllEnvs());
 
 it('closes a pending handshake and never reconnects after stop', async () => {
   vi.stubEnv('ARGO_MACHINE_INSPECT', '1');

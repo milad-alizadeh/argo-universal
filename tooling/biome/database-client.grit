@@ -1,0 +1,9 @@
+language js
+
+or {
+  `new DatabaseSync()`,
+  `new DatabaseSync($path)`,
+  `new DatabaseSync($path, $options)`
+} as $open where {
+  register_diagnostic(span=$open, message="Only packages/db opens the SQLite database; take the client from @repo/db (ADR-0002, ADR-0005).")
+}

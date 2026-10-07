@@ -106,6 +106,7 @@ function openServer({ applyConfigOptions = true } = {}) {
                       currentValue: 'large',
                     })),
                     capabilities: {
+                      permissionFeedback: true,
                       planApproval: 'startTurn',
                       stopShell: true,
                     },

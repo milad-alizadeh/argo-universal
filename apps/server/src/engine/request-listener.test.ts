@@ -108,7 +108,6 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  vi.restoreAllMocks();
   const closed = new Promise((resolve) => server.close(resolve));
   // A keep-alive socket that turns idle after close() would hold the server open until its timeout.
   server.closeAllConnections();

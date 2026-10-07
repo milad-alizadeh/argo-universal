@@ -260,8 +260,8 @@ Context: `address`, `ownedPid` (the Supervisor this app started, or null), `spaw
 
 ## 12. Tests
 
-- Every machine has one `*.test.ts` file with model-based tests from `xstate/graph`. It uses `machine.provide` with mock actors and fake timers, and has a test that every transition was walked. Effects that the model cannot reach get example tests in the same file, as the Supervisor's file has now.
-- If `getSimplePaths` gives more than 1,000 paths for a machine, split the machine, or bound the walk with a filter and say why in the test file.
+- Every machine has one `*.test.ts` file with model-based tests from `xstate/graph`. It uses `machine.provide` with mock actors and fake timers, and calls `expectEveryTransitionWalked` from `@repo/vitest/model-coverage`. It fails on any edge that no path walks, and names it. Effects that the model cannot reach get example tests in the same file, as the Supervisor's file has now.
+- `expectEveryTransitionWalked` also fails when a file walks 1,000 or more paths. Then split the machine, or bound the walk with a filter and say why in the test file.
 - One composition test drives `sessions`, a Session, `feed`, and `databaseWriter` with the Agent machine and a mock adapter against a temp database. Each adapter also has a composition test driven by its recording in `mocks/cli/<agent>/`.
 - The client package gets a Vitest config with the `node` environment for `src/**/*.test.ts`. Components are tested only with play functions.
 

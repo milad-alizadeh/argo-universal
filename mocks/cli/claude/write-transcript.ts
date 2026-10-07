@@ -24,5 +24,5 @@ export function writeClaudeTranscript(
       timestamp: '2026-10-05T00:00:00.000Z',
     })}\n`,
   );
-  return { CLAUDE_CONFIG_DIR: directory };
+  return { environment: { CLAUDE_CONFIG_DIR: directory }, scenario: {} };
 }

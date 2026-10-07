@@ -13,11 +13,39 @@
   },
   "linter": {
     "enabled": true,
+    // Biome cannot read pnpm catalog versions, so domains are named here.
+    "domains": { "test": "recommended", "react": "recommended" },
     "rules": {
       "preset": "recommended",
       "style": {
         "noNestedTernary": "error",
-        "noMagicNumbers": "error"
+        "noMagicNumbers": "error",
+        "noNonNullAssertion": "error",
+        "noParameterAssign": "error",
+        "useCollapsedIf": "error",
+        // Off for the vendored primitives.
+        "noUselessElse": "error"
+      },
+      "suspicious": {
+        "noExplicitAny": "error",
+        "noTsIgnore": "error",
+        "noImportCycles": "error",
+        "noFocusedTests": "error"
+      },
+      "correctness": {
+        "noUnusedVariables": "error",
+        "noUnusedImports": "error",
+        "noUnusedFunctionParameters": "error"
+      },
+      "nursery": {
+        // False is explicit and harmless: unset also passes, and true would flag 3 switches that already have a default.
+        "useExhaustiveSwitchCases": {
+          "level": "error",
+          "options": { "requireExplicitCase": false }
+        },
+        // Type-aware rules work only at the top level, never inside an override.
+        "noFloatingPromises": "error",
+        "noMisusedPromises": "error"
       }
     }
   },

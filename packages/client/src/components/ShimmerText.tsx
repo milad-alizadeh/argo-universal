@@ -9,6 +9,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
+import { withOccurrenceKeys } from '#lib/occurrence-keys';
 import { Text } from '#primitives/text';
 
 // How many characters the bright band spans on each side of its centre.
@@ -47,15 +48,17 @@ export function ShimmerText({
     <Text numberOfLines={1} selectable={false} className={className}>
       {reducedMotion
         ? text
-        : characters.map((character, index) => (
-            <ShimmerCharacter
-              key={`${index}:${character}`}
-              character={character}
-              index={index}
-              position={position}
-              emphasized={emphasized}
-            />
-          ))}
+        : withOccurrenceKeys(characters, (character) => character).map(
+            ({ item: character, key }, index) => (
+              <ShimmerCharacter
+                key={key}
+                character={character}
+                index={index}
+                position={position}
+                emphasized={emphasized}
+              />
+            ),
+          )}
     </Text>
   );
 }

@@ -1,0 +1,17 @@
+{
+  "name": "@repo/vitest",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./model-coverage": "./model-coverage.ts",
+    "./node": "./node.ts"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "vitest": "catalog:",
+    "xstate": "catalog:"
+  }
+}

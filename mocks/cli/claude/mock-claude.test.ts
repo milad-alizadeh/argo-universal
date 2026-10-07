@@ -3,13 +3,14 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   SDKControlRequest,
   SDKControlResponse,
   SDKMessage,
 } from '../../../packages/agents/claude/messages.ts';
 import { startLineProcess } from '../line-process.ts';
+import { mockCliScenarioEnvironment } from '../mock-cli.ts';
 import {
   recordedFrames as captureFrames,
   findRecording,
@@ -69,7 +70,10 @@ beforeEach(async () => {
   directory = await mkdtemp(path.join(os.tmpdir(), 'mock-claude-'));
 });
 
-afterEach(() => rm(directory, { recursive: true, force: true }));
+afterEach(async () => {
+  vi.unstubAllEnvs();
+  await rm(directory, { recursive: true, force: true });
+});
 
 const startClaude = async (
   recording: string,
@@ -292,6 +296,33 @@ describe('mock Claude CLI', () => {
     expect(
       claude.output.filter((frame) => frame.type === 'result'),
     ).toHaveLength(1);
+    claude.close();
+    expect(await claude.exited).toBe(0);
+  });
+
+  it('sends no frame of a blocked Turn until the interrupt arrives', async () => {
+    for (const [key, value] of Object.entries(
+      mockCliScenarioEnvironment({ blockTurnStart: true }),
+    ))
+      vi.stubEnv(key, value);
+    const claude = await startClaude('interrupt');
+
+    claude.send(prompt('Go.'));
+    claude.send({
+      type: 'control_request',
+      request_id: 'interrupt-1',
+      request: { subtype: 'interrupt' },
+    });
+
+    expect(await claude.next()).toMatchObject({
+      type: 'control_response',
+      response: { subtype: 'success', request_id: 'interrupt-1' },
+    });
+    expect(
+      (await claude.until((frame) => frame.type === 'result')).map(
+        (frame) => frame.type,
+      ),
+    ).toContain('result');
     claude.close();
     expect(await claude.exited).toBe(0);
   });

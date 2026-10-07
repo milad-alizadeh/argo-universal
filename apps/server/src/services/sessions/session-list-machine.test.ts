@@ -1,3 +1,4 @@
+import { expectEveryTransitionWalked } from '@repo/vitest/model-coverage';
 import { afterAll, expect, it } from 'vitest';
 import {
   type ActorLogic,
@@ -7,7 +8,7 @@ import {
   fromCallback,
   type SnapshotFrom,
 } from 'xstate';
-import { adjacencyMapToArray, getAdjacencyMap, TestModel } from 'xstate/graph';
+import { TestModel } from 'xstate/graph';
 import { openTestDatabase } from '#mocks/database';
 import { registryMachine } from './registry-machine';
 import { sessionListMachine } from './session-list-machine';
@@ -73,28 +74,12 @@ it.each(paths.map((path, index) => [index, path] as const))(
   },
 );
 it('the generated list subscription paths walk every transition', () => {
-  const edge = (from: ListSnapshot, type: string, to: ListSnapshot) =>
-    `${key(from)} ${type} ${key(to)}`;
-  const transitions = adjacencyMapToArray(
-    getAdjacencyMap(graphLogic, model.options),
-  ).map(({ state, event, nextState }) => edge(state, event.type, nextState));
-  const walked = new Set(
-    paths.flatMap((path) =>
-      path.steps
-        .slice(1)
-        .map((step, index) =>
-          edge(
-            path.steps[index]?.state ?? expect.unreachable(),
-            step.event.type,
-            step.state,
-          ),
-        ),
-    ),
-  );
-  expect(transitions.length).toBeGreaterThan(0);
-  expect(transitions.filter((transition) => !walked.has(transition))).toEqual(
-    [],
-  );
+  expectEveryTransitionWalked({
+    models: [model],
+    paths,
+    stateKey: key,
+    eventKey: (event) => event.type,
+  });
 });
 it('ends a subscription with the projection error when the stored data cannot be read', () => {
   const error = new Error('Unrecognised Session row');

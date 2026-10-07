@@ -27,7 +27,7 @@ export {
 
 // The dev menu exists only in native development builds; on web it throws.
 if (__DEV__ && Platform.OS !== 'web') {
-  registerDevMenuItems([
+  void registerDevMenuItems([
     {
       name: 'Open Storybook',
       callback: () => router.push('/(dev)/storybook'),
