@@ -260,6 +260,26 @@ serveJsonLines<Request>(({ id, method, params, result }) => {
       return send({ id, result: { thread: { id: threadId } } });
     }
     case 'turn/interrupt':
+      if (environment.scenario.interruptError !== 'none') {
+        if (environment.scenario.interruptError === 'afterCompletion') {
+          const completed = requestFrames.find(
+            (message) => message.method === 'turn/completed',
+          );
+          if (completed?.method === 'turn/completed')
+            send({
+              ...completed,
+              params: {
+                ...completed.params,
+                turn: { ...completed.params.turn, status: 'interrupted' },
+              },
+            } satisfies VendorMessage);
+          activeTurnId = null;
+        }
+        return send({
+          id,
+          error: { code: INTERNAL_ERROR, message: 'Mock interrupt failed.' },
+        });
+      }
       if ((params as TurnInterruptParams)?.turnId !== activeTurnId)
         return send({
           id,

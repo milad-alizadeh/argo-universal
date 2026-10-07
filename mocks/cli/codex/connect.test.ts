@@ -167,3 +167,131 @@ it('does not interrupt a completed Turn when its start response arrives afterwar
   await session.run({ type: 'agent.cancel' });
   expect(failures).toEqual([]);
 });
+
+it('leaves the Agent ready when Stop cancels a Turn with a pending Elicitation', async () => {
+  const { directory } = await prepare('elicitation');
+  const events: AgentEvent[] = [];
+  const parent = createActor(
+    fromCallback<AgentEvent>(({ receive }) =>
+      receive((event) => events.push(event)),
+    ),
+  ).start();
+  cleanups.push(() => {
+    parent.stop();
+  });
+  const agent = createActor(agentMachine, {
+    input: {
+      adapter: codexAdapter,
+      sessionId: 'session',
+      cwd: directory,
+      vendorSessionId: null,
+      configOptions: [],
+      parent,
+    },
+  }).start();
+  cleanups.push(async () => {
+    agent.send({ type: 'agent.stop' });
+    await waitFor(agent, (snapshot) => snapshot.status === 'done', cliDeadline);
+  });
+  await expect
+    .poll(
+      () => events.some((event) => event.type === 'agent.ready'),
+      cliDeadline,
+    )
+    .toBe(true);
+  agent.send(prompt);
+  await expect
+    .poll(
+      () => events.some((event) => event.type === 'agent.elicitationRequested'),
+      cliDeadline,
+    )
+    .toBe(true);
+  agent.send({ type: 'agent.cancel' });
+  agent.send({ type: 'agent.answerElicitation', action: 'cancel' });
+  await expect
+    .poll(
+      () => events.some((event) => event.type === 'agent.turnEnded'),
+      cliDeadline,
+    )
+    .toBe(true);
+  // Wait for both concurrently dispatched commands, including a late interrupt error.
+  const cancellationSettleWait = 200;
+  await new Promise((resolve) => setTimeout(resolve, cancellationSettleWait));
+  expect(events.filter((event) => event.type === 'agent.turnEnded')).toEqual([
+    expect.objectContaining({ stopReason: 'cancelled' }),
+  ]);
+  expect(agent.getSnapshot().status).toBe('active');
+  expect(agent.getSnapshot().context.failure).toBeNull();
+});
+
+it.each([
+  {
+    behavior: 'fails an Agent with a live Turn',
+    interruptError: 'beforeCompletion' as const,
+    status: 'done',
+    failure: 'Mock interrupt failed.',
+    endedTurns: 0,
+  },
+  {
+    behavior: 'keeps an Agent ready after its Turn ends',
+    interruptError: 'afterCompletion' as const,
+    status: 'active',
+    failure: null,
+    endedTurns: 1,
+  },
+])(
+  '$behavior on an interrupt error',
+  async ({ interruptError, status, failure, endedTurns }) => {
+    stubScenario({ interruptError });
+    const { directory } = await prepare('elicitation');
+    const events: AgentEvent[] = [];
+    const parent = createActor(
+      fromCallback<AgentEvent>(({ receive }) =>
+        receive((event) => events.push(event)),
+      ),
+    ).start();
+    cleanups.push(() => {
+      parent.stop();
+    });
+    const agent = createActor(agentMachine, {
+      input: {
+        adapter: codexAdapter,
+        sessionId: 'session',
+        cwd: directory,
+        vendorSessionId: null,
+        configOptions: [],
+        parent,
+      },
+    }).start();
+    cleanups.push(async () => {
+      agent.send({ type: 'agent.stop' });
+      await waitFor(
+        agent,
+        (snapshot) => snapshot.status === 'done',
+        cliDeadline,
+      );
+    });
+    await expect
+      .poll(
+        () => events.some((event) => event.type === 'agent.ready'),
+        cliDeadline,
+      )
+      .toBe(true);
+    agent.send(prompt);
+    await expect
+      .poll(
+        () =>
+          events.some((event) => event.type === 'agent.elicitationRequested'),
+        cliDeadline,
+      )
+      .toBe(true);
+    agent.send({ type: 'agent.cancel' });
+    const cancellationSettleWait = 200;
+    await new Promise((resolve) => setTimeout(resolve, cancellationSettleWait));
+    expect(agent.getSnapshot().status).toBe(status);
+    expect(agent.getSnapshot().context.failure).toBe(failure);
+    expect(
+      events.filter((event) => event.type === 'agent.turnEnded'),
+    ).toHaveLength(endedTurns);
+  },
+);

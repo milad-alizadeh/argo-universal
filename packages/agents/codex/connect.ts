@@ -12,13 +12,24 @@ import type {
   CommandExecutionRequestApprovalResponse,
   FileChangeRequestApprovalResponse,
   ToolRequestUserInputResponse,
+  TurnInterruptParams,
+  TurnInterruptResponse,
   TurnStartParams,
 } from './protocol.gen';
 
-const createVendorTurn = () => ({
-  id: null as string | null,
+interface VendorTurn {
+  id: string | null;
+  identity: PromiseWithResolvers<string | null>;
+  completion: PromiseWithResolvers<void>;
+  completed: boolean;
+  interrupted?: Promise<void>;
+}
+
+const createVendorTurn = (): VendorTurn => ({
+  id: null,
   identity: Promise.withResolvers<string | null>(),
   completion: Promise.withResolvers<void>(),
+  completed: false,
 });
 
 export async function connect(
@@ -28,7 +39,7 @@ export async function connect(
 ): Promise<VendorSession> {
   signal.throwIfAborted();
   let vendorSessionId = input.vendorSessionId;
-  let activeTurn: ReturnType<typeof createVendorTurn> | null = null;
+  let activeTurn: VendorTurn | null = null;
   const permissions = new Map<
     string,
     Extract<
@@ -71,6 +82,7 @@ export async function connect(
         notification.method === 'turn/completed' &&
         activeTurn?.id === notification.params.turn.id
       ) {
+        activeTurn.completed = true;
         activeTurn.identity.resolve(null);
         activeTurn.completion.resolve();
         activeTurn = null;
@@ -99,6 +111,20 @@ export async function connect(
         })
       : await server.request('thread/start', settings);
     vendorSessionId = started.thread.id;
+    // Both cancellation paths share one interrupt for this vendor Turn.
+    const interrupt = (turn: VendorTurn) =>
+      (turn.interrupted ??= (async () => {
+        const turnId = await turn.identity.promise;
+        if (!turnId || activeTurn !== turn) return;
+        try {
+          await (server.request('turn/interrupt', {
+            threadId: started.thread.id,
+            turnId,
+          } satisfies TurnInterruptParams) satisfies Promise<TurnInterruptResponse>);
+        } catch (error) {
+          if (!turn.completed) throw error;
+        }
+      })());
     const prompt = async (content: TurnStartParams['input']) => {
       const turn = createVendorTurn();
       activeTurn = turn;
@@ -137,6 +163,7 @@ export async function connect(
               turn.id = result.turn.id;
               turn.identity.resolve(turn.id);
             } else {
+              turn.completed = true;
               turn.completion.resolve();
               activeTurn = null;
             }
@@ -175,14 +202,7 @@ export async function connect(
             );
             return;
           case 'agent.cancel': {
-            const turn = activeTurn;
-            if (!turn) return;
-            const turnId = await turn.identity.promise;
-            if (turnId && activeTurn === turn)
-              await server.request('turn/interrupt', {
-                threadId: started.thread.id,
-                turnId,
-              });
+            if (activeTurn) await interrupt(activeTurn);
             return;
           }
           case 'agent.setConfigOption': {
@@ -214,10 +234,8 @@ export async function connect(
             if (!request) return;
             elicitation = null;
             if (command.action === 'cancel' && request.params.isBlocking) {
-              await server.request('turn/interrupt', {
-                threadId: started.thread.id,
-                turnId: request.params.turnId,
-              });
+              if (activeTurn?.id === request.params.turnId)
+                await interrupt(activeTurn);
               return;
             }
             const answers: ToolRequestUserInputResponse = {

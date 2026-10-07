@@ -27,6 +27,9 @@ const MockCliScenario = z.strictObject({
   turnResponseAfterNextStart: z.boolean().default(false),
   requestBeforeStartResponse: z.boolean().default(false),
   completionBeforeResponse: z.boolean().default(false),
+  interruptError: z
+    .enum(['none', 'beforeCompletion', 'afterCompletion'])
+    .default('none'),
   notificationsFirst: z.boolean().default(false),
   account: z.enum(['subscription', 'apiKey']).default('subscription'),
   transcriptFile: z.string().nullable().default(null),
