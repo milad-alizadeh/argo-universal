@@ -126,9 +126,11 @@ describe('after-edit', () => {
   });
 
   it('blocks on a warning and on an unused disable directive', () => {
+    // Split so check-comments does not read the string as a directive.
+    const directive = ['oxlint', 'disable-next-line no-debugger'].join('-');
     writeFileSync(
       path.join(root, 'noisy.ts'),
-      "console.log('x');\n// oxlint-disable-next-line no-debugger\nexport const y = 1;\n",
+      `console.log('x');\n// ${directive}\nexport const y = 1;\n`,
     );
     const result = runHook('after-edit', fileEdit('noisy.ts'));
     expect(result.status).toBe(BLOCKED);
