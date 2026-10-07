@@ -16,6 +16,8 @@ it('gives every scenario field its default when the variable is absent', () => {
     processFile: null,
     blockInitialize: false,
     malformedLine: false,
+    concurrentQuestions: false,
+    otherThreadRequest: false,
     blockTurnStart: false,
     turnResponseAfterNextStart: false,
     requestBeforeStartResponse: false,

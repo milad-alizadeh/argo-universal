@@ -37,6 +37,7 @@ const CLI_START: ConfigValues = {
 
 export const EXECUTABLE = 'claude';
 const STDERR_TAIL_LENGTH = 2000;
+const requestCancellationLimitMs = 3000;
 
 // Without an API key, so the CLI runs on the user's subscription (ADR-0004).
 export function cliEnvironment() {
@@ -107,15 +108,7 @@ export async function connect(
   let stderrTail = '';
   let stopping = false;
   const controller = new AbortController();
-  const toolRequests = new Map<string, (answer: PermissionResult) => void>();
-  let elicitation: { toolUseId: string; input: AskUserQuestionInput } | null =
-    null;
-  const cancelToolRequests = () => {
-    for (const resolve of toolRequests.values())
-      resolve({ behavior: 'deny', message: 'Request cancelled' });
-    toolRequests.clear();
-    elicitation = null;
-  };
+  const requests = createRequestTracker(listener);
   const withStderr = (error: unknown) => {
     const tail = stderrTail.trim();
     return tail ? `${describeError(error)}\n${tail}` : describeError(error);
@@ -143,19 +136,7 @@ export async function connect(
           message: 'Request answers are not implemented yet',
         });
       const answer = Promise.withResolvers<PermissionResult>();
-      if (toolName === 'AskUserQuestion')
-        elicitation = {
-          toolUseId: options.toolUseID,
-          input: toolInput as unknown as AskUserQuestionInput,
-        };
-      toolRequests.set(options.toolUseID, answer.resolve);
-      const cancel = () => {
-        toolRequests.delete(options.toolUseID);
-        if (elicitation?.toolUseId === options.toolUseID) elicitation = null;
-        answer.resolve({ behavior: 'deny', message: 'Request cancelled' });
-      };
-      options.signal.addEventListener('abort', cancel, { once: true });
-      listener.message({
+      const message: VendorMessage = {
         type: 'control_request',
         request_id: options.requestId,
         request: {
@@ -164,7 +145,13 @@ export async function connect(
           input: toolInput,
           tool_use_id: options.toolUseID,
         },
-      });
+      };
+      requests.add(message, answer.resolve);
+      const cancel = () =>
+        requests
+          .remove(options.toolUseID)
+          ?.resolve({ behavior: 'deny', message: 'Request cancelled' });
+      options.signal.addEventListener('abort', cancel, { once: true });
       if (options.signal.aborted) cancel();
       return answer.promise.finally(() =>
         options.signal.removeEventListener('abort', cancel),
@@ -188,11 +175,26 @@ export async function connect(
   const abort = () => {
     stopping = true;
     queue.end();
-    cancelToolRequests();
-    controller.abort();
+    void stopRequests().finally(() => controller.abort());
   };
   signal.addEventListener('abort', abort, { once: true });
   const vendor = query({ prompt: queue.prompts, options });
+  let stoppingRequests: Promise<void> | undefined;
+  const stopRequests = () =>
+    (stoppingRequests ??= (async () => {
+      if (!requests.cancel()) return;
+      // An interrupt acknowledgement lets the SDK flush denied requests before closing its pipe.
+      await new Promise<void>((resolve) => {
+        const deadline = setTimeout(resolve, requestCancellationLimitMs);
+        void vendor
+          .interrupt()
+          .catch(() => {})
+          .finally(() => {
+            clearTimeout(deadline);
+            resolve();
+          });
+      });
+    })());
 
   // Sends the vendor the values that differ from the ones it runs with.
   const applyValues = async (current: ConfigValues, next: ConfigValues) => {
@@ -237,7 +239,7 @@ export async function connect(
     try {
       for await (const message of vendor) {
         listener.message({ ...message, receivedAt: Date.now() });
-        // A usage request that fails as the Session closes has nothing to report.
+        // Usage failures are ignored; the streamed Turn still supplies its Feed.
         if (message.type === 'result') void sendUsage().catch(() => {});
       }
       if (!stopping) listener.failed(withStderr('The Claude CLI exited.'));
@@ -273,6 +275,7 @@ export async function connect(
           });
           return promptDispatched;
         case 'agent.cancel':
+          requests.cancel();
           await promptDispatched;
           // Teardown already interrupts the vendor session.
           if (stopping) return;
@@ -290,9 +293,12 @@ export async function connect(
           });
           return;
         }
+        case 'agent.answerPlanProposal':
+        case 'agent.rename':
+        case 'agent.stopShell':
+          throw new UnsupportedCommandError(command);
         case 'agent.answerPermission': {
-          const resolve = toolRequests.get(command.toolCallId);
-          toolRequests.delete(command.toolCallId);
+          const resolve = requests.remove(command.toolCallId)?.resolve;
           resolve?.(
             command.optionId === 'allow_once'
               ? { behavior: 'allow' }
@@ -307,11 +313,12 @@ export async function connect(
           return;
         }
         case 'agent.answerElicitation': {
-          const request = elicitation;
+          const request = requests.head();
           if (!request) return;
-          elicitation = null;
-          const resolve = toolRequests.get(request.toolUseId);
-          toolRequests.delete(request.toolUseId);
+          const resolve = requests.remove(
+            request.toolUseId,
+            command.action !== 'cancel',
+          )?.resolve;
           const answers: AskUserQuestionInput['answers'] = Object.fromEntries(
             Object.entries(
               toQuestionAnswers(
@@ -334,12 +341,9 @@ export async function connect(
                   interrupt: command.action === 'cancel',
                 },
           );
+          if (command.action === 'cancel') requests.cancel();
           return;
         }
-        case 'agent.answerPlanProposal':
-        case 'agent.rename':
-        case 'agent.stopShell':
-          throw new UnsupportedCommandError(command);
         default: {
           const unhandled: never = command;
           throw new UnsupportedCommandError(unhandled);
@@ -350,9 +354,59 @@ export async function connect(
       signal.removeEventListener('abort', abort);
       stopping = true;
       queue.end();
-      cancelToolRequests();
+      await stopRequests();
       vendor.close();
       await messages;
+    },
+  };
+}
+
+// Owns SDK request resolution and exposes only the first unanswered question.
+function createRequestTracker(listener: VendorSessionListener<VendorMessage>) {
+  type Request = {
+    resolve: (answer: PermissionResult) => void;
+    message: Extract<VendorMessage, { type: 'control_request' }>;
+  };
+  const pending = new Map<string, Request>();
+  const questions: string[] = [];
+  return {
+    add: (message: Request['message'], resolve: Request['resolve']) => {
+      if (message.request.subtype !== 'can_use_tool') return;
+      const id = message.request.tool_use_id;
+      pending.set(id, { resolve, message });
+      if (message.request.tool_name === 'AskUserQuestion') {
+        questions.push(id);
+        if (questions.length > 1) return;
+      }
+      listener.message(message);
+    },
+    head: () => {
+      const id = questions[0];
+      if (!id) return;
+      const request = pending.get(id)?.message.request;
+      if (request?.subtype !== 'can_use_tool') return;
+      // AskUserQuestionInput is the SDK's tool payload at this boundary.
+      return {
+        toolUseId: id,
+        input: request.input as unknown as AskUserQuestionInput,
+      };
+    },
+    remove: (id: string, advance = true) => {
+      const request = pending.get(id);
+      pending.delete(id);
+      const index = questions.indexOf(id);
+      if (index >= 0) questions.splice(index, 1);
+      const next = questions[0] ? pending.get(questions[0]) : undefined;
+      if (advance && index === 0 && next) listener.message(next.message);
+      return request;
+    },
+    cancel: () => {
+      const cancelled = [...pending.values()];
+      pending.clear();
+      questions.length = 0;
+      for (const request of cancelled)
+        request.resolve({ behavior: 'deny', message: 'Request cancelled' });
+      return cancelled.length;
     },
   };
 }
