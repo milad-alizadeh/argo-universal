@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { View } from 'react-native';
+import { LoadError } from '../components/LoadError';
 import { useTRPC } from '../trpc/context';
 import { NewSessionScreen } from './NewSessionScreen';
 import { SessionScreen } from './SessionScreen';
@@ -8,7 +10,28 @@ import { SessionScreen } from './SessionScreen';
 export function FirstSessionScreen() {
   const trpc = useTRPC();
   const list = useQuery(trpc.session.list.queryOptions({ archived: false }));
+  const [chosenId, setChosenId] = useState<string | null | undefined>();
   if (list.isPending) return <View className="flex-1 bg-background" />;
-  const first = list.data?.sessions[0];
-  return first ? <SessionScreen id={first.sessionId} /> : <NewSessionScreen />;
+  if (list.isError)
+    return (
+      <LoadError
+        title="Couldn't load Sessions"
+        description="The Server didn't respond. Check that it's running, then retry."
+        onRetry={() => void list.refetch()}
+      />
+    );
+  const sessions = list.data?.sessions ?? [];
+  if (
+    chosenId === undefined ||
+    (chosenId !== null &&
+      !sessions.some((session) => session.sessionId === chosenId))
+  ) {
+    setChosenId(sessions[0]?.sessionId ?? null);
+    return <View className="flex-1 bg-background" />;
+  }
+  return chosenId === null ? (
+    <NewSessionScreen />
+  ) : (
+    <SessionScreen id={chosenId} />
+  );
 }
