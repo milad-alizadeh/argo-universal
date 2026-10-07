@@ -114,7 +114,7 @@ export function createSessionService({
       if (
         optionId === 'reject_once' &&
         message &&
-        actor.getSnapshot().context.capabilities?.permissionFeedback === false
+        actor.getSnapshot().context.capabilities?.permissionFeedback !== true
       )
         throw new TRPCError({
           code: 'BAD_REQUEST',

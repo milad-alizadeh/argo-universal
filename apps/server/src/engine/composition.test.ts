@@ -34,6 +34,7 @@ import { initTestRepository } from '#mocks/git';
 import { liveHeaderMocks } from '#mocks/live-header';
 import type { writerMachine } from '../services/feed/writer-machine';
 import { createServerServices } from '../services/server-services';
+import type { SessionActorRef } from '../services/sessions/session-machine';
 import type { HttpServerOptions } from './http-server';
 import { engineMachine } from './machine';
 
@@ -1118,8 +1119,12 @@ it.each(agentAdapters)(
         optionId: 'reject_once' as const,
         message: 'Use a read-only command instead',
       };
+      const session = root.engine.system.get(`session:${sessionId}`) as
+        | SessionActorRef
+        | undefined;
       const supportsFeedback =
-        mockClis[adapter.agent]?.supportsPermissionFeedback;
+        session?.getSnapshot().context.capabilities?.permissionFeedback ===
+        true;
       if (!supportsFeedback) {
         await expect(
           caller.session.answerPermission(answer),

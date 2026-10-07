@@ -4,6 +4,7 @@ import type {
 } from '@anthropic-ai/claude-agent-sdk';
 
 export type {
+  AccountInfo,
   PermissionResult,
   SDKAssistantMessage,
   SDKControlInitializeResponse,

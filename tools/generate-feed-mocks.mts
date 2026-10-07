@@ -31,10 +31,10 @@ const mocks = agentAdapters.flatMap(({ agent }, index) => {
     'image-prompt',
     'markdown-answer',
   ];
-  if (cli.recordings.commandOutcomes)
-    recordings.push(cli.recordings.commandOutcomes);
-  if (cli.recordings.editStates) recordings.push(cli.recordings.editStates);
-  if (cli.recordings.editFailure) recordings.push(cli.recordings.editFailure);
+  const { commandOutcomes, editStates, editFailure } = cli.recordings;
+  if (commandOutcomes !== null) recordings.push(commandOutcomes);
+  if (editStates !== null) recordings.push(editStates);
+  if (editFailure !== null) recordings.push(editFailure);
   return recordings.map((recording) => {
     const sessionId = `agent-${index + 1}-${recording}`;
     let feed: Feed = { sessionId, maxRevision: 0, nextPosition: 0, rows: {} };

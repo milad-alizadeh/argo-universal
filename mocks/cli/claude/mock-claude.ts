@@ -1,6 +1,7 @@
 // A stand-in `claude` that the Agent SDK drives over stream-json. Each prompt replays the next recorded Turn.
 import { randomUUID } from 'node:crypto';
 import type {
+  AccountInfo,
   AskUserQuestionInput,
   PermissionResult,
   SDKAssistantMessage,
@@ -177,6 +178,11 @@ const initializeResponse: SDKControlInitializeResponse = {
   account: { subscriptionType: 'Claude Max', apiProvider: 'firstParty' },
 };
 
+const apiKeyAccount: AccountInfo = {
+  apiKeySource: 'ANTHROPIC_API_KEY',
+  apiProvider: 'firstParty',
+};
+
 const isInit = (frame: Frame) =>
   frame.type === 'system' && frame.subtype === 'init';
 const crashAfter = environment.exitMidTurn
@@ -230,8 +236,15 @@ function answer(subtype: string | undefined) {
   if (subtype !== 'initialize') return recordedAnswers.get(subtype);
   const response = recordedAnswers.get(subtype) ?? initializeResponse;
   // A CLI nobody signed in to still starts, with an account that has no subscription.
-  if (environment.availability !== 'not_signed_in') return response;
-  return { ...(response as Record<string, unknown>), account: {} };
+  if (environment.availability === 'not_signed_in')
+    return { ...(response as Record<string, unknown>), account: {} };
+  // A key that reaches the CLI, or a scenario that fakes one, replaces the subscription.
+  if (
+    process.env.ANTHROPIC_API_KEY ||
+    environment.scenario.account === 'apiKey'
+  )
+    return { ...(response as Record<string, unknown>), account: apiKeyAccount };
+  return response;
 }
 
 serveJsonLines<Output>((input) => {

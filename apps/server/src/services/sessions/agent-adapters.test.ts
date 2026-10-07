@@ -57,7 +57,7 @@ describe.each(agentAdapters)(
         ...transcript.environment,
         ...mockCliScenarioEnvironment({ ...scenario, ...transcript.scenario }),
       };
-      for (const key of mockCli.apiKeyVariables ?? [])
+      for (const key of mockCli.apiKeyVariables)
         vi.stubEnv(key, 'mock-api-key');
       for (const [key, value] of Object.entries(environment))
         vi.stubEnv(key, value);
@@ -202,7 +202,7 @@ describe.each(agentAdapters)(
       expect((await close()).output).toEqual({ failure: null });
     });
 
-    it.each(mockCli.connectionFailures ?? [])(
+    it.each(mockCli.connectionFailures)(
       'rejects an unsupported connection with $message',
       async (failure) => {
         const { session } = await startSession(
