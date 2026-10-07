@@ -50,7 +50,7 @@ const messagesFor = (text: string): string[] => {
       messages.push("Exempt the file in the plugin's includes instead.");
     if (complexity.test(rest))
       messages.push(
-        'Answer the alarm with docs/agents/code-shape.md or the debt list.',
+        'Refactor to meet the cap; docs/agents/prickles/prickles-style.md S2.',
       );
   }
   return messages;
