@@ -213,8 +213,8 @@ export const Answered: Story = {
       await expect(
         canvas.getByText('Already answered on another device'),
       ).toBeVisible();
+      // A loaded runner can draw the previous width's card for a few frames after the resize.
       if (width === 390) {
-        // A loaded runner can draw the wide card for a few frames after the resize.
         await waitFor(() =>
           expect(
             canvas.queryByRole('button', { name: 'Approve' }),
@@ -225,7 +225,7 @@ export const Answered: Story = {
         ).not.toBeInTheDocument();
       } else {
         await expect(
-          canvas.getByRole('button', { name: 'Approve' }),
+          await canvas.findByRole('button', { name: 'Approve' }),
         ).toBeDisabled();
         await expect(
           canvas.getByRole('button', { name: 'Keep planning' }),
