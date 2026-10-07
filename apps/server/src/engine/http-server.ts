@@ -11,6 +11,7 @@ import { createRequestListener } from './request-listener';
 
 export interface HttpServerOptions {
   home: string;
+  createId: () => string;
   port: number;
   version: string;
   startedAt: string;

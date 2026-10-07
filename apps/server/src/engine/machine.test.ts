@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type { Database } from '@repo/db';
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -100,6 +101,8 @@ type EngineSnapshot = SnapshotFrom<typeof machine>;
 type EngineEvent = EventFromLogic<typeof machine>;
 
 const input = {
+  now: () => Date.now(),
+  createId: randomUUID,
   home: '/unused',
   port: 7337,
   version: '1.2.3',
@@ -275,7 +278,10 @@ const states: Record<string, (snapshot: EngineSnapshot) => void> = {
     expectModelState(snapshot);
     expect(recoveryCalls).toEqual([
       expect.objectContaining({
-        input: { database: mockDatabase, blobsFolder: '/unused/blobs' },
+        input: {
+          database: mockDatabase,
+          blobsFolder: '/unused/blobs',
+        },
       }),
     ]);
     expect(startHttpServerCalls).toEqual([]);
@@ -284,9 +290,18 @@ const states: Record<string, (snapshot: EngineSnapshot) => void> = {
   },
   'live.listening': (snapshot) => {
     expectModelState(snapshot);
+    const sessions = startHttpServerCalls[0]?.input.sessions;
+    expect(sessions?.getSnapshot().context.now).toBe(input.now);
+    expect(sessions?.getSnapshot().context.createId).toBe(input.createId);
+    expect(
+      engine.getSnapshot().children.databaseWriter?.getSnapshot(),
+    ).toMatchObject({
+      context: { now: input.now },
+    });
     expect(startHttpServerCalls).toEqual([
       expect.objectContaining({
         input: {
+          createId: input.createId,
           home: input.home,
           port: 7337,
           version: '1.2.3',

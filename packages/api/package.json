@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/root.ts",
-    "./mocks": "./mocks/index.ts"
+    "./mocks": "./mocks/index.ts",
+    "./server-runtime": "./src/server-runtime.mts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
@@ -19,6 +20,7 @@
   "devDependencies": {
     "@repo/typescript": "workspace:*",
     "@repo/vitest": "workspace:*",
+    "@types/node": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

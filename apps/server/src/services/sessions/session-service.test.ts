@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -91,11 +92,20 @@ function openServer({
       actors: { sessions: registryMachine, writer },
     }).createMachine({
       invoke: [
-        { src: 'writer', systemId: 'databaseWriter', input: { database } },
+        {
+          src: 'writer',
+          systemId: 'databaseWriter',
+          input: {
+            now: () => Date.now(),
+            database,
+          },
+        },
         {
           src: 'sessions',
           systemId: 'sessions',
           input: {
+            now: () => Date.now(),
+            createId: randomUUID,
             database,
             runtimeDirectory: join(directory, '.argo'),
             adapters: [

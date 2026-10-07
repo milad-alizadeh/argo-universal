@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type { AgentProbe } from '@repo/agents';
 import { createMockAdapter } from '@repo/mocks/agent';
 import { afterAll, afterEach, expect, it, vi } from 'vitest';
@@ -18,7 +19,13 @@ function startAgents(...probes: (() => Promise<AgentProbe>)[]) {
     createMockAdapter({ probe }, `agent-${index + 1}`),
   );
   const sessions = createActor(registryMachine, {
-    input: { database, runtimeDirectory, adapters },
+    input: {
+      now: () => Date.now(),
+      createId: randomUUID,
+      database,
+      runtimeDirectory,
+      adapters,
+    },
   }).start();
   cleanups.push(() => sessions.stop());
   return createAgentService(sessions);

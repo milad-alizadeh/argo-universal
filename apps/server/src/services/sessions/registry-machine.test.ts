@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import { afterAll, afterEach, expect, it } from 'vitest';
 import {
@@ -20,6 +21,8 @@ const registryGraphMachine = createRegistryModelMachine(true);
 const { database, directory: runtimeDirectory, remove } = openTestDatabase();
 afterAll(remove);
 const input: RegistryInput = {
+  now: () => Date.now(),
+  createId: randomUUID,
   database,
   runtimeDirectory,
   adapters: [registryModelAdapter],
@@ -53,6 +56,8 @@ const events: RegistryEvent[] = [
       type: `xstate.snapshot.session:${sessionId}`,
       snapshot: createActor(sessionMachine, {
         input: {
+          now: () => Date.now(),
+          createId: randomUUID,
           kind: 'existing',
           database,
           runtimeDirectory,
