@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
+import { eachLayout, layoutWidths } from '../../mocks/each-layout';
 import {
   arrivingMessage,
   arrivingRowSessionMocks,
@@ -20,7 +21,6 @@ import {
   switchSession,
 } from '../../mocks/session-switch-preview';
 import { settleViewport } from '../../mocks/settle-viewport';
-import { applyTheme } from '../lib/theme';
 import { SessionScreen } from './SessionScreen';
 
 const meta = {
@@ -33,29 +33,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const widths = { phone: 390, wide: 1440 } as const;
-
-// Runs the assertion at phone and wide widths, in light and dark.
-async function eachLayout(
-  assertion: (layout: keyof typeof widths) => Promise<void>,
-) {
-  if (!('__vitest_browser__' in globalThis)) {
-    await assertion('phone');
-    return;
-  }
-  for (const layout of ['phone', 'wide'] as const) {
-    await settleViewport(widths[layout]);
-    for (const mode of ['light', 'dark'] as const) {
-      applyTheme('default', mode);
-      await assertion(layout);
-    }
-  }
-  applyTheme('default', 'light');
-}
-
 // At a phone's size the Feed overflows a screen, so the reader can scroll away from the end.
 async function settlePhone() {
-  if ('__vitest_browser__' in globalThis) await settleViewport(widths.phone);
+  if ('__vitest_browser__' in globalThis)
+    await settleViewport(layoutWidths.phone);
 }
 
 const atEnd = (scroll: HTMLElement) =>
@@ -74,12 +55,12 @@ function inViewport(element: Element) {
 
 export const RunningTurn: Story = {
   play: async ({ canvas }) =>
-    eachLayout(async (layout) => {
+    eachLayout(async (wide) => {
       const heading = await canvas.findByRole('heading', {
         name: /^Think briefly first/,
       });
       await expect(heading).toBeVisible();
-      if (layout === 'wide') {
+      if (wide) {
         await expect(canvas.getByText('Running')).toBeVisible();
         await expect(canvas.getByText('for 4m 12s')).toBeVisible();
       } else {
@@ -100,13 +81,13 @@ export const RunningTurn: Story = {
 export const Idle: Story = {
   parameters: { trpc: idleSessionMocks },
   play: async ({ canvas }) =>
-    eachLayout(async (layout) => {
+    eachLayout(async (wide) => {
       await expect(
         await canvas.findByRole('heading', {
           name: /^Without using any tools/,
         }),
       ).toBeVisible();
-      if (layout === 'wide') {
+      if (wide) {
         await expect(canvas.getByText('Idle')).toBeVisible();
         await expect(canvas.queryByText(/^for /)).toBeNull();
       }

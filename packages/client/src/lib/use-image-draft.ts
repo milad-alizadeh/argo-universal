@@ -2,18 +2,22 @@ import type { BlobRef, SessionNewInput } from '@repo/contracts';
 import { useMutation } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 import type { ComposerDraft } from '#components/Composer';
-import { useTRPC } from '../trpc/context';
+import { useTRPCClient } from '../trpc/context';
 import { pickImages } from './pick-images';
 
 const emptyDraft: ComposerDraft = { text: '', images: [] };
 
 // A Composer draft with attached images, and the prompt it sends once its images are uploaded.
 export function useImageDraft() {
-  const trpc = useTRPC();
+  const client = useTRPCClient();
   const [draft, setDraft] = useState(emptyDraft);
   // The file behind each attached image, by its id in the draft.
   const imageFiles = useRef(new Map<string, Blob>());
-  const upload = useMutation(trpc.blob.upload.mutationOptions());
+  // All of a draft's images upload together, as one mutation, so `upload` reports them as one.
+  const upload = useMutation({
+    mutationFn: (forms: FormData[]) =>
+      Promise.all(forms.map((form) => client.blob.upload.mutate(form))),
+  });
 
   async function attachImages() {
     const picked = await pickImages();
@@ -33,21 +37,17 @@ export function useImageDraft() {
     setDraft(next);
   }
 
-  // Uploads each image, in draft order; undefined once an upload fails, which `upload.error` shows.
-  async function uploadImages(
-    sent: ComposerDraft,
-  ): Promise<BlobRef[] | undefined> {
-    const references: BlobRef[] = [];
-    for (const image of sent.images) {
+  // Uploads the images at once, in draft order; undefined when any upload fails, which `upload.error` shows.
+  function uploadImages(sent: ComposerDraft): Promise<BlobRef[] | undefined> {
+    const forms = sent.images.map((image) => {
       const file = imageFiles.current.get(image.id);
       if (!file) throw new Error(`No file for the attached ${image.name}`);
       const form = new FormData();
       form.append('file', file, image.name);
-      const reference = await upload.mutateAsync(form).catch(() => undefined);
-      if (!reference) return undefined;
-      references.push(reference);
-    }
-    return references;
+      return form;
+    });
+    if (!forms.length) return Promise.resolve([]);
+    return upload.mutateAsync(forms).catch(() => undefined);
   }
 
   // The draft as prompt blocks: its text, then each uploaded image.

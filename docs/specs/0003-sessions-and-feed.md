@@ -60,7 +60,7 @@ On a phone, the app uses a drawer of sections, and detail screens push full scre
 25. As a developer, I want to open an edit's diff, inline on a phone and in the Inspector on a wide window, so that I can review it where there's room.
 26. As a developer, I want a live header that says what the Agent is doing, such as "Running pnpm test", so that I know where the Turn is.
 27. As a developer, I want the live header to use the Agent's own description of a tool where it gives one, and the tool's name otherwise, so that both Agents read well.
-28. As a developer, I want the Plan as a sticky panel on a wide window, and in the composer's status row showing done out of total on a phone, so that I always know how far the Agent got.
+28. As a developer, I want the Plan in a tray above the composer on a wide window, and in the composer's status row showing done out of total on a phone, so that I always know how far the Agent got.
 29. As a developer, I want a Compaction row that says when the Agent compacted its context, so that I understand why it may have forgotten details.
 30. As a developer, I want error Notices in red and other Notices dimmed, so that problems stand out.
 31. As a developer, I want a retry shown in the live header, so that a slow Turn explains itself.
@@ -280,7 +280,7 @@ Fields that ACP lacks go in `_meta.argo` (ADR 0006):
   - Rule 7: an edit's diff expands inline on a phone and opens in the Inspector on a wide window.
   - Rule 8: there is no "N files changed" card. The Changed files chip replaces it.
   - Rule 10: the final answer shows in full like any Agent message, with no actions under it.
-  - Rule 11: the Plan is a sticky panel on a wide window and in the composer's status row on a phone. It is never a Feed row.
+  - Rule 11: the Plan is a tray above the composer on a wide window and in the composer's status row on a phone. It is never a Feed row.
   - Rule 15: a pending Permission request is a card in the composer's place, not inline. Its Tool call row reads "Awaiting approval" until answered, then keeps a one-line outcome. Elicitations and Plan proposals use the same card place.
   - Rule 16: a Subagent row opens the Subagent's Feed, in the Inspector on a wide window and in a page sheet on a phone. The Subagents button's list replaces the panel, grouped into Running and Finished.
   - Rule 17: there is no Goal UI in this milestone.
@@ -386,10 +386,10 @@ These come from the UI map agreed on 2026-10-03.
   - The "Projects ⋯ +" sub-header, a heading's ⋯ and Add Project come later.
 - **Session header.**
   - On a phone, it is the native stack header: back, the plain one-line title, Changes and ⋯. It has no status mark and no Plan button; the Plan's done out of total shows in the composer's status row. The ⋯ menu holds Rename and Archive.
-  - On a wide window, it shows the title and its state (click the title to rename), the Subagents and Shells buttons, the Changed files chip, ⋯, and the Inspector toggles. The checkout path and branch sit in the composer's checkout row.
+  - On a wide window, it shows the title and its state (click the title to rename), the Subagents and Shells buttons, the Changed files chip, and ⋯. The Inspector expands and closes from its own header. The checkout path and branch sit in the composer's checkout row.
 - **Session bottom.** It shows exactly one of: the composer, a request card (Permission request, Elicitation or Plan proposal), or the "Archived · read-only" banner.
 - **Plan proposal card.** The plan scrolls inside the card under its title, capped at 280 px high, and Approve and Keep planning stay visible. An expand button beside the title shows the whole plan with the same title and buttons: on a wide window the card fills the main content over the Feed, and on a phone it opens as a native page sheet on iOS and full screen on Android and narrow web. Collapsing, or answering, returns to the card. Keep planning opens a required feedback field in the card.
-- **Plan.** On a wide window, a sticky panel at the top of the Feed. On a phone, the composer's status row shows it.
+- **Plan.** On a wide window, a tray above the composer card that opens in place to list the steps. On a phone, the composer's status row shows it.
 - **Changed files.** On a wide window, the chip opens the file list in the Inspector, which can expand to the full width. On a phone, the header's Changes button opens a popover.
 - **Subagents and Shells.** Two buttons, each with a count that is green while anything runs and grey once all have ended. Each opens a list grouped into Running and Finished, and each row shows model · duration · tokens. On a wide window the buttons sit at the top right of the header, and an item opens in the Inspector. On a phone they are pills above the composer, and an item opens in a page sheet. A Subagent row in the Feed opens the same place.
 - **Archive.** Archiving a Session that has uncommitted files asks first in a popover. Archiving shows a toast with Undo, and the Session moves to the Archived filter with the read-only banner.

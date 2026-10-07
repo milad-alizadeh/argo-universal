@@ -124,7 +124,7 @@ function SessionView({ sessionId, now }: { sessionId: string; now?: number }) {
           loadingOlder={loadingOlder}
           onStartReached={loadOlder}
           imageUrl={imageUrl}
-          emptyDetail={snapshot.checkout.branch ?? undefined}
+          emptyBranch={snapshot.checkout.branch ?? undefined}
           now={now}
         />
         {/* The bottom slot: the Composer until request cards and banners land. */}

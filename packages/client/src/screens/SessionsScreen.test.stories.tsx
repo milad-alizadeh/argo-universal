@@ -1,6 +1,7 @@
 import { archivedSessions, projectsList, sessionRows } from '@repo/api/mocks';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
+import { eachLayout } from '../../mocks/each-layout';
 import {
   emptySessionListMocks,
   sessionListMocks,
@@ -15,7 +16,6 @@ import {
 import { SessionsScreenPreview } from '../../mocks/sessions-screen-preview';
 import { fails, pending } from '../../mocks/trpc-mock-link';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
-import { applyTheme } from '../lib/theme';
 import { SessionsScreen } from './SessionsScreen';
 
 const recorder = createNavigationRecorder();
@@ -32,24 +32,6 @@ const meta = {
 } satisfies Meta<typeof SessionsScreen>;
 export default meta;
 type Story = StoryObj<typeof meta>;
-
-async function eachLayout(assertion: () => Promise<void>) {
-  if (!('__vitest_browser__' in globalThis)) {
-    await assertion();
-    return;
-  }
-  const { page } = await import('vitest/browser');
-  for (const width of [390, 1440]) {
-    await page.viewport(width, 844);
-    // Crossing the wide breakpoint swaps the header controls, so let React settle first.
-    for (let frame = 0; frame < 2; frame++)
-      await new Promise((resolve) => requestAnimationFrame(resolve));
-    for (const mode of ['light', 'dark'] as const) {
-      applyTheme('default', mode);
-      await assertion();
-    }
-  }
-}
 
 export const ProjectCollapse: Story = {
   play: async ({ canvas, userEvent }) =>

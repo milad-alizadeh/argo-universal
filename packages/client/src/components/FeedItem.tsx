@@ -37,15 +37,19 @@ const renderActivity = (activity: FeedActivity) => (
 
 // Whether the Feed draws anything for an item yet.
 export function isDrawnFeedItem(item: FeedViewItem): boolean {
-  if (
-    item.type === 'group' ||
-    item.type === 'exploration' ||
-    item.type === 'tool_call'
-  )
-    return true;
-  if (item.type === 'thought') return false;
-  const kind = item.row.sessionUpdate;
-  return kind === 'user_message' || kind === 'agent_message';
+  switch (item.type) {
+    case 'group':
+    case 'exploration':
+    case 'tool_call':
+      return true;
+    case 'thought':
+      return false;
+    case 'row':
+      return (
+        item.row.sessionUpdate === 'user_message' ||
+        item.row.sessionUpdate === 'agent_message'
+      );
+  }
 }
 
 // One item of the Feed view, drawn by the row component for its kind.

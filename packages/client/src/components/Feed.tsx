@@ -11,11 +11,10 @@ import type {
 } from '@repo/contracts';
 import { ArrowDownIcon } from 'phosphor-react-native/src/icons/ArrowDown';
 import {
-  createContext,
   type ReactNode,
   useCallback,
-  useContext,
   useEffect,
+  useEffectEvent,
   useMemo,
   useRef,
   useState,
@@ -43,8 +42,8 @@ export interface FeedProps {
   // Asks for older rows when the reader nears the top.
   onStartReached: () => void;
   imageUrl: (blob: BlobRef) => string;
-  // Under the empty Feed's heading, such as the branch.
-  emptyDetail?: string;
+  // The checkout's branch, under the empty Feed's heading.
+  emptyBranch?: string;
   // Fixes the live header's clock, for stories and tests.
   now?: number;
 }
@@ -65,14 +64,16 @@ function LoadingEarlier() {
   );
 }
 
-function EmptyFeed({ detail }: { detail?: string }) {
+function EmptyFeed({ branch }: { branch?: string }) {
   return (
     <View className="flex-1 items-center justify-center gap-1.5 p-6">
       <Text role="heading" aria-level={2} className="text-base font-semibold">
         What should we build?
       </Text>
-      {!!detail && (
-        <Text className="text-sm text-muted-foreground">{detail}</Text>
+      {!!branch && (
+        <Text className="font-mono text-xs leading-5 text-muted-foreground">
+          {branch}
+        </Text>
       )}
     </View>
   );
@@ -134,12 +135,18 @@ const startThreshold = 2;
 // One column as wide as the Composer, centred in the pane.
 const column = 'w-full max-w-composer self-center';
 
-const MotionContext = createContext<(moving: boolean) => void>(() => {});
+const fill = { flex: 1 };
+const fillShrinkable = { flex: 1, minHeight: 0 };
 
 // A row's collapsibles re-measure it each frame they move, so the list keeps the rows below in step.
-function FeedRow({ children }: { children: ReactNode }) {
+function FeedRow({
+  onMotion,
+  children,
+}: {
+  onMotion: (moving: boolean) => void;
+  children: ReactNode;
+}) {
   const syncLayout = useSyncLayout();
-  const onMotion = useContext(MotionContext);
   const layoutSync = useMemo(
     () => ({ syncLayout, onMotion }),
     [syncLayout, onMotion],
@@ -168,89 +175,100 @@ export function Feed({
   items,
   liveHeader,
   liveToolCall,
+  emptyBranch,
+  ...props
+}: FeedProps) {
+  const drawn = useMemo(() => items.filter(isDrawnFeedItem), [items]);
+  const entries = useMemo<FeedEntry[]>(
+    () =>
+      liveHeader
+        ? [
+            ...drawn,
+            { type: 'live_header', liveHeader, toolCall: liveToolCall },
+          ]
+        : drawn,
+    [drawn, liveHeader, liveToolCall],
+  );
+  if (!entries.length) return <EmptyFeed branch={emptyBranch} />;
+  const newest = drawn.at(-1);
+  return (
+    <FeedList
+      entries={entries}
+      newestKey={newest ? feedItemKey(newest) : ''}
+      {...props}
+    />
+  );
+}
+
+type FeedListProps = Pick<
+  FeedProps,
+  'loadingOlder' | 'onStartReached' | 'imageUrl' | 'now'
+> & {
+  entries: FeedEntry[];
+  // The newest row's key, so a row arriving while the reader is away marks Jump to latest.
+  newestKey: string;
+};
+
+function FeedList({
+  entries,
+  newestKey,
   loadingOlder,
   onStartReached,
   imageUrl,
-  emptyDetail,
   now,
-}: FeedProps) {
-  const entries = useMemo<FeedEntry[]>(() => {
-    const drawn: FeedEntry[] = items.filter(isDrawnFeedItem);
-    return liveHeader
-      ? [...drawn, { type: 'live_header', liveHeader, toolCall: liveToolCall }]
-      : drawn;
-  }, [items, liveHeader, liveToolCall]);
-  // Only the first render positions the list; later rows follow `maintainScrollAtEnd`.
-  const [initialIndex] = useState(() =>
-    entries.length ? entries.length - 1 : undefined,
-  );
+}: FeedListProps) {
   const wide = useWide();
   const list = useRef<LegendListRef>(null);
-  // The index lands on the last row's top by estimated sizes; from the very end, `followEnd` keeps it there as rows measure.
+  // Opens on the newest row by estimated sizes, then a frame later at the very end; from there `followEnd` keeps it there as rows measure.
+  const [initialIndex] = useState(entries.length - 1);
   useEffect(() => {
     const frame = requestAnimationFrame(() =>
       list.current?.scrollToEnd({ animated: false }),
     );
     return () => cancelAnimationFrame(frame);
   }, []);
-  const contentStyle = wide ? wideContentStyle : phoneContentStyle;
+
   // The list asks for older rows once until the reader scrolls well away, so a reader still near the top asks again as each page lands.
-  const startReached = useRef(onStartReached);
-  startReached.current = onStartReached;
+  const askOlderNearTop = useEffectEvent(() => {
+    if (list.current?.getState().isNearStart) onStartReached();
+  });
   const firstKey = entries[0] && entryKey(entries[0]);
-  useEffect(() => {
-    if (!firstKey) return;
-    const state = list.current?.getState();
-    if (
-      state?.scrollLength &&
-      state.scroll < startThreshold * state.scrollLength
-    )
-      startReached.current();
-  }, [firstKey]);
-  // At the end the Feed follows new rows; scrolled away, it holds still and offers a way back.
-  const [atEnd, setAtEnd] = useState(true);
-  const [unread, setUnread] = useState(false);
-  const ready = entries.length > 0;
-  useEffect(() => {
-    if (!ready) return;
-    return list.current
-      ?.getState()
-      .listen('isWithinMaintainScrollAtEndThreshold', (within) => {
-        setAtEnd(within);
-        if (within) setUnread(false);
-      });
-  }, [ready]);
-  const last = entries.at(-1);
-  const lastKey = last && entryKey(last);
-  const seenLastKey = useRef(lastKey);
-  useEffect(() => {
-    if (lastKey === seenLastKey.current) return;
-    seenLastKey.current = lastKey;
-    if (!atEnd) setUnread(true);
-  }, [lastKey, atEnd]);
-  // How many collapsibles are opening or closing.
-  const moving = useRef(0);
-  const [holding, setHolding] = useState(false);
+  useEffect(() => askOlderNearTop(), [firstKey]);
+
+  // The newest row's key when the reader left the end, or null while they are at it.
+  const [leftAt, setLeftAt] = useState<string | null>(null);
+  const onEndChange = useEffectEvent((within: boolean) =>
+    setLeftAt(within ? null : newestKey),
+  );
+  useEffect(
+    () =>
+      list.current
+        ?.getState()
+        .listen('isWithinMaintainScrollAtEndThreshold', onEndChange),
+    [],
+  );
+
+  // How many collapsibles are opening or closing; while any are, the Feed holds still.
+  const [moving, setMoving] = useState(0);
   const onMotion = useCallback((started: boolean) => {
-    moving.current += started ? 1 : -1;
     if (started) {
-      setHolding(true);
+      setMoving((count) => count + 1);
       return;
     }
     // A frame later, once the list has the final size: Legend checks the end only on scroll, so check it first, or the stale answer follows to the end.
     requestAnimationFrame(() => {
-      if (moving.current) return;
       list.current?.reportContentInset();
-      setHolding(false);
+      setMoving((count) => count - 1);
     });
   }, []);
+
   const jumpToLatest = useCallback(
     () => list.current?.scrollToEnd({ animated: true }),
     [],
   );
   const renderItem = useCallback(
     ({ item }: LegendListRenderItemProps<FeedEntry>) => (
-      <FeedRow>
+      <FeedRow onMotion={onMotion}>
         {item.type === 'live_header' ? (
           <LiveHeader
             liveHeader={item.liveHeader}
@@ -262,43 +280,40 @@ export function Feed({
         )}
       </FeedRow>
     ),
-    [imageUrl, now],
+    [imageUrl, now, onMotion],
   );
 
-  if (!entries.length) return <EmptyFeed detail={emptyDetail} />;
   return (
-    <View className="flex-1" style={{ minHeight: 0 }}>
-      <MotionContext.Provider value={onMotion}>
-        <LegendList
-          ref={list}
-          {...listTestId('feed-scroll')}
-          style={{ flex: 1 }}
-          contentContainerStyle={contentStyle}
-          data={entries}
-          keyExtractor={entryKey}
-          renderItem={renderItem}
-          estimatedItemSize={48}
-          // Each row keeps its own expanded state, which a recycled row would inherit.
-          recycleItems={false}
-          initialScrollIndex={initialIndex}
-          alignItemsAtEnd
-          // Rows measure taller than estimated and streaming text grows them; at the end, the Feed stays there.
-          maintainScrollAtEnd={holding ? holdEnd : followEnd}
-          maintainScrollAtEndThreshold={endThreshold}
-          maintainVisibleContentPosition={keepPosition}
-          // Older rows load two screens ahead of the top, and rows draw a screen beyond the view, so reading back never waits.
-          onStartReached={onStartReached}
-          onStartReachedThreshold={startThreshold}
-          drawDistance={800}
-          ListFooterComponent={FeedEnd}
-          // Dragging the Feed takes the keyboard down: with the finger on iOS, at once on Android.
-          keyboardDismissMode={
-            Platform.OS === 'ios' ? 'interactive' : 'on-drag'
-          }
-          keyboardShouldPersistTaps="handled"
-        />
-      </MotionContext.Provider>
-      {!atEnd && <JumpToLatest unread={unread} onPress={jumpToLatest} />}
+    <View style={fillShrinkable}>
+      <LegendList
+        ref={list}
+        {...listTestId('feed-scroll')}
+        style={fill}
+        contentContainerStyle={wide ? wideContentStyle : phoneContentStyle}
+        data={entries}
+        keyExtractor={entryKey}
+        renderItem={renderItem}
+        estimatedItemSize={48}
+        // Each row keeps its own expanded state, which a recycled row would inherit.
+        recycleItems={false}
+        initialScrollIndex={initialIndex}
+        alignItemsAtEnd
+        // Rows measure taller than estimated and streaming text grows them; at the end, the Feed stays there.
+        maintainScrollAtEnd={moving ? holdEnd : followEnd}
+        maintainScrollAtEndThreshold={endThreshold}
+        maintainVisibleContentPosition={keepPosition}
+        // Older rows load two screens ahead of the top, and rows draw a screen beyond the view, so reading back never waits.
+        onStartReached={onStartReached}
+        onStartReachedThreshold={startThreshold}
+        drawDistance={800}
+        ListFooterComponent={FeedEnd}
+        // Dragging the Feed takes the keyboard down: with the finger on iOS, at once on Android.
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+        keyboardShouldPersistTaps="handled"
+      />
+      {leftAt !== null && (
+        <JumpToLatest unread={leftAt !== newestKey} onPress={jumpToLatest} />
+      )}
       {/* Over the list, so keeping the reading position never scrolls it out of view. */}
       {loadingOlder && (
         <View className="absolute top-4 self-center rounded-full bg-background px-2 wide:top-6">

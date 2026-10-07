@@ -6,6 +6,7 @@ import {
 import type { SessionNewInput } from '@repo/contracts';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
+import { eachLayout } from '../../mocks/each-layout';
 import {
   failedStartMessage,
   failedStartNewSessionMocks,
@@ -15,7 +16,6 @@ import {
   sendingNewSessionMocks,
 } from '../../mocks/new-session-mock';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
-import { applyTheme } from '../lib/theme';
 import { NewSessionScreen } from './NewSessionScreen';
 
 const recorder = createNavigationRecorder();
@@ -48,29 +48,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const overlay = within(document.body);
-
-async function settle() {
-  await document.fonts.ready;
-  for (let frame = 0; frame < 2; frame++)
-    await new Promise((resolve) => requestAnimationFrame(resolve));
-}
-
-// Runs the assertion at phone and wide widths, in light and dark.
-async function eachLayout(assertion: (wide: boolean) => Promise<void>) {
-  const { page } = await import('vitest/browser');
-  try {
-    for (const width of [390, 1440]) {
-      await page.viewport(width, 844);
-      await settle();
-      for (const mode of ['light', 'dark'] as const) {
-        applyTheme('default', mode);
-        await assertion(width >= 720);
-      }
-    }
-  } finally {
-    applyTheme('default', 'light');
-  }
-}
 
 export const Ready: Story = {
   play: async ({ canvas }) =>
