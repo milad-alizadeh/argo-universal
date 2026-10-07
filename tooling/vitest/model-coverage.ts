@@ -2,8 +2,8 @@ import { expect } from 'vitest';
 import type { EventObject, Snapshot } from 'xstate';
 import {
   adjacencyMapToArray,
+  type StatePath,
   type TestModel,
-  type TestPath,
 } from 'xstate/graph';
 
 // Spec 0002 section 12: more paths than this means a split or a filter.
@@ -14,7 +14,7 @@ type Walk<TSnapshot extends Snapshot<unknown>, TEvent extends EventObject> = {
   // biome-ignore lint/suspicious/noExplicitAny: a model's input type does not matter here.
   models: TestModel<TSnapshot, TEvent, any>[];
   // Every path the file walks, whatever generated it.
-  paths: TestPath<TSnapshot, TEvent>[];
+  paths: StatePath<TSnapshot, TEvent>[];
   // Each file keeps its own keys: they encode what its machine counts as the same state and event.
   stateKey: (snapshot: TSnapshot) => string;
   eventKey: (event: TEvent) => string;

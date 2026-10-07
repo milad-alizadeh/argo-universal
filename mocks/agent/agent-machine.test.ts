@@ -7,6 +7,7 @@ import {
   agentMachine,
   findAgentAdapter,
 } from '@repo/agents';
+import { expectEveryTransitionWalked } from '@repo/vitest/model-coverage';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   type Actor,
@@ -16,7 +17,7 @@ import {
   fromCallback,
   type SnapshotFrom,
 } from 'xstate';
-import { adjacencyMapToArray, getAdjacencyMap, TestModel } from 'xstate/graph';
+import { TestModel } from 'xstate/graph';
 import {
   createMockAdapter,
   type MockAgentStream,
@@ -269,32 +270,12 @@ describe('Agent machine model', () => {
   );
 
   it('the generated paths walk every transition', () => {
-    const key = (
-      from: AgentSnapshot,
-      event: AgentMachineEvent,
-      to: AgentSnapshot,
-    ) =>
-      `${JSON.stringify(from.value)} ${eventKey(event)} ${JSON.stringify(to.value)}`;
-    const transitions = adjacencyMapToArray(
-      getAdjacencyMap(agentMachine, model.options),
-    ).map(({ state, event, nextState }) => key(state, event, nextState));
-    const walked = new Set(
-      paths.flatMap((path) =>
-        path.steps
-          .slice(1)
-          .map((step, index) =>
-            key(
-              path.steps[index]?.state ?? expect.unreachable(),
-              step.event,
-              step.state,
-            ),
-          ),
-      ),
-    );
-    expect(transitions.length).toBeGreaterThan(0);
-    expect(transitions.filter((transition) => !walked.has(transition))).toEqual(
-      [],
-    );
+    expectEveryTransitionWalked({
+      models: [model],
+      paths,
+      stateKey: (snapshot) => JSON.stringify(snapshot.value),
+      eventKey: eventKey,
+    });
   });
 });
 

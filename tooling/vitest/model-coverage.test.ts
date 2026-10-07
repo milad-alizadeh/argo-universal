@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { type AnyMachineSnapshot, createMachine, type EventObject } from 'xstate';
+import {
+  type AnyMachineSnapshot,
+  createMachine,
+  type EventObject,
+} from 'xstate';
 import { TestModel } from 'xstate/graph';
 import { expectEveryTransitionWalked } from './model-coverage';
 

@@ -1,3 +1,4 @@
+import { expectEveryTransitionWalked } from '@repo/vitest/model-coverage';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import {
   type Actor,
@@ -14,6 +15,8 @@ import {
   type DirectedGraphNode,
   getAdjacencyMap,
   getShortestPaths,
+  type StatePath,
+  TestModel,
   toDirectedGraph,
 } from 'xstate/graph';
 import {
@@ -78,7 +81,12 @@ const transitions = adjacencyMapToArray(getAdjacencyMap(machine, options));
 const paths = getShortestPaths(machine, options);
 const transitionKey = (transition: (typeof transitions)[number]) =>
   `${stateKey(transition.state)} ${transition.event.type} ${stateKey(transition.nextState)}`;
-const walked = new Set<string>();
+const model = new TestModel(machine, options);
+// Each per-transition test below adds the path it walked: the shortest path in, then the transition.
+const walkedPaths: StatePath<
+  SnapshotFrom<typeof machine>,
+  EventFromLogic<typeof machine>
+>[] = [];
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -103,14 +111,23 @@ it.each(
   actor.send(transition.event as never);
   expect(stateKey(actor.getSnapshot())).toBe(stateKey(transition.nextState));
   expect(liveTransports).toBe(actor.getSnapshot().matches('active') ? 1 : 0);
-  walked.add(transitionKey(transition));
+  walkedPaths.push({
+    ...path,
+    state: transition.nextState,
+    steps: [
+      ...path.steps,
+      { event: transition.event, state: transition.nextState },
+    ],
+  });
 });
 
 it('the model walks every transition', () => {
-  expect(transitions.length).toBeGreaterThan(0);
-  expect(
-    transitions.filter((transition) => !walked.has(transitionKey(transition))),
-  ).toEqual([]);
+  expectEveryTransitionWalked({
+    models: [model],
+    paths: walkedPaths,
+    stateKey,
+    eventKey: (event) => event.type,
+  });
 });
 
 it('waits 500 milliseconds between attempts and stops after 20 failures', () => {

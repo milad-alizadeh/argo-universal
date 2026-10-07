@@ -1,3 +1,4 @@
+import { expectEveryTransitionWalked } from '@repo/vitest/model-coverage';
 import { afterAll, afterEach, expect, it } from 'vitest';
 import {
   type AnyEventObject,
@@ -5,7 +6,7 @@ import {
   type EventFromLogic,
   type SnapshotFrom,
 } from 'xstate';
-import { adjacencyMapToArray, getAdjacencyMap, TestModel } from 'xstate/graph';
+import { TestModel } from 'xstate/graph';
 import { openTestDatabase } from '#mocks/database';
 import {
   createRegistryModelMachine,
@@ -112,28 +113,12 @@ it.each(paths.map((path, index) => [index, path] as const))(
 );
 
 it('the generated registry paths walk every transition', () => {
-  const edge = (from: RegistrySnapshot, type: string, to: RegistrySnapshot) =>
-    `${key(from)} ${type} ${key(to)}`;
-  const transitions = adjacencyMapToArray(
-    getAdjacencyMap(registryGraphMachine, model.options),
-  ).map(({ state, event, nextState }) => edge(state, event.type, nextState));
-  const walked = new Set(
-    paths.flatMap((path) =>
-      path.steps
-        .slice(1)
-        .map((step, index) =>
-          edge(
-            path.steps[index]?.state ?? expect.unreachable(),
-            step.event.type,
-            step.state,
-          ),
-        ),
-    ),
-  );
-  expect(transitions.length).toBeGreaterThan(0);
-  expect(transitions.filter((transition) => !walked.has(transition))).toEqual(
-    [],
-  );
+  expectEveryTransitionWalked({
+    models: [model],
+    paths,
+    stateKey: key,
+    eventKey: (event) => event.type,
+  });
 });
 
 afterAll(remove);
