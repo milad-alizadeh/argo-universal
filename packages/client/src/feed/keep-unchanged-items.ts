@@ -30,12 +30,51 @@ function sameItem(first: FeedViewItem, second: FeedViewItem): boolean {
   return false;
 }
 
+// The ids of the rows an item draws.
+function rowIds(item: FeedViewItem): string[] {
+  if (item.type === 'group') return item.items.flatMap(rowIds);
+  if (item.type === 'exploration') return item.toolCalls.map((row) => row.id);
+  return [item.row.id];
+}
+
+// Groups and explorations, with the explorations inside groups.
+function collapsibles(items: readonly FeedViewItem[]): FeedViewItem[] {
+  return items.flatMap((item) => {
+    if (item.type === 'group')
+      return [item, ...item.items.filter(({ type }) => type === 'exploration')];
+    return item.type === 'exploration' ? [item] : [];
+  });
+}
+
+// An older page can bring a group's first rows, so a group or exploration that holds a row its previous one was keyed by keeps that key.
+function keepKeys(
+  previous: FeedView,
+  items: readonly FeedViewItem[],
+): FeedViewItem[] {
+  const previousKeys = new Set(collapsibles(previous.items).map(itemKey));
+  const keepKey = <Item extends FeedViewItem>(item: Item): Item => {
+    if (item.type !== 'group' && item.type !== 'exploration') return item;
+    const keptId = rowIds(item).find((id) =>
+      previousKeys.has(`${item.type}:${id}`),
+    );
+    const withKey =
+      keptId === undefined || keptId === item.id
+        ? item
+        : { ...item, id: keptId };
+    return withKey.type === 'group'
+      ? { ...withKey, items: withKey.items.map(keepKey) }
+      : withKey;
+  };
+  return items.map(keepKey);
+}
+
 // The new view with each unchanged item swapped for its previous object, so memoised rows skip their render.
 export function keepUnchangedItems(
   previous: FeedView | null,
   next: FeedView,
 ): FeedView {
   if (!previous) return next;
+  const nextItems = keepKeys(previous, next.items);
   const previousItems = new Map(previous.items.map(toKeyedEntry));
   const keepIfUnchanged = (item: FeedViewItem): FeedViewItem => {
     const previousItem = previousItems.get(itemKey(item));
@@ -53,7 +92,7 @@ export function keepUnchangedItems(
       }),
     };
   };
-  return { ...next, items: next.items.map(keepIfUnchanged) };
+  return { ...next, items: nextItems.map(keepIfUnchanged) };
 }
 
 const itemKey = (item: FeedViewItem) => `${item.type}:${feedItemKey(item)}`;

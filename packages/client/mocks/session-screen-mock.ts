@@ -7,6 +7,7 @@ import type { SessionSnapshot, SessionUpdate } from '@repo/contracts';
 import { recordedFeedMock, recordedUserMessage } from './feed-message-mock';
 import { createFeedMocks } from './feed-mock';
 import { createSubscriptionPublisher } from './subscription-publisher';
+import { completedCommand } from './tool-call-mock';
 import { type Fixtures, pending } from './trpc-mock-link';
 
 const catalogAgent = (() => {
@@ -124,16 +125,60 @@ export const loadingOlderSessionMocks: Fixtures = {
 let releaseOlderPage = () => {};
 
 // Each older page waits until a test sends it, so the test can mark the reader's place first.
-export const heldOlderPageSessionMocks: Fixtures = {
-  ...longSessionMocks,
-  'feed.page': async (input) => {
-    if (input.direction === 'before')
-      await new Promise<void>((resolve) => {
-        releaseOlderPage = resolve;
-      });
-    return longFeedPage(input);
-  },
-};
+function holdOlderPages(feed: FeedMock): Fixtures {
+  const { 'feed.page': feedPage } = createFeedMocks(feed);
+  return {
+    ...createSessionMocks(feed),
+    'feed.page': async (input) => {
+      if (input.direction === 'before')
+        await new Promise<void>((resolve) => {
+          releaseOlderPage = resolve;
+        });
+      return feedPage(input);
+    },
+  };
+}
+
+export const heldOlderPageSessionMocks = holdOlderPages(longFeed);
+
+// The client's page size, which the split group straddles.
+const clientPageSize = 150;
+const splitGroupSize = 20;
+const splitGroupRowsInTail = splitGroupSize / 2;
+
+// One Turn of numbered commands, which the Feed draws as one Tool call group.
+const { commandActions: _, ...commandArgo } =
+  completedCommand._meta?.argo ?? {};
+const splitGroupRows = Array.from(
+  { length: splitGroupSize },
+  (_unused, index): SessionUpdate => ({
+    ...completedCommand,
+    id: `split-step-${index + 1}`,
+    toolCallId: `split-step-${index + 1}`,
+    turnId: 'turn-split-group',
+    title: `Step ${index + 1}`,
+    _meta: { ...completedCommand._meta, argo: commandArgo },
+  }),
+);
+const rowsAfterSplitGroup = longRows.slice(
+  -(clientPageSize - splitGroupRowsInTail),
+);
+const splitGroupFeedRows = [
+  ...longRows.slice(0, splitGroupSize),
+  ...splitGroupRows,
+  ...rowsAfterSplitGroup,
+].map((row, index) => ({ ...row, position: index + 1 }));
+
+// The tail page starts at Step 11, so the older page brings Steps 1 to 10 into the same group.
+export const splitGroupStepInTail = `Step ${splitGroupSize - 2}`;
+export const splitGroupSessionMocks = holdOlderPages(
+  withWholeTail(
+    { ...editAndCommandRecording, rows: splitGroupFeedRows },
+    {
+      maxRevision: Math.max(...splitGroupFeedRows.map((row) => row.revision)),
+    },
+  ),
+);
 
 // Sends the older page the Feed is waiting for.
 export const sendOlderPage = () => releaseOlderPage();

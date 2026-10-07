@@ -68,6 +68,29 @@ describe('keepUnchangedItems', () => {
     },
   );
 
+  it.each(mocks)(
+    "keeps a group's key when an older page brings its first rows for $agent",
+    ({ rows, snapshot }) => {
+      const group = toFeedView(rows, snapshot).items.find(
+        (item) => item.type === 'group',
+      );
+      if (group?.type !== 'group') throw new Error('Recording needs a group');
+      // The newer page starts at the group's second row.
+      const start = rows.findIndex((row) => row.id === group.id) + 1;
+      const previous = toFeedView(rows.slice(start), snapshot);
+      const [previousGroup] = previous.items;
+      if (
+        previousGroup?.type !== 'group' &&
+        previousGroup?.type !== 'exploration'
+      )
+        throw new Error('The newer page needs to start in the group');
+      const next = keepUnchangedItems(previous, toFeedView(rows, snapshot));
+      expect(next.items.find((item) => item.type === 'group')?.id).toBe(
+        previousGroup.id,
+      );
+    },
+  );
+
   it('keeps nothing without a previous view', () => {
     const [mock] = mocks;
     if (!mock) throw new Error('No recording');

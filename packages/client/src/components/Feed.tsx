@@ -28,6 +28,7 @@ import { listTestIdProps } from '../lib/list-test-id';
 import { motionDuration } from '../lib/motion';
 import { useWide } from '../navigation/use-wide';
 import { FeedItem, isDrawnFeedItem } from './FeedItem';
+import { type FeedGrowth, FeedGrowthContext } from './feed-growth-context';
 import { Icon } from './Icon';
 import { LiveHeader } from './LiveHeader';
 import { ShimmerText } from './ShimmerText';
@@ -126,6 +127,11 @@ const followEnd = { on: { dataChange: true, layout: true, itemLayout: true } };
 const holdEnd = { on: { dataChange: true, layout: true } };
 // Older rows paging in above keep the reader's place, and so do rows above that measure as the reader scrolls.
 const keepPosition = { data: true };
+
+// While rows measure after content grows above the reader, the Feed holds their place: within this many pixels, for this many still frames, at most this long in milliseconds.
+const placeTolerance = 0.5;
+const settledFrames = 10;
+const keepPlaceDuration = 500;
 
 // In screens from the end: only a reader at the very end is followed.
 const endThreshold = 0.02;
@@ -280,6 +286,50 @@ function FeedList({
     });
   }, []);
 
+  // Legend keeps the first row fully in view still, so content added inside a row above the reader's line, the middle of the view, would push what they read down.
+  const growthStarts = useRef(new Map<string, number>());
+  const feedGrowth = useMemo<FeedGrowth>(
+    () => ({
+      willGrowAbove: (key) => {
+        const state = list.current?.getState();
+        const top = state?.positionByKey(key);
+        if (!state || top === undefined) return;
+        const bottom = top + (state.sizes.get(key) ?? 0);
+        if (
+          top < state.scroll + state.scrollLength / 2 &&
+          bottom > state.scroll
+        )
+          growthStarts.current.set(key, top - state.scroll);
+      },
+      grewAbove: (key, height) => {
+        const topInView = growthStarts.current.get(key);
+        growthStarts.current.delete(key);
+        if (topInView === undefined || height <= 0) return;
+        // Until rows stop measuring, the row's old content stays where it was, whichever row Legend anchors.
+        const startedAt = performance.now();
+        let stillFrames = 0;
+        const keepPlace = () => {
+          const ref = list.current;
+          const state = ref?.getState();
+          const top = state?.positionByKey(key);
+          if (!ref || !state || top === undefined) return;
+          const offBy = top + height - topInView - state.scroll;
+          if (Math.abs(offBy) > placeTolerance) {
+            ref.setVisibleContentAnchorOffset((offset) => offset + offBy);
+            stillFrames = 0;
+          } else stillFrames += 1;
+          if (
+            stillFrames < settledFrames &&
+            performance.now() - startedAt < keepPlaceDuration
+          )
+            requestAnimationFrame(keepPlace);
+        };
+        keepPlace();
+      },
+    }),
+    [],
+  );
+
   const jumpToLatest = useCallback(
     () => list.current?.scrollToEnd({ animated: true }),
     [],
@@ -303,30 +353,32 @@ function FeedList({
 
   return (
     <View style={fillShrinkable}>
-      <LegendList
-        ref={list}
-        {...listTestIdProps('feed-scroll')}
-        style={fill}
-        contentContainerStyle={wide ? wideContentStyle : phoneContentStyle}
-        data={entries}
-        keyExtractor={entryKey}
-        renderItem={renderItem}
-        estimatedItemSize={48}
-        // Each row keeps its own expanded state, which a recycled row would inherit.
-        recycleItems={false}
-        initialScrollIndex={initialIndex}
-        alignItemsAtEnd
-        // Rows measure taller than estimated and streaming text grows them; at the end, the Feed stays there.
-        maintainScrollAtEnd={movingCollapsibles ? holdEnd : followEnd}
-        maintainScrollAtEndThreshold={endThreshold}
-        maintainVisibleContentPosition={keepPosition}
-        // Older rows load two screens ahead of the top, and rows draw a screen beyond the view, so reading back never waits.
-        onStartReached={onStartReached}
-        onStartReachedThreshold={startThreshold}
-        drawDistance={800}
-        ListFooterComponent={FeedEnd}
-        {...keyboardProps}
-      />
+      <FeedGrowthContext.Provider value={feedGrowth}>
+        <LegendList
+          ref={list}
+          {...listTestIdProps('feed-scroll')}
+          style={fill}
+          contentContainerStyle={wide ? wideContentStyle : phoneContentStyle}
+          data={entries}
+          keyExtractor={entryKey}
+          renderItem={renderItem}
+          estimatedItemSize={48}
+          // Each row keeps its own expanded state, which a recycled row would inherit.
+          recycleItems={false}
+          initialScrollIndex={initialIndex}
+          alignItemsAtEnd
+          // Rows measure taller than estimated and streaming text grows them; at the end, the Feed stays there.
+          maintainScrollAtEnd={movingCollapsibles ? holdEnd : followEnd}
+          maintainScrollAtEndThreshold={endThreshold}
+          maintainVisibleContentPosition={keepPosition}
+          // Older rows load two screens ahead of the top, and rows draw a screen beyond the view, so reading back never waits.
+          onStartReached={onStartReached}
+          onStartReachedThreshold={startThreshold}
+          drawDistance={800}
+          ListFooterComponent={FeedEnd}
+          {...keyboardProps}
+        />
+      </FeedGrowthContext.Provider>
       {newestKeyWhenLeftEnd !== null && (
         <JumpToLatest
           hasNewRows={newestKeyWhenLeftEnd !== newestKey}

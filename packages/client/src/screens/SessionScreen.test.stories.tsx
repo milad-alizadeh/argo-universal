@@ -15,6 +15,8 @@ import {
   runningTurnNow,
   sendArrivingRow,
   sendOlderPage,
+  splitGroupSessionMocks,
+  splitGroupStepInTail,
   twoSessionMocks,
 } from '../../mocks/session-screen-mock';
 import { SessionScreenPreview } from '../../mocks/session-screen-preview';
@@ -189,6 +191,26 @@ function markSettledMiddleOfView(feedScroll: HTMLElement) {
   );
 }
 
+// Where an element's top settles once it shows at its centre, unclipped, and holds still for two frames.
+function settledTopOf(findElement: () => HTMLElement) {
+  let lastTop: number | undefined;
+  return waitFor(
+    async () => {
+      await afterTwoFrames();
+      const box = findElement().getBoundingClientRect();
+      const atCentre = document.elementFromPoint(
+        box.left + box.width / 2,
+        box.top + box.height / 2,
+      );
+      const settled = findElement().contains(atCentre) && box.top === lastTop;
+      lastTop = box.top;
+      if (!settled) throw new Error('The element is still moving');
+      return box.top;
+    },
+    { timeout: 5000 },
+  );
+}
+
 export const KeepsPlaceWhenOlderRowsLoad: Story = {
   parameters: { trpc: heldOlderPageSessionMocks },
   play: async ({ canvas }) => {
@@ -220,6 +242,39 @@ export const KeepsPlaceWhenOlderRowsLoad: Story = {
     await expect(
       Math.abs(marked.element.getBoundingClientRect().top - marked.top),
     ).toBeLessThan(2);
+  },
+};
+
+// The newest page starts partway through a Tool call group, so the older page gives that group its first rows.
+export const KeepsPlaceWhenOlderRowsJoinAGroup: Story = {
+  parameters: { trpc: splitGroupSessionMocks },
+  play: async ({ canvas, userEvent }) => {
+    await resizeToPhoneWidth();
+    const scroll = await canvas.findByTestId('feed-scroll');
+    await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
+    await waitFor(
+      () => {
+        scrollUp(scroll, scroll.clientHeight);
+        expect(scroll.scrollTop).toBe(0);
+      },
+      { timeout: 15000, interval: 100 },
+    );
+    await expect(
+      canvas.getByRole('progressbar', { name: 'Loading earlier' }),
+    ).toBeVisible();
+    // The reader opens the group and reads one of its commands.
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Ran 10 commands' }),
+    );
+    const step = () =>
+      canvas.getByRole('button', { name: splitGroupStepInTail });
+    const top = await settledTopOf(step);
+    sendOlderPage();
+    // The group gains its first ten commands above, stays open, and the command being read stays where it was.
+    await expect(
+      await canvas.findByRole('button', { name: 'Ran 20 commands' }),
+    ).toBeVisible();
+    await expect(Math.abs((await settledTopOf(step)) - top)).toBeLessThan(2);
   },
 };
 
