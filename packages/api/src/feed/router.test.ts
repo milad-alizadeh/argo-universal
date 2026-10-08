@@ -122,11 +122,7 @@ describe('feed router', (): void => {
     const caller = createCaller({
       services: servicesWith({
         subscribe: async function* (): AsyncGenerator<
-          {
-            type: 'row.upsert';
-            rev: number;
-            row: typeof row;
-          },
+          FeedSubscribeOutput,
           void,
           Parameters<typeof structuredClone>[0]
         > {

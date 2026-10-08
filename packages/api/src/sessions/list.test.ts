@@ -1,15 +1,14 @@
+import type { SessionListOutput } from '@repo/contracts';
 import { describe, expect, it, vi } from 'vitest';
 import { unreachableServices } from '../../mocks';
 import { appRouter } from '../root';
 
 describe('session.list pagination input', (): void => {
   it('accepts the forward direction supplied by tRPC infinite queries', async (): Promise<void> => {
-    const list = vi.fn(
-      async (): Promise<{ sessions: never[]; nextCursor: null }> => ({
-        sessions: [],
-        nextCursor: null,
-      }),
-    );
+    const list = vi.fn(async (): Promise<SessionListOutput> => ({
+      sessions: [],
+      nextCursor: null,
+    }));
     const caller = appRouter.createCaller({
       services: unreachableServices({ session: { list } }),
     });
@@ -26,7 +25,7 @@ describe('session.list pagination input', (): void => {
     const caller = appRouter.createCaller({
       services: unreachableServices({
         session: {
-          list: async (): Promise<{ sessions: never[]; nextCursor: null }> => ({
+          list: async (): Promise<SessionListOutput> => ({
             sessions: [],
             nextCursor: null,
           }),

@@ -26,12 +26,7 @@ export function createElicitationAnswerSchema(
     Object.entries(schema.properties).map(
       ([name, property]): [
         string,
-        (
-          | z.ZodOptional<z.ZodArray<z.ZodString>>
-          | z.ZodOptional<z.ZodBoolean>
-          | z.ZodOptional<z.ZodNumber>
-          | z.ZodOptional<z.ZodString>
-        ),
+        ReturnType<(typeof types)[keyof typeof types]['optional']>,
       ] => [name, types[property.type].optional()],
     ),
   );

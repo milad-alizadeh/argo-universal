@@ -143,14 +143,7 @@ export function applyFeedChange(
           ) as SessionUpdate),
           revision,
         },
-        (): {
-          type: 'row.append';
-          rev: number;
-          id: string;
-          field: string;
-          off: number;
-          text: string;
-        } => ({
+        (): RowAppend => ({
           type: 'row.append',
           rev: revision,
           id,
@@ -171,14 +164,7 @@ export function applyFeedChange(
         };
       return accept(
         { ...existing, ...change.set, revision },
-        (
-          row,
-        ): {
-          type: 'row.patch';
-          rev: number;
-          id: string;
-          set: Record<string, unknown>;
-        } => ({
+        (row): RowPatch => ({
           type: 'row.patch',
           rev: revision,
           id,

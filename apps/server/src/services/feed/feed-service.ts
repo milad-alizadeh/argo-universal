@@ -2,6 +2,7 @@ import type { FeedService } from '@repo/api';
 import type { SessionUpdate } from '@repo/contracts';
 import type {
   FeedPageInput,
+  FeedPageOutput,
   FeedRowInput,
   FeedSubscribeInput,
   FeedSubscribeOutput,
@@ -42,7 +43,7 @@ export function createFeedService(deps: FeedDeps): FeedService {
   // Rows the database does not hold yet: queued in the writer, then held by the feed actor.
   const readUnsaved = (
     sessionId: string,
-  ): { rows: SessionUpdate[]; maxRevision: number } => {
+  ): Pick<FeedPageOutput, 'rows' | 'maxRevision'> => {
     const jobs = queuedFeedRows(
       deps.findWriter()?.getSnapshot().context.queue ?? [],
       sessionId,

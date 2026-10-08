@@ -1,3 +1,4 @@
+import type { BlobUploadOutput } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { unreachableServices } from '../../mocks';
 import { appRouter } from '../root';
@@ -6,11 +7,7 @@ it('accepts a file in FormData and returns its BlobRef', async (): Promise<void>
   const caller = appRouter.createCaller({
     services: unreachableServices({
       blob: {
-        upload: async (): Promise<{
-          blobId: string;
-          mime: string;
-          bytes: number;
-        }> => ({
+        upload: async (): Promise<BlobUploadOutput> => ({
           blobId: 'image-1',
           mime: 'image/png',
           bytes: 3,

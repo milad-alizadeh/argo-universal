@@ -6,7 +6,7 @@ import {
   sendTo,
   setup,
 } from 'xstate';
-import type { ActorRef, Snapshot } from 'xstate';
+import type { ActorRef, GuardArgs, Snapshot } from 'xstate';
 import type {
   AgentAdapter,
   AgentConnectInput,
@@ -39,6 +39,12 @@ type VendorEvent =
   | { type: 'vendor.event'; event: AgentEvent }
   | { type: 'vendor.failed'; error: unknown }
   | { type: 'vendor.closed' };
+
+type AgentMachineEvent = AgentCommand | VendorEvent;
+
+type AgentTurnGuard = (
+  args: Pick<GuardArgs<AgentContext, AgentMachineEvent>, 'event'>,
+) => boolean;
 
 // The adapter and parent ref are behaviour, so an Agent snapshot is not persistable.
 interface AgentContext extends AgentInput {
@@ -139,10 +145,8 @@ function startVendorSession(
 }
 
 const isTurnEvent =
-  (
-    type: 'agent.turnStarted' | 'agent.turnEnded',
-  ): (({ event }: { event: AgentCommand | VendorEvent }) => boolean) =>
-  ({ event }: { event: AgentCommand | VendorEvent }): boolean =>
+  (type: 'agent.turnStarted' | 'agent.turnEnded'): AgentTurnGuard =>
+  ({ event }): boolean =>
     event.type === 'vendor.event' && event.event.type === type;
 
 // One machine runs every Agent; the Session passes in the adapter to run.
@@ -150,7 +154,7 @@ export const agentMachine = setup({
   types: {
     input: {} as AgentInput,
     context: {} as AgentContext,
-    events: {} as AgentCommand | VendorEvent,
+    events: {} as AgentMachineEvent,
     output: {} as AgentOutput,
   },
   actors: {
@@ -190,13 +194,13 @@ export const agentMachine = setup({
     rememberStartLimit: assign({
       failure: `Agent startup exceeded agentStartLimit (${agentStartLimit} ms). Retry the Session.`,
     }),
-    rememberReady: assign(({ event }): { capabilities: AgentCapabilities } => {
+    rememberReady: assign(({ event }): Pick<AgentReady, 'capabilities'> => {
       assertEvent(event, 'vendor.ready');
       return { capabilities: event.ready.capabilities };
     }),
     sendReady: sendTo(
       ({ context }): AgentParent => context.parent,
-      ({ event }): AgentReady & { type: 'agent.ready' } => {
+      ({ event }): Extract<AgentEvent, { type: 'agent.ready' }> => {
         assertEvent(event, 'vendor.ready');
         return { type: 'agent.ready', ...event.ready } satisfies AgentEvent;
       },
