@@ -29,6 +29,10 @@ import {
 } from '../recording.ts';
 import { writeMockClaude } from './write-mock-claude.ts';
 
+const initializationRequestId = 'initialize-1';
+const interruptRequestId = 'interrupt-1';
+const editingScenario = 'edit-and-command';
+
 const PRODUCER = 'claude-cli';
 const RECORDINGS = path.join(import.meta.dirname, 'recordings');
 const VERSION = recordingVersion(RECORDINGS);
@@ -149,13 +153,13 @@ describe('mock Claude CLI', (): void => {
 
     claude.send({
       type: 'control_request',
-      request_id: 'initialize-1',
+      request_id: initializationRequestId,
       request: { subtype: 'initialize' },
     });
 
     expect(await claude.next()).toMatchObject({
       type: 'control_response',
-      response: { subtype: 'success', request_id: 'initialize-1' },
+      response: { subtype: 'success', request_id: initializationRequestId },
     });
     claude.close();
     expect(await claude.exited).toBe(0);
@@ -182,13 +186,17 @@ describe('mock Claude CLI', (): void => {
 
     claude.send({
       type: 'control_request',
-      request_id: 'interrupt-1',
+      request_id: interruptRequestId,
       request: { subtype: 'interrupt' },
     });
 
     expect(await claude.next()).toMatchObject({
       type: 'control_response',
-      response: { subtype: 'success', request_id: 'interrupt-1', response: {} },
+      response: {
+        subtype: 'success',
+        request_id: interruptRequestId,
+        response: {},
+      },
     });
     claude.close();
     expect(await claude.exited).toBe(0);
@@ -253,7 +261,7 @@ describe('mock Claude CLI', (): void => {
     ).toBe(false);
   });
 
-  it.each(['edit-and-command', 'image-prompt'])(
+  it.each([editingScenario, 'image-prompt'])(
     'replays %s without its control responses, under the session id it was given',
     async (recording): Promise<void> => {
       const { output } = recordedPipes(recording);
@@ -283,7 +291,7 @@ describe('mock Claude CLI', (): void => {
   );
 
   it('answers initialize and get_context_usage with the recorded answers', async (): Promise<void> => {
-    const { input, output } = recordedPipes('edit-and-command');
+    const { input, output } = recordedPipes(editingScenario);
     const recordedAnswer = (subtype: string): WireFrame | undefined => {
       const request = input.find(
         (frame): boolean =>
@@ -297,7 +305,7 @@ describe('mock Claude CLI', (): void => {
           ),
       );
     };
-    const claude = await startClaude('edit-and-command');
+    const claude = await startClaude(editingScenario);
 
     for (const subtype of ['initialize', 'get_context_usage']) {
       claude.send({
@@ -335,13 +343,13 @@ describe('mock Claude CLI', (): void => {
     );
     claude.send({
       type: 'control_request',
-      request_id: 'interrupt-1',
+      request_id: interruptRequestId,
       request: { subtype: 'interrupt' },
     });
 
     expect(await claude.next()).toMatchObject({
       type: 'control_response',
-      response: { subtype: 'success', request_id: 'interrupt-1' },
+      response: { subtype: 'success', request_id: interruptRequestId },
     });
     expect(
       await claude.until((frame): boolean => frame.type === 'result'),
@@ -368,13 +376,13 @@ describe('mock Claude CLI', (): void => {
     claude.send(prompt('Go.'));
     claude.send({
       type: 'control_request',
-      request_id: 'interrupt-1',
+      request_id: interruptRequestId,
       request: { subtype: 'interrupt' },
     });
 
     expect(await claude.next()).toMatchObject({
       type: 'control_response',
-      response: { subtype: 'success', request_id: 'interrupt-1' },
+      response: { subtype: 'success', request_id: interruptRequestId },
     });
     expect(
       (await claude.until((frame): boolean => frame.type === 'result')).map(
@@ -388,20 +396,20 @@ describe('mock Claude CLI', (): void => {
 
 it('answers initialize with an account that has no subscription when not signed in', async (): Promise<void> => {
   const executable = await writeMockClaude(directory, {
-    recording: 'edit-and-command',
+    recording: editingScenario,
     availability: 'not_signed_in',
   });
   const claude = startLineProcess(executable, SDK_FLAGS);
   claude.send({
     type: 'control_request',
-    request_id: 'initialize-1',
+    request_id: initializationRequestId,
     request: { subtype: 'initialize' },
   });
   expect(await claude.next()).toMatchObject({
     type: 'control_response',
     response: {
       subtype: 'success',
-      request_id: 'initialize-1',
+      request_id: initializationRequestId,
       response: expect.objectContaining({ account: {} }),
     },
   });

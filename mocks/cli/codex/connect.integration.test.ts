@@ -21,6 +21,11 @@ import {
 import { findRecording, readRecording, recordedFrames } from '../recording';
 import { writeMockCodex } from './write-mock-codex';
 
+const stopAgentEvent = 'agent.stop';
+const agentReadyEvent = 'agent.ready';
+const cancelAgentEvent = 'agent.cancel';
+const agentTurnEndedEvent = 'agent.turnEnded';
+
 const cleanups: (() => void | Promise<void>)[] = [];
 const cliDeadline = { timeout: 10_000 };
 afterEach(async (): Promise<void> => {
@@ -127,7 +132,7 @@ it('starts another Turn before a cancelled Turn receives its late start response
     },
   }).start();
   cleanups.push(async (): Promise<void> => {
-    agent.send({ type: 'agent.stop' });
+    agent.send({ type: stopAgentEvent });
     await waitFor(
       agent,
       (
@@ -146,17 +151,17 @@ it('starts another Turn before a cancelled Turn receives its late start response
       (): boolean =>
         events.some(
           (event): event is Extract<AgentEvent, { type: 'agent.ready' }> =>
-            event.type === 'agent.ready',
+            event.type === agentReadyEvent,
         ),
       cliDeadline,
     )
     .toBe(true);
   agent.send(prompt);
-  agent.send({ type: 'agent.cancel' });
+  agent.send({ type: cancelAgentEvent });
   const ended = (): Extract<AgentEvent, { type: 'agent.turnEnded' }>[] =>
     events.filter(
       (event): event is Extract<AgentEvent, { type: 'agent.turnEnded' }> =>
-        event.type === 'agent.turnEnded',
+        event.type === agentTurnEndedEvent,
     );
   await expect.poll((): number => ended().length, cliDeadline).toBe(1);
   agent.send({ ...prompt, turnId: 'turn-2' });
@@ -172,7 +177,7 @@ it('starts another Turn before a cancelled Turn receives its late start response
       cliDeadline,
     )
     .toBe(2);
-  agent.send({ type: 'agent.cancel' });
+  agent.send({ type: cancelAgentEvent });
   await expect.poll((): number => ended().length, cliDeadline).toBe(2);
   expect(ended()).toEqual([
     expect.objectContaining({ stopReason: 'cancelled' }),
@@ -200,7 +205,7 @@ it('does not interrupt a completed Turn when its start response arrives afterwar
   );
   cleanups.push((): Promise<void> => session.stop());
   await session.run(prompt);
-  await session.run({ type: 'agent.cancel' });
+  await session.run({ type: cancelAgentEvent });
   expect(failures).toEqual([]);
 });
 
@@ -226,7 +231,7 @@ it('leaves the Agent ready when Stop cancels a Turn with a pending Elicitation',
     },
   }).start();
   cleanups.push(async (): Promise<void> => {
-    agent.send({ type: 'agent.stop' });
+    agent.send({ type: stopAgentEvent });
     await waitFor(
       agent,
       (
@@ -243,7 +248,7 @@ it('leaves the Agent ready when Stop cancels a Turn with a pending Elicitation',
       (): boolean =>
         events.some(
           (event): event is Extract<AgentEvent, { type: 'agent.ready' }> =>
-            event.type === 'agent.ready',
+            event.type === agentReadyEvent,
         ),
       cliDeadline,
     )
@@ -263,14 +268,14 @@ it('leaves the Agent ready when Stop cancels a Turn with a pending Elicitation',
       cliDeadline,
     )
     .toBe(true);
-  agent.send({ type: 'agent.cancel' });
+  agent.send({ type: cancelAgentEvent });
   agent.send({ type: 'agent.answerElicitation', action: 'cancel' });
   await expect
     .poll(
       (): boolean =>
         events.some(
           (event): event is Extract<AgentEvent, { type: 'agent.turnEnded' }> =>
-            event.type === 'agent.turnEnded',
+            event.type === agentTurnEndedEvent,
         ),
       cliDeadline,
     )
@@ -283,7 +288,7 @@ it('leaves the Agent ready when Stop cancels a Turn with a pending Elicitation',
   expect(
     events.filter(
       (event): event is Extract<AgentEvent, { type: 'agent.turnEnded' }> =>
-        event.type === 'agent.turnEnded',
+        event.type === agentTurnEndedEvent,
     ),
   ).toEqual([expect.objectContaining({ stopReason: 'cancelled' })]);
   expect(agent.getSnapshot().status).toBe('active');
@@ -330,7 +335,7 @@ it.each([
       },
     }).start();
     cleanups.push(async (): Promise<void> => {
-      agent.send({ type: 'agent.stop' });
+      agent.send({ type: stopAgentEvent });
       await waitFor(
         agent,
         (
@@ -347,7 +352,7 @@ it.each([
         (): boolean =>
           events.some(
             (event): event is Extract<AgentEvent, { type: 'agent.ready' }> =>
-              event.type === 'agent.ready',
+              event.type === agentReadyEvent,
           ),
         cliDeadline,
       )
@@ -367,7 +372,7 @@ it.each([
         cliDeadline,
       )
       .toBe(true);
-    agent.send({ type: 'agent.cancel' });
+    agent.send({ type: cancelAgentEvent });
     const cancellationSettleWait = 200;
     await new Promise((resolve): NodeJS.Timeout =>
       setTimeout(resolve, cancellationSettleWait),
@@ -377,7 +382,7 @@ it.each([
     expect(
       events.filter(
         (event): event is Extract<AgentEvent, { type: 'agent.turnEnded' }> =>
-          event.type === 'agent.turnEnded',
+          event.type === agentTurnEndedEvent,
       ),
     ).toHaveLength(endedTurns);
   },

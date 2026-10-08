@@ -7,6 +7,8 @@ import { connect } from '../../../packages/agents/claude/connect';
 import { mockCliScenarioEnvironment } from '../mock-cli';
 import { writeMockClaude } from './write-mock-claude';
 
+const rejectedAgentMessageEvent = 'agent.messageRejected';
+
 const directories: string[] = [];
 afterEach(async (): Promise<void> => {
   vi.unstubAllEnvs();
@@ -29,7 +31,7 @@ it('reports an unsupported message through the real SDK adapter', async (): Prom
     {
       message: (): void => {},
       event: (event): void => {
-        if (event.type === 'agent.messageRejected') rejected.push(event);
+        if (event.type === rejectedAgentMessageEvent) rejected.push(event);
       },
       failed: (): void => {},
     },
@@ -45,11 +47,11 @@ it('reports an unsupported message through the real SDK adapter', async (): Prom
       .poll((): AgentEvent[] => rejected)
       .toEqual([
         {
-          type: 'agent.messageRejected',
+          type: rejectedAgentMessageEvent,
           reason: 'Unsupported SDK message: future_message',
         },
         {
-          type: 'agent.messageRejected',
+          type: rejectedAgentMessageEvent,
           reason: 'Unsupported SDK message: http',
         },
       ]);

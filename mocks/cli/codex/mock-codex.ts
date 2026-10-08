@@ -41,6 +41,8 @@ import {
 } from '../request-answer.ts';
 import { toPlanProposalAnswer, toRequestAnswer } from './request-answer.ts';
 
+const turnCompletedNotification = 'turn/completed';
+
 const PRODUCER = 'codex-app-server';
 // JSON-RPC error codes.
 const METHOD_NOT_FOUND = -32601;
@@ -69,7 +71,7 @@ const messages = recordedFrames(
 const turns = splitTurns(
   messages,
   (message): message is Extract<VendorMessage, { method: 'turn/completed' }> =>
-    isVendorMessage(message) && message.method === 'turn/completed',
+    isVendorMessage(message) && message.method === turnCompletedNotification,
 );
 const recordedThreadId = messages.flatMap((message): string[] =>
   typeof message.params.threadId === 'string' ? [message.params.threadId] : [],
@@ -175,7 +177,7 @@ function startTurn(
   const final = turn.at(-1);
   const interrupted =
     isVendorMessage(final) &&
-    final.method === 'turn/completed' &&
+    final.method === turnCompletedNotification &&
     final.params.turn.status === 'interrupted';
   const command = interrupted
     ? turn.findIndex(
@@ -301,9 +303,9 @@ serveJsonLines<WireFrame>(({ id, method, params, result }): void | boolean => {
             ): message is Extract<
               VendorMessage,
               { method: 'turn/completed' }
-            > => message.method === 'turn/completed',
+            > => message.method === turnCompletedNotification,
           );
-          if (completed?.method === 'turn/completed')
+          if (completed?.method === turnCompletedNotification)
             send({
               ...completed,
               params: {
@@ -338,10 +340,10 @@ serveJsonLines<WireFrame>(({ id, method, params, result }): void | boolean => {
           (
             message,
           ): message is Extract<VendorMessage, { method: 'turn/completed' }> =>
-            message.method === 'turn/completed',
+            message.method === turnCompletedNotification,
         );
         send({ id, result: {} });
-        if (completed?.method === 'turn/completed')
+        if (completed?.method === turnCompletedNotification)
           send({
             ...completed,
             params: {

@@ -25,6 +25,11 @@ import {
 } from '../recording.ts';
 import { writeMockCodex } from './write-mock-codex.ts';
 
+const fileChangeScenario = 'file-change';
+const startTurnMethod = 'turn/start';
+const turnStartedNotification = 'turn/started';
+const turnCompletedNotification = 'turn/completed';
+
 const PRODUCER = 'codex-app-server';
 const RECORDINGS = path.join(import.meta.dirname, 'recordings');
 const VERSION = recordingVersion(RECORDINGS);
@@ -52,7 +57,10 @@ const startAppServer = async (
   options: Partial<MockCliOptions> = {},
 ): Promise<ReturnType<typeof startLineProcess>> => {
   const codex = startLineProcess(
-    await writeMockCodex(directory, { recording: 'file-change', ...options }),
+    await writeMockCodex(directory, {
+      recording: fileChangeScenario,
+      ...options,
+    }),
     ['app-server'],
   );
   codex.send({ id: 1, method: 'initialize', params: {} });
@@ -74,7 +82,7 @@ const startTurn = async (
   expect(isThreadStartResponse(started.result)).toBe(true);
   codex.send({
     id: 3,
-    method: 'turn/start',
+    method: startTurnMethod,
     params: { threadId, input: [{ type: 'text', text: 'Go.' }] },
   });
 };
@@ -94,7 +102,7 @@ describe('codex recordings', (): void => {
 describe('mock Codex CLI', (): void => {
   it('reports the version of its recordings', async (): Promise<void> => {
     const executable = await writeMockCodex(directory, {
-      recording: 'file-change',
+      recording: fileChangeScenario,
     });
 
     const { stdout } = await promisify(execFile)(executable, ['--version']);
@@ -121,7 +129,7 @@ describe('mock Codex CLI', (): void => {
     expect(await codex.exited).toBe(0);
   });
 
-  it.each(['file-change', 'reply', 'edit-and-command', 'image-prompt'])(
+  it.each([fileChangeScenario, 'reply', 'edit-and-command', 'image-prompt'])(
     'replays %s after turn/start',
     async (recording): Promise<void> => {
       const messages = wireMessages(recording);
@@ -129,20 +137,20 @@ describe('mock Codex CLI', (): void => {
         (
           message,
         ): message is Extract<VendorMessage, { method: 'turn/started' }> =>
-          message.method === 'turn/started',
+          message.method === turnStartedNotification,
       );
       const codex = await startAppServer({ recording });
 
       await startTurn(codex, started?.params.threadId);
       const output = await codex.until(
-        (message): boolean => message.method === 'turn/completed',
+        (message): boolean => message.method === turnCompletedNotification,
       );
 
       expect(output[0]).toEqual({
         id: 3,
         result: {
           turn:
-            started?.method === 'turn/started'
+            started?.method === turnStartedNotification
               ? started.params.turn
               : undefined,
         },
@@ -154,14 +162,14 @@ describe('mock Codex CLI', (): void => {
   );
 
   it('answers turn/start past the last Turn with an error, not a crash', async (): Promise<void> => {
-    const messages = wireMessages('file-change');
+    const messages = wireMessages(fileChangeScenario);
     const codex = await startAppServer();
 
     await startTurn(codex, threadIdOf(messages[0]));
     await codex.until(
-      (message): boolean => message.method === 'turn/completed',
+      (message): boolean => message.method === turnCompletedNotification,
     );
-    codex.send({ id: 4, method: 'turn/start', params: { input: [] } });
+    codex.send({ id: 4, method: startTurnMethod, params: { input: [] } });
 
     expect(await codex.next()).toEqual({
       id: 4,
@@ -171,7 +179,7 @@ describe('mock Codex CLI', (): void => {
     expect(await codex.exited).toBe(0);
   });
 
-  it.each(['file-change', 'reply', 'edit-and-command', 'image-prompt'])(
+  it.each([fileChangeScenario, 'reply', 'edit-and-command', 'image-prompt'])(
     'exits right after turn/started in %s, to stand in for a crash',
     async (recording): Promise<void> => {
       const messages = wireMessages(recording);
@@ -184,7 +192,7 @@ describe('mock Codex CLI', (): void => {
         (
           message,
         ): message is Extract<VendorMessage, { method: 'turn/started' }> =>
-          message.method === 'turn/started',
+          message.method === turnStartedNotification,
       );
       expect(codex.output.slice(3)).toEqual(messages.slice(0, started + 1));
     },
@@ -220,7 +228,9 @@ it('holds the recorded interrupted Turn until the caller interrupts its command'
     );
   });
   expect(
-    prefix.some((message): boolean => message.method === 'turn/completed'),
+    prefix.some(
+      (message): boolean => message.method === turnCompletedNotification,
+    ),
   ).toBe(false);
   codex.send({
     id: 4,
@@ -231,12 +241,12 @@ it('holds the recorded interrupted Turn until the caller interrupts its command'
         (
           message,
         ): message is Extract<VendorMessage, { method: 'turn/started' }> =>
-          message.method === 'turn/started',
+          message.method === turnStartedNotification,
       )?.params.turn.id,
     },
   });
   const output = await codex.until(
-    (message): boolean => message.method === 'turn/completed',
+    (message): boolean => message.method === turnCompletedNotification,
   );
   expect(output[0]).toEqual({ id: 4, result: {} });
   expect([...prefix.slice(1), ...output.slice(1)]).toEqual(messages);
@@ -250,13 +260,13 @@ it('can replay turn/started before the response that supplies its vendor Turn id
   await codex.next();
   codex.send({
     id: 3,
-    method: 'turn/start',
+    method: startTurnMethod,
     params: { notificationsFirst: true },
   });
   const output = await codex.until(
-    (message): boolean => message.method === 'turn/completed',
+    (message): boolean => message.method === turnCompletedNotification,
   );
-  expect(output[0]).toMatchObject({ method: 'turn/started' });
+  expect(output[0]).toMatchObject({ method: turnStartedNotification });
   expect(output[1]).toMatchObject({
     id: 3,
     result: { turn: expect.objectContaining({ id: expect.any(String) }) },

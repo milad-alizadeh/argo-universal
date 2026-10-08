@@ -29,6 +29,8 @@ import {
 import { isKnownMessage } from './known-messages';
 import type { VendorMessage } from './messages';
 
+const cancelledRequestReason = 'Request cancelled';
+
 // The values the CLI starts with; the saved ones follow once its model list can check them.
 const CLI_START: ConfigValues = {
   mode: 'default',
@@ -173,7 +175,7 @@ export async function connect(
       const cancel = (): void | undefined =>
         requests
           .remove(options.toolUseID)
-          ?.resolve({ behavior: 'deny', message: 'Request cancelled' });
+          ?.resolve({ behavior: 'deny', message: cancelledRequestReason });
       options.signal.addEventListener('abort', cancel, { once: true });
       if (options.signal.aborted) cancel();
       return answer.promise.finally((): void =>
@@ -338,7 +340,7 @@ export async function connect(
                   behavior: 'deny',
                   message:
                     command.optionId === null
-                      ? 'Request cancelled'
+                      ? cancelledRequestReason
                       : (command.message ?? 'Rejected by user'),
                 },
           );
@@ -368,7 +370,7 @@ export async function connect(
                   behavior: 'deny',
                   message:
                     command.action === 'cancel'
-                      ? 'Request cancelled'
+                      ? cancelledRequestReason
                       : 'User declined to answer',
                   interrupt: command.action === 'cancel',
                 },
@@ -465,7 +467,7 @@ function createRequestTracker(listener: VendorSessionListener<VendorMessage>): {
       pending.clear();
       questions.length = 0;
       for (const request of cancelled)
-        request.resolve({ behavior: 'deny', message: 'Request cancelled' });
+        request.resolve({ behavior: 'deny', message: cancelledRequestReason });
       return cancelled.length;
     },
   };

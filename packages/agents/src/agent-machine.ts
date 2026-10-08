@@ -19,6 +19,10 @@ import { acceptAgentEvent, AgentReadyData } from './agent-events';
 import type { VendorSessionInput } from './agent-input';
 import { describeError } from './describe-error';
 
+const vendorEvent = 'vendor.event';
+const vendorReadyEvent = 'vendor.ready';
+const stopAgentEvent = 'agent.stop';
+
 const agentStartLimit = 10_000;
 
 // Wrapped, because Agent event types share the `agent.` prefix with commands.
@@ -43,7 +47,7 @@ interface AgentContext extends AgentInput {
 const isTurnEvent =
   (type: 'agent.turnStarted' | 'agent.turnEnded'): AgentTurnGuard =>
   ({ event }): boolean =>
-    event.type === 'vendor.event' && event.event.type === type;
+    event.type === vendorEvent && event.event.type === type;
 
 // One machine runs every Agent; the Session passes in the adapter to run.
 // Starts the adapter's vendor session, maps its messages, and reports both as vendor events.
@@ -63,7 +67,7 @@ function startVendorSession(
   const sendEvent = (event: AgentEvent): void => {
     if (controller.signal.aborted) return;
     const accepted = acceptAgentEvent(event);
-    if (isReady) sendBack({ type: 'vendor.event', event: accepted });
+    if (isReady) sendBack({ type: vendorEvent, event: accepted });
     else early.push(accepted);
   };
   // Resolves to null when starting fails, after reporting it.
@@ -101,10 +105,10 @@ function startVendorSession(
           fail(ready.error);
           return session;
         }
-        sendBack({ type: 'vendor.ready', ready: ready.data });
+        sendBack({ type: vendorReadyEvent, ready: ready.data });
         isReady = true;
         for (const event of early.splice(0))
-          sendBack({ type: 'vendor.event', event });
+          sendBack({ type: vendorEvent, event });
         return session;
       },
       (error: unknown): null => {
@@ -126,7 +130,7 @@ function startVendorSession(
 
   const run = async (command: AgentCommand): Promise<void> => {
     try {
-      if (command.type === 'agent.stop') {
+      if (command.type === stopAgentEvent) {
         await stop();
         sendBack({ type: 'vendor.closed' });
         return;
@@ -135,7 +139,7 @@ function startVendorSession(
       const session = await starting;
       if (!controller.signal.aborted) await session?.run(command);
     } catch (error) {
-      if (command.type === 'agent.stop' || !controller.signal.aborted)
+      if (command.type === stopAgentEvent || !controller.signal.aborted)
         fail(error);
     }
   };
@@ -158,7 +162,7 @@ export const agentMachine = setup({
         let queue = Promise.resolve();
         let beforeTurn = queue;
         receive((command): void => {
-          if (command.type === 'agent.stop') {
+          if (command.type === stopAgentEvent) {
             void session.run(command);
             return;
           }
@@ -188,26 +192,26 @@ export const agentMachine = setup({
       failure: `Agent startup exceeded agentStartLimit (${agentStartLimit} ms). Retry the Session.`,
     }),
     rememberReady: assign(({ event }): Pick<AgentReady, 'capabilities'> => {
-      assertEvent(event, 'vendor.ready');
+      assertEvent(event, vendorReadyEvent);
       return { capabilities: event.ready.capabilities };
     }),
     sendReady: sendTo(
       ({ context }): AgentParent => context.parent,
       ({ event }): Extract<AgentEvent, { type: 'agent.ready' }> => {
-        assertEvent(event, 'vendor.ready');
+        assertEvent(event, vendorReadyEvent);
         return { type: 'agent.ready', ...event.ready } satisfies AgentEvent;
       },
     ),
     sendEvent: sendTo(
       ({ context }): AgentParent => context.parent,
       ({ event }): AgentEvent => {
-        assertEvent(event, 'vendor.event');
+        assertEvent(event, vendorEvent);
         return event.event;
       },
     ),
     sendCommand: forwardTo('vendorSession'),
     stopVendorSession: sendTo('vendorSession', {
-      type: 'agent.stop',
+      type: stopAgentEvent,
     } satisfies AgentCommand),
     // Runs on `vendor.failed` and on the vendor session actor's error event.
     rememberFailure: assign({
