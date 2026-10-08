@@ -3,9 +3,9 @@ import { appRouter, type Services } from '@repo/api';
 import type { Database } from '@repo/db';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { WebSocketServer } from 'ws';
-import { blobsFolderIn } from '../services/blob/blob-service';
+import { blobsFolderIn } from '../services/blob';
 import { createServerServices } from '../services/server-services';
-import type { RegistryActorRef } from '../services/sessions/registry-machine';
+import type { RegistryActorRef } from '../services/sessions';
 import { createRequestGuard } from './request-guard';
 import { createRequestListener } from './request-listener';
 

@@ -51,13 +51,13 @@ import {
 } from '#mocks/database';
 import { initTestRepository } from '#mocks/git';
 import { liveHeaderMocks } from '#mocks/live-header';
-import { feedMachine } from '../services/feed/feed-machine';
-import { type WriterJob, writeJobs } from '../services/feed/writer-job';
-import { writerMachine } from '../services/feed/writer-machine';
+import { feedMachine } from '../services/feed';
+import { type WriterJob, writeJobs } from '../services/feed';
+import { writerMachine } from '../services/feed';
 import { createServerServices } from '../services/server-services';
-import { registryMachine } from '../services/sessions/registry-machine';
-import type { SessionActorRef } from '../services/sessions/session-machine';
-import { sessionMachine } from '../services/sessions/session-machine';
+import { registryMachine } from '../services/sessions';
+import type { SessionActorRef } from '../services/sessions';
+import { sessionMachine } from '../services/sessions';
 import type { HttpServerOptions } from './http-server';
 import { engineMachine } from './machine';
 

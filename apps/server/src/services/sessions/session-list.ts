@@ -10,7 +10,7 @@ import type { Database } from '@repo/db';
 import { TRPCError } from '@trpc/server';
 import { type ActorRefFrom, createActor } from 'xstate';
 import { z } from 'zod';
-import type { writerMachine } from '../feed/writer-machine';
+import type { writerMachine } from '../feed';
 import type { RegistryActorRef } from './registry-machine';
 import {
   type SessionListMachineInput,

@@ -8,9 +8,9 @@ import {
   type Subscription,
   setup,
 } from 'xstate';
-import type { FeedActorRef } from '../feed/feed-machine';
-import type { WriterJob } from '../feed/writer-job';
-import type { writerMachine } from '../feed/writer-machine';
+import type { FeedActorRef } from '../feed';
+import type { WriterJob } from '../feed';
+import type { writerMachine } from '../feed';
 import type { RegistryActorRef } from './registry-machine';
 import type { SessionActorRef } from './session-machine';
 

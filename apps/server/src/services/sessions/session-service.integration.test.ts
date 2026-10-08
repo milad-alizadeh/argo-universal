@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { AgentProbe, VendorCommand } from '@repo/agents';
 import { appRouter } from '@repo/api';
-import type { SessionNewInput } from '@repo/contracts';
+import type { FeedSubscribeOutput, SessionNewInput } from '@repo/contracts';
 import { turn } from '@repo/db/schema';
 import { sessionBranch } from '@repo/git';
 import {
@@ -18,7 +18,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { createActor, fromPromise, setup, waitFor } from 'xstate';
 import { insertSession, openTestDatabase } from '#mocks/database';
 import { initTestRepository } from '#mocks/git';
-import { writerMachine } from '../feed/writer-machine';
+import { writerMachine } from '../feed';
 import { createServerServices } from '../server-services';
 import { registryMachine } from './registry-machine';
 
@@ -619,4 +619,35 @@ it('rejects config choices that the Agent did not offer', async (): Promise<void
       value: 'missing',
     }),
   ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
+});
+
+it('keeps the Session failure when the registry removes a Session during its Feed subscription', async (): Promise<void> => {
+  vi.useFakeTimers();
+  cleanups.push((): void => {
+    vi.useRealTimers();
+  });
+  const { caller, streams } = openServer();
+  await caller.session.prompt({
+    sessionId: 'session-1',
+    prompt: [{ type: 'text', text: 'Start a Turn' }],
+  });
+  const updates = (
+    await caller.feed.subscribe({ sessionId: 'session-1', after: null })
+  )[Symbol.asyncIterator]();
+  await updates.next();
+  for (let index = 0; index < 3; index++) {
+    const stream = streams.get('session-1');
+    if (!stream) throw new Error('No Agent stream');
+    stream.fail(new Error('Agent crashed'));
+    await vi.advanceTimersByTimeAsync(index === 2 ? 0 : 1000);
+  }
+  let last: FeedSubscribeOutput | undefined;
+  for await (const event of {
+    [Symbol.asyncIterator]: (): typeof updates => updates,
+  })
+    last = event;
+  expect(last).toEqual({
+    type: 'closed',
+    failure: 'The Agent stopped three times in ten minutes',
+  });
 });
