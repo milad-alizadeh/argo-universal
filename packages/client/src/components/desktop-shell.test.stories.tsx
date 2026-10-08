@@ -682,8 +682,8 @@ export const ContentUpdatesKeepAnActiveToggleRunning: Story = {
     const { page } = await import('vitest/browser');
     await page.viewport(1440, 844);
     // The detail pane animates the frame around its viewport.
-    const frame = canvas.getByTestId('desktop-detail-viewport')
-      .parentElement as HTMLElement;
+    const frame = canvas.getByTestId('desktop-detail-viewport').parentElement;
+    if (!frame) throw new Error('Desktop detail viewport has no frame');
     await waitFor(() =>
       expect(
         canvas.getByTestId('desktop-list').getBoundingClientRect().width,
@@ -708,7 +708,10 @@ export const ContentUpdatesKeepAnActiveToggleRunning: Story = {
       await waitFor(() =>
         expect(animations.mock.results.length).toBeGreaterThan(0),
       );
-      const activeAnimation = animations.mock.results[0]?.value as Animation;
+      const animationResult = animations.mock.results[0];
+      if (animationResult?.type !== 'return')
+        throw new Error('Desktop frame animation did not start');
+      const activeAnimation = animationResult.value;
       const started = animations.mock.calls.length;
       await userEvent.click(
         canvas.getByRole('button', { name: 'Update attention' }),

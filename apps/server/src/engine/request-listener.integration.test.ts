@@ -1,7 +1,6 @@
 import { createHash } from 'node:crypto';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer, request, type Server } from 'node:http';
-import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { initTRPC } from '@trpc/server';
@@ -49,7 +48,10 @@ const send = ({
   body,
 }: HttpRequest): Promise<HttpResponse> =>
   new Promise<HttpResponse>((resolve, reject): void => {
-    const { port } = server.address() as AddressInfo;
+    const address = server.address();
+    if (!address || typeof address === 'string')
+      throw new Error('Server has no TCP address');
+    const { port } = address;
     const outgoing = request(
       { host: '127.0.0.1', port, method, path, headers: { host, ...headers } },
       (response): void => {
@@ -113,7 +115,10 @@ beforeEach(async (): Promise<void> => {
       typeof import('http').ServerResponse
     > => server.listen(0, '127.0.0.1', (): void => resolve()),
   );
-  const { port } = server.address() as AddressInfo;
+  const address = server.address();
+  if (!address || typeof address === 'string')
+    throw new Error('Server has no TCP address');
+  const { port } = address;
   host = `127.0.0.1:${port}`;
   listener = createRequestListener({
     guard: createRequestGuard(port),

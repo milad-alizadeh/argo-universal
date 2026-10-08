@@ -26,10 +26,13 @@ describe('fromFeedRow', (): void => {
 
   it('rejects a payload that carries an envelope field', (): void => {
     const row = toFeedRowWrite(message);
+    const payload = row.payload;
+    if (!payload || typeof payload !== 'object')
+      throw new Error('Message payload is not an object');
     expect((): ReturnType<typeof fromFeedRow> =>
       fromFeedRow('session-1', {
         ...row,
-        payload: { ...(row.payload as object), position: 9 },
+        payload: { ...payload, position: 9 },
       }),
     ).toThrow('row message-0#0 has position in its payload');
   });

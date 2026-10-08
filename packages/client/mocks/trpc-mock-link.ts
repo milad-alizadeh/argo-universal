@@ -54,23 +54,32 @@ export type Fixtures = {
   >;
 };
 
-type AnyFixture = (input: unknown, signal: AbortSignal) => unknown;
+const isAsyncIterable = (value: unknown): value is AsyncIterable<unknown> =>
+  value !== null &&
+  typeof value === 'object' &&
+  typeof Reflect.get(value, Symbol.asyncIterator) === 'function';
 
 // A terminating link that serves fixtures by procedure path (ADR 0010).
 export function trpcMockLink(fixtures: Fixtures): TRPCLink<AppRouter> {
   return () =>
     ({ op }) =>
       observable((observer) => {
-        const fixture = (fixtures as Record<string, AnyFixture | undefined>)[
-          op.path
-        ];
+        const fixture: unknown = Reflect.get(fixtures, op.path);
         const controller = new AbortController();
         (async (): Promise<void> => {
-          if (!fixture) throw new Error(`No story mock for ${op.path}`);
+          if (typeof fixture !== 'function')
+            throw new Error(`No story mock for ${op.path}`);
           if (op.type === 'subscription') {
             observer.next({ result: { type: 'started' } });
-            const ticks = fixture(op.input, controller.signal);
-            for await (const data of ticks as AsyncIterable<unknown>) {
+            const ticks: unknown = Reflect.apply(fixture, undefined, [
+              op.input,
+              controller.signal,
+            ]);
+            if (!isAsyncIterable(ticks))
+              throw new Error(
+                `Story mock for ${op.path} is not a subscription`,
+              );
+            for await (const data of ticks) {
               if (controller.signal.aborted) return;
               observer.next({ result: { type: 'data', data } });
             }
@@ -78,7 +87,10 @@ export function trpcMockLink(fixtures: Fixtures): TRPCLink<AppRouter> {
             observer.complete();
             return;
           }
-          const data = await fixture(op.input, controller.signal);
+          const data = await Reflect.apply(fixture, undefined, [
+            op.input,
+            controller.signal,
+          ]);
           observer.next({ result: { type: 'data', data } });
           observer.complete();
         })().catch((cause: unknown) => {
@@ -94,13 +106,13 @@ export function trpcMockLink(fixtures: Fixtures): TRPCLink<AppRouter> {
 const forever = new Promise<never>(() => {});
 
 // A fixture that never answers: a query stays loading, a subscription never sends.
-export function pending(): () => never {
-  return () =>
-    ({
-      // oxlint-disable-next-line unicorn/no-thenable -- awaiting this value must hang, as a query that never answers does.
-      then: (resolve: (value: never) => void) => forever.then(resolve),
-      [Symbol.asyncIterator]: () => ({ next: () => forever }),
-    }) as never;
+export function pending(): () => Promise<never> & AsyncIterable<never> {
+  const value = Object.assign(forever, {
+    [Symbol.asyncIterator]: (): AsyncIterator<never> => ({
+      next: () => forever,
+    }),
+  });
+  return () => value;
 }
 
 // A fixture that always errors with this message.

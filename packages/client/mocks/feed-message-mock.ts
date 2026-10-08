@@ -37,10 +37,11 @@ function recordedRow<Kind extends SessionUpdate['sessionUpdate']>(
   kind: Kind,
 ): Extract<SessionUpdate, { sessionUpdate: Kind }> {
   const row = recordedFeedMock(agent, recording).rows.findLast(
-    (row) => row.sessionUpdate === kind,
+    (row): row is Extract<SessionUpdate, { sessionUpdate: Kind }> =>
+      row.sessionUpdate === kind,
   );
   if (!row) throw new Error(`No ${kind} in ${agent}/${recording}`);
-  return row as Extract<SessionUpdate, { sessionUpdate: Kind }>;
+  return row;
 }
 
 export const recordedUserMessage = (
@@ -68,8 +69,11 @@ export function streamingAgentMessage(
   const fullLength = textLength(settled);
   let row: AgentMessage | undefined;
   for (const event of mock.stream) {
-    if (event.type === 'row.upsert' && event.row.id === settled.id)
-      row = event.row as AgentMessage;
+    if (event.type === 'row.upsert' && event.row.id === settled.id) {
+      if (event.row.sessionUpdate !== 'agent_message')
+        throw new Error('Streamed row is not an Agent message');
+      row = event.row;
+    }
     if (event.type === 'row.append' && event.id === settled.id && row) {
       const [, index] = event.field.split('.');
       const content = [...row.content];

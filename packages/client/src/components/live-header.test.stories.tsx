@@ -41,15 +41,18 @@ export const EveryStep: Story = {
       await settleViewport(width);
       const rows = canvas.getAllByRole('status');
       await expect(rows).toHaveLength(liveHeaderSteps.length);
-      const working = rows[
-        liveHeaderSteps.findIndex(
-          (step) => step.liveHeader.source.type === 'working',
-        )
-      ] as HTMLElement;
+      const working =
+        rows[
+          liveHeaderSteps.findIndex(
+            (step) => step.liveHeader.source.type === 'working',
+          )
+        ];
+      if (!working) throw new Error('Working header is missing');
       for (const [index, { liveHeader }] of liveHeaderSteps.entries()) {
         const { text, source } = liveHeader;
         const elapsed = liveHeaderElapsed;
-        const row = rows[index] as HTMLElement;
+        const row = rows[index];
+        if (!row) throw new Error('Live header row is missing');
         await expect(row).toBeVisible();
         await expect(row).toHaveAccessibleName(`${text} ${elapsed}`);
         await expect(row).toHaveTextContent(`${text} ${elapsed}`);

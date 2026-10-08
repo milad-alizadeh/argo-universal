@@ -45,7 +45,9 @@ describe('session.list pagination input', (): void => {
         services: unreachableServices(),
       });
       await expect(
-        caller.session.list({ archived: false, ...input } as never),
+        Reflect.apply(caller.session.list, undefined, [
+          { archived: false, ...input },
+        ]),
       ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
     },
   );
