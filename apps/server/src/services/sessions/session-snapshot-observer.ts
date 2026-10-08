@@ -120,6 +120,7 @@ class SessionSnapshotObserver implements Subscription {
   }
 
   private reject(error: unknown): void {
+    if (this.hasStopped) return;
     this.hasStopped = true;
     this.listener.error?.(error);
   }
