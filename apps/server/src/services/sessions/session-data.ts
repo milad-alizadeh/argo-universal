@@ -9,12 +9,8 @@ import { type Checkout, createCheckout, discardCheckout } from '@repo/git';
 import { eq, max } from 'drizzle-orm';
 import type { ActorRefFrom } from 'xstate';
 import { z } from 'zod';
-import {
-  applyQueuedSession,
-  queuedFeedRows,
-  type WriterJob,
-} from '../feed/writer-job';
-import type { writerMachine } from '../feed/writer-machine';
+import { applyQueuedSession, queuedFeedRows, type WriterJob } from '../feed';
+import type { writerMachine } from '../feed';
 import { decodeStoredSession, storedSessionColumns } from './session-record';
 
 // The first Turn's id travels with the creation, so the Session prompts as soon as it is stored.

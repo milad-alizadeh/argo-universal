@@ -556,6 +556,324 @@
       }
     },
     {
+      "files": ["apps/server/src/services/feed/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/client",
+                  "@repo/client/**",
+                  "@repo/universal-app",
+                  "@repo/universal-app/**",
+                  "@repo/storybook",
+                  "@repo/storybook/**",
+                  "@repo/desktop",
+                  "@repo/desktop/**"
+                ],
+                "message": "The Server never imports client or an App."
+              },
+              {
+                "group": [
+                  "../sessions/**",
+                  "**/services/sessions/**",
+                  "../agents/**",
+                  "**/services/agents/**",
+                  "../blob/**",
+                  "**/services/blob/**",
+                  "../projects/**",
+                  "**/services/projects/**",
+
+                  "!../agents/index",
+                  "!../agents/index.ts",
+                  "!**/services/agents/index",
+                  "!**/services/agents/index.ts",
+                  "!../blob/index",
+                  "!../blob/index.ts",
+                  "!**/services/blob/index",
+                  "!**/services/blob/index.ts",
+                  "!../projects/index",
+                  "!../projects/index.ts",
+                  "!**/services/projects/index",
+                  "!**/services/projects/index.ts"
+                ],
+                "message": "Import another Server domain through its index.ts face."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["apps/server/src/services/sessions/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/client",
+                  "@repo/client/**",
+                  "@repo/universal-app",
+                  "@repo/universal-app/**",
+                  "@repo/storybook",
+                  "@repo/storybook/**",
+                  "@repo/desktop",
+                  "@repo/desktop/**"
+                ],
+                "message": "The Server never imports client or an App."
+              },
+              {
+                "group": [
+                  "../feed/**",
+                  "**/services/feed/**",
+                  "../agents/**",
+                  "**/services/agents/**",
+                  "../blob/**",
+                  "**/services/blob/**",
+                  "../projects/**",
+                  "**/services/projects/**",
+                  "!../feed/index",
+                  "!../feed/index.ts",
+                  "!**/services/feed/index",
+                  "!**/services/feed/index.ts",
+                  "!../agents/index",
+                  "!../agents/index.ts",
+                  "!**/services/agents/index",
+                  "!**/services/agents/index.ts",
+                  "!../blob/index",
+                  "!../blob/index.ts",
+                  "!**/services/blob/index",
+                  "!**/services/blob/index.ts",
+                  "!../projects/index",
+                  "!../projects/index.ts",
+                  "!**/services/projects/index",
+                  "!**/services/projects/index.ts"
+                ],
+                "message": "Import another Server domain through its index.ts face."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["apps/server/src/services/agents/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/client",
+                  "@repo/client/**",
+                  "@repo/universal-app",
+                  "@repo/universal-app/**",
+                  "@repo/storybook",
+                  "@repo/storybook/**",
+                  "@repo/desktop",
+                  "@repo/desktop/**"
+                ],
+                "message": "The Server never imports client or an App."
+              },
+              {
+                "group": [
+                  "../feed/**",
+                  "**/services/feed/**",
+                  "../sessions/**",
+                  "**/services/sessions/**",
+                  "../blob/**",
+                  "**/services/blob/**",
+                  "../projects/**",
+                  "**/services/projects/**",
+                  "!../feed/index",
+                  "!../feed/index.ts",
+                  "!**/services/feed/index",
+                  "!**/services/feed/index.ts",
+                  "!../sessions/index",
+                  "!../sessions/index.ts",
+                  "!**/services/sessions/index",
+                  "!**/services/sessions/index.ts",
+                  "!../blob/index",
+                  "!../blob/index.ts",
+                  "!**/services/blob/index",
+                  "!**/services/blob/index.ts",
+                  "!../projects/index",
+                  "!../projects/index.ts",
+                  "!**/services/projects/index",
+                  "!**/services/projects/index.ts"
+                ],
+                "message": "Import another Server domain through its index.ts face."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["apps/server/src/services/blob/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/client",
+                  "@repo/client/**",
+                  "@repo/universal-app",
+                  "@repo/universal-app/**",
+                  "@repo/storybook",
+                  "@repo/storybook/**",
+                  "@repo/desktop",
+                  "@repo/desktop/**"
+                ],
+                "message": "The Server never imports client or an App."
+              },
+              {
+                "group": [
+                  "../feed/**",
+                  "**/services/feed/**",
+                  "../sessions/**",
+                  "**/services/sessions/**",
+                  "../agents/**",
+                  "**/services/agents/**",
+                  "../projects/**",
+                  "**/services/projects/**",
+                  "!../feed/index",
+                  "!../feed/index.ts",
+                  "!**/services/feed/index",
+                  "!**/services/feed/index.ts",
+                  "!../sessions/index",
+                  "!../sessions/index.ts",
+                  "!**/services/sessions/index",
+                  "!**/services/sessions/index.ts",
+                  "!../agents/index",
+                  "!../agents/index.ts",
+                  "!**/services/agents/index",
+                  "!**/services/agents/index.ts",
+                  "!../projects/index",
+                  "!../projects/index.ts",
+                  "!**/services/projects/index",
+                  "!**/services/projects/index.ts"
+                ],
+                "message": "Import another Server domain through its index.ts face."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["apps/server/src/services/projects/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/client",
+                  "@repo/client/**",
+                  "@repo/universal-app",
+                  "@repo/universal-app/**",
+                  "@repo/storybook",
+                  "@repo/storybook/**",
+                  "@repo/desktop",
+                  "@repo/desktop/**"
+                ],
+                "message": "The Server never imports client or an App."
+              },
+              {
+                "group": [
+                  "../feed/**",
+                  "**/services/feed/**",
+                  "../sessions/**",
+                  "**/services/sessions/**",
+                  "../agents/**",
+                  "**/services/agents/**",
+                  "../blob/**",
+                  "**/services/blob/**",
+                  "!../feed/index",
+                  "!../feed/index.ts",
+                  "!**/services/feed/index",
+                  "!**/services/feed/index.ts",
+                  "!../sessions/index",
+                  "!../sessions/index.ts",
+                  "!**/services/sessions/index",
+                  "!**/services/sessions/index.ts",
+                  "!../agents/index",
+                  "!../agents/index.ts",
+                  "!**/services/agents/index",
+                  "!**/services/agents/index.ts",
+                  "!../blob/index",
+                  "!../blob/index.ts",
+                  "!**/services/blob/index",
+                  "!**/services/blob/index.ts"
+                ],
+                "message": "Import another Server domain through its index.ts face."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["apps/server/**"],
+      "excludeFiles": [
+        "apps/server/src/services/feed/**",
+        "apps/server/src/services/sessions/**",
+        "apps/server/src/services/agents/**",
+        "apps/server/src/services/blob/**",
+        "apps/server/src/services/projects/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/client",
+                  "@repo/client/**",
+                  "@repo/universal-app",
+                  "@repo/universal-app/**",
+                  "@repo/storybook",
+                  "@repo/storybook/**",
+                  "@repo/desktop",
+                  "@repo/desktop/**"
+                ],
+                "message": "The Server never imports client or an App."
+              },
+              {
+                "group": [
+                  "**/services/feed/**",
+                  "**/services/sessions/**",
+                  "**/services/agents/**",
+                  "**/services/blob/**",
+                  "**/services/projects/**",
+                  "!**/services/*/index",
+                  "!**/services/*/index.ts",
+                  "./feed/**",
+                  "./sessions/**",
+                  "./agents/**",
+                  "./blob/**",
+                  "./projects/**",
+                  "!./*/index",
+                  "!./*/index.ts"
+                ],
+                "message": "Import a Server domain through its index.ts face."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       // D10
       "files": ["apps/desktop/**"],
       "rules": {

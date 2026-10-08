@@ -22,8 +22,12 @@ import { type Actor, createActor, fromPromise, setup } from 'xstate';
 import { insertSession, openTestDatabase } from '#mocks/database';
 import { storedMessage as message } from '#mocks/feed';
 import { createServerServices } from '../server-services';
-import { registryMachine } from '../sessions/registry-machine';
-import { sessionMachine } from '../sessions/session-machine';
+import {
+  createSessionReader,
+  createSessionSnapshotWatcher,
+  registryMachine,
+  sessionMachine,
+} from '../sessions';
 import { createSystemService } from '../system';
 import { feedMachine } from './feed-machine';
 import { readWrittenRow, toFeedRowWrite } from './feed-row';
@@ -70,7 +74,7 @@ const hostMachine = (
       session: sessionMachine.provide({
         actors: {
           loadSession: fromPromise(
-            (): Promise<import('../sessions/session-data').SessionData> =>
+            (): Promise<import('../sessions').SessionData> =>
               new Promise((): void => {}),
           ),
         },
@@ -136,14 +140,22 @@ const caller = (): ReturnType<typeof appRouter.createCaller> =>
         system: createSystemService({ version: '0.0.0', startedAt: '' }),
         feed: createFeedService({
           database,
-          findSession: (
-            sessionId,
-          ):
-            | import('xstate').ActorRefFromLogic<typeof sessionMachine>
-            | undefined =>
-            host.getSnapshot().status === 'active' && sessionId === 'session-1'
-              ? host.getSnapshot().children.session
-              : undefined,
+          readSession: createSessionReader(database),
+          watchSessionSnapshot: createSessionSnapshotWatcher({
+            database,
+            findSession: (
+              sessionId,
+            ):
+              | import('xstate').ActorRefFromLogic<typeof sessionMachine>
+              | undefined =>
+              host.getSnapshot().status === 'active' &&
+              sessionId === 'session-1'
+                ? host.getSnapshot().children.session
+                : undefined,
+            findFeed: (): ReturnType<typeof feedRef> => feedRef(),
+            findWriter: (): ReturnType<typeof host.system.get> =>
+              host.system.get('databaseWriter'),
+          }),
           findFeed: (
             sessionId,
           ):

@@ -10,9 +10,9 @@ import { createActor, fromPromise } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
 import { storedMessage } from '#mocks/feed';
 import { initTestRepository } from '#mocks/git';
-import { toFeedRowWrite } from '../feed/feed-row';
-import { writeJobs } from '../feed/writer-job';
-import { writerMachine } from '../feed/writer-machine';
+import { toFeedRowWrite } from '../feed';
+import { writeJobs } from '../feed';
+import { writerMachine } from '../feed';
 import {
   createSessionCheckout,
   discardSessionCheckout,
