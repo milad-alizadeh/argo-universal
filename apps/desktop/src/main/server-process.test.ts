@@ -13,7 +13,9 @@ import {
 
 let home: string;
 
-const writeServerJson = (pid: number) => {
+const writeServerJson = (
+  pid: number,
+): { pid: number; port: number; version: string; startedAt: string } => {
   const address = {
     pid,
     port: 7337,
@@ -24,45 +26,45 @@ const writeServerJson = (pid: number) => {
   return address;
 };
 
-beforeEach(() => {
+beforeEach((): void => {
   home = mkdtempSync(join(tmpdir(), 'desktop-server-process-'));
 });
 
-afterEach(() => {
+afterEach((): void => {
   vi.unstubAllEnvs();
   rmSync(home, { recursive: true, force: true });
 });
 
-describe('readLiveServerAddress', () => {
-  it('returns server.json of any version when its pid is alive', async () => {
+describe('readLiveServerAddress', (): void => {
+  it('returns server.json of any version when its pid is alive', async (): Promise<void> => {
     const address = writeServerJson(process.pid);
 
     expect(await readLiveServerAddress(home)).toEqual(address);
   });
 
-  it('returns null when the pid in server.json has exited', async () => {
+  it('returns null when the pid in server.json has exited', async (): Promise<void> => {
     const exited = spawnSync(process.execPath, ['--version']).pid;
     writeServerJson(exited);
 
     expect(await readLiveServerAddress(home)).toBeNull();
   });
 
-  it('returns null without server.json', async () => {
+  it('returns null without server.json', async (): Promise<void> => {
     expect(await readLiveServerAddress(home)).toBeNull();
   });
 });
 
-describe('spawnSupervisor', () => {
-  it('reports the pid before it returns, then the exit of a Supervisor that exits while it starts', async () => {
+describe('spawnSupervisor', (): void => {
+  it('reports the pid before it returns, then the exit of a Supervisor that exits while it starts', async (): Promise<void> => {
     // No src/main.ts here, so Node exits at once.
     const reports: string[] = [];
     let reportsOnReturn: string[] = [];
-    const exited = new Promise<void>((resolve) => {
+    const exited = new Promise<void>((resolve): void => {
       spawnSupervisor(
         { home, serverDirectory: home },
         {
-          spawned: (pid) => reports.push(`spawned ${typeof pid}`),
-          exited: (reason) => {
+          spawned: (pid): number => reports.push(`spawned ${typeof pid}`),
+          exited: (reason): void => {
             reports.push(reason);
             resolve();
           },
@@ -80,31 +82,31 @@ describe('spawnSupervisor', () => {
     ]);
   });
 
-  it('stops reporting once the returned function runs', async () => {
+  it('stops reporting once the returned function runs', async (): Promise<void> => {
     const reports: string[] = [];
     let pid = 0;
     const stopListening = spawnSupervisor(
       { home, serverDirectory: home },
       {
-        spawned: (value) => {
+        spawned: (value): void => {
           pid = value;
         },
-        exited: (reason) => reports.push(reason),
+        exited: (reason): number => reports.push(reason),
       },
     );
     stopListening();
 
-    await expect.poll(() => isRunning(pid)).toBe(false);
+    await expect.poll((): boolean => isRunning(pid)).toBe(false);
 
     expect(reports).toEqual([]);
   });
 });
 
-describe('signalSupervisor', () => {
-  it('does nothing for a pid that has exited', () => {
+describe('signalSupervisor', (): void => {
+  it('does nothing for a pid that has exited', (): void => {
     const exited = spawnSync(process.execPath, ['--version']).pid;
 
-    expect(() => signalSupervisor(exited)).not.toThrow();
+    expect((): void => signalSupervisor(exited)).not.toThrow();
   });
 });
 
@@ -112,7 +114,7 @@ it.each([
   [undefined, join(homedir(), '.argo')],
   ['', ''],
   ['/tmp/server-runtime', '/tmp/server-runtime'],
-])('resolves ARGO_HOME %s to %s', (override, expected) => {
+])('resolves ARGO_HOME %s to %s', (override, expected): void => {
   vi.stubEnv('ARGO_HOME', override);
   expect(resolveHome()).toBe(expected);
 });

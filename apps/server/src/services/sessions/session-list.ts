@@ -29,7 +29,7 @@ export function createSessionList(options: {
   sessions: RegistryActorRef;
 }): Pick<SessionService, 'list' | 'listUpdates' | 'counts'> {
   const { sessions } = options;
-  const writer = () =>
+  const writer = (): ActorRefFrom<typeof writerMachine> | undefined =>
     sessions.system.get('databaseWriter') as
       | ActorRefFrom<typeof writerMachine>
       | undefined;
@@ -49,7 +49,12 @@ export function createSessionList(options: {
     sessionIdsForJobs,
     relatedSessionIds,
   });
-  const list = async (input: SessionListInput) => {
+  const list = async (
+    input: SessionListInput,
+  ): Promise<{
+    sessions: import('@repo/contracts').SessionInfo[];
+    nextCursor: string | null;
+  }> => {
     let cursor: z.infer<typeof cursorSchema> | undefined;
     if (input.cursor !== undefined) {
       try {
@@ -64,9 +69,9 @@ export function createSessionList(options: {
       }
     }
     const rows = readCachedRows()
-      .map((row) => row.information)
+      .map((row): typeof row.information => row.information)
       .filter(
-        (row) =>
+        (row): boolean =>
           (input.projectId === undefined ||
             row.projectId === input.projectId) &&
           (row.archivedAt !== null) === input.archived &&
@@ -79,7 +84,7 @@ export function createSessionList(options: {
             (row.activityAt === cursor.activityAt &&
               row.sessionId < cursor.sessionId)),
       )
-      .sort((first, second) => {
+      .sort((first, second): number => {
         const activityOrder = second.activityAt - first.activityAt;
         if (activityOrder) return activityOrder;
         if (first.sessionId < second.sessionId) return 1;
@@ -102,31 +107,46 @@ export function createSessionList(options: {
     };
   };
   const readCounts = (rows: ReturnType<typeof readAll>): SessionCounts => {
-    const active = rows.filter((row) => row.information.archivedAt === null);
+    const active = rows.filter(
+      (row): boolean => row.information.archivedAt === null,
+    );
     return {
       attention: active.filter(
-        (row) =>
+        (row): boolean =>
           row.information.status === 'needs_input' ||
           row.information.status === 'unread',
       ).length,
-      running: active.filter((row) => row.running).length,
+      running: active.filter((row): boolean => row.running).length,
     };
   };
 
   return {
     list,
-    listUpdates: (signal) => {
+    listUpdates: (signal): ReturnType<typeof watch<SessionListUpdate>> => {
       let previous = new Map<string, string>();
-      return watch<SessionListUpdate>(signal, (state) => {
-        const rows = state.map((row) => row.information);
+      return watch<SessionListUpdate>(signal, (state): SessionListUpdate[] => {
+        const rows = state.map(
+          (row): typeof row.information => row.information,
+        );
         const next = new Map(
-          rows.map((row) => [row.sessionId, JSON.stringify(row)]),
+          rows.map((row): [string, string] => [
+            row.sessionId,
+            JSON.stringify(row),
+          ]),
         );
         const changed: SessionListUpdate[] = rows
           .filter(
-            (row) => previous.get(row.sessionId) !== next.get(row.sessionId),
+            (row): boolean =>
+              previous.get(row.sessionId) !== next.get(row.sessionId),
           )
-          .map((row) => ({ type: 'changed', session: row }));
+          .map(
+            (
+              row,
+            ): Extract<
+              import('@repo/contracts').SessionListUpdate,
+              { type: 'changed' }
+            > => ({ type: 'changed', session: row }),
+          );
         for (const sessionId of previous.keys())
           if (!next.has(sessionId))
             changed.push({ type: 'removed', sessionId });
@@ -134,15 +154,18 @@ export function createSessionList(options: {
         return changed;
       });
     },
-    counts: (signal) => {
+    counts: (signal): ReturnType<typeof watch<SessionCounts>> => {
       let previous = '';
-      return watch<SessionCounts>(signal, (rows) => {
-        const counts = readCounts(rows);
-        const serialized = JSON.stringify(counts);
-        if (serialized === previous) return [];
-        previous = serialized;
-        return [counts];
-      });
+      return watch<SessionCounts>(
+        signal,
+        (rows): { attention: number; running: number }[] => {
+          const counts = readCounts(rows);
+          const serialized = JSON.stringify(counts);
+          if (serialized === previous) return [];
+          previous = serialized;
+          return [counts];
+        },
+      );
     },
   };
 }
@@ -155,10 +178,16 @@ function createSessionListWatch({
   relatedSessionIds,
 }: Omit<SessionListMachineInput, 'writer'> & {
   writer: () => SessionListMachineInput['writer'];
-}) {
+}): {
+  watch: <Value>(
+    signal: AbortSignal | undefined,
+    changes: (rows: SessionListState) => Value[],
+  ) => AsyncGenerator<Value>;
+  readCachedRows: () => SessionListState;
+} {
   let sharedActor: ActorRefFrom<typeof sessionListMachine> | undefined;
   let references = 0;
-  const create = () =>
+  const create = (): import('xstate').Actor<typeof sessionListMachine> =>
     createActor(sessionListMachine, {
       input: {
         sessions,
@@ -168,7 +197,7 @@ function createSessionListWatch({
         relatedSessionIds,
       },
     });
-  const readCachedRows = () => {
+  const readCachedRows = (): SessionListState => {
     const actor = sharedActor ?? create().start();
     try {
       actor.send({ type: 'list.flush' });
@@ -194,19 +223,19 @@ function createSessionListWatch({
     sharedActor ??= create();
     const actor = sharedActor;
     references += 1;
-    const publish = (rows: SessionListState) => {
+    const publish = (rows: SessionListState): void => {
       for (const change of changes(rows)) events.emit('change', change);
     };
-    const rowsListener = actor.on('list.rows', ({ rows }) => {
+    const rowsListener = actor.on('list.rows', ({ rows }): void => {
       publish(rows);
     });
     const stream = on(events, 'change', { signal: controller.signal });
     const completion = actor.subscribe({
-      complete: () => controller.abort(),
-      error: (error) => controller.abort(error),
+      complete: (): void => controller.abort(),
+      error: (error): void => controller.abort(error),
     });
     let attached = true;
-    const release = () => {
+    const release = (): void => {
       if (!attached) return;
       attached = false;
       rowsListener.unsubscribe();
@@ -219,7 +248,7 @@ function createSessionListWatch({
         sharedActor = undefined;
       }
     };
-    const abort = () => {
+    const abort = (): void => {
       controller.abort();
       release();
     };

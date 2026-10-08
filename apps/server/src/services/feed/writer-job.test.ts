@@ -1,3 +1,4 @@
+import type { SessionUpdate } from '@repo/contracts';
 import { SessionRecord, Turn } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { blob, blobRef, feedRow, session, turn } from '@repo/db/schema';
@@ -40,26 +41,26 @@ const feedRows = (
   maxRevision,
 });
 
-const selectRows = () =>
+const selectRows = (): (typeof feedRow.$inferSelect)[] =>
   database
     .select()
     .from(feedRow)
     .where(eq(feedRow.sessionId, 'session-1'))
     .orderBy(feedRow.position)
     .all();
-const selectSession = () =>
+const selectSession = (): typeof session.$inferSelect | undefined =>
   database.select().from(session).where(eq(session.id, 'session-1')).get();
-const selectTurn = () =>
+const selectTurn = (): typeof turn.$inferSelect | undefined =>
   database.select().from(turn).where(eq(turn.id, 'turn-1')).get();
 
-beforeEach(() => {
+beforeEach((): void => {
   ({ database, remove: removeDatabase } = openTestDatabase());
 });
 
-afterEach(() => removeDatabase());
+afterEach((): void => removeDatabase());
 
-describe('writeJobs', () => {
-  it('inserts Feed rows and sets the Session maxRevision', () => {
+describe('writeJobs', (): void => {
+  it('inserts Feed rows and sets the Session maxRevision', (): void => {
     writeJobs(database, [
       feedRows([row(), row({ id: 'row-2', position: 1, revision: 2 })], 2),
     ]);
@@ -79,7 +80,7 @@ describe('writeJobs', () => {
     expect(selectSession()?.maxRevision).toBe(2);
   });
 
-  it('stamps activity when revisions advance and preserves it for repeated or older batches', () => {
+  it('stamps activity when revisions advance and preserves it for repeated or older batches', (): void => {
     writeJobs(database, [{ ...feedRows([row()], 1), activityAt: 100 }]);
     expect(selectSession()).toMatchObject({ maxRevision: 1, activityAt: 100 });
     writeJobs(database, [{ ...feedRows([], 1), activityAt: 200 }]);
@@ -89,7 +90,7 @@ describe('writeJobs', () => {
     expect(selectSession()).toMatchObject({ maxRevision: 2, activityAt: 400 });
   });
 
-  it('updates a Feed row it wrote before, by id, and keeps its position', () => {
+  it('updates a Feed row it wrote before, by id, and keeps its position', (): void => {
     writeJobs(database, [feedRows([row()], 1)]);
     writeJobs(database, [
       feedRows(
@@ -121,7 +122,7 @@ describe('writeJobs', () => {
     expect(selectSession()?.maxRevision).toBe(3);
   });
 
-  it('records the blobs a job names that are stored, once per Session', () => {
+  it('records the blobs a job names that are stored, once per Session', (): void => {
     database
       .insert(blob)
       .values({ id: 'image-1', mime: 'image/png', bytes: 3 })
@@ -141,7 +142,7 @@ describe('writeJobs', () => {
     ]);
   });
 
-  it('inserts a Turn, then updates it', () => {
+  it('inserts a Turn, then updates it', (): void => {
     writeJobs(database, [
       {
         type: 'turnInsert',
@@ -164,7 +165,7 @@ describe('writeJobs', () => {
     );
   });
 
-  it('updates a session row', () => {
+  it('updates a session row', (): void => {
     writeJobs(database, [
       {
         type: 'sessionRowUpdate',
@@ -178,7 +179,7 @@ describe('writeJobs', () => {
     );
   });
 
-  it('commits the jobs in the order they arrive', () => {
+  it('commits the jobs in the order they arrive', (): void => {
     writeJobs(database, [
       feedRows([row({ revision: 1 })], 1),
       feedRows([row({ revision: 2, state: 'settled' })], 2),
@@ -191,7 +192,7 @@ describe('writeJobs', () => {
     expect(selectSession()?.maxRevision).toBe(9);
   });
 
-  it('commits nothing when one job fails', () => {
+  it('commits nothing when one job fails', (): void => {
     const jobs: WriterJob[] = [
       feedRows([row()], 1),
       {
@@ -200,14 +201,14 @@ describe('writeJobs', () => {
       },
     ];
 
-    expect(() => writeJobs(database, jobs)).toThrow();
+    expect((): void => writeJobs(database, jobs)).toThrow();
     expect(selectRows()).toEqual([]);
     expect(selectSession()?.maxRevision).toBe(0);
     expect(selectTurn()).toBeUndefined();
   });
 });
 
-describe('describeJob', () => {
+describe('describeJob', (): void => {
   it.each<[WriterJob, string]>([
     [
       feedRows([row(), row({ id: 'row-2' })], 2),
@@ -232,12 +233,12 @@ describe('describeJob', () => {
       },
       'update Session session-1: epoch, vendorSessionId',
     ],
-  ])('%j reads %s', (job, description) => {
+  ])('%j reads %s', (job, description): void => {
     expect(describeJob(job)).toBe(description);
   });
 });
 
-it('projects a queued Session row update exactly as its commit', () => {
+it('projects a queued Session row update exactly as its commit', (): void => {
   const clock = vi.spyOn(Date, 'now').mockReturnValue(12000);
   try {
     const before = SessionRecord.parse(selectSession());
@@ -270,7 +271,7 @@ it('projects a queued Session row update exactly as its commit', () => {
   }
 });
 
-it('projects a queued Session insert exactly as its commit', () => {
+it('projects a queued Session insert exactly as its commit', (): void => {
   const jobs: WriterJob[] = [
     {
       type: 'sessionInsert',
@@ -301,7 +302,7 @@ it('projects a queued Session insert exactly as its commit', () => {
   expect(jobs).toEqual(original);
 });
 
-it('projects a queued Turn insert exactly as its commit', () => {
+it('projects a queued Turn insert exactly as its commit', (): void => {
   const jobs: WriterJob[] = [
     {
       type: 'turnInsert',
@@ -318,7 +319,7 @@ it('projects a queued Turn insert exactly as its commit', () => {
   expect(projected).toEqual([Turn.parse(selectTurn())]);
 });
 
-it('projects a queued Turn update exactly as its commit', () => {
+it('projects a queued Turn update exactly as its commit', (): void => {
   database
     .insert(turn)
     .values({
@@ -348,7 +349,7 @@ it('projects a queued Turn update exactly as its commit', () => {
   expect(before).toEqual(original);
 });
 
-it('projects queued Feed rows and their Session revision exactly as their commit', () => {
+it('projects queued Feed rows and their Session revision exactly as their commit', (): void => {
   const before = SessionRecord.parse(selectSession());
   const jobs: WriterJob[] = [
     {
@@ -371,14 +372,15 @@ it('projects queued Feed rows and their Session revision exactly as their commit
     sessionId: 'session-1',
     jobs,
   });
-  const rows = queuedFeedRows(jobs, 'session-1').flatMap((job) =>
-    job.rows.map((row) => fromFeedRow('session-1', row)),
+  const rows = queuedFeedRows(jobs, 'session-1').flatMap(
+    (job): SessionUpdate[] =>
+      job.rows.map((row): SessionUpdate => fromFeedRow('session-1', row)),
   );
   writeJobs(database, jobs);
   const data = SessionRecord.omit({ createdAt: true, updatedAt: true });
   expect(data.parse(projected)).toEqual(data.parse(selectSession()));
   expect(rows).toEqual(
-    selectRows().map((row) => fromFeedRow('session-1', row)),
+    selectRows().map((row): SessionUpdate => fromFeedRow('session-1', row)),
   );
 });
 
@@ -450,7 +452,7 @@ it.each([
   },
 ])(
   'keeps $kind times equal across repeated reads and commit',
-  ({ job, expected }) => {
+  ({ job, expected }): void => {
     const before = SessionRecord.parse(selectSession());
     const jobs = [stampWriterJob(job, 12000)];
     const clock = vi.spyOn(Date, 'now').mockReturnValue(20000);

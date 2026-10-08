@@ -22,7 +22,13 @@ import {
 import { type EngineStop, processSignals } from './process-signals';
 import { recoverAfterRestart } from './recovery';
 
-function writeEngineLog(home: string, line: string) {
+type EngineLogParameters = { line: string };
+type EngineOutput = { exitCode: number };
+type OpenDatabaseInput = { home: string };
+type RecoveryInput = { database: Database; blobsFolder: string };
+type CloseHttpServerInput = { server: HttpServer | null };
+
+function writeEngineLog(home: string, line: string): void {
   const stamped = `${new Date().toISOString()} engine ${process.pid}: ${line}`;
   console.log(stamped);
   mkdirSync(join(home, 'logs'), { recursive: true });
@@ -66,55 +72,56 @@ export const engineMachine = setup({
     input: {} as EngineInput,
     context: {} as EngineContext,
     events: {} as EngineEvent,
-    output: {} as { exitCode: number },
+    output: {} as EngineOutput,
   },
   actors: {
     // `openDatabase` also runs the Drizzle migrations.
-    openDatabase: fromPromise<Database, { home: string }>(async ({ input }) => {
-      const database = openDatabase(join(input.home, 'argo.db'));
-      try {
-        await seedProject(database);
-        return database;
-      } catch (error) {
-        database.$client.close();
-        throw error;
-      }
-    }),
-    recoverAfterRestart: fromPromise<
-      void,
-      { database: Database; blobsFolder: string }
-    >(async ({ input }) => {
-      recoverAfterRestart(input.database);
-      await removeUnusedBlobs(input);
-    }),
+    openDatabase: fromPromise<Database, OpenDatabaseInput>(
+      async ({ input }): Promise<Database> => {
+        const database = openDatabase(join(input.home, 'argo.db'));
+        try {
+          await seedProject(database);
+          return database;
+        } catch (error) {
+          database.$client.close();
+          throw error;
+        }
+      },
+    ),
+    recoverAfterRestart: fromPromise<void, RecoveryInput>(
+      async ({ input }): Promise<void> => {
+        recoverAfterRestart(input.database);
+        await removeUnusedBlobs(input);
+      },
+    ),
     databaseWriter: writerMachine,
     sessions: registryMachine,
     startHttpServer: fromPromise<HttpServer, HttpServerOptions>(
-      async ({ input, signal }) => {
+      async ({ input, signal }): Promise<HttpServer> => {
         const server = await startHttpServer(input);
         if (signal.aborted) await server.close();
         return server;
       },
     ),
-    closeHttpServer: fromPromise<void, { server: HttpServer | null }>(
-      async ({ input }) => input.server?.close(),
+    closeHttpServer: fromPromise<void, CloseHttpServerInput>(
+      async ({ input }): Promise<void> => input.server?.close(),
     ),
     processSignals,
   },
   actions: {
     stopSessions: sendTo('sessions', { type: 'sessions.stopAll' }),
     drainWriter: sendTo('databaseWriter', { type: 'writer.drain' }),
-    sendToSupervisor: (_, message: EngineMessage) => {
+    sendToSupervisor: (_, message: EngineMessage): void => {
       process.send?.(message);
     },
-    log: ({ context }, params: { line: string }) => {
+    log: ({ context }, params: EngineLogParameters): void => {
       writeEngineLog(context.home, params.line);
     },
-    closeDatabase: ({ context }) => {
+    closeDatabase: ({ context }): void => {
       context.database?.$client.close();
     },
   },
-  guards: { hasFailure: ({ context }) => context.failure !== null },
+  guards: { hasFailure: ({ context }): boolean => context.failure !== null },
   delays: {
     heartbeatInterval: 1000,
     httpCloseLimit: 5000,
@@ -123,7 +130,7 @@ export const engineMachine = setup({
   },
 }).createMachine({
   id: 'engine',
-  context: ({ input }) => ({
+  context: ({ input }): EngineContext => ({
     ...input,
     database: null,
     server: null,
@@ -137,7 +144,9 @@ export const engineMachine = setup({
       target: '.stopped',
       actions: {
         type: 'log',
-        params: ({ event }) => ({ line: `stopping: ${event.reason}` }),
+        params: ({ event }): EngineLogParameters => ({
+          line: `stopping: ${event.reason}`,
+        }),
       },
     },
   },
@@ -146,15 +155,15 @@ export const engineMachine = setup({
       invoke: {
         id: 'openDatabase',
         src: 'openDatabase',
-        input: ({ context }) => ({ home: context.home }),
+        input: ({ context }): OpenDatabaseInput => ({ home: context.home }),
         onDone: {
           target: 'recovering',
-          actions: assign({ database: ({ event }) => event.output }),
+          actions: assign({ database: ({ event }): Database => event.output }),
         },
         onError: {
           target: 'failed',
           actions: assign({
-            failure: ({ event }) =>
+            failure: ({ event }): string =>
               `could not open the database: ${String(event.error)}`,
           }),
         },
@@ -164,7 +173,7 @@ export const engineMachine = setup({
       invoke: {
         id: 'recoverAfterRestart',
         src: 'recoverAfterRestart',
-        input: ({ context }) => {
+        input: ({ context }): RecoveryInput => {
           return {
             database: openDatabaseOf(context),
             blobsFolder: blobsFolderIn(context.home),
@@ -174,7 +183,7 @@ export const engineMachine = setup({
         onError: {
           target: 'failed',
           actions: assign({
-            failure: ({ event }) =>
+            failure: ({ event }): string =>
               `could not recover after restart: ${String(event.error)}`,
           }),
         },
@@ -186,17 +195,19 @@ export const engineMachine = setup({
           id: 'databaseWriter',
           systemId: 'databaseWriter',
           src: 'databaseWriter',
-          input: ({ context }) => ({
+          input: ({
+            context,
+          }): import('xstate').InputFrom<typeof writerMachine> => ({
             database: openDatabaseOf(context),
             now: context.now,
-            log: (line: string) => writeEngineLog(context.home, line),
+            log: (line: string): void => writeEngineLog(context.home, line),
           }),
         },
         {
           id: 'sessions',
           systemId: 'sessions',
           src: 'sessions',
-          input: ({ context }) => ({
+          input: ({ context }): RegistryInput => ({
             database: openDatabaseOf(context),
             runtimeDirectory: context.home,
             adapters: context.adapters,
@@ -211,7 +222,9 @@ export const engineMachine = setup({
           target: '.stopping',
           actions: {
             type: 'log',
-            params: ({ event }) => ({ line: `stopping: ${event.reason}` }),
+            params: ({ event }): EngineLogParameters => ({
+              line: `stopping: ${event.reason}`,
+            }),
           },
         },
       },
@@ -220,7 +233,7 @@ export const engineMachine = setup({
           invoke: {
             id: 'startHttpServer',
             src: 'startHttpServer',
-            input: ({ context, self }) => ({
+            input: ({ context, self }): HttpServerOptions => ({
               createId: context.createId,
               sessions: self.system.get('sessions') as RegistryActorRef,
               home: context.home,
@@ -232,16 +245,18 @@ export const engineMachine = setup({
             onDone: {
               target: 'running',
               actions: [
-                assign({ server: ({ event }) => event.output }),
+                assign({ server: ({ event }): HttpServer => event.output }),
                 {
                   type: 'log',
-                  params: ({ context }) => ({
+                  params: ({ context }): { line: string } => ({
                     line: `listening on 127.0.0.1:${context.port}`,
                   }),
                 },
                 {
                   type: 'sendToSupervisor',
-                  params: ({ context }) => ({
+                  params: ({
+                    context,
+                  }): Extract<EngineMessage, { type: 'ready' }> => ({
                     type: 'ready',
                     port: context.port,
                   }),
@@ -251,7 +266,7 @@ export const engineMachine = setup({
             onError: {
               target: '#engine.failed',
               actions: assign({
-                failure: ({ event }) =>
+                failure: ({ event }): string =>
                   `could not listen: ${String(event.error)}`,
               }),
             },
@@ -278,12 +293,14 @@ export const engineMachine = setup({
               invoke: {
                 id: 'closeHttpServer',
                 src: 'closeHttpServer',
-                input: ({ context }) => ({ server: context.server }),
+                input: ({ context }): CloseHttpServerInput => ({
+                  server: context.server,
+                }),
                 onDone: { target: 'stoppingSessions' },
                 onError: {
                   target: 'stoppingSessions',
                   actions: assign({
-                    failure: ({ event }) =>
+                    failure: ({ event }): string =>
                       `could not close: ${String(event.error)}`,
                   }),
                 },
@@ -308,7 +325,7 @@ export const engineMachine = setup({
                   target: 'drainingWriter',
                   actions: {
                     type: 'log',
-                    params: ({ event }) => ({
+                    params: ({ event }): EngineLogParameters => ({
                       line: `could not stop Sessions: ${String(event.error)}`,
                     }),
                   },
@@ -336,7 +353,7 @@ export const engineMachine = setup({
                   target: '#engine.finishing',
                   actions: {
                     type: 'log',
-                    params: ({ event }) => ({
+                    params: ({ event }): EngineLogParameters => ({
                       line: `could not drain the writer: ${String(event.error)}`,
                     }),
                   },
@@ -371,10 +388,14 @@ export const engineMachine = setup({
         { type: 'closeDatabase' },
         {
           type: 'log',
-          params: ({ context }) => ({ line: context.failure ?? 'failed' }),
+          params: ({ context }): EngineLogParameters => ({
+            line: context.failure ?? 'failed',
+          }),
         },
       ],
     },
   },
-  output: ({ context }) => ({ exitCode: context.failure === null ? 0 : 1 }),
+  output: ({ context }): EngineOutput => ({
+    exitCode: context.failure === null ? 0 : 1,
+  }),
 });

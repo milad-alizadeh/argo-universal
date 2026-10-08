@@ -38,13 +38,42 @@ let host: Actor<ReturnType<typeof hostMachine>>;
 let controller: AbortController;
 
 // The Engine's writer and one Session's feed actor in one actor system, as the Engine will run them.
-const hostMachine = (writer = writerMachine) =>
+const hostMachine = (
+  writer = writerMachine,
+): import('xstate').StateMachine<
+  import('xstate').MachineContext,
+  import('xstate').AnyEventObject,
+  {
+    databaseWriter?: import('xstate').ActorRefFromLogic<typeof writerMachine>;
+    feed?: import('xstate').ActorRefFromLogic<typeof feedMachine>;
+    session?: import('xstate').ActorRefFromLogic<typeof sessionMachine>;
+  },
+  | { src: 'feed'; logic: typeof feedMachine; id: 'feed' }
+  | { src: 'session'; logic: typeof sessionMachine; id: 'session' }
+  | { src: 'writer'; logic: typeof writerMachine; id: 'databaseWriter' },
+  never,
+  never,
+  never,
+  Record<never, never>,
+  string,
+  import('xstate').NonReducibleUnknown,
+  import('xstate').NonReducibleUnknown,
+  import('xstate').EventObject,
+  import('xstate').MetaObject,
+  Record<never, never>,
+  import('xstate').MetaObject
+> =>
   setup({
     actors: {
       writer,
       feed: feedMachine,
       session: sessionMachine.provide({
-        actors: { loadSession: fromPromise(() => new Promise(() => {})) },
+        actors: {
+          loadSession: fromPromise(
+            (): Promise<import('../sessions/session-data').SessionData> =>
+              new Promise((): void => {}),
+          ),
+        },
       }),
     },
   }).createMachine({
@@ -52,8 +81,8 @@ const hostMachine = (writer = writerMachine) =>
       {
         id: 'session',
         src: 'session',
-        input: () => ({
-          now: () => Date.now(),
+        input: (): import('xstate').InputFrom<typeof sessionMachine> => ({
+          now: (): number => Date.now(),
           createId: randomUUID,
           database,
           runtimeDirectory,
@@ -66,8 +95,8 @@ const hostMachine = (writer = writerMachine) =>
         id: 'databaseWriter',
         systemId: 'databaseWriter',
         src: 'writer',
-        input: () => ({
-          now: () => Date.now(),
+        input: (): { now: () => number; database: Database } => ({
+          now: (): number => Date.now(),
           database,
         }),
       },
@@ -75,7 +104,7 @@ const hostMachine = (writer = writerMachine) =>
         id: 'feed',
         src: 'feed',
         input: {
-          now: () => Date.now(),
+          now: (): number => Date.now(),
           sessionId: 'session-1',
           epoch: 3,
           maxRevision: 5,
@@ -92,12 +121,14 @@ const hostMachine = (writer = writerMachine) =>
     ],
   });
 
-const startHost = (writer = writerMachine) => {
+const startHost = (writer = writerMachine): void => {
   host = createActor(hostMachine(writer)).start();
 };
-const feedRef = () => host.getSnapshot().children.feed;
+const feedRef = ():
+  | import('xstate').ActorRefFromLogic<typeof feedMachine>
+  | undefined => host.getSnapshot().children.feed;
 
-const caller = () =>
+const caller = (): ReturnType<typeof appRouter.createCaller> =>
   appRouter.createCaller(
     {
       services: {
@@ -105,20 +136,28 @@ const caller = () =>
         system: createSystemService({ version: '0.0.0', startedAt: '' }),
         feed: createFeedService({
           database,
-          findSession: (sessionId) =>
+          findSession: (
+            sessionId,
+          ):
+            | import('xstate').ActorRefFromLogic<typeof sessionMachine>
+            | undefined =>
             host.getSnapshot().status === 'active' && sessionId === 'session-1'
               ? host.getSnapshot().children.session
               : undefined,
-          findFeed: (sessionId) =>
-            sessionId === 'session-1' ? feedRef() : undefined,
-          findWriter: () => host.system.get('databaseWriter'),
+          findFeed: (
+            sessionId,
+          ):
+            | import('xstate').ActorRefFromLogic<typeof feedMachine>
+            | undefined => (sessionId === 'session-1' ? feedRef() : undefined),
+          findWriter: (): ReturnType<typeof host.system.get> =>
+            host.system.get('databaseWriter'),
         }),
       },
     },
     { signal: controller.signal },
   );
 
-const sendChange = (change: FeedChange) =>
+const sendChange = (change: FeedChange): void | undefined =>
   feedRef()?.send({ type: 'feed.change', change, turnId: 'turn-1' });
 const openMessage = (id: string, text = ''): FeedChange => ({
   type: 'upsert',
@@ -140,12 +179,12 @@ const appendText = (id: string, text: string): FeedChange => ({
 const subscribe = async (
   after: FeedSyncPoint | null,
   sessionId = 'session-1',
-) =>
+): Promise<AsyncIterator<FeedSubscribeOutput, void>> =>
   (await caller().feed.subscribe({ sessionId, after }))[Symbol.asyncIterator]();
 const take = async (
   iterator: AsyncIterator<FeedSubscribeOutput>,
   count: number,
-) => {
+): Promise<FeedSubscribeOutput[]> => {
   const values: FeedSubscribeOutput[] = [];
   while (values.length < count) {
     const next = await iterator.next();
@@ -154,8 +193,8 @@ const take = async (
   }
   return values;
 };
-const summary = (outputs: FeedSubscribeOutput[]) =>
-  outputs.map((output) => {
+const summary = (outputs: FeedSubscribeOutput[]): string[] =>
+  outputs.map((output): string => {
     if (output.type === 'row.upsert')
       return `upsert ${output.row.id} @${output.rev}`;
     if (output.type === 'row.append')
@@ -163,7 +202,7 @@ const summary = (outputs: FeedSubscribeOutput[]) =>
     return output.type;
   });
 
-beforeEach(() => {
+beforeEach((): void => {
   vi.useFakeTimers();
   controller = new AbortController();
   ({
@@ -175,25 +214,26 @@ beforeEach(() => {
     {
       type: 'feedRows',
       sessionId: 'session-1',
-      rows: [0, 1, 2, 3, 4].map((position) =>
-        toFeedRowWrite(message(position)),
+      rows: [0, 1, 2, 3, 4].map(
+        (position): import('./writer-job').FeedRowWrite =>
+          toFeedRowWrite(message(position)),
       ),
       maxRevision: 5,
     },
   ]);
 });
 
-afterEach(() => {
+afterEach((): void => {
   controller.abort();
   host?.stop();
   removeDatabase();
   vi.useRealTimers();
 });
 
-describe('feed.page', () => {
-  beforeEach(() => startHost());
+describe('feed.page', (): void => {
+  beforeEach((): void => startHost());
 
-  it('reads the newest rows in position order', async () => {
+  it('reads the newest rows in position order', async (): Promise<void> => {
     expect(
       await caller().feed.page({
         sessionId: 'session-1',
@@ -210,7 +250,7 @@ describe('feed.page', () => {
     });
   });
 
-  it('reads the rows before a cursor', async () => {
+  it('reads the rows before a cursor', async (): Promise<void> => {
     expect(
       await caller().feed.page({
         sessionId: 'session-1',
@@ -235,7 +275,7 @@ describe('feed.page', () => {
     ).toMatchObject({ rows: [message(0)], hasOlder: false, startCursor: 0 });
   });
 
-  it('answers a cursor from another epoch with the tail', async () => {
+  it('answers a cursor from another epoch with the tail', async (): Promise<void> => {
     expect(
       await caller().feed.page({
         sessionId: 'session-1',
@@ -252,7 +292,7 @@ describe('feed.page', () => {
     });
   });
 
-  it('flags a tail request from another epoch', async () => {
+  it('flags a tail request from another epoch', async (): Promise<void> => {
     expect(
       await caller().feed.page({
         sessionId: 'session-1',
@@ -263,7 +303,7 @@ describe('feed.page', () => {
     ).toMatchObject({ epoch: 3, rows: [message(4)], staleCursor: true });
   });
 
-  it('pages a Session with no rows', async () => {
+  it('pages a Session with no rows', async (): Promise<void> => {
     insertSession(database, { id: 'session-2' });
 
     expect(
@@ -278,13 +318,13 @@ describe('feed.page', () => {
     });
   });
 
-  it('fails with NOT_FOUND for an unknown Session', async () => {
+  it('fails with NOT_FOUND for an unknown Session', async (): Promise<void> => {
     await expect(
       caller().feed.page({ sessionId: 'session-9', direction: 'tail' }),
     ).rejects.toMatchObject({ code: 'NOT_FOUND' });
   });
 
-  it('keeps the place of a stored row that a change brings back', async () => {
+  it('keeps the place of a stored row that a change brings back', async (): Promise<void> => {
     sendChange({
       type: 'patch',
       id: 'message-3#0',
@@ -304,7 +344,7 @@ describe('feed.page', () => {
     });
   });
 
-  it('reads rows that the feed actor wrote through the database writer', async () => {
+  it('reads rows that the feed actor wrote through the database writer', async (): Promise<void> => {
     sendChange(openMessage('message-5#0', 'Hi'));
     sendChange({
       type: 'patch',
@@ -334,16 +374,16 @@ describe('feed.page', () => {
   });
 });
 
-describe('feed.row', () => {
-  beforeEach(() => startHost());
+describe('feed.row', (): void => {
+  beforeEach((): void => startHost());
 
-  it('reads a stored row', async () => {
+  it('reads a stored row', async (): Promise<void> => {
     expect(
       await caller().feed.row({ sessionId: 'session-1', id: 'message-2#0' }),
     ).toEqual(message(2));
   });
 
-  it('reads the newest version of an open row before it is written', async () => {
+  it('reads the newest version of an open row before it is written', async (): Promise<void> => {
     sendChange(openMessage('message-5#0'));
     sendChange(appendText('message-5#0', 'Hel'));
 
@@ -352,15 +392,15 @@ describe('feed.row', () => {
     ).toMatchObject({ revision: 7, content: [{ type: 'text', text: 'Hel' }] });
   });
 
-  it('fails with NOT_FOUND for an unknown row', async () => {
+  it('fails with NOT_FOUND for an unknown row', async (): Promise<void> => {
     await expect(
       caller().feed.row({ sessionId: 'session-1', id: 'message-9#0' }),
     ).rejects.toMatchObject({ code: 'NOT_FOUND' });
   });
 });
 
-describe('feed.subscribe', () => {
-  it('with no sync point, sends the rows not yet stored, then live changes', async () => {
+describe('feed.subscribe', (): void => {
+  it('with no sync point, sends the rows not yet stored, then live changes', async (): Promise<void> => {
     startHost();
     sendChange(openMessage('message-5#0', 'Hel'));
     const updates = await subscribe(null);
@@ -376,7 +416,7 @@ describe('feed.subscribe', () => {
     ]);
   });
 
-  it('catches up from a revision with stored rows and rows not yet written, without repeats', async () => {
+  it('catches up from a revision with stored rows and rows not yet written, without repeats', async (): Promise<void> => {
     startHost();
     sendChange(openMessage('message-5#0'));
     sendChange(appendText('message-5#0', 'Hel'));
@@ -394,15 +434,15 @@ describe('feed.subscribe', () => {
     ]);
   });
 
-  it('catches up with rows the database writer still holds', async () => {
+  it('catches up with rows the database writer still holds', async (): Promise<void> => {
     startHost(
       writerMachine.provide({
         actors: {
-          writeBatch: fromPromise(() =>
+          writeBatch: fromPromise((): Promise<void> =>
             Promise.reject(new Error('database is locked')),
           ),
         },
-        actions: { log: () => {} },
+        actions: { log: (): void => {} },
       }),
     );
     sendChange(openMessage('message-5#0', 'Hi'));
@@ -421,7 +461,7 @@ describe('feed.subscribe', () => {
     ]);
   });
 
-  it('resets a subscriber from another epoch, then sends the rows not yet stored', async () => {
+  it('resets a subscriber from another epoch, then sends the rows not yet stored', async (): Promise<void> => {
     startHost();
     sendChange(openMessage('message-5#0'));
     const updates = await subscribe({ epoch: 2, revision: 9 });
@@ -432,7 +472,7 @@ describe('feed.subscribe', () => {
     ]);
   });
 
-  it('sends stored rows and one snapshot before a closed Session stream ends', async () => {
+  it('sends stored rows and one snapshot before a closed Session stream ends', async (): Promise<void> => {
     startHost();
     host.stop();
     const updates = await subscribe({ epoch: 3, revision: 3 });
@@ -457,7 +497,7 @@ describe('feed.subscribe', () => {
     expect(await updates.next()).toMatchObject({ done: true });
   });
 
-  it('fails with NOT_FOUND for an unknown Session', async () => {
+  it('fails with NOT_FOUND for an unknown Session', async (): Promise<void> => {
     startHost();
     const updates = await subscribe(null, 'session-9');
 
@@ -467,11 +507,11 @@ describe('feed.subscribe', () => {
 
 const feedCloseDeadline = 1_000;
 
-it('ends a closed Session Feed after draining its last rows', async () => {
+it('ends a closed Session Feed after draining its last rows', async (): Promise<void> => {
   vi.useRealTimers();
   let stream: MockAgentStream | undefined;
   const adapter = createMockAdapter({
-    stream: (current) => {
+    stream: (current): undefined => {
       stream = current;
     },
   });
@@ -485,7 +525,7 @@ it('ends a closed Session Feed after draining its last rows', async () => {
           systemId: 'databaseWriter',
           src: 'writer',
           input: {
-            now: () => Date.now(),
+            now: (): number => Date.now(),
             database,
           },
         },
@@ -493,7 +533,7 @@ it('ends a closed Session Feed after draining its last rows', async () => {
           id: 'sessions',
           src: 'sessions',
           input: {
-            now: () => Date.now(),
+            now: (): number => Date.now(),
             createId: randomUUID,
             database,
             runtimeDirectory,
@@ -503,7 +543,7 @@ it('ends a closed Session Feed after draining its last rows', async () => {
       ],
     }),
   ).start();
-  onTestFinished(() => {
+  onTestFinished((): void => {
     root.stop();
   });
   const sessions = root.getSnapshot().children.sessions;
@@ -546,7 +586,7 @@ it('ends a closed Session Feed after draining its last rows', async () => {
   expect(sessions.system.get('session:session-1')).toBeUndefined();
   const heldRevision = Math.max(
     5,
-    ...events.flatMap((event) => ('rev' in event ? [event.rev] : [])),
+    ...events.flatMap((event): number[] => ('rev' in event ? [event.rev] : [])),
   );
   await services.session.prompt({
     sessionId: 'session-1',
@@ -569,7 +609,10 @@ it('ends a closed Session Feed after draining its last rows', async () => {
     type: 'agent.feed',
     change: openMessage('next-row', 'Next message'),
   });
-  for await (const event of { [Symbol.asyncIterator]: () => resumed }) {
+  for await (const event of {
+    [Symbol.asyncIterator]: (): AsyncIterator<FeedSubscribeOutput, void> =>
+      resumed,
+  }) {
     nextEvents.push(event);
     if (event.type === 'row.upsert' && event.row.id === 'next-row') break;
   }
@@ -579,14 +622,14 @@ it('ends a closed Session Feed after draining its last rows', async () => {
       row: expect.objectContaining({ id: 'next-row' }),
     }),
   );
-  const nextRevisions = nextEvents.flatMap((event) =>
+  const nextRevisions = nextEvents.flatMap((event): number[] =>
     'rev' in event ? [event.rev] : [],
   );
   expect(nextRevisions.length).toBeGreaterThan(0);
   expect(Math.min(...nextRevisions)).toBeGreaterThan(heldRevision);
 });
 
-it('reads a closed Session Feed without opening a Session', async () => {
+it('reads a closed Session Feed without opening a Session', async (): Promise<void> => {
   vi.useRealTimers();
   const root = createActor(
     setup({
@@ -598,7 +641,7 @@ it('reads a closed Session Feed without opening a Session', async () => {
           systemId: 'databaseWriter',
           src: 'writer',
           input: {
-            now: () => Date.now(),
+            now: (): number => Date.now(),
             database,
           },
         },
@@ -606,7 +649,7 @@ it('reads a closed Session Feed without opening a Session', async () => {
           id: 'sessions',
           src: 'sessions',
           input: {
-            now: () => Date.now(),
+            now: (): number => Date.now(),
             createId: randomUUID,
             database,
             runtimeDirectory,
@@ -616,7 +659,7 @@ it('reads a closed Session Feed without opening a Session', async () => {
       ],
     }),
   ).start();
-  onTestFinished(() => {
+  onTestFinished((): void => {
     root.stop();
   });
   const sessions = root.getSnapshot().children.sessions;
@@ -636,7 +679,7 @@ it('reads a closed Session Feed without opening a Session', async () => {
       )
       [Symbol.asyncIterator](),
   );
-  expect(events.map((event) => event.type)).toEqual([
+  expect(events.map((event): typeof event.type => event.type)).toEqual([
     'row.upsert',
     'row.upsert',
     'snapshot',
@@ -650,7 +693,7 @@ it('reads a closed Session Feed without opening a Session', async () => {
   expect(sessions.system.get('session:session-1')).toBeUndefined();
 });
 
-it('keeps a Subagent Feed stream open until its caller aborts', async () => {
+it('keeps a Subagent Feed stream open until its caller aborts', async (): Promise<void> => {
   startHost();
   insertSession(database, { id: 'subagent', parentSessionId: 'session-1' });
   const updates = await subscribe(null, 'subagent');
@@ -660,11 +703,13 @@ it('keeps a Subagent Feed stream open until its caller aborts', async () => {
   expect(await waiting).toMatchObject({ done: true });
 });
 
-async function drainClosedFeed(updates: AsyncIterator<FeedSubscribeOutput>) {
+async function drainClosedFeed(
+  updates: AsyncIterator<FeedSubscribeOutput>,
+): Promise<FeedSubscribeOutput[]> {
   let timer: ReturnType<typeof setTimeout> | undefined;
-  const deadline = new Promise<never>((_, reject) => {
+  const deadline = new Promise<never>((_, reject): void => {
     timer = setTimeout(
-      () =>
+      (): void =>
         reject(
           new Error(
             `Feed did not close within feedCloseDeadline (${feedCloseDeadline} ms)`,
@@ -673,9 +718,12 @@ async function drainClosedFeed(updates: AsyncIterator<FeedSubscribeOutput>) {
       feedCloseDeadline,
     );
   });
-  const drained = (async () => {
+  const drained = (async (): Promise<FeedSubscribeOutput[]> => {
     const events: FeedSubscribeOutput[] = [];
-    for await (const event of { [Symbol.asyncIterator]: () => updates })
+    for await (const event of {
+      [Symbol.asyncIterator]: (): AsyncIterator<FeedSubscribeOutput, void> =>
+        updates,
+    })
       events.push(event);
     return events;
   })();

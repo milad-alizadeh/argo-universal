@@ -32,11 +32,11 @@ export function decodeStoredFeedRow<Row extends FeedRowWrite>(row: Row): Row {
 export const payloadVersion = 1;
 
 // The blobs that the prompt rows among `rows` show, each once.
-export const promptBlobIds = (rows: readonly SessionUpdate[]) => [
+export const promptBlobIds = (rows: readonly SessionUpdate[]): string[] => [
   ...new Set(
-    rows.flatMap((row) =>
+    rows.flatMap((row): string[] =>
       row.sessionUpdate === 'user_message'
-        ? row.content.flatMap((block) =>
+        ? row.content.flatMap((block): string[] =>
             block.type === 'image' ? [block.blob.blobId] : [],
           )
         : [],
@@ -87,7 +87,7 @@ export function fromFeedRow(
     sessionUpdate: row.sessionUpdate,
   };
   const payload = z.record(z.string(), z.unknown()).parse(row.payload);
-  const clash = Object.keys(payload).find((key) =>
+  const clash = Object.keys(payload).find((key): boolean =>
     Object.hasOwn(envelope, key),
   );
   if (clash) throw new Error(`row ${row.id} has ${clash} in its payload`);
@@ -101,8 +101,8 @@ export function findQueuedRow(
   id: string,
 ): SessionUpdate | undefined {
   return newestRows(
-    queuedFeedRows(jobs, sessionId).flatMap((job) =>
-      job.rows.map((row) => fromFeedRow(sessionId, row)),
+    queuedFeedRows(jobs, sessionId).flatMap((job): SessionUpdate[] =>
+      job.rows.map((row): SessionUpdate => fromFeedRow(sessionId, row)),
     ),
   ).get(id);
 }

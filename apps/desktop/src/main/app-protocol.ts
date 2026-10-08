@@ -17,7 +17,7 @@ const contentSecurityPolicy = [
 ].join('; ');
 
 // Runs before `ready`: a standard, secure scheme gets relative URLs and web storage.
-export function registerAppScheme() {
+export function registerAppScheme(): void {
   protocol.registerSchemesAsPrivileged([
     {
       scheme: appScheme,
@@ -27,8 +27,8 @@ export function registerAppScheme() {
 }
 
 // Serves the Expo web export; a path without an extension is a route and gets index.html.
-export function handleAppProtocol(exportDirectory: string) {
-  protocol.handle(appScheme, async (request) => {
+export function handleAppProtocol(exportDirectory: string): void {
+  protocol.handle(appScheme, async (request): Promise<Response> => {
     const { pathname, search, hash } = new URL(request.url);
     const decodedPath = decodeURIComponent(pathname);
     // Expo Router reads the route from the URL, so /index.html must become /.

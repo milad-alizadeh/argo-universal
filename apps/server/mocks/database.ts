@@ -8,7 +8,7 @@ import { project, session } from '@repo/db/schema';
 export function openTestDatabase(
   sessionValues: Partial<typeof session.$inferInsert> = {},
   projectPath = '/project',
-) {
+): { database: Database; directory: string; remove: () => void } {
   const directory = mkdtempSync(join(tmpdir(), 'argo-server-'));
   const database = openDatabase(join(directory, 'argo.db'));
   database
@@ -19,7 +19,7 @@ export function openTestDatabase(
   return {
     database,
     directory,
-    remove: () => {
+    remove: (): void => {
       database.$client.close();
       rmSync(directory, { recursive: true, force: true });
     },
@@ -30,7 +30,7 @@ export function openTestDatabase(
 export function insertSession(
   database: Database,
   values: Partial<typeof session.$inferInsert> = {},
-) {
+): void {
   database
     .insert(session)
     .values({
@@ -45,7 +45,10 @@ export function insertSession(
 }
 
 // Counts executed reads at the real SQLite query port without replacing their results.
-export function countDatabaseReads(database: Database) {
+export function countDatabaseReads(database: Database): {
+  database: Database;
+  metrics: { queries: number; rows: number; sessionReads: number };
+} {
   const metrics = { queries: 0, rows: 0, sessionReads: 0 };
   const chain = new Set(['select', 'from', 'where', 'orderBy', 'limit']);
   const counted = <Value extends object>(
@@ -53,10 +56,10 @@ export function countDatabaseReads(database: Database) {
     fromSession = false,
   ): Value =>
     new Proxy(value, {
-      get(target, property, receiver) {
+      get(target, property, receiver): ReturnType<typeof Reflect.get> {
         const member = Reflect.get(target, property, receiver);
         if (typeof member !== 'function') return member;
-        return (...arguments_: unknown[]) => {
+        return (...arguments_: unknown[]): ReturnType<typeof Reflect.apply> => {
           const result = Reflect.apply(member, target, arguments_);
           if (property === 'all' || property === 'get') {
             metrics.queries += 1;

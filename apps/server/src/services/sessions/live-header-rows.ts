@@ -13,37 +13,44 @@ import {
 import { type FeedRowWrite, queuedFeedRows } from '../feed/writer-job';
 import type { writerMachine } from '../feed/writer-machine';
 
+type LiveHeaderRowsReader = (input: {
+  writer: ActorRefFrom<typeof writerMachine> | undefined;
+  sessionId: string;
+  turnId: string | null;
+  rows: Record<string, SessionUpdate>;
+}) => { rows: Record<string, SessionUpdate>; rejected: boolean };
+
 // Settled thoughts and retry Notices still inform the header after leaving Feed memory.
 export function createLiveHeaderRowsReader({
   database,
 }: {
   database: Database;
-}) {
+}): LiveHeaderRowsReader {
   let rejectedShapes = 0;
   return ({
     writer,
     sessionId,
     turnId,
     rows,
-  }: {
-    writer: ActorRefFrom<typeof writerMachine> | undefined;
-    sessionId: string;
-    turnId: string | null;
-    rows: Record<string, SessionUpdate>;
-  }): { rows: Record<string, SessionUpdate>; rejected: boolean } => {
+  }): ReturnType<LiveHeaderRowsReader> => {
     if (turnId === null) return { rows: {}, rejected: false };
     const stored = readStoredHeaderRows({ database, sessionId, turnId });
     const storedRows = new Set(stored);
     const queued = queuedFeedRows(
       writer?.getSnapshot().context.queue ?? [],
       sessionId,
-    ).flatMap((job) => job.rows.filter((row) => row.turnId === turnId));
+    ).flatMap((job): FeedRowWrite[] =>
+      job.rows.filter((row): boolean => row.turnId === turnId),
+    );
     let rejected = false;
     const parsed = [
       ...new Map(
-        [...stored, ...queued].map((row) => [`${row.id}/${row.revision}`, row]),
+        [...stored, ...queued].map((row): [string, FeedRowWrite] => [
+          `${row.id}/${row.revision}`,
+          row,
+        ]),
       ).values(),
-    ].flatMap((row) => {
+    ].flatMap((row): SessionUpdate[] => {
       try {
         return [
           fromFeedRow(
@@ -65,7 +72,7 @@ export function createLiveHeaderRowsReader({
       rows: Object.fromEntries(
         newestRows(
           [...parsed, ...Object.values(rows)].filter(
-            (row) => row.turnId === turnId,
+            (row): boolean => row.turnId === turnId,
           ),
         ),
       ),
@@ -102,7 +109,7 @@ function readStoredHeaderRows({
     .orderBy(desc(feedRow.position))
     .limit(1)
     .all()
-    .filter((row) => row.turnId === turnId);
+    .filter((row): boolean => row.turnId === turnId);
   const previousTool = database
     .select({ position: feedRow.position })
     .from(feedRow)
@@ -141,7 +148,9 @@ function readStoredHeaderRows({
         gt(feedRow.position, sql`coalesce((${previousTool}), -1)`),
         sql`case when json_valid(${feedRow.payload})
           then json_extract(${feedRow.payload}, '$.status') in (${sql.join(
-            runningToolCallStatuses.map((status) => sql`${status}`),
+            runningToolCallStatuses.map(
+              (status): import('drizzle-orm').SQL<unknown> => sql`${status}`,
+            ),
             sql`, `,
           )}) else ${feedRow.position} = (${newestInvalid}) end`,
       ),

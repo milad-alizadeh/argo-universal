@@ -1,3 +1,48 @@
+import type {
+  FeedSubscribeOutput,
+  SessionConfigSelectOption,
+  SessionInfo,
+  SessionSetConfigOptionOutput,
+} from '@repo/contracts';
+type StoredColumnCase<Table, Column> = {
+  agent: string;
+  table: Table;
+  column: Column;
+  id: string;
+  field: string;
+};
+type StoredColumnCases = [
+  StoredColumnCase<typeof session, typeof session.configValues>,
+  StoredColumnCase<typeof session, typeof session.vendorRef>,
+  StoredColumnCase<typeof turn, typeof turn.usage>,
+  StoredColumnCase<typeof turn, typeof turn.error>,
+];
+type FeedColumnCase = {
+  agent: string;
+  kind: 'agent_message' | 'agent_thought' | 'tool_call_update';
+  field: string;
+  column: typeof feedRow.payload | typeof feedRow.sourceRef;
+};
+type AvailabilityCase = { adapter: AgentAdapter; agent: string } & (
+  | {
+      availability: 'available';
+      installStep: undefined;
+      configOptions: ReturnType<typeof expect.arrayContaining>;
+    }
+  | {
+      availability: 'not_installed' | 'not_signed_in';
+      installStep: ReturnType<typeof expect.any>;
+      configOptions: readonly [];
+    }
+);
+import type { Actor } from 'xstate';
+
+type StartedEngine = {
+  engine: Actor<typeof engineMachine>;
+  createCaller: (
+    signal?: AbortSignal,
+  ) => Promise<ReturnType<typeof appRouter.createCaller>>;
+};
 import { execFileSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import {
@@ -62,7 +107,7 @@ function startEngine({
   database,
   adapter,
   home = '/unused',
-  closeDatabase = () => {},
+  closeDatabase = (): void => {},
   sessions = registryMachine,
   databaseWriter = writerMachine,
 }: {
@@ -72,33 +117,41 @@ function startEngine({
   closeDatabase?: () => void;
   sessions?: typeof registryMachine;
   databaseWriter?: typeof writerMachine;
-}) {
+}): StartedEngine {
   let services: Services | undefined;
   const machine = engineMachine.provide({
     actors: {
-      ...(database && { openDatabase: fromPromise(async () => database) }),
-      processSignals: fromCallback(() => {}),
+      ...(database && {
+        openDatabase: fromPromise(
+          async (): Promise<import('@repo/db').Database> => database,
+        ),
+      }),
+      processSignals: fromCallback((): void => {}),
       sessions,
       databaseWriter,
       startHttpServer: fromPromise(
-        async ({ input }: { input: HttpServerOptions }) => {
+        async ({
+          input,
+        }: {
+          input: HttpServerOptions;
+        }): Promise<{ close: () => Promise<void> }> => {
           services = createServerServices({
             ...input,
             blobsFolder: path.join(input.home, 'blobs'),
           });
-          return { close: async () => {} };
+          return { close: async (): Promise<void> => {} };
         },
       ),
     },
     actions: {
-      log: () => {},
-      sendToSupervisor: () => {},
+      log: (): void => {},
+      sendToSupervisor: (): void => {},
       ...(database && { closeDatabase }),
     },
   });
   const engine = createActor(machine, {
     input: {
-      now: () => Date.now(),
+      now: (): number => Date.now(),
       createId: randomUUID,
       home,
       port: 7337,
@@ -107,15 +160,22 @@ function startEngine({
       adapters: [adapter],
     },
   }).start();
-  onTestFinished(async () => {
+  onTestFinished(async (): Promise<void> => {
     // Fake timers would leave the wait hanging.
     vi.useRealTimers();
     try {
       if (engine.getSnapshot().status !== 'done') {
         engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
-        await waitFor(engine, (snapshot) => snapshot.status === 'done', {
-          timeout: gracefulStopLimit,
-        }).catch(() => {
+        await waitFor(
+          engine,
+          (
+            snapshot,
+          ): snapshot is Extract<typeof snapshot, { status: 'done' }> =>
+            snapshot.status === 'done',
+          {
+            timeout: gracefulStopLimit,
+          },
+        ).catch((): never => {
           throw new Error(
             `The Engine's graceful stop did not finish within ${gracefulStopLimit} ms`,
           );
@@ -127,8 +187,10 @@ function startEngine({
   });
   return {
     engine,
-    createCaller: async (signal?: AbortSignal) => {
-      await waitFor(engine, (snapshot) =>
+    createCaller: async (
+      signal?: AbortSignal,
+    ): Promise<ReturnType<typeof appRouter.createCaller>> => {
+      await waitFor(engine, (snapshot): boolean =>
         snapshot.matches({ live: 'running' }),
       );
       if (!services) throw new Error('No services');
@@ -139,18 +201,18 @@ function startEngine({
 
 it.each(liveHeaderMocks)(
   'shares live header and list activity for $agent after Feed writes',
-  async ({ command, thought, retry, progress }) => {
+  async ({ command, thought, retry, progress }): Promise<void> => {
     const { database, remove } = openTestDatabase();
     onTestFinished(remove);
     let stream: MockAgentStream | undefined;
     const adapter = createMockAdapter({
-      stream: (current) => {
+      stream: (current): undefined => {
         stream = current;
       },
     });
     const { createCaller } = startEngine({ database, adapter });
     const controller = new AbortController();
-    onTestFinished(() => controller.abort());
+    onTestFinished((): void => controller.abort());
     const caller = await createCaller(controller.signal);
     await caller.session.prompt({
       sessionId: 'session-1',
@@ -159,10 +221,10 @@ it.each(liveHeaderMocks)(
     const subscription = (
       await caller.feed.subscribe({ sessionId: 'session-1', after: null })
     )[Symbol.asyncIterator]();
-    const expectActivity = async (expected: string) => {
+    const expectActivity = async (expected: string): Promise<void> => {
       await expect
         .poll(
-          async () =>
+          async (): Promise<string | undefined> =>
             (await caller.session.list({ archived: false })).sessions[0]
               ?.activity,
         )
@@ -177,7 +239,7 @@ it.each(liveHeaderMocks)(
           break;
       }
     };
-    const sendRow = (row: SessionUpdate) => {
+    const sendRow = (row: SessionUpdate): void => {
       const {
         sessionId: _sessionId,
         turnId: _turnId,
@@ -222,13 +284,13 @@ it.each(liveHeaderMocks)(
       await expectActivity('Retrying (2 of 5)');
       sendRow(row);
       await expect
-        .poll(async () =>
+        .poll(async (): Promise<boolean> =>
           (
             await caller.feed.page({
               sessionId: 'session-1',
               direction: 'tail',
             })
-          ).rows.some((stored) => stored.id === row.id),
+          ).rows.some((stored): boolean => stored.id === row.id),
         )
         .toBe(true);
       await expectActivity('Checking the tests');
@@ -258,18 +320,18 @@ it.each(liveHeaderMocks)(
   },
 );
 
-it('keeps the Feed subscription open after malformed stored activity', async () => {
+it('keeps the Feed subscription open after malformed stored activity', async (): Promise<void> => {
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
   let stream: MockAgentStream | undefined;
   const adapter = createMockAdapter({
-    stream: (current) => {
+    stream: (current): undefined => {
       stream = current;
     },
   });
   const { createCaller } = startEngine({ database, adapter });
   const controller = new AbortController();
-  onTestFinished(() => controller.abort());
+  onTestFinished((): void => controller.abort());
   const caller = await createCaller(controller.signal);
   await caller.session.prompt({
     sessionId: 'session-1',
@@ -295,8 +357,10 @@ it('keeps the Feed subscription open after malformed stored activity', async () 
       payload: { messageId: 'malformed', content: 'invalid' },
     })
     .run();
-  const reported = vi.spyOn(console, 'error').mockImplementation(() => {});
-  onTestFinished(() => reported.mockRestore());
+  const reported = vi
+    .spyOn(console, 'error')
+    .mockImplementation((): void => {});
+  onTestFinished((): void => reported.mockRestore());
   const next = subscription.next();
   stream?.send({ type: 'agent.usage', usage: { used: 10, size: 100 } });
   await expect(next).resolves.toMatchObject({
@@ -336,18 +400,31 @@ it('keeps the Feed subscription open after malformed stored activity', async () 
 });
 
 it.each(
-  agentAdapters.flatMap(({ agent }) =>
-    (['agent_message', 'plan_update', 'agent_thought'] as const).map(
-      (kind) => ({ agent, kind }),
-    ),
+  agentAdapters.flatMap(
+    ({
+      agent,
+    }): {
+      agent: string;
+      kind: 'agent_message' | 'agent_thought' | 'plan_update';
+    }[] =>
+      (['agent_message', 'plan_update', 'agent_thought'] as const).map(
+        (
+          kind,
+        ): {
+          agent: string;
+          kind: 'agent_message' | 'agent_thought' | 'plan_update';
+        } => ({ agent, kind }),
+      ),
   ),
 )(
   'degrades only the Session with a malformed $kind row for $agent',
-  async ({ agent, kind }) => {
+  async ({ agent, kind }): Promise<void> => {
     const { database, remove } = openTestDatabase({ agent });
     onTestFinished(remove);
-    const reported = vi.spyOn(console, 'error').mockImplementation(() => {});
-    onTestFinished(() => reported.mockRestore());
+    const reported = vi
+      .spyOn(console, 'error')
+      .mockImplementation((): void => {});
+    onTestFinished((): void => reported.mockRestore());
     const { createCaller } = startEngine({
       database,
       adapter: createMockAdapter({}, agent),
@@ -390,26 +467,28 @@ it.each(
     const result = await caller.session.list({ archived: false });
     expect(result.sessions).toHaveLength(2);
     expect(
-      result.sessions.find((row) => row.sessionId === 'session-1'),
+      result.sessions.find((row): boolean => row.sessionId === 'session-1'),
     ).toMatchObject({ activity: '', plan: null });
     expect(
-      result.sessions.find((row) => row.sessionId === 'healthy'),
+      result.sessions.find((row): boolean => row.sessionId === 'healthy'),
     ).toMatchObject({ activity: 'Healthy reply' });
     expect(
-      reported.mock.calls.some(([message]) =>
+      reported.mock.calls.some(([message]): boolean =>
         String(message).includes('rejected'),
       ),
     ).toBe(true);
   },
 );
 
-it.each(agentAdapters.map(({ agent }) => agent))(
+it.each(agentAdapters.map(({ agent }): string => agent))(
   'drops only a malformed Session for %s',
-  async (agent) => {
+  async (agent): Promise<void> => {
     const { database, remove } = openTestDatabase({ agent });
     onTestFinished(remove);
-    const reported = vi.spyOn(console, 'error').mockImplementation(() => {});
-    onTestFinished(() => reported.mockRestore());
+    const reported = vi
+      .spyOn(console, 'error')
+      .mockImplementation((): void => {});
+    onTestFinished((): void => reported.mockRestore());
     const { createCaller } = startEngine({
       database,
       adapter: createMockAdapter({}, agent),
@@ -422,7 +501,9 @@ it.each(agentAdapters.map(({ agent }) => agent))(
       .where(eq(session.id, 'session-1'))
       .run();
     const result = await caller.session.list({ archived: false });
-    expect(result.sessions.map((row) => row.sessionId)).toEqual(['healthy']);
+    expect(result.sessions.map((row): string => row.sessionId)).toEqual([
+      'healthy',
+    ]);
     expect(reported).toHaveBeenCalledWith(
       'sessions: rejected list shape #1',
       expect.anything(),
@@ -430,13 +511,15 @@ it.each(agentAdapters.map(({ agent }) => agent))(
   },
 );
 
-it.each(agentAdapters.map(({ agent }) => agent))(
+it.each(agentAdapters.map(({ agent }): string => agent))(
   'drops only the Session with a malformed Turn for %s',
-  async (agent) => {
+  async (agent): Promise<void> => {
     const { database, remove } = openTestDatabase({ agent });
     onTestFinished(remove);
-    const reported = vi.spyOn(console, 'error').mockImplementation(() => {});
-    onTestFinished(() => reported.mockRestore());
+    const reported = vi
+      .spyOn(console, 'error')
+      .mockImplementation((): void => {});
+    onTestFinished((): void => reported.mockRestore());
     const { createCaller } = startEngine({
       database,
       adapter: createMockAdapter({}, agent),
@@ -453,7 +536,9 @@ it.each(agentAdapters.map(({ agent }) => agent))(
       })
       .run();
     const result = await caller.session.list({ archived: false });
-    expect(result.sessions.map((row) => row.sessionId)).toEqual(['healthy']);
+    expect(result.sessions.map((row): string => row.sessionId)).toEqual([
+      'healthy',
+    ]);
     expect(reported).toHaveBeenCalledWith(
       'sessions: rejected list shape #1',
       expect.anything(),
@@ -461,13 +546,13 @@ it.each(agentAdapters.map(({ agent }) => agent))(
   },
 );
 
-it('serves live Session procedures and drains their Feed before closing the database', async () => {
+it('serves live Session procedures and drains their Feed before closing the database', async (): Promise<void> => {
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
   let closedDatabase = false;
   const adapter = createMockAdapter({
-    stream: (stream) => {
-      stream.receive((command) => {
+    stream: (stream): undefined => {
+      stream.receive((command): void => {
         if (command.type === 'agent.prompt')
           stream.send({
             type: 'agent.feed',
@@ -488,7 +573,7 @@ it('serves live Session procedures and drains their Feed before closing the data
   const { engine, createCaller } = startEngine({
     database,
     adapter,
-    closeDatabase: () => {
+    closeDatabase: (): void => {
       closedDatabase = true;
     },
   });
@@ -506,7 +591,11 @@ it('serves live Session procedures and drains their Feed before closing the data
     content: [{ type: 'text', text: 'Hello from the Agent' }],
   });
   engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
-  await waitFor(engine, (snapshot) => snapshot.status === 'done');
+  await waitFor(
+    engine,
+    (snapshot): snapshot is Extract<typeof snapshot, { status: 'done' }> =>
+      snapshot.status === 'done',
+  );
   expect(closedDatabase).toBe(true);
   expect(engine.getSnapshot().output).toEqual({ exitCode: 0 });
   expect(
@@ -516,11 +605,13 @@ it('serves live Session procedures and drains their Feed before closing the data
 
 it.each(agentAdapters)(
   'serves a recorded $agent Turn through tRPC and stores it under one Argo Turn id',
-  async (adapter) => {
+  async (adapter): Promise<void> => {
     const directory = realpathSync(
       mkdtempSync(path.join(tmpdir(), 'argo-composition-')),
     );
-    onTestFinished(() => rmSync(directory, { recursive: true, force: true }));
+    onTestFinished((): void =>
+      rmSync(directory, { recursive: true, force: true }),
+    );
     const mockCli = mockClis[adapter.agent];
     if (!mockCli) throw new Error(`No mock CLI for ${adapter.agent}`);
     await mockCli.write(directory, { recording: mockCli.recordings.turn });
@@ -555,7 +646,7 @@ it.each(agentAdapters)(
     });
     await expect
       .poll(
-        async () => {
+        async (): Promise<boolean> => {
           const { rows } = await caller.feed.page({
             sessionId: 'session-1',
             direction: 'tail',
@@ -569,7 +660,11 @@ it.each(agentAdapters)(
       )
       .toBe(true);
     engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
-    await waitFor(engine, (snapshot) => snapshot.status === 'done');
+    await waitFor(
+      engine,
+      (snapshot): snapshot is Extract<typeof snapshot, { status: 'done' }> =>
+        snapshot.status === 'done',
+    );
     const { rows } = await caller.feed.page({
       sessionId: 'session-1',
       direction: 'tail',
@@ -580,7 +675,12 @@ it.each(agentAdapters)(
       content: [{ type: 'text', text: 'Edit the files and run a command.' }],
     });
     expect(
-      rows.filter((row) => row.sessionUpdate === 'user_message'),
+      rows.filter(
+        (
+          row,
+        ): row is Extract<SessionUpdate, { sessionUpdate: 'user_message' }> =>
+          row.sessionUpdate === 'user_message',
+      ),
     ).toHaveLength(1);
     expect(rows).toEqual(
       expect.arrayContaining([
@@ -598,12 +698,12 @@ it.each(agentAdapters)(
         }),
       ]),
     );
-    expect(new Set(rows.map((row) => row.turnId)).size).toBe(1);
+    expect(new Set(rows.map((row): string | null => row.turnId)).size).toBe(1);
     expect(engine.getSnapshot().output).toEqual({ exitCode: 0 });
   },
 );
 
-it('lists only top-level Sessions, searches literal titles, filters archives and pages tied activity', async () => {
+it('lists only top-level Sessions, searches literal titles, filters archives and pages tied activity', async (): Promise<void> => {
   const { database, remove } = openTestDatabase({
     title: 'Earlier',
     activityAt: 1,
@@ -641,11 +741,13 @@ it('lists only top-level Sessions, searches literal titles, filters archives and
     query: '%_',
     cursor: first.nextCursor ?? undefined,
   });
-  expect(second.sessions.map((row) => row.sessionId)).toEqual(['page-00']);
+  expect(second.sessions.map((row): string => row.sessionId)).toEqual([
+    'page-00',
+  ]);
   expect(second.nextCursor).toBeNull();
   expect(
     (await caller.session.list({ archived: true })).sessions.map(
-      (row) => row.sessionId,
+      (row): string => row.sessionId,
     ),
   ).toEqual(['archived']);
   expect(
@@ -657,7 +759,7 @@ it('lists only top-level Sessions, searches literal titles, filters archives and
   ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
 });
 
-it('sends live list changes and attention/running counts through request and Turn transitions', async () => {
+it('sends live list changes and attention/running counts through request and Turn transitions', async (): Promise<void> => {
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
   insertSession(database, { id: 'archived', archivedAt: 1, maxRevision: 1 });
@@ -668,13 +770,13 @@ it('sends live list changes and attention/running counts through request and Tur
   });
   let stream: MockAgentStream | undefined;
   const adapter = createMockAdapter({
-    stream: (current) => {
+    stream: (current): undefined => {
       stream = current;
     },
   });
   const { engine, createCaller } = startEngine({ database, adapter });
   const controller = new AbortController();
-  onTestFinished(() => controller.abort());
+  onTestFinished((): void => controller.abort());
   const caller = await createCaller(controller.signal);
   const counts = (await caller.session.counts())[Symbol.asyncIterator]();
   const updates = (await caller.session.listUpdates())[Symbol.asyncIterator]();
@@ -731,7 +833,8 @@ it('sends live list changes and attention/running counts through request and Tur
   expect((await counts.next()).value).toEqual({ attention: 1, running: 0 });
   await expect
     .poll(
-      async () => (await caller.session.list({ archived: false })).sessions[0],
+      async (): Promise<SessionInfo | undefined> =>
+        (await caller.session.list({ archived: false })).sessions[0],
     )
     .toMatchObject({
       status: 'unread',
@@ -754,11 +857,13 @@ it('sends live list changes and attention/running counts through request and Tur
   await updates.return?.();
 });
 
-it('seeds the Project from ARGO_PROJECT_PATH at Engine startup', async () => {
+it('seeds the Project from ARGO_PROJECT_PATH at Engine startup', async (): Promise<void> => {
   const directory = realpathSync(
     mkdtempSync(path.join(tmpdir(), 'argo-seed-')),
   );
-  onTestFinished(() => rmSync(directory, { recursive: true, force: true }));
+  onTestFinished((): void =>
+    rmSync(directory, { recursive: true, force: true }),
+  );
   vi.stubEnv('ARGO_PROJECT_PATH', process.cwd());
   const { engine, createCaller } = startEngine({
     adapter: createMockAdapter(),
@@ -780,10 +885,14 @@ it('seeds the Project from ARGO_PROJECT_PATH at Engine startup', async () => {
         : { type: 'worktree', baseBranch: currentBranch },
   });
   engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
-  await waitFor(engine, (snapshot) => snapshot.status === 'done');
+  await waitFor(
+    engine,
+    (snapshot): snapshot is Extract<typeof snapshot, { status: 'done' }> =>
+      snapshot.status === 'done',
+  );
 });
 
-it('uses the newest Turn for failures and excludes interrupted Turns from Failed', async () => {
+it('uses the newest Turn for failures and excludes interrupted Turns from Failed', async (): Promise<void> => {
   const { database, remove } = openTestDatabase({ maxRevision: 2 });
   onTestFinished(remove);
   insertSession(database, { id: 'interrupted', maxRevision: 2 });
@@ -833,7 +942,16 @@ it('uses the newest Turn for failures and excludes interrupted Turns from Failed
   const caller = await createCaller();
   const rows = (await caller.session.list({ archived: false })).sessions;
   expect(
-    Object.fromEntries(rows.map((row) => [row.sessionId, row.status])),
+    Object.fromEntries(
+      rows.map(
+        (
+          row,
+        ): [
+          string,
+          'failed' | 'idle' | 'needs_input' | 'running' | 'unread',
+        ] => [row.sessionId, row.status],
+      ),
+    ),
   ).toEqual({
     'session-1': 'failed',
     interrupted: 'unread',
@@ -842,7 +960,7 @@ it('uses the newest Turn for failures and excludes interrupted Turns from Failed
   });
 });
 
-it('publishes stored list changes, changes counts only when needed, and aborts a waiting subscription', async () => {
+it('publishes stored list changes, changes counts only when needed, and aborts a waiting subscription', async (): Promise<void> => {
   const { database, remove } = openTestDatabase({
     maxRevision: 1,
     title: 'Unread',
@@ -853,7 +971,7 @@ it('publishes stored list changes, changes counts only when needed, and aborts a
     adapter: createMockAdapter(),
   });
   const controller = new AbortController();
-  onTestFinished(() => controller.abort());
+  onTestFinished((): void => controller.abort());
   const caller = await createCaller(controller.signal);
   const counts = (await caller.session.counts())[Symbol.asyncIterator]();
   const updates = (await caller.session.listUpdates())[Symbol.asyncIterator]();
@@ -898,7 +1016,7 @@ it('publishes stored list changes, changes counts only when needed, and aborts a
 });
 
 // Sets the whole scenario once, before the CLI starts.
-const stubScenario = (scenario: MockCliScenarioInput) => {
+const stubScenario = (scenario: MockCliScenarioInput): void => {
   for (const [key, value] of Object.entries(
     mockCliScenarioEnvironment(scenario),
   ))
@@ -912,16 +1030,24 @@ async function startNewSessionEngine(
     recording,
     availability,
     sessions,
-    searchPath = (bin) => `${bin}${path.delimiter}${process.env.PATH ?? ''}`,
+    searchPath = (bin): string =>
+      `${bin}${path.delimiter}${process.env.PATH ?? ''}`,
   }: {
     sessions?: typeof registryMachine;
     recording?: string;
     availability?: 'available' | 'not_installed' | 'not_signed_in';
     searchPath?: (bin: string) => string;
   } = {},
-) {
+): Promise<
+  StartedEngine & {
+    project: string;
+    home: string;
+    git: ReturnType<typeof initTestRepository>;
+    database: ReturnType<typeof openTestDatabase>['database'];
+  }
+> {
   const root = realpathSync(mkdtempSync(path.join(tmpdir(), 'argo-new-')));
-  onTestFinished(() => rmSync(root, { recursive: true, force: true }));
+  onTestFinished((): void => rmSync(root, { recursive: true, force: true }));
   const project = path.join(root, 'project');
   const bin = path.join(root, 'bin');
   const home = path.join(root, 'home');
@@ -964,7 +1090,10 @@ async function readSnapshot(
     Symbol.asyncIterator
   ]();
   try {
-    for await (const update of { [Symbol.asyncIterator]: () => updates })
+    for await (const update of {
+      [Symbol.asyncIterator]: (): AsyncIterator<FeedSubscribeOutput, void> =>
+        updates,
+    })
       if (update.type === 'snapshot') return update.snapshot;
     throw new Error('No Session snapshot');
   } finally {
@@ -993,7 +1122,7 @@ for (const adapter of agentAdapters)
         ),
     )(
       `answers a ${adapter.agent} Permission request once through tRPC (${title})`,
-      async () => {
+      async (): Promise<void> => {
         stubScenario({ requestBeforeStartResponse });
         const root = await startNewSessionEngine(adapter, {
           recording: 'permission',
@@ -1008,7 +1137,7 @@ for (const adapter of agentAdapters)
         });
         await expect
           .poll(
-            async () =>
+            async (): Promise<SessionSnapshot['pendingPermission']> =>
               (await readSnapshot(root.createCaller, sessionId))
                 .pendingPermission,
           )
@@ -1031,7 +1160,7 @@ for (const adapter of agentAdapters)
         });
         await expect
           .poll(
-            async () =>
+            async (): Promise<SessionSnapshot['state']> =>
               (await readSnapshot(root.createCaller, sessionId)).state,
           )
           .toBe('idle');
@@ -1051,14 +1180,33 @@ for (const adapter of agentAdapters)
     );
 
 it.each(
-  agentAdapters.flatMap((adapter) =>
+  agentAdapters.flatMap(
     (
-      [{ type: 'worktree', baseBranch: 'feature' }, { type: 'main' }] as const
-    ).map((checkout) => ({ adapter, agent: adapter.agent, checkout })),
+      adapter,
+    ): {
+      adapter: AgentAdapter<unknown, unknown>;
+      agent: string;
+      checkout:
+        | { readonly type: 'worktree'; readonly baseBranch: 'feature' }
+        | { readonly type: 'main' };
+    }[] =>
+      (
+        [{ type: 'worktree', baseBranch: 'feature' }, { type: 'main' }] as const
+      ).map(
+        (
+          checkout,
+        ): {
+          adapter: AgentAdapter<unknown, unknown>;
+          agent: string;
+          checkout:
+            | { readonly type: 'worktree'; readonly baseBranch: 'feature' }
+            | { readonly type: 'main' };
+        } => ({ adapter, agent: adapter.agent, checkout }),
+      ),
   ),
 )(
   'starts a $agent Session in the $checkout.type checkout and runs its first Turn in one call',
-  async ({ adapter, checkout }) => {
+  async ({ adapter, checkout }): Promise<void> => {
     const root = await startNewSessionEngine(adapter);
     const { database, engine, createCaller } = root;
     const caller = await createCaller();
@@ -1075,7 +1223,7 @@ it.each(
       ],
     });
     const listed = (await caller.session.list({ archived: false })).sessions;
-    const created = listed.find((row) => row.sessionId === sessionId);
+    const created = listed.find((row): boolean => row.sessionId === sessionId);
     expect(created).toMatchObject({
       agent: adapter.agent,
       title: 'Edit the files and run a command.',
@@ -1100,7 +1248,7 @@ it.each(
     ]);
     await expect
       .poll(
-        async () => {
+        async (): Promise<boolean> => {
           const { rows } = await caller.feed.page({
             sessionId,
             direction: 'tail',
@@ -1123,7 +1271,7 @@ it.each(
         },
       ],
     });
-    expect(new Set(rows.map((row) => row.turnId)).size).toBe(1);
+    expect(new Set(rows.map((row): string | null => row.turnId)).size).toBe(1);
     expect(
       database.select().from(turn).where(eq(turn.sessionId, sessionId)).all(),
     ).toEqual([
@@ -1133,21 +1281,26 @@ it.each(
       }),
     ]);
     engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
-    await waitFor(engine, (snapshot) => snapshot.status === 'done');
+    await waitFor(
+      engine,
+      (snapshot): snapshot is Extract<typeof snapshot, { status: 'done' }> =>
+        snapshot.status === 'done',
+    );
     expect(engine.getSnapshot().output).toEqual({ exitCode: 0 });
   },
 );
 
 it.each(
-  agentAdapters.flatMap((adapter) =>
+  agentAdapters.flatMap((adapter): AvailabilityCase[] =>
     (
       [
         {
           availability: 'available',
           installStep: undefined,
           configOptions: expect.arrayContaining(
-            ['mode', 'model', 'thought_level'].map((category) =>
-              expect.objectContaining({ category }),
+            ['mode', 'model', 'thought_level'].map(
+              (category): ReturnType<typeof expect.objectContaining> =>
+                expect.objectContaining({ category }),
             ),
           ),
         },
@@ -1162,16 +1315,25 @@ it.each(
           configOptions: [],
         },
       ] as const
-    ).map((row) => ({ adapter, agent: adapter.agent, ...row })),
+    ).map((row): AvailabilityCase => ({
+      adapter,
+      agent: adapter.agent,
+      ...row,
+    })),
   ),
 )(
   'reports $agent as $availability with its install step and New Session options',
-  async ({ adapter, availability, installStep, configOptions }) => {
+  async ({
+    adapter,
+    availability,
+    installStep,
+    configOptions,
+  }): Promise<void> => {
     const root = await startNewSessionEngine(adapter, {
       recording: 'image-prompt',
       availability,
       // Only the mock folder, so an absent mock is an absent Agent.
-      searchPath: (bin) => bin,
+      searchPath: (bin): string => bin,
     });
     const caller = await root.createCaller();
     const [information, ...others] = await caller.agents.list();
@@ -1188,23 +1350,42 @@ it.each(
 );
 
 it.each(
-  agentAdapters.flatMap((adapter) =>
-    (['not_installed', 'not_signed_in'] as const).map((availability) => ({
+  agentAdapters.flatMap(
+    (
       adapter,
-      agent: adapter.agent,
-      availability,
-    })),
+    ): {
+      adapter: AgentAdapter<unknown, unknown>;
+      agent: string;
+      availability: 'not_installed' | 'not_signed_in';
+    }[] =>
+      (['not_installed', 'not_signed_in'] as const).map(
+        (
+          availability,
+        ): {
+          adapter: AgentAdapter<unknown, unknown>;
+          agent: string;
+          availability: 'not_installed' | 'not_signed_in';
+        } => ({
+          adapter,
+          agent: adapter.agent,
+          availability,
+        }),
+      ),
   ),
 )(
   'refuses a $agent Session whose Agent is $availability, leaving no Session, worktree or branch',
-  async ({ adapter, availability }) => {
+  async ({ adapter, availability }): Promise<void> => {
     // Git stays on PATH; any installed copy of the Agent's CLI does not.
     const otherDirectories = (process.env.PATH ?? '')
       .split(path.delimiter)
-      .filter((directory) => !existsSync(path.join(directory, adapter.agent)));
+      .filter(
+        (directory): boolean =>
+          !existsSync(path.join(directory, adapter.agent)),
+      );
     const root = await startNewSessionEngine(adapter, {
       availability,
-      searchPath: (bin) => [bin, ...otherDirectories].join(path.delimiter),
+      searchPath: (bin): string =>
+        [bin, ...otherDirectories].join(path.delimiter),
     });
     const caller = await root.createCaller();
     await expect(
@@ -1218,7 +1399,7 @@ it.each(
     ).rejects.toMatchObject({ code: 'PRECONDITION_FAILED' });
     expect(
       (await caller.session.list({ archived: false })).sessions.map(
-        (row) => row.sessionId,
+        (row): string => row.sessionId,
       ),
     ).toEqual(['session-1']);
     expect(root.git('worktree', 'list', '--porcelain')).not.toContain(
@@ -1234,25 +1415,44 @@ it.each(
 );
 
 it.each(
-  agentAdapters.map((adapter) => {
-    const permissionFeedback =
-      mockClis[adapter.agent]?.permissionFeedback === true;
-    const message = 'Use a read-only command instead';
-    return {
+  agentAdapters.map(
+    (
       adapter,
-      agent: adapter.agent,
-      permissionFeedback,
-      message: permissionFeedback ? message : undefined,
+    ): {
+      adapter: AgentAdapter<unknown, unknown>;
+      agent: string;
+      permissionFeedback: boolean;
+      message: string | undefined;
       recordedAnswer: {
-        type: 'permission',
-        optionId: 'reject_once',
-        ...(permissionFeedback ? { message } : {}),
-      },
-    };
-  }),
+        type: string;
+        optionId: string;
+        message?: string;
+      };
+    } => {
+      const permissionFeedback =
+        mockClis[adapter.agent]?.permissionFeedback === true;
+      const message = 'Use a read-only command instead';
+      return {
+        adapter,
+        agent: adapter.agent,
+        permissionFeedback,
+        message: permissionFeedback ? message : undefined,
+        recordedAnswer: {
+          type: 'permission',
+          optionId: 'reject_once',
+          ...(permissionFeedback ? { message } : {}),
+        },
+      };
+    },
+  ),
 )(
   'delivers a $agent rejection to its CLI, with feedback where the Agent takes it',
-  async ({ adapter, permissionFeedback, message, recordedAnswer }) => {
+  async ({
+    adapter,
+    permissionFeedback,
+    message,
+    recordedAnswer,
+  }): Promise<void> => {
     const root = await startNewSessionEngine(adapter, {
       recording: 'permission',
     });
@@ -1268,7 +1468,7 @@ it.each(
     });
     await expect
       .poll(
-        async () =>
+        async (): Promise<SessionSnapshot['pendingPermission']> =>
           (await readSnapshot(root.createCaller, sessionId)).pendingPermission,
       )
       .not.toBeNull();
@@ -1289,10 +1489,15 @@ it.each(
         message,
       }),
     ).toEqual({});
-    await expect.poll(() => readRequestAnswers(file)).toEqual([recordedAnswer]);
+    await expect
+      .poll((): ReturnType<typeof readRequestAnswers> =>
+        readRequestAnswers(file),
+      )
+      .toEqual([recordedAnswer]);
     await expect
       .poll(
-        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+        async (): Promise<SessionSnapshot['state']> =>
+          (await readSnapshot(root.createCaller, sessionId)).state,
       )
       .toBe('idle');
     expect(
@@ -1309,11 +1514,21 @@ it.each(
 
 it.each(
   agentAdapters
-    .filter((adapter) => mockClis[adapter.agent]?.permissionFeedback === false)
-    .map((adapter) => ({ adapter, agent: adapter.agent })),
+    .filter(
+      (adapter): boolean =>
+        mockClis[adapter.agent]?.permissionFeedback === false,
+    )
+    .map(
+      (
+        adapter,
+      ): { adapter: AgentAdapter<unknown, unknown>; agent: string } => ({
+        adapter,
+        agent: adapter.agent,
+      }),
+    ),
 )(
   'refuses rejection feedback $agent cannot take and keeps its Permission request pending',
-  async ({ adapter }) => {
+  async ({ adapter }): Promise<void> => {
     const root = await startNewSessionEngine(adapter, {
       recording: 'permission',
     });
@@ -1329,7 +1544,7 @@ it.each(
     });
     await expect
       .poll(
-        async () =>
+        async (): Promise<SessionSnapshot['pendingPermission']> =>
           (await readSnapshot(root.createCaller, sessionId)).pendingPermission,
       )
       .not.toBeNull();
@@ -1372,7 +1587,7 @@ for (const adapter of agentAdapters)
       },
     ])(
     `answers a ${adapter.agent} other-thread $recording request; skipped where requests have no thread id`,
-    async ({ recording, expected }) => {
+    async ({ recording, expected }): Promise<void> => {
       const root = await startNewSessionEngine(adapter, { recording });
       const file = path.join(root.home, 'answers.jsonl');
       stubScenario({ otherThreadRequest: true, requestAnswersFile: file });
@@ -1384,10 +1599,15 @@ for (const adapter of agentAdapters)
         configOptions: [],
         prompt: [{ type: 'text', text: 'Run a Turn' }],
       });
-      await expect.poll(() => readRequestAnswers(file)).toEqual([expected]);
+      await expect
+        .poll((): ReturnType<typeof readRequestAnswers> =>
+          readRequestAnswers(file),
+        )
+        .toEqual([expected]);
       await expect
         .poll(
-          async () => (await readSnapshot(root.createCaller, sessionId)).state,
+          async (): Promise<SessionSnapshot['state']> =>
+            (await readSnapshot(root.createCaller, sessionId)).state,
         )
         .toBe('idle');
       expect(await readSnapshot(root.createCaller, sessionId)).toMatchObject({
@@ -1399,7 +1619,7 @@ for (const adapter of agentAdapters)
 
 it.each(agentAdapters)(
   'cancel answers every $agent queued question',
-  async (adapter) => {
+  async (adapter): Promise<void> => {
     const root = await startNewSessionEngine(adapter, {
       recording: 'elicitation',
     });
@@ -1415,18 +1635,23 @@ it.each(agentAdapters)(
     });
     await expect
       .poll(
-        async () =>
+        async (): Promise<SessionSnapshot['pendingElicitation']> =>
           (await readSnapshot(root.createCaller, sessionId)).pendingElicitation,
       )
       .not.toBeNull();
     await caller.session.cancel({ sessionId });
-    await expect.poll(() => readRequestAnswers(file)).toHaveLength(2);
+    await expect
+      .poll((): ReturnType<typeof readRequestAnswers> =>
+        readRequestAnswers(file),
+      )
+      .toHaveLength(2);
     expect(await readRequestAnswers(file)).not.toEqual(
       expect.arrayContaining([expect.objectContaining({ action: 'accept' })]),
     );
     await expect
       .poll(
-        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+        async (): Promise<SessionSnapshot['state']> =>
+          (await readSnapshot(root.createCaller, sessionId)).state,
       )
       .toBe('idle');
     expect(
@@ -1437,7 +1662,7 @@ it.each(agentAdapters)(
 
 it.each(agentAdapters)(
   'stop answers every $agent queued question',
-  async (adapter) => {
+  async (adapter): Promise<void> => {
     const root = await startNewSessionEngine(adapter, {
       recording: 'elicitation',
     });
@@ -1453,14 +1678,19 @@ it.each(agentAdapters)(
     });
     await expect
       .poll(
-        async () =>
+        async (): Promise<SessionSnapshot['pendingElicitation']> =>
           (await readSnapshot(root.createCaller, sessionId)).pendingElicitation,
       )
       .not.toBeNull();
     root.engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
-    await waitFor(root.engine, (snapshot) => snapshot.status === 'done', {
-      timeout: gracefulStopLimit,
-    });
+    await waitFor(
+      root.engine,
+      (snapshot): snapshot is Extract<typeof snapshot, { status: 'done' }> =>
+        snapshot.status === 'done',
+      {
+        timeout: gracefulStopLimit,
+      },
+    );
     expect(await readRequestAnswers(file)).toHaveLength(2);
     expect(await readRequestAnswers(file)).not.toEqual(
       expect.arrayContaining([expect.objectContaining({ action: 'accept' })]),
@@ -1471,7 +1701,7 @@ it.each(agentAdapters)(
 
 it.each(agentAdapters)(
   'shows two $agent questions in FIFO order and answers both',
-  async (adapter) => {
+  async (adapter): Promise<void> => {
     const root = await startNewSessionEngine(adapter, {
       recording: 'elicitation',
     });
@@ -1487,7 +1717,7 @@ it.each(agentAdapters)(
     });
     await expect
       .poll(
-        async () =>
+        async (): Promise<SessionSnapshot['pendingElicitation']> =>
           (await readSnapshot(root.createCaller, sessionId)).pendingElicitation,
       )
       .not.toBeNull();
@@ -1508,7 +1738,7 @@ it.each(agentAdapters)(
     });
     await expect
       .poll(
-        async () =>
+        async (): Promise<string | undefined> =>
           (await readSnapshot(root.createCaller, sessionId)).pendingElicitation
             ?.toolCallId,
       )
@@ -1517,7 +1747,11 @@ it.each(agentAdapters)(
       .pendingElicitation;
     if (!second) throw new Error('No second Elicitation');
     expect(second.requestId).not.toBe(first.requestId);
-    await expect.poll(() => readRequestAnswers(file)).toEqual([recorded]);
+    await expect
+      .poll((): ReturnType<typeof readRequestAnswers> =>
+        readRequestAnswers(file),
+      )
+      .toEqual([recorded]);
     await caller.session.answerElicitation({
       sessionId,
       requestId: second.requestId,
@@ -1525,11 +1759,14 @@ it.each(agentAdapters)(
       content: recorded.content,
     });
     await expect
-      .poll(() => readRequestAnswers(file))
+      .poll((): ReturnType<typeof readRequestAnswers> =>
+        readRequestAnswers(file),
+      )
       .toEqual([recorded, recorded]);
     await expect
       .poll(
-        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+        async (): Promise<SessionSnapshot['state']> =>
+          (await readSnapshot(root.createCaller, sessionId)).state,
       )
       .toBe('idle');
     expect(
@@ -1540,7 +1777,7 @@ it.each(agentAdapters)(
 
 it.each(agentAdapters)(
   'answers a $agent Elicitation once through tRPC',
-  async (adapter) => {
+  async (adapter): Promise<void> => {
     const root = await startNewSessionEngine(adapter, {
       recording: 'elicitation',
     });
@@ -1556,7 +1793,7 @@ it.each(agentAdapters)(
     });
     await expect
       .poll(
-        async () =>
+        async (): Promise<SessionSnapshot['pendingElicitation']> =>
           (await readSnapshot(root.createCaller, sessionId)).pendingElicitation,
       )
       .not.toBeNull();
@@ -1601,17 +1838,28 @@ it.each(agentAdapters)(
       caller.session.answerElicitation(answer),
     ]);
     expect(
-      results.filter((result) => result.status === 'fulfilled'),
+      results.filter(
+        (result): result is PromiseFulfilledResult<Record<string, never>> =>
+          result.status === 'fulfilled',
+      ),
     ).toHaveLength(1);
     expect(
-      results.find((result) => result.status === 'rejected'),
+      results.find(
+        (result): result is PromiseRejectedResult =>
+          result.status === 'rejected',
+      ),
     ).toMatchObject({
       reason: { code: 'CONFLICT', message: 'already answered' },
     });
-    await expect.poll(() => readRequestAnswers(file)).toEqual([recorded]);
+    await expect
+      .poll((): ReturnType<typeof readRequestAnswers> =>
+        readRequestAnswers(file),
+      )
+      .toEqual([recorded]);
     await expect
       .poll(
-        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+        async (): Promise<SessionSnapshot['state']> =>
+          (await readSnapshot(root.createCaller, sessionId)).state,
       )
       .toBe('idle');
     await expect(
@@ -1624,16 +1872,31 @@ it.each(agentAdapters)(
 );
 
 it.each(
-  agentAdapters.flatMap((adapter) =>
-    (['decline', 'cancel'] as const).map((action) => ({
+  agentAdapters.flatMap(
+    (
       adapter,
-      agent: adapter.agent,
-      action,
-    })),
+    ): {
+      adapter: AgentAdapter<unknown, unknown>;
+      agent: string;
+      action: 'cancel' | 'decline';
+    }[] =>
+      (['decline', 'cancel'] as const).map(
+        (
+          action,
+        ): {
+          adapter: AgentAdapter<unknown, unknown>;
+          agent: string;
+          action: 'cancel' | 'decline';
+        } => ({
+          adapter,
+          agent: adapter.agent,
+          action,
+        }),
+      ),
   ),
 )(
   '$action answers a $agent Elicitation without accepting its form',
-  async ({ adapter, action }) => {
+  async ({ adapter, action }): Promise<void> => {
     const root = await startNewSessionEngine(adapter, {
       recording: 'elicitation',
     });
@@ -1649,7 +1912,7 @@ it.each(
     });
     await expect
       .poll(
-        async () =>
+        async (): Promise<SessionSnapshot['pendingElicitation']> =>
           (await readSnapshot(root.createCaller, sessionId)).pendingElicitation,
       )
       .not.toBeNull();
@@ -1662,11 +1925,14 @@ it.each(
       action,
     });
     await expect
-      .poll(() => readRequestAnswers(file))
+      .poll((): ReturnType<typeof readRequestAnswers> =>
+        readRequestAnswers(file),
+      )
       .toEqual([{ type: 'elicitation', action }]);
     await expect
       .poll(
-        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+        async (): Promise<SessionSnapshot['state']> =>
+          (await readSnapshot(root.createCaller, sessionId)).state,
       )
       .toBe('idle');
     await expect(
@@ -1685,7 +1951,7 @@ it.each(
 
 it.each(agentAdapters)(
   'cancels a $agent Turn with a pending Permission request and refuses a late answer',
-  async (adapter) => {
+  async (adapter): Promise<void> => {
     const root = await startNewSessionEngine(adapter, {
       recording: 'permission',
     });
@@ -1699,7 +1965,8 @@ it.each(agentAdapters)(
     });
     await expect
       .poll(
-        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+        async (): Promise<SessionSnapshot['state']> =>
+          (await readSnapshot(root.createCaller, sessionId)).state,
       )
       .toBe('requires_action');
     const before = await readSnapshot(root.createCaller, sessionId);
@@ -1707,7 +1974,8 @@ it.each(agentAdapters)(
     await caller.session.cancel({ sessionId });
     await expect
       .poll(
-        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+        async (): Promise<SessionSnapshot['state']> =>
+          (await readSnapshot(root.createCaller, sessionId)).state,
       )
       .toBe('idle');
     expect(await readSnapshot(root.createCaller, sessionId)).toMatchObject({
@@ -1747,7 +2015,7 @@ it.each(agentAdapters)(
 
 it.each(agentAdapters)(
   'cancels a $agent Turn with a pending Elicitation and refuses a late answer',
-  async (adapter) => {
+  async (adapter): Promise<void> => {
     const root = await startNewSessionEngine(adapter, {
       recording: 'elicitation',
     });
@@ -1761,7 +2029,8 @@ it.each(agentAdapters)(
     });
     await expect
       .poll(
-        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+        async (): Promise<SessionSnapshot['state']> =>
+          (await readSnapshot(root.createCaller, sessionId)).state,
       )
       .toBe('requires_action');
     const before = await readSnapshot(root.createCaller, sessionId);
@@ -1769,7 +2038,8 @@ it.each(agentAdapters)(
     await caller.session.cancel({ sessionId });
     await expect
       .poll(
-        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+        async (): Promise<SessionSnapshot['state']> =>
+          (await readSnapshot(root.createCaller, sessionId)).state,
       )
       .toBe('idle');
     expect(await readSnapshot(root.createCaller, sessionId)).toMatchObject({
@@ -1801,16 +2071,31 @@ it.each(agentAdapters)(
 );
 
 it.each(
-  agentAdapters.flatMap((adapter) =>
-    ['permission', 'elicitation'].map((recording) => ({
+  agentAdapters.flatMap(
+    (
       adapter,
-      agent: adapter.agent,
-      recording,
-    })),
+    ): {
+      adapter: AgentAdapter<unknown, unknown>;
+      agent: string;
+      recording: string;
+    }[] =>
+      ['permission', 'elicitation'].map(
+        (
+          recording,
+        ): {
+          adapter: AgentAdapter<unknown, unknown>;
+          agent: string;
+          recording: string;
+        } => ({
+          adapter,
+          agent: adapter.agent,
+          recording,
+        }),
+      ),
   ),
 )(
   'keeps a $agent $recording request answerable after two days',
-  async ({ adapter, recording }) => {
+  async ({ adapter, recording }): Promise<void> => {
     const root = await startNewSessionEngine(adapter, { recording });
     const file = path.join(root.home, 'answers.jsonl');
     stubScenario({ requestAnswersFile: file });
@@ -1824,7 +2109,8 @@ it.each(
     });
     await expect
       .poll(
-        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+        async (): Promise<SessionSnapshot['state']> =>
+          (await readSnapshot(root.createCaller, sessionId)).state,
       )
       .toBe('requires_action');
     const before = await readSnapshot(root.createCaller, sessionId);
@@ -1851,16 +2137,17 @@ it.each(
       });
     await expect
       .poll(
-        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+        async (): Promise<SessionSnapshot['state']> =>
+          (await readSnapshot(root.createCaller, sessionId)).state,
       )
       .toBe('idle');
   },
 );
 
-it('removes its temporary folder when a start fails', async () => {
+it('removes its temporary folder when a start fails', async (): Promise<void> => {
   const scratch = mkdtempSync(path.join(tmpdir(), 'argo-leak-check-'));
-  onTestFinished(() => rmSync(scratch, { recursive: true, force: true }));
-  onTestFinished(() => {
+  onTestFinished((): void => rmSync(scratch, { recursive: true, force: true }));
+  onTestFinished((): void => {
     expect(readdirSync(scratch)).toEqual([]);
   });
   vi.stubEnv('TMPDIR', scratch);
@@ -1869,9 +2156,9 @@ it('removes its temporary folder when a start fails', async () => {
   );
 });
 
-it('stops a started Engine when the test finishes', () => {
+it('stops a started Engine when the test finishes', (): void => {
   let started: ReturnType<typeof startEngine>['engine'] | undefined;
-  onTestFinished(() => {
+  onTestFinished((): void => {
     expect(started?.getSnapshot().status).toBe('done');
   });
   const { database, remove } = openTestDatabase();
@@ -1881,7 +2168,7 @@ it('stops a started Engine when the test finishes', () => {
 });
 
 for (const adapter of agentAdapters)
-  it(`keeps other ${adapter.agent} Sessions usable after a Feed actor fails`, async () => {
+  it(`keeps other ${adapter.agent} Sessions usable after a Feed actor fails`, async (): Promise<void> => {
     const failure = new Error('Feed failed on its first change');
     const sessions = registryMachine.provide({
       actors: {
@@ -1889,7 +2176,7 @@ for (const adapter of agentAdapters)
           actors: {
             feed: feedMachine.provide({
               actions: {
-                sendToWriter: ({ context, system }, { job }) => {
+                sendToWriter: ({ context, system }, { job }): void => {
                   if (context.sessionId === 'session-broken') throw failure;
                   system
                     .get('databaseWriter')
@@ -1913,7 +2200,7 @@ for (const adapter of agentAdapters)
       checkoutPath: root.project,
     });
     const controller = new AbortController();
-    onTestFinished(() => controller.abort());
+    onTestFinished((): void => controller.abort());
     const caller = await root.createCaller(controller.signal);
     const list = (await caller.session.listUpdates())[Symbol.asyncIterator]();
     await list.next();
@@ -1926,7 +2213,7 @@ for (const adapter of agentAdapters)
       agent: adapter.agent,
     });
     await expect
-      .poll(() =>
+      .poll((): ReturnType<typeof Reflect.get> =>
         root.engine.system.get('session:session-broken')?.getSnapshot().can({
           type: 'session.prompt',
           turnId: 'readiness-check',
@@ -1939,36 +2226,52 @@ for (const adapter of agentAdapters)
     )[Symbol.asyncIterator]();
     expect((await feed.next()).value).toMatchObject({ type: 'snapshot' });
     const rejectedFeed = expect(
-      (async () => {
-        for await (const event of { [Symbol.asyncIterator]: () => feed })
+      (async (): Promise<void> => {
+        for await (const event of {
+          [Symbol.asyncIterator]: (): AsyncIterator<
+            FeedSubscribeOutput,
+            void
+          > => feed,
+        })
           expect(event).toMatchObject({ type: 'snapshot' });
       })(),
     ).rejects.toThrow(failure.message);
     const engineErrors: unknown[] = [];
-    root.engine.subscribe({ error: (error) => engineErrors.push(error) });
+    root.engine.subscribe({
+      error: (error): number => engineErrors.push(error),
+    });
     await caller.session.prompt({
       sessionId: 'session-broken',
       prompt: [{ type: 'text', text: 'First Session' }],
     });
     await rejectedFeed;
     await expect
-      .poll(() => root.engine.system.get('session:session-broken'))
+      .poll((): ReturnType<typeof root.engine.system.get> =>
+        root.engine.system.get('session:session-broken'),
+      )
       .toBeUndefined();
     await caller.session.prompt({
       sessionId: 'session-2',
       prompt: [{ type: 'text', text: 'Finish this Turn' }],
     });
     await expect
-      .poll(async () => {
+      .poll(async (): Promise<SessionSnapshot['state']> => {
         const snapshot = await readSnapshot(root.createCaller, 'session-2');
         return snapshot.state;
       })
       .toBe('idle');
     await expect
-      .poll(async () =>
+      .poll(async (): Promise<boolean> =>
         (
           await caller.feed.page({ sessionId: 'session-2', direction: 'tail' })
-        ).rows.some((row) => row.sessionUpdate === 'agent_message'),
+        ).rows.some(
+          (
+            row,
+          ): row is Extract<
+            SessionUpdate,
+            { sessionUpdate: 'agent_message' }
+          > => row.sessionUpdate === 'agent_message',
+        ),
       )
       .toBe(true);
     expect(root.engine.getSnapshot().status).toBe('active');
@@ -1977,7 +2280,7 @@ for (const adapter of agentAdapters)
     await list.return?.();
   });
 
-it('shares one coalesced list read for three subscribers across fifty changes', async () => {
+it('shares one coalesced list read for three subscribers across fifty changes', async (): Promise<void> => {
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
   const counted = countDatabaseReads(database);
@@ -1991,7 +2294,7 @@ it('shares one coalesced list read for three subscribers across fifty changes', 
     new AbortController(),
     new AbortController(),
   ];
-  onTestFinished(() => {
+  onTestFinished((): void => {
     for (const controller of controllers) controller.abort();
   });
   const firstCaller = await createCaller(controllers[0]?.signal);
@@ -2100,7 +2403,7 @@ it('shares one coalesced list read for three subscribers across fifty changes', 
 });
 
 for (const adapter of agentAdapters) {
-  it(`rejects a new ${adapter.agent} Session when CLI initialization exceeds agentStartLimit`, async () => {
+  it(`rejects a new ${adapter.agent} Session when CLI initialization exceeds agentStartLimit`, async (): Promise<void> => {
     stubScenario({ blockInitialize: true });
     const root = await startNewSessionEngine(adapter);
     const caller = await root.createCaller();
@@ -2118,7 +2421,7 @@ for (const adapter of agentAdapters) {
         'Agent startup exceeded agentStartLimit (10000 ms). Retry the Session.',
     });
     await expect
-      .poll(() => root.git('branch', '--list', 'argo/*').trim())
+      .poll((): string => root.git('branch', '--list', 'argo/*').trim())
       .toBe('');
     expect(root.git('worktree', 'list')).not.toContain(root.home);
     expect(
@@ -2138,7 +2441,7 @@ for (const adapter of agentAdapters) {
     ).toEqual({ sessionId: expect.any(String) });
   }, 15_000);
 
-  it(`rejects a new ${adapter.agent} Session when a Checkout hook exceeds checkoutLimit`, async () => {
+  it(`rejects a new ${adapter.agent} Session when a Checkout hook exceeds checkoutLimit`, async (): Promise<void> => {
     const root = await startNewSessionEngine(adapter);
     const marker = path.join(root.home, 'hook-started');
     const hook = path.join(root.project, '.git', 'hooks', 'post-checkout');
@@ -2166,14 +2469,14 @@ for (const adapter of agentAdapters) {
       message:
         'Checkout creation exceeded checkoutLimit (10000 ms). Retry the Session.',
     });
-    await expect.poll(() => existsSync(marker)).toBe(true);
+    await expect.poll((): boolean => existsSync(marker)).toBe(true);
     const checkoutPath = readFileSync(marker, 'utf8').trim();
     expect(checkoutPath).toContain(path.join(root.home, 'worktrees'));
     expect(existsSync(checkoutPath)).toBe(true);
     await rejected;
-    await expect.poll(() => existsSync(checkoutPath)).toBe(false);
+    await expect.poll((): boolean => existsSync(checkoutPath)).toBe(false);
     await expect
-      .poll(() => root.git('branch', '--list', 'argo/*').trim())
+      .poll((): string => root.git('branch', '--list', 'argo/*').trim())
       .toBe('');
     expect(root.git('worktree', 'list')).not.toContain(checkoutPath);
     rmSync(hook);
@@ -2189,7 +2492,7 @@ for (const adapter of agentAdapters) {
   }, 15_000);
 }
 
-it('reads only the changed Session and pages the shared cache', async () => {
+it('reads only the changed Session and pages the shared cache', async (): Promise<void> => {
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
   for (let index = 2; index <= 60; index++)
@@ -2200,7 +2503,7 @@ it('reads only the changed Session and pages the shared cache', async () => {
     adapter: createMockAdapter(),
   });
   const controller = new AbortController();
-  onTestFinished(() => controller.abort());
+  onTestFinished((): void => controller.abort());
   const caller = await createCaller(controller.signal);
   const updates = (await caller.session.listUpdates())[Symbol.asyncIterator]();
   for (let index = 0; index < 60; index++)
@@ -2251,7 +2554,7 @@ it('reads only the changed Session and pages the shared cache', async () => {
   }
 });
 
-it('initializes a fresh list after all watchers leave and unwatched data changes', async () => {
+it('initializes a fresh list after all watchers leave and unwatched data changes', async (): Promise<void> => {
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
   const { engine, createCaller } = startEngine({
@@ -2259,7 +2562,7 @@ it('initializes a fresh list after all watchers leave and unwatched data changes
     adapter: createMockAdapter(),
   });
   const controller = new AbortController();
-  onTestFinished(() => controller.abort());
+  onTestFinished((): void => controller.abort());
   const watchedCaller = await createCaller(controller.signal);
   const caller = await createCaller();
   const updates = (await watchedCaller.session.listUpdates())[
@@ -2281,7 +2584,10 @@ it('initializes a fresh list after all watchers leave and unwatched data changes
       set: { title: 'Changed without watchers', maxRevision: 1 },
     },
   });
-  await waitFor(writer, (snapshot) => snapshot.context.queue.length === 0);
+  await waitFor(
+    writer,
+    (snapshot): boolean => snapshot.context.queue.length === 0,
+  );
   expect(
     (await caller.session.list({ archived: false })).sessions,
   ).toMatchObject([
@@ -2293,13 +2599,13 @@ it('initializes a fresh list after all watchers leave and unwatched data changes
   ]);
 });
 
-it('pages current queued activity before the list publication delay', async () => {
+it('pages current queued activity before the list publication delay', async (): Promise<void> => {
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
   insertSession(database, { id: 'session-2', activityAt: 10 });
   const counted = countDatabaseReads(database);
   const batch = Promise.withResolvers<void>();
-  onTestFinished(() => batch.resolve());
+  onTestFinished((): void => batch.resolve());
   const { engine, createCaller } = startEngine({
     database: counted.database,
     adapter: createMockAdapter(),
@@ -2308,7 +2614,7 @@ it('pages current queued activity before the list publication delay', async () =
         writeBatch: fromPromise<
           void,
           { database: Parameters<typeof writeJobs>[0]; jobs: WriterJob[] }
-        >(async ({ input }) => {
+        >(async ({ input }): Promise<void> => {
           await batch.promise;
           writeJobs(input.database, input.jobs);
         }),
@@ -2316,7 +2622,7 @@ it('pages current queued activity before the list publication delay', async () =
     }),
   });
   const controller = new AbortController();
-  onTestFinished(() => controller.abort());
+  onTestFinished((): void => controller.abort());
   const caller = await createCaller(controller.signal);
   const updates = (await caller.session.listUpdates())[Symbol.asyncIterator]();
   await updates.next();
@@ -2336,10 +2642,9 @@ it('pages current queued activity before the list publication delay', async () =
       },
     });
     expect(
-      (await caller.session.list({ archived: false })).sessions.map((row) => [
-        row.sessionId,
-        row.activityAt,
-      ]),
+      (await caller.session.list({ archived: false })).sessions.map(
+        (row): (string | number)[] => [row.sessionId, row.activityAt],
+      ),
     ).toEqual([
       ['session-1', 20],
       ['session-2', 10],
@@ -2360,7 +2665,7 @@ it('pages current queued activity before the list publication delay', async () =
   }
 });
 
-it('updates a cached parent when its stored Subagent Turn changes', async () => {
+it('updates a cached parent when its stored Subagent Turn changes', async (): Promise<void> => {
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
   insertSession(database, { id: 'child-1', parentSessionId: 'session-1' });
@@ -2369,7 +2674,7 @@ it('updates a cached parent when its stored Subagent Turn changes', async () => 
     adapter: createMockAdapter(),
   });
   const controller = new AbortController();
-  onTestFinished(() => controller.abort());
+  onTestFinished((): void => controller.abort());
   const caller = await createCaller(controller.signal);
   const updates = (await caller.session.listUpdates())[Symbol.asyncIterator]();
   expect((await updates.next()).value).toMatchObject({
@@ -2419,7 +2724,7 @@ it('updates a cached parent when its stored Subagent Turn changes', async () => 
 
 it.each(agentAdapters)(
   'holds a $agent model choice until the next Turn',
-  async (adapter) => {
+  async (adapter): Promise<void> => {
     const root = await startNewSessionEngine(adapter, {
       recording: 'interrupt',
     });
@@ -2433,18 +2738,21 @@ it.each(agentAdapters)(
     });
     await expect
       .poll(
-        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+        async (): Promise<SessionSnapshot['state']> =>
+          (await readSnapshot(root.createCaller, sessionId)).state,
       )
       .toBe('running');
     const before = await readSnapshot(root.createCaller, sessionId);
     const model = before.configOptions.find(
-      (option) => option.category === 'model',
+      (option): boolean => option.category === 'model',
     );
     if (model?.type !== 'select')
       throw new Error('Recorded catalog needs model choices.');
     const choice = model.options
-      .flatMap((entry) => ('groupId' in entry ? entry.options : [entry]))
-      .find((entry) => entry.value !== model.currentValue);
+      .flatMap((entry): SessionConfigSelectOption[] =>
+        'groupId' in entry ? entry.options : [entry],
+      )
+      .find((entry): boolean => entry.value !== model.currentValue);
     if (!choice) throw new Error('Recorded catalog needs a second model.');
     const configured = await caller.session
       .setConfigOption({
@@ -2454,14 +2762,23 @@ it.each(agentAdapters)(
         value: choice.value,
       })
       .then(
-        (result) => ({ result, error: undefined }),
-        (error: unknown) => ({ result: undefined, error }),
+        (
+          result,
+        ): {
+          result: SessionSetConfigOptionOutput;
+          error: undefined;
+        } => ({ result, error: undefined }),
+        (error: unknown): { result: undefined; error: unknown } => ({
+          result: undefined,
+          error,
+        }),
       );
     const held = await readSnapshot(root.createCaller, sessionId);
     await caller.session.cancel({ sessionId });
     await expect
       .poll(
-        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+        async (): Promise<SessionSnapshot['state']> =>
+          (await readSnapshot(root.createCaller, sessionId)).state,
       )
       .toBe('idle');
     const { messageId } = await caller.session.prompt({
@@ -2470,15 +2787,17 @@ it.each(agentAdapters)(
     });
     await expect
       .poll(
-        async () =>
+        async (): Promise<string | null | undefined> =>
           (await caller.feed.page({ sessionId, direction: 'tail' })).rows.find(
-            (row) => row.id === messageId,
+            (row): boolean => row.id === messageId,
           )?.turnId,
       )
       .toEqual(expect.any(String));
     const rows = (await caller.feed.page({ sessionId, direction: 'tail' }))
       .rows;
-    const nextTurnId = rows.find((row) => row.id === messageId)?.turnId;
+    const nextTurnId = rows.find(
+      (row): boolean => row.id === messageId,
+    )?.turnId;
     expect(
       root.database
         .select()
@@ -2507,17 +2826,17 @@ it.each(agentAdapters)(
     });
     await expect
       .poll(
-        async () =>
+        async (): Promise<string | boolean | undefined> =>
           (await readSnapshot(root.createCaller, sessionId)).configOptions.find(
-            (option) => option.configId === model.configId,
+            (option): boolean => option.configId === model.configId,
           )?.currentValue,
       )
       .toBe(choice.value);
     await expect
       .poll(
-        async () =>
+        async (): Promise<boolean | undefined> =>
           (await readSnapshot(root.createCaller, sessionId)).configOptions.find(
-            (option) => option.configId === model.configId,
+            (option): boolean => option.configId === model.configId,
           )?._meta?.argo?.heldUntilNextTurn,
       )
       .not.toBe(true);
@@ -2526,7 +2845,7 @@ it.each(agentAdapters)(
 
 it.each(agentAdapters)(
   'shows the applied $agent effort after the next Turn clamps a held choice',
-  async (adapter) => {
+  async (adapter): Promise<void> => {
     const root = await startNewSessionEngine(adapter, {
       recording: 'interrupt',
     });
@@ -2540,34 +2859,41 @@ it.each(agentAdapters)(
     });
     await expect
       .poll(
-        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+        async (): Promise<SessionSnapshot['state']> =>
+          (await readSnapshot(root.createCaller, sessionId)).state,
       )
       .toBe('running');
     const before = await readSnapshot(root.createCaller, sessionId);
     const model = before.configOptions.find(
-      (option) => option.category === 'model',
+      (option): boolean => option.category === 'model',
     );
     const effort = before.configOptions.find(
-      (option) => option.category === 'thought_level',
+      (option): boolean => option.category === 'thought_level',
     );
     if (model?.type !== 'select' || effort?.type !== 'select')
       throw new Error('Recorded catalog needs model and effort choices.');
-    const models = model.options.flatMap((entry) =>
-      'groupId' in entry ? entry.options : [entry],
+    const models = model.options.flatMap(
+      (entry): SessionConfigSelectOption[] =>
+        'groupId' in entry ? entry.options : [entry],
     );
-    const wide = models.find((entry) => entry.value === model.currentValue);
+    const wide = models.find(
+      (entry): boolean => entry.value === model.currentValue,
+    );
     const levels = wide?._meta?.argo?.supportedEffortLevels ?? [];
     const narrow = models.find(
-      (entry) =>
+      (entry): boolean | undefined =>
         entry._meta?.argo?.supportsEffort &&
         levels.some(
-          (level) => !entry._meta?.argo?.supportedEffortLevels?.includes(level),
+          (level): boolean =>
+            !entry._meta?.argo?.supportedEffortLevels?.includes(level),
         ),
     );
     const unsupported = effort.options
-      .flatMap((entry) => ('groupId' in entry ? entry.options : [entry]))
+      .flatMap((entry): SessionConfigSelectOption[] =>
+        'groupId' in entry ? entry.options : [entry],
+      )
       .find(
-        (entry) =>
+        (entry): boolean =>
           levels.includes(entry.value) &&
           !narrow?._meta?.argo?.supportedEffortLevels?.includes(entry.value),
       );
@@ -2587,7 +2913,8 @@ it.each(agentAdapters)(
     await caller.session.cancel({ sessionId });
     await expect
       .poll(
-        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+        async (): Promise<SessionSnapshot['state']> =>
+          (await readSnapshot(root.createCaller, sessionId)).state,
       )
       .toBe('idle');
     await caller.session.prompt({
@@ -2595,33 +2922,34 @@ it.each(agentAdapters)(
       prompt: [{ type: 'text', text: 'Run the narrower model' }],
     });
     await expect
-      .poll(async () => {
+      .poll(async (): Promise<boolean | undefined> => {
         const snapshot = await readSnapshot(root.createCaller, sessionId);
         return snapshot.configOptions.find(
-          (option) => option.configId === effort.configId,
+          (option): boolean => option.configId === effort.configId,
         )?._meta?.argo?.heldUntilNextTurn;
       })
       .not.toBe(true);
     const after = await readSnapshot(root.createCaller, sessionId);
     expect(
-      after.configOptions.find((option) => option.configId === model.configId)
-        ?.currentValue,
+      after.configOptions.find(
+        (option): boolean => option.configId === model.configId,
+      )?.currentValue,
     ).toBe(narrow.value);
     const applied = after.configOptions.find(
-      (option) => option.configId === effort.configId,
+      (option): boolean => option.configId === effort.configId,
     )?.currentValue;
     expect(applied).not.toBe(unsupported.value);
     expect(narrow._meta?.argo?.supportedEffortLevels).toContain(applied);
     expect(
       after.configOptions.some(
-        (option) => option._meta?.argo?.heldUntilNextTurn,
+        (option): boolean | undefined => option._meta?.argo?.heldUntilNextTurn,
       ),
     ).toBe(false);
   },
 );
 
 it.each(
-  agentAdapters.flatMap(({ agent }) => [
+  agentAdapters.flatMap(({ agent }): StoredColumnCases => [
     {
       agent,
       table: session,
@@ -2653,11 +2981,13 @@ it.each(
   ]),
 )(
   'drops only the Session with unreadable $field JSON for $agent',
-  async ({ agent, table, column, id }) => {
+  async ({ agent, table, column, id }): Promise<void> => {
     const { database, remove } = openTestDatabase({ agent });
     onTestFinished(remove);
-    const reported = vi.spyOn(console, 'error').mockImplementation(() => {});
-    onTestFinished(() => reported.mockRestore());
+    const reported = vi
+      .spyOn(console, 'error')
+      .mockImplementation((): void => {});
+    onTestFinished((): void => reported.mockRestore());
     const { createCaller } = startEngine({
       database,
       adapter: createMockAdapter({}, agent),
@@ -2672,7 +3002,9 @@ it.each(
       sql`update ${table} set ${sql.identifier(column.name)} = 'broken-json' where ${table.id} = ${id}`,
     );
     const result = await caller.session.list({ archived: false });
-    expect(result.sessions.map((row) => row.sessionId)).toEqual(['healthy']);
+    expect(result.sessions.map((row): string => row.sessionId)).toEqual([
+      'healthy',
+    ]);
     expect(reported).toHaveBeenCalledWith(
       'sessions: rejected list shape #1',
       expect.anything(),
@@ -2681,9 +3013,9 @@ it.each(
 );
 
 it.each(
-  agentAdapters.flatMap(({ agent }) =>
+  agentAdapters.flatMap(({ agent }): FeedColumnCase[] =>
     (['agent_message', 'agent_thought', 'tool_call_update'] as const).flatMap(
-      (kind) => [
+      (kind): FeedColumnCase[] => [
         { agent, kind, column: feedRow.payload, field: 'payload' },
         { agent, kind, column: feedRow.sourceRef, field: 'source reference' },
       ],
@@ -2691,11 +3023,13 @@ it.each(
   ),
 )(
   'degrades only the Session with unreadable $kind $field JSON for $agent',
-  async ({ agent, kind, column }) => {
+  async ({ agent, kind, column }): Promise<void> => {
     const { database, remove } = openTestDatabase({ agent });
     onTestFinished(remove);
-    const reported = vi.spyOn(console, 'error').mockImplementation(() => {});
-    onTestFinished(() => reported.mockRestore());
+    const reported = vi
+      .spyOn(console, 'error')
+      .mockImplementation((): void => {});
+    onTestFinished((): void => reported.mockRestore());
     const { createCaller } = startEngine({
       database,
       adapter: createMockAdapter({}, agent),
@@ -2733,11 +3067,13 @@ it.each(
     const result = await caller.session.list({ archived: false });
     expect(result.sessions).toHaveLength(2);
     expect(
-      result.sessions.find((row) => row.sessionId === 'session-1'),
+      result.sessions.find((row): boolean => row.sessionId === 'session-1'),
     ).toMatchObject({ activity: '', plan: null });
-    expect(result.sessions.map((row) => row.sessionId)).toContain('healthy');
+    expect(result.sessions.map((row): string => row.sessionId)).toContain(
+      'healthy',
+    );
     expect(
-      reported.mock.calls.some(([message]) =>
+      reported.mock.calls.some(([message]): boolean =>
         String(message).includes('rejected'),
       ),
     ).toBe(true);

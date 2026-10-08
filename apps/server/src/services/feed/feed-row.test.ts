@@ -9,13 +9,13 @@ import {
 
 const message = storedMessage(0);
 
-describe('fromFeedRow', () => {
-  it('reads back the row toFeedRowWrite stores', () => {
+describe('fromFeedRow', (): void => {
+  it('reads back the row toFeedRowWrite stores', (): void => {
     expect(fromFeedRow('session-1', toFeedRowWrite(message))).toEqual(message);
   });
 
-  it('rejects a row from another payload version', () => {
-    expect(() =>
+  it('rejects a row from another payload version', (): void => {
+    expect((): ReturnType<typeof fromFeedRow> =>
       fromFeedRow('session-1', {
         ...toFeedRowWrite(message),
         payloadVersion: 2,
@@ -23,9 +23,9 @@ describe('fromFeedRow', () => {
     ).toThrow('row message-0#0 has payload version 2, not 1');
   });
 
-  it('rejects a payload that carries an envelope field', () => {
+  it('rejects a payload that carries an envelope field', (): void => {
     const row = toFeedRowWrite(message);
-    expect(() =>
+    expect((): ReturnType<typeof fromFeedRow> =>
       fromFeedRow('session-1', {
         ...row,
         payload: { ...(row.payload as object), position: 9 },
@@ -34,14 +34,33 @@ describe('fromFeedRow', () => {
   });
 });
 
-describe('promptBlobIds', () => {
-  it('lists each blob a prompt shows once and skips other rows', () => {
-    const image = (blobId: string) => ({
+describe('promptBlobIds', (): void => {
+  it('lists each blob a prompt shows once and skips other rows', (): void => {
+    const image = (
+      blobId: string,
+    ): {
+      type: 'image';
+      mimeType: string;
+      blob: { blobId: string; mime: string; bytes: number };
+    } => ({
       type: 'image' as const,
       mimeType: 'image/png',
       blob: { blobId, mime: 'image/png', bytes: 3 },
     });
-    const prompt = (id: string, blobIds: string[]) => ({
+    const prompt = (
+      id: string,
+      blobIds: string[],
+    ): Omit<typeof message, 'sessionUpdate' | 'content'> & {
+      sessionUpdate: 'user_message';
+      content: (
+        | { type: 'text'; text: string }
+        | {
+            type: 'image';
+            mimeType: string;
+            blob: { blobId: string; mime: string; bytes: number };
+          }
+      )[];
+    } => ({
       ...message,
       id,
       sessionUpdate: 'user_message' as const,
@@ -81,7 +100,7 @@ it.each([
     text: 'In memory',
     revision: 1,
   },
-])('$rule', ({ rows, text, revision }) => {
+])('$rule', ({ rows, text, revision }): void => {
   const original = structuredClone(rows);
   expect([...newestRows(rows).values()]).toEqual([
     {

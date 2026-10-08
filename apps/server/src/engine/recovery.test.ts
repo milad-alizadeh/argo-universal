@@ -40,7 +40,13 @@ let engine: ActorRefFrom<typeof engineMachine>;
 let messages: EngineMessage[];
 let rowsAtReady: ReturnType<typeof readRows>[];
 
-const readRows = (database: Database) => ({
+const readRows = (
+  database: Database,
+): {
+  turns: (typeof turn.$inferSelect)[];
+  rows: (typeof feedRow.$inferSelect)[];
+  sessions: (typeof session.$inferSelect)[];
+} => ({
   turns: database.select().from(turn).orderBy(turn.id).all(),
   rows: database
     .select()
@@ -50,7 +56,7 @@ const readRows = (database: Database) => ({
   sessions: database.select().from(session).orderBy(session.id).all(),
 });
 
-const readStoredRows = () => {
+const readStoredRows = (): ReturnType<typeof readRows> => {
   const database = openDatabase(join(home, 'argo.db'));
   try {
     return readRows(database);
@@ -59,12 +65,14 @@ const readStoredRows = () => {
   }
 };
 
-const startEngine = async () => {
+const startEngine = async (): Promise<
+  ReturnType<typeof engine.getSnapshot>
+> => {
   engine = createActor(
     engineMachine.provide({
       actions: {
-        log: () => {},
-        sendToSupervisor: ({ context }, message) => {
+        log: (): void => {},
+        sendToSupervisor: ({ context }, message): void => {
           messages.push(message);
           if (message.type === 'ready' && context.database)
             rowsAtReady.push(readRows(context.database));
@@ -73,7 +81,7 @@ const startEngine = async () => {
     }),
     {
       input: {
-        now: () => Date.now(),
+        now: (): number => Date.now(),
         createId: randomUUID,
         home,
         port: 0,
@@ -85,14 +93,14 @@ const startEngine = async () => {
   ).start();
   await waitFor(
     engine,
-    (snapshot) =>
+    (snapshot): boolean =>
       snapshot.context.server !== null || snapshot.status === 'done',
   );
   return engine.getSnapshot();
 };
 
 // Actor.stop() cuts the lifecycle short; release the handles the killed process would lose.
-const interruptEngine = async () => {
+const interruptEngine = async (): Promise<void> => {
   const { database, server } = engine.getSnapshot().context;
   engine.stop();
   await server?.close();
@@ -145,7 +153,7 @@ const toolRow = ({
   },
 });
 
-beforeEach(async () => {
+beforeEach(async (): Promise<void> => {
   home = mkdtempSync(join(tmpdir(), 'argo-recovery-'));
   messages = [];
   rowsAtReady = [];
@@ -159,25 +167,36 @@ beforeEach(async () => {
   database
     .insert(session)
     .values(
-      ['session-1', 'session-2'].map((id) => ({
-        id,
-        projectId: 'project',
-        agent: 'mock',
-        checkoutPath: '/project',
-        projectionVersion: 1,
-        epoch: 3,
-      })),
+      ['session-1', 'session-2'].map(
+        (
+          id,
+        ): {
+          id: string;
+          projectId: string;
+          agent: string;
+          checkoutPath: string;
+          projectionVersion: number;
+          epoch: number;
+        } => ({
+          id,
+          projectId: 'project',
+          agent: 'mock',
+          checkoutPath: '/project',
+          projectionVersion: 1,
+          epoch: 3,
+        }),
+      ),
     )
     .run();
 });
 
-afterEach(async () => {
+afterEach(async (): Promise<void> => {
   if (engine.getSnapshot().status === 'active') await interruptEngine();
   rmSync(home, { recursive: true, force: true });
 });
 
-describe('Engine restart recovery', () => {
-  it('repairs an interrupted Turn and its Feed before reporting ready', async () => {
+describe('Engine restart recovery', (): void => {
+  it('repairs an interrupted Turn and its Feed before reporting ready', async (): Promise<void> => {
     const database =
       engine.getSnapshot().context.database ?? expect.unreachable();
     writeJobs(database, [
@@ -273,12 +292,24 @@ describe('Engine restart recovery', () => {
     expect(repaired.turns[1]?.endedAt).toBeGreaterThanOrEqual(interruptedAt);
     expect(repaired.turns[1]?.endedAt).toBeLessThanOrEqual(Date.now());
     expect(
-      repaired.rows.map(({ id, state, revision, payload }) => ({
-        id,
-        state,
-        revision,
-        payload,
-      })),
+      repaired.rows.map(
+        ({
+          id,
+          state,
+          revision,
+          payload,
+        }): {
+          id: string;
+          state: 'open' | 'settled';
+          revision: number;
+          payload: unknown;
+        } => ({
+          id,
+          state,
+          revision,
+          payload,
+        }),
+      ),
     ).toEqual([
       expect.objectContaining({
         id: 'message',
@@ -293,7 +324,7 @@ describe('Engine restart recovery', () => {
         'failed-tool',
         'cancelled-tool',
         'settled-pending-tool',
-      ].map((id, index) => {
+      ].map((id, index): ReturnType<typeof expect.objectContaining> => {
         let status = 'failed';
         if (id === 'completed-tool') status = 'completed';
         else if (id === 'cancelled-tool') status = 'cancelled';
@@ -322,10 +353,12 @@ describe('Engine restart recovery', () => {
       searchText: 'Partial reply',
     });
     expect(
-      repaired.sessions.map(({ maxRevision, epoch }) => ({
-        maxRevision,
-        epoch,
-      })),
+      repaired.sessions.map(
+        ({ maxRevision, epoch }): { maxRevision: number; epoch: number } => ({
+          maxRevision,
+          epoch,
+        }),
+      ),
     ).toEqual([
       { maxRevision: 27, epoch: 3 },
       { maxRevision: 6, epoch: 3 },
@@ -336,7 +369,7 @@ describe('Engine restart recovery', () => {
     expect(rowsAtReady.at(-1)).toEqual(repaired);
   });
 
-  it('deletes blobs no prompt refers to once they are over a day old', async () => {
+  it('deletes blobs no prompt refers to once they are over a day old', async (): Promise<void> => {
     const database =
       engine.getSnapshot().context.database ?? expect.unreachable();
     const blobsFolder = join(home, 'blobs');
@@ -363,7 +396,7 @@ describe('Engine restart recovery', () => {
     expect(readdirSync(blobsFolder).sort()).toEqual(['new-unused', 'old-used']);
   });
 
-  it('rolls back every repair and fails without serving when a Session write fails', async () => {
+  it('rolls back every repair and fails without serving when a Session write fails', async (): Promise<void> => {
     const database =
       engine.getSnapshot().context.database ?? expect.unreachable();
     writeJobs(database, [
@@ -404,7 +437,7 @@ describe('Engine restart recovery', () => {
     expect(readStoredRows()).toEqual(before);
   });
 
-  it('settles and counts unrecognised Feed payloads before serving', async () => {
+  it('settles and counts unrecognised Feed payloads before serving', async (): Promise<void> => {
     const database =
       engine.getSnapshot().context.database ?? expect.unreachable();
     writeJobs(database, [
@@ -442,7 +475,9 @@ describe('Engine restart recovery', () => {
         ],
       },
     ]);
-    const reported = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const reported = vi
+      .spyOn(console, 'error')
+      .mockImplementation((): void => {});
     try {
       await interruptEngine();
       messages = [];
@@ -456,11 +491,17 @@ describe('Engine restart recovery', () => {
       const repaired =
         rowsAtReady[0] ?? expect.unreachable('The Engine did not report ready');
       expect(
-        repaired.rows.map(({ id, revision, state }) => ({
-          id,
-          revision,
-          state,
-        })),
+        repaired.rows.map(
+          ({
+            id,
+            revision,
+            state,
+          }): { id: string; revision: number; state: 'open' | 'settled' } => ({
+            id,
+            revision,
+            state,
+          }),
+        ),
       ).toEqual([
         { id: 'valid-message', revision: 10, state: 'settled' },
         { id: 'invalid-message', revision: 11, state: 'settled' },
@@ -474,9 +515,9 @@ describe('Engine restart recovery', () => {
         status: 'ended',
         error: { code: 'interrupted' },
       });
-      expect(repaired.sessions.map(({ maxRevision }) => maxRevision)).toEqual([
-        11, 5,
-      ]);
+      expect(
+        repaired.sessions.map(({ maxRevision }): number => maxRevision),
+      ).toEqual([11, 5]);
       expect(reported).toHaveBeenCalledWith(
         'recovery: rejected Feed shape #1 (session-1/invalid-message)',
         expect.anything(),
@@ -492,17 +533,34 @@ describe('Engine restart recovery', () => {
 });
 
 it.each(
-  (['open', 'settled'] as const).flatMap((state) => [
-    { state, column: feedRow.payload, field: 'payload' },
-    { state, column: feedRow.sourceRef, field: 'source reference' },
-  ]),
+  (['open', 'settled'] as const).flatMap(
+    (
+      state,
+    ): [
+      {
+        state: 'open' | 'settled';
+        column: typeof feedRow.payload;
+        field: string;
+      },
+      {
+        state: 'open' | 'settled';
+        column: typeof feedRow.sourceRef;
+        field: string;
+      },
+    ] => [
+      { state, column: feedRow.payload, field: 'payload' },
+      { state, column: feedRow.sourceRef, field: 'source reference' },
+    ],
+  ),
 )(
   'keeps recovery available with unreadable $field JSON on a $state row',
-  ({ state, column }) => {
+  ({ state, column }): void => {
     const { database, remove } = openTestDatabase();
     onTestFinished(remove);
-    const reported = vi.spyOn(console, 'error').mockImplementation(() => {});
-    onTestFinished(() => reported.mockRestore());
+    const reported = vi
+      .spyOn(console, 'error')
+      .mockImplementation((): void => {});
+    onTestFinished((): void => reported.mockRestore());
     database
       .insert(feedRow)
       .values({
@@ -519,7 +577,7 @@ it.each(
     database.run(
       sql`update ${feedRow} set ${sql.identifier(column.name)} = 'broken-json' where ${feedRow.id} = 'bad-json'`,
     );
-    expect(() => recoverAfterRestart(database)).not.toThrow();
+    expect((): void => recoverAfterRestart(database)).not.toThrow();
     const repaired = database.select(storedFeedColumns).from(feedRow).get();
     expect(repaired).toMatchObject({
       id: 'bad-json',

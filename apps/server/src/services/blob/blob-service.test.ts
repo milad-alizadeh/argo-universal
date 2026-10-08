@@ -29,33 +29,40 @@ let database: Database;
 let removeDatabase: () => void;
 let blobsFolder: string;
 
-const formWith = (file: Blob) => {
+const formWith = (file: Blob): FormData => {
   const form = new FormData();
   form.set('file', file, 'image.png');
   return form;
 };
-const upload = (file: Blob) =>
-  createBlobService({ database, blobsFolder }).upload(formWith(file));
-const storedIds = () =>
+const upload = (
+  file: Blob,
+): Promise<{
+  blobId: string;
+  mime: string;
+  bytes: number;
+  width?: number;
+  height?: number;
+}> => createBlobService({ database, blobsFolder }).upload(formWith(file));
+const storedIds = (): string[] =>
   database
     .select({ id: blob.id })
     .from(blob)
     .all()
-    .map(({ id }) => id)
+    .map(({ id }): string => id)
     .sort();
 
-beforeEach(() => {
+beforeEach((): void => {
   ({ database, remove: removeDatabase } = openTestDatabase());
   blobsFolder = join(mkdtempSync(join(tmpdir(), 'argo-blobs-')), 'blobs');
 });
 
-afterEach(() => {
+afterEach((): void => {
   removeDatabase();
   rmSync(join(blobsFolder, '..'), { recursive: true, force: true });
 });
 
-describe('blob upload', () => {
-  it('stores a file under the sha256 of its content and returns its BlobRef', async () => {
+describe('blob upload', (): void => {
+  it('stores a file under the sha256 of its content and returns its BlobRef', async (): Promise<void> => {
     const ref = await upload(new Blob([png], { type: 'image/png' }));
 
     expect(ref).toEqual({ blobId: pngId, mime: 'image/png', bytes: 70 });
@@ -63,13 +70,13 @@ describe('blob upload', () => {
     expect(storedIds()).toEqual([pngId]);
   });
 
-  it('names an image by its content when the App declares another type', async () => {
+  it('names an image by its content when the App declares another type', async (): Promise<void> => {
     const ref = await upload(new Blob([png], { type: 'text/plain' }));
 
     expect(ref.mime).toBe('image/png');
   });
 
-  it('stores the same content once', async () => {
+  it('stores the same content once', async (): Promise<void> => {
     const first = await upload(new Blob([png], { type: 'image/png' }));
     const second = await upload(new Blob([png], { type: 'image/png' }));
 
@@ -78,7 +85,7 @@ describe('blob upload', () => {
     expect(storedIds()).toEqual([pngId]);
   });
 
-  it('refuses a file over 20 MB and stores nothing', async () => {
+  it('refuses a file over 20 MB and stores nothing', async (): Promise<void> => {
     await expect(
       upload(new Blob([new Uint8Array(maxBlobUploadBytes + 1)])),
     ).rejects.toMatchObject({ code: 'PAYLOAD_TOO_LARGE' });
@@ -87,16 +94,16 @@ describe('blob upload', () => {
     expect(storedIds()).toEqual([]);
   });
 
-  it('accepts a file of exactly 20 MB', async () => {
+  it('accepts a file of exactly 20 MB', async (): Promise<void> => {
     const ref = await upload(new Blob([new Uint8Array(maxBlobUploadBytes)]));
 
     expect(ref.bytes).toBe(maxBlobUploadBytes);
   });
 });
 
-describe('removeUnusedBlobs', () => {
+describe('removeUnusedBlobs', (): void => {
   const now = Date.UTC(2026, 9, 5);
-  const storeBlob = (id: string, createdAt: number) => {
+  const storeBlob = (id: string, createdAt: number): void => {
     mkdirSync(blobsFolder, { recursive: true });
     writeFileSync(join(blobsFolder, id), id);
     database
@@ -105,7 +112,7 @@ describe('removeUnusedBlobs', () => {
       .run();
   };
 
-  it('deletes a blob no prompt refers to once it is over a day old', async () => {
+  it('deletes a blob no prompt refers to once it is over a day old', async (): Promise<void> => {
     storeBlob('old-unused', now - day - 1);
     storeBlob('old-used', now - 2 * day);
     storeBlob('new-unused', now - day + 1);
@@ -120,7 +127,7 @@ describe('removeUnusedBlobs', () => {
     expect(readdirSync(blobsFolder).sort()).toEqual(['new-unused', 'old-used']);
   });
 
-  it('deletes a file left without a row once it is over a day old', async () => {
+  it('deletes a file left without a row once it is over a day old', async (): Promise<void> => {
     mkdirSync(blobsFolder, { recursive: true });
     for (const [name, age] of [
       ['old-stray', day + 1],
@@ -136,7 +143,7 @@ describe('removeUnusedBlobs', () => {
     expect(readdirSync(blobsFolder)).toEqual(['new-stray']);
   });
 
-  it('does nothing before the first upload makes the folder', async () => {
+  it('does nothing before the first upload makes the folder', async (): Promise<void> => {
     await expect(
       removeUnusedBlobs({ database, blobsFolder, now }),
     ).resolves.toBeUndefined();
