@@ -846,9 +846,11 @@ export const DragToCollapseExpandAndReopen: Story = {
       'open',
     );
     await controlled.render({ inspectorState: 'open' });
-    await expect(
-      canvas.getByRole('button', { name: expandInspectorLabel }),
-    ).toBeVisible();
+    await waitFor(() =>
+      expect(
+        canvas.getByRole('button', { name: expandInspectorLabel }),
+      ).toBeVisible(),
+    );
     await waitFor(() =>
       expect(
         canvas.getByTestId(detailId).getBoundingClientRect().width,
