@@ -77,21 +77,27 @@ describe('recorded Turns', (): void => {
   );
 });
 
-it('rejects an unrecognised method without changing the Turn mapping', (): void => {
-  const mappingState = {
-    ...initialMappingState(),
-    vendorTurnId: 'unknown-method-turn',
-  };
-  const message = {
-    method: 'item/futureNotification',
-    params: { turnId: 'unknown-method-turn' },
-  };
-  expect(
-    Reflect.apply(toAgentEvents, undefined, [message, mappingState]),
-  ).toEqual({
-    events: [
-      { type: 'agent.messageRejected', reason: 'Unrecognised vendor payload' },
-    ],
-    mappingState,
-  });
-});
+it.each(['item/futureNotification', 'toString', 'constructor'])(
+  'rejects an unrecognised method %s without changing the Turn mapping',
+  (method): void => {
+    const mappingState = {
+      ...initialMappingState(),
+      vendorTurnId: 'unknown-method-turn',
+    };
+    const message = {
+      method,
+      params: { turnId: 'unknown-method-turn' },
+    };
+    expect(
+      Reflect.apply(toAgentEvents, undefined, [message, mappingState]),
+    ).toEqual({
+      events: [
+        {
+          type: 'agent.messageRejected',
+          reason: 'Unrecognised vendor payload',
+        },
+      ],
+      mappingState,
+    });
+  },
+);

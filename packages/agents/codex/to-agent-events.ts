@@ -62,8 +62,9 @@ export function toAgentEvents(
   message: VendorMessage,
   mappingState: MappingState,
 ): AgentMapping<MappingState> {
+  if (!Object.hasOwn(handlers, message.method))
+    return rejectAgentMessage(mappingState);
   const handler = handlers[message.method];
-  if (!handler) return rejectAgentMessage(mappingState);
   return mapRecognised(message, mappingState, handler);
 }
 const mapRecognised = (
