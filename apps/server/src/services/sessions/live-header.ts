@@ -2,6 +2,7 @@ import type { ToolCallTerminal } from '@repo/contracts';
 import {
   isToolCallRunning,
   knownCommandActions,
+  type TextContent,
   type LiveHeader,
   type LiveHeaderSource,
   type PendingElicitation,
@@ -102,10 +103,7 @@ export function toLiveHeader(
     .at(-1);
   const thoughtText =
     thought?.content
-      .filter(
-        (block): block is { type: 'text'; text: string } =>
-          block.type === 'text',
-      )
+      .filter((block): block is TextContent => block.type === 'text')
       .map((block): string => block.text)
       .join('\n') ?? '';
   const title = [...thoughtText.matchAll(/^\s*\*\*([^\n]+?)\*\*\s*$/gm)]

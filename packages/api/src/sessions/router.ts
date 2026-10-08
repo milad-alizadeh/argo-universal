@@ -47,31 +47,31 @@ export const sessionRouter = router({
     .subscription(async function* ({
       ctx,
       signal,
-    }): AsyncGenerator<{ attention: number; running: number }, void> {
+    }): AsyncGenerator<SessionCounts, void> {
       yield* ctx.services.session.counts(signal);
     }),
   new: publicProcedure
     .input(SessionNewInput)
     .output(SessionNewOutput)
-    .mutation(({ ctx, input }): Promise<{ sessionId: string }> =>
+    .mutation(({ ctx, input }): Promise<SessionNewOutput> =>
       ctx.services.session.new(input),
     ),
   prompt: publicProcedure
     .input(SessionPromptInput)
     .output(SessionPromptOutput)
-    .mutation(({ ctx, input }): Promise<{ messageId: string }> =>
+    .mutation(({ ctx, input }): Promise<SessionPromptOutput> =>
       ctx.services.session.prompt(input),
     ),
   rename: publicProcedure
     .input(SessionRenameInput)
     .output(SessionRenameOutput)
-    .mutation(({ ctx, input }): Promise<Record<string, never>> =>
+    .mutation(({ ctx, input }): Promise<SessionRenameOutput> =>
       ctx.services.session.rename(input),
     ),
   cancel: publicProcedure
     .input(SessionCancelInput)
     .output(SessionCancelOutput)
-    .mutation(({ ctx, input }): Promise<Record<string, never>> =>
+    .mutation(({ ctx, input }): Promise<SessionCancelOutput> =>
       ctx.services.session.cancel(input),
     ),
   setConfigOption: publicProcedure
@@ -83,19 +83,19 @@ export const sessionRouter = router({
   answerPermission: publicProcedure
     .input(SessionAnswerPermissionInput)
     .output(SessionAnswerPermissionOutput)
-    .mutation(({ ctx, input }): Promise<Record<string, never>> =>
+    .mutation(({ ctx, input }): Promise<SessionAnswerPermissionOutput> =>
       ctx.services.session.answerPermission(input),
     ),
   answerElicitation: publicProcedure
     .input(SessionAnswerElicitationInput)
     .output(SessionAnswerElicitationOutput)
-    .mutation(({ ctx, input }): Promise<Record<string, never>> =>
+    .mutation(({ ctx, input }): Promise<SessionAnswerElicitationOutput> =>
       ctx.services.session.answerElicitation(input),
     ),
   answerPlanProposal: publicProcedure
     .input(SessionAnswerPlanProposalInput)
     .output(SessionAnswerPlanProposalOutput)
-    .mutation(({ ctx, input }): Promise<Record<string, never>> =>
+    .mutation(({ ctx, input }): Promise<SessionAnswerPlanProposalOutput> =>
       ctx.services.session.answerPlanProposal(input),
     ),
   changes: publicProcedure

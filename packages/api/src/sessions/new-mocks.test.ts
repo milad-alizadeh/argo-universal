@@ -1,3 +1,4 @@
+import type { SessionNewOutput } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import {
   dangerousModeOptions,
@@ -27,7 +28,7 @@ it.each(newSessionInputs)(
     const caller = appRouter.createCaller({
       services: unreachableServices({
         session: {
-          new: async (): Promise<{ sessionId: string }> => ({
+          new: async (): Promise<SessionNewOutput> => ({
             sessionId: 'image-session',
           }),
         },
@@ -83,10 +84,8 @@ it('serves the branch mock through its procedure contract', async (): Promise<vo
   const caller = appRouter.createCaller({
     services: unreachableServices({
       projects: {
-        branches: async (): Promise<{
-          branches: string[];
-          currentBranch: string | null;
-        }> => newSessionBranches,
+        branches: async (): Promise<typeof newSessionBranches> =>
+          newSessionBranches,
       },
     }),
   });

@@ -56,12 +56,17 @@ type FeedInternalEvent = FeedChangeApplied | FeedChangeRejected;
 
 export type FeedBatch = { type: 'feed.batch'; events: FeedStreamEvent[] };
 
+type WriterJobParameters = Pick<
+  Extract<WriterEvent, { type: 'writer.write' }>,
+  'job'
+>;
+
 // Every changed row with the newest revision, as one job for the database writer.
 const rowsJob = ({
   context,
 }: {
   context: FeedContext;
-}): { job: Extract<WriterJob, { type: 'feedRows' }> } => {
+}): WriterJobParameters & { job: Extract<WriterJob, { type: 'feedRows' }> } => {
   const rows = context.changedRowIds.flatMap((id): SessionUpdate[] => {
     const row = context.rows[id];
     return row ? [row] : [];
@@ -149,7 +154,7 @@ export const feedMachine = setup({
     sendToWriter: sendTo(
       ({ system }): ReturnType<typeof system.get> =>
         system.get('databaseWriter'),
-      (_, params: { job: WriterJob }): WriterEvent => ({
+      (_, params: WriterJobParameters): WriterEvent => ({
         type: 'writer.write',
         job: params.job,
       }),

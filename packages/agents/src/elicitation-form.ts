@@ -1,4 +1,8 @@
-import type { ElicitationSchema } from '@repo/contracts';
+import type {
+  ElicitationEnumOption,
+  ElicitationPropertySchema,
+  ElicitationSchema,
+} from '@repo/contracts';
 
 export interface ElicitationQuestion {
   id: string;
@@ -32,45 +36,9 @@ export function toElicitationForm(
     type: 'object',
     properties: Object.fromEntries(
       questions.map(
-        (
-          question,
-        ): [
-          string,
-          (
-            | {
-                type: 'array';
-                title: string;
-                description: string;
-                items: {
-                  anyOf: {
-                    const: string;
-                    title: string;
-                    description?: string;
-                  }[];
-                };
-                oneOf?: undefined;
-              }
-            | {
-                items?: undefined;
-                type: 'string';
-                title: string;
-                description: string;
-                oneOf: {
-                  const: string;
-                  title: string;
-                  description?: string;
-                }[];
-              }
-          ),
-        ] => {
+        (question): [ElicitationQuestion['id'], ElicitationPropertySchema] => {
           const choices = question.options.map(
-            (
-              option,
-            ): {
-              const: string;
-              title: string;
-              description?: string;
-            } => ({
+            (option): ElicitationEnumOption => ({
               const: option.label,
               title: option.label,
               ...(option.description
