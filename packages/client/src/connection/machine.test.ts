@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   type Actor,
   type ActorLogic,
+  type ActorOptions,
   type AnyEventObject,
   createActor,
   matchesState,
@@ -60,8 +61,48 @@ const modelLogic = machine as unknown as ActorLogic<
 // The machine reads neither while the watcher and refetch are mocks.
 const input = createConnectionInput();
 
-const startConnection = (): ReturnType<typeof createActor<typeof machine>> => {
-  connection = createActor(machine, { input });
+type ConnectionClock = NonNullable<ActorOptions<typeof machine>['clock']>;
+
+const createModelClock = (): {
+  clock: ConnectionClock;
+  fire: (eventType: string) => void;
+} => {
+  const callbacks = new Map<
+    number,
+    { callback: Parameters<ConnectionClock['setTimeout']>[0]; delay: number }
+  >();
+  let nextId = 0;
+  return {
+    clock: {
+      setTimeout: (callback, delay): number => {
+        const id = nextId++;
+        callbacks.set(id, { callback, delay });
+        return id;
+      },
+      clearTimeout: (id: unknown): void => {
+        if (typeof id === 'number') callbacks.delete(id);
+      },
+    },
+    fire: (eventType): void => {
+      const event = Object.values(
+        connection.system.getSnapshot()._scheduledEvents,
+      ).find((scheduled) => scheduled.event.type === eventType);
+      if (!event) throw new Error(`No event scheduled for ${eventType}`);
+      const scheduled = [...callbacks].find(
+        ([, timer]) => timer.delay === event.delay,
+      );
+      if (!scheduled) throw new Error(`No callback scheduled for ${eventType}`);
+      const [id, timer] = scheduled;
+      callbacks.delete(id);
+      timer.callback();
+    },
+  };
+};
+
+const startConnection = (
+  clock?: ConnectionClock,
+): ReturnType<typeof createActor<typeof machine>> => {
+  connection = createActor(machine, { input, ...(clock ? { clock } : {}) });
   connection.on('connection.attemptAllowed', () => {
     allowedAttempts += 1;
   });
@@ -89,6 +130,7 @@ afterEach(() => {
 });
 
 describe('connection model', (): void => {
+  let modelClock: ReturnType<typeof createModelClock>;
   const payloads: Record<string, ConnectionEvent> = {
     'connection.lost': { type: 'connection.lost', error: lostError },
   };
@@ -116,13 +158,14 @@ describe('connection model', (): void => {
     stateMatcher: (snapshot, key): boolean => matchesState(key, snapshot.value),
   });
 
-  // Each sends the delayed event itself: the retry and offline timers run at once, so crossing one could fire the other. The example tests below time them.
+  // Select the actual scheduled callback so simultaneous retry and offline paths stay independent.
   const executors: Record<
     string,
     EventExecutor<ConnectionSnapshot, ConnectionEvent>
   > = {
     'xstate.init': () => {
-      startConnection();
+      modelClock = createModelClock();
+      startConnection(modelClock.clock);
     },
     'connection.opened': () => {
       const before = { refetches, down: isDown(connection.getSnapshot()) };
@@ -147,11 +190,11 @@ describe('connection model', (): void => {
     },
     'xstate.after.retryDelay.connection.attempt.waiting': (step) => {
       const before = allowedAttempts;
-      connection.send({ type: step.event.type } as never);
+      modelClock.fire(step.event.type);
       expect(allowedAttempts).toBe(before + 1);
     },
     'xstate.after.offlineDelay.connection.link.reconnecting': (step) => {
-      connection.send({ type: step.event.type } as never);
+      modelClock.fire(step.event.type);
     },
   };
 
@@ -211,7 +254,7 @@ describe('connection model', (): void => {
   });
 });
 
-// The real timers, which the model sends as events.
+// The real timers, exercised with the default actor clock.
 describe('connection', () => {
   const requestAttempt = (): void =>
     connection.send({ type: 'connection.attemptRequested' });
