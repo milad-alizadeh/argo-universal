@@ -623,7 +623,9 @@ it('rejects config choices that the Agent did not offer', async (): Promise<void
 
 it('keeps the Session failure when the registry removes a Session during its Feed subscription', async (): Promise<void> => {
   vi.useFakeTimers();
-  cleanups.push((): void => vi.useRealTimers());
+  cleanups.push((): void => {
+    vi.useRealTimers();
+  });
   const { caller, streams } = openServer();
   await caller.session.prompt({
     sessionId: 'session-1',
