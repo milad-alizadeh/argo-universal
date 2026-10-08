@@ -344,9 +344,11 @@ export const AttachmentInNarrowContent: Story = {
       canvas.queryByRole('button', { name: 'Attach' }),
     ).not.toBeInTheDocument();
     await userEvent.click(attach);
-    await expect(
-      await within(document.body).findByRole('button', { name: 'Photos' }),
-    ).toBeVisible();
+    await waitFor(() =>
+      expect(
+        within(document.body).getByRole('button', { name: 'Photos' }),
+      ).toBeVisible(),
+    );
     await expect(
       within(document.body).queryByRole('button', { name: 'Files and Folder' }),
     ).not.toBeInTheDocument();
