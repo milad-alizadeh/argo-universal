@@ -1,3 +1,11 @@
+import { recordedFeedMocks } from '@repo/api/mocks';
+import type {
+  AgentThought,
+  Notice,
+  SessionUpdate,
+  ToolCallUpdate,
+} from '@repo/contracts';
+
 type LiveHeaderMock = {
   agent: string;
   recordedHeader: string;
@@ -30,13 +38,6 @@ type LiveHeaderMock = {
       })
   )[];
 };
-import { recordedFeedMocks } from '@repo/api/mocks';
-import type {
-  AgentThought,
-  Notice,
-  SessionUpdate,
-  ToolCallUpdate,
-} from '@repo/contracts';
 
 const thought = recordedFeedMocks
   .flatMap((mock): SessionUpdate[] => mock.rows)

@@ -149,15 +149,7 @@ it('the generated registry paths walk every transition', (): void => {
       models: [model],
       paths,
       stateKey: key,
-      eventKey: (
-        event,
-      ):
-        | 'sessions.create'
-        | 'sessions.open'
-        | 'sessions.stopAll'
-        | `xstate.done.actor.${string}`
-        | `xstate.error.actor.${string}`
-        | `xstate.snapshot.${string}` => event.type,
+      eventKey: (event): typeof event.type => event.type,
     }),
   ).toEqual([]);
 });

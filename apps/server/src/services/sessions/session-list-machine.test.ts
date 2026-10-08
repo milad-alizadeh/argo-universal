@@ -108,10 +108,7 @@ it('the generated list subscription paths walk every transition', (): void => {
       models: [model],
       paths,
       stateKey: key,
-      eventKey: (
-        event,
-      ): 'list.failed' | 'list.flush' | 'list.refresh' | 'list.stop' =>
-        event.type,
+      eventKey: (event): typeof event.type => event.type,
     }),
   ).toEqual([]);
 });

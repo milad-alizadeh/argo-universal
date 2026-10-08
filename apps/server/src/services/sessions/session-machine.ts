@@ -1,23 +1,3 @@
-type FeedChangeEvent = Extract<
-  import('../feed/feed-machine').FeedEvent,
-  { type: 'feed.change' }
->;
-type SessionDataParameters = { data: SessionData };
-type FailureParameters = { error: unknown };
-type LoadSessionInput = {
-  session: SessionInput;
-  writer: ActorRefFrom<typeof writerMachine> | undefined;
-};
-type DiscardCheckoutInput = {
-  session: NewSessionInput;
-  checkout: SessionData['checkout'];
-};
-type EndTurnParameters = {
-  stopReason: StopReason;
-  usage?: TurnUsage;
-  error?: TurnError;
-};
-type StartTurnParameters = { turnId: string; content: ContentBlock[] };
 import {
   type AgentAdapter,
   type AgentCapabilities,
@@ -62,6 +42,27 @@ import {
   type SessionInput,
   toSessionInsert,
 } from './session-data';
+
+type FeedChangeEvent = Extract<
+  import('../feed/feed-machine').FeedEvent,
+  { type: 'feed.change' }
+>;
+type SessionDataParameters = { data: SessionData };
+type FailureParameters = { error: unknown };
+type LoadSessionInput = {
+  session: SessionInput;
+  writer: ActorRefFrom<typeof writerMachine> | undefined;
+};
+type DiscardCheckoutInput = {
+  session: NewSessionInput;
+  checkout: SessionData['checkout'];
+};
+type EndTurnParameters = {
+  stopReason: StopReason;
+  usage?: TurnUsage;
+  error?: TurnError;
+};
+type StartTurnParameters = { turnId: string; content: ContentBlock[] };
 
 // The registry passes the adapter for the Session's Agent.
 export type SessionMachineInput = SessionInput & {

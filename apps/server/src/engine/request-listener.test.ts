@@ -89,12 +89,11 @@ async function formRequest(
   });
 }
 
-const uploadForm =
-  (): import('.pnpm/undici-types@7.24.6/node_modules/undici-types').FormData => {
-    const form = new FormData();
-    form.set('file', new File(['file content'], 'notes.txt'));
-    return form;
-  };
+const uploadForm = (): FormData => {
+  const form = new FormData();
+  form.set('file', new File(['file content'], 'notes.txt'));
+  return form;
+};
 
 beforeEach(async (): Promise<void> => {
   home = mkdtempSync(join(tmpdir(), 'server-request-listener-'));

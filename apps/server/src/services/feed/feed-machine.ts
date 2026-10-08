@@ -1,4 +1,3 @@
-type FeedLogParameters = { line: string };
 import type { FeedChange, SessionUpdate } from '@repo/contracts';
 import type { session } from '@repo/db/schema';
 import {
@@ -19,6 +18,8 @@ import {
 import { promptBlobIds, toFeedRowWrite } from './feed-row';
 import type { WriterJob } from './writer-job';
 import type { WriterEvent } from './writer-machine';
+
+type FeedLogParameters = { line: string };
 
 // What the Session reads from its `session` row when it opens.
 export interface FeedInput extends Pick<

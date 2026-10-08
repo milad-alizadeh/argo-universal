@@ -184,12 +184,7 @@ const executors: Record<
       ({
         type,
       }): [
-        (
-          | 'feed.change'
-          | 'feed.changeApplied'
-          | 'feed.changeRejected'
-          | 'feed.flush'
-        ),
+        FeedMachineEvent['type'],
         ({ event }: { event: FeedMachineEvent }) => void,
       ] => [
         type,
@@ -336,9 +331,7 @@ describe('feed', (): void => {
     vi.advanceTimersByTime(1);
     expect(
       batches.map((batch): ('row.append' | 'row.patch' | 'row.upsert')[] =>
-        batch.map(
-          (event): 'row.append' | 'row.patch' | 'row.upsert' => event.type,
-        ),
+        batch.map((event): typeof event.type => event.type),
       ),
     ).toEqual([['row.upsert', 'row.append']]);
   });

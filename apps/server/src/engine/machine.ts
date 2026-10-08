@@ -1,8 +1,3 @@
-type EngineLogParameters = { line: string };
-type EngineOutput = { exitCode: number };
-type OpenDatabaseInput = { home: string };
-type RecoveryInput = { database: Database; blobsFolder: string };
-type CloseHttpServerInput = { server: HttpServer | null };
 import { appendFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { type Database, openDatabase } from '@repo/db';
@@ -26,6 +21,12 @@ import {
 } from './http-server';
 import { type EngineStop, processSignals } from './process-signals';
 import { recoverAfterRestart } from './recovery';
+
+type EngineLogParameters = { line: string };
+type EngineOutput = { exitCode: number };
+type OpenDatabaseInput = { home: string };
+type RecoveryInput = { database: Database; blobsFolder: string };
+type CloseHttpServerInput = { server: HttpServer | null };
 
 function writeEngineLog(home: string, line: string): void {
   const stamped = `${new Date().toISOString()} engine ${process.pid}: ${line}`;

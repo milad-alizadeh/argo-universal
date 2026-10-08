@@ -11,8 +11,13 @@ import {
   notInArray,
   or,
   sql,
+  type SQL,
 } from 'drizzle-orm';
-import { alias } from 'drizzle-orm/sqlite-core';
+import {
+  alias,
+  type SQLiteAsyncSelectBase,
+  type SQLiteSelectWithout,
+} from 'drizzle-orm/sqlite-core';
 import type { ActorRefFrom } from 'xstate';
 import type { FeedActorRef } from '../feed/feed-machine';
 import {
@@ -38,6 +43,18 @@ const storedTurnColumns = {
   error: sql<unknown>`${turn.error}`,
   usage: sql<unknown>`${turn.usage}`,
 };
+
+type ChildTurnIdsQuery = SQLiteSelectWithout<
+  SQLiteAsyncSelectBase<
+    'session',
+    'sync',
+    ReturnType<Database['run']>,
+    { id: SQL<string> },
+    'partial'
+  >,
+  false,
+  'where'
+>;
 
 interface ListReadInput {
   database: Database;
@@ -341,23 +358,7 @@ function readChildTurnIds(input: {
   updates: string[];
   children: string[];
   running: boolean;
-}): Omit<
-  import('drizzle-orm/sqlite-core').SQLiteAsyncSelectBase<
-    'session',
-    'sync',
-    import('node:sqlite').StatementResultingChanges,
-    { id: import('drizzle-orm').SQL<string> },
-    'partial',
-    Record<'session', 'not-null'>,
-    false,
-    'where',
-    { id: string }[],
-    {
-      id: import('drizzle-orm').DrizzleTypeError<'You cannot reference this field without assigning it an alias first - use `.as(<alias>)`'>;
-    }
-  >,
-  'where'
-> {
+}): ChildTurnIdsQuery {
   const candidate = alias(turn, 'candidate_turn');
   const latest = input.database
     .select({ id: candidate.id })

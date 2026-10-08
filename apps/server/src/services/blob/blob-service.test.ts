@@ -29,9 +29,7 @@ let database: Database;
 let removeDatabase: () => void;
 let blobsFolder: string;
 
-const formWith = (
-  file: Blob,
-): import('.pnpm/undici-types@7.24.6/node_modules/undici-types').FormData => {
+const formWith = (file: Blob): FormData => {
   const form = new FormData();
   form.set('file', file, 'image.png');
   return form;

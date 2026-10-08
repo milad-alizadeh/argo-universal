@@ -679,19 +679,12 @@ it('reads a closed Session Feed without opening a Session', async (): Promise<vo
       )
       [Symbol.asyncIterator](),
   );
-  expect(
-    events.map(
-      (
-        event,
-      ):
-        | 'closed'
-        | 'reset'
-        | 'row.append'
-        | 'row.patch'
-        | 'row.upsert'
-        | 'snapshot' => event.type,
-    ),
-  ).toEqual(['row.upsert', 'row.upsert', 'snapshot', 'closed']);
+  expect(events.map((event): typeof event.type => event.type)).toEqual([
+    'row.upsert',
+    'row.upsert',
+    'snapshot',
+    'closed',
+  ]);
   expect(events.at(-1)).toEqual({ type: 'closed', failure: null });
   expect(events[2]).toMatchObject({
     snapshot: { state: 'idle', configOptions: [], maxRevision: 5 },

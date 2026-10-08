@@ -444,14 +444,7 @@ describe('engine model', (): void => {
         models: [model],
         paths,
         stateKey: (snapshot): string => JSON.stringify(snapshot.value),
-        eventKey: (
-          event,
-        ):
-          | 'engine.stop'
-          | 'xstate.done.actor.databaseWriter'
-          | 'xstate.done.actor.sessions'
-          | 'xstate.error.actor.databaseWriter'
-          | 'xstate.error.actor.sessions' => event.type,
+        eventKey: (event): typeof event.type => event.type,
       }),
     ).toEqual([]);
   });

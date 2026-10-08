@@ -1,10 +1,11 @@
-type PortParameters = { port: number };
 import { readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ServerAddress } from '@repo/contracts';
 import { assign, sendTo, setup, spawnChild, stopChild } from 'xstate';
 import type { EngineEvent } from './engine-message';
 import { engineProcess } from './engine-process';
+
+type PortParameters = { port: number };
 
 export interface SupervisorInput {
   home: string;

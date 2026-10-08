@@ -941,7 +941,7 @@ it('the generated paths walk every reachable transition', (): void => {
       models,
       paths,
       stateKey: (snapshot): string => String(key(snapshot)),
-      eventKey: (event): SessionEvent['type'] => event.type,
+      eventKey: (event): typeof event.type => event.type,
     }),
   ).toEqual([]);
 });

@@ -1,3 +1,27 @@
+import { randomUUID } from 'node:crypto';
+import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import type { AgentProbe, VendorCommand } from '@repo/agents';
+import { appRouter } from '@repo/api';
+import type { SessionNewInput } from '@repo/contracts';
+import { turn } from '@repo/db/schema';
+import { sessionBranch } from '@repo/git';
+import {
+  createMockAdapter,
+  type MockAgentScript,
+  type MockAgentStream,
+  mockReady,
+} from '@repo/mocks/agent';
+import { eq } from 'drizzle-orm';
+import { afterEach, expect, it, vi } from 'vitest';
+import { createActor, fromPromise, setup, waitFor } from 'xstate';
+import { insertSession, openTestDatabase } from '#mocks/database';
+import { initTestRepository } from '#mocks/git';
+import { writerMachine } from '../feed/writer-machine';
+import { createServerServices } from '../server-services';
+import { registryMachine } from './registry-machine';
+
 type TestServer = {
   caller: ReturnType<typeof appRouter.createCaller>;
   root: import('xstate').Actor<
@@ -48,29 +72,6 @@ type AlternateReady = typeof mockReady & {
   configOptions: TestServer['configOptions'];
   capabilities: { planApproval: 'startTurn' };
 };
-import { randomUUID } from 'node:crypto';
-import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import type { AgentProbe, VendorCommand } from '@repo/agents';
-import { appRouter } from '@repo/api';
-import type { SessionNewInput } from '@repo/contracts';
-import { turn } from '@repo/db/schema';
-import { sessionBranch } from '@repo/git';
-import {
-  createMockAdapter,
-  type MockAgentScript,
-  type MockAgentStream,
-  mockReady,
-} from '@repo/mocks/agent';
-import { eq } from 'drizzle-orm';
-import { afterEach, expect, it, vi } from 'vitest';
-import { createActor, fromPromise, setup, waitFor } from 'xstate';
-import { insertSession, openTestDatabase } from '#mocks/database';
-import { initTestRepository } from '#mocks/git';
-import { writerMachine } from '../feed/writer-machine';
-import { createServerServices } from '../server-services';
-import { registryMachine } from './registry-machine';
 
 const cleanups: (() => void)[] = [];
 afterEach((): void => {

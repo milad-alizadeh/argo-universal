@@ -1,7 +1,8 @@
-type ProbeParameters = { probe: AgentProbe };
-type UnavailableParameters = { reason: string };
 import type { AgentAdapter, AgentProbe } from '@repo/agents';
 import { type ActorRefFrom, assign, fromPromise, setup } from 'xstate';
+
+type ProbeParameters = { probe: AgentProbe };
+type UnavailableParameters = { reason: string };
 
 export interface AgentProbeInput {
   adapter: AgentAdapter;

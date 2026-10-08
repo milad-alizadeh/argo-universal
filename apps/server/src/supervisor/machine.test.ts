@@ -267,14 +267,7 @@ describe('supervisor model', (): void => {
         models: [model],
         paths: [...shortestPaths, ...simplePaths],
         stateKey: (snapshot): string => JSON.stringify(snapshot.value),
-        eventKey: (
-          event,
-        ):
-          | 'engine.exit'
-          | 'engine.exited'
-          | 'engine.heartbeat'
-          | 'engine.ready'
-          | 'server.stop' => event.type,
+        eventKey: (event): typeof event.type => event.type,
       }),
     ).toEqual([]);
   });

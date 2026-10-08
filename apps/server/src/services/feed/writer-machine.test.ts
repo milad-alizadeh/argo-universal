@@ -245,7 +245,7 @@ describe('database writer model', (): void => {
         models: [model],
         paths: [...shortestPaths, ...simplePaths],
         stateKey: (snapshot): string => JSON.stringify(snapshot.value),
-        eventKey: (event): 'writer.drain' | 'writer.write' => event.type,
+        eventKey: (event): typeof event.type => event.type,
       }),
     ).toEqual([]);
   });

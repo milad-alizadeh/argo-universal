@@ -1,16 +1,3 @@
-type ServerStateConfig = ReturnType<typeof serverSetup.createStateConfig>;
-type ReadingAddressState = Required<Pick<ServerStateConfig, 'invoke'>>;
-type WaitingForSupervisorExitState = Required<
-  Pick<ServerStateConfig, 'entry' | 'initial' | 'after'>
-> & {
-  states: Record<
-    'waiting' | 'checking',
-    Pick<ServerStateConfig, 'after' | 'invoke'>
-  >;
-};
-type RunningParameters = { running: boolean };
-type ServerLogParameters = { line: string };
-type AddressParameters = { address: ServerAddress | null };
 import type { ServerAddress } from '@repo/contracts';
 import {
   type ActorRef,
@@ -29,6 +16,20 @@ import {
   signalSupervisor,
   spawnSupervisor,
 } from './server-process';
+
+type ServerStateConfig = ReturnType<typeof serverSetup.createStateConfig>;
+type ReadingAddressState = Required<Pick<ServerStateConfig, 'invoke'>>;
+type WaitingForSupervisorExitState = Required<
+  Pick<ServerStateConfig, 'entry' | 'initial' | 'after'>
+> & {
+  states: Record<
+    'waiting' | 'checking',
+    Pick<ServerStateConfig, 'after' | 'invoke'>
+  >;
+};
+type RunningParameters = { running: boolean };
+type ServerLogParameters = { line: string };
+type AddressParameters = { address: ServerAddress | null };
 
 export type ServerInput = SupervisorPaths;
 

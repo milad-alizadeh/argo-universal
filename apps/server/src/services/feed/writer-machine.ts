@@ -1,5 +1,3 @@
-type WriterBatchInput = { database: Database; jobs: WriterJob[] };
-type WriterLogParameters = { line: string };
 import type { Database } from '@repo/db';
 import { and, assertEvent, assign, fromPromise, setup, stateIn } from 'xstate';
 import {
@@ -8,6 +6,9 @@ import {
   type WriterJob,
   writeJobs,
 } from './writer-job';
+
+type WriterBatchInput = { database: Database; jobs: WriterJob[] };
+type WriterLogParameters = { line: string };
 
 export interface WriterInput {
   database: Database;

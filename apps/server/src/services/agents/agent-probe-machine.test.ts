@@ -87,7 +87,7 @@ it('the generated agent probe paths walk every transition', (): void => {
       models: [model],
       paths,
       stateKey: key,
-      eventKey: (event): 'agentProbe.refresh' => event.type,
+      eventKey: (event): typeof event.type => event.type,
     }),
   ).toEqual([]);
 });

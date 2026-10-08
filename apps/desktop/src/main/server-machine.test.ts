@@ -387,10 +387,7 @@ describe('server connection model', (): void => {
         models: [model],
         paths: [...shortestPaths, ...simplePaths],
         stateKey: (snapshot): string => JSON.stringify(snapshot.value),
-        eventKey: (
-          event,
-        ): 'app.quit' | 'server.exited' | 'server.retry' | 'server.spawned' =>
-          event.type,
+        eventKey: (event): typeof event.type => event.type,
       }),
     ).toEqual([]);
   });

@@ -1,8 +1,3 @@
-interface SessionListContext extends SessionListMachineInput {
-  failure: unknown;
-  rows: SessionListState | null;
-  dirty: Set<string> | null;
-}
 import type { SessionInfo } from '@repo/contracts';
 import {
   type ActorRefFrom,
@@ -18,6 +13,12 @@ import type { WriterJob } from '../feed/writer-job';
 import type { writerMachine } from '../feed/writer-machine';
 import type { RegistryActorRef } from './registry-machine';
 import type { SessionActorRef } from './session-machine';
+
+interface SessionListContext extends SessionListMachineInput {
+  failure: unknown;
+  rows: SessionListState | null;
+  dirty: Set<string> | null;
+}
 
 export type SessionListState = { information: SessionInfo; running: boolean }[];
 export interface SessionListMachineInput {
