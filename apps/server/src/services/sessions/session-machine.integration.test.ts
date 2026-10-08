@@ -506,12 +506,10 @@ it('keeps the latest held choices through updates and cancellation, then applies
     },
   ] satisfies SessionConfigOption[];
   const { session, stream, commands } = await openSession({
-    connect: async (): Promise<{
-      vendorSessionId: string;
-      capabilities: import('@repo/agents').AgentCapabilities;
-      continuedOutside: boolean;
-      configOptions: typeof options;
-    }> => ({ ...mockReady, configOptions: options }),
+    connect: async (): Promise<typeof mockReady> => ({
+      ...mockReady,
+      configOptions: options,
+    }),
   });
   sendSessionCommand(session, firstPrompt);
   await expect
@@ -530,21 +528,10 @@ it('keeps the latest held choices through updates and cancellation, then applies
     });
   stream.send({
     type: 'agent.configOptionsChanged',
-    configOptions: options.map(
-      (
-        option,
-      ): {
-        configId: string;
-        category: string;
-        type: 'select';
-        currentValue: string;
-        options: { value: string; name: string }[];
-        name: string;
-      } => ({
-        ...option,
-        name: `Renamed ${option.name}`,
-      }),
-    ),
+    configOptions: options.map((option): typeof option => ({
+      ...option,
+      name: `Renamed ${option.name}`,
+    })),
   });
   expect(session.getSnapshot().context.configOptions).toMatchObject([
     {
@@ -588,21 +575,10 @@ it('keeps the latest held choices through updates and cancellation, then applies
   ).not.toBe(true);
   stream.send({
     type: 'agent.configOptionsChanged',
-    configOptions: options.map(
-      (
-        option,
-      ): {
-        configId: string;
-        name: string;
-        category: string;
-        type: 'select';
-        options: { value: string; name: string }[];
-        currentValue: string;
-      } => ({
-        ...option,
-        currentValue: option.configId === 'model' ? 'large' : 'auto',
-      }),
-    ),
+    configOptions: options.map((option): typeof option => ({
+      ...option,
+      currentValue: option.configId === 'model' ? 'large' : 'auto',
+    })),
   });
   expect(
     session

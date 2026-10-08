@@ -175,7 +175,7 @@ export function createSessionService({
     },
     changes: notImplemented,
     diff: notImplemented,
-    new: async (input): Promise<{ sessionId: string }> => {
+    new: async (input): ReturnType<SessionService['new']> => {
       const projectPath = readProjectPath(database, input.projectId);
       if (
         input.checkout.type === 'worktree' &&
@@ -209,7 +209,10 @@ export function createSessionService({
       await written(sessionId);
       return { sessionId };
     },
-    prompt: async ({ sessionId, prompt }): Promise<{ messageId: string }> => {
+    prompt: async ({
+      sessionId,
+      prompt,
+    }): ReturnType<SessionService['prompt']> => {
       const actor = await open(sessionId);
       const turnId = createId();
       sendSessionCommand(actor, {

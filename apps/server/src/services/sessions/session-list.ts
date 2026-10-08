@@ -3,6 +3,7 @@ import type { SessionService } from '@repo/api';
 import type {
   SessionCounts,
   SessionListInput,
+  SessionListOutput,
   SessionListUpdate,
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
@@ -49,12 +50,7 @@ export function createSessionList(options: {
     sessionIdsForJobs,
     relatedSessionIds,
   });
-  const list = async (
-    input: SessionListInput,
-  ): Promise<{
-    sessions: import('@repo/contracts').SessionInfo[];
-    nextCursor: string | null;
-  }> => {
+  const list = async (input: SessionListInput): Promise<SessionListOutput> => {
     let cursor: z.infer<typeof cursorSchema> | undefined;
     if (input.cursor !== undefined) {
       try {
@@ -156,16 +152,13 @@ export function createSessionList(options: {
     },
     counts: (signal): ReturnType<typeof watch<SessionCounts>> => {
       let previous = '';
-      return watch<SessionCounts>(
-        signal,
-        (rows): { attention: number; running: number }[] => {
-          const counts = readCounts(rows);
-          const serialized = JSON.stringify(counts);
-          if (serialized === previous) return [];
-          previous = serialized;
-          return [counts];
-        },
-      );
+      return watch<SessionCounts>(signal, (rows): SessionCounts[] => {
+        const counts = readCounts(rows);
+        const serialized = JSON.stringify(counts);
+        if (serialized === previous) return [];
+        previous = serialized;
+        return [counts];
+      });
     },
   };
 }

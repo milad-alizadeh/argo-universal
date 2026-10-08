@@ -170,14 +170,15 @@ beforeEach(async (): Promise<void> => {
       ['session-1', 'session-2'].map(
         (
           id,
-        ): {
-          id: string;
-          projectId: string;
-          agent: string;
-          checkoutPath: string;
-          projectionVersion: number;
-          epoch: number;
-        } => ({
+        ): Pick<
+          typeof session.$inferSelect,
+          | 'id'
+          | 'projectId'
+          | 'agent'
+          | 'checkoutPath'
+          | 'projectionVersion'
+          | 'epoch'
+        > => ({
           id,
           projectId: 'project',
           agent: 'mock',
@@ -298,12 +299,10 @@ describe('Engine restart recovery', (): void => {
           state,
           revision,
           payload,
-        }): {
-          id: string;
-          state: 'open' | 'settled';
-          revision: number;
-          payload: unknown;
-        } => ({
+        }): Pick<
+          typeof feedRow.$inferSelect,
+          'id' | 'state' | 'revision' | 'payload'
+        > => ({
           id,
           state,
           revision,
@@ -354,7 +353,10 @@ describe('Engine restart recovery', (): void => {
     });
     expect(
       repaired.sessions.map(
-        ({ maxRevision, epoch }): { maxRevision: number; epoch: number } => ({
+        ({
+          maxRevision,
+          epoch,
+        }): Pick<typeof session.$inferSelect, 'maxRevision' | 'epoch'> => ({
           maxRevision,
           epoch,
         }),
@@ -496,7 +498,10 @@ describe('Engine restart recovery', (): void => {
             id,
             revision,
             state,
-          }): { id: string; revision: number; state: 'open' | 'settled' } => ({
+          }): Pick<
+            typeof feedRow.$inferSelect,
+            'id' | 'state' | 'revision'
+          > => ({
             id,
             revision,
             state,

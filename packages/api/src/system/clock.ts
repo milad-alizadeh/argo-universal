@@ -6,6 +6,6 @@ export const clock = publicProcedure
   .subscription(async function* ({
     ctx,
     signal,
-  }): AsyncGenerator<{ now: string }, void> {
+  }): AsyncGenerator<ClockTick, void> {
     yield* ctx.services.system.clock(signal);
   });

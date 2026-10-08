@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
+import type { ServerAddress } from '@repo/contracts';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   isRunning,
@@ -13,9 +14,7 @@ import {
 
 let home: string;
 
-const writeServerJson = (
-  pid: number,
-): { pid: number; port: number; version: string; startedAt: string } => {
+const writeServerJson = (pid: number): ServerAddress => {
   const address = {
     pid,
     port: 7337,

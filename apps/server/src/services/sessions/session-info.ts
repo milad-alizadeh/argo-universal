@@ -1,14 +1,15 @@
 import type {
   AgentMessage,
+  TextContent,
   LiveHeader,
   PendingPermission,
   PlanUpdate,
-  SessionInfo,
   SessionRecord,
   SessionUpdate,
   Turn,
 } from '@repo/contracts';
 import { type LiveHeaderInput, toLiveHeader } from './live-header';
+import type { SessionListState } from './session-list-machine';
 import { toSessionCheckout } from './session-record';
 import { deriveSessionStatus } from './session-status';
 
@@ -23,10 +24,9 @@ export interface SessionInfoInput {
   children: readonly SessionRecord[];
 }
 
-export function toSessionInfo(input: SessionInfoInput): {
-  information: SessionInfo;
-  running: boolean;
-} {
+export function toSessionInfo(
+  input: SessionInfoInput,
+): SessionListState[number] {
   const { row, live } = input;
   const latestTurn = latestTurnOf(input.turns, row.id);
   const running = live
@@ -130,10 +130,7 @@ function activityOf(input: {
   if (input.running) return input.header?.text ?? 'Working';
   return (
     input.message?.content
-      .filter(
-        (block): block is { type: 'text'; text: string } =>
-          block.type === 'text',
-      )
+      .filter((block): block is TextContent => block.type === 'text')
       .map((block): string => block.text)
       .join('\n')
       .split('\n')[0] ?? ''

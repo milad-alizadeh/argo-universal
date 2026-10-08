@@ -1,5 +1,5 @@
 import { createServer, type Server } from 'node:http';
-import { appRouter } from '@repo/api';
+import { appRouter, type Services } from '@repo/api';
 import type { Database } from '@repo/db';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { WebSocketServer } from 'ws';
@@ -52,7 +52,10 @@ export async function startHttpServer(
   const blobsFolder = blobsFolderIn(options.home);
   const services = createServerServices({ ...options, blobsFolder });
 
-  const createContext = (): { services: import('@repo/api').Services } => ({
+  const createContext = (): Extract<
+    Parameters<typeof appRouter.createCaller>[0],
+    { services: Services }
+  > => ({
     services,
   });
 
