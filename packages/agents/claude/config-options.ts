@@ -3,7 +3,11 @@ import type {
   ModelInfo,
   PermissionMode,
 } from '@anthropic-ai/claude-agent-sdk';
-import type { ConfigOptionIcon, SessionConfigOption } from '@repo/contracts';
+import type {
+  ConfigOptionIcon,
+  SessionConfigOption,
+  SessionConfigSelectOption,
+} from '@repo/contracts';
 import type { AgentConfigValue } from '../src/agent-events';
 
 // The SDK names its modes only as a type, so this list and its names are ours; `dontAsk` is not offered.
@@ -51,9 +55,11 @@ const findModel = (
 
 // Models and their effort levels come from the CLI's model list.
 const modesFor = (model: ModelInfo | undefined): Mode[] =>
-  (Object.keys(modeNames) as Mode[]).filter(
-    (mode): boolean | undefined => mode !== 'auto' || model?.supportsAutoMode,
-  );
+  Object.keys(modeNames)
+    .filter((mode): mode is Mode => mode in modeNames)
+    .filter(
+      (mode): boolean | undefined => mode !== 'auto' || model?.supportsAutoMode,
+    );
 const effortLevelsFor = (model: ModelInfo | undefined): EffortLevel[] =>
   (model?.supportsEffort && model.supportedEffortLevels) || [];
 
@@ -126,14 +132,17 @@ export function startingValues(
   });
 }
 
+const isConfigId = (value: string): value is keyof ConfigValues =>
+  value === 'mode' || value === 'model' || value === 'effort';
+
 // The values after the user picks one option, or undefined for a value that was not offered.
 export function changeValue(
   models: ModelInfo[],
   values: ConfigValues,
   change: AgentConfigValue,
 ): ConfigValues | undefined {
-  if (!(change.configId in values)) return undefined;
-  const configId = change.configId as keyof ConfigValues;
+  const configId = change.configId;
+  if (!isConfigId(configId)) return undefined;
   const next = allowedValues(models, { ...values, [configId]: change.value });
   return next[configId] === change.value ? next : undefined;
 }
@@ -155,33 +164,12 @@ export function toConfigOptions(
       name: 'Mode',
       category: 'mode',
       currentValue: values.mode,
-      options: modesFor(model).map(
-        (
-          mode,
-        ): {
-          value:
-            | 'acceptEdits'
-            | 'auto'
-            | 'bypassPermissions'
-            | 'default'
-            | 'plan';
-          name: string;
-          description: string;
-          _meta: {
-            argo:
-              | { icon: 'ShieldWarning'; tone: 'safe' }
-              | { icon: 'Pencil'; tone: 'moderate' }
-              | { icon: 'MapTrifold'; tone: 'planning' }
-              | { icon: 'Sparkles'; tone: 'moderate' }
-              | { icon: 'WarningTriangle'; tone: 'dangerous' };
-          };
-        } => ({
-          value: mode,
-          name: modeNames[mode],
-          description: modeDescriptions[mode],
-          _meta: { argo: modeMetadata[mode] },
-        }),
-      ),
+      options: modesFor(model).map((mode): SessionConfigSelectOption => ({
+        value: mode,
+        name: modeNames[mode],
+        description: modeDescriptions[mode],
+        _meta: { argo: modeMetadata[mode] },
+      })),
     },
     {
       type: 'select',
@@ -189,56 +177,31 @@ export function toConfigOptions(
       name: 'Model',
       category: 'model',
       currentValue: values.model,
-      options: models.map(
-        (
-          option,
-        ): {
-          value: string;
-          name: string;
-          _meta: {
-            argo: {
-              shortName: string;
-              supportsEffort: boolean;
-              supportedEffortLevels: (
-                | 'high'
-                | 'low'
-                | 'max'
-                | 'medium'
-                | 'xhigh'
-              )[];
-              supportsAdaptiveThinking: boolean;
-              supportsFastMode: boolean;
-              supportsAutoMode: boolean;
-            };
-          };
-          description?: string;
-        } => ({
-          value: option.value,
-          name:
-            option.value === DEFAULT_VALUE
-              ? `${modelName(option)} (recommended)`
-              : modelName(option),
-          _meta: {
-            argo: {
-              shortName: modelName(option),
-              supportsEffort: option.supportsEffort ?? false,
-              supportedEffortLevels: option.supportedEffortLevels ?? [],
-              supportsAdaptiveThinking:
-                option.supportsAdaptiveThinking ?? false,
-              supportsFastMode: option.supportsFastMode ?? false,
-              supportsAutoMode: option.supportsAutoMode ?? false,
-            },
+      options: models.map((option): SessionConfigSelectOption => ({
+        value: option.value,
+        name:
+          option.value === DEFAULT_VALUE
+            ? `${modelName(option)} (recommended)`
+            : modelName(option),
+        _meta: {
+          argo: {
+            shortName: modelName(option),
+            supportsEffort: option.supportsEffort ?? false,
+            supportedEffortLevels: option.supportedEffortLevels ?? [],
+            supportsAdaptiveThinking: option.supportsAdaptiveThinking ?? false,
+            supportsFastMode: option.supportsFastMode ?? false,
+            supportsAutoMode: option.supportsAutoMode ?? false,
           },
-          ...(option.description
-            ? {
-                description:
-                  option.value === DEFAULT_VALUE
-                    ? withoutModelPrefix(option, option.description)
-                    : option.description,
-              }
-            : {}),
-        }),
-      ),
+        },
+        ...(option.description
+          ? {
+              description:
+                option.value === DEFAULT_VALUE
+                  ? withoutModelPrefix(option, option.description)
+                  : option.description,
+            }
+          : {}),
+      })),
     },
   ];
   const levels = effortLevelsFor(model);
@@ -250,7 +213,7 @@ export function toConfigOptions(
     category: 'thought_level',
     currentValue:
       values.effort === DEFAULT_VALUE ? defaultEffort(model) : values.effort,
-    options: levels.map((level): { value: EffortLevel; name: string } => ({
+    options: levels.map((level): SessionConfigSelectOption => ({
       value: level,
       name: effortName(level),
     })),

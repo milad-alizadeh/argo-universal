@@ -12,7 +12,8 @@ import { agentMachine } from '@repo/agents';
 import { afterEach, expect, it, vi } from 'vitest';
 import { createActor, fromCallback, waitFor } from 'xstate';
 import { codexAdapter } from '../../../packages/agents/codex/index';
-import type { VendorMessage } from '../../../packages/agents/codex/messages';
+import { isVendorMessage } from '../../../packages/agents/codex/payloads.ts';
+import { isWireMessage } from '../../../packages/agents/codex/wire-payloads.ts';
 import {
   type MockCliScenarioInput,
   mockCliScenarioEnvironment,
@@ -60,9 +61,10 @@ it('starts another Turn before a cancelled Turn receives its late start response
     'interrupt',
   );
   const recording = readRecording(source, 'codex-app-server');
-  const messages = recordedFrames<VendorMessage>(recording.payload, 'messages');
+  const messages = recordedFrames(recording.payload, 'messages', isWireMessage);
   const identifiers = new Set(
     messages.flatMap((message): string[] => {
+      if (!isVendorMessage(message)) return [];
       if (
         message.method === 'turn/started' ||
         message.method === 'turn/completed'
@@ -76,10 +78,13 @@ it('starts another Turn before a cancelled Turn receives its late start response
       return [];
     }),
   );
-  const next = messages.map((message): VendorMessage => {
+  const next = messages.map((message): typeof message => {
     let text = JSON.stringify(message);
     for (const id of identifiers) text = text.replaceAll(id, `${id}-next`);
-    return JSON.parse(text);
+    const copied: unknown = JSON.parse(text);
+    if (!isWireMessage(copied))
+      throw new Error('Invalid copied recording message');
+    return copied;
   });
   messages.push(...next);
   const recordingDirectory = path.join(

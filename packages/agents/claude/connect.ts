@@ -27,6 +27,8 @@ import {
   toConfigOptions,
 } from './config-options';
 import type { VendorMessage } from './messages';
+import { isVendorMessage, isIgnoredCliExtension } from './payloads.ts';
+import { isAskUserQuestionInput } from './tool-inputs.ts';
 
 // The values the CLI starts with; the saved ones follow once its model list can check them.
 const CLI_START: ConfigValues = {
@@ -263,7 +265,14 @@ export async function connect(
   const messages = (async (): Promise<void> => {
     try {
       for await (const message of vendor) {
-        listener.message({ ...message, receivedAt: Date.now() });
+        const payload: unknown = { ...message, receivedAt: Date.now() };
+        if (isIgnoredCliExtension(payload)) continue;
+        if (isVendorMessage(payload)) listener.message(payload);
+        else
+          listener.event({
+            type: 'agent.messageRejected',
+            reason: 'Unrecognised vendor payload',
+          });
         // Usage failures are ignored; the streamed Turn still supplies its Feed.
         if (message.type === 'result') void sendUsage().catch((): void => {});
       }
@@ -389,7 +398,7 @@ export async function connect(
 // Owns SDK request resolution and exposes only the first unanswered question.
 function createRequestTracker(listener: VendorSessionListener<VendorMessage>): {
   add: (
-    message: import('@anthropic-ai/claude-agent-sdk').SDKControlRequest & {
+    message: Extract<VendorMessage, { type: 'control_request' }> & {
       receivedAt?: number;
     },
     resolve: (answer: PermissionResult) => void,
@@ -430,10 +439,11 @@ function createRequestTracker(listener: VendorSessionListener<VendorMessage>): {
       if (!id) return;
       const request = pending.get(id)?.message.request;
       if (request?.subtype !== 'can_use_tool') return;
+      if (!isAskUserQuestionInput(request.input)) return;
       // AskUserQuestionInput is the SDK's tool payload at this boundary.
       return {
         toolUseId: id,
-        input: request.input as unknown as AskUserQuestionInput,
+        input: request.input,
       };
     },
     remove: (

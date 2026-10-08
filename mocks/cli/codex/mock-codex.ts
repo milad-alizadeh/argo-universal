@@ -1,14 +1,25 @@
 // A stand-in `codex app-server` over JSON-RPC. Each `turn/start` replays the next recorded Turn.
 import path from 'node:path';
-import type { VendorMessage } from '../../../packages/agents/codex/messages.ts';
+import type {
+  MappedTurn,
+  VendorMessage,
+} from '../../../packages/agents/codex/messages.ts';
+import { isVendorMessage } from '../../../packages/agents/codex/payloads.ts';
 import type {
   Account,
   GetAccountResponse,
-  ThreadResumeParams,
-  TurnInterruptParams,
-  TurnStartParams,
-  TurnStartResponse,
+  InitializeResponse,
 } from '../../../packages/agents/codex/protocol.gen.ts';
+import {
+  isResumeInput,
+  isInterruptInput,
+} from '../../../packages/agents/codex/request-payloads.ts';
+import {
+  type WireFrame,
+  type WireMessage,
+  isWireMessage,
+  isWireFrame,
+} from '../../../packages/agents/codex/wire-payloads.ts';
 import {
   readMockCliEnvironment,
   readMockTranscript,
@@ -25,6 +36,7 @@ import {
 import {
   createRequestAnswerReader,
   recordRequestAnswer,
+  type RecordedRequestAnswer,
 } from '../request-answer.ts';
 import { toPlanProposalAnswer, toRequestAnswer } from './request-answer.ts';
 
@@ -33,13 +45,6 @@ const PRODUCER = 'codex-app-server';
 const METHOD_NOT_FOUND = -32601;
 const INTERNAL_ERROR = -32603;
 
-// The transport owns method and correlation; each request payload uses generated protocol types.
-type Request = {
-  id?: string | number;
-  method?: string;
-  params?: unknown;
-  result?: unknown;
-};
 const environment = readMockCliEnvironment();
 const readRequestAnswer = createRequestAnswerReader();
 const recording = readRecording(environment.recordingFile, PRODUCER);
@@ -55,18 +60,19 @@ if (command !== 'app-server') {
 }
 
 // The capture time is the recorder's, not part of the wire message.
-const messages = recordedFrames<VendorMessage & { emittedAtMs?: number }>(
+const messages = recordedFrames(
   recording.payload,
   'messages',
-).map(({ emittedAtMs: _, ...message }): VendorMessage => message);
+  isWireMessage,
+).map(({ emittedAtMs: _, ...message }): typeof message => message);
 const turns = splitTurns(
   messages,
   (message): message is Extract<VendorMessage, { method: 'turn/completed' }> =>
-    message.method === 'turn/completed',
+    isVendorMessage(message) && message.method === 'turn/completed',
 );
-const recordedThreadId = messages.find(
-  (message): string => message.params.threadId,
-)?.params.threadId;
+const recordedThreadId = messages.flatMap((message): string[] =>
+  typeof message.params.threadId === 'string' ? [message.params.threadId] : [],
+)[0];
 if (!recordedThreadId) throw new Error('The recording has no thread id.');
 let threadId = recordedThreadId;
 let turnIndex = 0;
@@ -81,7 +87,7 @@ const concurrentRequests = new Map<string | number, VendorMessage>();
 
 function replayRequestFrames(
   recordedFrames: typeof messages,
-  crashAfter: ((message: VendorMessage) => boolean) | null,
+  crashAfter: ((message: WireMessage) => boolean) | null,
 ): void {
   let frames = recordedFrames;
   const index = frames.findIndex(
@@ -94,15 +100,16 @@ function replayRequestFrames(
     request = {
       ...request,
       params: { ...request.params, threadId: 'another-thread' },
-    } as VendorMessage;
+    };
     frames = [...frames.slice(0, index), request, ...frames.slice(index + 1)];
   }
-  heldRequestId = request && 'id' in request ? request.id : null;
-  heldRequest = request ?? null;
+  heldRequestId = request?.id ?? null;
+  heldRequest = isVendorMessage(request) ? request : null;
   requestFrames = index < 0 ? [] : frames.slice(index + 1);
   if (
     environment.scenario.concurrentQuestions &&
-    request?.method === 'item/tool/requestUserInput'
+    isVendorMessage(request) &&
+    request.method === 'item/tool/requestUserInput'
   ) {
     const second = {
       ...request,
@@ -111,7 +118,10 @@ function replayRequestFrames(
     } satisfies VendorMessage;
     concurrentRequests.set(request.id, request);
     concurrentRequests.set(second.id, second);
-    replayTurn([...frames.slice(0, index + 1), second], crashAfter);
+    replayTurn<WireMessage>(
+      [...frames.slice(0, index + 1), second],
+      crashAfter,
+    );
     return;
   }
   const completed = replayTurn(
@@ -122,7 +132,7 @@ function replayRequestFrames(
 }
 let withheldStartResponse: {
   id: string | number | undefined;
-  result: TurnStartResponse;
+  result: { turn: MappedTurn };
 } | null = null;
 
 // Read on request, so a version folder without a model list still serves Turns.
@@ -142,16 +152,13 @@ function startTurn(
   id: string | number | undefined,
   notificationsFirst = false,
 ): void {
-  const turn = turns[turnIndex++]?.map(
-    (message): VendorMessage =>
-      ({
-        ...message,
-        params: { ...message.params, threadId },
-      }) as VendorMessage,
-  );
+  const turn = turns[turnIndex++]?.map((message): WireMessage => ({
+    ...message,
+    params: { ...message.params, threadId },
+  }));
   const started = turn?.find(
     (message): message is Extract<VendorMessage, { method: 'turn/started' }> =>
-      message.method === 'turn/started',
+      isVendorMessage(message) && message.method === 'turn/started',
   );
   if (turn === undefined || started === undefined) {
     send({
@@ -166,11 +173,13 @@ function startTurn(
   // Every recording crashes at the same point: right after `turn/started`.
   const final = turn.at(-1);
   const interrupted =
-    final?.method === 'turn/completed' &&
+    isVendorMessage(final) &&
+    final.method === 'turn/completed' &&
     final.params.turn.status === 'interrupted';
   const command = interrupted
     ? turn.findIndex(
         (message): boolean =>
+          isVendorMessage(message) &&
           message.method === 'item/started' &&
           message.params.item.type === 'commandExecution',
       )
@@ -178,6 +187,7 @@ function startTurn(
   if (command >= 0) interruptedFrames = turn.slice(command + 1);
   pendingPlanProposal = turn.some(
     (message): boolean =>
+      isVendorMessage(message) &&
       message.method === 'item/completed' &&
       message.params.item.type === 'plan',
   );
@@ -219,7 +229,7 @@ function startTurn(
   else replayRequestFrames(frames.slice(before), crashAfter);
 }
 
-serveJsonLines<Request>(({ id, method, params, result }): void | boolean => {
+serveJsonLines<WireFrame>(({ id, method, params, result }): void | boolean => {
   switch (method) {
     case undefined:
       return answerRequest(id, result);
@@ -228,7 +238,15 @@ serveJsonLines<Request>(({ id, method, params, result }): void | boolean => {
     case 'initialize':
       if (environment.scenario.blockInitialize) return;
       if (environment.scenario.malformedLine) return send({ id, error: {} });
-      return send({ id, result: {} });
+      return send({
+        id,
+        result: {
+          userAgent: 'mock',
+          codexHome: path.dirname(environment.recordingFile),
+          platformFamily: process.platform,
+          platformOs: process.platform,
+        } satisfies InitializeResponse,
+      });
     case 'account/read': {
       const usesApiKey =
         process.env.OPENAI_API_KEY ||
@@ -251,7 +269,9 @@ serveJsonLines<Request>(({ id, method, params, result }): void | boolean => {
     case 'thread/resume': {
       const file = environment.scenario.transcriptFile;
       const stored = file ? readMockTranscript(file) : null;
-      const resume = params as ThreadResumeParams;
+      if (!isResumeInput(params))
+        throw new Error('Invalid thread/resume input');
+      const resume = params;
       if (!stored || stored.vendorSessionId !== resume?.threadId)
         return send({
           id,
@@ -290,7 +310,7 @@ serveJsonLines<Request>(({ id, method, params, result }): void | boolean => {
           error: { code: INTERNAL_ERROR, message: 'Mock interrupt failed.' },
         });
       }
-      if ((params as TurnInterruptParams)?.turnId !== activeTurnId)
+      if (!isInterruptInput(params) || params.turnId !== activeTurnId)
         return send({
           id,
           error: {
@@ -302,7 +322,7 @@ serveJsonLines<Request>(({ id, method, params, result }): void | boolean => {
       if (interruptedRequest?.method === 'item/tool/requestUserInput') {
         if (concurrentRequests.size === 0)
           recordRequestAnswer(
-            readRequestAnswer(() =>
+            readRequestAnswer((): RecordedRequestAnswer =>
               toRequestAnswer(interruptedRequest, { method: 'turn/interrupt' }),
             ),
           );
@@ -336,12 +356,14 @@ serveJsonLines<Request>(({ id, method, params, result }): void | boolean => {
     case 'turn/start':
       if (pendingPlanProposal)
         recordRequestAnswer(
-          readRequestAnswer(() => toPlanProposalAnswer(params)),
+          readRequestAnswer((): RecordedRequestAnswer =>
+            toPlanProposalAnswer(params),
+          ),
         );
       return startTurn(
         id,
-        (params as TurnStartParams & { notificationsFirst?: boolean })
-          ?.notificationsFirst || environment.scenario.notificationsFirst,
+        notificationsFirstRequested(params) ||
+          environment.scenario.notificationsFirst,
       );
     default:
       send({
@@ -352,7 +374,7 @@ serveJsonLines<Request>(({ id, method, params, result }): void | boolean => {
         },
       });
   }
-});
+}, isWireFrame);
 
 // Correlates mock request replies and releases the Turn once every question has an answer.
 function answerRequest(id: string | number | undefined, result: unknown): void {
@@ -365,7 +387,9 @@ function answerRequest(id: string | number | undefined, result: unknown): void {
     const request = heldRequest;
     if (request && 'id' in request)
       recordRequestAnswer(
-        readRequestAnswer(() => toRequestAnswer(request, result)),
+        readRequestAnswer((): RecordedRequestAnswer =>
+          toRequestAnswer(request, result),
+        ),
       );
     if (withheldStartResponse) {
       send(withheldStartResponse);
@@ -375,3 +399,8 @@ function answerRequest(id: string | number | undefined, result: unknown): void {
       replayRequestFrames(requestFrames, null);
   }
 }
+
+const notificationsFirstRequested = (value: unknown): boolean =>
+  isWireFrame(value) &&
+  'notificationsFirst' in value &&
+  value.notificationsFirst === true;

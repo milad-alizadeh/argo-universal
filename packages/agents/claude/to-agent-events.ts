@@ -1,20 +1,20 @@
-import type {
-  SDKAssistantMessage,
-  SDKMessage,
-  SDKPartialAssistantMessage,
-  SDKResultMessage,
-  SDKUserMessage,
-  SDKUserMessageReplay,
-} from '@anthropic-ai/claude-agent-sdk';
 import type { StopReason, TurnUsage } from '@repo/contracts';
-import type { AgentMapping } from '../src/agent-adapter';
+import { rejectAgentMessage, type AgentMapping } from '../src/agent-adapter';
 import type { AgentEvent, FeedChange, FeedUpdate } from '../src/agent-events';
-import type { VendorMessage } from './messages';
+import type {
+  MappedAssistant,
+  MappedUser,
+  MappedPartialAssistant,
+  MappedContent,
+} from './messages';
+import { isVendorMessage, isIgnoredCliExtension } from './payloads.ts';
 import { toRequestEvents } from './request-events';
+import type { MappedResult } from './result-payloads.ts';
+import type { MappedSystem } from './system-payloads.ts';
 import { type ToolCallRow, toolCallEnded, toolCallStarted } from './tool-calls';
 
 type TextKind = 'agent_message' | 'agent_thought';
-type AssistantBlock = SDKAssistantMessage['message']['content'][number];
+type AssistantBlock = MappedContent;
 // What `toAgentEvents` remembers between messages, until the Turn's result clears it.
 export interface MappingState {
   // Blocks seen per `message.id`, which gives a block's index without the stream.
@@ -82,9 +82,11 @@ const dropped = (mappingState: MappingState): AgentMapping<MappingState> => ({
 
 // Maps one SDK message to Agent events (ADR-0006); pure, so recordings can drive it.
 export function toAgentEvents(
-  message: VendorMessage,
+  message: unknown,
   mappingState: MappingState,
 ): AgentMapping<MappingState> {
+  if (isIgnoredCliExtension(message)) return dropped(mappingState);
+  if (!isVendorMessage(message)) return rejectAgentMessage(mappingState);
   // Subagent messages belong to issue 11e.
   if ('parent_tool_use_id' in message && message.parent_tool_use_id)
     return dropped(mappingState);
@@ -107,7 +109,7 @@ export function toAgentEvents(
 }
 
 type Delta = Extract<
-  SDKPartialAssistantMessage['event'],
+  MappedPartialAssistant['event'],
   { type: 'content_block_delta' }
 >['delta'];
 
@@ -118,7 +120,7 @@ function deltaText(delta: Delta): string {
 }
 
 function mapStreamEvent(
-  { event }: SDKPartialAssistantMessage,
+  { event }: MappedPartialAssistant,
   mappingState: MappingState,
 ): AgentMapping<MappingState> {
   const { streamMessageId } = mappingState;
@@ -168,7 +170,7 @@ function mapStreamEvent(
 }
 
 function mapAssistant(
-  message: SDKAssistantMessage & { receivedAt?: number },
+  message: MappedAssistant & { receivedAt?: number },
   mappingState: MappingState,
 ): AgentMapping<MappingState> {
   const { id: messageId, content } = message.message;
@@ -246,7 +248,7 @@ function mapBlock({
 
 // A user message carries Tool results; the Session writes the user's own prompt.
 function mapUser(
-  message: (SDKUserMessage | SDKUserMessageReplay) & { receivedAt?: number },
+  message: MappedUser & { receivedAt?: number },
   mappingState: MappingState,
 ): AgentMapping<MappingState> {
   const { content } = message.message;
@@ -268,7 +270,7 @@ function mapUser(
 
 const TURN_ERROR_CODE = -32603;
 
-function stopReason(result: SDKResultMessage): StopReason {
+function stopReason(result: MappedResult): StopReason {
   if (
     result.terminal_reason === 'aborted_streaming' ||
     result.terminal_reason === 'aborted_tools'
@@ -281,7 +283,7 @@ function stopReason(result: SDKResultMessage): StopReason {
     : 'end_turn';
 }
 
-function turnUsage({ usage }: SDKResultMessage): TurnUsage {
+function turnUsage({ usage }: MappedResult): TurnUsage {
   const cachedReadTokens = usage.cache_read_input_tokens ?? 0;
   const cachedWriteTokens = usage.cache_creation_input_tokens ?? 0;
   const thoughtTokens = usage.output_tokens_details?.thinking_tokens;
@@ -301,7 +303,7 @@ function turnUsage({ usage }: SDKResultMessage): TurnUsage {
 
 // The result ends the Turn, and settles rows that never got their record or result.
 function mapResult(
-  result: SDKResultMessage & { receivedAt?: number },
+  result: MappedResult & { receivedAt?: number },
   mappingState: MappingState,
 ): AgentMapping<MappingState> {
   const reason = stopReason(result);
@@ -353,7 +355,7 @@ function mapResult(
 }
 
 function mapNotice(
-  message: Extract<SDKMessage, { type: 'system' }>,
+  message: MappedSystem,
   mappingState: MappingState,
 ): AgentMapping<MappingState> {
   if (message.subtype === 'status' && message.status === 'compacting') {

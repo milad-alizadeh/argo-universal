@@ -1,57 +1,37 @@
-import type {
-  SDKAssistantMessage,
-  SDKUserMessage,
-} from '@anthropic-ai/claude-agent-sdk';
-import type {
-  BashInput,
-  FileEditInput,
-  FileReadInput,
-  FileReadOutput,
-  FileWriteInput,
-  FileWriteOutput,
-  GlobInput,
-  GrepInput,
-  WebFetchInput,
-  WebSearchInput,
-} from '@anthropic-ai/claude-agent-sdk/sdk-tools';
 import type { DiffChange, ToolCallContent, ToolKind } from '@repo/contracts';
 import type { FeedUpdate } from '../src/agent-events';
+import type { MappedContent, MappedUser } from './messages';
+import {
+  isBashInput,
+  isEditInput,
+  isGlobInput,
+  isGrepInput,
+  isReadInput,
+  isWebFetchInput,
+  isWebSearchInput,
+  isWriteInput,
+} from './tool-inputs.ts';
+import {
+  isTextReadResult,
+  isToolResultMeta,
+  isWriteResult,
+} from './tool-results.ts';
 
 export type ToolCallRow = Extract<
   FeedUpdate,
   { sessionUpdate: 'tool_call_update' }
 >;
 
-type ToolUseBlock = Extract<
-  SDKAssistantMessage['message']['content'][number],
-  { type: 'tool_use' }
->;
-export type ToolResultBlock = Extract<
-  Exclude<SDKUserMessage['message']['content'], string>[number],
-  { type: 'tool_result' }
->;
-
-// The CLI marks a Tool call the user refused here; the SDK types do not name the field.
-interface ToolResultMeta {
-  tool_result_meta?: { id: string; non_execution_kind: string }[];
-}
+type ToolUseBlock = Extract<MappedContent, { type: 'tool_use' }>;
+export type ToolResultBlock = Extract<MappedContent, { type: 'tool_result' }>;
 
 type ToolShape = Pick<ToolCallRow, 'title' | 'kind' | 'content' | 'locations'>;
 
 // How each built-in tool reads; any other tool shows as `other`.
-const toolShapes: Record<string, (input: unknown) => ToolShape> = {
-  Write: (
-    input,
-  ): {
-    title: string;
-    kind: 'edit';
-    locations: { path: string }[];
-    content: {
-      type: 'diff';
-      changes: { operation: 'add'; path: string; newText: string }[];
-    }[];
-  } => {
-    const { file_path: path, content } = input as FileWriteInput;
+const toolShapes: Record<string, (input: unknown) => ToolShape | undefined> = {
+  Write: (input): ToolShape | undefined => {
+    if (!isWriteInput(input)) return;
+    const { file_path: path, content } = input;
     return {
       title: `Write ${path}`,
       kind: 'edit',
@@ -64,23 +44,9 @@ const toolShapes: Record<string, (input: unknown) => ToolShape> = {
       ],
     };
   },
-  Edit: (
-    input,
-  ): {
-    title: string;
-    kind: 'edit';
-    locations: { path: string }[];
-    content: {
-      type: 'diff';
-      changes: {
-        operation: 'modify';
-        path: string;
-        oldText: string;
-        newText: string;
-      }[];
-    }[];
-  } => {
-    const { file_path: path, old_string, new_string } = input as FileEditInput;
+  Edit: (input): ToolShape | undefined => {
+    if (!isEditInput(input)) return;
+    const { file_path: path, old_string, new_string } = input;
     return {
       title: `Edit ${path}`,
       kind: 'edit',
@@ -100,18 +66,9 @@ const toolShapes: Record<string, (input: unknown) => ToolShape> = {
       ],
     };
   },
-  Read: (
-    input,
-  ): {
-    title: string;
-    kind: 'read';
-    locations: (
-      | { path: string; line?: undefined }
-      | { path: string; line: number }
-    )[];
-    content: never[];
-  } => {
-    const { file_path: path, offset: line } = input as FileReadInput;
+  Read: (input): ToolShape | undefined => {
+    if (!isReadInput(input)) return;
+    const { file_path: path, offset: line } = input;
     return {
       title: `Read ${path}`,
       kind: 'read',
@@ -119,37 +76,27 @@ const toolShapes: Record<string, (input: unknown) => ToolShape> = {
       content: [],
     };
   },
-  Bash: (
-    input,
-  ): {
-    title: string;
-    kind: 'execute';
-    content: { type: 'terminal'; command: string; output: string }[];
-  } => {
-    const { command, description } = input as BashInput;
+  Bash: (input): ToolShape | undefined => {
+    if (!isBashInput(input)) return;
     return {
-      title: description ?? command,
+      title: input.description ?? input.command,
       kind: 'execute',
-      content: [{ type: 'terminal', command, output: '' }],
+      content: [{ type: 'terminal', command: input.command, output: '' }],
     };
   },
-  Grep: (input): ToolShape => search('Grep', (input as GrepInput).pattern),
-  Glob: (input): ToolShape => search('Glob', (input as GlobInput).pattern),
-  WebFetch: (input): { title: string; kind: 'fetch'; content: never[] } => ({
-    title: `Fetch ${(input as WebFetchInput).url}`,
-    kind: 'fetch',
-    content: [],
-  }),
-  WebSearch: (input): { title: string; kind: 'fetch'; content: never[] } => ({
-    title: `Search ${(input as WebSearchInput).query}`,
-    kind: 'fetch',
-    content: [],
-  }),
-  ExitPlanMode: (): {
-    title: string;
-    kind: 'switch_mode';
-    content: never[];
-  } => ({
+  Grep: (input): ToolShape | undefined =>
+    isGrepInput(input) ? search('Grep', input.pattern) : undefined,
+  Glob: (input): ToolShape | undefined =>
+    isGlobInput(input) ? search('Glob', input.pattern) : undefined,
+  WebFetch: (input): ToolShape | undefined =>
+    isWebFetchInput(input)
+      ? { title: `Fetch ${input.url}`, kind: 'fetch', content: [] }
+      : undefined,
+  WebSearch: (input): ToolShape | undefined =>
+    isWebSearchInput(input)
+      ? { title: `Search ${input.query}`, kind: 'fetch', content: [] }
+      : undefined,
+  ExitPlanMode: (): ToolShape => ({
     title: 'Leave plan mode',
     kind: 'switch_mode',
     content: [],
@@ -167,13 +114,15 @@ export function toolCallStarted(
   block: ToolUseBlock,
   timestamp?: number,
 ): ToolCallRow {
-  const shape = toolShapes[block.name]?.(block.input) ?? {
+  const shape = ownToolShape(block) ?? {
     title: block.name,
     kind: 'other' satisfies ToolKind,
     content: [],
   };
   const description =
-    block.name === 'Bash' ? (block.input as BashInput).description : undefined;
+    block.name === 'Bash' && isBashInput(block.input)
+      ? block.input.description
+      : undefined;
   return {
     id: block.id,
     sessionUpdate: 'tool_call_update',
@@ -203,8 +152,10 @@ function resultText(result: ToolResultBlock): string {
     .join('\n');
 }
 
-function userRejected(message: SDKUserMessage, toolCallId: string): boolean {
-  const meta = (message as ToolResultMeta).tool_result_meta ?? [];
+function userRejected(message: MappedUser, toolCallId: string): boolean {
+  const meta = isToolResultMeta(message)
+    ? (message.tool_result_meta ?? [])
+    : [];
   return meta.some(
     (entry): boolean =>
       entry.id === toolCallId && entry.non_execution_kind === 'user-rejected',
@@ -212,13 +163,10 @@ function userRejected(message: SDKUserMessage, toolCallId: string): boolean {
 }
 
 // What the Write tool found at the path before it wrote; null for a new file.
-function overwrittenText(
-  row: ToolCallRow,
-  message: SDKUserMessage,
-): string | null {
+function overwrittenText(row: ToolCallRow, message: MappedUser): string | null {
   if (row.name !== 'Write') return null;
-  const output = message.tool_use_result as FileWriteOutput | undefined;
-  return output?.originalFile ?? null;
+  const output = message.tool_use_result;
+  return isWriteResult(output) ? output.originalFile : null;
 }
 
 const settled = (
@@ -231,7 +179,7 @@ const settled = (
 export function toolCallEnded(
   startedRow: ToolCallRow,
   result: ToolResultBlock,
-  message: SDKUserMessage & { receivedAt?: number },
+  message: MappedUser & { receivedAt?: number },
 ): ToolCallRow {
   const endedAt =
     message.timestamp === undefined
@@ -266,9 +214,9 @@ export function toolCallEnded(
   if (rejected) return settled(row, 'cancelled', content);
   if (!result.is_error) {
     if (row.kind === 'read' || row.kind === 'search') {
-      const read = message.tool_use_result as FileReadOutput | undefined;
+      const read = message.tool_use_result;
       const text =
-        row.kind === 'read' && read?.type === 'text'
+        row.kind === 'read' && isTextReadResult(read)
           ? read.file.content
           : output;
       content.push({ type: 'content', content: { type: 'text', text } });
@@ -295,4 +243,9 @@ export function toolCallEnded(
     content: { type: 'text', text: output },
   };
   return settled(row, 'failed', [...content, error]);
+}
+
+function ownToolShape(block: ToolUseBlock): ToolShape | undefined {
+  if (!Object.hasOwn(toolShapes, block.name)) return undefined;
+  return toolShapes[block.name]?.(block.input);
 }

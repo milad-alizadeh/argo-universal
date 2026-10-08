@@ -44,7 +44,8 @@ it('carries a scenario through one environment variable', (): void => {
 });
 
 it('rejects a misspelt field where the scenario is written', (): void => {
+  const misspeltScenario = { blockTurnStart: false, blockTurnstart: true };
   expect((): { MOCK_CLI_SCENARIO: string } =>
-    mockCliScenarioEnvironment({ blockTurnstart: true } as never),
+    mockCliScenarioEnvironment(misspeltScenario),
   ).toThrow(/Unrecognized key/);
 });

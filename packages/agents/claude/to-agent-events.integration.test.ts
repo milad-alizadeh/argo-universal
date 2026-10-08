@@ -1,8 +1,11 @@
 import path from 'node:path';
-import type { SDKMessage } from '@anthropic-ai/claude-agent-sdk';
+import { SessionUpdate } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import { readRecording } from '../mocks/recording';
 import type { FeedChange, FeedUpdate } from '../src/agent-events';
+import { isRecord } from '../src/payload-shape.ts';
+import type { VendorMessage } from './messages';
+import { isVendorMessage } from './payloads.ts';
 import {
   initialMappingState,
   type MappingState,
@@ -15,13 +18,16 @@ const RECORDINGS = path.join(
 );
 
 // The stdout frames of a recording, without the control frames that the SDK consumes itself.
-function recordedMessages(name: string): SDKMessage[] {
-  const recording: { payload: { output: { type: string }[] } } = JSON.parse(
-    readRecording(RECORDINGS, name),
+function recordedMessages(name: string): VendorMessage[] {
+  const recording: unknown = JSON.parse(readRecording(RECORDINGS, name));
+  if (!isRecord(recording) || !isRecord(recording.payload))
+    throw new Error('Invalid recording envelope');
+  const output = recording.payload.output;
+  if (!Array.isArray(output)) throw new Error('Invalid recording output');
+  return output.filter(
+    (frame): frame is VendorMessage =>
+      isVendorMessage(frame) && frame.type !== 'control_request',
   );
-  return recording.payload.output.filter(
-    (frame): boolean => !frame.type.startsWith('control_'),
-  ) as SDKMessage[];
 }
 
 // Fixtures carry only the fields the mapping reads.
@@ -31,7 +37,7 @@ function mapAll(
 ): { events: import('../src').AgentEvent[]; mappingState: MappingState } {
   let mappingState: MappingState = start;
   const events = messages.flatMap((message): import('../src').AgentEvent[] => {
-    const result = toAgentEvents(message as SDKMessage, mappingState);
+    const result = toAgentEvents(message, mappingState);
     mappingState = result.mappingState;
     return result.events;
   });
@@ -92,15 +98,17 @@ it('keeps the Agent’s Bash description and timestamps without inventing comman
 it('uses the transport receipt time when an interrupted Tool call has no final result', (): void => {
   const messages = recordedMessages('interrupt')
     .filter(
-      (message): message is Exclude<SDKMessage, { type: 'user' }> =>
+      (message): message is Exclude<VendorMessage, { type: 'user' }> =>
         message.type !== 'user',
     )
     .map(
       (
         message,
       ):
-        | Exclude<SDKMessage, { type: 'user' | 'result' }>
-        | (Extract<SDKMessage, { type: 'result' }> & { receivedAt: number }) =>
+        | Exclude<VendorMessage, { type: 'user' | 'result' }>
+        | (Extract<VendorMessage, { type: 'result' }> & {
+            receivedAt: number;
+          }) =>
         message.type === 'result'
           ? { ...message, receivedAt: 1791165784000 }
           : message,
@@ -128,18 +136,20 @@ function foldRows(changes: FeedChange[]): FeedUpdate[] {
     const row = rows.get(change.id);
     if (!row) throw new Error(`No row ${change.id}`);
     if (change.type === 'patch') {
-      rows.set(change.id, { ...row, ...change.set } as FeedUpdate);
+      rows.set(change.id, parseFeedUpdate({ ...row, ...change.set }));
       continue;
     }
-    const copy = structuredClone(row) as Record<string, unknown>;
+    const copy: unknown = structuredClone(row);
     const keys = change.field.split('.');
-    const last = keys.pop() as string;
-    const target = keys.reduce<Record<string, unknown>>(
-      (value, key): typeof value => value[key] as Record<string, unknown>,
+    const last = keys.pop();
+    if (!last) throw new Error('Empty append path');
+    const target = keys.reduce<unknown>(
+      (value, key): unknown => pathValue(value, key),
       copy,
     );
+    if (!isRecord(target)) throw new Error('Invalid append target');
     target[last] = `${target[last]}${change.text}`;
-    rows.set(change.id, copy as FeedUpdate);
+    rows.set(change.id, parseFeedUpdate(copy));
   }
   return [...rows.values()];
 }
@@ -260,14 +270,16 @@ describe('toAgentEvents on a Turn with edits and commands', (): void => {
 
   it('gives text rows message.id#blockIndex, the same with or without streaming', (): void => {
     const firstMessage = messages.find(
-      (message): message is Extract<SDKMessage, { type: 'assistant' }> =>
+      (message): message is Extract<VendorMessage, { type: 'assistant' }> =>
         message.type === 'assistant',
     );
     expect(rows[0]?.id).toBe(`${firstMessage?.message.id}#0`);
 
     const recordsOnly = mapAll(
       messages.filter(
-        (message): message is Exclude<SDKMessage, { type: 'stream_event' }> =>
+        (
+          message,
+        ): message is Exclude<VendorMessage, { type: 'stream_event' }> =>
           message.type !== 'stream_event',
       ),
     );
@@ -330,6 +342,7 @@ const result = (
 ): {
   type: string;
   subtype: string;
+  result: string;
   is_error: boolean;
   stop_reason: string;
   usage: {
@@ -343,6 +356,7 @@ const result = (
 } => ({
   type: 'result',
   subtype: 'success',
+  result: '',
   is_error: false,
   stop_reason: 'end_turn',
   usage: {
@@ -418,7 +432,7 @@ describe('toAgentEvents on single messages', (): void => {
         retry_delay_ms: 1000,
         error_status: 529,
         error: 'server_error',
-        uuid: 'retry-1',
+        uuid: '00000000-0000-0000-0000-000000000001',
         session_id: 'vendor-1',
       },
     ]);
@@ -426,7 +440,7 @@ describe('toAgentEvents on single messages', (): void => {
       {
         type: 'upsert',
         update: {
-          id: 'retry-1',
+          id: '00000000-0000-0000-0000-000000000001',
           sessionUpdate: 'notice',
           state: 'settled',
           severity: 'warning',
@@ -445,7 +459,7 @@ describe('toAgentEvents on single messages', (): void => {
         type: 'system',
         subtype: 'local_command_output',
         content: 'Compacted.',
-        uuid: 'local-1',
+        uuid: '00000000-0000-0000-0000-000000000002',
         session_id: 'vendor-1',
       },
     ]);
@@ -453,7 +467,7 @@ describe('toAgentEvents on single messages', (): void => {
       {
         type: 'upsert',
         update: {
-          id: 'local-1',
+          id: '00000000-0000-0000-0000-000000000002',
           sessionUpdate: 'notice',
           state: 'settled',
           severity: 'info',
@@ -500,7 +514,11 @@ describe('toAgentEvents on single messages', (): void => {
     ],
     [
       'a system message Argo does not show',
-      { type: 'system', subtype: 'task_progress', uuid: 'task-1' },
+      {
+        type: 'system',
+        subtype: 'task_progress',
+        uuid: '00000000-0000-0000-0000-000000000003',
+      },
     ],
   ])('drops %s', (_, message): void => {
     expect(mapAll([message])).toEqual({
@@ -509,3 +527,26 @@ describe('toAgentEvents on single messages', (): void => {
     });
   });
 });
+
+function pathValue(value: unknown, key: string): unknown {
+  if (Array.isArray(value)) return value[Number(key)];
+  if (isRecord(value)) return value[key];
+  throw new Error('Invalid append path');
+}
+function parseFeedUpdate(value: unknown): FeedUpdate {
+  if (!isRecord(value)) throw new Error('Invalid Feed row');
+  const {
+    sessionId: _sessionId,
+    turnId: _turnId,
+    position: _position,
+    revision: _revision,
+    ...update
+  } = SessionUpdate.parse({
+    ...value,
+    sessionId: 'session-1',
+    turnId: null,
+    position: 0,
+    revision: 0,
+  });
+  return update;
+}

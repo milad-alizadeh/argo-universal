@@ -3,23 +3,26 @@ import {
   startingValues,
   toConfigOptions,
 } from '../../../packages/agents/claude/config-options';
-import type {
-  SDKControlInitializeResponse,
-  SDKControlResponse,
-} from '../../../packages/agents/claude/messages';
+import {
+  isWireFrame,
+  isControlResponse,
+  isInitializeResponse,
+} from '../../../packages/agents/claude/control-payloads.ts';
 import { recordedImagePrompt } from '../image';
 import { findRecording, readRecording, recordedFrames } from '../recording';
 
-const initialization = recordedFrames<SDKControlResponse>(
+const initialization = recordedFrames(
   readRecording(
     findRecording(path.join(import.meta.dirname, 'recordings'), 'image-prompt'),
     'claude-cli',
   ).payload,
   'output',
-).find((frame): boolean => frame.type === 'control_response');
+  isWireFrame,
+).find(isControlResponse);
 const recordedModels =
-  initialization?.response.subtype === 'success'
-    ? (initialization.response.response as SDKControlInitializeResponse).models
+  initialization?.response.subtype === 'success' &&
+  isInitializeResponse(initialization.response.response)
+    ? initialization.response.response.models
     : undefined;
 if (!recordedModels) throw new Error('Image recording has no model catalog');
 const efforts = new Set<string>();

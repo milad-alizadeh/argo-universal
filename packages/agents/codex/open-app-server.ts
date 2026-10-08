@@ -1,14 +1,26 @@
 import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
 import { describeError } from '../src/describe-error';
-import type { VendorRequests } from './messages';
+import {
+  arrayOf,
+  hasFields,
+  isBoolean,
+  isRecord,
+  isString,
+  oneOf,
+  nullable,
+} from '../src/payload-shape.ts';
+import type { Model } from './config-options';
+import type { MappedTurn, VendorRequests } from './messages';
+import { isTurn } from './payloads.ts';
 import type {
+  Account,
   GetAccountParams,
-  GetAccountResponse,
   InitializeParams,
   InitializeResponse,
   ModelListParams,
   ModelListResponse,
+  Thread,
   ThreadResumeParams,
   ThreadResumeResponse,
   ThreadStartParams,
@@ -16,20 +28,9 @@ import type {
   TurnInterruptParams,
   TurnInterruptResponse,
   TurnStartParams,
-  TurnStartResponse,
 } from './protocol.gen';
 
 export const EXECUTABLE = 'codex';
-
-interface Requests {
-  initialize: [InitializeParams, InitializeResponse];
-  'account/read': [GetAccountParams, GetAccountResponse];
-  'model/list': [ModelListParams, ModelListResponse];
-  'thread/start': [ThreadStartParams, ThreadStartResponse];
-  'thread/resume': [ThreadResumeParams, ThreadResumeResponse];
-  'turn/start': [TurnStartParams, TurnStartResponse];
-  'turn/interrupt': [TurnInterruptParams, TurnInterruptResponse];
-}
 
 type AppServerMessage = {
   method: string;
@@ -151,7 +152,17 @@ export function openAppServer(
       }
       const id = ++nextId;
       pending.set(id, {
-        resolve: (result): void => resolve(result as Requests[Method][1]),
+        resolve: (result): void => {
+          if (!isResponse(method, result)) {
+            const error = new Error(
+              `Invalid app-server response for ${method}`,
+            );
+            reject(error);
+            fail(error);
+            return;
+          }
+          resolve(result);
+        },
         reject,
       });
       send({ id, method, params });
@@ -242,4 +253,76 @@ function readAppServerFrame(line: string): AppServerFrame {
   if (!('result' in message))
     throw new Error(`Unrecognised app-server message: ${preview}`);
   return { kind: 'result', id, result: message.result };
+}
+
+type ThreadIdentity<Response extends { thread: Thread }> = {
+  thread: Pick<Response['thread'], 'id'>;
+};
+export type ModelListPage = Pick<ModelListResponse, 'nextCursor'> & {
+  data: Model[];
+};
+interface Requests {
+  initialize: [InitializeParams, InitializeResponse];
+  'account/read': [GetAccountParams, { account: AccountIdentity | null }];
+  'model/list': [ModelListParams, ModelListPage];
+  'thread/start': [ThreadStartParams, ThreadIdentity<ThreadStartResponse>];
+  'thread/resume': [ThreadResumeParams, ThreadIdentity<ThreadResumeResponse>];
+  'turn/start': [TurnStartParams, { turn: MappedTurn }];
+  'turn/interrupt': [TurnInterruptParams, TurnInterruptResponse];
+}
+
+export type AccountIdentity = Account extends infer Value
+  ? Value extends Account
+    ? Pick<Value, 'type'>
+    : never
+  : never;
+const isAccount = (value: unknown): value is AccountIdentity =>
+  hasFields(value, { type: oneOf('apiKey', 'chatgpt', 'amazonBedrock') });
+const isEffort = (
+  value: unknown,
+): value is Model['supportedReasoningEfforts'][number] =>
+  hasFields(value, { reasoningEffort: isString, description: isString });
+const isModel = (value: unknown): value is Model =>
+  hasFields(value, {
+    model: isString,
+    displayName: isString,
+    description: isString,
+    hidden: isBoolean,
+    isDefault: isBoolean,
+    supportedReasoningEfforts: arrayOf(isEffort),
+    defaultReasoningEffort: isString,
+    inputModalities: arrayOf(
+      (value): value is Model['inputModalities'][number] =>
+        oneOf('text', 'image', 'audio')(value),
+    ),
+    supportsPersonality: isBoolean,
+  });
+export const isModelListResponse = (value: unknown): value is ModelListPage =>
+  hasFields(value, { data: arrayOf(isModel), nextCursor: nullable(isString) });
+const isThreadIdentity = (value: unknown): boolean =>
+  hasFields(value, {
+    thread: (thread): boolean => hasFields(thread, { id: isString }),
+  });
+const responsePredicates = {
+  initialize: (value: unknown): boolean =>
+    hasFields(value, {
+      userAgent: isString,
+      codexHome: isString,
+      platformFamily: isString,
+      platformOs: isString,
+    }),
+  'account/read': (value: unknown): boolean =>
+    hasFields(value, { account: nullable(isAccount) }),
+  'model/list': isModelListResponse,
+  'thread/start': isThreadIdentity,
+  'thread/resume': isThreadIdentity,
+  'turn/start': (value: unknown): boolean => hasFields(value, { turn: isTurn }),
+  'turn/interrupt': (value: unknown): boolean =>
+    isRecord(value) && Object.keys(value).length === 0,
+};
+function isResponse<Method extends keyof Requests>(
+  method: Method,
+  value: unknown,
+): value is Requests[Method][1] {
+  return responsePredicates[method](value);
 }

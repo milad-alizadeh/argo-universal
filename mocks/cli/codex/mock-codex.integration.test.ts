@@ -5,7 +5,12 @@ import path from 'node:path';
 import { promisify } from 'node:util';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { VendorMessage } from '../../../packages/agents/codex/messages.ts';
+import { isVendorMessage } from '../../../packages/agents/codex/payloads.ts';
 import { codexProtocolVersion } from '../../../packages/agents/codex/protocol.gen.ts';
+import {
+  type WireMessage,
+  isWireMessage,
+} from '../../../packages/agents/codex/wire-payloads.ts';
 import { startLineProcess } from '../line-process.ts';
 import type { MockCliOptions } from '../mock-cli.ts';
 import {
@@ -27,11 +32,10 @@ const recordedPayload = (
   readRecording(findRecording(RECORDINGS, name), PRODUCER).payload;
 
 // The wire messages of a recording, without the time each was captured.
-const wireMessages = (name: string): VendorMessage[] =>
-  recordedFrames<VendorMessage & { emittedAtMs?: number }>(
-    recordedPayload(name),
-    'messages',
-  ).map(({ emittedAtMs: _, ...message }): typeof message => message);
+const wireMessages = (name: string): WireMessage[] =>
+  recordedFrames(recordedPayload(name), 'messages', isWireMessage).map(
+    ({ emittedAtMs: _, ...message }): typeof message => message,
+  );
 
 let directory: string;
 
@@ -148,7 +152,7 @@ describe('mock Codex CLI', (): void => {
     const messages = wireMessages('file-change');
     const codex = await startAppServer();
 
-    await startTurn(codex, messages[0]?.params.threadId);
+    await startTurn(codex, threadIdOf(messages[0]));
     await codex.until(
       (message): boolean => message.method === 'turn/completed',
     );
@@ -168,7 +172,7 @@ describe('mock Codex CLI', (): void => {
       const messages = wireMessages(recording);
       const codex = await startAppServer({ recording, exitMidTurn: true });
 
-      await startTurn(codex, messages[0]?.params.threadId);
+      await startTurn(codex, threadIdOf(messages[0]));
 
       expect(await codex.exited).toBe(1);
       const started = messages.findIndex(
@@ -201,9 +205,10 @@ describe('mock Codex CLI', (): void => {
 it('holds the recorded interrupted Turn until the caller interrupts its command', async (): Promise<void> => {
   const messages = wireMessages('interrupt');
   const codex = await startAppServer({ recording: 'interrupt' });
-  await startTurn(codex, messages[0]?.params.threadId);
+  await startTurn(codex, threadIdOf(messages[0]));
   const prefix = await codex.until((wireMessage): boolean => {
-    const message = wireMessage as unknown as VendorMessage;
+    if (!isVendorMessage(wireMessage)) return false;
+    const message = wireMessage;
     return (
       message.method === 'item/started' &&
       message.params.item.type === 'commandExecution'
@@ -216,7 +221,7 @@ it('holds the recorded interrupted Turn until the caller interrupts its command'
     id: 4,
     method: 'turn/interrupt',
     params: {
-      threadId: messages[0]?.params.threadId,
+      threadId: threadIdOf(messages[0]),
       turnId: messages.find(
         (
           message,
@@ -265,3 +270,8 @@ it('reports an absent account when not signed in', async (): Promise<void> => {
   codex.close();
   expect(await codex.exited).toBe(0);
 });
+
+const threadIdOf = (frame: WireMessage | undefined): string | undefined =>
+  typeof frame?.params.threadId === 'string'
+    ? frame.params.threadId
+    : undefined;

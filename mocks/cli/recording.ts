@@ -6,11 +6,26 @@ import { z } from 'zod';
 export type Recording = { version: string; payload: unknown };
 
 // Validate the recording envelope here; vendor converters use their SDK's frame types (ADR-0015).
-export function recordedFrames<Frame>(payload: unknown, pipe: string): Frame[] {
+export function recordedFrames<Frame>(
+  payload: unknown,
+  pipe: string,
+  accepts: (value: unknown) => value is Frame,
+): Frame[] {
   const frames = Array.isArray(payload)
     ? payload
     : z.record(z.string(), z.unknown()).parse(payload)[pipe];
-  return z.array(z.looseObject({})).parse(frames) as Frame[];
+  return z
+    .array(z.unknown())
+    .parse(frames)
+    .map((frame): Frame => readFrame(frame, accepts));
+}
+
+function readFrame<Frame>(
+  frame: unknown,
+  accepts: (value: unknown) => value is Frame,
+): Frame {
+  if (!accepts(frame)) throw new Error('Unrecognised recorded vendor frame');
+  return frame;
 }
 
 const envelope = (

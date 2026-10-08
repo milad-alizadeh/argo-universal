@@ -34,6 +34,7 @@ const roots = [
   'v2/FileChangeRequestApprovalResponse',
   'v2/ToolRequestUserInputParams',
   'v2/ToolRequestUserInputResponse',
+  'ServerNotification',
 ];
 try {
   const version = execFileSync('codex', ['--version'], {

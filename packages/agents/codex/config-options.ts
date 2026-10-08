@@ -1,6 +1,23 @@
-import type { ConfigOptionIcon, SessionConfigOption } from '@repo/contracts';
+import type {
+  ConfigOptionIcon,
+  SessionConfigOption,
+  SessionConfigSelectOption,
+} from '@repo/contracts';
 import type { AgentConfigValue } from '../src/agent-events';
-import type { Model, ReasoningEffort } from './protocol.gen';
+import type { Model as ProtocolModel, ReasoningEffort } from './protocol.gen';
+
+export type Model = Pick<
+  ProtocolModel,
+  | 'model'
+  | 'displayName'
+  | 'description'
+  | 'hidden'
+  | 'isDefault'
+  | 'supportedReasoningEfforts'
+  | 'defaultReasoningEffort'
+  | 'inputModalities'
+  | 'supportsPersonality'
+>;
 
 const modeNames = {
   plan: 'Plan mode',
@@ -22,6 +39,10 @@ const modeMetadata = {
   NonNullable<SessionConfigOption['_meta']>['argo'] & { icon: ConfigOptionIcon }
 >;
 
+const isMode = (value: string): value is Mode => value in modeNames;
+const isConfigId = (value: string): value is keyof ConfigValues =>
+  value === 'mode' || value === 'model' || value === 'effort';
+
 export interface ConfigValues {
   model: string;
   effort: ReasoningEffort;
@@ -41,9 +62,9 @@ function allowedValues(
     model.supportedReasoningEfforts.find(
       (option): boolean => option.reasoningEffort === wanted.effort,
     )?.reasoningEffort ?? model.defaultReasoningEffort;
-  const mode = Object.keys(modeNames).find(
-    (mode): boolean => mode === wanted.mode,
-  ) as ConfigValues['mode'] | undefined;
+  const mode = Object.keys(modeNames)
+    .filter(isMode)
+    .find((mode): boolean => mode === wanted.mode);
   return { model: model.model, effort, mode: mode ?? 'default' };
 }
 export const startingValues = (
@@ -64,14 +85,12 @@ export function changeValue(
   values: ConfigValues,
   change: AgentConfigValue,
 ): ConfigValues | undefined {
-  if (!(change.configId in values)) return undefined;
+  if (!isConfigId(change.configId)) return undefined;
   const next = allowedValues(models, {
     ...values,
     [change.configId]: change.value,
   });
-  return next[change.configId as keyof ConfigValues] === change.value
-    ? next
-    : undefined;
+  return next[change.configId] === change.value ? next : undefined;
 }
 export function toConfigOptions(
   models: Model[],
@@ -84,21 +103,14 @@ export function toConfigOptions(
       name: 'Mode',
       category: 'mode',
       currentValue: values.mode,
-      options: Object.entries(modeNames).map(
-        ([value, name]): {
-          value: string;
-          name: string;
-          _meta: {
-            argo: (typeof modeMetadata)[Mode];
-          };
-          description: string;
-        } => ({
+      options: Object.keys(modeNames)
+        .filter(isMode)
+        .map((value): SessionConfigSelectOption => ({
           value,
-          name,
-          _meta: { argo: modeMetadata[value as ConfigValues['mode']] },
-          description: modeDescriptions[value as ConfigValues['mode']],
-        }),
-      ),
+          name: modeNames[value],
+          _meta: { argo: modeMetadata[value] },
+          description: modeDescriptions[value],
+        })),
     },
     {
       type: 'select',
@@ -106,37 +118,21 @@ export function toConfigOptions(
       name: 'Model',
       category: 'model',
       currentValue: values.model,
-      options: models.map(
-        (
-          model,
-        ): {
-          value: string;
-          name: string;
-          description: string;
-          _meta: {
-            argo: {
-              supportsEffort: boolean;
-              supportedEffortLevels: string[];
-              supportsImages: boolean;
-              supportsPersonality: boolean;
-            };
-          };
-        } => ({
-          value: model.model,
-          name: model.displayName,
-          description: model.description,
-          _meta: {
-            argo: {
-              supportsEffort: model.supportedReasoningEfforts.length > 0,
-              supportedEffortLevels: model.supportedReasoningEfforts.map(
-                (option): string => option.reasoningEffort,
-              ),
-              supportsImages: model.inputModalities.includes('image'),
-              supportsPersonality: model.supportsPersonality,
-            },
+      options: models.map((model): SessionConfigSelectOption => ({
+        value: model.model,
+        name: model.displayName,
+        description: model.description,
+        _meta: {
+          argo: {
+            supportsEffort: model.supportedReasoningEfforts.length > 0,
+            supportedEffortLevels: model.supportedReasoningEfforts.map(
+              (option): string => option.reasoningEffort,
+            ),
+            supportsImages: model.inputModalities.includes('image'),
+            supportsPersonality: model.supportsPersonality,
           },
-        }),
-      ),
+        },
+      })),
     },
     {
       type: 'select',
@@ -146,7 +142,7 @@ export function toConfigOptions(
       currentValue: values.effort,
       options: (
         modelFor(models, values.model)?.supportedReasoningEfforts ?? []
-      ).map((option): { value: string; name: string; description: string } => ({
+      ).map((option): SessionConfigSelectOption => ({
         value: option.reasoningEffort,
         name:
           option.reasoningEffort === 'xhigh'

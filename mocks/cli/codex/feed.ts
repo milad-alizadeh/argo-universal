@@ -1,9 +1,10 @@
 import path from 'node:path';
-import type { VendorMessage } from '../../../packages/agents/codex/messages.ts';
+import { isVendorMessage } from '../../../packages/agents/codex/payloads.ts';
 import {
   initialMappingState,
   toAgentEvents,
 } from '../../../packages/agents/codex/to-agent-events.ts';
+import { isWireMessage } from '../../../packages/agents/codex/wire-payloads.ts';
 import { recordedFeedEvents } from '../feed.ts';
 import { recordedDataUrlImage } from '../image.ts';
 import { findRecording, readRecording, recordedFrames } from '../recording.ts';
@@ -13,18 +14,19 @@ export function feedEvents(name: string): import('@repo/agents').AgentEvent[] {
     path.join(import.meta.dirname, 'recordings'),
     name,
   );
-  const messages = recordedFrames<VendorMessage & { emittedAtMs?: number }>(
+  const messages = recordedFrames(
     readRecording(file, 'codex-app-server').payload,
     'messages',
+    isWireMessage,
   );
   return recordedFeedEvents(
     { initialMappingState, toAgentEvents },
     messages.map(
-      (message): VendorMessage & { receivedAt: number | undefined } => ({
+      (message): typeof message & { receivedAt: number | undefined } => ({
         ...message,
         receivedAt: message.emittedAtMs,
       }),
-    ) as VendorMessage[],
+    ),
   );
 }
 
@@ -38,17 +40,20 @@ export function recordedPrompt(
     path.join(import.meta.dirname, 'recordings'),
     name,
   );
-  const messages = recordedFrames<VendorMessage & { emittedAtMs?: number }>(
+  const messages = recordedFrames(
     readRecording(file, 'codex-app-server').payload,
     'messages',
+    isWireMessage,
   );
   const completed = messages.find(
     (message): boolean =>
+      isVendorMessage(message) &&
       message.method === 'item/completed' &&
       message.params.item.type === 'userMessage',
   );
   if (
-    completed?.method !== 'item/completed' ||
+    !isVendorMessage(completed) ||
+    completed.method !== 'item/completed' ||
     completed.params.item.type !== 'userMessage'
   )
     return;

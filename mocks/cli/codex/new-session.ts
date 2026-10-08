@@ -3,18 +3,17 @@ import {
   startingValues,
   toConfigOptions,
 } from '../../../packages/agents/codex/config-options';
-import type { ModelListResponse } from '../../../packages/agents/codex/protocol.gen';
+import { isModelListResponse } from '../../../packages/agents/codex/open-app-server';
 import { recordedImagePrompt } from '../image';
-import { findRecording, readRecording, recordedFrames } from '../recording';
+import { findRecording, readRecording } from '../recording';
 
 const modelsPayload = readRecording(
   findRecording(path.join(import.meta.dirname, 'recordings'), 'model-list'),
   'codex-app-server',
 ).payload;
-const recordedModels = recordedFrames<ModelListResponse['data'][number]>(
-  modelsPayload,
-  'data',
-);
+if (!isModelListResponse(modelsPayload))
+  throw new Error('Invalid recorded model catalog');
+const recordedModels = modelsPayload.data;
 const efforts = new Set<string>();
 const models = recordedModels.filter((model): boolean => {
   const key = JSON.stringify(

@@ -2,11 +2,12 @@ import type {
   CommandAction,
   DiffChange,
   ToolCallStatus,
+  ToolCallLocation,
 } from '@repo/contracts';
 import type { FeedUpdate } from '../src/agent-events';
+import type { MappedThreadItem } from './messages.ts';
 import type {
   FileUpdateChange,
-  ThreadItem,
   CommandAction as VendorCommandAction,
 } from './protocol.gen';
 
@@ -15,7 +16,7 @@ export type ToolCallRow = Extract<
   { sessionUpdate: 'tool_call_update' }
 >;
 type ToolItem = Extract<
-  ThreadItem,
+  MappedThreadItem,
   { type: 'commandExecution' | 'fileChange' }
 >;
 
@@ -145,7 +146,7 @@ export function toToolCall(
     title: `Edit ${item.changes.map((change): string => change.path).join(', ')}`,
     name: item.type,
     kind: 'edit',
-    locations: item.changes.map((change): { path: string } => ({
+    locations: item.changes.map((change): ToolCallLocation => ({
       path: destinationPath(change),
     })),
     content: [

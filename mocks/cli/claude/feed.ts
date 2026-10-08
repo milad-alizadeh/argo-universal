@@ -1,9 +1,8 @@
 import path from 'node:path';
-import type {
-  SDKControlResponse,
-  SDKUserMessage,
-  VendorMessage,
-} from '../../../packages/agents/claude/messages.ts';
+import {
+  isWireFrame,
+  isUserMessage,
+} from '../../../packages/agents/claude/control-payloads.ts';
 import {
   initialMappingState,
   toAgentEvents,
@@ -17,9 +16,11 @@ export function feedEvents(name: string): import('@repo/agents').AgentEvent[] {
     path.join(import.meta.dirname, 'recordings'),
     name,
   );
-  const frames = recordedFrames<
-    (VendorMessage | SDKControlResponse) & { emittedAtMs?: number }
-  >(readRecording(file, 'claude-cli').payload, 'output');
+  const frames = recordedFrames(
+    readRecording(file, 'claude-cli').payload,
+    'output',
+    isWireFrame,
+  );
   return recordedFeedEvents(
     { initialMappingState, toAgentEvents },
     frames
@@ -31,7 +32,7 @@ export function feedEvents(name: string): import('@repo/agents').AgentEvent[] {
       .map((frame): typeof frame & { receivedAt: number | undefined } => ({
         ...frame,
         receivedAt: frame.emittedAtMs,
-      })) as VendorMessage[],
+      })),
   );
 }
 
@@ -45,10 +46,11 @@ export function recordedPrompt(
     path.join(import.meta.dirname, 'recordings'),
     name,
   );
-  const frame = recordedFrames<SDKUserMessage>(
+  const frame = recordedFrames(
     readRecording(file, 'claude-cli').payload,
     'input',
-  ).find((input): boolean => input.type === 'user');
+    isWireFrame,
+  ).find(isUserMessage);
   if (!frame) return;
   const { content } = frame.message;
   if (typeof content === 'string')

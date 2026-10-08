@@ -1,21 +1,18 @@
-import type { SDKControlRequest } from '@anthropic-ai/claude-agent-sdk';
-import type {
-  AskUserQuestionInput,
-  ExitPlanModeInput,
-} from '@anthropic-ai/claude-agent-sdk/sdk-tools';
-import { permissionOptions } from '@repo/contracts';
+import { permissionOptions, type PermissionOption } from '@repo/contracts';
 import type { AgentEvent } from '../src/agent-events';
-import { toElicitationForm } from '../src/elicitation-form';
+import {
+  toElicitationForm,
+  type ElicitationQuestion,
+} from '../src/elicitation-form';
+import type { MappedControlRequest } from './messages';
+import { isAskUserQuestionInput, isExitPlanModeInput } from './tool-inputs.ts';
 
-export function toRequestEvents(message: SDKControlRequest): AgentEvent[] {
+export function toRequestEvents(message: MappedControlRequest): AgentEvent[] {
   const request = message.request;
   if (request.subtype !== 'can_use_tool') return [];
   if (request.tool_name === 'ExitPlanMode') {
-    // The CLI records these Plan fields; ExitPlanModeInput leaves them as unknown extension keys.
-    const input = request.input as ExitPlanModeInput & {
-      plan: string;
-      planFilePath?: string;
-    };
+    const input = request.input;
+    if (!isExitPlanModeInput(input)) return [];
     const planId = `${request.tool_use_id}:plan`;
     return [
       {
@@ -44,7 +41,8 @@ export function toRequestEvents(message: SDKControlRequest): AgentEvent[] {
     ];
   }
   if (request.tool_name === 'AskUserQuestion') {
-    const input = request.input as unknown as AskUserQuestionInput;
+    const input = request.input;
+    if (!isAskUserQuestionInput(input)) return [];
     return [
       {
         type: 'agent.elicitationRequested',
@@ -55,23 +53,13 @@ export function toRequestEvents(message: SDKControlRequest): AgentEvent[] {
             .join('\n'),
           toolCallId: request.tool_use_id,
           requestedSchema: toElicitationForm(
-            input.questions.map(
-              (
-                question,
-              ): {
-                id: string;
-                title: string;
-                question: string;
-                options: typeof question.options;
-                multiple: typeof question.multiSelect;
-              } => ({
-                id: question.question,
-                title: question.header,
-                question: question.question,
-                options: question.options,
-                multiple: question.multiSelect,
-              }),
-            ),
+            input.questions.map((question): ElicitationQuestion => ({
+              id: question.question,
+              title: question.header,
+              question: question.question,
+              options: question.options,
+              multiple: question.multiSelect,
+            })),
           ),
         },
       },
@@ -83,15 +71,9 @@ export function toRequestEvents(message: SDKControlRequest): AgentEvent[] {
       request: {
         toolCallId: request.tool_use_id,
         title: request.tool_name,
-        options: permissionOptions.map(
-          (
-            option,
-          ): {
-            optionId: 'allow_once' | 'reject_once';
-            name: string;
-            kind: 'allow_once' | 'reject_once';
-          } => ({ ...option }),
-        ),
+        options: permissionOptions.map((option): PermissionOption => ({
+          ...option,
+        })),
       },
     },
   ];

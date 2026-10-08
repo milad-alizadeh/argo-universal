@@ -2,11 +2,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import type {
-  SDKControlRequest,
-  SDKControlResponse,
-  SDKMessage,
-} from '../../../packages/agents/claude/messages.ts';
+import { isWireFrame } from '../../../packages/agents/claude/control-payloads.ts';
 import { startLineProcess } from '../line-process.ts';
 import { mockCliScenarioEnvironment } from '../mock-cli.ts';
 import { findRecording, readRecording, recordedFrames } from '../recording.ts';
@@ -38,9 +34,7 @@ it.each(['permission', 'elicitation', 'plan-approved', 'plan-kept-planning'])(
       findRecording(path.join(import.meta.dirname, 'recordings'), recording),
       'claude-cli',
     ).payload;
-    const inputs = recordedFrames<
-      SDKMessage | SDKControlRequest | SDKControlResponse
-    >(payload, 'input');
+    const inputs = recordedFrames(payload, 'input', isWireFrame);
     const firstAnswer = inputs.findIndex(
       (frame): boolean => frame.type === 'control_response',
     );
@@ -62,9 +56,7 @@ it('reports and counts a malformed live Permission response', async (): Promise<
     findRecording(path.join(import.meta.dirname, 'recordings'), 'permission'),
     'claude-cli',
   ).payload;
-  const inputs = recordedFrames<
-    SDKMessage | SDKControlRequest | SDKControlResponse
-  >(payload, 'input');
+  const inputs = recordedFrames(payload, 'input', isWireFrame);
   const firstAnswer = inputs.findIndex(
     (frame): boolean => frame.type === 'control_response',
   );
