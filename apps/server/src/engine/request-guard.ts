@@ -1,3 +1,4 @@
+import type { IncomingHttpHeaders } from 'node:http';
 import { z } from 'zod';
 
 // No Origin (the native Apps), the desktop app, or a web App on this machine on any port.
@@ -9,18 +10,19 @@ const AllowedOrigin = z.union([
 
 const headerExcerptLength = 100;
 
-export type RequestGuard = ReturnType<typeof createRequestGuard>;
+type RequestHeaders = Record<'host', IncomingHttpHeaders['host']>;
+type UpgradeHeaders = RequestHeaders &
+  Record<'origin', IncomingHttpHeaders['origin']>;
+
+export interface RequestGuard {
+  allowsRequest: (headers: RequestHeaders) => boolean;
+  allowsUpgrade: (headers: UpgradeHeaders) => boolean;
+  allowsOrigin: (origin: IncomingHttpHeaders['origin']) => boolean;
+  report: (subject: string, value: string | undefined) => void;
+}
 
 // Checks Host on every request and Origin on every tRPC call, so a website cannot reach the Server (ADR 0002).
-export function createRequestGuard(port: number): {
-  allowsRequest: (headers: { host: string | undefined }) => boolean;
-  allowsUpgrade: (headers: {
-    host: string | undefined;
-    origin: string | undefined;
-  }) => boolean;
-  allowsOrigin: (origin: string | undefined) => boolean;
-  report: (subject: string, value: string | undefined) => void;
-} {
+export function createRequestGuard(port: number): RequestGuard {
   const AllowedHost = z.enum([`127.0.0.1:${port}`, `localhost:${port}`]);
   let rejectedRequests = 0;
 
@@ -45,12 +47,10 @@ export function createRequestGuard(port: number): {
   };
 
   return {
-    allowsRequest: (headers: { host: string | undefined }): boolean =>
+    allowsRequest: (headers: RequestHeaders): boolean =>
       allowsHost(headers.host),
-    allowsUpgrade: (headers: {
-      host: string | undefined;
-      origin: string | undefined;
-    }): boolean => allowsHost(headers.host) && allowsOrigin(headers.origin),
+    allowsUpgrade: (headers: UpgradeHeaders): boolean =>
+      allowsHost(headers.host) && allowsOrigin(headers.origin),
     allowsOrigin,
     report,
   };
