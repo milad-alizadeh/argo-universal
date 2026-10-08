@@ -1,8 +1,7 @@
-import { createServer } from 'node:http';
-import type { AddressInfo } from 'node:net';
+import { createServer, type Server } from 'node:http';
 import { appRouter } from '@repo/api';
 import { unreachableServices } from '@repo/api/mocks';
-import type { TRPCClient } from '@trpc/client';
+import { getUntypedClient } from '@trpc/client';
 import { type AnyTRPCRouter, initTRPC } from '@trpc/server';
 import { createHTTPHandler } from '@trpc/server/adapters/standalone';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
@@ -49,6 +48,13 @@ const uploadRouter = t.router({
     }),
 });
 
+const tcpPort = (server: Pick<Server, 'address'>): number => {
+  const address = server.address();
+  if (!address || typeof address === 'string')
+    throw new Error('Server has no TCP address');
+  return address.port;
+};
+
 // Serves one router over the WebSocket and over HTTP at /trpc/ on one server, as the Engine does.
 async function startMockServer(router: AnyTRPCRouter = appRouter): Promise<{
   url: string;
@@ -78,7 +84,7 @@ async function startMockServer(router: AnyTRPCRouter = appRouter): Promise<{
     server.closeAllConnections();
     server.close();
   });
-  const { port } = server.address() as AddressInfo;
+  const port = tcpPort(server);
   return {
     url: `ws://127.0.0.1:${port}`,
     connections: () => connections,
@@ -115,14 +121,14 @@ describe('createTRPCClient', () => {
     const server = await startMockServer(uploadRouter);
     const trpc = createTRPCClient(server.url);
     closers.push(trpc.close);
-    const client = trpc.client as unknown as TRPCClient<typeof uploadRouter>;
+    const client = getUntypedClient(trpc.client);
 
     const form = new FormData();
     form.set('file', new File([uploadedFileContent], 'notes.txt'));
-    expect(await client.upload.mutate(form)).toBe(uploadedFileContent);
+    expect(await client.mutation('upload', form)).toBe(uploadedFileContent);
     expect(server.httpRequests()).toBe(1);
 
-    expect(await client.ping.query()).toBe('pong');
+    expect(await client.query('ping')).toBe('pong');
     expect(server.httpRequests()).toBe(1);
     expect(server.connections()).toBe(1);
   });
@@ -135,15 +141,15 @@ describe('createTRPCClient', () => {
     });
     const trpc = createTRPCClient(server.url, () => attemptAllowed);
     closers.push(trpc.close);
-    const client = trpc.client as unknown as TRPCClient<typeof uploadRouter>;
+    const client = getUntypedClient(trpc.client);
 
     const form = new FormData();
     form.set('file', new File([uploadedFileContent], 'notes.txt'));
-    expect(await client.upload.mutate(form)).toBe(uploadedFileContent);
+    expect(await client.mutation('upload', form)).toBe(uploadedFileContent);
     expect(server.connections()).toBe(0);
 
     allowAttempt();
-    expect(await client.ping.query()).toBe('pong');
+    expect(await client.query('ping')).toBe('pong');
     expect(server.connections()).toBe(1);
   });
 });

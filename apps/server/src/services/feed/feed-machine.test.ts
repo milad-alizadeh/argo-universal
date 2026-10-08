@@ -1,15 +1,23 @@
 import type { FeedChange } from '@repo/contracts';
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
+import { terminalPaths } from '@repo/vitest/model-paths';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   type Actor,
-  type ActorLogic,
-  type AnyEventObject,
+  type ActorOptions,
   createActor,
-  type EventFromLogic,
+  matchesState,
   type SnapshotFrom,
 } from 'xstate';
-import { type EventExecutor, TestModel, type TestPath } from 'xstate/graph';
+import {
+  type AdjacencyMap,
+  type EventExecutor,
+  type GraphEventFromLogic,
+  type StatePath,
+  getShortestPaths,
+  getSimplePaths,
+  getAdjacencyMap,
+} from 'xstate/graph';
 import type { FeedStreamEvent } from './feed-change';
 import { feedMachine } from './feed-machine';
 import { findQueuedRow } from './feed-row';
@@ -38,7 +46,6 @@ const machine = feedMachine.provide({
   },
 });
 type FeedSnapshot = SnapshotFrom<typeof machine>;
-type FeedMachineEvent = EventFromLogic<typeof machine>;
 
 const input = {
   now: (): number => 1000,
@@ -111,14 +118,8 @@ const events = [
   { type: 'feed.flush' },
   { type: streamBatchDelayEvent },
   { type: storeDelayEvent },
-] as AnyEventObject[] as FeedMachineEvent[];
-
-// xstate/graph's types take no emitted events, so the model sees the machine without them.
-const graphLogic = machine as unknown as ActorLogic<
-  FeedSnapshot,
-  FeedMachineEvent,
-  typeof modelInput
->;
+] satisfies GraphEventFromLogic<typeof machine>[];
+type FeedMachineEvent = (typeof events)[number];
 
 // The message's place, and the state value; `via` names how a vertex was reached.
 const serializeWith =
@@ -147,28 +148,60 @@ const serializeWith =
     });
   };
 
+const canGraphEvent = (
+  snapshot: FeedSnapshot,
+  event: FeedMachineEvent,
+): boolean => {
+  switch (event.type) {
+    case streamBatchDelayEvent:
+      return snapshot.matches({ active: { stream: 'batching' } });
+    case storeDelayEvent:
+      return snapshot.matches({ active: { store: 'dirty' } });
+    default:
+      return snapshot.can(event);
+  }
+};
+
 const modelOptions = {
   input: modelInput,
   events,
   // A done actor ignores events, so the model must not send any.
   filterEvents: (snapshot: FeedSnapshot, event: FeedMachineEvent): boolean =>
-    snapshot.status === 'active' && snapshot.can(event),
-  stateMatcher: (snapshot: FeedSnapshot, key: string): boolean =>
-    snapshot.matches(key as never),
+    snapshot.status === 'active' && canGraphEvent(snapshot, event),
 };
-// A vertex for each transition, so the shortest paths reach every transition, back edges too.
-const transitionModel = new TestModel(graphLogic, {
+// A vertex for each transition, so shortest paths reach back edges too.
+const transitionOptions = {
   ...modelOptions,
   serializeState: serializeWith((): true => true),
-});
-// A vertex only for each self-transition, which keeps the simple paths of event orderings under 1,000.
-const orderingModel = new TestModel(graphLogic, {
+};
+// A vertex only for each self-transition keeps simple paths below 1,000.
+const orderingOptions = {
   ...modelOptions,
   serializeState: serializeWith((sameAsPrevious): boolean => sameAsPrevious),
-});
+};
 
 const rowIdOf = (event: FeedStreamEvent): string =>
   event.type === 'row.upsert' ? event.row.id : event.id;
+
+type FeedClock = NonNullable<ActorOptions<typeof machine>['clock']>;
+let scheduledCallbacks: Map<number, Parameters<FeedClock['setTimeout']>[0]>;
+const modelClock: FeedClock = {
+  setTimeout: (callback, delay): number => {
+    if (scheduledCallbacks.has(delay))
+      throw new Error(`Two Feed timers share ${delay} ms`);
+    scheduledCallbacks.set(delay, callback);
+    return delay;
+  },
+  clearTimeout: (delay: unknown): void => {
+    if (typeof delay === 'number') scheduledCallbacks.delete(delay);
+  },
+};
+const fireTimer = (delay: number): void => {
+  const callback = scheduledCallbacks.get(delay);
+  if (!callback) throw new Error(`No Feed callback scheduled for ${delay} ms`);
+  scheduledCallbacks.delete(delay);
+  callback();
+};
 
 // Holds whatever the timers would do, so the order of the two regions' timers stays the model's choice.
 const executors: Record<
@@ -176,7 +209,10 @@ const executors: Record<
   EventExecutor<FeedSnapshot, FeedMachineEvent>
 > = {
   'xstate.init': (): void => {
-    feed = createActor(machine, { input: modelInput }).start();
+    feed = createActor(machine, {
+      input: modelInput,
+      clock: modelClock,
+    }).start();
     feed.on('feed.batch', ({ events: batch }): void => {
       batches.push(batch);
     });
@@ -190,7 +226,18 @@ const executors: Record<
         ({ event }: { event: FeedMachineEvent }) => void,
       ] => [
         type,
-        ({ event }: { event: FeedMachineEvent }): void => feed.send(event),
+        ({ event }: { event: FeedMachineEvent }): void => {
+          switch (event.type) {
+            case streamBatchDelayEvent:
+              fireTimer(streamBatchDelayMs);
+              break;
+            case storeDelayEvent:
+              fireTimer(storeDelayMs);
+              break;
+            default:
+              feed.send(event);
+          }
+        },
       ],
     ),
   ),
@@ -263,9 +310,11 @@ const states: Record<string, (snapshot: FeedSnapshot) => void> = {
   },
 };
 
-const shortestPaths = transitionModel.getShortestPaths();
-const simplePaths = orderingModel.getSimplePaths();
-const title = (path: TestPath<FeedSnapshot, FeedMachineEvent>): string =>
+const shortestPaths = terminalPaths(
+  getShortestPaths(machine, transitionOptions),
+);
+const simplePaths = terminalPaths(getSimplePaths(machine, orderingOptions));
+const title = (path: StatePath<FeedSnapshot, FeedMachineEvent>): string =>
   path.steps
     .map(({ event }): string => {
       if (event.type !== 'feed.change')
@@ -278,6 +327,7 @@ const title = (path: TestPath<FeedSnapshot, FeedMachineEvent>): string =>
 
 beforeEach((): void => {
   vi.useFakeTimers();
+  scheduledCallbacks = new Map();
   batches = [];
   jobs = [];
   logLines = [];
@@ -295,18 +345,31 @@ describe('feed model', (): void => {
   ])('%s', (_, paths): void => {
     it.each(
       paths.map(
-        (path): [string, TestPath<FeedSnapshot, FeedMachineEvent>] =>
+        (path): [string, StatePath<FeedSnapshot, FeedMachineEvent>] =>
           [title(path), path] as const,
       ),
     )('%s', async (_, path): Promise<void> => {
-      await path.test({ events: executors, states });
+      for (const step of path.steps) {
+        const execute = executors[step.event.type];
+        if (!execute)
+          throw new Error(`Missing Feed executor for ${step.event.type}`);
+        await execute(step);
+        for (const [key, assertState] of Object.entries(states)) {
+          if (matchesState(key, step.state.value)) assertState(step.state);
+        }
+      }
     });
   });
 
   it('the generated paths walk every transition', (): void => {
     expect(
       unwalkedTransitions({
-        models: [transitionModel],
+        models: [
+          {
+            getAdjacencyMap: (): AdjacencyMap<FeedSnapshot, FeedMachineEvent> =>
+              getAdjacencyMap(machine, transitionOptions),
+          },
+        ],
         paths: [...shortestPaths, ...simplePaths],
         stateKey: (snapshot): string => JSON.stringify(snapshot.value),
         eventKey: (event): string => JSON.stringify(event),

@@ -40,17 +40,45 @@ function subscribe(listener: () => void) {
 }
 
 // Stands in for the Server's end of each WebSocket: it opens at once, answers PING, and never answers a request.
-class WebSocketMock extends EventTarget {
+class WebSocketMock extends EventTarget implements WebSocket {
   static readonly CONNECTING = 0;
   static readonly OPEN = 1;
   static readonly CLOSING = 2;
   static readonly CLOSED = 3;
 
-  readyState: number = WebSocketMock.CONNECTING;
-  binaryType: BinaryType = 'blob';
+  readonly CONNECTING = WebSocketMock.CONNECTING;
+  readonly OPEN = WebSocketMock.OPEN;
+  readonly CLOSING = WebSocketMock.CLOSING;
+  readonly CLOSED = WebSocketMock.CLOSED;
+  readonly bufferedAmount = 0;
+  readonly extensions = '';
+  readonly protocol = '';
+  readonly url: WebSocket['url'];
+  onopen: WebSocket['onopen'] = null;
+  onerror: WebSocket['onerror'] = null;
+  onclose: WebSocket['onclose'] = null;
+  onmessage: WebSocket['onmessage'] = null;
+  readyState: WebSocket['readyState'] = WebSocketMock.CONNECTING;
+  binaryType: WebSocket['binaryType'] = 'blob';
 
-  constructor(readonly url: string) {
+  constructor(
+    url: ConstructorParameters<typeof WebSocket>[0],
+    _protocols?: ConstructorParameters<typeof WebSocket>[1],
+  ) {
     super();
+    this.url = url.toString();
+    this.addEventListener('open', (event): void => {
+      this.onopen?.call(this, event);
+    });
+    this.addEventListener('error', (event): void => {
+      this.onerror?.call(this, event);
+    });
+    this.addEventListener('close', (event): void => {
+      if (event instanceof CloseEvent) this.onclose?.call(this, event);
+    });
+    this.addEventListener('message', (event): void => {
+      if (event instanceof MessageEvent) this.onmessage?.call(this, event);
+    });
     sockets.push(this);
     changed();
     setTimeout(() => {
@@ -64,7 +92,7 @@ class WebSocketMock extends EventTarget {
     return this.readyState === WebSocketMock.CLOSED;
   }
 
-  send(data: string): void {
+  send(data: Parameters<WebSocket['send']>[0]): void {
     if (data !== 'PING') return;
     setTimeout(() => {
       if (this.readyState !== WebSocketMock.OPEN) return;
@@ -72,10 +100,19 @@ class WebSocketMock extends EventTarget {
     });
   }
 
-  close(): void {
+  // Native control pongs have no JavaScript event; only the connecting-state error is observable.
+  ping(): void {
+    if (this.readyState === WebSocketMock.CONNECTING)
+      throw new Error('INVALID_STATE_ERR');
+  }
+
+  close(
+    code: Parameters<WebSocket['close']>[0] = 1000,
+    reason: Parameters<WebSocket['close']>[1] = '',
+  ): void {
     if (this.isClosed()) return;
     this.readyState = WebSocketMock.CLOSED;
-    this.dispatchEvent(new CloseEvent('close', { code: 1000 }));
+    this.dispatchEvent(new CloseEvent('close', { code, reason }));
     changed();
   }
 }
@@ -87,7 +124,7 @@ export function mockWebSocket() {
   screenSubscriptions = 0;
   statesScreensSaw.clear();
   changed();
-  globalThis.WebSocket = WebSocketMock as unknown as typeof WebSocket;
+  globalThis.WebSocket = WebSocketMock;
   return (): void => {
     globalThis.WebSocket = browserWebSocket;
   };

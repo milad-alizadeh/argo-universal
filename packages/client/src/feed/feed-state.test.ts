@@ -84,10 +84,9 @@ const beforeAppend = replay(
   mergeNewestPage(emptyFeed, page([], 0)),
   rowEvents(streamed.stream.slice(0, firstAppend)),
 );
-const append = streamed.stream[firstAppend] as Extract<
-  RowEvent,
-  { type: 'row.append' }
->;
+const append = streamed.stream[firstAppend];
+if (append?.type !== 'row.append')
+  throw new Error('No append in streamed recording');
 
 describe('applySubscriptionEvent', () => {
   it('asks for the whole row when an append does not start where its text ends', () => {

@@ -37,14 +37,16 @@ it.each([
   async (invalid): Promise<void> => {
     const caller = appRouter.createCaller({ services: unreachableServices() });
     await expect(
-      caller.session.new({
-        projectId: 'project-1',
-        agent: 'agent-one',
-        checkout: { type: 'main' },
-        configOptions: [],
-        prompt: [{ type: 'text', text: 'Build it' }],
-        ...invalid,
-      } as never),
+      Reflect.apply(caller.session.new, undefined, [
+        {
+          projectId: 'project-1',
+          agent: 'agent-one',
+          checkout: { type: 'main' },
+          configOptions: [],
+          prompt: [{ type: 'text', text: 'Build it' }],
+          ...invalid,
+        },
+      ]),
     ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
   },
 );

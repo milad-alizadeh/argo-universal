@@ -1,6 +1,5 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer, type Server } from 'node:http';
-import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -41,7 +40,10 @@ async function startMockServer(body: unknown): Promise<number> {
       typeof import('http').ServerResponse
     > => server.listen(0, '127.0.0.1', (): void => resolve()),
   );
-  return (server.address() as AddressInfo).port;
+  const address = server.address();
+  if (!address || typeof address === 'string')
+    throw new Error('Server has no TCP address');
+  return address.port;
 }
 
 beforeEach((): void => {

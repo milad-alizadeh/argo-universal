@@ -1,21 +1,26 @@
 import { randomUUID } from 'node:crypto';
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
+import { terminalPaths } from '@repo/vitest/model-paths';
 import { afterAll, expect, it } from 'vitest';
 import {
-  type ActorLogic,
-  type AnyEventObject,
   createActor,
-  type EventFromLogic,
   fromCallback,
   SimulatedClock,
   type SnapshotFrom,
 } from 'xstate';
-import { TestModel } from 'xstate/graph';
+import {
+  type AdjacencyMap,
+  type GraphEventFromLogic,
+  getAdjacencyMap,
+  getShortestPaths,
+} from 'xstate/graph';
 import { openTestDatabase } from '#mocks/database';
 import { registryMachine } from './registry-machine';
 import { sessionListMachine } from './session-list-machine';
 
 const refreshListEvent = 'list.refresh';
+const refreshDelayEvent =
+  'xstate.after.listRefreshDelay.sessionList.active.pending';
 
 const { database, directory: runtimeDirectory, remove } = openTestDatabase();
 afterAll(remove);
@@ -38,7 +43,6 @@ const input = {
 const machine = sessionListMachine.provide({
   actors: { observe: fromCallback((): void => {}) },
 });
-type ListEvent = EventFromLogic<typeof machine>;
 type ListSnapshot = SnapshotFrom<typeof machine>;
 // The model drives the pending state's named delay event as well as public events.
 const events = [
@@ -46,28 +50,30 @@ const events = [
   { type: 'list.failed', error: 'Unavailable database' },
   { type: 'list.stop' },
   { type: 'list.flush' },
-  { type: 'xstate.after.listRefreshDelay.sessionList.active.pending' },
-] as AnyEventObject[] as ListEvent[];
+  { type: refreshDelayEvent },
+] satisfies GraphEventFromLogic<typeof machine>[];
+type ListEvent = (typeof events)[number];
 const key = (snapshot: ListSnapshot): string => JSON.stringify(snapshot.value);
-// xstate/graph's types do not carry emitted events.
-const graphLogic = machine as unknown as ActorLogic<
-  ListSnapshot,
-  ListEvent,
-  typeof input
->;
-const model = new TestModel(graphLogic, {
+const options = {
   input,
   events,
-  filterEvents: (snapshot, event): boolean =>
+  filterEvents: (snapshot: ListSnapshot, event: ListEvent): boolean =>
     snapshot.status === 'active' &&
-    (event.type === refreshListEvent || snapshot.can(event)),
-  serializeState: (snapshot, event, previous): string =>
+    (event.type === refreshListEvent ||
+      (event.type === refreshDelayEvent
+        ? snapshot.matches({ active: 'pending' })
+        : snapshot.can(event))),
+  serializeState: (
+    snapshot: ListSnapshot,
+    event: ListEvent | undefined,
+    previous?: ListSnapshot,
+  ): string =>
     JSON.stringify({
       value: snapshot.value,
       via: event && `${previous && key(previous)} ${event.type}`,
     }),
-});
-const paths = model.getShortestPaths();
+};
+const paths = terminalPaths(getShortestPaths(machine, options));
 it.each(
   paths.map(
     (path, index): readonly [number, typeof path] => [index, path] as const,
@@ -75,31 +81,16 @@ it.each(
 )('walks list subscription model path %i', async (_, path): Promise<void> => {
   const clock = new SimulatedClock();
   const actor = createActor(machine, { input, clock }).start();
+  const execute = (event: ListEvent): void => {
+    if (event.type === refreshDelayEvent) clock.increment(100);
+    else actor.send(event);
+  };
   try {
-    await path.test({
-      events: Object.fromEntries(
-        events.map(
-          ({
-            type,
-          }): [
-            'list.failed' | 'list.flush' | 'list.refresh' | 'list.stop',
-            ({ event }: { event: AnyEventObject }) => void,
-          ] => [
-            type,
-            ({ event }: { event: AnyEventObject }): void => {
-              if (event.type.startsWith('xstate.after.')) clock.increment(100);
-              else actor.send(event as ListEvent);
-            },
-          ],
-        ),
-      ),
-      states: {
-        '*': (expected): void => {
-          expect(key(actor.getSnapshot())).toBe(key(expected));
-          expect(actor.getSnapshot().status).toBe(expected.status);
-        },
-      },
-    });
+    for (const [index, step] of path.steps.entries()) {
+      if (index > 0) execute(step.event);
+      expect(key(actor.getSnapshot())).toBe(key(step.state));
+      expect(actor.getSnapshot().status).toBe(step.state.status);
+    }
   } finally {
     actor.stop();
   }
@@ -107,7 +98,12 @@ it.each(
 it('the generated list subscription paths walk every transition', (): void => {
   expect(
     unwalkedTransitions({
-      models: [model],
+      models: [
+        {
+          getAdjacencyMap: (): AdjacencyMap<ListSnapshot, ListEvent> =>
+            getAdjacencyMap(machine, options),
+        },
+      ],
       paths,
       stateKey: key,
       eventKey: (event): typeof event.type => event.type,

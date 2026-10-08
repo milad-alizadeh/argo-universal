@@ -1,15 +1,23 @@
-import type { Database } from '@repo/db';
+import { type Database, openDatabase } from '@repo/db';
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
+import { terminalPaths } from '@repo/vitest/model-paths';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   type Actor,
-  type AnyEventObject,
   createActor,
-  type EventFromLogic,
+  matchesState,
   fromPromise,
   type SnapshotFrom,
 } from 'xstate';
-import { type EventExecutor, TestModel, type TestPath } from 'xstate/graph';
+import {
+  type AdjacencyMap,
+  type EventExecutor,
+  type GraphEventFromLogic,
+  type StatePath,
+  getAdjacencyMap,
+  getShortestPaths,
+  getSimplePaths,
+} from 'xstate/graph';
 import type { WriterJob } from './writer-job';
 import { writerMachine } from './writer-machine';
 
@@ -32,7 +40,7 @@ let sentJobs: WriterJob[];
 let committedJobs: WriterJob[];
 let writer: Actor<typeof machine>;
 
-const mockDatabase = {} as Database;
+const mockDatabase = openDatabase(':memory:');
 const machine = writerMachine.provide({
   actors: {
     writeBatch: fromPromise<void, { database: Database; jobs: WriterJob[] }>(
@@ -62,7 +70,6 @@ const machine = writerMachine.provide({
   },
 });
 type WriterSnapshot = SnapshotFrom<typeof machine>;
-type WriterEvent = EventFromLogic<typeof machine>;
 
 const input = {
   now: (): number => 1000,
@@ -85,32 +92,55 @@ const sendWrite = (): void => {
 const events = [
   { type: writeFeedEvent, job: job(0) },
   { type: drainWriterEvent },
-  { type: 'xstate.done.actor.writeBatch', actorId: 'writeBatch' },
+  {
+    type: 'xstate.done.actor.writeBatch',
+    actorId: 'writeBatch',
+    output: undefined,
+  },
   {
     type: 'xstate.error.actor.writeBatch',
     error: writeError,
     actorId: 'writeBatch',
   },
   { type: 'xstate.after.writeRetryDelay.databaseWriter.waitingToRetry' },
-] as AnyEventObject[] as WriterEvent[];
+] satisfies GraphEventFromLogic<typeof machine>[];
+type WriterEvent = (typeof events)[number];
 
-const model = new TestModel(machine, {
+const canGraphEvent = (
+  snapshot: WriterSnapshot,
+  event: WriterEvent,
+): boolean => {
+  switch (event.type) {
+    case 'xstate.done.actor.writeBatch':
+    case 'xstate.error.actor.writeBatch':
+      return snapshot.matches('writing') || snapshot.matches('draining');
+    case 'xstate.after.writeRetryDelay.databaseWriter.waitingToRetry':
+      return snapshot.matches('waitingToRetry');
+    default:
+      return snapshot.can(event);
+  }
+};
+
+const options = {
   input,
   events,
   limit: 1000,
   // A done actor ignores events, so the model must not send any.
-  filterEvents: (snapshot, event): boolean =>
-    snapshot.status === 'active' && snapshot.can(event),
+  filterEvents: (snapshot: WriterSnapshot, event: WriterEvent): boolean =>
+    snapshot.status === 'active' && canGraphEvent(snapshot, event),
   // Never the jobs themselves, only whether a batch runs and jobs wait behind it; `via` gives each self-transition its own vertex.
-  serializeState: (snapshot, event, previous): string =>
+  serializeState: (
+    snapshot: WriterSnapshot,
+    event: WriterEvent | undefined,
+    previous?: WriterSnapshot,
+  ): string =>
     JSON.stringify({
       value: snapshot.value,
       batch: snapshot.context.batchSize > 0,
       waiting: snapshot.context.queue.length > snapshot.context.batchSize,
       via: event && `${JSON.stringify(previous?.value)} ${event.type}`,
     }),
-  stateMatcher: (snapshot, key): boolean => snapshot.matches(key as never),
-});
+};
 
 const latestCall = (): WriteBatchCall =>
   writeBatchCalls.at(-1) ?? expect.unreachable('writeBatch was not invoked');
@@ -196,9 +226,10 @@ const states: Record<string, (snapshot: WriterSnapshot) => void> = {
   },
 };
 
-const shortestPaths = model.getShortestPaths();
-const simplePaths = model.getSimplePaths();
-const title = (path: TestPath<WriterSnapshot, WriterEvent>): string =>
+const shortestPaths = terminalPaths(getShortestPaths(machine, options));
+const simplePaths = terminalPaths(getSimplePaths(machine, options));
+mockDatabase.$client.close();
+const title = (path: StatePath<WriterSnapshot, WriterEvent>): string =>
   path.steps
     .map(({ event }): string =>
       event.type
@@ -208,6 +239,7 @@ const title = (path: TestPath<WriterSnapshot, WriterEvent>): string =>
     .join(' → ');
 
 beforeEach((): void => {
+  input.database = openDatabase(':memory:');
   vi.useFakeTimers();
   writeBatchCalls = [];
   logLines = [];
@@ -217,6 +249,7 @@ beforeEach((): void => {
 
 afterEach((): void => {
   writer.stop();
+  input.database.$client.close();
   vi.useRealTimers();
 });
 
@@ -227,25 +260,31 @@ describe('database writer model', (): void => {
   ])('%s', (_, paths): void => {
     it.each(
       paths.map(
-        (
-          path,
-        ): [
-          string,
-          TestPath<
-            WriterSnapshot,
-            { type: 'writer.write'; job: WriterJob } | { type: 'writer.drain' }
-          >,
-        ] => [title(path), path] as const,
+        (path): [string, StatePath<WriterSnapshot, WriterEvent>] =>
+          [title(path), path] as const,
       ),
     )('%s', async (_, path): Promise<void> => {
-      await path.test({ events: executors, states });
+      for (const step of path.steps) {
+        const execute = executors[step.event.type];
+        if (!execute)
+          throw new Error(`No Writer executor for ${step.event.type}`);
+        await execute(step);
+        for (const [key, assertState] of Object.entries(states)) {
+          if (matchesState(key, step.state.value)) assertState(step.state);
+        }
+      }
     });
   });
 
   it('the generated paths walk every transition', (): void => {
     expect(
       unwalkedTransitions({
-        models: [model],
+        models: [
+          {
+            getAdjacencyMap: (): AdjacencyMap<WriterSnapshot, WriterEvent> =>
+              getAdjacencyMap(machine, options),
+          },
+        ],
         paths: [...shortestPaths, ...simplePaths],
         stateKey: (snapshot): string => JSON.stringify(snapshot.value),
         eventKey: (event): typeof event.type => event.type,

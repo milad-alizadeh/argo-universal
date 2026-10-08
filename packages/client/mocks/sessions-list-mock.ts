@@ -52,7 +52,7 @@ export const nextPageLoadingMocks = {
   ...sessionListMocks,
   'session.list': ({
     cursor,
-  }): { sessions: typeof firstPageSessions; nextCursor: string } =>
+  }): FixtureOutput<'session.list'> | Promise<FixtureOutput<'session.list'>> =>
     cursor
       ? pending()()
       : { sessions: firstPageSessions, nextCursor: 'next-page' },

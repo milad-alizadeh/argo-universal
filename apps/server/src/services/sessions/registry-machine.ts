@@ -1,8 +1,4 @@
-import {
-  type AgentAdapter,
-  agentAdapters,
-  findAgentAdapter,
-} from '@repo/agents';
+import { type AgentAdapter, agentAdapters } from '@repo/agents';
 import type { Database } from '@repo/db';
 import {
   type ActorRefFrom,
@@ -13,6 +9,7 @@ import {
   setup,
 } from 'xstate';
 import { agentProbeId, agentProbeMachine } from '../agents';
+import { createRegistrySessionInput } from './registry-session-input';
 import type { SessionCreationInput } from './session-data';
 import { type SessionActorRef, sessionMachine } from './session-machine';
 import { sessionActorId } from './session-system';
@@ -84,26 +81,7 @@ export const registryMachine = setup({
           id: sessionActorId(event.sessionId),
           systemId: sessionActorId(event.sessionId),
           syncSnapshot: true,
-          input: {
-            database: context.database,
-            runtimeDirectory: context.runtimeDirectory,
-            now: context.now,
-            createId: context.createId,
-            adapter: findAgentAdapter(event.agent, context.adapters),
-            sessionId: event.sessionId,
-            ...(event.type === createSessionEvent
-              ? {
-                  kind: 'new',
-                  projectId: event.projectId,
-                  projectPath: event.projectPath,
-                  agent: event.agent,
-                  checkout: event.checkout,
-                  configOptions: event.configOptions,
-                  prompt: event.prompt,
-                  turnId: event.turnId,
-                }
-              : { kind: 'existing' }),
-          },
+          input: createRegistrySessionInput({ context, event }),
         });
         return {
           sessions: { ...context.sessions, [event.sessionId]: session },

@@ -55,7 +55,7 @@ const feedWith = (...rows: SessionUpdate[]): Feed => ({
 
 const update = (row: SessionUpdate): FeedUpdate => {
   const { sessionId, position, revision, turnId, ...rest } = row;
-  return rest as FeedUpdate;
+  return rest;
 };
 
 interface Accepted {
@@ -209,7 +209,7 @@ const accepted: Accepted[] = [
 interface Rejected {
   name: string;
   feed: Feed;
-  change: FeedChange;
+  change: unknown;
   rejection: RegExp;
 }
 
@@ -219,7 +219,7 @@ const rejected: Rejected[] = [
     feed: feedWith(),
     change: {
       type: 'upsert',
-      update: { ...update(command()), status: 'stuck' } as never,
+      update: { ...update(command()), status: 'stuck' },
     },
     rejection: /^row tool-1 does not match tool_call_update: /,
   },
@@ -313,7 +313,9 @@ describe('applyFeedChange', (): void => {
   );
 
   it.each(rejected)('rejects $name', ({ feed, change, rejection }): void => {
-    expect(applyFeedChange(feed, change, 'turn-1')).toEqual({
+    expect(
+      Reflect.apply(applyFeedChange, undefined, [feed, change, 'turn-1']),
+    ).toEqual({
       rejection: expect.stringMatching(rejection),
     });
   });

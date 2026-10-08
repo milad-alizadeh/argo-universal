@@ -17,9 +17,11 @@ export type AppOptions = { appTarget: 'web' | 'electron' };
 const repositoryRoot = path.resolve(import.meta.dirname, '..');
 const desktopDirectory = path.join(repositoryRoot, 'apps/desktop');
 // Resolve Electron from the desktop app, so the launch does not depend on pnpm hoisting.
-const electronPath = createRequire(path.join(desktopDirectory, 'package.json'))(
-  'electron',
-) as string;
+const electronPath = z
+  .string()
+  .parse(
+    createRequire(path.join(desktopDirectory, 'package.json'))('electron'),
+  );
 
 const ServerPackage = z.object({ version: z.string() });
 const ServerProcess = z.object({ pid: z.int() });

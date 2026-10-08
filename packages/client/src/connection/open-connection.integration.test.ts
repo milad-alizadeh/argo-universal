@@ -1,4 +1,3 @@
-import type { AddressInfo } from 'node:net';
 import { appRouter } from '@repo/api';
 import { unreachableServices } from '@repo/api/mocks';
 import { QueryClient, QueryObserver } from '@tanstack/react-query';
@@ -43,7 +42,9 @@ async function startServer(
       server.close(() => resolve());
     });
   closers.push(stop);
-  const address = server.address() as AddressInfo;
+  const address = server.address();
+  if (!address || typeof address === 'string')
+    throw new Error('Server has no TCP address');
   return { url: `ws://127.0.0.1:${address.port}`, port: address.port, stop };
 }
 

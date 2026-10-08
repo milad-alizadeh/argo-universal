@@ -131,16 +131,20 @@ function openServer({
         commands.get(stream.input.sessionId)?.push(command);
         if (command.type === 'agent.cancel')
           stream.send({ type: 'agent.turnEnded', stopReason: 'cancelled' });
-        if (command.type === 'agent.setConfigOption' && applyConfigOptions)
+        if (command.type === 'agent.setConfigOption' && applyConfigOptions) {
+          const value = command.value;
+          if (typeof value !== 'string')
+            throw new Error('Mock select option needs a string value');
           queueMicrotask((): void =>
             stream.send({
               type: agentConfigOptionsChangedEvent,
               configOptions: configOptions.map((option): typeof option => ({
                 ...option,
-                currentValue: command.value as string,
+                currentValue: value,
               })),
             }),
           );
+        }
       });
     },
   };
