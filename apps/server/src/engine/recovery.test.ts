@@ -478,11 +478,11 @@ describe('Engine restart recovery', () => {
         11, 5,
       ]);
       expect(reported).toHaveBeenCalledWith(
-        'recovery: rejected Feed shape #1 (session-1/invalid-message)',
+        'recovery: rejected Feed shape (session-1/invalid-message) #1',
         expect.anything(),
       );
       expect(reported).toHaveBeenCalledWith(
-        'recovery: rejected Feed shape #2 (session-2/future-payload)',
+        'recovery: rejected Feed shape (session-2/future-payload) #2',
         expect.anything(),
       );
     } finally {
@@ -527,7 +527,7 @@ it.each(
       revision: 1,
     });
     expect(reported).toHaveBeenCalledWith(
-      'recovery: rejected Feed shape #1 (session-1/bad-json)',
+      'recovery: rejected Feed shape (session-1/bad-json) #1',
       expect.anything(),
     );
   },

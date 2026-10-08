@@ -4,6 +4,7 @@ import { feedRow } from '@repo/db/schema';
 import { and, desc, eq, gt, isNull, ne, or, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/sqlite-core';
 import type { ActorRefFrom } from 'xstate';
+import { createRejectionCounter } from '../../lib/count-rejections';
 import {
   decodeStoredFeedRow,
   fromFeedRow,
@@ -19,7 +20,7 @@ export function createLiveHeaderRowsReader({
 }: {
   database: Database;
 }) {
-  let rejectedShapes = 0;
+  const rejections = createRejectionCounter('sessions');
   return ({
     writer,
     sessionId,
@@ -53,11 +54,7 @@ export function createLiveHeaderRowsReader({
         ];
       } catch (error) {
         rejected = true;
-        rejectedShapes += 1;
-        console.error(
-          `sessions: rejected live-header shape #${rejectedShapes}`,
-          error,
-        );
+        rejections.report('rejected live-header shape', error);
         return [];
       }
     });

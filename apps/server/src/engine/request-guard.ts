@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { createRejectionCounter } from '../lib/count-rejections';
 
 // No Origin (the native Apps), the desktop app, or a web App on this machine on any port.
 const AllowedOrigin = z.union([
@@ -14,13 +15,12 @@ export type RequestGuard = ReturnType<typeof createRequestGuard>;
 // Checks Host on every request and Origin on every tRPC call, so a website cannot reach the Server (ADR 0002).
 export function createRequestGuard(port: number) {
   const AllowedHost = z.enum([`127.0.0.1:${port}`, `localhost:${port}`]);
-  let rejectedRequests = 0;
+  const rejections = createRejectionCounter('engine');
 
   // Logs and counts every rejected request, whichever check rejected it.
-  const report = (subject: string, value: string | undefined) => {
-    rejectedRequests += 1;
-    console.error(
-      `engine: rejected ${subject} ${JSON.stringify(value?.slice(0, headerExcerptLength))} #${rejectedRequests}`,
+  const report = (subject: string, value: string | undefined): void => {
+    rejections.report(
+      `rejected ${subject} ${JSON.stringify(value?.slice(0, headerExcerptLength))}`,
     );
   };
 

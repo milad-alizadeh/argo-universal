@@ -8,6 +8,7 @@ import { session } from '@repo/db/schema';
 import { isSessionBranch } from '@repo/git';
 import { TRPCError } from '@trpc/server';
 import { eq, getTableColumns, sql } from 'drizzle-orm';
+import { createRejectionCounter } from '../../lib/count-rejections';
 
 // JSON is decoded per row at the reader boundary, after SQLite has returned the bounded result.
 export const storedSessionColumns = {
@@ -52,7 +53,7 @@ export function toSessionCheckout(row: {
 }
 
 export function createSessionReader(database: Database) {
-  let rejectedRows = 0;
+  const rejections = createRejectionCounter('sessions');
   return (sessionId: string) => {
     const stored = database
       .select({
@@ -80,11 +81,7 @@ export function createSessionReader(database: Database) {
       checkout: toSessionCheckout({ id, checkoutPath, checkoutBranch }),
     });
     if (!parsed.success) {
-      rejectedRows += 1;
-      console.error(
-        `sessions: rejected database row #${rejectedRows}`,
-        parsed.error,
-      );
+      rejections.report('rejected database row', parsed.error);
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Unrecognised Session row',

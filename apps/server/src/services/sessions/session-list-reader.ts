@@ -13,6 +13,7 @@ import {
 } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/sqlite-core';
 import type { ActorRefFrom } from 'xstate';
+import { createRejectionCounter } from '../../lib/count-rejections';
 import type { FeedActorRef } from '../feed/feed-machine';
 import {
   decodeStoredFeedRow,
@@ -53,13 +54,12 @@ export function createSessionListReader(options: {
 }) {
   const { database, sessions, writer } = options;
   const readLiveHeaderRows = createLiveHeaderRowsReader({ database });
-  let rejectedShapes = 0;
+  const rejections = createRejectionCounter('sessions');
   const validate = <Value>(read: () => Value): Value | undefined => {
     try {
       return read();
     } catch (error) {
-      rejectedShapes += 1;
-      console.error(`sessions: rejected list shape #${rejectedShapes}`, error);
+      rejections.report('rejected list shape', error);
       return undefined;
     }
   };
