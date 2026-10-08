@@ -31,6 +31,12 @@ interface Requests {
   'turn/interrupt': [TurnInterruptParams, TurnInterruptResponse];
 }
 
+type AppServerMessage = {
+  method: string;
+  params: unknown;
+  id: string | number | undefined;
+};
+
 const stderrTailLength = 2000;
 const rejectedLinePreviewLength = 200;
 const gracefulStopLimitMs = 3000;
@@ -39,11 +45,7 @@ const forcedStopLimitMs = 5000;
 // Owns the stdio transport and RPC correlation; vendor payloads use the generated types (ADR-0015).
 export function openAppServer(
   cwd: string,
-  onMessage: (message: {
-    method: string;
-    params: unknown;
-    id?: string | number;
-  }) => void,
+  onMessage: (message: AppServerMessage) => void,
   onFailure: (error: unknown) => void,
   signal: AbortSignal,
 ): {
@@ -197,7 +199,7 @@ export function openAppServer(
 }
 
 type AppServerFrame =
-  | { kind: 'message'; method: string; params: unknown; id?: string | number }
+  | ({ kind: 'message' } & AppServerMessage)
   | { kind: 'error'; id: number; message: string }
   | { kind: 'result'; id: number; result: unknown };
 

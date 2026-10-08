@@ -207,7 +207,7 @@ function mapBlock({
   rowId: string;
   messageId: string;
   mappingState: MappingState;
-  timestamp?: number;
+  timestamp: number | undefined;
 }): AgentMapping<MappingState> {
   switch (block.type) {
     case 'text':
