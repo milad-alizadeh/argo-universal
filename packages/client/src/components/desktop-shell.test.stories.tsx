@@ -183,7 +183,9 @@ export const MainContentUsesAvailableWidth: Story = {
     await waitFor(() =>
       expect(approve().getBoundingClientRect().height).toBe(32),
     );
-    await expect(canvas.getByText('session', { exact: true })).toBeVisible();
+    await expect(
+      await canvas.findByText('session', { exact: true }),
+    ).toBeVisible();
     await controlled.render({ inspectorState: 'open' });
     await waitFor(() =>
       expect(content.getBoundingClientRect().width).toBeLessThan(720),
@@ -231,7 +233,9 @@ export const MainContentUsesAvailableWidth: Story = {
     await waitFor(() =>
       expect(approve().getBoundingClientRect().height).toBe(32),
     );
-    await expect(canvas.getByText('session', { exact: true })).toBeVisible();
+    await expect(
+      await canvas.findByText('session', { exact: true }),
+    ).toBeVisible();
     const inspectorDivider = canvas.getByRole('separator', {
       name: resizeInspectorLabel,
     });

@@ -1,5 +1,5 @@
-import { appRouter } from '@repo/api';
-import { unreachableServices } from '@repo/api/mocks';
+import { unreachableServices } from '@repo/engine/mocks';
+import { appRouter } from '@repo/engine/router';
 import { QueryClient, QueryObserver } from '@tanstack/react-query';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { afterEach, describe, expect, it, vi } from 'vitest';

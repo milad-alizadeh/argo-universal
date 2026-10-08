@@ -17,15 +17,19 @@ Where the canon cannot apply as written, these are the recorded applications (ow
 
    | Tier | Packages | Inside a package |
    |---|---|---|
-   | Local | the apps; each Agent adapter folder | client `screens/` and `components/<feature>/`; Server `services/<domain>/`, `engine/`, `supervisor/` |
-   | Product | contracts, db, api, the shared Agent module, git, client | client `feed/`, `trpc/`, `connection/`, `navigation/`; a Server domain's `index.ts` |
-   | Generic | machine-log, uniwind, `tooling/*` | client `src/lib/` and the vendored `src/primitives/`; Server `src/lib/` |
+   | Local | the apps; each Agent adapter folder | client `screens/` and `components/<feature>/`; Engine `services/<domain>/` and `engine/`; Supervisor `supervisor/` |
+   | Product | contracts, db, api, engine, the shared Agent module, git, client | client `feed/`, `trpc/`, `connection/`, `navigation/`; a Server domain's `index.ts` |
+   | Generic | machine-log, uniwind, `tooling/*` | client `src/lib/` and the vendored `src/primitives/`; Engine `src/lib/` |
 
    Git is product because Checkout is a `GLOSSARY.md` term (ADR-0008). Shell and Turn have UI homonyms, so their word matches need a person. Switch to `lib/generic/` and `lib/product/` when three or more shared product modules need a home outside the client's four named product folders.
 
    The accepted exceptions are `millisecondsPerSecond` defined once per package, and the Composer importing the Plan proposal card from `requests/` for its card swap (Spec 0006, Owner #17).
 
    oxlint enforces the import direction with `no-restricted-imports` blocks in `tooling/oxlint/argo.json`; add a block when a tier folder is added. When to hoist and whether a name belongs to the product stay with code review, as A2 and TA1 leave them.
+
+10. **Thin Session handlers.** A5 permits the Session tRPC procedure to resolve its actor, apply the current admission checks, send one validated event and return the existing acknowledgement (Spec 0008, owner, 2026-10-08). This routing work stays beside the Session domain. Substantive rules, persistence and native lifecycle belong to domain operations and machines; there is no mandatory forwarding service or actor request/reply protocol.
+
+11. **Router type delivery.** The Engine package (`@repo/engine`) owns the one operational tRPC initialization, context, root and domain routers. The deployable Server (`apps/server`, `@repo/server`) owns the Supervisor and process startup, exports no library face, and depends on Engine. The App infers procedure inputs and outputs through `import type { AppRouter } from '@repo/engine/router'`, derived from that real router (Spec 0008, owner, 2026-10-08). This narrow type dependency is the application of A2/A3: oxlint rejects Engine runtime imports, unrelated Engine types and every deployable Server import in App production code. Reusable packages never depend on the deployable Server (owner, 2026-10-09). Canonical schemas stay in Contracts. Tests may load the real router; API mocks and the shared runtime-directory entry remain supported without an API-to-Engine package cycle. App typechecks and web/native builds prove the type graph and bundle boundary.
 
 Enforcement lands through a spec issue, folder by folder, so CI stays green.
 

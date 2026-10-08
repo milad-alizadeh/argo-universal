@@ -1,5 +1,5 @@
-import type { AppRouter } from '@repo/api';
 import type { SessionConfigOption, SessionNewInput } from '@repo/contracts';
+import type { AppRouter } from '@repo/engine/router';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import type { inferRouterOutputs } from '@trpc/server';
 import type * as React from 'react';

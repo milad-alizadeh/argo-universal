@@ -1,4 +1,4 @@
-import type { AppRouter } from '@repo/api';
+import type { AppRouter } from '@repo/engine/router';
 import * as trpc from '@trpc/client';
 
 export interface ServerClient {

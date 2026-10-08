@@ -1,11 +1,11 @@
 import { fork } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { EngineMessage } from '@repo/engine/ipc';
+import { createRejectionCounter } from '@repo/engine/rejections';
 import { fromCallback } from 'xstate';
-import { createRejectionCounter } from '../lib/count-rejections';
 import {
   type EngineCommand,
   type EngineEvent,
-  EngineMessage,
   WatchModeMessage,
 } from './engine-message';
 

@@ -1,0 +1,5 @@
+{
+  "extends": "@repo/typescript/node.json",
+  "compilerOptions": { "allowImportingTsExtensions": true },
+  "include": ["src", "mocks", "vitest.config.ts"]
+}

@@ -1,9 +1,9 @@
-import type { AppRouter } from '@repo/api';
 import type {
   FeedSubscribeOutput,
   FeedSyncPoint,
   SessionSnapshot,
 } from '@repo/contracts';
+import type { AppRouter } from '@repo/engine/router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { TRPCClientErrorLike } from '@trpc/client';
 import type { inferRouterOutputs } from '@trpc/server';

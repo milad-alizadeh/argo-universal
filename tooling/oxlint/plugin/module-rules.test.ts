@@ -44,8 +44,79 @@ ruleTester.run('api-type-only', apiTypeOnly, {
       filename: clientFile,
     },
     { code: "import { z } from '@repo/apis';", filename: clientFile },
+    {
+      code: "import type Router = require('@repo/api');",
+      filename: clientFile,
+    },
+    {
+      code: "type Router = import('@repo/api').AppRouter;",
+      filename: clientFile,
+    },
+    {
+      code: "import type { AppRouter } from '@repo/engine/router';",
+      filename: clientFile,
+    },
+    {
+      code: "export type { AppRouter } from '@repo/engine/router';",
+      filename: clientFile,
+    },
   ],
   invalid: [
+    {
+      code: "import type { AppRouter } from '@repo/server/router';",
+      filename: clientFile,
+      errors: apiValue,
+    },
+    {
+      code: "import { appRouter } from '@repo/server/router';",
+      filename: clientFile,
+      errors: apiValue,
+    },
+    {
+      code: "import services = require('@repo/engine/mocks');",
+      filename: clientFile,
+      errors: apiValue,
+    },
+    {
+      code: "import router = require('@repo/api');",
+      filename: clientFile,
+      errors: apiValue,
+    },
+    {
+      code: "type Services = ReturnType<typeof import('@repo/engine/mocks').unreachableServices>;",
+      filename: clientFile,
+      errors: apiValue,
+    },
+    {
+      code: "type Router = import('@repo/engine/router').AppRouter;",
+      filename: clientFile,
+      errors: apiValue,
+    },
+    {
+      code: "import { appRouter } from '@repo/engine/router';",
+      filename: clientFile,
+      errors: apiValue,
+    },
+    {
+      code: "import type { AppRouter } from '@repo/engine/internal';",
+      filename: clientFile,
+      errors: apiValue,
+    },
+    {
+      code: "import type { Other } from '@repo/engine/router';",
+      filename: clientFile,
+      errors: apiValue,
+    },
+    {
+      code: "export type * from '@repo/engine/router';",
+      filename: clientFile,
+      errors: apiValue,
+    },
+    {
+      code: "await import('@repo/engine/router');",
+      filename: clientFile,
+      errors: apiValue,
+    },
     {
       code: "import { appRouter } from '@repo/api';",
       filename: clientFile,

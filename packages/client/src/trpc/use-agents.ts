@@ -1,5 +1,5 @@
-import type { AppRouter } from '@repo/api';
 import type { AgentInfo } from '@repo/contracts';
+import type { AppRouter } from '@repo/engine/router';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { TRPCClientErrorLike } from '@trpc/client';
