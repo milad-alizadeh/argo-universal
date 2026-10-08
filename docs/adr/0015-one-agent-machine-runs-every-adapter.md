@@ -22,5 +22,5 @@ This follows old Argo's ADR-0047, which replaced its per-vendor machines with as
 ## Considered Options
 
 - A machine per adapter, as first designed. Replaced: the copies drift, every adapter needs its own model-based tests for the same states, and the Claude machine mapped each message twice to decide whether a Turn ended.
-- A stateful class per vendor, as Paseo's `ClaudeAgentSession` is. Rejected: the mapping stays a pure function that recordings drive, with its state in the machine's context.
+- A stateful class per vendor, as Paseo's `ClaudeAgentSession` is. Rejected: the mapping stays a pure function that typed response fixtures drive, with its state in the machine's context.
 - Zod schemas for every vendor message. Replaced: the SDK already types its messages, and the Feed checks the result against the contract.

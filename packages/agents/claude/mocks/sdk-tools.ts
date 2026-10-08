@@ -1,3 +1,9 @@
+import type {
+  BashInput,
+  FileEditInput,
+  FileReadInput,
+  FileWriteInput,
+} from '@anthropic-ai/claude-agent-sdk/sdk-tools';
 import type { VendorMessage } from '../messages';
 import { assistant, user } from './sdk-messages';
 import { completed } from './sdk-result';
@@ -21,7 +27,7 @@ export const edits: VendorMessage[] = [
           file_path: '/project/notes.md',
           content:
             '# Todo\n\n- [ ] Update greeting in hello.txt\n- [ ] Review git status\n',
-        },
+        } satisfies FileWriteInput,
         caller: { type: 'direct' },
       },
     ]),
@@ -45,7 +51,7 @@ export const edits: VendorMessage[] = [
         type: 'tool_use',
         id: 'toolu_01SxWPoiSEcuefwQ7yYCUMf7',
         name: 'Read',
-        input: { file_path: helloPath },
+        input: { file_path: helloPath } satisfies FileReadInput,
         caller: { type: 'direct' },
       },
     ]),
@@ -82,7 +88,7 @@ export const edits: VendorMessage[] = [
           file_path: helloPath,
           old_string: 'hello world',
           new_string: 'hello Argo',
-        },
+        } satisfies FileEditInput,
         caller: { type: 'direct' },
       },
     ]),
@@ -109,7 +115,7 @@ export const edits: VendorMessage[] = [
         input: {
           command: 'cat hello.txt && git status --short',
           description: 'Show hello.txt and short git status',
-        },
+        } satisfies BashInput,
         caller: { type: 'direct' },
       },
     ]),

@@ -1,3 +1,4 @@
+import type { BashInput } from '@anthropic-ai/claude-agent-sdk/sdk-tools';
 import type { VendorMessage } from '../messages';
 import { assistant, user } from './sdk-messages';
 import { completed } from './sdk-result';
@@ -29,7 +30,7 @@ export const interrupted: VendorMessage[] = [
       input: {
         command: 'sleep 20 && echo done',
         description: 'Wait 20 seconds then print done',
-      },
+      } satisfies BashInput,
       caller: { type: 'direct' },
     },
   ]),
