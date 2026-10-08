@@ -1,21 +1,25 @@
-import type { SDKControlRequest } from '@anthropic-ai/claude-agent-sdk';
-import type {
-  AskUserQuestionInput,
-  ExitPlanModeInput,
-} from '@anthropic-ai/claude-agent-sdk/sdk-tools';
-import { permissionOptions } from '@repo/contracts';
-import type { AgentEvent } from '../src/agent-events';
-import { toElicitationForm } from '../src/elicitation-form';
+import {
+  PlanMarkdown,
+  permissionOptions,
+  type PermissionOption,
+} from '@repo/contracts';
+import { parseAgentEvent, type AgentEvent } from '../src/agent-events';
+import { dictionary } from './dictionary';
+import type { SDKControlRequest } from './messages';
 
 export function toRequestEvents(message: SDKControlRequest): AgentEvent[] {
   const request = message.request;
   if (request.subtype !== 'can_use_tool') return [];
   if (request.tool_name === 'ExitPlanMode') {
-    // The CLI records these Plan fields; ExitPlanModeInput leaves them as unknown extension keys.
-    const input = request.input as ExitPlanModeInput & {
-      plan: string;
-      planFilePath?: string;
-    };
+    const input = request.input;
+    const plan = PlanMarkdown.parse({
+      type: 'markdown',
+      planId: `${request.tool_use_id}:plan`,
+      content: input.plan,
+      _meta: {
+        argo: { requestId: message.request_id, filePath: input.planFilePath },
+      },
+    });
     const planId = `${request.tool_use_id}:plan`;
     return [
       {
@@ -26,55 +30,59 @@ export function toRequestEvents(message: SDKControlRequest): AgentEvent[] {
             id: planId,
             sessionUpdate: 'plan_update',
             state: 'settled',
-            plan: {
-              type: 'markdown',
-              planId,
-              content: input.plan,
-              _meta: {
-                argo: {
-                  requestId: message.request_id,
-                  filePath: input.planFilePath,
-                },
-              },
-            },
+            plan,
           },
         },
       },
-      { type: 'agent.planProposed', planId, content: input.plan },
+      { type: 'agent.planProposed', planId, content: plan.content },
     ];
   }
   if (request.tool_name === 'AskUserQuestion') {
-    const input = request.input as unknown as AskUserQuestionInput;
+    const input = request.input;
+    if (!Array.isArray(input.questions)) throw new Error('Expected questions');
+    const questions = input.questions.map(
+      (question: unknown): Record<string, unknown> => dictionary(question),
+    );
+    const names = questions.map((question): unknown => question.question);
+    const requestedSchema = {
+      type: 'object',
+      properties: Object.fromEntries(
+        questions.map((question, index): [string, unknown] => {
+          if (!Array.isArray(question.options))
+            throw new Error('Expected question options');
+          const choices = question.options.map((option: unknown): object => {
+            const fields = dictionary(option);
+            return {
+              const: fields.label,
+              title: fields.label,
+              description: fields.description,
+            };
+          });
+          return [
+            typeof names[index] === 'string' ? names[index] : '',
+            {
+              type: question.multiSelect === true ? 'array' : 'string',
+              title: question.header,
+              description: question.question,
+              ...(question.multiSelect === true
+                ? { items: { anyOf: choices } }
+                : { oneOf: choices }),
+            },
+          ];
+        }),
+      ),
+      required: names,
+    };
     return [
-      {
+      parseAgentEvent({
         type: 'agent.elicitationRequested',
         request: {
           mode: 'form',
-          message: input.questions
-            .map((question): string => question.question)
-            .join('\n'),
+          message: names.join('\n'),
           toolCallId: request.tool_use_id,
-          requestedSchema: toElicitationForm(
-            input.questions.map(
-              (
-                question,
-              ): {
-                id: string;
-                title: string;
-                question: string;
-                options: typeof question.options;
-                multiple: typeof question.multiSelect;
-              } => ({
-                id: question.question,
-                title: question.header,
-                question: question.question,
-                options: question.options,
-                multiple: question.multiSelect,
-              }),
-            ),
-          ),
+          requestedSchema,
         },
-      },
+      }),
     ];
   }
   return [
@@ -83,15 +91,9 @@ export function toRequestEvents(message: SDKControlRequest): AgentEvent[] {
       request: {
         toolCallId: request.tool_use_id,
         title: request.tool_name,
-        options: permissionOptions.map(
-          (
-            option,
-          ): {
-            optionId: 'allow_once' | 'reject_once';
-            name: string;
-            kind: 'allow_once' | 'reject_once';
-          } => ({ ...option }),
-        ),
+        options: permissionOptions.map((option): PermissionOption => ({
+          ...option,
+        })),
       },
     },
   ];

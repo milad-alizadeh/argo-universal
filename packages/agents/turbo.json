@@ -1,10 +1,4 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
-  "extends": ["//"],
-  "tasks": {
-    "test": {
-      // Adapter tests read the recordings in mocks/, which depends on this package, so they cannot be a workspace dependency.
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/mocks/cli/*/recordings/**"]
-    }
-  }
+  "extends": ["//"]
 }

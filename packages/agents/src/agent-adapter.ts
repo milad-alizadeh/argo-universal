@@ -75,9 +75,20 @@ export interface AgentAdapter<Message = unknown, MappingState = unknown> {
     signal: AbortSignal,
   ): Promise<VendorSession>;
   initialMappingState(): MappingState;
-  // Pure, so recordings can drive it (ADR-0006).
+  // Pure, so typed response fixtures can drive it (ADR-0006).
   toAgentEvents(
     message: Message,
     mappingState: MappingState,
   ): AgentMapping<MappingState>;
+}
+
+export function rejectAgentMessage<MappingState>(
+  mappingState: MappingState,
+): AgentMapping<MappingState> {
+  return {
+    events: [
+      { type: 'agent.messageRejected', reason: 'Unrecognised vendor payload' },
+    ],
+    mappingState,
+  };
 }

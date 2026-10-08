@@ -1,5 +1,8 @@
 {
   "extends": "@repo/typescript/node.json",
-  "compilerOptions": { "exactOptionalPropertyTypes": true },
+  "compilerOptions": {
+    "exactOptionalPropertyTypes": true,
+    "allowImportingTsExtensions": true
+  },
   "include": ["src", "claude", "codex", "vitest.config.ts"]
 }

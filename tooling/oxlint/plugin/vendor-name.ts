@@ -9,7 +9,7 @@ export const vendorName = defineRule({
     type: 'problem',
     messages: {
       vendorName:
-        'A vendor name appears only inside packages/agents/<agent>/ and mocks/cli/<agent>/ (ADR-0004). Branch on a capability the adapter registers.',
+        'A vendor name appears only inside packages/agents/<agent>/ (ADR-0004). Branch on a capability the adapter registers.',
     },
   },
   create: (context): VendorNameVisitor => ({

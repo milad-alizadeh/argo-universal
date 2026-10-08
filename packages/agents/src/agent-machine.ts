@@ -6,30 +6,18 @@ import {
   sendTo,
   setup,
 } from 'xstate';
-import type { ActorRef, GuardArgs, Snapshot } from 'xstate';
-import type {
-  AgentAdapter,
-  AgentConnectInput,
-  AgentMapping,
-  AgentReady,
-} from './agent-adapter';
+import type { GuardArgs } from 'xstate';
+import type { AgentParent, AgentInput, AgentOutput } from './agent-input';
+export type { AgentParent, AgentInput, AgentOutput } from './agent-input';
+import type { AgentMapping, AgentReady } from './agent-adapter';
 import type {
   AgentCapabilities,
   AgentCommand,
   AgentEvent,
 } from './agent-events';
+import { acceptAgentEvent, AgentReadyData } from './agent-events';
+import type { VendorSessionInput } from './agent-input';
 import { describeError } from './describe-error';
-
-export type AgentParent = ActorRef<Snapshot<unknown>, AgentEvent>;
-
-export interface AgentInput extends AgentConnectInput {
-  adapter: AgentAdapter;
-  parent: AgentParent;
-}
-
-export interface AgentOutput {
-  failure: string | null;
-}
 
 const agentStartLimit = 10_000;
 
@@ -52,8 +40,12 @@ interface AgentContext extends AgentInput {
   failure: string | null;
 }
 
-type VendorSessionInput = AgentConnectInput & { adapter: AgentAdapter };
+const isTurnEvent =
+  (type: 'agent.turnStarted' | 'agent.turnEnded'): AgentTurnGuard =>
+  ({ event }): boolean =>
+    event.type === 'vendor.event' && event.event.type === type;
 
+// One machine runs every Agent; the Session passes in the adapter to run.
 // Starts the adapter's vendor session, maps its messages, and reports both as vendor events.
 function startVendorSession(
   { adapter, ...input }: VendorSessionInput,
@@ -70,8 +62,9 @@ function startVendorSession(
 
   const sendEvent = (event: AgentEvent): void => {
     if (controller.signal.aborted) return;
-    if (isReady) sendBack({ type: 'vendor.event', event });
-    else early.push(event);
+    const accepted = acceptAgentEvent(event);
+    if (isReady) sendBack({ type: 'vendor.event', event: accepted });
+    else early.push(accepted);
   };
   // Resolves to null when starting fails, after reporting it.
   const starting = adapter
@@ -91,7 +84,7 @@ function startVendorSession(
             return;
           }
           mappingState = mapped.mappingState;
-          mapped.events.forEach(sendEvent);
+          for (const event of mapped.events) sendEvent(event);
         },
         event: sendEvent,
         failed: (error): void => {
@@ -103,9 +96,15 @@ function startVendorSession(
     .then(
       (session): import('./agent-adapter').VendorSession => {
         if (controller.signal.aborted) return session;
-        sendBack({ type: 'vendor.ready', ready: session.ready });
+        const ready = AgentReadyData.safeParse(session.ready);
+        if (!ready.success) {
+          fail(ready.error);
+          return session;
+        }
+        sendBack({ type: 'vendor.ready', ready: ready.data });
         isReady = true;
-        early.splice(0).forEach(sendEvent);
+        for (const event of early.splice(0))
+          sendBack({ type: 'vendor.event', event });
         return session;
       },
       (error: unknown): null => {
@@ -144,12 +143,6 @@ function startVendorSession(
   return { run, stop: (): undefined => void stop().catch((): void => {}) };
 }
 
-const isTurnEvent =
-  (type: 'agent.turnStarted' | 'agent.turnEnded'): AgentTurnGuard =>
-  ({ event }): boolean =>
-    event.type === 'vendor.event' && event.event.type === type;
-
-// One machine runs every Agent; the Session passes in the adapter to run.
 export const agentMachine = setup({
   types: {
     input: {} as AgentInput,

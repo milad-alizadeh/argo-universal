@@ -707,3 +707,369 @@ autoResolutionMs: number | null, };
 export type ToolRequestUserInputAnswer = { answers: Array<string>, };
 
 export type ToolRequestUserInputResponse = { answers: { [key in string]?: ToolRequestUserInputAnswer }, };
+
+export type FuzzyFileSearchSessionCompletedNotification = { sessionId: string, };
+
+export type FuzzyFileSearchMatchType = "file" | "directory";
+
+export type FuzzyFileSearchResult = { root: string, path: string, match_type: FuzzyFileSearchMatchType, file_name: string, score: number, indices: Array<number> | null, };
+
+export type FuzzyFileSearchSessionUpdatedNotification = { sessionId: string, query: string, files: Array<FuzzyFileSearchResult>, };
+
+export type DesktopOnboardingEntrypoint = "life_sciences";
+
+export type AccountLoginCompletedNotification = { loginId: string | null, success: boolean, error: string | null, onboardingEntrypoint: DesktopOnboardingEntrypoint | null, };
+
+export type CreditsSnapshot = { hasCredits: boolean, unlimited: boolean, balance: string | null, };
+
+export type RateLimitReachedType = "rate_limit_reached" | "workspace_owner_credits_depleted" | "workspace_member_credits_depleted" | "workspace_owner_usage_limit_reached" | "workspace_member_usage_limit_reached";
+
+export type RateLimitWindow = { usedPercent: number, windowDurationMins: number | null, resetsAt: number | null, };
+
+export type SpendControlLimitSnapshot = { limit: string, used: string, remainingPercent: number, resetsAt: number, };
+
+export type RateLimitSnapshot = { limitId: string | null, limitName: string | null,
+
+normalModelSlug: string | null, primary: RateLimitWindow | null, secondary: RateLimitWindow | null, credits: CreditsSnapshot | null, individualLimit: SpendControlLimitSnapshot | null,
+
+spendControlReached: boolean | null, planType: PlanType | null, rateLimitReachedType: RateLimitReachedType | null, };
+
+export type AccountRateLimitsUpdatedNotification = { rateLimits: RateLimitSnapshot, };
+
+export type AuthMode = "apikey" | "chatgpt" | "chatgptAuthTokens" | "headers" | "agentIdentity" | "personalAccessToken" | "bedrockApiKey" | "bedrockAccessKeys";
+
+export type AccountUpdatedNotification = { authMode: AuthMode | null, planType: PlanType | null, };
+
+export type AppBranding = { category: string | null, developer: string | null, website: string | null, privacyPolicy: string | null, termsOfService: string | null, isDiscoverableApp: boolean, };
+
+export type AppReview = { status: string, };
+
+export type AppScreenshot = { url: string | null, fileId: string | null, userPrompt: string, };
+
+export type AppMetadata = { review: AppReview | null, categories: Array<string> | null, subCategories: Array<string> | null, seoDescription: string | null, screenshots: Array<AppScreenshot> | null, developer: string | null, version: string | null, versionId: string | null, versionNotes: string | null, firstPartyRequiresInstall: boolean | null, showInComposerWhenUnlinked: boolean | null, };
+
+export type AppInfo = { id: string, name: string, description: string | null, logoUrl: string | null, logoUrlDark: string | null, iconAssets: { [key in string]?: string } | null, iconDarkAssets: { [key in string]?: string } | null, distributionChannel: string | null, branding: AppBranding | null, appMetadata: AppMetadata | null, labels: { [key in string]?: string } | null, installUrl: string | null, isAccessible: boolean,
+
+isEnabled: boolean, pluginDisplayNames: Array<string>, };
+
+export type AppListUpdatedNotification = { data: Array<AppInfo>, };
+
+export type AuthRecoveryNotification = { threadId: string, turnId: string, provider: string, message: string, };
+
+export type CommandExecOutputStream = "stdout" | "stderr";
+
+export type CommandExecOutputDeltaNotification = {
+
+processId: string,
+
+stream: CommandExecOutputStream,
+
+deltaBase64: string,
+
+capReached: boolean, };
+
+export type TextPosition = {
+
+line: number,
+
+column: number, };
+
+export type TextRange = { start: TextPosition, end: TextPosition, };
+
+export type ConfigWarningNotification = {
+
+summary: string,
+
+details: string | null,
+
+path?: string,
+
+range?: TextRange, };
+
+export type ContextCompactedNotification = { threadId: string, turnId: string, };
+
+export type DeprecationNoticeNotification = {
+
+summary: string,
+
+details: string | null, };
+
+export type EnvironmentConnectionNotification = { threadId: string, environmentId: string, };
+
+export type ErrorNotification = { error: TurnError, willRetry: boolean, threadId: string, turnId: string, };
+
+export type ExternalAgentConfigMigrationItemType = "AGENTS_MD" | "CONFIG" | "SKILLS" | "PLUGINS" | "MCP_SERVER_CONFIG" | "SUBAGENTS" | "HOOKS" | "COMMANDS" | "MEMORY" | "SESSIONS";
+
+export type ExternalAgentConfigImportItemTypeFailure = { itemType: ExternalAgentConfigMigrationItemType, errorType: string | null, subErrorType: string | null, failureStage: string, message: string, cwd: string | null, source: string | null, };
+
+export type ExternalAgentConfigImportItemTypeSuccess = { itemType: ExternalAgentConfigMigrationItemType, cwd: string | null, source: string | null, target: string | null,
+
+title: string | null, };
+
+export type ExternalAgentConfigImportTypeResult = { itemType: ExternalAgentConfigMigrationItemType, successes: Array<ExternalAgentConfigImportItemTypeSuccess>, failures: Array<ExternalAgentConfigImportItemTypeFailure>, };
+
+export type ExternalAgentConfigImportCompletedNotification = { importId: string, itemTypeResults: Array<ExternalAgentConfigImportTypeResult>, };
+
+export type ExternalAgentConfigImportProgressNotification = { importId: string, itemTypeResults: Array<ExternalAgentConfigImportTypeResult>, };
+
+export type FileChangeOutputDeltaNotification = { threadId: string, turnId: string, itemId: string, delta: string, };
+
+export type FileChangePatchUpdatedNotification = { threadId: string, turnId: string, itemId: string, changes: Array<FileUpdateChange>, };
+
+export type FsChangedNotification = {
+
+watchId: string,
+
+changedPaths: Array<AbsolutePathBuf>, };
+
+export type GatewayOAuthStatus = "notReady" | "started" | "succeeded" | "failed";
+
+export type GatewayOAuthChangedNotification = {
+
+authUrl: string | null, providerId: string, status: GatewayOAuthStatus, error: string | null, };
+
+export type GuardianWarningNotification = {
+
+threadId: string,
+
+message: string, };
+
+export type HookEventName = "preToolUse" | "permissionRequest" | "postToolUse" | "preCompact" | "postCompact" | "sessionStart" | "sessionEnd" | "userPromptSubmit" | "subagentStart" | "subagentStop" | "stop" | "interrupt";
+
+export type HookExecutionMode = "sync" | "async";
+
+export type HookHandlerType = "command" | "mcpTool" | "prompt" | "agent";
+
+export type HookOutputEntryKind = "warning" | "stop" | "feedback" | "context" | "error";
+
+export type HookOutputEntry = { kind: HookOutputEntryKind, text: string, };
+
+export type HookRunStatus = "running" | "completed" | "failed" | "blocked" | "stopped";
+
+export type HookScope = "thread" | "turn";
+
+export type HookSource = "system" | "user" | "project" | "mdm" | "sessionFlags" | "plugin" | "cloudRequirements" | "cloudManagedConfig" | "legacyManagedConfigFile" | "legacyManagedConfigMdm" | "unknown";
+
+export type HookRunSummary = { id: string, eventName: HookEventName, handlerType: HookHandlerType, executionMode: HookExecutionMode, scope: HookScope, sourcePath: AbsolutePathBuf, source: HookSource, displayOrder: bigint, status: HookRunStatus, statusMessage: string | null, startedAt: bigint, completedAt: bigint | null, durationMs: bigint | null, entries: Array<HookOutputEntry>, };
+
+export type HookCompletedNotification = { threadId: string, turnId: string | null, run: HookRunSummary, };
+
+export type HookStartedNotification = { threadId: string, turnId: string | null, run: HookRunSummary, };
+
+export type AutoReviewDecisionSource = "agent";
+
+export type GuardianApprovalReviewStatus = "inProgress" | "approved" | "denied" | "timedOut" | "aborted";
+
+export type GuardianRiskLevel = "low" | "medium" | "high" | "critical";
+
+export type GuardianUserAuthorization = "unknown" | "low" | "medium" | "high";
+
+export type GuardianApprovalReview = { status: GuardianApprovalReviewStatus, riskLevel: GuardianRiskLevel | null, userAuthorization: GuardianUserAuthorization | null, rationale: string | null, };
+
+export type GuardianCommandSource = "shell" | "unifiedExec";
+
+export type RequestPermissionProfile = { network: AdditionalNetworkPermissions | null, fileSystem: AdditionalFileSystemPermissions | null, };
+
+export type GuardianApprovalReviewAction = { "type": "command", source: GuardianCommandSource, command: string, cwd: LegacyAppPathString, } | { "type": "execve", source: GuardianCommandSource, program: string, argv: Array<string>, cwd: AbsolutePathBuf, } | { "type": "writeStdin", approvalId: string, processId: string, stdin: string, cwd: LegacyAppPathString, } | { "type": "applyPatch", cwd: LegacyAppPathString, files: Array<LegacyAppPathString>, } | { "type": "networkAccess", target: string, host: string, protocol: NetworkApprovalProtocol, port: number, } | { "type": "mcpToolCall", server: string, toolName: string, connectorId: string | null, connectorName: string | null, toolTitle: string | null, } | { "type": "requestPermissions", reason: string | null, permissions: RequestPermissionProfile, };
+
+export type ItemGuardianApprovalReviewCompletedNotification = { threadId: string, turnId: string,
+
+startedAtMs: number,
+
+completedAtMs: number,
+
+reviewId: string,
+
+targetItemId: string | null, decisionSource: AutoReviewDecisionSource, review: GuardianApprovalReview, action: GuardianApprovalReviewAction, };
+
+export type ItemGuardianApprovalReviewStartedNotification = { threadId: string, turnId: string,
+
+startedAtMs: number,
+
+reviewId: string,
+
+targetItemId: string | null, review: GuardianApprovalReview, action: GuardianApprovalReviewAction, };
+
+export type McpServerEventNotification = { method: string, params: JsonValue, };
+
+export type McpServerEventStreamNotification = { subscriptionId: string, notification: McpServerEventNotification, };
+
+export type McpServerOauthLoginCompletedNotification = { name: string, threadId: string | null, success: boolean, error?: string, };
+
+export type McpServerStartupFailureReason = "reauthenticationRequired";
+
+export type McpServerStartupState = "starting" | "ready" | "failed" | "cancelled";
+
+export type McpServerStatusUpdatedNotification = { threadId: string | null, name: string, status: McpServerStartupState, error: string | null, failureReason: McpServerStartupFailureReason | null, };
+
+export type McpToolCallProgressNotification = { threadId: string, turnId: string, itemId: string, message: string, };
+
+export type ModelRerouteReason = "highRiskCyberActivity";
+
+export type ModelReroutedNotification = { threadId: string, turnId: string, fromModel: string, toModel: string, reason: ModelRerouteReason, };
+
+export type ModelSafetyBufferingUpdatedNotification = { threadId: string, turnId: string, model: string, useCases: Array<string>, reasons: Array<string>, showBufferingUi: boolean, fasterModel: string | null, };
+
+export type ModelVerification = "trustedAccessForCyber";
+
+export type ModelVerificationNotification = { threadId: string, turnId: string, verifications: Array<ModelVerification>, };
+
+export type PlanDeltaNotification = { threadId: string, turnId: string, itemId: string, delta: string, };
+
+export type ProcessExitedNotification = {
+
+processHandle: string,
+
+exitCode: number,
+
+stdout: string,
+
+stdoutCapReached: boolean,
+
+stderr: string,
+
+stderrCapReached: boolean, };
+
+export type ProcessOutputStream = "stdout" | "stderr";
+
+export type ProcessOutputDeltaNotification = {
+
+processHandle: string,
+
+stream: ProcessOutputStream,
+
+deltaBase64: string,
+
+capReached: boolean, };
+
+export type ProjectChangeType = "created" | "updated" | "deleted";
+
+export type ProjectChangedNotification = { projectId: string, changeType: ProjectChangeType, };
+
+export type ResponseUsageMetadata = { amount: string | null, metadata: JsonValue | null, };
+
+export type RawResponseCompletedNotification = { threadId: string, turnId: string, responseId: string, usage: TokenUsageBreakdown | null, usageMetadata: ResponseUsageMetadata | null, };
+
+export type RawResponseItemCompletedNotification = { threadId: string, turnId: string, item: ResponseItem, };
+
+export type ReasoningSummaryPartAddedNotification = { threadId: string, turnId: string, itemId: string, summaryIndex: number, };
+
+export type RemoteControlConnectionStatus = "disabled" | "connecting" | "connected" | "errored";
+
+export type RemoteControlStatusChangedNotification = { status: RemoteControlConnectionStatus, serverName: string, installationId: string, environmentId: string | null, };
+
+export type RequestId = string | number;
+
+export type ServerRequestResolvedNotification = { threadId: string, requestId: RequestId, };
+
+export type SkillsChangedNotification = Record<string, never>;
+
+export type StrictReviewRequiredNotification = { threadId: string, turnId: string,
+
+startedAtMs: number, };
+
+export type TerminalInteractionNotification = { threadId: string, turnId: string, itemId: string, processId: string, stdin: string, };
+
+export type ThreadArchivedNotification = { threadId: string, };
+
+export type ThreadAttachmentOperation = "created" | "deleted";
+
+export type ThreadAttachmentUpdatedNotification = { threadId: string, attachmentType: string, identityKey: string, attachmentId: string, operation: ThreadAttachmentOperation, };
+
+export type ThreadClosedNotification = { threadId: string, };
+
+export type ThreadDeletedNotification = { threadId: string, };
+
+export type ThreadGoalClearedNotification = { threadId: string, };
+
+export type ThreadGoalStatus = "active" | "paused" | "blocked" | "usageLimited" | "budgetLimited" | "complete";
+
+export type ThreadGoal = { threadId: string, objective: string, status: ThreadGoalStatus, tokenBudget: number | null, tokensUsed: number, timeUsedSeconds: number, createdAt: number, updatedAt: number, };
+
+export type ThreadGoalUpdatedNotification = { threadId: string, turnId: string | null, goal: ThreadGoal, };
+
+export type ThreadNameUpdatedNotification = { threadId: string, threadName?: string, };
+
+export type ThreadProjectUpdatedNotification = { threadId: string, projectId: string | null, };
+
+export type ThreadQueueChangedNotification = { threadId: string, };
+
+export type ThreadRealtimeClosedNotification = { threadId: string, reason: string | null, };
+
+export type ThreadRealtimeErrorNotification = { threadId: string, message: string, };
+
+export type ThreadRealtimeItemAddedNotification = { threadId: string, item: JsonValue, };
+
+export type ThreadRealtimeBemItemPresentation = { "type": "wholeItem" } | { "type": "inlineMarkdown" } | { "type": "inlineVisualization", index: number, };
+
+export type ThreadRealtimeSessionOutcome = "ended" | "failed";
+
+export type ThreadRealtimeTranscriptRole = "user" | "assistant";
+
+export type ThreadRealtimeItem = { id: string, realtimeSessionId: string, } & ({ "type": "realtimeSessionStarted" } | { "type": "transcriptSegment", role: ThreadRealtimeTranscriptRole, text: string, } | { "type": "bemItemPromoted", turnId: string, itemId: string, presentation: ThreadRealtimeBemItemPresentation, } | { "type": "realtimeSessionClosed", outcome: ThreadRealtimeSessionOutcome, });
+
+export type ThreadRealtimeItemCompletedNotification = { threadId: string, item: ThreadRealtimeItem, };
+
+export type ThreadRealtimeItemStartedNotification = { threadId: string, item: ThreadRealtimeItem, };
+
+export type ThreadRealtimeItemTranscriptDeltaNotification = { threadId: string, itemId: string, delta: string, };
+
+export type ThreadRealtimeAudioChunk = { data: string, sampleRate: number, numChannels: number, samplesPerChannel: number | null, itemId: string | null, };
+
+export type ThreadRealtimeOutputAudioDeltaNotification = { threadId: string, audio: ThreadRealtimeAudioChunk, };
+
+export type ThreadRealtimeSdpNotification = { threadId: string, sdp: string, };
+
+export type RealtimeConversationVersion = "v1" | "v2" | "v3";
+
+export type ThreadRealtimeStartedNotification = { threadId: string, realtimeSessionId: string | null, version: RealtimeConversationVersion, };
+
+export type ThreadRealtimeTranscriptDeltaNotification = { threadId: string, role: string,
+
+delta: string, };
+
+export type ThreadRealtimeTranscriptDoneNotification = { threadId: string, role: string,
+
+text: string, };
+
+export type ThreadRevertedNotification = { threadId: string, };
+
+export type ThreadSettings = {
+
+disabledPluginIds: Array<string>, cwd: AbsolutePathBuf, approvalPolicy: AskForApproval, approvalsReviewer: ApprovalsReviewer, sandboxPolicy: SandboxPolicy, activePermissionProfile: ActivePermissionProfile | null, model: string, modelProvider: string, serviceTier: string | null, effort: ReasoningEffort | null, summary: ReasoningSummary | null, collaborationMode: CollaborationMode,
+
+multiAgentMode: MultiAgentMode,
+
+personality: Personality | null, };
+
+export type ThreadSettingsUpdatedNotification = { threadId: string, threadSettings: ThreadSettings, };
+
+export type ThreadStartedNotification = { thread: Thread, };
+
+export type ThreadStatusChangedNotification = { threadId: string, status: ThreadStatus, };
+
+export type ThreadUnarchivedNotification = { threadId: string, };
+
+export type TurnDiffUpdatedNotification = { threadId: string, turnId: string, diff: string, };
+
+export type TurnModerationMetadataNotification = { threadId: string, turnId: string, metadata: JsonValue, };
+
+export type TurnPlanStepStatus = "pending" | "inProgress" | "completed";
+
+export type TurnPlanStep = { step: string, status: TurnPlanStepStatus, };
+
+export type TurnPlanUpdatedNotification = { threadId: string, turnId: string, explanation: string | null, plan: Array<TurnPlanStep>, };
+
+export type WarningNotification = {
+
+threadId: string | null,
+
+message: string, };
+
+export type WindowsSandboxSetupMode = "elevated" | "unelevated";
+
+export type WindowsSandboxSetupCompletedNotification = { mode: WindowsSandboxSetupMode, success: boolean, error: string | null, };
+
+export type WindowsWorldWritableWarningNotification = { samplePaths: Array<string>, extraCount: number, failedScan: boolean, };
+
+export type ServerNotification = { "method": "error", "params": ErrorNotification } | { "method": "thread/started", "params": ThreadStartedNotification } | { "method": "thread/status/changed", "params": ThreadStatusChangedNotification } | { "method": "thread/archived", "params": ThreadArchivedNotification } | { "method": "thread/deleted", "params": ThreadDeletedNotification } | { "method": "thread/unarchived", "params": ThreadUnarchivedNotification } | { "method": "thread/closed", "params": ThreadClosedNotification } | { "method": "thread/reverted", "params": ThreadRevertedNotification } | { "method": "skills/changed", "params": SkillsChangedNotification } | { "method": "thread/name/updated", "params": ThreadNameUpdatedNotification } | { "method": "thread/attachment/updated", "params": ThreadAttachmentUpdatedNotification } | { "method": "thread/goal/updated", "params": ThreadGoalUpdatedNotification } | { "method": "thread/goal/cleared", "params": ThreadGoalClearedNotification } | { "method": "thread/queue/changed", "params": ThreadQueueChangedNotification } | { "method": "project/changed", "params": ProjectChangedNotification } | { "method": "thread/project/updated", "params": ThreadProjectUpdatedNotification } | { "method": "thread/environment/connected", "params": EnvironmentConnectionNotification } | { "method": "thread/environment/disconnected", "params": EnvironmentConnectionNotification } | { "method": "thread/settings/updated", "params": ThreadSettingsUpdatedNotification } | { "method": "thread/tokenUsage/updated", "params": ThreadTokenUsageUpdatedNotification } | { "method": "turn/started", "params": TurnStartedNotification } | { "method": "hook/started", "params": HookStartedNotification } | { "method": "turn/completed", "params": TurnCompletedNotification } | { "method": "hook/completed", "params": HookCompletedNotification } | { "method": "turn/diff/updated", "params": TurnDiffUpdatedNotification } | { "method": "turn/plan/updated", "params": TurnPlanUpdatedNotification } | { "method": "item/started", "params": ItemStartedNotification } | { "method": "item/autoApprovalReview/started", "params": ItemGuardianApprovalReviewStartedNotification } | { "method": "item/autoApprovalReview/completed", "params": ItemGuardianApprovalReviewCompletedNotification } | { "method": "autoApprovalReview/strictReviewRequired", "params": StrictReviewRequiredNotification } | { "method": "item/completed", "params": ItemCompletedNotification } | { "method": "rawResponseItem/completed", "params": RawResponseItemCompletedNotification } | { "method": "rawResponse/completed", "params": RawResponseCompletedNotification } | { "method": "item/agentMessage/delta", "params": AgentMessageDeltaNotification } | { "method": "item/plan/delta", "params": PlanDeltaNotification } | { "method": "command/exec/outputDelta", "params": CommandExecOutputDeltaNotification } | { "method": "process/outputDelta", "params": ProcessOutputDeltaNotification } | { "method": "process/exited", "params": ProcessExitedNotification } | { "method": "item/commandExecution/outputDelta", "params": CommandExecutionOutputDeltaNotification } | { "method": "item/commandExecution/terminalInteraction", "params": TerminalInteractionNotification } | { "method": "item/fileChange/outputDelta", "params": FileChangeOutputDeltaNotification } | { "method": "item/fileChange/patchUpdated", "params": FileChangePatchUpdatedNotification } | { "method": "serverRequest/resolved", "params": ServerRequestResolvedNotification } | { "method": "item/mcpToolCall/progress", "params": McpToolCallProgressNotification } | { "method": "mcpServer/oauthLogin/completed", "params": McpServerOauthLoginCompletedNotification } | { "method": "mcpServer/startupStatus/updated", "params": McpServerStatusUpdatedNotification } | { "method": "mcpServer/event/stream/notification", "params": McpServerEventStreamNotification } | { "method": "account/updated", "params": AccountUpdatedNotification } | { "method": "account/gatewayOAuth/changed", "params": GatewayOAuthChangedNotification } | { "method": "account/rateLimits/updated", "params": AccountRateLimitsUpdatedNotification } | { "method": "app/list/updated", "params": AppListUpdatedNotification } | { "method": "remoteControl/status/changed", "params": RemoteControlStatusChangedNotification } | { "method": "externalAgentConfig/import/progress", "params": ExternalAgentConfigImportProgressNotification } | { "method": "externalAgentConfig/import/completed", "params": ExternalAgentConfigImportCompletedNotification } | { "method": "fs/changed", "params": FsChangedNotification } | { "method": "item/reasoning/summaryTextDelta", "params": ReasoningSummaryTextDeltaNotification } | { "method": "item/reasoning/summaryPartAdded", "params": ReasoningSummaryPartAddedNotification } | { "method": "item/reasoning/textDelta", "params": ReasoningTextDeltaNotification } | { "method": "thread/compacted", "params": ContextCompactedNotification } | { "method": "model/rerouted", "params": ModelReroutedNotification } | { "method": "model/verification", "params": ModelVerificationNotification } | { "method": "modelProvider/authRecoveryStarted", "params": AuthRecoveryNotification } | { "method": "modelProvider/authRecoveryCompleted", "params": AuthRecoveryNotification } | { "method": "turn/moderationMetadata", "params": TurnModerationMetadataNotification } | { "method": "model/safetyBuffering/updated", "params": ModelSafetyBufferingUpdatedNotification } | { "method": "warning", "params": WarningNotification } | { "method": "guardianWarning", "params": GuardianWarningNotification } | { "method": "deprecationNotice", "params": DeprecationNoticeNotification } | { "method": "configWarning", "params": ConfigWarningNotification } | { "method": "fuzzyFileSearch/sessionUpdated", "params": FuzzyFileSearchSessionUpdatedNotification } | { "method": "fuzzyFileSearch/sessionCompleted", "params": FuzzyFileSearchSessionCompletedNotification } | { "method": "thread/realtime/started", "params": ThreadRealtimeStartedNotification } | { "method": "thread/realtime/itemAdded", "params": ThreadRealtimeItemAddedNotification } | { "method": "thread/realtime/item/started", "params": ThreadRealtimeItemStartedNotification } | { "method": "thread/realtime/item/transcript/delta", "params": ThreadRealtimeItemTranscriptDeltaNotification } | { "method": "thread/realtime/item/completed", "params": ThreadRealtimeItemCompletedNotification } | { "method": "thread/realtime/transcript/delta", "params": ThreadRealtimeTranscriptDeltaNotification } | { "method": "thread/realtime/transcript/done", "params": ThreadRealtimeTranscriptDoneNotification } | { "method": "thread/realtime/outputAudio/delta", "params": ThreadRealtimeOutputAudioDeltaNotification } | { "method": "thread/realtime/sdp", "params": ThreadRealtimeSdpNotification } | { "method": "thread/realtime/error", "params": ThreadRealtimeErrorNotification } | { "method": "thread/realtime/closed", "params": ThreadRealtimeClosedNotification } | { "method": "windows/worldWritableWarning", "params": WindowsWorldWritableWarningNotification } | { "method": "windowsSandbox/setupCompleted", "params": WindowsSandboxSetupCompletedNotification } | { "method": "account/login/completed", "params": AccountLoginCompletedNotification };

@@ -6,7 +6,7 @@ import type {
   UserMessage,
 } from '@repo/contracts';
 
-// The bytes of `mocks/cli/red-square.png`, the image both Agents' `image-prompt` recordings sent.
+// The bytes of `mocks/agent/red-square.png`, the shared image attachment mock.
 export const redSquareDataUrl =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKklEQVR4nGN4piFHU8QwasGoBaMWjFowasGoBaMWjFowasGoBaMWDBULANahsD1zXuJAAAAAAElFTkSuQmCC';
 
