@@ -27,7 +27,7 @@ class SessionSnapshotObserver implements Subscription {
   private feed: ReturnType<FeedDeps['findFeed']>;
   private sessionListener: Subscription | undefined;
   private feedListener: Subscription | undefined;
-  private failed = false;
+  private hasStopped = false;
   private serialized = '';
   private registryListener: Subscription | undefined;
   private readonly reader: SessionSnapshotReader;
@@ -49,12 +49,13 @@ class SessionSnapshotObserver implements Subscription {
   }
 
   public unsubscribe(): void {
-    this.unwatchSession();
+    this.sessionListener?.unsubscribe();
     this.unwatchFeed();
     this.registryListener?.unsubscribe();
   }
 
   private watchSession(): void {
+    this.sessionListener?.unsubscribe();
     this.sessionListener = this.session?.subscribe({
       next: (): void => this.changed(),
       complete: (): void => this.closed(),
@@ -73,18 +74,37 @@ class SessionSnapshotObserver implements Subscription {
   private sessionChanged(): void {
     const session = this.options.findSession(this.sessionId);
     if (session !== this.session) {
-      this.unwatchSession();
+      if (this.finishCurrent()) return;
       this.session = session;
       this.watchSession();
     }
     this.changed();
   }
 
-  private unwatchSession(): void {
-    this.sessionListener?.unsubscribe();
+  private finishCurrent(): boolean {
+    return this.session
+      ? this.finishSnapshot(this.session.getSnapshot())
+      : false;
+  }
+
+  private finishSnapshot(
+    snapshot: ReturnType<SessionActorRef['getSnapshot']>,
+  ): boolean {
+    switch (snapshot.status) {
+      case 'done':
+        this.closed();
+        return true;
+      case 'error':
+        this.reject(snapshot.error);
+        return true;
+      default:
+        return false;
+    }
   }
 
   private closed(): void {
+    if (this.hasStopped) return;
+    this.hasStopped = true;
     this.listener.next?.({
       type: 'closed',
       failure: this.failure(),
@@ -100,12 +120,12 @@ class SessionSnapshotObserver implements Subscription {
   }
 
   private reject(error: unknown): void {
-    this.failed = true;
+    this.hasStopped = true;
     this.listener.error?.(error);
   }
 
   private changed(): void {
-    if (this.failed) return;
+    if (this.hasStopped) return;
     try {
       this.watchFeed();
       this.publish();
