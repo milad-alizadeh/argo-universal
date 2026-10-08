@@ -708,7 +708,7 @@ export const ContentUpdatesKeepAnActiveToggleRunning: Story = {
       await expect(
         canvas.getByLabelText('2 Sessions need attention'),
       ).toBeVisible();
-      await expect(animations.mock.calls.length).toBe(started);
+      await expect(animations.mock.calls).toHaveLength(started);
       if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
         await expect(activeAnimation?.playState).not.toBe('idle');
       }

@@ -36,7 +36,7 @@ export function expectFadeColor(fade: Element, surface?: Element) {
     ? getComputedStyle(surface).backgroundColor
     : surfaceBehind(fade);
   const stops = fade.querySelectorAll('stop');
-  expect(stops.length).toBe(3);
+  expect(stops).toHaveLength(3);
   for (const stop of stops)
     expect(pixel(stop.getAttribute('stop-color') ?? '')).toEqual(
       pixel(surfaceColor),
