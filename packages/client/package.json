@@ -81,7 +81,7 @@
   },
   "devDependencies": {
     "@repo/api": "workspace:*",
-    "@repo/server": "workspace:*",
+    "@repo/engine": "workspace:*",
     "@repo/typescript": "workspace:*",
     "@repo/vitest": "workspace:*",
     "@storybook/react-native-web-vite": "catalog:",

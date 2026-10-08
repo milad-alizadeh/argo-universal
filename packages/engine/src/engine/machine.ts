@@ -11,12 +11,12 @@ import {
   sessionRegistryId,
   findSessionRegistry,
 } from '../services/sessions';
-import type { EngineMessage } from '../supervisor/engine-message';
 import {
   type HttpServer,
   type HttpServerOptions,
   startHttpServer,
 } from './http-server';
+import type { EngineMessage } from './ipc';
 import { type EngineStop, processSignals } from './process-signals';
 import { recoverAfterRestart } from './recovery';
 

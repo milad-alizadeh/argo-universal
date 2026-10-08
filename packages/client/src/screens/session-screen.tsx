@@ -3,7 +3,7 @@ import type {
   SessionUpdate,
   ToolCallUpdate,
 } from '@repo/contracts';
-import type { AppRouter } from '@repo/server/router';
+import type { AppRouter } from '@repo/engine/router';
 import { useMutation } from '@tanstack/react-query';
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
 import type * as React from 'react';

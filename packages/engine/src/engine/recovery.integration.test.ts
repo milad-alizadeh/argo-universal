@@ -31,7 +31,7 @@ import { type ActorRefFrom, createActor, waitFor } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
 import { storedFeedColumns } from '../services/feed';
 import { type FeedRowWrite, writeJobs } from '../services/feed';
-import type { EngineMessage } from '../supervisor/engine-message';
+import type { EngineMessage } from './ipc';
 import { engineMachine } from './machine';
 import { recoverAfterRestart } from './recovery';
 

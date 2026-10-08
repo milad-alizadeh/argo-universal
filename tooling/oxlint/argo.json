@@ -92,7 +92,7 @@
         "**/mocks/**",
         "tools/**",
         "apps/*/scripts/**",
-        "apps/server/src/engine/machine.ts",
+        "packages/engine/src/engine/machine.ts",
         "apps/server/src/supervisor/index.ts"
       ],
       "rules": { "no-console": "off" }
@@ -379,7 +379,7 @@
       "rules": { "import/no-nodejs-modules": "error" }
     },
     {
-      // D4: only AppRouter from the real Server router may cross into client/src, with import type (ADR-0016).
+      // D4: only AppRouter from the real Engine router may cross into client/src, with import type (ADR-0016).
       "files": ["packages/client/src/**"],
       "excludeFiles": ["**/*.test.*", "**/*.stories.*", "**/mocks/**"],
       "rules": { "argo/api-type-only": "error" }
@@ -531,7 +531,7 @@
     },
     {
       // D9
-      "files": ["apps/server/**"],
+      "files": ["apps/server/**", "packages/engine/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -546,9 +546,11 @@
                   "@repo/storybook",
                   "@repo/storybook/**",
                   "@repo/desktop",
-                  "@repo/desktop/**"
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
                 ],
-                "message": "The Server never imports client or an App."
+                "message": "The Engine and Supervisor never import client or an App."
               }
             ]
           }
@@ -556,7 +558,7 @@
       }
     },
     {
-      "files": ["apps/server/src/services/feed/**"],
+      "files": ["packages/engine/src/services/feed/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -571,9 +573,11 @@
                   "@repo/storybook",
                   "@repo/storybook/**",
                   "@repo/desktop",
-                  "@repo/desktop/**"
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
                 ],
-                "message": "The Server never imports client or an App."
+                "message": "The Engine and Supervisor never import client or an App."
               },
               {
                 "group": [
@@ -599,7 +603,7 @@
                   "!**/services/projects/index",
                   "!**/services/projects/index.ts"
                 ],
-                "message": "Import another Server domain through its index.ts face."
+                "message": "Import another Engine domain through its index.ts face."
               }
             ]
           }
@@ -607,7 +611,7 @@
       }
     },
     {
-      "files": ["apps/server/src/services/sessions/**"],
+      "files": ["packages/engine/src/services/sessions/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -622,9 +626,11 @@
                   "@repo/storybook",
                   "@repo/storybook/**",
                   "@repo/desktop",
-                  "@repo/desktop/**"
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
                 ],
-                "message": "The Server never imports client or an App."
+                "message": "The Engine and Supervisor never import client or an App."
               },
               {
                 "group": [
@@ -653,7 +659,7 @@
                   "!**/services/projects/index",
                   "!**/services/projects/index.ts"
                 ],
-                "message": "Import another Server domain through its index.ts face."
+                "message": "Import another Engine domain through its index.ts face."
               }
             ]
           }
@@ -661,7 +667,7 @@
       }
     },
     {
-      "files": ["apps/server/src/services/agents/**"],
+      "files": ["packages/engine/src/services/agents/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -676,9 +682,11 @@
                   "@repo/storybook",
                   "@repo/storybook/**",
                   "@repo/desktop",
-                  "@repo/desktop/**"
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
                 ],
-                "message": "The Server never imports client or an App."
+                "message": "The Engine and Supervisor never import client or an App."
               },
               {
                 "group": [
@@ -707,7 +715,7 @@
                   "!**/services/projects/index",
                   "!**/services/projects/index.ts"
                 ],
-                "message": "Import another Server domain through its index.ts face."
+                "message": "Import another Engine domain through its index.ts face."
               }
             ]
           }
@@ -715,7 +723,7 @@
       }
     },
     {
-      "files": ["apps/server/src/services/blob/**"],
+      "files": ["packages/engine/src/services/blob/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -730,9 +738,11 @@
                   "@repo/storybook",
                   "@repo/storybook/**",
                   "@repo/desktop",
-                  "@repo/desktop/**"
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
                 ],
-                "message": "The Server never imports client or an App."
+                "message": "The Engine and Supervisor never import client or an App."
               },
               {
                 "group": [
@@ -761,7 +771,7 @@
                   "!**/services/projects/index",
                   "!**/services/projects/index.ts"
                 ],
-                "message": "Import another Server domain through its index.ts face."
+                "message": "Import another Engine domain through its index.ts face."
               }
             ]
           }
@@ -769,7 +779,7 @@
       }
     },
     {
-      "files": ["apps/server/src/services/projects/**"],
+      "files": ["packages/engine/src/services/projects/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -784,9 +794,11 @@
                   "@repo/storybook",
                   "@repo/storybook/**",
                   "@repo/desktop",
-                  "@repo/desktop/**"
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
                 ],
-                "message": "The Server never imports client or an App."
+                "message": "The Engine and Supervisor never import client or an App."
               },
               {
                 "group": [
@@ -815,7 +827,7 @@
                   "!**/services/blob/index",
                   "!**/services/blob/index.ts"
                 ],
-                "message": "Import another Server domain through its index.ts face."
+                "message": "Import another Engine domain through its index.ts face."
               }
             ]
           }
@@ -823,13 +835,13 @@
       }
     },
     {
-      "files": ["apps/server/**"],
+      "files": ["apps/server/**", "packages/engine/**"],
       "excludeFiles": [
-        "apps/server/src/services/feed/**",
-        "apps/server/src/services/sessions/**",
-        "apps/server/src/services/agents/**",
-        "apps/server/src/services/blob/**",
-        "apps/server/src/services/projects/**"
+        "packages/engine/src/services/feed/**",
+        "packages/engine/src/services/sessions/**",
+        "packages/engine/src/services/agents/**",
+        "packages/engine/src/services/blob/**",
+        "packages/engine/src/services/projects/**"
       ],
       "rules": {
         "no-restricted-imports": [
@@ -845,9 +857,11 @@
                   "@repo/storybook",
                   "@repo/storybook/**",
                   "@repo/desktop",
-                  "@repo/desktop/**"
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
                 ],
-                "message": "The Server never imports client or an App."
+                "message": "The Engine and Supervisor never import client or an App."
               },
               {
                 "group": [
@@ -866,7 +880,7 @@
                   "!./*/index",
                   "!./*/index.ts"
                 ],
-                "message": "Import a Server domain through its index.ts face."
+                "message": "Import an Engine domain through its index.ts face."
               }
             ]
           }
@@ -922,19 +936,22 @@
     },
     {
       // Apps launch processes only at the three launchers; all git work stays in packages/git (ADR-0008).
-      "files": ["apps/**"],
+      "files": ["apps/**", "packages/engine/**"],
       "excludeFiles": [
         "**/*.test.*",
         "**/mocks/**",
         "apps/server/src/supervisor/engine-process.ts",
-        "apps/server/src/services/system/info.ts",
+        "packages/engine/src/services/system/info.ts",
         "apps/desktop/src/main/server-process.ts"
       ],
       "rules": { "argo/child-process": "error" }
     },
     {
       // Server machines take their clock and id generator from input.
-      "files": ["apps/server/src/**/*machine.ts"],
+      "files": [
+        "apps/server/src/**/*machine.ts",
+        "packages/engine/src/**/*machine.ts"
+      ],
       "rules": { "argo/machine-clock": "error" }
     }
   ]

@@ -1,6 +1,6 @@
 # A local Server owns all machine work, and Apps connect to it directly
 
-The phone, the web app, and the desktop app must have the same abilities. So one local Node process, the Server (`apps/server`), owns Sessions, Agents, git, worktrees, and storage. Electron never does this work in its main process.
+The phone, the web app, and the desktop app must have the same abilities. So the local Server owns Sessions, Agents, git, worktrees, and storage. Its deployable Supervisor and process startup live in `apps/server`; the reusable Engine implementation and domain work live in `packages/engine` (owner, 2026-10-09). Electron never does this work in its main process.
 
 Every App connects to the Server over one WebSocket that carries every tRPC call (`wsLink`, `ws` with `applyWSSHandler`, Zod, no superjson). The one exception is a file upload: tRPC accepts a file only over HTTP, so a client's `splitLink` sends a call whose input is a file through `httpLink`, to the same router served by tRPC's `createHTTPHandler` on the same `node:http` server. A one-shot upload has no reconnect path. Plain HTTP serves only `GET /blobs/:id`, because an image needs a URL that returns its bytes. There is no HTTP framework (owner, 2026-10-03; this replaces Hono). The Electron renderer connects in the same way as the phone. There is no tRPC over Electron IPC. The preload script gives the renderer only the Server address and window controls.
 

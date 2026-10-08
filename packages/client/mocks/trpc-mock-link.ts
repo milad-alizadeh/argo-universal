@@ -1,4 +1,4 @@
-import type { AppRouter } from '@repo/server/router';
+import type { AppRouter } from '@repo/engine/router';
 import { TRPCClientError, type TRPCLink } from '@trpc/client';
 import type {
   AnyTRPCProcedure,

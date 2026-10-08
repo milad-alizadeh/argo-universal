@@ -627,33 +627,18 @@ importers:
 
   apps/server:
     dependencies:
-      '@repo/agents':
-        specifier: workspace:*
-        version: link:../../packages/agents
       '@repo/api':
         specifier: workspace:*
         version: link:../../packages/api
       '@repo/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@repo/db':
+      '@repo/engine':
         specifier: workspace:*
-        version: link:../../packages/db
-      '@repo/git':
-        specifier: workspace:*
-        version: link:../../packages/git
-      '@trpc/server':
-        specifier: 'catalog:'
-        version: 11.19.0(typescript@7.0.2)
-      drizzle-orm:
-        specifier: 'catalog:'
-        version: 1.0.0-rc.4(valibot@1.5.0(typescript@7.0.2))(zod@4.6.5)
+        version: link:../../packages/engine
       tsx:
         specifier: 'catalog:'
         version: 4.23.15
-      ws:
-        specifier: 'catalog:'
-        version: 8.22.0
       xstate:
         specifier: 'catalog:'
         version: 5.33.2(patch_hash=515e52fcbbcdb6786c4f9c868f284309c5ad4de4a35e522342d0a514e9f35759)
@@ -661,6 +646,9 @@ importers:
         specifier: 'catalog:'
         version: 4.6.5
     devDependencies:
+      '@repo/agents':
+        specifier: workspace:*
+        version: link:../../packages/agents
       '@repo/mocks':
         specifier: workspace:*
         version: link:../../mocks
@@ -673,9 +661,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.1
-      '@types/ws':
-        specifier: 'catalog:'
-        version: 8.18.2
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -1195,9 +1180,9 @@ importers:
       '@repo/api':
         specifier: workspace:*
         version: link:../api
-      '@repo/server':
+      '@repo/engine':
         specifier: workspace:*
-        version: link:../../apps/server
+        version: link:../engine
       '@repo/typescript':
         specifier: workspace:*
         version: link:../../tooling/typescript
@@ -1284,6 +1269,61 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
+
+  packages/engine:
+    dependencies:
+      '@repo/agents':
+        specifier: workspace:*
+        version: link:../agents
+      '@repo/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@repo/db':
+        specifier: workspace:*
+        version: link:../db
+      '@repo/git':
+        specifier: workspace:*
+        version: link:../git
+      '@trpc/server':
+        specifier: 'catalog:'
+        version: 11.19.0(typescript@7.0.2)
+      drizzle-orm:
+        specifier: 'catalog:'
+        version: 1.0.0-rc.4(valibot@1.5.0(typescript@7.0.2))(zod@4.6.5)
+      ws:
+        specifier: 'catalog:'
+        version: 8.22.0
+      xstate:
+        specifier: 'catalog:'
+        version: 5.33.2(patch_hash=515e52fcbbcdb6786c4f9c868f284309c5ad4de4a35e522342d0a514e9f35759)
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.5
+    devDependencies:
+      '@repo/api':
+        specifier: workspace:*
+        version: link:../api
+      '@repo/mocks':
+        specifier: workspace:*
+        version: link:../../mocks
+      '@repo/typescript':
+        specifier: workspace:*
+        version: link:../../tooling/typescript
+      '@repo/vitest':
+        specifier: workspace:*
+        version: link:../../tooling/vitest
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.1
+      '@types/ws':
+        specifier: 'catalog:'
+        version: 8.18.2
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.3(@types/node@24.19.1)(@vitest/browser-playwright@5.0.3)(@vitest/coverage-v8@5.0.3)(@vitest/ui@5.0.3)(jsdom@30.1.1)(vite@8.3.2(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
   packages/git:
     dependencies:

@@ -32,8 +32,8 @@ import {
   getAdjacencyMap,
   toDirectedGraph,
 } from 'xstate/graph';
-import type { EngineMessage } from '../supervisor/engine-message';
 import type { HttpServer, HttpServerOptions } from './http-server';
+import type { EngineMessage } from './ipc';
 import { engineMachine } from './machine';
 
 const stopAllSessionsEvent = 'sessions.stopAll';

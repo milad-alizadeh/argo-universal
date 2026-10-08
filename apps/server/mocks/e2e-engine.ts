@@ -4,6 +4,8 @@ import { join } from 'node:path';
 import { agentAdapters } from '@repo/agents';
 import { resolveRuntimeDirectory } from '@repo/api/server-runtime';
 import { ServerAddress } from '@repo/contracts';
+import type { EngineMessage } from '@repo/engine/ipc';
+import { engineMachine } from '@repo/engine/machine';
 import {
   AppFixtureAgents,
   createAppFixtureAdapters,
@@ -11,8 +13,6 @@ import {
 import { createActor } from 'xstate';
 import { z } from 'zod';
 import packageJson from '../package.json' with { type: 'json' };
-import { engineMachine } from '../src/engine/machine';
-import type { EngineMessage } from '../src/supervisor/engine-message';
 
 const home = resolveRuntimeDirectory();
 const startedAt = new Date().toISOString();

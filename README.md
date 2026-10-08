@@ -4,7 +4,8 @@ Argo is a cockpit for coding agents. It runs Claude and Codex Sessions on your m
 
 - `apps/universal-app`: the Expo app for iOS, Android, and web
 - `apps/desktop`: the Electron shell that loads the web build
-- `apps/server`: the local Server that owns Sessions, git, and storage
+- `apps/server`: the deployable Server Supervisor and process startup
+- `packages/engine`: the Engine that owns Sessions, git, storage and the real router
 - `apps/storybook`: the web Storybook
 - `e2e`: the Playwright specs for web and Electron
 

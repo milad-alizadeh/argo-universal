@@ -3,9 +3,6 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "imports": {
-    "#mocks/*": "./mocks/*.ts"
-  },
   "scripts": {
     "check-types": "tsc --noEmit",
     "dev": "tsx src/main.ts --watch",
@@ -13,29 +10,20 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@repo/agents": "workspace:*",
     "@repo/api": "workspace:*",
     "@repo/contracts": "workspace:*",
-    "@repo/db": "workspace:*",
-    "@repo/git": "workspace:*",
-    "@trpc/server": "catalog:",
-    "drizzle-orm": "catalog:",
+    "@repo/engine": "workspace:*",
     "tsx": "catalog:",
-    "ws": "catalog:",
     "xstate": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@repo/agents": "workspace:*",
     "@repo/mocks": "workspace:*",
     "@repo/typescript": "workspace:*",
     "@repo/vitest": "workspace:*",
     "@types/node": "catalog:",
-    "@types/ws": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
-  },
-  "exports": {
-    "./router": "./src/engine/router.ts",
-    "./mocks": "./mocks/services.ts"
   }
 }

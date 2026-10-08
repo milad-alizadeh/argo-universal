@@ -1,6 +1,6 @@
 import { createServer, type Server } from 'node:http';
-import { mockUpload, unreachableServices } from '@repo/server/mocks';
-import { appRouter } from '@repo/server/router';
+import { mockUpload, unreachableServices } from '@repo/engine/mocks';
+import { appRouter } from '@repo/engine/router';
 import { createHTTPHandler } from '@trpc/server/adapters/standalone';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { afterEach, describe, expect, it } from 'vitest';

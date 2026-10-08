@@ -4,6 +4,7 @@ import { onModuleSources, stringValue } from './syntax.ts';
 
 const apiPackage = /^@repo\/api(?:\/|$)/;
 const serverPackage = /^@repo\/server(?:\/|$)/;
+const enginePackage = /^@repo\/engine(?:\/|$)/;
 
 const isTypeOnlyDeclaration = (statement: ESTree.Node): boolean =>
   'importKind' in statement
@@ -38,7 +39,7 @@ const namesOnlyAppRouter = (statement: ESTree.Node): boolean => {
 };
 
 const isPublicRouterType = (source: string, statement: ESTree.Node): boolean =>
-  source === '@repo/server/router' &&
+  source === '@repo/engine/router' &&
   isTypeOnly(statement) &&
   namesOnlyAppRouter(statement);
 
@@ -46,7 +47,8 @@ const isForbiddenServerImport = (
   source: string,
   statement: ESTree.Node,
 ): boolean =>
-  serverPackage.test(source) && !isPublicRouterType(source, statement);
+  serverPackage.test(source) ||
+  (enginePackage.test(source) && !isPublicRouterType(source, statement));
 
 const isForbiddenImport = (source: string, statement: ESTree.Node): boolean =>
   (apiPackage.test(source) && !isTypeOnly(statement)) ||
@@ -57,7 +59,7 @@ export const apiTypeOnly = defineRule({
     type: 'problem',
     messages: {
       apiTypeOnly:
-        'The App imports only AppRouter from @repo/server/router with `import type`; Server runtime stays outside App bundles (ADR-0016). @repo/api runtime belongs in tests, stories or mocks.',
+        'The App imports only AppRouter from @repo/engine/router with `import type`; Engine runtime stays outside App bundles (ADR-0016). @repo/api runtime belongs in tests, stories or mocks.',
     },
   },
   create: (context): Visitor =>
