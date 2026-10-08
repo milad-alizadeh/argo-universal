@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { sessionListMocks } from '../../mocks/session-list-mock';
 import { PhoneLayout } from '../components/phone-layout';
 import { sectionDestination } from '../navigation/sections';
 import { PhoneSectionScreen } from './phone-section-screen';
@@ -8,6 +9,7 @@ import { PhoneSectionScreen } from './phone-section-screen';
 const meta = {
   title: 'Shell/PhoneSectionScreen',
   component: PhoneSectionScreen,
+  parameters: { trpc: sessionListMocks },
   argTypes: {
     section: {
       control: 'select',
