@@ -461,21 +461,10 @@ it('returns the chosen config value and delivers later Agent changes through the
   const stream = streams.get(sessionId);
   stream?.send({
     type: 'agent.configOptionsChanged',
-    configOptions: configOptions.map(
-      (
-        option,
-      ): {
-        configId: string;
-        category: string;
-        type: 'select';
-        currentValue: string;
-        options: { value: string; name: string }[];
-        name: string;
-      } => ({
-        ...option,
-        name: 'Renamed',
-      }),
-    ),
+    configOptions: configOptions.map((option): typeof option => ({
+      ...option,
+      name: 'Renamed',
+    })),
   });
   expect((await iterator.next()).value).toMatchObject({
     type: 'snapshot',
@@ -483,21 +472,10 @@ it('returns the chosen config value and delivers later Agent changes through the
   });
   stream?.send({
     type: 'agent.configOptionsChanged',
-    configOptions: configOptions.map(
-      (
-        option,
-      ): {
-        configId: string;
-        name: string;
-        category: string;
-        type: 'select';
-        options: { value: string; name: string }[];
-        currentValue: string;
-      } => ({
-        ...option,
-        currentValue: 'large',
-      }),
-    ),
+    configOptions: configOptions.map((option): typeof option => ({
+      ...option,
+      currentValue: 'large',
+    })),
   });
   expect((await iterator.next()).value).toMatchObject({
     type: 'snapshot',
