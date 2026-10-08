@@ -88,10 +88,7 @@ let server: Actor<typeof machine>;
 const machine = serverConnectionMachine.provide({
   actors: {
     readAddress: createPromiseMock(
-      (): PendingCall<
-        import('./server-process').SupervisorPaths,
-        { pid: number; port: number; version: string; startedAt: string } | null
-      >[] => readAddressCalls,
+      (): PendingCall<ServerInput, ServerAddress | null>[] => readAddressCalls,
     ),
     checkRunning: createPromiseMock(
       (): PendingCall<CheckRunningInput, boolean>[] => checkRunningCalls,
@@ -187,12 +184,7 @@ describe('server connection model', (): void => {
         output,
       ): {
         type: string;
-        output: {
-          pid: number;
-          port: number;
-          version: string;
-          startedAt: string;
-        } | null;
+        output: ServerAddress | null;
         actorId: string;
       } => ({
         type: 'xstate.done.actor.readAddress',

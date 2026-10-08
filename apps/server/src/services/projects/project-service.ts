@@ -61,9 +61,7 @@ export function readProjectPath(database: Database, projectId: string): string {
 export function createProjectService(database: Database): ProjectsService {
   let rejectedProjects = 0;
   return {
-    branches: async ({
-      projectId,
-    }): Promise<{ branches: string[]; currentBranch: string | null }> =>
+    branches: async ({ projectId }): ReturnType<ProjectsService['branches']> =>
       listBranches(readProjectPath(database, projectId)),
     list: async (): Promise<ProjectInfo[]> =>
       Promise.all(

@@ -102,12 +102,8 @@ export async function listBranches(
   projectPath: string,
   signal?: AbortSignal,
 ): Promise<{ branches: string[]; currentBranch: string | null }> {
-  const git = (
-    ...arguments_: string[]
-  ): import('child_process').PromiseWithChild<{
-    stdout: string;
-    stderr: string;
-  }> => run(['-C', projectPath, ...arguments_], signal);
+  const git = (...arguments_: string[]): ReturnType<typeof run> =>
+    run(['-C', projectPath, ...arguments_], signal);
   const [{ stdout }, head] = await Promise.all([
     git('for-each-ref', '--format=%(refname)', 'refs/heads/'),
     git('symbolic-ref', '--quiet', 'HEAD').then(
