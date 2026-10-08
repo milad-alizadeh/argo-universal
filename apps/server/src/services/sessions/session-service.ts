@@ -7,7 +7,6 @@ import { TRPCError } from '@trpc/server';
 import { type ActorRefFrom, type SnapshotFrom, waitFor } from 'xstate';
 import { userMessageId } from '../feed/feed-change';
 import type { writerMachine } from '../feed/writer-machine';
-import { notImplemented } from '../not-implemented';
 import { readProjectPath } from '../projects/project-service';
 import type { RegistryActorRef, RegistryCommand } from './registry-machine';
 import { sendSessionCommand } from './session-command';
@@ -240,4 +239,12 @@ export function createSessionService({
       return { configOptions: actor.getSnapshot().context.configOptions };
     },
   };
+}
+
+// Contract procedures become operational in issue #74.
+function notImplemented(): never {
+  throw new TRPCError({
+    code: 'NOT_IMPLEMENTED',
+    message: 'This procedure is not implemented yet',
+  });
 }
