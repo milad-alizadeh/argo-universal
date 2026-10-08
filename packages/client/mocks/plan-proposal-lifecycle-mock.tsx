@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { PlanProposalCardProps } from '../src/components/PlanProposalCard';
+import type { PlanProposalCardProps } from '../src/components/plan-proposal-card';
 import { PlanProposalPreview } from './plan-proposal-mock';
 
 export function PlanProposalAnswerPreview(

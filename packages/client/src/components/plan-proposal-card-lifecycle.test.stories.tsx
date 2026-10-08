@@ -8,7 +8,7 @@ import {
   shortPlanProposal,
 } from '../../mocks/plan-proposal-mock';
 import { settleViewport } from '../../mocks/settle-viewport';
-import { PlanProposalCard } from './PlanProposalCard';
+import { PlanProposalCard } from './plan-proposal-card';
 
 const meta = {
   title: 'Tests/PlanProposalCardLifecycle',
