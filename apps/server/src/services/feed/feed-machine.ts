@@ -9,6 +9,7 @@ import {
   sendTo,
   setup,
 } from 'xstate';
+import { countRejection } from '../../lib/count-rejections';
 import {
   applyFeedChange,
   changedRowId,
@@ -144,7 +145,8 @@ export const feedMachine = setup({
       });
     }),
     countRejectedChange: assign({
-      rejectedChanges: ({ context }): number => context.rejectedChanges + 1,
+      rejectedChanges: ({ context }): number =>
+        countRejection(context.rejectedChanges),
     }),
     emitBatch: emit(({ context }): FeedBatch => ({
       type: 'feed.batch' as const,

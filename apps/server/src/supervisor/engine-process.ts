@@ -1,6 +1,7 @@
 import { fork } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { fromCallback } from 'xstate';
+import { createRejectionCounter } from '../lib/count-rejections';
 import {
   type EngineCommand,
   type EngineEvent,
@@ -25,7 +26,7 @@ export const engineProcess = fromCallback<EngineCommand, { watch: boolean }>(
         ...(input.watch ? ['--watch'] : []),
       ],
     });
-    let unrecognisedMessages = 0;
+    const rejections = createRejectionCounter('supervisor');
 
     const onMessage = (raw: unknown): void => {
       const message = EngineMessage.safeParse(raw);
@@ -36,11 +37,7 @@ export const engineProcess = fromCallback<EngineCommand, { watch: boolean }>(
         return;
       }
       if (WatchModeMessage.safeParse(raw).success) return;
-      unrecognisedMessages += 1;
-      console.error(
-        `supervisor: unrecognised engine message #${unrecognisedMessages}`,
-        message.error.issues,
-      );
+      rejections.report('unrecognised engine message', message.error.issues);
     };
     const onExit = (code: number | null): void =>
       send({ type: 'engine.exit', code });
