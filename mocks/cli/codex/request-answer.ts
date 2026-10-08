@@ -2,7 +2,7 @@ import type { VendorRequest } from '../../../packages/agents/codex/messages.ts';
 import type {
   CommandExecutionRequestApprovalResponse,
   ToolRequestUserInputResponse,
-  UserInput,
+  TurnStartParams,
 } from '../../../packages/agents/codex/protocol.gen.ts';
 import {
   rejectRequestAnswer,
@@ -133,7 +133,9 @@ function inputText(block: unknown): string {
   return recognizedInputText(block);
 }
 
-const inputKinds: Record<UserInput['type'], true> = {
+type PlanInput = TurnStartParams['input'][number];
+
+const inputKinds: Record<PlanInput['type'], true> = {
   text: true,
   image: true,
   localImage: true,
@@ -148,7 +150,7 @@ function recognizedInputText(block: Record<string, unknown>): string {
   return block.type === 'text' ? feedbackText(block.text) : '';
 }
 
-function isInputKind(kind: unknown): kind is UserInput['type'] {
+function isInputKind(kind: unknown): kind is PlanInput['type'] {
   return typeof kind === 'string' && Object.hasOwn(inputKinds, kind);
 }
 

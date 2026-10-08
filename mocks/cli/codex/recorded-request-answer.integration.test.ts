@@ -1,4 +1,5 @@
-import { mkdtemp, rm } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
@@ -10,11 +11,17 @@ import { recordedRequestAnswer } from './recorded-request-answer.ts';
 import { writeMockCodex } from './write-mock-codex.ts';
 
 let directory: string;
+const recordingFiles: string[] = [];
+const producer = 'codex-app-server';
+const turnStart = 'turn/start';
 
 beforeEach(async (): Promise<void> => {
   directory = await mkdtemp(path.join(os.tmpdir(), 'recorded-answers-'));
 });
-afterEach((): Promise<void> => rm(directory, { recursive: true, force: true }));
+afterEach(async (): Promise<void> => {
+  await rm(directory, { recursive: true, force: true });
+  for (const file of recordingFiles.splice(0)) await rm(file);
+});
 
 it.each(['permission', 'elicitation', 'plan-approved', 'plan-kept-planning'])(
   'records the live %s answer like its recorded reader',
@@ -31,7 +38,7 @@ it.each(['permission', 'elicitation', 'plan-approved', 'plan-kept-planning'])(
     );
     const payload = readRecording(
       findRecording(path.join(import.meta.dirname, 'recordings'), recording),
-      'codex-app-server',
+      producer,
     ).payload;
     for (const input of recordedFrames<Record<string, unknown>>(
       payload,
@@ -51,7 +58,7 @@ it('reports and counts an unsupported live Permission answer', async (): Promise
     await writeMockCodex(directory, { recording: 'permission' }),
     ['app-server'],
   );
-  vendor.send({ id: 1, method: 'turn/start', params: { input: [] } });
+  vendor.send({ id: 1, method: turnStart, params: { input: [] } });
   const output = await vendor.until(
     (frame): boolean =>
       frame.method === 'item/commandExecution/requestApproval',
@@ -64,3 +71,56 @@ it('reports and counts an unsupported live Permission answer', async (): Promise
   );
   expect(await vendor.exited).toBe(1);
 });
+
+it.each([{}, { params: null }, { params: { input: 'text' } }])(
+  'rejects malformed recorded Plan parameters %j',
+  async (nextTurn): Promise<void> => {
+    const name = await writeRecording({
+      messages: [],
+      input: [
+        { method: turnStart, params: { input: [] } },
+        { method: turnStart, ...nextTurn },
+      ],
+    });
+    const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect(() => recordedRequestAnswer(name)).toThrow(
+      'Unsupported codex request answer',
+    );
+    expect(diagnostic).toHaveBeenCalledExactlyOnceWith(
+      'Mock CLI rejected request answer (1)',
+    );
+  },
+);
+
+it.each([
+  { input: { id: 99, result: { answers: {} } }, action: 'decline' },
+  { input: { method: 'turn/interrupt' }, action: 'cancel' },
+])(
+  'reads recorded Elicitation %s without Turn parameters',
+  async ({ input, action }): Promise<void> => {
+    const name = await writeRecording({
+      messages: [{ id: 99, method: 'item/tool/requestUserInput' }],
+      input: [input],
+    });
+    expect(recordedRequestAnswer(name)).toEqual({
+      type: 'elicitation',
+      action,
+    });
+  },
+);
+
+async function writeRecording(payload: unknown): Promise<string> {
+  const name = `answer-${randomUUID()}`;
+  const source = findRecording(
+    path.join(import.meta.dirname, 'recordings'),
+    'plan-approved',
+  );
+  const { version } = readRecording(source, producer);
+  const file = path.join(path.dirname(source), `${name}.json`);
+  recordingFiles.push(file);
+  await writeFile(
+    file,
+    JSON.stringify({ producer, version, recordedAt: null, payload }),
+  );
+  return name;
+}

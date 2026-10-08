@@ -3,7 +3,6 @@ import type {
   VendorMessage,
   VendorRequest,
 } from '../../../packages/agents/codex/messages.ts';
-import type { TurnStartParams } from '../../../packages/agents/codex/protocol.gen.ts';
 import { findRecording, readRecording, recordedFrames } from '../recording.ts';
 import {
   createRequestAnswerReader,
@@ -14,7 +13,7 @@ import { toPlanProposalAnswer, toRequestAnswer } from './request-answer.ts';
 type RecordedInput = {
   id?: string | number;
   method?: string;
-  params: TurnStartParams;
+  params?: unknown;
   result?: unknown;
 };
 
@@ -59,12 +58,14 @@ function isRequest(frame: VendorMessage): frame is VendorRequest {
   );
 }
 
-function recordedPlanAnswer(
-  inputs: { method?: string; params: TurnStartParams }[],
-): RecordedRequestAnswer {
-  const nextTurn = inputs.filter(
-    (frame): boolean => frame.method === 'turn/start',
-  )[1];
+function recordedPlanAnswer(inputs: RecordedInput[]): RecordedRequestAnswer {
+  const nextTurn = inputs.filter(isTurnStart)[1];
   if (!nextTurn) throw new Error('Recording has no Plan answer Turn');
   return toPlanProposalAnswer(nextTurn.params);
+}
+
+function isTurnStart(
+  frame: RecordedInput,
+): frame is RecordedInput & { method: 'turn/start' } {
+  return frame.method === 'turn/start';
 }
