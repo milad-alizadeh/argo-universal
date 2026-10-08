@@ -6,6 +6,7 @@ import type {
   SDKUserMessageReplay,
   SDKPartialAssistantMessage,
 } from '@anthropic-ai/claude-agent-sdk';
+import type { ProjectedFields } from '../src/payload-shape.ts';
 import type { MappedResult } from './result-payloads.ts';
 import type { MappedSystem } from './system-payloads.ts';
 
@@ -24,23 +25,20 @@ export type {
 
 export type { AskUserQuestionInput } from '@anthropic-ai/claude-agent-sdk/sdk-tools';
 
-type Fields<Value, Keys extends PropertyKey> = Value extends unknown
-  ? Pick<Value, Extract<keyof Value, Keys>>
-  : never;
 type AssistantContent = SDKAssistantMessage['message']['content'][number];
 type UserContent = Exclude<
   SDKUserMessage['message']['content'],
   string
 >[number];
-type TextContent = Fields<
+type TextContent = ProjectedFields<
   Extract<AssistantContent | UserContent, { type: 'text' | 'thinking' }>,
   'type' | 'text' | 'thinking'
 >;
-type ToolContent = Fields<
+type ToolContent = ProjectedFields<
   Extract<AssistantContent | UserContent, { type: 'tool_use' }>,
   'type' | 'id' | 'name' | 'input'
 >;
-type ImageContent = Fields<
+type ImageContent = ProjectedFields<
   Extract<UserContent, { type: 'image' }>,
   'type' | 'source'
 >;
@@ -56,7 +54,7 @@ export type MappedContent =
   | (Pick<ResultContent, 'type' | 'tool_use_id' | 'is_error'> & {
       content?: string | MappedContent[];
     })
-  | Fields<
+  | ProjectedFields<
       Exclude<
         AssistantContent | UserContent | NestedContent,
         { type: 'text' | 'thinking' | 'tool_use' | 'tool_result' | 'image' }
@@ -70,7 +68,7 @@ export type MappedAssistant = Pick<SDKAssistantMessage, 'type' | 'timestamp'> &
         content: MappedContent[];
       };
   };
-type UserEnvelope = Fields<
+type UserEnvelope = ProjectedFields<
   SDKUserMessage | SDKUserMessageReplay,
   'type' | 'timestamp' | 'isReplay' | 'isSynthetic' | 'tool_use_result'
 >;
@@ -80,9 +78,9 @@ export type MappedUser = UserEnvelope &
   };
 type Stream = SDKPartialAssistantMessage['event'];
 type Delta = Extract<Stream, { type: 'content_block_delta' }>['delta'];
-type MappedDelta = Fields<Delta, 'type' | 'text' | 'thinking'>;
+type MappedDelta = ProjectedFields<Delta, 'type' | 'text' | 'thinking'>;
 type MappedStream =
-  | Fields<
+  | ProjectedFields<
       Exclude<
         Stream,
         {
@@ -103,7 +101,7 @@ type MappedStream =
     > & {
       content_block:
         | Extract<MappedContent, { type: 'text' | 'thinking' }>
-        | Fields<
+        | ProjectedFields<
             Exclude<
               Extract<Stream, { type: 'content_block_start' }>['content_block'],
               { type: 'text' | 'thinking' }
@@ -124,11 +122,11 @@ export type MappedControlRequest = Pick<
   'type' | 'request_id'
 > & {
   request:
-    | Fields<
+    | ProjectedFields<
         Extract<SDKControlRequest['request'], { subtype: 'can_use_tool' }>,
         'subtype' | 'tool_name' | 'tool_use_id' | 'input'
       >
-    | Fields<
+    | ProjectedFields<
         Exclude<SDKControlRequest['request'], { subtype: 'can_use_tool' }>,
         'subtype'
       >;
@@ -140,7 +138,7 @@ export type VendorMessage = (
   | MappedResult
   | MappedSystem
   | MappedControlRequest
-  | Fields<
+  | ProjectedFields<
       Exclude<
         SDKMessage,
         { type: 'assistant' | 'user' | 'stream_event' | 'result' | 'system' }

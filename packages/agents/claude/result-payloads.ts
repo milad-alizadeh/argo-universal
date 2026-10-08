@@ -1,7 +1,5 @@
 import type { SDKResultMessage } from '@anthropic-ai/claude-agent-sdk';
-type Fields<Value, Keys extends PropertyKey> = Value extends unknown
-  ? Pick<Value, Extract<keyof Value, Keys>>
-  : never;
+import type { ProjectedFields } from '../src/payload-shape.ts';
 type Usage = SDKResultMessage['usage'];
 type MappedUsage = Pick<Usage, 'input_tokens' | 'output_tokens'> &
   Partial<
@@ -12,7 +10,7 @@ type MappedUsage = Pick<Usage, 'input_tokens' | 'output_tokens'> &
       | 'output_tokens_details'
     >
   >;
-export type MappedResult = Fields<
+export type MappedResult = ProjectedFields<
   SDKResultMessage,
   'type' | 'subtype' | 'is_error' | 'terminal_reason' | 'result' | 'errors'
 > &

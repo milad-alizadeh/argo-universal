@@ -1,4 +1,5 @@
 import type { SDKMessage } from '@anthropic-ai/claude-agent-sdk';
+import type { ProjectedFields } from '../src/payload-shape.ts';
 import {
   acceptsNamedPayload,
   hasFields,
@@ -8,9 +9,6 @@ import {
   oneOf,
   optional,
 } from '../src/payload-shape.ts';
-type Fields<Value, Keys extends PropertyKey> = Value extends unknown
-  ? Pick<Value, Extract<keyof Value, Keys>>
-  : never;
 type System = Extract<SDKMessage, { type: 'system' }>;
 type NoticeKind =
   | 'status'
@@ -21,7 +19,7 @@ type NoticeKind =
   | 'notification'
   | 'hook_response';
 export type MappedSystem =
-  | Fields<
+  | ProjectedFields<
       Extract<System, { subtype: NoticeKind }>,
       | 'type'
       | 'subtype'
@@ -38,7 +36,7 @@ export type MappedSystem =
       | 'hook_name'
       | 'stderr'
     >
-  | Fields<
+  | ProjectedFields<
       Exclude<System, { subtype: NoticeKind }>,
       'type' | 'subtype' | 'uuid'
     >;

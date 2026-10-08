@@ -1,3 +1,7 @@
+export type ProjectedFields<
+  Value,
+  Keys extends PropertyKey,
+> = Value extends unknown ? Pick<Value, Extract<keyof Value, Keys>> : never;
 export type PayloadPredicate<Value = unknown> = (
   value: unknown,
 ) => value is Value;

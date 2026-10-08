@@ -3,6 +3,7 @@ import type {
   SDKControlInitializeResponse,
   SDKControlResponse,
 } from '@anthropic-ai/claude-agent-sdk';
+import type { ProjectedFields } from '../src/payload-shape.ts';
 import {
   arrayOf,
   hasFields,
@@ -20,11 +21,8 @@ import type {
 } from './messages.ts';
 import { isVendorMessage } from './payloads.ts';
 
-type Fields<Value, Keys extends PropertyKey> = Value extends unknown
-  ? Pick<Value, Extract<keyof Value, Keys>>
-  : never;
 export type MappedControlResponse = Pick<SDKControlResponse, 'type'> & {
-  response: Fields<
+  response: ProjectedFields<
     SDKControlResponse['response'],
     'subtype' | 'request_id' | 'response' | 'error'
   >;

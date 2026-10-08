@@ -1,3 +1,4 @@
+import type { ProjectedFields } from '../src/payload-shape.ts';
 import type { UnmappedNotification } from './notification-kinds.ts';
 import type {
   AgentMessageDeltaNotification,
@@ -20,10 +21,7 @@ import type {
   UserInput,
 } from './protocol.gen';
 
-type Fields<Value, Keys extends PropertyKey> = Value extends unknown
-  ? Pick<Value, Extract<keyof Value, Keys>>
-  : never;
-export type MappedUserInput = Fields<
+export type MappedUserInput = ProjectedFields<
   UserInput,
   'type' | 'text' | 'url' | 'fileId' | 'path' | 'name'
 >;
@@ -54,8 +52,8 @@ type MappedItemKind =
   | 'commandExecution'
   | 'fileChange';
 type ItemWithoutPrompt =
-  | Fields<Extract<ThreadItem, { type: MappedItemKind }>, ItemFields>
-  | Fields<
+  | ProjectedFields<Extract<ThreadItem, { type: MappedItemKind }>, ItemFields>
+  | ProjectedFields<
       Exclude<ThreadItem, { type: MappedItemKind | 'userMessage' }>,
       'type' | 'id'
     >;
@@ -91,18 +89,21 @@ export type VendorRequest = {
   [Method in keyof VendorRequests]: {
     method: Method;
     id: string | number;
-    params: Fields<VendorRequests[Method][0], RequestFields>;
+    params: ProjectedFields<VendorRequests[Method][0], RequestFields>;
   };
 }[keyof VendorRequests];
-type TurnNotification<Notification> = Fields<Notification, 'threadId'> & {
+type TurnNotification<Notification> = ProjectedFields<
+  Notification,
+  'threadId'
+> & {
   turn: MappedTurn;
 };
-type ItemNotification<Notification> = Fields<
+type ItemNotification<Notification> = ProjectedFields<
   Notification,
   'threadId' | 'turnId'
 > & {
   item: MappedThreadItem;
-} & Partial<Fields<Notification, 'startedAtMs' | 'completedAtMs'>>;
+} & Partial<ProjectedFields<Notification, 'startedAtMs' | 'completedAtMs'>>;
 interface Notifications {
   'turn/started': TurnNotification<TurnStartedNotification>;
   'turn/completed': TurnNotification<TurnCompletedNotification>;
@@ -110,7 +111,7 @@ interface Notifications {
   'item/completed': ItemNotification<ItemCompletedNotification>;
   'item/agentMessage/delta': AgentMessageDeltaNotification;
   'item/reasoning/summaryTextDelta': ReasoningSummaryTextDeltaNotification;
-  'item/reasoning/textDelta': Fields<
+  'item/reasoning/textDelta': ProjectedFields<
     ReasoningTextDeltaNotification,
     'threadId' | 'turnId' | 'itemId' | 'delta'
   >;
