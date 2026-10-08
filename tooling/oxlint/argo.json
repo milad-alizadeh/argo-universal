@@ -168,6 +168,7 @@
       "files": ["**/*.test.ts", "**/*.test.tsx", "**/*.test.mts"],
       "rules": {
         "argo/no-internal-mock": "error",
+        "argo/unit-test-io": "error",
         "vitest/no-disabled-tests": "error",
         "vitest/no-conditional-expect": "error",
         "vitest/no-identical-title": "error",
@@ -178,7 +179,7 @@
     },
     {
       // xstate/graph model tests assert per path, so a branch around expect is how they read the path.
-      "files": ["**/*machine.test.ts"],
+      "files": ["**/*machine.test.ts", "**/*machine.integration.test.ts"],
       "rules": { "vitest/no-conditional-expect": "off" }
     },
     {
