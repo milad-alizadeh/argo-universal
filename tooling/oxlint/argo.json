@@ -379,7 +379,7 @@
       "rules": { "import/no-nodejs-modules": "error" }
     },
     {
-      // D4: client/src takes @repo/api with import type only; @repo/api is a devDependency for tests, so pnpm resolves a value import too.
+      // D4: only AppRouter from the real Server router may cross into client/src, with import type (ADR-0016).
       "files": ["packages/client/src/**"],
       "excludeFiles": ["**/*.test.*", "**/*.stories.*", "**/mocks/**"],
       "rules": { "argo/api-type-only": "error" }

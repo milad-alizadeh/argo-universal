@@ -1,7 +1,7 @@
 import type { BlobUploadOutput } from '@repo/contracts';
 import { expect, it } from 'vitest';
-import { unreachableServices } from '../../mocks';
-import { appRouter } from '../root';
+import { unreachableServices } from '#mocks/services';
+import { appRouter } from '../../engine/router';
 
 it('accepts a file in FormData and returns its BlobRef', async (): Promise<void> => {
   const caller = appRouter.createCaller({

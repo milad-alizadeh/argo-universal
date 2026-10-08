@@ -1,6 +1,6 @@
 import { initTRPC } from '@trpc/server';
 import { z } from 'zod';
-import type { Services } from './services';
+import type { Services } from '../services/services';
 
 export interface Context {
   services: Services;

@@ -1,14 +1,14 @@
-import type { SessionNewOutput } from '@repo/contracts';
-import { expect, it } from 'vitest';
 import {
   dangerousModeOptions,
   newSessionBranches,
   newSessionCatalogs,
   newSessionInputs,
   newSessionOptions,
-  unreachableServices,
-} from '../../mocks';
-import { appRouter } from '../root';
+} from '@repo/api/mocks';
+import type { SessionNewOutput } from '@repo/contracts';
+import { expect, it } from 'vitest';
+import { unreachableServices } from '#mocks/services';
+import { appRouter } from '../../engine/router';
 
 it.each(Object.entries(newSessionCatalogs))(
   'serves the %s New Session catalog mock',

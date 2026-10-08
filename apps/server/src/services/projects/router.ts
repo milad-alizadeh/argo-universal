@@ -3,7 +3,7 @@ import {
   ProjectsBranchesOutput,
   ProjectsListOutput,
 } from '@repo/contracts';
-import { publicProcedure, router } from '../trpc';
+import { publicProcedure, router } from '../../engine/trpc';
 
 export const projectsRouter = router({
   branches: publicProcedure

@@ -1,5 +1,4 @@
 import { EventEmitter, on } from 'node:events';
-import type { SessionService } from '@repo/api';
 import type {
   SessionCounts,
   SessionListInput,
@@ -12,6 +11,7 @@ import { type ActorRefFrom, createActor } from 'xstate';
 import { z } from 'zod';
 import { findDatabaseWriter, type writerMachine } from '../feed';
 import type { RegistryActorRef } from './registry-machine';
+import type { SessionService } from './service';
 import {
   type SessionListMachineInput,
   type SessionListState,

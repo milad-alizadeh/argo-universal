@@ -54,12 +54,6 @@
     { "files": ["packages/agents/src/*"], "rules": { "complexity": "off", "max-lines-per-function": "off", "max-statements": "off", "stylistic/multiline-comment-style": "off" } },
     // complexity, max-lines, max-lines-per-function, sonarjs/no-duplicate-string, typescript/explicit-function-return-type
     { "files": ["packages/api/mocks/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off" } },
-    // typescript/consistent-type-assertions
-    { "files": ["packages/api/src/feed/*"], "rules": {"vitest/require-to-throw-message": "off" } },
-    // complexity, typescript/consistent-type-assertions, typescript/explicit-function-return-type, vitest/require-mock-type-parameters
-    { "files": ["packages/api/src/sessions/*"], "rules": { "complexity": "off", "vitest/require-mock-type-parameters": "off" } },
-    // sonarjs/no-unused-vars, typescript/consistent-type-assertions, typescript/explicit-function-return-type, vitest/require-to-throw-message
-    { "files": ["packages/api/src/system/*"], "rules": { "sonarjs/no-unused-vars": "off", "vitest/require-to-throw-message": "off" } },
     // complexity, jsx-a11y/no-autofocus, jsx-a11y/role-has-required-aria-props, max-lines, max-lines-per-function, max-statements, react/set-state-in-effect, sonarjs/cognitive-complexity, sonarjs/no-duplicate-string, sonarjs/no-nested-conditional, stylistic/multiline-comment-style, typescript/consistent-type-assertions, typescript/explicit-function-return-type, typescript/no-floating-promises, typescript/unbound-method, unicorn-js/prefer-switch, unicorn/no-useless-undefined, unicorn/prefer-spread
     { "files": ["packages/client/mocks/*"], "rules": { "complexity": "off", "jsx-a11y/no-autofocus": "off", "max-lines": "off", "max-lines-per-function": "off", "max-statements": "off", "sonarjs/no-nested-conditional": "off", "stylistic/multiline-comment-style": "off", "unicorn/no-useless-undefined": "off", "unicorn/prefer-spread": "off" } },
     // complexity, max-depth, typescript/explicit-function-return-type

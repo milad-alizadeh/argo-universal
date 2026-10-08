@@ -4,10 +4,10 @@ import type {
   FeedSubscribeOutput,
 } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
-import { unreachableServices } from '../../mocks';
-import { appRouter } from '../root';
+import { unreachableServices } from '#mocks/services';
+import { appRouter } from '../../engine/router';
+import { createCallerFactory } from '../../engine/trpc';
 import type { Services } from '../services';
-import { createCallerFactory } from '../trpc';
 
 const firstMessageRowId = 'message-1#0';
 

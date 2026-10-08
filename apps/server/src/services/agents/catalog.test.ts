@@ -3,8 +3,8 @@ import {
   getConfigOptionDiagnostics,
 } from '@repo/contracts';
 import { expect, it } from 'vitest';
-import { unreachableServices } from '../../mocks';
-import { appRouter } from '../root';
+import { unreachableServices } from '#mocks/services';
+import { appRouter } from '../../engine/router';
 
 it('keeps extension categories and metadata on options, groups and values', async (): Promise<void> => {
   const catalog: AgentsListOutput = [

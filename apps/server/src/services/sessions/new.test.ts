@@ -1,7 +1,7 @@
 import type { SessionNewOutput } from '@repo/contracts';
 import { expect, it } from 'vitest';
-import { unreachableServices } from '../../mocks';
-import { appRouter } from '../root';
+import { unreachableServices } from '#mocks/services';
+import { appRouter } from '../../engine/router';
 
 it('accepts the first prompt and initial choices together and returns only the Session id', async (): Promise<void> => {
   const caller = appRouter.createCaller({

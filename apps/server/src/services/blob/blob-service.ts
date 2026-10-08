@@ -1,12 +1,12 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { BlobService } from '@repo/api';
 import { type BlobUploadOutput, maxBlobUploadBytes } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { blob, blobRef } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
 import { and, eq, lt, notExists, sql } from 'drizzle-orm';
+import type { BlobService } from './service';
 
 // One day in milliseconds.
 const unusedBlobAge = 86_400_000;

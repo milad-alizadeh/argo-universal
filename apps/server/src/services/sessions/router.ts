@@ -25,7 +25,7 @@ import {
   SessionSetConfigOptionInput,
   SessionSetConfigOptionOutput,
 } from '@repo/contracts';
-import { publicProcedure, router, zAsyncIterable } from '../trpc';
+import { publicProcedure, router, zAsyncIterable } from '../../engine/trpc';
 
 export const sessionRouter = router({
   list: publicProcedure

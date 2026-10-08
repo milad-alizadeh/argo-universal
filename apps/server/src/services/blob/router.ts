@@ -1,5 +1,5 @@
 import { BlobUploadInput, BlobUploadOutput } from '@repo/contracts';
-import { publicProcedure, router } from '../trpc';
+import { publicProcedure, router } from '../../engine/trpc';
 
 export const blobRouter = router({
   upload: publicProcedure

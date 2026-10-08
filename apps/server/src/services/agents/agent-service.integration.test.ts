@@ -16,7 +16,7 @@ afterEach((): void => {
 
 function startAgents(
   ...probes: (() => Promise<AgentProbe>)[]
-): import('@repo/api').AgentsService {
+): import('./service').AgentsService {
   const adapters = probes.map(
     (
       probe,

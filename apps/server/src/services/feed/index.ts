@@ -25,3 +25,6 @@ export {
 } from './writer-job';
 export { type WriterEvent, writerMachine } from './writer-machine';
 export { databaseWriterId, findDatabaseWriter } from './writer-system';
+
+export { feedRouter } from './router';
+export type { FeedService } from './service';

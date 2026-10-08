@@ -1,7 +1,7 @@
 import type { ProjectsBranchesOutput } from '@repo/contracts';
 import { expect, it } from 'vitest';
-import { unreachableServices } from '../../mocks';
-import { appRouter } from '../root';
+import { unreachableServices } from '#mocks/services';
+import { appRouter } from '../../engine/router';
 
 it('returns local branches and the current branch for a Project', async (): Promise<void> => {
   const caller = appRouter.createCaller({

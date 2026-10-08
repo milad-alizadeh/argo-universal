@@ -1,5 +1,4 @@
 import { randomUUID } from 'node:crypto';
-import type { SessionService } from '@repo/api';
 import { createElicitationAnswerSchema } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { listBranches } from '@repo/git';
@@ -9,6 +8,7 @@ import { userMessageId } from '../feed';
 import { findDatabaseWriter, type writerMachine } from '../feed';
 import { readProjectPath } from '../projects';
 import type { RegistryActorRef, RegistryCommand } from './registry-machine';
+import type { SessionService } from './service';
 import { sendSessionCommand } from './session-command';
 import { createSessionList } from './session-list';
 import type { SessionActorRef } from './session-machine';

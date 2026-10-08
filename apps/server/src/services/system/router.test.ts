@@ -1,8 +1,8 @@
 import type { ClockTick, SystemInfo } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
-import { unreachableServices } from '../../mocks';
-import { appRouter } from '../root';
-import { createCallerFactory } from '../trpc';
+import { unreachableServices } from '#mocks/services';
+import { appRouter } from '../../engine/router';
+import { createCallerFactory } from '../../engine/trpc';
 
 const createCaller = createCallerFactory(appRouter);
 
@@ -63,10 +63,10 @@ describe('system router', (): void => {
     });
 
     const iterate = async (): Promise<void> => {
-      for await (const _tick of await caller.system.clock()) {
-      }
+      const ticks = await caller.system.clock();
+      await ticks[Symbol.asyncIterator]().next();
     };
 
-    await expect(iterate()).rejects.toThrow();
+    await expect(iterate()).rejects.toThrow(/Invalid ISO datetime/);
   });
 });

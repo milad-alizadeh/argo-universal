@@ -82,7 +82,7 @@ function subscribeToSession(service: ReturnType<typeof createFeedService>): {
 async function openSession(overrides: Partial<MockAgentScript> = {}): Promise<{
   session: import('xstate').ActorRefFromLogic<typeof sessionMachine>;
   feed: FeedActorRef;
-  service: import('@repo/api').FeedService;
+  service: import('../feed').FeedService;
   commands: AgentCommand[];
   stream: MockAgentStream;
   database: import('@repo/db').Database;

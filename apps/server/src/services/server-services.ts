@@ -1,4 +1,3 @@
-import type { Services } from '@repo/api';
 import type { Database } from '@repo/db';
 import type { ActorRefFrom } from 'xstate';
 import { createAgentService } from './agents';
@@ -7,6 +6,7 @@ import type { FeedActorRef } from './feed';
 import { createFeedService, findDatabaseWriter } from './feed';
 import type { writerMachine } from './feed';
 import { createProjectService } from './projects';
+import type { Services } from './services';
 import { createSessionReader, createSessionSnapshotWatcher } from './sessions';
 import type { RegistryActorRef } from './sessions';
 import type { SessionActorRef } from './sessions';

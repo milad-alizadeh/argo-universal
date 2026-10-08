@@ -1,6 +1,4 @@
 import { randomUUID } from 'node:crypto';
-import { appRouter } from '@repo/api';
-import { unreachableServices } from '@repo/api/mocks';
 import type {
   FeedChange,
   FeedSubscribeOutput,
@@ -21,6 +19,8 @@ import {
 import { type Actor, createActor, fromPromise, setup } from 'xstate';
 import { insertSession, openTestDatabase } from '#mocks/database';
 import { storedMessage as message } from '#mocks/feed';
+import { unreachableServices } from '#mocks/services';
+import { appRouter } from '../../engine/router';
 import { createServerServices } from '../server-services';
 import {
   createSessionReader,

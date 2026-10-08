@@ -3,28 +3,35 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer, request, type Server } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { initTRPC } from '@trpc/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { z } from 'zod';
+import { unreachableServices } from '#mocks/services';
 import { createRequestGuard } from './request-guard';
 import { createRequestListener } from './request-listener';
+import { appRouter } from './router';
 
-const pingRoute = '/trpc/ping';
-const uploadRoute = '/trpc/upload';
+const binaryMime = 'application/octet-stream';
+
+const infoRoute = '/trpc/system.info';
+const uploadRoute = '/trpc/blob.upload';
 
 const blobBytes = new TextEncoder().encode('blob content');
 const blobId = createHash('sha256').update(blobBytes).digest('hex');
 
-const t = initTRPC.create();
-const testRouter = t.router({
-  ping: t.procedure.query((): string => 'pong'),
-  upload: t.procedure
-    .input(z.instanceof(FormData))
-    .mutation(async ({ input }): Promise<{ name: string; text: string }> => {
-      const file = input.get('file');
-      if (!(file instanceof File)) throw new Error('No file');
-      return { name: file.name, text: await file.text() };
+const systemInfo = {
+  version: '1.2.3',
+  startedAt: '2026-10-03T00:00:00.000Z',
+  pid: 4242,
+  name: 'Test machine',
+};
+const services = unreachableServices({
+  system: { info: () => systemInfo },
+  blob: {
+    upload: async (file) => ({
+      blobId: await file.text(),
+      mime: file.type || binaryMime,
+      bytes: file.size,
     }),
+  },
 });
 
 let home: string;
@@ -126,8 +133,8 @@ beforeEach(async (): Promise<void> => {
   listener = createRequestListener({
     guard: createRequestGuard(port),
     blobsFolder: join(home, 'blobs'),
-    router: testRouter,
-    createContext: (): Record<never, never> => ({}),
+    router: appRouter,
+    createContext: () => ({ services }),
   });
 });
 
@@ -195,16 +202,22 @@ describe('request listener', (): void => {
   });
 
   it('answers a tRPC query over HTTP at /trpc/', async (): Promise<void> => {
-    const response = await send({ path: pingRoute });
+    const response = await send({ path: infoRoute });
     expect(response.status).toBe(200);
-    expect(JSON.parse(response.body)).toEqual({ result: { data: 'pong' } });
+    expect(JSON.parse(response.body)).toEqual({ result: { data: systemInfo } });
   });
 
   it('hands an upload body to tRPC unread', async (): Promise<void> => {
     const response = await formRequest(uploadRoute, uploadForm());
     expect(response.status).toBe(200);
     expect(JSON.parse(response.body)).toEqual({
-      result: { data: { name: 'notes.txt', text: 'file content' } },
+      result: {
+        data: {
+          blobId: 'file content',
+          mime: binaryMime,
+          bytes: 12,
+        },
+      },
     });
   });
 
@@ -243,7 +256,7 @@ describe('request listener', (): void => {
     },
   );
 
-  it.each([`/blobs/${blobId}`, pingRoute])(
+  it.each([`/blobs/${blobId}`, infoRoute])(
     'answers 403 to %s from another Host and counts it',
     async (path): Promise<void> => {
       const response = await send({
@@ -259,7 +272,7 @@ describe('request listener', (): void => {
 
   it('answers 403 to a Host that is not a plain host and port', async (): Promise<void> => {
     const response = await send({
-      path: pingRoute,
+      path: infoRoute,
       headers: { host: `evil.example@${host}` },
     });
     expect(response.status).toBe(403);

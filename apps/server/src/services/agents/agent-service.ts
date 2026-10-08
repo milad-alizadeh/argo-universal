@@ -1,7 +1,7 @@
-import type { AgentsService } from '@repo/api';
 import { waitFor } from 'xstate';
 import type { RegistryActorRef } from '../sessions';
 import { findAgentProbe } from './agent-probe-system';
+import type { AgentsService } from './service';
 
 // Answers from each Agent's last probe; `refresh` probes them all again first.
 export function createAgentService(sessions: RegistryActorRef): AgentsService {

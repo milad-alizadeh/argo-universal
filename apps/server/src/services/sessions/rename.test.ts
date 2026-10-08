@@ -1,3 +1,4 @@
+import { sessionTitleMocks } from '@repo/api/mocks';
 import {
   type FeedSubscribeOutput,
   type SessionListOutput,
@@ -6,8 +7,8 @@ import {
   SessionSnapshot,
 } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
-import { sessionTitleMocks, unreachableServices } from '../../mocks';
-import { appRouter } from '../root';
+import { unreachableServices } from '#mocks/services';
+import { appRouter } from '../../engine/router';
 
 describe('Session title contracts', (): void => {
   it.each(sessionTitleMocks)(

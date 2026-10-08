@@ -1,7 +1,7 @@
 import type { SessionListOutput } from '@repo/contracts';
 import { describe, expect, it, vi } from 'vitest';
-import { unreachableServices } from '../../mocks';
-import { appRouter } from '../root';
+import { unreachableServices } from '#mocks/services';
+import { appRouter } from '../../engine/router';
 
 describe('session.list pagination input', (): void => {
   it('accepts the forward direction supplied by tRPC infinite queries', async (): Promise<void> => {

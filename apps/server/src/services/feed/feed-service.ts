@@ -1,4 +1,3 @@
-import type { FeedService } from '@repo/api';
 import type {
   SessionInfo,
   SessionSnapshot,
@@ -24,6 +23,7 @@ import {
   readWrittenRow,
   storedFeedColumns,
 } from './feed-row';
+import type { FeedService } from './service';
 import { queuedFeedRows } from './writer-job';
 import type { writerMachine } from './writer-machine';
 

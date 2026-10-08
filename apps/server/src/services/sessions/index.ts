@@ -19,3 +19,6 @@ export { toSessionCheckout } from './session-record';
 export { createRegistrySessionInput } from './registry-session-input';
 export { sessionRegistryId, findSessionRegistry } from './registry-system';
 export { sessionActorId, findSessionActor } from './session-system';
+
+export { sessionRouter } from './router';
+export type { SessionService } from './service';

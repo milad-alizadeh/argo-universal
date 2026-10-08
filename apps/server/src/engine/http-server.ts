@@ -1,13 +1,14 @@
 import { createServer, type Server } from 'node:http';
-import { appRouter, type Services } from '@repo/api';
 import type { Database } from '@repo/db';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { WebSocketServer } from 'ws';
 import { blobsFolderIn } from '../services/blob';
 import { createServerServices } from '../services/server-services';
+import type { Services } from '../services/services';
 import type { RegistryActorRef } from '../services/sessions';
 import { createRequestGuard } from './request-guard';
 import { createRequestListener } from './request-listener';
+import { appRouter } from './router';
 
 export interface HttpServerOptions {
   home: string;

@@ -33,5 +33,9 @@
     "@types/ws": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "exports": {
+    "./router": "./src/engine/router.ts",
+    "./mocks": "./mocks/services.ts"
   }
 }

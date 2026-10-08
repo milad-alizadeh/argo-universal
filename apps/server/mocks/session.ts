@@ -48,7 +48,7 @@ export function createSessionHost(
     >
   >;
   session: import('xstate').ActorRefFromLogic<typeof sessionMachine>;
-  service: import('@repo/api').FeedService;
+  service: import('../src/services/feed').FeedService;
   findFeed: () => FeedActorRef | undefined;
 } {
   const runtimeDirectory = mkdtempSync(join(tmpdir(), 'session-runtime-'));

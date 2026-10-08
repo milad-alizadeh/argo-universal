@@ -1,6 +1,5 @@
 import { createHash } from 'node:crypto';
 import { basename } from 'node:path';
-import type { ProjectsService } from '@repo/api';
 import { ProjectInfo } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { project } from '@repo/db/schema';
@@ -8,6 +7,7 @@ import { listBranches, readRepository } from '@repo/git';
 import { TRPCError } from '@trpc/server';
 import { eq } from 'drizzle-orm';
 import { createRejectionCounter } from '../../lib/count-rejections';
+import type { ProjectsService } from './service';
 
 export async function seedProject(
   database: Database,

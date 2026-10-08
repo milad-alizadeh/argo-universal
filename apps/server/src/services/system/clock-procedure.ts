@@ -1,5 +1,5 @@
 import { ClockTick } from '@repo/contracts';
-import { publicProcedure, zAsyncIterable } from '../trpc';
+import { publicProcedure, zAsyncIterable } from '../../engine/trpc';
 
 export const clock = publicProcedure
   .output(zAsyncIterable({ yield: ClockTick }))

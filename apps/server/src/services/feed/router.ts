@@ -6,7 +6,7 @@ import {
   FeedSubscribeInput,
   FeedSubscribeOutput,
 } from '@repo/contracts';
-import { publicProcedure, router, zAsyncIterable } from '../trpc';
+import { publicProcedure, router, zAsyncIterable } from '../../engine/trpc';
 
 // The Feed procedures.
 export const feedRouter = router({

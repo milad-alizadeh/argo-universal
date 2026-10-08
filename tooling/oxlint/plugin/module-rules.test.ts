@@ -44,8 +44,41 @@ ruleTester.run('api-type-only', apiTypeOnly, {
       filename: clientFile,
     },
     { code: "import { z } from '@repo/apis';", filename: clientFile },
+    {
+      code: "import type { AppRouter } from '@repo/server/router';",
+      filename: clientFile,
+    },
+    {
+      code: "export type { AppRouter } from '@repo/server/router';",
+      filename: clientFile,
+    },
   ],
   invalid: [
+    {
+      code: "import { appRouter } from '@repo/server/router';",
+      filename: clientFile,
+      errors: apiValue,
+    },
+    {
+      code: "import type { AppRouter } from '@repo/server/internal';",
+      filename: clientFile,
+      errors: apiValue,
+    },
+    {
+      code: "import type { Other } from '@repo/server/router';",
+      filename: clientFile,
+      errors: apiValue,
+    },
+    {
+      code: "export type * from '@repo/server/router';",
+      filename: clientFile,
+      errors: apiValue,
+    },
+    {
+      code: "await import('@repo/server/router');",
+      filename: clientFile,
+      errors: apiValue,
+    },
     {
       code: "import { appRouter } from '@repo/api';",
       filename: clientFile,
