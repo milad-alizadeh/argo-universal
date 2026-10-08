@@ -9,11 +9,11 @@ export function useFeedView(
   rows: readonly SessionUpdate[],
   snapshot: SessionSnapshot | null,
 ): FeedView | null {
-  const [held, setHeld] = useState({
+  const [held, setHeld] = useState(() => ({
     rows,
     snapshot,
     view: snapshot ? toFeedView(rows, snapshot) : null,
-  });
+  }));
   if (held.rows === rows && held.snapshot === snapshot) return held.view;
   const view = snapshot
     ? keepUnchangedItems(held.view, toFeedView(rows, snapshot))
