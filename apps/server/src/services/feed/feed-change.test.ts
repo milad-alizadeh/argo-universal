@@ -12,8 +12,11 @@ import {
   type FeedStreamEvent,
 } from './feed-change';
 
+const firstMessageRowId = 'message-1#0';
+const messageTextField = 'content.0.text';
+
 const message = (overrides: Partial<AgentMessage> = {}): AgentMessage => ({
-  id: 'message-1#0',
+  id: firstMessageRowId,
   sessionId: 'session-1',
   position: 3,
   revision: 7,
@@ -115,8 +118,8 @@ const accepted: Accepted[] = [
     rows: [message()],
     change: {
       type: 'append',
-      id: 'message-1#0',
-      field: 'content.0.text',
+      id: firstMessageRowId,
+      field: messageTextField,
       text: ', world',
     },
     rowAfter: message({
@@ -126,8 +129,8 @@ const accepted: Accepted[] = [
     streamEvent: {
       type: 'row.append',
       rev: 9,
-      id: 'message-1#0',
-      field: 'content.0.text',
+      id: firstMessageRowId,
+      field: messageTextField,
       off: 5,
       text: ', world',
     },
@@ -187,13 +190,17 @@ const accepted: Accepted[] = [
   {
     name: 'a patch to a settled row, which keeps its place',
     rows: [message({ state: 'settled' })],
-    change: { type: 'patch', id: 'message-1#0', set: { messageId: 'plan-1' } },
+    change: {
+      type: 'patch',
+      id: firstMessageRowId,
+      set: { messageId: 'plan-1' },
+    },
     turnId: 'turn-2',
     rowAfter: message({ revision: 9, state: 'settled', messageId: 'plan-1' }),
     streamEvent: {
       type: 'row.patch',
       rev: 9,
-      id: 'message-1#0',
+      id: firstMessageRowId,
       set: { messageId: 'plan-1' },
     },
   },
@@ -221,7 +228,7 @@ const rejected: Rejected[] = [
     feed: feedWith(message()),
     change: {
       type: 'upsert',
-      update: update(command({ id: 'message-1#0' })),
+      update: update(command({ id: firstMessageRowId })),
     },
     rejection: /^row message-1#0 is agent_message, not tool_call_update$/,
   },
@@ -231,7 +238,7 @@ const rejected: Rejected[] = [
     change: {
       type: 'append',
       id: 'message-2#0',
-      field: 'content.0.text',
+      field: messageTextField,
       text: 'x',
     },
     rejection: /^no row message-2#0$/,
@@ -241,7 +248,7 @@ const rejected: Rejected[] = [
     feed: feedWith(message()),
     change: {
       type: 'append',
-      id: 'message-1#0',
+      id: firstMessageRowId,
       field: 'content.0',
       text: 'x',
     },
@@ -252,7 +259,7 @@ const rejected: Rejected[] = [
     feed: feedWith(message()),
     change: {
       type: 'append',
-      id: 'message-1#0',
+      id: firstMessageRowId,
       field: 'content.1.text',
       text: 'x',
     },
@@ -261,7 +268,7 @@ const rejected: Rejected[] = [
   {
     name: 'an append to an envelope field',
     feed: feedWith(message()),
-    change: { type: 'append', id: 'message-1#0', field: 'id', text: 'x' },
+    change: { type: 'append', id: firstMessageRowId, field: 'id', text: 'x' },
     rejection: /^id of row message-1#0 is set by the Feed$/,
   },
   {
@@ -319,9 +326,19 @@ describe('applyFeedChange', (): void => {
         type: 'upsert',
         update: update(message({ content: [{ type: 'text', text: '' }] })),
       },
-      { type: 'append', id: 'message-1#0', field: 'content.0.text', text: 'a' },
-      { type: 'append', id: 'message-1#0', field: 'content.0.text', text: 'b' },
-      { type: 'patch', id: 'message-1#0', set: { state: 'settled' } },
+      {
+        type: 'append',
+        id: firstMessageRowId,
+        field: messageTextField,
+        text: 'a',
+      },
+      {
+        type: 'append',
+        id: firstMessageRowId,
+        field: messageTextField,
+        text: 'b',
+      },
+      { type: 'patch', id: firstMessageRowId, set: { state: 'settled' } },
     ];
 
     let feed = feedWith();
@@ -334,7 +351,7 @@ describe('applyFeedChange', (): void => {
     }
 
     expect(revisions).toEqual([9, 10, 11, 12]);
-    expect(feed.rows['message-1#0']).toEqual(
+    expect(feed.rows[firstMessageRowId]).toEqual(
       message({
         position: 5,
         revision: 12,

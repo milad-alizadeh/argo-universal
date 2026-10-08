@@ -44,6 +44,10 @@ import {
   toSessionInsert,
 } from './session-data';
 
+const writeFeedEvent = 'writer.write';
+const feedChangeEvent = 'feed.change';
+const flushingSessionTarget = '#session.open.flushing';
+
 type FeedChangeEvent = Extract<
   import('../feed').FeedEvent,
   { type: 'feed.change' }
@@ -220,7 +224,7 @@ const sessionSetup = setup({
       assertEvent(event, 'agent.ready');
       if (context.stored)
         enqueue.sendTo(writer, {
-          type: 'writer.write',
+          type: writeFeedEvent,
           job: {
             type: 'sessionRowUpdate',
             id: context.sessionId,
@@ -246,7 +250,7 @@ const sessionSetup = setup({
       if (context.input.kind !== 'new') return;
       enqueue.assign({ stored: true });
       enqueue.sendTo(writer, {
-        type: 'writer.write',
+        type: writeFeedEvent,
         job: toSessionInsert(context.input, context),
       });
     }),
@@ -264,7 +268,7 @@ const sessionSetup = setup({
           activeTurnStartedAt: startedAt,
         });
         enqueue.sendTo(writer, {
-          type: 'writer.write',
+          type: writeFeedEvent,
           job: {
             type: 'turnInsert',
             turn: {
@@ -277,7 +281,7 @@ const sessionSetup = setup({
           },
         });
         enqueue.sendTo('feed', {
-          type: 'feed.change',
+          type: feedChangeEvent,
           turnId: params.turnId,
           change: userMessageChange(params.turnId, params.content),
         });
@@ -292,7 +296,7 @@ const sessionSetup = setup({
       ({ context, enqueue }, params: EndTurnParameters): void => {
         if (context.activeTurnId)
           enqueue.sendTo(writer, {
-            type: 'writer.write',
+            type: writeFeedEvent,
             job: {
               type: 'turnUpdate',
               id: context.activeTurnId,
@@ -321,7 +325,7 @@ const sessionSetup = setup({
       }): Extract<import('../feed').FeedEvent, { type: 'feed.change' }> => {
         assertEvent(event, 'agent.feed');
         return {
-          type: 'feed.change',
+          type: feedChangeEvent,
           change: event.change,
           turnId: context.activeTurnId,
         };
@@ -337,7 +341,7 @@ const sessionSetup = setup({
       const configValues = toConfigValues(event.configOptions);
       if (context.stored)
         enqueue.sendTo(writer, {
-          type: 'writer.write',
+          type: writeFeedEvent,
           job: {
             type: 'sessionRowUpdate',
             id: context.sessionId,
@@ -407,7 +411,7 @@ const sessionSetup = setup({
       assertEvent(event, 'session.answerPermission');
       const change = permissionOutcomeChange(event.toolCallId, event.optionId);
       enqueue.sendTo('feed', {
-        type: 'feed.change',
+        type: feedChangeEvent,
         turnId: context.activeTurnId,
         change,
       });
@@ -437,7 +441,7 @@ const sessionSetup = setup({
       for (const request of context.permissionQueue) {
         const change = permissionOutcomeChange(request.toolCallId, null);
         enqueue.sendTo('feed', {
-          type: 'feed.change',
+          type: feedChangeEvent,
           turnId: context.activeTurnId,
           change,
         });
@@ -468,7 +472,7 @@ const sessionSetup = setup({
       ];
       enqueue.assign({ agentCrashes });
       enqueue.sendTo('feed', {
-        type: 'feed.change',
+        type: feedChangeEvent,
         turnId: context.activeTurnId,
         change: {
           type: 'upsert',
@@ -486,7 +490,7 @@ const sessionSetup = setup({
       const failure = 'The Agent stopped three times in ten minutes';
       enqueue.assign({ failure });
       enqueue.sendTo(writer, {
-        type: 'writer.write',
+        type: writeFeedEvent,
         job: {
           type: 'sessionRowUpdate',
           id: context.sessionId,
@@ -503,7 +507,7 @@ const sessionSetup = setup({
       ({ context, event }): FeedChangeEvent => {
         assertEvent(event, 'agent.messageRejected');
         return {
-          type: 'feed.change',
+          type: feedChangeEvent,
           turnId: context.activeTurnId,
           change: {
             type: 'upsert',
@@ -526,7 +530,7 @@ const sessionSetup = setup({
       );
     },
     cancelNotice: sendTo('feed', ({ context }): FeedChangeEvent => ({
-      type: 'feed.change',
+      type: feedChangeEvent,
       turnId: context.activeTurnId,
       change: {
         type: 'upsert',
@@ -865,12 +869,12 @@ export const sessionMachine = sessionSetup.createMachine({
                 'stopAgent',
               ],
               on: {
-                'xstate.done.actor.agent': { target: '#session.open.flushing' },
+                'xstate.done.actor.agent': { target: flushingSessionTarget },
                 'xstate.error.actor.agent': {
-                  target: '#session.open.flushing',
+                  target: flushingSessionTarget,
                 },
               },
-              after: { agentStopLimit: '#session.open.flushing' },
+              after: { agentStopLimit: flushingSessionTarget },
             },
           },
         },

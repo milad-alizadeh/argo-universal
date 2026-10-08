@@ -24,6 +24,14 @@ import {
 import { createConnectionInput } from '../../mocks/connection-input';
 import { connectionMachine } from './machine';
 
+const connectionLostEvent = 'connection.lost';
+const connectionOpenedEvent = 'connection.opened';
+const foregroundEvent = 'app.foreground';
+const connectionAttemptEvent = 'connection.attemptRequested';
+const retryDelayEvent = 'xstate.after.retryDelay.connection.attempt.waiting';
+const offlineDelayEvent =
+  'xstate.after.offlineDelay.connection.link.reconnecting';
+
 // Numbers written out so the model cannot grade itself.
 const offlineDelayMs = 10_000;
 const retryDelayMs = (attempts: number): number =>
@@ -127,12 +135,12 @@ afterEach(() => {
 describe('connection model', (): void => {
   let modelClock: ReturnType<typeof createModelClock>;
   const fixtures = [
-    { type: 'connection.opened' },
-    { type: 'connection.lost', error: lostError },
-    { type: 'connection.attemptRequested' },
-    { type: 'app.foreground' },
-    { type: 'xstate.after.retryDelay.connection.attempt.waiting' },
-    { type: 'xstate.after.offlineDelay.connection.link.reconnecting' },
+    { type: connectionOpenedEvent },
+    { type: connectionLostEvent, error: lostError },
+    { type: connectionAttemptEvent },
+    { type: foregroundEvent },
+    { type: retryDelayEvent },
+    { type: offlineDelayEvent },
   ] satisfies GraphEventFromLogic<typeof machine>[];
   type ConnectionGraphEvent = (typeof fixtures)[number];
   const canGraphEvent = (
@@ -140,9 +148,9 @@ describe('connection model', (): void => {
     event: ConnectionGraphEvent,
   ): boolean => {
     switch (event.type) {
-      case 'xstate.after.retryDelay.connection.attempt.waiting':
+      case retryDelayEvent:
         return snapshot.matches({ attempt: 'waiting' });
-      case 'xstate.after.offlineDelay.connection.link.reconnecting':
+      case offlineDelayEvent:
         return snapshot.matches({ link: 'reconnecting' });
       default:
         return snapshot.can(event);
@@ -188,33 +196,33 @@ describe('connection model', (): void => {
       modelClock = createModelClock();
       startConnection(modelClock.clock);
     },
-    'connection.opened': () => {
+    [connectionOpenedEvent]: () => {
       const before = { refetches, down: isDown(connection.getSnapshot()) };
-      watcher.send({ type: 'connection.opened' });
+      watcher.send({ type: connectionOpenedEvent });
       expect(refetches).toBe(before.refetches + (before.down ? 1 : 0));
     },
-    'connection.lost': () => {
-      watcher.send({ type: 'connection.lost', error: lostError });
+    [connectionLostEvent]: () => {
+      watcher.send({ type: connectionLostEvent, error: lostError });
     },
-    'connection.attemptRequested': (step) => {
+    [connectionAttemptEvent]: (step) => {
       const before = allowedAttempts;
-      connection.send({ type: 'connection.attemptRequested' });
+      connection.send({ type: connectionAttemptEvent });
       // An attempt allowed at once leaves nothing waiting.
       expect(allowedAttempts).toBe(
         before + (attemptState(step.state) === 'idle' ? 1 : 0),
       );
     },
-    'app.foreground': () => {
+    [foregroundEvent]: () => {
       const before = allowedAttempts;
-      connection.send({ type: 'app.foreground' });
+      connection.send({ type: foregroundEvent });
       expect(allowedAttempts).toBe(before + 1);
     },
-    'xstate.after.retryDelay.connection.attempt.waiting': (step) => {
+    [retryDelayEvent]: (step) => {
       const before = allowedAttempts;
       modelClock.fire(step.event.type);
       expect(allowedAttempts).toBe(before + 1);
     },
-    'xstate.after.offlineDelay.connection.link.reconnecting': (step) => {
+    [offlineDelayEvent]: (step) => {
       modelClock.fire(step.event.type);
     },
   };
@@ -233,9 +241,9 @@ describe('connection model', (): void => {
     ...getPathsFromEvents(
       machine,
       [
-        { type: 'connection.attemptRequested' },
-        { type: 'connection.attemptRequested' },
-        { type: 'connection.lost', error: lostError },
+        { type: connectionAttemptEvent },
+        { type: connectionAttemptEvent },
+        { type: connectionLostEvent, error: lostError },
       ],
       options,
     ),
@@ -248,7 +256,7 @@ describe('connection model', (): void => {
         canGraphEvent(snapshot, event) &&
         !(
           linkState(snapshot) === 'connecting' &&
-          event.type === 'connection.lost'
+          event.type === connectionLostEvent
         ),
     }),
   );
@@ -300,7 +308,7 @@ describe('connection model', (): void => {
 // The real timers, exercised with the default actor clock.
 describe('connection', () => {
   const requestAttempt = (): void =>
-    connection.send({ type: 'connection.attemptRequested' });
+    connection.send({ type: connectionAttemptEvent });
 
   // Requests an attempt and returns how long the machine waited before it allowed it.
   const waitForAllowedAttempt = (): number => {
@@ -316,8 +324,8 @@ describe('connection', () => {
   };
 
   const loseOpenConnection = (): void => {
-    watcher.send({ type: 'connection.opened' });
-    watcher.send({ type: 'connection.lost', error: lostError });
+    watcher.send({ type: connectionOpenedEvent });
+    watcher.send({ type: connectionLostEvent, error: lostError });
   };
 
   it('allows the first attempt at once', () => {
@@ -357,7 +365,7 @@ describe('connection', () => {
 
   it('a loss before the first open goes offline after offlineDelay', () => {
     startConnection();
-    watcher.send({ type: 'connection.lost', error: lostError });
+    watcher.send({ type: connectionLostEvent, error: lostError });
 
     expect(linkState(connection.getSnapshot())).toBe('reconnecting');
     vi.advanceTimersByTime(offlineDelayMs - 1);
@@ -396,7 +404,7 @@ describe('connection', () => {
     loseOpenConnection();
     requestAttempt();
 
-    connection.send({ type: 'app.foreground' });
+    connection.send({ type: foregroundEvent });
 
     expect(allowedAttempts).toBe(1);
     vi.advanceTimersByTime(retryDelayMs(0));
@@ -408,7 +416,7 @@ describe('connection', () => {
     loseOpenConnection();
 
     vi.advanceTimersByTime(offlineDelayMs - 1);
-    watcher.send({ type: 'connection.lost', error: lostError });
+    watcher.send({ type: connectionLostEvent, error: lostError });
     vi.advanceTimersByTime(1);
 
     expect(linkState(connection.getSnapshot())).toBe('offline');

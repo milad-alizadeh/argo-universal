@@ -3,9 +3,11 @@ import { createTRPCClient } from '@trpc/client';
 import { describe, expect, it } from 'vitest';
 import { fails, pending, trpcMockLink } from './trpc-mock-link';
 
+const serverStartedAt = '2026-10-03T00:00:00.000Z';
+
 const systemInfo = {
   version: '1.2.3',
-  startedAt: '2026-10-03T00:00:00.000Z',
+  startedAt: serverStartedAt,
   pid: 4242,
   name: "Milad's Mac mini",
 };
@@ -24,7 +26,7 @@ describe('trpcMockLink', () => {
       links: [
         trpcMockLink({
           'system.clock': async function* () {
-            yield { now: '2026-10-03T00:00:00.000Z' };
+            yield { now: serverStartedAt };
             yield { now: '2026-10-03T00:00:01.000Z' };
           },
         }),
@@ -41,7 +43,7 @@ describe('trpcMockLink', () => {
     });
 
     expect(received).toEqual([
-      { now: '2026-10-03T00:00:00.000Z' },
+      { now: serverStartedAt },
       { now: '2026-10-03T00:00:01.000Z' },
     ]);
   });

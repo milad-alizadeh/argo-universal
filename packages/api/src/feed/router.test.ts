@@ -9,10 +9,12 @@ import { appRouter } from '../root';
 import type { Services } from '../services';
 import { createCallerFactory } from '../trpc';
 
+const firstMessageRowId = 'message-1#0';
+
 const createCaller = createCallerFactory(appRouter);
 
 const row: AgentMessage = {
-  id: 'message-1#0',
+  id: firstMessageRowId,
   sessionId: 'session-1',
   position: 0,
   revision: 1,
@@ -83,7 +85,7 @@ describe('feed router', (): void => {
     const caller = createCaller({ services });
 
     await expect(
-      caller.feed.row({ sessionId: 'session-1', id: 'message-1#0' }),
+      caller.feed.row({ sessionId: 'session-1', id: firstMessageRowId }),
     ).rejects.toThrow('Output validation failed');
   });
 
@@ -93,7 +95,7 @@ describe('feed router', (): void => {
       {
         type: 'row.append',
         rev: 2,
-        id: 'message-1#0',
+        id: firstMessageRowId,
         field: 'content.0.text',
         off: 5,
         text: '!',

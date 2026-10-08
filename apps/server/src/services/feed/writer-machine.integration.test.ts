@@ -14,6 +14,9 @@ import { type EventExecutor, TestModel, type TestPath } from 'xstate/graph';
 import type { WriterJob } from './writer-job';
 import { writerMachine } from './writer-machine';
 
+const writeFeedEvent = 'writer.write';
+const drainWriterEvent = 'writer.drain';
+
 // A failed batch is tried again after 1 second.
 const writeRetryDelayMs = 1000;
 
@@ -76,13 +79,13 @@ const job = (index: number): WriterJob => ({
 const sendWrite = (): void => {
   const sent = job(sentJobs.length + 1);
   sentJobs.push(sent);
-  writer.send({ type: 'writer.write', job: sent });
+  writer.send({ type: writeFeedEvent, job: sent });
 };
 
 // Done and error events of invoked actors are not in the machine's event type, but the model drives them.
 const events = [
-  { type: 'writer.write', job: job(0) },
-  { type: 'writer.drain' },
+  { type: writeFeedEvent, job: job(0) },
+  { type: drainWriterEvent },
   { type: 'xstate.done.actor.writeBatch', actorId: 'writeBatch' },
   {
     type: 'xstate.error.actor.writeBatch',
@@ -126,7 +129,7 @@ const executors: Record<string, EventExecutor<WriterSnapshot, WriterEvent>> = {
     writer = createActor(machine, { input }).start();
   },
   'writer.write': sendWrite,
-  'writer.drain': (): void => writer.send({ type: 'writer.drain' }),
+  'writer.drain': (): void => writer.send({ type: drainWriterEvent }),
   'xstate.done.actor.writeBatch': (): Promise<void> =>
     settle((call): void => call.resolve()),
   'xstate.error.actor.writeBatch': (): Promise<void> =>
@@ -278,7 +281,7 @@ describe('database writer', (): void => {
 
   it('keeps the enqueue clock value when a Feed write is retried', async (): Promise<void> => {
     writer.send({
-      type: 'writer.write',
+      type: writeFeedEvent,
       job: {
         type: 'feedRows',
         sessionId: 'session-1',
@@ -313,7 +316,7 @@ describe('database writer', (): void => {
 
   it('logs each lost job when the drain fails', async (): Promise<void> => {
     sendWrite();
-    writer.send({ type: 'writer.drain' });
+    writer.send({ type: drainWriterEvent });
     sendWrite();
     await settle((call): void => call.resolve());
     await settle((call): void => call.reject(writeError));

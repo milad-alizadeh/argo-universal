@@ -15,6 +15,8 @@ import {
 import { settleViewport } from '../../mocks/settle-viewport';
 import type { ElicitationValues } from './elicitation-form';
 
+const answeredLabel = 'You answered';
+
 const meta = {
   title: 'Tests/ElicitationForm',
   component: ElicitationFormPreview,
@@ -46,7 +48,7 @@ function choice(width: number, mock: RequestMock = elicitationMock): Story {
         action: 'accept',
         content: answer.input.content,
       });
-      await expect(canvas.getByText('You answered')).toBeVisible();
+      await expect(canvas.getByText(answeredLabel)).toBeVisible();
       await expect(
         canvas.queryByText('Color preference'),
       ).not.toBeInTheDocument();
@@ -166,7 +168,7 @@ function validation(width: number): Story {
           notify: false,
         },
       });
-      await expect(canvas.getByText('You answered')).toBeVisible();
+      await expect(canvas.getByText(answeredLabel)).toBeVisible();
       await expect(canvas.getByText('No', { exact: true })).toBeVisible();
     },
   };
@@ -181,7 +183,7 @@ export const SubmitWithEnter: Story = {
     await userEvent.click(canvas.getByRole('textbox', { name: 'Title' }));
     await userEvent.keyboard('{Enter}');
     await expect(args.onAnswer).toHaveBeenCalledTimes(1);
-    await expect(canvas.getByText('You answered')).toBeVisible();
+    await expect(canvas.getByText(answeredLabel)).toBeVisible();
   },
 };
 

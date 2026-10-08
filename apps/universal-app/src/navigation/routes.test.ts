@@ -2,12 +2,19 @@ import type { NavigationDestination } from '@repo/client';
 import { describe, expect, it } from 'vitest';
 import { destinationFor, hrefFor } from './routes';
 
+const sessionsRouteGroup = '(sessions)';
+const firstAgentId = 'first-agent';
+
 const destinations: [NavigationDestination, string[], object][] = [
-  [{ to: 'sessions' }, ['(shell)', '(sessions)'], {}],
-  [{ to: 'new-session' }, ['(shell)', '(sessions)', 'sessions', 'new'], {}],
+  [{ to: 'sessions' }, ['(shell)', sessionsRouteGroup], {}],
+  [
+    { to: 'new-session' },
+    ['(shell)', sessionsRouteGroup, 'sessions', 'new'],
+    {},
+  ],
   [
     { to: 'session', id: 'session-1' },
-    ['(shell)', '(sessions)', 'sessions', '[id]'],
+    ['(shell)', sessionsRouteGroup, 'sessions', '[id]'],
     {},
   ],
   [{ to: 'issues' }, ['(shell)', 'issues', 'index'], {}],
@@ -34,7 +41,7 @@ const destinations: [NavigationDestination, string[], object][] = [
     {},
   ],
   [
-    { to: 'settings-agent', agent: 'first-agent' },
+    { to: 'settings-agent', agent: firstAgentId },
     ['(shell)', 'settings', 'agents', '[agent]'],
     {},
   ],
@@ -47,9 +54,9 @@ describe('hrefFor', () => {
       pathname: '/sessions/[id]',
       params: { id: 'session-1' },
     });
-    expect(hrefFor({ to: 'settings-agent', agent: 'first-agent' })).toEqual({
+    expect(hrefFor({ to: 'settings-agent', agent: firstAgentId })).toEqual({
       pathname: '/settings/agents/[agent]',
-      params: { agent: 'first-agent' },
+      params: { agent: firstAgentId },
     });
   });
 });
@@ -62,7 +69,7 @@ describe('destinationFor', () => {
 
   it('keeps only the params its route names', () => {
     expect(
-      destinationFor(['(shell)', '(sessions)', 'sessions', '[id]'], {
+      destinationFor(['(shell)', sessionsRouteGroup, 'sessions', '[id]'], {
         id: 'session-1',
         tab: 'feed',
       }),

@@ -32,6 +32,10 @@ import { useWide } from '../navigation/use-wide';
 import { ComposerPopover } from './composer-popover';
 import { useContentWide } from './content-layout';
 
+const successBackgroundClassName = 'bg-success';
+const warningBackgroundClassName = 'bg-warning';
+const mutedTextClassName = 'text-muted-foreground';
+
 const fullPercent = 100;
 // Context use below this percent is the Smart zone; at or above, the Dumb zone.
 const smartZonePercent = 20;
@@ -72,7 +76,9 @@ function Meter({
         className={cn(
           'h-full rounded-full bg-foreground',
           warning &&
-            (contextZone(percent) === 'smart' ? 'bg-success' : 'bg-warning'),
+            (contextZone(percent) === 'smart'
+              ? successBackgroundClassName
+              : warningBackgroundClassName),
         )}
         style={{ width: `${Math.max(0, Math.min(fullPercent, percent))}%` }}
       />
@@ -112,7 +118,9 @@ function ContextRing({ percent }: { percent: number }): React.JSX.Element {
             r={contextRingRadius}
             fill="none"
             strokeClassName={
-              contextZone(percent) === 'smart' ? 'bg-success' : 'bg-warning'
+              contextZone(percent) === 'smart'
+                ? successBackgroundClassName
+                : warningBackgroundClassName
             }
             strokeWidth={2}
             strokeLinecap="round"
@@ -189,7 +197,7 @@ export function ComposerPlan({
         selectable={false}
         className={cn(
           'select-none text-xs leading-4 font-normal',
-          wide && 'text-muted-foreground',
+          wide && mutedTextClassName,
         )}
       >
         {wide ? `Plan ${done}/${entries.length}` : 'Plan'}
@@ -350,7 +358,7 @@ function PlanSteps({ entries }: { entries: PlanEntry[] }): React.JSX.Element {
           );
         } else if (entry.status === 'completed') {
           stepIndicator = (
-            <Icon as={CheckIcon} className="text-muted-foreground" />
+            <Icon as={CheckIcon} className={mutedTextClassName} />
           );
         } else {
           stepIndicator = (
@@ -388,7 +396,7 @@ function PlanSteps({ entries }: { entries: PlanEntry[] }): React.JSX.Element {
                 'flex-1 min-w-0 text-sm leading-5 wide:text-xs wide:leading-4 font-normal',
                 (entry.status === 'completed' ||
                   (!wide && entry.status === 'pending')) &&
-                  'text-muted-foreground',
+                  mutedTextClassName,
                 wide && entry.status === 'in_progress' && 'font-medium',
               )}
             >
@@ -439,7 +447,7 @@ export function ComposerStatusControls({
                   : 'w-7 px-0 has-[>svg]:px-0',
               )}
             >
-              <Icon as={ClockCountdownIcon} className="text-muted-foreground" />
+              <Icon as={ClockCountdownIcon} className={mutedTextClassName} />
               <Text
                 selectable={false}
                 className={cn(
@@ -602,13 +610,13 @@ export function ComposerStatusControls({
                     label: `Smart zone · below ${smartZonePercent}%`,
                     explanation:
                       'Focused context helps the Agent follow instructions.',
-                    color: 'bg-success',
+                    color: successBackgroundClassName,
                   },
                   {
                     label: `Dumb zone · ${smartZonePercent}% and up`,
                     explanation:
                       'Extra history can distract the Agent, even with space left.',
-                    color: 'bg-warning',
+                    color: warningBackgroundClassName,
                   },
                 ].map((zone) => (
                   <View key={zone.label} className="flex-row gap-2">
@@ -689,13 +697,13 @@ export function ComposerWorkChips({
               onPress={work.onPress}
               className="h-6 sm:h-6 py-0 px-2.5 has-[>svg]:px-2.5 gap-1.5 rounded-full border border-border bg-card shadow-composer"
             >
-              <Icon as={icon} className="text-muted-foreground" />
+              <Icon as={icon} className={mutedTextClassName} />
               <View className="flex-row items-center gap-1">
                 <Text
                   selectable={false}
                   className={cn(
                     'select-none text-xs leading-4 font-normal',
-                    work.running ? 'text-success' : 'text-muted-foreground',
+                    work.running ? 'text-success' : mutedTextClassName,
                   )}
                 >
                   {work.count}

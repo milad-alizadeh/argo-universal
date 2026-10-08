@@ -5,6 +5,8 @@ import { cn } from '#lib/utils';
 import { Icon } from '#primitives/icon';
 import { Text, TextClassContext } from '#primitives/text';
 
+const destructiveTextClassName = 'text-destructive';
+
 function Alert({
   className,
   variant,
@@ -22,7 +24,7 @@ function Alert({
     <TextClassContext.Provider
       value={cn(
         'text-sm text-foreground',
-        variant === 'destructive' && 'text-destructive',
+        variant === 'destructive' && destructiveTextClassName,
         className,
       )}
     >
@@ -38,7 +40,7 @@ function Alert({
           <Icon
             as={icon}
             className={cn(
-              variant === 'destructive' && 'text-destructive',
+              variant === 'destructive' && destructiveTextClassName,
               iconClassName,
             )}
           />
@@ -73,7 +75,7 @@ function AlertDescription({
     <Text
       className={cn(
         'text-muted-foreground ml-0.5 pb-1.5 pl-6 text-sm leading-relaxed',
-        textClass?.includes('text-destructive') && 'text-destructive/90',
+        textClass?.includes(destructiveTextClassName) && 'text-destructive/90',
         className,
       )}
       {...props}

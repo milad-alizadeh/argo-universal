@@ -15,6 +15,15 @@ import {
   type PlanProposalCardProps,
 } from './plan-proposal-card';
 
+const approvePlanQuestion = 'Approve this plan?';
+const keepPlanningLabel = 'Keep planning';
+const planScrollId = 'plan-proposal-scroll';
+const expandPlanLabel = 'Expand plan';
+const expandedPlanLabel = 'Expanded plan';
+const collapsePlanLabel = 'Collapse plan';
+const answeredElsewhereMessage = 'Already answered on another device';
+const feedbackDraft = 'Keep this feedback';
+
 const meta = {
   title: 'Tests/PlanProposalCard',
   component: PlanProposalCard,
@@ -35,7 +44,7 @@ export const ShortPlan: Story = {
   play: async ({ canvas, userEvent }) => {
     for (const width of [layoutWidths.phone, layoutWidths.wide]) {
       await settleViewport(width);
-      await expect(canvas.getByText('Approve this plan?')).toBeVisible();
+      await expect(canvas.getByText(approvePlanQuestion)).toBeVisible();
       await expect(canvas.getByText(/then verify its contents/)).toBeVisible();
       await waitFor(() => {
         if (width === layoutWidths.phone) {
@@ -53,14 +62,14 @@ export const ShortPlan: Story = {
         canvas.getByRole('button', { name: 'Approve' }),
       ).toBeEnabled();
       await expect(
-        canvas.getByRole('button', { name: 'Keep planning' }),
+        canvas.getByRole('button', { name: keepPlanningLabel }),
       ).toBeEnabled();
     }
     await userEvent.click(canvas.getByRole('button', { name: 'Approve' }));
     await expect(canvas.getByRole('status')).toHaveTextContent('Plan approved');
     await expect(canvas.getByRole('textbox')).toHaveValue('Keep my draft');
     await expect(
-      canvas.queryByText('Approve this plan?'),
+      canvas.queryByText(approvePlanQuestion),
     ).not.toBeInTheDocument();
   },
 };
@@ -70,14 +79,14 @@ export const LongPlan: Story = {
   play: async ({ canvas }) => {
     for (const width of [layoutWidths.phone, layoutWidths.wide]) {
       await settleViewport(width);
-      const scroll = canvas.getByTestId('plan-proposal-scroll');
+      const scroll = canvas.getByTestId(planScrollId);
       await waitFor(() => {
         expect(scroll.getBoundingClientRect().height).toBe(280);
         expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight);
       });
       const card = canvas.getByTestId('plan-proposal-card');
       const titleTop =
-        canvas.getByText('Approve this plan?').getBoundingClientRect().top -
+        canvas.getByText(approvePlanQuestion).getBoundingClientRect().top -
         card.getBoundingClientRect().top;
       const approve = canvas.getByRole('button', { name: 'Approve' });
       const buttonTop =
@@ -85,7 +94,7 @@ export const LongPlan: Story = {
       scroll.scrollTop = scroll.scrollHeight;
       await waitFor(() => expect(scroll.scrollTop).toBeGreaterThan(0));
       await expect(
-        canvas.getByText('Approve this plan?').getBoundingClientRect().top -
+        canvas.getByText(approvePlanQuestion).getBoundingClientRect().top -
           card.getBoundingClientRect().top,
       ).toBe(titleTop);
       await expect(
@@ -105,18 +114,18 @@ function keepPlanning(width: number): Story {
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       await userEvent.click(
-        canvas.getByRole('button', { name: 'Keep planning' }),
+        canvas.getByRole('button', { name: keepPlanningLabel }),
       );
       const feedback = canvas.getByRole('textbox', {
         name: 'What should change in the plan?',
       });
       await expect(feedback).toHaveFocus();
       await expect(
-        canvas.getByRole('button', { name: 'Keep planning' }),
+        canvas.getByRole('button', { name: keepPlanningLabel }),
       ).toBeDisabled();
       await userEvent.type(feedback, '   ');
       await expect(
-        canvas.getByRole('button', { name: 'Keep planning' }),
+        canvas.getByRole('button', { name: keepPlanningLabel }),
       ).toBeDisabled();
       if (width === layoutWidths.wide) await userEvent.keyboard('{Escape}');
       else await userEvent.click(canvas.getByRole('button', { name: 'Back' }));
@@ -135,14 +144,14 @@ function keepPlanningWithFeedback(width: number): Story {
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
       await userEvent.click(
-        canvas.getByRole('button', { name: 'Keep planning' }),
+        canvas.getByRole('button', { name: keepPlanningLabel }),
       );
       const feedback = canvas.getByRole('textbox', {
         name: 'What should change in the plan?',
       });
       await userEvent.type(feedback, planProposalFeedback);
       await expect(
-        canvas.getByRole('button', { name: 'Keep planning' }),
+        canvas.getByRole('button', { name: keepPlanningLabel }),
       ).toBeEnabled();
       if (width === layoutWidths.phone) {
         await userEvent.click(canvas.getByRole('button', { name: 'Back' }));
@@ -174,13 +183,13 @@ function expanded(width: number): Story {
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       await userEvent.click(
-        canvas.getByRole('button', { name: 'Expand plan' }),
+        canvas.getByRole('button', { name: expandPlanLabel }),
       );
       const dialog = await within(document.body).findByRole('dialog', {
-        name: 'Expanded plan',
+        name: expandedPlanLabel,
       });
       const panel = within(dialog);
-      const scroll = panel.getByTestId('plan-proposal-scroll');
+      const scroll = panel.getByTestId(planScrollId);
       await waitFor(() =>
         expect(scroll.getBoundingClientRect().height).toBeGreaterThan(280),
       );
@@ -204,17 +213,17 @@ function expanded(width: number): Story {
         window.innerHeight,
       );
       await userEvent.click(
-        panel.getByRole('button', { name: 'Collapse plan' }),
+        panel.getByRole('button', { name: collapsePlanLabel }),
       );
       await waitFor(() =>
         expect(
           within(document.body).queryByRole('dialog', {
-            name: 'Expanded plan',
+            name: expandedPlanLabel,
           }),
         ).not.toBeInTheDocument(),
       );
       await expect(
-        canvas.getByRole('button', { name: 'Expand plan' }),
+        canvas.getByRole('button', { name: expandPlanLabel }),
       ).toBeVisible();
     },
   };
@@ -229,12 +238,12 @@ function answered(
   return {
     args: {
       proposal,
-      state: { kind: 'answered', reason: 'Already answered on another device' },
+      state: { kind: 'answered', reason: answeredElsewhereMessage },
     },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
       await expect(canvas.getByRole('status')).toHaveTextContent(
-        'Already answered on another device',
+        answeredElsewhereMessage,
       );
       await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
       // A loaded runner can draw the default viewport's card for a few frames after the resize.
@@ -245,27 +254,27 @@ function answered(
           ).not.toBeInTheDocument(),
         );
         await expect(
-          canvas.queryByRole('button', { name: 'Keep planning' }),
+          canvas.queryByRole('button', { name: keepPlanningLabel }),
         ).not.toBeInTheDocument();
       } else {
         await expect(
           canvas.getByRole('button', { name: 'Approve' }),
         ).toBeDisabled();
         await expect(
-          canvas.getByRole('button', { name: 'Keep planning' }),
+          canvas.getByRole('button', { name: keepPlanningLabel }),
         ).toBeDisabled();
       }
       await userEvent.click(
-        canvas.getByRole('button', { name: 'Expand plan' }),
+        canvas.getByRole('button', { name: expandPlanLabel }),
       );
       const dialog = await within(document.body).findByRole('dialog', {
-        name: 'Expanded plan',
+        name: expandedPlanLabel,
       });
       await expect(
-        within(dialog).getByText('Already answered on another device'),
+        within(dialog).getByText(answeredElsewhereMessage),
       ).toBeVisible();
       await userEvent.click(
-        within(dialog).getByRole('button', { name: 'Collapse plan' }),
+        within(dialog).getByRole('button', { name: collapsePlanLabel }),
       );
       await expect(args.onAnswer).not.toHaveBeenCalled();
     },
@@ -315,15 +324,15 @@ function answerCollapsesExpansion(width: number): Story {
       await settleViewport(width);
       for (const decision of ['approve', 'keep_planning']) {
         await userEvent.click(
-          canvas.getByRole('button', { name: 'Expand plan' }),
+          canvas.getByRole('button', { name: expandPlanLabel }),
         );
         const dialog = await overlay.findByRole('dialog', {
-          name: 'Expanded plan',
+          name: expandedPlanLabel,
         });
         const panel = within(dialog);
         if (decision === 'keep_planning') {
           await userEvent.click(
-            panel.getByRole('button', { name: 'Keep planning' }),
+            panel.getByRole('button', { name: keepPlanningLabel }),
           );
           await userEvent.type(
             panel.getByRole('textbox'),
@@ -332,18 +341,17 @@ function answerCollapsesExpansion(width: number): Story {
         }
         await userEvent.click(
           panel.getByRole('button', {
-            name: decision === 'approve' ? 'Approve' : 'Keep planning',
+            name: decision === 'approve' ? 'Approve' : keepPlanningLabel,
           }),
         );
         await waitFor(() =>
           expect(
-            overlay.queryByRole('dialog', { name: 'Expanded plan' }),
+            overlay.queryByRole('dialog', { name: expandedPlanLabel }),
           ).not.toBeInTheDocument(),
         );
-        await expect(canvas.getByText('Approve this plan?')).toBeVisible();
+        await expect(canvas.getByText(approvePlanQuestion)).toBeVisible();
         await expect(
-          canvas.getByTestId('plan-proposal-scroll').getBoundingClientRect()
-            .height,
+          canvas.getByTestId(planScrollId).getBoundingClientRect().height,
         ).toBe(280);
       }
       await expect(canvas.getByRole('textbox')).toHaveValue(
@@ -384,14 +392,14 @@ function recordedAnswer(index: number): Story {
     args: { proposal: mock.proposal },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(index % 2 ? layoutWidths.wide : layoutWidths.phone);
-      await expect(canvas.getByText('Approve this plan?')).toBeVisible();
+      await expect(canvas.getByText(approvePlanQuestion)).toBeVisible();
       if (mock.answer.decision === 'keep_planning') {
         await userEvent.click(
-          canvas.getByRole('button', { name: 'Keep planning' }),
+          canvas.getByRole('button', { name: keepPlanningLabel }),
         );
         await userEvent.type(canvas.getByRole('textbox'), mock.answer.feedback);
         await userEvent.click(
-          canvas.getByRole('button', { name: 'Keep planning' }),
+          canvas.getByRole('button', { name: keepPlanningLabel }),
         );
       } else
         await userEvent.click(canvas.getByRole('button', { name: 'Approve' }));
@@ -412,43 +420,43 @@ function expandWhilePlanning(width: number): Story {
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       await userEvent.click(
-        canvas.getByRole('button', { name: 'Keep planning' }),
+        canvas.getByRole('button', { name: keepPlanningLabel }),
       );
-      await userEvent.type(canvas.getByRole('textbox'), 'Keep this feedback');
+      await userEvent.type(canvas.getByRole('textbox'), feedbackDraft);
       await userEvent.click(
-        canvas.getByRole('button', { name: 'Expand plan' }),
+        canvas.getByRole('button', { name: expandPlanLabel }),
       );
       const dialog = await within(document.body).findByRole('dialog', {
-        name: 'Expanded plan',
+        name: expandedPlanLabel,
       });
       await expect(within(dialog).getByRole('textbox')).toHaveValue(
-        'Keep this feedback',
+        feedbackDraft,
       );
       await userEvent.click(
-        within(dialog).getByRole('button', { name: 'Collapse plan' }),
+        within(dialog).getByRole('button', { name: collapsePlanLabel }),
       );
-      await expect(canvas.getByRole('textbox')).toHaveValue(
-        'Keep this feedback',
-      );
+      await expect(canvas.getByRole('textbox')).toHaveValue(feedbackDraft);
       await expect(
-        canvas.getByRole('button', { name: 'Expand plan' }),
+        canvas.getByRole('button', { name: expandPlanLabel }),
       ).toBeVisible();
       await userEvent.click(canvas.getByRole('button', { name: 'Back' }));
       await userEvent.click(
-        canvas.getByRole('button', { name: 'Expand plan' }),
+        canvas.getByRole('button', { name: expandPlanLabel }),
       );
       await within(document.body).findByRole('dialog', {
-        name: 'Expanded plan',
+        name: expandedPlanLabel,
       });
       if (width === layoutWidths.wide) await userEvent.keyboard('{Escape}');
       else
         await userEvent.click(
-          within(document.body).getByRole('button', { name: 'Collapse plan' }),
+          within(document.body).getByRole('button', {
+            name: collapsePlanLabel,
+          }),
         );
       await waitFor(() =>
         expect(
           within(document.body).queryByRole('dialog', {
-            name: 'Expanded plan',
+            name: expandedPlanLabel,
           }),
         ).not.toBeInTheDocument(),
       );
