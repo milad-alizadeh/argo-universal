@@ -1,17 +1,15 @@
 import type {
   ContentBlock,
   ContextUsage,
+  FeedChange,
   PendingElicitation,
   PendingPermission,
   PermissionOption,
   PlanMarkdown,
-  RowAppend,
-  RowPatch,
   SessionInfo,
   SessionPromptInput,
   SessionSetConfigOptionInput,
   SessionSetConfigOptionOutput,
-  SessionUpdate,
   StopReason,
   SubagentState,
   TerminalExitStatus,
@@ -21,20 +19,8 @@ import type {
   TurnError,
   TurnUsage,
 } from '@repo/contracts';
-import type { ActorRef, Snapshot } from 'xstate';
-import type { AgentAdapter } from './agent-adapter';
 
-// The Feed supplies these fields when it assigns a change to a Session and Turn.
-type FeedEnvelope = 'sessionId' | 'turnId' | 'position' | 'revision';
-type WithoutEnvelope<Update> = Update extends SessionUpdate
-  ? Omit<Update, FeedEnvelope>
-  : never;
-
-export type FeedUpdate = WithoutEnvelope<SessionUpdate>;
-export type FeedChange =
-  | { type: 'upsert'; update: FeedUpdate }
-  | ({ type: 'append' } & Pick<RowAppend, 'id' | 'field' | 'text'>)
-  | ({ type: 'patch' } & Pick<RowPatch, 'id' | 'set'>);
+export type { FeedChange, FeedUpdate } from '@repo/contracts';
 
 export interface AgentCapabilities {
   permissionFeedback: boolean;
@@ -147,16 +133,3 @@ export type AgentEvent =
   | { type: 'agent.subagentChanged'; subagent: AgentSubagent }
   | { type: 'agent.shellChanged'; shell: AgentShell }
   | { type: 'agent.shellOutput'; shellId: AgentShell['id']; text: string };
-
-export type AgentParent = ActorRef<Snapshot<unknown>, AgentEvent>;
-
-export interface AgentInput extends Pick<SessionInfo, 'sessionId' | 'cwd'> {
-  adapter: AgentAdapter;
-  vendorSessionId: string | null;
-  configOptions: AgentConfigValue[];
-  parent: AgentParent;
-}
-
-export interface AgentOutput {
-  failure: string | null;
-}

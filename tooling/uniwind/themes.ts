@@ -21,8 +21,12 @@ export const themes = [
 export type ThemeId = (typeof themes)[number]['id'];
 export type ThemeMode = 'light' | 'dark';
 
-export function getThemeVariables(themeId: ThemeId, mode: ThemeMode) {
-  const selected = themes.find((theme) => theme.id === themeId) ?? themes[0];
+export function getThemeVariables(
+  themeId: ThemeId,
+  mode: ThemeMode,
+): typeof defaultTheme.light {
+  const selected =
+    themes.find((theme): boolean => theme.id === themeId) ?? themes[0];
   return {
     ...defaultTheme.light,
     ...defaultTheme[mode],

@@ -18,7 +18,7 @@ const ConfigOptionMeta = z.looseObject({
     .looseObject({
       icon: z
         .string()
-        .transform((icon) => {
+        .transform((icon): string => {
           if (!knownIcons.has(icon)) unknownIcons += 1;
           return icon;
         })
@@ -66,13 +66,18 @@ const knownCategories = new Set([
 let unknownCategories = 0;
 
 // Unknown categories are kept for ACP extensions and counted on boundary validation.
-export const SessionConfigOptionCategory = z.string().transform((category) => {
-  if (!knownCategories.has(category)) {
-    unknownCategories += 1;
-  }
-  return category;
-});
-export function getConfigOptionDiagnostics() {
+export const SessionConfigOptionCategory = z
+  .string()
+  .transform((category): string => {
+    if (!knownCategories.has(category)) {
+      unknownCategories += 1;
+    }
+    return category;
+  });
+export function getConfigOptionDiagnostics(): {
+  unknownCategories: number;
+  unknownIcons: number;
+} {
   return { unknownCategories, unknownIcons };
 }
 export type SessionConfigOptionCategory = z.infer<

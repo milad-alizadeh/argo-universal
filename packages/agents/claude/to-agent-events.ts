@@ -40,7 +40,8 @@ const feed = (change: FeedChange): AgentEvent => ({
   type: 'agent.feed',
   change,
 });
-const upsert = (update: FeedUpdate) => feed({ type: 'upsert', update });
+const upsert = (update: FeedUpdate): ReturnType<typeof feed> =>
+  feed({ type: 'upsert', update });
 
 const textRow = ({
   id,
@@ -67,7 +68,9 @@ const textOf = (
   block:
     | { type: 'text'; text: string }
     | { type: 'thinking'; thinking: string },
-) =>
+):
+  | { kind: 'agent_message'; text: string }
+  | { kind: 'agent_thought'; text: string } =>
   block.type === 'text'
     ? { kind: 'agent_message' as const, text: block.text }
     : { kind: 'agent_thought' as const, text: block.thinking };
@@ -108,7 +111,7 @@ type Delta = Extract<
   { type: 'content_block_delta' }
 >['delta'];
 
-function deltaText(delta: Delta) {
+function deltaText(delta: Delta): string {
   if (delta.type === 'text_delta') return delta.text;
   if (delta.type === 'thinking_delta') return delta.thinking;
   return '';
@@ -204,7 +207,7 @@ function mapBlock({
   rowId: string;
   messageId: string;
   mappingState: MappingState;
-  timestamp?: number;
+  timestamp: number | undefined;
 }): AgentMapping<MappingState> {
   switch (block.type) {
     case 'text':
@@ -312,10 +315,10 @@ function mapResult(
             reason === 'cancelled' ? 'cancelled' : 'failed',
           ),
         ]),
-    ...Object.keys(mappingState.openTextRows).map((id) =>
+    ...Object.keys(mappingState.openTextRows).map((id): AgentEvent =>
       feed({ type: 'patch', id, set: { state: 'settled' } }),
     ),
-    ...Object.values(mappingState.openToolCalls).map((row) =>
+    ...Object.values(mappingState.openToolCalls).map((row): AgentEvent =>
       upsert({
         ...row,
         state: 'settled',

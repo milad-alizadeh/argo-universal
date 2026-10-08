@@ -9,7 +9,7 @@ const mockCalls = [
 const ownModule = /^(?:\.|@repo\/)/;
 
 const isMockCall = (node: ESTree.CallExpression): boolean =>
-  mockCalls.some((call) => isMember(node.callee, call));
+  mockCalls.some((call): boolean => isMember(node.callee, call));
 
 export const noInternalMock = defineRule({
   meta: {
@@ -19,7 +19,9 @@ export const noInternalMock = defineRule({
         'Pass a fake through the port (machine.provide or a parameter) instead of vi.mock on an own module.',
     },
   },
-  create: (context) => ({
+  create: (
+    context,
+  ): { CallExpression: (node: ESTree.CallExpression) => void } => ({
     CallExpression: (node): void => {
       const path = stringValue(node.arguments[0]);
       if (isMockCall(node) && ownModule.test(path))

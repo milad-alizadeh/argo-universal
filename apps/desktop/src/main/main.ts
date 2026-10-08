@@ -16,7 +16,7 @@ const appDirectory = app.getAppPath();
 const serverDirectory = path.join(appDirectory, '../server');
 const webExportDirectory = path.join(appDirectory, '../universal-app/dist');
 // Node's URL gives origin 'null' for the app: scheme, so build the origin from its parts.
-const originOf = (url: string) => {
+const originOf = (url: string): string => {
   const { protocol, host } = new URL(url);
   return `${protocol}//${host}`;
 };
@@ -35,7 +35,8 @@ if (runsInBackground && process.platform === 'darwin') {
 
 registerAppScheme();
 
-const serverUrl = (address: ServerAddress) => `ws://127.0.0.1:${address.port}`;
+const serverUrl = (address: ServerAddress): string =>
+  `ws://127.0.0.1:${address.port}`;
 
 // Makes sure a Supervisor runs; on quit it stops only one that it started.
 const home = resolveHome();
@@ -43,7 +44,7 @@ const server = createActor(serverConnectionMachine, {
   input: { home, serverDirectory },
 });
 
-const createWindow = (url: string) => {
+const createWindow = (url: string): void => {
   const mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
@@ -61,16 +62,18 @@ const createWindow = (url: string) => {
   });
 
   // Keep the window on the App; the development inspector opens separately.
-  mainWindow.webContents.on('will-navigate', (event, target) => {
+  mainWindow.webContents.on('will-navigate', (event, target): void => {
     if (originOf(target) !== windowOrigin) event.preventDefault();
   });
-  mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  mainWindow.webContents.setWindowOpenHandler((): { action: 'deny' } => ({
+    action: 'deny',
+  }));
 
   void mainWindow.loadURL(webDevelopmentUrl ?? `${appOrigin}/`);
 };
 
 for (const action of ['minimize', 'maximize', 'close'] as const) {
-  ipcMain.on(`window:${action}`, (event) => {
+  ipcMain.on(`window:${action}`, (event): void => {
     if (event.senderFrame?.origin !== windowOrigin) return;
     const window = BrowserWindow.fromWebContents(event.sender);
     if (!window) return;
@@ -82,16 +85,16 @@ for (const action of ['minimize', 'maximize', 'close'] as const) {
 
 let serverStarted = false;
 
-const start = () => {
+const start = (): void => {
   if (!webDevelopmentUrl) handleAppProtocol(webExportDirectory);
   let url: string | null = null;
-  server.on('server.ready', ({ address }) => {
+  server.on('server.ready', ({ address }): void => {
     url = serverUrl(address);
     if (BrowserWindow.getAllWindows().length === 0) createWindow(url);
   });
 
   // The failure dialog offers Retry and Quit.
-  server.on('server.failed', ({ failure }) => {
+  server.on('server.failed', ({ failure }): void => {
     void dialog
       .showMessageBox({
         type: 'error',
@@ -101,13 +104,13 @@ const start = () => {
         defaultId: 0,
         cancelId: 1,
       })
-      .then(({ response }) => {
+      .then(({ response }): void => {
         if (response === 0) server.send({ type: 'server.retry' });
         else app.quit();
       });
   });
   server.subscribe({
-    error: (error) => {
+    error: (error): void => {
       void dialog
         .showMessageBox({
           type: 'error',
@@ -115,14 +118,14 @@ const start = () => {
           detail: String(error),
           buttons: ['Quit'],
         })
-        .then(() => app.quit());
+        .then((): void => app.quit());
     },
   });
   server.start();
   serverStarted = true;
 
   // On macOS, clicking the dock icon with no window open opens one.
-  app.on('activate', () => {
+  app.on('activate', (): void => {
     if (url && BrowserWindow.getAllWindows().length === 0) {
       createWindow(url);
     }
@@ -131,7 +134,7 @@ const start = () => {
 
 // A second launch hands over to the first one, which shows its window, and quits.
 if (app.requestSingleInstanceLock()) {
-  app.on('second-instance', () => {
+  app.on('second-instance', (): void => {
     const window = BrowserWindow.getAllWindows()[0];
     if (!window) return;
     if (window.isMinimized()) window.restore();
@@ -146,11 +149,11 @@ if (app.requestSingleInstanceLock()) {
 
 // Quit waits for the Server machine, which stops the Supervisor only if this app started it.
 server.subscribe({
-  complete: () => {
+  complete: (): void => {
     app.quit();
   },
 });
-app.on('will-quit', (event) => {
+app.on('will-quit', (event): void => {
   if (!serverStarted || server.getSnapshot().status !== 'active') return;
   server.send({ type: 'app.quit' });
   // A reused Supervisor stops synchronously; prevent quit only while an owned one is stopping.
@@ -158,7 +161,7 @@ app.on('will-quit', (event) => {
 });
 
 // Closing the last window quits, except on macOS, where the app stays until Cmd+Q.
-app.on('window-all-closed', () => {
+app.on('window-all-closed', (): void => {
   if (process.platform !== 'darwin') {
     app.quit();
   }

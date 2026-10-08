@@ -6,17 +6,61 @@ import type {
   ToolCallUpdate,
 } from '@repo/contracts';
 
+type LiveHeaderMock = {
+  agent: string;
+  recordedHeader: string;
+  command: ToolCallUpdate & {
+    turnId: string;
+    state: 'open';
+    status: 'in_progress';
+  };
+  thought: Omit<AgentThought, 'turnId' | 'content'> & {
+    turnId: string;
+    content: { type: 'text'; text: string }[];
+  };
+  retry: Notice & {
+    state: 'settled';
+    severity: 'warning';
+    _meta: {
+      argo: {
+        retry: { attempt: number; maxAttempts: number; delayMs: number };
+      };
+    };
+  };
+  progress: (
+    | (Extract<SessionUpdate, { sessionUpdate: 'plan_update' }> & {
+        state: 'settled';
+        plan: { type: 'items'; planId: string; entries: never[] };
+      })
+    | (Extract<SessionUpdate, { sessionUpdate: 'compaction_update' }> & {
+        state: 'settled';
+        status: 'completed';
+      })
+  )[];
+};
+
 const thought = recordedFeedMocks
-  .flatMap((mock) => mock.rows)
-  .find((row): row is AgentThought => row.sessionUpdate === 'agent_thought');
+  .flatMap((mock): SessionUpdate[] => mock.rows)
+  .find(
+    (
+      row,
+    ): row is Extract<
+      import('@repo/contracts').SessionUpdate,
+      { sessionUpdate: 'agent_thought' }
+    > => row.sessionUpdate === 'agent_thought',
+  );
 if (!thought) throw new Error('Recording needs an Agent thought');
 
 export const liveHeaderMocks = recordedFeedMocks
-  .filter((mock) => mock.recording === 'edit-and-command')
-  .map((mock) => {
+  .filter((mock): boolean => mock.recording === 'edit-and-command')
+  .map((mock): LiveHeaderMock => {
     const command = mock.rows.find(
-      (row): row is ToolCallUpdate =>
-        row.sessionUpdate === 'tool_call_update' && row.kind === 'execute',
+      (
+        row,
+      ): row is Extract<
+        import('@repo/contracts').SessionUpdate,
+        { sessionUpdate: 'tool_call_update' }
+      > => row.sessionUpdate === 'tool_call_update' && row.kind === 'execute',
     );
     if (!command) throw new Error('Recording needs a command');
     return {
@@ -37,7 +81,10 @@ export const liveHeaderMocks = recordedFeedMocks
         position: command.position + 1,
         revision: command.revision + 1,
         content: [
-          { type: 'text' as const, text: '**Checking the tests**\n\nDetails' },
+          {
+            type: 'text' as const,
+            text: '**Checking the tests**\n\nDetails',
+          },
         ],
       },
       retry: {

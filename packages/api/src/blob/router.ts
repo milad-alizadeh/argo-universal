@@ -5,5 +5,7 @@ export const blobRouter = router({
   upload: publicProcedure
     .input(BlobUploadInput)
     .output(BlobUploadOutput)
-    .mutation(({ ctx, input }) => ctx.services.blob.upload(input)),
+    .mutation(({ ctx, input }): Promise<BlobUploadOutput> =>
+      ctx.services.blob.upload(input),
+    ),
 });

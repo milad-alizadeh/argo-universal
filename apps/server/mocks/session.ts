@@ -17,9 +17,41 @@ import {
 export const firstPrompt: Extract<SessionCommand, { type: 'session.prompt' }> =
   { type: 'session.prompt', turnId: 'turn-1', content: [] };
 
-export function createSessionHost(database: Database, adapter: AgentAdapter) {
+export function createSessionHost(
+  database: Database,
+  adapter: AgentAdapter,
+): {
+  root: import('xstate').Actor<
+    import('xstate').StateMachine<
+      import('xstate').MachineContext,
+      import('xstate').AnyEventObject,
+      {
+        databaseWriter?: import('xstate').ActorRefFromLogic<
+          typeof writerMachine
+        >;
+        session?: import('xstate').ActorRefFromLogic<typeof sessionMachine>;
+      },
+      | { src: 'session'; logic: typeof sessionMachine; id: 'session' }
+      | { src: 'writer'; logic: typeof writerMachine; id: 'databaseWriter' },
+      never,
+      never,
+      never,
+      Record<never, never>,
+      string,
+      import('xstate').NonReducibleUnknown,
+      import('xstate').NonReducibleUnknown,
+      import('xstate').EventObject,
+      import('xstate').MetaObject,
+      Record<never, never>,
+      import('xstate').MetaObject
+    >
+  >;
+  session: import('xstate').ActorRefFromLogic<typeof sessionMachine>;
+  service: import('@repo/api').FeedService;
+  findFeed: () => FeedActorRef | undefined;
+} {
   const runtimeDirectory = mkdtempSync(join(tmpdir(), 'session-runtime-'));
-  onTestFinished(() =>
+  onTestFinished((): void =>
     rmSync(runtimeDirectory, { recursive: true, force: true }),
   );
   const root = createActor(
@@ -35,7 +67,7 @@ export function createSessionHost(database: Database, adapter: AgentAdapter) {
           systemId: 'databaseWriter',
           src: 'writer',
           input: {
-            now: () => Date.now(),
+            now: (): number => Date.now(),
             database,
           },
         },
@@ -44,7 +76,7 @@ export function createSessionHost(database: Database, adapter: AgentAdapter) {
           systemId: 'session:session-1',
           src: 'session',
           input: {
-            now: () => Date.now(),
+            now: (): number => Date.now(),
             createId: randomUUID,
             database,
             runtimeDirectory,
@@ -58,13 +90,17 @@ export function createSessionHost(database: Database, adapter: AgentAdapter) {
   ).start();
   const session = root.getSnapshot().children.session;
   if (!session) throw new Error('Session not started');
-  const findFeed = () =>
+  const findFeed = (): FeedActorRef | undefined =>
     session.getSnapshot().children.feed as FeedActorRef | undefined;
   const service = createFeedService({
     database,
     findFeed,
-    findWriter: () => root.getSnapshot().children.databaseWriter,
-    findSession: () => session,
+    findWriter: ():
+      | import('xstate').ActorRefFromLogic<typeof writerMachine>
+      | undefined => root.getSnapshot().children.databaseWriter,
+    findSession: (): import('xstate').ActorRefFromLogic<
+      typeof sessionMachine
+    > => session,
   });
   return { root, session, service, findFeed };
 }

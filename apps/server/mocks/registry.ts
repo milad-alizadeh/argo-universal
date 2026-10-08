@@ -1,5 +1,11 @@
 import { createMockAdapter } from '@repo/mocks/agent';
-import { assertEvent, assign, createActor, setup } from 'xstate';
+import {
+  assertEvent,
+  assign,
+  createActor,
+  type SnapshotFrom,
+  setup,
+} from 'xstate';
 import { registryMachine } from '../src/services/sessions/registry-machine';
 import type { SessionInput } from '../src/services/sessions/session-data';
 import type { SessionActorRef } from '../src/services/sessions/session-machine';
@@ -8,7 +14,7 @@ import type { SessionActorRef } from '../src/services/sessions/session-machine';
 const session = setup({
   types: {
     input: {} as Pick<SessionInput, 'sessionId'>,
-    context: {} as { sessionId: string },
+    context: {} as Pick<SessionInput, 'sessionId'>,
     events: {} as
       | { type: 'session.close' }
       | { type: 'mock.finish' }
@@ -16,12 +22,12 @@ const session = setup({
     output: {} as { failure: null },
   },
 }).createMachine({
-  context: ({ input }) => input,
+  context: ({ input }): Pick<SessionInput, 'sessionId'> => input,
   initial: 'open',
   output: { failure: null },
   on: {
     'mock.fail': {
-      actions: () => {
+      actions: (): never => {
         throw new Error('Session actor failed');
       },
     },
@@ -33,36 +39,45 @@ const session = setup({
   },
 });
 
-export const createRegistryModelMachine = (forGraph: boolean) =>
+export const createRegistryModelMachine = (
+  forGraph: boolean,
+): typeof registryMachine =>
   registryMachine.provide({
     actions: {
       // Graph traversal would register each Agent's probe once per branch.
-      ...(forGraph ? { spawnAgentProbes: () => {} } : {}),
-      openSession: assign(({ context, event, spawn }) => {
-        assertEvent(event, ['sessions.create', 'sessions.open']);
-        if (context.sessions[event.sessionId]) return {};
-        const options = {
-          id: `session:${event.sessionId}` as never,
-          input: { sessionId: event.sessionId },
-        };
-        // Graph traversal shares a system across branches, so its refs are unstarted and unregistered.
-        const actor = forGraph
-          ? createActor(session, options)
-          : spawn(session, {
-              ...options,
-              systemId: `session:${event.sessionId}`,
-              syncSnapshot: true,
-            });
-        return {
-          sessions: {
-            ...context.sessions,
-            [event.sessionId]: actor as unknown as SessionActorRef,
-          },
-        };
-      }),
+      ...(forGraph ? { spawnAgentProbes: (): void => {} } : {}),
+      openSession: assign(
+        ({
+          context,
+          event,
+          spawn,
+        }): Partial<SnapshotFrom<typeof registryMachine>['context']> => {
+          assertEvent(event, ['sessions.create', 'sessions.open']);
+          if (context.sessions[event.sessionId]) return {};
+          const options = {
+            id: `session:${event.sessionId}` as never,
+            input: { sessionId: event.sessionId },
+          };
+          // Graph traversal shares a system across branches, so its refs are unstarted and unregistered.
+          const actor = forGraph
+            ? createActor(session, options)
+            : spawn(session, {
+                ...options,
+                systemId: `session:${event.sessionId}`,
+                syncSnapshot: true,
+              });
+          return {
+            sessions: {
+              ...context.sessions,
+              [event.sessionId]: actor as unknown as SessionActorRef,
+            },
+          };
+        },
+      ),
     },
   });
 
 export const registryModelAdapter = createMockAdapter({
-  connect: () => new Promise(() => {}),
+  connect: (): Promise<import('@repo/agents').AgentReady> =>
+    new Promise((): void => {}),
 });

@@ -31,6 +31,12 @@ interface Requests {
   'turn/interrupt': [TurnInterruptParams, TurnInterruptResponse];
 }
 
+type AppServerMessage = {
+  method: string;
+  params: unknown;
+  id: string | number | undefined;
+};
+
 const stderrTailLength = 2000;
 const rejectedLinePreviewLength = 200;
 const gracefulStopLimitMs = 3000;
@@ -39,14 +45,21 @@ const forcedStopLimitMs = 5000;
 // Owns the stdio transport and RPC correlation; vendor payloads use the generated types (ADR-0015).
 export function openAppServer(
   cwd: string,
-  onMessage: (message: {
-    method: string;
-    params: unknown;
-    id?: string | number;
-  }) => void,
+  onMessage: (message: AppServerMessage) => void,
   onFailure: (error: unknown) => void,
   signal: AbortSignal,
-) {
+): {
+  request: <Method extends keyof Requests>(
+    method: Method,
+    params: Requests[Method][0],
+  ) => Promise<Requests[Method][1]>;
+  respond: <Method extends keyof VendorRequests>(
+    request: { method: Method; id: string | number },
+    result: VendorRequests[Method][1],
+  ) => boolean;
+  notify: (method: string) => boolean;
+  close: () => Promise<void>;
+} {
   const {
     OPENAI_API_KEY: _openaiKey,
     CODEX_API_KEY: _codexKey,
@@ -66,11 +79,11 @@ export function openAppServer(
   let stderrTail = '';
   let stopping = false;
   let failed = false;
-  const withStderr = (error: unknown) =>
+  const withStderr = (error: unknown): Error =>
     new Error(
       [describeError(error), stderrTail.trim()].filter(Boolean).join('\n'),
     );
-  const fail = (error: unknown) => {
+  const fail = (error: unknown): void => {
     if (failed) return;
     failed = true;
     const failure = withStderr(error);
@@ -78,21 +91,22 @@ export function openAppServer(
     pending.clear();
     if (!stopping) onFailure(failure);
   };
-  child.stderr.on('data', (text) => {
+  child.stderr.on('data', (text): void => {
     stderrTail = (stderrTail + text.toString()).slice(-stderrTailLength);
   });
   child.on('error', fail);
   child.stdin.on('error', fail);
-  const exited = new Promise<void>((resolve) =>
-    child.once('close', (code, signal) => {
-      fail(`The Codex CLI exited (${signal ?? code}).`);
-      resolve();
-    }),
+  const exited = new Promise<void>(
+    (resolve): import('child_process').ChildProcessWithoutNullStreams =>
+      child.once('close', (code, signal): void => {
+        fail(`The Codex CLI exited (${signal ?? code}).`);
+        resolve();
+      }),
   );
-  const send = (message: unknown) =>
+  const send = (message: unknown): boolean =>
     child.stdin.write(`${JSON.stringify(message)}\n`);
   const lines = createInterface({ input: child.stdout });
-  lines.on('line', (line) => {
+  lines.on('line', (line): void => {
     try {
       const frame = readAppServerFrame(line);
       if (frame.kind === 'message') {
@@ -130,24 +144,24 @@ export function openAppServer(
     method: Method,
     params: Requests[Method][0],
   ): Promise<Requests[Method][1]> =>
-    new Promise((resolve, reject) => {
+    new Promise((resolve, reject): void => {
       if (stopping || failed) {
         reject(withStderr('The Codex CLI is closed.'));
         return;
       }
       const id = ++nextId;
       pending.set(id, {
-        resolve: (result) => resolve(result as Requests[Method][1]),
+        resolve: (result): void => resolve(result as Requests[Method][1]),
         reject,
       });
       send({ id, method, params });
     });
   let closing: Promise<void> | undefined;
-  const close = () => {
-    closing ??= (async () => {
+  const close = (): Promise<void> => {
+    closing ??= (async (): Promise<undefined> => {
       stopping = true;
       child.stdin.end();
-      const terminate = (signal: NodeJS.Signals) => {
+      const terminate = (signal: NodeJS.Signals): void => {
         if (!child.pid) return;
         try {
           if (process.platform === 'win32') child.kill(signal);
@@ -155,10 +169,13 @@ export function openAppServer(
         } catch {}
       };
       const graceful = setTimeout(
-        () => terminate('SIGTERM'),
+        (): void => terminate('SIGTERM'),
         gracefulStopLimitMs,
       );
-      const forced = setTimeout(() => terminate('SIGKILL'), forcedStopLimitMs);
+      const forced = setTimeout(
+        (): void => terminate('SIGKILL'),
+        forcedStopLimitMs,
+      );
       await exited;
       clearTimeout(graceful);
       clearTimeout(forced);
@@ -167,7 +184,7 @@ export function openAppServer(
     })();
     return closing;
   };
-  const abort = () => void close();
+  const abort = (): undefined => void close();
   signal.addEventListener('abort', abort, { once: true });
   if (signal.aborted) abort();
   return {
@@ -175,14 +192,14 @@ export function openAppServer(
     respond: <Method extends keyof VendorRequests>(
       request: { method: Method; id: string | number },
       result: VendorRequests[Method][1],
-    ) => send({ id: request.id, result }),
-    notify: (method: string) => send({ method }),
+    ): boolean => send({ id: request.id, result }),
+    notify: (method: string): boolean => send({ method }),
     close,
   };
 }
 
 type AppServerFrame =
-  | { kind: 'message'; method: string; params: unknown; id?: string | number }
+  | ({ kind: 'message' } & AppServerMessage)
   | { kind: 'error'; id: number; message: string }
   | { kind: 'result'; id: number; result: unknown };
 

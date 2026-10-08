@@ -3,7 +3,18 @@ import { sessionColumns } from '../columns';
 import type { ElicitationSchema } from './snapshot';
 
 // Keep skipped questions absent, as the request form does; free text can answer an enum field.
-export function createElicitationAnswerSchema(schema: ElicitationSchema) {
+export function createElicitationAnswerSchema(
+  schema: ElicitationSchema,
+): z.ZodObject<
+  {
+    [x: string]:
+      | z.ZodOptional<z.ZodArray<z.ZodString>>
+      | z.ZodOptional<z.ZodBoolean>
+      | z.ZodOptional<z.ZodNumber>
+      | z.ZodOptional<z.ZodString>;
+  },
+  z.core.$strict
+> {
   const types = {
     string: z.string(),
     number: z.number(),
@@ -12,10 +23,12 @@ export function createElicitationAnswerSchema(schema: ElicitationSchema) {
     array: z.array(z.string()),
   };
   const fields = Object.fromEntries(
-    Object.entries(schema.properties).map(([name, property]) => [
-      name,
-      types[property.type].optional(),
-    ]),
+    Object.entries(schema.properties).map(
+      ([name, property]): [
+        string,
+        ReturnType<(typeof types)[keyof typeof types]['optional']>,
+      ] => [name, types[property.type].optional()],
+    ),
   );
   return z.strictObject(fields);
 }

@@ -9,8 +9,9 @@ import { createProjectRepository } from './project-repository';
 const serverDirectory = path.resolve(import.meta.dirname, '../apps/server');
 
 const serverHost = '127.0.0.1';
-const serverUrlFor = (port: number) => `ws://${serverHost}:${port}`;
-export const serverHttpUrl = (port: number) => `http://${serverHost}:${port}`;
+const serverUrlFor = (port: number): string => `ws://${serverHost}:${port}`;
+export const serverHttpUrl = (port: number): string =>
+  `http://${serverHost}:${port}`;
 const serverStartMilliseconds = 30_000;
 const serverPollMilliseconds = 200;
 
@@ -18,23 +19,25 @@ const serverPollMilliseconds = 200;
 export async function pollServer<T>(
   check: () => Promise<T | undefined>,
   timeoutMessage: (seconds: number) => string,
-) {
+): Promise<NonNullable<Awaited<T>> | (Awaited<T> & null)> {
   const deadline = Date.now() + serverStartMilliseconds;
   while (Date.now() < deadline) {
     const result = await check();
     if (result !== undefined) return result;
-    await new Promise((resolve) => setTimeout(resolve, serverPollMilliseconds));
+    await new Promise((resolve): NodeJS.Timeout =>
+      setTimeout(resolve, serverPollMilliseconds),
+    );
   }
   throw new Error(timeoutMessage(serverStartMilliseconds / 1000));
 }
 
-export const findFreePort = () =>
-  new Promise<number>((resolve, reject) => {
+export const findFreePort = (): Promise<number> =>
+  new Promise<number>((resolve, reject): void => {
     const server = createServer();
     server.once('error', reject);
-    server.listen(0, serverHost, () => {
+    server.listen(0, serverHost, (): void => {
       const address = server.address();
-      server.close(() =>
+      server.close((): void =>
         typeof address === 'object' && address
           ? resolve(address.port)
           : reject(new Error('No free port')),
@@ -60,39 +63,42 @@ async function waitUntilReady({
   server: ChildProcess;
   portTaken: () => boolean;
   stderrTail: () => string;
-}) {
+}): Promise<boolean> {
   return pollServer(
-    async () => {
+    async (): Promise<boolean | undefined> => {
       if (hasExited(server))
         throw new Error(`${describeExit(server)}${withStderr(stderrTail())}`);
       if (portTaken()) return false;
       const text = await readFile(path.join(home, 'server.json'), 'utf8').catch(
-        () => null,
+        (): null => null,
       );
       if (text !== null && ServerFile.parse(JSON.parse(text)).port === port)
         return true;
       return;
     },
-    (seconds) =>
+    (seconds): string =>
       `The Server did not start within ${seconds} s${withStderr(stderrTail())}`,
   );
 }
 
-const hasExited = (server: ChildProcess) =>
+const hasExited = (server: ChildProcess): boolean =>
   server.exitCode !== null || server.signalCode !== null;
 
-const describeExit = (server: ChildProcess) =>
+const describeExit = (server: ChildProcess): string =>
   server.signalCode === null
     ? `The Server exited with code ${server.exitCode}`
     : `The Server exited with signal ${server.signalCode}`;
 
-const withStderr = (tail: string) =>
+const withStderr = (tail: string): string =>
   tail === ''
     ? ''
     : `\nServer stderr (last ${STDERR_TAIL_LENGTH} characters):\n${tail}`;
 
 // Starts a Server with its own home, Project and mock Agent CLIs, so a test can change them without touching other tests.
-export async function startOwnServer(directory: string, agents: MockAgents) {
+export async function startOwnServer(
+  directory: string,
+  agents: MockAgents,
+): Promise<{ serverUrl: string; httpUrl: string; stop: () => Promise<void> }> {
   const agentDirectory = path.join(directory, 'agent-bin');
   const projectPath = path.join(directory, 'project');
   const home = path.join(directory, 'server-home');
@@ -115,16 +121,18 @@ export async function startOwnServer(directory: string, agents: MockAgents) {
     let portTaken = false;
     let stderrTail = '';
     for (const stream of [server.stdout, server.stderr]) {
-      stream.on('data', (chunk: Buffer) => {
+      stream.on('data', (chunk: Buffer): void => {
         if (portTakenPattern.test(chunk.toString())) portTaken = true;
       });
     }
-    server.stderr.on('data', (chunk: Buffer) => {
+    server.stderr.on('data', (chunk: Buffer): void => {
       stderrTail = (stderrTail + chunk.toString()).slice(-STDERR_TAIL_LENGTH);
     });
-    const stop = async () => {
+    const stop = async (): Promise<void> => {
       if (hasExited(server)) return;
-      const exited = new Promise((resolve) => server.once('exit', resolve));
+      const exited = new Promise((resolve): typeof server =>
+        server.once('exit', resolve),
+      );
       // SIGTERM lets the supervisor stop the Engine and remove server.json.
       server.kill('SIGTERM');
       await exited;
@@ -135,8 +143,8 @@ export async function startOwnServer(directory: string, agents: MockAgents) {
           home,
           port,
           server,
-          portTaken: () => portTaken,
-          stderrTail: () => stderrTail,
+          portTaken: (): boolean => portTaken,
+          stderrTail: (): string => stderrTail,
         })
       ) {
         return {

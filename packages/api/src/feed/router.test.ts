@@ -31,21 +31,23 @@ const page: FeedPageOutput = {
   staleCursor: false,
 };
 
-const servicesWith = (feed: Partial<Services['feed']>) =>
+const servicesWith = (feed: Partial<Services['feed']>): Services =>
   unreachableServices({ feed });
 
-const collect = async (updates: AsyncIterable<FeedSubscribeOutput>) => {
+const collect = async (
+  updates: AsyncIterable<FeedSubscribeOutput>,
+): Promise<FeedSubscribeOutput[]> => {
   const received: FeedSubscribeOutput[] = [];
   for await (const update of updates) received.push(update);
   return received;
 };
 
-describe('feed router', () => {
-  it('answers feed.page from the feed service, with the default limit', async () => {
+describe('feed router', (): void => {
+  it('answers feed.page from the feed service, with the default limit', async (): Promise<void> => {
     const inputs: unknown[] = [];
     const caller = createCaller({
       services: servicesWith({
-        page: (input) => {
+        page: (input): FeedPageOutput => {
           inputs.push(input);
           return page;
         },
@@ -60,7 +62,7 @@ describe('feed router', () => {
     ]);
   });
 
-  it('rejects a feed.page limit above 200', async () => {
+  it('rejects a feed.page limit above 200', async (): Promise<void> => {
     const caller = createCaller({ services: servicesWith({}) });
 
     await expect(
@@ -72,10 +74,11 @@ describe('feed router', () => {
     ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
   });
 
-  it('rejects a row that breaks the contract', async () => {
+  it('rejects a row that breaks the contract', async (): Promise<void> => {
     const caller = createCaller({
       services: servicesWith({
-        row: () => ({ ...row, sessionUpdate: 'agent_monologue' }) as never,
+        row: (): never =>
+          ({ ...row, sessionUpdate: 'agent_monologue' }) as never,
       }),
     });
 
@@ -84,7 +87,7 @@ describe('feed router', () => {
     ).rejects.toThrow('Output validation failed');
   });
 
-  it('streams feed.subscribe updates from the feed service', async () => {
+  it('streams feed.subscribe updates from the feed service', async (): Promise<void> => {
     const updates: FeedSubscribeOutput[] = [
       { type: 'row.upsert', rev: 1, row },
       {
@@ -98,7 +101,11 @@ describe('feed router', () => {
     ];
     const caller = createCaller({
       services: servicesWith({
-        subscribe: async function* () {
+        subscribe: async function* (): AsyncGenerator<
+          FeedSubscribeOutput,
+          void,
+          Parameters<typeof structuredClone>[0]
+        > {
           yield* updates;
         },
       }),
@@ -111,10 +118,14 @@ describe('feed router', () => {
     ).toEqual(updates);
   });
 
-  it('rejects a feed.subscribe update that breaks the contract', async () => {
+  it('rejects a feed.subscribe update that breaks the contract', async (): Promise<void> => {
     const caller = createCaller({
       services: servicesWith({
-        subscribe: async function* () {
+        subscribe: async function* (): AsyncGenerator<
+          FeedSubscribeOutput,
+          void,
+          Parameters<typeof structuredClone>[0]
+        > {
           yield { type: 'row.upsert', rev: 1, row: { ...row, position: -0.5 } };
         },
       }),

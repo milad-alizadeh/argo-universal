@@ -6,7 +6,7 @@ import type {
 import { findRecording, readRecording, recordedFrames } from '../recording.ts';
 
 // The real CLI's response to generate_session_title with persist enabled.
-export function recordedTitle() {
+export function recordedTitle(): string {
   const file = findRecording(
     path.join(import.meta.dirname, 'recordings'),
     'session-title',
@@ -16,7 +16,7 @@ export function recordedTitle() {
     payload,
     'output',
   ).find(
-    (frame) =>
+    (frame): boolean =>
       frame.type === 'control_response' &&
       frame.response.subtype === 'success' &&
       typeof frame.response.response?.title === 'string',

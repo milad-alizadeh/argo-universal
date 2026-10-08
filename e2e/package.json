@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check-types": "tsc --noEmit",
-    "test:electron": "playwright test --project=electron",
-    "test:web": "playwright test --project=web"
+    "check-types": "bddgen && tsc --noEmit",
+    "test:electron": "bddgen && playwright test --project=electron",
+    "test:web": "bddgen && playwright test --project=web"
   },
   "devDependencies": {
     "@playwright/test": "catalog:",
@@ -16,6 +16,7 @@
     "@repo/typescript": "workspace:*",
     "@repo/universal-app": "workspace:*",
     "@types/node": "catalog:",
+    "playwright-bdd": "catalog:",
     "typescript": "catalog:",
     "zod": "catalog:"
   }

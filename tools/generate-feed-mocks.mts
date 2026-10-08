@@ -21,7 +21,20 @@ import { worktreeCheckout } from './mock-checkout.mts';
 const turnStartedAt = Date.UTC(2026, 9, 6, 9, 0, 0);
 
 // Mocks use real Agent conversion and Feed validation, including append and patch changes.
-const mocks = agentAdapters.flatMap(({ agent }, index) => {
+type StreamEvent = Extract<
+  ReturnType<typeof applyFeedChange>,
+  { feed: Feed }
+>['streamEvent'];
+type GeneratedFeedMock = {
+  agent: string;
+  recording: string;
+  rows: SessionUpdate[];
+  stream: (StreamEvent | { type: string; snapshot: SessionSnapshot })[];
+  snapshot: SessionSnapshot;
+  liveHeaders: LiveHeader[];
+};
+
+const mocks = agentAdapters.flatMap(({ agent }, index): GeneratedFeedMock[] => {
   const cli = mockClis[agent];
   if (!cli) throw new Error('Missing Agent mock');
   const recordings = [
@@ -35,17 +48,17 @@ const mocks = agentAdapters.flatMap(({ agent }, index) => {
   if (commandOutcomes !== null) recordings.push(commandOutcomes);
   if (editStates !== null) recordings.push(editStates);
   if (editFailure !== null) recordings.push(editFailure);
-  return recordings.map((recording) => {
+  return recordings.map((recording): GeneratedFeedMock => {
     const sessionId = `agent-${index + 1}-${recording}`;
     let feed: Feed = { sessionId, maxRevision: 0, nextPosition: 0, rows: {} };
     let turnNumber = 1;
     let turnId: string | null = 'turn-1';
-    const stream = [];
+    const stream: StreamEvent[] = [];
     const liveHeaders: LiveHeader[] = [];
     const header = (
       session: Partial<Parameters<typeof toLiveHeader>[0]> = {},
       extraRows: SessionUpdate[] = [],
-    ) =>
+    ): ReturnType<typeof toLiveHeader> =>
       toLiveHeader(
         {
           activeTurnId: turnId,
@@ -57,7 +70,7 @@ const mocks = agentAdapters.flatMap(({ agent }, index) => {
         [...Object.values(feed.rows), ...extraRows],
       );
     // The Server's live header after each change, kept when it says something new.
-    const recordHeader = (live = header()) => {
+    const recordHeader = (live = header()): void => {
       const last = liveHeaders.at(-1);
       if (
         live &&
@@ -65,7 +78,7 @@ const mocks = agentAdapters.flatMap(({ agent }, index) => {
       )
         liveHeaders.push(live);
     };
-    const apply = (change: Parameters<typeof applyFeedChange>[1]) => {
+    const apply = (change: Parameters<typeof applyFeedChange>[1]): void => {
       const result = applyFeedChange(feed, change, turnId);
       if ('rejection' in result)
         throw new Error(`${sessionId}: ${result.rejection}`);
@@ -73,10 +86,15 @@ const mocks = agentAdapters.flatMap(({ agent }, index) => {
       stream.push(result.streamEvent);
       recordHeader();
     };
-    const recordRequestsAndRetry = () => {
+    const recordRequestsAndRetry = (): void => {
       const latest = Object.values(feed.rows).at(-1);
       const tool = Object.values(feed.rows).find(
-        (row) => row.sessionUpdate === 'tool_call_update',
+        (
+          row,
+        ): row is Extract<
+          Feed['rows'][string],
+          { sessionUpdate: 'tool_call_update' }
+        > => row.sessionUpdate === 'tool_call_update',
       );
       if (!latest || !tool || tool.sessionUpdate !== 'tool_call_update') return;
       recordHeader(
@@ -167,7 +185,7 @@ const mocks = agentAdapters.flatMap(({ agent }, index) => {
       agent: `agent-${index + 1}`,
       recording,
       rows: Object.values(feed.rows).sort(
-        (first, second) => first.position - second.position,
+        (first, second): number => first.position - second.position,
       ),
       stream: [...stream, { type: 'snapshot', snapshot }],
       snapshot,

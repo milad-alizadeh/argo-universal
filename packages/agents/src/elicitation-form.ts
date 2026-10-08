@@ -1,4 +1,8 @@
-import type { ElicitationSchema } from '@repo/contracts';
+import type {
+  ElicitationEnumOption,
+  ElicitationPropertySchema,
+  ElicitationSchema,
+} from '@repo/contracts';
 
 export interface ElicitationQuestion {
   id: string;
@@ -12,7 +16,7 @@ export function toQuestionAnswers(
   content: Record<string, unknown> = {},
 ): Record<string, string[]> {
   return Object.fromEntries(
-    Object.entries(content).map(([name, value]) => {
+    Object.entries(content).map(([name, value]): [string, string[]] => {
       if (typeof value === 'string') return [name, [value]];
       if (
         Array.isArray(value) &&
@@ -31,30 +35,36 @@ export function toElicitationForm(
   return {
     type: 'object',
     properties: Object.fromEntries(
-      questions.map((question) => {
-        const choices = question.options.map((option) => ({
-          const: option.label,
-          title: option.label,
-          ...(option.description ? { description: option.description } : {}),
-        }));
-        return [
-          question.id,
-          question.multiple
-            ? {
-                type: 'array',
-                title: question.title,
-                description: question.question,
-                items: { anyOf: choices },
-              }
-            : {
-                type: 'string',
-                title: question.title,
-                description: question.question,
-                oneOf: choices,
-              },
-        ];
-      }),
+      questions.map(
+        (question): [ElicitationQuestion['id'], ElicitationPropertySchema] => {
+          const choices = question.options.map(
+            (option): ElicitationEnumOption => ({
+              const: option.label,
+              title: option.label,
+              ...(option.description
+                ? { description: option.description }
+                : {}),
+            }),
+          );
+          return [
+            question.id,
+            question.multiple
+              ? {
+                  type: 'array',
+                  title: question.title,
+                  description: question.question,
+                  items: { anyOf: choices },
+                }
+              : {
+                  type: 'string',
+                  title: question.title,
+                  description: question.question,
+                  oneOf: choices,
+                },
+          ];
+        },
+      ),
     ),
-    required: questions.map((question) => question.id),
+    required: questions.map((question): string => question.id),
   };
 }

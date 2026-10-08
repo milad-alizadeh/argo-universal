@@ -11,15 +11,26 @@ export function toRequestEvents(message: VendorMessage): AgentEvent[] {
         type: 'agent.elicitationRequested',
         request: {
           mode: 'form',
-          message: questions.map((question) => question.question).join('\n'),
+          message: questions
+            .map((question): string => question.question)
+            .join('\n'),
           toolCallId: itemId,
           requestedSchema: toElicitationForm(
-            questions.map((question) => ({
-              id: question.id,
-              title: question.header,
-              question: question.question,
-              options: question.options ?? [],
-            })),
+            questions.map(
+              (
+                question,
+              ): {
+                id: string;
+                title: string;
+                question: string;
+                options: import('./protocol.gen').ToolRequestUserInputOption[];
+              } => ({
+                id: question.id,
+                title: question.header,
+                question: question.question,
+                options: question.options ?? [],
+              }),
+            ),
           ),
         },
       },
@@ -38,7 +49,15 @@ export function toRequestEvents(message: VendorMessage): AgentEvent[] {
             message.params.reason ??
             ('command' in message.params ? message.params.command : null) ??
             'Approve file changes',
-          options: permissionOptions.map((option) => ({ ...option })),
+          options: permissionOptions.map(
+            (
+              option,
+            ): {
+              optionId: 'allow_once' | 'reject_once';
+              name: string;
+              kind: 'allow_once' | 'reject_once';
+            } => ({ ...option }),
+          ),
         },
       },
     ];

@@ -135,10 +135,10 @@ export const sessionRows = {
 
 // Each Agent has all row variations, so stories can check parity without naming vendors.
 export const activeSessions: SessionListOutput = {
-  sessions: agentsList.flatMap(({ agent }) =>
+  sessions: agentsList.flatMap(({ agent }): SessionInfo[] =>
     Object.values(sessionRows)
-      .filter((row) => row.archivedAt === null)
-      .map((row) => ({
+      .filter((row): boolean => row.archivedAt === null)
+      .map((row): typeof row => ({
         ...row,
         agent,
         sessionId: `${agent}:${row.sessionId}`,

@@ -64,6 +64,7 @@
     "argo/json-parse-cast": "error",
     "argo/mock-environment": "error",
     "argo/database-client": "error",
+    "argo/drizzle-schema-boundary": "error",
     // A relative path into packages/, tooling/ or apps/ skips package.json, pnpm isolation and exports (A2).
     "argo/cross-package-import": "error",
     // oxlint cannot resolve the re-exported members of @rn-primitives namespaces; tsc checks every namespace member.
@@ -168,6 +169,7 @@
       "files": ["**/*.test.ts", "**/*.test.tsx", "**/*.test.mts"],
       "rules": {
         "argo/no-internal-mock": "error",
+        "argo/unit-test-io": "error",
         "vitest/no-disabled-tests": "error",
         "vitest/no-conditional-expect": "error",
         "vitest/no-identical-title": "error",
@@ -178,7 +180,7 @@
     },
     {
       // xstate/graph model tests assert per path, so a branch around expect is how they read the path.
-      "files": ["**/*machine.test.ts"],
+      "files": ["**/*machine.test.ts", "**/*machine.integration.test.ts"],
       "rules": { "vitest/no-conditional-expect": "off" }
     },
     {
@@ -187,6 +189,61 @@
         "packages/client/src/screens/**",
         "packages/client/src/components/**"
       ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@trpc/client",
+                "message": "Screens get tRPC from useTRPC() only (ADR-0009)."
+              },
+              {
+                "name": "../trpc/create-trpc-client",
+                "message": "Screens get tRPC from useTRPC() only (ADR-0009)."
+              },
+              {
+                "name": "../trpc/context",
+                "importNames": ["useTRPCClient"],
+                "message": "Screens get tRPC from useTRPC() only (ADR-0009)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // Feed, connection and tRPC sit below components and screens (A2).
+      "files": [
+        "packages/client/src/feed/**",
+        "packages/client/src/connection/**",
+        "packages/client/src/trpc/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "#components/**",
+                  "../**/components",
+                  "../**/components/**",
+                  "../**/screens",
+                  "../**/screens/**",
+                  "@repo/client",
+                  "@repo/client/**"
+                ],
+                "message": "Client modules never import components, screens or the client barrel (A2)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // Screens repeat the useTRPC bans because only the last matching override's options apply.
+      "files": ["packages/client/src/screens/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -435,6 +492,11 @@
           }
         ]
       }
+    },
+    {
+      // The shared Agent vocabulary and machine depend one way, including type imports (Spec 0006).
+      "files": ["packages/agents/src/**"],
+      "rules": { "import/no-cycle": ["error", { "ignoreTypes": false }] }
     },
     {
       // D9

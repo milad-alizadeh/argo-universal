@@ -5,11 +5,11 @@ import { createActor } from 'xstate';
 import packageJson from '../../package.json' with { type: 'json' };
 import { supervisorMachine } from './machine';
 
-export function startSupervisor(options: { watch: boolean }) {
+export function startSupervisor(options: { watch: boolean }): void {
   const home = resolveRuntimeDirectory();
   const logFile = join(home, 'logs', 'supervisor.log');
   mkdirSync(join(home, 'logs'), { recursive: true });
-  const log = (line: string) => {
+  const log = (line: string): void => {
     const stamped = `${new Date().toISOString()} supervisor ${process.pid}: ${line}`;
     console.log(stamped);
     appendFileSync(logFile, `${stamped}\n`);
@@ -27,7 +27,7 @@ export function startSupervisor(options: { watch: boolean }) {
 
   let lastState: string | undefined;
   supervisor.subscribe({
-    next: (snapshot) => {
+    next: (snapshot): void => {
       const state =
         typeof snapshot.value === 'string'
           ? snapshot.value
@@ -37,16 +37,16 @@ export function startSupervisor(options: { watch: boolean }) {
       log(state);
     },
     // The Engine process keeps the event loop alive until it exits, then Node exits with this code.
-    complete: () => {
+    complete: (): void => {
       process.exitCode = supervisor.getSnapshot().matches('failed') ? 1 : 0;
     },
-    error: (error) => {
+    error: (error): void => {
       log(`error: ${String(error)}`);
       process.exitCode = 1;
     },
   });
 
-  const stop = (signal: NodeJS.Signals) => {
+  const stop = (signal: NodeJS.Signals): void => {
     if (supervisor.getSnapshot().status !== 'active') process.exit();
     log(`received ${signal}`);
     supervisor.send({ type: 'server.stop' });

@@ -9,13 +9,20 @@ import {
   shortPlanProposal,
 } from '../../mocks/plan-proposal-mock';
 import { settleViewport } from '../../mocks/settle-viewport';
-import { PlanProposalCard } from './PlanProposalCard';
+import {
+  PlanProposalCard,
+  type PlanProposalCardProps,
+} from './PlanProposalCard';
 
 const meta = {
   title: 'Tests/PlanProposalCard',
   component: PlanProposalCard,
   parameters: { screenPreview: true, previewPadding: false },
-  args: { proposal: shortPlanProposal, onAnswer: fn() },
+  args: {
+    proposal: shortPlanProposal,
+    onAnswer: fn(),
+    state: { kind: 'open' },
+  },
   render: (args) => <PlanProposalPreview {...args} />,
 } satisfies Meta<typeof PlanProposalCard>;
 export default meta;
@@ -214,14 +221,21 @@ function expanded(width: number): Story {
 export const ExpandedPhone = expanded(layoutWidths.phone);
 export const ExpandedWide = expanded(layoutWidths.wide);
 
-function answered(width: number): Story {
+function answered(
+  width: number,
+  proposal: PlanProposalCardProps['proposal'] = shortPlanProposal,
+): Story {
   return {
-    args: { answered: true },
+    args: {
+      proposal,
+      state: { kind: 'answered', reason: 'Already answered on another device' },
+    },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
-      await expect(
-        canvas.getByText('Already answered on another device'),
-      ).toBeVisible();
+      await expect(canvas.getByRole('status')).toHaveTextContent(
+        'Already answered on another device',
+      );
+      await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
       // A loaded runner can draw the default viewport's card for a few frames after the resize.
       if (width === layoutWidths.phone) {
         await waitFor(() =>
@@ -258,6 +272,36 @@ function answered(width: number): Story {
 }
 export const AnsweredPhone = answered(layoutWidths.phone);
 export const AnsweredWide = answered(layoutWidths.wide);
+export const FirstAgentAnsweredPhone = answered(
+  layoutWidths.phone,
+  planProposalMocks[0]?.proposal,
+);
+export const FirstAgentAnsweredWide = answered(
+  layoutWidths.wide,
+  planProposalMocks[0]?.proposal,
+);
+
+function open(width: number, index: number): Story {
+  const mock = planProposalMocks[index];
+  if (!mock) throw new Error('Recorded catalog needs a Plan proposal.');
+  return {
+    args: { proposal: mock.proposal },
+    play: async ({ canvas, userEvent, args }) => {
+      await settleViewport(width);
+      await expect(canvas.queryByRole('status')).not.toBeInTheDocument();
+      await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
+      await userEvent.click(canvas.getByRole('button', { name: 'Approve' }));
+      await expect(args.onAnswer).toHaveBeenCalledWith({
+        planId: mock.proposal.planId,
+        decision: 'approve',
+      });
+    },
+  };
+}
+export const FirstAgentOpenPhone = open(layoutWidths.phone, 0);
+export const FirstAgentOpenWide = open(layoutWidths.wide, 0);
+export const SecondAgentOpenPhone = open(layoutWidths.phone, 2);
+export const SecondAgentOpenWide = open(layoutWidths.wide, 2);
 
 function answerCollapsesExpansion(width: number): Story {
   return {
@@ -395,7 +439,11 @@ function expandWhilePlanning(width: number): Story {
       await within(document.body).findByRole('dialog', {
         name: 'Expanded plan',
       });
-      await userEvent.keyboard('{Escape}');
+      if (width === layoutWidths.wide) await userEvent.keyboard('{Escape}');
+      else
+        await userEvent.click(
+          within(document.body).getByRole('button', { name: 'Collapse plan' }),
+        );
       await waitFor(() =>
         expect(
           within(document.body).queryByRole('dialog', {

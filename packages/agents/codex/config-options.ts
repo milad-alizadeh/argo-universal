@@ -27,9 +27,9 @@ export interface ConfigValues {
   effort: ReasoningEffort;
   mode: keyof typeof modeNames;
 }
-const modelFor = (models: Model[], value: unknown) =>
-  models.find((model) => model.model === value) ??
-  models.find((model) => model.isDefault) ??
+const modelFor = (models: Model[], value: unknown): Model | undefined =>
+  models.find((model): boolean => model.model === value) ??
+  models.find((model): boolean => model.isDefault) ??
   models[0];
 function allowedValues(
   models: Model[],
@@ -39,17 +39,25 @@ function allowedValues(
   if (!model) throw new Error('Codex offers no models.');
   const effort =
     model.supportedReasoningEfforts.find(
-      (option) => option.reasoningEffort === wanted.effort,
+      (option): boolean => option.reasoningEffort === wanted.effort,
     )?.reasoningEffort ?? model.defaultReasoningEffort;
-  const mode = Object.keys(modeNames).find((mode) => mode === wanted.mode) as
-    | ConfigValues['mode']
-    | undefined;
+  const mode = Object.keys(modeNames).find(
+    (mode): boolean => mode === wanted.mode,
+  ) as ConfigValues['mode'] | undefined;
   return { model: model.model, effort, mode: mode ?? 'default' };
 }
-export const startingValues = (models: Model[], saved: AgentConfigValue[]) =>
+export const startingValues = (
+  models: Model[],
+  saved: AgentConfigValue[],
+): ConfigValues =>
   allowedValues(
     models,
-    Object.fromEntries(saved.map((option) => [option.configId, option.value])),
+    Object.fromEntries(
+      saved.map((option): [string, string | boolean] => [
+        option.configId,
+        option.value,
+      ]),
+    ),
   );
 export function changeValue(
   models: Model[],
@@ -76,12 +84,21 @@ export function toConfigOptions(
       name: 'Mode',
       category: 'mode',
       currentValue: values.mode,
-      options: Object.entries(modeNames).map(([value, name]) => ({
-        value,
-        name,
-        _meta: { argo: modeMetadata[value as ConfigValues['mode']] },
-        description: modeDescriptions[value as ConfigValues['mode']],
-      })),
+      options: Object.entries(modeNames).map(
+        ([value, name]): {
+          value: string;
+          name: string;
+          _meta: {
+            argo: (typeof modeMetadata)[Mode];
+          };
+          description: string;
+        } => ({
+          value,
+          name,
+          _meta: { argo: modeMetadata[value as ConfigValues['mode']] },
+          description: modeDescriptions[value as ConfigValues['mode']],
+        }),
+      ),
     },
     {
       type: 'select',
@@ -89,21 +106,37 @@ export function toConfigOptions(
       name: 'Model',
       category: 'model',
       currentValue: values.model,
-      options: models.map((model) => ({
-        value: model.model,
-        name: model.displayName,
-        description: model.description,
-        _meta: {
-          argo: {
-            supportsEffort: model.supportedReasoningEfforts.length > 0,
-            supportedEffortLevels: model.supportedReasoningEfforts.map(
-              (option) => option.reasoningEffort,
-            ),
-            supportsImages: model.inputModalities.includes('image'),
-            supportsPersonality: model.supportsPersonality,
+      options: models.map(
+        (
+          model,
+        ): {
+          value: string;
+          name: string;
+          description: string;
+          _meta: {
+            argo: {
+              supportsEffort: boolean;
+              supportedEffortLevels: string[];
+              supportsImages: boolean;
+              supportsPersonality: boolean;
+            };
+          };
+        } => ({
+          value: model.model,
+          name: model.displayName,
+          description: model.description,
+          _meta: {
+            argo: {
+              supportsEffort: model.supportedReasoningEfforts.length > 0,
+              supportedEffortLevels: model.supportedReasoningEfforts.map(
+                (option): string => option.reasoningEffort,
+              ),
+              supportsImages: model.inputModalities.includes('image'),
+              supportsPersonality: model.supportsPersonality,
+            },
           },
-        },
-      })),
+        }),
+      ),
     },
     {
       type: 'select',
@@ -113,7 +146,7 @@ export function toConfigOptions(
       currentValue: values.effort,
       options: (
         modelFor(models, values.model)?.supportedReasoningEfforts ?? []
-      ).map((option) => ({
+      ).map((option): { value: string; name: string; description: string } => ({
         value: option.reasoningEffort,
         name:
           option.reasoningEffort === 'xhigh'

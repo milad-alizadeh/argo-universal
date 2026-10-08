@@ -3,11 +3,8 @@ import path from 'node:path';
 import type { VendorMessage } from '../../../packages/agents/codex/messages.ts';
 import type {
   Account,
-  CommandExecutionRequestApprovalResponse,
-  FileChangeRequestApprovalResponse,
   GetAccountResponse,
   ThreadResumeParams,
-  ToolRequestUserInputResponse,
   TurnInterruptParams,
   TurnStartParams,
   TurnStartResponse,
@@ -25,7 +22,11 @@ import {
   recordedFrames,
   splitTurns,
 } from '../recording.ts';
-import { recordRequestAnswer } from '../request-answer.ts';
+import {
+  createRequestAnswerReader,
+  recordRequestAnswer,
+} from '../request-answer.ts';
+import { toPlanProposalAnswer, toRequestAnswer } from './request-answer.ts';
 
 const PRODUCER = 'codex-app-server';
 // JSON-RPC error codes.
@@ -40,6 +41,7 @@ type Request = {
   result?: unknown;
 };
 const environment = readMockCliEnvironment();
+const readRequestAnswer = createRequestAnswerReader();
 const recording = readRecording(environment.recordingFile, PRODUCER);
 const [command] = process.argv.slice(2);
 
@@ -56,16 +58,19 @@ if (command !== 'app-server') {
 const messages = recordedFrames<VendorMessage & { emittedAtMs?: number }>(
   recording.payload,
   'messages',
-).map(({ emittedAtMs: _, ...message }) => message);
+).map(({ emittedAtMs: _, ...message }): VendorMessage => message);
 const turns = splitTurns(
   messages,
-  (message) => message.method === 'turn/completed',
+  (message): message is Extract<VendorMessage, { method: 'turn/completed' }> =>
+    message.method === 'turn/completed',
 );
-const recordedThreadId = messages.find((message) => message.params.threadId)
-  ?.params.threadId;
+const recordedThreadId = messages.find(
+  (message): string => message.params.threadId,
+)?.params.threadId;
 if (!recordedThreadId) throw new Error('The recording has no thread id.');
 let threadId = recordedThreadId;
 let turnIndex = 0;
+let pendingPlanProposal = false;
 let interruptedFrames: typeof messages | null = null;
 let activeTurnId: string | null = null;
 let cancelling = false;
@@ -77,9 +82,12 @@ const concurrentRequests = new Map<string | number, VendorMessage>();
 function replayRequestFrames(
   recordedFrames: typeof messages,
   crashAfter: ((message: VendorMessage) => boolean) | null,
-) {
+): void {
   let frames = recordedFrames;
-  const index = frames.findIndex((frame) => 'id' in frame);
+  const index = frames.findIndex(
+    (frame): frame is Extract<VendorMessage, { id: string | number }> =>
+      'id' in frame,
+  );
   let request = frames[index];
   if (request && environment.scenario.otherThreadRequest) {
     // Changing only threadId preserves the recording's generated payload family.
@@ -118,7 +126,7 @@ let withheldStartResponse: {
 } | null = null;
 
 // Read on request, so a version folder without a model list still serves Turns.
-function listModels(id: string | number | undefined) {
+function listModels(id: string | number | undefined): void {
   try {
     const file = findRecording(
       path.join(import.meta.dirname, 'recordings'),
@@ -133,15 +141,18 @@ function listModels(id: string | number | undefined) {
 function startTurn(
   id: string | number | undefined,
   notificationsFirst = false,
-) {
+): void {
   const turn = turns[turnIndex++]?.map(
-    (message) =>
+    (message): VendorMessage =>
       ({
         ...message,
         params: { ...message.params, threadId },
       }) as VendorMessage,
   );
-  const started = turn?.find((message) => message.method === 'turn/started');
+  const started = turn?.find(
+    (message): message is Extract<VendorMessage, { method: 'turn/started' }> =>
+      message.method === 'turn/started',
+  );
   if (turn === undefined || started === undefined) {
     send({
       id,
@@ -159,12 +170,17 @@ function startTurn(
     final.params.turn.status === 'interrupted';
   const command = interrupted
     ? turn.findIndex(
-        (message) =>
+        (message): boolean =>
           message.method === 'item/started' &&
           message.params.item.type === 'commandExecution',
       )
     : -1;
   if (command >= 0) interruptedFrames = turn.slice(command + 1);
+  pendingPlanProposal = turn.some(
+    (message): boolean =>
+      message.method === 'item/completed' &&
+      message.params.item.type === 'plan',
+  );
   activeTurnId = started.params.turn.id;
   cancelling = false;
   const frames = command >= 0 ? turn.slice(0, command + 1) : turn;
@@ -174,7 +190,7 @@ function startTurn(
   }
   const response = { id, result: { turn: started.params?.turn } };
   const crashAfter = environment.exitMidTurn
-    ? (message: (typeof frames)[number]) => message === started
+    ? (message: (typeof frames)[number]): boolean => message === started
     : null;
   if (turnIndex === 1 && environment.scenario.turnResponseAfterNextStart) {
     withheldStartResponse = response;
@@ -203,7 +219,7 @@ function startTurn(
   else replayRequestFrames(frames.slice(before), crashAfter);
 }
 
-serveJsonLines<Request>(({ id, method, params, result }) => {
+serveJsonLines<Request>(({ id, method, params, result }): void | boolean => {
   switch (method) {
     case undefined:
       return answerRequest(id, result);
@@ -252,7 +268,12 @@ serveJsonLines<Request>(({ id, method, params, result }) => {
       if (environment.scenario.interruptError !== 'none') {
         if (environment.scenario.interruptError === 'afterCompletion') {
           const completed = requestFrames.find(
-            (message) => message.method === 'turn/completed',
+            (
+              message,
+            ): message is Extract<
+              VendorMessage,
+              { method: 'turn/completed' }
+            > => message.method === 'turn/completed',
           );
           if (completed?.method === 'turn/completed')
             send({
@@ -277,11 +298,19 @@ serveJsonLines<Request>(({ id, method, params, result }) => {
             message: 'The vendor Turn id does not match.',
           },
         });
-      if (heldRequest?.method === 'item/tool/requestUserInput') {
+      const interruptedRequest = heldRequest;
+      if (interruptedRequest?.method === 'item/tool/requestUserInput') {
         if (concurrentRequests.size === 0)
-          recordRequestAnswer({ type: 'elicitation', action: 'cancel' });
+          recordRequestAnswer(
+            readRequestAnswer(() =>
+              toRequestAnswer(interruptedRequest, { method: 'turn/interrupt' }),
+            ),
+          );
         const completed = requestFrames.find(
-          (message) => message.method === 'turn/completed',
+          (
+            message,
+          ): message is Extract<VendorMessage, { method: 'turn/completed' }> =>
+            message.method === 'turn/completed',
         );
         send({ id, result: {} });
         if (completed?.method === 'turn/completed')
@@ -305,6 +334,10 @@ serveJsonLines<Request>(({ id, method, params, result }) => {
       activeTurnId = null;
       return;
     case 'turn/start':
+      if (pendingPlanProposal)
+        recordRequestAnswer(
+          readRequestAnswer(() => toPlanProposalAnswer(params)),
+        );
       return startTurn(
         id,
         (params as TurnStartParams & { notificationsFirst?: boolean })
@@ -322,47 +355,18 @@ serveJsonLines<Request>(({ id, method, params, result }) => {
 });
 
 // Correlates mock request replies and releases the Turn once every question has an answer.
-function answerRequest(id: string | number | undefined, result: unknown) {
+function answerRequest(id: string | number | undefined, result: unknown): void {
   if (id !== undefined && concurrentRequests.has(id)) {
     heldRequest = concurrentRequests.get(id) ?? null;
     heldRequestId = id;
     concurrentRequests.delete(id);
   }
   if (id === heldRequestId) {
-    if (
-      heldRequest?.method === 'item/commandExecution/requestApproval' ||
-      heldRequest?.method === 'item/fileChange/requestApproval'
-    ) {
-      const answer = result as
-        | CommandExecutionRequestApprovalResponse
-        | FileChangeRequestApprovalResponse;
-      recordRequestAnswer({
-        type: 'permission',
-        optionId: answer.decision === 'accept' ? 'allow_once' : 'reject_once',
-      });
-    }
-    if (heldRequest?.method === 'item/tool/requestUserInput') {
-      const answer = result as ToolRequestUserInputResponse;
+    const request = heldRequest;
+    if (request && 'id' in request)
       recordRequestAnswer(
-        Object.keys(answer.answers).length
-          ? {
-              type: 'elicitation',
-              action: 'accept',
-              content: Object.fromEntries(
-                Object.entries(answer.answers).map(([key, value]) => [
-                  key,
-                  value?.answers.length === 1
-                    ? value.answers[0]
-                    : value?.answers,
-                ]),
-              ),
-            }
-          : {
-              type: 'elicitation',
-              action: cancelling ? 'cancel' : 'decline',
-            },
+        readRequestAnswer(() => toRequestAnswer(request, result)),
       );
-    }
     if (withheldStartResponse) {
       send(withheldStartResponse);
       withheldStartResponse = null;

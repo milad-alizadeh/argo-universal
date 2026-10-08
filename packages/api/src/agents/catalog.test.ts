@@ -6,7 +6,7 @@ import { expect, it } from 'vitest';
 import { unreachableServices } from '../../mocks';
 import { appRouter } from '../root';
 
-it('keeps extension categories and metadata on options, groups and values', async () => {
+it('keeps extension categories and metadata on options, groups and values', async (): Promise<void> => {
   const catalog: AgentsListOutput = [
     {
       agent: 'agent-one',
@@ -44,7 +44,7 @@ it('keeps extension categories and metadata on options, groups and values', asyn
   ];
   const caller = appRouter.createCaller({
     services: unreachableServices({
-      agents: { list: async () => catalog },
+      agents: { list: async (): Promise<AgentsListOutput> => catalog },
     }),
   });
   const before = getConfigOptionDiagnostics().unknownCategories;

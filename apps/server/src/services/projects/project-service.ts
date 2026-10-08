@@ -12,7 +12,7 @@ import { createRejectionCounter } from '../../lib/count-rejections';
 export async function seedProject(
   database: Database,
   path = process.env.ARGO_PROJECT_PATH ?? process.cwd(),
-) {
+): Promise<void> {
   const { root, commonDirectory } = await readRepository(path);
   const existing = database
     .select()
@@ -32,7 +32,12 @@ export async function seedProject(
 }
 
 // Until a Session stores a choice, a worktree from the current branch, or the main checkout on a detached HEAD.
-const defaultCheckoutChoice = async (path: string) => {
+const defaultCheckoutChoice = async (
+  path: string,
+): Promise<
+  | { type: 'main'; baseBranch?: undefined }
+  | { type: 'worktree'; baseBranch: string }
+> => {
   const { currentBranch } = await listBranches(path);
   return currentBranch === null
     ? { type: 'main' as const }
@@ -40,7 +45,7 @@ const defaultCheckoutChoice = async (path: string) => {
 };
 
 // The Project's path, or NOT_FOUND for an unknown Project.
-export function readProjectPath(database: Database, projectId: string) {
+export function readProjectPath(database: Database, projectId: string): string {
   const stored = database
     .select({ path: project.path })
     .from(project)
@@ -57,15 +62,15 @@ export function readProjectPath(database: Database, projectId: string) {
 export function createProjectService(database: Database): ProjectsService {
   const rejections = createRejectionCounter('projects');
   return {
-    branches: async ({ projectId }) =>
+    branches: async ({ projectId }): ReturnType<ProjectsService['branches']> =>
       listBranches(readProjectPath(database, projectId)),
-    list: async () =>
+    list: async (): Promise<ProjectInfo[]> =>
       Promise.all(
         database
           .select()
           .from(project)
           .all()
-          .map(async (row) => {
+          .map(async (row): Promise<ProjectInfo> => {
             const checkoutChoice =
               row.checkoutChoice ?? (await defaultCheckoutChoice(row.path));
             const result = ProjectInfo.safeParse({ ...row, checkoutChoice });

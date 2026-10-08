@@ -14,6 +14,12 @@ import type { writerMachine } from '../feed/writer-machine';
 import type { RegistryActorRef } from './registry-machine';
 import type { SessionActorRef } from './session-machine';
 
+interface SessionListContext extends SessionListMachineInput {
+  failure: unknown;
+  rows: SessionListState | null;
+  dirty: Set<string> | null;
+}
+
 export type SessionListState = { information: SessionInfo; running: boolean }[];
 export interface SessionListMachineInput {
   sessions: RegistryActorRef;
@@ -31,22 +37,20 @@ type SessionListEvent =
 export const sessionListMachine = setup({
   types: {
     input: {} as SessionListMachineInput,
-    context: {} as SessionListMachineInput & {
-      failure: unknown;
-      rows: SessionListState | null;
-      dirty: Set<string> | null;
-    },
+    context: {} as SessionListContext,
     events: {} as SessionListEvent,
     emitted: {} as { type: 'list.rows'; rows: SessionListState },
   },
   actors: {
     observe: fromCallback<SessionListEvent, SessionListMachineInput>(
-      ({ input, sendBack }) => {
+      ({ input, sendBack }): (() => void) => {
         const feeds = new Map<FeedActorRef, Subscription>();
         const sessions = new Map<SessionActorRef, Subscription>();
-        const refresh = (sessionIds: readonly string[]) =>
-          queueMicrotask(() => sendBack({ type: 'list.refresh', sessionIds }));
-        const connect = () => {
+        const refresh = (sessionIds: readonly string[]): void =>
+          queueMicrotask((): void =>
+            sendBack({ type: 'list.refresh', sessionIds }),
+          );
+        const connect = (): void => {
           const current = new Set(
             Object.values(input.sessions.getSnapshot().context.sessions),
           );
@@ -57,8 +61,8 @@ export const sessionListMachine = setup({
               sessions.set(
                 actor,
                 actor.subscribe({
-                  next: () => refresh([id]),
-                  error: () => refresh([id]),
+                  next: (): void => refresh([id]),
+                  error: (): void => refresh([id]),
                 }),
               );
               refresh([id]);
@@ -72,8 +76,8 @@ export const sessionListMachine = setup({
                 feeds.set(
                   feed,
                   feed.subscribe({
-                    next: () => refresh([id]),
-                    error: () => refresh([id]),
+                    next: (): void => refresh([id]),
+                    error: (): void => refresh([id]),
                   }),
                 );
             }
@@ -92,16 +96,16 @@ export const sessionListMachine = setup({
         };
         const registry = input.sessions.subscribe({
           next: connect,
-          error: (error) => sendBack({ type: 'list.failed', error }),
-          complete: () => sendBack({ type: 'list.stop' }),
+          error: (error): void => sendBack({ type: 'list.failed', error }),
+          complete: (): void => sendBack({ type: 'list.stop' }),
         });
         let previous = new Set<WriterJob>();
-        const changedJobs = (jobs: readonly WriterJob[]) => {
+        const changedJobs = (jobs: readonly WriterJob[]): void => {
           try {
             const current = new Set(jobs);
             const changed = [
-              ...jobs.filter((job) => !previous.has(job)),
-              ...[...previous].filter((job) => !current.has(job)),
+              ...jobs.filter((job): boolean => !previous.has(job)),
+              ...[...previous].filter((job): boolean => !current.has(job)),
             ];
             previous = current;
             if (changed.length) refresh(input.sessionIdsForJobs(changed));
@@ -110,12 +114,12 @@ export const sessionListMachine = setup({
           }
         };
         const writer = input.writer?.subscribe({
-          next: (snapshot) => changedJobs(snapshot.context.queue),
-          error: () => changedJobs([]),
+          next: (snapshot): void => changedJobs(snapshot.context.queue),
+          error: (): void => changedJobs([]),
         });
         connect();
         changedJobs(input.writer?.getSnapshot().context.queue ?? []);
-        return () => {
+        return (): void => {
           registry.unsubscribe();
           writer?.unsubscribe();
           for (const listener of feeds.values()) listener.unsubscribe();
@@ -126,16 +130,18 @@ export const sessionListMachine = setup({
   },
   delays: { listRefreshDelay: 100 },
   actions: {
-    rememberDirty: assign(({ context, event }) => {
-      assertEvent(event, 'list.refresh');
-      return {
-        dirty:
-          context.dirty === null || event.sessionIds === undefined
-            ? null
-            : new Set([...context.dirty, ...event.sessionIds]),
-      };
-    }),
-    publishRows: enqueueActions(({ context, enqueue }) => {
+    rememberDirty: assign(
+      ({ context, event }): Pick<SessionListContext, 'dirty'> => {
+        assertEvent(event, 'list.refresh');
+        return {
+          dirty:
+            context.dirty === null || event.sessionIds === undefined
+              ? null
+              : new Set([...context.dirty, ...event.sessionIds]),
+        };
+      },
+    ),
+    publishRows: enqueueActions(({ context, enqueue }): void => {
       try {
         const ids =
           context.dirty && context.relatedSessionIds([...context.dirty]);
@@ -143,10 +149,12 @@ export const sessionListMachine = setup({
         if (context.dirty === null) changed = context.readRows();
         else if (context.dirty.size) changed = context.readRows(ids ?? []);
         const cache = new Map(
-          (context.dirty === null ? [] : (context.rows ?? [])).map((row) => [
-            row.information.sessionId,
-            row,
-          ]),
+          (context.dirty === null ? [] : (context.rows ?? [])).map(
+            (row): [string, SessionListState[number]] => [
+              row.information.sessionId,
+              row,
+            ],
+          ),
         );
         for (const id of context.relatedSessionIds(ids ?? [])) cache.delete(id);
         for (const row of changed) cache.set(row.information.sessionId, row);
@@ -157,14 +165,16 @@ export const sessionListMachine = setup({
         enqueue.raise({ type: 'list.failed', error });
       }
     }),
-    rememberFailure: assign(({ event }) => {
-      assertEvent(event, 'list.failed');
-      return { failure: event.error };
-    }),
+    rememberFailure: assign(
+      ({ event }): Pick<SessionListContext, 'failure'> => {
+        assertEvent(event, 'list.failed');
+        return { failure: event.error };
+      },
+    ),
   },
 }).createMachine({
   id: 'sessionList',
-  context: ({ input }) => ({
+  context: ({ input }): SessionListContext => ({
     ...input,
     failure: null,
     rows: null,
@@ -173,7 +183,10 @@ export const sessionListMachine = setup({
   initial: 'active',
   states: {
     active: {
-      invoke: { src: 'observe', input: ({ context }) => context },
+      invoke: {
+        src: 'observe',
+        input: ({ context }): SessionListContext => context,
+      },
       entry: 'publishRows',
       initial: 'idle',
       states: {
