@@ -3,10 +3,11 @@ import { readFile } from 'node:fs/promises';
 import { createServer } from 'node:net';
 import path from 'node:path';
 import { z } from 'zod';
-import { type MockAgents, mockAgentPath, writeMockAgents } from './mock-agents';
+import type { MockAgents } from './mock-agents';
 import { createProjectRepository } from './project-repository';
 
 const serverDirectory = path.resolve(import.meta.dirname, '../apps/server');
+const fixtureEngineArguments = ['--import', 'tsx', 'mocks/e2e-engine.ts'];
 
 const serverHost = '127.0.0.1';
 const serverUrlFor = (port: number): string => `ws://${serverHost}:${port}`;
@@ -15,7 +16,7 @@ export const serverHttpUrl = (port: number): string =>
 const serverStartMilliseconds = 30_000;
 const serverPollMilliseconds = 200;
 
-// Polls `check` until it settles on a value, and throws `timeoutMessage` once a Server has had its whole start time.
+// Poll until the Server starts or its startup deadline expires.
 export async function pollServer<T>(
   check: () => Promise<T | undefined>,
   timeoutMessage: (seconds: number) => string,
@@ -50,7 +51,7 @@ const portTakenPattern = /EADDRINUSE/;
 const attempts = 3;
 const STDERR_TAIL_LENGTH = 2000;
 
-// Ready once this Server's own home names its port; another run's Server on a shared port never counts.
+// Only the Server in this isolated home can satisfy readiness.
 async function waitUntilReady({
   home,
   port,
@@ -94,30 +95,28 @@ const withStderr = (tail: string): string =>
     ? ''
     : `\nServer stderr (last ${STDERR_TAIL_LENGTH} characters):\n${tail}`;
 
-// Starts a Server with its own home, Project and mock Agent CLIs, so a test can change them without touching other tests.
+// Starts a real Engine with shared fixture adapters in an isolated home.
 export async function startOwnServer(
   directory: string,
   agents: MockAgents,
 ): Promise<{ serverUrl: string; httpUrl: string; stop: () => Promise<void> }> {
-  const agentDirectory = path.join(directory, 'agent-bin');
   const projectPath = path.join(directory, 'project');
   const home = path.join(directory, 'server-home');
   await createProjectRepository(projectPath);
-  await writeMockAgents(agentDirectory, agents);
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     const port = await findFreePort();
-    const server = spawn(process.execPath, ['--import', 'tsx', 'src/main.ts'], {
+    const server = spawn(process.execPath, fixtureEngineArguments, {
       cwd: serverDirectory,
       env: {
         ...process.env,
         ARGO_HOME: home,
         ARGO_SERVER_PORT: String(port),
         ARGO_PROJECT_PATH: projectPath,
-        PATH: mockAgentPath(agentDirectory),
+        ARGO_E2E_AGENTS: JSON.stringify(agents),
+        PATH: '/usr/bin:/bin',
       },
       stdio: ['ignore', 'pipe', 'pipe'],
     });
-    // Another process can take the port between findFreePort and the Engine's listen; the Supervisor then retries it forever.
     let portTaken = false;
     let stderrTail = '';
     for (const stream of [server.stdout, server.stderr]) {
@@ -133,7 +132,6 @@ export async function startOwnServer(
       const exited = new Promise((resolve): typeof server =>
         server.once('exit', resolve),
       );
-      // SIGTERM lets the supervisor stop the Engine and remove server.json.
       server.kill('SIGTERM');
       await exited;
     };

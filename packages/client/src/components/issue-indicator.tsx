@@ -2,7 +2,7 @@ import { TicketIcon } from 'phosphor-react-native';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/text';
-import { Icon } from './icon';
+import { Icon } from '../lib/icon';
 
 export interface IssueIndicatorProps {
   number: number;

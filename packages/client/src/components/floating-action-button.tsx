@@ -1,7 +1,7 @@
 import type { Icon as PhosphorIcon } from 'phosphor-react-native';
 import type * as React from 'react';
 import { Button } from '#primitives/button';
-import { Icon } from './icon';
+import { Icon } from '../lib/icon';
 
 export interface FloatingActionButtonProps {
   accessibilityLabel: string;

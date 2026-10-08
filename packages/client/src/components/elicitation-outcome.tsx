@@ -6,8 +6,8 @@ import { QuestionIcon } from 'phosphor-react-native';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/text';
+import { Icon } from '../lib/icon';
 import type { ElicitationAnswer } from './elicitation-form';
-import { Icon } from './icon';
 
 export interface ElicitationOutcomeProps {
   request: PendingElicitation;

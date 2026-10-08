@@ -4,7 +4,7 @@ import type * as React from 'react';
 import { useEffect, useState } from 'react';
 import { Platform, Pressable } from 'react-native';
 import { cn } from '#lib/utils';
-import { Icon } from './icon';
+import { Icon } from '../lib/icon';
 
 export interface CopyButtonProps {
   value: string;

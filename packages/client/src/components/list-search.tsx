@@ -19,8 +19,8 @@ import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
 import { Input } from '#primitives/input';
 import { Text } from '#primitives/text';
+import { Icon, useIconPixels } from '../lib/icon';
 import { useWide } from '../navigation/use-wide';
-import { Icon, useIconPixels } from './icon';
 
 const wideButtonSize = 32;
 const narrowButtonSize = 44;

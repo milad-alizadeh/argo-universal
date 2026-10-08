@@ -3,7 +3,7 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/utils';
 import { Text } from '#primitives/text';
-import { Icon } from './icon';
+import { Icon } from '../lib/icon';
 
 const statusAppearance = {
   open: { icon: GitPullRequestIcon, className: 'text-success' },

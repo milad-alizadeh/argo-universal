@@ -33,6 +33,15 @@ export async function readFeed(page: Page, httpUrl: string): Promise<FeedRows> {
 }
 
 Then(
+  'the Agent replies {string}',
+  async ({ page }, reply: string): Promise<void> => {
+    await expect(
+      page.getByTestId('feed-scroll').getByText(reply, { exact: true }),
+    ).toBeVisible();
+  },
+);
+
+Then(
   'the Session Feed contains the text prompt {string}',
   async ({ page, server }, prompt: string): Promise<void> => {
     const [row] = await readFeed(page, server.httpUrl);

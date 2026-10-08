@@ -1,9 +1,7 @@
 import type { BlobRef, SessionNewInput } from '@repo/contracts';
-import type { UseMutationResult } from '@tanstack/react-query';
-import { useMutation } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
-import type { ComposerDraft } from '#components/composer';
-import { useTRPCClient } from '../trpc/context';
+import { useBlobUpload } from '../trpc/use-blob-upload';
+import type { ComposerDraft } from './composer';
 import { draftPrompt } from './draft-prompt';
 import { pickImages } from './pick-images';
 
@@ -16,7 +14,7 @@ export interface ImageDraft {
   ) => Promise<SessionNewInput['prompt'] | undefined>;
   clearDraft: () => void;
   imageSelectionError: string | undefined;
-  imageUpload: UseMutationResult<BlobRef[], Error, FormData[]>;
+  imageUpload: ReturnType<typeof useBlobUpload>;
 }
 
 export const imageSelectionFailureMessage =
@@ -26,16 +24,12 @@ const emptyDraft: ComposerDraft = { text: '', images: [] };
 
 // A Composer draft with attached images, and the prompt it sends once its images are uploaded.
 export function useImageDraft(): ImageDraft {
-  const client = useTRPCClient();
   const [draft, setDraft] = useState(emptyDraft);
   const [imageSelectionError, setImageSelectionError] = useState<string>();
   // The file behind each attached image, by its id in the draft.
   const imageFiles = useRef(new Map<string, Blob>());
-  // All of a draft's images upload together, as one mutation, so `imageUpload` reports them as one.
-  const imageUpload = useMutation({
-    mutationFn: (forms: FormData[]) =>
-      Promise.all(forms.map((form) => client.blob.upload.mutate(form))),
-  });
+  // All of a draft's images upload together, so `imageUpload` reports them as one.
+  const imageUpload = useBlobUpload();
 
   async function attachImages(): Promise<void> {
     try {

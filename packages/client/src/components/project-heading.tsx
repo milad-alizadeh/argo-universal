@@ -10,7 +10,7 @@ import { Platform, Pressable, View } from 'react-native';
 import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
 import { Text, TextClassContext } from '#primitives/text';
-import { Icon } from './icon';
+import { Icon } from '../lib/icon';
 
 export interface ProjectHeadingProps {
   name: string;

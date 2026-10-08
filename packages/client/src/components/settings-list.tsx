@@ -13,9 +13,9 @@ import type { ReactNode } from 'react';
 import { Platform, Pressable, ScrollView, View } from 'react-native';
 import { cn } from '#lib/utils';
 import { Text } from '#primitives/text';
+import { Icon } from '../lib/icon';
 import type { Navigate, NavigationDestination } from '../navigation/context';
 import { useWide } from '../navigation/use-wide';
-import { Icon } from './icon';
 
 export interface SettingsListProps {
   projects: readonly { name: string }[];

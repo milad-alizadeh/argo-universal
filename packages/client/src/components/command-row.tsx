@@ -8,8 +8,8 @@ import { cn } from '#lib/utils';
 import { Text } from '#primitives/text';
 import { toolCallTitle } from '../feed/tool-call-title';
 import { useToolCallDuration } from '../feed/use-tool-call-duration';
+import { Icon } from '../lib/icon';
 import { FeedCodeBlock } from './feed-code-block';
-import { Icon } from './icon';
 import { ToolCallDisclosure } from './tool-call-disclosure';
 
 export interface CommandRowProps {

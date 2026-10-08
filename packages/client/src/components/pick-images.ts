@@ -1,6 +1,6 @@
 import { File } from 'expo-file-system';
 import { launchImageLibraryAsync } from 'expo-image-picker';
-import type { ComposerImage } from '#components/composer';
+import type { ComposerImage } from './composer';
 
 export interface PickedImage {
   image: ComposerImage;

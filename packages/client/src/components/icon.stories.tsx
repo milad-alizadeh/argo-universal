@@ -8,7 +8,7 @@ import { PlusIcon } from 'phosphor-react-native/src/icons/Plus';
 import { View } from 'react-native';
 import { Button } from '#primitives/button';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
-import { Icon } from './icon';
+import { Icon } from '../lib/icon';
 
 const weights: IconWeight[] = [
   'thin',

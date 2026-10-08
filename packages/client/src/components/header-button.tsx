@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import { hasLiquidGlass } from '#lib/native-header';
 import { cn } from '#lib/utils';
 import { Button, type ButtonProps } from '#primitives/button';
-import { Icon } from './icon';
+import { Icon } from '../lib/icon';
 
 export interface HeaderButtonProps extends Pick<
   ButtonProps,
