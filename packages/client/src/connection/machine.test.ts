@@ -1,4 +1,5 @@
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
+import { terminalPaths } from '@repo/vitest/model-paths';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   type Actor,
@@ -227,28 +228,6 @@ describe('connection model', (): void => {
     },
   };
 
-  const isPrefixOf = (
-    path: StatePath<ConnectionSnapshot, ConnectionGraphEvent>,
-    other: typeof path,
-  ): boolean =>
-    path.steps.every(
-      (step, index) =>
-        JSON.stringify(step.event) ===
-        JSON.stringify(other.steps[index]?.event),
-    );
-  const terminalPaths = (
-    paths: StatePath<ConnectionSnapshot, ConnectionGraphEvent>[],
-  ): typeof paths =>
-    paths.filter(
-      (path, index) =>
-        !paths.some(
-          (other, otherIndex) =>
-            (other.steps.length > path.steps.length ||
-              (other.steps.length === path.steps.length &&
-                otherIndex < index)) &&
-            isPrefixOf(path, other),
-        ),
-    );
   const shortestPaths = [
     ...terminalPaths(getShortestPaths(machine, options)),
     ...getPathsFromEvents(

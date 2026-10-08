@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./model-coverage": "./model-coverage.ts",
+    "./model-paths": "./model-paths.ts",
     "./node": "./node.ts"
   },
   "scripts": {
