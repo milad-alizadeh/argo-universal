@@ -26,11 +26,11 @@ let feed: Actor<typeof machine>;
 
 const machine = feedMachine.provide({
   actions: {
-    sendToWriter: (_, { job }) => {
+    sendToWriter: (_, { job }): void => {
       if (job.type !== 'feedRows') throw new Error(`unexpected ${job.type}`);
       jobs.push(job);
     },
-    log: (_, { line }) => {
+    log: (_, { line }): void => {
       logLines.push(line);
     },
   },
@@ -39,23 +39,29 @@ type FeedSnapshot = SnapshotFrom<typeof machine>;
 type FeedMachineEvent = EventFromLogic<typeof machine>;
 
 const input = {
-  now: () => 1000,
+  now: (): number => 1000,
   sessionId: 'session-1',
   epoch: 2,
   maxRevision: 0,
   nextPosition: 0,
   // Rows the mocked writer received come back to a later change.
-  findWrittenRow: (id: string) => findQueuedRow(jobs, 'session-1', id),
+  findWrittenRow: (id: string): ReturnType<typeof findQueuedRow> =>
+    findQueuedRow(jobs, 'session-1', id),
 };
 
 // xstate/graph runs no actions, so the model's writer keeps nothing to give back; the example tests cover written rows.
 const modelInput = {
   ...input,
-  findWrittenRow: () => undefined,
+  findWrittenRow: (): undefined => undefined,
 };
 
-const change = (feedChange: FeedChange) =>
-  ({ type: 'feed.change', change: feedChange, turnId: 'turn-1' }) as const;
+const change = (
+  feedChange: FeedChange,
+): {
+  readonly type: 'feed.change';
+  readonly change: FeedChange;
+  readonly turnId: 'turn-1';
+} => ({ type: 'feed.change', change: feedChange, turnId: 'turn-1' }) as const;
 const openMessage = change({
   type: 'upsert',
   update: {
@@ -114,13 +120,19 @@ const graphLogic = machine as unknown as ActorLogic<
 
 // The message's place, and the state value; `via` names how a vertex was reached.
 const serializeWith =
-  (via: (sameAsPrevious: boolean) => boolean) =>
+  (
+    via: (sameAsPrevious: boolean) => boolean,
+  ): ((
+    snapshot: FeedSnapshot,
+    event: FeedMachineEvent | undefined,
+    previous: FeedSnapshot | undefined,
+  ) => string) =>
   (
     snapshot: FeedSnapshot,
     event: FeedMachineEvent | undefined,
     previous: FeedSnapshot | undefined,
-  ) => {
-    const vertex = (of: FeedSnapshot | undefined) =>
+  ): string => {
+    const vertex = (of: FeedSnapshot | undefined): string | undefined =>
       of &&
       JSON.stringify({ value: of.value, open: Object.keys(of.context.rows) });
     const key = vertex(snapshot);
@@ -137,23 +149,23 @@ const modelOptions = {
   input: modelInput,
   events,
   // A done actor ignores events, so the model must not send any.
-  filterEvents: (snapshot: FeedSnapshot, event: FeedMachineEvent) =>
+  filterEvents: (snapshot: FeedSnapshot, event: FeedMachineEvent): boolean =>
     snapshot.status === 'active' && snapshot.can(event),
-  stateMatcher: (snapshot: FeedSnapshot, key: string) =>
+  stateMatcher: (snapshot: FeedSnapshot, key: string): boolean =>
     snapshot.matches(key as never),
 };
 // A vertex for each transition, so the shortest paths reach every transition, back edges too.
 const transitionModel = new TestModel(graphLogic, {
   ...modelOptions,
-  serializeState: serializeWith(() => true),
+  serializeState: serializeWith((): true => true),
 });
 // A vertex only for each self-transition, which keeps the simple paths of event orderings under 1,000.
 const orderingModel = new TestModel(graphLogic, {
   ...modelOptions,
-  serializeState: serializeWith((sameAsPrevious) => sameAsPrevious),
+  serializeState: serializeWith((sameAsPrevious): boolean => sameAsPrevious),
 });
 
-const rowIdOf = (event: FeedStreamEvent) =>
+const rowIdOf = (event: FeedStreamEvent): string =>
   event.type === 'row.upsert' ? event.row.id : event.id;
 
 // Holds whatever the timers would do, so the order of the two regions' timers stays the model's choice.
@@ -161,35 +173,49 @@ const executors: Record<
   string,
   EventExecutor<FeedSnapshot, FeedMachineEvent>
 > = {
-  'xstate.init': () => {
+  'xstate.init': (): void => {
     feed = createActor(machine, { input: modelInput }).start();
-    feed.on('feed.batch', ({ events: batch }) => {
+    feed.on('feed.batch', ({ events: batch }): void => {
       batches.push(batch);
     });
   },
   ...Object.fromEntries(
-    events.map(({ type }) => [
-      type,
-      ({ event }: { event: FeedMachineEvent }) => feed.send(event),
-    ]),
+    events.map(
+      ({
+        type,
+      }): [
+        FeedMachineEvent['type'],
+        ({ event }: { event: FeedMachineEvent }) => void,
+      ] => [
+        type,
+        ({ event }: { event: FeedMachineEvent }): void => feed.send(event),
+      ],
+    ),
   ),
 };
 
 // Each accepted change streams once and in order, and the newest version of each row is written or waits to be.
-const expectConsistent = (expected: FeedSnapshot) => {
+const expectConsistent = (expected: FeedSnapshot): void => {
   const actual = feed.getSnapshot();
   expect(actual.value).toEqual(expected.value);
   expect(actual.status).toBe(expected.status);
   const { context } = actual;
 
   const streamed = [...batches.flat(), ...context.streamEvents];
-  expect(streamed.map((event) => event.rev)).toEqual(
-    Array.from({ length: context.maxRevision }, (_, index) => index + 1),
+  expect(streamed.map((event): number => event.rev)).toEqual(
+    Array.from(
+      { length: context.maxRevision },
+      (_, index): number => index + 1,
+    ),
   );
 
-  const newest = new Map(streamed.map((event) => [rowIdOf(event), event.rev]));
+  const newest = new Map(
+    streamed.map((event): [string, number] => [rowIdOf(event), event.rev]),
+  );
   const written = new Map(
-    jobs.flatMap((job) => job.rows.map((row) => [row.id, row.revision])),
+    jobs.flatMap((job): [string, number][] =>
+      job.rows.map((row): [string, number] => [row.id, row.revision]),
+    ),
   );
   for (const [id, revision] of newest) {
     if (context.changedRowIds.includes(id))
@@ -198,32 +224,36 @@ const expectConsistent = (expected: FeedSnapshot) => {
   }
 
   expect(
-    Object.values(context.rows).filter((row) => row.state === 'settled'),
+    Object.values(context.rows).filter(
+      (row): boolean => row.state === 'settled',
+    ),
   ).toEqual([]);
-  expect(jobs.map((job) => job.maxRevision)).toEqual(
-    [...jobs.map((job) => job.maxRevision)].sort((a, b) => a - b),
+  expect(jobs.map((job): number => job.maxRevision)).toEqual(
+    [...jobs.map((job): number => job.maxRevision)].sort(
+      (a, b): number => a - b,
+    ),
   );
   expect(logLines).toHaveLength(context.rejectedChanges);
 };
 
 const states: Record<string, (snapshot: FeedSnapshot) => void> = {
-  'active.stream.quiet': (snapshot) => {
+  'active.stream.quiet': (snapshot): void => {
     expectConsistent(snapshot);
     expect(feed.getSnapshot().context.streamEvents).toEqual([]);
   },
-  'active.stream.batching': (snapshot) => {
+  'active.stream.batching': (snapshot): void => {
     expectConsistent(snapshot);
     expect(feed.getSnapshot().context.streamEvents).not.toEqual([]);
   },
-  'active.store.clean': (snapshot) => {
+  'active.store.clean': (snapshot): void => {
     expectConsistent(snapshot);
     expect(feed.getSnapshot().context.changedRowIds).toEqual([]);
   },
-  'active.store.dirty': (snapshot) => {
+  'active.store.dirty': (snapshot): void => {
     expectConsistent(snapshot);
     expect(feed.getSnapshot().context.changedRowIds).not.toEqual([]);
   },
-  flushed: (snapshot) => {
+  flushed: (snapshot): void => {
     expectConsistent(snapshot);
     const { context } = feed.getSnapshot();
     expect(context.streamEvents).toEqual([]);
@@ -233,9 +263,9 @@ const states: Record<string, (snapshot: FeedSnapshot) => void> = {
 
 const shortestPaths = transitionModel.getShortestPaths();
 const simplePaths = orderingModel.getSimplePaths();
-const title = (path: TestPath<FeedSnapshot, FeedMachineEvent>) =>
+const title = (path: TestPath<FeedSnapshot, FeedMachineEvent>): string =>
   path.steps
-    .map(({ event }) => {
+    .map(({ event }): string => {
       if (event.type !== 'feed.change')
         return event.type.replace(/^xstate\.after\.(\w+)\..*$/, 'after $1');
       if (event.change.type === 'upsert') return 'open';
@@ -244,52 +274,54 @@ const title = (path: TestPath<FeedSnapshot, FeedMachineEvent>) =>
     })
     .join(' → ');
 
-beforeEach(() => {
+beforeEach((): void => {
   vi.useFakeTimers();
   batches = [];
   jobs = [];
   logLines = [];
 });
 
-afterEach(() => {
+afterEach((): void => {
   feed.stop();
   vi.useRealTimers();
 });
 
-describe('feed model', () => {
+describe('feed model', (): void => {
   describe.each([
     ['shortest path', shortestPaths],
     ['simple path', simplePaths],
-  ])('%s', (_, paths) => {
-    it.each(paths.map((path) => [title(path), path] as const))(
-      '%s',
-      async (_, path) => {
-        await path.test({ events: executors, states });
-      },
-    );
+  ])('%s', (_, paths): void => {
+    it.each(
+      paths.map(
+        (path): [string, TestPath<FeedSnapshot, FeedMachineEvent>] =>
+          [title(path), path] as const,
+      ),
+    )('%s', async (_, path): Promise<void> => {
+      await path.test({ events: executors, states });
+    });
   });
 
-  it('the generated paths walk every transition', () => {
+  it('the generated paths walk every transition', (): void => {
     expect(
       unwalkedTransitions({
         models: [transitionModel],
         paths: [...shortestPaths, ...simplePaths],
-        stateKey: (snapshot) => JSON.stringify(snapshot.value),
-        eventKey: (event) => JSON.stringify(event),
+        stateKey: (snapshot): string => JSON.stringify(snapshot.value),
+        eventKey: (event): string => JSON.stringify(event),
       }),
     ).toEqual([]);
   });
 });
 
-describe('feed', () => {
-  beforeEach(() => {
+describe('feed', (): void => {
+  beforeEach((): void => {
     feed = createActor(machine, { input }).start();
-    feed.on('feed.batch', ({ events: batch }) => {
+    feed.on('feed.batch', ({ events: batch }): void => {
       batches.push(batch);
     });
   });
 
-  it('streams the changes of 60 ms as one batch', () => {
+  it('streams the changes of 60 ms as one batch', (): void => {
     feed.send(openMessage);
     vi.advanceTimersByTime(30);
     feed.send(appendText);
@@ -297,12 +329,14 @@ describe('feed', () => {
     expect(batches).toEqual([]);
 
     vi.advanceTimersByTime(1);
-    expect(batches.map((batch) => batch.map((event) => event.type))).toEqual([
-      ['row.upsert', 'row.append'],
-    ]);
+    expect(
+      batches.map((batch): ('row.append' | 'row.patch' | 'row.upsert')[] =>
+        batch.map((event): typeof event.type => event.type),
+      ),
+    ).toEqual([['row.upsert', 'row.append']]);
   });
 
-  it('writes open rows 1 second after the first change, in one job', () => {
+  it('writes open rows 1 second after the first change, in one job', (): void => {
     feed.send(openMessage);
     vi.advanceTimersByTime(500);
     feed.send(openTool);
@@ -335,7 +369,7 @@ describe('feed', () => {
     ]);
   });
 
-  it('names the blobs a prompt shows in its job', () => {
+  it('names the blobs a prompt shows in its job', (): void => {
     feed.send(
       change({
         type: 'upsert',
@@ -358,7 +392,7 @@ describe('feed', () => {
     expect(jobs).toEqual([expect.objectContaining({ blobIds: ['image-1'] })]);
   });
 
-  it('writes at once when a row settles, and keeps only open rows', () => {
+  it('writes at once when a row settles, and keeps only open rows', (): void => {
     feed.send(openTool);
     feed.send(openMessage);
     feed.send(settleMessage);
@@ -381,7 +415,7 @@ describe('feed', () => {
     expect(jobs).toHaveLength(1);
   });
 
-  it('writes when the store timer runs out while a batch waits', () => {
+  it('writes when the store timer runs out while a batch waits', (): void => {
     feed.send(openMessage);
     vi.advanceTimersByTime(950);
     feed.send(appendText);
@@ -393,7 +427,7 @@ describe('feed', () => {
     expect(batches).toHaveLength(2);
   });
 
-  it('flushes the waiting batch and every changed row, then finishes', () => {
+  it('flushes the waiting batch and every changed row, then finishes', (): void => {
     feed.send(openTool);
     feed.send(openMessage);
     feed.send({ type: 'feed.flush' });
@@ -411,7 +445,7 @@ describe('feed', () => {
     expect(feed.getSnapshot().status).toBe('done');
   });
 
-  it('brings a written row back for a later change, in its place', () => {
+  it('brings a written row back for a later change, in its place', (): void => {
     feed.send(openTool);
     feed.send(openMessage);
     feed.send(settleMessage);
@@ -440,12 +474,12 @@ describe('feed', () => {
     expect(feed.getSnapshot().context.nextPosition).toBe(2);
   });
 
-  it('rejects a change when its written row cannot be read, and keeps running', () => {
+  it('rejects a change when its written row cannot be read, and keeps running', (): void => {
     feed.stop();
     feed = createActor(machine, {
       input: {
         ...input,
-        findWrittenRow: () => {
+        findWrittenRow: (): never => {
           throw new Error('payload does not match agent_message');
         },
       },
@@ -461,7 +495,7 @@ describe('feed', () => {
     });
   });
 
-  it('logs and counts a rejected change, and streams and writes nothing for it', () => {
+  it('logs and counts a rejected change, and streams and writes nothing for it', (): void => {
     feed.send(appendText);
     vi.advanceTimersByTime(storeDelayMs);
 

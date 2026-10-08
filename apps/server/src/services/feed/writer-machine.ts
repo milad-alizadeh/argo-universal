@@ -7,6 +7,9 @@ import {
   writeJobs,
 } from './writer-job';
 
+type WriterBatchInput = { database: Database; jobs: WriterJob[] };
+type WriterLogParameters = { line: string };
+
 export interface WriterInput {
   database: Database;
   now: () => number;
@@ -25,7 +28,11 @@ export type WriterEvent =
   | { type: 'writer.drain' };
 
 // The jobs `takeBatch` counted, oldest first.
-const batchInput = ({ context }: { context: WriterContext }) => ({
+const batchInput = ({
+  context,
+}: {
+  context: WriterContext;
+}): WriterBatchInput => ({
   database: context.database,
   jobs: context.queue.slice(0, context.batchSize),
 });
@@ -37,38 +44,45 @@ export const writerMachine = setup({
     events: {} as WriterEvent,
   },
   actors: {
-    writeBatch: fromPromise<void, { database: Database; jobs: WriterJob[] }>(
-      async ({ input }) => writeJobs(input.database, input.jobs),
+    writeBatch: fromPromise<void, WriterBatchInput>(
+      async ({ input }): Promise<void> => writeJobs(input.database, input.jobs),
     ),
   },
   actions: {
     enqueue: assign({
-      queue: ({ context, event }) => {
+      queue: ({ context, event }): WriterContext['queue'] => {
         assertEvent(event, 'writer.write');
         return [...context.queue, stampWriterJob(event.job, context.now())];
       },
     }),
-    takeBatch: assign({ batchSize: ({ context }) => context.queue.length }),
+    takeBatch: assign({
+      batchSize: ({ context }): number => context.queue.length,
+    }),
     dropBatch: assign({
-      queue: ({ context }) => context.queue.slice(context.batchSize),
+      queue: ({ context }): WriterContext['queue'] =>
+        context.queue.slice(context.batchSize),
       batchSize: 0,
     }),
     releaseBatch: assign({ batchSize: 0 }),
-    log: ({ context }, params: { line: string }) => {
+    log: ({ context }, params: WriterLogParameters): void => {
       const line = `databaseWriter: ${params.line}`;
       if (context.log) context.log(line);
       else console.error(line);
     },
   },
   guards: {
-    hasJobsAfterBatch: ({ context }) =>
+    hasJobsAfterBatch: ({ context }): boolean =>
       context.queue.length > context.batchSize,
     drainRequested: stateIn({ writing: 'drainRequested' }),
   },
   delays: { writeRetryDelay: 1000 },
 }).createMachine({
   id: 'databaseWriter',
-  context: ({ input }) => ({ ...input, queue: [], batchSize: 0 }),
+  context: ({ input }): WriterContext => ({
+    ...input,
+    queue: [],
+    batchSize: 0,
+  }),
   initial: 'idle',
   on: { 'writer.write': { actions: 'enqueue' } },
   states: {
@@ -108,7 +122,7 @@ export const writerMachine = setup({
             actions: [
               {
                 type: 'log',
-                params: ({ event }) => ({
+                params: ({ event }): WriterLogParameters => ({
                   line: `could not write, draining: ${String(event.error)}`,
                 }),
               },
@@ -120,7 +134,7 @@ export const writerMachine = setup({
             actions: [
               {
                 type: 'log',
-                params: ({ context, event }) => ({
+                params: ({ context, event }): WriterLogParameters => ({
                   line: `could not write, keeping ${context.queue.length} jobs to retry: ${String(event.error)}`,
                 }),
               },
@@ -160,7 +174,7 @@ export const writerMachine = setup({
           actions: [
             {
               type: 'log',
-              params: ({ context, event }) => ({
+              params: ({ context, event }): WriterLogParameters => ({
                 line: `could not write while draining, lost ${context.queue.length} jobs: ${String(event.error)}\n${context.queue.map(describeJob).join('\n')}`,
               }),
             },

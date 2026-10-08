@@ -1,6 +1,9 @@
 import type { AgentAdapter, AgentProbe } from '@repo/agents';
 import { type ActorRefFrom, assign, fromPromise, setup } from 'xstate';
 
+type ProbeParameters = { probe: AgentProbe };
+type UnavailableParameters = { reason: string };
+
 export interface AgentProbeInput {
   adapter: AgentAdapter;
 }
@@ -13,7 +16,7 @@ interface AgentProbeContext extends AgentProbeInput {
 export type AgentProbeEvent = { type: 'agentProbe.refresh' };
 
 // The system id under which each Agent's probe runs.
-export const agentProbeId = (agent: string) => `agentProbe:${agent}`;
+export const agentProbeId = (agent: string): string => `agentProbe:${agent}`;
 
 const probeTimeout = 20_000;
 const millisecondsPerSecond = 1000;
@@ -26,16 +29,19 @@ export const agentProbeMachine = setup({
     events: {} as AgentProbeEvent,
   },
   actors: {
-    probe: fromPromise<AgentProbe, AgentAdapter>(({ input, signal }) =>
-      input.probe(signal),
+    probe: fromPromise<AgentProbe, AgentAdapter>(
+      ({ input, signal }): Promise<AgentProbe> => input.probe(signal),
     ),
   },
   actions: {
     rememberProbe: assign({
-      probe: (_, params: { probe: AgentProbe }) => params.probe,
+      probe: (_, params: ProbeParameters): AgentProbe => params.probe,
     }),
     rememberUnavailable: assign({
-      probe: ({ context }, params: { reason: string }) => ({
+      probe: (
+        { context },
+        params: UnavailableParameters,
+      ): NonNullable<AgentProbeContext['probe']> => ({
         availability: 'unavailable' as const,
         installStep: `${context.adapter.label} did not start: ${params.reason}`,
         configOptions: [],
@@ -45,7 +51,10 @@ export const agentProbeMachine = setup({
   delays: { probeTimeout },
 }).createMachine({
   id: 'agentProbe',
-  context: ({ input }) => ({ ...input, probe: null }),
+  context: ({ input }): AgentProbeContext => ({
+    ...input,
+    probe: null,
+  }),
   initial: 'probing',
   states: {
     // A refresh while probing shares the running probe; leaving aborts it.
@@ -53,19 +62,21 @@ export const agentProbeMachine = setup({
       invoke: {
         id: 'probe',
         src: 'probe',
-        input: ({ context }) => context.adapter,
+        input: ({ context }): AgentProbeInput['adapter'] => context.adapter,
         onDone: {
           target: 'probed',
           actions: {
             type: 'rememberProbe',
-            params: ({ event }) => ({ probe: event.output }),
+            params: ({ event }): ProbeParameters => ({
+              probe: event.output,
+            }),
           },
         },
         onError: {
           target: 'probed',
           actions: {
             type: 'rememberUnavailable',
-            params: ({ event }) => ({
+            params: ({ event }): UnavailableParameters => ({
               reason:
                 event.error instanceof Error
                   ? event.error.message

@@ -26,10 +26,10 @@ const engine = createActor(engineMachine, {
   },
 });
 engine.subscribe({
-  complete: () => {
+  complete: (): never => {
     process.exit(engine.getSnapshot().output?.exitCode ?? 1);
   },
-  error: (error) => {
+  error: (error): never => {
     console.error(`engine: ${String(error)}`);
     process.exit(1);
   },

@@ -25,18 +25,24 @@ export interface HttpServer {
 
 const forbiddenStatus = 403;
 
-const listen = (server: Server, port: number) =>
-  new Promise<void>((resolve, reject) => {
+const listen = (server: Server, port: number): Promise<void> =>
+  new Promise<void>((resolve, reject): void => {
     server.once('error', reject);
-    server.listen(port, '127.0.0.1', () => {
+    server.listen(port, '127.0.0.1', (): void => {
       server.off('error', reject);
       resolve();
     });
   });
 
-const closeServer = (server: Server) =>
-  new Promise<void>((resolve, reject) =>
-    server.close((error) => (error ? reject(error) : resolve())),
+const closeServer = (server: Server): Promise<void> =>
+  new Promise<void>(
+    (
+      resolve,
+      reject,
+    ): Server<
+      typeof import('http').IncomingMessage,
+      typeof import('http').ServerResponse
+    > => server.close((error): void => (error ? reject(error) : resolve())),
   );
 
 // Serves one tRPC router over the WebSocket and over HTTP, and blobs, on 127.0.0.1 (ADR 0002); resolves once the port is bound.
@@ -46,7 +52,9 @@ export async function startHttpServer(
   const blobsFolder = blobsFolderIn(options.home);
   const services = createServerServices({ ...options, blobsFolder });
 
-  const createContext = () => ({ services });
+  const createContext = (): { services: import('@repo/api').Services } => ({
+    services,
+  });
 
   const guard = createRequestGuard(options.port);
   const server = createServer(
@@ -63,7 +71,7 @@ export async function startHttpServer(
   // Attached after listen: ws re-emits the server's 'error', so a failed listen would throw from it.
   const webSocketServer = new WebSocketServer({
     server,
-    verifyClient: ({ req }, callback) =>
+    verifyClient: ({ req }, callback): void =>
       callback(
         guard.allowsUpgrade({
           host: req.headers.host,
@@ -81,7 +89,7 @@ export async function startHttpServer(
   });
 
   // server.close() waits for upgraded sockets, so the WebSocket clients go first.
-  const closeAll = async () => {
+  const closeAll = async (): Promise<void> => {
     handler.broadcastReconnectNotification();
     for (const client of webSocketServer.clients) client.terminate();
     webSocketServer.close();
@@ -91,7 +99,7 @@ export async function startHttpServer(
     await closed;
   };
   let closing: Promise<void> | undefined;
-  const close = () => {
+  const close = (): Promise<void> => {
     closing ??= closeAll();
     return closing;
   };

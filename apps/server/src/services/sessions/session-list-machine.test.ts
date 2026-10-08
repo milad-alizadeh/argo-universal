@@ -19,7 +19,7 @@ const { database, directory: runtimeDirectory, remove } = openTestDatabase();
 afterAll(remove);
 const sessions = createActor(registryMachine, {
   input: {
-    now: () => Date.now(),
+    now: (): number => Date.now(),
     createId: randomUUID,
     database,
     runtimeDirectory,
@@ -29,12 +29,12 @@ const sessions = createActor(registryMachine, {
 const input = {
   sessions,
   writer: undefined,
-  readRows: () => [],
-  sessionIdsForJobs: () => [],
-  relatedSessionIds: (ids: readonly string[]) => [...ids],
+  readRows: (): never[] => [],
+  sessionIdsForJobs: (): never[] => [],
+  relatedSessionIds: (ids: readonly string[]): string[] => [...ids],
 };
 const machine = sessionListMachine.provide({
-  actors: { observe: fromCallback(() => {}) },
+  actors: { observe: fromCallback((): void => {}) },
 });
 type ListEvent = EventFromLogic<typeof machine>;
 type ListSnapshot = SnapshotFrom<typeof machine>;
@@ -46,7 +46,7 @@ const events = [
   { type: 'list.flush' },
   { type: 'xstate.after.listRefreshDelay.sessionList.active.pending' },
 ] as AnyEventObject[] as ListEvent[];
-const key = (snapshot: ListSnapshot) => JSON.stringify(snapshot.value);
+const key = (snapshot: ListSnapshot): string => JSON.stringify(snapshot.value);
 // xstate/graph's types do not carry emitted events.
 const graphLogic = machine as unknown as ActorLogic<
   ListSnapshot,
@@ -56,60 +56,68 @@ const graphLogic = machine as unknown as ActorLogic<
 const model = new TestModel(graphLogic, {
   input,
   events,
-  filterEvents: (snapshot, event) =>
+  filterEvents: (snapshot, event): boolean =>
     snapshot.status === 'active' &&
     (event.type === 'list.refresh' || snapshot.can(event)),
-  serializeState: (snapshot, event, previous) =>
+  serializeState: (snapshot, event, previous): string =>
     JSON.stringify({
       value: snapshot.value,
       via: event && `${previous && key(previous)} ${event.type}`,
     }),
 });
 const paths = model.getShortestPaths();
-it.each(paths.map((path, index) => [index, path] as const))(
-  'walks list subscription model path %i',
-  async (_, path) => {
-    const clock = new SimulatedClock();
-    const actor = createActor(machine, { input, clock }).start();
-    try {
-      await path.test({
-        events: Object.fromEntries(
-          events.map(({ type }) => [
+it.each(
+  paths.map(
+    (path, index): readonly [number, typeof path] => [index, path] as const,
+  ),
+)('walks list subscription model path %i', async (_, path): Promise<void> => {
+  const clock = new SimulatedClock();
+  const actor = createActor(machine, { input, clock }).start();
+  try {
+    await path.test({
+      events: Object.fromEntries(
+        events.map(
+          ({
             type,
-            ({ event }: { event: AnyEventObject }) => {
+          }): [
+            'list.failed' | 'list.flush' | 'list.refresh' | 'list.stop',
+            ({ event }: { event: AnyEventObject }) => void,
+          ] => [
+            type,
+            ({ event }: { event: AnyEventObject }): void => {
               if (event.type.startsWith('xstate.after.')) clock.increment(100);
               else actor.send(event as ListEvent);
             },
-          ]),
+          ],
         ),
-        states: {
-          '*': (expected) => {
-            expect(key(actor.getSnapshot())).toBe(key(expected));
-            expect(actor.getSnapshot().status).toBe(expected.status);
-          },
+      ),
+      states: {
+        '*': (expected): void => {
+          expect(key(actor.getSnapshot())).toBe(key(expected));
+          expect(actor.getSnapshot().status).toBe(expected.status);
         },
-      });
-    } finally {
-      actor.stop();
-    }
-  },
-);
-it('the generated list subscription paths walk every transition', () => {
+      },
+    });
+  } finally {
+    actor.stop();
+  }
+});
+it('the generated list subscription paths walk every transition', (): void => {
   expect(
     unwalkedTransitions({
       models: [model],
       paths,
       stateKey: key,
-      eventKey: (event) => event.type,
+      eventKey: (event): typeof event.type => event.type,
     }),
   ).toEqual([]);
 });
-it('ends a subscription with the projection error when the stored data cannot be read', () => {
+it('ends a subscription with the projection error when the stored data cannot be read', (): void => {
   const error = new Error('Unrecognised Session row');
   const actor = createActor(machine, {
     input: {
       ...input,
-      readRows: () => {
+      readRows: (): never => {
         throw error;
       },
     },
@@ -120,7 +128,7 @@ it('ends a subscription with the projection error when the stored data cannot be
   });
   actor.stop();
 });
-it('publishes once after 100 ms even when fifty refreshes arrive while pending', () => {
+it('publishes once after 100 ms even when fifty refreshes arrive while pending', (): void => {
   const clock = new SimulatedClock();
   let reads = 0;
   let publications = 0;
@@ -128,13 +136,13 @@ it('publishes once after 100 ms even when fifty refreshes arrive while pending',
     clock,
     input: {
       ...input,
-      readRows: () => {
+      readRows: (): never[] => {
         reads += 1;
         return [];
       },
     },
   });
-  actor.on('list.rows', () => publications++);
+  actor.on('list.rows', (): number => publications++);
   actor.start();
   for (let index = 0; index < 50; index++) actor.send({ type: 'list.refresh' });
   clock.increment(99);
@@ -144,7 +152,7 @@ it('publishes once after 100 ms even when fifty refreshes arrive while pending',
   expect([reads, publications]).toEqual([2, 2]);
   actor.stop();
 });
-it('owns a delayed projection failure and cancels its observation', () => {
+it('owns a delayed projection failure and cancels its observation', (): void => {
   const clock = new SimulatedClock();
   const error = new Error('Unavailable Session rows');
   let observations = 0;
@@ -152,9 +160,9 @@ it('owns a delayed projection failure and cancels its observation', () => {
   const actor = createActor(
     sessionListMachine.provide({
       actors: {
-        observe: fromCallback(() => {
+        observe: fromCallback((): (() => number) => {
           observations += 1;
-          return () => observations--;
+          return (): number => observations--;
         }),
       },
     }),
@@ -162,7 +170,7 @@ it('owns a delayed projection failure and cancels its observation', () => {
       clock,
       input: {
         ...input,
-        readRows: () => {
+        readRows: (): never[] => {
           if (reads++ > 0) throw error;
           return [];
         },

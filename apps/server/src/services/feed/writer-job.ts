@@ -60,8 +60,11 @@ const feedRowUpdate = {
 };
 
 // Commits every job in order in one transaction; one failing job rolls back them all.
-export function writeJobs(database: Database, jobs: readonly WriterJob[]) {
-  void database.transaction((transaction) => {
+export function writeJobs(
+  database: Database,
+  jobs: readonly WriterJob[],
+): void {
+  void database.transaction((transaction): void => {
     for (const job of jobs) {
       switch (job.type) {
         case 'feedRows': {
@@ -69,7 +72,10 @@ export function writeJobs(database: Database, jobs: readonly WriterJob[]) {
             transaction
               .insert(feedRow)
               .values(
-                job.rows.map((row) => ({ ...row, sessionId: job.sessionId })),
+                job.rows.map((row): typeof feedRow.$inferInsert => ({
+                  ...row,
+                  sessionId: job.sessionId,
+                })),
               )
               .onConflictDoUpdate({
                 target: [feedRow.sessionId, feedRow.id],
@@ -151,7 +157,7 @@ export function writeJobs(database: Database, jobs: readonly WriterJob[]) {
 export function describeJob(job: WriterJob): string {
   switch (job.type) {
     case 'feedRows':
-      return `Feed rows ${job.rows.map((row) => row.id).join(', ')} of Session ${job.sessionId} at maxRevision ${job.maxRevision}`;
+      return `Feed rows ${job.rows.map((row): string => row.id).join(', ')} of Session ${job.sessionId} at maxRevision ${job.maxRevision}`;
     case 'sessionInsert':
       return `insert Session ${job.session.id} of Project ${job.session.projectId}`;
     case 'turnInsert':
@@ -243,7 +249,7 @@ export function applyQueuedTurns(
   rows: readonly Turn[],
   jobs: readonly WriterJob[],
 ): Turn[] {
-  const turns = new Map(rows.map((row) => [row.id, row]));
+  const turns = new Map(rows.map((row): [string, Turn] => [row.id, row]));
   for (const job of jobs) {
     switch (job.type) {
       case 'turnInsert':

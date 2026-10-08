@@ -1,3 +1,18 @@
+import type { AgentOutput } from '@repo/agents';
+import type { UserMessage } from '@repo/contracts';
+import type { SessionUpdate } from '@repo/contracts';
+import type { FeedActorRef } from '../feed/feed-machine';
+
+type ClosedSession = {
+  output: AgentOutput | undefined;
+  rows: SessionUpdate[];
+  storedSession: typeof sessionTable.$inferSelect | undefined;
+};
+type StartedSession = {
+  session: SessionActorRef;
+  findFeed: () => FeedActorRef | undefined;
+  close: () => Promise<ClosedSession>;
+};
 import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -16,22 +31,24 @@ import { sendSessionCommand } from './session-command';
 import type { SessionActorRef } from './session-machine';
 
 const cleanups: (() => void)[] = [];
-afterEach(() => {
+afterEach((): void => {
   for (const cleanup of cleanups.splice(0).reverse()) cleanup();
 });
 
-const temporaryDirectory = (prefix: string) => {
+const temporaryDirectory = (prefix: string): string => {
   const directory = realpathSync(mkdtempSync(path.join(tmpdir(), prefix)));
-  cleanups.push(() => rmSync(directory, { recursive: true, force: true }));
+  cleanups.push((): void =>
+    rmSync(directory, { recursive: true, force: true }),
+  );
   return directory;
 };
 
-const isIdle = (snapshot: SnapshotFrom<SessionActorRef>) =>
+const isIdle = (snapshot: SnapshotFrom<SessionActorRef>): boolean =>
   snapshot.can(firstPrompt);
 
 describe.each(agentAdapters)(
   '$agent adapter against its mock CLI',
-  (adapter) => {
+  (adapter): void => {
     const { agent } = adapter;
     const registeredCli = mockClis[agent];
     if (!registeredCli) throw new Error(`No mock CLI for ${agent}`);
@@ -43,7 +60,7 @@ describe.each(agentAdapters)(
       vendorSessionId: string | null,
       transcriptId: string,
       scenario: MockCliScenarioInput = {},
-    ) {
+    ): Promise<StartedSession> {
       const bin = temporaryDirectory('argo-bin-');
       const cwd = temporaryDirectory('argo-project-');
       await mockCli.write(bin, { recording });
@@ -70,13 +87,20 @@ describe.each(agentAdapters)(
         database,
         adapter,
       );
-      cleanups.push(() => root.stop());
+      cleanups.push((): ReturnType<typeof root.stop> => root.stop());
       // Closing flushes every row to the database, where the Turn's rows are read back.
-      const close = async () => {
+      const close = async (): Promise<ClosedSession> => {
         sendSessionCommand(session, { type: 'session.close' });
-        await waitFor(session, (snapshot) => snapshot.status === 'done', {
-          timeout: 10_000,
-        });
+        await waitFor(
+          session,
+          (
+            snapshot,
+          ): snapshot is Extract<typeof snapshot, { status: 'done' }> =>
+            snapshot.status === 'done',
+          {
+            timeout: 10_000,
+          },
+        );
         return {
           output: session.getSnapshot().output,
           rows: service.page({
@@ -94,7 +118,7 @@ describe.each(agentAdapters)(
       recording: string,
       vendorSessionId: string | null = null,
       scenario: MockCliScenarioInput = {},
-    ) {
+    ): Promise<StartedSession> {
       const started = await startSession(
         recording,
         vendorSessionId,
@@ -105,7 +129,7 @@ describe.each(agentAdapters)(
       return started;
     }
 
-    const prompt = (session: SessionActorRef) =>
+    const prompt = (session: SessionActorRef): void =>
       sendSessionCommand(session, {
         type: 'session.prompt',
         turnId: 'turn-1',
@@ -126,7 +150,7 @@ describe.each(agentAdapters)(
           mockCli.unsupportedScenarios.includes('notificationsFirst'),
       )(
         `runs a Turn with edits, a command and an answer, then stops (${title})`,
-        async () => {
+        async (): Promise<void> => {
           const { session, close } = await openSession(
             mockCli.recordings.turn,
             null,
@@ -137,16 +161,20 @@ describe.each(agentAdapters)(
           await waitFor(session, isIdle, { timeout: 10_000 });
           await waitFor(
             session,
-            (snapshot) => snapshot.context.usage !== null,
+            (snapshot): boolean => snapshot.context.usage !== null,
             { timeout: 10_000 },
           );
 
           const { output, rows, storedSession } = await close();
           expect(output).toEqual({ failure: null });
           expect(storedSession?.vendorSessionId).toBe(vendorSessionId);
-          expect(rows.every((row) => row.state === 'settled')).toBe(true);
+          expect(rows.every((row): boolean => row.state === 'settled')).toBe(
+            true,
+          );
           expect(
-            rows.filter((row) => row.sessionUpdate === 'user_message'),
+            rows.filter(
+              (row): row is UserMessage => row.sessionUpdate === 'user_message',
+            ),
           ).toHaveLength(1);
           expect(rows).toEqual(
             expect.arrayContaining([
@@ -163,11 +191,13 @@ describe.each(agentAdapters)(
             ]),
           );
           expect(rows.at(-1)).toMatchObject({ sessionUpdate: 'agent_message' });
-          expect(rows.every((row) => row.turnId === 'turn-1')).toBe(true);
+          expect(rows.every((row): boolean => row.turnId === 'turn-1')).toBe(
+            true,
+          );
         },
       );
 
-    it('cancels a Turn during a command', async () => {
+    it('cancels a Turn during a command', async (): Promise<void> => {
       const { session, findFeed, close } = await openSession(
         mockCli.recordings.cancelledTurn,
       );
@@ -176,9 +206,14 @@ describe.each(agentAdapters)(
       prompt(session);
       await waitFor(
         feed,
-        (snapshot) =>
+        (snapshot): boolean =>
           Object.values(snapshot.context.rows).some(
-            (row) => row.sessionUpdate === 'tool_call_update',
+            (
+              row,
+            ): row is Extract<
+              SessionUpdate,
+              { sessionUpdate: 'tool_call_update' }
+            > => row.sessionUpdate === 'tool_call_update',
           ),
         { timeout: 10_000 },
       );
@@ -188,16 +223,25 @@ describe.each(agentAdapters)(
       const { output, rows } = await close();
       expect(output).toEqual({ failure: null });
       expect(
-        rows.filter((row) => row.sessionUpdate === 'user_message'),
+        rows.filter(
+          (row): row is UserMessage => row.sessionUpdate === 'user_message',
+        ),
       ).toHaveLength(1);
       expect(
-        rows.filter((row) => row.sessionUpdate === 'tool_call_update'),
+        rows.filter(
+          (
+            row,
+          ): row is Extract<
+            SessionUpdate,
+            { sessionUpdate: 'tool_call_update' }
+          > => row.sessionUpdate === 'tool_call_update',
+        ),
       ).toEqual([
         expect.objectContaining({ state: 'settled', status: 'cancelled' }),
       ]);
     });
 
-    it('resumes the vendor Session it stored', async () => {
+    it('resumes the vendor Session it stored', async (): Promise<void> => {
       const vendorSessionId = crypto.randomUUID();
       const { session, close } = await openSession(
         mockCli.recordings.turn,
@@ -213,7 +257,7 @@ describe.each(agentAdapters)(
 
     it.each(mockCli.connectionFailures)(
       'rejects an unsupported connection with $message',
-      async (failure) => {
+      async (failure): Promise<void> => {
         const { session } = await startSession(
           mockCli.recordings.turn,
           null,
@@ -228,7 +272,7 @@ describe.each(agentAdapters)(
       },
     );
 
-    it('fails with a clear error when the stored vendor Session has no transcript', async () => {
+    it('fails with a clear error when the stored vendor Session has no transcript', async (): Promise<void> => {
       const { session } = await startSession(
         mockCli.recordings.turn,
         crypto.randomUUID(),

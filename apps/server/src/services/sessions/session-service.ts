@@ -27,7 +27,7 @@ export function createSessionService({
   createId = randomUUID,
 }: SessionServiceOptions): SessionService {
   const readSession = createSessionReader(database);
-  const send = (command: RegistryCommand) => {
+  const send = (command: RegistryCommand): void => {
     const snapshot = sessions.getSnapshot();
     if (!snapshot.can(command))
       throw new TRPCError({
@@ -36,7 +36,7 @@ export function createSessionService({
       });
     sessions.send(command);
   };
-  const findSessionActor = (sessionId: string) => {
+  const findSessionActor = (sessionId: string): SessionActorRef => {
     const actor = sessions.system.get(`session:${sessionId}`) as
       | SessionActorRef
       | undefined;
@@ -47,11 +47,12 @@ export function createSessionService({
       });
     return actor;
   };
-  const ready = async (sessionId: string) => {
+  const ready = async (sessionId: string): Promise<SessionActorRef> => {
     const actor = findSessionActor(sessionId);
     const snapshot = await waitFor(
       actor,
-      (snapshot) => snapshot.status !== 'active' || isSessionReady(snapshot),
+      (snapshot): boolean =>
+        snapshot.status !== 'active' || isSessionReady(snapshot),
       { timeout: Infinity },
     );
     if (snapshot.status !== 'active')
@@ -61,7 +62,7 @@ export function createSessionService({
       });
     return actor;
   };
-  const open = async (sessionId: string) => {
+  const open = async (sessionId: string): Promise<SessionActorRef> => {
     const row = readSession(sessionId);
     if (row.parentSessionId !== null)
       throw new TRPCError({
@@ -76,18 +77,19 @@ export function createSessionService({
     return ready(sessionId);
   };
   // Resolves once the writer has committed the new Session's row, so every read finds it.
-  const written = async (sessionId: string) => {
+  const written = async (sessionId: string): Promise<void> => {
     const writer = sessions.system.get('databaseWriter') as
       | ActorRefFrom<typeof writerMachine>
       | undefined;
     if (!writer) return;
-    const queued = (snapshot: SnapshotFrom<typeof writerMachine>) =>
+    const queued = (snapshot: SnapshotFrom<typeof writerMachine>): boolean =>
       snapshot.context.queue.some(
-        (job) => job.type === 'sessionInsert' && job.session.id === sessionId,
+        (job): boolean =>
+          job.type === 'sessionInsert' && job.session.id === sessionId,
       );
     const snapshot = await waitFor(
       writer,
-      (snapshot) =>
+      (snapshot): boolean =>
         snapshot.status !== 'active' ||
         !queued(snapshot) ||
         snapshot.matches('waitingToRetry'),
@@ -103,12 +105,19 @@ export function createSessionService({
   };
   return {
     ...createSessionList({ database, sessions }),
-    answerPermission: async ({ sessionId, toolCallId, optionId, message }) => {
+    answerPermission: async ({
+      sessionId,
+      toolCallId,
+      optionId,
+      message,
+    }): Promise<Record<never, never>> => {
       const actor = await open(sessionId);
       const request = actor.getSnapshot().context.permissionQueue[0];
       if (request?.toolCallId !== toolCallId)
         throw new TRPCError({ code: 'CONFLICT', message: 'already answered' });
-      if (!request.options.some((option) => option.optionId === optionId))
+      if (
+        !request.options.some((option): boolean => option.optionId === optionId)
+      )
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'The Agent did not offer that option',
@@ -130,7 +139,12 @@ export function createSessionService({
       });
       return {};
     },
-    answerElicitation: async ({ sessionId, requestId, action, content }) => {
+    answerElicitation: async ({
+      sessionId,
+      requestId,
+      action,
+      content,
+    }): Promise<Record<never, never>> => {
       const actor = await open(sessionId);
       const request = actor.getSnapshot().context.pendingElicitation;
       if (request?.requestId !== requestId)
@@ -153,7 +167,7 @@ export function createSessionService({
       });
       return {};
     },
-    answerPlanProposal: async () => {
+    answerPlanProposal: async (): Promise<never> => {
       throw new TRPCError({
         code: 'NOT_IMPLEMENTED',
         message: 'Plan proposal answers are not implemented yet',
@@ -161,7 +175,7 @@ export function createSessionService({
     },
     changes: notImplemented,
     diff: notImplemented,
-    new: async (input) => {
+    new: async (input): Promise<{ sessionId: string }> => {
       const projectPath = readProjectPath(database, input.projectId);
       if (
         input.checkout.type === 'worktree' &&
@@ -182,7 +196,8 @@ export function createSessionService({
       });
       const snapshot = await waitFor(
         findSessionActor(sessionId),
-        (snapshot) => snapshot.status !== 'active' || snapshot.context.stored,
+        (snapshot): boolean =>
+          snapshot.status !== 'active' || snapshot.context.stored,
         { timeout: Infinity },
       );
       if (!snapshot.context.stored)
@@ -193,7 +208,7 @@ export function createSessionService({
       await written(sessionId);
       return { sessionId };
     },
-    prompt: async ({ sessionId, prompt }) => {
+    prompt: async ({ sessionId, prompt }): Promise<{ messageId: string }> => {
       const actor = await open(sessionId);
       const turnId = createId();
       sendSessionCommand(actor, {
@@ -204,28 +219,37 @@ export function createSessionService({
       return { messageId: userMessageId(turnId) };
     },
     // Title persistence and Agent commands are issue #66.
-    rename: async () => {
+    rename: async (): Promise<never> => {
       throw new TRPCError({
         code: 'NOT_IMPLEMENTED',
         message: 'Session rename is not implemented yet',
       });
     },
-    cancel: async ({ sessionId }) => {
+    cancel: async ({ sessionId }): Promise<Record<never, never>> => {
       sendSessionCommand(await open(sessionId), { type: 'session.cancel' });
       return {};
     },
-    setConfigOption: async ({ sessionId, configId, value }) => {
+    setConfigOption: async ({
+      sessionId,
+      configId,
+      value,
+    }): Promise<import('@repo/contracts').SessionSetConfigOptionOutput> => {
       const actor = await open(sessionId);
       const previous = actor.getSnapshot().context.configOptions;
-      const option = previous.find((option) => option.configId === configId);
+      const option = previous.find(
+        (option): boolean => option.configId === configId,
+      );
       const allowed =
         option?.type === 'boolean'
           ? typeof value === 'boolean'
           : option?.options
-              .flatMap((choice) =>
-                'groupId' in choice ? choice.options : [choice],
+              .flatMap(
+                (
+                  choice,
+                ): import('@repo/contracts').SessionConfigSelectOption[] =>
+                  'groupId' in choice ? choice.options : [choice],
               )
-              .some((choice) => choice.value === value);
+              .some((choice): boolean => choice.value === value);
       if (!allowed)
         throw new TRPCError({
           code: 'BAD_REQUEST',

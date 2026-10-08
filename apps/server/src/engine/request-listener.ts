@@ -34,8 +34,10 @@ const httpStatus = {
   internalError: 500,
 };
 
-const openBlob = (path: string) =>
-  open(path).catch((error: NodeJS.ErrnoException) => {
+const openBlob = (
+  path: string,
+): Promise<void | import('fs/promises').FileHandle> =>
+  open(path).catch((error: NodeJS.ErrnoException): void => {
     if (error.code === 'ENOENT') return;
     throw error;
   });
@@ -45,7 +47,7 @@ const answerError = (
   status: number,
   error: string,
   headers: Record<string, string> = {},
-) => {
+): void => {
   response.writeHead(status, {
     'content-type': 'application/json',
     ...headers,
@@ -57,7 +59,7 @@ async function streamBlob(
   options: { guard: RequestGuard; blobsFolder: string },
   id: string,
   response: ServerResponse,
-) {
+): Promise<void> {
   const blobId = BlobId.safeParse(id);
   if (!blobId.success) {
     options.guard.report('blob id', id);
@@ -65,10 +67,12 @@ async function streamBlob(
   }
   const file = await openBlob(join(options.blobsFolder, blobId.data));
   if (!file) return answerError(response, httpStatus.notFound, 'Not found');
-  const stats = await file.stat().catch(async (error: unknown) => {
-    await file.close();
-    throw error;
-  });
+  const stats = await file
+    .stat()
+    .catch(async (error: unknown): Promise<never> => {
+      await file.close();
+      throw error;
+    });
   if (!stats.isFile()) {
     await file.close();
     return answerError(response, httpStatus.notFound, 'Not found');
@@ -79,7 +83,7 @@ async function streamBlob(
   });
   // The read stream closes the file when it ends or fails.
   await pipeline(file.createReadStream(), response).catch(
-    (error: NodeJS.ErrnoException) => {
+    (error: NodeJS.ErrnoException): void => {
       // A client that closes the socket before the end, such as an image scrolled away, is no Engine error.
       if (error.code !== 'ERR_STREAM_PREMATURE_CLOSE') throw error;
     },
@@ -102,7 +106,7 @@ export function createRequestListener<Router extends AnyTRPCRouter>(
     id: string,
     request: IncomingMessage,
     response: ServerResponse,
-  ) => {
+  ): void => {
     if (request.method !== 'GET')
       return answerError(
         response,
@@ -110,14 +114,14 @@ export function createRequestListener<Router extends AnyTRPCRouter>(
         'Method not allowed',
         { allow: 'GET' },
       );
-    streamBlob(options, id, response).catch((error: unknown) => {
+    streamBlob(options, id, response).catch((error: unknown): void => {
       console.error(`engine: ${String(error)}`);
       if (response.headersSent) response.destroy();
       else answerError(response, httpStatus.internalError, 'Internal error');
     });
   };
 
-  return (request, response) => {
+  return (request, response): void => {
     if (!guard.allowsRequest({ host: request.headers.host }))
       return answerError(response, httpStatus.forbidden, 'Forbidden');
     const blob = blobUrlPattern.exec(request.url ?? '');

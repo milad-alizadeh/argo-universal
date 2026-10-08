@@ -5,6 +5,7 @@ import { info, type SystemDeps } from './info';
 export type { SystemDeps } from './info';
 
 export const createSystemService = (deps: SystemDeps): SystemService => ({
-  info: () => info(deps),
-  clock: (signal) => clock(signal),
+  info: (): { version: string; startedAt: string; pid: number; name: string } =>
+    info(deps),
+  clock: (signal): ReturnType<typeof clock> => clock(signal),
 });

@@ -6,15 +6,15 @@ import { contextBridge, ipcRenderer } from 'electron';
 const serverUrlPrefix = '--server-url=';
 const serverUrl =
   process.argv
-    .find((argument) => argument.startsWith(serverUrlPrefix))
+    .find((argument): boolean => argument.startsWith(serverUrlPrefix))
     ?.slice(serverUrlPrefix.length) ?? null;
 
 // The renderer gets the Server address and window controls, nothing else (ADR 0002).
 contextBridge.exposeInMainWorld('argo', {
   serverUrl,
   window: {
-    minimize: () => ipcRenderer.send('window:minimize'),
-    maximize: () => ipcRenderer.send('window:maximize'),
-    close: () => ipcRenderer.send('window:close'),
+    minimize: (): void => ipcRenderer.send('window:minimize'),
+    maximize: (): void => ipcRenderer.send('window:maximize'),
+    close: (): void => ipcRenderer.send('window:close'),
   },
 });
