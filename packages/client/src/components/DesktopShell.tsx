@@ -12,10 +12,10 @@ import { DesktopRail } from './DesktopRail';
 import { Icon } from './Icon';
 import { PanelResizeHandle } from './PanelResizeHandle';
 import { ScrollFadeView } from './ScrollFade';
+import type { ShellSection } from './shell-sections';
 import { ShellHeaderActions } from './ShellHeaderActions';
 import { ShellHeaderContent } from './ShellHeaderContent';
 import { ShellPane } from './ShellPane';
-import type { ShellSection } from './shell-sections';
 
 export interface DesktopShellProps {
   selectedSection: ShellSection;

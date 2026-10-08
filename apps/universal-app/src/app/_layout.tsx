@@ -1,12 +1,10 @@
 import '../../global.css';
-
 import {
   AppProviders,
   type Navigate,
   NavigationProvider,
   useConnection,
 } from '@repo/client';
-import { createBrowserMachineInspection } from '@repo/machine-log/browser';
 import { PortalHost } from '@rn-primitives/portal';
 import { registerDevMenuItems } from 'expo-dev-client';
 import { type Href, router, Stack } from 'expo-router';
@@ -52,14 +50,6 @@ const serverUrl =
   process.env.EXPO_PUBLIC_ARGO_SERVER_URL ??
   'ws://127.0.0.1:7337';
 
-const inspection = createBrowserMachineInspection({
-  enabled: __DEV__ && process.env.EXPO_PUBLIC_ARGO_MACHINE_LOG === '1',
-  inspectEnabled:
-    __DEV__ && process.env.EXPO_PUBLIC_ARGO_MACHINE_INSPECT === '1',
-  processName: 'app',
-  writeLine: (line) => console.log(line.trimEnd()),
-});
-
 // Screens in @repo/client navigate through this.
 const navigate: Navigate = (destination, options) =>
   options?.replace
@@ -75,7 +65,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       {/* Screens follow the keyboard frame by frame through this. */}
       <KeyboardProvider>
-        <AppProviders serverUrl={serverUrl} inspect={inspection.inspect}>
+        <AppProviders serverUrl={serverUrl}>
           <ForegroundSignal />
           <ThemeProvider value={navigationTheme}>
             <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />

@@ -1,0 +1,32 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  // The Prickles pack, Argo's rules on top, then the folders that do not meet them yet (ADR-0016, ADR-0017).
+  "extends": [
+    "./tooling/oxlint/prickles.json",
+    "./tooling/oxlint/argo.json",
+    "./tooling/oxlint/not-yet-cleared.json"
+  ],
+  "options": {
+    "reportUnusedDisableDirectives": "error"
+  },
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/.expo/**",
+    "**/.turbo/**",
+    "**/.vitest/**",
+    "**/.vite/**",
+    "**/coverage/**",
+    "**/storybook-static/**",
+    "**/playwright-report/**",
+    "**/blob-report/**",
+    "**/test-results/**",
+    "packages/db/drizzle/**",
+    "**/.rnstorybook/storybook.requires.ts",
+    "**/*.gen.*",
+    // Metro and `uniwind generate-artifacts` rewrite this file on every run.
+    "**/uniwind-types.d.ts",
+    // Installed by the skills tool, not written in this repo.
+    ".agents/**",
+    ".claude/**"
+  ]
+}

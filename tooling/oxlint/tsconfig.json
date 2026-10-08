@@ -1,0 +1,8 @@
+{
+  "extends": "@repo/typescript/node.json",
+  // oxlint loads the plugin under plain `node`, whose type stripping needs `.ts` in relative imports.
+  "compilerOptions": {
+    "allowImportingTsExtensions": true
+  },
+  "include": ["plugin", "vitest.config.ts"]
+}

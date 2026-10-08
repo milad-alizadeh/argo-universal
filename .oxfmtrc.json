@@ -1,0 +1,63 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  // Owner's style: two spaces, single quotes, 80 columns (ADR-0017).
+  "useTabs": false,
+  "tabWidth": 2,
+  "printWidth": 80,
+  "singleQuote": true,
+  "jsxSingleQuote": false,
+  "quoteProps": "as-needed",
+  "trailingComma": "all",
+  "semi": true,
+  "arrowParens": "always",
+  "bracketSameLine": false,
+  "bracketSpacing": true,
+  "objectWrap": "preserve",
+  "endOfLine": "lf",
+  "sortPackageJson": false,
+  // One import block: Node builtins, packages, `#` subpath imports, then relative paths.
+  "sortImports": {
+    "newlinesBetween": false,
+    "groups": [
+      "builtin",
+      "external",
+      "internal",
+      "parent",
+      ["sibling", "index"]
+    ]
+  },
+  "overrides": [
+    {
+      // CSS and YAML keep double quotes.
+      "files": ["*.css", "*.yaml", "*.yml"],
+      "options": { "singleQuote": false }
+    },
+    {
+      // knip and other JSONC readers take no trailing commas.
+      "files": ["*.jsonc"],
+      "options": { "trailingComma": "none" }
+    }
+  ],
+  "ignorePatterns": [
+    // Markdown stays as written: the Prickles canon files are verbatim copies.
+    "*.md",
+    "pnpm-lock.yaml",
+    // The burn-down list keeps one line per folder.
+    "tooling/oxlint/not-yet-cleared.json",
+    "packages/db/drizzle/",
+    "**/.rnstorybook/storybook.requires.ts",
+    "*.gen.*",
+    // Metro and `uniwind generate-artifacts` rewrite this file on every run.
+    "uniwind-types.d.ts",
+    // Icon Composer bundles are written by Apple's tool, not by hand.
+    "*.icon/",
+    // Installed by the skills tool, not written in this repo.
+    ".agents/",
+    ".claude/skills/",
+    "skills-lock.json",
+    "playwright-report/",
+    "blob-report/",
+    "test-results/",
+    "storybook-static/"
+  ]
+}

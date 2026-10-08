@@ -65,22 +65,28 @@ const patchArray = (file: string) => ({
 beforeAll(() => {
   root = mkdtempSync(path.join(tmpdir(), 'agent-hooks-'));
   mkdirSync(path.join(root, 'tools'));
-  cpSync(
-    path.join(repositoryRoot, 'tools/agent-hooks.mts'),
-    path.join(root, 'tools/agent-hooks.mts'),
-  );
+  for (const script of ['agent-hooks.mts', 'hook-checks.mts'])
+    cpSync(
+      path.join(repositoryRoot, 'tools', script),
+      path.join(root, 'tools', script),
+    );
   symlinkSync(
     path.join(repositoryRoot, 'node_modules'),
     path.join(root, 'node_modules'),
   );
   writeFileSync(path.join(root, 'package.json'), '{"type":"module"}\n');
   writeFileSync(
-    path.join(root, 'biome.json'),
+    path.join(root, '.oxlintrc.json'),
     JSON.stringify({
-      linter: { rules: { recommended: true } },
-      formatter: { indentStyle: 'space' },
+      options: { reportUnusedDisableDirectives: 'error' },
+      rules: {
+        'typescript/no-explicit-any': 'error',
+        'no-console': 'warn',
+        'no-unused-vars': 'error',
+      },
     }),
   );
+  writeFileSync(path.join(root, '.oxfmtrc.json'), '{ "singleQuote": true }\n');
   writeFileSync(path.join(root, 'scratch.ts'), anyViolation);
   writeFileSync(path.join(root, 'clean.ts'), 'export const value = 1;\n');
   writeFileSync(
@@ -103,19 +109,34 @@ describe('after-edit', () => {
   it('reports a finding from an Edit call and blocks', () => {
     const result = runHook('after-edit', fileEdit('scratch.ts'));
     expect(result.status).toBe(BLOCKED);
-    expect(result.stderr).toContain('noExplicitAny');
+    expect(result.stderr).toContain('no-explicit-any');
+    expect(result.stderr).toContain('docs/agents/hooks.md');
   });
 
   it('reports the same finding from an apply_patch call', () => {
     const result = runHook('after-edit', patchEdit('scratch.ts'));
     expect(result.status).toBe(BLOCKED);
-    expect(result.stderr).toContain('noExplicitAny');
+    expect(result.stderr).toContain('no-explicit-any');
   });
 
   it('reads an apply_patch command given as an array', () => {
     writeFileSync(path.join(root, 'added.ts'), anyViolation);
     const result = runHook('after-edit', patchArray('added.ts'));
     expect(result.status).toBe(BLOCKED);
+  });
+
+  it('blocks on a warning and on an unused disable directive', () => {
+    // Split so check-comments does not read the string as a directive.
+    const directive = ['oxlint', 'disable-next-line no-debugger'].join('-');
+    writeFileSync(
+      path.join(root, 'noisy.ts'),
+      `console.log('x');\n// ${directive}\nexport const y = 1;\n`,
+    );
+    const result = runHook('after-edit', fileEdit('noisy.ts'));
+    expect(result.status).toBe(BLOCKED);
+    expect(result.stderr).toContain('no-console');
+    expect(result.stderr).toContain('unused-disable-directive');
+    rmSync(path.join(root, 'noisy.ts'));
   });
 
   it('passes a clean file', () => {
@@ -174,7 +195,7 @@ describe('command', () => {
 
 describe('before-stop', () => {
   it('exits at once when stop_hook_active is set', () => {
-    writeFileSync(path.join(root, 'duplicate.json'), '{"a":1,"a":2}\n');
+    writeFileSync(path.join(root, 'blocked.ts'), anyViolation);
     expect(runHook('before-stop', { stop_hook_active: true }).status).toBe(0);
   });
 
@@ -184,14 +205,14 @@ describe('before-stop', () => {
       stop_hook_active: false,
     });
     expect(first.status).toBe(BLOCKED);
-    expect(first.stderr).toContain('duplicate.json');
+    expect(first.stderr).toContain('blocked.ts');
     expect(
       runHook('before-stop', { cwd: root, stop_hook_active: true }).status,
     ).toBe(0);
   });
 
   it('formats changed files', () => {
-    rmSync(path.join(root, 'duplicate.json'));
+    rmSync(path.join(root, 'blocked.ts'));
     rmSync(path.join(root, 'scratch.ts'));
     rmSync(path.join(root, 'added.ts'));
     rmSync(path.join(root, 'unused.ts'));

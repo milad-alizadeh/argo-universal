@@ -11,8 +11,8 @@ import type { FeedActivity, FeedGroup } from '../feed/feed-view';
 import { toolCallTitle } from '../feed/tool-call-title';
 import { useToolCallDuration } from '../feed/use-tool-call-duration';
 import { FeedGrowthContext } from './feed-growth-context';
-import { ToolCallDisclosure } from './ToolCallDisclosure';
 import { toolCallIcon } from './tool-call-icon';
+import { ToolCallDisclosure } from './ToolCallDisclosure';
 
 export interface ToolCallGroupProps {
   group: FeedGroup;

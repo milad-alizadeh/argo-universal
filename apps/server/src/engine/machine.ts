@@ -35,8 +35,10 @@ function openDatabaseOf(context: { database: Database | null }): Database {
   return context.database;
 }
 
-export interface EngineInput
-  extends Pick<RegistryInput, 'adapters' | 'now' | 'createId'> {
+export interface EngineInput extends Pick<
+  RegistryInput,
+  'adapters' | 'now' | 'createId'
+> {
   home: string;
   port: number;
   version: string;

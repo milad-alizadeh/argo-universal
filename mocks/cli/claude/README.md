@@ -40,7 +40,7 @@ const crashing = await writeMockClaude(directory, { recording: 'task-plan', exit
 
 `markdown-answer` was captured from the installed 2.1.286 executable over stream-json on 2026-10-06, with partial messages, no MCP servers and project settings only. Catalog, account, `system/init` and rate-limit frames are excluded, and paths are normalized.
 
-Feed mocks are generated from these recordings through `toAgentEvents` and the real Feed change validator. Each mock's first `user_message` comes from the recording's own prompt through the Server's `userMessageChange`. Regenerate with `pnpm --filter @repo/server exec tsx ../../tools/generate-feed-mocks.mts`, then format `packages/api/mocks/feed-recordings.json` with Biome.
+Feed mocks are generated from these recordings through `toAgentEvents` and the real Feed change validator. Each mock's first `user_message` comes from the recording's own prompt through the Server's `userMessageChange`. Regenerate with `pnpm --filter @repo/server exec tsx ../../tools/generate-feed-mocks.mts`, then format `packages/api/mocks/feed-recordings.json` with `pnpm exec oxfmt`.
 
 ## New Session mocks
 
@@ -62,4 +62,4 @@ The capture uses claude-cli 2.1.286 over stream-json. `Write` asks for Permissio
 
 `request-answer.ts` reads the real replies. The pure Agent converters map the requests and Plan rows. Shared pending and answered mocks are built through those converters and the Server's Feed validator, with a deterministic Session request id and clock. Answered states show the continuing Turn, including the Permission outcome or Plan outcome and any feedback a person typed. Server issues #57 and #58 wire these procedures to live Sessions.
 
-Regenerate with `pnpm --filter @repo/server exec tsx ../../tools/generate-request-mocks.mts`, then format `packages/api/mocks/request-recordings.json` with Biome. Shared mocks are exported as `recordedRequestMocks` from `@repo/api/mocks` for the request cards.
+Regenerate with `pnpm --filter @repo/server exec tsx ../../tools/generate-request-mocks.mts`, then format `packages/api/mocks/request-recordings.json` with `pnpm exec oxfmt`. Shared mocks are exported as `recordedRequestMocks` from `@repo/api/mocks` for the request cards.

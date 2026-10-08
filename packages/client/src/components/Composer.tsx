@@ -105,7 +105,7 @@ export function Composer({
   const inactive = sending || disabled;
   const canRecoverAgent = Boolean(
     configuration?.onAgentRetry &&
-      configuration.agents.every((agent) => agent.availability !== 'available'),
+    configuration.agents.every((agent) => agent.availability !== 'available'),
   );
   const configurationInactive = sending || (disabled && !canRecoverAgent);
   const showStop = configuration?.turnRunning && onStop;

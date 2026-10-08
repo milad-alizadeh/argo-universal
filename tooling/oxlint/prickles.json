@@ -1,0 +1,446 @@
+{
+  "$schema": "../../node_modules/oxlint/configuration_schema.json",
+  // The Prickles canon v2.0 ESLint pack (https://prickles.org/implementation, CC BY-NC 4.0), as `@oxlint/migrate@1.87.0 --type-aware` writes it.
+  // Rules oxlint lacks run through the pack's own ESLint plugins as oxlint JS plugins. ADR-0017 lists every difference from the pack.
+  // Change a rule here only to follow a new pack release; Argo's own rules live in argo.json.
+  "plugins": ["typescript", "unicorn", "jsx-a11y", "import"],
+  "jsPlugins": [
+    "eslint-plugin-sonarjs",
+    { "name": "unicorn-js", "specifier": "eslint-plugin-unicorn" },
+    { "name": "stylistic", "specifier": "@stylistic/eslint-plugin" }
+  ],
+  "categories": { "correctness": "off" },
+  "env": { "builtin": true },
+  "settings": { "react": { "version": "999.999.999" } },
+  "ignorePatterns": ["dist/**", "build/**", "coverage/**", "node_modules/**"],
+  "rules": {
+    // tseslint.configs.recommended and sonarjs.configs.recommended, expanded by @oxlint/migrate.
+    "no-array-constructor": "error",
+    "no-unused-expressions": "error",
+    "sonarjs/class-name": "error",
+    "sonarjs/no-fallthrough": "error",
+    "sonarjs/no-equals-in-for-termination": "error",
+    "sonarjs/no-extra-arguments": "error",
+    "sonarjs/no-labels": "error",
+    "sonarjs/no-nested-assignment": "error",
+    "sonarjs/unused-import": "error",
+    "sonarjs/fixme-tag": "error",
+    "sonarjs/todo-tag": "error",
+    "sonarjs/no-case-label-in-switch": "error",
+    "sonarjs/no-parameter-reassignment": "error",
+    "sonarjs/no-floating-point-equality": "error",
+    "sonarjs/prefer-while": "error",
+    "sonarjs/no-small-switch": "error",
+    "sonarjs/no-hardcoded-ip": "error",
+    "sonarjs/label-position": "error",
+    "sonarjs/public-static-readonly": "error",
+    "sonarjs/call-argument-line": "error",
+    "sonarjs/max-switch-cases": "error",
+    "sonarjs/no-unused-vars": "error",
+    "sonarjs/function-inside-loop": "error",
+    "sonarjs/code-eval": "error",
+    "sonarjs/future-reserved-words": "error",
+    "sonarjs/bitwise-operators": "error",
+    "sonarjs/no-primitive-wrappers": "error",
+    "sonarjs/no-skipped-tests": "error",
+    "sonarjs/constructor-for-side-effects": "error",
+    "sonarjs/no-dead-store": "error",
+    "sonarjs/no-identical-conditions": "error",
+    "sonarjs/no-duplicated-branches": "error",
+    "sonarjs/deprecation": "error",
+    "sonarjs/misplaced-loop-counter": "error",
+    "sonarjs/no-nested-functions": "error",
+    "sonarjs/no-hardcoded-passwords": "error",
+    "sonarjs/sql-queries": "error",
+    "sonarjs/insecure-cookie": "error",
+    "sonarjs/no-useless-increment": "error",
+    "sonarjs/no-globals-shadowing": "error",
+    "sonarjs/no-empty-test-file": "error",
+    "sonarjs/no-ignored-return": "error",
+    "sonarjs/arguments-order": "error",
+    "sonarjs/pseudo-random": "error",
+    "sonarjs/for-loop-increment-sign": "error",
+    "sonarjs/null-dereference": "error",
+    "sonarjs/no-selector-parameter": "error",
+    "sonarjs/updated-loop-counter": "error",
+    "sonarjs/block-scoped-var": "error",
+    "sonarjs/no-ignored-exceptions": "error",
+    "sonarjs/file-uploads": "error",
+    "sonarjs/file-permissions": "error",
+    "sonarjs/no-empty-character-class": "error",
+    "sonarjs/no-unenclosed-multiline-block": "error",
+    "sonarjs/index-of-compare-to-positive-number": "error",
+    "sonarjs/assertions-in-tests": "error",
+    "sonarjs/no-implicit-global": "error",
+    "sonarjs/no-useless-catch": "error",
+    "sonarjs/xml-parser-xxe": "error",
+    "sonarjs/non-existent-operator": "error",
+    "sonarjs/post-message": "error",
+    "sonarjs/no-array-delete": "error",
+    "sonarjs/no-alphabetical-sort": "error",
+    "sonarjs/no-fixed-wait-in-tests": "error",
+    "sonarjs/no-incomplete-assertions": "error",
+    "sonarjs/no-global-this": "error",
+    "sonarjs/new-operator-misuse": "error",
+    "sonarjs/no-delete-var": "error",
+    "sonarjs/cookie-no-httponly": "error",
+    "sonarjs/no-nested-conditional": "error",
+    "sonarjs/different-types-comparison": "error",
+    "sonarjs/inverted-assertion-arguments": "error",
+    "sonarjs/updated-const-var": "error",
+    "sonarjs/no-invariant-returns": "error",
+    "sonarjs/generator-without-yield": "error",
+    "sonarjs/no-associative-arrays": "error",
+    "sonarjs/comma-or-logical-or-case": "error",
+    "sonarjs/no-redundant-jump": "error",
+    "sonarjs/inconsistent-function-call": "error",
+    "sonarjs/no-use-of-empty-return-value": "error",
+    "sonarjs/void-use": "error",
+    "sonarjs/cognitive-complexity": "error",
+    "sonarjs/argument-type": "error",
+    "sonarjs/in-operator-type-error": "error",
+    "sonarjs/array-callback-without-return": "error",
+    "sonarjs/function-return-type": "error",
+    "sonarjs/no-all-duplicated-branches": "error",
+    "sonarjs/no-same-line-conditional": "error",
+    "sonarjs/no-collection-size-mischeck": "error",
+    "sonarjs/no-unthrown-error": "error",
+    "sonarjs/no-os-command-from-path": "error",
+    "sonarjs/no-misleading-array-reverse": "error",
+    "sonarjs/no-element-overwrite": "error",
+    "sonarjs/no-empty-collection": "error",
+    "sonarjs/no-redundant-assignments": "error",
+    "sonarjs/prefer-type-guard": "error",
+    "sonarjs/use-type-alias": "error",
+    "sonarjs/no-useless-intersection": "error",
+    "sonarjs/weak-ssl": "error",
+    "sonarjs/no-weak-keys": "error",
+    "sonarjs/csrf": "error",
+    "sonarjs/production-debug": "error",
+    "sonarjs/prefer-default-last": "error",
+    "sonarjs/no-in-misuse": "error",
+    "sonarjs/no-duplicate-in-composite": "error",
+    "sonarjs/no-undefined-argument": "error",
+    "sonarjs/no-nested-template-literals": "error",
+    "sonarjs/prefer-promise-shorthand": "error",
+    "sonarjs/no-redundant-optional": "error",
+    "sonarjs/hashing": "error",
+    "sonarjs/no-try-promise": "error",
+    "sonarjs/unverified-certificate": "error",
+    "sonarjs/cors": "error",
+    "sonarjs/link-with-target-blank": "error",
+    "sonarjs/disabled-auto-escaping": "error",
+    "sonarjs/table-header": "error",
+    "sonarjs/no-table-as-layout": "error",
+    "sonarjs/table-header-reference": "error",
+    "sonarjs/object-alt-content": "error",
+    "sonarjs/no-clear-text-protocols": "error",
+    "sonarjs/publicly-writable-directories": "error",
+    "sonarjs/unverified-hostname": "error",
+    "sonarjs/encryption-secure-mode": "error",
+    "sonarjs/no-weak-cipher": "error",
+    "sonarjs/insecure-jwt-token": "error",
+    "sonarjs/x-powered-by": "error",
+    "sonarjs/content-length": "error",
+    "sonarjs/disabled-resource-integrity": "error",
+    "sonarjs/content-security-policy": "error",
+    "sonarjs/no-mime-sniff": "error",
+    "sonarjs/no-referrer-policy": "error",
+    "sonarjs/strict-transport-security": "error",
+    "sonarjs/empty-string-repetition": "error",
+    "sonarjs/regex-complexity": "error",
+    "sonarjs/no-incompatible-assertion-types": "error",
+    "sonarjs/anchor-precedence": "error",
+    "sonarjs/slow-regex": "error",
+    "sonarjs/no-invalid-regexp": "error",
+    "sonarjs/unused-named-groups": "error",
+    "sonarjs/no-same-argument-assert": "error",
+    "sonarjs/no-misleading-character-class": "error",
+    "sonarjs/duplicates-in-character-class": "error",
+    "sonarjs/session-regeneration": "error",
+    "sonarjs/prefer-specific-assertions": "error",
+    "sonarjs/no-trivial-assertions": "error",
+    "sonarjs/test-check-exception": "error",
+    "sonarjs/stable-tests": "error",
+    "sonarjs/parameterized-tests": "error",
+    "sonarjs/no-empty-after-reluctant": "error",
+    "sonarjs/single-character-alternation": "error",
+    "sonarjs/no-code-after-done": "error",
+    "sonarjs/disabled-timeout": "error",
+    "sonarjs/chai-determinate-assertion": "error",
+    "sonarjs/aws-s3-bucket-insecure-http": "error",
+    "sonarjs/aws-s3-bucket-versioning": "error",
+    "sonarjs/aws-s3-bucket-granted-access": "error",
+    "sonarjs/no-angular-bypass-sanitization": "error",
+    "sonarjs/aws-iam-public-access": "error",
+    "sonarjs/aws-ec2-unencrypted-ebs-volume": "error",
+    "sonarjs/aws-s3-bucket-public-access": "error",
+    "sonarjs/aws-iam-all-privileges": "error",
+    "sonarjs/aws-rds-unencrypted-databases": "error",
+    "sonarjs/aws-opensearchservice-domain": "error",
+    "sonarjs/aws-iam-privilege-escalation": "error",
+    "sonarjs/aws-sagemaker-unencrypted-notebook": "error",
+    "sonarjs/aws-restricted-ip-admin-access": "error",
+    "sonarjs/no-empty-alternatives": "error",
+    "sonarjs/no-control-regex": "error",
+    "sonarjs/no-regex-spaces": "error",
+    "sonarjs/aws-sns-unencrypted-topics": "error",
+    "sonarjs/existing-groups": "error",
+    "sonarjs/aws-ec2-rds-dms-public": "error",
+    "sonarjs/aws-sqs-unencrypted-queue": "error",
+    "sonarjs/no-empty-group": "error",
+    "sonarjs/aws-efs-unencrypted": "error",
+    "sonarjs/aws-apigateway-public-api": "error",
+    "sonarjs/stateful-regex": "error",
+    "sonarjs/concise-regex": "error",
+    "sonarjs/single-char-in-character-classes": "error",
+    "sonarjs/no-hardcoded-secrets": "error",
+    "sonarjs/no-exclusive-tests": "error",
+    "sonarjs/hardcoded-secret-signatures": "error",
+    "sonarjs/jsx-no-leaked-render": "error",
+    "sonarjs/no-hook-setter-in-body": "error",
+    "sonarjs/no-useless-react-setstate": "error",
+    "sonarjs/no-uniq-key": "error",
+    "sonarjs/redundant-type-aliases": "error",
+    "sonarjs/prefer-regexp-exec": "error",
+    "sonarjs/no-internal-api-use": "error",
+    "sonarjs/prefer-read-only-props": "error",
+    "sonarjs/no-literal-call": "error",
+    "sonarjs/reduce-initial-value": "error",
+    "sonarjs/no-async-constructor": "error",
+    "sonarjs/review-blockchain-mnemonic": "error",
+    "sonarjs/dynamically-constructed-templates": "error",
+    "sonarjs/no-session-cookies-on-static-assets": "error",
+    "sonarjs/dompurify-unsafe-config": "error",
+    "sonarjs/no-duplicate-test-title": "error",
+    "sonarjs/async-test-assertions": "error",
+    "sonarjs/no-empty-test-title": "error",
+    "sonarjs/hooks-before-test-cases": "error",
+    "sonarjs/no-forced-browser-interaction": "error",
+    "sonarjs/assertions-in-test-cases": "error",
+    "sonarjs/synchronous-suite-callback": "error",
+    "sonarjs/super-linear-regex": "error",
+    "sonarjs/prefer-native-lodash-alternative": "error",
+    "sonarjs/no-default-utility-imports": "error",
+    "sonarjs/memoize-cache-key": "error",
+    "sonarjs/no-debug-commands-in-ui-tests": "error",
+    "sonarjs/no-interpolation-in-inline-snapshots": "error",
+    "sonarjs/explicit-test-skip": "error",
+    "sonarjs/no-empty-parameterized-test-dataset": "error",
+    "sonarjs/testing-library-query-assertion": "error",
+    "sonarjs/synchronous-exception-assertions": "error",
+    "sonarjs/no-duplicate-parameterized-test-case": "error",
+    "sonarjs/no-debounce-throttle-in-render": "error",
+    "sonarjs/avoid-mutating-nested-properties-of-shallow-clones": "error",
+    "sonarjs/prefer-native-jquery-alternative": "error",
+    "sonarjs/no-vue-class-component": "error",
+    "sonarjs/no-vue-mixins": "error",
+    "sonarjs/testing-library-prefer-query-by-disappearance": "error",
+    "sonarjs/prefer-cypress-should": "error",
+    "sonarjs/no-mutate-reactive-state-in-updated-hook": "error",
+    "sonarjs/vitest-mock-at-module-scope": "error",
+    "sonarjs/prefer-native-axios-alternative": "error",
+    "typescript/no-duplicate-enum-values": "error",
+    "typescript/no-empty-object-type": "error",
+    "typescript/no-extra-non-null-assertion": "error",
+    "typescript/no-misused-new": "error",
+    "typescript/no-namespace": "error",
+    "typescript/no-non-null-asserted-optional-chain": "error",
+    "typescript/no-require-imports": "error",
+    "typescript/no-this-alias": "error",
+    "typescript/no-unnecessary-type-constraint": "error",
+    "typescript/no-unsafe-declaration-merging": "error",
+    "typescript/no-unsafe-function-type": "error",
+    "typescript/no-wrapper-object-types": "error",
+    "typescript/prefer-as-const": "error",
+    "typescript/prefer-namespace-keyword": "error",
+    "typescript/triple-slash-reference": "error",
+
+    // The pack's own rules, in its order, with its comments.
+    // TA1 Linter as Law — https://prickles.org/tenet/linter-as-law/TA1 (also covers: F5)
+    // Not carried over: oxfmt replaces Prettier, and `pnpm quality` runs `oxfmt --check` (ADR-0017).
+
+    // T2 No Escape Hatches — https://prickles.org/tenet/no-escape-hatches/T2
+    "typescript/no-explicit-any": "error",
+    "typescript/no-non-null-assertion": "off",
+    // T2 (also covers: F2, F5)
+    "typescript/explicit-function-return-type": "error",
+    // T2 (also covers: TA1)
+    "typescript/ban-ts-comment": "error",
+    // F4 Simplicity — https://prickles.org/tenet/simplicity/F4 (also covers: T2)
+    "no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "destructuredArrayIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
+    ],
+
+    // F6 Encapsulation — https://prickles.org/tenet/encapsulation/F6
+    "no-param-reassign": "error",
+
+    // F4 Simplicity (also covers: F5, P5)
+    "no-console": ["error", { "allow": ["error"] }],
+    // F4 (also covers: F5)
+    "no-multi-str": "error",
+
+    // F1 Single Responsibility — https://prickles.org/tenet/single-responsibility-principle/F1 (also covers: S2)
+    "max-lines-per-function": [
+      "error",
+      { "max": 15, "skipBlankLines": true, "skipComments": true }
+    ],
+    // F1 (also covers: S2, F4)
+    "max-lines": [
+      "error",
+      { "max": 150, "skipBlankLines": true, "skipComments": true }
+    ],
+
+    // S2 Cyclomatic Caps — https://prickles.org/tenet/cyclomatic-caps/S2 (also covers: F1, F4)
+    "complexity": ["error", 3],
+    // S2 (also covers: S4)
+    "max-depth": ["error", 3],
+    // S2 (also covers: S4)
+    "max-nested-callbacks": ["error", 3],
+    // S2 (also covers: F1, F4)
+    "max-statements": ["error", 10],
+    // S3 Parameter Object — https://prickles.org/tenet/parameter-object/S3 (also covers: S2, F1)
+    "max-params": ["error", 3],
+
+    // F5 Self-Documenting Code — https://prickles.org/tenet/self-documenting-code/F5
+    "no-inline-comments": "error",
+    // F5 (also covers: F4)
+    "no-warning-comments": [
+      "error",
+      { "terms": ["todo", "fixme", "xxx", "hack"] }
+    ],
+    // F5
+    "stylistic/line-comment-position": [
+      "error",
+      { "position": "above", "ignorePattern": "$^" }
+    ],
+    // F5
+    "stylistic/multiline-comment-style": ["error", "starred-block"],
+
+    // P5 Shift-Left Quality — https://prickles.org/tenet/shift-left-quality/P5 (a11y safety net in JSX — also covers: TS5 Structural Assertions)
+    "jsx-a11y/alt-text": "error",
+    "jsx-a11y/anchor-has-content": "error",
+    "jsx-a11y/anchor-is-valid": "error",
+    "jsx-a11y/aria-props": "error",
+    "jsx-a11y/aria-proptypes": "error",
+    "jsx-a11y/aria-role": "error",
+    "jsx-a11y/aria-unsupported-elements": "error",
+    "jsx-a11y/click-events-have-key-events": "error",
+    "jsx-a11y/heading-has-content": "error",
+    "jsx-a11y/img-redundant-alt": "error",
+    "jsx-a11y/interactive-supports-focus": "error",
+    "jsx-a11y/label-has-associated-control": "error",
+    "jsx-a11y/no-noninteractive-element-interactions": "error",
+    "jsx-a11y/no-redundant-roles": "error",
+    "jsx-a11y/no-static-element-interactions": "error",
+    "jsx-a11y/role-has-required-aria-props": "error",
+    "jsx-a11y/role-supports-aria-props": "error",
+    // F3 Don't Repeat Yourself — https://prickles.org/tenet/dont-repeat-yourself/F3 (also covers: TA2)
+    "sonarjs/no-duplicate-string": ["error", { "threshold": 3 }],
+    // F3 (also covers: TA2)
+    "sonarjs/no-identical-functions": "error",
+    // F3
+    "sonarjs/no-identical-expressions": "error",
+    // S5 Inline-First — https://prickles.org/tenet/inline-first/S5 (also covers: F4)
+    "sonarjs/prefer-immediate-return": "error",
+    // S5 (also covers: F4)
+    "sonarjs/prefer-single-boolean-return": "error",
+    // S5 (also covers: F4)
+    "sonarjs/no-inverted-boolean-check": "error",
+    // F4 (also covers: S4)
+    "sonarjs/no-collapsible-if": "error",
+    // F4 (also covers: S5)
+    "sonarjs/no-redundant-boolean": "error",
+    // F4
+    "sonarjs/no-unused-collection": "error",
+    // F4
+    "sonarjs/no-gratuitous-expressions": "error",
+
+    // A2 Three-Tier Hoisting — https://prickles.org/tenet/three-tier-hoisting/A2 (also covers: F1)
+    "unicorn/consistent-function-scoping": "error",
+    // TA1 Linter as Law
+    "unicorn/no-abusive-eslint-disable": "error",
+    // F4 Simplicity (also covers: S5)
+    "unicorn-js/no-for-each": "error",
+    "unicorn-js/no-for-loop": "error",
+    // S4 Guard Clauses — https://prickles.org/tenet/guard-clauses/S4 (also covers: F4)
+    "unicorn/no-lonely-if": "error",
+    // S5 (also covers: F4)
+    "unicorn/no-negated-condition": "error",
+    // F4 (also covers: S5)
+    "unicorn/no-nested-ternary": "error",
+    // F4
+    "unicorn/no-useless-spread": "error",
+    "unicorn/no-useless-undefined": "error",
+    // S5 (also covers: F4)
+    "unicorn/prefer-array-find": "error",
+    // F4
+    "unicorn/prefer-array-flat": "error",
+    "unicorn/prefer-array-flat-map": "error",
+    "unicorn/prefer-array-some": "error",
+    "unicorn/prefer-includes": "error",
+    "unicorn/prefer-modern-math-apis": "error",
+    "unicorn/prefer-negative-index": "error",
+    "unicorn/prefer-number-properties": "error",
+    "unicorn/prefer-object-from-entries": "error",
+    "unicorn/prefer-optional-catch-binding": "error",
+    "unicorn/prefer-set-has": "error",
+    "unicorn/prefer-spread": "error",
+    "unicorn/prefer-string-replace-all": "error",
+    "unicorn/prefer-string-slice": "error",
+    "unicorn/prefer-string-starts-ends-with": "error",
+    "unicorn/prefer-string-trim-start-end": "error",
+    // S5 (also covers: F4)
+    "unicorn-js/prefer-switch": ["error", { "minimumCases": 3 }],
+    // S5 (also covers: F4)
+    "unicorn/prefer-ternary": "error",
+    // F4
+    "unicorn/prefer-type-error": "error",
+    "unicorn/throw-new-error": "error",
+
+    // F2 Intention-Revealing Names — https://prickles.org/tenet/intention-revealing-names/F2 (also covers: A1)
+    "unicorn/filename-case": [
+      "error",
+      { "case": "kebabCase", "ignore": ["^README\\.md$"] }
+    ],
+
+    // A2 Three-Tier Hoisting — https://prickles.org/tenet/three-tier-hoisting/A2 (also covers: A3)
+    // Not carried over: oxlint has no import/no-restricted-paths, and Argo has no src/lib/generic or src/lib/product folders.
+    // Argo's own import boundaries, D1 to D11 in argo.json, take this rule's place (ADR-0017).
+    // A3 Stable Dependencies — https://prickles.org/tenet/stable-dependencies-principle/A3 (also covers: A11)
+    "import/no-cycle": "error"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
+      "rules": {
+        "constructor-super": "off",
+        "getter-return": "off",
+        "no-class-assign": "off",
+        "no-const-assign": "off",
+        "no-dupe-class-members": "off",
+        "no-dupe-keys": "off",
+        "no-func-assign": "off",
+        "no-import-assign": "off",
+        "no-new-native-nonconstructor": "off",
+        "no-obj-calls": "off",
+        "no-redeclare": "off",
+        "no-setter-return": "off",
+        "no-this-before-super": "off",
+        "no-unreachable": "off",
+        "no-unsafe-negation": "off",
+        "no-var": "error",
+        "no-with": "off",
+        "prefer-const": "error",
+        "prefer-rest-params": "error",
+        "prefer-spread": "error"
+      }
+    }
+  ]
+}

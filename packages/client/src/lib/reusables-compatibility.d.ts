@@ -15,7 +15,9 @@ declare module 'react-native/Libraries/Utilities/Platform' {
       const Values extends Partial<Record<PlatformOSType, unknown>> & {
         default: unknown;
       },
-    >(specifics: Values): Values[keyof Values];
+    >(
+      specifics: Values,
+    ): Values[keyof Values];
     select<const Values extends Partial<Record<PlatformOSType, unknown>>>(
       specifics: Values,
     ): Values[keyof Values] | undefined;

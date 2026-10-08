@@ -33,7 +33,7 @@ These come from old Argo (codex-app-server 0.157.0). Fresh recordings of each Se
 
 `markdown-answer` was captured from the real 0.157.0 app-server on 2026-10-06 with the catalog default model. It keeps the Turn's notifications from `turn/started` on; hook, MCP startup, account and warning traffic are excluded, and paths are normalized.
 
-Feed mocks are generated from these recordings through `toAgentEvents` and the real Feed change validator. Each mock's first `user_message` comes from the recording's own prompt through the Server's `userMessageChange`. Regenerate with `pnpm --filter @repo/server exec tsx ../../tools/generate-feed-mocks.mts`, then format `packages/api/mocks/feed-recordings.json` with Biome.
+Feed mocks are generated from these recordings through `toAgentEvents` and the real Feed change validator. Each mock's first `user_message` comes from the recording's own prompt through the Server's `userMessageChange`. Regenerate with `pnpm --filter @repo/server exec tsx ../../tools/generate-feed-mocks.mts`, then format `packages/api/mocks/feed-recordings.json` with `pnpm exec oxfmt`.
 
 `edit-and-command.json` and `interrupt.json` were recorded from the real 0.157.0 app-server on 2026-10-05. The first changes `app.txt`, creates `notes.md`, prints the files and answers `done`. The second interrupts `sleep 30` after its command starts. The catalog default model was selected because the user's configured default was unavailable to the account. The app-server emitted no reasoning items in these captures, even with high effort and detailed summaries; the converter's thought tests use protocol-shaped examples at the same pure-function seam.
 
@@ -60,4 +60,4 @@ The capture uses codex-app-server 0.157.0. A command outside the read-only Check
 
 `request-answer.ts` reads the real replies. The pure Agent converters map the requests and Plan rows. Shared pending and answered mocks are built through those converters and the Server's Feed validator, with a deterministic Session request id and clock. Answered states show the continuing Turn, including the Permission outcome or Plan outcome and any feedback a person typed. Server issues #57 and #58 wire these procedures to live Sessions.
 
-Regenerate with `pnpm --filter @repo/server exec tsx ../../tools/generate-request-mocks.mts`, then format `packages/api/mocks/request-recordings.json` with Biome. Shared mocks are exported as `recordedRequestMocks` from `@repo/api/mocks` for the request cards.
+Regenerate with `pnpm --filter @repo/server exec tsx ../../tools/generate-request-mocks.mts`, then format `packages/api/mocks/request-recordings.json` with `pnpm exec oxfmt`. Shared mocks are exported as `recordedRequestMocks` from `@repo/api/mocks` for the request cards.
