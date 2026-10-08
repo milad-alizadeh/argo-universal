@@ -1,27 +1,15 @@
-import type {
-  SessionConfigOption,
-  SessionConfigSelectOption,
-} from '@repo/contracts';
+import type { SessionConfigOption } from '@repo/contracts';
 import type { AgentConfigValue } from '../src/agent-events';
+import { changeValue as changeConfigValue } from '../src/config-options';
 import {
-  changeValue as changeConfigValue,
-  effortLevelName,
-  hasEffortLevels,
-  sharedModes,
-} from '../src/config-options';
+  modes,
+  isMode,
+  modeOption,
+  modelOption,
+  effortOptions,
+} from './config-select-options';
 import type { Model, ReasoningEffort } from './protocol.gen';
 export type { Model } from './protocol.gen';
-
-const modes = {
-  ...sharedModes,
-  fullAccess: {
-    name: 'Full access',
-    description: 'Runs without sandbox or permission requests.',
-    _meta: { argo: { icon: 'WarningTriangle', tone: 'dangerous' } },
-  },
-} satisfies Record<string, Omit<SessionConfigSelectOption, 'value'>>;
-type Mode = keyof typeof modes;
-const isMode = (value: string): value is Mode => value in modes;
 
 export interface ConfigValues {
   model: string;
@@ -38,14 +26,11 @@ function allowedValues(
 ): ConfigValues {
   const model = modelFor(models, wanted.model);
   if (!model) throw new Error('Codex offers no models.');
-  const effort =
-    model.supportedReasoningEfforts.find(
-      (option): boolean => option.reasoningEffort === wanted.effort,
-    )?.reasoningEffort ?? model.defaultReasoningEffort;
+  const effort = allowedEffort(model, wanted.effort);
   const mode = Object.keys(modes)
     .filter(isMode)
     .find((mode): boolean => mode === wanted.mode);
-  return { model: model.model, effort, mode: mode ?? 'default' };
+  return { model: model.model, effort, mode: allowedMode(mode) };
 }
 export const startingValues = (
   models: Model[],
@@ -76,59 +61,16 @@ export function toConfigOptions(
   models: Model[],
   values: ConfigValues,
 ): SessionConfigOption[] {
-  const levels =
-    modelFor(models, values.model)?.supportedReasoningEfforts ?? [];
-  const options: SessionConfigOption[] = [
-    {
-      type: 'select',
-      configId: 'mode',
-      name: 'Mode',
-      category: 'mode',
-      currentValue: values.mode,
-      options: Object.keys(modes)
-        .filter(isMode)
-        .map((value): SessionConfigSelectOption => ({
-          value,
-          ...modes[value],
-        })),
-    },
-    {
-      type: 'select',
-      configId: 'model',
-      name: 'Model',
-      category: 'model',
-      currentValue: values.model,
-      options: models.map((model): SessionConfigSelectOption => ({
-        value: model.model,
-        name: model.displayName,
-        description: model.description,
-        _meta: {
-          argo: {
-            supportsEffort: model.supportedReasoningEfforts.length > 0,
-            supportedEffortLevels: model.supportedReasoningEfforts.map(
-              (option): string => option.reasoningEffort,
-            ),
-            supportsImages: model.inputModalities.includes('image'),
-            supportsPersonality: model.supportsPersonality,
-          },
-        },
-      })),
-    },
-  ];
-  if (!hasEffortLevels(levels)) return options;
   return [
-    ...options,
-    {
-      type: 'select',
-      configId: 'effort',
-      name: 'Effort',
-      category: 'thought_level',
-      currentValue: values.effort,
-      options: levels.map((option): SessionConfigSelectOption => ({
-        value: option.reasoningEffort,
-        name: effortLevelName(option.reasoningEffort),
-        description: option.description,
-      })),
-    },
+    modeOption(values.mode),
+    modelOption(models, values.model),
+    ...effortOptions(modelFor(models, values.model), values.effort),
   ];
 }
+const allowedEffort = (model: Model, wanted: unknown): ReasoningEffort =>
+  model.supportedReasoningEfforts.find(
+    (option): boolean => option.reasoningEffort === wanted,
+  )?.reasoningEffort ?? model.defaultReasoningEffort;
+const allowedMode = (
+  mode: keyof typeof modes | undefined,
+): keyof typeof modes => mode ?? 'default';
