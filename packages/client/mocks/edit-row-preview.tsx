@@ -1,8 +1,8 @@
 import type { ToolCallUpdate } from '@repo/contracts';
 import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import { DesktopShell } from '../src/components/DesktopShell';
-import { EditRow } from '../src/components/EditRow';
+import { DesktopShell } from '../src/components/desktop-shell';
+import { EditRow } from '../src/components/edit-row';
 import { useWide } from '../src/navigation/use-wide';
 import { Text } from '../src/primitives/text';
 

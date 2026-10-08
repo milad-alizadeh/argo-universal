@@ -1,9 +1,9 @@
 import { recordedRequestMocks } from '@repo/api/mocks';
 import { useState } from 'react';
 import { View } from 'react-native';
-import type { ComposerDraft } from '../src/components/Composer';
-import type { PlanProposalCardProps } from '../src/components/PlanProposalCard';
-import { PlanProposalRegion } from '../src/components/PlanProposalRegion';
+import type { ComposerDraft } from '../src/components/composer';
+import type { PlanProposalCardProps } from '../src/components/plan-proposal-card';
+import { PlanProposalRegion } from '../src/components/plan-proposal-region';
 import { Text } from '../src/primitives/text';
 import { ComposerMock } from './composer-mock';
 

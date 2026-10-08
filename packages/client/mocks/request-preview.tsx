@@ -2,21 +2,21 @@ import { type RequestMock, recordedRequestMocks } from '@repo/api/mocks';
 import type { PendingElicitation } from '@repo/contracts';
 import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
-import { CommandRow } from '../src/components/CommandRow';
-import { Composer, type ComposerDraft } from '../src/components/Composer';
+import { CommandRow } from '../src/components/command-row';
+import { Composer, type ComposerDraft } from '../src/components/composer';
 import {
   type ElicitationAnswer,
   ElicitationForm,
   type ElicitationValues,
-} from '../src/components/ElicitationForm';
-import { ElicitationOutcome } from '../src/components/ElicitationOutcome';
-import { PermissionOutcome } from '../src/components/PermissionOutcome';
+} from '../src/components/elicitation-form';
+import { ElicitationOutcome } from '../src/components/elicitation-outcome';
+import { PermissionOutcome } from '../src/components/permission-outcome';
 import {
   type PermissionAnswer,
   PermissionRequest,
-} from '../src/components/PermissionRequest';
-import { ToolCallGroup } from '../src/components/ToolCallGroup';
-import { ToolCallRow } from '../src/components/ToolCallRow';
+} from '../src/components/permission-request';
+import { ToolCallGroup } from '../src/components/tool-call-group';
+import { ToolCallRow } from '../src/components/tool-call-row';
 import { toFeedView } from '../src/feed/to-feed-view';
 
 export const permissionMocks = recordedRequestMocks.filter(

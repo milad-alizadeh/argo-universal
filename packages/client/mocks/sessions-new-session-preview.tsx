@@ -4,7 +4,7 @@ import { View } from 'react-native';
 import {
   SessionsList,
   type SessionsListProps,
-} from '../src/components/SessionsList';
+} from '../src/components/sessions-list';
 import { largeSessions } from './sessions-list-mock';
 
 export function SessionsNewSessionPreview(props: SessionsListProps) {
