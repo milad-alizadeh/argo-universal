@@ -7,7 +7,7 @@ import type {
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { TRPCError } from '@trpc/server';
-import { type ActorRefFrom, createActor } from 'xstate';
+import { type Actor, type ActorRefFrom, createActor } from 'xstate';
 import { z } from 'zod';
 import { findDatabaseWriter, type writerMachine } from '../feed';
 import type { RegistryActorRef } from './registry-machine';
@@ -133,14 +133,10 @@ export function createSessionList(options: {
             (row): boolean =>
               previous.get(row.sessionId) !== next.get(row.sessionId),
           )
-          .map(
-            (
-              row,
-            ): Extract<
-              import('@repo/contracts').SessionListUpdate,
-              { type: 'changed' }
-            > => ({ type: 'changed', session: row }),
-          );
+          .map((row): Extract<SessionListUpdate, { type: 'changed' }> => ({
+            type: 'changed',
+            session: row,
+          }));
         for (const sessionId of previous.keys())
           if (!next.has(sessionId))
             changed.push({ type: 'removed', sessionId });
@@ -178,7 +174,7 @@ function createSessionListWatch({
 } {
   let sharedActor: ActorRefFrom<typeof sessionListMachine> | undefined;
   let references = 0;
-  const create = (): import('xstate').Actor<typeof sessionListMachine> =>
+  const create = (): Actor<typeof sessionListMachine> =>
     createActor(sessionListMachine, {
       input: {
         sessions,

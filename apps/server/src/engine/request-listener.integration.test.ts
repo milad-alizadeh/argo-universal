@@ -111,13 +111,8 @@ beforeEach(async (): Promise<void> => {
   server = createServer((incoming, outgoing): void | undefined =>
     listener?.(incoming, outgoing),
   );
-  await new Promise<void>(
-    (
-      resolve,
-    ): Server<
-      typeof import('http').IncomingMessage,
-      typeof import('http').ServerResponse
-    > => server.listen(0, '127.0.0.1', (): void => resolve()),
+  await new Promise<void>((resolve): Server =>
+    server.listen(0, '127.0.0.1', (): void => resolve()),
   );
   const address = server.address();
   if (!address || typeof address === 'string')
@@ -133,14 +128,7 @@ beforeEach(async (): Promise<void> => {
 });
 
 afterEach(async (): Promise<void> => {
-  const closed = new Promise(
-    (
-      resolve,
-    ): Server<
-      typeof import('http').IncomingMessage,
-      typeof import('http').ServerResponse
-    > => server.close(resolve),
-  );
+  const closed = new Promise((resolve): Server => server.close(resolve));
   // A keep-alive socket that turns idle after close() would hold the server open until its timeout.
   server.closeAllConnections();
   await closed;

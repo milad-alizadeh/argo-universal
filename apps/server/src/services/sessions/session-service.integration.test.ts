@@ -2,8 +2,9 @@ import { randomUUID } from 'node:crypto';
 import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { AgentProbe, VendorCommand } from '@repo/agents';
+import type { AgentProbe, AgentReady, VendorCommand } from '@repo/agents';
 import type { FeedSubscribeOutput, SessionNewInput } from '@repo/contracts';
+import type { Database } from '@repo/db';
 import { turn } from '@repo/db/schema';
 import { sessionBranch } from '@repo/git';
 import {
@@ -14,12 +15,23 @@ import {
 } from '@repo/mocks/agent';
 import { eq } from 'drizzle-orm';
 import { afterEach, expect, it, vi } from 'vitest';
+import type {
+  Actor,
+  StateMachine,
+  MachineContext,
+  AnyEventObject,
+  ActorRefFromLogic,
+  NonReducibleUnknown,
+  EventObject,
+  MetaObject,
+} from 'xstate';
 import { createActor, fromPromise, setup, waitFor } from 'xstate';
 import { insertSession, openTestDatabase } from '#mocks/database';
 import { initTestRepository } from '#mocks/git';
 import { appRouter } from '../../engine/router';
 import { writerMachine } from '../feed';
 import { createServerServices } from '../server-services';
+import type { Services } from '../services';
 import { registryMachine } from './registry-machine';
 
 const agentConfigOptionsChangedEvent = 'agent.configOptionsChanged';
@@ -28,15 +40,13 @@ const sessionActorId = 'session:session-1';
 
 type TestServer = {
   caller: ReturnType<typeof appRouter.createCaller>;
-  root: import('xstate').Actor<
-    import('xstate').StateMachine<
-      import('xstate').MachineContext,
-      import('xstate').AnyEventObject,
+  root: Actor<
+    StateMachine<
+      MachineContext,
+      AnyEventObject,
       {
         [x: string]:
-          | import('xstate').ActorRefFromLogic<
-              typeof registryMachine | typeof writerMachine
-            >
+          | ActorRefFromLogic<typeof registryMachine | typeof writerMachine>
           | undefined;
       },
       | {
@@ -50,12 +60,12 @@ type TestServer = {
       never,
       Record<never, never>,
       string,
-      import('xstate').NonReducibleUnknown,
-      import('xstate').NonReducibleUnknown,
-      import('xstate').EventObject,
-      import('xstate').MetaObject,
+      NonReducibleUnknown,
+      NonReducibleUnknown,
+      EventObject,
+      MetaObject,
       Record<never, never>,
-      import('xstate').MetaObject
+      MetaObject
     >
   >;
   streams: Map<string, MockAgentStream>;
@@ -68,8 +78,8 @@ type TestServer = {
     currentValue: string;
     options: { value: string; name: string }[];
   }[];
-  services: import('../services').Services;
-  database: import('@repo/db').Database;
+  services: Services;
+  database: Database;
   git: (...arguments_: string[]) => string;
 };
 type AlternateReady = typeof mockReady & {
@@ -193,7 +203,7 @@ function openServer({
               ),
               createMockAdapter(
                 {
-                  connect: (): Promise<import('@repo/agents').AgentReady> =>
+                  connect: (): Promise<AgentReady> =>
                     Promise.reject(new Error(signInFailure)),
                   // Signed in when the Server starts, signed out by the first Session.
                   probe: vi

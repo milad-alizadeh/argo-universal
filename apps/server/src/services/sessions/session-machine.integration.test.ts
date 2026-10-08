@@ -1,9 +1,10 @@
 import { randomUUID } from 'node:crypto';
-import { type AgentCommand, agentMachine } from '@repo/agents';
+import { type AgentCommand, type AgentReady, agentMachine } from '@repo/agents';
 import { sessionRows } from '@repo/api/mocks';
 import type { Notice, SessionUpdate } from '@repo/contracts';
 import type { FeedSubscribeOutput } from '@repo/contracts';
 import { permissionOptions, type SessionConfigOption } from '@repo/contracts';
+import type { Database } from '@repo/db';
 import {
   createMockAdapter,
   type MockAgentScript,
@@ -17,6 +18,7 @@ import { terminalPaths } from '@repo/vitest/model-paths';
 import { afterAll, afterEach, expect, it, vi } from 'vitest';
 import {
   createActor,
+  type ActorRefFromLogic,
   fromPromise,
   type SnapshotFrom,
   setup,
@@ -32,7 +34,7 @@ import { openTestDatabase } from '#mocks/database';
 import { messageChange } from '#mocks/feed';
 import { createSessionHost, firstPrompt } from '#mocks/session';
 import { type FeedActorRef, feedMachine } from '../feed';
-import type { createFeedService } from '../feed';
+import type { createFeedService, FeedService } from '../feed';
 import { databaseWriterId, writerMachine } from '../feed';
 import { sendSessionCommand } from './session-command';
 import type { SessionData } from './session-data';
@@ -80,12 +82,12 @@ function subscribeToSession(service: ReturnType<typeof createFeedService>): {
 }
 
 async function openSession(overrides: Partial<MockAgentScript> = {}): Promise<{
-  session: import('xstate').ActorRefFromLogic<typeof sessionMachine>;
+  session: ActorRefFromLogic<typeof sessionMachine>;
   feed: FeedActorRef;
-  service: import('../feed').FeedService;
+  service: FeedService;
   commands: AgentCommand[];
   stream: MockAgentStream;
-  database: import('@repo/db').Database;
+  database: Database;
   currentStream: () => MockAgentStream;
 }> {
   const { database, remove } = openTestDatabase();
@@ -447,7 +449,7 @@ it('restarts the Agent with its vendor Session and gives up after three crashes 
   vi.useFakeTimers();
   const resumed: (string | null)[] = [];
   const { session, service, currentStream } = await openSession({
-    connect: async (input): Promise<import('@repo/agents').AgentReady> => {
+    connect: async (input): Promise<AgentReady> => {
       resumed.push(input.vendorSessionId);
       return mockReady;
     },

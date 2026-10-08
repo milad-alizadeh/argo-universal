@@ -36,14 +36,8 @@ const listen = (server: Server, port: number): Promise<void> =>
   });
 
 const closeServer = (server: Server): Promise<void> =>
-  new Promise<void>(
-    (
-      resolve,
-      reject,
-    ): Server<
-      typeof import('http').IncomingMessage,
-      typeof import('http').ServerResponse
-    > => server.close((error): void => (error ? reject(error) : resolve())),
+  new Promise<void>((resolve, reject): Server =>
+    server.close((error): void => (error ? reject(error) : resolve())),
   );
 
 // Serves one tRPC router over the WebSocket and over HTTP, and blobs, on 127.0.0.1 (ADR 0002); resolves once the port is bound.

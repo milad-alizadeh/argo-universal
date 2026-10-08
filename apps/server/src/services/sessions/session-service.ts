@@ -1,5 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { createElicitationAnswerSchema } from '@repo/contracts';
+import type {
+  SessionSetConfigOptionOutput,
+  SessionConfigSelectOption,
+} from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { listBranches } from '@repo/git';
 import { TRPCError } from '@trpc/server';
@@ -234,7 +238,7 @@ export function createSessionService({
       sessionId,
       configId,
       value,
-    }): Promise<import('@repo/contracts').SessionSetConfigOptionOutput> => {
+    }): Promise<SessionSetConfigOptionOutput> => {
       const actor = await open(sessionId);
       const previous = actor.getSnapshot().context.configOptions;
       const option = previous.find(
@@ -244,11 +248,8 @@ export function createSessionService({
         option?.type === 'boolean'
           ? typeof value === 'boolean'
           : option?.options
-              .flatMap(
-                (
-                  choice,
-                ): import('@repo/contracts').SessionConfigSelectOption[] =>
-                  'groupId' in choice ? choice.options : [choice],
+              .flatMap((choice): SessionConfigSelectOption[] =>
+                'groupId' in choice ? choice.options : [choice],
               )
               .some((choice): boolean => choice.value === value);
       if (!allowed)

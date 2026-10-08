@@ -1,4 +1,4 @@
-import type { ESTree } from '@oxlint/plugins';
+import type { ESTree, Visitor } from '@oxlint/plugins';
 import { defineRule } from '@oxlint/plugins';
 import { onModuleSources, stringValue } from './syntax.ts';
 
@@ -60,7 +60,7 @@ export const apiTypeOnly = defineRule({
         'The App imports only AppRouter from @repo/server/router with `import type`; Server runtime stays outside App bundles (ADR-0016). @repo/api runtime belongs in tests, stories or mocks.',
     },
   },
-  create: (context): import('@oxlint/plugins').Visitor =>
+  create: (context): Visitor =>
     onModuleSources((source, statement): void => {
       if (isForbiddenImport(stringValue(source), statement))
         context.report({ node: source, messageId: 'apiTypeOnly' });

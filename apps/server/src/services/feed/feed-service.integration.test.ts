@@ -16,6 +16,16 @@ import {
   onTestFinished,
   vi,
 } from 'vitest';
+import type {
+  StateMachine,
+  MachineContext,
+  AnyEventObject,
+  ActorRefFromLogic,
+  NonReducibleUnknown,
+  EventObject,
+  MetaObject,
+  InputFrom,
+} from 'xstate';
 import { type Actor, createActor, fromPromise, setup } from 'xstate';
 import { insertSession, openTestDatabase } from '#mocks/database';
 import { storedMessage as message } from '#mocks/feed';
@@ -28,11 +38,12 @@ import {
   registryMachine,
   sessionMachine,
 } from '../sessions';
+import type { SessionData } from '../sessions';
 import { createSystemService } from '../system';
 import { feedMachine } from './feed-machine';
 import { readWrittenRow, toFeedRowWrite } from './feed-row';
 import { createFeedService } from './feed-service';
-import { writeJobs } from './writer-job';
+import { writeJobs, type FeedRowWrite } from './writer-job';
 import { writerMachine } from './writer-machine';
 
 const upsertRowEvent = 'row.upsert';
@@ -47,13 +58,13 @@ let controller: AbortController;
 // The Engine's writer and one Session's feed actor in one actor system, as the Engine will run them.
 const hostMachine = (
   writer = writerMachine,
-): import('xstate').StateMachine<
-  import('xstate').MachineContext,
-  import('xstate').AnyEventObject,
+): StateMachine<
+  MachineContext,
+  AnyEventObject,
   {
-    databaseWriter?: import('xstate').ActorRefFromLogic<typeof writerMachine>;
-    feed?: import('xstate').ActorRefFromLogic<typeof feedMachine>;
-    session?: import('xstate').ActorRefFromLogic<typeof sessionMachine>;
+    databaseWriter?: ActorRefFromLogic<typeof writerMachine>;
+    feed?: ActorRefFromLogic<typeof feedMachine>;
+    session?: ActorRefFromLogic<typeof sessionMachine>;
   },
   | { src: 'feed'; logic: typeof feedMachine; id: 'feed' }
   | { src: 'session'; logic: typeof sessionMachine; id: 'session' }
@@ -63,12 +74,12 @@ const hostMachine = (
   never,
   Record<never, never>,
   string,
-  import('xstate').NonReducibleUnknown,
-  import('xstate').NonReducibleUnknown,
-  import('xstate').EventObject,
-  import('xstate').MetaObject,
+  NonReducibleUnknown,
+  NonReducibleUnknown,
+  EventObject,
+  MetaObject,
   Record<never, never>,
-  import('xstate').MetaObject
+  MetaObject
 > =>
   setup({
     actors: {
@@ -77,8 +88,7 @@ const hostMachine = (
       session: sessionMachine.provide({
         actors: {
           loadSession: fromPromise(
-            (): Promise<import('../sessions').SessionData> =>
-              new Promise((): void => {}),
+            (): Promise<SessionData> => new Promise((): void => {}),
           ),
         },
       }),
@@ -88,7 +98,7 @@ const hostMachine = (
       {
         id: 'session',
         src: 'session',
-        input: (): import('xstate').InputFrom<typeof sessionMachine> => ({
+        input: (): InputFrom<typeof sessionMachine> => ({
           now: (): number => Date.now(),
           createId: randomUUID,
           database,
@@ -131,9 +141,8 @@ const hostMachine = (
 const startHost = (writer = writerMachine): void => {
   host = createActor(hostMachine(writer)).start();
 };
-const feedRef = ():
-  | import('xstate').ActorRefFromLogic<typeof feedMachine>
-  | undefined => host.getSnapshot().children.feed;
+const feedRef = (): ActorRefFromLogic<typeof feedMachine> | undefined =>
+  host.getSnapshot().children.feed;
 
 const caller = (): ReturnType<typeof appRouter.createCaller> =>
   appRouter.createCaller(
@@ -148,9 +157,7 @@ const caller = (): ReturnType<typeof appRouter.createCaller> =>
             database,
             findSession: (
               sessionId,
-            ):
-              | import('xstate').ActorRefFromLogic<typeof sessionMachine>
-              | undefined =>
+            ): ActorRefFromLogic<typeof sessionMachine> | undefined =>
               host.getSnapshot().status === 'active' &&
               sessionId === 'session-1'
                 ? host.getSnapshot().children.session
@@ -161,9 +168,8 @@ const caller = (): ReturnType<typeof appRouter.createCaller> =>
           }),
           findFeed: (
             sessionId,
-          ):
-            | import('xstate').ActorRefFromLogic<typeof feedMachine>
-            | undefined => (sessionId === 'session-1' ? feedRef() : undefined),
+          ): ActorRefFromLogic<typeof feedMachine> | undefined =>
+            sessionId === 'session-1' ? feedRef() : undefined,
           findWriter: (): ReturnType<typeof host.system.get> =>
             host.system.get('databaseWriter'),
         }),
@@ -229,9 +235,8 @@ beforeEach((): void => {
     {
       type: 'feedRows',
       sessionId: 'session-1',
-      rows: [0, 1, 2, 3, 4].map(
-        (position): import('./writer-job').FeedRowWrite =>
-          toFeedRowWrite(message(position)),
+      rows: [0, 1, 2, 3, 4].map((position): FeedRowWrite =>
+        toFeedRowWrite(message(position)),
       ),
       maxRevision: 5,
     },

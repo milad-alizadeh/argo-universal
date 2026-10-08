@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { unreachableServices } from '#mocks/services';
 import { appRouter } from '../../engine/router';
 import { createCallerFactory } from '../../engine/trpc';
+import type { Services } from '../services';
 
 const createCaller = createCallerFactory(appRouter);
 
@@ -13,7 +14,7 @@ const systemInfo: SystemInfo = {
   name: "Milad's Mac mini",
 };
 
-const servicesWith = (ticks: ClockTick[]): import('../services').Services =>
+const servicesWith = (ticks: ClockTick[]): Services =>
   unreachableServices({
     system: {
       info: (): SystemInfo => systemInfo,

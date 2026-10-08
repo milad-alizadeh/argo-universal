@@ -9,6 +9,7 @@ import type { FeedSubscribeOutput, SessionSnapshot } from '@repo/contracts';
 import type { SessionInfo } from '@repo/contracts';
 import type { SessionListUpdate, SessionUpdate } from '@repo/contracts';
 import { permissionOptions } from '@repo/contracts';
+import type { Database } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
 import { listBranches } from '@repo/git';
 import { createMockAdapter, type MockAgentStream } from '@repo/mocks/agent';
@@ -102,9 +103,7 @@ function startEngine({
   const machine = engineMachine.provide({
     actors: {
       ...(database && {
-        openDatabase: fromPromise(
-          async (): Promise<import('@repo/db').Database> => database,
-        ),
+        openDatabase: fromPromise(async (): Promise<Database> => database),
       }),
       processSignals: fromCallback((): void => {}),
       sessions,

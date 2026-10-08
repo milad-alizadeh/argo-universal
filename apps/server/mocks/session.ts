@@ -5,8 +5,18 @@ import { join } from 'node:path';
 import type { AgentAdapter } from '@repo/agents';
 import type { Database } from '@repo/db';
 import { onTestFinished } from 'vitest';
+import type {
+  Actor,
+  StateMachine,
+  MachineContext,
+  AnyEventObject,
+  ActorRefFromLogic,
+  NonReducibleUnknown,
+  EventObject,
+  MetaObject,
+} from 'xstate';
 import { createActor, setup } from 'xstate';
-import type { FeedActorRef } from '../src/services/feed';
+import type { FeedActorRef, FeedService } from '../src/services/feed';
 import { createFeedService } from '../src/services/feed';
 import { writerMachine } from '../src/services/feed';
 import {
@@ -22,15 +32,13 @@ export function createSessionHost(
   database: Database,
   adapter: AgentAdapter,
 ): {
-  root: import('xstate').Actor<
-    import('xstate').StateMachine<
-      import('xstate').MachineContext,
-      import('xstate').AnyEventObject,
+  root: Actor<
+    StateMachine<
+      MachineContext,
+      AnyEventObject,
       {
-        databaseWriter?: import('xstate').ActorRefFromLogic<
-          typeof writerMachine
-        >;
-        session?: import('xstate').ActorRefFromLogic<typeof sessionMachine>;
+        databaseWriter?: ActorRefFromLogic<typeof writerMachine>;
+        session?: ActorRefFromLogic<typeof sessionMachine>;
       },
       | { src: 'session'; logic: typeof sessionMachine; id: 'session' }
       | { src: 'writer'; logic: typeof writerMachine; id: 'databaseWriter' },
@@ -39,16 +47,16 @@ export function createSessionHost(
       never,
       Record<never, never>,
       string,
-      import('xstate').NonReducibleUnknown,
-      import('xstate').NonReducibleUnknown,
-      import('xstate').EventObject,
-      import('xstate').MetaObject,
+      NonReducibleUnknown,
+      NonReducibleUnknown,
+      EventObject,
+      MetaObject,
       Record<never, never>,
-      import('xstate').MetaObject
+      MetaObject
     >
   >;
-  session: import('xstate').ActorRefFromLogic<typeof sessionMachine>;
-  service: import('../src/services/feed').FeedService;
+  session: ActorRefFromLogic<typeof sessionMachine>;
+  service: FeedService;
   findFeed: () => FeedActorRef | undefined;
 } {
   const runtimeDirectory = mkdtempSync(join(tmpdir(), 'session-runtime-'));
@@ -96,19 +104,15 @@ export function createSessionHost(
   const service = createFeedService({
     database,
     findFeed,
-    findWriter: ():
-      | import('xstate').ActorRefFromLogic<typeof writerMachine>
-      | undefined => root.getSnapshot().children.databaseWriter,
+    findWriter: (): ActorRefFromLogic<typeof writerMachine> | undefined =>
+      root.getSnapshot().children.databaseWriter,
     readSession: createSessionReader(database),
     watchSessionSnapshot: createSessionSnapshotWatcher({
       database,
       findFeed,
-      findWriter: ():
-        | import('xstate').ActorRefFromLogic<typeof writerMachine>
-        | undefined => root.getSnapshot().children.databaseWriter,
-      findSession: (): import('xstate').ActorRefFromLogic<
-        typeof sessionMachine
-      > => session,
+      findWriter: (): ActorRefFromLogic<typeof writerMachine> | undefined =>
+        root.getSnapshot().children.databaseWriter,
+      findSession: (): ActorRefFromLogic<typeof sessionMachine> => session,
     }),
   });
   return { root, session, service, findFeed };

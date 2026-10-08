@@ -1,11 +1,15 @@
 import { randomUUID } from 'node:crypto';
-import type { AgentProbe } from '@repo/agents';
-import { createMockAdapter } from '@repo/mocks/agent';
+import type { AgentProbe, AgentAdapter } from '@repo/agents';
+import {
+  createMockAdapter,
+  type MockAgentStreamEvent,
+} from '@repo/mocks/agent';
 import { afterAll, afterEach, expect, it, vi } from 'vitest';
 import { createActor } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
 import { registryMachine } from '../sessions';
 import { createAgentService } from './agent-service';
+import type { AgentsService } from './service';
 
 const { database, directory: runtimeDirectory, remove } = openTestDatabase();
 afterAll(remove);
@@ -14,17 +18,10 @@ afterEach((): void => {
   for (const cleanup of cleanups.splice(0)) cleanup();
 });
 
-function startAgents(
-  ...probes: (() => Promise<AgentProbe>)[]
-): import('./service').AgentsService {
+function startAgents(...probes: (() => Promise<AgentProbe>)[]): AgentsService {
   const adapters = probes.map(
-    (
-      probe,
-      index,
-    ): import('@repo/agents').AgentAdapter<
-      import('@repo/mocks/agent').MockAgentStreamEvent,
-      null
-    > => createMockAdapter({ probe }, `agent-${index + 1}`),
+    (probe, index): AgentAdapter<MockAgentStreamEvent, null> =>
+      createMockAdapter({ probe }, `agent-${index + 1}`),
   );
   const sessions = createActor(registryMachine, {
     input: {
