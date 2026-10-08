@@ -1,5 +1,9 @@
 import type { FeedService } from '@repo/api';
-import type { SessionUpdate } from '@repo/contracts';
+import type {
+  SessionInfo,
+  SessionSnapshot,
+  SessionUpdate,
+} from '@repo/contracts';
 import type {
   FeedPageInput,
   FeedPageOutput,
@@ -11,11 +15,7 @@ import type { Database } from '@repo/db';
 import { feedRow } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
 import { and, asc, desc, eq, gt, lt } from 'drizzle-orm';
-import type { ActorRefFrom, Subscription } from 'xstate';
-import { createLiveHeaderRowsReader } from '../sessions/live-header-rows';
-import type { SessionActorRef } from '../sessions/session-machine';
-import { createSessionReader } from '../sessions/session-record';
-import { toSessionSnapshot } from '../sessions/session-snapshot';
+import type { ActorRefFrom, Observer, Subscription } from 'xstate';
 import type { FeedActorRef } from './feed-machine';
 import {
   decodeStoredFeedRow,
@@ -31,14 +31,25 @@ export interface FeedDeps {
   database: Database;
   // The feed actor of an open Session; a closed Session has none.
   findFeed: (sessionId: string) => FeedActorRef | undefined;
-  findSession?: (sessionId: string) => SessionActorRef | undefined;
+  readSession: (
+    sessionId: string,
+  ) => Pick<
+    SessionInfo,
+    'parentSessionId' | 'agent' | 'title' | 'titleSource'
+  > &
+    Pick<SessionSnapshot, 'epoch' | 'maxRevision' | 'checkout'>;
+  watchSessionSnapshot: (
+    sessionId: string,
+    listener: Observer<
+      Extract<FeedSubscribeOutput, { type: 'snapshot' | 'closed' }>
+    >,
+  ) => Subscription;
   findWriter: () => ActorRefFrom<typeof writerMachine> | undefined;
 }
 
 export function createFeedService(deps: FeedDeps): FeedService {
   const { database } = deps;
-  const readSession = createSessionReader(database);
-  const readLiveHeaderRows = createLiveHeaderRowsReader({ database });
+  const { readSession } = deps;
 
   // Rows the database does not hold yet: queued in the writer, then held by the feed actor.
   const readUnsaved = (
@@ -144,73 +155,33 @@ export function createFeedService(deps: FeedDeps): FeedService {
     { sessionId, after }: FeedSubscribeInput,
     signal: AbortSignal | undefined,
   ): AsyncGenerator<FeedSubscribeOutput> {
-    const { epoch, maxRevision, parentSessionId } = readSession(sessionId);
+    const { epoch, maxRevision } = readSession(sessionId);
 
     const live: FeedSubscribeOutput[] = [];
     let wake: (() => void) | undefined;
     let feed: FeedActorRef | undefined;
     let listener: Subscription | undefined;
-    let feedListener: Subscription | undefined;
-    const sessionActor = deps.findSession?.(sessionId);
-    let closed = !sessionActor && parentSessionId === null;
-    let failure = sessionActor?.getSnapshot().output?.failure ?? null;
-    let lastSnapshot = '';
+    let closed = false;
+    let failure: Extract<FeedSubscribeOutput, { type: 'closed' }>['failure'] =
+      null;
     let snapshotFailure: { error: unknown } | undefined;
-    const snapshotChanged = (): void => {
-      if (snapshotFailure) return;
-      try {
-        const nextFeed = deps.findFeed(sessionId);
-        if (nextFeed && nextFeed !== feed) {
-          listener?.unsubscribe();
-          feedListener?.unsubscribe();
-          feed = nextFeed;
-          listener = feed.on('feed.batch', (batch): void => {
-            live.push(...batch.events);
-            wake?.();
-          });
-          feedListener = feed.subscribe({
-            next: snapshotChanged,
-            error: (error): void => {
-              snapshotFailure = { error };
-              wake?.();
-            },
-          });
-        }
-        const session = sessionActor?.getSnapshot() ?? null;
-        const feedContext = feed?.getSnapshot().context ?? {
-          epoch,
-          maxRevision,
-        };
-        const snapshot = toSessionSnapshot(
-          session,
-          {
-            context: {
-              ...feedContext,
-              rows: readLiveHeaderRows({
-                writer: deps.findWriter(),
-                sessionId,
-                turnId: session?.context.activeTurnId ?? null,
-                rows: 'rows' in feedContext ? feedContext.rows : {},
-              }).rows,
-            },
-          },
-          readSession(sessionId),
-        );
-        const serialized = JSON.stringify(snapshot);
-        if (serialized === lastSnapshot) return;
-        lastSnapshot = serialized;
-        live.push({ type: 'snapshot', snapshot });
+    const watchFeedBatches = (): void => {
+      const nextFeed = deps.findFeed(sessionId);
+      if (!nextFeed || nextFeed === feed) return;
+      listener?.unsubscribe();
+      feed = nextFeed;
+      listener = feed.on('feed.batch', (batch): void => {
+        live.push(...batch.events);
         wake?.();
-      } catch (error) {
-        snapshotFailure = { error };
-        wake?.();
-      }
+      });
     };
-    const sessionListener = sessionActor?.subscribe({
-      next: snapshotChanged,
-      complete: (): void => {
-        closed = true;
-        failure = sessionActor.getSnapshot().output?.failure ?? null;
+    const snapshotListener = deps.watchSessionSnapshot(sessionId, {
+      next: (event): void => {
+        watchFeedBatches();
+        if (event.type === 'closed') {
+          closed = true;
+          failure = event.failure;
+        } else live.push(event);
         wake?.();
       },
       error: (error): void => {
@@ -218,7 +189,7 @@ export function createFeedService(deps: FeedDeps): FeedService {
         wake?.();
       },
     });
-    snapshotChanged();
+    watchFeedBatches();
     const wakeOnAbort = (): void | undefined => wake?.();
     signal?.addEventListener('abort', wakeOnAbort);
     const throwSnapshotFailure = (): void => {
@@ -258,8 +229,7 @@ export function createFeedService(deps: FeedDeps): FeedService {
       }
     } finally {
       listener?.unsubscribe();
-      sessionListener?.unsubscribe();
-      feedListener?.unsubscribe();
+      snapshotListener?.unsubscribe();
       signal?.removeEventListener('abort', wakeOnAbort);
     }
   }

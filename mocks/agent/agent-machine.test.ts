@@ -764,3 +764,34 @@ describe('Agent machine', (): void => {
     ]);
   });
 });
+
+it('rejects invalid usage before publishing it to the Session', async (): Promise<void> => {
+  start();
+  await connect();
+  stream.send({ type: 'agent.usage', usage: { used: Number.NaN, size: 100 } });
+  await settle();
+  expect(received).toEqual([
+    readyEvent,
+    {
+      type: 'agent.messageRejected',
+      reason: 'Invalid Argo event: agent.usage',
+    },
+  ]);
+});
+
+it('fails startup before accepting invalid ready data', async (): Promise<void> => {
+  start();
+  agent.send(prompt);
+  await connect(
+    Object.assign({}, ready, {
+      configOptions: [
+        Object.assign({}, ready.configOptions[0], { options: null }),
+      ],
+    }),
+  );
+  expect(agent.getSnapshot().matches('failed')).toBe(true);
+  expect(received).toEqual([]);
+  expect(commands).toEqual([]);
+  expect(cleanups).toBe(1);
+  expect(shutdowns).toBe(1);
+});

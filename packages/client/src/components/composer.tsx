@@ -1,3 +1,4 @@
+import { maxBlobUploadBytes, maxBlobUploadMebibytes } from '@repo/contracts';
 import {
   ArrowUpIcon,
   CodeIcon,
@@ -34,9 +35,6 @@ import {
   type PlanProposalCardProps,
 } from './plan-proposal-card';
 
-const bytesPerMebibyte = 1_048_576;
-const maximumImageMebibytes = 20;
-const maximumImageBytes = maximumImageMebibytes * bytesPerMebibyte;
 // The message field grows a line at a time up to this many lines, then scrolls.
 const maximumVisibleLines = 4;
 const lineHeight = 20;
@@ -106,22 +104,25 @@ export function Composer({
     configuration.agents.every((agent) => agent.availability !== 'available'),
   );
   const configurationInactive = sending || (disabled && !canRecoverAgent);
-  const showStop = configuration?.turnRunning && onStop;
   const oversized = draft.images.filter(
-    (image) => image.bytes > maximumImageBytes,
+    (image) => image.bytes > maxBlobUploadBytes,
   );
-  const canSend =
-    !inactive &&
-    sendable &&
-    !configuration?.turnRunning &&
-    oversized.length === 0 &&
-    (draft.text.trim().length > 0 || draft.images.length > 0);
+  const sendState = sendButtonState({
+    stop: Boolean(configuration?.turnRunning && onStop),
+    sending,
+    ready:
+      !inactive &&
+      sendable &&
+      !configuration?.turnRunning &&
+      oversized.length === 0 &&
+      (draft.text.trim().length > 0 || draft.images.length > 0),
+  });
   let sendButtonContent: ReactNode;
-  if (showStop) {
+  if (sendState === 'stop') {
     sendButtonContent = (
       <View className="size-2.5 rounded-xs bg-primary-foreground" />
     );
-  } else if (sending) {
+  } else if (sendState === 'sending') {
     sendButtonContent = (
       <IconSpinner
         accessibilityLabel="Sending"
@@ -167,7 +168,7 @@ export function Composer({
                   <View
                     className={cn(
                       'group relative w-40 h-30 overflow-hidden rounded-md border bg-muted',
-                      image.bytes > maximumImageBytes
+                      image.bytes > maxBlobUploadBytes
                         ? 'border-destructive'
                         : 'border-border',
                     )}
@@ -216,7 +217,7 @@ export function Composer({
           )}
           {oversized.length > 0 && (
             <ComposerWarning numberOfLines={1}>
-              Image exceeds 20 MB.
+              {`Image exceeds ${maxBlobUploadMebibytes} MB.`}
             </ComposerWarning>
           )}
           {error && <ComposerWarning>{error}</ComposerWarning>}
@@ -266,7 +267,7 @@ export function Composer({
                     onPressIn={() => setAttachHighlighted(true)}
                     onPressOut={() => setAttachHighlighted(false)}
                     hitSlop={8}
-                    accessibilityLabel="Attach images"
+                    accessibilityLabel={wide ? 'Attach' : 'Attach images'}
                   >
                     <View
                       pointerEvents="none"
@@ -374,19 +375,22 @@ export function Composer({
                 size="icon"
                 className={cn(
                   'size-7 sm:size-7 rounded-full',
-                  !showStop && wide && 'shadow-none!',
-                  (sending || showStop) && 'opacity-100',
-                  !canSend && !sending && !showStop && 'opacity-35',
+                  sendState !== 'stop' && wide && 'shadow-none!',
+                  (sendState === 'sending' || sendState === 'stop') &&
+                    'opacity-100',
+                  sendState === 'blocked' && 'opacity-35',
                 )}
-                accessibilityLabel={showStop ? 'Stop' : 'Send'}
-                disabled={showStop ? disabled : !canSend}
-                onPress={() => {
-                  if (showStop) {
-                    onStop();
-                    return;
-                  }
-                  if (canSend) onSend(draft);
-                }}
+                accessibilityLabel={sendState === 'stop' ? 'Stop' : 'Send'}
+                disabled={
+                  sendState === 'stop' ? disabled : sendState !== 'ready'
+                }
+                onPress={
+                  sendState === 'stop'
+                    ? (): void => onStop?.()
+                    : (): void => {
+                        if (sendState === 'ready') onSend(draft);
+                      }
+                }
               >
                 {sendButtonContent}
               </Button>
@@ -420,6 +424,19 @@ export function Composer({
       )}
     </View>
   );
+}
+
+function sendButtonState(conditions: {
+  stop: boolean;
+  sending: boolean;
+  ready: boolean;
+}): 'stop' | 'sending' | 'ready' | 'blocked' {
+  const candidates = [
+    ['stop', conditions.stop],
+    ['sending', conditions.sending],
+    ['ready', conditions.ready],
+  ] as const;
+  return candidates.find(([, active]) => active)?.[0] ?? 'blocked';
 }
 
 function ComposerWarning({

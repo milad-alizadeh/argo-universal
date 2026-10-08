@@ -182,11 +182,11 @@ it('marks Plan and dangerous modes and keeps per-model support flags', (): void 
 it('resolves the CLI alias to a model name in the adapter', (): void => {
   const catalog = [
     {
-      ...models[0],
+      ...requireModel(0),
       description: 'Opus 5.5 · Best for everyday, complex tasks',
     },
-    models[1],
-  ] as ModelInfo[];
+    requireModel(1),
+  ] satisfies ModelInfo[];
   const model = toConfigOptions(catalog, startingValues(catalog, [])).find(
     (option): boolean => option.category === 'model',
   );
@@ -211,12 +211,12 @@ it.each([
 ])('maps the default effort for %s to %s', (resolvedModel, effort): void => {
   const catalog = [
     {
-      ...models[0],
+      ...requireModel(0),
       resolvedModel,
       description: '',
       supportedEffortLevels: ['low', 'medium', 'high', 'xhigh', 'max'],
     },
-  ] as ModelInfo[];
+  ] satisfies ModelInfo[];
   const values = startingValues(catalog, [
     { configId: 'effort', value: 'default' },
   ]);
@@ -231,3 +231,9 @@ it.each([
     name: 'Default',
   });
 });
+
+function requireModel(index: number): ModelInfo {
+  const model = models[index];
+  if (!model) throw new Error('Missing model fixture');
+  return model;
+}
