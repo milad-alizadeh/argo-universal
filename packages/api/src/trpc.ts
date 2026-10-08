@@ -15,13 +15,22 @@ export const createCallerFactory = t.createCallerFactory;
 const isAsyncIterable = (value: unknown): value is AsyncIterable<unknown> =>
   value != null && typeof value === 'object' && Symbol.asyncIterator in value;
 
+type ParsedValues<Yield> = AsyncGenerator<
+  Awaited<Yield>,
+  void,
+  Parameters<z.ZodType['parse']>[0]
+>;
+
 // `.output()` checks a subscription's whole return value, so this checks each yielded value (tRPC subscriptions docs).
 export function zAsyncIterable<TYieldIn, TYieldOut>(options: {
   yield: z.ZodType<TYieldOut, TYieldIn>;
-}) {
+}): z.ZodType<AsyncIterable<TYieldOut, void>, AsyncIterable<TYieldIn, void>> {
   return z
-    .custom<AsyncIterable<TYieldIn>>((value) => isAsyncIterable(value))
-    .transform(async function* (iterable) {
+    .custom<AsyncIterable<TYieldIn>>(
+      (value): value is AsyncIterable<Parameters<typeof isAsyncIterable>[0]> =>
+        isAsyncIterable(value),
+    )
+    .transform(async function* (iterable): ParsedValues<TYieldOut> {
       for await (const value of iterable) yield options.yield.parseAsync(value);
     }) as unknown as z.ZodType<
     AsyncIterable<TYieldOut, void, unknown>,

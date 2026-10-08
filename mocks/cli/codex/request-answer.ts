@@ -15,7 +15,17 @@ export function recordedRequestAnswer(name: string): RecordedRequestAnswer {
     'codex-app-server',
   );
   const request = recordedFrames<VendorMessage>(payload, 'messages').find(
-    (frame) =>
+    (
+      frame,
+    ): frame is Extract<
+      VendorMessage,
+      {
+        method:
+          | 'item/commandExecution/requestApproval'
+          | 'item/fileChange/requestApproval'
+          | 'item/tool/requestUserInput';
+      }
+    > =>
       frame.method === 'item/commandExecution/requestApproval' ||
       frame.method === 'item/fileChange/requestApproval' ||
       frame.method === 'item/tool/requestUserInput',
@@ -24,7 +34,9 @@ export function recordedRequestAnswer(name: string): RecordedRequestAnswer {
     const nextTurn = recordedFrames<{
       method: string;
       params: TurnStartParams;
-    }>(payload, 'input').filter((frame) => frame.method === 'turn/start')[1];
+    }>(payload, 'input').filter(
+      (frame): boolean => frame.method === 'turn/start',
+    )[1];
     if (!nextTurn) throw new Error('Recording has no Plan answer Turn');
     return nextTurn.params.collaborationMode?.mode === 'default'
       ? { type: 'plan', decision: 'approve' }
@@ -32,7 +44,7 @@ export function recordedRequestAnswer(name: string): RecordedRequestAnswer {
           type: 'plan',
           decision: 'keep_planning',
           feedback: nextTurn.params.input
-            .map((block) => (block.type === 'text' ? block.text : ''))
+            .map((block): string => (block.type === 'text' ? block.text : ''))
             .join('\n'),
         };
   }
@@ -40,7 +52,7 @@ export function recordedRequestAnswer(name: string): RecordedRequestAnswer {
   const response = recordedFrames<{ id: string | number; result: unknown }>(
     payload,
     'input',
-  ).find((frame) => frame.id === request.id);
+  ).find((frame): boolean => frame.id === request.id);
   if (!response) throw new Error('Recording has no matching answer');
   if (request.method === 'item/tool/requestUserInput') {
     const result = response.result as ToolRequestUserInputResponse;
@@ -48,7 +60,7 @@ export function recordedRequestAnswer(name: string): RecordedRequestAnswer {
       type: 'elicitation',
       action: 'accept',
       content: Object.fromEntries(
-        Object.entries(result.answers).map(([id, answer]) => {
+        Object.entries(result.answers).map(([id, answer]): [string, string] => {
           const value = answer?.answers[0];
           if (value === undefined)
             throw new Error('Recording has no Elicitation answer');

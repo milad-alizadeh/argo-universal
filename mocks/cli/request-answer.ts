@@ -21,17 +21,21 @@ const RequestAnswer = z.discriminatedUnion('type', [
   }),
 ]);
 
-export function recordRequestAnswer(answer: RecordedRequestAnswer) {
+export function recordRequestAnswer(answer: RecordedRequestAnswer): void {
   const file = readMockCliEnvironment().scenario.requestAnswersFile;
   if (file) appendFileSync(file, `${JSON.stringify(answer)}\n`);
 }
 
-export function readRequestAnswers(file: string) {
+export function readRequestAnswers(
+  file: string,
+): z.infer<typeof RequestAnswer>[] {
   if (!existsSync(file)) return [];
   return readFileSync(file, 'utf8')
     .trim()
     .split('\n')
-    .map((line) => RequestAnswer.parse(JSON.parse(line)));
+    .map((line): z.infer<typeof RequestAnswer> =>
+      RequestAnswer.parse(JSON.parse(line)),
+    );
 }
 
 export type RecordedRequestAnswer =

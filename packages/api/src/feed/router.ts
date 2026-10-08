@@ -13,15 +13,19 @@ export const feedRouter = router({
   page: publicProcedure
     .input(FeedPageInput)
     .output(FeedPageOutput)
-    .query(({ ctx, input }) => ctx.services.feed.page(input)),
+    .query(({ ctx, input }): FeedPageOutput => ctx.services.feed.page(input)),
   row: publicProcedure
     .input(FeedRowInput)
     .output(FeedRowOutput)
-    .query(({ ctx, input }) => ctx.services.feed.row(input)),
+    .query(({ ctx, input }): FeedRowOutput => ctx.services.feed.row(input)),
   subscribe: publicProcedure
     .input(FeedSubscribeInput)
     .output(zAsyncIterable({ yield: FeedSubscribeOutput }))
-    .subscription(async function* ({ ctx, input, signal }) {
+    .subscription(async function* ({
+      ctx,
+      input,
+      signal,
+    }): AsyncGenerator<FeedSubscribeOutput, void> {
       yield* ctx.services.feed.subscribe(input, signal);
     }),
 });

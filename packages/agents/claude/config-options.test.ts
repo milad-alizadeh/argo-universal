@@ -15,8 +15,8 @@ const models: ModelInfo[] = [
   { value: 'haiku', displayName: 'Haiku', description: 'Fastest' },
 ];
 
-describe('Claude config options', () => {
-  it('starts from the defaults and offers each model, mode and effort', () => {
+describe('Claude config options', (): void => {
+  it('starts from the defaults and offers each model, mode and effort', (): void => {
     const values = startingValues(models, []);
     expect(values).toEqual({
       mode: 'default',
@@ -65,7 +65,7 @@ describe('Claude config options', () => {
     ]);
   });
 
-  it('keeps saved values the models still allow', () => {
+  it('keeps saved values the models still allow', (): void => {
     expect(
       startingValues(models, [
         { configId: 'model', value: 'default' },
@@ -82,7 +82,7 @@ describe('Claude config options', () => {
     ).toEqual({ model: 'default', mode: 'default', effort: 'medium' });
   });
 
-  it('drops auto mode and effort for a model without them', () => {
+  it('drops auto mode and effort for a model without them', (): void => {
     const values = changeValue(
       models,
       { model: 'default', mode: 'auto', effort: 'high' },
@@ -95,7 +95,7 @@ describe('Claude config options', () => {
     });
     expect(
       toConfigOptions(models, values ?? expect.unreachable()).map(
-        (option) => option.configId,
+        (option): string => option.configId,
       ),
     ).toEqual(['mode', 'model']);
   });
@@ -104,7 +104,7 @@ describe('Claude config options', () => {
     { configId: 'mode', value: 'dontAsk' },
     { configId: 'colour', value: 'blue' },
     { configId: 'mode', value: true },
-  ])('refuses a value Argo did not offer: %o', (change) => {
+  ])('refuses a value Argo did not offer: %o', (change): void => {
     expect(
       changeValue(
         models,
@@ -115,7 +115,7 @@ describe('Claude config options', () => {
   });
 });
 
-it('marks Plan and dangerous modes and keeps per-model support flags', () => {
+it('marks Plan and dangerous modes and keeps per-model support flags', (): void => {
   const options = toConfigOptions(models, startingValues(models, []));
   expect(options).toEqual(
     expect.arrayContaining([
@@ -159,7 +159,7 @@ it('marks Plan and dangerous modes and keeps per-model support flags', () => {
   );
 });
 
-it('resolves the CLI alias to a model name in the adapter', () => {
+it('resolves the CLI alias to a model name in the adapter', (): void => {
   const catalog = [
     {
       ...models[0],
@@ -168,7 +168,7 @@ it('resolves the CLI alias to a model name in the adapter', () => {
     models[1],
   ] as ModelInfo[];
   const model = toConfigOptions(catalog, startingValues(catalog, [])).find(
-    (option) => option.category === 'model',
+    (option): boolean => option.category === 'model',
   );
   expect(model).toMatchObject({
     options: [
@@ -188,7 +188,7 @@ it.each([
   ['claude-sonnet-5-5', 'medium'],
   ['claude-opus-4-7', 'xhigh'],
   ['claude-opus-4-6', 'high'],
-])('maps the default effort for %s to %s', (resolvedModel, effort) => {
+])('maps the default effort for %s to %s', (resolvedModel, effort): void => {
   const catalog = [
     {
       ...models[0],
@@ -202,7 +202,7 @@ it.each([
   ]);
   expect(values.effort).toBe(effort);
   const option = toConfigOptions(catalog, values).find(
-    (entry) => entry.category === 'thought_level',
+    (entry): boolean => entry.category === 'thought_level',
   );
   expect(option).toMatchObject({ currentValue: effort });
   if (option?.type !== 'select') throw new Error('Missing effort options');

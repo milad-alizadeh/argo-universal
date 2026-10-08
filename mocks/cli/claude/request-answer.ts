@@ -18,7 +18,7 @@ export function recordedRequestAnswer(name: string): RecordedRequestAnswer {
     payload,
     'output',
   ).find(
-    (frame) =>
+    (frame): boolean =>
       frame.type === 'control_request' &&
       frame.request.subtype === 'can_use_tool',
   );
@@ -30,7 +30,7 @@ export function recordedRequestAnswer(name: string): RecordedRequestAnswer {
   const frame = recordedFrames<
     SDKMessage | SDKControlRequest | SDKControlResponse
   >(payload, 'input').find(
-    (frame) =>
+    (frame): boolean =>
       frame.type === 'control_response' &&
       frame.response.request_id === request.request_id,
   );

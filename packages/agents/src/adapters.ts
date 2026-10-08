@@ -13,14 +13,25 @@ const missingAdapter = (agent: string): AgentAdapter => ({
   agent,
   label: agent,
   logo: '',
-  probe: async () => ({ availability: 'unavailable', configOptions: [] }),
-  connect: () => Promise.reject(new Error(`No Agent adapter for ${agent}.`)),
-  initialMappingState: () => null,
-  toAgentEvents: (_, mappingState) => ({ events: [], mappingState }),
+  probe: async (): Promise<{
+    availability: 'unavailable';
+    configOptions: never[];
+  }> => ({ availability: 'unavailable', configOptions: [] }),
+  connect: (): Promise<import('./agent-adapter').VendorSession> =>
+    Promise.reject(new Error(`No Agent adapter for ${agent}.`)),
+  initialMappingState: (): null => null,
+  toAgentEvents: (
+    _,
+    mappingState,
+  ): {
+    events: never[];
+    mappingState: Parameters<AgentAdapter['toAgentEvents']>[1];
+  } => ({ events: [], mappingState }),
 });
 
 export const findAgentAdapter = (
   agent: string,
   adapters: readonly AgentAdapter[],
-) =>
-  adapters.find((adapter) => adapter.agent === agent) ?? missingAdapter(agent);
+): AgentAdapter =>
+  adapters.find((adapter): boolean => adapter.agent === agent) ??
+  missingAdapter(agent);

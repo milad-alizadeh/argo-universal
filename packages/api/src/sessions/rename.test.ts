@@ -3,21 +3,28 @@ import { describe, expect, it } from 'vitest';
 import { sessionTitleMocks, unreachableServices } from '../../mocks';
 import { appRouter } from '../root';
 
-describe('Session title contracts', () => {
+describe('Session title contracts', (): void => {
   it.each(sessionTitleMocks)(
     'serves the $name title mock for $session.agent',
-    async ({ session, snapshot, renameInput }) => {
+    async ({ session, snapshot, renameInput }): Promise<void> => {
       const caller = appRouter.createCaller({
         services: unreachableServices({
           session: {
-            list: async () => ({ sessions: [session], nextCursor: null }),
-            rename: async (input) => {
+            list: async (): Promise<{
+              sessions: (typeof session)[];
+              nextCursor: null;
+            }> => ({ sessions: [session], nextCursor: null }),
+            rename: async (input): Promise<Record<string, never>> => {
               expect(input).toEqual(renameInput);
               return {};
             },
           },
           feed: {
-            subscribe: async function* () {
+            subscribe: async function* (): AsyncGenerator<
+              { type: 'snapshot'; snapshot: typeof snapshot },
+              void,
+              Parameters<typeof structuredClone>[0]
+            > {
               yield { type: 'snapshot', snapshot };
             },
           },
@@ -42,14 +49,14 @@ describe('Session title contracts', () => {
     { sessionId: 'session-1' },
     { sessionId: 'session-1', title: 42 },
     { sessionId: 'session-1', title: 'Title', titleSource: 'agent' },
-  ])('rejects malformed rename input: %j', async (input) => {
+  ])('rejects malformed rename input: %j', async (input): Promise<void> => {
     const caller = appRouter.createCaller({ services: unreachableServices() });
     await expect(caller.session.rename(input as never)).rejects.toMatchObject({
       code: 'BAD_REQUEST',
     });
   });
 
-  it('rejects an unrecognised title source in the list and snapshot', () => {
+  it('rejects an unrecognised title source in the list and snapshot', (): void => {
     const mock = sessionTitleMocks[0];
     if (!mock) throw new Error('Missing title mock');
     expect(

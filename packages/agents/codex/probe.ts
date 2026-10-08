@@ -14,8 +14,8 @@ export async function probe(signal: AbortSignal): Promise<AgentProbe> {
     };
   const server = openAppServer(
     homedir(),
-    () => {},
-    () => {},
+    (): void => {},
+    (): void => {},
     signal,
   );
   try {

@@ -2,11 +2,14 @@ import { expect, it } from 'vitest';
 import { unreachableServices } from '../../mocks';
 import { appRouter } from '../root';
 
-it('returns local branches and the current branch for a Project', async () => {
+it('returns local branches and the current branch for a Project', async (): Promise<void> => {
   const caller = appRouter.createCaller({
     services: unreachableServices({
       projects: {
-        branches: async () => ({
+        branches: async (): Promise<{
+          branches: string[];
+          currentBranch: string;
+        }> => ({
           branches: ['main', 'feature'],
           currentBranch: 'feature',
         }),

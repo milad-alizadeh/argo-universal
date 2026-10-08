@@ -11,8 +11,8 @@ export const childProcessImport = defineRule({
         'Apps run git through packages/git (ADR-0008); only the three process launchers open subprocesses.',
     },
   },
-  create: (context) =>
-    onModuleSources((source) => {
+  create: (context): import('@oxlint/plugins').Visitor =>
+    onModuleSources((source): void => {
       if (childProcess.test(stringValue(source)))
         context.report({ node: source, messageId: 'childProcess' });
     }),

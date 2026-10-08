@@ -43,15 +43,18 @@ export interface ConfigValues {
 }
 type Wanted = Record<keyof ConfigValues, unknown>;
 
-const findModel = (models: ModelInfo[], value: unknown) =>
-  models.find((model) => model.value === value);
+const findModel = (
+  models: ModelInfo[],
+  value: unknown,
+): ModelInfo | undefined =>
+  models.find((model): boolean => model.value === value);
 
 // Models and their effort levels come from the CLI's model list.
-const modesFor = (model: ModelInfo | undefined) =>
+const modesFor = (model: ModelInfo | undefined): Mode[] =>
   (Object.keys(modeNames) as Mode[]).filter(
-    (mode) => mode !== 'auto' || model?.supportsAutoMode,
+    (mode): boolean | undefined => mode !== 'auto' || model?.supportsAutoMode,
   );
-const effortLevelsFor = (model: ModelInfo | undefined) =>
+const effortLevelsFor = (model: ModelInfo | undefined): EffortLevel[] =>
   (model?.supportsEffort && model.supportedEffortLevels) || [];
 
 function modelName(model: ModelInfo): string {
@@ -66,7 +69,7 @@ function modelName(model: ModelInfo): string {
   return model.displayName.replace(/\s*\(recommended\)\s*$/i, '');
 }
 
-const withoutModelPrefix = (model: ModelInfo, description: string) => {
+const withoutModelPrefix = (model: ModelInfo, description: string): string => {
   const prefix = `${modelName(model)} · `;
   return description.startsWith(prefix)
     ? description.slice(prefix.length)
@@ -86,8 +89,8 @@ function defaultEffort(
   if (/(?:opus|sonnet) 5[ .]5\b/.test(name)) preferred = 'medium';
   else if (/opus 4[ .]7\b/.test(name)) preferred = 'xhigh';
   return (
-    levels.find((level) => level === preferred) ??
-    levels.find((level) => level === 'high') ??
+    levels.find((level): boolean => level === preferred) ??
+    levels.find((level): level is 'high' => level === 'high') ??
     levels[0] ??
     DEFAULT_VALUE
   );
@@ -98,11 +101,14 @@ function allowedValues(models: ModelInfo[], wanted: Wanted): ConfigValues {
   const model =
     findModel(models, wanted.model) ?? findModel(models, DEFAULT_VALUE);
   return {
-    mode: modesFor(model).find((mode) => mode === wanted.mode) ?? 'default',
+    mode:
+      modesFor(model).find((mode): boolean => mode === wanted.mode) ??
+      'default',
     model: model?.value ?? DEFAULT_VALUE,
     effort:
-      effortLevelsFor(model).find((level) => level === wanted.effort) ??
-      defaultEffort(model),
+      effortLevelsFor(model).find(
+        (level): boolean => level === wanted.effort,
+      ) ?? defaultEffort(model),
   };
 }
 
@@ -111,8 +117,8 @@ export function startingValues(
   models: ModelInfo[],
   saved: AgentConfigValue[],
 ): ConfigValues {
-  const savedValue = (configId: string) =>
-    saved.find((option) => option.configId === configId)?.value;
+  const savedValue = (configId: string): string | boolean | undefined =>
+    saved.find((option): boolean => option.configId === configId)?.value;
   return allowedValues(models, {
     mode: savedValue('mode'),
     model: savedValue('model'),
@@ -132,7 +138,7 @@ export function changeValue(
   return next[configId] === change.value ? next : undefined;
 }
 
-const effortName = (level: EffortLevel) =>
+const effortName = (level: EffortLevel): string =>
   level === 'xhigh'
     ? 'Extra high'
     : `${level.charAt(0).toUpperCase()}${level.slice(1)}`;
@@ -149,12 +155,33 @@ export function toConfigOptions(
       name: 'Mode',
       category: 'mode',
       currentValue: values.mode,
-      options: modesFor(model).map((mode) => ({
-        value: mode,
-        name: modeNames[mode],
-        description: modeDescriptions[mode],
-        _meta: { argo: modeMetadata[mode] },
-      })),
+      options: modesFor(model).map(
+        (
+          mode,
+        ): {
+          value:
+            | 'acceptEdits'
+            | 'auto'
+            | 'bypassPermissions'
+            | 'default'
+            | 'plan';
+          name: string;
+          description: string;
+          _meta: {
+            argo:
+              | { icon: 'ShieldWarning'; tone: 'safe' }
+              | { icon: 'Pencil'; tone: 'moderate' }
+              | { icon: 'MapTrifold'; tone: 'planning' }
+              | { icon: 'Sparkles'; tone: 'moderate' }
+              | { icon: 'WarningTriangle'; tone: 'dangerous' };
+          };
+        } => ({
+          value: mode,
+          name: modeNames[mode],
+          description: modeDescriptions[mode],
+          _meta: { argo: modeMetadata[mode] },
+        }),
+      ),
     },
     {
       type: 'select',
@@ -162,31 +189,56 @@ export function toConfigOptions(
       name: 'Model',
       category: 'model',
       currentValue: values.model,
-      options: models.map((option) => ({
-        value: option.value,
-        name:
-          option.value === DEFAULT_VALUE
-            ? `${modelName(option)} (recommended)`
-            : modelName(option),
-        _meta: {
-          argo: {
-            shortName: modelName(option),
-            supportsEffort: option.supportsEffort ?? false,
-            supportedEffortLevels: option.supportedEffortLevels ?? [],
-            supportsAdaptiveThinking: option.supportsAdaptiveThinking ?? false,
-            supportsFastMode: option.supportsFastMode ?? false,
-            supportsAutoMode: option.supportsAutoMode ?? false,
+      options: models.map(
+        (
+          option,
+        ): {
+          value: string;
+          name: string;
+          _meta: {
+            argo: {
+              shortName: string;
+              supportsEffort: boolean;
+              supportedEffortLevels: (
+                | 'high'
+                | 'low'
+                | 'max'
+                | 'medium'
+                | 'xhigh'
+              )[];
+              supportsAdaptiveThinking: boolean;
+              supportsFastMode: boolean;
+              supportsAutoMode: boolean;
+            };
+          };
+          description?: string;
+        } => ({
+          value: option.value,
+          name:
+            option.value === DEFAULT_VALUE
+              ? `${modelName(option)} (recommended)`
+              : modelName(option),
+          _meta: {
+            argo: {
+              shortName: modelName(option),
+              supportsEffort: option.supportsEffort ?? false,
+              supportedEffortLevels: option.supportedEffortLevels ?? [],
+              supportsAdaptiveThinking:
+                option.supportsAdaptiveThinking ?? false,
+              supportsFastMode: option.supportsFastMode ?? false,
+              supportsAutoMode: option.supportsAutoMode ?? false,
+            },
           },
-        },
-        ...(option.description
-          ? {
-              description:
-                option.value === DEFAULT_VALUE
-                  ? withoutModelPrefix(option, option.description)
-                  : option.description,
-            }
-          : {}),
-      })),
+          ...(option.description
+            ? {
+                description:
+                  option.value === DEFAULT_VALUE
+                    ? withoutModelPrefix(option, option.description)
+                    : option.description,
+              }
+            : {}),
+        }),
+      ),
     },
   ];
   const levels = effortLevelsFor(model);
@@ -198,7 +250,10 @@ export function toConfigOptions(
     category: 'thought_level',
     currentValue:
       values.effort === DEFAULT_VALUE ? defaultEffort(model) : values.effort,
-    options: levels.map((level) => ({ value: level, name: effortName(level) })),
+    options: levels.map((level): { value: EffortLevel; name: string } => ({
+      value: level,
+      name: effortName(level),
+    })),
   };
   return [...options, effort];
 }

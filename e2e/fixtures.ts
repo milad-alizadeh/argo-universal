@@ -37,16 +37,19 @@ export const serverVersion = ServerPackage.parse(
 ).version;
 
 // The supervisor removes server.json when it stops, so a file left behind names a Server still running.
-const readServerPid = async (home: string) => {
+const readServerPid = async (home: string): Promise<number | null> => {
   const text = await readFile(path.join(home, 'server.json'), 'utf8').catch(
-    () => null,
+    (): null => null,
   );
   return text === null ? null : ServerProcess.parse(JSON.parse(text)).pid;
 };
 
 // The App prefers the Server URL the desktop preload sets over its built-in one, so tests can point it at any port.
-const pointAppAtServer = (page: Page, serverUrl: string) =>
-  page.addInitScript((url) => {
+const pointAppAtServer = (
+  page: Page,
+  serverUrl: string,
+): Promise<import('@playwright/test').Disposable> =>
+  page.addInitScript((url): void => {
     Object.assign(globalThis, { argo: { serverUrl: url } });
   }, serverUrl);
 
@@ -58,15 +61,15 @@ export type ServerOptions = {
 type App = { page: Page; httpUrl: string };
 
 // Polls system.info, so a test never calls a Server that is still starting.
-const waitForServer = (httpUrl: string) =>
+const waitForServer = (httpUrl: string): Promise<true> =>
   pollServer(
-    async () => {
+    async (): Promise<true | undefined> => {
       const response = await fetch(`${httpUrl}/trpc/system.info`).catch(
-        () => null,
+        (): null => null,
       );
       return response?.ok ? true : undefined;
     },
-    (seconds) => `The Server did not answer within ${seconds} s`,
+    (seconds): string => `The Server did not answer within ${seconds} s`,
   );
 
 export const test = base.extend<
@@ -75,7 +78,11 @@ export const test = base.extend<
   appTarget: ['web', { option: true }],
   mockAgents: [{}, { option: true }],
   // The App on a Server of the test's own, so tests never share state; the port, mock CLIs, Project and teardown stay in here.
-  app: async ({ appTarget, context, mockAgents }, use, testInfo) => {
+  app: async (
+    { appTarget, context, mockAgents },
+    use,
+    testInfo,
+  ): Promise<void> => {
     // Starting a Server compiles it with tsx, which takes seconds when several runs share the machine.
     test.slow();
     if (appTarget === 'web') {
@@ -143,10 +150,10 @@ export const test = base.extend<
       );
     }
   },
-  page: async ({ app }, use) => {
+  page: async ({ app }, use): Promise<void> => {
     await use(app.page);
   },
-  server: async ({ app }, use) => {
+  server: async ({ app }, use): Promise<void> => {
     await use({ httpUrl: app.httpUrl });
   },
 });

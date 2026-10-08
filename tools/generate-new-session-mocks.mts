@@ -5,7 +5,11 @@ import { mockClis } from '../mocks/cli/index.ts';
 import { agentAdapters } from '../packages/agents/src/adapters.ts';
 import { agentsList } from '../packages/api/mocks/session-list.ts';
 
-const mocks = agentAdapters.map(({ agent }, index) => {
+type NewSessionMock = { agent: string } & ReturnType<
+  (typeof mockClis)[string]['newSessionMock']
+>;
+
+const mocks = agentAdapters.map(({ agent }, index): NewSessionMock => {
   const cli = mockClis[agent];
   const id = agentsList[index]?.agent;
   if (!cli || !id) throw new Error('Missing Agent mock');

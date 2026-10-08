@@ -13,23 +13,32 @@ const recording: { payload: ModelListResponse } = JSON.parse(
   ),
 );
 const efforts = new Set<string>();
-const models = recording.payload.data.filter((model) => {
+const models = recording.payload.data.filter((model): boolean => {
   const key = JSON.stringify(
-    model.supportedReasoningEfforts.map((effort) => effort.reasoningEffort),
+    model.supportedReasoningEfforts.map(
+      (effort): string => effort.reasoningEffort,
+    ),
   );
   if (efforts.has(key)) return false;
   efforts.add(key);
   return true;
 });
 
-export function newSessionMock() {
+type NewSessionMock = {
+  configOptions: ReturnType<typeof toConfigOptions>;
+  configOptionsByModel: ReturnType<typeof toConfigOptions>[];
+  prompt: typeof recordedImagePrompt;
+};
+
+export function newSessionMock(): NewSessionMock {
   return {
     configOptions: toConfigOptions(models, startingValues(models, [])),
-    configOptionsByModel: models.map((model) =>
-      toConfigOptions(
-        models,
-        startingValues(models, [{ configId: 'model', value: model.model }]),
-      ),
+    configOptionsByModel: models.map(
+      (model): ReturnType<typeof toConfigOptions> =>
+        toConfigOptions(
+          models,
+          startingValues(models, [{ configId: 'model', value: model.model }]),
+        ),
     ),
     prompt: recordedImagePrompt,
   };

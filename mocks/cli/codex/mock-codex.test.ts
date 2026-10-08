@@ -20,25 +20,29 @@ const PRODUCER = 'codex-app-server';
 const RECORDINGS = path.join(import.meta.dirname, 'recordings');
 const VERSION = recordingVersion(RECORDINGS);
 
-const recordedPayload = (name: string) =>
+const recordedPayload = (
+  name: string,
+): ReturnType<typeof readRecording>['payload'] =>
   readRecording(findRecording(RECORDINGS, name), PRODUCER).payload;
 
 // The wire messages of a recording, without the time each was captured.
-const wireMessages = (name: string) =>
+const wireMessages = (name: string): VendorMessage[] =>
   recordedFrames<VendorMessage & { emittedAtMs?: number }>(
     recordedPayload(name),
     'messages',
-  ).map(({ emittedAtMs: _, ...message }) => message);
+  ).map(({ emittedAtMs: _, ...message }): typeof message => message);
 
 let directory: string;
 
-beforeEach(async () => {
+beforeEach(async (): Promise<void> => {
   directory = await mkdtemp(path.join(os.tmpdir(), 'mock-codex-'));
 });
 
-afterEach(() => rm(directory, { recursive: true, force: true }));
+afterEach((): Promise<void> => rm(directory, { recursive: true, force: true }));
 
-const startAppServer = async (options: Partial<MockCliOptions> = {}) => {
+const startAppServer = async (
+  options: Partial<MockCliOptions> = {},
+): Promise<ReturnType<typeof startLineProcess>> => {
   const codex = startLineProcess(
     await writeMockCodex(directory, { recording: 'file-change', ...options }),
     ['app-server'],
@@ -52,7 +56,7 @@ const startAppServer = async (options: Partial<MockCliOptions> = {}) => {
 const startTurn = async (
   codex: Awaited<ReturnType<typeof startAppServer>>,
   threadId: string | undefined,
-) => {
+): Promise<void> => {
   codex.send({ id: 2, method: 'thread/start', params: {} });
   expect(await codex.next()).toEqual({
     id: 2,
@@ -65,14 +69,17 @@ const startTurn = async (
   });
 };
 
-describe('codex recordings', () => {
-  it.each(recordingFiles(RECORDINGS))('%s reads as a recording', (file) => {
-    expect(readRecording(file, PRODUCER).version).toBe(VERSION);
-  });
+describe('codex recordings', (): void => {
+  it.each(recordingFiles(RECORDINGS))(
+    '%s reads as a recording',
+    (file): void => {
+      expect(readRecording(file, PRODUCER).version).toBe(VERSION);
+    },
+  );
 });
 
-describe('mock Codex CLI', () => {
-  it('reports the version of its recordings', async () => {
+describe('mock Codex CLI', (): void => {
+  it('reports the version of its recordings', async (): Promise<void> => {
     const executable = await writeMockCodex(directory, {
       recording: 'file-change',
     });
@@ -82,13 +89,13 @@ describe('mock Codex CLI', () => {
     expect(stdout).toBe(`codex-cli ${VERSION}\n`);
   });
 
-  it('refuses a recording it does not have', async () => {
+  it('refuses a recording it does not have', async (): Promise<void> => {
     await expect(
       writeMockCodex(directory, { recording: 'no-such-turn' }),
     ).rejects.toThrow(/no-such-turn/);
   });
 
-  it('answers model/list with the recorded models', async () => {
+  it('answers model/list with the recorded models', async (): Promise<void> => {
     const codex = await startAppServer();
 
     codex.send({ id: 2, method: 'model/list', params: {} });
@@ -103,16 +110,19 @@ describe('mock Codex CLI', () => {
 
   it.each(['file-change', 'reply', 'edit-and-command', 'image-prompt'])(
     'replays %s after turn/start',
-    async (recording) => {
+    async (recording): Promise<void> => {
       const messages = wireMessages(recording);
       const started = messages.find(
-        (message) => message.method === 'turn/started',
+        (
+          message,
+        ): message is Extract<VendorMessage, { method: 'turn/started' }> =>
+          message.method === 'turn/started',
       );
       const codex = await startAppServer({ recording });
 
       await startTurn(codex, started?.params.threadId);
       const output = await codex.until(
-        (message) => message.method === 'turn/completed',
+        (message): boolean => message.method === 'turn/completed',
       );
 
       expect(output[0]).toEqual({
@@ -130,12 +140,14 @@ describe('mock Codex CLI', () => {
     },
   );
 
-  it('answers turn/start past the last Turn with an error, not a crash', async () => {
+  it('answers turn/start past the last Turn with an error, not a crash', async (): Promise<void> => {
     const messages = wireMessages('file-change');
     const codex = await startAppServer();
 
     await startTurn(codex, messages[0]?.params.threadId);
-    await codex.until((message) => message.method === 'turn/completed');
+    await codex.until(
+      (message): boolean => message.method === 'turn/completed',
+    );
     codex.send({ id: 4, method: 'turn/start', params: { input: [] } });
 
     expect(await codex.next()).toEqual({
@@ -148,7 +160,7 @@ describe('mock Codex CLI', () => {
 
   it.each(['file-change', 'reply', 'edit-and-command', 'image-prompt'])(
     'exits right after turn/started in %s, to stand in for a crash',
-    async (recording) => {
+    async (recording): Promise<void> => {
       const messages = wireMessages(recording);
       const codex = await startAppServer({ recording, exitMidTurn: true });
 
@@ -156,7 +168,10 @@ describe('mock Codex CLI', () => {
 
       expect(await codex.exited).toBe(1);
       const started = messages.findIndex(
-        (message) => message.method === 'turn/started',
+        (
+          message,
+        ): message is Extract<VendorMessage, { method: 'turn/started' }> =>
+          message.method === 'turn/started',
       );
       expect(codex.output.slice(3)).toEqual(messages.slice(0, started + 1));
     },
@@ -164,7 +179,7 @@ describe('mock Codex CLI', () => {
 
   it.each(['thread/fork'])(
     'rejects %s, which the recording cannot answer',
-    async (method) => {
+    async (method): Promise<void> => {
       const codex = await startAppServer();
 
       codex.send({ id: 2, method, params: {} });
@@ -179,31 +194,35 @@ describe('mock Codex CLI', () => {
   );
 });
 
-it('holds the recorded interrupted Turn until the caller interrupts its command', async () => {
+it('holds the recorded interrupted Turn until the caller interrupts its command', async (): Promise<void> => {
   const messages = wireMessages('interrupt');
   const codex = await startAppServer({ recording: 'interrupt' });
   await startTurn(codex, messages[0]?.params.threadId);
-  const prefix = await codex.until((wireMessage) => {
+  const prefix = await codex.until((wireMessage): boolean => {
     const message = wireMessage as unknown as VendorMessage;
     return (
       message.method === 'item/started' &&
       message.params.item.type === 'commandExecution'
     );
   });
-  expect(prefix.some((message) => message.method === 'turn/completed')).toBe(
-    false,
-  );
+  expect(
+    prefix.some((message): boolean => message.method === 'turn/completed'),
+  ).toBe(false);
   codex.send({
     id: 4,
     method: 'turn/interrupt',
     params: {
       threadId: messages[0]?.params.threadId,
-      turnId: messages.find((message) => message.method === 'turn/started')
-        ?.params.turn.id,
+      turnId: messages.find(
+        (
+          message,
+        ): message is Extract<VendorMessage, { method: 'turn/started' }> =>
+          message.method === 'turn/started',
+      )?.params.turn.id,
     },
   });
   const output = await codex.until(
-    (message) => message.method === 'turn/completed',
+    (message): boolean => message.method === 'turn/completed',
   );
   expect(output[0]).toEqual({ id: 4, result: {} });
   expect([...prefix.slice(1), ...output.slice(1)]).toEqual(messages);
@@ -211,7 +230,7 @@ it('holds the recorded interrupted Turn until the caller interrupts its command'
   expect(await codex.exited).toBe(0);
 });
 
-it('can replay turn/started before the response that supplies its vendor Turn id', async () => {
+it('can replay turn/started before the response that supplies its vendor Turn id', async (): Promise<void> => {
   const codex = await startAppServer();
   codex.send({ id: 2, method: 'thread/start', params: {} });
   await codex.next();
@@ -221,7 +240,7 @@ it('can replay turn/started before the response that supplies its vendor Turn id
     params: { notificationsFirst: true },
   });
   const output = await codex.until(
-    (message) => message.method === 'turn/completed',
+    (message): boolean => message.method === 'turn/completed',
   );
   expect(output[0]).toMatchObject({ method: 'turn/started' });
   expect(output[1]).toMatchObject({
@@ -232,7 +251,7 @@ it('can replay turn/started before the response that supplies its vendor Turn id
   expect(await codex.exited).toBe(0);
 });
 
-it('reports an absent account when not signed in', async () => {
+it('reports an absent account when not signed in', async (): Promise<void> => {
   const codex = await startAppServer({ availability: 'not_signed_in' });
   codex.send({ id: 5, method: 'account/read', params: {} });
   expect(await codex.next()).toMatchObject({

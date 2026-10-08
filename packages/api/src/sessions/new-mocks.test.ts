@@ -11,9 +11,11 @@ import { appRouter } from '../root';
 
 it.each(Object.entries(newSessionCatalogs))(
   'serves the %s New Session catalog mock',
-  async (_, catalog) => {
+  async (_, catalog): Promise<void> => {
     const caller = appRouter.createCaller({
-      services: unreachableServices({ agents: { list: async () => catalog } }),
+      services: unreachableServices({
+        agents: { list: async (): Promise<typeof catalog> => catalog },
+      }),
     });
     await expect(caller.agents.list()).resolves.toEqual(catalog);
   },
@@ -21,10 +23,14 @@ it.each(Object.entries(newSessionCatalogs))(
 
 it.each(newSessionInputs)(
   'serves the recorded image prompt for $agent',
-  async (input) => {
+  async (input): Promise<void> => {
     const caller = appRouter.createCaller({
       services: unreachableServices({
-        session: { new: async () => ({ sessionId: 'image-session' }) },
+        session: {
+          new: async (): Promise<{ sessionId: string }> => ({
+            sessionId: 'image-session',
+          }),
+        },
       }),
     });
     await expect(caller.session.new(input)).resolves.toEqual({
@@ -39,40 +45,49 @@ it.each(newSessionInputs)(
   },
 );
 
-it('offers model-specific efforts, including a model without effort, and a selected dangerous mode for each Agent', () => {
+it('offers model-specific efforts, including a model without effort, and a selected dangerous mode for each Agent', (): void => {
   const models = newSessionOptions.flatMap(
-    ({ configOptionsByModel }) => configOptionsByModel,
+    ({ configOptionsByModel }): typeof configOptionsByModel =>
+      configOptionsByModel,
   );
   expect(
     models.some(
-      (options) =>
-        !options.some((option) => option.category === 'thought_level'),
+      (options): boolean =>
+        !options.some((option): boolean => option.category === 'thought_level'),
     ),
   ).toBe(true);
-  const choices = models.map((options) =>
-    options.find((option) => option.category === 'thought_level'),
+  const choices = models.map((options): (typeof options)[number] | undefined =>
+    options.find((option): boolean => option.category === 'thought_level'),
   );
   expect(
     new Set(
-      choices.map((option) =>
+      choices.map((option): number =>
         option?.type === 'select' ? option.options.length : 0,
       ),
     ).size,
   ).toBeGreaterThan(2);
   for (const { configOptions } of dangerousModeOptions) {
-    const mode = configOptions.find((option) => option.category === 'mode');
+    const mode = configOptions.find(
+      (option): boolean => option.category === 'mode',
+    );
     if (mode?.type !== 'select') throw new Error('Missing mode mock');
     const selected = mode.options.find(
-      (choice) => 'value' in choice && choice.value === mode.currentValue,
+      (choice): boolean =>
+        'value' in choice && choice.value === mode.currentValue,
     );
     expect(selected?._meta?.argo?.tone).toBe('dangerous');
   }
 });
 
-it('serves the branch mock through its procedure contract', async () => {
+it('serves the branch mock through its procedure contract', async (): Promise<void> => {
   const caller = appRouter.createCaller({
     services: unreachableServices({
-      projects: { branches: async () => newSessionBranches },
+      projects: {
+        branches: async (): Promise<{
+          branches: string[];
+          currentBranch: string | null;
+        }> => newSessionBranches,
+      },
     }),
   });
   await expect(

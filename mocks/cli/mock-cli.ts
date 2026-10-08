@@ -42,7 +42,9 @@ export type MockCliScenario = z.output<typeof MockCliScenario>;
 export type MockCliScenarioInput = z.input<typeof MockCliScenario>;
 
 // Parses the scenario, so a bad field fails where a test writes it, and returns the variable that carries it.
-export function mockCliScenarioEnvironment(scenario: MockCliScenarioInput) {
+export function mockCliScenarioEnvironment(scenario: MockCliScenarioInput): {
+  MOCK_CLI_SCENARIO: string;
+} {
   return {
     [SCENARIO_VARIABLE]: JSON.stringify(MockCliScenario.parse(scenario)),
   };
@@ -57,7 +59,7 @@ const MockCliEnvironment = z.object({
   [EXIT_MID_TURN_VARIABLE]: z.enum(['0', '1']),
 });
 
-const quote = (text: string) => `'${text.replaceAll("'", `'\\''`)}'`;
+const quote = (text: string): string => `'${text.replaceAll("'", `'\\''`)}'`;
 
 // Writes an executable `name` that runs `script` under this node, replaying a recording beside it.
 export async function writeMockCliShim({
@@ -67,7 +69,11 @@ export async function writeMockCliShim({
   recording,
   exitMidTurn = false,
   availability = 'available',
-}: MockCliOptions & { directory: string; name: string; script: string }) {
+}: MockCliOptions & {
+  directory: string;
+  name: string;
+  script: string;
+}): Promise<string> {
   const executable = path.join(directory, name);
   if (availability === 'not_installed') {
     await rm(executable, { force: true });
@@ -93,7 +99,12 @@ export async function writeMockCliShim({
 }
 
 // The only reader of MOCK_CLI_ settings: the shim's variables and the test scenario.
-export function readMockCliEnvironment() {
+export function readMockCliEnvironment(): {
+  availability: 'available' | 'not_signed_in';
+  recordingFile: string;
+  exitMidTurn: boolean;
+  scenario: MockCliScenario;
+} {
   const environment = MockCliEnvironment.parse(process.env);
   return {
     availability: environment[AVAILABILITY_VARIABLE],
@@ -106,20 +117,20 @@ export function readMockCliEnvironment() {
 }
 
 // Writes one JSON message per line, as both Agent protocols do on stdout.
-export const send = (message: unknown) =>
+export const send = (message: unknown): boolean =>
   process.stdout.write(`${JSON.stringify(message)}\n`);
 
 let crashed = false;
 
 // Reads one JSON message per stdin line, and exits when the caller closes stdin.
-export function serveJsonLines<Frame>(handle: (message: Frame) => void) {
+export function serveJsonLines<Frame>(handle: (message: Frame) => void): void {
   const { processFile } = readMockCliEnvironment().scenario;
   if (processFile) writeFileSync(processFile, String(process.pid));
   createInterface({ input: process.stdin })
-    .on('line', (line) => {
+    .on('line', (line): void => {
       if (!crashed) handle(z.looseObject({}).parse(JSON.parse(line)) as Frame);
     })
-    .on('close', () => {
+    .on('close', (): void => {
       if (!crashed) process.exit(0);
     });
 }
@@ -135,7 +146,7 @@ export function replayTurn<Frame>(
       crashed = true;
       process.stderr.write('Mock CLI exited mid-Turn.\n');
       // Exits once stdout has flushed, since pipe writes are asynchronous on macOS.
-      process.stdout.write('', () => process.exit(1));
+      process.stdout.write('', (): never => process.exit(1));
       return false;
     }
   }
@@ -143,7 +154,7 @@ export function replayTurn<Frame>(
 }
 
 // The transcript marker belongs to the mock harness, not either vendor protocol.
-export function readMockTranscript(file: string) {
+export function readMockTranscript(file: string): { vendorSessionId: string } {
   return z
     .object({ vendorSessionId: z.string() })
     .parse(JSON.parse(readFileSync(file, 'utf8')));

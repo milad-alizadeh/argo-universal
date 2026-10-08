@@ -12,15 +12,17 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { FileUpdateChange } from './protocol.gen';
 import { toToolCall } from './tool-calls';
 
-describe('file Tool call patches', () => {
+describe('file Tool call patches', (): void => {
   let checkout: string;
-  beforeEach(() => {
+  beforeEach((): void => {
     checkout = mkdtempSync(join(tmpdir(), 'agent-patch-'));
     execFileSync('git', ['init', '--quiet'], { cwd: checkout });
   });
-  afterEach(() => rmSync(checkout, { recursive: true, force: true }));
+  afterEach((): void => rmSync(checkout, { recursive: true, force: true }));
 
-  const applyChange = (change: FileUpdateChange) => {
+  const applyChange = (
+    change: FileUpdateChange,
+  ): import('@repo/contracts').DiffChange[] => {
     const row = toToolCall(
       {
         type: 'fileChange',
@@ -30,7 +32,21 @@ describe('file Tool call patches', () => {
       },
       'settled',
     );
-    const content = row.content.find((entry) => entry.type === 'diff');
+    const content = row.content.find(
+      (
+        entry,
+      ): entry is {
+        type: 'diff';
+        changes: {
+          operation: 'add' | 'delete' | 'modify' | 'move';
+          path: string;
+          oldPath?: string;
+          oldText?: string;
+          newText?: string;
+        }[];
+        patch?: { format: 'git_patch'; text: string };
+      } => entry.type === 'diff',
+    );
     if (!content?.patch) throw new Error('The Tool call has no patch.');
     execFileSync('git', ['apply', '--whitespace=nowarn', '-'], {
       cwd: checkout,
@@ -55,7 +71,7 @@ describe('file Tool call patches', () => {
     'back\\slash.txt',
     'accent-é.txt',
     'accent-é\tname.txt',
-  ])('preserves path %j when adding, moving and deleting', (filePath) => {
+  ])('preserves path %j when adding, moving and deleting', (filePath): void => {
     const text = 'content\n';
     applyChange({ path: filePath, kind: { type: 'add' }, diff: text });
     expect(readFileSync(join(checkout, filePath), 'utf8')).toBe(text);
@@ -73,7 +89,7 @@ describe('file Tool call patches', () => {
 
   it.each(contents)(
     'adds a file with $name without changing its bytes',
-    ({ text }) => {
+    ({ text }): void => {
       expect(
         applyChange({ path: 'file.txt', kind: { type: 'add' }, diff: text }),
       ).toEqual([{ operation: 'add', path: 'file.txt', newText: text }]);
@@ -81,7 +97,7 @@ describe('file Tool call patches', () => {
     },
   );
 
-  it.each(contents)('deletes a file with $name', ({ text }) => {
+  it.each(contents)('deletes a file with $name', ({ text }): void => {
     writeFileSync(join(checkout, 'file.txt'), text);
     expect(
       applyChange({ path: 'file.txt', kind: { type: 'delete' }, diff: text }),
@@ -91,7 +107,7 @@ describe('file Tool call patches', () => {
 
   it.each(contents)(
     'moves a file with $name without changing its bytes',
-    ({ text }) => {
+    ({ text }): void => {
       writeFileSync(join(checkout, 'old.txt'), text);
       expect(
         applyChange({
@@ -118,7 +134,7 @@ describe('file Tool call patches', () => {
       after: 'after',
       diff: '@@ -1 +1 @@\n-before\n\\ No newline at end of file\n+after\n\\ No newline at end of file\n',
     },
-  ])('moves and edits a file with $name', ({ before, after, diff }) => {
+  ])('moves and edits a file with $name', ({ before, after, diff }): void => {
     writeFileSync(join(checkout, 'old.txt'), before);
     applyChange({
       path: 'old.txt',

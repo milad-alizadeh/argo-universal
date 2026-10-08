@@ -6,7 +6,10 @@ export function writeClaudeTranscript(
   directory: string,
   cwd: string,
   sessionId: string,
-) {
+): {
+  environment: { CLAUDE_CONFIG_DIR: string };
+  scenario: Record<string, never>;
+} {
   const projectDirectory = path.join(
     directory,
     'projects',
@@ -24,5 +27,8 @@ export function writeClaudeTranscript(
       timestamp: '2026-10-05T00:00:00.000Z',
     })}\n`,
   );
-  return { environment: { CLAUDE_CONFIG_DIR: directory }, scenario: {} };
+  return {
+    environment: { CLAUDE_CONFIG_DIR: directory },
+    scenario: {},
+  };
 }

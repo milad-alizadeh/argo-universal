@@ -5,7 +5,7 @@ const phone = { width: 390, height: 844 };
 
 test('crossing 720 px swaps the shell and keeps the URL and the open detail', async ({
   page,
-}) => {
+}): Promise<void> => {
   const desktopShell = page.getByTestId('desktop-shell');
   const phoneShell = page.getByTestId('phone-shell');
   const connection = page.getByText('Version', { exact: true });
@@ -46,7 +46,7 @@ test('crossing 720 px swaps the shell and keeps the URL and the open detail', as
 test('Back from a page opened on its own returns to its section list', async ({
   page,
   appTarget,
-}) => {
+}): Promise<void> => {
   test.skip(appTarget === 'electron', 'Electron opens only the app root');
   await page.setViewportSize(phone);
   // `expo serve` serves the single-page export only at `/`, so the App starts from a rewritten URL instead.

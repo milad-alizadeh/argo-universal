@@ -24,14 +24,19 @@ const PRODUCER = 'claude-cli';
 const RECORDINGS = path.join(import.meta.dirname, 'recordings');
 const VERSION = recordingVersion(RECORDINGS);
 
-const recordedFrames = (name: string) =>
+const recordedFrames = (name: string): SDKMessage[] =>
   captureFrames<SDKMessage>(
     readRecording(findRecording(RECORDINGS, name), PRODUCER).payload,
     'output',
   );
 
 // A recording of both pipes: what the SDK wrote to stdin, and what the CLI wrote to stdout.
-const recordedPipes = (name: string) => {
+const recordedPipes = (
+  name: string,
+): {
+  input: (SDKControlRequest | SDKMessage)[];
+  output: (SDKControlRequest | SDKControlResponse | SDKMessage)[];
+} => {
   const payload = readRecording(
     findRecording(RECORDINGS, name),
     PRODUCER,
@@ -45,10 +50,17 @@ const recordedPipes = (name: string) => {
   };
 };
 
-const isControlResponse = (frame: { type: string }) =>
+const isControlResponse = (frame: { type: string }): boolean =>
   frame.type === 'control_response';
 
-const prompt = (text: string) => ({
+const prompt = (
+  text: string,
+): {
+  type: string;
+  message: { role: string; content: string };
+  parent_tool_use_id: null;
+  session_id: string;
+} => ({
   type: 'user',
   message: { role: 'user', content: text },
   parent_tool_use_id: null,
@@ -66,11 +78,11 @@ const SDK_FLAGS = [
 
 let directory: string;
 
-beforeEach(async () => {
+beforeEach(async (): Promise<void> => {
   directory = await mkdtemp(path.join(os.tmpdir(), 'mock-claude-'));
 });
 
-afterEach(async () => {
+afterEach(async (): Promise<void> => {
   vi.unstubAllEnvs();
   await rm(directory, { recursive: true, force: true });
 });
@@ -79,20 +91,23 @@ const startClaude = async (
   recording: string,
   exitMidTurn = false,
   flags: string[] = [],
-) =>
+): Promise<ReturnType<typeof startLineProcess>> =>
   startLineProcess(
     await writeMockClaude(directory, { recording, exitMidTurn }),
     [...SDK_FLAGS, ...flags],
   );
 
-describe('claude recordings', () => {
-  it.each(recordingFiles(RECORDINGS))('%s reads as a recording', (file) => {
-    expect(readRecording(file, PRODUCER).version).toBe(VERSION);
-  });
+describe('claude recordings', (): void => {
+  it.each(recordingFiles(RECORDINGS))(
+    '%s reads as a recording',
+    (file): void => {
+      expect(readRecording(file, PRODUCER).version).toBe(VERSION);
+    },
+  );
 });
 
-describe('mock Claude CLI', () => {
-  it('reports the version of its recordings', async () => {
+describe('mock Claude CLI', (): void => {
+  it('reports the version of its recordings', async (): Promise<void> => {
     const executable = await writeMockClaude(directory, {
       recording: 'task-plan',
     });
@@ -102,13 +117,13 @@ describe('mock Claude CLI', () => {
     expect(stdout).toBe(`${VERSION} (Claude Code)\n`);
   });
 
-  it('refuses a recording it does not have', async () => {
+  it('refuses a recording it does not have', async (): Promise<void> => {
     await expect(
       writeMockClaude(directory, { recording: 'no-such-turn' }),
     ).rejects.toThrow(/no-such-turn/);
   });
 
-  it('answers the SDK initialize request', async () => {
+  it('answers the SDK initialize request', async (): Promise<void> => {
     const claude = await startClaude('task-plan');
 
     claude.send({
@@ -125,7 +140,7 @@ describe('mock Claude CLI', () => {
     expect(await claude.exited).toBe(0);
   });
 
-  it('acknowledges a model choice for the SDK before another prompt', async () => {
+  it('acknowledges a model choice for the SDK before another prompt', async (): Promise<void> => {
     const cli = await startClaude('interrupt');
     const request = {
       type: 'control_request',
@@ -141,7 +156,7 @@ describe('mock Claude CLI', () => {
     expect(await cli.exited).toBe(0);
   });
 
-  it('answers an interrupt when the recording has no interrupt answer', async () => {
+  it('answers an interrupt when the recording has no interrupt answer', async (): Promise<void> => {
     const claude = await startClaude('task-plan');
 
     claude.send({
@@ -160,13 +175,15 @@ describe('mock Claude CLI', () => {
 
   it.each(['task-plan', 'text-stream', 'lifecycle'])(
     'replays %s between its own init and result frames',
-    async (recording) => {
+    async (recording): Promise<void> => {
       const frames = recordedFrames(recording);
       const sessionId = frames[0]?.session_id;
       const claude = await startClaude(recording);
 
       claude.send(prompt('Go.'));
-      const output = await claude.until((frame) => frame.type === 'result');
+      const output = await claude.until(
+        (frame): boolean => frame.type === 'result',
+      );
 
       expect(output[0]).toMatchObject({
         type: 'system',
@@ -186,11 +203,11 @@ describe('mock Claude CLI', () => {
     },
   );
 
-  it('ends a prompt past the last Turn as a failed Turn, not a crash', async () => {
+  it('ends a prompt past the last Turn as a failed Turn, not a crash', async (): Promise<void> => {
     const claude = await startClaude('task-plan');
 
     claude.send(prompt('Go.'));
-    await claude.until((frame) => frame.type === 'result');
+    await claude.until((frame): boolean => frame.type === 'result');
     claude.send(prompt('Again.'));
 
     expect(await claude.next()).toMatchObject({
@@ -202,7 +219,7 @@ describe('mock Claude CLI', () => {
     expect(await claude.exited).toBe(0);
   });
 
-  it('exits mid-Turn when asked to stand in for a crash', async () => {
+  it('exits mid-Turn when asked to stand in for a crash', async (): Promise<void> => {
     const frames = recordedFrames('task-plan');
     const claude = await startClaude('task-plan', true);
 
@@ -210,12 +227,14 @@ describe('mock Claude CLI', () => {
 
     expect(await claude.exited).toBe(1);
     expect(claude.output.slice(1)).toEqual(frames.slice(0, 1));
-    expect(claude.output.some((frame) => frame.type === 'result')).toBe(false);
+    expect(
+      claude.output.some((frame): boolean => frame.type === 'result'),
+    ).toBe(false);
   });
 
   it.each(['edit-and-command', 'image-prompt'])(
     'replays %s without its control responses, under the session id it was given',
-    async (recording) => {
+    async (recording): Promise<void> => {
       const { output } = recordedPipes(recording);
       const claude = await startClaude(recording, false, [
         '--session-id',
@@ -223,13 +242,15 @@ describe('mock Claude CLI', () => {
       ]);
 
       claude.send(prompt('Go.'));
-      const frames = await claude.until((frame) => frame.type === 'result');
+      const frames = await claude.until(
+        (frame): boolean => frame.type === 'result',
+      );
 
       const turn = output
-        .filter((frame) => !isControlResponse(frame))
+        .filter((frame): boolean => !isControlResponse(frame))
         .slice(0, frames.length);
       expect(frames).toEqual(
-        turn.map((frame) =>
+        turn.map((frame): typeof frame =>
           'session_id' in frame
             ? { ...frame, session_id: 'session-from-flags' }
             : frame,
@@ -240,15 +261,17 @@ describe('mock Claude CLI', () => {
     },
   );
 
-  it('answers initialize and get_context_usage with the recorded answers', async () => {
+  it('answers initialize and get_context_usage with the recorded answers', async (): Promise<void> => {
     const { input, output } = recordedPipes('edit-and-command');
-    const recordedAnswer = (subtype: string) => {
+    const recordedAnswer = (
+      subtype: string,
+    ): SDKControlRequest | SDKControlResponse | SDKMessage | undefined => {
       const request = input.find(
-        (frame) =>
+        (frame): boolean =>
           frame.type === 'control_request' && frame.request.subtype === subtype,
       );
       return output.find(
-        (frame) =>
+        (frame): boolean =>
           isControlResponse(frame) &&
           JSON.stringify(frame).includes(
             `"request_id":"${request?.type === 'control_request' ? request.request_id : undefined}"`,
@@ -282,12 +305,12 @@ describe('mock Claude CLI', () => {
     expect(await claude.exited).toBe(0);
   });
 
-  it('holds the rest of an interrupted Turn until the interrupt arrives', async () => {
+  it('holds the rest of an interrupted Turn until the interrupt arrives', async (): Promise<void> => {
     const claude = await startClaude('interrupt');
 
     claude.send(prompt('Go.'));
     await claude.until(
-      (frame) =>
+      (frame): boolean =>
         frame.type === 'stream_event' &&
         JSON.stringify(frame).includes('"message_stop"'),
     );
@@ -302,7 +325,7 @@ describe('mock Claude CLI', () => {
       response: { subtype: 'success', request_id: 'interrupt-1' },
     });
     expect(
-      await claude.until((frame) => frame.type === 'result'),
+      await claude.until((frame): boolean => frame.type === 'result'),
     ).toContainEqual(
       expect.objectContaining({
         type: 'result',
@@ -310,13 +333,13 @@ describe('mock Claude CLI', () => {
       }),
     );
     expect(
-      claude.output.filter((frame) => frame.type === 'result'),
+      claude.output.filter((frame): boolean => frame.type === 'result'),
     ).toHaveLength(1);
     claude.close();
     expect(await claude.exited).toBe(0);
   });
 
-  it('sends no frame of a blocked Turn until the interrupt arrives', async () => {
+  it('sends no frame of a blocked Turn until the interrupt arrives', async (): Promise<void> => {
     for (const [key, value] of Object.entries(
       mockCliScenarioEnvironment({ blockTurnStart: true }),
     ))
@@ -335,8 +358,8 @@ describe('mock Claude CLI', () => {
       response: { subtype: 'success', request_id: 'interrupt-1' },
     });
     expect(
-      (await claude.until((frame) => frame.type === 'result')).map(
-        (frame) => frame.type,
+      (await claude.until((frame): boolean => frame.type === 'result')).map(
+        (frame): typeof frame.type => frame.type,
       ),
     ).toContain('result');
     claude.close();
@@ -344,7 +367,7 @@ describe('mock Claude CLI', () => {
   });
 });
 
-it('answers initialize with an account that has no subscription when not signed in', async () => {
+it('answers initialize with an account that has no subscription when not signed in', async (): Promise<void> => {
   const executable = await writeMockClaude(directory, {
     recording: 'edit-and-command',
     availability: 'not_signed_in',

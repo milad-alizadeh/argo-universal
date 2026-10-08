@@ -16,18 +16,18 @@ const machine = createMachine({
   },
 });
 
-const stateKey = (snapshot: { value: unknown }) =>
+const stateKey = (snapshot: { value: unknown }): string =>
   JSON.stringify(snapshot.value);
-const eventKey = (event: { type: string }) => event.type;
-const active = (snapshot: AnyMachineSnapshot, event: EventObject) =>
+const eventKey = (event: { type: string }): string => event.type;
+const active = (snapshot: AnyMachineSnapshot, event: EventObject): boolean =>
   snapshot.status === 'active' && snapshot.can(event);
 const model = new TestModel(machine, {
   filterEvents: active,
   events: [{ type: 'start' }, { type: 'skip' }, { type: 'finish' }],
 });
 
-describe('unwalkedTransitions', () => {
-  it('finds none when the paths walk every transition', () => {
+describe('unwalkedTransitions', (): void => {
+  it('finds none when the paths walk every transition', (): void => {
     expect(
       unwalkedTransitions({
         models: [model],
@@ -38,16 +38,16 @@ describe('unwalkedTransitions', () => {
     ).toEqual([]);
   });
 
-  it('names the transition that no path walks', () => {
+  it('names the transition that no path walks', (): void => {
     const paths = model
       .getSimplePaths()
-      .filter((path) => !path.description.includes('skip'));
+      .filter((path): boolean => !path.description.includes('skip'));
     expect(
       unwalkedTransitions({ models: [model], paths, stateKey, eventKey }),
     ).toEqual(['"idle" skip "done"']);
   });
 
-  it('unions the edges of several models', () => {
+  it('unions the edges of several models', (): void => {
     const skipModel = new TestModel(machine, {
       events: [{ type: 'skip' }],
       filterEvents: active,
@@ -66,18 +66,18 @@ describe('unwalkedTransitions', () => {
     ).toEqual(['"idle" start "busy"', '"busy" finish "done"']);
   });
 
-  it('fails when the models have no edges', () => {
+  it('fails when the models have no edges', (): void => {
     const empty = new TestModel(machine, { events: [], filterEvents: active });
-    expect(() =>
+    expect((): string[] =>
       unwalkedTransitions({ models: [empty], paths: [], stateKey, eventKey }),
     ).toThrow('The models have no transitions to walk.');
   });
 
-  it('fails at the path cap', () => {
+  it('fails at the path cap', (): void => {
     const [path] = model.getSimplePaths();
     if (!path) throw new Error('The model has no paths.');
-    const paths = Array.from({ length: 1000 }, () => path);
-    expect(() =>
+    const paths = Array.from({ length: 1000 }, (): typeof path => path);
+    expect((): string[] =>
       unwalkedTransitions({ models: [model], paths, stateKey, eventKey }),
     ).toThrow('1000 paths reach the cap of 1000');
   });

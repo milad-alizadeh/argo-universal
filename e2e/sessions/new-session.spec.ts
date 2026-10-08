@@ -40,7 +40,7 @@ async function query<Output>({
   procedure: string;
   input: unknown;
   output: z.ZodType<Output>;
-}) {
+}): Promise<Output> {
   // A reused keep-alive socket can meet the Server closing it after 5 s idle; Playwright retries only ECONNRESET.
   const response = await page.request.get(
     `${httpUrl}/trpc/${procedure}?input=${encodeURIComponent(JSON.stringify(input))}`,
@@ -52,7 +52,10 @@ async function query<Output>({
     .parse(await response.json()).result.data;
 }
 
-const readAgents = (page: Page, httpUrl: string) =>
+const readAgents = (
+  page: Page,
+  httpUrl: string,
+): Promise<{ agent: string; label: string; installStep?: string }[]> =>
   query({
     page,
     httpUrl,
@@ -61,16 +64,24 @@ const readAgents = (page: Page, httpUrl: string) =>
     output: AgentsList,
   });
 
-async function readAgent(page: Page, httpUrl: string, agent: string) {
+async function readAgent(
+  page: Page,
+  httpUrl: string,
+  agent: string,
+): Promise<{ agent: string; label: string; installStep?: string }> {
   const found = (await readAgents(page, httpUrl)).find(
-    (entry) => entry.agent === agent,
+    (entry): boolean => entry.agent === agent,
   );
   if (!found) throw new Error(`The Server has no Agent ${agent}`);
   return found;
 }
 
 // The Session's Session updates, newest page, read from the Server.
-const readFeed = async (page: Page, httpUrl: string, sessionId: string) =>
+const readFeed = async (
+  page: Page,
+  httpUrl: string,
+  sessionId: string,
+): Promise<z.infer<typeof FeedPage>['rows']> =>
   (
     await query({
       page,
@@ -81,7 +92,7 @@ const readFeed = async (page: Page, httpUrl: string, sessionId: string) =>
     })
   ).rows;
 
-async function chooseAgent(page: Page, label: string) {
+async function chooseAgent(page: Page, label: string): Promise<void> {
   await page.getByRole('button', { name: 'Agent and model' }).click();
   await page.getByRole('button', { name: 'Choose Agent' }).click();
   await page.getByRole('button', { name: `Select ${label}` }).click();
@@ -93,7 +104,7 @@ async function chooseAgent(page: Page, label: string) {
 }
 
 // Sends the draft and returns the Session that replaced the New Session page.
-async function send(page: Page) {
+async function send(page: Page): Promise<string> {
   await page.getByRole('button', { name: 'Send' }).click();
   await expect(page).toHaveURL(/\/sessions\/(?!new)[^/]+$/);
   const sessionId = new URL(page.url()).pathname.split('/').pop();
@@ -101,7 +112,7 @@ async function send(page: Page) {
   return sessionId;
 }
 
-async function openNewSession(page: Page) {
+async function openNewSession(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'New Session', exact: true }).click();
   await expect(page).toHaveURL(/\/sessions\/new$/);
   await expect(page.getByRole('img', { name: 'Connected' })).toBeVisible();
@@ -112,7 +123,7 @@ for (const agent of agentIds) {
   test(`${agent}: a text prompt starts a Session, and Back returns to the list`, async ({
     page,
     server,
-  }) => {
+  }): Promise<void> => {
     await page.setViewportSize(phone);
     const { label } = await readAgent(page, server.httpUrl, agent);
     await openNewSession(page);
@@ -139,13 +150,13 @@ for (const agent of agentIds) {
     ).toHaveCount(0);
   });
 
-  test.describe(`${agent} with an image prompt recording`, () => {
+  test.describe(`${agent} with an image prompt recording`, (): void => {
     test.use({ mockAgents: { [agent]: { recording: 'image-prompt' } } });
 
     test(`${agent}: an image prompt uploads the image and starts a Session`, async ({
       page,
       server,
-    }) => {
+    }): Promise<void> => {
       await page.setViewportSize(phone);
       const { label } = await readAgent(page, server.httpUrl, agent);
       await openNewSession(page);
@@ -186,7 +197,7 @@ for (const agent of agentIds) {
 
 test('the checkout choice is remembered for the next New Session', async ({
   page,
-}) => {
+}): Promise<void> => {
   await page.setViewportSize(phone);
   await openNewSession(page);
   const checkout = page.getByRole('button', { name: 'Checkout' });
@@ -209,17 +220,24 @@ const steps = {
 
 for (const availability of ['not_installed', 'not_signed_in'] as const) {
   const { status } = steps[availability];
-  test.describe(`with every Agent ${status.toLowerCase()}`, () => {
+  test.describe(`with every Agent ${status.toLowerCase()}`, (): void => {
     test.use({
       mockAgents: Object.fromEntries(
-        agentIds.map((agent) => [agent, { availability }]),
+        agentIds.map(
+          (
+            agent,
+          ): [string, { availability: 'not_installed' | 'not_signed_in' }] => [
+            agent,
+            { availability },
+          ],
+        ),
       ),
     });
 
     test(`New Session shows the first Agent's step`, async ({
       page,
       server,
-    }) => {
+    }): Promise<void> => {
       await page.setViewportSize(phone);
       const [first, ...rest] = await readAgents(page, server.httpUrl);
       // Every Agent reports a step of its own.
@@ -244,13 +262,13 @@ for (const [index, availability] of [
 ] as const) {
   const agent = agentIds[index] ?? '';
   const { status, setup } = steps[availability];
-  test.describe(`${agent} ${status.toLowerCase()}`, () => {
+  test.describe(`${agent} ${status.toLowerCase()}`, (): void => {
     test.use({ mockAgents: { [agent]: { availability } } });
 
     test('the Agent picker marks it and opens its setup', async ({
       page,
       server,
-    }) => {
+    }): Promise<void> => {
       await page.setViewportSize(phone);
       const { label } = await readAgent(page, server.httpUrl, agent);
       await openNewSession(page);

@@ -2,14 +2,14 @@ import { expect, serverVersion, test } from '../fixtures';
 
 test('the Connection page shows the Server version and a ticking clock', async ({
   page,
-}) => {
+}): Promise<void> => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByRole('button', { name: 'Connection', exact: true }).click();
   await expect(page).toHaveURL(/\/settings\/connection$/);
 
   // Each row shows its label and, next to it, its value.
-  const rowValue = (label: string) =>
+  const rowValue = (label: string): import('@playwright/test').Locator =>
     page
       .getByText(label, { exact: true })
       .locator('xpath=following-sibling::*[1]');

@@ -8,7 +8,7 @@ const root = fileURLToPath(new URL('..', import.meta.url));
 // The checker and its tests spell out the comments it reports.
 const own = new Set(
   ['check-comments.mts', 'comment-rules.mts', 'comment-rules.test.mts'].map(
-    (name) => resolve(root, 'tools', name),
+    (name): string => resolve(root, 'tools', name),
   ),
 );
 
@@ -23,16 +23,16 @@ const trackedSources = (): string[] =>
 const fileProblems = (file: string): string[] =>
   readFileSync(file, 'utf8')
     .split('\n')
-    .flatMap((line, index) =>
+    .flatMap((line, index): string[] =>
       commentProblems(line).map(
-        (message) => `${relative(root, file)}:${index + 1}: ${message}`,
+        (message): string => `${relative(root, file)}:${index + 1}: ${message}`,
       ),
     );
 
 const requested = process.argv.slice(2);
 const files = (requested.length > 0 ? requested : trackedSources())
-  .map((file) => resolve(root, file))
-  .filter((file) => !/\.gen\./.test(file) && !own.has(file))
+  .map((file): string => resolve(root, file))
+  .filter((file): boolean => !/\.gen\./.test(file) && !own.has(file))
   .sort();
 const problems = files.flatMap(fileProblems);
 

@@ -51,17 +51,27 @@ export function toRequestEvents(message: SDKControlRequest): AgentEvent[] {
         request: {
           mode: 'form',
           message: input.questions
-            .map((question) => question.question)
+            .map((question): string => question.question)
             .join('\n'),
           toolCallId: request.tool_use_id,
           requestedSchema: toElicitationForm(
-            input.questions.map((question) => ({
-              id: question.question,
-              title: question.header,
-              question: question.question,
-              options: question.options,
-              multiple: question.multiSelect,
-            })),
+            input.questions.map(
+              (
+                question,
+              ): {
+                id: string;
+                title: string;
+                question: string;
+                options: typeof question.options;
+                multiple: typeof question.multiSelect;
+              } => ({
+                id: question.question,
+                title: question.header,
+                question: question.question,
+                options: question.options,
+                multiple: question.multiSelect,
+              }),
+            ),
           ),
         },
       },
@@ -73,7 +83,15 @@ export function toRequestEvents(message: SDKControlRequest): AgentEvent[] {
       request: {
         toolCallId: request.tool_use_id,
         title: request.tool_name,
-        options: permissionOptions.map((option) => ({ ...option })),
+        options: permissionOptions.map(
+          (
+            option,
+          ): {
+            optionId: 'allow_once' | 'reject_once';
+            name: string;
+            kind: 'allow_once' | 'reject_once';
+          } => ({ ...option }),
+        ),
       },
     },
   ];
