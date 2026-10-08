@@ -1,17 +1,25 @@
+export interface SubscriptionPublisher<Value> {
+  reset: () => void;
+  publish: (value: Value) => void;
+  subscribe: (signal: AbortSignal) => AsyncGenerator<Value>;
+}
+
 // Feeds a subscription fixture: each published value goes to the open subscription, as the Server sends a change.
-export function createSubscriptionPublisher<Value>() {
+export function createSubscriptionPublisher<
+  Value,
+>(): SubscriptionPublisher<Value> {
   let active = false;
   let generation = 0;
   const queued: Value[] = [];
   let send: ((value: Value) => void) | undefined;
   return {
-    reset() {
+    reset(): void {
       generation += 1;
       send = undefined;
       active = false;
       queued.length = 0;
     },
-    publish(value: Value) {
+    publish(value: Value): void {
       if (!active) return;
       if (send) send(value);
       else queued.push(value);
@@ -24,15 +32,15 @@ export function createSubscriptionPublisher<Value>() {
           const value = queued.length
             ? queued.shift()
             : await new Promise<Value | undefined>((resolve) => {
-                const cleanup = () => {
+                const cleanup = (): void => {
                   signal.removeEventListener('abort', abort);
                   if (send === deliver) send = undefined;
                 };
-                const abort = () => {
+                const abort = (): void => {
                   cleanup();
                   resolve(undefined);
                 };
-                const deliver = (next: Value) => {
+                const deliver = (next: Value): void => {
                   cleanup();
                   resolve(next);
                 };

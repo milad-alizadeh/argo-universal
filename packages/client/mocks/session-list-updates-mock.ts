@@ -2,12 +2,34 @@ import { sessionRows } from '@repo/api/mocks';
 import type { SessionInfo, SessionListUpdate } from '@repo/contracts';
 import { sessionListMocks } from './session-list-mock';
 import { createSubscriptionPublisher } from './subscription-publisher';
+import type { FixtureArguments, FixtureOutput } from './trpc-mock-link';
 import type { Fixtures } from './trpc-mock-link';
+
+interface SessionListUpdatesMock {
+  calls: Record<'list' | 'active' | 'nextPage' | 'delivered', number>;
+  reset: () => void;
+  hold: () => void;
+  release: () => void;
+  publish: ReturnType<
+    typeof createSubscriptionPublisher<SessionListUpdate>
+  >['publish'];
+  fixtures: Omit<
+    typeof sessionListMocks,
+    'session.list' | 'session.listUpdates'
+  > & {
+    'session.list': (
+      input: FixtureArguments<'session.list'>[0],
+    ) => Promise<FixtureOutput<'session.list'>>;
+    'session.listUpdates': (
+      ...args: FixtureArguments<'session.listUpdates'>
+    ) => AsyncGenerator<SessionListUpdate>;
+  };
+}
 
 export function createSessionListUpdatesMock(options?: {
   sessions: readonly SessionInfo[];
   pageSize?: number;
-}) {
+}): SessionListUpdatesMock {
   const initialSessions = (): SessionInfo[] =>
     options
       ? [...options.sessions]
@@ -22,7 +44,7 @@ export function createSessionListUpdatesMock(options?: {
   const updates = createSubscriptionPublisher<SessionListUpdate>();
   return {
     calls,
-    reset() {
+    reset(): void {
       generation += 1;
       held?.resolve();
       held = undefined;
@@ -30,14 +52,14 @@ export function createSessionListUpdatesMock(options?: {
       Object.assign(calls, { list: 0, active: 0, nextPage: 0, delivered: 0 });
       updates.reset();
     },
-    hold() {
+    hold(): void {
       held ??= Promise.withResolvers<void>();
     },
-    release() {
+    release(): void {
       held?.resolve();
       held = undefined;
     },
-    publish(update: SessionListUpdate) {
+    publish(update: SessionListUpdate): void {
       sessions = sessions.filter(
         (session) =>
           session.sessionId !==

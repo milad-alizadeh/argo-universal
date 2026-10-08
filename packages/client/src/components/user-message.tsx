@@ -6,6 +6,7 @@ import type {
   UserMessage as UserMessageRow,
 } from '@repo/contracts';
 import { FileIcon, FolderIcon } from 'phosphor-react-native';
+import type * as React from 'react';
 import { memo, useLayoutEffect, useRef, useState } from 'react';
 import {
   Image,
@@ -34,7 +35,7 @@ const openImageHeightFraction = 0.8;
 type Reference = Extract<ContentBlock, { type: 'resource_link' | 'resource' }>;
 
 // Text exactly as typed, with backtick spans drawn as inline code.
-function TypedText({ text }: { text: string }) {
+function TypedText({ text }: { text: string }): (string | React.JSX.Element)[] {
   return withOccurrenceKeys(text.split(/(`[^`\n]+`)/), (part) => part).map(
     ({ item: part, key }) =>
       part.length > 2 && part.startsWith('`') && part.endsWith('`') ? (
@@ -47,7 +48,7 @@ function TypedText({ text }: { text: string }) {
   );
 }
 
-function Bubble({ text }: { text: string }) {
+function Bubble({ text }: { text: string }): React.JSX.Element {
   const [expanded, setExpanded] = useState(false);
   const [fullHeight, setFullHeight] = useState(0);
   const [shownHeight, setShownHeight] = useState(0);
@@ -91,7 +92,7 @@ function Bubble({ text }: { text: string }) {
   );
 }
 
-function imageLabel(image: ImageContent) {
+function imageLabel(image: ImageContent): string | undefined {
   if (image._meta?.argo?.source === 'pasted') return 'Pasted';
   const { width, height } = image.blob;
   return width && height ? `${width}×${height}` : undefined;
@@ -103,7 +104,7 @@ function Thumbnail({
 }: {
   image: ImageContent;
   imageUrl: UserMessageProps['imageUrl'];
-}) {
+}): React.JSX.Element {
   const [open, setOpen] = useState(false);
   const window = useWindowDimensions();
   const label = imageLabel(image);
@@ -141,13 +142,13 @@ function Thumbnail({
   );
 }
 
-function referenceName(reference: Reference) {
+function referenceName(reference: Reference): string {
   if (reference.type === 'resource_link') return reference.name;
   const path = reference.resource.uri.replace(/\/$/, '');
   return path.slice(path.lastIndexOf('/') + 1);
 }
 
-function isFolder(reference: Reference) {
+function isFolder(reference: Reference): boolean {
   const uri =
     reference.type === 'resource_link' ? reference.uri : reference.resource.uri;
   const mimeType =
@@ -157,7 +158,11 @@ function isFolder(reference: Reference) {
   return mimeType === 'inode/directory' || uri.endsWith('/');
 }
 
-function ReferenceChip({ reference }: { reference: Reference }) {
+function ReferenceChip({
+  reference,
+}: {
+  reference: Reference;
+}): React.JSX.Element {
   return (
     <View className="h-[26px] flex-row items-center gap-1.5 rounded-md border border-border bg-card px-2">
       <Icon

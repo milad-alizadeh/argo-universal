@@ -1,6 +1,7 @@
 import type { SessionStatus } from '@repo/contracts';
 import { Portal } from '@rn-primitives/portal';
 import { DotsThreeIcon, GitPullRequestIcon } from 'phosphor-react-native';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
@@ -41,7 +42,10 @@ function StatusLine({
   status,
   startedAt,
   now,
-}: Pick<SessionHeaderProps, 'status' | 'startedAt' | 'now'>) {
+}: Pick<
+  SessionHeaderProps,
+  'status' | 'startedAt' | 'now'
+>): React.JSX.Element {
   const clock = useClock(startedAt !== null, now);
   return (
     <View className="flex-row items-center gap-1">
@@ -66,7 +70,7 @@ export function SessionHeader({
   status,
   startedAt,
   now,
-}: SessionHeaderProps) {
+}: SessionHeaderProps): React.JSX.Element {
   const wide = useWide();
   if (!wide)
     return (

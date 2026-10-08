@@ -2,6 +2,7 @@ import { isToolCallRunning, type ToolCallUpdate } from '@repo/contracts';
 import { CheckIcon } from 'phosphor-react-native/src/icons/Check';
 import { TerminalWindowIcon } from 'phosphor-react-native/src/icons/TerminalWindow';
 import { XIcon } from 'phosphor-react-native/src/icons/X';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/utils';
 import { Text } from '#primitives/text';
@@ -25,7 +26,7 @@ export function CommandRow({
   now,
   permissionMessage,
   awaitingApproval = false,
-}: CommandRowProps) {
+}: CommandRowProps): React.JSX.Element | null {
   const running = isToolCallRunning(row);
   const stopped = row.status === 'cancelled';
   const duration = useToolCallDuration(row, now);
@@ -82,6 +83,6 @@ export function CommandRow({
   );
 }
 
-function commandCode(command: string, output: string) {
+function commandCode(command: string, output: string): string {
   return output ? `$ ${command}\n${output}` : `$ ${command}`;
 }

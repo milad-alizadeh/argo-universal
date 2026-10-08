@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { action } from 'storybook/actions';
 import { DesktopShellMock } from '../../mocks/desktop-shell-mock';
 import { InspectorFilesMock } from '../../mocks/inspector-files-mock';
@@ -21,7 +22,7 @@ const meta = {
     sidebarShown: { control: 'boolean' },
     attentionCount: { control: 'number' },
   },
-  render: (args) => <DesktopShellMock {...args} />,
+  render: (args): React.JSX.Element => <DesktopShellMock {...args} />,
   args: {
     showInspectorControls: false,
     selectedSection: 'sessions',

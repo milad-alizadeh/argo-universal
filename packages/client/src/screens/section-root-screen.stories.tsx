@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { sessionListMocks } from '../../mocks/session-list-mock';
 import { SectionRootScreen } from './section-root-screen';
@@ -13,7 +14,7 @@ const meta = {
     },
   },
   args: { section: 'sessions' },
-  render: (args) => (
+  render: (args): React.JSX.Element => (
     <View className="h-[796px] w-full">
       <SectionRootScreen {...args} />
     </View>

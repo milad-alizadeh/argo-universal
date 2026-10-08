@@ -1,4 +1,5 @@
 import type { BlobRef, SessionNewInput } from '@repo/contracts';
+import type { UseMutationResult } from '@tanstack/react-query';
 import { useMutation } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 import type { ComposerDraft } from '#components/composer';
@@ -6,13 +7,25 @@ import { useTRPCClient } from '../trpc/context';
 import { draftPrompt } from './draft-prompt';
 import { pickImages } from './pick-images';
 
+export interface ImageDraft {
+  draft: ComposerDraft;
+  changeDraft: (next: ComposerDraft) => void;
+  attachImages: () => Promise<void>;
+  uploadDraftAsPrompt: (
+    sent: ComposerDraft,
+  ) => Promise<SessionNewInput['prompt'] | undefined>;
+  clearDraft: () => void;
+  imageSelectionError: string | undefined;
+  imageUpload: UseMutationResult<BlobRef[], Error, FormData[]>;
+}
+
 export const imageSelectionFailureMessage =
   "Couldn't select images. Try again.";
 
 const emptyDraft: ComposerDraft = { text: '', images: [] };
 
 // A Composer draft with attached images, and the prompt it sends once its images are uploaded.
-export function useImageDraft() {
+export function useImageDraft(): ImageDraft {
   const client = useTRPCClient();
   const [draft, setDraft] = useState(emptyDraft);
   const [imageSelectionError, setImageSelectionError] = useState<string>();
@@ -24,7 +37,7 @@ export function useImageDraft() {
       Promise.all(forms.map((form) => client.blob.upload.mutate(form))),
   });
 
-  async function attachImages() {
+  async function attachImages(): Promise<void> {
     try {
       const picked = await pickImages();
       setImageSelectionError(undefined);
@@ -40,7 +53,7 @@ export function useImageDraft() {
   }
 
   // Keeps a file only while its image is in the draft.
-  function changeDraft(next: ComposerDraft) {
+  function changeDraft(next: ComposerDraft): void {
     const keptImageIds = new Set(next.images.map((image) => image.id));
     for (const id of imageFiles.current.keys())
       if (!keptImageIds.has(id)) imageFiles.current.delete(id);

@@ -4,6 +4,7 @@ import {
   PencilSimpleIcon,
   TrashIcon,
 } from 'phosphor-react-native';
+import type * as React from 'react';
 import { useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/utils';
@@ -41,7 +42,7 @@ function FileEdit({
 }: {
   file: FileDiff;
   nested?: boolean;
-}) {
+}): React.JSX.Element {
   const [open, setOpen] = useState(false);
   const verb = verbs[file.operation];
   return (
@@ -95,7 +96,7 @@ function FileEdit({
 }
 
 // One Tool call can edit several files; each expands its diff inline.
-export function EditRow({ row }: EditRowProps) {
+export function EditRow({ row }: EditRowProps): React.JSX.Element {
   const files = useMemo(
     () =>
       row.content.flatMap((block) =>

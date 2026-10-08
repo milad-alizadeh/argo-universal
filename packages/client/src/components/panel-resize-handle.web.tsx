@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import { useRef } from 'react';
 import type { PanelResizeHandleProps } from './panel-resize-handle';
 
@@ -13,13 +14,13 @@ export function PanelResizeHandle({
   edge = 'right',
   onChange,
   onDragStateChange,
-}: PanelResizeHandleProps) {
+}: PanelResizeHandleProps): React.JSX.Element {
   const drag = useRef<{
     pointer: number;
     position: number;
     width: number;
   } | null>(null);
-  const resize = (width: number) => onChange(width);
+  const resize = (width: number): void => onChange(width);
   return (
     <hr
       aria-label={label}

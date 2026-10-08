@@ -5,6 +5,23 @@ import type {
 import Ajv, { type ErrorObject, type ValidateFunction } from 'ajv';
 import addFormats from 'ajv-formats';
 
+interface ElicitationSchema {
+  fields: {
+    name: string;
+    property: ElicitationPropertySchema;
+    key: string;
+    required: boolean;
+  }[];
+  error: string | undefined;
+  content: (
+    values: ElicitationFormValues,
+  ) => Record<string, ElicitationValue | number>;
+  defaultValues: (values: ElicitationValues) => ElicitationFormValues;
+  validate: (input: {
+    value: ElicitationFormValues;
+  }) => { form?: string; fields: Record<string, string> } | undefined;
+}
+
 export type ElicitationValue = string | boolean | string[];
 export type ElicitationValues = Record<string, ElicitationValue>;
 export type ElicitationFormValues = Record<
@@ -13,7 +30,9 @@ export type ElicitationFormValues = Record<
 >;
 const validator = addFormats(new Ajv({ allErrors: true, strict: false }));
 
-export function elicitationChoices(property: ElicitationPropertySchema) {
+export function elicitationChoices(
+  property: ElicitationPropertySchema,
+): Extract<ElicitationPropertySchema, { type: 'string' }>['oneOf'] {
   if (property.type === 'string')
     return (
       property.oneOf ??
@@ -26,7 +45,10 @@ export function elicitationChoices(property: ElicitationPropertySchema) {
   return;
 }
 
-function errorMessage(error: ErrorObject, property: ElicitationPropertySchema) {
+function errorMessage(
+  error: ErrorObject,
+  property: ElicitationPropertySchema,
+): string {
   if (error.keyword === 'required') return 'This field is required.';
   if (property.type === 'number' || property.type === 'integer') {
     if (error.keyword === 'type')
@@ -56,7 +78,7 @@ function errorMessage(error: ErrorObject, property: ElicitationPropertySchema) {
 
 export function createElicitationSchema(
   schema: PendingElicitation['requestedSchema'],
-) {
+): ElicitationSchema {
   const fields = Object.entries(schema.properties).map(
     ([name, property], index) => ({
       name,
@@ -72,7 +94,9 @@ export function createElicitationSchema(
   } catch {
     schemaError = 'The Agent provided an invalid form.';
   }
-  const content = (values: ElicitationFormValues) =>
+  const content = (
+    values: ElicitationFormValues,
+  ): ReturnType<ElicitationSchema['content']> =>
     Object.fromEntries(
       fields.flatMap(({ name, key, property }) => {
         const value = values[key];

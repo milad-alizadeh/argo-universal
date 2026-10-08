@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import {
   emptySessionMocks,
   idleSessionMocks,
@@ -15,7 +16,7 @@ const meta = {
   component: SessionScreen,
   parameters: { trpc: runningSessionMocks, screenPreview: true },
   args: { id: 'session-1', now: runningTurnNow },
-  render: (args) => <SessionScreenPreview {...args} />,
+  render: (args): React.JSX.Element => <SessionScreenPreview {...args} />,
 } satisfies Meta<typeof SessionScreen>;
 export default meta;
 type Story = StoryObj<typeof meta>;

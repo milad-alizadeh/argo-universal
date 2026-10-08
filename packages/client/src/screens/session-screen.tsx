@@ -1,9 +1,12 @@
+import type { AppRouter } from '@repo/api';
 import type {
   SessionSnapshot,
   SessionUpdate,
   ToolCallUpdate,
 } from '@repo/contracts';
 import { useMutation } from '@tanstack/react-query';
+import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { Composer, type ComposerDraft } from '#components/composer';
@@ -23,7 +26,26 @@ import { useImageDraft } from '../lib/use-image-draft';
 import { useNavigate } from '../navigation/context';
 import { useWide } from '../navigation/use-wide';
 import { useBlobUrl } from '../trpc/blob-url';
+import type { ClientError } from '../trpc/context';
 import { useTRPC } from '../trpc/context';
+
+type SessionMutation<Name extends 'prompt' | 'cancel' | 'setConfigOption'> =
+  ReturnType<
+    typeof useMutation<
+      inferRouterOutputs<AppRouter>['session'][Name],
+      ClientError,
+      inferRouterInputs<AppRouter>['session'][Name]
+    >
+  >;
+type SessionCommands = Omit<
+  ReturnType<typeof useImageDraft>,
+  'clearDraft' | 'uploadDraftAsPrompt'
+> & {
+  promptSession: SessionMutation<'prompt'>;
+  cancelTurn: SessionMutation<'cancel'>;
+  setConfigOption: SessionMutation<'setConfigOption'>;
+  sendDraft: (sent: ComposerDraft) => Promise<void>;
+};
 
 export interface SessionScreenProps {
   id: string;
@@ -55,11 +77,20 @@ function findLiveToolCall(
 const composerFadeHeight = { phone: 88, wide: 64 };
 
 // One Session: its header, its Feed, and the Composer pinned below. A new id starts every piece of state over.
-export function SessionScreen({ id, now }: SessionScreenProps) {
+export function SessionScreen({
+  id,
+  now,
+}: SessionScreenProps): React.JSX.Element {
   return <SessionView key={id} sessionId={id} now={now} />;
 }
 
-function SessionView({ sessionId, now }: { sessionId: string; now?: number }) {
+function SessionView({
+  sessionId,
+  now,
+}: {
+  sessionId: string;
+  now?: number;
+}): React.JSX.Element {
   const navigate = useNavigate();
   const imageUrl = useBlobUrl();
   const connected = useConnectionState() === 'open';
@@ -207,7 +238,10 @@ function SessionView({ sessionId, now }: { sessionId: string; now?: number }) {
 }
 
 // Draft uploads and successful commands resume a Feed that has closed.
-function useSessionCommands(sessionId: string, resumeAfterCommand: () => void) {
+function useSessionCommands(
+  sessionId: string,
+  resumeAfterCommand: () => void,
+): SessionCommands {
   const trpc = useTRPC();
   const { clearDraft, uploadDraftAsPrompt, ...draft } = useImageDraft();
   const promptSession = useMutation(
@@ -226,7 +260,7 @@ function useSessionCommands(sessionId: string, resumeAfterCommand: () => void) {
       onSuccess: resumeAfterCommand,
     }),
   );
-  async function sendDraft(sent: ComposerDraft) {
+  async function sendDraft(sent: ComposerDraft): Promise<void> {
     promptSession.reset();
     draft.imageUpload.reset();
     const prompt = await uploadDraftAsPrompt(sent);

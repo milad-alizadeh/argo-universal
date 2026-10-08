@@ -1,4 +1,5 @@
 import type { Icon as PhosphorIcon } from 'phosphor-react-native';
+import type * as React from 'react';
 import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/utils';
@@ -34,7 +35,7 @@ export function FeedDisclosure({
   awaitingApproval = false,
   denied = false,
   children,
-}: FeedDisclosureProps) {
+}: FeedDisclosureProps): React.JSX.Element {
   const [open, setOpen] = useState(initialOpen);
   const [hovered, setHovered] = useState(false);
   const title = trailing ? `${label} ${trailing}` : label;

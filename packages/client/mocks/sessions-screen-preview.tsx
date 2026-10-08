@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import { View } from 'react-native';
 import {
   SessionsHeader,
@@ -6,7 +7,7 @@ import {
 } from '../src/screens/sessions-screen';
 
 // The Sessions list under a plain header row, as a shell draws it.
-export function SessionsScreenPreview() {
+export function SessionsScreenPreview(): React.JSX.Element {
   const filter = useSessionsFilter();
   return (
     <View className="flex-1 w-full" style={{ minHeight: 0 }}>

@@ -20,6 +20,7 @@ import {
   SparkleIcon,
   WarningIcon,
 } from 'phosphor-react-native';
+import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
@@ -62,13 +63,17 @@ function choices(option?: SelectConfiguration): SessionConfigSelectOption[] {
 function selection(
   configuration: ComposerConfigurationProps,
   category: string,
-) {
+): SelectConfiguration | undefined {
   return configuration.configOptions.find(
     (option): option is SelectConfiguration =>
       option.type === 'select' && option.category === category,
   );
 }
-function currentEffort(configuration: ComposerConfigurationProps) {
+function currentEffort(configuration: ComposerConfigurationProps): {
+  option: ReturnType<typeof selection>;
+  choices: SessionConfigSelectOption[];
+  selected: SessionConfigSelectOption | undefined;
+} {
   const model = selection(configuration, 'model');
   const option = selection(configuration, 'thought_level');
   const currentModel = choices(model).find(
@@ -99,7 +104,7 @@ const configurationIcons: Record<string, typeof ShieldWarningIcon> = {
 } satisfies Record<ConfigOptionIcon, typeof ShieldWarningIcon>;
 const agentModelMenuWidth = 580;
 const agentMenuWidth = 280;
-function configurationIcon(name?: string) {
+function configurationIcon(name?: string): typeof SparkleIcon {
   return (
     (name && Object.hasOwn(configurationIcons, name)
       ? configurationIcons[name]
@@ -133,7 +138,7 @@ const ThemedLogo = withUniwind(SvgXml, {
   color: { fromClassName: 'className', styleProperty: 'color' },
 });
 
-function Logo({ agent }: { agent?: AgentInfo }) {
+function Logo({ agent }: { agent?: AgentInfo }): React.JSX.Element | null {
   return agent ? (
     <View className="size-icon-md shrink-0 items-center justify-center">
       <View testID="composer-agent-icon" className="size-icon-mark">
@@ -163,7 +168,7 @@ function Choice({
   onPress: () => void;
   dangerous?: boolean;
   leading?: React.ReactNode;
-}) {
+}): React.JSX.Element {
   return (
     <Button
       variant="ghost"
@@ -216,7 +221,7 @@ function Choice({
   );
 }
 
-function modelName(choice?: SessionConfigSelectOption) {
+function modelName(choice?: SessionConfigSelectOption): string {
   return (
     choice?._meta?.argo?.shortName ??
     choice?.name.replace(/\s*\(recommended\)\s*$/i, '') ??
@@ -224,7 +229,7 @@ function modelName(choice?: SessionConfigSelectOption) {
   );
 }
 
-function MenuHeading({ children }: { children: string }) {
+function MenuHeading({ children }: { children: string }): React.JSX.Element {
   return (
     <Text
       selectable={false}
@@ -241,20 +246,20 @@ function AgentChoices({
 }: {
   configuration: ComposerConfigurationProps;
   onSelect: () => void;
-}) {
+}): React.JSX.Element {
   const wide = useWide();
   const agents = configuration.onAgentChange
     ? configuration.agents
     : configuration.agents.filter(
         (agent) => agent.agent === configuration.agent,
       );
-  const renderAgent = (agent: AgentInfo) => {
+  const renderAgent = (agent: AgentInfo): React.JSX.Element => {
     const availability =
       agent.availability === 'available'
         ? undefined
         : agentAvailability[agent.availability];
     const setup = configuration.onAgentSetup
-      ? () => configuration.onAgentSetup?.(agent.agent)
+      ? (): void | undefined => configuration.onAgentSetup?.(agent.agent)
       : undefined;
     const onAvailabilityAction =
       availability?.action === 'retry' ? configuration.onAgentRetry : setup;
@@ -378,7 +383,7 @@ function AgentChoices({
   );
 }
 
-function AgentSeparator() {
+function AgentSeparator(): React.JSX.Element {
   return <View className="h-0.5" />;
 }
 
@@ -388,7 +393,7 @@ function ModelChoices({
 }: {
   configuration: ComposerConfigurationProps;
   onSelect: () => void;
-}) {
+}): React.JSX.Element | null {
   const model = selection(configuration, 'model');
   if (!model) return null;
   return (
@@ -414,7 +419,7 @@ function EffortControl({
   configuration,
 }: {
   configuration: ComposerConfigurationProps;
-}) {
+}): React.JSX.Element | null {
   const {
     option: effort,
     choices: effortChoices,
@@ -504,7 +509,7 @@ function AgentModelMenu({
   configuration,
 }: {
   configuration: ComposerConfigurationProps;
-}) {
+}): React.JSX.Element {
   const wide = useWide();
   const [page, setPage] = useState<'settings' | 'agent' | 'model'>('settings');
   const agent = configuration.agents.find(
@@ -663,7 +668,7 @@ export function ComposerAgentModelControl({
 }: {
   configuration: ComposerConfigurationProps;
   disabled: boolean;
-}) {
+}): React.JSX.Element | null {
   const wide = useContentWide();
   const model = selection(configuration, 'model');
   const current = choices(model).find(
@@ -730,7 +735,7 @@ export function ComposerModeControl({
 }: {
   configuration: ComposerConfigurationProps;
   disabled: boolean;
-}) {
+}): React.JSX.Element | null {
   const wide = useContentWide();
   const mode = selection(configuration, 'mode');
   const current = choices(mode).find(
@@ -825,7 +830,7 @@ export function CheckoutContents({
   checkout: ComposerConfigurationProps['checkout'];
   disabled: boolean;
   close: () => void;
-}) {
+}): React.JSX.Element {
   return (
     <View className="p-1 gap-0.5">
       {[false, true].map((newWorktree) => (
@@ -856,7 +861,7 @@ export function ComposerCheckoutControl({
 }: {
   checkout: ComposerConfigurationProps['checkout'];
   disabled: boolean;
-}) {
+}): React.JSX.Element {
   const wide = useContentWide();
   const created = !!checkout.path;
   const editable = !created && !!checkout.onNewWorktreeChange;

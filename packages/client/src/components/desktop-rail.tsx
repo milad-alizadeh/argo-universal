@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import { memo } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/utils';
@@ -64,7 +65,7 @@ export const DesktopRail = memo(function DesktopRail({
   attentionCount,
   onSectionChange,
 }: DesktopRailProps) {
-  const sectionButton = (section: ShellSection) => (
+  const sectionButton = (section: ShellSection): React.JSX.Element => (
     <SectionButton
       key={section}
       section={section}

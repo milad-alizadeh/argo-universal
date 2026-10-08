@@ -9,6 +9,7 @@ import type {
   PlanEntry,
   SessionConfigOption,
 } from '@repo/contracts';
+import type * as React from 'react';
 import { useState } from 'react';
 import {
   Composer,
@@ -81,7 +82,12 @@ export const composerPlanDone: PlanEntry[] = composerPlan.map((entry) => ({
 }));
 
 export const composerNoEffortSelections = newSessionCatalogs.bothAvailable.map(
-  (agent) => ({
+  (
+    agent,
+  ): Pick<
+    NonNullable<ComposerProps['configuration']>,
+    'agents' | 'agent' | 'configOptions' | 'onConfigChange'
+  > & { checkout: { branch: string; newWorktree: boolean } } => ({
     agents: newSessionCatalogs.bothAvailable,
     agent: agent.agent,
     configOptions: agent.configOptions.map((option) =>
@@ -95,13 +101,20 @@ export const composerNoEffortSelections = newSessionCatalogs.bothAvailable.map(
 );
 
 export const composerUnavailableConfigurations =
-  newSessionCatalogs.bothUnavailable.map((agent) => ({
-    agents: newSessionCatalogs.bothUnavailable,
-    agent: agent.agent,
-    configOptions: agent.configOptions,
-    onConfigChange: () => {},
-    checkout: { branch: 'main', newWorktree: false },
-  }));
+  newSessionCatalogs.bothUnavailable.map(
+    (
+      agent,
+    ): Pick<
+      NonNullable<ComposerProps['configuration']>,
+      'agents' | 'agent' | 'configOptions' | 'onConfigChange'
+    > & { checkout: { branch: string; newWorktree: boolean } } => ({
+      agents: newSessionCatalogs.bothUnavailable,
+      agent: agent.agent,
+      configOptions: agent.configOptions,
+      onConfigChange: () => {},
+      checkout: { branch: 'main', newWorktree: false },
+    }),
+  );
 
 export function ComposerMock(
   props: ComposerProps & {
@@ -110,7 +123,7 @@ export function ComposerMock(
     // Replaces the Session's Plan; an empty list means the Agent has none.
     plan?: PlanEntry[];
   },
-) {
+): React.JSX.Element {
   const [draft, setDraft] = useState(props.draft);
   const [agent, setAgent] = useState(
     newSessionCatalogs.bothAvailable[0]?.agent ?? '',
@@ -133,7 +146,7 @@ export function ComposerMock(
       onCreateGoal={props.onCreateGoal}
       onStop={
         props.onStop
-          ? () => {
+          ? (): void => {
               setRunning(false);
               props.onStop?.();
             }
@@ -177,7 +190,7 @@ export function ComposerMock(
           turnRunning: running,
           onAgentChange: props.sessionStarted
             ? undefined
-            : (nextAgent) => {
+            : (nextAgent): void => {
                 setAgent(nextAgent);
                 setConfigOptions(
                   newSessionOptions.find((entry) => entry.agent === nextAgent)

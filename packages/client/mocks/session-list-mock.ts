@@ -4,13 +4,19 @@ import {
   archivedSessions,
   projectsList,
 } from '@repo/api/mocks';
+import type { SessionCounts } from '@repo/contracts';
+import type { FixtureOutput } from './trpc-mock-link';
 import type { Fixtures } from './trpc-mock-link';
 
 // Shared procedure mocks for Session list screen stories (ADR 0010).
 export const sessionListMocks = {
-  'projects.list': () => projectsList,
-  'agents.list': () => agentsList,
-  'session.list': ({ projectId, archived, query }) => {
+  'projects.list': (): typeof projectsList => projectsList,
+  'agents.list': (): typeof agentsList => agentsList,
+  'session.list': ({
+    projectId,
+    archived,
+    query,
+  }): FixtureOutput<'session.list'> => {
     const list = archived ? archivedSessions : activeSessions;
     return {
       ...list,
@@ -21,8 +27,8 @@ export const sessionListMocks = {
       ),
     };
   },
-  'session.listUpdates': async function* () {},
-  'session.counts': async function* () {
+  'session.listUpdates': async function* (): AsyncGenerator<never> {},
+  'session.counts': async function* (): AsyncGenerator<SessionCounts> {
     yield {
       attention: activeSessions.sessions.filter(
         (session) =>
@@ -37,8 +43,11 @@ export const sessionListMocks = {
 
 export const emptySessionListMocks = {
   ...sessionListMocks,
-  'session.list': () => ({ sessions: [], nextCursor: null }),
-  'session.counts': async function* () {
+  'session.list': (): { sessions: never[]; nextCursor: null } => ({
+    sessions: [],
+    nextCursor: null,
+  }),
+  'session.counts': async function* (): AsyncGenerator<SessionCounts> {
     yield { attention: 0, running: 0 };
   },
 } satisfies Fixtures;

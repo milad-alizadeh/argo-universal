@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import { createContext, useContext, useState } from 'react';
 import { View, type ViewProps } from 'react-native';
 import { useCSSVariable } from 'uniwind';
@@ -17,7 +18,7 @@ export function ContentLayout({
   className,
   onLayout,
   ...props
-}: ViewProps) {
+}: ViewProps): React.JSX.Element {
   const breakpoint = Number.parseFloat(
     String(useCSSVariable('--breakpoint-wide')),
   );

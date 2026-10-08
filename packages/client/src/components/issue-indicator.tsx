@@ -1,4 +1,5 @@
 import { TicketIcon } from 'phosphor-react-native';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/text';
 import { Icon } from './icon';
@@ -7,7 +8,9 @@ export interface IssueIndicatorProps {
   number: number;
 }
 
-export function IssueIndicator({ number }: IssueIndicatorProps) {
+export function IssueIndicator({
+  number,
+}: IssueIndicatorProps): React.JSX.Element {
   return (
     <View
       accessibilityLabel={`Issue #${number}`}

@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import { createContext, type ReactNode, useContext, useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -48,7 +49,7 @@ export function PhoneShell({
   onSectionChange,
   swipeEnabled = true,
   children,
-}: PhoneShellProps) {
+}: PhoneShellProps): React.JSX.Element {
   const drawerWidth = Number.parseFloat(
     String(useCSSVariable('--spacing-phone-drawer')),
   );
@@ -67,12 +68,12 @@ export function PhoneShell({
   const chrome = useResolveClassNames('bg-shell-chrome');
   const { top } = useSafeAreaInsets();
 
-  function selectSection(section: ShellSection) {
+  function selectSection(section: ShellSection): void {
     onSectionChange(section);
     onDrawerOpenChange(false);
   }
 
-  function sectionButton(section: ShellSection) {
+  function sectionButton(section: ShellSection): React.JSX.Element {
     const { title, icon } = shellSections[section];
     return (
       <Button

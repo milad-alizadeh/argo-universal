@@ -8,6 +8,7 @@ import {
   type Icon as PhosphorIcon,
   RobotIcon,
 } from 'phosphor-react-native';
+import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { Platform, Pressable, ScrollView, View } from 'react-native';
 import { cn } from '#lib/utils';
@@ -46,7 +47,7 @@ export function SettingsList({
   deviceCount,
   appearanceState = 'System',
   notificationsState = 'On',
-}: SettingsListProps) {
+}: SettingsListProps): React.JSX.Element {
   const wide = useWide();
   let device = deviceName;
   if (device === undefined || device === null) {
@@ -67,7 +68,7 @@ export function SettingsList({
     destination: NavigationDestination;
     state?: string;
     attention?: boolean;
-  }) {
+  }): React.JSX.Element {
     const selected =
       wide &&
       (destination.to === selectedDestination?.to ||
@@ -185,7 +186,13 @@ export function SettingsList({
   );
 }
 
-function Group({ title, children }: { title: string; children: ReactNode }) {
+function Group({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}): React.JSX.Element {
   return (
     <View className="wide:gap-0.5">
       <View className="h-9 shrink-0 justify-center pl-2.5 wide:h-8 wide:pr-1">

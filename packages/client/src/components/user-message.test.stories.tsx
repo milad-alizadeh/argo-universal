@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, within } from 'storybook/test';
 import { layoutWidths } from '../../mocks/each-layout';
@@ -16,7 +17,7 @@ const meta = {
   component: UserMessage,
   // The Feed gives every row its full width.
   decorators: [
-    (Story) => (
+    (Story): React.JSX.Element => (
       <View className="w-full">
         <Story />
       </View>

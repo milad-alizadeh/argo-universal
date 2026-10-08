@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createTRPCClient } from '@trpc/client';
+import type * as React from 'react';
 import { type ComponentType, type ReactNode, useState } from 'react';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import type { ConnectionState } from '../src/connection/context';
@@ -16,7 +17,10 @@ interface StoryContext {
 }
 
 // Story decorator: serves `parameters.trpc` fixtures through the mock link (ADR 0010), on a Connection held in `parameters.connection`.
-export function withTrpcMocks(Story: ComponentType, context: StoryContext) {
+export function withTrpcMocks(
+  Story: ComponentType,
+  context: StoryContext,
+): React.JSX.Element {
   return (
     <TrpcMocks
       key={context.id}
@@ -36,7 +40,7 @@ function TrpcMocks({
   fixtures: Fixtures;
   connectionState: ConnectionState;
   children: ReactNode;
-}) {
+}): React.JSX.Element {
   const [queryClient] = useState(
     () => new QueryClient({ defaultOptions: { queries: { retry: false } } }),
   );

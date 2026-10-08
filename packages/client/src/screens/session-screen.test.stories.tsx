@@ -1,6 +1,7 @@
 import { newSessionCatalogs, recordedFeedMocks } from '@repo/api/mocks';
 import type { FeedSnapshot, FeedSyncPoint } from '@repo/contracts';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { expect, spyOn, waitFor, within } from 'storybook/test';
 import { composerImages } from '../../mocks/composer-mock';
 import { eachLayout, layoutWidths } from '../../mocks/each-layout';
@@ -41,7 +42,7 @@ const meta = {
   component: SessionScreen,
   parameters: { trpc: runningSessionMocks, screenPreview: true },
   args: { id: 'session-1', now: runningTurnNow },
-  render: (args) => <SessionScreenPreview {...args} />,
+  render: (args): React.JSX.Element => <SessionScreenPreview {...args} />,
 } satisfies Meta<typeof SessionScreen>;
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -120,7 +121,7 @@ export const UnavailableAgentRetryWideSecondAgent = unavailableAgentRetry(
 );
 
 // At a phone's size the Feed overflows a screen, so the reader can scroll away from the end.
-async function resizeToPhoneWidth() {
+async function resizeToPhoneWidth(): Promise<void> {
   if ('__vitest_browser__' in globalThis)
     await settleViewport(layoutWidths.phone);
 }
@@ -128,17 +129,17 @@ async function resizeToPhoneWidth() {
 // A loaded runner can take a few frames per scroll before the Feed answers.
 const scrollAwayWait = { timeout: 15000, interval: 100 };
 
-const scrolledToEnd = (feedScroll: HTMLElement) =>
+const scrolledToEnd = (feedScroll: HTMLElement): boolean =>
   feedScroll.scrollHeight - feedScroll.scrollTop - feedScroll.clientHeight < 2;
 
 // Scrolls up as a reader does on the web: the wheel turning up stops the Feed following the end, which setting scrollTop alone does not.
-function scrollUp(feedScroll: HTMLElement, distance: number) {
+function scrollUp(feedScroll: HTMLElement, distance: number): void {
   feedScroll.dispatchEvent(new WheelEvent('wheel', { deltaY: -distance }));
   feedScroll.scrollTop = Math.max(0, feedScroll.scrollTop - distance);
   feedScroll.dispatchEvent(new Event('scroll'));
 }
 
-function fullyInViewport(element: Element) {
+function fullyInViewport(element: Element): boolean {
   const box = element.getBoundingClientRect();
   return (
     box.height > 0 &&
@@ -238,7 +239,10 @@ export const PagesOlderRows: Story = {
 };
 
 // The element at the middle of the Feed's view, and where its top is now.
-function markMiddleOfView(feedScroll: HTMLElement) {
+function markMiddleOfView(feedScroll: HTMLElement): {
+  element: Element;
+  top: number;
+} {
   const view = feedScroll.getBoundingClientRect();
   const element = document.elementFromPoint(
     view.left + view.width / 2,
@@ -250,13 +254,15 @@ function markMiddleOfView(feedScroll: HTMLElement) {
 }
 
 // After two frames, the browser has sent its scroll and resize events and the Feed has answered them.
-const afterTwoFrames = () =>
+const afterTwoFrames = (): Promise<void> =>
   new Promise<void>((resolve) =>
     requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
   );
 
 // Once rows in view stop measuring, the middle of the view holds the same element at the same place two frames apart.
-function markSettledMiddleOfView(feedScroll: HTMLElement) {
+function markSettledMiddleOfView(
+  feedScroll: HTMLElement,
+): Promise<ReturnType<typeof markMiddleOfView>> {
   let lastMark = markMiddleOfView(feedScroll);
   return waitFor(
     async () => {
@@ -273,7 +279,7 @@ function markSettledMiddleOfView(feedScroll: HTMLElement) {
 }
 
 // Where an element's top settles once it shows at its centre, unclipped, and holds still for two frames.
-function settledTopOf(findElement: () => HTMLElement) {
+function settledTopOf(findElement: () => HTMLElement): Promise<number> {
   let lastTop: number | undefined;
   return waitFor(
     async () => {
@@ -347,7 +353,7 @@ export const KeepsPlaceWhenOlderRowsJoinAGroup: Story = {
     await userEvent.click(
       canvas.getByRole('button', { name: 'Ran 10 commands' }),
     );
-    const step = () =>
+    const step = (): HTMLElement =>
       canvas.getByRole('button', { name: splitGroupStepInTail });
     const top = await settledTopOf(step);
     sendOlderPage();
@@ -405,7 +411,7 @@ export const KeepsPlaceWhenRowOpens: Story = {
     const scroll = await canvas.findByTestId('feed-scroll');
     await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
     // Away from the end, opening a row grows the Feed below it and leaves the rows above where they were.
-    const closedRowInTopHalf = () => {
+    const closedRowInTopHalf = (): HTMLElement | undefined => {
       const view = scroll.getBoundingClientRect();
       return within(scroll)
         .queryAllByRole('button', { expanded: false })
@@ -922,7 +928,7 @@ function failedPick(width: number, agentIndex: 0 | 1): Story {
   const catalog = uploadCatalogs[agentIndex];
   if (!catalog) throw new Error('Recorded catalog needs both Agents.');
   let calls = 0;
-  let restorePicker = () => {};
+  let restorePicker = (): void => {};
   return {
     beforeEach: () => {
       restorePicker();
@@ -943,7 +949,7 @@ function failedPick(width: number, agentIndex: 0 | 1): Story {
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       const bytes = await (await fetch(catalog.image.uri)).blob();
-      const attachImage = async (name: string) => {
+      const attachImage = async (name: string): Promise<void> => {
         await userEvent.click(
           canvas.getByRole('button', { name: 'Attach images' }),
         );
@@ -977,7 +983,7 @@ function failedPick(width: number, agentIndex: 0 | 1): Story {
           throw new Error('Image selection failed');
         },
       );
-      restorePicker = () => picker.mockRestore();
+      restorePicker = (): void => picker.mockRestore();
       try {
         await attachImage('failed-selection.png');
         const alert = await canvas.findByRole('alert');

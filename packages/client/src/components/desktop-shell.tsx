@@ -2,6 +2,7 @@ import { ArrowsInSimpleIcon } from 'phosphor-react-native/src/icons/ArrowsInSimp
 import { ArrowsOutSimpleIcon } from 'phosphor-react-native/src/icons/ArrowsOutSimple';
 import { SidebarSimpleIcon } from 'phosphor-react-native/src/icons/SidebarSimple';
 import { XIcon } from 'phosphor-react-native/src/icons/X';
+import type * as React from 'react';
 import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
@@ -56,7 +57,7 @@ export function DesktopShell({
   onInspectorStateChange,
   inspectorHeader,
   inspector,
-}: DesktopShellProps) {
+}: DesktopShellProps): React.JSX.Element {
   const listWidth = Number.parseFloat(
     String(useCSSVariable('--spacing-shell-list')),
   );
@@ -101,7 +102,7 @@ export function DesktopShell({
   if (inspectorOpen && inspectorExpanded) inspectorTargetWidth = availableWidth;
   else if (inspectorOpen) inspectorTargetWidth = visibleInspectorWidth;
 
-  function resizeList(nextWidth: number) {
+  function resizeList(nextWidth: number): void {
     if (nextWidth < listWidth / 2) {
       onSidebarShownChange(false);
       return;
@@ -112,7 +113,7 @@ export function DesktopShell({
     if (!sidebarShown) onSidebarShownChange(true);
   }
 
-  function resizeInspector(nextWidth: number) {
+  function resizeInspector(nextWidth: number): void {
     if (nextWidth < inspectorWidth / 2) {
       onInspectorStateChange('closed');
       return;

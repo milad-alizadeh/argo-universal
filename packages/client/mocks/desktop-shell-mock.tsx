@@ -1,4 +1,5 @@
 import { DotsThreeIcon } from 'phosphor-react-native/src/icons/DotsThree';
+import type * as React from 'react';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import {
@@ -23,7 +24,9 @@ export function DesktopShellMock({
   showInspectorControls = false,
   inspector,
   children,
-}: Partial<DesktopShellProps> & { showInspectorControls?: boolean }) {
+}: Partial<DesktopShellProps> & {
+  showInspectorControls?: boolean;
+}): React.JSX.Element {
   const [section, setSection] = useState(selectedSection);
   const [shown, setShown] = useState(sidebarShown);
   const [inspection, setInspection] = useState(inspectorState);
