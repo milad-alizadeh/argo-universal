@@ -4,9 +4,14 @@ const sameList = <Value>(
   first: readonly Value[],
   second: readonly Value[],
   isSame: (first: Value, second: Value) => boolean = Object.is,
-): boolean =>
-  first.length === second.length &&
-  first.every((value, index) => isSame(value, second[index] as Value));
+): boolean => {
+  if (first.length !== second.length) return false;
+  const following = second.values();
+  return first.every((value) => {
+    const other = following.next();
+    return !other.done && isSame(value, other.value);
+  });
+};
 
 // Rows are compared by reference: the Feed state replaces a row only when it changes.
 function sameItem(first: FeedViewItem, second: FeedViewItem): boolean {
@@ -87,7 +92,7 @@ export function keepUnchangedItems(
       items: item.items.map((activity) => {
         const previousActivity = previousActivities.get(itemKey(activity));
         return previousActivity && sameItem(previousActivity, activity)
-          ? (previousActivity as typeof activity)
+          ? previousActivity
           : activity;
       }),
     };
@@ -98,4 +103,6 @@ export function keepUnchangedItems(
 const itemKey = (item: FeedViewItem): string =>
   `${item.type}:${feedItemKey(item)}`;
 
-const toKeyedEntry = (item: FeedViewItem) => [itemKey(item), item] as const;
+const toKeyedEntry = <Item extends FeedViewItem>(
+  item: Item,
+): readonly [string, Item] => [itemKey(item), item];

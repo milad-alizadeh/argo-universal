@@ -208,7 +208,7 @@ function createSessionListWatch({
     changes: (rows: SessionListState) => Value[],
   ): AsyncGenerator<Value> {
     if (signal?.aborted) return;
-    const events = new EventEmitter();
+    const events = new EventEmitter<{ change: [Value] }>();
     const controller = new AbortController();
     const first = sharedActor === undefined;
     sharedActor ??= create();
@@ -220,7 +220,9 @@ function createSessionListWatch({
     const rowsListener = actor.on('list.rows', ({ rows }): void => {
       publish(rows);
     });
-    const stream = on(events, 'change', { signal: controller.signal });
+    const stream: AsyncIterable<Value[]> = on(events, 'change', {
+      signal: controller.signal,
+    });
     const completion = actor.subscribe({
       complete: (): void => controller.abort(),
       error: (error): void => controller.abort(error),
@@ -250,7 +252,7 @@ function createSessionListWatch({
         const rows = actor.getSnapshot().context.rows;
         if (rows) publish(rows);
       }
-      for await (const [change] of stream) yield change as Value;
+      for await (const changes of stream) yield* changes;
     } catch (error) {
       const snapshot = actor.getSnapshot();
       if (snapshot.status === 'error') throw snapshot.error;

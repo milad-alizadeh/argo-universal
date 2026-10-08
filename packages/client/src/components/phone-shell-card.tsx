@@ -1,6 +1,6 @@
 import type * as React from 'react';
 import type { ReactNode } from 'react';
-import { useWindowDimensions, type ViewStyle } from 'react-native';
+import { useWindowDimensions } from 'react-native';
 import { useDrawerProgress } from 'react-native-drawer-layout';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { useResolveClassNames } from 'uniwind';
@@ -14,9 +14,7 @@ export function PhoneShellCard({
   children,
 }: PhoneShellCardProps): React.JSX.Element {
   const progress = useDrawerProgress();
-  const { marginTop, borderRadius } = useResolveClassNames(
-    'mt-3 rounded-xl',
-  ) as ViewStyle;
+  const { marginTop, borderRadius } = useResolveClassNames('mt-3 rounded-xl');
   const radius = Number(borderRadius);
   // Scaling about the left edge insets the card top and bottom by mt-3 without a layout pass.
   const shrink = (2 * Number(marginTop)) / useWindowDimensions().height;

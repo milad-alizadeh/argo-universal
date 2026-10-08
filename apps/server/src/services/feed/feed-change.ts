@@ -9,7 +9,7 @@ import {
   readFeedField,
   SessionUpdate,
   type SessionUpdateKind,
-  writeFeedField,
+  writeFeedRowField,
 } from '@repo/contracts';
 import { z } from 'zod';
 
@@ -136,11 +136,8 @@ export function applyFeedChange(
         return { rejection: `${change.field} of row ${id} is not a string` };
       return accept(
         {
-          ...(writeFeedField(
-            existing,
-            path,
-            current + change.text,
-          ) as SessionUpdate),
+          ...existing,
+          ...writeFeedRowField(existing, change.field, current + change.text),
           revision,
         },
         (): RowAppend => ({

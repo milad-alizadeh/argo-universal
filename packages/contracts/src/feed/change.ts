@@ -7,6 +7,7 @@ import {
   Notice,
   PlanUpdate,
   SubagentUpdate,
+  type SessionUpdate,
   TaskUpdate,
   ToolCallUpdate,
   UserMessage,
@@ -19,9 +20,10 @@ const withoutEnvelope = {
   revision: true,
   turnId: true,
 } as const;
-export const feedSetFields = Object.keys(withoutEnvelope) as Array<
-  keyof typeof withoutEnvelope
->;
+export const feedSetFields = Object.keys(withoutEnvelope).filter(
+  (key): key is keyof typeof withoutEnvelope =>
+    Object.hasOwn(withoutEnvelope, key),
+);
 
 // A Session update as an Agent reports it: a row without the fields the Feed actor sets.
 export const FeedUpdate = z.discriminatedUnion('sessionUpdate', [
@@ -67,7 +69,7 @@ export function readFeedField(
       typeof current === 'object' &&
       Object.hasOwn(current, key)
     )
-      current = (current as Record<string, unknown>)[key];
+      current = Reflect.get(current, key);
     else return undefined;
   }
   return current;
@@ -85,8 +87,29 @@ export function writeFeedField(
     copy[Number(key)] = writeFeedField(value[Number(key)], rest, text);
     return copy;
   }
-  const record = value as Record<string, unknown>;
-  return { ...record, [key]: writeFeedField(record[key], rest, text) };
+  if (value === null || typeof value !== 'object')
+    throw new TypeError('A resolved Feed path needs an object before its text');
+  return writeObjectField(value, [key, ...rest], text);
+}
+
+export function writeFeedRowField(
+  value: SessionUpdate,
+  field: string,
+  text: string,
+): Record<string, unknown> {
+  const [key = '', ...rest] = field.split('.');
+  return writeObjectField(value, [key, ...rest], text);
+}
+
+function writeObjectField(
+  value: object,
+  [key, ...rest]: readonly [string, ...string[]],
+  text: string,
+): Record<string, unknown> {
+  return {
+    ...value,
+    [key]: writeFeedField(Reflect.get(value, key), rest, text),
+  };
 }
 
 // Top-level fields of a row to replace; `state: 'settled'` settles it.

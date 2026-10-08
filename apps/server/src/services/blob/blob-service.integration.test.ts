@@ -11,6 +11,7 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { BlobUploadInput } from '@repo/contracts';
 import { type BlobUploadOutput, maxBlobUploadBytes } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { blob, blobRef } from '@repo/db/schema';
@@ -37,7 +38,9 @@ const formWith = (file: Blob): FormData => {
   return form;
 };
 const upload = (file: Blob): Promise<BlobUploadOutput> =>
-  createBlobService({ database, blobsFolder }).upload(formWith(file));
+  createBlobService({ database, blobsFolder }).upload(
+    BlobUploadInput.parse(formWith(file)),
+  );
 const storedIds = (): string[] =>
   database
     .select({ id: blob.id })

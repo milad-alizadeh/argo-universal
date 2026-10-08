@@ -12,12 +12,16 @@ export const BlobUploadInput = z
     (value): boolean =>
       typeof FormData !== 'undefined' && value instanceof FormData,
   )
-  .refine((form): boolean => {
-    let entries = 0;
-    for (const _ of form) entries += 1;
-    return entries === 1 && form.get('file') instanceof Blob;
-  }, 'Expected FormData with one file in the file field');
-export type BlobUploadInput = z.infer<typeof BlobUploadInput>;
+  .transform((form, context): Blob => {
+    const file = form.get('file');
+    if ([...form].length === 1 && file instanceof Blob) return file;
+    context.addIssue({
+      code: 'custom',
+      message: 'Expected FormData with one file in the file field',
+    });
+    return z.NEVER;
+  });
+export type BlobUploadInput = z.input<typeof BlobUploadInput>;
 
 export const BlobUploadOutput = BlobRef;
 export type BlobUploadOutput = z.infer<typeof BlobUploadOutput>;

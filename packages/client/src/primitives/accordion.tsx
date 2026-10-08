@@ -15,17 +15,18 @@ import { cn } from '#lib/utils';
 import { Icon } from '#primitives/icon';
 import { TextClassContext } from '#primitives/text';
 
+type AccordionRootProps = React.ComponentProps<typeof AccordionPrimitive.Root>;
+
 function Accordion({
   children,
   ref,
   ...props
-}: Omit<React.ComponentProps<typeof AccordionPrimitive.Root>, 'asChild'>) {
+}:
+  | Omit<Extract<AccordionRootProps, { type: 'single' }>, 'asChild'>
+  | Omit<Extract<AccordionRootProps, { type: 'multiple' }>, 'asChild'>) {
   return (
     <LayoutAnimationConfig skipEntering>
-      <AccordionPrimitive.Root
-        {...(props as AccordionPrimitive.RootProps)}
-        asChild={Platform.OS !== 'web'}
-      >
+      <AccordionPrimitive.Root {...props} asChild={Platform.OS !== 'web'}>
         <Animated.View layout={LinearTransition.duration(motionDuration.enter)}>
           {children}
         </Animated.View>

@@ -20,7 +20,6 @@ import {
 } from 'drizzle-orm/sqlite-core';
 import type { ActorRefFrom } from 'xstate';
 import { createRejectionCounter } from '../../lib/count-rejections';
-import type { FeedActorRef } from '../feed';
 import {
   decodeStoredFeedRow,
   fromFeedRow,
@@ -397,7 +396,7 @@ function readSessionInformation(
   } = input;
   const actor = sessions.getSnapshot().context.sessions[row.id];
   const live = actor?.getSnapshot();
-  const feed = live?.children.feed as FeedActorRef | undefined;
+  const feed = live?.children.feed;
   const feedContext = feed?.getSnapshot().context;
   const changes = [
     ...(['agent_message', 'plan_update'] as const).flatMap(
