@@ -4,13 +4,13 @@ import type { ActorRefFrom } from 'xstate';
 import { createAgentService } from './agents';
 import { createBlobService } from './blob';
 import type { FeedActorRef } from './feed';
-import { createFeedService } from './feed';
+import { createFeedService, findDatabaseWriter } from './feed';
 import type { writerMachine } from './feed';
 import { createProjectService } from './projects';
 import { createSessionReader, createSessionSnapshotWatcher } from './sessions';
 import type { RegistryActorRef } from './sessions';
 import type { SessionActorRef } from './sessions';
-import { createSessionService } from './sessions';
+import { createSessionService, findSessionActor } from './sessions';
 import { createSystemService } from './system';
 
 export function createServerServices(options: {
@@ -22,17 +22,13 @@ export function createServerServices(options: {
   createId?: () => string;
 }): Services {
   const findSession = (sessionId: string): SessionActorRef | undefined =>
-    options.sessions.system.get(`session:${sessionId}`) as
-      | SessionActorRef
-      | undefined;
+    findSessionActor(options.sessions.system, sessionId);
   const findFeed = (sessionId: string): FeedActorRef | undefined =>
     findSession(sessionId)?.getSnapshot().children.feed as
       | FeedActorRef
       | undefined;
   const findWriter = (): ActorRefFrom<typeof writerMachine> | undefined =>
-    options.sessions.system.get('databaseWriter') as
-      | ActorRefFrom<typeof writerMachine>
-      | undefined;
+    findDatabaseWriter(options.sessions.system);
   const session = createSessionService(options);
   return {
     blob: createBlobService(options),

@@ -4,9 +4,9 @@ import { createElicitationAnswerSchema } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { listBranches } from '@repo/git';
 import { TRPCError } from '@trpc/server';
-import { type ActorRefFrom, type SnapshotFrom, waitFor } from 'xstate';
+import { type SnapshotFrom, waitFor } from 'xstate';
 import { userMessageId } from '../feed';
-import type { writerMachine } from '../feed';
+import { findDatabaseWriter, type writerMachine } from '../feed';
 import { readProjectPath } from '../projects';
 import type { RegistryActorRef, RegistryCommand } from './registry-machine';
 import { sendSessionCommand } from './session-command';
@@ -14,6 +14,7 @@ import { createSessionList } from './session-list';
 import type { SessionActorRef } from './session-machine';
 import { createSessionReader } from './session-record';
 import { isSessionReady } from './session-snapshot';
+import { findSessionActor } from './session-system';
 
 export interface SessionServiceOptions {
   database: Database;
@@ -36,10 +37,8 @@ export function createSessionService({
       });
     sessions.send(command);
   };
-  const findSessionActor = (sessionId: string): SessionActorRef => {
-    const actor = sessions.system.get(`session:${sessionId}`) as
-      | SessionActorRef
-      | undefined;
+  const requireSessionActor = (sessionId: string): SessionActorRef => {
+    const actor = findSessionActor(sessions.system, sessionId);
     if (!actor)
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
@@ -48,7 +47,7 @@ export function createSessionService({
     return actor;
   };
   const ready = async (sessionId: string): Promise<SessionActorRef> => {
-    const actor = findSessionActor(sessionId);
+    const actor = requireSessionActor(sessionId);
     const snapshot = await waitFor(
       actor,
       (snapshot): boolean =>
@@ -78,9 +77,7 @@ export function createSessionService({
   };
   // Resolves once the writer has committed the new Session's row, so every read finds it.
   const written = async (sessionId: string): Promise<void> => {
-    const writer = sessions.system.get('databaseWriter') as
-      | ActorRefFrom<typeof writerMachine>
-      | undefined;
+    const writer = findDatabaseWriter(sessions.system);
     if (!writer) return;
     const queued = (snapshot: SnapshotFrom<typeof writerMachine>): boolean =>
       snapshot.context.queue.some(
@@ -196,7 +193,7 @@ export function createSessionService({
         projectPath,
       });
       const snapshot = await waitFor(
-        findSessionActor(sessionId),
+        requireSessionActor(sessionId),
         (snapshot): boolean =>
           snapshot.status !== 'active' || snapshot.context.stored,
         { timeout: Infinity },

@@ -19,7 +19,6 @@ import {
   type AnyEventObject,
   createActor,
   type EventFromLogic,
-  fromCallback,
   fromPromise,
   type SnapshotFrom,
   setup,
@@ -31,7 +30,7 @@ import { messageChange } from '#mocks/feed';
 import { createSessionHost, firstPrompt } from '#mocks/session';
 import { type FeedActorRef, feedMachine } from '../feed';
 import type { createFeedService } from '../feed';
-import type { WriterEvent } from '../feed';
+import { databaseWriterId, writerMachine } from '../feed';
 import { sendSessionCommand } from './session-command';
 import { type SessionMachineInput, sessionMachine } from './session-machine';
 import { toSessionSnapshot } from './session-snapshot';
@@ -808,11 +807,22 @@ it.each(
       setup({
         actors: {
           session: machine,
-          writer: fromCallback<WriterEvent>((): void => {}),
+          writer: writerMachine.provide({
+            actors: {
+              writeBatch: fromPromise(
+                (): Promise<void> => new Promise((): void => {}),
+              ),
+            },
+          }),
         },
       }).createMachine({
         invoke: [
-          { id: 'writer', systemId: 'databaseWriter', src: 'writer' },
+          {
+            id: 'writer',
+            systemId: databaseWriterId,
+            src: 'writer',
+            input: { database, now: (): number => 1000 },
+          },
           { id: 'session', src: 'session', input },
         ],
       }),
