@@ -93,6 +93,9 @@ const [firstCatalog] = pickerCatalogs;
 if (!firstCatalog)
   throw new Error('Recorded catalog needs an available Agent.');
 const firstAgent = firstCatalog.agent;
+const secondAgent = pickerCatalogs[1]?.agent;
+if (!secondAgent)
+  throw new Error('Recorded catalog needs a second available Agent.');
 
 const meta = {
   title: 'Tests/Composer',
@@ -733,7 +736,45 @@ function checkout(width: number): Story {
     },
   };
 }
-export const CheckoutPhone = checkout(layoutWidths.phone);
+function phoneStatusControls(
+  agent: Pick<AgentInfo, 'agent' | 'configOptions'>,
+): Story {
+  return {
+    args: {
+      configuration: {
+        agents: newSessionCatalogs.bothAvailable,
+        agent: agent.agent,
+        configOptions: agent.configOptions,
+        onConfigChange: fn(),
+        checkout: {
+          branch: 'main',
+          newWorktree: true,
+          onNewWorktreeChange: fn(),
+        },
+      },
+      status: {
+        plan: composerPlan,
+        subagents: { count: 2, running: true, onPress: fn() },
+        shells: { count: 1, running: false, onPress: fn() },
+      },
+    },
+    play: async ({ canvas }) => {
+      await settleViewport(layoutWidths.phone);
+      await expect(
+        canvas.queryByRole('button', { name: 'Checkout' }),
+      ).not.toBeInTheDocument();
+      await expect(canvas.getByRole('button', { name: 'Plan' })).toBeVisible();
+      await expect(
+        canvas.getByRole('button', { name: 'Subagents: 2' }),
+      ).toBeVisible();
+      await expect(
+        canvas.getByRole('button', { name: 'Shells: 1' }),
+      ).toBeVisible();
+    },
+  };
+}
+export const CheckoutPhone = phoneStatusControls(firstAgent);
+export const CheckoutPhoneSecondAgent = phoneStatusControls(secondAgent);
 export const CheckoutWide = checkout(layoutWidths.wide);
 
 function createdCheckoutIsReadOnly(width: number): Story {
