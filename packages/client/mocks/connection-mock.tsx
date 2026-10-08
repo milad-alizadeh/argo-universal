@@ -5,6 +5,7 @@ import { AppProviders } from '../src/trpc/app-providers';
 import { useTRPCClient } from '../src/trpc/context';
 
 interface ConnectionReport {
+  serverUrl: string;
   open: number;
   closed: number;
   screenSubscriptions: number;
@@ -20,6 +21,7 @@ let report = buildReport();
 function buildReport(): ConnectionReport {
   const closed = sockets.filter((socket) => socket.isClosed()).length;
   return {
+    serverUrl: sockets.at(-1)?.url ?? '',
     open: sockets.length - closed,
     closed,
     screenSubscriptions,
@@ -100,9 +102,10 @@ export function ConnectionMock({
   strictMode = false,
 }: ConnectionMockProps): React.JSX.Element {
   const [mounted, setMounted] = useState(false);
+  const [serverUrl, setServerUrl] = useState('ws://127.0.0.1:7337');
   const current = useSyncExternalStore(subscribe, () => report);
   const providers = mounted ? (
-    <AppProviders serverUrl="ws://127.0.0.1:7337">
+    <AppProviders serverUrl={serverUrl}>
       <ScreenMock />
     </AppProviders>
   ) : null;
@@ -112,7 +115,14 @@ export function ConnectionMock({
       <Pressable role="button" onPress={() => setMounted(!mounted)}>
         <Text>{mounted ? 'Unmount' : 'Mount'}</Text>
       </Pressable>
+      <Pressable
+        role="button"
+        onPress={() => setServerUrl('ws://127.0.0.1:7338')}
+      >
+        <Text>Switch Server</Text>
+      </Pressable>
       {strictMode ? <StrictMode>{providers}</StrictMode> : providers}
+      <Text>{`Server: ${current.serverUrl}`}</Text>
       <Text>{`Open Connections: ${current.open}`}</Text>
       <Text>{`Closed Connections: ${current.closed}`}</Text>
       <Text>{`Screen subscriptions: ${current.screenSubscriptions}`}</Text>

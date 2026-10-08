@@ -40,3 +40,24 @@ export const GivesScreensAnOpenConnectionUnderStrictMode: Story = {
     await expect(canvas.getByText('Closed Connections: 0')).toBeVisible();
   },
 };
+
+export const ReconnectsAfterServerChanges: Story = {
+  args: { strictMode: true },
+  play: async ({ canvas, userEvent }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Mount' }));
+    await expect(await canvas.findByText('Open Connections: 1')).toBeVisible();
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Switch Server' }),
+    );
+    await expect(
+      await canvas.findByText('Server: ws://127.0.0.1:7338'),
+    ).toBeVisible();
+    await expect(canvas.getByText('Open Connections: 1')).toBeVisible();
+    await expect(canvas.getByText('Closed Connections: 1')).toBeVisible();
+    await expect(
+      canvas.getByText(
+        'Connection states the screens saw: connecting, pending',
+      ),
+    ).toBeVisible();
+  },
+};
