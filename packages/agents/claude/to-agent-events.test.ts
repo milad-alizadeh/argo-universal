@@ -12,6 +12,9 @@ import {
   type MappingState,
   toAgentEvents,
 } from './to-agent-events';
+
+const vendorSessionId = '6d8abfff-ea69-4c66-b642-d445f9060d16';
+const agentTurnEndedEvent = 'agent.turnEnded';
 // SDK-owned messages exercise mapping without narrowing their provider shapes.
 function mapAll(
   messages: VendorMessage[],
@@ -44,15 +47,15 @@ it('reconciles the recorded compacting status and boundary into one Compaction r
   );
   expect(compactions).toEqual([
     {
-      id: '6d8abfff-ea69-4c66-b642-d445f9060d16',
-      compactionId: '6d8abfff-ea69-4c66-b642-d445f9060d16',
+      id: vendorSessionId,
+      compactionId: vendorSessionId,
       sessionUpdate: 'compaction_update',
       state: 'open',
       status: 'in_progress',
     },
     {
-      id: '6d8abfff-ea69-4c66-b642-d445f9060d16',
-      compactionId: '6d8abfff-ea69-4c66-b642-d445f9060d16',
+      id: vendorSessionId,
+      compactionId: vendorSessionId,
       sessionUpdate: 'compaction_update',
       state: 'settled',
       status: 'completed',
@@ -283,7 +286,7 @@ describe('toAgentEvents on a Turn with edits and commands', (): void => {
 
   it('ends the Turn with its stop reason and usage', (): void => {
     expect(events.at(-1)).toEqual({
-      type: 'agent.turnEnded',
+      type: agentTurnEndedEvent,
       stopReason: 'end_turn',
       usage: {
         totalTokens: expect.any(Number),
@@ -311,7 +314,7 @@ describe('toAgentEvents on an interrupted Turn', (): void => {
       }),
     ]);
     expect(events.at(-1)).toMatchObject({
-      type: 'agent.turnEnded',
+      type: agentTurnEndedEvent,
       stopReason: 'cancelled',
     });
   });
@@ -349,7 +352,7 @@ describe('toAgentEvents on single messages', (): void => {
   ])('maps a %s result to its stop reason', (_, message, stopReason): void => {
     const { events } = mapAll([message]);
     expect(events).toEqual([
-      expect.objectContaining({ type: 'agent.turnEnded', stopReason }),
+      expect.objectContaining({ type: agentTurnEndedEvent, stopReason }),
     ]);
   });
 

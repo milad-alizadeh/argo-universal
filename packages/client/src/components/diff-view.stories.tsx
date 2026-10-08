@@ -3,6 +3,8 @@ import { recordedFile } from '../../mocks/feed-edit-mock';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
 import { DiffView } from './diff-view';
 
+const editStatesId = 'edit-states';
+
 const meta = {
   title: 'Feed/DiffView',
   component: DiffView,
@@ -21,13 +23,13 @@ export const Overview: Story = {
         <DiffView file={recordedFile('agent-1', 'edit-and-command', 'add')} />
       </Variation>
       <Variation label="Deleted file">
-        <DiffView file={recordedFile('agent-2', 'edit-states', 'delete')} />
+        <DiffView file={recordedFile('agent-2', editStatesId, 'delete')} />
       </Variation>
       <Variation label="Large diff">
-        <DiffView file={recordedFile('agent-2', 'edit-states')} />
+        <DiffView file={recordedFile('agent-2', editStatesId)} />
       </Variation>
       <Variation label="Inline preview">
-        <DiffView file={recordedFile('agent-2', 'edit-states')} inline />
+        <DiffView file={recordedFile('agent-2', editStatesId)} inline />
       </Variation>
     </Variations>
   ),

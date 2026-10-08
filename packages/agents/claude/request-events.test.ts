@@ -2,6 +2,8 @@ import { expect, it } from 'vitest';
 import { permission, plan, question } from './mocks/requests';
 import { initialMappingState, toAgentEvents } from './to-agent-events';
 
+const colorQuestion = 'Choose a color';
+
 it('maps a provider approval request to Argo permission options', (): void => {
   expect(toAgentEvents(permission, initialMappingState()).events).toEqual([
     {
@@ -53,16 +55,16 @@ it('maps provider question choices to the canonical Argo form', (): void => {
       type: 'agent.elicitationRequested',
       request: {
         mode: 'form',
-        message: 'Choose a color',
+        message: colorQuestion,
         toolCallId: 'tool',
         requestedSchema: {
           type: 'object',
-          required: ['Choose a color'],
+          required: [colorQuestion],
           properties: {
-            'Choose a color': {
+            [colorQuestion]: {
               type: 'string',
               title: 'Color',
-              description: 'Choose a color',
+              description: colorQuestion,
               oneOf: [
                 { const: 'Red', title: 'Red', description: 'A red square' },
                 { const: 'Blue', title: 'Blue', description: 'A blue circle' },

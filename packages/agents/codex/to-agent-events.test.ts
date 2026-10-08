@@ -10,9 +10,17 @@ import { responses as reply } from './mocks/reply';
 import type { CommandAction as SuppliedCommandAction } from './protocol.gen';
 import { initialMappingState, toAgentEvents } from './to-agent-events';
 
+const editCommandFixture = 'edit-and-command';
+const agentFeedEvent = 'agent.feed';
+const vendorSessionId = '01a10f63-35db-7062-a47d-ebd815c1bea2';
+const appFilePath = '/repo/app.txt';
+const agentTurnEndedEvent = 'agent.turnEnded';
+const thoughtTurnId = 'thought-turn';
+const checkFilesPrompt = 'Check the files.';
+
 const fixtures: Record<string, VendorMessage[]> = {
   compaction,
-  'edit-and-command': edits,
+  [editCommandFixture]: edits,
   'file-change': changes,
   interrupt,
   reply,
@@ -47,7 +55,7 @@ const replaceCommandActions = <
 const withCommandActions = (
   commandActions: SuppliedCommandAction[],
 ): VendorMessage[] =>
-  responses('edit-and-command').map((message: VendorMessage): VendorMessage => {
+  responses(editCommandFixture).map((message: VendorMessage): VendorMessage => {
     if (
       message.method === 'item/started' &&
       message.params.item.type === 'commandExecution'
@@ -68,7 +76,7 @@ const withCommandActions = (
   });
 const settledRows = (events: AgentEvent[]): FeedUpdate[] =>
   events.flatMap((event): FeedUpdate[] =>
-    event.type === 'agent.feed' &&
+    event.type === agentFeedEvent &&
     event.change.type === 'upsert' &&
     event.change.update.state === 'settled'
       ? [event.change.update]
@@ -79,7 +87,7 @@ it('reconciles the recorded Compaction start and completion into one row', (): v
   const events = mapResponses('compaction');
   const rows = events.flatMap(
     (event): Extract<FeedUpdate, { sessionUpdate: 'compaction_update' }>[] =>
-      event.type === 'agent.feed' &&
+      event.type === agentFeedEvent &&
       event.change.type === 'upsert' &&
       event.change.update.sessionUpdate === 'compaction_update'
         ? [event.change.update]
@@ -87,15 +95,15 @@ it('reconciles the recorded Compaction start and completion into one row', (): v
   );
   expect(rows).toEqual([
     {
-      id: '01a10f63-35db-7062-a47d-ebd815c1bea2',
-      compactionId: '01a10f63-35db-7062-a47d-ebd815c1bea2',
+      id: vendorSessionId,
+      compactionId: vendorSessionId,
       sessionUpdate: 'compaction_update',
       state: 'open',
       status: 'in_progress',
     },
     {
-      id: '01a10f63-35db-7062-a47d-ebd815c1bea2',
-      compactionId: '01a10f63-35db-7062-a47d-ebd815c1bea2',
+      id: vendorSessionId,
+      compactionId: vendorSessionId,
       sessionUpdate: 'compaction_update',
       state: 'settled',
       status: 'completed',
@@ -104,7 +112,7 @@ it('reconciles the recorded Compaction start and completion into one row', (): v
 });
 
 it('exposes only the command actions the Agent supplied, including unknown actions', (): void => {
-  const tools = settledRows(mapResponses('edit-and-command'))
+  const tools = settledRows(mapResponses(editCommandFixture))
     .filter(
       (
         row,
@@ -117,7 +125,7 @@ it('exposes only the command actions the Agent supplied, including unknown actio
       _meta: {
         argo: expect.objectContaining({
           commandActions: [
-            { type: 'read', command: 'cat app.txt', path: '/repo/app.txt' },
+            { type: 'read', command: 'cat app.txt', path: appFilePath },
           ],
         }),
       },
@@ -135,7 +143,7 @@ it('exposes only the command actions the Agent supplied, including unknown actio
 });
 
 it('keeps the recorded Tool call start and end times', (): void => {
-  const tools = settledRows(mapResponses('edit-and-command'))
+  const tools = settledRows(mapResponses(editCommandFixture))
     .filter(
       (
         row,
@@ -227,10 +235,14 @@ describe('recorded Turns', (): void => {
       ).toEqual([{ type: 'agent.turnStarted' }]);
       expect(
         events.filter(
-          (event): event is Extract<AgentEvent, { type: 'agent.turnEnded' }> =>
-            event.type === 'agent.turnEnded',
+          (
+            event,
+          ): event is Extract<
+            AgentEvent,
+            { type: typeof agentTurnEndedEvent }
+          > => event.type === agentTurnEndedEvent,
         ),
-      ).toEqual([{ type: 'agent.turnEnded', stopReason: 'end_turn' }]);
+      ).toEqual([{ type: agentTurnEndedEvent, stopReason: 'end_turn' }]);
       expect(
         settledRows(events).some(
           (
@@ -266,12 +278,12 @@ it('preserves every recorded file change and patch in one Tool call', (): void =
     expect.objectContaining({
       kind: 'edit',
       status: 'completed',
-      locations: [{ path: '/repo/app.txt' }, { path: '/repo/notes.md' }],
+      locations: [{ path: appFilePath }, { path: '/repo/notes.md' }],
       content: [
         {
           type: 'diff',
           changes: [
-            { operation: 'modify', path: '/repo/app.txt' },
+            { operation: 'modify', path: appFilePath },
             { operation: 'add', path: '/repo/notes.md', newText: 'hello\n' },
           ],
           patch: {
@@ -285,7 +297,7 @@ it('preserves every recorded file change and patch in one Tool call', (): void =
 });
 
 it('maps recorded command output, exit status and usage without repeating the final text', (): void => {
-  const events = mapResponses('edit-and-command');
+  const events = mapResponses(editCommandFixture);
   const tools = settledRows(events).filter(
     (row): row is Extract<FeedUpdate, { sessionUpdate: 'tool_call_update' }> =>
       row.sessionUpdate === 'tool_call_update',
@@ -320,13 +332,13 @@ it('maps recorded command output, exit status and usage without repeating the fi
 it('ends the recorded interrupted Turn and settles its unfinished command', (): void => {
   const events = mapResponses('interrupt');
   expect(events.at(-1)).toMatchObject({
-    type: 'agent.turnEnded',
+    type: agentTurnEndedEvent,
     stopReason: 'cancelled',
   });
   expect(events).toEqual(
     expect.arrayContaining([
       expect.objectContaining({
-        type: 'agent.feed',
+        type: agentFeedEvent,
         change: expect.objectContaining({
           type: 'patch',
           set: expect.objectContaining({
@@ -344,7 +356,7 @@ it('retains the recorded cancellation time when the Tool call never sends a fina
   expect(events).toEqual(
     expect.arrayContaining([
       expect.objectContaining({
-        type: 'agent.feed',
+        type: agentFeedEvent,
         change: expect.objectContaining({
           type: 'patch',
           set: expect.objectContaining({
@@ -369,7 +381,7 @@ it('reconciles a thought summary with its final record and drops raw thought tex
       params: {
         threadId: 'thread',
         turn: {
-          id: 'thought-turn',
+          id: thoughtTurnId,
           status: 'inProgress',
           error: null,
           items: [],
@@ -385,7 +397,7 @@ it('reconciles a thought summary with its final record and drops raw thought tex
       params: {
         startedAtMs: 0,
         threadId: 'thread',
-        turnId: 'thought-turn',
+        turnId: thoughtTurnId,
         item: { type: 'reasoning', id: 'thought', summary: [], content: [] },
       },
     },
@@ -393,17 +405,17 @@ it('reconciles a thought summary with its final record and drops raw thought tex
       method: 'item/reasoning/summaryTextDelta',
       params: {
         threadId: 'thread',
-        turnId: 'thought-turn',
+        turnId: thoughtTurnId,
         itemId: 'thought',
         summaryIndex: 0,
-        delta: 'Check the files.',
+        delta: checkFilesPrompt,
       },
     },
     {
       method: 'item/reasoning/textDelta',
       params: {
         threadId: 'thread',
-        turnId: 'thought-turn',
+        turnId: thoughtTurnId,
         itemId: 'thought',
         contentIndex: 0,
         delta: 'Raw reasoning',
@@ -414,11 +426,11 @@ it('reconciles a thought summary with its final record and drops raw thought tex
       params: {
         completedAtMs: 1,
         threadId: 'thread',
-        turnId: 'thought-turn',
+        turnId: thoughtTurnId,
         item: {
           type: 'reasoning',
           id: 'thought',
-          summary: ['Check the files.'],
+          summary: [checkFilesPrompt],
           content: ['Raw reasoning'],
         },
       },
@@ -431,22 +443,22 @@ it('reconciles a thought summary with its final record and drops raw thought tex
       messageId: 'thought',
       sessionUpdate: 'agent_thought',
       state: 'settled',
-      content: [{ type: 'text', text: 'Check the files.' }],
+      content: [{ type: 'text', text: checkFilesPrompt }],
     },
   ]);
   expect(
     events.filter(
       (event): boolean =>
-        event.type === 'agent.feed' && event.change.type === 'append',
+        event.type === agentFeedEvent && event.change.type === 'append',
     ),
   ).toEqual([
     {
-      type: 'agent.feed',
+      type: agentFeedEvent,
       change: {
         type: 'append',
         id: 'thought',
         field: 'content.0.text',
-        text: 'Check the files.',
+        text: checkFilesPrompt,
       },
     },
   ]);
@@ -500,7 +512,7 @@ it.each(['failed', 'interrupted'] as const)(
     );
     expect(ended.events).toEqual([
       {
-        type: 'agent.turnEnded',
+        type: agentTurnEndedEvent,
         stopReason: status === 'failed' ? 'error' : 'cancelled',
         error: {
           code: -32603,
@@ -515,7 +527,7 @@ it.each(['failed', 'interrupted'] as const)(
 it('attributes only the resumed Turn’s recorded usage when no previous baseline is loaded', (): void => {
   const ended = mapResponses('interrupt').at(-1);
   expect(ended).toMatchObject({
-    type: 'agent.turnEnded',
+    type: agentTurnEndedEvent,
     usage: {
       totalTokens: 19905,
       inputTokens: 19848,

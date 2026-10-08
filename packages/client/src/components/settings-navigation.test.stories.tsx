@@ -5,6 +5,8 @@ import { expect } from 'storybook/test';
 import { SettingsListMock } from '../../mocks/settings-list-mock';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
 
+const exampleProjectId = 'example-project';
+
 const recorder = createNavigationRecorder();
 const meta = {
   title: 'Tests/SettingsNavigation',
@@ -39,7 +41,7 @@ export const PhoneListAndDetail: Story = {
     );
     await userEvent.click(
       await canvas.findByRole('button', {
-        name: 'example-project',
+        name: exampleProjectId,
       }),
     );
     await expect(
@@ -48,7 +50,7 @@ export const PhoneListAndDetail: Story = {
     await expect(recorder.destinations[0]).toEqual({ to: 'settings-accounts' });
     await expect(recorder.destinations.at(-1)).toEqual({
       to: 'settings-project',
-      name: 'example-project',
+      name: exampleProjectId,
     });
   },
 };
@@ -65,7 +67,7 @@ export const SidebarListAndDetail: Story = {
     ).toHaveAttribute('aria-selected', 'true');
     await userEvent.click(canvas.getByRole('button', { name: 'Projects' }));
     await userEvent.click(
-      canvas.getByRole('button', { name: 'example-project' }),
+      canvas.getByRole('button', { name: exampleProjectId }),
     );
     await expect(
       await canvas.findByText('Settings for example-project will appear here.'),
@@ -78,7 +80,7 @@ export const SidebarListAndDetail: Story = {
     ).toBeVisible();
     await expect(recorder.destinations).toEqual([
       { to: 'settings-projects' },
-      { to: 'settings-project', name: 'example-project' },
+      { to: 'settings-project', name: exampleProjectId },
     ]);
   },
 };

@@ -19,6 +19,8 @@ import {
 import { type EngineStop, processSignals } from './process-signals';
 import { recoverAfterRestart } from './recovery';
 
+const finishingEngineTarget = '#engine.finishing';
+
 type EngineLogParameters = { line: string };
 type EngineOutput = { exitCode: number };
 type OpenDatabaseInput = { home: string };
@@ -344,10 +346,10 @@ export const engineMachine = setup({
               entry: 'drainWriter',
               on: {
                 'xstate.done.actor.databaseWriter': {
-                  target: '#engine.finishing',
+                  target: finishingEngineTarget,
                 },
                 'xstate.error.actor.databaseWriter': {
-                  target: '#engine.finishing',
+                  target: finishingEngineTarget,
                   actions: {
                     type: 'log',
                     params: ({ event }): EngineLogParameters => ({
@@ -358,7 +360,7 @@ export const engineMachine = setup({
               },
               after: {
                 writerDrainLimit: {
-                  target: '#engine.finishing',
+                  target: finishingEngineTarget,
                   actions: {
                     type: 'log',
                     params: {

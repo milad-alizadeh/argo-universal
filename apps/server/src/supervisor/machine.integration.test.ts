@@ -28,6 +28,11 @@ import {
 import type { EngineCommand } from './engine-message';
 import { supervisorMachine } from './machine';
 
+const supervisorStartedAt = '2026-10-03T00:00:00.000Z';
+const readyEngineEvent = 'engine.ready';
+const engineExitedEvent = 'engine.exit';
+const stopServerEvent = 'server.stop';
+
 // Numbers written out so the model cannot grade itself.
 const readyTimeoutMs = 15_000;
 const heartbeatTimeoutMs = 5000;
@@ -113,12 +118,12 @@ describe('supervisor model', (): void => {
     now: (): number => 1000,
     home: '/unused',
     version: '1.2.3',
-    startedAt: '2026-10-03T00:00:00.000Z',
+    startedAt: supervisorStartedAt,
     watch: false,
   };
   const payloads: Record<string, SupervisorEvent> = {
-    'engine.ready': { type: 'engine.ready', port: 7337 },
-    'engine.exit': { type: 'engine.exit', code: 1 },
+    'engine.ready': { type: readyEngineEvent, port: 7337 },
+    'engine.exit': { type: engineExitedEvent, code: 1 },
   };
   const eventTypes = (node: DirectedGraphNode): string[] => [
     ...node.edges.map((edge): string => edge.label.text),
@@ -166,18 +171,18 @@ describe('supervisor model', (): void => {
       supervisor = createActor(machine, { input }).start();
     },
     'engine.ready': (): void =>
-      latestEngine().send({ type: 'engine.ready', port: 7337 }),
+      latestEngine().send({ type: readyEngineEvent, port: 7337 }),
     'engine.heartbeat': (): void => {
       vi.advanceTimersByTime(heartbeatTimeoutMs - 1);
       latestEngine().send({ type: 'engine.heartbeat' });
     },
     'engine.exit': (): void =>
-      latestEngine().send({ type: 'engine.exit', code: 1 }),
+      latestEngine().send({ type: engineExitedEvent, code: 1 }),
     'engine.exited': (): void => {
       expect(latestEngine().askedToStop).toBe(true);
       latestEngine().exit();
     },
-    'server.stop': (): void => supervisor.send({ type: 'server.stop' }),
+    'server.stop': (): void => supervisor.send({ type: stopServerEvent }),
     'xstate.after.readyTimeout.supervisor.starting': (): void =>
       crossDelay(readyTimeoutMs),
     'xstate.after.heartbeatTimeout.supervisor.running': (): void =>
@@ -299,7 +304,7 @@ describe('supervisor', (): void => {
           now: (): number => Date.now(),
           home,
           version: '1.2.3',
-          startedAt: '2026-10-03T00:00:00.000Z',
+          startedAt: supervisorStartedAt,
           watch: false,
         },
       },
@@ -308,7 +313,7 @@ describe('supervisor', (): void => {
   };
 
   const crashLatestEngine = (): void =>
-    latestEngine().send({ type: 'engine.exit', code: 1 });
+    latestEngine().send({ type: engineExitedEvent, code: 1 });
 
   // Crashes the Engine and returns how long the Supervisor waited before it started the next one.
   const crashAndWaitForRestart = (): number => {
@@ -324,7 +329,7 @@ describe('supervisor', (): void => {
   };
 
   const keepRunningFor = (milliseconds: number): void => {
-    latestEngine().send({ type: 'engine.ready', port: 7337 });
+    latestEngine().send({ type: readyEngineEvent, port: 7337 });
     for (let waited = 0; waited < milliseconds; waited += 1000) {
       vi.advanceTimersByTime(1000);
       latestEngine().send({ type: 'engine.heartbeat' });
@@ -343,22 +348,22 @@ describe('supervisor', (): void => {
     startSupervisor();
     expect(existsSync(serverJsonPath())).toBe(false);
 
-    latestEngine().send({ type: 'engine.ready', port: 7337 });
+    latestEngine().send({ type: readyEngineEvent, port: 7337 });
 
     expect(readServerJson()).toEqual({
       pid: process.pid,
       port: 7337,
       version: '1.2.3',
-      startedAt: '2026-10-03T00:00:00.000Z',
+      startedAt: supervisorStartedAt,
     });
     expect(readdirSync(home)).toEqual(['server.json']);
   });
 
   it('removes its own server.json when asked to stop', (): void => {
     startSupervisor();
-    latestEngine().send({ type: 'engine.ready', port: 7337 });
+    latestEngine().send({ type: readyEngineEvent, port: 7337 });
 
-    supervisor.send({ type: 'server.stop' });
+    supervisor.send({ type: stopServerEvent });
 
     expect(existsSync(serverJsonPath())).toBe(false);
   });
@@ -398,7 +403,7 @@ describe('supervisor', (): void => {
     startSupervisor();
     writeOtherServerJson();
 
-    supervisor.send({ type: 'server.stop' });
+    supervisor.send({ type: stopServerEvent });
 
     expect(supervisor.getSnapshot().value).toBe('stopping');
     expect(readServerJson()).toEqual(otherServerAddress);

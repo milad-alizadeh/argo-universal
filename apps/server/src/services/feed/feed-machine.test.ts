@@ -15,6 +15,8 @@ import { feedMachine } from './feed-machine';
 import { findQueuedRow } from './feed-row';
 import type { FeedRowsJob } from './writer-job';
 
+const firstMessageRowId = 'message-1#0';
+
 // A batch every 60 ms, and open rows written after 1 second.
 const streamBatchDelayMs = 60;
 const storeDelayMs = 1000;
@@ -65,7 +67,7 @@ const change = (
 const openMessage = change({
   type: 'upsert',
   update: {
-    id: 'message-1#0',
+    id: firstMessageRowId,
     state: 'open',
     sessionUpdate: 'agent_message',
     messageId: 'message-1',
@@ -74,13 +76,13 @@ const openMessage = change({
 });
 const appendText = change({
   type: 'append',
-  id: 'message-1#0',
+  id: firstMessageRowId,
   field: 'content.0.text',
   text: 'a',
 });
 const settleMessage = change({
   type: 'patch',
-  id: 'message-1#0',
+  id: firstMessageRowId,
   set: { state: 'settled' },
 });
 const openTool = change({
@@ -352,7 +354,7 @@ describe('feed', (): void => {
         sessionId: 'session-1',
         rows: [
           expect.objectContaining({
-            id: 'message-1#0',
+            id: firstMessageRowId,
             position: 0,
             revision: 3,
           }),
@@ -364,7 +366,7 @@ describe('feed', (): void => {
       },
     ]);
     expect(Object.keys(feed.getSnapshot().context.rows)).toEqual([
-      'message-1#0',
+      firstMessageRowId,
       'tool-1',
     ]);
   });
@@ -402,7 +404,7 @@ describe('feed', (): void => {
         rows: [
           expect.objectContaining({ id: 'tool-1', state: 'open' }),
           expect.objectContaining({
-            id: 'message-1#0',
+            id: firstMessageRowId,
             state: 'settled',
             revision: 3,
           }),
@@ -437,7 +439,7 @@ describe('feed', (): void => {
       expect.objectContaining({
         rows: [
           expect.objectContaining({ id: 'tool-1', state: 'open' }),
-          expect.objectContaining({ id: 'message-1#0', state: 'open' }),
+          expect.objectContaining({ id: firstMessageRowId, state: 'open' }),
         ],
         maxRevision: 2,
       }),
@@ -452,7 +454,7 @@ describe('feed', (): void => {
     feed.send(
       change({
         type: 'patch',
-        id: 'message-1#0',
+        id: firstMessageRowId,
         set: { messageId: 'plan-1' },
       }),
     );
@@ -461,7 +463,7 @@ describe('feed', (): void => {
       expect.objectContaining({
         rows: [
           expect.objectContaining({
-            id: 'message-1#0',
+            id: firstMessageRowId,
             position: 1,
             revision: 4,
             state: 'settled',

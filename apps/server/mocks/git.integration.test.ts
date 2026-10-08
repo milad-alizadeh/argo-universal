@@ -21,6 +21,8 @@ import {
 import { expect, it, onTestFinished } from 'vitest';
 import { initTestRepository } from './git';
 
+const occupiedBranch = 'argo/occupied';
+
 it('reads the repository root and common directory from a nested path', async (): Promise<void> => {
   const directory = realpathSync(
     mkdtempSync(join(tmpdir(), 'repository-read-\n')),
@@ -144,8 +146,8 @@ it('preserves an existing Session branch when Checkout creation fails', async ()
     rmSync(directory, { recursive: true, force: true }),
   );
   const git = initTestRepository(directory);
-  git('branch', 'argo/occupied');
-  const original = git('rev-parse', 'argo/occupied');
+  git('branch', occupiedBranch);
+  const original = git('rev-parse', occupiedBranch);
   await expect(
     createCheckout(
       {
@@ -161,7 +163,7 @@ it('preserves an existing Session branch when Checkout creation fails', async ()
     name: 'Error',
     stderr: expect.stringContaining('already exists'),
   });
-  expect(git('rev-parse', 'argo/occupied')).toBe(original);
+  expect(git('rev-parse', occupiedBranch)).toBe(original);
 });
 
 it('preserves an existing worktree and branch when creation starts with an aborted signal', async (): Promise<void> => {
@@ -182,8 +184,8 @@ it('preserves an existing worktree and branch when creation starts with an abort
   mkdirSync(join(directory, 'runtime', 'worktrees', 'project'), {
     recursive: true,
   });
-  git('worktree', 'add', '-q', '-b', 'argo/occupied', checkoutPath, 'main');
-  const original = git('rev-parse', 'argo/occupied');
+  git('worktree', 'add', '-q', '-b', occupiedBranch, checkoutPath, 'main');
+  const original = git('rev-parse', occupiedBranch);
   await expect(
     createCheckout(
       {
@@ -197,7 +199,7 @@ it('preserves an existing worktree and branch when creation starts with an abort
     ),
   ).rejects.toMatchObject({ name: 'AbortError' });
   expect(existsSync(checkoutPath)).toBe(true);
-  expect(git('rev-parse', 'argo/occupied')).toBe(original);
+  expect(git('rev-parse', occupiedBranch)).toBe(original);
   expect(git('worktree', 'list')).toContain(checkoutPath);
 });
 

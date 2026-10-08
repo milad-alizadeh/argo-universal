@@ -34,6 +34,15 @@ import { registryMachine, sessionMachine } from '../services/sessions';
 import type { HttpServerOptions } from './http-server';
 import { engineMachine } from './machine';
 
+const engineStopEvent = 'engine.stop';
+const agentFeedEvent = 'agent.feed';
+const checkingTestsStatus = 'Checking the tests';
+const retryingStatus = 'Retrying (2 of 5)';
+const rejectedSessionListLog = 'sessions: rejected list shape #1';
+const writerWriteEvent = 'writer.write';
+const changedAloneTitle = 'Changed alone';
+const brokenSessionId = 'session-broken';
+
 type StoredColumnCase<Table, Column> = {
   agent: string;
   table: Table;
@@ -135,7 +144,7 @@ function startEngine({
     vi.useRealTimers();
     try {
       if (engine.getSnapshot().status !== 'done') {
-        engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
+        engine.send({ type: engineStopEvent, reason: 'SIGTERM' });
         await waitFor(
           engine,
           (
@@ -218,7 +227,7 @@ it.each(liveHeaderMocks)(
         ...update
       } = row;
       stream?.send({
-        type: 'agent.feed',
+        type: agentFeedEvent,
         change: { type: 'upsert', update },
       });
     };
@@ -232,9 +241,9 @@ it.each(liveHeaderMocks)(
     });
     await expectActivity('Running pnpm test');
     sendRow(thought);
-    await expectActivity('Checking the tests');
+    await expectActivity(checkingTestsStatus);
     sendRow(retry);
-    await expectActivity('Retrying (2 of 5)');
+    await expectActivity(retryingStatus);
     // Settled rows have left the Feed actor by now; a fresh subscription must retain the retry.
     const reconnect = (
       await caller.feed.subscribe({ sessionId: 'session-1', after: null })
@@ -243,7 +252,7 @@ it.each(liveHeaderMocks)(
       type: 'snapshot',
       snapshot: {
         liveHeader: {
-          text: 'Retrying (2 of 5)',
+          text: retryingStatus,
           source: { type: 'retry' },
           startedAt: expect.any(Number),
         },
@@ -251,7 +260,7 @@ it.each(liveHeaderMocks)(
     });
     for (const row of progress) {
       sendRow(retry);
-      await expectActivity('Retrying (2 of 5)');
+      await expectActivity(retryingStatus);
       sendRow(row);
       await expect
         .poll(async (): Promise<boolean> =>
@@ -263,10 +272,10 @@ it.each(liveHeaderMocks)(
           ).rows.some((stored): boolean => stored.id === row.id),
         )
         .toBe(true);
-      await expectActivity('Checking the tests');
+      await expectActivity(checkingTestsStatus);
     }
     sendRow({ ...command, status: 'completed', state: 'settled' });
-    await expectActivity('Checking the tests');
+    await expectActivity(checkingTestsStatus);
     stream?.send({
       type: 'agent.permissionRequested',
       request: {
@@ -464,7 +473,7 @@ it.each(agentAdapters.map(({ agent }): string => agent))(
       'healthy',
     ]);
     expect(reported).toHaveBeenCalledWith(
-      'sessions: rejected list shape #1',
+      rejectedSessionListLog,
       expect.anything(),
     );
   },
@@ -499,7 +508,7 @@ it.each(agentAdapters.map(({ agent }): string => agent))(
       'healthy',
     ]);
     expect(reported).toHaveBeenCalledWith(
-      'sessions: rejected list shape #1',
+      rejectedSessionListLog,
       expect.anything(),
     );
   },
@@ -514,7 +523,7 @@ it('serves live Session procedures and drains their Feed before closing the data
       stream.receive((command): void => {
         if (command.type === 'agent.prompt')
           stream.send({
-            type: 'agent.feed',
+            type: agentFeedEvent,
             change: {
               type: 'upsert',
               update: {
@@ -549,7 +558,7 @@ it('serves live Session procedures and drains their Feed before closing the data
   ).toMatchObject({
     content: [{ type: 'text', text: 'Hello from the Agent' }],
   });
-  engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
+  engine.send({ type: engineStopEvent, reason: 'SIGTERM' });
   await waitFor(
     engine,
     (snapshot): snapshot is Extract<typeof snapshot, { status: 'done' }> =>
@@ -649,7 +658,7 @@ it('sends live list changes and attention/running counts through request and Tur
   >;
   for (const sessionId of ['archived', 'subagent'])
     writer.send({
-      type: 'writer.write',
+      type: writerWriteEvent,
       job: {
         type: 'turnInsert',
         turn: { id: `turn-${sessionId}`, sessionId, status: 'running' },
@@ -676,7 +685,7 @@ it('sends live list changes and attention/running counts through request and Tur
     activity: 'Run a command',
   });
   stream?.send({
-    type: 'agent.feed',
+    type: agentFeedEvent,
     change: {
       type: 'upsert',
       update: {
@@ -743,7 +752,7 @@ it('seeds the Project from ARGO_PROJECT_PATH at Engine startup', async (): Promi
         ? { type: 'main' }
         : { type: 'worktree', baseBranch: currentBranch },
   });
-  engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
+  engine.send({ type: engineStopEvent, reason: 'SIGTERM' });
   await waitFor(
     engine,
     (snapshot): snapshot is Extract<typeof snapshot, { status: 'done' }> =>
@@ -841,7 +850,7 @@ it('publishes stored list changes, changes counts only when needed, and aborts a
   >;
   const waitingCounts = counts.next();
   writer.send({
-    type: 'writer.write',
+    type: writerWriteEvent,
     job: {
       type: 'sessionRowUpdate',
       id: 'session-1',
@@ -853,7 +862,7 @@ it('publishes stored list changes, changes counts only when needed, and aborts a
     session: { title: 'Renamed' },
   });
   writer.send({
-    type: 'writer.write',
+    type: writerWriteEvent,
     job: {
       type: 'sessionRowUpdate',
       id: 'session-1',
@@ -937,7 +946,7 @@ it('shares one coalesced list read for three subscribers across fifty changes', 
     >;
     for (let index = 1; index <= 50; index += 1)
       writer.send({
-        type: 'writer.write',
+        type: writerWriteEvent,
         job: {
           type: 'sessionRowUpdate',
           id: 'session-1',
@@ -963,7 +972,7 @@ it('shares one coalesced list read for three subscribers across fifty changes', 
     const survivorChange = second.next();
     const survivorCounts = counts.next();
     writer.send({
-      type: 'writer.write',
+      type: writerWriteEvent,
       job: {
         type: 'sessionRowUpdate',
         id: 'session-1',
@@ -981,7 +990,7 @@ it('shares one coalesced list read for three subscribers across fifty changes', 
     controllers[2]?.abort();
     counted.metrics.sessionReads = 0;
     writer.send({
-      type: 'writer.write',
+      type: writerWriteEvent,
       job: {
         type: 'sessionRowUpdate',
         id: 'session-1',
@@ -1032,17 +1041,17 @@ it('reads only the changed Session and pages the shared cache', async (): Promis
     const writer: ActorRefFrom<typeof writerMachine> =
       engine.system.get('databaseWriter');
     writer.send({
-      type: 'writer.write',
+      type: writerWriteEvent,
       job: {
         type: 'sessionRowUpdate',
         id: 'session-1',
-        set: { title: 'Changed alone', maxRevision: 1 },
+        set: { title: changedAloneTitle, maxRevision: 1 },
       },
     });
     await vi.advanceTimersByTimeAsync(100);
     expect((await changed).value).toMatchObject({
       type: 'changed',
-      session: { sessionId: 'session-1', title: 'Changed alone' },
+      session: { sessionId: 'session-1', title: changedAloneTitle },
     });
     expect(counted.metrics.queries).toBeLessThanOrEqual(5);
     expect(counted.metrics.rows).toBeLessThanOrEqual(3);
@@ -1050,7 +1059,7 @@ it('reads only the changed Session and pages the shared cache', async (): Promis
     const page = await caller.session.list({ archived: false });
     expect(page.sessions[0]).toMatchObject({
       sessionId: 'session-1',
-      title: 'Changed alone',
+      title: changedAloneTitle,
       status: 'unread',
     });
     expect(page.sessions).toHaveLength(50);
@@ -1092,7 +1101,7 @@ it('initializes a fresh list after all watchers leave and unwatched data changes
   const writer: ActorRefFrom<typeof writerMachine> =
     engine.system.get('databaseWriter');
   writer.send({
-    type: 'writer.write',
+    type: writerWriteEvent,
     job: {
       type: 'sessionRowUpdate',
       id: 'session-1',
@@ -1148,7 +1157,7 @@ it('pages current queued activity before the list publication delay', async (): 
     const writer: ActorRefFrom<typeof writerMachine> =
       engine.system.get('databaseWriter');
     writer.send({
-      type: 'writer.write',
+      type: writerWriteEvent,
       job: {
         type: 'sessionRowUpdate',
         id: 'session-1',
@@ -1202,7 +1211,7 @@ it('updates a cached parent when its stored Subagent Turn changes', async (): Pr
       engine.system.get('databaseWriter');
     const running = updates.next();
     writer.send({
-      type: 'writer.write',
+      type: writerWriteEvent,
       job: {
         type: 'turnInsert',
         turn: {
@@ -1219,7 +1228,7 @@ it('updates a cached parent when its stored Subagent Turn changes', async (): Pr
     });
     const stopped = updates.next();
     writer.send({
-      type: 'writer.write',
+      type: writerWriteEvent,
       job: {
         type: 'turnUpdate',
         id: 'child-turn',
@@ -1295,7 +1304,7 @@ it.each(
       'healthy',
     ]);
     expect(reported).toHaveBeenCalledWith(
-      'sessions: rejected list shape #1',
+      rejectedSessionListLog,
       expect.anything(),
     );
   },
@@ -1386,10 +1395,10 @@ for (const adapter of agentAdapters)
             feed: feedMachine.provide({
               actions: {
                 sendToWriter: ({ context, system }, { job }): void => {
-                  if (context.sessionId === 'session-broken') throw failure;
+                  if (context.sessionId === brokenSessionId) throw failure;
                   system
                     .get('databaseWriter')
-                    .send({ type: 'writer.write', job });
+                    .send({ type: writerWriteEvent, job });
                 },
               },
             }),
@@ -1399,7 +1408,7 @@ for (const adapter of agentAdapters)
     });
     const root = await startNewSessionEngine(adapter, { sessions });
     insertSession(root.database, {
-      id: 'session-broken',
+      id: brokenSessionId,
       agent: adapter.agent,
       checkoutPath: root.project,
     });
@@ -1418,7 +1427,7 @@ for (const adapter of agentAdapters)
     if (!registry) throw new Error('No Session registry');
     registry.send({
       type: 'sessions.open',
-      sessionId: 'session-broken',
+      sessionId: brokenSessionId,
       agent: adapter.agent,
     });
     await expect
@@ -1431,7 +1440,7 @@ for (const adapter of agentAdapters)
       )
       .toBe(true);
     const feed = (
-      await caller.feed.subscribe({ sessionId: 'session-broken', after: null })
+      await caller.feed.subscribe({ sessionId: brokenSessionId, after: null })
     )[Symbol.asyncIterator]();
     expect((await feed.next()).value).toMatchObject({ type: 'snapshot' });
     const rejectedFeed = (async (): Promise<void> => {
@@ -1449,7 +1458,7 @@ for (const adapter of agentAdapters)
       error: (error): number => engineErrors.push(error),
     });
     await caller.session.prompt({
-      sessionId: 'session-broken',
+      sessionId: brokenSessionId,
       prompt: [{ type: 'text', text: 'First Session' }],
     });
     expect(await rejectedFeed).toMatchObject({ message: failure.message });

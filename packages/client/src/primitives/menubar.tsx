@@ -20,6 +20,7 @@ import { cn } from '#lib/utils';
 import { Icon } from '#primitives/icon';
 import { NativeOnlyAnimatedView } from '#primitives/native-only-animated-view';
 import { TextClassContext } from '#primitives/text';
+import { disabledMenuItemClassName, menuItemClassName } from './menu-styles';
 
 const MenubarMenu = MenubarPrimitive.Menu;
 
@@ -237,14 +238,14 @@ function MenubarItem({
           'active:bg-accent group relative flex flex-row items-center gap-2 rounded-sm px-2 py-2 sm:py-1.5',
           Platform.select({
             web: cn(
-              'focus:bg-accent focus:text-accent-foreground cursor-default outline-none data-[disabled]:pointer-events-none',
+              menuItemClassName,
               variant === 'destructive' &&
                 'focus:bg-destructive/10 dark:focus:bg-destructive/20',
             ),
           }),
           variant === 'destructive' &&
             'active:bg-destructive/10 dark:active:bg-destructive/20',
-          props.disabled && 'opacity-50',
+          props.disabled && disabledMenuItemClassName,
           inset && 'pl-8',
           className,
         )}
@@ -267,9 +268,9 @@ function MenubarCheckboxItem({
         className={cn(
           'active:bg-accent group relative flex flex-row items-center gap-2 rounded-sm py-2 pl-8 pr-2 sm:py-1.5',
           Platform.select({
-            web: 'focus:bg-accent focus:text-accent-foreground cursor-default outline-none data-[disabled]:pointer-events-none',
+            web: menuItemClassName,
           }),
-          props.disabled && 'opacity-50',
+          props.disabled && disabledMenuItemClassName,
           className,
         )}
         {...props}
@@ -304,9 +305,9 @@ function MenubarRadioItem({
         className={cn(
           'active:bg-accent group relative flex flex-row items-center gap-2 rounded-sm py-2 pl-8 pr-2 sm:py-1.5',
           Platform.select({
-            web: 'focus:bg-accent focus:text-accent-foreground cursor-default outline-none data-[disabled]:pointer-events-none',
+            web: menuItemClassName,
           }),
-          props.disabled && 'opacity-50',
+          props.disabled && disabledMenuItemClassName,
           className,
         )}
         {...props}

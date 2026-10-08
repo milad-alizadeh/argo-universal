@@ -22,6 +22,9 @@ import {
   ProjectSettingsScreen,
 } from '../src/screens/placeholder-screens';
 
+const accountsSectionId = 'settings-accounts';
+const projectSectionId = 'settings-project';
+
 export const settingsListMocks = {
   projects: [{ name: 'example-project' }],
   agents: [
@@ -51,10 +54,10 @@ export function SettingsListMock({
   >(() => {
     let initialDestination: NavigationDestination | undefined;
     if (page === 'accounts') {
-      initialDestination = { to: 'settings-accounts' };
+      initialDestination = { to: accountsSectionId };
     } else if (page === 'project') {
       initialDestination = {
-        to: 'settings-project',
+        to: projectSectionId,
         name: 'example-project',
       };
     } else {
@@ -65,7 +68,7 @@ export function SettingsListMock({
   const section = page === 'issues' || page === 'atlas' ? page : 'settings';
   const title = section.charAt(0).toUpperCase() + section.slice(1);
   const selectedDestination: NavigationDestination | undefined =
-    destination ?? (wide ? { to: 'settings-accounts' } : undefined);
+    destination ?? (wide ? { to: accountsSectionId } : undefined);
   const list = (
     <SettingsList
       {...settingsListMocks}
@@ -92,7 +95,7 @@ export function SettingsListMock({
             accessibilityLabel={name}
             onPress={() => {
               const next: NavigationDestination = {
-                to: 'settings-project',
+                to: projectSectionId,
                 name,
               };
               navigate(next);
@@ -127,7 +130,7 @@ export function SettingsListMock({
         ))}
       </View>
     );
-  } else if (selectedDestination?.to === 'settings-project') {
+  } else if (selectedDestination?.to === projectSectionId) {
     detail = <ProjectSettingsScreen name={selectedDestination.name} />;
   } else if (selectedDestination?.to === 'settings-agent') {
     detail = (
@@ -137,7 +140,7 @@ export function SettingsListMock({
     );
   } else if (
     selectedDestination &&
-    selectedDestination.to !== 'settings-accounts'
+    selectedDestination.to !== accountsSectionId
   ) {
     let placeholderTitle = 'Notifications';
     if (selectedDestination.to === 'settings-connection')

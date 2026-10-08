@@ -23,6 +23,8 @@ import { PlanProposalExpansion } from './plan-proposal-expansion';
 import { RequestCard, type RequestState } from './request-card';
 import { ScrollFade } from './scroll-fade';
 
+const flexibleContentClassName = 'flex-1 min-h-0';
+
 export type PlanProposalAnswer =
   | Omit<
       Extract<SessionAnswerPlanProposalInput, { decision: 'approve' }>,
@@ -93,7 +95,7 @@ function PlanProposalInteraction({
           !windowWide &&
           'rounded-none border-0 shadow-none bg-popover',
       )}
-      bodyClassName={expanded ? 'flex-1 min-h-0' : undefined}
+      bodyClassName={expanded ? flexibleContentClassName : undefined}
       footerClassName={cn(
         'min-h-0',
         planning || answered ? 'justify-between' : 'justify-end',
@@ -150,7 +152,10 @@ function PlanProposalInteraction({
       }
     >
       <View
-        className={cn('gap-2', expanded ? 'flex-1 min-h-0' : 'px-4 pt-4 pb-1')}
+        className={cn(
+          'gap-2',
+          expanded ? flexibleContentClassName : 'px-4 pt-4 pb-1',
+        )}
       >
         <View
           className={
@@ -226,13 +231,15 @@ function PlanProposalBody({
       className={cn(
         'relative overflow-hidden',
         expanded
-          ? 'flex-1 min-h-0'
+          ? flexibleContentClassName
           : 'max-h-plan-proposal bg-secondary rounded-md',
       )}
     >
       <ScrollView
         testID="plan-proposal-scroll"
-        className={expanded ? 'flex-1 min-h-0' : 'max-h-plan-proposal grow-0'}
+        className={
+          expanded ? flexibleContentClassName : 'max-h-plan-proposal grow-0'
+        }
         contentContainerClassName={expanded ? 'px-4 pt-2 pb-4' : 'p-3'}
         showsVerticalScrollIndicator={false}
         onContentSizeChange={(_, height) => setContentHeight(height)}

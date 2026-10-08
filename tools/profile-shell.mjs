@@ -1,6 +1,8 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 
+const hideSidebarLabel = 'Hide sidebar';
+
 const require = createRequire(new URL('../e2e/package.json', import.meta.url));
 const { chromium } = require('@playwright/test');
 const label = process.argv[2] ?? 'current';
@@ -18,7 +20,7 @@ await mkdir('/tmp/argo-shell-profile', { recursive: true });
 await page.goto(
   `${origin}/iframe.html?id=shell-desktopshell--selected-section&viewMode=story&args=showInspectorControls:true`,
 );
-await page.getByRole('button', { name: 'Hide sidebar' }).waitFor();
+await page.getByRole('button', { name: hideSidebarLabel }).waitFor();
 await page.waitForTimeout(500);
 await page.evaluate(() => {
   for (const [id, count] of [
@@ -37,7 +39,7 @@ await page.evaluate(() => {
   }
 });
 for (const name of [
-  'Hide sidebar',
+  hideSidebarLabel,
   'Show sidebar',
   'Open Inspector',
   'Close Inspector',
@@ -79,7 +81,7 @@ for (const panel of ['sidebar', 'Inspector']) {
     );
     let name = '';
     if (panel === 'sidebar')
-      name = toggle % 2 ? 'Show sidebar' : 'Hide sidebar';
+      name = toggle % 2 ? 'Show sidebar' : hideSidebarLabel;
     else name = toggle % 2 ? 'Close Inspector' : 'Open Inspector';
     await page.getByRole('button', { name, exact: true }).click();
     intervals.push(...(await sampling));
