@@ -98,11 +98,10 @@ it('aborts a blocked Checkout and removes its worktree and new branch', async ()
     'project',
     'blocked',
   );
-  const markerName = 'hook-started';
-  const marker = join(directory, markerName);
+  const marker = join(directory, 'hook-started');
   const started = Promise.withResolvers<void>();
-  checkoutResources.hookWatcher = watch(directory, (_, filename): void => {
-    if (filename === markerName) started.resolve();
+  checkoutResources.hookWatcher = watch(directory, (): void => {
+    if (existsSync(marker)) started.resolve();
   });
   checkoutResources.hookWatcher.on('error', started.reject);
   writeFileSync(
