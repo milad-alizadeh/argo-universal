@@ -14,7 +14,7 @@ const rejectedToolResult = {
   ]),
   tool_result_meta: [
     {
-      id: 'toolu_01RmbdAbVKQQdXSR61Rrkz3',
+      id: 'toolu_01RmbdAbVKQQdXJSR61Rrkz3',
       non_execution_kind: 'user-rejected',
     },
   ],

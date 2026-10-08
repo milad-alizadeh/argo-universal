@@ -3,11 +3,11 @@ import {
   isCommandResponse,
   isFileResponse,
   isQuestionResponse,
-  isTurnStartInput,
 } from '../../../packages/agents/codex/payloads.ts';
 import type { ToolRequestUserInputResponse } from '../../../packages/agents/codex/protocol.gen.ts';
 import { isWireFrame } from '../../../packages/agents/codex/wire-payloads.ts';
 import {
+  PlanAnswer,
   rejectRequestAnswer,
   type RecordedRequestAnswer,
 } from '../request-answer.ts';
@@ -90,14 +90,25 @@ function questionValue(answers: string[]): string | string[] {
 export function toPlanProposalAnswer(
   turnStart: unknown,
 ): RecordedRequestAnswer {
-  if (!isTurnStartInput(turnStart)) return rejectRequestAnswer('codex');
-  if (turnStart.collaborationMode?.mode === 'default')
-    return { type: 'plan', decision: 'approve' };
-  return {
+  const command = dictionary(turnStart);
+  if (dictionary(command.collaborationMode).mode === 'default')
+    return PlanAnswer.parse({ type: 'plan', decision: 'approve' });
+  if (!Array.isArray(command.input)) return rejectRequestAnswer('codex');
+  const feedback = command.input.map((block: unknown): string => {
+    const input = dictionary(block);
+    return input.type === 'text'
+      ? PlanAnswer.options[1].shape.feedback.parse(input.text)
+      : '';
+  });
+  return PlanAnswer.parse({
     type: 'plan',
     decision: 'keep_planning',
-    feedback: turnStart.input
-      .map((block): string => (block.type === 'text' ? block.text : ''))
-      .join('\n'),
-  };
+    feedback: feedback.join('\n'),
+  });
+}
+
+function dictionary(value: unknown): Record<string, unknown> {
+  if (typeof value !== 'object' || value === null || Array.isArray(value))
+    return rejectRequestAnswer('codex');
+  return Object.fromEntries(Object.entries(value));
 }

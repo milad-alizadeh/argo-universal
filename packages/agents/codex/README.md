@@ -18,6 +18,6 @@ Use the same pinned CLI for generation and capture. `node packages/agents/codex/
 
 The TypeScript generator and the CLI's JSON Schema generator differ on required fields, including `Turn.itemsView` and `ModelListResponse.nextCursor`. Generating runtime schemas from the same TypeScript Argo consumes keeps those required fields intact without handwritten vendor schemas or projections.
 
-The provider-local `captureStartup(cwd)` export in `mocks/cli/codex/capture-startup.ts` captures initialization, account discovery, a full Thread start response, one minimal Turn and a Thread resume response through the production transport. Run it explicitly against an empty temporary Checkout when refreshing the pinned provider. Normal tests remain offline. Capture replaces personal email, account routing identity, home paths and Checkout paths with explicit recording bindings. Replay reads the captured Thread identity and Checkout path to bind them to the test Session; it does not invent successful startup responses.
+The native contract tests replay the existing versioned recordings and complete startup responses captured from that provider version. App end-to-end tests use shared Argo fixtures at the AgentAdapter port (ADR-0018). Updating protocol types and schemas does not replace reviewing the expected adapter translations.
 
-Existing scenario captures and derived UI mocks still need their existing refresh steps when the provider version changes. Semantic adapter assertions remain fixed for review rather than being regenerated from a changed adapter.
+Semantic adapter assertions remain fixed for review rather than being regenerated from a changed adapter.

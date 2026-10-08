@@ -3,6 +3,15 @@ import type { AgentCommandOf } from '@repo/agents';
 import { z } from 'zod';
 import { readMockCliEnvironment } from './mock-cli.ts';
 
+export const PlanAnswer = z.discriminatedUnion('decision', [
+  z.object({ type: z.literal('plan'), decision: z.literal('approve') }),
+  z.object({
+    type: z.literal('plan'),
+    decision: z.literal('keep_planning'),
+    feedback: z.string(),
+  }),
+]);
+
 const RequestAnswer = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('permission'),
@@ -14,11 +23,7 @@ const RequestAnswer = z.discriminatedUnion('type', [
     action: z.enum(['accept', 'decline', 'cancel']),
     content: z.record(z.string(), z.unknown()).optional(),
   }),
-  z.object({
-    type: z.literal('plan'),
-    decision: z.enum(['approve', 'keep_planning']),
-    feedback: z.string().optional(),
-  }),
+  PlanAnswer,
 ]);
 
 export function recordRequestAnswer(answer: RecordedRequestAnswer): void {
