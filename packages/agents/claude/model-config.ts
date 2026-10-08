@@ -57,8 +57,13 @@ export function modelConfigOption(
     name: 'Model',
     category: 'model',
     currentValue: model,
-    options: models.map(modelOption),
+    options: modelChoices(models),
   };
+}
+function modelChoices(models: ModelInfo[]): SessionConfigSelectOption[] {
+  const choices = models.map(modelOption);
+  if (findModel(models, DEFAULT_VALUE)) return choices;
+  return [{ value: DEFAULT_VALUE, name: 'Provider default' }, ...choices];
 }
 function modelOption(model: ModelInfo): SessionConfigSelectOption {
   const shortName = modelName(model);
