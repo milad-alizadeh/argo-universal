@@ -1,7 +1,7 @@
 import type { BlobRef, SessionNewInput } from '@repo/contracts';
 import { useMutation } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
-import type { ComposerDraft } from '#components/Composer';
+import type { ComposerDraft } from '#components/composer';
 import { useTRPCClient } from '../trpc/context';
 import { draftPrompt } from './draft-prompt';
 import { pickImages } from './pick-images';

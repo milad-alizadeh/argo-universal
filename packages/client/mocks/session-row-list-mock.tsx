@@ -1,7 +1,10 @@
 import { agentsList } from '@repo/api/mocks';
 import type { SessionInfo } from '@repo/contracts';
 import { View } from 'react-native';
-import { SessionRow, type SessionRowProps } from '../src/components/SessionRow';
+import {
+  SessionRow,
+  type SessionRowProps,
+} from '../src/components/session-row';
 import { useWide } from '../src/navigation/use-wide';
 
 export function SessionRowListMock({
