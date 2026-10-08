@@ -1,6 +1,6 @@
 import { View } from 'react-native';
-import { CommandRow } from '../src/components/CommandRow';
-import { ToolCallRow } from '../src/components/ToolCallRow';
+import { CommandRow } from '../src/components/command-row';
+import { ToolCallRow } from '../src/components/tool-call-row';
 import type { FeedActivity } from '../src/feed/feed-view';
 
 export function renderRecordedActivity(activity: FeedActivity) {

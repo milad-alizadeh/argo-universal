@@ -1,7 +1,7 @@
 import type { BlobRef, SessionNewInput } from '@repo/contracts';
 import { useRef, useState } from 'react';
 import { useBlobUpload } from '../trpc/use-blob-upload';
-import type { ComposerDraft } from './Composer';
+import type { ComposerDraft } from './composer';
 import { draftPrompt } from './draft-prompt';
 import { pickImages } from './pick-images';
 

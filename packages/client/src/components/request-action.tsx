@@ -5,7 +5,7 @@ import { cn } from '#lib/utils';
 import { Button, type ButtonProps } from '#primitives/button';
 import { Text } from '#primitives/text';
 import { Icon } from '../lib/icon';
-import { useContentWide } from './ContentLayout';
+import { useContentWide } from './content-layout';
 
 type RequestActionProps = Omit<ButtonProps, 'children'> & {
   children: string;
