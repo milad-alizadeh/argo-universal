@@ -2,11 +2,17 @@ import { newSessionCatalogs, recordedFeedMocks } from '@repo/api/mocks';
 import type { FeedSnapshot, FeedSyncPoint } from '@repo/contracts';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
+import { createRoot } from 'react-dom/client';
+import { View } from 'react-native';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { expect, spyOn, waitFor, within } from 'storybook/test';
 import { composerImages } from '../../mocks/composer-mock';
 import { eachLayout, layoutWidths } from '../../mocks/each-layout';
+import { recordedImageUrl } from '../../mocks/feed-message-mock';
 import { createFeedMocks } from '../../mocks/feed-mock';
 import { agentProbeRequests } from '../../mocks/new-session-mock';
+import { ScreenHeaderMock } from '../../mocks/screen-header-mock';
 import {
   arrivingMessage,
   arrivingRowSessionMocks,
@@ -28,13 +34,13 @@ import {
   unavailableSessionCases,
 } from '../../mocks/session-screen-mock';
 import { SessionScreenPreview } from '../../mocks/session-screen-preview';
-import {
-  SessionSwitchPreview,
-  switchSession,
-} from '../../mocks/session-switch-preview';
 import { settleViewport } from '../../mocks/settle-viewport';
 import { createSubscriptionPublisher } from '../../mocks/subscription-publisher';
 import { type Fixtures, fails } from '../../mocks/trpc-mock-link';
+import { TrpcMocks } from '../../mocks/with-trpc-mocks';
+import { NavigationProvider } from '../navigation/context';
+import { ScreenHeaderProvider } from '../navigation/screen-header';
+import { BlobUrlContext } from '../trpc/blob-url';
 import { SessionScreen } from './session-screen';
 
 const meta = {
@@ -468,24 +474,51 @@ export const KeepsPlaceWhenRowOpens: Story = {
 };
 
 export const SwitchesSessions: Story = {
-  parameters: { trpc: twoSessionMocks },
-  render: (args) => <SessionSwitchPreview {...args} />,
-  play: async ({ canvas }) => {
+  render: () => <View testID="session-switch-root" className="flex-1" />,
+  play: async ({ canvas, userEvent }) => {
     await resizeToPhoneWidth();
-    await canvas.findByRole('heading', { name: /^Think briefly first/ });
-    await expect(canvas.getByRole('button', { name: 'Stop' })).toBeVisible();
-    switchSession('session-2');
-    // The next Session opens at its own newest row, with none of the last one's rows or state.
-    await canvas.findByRole('heading', { name: /^Without using any tools/ });
-    await expect(canvas.queryByText(/^Think briefly first/)).toBeNull();
-    await expect(canvas.queryByRole('button', { name: 'Stop' })).toBeNull();
-    await expect(canvas.queryByRole('status')).toBeNull();
-    await waitFor(() =>
-      expect(fullyInViewport(canvas.getByText('Redraws'))).toBe(true),
-    );
-    await expect(
-      canvas.queryByRole('button', { name: /Jump to latest/ }),
-    ).toBeNull();
+    const root = createRoot(canvas.getByTestId('session-switch-root'));
+    const render = (id: string): void =>
+      root.render(
+        <SafeAreaProvider>
+          <KeyboardProvider>
+            <TrpcMocks fixtures={twoSessionMocks} connectionState="open">
+              <NavigationProvider navigate={() => {}}>
+                <ScreenHeaderProvider header={ScreenHeaderMock}>
+                  <BlobUrlContext.Provider value={recordedImageUrl}>
+                    <SessionScreenPreview id={id} now={runningTurnNow} />
+                  </BlobUrlContext.Provider>
+                </ScreenHeaderProvider>
+              </NavigationProvider>
+            </TrpcMocks>
+          </KeyboardProvider>
+        </SafeAreaProvider>,
+      );
+    try {
+      render('session-1');
+      await canvas.findByRole('heading', { name: /^Think briefly first/ });
+      await expect(canvas.getByRole('button', { name: 'Stop' })).toBeVisible();
+      await userEvent.type(
+        canvas.getByRole('textbox', { name: 'Message' }),
+        'Draft for the first Session',
+      );
+      render('session-2');
+      await canvas.findByRole('heading', { name: /^Without using any tools/ });
+      await expect(canvas.queryByText(/^Think briefly first/)).toBeNull();
+      await expect(canvas.queryByRole('button', { name: 'Stop' })).toBeNull();
+      await expect(canvas.queryByRole('status')).toBeNull();
+      await expect(
+        canvas.getByRole('textbox', { name: 'Message' }),
+      ).toHaveValue('');
+      await waitFor(() =>
+        expect(fullyInViewport(canvas.getByText('Redraws'))).toBe(true),
+      );
+      await expect(
+        canvas.queryByRole('button', { name: /Jump to latest/ }),
+      ).toBeNull();
+    } finally {
+      root.unmount();
+    }
   },
 };
 

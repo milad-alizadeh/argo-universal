@@ -7,6 +7,7 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { expect, fn, waitFor } from 'storybook/test';
 import { layoutWidths } from '../../mocks/each-layout';
+import { PhoneShellFrame } from '../../mocks/phone-shell-frame';
 import { ScreenHeaderMock } from '../../mocks/screen-header-mock';
 import { createSessionCountsMock } from '../../mocks/session-counts-mock';
 import { settleViewport } from '../../mocks/settle-viewport';
@@ -308,3 +309,36 @@ export const OverflowAttentionTablet = attentionAndSectionStates(
   100,
   tabletWidth,
 );
+
+export const HeaderActionsReportCallbacks: Story = {
+  render: () => <View testID="header-actions-root" />,
+  play: async ({ canvas, userEvent }) => {
+    await settleViewport(layoutWidths.phone);
+    const root = createRoot(canvas.getByTestId('header-actions-root'));
+    const onSearch = fn();
+    const onFilter = fn();
+    try {
+      root.render(
+        <SafeAreaProvider>
+          <ScreenHeaderProvider header={ScreenHeaderMock}>
+            <View style={{ height: 600 }}>
+              <PhoneShellFrame onSearch={onSearch} onFilter={onFilter} />
+            </View>
+          </ScreenHeaderProvider>
+        </SafeAreaProvider>,
+      );
+      await userEvent.click(
+        await canvas.findByRole('button', { name: 'Search Sessions' }),
+      );
+      await expect(onSearch).toHaveBeenCalledOnce();
+      await expect(onFilter).not.toHaveBeenCalled();
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Filter Sessions' }),
+      );
+      await expect(onFilter).toHaveBeenCalledOnce();
+      await expect(onSearch).toHaveBeenCalledOnce();
+    } finally {
+      root.unmount();
+    }
+  },
+};
