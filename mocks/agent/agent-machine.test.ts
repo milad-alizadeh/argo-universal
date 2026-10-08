@@ -5,6 +5,7 @@ import {
   type AgentEvent,
   type AgentInput,
   type AgentReady,
+  type VendorSession,
   agentMachine,
   findAgentAdapter,
 } from '@repo/agents';
@@ -658,15 +659,7 @@ describe('Agent machine', (): void => {
   it('stops a blocked prompt before queued controls can run', async (): Promise<void> => {
     input.adapter = {
       ...adapter,
-      connect: async (
-        _,
-        listener,
-        signal,
-      ): Promise<{
-        ready: AgentReady;
-        run: (command: import('@repo/agents').VendorCommand) => Promise<void>;
-        stop: () => Promise<void>;
-      }> => ({
+      connect: async (_, listener, signal): Promise<VendorSession> => ({
         ready,
         run: async (command): Promise<void> => {
           commands.push(command);
@@ -739,11 +732,7 @@ describe('Agent machine', (): void => {
     const rename: AgentCommand = { type: 'agent.rename', title: 'Next title' };
     input.adapter = {
       ...adapter,
-      connect: async (): Promise<{
-        ready: AgentReady;
-        run: (command: import('@repo/agents').VendorCommand) => Promise<void>;
-        stop: () => Promise<void>;
-      }> => ({
+      connect: async (): Promise<VendorSession> => ({
         ready,
         run: async (command): Promise<void> => {
           commands.push(command);

@@ -1,5 +1,6 @@
 import {
   type AgentsListOutput,
+  type SessionSetConfigOptionInput,
   type ProjectsBranchesOutput,
   type ProjectsListOutput,
   SessionConfigOption,
@@ -37,14 +38,9 @@ export const newSessionCatalogs = {
   bothUnavailable: available.map(
     (
       agent,
-    ): {
-      agent: string;
-      label: string;
-      logo: string;
-      availability: 'unavailable';
-      installStep: string;
-      configOptions: never[];
-    } => ({
+    ): Required<
+      Omit<AgentsListOutput[number], 'availability' | 'configOptions'>
+    > & { availability: 'unavailable'; configOptions: never[] } => ({
       ...agent,
       availability: 'unavailable' as const,
       installStep: "CLI didn't start",
@@ -77,7 +73,7 @@ export const dangerousModeOptions = newSessionOptions.map(
   ({
     agent,
     configOptions,
-  }): { agent: string; configOptions: SessionConfigOption[] } => ({
+  }): Pick<(typeof newSessionOptions)[number], 'agent' | 'configOptions'> => ({
     agent,
     configOptions: configOptions.map((option): SessionConfigOption => {
       if (option.category !== 'mode' || option.type !== 'select') return option;
@@ -108,7 +104,7 @@ export const newSessionInputs: SessionNewInput[] = newSessionOptions.map(
     configOptions,
     prompt,
   }): Omit<SessionNewInput, 'checkout'> & {
-    checkout: { type: 'worktree'; baseBranch: string };
+    checkout: Extract<SessionNewInput['checkout'], { type: 'worktree' }>;
   } => ({
     projectId: projectsList[0]?.id ?? 'project-1',
     agent,
@@ -117,7 +113,7 @@ export const newSessionInputs: SessionNewInput[] = newSessionOptions.map(
       ({
         configId,
         currentValue,
-      }): { configId: string; value: string | boolean } => ({
+      }): Pick<SessionSetConfigOptionInput, 'configId' | 'value'> => ({
         configId,
         value: currentValue,
       }),

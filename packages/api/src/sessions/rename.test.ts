@@ -1,4 +1,9 @@
-import { SessionInfo, SessionSnapshot } from '@repo/contracts';
+import {
+  type FeedSubscribeOutput,
+  type SessionListOutput,
+  SessionInfo,
+  SessionSnapshot,
+} from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import { sessionTitleMocks, unreachableServices } from '../../mocks';
 import { appRouter } from '../root';
@@ -10,10 +15,12 @@ describe('Session title contracts', (): void => {
       const caller = appRouter.createCaller({
         services: unreachableServices({
           session: {
-            list: async (): Promise<{
-              sessions: (typeof session)[];
-              nextCursor: null;
-            }> => ({ sessions: [session], nextCursor: null }),
+            list: async (): Promise<
+              SessionListOutput & {
+                sessions: (typeof session)[];
+                nextCursor: null;
+              }
+            > => ({ sessions: [session], nextCursor: null }),
             rename: async (input): Promise<Record<string, never>> => {
               expect(input).toEqual(renameInput);
               return {};
@@ -21,7 +28,9 @@ describe('Session title contracts', (): void => {
           },
           feed: {
             subscribe: async function* (): AsyncGenerator<
-              { type: 'snapshot'; snapshot: typeof snapshot },
+              Extract<FeedSubscribeOutput, { type: 'snapshot' }> & {
+                snapshot: typeof snapshot;
+              },
               void,
               Parameters<typeof structuredClone>[0]
             > {

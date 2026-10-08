@@ -2,6 +2,8 @@ import type {
   AgentAdapter,
   AgentConnectInput,
   AgentEvent,
+  AgentMapping,
+  VendorSession,
   AgentProbe,
   AgentReady,
   VendorCommand,
@@ -45,10 +47,9 @@ export const createMockAdapter = (
     connect = async (): Promise<AgentReady> => mockReady,
     stream = (): undefined => undefined,
     stop = async (): Promise<void> => {},
-    probe = async (): Promise<{
-      availability: 'available';
-      configOptions: never[];
-    }> => ({ availability: 'available', configOptions: [] }),
+    probe = async (): Promise<
+      AgentProbe & { availability: 'available'; configOptions: never[] }
+    > => ({ availability: 'available', configOptions: [] }),
   }: MockAgentScript = {},
   agent = 'mock',
 ): AgentAdapter<MockAgentStreamEvent, null> => ({
@@ -60,19 +61,11 @@ export const createMockAdapter = (
   toAgentEvents: (
     event,
     mappingState,
-  ): { events: MockAgentStreamEvent[]; mappingState: null } => ({
+  ): AgentMapping<null> & { events: MockAgentStreamEvent[] } => ({
     events: [event],
     mappingState,
   }),
-  async connect(
-    input,
-    listener,
-    signal,
-  ): Promise<{
-    ready: AgentReady;
-    run: (command: VendorCommand) => Promise<void>;
-    stop: () => Promise<void>;
-  }> {
+  async connect(input, listener, signal): Promise<VendorSession> {
     const ready = await connect(input, signal);
     const handlers: ((command: VendorCommand) => void)[] = [];
     const cleanup = stream({

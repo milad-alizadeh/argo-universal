@@ -16,14 +16,9 @@ const systemInfo: SystemInfo = {
 const servicesWith = (ticks: ClockTick[]): import('../services').Services =>
   unreachableServices({
     system: {
-      info: (): {
-        version: string;
-        startedAt: string;
-        pid: number;
-        name: string;
-      } => systemInfo,
+      info: (): SystemInfo => systemInfo,
       clock: async function* (): AsyncGenerator<
-        { now: string },
+        ClockTick,
         void,
         Parameters<typeof structuredClone>[0]
       > {
@@ -41,12 +36,10 @@ describe('system router', (): void => {
 
   it('rejects a system.info that breaks the contract', async (): Promise<void> => {
     const services = servicesWith([]);
-    services.system.info = (): {
-      version: string;
-      startedAt: string;
-      name: string;
-      pid: never;
-    } => ({ ...systemInfo, pid: 'one' as never });
+    services.system.info = (): Omit<SystemInfo, 'pid'> & { pid: never } => ({
+      ...systemInfo,
+      pid: 'one' as never,
+    });
     const caller = createCaller({ services });
 
     await expect(caller.system.info()).rejects.toThrow(

@@ -1,3 +1,4 @@
+import type { SessionNewOutput } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { unreachableServices } from '../../mocks';
 import { appRouter } from '../root';
@@ -6,7 +7,7 @@ it('accepts the first prompt and initial choices together and returns only the S
   const caller = appRouter.createCaller({
     services: unreachableServices({
       session: {
-        new: async (): Promise<{ sessionId: string }> => ({
+        new: async (): Promise<SessionNewOutput> => ({
           sessionId: 'session-1',
         }),
       },
@@ -52,7 +53,7 @@ it('accepts image content and boolean config choices in the initial prompt', asy
   const caller = appRouter.createCaller({
     services: unreachableServices({
       session: {
-        new: async (): Promise<{ sessionId: string }> => ({
+        new: async (): Promise<SessionNewOutput> => ({
           sessionId: 'image-session',
         }),
       },

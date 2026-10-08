@@ -1,9 +1,66 @@
+import { execFileSync } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { setTimeout as wait } from 'node:timers/promises';
+import { type AgentAdapter, agentAdapters } from '@repo/agents';
+import { appRouter, type Services } from '@repo/api';
 import type {
+  AgentAvailability,
   FeedSubscribeOutput,
+  SessionAnswerElicitationInput,
+  SessionNewInput,
   SessionConfigSelectOption,
   SessionInfo,
   SessionSetConfigOptionOutput,
 } from '@repo/contracts';
+import type {
+  SessionListUpdate,
+  SessionSnapshot,
+  SessionUpdate,
+} from '@repo/contracts';
+import { permissionOptions } from '@repo/contracts';
+import { feedRow, session, turn } from '@repo/db/schema';
+import { listBranches, sessionBranch } from '@repo/git';
+import { createMockAdapter, type MockAgentStream } from '@repo/mocks/agent';
+import { mockClis } from '@repo/mocks/cli';
+import {
+  type MockCliScenarioInput,
+  mockCliScenarioEnvironment,
+} from '@repo/mocks/cli/mock-cli';
+import { readRequestAnswers } from '@repo/mocks/cli/request-answer';
+import { eq, sql } from 'drizzle-orm';
+import { expect, it, onTestFinished, vi } from 'vitest';
+import type { Actor } from 'xstate';
+import type { ActorRefFrom } from 'xstate';
+import { createActor, fromCallback, fromPromise, waitFor } from 'xstate';
+import {
+  countDatabaseReads,
+  insertSession,
+  openTestDatabase,
+} from '#mocks/database';
+import { initTestRepository } from '#mocks/git';
+import { liveHeaderMocks } from '#mocks/live-header';
+import { feedMachine } from '../services/feed/feed-machine';
+import { type WriterJob, writeJobs } from '../services/feed/writer-job';
+import { writerMachine } from '../services/feed/writer-machine';
+import { createServerServices } from '../services/server-services';
+import { registryMachine } from '../services/sessions/registry-machine';
+import type { SessionActorRef } from '../services/sessions/session-machine';
+import { sessionMachine } from '../services/sessions/session-machine';
+import type { HttpServerOptions } from './http-server';
+import { engineMachine } from './machine';
+
 type StoredColumnCase<Table, Column> = {
   agent: string;
   table: Table;
@@ -35,7 +92,6 @@ type AvailabilityCase = { adapter: AgentAdapter; agent: string } & (
       configOptions: readonly [];
     }
 );
-import type { Actor } from 'xstate';
 
 type StartedEngine = {
   engine: Actor<typeof engineMachine>;
@@ -43,58 +99,40 @@ type StartedEngine = {
     signal?: AbortSignal,
   ) => Promise<ReturnType<typeof appRouter.createCaller>>;
 };
-import { execFileSync } from 'node:child_process';
-import { randomUUID } from 'node:crypto';
-import {
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readdirSync,
-  readFileSync,
-  realpathSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
-import { setTimeout as wait } from 'node:timers/promises';
-import { type AgentAdapter, agentAdapters } from '@repo/agents';
-import { appRouter, type Services } from '@repo/api';
-import type {
-  SessionListUpdate,
-  SessionSnapshot,
-  SessionUpdate,
-} from '@repo/contracts';
-import { permissionOptions } from '@repo/contracts';
-import { feedRow, session, turn } from '@repo/db/schema';
-import { listBranches, sessionBranch } from '@repo/git';
-import { createMockAdapter, type MockAgentStream } from '@repo/mocks/agent';
-import { mockClis } from '@repo/mocks/cli';
-import {
-  type MockCliScenarioInput,
-  mockCliScenarioEnvironment,
-} from '@repo/mocks/cli/mock-cli';
-import { readRequestAnswers } from '@repo/mocks/cli/request-answer';
-import { eq, sql } from 'drizzle-orm';
-import { expect, it, onTestFinished, vi } from 'vitest';
-import type { ActorRefFrom } from 'xstate';
-import { createActor, fromCallback, fromPromise, waitFor } from 'xstate';
-import {
-  countDatabaseReads,
-  insertSession,
-  openTestDatabase,
-} from '#mocks/database';
-import { initTestRepository } from '#mocks/git';
-import { liveHeaderMocks } from '#mocks/live-header';
-import { feedMachine } from '../services/feed/feed-machine';
-import { type WriterJob, writeJobs } from '../services/feed/writer-job';
-import { writerMachine } from '../services/feed/writer-machine';
-import { createServerServices } from '../services/server-services';
-import { registryMachine } from '../services/sessions/registry-machine';
-import type { SessionActorRef } from '../services/sessions/session-machine';
-import { sessionMachine } from '../services/sessions/session-machine';
-import type { HttpServerOptions } from './http-server';
-import { engineMachine } from './machine';
+
+type MalformedFeedCase = {
+  agent: AgentAdapter['agent'];
+  kind: Extract<
+    SessionUpdate['sessionUpdate'],
+    'agent_message' | 'agent_thought' | 'plan_update'
+  >;
+};
+type CheckoutCase = {
+  adapter: AgentAdapter;
+  agent: AgentAdapter['agent'];
+  checkout:
+    | Readonly<
+        Extract<SessionNewInput['checkout'], { type: 'worktree' }> & {
+          baseBranch: 'feature';
+        }
+      >
+    | Readonly<Extract<SessionNewInput['checkout'], { type: 'main' }>>;
+};
+type UnavailableAgentCase = {
+  adapter: AgentAdapter;
+  agent: AgentAdapter['agent'];
+  availability: Exclude<AgentAvailability, 'available' | 'unavailable'>;
+};
+type DeclinedElicitationCase = {
+  adapter: AgentAdapter;
+  agent: AgentAdapter['agent'];
+  action: Exclude<SessionAnswerElicitationInput['action'], 'accept'>;
+};
+type RecordedRequestCase = {
+  adapter: AgentAdapter;
+  agent: AgentAdapter['agent'];
+  recording: string;
+};
 
 // The longest the teardown waits for the Engine's graceful stop.
 const gracefulStopLimit = 5_000;
@@ -400,21 +438,10 @@ it('keeps the Feed subscription open after malformed stored activity', async ():
 });
 
 it.each(
-  agentAdapters.flatMap(
-    ({
-      agent,
-    }): {
-      agent: string;
-      kind: 'agent_message' | 'agent_thought' | 'plan_update';
-    }[] =>
-      (['agent_message', 'plan_update', 'agent_thought'] as const).map(
-        (
-          kind,
-        ): {
-          agent: string;
-          kind: 'agent_message' | 'agent_thought' | 'plan_update';
-        } => ({ agent, kind }),
-      ),
+  agentAdapters.flatMap(({ agent }): MalformedFeedCase[] =>
+    (['agent_message', 'plan_update', 'agent_thought'] as const).map(
+      (kind): MalformedFeedCase => ({ agent, kind }),
+    ),
   ),
 )(
   'degrades only the Session with a malformed $kind row for $agent',
@@ -1180,29 +1207,14 @@ for (const adapter of agentAdapters)
     );
 
 it.each(
-  agentAdapters.flatMap(
+  agentAdapters.flatMap((adapter): CheckoutCase[] =>
     (
+      [{ type: 'worktree', baseBranch: 'feature' }, { type: 'main' }] as const
+    ).map((checkout): CheckoutCase => ({
       adapter,
-    ): {
-      adapter: AgentAdapter<unknown, unknown>;
-      agent: string;
-      checkout:
-        | { readonly type: 'worktree'; readonly baseBranch: 'feature' }
-        | { readonly type: 'main' };
-    }[] =>
-      (
-        [{ type: 'worktree', baseBranch: 'feature' }, { type: 'main' }] as const
-      ).map(
-        (
-          checkout,
-        ): {
-          adapter: AgentAdapter<unknown, unknown>;
-          agent: string;
-          checkout:
-            | { readonly type: 'worktree'; readonly baseBranch: 'feature' }
-            | { readonly type: 'main' };
-        } => ({ adapter, agent: adapter.agent, checkout }),
-      ),
+      agent: adapter.agent,
+      checkout,
+    })),
   ),
 )(
   'starts a $agent Session in the $checkout.type checkout and runs its first Turn in one call',
@@ -1350,27 +1362,14 @@ it.each(
 );
 
 it.each(
-  agentAdapters.flatMap(
-    (
-      adapter,
-    ): {
-      adapter: AgentAdapter<unknown, unknown>;
-      agent: string;
-      availability: 'not_installed' | 'not_signed_in';
-    }[] =>
-      (['not_installed', 'not_signed_in'] as const).map(
-        (
-          availability,
-        ): {
-          adapter: AgentAdapter<unknown, unknown>;
-          agent: string;
-          availability: 'not_installed' | 'not_signed_in';
-        } => ({
-          adapter,
-          agent: adapter.agent,
-          availability,
-        }),
-      ),
+  agentAdapters.flatMap((adapter): UnavailableAgentCase[] =>
+    (['not_installed', 'not_signed_in'] as const).map(
+      (availability): UnavailableAgentCase => ({
+        adapter,
+        agent: adapter.agent,
+        availability,
+      }),
+    ),
   ),
 )(
   'refuses a $agent Session whose Agent is $availability, leaving no Session, worktree or branch',
@@ -1872,27 +1871,12 @@ it.each(agentAdapters)(
 );
 
 it.each(
-  agentAdapters.flatMap(
-    (
+  agentAdapters.flatMap((adapter): DeclinedElicitationCase[] =>
+    (['decline', 'cancel'] as const).map((action): DeclinedElicitationCase => ({
       adapter,
-    ): {
-      adapter: AgentAdapter<unknown, unknown>;
-      agent: string;
-      action: 'cancel' | 'decline';
-    }[] =>
-      (['decline', 'cancel'] as const).map(
-        (
-          action,
-        ): {
-          adapter: AgentAdapter<unknown, unknown>;
-          agent: string;
-          action: 'cancel' | 'decline';
-        } => ({
-          adapter,
-          agent: adapter.agent,
-          action,
-        }),
-      ),
+      agent: adapter.agent,
+      action,
+    })),
   ),
 )(
   '$action answers a $agent Elicitation without accepting its form',
@@ -2071,27 +2055,12 @@ it.each(agentAdapters)(
 );
 
 it.each(
-  agentAdapters.flatMap(
-    (
+  agentAdapters.flatMap((adapter): RecordedRequestCase[] =>
+    ['permission', 'elicitation'].map((recording): RecordedRequestCase => ({
       adapter,
-    ): {
-      adapter: AgentAdapter<unknown, unknown>;
-      agent: string;
-      recording: string;
-    }[] =>
-      ['permission', 'elicitation'].map(
-        (
-          recording,
-        ): {
-          adapter: AgentAdapter<unknown, unknown>;
-          agent: string;
-          recording: string;
-        } => ({
-          adapter,
-          agent: adapter.agent,
-          recording,
-        }),
-      ),
+      agent: adapter.agent,
+      recording,
+    })),
   ),
 )(
   'keeps a $agent $recording request answerable after two days',

@@ -1,3 +1,4 @@
+import type { ProjectsBranchesOutput } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { unreachableServices } from '../../mocks';
 import { appRouter } from '../root';
@@ -6,10 +7,9 @@ it('returns local branches and the current branch for a Project', async (): Prom
   const caller = appRouter.createCaller({
     services: unreachableServices({
       projects: {
-        branches: async (): Promise<{
-          branches: string[];
-          currentBranch: string;
-        }> => ({
+        branches: async (): Promise<
+          ProjectsBranchesOutput & { currentBranch: string }
+        > => ({
           branches: ['main', 'feature'],
           currentBranch: 'feature',
         }),
