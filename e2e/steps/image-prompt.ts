@@ -7,7 +7,7 @@ import { When, Then } from './fixtures';
 
 const imagePath = path.resolve(
   import.meta.dirname,
-  '../../mocks/cli/red-square.png',
+  '../../mocks/agent/red-square.png',
 );
 const imageMime = 'image/png';
 const imagePrompt = 'Name the dominant color in this image.';

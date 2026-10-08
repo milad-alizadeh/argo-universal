@@ -7,18 +7,22 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "check-types": "tsc --noEmit",
-    "test": "vitest run"
+    "check-types": "pnpm generate && tsc --noEmit",
+    "test": "pnpm generate && vitest run",
+    "generate": "node codex/generate-runtime-schemas.ts && node claude/generate-message-tags.ts"
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "catalog:",
     "@repo/contracts": "workspace:*",
-    "xstate": "catalog:"
+    "ajv": "catalog:",
+    "xstate": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@repo/typescript": "workspace:*",
     "@repo/vitest": "workspace:*",
     "@types/node": "catalog:",
+    "ts-json-schema-generator": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

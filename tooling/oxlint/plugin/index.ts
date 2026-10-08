@@ -7,7 +7,6 @@ import { drizzleSchemaBoundary } from './drizzle-schema-boundary.ts';
 import { iconSize } from './icon-size.ts';
 import { jsonParseCast } from './json-parse-cast.ts';
 import { machineClock } from './machine-clock.ts';
-import { mockEnvironment } from './mock-environment.ts';
 import { noInternalMock } from './no-internal-mock.ts';
 import { unitTestIo } from './unit-test-io.ts';
 import { vendorName } from './vendor-name.ts';
@@ -24,7 +23,6 @@ export default definePlugin({
     'icon-size': iconSize,
     'json-parse-cast': jsonParseCast,
     'machine-clock': machineClock,
-    'mock-environment': mockEnvironment,
     'no-internal-mock': noInternalMock,
     'vendor-name': vendorName,
     'unit-test-io': unitTestIo,
