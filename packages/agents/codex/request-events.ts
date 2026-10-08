@@ -2,7 +2,10 @@ import { permissionOptions } from '@repo/contracts';
 import type { AgentEvent } from '../src/agent-events';
 import { toElicitationRequest } from '../src/elicitation-form';
 import type { VendorMessage } from './messages';
-import type { ToolRequestUserInputQuestion } from './protocol.gen';
+import type {
+  ToolRequestUserInputQuestion,
+  CommandExecutionRequestApprovalParams,
+} from './protocol.gen';
 import type { PermissionRequest } from './vendor-session-state';
 const questionInput = (
   question: ToolRequestUserInputQuestion,
@@ -20,7 +23,9 @@ const elicitationEvent = (
     message.params.questions.map(questionInput),
   ),
 ];
-const permissionCommand = (message: PermissionRequest): string | null =>
+const permissionCommand = (
+  message: PermissionRequest,
+): CommandExecutionRequestApprovalParams['command'] =>
   'command' in message.params ? message.params.command : null;
 const permissionTitle = (message: PermissionRequest): string =>
   message.params.reason ?? commandTitle(message);
