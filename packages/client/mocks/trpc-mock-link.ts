@@ -87,7 +87,7 @@ export function trpcMockLink(fixtures: Fixtures): TRPCLink<AppRouter> {
             observer.complete();
             return;
           }
-          const data = await Reflect.apply(fixture, undefined, [
+          const data: unknown = await Reflect.apply(fixture, undefined, [
             op.input,
             controller.signal,
           ]);
