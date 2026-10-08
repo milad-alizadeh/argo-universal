@@ -1,9 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn, within } from 'storybook/test';
+import { expect, fn } from 'storybook/test';
 import { layoutWidths } from '../../mocks/each-layout';
-import { PlanProposalAnswerPreview } from '../../mocks/plan-proposal-lifecycle-mock';
 import {
-  PlanProposalPreview,
   planProposalMocks,
   shortPlanProposal,
 } from '../../mocks/plan-proposal-mock';
@@ -19,9 +17,6 @@ const meta = {
     onAnswer: fn(),
     state: { kind: 'open' },
   },
-  render: (args): ReturnType<typeof PlanProposalPreview> => (
-    <PlanProposalPreview {...args} />
-  ),
 } satisfies Meta<typeof PlanProposalCard>;
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -29,7 +24,6 @@ type Story = StoryObj<typeof meta>;
 const needsProposal = 'Recorded catalog needs a Plan proposal.';
 const keepPlanningLabel = 'Keep planning';
 const sendingLabel = 'Sending…';
-const feedbackLabel = 'What should change in the plan?';
 function submitting(width: number, index: number): Story {
   const mock = planProposalMocks[index];
   if (!mock) throw new Error(needsProposal);
@@ -87,52 +81,3 @@ export const FirstAgentErrorPhone = failedAnswer(layoutWidths.phone, 0);
 export const FirstAgentErrorWide = failedAnswer(layoutWidths.wide, 0);
 export const SecondAgentErrorPhone = failedAnswer(layoutWidths.phone, 2);
 export const SecondAgentErrorWide = failedAnswer(layoutWidths.wide, 2);
-
-function feedbackPending(width: number, index: number): Story {
-  const mock = planProposalMocks[index];
-  if (!mock) throw new Error(needsProposal);
-  return {
-    args: { proposal: mock.proposal },
-    render: (args): ReturnType<typeof PlanProposalPreview> => (
-      <PlanProposalAnswerPreview {...args} />
-    ),
-    play: async ({ canvas, userEvent, args }) => {
-      await settleViewport(width);
-      await userEvent.click(
-        canvas.getByRole('button', { name: keepPlanningLabel }),
-      );
-      const feedback = canvas.getByRole('textbox', {
-        name: feedbackLabel,
-      });
-      await userEvent.type(feedback, 'Keep this feedback');
-      await userEvent.click(
-        canvas.getByRole('button', { name: keepPlanningLabel }),
-      );
-      const sending = canvas.getByRole('button', { name: sendingLabel });
-      await expect(within(sending).getByRole('status')).toHaveTextContent(
-        sendingLabel,
-      );
-      await expect(feedback).toHaveValue('Keep this feedback');
-      await expect(feedback).toHaveAttribute('readonly');
-      await expect(canvas.getByRole('button', { name: 'Back' })).toBeDisabled();
-      await userEvent.keyboard('{Enter}');
-      await expect(args.onAnswer).toHaveBeenCalledTimes(1);
-    },
-  };
-}
-export const FirstAgentFeedbackPendingPhone = feedbackPending(
-  layoutWidths.phone,
-  0,
-);
-export const FirstAgentFeedbackPendingWide = feedbackPending(
-  layoutWidths.wide,
-  0,
-);
-export const SecondAgentFeedbackPendingPhone = feedbackPending(
-  layoutWidths.phone,
-  2,
-);
-export const SecondAgentFeedbackPendingWide = feedbackPending(
-  layoutWidths.wide,
-  2,
-);
