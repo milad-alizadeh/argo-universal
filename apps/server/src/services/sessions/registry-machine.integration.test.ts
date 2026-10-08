@@ -2,9 +2,9 @@ import { randomUUID } from 'node:crypto';
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import { afterAll, afterEach, expect, it } from 'vitest';
 import {
-  type AnyEventObject,
   createActor,
   type EventFromLogic,
+  type EventObject,
   type SnapshotFrom,
 } from 'xstate';
 import { TestModel } from 'xstate/graph';
@@ -114,21 +114,14 @@ it.each(
       events.map(
         ({
           type,
-        }): [
-          RegistryEvent['type'],
-          (args: { event: AnyEventObject }) => void,
-        ] => [
+        }): [RegistryEvent['type'], (args: { event: EventObject }) => void] => [
           type,
-          ({ event }: { event: AnyEventObject }): void => {
-            if ('actorId' in event && event.actorId.startsWith('session:')) {
-              const session = registry.system.get(event.actorId);
-              if (!session) throw new Error('No Session');
-              session.send({
-                type: event.type.startsWith('xstate.error.')
-                  ? 'mock.fail'
-                  : 'mock.finish',
-              });
-            } else registry.send(event as RegistryEvent);
+          ({ event }): void => {
+            const fixture = events.find(
+              (candidate): boolean => candidate === event,
+            );
+            if (!fixture) throw new Error('Unknown registry model event');
+            registry.send(fixture);
           },
         ],
       ),
@@ -162,7 +155,11 @@ it('removes a failed Session while keeping another Session available', (): void 
   registry.start();
   for (const sessionId of ['one', 'two'])
     registry.send({ type: 'sessions.open', sessionId, agent: 'mock' });
-  registry.system.get('session:one').send({ type: 'mock.fail' });
+  registry.send({
+    type: 'xstate.error.actor.session:one',
+    actorId: 'session:one',
+    error: new Error('Session actor failed'),
+  });
   expect(registry.getSnapshot().status).toBe('active');
   expect(Object.keys(registry.getSnapshot().context.sessions)).toEqual(['two']);
   expect(registry.system.get('session:one')).toBeUndefined();

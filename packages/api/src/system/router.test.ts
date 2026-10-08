@@ -36,10 +36,7 @@ describe('system router', (): void => {
 
   it('rejects a system.info that breaks the contract', async (): Promise<void> => {
     const services = servicesWith([]);
-    services.system.info = (): SystemInfo => ({
-      ...systemInfo,
-      pid: 'one' as never,
-    });
+    Reflect.set(services.system, 'info', () => ({ ...systemInfo, pid: 'one' }));
     const caller = createCaller({ services });
 
     await expect(caller.system.info()).rejects.toThrow(

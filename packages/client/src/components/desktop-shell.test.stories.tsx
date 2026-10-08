@@ -197,8 +197,10 @@ export const MainContentUsesAvailableWidth: Story = {
     const keepPlanning = canvas.getByRole('button', {
       name: 'Keep planning',
     });
-    await expect(keepPlanning.getBoundingClientRect().width).toBe(
-      approve().getBoundingClientRect().width,
+    await waitFor(() =>
+      expect(keepPlanning.getBoundingClientRect().width).toBe(
+        approve().getBoundingClientRect().width,
+      ),
     );
     await expect(approve().getBoundingClientRect().right).toBeLessThanOrEqual(
       content.getBoundingClientRect().right,
@@ -936,8 +938,8 @@ export const ContentUpdatesKeepAnActiveToggleRunning: Story = {
     const { page } = await import('vitest/browser');
     await page.viewport(1440, 844);
     // The detail pane animates the frame around its viewport.
-    const frame = canvas.getByTestId('desktop-detail-viewport')
-      .parentElement as HTMLElement;
+    const frame = canvas.getByTestId('desktop-detail-viewport').parentElement;
+    if (!frame) throw new Error('Desktop detail viewport has no frame');
     await waitFor(() =>
       expect(
         canvas.getByTestId(sessionListId).getBoundingClientRect().width,
@@ -958,7 +960,10 @@ export const ContentUpdatesKeepAnActiveToggleRunning: Story = {
       await waitFor(() =>
         expect(animations.mock.results.length).toBeGreaterThan(0),
       );
-      const activeAnimation = animations.mock.results[0]?.value as Animation;
+      const animationResult = animations.mock.results[0];
+      if (animationResult?.type !== 'return')
+        throw new Error('Desktop frame animation did not start');
+      const activeAnimation = animationResult.value;
       const started = animations.mock.calls.length;
       await controlled.render({ attentionCount: 2 });
       await expect(
@@ -1091,9 +1096,11 @@ export const OneHeldDragCanCloseAndReopenPanels: Story = {
       'open',
     );
     await controlled.render({ inspectorState: 'open' });
-    await expect(
-      canvas.getByRole('button', { name: closeInspectorLabel }),
-    ).toBeVisible();
+    await waitFor(() =>
+      expect(
+        canvas.getByRole('button', { name: closeInspectorLabel }),
+      ).toBeVisible(),
+    );
     await userEvent.pointer({ keys: pointerRelease });
   }),
 };

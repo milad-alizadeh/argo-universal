@@ -1,12 +1,12 @@
 import type { ServerAddress } from '@repo/contracts';
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
+import { terminalPaths } from '@repo/vitest/model-paths';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   type Actor,
-  type ActorLogic,
   type AnyEventObject,
   createActor,
-  type EventFromLogic,
+  matchesState,
   fromCallback,
   fromPromise,
   type SnapshotFrom,
@@ -14,8 +14,12 @@ import {
 import {
   type DirectedGraphNode,
   type EventExecutor,
-  TestModel,
-  type TestPath,
+  type StatePath,
+  type GraphEventFromLogic,
+  type AdjacencyMap,
+  getShortestPaths,
+  getSimplePaths,
+  getAdjacencyMap,
   toDirectedGraph,
 } from 'xstate/graph';
 import {
@@ -114,14 +118,6 @@ const machine = serverConnectionMachine.provide({
   },
 });
 type ServerSnapshot = SnapshotFrom<typeof machine>;
-type ServerEvent = EventFromLogic<typeof machine>;
-// xstate/graph types its logic without emitted events.
-const modelLogic = machine as unknown as ActorLogic<
-  ServerSnapshot,
-  ServerEvent,
-  ServerInput
->;
-
 const input: ServerInput = { home: '/unused', serverDirectory: '/unused' };
 
 const startServerMachine = (): typeof server => {
@@ -175,55 +171,101 @@ afterEach((): void => {
 
 describe('server connection model', (): void => {
   const readError = new Error('EACCES');
+  const readAddressDoneEvent = 'xstate.done.actor.readAddress';
+  const readAddressErrorEvent = 'xstate.error.actor.readAddress';
+  const checkRunningDoneEvent = 'xstate.done.actor.checkRunning';
   // Done and error events of invoked actors are not in the machine's event type, but the model drives them.
-  const payloads: Record<string, AnyEventObject[]> = {
-    'xstate.done.actor.readAddress': [
-      runningAddress,
-      null,
-      startedAddress,
-      staleAddress,
-    ].map(
-      (
-        output,
-      ): {
-        type: string;
-        output: ServerAddress | null;
-        actorId: string;
-      } => ({
-        type: 'xstate.done.actor.readAddress',
-        output,
-        actorId: 'readAddress',
-      }),
+  const fixtures = [
+    ...[runningAddress, null, startedAddress, staleAddress].map(
+      (output) =>
+        ({
+          type: readAddressDoneEvent,
+          output,
+          actorId: 'readAddress',
+        }) as const,
     ),
-    'xstate.error.actor.readAddress': [
-      {
-        type: 'xstate.error.actor.readAddress',
-        error: readError,
-        actorId: 'readAddress',
-      },
-    ],
-    'xstate.done.actor.checkRunning': [true, false].map(
-      (output): { type: string; output: boolean; actorId: string } => ({
-        type: 'xstate.done.actor.checkRunning',
-        output,
-        actorId: 'checkRunning',
-      }),
+    {
+      type: readAddressErrorEvent,
+      error: readError,
+      actorId: 'readAddress',
+    },
+    ...[true, false].map(
+      (output) =>
+        ({
+          type: checkRunningDoneEvent,
+          output,
+          actorId: 'checkRunning',
+        }) as const,
     ),
-    'server.spawned': [
-      { type: 'server.spawned', pid: startedAddress.pid, at: spawnedAt },
-    ],
-    'server.exited': [{ type: supervisorExitedEvent, reason: exitReason }],
-  };
+    { type: 'server.spawned', pid: startedAddress.pid, at: spawnedAt },
+    { type: supervisorExitedEvent, reason: exitReason },
+    { type: retryServerEvent },
+    { type: 'app.quit' },
+    {
+      type: 'xstate.after.pollDelay.serverConnection.starting.answering.waiting',
+    },
+    { type: 'xstate.after.pollDelay.serverConnection.abandoning.waiting' },
+    { type: 'xstate.after.pollDelay.serverConnection.retrying.waiting' },
+    { type: 'xstate.after.pollDelay.serverConnection.stopping.waiting' },
+    { type: 'xstate.after.startLimit.serverConnection.starting.answering' },
+    { type: 'xstate.after.stopLimit.serverConnection.abandoning' },
+    { type: 'xstate.after.stopLimit.serverConnection.retrying' },
+    { type: 'xstate.after.stopLimit.serverConnection.stopping' },
+  ] satisfies GraphEventFromLogic<typeof machine>[];
+  type ServerEvent = (typeof fixtures)[number];
   const eventTypes = (node: DirectedGraphNode): string[] => [
     ...node.edges.map((edge): string => edge.label.text),
     ...node.children.flatMap(eventTypes),
   ];
   const types = [...new Set(eventTypes(toDirectedGraph(machine)))];
-  const events = types.flatMap(
-    (type): ServerEvent[] => (payloads[type] ?? [{ type }]) as ServerEvent[],
-  );
-  const output = (event: ServerEvent): unknown =>
-    (event as unknown as { output: unknown }).output;
+  const events = types.flatMap((type): ServerEvent[] => {
+    const matching = fixtures.filter((event) => event.type === type);
+    if (!matching.length)
+      throw new Error(`Missing Server graph fixture for ${type}`);
+    return matching;
+  });
+  const output = (
+    event: ServerEvent,
+  ): ServerAddress | null | boolean | undefined =>
+    'output' in event ? event.output : undefined;
+  const canGraphEvent = (
+    snapshot: ServerSnapshot,
+    event: ServerEvent,
+  ): boolean => {
+    switch (event.type) {
+      case readAddressDoneEvent:
+      case readAddressErrorEvent:
+        return (
+          snapshot.matches('locating') ||
+          snapshot.matches('rechecking') ||
+          snapshot.matches({ starting: { answering: 'checking' } })
+        );
+      case checkRunningDoneEvent:
+        return (
+          snapshot.matches({ abandoning: 'checking' }) ||
+          snapshot.matches({ retrying: 'checking' }) ||
+          snapshot.matches({ stopping: 'checking' })
+        );
+      case 'xstate.after.pollDelay.serverConnection.starting.answering.waiting':
+        return snapshot.matches({ starting: { answering: 'waiting' } });
+      case 'xstate.after.pollDelay.serverConnection.abandoning.waiting':
+        return snapshot.matches({ abandoning: 'waiting' });
+      case 'xstate.after.pollDelay.serverConnection.retrying.waiting':
+        return snapshot.matches({ retrying: 'waiting' });
+      case 'xstate.after.pollDelay.serverConnection.stopping.waiting':
+        return snapshot.matches({ stopping: 'waiting' });
+      case 'xstate.after.startLimit.serverConnection.starting.answering':
+        return snapshot.matches({ starting: 'answering' });
+      case 'xstate.after.stopLimit.serverConnection.abandoning':
+        return snapshot.matches('abandoning');
+      case 'xstate.after.stopLimit.serverConnection.retrying':
+        return snapshot.matches('retrying');
+      case 'xstate.after.stopLimit.serverConnection.stopping':
+        return snapshot.matches('stopping');
+      default:
+        return snapshot.can(event);
+    }
+  };
 
   // Never the address itself, only whose it is.
   const vertex = (
@@ -239,28 +281,32 @@ describe('server connection model', (): void => {
     ownedPid: snapshot.context.ownedPid,
     failure: snapshot.context.failure !== null,
   });
-  const model = new TestModel(modelLogic, {
+  const options = {
     input,
     events,
     // A done actor ignores events, but traversal still leaves a final state through the root `on`; a stale server.json only matters while the spawned Supervisor answers.
-    filterEvents: (snapshot, event): boolean =>
+    filterEvents: (snapshot: ServerSnapshot, event: ServerEvent): boolean =>
       snapshot.status === 'active' &&
-      snapshot.can(event) &&
+      canGraphEvent(snapshot, event) &&
       (output(event) !== staleAddress ||
         snapshot.matches({ starting: { answering: 'checking' } })),
     // `via` gives each step into a state its own vertex, so the shortest paths walk every transition.
-    serializeState: (snapshot, event, previous): string =>
+    serializeState: (
+      snapshot: ServerSnapshot,
+      event: ServerEvent | undefined,
+      previous?: ServerSnapshot,
+    ): string =>
       JSON.stringify({
         ...vertex(snapshot),
         via: event && `${JSON.stringify(previous?.value)} ${event.type}`,
       }),
-    stateMatcher: (snapshot, key): boolean => snapshot.matches(key as never),
-  });
+  };
   // Without `via`: with it, the polling loops give thousands of simple paths.
-  const simplePathModel = new TestModel(modelLogic, {
-    ...model.options,
-    serializeState: (snapshot): string => JSON.stringify(vertex(snapshot)),
-  });
+  const simplePathOptions = {
+    ...options,
+    serializeState: (snapshot: ServerSnapshot): string =>
+      JSON.stringify(vertex(snapshot)),
+  };
 
   // Fires timers in order until the delayed transition has run; an earlier `pollDelay` may fire on the way.
   const fireDelay: EventExecutor<ServerSnapshot, ServerEvent> = async ({
@@ -281,16 +327,20 @@ describe('server connection model', (): void => {
     'xstate.init': (): void => {
       startServerMachine();
     },
-    'xstate.done.actor.readAddress': ({ event }): Promise<void> =>
-      settle((): void =>
-        latest(readAddressCalls).resolve(output(event) as ServerAddress | null),
-      ),
-    'xstate.error.actor.readAddress': (): Promise<void> =>
+    [readAddressDoneEvent]: ({ event }): Promise<void> => {
+      if (event.type !== readAddressDoneEvent)
+        throw new Error('Expected address result');
+      return settle((): void => latest(readAddressCalls).resolve(event.output));
+    },
+    [readAddressErrorEvent]: (): Promise<void> =>
       settle((): void => latest(readAddressCalls).reject(readError)),
-    'xstate.done.actor.checkRunning': ({ event }): Promise<void> =>
-      settle((): void =>
-        latest(checkRunningCalls).resolve(output(event) as boolean),
-      ),
+    [checkRunningDoneEvent]: ({ event }): Promise<void> => {
+      if (event.type !== checkRunningDoneEvent)
+        throw new Error('Expected process result');
+      return settle((): void =>
+        latest(checkRunningCalls).resolve(event.output),
+      );
+    },
     'server.spawned': reportSpawned,
     'server.exited': reportExited,
     'server.retry': (): void => server.send({ type: retryServerEvent }),
@@ -345,20 +395,20 @@ describe('server connection model', (): void => {
     },
   };
 
-  const shortestPaths = model.getShortestPaths();
-  const simplePaths = simplePathModel.getSimplePaths();
-  const title = (path: TestPath<ServerSnapshot, ServerEvent>): string =>
+  const shortestPaths = terminalPaths(getShortestPaths(machine, options));
+  const simplePaths = terminalPaths(getSimplePaths(machine, simplePathOptions));
+  const title = (path: StatePath<ServerSnapshot, ServerEvent>): string =>
     path.steps
       .map(({ event }): string => {
         const name = event.type
           .replace(/^xstate\.after\.(\w+)\..*$/, 'after $1')
           .replace(/^xstate\.(done|error)\.actor\.(\w+)$/, '$2 $1');
         if (!('output' in event)) return name;
-        const value = output(event);
+        const value = event.output;
         if (typeof value === 'boolean')
           return `${name} (${value ? 'running' : 'exited'})`;
         if (value === staleAddress) return `${name} (stale pid 200)`;
-        return `${name} (${value === null ? 'none' : `pid ${(value as ServerAddress).pid}`})`;
+        return `${name} (${value === null ? 'none' : `pid ${value.pid}`})`;
       })
       .join(' → ');
 
@@ -368,18 +418,33 @@ describe('server connection model', (): void => {
   ])('%s', (_, paths): void => {
     it.each(
       paths.map(
-        (path): [string, TestPath<ServerSnapshot, ServerEvent>] =>
+        (path): [string, StatePath<ServerSnapshot, ServerEvent>] =>
           [title(path), path] as const,
       ),
     )('%s', async (_, path): Promise<void> => {
-      await path.test({ events: executors, states });
+      for (const step of path.steps) {
+        const execute = executors[step.event.type];
+        if (!execute)
+          throw new Error(`Missing Server executor for ${step.event.type}`);
+        await execute(step);
+        states['*']?.(step.state);
+        for (const [key, assertState] of Object.entries(states)) {
+          if (key !== '*' && matchesState(key, step.state.value))
+            assertState(step.state);
+        }
+      }
     });
   });
 
   it('the generated paths walk every transition', (): void => {
     expect(
       unwalkedTransitions({
-        models: [model],
+        models: [
+          {
+            getAdjacencyMap: (): AdjacencyMap<ServerSnapshot, ServerEvent> =>
+              getAdjacencyMap(machine, options),
+          },
+        ],
         paths: [...shortestPaths, ...simplePaths],
         stateKey: (snapshot): string => JSON.stringify(snapshot.value),
         eventKey: (event): typeof event.type => event.type,

@@ -26,9 +26,8 @@ export const ShowsServerInfoAndClock: Story = {
       .getByRole('heading', { name: 'Server' })
       .closest('[class*="rounded-xl"]');
     await expect(card).not.toBeNull();
-    await expect(getComputedStyle(card as Element).borderTopLeftRadius).toBe(
-      '14px',
-    );
+    if (!card) throw new Error('Server card is missing');
+    await expect(getComputedStyle(card).borderTopLeftRadius).toBe('14px');
     // An open Connection shows no banner.
     await expect(canvas.queryByRole('status')).toBeNull();
   },

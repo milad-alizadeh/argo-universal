@@ -43,6 +43,6 @@ it.each(['missing', 'text', 'extra'])(
 it('rejects JSON input in place of multipart FormData', async (): Promise<void> => {
   const caller = appRouter.createCaller({ services: unreachableServices() });
   await expect(
-    caller.blob.upload({ file: 'image' } as never),
+    Reflect.apply(caller.blob.upload, undefined, [{ file: 'image' }]),
   ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
 });

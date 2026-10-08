@@ -13,18 +13,21 @@ import {
   mockReadyEvent,
 } from '@repo/mocks/agent';
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
+import { terminalPaths } from '@repo/vitest/model-paths';
 import { afterAll, afterEach, expect, it, vi } from 'vitest';
 import {
-  type ActorLogic,
-  type AnyEventObject,
   createActor,
-  type EventFromLogic,
   fromPromise,
   type SnapshotFrom,
   setup,
   waitFor,
 } from 'xstate';
-import { TestModel } from 'xstate/graph';
+import {
+  type TestModel,
+  type GraphEventFromLogic,
+  getShortestPaths,
+  getAdjacencyMap,
+} from 'xstate/graph';
 import { openTestDatabase } from '#mocks/database';
 import { messageChange } from '#mocks/feed';
 import { createSessionHost, firstPrompt } from '#mocks/session';
@@ -32,6 +35,7 @@ import { type FeedActorRef, feedMachine } from '../feed';
 import type { createFeedService } from '../feed';
 import { databaseWriterId, writerMachine } from '../feed';
 import { sendSessionCommand } from './session-command';
+import type { SessionData } from './session-data';
 import { type SessionMachineInput, sessionMachine } from './session-machine';
 import { toSessionSnapshot } from './session-snapshot';
 
@@ -619,6 +623,24 @@ it('closes after the Agent stop limit even when the Agent does not stop', async 
 });
 
 const { database, directory: runtimeDirectory, remove } = openTestDatabase();
+const checkoutCreatedEvent = 'xstate.done.actor.createCheckout';
+const checkoutCreateFailedEvent = 'xstate.error.actor.createCheckout';
+const checkoutDiscardedEvent = 'xstate.done.actor.discardCheckout';
+const checkoutDiscardFailedEvent = 'xstate.error.actor.discardCheckout';
+const sessionLoadedEvent = 'xstate.done.actor.loadSession';
+const sessionLoadFailedEvent = 'xstate.error.actor.loadSession';
+const feedFailedEvent = 'xstate.error.actor.feed';
+const feedFlushedEvent = 'xstate.done.actor.feed';
+const checkoutDelayEvent = 'xstate.after.checkoutLimit.session.creating';
+const cancelDelayEvent =
+  'xstate.after.cancelLimit.session.open.live.cancelling';
+const agentStopDelayEvent =
+  'xstate.after.agentStopLimit.session.open.live.closing';
+const agentRestartDelayEvent =
+  'xstate.after.agentRestartDelay.session.open.recovering';
+const feedFlushDelayEvent = 'xstate.after.feedFlushLimit.session.open.flushing';
+const feedFailureMessage = 'Feed failed';
+const feedFailure = Object.assign(new Error(feedFailureMessage), { name: '' });
 const data = {
   sessionId: 'session-1',
   projectId: 'project-1',
@@ -628,7 +650,12 @@ const data = {
   epoch: 0,
   maxRevision: 0,
   nextPosition: 0,
-};
+  configValues: [],
+  activityAt: 1000,
+} satisfies SessionData;
+let createCheckoutCall = Promise.withResolvers<SessionData>();
+let discardCheckoutCall = Promise.withResolvers<void>();
+let loadSessionCall = Promise.withResolvers<SessionData>();
 let stream: MockAgentStream | undefined;
 let modelCommands: AgentCommand[] = [];
 const ready = mockReadyEvent;
@@ -644,17 +671,18 @@ const adapter = createMockAdapter({
 });
 const machine = sessionMachine.provide({
   actors: {
-    createCheckout: fromPromise(
-      (): Promise<import('./session-data').SessionData> =>
-        new Promise((): void => {}),
-    ),
-    discardCheckout: fromPromise(
-      (): Promise<void> => new Promise((): void => {}),
-    ),
-    loadSession: fromPromise(
-      (): Promise<import('./session-data').SessionData> =>
-        new Promise((): void => {}),
-    ),
+    createCheckout: fromPromise((): Promise<SessionData> => {
+      createCheckoutCall = Promise.withResolvers<SessionData>();
+      return createCheckoutCall.promise;
+    }),
+    discardCheckout: fromPromise((): Promise<void> => {
+      discardCheckoutCall = Promise.withResolvers<void>();
+      return discardCheckoutCall.promise;
+    }),
+    loadSession: fromPromise((): Promise<SessionData> => {
+      loadSessionCall = Promise.withResolvers<SessionData>();
+      return loadSessionCall.promise;
+    }),
     agent: agentMachine.provide({ actions: { sendReady: (): void => {} } }),
     feed: feedMachine.provide({
       actions: {
@@ -669,15 +697,38 @@ const machine = sessionMachine.provide({
   },
 });
 type SessionSnapshot = SnapshotFrom<typeof machine>;
-type SessionEvent = EventFromLogic<typeof machine>;
 const events = [
-  { type: 'xstate.done.actor.createCheckout', output: data },
-  { type: 'xstate.error.actor.createCheckout', error: 'Could not create' },
-  { type: 'xstate.done.actor.discardCheckout' },
-  { type: 'xstate.error.actor.discardCheckout', error: 'Could not remove' },
-  { type: 'xstate.done.actor.loadSession', output: data },
-  { type: 'xstate.error.actor.loadSession', error: 'Could not load' },
-  { type: 'xstate.error.actor.feed', error: 'Feed failed' },
+  {
+    type: checkoutCreatedEvent,
+    actorId: 'createCheckout',
+    output: data,
+  },
+  {
+    type: checkoutCreateFailedEvent,
+    actorId: 'createCheckout',
+    error: 'Could not create',
+  },
+  {
+    type: checkoutDiscardedEvent,
+    actorId: 'discardCheckout',
+    output: undefined,
+  },
+  {
+    type: checkoutDiscardFailedEvent,
+    actorId: 'discardCheckout',
+    error: 'Could not remove',
+  },
+  {
+    type: sessionLoadedEvent,
+    actorId: 'loadSession',
+    output: data,
+  },
+  {
+    type: sessionLoadFailedEvent,
+    actorId: 'loadSession',
+    error: 'Could not load',
+  },
+  { type: feedFailedEvent, actorId: 'feed', error: feedFailureMessage },
   ready,
   { type: sessionPromptEvent, turnId: 'turn-1', content: [] },
   { type: sessionSetConfigEvent, configId: 'mode', value: 'plan' },
@@ -720,13 +771,14 @@ const events = [
   },
   { type: 'xstate.done.actor.agent', output: { failure: null } },
   { type: 'xstate.error.actor.agent', error: 'Agent crashed' },
-  { type: 'xstate.done.actor.feed' },
-  { type: 'xstate.after.checkoutLimit.session.creating' },
-  { type: 'xstate.after.cancelLimit.session.open.live.cancelling' },
-  { type: 'xstate.after.agentStopLimit.session.open.live.closing' },
-  { type: 'xstate.after.agentRestartDelay.session.open.recovering' },
-  { type: 'xstate.after.feedFlushLimit.session.open.flushing' },
-] as AnyEventObject[] as SessionEvent[];
+  { type: feedFlushedEvent, actorId: 'feed', output: undefined },
+  { type: checkoutDelayEvent },
+  { type: cancelDelayEvent },
+  { type: agentStopDelayEvent },
+  { type: agentRestartDelayEvent },
+  { type: feedFlushDelayEvent },
+] satisfies GraphEventFromLogic<typeof machine>[];
+type SessionEvent = (typeof events)[number];
 const key = (snapshot: SessionSnapshot | undefined): string | undefined =>
   snapshot &&
   JSON.stringify({
@@ -736,59 +788,90 @@ const key = (snapshot: SessionSnapshot | undefined): string | undefined =>
     crashes: snapshot.context.agentCrashes.length,
     stored: snapshot.context.stored,
   });
-const logic = machine as unknown as ActorLogic<
-  SessionSnapshot,
-  SessionEvent,
-  SessionMachineInput
+const canGraphEvent = (
+  snapshot: SessionSnapshot,
+  event: SessionEvent,
+): boolean => {
+  switch (event.type) {
+    case checkoutCreatedEvent:
+    case checkoutCreateFailedEvent:
+    case checkoutDelayEvent:
+      return snapshot.matches('creating');
+    case sessionLoadedEvent:
+    case sessionLoadFailedEvent:
+      return snapshot.matches('loading');
+    case checkoutDiscardedEvent:
+    case checkoutDiscardFailedEvent:
+      return snapshot.matches('discarding');
+    case feedFlushedEvent:
+    case feedFailedEvent:
+      return snapshot.matches('open');
+    case cancelDelayEvent:
+      return snapshot.matches({ open: { live: 'cancelling' } });
+    case agentStopDelayEvent:
+      return snapshot.matches({ open: { live: 'closing' } });
+    case agentRestartDelayEvent:
+      return snapshot.matches({ open: 'recovering' });
+    case feedFlushDelayEvent:
+      return snapshot.matches({ open: 'flushing' });
+    default:
+      return snapshot.can(event);
+  }
+};
+type ModelOptions = NonNullable<
+  Parameters<typeof getShortestPaths<typeof machine, SessionEvent>>[1]
 >;
-const models = (['new', 'existing'] as const).map(
-  (kind): TestModel<SessionSnapshot, SessionEvent, SessionMachineInput> =>
-    new TestModel<SessionSnapshot, SessionEvent, SessionMachineInput>(logic, {
-      input:
-        kind === 'existing'
-          ? {
-              database,
-              runtimeDirectory,
-              adapter,
-              now: (): number => 1000,
-              createId: (): string => requestModel,
-              kind,
-              sessionId: 'session-1',
-            }
-          : {
-              database,
-              runtimeDirectory,
-              adapter,
-              now: (): number => 1000,
-              createId: (): string => requestModel,
-              kind,
-              sessionId: 'session-1',
-              projectId: 'project-1',
-              projectPath: '/project',
-              agent: 'mock',
-              checkout: { type: 'main' },
-              configOptions: [],
-              prompt: [{ type: 'text', text: 'Build it' }],
-              turnId: 'turn-1',
-            },
-      events,
-      // Two queued requests cover both queue branches; snapshot equality bounds crash timestamps and repeated Turns.
-      filterEvents: (snapshot, event): boolean =>
-        snapshot.status === 'active' &&
-        snapshot.can(event) &&
-        (event.type !== permissionRequestedEvent ||
-          snapshot.context.permissionQueue.length < 2),
-      serializeState: (snapshot, event, previous): string =>
-        JSON.stringify({
-          key: key(snapshot),
-          via: event && `${key(previous)} ${event.type}`,
-        }),
+const models = (['new', 'existing'] as const).map((kind): ModelOptions => ({
+  input:
+    kind === 'existing'
+      ? {
+          database,
+          runtimeDirectory,
+          adapter,
+          now: (): number => 1000,
+          createId: (): string => requestModel,
+          kind,
+          sessionId: 'session-1',
+        }
+      : {
+          database,
+          runtimeDirectory,
+          adapter,
+          now: (): number => 1000,
+          createId: (): string => requestModel,
+          kind,
+          sessionId: 'session-1',
+          projectId: 'project-1',
+          projectPath: '/project',
+          agent: 'mock',
+          checkout: { type: 'main' },
+          configOptions: [],
+          prompt: [{ type: 'text', text: 'Build it' }],
+          turnId: 'turn-1',
+        },
+  events,
+  // Two queued requests cover both queue branches; snapshot equality bounds crash timestamps and repeated Turns.
+  filterEvents: (snapshot, event): boolean =>
+    snapshot.status === 'active' &&
+    canGraphEvent(snapshot, event) &&
+    (event.type !== permissionRequestedEvent ||
+      snapshot.context.permissionQueue.length < 2),
+  serializeState: (snapshot, event, previous): string =>
+    JSON.stringify({
+      key: key(snapshot),
+      via: event && `${key(previous)} ${event.type}`,
     }),
-);
+}));
 const paths = models.flatMap(
-  (model): ReturnType<typeof model.getShortestPaths> =>
-    model.getShortestPaths(),
+  (
+    options,
+  ): ReturnType<typeof getShortestPaths<typeof machine, SessionEvent>> =>
+    terminalPaths(getShortestPaths(machine, options)),
 );
+const isStreamEvent = (
+  event: SessionEvent,
+): event is Extract<SessionEvent, MockAgentStreamEvent> =>
+  event.type.startsWith('agent.') && event.type !== 'agent.ready';
 
 it.each(
   paths.map(
@@ -802,6 +885,17 @@ it.each(
     modelCommands = [];
     const input = path.steps[0]?.state.context.input;
     if (!input) throw new Error('No model input');
+    let failNextClockRead = false;
+    const runtimeInput: SessionMachineInput = {
+      ...input,
+      now: (): number => {
+        if (failNextClockRead) {
+          failNextClockRead = false;
+          throw feedFailure;
+        }
+        return input.now();
+      },
+    };
     // The model writer holds jobs so paths cannot alter the database.
     const root = createActor(
       setup({
@@ -823,7 +917,7 @@ it.each(
             src: 'writer',
             input: { database, now: (): number => 1000 },
           },
-          { id: 'session', src: 'session', input },
+          { id: 'session', src: 'session', input: runtimeInput },
         ],
       }),
     ).start();
@@ -842,13 +936,66 @@ it.each(
           async ({ event }: { event: SessionEvent }): Promise<void> => {
             const before = sessionActor.getSnapshot();
             const commandIndex = modelCommands.length;
-            if (
-              event.type.startsWith('agent.') &&
-              event.type !== 'agent.ready' &&
-              stream
-            )
-              stream.send(event as MockAgentStreamEvent);
-            else sessionActor.send(event);
+            switch (event.type) {
+              case checkoutCreatedEvent:
+                createCheckoutCall.resolve(data);
+                break;
+              case checkoutCreateFailedEvent:
+                createCheckoutCall.reject(event.error);
+                break;
+              case sessionLoadedEvent:
+                loadSessionCall.resolve(data);
+                break;
+              case sessionLoadFailedEvent:
+                loadSessionCall.reject(event.error);
+                break;
+              case checkoutDiscardedEvent:
+                discardCheckoutCall.resolve();
+                break;
+              case checkoutDiscardFailedEvent:
+                discardCheckoutCall.reject(event.error);
+                break;
+              case feedFlushedEvent: {
+                const feed = sessionActor.getSnapshot().children.feed;
+                if (!feed) throw new Error('No model Feed actor');
+                feed.send({ type: 'feed.flush' });
+                break;
+              }
+              case feedFailedEvent: {
+                const feed = sessionActor.getSnapshot().children.feed;
+                if (!feed) throw new Error('No model Feed actor');
+                failNextClockRead = true;
+                feed.send({
+                  type: 'feed.change',
+                  turnId: 'turn-1',
+                  change: {
+                    type: 'upsert',
+                    update: {
+                      id: 'clock-failure',
+                      messageId: 'clock-failure',
+                      sessionUpdate: 'agent_message',
+                      state: 'open',
+                      content: [],
+                    },
+                  },
+                });
+                break;
+              }
+              case checkoutDelayEvent:
+              case cancelDelayEvent:
+                await vi.advanceTimersByTimeAsync(10_000);
+                break;
+              case agentStopDelayEvent:
+              case feedFlushDelayEvent:
+                await vi.advanceTimersByTimeAsync(5_000);
+                break;
+              case agentRestartDelayEvent:
+                await vi.advanceTimersByTimeAsync(1_000);
+                break;
+              default:
+                if (isStreamEvent(event) && stream) stream.send(event);
+                else sessionActor.send(event);
+            }
             await vi.advanceTimersByTimeAsync(0);
             if (
               event.type === sessionPromptEvent &&
@@ -863,52 +1010,56 @@ it.each(
                 },
                 { ...event, type: agentPromptEvent },
               ]);
-            if (String(event.type) === 'xstate.error.actor.feed')
+            if (event.type === feedFailedEvent)
               expect(sessionActor.getSnapshot().output).toEqual({
-                failure: 'Feed failed',
+                failure: feedFailureMessage,
               });
           },
         ],
       ),
     );
-    await path.test({
-      events: executors,
-      states: {
-        '*': (expected): void => {
-          const actual = sessionActor.getSnapshot();
-          expect(actual.context.heldConfigValues).toEqual(
-            expected.context.heldConfigValues,
-          );
-          expect(actual.context.rejectedMessages).toBe(
-            expected.context.rejectedMessages,
-          );
-          const feed = actual.children.feed as FeedActorRef | undefined;
-          const { epoch, maxRevision, liveHeader, ...projection } =
-            toSessionSnapshot(
-              expected,
-              { context: expected.context },
-              sessionRows.idle,
-            );
-          expect(
-            toSessionSnapshot(
-              actual,
-              feed?.getSnapshot() ?? { context: { epoch, maxRevision } },
-              sessionRows.idle,
-            ),
-          ).toMatchObject({
-            ...projection,
-            pendingElicitation: projection.pendingElicitation && {
-              ...projection.pendingElicitation,
-              requestId: requestModel,
-            },
-            liveHeader: liveHeader && {
-              ...liveHeader,
-              startedAt: liveHeader.startedAt === null ? null : 1000,
-            },
-          });
+    const assertState = (expected: SessionSnapshot): void => {
+      const actual = sessionActor.getSnapshot();
+      expect(actual.context.heldConfigValues).toEqual(
+        expected.context.heldConfigValues,
+      );
+      expect(actual.context.rejectedMessages).toBe(
+        expected.context.rejectedMessages,
+      );
+      const feed = actual.children.feed;
+      const { epoch, maxRevision, liveHeader, ...projection } =
+        toSessionSnapshot(
+          expected,
+          { context: expected.context },
+          sessionRows.idle,
+        );
+      expect(
+        toSessionSnapshot(
+          actual,
+          feed?.getSnapshot() ?? { context: { epoch, maxRevision } },
+          sessionRows.idle,
+        ),
+      ).toMatchObject({
+        ...projection,
+        pendingElicitation: projection.pendingElicitation && {
+          ...projection.pendingElicitation,
+          requestId: requestModel,
         },
-      },
-    });
+        liveHeader: liveHeader && {
+          ...liveHeader,
+          startedAt: liveHeader.startedAt === null ? null : 1000,
+        },
+      });
+    };
+    for (const [index, step] of path.steps.entries()) {
+      if (index > 0) {
+        const execute = executors[step.event.type];
+        if (!execute)
+          throw new Error(`Missing Session executor for ${step.event.type}`);
+        await execute(step);
+      }
+      assertState(step.state);
+    }
   },
 );
 
@@ -944,7 +1095,18 @@ it('ends Checkout creation with a retryable failure when git does not finish', a
 it('the generated paths walk every reachable transition', (): void => {
   expect(
     unwalkedTransitions({
-      models,
+      models: models.map(
+        (
+          options,
+        ): Pick<
+          TestModel<SessionSnapshot, SessionEvent, SessionMachineInput>,
+          'getAdjacencyMap'
+        > => ({
+          getAdjacencyMap: (): ReturnType<
+            typeof getAdjacencyMap<typeof machine, SessionEvent>
+          > => getAdjacencyMap(machine, options),
+        }),
+      ),
       paths,
       stateKey: (snapshot): string => String(key(snapshot)),
       eventKey: (event): typeof event.type => event.type,

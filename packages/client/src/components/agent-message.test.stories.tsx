@@ -76,8 +76,10 @@ function markdownPlay(heading: string, firstHeader: string) {
         lineHeight: '22px',
       });
       await expect(getComputedStyle(link).textDecorationLine).toBe('underline');
+      const code = canvas.getAllByText('feed.rows')[0];
+      if (!code) throw new Error('Message code is missing');
       await expectType({
-        element: canvas.getAllByText('feed.rows')[0] as HTMLElement,
+        element: code,
         family: 'SF Mono',
         size: '12px',
         lineHeight: '18px',

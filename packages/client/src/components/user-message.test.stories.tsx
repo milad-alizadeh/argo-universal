@@ -37,16 +37,15 @@ export const InlineCode: Story = {
   play: async ({ canvas }) => {
     for (const width of widths) {
       await settleViewport(width);
-      const code = getComputedStyle(
-        canvas.getAllByText('sleep 20 && echo done', {
-          exact: true,
-        })[0] as HTMLElement,
-      );
+      const codeElement = canvas.getAllByText('sleep 20 && echo done', {
+        exact: true,
+      })[0];
+      if (!codeElement) throw new Error('Inline code is missing');
+      const code = getComputedStyle(codeElement);
       await expect(code.fontFamily).toContain('SF Mono');
       await expect(code.fontSize).toBe('12px');
-      const prose = canvas.getAllByText(
-        /^Run the shell command/,
-      )[0] as HTMLElement;
+      const prose = canvas.getAllByText(/^Run the shell command/)[0];
+      if (!prose) throw new Error('Message prose is missing');
       await expect(getComputedStyle(prose).fontSize).toBe('14px');
       await expect(getComputedStyle(prose).lineHeight).toBe('20px');
       await expect(

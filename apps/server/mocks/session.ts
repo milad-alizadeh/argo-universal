@@ -92,7 +92,7 @@ export function createSessionHost(
   const session = root.getSnapshot().children.session;
   if (!session) throw new Error('Session not started');
   const findFeed = (): FeedActorRef | undefined =>
-    session.getSnapshot().children.feed as FeedActorRef | undefined;
+    session.getSnapshot().children.feed;
   const service = createFeedService({
     database,
     findFeed,

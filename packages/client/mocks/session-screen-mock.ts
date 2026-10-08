@@ -124,12 +124,12 @@ export const oldestMessage = firstTextOf(
 
 // Each recording's rows as one more copy, with ids and positions after the copies before it.
 const rowsAsCopy = (mock: FeedMock, copy: number): FeedMock['rows'] =>
-  mock.rows.map((row) => ({
+  mock.rows.map((row): SessionUpdate => ({
     ...row,
     id: `${copy}-${row.id}`,
     position: copy * 1000 + row.position,
     ...('toolCallId' in row ? { toolCallId: `${copy}-${row.toolCallId}` } : {}),
-  })) as SessionUpdate[];
+  }));
 
 // The oldest recording, then every other recording seven times over, so the Feed spans several pages.
 const repeatedRecordings = Array.from({ length: 7 }, () =>

@@ -550,7 +550,10 @@ const agentFailedMocks: Fixtures = {
   'feed.subscribe': (input, signal) => {
     openAttempts += 1;
     if (openAttempts === 1) throw new Error(agentFailure);
-    return idleSessionMocks['feed.subscribe']?.(input, signal) as never;
+    const subscribe = idleSessionMocks['feed.subscribe'];
+    if (!subscribe)
+      throw new Error('Idle Session has no Feed subscription mock');
+    return subscribe(input, signal);
   },
 };
 
