@@ -5,7 +5,7 @@ import { createRoot } from 'react-dom/client';
 import { View } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { expect, fn, waitFor } from 'storybook/test';
+import { expect, fn, waitFor, within } from 'storybook/test';
 import { layoutWidths } from '../../mocks/each-layout';
 import { PhoneShellFrame } from '../../mocks/phone-shell-frame';
 import { ScreenHeaderMock } from '../../mocks/screen-header-mock';
@@ -78,7 +78,9 @@ function mountPhoneLayout(
         </KeyboardProvider>
       </SafeAreaProvider>,
     );
-    await new Promise(requestAnimationFrame);
+    await within(element).findByRole('heading', {
+      name: shellSections[section].title,
+    });
   };
   return { root, render, onNavigate };
 }
