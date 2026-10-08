@@ -8,6 +8,7 @@ import {
   ArrowsOutSimpleIcon,
   MapTrifoldIcon,
 } from 'phosphor-react-native';
+import type * as React from 'react';
 import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { cn } from '#lib/utils';
@@ -39,7 +40,9 @@ export interface PlanProposalCardProps {
   error?: string;
 }
 
-export function PlanProposalCard(props: PlanProposalCardProps) {
+export function PlanProposalCard(
+  props: PlanProposalCardProps,
+): React.JSX.Element {
   return <PlanProposalInteraction key={props.proposal.planId} {...props} />;
 }
 
@@ -48,7 +51,7 @@ function PlanProposalInteraction({
   onAnswer,
   state,
   error,
-}: PlanProposalCardProps) {
+}: PlanProposalCardProps): React.JSX.Element {
   const wide = useContentWide();
   const windowWide = useWide();
   const answered = state.kind === 'answered';
@@ -58,7 +61,7 @@ function PlanProposalInteraction({
   const answerLabel = planning ? 'Keep planning' : 'Approve';
   const [feedback, setFeedback] = useState('');
   const [expanded, setExpanded] = useState(false);
-  const submit = () => {
+  const submit = (): void => {
     if (inactive || (planning && !feedback.trim())) return;
     setExpanded(false);
     if (planning) {
@@ -69,7 +72,7 @@ function PlanProposalInteraction({
       });
     } else onAnswer({ planId: proposal.planId, decision: 'approve' });
   };
-  const back = () => {
+  const back = (): void => {
     if (planning) setPlanning(false);
     else setExpanded(false);
   };
@@ -211,7 +214,7 @@ function PlanProposalBody({
 }: {
   content: string;
   expanded: boolean;
-}) {
+}): React.JSX.Element {
   const [contentHeight, setContentHeight] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(0);
   const [offset, setOffset] = useState(0);

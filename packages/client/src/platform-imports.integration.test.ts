@@ -13,7 +13,7 @@ const aliasFolders = Object.entries(clientPackage.imports).map(
   }),
 );
 
-function listFiles(directory: string) {
+function listFiles(directory: string): string[] {
   return readdirSync(join(packageRoot, directory), { recursive: true })
     .map((name) => join(directory, String(name)))
     .filter((name) => /\.tsx?$/.test(name));

@@ -4,7 +4,7 @@ const sameList = <Value>(
   first: readonly Value[],
   second: readonly Value[],
   isSame: (first: Value, second: Value) => boolean = Object.is,
-) =>
+): boolean =>
   first.length === second.length &&
   first.every((value, index) => isSame(value, second[index] as Value));
 
@@ -95,6 +95,7 @@ export function keepUnchangedItems(
   return { ...next, items: nextItems.map(keepIfUnchanged) };
 }
 
-const itemKey = (item: FeedViewItem) => `${item.type}:${feedItemKey(item)}`;
+const itemKey = (item: FeedViewItem): string =>
+  `${item.type}:${feedItemKey(item)}`;
 
 const toKeyedEntry = (item: FeedViewItem) => [itemKey(item), item] as const;

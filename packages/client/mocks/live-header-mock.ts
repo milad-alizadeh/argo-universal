@@ -20,7 +20,7 @@ export const liveHeaderSteps = recordedFeedMocks
 function toolCallFor(
   liveHeader: LiveHeader,
   rows: (typeof recordedFeedMocks)[number]['rows'],
-) {
+): ToolCallUpdate | undefined {
   const { source } = liveHeader;
   if (source.type !== 'tool_call') return;
   return rows.findLast(

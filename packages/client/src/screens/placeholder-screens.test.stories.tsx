@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
 import { SettingsListMock } from '../../mocks/settings-list-mock';
@@ -6,7 +7,7 @@ import { SettingsListMock } from '../../mocks/settings-list-mock';
 const meta = {
   title: 'Tests/PlaceholderScreens',
   component: SettingsListMock,
-  render: (args) => (
+  render: (args): React.JSX.Element => (
     <View className="h-[796px] w-full">
       <SettingsListMock {...args} />
     </View>

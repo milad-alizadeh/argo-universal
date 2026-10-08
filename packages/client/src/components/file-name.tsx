@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import { Platform } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 import { cn } from '#lib/utils';
@@ -9,7 +10,7 @@ export function FileName({
 }: {
   path: string;
   className?: string;
-}) {
+}): React.JSX.Element {
   const underlineColor = useCSSVariable('--color-ring');
   return (
     <Text

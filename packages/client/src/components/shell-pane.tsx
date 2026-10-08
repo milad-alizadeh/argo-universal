@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import { type ReactNode, useEffect, useRef } from 'react';
 import { View } from 'react-native';
 import Animated, {
@@ -31,7 +32,7 @@ export function ShellPane({
   animate = true,
   header,
   children,
-}: ShellPaneProps) {
+}: ShellPaneProps): React.JSX.Element {
   const lastContentWidth = useRef(contentWidth ?? width);
   const stableContentWidth =
     contentWidth ?? (width > 0 ? width : lastContentWidth.current);

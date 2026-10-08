@@ -1,4 +1,5 @@
 import { BookOpenIcon } from 'phosphor-react-native/src/icons/BookOpen';
+import type * as React from 'react';
 import {
   type ReactNode,
   useCallback,
@@ -21,11 +22,14 @@ export interface ToolCallGroupProps {
   now?: number;
 }
 
-const activityKey = (activity: FeedActivity) =>
+const activityKey = (activity: FeedActivity): string =>
   activity.type === 'exploration' ? activity.id : activity.row.id;
 
 // Reports to the Feed when an older page brings activities before those already drawn, and how tall they measure.
-function useGrowthAbove(groupKey: string, keys: readonly string[]) {
+function useGrowthAbove(
+  groupKey: string,
+  keys: readonly string[],
+): (event: LayoutChangeEvent) => void {
   const feedGrowth = useContext(FeedGrowthContext);
   const drawnKeys = useRef(keys);
   const height = useRef<number | null>(null);
@@ -60,7 +64,7 @@ export function ToolCallGroup({
   renderActivity,
   initialOpen,
   now,
-}: ToolCallGroupProps) {
+}: ToolCallGroupProps): React.JSX.Element {
   const live = group.state === 'open' ? group.live : undefined;
   const duration = useToolCallDuration(live?.toolCall, now);
   const running = group.state === 'open';

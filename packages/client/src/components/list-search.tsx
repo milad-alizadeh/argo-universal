@@ -1,4 +1,5 @@
 import { MagnifyingGlassIcon, XIcon } from 'phosphor-react-native';
+import type * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { type TextInput, View } from 'react-native';
 import Animated, {
@@ -37,7 +38,11 @@ interface ListSearchProps {
   onChangeText: (value: string) => void;
 }
 
-export function ListSearch({ title, value, onChangeText }: ListSearchProps) {
+export function ListSearch({
+  title,
+  value,
+  onChangeText,
+}: ListSearchProps): React.JSX.Element {
   const wide = useWide();
   const buttonSize = wide ? wideButtonSize : narrowButtonSize;
   const iconSize = useIconPixels(wide ? 'md' : 'lg');
@@ -59,7 +64,7 @@ export function ListSearch({ title, value, onChangeText }: ListSearchProps) {
       return;
     }
     const frame = requestAnimationFrame(() => input.current?.focus());
-    return () => cancelAnimationFrame(frame);
+    return (): void => cancelAnimationFrame(frame);
   }, [progress, searching]);
 
   const titleStyle = useAnimatedStyle(
@@ -103,7 +108,7 @@ export function ListSearch({ title, value, onChangeText }: ListSearchProps) {
     }),
     [progress],
   );
-  function closeSearch() {
+  function closeSearch(): void {
     setSearching(false);
     onChangeText('');
   }
@@ -164,7 +169,7 @@ export function ListSearch({ title, value, onChangeText }: ListSearchProps) {
         )}
         accessibilityLabel={searching ? 'Close search' : `Search ${title}`}
         accessibilityState={{ expanded: searching }}
-        onPress={searching ? closeSearch : () => setSearching(true)}
+        onPress={searching ? closeSearch : (): void => setSearching(true)}
       >
         <Animated.View
           pointerEvents="none"

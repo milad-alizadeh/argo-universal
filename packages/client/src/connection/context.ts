@@ -11,7 +11,7 @@ export type ConnectionState = SnapshotFrom<
 export const ConnectionContext = createContext<ConnectionActor | null>(null);
 
 // The App's Connection machine, from AppProviders or a story's mock.
-export function useConnection() {
+export function useConnection(): ConnectionActor {
   const connection = useContext(ConnectionContext);
   if (!connection) throw new Error('useConnection needs AppProviders');
   return connection;
@@ -25,7 +25,7 @@ export function useConnectionState(): ConnectionState {
 export function useResubscribeOnReconnect(subscription: {
   status: string;
   reset: () => void;
-}) {
+}): void {
   const state = useConnectionState();
   const previous = useRef(state);
   const { status, reset } = subscription;

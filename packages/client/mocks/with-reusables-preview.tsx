@@ -1,5 +1,6 @@
 import { type ThemeId, themes } from '@repo/uniwind/themes';
 import { PortalHost } from '@rn-primitives/portal';
+import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { type ComponentType, useLayoutEffect } from 'react';
 import { Platform, ScrollView, View } from 'react-native';
@@ -36,7 +37,7 @@ function ReusablesPreview({
   standalone: boolean;
   padding: boolean;
   screen: boolean;
-}) {
+}): React.JSX.Element {
   useLayoutEffect(() => {
     applyTheme(themeId, mode);
   }, [themeId, mode]);
@@ -84,7 +85,7 @@ function ReusablesPreview({
 export function withReusablesPreview(
   Story: ComponentType,
   context: PreviewContext,
-) {
+): React.JSX.Element {
   return (
     <ReusablesPreview
       Story={Story}

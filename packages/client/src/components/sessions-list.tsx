@@ -7,6 +7,7 @@ import type {
   ProjectsListOutput,
   SessionInfo,
 } from '@repo/contracts';
+import type * as React from 'react';
 import {
   memo,
   type ReactElement,
@@ -42,7 +43,7 @@ const contentStyle = {
   paddingBottom: 28,
 };
 
-function entryKey(entry: SessionsListEntry) {
+function entryKey(entry: SessionsListEntry): string {
   return entry.id;
 }
 
@@ -63,7 +64,10 @@ export interface SessionsListProps {
 }
 
 // Which Project headings are collapsed, and the toggle for one.
-function useCollapsedProjects() {
+function useCollapsedProjects(): {
+  collapsed: ReadonlySet<string>;
+  toggleProject: (id: string) => void;
+} {
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const toggleProject = useCallback((id: string) => {
     setCollapsed((current) => {
@@ -77,7 +81,7 @@ function useCollapsedProjects() {
 }
 
 // A phone list sits at the screen's list inset, like every other phone list.
-function useContentStyle(wide: boolean) {
+function useContentStyle(wide: boolean): typeof contentStyle {
   const screenListInset = Number.parseFloat(
     String(useCSSVariable('--spacing-gutter-list')),
   );
@@ -89,7 +93,11 @@ function useContentStyle(wide: boolean) {
 }
 
 // When the next page starts loading while the reader is at the end, scrolls the loading footer into view.
-function useRevealLoadingFooter(isFetchingNextPage: boolean) {
+function useRevealLoadingFooter(isFetchingNextPage: boolean): {
+  scrollView: React.RefObject<ScrollView | null>;
+  trackAtEnd: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+  revealIfPending: () => void;
+} {
   const scrollView = useRef<ScrollView>(null);
   const atEnd = useRef(false);
   const revealPending = useRef(false);
@@ -114,7 +122,7 @@ function useRevealLoadingFooter(isFetchingNextPage: boolean) {
 }
 
 // On native, rows that move, appear or leave animate into place.
-function useAnimateReorder(entries: SessionsListEntry[]) {
+function useAnimateReorder(entries: SessionsListEntry[]): void {
   const entryOrder = entries.map((entry) => entry.id).join('|');
   const previousOrder = useRef(entryOrder);
   useLayoutEffect(() => {
@@ -138,7 +146,7 @@ export function SessionsList({
   onNewSession,
   onProjectSettings,
   header,
-}: SessionsListProps) {
+}: SessionsListProps): React.JSX.Element {
   const contentContainerStyle = useContentStyle(useWide());
   const loadingFooter = useRevealLoadingFooter(isFetchingNextPage);
   // The top fade shows once content has scrolled under the header.
@@ -238,7 +246,7 @@ export function SessionsList({
   );
 }
 
-function NoSessionsYet() {
+function NoSessionsYet(): React.JSX.Element {
   return (
     <Text className="pb-1 pl-session-name pr-1 text-xs leading-4 text-muted-foreground">
       No Sessions yet.
@@ -246,7 +254,7 @@ function NoSessionsYet() {
   );
 }
 
-function LoadingMoreSessions() {
+function LoadingMoreSessions(): React.JSX.Element {
   return (
     <View className="h-24 items-center justify-center">
       <ActivityIndicator
@@ -259,7 +267,10 @@ function LoadingMoreSessions() {
   );
 }
 
-function emptyListTitle(query: string, archived: boolean) {
+function emptyListTitle(
+  query: string,
+  archived: boolean,
+): 'No matching Sessions' | 'No archived Sessions' | 'No Projects yet' {
   if (query) return 'No matching Sessions';
   if (archived) return 'No archived Sessions';
   return 'No Projects yet';
@@ -271,7 +282,7 @@ function EmptySessionsList({
 }: {
   query: string;
   archived: boolean;
-}) {
+}): React.JSX.Element {
   return (
     <View className="items-center gap-1 px-4 py-8">
       <Text className="text-center text-sm font-medium">
@@ -289,7 +300,7 @@ function EmptySessionsList({
 
 const fadeSurface = 'bg-background wide:bg-sidebar';
 
-function ProjectEntrySeparator() {
+function ProjectEntrySeparator(): React.JSX.Element {
   return <View className="h-0 wide:h-0.5" />;
 }
 

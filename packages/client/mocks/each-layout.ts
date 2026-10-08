@@ -4,7 +4,9 @@ import { settleViewport } from './settle-viewport';
 export const layoutWidths = { phone: 390, wide: 1440 } as const;
 
 // Runs the assertion at phone and wide widths, in light and dark; outside the browser runner, once at the default size.
-export async function eachLayout(assertion: (wide: boolean) => Promise<void>) {
+export async function eachLayout(
+  assertion: (wide: boolean) => Promise<void>,
+): Promise<void> {
   if (!('__vitest_browser__' in globalThis)) {
     await assertion(false);
     return;

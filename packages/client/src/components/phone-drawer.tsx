@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import type { ReactNode } from 'react';
 import type { ViewStyle } from 'react-native';
 import { Drawer } from 'react-native-drawer-layout';
@@ -23,7 +24,7 @@ export function PhoneDrawer({
   onClosed: _onClosed,
   swipeEnabled = true,
   ...props
-}: PhoneDrawerProps) {
+}: PhoneDrawerProps): React.JSX.Element {
   return (
     <Drawer
       {...props}

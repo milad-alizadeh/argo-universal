@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import { useMemo, useRef } from 'react';
 import { PanResponder, View } from 'react-native';
 
@@ -24,7 +25,7 @@ export function PanelResizeHandle({
   edge = 'right',
   onChange,
   onDragStateChange,
-}: PanelResizeHandleProps) {
+}: PanelResizeHandleProps): React.JSX.Element {
   const startingWidth = useRef(value);
   const current = useRef({ value, direction, onChange, onDragStateChange });
   current.current = { value, direction, onChange, onDragStateChange };

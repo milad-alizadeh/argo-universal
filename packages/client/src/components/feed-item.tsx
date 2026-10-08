@@ -1,4 +1,5 @@
 import type { BlobRef } from '@repo/contracts';
+import type * as React from 'react';
 import { memo } from 'react';
 import type { FeedActivity, FeedViewItem } from '../feed/feed-view';
 import { AgentMessage } from './agent-message';
@@ -31,7 +32,7 @@ const FeedActivityRow = memo(function FeedActivityRow({
   return <ToolCallRow row={row} />;
 });
 
-const renderActivity = (activity: FeedActivity) => (
+const renderActivity = (activity: FeedActivity): React.JSX.Element => (
   <FeedActivityRow activity={activity} />
 );
 

@@ -65,5 +65,5 @@ export interface FeedView {
   plan: Plan | null;
 }
 
-export const feedItemKey = (item: FeedViewItem) =>
+export const feedItemKey = (item: FeedViewItem): string =>
   item.type === 'group' || item.type === 'exploration' ? item.id : item.row.id;
