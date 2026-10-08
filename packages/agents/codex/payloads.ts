@@ -17,17 +17,6 @@ validator.addSchema(schemas, 'protocol');
 export const isVendorMessage = validator.compile<VendorMessage>({
   $ref: 'protocol#/definitions/VendorMessage',
 });
-export const isModelListResponse = validator.compile<ModelListResponse>({
-  $ref: 'protocol#/definitions/ModelListResponse',
-});
-export const isThreadStartResponse = validator.compile<ThreadStartResponse>({
-  $ref: 'protocol#/definitions/ThreadStartResponse',
-});
-
-export const isAccountResponse = validator.compile<GetAccountResponse>({
-  $ref: 'protocol#/definitions/GetAccountResponse',
-});
-
 export const responseValidators: {
   [Method in keyof Requests]: ValidateFunction<Requests[Method][1]>;
 } = {
