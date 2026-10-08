@@ -6,13 +6,13 @@ import { expect } from 'storybook/test';
 import { createSessionCountsMock } from '../../mocks/session-counts-mock';
 import { sessionListMocks } from '../../mocks/session-list-mock';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
-import { PhoneLayout } from '../components/phone-layout';
-import type { ShellSection } from '../components/shell-sections';
 import {
   type NavigationDestination,
   NavigationProvider,
 } from '../navigation/context';
+import type { Section } from '../navigation/sections';
 import { sectionDestination, sectionOf } from '../navigation/sections';
+import { PhoneLayout } from './phone-layout';
 import { PhoneSectionScreen } from './phone-section-screen';
 
 const recorder = createNavigationRecorder();
@@ -22,7 +22,7 @@ const counts = createSessionCountsMock({ attention: 1, running: 1 });
 function NavigatingPhoneLayout({
   section,
 }: {
-  section: ShellSection;
+  section: Section;
 }): React.JSX.Element {
   const [destination, setDestination] = useState<NavigationDestination>(
     sectionDestination(section),

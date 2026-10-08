@@ -1,9 +1,9 @@
 import type { BlobRef, SessionNewInput } from '@repo/contracts';
 import { useRef, useState } from 'react';
-import { useBlobUpload } from '../trpc/use-blob-upload';
-import type { ComposerDraft } from './composer';
+import type { ComposerDraft } from '../components/composer';
 import { draftPrompt } from './draft-prompt';
 import { pickImages } from './pick-images';
+import { useBlobUpload } from './use-blob-upload';
 
 export interface ImageDraft {
   draft: ComposerDraft;
@@ -64,7 +64,7 @@ export function useImageDraft(): ImageDraft {
       return form;
     });
     if (!forms.length) return Promise.resolve([]);
-    return imageUpload.mutateAsync(forms).catch(() => undefined);
+    return imageUpload.mutateAsync(forms).catch((): undefined => {});
   }
 
   // Uploads the draft's images; undefined when any upload fails.

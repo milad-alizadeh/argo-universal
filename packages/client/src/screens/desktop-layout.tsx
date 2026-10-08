@@ -2,16 +2,19 @@ import { PortalHost } from '@rn-primitives/portal';
 import type * as React from 'react';
 import { type ReactNode, useState } from 'react';
 import { Text } from '#primitives/text';
+import { DesktopShell, type InspectorState } from '../components/desktop-shell';
+import {
+  detailActionsHost,
+  detailHeaderHost,
+} from '../components/session-header';
+import { shellSections } from '../components/shell-sections';
 import { type NavigationDestination, useNavigate } from '../navigation/context';
 import {
   destinationTitle,
   sectionDestination,
   sectionOf,
 } from '../navigation/sections';
-import { DesktopShell, type InspectorState } from './desktop-shell';
 import { useSectionList } from './section-list';
-import { detailActionsHost, detailHeaderHost } from './session-header';
-import { shellSections } from './shell-sections';
 import { useAttentionCount } from './use-attention-count';
 
 export interface DesktopLayoutProps {

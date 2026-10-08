@@ -28,9 +28,9 @@ import { settleViewport } from '../../mocks/settle-viewport';
 import type { FixtureOutput } from '../../mocks/trpc-mock-link';
 import { fails, pending } from '../../mocks/trpc-mock-link';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
-import { DesktopLayout } from '../components/desktop-layout';
 import { useConnection } from '../connection/context';
 import type { ConnectionActor } from '../connection/open-connection';
+import { DesktopLayout } from './desktop-layout';
 import { SessionsScreen } from './sessions-screen';
 
 const settingsPrompt = 'Build the settings screen';

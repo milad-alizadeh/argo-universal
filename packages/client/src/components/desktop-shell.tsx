@@ -9,6 +9,7 @@ import { useCSSVariable } from 'uniwind';
 import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
 import { Icon } from '../lib/icon';
+import type { Section } from '../navigation/sections';
 import { ContentLayout } from './content-layout';
 import { DesktopRail } from './desktop-rail';
 import { PanelResizeHandle } from './panel-resize-handle';
@@ -16,14 +17,13 @@ import { ScrollFadeView } from './scroll-fade';
 import { ShellHeaderActions } from './shell-header-actions';
 import { ShellHeaderContent } from './shell-header-content';
 import { ShellPane } from './shell-pane';
-import type { ShellSection } from './shell-sections';
 
 export interface DesktopShellProps {
-  selectedSection: ShellSection;
+  selectedSection: Section;
   attentionCount: number;
   sidebarShown: boolean;
   onSidebarShownChange: (shown: boolean) => void;
-  onSectionChange: (section: ShellSection) => void;
+  onSectionChange: (section: Section) => void;
   listHeader: ReactNode;
   list: ReactNode;
   detailHeader: ReactNode;

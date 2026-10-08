@@ -11,8 +11,8 @@ import {
   oversizedComposerImage,
 } from '../../mocks/composer-mock';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
+import { imageSelectionFailureMessage } from '../screens/use-image-draft';
 import { Composer } from './composer';
-import { imageSelectionFailureMessage } from './use-image-draft';
 
 const spacingAndColoursPrompt = 'Match the spacing and colours.';
 
