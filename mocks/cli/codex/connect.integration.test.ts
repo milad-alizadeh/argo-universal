@@ -17,7 +17,7 @@ import {
   type MockCliScenarioInput,
   mockCliScenarioEnvironment,
 } from '../mock-cli';
-import { findRecording } from '../recording';
+import { findRecording, readRecording, recordedFrames } from '../recording';
 import { writeMockCodex } from './write-mock-codex';
 
 const cleanups: (() => void | Promise<void>)[] = [];
@@ -59,13 +59,10 @@ it('starts another Turn before a cancelled Turn receives its late start response
     path.join(import.meta.dirname, 'recordings'),
     'interrupt',
   );
-  const envelope = JSON.parse(readFileSync(source, 'utf8')) as {
-    payload: {
-      messages: VendorMessage[];
-    };
-  };
+  const recording = readRecording(source, 'codex-app-server');
+  const messages = recordedFrames<VendorMessage>(recording.payload, 'messages');
   const identifiers = new Set(
-    envelope.payload.messages.flatMap((message): string[] => {
+    messages.flatMap((message): string[] => {
       if (
         message.method === 'turn/started' ||
         message.method === 'turn/completed'
@@ -79,19 +76,27 @@ it('starts another Turn before a cancelled Turn receives its late start response
       return [];
     }),
   );
-  const next = envelope.payload.messages.map((message): VendorMessage => {
+  const next = messages.map((message): VendorMessage => {
     let text = JSON.stringify(message);
     for (const id of identifiers) text = text.replaceAll(id, `${id}-next`);
     return JSON.parse(text);
   });
-  envelope.payload.messages.push(...next);
+  messages.push(...next);
   const recordingDirectory = path.join(
     directory,
     path.basename(path.dirname(source)),
   );
   mkdirSync(recordingDirectory);
   const repeated = path.join(recordingDirectory, 'two-turns.json');
-  writeFileSync(repeated, JSON.stringify(envelope));
+  writeFileSync(
+    repeated,
+    JSON.stringify({
+      producer: 'codex-app-server',
+      version: recording.version,
+      recordedAt: null,
+      payload: { messages },
+    }),
+  );
   writeFileSync(
     executable,
     readFileSync(executable, 'utf8').replace(source, repeated),

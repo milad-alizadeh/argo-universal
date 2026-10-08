@@ -1,5 +1,7 @@
 // Generated from codex-cli 0.157.0; run node packages/agents/codex/generate-protocol.ts.
 
+export const codexProtocolVersion = "0.157.0";
+
 export type ClientInfo = { name: string, title: string | null, version: string, };
 
 export type JsonValue = number | string | boolean | Array<JsonValue> | { [key in string]?: JsonValue } | null;

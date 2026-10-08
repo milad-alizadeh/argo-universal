@@ -1,3 +1,4 @@
+import path from 'node:path';
 import {
   startingValues,
   toConfigOptions,
@@ -7,13 +8,11 @@ import type {
   SDKControlResponse,
 } from '../../../packages/agents/claude/messages';
 import { recordedImagePrompt } from '../image';
-import { readRecording, recordedFrames } from '../recording';
+import { findRecording, readRecording, recordedFrames } from '../recording';
 
 const initialization = recordedFrames<SDKControlResponse>(
   readRecording(
-    fileURLToPath(
-      new URL('./recordings/2.1.286/image-prompt.json', import.meta.url),
-    ),
+    findRecording(path.join(import.meta.dirname, 'recordings'), 'image-prompt'),
     'claude-cli',
   ).payload,
   'output',
@@ -50,5 +49,3 @@ export function newSessionMock(): NewSessionMock {
     prompt: recordedImagePrompt,
   };
 }
-
-import { fileURLToPath } from 'node:url';
