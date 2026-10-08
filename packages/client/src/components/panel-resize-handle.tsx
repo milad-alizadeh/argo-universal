@@ -1,6 +1,11 @@
 import type * as React from 'react';
-import { useMemo, useRef } from 'react';
-import { PanResponder, View } from 'react-native';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import {
+  type GestureResponderEvent,
+  type PanResponderGestureState,
+  PanResponder,
+  View,
+} from 'react-native';
 
 // How far one arrow key or accessibility action moves the edge, in points.
 const keyboardStep = 16;
@@ -26,27 +31,12 @@ export function PanelResizeHandle({
   onChange,
   onDragStateChange,
 }: PanelResizeHandleProps): React.JSX.Element {
-  const startingWidth = useRef(value);
-  const current = useRef({ value, direction, onChange, onDragStateChange });
-  current.current = { value, direction, onChange, onDragStateChange };
-  const responder = useMemo(
-    () =>
-      PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
-        onPanResponderGrant: () => {
-          startingWidth.current = current.current.value;
-          current.current.onDragStateChange?.(true);
-        },
-        onPanResponderRelease: () => current.current.onDragStateChange?.(false),
-        onPanResponderTerminate: () =>
-          current.current.onDragStateChange?.(false),
-        onPanResponderMove: (_event, gesture) =>
-          current.current.onChange(
-            startingWidth.current + gesture.dx * current.current.direction,
-          ),
-      }),
-    [],
-  );
+  const responder = useResizeResponder({
+    value,
+    direction,
+    onChange,
+    onDragStateChange,
+  });
   return (
     <View
       {...responder.panHandlers}
@@ -72,4 +62,64 @@ export function PanelResizeHandle({
       }
     />
   );
+}
+
+function useResizeGestureHandlers({
+  value,
+  direction,
+  onChange,
+  onDragStateChange,
+}: Pick<
+  PanelResizeHandleProps,
+  'value' | 'direction' | 'onChange' | 'onDragStateChange'
+>): Pick<
+  Parameters<typeof PanResponder.create>[0],
+  | 'onPanResponderGrant'
+  | 'onPanResponderRelease'
+  | 'onPanResponderTerminate'
+  | 'onPanResponderMove'
+> {
+  const startingWidth = useRef(value);
+  const current = useRef({ value, direction, onChange, onDragStateChange });
+  useLayoutEffect(() => {
+    current.current = { value, direction, onChange, onDragStateChange };
+  }, [value, direction, onChange, onDragStateChange]);
+  const grant = useCallback(() => {
+    startingWidth.current = current.current.value;
+    current.current.onDragStateChange?.(true);
+  }, []);
+  const release = useCallback(
+    () => current.current.onDragStateChange?.(false),
+    [],
+  );
+  const move = useCallback(
+    (_event: GestureResponderEvent, gesture: PanResponderGestureState) => {
+      current.current.onChange(
+        startingWidth.current + gesture.dx * current.current.direction,
+      );
+    },
+    [],
+  );
+  return {
+    onPanResponderGrant: grant,
+    onPanResponderRelease: release,
+    onPanResponderTerminate: release,
+    onPanResponderMove: move,
+  };
+}
+
+function useResizeResponder(
+  props: Pick<
+    PanelResizeHandleProps,
+    'value' | 'direction' | 'onChange' | 'onDragStateChange'
+  >,
+): ReturnType<typeof PanResponder.create> {
+  const handlers = useResizeGestureHandlers(props);
+  const [responder] = useState(() =>
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      ...handlers,
+    }),
+  );
+  return responder;
 }

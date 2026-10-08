@@ -54,11 +54,13 @@ export function ListSearch({
   const progress = useSharedValue(0);
 
   useEffect(() => {
-    progress.value = withTiming(searching ? 1 : 0, {
-      duration: searching ? motionDuration.shellPane : closeMilliseconds,
-      easing: bezierEasing(easingCurve.decelerate),
-      reduceMotion: ReduceMotion.System,
-    });
+    progress.set(
+      withTiming(searching ? 1 : 0, {
+        duration: searching ? motionDuration.shellPane : closeMilliseconds,
+        easing: bezierEasing(easingCurve.decelerate),
+        reduceMotion: ReduceMotion.System,
+      }),
+    );
     if (!searching) {
       input.current?.blur();
       return;
@@ -69,17 +71,17 @@ export function ListSearch({
 
   const titleStyle = useAnimatedStyle(
     () => ({
-      opacity: 1 - progress.value,
-      transform: [{ translateX: -titleShift * progress.value }],
+      opacity: 1 - progress.get(),
+      transform: [{ translateX: -titleShift * progress.get() }],
     }),
     [progress],
   );
   const surfaceStyle = useAnimatedStyle(
     () => ({
-      width: buttonSize + (width - buttonSize) * progress.value,
+      width: buttonSize + (width - buttonSize) * progress.get(),
       borderRadius:
-        buttonSize / 2 + (fieldRadius - buttonSize / 2) * progress.value,
-      opacity: progress.value,
+        buttonSize / 2 + (fieldRadius - buttonSize / 2) * progress.get(),
+      opacity: progress.get(),
     }),
     [buttonSize, width, progress],
   );
@@ -88,21 +90,21 @@ export function ListSearch({
       transform: [
         {
           translateX:
-            -(width - buttonSize / 2 - fieldIconCentre) * progress.value,
+            -(width - buttonSize / 2 - fieldIconCentre) * progress.get(),
         },
-        { scale: 1 + (fieldIconSize / iconSize - 1) * progress.value },
+        { scale: 1 + (fieldIconSize / iconSize - 1) * progress.get() },
       ],
     }),
     [buttonSize, iconSize, fieldIconSize, width, progress],
   );
   const closeStyle = useAnimatedStyle(
     () => ({
-      opacity: progress.value,
+      opacity: progress.get(),
       transform: [
-        { rotate: `${-quarterTurnDegrees * (1 - progress.value)}deg` },
+        { rotate: `${-quarterTurnDegrees * (1 - progress.get())}deg` },
         {
           scale:
-            closeIconStartScale + (1 - closeIconStartScale) * progress.value,
+            closeIconStartScale + (1 - closeIconStartScale) * progress.get(),
         },
       ],
     }),

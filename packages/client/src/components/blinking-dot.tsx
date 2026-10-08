@@ -31,18 +31,20 @@ export function BlinkingDot({
   const { backgroundColor } = useResolveClassNames(colorClassName);
   const opacity = useSharedValue(1);
   useEffect(() => {
-    opacity.value = blinking
-      ? withRepeat(
-          withTiming(dimmedOpacity, { duration: blinkMilliseconds }),
-          -1,
-          true,
-        )
-      : 1;
+    opacity.set(
+      blinking
+        ? withRepeat(
+            withTiming(dimmedOpacity, { duration: blinkMilliseconds }),
+            -1,
+            true,
+          )
+        : 1,
+    );
     return (): void => cancelAnimation(opacity);
   }, [blinking, opacity]);
   const style = useAnimatedStyle(
     () => ({
-      opacity: opacity.value,
+      opacity: opacity.get(),
       boxShadow: blinking
         ? [
             {

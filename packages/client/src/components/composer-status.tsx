@@ -143,16 +143,18 @@ export function ComposerPlan({
   const [stepsHeight, setStepsHeight] = useState(0);
   const revealHeight = useSharedValue(0);
   useEffect(() => {
-    revealHeight.value = withTiming(expanded ? stepsHeight : 0, {
-      duration: 200,
-      easing: Easing.out(Easing.cubic),
-    });
+    revealHeight.set(
+      withTiming(expanded ? stepsHeight : 0, {
+        duration: 200,
+        easing: Easing.out(Easing.cubic),
+      }),
+    );
     return (): void => cancelAnimation(revealHeight);
   }, [expanded, stepsHeight, revealHeight]);
   const revealStyle = useAnimatedStyle(
     () => ({
-      height: revealHeight.value,
-      opacity: revealHeight.value === 0 ? 0 : 1,
+      height: revealHeight.get(),
+      opacity: revealHeight.get() === 0 ? 0 : 1,
     }),
     [revealHeight],
   );
@@ -282,17 +284,19 @@ export function ComposerPlan({
 function NativePlanSpinner({ label }: { label: string }): React.JSX.Element {
   const rotation = useSharedValue(0);
   useEffect(() => {
-    rotation.value = withRepeat(
-      withTiming(fullTurnDegrees, {
-        duration: spinnerTurnMilliseconds,
-        easing: Easing.linear,
-      }),
-      -1,
+    rotation.set(
+      withRepeat(
+        withTiming(fullTurnDegrees, {
+          duration: spinnerTurnMilliseconds,
+          easing: Easing.linear,
+        }),
+        -1,
+      ),
     );
     return (): void => cancelAnimation(rotation);
   }, [rotation]);
   const style = useAnimatedStyle(
-    () => ({ transform: [{ rotate: `${rotation.value}deg` }] }),
+    () => ({ transform: [{ rotate: `${rotation.get()}deg` }] }),
     [rotation],
   );
   return (

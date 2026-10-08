@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import type { ShellPaneProps } from './shell-pane';
 
@@ -23,27 +23,39 @@ export function ShellPane({
   const reflows = contentWidth === undefined;
   const surface = useRef<HTMLDivElement>(null);
   const motion = useRef<Animation[]>([]);
-  const previous = useRef({
+  const [held, setHeld] = useState({
     width,
     offset,
     contentWidth: contentWidth ?? width,
     transitionKey,
     frameWidth: Math.max(width, contentWidth ?? width),
   });
+  const previous = useRef(held);
   const stableContentWidth =
-    contentWidth ?? (width > 0 ? width : previous.current.contentWidth);
+    contentWidth ?? (width > 0 ? width : held.contentWidth);
   // The frame keeps its width until the transition, width or content width changes, so a running animation's clip holds.
   const unchanged =
-    previous.current.transitionKey === transitionKey &&
-    previous.current.width === width &&
-    previous.current.contentWidth === stableContentWidth;
+    held.transitionKey === transitionKey &&
+    held.width === width &&
+    held.contentWidth === stableContentWidth;
   const frameWidth = unchanged
-    ? previous.current.frameWidth
-    : Math.max(width, previous.current.width, stableContentWidth);
-  const surfaceWidth = Math.max(
-    1,
-    width || previous.current.width || stableContentWidth,
-  );
+    ? held.frameWidth
+    : Math.max(width, held.width, stableContentWidth);
+  const surfaceWidth = Math.max(1, width || held.width || stableContentWidth);
+
+  if (
+    held.width !== width ||
+    held.offset !== offset ||
+    held.contentWidth !== stableContentWidth ||
+    held.transitionKey !== transitionKey
+  )
+    setHeld({
+      width,
+      offset,
+      contentWidth: stableContentWidth,
+      transitionKey,
+      frameWidth,
+    });
 
   useLayoutEffect(() => {
     const element = viewport.current;

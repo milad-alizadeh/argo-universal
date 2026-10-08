@@ -57,7 +57,7 @@ export const SessionRow = memo(function SessionRow({
   );
   const logoRotation = useSharedValue(0);
   useEffect(() => {
-    logoRotation.value =
+    logoRotation.set(
       session.status === 'running'
         ? withRepeat(
             withTiming(fullTurnDegrees, {
@@ -66,11 +66,12 @@ export const SessionRow = memo(function SessionRow({
             }),
             -1,
           )
-        : 0;
+        : 0,
+    );
     return (): void => cancelAnimation(logoRotation);
   }, [session.status, logoRotation]);
   const logoStyle = useAnimatedStyle(
-    () => ({ transform: [{ rotate: `${logoRotation.value}deg` }] }),
+    () => ({ transform: [{ rotate: `${logoRotation.get()}deg` }] }),
     [logoRotation],
   );
   const markSurface = selected

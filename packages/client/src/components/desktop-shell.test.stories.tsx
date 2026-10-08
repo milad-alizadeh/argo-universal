@@ -905,13 +905,13 @@ export const InspectorFadesIntoTheAppBackground: Story = {
     );
     inspector.scrollTop = 60;
     const title = canvas.getByTestId('desktop-inspector-title');
-    await waitFor(() => {
+    await waitFor(async () => {
       const fade = inspector.parentElement?.querySelector(
         ':scope > [data-testid="scroll-fade-top"]',
       );
-      expect(fade).toBeTruthy();
+      await expect(fade).toBeTruthy();
       if (!fade) return;
-      expect(fade.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+      await expect(fade.getBoundingClientRect().top).toBeGreaterThanOrEqual(
         title.getBoundingClientRect().bottom - 1,
       );
       expectFadeColor(fade, canvas.getByTestId('desktop-panel'));

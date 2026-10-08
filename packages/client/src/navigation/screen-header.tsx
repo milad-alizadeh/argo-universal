@@ -2,6 +2,7 @@ import type * as React from 'react';
 import {
   type ComponentType,
   createContext,
+  createElement,
   type ReactElement,
   type ReactNode,
   useContext,
@@ -46,5 +47,5 @@ export function ScreenHeader(
   props: ScreenHeaderProps,
 ): React.JSX.Element | null {
   const Header = useContext(ScreenHeaderContext);
-  return Header ? <Header {...props} /> : null;
+  return Header ? createElement(Header, props) : null;
 }

@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { type ReactNode, useEffect, useRef } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import Animated, {
   ReduceMotion,
@@ -33,28 +33,30 @@ export function ShellPane({
   header,
   children,
 }: ShellPaneProps): React.JSX.Element {
-  const lastContentWidth = useRef(contentWidth ?? width);
+  const [lastContentWidth, setLastContentWidth] = useState(
+    contentWidth ?? width,
+  );
   const stableContentWidth =
-    contentWidth ?? (width > 0 ? width : lastContentWidth.current);
-  useEffect(() => {
-    lastContentWidth.current = stableContentWidth;
-  }, [stableContentWidth]);
+    contentWidth ?? (width > 0 ? width : lastContentWidth);
+  if (lastContentWidth !== stableContentWidth)
+    setLastContentWidth(stableContentWidth);
   const animatedWidth = useSharedValue(width);
   const previousTransition = useRef(transitionKey);
   useEffect(() => {
-    animatedWidth.value =
+    animatedWidth.set(
       !animate || previousTransition.current === transitionKey
         ? width
         : withTiming(width, {
             duration: motionDuration.shellPane,
             easing: bezierEasing(easingCurve.decelerate),
             reduceMotion: ReduceMotion.System,
-          });
+          }),
+    );
     previousTransition.current = transitionKey;
   }, [animatedWidth, width, transitionKey, animate]);
   const animatedStyle = useAnimatedStyle(
     () => ({
-      width: animatedWidth.value,
+      width: animatedWidth.get(),
     }),
     [animatedWidth],
   );
