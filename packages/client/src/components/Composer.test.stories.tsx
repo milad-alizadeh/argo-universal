@@ -938,7 +938,12 @@ function sessionControls(width: number): Story {
       ).not.toBeInTheDocument();
       await userEvent.keyboard('{Escape}');
       await expect(args.onStop).not.toHaveBeenCalled();
-      await userEvent.click(canvas.getByRole('button', { name: 'Stop' }));
+      const stop = canvas.getByRole('button', { name: 'Stop' });
+      await expect(stop).toBeEnabled();
+      await expect(
+        canvas.queryByRole('button', { name: 'Send' }),
+      ).not.toBeInTheDocument();
+      await userEvent.click(stop);
       await expect(args.onStop).toHaveBeenCalledOnce();
       await expect(
         canvas.queryByRole('button', { name: 'Stop' }),
@@ -949,11 +954,97 @@ function sessionControls(width: number): Story {
 export const SessionControlsPhone = sessionControls(layoutWidths.phone);
 export const SessionControlsWide = sessionControls(layoutWidths.wide);
 
+function stopPrecedence(
+  width: number,
+  agentIndex: number,
+  disabled: boolean,
+): Story {
+  const catalog = pickerCatalogs[agentIndex];
+  if (!catalog)
+    throw new Error(`Recorded catalog needs an Agent at index ${agentIndex}.`);
+  return {
+    args: {
+      draft: {
+        text: 'A draft during a Turn.',
+        images: [oversizedComposerImage],
+      },
+      sending: true,
+      disabled,
+      sendable: false,
+      onStop: fn(),
+      configuration: {
+        agents: newSessionCatalogs.bothAvailable,
+        agent: catalog.agent.agent,
+        configOptions: catalog.agent.configOptions,
+        onConfigChange: fn(),
+        checkout: { branch: 'main', newWorktree: false },
+        turnRunning: true,
+      },
+    },
+    play: async ({ canvas, userEvent, args }): Promise<void> => {
+      await settleViewport(width);
+      const stop = canvas.getByRole('button', { name: 'Stop' });
+      await expect(stop).toHaveProperty('disabled', disabled);
+      await expect(
+        canvas.queryByRole('button', { name: 'Send' }),
+      ).not.toBeInTheDocument();
+      await expect(
+        canvas.queryByRole('progressbar', { name: 'Sending' }),
+      ).not.toBeInTheDocument();
+      if (!disabled) await userEvent.click(stop);
+      await expect(args.onStop).toHaveBeenCalledTimes(disabled ? 0 : 1);
+      await expect(args.onSend).not.toHaveBeenCalled();
+    },
+  };
+}
+export const StopPrecedenceClaudePhone = stopPrecedence(
+  layoutWidths.phone,
+  0,
+  false,
+);
+export const StopPrecedenceClaudeWide = stopPrecedence(
+  layoutWidths.wide,
+  0,
+  false,
+);
+export const StopPrecedenceCodexPhone = stopPrecedence(
+  layoutWidths.phone,
+  1,
+  false,
+);
+export const StopPrecedenceCodexWide = stopPrecedence(
+  layoutWidths.wide,
+  1,
+  false,
+);
+export const DisabledStopClaudePhone = stopPrecedence(
+  layoutWidths.phone,
+  0,
+  true,
+);
+export const DisabledStopClaudeWide = stopPrecedence(
+  layoutWidths.wide,
+  0,
+  true,
+);
+export const DisabledStopCodexPhone = stopPrecedence(
+  layoutWidths.phone,
+  1,
+  true,
+);
+export const DisabledStopCodexWide = stopPrecedence(layoutWidths.wide, 1, true);
+
 export const RunningWithoutStop: Story = {
   render: (args) => <ComposerMock {...args} sessionStarted running />,
   args: { draft: { text: 'A draft during a Turn.', images: [] } },
   play: async ({ canvas, args }) => {
     await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
+    await expect(
+      canvas.queryByRole('button', { name: 'Stop' }),
+    ).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByRole('progressbar', { name: 'Sending' }),
+    ).not.toBeInTheDocument();
     await expect(args.onSend).not.toHaveBeenCalled();
   },
 };
