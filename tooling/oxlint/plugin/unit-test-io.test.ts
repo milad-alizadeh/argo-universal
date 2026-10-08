@@ -45,11 +45,11 @@ interface TestCase {
 interface RejectedCase extends TestCase {
   errors: { messageId: string }[];
 }
-const allowed = (code: string): TestCase => ({
+const createIntegrationCase = (code: string): TestCase => ({
   code,
   filename: integrationFilename,
 });
-const rejected = (code: string): RejectedCase => ({
+const createRejectedCase = (code: string): RejectedCase => ({
   code,
   filename: unitFilename,
   errors: [{ messageId: 'unitTestIo' }],
@@ -57,7 +57,7 @@ const rejected = (code: string): RejectedCase => ({
 
 ruleTester.run('unit-test-io', unitTestIo, {
   valid: [
-    ...forbidden.map(allowed),
+    ...forbidden.map(createIntegrationCase),
     { code: 'const today = new Date(0);', filename: unitFilename },
     { code: 'const started = input.now();', filename: unitFilename },
     { code: "import { join } from 'node:path';", filename: unitFilename },
@@ -72,8 +72,14 @@ ruleTester.run('unit-test-io', unitTestIo, {
     },
   ],
   invalid: [
-    ...forbidden.map(rejected),
-    { ...rejected(ambientReads[0] ?? ''), filename: '/repo/example.test.mts' },
-    { ...rejected(ambientReads[0] ?? ''), filename: '/repo/example.test.tsx' },
+    ...forbidden.map(createRejectedCase),
+    {
+      ...createRejectedCase(ambientReads[0] ?? ''),
+      filename: '/repo/example.test.mts',
+    },
+    {
+      ...createRejectedCase(ambientReads[0] ?? ''),
+      filename: '/repo/example.test.tsx',
+    },
   ],
 });

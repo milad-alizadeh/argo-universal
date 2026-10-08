@@ -19,7 +19,7 @@ type NodeTestOptions = Pick<
   'include' | 'testTimeout' | 'expect'
 >;
 
-const unitProject = (
+const createUnitProject = (
   options: NodeTestOptions,
 ): TestProjectInlineConfiguration => ({
   extends: false,
@@ -31,7 +31,7 @@ const unitProject = (
     setupFiles: [fileURLToPath(new URL('./unit-setup.ts', import.meta.url))],
   },
 });
-const integrationProject = (
+const createIntegrationProject = (
   options: NodeTestOptions,
 ): TestProjectInlineConfiguration => ({
   extends: false,
@@ -43,9 +43,9 @@ const integrationProject = (
   },
 });
 
-export const nodeProjects = (
+export const createNodeTestProjects = (
   options: NodeTestOptions = {},
 ): TestProjectInlineConfiguration[] => [
-  unitProject(options),
-  integrationProject(options),
+  createUnitProject(options),
+  createIntegrationProject(options),
 ];

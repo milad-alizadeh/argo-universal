@@ -1,6 +1,6 @@
 import { defineProject } from 'vitest/config';
-import { nodeProjects } from './node.ts';
+import { createNodeTestProjects } from './node.ts';
 
 export default defineProject({
-  test: { projects: nodeProjects() },
+  test: { projects: createNodeTestProjects() },
 });

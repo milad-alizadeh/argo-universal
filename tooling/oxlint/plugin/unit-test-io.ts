@@ -10,7 +10,7 @@ const workspaceResources = /^@repo\/(?:db|git)(?:\/|$)/;
 const isResource = (source: string): boolean =>
   nodeResources.test(source) || workspaceResources.test(source);
 
-const memberName = (node: ESTree.MemberExpression): string => {
+const readMemberName = (node: ESTree.MemberExpression): string => {
   if (node.computed) return stringValue(node.property);
   return node.property.type === 'Identifier' ? node.property.name : '';
 };
@@ -21,7 +21,7 @@ const isNamedObject = (node: ESTree.Node, name: string): boolean =>
 const isRead = (node: ESTree.Node, object: string, property: string): boolean =>
   node.type === 'MemberExpression' &&
   isNamedObject(node.object, object) &&
-  memberName(node) === property;
+  readMemberName(node) === property;
 
 const readsClock = (node: ESTree.CallExpression): boolean =>
   isRead(node.callee, 'Date', 'now') ||
