@@ -1,3 +1,4 @@
+import type { RequestMock } from '@repo/api/mocks';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, within } from 'storybook/test';
 import {
@@ -320,4 +321,3 @@ function clearOptionalNumber(width: number): Story {
 }
 export const ClearOptionalNumberPhone = clearOptionalNumber(390);
 export const ClearOptionalNumberWide = clearOptionalNumber(1440);
-import type { RequestMock } from '@repo/api/mocks';
