@@ -9,11 +9,11 @@ import { keyboardAvoidingStyle, Screen } from '#components/screen';
 import { StartSessionIn } from '#components/start-session-in';
 import { Text } from '#primitives/text';
 import { useContentWide } from '../components/content-layout';
+import { useImageDraft } from '../components/use-image-draft';
 import { useConnectionState } from '../connection/context';
-import { useAgents } from '../lib/use-agents';
-import { useImageDraft } from '../lib/use-image-draft';
 import { useNavigate } from '../navigation/context';
 import { useTRPC } from '../trpc/context';
+import { useAgents } from '../trpc/use-agents';
 
 export interface NewSessionScreenProps {
   // The Project whose heading + opened this page.
@@ -284,7 +284,6 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
             error={
               agent && !agentAvailable ? agent.installStep : send.sendError
             }
-            phoneCheckout={false}
             configuration={{
               agents: agents.data,
               agent: agent?.agent ?? '',

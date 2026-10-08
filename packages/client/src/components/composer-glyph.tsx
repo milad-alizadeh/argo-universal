@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { withUniwind } from 'uniwind';
-import { type IconSize, iconSizeClasses } from './icon';
+import { type IconSize, iconSizeClasses } from '../lib/icon';
 
 const ThemedSvg = withUniwind(Svg, {
   stroke: { fromClassName: 'className', styleProperty: 'color' },

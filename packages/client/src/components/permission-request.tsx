@@ -7,8 +7,8 @@ import { Platform, View } from 'react-native';
 import { cn } from '#lib/utils';
 import { Text } from '#primitives/text';
 import { Textarea } from '#primitives/textarea';
+import { Icon } from '../lib/icon';
 import { useContentWide } from './content-layout';
-import { Icon } from './icon';
 import { RequestAction, RequestCard, type RequestState } from './request-card';
 
 export type PermissionAnswer = Pick<

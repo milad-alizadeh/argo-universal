@@ -21,7 +21,7 @@ import { fullTurnDegrees } from '#lib/motion';
 import { Text } from '#primitives/text';
 import { formatElapsed, millisecondsPerSecond } from '../feed/format-elapsed';
 import { useClock } from '../feed/use-clock';
-import { Icon } from './icon';
+import { Icon } from '../lib/icon';
 import { ShimmerText } from './shimmer-text';
 import { StatusIndicator } from './status-indicator';
 import { toolCallIcon } from './tool-call-icon';

@@ -11,11 +11,11 @@ import { Button } from '#primitives/button';
 import { Collapsible, CollapsibleContent } from '#primitives/collapsible';
 import { Text, TextClassContext } from '#primitives/text';
 import { type FileDiff, toFileDiffs } from '../feed/file-diff';
+import { Icon } from '../lib/icon';
 import { DiffView } from './diff-view';
 import { DisclosureCaret } from './disclosure-caret';
 import { FileName } from './file-name';
 import { fileTypeIcon } from './file-type-icon';
-import { Icon } from './icon';
 
 export interface EditRowProps {
   row: ToolCallUpdate;

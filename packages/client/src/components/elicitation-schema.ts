@@ -14,16 +14,14 @@ export type ElicitationFormValues = Record<
 const validator = addFormats(new Ajv({ allErrors: true, strict: false }));
 
 export function elicitationChoices(property: ElicitationPropertySchema) {
-  if (property.type === 'string')
-    return (
-      property.oneOf ??
-      property.enum?.map((value) => ({ const: value, title: value }))
-    );
   if (property.type === 'array')
     return 'anyOf' in property.items
       ? property.items.anyOf
       : property.items.enum.map((value) => ({ const: value, title: value }));
-  return;
+  return property.type === 'string'
+    ? (property.oneOf ??
+        property.enum?.map((value) => ({ const: value, title: value })))
+    : undefined;
 }
 
 function errorMessage(error: ErrorObject, property: ElicitationPropertySchema) {

@@ -1,4 +1,6 @@
+import { newSessionCatalogs } from '@repo/api/mocks';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type { ComponentProps } from 'react';
 import { Platform, ScrollView, View } from 'react-native';
 import { action } from 'storybook/actions';
 import {
@@ -8,17 +10,24 @@ import {
   oversizedComposerImage,
 } from '../../mocks/composer-mock';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
-import { imageSelectionFailureMessage } from '../lib/use-image-draft';
-import { Composer } from './composer';
+import { imageSelectionFailureMessage } from './use-image-draft';
+
+function ComposerPreview(args: ComponentProps<typeof ComposerMock>) {
+  return <ComposerMock key={args.initialAgent} {...args} />;
+}
+
+const [firstAgent] = newSessionCatalogs.bothAvailable;
+if (!firstAgent) throw new Error('Recorded catalog needs an available Agent.');
 
 const meta = {
   title: 'Sessions/Composer',
-  component: Composer,
+  component: ComposerPreview,
   parameters: {
     previewPadding: false,
     screenPreview: Platform.OS !== 'web',
   },
   args: {
+    initialAgent: firstAgent.agent,
     draft: { text: '', images: [] },
     onDraftChange: action('edit draft'),
     onAttachImages: action('attach images'),
@@ -27,7 +36,22 @@ const meta = {
     onCreateGoal: action('create goal'),
     onSend: action('send prompt'),
   },
-} satisfies Meta<typeof Composer>;
+  argTypes: {
+    initialAgent: {
+      name: 'Agent',
+      options: newSessionCatalogs.bothAvailable.map((agent) => agent.agent),
+      control: {
+        type: 'select',
+        labels: Object.fromEntries(
+          newSessionCatalogs.bothAvailable.map((agent) => [
+            agent.agent,
+            agent.label,
+          ]),
+        ),
+      },
+    },
+  },
+} satisfies Meta<typeof ComposerPreview>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
@@ -39,7 +63,7 @@ export const ImageSelectionFailed: Story = {
   render: (args) => (
     <View className="w-full items-center p-4">
       <View className="w-full max-w-composer">
-        <ComposerMock {...args} />
+        <ComposerPreview {...args} />
       </View>
     </View>
   ),
@@ -53,16 +77,16 @@ export const Overview: Story = {
         <View className="w-full max-w-composer">
           <Variations className="max-w-none">
             <Variation label="Empty">
-              <ComposerMock {...args} />
+              <ComposerPreview {...args} />
             </Variation>
             <Variation label="Typing">
-              <ComposerMock
+              <ComposerPreview
                 {...args}
                 draft={{ text: 'Match the spacing and colours.', images: [] }}
               />
             </Variation>
             <Variation label="Multi-line">
-              <ComposerMock
+              <ComposerPreview
                 {...args}
                 draft={{
                   text: 'Match the spacing and colours.\nKeep the phone layout readable.\nUse the shared light and dark themes.',
@@ -71,7 +95,7 @@ export const Overview: Story = {
               />
             </Variation>
             <Variation label="Scrollable draft">
-              <ComposerMock
+              <ComposerPreview
                 {...args}
                 draft={{
                   text: 'First line\nSecond line\nThird line\nFourth line\nFifth line\nSixth line',
@@ -80,7 +104,7 @@ export const Overview: Story = {
               />
             </Variation>
             <Variation label="Images attached">
-              <ComposerMock
+              <ComposerPreview
                 {...args}
                 draft={{
                   text: 'Match these screenshots.',
@@ -89,7 +113,7 @@ export const Overview: Story = {
               />
             </Variation>
             <Variation label="Image too large">
-              <ComposerMock
+              <ComposerPreview
                 {...args}
                 draft={{
                   text: 'Match these screenshots.',
@@ -98,21 +122,21 @@ export const Overview: Story = {
               />
             </Variation>
             <Variation label="Sending">
-              <ComposerMock
+              <ComposerPreview
                 {...args}
                 draft={{ text: 'Match the spacing and colours.', images: [] }}
                 sending
               />
             </Variation>
             <Variation label="Disabled">
-              <ComposerMock
+              <ComposerPreview
                 {...args}
                 draft={{ text: 'Match the spacing and colours.', images: [] }}
                 disabled
               />
             </Variation>
             <Variation label="Turn running">
-              <ComposerMock
+              <ComposerPreview
                 {...args}
                 sessionStarted
                 running
@@ -120,13 +144,17 @@ export const Overview: Story = {
               />
             </Variation>
             <Variation label="In a Session">
-              <ComposerMock {...args} sessionStarted />
+              <ComposerPreview {...args} sessionStarted />
             </Variation>
             <Variation label="Plan done">
-              <ComposerMock {...args} sessionStarted plan={composerPlanDone} />
+              <ComposerPreview
+                {...args}
+                sessionStarted
+                plan={composerPlanDone}
+              />
             </Variation>
             <Variation label="No Plan">
-              <ComposerMock {...args} sessionStarted plan={[]} />
+              <ComposerPreview {...args} sessionStarted plan={[]} />
             </Variation>
           </Variations>
         </View>

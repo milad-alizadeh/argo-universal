@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./agent": "./agent/adapter.ts",
+    "./agent/*": "./agent/*.ts",
     "./cli": "./cli/index.ts",
     "./cli/*": "./cli/*.ts"
   },

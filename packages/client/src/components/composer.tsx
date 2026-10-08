@@ -12,6 +12,7 @@ import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
 import { Textarea } from '#primitives/textarea';
+import { Icon, IconSpinner } from '../lib/icon';
 import {
   ComposerAgentModelControl,
   ComposerCheckoutControl,
@@ -27,7 +28,6 @@ import {
   ComposerWorkChips,
 } from './composer-status';
 import { useContentWide } from './content-layout';
-import { Icon, IconSpinner } from './icon';
 import {
   PlanProposalCard,
   type PlanProposalCardProps,
@@ -73,8 +73,6 @@ export interface ComposerProps {
   sendable?: boolean;
   // Shown in the Composer's warning line, as when a New Session fails to start.
   error?: string;
-  // False when the page draws the checkout itself, as New Session does on a phone.
-  phoneCheckout?: boolean;
 }
 
 export function Composer({
@@ -95,7 +93,6 @@ export function Composer({
   disabled = false,
   sendable = true,
   error,
-  phoneCheckout = true,
 }: ComposerProps) {
   const wide = useContentWide();
   const [attachHighlighted, setAttachHighlighted] = useState(false);
@@ -139,29 +136,13 @@ export function Composer({
   return (
     <View className="w-full max-w-composer items-center">
       {!wide &&
-        ((phoneCheckout &&
-          !configuration?.checkout.path &&
-          configuration?.checkout.onNewWorktreeChange) ||
-          status?.plan?.length ||
-          status?.subagents ||
-          status?.shells) && (
+        (status?.plan?.length || status?.subagents || status?.shells) && (
           <View className="min-h-7 max-w-full mb-1 flex-row flex-wrap items-center justify-center gap-2">
-            {phoneCheckout &&
-            !configuration?.checkout.path &&
-            configuration?.checkout.onNewWorktreeChange ? (
-              <ComposerCheckoutControl
-                checkout={configuration.checkout}
-                disabled={inactive}
-              />
-            ) : (
-              <>
-                {!!status?.plan?.length && (
-                  <ComposerPlan entries={status.plan} disabled={inactive} />
-                )}
-                {status && (
-                  <ComposerWorkChips status={status} disabled={inactive} />
-                )}
-              </>
+            {!!status?.plan?.length && (
+              <ComposerPlan entries={status.plan} disabled={inactive} />
+            )}
+            {status && (
+              <ComposerWorkChips status={status} disabled={inactive} />
             )}
           </View>
         )}
