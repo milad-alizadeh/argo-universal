@@ -45,7 +45,7 @@ export const FadesMatchSurface: Story = {
     const scroll = await canvas.findByTestId('scroll-fade-scroll');
     scroll.scrollTop = 120;
     const top = await canvas.findByTestId('scroll-fade-top');
-    expectFadeColor(top);
+    await expectFadeColor(top);
   },
 };
 

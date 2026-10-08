@@ -384,7 +384,7 @@ export const AttachmentInNarrowContent: Story = {
   render: (args): ReactElement => (
     <View style={{ width: layoutWidths.phone }}>
       <ContentLayout>
-        <ComposerMock {...args} />
+        <Composer {...composerProps(args)} />
       </ContentLayout>
     </View>
   ),
@@ -1203,9 +1203,9 @@ export const ScrollableAgentCatalog: Story = {
       canvas.getByRole('button', { name: 'Agent and model' }),
     );
     const scroll = await overlay.findByTestId('composer-agents-scroll');
-    await waitFor(() => {
-      expect(scroll.clientHeight).toBeGreaterThan(100);
-      expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight);
+    await waitFor(async () => {
+      await expect(scroll.clientHeight).toBeGreaterThan(100);
+      await expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight);
     });
     const menu = overlay.getByRole('dialog');
     await Promise.all(
@@ -1224,13 +1224,13 @@ export const ScrollableAgentCatalog: Story = {
     const lastAgent = await overlay.findByRole('button', {
       name: 'Select Agent 40',
     });
-    await waitFor(() => {
+    await waitFor(async () => {
       const item = lastAgent.getBoundingClientRect();
       const viewport = scroll.getBoundingClientRect();
-      expect(item.top).toBeGreaterThanOrEqual(viewport.top);
-      expect(item.bottom).toBeLessThanOrEqual(viewport.bottom);
-      expect(heading.getBoundingClientRect().top).toBeCloseTo(headingTop);
-      expect(menu.getBoundingClientRect().height).toBeCloseTo(menuHeight);
+      await expect(item.top).toBeGreaterThanOrEqual(viewport.top);
+      await expect(item.bottom).toBeLessThanOrEqual(viewport.bottom);
+      await expect(heading.getBoundingClientRect().top).toBeCloseTo(headingTop);
+      await expect(menu.getBoundingClientRect().height).toBeCloseTo(menuHeight);
     });
     await userEvent.click(lastAgent);
     await expect(args.configuration?.onAgentChange).toHaveBeenCalledWith(
@@ -1518,15 +1518,17 @@ async function expectWideFooter({ canvas, card }: FooterCheck): Promise<void> {
 
 async function expectWideAgentMenu(): Promise<void> {
   const overlay = within(document.body);
-  await waitFor(() => {
-    expect(overlay.getByRole('dialog').getBoundingClientRect().width).toBe(580);
+  await waitFor(async () => {
+    await expect(
+      overlay.getByRole('dialog').getBoundingClientRect().width,
+    ).toBe(580);
     const agentHeading = overlay
       .getByText('Agent', { exact: true })
       .getBoundingClientRect();
     const modelHeading = overlay
       .getByText('Model', { exact: true })
       .getBoundingClientRect();
-    expect(modelHeading.left - agentHeading.left).toBe(172);
+    await expect(modelHeading.left - agentHeading.left).toBe(172);
   });
   await expect(
     overlay.getByText('Start a new Session to switch Agent'),
@@ -1647,10 +1649,10 @@ function equalPlanSteps(width: number, agentIndex: number): Story {
           ? overlay.getByRole('dialog')
           : canvas.getByTestId('composer-plan-steps'),
       );
-      await waitFor(() => {
+      await waitFor(async () => {
         const steps = list.getAllByText(entry.content, { exact: true });
-        expect(steps).toHaveLength(2);
-        for (const step of steps) expect(step).toBeVisible();
+        await expect(steps).toHaveLength(2);
+        for (const step of steps) await expect(step).toBeVisible();
       });
       await expect(
         overlay.getAllByRole('progressbar', {

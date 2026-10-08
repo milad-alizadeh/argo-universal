@@ -23,7 +23,8 @@ if (!firstAgent) throw new Error('Recorded catalog needs an available Agent.');
 
 const meta = {
   title: 'Sessions/Composer',
-  component: ComposerPreview,
+  component: Composer,
+  render: (args): React.JSX.Element => <Composer {...composerProps(args)} />,
   parameters: {
     previewPadding: false,
     screenPreview: Platform.OS !== 'web',
@@ -53,7 +54,7 @@ const meta = {
       },
     },
   },
-} satisfies Meta<typeof ComposerPreview>;
+} satisfies Meta<ComposerMockProps>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 

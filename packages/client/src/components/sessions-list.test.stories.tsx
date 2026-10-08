@@ -156,10 +156,12 @@ export const InsertSessionOpaqueRows: Story = {
       name: 'Large Session 0, Idle',
     });
     await userEvent.hover(heading);
-    await waitFor(() => {
+    await waitFor(async () => {
       const firstRow = existing.getBoundingClientRect();
       const project = heading.getBoundingClientRect();
-      expect(Math.abs(firstRow.top - project.bottom)).toBeLessThanOrEqual(3);
+      await expect(Math.abs(firstRow.top - project.bottom)).toBeLessThanOrEqual(
+        3,
+      );
     });
     const initialTop = existing.getBoundingClientRect().top;
     const positions = [initialTop];
@@ -185,42 +187,44 @@ export const InsertSessionOpaqueRows: Story = {
     const inserted = await canvas.findByRole('button', {
       name: 'New Session 1, Idle',
     });
-    function assertOpaqueRow(button: HTMLElement): void {
+    async function assertOpaqueRow(button: HTMLElement): Promise<void> {
       const surface = button.parentElement;
       if (!surface) throw new Error('Missing Session row surface');
       const color = getComputedStyle(surface).backgroundColor;
-      expect(
+      await expect(
         color,
         'The animated row surface must be opaque, not only its button',
       ).not.toBe('rgba(0, 0, 0, 0)');
-      expect(color).not.toBe('transparent');
-      expect(getComputedStyle(surface).opacity).toBe('1');
-      expect(getComputedStyle(surface).overflow).toBe('hidden');
+      await expect(color).not.toBe('transparent');
+      await expect(getComputedStyle(surface).opacity).toBe('1');
+      await expect(getComputedStyle(surface).overflow).toBe('hidden');
     }
-    assertOpaqueRow(inserted);
-    assertOpaqueRow(existing);
+    await assertOpaqueRow(inserted);
+    await assertOpaqueRow(existing);
     for (let frame = 0; frame < 12; frame++) {
       await new Promise<void>((resolve) =>
         requestAnimationFrame(() => resolve()),
       );
-      assertOpaqueRow(inserted);
-      assertOpaqueRow(existing);
+      await assertOpaqueRow(inserted);
+      await assertOpaqueRow(existing);
       positions.push(existing.getBoundingClientRect().top);
     }
-    await waitFor(() => {
+    await waitFor(async () => {
       const newRectangle = inserted.getBoundingClientRect();
       const oldRectangle = existing.getBoundingClientRect();
-      expect(newRectangle.bottom).toBeLessThanOrEqual(oldRectangle.top + 1);
+      await expect(newRectangle.bottom).toBeLessThanOrEqual(
+        oldRectangle.top + 1,
+      );
     });
     await movement;
     const finalTop = existing.getBoundingClientRect().top;
-    expect(finalTop - initialTop).toBeGreaterThan(20);
-    expect(
+    await expect(finalTop - initialTop).toBeGreaterThan(20);
+    await expect(
       positions.some((top) => top > initialTop + 1 && top < finalTop - 1),
       'Existing rows must pass through intermediate positions, not jump',
     ).toBe(true);
     await userEvent.hover(inserted);
-    assertOpaqueRow(inserted);
+    await assertOpaqueRow(inserted);
   },
 };
 export const InsertSessionOpaqueRowsDark: Story = {
@@ -242,24 +246,24 @@ export const ScrollFadePadding: Story = {
     const heading = await canvas.findByRole('button', {
       name: 'Example Project',
     });
-    await waitFor(() => {
-      expect(
+    await waitFor(async () => {
+      await expect(
         heading.getBoundingClientRect().top -
           scroll.getBoundingClientRect().top,
       ).toBeGreaterThanOrEqual(19);
     });
     // The top fade waits until content has scrolled under the header.
-    expect(canvas.queryByTestId('scroll-fade-top')).toBeNull();
+    await expect(canvas.queryByTestId('scroll-fade-top')).toBeNull();
     // Until the rows measure, the list is not yet tall enough to scroll.
-    await waitFor(() => {
+    await waitFor(async () => {
       scroll.scrollTop = 40;
-      expect(scroll.scrollTop).toBeGreaterThan(0);
+      await expect(scroll.scrollTop).toBeGreaterThan(0);
     });
     const topFade = await canvas.findByTestId('scroll-fade-top');
     const bottomFade = canvas.getByTestId('scroll-fade-bottom');
     const surface = topFade.parentElement;
     if (!surface) throw new Error('Missing list surface');
-    expect(
+    await expect(
       getComputedStyle(surface).maskImage,
       'The list surface must stay opaque instead of revealing the page behind it',
     ).toBe('none');
@@ -277,27 +281,29 @@ export const ScrollFadePadding: Story = {
     }
     for (const fade of [topFade, bottomFade]) {
       const stops = fade.querySelectorAll('stop');
-      expect(stops.length).toBeGreaterThan(0);
+      await expect(stops.length).toBeGreaterThan(0);
       for (const stop of stops)
-        expect(colorPixel(getComputedStyle(stop).stopColor)).toEqual(
+        await expect(colorPixel(getComputedStyle(stop).stopColor)).toEqual(
           colorPixel(surfaceColor),
         );
     }
-    expect(topFade.getBoundingClientRect().height).toBe(scrollFadeHeight.top);
-    expect(bottomFade.getBoundingClientRect().height).toBe(
+    await expect(topFade.getBoundingClientRect().height).toBe(
+      scrollFadeHeight.top,
+    );
+    await expect(bottomFade.getBoundingClientRect().height).toBe(
       scrollFadeHeight.bottom,
     );
     scroll.scrollTop = scroll.scrollHeight;
     const last = await canvas.findByRole('button', {
       name: 'Large Session 11, Idle',
     });
-    await waitFor(() => {
+    await waitFor(async () => {
       scroll.scrollTop = scroll.scrollHeight;
       const viewportBottom = scroll.getBoundingClientRect().bottom;
-      expect(
+      await expect(
         viewportBottom - last.getBoundingClientRect().bottom,
       ).toBeGreaterThanOrEqual(27);
-      expect(last.getBoundingClientRect().bottom).toBeGreaterThan(
+      await expect(last.getBoundingClientRect().bottom).toBeGreaterThan(
         scroll.getBoundingClientRect().top,
       );
     });
@@ -333,11 +339,13 @@ export const PaginationSpinnerVisible: Story = {
     });
     await waitFor(() => expect(getDelayedFooterLayouts()).toBeGreaterThan(0));
     await waitFor(
-      () => {
+      async () => {
         const viewport = scroll.getBoundingClientRect();
         const indicator = spinner.getBoundingClientRect();
-        expect(indicator.top).toBeGreaterThanOrEqual(viewport.top + 20);
-        expect(indicator.bottom).toBeLessThanOrEqual(viewport.bottom - 28);
+        await expect(indicator.top).toBeGreaterThanOrEqual(viewport.top + 20);
+        await expect(indicator.bottom).toBeLessThanOrEqual(
+          viewport.bottom - 28,
+        );
       },
       { timeout: 1000 },
     );

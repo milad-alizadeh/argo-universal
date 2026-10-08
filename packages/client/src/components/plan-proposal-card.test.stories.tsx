@@ -63,9 +63,9 @@ export const LongPlan: Story = {
     for (const width of [layoutWidths.phone, layoutWidths.wide]) {
       await settleViewport(width);
       const scroll = canvas.getByTestId('plan-proposal-scroll');
-      await waitFor(() => {
-        expect(scroll.getBoundingClientRect().height).toBe(280);
-        expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight);
+      await waitFor(async () => {
+        await expect(scroll.getBoundingClientRect().height).toBe(280);
+        await expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight);
       });
       const card = canvas.getByTestId('plan-proposal-card');
       const titleTop =

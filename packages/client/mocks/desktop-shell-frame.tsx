@@ -20,15 +20,12 @@ export function DesktopShellFrame({
   attentionCount = 1,
   sidebarShown = true,
   inspectorState = 'closed',
-  showInspectorControls = false,
   inspector,
   children,
   onSectionChange = () => {},
   onSidebarShownChange = () => {},
   onInspectorStateChange = () => {},
-}: Partial<DesktopShellProps> & {
-  showInspectorControls?: boolean;
-}): React.JSX.Element {
+}: Partial<DesktopShellProps>): React.JSX.Element {
   const title =
     selectedSection.charAt(0).toUpperCase() + selectedSection.slice(1);
   return (
@@ -103,14 +100,6 @@ export function DesktopShellFrame({
           </View>
         )}
       </DesktopShell>
-      {showInspectorControls && (
-        <Button
-          accessibilityLabel="Open Inspector"
-          onPress={() => onInspectorStateChange('open')}
-        >
-          <Text>Open Inspector</Text>
-        </Button>
-      )}
     </View>
   );
 }

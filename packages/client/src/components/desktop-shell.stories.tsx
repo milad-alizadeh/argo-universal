@@ -10,7 +10,6 @@ const meta = {
   component: DesktopShell,
   parameters: { screenPreview: true },
   argTypes: {
-    showInspectorControls: { control: false, table: { disable: true } },
     selectedSection: {
       control: 'select',
       options: ['sessions', 'issues', 'atlas', 'settings'],
@@ -24,7 +23,6 @@ const meta = {
   },
   render: (args): React.JSX.Element => <DesktopShellFrame {...args} />,
   args: {
-    showInspectorControls: false,
     selectedSection: 'sessions',
     attentionCount: 1,
     sidebarShown: true,
@@ -39,7 +37,7 @@ const meta = {
     onSidebarShownChange: action('sidebar changed'),
     onInspectorStateChange: action('Inspector changed'),
   },
-} satisfies Meta<DesktopShellProps & { showInspectorControls?: boolean }>;
+} satisfies Meta<DesktopShellProps>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
