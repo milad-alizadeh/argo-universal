@@ -14,7 +14,7 @@ import type {
   WebFetchInput,
   WebSearchInput,
 } from '@anthropic-ai/claude-agent-sdk/sdk-tools';
-import type { ToolCallContent, ToolKind } from '@repo/contracts';
+import type { DiffChange, ToolCallContent, ToolKind } from '@repo/contracts';
 import type { FeedUpdate } from '../src/agent-events';
 
 export type ToolCallRow = Extract<
@@ -254,15 +254,7 @@ export function toolCallEnded(
     if (block.type === 'terminal') return { ...block, output };
     if (block.type !== 'diff' || oldText === null) return block;
     const changes = block.changes.map(
-      (
-        change,
-      ): {
-        path: string;
-        oldPath?: string;
-        newText?: string;
-        operation: 'modify';
-        oldText: string;
-      } => ({
+      (change): DiffChange & { operation: 'modify'; oldText: string } => ({
         ...change,
         operation: 'modify' as const,
         oldText,

@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import type { CommandAction } from '@repo/contracts';
+import type { CommandAction, ToolCallUpdate } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import type { AgentEvent, FeedUpdate } from '../src/agent-events';
 import type { VendorMessage } from './messages';
@@ -151,21 +151,7 @@ it('keeps the recorded Tool call start and end times', (): void => {
     .filter((row): boolean => row.kind === 'execute');
   expect(
     tools.map(
-      (
-        row,
-      ):
-        | {
-            truncated?: boolean;
-            permissionOutcome?:
-              | { outcome: 'cancelled' }
-              | { outcome: 'selected'; optionId: string };
-            commandActions?: CommandAction[];
-            startedAt?: number;
-            endedAt?: number;
-            shellId?: string;
-            description?: string;
-          }
-        | undefined => row._meta?.argo,
+      (row): NonNullable<ToolCallUpdate['_meta']>['argo'] => row._meta?.argo,
     ),
   ).toEqual([
     expect.objectContaining({
