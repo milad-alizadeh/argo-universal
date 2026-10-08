@@ -73,17 +73,18 @@ export function streamingAgentMessage(
       if (event.row.sessionUpdate !== 'agent_message')
         throw new Error('Streamed row is not an Agent message');
       row = event.row;
+      continue;
     }
-    if (event.type === 'row.append' && event.id === settled.id && row) {
-      const [, index] = event.field.split('.');
-      const content = [...row.content];
-      const block = content[Number(index)];
-      if (block?.type !== 'text' || block.text.length !== event.off)
-        throw new Error(`Append out of order in ${agent}/${recording}`);
-      content[Number(index)] = { ...block, text: block.text + event.text };
-      row = { ...row, content, revision: event.rev };
-      if (textLength(row) >= fullLength * 0.6) break;
-    }
+    if (event.type !== 'row.append' || event.id !== settled.id || !row)
+      continue;
+    const [, index] = event.field.split('.');
+    const content = [...row.content];
+    const block = content[Number(index)];
+    if (block?.type !== 'text' || block.text.length !== event.off)
+      throw new Error(`Append out of order in ${agent}/${recording}`);
+    content[Number(index)] = { ...block, text: block.text + event.text };
+    row = { ...row, content, revision: event.rev };
+    if (textLength(row) >= fullLength * 0.6) break;
   }
   if (row?.state !== 'open')
     throw new Error(`No open Agent message streamed in ${agent}/${recording}`);
