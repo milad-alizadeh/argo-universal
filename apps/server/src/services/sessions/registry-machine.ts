@@ -15,6 +15,7 @@ import {
 import { agentProbeId, agentProbeMachine } from '../agents';
 import type { SessionCreationInput } from './session-data';
 import { type SessionActorRef, sessionMachine } from './session-machine';
+import { sessionActorId } from './session-system';
 
 export interface RegistryInput {
   database: Database;
@@ -77,8 +78,8 @@ export const registryMachine = setup({
         assertEvent(event, ['sessions.create', 'sessions.open']);
         if (context.sessions[event.sessionId]) return {};
         const session = spawn('session', {
-          id: `session:${event.sessionId}`,
-          systemId: `session:${event.sessionId}`,
+          id: sessionActorId(event.sessionId),
+          systemId: sessionActorId(event.sessionId),
           syncSnapshot: true,
           input: {
             database: context.database,
@@ -112,7 +113,7 @@ export const registryMachine = setup({
       enqueue.assign({
         sessions: Object.fromEntries(
           Object.entries(context.sessions).filter(
-            ([id]): boolean => `session:${id}` !== event.actorId,
+            ([id]): boolean => sessionActorId(id) !== event.actorId,
           ),
         ),
       });
