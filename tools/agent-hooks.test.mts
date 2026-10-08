@@ -119,6 +119,17 @@ describe('after-edit', () => {
     expect(result.stderr).toContain('no-explicit-any');
   });
 
+  it('reports a finding through a Checkout directory alias', () => {
+    const alias = path.join(root, 'checkout-alias');
+    symlinkSync(root, alias, 'dir');
+    const result = runHook('after-edit', {
+      ...fileEdit('scratch.ts'),
+      cwd: alias,
+    });
+    expect(result.status).toBe(BLOCKED);
+    expect(result.stderr).toContain('no-explicit-any');
+  });
+
   it('reads an apply_patch command given as an array', () => {
     writeFileSync(path.join(root, 'added.ts'), anyViolation);
     const result = runHook('after-edit', patchArray('added.ts'));

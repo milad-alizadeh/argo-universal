@@ -1,5 +1,5 @@
 // Read docs/agents/hooks.md before changing this script or the hook configs that run it.
-import { existsSync } from 'node:fs';
+import { existsSync, realpathSync } from 'node:fs';
 import path from 'node:path';
 import { z } from 'zod';
 import {
@@ -70,7 +70,9 @@ function afterEdit(input: HookInput): number {
   const base = input.cwd ?? process.cwd();
   const files = editedPaths(input)
     .map((edited) => path.resolve(base, edited))
-    .filter((file) => isInsideRoot(file) && existsSync(file))
+    .filter((file) => existsSync(file))
+    .map((file): string => realpathSync(file))
+    .filter(isInsideRoot)
     .filter((file) => LINTED_FILE.test(file));
   if (files.length === 0) return 0;
   return block([lint({ files, typeAware: false, skipped: UNUSED_RULES })]);
