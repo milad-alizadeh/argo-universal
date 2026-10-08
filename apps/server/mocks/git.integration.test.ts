@@ -1,10 +1,12 @@
 import {
   existsSync,
+  type FSWatcher,
   mkdirSync,
   mkdtempSync,
   realpathSync,
   rmSync,
   symlinkSync,
+  watch,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -77,9 +79,17 @@ it('aborts a blocked Checkout and removes its worktree and new branch', async ()
   const directory = realpathSync(
     mkdtempSync(join(tmpdir(), 'checkout-abort-')),
   );
-  onTestFinished((): void =>
-    rmSync(directory, { recursive: true, force: true }),
-  );
+  const controller = new AbortController();
+  const checkoutResources: {
+    creation?: ReturnType<typeof createCheckout>;
+    hookWatcher?: FSWatcher;
+  } = {};
+  onTestFinished(async (): Promise<void> => {
+    checkoutResources.hookWatcher?.close();
+    controller.abort();
+    await Promise.allSettled([checkoutResources.creation]);
+    rmSync(directory, { recursive: true, force: true });
+  });
   const git = initTestRepository(directory);
   const checkoutPath = join(
     directory,
@@ -89,6 +99,11 @@ it('aborts a blocked Checkout and removes its worktree and new branch', async ()
     'blocked',
   );
   const marker = join(directory, 'hook-started');
+  const started = Promise.withResolvers<void>();
+  checkoutResources.hookWatcher = watch(directory, (): void => {
+    if (existsSync(marker)) started.resolve();
+  });
+  checkoutResources.hookWatcher.on('error', started.reject);
   writeFileSync(
     join(directory, '.git', 'hooks', 'post-checkout'),
     [
@@ -100,8 +115,6 @@ it('aborts a blocked Checkout and removes its worktree and new branch', async ()
     ].join('\n'),
     { mode: 0o755 },
   );
-  const controller = new AbortController();
-  onTestFinished((): void => controller.abort());
   const creation = createCheckout(
     {
       projectPath: directory,
@@ -112,7 +125,9 @@ it('aborts a blocked Checkout and removes its worktree and new branch', async ()
     },
     controller.signal,
   );
-  await expect.poll((): boolean => existsSync(marker)).toBe(true);
+  checkoutResources.creation = creation;
+  void creation.catch(started.reject);
+  await started.promise;
   expect(existsSync(checkoutPath)).toBe(true);
   controller.abort();
   await expect(creation).rejects.toMatchObject({ name: 'AbortError' });
