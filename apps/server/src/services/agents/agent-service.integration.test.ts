@@ -4,7 +4,7 @@ import { createMockAdapter } from '@repo/mocks/agent';
 import { afterAll, afterEach, expect, it, vi } from 'vitest';
 import { createActor } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
-import { registryMachine } from '../sessions/registry-machine';
+import { registryMachine } from '../sessions';
 import { createAgentService } from './agent-service';
 
 const { database, directory: runtimeDirectory, remove } = openTestDatabase();

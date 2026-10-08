@@ -8,8 +8,8 @@ import {
   insertSession,
   openTestDatabase,
 } from '#mocks/database';
-import type { WriterJob } from '../feed/writer-job';
-import { writerMachine } from '../feed/writer-machine';
+import type { WriterJob } from '../feed';
+import { writerMachine } from '../feed';
 import { registryMachine } from './registry-machine';
 import { createSessionListReader } from './session-list-reader';
 

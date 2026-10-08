@@ -1,15 +1,16 @@
 import type { Services } from '@repo/api';
 import type { Database } from '@repo/db';
 import type { ActorRefFrom } from 'xstate';
-import { createAgentService } from './agents/agent-service';
-import { createBlobService } from './blob/blob-service';
-import type { FeedActorRef } from './feed/feed-machine';
-import { createFeedService } from './feed/feed-service';
-import type { writerMachine } from './feed/writer-machine';
-import { createProjectService } from './projects/project-service';
-import type { RegistryActorRef } from './sessions/registry-machine';
-import type { SessionActorRef } from './sessions/session-machine';
-import { createSessionService } from './sessions/session-service';
+import { createAgentService } from './agents';
+import { createBlobService } from './blob';
+import type { FeedActorRef } from './feed';
+import { createFeedService } from './feed';
+import type { writerMachine } from './feed';
+import { createProjectService } from './projects';
+import { createSessionReader, createSessionSnapshotWatcher } from './sessions';
+import type { RegistryActorRef } from './sessions';
+import type { SessionActorRef } from './sessions';
+import { createSessionService } from './sessions';
 import { createSystemService } from './system';
 
 export function createServerServices(options: {
@@ -24,6 +25,14 @@ export function createServerServices(options: {
     options.sessions.system.get(`session:${sessionId}`) as
       | SessionActorRef
       | undefined;
+  const findFeed = (sessionId: string): FeedActorRef | undefined =>
+    findSession(sessionId)?.getSnapshot().children.feed as
+      | FeedActorRef
+      | undefined;
+  const findWriter = (): ActorRefFrom<typeof writerMachine> | undefined =>
+    options.sessions.system.get('databaseWriter') as
+      | ActorRefFrom<typeof writerMachine>
+      | undefined;
   const session = createSessionService(options);
   return {
     blob: createBlobService(options),
@@ -33,15 +42,15 @@ export function createServerServices(options: {
     session,
     feed: createFeedService({
       database: options.database,
-      findSession,
-      findFeed: (sessionId): FeedActorRef | undefined =>
-        findSession(sessionId)?.getSnapshot().children.feed as
-          | FeedActorRef
-          | undefined,
-      findWriter: (): ActorRefFrom<typeof writerMachine> | undefined =>
-        options.sessions.system.get('databaseWriter') as
-          | ActorRefFrom<typeof writerMachine>
-          | undefined,
+      readSession: createSessionReader(options.database),
+      watchSessionSnapshot: createSessionSnapshotWatcher({
+        database: options.database,
+        findSession,
+        findFeed,
+        findWriter,
+      }),
+      findFeed,
+      findWriter,
     }),
   };
 }

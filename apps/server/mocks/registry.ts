@@ -6,9 +6,9 @@ import {
   type SnapshotFrom,
   setup,
 } from 'xstate';
-import { registryMachine } from '../src/services/sessions/registry-machine';
-import type { SessionInput } from '../src/services/sessions/session-data';
-import type { SessionActorRef } from '../src/services/sessions/session-machine';
+import { registryMachine } from '../src/services/sessions';
+import type { SessionInput } from '../src/services/sessions';
+import type { SessionActorRef } from '../src/services/sessions';
 
 // Holds closing Sessions until the model completes one; no database or Agent effects.
 const session = setup({

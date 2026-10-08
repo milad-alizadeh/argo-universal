@@ -3,10 +3,10 @@ import {
   applyFeedChange,
   type Feed,
   userMessageChange,
-} from '../apps/server/src/services/feed/feed-change.ts';
-import { toLiveHeader } from '../apps/server/src/services/sessions/live-header.ts';
-import { titleFromPrompt } from '../apps/server/src/services/sessions/session-data.ts';
-import { noChanges } from '../apps/server/src/services/sessions/session-snapshot.ts';
+} from '../apps/server/src/services/feed/index.ts';
+import { toLiveHeader } from '../apps/server/src/services/sessions/index.ts';
+import { titleFromPrompt } from '../apps/server/src/services/sessions/index.ts';
+import { noChanges } from '../apps/server/src/services/sessions/index.ts';
 import { mockClis } from '../mocks/cli/index.ts';
 import { agentAdapters } from '../packages/agents/src/adapters.ts';
 import type { RequestAnswer } from '../packages/api/mocks/requests.ts';

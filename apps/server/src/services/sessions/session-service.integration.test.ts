@@ -18,7 +18,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { createActor, fromPromise, setup, waitFor } from 'xstate';
 import { insertSession, openTestDatabase } from '#mocks/database';
 import { initTestRepository } from '#mocks/git';
-import { writerMachine } from '../feed/writer-machine';
+import { writerMachine } from '../feed';
 import { createServerServices } from '../server-services';
 import { registryMachine } from './registry-machine';
 

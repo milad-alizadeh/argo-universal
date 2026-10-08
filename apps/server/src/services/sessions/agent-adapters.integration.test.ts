@@ -1,7 +1,7 @@
 import type { AgentOutput } from '@repo/agents';
 import type { UserMessage } from '@repo/contracts';
 import type { SessionUpdate } from '@repo/contracts';
-import type { FeedActorRef } from '../feed/feed-machine';
+import type { FeedActorRef } from '../feed';
 
 type ClosedSession = {
   output: AgentOutput | undefined;

@@ -8,7 +8,7 @@ import {
   fromFeedRow,
   payloadVersion,
   storedFeedColumns,
-} from '../services/feed/feed-row';
+} from '../services/feed';
 
 // Repairs the database before the Engine serves; any failure rolls back the whole repair.
 export function recoverAfterRestart(database: Database): void {

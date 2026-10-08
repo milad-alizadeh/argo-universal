@@ -10,9 +10,9 @@ import {
   fromFeedRow,
   newestRows,
   storedFeedColumns,
-} from '../feed/feed-row';
-import { type FeedRowWrite, queuedFeedRows } from '../feed/writer-job';
-import type { writerMachine } from '../feed/writer-machine';
+} from '../feed';
+import { type FeedRowWrite, queuedFeedRows } from '../feed';
+import type { writerMachine } from '../feed';
 
 type LiveHeaderRowsReader = (input: {
   writer: ActorRefFrom<typeof writerMachine> | undefined;

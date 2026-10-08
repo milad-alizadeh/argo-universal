@@ -1,4 +1,4 @@
-import { toSessionCheckout } from '../apps/server/src/services/sessions/session-record.ts';
+import { toSessionCheckout } from '../apps/server/src/services/sessions/index.ts';
 
 // Where the Server puts a new worktree Session, under the recordings' `/repo` Project.
 export const worktreeCheckout = (

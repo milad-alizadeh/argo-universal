@@ -1,6 +1,6 @@
 import type { AgentsService } from '@repo/api';
 import { waitFor } from 'xstate';
-import type { RegistryActorRef } from '../sessions/registry-machine';
+import type { RegistryActorRef } from '../sessions';
 import { type AgentProbeActorRef, agentProbeId } from './agent-probe-machine';
 
 // Answers from each Agent's last probe; `refresh` probes them all again first.
