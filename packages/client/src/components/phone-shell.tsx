@@ -11,7 +11,7 @@ import { Icon } from '../lib/icon';
 import { PhoneDrawer } from './phone-drawer';
 import { PhoneShellCard } from './phone-shell-card';
 import { type ShellSection, shellSections } from './shell-sections';
-import { maximumAttentionBadgeCount } from './use-attention-count';
+import { maximumAttentionBadgeCount } from './attention-badge';
 
 export type { ShellSection } from './shell-sections';
 

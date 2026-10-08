@@ -7,7 +7,7 @@ import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
 import { Icon } from '../lib/icon';
 import { type ShellSection, shellSections } from './shell-sections';
-import { maximumAttentionBadgeCount } from './use-attention-count';
+import { maximumAttentionBadgeCount } from './attention-badge';
 
 interface DesktopRailProps {
   selectedSection: ShellSection;
