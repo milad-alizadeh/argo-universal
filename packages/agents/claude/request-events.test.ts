@@ -85,3 +85,25 @@ it('rejects an SDK dictionary that cannot become an Argo plan', (): void => {
     ),
   ).toThrow(/Invalid input/);
 });
+
+it.each([
+  { header: 17, question: colorQuestion, options: [] },
+  { header: 'Color', question: 17, options: [] },
+  { header: 'Color', question: colorQuestion, options: 17 },
+  { header: 'Color', question: colorQuestion, options: [{ label: 17 }] },
+  {
+    header: 'Color',
+    question: colorQuestion,
+    options: [{ label: 'Red', description: false }],
+  },
+])('rejects a malformed SDK question projection: %o', (invalid): void => {
+  expect(() =>
+    toAgentEvents(
+      {
+        ...question,
+        request: { ...question.request, input: { questions: [invalid] } },
+      },
+      initialMappingState(),
+    ),
+  ).toThrow(/Invalid input|Expected question options/);
+});

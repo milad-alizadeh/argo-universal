@@ -9,6 +9,11 @@ import type {
   SessionConfigSelectOption,
 } from '@repo/contracts';
 import type { AgentConfigValue } from '../src/agent-events';
+import {
+  changeValue as changeConfigValue,
+  effortLevelName,
+  hasEffortLevels,
+} from '../src/config-options';
 
 // The SDK names its modes only as a type, so this list and its names are ours; `dontAsk` is not offered.
 const modeNames = {
@@ -132,25 +137,18 @@ export function startingValues(
   });
 }
 
-const isConfigId = (value: string): value is keyof ConfigValues =>
-  value === 'mode' || value === 'model' || value === 'effort';
-
 // The values after the user picks one option, or undefined for a value that was not offered.
 export function changeValue(
   models: ModelInfo[],
   values: ConfigValues,
   change: AgentConfigValue,
 ): ConfigValues | undefined {
-  const configId = change.configId;
-  if (!isConfigId(configId)) return undefined;
-  const next = allowedValues(models, { ...values, [configId]: change.value });
-  return next[configId] === change.value ? next : undefined;
+  return changeConfigValue(
+    (wanted): ConfigValues => allowedValues(models, wanted),
+    values,
+    change,
+  );
 }
-
-const effortName = (level: EffortLevel): string =>
-  level === 'xhigh'
-    ? 'Extra high'
-    : `${level.charAt(0).toUpperCase()}${level.slice(1)}`;
 
 export function toConfigOptions(
   models: ModelInfo[],
@@ -205,7 +203,7 @@ export function toConfigOptions(
     },
   ];
   const levels = effortLevelsFor(model);
-  if (levels.length === 0) return options;
+  if (!hasEffortLevels(levels)) return options;
   const effort: SessionConfigOption = {
     type: 'select',
     configId: 'effort',
@@ -215,7 +213,7 @@ export function toConfigOptions(
       values.effort === DEFAULT_VALUE ? defaultEffort(model) : values.effort,
     options: levels.map((level): SessionConfigSelectOption => ({
       value: level,
-      name: effortName(level),
+      name: effortLevelName(level),
     })),
   };
   return [...options, effort];
