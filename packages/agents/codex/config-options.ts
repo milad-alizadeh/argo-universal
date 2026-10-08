@@ -16,7 +16,7 @@ const modes = {
   ...sharedModes,
   fullAccess: {
     name: 'Full access',
-    description: 'Runs without sandbox or permission requests',
+    description: 'Runs without sandbox or permission requests.',
     _meta: { argo: { icon: 'WarningTriangle', tone: 'dangerous' } },
   },
 } satisfies Record<string, Omit<SessionConfigSelectOption, 'value'>>;
