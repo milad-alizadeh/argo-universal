@@ -16,6 +16,7 @@ import { RequestFrame } from '../../mocks/request-preview';
 import { settleViewport } from '../../mocks/settle-viewport';
 import { ElicitationForm } from './elicitation-form';
 import type { ElicitationValues } from './elicitation-form';
+import galleryMeta, { Overview as Gallery } from './elicitation-form.stories';
 import { ElicitationOutcome } from './elicitation-outcome';
 
 const meta: Meta<typeof ElicitationForm> = {
@@ -376,3 +377,35 @@ export const EmptyAcceptedOutcome: Story = {
     await expect(canvas.getByText('None', { exact: true })).toBeVisible();
   },
 };
+
+function galleryFixture(mock: RequestMock, width: number): Story {
+  const props = elicitationProps({ mock });
+  return {
+    render: () => Gallery.render({ ...galleryMeta.args, agent: mock.agent }),
+    play: async ({ canvas }) => {
+      await settleViewport(width);
+      await expect(
+        canvas.getAllByText(props.request.message).length,
+      ).toBeGreaterThan(0);
+    },
+  };
+}
+const [firstGalleryAgent, secondGalleryAgent] = elicitationMocks;
+if (!firstGalleryAgent || !secondGalleryAgent)
+  throw new Error('Recorded gallery needs both Agents.');
+export const GalleryFirstAgentPhone: Story = galleryFixture(
+  firstGalleryAgent,
+  390,
+);
+export const GalleryFirstAgentWide: Story = galleryFixture(
+  firstGalleryAgent,
+  1024,
+);
+export const GallerySecondAgentPhone: Story = galleryFixture(
+  secondGalleryAgent,
+  390,
+);
+export const GallerySecondAgentWide: Story = galleryFixture(
+  secondGalleryAgent,
+  1024,
+);

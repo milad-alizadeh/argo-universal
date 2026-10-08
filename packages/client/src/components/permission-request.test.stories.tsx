@@ -8,6 +8,7 @@ import {
 } from '../../mocks/request-preview';
 import { settleViewport } from '../../mocks/settle-viewport';
 import { PermissionRequest } from './permission-request';
+import galleryMeta, { Overview as Gallery } from './permission-request.stories';
 
 const meta: Meta<typeof PermissionRequest> = {
   title: 'Tests/PermissionRequest',
@@ -242,3 +243,40 @@ export const FirstAgentOutcomePhone = permissionFeed(390, 0, true);
 export const FirstAgentOutcomeWide = permissionFeed(1440, 0, true);
 export const SecondAgentOutcomePhone = permissionFeed(390, 1, true);
 export const SecondAgentOutcomeWide = permissionFeed(1440, 1, true);
+
+function galleryFixture(mock: RequestMock, width: number): Story {
+  const props = permissionProps({ mock });
+  return {
+    render: () => Gallery.render({ ...galleryMeta.args, agent: mock.agent }),
+    play: async ({ canvas }) => {
+      await settleViewport(width);
+      await expect(
+        canvas.getAllByText(props.request.title).length,
+      ).toBeGreaterThan(0);
+      if (!props.input) throw new Error('Recorded permission needs input.');
+      await expect(
+        canvas.getAllByText(props.input, { normalizer: (text): string => text })
+          .length,
+      ).toBeGreaterThan(0);
+    },
+  };
+}
+const [firstGalleryAgent, secondGalleryAgent] = permissionMocks;
+if (!firstGalleryAgent || !secondGalleryAgent)
+  throw new Error('Recorded gallery needs both Agents.');
+export const GalleryFirstAgentPhone: Story = galleryFixture(
+  firstGalleryAgent,
+  390,
+);
+export const GalleryFirstAgentWide: Story = galleryFixture(
+  firstGalleryAgent,
+  1024,
+);
+export const GallerySecondAgentPhone: Story = galleryFixture(
+  secondGalleryAgent,
+  390,
+);
+export const GallerySecondAgentWide: Story = galleryFixture(
+  secondGalleryAgent,
+  1024,
+);
