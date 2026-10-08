@@ -854,7 +854,7 @@ it.each(
           expect(actual.context.rejectedMessages).toBe(
             expected.context.rejectedMessages,
           );
-          const feed = actual.children.feed as FeedActorRef | undefined;
+          const feed = actual.children.feed;
           const { epoch, maxRevision, liveHeader, ...projection } =
             toSessionSnapshot(
               expected,
