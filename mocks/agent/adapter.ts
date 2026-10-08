@@ -42,10 +42,13 @@ export const mockReadyEvent = { type: 'agent.ready', ...mockReady } as const;
 // An adapter whose vendor messages are the Agent events a test scripts.
 export const createMockAdapter = (
   {
-    connect = async () => mockReady,
-    stream = () => undefined,
-    stop = async () => {},
-    probe = async () => ({ availability: 'available', configOptions: [] }),
+    connect = async (): Promise<AgentReady> => mockReady,
+    stream = (): undefined => undefined,
+    stop = async (): Promise<void> => {},
+    probe = async (): Promise<{
+      availability: 'available';
+      configOptions: never[];
+    }> => ({ availability: 'available', configOptions: [] }),
   }: MockAgentScript = {},
   agent = 'mock',
 ): AgentAdapter<MockAgentStreamEvent, null> => ({
@@ -53,23 +56,37 @@ export const createMockAdapter = (
   label: agent,
   logo: '<svg xmlns="http://www.w3.org/2000/svg"/>',
   probe,
-  initialMappingState: () => null,
-  toAgentEvents: (event, mappingState) => ({ events: [event], mappingState }),
-  async connect(input, listener, signal) {
+  initialMappingState: (): null => null,
+  toAgentEvents: (
+    event,
+    mappingState,
+  ): { events: MockAgentStreamEvent[]; mappingState: null } => ({
+    events: [event],
+    mappingState,
+  }),
+  async connect(
+    input,
+    listener,
+    signal,
+  ): Promise<{
+    ready: AgentReady;
+    run: (command: VendorCommand) => Promise<void>;
+    stop: () => Promise<void>;
+  }> {
     const ready = await connect(input, signal);
     const handlers: ((command: VendorCommand) => void)[] = [];
     const cleanup = stream({
       input,
       send: listener.message,
       fail: listener.failed,
-      receive: (handler) => handlers.push(handler),
+      receive: (handler): number => handlers.push(handler),
     });
     return {
       ready,
-      run: async (command) => {
+      run: async (command): Promise<void> => {
         for (const handler of handlers) handler(command);
       },
-      stop: async () => {
+      stop: async (): Promise<void> => {
         cleanup?.();
         await stop(input);
       },

@@ -31,59 +31,106 @@ export const sessionRouter = router({
   list: publicProcedure
     .input(SessionListInput)
     .output(SessionListOutput)
-    .query(({ ctx, input }) => ctx.services.session.list(input)),
+    .query(({ ctx, input }): Promise<SessionListOutput> =>
+      ctx.services.session.list(input),
+    ),
   listUpdates: publicProcedure
     .output(zAsyncIterable({ yield: SessionListUpdate }))
-    .subscription(async function* ({ ctx, signal }) {
+    .subscription(async function* ({
+      ctx,
+      signal,
+    }): AsyncGenerator<SessionListUpdate, void> {
       yield* ctx.services.session.listUpdates(signal);
     }),
   counts: publicProcedure
     .output(zAsyncIterable({ yield: SessionCounts }))
-    .subscription(async function* ({ ctx, signal }) {
+    .subscription(async function* ({
+      ctx,
+      signal,
+    }): AsyncGenerator<{ attention: number; running: number }, void> {
       yield* ctx.services.session.counts(signal);
     }),
   new: publicProcedure
     .input(SessionNewInput)
     .output(SessionNewOutput)
-    .mutation(({ ctx, input }) => ctx.services.session.new(input)),
+    .mutation(({ ctx, input }): Promise<{ sessionId: string }> =>
+      ctx.services.session.new(input),
+    ),
   prompt: publicProcedure
     .input(SessionPromptInput)
     .output(SessionPromptOutput)
-    .mutation(({ ctx, input }) => ctx.services.session.prompt(input)),
+    .mutation(({ ctx, input }): Promise<{ messageId: string }> =>
+      ctx.services.session.prompt(input),
+    ),
   rename: publicProcedure
     .input(SessionRenameInput)
     .output(SessionRenameOutput)
-    .mutation(({ ctx, input }) => ctx.services.session.rename(input)),
+    .mutation(({ ctx, input }): Promise<Record<string, never>> =>
+      ctx.services.session.rename(input),
+    ),
   cancel: publicProcedure
     .input(SessionCancelInput)
     .output(SessionCancelOutput)
-    .mutation(({ ctx, input }) => ctx.services.session.cancel(input)),
+    .mutation(({ ctx, input }): Promise<Record<string, never>> =>
+      ctx.services.session.cancel(input),
+    ),
   setConfigOption: publicProcedure
     .input(SessionSetConfigOptionInput)
     .output(SessionSetConfigOptionOutput)
-    .mutation(({ ctx, input }) => ctx.services.session.setConfigOption(input)),
+    .mutation(({ ctx, input }): Promise<SessionSetConfigOptionOutput> =>
+      ctx.services.session.setConfigOption(input),
+    ),
   answerPermission: publicProcedure
     .input(SessionAnswerPermissionInput)
     .output(SessionAnswerPermissionOutput)
-    .mutation(({ ctx, input }) => ctx.services.session.answerPermission(input)),
+    .mutation(({ ctx, input }): Promise<Record<string, never>> =>
+      ctx.services.session.answerPermission(input),
+    ),
   answerElicitation: publicProcedure
     .input(SessionAnswerElicitationInput)
     .output(SessionAnswerElicitationOutput)
-    .mutation(({ ctx, input }) =>
+    .mutation(({ ctx, input }): Promise<Record<string, never>> =>
       ctx.services.session.answerElicitation(input),
     ),
   answerPlanProposal: publicProcedure
     .input(SessionAnswerPlanProposalInput)
     .output(SessionAnswerPlanProposalOutput)
-    .mutation(({ ctx, input }) =>
+    .mutation(({ ctx, input }): Promise<Record<string, never>> =>
       ctx.services.session.answerPlanProposal(input),
     ),
   changes: publicProcedure
     .input(SessionChangesInput)
     .output(SessionChangesOutput)
-    .query(({ ctx, input }) => ctx.services.session.changes(input)),
+    .query(
+      ({
+        ctx,
+        input,
+      }): Promise<
+        {
+          operation: 'add' | 'delete' | 'modify' | 'move';
+          path: string;
+          oldPath?: string;
+          additions: number | null;
+          deletions: number | null;
+        }[]
+      > => ctx.services.session.changes(input),
+    ),
   diff: publicProcedure
     .input(SessionDiffInput)
     .output(SessionDiffOutput)
-    .query(({ ctx, input }) => ctx.services.session.diff(input)),
+    .query(
+      ({
+        ctx,
+        input,
+      }): Promise<{
+        file: {
+          operation: 'add' | 'delete' | 'modify' | 'move';
+          path: string;
+          oldPath?: string;
+          additions: number | null;
+          deletions: number | null;
+        };
+        patch: { format: 'git_patch'; text: string };
+      }> => ctx.services.session.diff(input),
+    ),
 });

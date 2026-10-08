@@ -49,20 +49,23 @@ const changeOf = ({ path, kind, diff }: FileUpdateChange): DiffChange => {
         : { operation: 'modify', path };
   }
 };
-const destinationPath = (change: FileUpdateChange) =>
+const destinationPath = (change: FileUpdateChange): string =>
   (change.kind.type === 'update' && change.kind.move_path) || change.path;
 const octalRadix = 8;
 const octalEscapeDigits = 3;
-const quotePath = (filePath: string) => {
-  // oxlint-disable-next-line no-control-regex -- Git pathnames encode control characters with octal escapes.
-  const escaped = filePath.replace(/[\x00-\x20"\\\x7f]/g, (character) => {
-    if (character === '"' || character === '\\') return `\\${character}`;
-    return `\\${character.charCodeAt(0).toString(octalRadix).padStart(octalEscapeDigits, '0')}`;
-  });
+const quotePath = (filePath: string): string => {
+  const escaped = filePath.replace(
+    // oxlint-disable-next-line no-control-regex -- Git pathnames encode control characters with octal escapes.
+    /[\x00-\x20"\\\x7f]/g,
+    (character): string => {
+      if (character === '"' || character === '\\') return `\\${character}`;
+      return `\\${character.charCodeAt(0).toString(octalRadix).padStart(octalEscapeDigits, '0')}`;
+    },
+  );
   if (escaped === filePath) return filePath;
   return `"${escaped}"`;
 };
-const patchOf = (change: FileUpdateChange) => {
+const patchOf = (change: FileUpdateChange): string => {
   const oldPath = change.path.replace(/^\//, '');
   const newPath = destinationPath(change).replace(/^\//, '');
   const oldFile = quotePath(`a/${oldPath}`);
@@ -89,7 +92,7 @@ const patchOf = (change: FileUpdateChange) => {
   const oldRange = adding ? '0,0' : range;
   const newRange = adding ? range : '0,0';
   const sign = adding ? '+' : '-';
-  const body = lines.map((line) => sign + line).join('\n');
+  const body = lines.map((line): string => sign + line).join('\n');
   let patch = `${header}${metadata}--- ${oldMarker}\n+++ ${newMarker}\n@@ -${oldRange} +${newRange} @@\n${body}\n`;
   if (!finalNewline) patch += '\\ No newline at end of file\n';
   return patch;
@@ -139,10 +142,10 @@ export function toToolCall(
     };
   return {
     ...common,
-    title: `Edit ${item.changes.map((change) => change.path).join(', ')}`,
+    title: `Edit ${item.changes.map((change): string => change.path).join(', ')}`,
     name: item.type,
     kind: 'edit',
-    locations: item.changes.map((change) => ({
+    locations: item.changes.map((change): { path: string } => ({
       path: destinationPath(change),
     })),
     content: [

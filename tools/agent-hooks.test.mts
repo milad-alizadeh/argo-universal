@@ -21,11 +21,14 @@ const unformattedJson = '{"a":1}\n';
 
 let root: string;
 
-function git(...args: string[]) {
+function git(...args: string[]): void {
   spawnSync('git', args, { cwd: root, encoding: 'utf8' });
 }
 
-function runHook(command: string, input: unknown) {
+function runHook(
+  command: string,
+  input: unknown,
+): { status: number | null; stderr: string } {
   const stdin = typeof input === 'string' ? input : JSON.stringify(input);
   const result = spawnSync(
     'node',
@@ -40,19 +43,25 @@ function runHook(command: string, input: unknown) {
 }
 
 // Recorded input shapes: an Edit or Write call carries file_path; an apply_patch call carries a command.
-const fileEdit = (file: string) => ({
+const fileEdit = (
+  file: string,
+): { cwd: string; tool_name: string; tool_input: { file_path: string } } => ({
   cwd: root,
   tool_name: 'Edit',
   tool_input: { file_path: file },
 });
-const patchEdit = (file: string) => ({
+const patchEdit = (
+  file: string,
+): { cwd: string; tool_name: string; tool_input: { command: string } } => ({
   cwd: root,
   tool_name: 'apply_patch',
   tool_input: {
     command: `*** Begin Patch\n*** Update File: ${file}\n@@\n-a\n+b\n*** End Patch`,
   },
 });
-const patchArray = (file: string) => ({
+const patchArray = (
+  file: string,
+): { cwd: string; tool_name: string; tool_input: { command: string[] } } => ({
   cwd: root,
   tool_name: 'apply_patch',
   tool_input: {
@@ -63,7 +72,7 @@ const patchArray = (file: string) => ({
   },
 });
 
-beforeAll(() => {
+beforeAll((): void => {
   root = mkdtempSync(path.join(tmpdir(), 'agent-hooks-'));
   mkdirSync(path.join(root, 'tools'));
   for (const script of ['agent-hooks.mts', 'hook-checks.mts'])
@@ -102,19 +111,19 @@ beforeAll(() => {
   git('commit', '-q', '-m', 'base');
 });
 
-afterAll(() => {
+afterAll((): void => {
   rmSync(root, { recursive: true, force: true });
 });
 
-describe('after-edit', () => {
-  it('reports a finding from an Edit call and blocks', () => {
+describe('after-edit', (): void => {
+  it('reports a finding from an Edit call and blocks', (): void => {
     const result = runHook('after-edit', fileEdit('scratch.ts'));
     expect(result.status).toBe(BLOCKED);
     expect(result.stderr).toContain(explicitAnyRule);
     expect(result.stderr).toContain('docs/agents/hooks.md');
   });
 
-  it('reports the same finding from an apply_patch call', () => {
+  it('reports the same finding from an apply_patch call', (): void => {
     const result = runHook('after-edit', patchEdit('scratch.ts'));
     expect(result.status).toBe(BLOCKED);
     expect(result.stderr).toContain(explicitAnyRule);
@@ -131,13 +140,13 @@ describe('after-edit', () => {
     expect(result.stderr).toContain(explicitAnyRule);
   });
 
-  it('reads an apply_patch command given as an array', () => {
+  it('reads an apply_patch command given as an array', (): void => {
     writeFileSync(path.join(root, 'added.ts'), anyViolation);
     const result = runHook('after-edit', patchArray('added.ts'));
     expect(result.status).toBe(BLOCKED);
   });
 
-  it('blocks on a warning and on an unused disable directive', () => {
+  it('blocks on a warning and on an unused disable directive', (): void => {
     // Split so check-comments does not read the string as a directive.
     const directive = ['oxlint', 'disable-next-line no-debugger'].join('-');
     writeFileSync(
@@ -151,15 +160,15 @@ describe('after-edit', () => {
     rmSync(path.join(root, 'noisy.ts'));
   });
 
-  it('passes a clean file', () => {
+  it('passes a clean file', (): void => {
     expect(runHook('after-edit', fileEdit('clean.ts')).status).toBe(0);
   });
 
-  it('skips unused imports, which the next edit often uses', () => {
+  it('skips unused imports, which the next edit often uses', (): void => {
     expect(runHook('after-edit', fileEdit('unused.ts')).status).toBe(0);
   });
 
-  it('never rewrites the edited file', () => {
+  it('never rewrites the edited file', (): void => {
     writeFileSync(path.join(root, 'crooked.json'), unformattedJson);
     runHook('after-edit', fileEdit('crooked.json'));
     expect(readFileSync(path.join(root, 'crooked.json'), 'utf8')).toBe(
@@ -167,7 +176,7 @@ describe('after-edit', () => {
     );
   });
 
-  it('ignores a path outside the root', () => {
+  it('ignores a path outside the root', (): void => {
     expect(
       runHook('after-edit', {
         cwd: root,
@@ -176,7 +185,7 @@ describe('after-edit', () => {
     ).toBe(0);
   });
 
-  it('ignores an apply_patch that deletes the file', () => {
+  it('ignores an apply_patch that deletes the file', (): void => {
     const deletion = {
       cwd: root,
       tool_input: {
@@ -186,32 +195,32 @@ describe('after-edit', () => {
     expect(runHook('after-edit', deletion).status).toBe(0);
   });
 
-  it('skips input of an unknown shape', () => {
+  it('skips input of an unknown shape', (): void => {
     const result = runHook('after-edit', []);
     expect(result.status).toBe(0);
     expect(result.stderr).toContain('unrecognised hook input; skipped');
   });
 
-  it('skips input that is not JSON', () => {
+  it('skips input that is not JSON', (): void => {
     expect(runHook('after-edit', 'not json').status).toBe(0);
   });
 });
 
-describe('command', () => {
-  it('rejects an unknown command with a usage line', () => {
+describe('command', (): void => {
+  it('rejects an unknown command with a usage line', (): void => {
     const result = runHook('nonsense', {});
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('usage');
   });
 });
 
-describe('before-stop', () => {
-  it('exits at once when stop_hook_active is set', () => {
+describe('before-stop', (): void => {
+  it('exits at once when stop_hook_active is set', (): void => {
     writeFileSync(path.join(root, 'blocked.ts'), anyViolation);
     expect(runHook('before-stop', { stop_hook_active: true }).status).toBe(0);
   });
 
-  it('blocks on a finding in a changed file, and a second stop passes', () => {
+  it('blocks on a finding in a changed file, and a second stop passes', (): void => {
     const first = runHook('before-stop', {
       cwd: root,
       stop_hook_active: false,
@@ -223,7 +232,7 @@ describe('before-stop', () => {
     ).toBe(0);
   });
 
-  it('formats changed files', () => {
+  it('formats changed files', (): void => {
     rmSync(path.join(root, 'blocked.ts'));
     rmSync(path.join(root, 'scratch.ts'));
     rmSync(path.join(root, 'added.ts'));
@@ -235,7 +244,7 @@ describe('before-stop', () => {
     );
   });
 
-  it('exits at once when no checked file changed', () => {
+  it('exits at once when no checked file changed', (): void => {
     git('add', '.');
     git('commit', '-q', '-m', 'second');
     writeFileSync(path.join(root, 'notes.md'), 'notes\n');

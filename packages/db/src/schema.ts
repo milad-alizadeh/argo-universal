@@ -1,10 +1,13 @@
-import { sql } from 'drizzle-orm';
+import { type HasDefault, type NotNull, sql } from 'drizzle-orm';
 import {
   type AnySQLiteColumn,
+  type IndexBuilder,
+  type PrimaryKeyBuilder,
   index,
   integer,
   primaryKey,
   snakeCase,
+  type SQLiteIntegerBuilder,
   text,
   uniqueIndex,
 } from 'drizzle-orm/sqlite-core';
@@ -43,7 +46,8 @@ export type StopReason = (typeof stopReasons)[number];
 // Times are Unix milliseconds. JSON columns are text; the Server validates them on write and read.
 // The database stamps `createdAt` and `startedAt` on insert, and a trigger stamps `updatedAt` on update (migration `updated_at_triggers`).
 const now = sql`(cast(unixepoch('subsec') * 1000 as integer))`;
-const timestamp = () => integer().notNull().default(now);
+const timestamp = (): HasDefault<NotNull<SQLiteIntegerBuilder>> =>
+  integer().notNull().default(now);
 
 export const project = snakeCase.table('project', {
   id: text().primaryKey(),
@@ -60,7 +64,7 @@ export const session = snakeCase.table('session', {
   id: text().primaryKey(),
   projectId: text()
     .notNull()
-    .references(() => project.id, { onDelete: 'cascade' }),
+    .references((): typeof project.id => project.id, { onDelete: 'cascade' }),
   agent: text().notNull(),
   title: text().notNull().default(''),
   titleSource: text({ enum: sessionTitleSources }).notNull().default('prompt'),
@@ -92,7 +96,7 @@ export const turn = snakeCase.table(
     id: text().primaryKey(),
     sessionId: text()
       .notNull()
-      .references(() => session.id, { onDelete: 'cascade' }),
+      .references((): typeof session.id => session.id, { onDelete: 'cascade' }),
     status: text({ enum: turnStatuses }).notNull(),
     stopReason: text({ enum: stopReasons }),
     error: text({ mode: 'json' }),
@@ -101,20 +105,19 @@ export const turn = snakeCase.table(
     startedAt: timestamp(),
     endedAt: integer(),
   },
-  (table) => [
-    index('turn_session_id_started_at_index').on(
-      table.sessionId,
-      table.startedAt,
-    ),
+  ({ sessionId, startedAt }): IndexBuilder[] => [
+    index('turn_session_id_started_at_index').on(sessionId, startedAt),
   ],
 );
+
+const kindIndex = 'feed_row_session_id_session_update_position_index';
 
 export const feedRow = snakeCase.table(
   'feed_row',
   {
     sessionId: text()
       .notNull()
-      .references(() => session.id, { onDelete: 'cascade' }),
+      .references((): typeof session.id => session.id, { onDelete: 'cascade' }),
     position: integer().notNull(),
     id: text().notNull(),
     sessionUpdate: text({ enum: sessionUpdateKinds }).notNull(),
@@ -128,18 +131,14 @@ export const feedRow = snakeCase.table(
     createdAt: timestamp(),
     updatedAt: timestamp(),
   },
-  (table) => [
+  (table): (IndexBuilder | PrimaryKeyBuilder)[] => [
     primaryKey({ columns: [table.sessionId, table.position] }),
     uniqueIndex('feed_row_session_id_id_unique').on(table.sessionId, table.id),
     index('feed_row_session_id_revision_index').on(
       table.sessionId,
       table.revision,
     ),
-    index('feed_row_session_id_session_update_position_index').on(
-      table.sessionId,
-      table.sessionUpdate,
-      table.position,
-    ),
+    index(kindIndex).on(table.sessionId, table.sessionUpdate, table.position),
   ],
 );
 
@@ -159,10 +158,12 @@ export const blobRef = snakeCase.table(
   {
     blobId: text()
       .notNull()
-      .references(() => blob.id),
+      .references((): typeof blob.id => blob.id),
     sessionId: text()
       .notNull()
-      .references(() => session.id, { onDelete: 'cascade' }),
+      .references((): typeof session.id => session.id, { onDelete: 'cascade' }),
   },
-  (table) => [primaryKey({ columns: [table.blobId, table.sessionId] })],
+  ({ blobId, sessionId }): PrimaryKeyBuilder[] => [
+    primaryKey({ columns: [blobId, sessionId] }),
+  ],
 );

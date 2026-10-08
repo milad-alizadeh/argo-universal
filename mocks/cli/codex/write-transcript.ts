@@ -6,8 +6,14 @@ export function writeCodexTranscript(
   directory: string,
   _cwd: string,
   vendorSessionId: string,
-) {
+): {
+  environment: Record<string, never>;
+  scenario: { transcriptFile: string };
+} {
   const file = path.join(directory, 'transcript.json');
   writeFileSync(file, JSON.stringify({ vendorSessionId }));
-  return { environment: {}, scenario: { transcriptFile: file } };
+  return {
+    environment: {},
+    scenario: { transcriptFile: file },
+  };
 }

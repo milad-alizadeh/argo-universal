@@ -9,7 +9,7 @@ export function recordedFeedEvents<Message, MappingState>(
   messages: Message[],
 ): AgentEvent[] {
   let state = adapter.initialMappingState();
-  return messages.flatMap((message) => {
+  return messages.flatMap((message): AgentEvent[] => {
     const mapped = adapter.toAgentEvents(message, state);
     state = mapped.mappingState;
     return mapped.events;

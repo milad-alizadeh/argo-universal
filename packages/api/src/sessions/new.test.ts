@@ -2,10 +2,14 @@ import { expect, it } from 'vitest';
 import { unreachableServices } from '../../mocks';
 import { appRouter } from '../root';
 
-it('accepts the first prompt and initial choices together and returns only the Session id', async () => {
+it('accepts the first prompt and initial choices together and returns only the Session id', async (): Promise<void> => {
   const caller = appRouter.createCaller({
     services: unreachableServices({
-      session: { new: async () => ({ sessionId: 'session-1' }) },
+      session: {
+        new: async (): Promise<{ sessionId: string }> => ({
+          sessionId: 'session-1',
+        }),
+      },
     }),
   });
   await expect(
@@ -27,24 +31,31 @@ it.each([
   {
     prompt: [{ type: 'resource_link', name: 'File', uri: 'file:///repo/file' }],
   },
-])('rejects incomplete or obsolete New Session inputs: %j', async (invalid) => {
-  const caller = appRouter.createCaller({ services: unreachableServices() });
-  await expect(
-    caller.session.new({
-      projectId: 'project-1',
-      agent: 'agent-one',
-      checkout: { type: 'main' },
-      configOptions: [],
-      prompt: [{ type: 'text', text: 'Build it' }],
-      ...invalid,
-    } as never),
-  ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
-});
+])(
+  'rejects incomplete or obsolete New Session inputs: %j',
+  async (invalid): Promise<void> => {
+    const caller = appRouter.createCaller({ services: unreachableServices() });
+    await expect(
+      caller.session.new({
+        projectId: 'project-1',
+        agent: 'agent-one',
+        checkout: { type: 'main' },
+        configOptions: [],
+        prompt: [{ type: 'text', text: 'Build it' }],
+        ...invalid,
+      } as never),
+    ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
+  },
+);
 
-it('accepts image content and boolean config choices in the initial prompt', async () => {
+it('accepts image content and boolean config choices in the initial prompt', async (): Promise<void> => {
   const caller = appRouter.createCaller({
     services: unreachableServices({
-      session: { new: async () => ({ sessionId: 'image-session' }) },
+      session: {
+        new: async (): Promise<{ sessionId: string }> => ({
+          sessionId: 'image-session',
+        }),
+      },
     }),
   });
   await expect(

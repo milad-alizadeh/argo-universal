@@ -5,5 +5,7 @@ export const agentsRouter = router({
   list: publicProcedure
     .input(AgentsListInput)
     .output(AgentsListOutput)
-    .query(({ ctx, input }) => ctx.services.agents.list(input)),
+    .query(({ ctx, input }): Promise<AgentsListOutput> =>
+      ctx.services.agents.list(input),
+    ),
 });

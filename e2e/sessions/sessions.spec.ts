@@ -1,12 +1,12 @@
 import { expect, test } from '../fixtures';
 
 // The badge's label for `count` Sessions, as the rail and the drawer word it.
-const attentionLabel = (count: number) =>
+const attentionLabel = (count: number): string =>
   `${count} ${count === 1 ? 'Session needs' : 'Sessions need'} attention`;
 
 test('the Sessions list and badge follow a Session live, and search and the filter narrow it', async ({
   page,
-}) => {
+}): Promise<void> => {
   const title = 'Check the live list';
   const row = page.getByRole('button', { name: new RegExp(`^${title}, `) });
   await expect(

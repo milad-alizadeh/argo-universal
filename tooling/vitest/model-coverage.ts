@@ -23,18 +23,18 @@ export function unwalkedTransitions<
   TSnapshot extends Snapshot<unknown>,
   TEvent extends EventObject,
 >({ models, paths, stateKey, eventKey }: Walk<TSnapshot, TEvent>): string[] {
-  const key = (from: TSnapshot, event: TEvent, to: TSnapshot) =>
+  const key = (from: TSnapshot, event: TEvent, to: TSnapshot): string =>
     `${stateKey(from)} ${eventKey(event)} ${stateKey(to)}`;
   const edges = new Set(
-    models.flatMap((model) =>
+    models.flatMap((model): string[] =>
       adjacencyMapToArray(model.getAdjacencyMap()).map(
-        ({ state, event, nextState }) => key(state, event, nextState),
+        ({ state, event, nextState }): string => key(state, event, nextState),
       ),
     ),
   );
   const walked = new Set(
-    paths.flatMap((path) =>
-      path.steps.slice(1).map((step, index) => {
+    paths.flatMap((path): string[] =>
+      path.steps.slice(1).map((step, index): string => {
         const from = path.steps[index];
         if (!from) throw new Error('A path step has no previous step.');
         return key(from.state, step.event, step.state);
@@ -47,5 +47,5 @@ export function unwalkedTransitions<
     throw new Error(
       `${paths.length} paths reach the cap of ${maximumPathCount}; split the model or filter its events.`,
     );
-  return [...edges].filter((edge) => !walked.has(edge));
+  return [...edges].filter((edge): boolean => !walked.has(edge));
 }

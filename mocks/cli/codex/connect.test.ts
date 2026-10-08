@@ -22,21 +22,25 @@ import { writeMockCodex } from './write-mock-codex';
 
 const cleanups: (() => void | Promise<void>)[] = [];
 const cliDeadline = { timeout: 10_000 };
-afterEach(async () => {
+afterEach(async (): Promise<void> => {
   for (const cleanup of cleanups.splice(0).reverse()) await cleanup();
 });
 
 // Sets the whole scenario once, before the CLI starts.
-const stubScenario = (scenario: MockCliScenarioInput) => {
+const stubScenario = (scenario: MockCliScenarioInput): void => {
   for (const [key, value] of Object.entries(
     mockCliScenarioEnvironment(scenario),
   ))
     vi.stubEnv(key, value);
 };
 
-async function prepare(recording: string) {
+async function prepare(
+  recording: string,
+): Promise<{ directory: string; executable: string }> {
   const directory = mkdtempSync(path.join(tmpdir(), 'codex-cancel-'));
-  cleanups.push(() => rmSync(directory, { recursive: true, force: true }));
+  cleanups.push((): void =>
+    rmSync(directory, { recursive: true, force: true }),
+  );
   const executable = await writeMockCodex(directory, { recording });
   vi.stubEnv('PATH', directory);
   return { directory, executable };
@@ -48,7 +52,7 @@ const prompt: AgentCommandOf<'agent.prompt'> = {
   content: [{ type: 'text', text: 'Run a command.' }],
 };
 
-it('starts another Turn before a cancelled Turn receives its late start response', async () => {
+it('starts another Turn before a cancelled Turn receives its late start response', async (): Promise<void> => {
   stubScenario({ turnResponseAfterNextStart: true });
   const { directory, executable } = await prepare('interrupt');
   const source = findRecording(
@@ -61,7 +65,7 @@ it('starts another Turn before a cancelled Turn receives its late start response
     };
   };
   const identifiers = new Set(
-    envelope.payload.messages.flatMap((message) => {
+    envelope.payload.messages.flatMap((message): string[] => {
       if (
         message.method === 'turn/started' ||
         message.method === 'turn/completed'
@@ -75,7 +79,7 @@ it('starts another Turn before a cancelled Turn receives its late start response
       return [];
     }),
   );
-  const next = envelope.payload.messages.map((message) => {
+  const next = envelope.payload.messages.map((message): VendorMessage => {
     let text = JSON.stringify(message);
     for (const id of identifiers) text = text.replaceAll(id, `${id}-next`);
     return JSON.parse(text);
@@ -95,11 +99,11 @@ it('starts another Turn before a cancelled Turn receives its late start response
 
   const events: AgentEvent[] = [];
   const parent = createActor(
-    fromCallback<AgentEvent>(({ receive }) =>
-      receive((event) => events.push(event)),
+    fromCallback<AgentEvent>(({ receive }): void =>
+      receive((event): number => events.push(event)),
     ),
   ).start();
-  cleanups.push(() => {
+  cleanups.push((): void => {
     parent.stop();
   });
   const agent = createActor(agentMachine, {
@@ -112,39 +116,61 @@ it('starts another Turn before a cancelled Turn receives its late start response
       parent,
     },
   }).start();
-  cleanups.push(async () => {
+  cleanups.push(async (): Promise<void> => {
     agent.send({ type: 'agent.stop' });
-    await waitFor(agent, (snapshot) => snapshot.status === 'done', {
-      timeout: 10_000,
-    });
+    await waitFor(
+      agent,
+      (
+        snapshot,
+      ): snapshot is Extract<
+        ReturnType<typeof agent.getSnapshot>,
+        { status: 'done' }
+      > => snapshot.status === 'done',
+      {
+        timeout: 10_000,
+      },
+    );
   });
   await expect
     .poll(
-      () => events.some((event) => event.type === 'agent.ready'),
+      (): boolean =>
+        events.some(
+          (event): event is Extract<AgentEvent, { type: 'agent.ready' }> =>
+            event.type === 'agent.ready',
+        ),
       cliDeadline,
     )
     .toBe(true);
   agent.send(prompt);
   agent.send({ type: 'agent.cancel' });
-  const ended = () =>
-    events.filter((event) => event.type === 'agent.turnEnded');
-  await expect.poll(() => ended().length, cliDeadline).toBe(1);
+  const ended = (): Extract<AgentEvent, { type: 'agent.turnEnded' }>[] =>
+    events.filter(
+      (event): event is Extract<AgentEvent, { type: 'agent.turnEnded' }> =>
+        event.type === 'agent.turnEnded',
+    );
+  await expect.poll((): number => ended().length, cliDeadline).toBe(1);
   agent.send({ ...prompt, turnId: 'turn-2' });
   await expect
     .poll(
-      () => events.filter((event) => event.type === 'agent.turnStarted').length,
+      (): number =>
+        events.filter(
+          (
+            event,
+          ): event is Extract<AgentEvent, { type: 'agent.turnStarted' }> =>
+            event.type === 'agent.turnStarted',
+        ).length,
       cliDeadline,
     )
     .toBe(2);
   agent.send({ type: 'agent.cancel' });
-  await expect.poll(() => ended().length, cliDeadline).toBe(2);
+  await expect.poll((): number => ended().length, cliDeadline).toBe(2);
   expect(ended()).toEqual([
     expect.objectContaining({ stopReason: 'cancelled' }),
     expect.objectContaining({ stopReason: 'cancelled' }),
   ]);
 });
 
-it('does not interrupt a completed Turn when its start response arrives afterward', async () => {
+it('does not interrupt a completed Turn when its start response arrives afterward', async (): Promise<void> => {
   stubScenario({ completionBeforeResponse: true });
   const { directory } = await prepare('edit-and-command');
   const failures: unknown[] = [];
@@ -156,27 +182,27 @@ it('does not interrupt a completed Turn when its start response arrives afterwar
       configOptions: [],
     },
     {
-      message: () => {},
-      event: () => {},
-      failed: (error) => failures.push(error),
+      message: (): void => {},
+      event: (): void => {},
+      failed: (error): number => failures.push(error),
     },
     new AbortController().signal,
   );
-  cleanups.push(() => session.stop());
+  cleanups.push((): Promise<void> => session.stop());
   await session.run(prompt);
   await session.run({ type: 'agent.cancel' });
   expect(failures).toEqual([]);
 });
 
-it('leaves the Agent ready when Stop cancels a Turn with a pending Elicitation', async () => {
+it('leaves the Agent ready when Stop cancels a Turn with a pending Elicitation', async (): Promise<void> => {
   const { directory } = await prepare('elicitation');
   const events: AgentEvent[] = [];
   const parent = createActor(
-    fromCallback<AgentEvent>(({ receive }) =>
-      receive((event) => events.push(event)),
+    fromCallback<AgentEvent>(({ receive }): void =>
+      receive((event): number => events.push(event)),
     ),
   ).start();
-  cleanups.push(() => {
+  cleanups.push((): void => {
     parent.stop();
   });
   const agent = createActor(agentMachine, {
@@ -189,20 +215,41 @@ it('leaves the Agent ready when Stop cancels a Turn with a pending Elicitation',
       parent,
     },
   }).start();
-  cleanups.push(async () => {
+  cleanups.push(async (): Promise<void> => {
     agent.send({ type: 'agent.stop' });
-    await waitFor(agent, (snapshot) => snapshot.status === 'done', cliDeadline);
+    await waitFor(
+      agent,
+      (
+        snapshot,
+      ): snapshot is Extract<
+        ReturnType<typeof agent.getSnapshot>,
+        { status: 'done' }
+      > => snapshot.status === 'done',
+      cliDeadline,
+    );
   });
   await expect
     .poll(
-      () => events.some((event) => event.type === 'agent.ready'),
+      (): boolean =>
+        events.some(
+          (event): event is Extract<AgentEvent, { type: 'agent.ready' }> =>
+            event.type === 'agent.ready',
+        ),
       cliDeadline,
     )
     .toBe(true);
   agent.send(prompt);
   await expect
     .poll(
-      () => events.some((event) => event.type === 'agent.elicitationRequested'),
+      (): boolean =>
+        events.some(
+          (
+            event,
+          ): event is Extract<
+            AgentEvent,
+            { type: 'agent.elicitationRequested' }
+          > => event.type === 'agent.elicitationRequested',
+        ),
       cliDeadline,
     )
     .toBe(true);
@@ -210,16 +257,25 @@ it('leaves the Agent ready when Stop cancels a Turn with a pending Elicitation',
   agent.send({ type: 'agent.answerElicitation', action: 'cancel' });
   await expect
     .poll(
-      () => events.some((event) => event.type === 'agent.turnEnded'),
+      (): boolean =>
+        events.some(
+          (event): event is Extract<AgentEvent, { type: 'agent.turnEnded' }> =>
+            event.type === 'agent.turnEnded',
+        ),
       cliDeadline,
     )
     .toBe(true);
   // Wait for both concurrently dispatched commands, including a late interrupt error.
   const cancellationSettleWait = 200;
-  await new Promise((resolve) => setTimeout(resolve, cancellationSettleWait));
-  expect(events.filter((event) => event.type === 'agent.turnEnded')).toEqual([
-    expect.objectContaining({ stopReason: 'cancelled' }),
-  ]);
+  await new Promise((resolve): NodeJS.Timeout =>
+    setTimeout(resolve, cancellationSettleWait),
+  );
+  expect(
+    events.filter(
+      (event): event is Extract<AgentEvent, { type: 'agent.turnEnded' }> =>
+        event.type === 'agent.turnEnded',
+    ),
+  ).toEqual([expect.objectContaining({ stopReason: 'cancelled' })]);
   expect(agent.getSnapshot().status).toBe('active');
   expect(agent.getSnapshot().context.failure).toBeNull();
 });
@@ -241,16 +297,16 @@ it.each([
   },
 ])(
   '$behavior on an interrupt error',
-  async ({ interruptError, status, failure, endedTurns }) => {
+  async ({ interruptError, status, failure, endedTurns }): Promise<void> => {
     stubScenario({ interruptError });
     const { directory } = await prepare('elicitation');
     const events: AgentEvent[] = [];
     const parent = createActor(
-      fromCallback<AgentEvent>(({ receive }) =>
-        receive((event) => events.push(event)),
+      fromCallback<AgentEvent>(({ receive }): void =>
+        receive((event): number => events.push(event)),
       ),
     ).start();
-    cleanups.push(() => {
+    cleanups.push((): void => {
       parent.stop();
     });
     const agent = createActor(agentMachine, {
@@ -263,35 +319,56 @@ it.each([
         parent,
       },
     }).start();
-    cleanups.push(async () => {
+    cleanups.push(async (): Promise<void> => {
       agent.send({ type: 'agent.stop' });
       await waitFor(
         agent,
-        (snapshot) => snapshot.status === 'done',
+        (
+          snapshot,
+        ): snapshot is Extract<
+          ReturnType<typeof agent.getSnapshot>,
+          { status: 'done' }
+        > => snapshot.status === 'done',
         cliDeadline,
       );
     });
     await expect
       .poll(
-        () => events.some((event) => event.type === 'agent.ready'),
+        (): boolean =>
+          events.some(
+            (event): event is Extract<AgentEvent, { type: 'agent.ready' }> =>
+              event.type === 'agent.ready',
+          ),
         cliDeadline,
       )
       .toBe(true);
     agent.send(prompt);
     await expect
       .poll(
-        () =>
-          events.some((event) => event.type === 'agent.elicitationRequested'),
+        (): boolean =>
+          events.some(
+            (
+              event,
+            ): event is Extract<
+              AgentEvent,
+              { type: 'agent.elicitationRequested' }
+            > => event.type === 'agent.elicitationRequested',
+          ),
         cliDeadline,
       )
       .toBe(true);
     agent.send({ type: 'agent.cancel' });
     const cancellationSettleWait = 200;
-    await new Promise((resolve) => setTimeout(resolve, cancellationSettleWait));
+    await new Promise((resolve): NodeJS.Timeout =>
+      setTimeout(resolve, cancellationSettleWait),
+    );
     expect(agent.getSnapshot().status).toBe(status);
     expect(agent.getSnapshot().context.failure).toBe(failure);
     expect(
-      events.filter((event) => event.type === 'agent.turnEnded'),
+      events.filter(
+        (event): event is Extract<AgentEvent, { type: 'agent.turnEnded' }> =>
+          event.type === 'agent.turnEnded',
+      ),
     ).toHaveLength(endedTurns);
   },
 );
@@ -307,39 +384,42 @@ it.each([
     description: 'null request id',
     frame: { id: null, method: 'item/tool/requestUserInput', params: {} },
   },
-])('fails a connection with a $description frame', async ({ frame }) => {
-  const { directory, executable } = await prepare('elicitation');
-  writeFileSync(
-    executable,
-    [
-      `#!${process.execPath}`,
-      `process.stdout.write(${JSON.stringify(`${JSON.stringify(frame)}\n`)});`,
-      'process.stdin.resume();',
-      "process.stdin.on('end', () => process.exit(0));",
-    ].join('\n'),
-  );
-  const failures: unknown[] = [];
-  const controller = new AbortController();
-  cleanups.push(() => controller.abort());
-  await expect(
-    codexAdapter.connect(
-      {
-        sessionId: 'session',
-        cwd: directory,
-        vendorSessionId: null,
-        configOptions: [],
-      },
-      {
-        message: () => {},
-        event: () => {},
-        failed: (error) => failures.push(error),
-      },
-      controller.signal,
-    ),
-  ).rejects.toThrow('Unrecognised app-server message');
-  expect(failures).toEqual([
-    expect.objectContaining({
-      message: expect.stringContaining('Unrecognised app-server message'),
-    }),
-  ]);
-});
+])(
+  'fails a connection with a $description frame',
+  async ({ frame }): Promise<void> => {
+    const { directory, executable } = await prepare('elicitation');
+    writeFileSync(
+      executable,
+      [
+        `#!${process.execPath}`,
+        `process.stdout.write(${JSON.stringify(`${JSON.stringify(frame)}\n`)});`,
+        'process.stdin.resume();',
+        "process.stdin.on('end', () => process.exit(0));",
+      ].join('\n'),
+    );
+    const failures: unknown[] = [];
+    const controller = new AbortController();
+    cleanups.push((): void => controller.abort());
+    await expect(
+      codexAdapter.connect(
+        {
+          sessionId: 'session',
+          cwd: directory,
+          vendorSessionId: null,
+          configOptions: [],
+        },
+        {
+          message: (): void => {},
+          event: (): void => {},
+          failed: (error): number => failures.push(error),
+        },
+        controller.signal,
+      ),
+    ).rejects.toThrow('Unrecognised app-server message');
+    expect(failures).toEqual([
+      expect.objectContaining({
+        message: expect.stringContaining('Unrecognised app-server message'),
+      }),
+    ]);
+  },
+);

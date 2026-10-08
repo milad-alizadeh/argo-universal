@@ -30,7 +30,7 @@ export const PermissionOption = z
     kind: PermissionOptionKind,
   })
   .refine(
-    (option) => option.optionId === option.kind,
+    (option): boolean => option.optionId === option.kind,
     'The option id must match its kind',
   );
 export type PermissionOption = z.infer<typeof PermissionOption>;
@@ -48,7 +48,12 @@ export const PendingPermission = z.strictObject({
     .array(PermissionOption)
     .length(2)
     .refine(
-      (options) => new Set(options.map((option) => option.optionId)).size === 2,
+      (options): boolean =>
+        new Set(
+          options.map(
+            (option): 'allow_once' | 'reject_once' => option.optionId,
+          ),
+        ).size === 2,
       'Offer allow_once and reject_once exactly once',
     ),
 });
