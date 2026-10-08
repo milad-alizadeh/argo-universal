@@ -4,6 +4,8 @@ import { TicketIcon } from 'phosphor-react-native/src/icons/Ticket';
 import { TreeStructureIcon } from 'phosphor-react-native/src/icons/TreeStructure';
 import type { Section } from '../navigation/sections';
 
+export type { Section } from '../navigation/sections';
+
 export const shellSections = {
   sessions: { title: 'Sessions', icon: ChatsIcon },
   issues: { title: 'Issues', icon: TicketIcon },

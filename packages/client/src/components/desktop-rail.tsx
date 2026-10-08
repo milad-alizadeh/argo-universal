@@ -6,9 +6,8 @@ import { Badge } from '#primitives/badge';
 import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
 import { Icon } from '../lib/icon';
-import type { Section } from '../navigation/sections';
 import { maximumAttentionBadgeCount } from './attention-badge';
-import { shellSections } from './shell-sections';
+import { type Section, shellSections } from './shell-sections';
 
 interface DesktopRailProps {
   selectedSection: Section;
