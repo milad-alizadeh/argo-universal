@@ -1,4 +1,5 @@
 import type { NavigationDestination } from '@repo/client';
+import type { Href } from 'expo-router';
 
 // The route that draws each destination; a destination's fields are its route's params.
 type RouteParams = Record<string, string | string[] | undefined>;
@@ -66,12 +67,38 @@ const routes = {
   }
 >;
 
-type Route = keyof typeof routes;
+export function hrefFor(destination: NavigationDestination): Href {
+  if (destination.to === 'session') return sessionHref(destination);
+  return settingsOrStaticHref(destination);
+}
 
-export function hrefFor({ to, ...params }: NavigationDestination): {
-  pathname: (typeof routes)[Route]['pathname'];
-  params: Omit<NavigationDestination, 'to'>;
-} {
+function settingsOrStaticHref(
+  destination: Exclude<NavigationDestination, { to: 'session' }>,
+): Href {
+  if (destination.to === 'settings-project') return projectHref(destination);
+  if (destination.to === 'settings-agent') return agentHref(destination);
+  const { to, ...params } = destination;
+  return { pathname: routes[to].pathname, params };
+}
+
+function sessionHref(
+  destination: Extract<NavigationDestination, { to: 'session' }>,
+): Href {
+  const { to, ...params } = destination;
+  return { pathname: routes[to].pathname, params };
+}
+
+function projectHref(
+  destination: Extract<NavigationDestination, { to: 'settings-project' }>,
+): Href {
+  const { to, ...params } = destination;
+  return { pathname: routes[to].pathname, params };
+}
+
+function agentHref(
+  destination: Extract<NavigationDestination, { to: 'settings-agent' }>,
+): Href {
+  const { to, ...params } = destination;
   return { pathname: routes[to].pathname, params };
 }
 
