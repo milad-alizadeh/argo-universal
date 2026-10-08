@@ -1,38 +1,44 @@
 import type {
+  ConfigOptionIcon,
   SessionConfigOption,
   SessionConfigSelectOption,
 } from '@repo/contracts';
-import {
-  effortLevelName,
-  hasEffortLevels,
-  sharedModes,
-} from '../src/config-options';
+import { effortLevelName, hasEffortLevels } from '../src/config-options';
 import type {
   Model,
   ReasoningEffort,
   ReasoningEffortOption,
 } from './protocol.gen';
-export const modes = {
-  ...sharedModes,
-  fullAccess: {
-    name: 'Full access',
-    description: 'Runs without sandbox or permission requests.',
-    _meta: { argo: { icon: 'WarningTriangle', tone: 'dangerous' } },
-  },
-} satisfies Record<string, Omit<SessionConfigSelectOption, 'value'>>;
-export const isMode = (value: string): value is keyof typeof modes =>
-  value in modes;
+export const modeNames = {
+  plan: 'Plan mode',
+  default: 'Ask first',
+  fullAccess: 'Full access',
+};
+type Mode = keyof typeof modeNames;
+const modeDescriptions = {
+  default: 'Asks before edits and commands',
+  plan: 'Reads and plans, changes nothing',
+  fullAccess: 'Runs without sandbox or permission requests.',
+} satisfies Record<Mode, string>;
+const modeMetadata = {
+  default: { icon: 'ShieldWarning', tone: 'safe' },
+  plan: { icon: 'MapTrifold', tone: 'planning' },
+  fullAccess: { icon: 'WarningTriangle', tone: 'dangerous' },
+} satisfies Record<
+  Mode,
+  NonNullable<SessionConfigOption['_meta']>['argo'] & { icon: ConfigOptionIcon }
+>;
+export const isMode = (value: string): value is Mode => value in modeNames;
+
 export const modeOption = (
-  currentValue: keyof typeof modes,
+  currentValue: keyof typeof modeNames,
 ): SessionConfigOption => ({
   type: 'select',
   configId: 'mode',
   name: 'Mode',
   category: 'mode',
   currentValue,
-  options: Object.keys(modes)
-    .filter(isMode)
-    .map((value): SessionConfigSelectOption => ({ value, ...modes[value] })),
+  options: Object.keys(modeNames).filter(isMode).map(modeChoice),
 });
 const modelMetadata = (model: Model): SessionConfigSelectOption['_meta'] => ({
   argo: {
@@ -89,4 +95,11 @@ const effortOption = (
   category: 'thought_level',
   currentValue,
   options: levels.map(effortChoice),
+});
+
+const modeChoice = (value: Mode): SessionConfigSelectOption => ({
+  value,
+  name: modeNames[value],
+  description: modeDescriptions[value],
+  _meta: { argo: modeMetadata[value] },
 });

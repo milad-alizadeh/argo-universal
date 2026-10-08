@@ -2,7 +2,7 @@ import type { SessionConfigOption } from '@repo/contracts';
 import type { AgentConfigValue } from '../src/agent-events';
 import { changeValue as changeConfigValue } from '../src/config-options';
 import {
-  modes,
+  modeNames,
   isMode,
   modeOption,
   modelOption,
@@ -14,7 +14,7 @@ export type { Model } from './protocol.gen';
 export interface ConfigValues {
   model: string;
   effort: ReasoningEffort;
-  mode: keyof typeof modes;
+  mode: keyof typeof modeNames;
 }
 const modelFor = (models: Model[], value: unknown): Model | undefined =>
   models.find((model): boolean => model.model === value) ??
@@ -27,7 +27,7 @@ function allowedValues(
   const model = modelFor(models, wanted.model);
   if (!model) throw new Error('Codex offers no models.');
   const effort = allowedEffort(model, wanted.effort);
-  const mode = Object.keys(modes)
+  const mode = Object.keys(modeNames)
     .filter(isMode)
     .find((mode): boolean => mode === wanted.mode);
   return { model: model.model, effort, mode: allowedMode(mode) };
@@ -72,5 +72,5 @@ const allowedEffort = (model: Model, wanted: unknown): ReasoningEffort =>
     (option): boolean => option.reasoningEffort === wanted,
   )?.reasoningEffort ?? model.defaultReasoningEffort;
 const allowedMode = (
-  mode: keyof typeof modes | undefined,
-): keyof typeof modes => mode ?? 'default';
+  mode: keyof typeof modeNames | undefined,
+): keyof typeof modeNames => mode ?? 'default';

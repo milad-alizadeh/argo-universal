@@ -4,6 +4,7 @@ import type {
   PermissionMode,
 } from '@anthropic-ai/claude-agent-sdk';
 import type {
+  ConfigOptionIcon,
   SessionConfigOption,
   SessionConfigSelectOption,
 } from '@repo/contracts';
@@ -12,31 +13,34 @@ import {
   changeValue as changeConfigValue,
   effortLevelName,
   hasEffortLevels,
-  sharedModes,
 } from '../src/config-options';
 
 // The SDK names its modes only as a type, so this list and its names are ours; `dontAsk` is not offered.
-const modes = {
-  ...sharedModes,
-  acceptEdits: {
-    name: 'Accept edits',
-    description: 'Edits files without asking, asks before commands',
-    _meta: { argo: { icon: 'Pencil', tone: 'moderate' } },
-  },
-  auto: {
-    name: 'Auto',
-    description: 'Automatically checks permissions for each action',
-    _meta: { argo: { icon: 'Sparkles', tone: 'moderate' } },
-  },
-  bypassPermissions: {
-    name: 'Bypass permissions',
-    description: 'Runs everything without asking',
-    _meta: { argo: { icon: 'WarningTriangle', tone: 'dangerous' } },
-  },
-} satisfies Partial<
-  Record<PermissionMode, Omit<SessionConfigSelectOption, 'value'>>
+const modeNames = {
+  plan: 'Plan mode',
+  default: 'Ask first',
+  acceptEdits: 'Accept edits',
+  auto: 'Auto',
+  bypassPermissions: 'Bypass permissions',
+} satisfies Partial<Record<PermissionMode, string>>;
+type Mode = keyof typeof modeNames;
+const modeDescriptions = {
+  default: 'Asks before edits and commands',
+  acceptEdits: 'Edits files without asking, asks before commands',
+  plan: 'Reads and plans, changes nothing',
+  auto: 'Automatically checks permissions for each action',
+  bypassPermissions: 'Runs everything without asking',
+} satisfies Record<Mode, string>;
+const modeMetadata = {
+  default: { icon: 'ShieldWarning', tone: 'safe' },
+  acceptEdits: { icon: 'Pencil', tone: 'moderate' },
+  plan: { icon: 'MapTrifold', tone: 'planning' },
+  auto: { icon: 'Sparkles', tone: 'moderate' },
+  bypassPermissions: { icon: 'WarningTriangle', tone: 'dangerous' },
+} satisfies Record<
+  Mode,
+  NonNullable<SessionConfigOption['_meta']>['argo'] & { icon: ConfigOptionIcon }
 >;
-type Mode = keyof typeof modes;
 
 // `default` identifies the recommended model; supported effort defaults resolve to a concrete level.
 export const DEFAULT_VALUE = 'default';
@@ -56,8 +60,8 @@ const findModel = (
 
 // Models and their effort levels come from the CLI's model list.
 const modesFor = (model: ModelInfo | undefined): Mode[] =>
-  Object.keys(modes)
-    .filter((mode): mode is Mode => mode in modes)
+  Object.keys(modeNames)
+    .filter((mode): mode is Mode => mode in modeNames)
     .filter(
       (mode): boolean | undefined => mode !== 'auto' || model?.supportsAutoMode,
     );
@@ -160,7 +164,9 @@ export function toConfigOptions(
       currentValue: values.mode,
       options: modesFor(model).map((mode): SessionConfigSelectOption => ({
         value: mode,
-        ...modes[mode],
+        name: modeNames[mode],
+        description: modeDescriptions[mode],
+        _meta: { argo: modeMetadata[mode] },
       })),
     },
     {

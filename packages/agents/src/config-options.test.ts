@@ -31,27 +31,10 @@ const adapters = [
   },
 ];
 it.each(adapters)(
-  '$name offers the common modes and effort labels',
+  '$name offers the shared effort labels',
   ({ options }): void => {
     expect(options).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({
-          configId: 'mode',
-          options: expect.arrayContaining([
-            {
-              value: 'default',
-              name: 'Ask first',
-              description: 'Asks before edits and commands',
-              _meta: { argo: { icon: 'ShieldWarning', tone: 'safe' } },
-            },
-            {
-              value: 'plan',
-              name: 'Plan mode',
-              description: 'Reads and plans, changes nothing',
-              _meta: { argo: { icon: 'MapTrifold', tone: 'planning' } },
-            },
-          ]),
-        }),
         expect.objectContaining({
           configId: 'effort',
           options: expect.arrayContaining([

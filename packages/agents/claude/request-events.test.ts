@@ -2,9 +2,7 @@ import { expect, it } from 'vitest';
 import { permission, plan, question } from './mocks/requests';
 import { initialMappingState, toAgentEvents } from './to-agent-events';
 
-const questionText = 'Choose a color';
-
-const colorQuestion = questionText;
+const colorQuestion = 'Choose a color';
 
 it('maps a provider approval request to Argo permission options', (): void => {
   expect(toAgentEvents(permission, initialMappingState()).events).toEqual([
@@ -89,13 +87,13 @@ it('rejects an SDK dictionary that cannot become an Argo plan', (): void => {
 });
 
 it.each([
-  { header: 17, question: questionText, options: [] },
+  { header: 17, question: colorQuestion, options: [] },
   { header: 'Color', question: 17, options: [] },
-  { header: 'Color', question: questionText, options: 17 },
-  { header: 'Color', question: questionText, options: [{ label: 17 }] },
+  { header: 'Color', question: colorQuestion, options: 17 },
+  { header: 'Color', question: colorQuestion, options: [{ label: 17 }] },
   {
     header: 'Color',
-    question: questionText,
+    question: colorQuestion,
     options: [{ label: 'Red', description: false }],
   },
 ])('rejects a malformed SDK question projection: %o', (invalid): void => {
