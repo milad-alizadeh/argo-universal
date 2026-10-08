@@ -1,5 +1,9 @@
-import type { AgentInfo, SessionNewInput } from '@repo/contracts';
-import type { AgentCommand, AgentEvent, AgentInput } from './agent-events';
+import type { AgentInfo, SessionInfo, SessionNewInput } from '@repo/contracts';
+import type {
+  AgentCommand,
+  AgentConfigValue,
+  AgentEvent,
+} from './agent-events';
 
 export type AgentCommandOf<Type extends AgentCommand['type']> = Extract<
   AgentCommand,
@@ -11,7 +15,13 @@ export type AgentReady = Omit<
   'type'
 >;
 
-export type AgentConnectInput = Omit<AgentInput, 'adapter' | 'parent'>;
+export interface AgentConnectInput extends Pick<
+  SessionInfo,
+  'sessionId' | 'cwd'
+> {
+  vendorSessionId: string | null;
+  configOptions: AgentConfigValue[];
+}
 
 // How a vendor session reports to the Agent machine; vendor messages go through `toAgentEvents`.
 // A vendor session may report before `connect` resolves; the Agent machine holds those events until ready.
