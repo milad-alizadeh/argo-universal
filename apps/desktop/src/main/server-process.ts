@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
-import { homedir } from 'node:os';
 import { join } from 'node:path';
+import { resolveRuntimeDirectory } from '@repo/api/server-runtime';
 import { ServerAddress } from '@repo/contracts';
 import type { z } from 'zod';
 
@@ -17,8 +17,7 @@ const reportUnrecognised = (source: string, error: z.ZodError) => {
 };
 
 // ARGO_HOME overrides ~/.argo, as in the Server.
-export const resolveHome = () =>
-  process.env.ARGO_HOME ?? join(homedir(), '.argo');
+export const resolveHome = resolveRuntimeDirectory;
 
 async function readServerAddress(home: string): Promise<ServerAddress | null> {
   let text: string;

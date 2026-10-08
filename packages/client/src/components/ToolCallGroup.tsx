@@ -61,57 +61,33 @@ export function ToolCallGroup({
   initialOpen,
   now,
 }: ToolCallGroupProps) {
-  const toolCalls = group.items.flatMap((activity) => {
-    if (activity.type === 'exploration') return activity.toolCalls;
-    if (activity.type === 'tool_call') return [activity.row];
-    return [];
-  });
-  const latest = toolCalls.reduce<(typeof toolCalls)[number] | undefined>(
-    (previous, row) =>
-      !previous || row.position > previous.position ? row : previous,
-    undefined,
-  );
-  const duration = useToolCallDuration(latest, now);
+  const live = group.state === 'open' ? group.live : undefined;
+  const duration = useToolCallDuration(live?.toolCall, now);
   const running = group.state === 'open';
   const items = group.items.flatMap<FeedActivity>((activity) => {
-    if (
-      !running ||
-      !latest ||
-      (latest.status !== 'pending' && latest.status !== 'in_progress')
-    )
-      return [activity];
-    if (activity.type === 'tool_call' && activity.row.id === latest.id)
+    if (!live) return [activity];
+    if (activity.type === 'tool_call' && activity.row.id === live.toolCall.id)
       return [];
     if (activity.type === 'exploration') {
       const remaining = activity.toolCalls.filter(
-        (row) => row.id !== latest.id,
+        (row) => row.id !== live.toolCall.id,
       );
       return remaining.length ? [{ ...activity, toolCalls: remaining }] : [];
     }
     return [activity];
   });
   const onActivitiesLayout = useGrowthAbove(group.id, items.map(activityKey));
-  const livePermission =
-    running &&
-    latest &&
-    (latest.status === 'pending' || latest.status === 'in_progress')
-      ? latest._meta?.argo?.permissionOutcome
-      : undefined;
   return (
     <ToolCallDisclosure
-      permissionOutcome={livePermission}
+      permissionOutcome={live?.toolCall._meta?.argo?.permissionOutcome}
       label={
-        running && latest
-          ? toolCallTitle(latest, group.title === 'Awaiting approval')
-          : group.title
+        live ? toolCallTitle(live.toolCall, live.awaitingApproval) : group.title
       }
-      icon={running && latest ? toolCallIcon(latest) : BookOpenIcon}
+      icon={live ? toolCallIcon(live.toolCall) : BookOpenIcon}
       running={running}
-      awaitingApproval={group.title === 'Awaiting approval'}
+      awaitingApproval={live?.awaitingApproval ?? false}
       initialOpen={initialOpen}
-      trailing={
-        running && group.title !== 'Awaiting approval' ? duration : undefined
-      }
+      trailing={running && !live?.awaitingApproval ? duration : undefined}
     >
       <View className="gap-2 pb-1" onLayout={onActivitiesLayout}>
         {items.map((activity) => (

@@ -1,12 +1,12 @@
 import { appendFileSync, mkdirSync } from 'node:fs';
-import { homedir } from 'node:os';
 import { join } from 'node:path';
+import { resolveRuntimeDirectory } from '@repo/api/server-runtime';
 import { createActor } from 'xstate';
 import packageJson from '../../package.json' with { type: 'json' };
 import { supervisorMachine } from './machine';
 
 export function startSupervisor(options: { watch: boolean }) {
-  const home = process.env.ARGO_HOME ?? join(homedir(), '.argo');
+  const home = resolveRuntimeDirectory();
   const logFile = join(home, 'logs', 'supervisor.log');
   mkdirSync(join(home, 'logs'), { recursive: true });
   const log = (line: string) => {
@@ -18,6 +18,7 @@ export function startSupervisor(options: { watch: boolean }) {
   const supervisor = createActor(supervisorMachine, {
     input: {
       home,
+      now: Date.now,
       version: packageJson.version,
       startedAt: new Date().toISOString(),
       watch: options.watch,

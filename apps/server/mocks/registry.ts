@@ -9,13 +9,23 @@ const session = setup({
   types: {
     input: {} as Pick<SessionInput, 'sessionId'>,
     context: {} as { sessionId: string },
-    events: {} as { type: 'session.close' } | { type: 'mock.finish' },
+    events: {} as
+      | { type: 'session.close' }
+      | { type: 'mock.finish' }
+      | { type: 'mock.fail' },
     output: {} as { failure: null },
   },
 }).createMachine({
   context: ({ input }) => input,
   initial: 'open',
   output: { failure: null },
+  on: {
+    'mock.fail': {
+      actions: () => {
+        throw new Error('Session actor failed');
+      },
+    },
+  },
   states: {
     open: { on: { 'session.close': 'closing', 'mock.finish': 'closed' } },
     closing: { on: { 'mock.finish': 'closed' } },

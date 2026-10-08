@@ -1,9 +1,15 @@
 import type { Database } from '@repo/db';
 import { and, assertEvent, assign, fromPromise, setup, stateIn } from 'xstate';
-import { describeJob, type WriterJob, writeJobs } from './writer-job';
+import {
+  describeJob,
+  stampWriterJob,
+  type WriterJob,
+  writeJobs,
+} from './writer-job';
 
 export interface WriterInput {
   database: Database;
+  now: () => number;
   log?: (line: string) => void;
 }
 
@@ -39,7 +45,7 @@ export const writerMachine = setup({
     enqueue: assign({
       queue: ({ context, event }) => {
         assertEvent(event, 'writer.write');
-        return [...context.queue, event.job];
+        return [...context.queue, stampWriterJob(event.job, context.now())];
       },
     }),
     takeBatch: assign({ batchSize: ({ context }) => context.queue.length }),

@@ -23,6 +23,13 @@ export interface VendorSessionListener<Message> {
 
 export type VendorCommand = Exclude<AgentCommand, { type: 'agent.stop' }>;
 
+export class UnsupportedCommandError extends Error {
+  constructor(command: VendorCommand) {
+    super(`The Agent does not support ${command.type}.`);
+    this.name = 'UnsupportedCommandError';
+  }
+}
+
 // One live vendor session. Ordinary commands run in order; cancel and stop can interrupt them.
 export interface VendorSession {
   ready: AgentReady;

@@ -1,17 +1,35 @@
 import { SessionUpdate } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow } from '@repo/db/schema';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, getTableColumns, sql } from 'drizzle-orm';
 import type { ActorRefFrom } from 'xstate';
 import { z } from 'zod';
-import type { FeedRowWrite, WriterJob } from './writer-job';
+import {
+  type FeedRowsJob,
+  type FeedRowWrite,
+  queuedFeedRows,
+} from './writer-job';
 import type { writerMachine } from './writer-machine';
 
 type WriterRef = ActorRefFrom<typeof writerMachine>;
-export type FeedRowsJob = Extract<WriterJob, { type: 'feedRows' }>;
+
+export const storedFeedColumns = {
+  ...getTableColumns(feedRow),
+  payload: sql<unknown>`${feedRow.payload}`,
+  sourceRef: sql<unknown>`${feedRow.sourceRef}`,
+};
+
+export function decodeStoredFeedRow<Row extends FeedRowWrite>(row: Row): Row {
+  return {
+    ...row,
+    payload: JSON.parse(String(row.payload)),
+    sourceRef:
+      row.sourceRef === null ? null : JSON.parse(String(row.sourceRef)),
+  };
+}
 
 // The shape version of `payload` in the rows this Server writes.
-const payloadVersion = 1;
+export const payloadVersion = 1;
 
 // The blobs that the prompt rows among `rows` show, each once.
 export const promptBlobIds = (rows: readonly SessionUpdate[]) => [
@@ -76,25 +94,17 @@ export function fromFeedRow(
   return SessionUpdate.parse({ ...payload, ...envelope });
 }
 
-// The jobs of a Session's rows that the database writer holds until they commit.
-export function queuedFeedRows(
-  writer: WriterRef | undefined,
-  sessionId: string,
-): FeedRowsJob[] {
-  return (writer?.getSnapshot().context.queue ?? []).filter(
-    (job): job is FeedRowsJob =>
-      job.type === 'feedRows' && job.sessionId === sessionId,
-  );
-}
-
 // The newest version of a row in jobs that have not committed.
 export function findQueuedRow(
   jobs: readonly FeedRowsJob[],
   sessionId: string,
   id: string,
 ): SessionUpdate | undefined {
-  const row = jobs.flatMap((job) => job.rows).findLast((row) => row.id === id);
-  return row && fromFeedRow(sessionId, row);
+  return newestRows(
+    queuedFeedRows(jobs, sessionId).flatMap((job) =>
+      job.rows.map((row) => fromFeedRow(sessionId, row)),
+    ),
+  ).get(id);
 }
 
 // The newest version of a row the feed actor handed to the database writer, queued or stored.
@@ -110,15 +120,27 @@ export function readWrittenRow({
   id: string;
 }): SessionUpdate | undefined {
   const queued = findQueuedRow(
-    queuedFeedRows(writer, sessionId),
+    queuedFeedRows(writer?.getSnapshot().context.queue ?? [], sessionId),
     sessionId,
     id,
   );
   if (queued) return queued;
   const stored = database
-    .select()
+    .select(storedFeedColumns)
     .from(feedRow)
     .where(and(eq(feedRow.sessionId, sessionId), eq(feedRow.id, id)))
     .get();
-  return stored && fromFeedRow(sessionId, stored);
+  return stored && fromFeedRow(sessionId, decodeStoredFeedRow(stored));
+}
+
+// Higher revision wins; a tie goes to the later input (stored, queued, then in memory).
+export function newestRows(
+  rows: Iterable<SessionUpdate>,
+): Map<string, SessionUpdate> {
+  const newest = new Map<string, SessionUpdate>();
+  for (const row of rows) {
+    const known = newest.get(row.id);
+    if (!known || row.revision >= known.revision) newest.set(row.id, row);
+  }
+  return newest;
 }

@@ -1,27 +1,50 @@
-import {
-  SessionInfo,
-  SessionRecord,
-  type SessionUpdate,
-  Turn,
-} from '@repo/contracts';
+import { SessionInfo, SessionRecord, Turn } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
-import { TRPCError } from '@trpc/server';
-import { and, desc, eq } from 'drizzle-orm';
+import {
+  and,
+  desc,
+  eq,
+  getTableColumns,
+  inArray,
+  notInArray,
+  or,
+  sql,
+} from 'drizzle-orm';
+import { alias } from 'drizzle-orm/sqlite-core';
 import type { ActorRefFrom } from 'xstate';
-import { z } from 'zod';
 import type { FeedActorRef } from '../feed/feed-machine';
-import { fromFeedRow, queuedFeedRows } from '../feed/feed-row';
+import {
+  decodeStoredFeedRow,
+  fromFeedRow,
+  newestRows,
+  storedFeedColumns,
+} from '../feed/feed-row';
+import {
+  applyQueuedSession,
+  applyQueuedTurns,
+  queuedFeedRows,
+  type WriterJob,
+} from '../feed/writer-job';
 import type { writerMachine } from '../feed/writer-machine';
-import { toLiveHeader } from './live-header';
-import { readLiveHeaderRows } from './live-header-rows';
+import { createLiveHeaderRowsReader } from './live-header-rows';
 import type { RegistryActorRef } from './registry-machine';
-import { toSessionCheckout } from './session-record';
-import { deriveSessionStatus } from './session-status';
+import { latestTurnOf, toSessionInfo } from './session-info';
+import { decodeStoredSession, storedSessionColumns } from './session-record';
 
-const storedSession = SessionRecord;
-const storedTurn = Turn;
-const interruptedError = z.object({ code: z.literal('interrupted') });
+const storedTurnColumns = {
+  ...getTableColumns(turn),
+  error: sql<unknown>`${turn.error}`,
+  usage: sql<unknown>`${turn.usage}`,
+};
+
+interface ListReadInput {
+  database: Database;
+  writer: ActorRefFrom<typeof writerMachine> | undefined;
+  readLiveHeaderRows: ReturnType<typeof createLiveHeaderRowsReader>;
+  validate<Value>(read: () => Value): Value | undefined;
+  rejectedSessions: Set<string>;
+}
 
 export function createSessionListReader(options: {
   database: Database;
@@ -29,229 +52,376 @@ export function createSessionListReader(options: {
   writer: () => ActorRefFrom<typeof writerMachine> | undefined;
 }) {
   const { database, sessions, writer } = options;
+  const readLiveHeaderRows = createLiveHeaderRowsReader({ database });
   let rejectedShapes = 0;
-  const validate = <Value>(read: () => Value): Value => {
+  const validate = <Value>(read: () => Value): Value | undefined => {
     try {
       return read();
     } catch (error) {
       rejectedShapes += 1;
       console.error(`sessions: rejected list shape #${rejectedShapes}`, error);
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Unrecognised Session list data',
-      });
+      return undefined;
     }
   };
-  const readAll = () => {
-    const jobs = writer()?.getSnapshot().context.queue ?? [];
-    const storedTurns = new Map(
-      database
-        .select()
-        .from(turn)
-        .all()
-        .map((row) => [row.id, validate(() => storedTurn.parse(row))]),
-    );
-    for (const job of jobs) {
-      if (job.type === 'turnInsert') {
-        const previous = storedTurns.get(job.turn.id);
-        storedTurns.set(
-          job.turn.id,
-          validate(() =>
-            storedTurn.parse({
-              startedAt: Date.now(),
-              endedAt: null,
-              error: null,
-              usage: null,
-              stopReason: null,
-              ...previous,
-              ...job.turn,
-            }),
-          ),
-        );
+  const parents = new Map<string, string | null>();
+  const readRows = (sessionIds?: readonly string[]) => {
+    const input = {
+      database,
+      writer: writer(),
+      validate,
+      readLiveHeaderRows,
+      rejectedSessions: new Set<string>(),
+    };
+    if (!sessionIds) parents.clear();
+    const ids = sessionIds && new Set(sessionIds);
+    if (ids)
+      for (const id of ids) {
+        const parent = parents.get(id);
+        if (parent) ids.add(parent);
       }
-      if (job.type === 'turnUpdate') {
-        const row = storedTurns.get(job.id);
-        if (row)
-          storedTurns.set(
-            job.id,
-            validate(() => storedTurn.parse({ ...row, ...job.set })),
-          );
-      }
+    let rows = readListSessions(input, ids && [...ids]);
+    const addedParents = new Set<string>();
+    for (const row of rows) {
+      parents.set(row.id, row.parentSessionId);
+      if (
+        ids?.has(row.id) &&
+        row.parentSessionId &&
+        !ids.has(row.parentSessionId)
+      )
+        addedParents.add(row.parentSessionId);
     }
-    const turns = [...storedTurns.values()];
-    const rows = database
-      .select()
-      .from(session)
-      .all()
-      .map((row) => {
-        for (const job of jobs) {
-          if (job.type === 'sessionRowUpdate' && job.id === row.id)
-            Object.assign(row, job.set);
-          if (
-            job.type === 'feedRows' &&
-            job.sessionId === row.id &&
-            job.maxRevision > row.maxRevision
-          ) {
-            row.maxRevision = job.maxRevision;
-            row.activityAt = job.activityAt ?? row.activityAt;
-          }
-        }
-        return validate(() => storedSession.parse(row));
-      });
+    if (addedParents.size) {
+      for (const id of addedParents) ids?.add(id);
+      rows = [
+        ...new Map(
+          [...rows, ...readListSessions(input, [...addedParents])].map(
+            (row) => [row.id, row],
+          ),
+        ).values(),
+      ];
+    }
     return rows
-      .filter((row) => row.parentSessionId === null)
-      .map((row) => {
-        const actor = sessions.getSnapshot().context.sessions[row.id];
-        const live = actor?.getSnapshot();
-        const feed = live?.children.feed as FeedActorRef | undefined;
-        const changes = [
-          ...(['agent_message', 'plan_update'] as const).flatMap((kind) =>
-            database
-              .select()
-              .from(feedRow)
-              .where(
-                and(
-                  eq(feedRow.sessionId, row.id),
-                  eq(feedRow.sessionUpdate, kind),
-                ),
-              )
-              .orderBy(desc(feedRow.position))
-              .limit(1)
-              .all()
-              .map((stored) => validate(() => fromFeedRow(row.id, stored))),
-          ),
-          ...queuedFeedRows(writer(), row.id).flatMap((job) =>
-            job.rows.map((stored) =>
-              validate(() => fromFeedRow(row.id, stored)),
-            ),
-          ),
-          ...Object.values(feed?.getSnapshot().context.rows ?? {}),
-        ];
-        const newest = new Map<string, SessionUpdate>();
-        for (const change of changes) {
-          const known = newest.get(change.id);
-          if (!known || change.revision >= known.revision)
-            newest.set(change.id, change);
-        }
-        const updates = [...newest.values()].sort(
-          (first, second) => first.position - second.position,
-        );
-        const latestTurn = turns
-          .filter((turn) => turn.sessionId === row.id)
-          .sort(
-            (first, second) =>
-              second.startedAt - first.startedAt ||
-              second.id.localeCompare(first.id),
-          )[0];
-        const running = live
-          ? live.context.activeTurnId !== null
-          : latestTurn?.status === 'running';
-        const pendingPermission = live?.context.permissionQueue[0];
-        const pendingElicitation = live?.context.pendingElicitation;
-        const needsInput = Boolean(pendingPermission || pendingElicitation);
-        const maxRevision = Math.max(
-          row.maxRevision,
-          feed?.getSnapshot().context.maxRevision ?? 0,
-        );
-        if (feed && feed.getSnapshot().context.maxRevision > row.maxRevision)
-          row.activityAt = feed.getSnapshot().context.activityAt;
-        const status = deriveSessionStatus({
-          needsInput,
-          running,
-          failure: live?.context.failure ?? row.failure,
-          latestTurnFailed: latestTurn?.stopReason === 'error',
-          latestTurnInterrupted: interruptedError.safeParse(latestTurn?.error)
-            .success,
-          maxRevision,
-          seenRevision: row.seenRevision,
-        });
-        const message = updates.findLast(
-          (update) => update.sessionUpdate === 'agent_message',
-        );
-        const activeTurnId =
-          live?.context.activeTurnId ??
-          (running ? (latestTurn?.id ?? null) : null);
-        const liveHeader = validate(() =>
-          toLiveHeader(
-            {
-              activeTurnId,
-              activeTurnStartedAt:
-                live?.context.activeTurnStartedAt ??
-                (running ? (latestTurn?.startedAt ?? null) : null),
-              permissionQueue: live?.context.permissionQueue ?? [],
-              pendingElicitation: pendingElicitation ?? null,
-            },
-            Object.values(
-              readLiveHeaderRows({
-                database,
-                writer: writer(),
-                sessionId: row.id,
-                turnId: activeTurnId,
-                rows: feed?.getSnapshot().context.rows ?? {},
-              }),
-            ),
-          ),
-        );
-        const plan = updates.findLast(
-          (update) => update.sessionUpdate === 'plan_update',
-        );
+      .filter(
+        (row) => row.parentSessionId === null && (!ids || ids.has(row.id)),
+      )
+      .flatMap((row) => {
         const children = rows.filter(
           (child) => child.parentSessionId === row.id,
         );
-        let activity: string;
-        if (needsInput) {
-          activity = pendingPermission?.title ?? 'Waiting for your answer';
-        } else if (running) {
-          activity = liveHeader?.text ?? 'Working';
-        } else {
-          activity =
-            message?.content
-              .filter((block) => block.type === 'text')
-              .map((block) => block.text)
-              .join('\n')
-              .split('\n')[0] ?? '';
-        }
-        const information = validate(() =>
-          SessionInfo.parse({
-            sessionId: row.id,
-            projectId: row.projectId,
-            agent: row.agent,
-            parentSessionId: row.parentSessionId,
-            cwd: row.checkoutPath,
-            createdAt: row.createdAt,
-            updatedAt: row.updatedAt,
-            title: row.title,
-            titleSource: row.titleSource,
-            status,
-            activity,
-            activityAt: row.activityAt,
-            checkout: toSessionCheckout(row),
-            plan:
-              plan?.plan.type === 'items'
-                ? {
-                    done: plan.plan.entries.filter(
-                      (entry) => entry.status === 'completed',
-                    ).length,
-                    total: plan.plan.entries.length,
-                  }
-                : null,
-            subagents: {
-              total: children.length,
-              running: children.filter((child) =>
-                turns.some(
-                  (turn) =>
-                    turn.sessionId === child.id && turn.status === 'running',
-                ),
-              ).length,
-            },
-            shells: { total: 0, running: 0 },
-            archivedAt: row.archivedAt,
-            issue: null,
-            pullRequest: null,
-          }),
+        const turns = readListTurns(
+          input,
+          row.id,
+          children.map((child) => child.id),
         );
-        return { information, running };
+        if (input.rejectedSessions.has(row.id)) return [];
+        const result = readSessionInformation({
+          ...input,
+          sessions,
+          turns,
+          rows: children.filter(
+            (child) => !input.rejectedSessions.has(child.id),
+          ),
+          row,
+        });
+        return result ? [result] : [];
       });
   };
-  return readAll;
+  const sessionIdsForJobs = (jobs: readonly WriterJob[]): string[] => [
+    ...new Set(
+      jobs.flatMap((job) => {
+        switch (job.type) {
+          case 'feedRows':
+            return [job.sessionId];
+          case 'sessionInsert':
+            return [
+              job.session.id,
+              ...(job.session.parentSessionId
+                ? [job.session.parentSessionId]
+                : []),
+            ];
+          case 'sessionRowUpdate':
+            return [
+              job.id,
+              ...(job.set.parentSessionId ? [job.set.parentSessionId] : []),
+            ];
+          case 'turnInsert':
+            return [job.turn.sessionId];
+          case 'turnUpdate':
+            return readTurnSessionIds({
+              database,
+              sessions,
+              jobs: [...jobs, ...(writer()?.getSnapshot().context.queue ?? [])],
+              turnId: job.id,
+              validate,
+            });
+          default: {
+            const unhandled: never = job;
+            throw new Error(`Unhandled writer job ${unhandled}`);
+          }
+        }
+      }),
+    ),
+  ];
+  const relatedSessionIds = (sessionIds: readonly string[]) => {
+    const ids = new Set(sessionIds);
+    for (const id of ids) {
+      const parent = parents.get(id);
+      if (parent) ids.add(parent);
+    }
+    return [...ids];
+  };
+  return { readRows, sessionIdsForJobs, relatedSessionIds };
+}
+
+function readTurnSessionIds(input: {
+  database: Database;
+  sessions: RegistryActorRef;
+  jobs: readonly WriterJob[];
+  turnId: string;
+  validate: ListReadInput['validate'];
+}): string[] {
+  const queued = input.jobs.find(
+    (job) => job.type === 'turnInsert' && job.turn.id === input.turnId,
+  );
+  if (queued?.type === 'turnInsert') return [queued.turn.sessionId];
+  const live = Object.values(
+    input.sessions.getSnapshot().context.sessions,
+  ).find((actor) => actor.getSnapshot().context.activeTurnId === input.turnId);
+  if (live) return [live.getSnapshot().context.sessionId];
+  const stored = input.database
+    .select({ sessionId: turn.sessionId })
+    .from(turn)
+    .where(eq(turn.id, input.turnId))
+    .get();
+  const id =
+    stored &&
+    input.validate(() => SessionRecord.shape.id.parse(stored.sessionId));
+  return id ? [id] : [];
+}
+
+function readListSessions(
+  input: ListReadInput,
+  sessionIds?: readonly string[],
+): SessionRecord[] {
+  const jobs = input.writer?.getSnapshot().context.queue ?? [];
+  const stored = input.database
+    .select(storedSessionColumns)
+    .from(session)
+    .where(
+      sessionIds
+        ? or(
+            inArray(session.id, sessionIds),
+            inArray(session.parentSessionId, sessionIds),
+          )
+        : undefined,
+    )
+    .all();
+  const rows = new Map(stored.map((row) => [row.id, row]));
+  const ids = new Set([
+    ...rows.keys(),
+    ...jobs.flatMap((job) =>
+      job.type === 'sessionInsert' &&
+      (!sessionIds ||
+        sessionIds.includes(job.session.id) ||
+        (job.session.parentSessionId &&
+          sessionIds.includes(job.session.parentSessionId)))
+        ? [job.session.id]
+        : [],
+    ),
+  ]);
+  return [...ids].flatMap((id) => {
+    const row = input.validate(() => {
+      const stored = rows.get(id);
+      return applyQueuedSession({
+        row: stored && decodeStoredSession(stored),
+        sessionId: id,
+        jobs,
+      });
+    });
+    return row ? [row] : [];
+  });
+}
+
+function readListTurns(
+  input: ListReadInput,
+  sessionId: string,
+  children: string[],
+): Turn[] {
+  const jobs = input.writer?.getSnapshot().context.queue ?? [];
+  const updates = jobs.flatMap((job) =>
+    job.type === 'turnUpdate' ? [job.id] : [],
+  );
+  const unchanged = updates.length ? notInArray(turn.id, updates) : undefined;
+  const runningIds = readChildTurnIds({
+    database: input.database,
+    updates,
+    children,
+    running: true,
+  });
+  const latestIds = readChildTurnIds({
+    database: input.database,
+    updates,
+    children,
+    running: false,
+  });
+  const rows = [
+    ...input.database
+      .select(storedTurnColumns)
+      .from(turn)
+      .where(and(eq(turn.sessionId, sessionId), unchanged))
+      .orderBy(desc(turn.startedAt), desc(turn.id))
+      .limit(1)
+      .all(),
+    ...(children.length
+      ? input.database
+          .select(storedTurnColumns)
+          .from(turn)
+          .where(or(inArray(turn.id, runningIds), inArray(turn.id, latestIds)))
+          .all()
+      : []),
+    ...(updates.length
+      ? input.database
+          .select(storedTurnColumns)
+          .from(turn)
+          .where(
+            and(
+              inArray(turn.sessionId, [sessionId, ...children]),
+              inArray(turn.id, updates),
+            ),
+          )
+          .all()
+      : []),
+  ];
+  const ids = new Set([sessionId, ...children]);
+  const parseTurn = (
+    row: typeof turn.$inferSelect | Turn,
+    stored = false,
+  ): Turn[] => {
+    const parsed = input.validate(() =>
+      Turn.parse(
+        stored
+          ? {
+              ...row,
+              error: row.error === null ? null : JSON.parse(String(row.error)),
+              usage: row.usage === null ? null : JSON.parse(String(row.usage)),
+            }
+          : row,
+      ),
+    );
+    if (!parsed) input.rejectedSessions.add(row.sessionId);
+    return parsed ? [parsed] : [];
+  };
+  return applyQueuedTurns(
+    rows.flatMap((row) => parseTurn(row, true)),
+    jobs,
+  )
+    .filter((row) => ids.has(row.sessionId))
+    .flatMap((row) => parseTurn(row));
+}
+
+function readChildTurnIds(input: {
+  database: Database;
+  updates: string[];
+  children: string[];
+  running: boolean;
+}) {
+  const candidate = alias(turn, 'candidate_turn');
+  const latest = input.database
+    .select({ id: candidate.id })
+    .from(candidate)
+    .where(
+      and(
+        eq(candidate.sessionId, session.id),
+        input.running ? eq(candidate.status, 'running') : undefined,
+        input.updates.length
+          ? notInArray(candidate.id, input.updates)
+          : undefined,
+      ),
+    )
+    .orderBy(desc(candidate.startedAt), desc(candidate.id))
+    .limit(1);
+  return input.database
+    .select({ id: sql<string>`(${latest})` })
+    .from(session)
+    .where(inArray(session.id, input.children));
+}
+
+function readSessionInformation(
+  input: ListReadInput & {
+    sessions: RegistryActorRef;
+    row: SessionRecord;
+    rows: readonly SessionRecord[];
+    turns: readonly Turn[];
+  },
+): { information: SessionInfo; running: boolean } | undefined {
+  const {
+    database,
+    writer,
+    validate,
+    readLiveHeaderRows,
+    sessions,
+    row,
+    rows,
+    turns,
+  } = input;
+  const actor = sessions.getSnapshot().context.sessions[row.id];
+  const live = actor?.getSnapshot();
+  const feed = live?.children.feed as FeedActorRef | undefined;
+  const feedContext = feed?.getSnapshot().context;
+  const changes = [
+    ...(['agent_message', 'plan_update'] as const).flatMap((kind) =>
+      database
+        .select(storedFeedColumns)
+        .from(feedRow)
+        .where(
+          and(eq(feedRow.sessionId, row.id), eq(feedRow.sessionUpdate, kind)),
+        )
+        .orderBy(desc(feedRow.position))
+        .limit(1)
+        .all()
+        .map((stored) =>
+          validate(() => fromFeedRow(row.id, decodeStoredFeedRow(stored))),
+        ),
+    ),
+    ...queuedFeedRows(
+      writer?.getSnapshot().context.queue ?? [],
+      row.id,
+    ).flatMap((job) =>
+      job.rows.map((stored) => validate(() => fromFeedRow(row.id, stored))),
+    ),
+    ...Object.values(feedContext?.rows ?? {}),
+  ];
+  const rejected = changes.includes(undefined);
+  const updates = [
+    ...newestRows(changes.filter((row) => row !== undefined)).values(),
+  ].sort((first, second) => first.position - second.position);
+  const latestTurn = latestTurnOf(turns, row.id);
+  const activeTurnId =
+    live?.context.activeTurnId ??
+    (!live && latestTurn?.status === 'running' ? latestTurn.id : null);
+  const header = readLiveHeaderRows({
+    writer,
+    sessionId: row.id,
+    turnId: activeTurnId,
+    rows: feedContext?.rows ?? {},
+  });
+  const result = toSessionInfo({
+    row,
+    turns,
+    message: updates.findLast(
+      (update) => update.sessionUpdate === 'agent_message',
+    ),
+    plan: updates.findLast((update) => update.sessionUpdate === 'plan_update'),
+    live: live?.context ?? null,
+    feed: feedContext ?? null,
+    liveHeaderRows: Object.values(header.rows),
+    children: rows.filter((child) => child.parentSessionId === row.id),
+  });
+  const information = validate(() =>
+    SessionInfo.parse({
+      ...result.information,
+      ...(rejected || header.rejected ? { activity: '', plan: null } : {}),
+    }),
+  );
+  return information ? { information, running: result.running } : undefined;
 }

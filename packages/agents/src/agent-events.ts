@@ -124,6 +124,7 @@ export type AgentEvent =
       change: FeedChange;
       subagentToolCallId?: AgentSubagent['toolCallId'];
     }
+  | { type: 'agent.messageRejected'; reason: string }
   | { type: 'agent.permissionRequested'; request: PendingPermission }
   | {
       type: 'agent.elicitationRequested';

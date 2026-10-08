@@ -50,3 +50,24 @@ export const nextPageLoadingMocks = {
       ? pending()()
       : { sessions: firstPageSessions, nextCursor: 'next-page' },
 } satisfies Fixtures;
+
+export const streamingSessionCatalogs = agentsList.map((agent) => {
+  const row = activeSessions.sessions.find(
+    (session) => session.agent === agent.agent && session.status === 'idle',
+  );
+  if (!row)
+    throw new Error(
+      `Recorded catalog needs an idle Session for ${agent.label}.`,
+    );
+  return {
+    row,
+    pages: Array.from({ length: 60 }, (_, index) => ({
+      ...row,
+      sessionId: `${row.sessionId}:page-${index}`,
+      title: `${agent.label} Session ${index}`,
+      activityAt: row.activityAt + 60 - index,
+    })),
+  };
+});
+if (streamingSessionCatalogs.length !== 2)
+  throw new Error('Recorded catalog needs both Agents for streaming lists.');

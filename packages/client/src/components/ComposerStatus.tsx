@@ -38,6 +38,10 @@ const contextRingRadius = 5.5;
 const maximumPlanStepsHeight = 264;
 const spinnerTurnMilliseconds = 750;
 
+function contextZone(percent: number): 'smart' | 'dumb' {
+  return percent < smartZonePercent ? 'smart' : 'dumb';
+}
+
 export interface ComposerStatusProps {
   plan?: PlanEntry[];
   subagents?: { count: number; running: boolean; onPress: () => void };
@@ -66,7 +70,8 @@ function Meter({
       <View
         className={cn(
           'h-full rounded-full bg-foreground',
-          warning && (percent < smartZonePercent ? 'bg-success' : 'bg-warning'),
+          warning &&
+            (contextZone(percent) === 'smart' ? 'bg-success' : 'bg-warning'),
         )}
         style={{ width: `${Math.max(0, Math.min(fullPercent, percent))}%` }}
       />
@@ -106,7 +111,7 @@ function ContextRing({ percent }: { percent: number }) {
             r={contextRingRadius}
             fill="none"
             strokeClassName={
-              percent < smartZonePercent ? 'bg-success' : 'bg-warning'
+              contextZone(percent) === 'smart' ? 'bg-success' : 'bg-warning'
             }
             strokeWidth={2}
             strokeLinecap="round"
@@ -324,9 +329,12 @@ function NativePlanSpinner({ label }: { label: string }) {
 
 function PlanSteps({ entries }: { entries: PlanEntry[] }) {
   const wide = useWide();
+  const occurrences = new Map<string, number>();
   const steps = (
     <View className={wide ? 'px-1 pb-2' : 'pb-1'}>
       {entries.map((entry) => {
+        const occurrence = occurrences.get(entry.content) ?? 0;
+        occurrences.set(entry.content, occurrence + 1);
         let stepIndicator: ReactNode;
         if (entry.status === 'in_progress' && Platform.OS !== 'web' && !wide) {
           stepIndicator = (
@@ -361,7 +369,7 @@ function PlanSteps({ entries }: { entries: PlanEntry[] }) {
         }
         return (
           <View
-            key={entry.content}
+            key={`${entry.content}#${occurrence}`}
             className={cn(
               'flex-row items-start px-4 wide:pl-1 wide:pr-0.5 py-2 gap-2.5 wide:gap-1.5',
               wide &&
@@ -390,7 +398,13 @@ function PlanSteps({ entries }: { entries: PlanEntry[] }) {
       })}
     </View>
   );
-  return wide ? <ScrollView className="max-h-66">{steps}</ScrollView> : steps;
+  return wide ? (
+    <ScrollView style={{ maxHeight: maximumPlanStepsHeight }}>
+      {steps}
+    </ScrollView>
+  ) : (
+    steps
+  );
 }
 
 export function ComposerStatusControls({
@@ -568,13 +582,15 @@ export function ComposerStatusControls({
                     className={cn(
                       'select-none',
                       'ml-auto text-xs font-normal',
-                      percent < smartZonePercent
+                      contextZone(percent) === 'smart'
                         ? 'text-success'
                         : 'text-warning',
                     )}
                   >
                     {percent}% ·{' '}
-                    {percent < smartZonePercent ? 'Smart zone' : 'Dumb zone'}
+                    {contextZone(percent) === 'smart'
+                      ? 'Smart zone'
+                      : 'Dumb zone'}
                   </Text>
                 </View>
                 <Meter percent={percent} warning />
@@ -582,13 +598,13 @@ export function ComposerStatusControls({
               <View className="px-0 pt-3 gap-2">
                 {[
                   {
-                    label: 'Smart zone · below 20%',
+                    label: `Smart zone · below ${smartZonePercent}%`,
                     explanation:
                       'Focused context helps the Agent follow instructions.',
                     color: 'bg-success',
                   },
                   {
-                    label: 'Dumb zone · 20% and up',
+                    label: `Dumb zone · ${smartZonePercent}% and up`,
                     explanation:
                       'Extra history can distract the Agent, even with space left.',
                     color: 'bg-warning',
@@ -658,7 +674,7 @@ export function ComposerWorkChips({
     <>
       {(
         [
-          ['Agents', RobotIcon, status.subagents],
+          ['Subagents', RobotIcon, status.subagents],
           ['Shells', TerminalIcon, status.shells],
         ] as const
       ).map(
@@ -673,12 +689,23 @@ export function ComposerWorkChips({
               className="h-6 sm:h-6 py-0 px-2.5 has-[>svg]:px-2.5 gap-1.5 rounded-full border border-border bg-card shadow-composer"
             >
               <Icon as={icon} className="text-muted-foreground" />
-              <Text
-                selectable={false}
-                className="select-none text-xs leading-4 font-normal"
-              >
-                {work.count} {label}
-              </Text>
+              <View className="flex-row items-center gap-1">
+                <Text
+                  selectable={false}
+                  className={cn(
+                    'select-none text-xs leading-4 font-normal',
+                    work.running ? 'text-success' : 'text-muted-foreground',
+                  )}
+                >
+                  {work.count}
+                </Text>
+                <Text
+                  selectable={false}
+                  className="select-none text-xs leading-4 font-normal"
+                >
+                  {label}
+                </Text>
+              </View>
             </Button>
           ),
       )}

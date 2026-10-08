@@ -7,6 +7,7 @@ import {
   ComposerMock,
   composerImages,
   composerLongAgentCatalog,
+  composerPlan,
   composerPlanDone,
   oversizedComposerImage,
 } from '../../mocks/composer-mock';
@@ -1019,8 +1020,23 @@ function unavailableAgents(width: number): Story {
 export const UnavailableAgentsPhone = unavailableAgents(layoutWidths.phone);
 export const UnavailableAgentsWide = unavailableAgents(layoutWidths.wide);
 
-function responsiveLayout(width: number): Story {
+function responsiveLayout(width: number, agentIndex: number): Story {
+  const catalog = pickerCatalogs[agentIndex];
+  if (!catalog) throw new Error('Recorded catalog needs an available Agent.');
   return {
+    args: {
+      configuration: {
+        agents: [catalog.agent],
+        agent: catalog.agent.agent,
+        configOptions: catalog.agent.configOptions,
+        onConfigChange: fn(),
+        checkout: {
+          branch: 'main',
+          newWorktree: false,
+          path: '/Developer/project/.worktrees/session',
+        },
+      },
+    },
     render: (args) => <ComposerMock {...args} sessionStarted />,
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
@@ -1054,8 +1070,33 @@ function responsiveLayout(width: number): Story {
         canvas.getByRole('button', { name: 'Mode' }).getBoundingClientRect()
           .height,
       ).toBe(28);
-      if (width < 720) await expectPhoneFooter({ canvas, card });
-      else await expectWideFooter({ canvas, card });
+      if (width < 720) {
+        const subagents = canvas.getByRole('button', { name: 'Subagents: 2' });
+        const shells = canvas.getByRole('button', { name: 'Shells: 1' });
+        await expect(subagents).toBeVisible();
+        await expect(
+          canvas.queryByRole('button', { name: 'Agents: 2' }),
+        ).not.toBeInTheDocument();
+        const count = within(subagents).getByText('2', { exact: true });
+        const shellCount = within(shells).getByText('1', { exact: true });
+        await expect(getComputedStyle(count).color).not.toBe(
+          getComputedStyle(shellCount).color,
+        );
+        await expect(
+          getComputedStyle(
+            within(subagents).getByText('Subagents', { exact: true }),
+          ).color,
+        ).not.toBe(getComputedStyle(count).color);
+        await expectPhoneFooter({ canvas, card });
+      } else {
+        await expect(
+          canvas.queryByRole('button', { name: 'Subagents: 2' }),
+        ).not.toBeInTheDocument();
+        await expect(
+          canvas.queryByRole('button', { name: 'Shells: 1' }),
+        ).not.toBeInTheDocument();
+        await expectWideFooter({ canvas, card });
+      }
       await userEvent.click(trigger);
       if (width < 720) {
         await expect(
@@ -1081,8 +1122,67 @@ function responsiveLayout(width: number): Story {
     },
   };
 }
-export const ResponsiveLayoutPhone = responsiveLayout(layoutWidths.phone);
-export const ResponsiveLayoutWide = responsiveLayout(layoutWidths.wide);
+export const ResponsiveLayoutPhone = responsiveLayout(layoutWidths.phone, 0);
+export const ResponsiveLayoutWide = responsiveLayout(layoutWidths.wide, 0);
+export const ResponsiveLayoutPhoneSecondAgent = responsiveLayout(
+  layoutWidths.phone,
+  1,
+);
+export const ResponsiveLayoutWideSecondAgent = responsiveLayout(
+  layoutWidths.wide,
+  1,
+);
+
+function workCountTones(agentIndex: number, shellsRunning: boolean): Story {
+  const catalog = pickerCatalogs[agentIndex];
+  if (!catalog) throw new Error('Recorded catalog needs an available Agent.');
+  return {
+    args: {
+      configuration: {
+        agents: [catalog.agent],
+        agent: catalog.agent.agent,
+        configOptions: catalog.agent.configOptions,
+        onConfigChange: fn(),
+        checkout: { branch: 'main', newWorktree: false },
+      },
+      status: {
+        subagents: { count: 2, running: false, onPress: fn() },
+        shells: { count: 1, running: shellsRunning, onPress: fn() },
+      },
+    },
+    play: async ({ canvas }) => {
+      await settleViewport(layoutWidths.phone);
+      const subagents = canvas.getByRole('button', { name: 'Subagents: 2' });
+      const shells = canvas.getByRole('button', { name: 'Shells: 1' });
+      await expect(subagents).toBeVisible();
+      await expect(shells).toBeVisible();
+      await expect(
+        canvas.queryByRole('button', { name: 'Agents: 2' }),
+      ).not.toBeInTheDocument();
+      const countColor = getComputedStyle(
+        within(subagents).getByText('2', { exact: true }),
+      ).color;
+      const shellColor = getComputedStyle(
+        within(shells).getByText('1', { exact: true }),
+      ).color;
+      if (shellsRunning) await expect(shellColor).not.toBe(countColor);
+      else await expect(shellColor).toBe(countColor);
+      await expect(
+        getComputedStyle(
+          within(subagents).getByText('Subagents', { exact: true }),
+        ).color,
+      ).not.toBe(countColor);
+      await expect(
+        getComputedStyle(within(shells).getByText('Shells', { exact: true }))
+          .color,
+      ).not.toBe(shellColor);
+    },
+  };
+}
+export const WorkSettledFirstAgent = workCountTones(0, false);
+export const WorkSettledSecondAgent = workCountTones(1, false);
+export const ShellsRunningFirstAgent = workCountTones(0, true);
+export const ShellsRunningSecondAgent = workCountTones(1, true);
 
 export const ResponsiveLayoutNarrowPhone: Story = {
   render: (args) => <ComposerMock {...args} sessionStarted />,
@@ -1229,6 +1329,74 @@ export const PlanDonePhone = planDone(layoutWidths.phone);
 export const PlanDoneWide = planDone(layoutWidths.wide);
 export const PlanDonePhoneDark: Story = { ...PlanDonePhone, ...dark };
 export const PlanDoneWideDark: Story = { ...PlanDoneWide, ...dark };
+
+function equalPlanSteps(width: number, agentIndex: number): Story {
+  const catalog = pickerCatalogs[agentIndex];
+  const entry = composerPlan[0];
+  if (!catalog || !entry)
+    throw new Error(
+      'Recorded catalog needs an available Agent and a Plan step.',
+    );
+  return {
+    args: {
+      configuration: {
+        agents: [catalog.agent],
+        agent: catalog.agent.agent,
+        configOptions: catalog.agent.configOptions,
+        onConfigChange: fn(),
+        checkout: { branch: 'main', newWorktree: false },
+      },
+    },
+    render: (args) => (
+      <ComposerMock
+        {...args}
+        sessionStarted
+        plan={[entry, { ...entry, status: 'in_progress' }]}
+      />
+    ),
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
+      const overlay = within(document.body);
+      await userEvent.click(canvas.getByRole('button', { name: 'Plan' }));
+      if (width < 720)
+        await waitFor(() => expect(overlay.getByRole('dialog')).toBeVisible());
+      const list = within(
+        width < 720
+          ? overlay.getByRole('dialog')
+          : canvas.getByTestId('composer-plan-steps'),
+      );
+      await waitFor(() => {
+        const steps = list.getAllByText(entry.content, { exact: true });
+        expect(steps).toHaveLength(2);
+        for (const step of steps) expect(step).toBeVisible();
+      });
+      await expect(
+        overlay.getAllByRole('progressbar', {
+          name: `${entry.content} in progress`,
+        }),
+      ).toHaveLength(1);
+      await expect(
+        overlay.queryByText('Verify phone and desktop'),
+      ).not.toBeInTheDocument();
+    },
+  };
+}
+export const EqualPlanStepsPhoneFirstAgent = equalPlanSteps(
+  layoutWidths.phone,
+  0,
+);
+export const EqualPlanStepsPhoneSecondAgent = equalPlanSteps(
+  layoutWidths.phone,
+  1,
+);
+export const EqualPlanStepsWideFirstAgent = equalPlanSteps(
+  layoutWidths.wide,
+  0,
+);
+export const EqualPlanStepsWideSecondAgent = equalPlanSteps(
+  layoutWidths.wide,
+  1,
+);
 
 export const NoPlan: Story = {
   render: (args) => <ComposerMock {...args} sessionStarted plan={[]} />,

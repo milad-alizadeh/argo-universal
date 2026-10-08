@@ -1,13 +1,20 @@
-import { SessionUpdate } from '@repo/contracts';
+import { runningToolCallStatuses } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
 import { and, eq, or, sql } from 'drizzle-orm';
-import { z } from 'zod';
-
-const payloadObject = z.record(z.string(), z.unknown());
+import {
+  decodeStoredFeedRow,
+  fromFeedRow,
+  payloadVersion,
+  storedFeedColumns,
+} from '../services/feed/feed-row';
 
 // Repairs the database before the Engine serves; any failure rolls back the whole repair.
 export function recoverAfterRestart(database: Database) {
+  const runningStatus = sql`case when json_valid(${feedRow.payload}) then json_extract(${feedRow.payload}, '$.status') in (${sql.join(
+    runningToolCallStatuses.map((status) => sql`${status}`),
+    sql`, `,
+  )}) else 0 end`;
   void database.transaction((transaction) => {
     transaction
       .update(turn)
@@ -24,7 +31,7 @@ export function recoverAfterRestart(database: Database) {
       .run();
 
     const rows = transaction
-      .select({ row: feedRow, maxRevision: session.maxRevision })
+      .select({ row: storedFeedColumns, maxRevision: session.maxRevision })
       .from(feedRow)
       .innerJoin(session, eq(feedRow.sessionId, session.id))
       .where(
@@ -32,7 +39,7 @@ export function recoverAfterRestart(database: Database) {
           eq(feedRow.state, 'open'),
           and(
             eq(feedRow.sessionUpdate, 'tool_call_update'),
-            sql`json_extract(${feedRow.payload}, '$.status') in ('pending', 'in_progress')`,
+            or(runningStatus, sql`not json_valid(${feedRow.payload})`),
           ),
         ),
       )
@@ -40,51 +47,40 @@ export function recoverAfterRestart(database: Database) {
       .all();
 
     const revisions = new Map<string, number>();
-    const unrecognisedRows: string[] = [];
+    let rejectedShapes = 0;
     for (const { row, maxRevision } of rows) {
-      const payload = payloadObject.safeParse(row.payload);
-      const update = payload.success
-        ? SessionUpdate.safeParse({
-            ...payload.data,
-            id: row.id,
-            sessionId: row.sessionId,
-            position: row.position,
-            revision: row.revision,
-            turnId: row.turnId,
-            state: row.state,
-            sessionUpdate: row.sessionUpdate,
-          })
-        : null;
-      if (!payload.success || !update?.success || row.payloadVersion !== 1) {
-        unrecognisedRows.push(`${row.sessionId}/${row.id}`);
-        continue;
+      try {
+        fromFeedRow(row.sessionId, decodeStoredFeedRow(row));
+      } catch (error) {
+        rejectedShapes += 1;
+        console.error(
+          `recovery: rejected Feed shape #${rejectedShapes} (${row.sessionId}/${row.id})`,
+          {
+            error,
+            payloadVersion: row.payloadVersion,
+            expectedPayloadVersion: payloadVersion,
+          },
+        );
       }
 
       const revision = (revisions.get(row.sessionId) ?? maxRevision) + 1;
       revisions.set(row.sessionId, revision);
-      const toolFailed =
-        update.data.sessionUpdate === 'tool_call_update' &&
-        (update.data.status === 'pending' ||
-          update.data.status === 'in_progress');
       transaction
         .update(feedRow)
         .set({
           state: 'settled',
           revision,
-          ...(toolFailed
-            ? { payload: { ...payload.data, status: 'failed' } }
-            : {}),
+          payload: sql`case
+            when ${feedRow.sessionUpdate} = 'tool_call_update'
+              and ${runningStatus}
+            then json_set(${feedRow.payload}, '$.status', 'failed')
+            else ${feedRow.payload} end`,
         })
         .where(
           and(eq(feedRow.sessionId, row.sessionId), eq(feedRow.id, row.id)),
         )
         .run();
     }
-    if (unrecognisedRows.length > 0)
-      throw new Error(
-        `unrecognised Feed rows: ${unrecognisedRows.length} (${unrecognisedRows.join(', ')})`,
-      );
-
     for (const [sessionId, maxRevision] of revisions)
       transaction
         .update(session)

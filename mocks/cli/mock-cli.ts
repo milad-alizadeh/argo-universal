@@ -23,10 +23,16 @@ const SCENARIO_VARIABLE = 'MOCK_CLI_SCENARIO';
 const MockCliScenario = z.strictObject({
   processFile: z.string().nullable().default(null),
   blockInitialize: z.boolean().default(false),
+  malformedLine: z.boolean().default(false),
+  concurrentQuestions: z.boolean().default(false),
+  otherThreadRequest: z.boolean().default(false),
   blockTurnStart: z.boolean().default(false),
   turnResponseAfterNextStart: z.boolean().default(false),
   requestBeforeStartResponse: z.boolean().default(false),
   completionBeforeResponse: z.boolean().default(false),
+  interruptError: z
+    .enum(['none', 'beforeCompletion', 'afterCompletion'])
+    .default('none'),
   notificationsFirst: z.boolean().default(false),
   account: z.enum(['subscription', 'apiKey']).default('subscription'),
   transcriptFile: z.string().nullable().default(null),

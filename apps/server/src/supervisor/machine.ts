@@ -7,6 +7,7 @@ import { engineProcess } from './engine-process';
 
 export interface SupervisorInput {
   home: string;
+  now: () => number;
   version: string;
   startedAt: string;
   watch: boolean;
@@ -46,7 +47,7 @@ export const supervisorMachine = setup({
     setPort: assign({ port: (_, params: { port: number }) => params.port }),
     recordCrash: assign({
       crashTimes: ({ context }) => {
-        const now = Date.now();
+        const now = context.now();
         return [
           ...context.crashTimes.filter((time) => now - time < crashWindowMs),
           now,

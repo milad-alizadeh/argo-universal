@@ -35,7 +35,10 @@ function openDatabaseOf(context: { database: Database | null }): Database {
   return context.database;
 }
 
-export interface EngineInput extends Pick<RegistryInput, 'adapters'> {
+export interface EngineInput extends Pick<
+  RegistryInput,
+  'adapters' | 'now' | 'createId'
+> {
   home: string;
   port: number;
   version: string;
@@ -185,6 +188,7 @@ export const engineMachine = setup({
           src: 'databaseWriter',
           input: ({ context }) => ({
             database: openDatabaseOf(context),
+            now: context.now,
             log: (line: string) => writeEngineLog(context.home, line),
           }),
         },
@@ -196,6 +200,8 @@ export const engineMachine = setup({
             database: openDatabaseOf(context),
             runtimeDirectory: context.home,
             adapters: context.adapters,
+            now: context.now,
+            createId: context.createId,
           }),
         },
       ],
@@ -215,6 +221,7 @@ export const engineMachine = setup({
             id: 'startHttpServer',
             src: 'startHttpServer',
             input: ({ context, self }) => ({
+              createId: context.createId,
               sessions: self.system.get('sessions') as RegistryActorRef,
               home: context.home,
               port: context.port,

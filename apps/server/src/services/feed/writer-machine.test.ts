@@ -61,7 +61,10 @@ const machine = writerMachine.provide({
 type WriterSnapshot = SnapshotFrom<typeof machine>;
 type WriterEvent = EventFromLogic<typeof machine>;
 
-const input = { database: mockDatabase };
+const input = {
+  now: () => 1000,
+  database: mockDatabase,
+};
 const writeError = new Error('database is locked');
 const job = (index: number): WriterJob => ({
   type: 'turnUpdate',
@@ -252,6 +255,41 @@ describe('database writer', () => {
     expect(writeBatchCalls.map((call) => call.jobs)).toEqual([
       [job(1)],
       [job(1), job(2), job(3)],
+    ]);
+  });
+
+  it('keeps the enqueue clock value when a Feed write is retried', async () => {
+    writer.send({
+      type: 'writer.write',
+      job: {
+        type: 'feedRows',
+        sessionId: 'session-1',
+        rows: [],
+        maxRevision: 1,
+      },
+    });
+    await settle((call) => call.reject(writeError));
+    vi.advanceTimersByTime(writeRetryDelayMs);
+
+    expect(writeBatchCalls.map((call) => call.jobs)).toEqual([
+      [
+        {
+          type: 'feedRows',
+          sessionId: 'session-1',
+          rows: [],
+          maxRevision: 1,
+          activityAt: 1000,
+        },
+      ],
+      [
+        {
+          type: 'feedRows',
+          sessionId: 'session-1',
+          rows: [],
+          maxRevision: 1,
+          activityAt: 1000,
+        },
+      ],
     ]);
   });
 

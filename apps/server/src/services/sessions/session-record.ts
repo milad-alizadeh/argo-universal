@@ -5,8 +5,25 @@ import {
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { session } from '@repo/db/schema';
+import { isSessionBranch } from '@repo/git';
 import { TRPCError } from '@trpc/server';
-import { eq } from 'drizzle-orm';
+import { eq, getTableColumns, sql } from 'drizzle-orm';
+
+// JSON is decoded per row at the reader boundary, after SQLite has returned the bounded result.
+export const storedSessionColumns = {
+  ...getTableColumns(session),
+  vendorRef: sql<unknown>`${session.vendorRef}`,
+  configValues: sql<unknown>`${session.configValues}`,
+};
+
+export function decodeStoredSession(row: typeof session.$inferSelect) {
+  return {
+    ...row,
+    vendorRef:
+      row.vendorRef === null ? null : JSON.parse(String(row.vendorRef)),
+    configValues: JSON.parse(String(row.configValues)),
+  };
+}
 
 const sessionRecord = SessionInfo.pick({
   title: true,
@@ -21,14 +38,14 @@ const sessionRecord = SessionInfo.pick({
   }).shape,
 );
 
-// A worktree Session runs on its own `argo/<id>` branch; any other branch is the main checkout.
+// A worktree Session runs on its own Session branch; any other branch is the main checkout.
 export function toSessionCheckout(row: {
   id: string;
   checkoutPath: SessionCheckout['path'];
   checkoutBranch: SessionCheckout['branch'];
 }): SessionCheckout {
   return {
-    type: row.checkoutBranch === `argo/${row.id}` ? 'worktree' : 'main',
+    type: isSessionBranch(row.checkoutBranch, row.id) ? 'worktree' : 'main',
     path: row.checkoutPath,
     branch: row.checkoutBranch,
   };

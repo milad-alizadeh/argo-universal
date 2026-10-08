@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
 import { describeError } from '../src/describe-error';
+import type { VendorRequests } from './messages';
 import type {
   GetAccountParams,
   GetAccountResponse,
@@ -29,15 +30,9 @@ interface Requests {
   'turn/start': [TurnStartParams, TurnStartResponse];
   'turn/interrupt': [TurnInterruptParams, TurnInterruptResponse];
 }
-interface WireMessage {
-  id?: string | number;
-  method?: string;
-  params?: unknown;
-  result?: unknown;
-  error?: { code: number; message: string };
-}
 
 const stderrTailLength = 2000;
+const rejectedLinePreviewLength = 200;
 const gracefulStopLimitMs = 3000;
 const forcedStopLimitMs = 5000;
 
@@ -99,39 +94,34 @@ export function openAppServer(
   const lines = createInterface({ input: child.stdout });
   lines.on('line', (line) => {
     try {
-      const message = JSON.parse(line) as WireMessage;
-      if (message === null || typeof message !== 'object')
-        throw new Error('Invalid app-server envelope.');
-      if (typeof message.method === 'string') {
+      const frame = readAppServerFrame(line);
+      if (frame.kind === 'message') {
         if (
-          message.id !== undefined &&
-          message.method !== 'item/commandExecution/requestApproval' &&
-          message.method !== 'item/fileChange/requestApproval' &&
-          message.method !== 'item/tool/requestUserInput'
+          frame.id !== undefined &&
+          frame.method !== 'item/commandExecution/requestApproval' &&
+          frame.method !== 'item/fileChange/requestApproval' &&
+          frame.method !== 'item/tool/requestUserInput'
         ) {
           send({
-            id: message.id,
+            id: frame.id,
             error: {
               code: -32601,
-              message: `Unsupported request: ${message.method}`,
+              message: `Unsupported request: ${frame.method}`,
             },
           });
           return;
         }
-        onMessage({
-          method: message.method,
-          params: message.params,
-          id: message.id,
-        });
+        onMessage({ method: frame.method, params: frame.params, id: frame.id });
         return;
       }
-      if (typeof message.id !== 'number') return;
-      const entry = pending.get(message.id);
-      if (!entry) return;
-      pending.delete(message.id);
-      if (message.error) entry.reject(withStderr(message.error.message));
-      else if ('result' in message) entry.resolve(message.result);
-      else entry.reject(withStderr('Invalid app-server response.'));
+      const entry = pending.get(frame.id);
+      if (!entry)
+        throw new Error(
+          `Unrecognised app-server message: ${line.slice(0, rejectedLinePreviewLength)}`,
+        );
+      pending.delete(frame.id);
+      if (frame.kind === 'error') entry.reject(withStderr(frame.message));
+      else entry.resolve(frame.result);
     } catch (error) {
       fail(error);
     }
@@ -182,8 +172,57 @@ export function openAppServer(
   if (signal.aborted) abort();
   return {
     request,
-    respond: (id: string | number, result: unknown) => send({ id, result }),
+    respond: <Method extends keyof VendorRequests>(
+      request: { method: Method; id: string | number },
+      result: VendorRequests[Method][1],
+    ) => send({ id: request.id, result }),
     notify: (method: string) => send({ method }),
     close,
   };
+}
+
+type AppServerFrame =
+  | { kind: 'message'; method: string; params: unknown; id?: string | number }
+  | { kind: 'error'; id: number; message: string }
+  | { kind: 'result'; id: number; result: unknown };
+
+// Narrows the JSON-RPC envelope before routing or correlating its vendor payload.
+function readAppServerFrame(line: string): AppServerFrame {
+  const message: unknown = JSON.parse(line);
+  const preview = line.slice(0, rejectedLinePreviewLength);
+  if (message === null || typeof message !== 'object' || Array.isArray(message))
+    throw new Error(`Unrecognised app-server message: ${preview}`);
+  const id = 'id' in message ? message.id : undefined;
+  const method = 'method' in message ? message.method : undefined;
+  if (
+    (id !== undefined && typeof id !== 'string' && typeof id !== 'number') ||
+    (method !== undefined && typeof method !== 'string') ||
+    (id === undefined && method === undefined)
+  )
+    throw new Error(`Unrecognised app-server message: ${preview}`);
+  if (typeof method === 'string')
+    return {
+      kind: 'message',
+      method,
+      params: 'params' in message ? message.params : undefined,
+      id,
+    };
+  if (typeof id !== 'number')
+    throw new Error(`Unrecognised app-server message: ${preview}`);
+  if ('error' in message) {
+    const error = message.error;
+    if (
+      error === null ||
+      typeof error !== 'object' ||
+      !('code' in error) ||
+      typeof error.code !== 'number' ||
+      !('message' in error) ||
+      typeof error.message !== 'string'
+    )
+      throw new Error(`Invalid app-server error: ${preview}`);
+    return { kind: 'error', id, message: error.message };
+  }
+  if (!('result' in message))
+    throw new Error(`Unrecognised app-server message: ${preview}`);
+  return { kind: 'result', id, result: message.result };
 }

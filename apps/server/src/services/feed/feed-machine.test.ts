@@ -12,7 +12,8 @@ import {
 import { type EventExecutor, TestModel, type TestPath } from 'xstate/graph';
 import type { FeedStreamEvent } from './feed-change';
 import { feedMachine } from './feed-machine';
-import { type FeedRowsJob, findQueuedRow } from './feed-row';
+import { findQueuedRow } from './feed-row';
+import type { FeedRowsJob } from './writer-job';
 
 // A batch every 60 ms, and open rows written after 1 second.
 const streamBatchDelayMs = 60;
@@ -38,6 +39,7 @@ type FeedSnapshot = SnapshotFrom<typeof machine>;
 type FeedMachineEvent = EventFromLogic<typeof machine>;
 
 const input = {
+  now: () => 1000,
   sessionId: 'session-1',
   epoch: 2,
   maxRevision: 0,
@@ -47,7 +49,10 @@ const input = {
 };
 
 // xstate/graph runs no actions, so the model's writer keeps nothing to give back; the example tests cover written rows.
-const modelInput = { ...input, findWrittenRow: () => undefined };
+const modelInput = {
+  ...input,
+  findWrittenRow: () => undefined,
+};
 
 const change = (feedChange: FeedChange) =>
   ({ type: 'feed.change', change: feedChange, turnId: 'turn-1' }) as const;
@@ -302,7 +307,7 @@ describe('feed', () => {
     vi.advanceTimersByTime(500);
     feed.send(openTool);
     feed.send(appendText);
-    const activityAt = Date.now();
+    const activityAt = 1000;
     vi.advanceTimersByTime(storeDelayMs - 500 - 1);
     expect(jobs).toEqual([]);
 

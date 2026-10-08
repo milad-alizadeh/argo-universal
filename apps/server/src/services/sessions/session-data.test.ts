@@ -47,7 +47,11 @@ it.each([
     );
     cleanups.push(() => rmSync(directory, { recursive: true, force: true }));
     const git = initTestRepository(directory);
-    const { database, remove } = openTestDatabase({}, directory);
+    const {
+      database,
+      directory: runtimeDirectory,
+      remove,
+    } = openTestDatabase({}, directory);
     cleanups.push(remove);
     const input = {
       ...newSession,
@@ -69,6 +73,7 @@ it.each([
     expect(
       await loadSession({
         database,
+        runtimeDirectory,
         sessionId: 'new-session',
         kind: 'existing',
       }),
@@ -141,13 +146,18 @@ it.each([
 );
 
 it('reloads Feed positions and the vendor Session from writes still queued', async () => {
-  const { database, remove } = openTestDatabase();
+  const { database, directory: runtimeDirectory, remove } = openTestDatabase();
   cleanups.push(remove);
   const writer = createActor(
     writerMachine.provide({
       actors: { writeBatch: fromPromise(() => new Promise(() => {})) },
     }),
-    { input: { database } },
+    {
+      input: {
+        now: () => Date.now(),
+        database,
+      },
+    },
   ).start();
   cleanups.push(() => writer.stop());
   writer.send({
@@ -169,7 +179,7 @@ it('reloads Feed positions and the vendor Session from writes still queued', asy
   });
   expect(
     await loadSession(
-      { database, sessionId: 'session-1', kind: 'existing' },
+      { database, runtimeDirectory, sessionId: 'session-1', kind: 'existing' },
       writer,
     ),
   ).toMatchObject({
@@ -180,15 +190,21 @@ it('reloads Feed positions and the vendor Session from writes still queued', asy
 });
 
 it('rejects an unknown Session or Project', async () => {
-  const { database, remove } = openTestDatabase();
+  const { database, directory: runtimeDirectory, remove } = openTestDatabase();
   cleanups.push(remove);
   await expect(
-    loadSession({ database, sessionId: 'missing', kind: 'existing' }),
+    loadSession({
+      database,
+      runtimeDirectory,
+      sessionId: 'missing',
+      kind: 'existing',
+    }),
   ).rejects.toThrow('No Session missing');
   await expect(
     createSessionCheckout({
       ...newSession,
       database,
+      runtimeDirectory,
       projectId: 'missing',
       checkout: { type: 'main' },
     }),
@@ -199,13 +215,18 @@ it('rejects and reports a git response that has no working Checkout', async () =
   const directory = mkdtempSync(join(tmpdir(), 'session-bare-'));
   cleanups.push(() => rmSync(directory, { recursive: true, force: true }));
   execFileSync('git', ['init', '--bare', directory]);
-  const { database, remove } = openTestDatabase({}, directory);
+  const {
+    database,
+    directory: runtimeDirectory,
+    remove,
+  } = openTestDatabase({}, directory);
   cleanups.push(remove);
   const report = vi.spyOn(console, 'error').mockImplementation(() => {});
   await expect(
     createSessionCheckout({
       ...newSession,
       database,
+      runtimeDirectory,
       checkout: { type: 'main' },
     }),
   ).rejects.toThrow('Unrecognised git worktree list response');

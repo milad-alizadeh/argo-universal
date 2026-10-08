@@ -8,6 +8,7 @@ import {
   oversizedComposerImage,
 } from '../../mocks/composer-mock';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
+import { imageSelectionFailureMessage } from '../lib/use-image-draft';
 import { Composer } from './Composer';
 
 const meta = {
@@ -29,6 +30,20 @@ const meta = {
 } satisfies Meta<typeof Composer>;
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+export const ImageSelectionFailed: Story = {
+  args: {
+    draft: { text: 'Build this screen using the brief.', images: [] },
+    error: imageSelectionFailureMessage,
+  },
+  render: (args) => (
+    <View className="w-full items-center p-4">
+      <View className="w-full max-w-composer">
+        <ComposerMock {...args} />
+      </View>
+    </View>
+  ),
+};
 
 export const Overview: Story = {
   name: 'Composer',

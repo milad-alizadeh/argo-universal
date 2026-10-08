@@ -5,6 +5,7 @@ import {
   newSessionProjects,
   serverInfo,
 } from '@repo/api/mocks';
+import type { AgentsListInput } from '@repo/contracts';
 import { type Fixtures, fails, pending } from './trpc-mock-link';
 
 export const newSessionMocks = {
@@ -30,6 +31,17 @@ export const notInstalledNewSessionMocks = {
 export const notSignedInNewSessionMocks = {
   ...newSessionMocks,
   'agents.list': () => newSessionCatalogs.oneNotSignedIn,
+} satisfies Fixtures;
+
+export const agentProbeRequests: AgentsListInput[] = [];
+export const unavailableNewSessionMocks = {
+  ...newSessionMocks,
+  'agents.list': (input) => {
+    agentProbeRequests.push(input ?? undefined);
+    return input?.refresh
+      ? newSessionCatalogs.bothAvailable
+      : newSessionCatalogs.bothUnavailable;
+  },
 } satisfies Fixtures;
 
 export const sendingNewSessionMocks = {

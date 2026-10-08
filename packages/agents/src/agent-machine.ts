@@ -9,6 +9,7 @@ import {
 import type {
   AgentAdapter,
   AgentConnectInput,
+  AgentMapping,
   AgentReady,
 } from './agent-adapter';
 import type {
@@ -19,6 +20,8 @@ import type {
   AgentOutput,
 } from './agent-events';
 import { describeError } from './describe-error';
+
+const agentStartLimit = 10_000;
 
 // Wrapped, because Agent event types share the `agent.` prefix with commands.
 type VendorEvent =
@@ -60,7 +63,16 @@ function startVendorSession(
       {
         message: (message) => {
           if (controller.signal.aborted) return;
-          const mapped = adapter.toAgentEvents(message, mappingState);
+          let mapped: AgentMapping<unknown>;
+          try {
+            mapped = adapter.toAgentEvents(message, mappingState);
+          } catch (error) {
+            sendEvent({
+              type: 'agent.messageRejected',
+              reason: describeError(error),
+            });
+            return;
+          }
           mappingState = mapped.mappingState;
           mapped.events.forEach(sendEvent);
         },
@@ -160,6 +172,9 @@ export const agentMachine = setup({
     ),
   },
   actions: {
+    rememberStartLimit: assign({
+      failure: `Agent startup exceeded agentStartLimit (${agentStartLimit} ms). Retry the Session.`,
+    }),
     rememberReady: assign(({ event }) => {
       assertEvent(event, 'vendor.ready');
       return { capabilities: event.ready.capabilities };
@@ -188,6 +203,7 @@ export const agentMachine = setup({
         'error' in event ? describeError(event.error) : null,
     }),
   },
+  delays: { agentStartLimit },
   guards: {
     canStopShell: ({ context }) => context.capabilities?.stopShell === true,
     proposalStartsTurn: ({ context, event }) =>
@@ -216,6 +232,9 @@ export const agentMachine = setup({
   },
   states: {
     starting: {
+      after: {
+        agentStartLimit: { target: 'failed', actions: 'rememberStartLimit' },
+      },
       on: {
         'vendor.ready': {
           target: 'ready',

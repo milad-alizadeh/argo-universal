@@ -1,12 +1,16 @@
 import { execFile } from 'node:child_process';
-import { mkdir } from 'node:fs/promises';
-import { dirname, isAbsolute, join } from 'node:path';
+import { existsSync } from 'node:fs';
+import { mkdir, realpath } from 'node:fs/promises';
+import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { promisify } from 'node:util';
 import { z } from 'zod';
 
-const run = promisify(execFile);
+const execute = promisify(execFile);
+const run = (arguments_: string[], signal?: AbortSignal) =>
+  execute('git', arguments_, { signal });
 let rejectedResponses = 0;
 const branchRefPrefix = 'refs/heads/';
+const sessionBranchPrefix = 'argo/';
 // A local branch ref, read as the branch name.
 const branchName = z
   .string()
@@ -64,12 +68,36 @@ export type CheckoutChoice =
   | { type: 'worktree'; baseBranch: string }
   | { type: 'main' };
 
+// Resolves a repository through any working tree or nested directory (ADR-0008).
+export async function readRepository(
+  path: string,
+): Promise<{ root: string; commonDirectory: string }> {
+  const directory = await realpath(path);
+  const responses = await Promise.all([
+    run(['-C', directory, 'rev-parse', '--show-toplevel']),
+    run(['-C', directory, 'rev-parse', '--git-common-dir']),
+  ]);
+  const paths = z
+    .tuple([
+      z.string().trim().min(1).refine(isAbsolute),
+      z.string().trim().min(1),
+    ])
+    .safeParse(responses.map(({ stdout }) => stdout));
+  if (!paths.success)
+    return rejectResponse('repository paths', paths.error.message);
+  return {
+    root: paths.data[0],
+    commonDirectory: await realpath(resolve(directory, paths.data[1])),
+  };
+}
+
 // The Project's local branches, and the branch HEAD is on, or null when detached.
 export async function listBranches(
   projectPath: string,
+  signal?: AbortSignal,
 ): Promise<{ branches: string[]; currentBranch: string | null }> {
   const git = (...arguments_: string[]) =>
-    run('git', ['-C', projectPath, ...arguments_]);
+    run(['-C', projectPath, ...arguments_], signal);
   const [{ stdout }, head] = await Promise.all([
     git('for-each-ref', '--format=%(refname)', 'refs/heads/'),
     git('symbolic-ref', '--quiet', 'HEAD').then(
@@ -77,6 +105,7 @@ export async function listBranches(
       () => null,
     ),
   ]);
+  signal?.throwIfAborted();
   const listed = z
     .array(branchName)
     .safeParse(stdout.split('\n').filter(Boolean));
@@ -85,16 +114,24 @@ export async function listBranches(
   return { branches: listed.data, currentBranch: current.data };
 }
 
+// The prefix is stored data and must survive a product rename.
+export const sessionBranch = (id: string) => `${sessionBranchPrefix}${id}`;
+export const isSessionBranch = (branch: string | null, id: string) =>
+  branch === sessionBranch(id);
+
 // The Project may have been registered through any of its working trees.
-export async function createCheckout(input: {
-  projectPath: string;
-  projectId: string;
-  sessionId: string;
-  choice: CheckoutChoice;
-  runtimeDirectory: string;
-}): Promise<Checkout> {
+export async function createCheckout(
+  input: {
+    projectPath: string;
+    projectId: string;
+    sessionId: string;
+    choice: CheckoutChoice;
+    runtimeDirectory: string;
+  },
+  signal?: AbortSignal,
+): Promise<Checkout> {
   const git = async (...arguments_: string[]) =>
-    (await run('git', ['-C', input.projectPath, ...arguments_])).stdout.trim();
+    (await run(['-C', input.projectPath, ...arguments_], signal)).stdout.trim();
   const main = readMainCheckout(
     await git('worktree', 'list', '--porcelain', '-z'),
   );
@@ -108,26 +145,60 @@ export async function createCheckout(input: {
     input.projectId,
     input.sessionId,
   );
-  const branch = `argo/${input.sessionId}`;
+  const branch = sessionBranch(input.sessionId);
   await mkdir(dirname(checkoutPath), { recursive: true });
-  // A full ref keeps the base a local branch, and never an option.
-  await git(
-    'worktree',
-    'add',
-    '-b',
-    branch,
-    checkoutPath,
-    `refs/heads/${input.choice.baseBranch}`,
-  );
+  const checkoutExists = existsSync(checkoutPath);
+  const branchExists = (
+    await listBranches(input.projectPath, signal)
+  ).branches.includes(branch);
+  signal?.throwIfAborted();
+  try {
+    // A full ref keeps the base a local branch, and never an option.
+    await git(
+      'worktree',
+      'add',
+      '-b',
+      branch,
+      checkoutPath,
+      `refs/heads/${input.choice.baseBranch}`,
+    );
+  } catch (error) {
+    if (signal?.aborted && !checkoutExists && !branchExists) {
+      // Teardown has aborted the creation signal; cleanup owns a fresh one.
+      await discardCheckout(
+        input.projectPath,
+        { path: checkoutPath, branch },
+        new AbortController().signal,
+        true,
+      );
+    }
+    throw error;
+  }
   return { path: checkoutPath, branch };
 }
 
-// Removes a worktree that no Turn ran in, with its new branch; a dirty worktree is refused.
+// Removes a worktree that no Turn ran in, with its new branch.
 export async function discardCheckout(
   projectPath: string,
   checkout: Checkout,
+  signal?: AbortSignal,
+  force = false,
 ): Promise<void> {
-  await run('git', ['-C', projectPath, 'worktree', 'remove', checkout.path]);
-  if (checkout.branch)
-    await run('git', ['-C', projectPath, 'branch', '-D', checkout.branch]);
+  if (existsSync(checkout.path))
+    await run(
+      [
+        '-C',
+        projectPath,
+        'worktree',
+        'remove',
+        ...(force ? ['--force', '--force'] : []),
+        checkout.path,
+      ],
+      signal,
+    );
+  if (
+    checkout.branch &&
+    (await listBranches(projectPath, signal)).branches.includes(checkout.branch)
+  )
+    await run(['-C', projectPath, 'branch', '-D', checkout.branch], signal);
 }

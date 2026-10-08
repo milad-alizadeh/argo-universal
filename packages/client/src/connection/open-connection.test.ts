@@ -81,6 +81,30 @@ describe('openConnection', () => {
     );
   });
 
+  it('connects after an initial failure when the Server becomes available', async () => {
+    const stopped = await startServer();
+    await stopped.stop();
+    const queryClient = new QueryClient();
+    const { client, connection, close } = openConnection(
+      stopped.url,
+      queryClient,
+    );
+    closers.push(close);
+    const observer = new QueryObserver(queryClient, {
+      queryKey: ['system.info'],
+      queryFn: () => client.system.info.query(),
+    });
+    closers.push(observer.subscribe(() => {}));
+    await linkIs(connection, 'reconnecting');
+    expect(observer.getCurrentResult().data).toBeUndefined();
+
+    await startServer(stopped.port);
+    await linkIs(connection, 'open');
+    await vi.waitFor(() =>
+      expect(observer.getCurrentResult().data?.version).toBe('1.2.3'),
+    );
+  });
+
   it('closes while an attempt waits for its retry delay', async () => {
     const unused = await startServer();
     await unused.stop();

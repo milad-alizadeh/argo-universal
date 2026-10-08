@@ -3,6 +3,7 @@ import type {
   VendorSession,
   VendorSessionListener,
 } from '../src/agent-adapter';
+import { UnsupportedCommandError } from '../src/agent-adapter';
 import { toQuestionAnswers } from '../src/elicitation-form';
 import { changeValue, startingValues, toConfigOptions } from './config-options';
 import { initialize, readModels, usesChatGpt } from './handshake';
@@ -12,13 +13,24 @@ import type {
   CommandExecutionRequestApprovalResponse,
   FileChangeRequestApprovalResponse,
   ToolRequestUserInputResponse,
+  TurnInterruptParams,
+  TurnInterruptResponse,
   TurnStartParams,
 } from './protocol.gen';
 
-const createVendorTurn = () => ({
-  id: null as string | null,
+interface VendorTurn {
+  id: string | null;
+  identity: PromiseWithResolvers<string | null>;
+  completion: PromiseWithResolvers<void>;
+  completed: boolean;
+  interrupted?: Promise<void>;
+}
+
+const createVendorTurn = (): VendorTurn => ({
+  id: null,
   identity: Promise.withResolvers<string | null>(),
   completion: Promise.withResolvers<void>(),
+  completed: false,
 });
 
 export async function connect(
@@ -28,7 +40,7 @@ export async function connect(
 ): Promise<VendorSession> {
   signal.throwIfAborted();
   let vendorSessionId = input.vendorSessionId;
-  let activeTurn: ReturnType<typeof createVendorTurn> | null = null;
+  let activeTurn: VendorTurn | null = null;
   const permissions = new Map<
     string,
     Extract<
@@ -40,22 +52,41 @@ export async function connect(
       }
     >
   >();
-  let elicitation: Extract<
+  const elicitations: Extract<
     VendorMessage,
     { method: 'item/tool/requestUserInput' }
-  > | null = null;
+  >[] = [];
+  const cancelRequests = () => {
+    for (const request of permissions.values())
+      server.respond(request, { decision: 'cancel' });
+    permissions.clear();
+    for (const request of elicitations.splice(0))
+      server.respond(request, { answers: {} });
+  };
+  signal.addEventListener('abort', cancelRequests, { once: true });
   const server = openAppServer(
     input.cwd,
     (message) => {
       const notification = message as VendorMessage;
-      if (notification.params?.threadId !== vendorSessionId) return;
       if (
         notification.method === 'item/commandExecution/requestApproval' ||
         notification.method === 'item/fileChange/requestApproval'
-      )
+      ) {
+        if (notification.params.threadId !== vendorSessionId) {
+          server.respond(notification, { decision: 'decline' });
+          return;
+        }
         permissions.set(notification.params.itemId, notification);
-      if (notification.method === 'item/tool/requestUserInput')
-        elicitation = notification;
+      }
+      if (notification.method === 'item/tool/requestUserInput') {
+        if (notification.params.threadId !== vendorSessionId) {
+          server.respond(notification, { answers: {} });
+          return;
+        }
+        elicitations.push(notification);
+        if (elicitations.length > 1) return;
+      }
+      if (notification.params?.threadId !== vendorSessionId) return;
       if (notification.method === 'turn/started') {
         if (
           !activeTurn ||
@@ -71,11 +102,11 @@ export async function connect(
         notification.method === 'turn/completed' &&
         activeTurn?.id === notification.params.turn.id
       ) {
+        activeTurn.completed = true;
         activeTurn.identity.resolve(null);
         activeTurn.completion.resolve();
         activeTurn = null;
-        permissions.clear();
-        elicitation = null;
+        cancelRequests();
       }
     },
     listener.failed,
@@ -99,6 +130,20 @@ export async function connect(
         })
       : await server.request('thread/start', settings);
     vendorSessionId = started.thread.id;
+    // Both cancellation paths share one interrupt for this vendor Turn.
+    const interrupt = (turn: VendorTurn) =>
+      (turn.interrupted ??= (async () => {
+        const turnId = await turn.identity.promise;
+        if (!turnId || activeTurn !== turn) return;
+        try {
+          await (server.request('turn/interrupt', {
+            threadId: started.thread.id,
+            turnId,
+          } satisfies TurnInterruptParams) satisfies Promise<TurnInterruptResponse>);
+        } catch (error) {
+          if (!turn.completed) throw error;
+        }
+      })());
     const prompt = async (content: TurnStartParams['input']) => {
       const turn = createVendorTurn();
       activeTurn = turn;
@@ -137,6 +182,7 @@ export async function connect(
               turn.id = result.turn.id;
               turn.identity.resolve(turn.id);
             } else {
+              turn.completed = true;
               turn.completion.resolve();
               activeTurn = null;
             }
@@ -175,14 +221,12 @@ export async function connect(
             );
             return;
           case 'agent.cancel': {
-            const turn = activeTurn;
-            if (!turn) return;
-            const turnId = await turn.identity.promise;
-            if (turnId && activeTurn === turn)
-              await server.request('turn/interrupt', {
-                threadId: started.thread.id,
-                turnId,
-              });
+            try {
+              // A Turn that already ended needs no interrupt.
+              if (activeTurn) await interrupt(activeTurn);
+            } finally {
+              cancelRequests();
+            }
             return;
           }
           case 'agent.setConfigOption': {
@@ -206,18 +250,20 @@ export async function connect(
             };
             if (command.optionId === 'allow_once') result.decision = 'accept';
             if (command.optionId === null) result.decision = 'cancel';
-            server.respond(request.id, result);
+            server.respond(request, result);
             return;
           }
           case 'agent.answerElicitation': {
-            const request = elicitation;
+            const request = elicitations.shift();
             if (!request) return;
-            elicitation = null;
             if (command.action === 'cancel' && request.params.isBlocking) {
-              await server.request('turn/interrupt', {
-                threadId: started.thread.id,
-                turnId: request.params.turnId,
-              });
+              try {
+                if (activeTurn?.id === request.params.turnId)
+                  await interrupt(activeTurn);
+              } finally {
+                server.respond(request, { answers: {} });
+                cancelRequests();
+              }
               return;
             }
             const answers: ToolRequestUserInputResponse = {
@@ -230,21 +276,34 @@ export async function connect(
               ),
             };
             server.respond(
-              request.id,
+              request,
               command.action === 'accept'
                 ? answers
                 : ({ answers: {} } satisfies ToolRequestUserInputResponse),
             );
+            if (elicitations[0])
+              listener.message({ ...elicitations[0], receivedAt: Date.now() });
             return;
           }
-          // Plan answers, titles, images and Shells belong to their later slices.
-          default:
-            return;
+          case 'agent.answerPlanProposal':
+          case 'agent.rename':
+          case 'agent.stopShell':
+            throw new UnsupportedCommandError(command);
+          default: {
+            const unhandled: never = command;
+            throw new UnsupportedCommandError(unhandled);
+          }
         }
       },
-      stop: server.close,
+      stop: async () => {
+        signal.removeEventListener('abort', cancelRequests);
+        cancelRequests();
+        await server.close();
+      },
     };
   } catch (error) {
+    signal.removeEventListener('abort', cancelRequests);
+    cancelRequests();
     await server.close();
     throw error;
   }

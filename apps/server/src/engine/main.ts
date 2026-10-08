@@ -1,5 +1,5 @@
-import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { randomUUID } from 'node:crypto';
+import { resolveRuntimeDirectory } from '@repo/api/server-runtime';
 import { createActor } from 'xstate';
 import { z } from 'zod';
 import packageJson from '../../package.json' with { type: 'json' };
@@ -14,10 +14,12 @@ const port = z.coerce
   .max(highestPort)
   .parse(process.env.ARGO_SERVER_PORT ?? defaultPort);
 
-const home = process.env.ARGO_HOME ?? join(homedir(), '.argo');
+const home = resolveRuntimeDirectory();
 const engine = createActor(engineMachine, {
   input: {
     home,
+    now: Date.now,
+    createId: randomUUID,
     port,
     version: packageJson.version,
     startedAt: new Date().toISOString(),

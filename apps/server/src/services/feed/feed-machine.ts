@@ -25,6 +25,7 @@ export interface FeedInput extends Pick<
   'epoch' | 'maxRevision'
 > {
   sessionId: string;
+  now: () => number;
   activityAt?: number;
   // One past the highest stored position.
   nextPosition: number;
@@ -33,7 +34,7 @@ export interface FeedInput extends Pick<
 }
 
 export interface FeedContext
-  extends Feed, Pick<FeedInput, 'epoch' | 'findWrittenRow'> {
+  extends Feed, Pick<FeedInput, 'epoch' | 'findWrittenRow' | 'now'> {
   activityAt: number;
   // Rows changed since the last write, in the order they first changed.
   changedRowIds: string[];
@@ -120,7 +121,7 @@ export const feedMachine = setup({
       const { feed, streamEvent } = result;
       enqueue.assign({
         ...feed,
-        activityAt: Date.now(),
+        activityAt: context.now(),
         changedRowIds: context.changedRowIds.includes(id)
           ? context.changedRowIds
           : [...context.changedRowIds, id],

@@ -1,4 +1,4 @@
-import type { ToolCallUpdate } from '@repo/contracts';
+import { knownCommandActions, type ToolCallUpdate } from '@repo/contracts';
 import { BookOpenIcon } from 'phosphor-react-native/src/icons/BookOpen';
 import { GlobeIcon } from 'phosphor-react-native/src/icons/Globe';
 import { PencilSimpleIcon } from 'phosphor-react-native/src/icons/PencilSimple';
@@ -6,11 +6,7 @@ import { TerminalWindowIcon } from 'phosphor-react-native/src/icons/TerminalWind
 import { WrenchIcon } from 'phosphor-react-native/src/icons/Wrench';
 
 export function toolCallIcon(row: ToolCallUpdate) {
-  const actions = row._meta?.argo?.commandActions;
-  const category =
-    actions?.length && actions.every((action) => action.type !== 'unknown')
-      ? actions[0]?.type
-      : row.kind;
+  const category = knownCommandActions(row)[0]?.type ?? row.kind;
   switch (category) {
     case 'read':
     case 'list':

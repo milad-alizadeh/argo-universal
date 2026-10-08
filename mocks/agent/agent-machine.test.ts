@@ -1,4 +1,5 @@
 import {
+  type AgentAdapter,
   type AgentCommand,
   type AgentConnectInput,
   type AgentEvent,
@@ -174,6 +175,10 @@ const events = [
     event: { type: 'agent.turnEnded', stopReason: 'end_turn' },
   },
   { type: 'vendor.event', event: feed },
+  {
+    type: 'vendor.event',
+    event: { type: 'agent.messageRejected', reason: 'Unknown vendor message' },
+  },
   { type: 'vendor.ready', ready },
   {
     type: 'vendor.ready',
@@ -188,6 +193,7 @@ const events = [
   },
   { type: 'vendor.failed', error: failure.message },
   { type: 'vendor.closed' },
+  { type: 'xstate.after.agentStartLimit.agent.starting' },
   { type: 'xstate.error.actor.vendorSession', error: failure },
 ] as AnyEventObject[] as AgentMachineEvent[];
 
@@ -249,6 +255,8 @@ const executors = Object.fromEntries(
         connection.resolve(ready);
         shutdown.resolve();
         await settle();
+      } else if (event.type.startsWith('xstate.after.agentStartLimit')) {
+        await vi.advanceTimersByTimeAsync(10_000);
       } else {
         // A callback error is modelled here; the example below exercises a real throw.
         agent.send(event);
@@ -290,6 +298,92 @@ describe('Agent machine model', () => {
 });
 
 describe('Agent machine', () => {
+  it('ends startup with a retryable failure when the Agent does not initialize', async () => {
+    start();
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(agent.getSnapshot().status).toBe('done');
+    expect(agent.getSnapshot().output).toEqual({
+      failure:
+        'Agent startup exceeded agentStartLimit (10000 ms). Retry the Session.',
+    });
+    expect(received).toEqual([]);
+  });
+
+  it('reports a rejected vendor message and maps the next message without losing its mapping state', async () => {
+    const states: { mapped: number }[] = [];
+    const nextMessage: MockAgentStreamEvent = {
+      type: 'agent.titleChanged',
+      title: 'Mapped the next message',
+    };
+    const messages = createMockAdapter({
+      connect: async () => ready,
+      stream: (stream) => {
+        stream.receive(() => {
+          stream.send(feed);
+          stream.send({ type: 'agent.usage', usage: { used: 1, size: 2 } });
+          stream.send(nextMessage);
+        });
+      },
+    });
+    const rejectingAdapter: AgentAdapter<
+      MockAgentStreamEvent,
+      { mapped: number }
+    > = {
+      ...messages,
+      initialMappingState: () => ({ mapped: 0 }),
+      toAgentEvents: (message, mappingState) => {
+        states.push(mappingState);
+        if (message.type === 'agent.usage')
+          throw new Error('Unknown vendor message');
+        return {
+          events: [message],
+          mappingState: { mapped: mappingState.mapped + 1 },
+        };
+      },
+    };
+    input.adapter = rejectingAdapter;
+    start();
+    await settle();
+    agent.send(prompt);
+    await settle();
+    expect(agent.getSnapshot().status).toBe('active');
+    expect(agent.getSnapshot().context.failure).toBeNull();
+    expect(received).toEqual([
+      readyEvent,
+      feed,
+      { type: 'agent.messageRejected', reason: 'Unknown vendor message' },
+      nextMessage,
+    ]);
+    expect(states).toEqual([{ mapped: 0 }, { mapped: 1 }, { mapped: 1 }]);
+  });
+  it('reports a rejected startup message after the Agent is ready', async () => {
+    const messages = createMockAdapter({
+      connect: async () => ready,
+      stream: (stream) => {
+        stream.send({ type: 'agent.usage', usage: { used: 1, size: 2 } });
+        stream.send(feed);
+      },
+    });
+    const rejectingAdapter: typeof messages = {
+      ...messages,
+      toAgentEvents: (message, mappingState) => {
+        if (message.type === 'agent.usage')
+          throw new Error('Unknown startup message');
+        return messages.toAgentEvents(message, mappingState);
+      },
+    };
+    input.adapter = rejectingAdapter;
+    start();
+    await settle();
+    expect(agent.getSnapshot().status).toBe('active');
+    expect(agent.getSnapshot().context.failure).toBeNull();
+    expect(received).toEqual([
+      readyEvent,
+      { type: 'agent.messageRejected', reason: 'Unknown startup message' },
+      feed,
+    ]);
+  });
+
   it('refuses stopping a Shell when the adapter lacks that capability', async () => {
     start();
     await connect({

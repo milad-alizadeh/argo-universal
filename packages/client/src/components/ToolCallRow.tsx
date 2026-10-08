@@ -1,4 +1,4 @@
-import type { ToolCallUpdate } from '@repo/contracts';
+import { isToolCallRunning, type ToolCallUpdate } from '@repo/contracts';
 import { View } from 'react-native';
 import { Text } from '#primitives/text';
 import { toolCallTitle } from '../feed/tool-call-title';
@@ -39,7 +39,7 @@ export function ToolCallRow({
     <ToolCallDisclosure
       label={toolCallTitle(row, awaitingApproval)}
       icon={toolCallIcon(row)}
-      running={row.status === 'pending' || row.status === 'in_progress'}
+      running={isToolCallRunning(row)}
       failed={row.status === 'failed'}
       initialOpen={initialOpen}
       awaitingApproval={awaitingApproval}

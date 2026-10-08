@@ -10,6 +10,7 @@ import { StartSessionIn } from '#components/StartSessionIn';
 import { Text } from '#primitives/text';
 import { useContentWide } from '../components/ContentLayout';
 import { useConnectionState } from '../connection/context';
+import { useAgents } from '../lib/use-agents';
 import { useImageDraft } from '../lib/use-image-draft';
 import { useNavigate } from '../navigation/context';
 import { useTRPC } from '../trpc/context';
@@ -38,7 +39,7 @@ function withChosenValue(
 function useSessionChoices(projectId: string | undefined) {
   const trpc = useTRPC();
   const projects = useQuery(trpc.projects.list.queryOptions());
-  const agents = useQuery(trpc.agents.list.queryOptions());
+  const agents = useAgents();
   const [chosenProjectId, setChosenProjectId] = useState(projectId);
   const [chosenAgent, setChosenAgent] = useState<string>();
   const [chosenConfigValues, setChosenConfigValues] = useState<
@@ -106,7 +107,29 @@ function useSessionChoices(projectId: string | undefined) {
       setChosenConfigValues({});
     },
     chooseConfigValue: (configId: string, value: string | boolean) =>
-      setChosenConfigValues((values) => ({ ...values, [configId]: value })),
+      setChosenConfigValues((values) => {
+        const next = { ...values, [configId]: value };
+        const option = configOptions.find(
+          (entry) => entry.configId === configId,
+        );
+        if (option?.category !== 'model' || option.type !== 'select')
+          return next;
+        const levels = option.options
+          .flatMap((entry) => ('groupId' in entry ? entry.options : [entry]))
+          .find((choice) => choice.value === value)?._meta
+          ?.argo?.supportedEffortLevels;
+        const effort = configOptions.find(
+          (entry) =>
+            entry.category === 'thought_level' && entry.type === 'select',
+        );
+        if (
+          effort?.type === 'select' &&
+          levels &&
+          !levels.includes(effort.currentValue)
+        )
+          delete next[effort.configId];
+        return next;
+      }),
     chooseNewWorktree: setChosenNewWorktree,
   };
 }
@@ -125,8 +148,14 @@ function sendErrorMessage(
 function useStartSession(onStartFailed: () => void) {
   const trpc = useTRPC();
   const navigate = useNavigate();
-  const { draft, changeDraft, attachImages, uploadDraftAsPrompt, imageUpload } =
-    useImageDraft();
+  const {
+    draft,
+    changeDraft,
+    attachImages,
+    uploadDraftAsPrompt,
+    imageUpload,
+    imageSelectionError,
+  } = useImageDraft();
   const newSession = useMutation(
     trpc.session.new.mutationOptions({
       onSuccess: ({ sessionId }) =>
@@ -154,7 +183,9 @@ function useStartSession(onStartFailed: () => void) {
     startSession,
     clearSendErrors,
     sending: imageUpload.isPending || newSession.isPending,
-    sendError: sendErrorMessage(newSession.error, imageUpload.error),
+    sendError:
+      imageSelectionError ??
+      sendErrorMessage(newSession.error, imageUpload.error),
   };
 }
 
@@ -265,6 +296,7 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
               },
               onAgentSetup: (setup) =>
                 navigate({ to: 'settings-agent', agent: setup }),
+              onAgentRetry: agents.retry,
               checkout,
             }}
           />

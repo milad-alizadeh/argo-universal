@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -5,6 +6,7 @@ import type { AgentProbe, VendorCommand } from '@repo/agents';
 import { appRouter } from '@repo/api';
 import type { SessionNewInput } from '@repo/contracts';
 import { turn } from '@repo/db/schema';
+import { sessionBranch } from '@repo/git';
 import {
   createMockAdapter,
   type MockAgentScript,
@@ -13,7 +15,7 @@ import {
 } from '@repo/mocks/agent';
 import { eq } from 'drizzle-orm';
 import { afterEach, expect, it, vi } from 'vitest';
-import { createActor, setup, waitFor } from 'xstate';
+import { createActor, fromPromise, setup, waitFor } from 'xstate';
 import { insertSession, openTestDatabase } from '#mocks/database';
 import { initTestRepository } from '#mocks/git';
 import { writerMachine } from '../feed/writer-machine';
@@ -25,7 +27,10 @@ afterEach(() => {
   for (const cleanup of cleanups.splice(0).reverse()) cleanup();
 });
 
-function openServer({ applyConfigOptions = true } = {}) {
+function openServer({
+  applyConfigOptions = true,
+  writer = writerMachine,
+} = {}) {
   const directory = realpathSync(
     mkdtempSync(join(tmpdir(), 'session-service-')),
   );
@@ -84,14 +89,23 @@ function openServer({ applyConfigOptions = true } = {}) {
   };
   const root = createActor(
     setup({
-      actors: { sessions: registryMachine, writer: writerMachine },
+      actors: { sessions: registryMachine, writer },
     }).createMachine({
       invoke: [
-        { src: 'writer', systemId: 'databaseWriter', input: { database } },
+        {
+          src: 'writer',
+          systemId: 'databaseWriter',
+          input: {
+            now: () => Date.now(),
+            database,
+          },
+        },
         {
           src: 'sessions',
           systemId: 'sessions',
           input: {
+            now: () => Date.now(),
+            createId: randomUUID,
             database,
             runtimeDirectory: join(directory, '.argo'),
             adapters: [
@@ -169,6 +183,51 @@ const newSession: SessionNewInput = {
   prompt: [{ type: 'text', text: 'Build it\nand test it' }],
 };
 
+it('rejects a new Session when the writer keeps its insert queued for retry', async () => {
+  const writer = writerMachine.provide({
+    actors: {
+      writeBatch: fromPromise(async (): Promise<void> => {
+        throw new Error('database is locked');
+      }),
+    },
+    delays: { writeRetryDelay: 60_000 },
+    actions: { log: () => {} },
+  });
+  const { caller } = openServer({ writer });
+  await expect(caller.session.new(newSession)).rejects.toMatchObject({
+    code: 'INTERNAL_SERVER_ERROR',
+    message: expect.stringContaining(
+      'was not stored because the writer is retrying. Retry the Session.',
+    ),
+  });
+});
+
+it('rejects a new Session whose insert is queued behind another retrying job', async () => {
+  const retryReported = vi.fn();
+  const writer = writerMachine.provide({
+    actors: {
+      writeBatch: fromPromise(async (): Promise<void> => {
+        throw new Error('another job cannot be written');
+      }),
+    },
+    delays: { writeRetryDelay: 60_000 },
+    actions: { log: () => retryReported() },
+  });
+  const { caller, root } = openServer({ writer });
+  const databaseWriter = root.system.get('databaseWriter');
+  databaseWriter.send({
+    type: 'writer.write',
+    job: { type: 'turnUpdate', id: 'other-turn', set: { endedAt: 1 } },
+  });
+  await vi.waitFor(() => expect(retryReported).toHaveBeenCalledOnce());
+  await expect(caller.session.new(newSession)).rejects.toMatchObject({
+    code: 'INTERNAL_SERVER_ERROR',
+    message: expect.stringContaining(
+      'was not stored because the writer is retrying. Retry the Session.',
+    ),
+  });
+});
+
 it('creates the Checkout, starts the Agent with the chosen options and runs the first Turn in one call', async () => {
   const { caller, streams, database, commands } = openServer();
   const { sessionId } = await caller.session.new({
@@ -207,7 +266,7 @@ it('creates the Checkout, starts the Agent with the chosen options and runs the 
       checkout: {
         type: 'worktree',
         path: expect.stringContaining(sessionId),
-        branch: `argo/${sessionId}`,
+        branch: sessionBranch(sessionId),
       },
     }),
   );
@@ -300,11 +359,19 @@ it('defaults the checkout choice to a worktree from the current branch, and the 
   expect(await checkoutChoice()).toEqual({ type: 'main' });
 });
 
-it('returns after dispatching a config choice and delivers later changes through the Feed', async () => {
-  const { caller, streams, configOptions, services } = openServer({
+it('returns the chosen config value and delivers later Agent changes through the Feed', async () => {
+  const { caller, root, streams, configOptions, services } = openServer({
     applyConfigOptions: false,
   });
   const sessionId = 'session-1';
+  root.system.get('sessions').send({
+    type: 'sessions.open',
+    sessionId,
+    agent: 'mock',
+  });
+  await waitFor(root.system.get(`session:${sessionId}`), (snapshot) =>
+    snapshot.can({ type: 'session.prompt', turnId: 'ready', content: [] }),
+  );
   const controller = new AbortController();
   cleanups.push(() => controller.abort());
   const updates = services.feed.subscribe(
@@ -321,7 +388,11 @@ it('returns after dispatching a config choice and delivers later changes through
       value: 'large',
     }),
   ).toMatchObject({
-    configOptions: [{ configId: 'model', currentValue: 'small' }],
+    configOptions: [{ configId: 'model', currentValue: 'large' }],
+  });
+  expect((await iterator.next()).value).toMatchObject({
+    type: 'snapshot',
+    snapshot: { configOptions: [{ currentValue: 'large' }] },
   });
   const stream = streams.get(sessionId);
   stream?.send({
@@ -391,8 +462,9 @@ it('rejects unknown Sessions and input that breaks the contract', async () => {
   ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
 });
 
-it('opens a stored Session when its Feed is subscribed, and sends its live config options', async () => {
-  const { services } = openServer();
+it('reads a stored Session snapshot without opening an actor when its Feed is subscribed', async () => {
+  const { root, services } = openServer();
+  expect(root.system.get('session:session-1')).toBeUndefined();
   const controller = new AbortController();
   cleanups.push(() => controller.abort());
   const caller = appRouter.createCaller(
@@ -406,8 +478,9 @@ it('opens a stored Session when its Feed is subscribed, and sends its live confi
   const iterator = updates[Symbol.asyncIterator]();
   expect((await iterator.next()).value).toMatchObject({
     type: 'snapshot',
-    snapshot: { configOptions: [{ configId: 'model', currentValue: 'small' }] },
+    snapshot: { configOptions: [] },
   });
+  expect(root.system.get('session:session-1')).toBeUndefined();
   controller.abort();
   await iterator.return?.();
 });
