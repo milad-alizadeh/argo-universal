@@ -1,5 +1,11 @@
 import type { Services } from '../src/services/services';
 
+export const mockUpload: Services['blob']['upload'] = async (file) => ({
+  blobId: await file.text(),
+  mime: file.type || 'application/octet-stream',
+  bytes: file.size,
+});
+
 type ServiceOverrides = { [Name in keyof Services]?: Partial<Services[Name]> };
 
 const unreachable =

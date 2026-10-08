@@ -4,7 +4,7 @@ import { createServer, request, type Server } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { unreachableServices } from '#mocks/services';
+import { mockUpload, unreachableServices } from '#mocks/services';
 import { createRequestGuard } from './request-guard';
 import { createRequestListener } from './request-listener';
 import { appRouter } from './router';
@@ -25,13 +25,7 @@ const systemInfo = {
 };
 const services = unreachableServices({
   system: { info: () => systemInfo },
-  blob: {
-    upload: async (file) => ({
-      blobId: await file.text(),
-      mime: file.type || binaryMime,
-      bytes: file.size,
-    }),
-  },
+  blob: { upload: mockUpload },
 });
 
 let home: string;

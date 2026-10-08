@@ -45,6 +45,10 @@ ruleTester.run('api-type-only', apiTypeOnly, {
     },
     { code: "import { z } from '@repo/apis';", filename: clientFile },
     {
+      code: "type Router = import('@repo/api').AppRouter;",
+      filename: clientFile,
+    },
+    {
       code: "import type { AppRouter } from '@repo/server/router';",
       filename: clientFile,
     },
@@ -54,6 +58,16 @@ ruleTester.run('api-type-only', apiTypeOnly, {
     },
   ],
   invalid: [
+    {
+      code: "type Services = ReturnType<typeof import('@repo/server/mocks').unreachableServices>;",
+      filename: clientFile,
+      errors: apiValue,
+    },
+    {
+      code: "type Router = import('@repo/server/router').AppRouter;",
+      filename: clientFile,
+      errors: apiValue,
+    },
     {
       code: "import { appRouter } from '@repo/server/router';",
       filename: clientFile,

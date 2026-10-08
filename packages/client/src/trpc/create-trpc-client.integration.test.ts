@@ -1,5 +1,5 @@
 import { createServer, type Server } from 'node:http';
-import { unreachableServices } from '@repo/server/mocks';
+import { mockUpload, unreachableServices } from '@repo/server/mocks';
 import { appRouter } from '@repo/server/router';
 import { createHTTPHandler } from '@trpc/server/adapters/standalone';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
@@ -20,13 +20,7 @@ const systemInfo = {
 };
 
 const services = unreachableServices({
-  blob: {
-    upload: async (file) => ({
-      blobId: await file.text(),
-      mime: file.type || binaryMime,
-      bytes: file.size,
-    }),
-  },
+  blob: { upload: mockUpload },
   system: {
     info: () => systemInfo,
     clock: async function* () {

@@ -43,6 +43,7 @@ export const onModuleSources = (listen: ModuleSourceListener): Visitor => ({
   },
   ExportAllDeclaration: (node): void => listen(node.source, node),
   ImportExpression: (node): void => listen(node.source, node),
+  TSImportType: (node): void => listen(node.source, node),
   CallExpression: (node): void => {
     const [source] = node.arguments;
     if (isRequire(node) && source) listen(source, node);

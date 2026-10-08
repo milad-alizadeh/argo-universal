@@ -5,10 +5,13 @@ import { onModuleSources, stringValue } from './syntax.ts';
 const apiPackage = /^@repo\/api(?:\/|$)/;
 const serverPackage = /^@repo\/server(?:\/|$)/;
 
-const isTypeOnly = (statement: ESTree.Node): boolean =>
+const isTypeOnlyDeclaration = (statement: ESTree.Node): boolean =>
   'importKind' in statement
     ? statement.importKind === 'type'
     : 'exportKind' in statement && statement.exportKind === 'type';
+
+const isTypeOnly = (statement: ESTree.Node): boolean =>
+  statement.type === 'TSImportType' || isTypeOnlyDeclaration(statement);
 
 const isAppRouterName = (node: ESTree.Node): boolean =>
   node.type === 'Identifier' && node.name === 'AppRouter';
