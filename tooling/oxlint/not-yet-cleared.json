@@ -64,10 +64,6 @@
     { "files": ["apps/universal-app/src/navigation/*"], "rules": { "complexity": "off", "max-lines-per-function": "off", "no-inline-comments": "off", "sonarjs/no-duplicate-string": "off", "sonarjs/no-unused-vars": "off", "stylistic/line-comment-position": "off", "typescript/consistent-type-assertions": "off", "typescript/explicit-function-return-type": "off" } },
     // complexity, max-lines-per-function, max-statements, sonarjs/no-redundant-jump, sonarjs/no-unused-vars, typescript/consistent-type-assertions, typescript/explicit-function-return-type
     { "files": ["e2e/*"], "rules": { "complexity": "off", "max-lines-per-function": "off", "max-statements": "off", "sonarjs/no-redundant-jump": "off", "sonarjs/no-unused-vars": "off", "typescript/consistent-type-assertions": "off" } },
-    // sonarjs/no-duplicate-string, sonarjs/no-skipped-tests
-    { "files": ["e2e/navigation/*"], "rules": { "sonarjs/no-duplicate-string": "off", "sonarjs/no-skipped-tests": "off" } },
-    // complexity, max-lines, max-statements, sonarjs/no-duplicate-string, typescript/explicit-function-return-type
-    { "files": ["e2e/sessions/*"], "rules": { "complexity": "off", "max-lines": "off", "max-statements": "off", "sonarjs/no-duplicate-string": "off" } },
     // complexity, max-lines, max-lines-per-function, sonarjs/no-duplicate-string, typescript/consistent-type-assertions, typescript/explicit-function-return-type, typescript/unbound-method, unicorn-js/prefer-switch, unicorn/no-useless-undefined, vitest/expect-expect, vitest/no-standalone-expect
     { "files": ["mocks/agent/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "sonarjs/no-duplicate-string": "off", "typescript/consistent-type-assertions": "off", "typescript/unbound-method": "off", "unicorn-js/prefer-switch": "off", "vitest/expect-expect": "off", "vitest/no-standalone-expect": "off" } },
     // complexity, max-lines, max-lines-per-function, max-nested-callbacks, max-statements, sonarjs/no-invariant-returns, sonarjs/no-nested-template-literals, typescript/consistent-type-assertions, typescript/explicit-function-return-type, unicorn/consistent-function-scoping

@@ -2,11 +2,8 @@ import { readFileSync } from 'node:fs';
 import { mkdir, readFile, symlink } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
-import {
-  test as base,
-  _electron as electron,
-  type Page,
-} from '@playwright/test';
+import { _electron as electron, type Page } from '@playwright/test';
+import { test as base } from 'playwright-bdd';
 import { z } from 'zod';
 import { type MockAgents, writeMockAgents } from './mock-agents';
 import {
