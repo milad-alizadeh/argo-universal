@@ -109,6 +109,7 @@ class SessionSnapshotObserver implements Subscription {
     this.publishSnapshot(snapshot);
     if (isClosed) this.closed();
   }
+
   private publishSnapshot(
     snapshot: Extract<SnapshotEvent, { type: 'snapshot' }>['snapshot'],
   ): void {

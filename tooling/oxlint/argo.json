@@ -546,7 +546,6 @@
               },
               {
                 "group": [
-                  "../sessions",
                   "../sessions/**",
                   "**/services/sessions/**",
                   "../agents/**",
