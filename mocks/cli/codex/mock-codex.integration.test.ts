@@ -5,6 +5,7 @@ import path from 'node:path';
 import { promisify } from 'node:util';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { VendorMessage } from '../../../packages/agents/codex/messages.ts';
+import { codexProtocolVersion } from '../../../packages/agents/codex/protocol.gen.ts';
 import { startLineProcess } from '../line-process.ts';
 import type { MockCliOptions } from '../mock-cli.ts';
 import {
@@ -70,6 +71,9 @@ const startTurn = async (
 };
 
 describe('codex recordings', (): void => {
+  it('matches the generated protocol version exactly', (): void => {
+    expect(VERSION).toBe(codexProtocolVersion);
+  });
   it.each(recordingFiles(RECORDINGS))(
     '%s reads as a recording',
     (file): void => {

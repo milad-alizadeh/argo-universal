@@ -1,3 +1,4 @@
+import { globSync, readFileSync } from 'node:fs';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -113,4 +114,19 @@ describe('splitTurns', (): void => {
       ['d'],
     ]);
   });
+});
+
+it('reads versioned recording paths only through recording modules', (): void => {
+  const repository = path.resolve(import.meta.dirname, '../..');
+  const files = globSync(['mocks/**/*.ts', 'packages/agents/**/*.ts'], {
+    cwd: repository,
+    exclude: ['**/node_modules/**'],
+  });
+  const pinned = files.filter((file): boolean => {
+    if (file === 'mocks/cli/recording.ts') return false;
+    return /recordings[/\\]\d+\.\d+\.\d+[/\\]/.test(
+      readFileSync(path.join(repository, file), 'utf8'),
+    );
+  });
+  expect(pinned).toEqual([]);
 });

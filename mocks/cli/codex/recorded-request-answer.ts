@@ -1,0 +1,70 @@
+import path from 'node:path';
+import type {
+  VendorMessage,
+  VendorRequest,
+} from '../../../packages/agents/codex/messages.ts';
+import type { TurnStartParams } from '../../../packages/agents/codex/protocol.gen.ts';
+import { findRecording, readRecording, recordedFrames } from '../recording.ts';
+import {
+  createRequestAnswerReader,
+  type RecordedRequestAnswer,
+} from '../request-answer.ts';
+import { toPlanProposalAnswer, toRequestAnswer } from './request-answer.ts';
+
+type RecordedInput = {
+  id?: string | number;
+  method?: string;
+  params: TurnStartParams;
+  result?: unknown;
+};
+
+export function recordedRequestAnswer(name: string): RecordedRequestAnswer {
+  return createRequestAnswerReader()(() => readRecordedAnswer(name));
+}
+
+function readRecordedAnswer(name: string): RecordedRequestAnswer {
+  const { payload } = readRecording(
+    findRecording(path.join(import.meta.dirname, 'recordings'), name),
+    'codex-app-server',
+  );
+  const request = recordedFrames<VendorMessage>(payload, 'messages').find(
+    isRequest,
+  );
+  return recordedAnswer(request, payload);
+}
+
+function recordedAnswer(
+  request: VendorRequest | undefined,
+  payload: unknown,
+): RecordedRequestAnswer {
+  const inputs = recordedFrames<RecordedInput>(payload, 'input');
+  if (!request) return recordedPlanAnswer(inputs);
+  const response = inputs.find(
+    (frame): boolean =>
+      frame.id === request.id || frame.method === 'turn/interrupt',
+  );
+  if (!response) throw new Error('Recording has no matching answer');
+  return toRequestAnswer(request, responseResult(response));
+}
+
+function responseResult(response: RecordedInput): unknown {
+  return response.method === 'turn/interrupt' ? response : response.result;
+}
+
+function isRequest(frame: VendorMessage): frame is VendorRequest {
+  return (
+    frame.method === 'item/commandExecution/requestApproval' ||
+    frame.method === 'item/fileChange/requestApproval' ||
+    frame.method === 'item/tool/requestUserInput'
+  );
+}
+
+function recordedPlanAnswer(
+  inputs: { method?: string; params: TurnStartParams }[],
+): RecordedRequestAnswer {
+  const nextTurn = inputs.filter(
+    (frame): boolean => frame.method === 'turn/start',
+  )[1];
+  if (!nextTurn) throw new Error('Recording has no Plan answer Turn');
+  return toPlanProposalAnswer(nextTurn.params);
+}

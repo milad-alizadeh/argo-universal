@@ -3,11 +3,8 @@ import path from 'node:path';
 import type { VendorMessage } from '../../../packages/agents/codex/messages.ts';
 import type {
   Account,
-  CommandExecutionRequestApprovalResponse,
-  FileChangeRequestApprovalResponse,
   GetAccountResponse,
   ThreadResumeParams,
-  ToolRequestUserInputResponse,
   TurnInterruptParams,
   TurnStartParams,
   TurnStartResponse,
@@ -25,7 +22,11 @@ import {
   recordedFrames,
   splitTurns,
 } from '../recording.ts';
-import { recordRequestAnswer } from '../request-answer.ts';
+import {
+  createRequestAnswerReader,
+  recordRequestAnswer,
+} from '../request-answer.ts';
+import { toPlanProposalAnswer, toRequestAnswer } from './request-answer.ts';
 
 const PRODUCER = 'codex-app-server';
 // JSON-RPC error codes.
@@ -40,6 +41,7 @@ type Request = {
   result?: unknown;
 };
 const environment = readMockCliEnvironment();
+const readRequestAnswer = createRequestAnswerReader();
 const recording = readRecording(environment.recordingFile, PRODUCER);
 const [command] = process.argv.slice(2);
 
@@ -68,6 +70,7 @@ const recordedThreadId = messages.find(
 if (!recordedThreadId) throw new Error('The recording has no thread id.');
 let threadId = recordedThreadId;
 let turnIndex = 0;
+let pendingPlanProposal = false;
 let interruptedFrames: typeof messages | null = null;
 let activeTurnId: string | null = null;
 let cancelling = false;
@@ -173,6 +176,11 @@ function startTurn(
       )
     : -1;
   if (command >= 0) interruptedFrames = turn.slice(command + 1);
+  pendingPlanProposal = turn.some(
+    (message): boolean =>
+      message.method === 'item/completed' &&
+      message.params.item.type === 'plan',
+  );
   activeTurnId = started.params.turn.id;
   cancelling = false;
   const frames = command >= 0 ? turn.slice(0, command + 1) : turn;
@@ -290,9 +298,14 @@ serveJsonLines<Request>(({ id, method, params, result }): void | boolean => {
             message: 'The vendor Turn id does not match.',
           },
         });
-      if (heldRequest?.method === 'item/tool/requestUserInput') {
+      const interruptedRequest = heldRequest;
+      if (interruptedRequest?.method === 'item/tool/requestUserInput') {
         if (concurrentRequests.size === 0)
-          recordRequestAnswer({ type: 'elicitation', action: 'cancel' });
+          recordRequestAnswer(
+            readRequestAnswer(() =>
+              toRequestAnswer(interruptedRequest, { method: 'turn/interrupt' }),
+            ),
+          );
         const completed = requestFrames.find(
           (
             message,
@@ -321,6 +334,10 @@ serveJsonLines<Request>(({ id, method, params, result }): void | boolean => {
       activeTurnId = null;
       return;
     case 'turn/start':
+      if (pendingPlanProposal)
+        recordRequestAnswer(
+          readRequestAnswer(() => toPlanProposalAnswer(params)),
+        );
       return startTurn(
         id,
         (params as TurnStartParams & { notificationsFirst?: boolean })
@@ -345,42 +362,11 @@ function answerRequest(id: string | number | undefined, result: unknown): void {
     concurrentRequests.delete(id);
   }
   if (id === heldRequestId) {
-    if (
-      heldRequest?.method === 'item/commandExecution/requestApproval' ||
-      heldRequest?.method === 'item/fileChange/requestApproval'
-    ) {
-      const answer = result as
-        | CommandExecutionRequestApprovalResponse
-        | FileChangeRequestApprovalResponse;
-      recordRequestAnswer({
-        type: 'permission',
-        optionId: answer.decision === 'accept' ? 'allow_once' : 'reject_once',
-      });
-    }
-    if (heldRequest?.method === 'item/tool/requestUserInput') {
-      const answer = result as ToolRequestUserInputResponse;
+    const request = heldRequest;
+    if (request && 'id' in request)
       recordRequestAnswer(
-        Object.keys(answer.answers).length
-          ? {
-              type: 'elicitation',
-              action: 'accept',
-              content: Object.fromEntries(
-                Object.entries(answer.answers).map(
-                  ([key, value]): [string, string | string[] | undefined] => [
-                    key,
-                    value?.answers.length === 1
-                      ? value.answers[0]
-                      : value?.answers,
-                  ],
-                ),
-              ),
-            }
-          : {
-              type: 'elicitation',
-              action: cancelling ? 'cancel' : 'decline',
-            },
+        readRequestAnswer(() => toRequestAnswer(request, result)),
       );
-    }
     if (withheldStartResponse) {
       send(withheldStartResponse);
       withheldStartResponse = null;

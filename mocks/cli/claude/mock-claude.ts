@@ -2,8 +2,6 @@
 import { randomUUID } from 'node:crypto';
 import type {
   AccountInfo,
-  AskUserQuestionInput,
-  PermissionResult,
   SDKAssistantMessage,
   SDKControlInitializeResponse,
   SDKControlRequest,
@@ -19,7 +17,11 @@ import {
   serveJsonLines,
 } from '../mock-cli.ts';
 import { readRecording, recordedFrames, splitTurns } from '../recording.ts';
-import { recordRequestAnswer } from '../request-answer.ts';
+import {
+  createRequestAnswerReader,
+  recordRequestAnswer,
+} from '../request-answer.ts';
+import { readPermissionResult, toRequestAnswer } from './request-answer.ts';
 
 type ResultUsage = {
   [
@@ -40,6 +42,7 @@ const PRODUCER = 'claude-cli';
 type Frame = SDKMessage | SDKControlRequest | typeof INTERRUPT_POINT;
 type Output = SDKMessage | SDKControlRequest | SDKControlResponse;
 const environment = readMockCliEnvironment();
+const readRequestAnswer = createRequestAnswerReader();
 const recording = readRecording(environment.recordingFile, PRODUCER);
 
 if (process.argv.includes('--version')) {
@@ -348,37 +351,14 @@ serveJsonLines<Output>((input): void => {
       input.response.request_id === pendingRequestId &&
       input.response.subtype === 'success'
     ) {
-      const result = input.response.response as PermissionResult;
-      if (
-        pendingRequest?.request.subtype === 'can_use_tool' &&
-        pendingRequest.request.tool_name !== 'AskUserQuestion'
-      )
+      const request = pendingRequest?.request;
+      const response = input.response.response;
+      if (request?.subtype === 'can_use_tool')
         recordRequestAnswer(
-          result.behavior === 'allow'
-            ? { type: 'permission', optionId: 'allow_once' }
-            : {
-                type: 'permission',
-                optionId: 'reject_once',
-                message: result.message,
-              },
+          readRequestAnswer(() =>
+            toRequestAnswer(request, readPermissionResult(response)),
+          ),
         );
-      if (
-        pendingRequest?.request.subtype === 'can_use_tool' &&
-        pendingRequest.request.tool_name === 'AskUserQuestion'
-      ) {
-        const deniedAction =
-          result.behavior === 'deny' && result.interrupt ? 'cancel' : 'decline';
-        recordRequestAnswer({
-          type: 'elicitation',
-          action: result.behavior === 'allow' ? 'accept' : deniedAction,
-          ...(result.behavior === 'allow'
-            ? {
-                content: result.updatedInput
-                  ?.answers as AskUserQuestionInput['answers'],
-              }
-            : {}),
-        });
-      }
       if (concurrentRequests.size === 0) replay(heldFrames);
     }
     return;

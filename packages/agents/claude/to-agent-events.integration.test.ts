@@ -1,7 +1,7 @@
-import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import type { SDKMessage } from '@anthropic-ai/claude-agent-sdk';
 import { describe, expect, it } from 'vitest';
+import { readRecording } from '../mocks/recording';
 import type { FeedChange, FeedUpdate } from '../src/agent-events';
 import {
   initialMappingState,
@@ -16,9 +16,8 @@ const RECORDINGS = path.join(
 
 // The stdout frames of a recording, without the control frames that the SDK consumes itself.
 function recordedMessages(name: string): SDKMessage[] {
-  const [version] = readdirSync(RECORDINGS);
   const recording: { payload: { output: { type: string }[] } } = JSON.parse(
-    readFileSync(path.join(RECORDINGS, `${version}`, `${name}.json`), 'utf8'),
+    readRecording(RECORDINGS, name),
   );
   return recording.payload.output.filter(
     (frame): boolean => !frame.type.startsWith('control_'),
