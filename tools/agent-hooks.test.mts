@@ -16,6 +16,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 const repositoryRoot = fileURLToPath(new URL('..', import.meta.url));
 const BLOCKED = 2;
 const anyViolation = 'export const value: any = 1;\n';
+const explicitAnyRule = 'no-explicit-any';
 const unformattedJson = '{"a":1}\n';
 
 let root: string;
@@ -109,14 +110,14 @@ describe('after-edit', () => {
   it('reports a finding from an Edit call and blocks', () => {
     const result = runHook('after-edit', fileEdit('scratch.ts'));
     expect(result.status).toBe(BLOCKED);
-    expect(result.stderr).toContain('no-explicit-any');
+    expect(result.stderr).toContain(explicitAnyRule);
     expect(result.stderr).toContain('docs/agents/hooks.md');
   });
 
   it('reports the same finding from an apply_patch call', () => {
     const result = runHook('after-edit', patchEdit('scratch.ts'));
     expect(result.status).toBe(BLOCKED);
-    expect(result.stderr).toContain('no-explicit-any');
+    expect(result.stderr).toContain(explicitAnyRule);
   });
 
   it('reports a finding through a Checkout directory alias', (): void => {
@@ -127,7 +128,7 @@ describe('after-edit', () => {
       cwd: alias,
     });
     expect(result.status).toBe(BLOCKED);
-    expect(result.stderr).toContain('no-explicit-any');
+    expect(result.stderr).toContain(explicitAnyRule);
   });
 
   it('reads an apply_patch command given as an array', () => {
