@@ -1,18 +1,16 @@
 import { readFileSync } from 'node:fs';
-import { mkdir, readFile, symlink } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
-import { _electron as electron, type Page } from '@playwright/test';
+import {
+  _electron as electron,
+  type Page,
+  type ElectronApplication,
+} from '@playwright/test';
 import { test as base } from 'playwright-bdd';
 import { z } from 'zod';
-import { type MockAgents, writeMockAgents } from './mock-agents';
-import {
-  findFreePort,
-  pollServer,
-  serverHttpUrl,
-  startOwnServer,
-} from './own-server';
-import { createProjectRepository } from './project-repository';
+import type { MockAgents } from './mock-agents';
+import { pollServer, startOwnServer } from './own-server';
 
 export type AppOptions = { appTarget: 'web' | 'electron' };
 
@@ -51,7 +49,7 @@ const pointAppAtServer = (
   }, serverUrl);
 
 export type ServerOptions = {
-  // Each Agent's mock CLI options for this test's Server; an Agent left out replays its usual Turn.
+  // Shared Argo fixture options by registered Agent identity.
   mockAgents: MockAgents;
 };
 
@@ -74,7 +72,7 @@ export const test = base.extend<
 >({
   appTarget: ['web', { option: true }],
   mockAgents: [{}, { option: true }],
-  // The App on a Server of the test's own, so tests never share state; the port, mock CLIs, Project and teardown stay in here.
+  // Each App uses isolated real storage and shared Agent adapter fixtures.
   app: async (
     { appTarget, context, mockAgents },
     use,
@@ -98,46 +96,39 @@ export const test = base.extend<
       return;
     }
 
-    // Desktop starts its own Server in a fresh home on a free port.
-    const home = testInfo.outputPath('server-home');
-    const agentPath = await writeMockAgents(
-      testInfo.outputPath('agent-bin'),
-      mockAgents,
-    );
-    // Desktop starts the Server with `node` from PATH; a folder holding only node keeps real Agent CLIs beside it off PATH.
-    const nodeDirectory = testInfo.outputPath('node-bin');
-    await mkdir(nodeDirectory, { recursive: true });
-    await symlink(process.execPath, path.join(nodeDirectory, 'node'));
-    const port = await findFreePort();
+    const directory = testInfo.outputPath('own-server');
+    const fixtureServer = await startOwnServer(directory, mockAgents);
+    const home = path.join(directory, 'server-home');
     const {
       ARGO_EXPO_WEB_URL: _webDevelopmentUrl,
       ELECTRON_RUN_AS_NODE: _runAsNode,
       ...environment
     } = process.env;
-    const electronApp = await electron.launch({
-      executablePath: electronPath,
-      args: [desktopDirectory],
-      // `env` replaces the whole environment; without ARGO_EXPO_WEB_URL the window loads the web export over app://.
-      env: {
-        ...environment,
-        ARGO_HOME: home,
-        ARGO_SERVER_PORT: String(port),
-        // Its own app data, so parallel launches each get the single-instance lock.
-        ARGO_USER_DATA_DIRECTORY: testInfo.outputPath('user-data'),
-        ARGO_BACKGROUND: '1',
-        PATH: [nodeDirectory, agentPath].join(path.delimiter),
-        ARGO_PROJECT_PATH: await createProjectRepository(
-          testInfo.outputPath('project'),
-        ),
-      },
-    });
+    let electronApp: ElectronApplication | undefined;
     try {
-      const httpUrl = serverHttpUrl(port);
+      electronApp = await electron.launch({
+        executablePath: electronPath,
+        args: [desktopDirectory],
+        // `env` replaces the whole environment; without ARGO_EXPO_WEB_URL the window loads the web export over app://.
+        env: {
+          ...environment,
+          ARGO_HOME: home,
+          // Its own app data, so parallel launches each get the single-instance lock.
+          ARGO_USER_DATA_DIRECTORY: testInfo.outputPath('user-data'),
+          ARGO_BACKGROUND: '1',
+          PATH: '/usr/bin:/bin',
+        },
+      });
+      const httpUrl = fixtureServer.httpUrl;
       await waitForServer(httpUrl);
       await use({ page: await electronApp.firstWindow(), httpUrl });
     } finally {
-      // Quitting stops the Server that desktop started.
-      await electronApp.close();
+      // Close the App before gracefully stopping its fixture Engine.
+      try {
+        await electronApp?.close();
+      } finally {
+        await fixtureServer.stop();
+      }
     }
     const leftoverPid = await readServerPid(home);
     if (leftoverPid !== null) {

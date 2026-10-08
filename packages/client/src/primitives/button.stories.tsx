@@ -3,8 +3,8 @@ import { PlusIcon } from 'phosphor-react-native/src/icons/Plus';
 import type { ComponentProps } from 'react';
 import { View } from 'react-native';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
+import { Icon } from '../lib/icon';
 import { Button } from './button';
-import { Icon } from './icon';
 import { Text } from './text';
 
 const buttons: { label: string; props: ComponentProps<typeof Button> }[] = [

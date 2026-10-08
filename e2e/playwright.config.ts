@@ -19,7 +19,7 @@ export default defineConfig<AppOptions & ServerOptions>({
   }),
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
+  retries: 0,
   // A test that passes only on retry is a flake: it fails the run on CI, with its trace.
   failOnFlakyTests: !!process.env.CI,
   workers: process.env.CI ? 1 : undefined,
@@ -38,7 +38,7 @@ export default defineConfig<AppOptions & ServerOptions>({
       name: 'web',
       use: { ...devices['Desktop Chrome'], appTarget: 'web' },
     },
-    // The desktop app in production mode; it starts its own Server.
+    // The desktop App in production mode connects to its fixture Engine.
     {
       name: 'electron',
       grepInvert: /@web-only/,
@@ -46,7 +46,7 @@ export default defineConfig<AppOptions & ServerOptions>({
     },
   ],
 
-  // The web export; each test starts a real Server of its own, and e2e tests mock only the Agent CLI (AGENTS.md).
+  // The web export; each App has a real Engine with shared fixture adapters.
   webServer: [
     {
       name: 'Web',

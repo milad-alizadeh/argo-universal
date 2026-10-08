@@ -25,7 +25,7 @@ Where the canon cannot apply as written, these are the recorded applications (ow
 
    The accepted exceptions are a mock CLI importing its own Agent's adapter by relative path (ADR-0015), `millisecondsPerSecond` defined once per package, and the Composer importing the Plan proposal card from `requests/` for its card swap (Spec 0006, Owner #17).
 
-   `pnpm quality:hoisting` reports production importers separately from tests, stories and mocks, follows barrels to declaring modules, and flags generic imports and names for review. It runs on demand and never gates CI. Update its tier mapping with the matching oxlint direction block when a tier folder is added.
+   oxlint enforces the import direction with `no-restricted-imports` blocks in `tooling/oxlint/argo.json`; add a block when a tier folder is added. When to hoist and whether a name belongs to the product stay with code review, as A2 and TA1 leave them.
 
 Enforcement lands through a spec issue, folder by folder, so CI stays green.
 
