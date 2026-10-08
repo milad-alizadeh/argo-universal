@@ -7,6 +7,7 @@ import { project } from '@repo/db/schema';
 import { listBranches, readRepository } from '@repo/git';
 import { TRPCError } from '@trpc/server';
 import { eq } from 'drizzle-orm';
+import { createRejectionCounter } from '../../lib/count-rejections';
 
 export async function seedProject(
   database: Database,
@@ -59,7 +60,7 @@ export function readProjectPath(database: Database, projectId: string): string {
 }
 
 export function createProjectService(database: Database): ProjectsService {
-  let rejectedProjects = 0;
+  const rejections = createRejectionCounter('projects');
   return {
     branches: async ({ projectId }): ReturnType<ProjectsService['branches']> =>
       listBranches(readProjectPath(database, projectId)),
@@ -74,11 +75,7 @@ export function createProjectService(database: Database): ProjectsService {
               row.checkoutChoice ?? (await defaultCheckoutChoice(row.path));
             const result = ProjectInfo.safeParse({ ...row, checkoutChoice });
             if (!result.success) {
-              rejectedProjects += 1;
-              console.error(
-                `projects: rejected shape #${rejectedProjects}`,
-                result.error,
-              );
+              rejections.report('rejected shape', result.error);
               throw result.error;
             }
             return result.data;
