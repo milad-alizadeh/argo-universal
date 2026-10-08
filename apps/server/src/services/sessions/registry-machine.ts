@@ -91,6 +91,7 @@ export const registryMachine = setup({
               ? {
                   kind: 'new',
                   projectId: event.projectId,
+                  projectPath: event.projectPath,
                   agent: event.agent,
                   checkout: event.checkout,
                   configOptions: event.configOptions,

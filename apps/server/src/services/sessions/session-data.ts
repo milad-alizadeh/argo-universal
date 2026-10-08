@@ -4,10 +4,9 @@ import {
   SessionRecord,
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
-import { feedRow, project, session } from '@repo/db/schema';
+import { feedRow, session } from '@repo/db/schema';
 import { type Checkout, createCheckout, discardCheckout } from '@repo/git';
 import { eq, max } from 'drizzle-orm';
-import { createSelectSchema } from 'drizzle-orm/zod';
 import type { ActorRefFrom } from 'xstate';
 import { z } from 'zod';
 import {
@@ -19,7 +18,10 @@ import type { writerMachine } from '../feed/writer-machine';
 import { decodeStoredSession, storedSessionColumns } from './session-record';
 
 // The first Turn's id travels with the creation, so the Session prompts as soon as it is stored.
-export type SessionCreationInput = SessionNewInput & { turnId: string };
+export type SessionCreationInput = SessionNewInput & {
+  projectPath: string;
+  turnId: string;
+};
 
 export type SessionInput = {
   database: Database;
@@ -41,16 +43,6 @@ export interface SessionData {
   nextPosition: number;
 }
 
-const readProjectPath = (input: NewSessionInput): string => {
-  const stored = input.database
-    .select()
-    .from(project)
-    .where(eq(project.id, input.projectId))
-    .get();
-  if (!stored) throw new Error(`No Project ${input.projectId}`);
-  return createSelectSchema(project).parse(stored).path;
-};
-
 // Creates the Checkout only; the Session row waits until its Agent is ready, so no empty Session exists.
 export async function createSessionCheckout(
   input: NewSessionInput,
@@ -58,7 +50,7 @@ export async function createSessionCheckout(
 ): Promise<SessionData> {
   const checkout = await createCheckout(
     {
-      projectPath: readProjectPath(input),
+      projectPath: input.projectPath,
       projectId: input.projectId,
       sessionId: input.sessionId,
       choice: input.checkout,
@@ -123,7 +115,7 @@ export async function discardSessionCheckout(
   signal?: AbortSignal,
 ): Promise<void> {
   if (input.checkout.type === 'worktree')
-    await discardCheckout(readProjectPath(input), checkout, signal);
+    await discardCheckout(input.projectPath, checkout, signal);
 }
 
 const storedConfigValues = z.array(InitialConfigOption);

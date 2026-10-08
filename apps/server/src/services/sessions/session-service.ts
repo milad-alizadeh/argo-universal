@@ -193,6 +193,7 @@ export function createSessionService({
         sessionId,
         turnId: createId(),
         ...input,
+        projectPath,
       });
       const snapshot = await waitFor(
         findSessionActor(sessionId),
