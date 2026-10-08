@@ -15,15 +15,15 @@ import {
   SessionHeader,
   type SessionHeaderStatus,
 } from '#components/session-header';
+import { useImageDraft } from '../components/use-image-draft';
 import { useConnectionState } from '../connection/context';
 import { useFeedView } from '../feed/use-feed-view';
 import { useSessionFeed } from '../feed/use-session-feed';
-import { useAgents } from '../lib/use-agents';
-import { useImageDraft } from '../lib/use-image-draft';
 import { useNavigate } from '../navigation/context';
 import { useWide } from '../navigation/use-wide';
 import { useBlobUrl } from '../trpc/blob-url';
 import { useTRPC } from '../trpc/context';
+import { useAgents } from '../trpc/use-agents';
 
 export interface SessionScreenProps {
   id: string;
