@@ -14,7 +14,6 @@
     "@anthropic-ai/claude-agent-sdk": "catalog:",
     "@repo/contracts": "workspace:*",
     "ajv": "catalog:",
-    "ajv-formats": "catalog:",
     "xstate": "catalog:",
     "zod": "catalog:"
   },

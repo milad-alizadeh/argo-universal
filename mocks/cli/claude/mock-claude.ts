@@ -322,6 +322,10 @@ function playTurn(): void {
     return;
   }
   if (!turn.some(isInit)) send(initFrame());
+  if (environment.scenario.malformedPayload) {
+    send({ type: 'future_message' });
+    send({ type: 'http' });
+  }
   replay(turn);
 }
 

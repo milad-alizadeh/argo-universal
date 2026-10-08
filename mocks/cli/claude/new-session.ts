@@ -9,10 +9,7 @@ import {
 } from '../../../packages/agents/claude/wire.ts';
 import { recordedImagePrompt } from '../image';
 import { findRecording, readRecording, recordedFrames } from '../recording';
-import {
-  isRecordedFrame as isWireFrame,
-  type RecordedFrame as WireFrame,
-} from '../recording.ts';
+import { isRecordedFrame as isWireFrame } from '../recording.ts';
 
 const initialization = recordedFrames(
   readRecording(

@@ -6,15 +6,15 @@ import {
   isThreadStartResponse,
   isAccountResponse,
 } from '../../../packages/agents/codex/payloads.ts';
+import {
+  isResumeInput,
+  isInterruptInput,
+} from '../../../packages/agents/codex/payloads.ts';
 import type {
   Turn,
   Account,
   GetAccountResponse,
 } from '../../../packages/agents/codex/protocol.gen.ts';
-import {
-  isResumeInput,
-  isInterruptInput,
-} from '../../../packages/agents/codex/request-payloads.ts';
 import {
   type WireFrame,
   type WireMessage,

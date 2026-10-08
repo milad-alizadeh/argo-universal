@@ -26,6 +26,7 @@ import {
   startingValues,
   toConfigOptions,
 } from './config-options';
+import { isKnownMessage } from './known-messages';
 import type { VendorMessage } from './messages';
 
 // The values the CLI starts with; the saved ones follow once its model list can check them.
@@ -263,7 +264,13 @@ export async function connect(
   const messages = (async (): Promise<void> => {
     try {
       for await (const message of vendor) {
-        listener.message({ ...message, receivedAt: Date.now() });
+        if (isKnownMessage(message))
+          listener.message({ ...message, receivedAt: Date.now() });
+        else
+          listener.event({
+            type: 'agent.messageRejected',
+            reason: `Unsupported SDK message: ${message.type}`,
+          });
         // Usage failures are ignored; the streamed Turn still supplies its Feed.
         if (message.type === 'result') void sendUsage().catch((): void => {});
       }

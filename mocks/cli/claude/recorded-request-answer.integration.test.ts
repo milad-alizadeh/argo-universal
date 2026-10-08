@@ -4,10 +4,7 @@ import path from 'node:path';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { startLineProcess } from '../line-process.ts';
 import { mockCliScenarioEnvironment } from '../mock-cli.ts';
-import {
-  isRecordedFrame as isWireFrame,
-  type RecordedFrame as WireFrame,
-} from '../recording.ts';
+import { isRecordedFrame as isWireFrame } from '../recording.ts';
 import { findRecording, readRecording, recordedFrames } from '../recording.ts';
 import { readRequestAnswers } from '../request-answer.ts';
 import { recordedRequestAnswer } from './recorded-request-answer.ts';

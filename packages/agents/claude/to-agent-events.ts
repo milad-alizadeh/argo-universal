@@ -1,14 +1,14 @@
+import type { SDKPartialAssistantMessage } from '@anthropic-ai/claude-agent-sdk';
 import type { StopReason, TurnUsage } from '@repo/contracts';
-import { rejectAgentMessage, type AgentMapping } from '../src/agent-adapter';
+import { type AgentMapping } from '../src/agent-adapter';
 import type { AgentEvent, FeedChange, FeedUpdate } from '../src/agent-events';
 import type {
   SDKAssistantMessage,
   SDKUserMessage,
   VendorMessage,
 } from './messages';
-import { toRequestEvents } from './request-events';
 import type { SDKResultMessage, SDKMessage } from './messages';
-import type { SDKPartialAssistantMessage } from '@anthropic-ai/claude-agent-sdk';
+import { toRequestEvents } from './request-events';
 import { type ToolCallRow, toolCallEnded, toolCallStarted } from './tool-calls';
 
 type TextKind = 'agent_message' | 'agent_thought';

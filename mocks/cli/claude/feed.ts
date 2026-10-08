@@ -9,10 +9,7 @@ import {
 } from '../../../packages/agents/claude/wire.ts';
 import { recordedFeedEvents } from '../feed.ts';
 import { recordedImage } from '../image.ts';
-import {
-  isRecordedFrame as isWireFrame,
-  type RecordedFrame as WireFrame,
-} from '../recording.ts';
+import { isRecordedFrame as isWireFrame } from '../recording.ts';
 import { findRecording, readRecording, recordedFrames } from '../recording.ts';
 
 export function feedEvents(name: string): import('@repo/agents').AgentEvent[] {

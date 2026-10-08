@@ -3,6 +3,12 @@ import { assistant, user } from './sdk-messages';
 import { completed } from './sdk-result';
 import { thought, answer } from './sdk-text';
 
+const originalText = 'hello world\n';
+
+const commandOutput = 'hello Argo\n M hello.txt\n?? notes.md';
+
+const helloPath = '/project/hello.txt';
+
 export const edits: VendorMessage[] = [
   ...thought,
   {
@@ -39,7 +45,7 @@ export const edits: VendorMessage[] = [
         type: 'tool_use',
         id: 'toolu_01SxWPoiSEcuefwQ7yYCUMf7',
         name: 'Read',
-        input: { file_path: '/project/hello.txt' },
+        input: { file_path: helloPath },
         caller: { type: 'direct' },
       },
     ]),
@@ -56,8 +62,8 @@ export const edits: VendorMessage[] = [
     {
       type: 'text',
       file: {
-        filePath: '/project/hello.txt',
-        content: 'hello world\n',
+        filePath: helloPath,
+        content: originalText,
         numLines: 2,
         startLine: 1,
         totalLines: 2,
@@ -73,7 +79,7 @@ export const edits: VendorMessage[] = [
         name: 'Edit',
         input: {
           replace_all: false,
-          file_path: '/project/hello.txt',
+          file_path: helloPath,
           old_string: 'hello world',
           new_string: 'hello Argo',
         },
@@ -91,7 +97,7 @@ export const edits: VendorMessage[] = [
           'The file /project/hello.txt has been updated successfully. (file state is current in your context \u2014 no need to Read it back)',
       },
     ],
-    { originalFile: 'hello world\n' },
+    { originalFile: originalText },
     '2026-10-05T02:02:55.085Z',
   ),
   {
@@ -114,12 +120,12 @@ export const edits: VendorMessage[] = [
       {
         tool_use_id: 'toolu_01G161bUEDoix223h77wg2HL',
         type: 'tool_result',
-        content: 'hello Argo\n M hello.txt\n?? notes.md',
+        content: commandOutput,
         is_error: false,
       },
     ],
     {
-      stdout: 'hello Argo\n M hello.txt\n?? notes.md',
+      stdout: commandOutput,
       stderr: '',
       interrupted: false,
     },

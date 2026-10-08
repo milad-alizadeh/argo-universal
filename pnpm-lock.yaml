@@ -966,9 +966,6 @@ importers:
       ajv:
         specifier: 'catalog:'
         version: 8.20.0
-      ajv-formats:
-        specifier: 'catalog:'
-        version: 3.0.1(ajv@8.20.0)
       xstate:
         specifier: 'catalog:'
         version: 5.33.2

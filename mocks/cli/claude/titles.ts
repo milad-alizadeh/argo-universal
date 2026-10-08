@@ -1,9 +1,6 @@
 import path from 'node:path';
 import { isControlResponse } from '../../../packages/agents/claude/wire.ts';
-import {
-  isRecordedFrame as isWireFrame,
-  type RecordedFrame as WireFrame,
-} from '../recording.ts';
+import { isRecordedFrame as isWireFrame } from '../recording.ts';
 import { findRecording, readRecording, recordedFrames } from '../recording.ts';
 
 // The real CLI's response to generate_session_title with persist enabled.
