@@ -43,6 +43,27 @@ import {
   toSessionInsert,
 } from './session-data';
 
+type FeedChangeEvent = Extract<
+  import('../feed/feed-machine').FeedEvent,
+  { type: 'feed.change' }
+>;
+type SessionDataParameters = { data: SessionData };
+type FailureParameters = { error: unknown };
+type LoadSessionInput = {
+  session: SessionInput;
+  writer: ActorRefFrom<typeof writerMachine> | undefined;
+};
+type DiscardCheckoutInput = {
+  session: NewSessionInput;
+  checkout: SessionData['checkout'];
+};
+type EndTurnParameters = {
+  stopReason: StopReason;
+  usage?: TurnUsage;
+  error?: TurnError;
+};
+type StartTurnParameters = { turnId: string; content: ContentBlock[] };
+
 // The registry passes the adapter for the Session's Agent.
 export type SessionMachineInput = SessionInput & {
   adapter: AgentAdapter;
@@ -100,19 +121,27 @@ const checkoutLimit = 10_000;
 const crashWindowMs = 600_000;
 const maxCrashesInWindow = 3;
 
-const writer = ({ system }: { system: { get: (id: string) => unknown } }) =>
+const writer = ({
+  system,
+}: {
+  system: { get: (id: string) => unknown };
+}): ActorRefFrom<typeof writerMachine> =>
   system.get('databaseWriter') as ActorRefFrom<typeof writerMachine>;
 
 // The values an Agent reconnects with, read from the options it last reported.
-const toConfigValues = (configOptions: SessionConfigOption[]) =>
-  configOptions.map((option) => ({
+const toConfigValues = (
+  configOptions: SessionConfigOption[],
+): AgentConfigValue[] =>
+  configOptions.map((option): AgentConfigValue => ({
     configId: option.configId,
     value: option.currentValue,
   }));
 
 // The model the Agent runs with, which a Turn records.
-const currentModel = (configOptions: SessionConfigOption[]) => {
-  const model = configOptions.find((option) => option.category === 'model');
+const currentModel = (configOptions: SessionConfigOption[]): string | null => {
+  const model = configOptions.find(
+    (option): boolean => option.category === 'model',
+  );
   return model?.type === 'select' ? model.currentValue : null;
 };
 
@@ -143,45 +172,49 @@ const sessionSetup = setup({
   },
   actors: {
     createCheckout: fromPromise<SessionData, NewSessionInput>(
-      ({ input, signal }) => createSessionCheckout(input, signal),
+      ({ input, signal }): Promise<SessionData> =>
+        createSessionCheckout(input, signal),
     ),
-    discardCheckout: fromPromise<
-      void,
-      { session: NewSessionInput; checkout: SessionData['checkout'] }
-    >(({ input, signal }) =>
-      discardSessionCheckout(input.session, input.checkout, signal),
+    discardCheckout: fromPromise<void, DiscardCheckoutInput>(
+      ({ input, signal }): Promise<void> =>
+        discardSessionCheckout(input.session, input.checkout, signal),
     ),
-    loadSession: fromPromise<
-      SessionData,
-      {
-        session: SessionInput;
-        writer: ActorRefFrom<typeof writerMachine> | undefined;
-      }
-    >(({ input }) => loadSession(input.session, input.writer)),
+    loadSession: fromPromise<SessionData, LoadSessionInput>(
+      ({ input }): Promise<SessionData> =>
+        loadSession(input.session, input.writer),
+    ),
     feed: feedMachine,
     agent: agentMachine,
   },
   actions: {
-    rememberSession: assign((_, params: { data: SessionData }) => params.data),
-    rememberFailure: assign((_, params: { error: unknown }) => ({
-      failure: String(params.error),
-    })),
-    rememberStartFailure: assign(({ event }) => {
-      if (event.type === 'xstate.error.actor.agent')
-        return { failure: String(event.error) };
-      if (event.type === 'xstate.done.actor.agent' && event.output.failure)
-        return { failure: event.output.failure };
-      return { failure: 'The Session closed before its Agent started' };
-    }),
-    addDiscardFailure: assign(({ context, event }) => ({
-      failure: `${context.failure}\nThe Checkout was not removed: ${String('error' in event ? event.error : event)}`,
-    })),
+    rememberSession: assign(
+      (_, params: SessionDataParameters): SessionData => params.data,
+    ),
+    rememberFailure: assign(
+      (_, params: FailureParameters): Pick<SessionContext, 'failure'> => ({
+        failure: String(params.error),
+      }),
+    ),
+    rememberStartFailure: assign(
+      ({ event }): Pick<SessionContext, 'failure'> => {
+        if (event.type === 'xstate.error.actor.agent')
+          return { failure: String(event.error) };
+        if (event.type === 'xstate.done.actor.agent' && event.output.failure)
+          return { failure: event.output.failure };
+        return { failure: 'The Session closed before its Agent started' };
+      },
+    ),
+    addDiscardFailure: assign(
+      ({ context, event }): Pick<SessionContext, 'failure'> => ({
+        failure: `${context.failure}\nThe Checkout was not removed: ${String('error' in event ? event.error : event)}`,
+      }),
+    ),
     // An Agent that could not start may have been signed out or removed since its last probe.
-    refreshAgentProbe: enqueueActions(({ context, system, enqueue }) => {
+    refreshAgentProbe: enqueueActions(({ context, system, enqueue }): void => {
       const probe = system.get(agentProbeId(context.input.adapter.agent));
       if (probe) enqueue.sendTo(probe, { type: 'agentProbe.refresh' });
     }),
-    rememberReady: enqueueActions(({ context, event, enqueue }) => {
+    rememberReady: enqueueActions(({ context, event, enqueue }): void => {
       assertEvent(event, 'agent.ready');
       if (context.stored)
         enqueue.sendTo(writer, {
@@ -207,7 +240,7 @@ const sessionSetup = setup({
       });
     }),
     // Writes the new Session's row once its Agent is ready, so no empty Session exists.
-    storeSession: enqueueActions(({ context, enqueue }) => {
+    storeSession: enqueueActions(({ context, enqueue }): void => {
       if (context.input.kind !== 'new') return;
       enqueue.assign({ stored: true });
       enqueue.sendTo(writer, {
@@ -216,10 +249,7 @@ const sessionSetup = setup({
       });
     }),
     startTurn: enqueueActions(
-      (
-        { context, enqueue },
-        params: { turnId: string; content: ContentBlock[] },
-      ) => {
+      ({ context, enqueue }, params: StartTurnParameters): void => {
         for (const choice of context.heldConfigValues)
           enqueue.sendTo('agent', {
             type: 'agent.setConfigOption',
@@ -257,14 +287,7 @@ const sessionSetup = setup({
       },
     ),
     endTurn: enqueueActions(
-      (
-        { context, enqueue },
-        params: {
-          stopReason: StopReason;
-          usage?: TurnUsage;
-          error?: TurnError;
-        },
-      ) => {
+      ({ context, enqueue }, params: EndTurnParameters): void => {
         if (context.activeTurnId)
           enqueue.sendTo(writer, {
             type: 'writer.write',
@@ -288,20 +311,29 @@ const sessionSetup = setup({
         });
       },
     ),
-    forwardFeed: sendTo('feed', ({ context, event }) => {
-      assertEvent(event, 'agent.feed');
-      return {
-        type: 'feed.change',
-        change: event.change,
-        turnId: context.activeTurnId,
-      };
-    }),
-    rememberUsage: assign(({ event }) => {
+    forwardFeed: sendTo(
+      'feed',
+      ({
+        context,
+        event,
+      }): Extract<
+        import('./../feed/feed-machine').FeedEvent,
+        { type: 'feed.change' }
+      > => {
+        assertEvent(event, 'agent.feed');
+        return {
+          type: 'feed.change',
+          change: event.change,
+          turnId: context.activeTurnId,
+        };
+      },
+    ),
+    rememberUsage: assign(({ event }): Pick<SessionContext, 'usage'> => {
       assertEvent(event, 'agent.usage');
       return { usage: event.usage };
     }),
     // Stores the values too, so a Session resumed after a restart keeps its model and mode.
-    rememberConfig: enqueueActions(({ context, event, enqueue }) => {
+    rememberConfig: enqueueActions(({ context, event, enqueue }): void => {
       assertEvent(event, 'agent.configOptionsChanged');
       const configValues = toConfigValues(event.configOptions);
       if (context.stored)
@@ -321,12 +353,12 @@ const sessionSetup = setup({
         configValues,
       });
     }),
-    forwardConfig: enqueueActions(({ context, event, enqueue }) => {
+    forwardConfig: enqueueActions(({ context, event, enqueue }): void => {
       assertEvent(event, 'session.setConfigOption');
       enqueue.assign({
         configOptions: chooseConfigValue(context.configOptions, event, false),
         heldConfigValues: context.heldConfigValues.filter(
-          (choice) => choice.configId !== event.configId,
+          (choice): boolean => choice.configId !== event.configId,
         ),
       });
       enqueue.sendTo('agent', {
@@ -334,36 +366,45 @@ const sessionSetup = setup({
         type: 'agent.setConfigOption',
       } satisfies AgentCommand);
     }),
-    holdConfig: assign(({ context, event }) => {
-      assertEvent(event, 'session.setConfigOption');
-      const choice = { configId: event.configId, value: event.value };
-      const previous = context.heldConfigValues;
-      const heldConfigValues = previous.some(
-        (value) => value.configId === choice.configId,
-      )
-        ? previous.map((value) =>
-            value.configId === choice.configId ? choice : value,
-          )
-        : [...previous, choice];
-      return {
-        heldConfigValues,
-        configOptions: chooseConfigValue(context.configOptions, choice, true),
-      };
-    }),
-    queuePermission: assign(({ context, event }) => {
-      assertEvent(event, 'agent.permissionRequested');
-      return { permissionQueue: [...context.permissionQueue, event.request] };
-    }),
-    rememberElicitation: assign(({ context, event }) => {
-      assertEvent(event, 'agent.elicitationRequested');
-      return {
-        pendingElicitation: {
-          ...event.request,
-          requestId: context.input.createId(),
-        },
-      };
-    }),
-    answerPermission: enqueueActions(({ context, event, enqueue }) => {
+    holdConfig: assign(
+      ({
+        context,
+        event,
+      }): Pick<SessionContext, 'heldConfigValues' | 'configOptions'> => {
+        assertEvent(event, 'session.setConfigOption');
+        const choice = { configId: event.configId, value: event.value };
+        const previous = context.heldConfigValues;
+        const heldConfigValues = previous.some(
+          (value): boolean => value.configId === choice.configId,
+        )
+          ? previous.map((value): AgentConfigValue =>
+              value.configId === choice.configId ? choice : value,
+            )
+          : [...previous, choice];
+        return {
+          heldConfigValues,
+          configOptions: chooseConfigValue(context.configOptions, choice, true),
+        };
+      },
+    ),
+    queuePermission: assign(
+      ({ context, event }): Pick<SessionContext, 'permissionQueue'> => {
+        assertEvent(event, 'agent.permissionRequested');
+        return { permissionQueue: [...context.permissionQueue, event.request] };
+      },
+    ),
+    rememberElicitation: assign(
+      ({ context, event }): Pick<SessionContext, 'pendingElicitation'> => {
+        assertEvent(event, 'agent.elicitationRequested');
+        return {
+          pendingElicitation: {
+            ...event.request,
+            requestId: context.input.createId(),
+          },
+        };
+      },
+    ),
+    answerPermission: enqueueActions(({ context, event, enqueue }): void => {
       assertEvent(event, 'session.answerPermission');
       const change = permissionOutcomeChange(event.toolCallId, event.optionId);
       enqueue.sendTo('feed', {
@@ -377,17 +418,23 @@ const sessionSetup = setup({
       } satisfies AgentCommand);
     }),
     removePermission: assign({
-      permissionQueue: ({ context }) => context.permissionQueue.slice(1),
+      permissionQueue: ({ context }): SessionContext['permissionQueue'] =>
+        context.permissionQueue.slice(1),
     }),
-    answerElicitation: sendTo('agent', ({ event }) => {
-      assertEvent(event, 'session.answerElicitation');
-      return {
-        ...event,
-        type: 'agent.answerElicitation',
-      } satisfies AgentCommand;
-    }),
+    answerElicitation: sendTo(
+      'agent',
+      ({
+        event,
+      }): Extract<AgentCommand, { type: 'agent.answerElicitation' }> => {
+        assertEvent(event, 'session.answerElicitation');
+        return {
+          ...event,
+          type: 'agent.answerElicitation',
+        } satisfies AgentCommand;
+      },
+    ),
     removeElicitation: assign({ pendingElicitation: null }),
-    cancelRequests: enqueueActions(({ context, enqueue }) => {
+    cancelRequests: enqueueActions(({ context, enqueue }): void => {
       for (const request of context.permissionQueue) {
         const change = permissionOutcomeChange(request.toolCallId, null);
         enqueue.sendTo('feed', {
@@ -412,10 +459,12 @@ const sessionSetup = setup({
       type: 'agent.cancel',
     } satisfies AgentCommand),
     stopAgent: sendTo('agent', { type: 'agent.stop' } satisfies AgentCommand),
-    recordCrash: enqueueActions(({ context, enqueue }) => {
+    recordCrash: enqueueActions(({ context, enqueue }): void => {
       const now = context.input.now();
       const agentCrashes = [
-        ...context.agentCrashes.filter((at) => at > now - crashWindowMs),
+        ...context.agentCrashes.filter(
+          (at): boolean => at > now - crashWindowMs,
+        ),
         now,
       ];
       enqueue.assign({ agentCrashes });
@@ -434,7 +483,7 @@ const sessionSetup = setup({
         },
       });
     }),
-    giveUp: enqueueActions(({ context, enqueue }) => {
+    giveUp: enqueueActions(({ context, enqueue }): void => {
       const failure = 'The Agent stopped three times in ten minutes';
       enqueue.assign({ failure });
       enqueue.sendTo(writer, {
@@ -447,33 +496,36 @@ const sessionSetup = setup({
       });
     }),
     countRejectedMessage: assign({
-      rejectedMessages: ({ context }) => context.rejectedMessages + 1,
+      rejectedMessages: ({ context }): number => context.rejectedMessages + 1,
     }),
-    messageRejectedNotice: sendTo('feed', ({ context, event }) => {
-      assertEvent(event, 'agent.messageRejected');
-      return {
-        type: 'feed.change',
-        turnId: context.activeTurnId,
-        change: {
-          type: 'upsert',
-          update: {
-            id: context.input.createId(),
-            sessionUpdate: 'notice',
-            state: 'settled',
-            severity: 'warning',
-            title: 'The Agent sent an unrecognised message',
-            description: event.reason,
+    messageRejectedNotice: sendTo(
+      'feed',
+      ({ context, event }): FeedChangeEvent => {
+        assertEvent(event, 'agent.messageRejected');
+        return {
+          type: 'feed.change',
+          turnId: context.activeTurnId,
+          change: {
+            type: 'upsert',
+            update: {
+              id: context.input.createId(),
+              sessionUpdate: 'notice',
+              state: 'settled',
+              severity: 'warning',
+              title: 'The Agent sent an unrecognised message',
+              description: event.reason,
+            },
           },
-        },
-      };
-    }),
-    logMessageRejected: ({ context, event }) => {
+        };
+      },
+    ),
+    logMessageRejected: ({ context, event }): void => {
       assertEvent(event, 'agent.messageRejected');
       console.error(
         `session ${context.sessionId}: rejected an Agent message: ${event.reason}`,
       );
     },
-    cancelNotice: sendTo('feed', ({ context }) => ({
+    cancelNotice: sendTo('feed', ({ context }): FeedChangeEvent => ({
       type: 'feed.change',
       turnId: context.activeTurnId,
       change: {
@@ -490,14 +542,15 @@ const sessionSetup = setup({
     flushFeed: sendTo('feed', { type: 'feed.flush' }),
   },
   guards: {
-    isNew: ({ context }) => context.input.kind === 'new',
-    isUnstored: ({ context }) => !context.stored,
-    isPermissionHead: ({ context, event }) =>
+    isNew: ({ context }): boolean => context.input.kind === 'new',
+    isUnstored: ({ context }): boolean => !context.stored,
+    isPermissionHead: ({ context, event }): boolean =>
       event.type === 'session.answerPermission' &&
       context.permissionQueue[0]?.toolCallId === event.toolCallId,
-    hasPermission: ({ context }) => context.permissionQueue.length > 0,
-    hasElicitation: ({ context }) => context.pendingElicitation !== null,
-    tooManyCrashes: ({ context }) =>
+    hasPermission: ({ context }): boolean => context.permissionQueue.length > 0,
+    hasElicitation: ({ context }): boolean =>
+      context.pendingElicitation !== null,
+    tooManyCrashes: ({ context }): boolean =>
       context.agentCrashes.length >= maxCrashesInWindow,
   },
   delays: {
@@ -514,7 +567,11 @@ const sessionEntryOutcome = {
     target: 'open',
     actions: {
       type: 'rememberSession',
-      params: ({ event }: { event: { output: SessionData } }) => ({
+      params: ({
+        event,
+      }: {
+        event: { output: SessionData };
+      }): SessionDataParameters => ({
         data: event.output,
       }),
     },
@@ -523,7 +580,11 @@ const sessionEntryOutcome = {
     target: 'closed',
     actions: {
       type: 'rememberFailure',
-      params: ({ event }: { event: { error: unknown } }) => ({
+      params: ({
+        event,
+      }: {
+        event: { error: unknown };
+      }): FailureParameters => ({
         error: event.error,
       }),
     },
@@ -531,7 +592,11 @@ const sessionEntryOutcome = {
 } as const;
 
 // The prompt that `session.new` carried in; only a new Session is ever unstored.
-const firstTurn = ({ context }: { context: SessionContext }) => {
+const firstTurn = ({
+  context,
+}: {
+  context: SessionContext;
+}): StartTurnParameters => {
   if (context.input.kind !== 'new')
     throw new Error('Only a new Session has a first Turn');
   return { turnId: context.input.turnId, content: context.input.prompt };
@@ -559,7 +624,7 @@ const endedTurn = {
     event,
   }: {
     event: Extract<AgentEvent, { type: 'agent.turnEnded' }>;
-  }) => ({
+  }): EndTurnParameters => ({
     stopReason: event.stopReason,
     usage: event.usage,
     error: event.error,
@@ -568,7 +633,7 @@ const endedTurn = {
 
 export const sessionMachine = sessionSetup.createMachine({
   id: 'session',
-  context: ({ input }) => ({
+  context: ({ input }): SessionContext => ({
     input,
     sessionId: input.sessionId,
     projectId: input.kind === 'new' ? input.projectId : '',
@@ -593,7 +658,9 @@ export const sessionMachine = sessionSetup.createMachine({
     failure: null,
     stored: input.kind === 'existing',
   }),
-  output: ({ context }) => ({ failure: context.failure }),
+  output: ({ context }): AgentOutput => ({
+    failure: context.failure,
+  }),
   initial: 'entering',
   states: {
     entering: {
@@ -614,7 +681,8 @@ export const sessionMachine = sessionSetup.createMachine({
       invoke: {
         id: 'createCheckout',
         src: 'createCheckout',
-        input: ({ context }) => context.input as NewSessionInput,
+        input: ({ context }): NewSessionInput =>
+          context.input as NewSessionInput,
         ...sessionEntryOutcome,
       },
     },
@@ -622,7 +690,7 @@ export const sessionMachine = sessionSetup.createMachine({
       invoke: {
         id: 'loadSession',
         src: 'loadSession',
-        input: ({ context, self }) => ({
+        input: ({ context, self }): LoadSessionInput => ({
           session: context.input,
           writer: self.system.get('databaseWriter') as
             | ActorRefFrom<typeof writerMachine>
@@ -635,14 +703,17 @@ export const sessionMachine = sessionSetup.createMachine({
       invoke: {
         id: 'feed',
         src: 'feed',
-        input: ({ context, self }) => ({
+        input: ({
+          context,
+          self,
+        }): import('xstate').InputFrom<typeof feedMachine> => ({
           sessionId: context.sessionId,
           epoch: context.epoch,
           maxRevision: context.maxRevision,
           activityAt: context.activityAt,
           nextPosition: context.nextPosition,
           now: context.input.now,
-          findWrittenRow: (id) =>
+          findWrittenRow: (id): ReturnType<typeof readWrittenRow> =>
             readWrittenRow({
               database: context.input.database,
               writer: self.system.get('databaseWriter') as
@@ -657,7 +728,7 @@ export const sessionMachine = sessionSetup.createMachine({
           target: 'closed',
           actions: {
             type: 'rememberFailure',
-            params: ({ event }) => ({ error: event.error }),
+            params: ({ event }): FailureParameters => ({ error: event.error }),
           },
         },
       },
@@ -673,7 +744,7 @@ export const sessionMachine = sessionSetup.createMachine({
             }: {
               context: SessionContext;
               self: AgentInput['parent'];
-            }) => ({
+            }): AgentInput => ({
               adapter: context.input.adapter,
               sessionId: context.sessionId,
               cwd: context.checkout.path,
@@ -726,7 +797,7 @@ export const sessionMachine = sessionSetup.createMachine({
                   target: 'running',
                   actions: {
                     type: 'startTurn',
-                    params: ({ event }) => ({
+                    params: ({ event }): StartTurnParameters => ({
                       turnId: event.turnId,
                       content: event.content,
                     }),
@@ -823,7 +894,7 @@ export const sessionMachine = sessionSetup.createMachine({
       invoke: {
         id: 'discardCheckout',
         src: 'discardCheckout',
-        input: ({ context }) => ({
+        input: ({ context }): DiscardCheckoutInput => ({
           session: context.input as NewSessionInput,
           checkout: context.checkout,
         }),
@@ -841,7 +912,7 @@ function chooseConfigValue(
   choice: AgentConfigValue,
   held: boolean,
 ): SessionConfigOption[] {
-  return options.map((option) => {
+  return options.map((option): SessionConfigOption => {
     if (option.configId !== choice.configId) return option;
     const _meta = {
       ...option._meta,
@@ -862,7 +933,8 @@ function keepHeldConfigChoices(
   held: AgentConfigValue[],
 ): SessionConfigOption[] {
   return held.reduce(
-    (current, choice) => chooseConfigValue(current, choice, true),
+    (current, choice): SessionConfigOption[] =>
+      chooseConfigValue(current, choice, true),
     options,
   );
 }

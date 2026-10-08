@@ -37,7 +37,11 @@ export const MainContentUsesAvailableWidth: Story = {
               onDraftChange={fn()}
               onAttachImages={fn()}
               onSend={fn()}
-              planProposal={{ proposal: shortPlanProposal, onAnswer: fn() }}
+              planProposal={{
+                proposal: shortPlanProposal,
+                onAnswer: fn(),
+                state: { kind: 'open' },
+              }}
             />
           </View>
         </PlanProposalRegion>
@@ -603,9 +607,11 @@ export const DragToCollapseExpandAndReopen: Story = {
       ).toBe(300),
     );
     await drag('Resize Inspector', -240);
-    await expect(
-      canvas.getByRole('button', { name: 'Close Inspector' }),
-    ).toBeVisible();
+    await waitFor(() =>
+      expect(
+        canvas.getByRole('button', { name: 'Close Inspector' }),
+      ).toBeVisible(),
+    );
     await waitFor(() =>
       expect(
         canvas.getByTestId('desktop-inspector').getBoundingClientRect().width,
@@ -708,7 +714,7 @@ export const ContentUpdatesKeepAnActiveToggleRunning: Story = {
       await expect(
         canvas.getByLabelText('2 Sessions need attention'),
       ).toBeVisible();
-      await expect(animations.mock.calls.length).toBe(started);
+      await expect(animations.mock.calls).toHaveLength(started);
       if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
         await expect(activeAnimation?.playState).not.toBe('idle');
       }

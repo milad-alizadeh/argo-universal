@@ -4,7 +4,7 @@ import {
   recordedPrompt as claudeRecordedPrompt,
 } from './claude/feed.ts';
 import { newSessionMock as claudeNewSessionMock } from './claude/new-session.ts';
-import { recordedRequestAnswer as claudeRequestAnswer } from './claude/request-answer.ts';
+import { recordedRequestAnswer as claudeRequestAnswer } from './claude/recorded-request-answer.ts';
 import { recordedTitle } from './claude/titles.ts';
 import { writeMockClaude } from './claude/write-mock-claude.ts';
 import { writeClaudeTranscript } from './claude/write-transcript.ts';
@@ -13,7 +13,7 @@ import {
   recordedPrompt as codexRecordedPrompt,
 } from './codex/feed.ts';
 import { newSessionMock as codexNewSessionMock } from './codex/new-session.ts';
-import { recordedRequestAnswer as codexRequestAnswer } from './codex/request-answer.ts';
+import { recordedRequestAnswer as codexRequestAnswer } from './codex/recorded-request-answer.ts';
 import { writeMockCodex } from './codex/write-mock-codex.ts';
 import { writeCodexTranscript } from './codex/write-transcript.ts';
 import type {

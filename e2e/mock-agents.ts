@@ -4,7 +4,7 @@ import { mockClis } from '@repo/mocks/cli';
 import type { MockCliOptions } from '@repo/mocks/cli/mock-cli';
 
 // A PATH with the mock Agent CLIs in `directory` and no inherited entries, so a real Agent CLI on this machine never stands in for a missing mock.
-export const mockAgentPath = (directory: string) =>
+export const mockAgentPath = (directory: string): string =>
   [directory, '/usr/bin', '/bin'].join(path.delimiter);
 
 // Each Agent's mock CLI options by Agent id; an Agent left out replays its usual Turn.
@@ -14,10 +14,10 @@ export type MockAgents = Record<string, Partial<MockCliOptions>>;
 export async function writeMockAgents(
   directory: string,
   agents: MockAgents = {},
-) {
+): Promise<string> {
   await mkdir(directory, { recursive: true });
   await Promise.all(
-    Object.entries(mockClis).map(([agent, mockCli]) =>
+    Object.entries(mockClis).map(([agent, mockCli]): Promise<string> =>
       mockCli.write(directory, {
         recording: mockCli.recordings.turn,
         ...agents[agent],

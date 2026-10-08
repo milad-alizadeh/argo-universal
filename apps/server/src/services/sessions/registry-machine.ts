@@ -64,7 +64,7 @@ export const registryMachine = setup({
   actors: { session: sessionMachine, agentProbe: agentProbeMachine },
   actions: {
     // Each Agent is probed once at start, so the first `agents.list` rarely waits.
-    spawnAgentProbes: enqueueActions(({ context, enqueue }) => {
+    spawnAgentProbes: enqueueActions(({ context, enqueue }): void => {
       for (const adapter of context.adapters)
         enqueue.spawnChild('agentProbe', {
           id: agentProbeId(adapter.agent),
@@ -72,57 +72,62 @@ export const registryMachine = setup({
           input: { adapter },
         });
     }),
-    openSession: assign(({ context, event, spawn }) => {
-      assertEvent(event, ['sessions.create', 'sessions.open']);
-      if (context.sessions[event.sessionId]) return {};
-      const session = spawn('session', {
-        id: `session:${event.sessionId}`,
-        systemId: `session:${event.sessionId}`,
-        syncSnapshot: true,
-        input: {
-          database: context.database,
-          runtimeDirectory: context.runtimeDirectory,
-          now: context.now,
-          createId: context.createId,
-          adapter: findAgentAdapter(event.agent, context.adapters),
-          sessionId: event.sessionId,
-          ...(event.type === 'sessions.create'
-            ? {
-                kind: 'new',
-                projectId: event.projectId,
-                agent: event.agent,
-                checkout: event.checkout,
-                configOptions: event.configOptions,
-                prompt: event.prompt,
-                turnId: event.turnId,
-              }
-            : { kind: 'existing' }),
-        },
-      });
-      return { sessions: { ...context.sessions, [event.sessionId]: session } };
-    }),
-    removeSession: enqueueActions(({ context, event, enqueue }) => {
+    openSession: assign(
+      ({ context, event, spawn }): Partial<RegistryContext> => {
+        assertEvent(event, ['sessions.create', 'sessions.open']);
+        if (context.sessions[event.sessionId]) return {};
+        const session = spawn('session', {
+          id: `session:${event.sessionId}`,
+          systemId: `session:${event.sessionId}`,
+          syncSnapshot: true,
+          input: {
+            database: context.database,
+            runtimeDirectory: context.runtimeDirectory,
+            now: context.now,
+            createId: context.createId,
+            adapter: findAgentAdapter(event.agent, context.adapters),
+            sessionId: event.sessionId,
+            ...(event.type === 'sessions.create'
+              ? {
+                  kind: 'new',
+                  projectId: event.projectId,
+                  projectPath: event.projectPath,
+                  agent: event.agent,
+                  checkout: event.checkout,
+                  configOptions: event.configOptions,
+                  prompt: event.prompt,
+                  turnId: event.turnId,
+                }
+              : { kind: 'existing' }),
+          },
+        });
+        return {
+          sessions: { ...context.sessions, [event.sessionId]: session },
+        };
+      },
+    ),
+    removeSession: enqueueActions(({ context, event, enqueue }): void => {
       if (!('actorId' in event)) return;
       enqueue.stopChild(event.actorId);
       enqueue.assign({
         sessions: Object.fromEntries(
           Object.entries(context.sessions).filter(
-            ([id]) => `session:${id}` !== event.actorId,
+            ([id]): boolean => `session:${id}` !== event.actorId,
           ),
         ),
       });
     }),
-    logActorFailure: ({ event }) => {
+    logActorFailure: ({ event }): void => {
       assertEvent(event, 'xstate.error.actor.*');
       console.error(
         `sessions: ${event.actorId} failed: ${String(event.error)}`,
       );
     },
-    closeSessions: enqueueActions(({ context, enqueue }) => {
+    closeSessions: enqueueActions(({ context, enqueue }): void => {
       for (const session of Object.values(context.sessions))
         enqueue.sendTo(session, { type: 'session.close' });
     }),
-    closeReadySession: enqueueActions(({ context, event, enqueue }) => {
+    closeReadySession: enqueueActions(({ context, event, enqueue }): void => {
       if (!('snapshot' in event)) return;
       const { snapshot } = event;
       const session = context.sessions[snapshot.context.sessionId];
@@ -135,16 +140,19 @@ export const registryMachine = setup({
     }),
   },
   guards: {
-    isRegisteredAgent: ({ context, event }) =>
+    isRegisteredAgent: ({ context, event }): boolean =>
       (event.type === 'sessions.create' || event.type === 'sessions.open') &&
-      context.adapters.some((adapter) => adapter.agent === event.agent),
-    isSessionFailure: ({ event }) =>
+      context.adapters.some(
+        (adapter): boolean => adapter.agent === event.agent,
+      ),
+    isSessionFailure: ({ event }): boolean =>
       'actorId' in event && event.actorId.startsWith('session:'),
-    noSessions: ({ context }) => Object.keys(context.sessions).length === 0,
+    noSessions: ({ context }): boolean =>
+      Object.keys(context.sessions).length === 0,
   },
 }).createMachine({
   id: 'sessions',
-  context: ({ input }) => ({
+  context: ({ input }): RegistryContext => ({
     ...input,
     adapters: input.adapters ?? agentAdapters,
     sessions: {},

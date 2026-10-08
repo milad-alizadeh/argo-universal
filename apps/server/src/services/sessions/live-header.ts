@@ -1,6 +1,8 @@
+import type { ToolCallTerminal } from '@repo/contracts';
 import {
   isToolCallRunning,
   knownCommandActions,
+  type TextContent,
   type LiveHeader,
   type LiveHeaderSource,
   type PendingElicitation,
@@ -20,8 +22,10 @@ export interface LiveHeaderInput {
 function toolKindLabel(tool: ToolCallUpdate): string | null {
   const path =
     tool.locations?.[0]?.path ??
-    tool.content.flatMap((block) =>
-      block.type === 'diff' ? block.changes.map((change) => change.path) : [],
+    tool.content.flatMap((block): string[] =>
+      block.type === 'diff'
+        ? block.changes.map((change): string => change.path)
+        : [],
     )[0];
   switch (tool.kind) {
     case 'execute': {
@@ -34,7 +38,9 @@ function toolKindLabel(tool: ToolCallUpdate): string | null {
           : 'Searching files';
       if (action?.type === 'list')
         return action.path ? `Listing ${action.path}` : 'Listing files';
-      const terminal = tool.content.find((block) => block.type === 'terminal');
+      const terminal = tool.content.find(
+        (block): block is ToolCallTerminal => block.type === 'terminal',
+      );
       return terminal?.command
         ? `Running ${terminal.command}`
         : 'Running command';
@@ -77,8 +83,8 @@ export function toLiveHeader(
   if (session.pendingPlanProposal) return header('Plan ready', request);
   if (session.activeTurnId === null) return null;
   const current = rows
-    .filter((row) => row.turnId === session.activeTurnId)
-    .toSorted((first, second) => first.revision - second.revision);
+    .filter((row): boolean => row.turnId === session.activeTurnId)
+    .toSorted((first, second): number => first.revision - second.revision);
   const latest = current.at(-1);
   const retry =
     latest?.sessionUpdate === 'notice' ? latest._meta?.argo?.retry : undefined;
@@ -87,13 +93,18 @@ export function toLiveHeader(
       type: 'retry',
     });
   const thought = current
-    .filter((row) => row.sessionUpdate === 'agent_thought')
-    .toSorted((first, second) => first.position - second.position)
+    .filter(
+      (
+        row,
+      ): row is Extract<SessionUpdate, { sessionUpdate: 'agent_thought' }> =>
+        row.sessionUpdate === 'agent_thought',
+    )
+    .toSorted((first, second): number => first.position - second.position)
     .at(-1);
   const thoughtText =
     thought?.content
-      .filter((block) => block.type === 'text')
-      .map((block) => block.text)
+      .filter((block): block is TextContent => block.type === 'text')
+      .map((block): string => block.text)
       .join('\n') ?? '';
   const title = [...thoughtText.matchAll(/^\s*\*\*([^\n]+?)\*\*\s*$/gm)]
     .at(-1)?.[1]
@@ -101,10 +112,12 @@ export function toLiveHeader(
   if (title) return header(title, { type: 'thought' });
   const tool = current
     .filter(
-      (row): row is ToolCallUpdate =>
+      (
+        row,
+      ): row is Extract<SessionUpdate, { sessionUpdate: 'tool_call_update' }> =>
         row.sessionUpdate === 'tool_call_update' && isToolCallRunning(row),
     )
-    .toSorted((first, second) => first.position - second.position)
+    .toSorted((first, second): number => first.position - second.position)
     .at(-1);
   if (!tool) return header('Working', { type: 'working' });
   const text =

@@ -17,7 +17,9 @@ export const mockEnvironment = defineRule({
         'Read mock CLI settings through readMockCliEnvironment() in mocks/cli/mock-cli.ts, not from process.env, so a misspelt knob fails its schema.',
     },
   },
-  create: (context) => ({
+  create: (
+    context,
+  ): { MemberExpression: (node: ESTree.MemberExpression) => void } => ({
     MemberExpression: (node): void => {
       const isEnvironment = isMember(node.object, processEnvironment);
       if (isEnvironment && propertyName(node).startsWith('MOCK_CLI_'))

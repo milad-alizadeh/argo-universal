@@ -50,7 +50,7 @@ try {
   const typeNames = new Map<string, string[]>();
   const sources = new Map<string, string>();
   const declarations: string[] = [];
-  const visit = (file: string) => {
+  const visit = (file: string): void => {
     if (visited.has(file)) return;
     visited.add(file);
     const source = readFileSync(file, 'utf8');
@@ -64,7 +64,7 @@ try {
     if (name) typeNames.set(name, [...(typeNames.get(name) ?? []), file]);
   };
   for (const root of roots) visit(path.join(directory, `${root}.ts`));
-  const nameFor = (name: string, file: string) =>
+  const nameFor = (name: string, file: string): string =>
     (typeNames.get(name)?.length ?? 0) > 1 && path.dirname(file) === directory
       ? `Legacy${name}`
       : name;
@@ -95,7 +95,7 @@ try {
   }
   writeFileSync(
     new URL('./protocol.gen.ts', import.meta.url),
-    `// Generated from ${version}; run node packages/agents/codex/generate-protocol.ts.\n\n${declarations.join('\n\n')}\n`,
+    `// Generated from ${version}; run node packages/agents/codex/generate-protocol.ts.\n\nexport const codexProtocolVersion = ${JSON.stringify(version.replace(/^codex-cli /, ''))};\n\n${declarations.join('\n\n')}\n`,
   );
 } finally {
   rmSync(directory, { recursive: true, force: true });

@@ -15,27 +15,37 @@ const running: Record<ToolCallStatus, boolean> = {
   cancelled: false,
 };
 it.each(
-  ToolCallStatus.options.map((status) => ({
-    status,
-    running: running[status],
-  })),
-)('reports $status Tool calls as running=$running', ({ status, running }) => {
-  const row = ToolCallUpdate.parse({
-    id: 'tool-1',
-    sessionId: 'session-1',
-    turnId: 'turn-1',
-    position: 1,
-    revision: 1,
-    state: 'settled',
-    sessionUpdate: 'tool_call_update',
-    toolCallId: 'tool-1',
-    kind: 'execute',
-    title: 'Run command',
-    status,
-    content: [],
-  });
-  expect(isToolCallRunning(row)).toBe(running);
-});
+  ToolCallStatus.options.map(
+    (
+      status,
+    ): {
+      status: 'cancelled' | 'completed' | 'failed' | 'in_progress' | 'pending';
+      running: boolean;
+    } => ({
+      status,
+      running: running[status],
+    }),
+  ),
+)(
+  'reports $status Tool calls as running=$running',
+  ({ status, running }): void => {
+    const row = ToolCallUpdate.parse({
+      id: 'tool-1',
+      sessionId: 'session-1',
+      turnId: 'turn-1',
+      position: 1,
+      revision: 1,
+      state: 'settled',
+      sessionUpdate: 'tool_call_update',
+      toolCallId: 'tool-1',
+      kind: 'execute',
+      title: 'Run command',
+      status,
+      content: [],
+    });
+    expect(isToolCallRunning(row)).toBe(running);
+  },
+);
 
 const actionCases: {
   name: string;
@@ -96,7 +106,7 @@ const actionCases: {
 ];
 it.each(actionCases)(
   'returns known command actions for $name',
-  ({ actions, expected }) => {
+  ({ actions, expected }): void => {
     const row = ToolCallUpdate.parse({
       id: 'tool-1',
       sessionId: 'session-1',
@@ -117,7 +127,7 @@ it.each(actionCases)(
   },
 );
 
-it('returns no command actions when the Tool call has no extension metadata', () => {
+it('returns no command actions when the Tool call has no extension metadata', (): void => {
   const row = ToolCallUpdate.parse({
     id: 'tool-1',
     sessionId: 'session-1',

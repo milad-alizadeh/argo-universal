@@ -19,6 +19,8 @@ import { promptBlobIds, toFeedRowWrite } from './feed-row';
 import type { WriterJob } from './writer-job';
 import type { WriterEvent } from './writer-machine';
 
+type FeedLogParameters = { line: string };
+
 // What the Session reads from its `session` row when it opens.
 export interface FeedInput extends Pick<
   typeof session.$inferSelect,
@@ -54,9 +56,18 @@ type FeedInternalEvent = FeedChangeApplied | FeedChangeRejected;
 
 export type FeedBatch = { type: 'feed.batch'; events: FeedStreamEvent[] };
 
+type WriterJobParameters = Pick<
+  Extract<WriterEvent, { type: 'writer.write' }>,
+  'job'
+>;
+
 // Every changed row with the newest revision, as one job for the database writer.
-const rowsJob = ({ context }: { context: FeedContext }) => {
-  const rows = context.changedRowIds.flatMap((id) => {
+const rowsJob = ({
+  context,
+}: {
+  context: FeedContext;
+}): WriterJobParameters & { job: Extract<WriterJob, { type: 'feedRows' }> } => {
+  const rows = context.changedRowIds.flatMap((id): SessionUpdate[] => {
     const row = context.rows[id];
     return row ? [row] : [];
   });
@@ -85,7 +96,7 @@ export const feedMachine = setup({
     emitted: {} as FeedBatch,
   },
   actions: {
-    applyChange: enqueueActions(({ context, event, enqueue }) => {
+    applyChange: enqueueActions(({ context, event, enqueue }): void => {
       assertEvent(event, 'feed.change');
       const id = changedRowId(event.change);
       const { sessionId, maxRevision, nextPosition } = context;
@@ -133,44 +144,45 @@ export const feedMachine = setup({
       });
     }),
     countRejectedChange: assign({
-      rejectedChanges: ({ context }) => context.rejectedChanges + 1,
+      rejectedChanges: ({ context }): number => context.rejectedChanges + 1,
     }),
-    emitBatch: emit(({ context }) => ({
+    emitBatch: emit(({ context }): FeedBatch => ({
       type: 'feed.batch' as const,
       events: context.streamEvents,
     })),
     clearBatch: assign({ streamEvents: [] }),
     sendToWriter: sendTo(
-      ({ system }) => system.get('databaseWriter'),
-      (_, params: { job: WriterJob }): WriterEvent => ({
+      ({ system }): ReturnType<typeof system.get> =>
+        system.get('databaseWriter'),
+      (_, params: WriterJobParameters): WriterEvent => ({
         type: 'writer.write',
         job: params.job,
       }),
     ),
     // Settled rows leave memory once written; open rows stay for their next change.
     dropWrittenRows: assign({
-      rows: ({ context }) =>
+      rows: ({ context }): FeedContext['rows'] =>
         Object.fromEntries(
           Object.entries(context.rows).filter(
-            ([, row]) => row.state === 'open',
+            ([, row]): boolean => row.state === 'open',
           ),
         ),
       changedRowIds: [],
     }),
-    log: ({ context }, params: { line: string }) => {
+    log: ({ context }, params: FeedLogParameters): void => {
       console.error(`feed ${context.sessionId}: ${params.line}`);
     },
   },
   guards: {
-    changeSettled: ({ event }) =>
+    changeSettled: ({ event }): boolean =>
       event.type === 'feed.changeApplied' && event.settled,
-    hasStreamEvents: ({ context }) => context.streamEvents.length > 0,
-    hasChangedRows: ({ context }) => context.changedRowIds.length > 0,
+    hasStreamEvents: ({ context }): boolean => context.streamEvents.length > 0,
+    hasChangedRows: ({ context }): boolean => context.changedRowIds.length > 0,
   },
   delays: { streamBatchDelay: 60, storeDelay: 1000 },
 }).createMachine({
   id: 'feed',
-  context: ({ input }) => ({
+  context: ({ input }): FeedContext => ({
     ...input,
     activityAt: input.activityAt ?? 0,
     rows: {},
@@ -189,7 +201,7 @@ export const feedMachine = setup({
             'countRejectedChange',
             {
               type: 'log',
-              params: ({ event }) => ({
+              params: ({ event }): FeedLogParameters => ({
                 line: `rejected a change: ${event.reason}`,
               }),
             },
@@ -198,7 +210,7 @@ export const feedMachine = setup({
         // Emits the waiting batch and writes every changed row, open or settled.
         'feed.flush': {
           target: 'flushed',
-          actions: enqueueActions(({ enqueue, check }) => {
+          actions: enqueueActions(({ enqueue, check }): void => {
             if (check('hasStreamEvents')) {
               enqueue('emitBatch');
               enqueue('clearBatch');

@@ -16,7 +16,13 @@ export const storedSessionColumns = {
   configValues: sql<unknown>`${session.configValues}`,
 };
 
-export function decodeStoredSession(row: typeof session.$inferSelect) {
+export function decodeStoredSession(row: typeof session.$inferSelect): Omit<
+  typeof session.$inferSelect,
+  'vendorRef' | 'configValues'
+> & {
+  vendorRef: ReturnType<typeof JSON.parse>;
+  configValues: ReturnType<typeof JSON.parse>;
+} {
   return {
     ...row,
     vendorRef:
@@ -25,7 +31,7 @@ export function decodeStoredSession(row: typeof session.$inferSelect) {
   };
 }
 
-const sessionRecord = SessionInfo.pick({
+const sessionSnapshotFields = SessionInfo.pick({
   title: true,
   titleSource: true,
   agent: true,
@@ -37,6 +43,7 @@ const sessionRecord = SessionInfo.pick({
     checkout: true,
   }).shape,
 );
+type SessionSnapshotFields = import('zod').infer<typeof sessionSnapshotFields>;
 
 // A worktree Session runs on its own Session branch; any other branch is the main checkout.
 export function toSessionCheckout(row: {
@@ -51,9 +58,11 @@ export function toSessionCheckout(row: {
   };
 }
 
-export function createSessionReader(database: Database) {
+export function createSessionReader(
+  database: Database,
+): (sessionId: string) => SessionSnapshotFields {
   let rejectedRows = 0;
-  return (sessionId: string) => {
+  return (sessionId: string): SessionSnapshotFields => {
     const stored = database
       .select({
         title: session.title,
@@ -75,7 +84,7 @@ export function createSessionReader(database: Database) {
         message: `No Session ${sessionId}`,
       });
     const { id, checkoutPath, checkoutBranch, ...otherColumns } = stored;
-    const parsed = sessionRecord.safeParse({
+    const parsed = sessionSnapshotFields.safeParse({
       ...otherColumns,
       checkout: toSessionCheckout({ id, checkoutPath, checkoutBranch }),
     });

@@ -118,9 +118,8 @@ export const PaperAgentSymbols: Story = {
   ),
   play: async ({ canvasElement }) => {
     await expect(
-      canvasElement.querySelectorAll('[data-testid="session-logo"] path')
-        .length,
-    ).toBe(2);
+      canvasElement.querySelectorAll('[data-testid="session-logo"] path'),
+    ).toHaveLength(2);
   },
 };
 

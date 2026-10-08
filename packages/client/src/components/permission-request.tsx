@@ -9,8 +9,7 @@ import { Text } from '#primitives/text';
 import { Textarea } from '#primitives/textarea';
 import { useContentWide } from './content-layout';
 import { Icon } from './icon';
-import { AlreadyAnswered, RequestAction, RequestCard } from './request-card';
-import { useRequestShortcuts } from './use-request-shortcuts';
+import { RequestAction, RequestCard, type RequestState } from './request-card';
 
 export type PermissionAnswer = Pick<
   SessionAnswerPermissionInput,
@@ -24,8 +23,7 @@ export interface PermissionRequestProps {
   denialMessage?: string;
   onDenialMessageChange: (message: string | undefined) => void;
   onAnswer: (answer: PermissionAnswer) => void;
-  submitting?: boolean;
-  alreadyAnswered?: string;
+  state: RequestState;
   error?: string;
 }
 
@@ -36,13 +34,14 @@ export function PermissionRequest({
   denialMessage,
   onDenialMessageChange,
   onAnswer,
-  submitting = false,
-  alreadyAnswered,
+  state,
   error,
 }: PermissionRequestProps) {
   const wide = useContentWide();
+  const submitting = state.kind === 'submitting';
+  const alreadyAnswered = state.kind === 'answered';
   const denying = denialMessage !== undefined;
-  const inactive = submitting || !!alreadyAnswered;
+  const inactive = submitting || alreadyAnswered;
   const answerLabel = denying ? 'Deny' : 'Allow once';
   const answer = () => {
     if (inactive) return;
@@ -56,17 +55,36 @@ export function PermissionRequest({
     );
   };
 
-  const nativeId = useRequestShortcuts({
-    inactive,
-    onEnter: answer,
-    onEscape: () => onDenialMessageChange(denying ? undefined : ''),
-  });
-
   return (
-    <RequestCard nativeID={nativeId}>
-      <View
-        className={cn('gap-2 px-4 pt-4 pb-1', alreadyAnswered && 'opacity-50')}
-      >
+    <RequestCard
+      state={state}
+      error={error}
+      onEnter={answer}
+      onEscape={() => onDenialMessageChange(denying ? undefined : '')}
+      footerClassName={cn('justify-end', denying && 'justify-between')}
+      actions={
+        <>
+          <RequestAction
+            disabled={inactive}
+            className={
+              wide ? 'flex-none bg-transparent' : 'flex-1 bg-secondary'
+            }
+            onPress={() => onDenialMessageChange(denying ? undefined : '')}
+          >
+            {denying ? 'Back' : 'Deny'}
+          </RequestAction>
+          <RequestAction
+            primary
+            disabled={inactive}
+            className={wide ? 'flex-none' : 'flex-1'}
+            onPress={answer}
+          >
+            {submitting ? 'Sending…' : answerLabel}
+          </RequestAction>
+        </>
+      }
+    >
+      <View className="gap-2 px-4 pt-4 pb-1">
         <View className="flex-row items-center gap-1.5">
           <Icon
             as={TerminalWindowIcon}
@@ -107,43 +125,6 @@ export function PermissionRequest({
           <Text className="text-sm leading-5 text-muted-foreground">
             {reason}
           </Text>
-        )}
-      </View>
-      {error && (
-        <Text
-          role="alert"
-          className="px-4 pt-3 text-sm leading-5 text-destructive"
-        >
-          {error}
-        </Text>
-      )}
-      <View
-        className={cn(
-          'min-h-13 flex-row items-center justify-end gap-1 px-2 pt-3 pb-2',
-          denying && 'justify-between',
-        )}
-      >
-        {alreadyAnswered && <AlreadyAnswered reason={alreadyAnswered} />}
-        {(!alreadyAnswered || wide) && (
-          <>
-            <RequestAction
-              disabled={inactive}
-              className={
-                wide ? 'flex-none bg-transparent' : 'flex-1 bg-secondary'
-              }
-              onPress={() => onDenialMessageChange(denying ? undefined : '')}
-            >
-              {denying ? 'Back' : 'Deny'}
-            </RequestAction>
-            <RequestAction
-              primary
-              disabled={inactive}
-              className={wide ? 'flex-none' : 'flex-1'}
-              onPress={answer}
-            >
-              {submitting ? 'Sending…' : answerLabel}
-            </RequestAction>
-          </>
         )}
       </View>
     </RequestCard>

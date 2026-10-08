@@ -45,7 +45,9 @@ const feedWith = (...rows: SessionUpdate[]): Feed => ({
   sessionId: 'session-1',
   maxRevision: 8,
   nextPosition: 5,
-  rows: Object.fromEntries(rows.map((row) => [row.id, row])),
+  rows: Object.fromEntries(
+    rows.map((row): [string, SessionUpdate] => [row.id, row]),
+  ),
 });
 
 const update = (row: SessionUpdate): FeedUpdate => {
@@ -282,10 +284,10 @@ const rejected: Rejected[] = [
   },
 ];
 
-describe('applyFeedChange', () => {
+describe('applyFeedChange', (): void => {
   it.each(accepted)(
     '$name',
-    ({ rows, change, turnId = 'turn-1', rowAfter, streamEvent }) => {
+    ({ rows, change, turnId = 'turn-1', rowAfter, streamEvent }): void => {
       const feed = feedWith(...rows);
       expect(applyFeedChange(feed, change, turnId)).toEqual({
         feed: {
@@ -303,13 +305,13 @@ describe('applyFeedChange', () => {
     },
   );
 
-  it.each(rejected)('rejects $name', ({ feed, change, rejection }) => {
+  it.each(rejected)('rejects $name', ({ feed, change, rejection }): void => {
     expect(applyFeedChange(feed, change, 'turn-1')).toEqual({
       rejection: expect.stringMatching(rejection),
     });
   });
 
-  it('raises the revision by one for each change', () => {
+  it('raises the revision by one for each change', (): void => {
     const changes: FeedChange[] = [
       {
         type: 'upsert',

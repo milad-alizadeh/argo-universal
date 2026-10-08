@@ -13,26 +13,33 @@ const systemInfo: SystemInfo = {
   name: "Milad's Mac mini",
 };
 
-const servicesWith = (ticks: ClockTick[]) =>
+const servicesWith = (ticks: ClockTick[]): import('../services').Services =>
   unreachableServices({
     system: {
-      info: () => systemInfo,
-      clock: async function* () {
+      info: (): SystemInfo => systemInfo,
+      clock: async function* (): AsyncGenerator<
+        ClockTick,
+        void,
+        Parameters<typeof structuredClone>[0]
+      > {
         yield* ticks;
       },
     },
   });
 
-describe('system router', () => {
-  it('answers system.info from the system service', async () => {
+describe('system router', (): void => {
+  it('answers system.info from the system service', async (): Promise<void> => {
     const caller = createCaller({ services: servicesWith([]) });
 
     expect(await caller.system.info()).toEqual(systemInfo);
   });
 
-  it('rejects a system.info that breaks the contract', async () => {
+  it('rejects a system.info that breaks the contract', async (): Promise<void> => {
     const services = servicesWith([]);
-    services.system.info = () => ({ ...systemInfo, pid: 'one' as never });
+    services.system.info = (): SystemInfo => ({
+      ...systemInfo,
+      pid: 'one' as never,
+    });
     const caller = createCaller({ services });
 
     await expect(caller.system.info()).rejects.toThrow(
@@ -40,7 +47,7 @@ describe('system router', () => {
     );
   });
 
-  it('streams system.clock ticks from the system service', async () => {
+  it('streams system.clock ticks from the system service', async (): Promise<void> => {
     const ticks = [
       { now: '2026-10-03T00:00:00.000Z' },
       { now: '2026-10-03T00:00:01.000Z' },
@@ -53,12 +60,12 @@ describe('system router', () => {
     expect(received).toEqual(ticks);
   });
 
-  it('rejects a system.clock tick that breaks the contract', async () => {
+  it('rejects a system.clock tick that breaks the contract', async (): Promise<void> => {
     const caller = createCaller({
       services: servicesWith([{ now: 'not a time' }]),
     });
 
-    const iterate = async () => {
+    const iterate = async (): Promise<void> => {
       for await (const _tick of await caller.system.clock()) {
       }
     };

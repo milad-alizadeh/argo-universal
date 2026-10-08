@@ -10,13 +10,10 @@ import {
   createElicitationSchema,
   type ElicitationValues,
 } from '#lib/elicitation-schema';
-import { cn } from '#lib/utils';
 import { Text } from '#primitives/text';
-import { useContentWide } from './content-layout';
 import { ElicitationField } from './elicitation-field';
 import { Icon } from './icon';
-import { AlreadyAnswered, RequestAction, RequestCard } from './request-card';
-import { useRequestShortcuts } from './use-request-shortcuts';
+import { RequestAction, RequestCard, type RequestState } from './request-card';
 
 export type { ElicitationValues } from '#lib/elicitation-schema';
 export type ElicitationAnswer = Pick<
@@ -28,8 +25,7 @@ export interface ElicitationFormProps {
   initialValues?: ElicitationValues;
   onAnswer: (answer: ElicitationAnswer) => void;
   source?: string;
-  submitting?: boolean;
-  alreadyAnswered?: string;
+  state: RequestState;
   error?: string;
 }
 
@@ -42,11 +38,11 @@ function RequestForm({
   initialValues = {},
   onAnswer,
   source,
-  submitting = false,
-  alreadyAnswered,
+  state,
   error: responseError,
 }: ElicitationFormProps) {
-  const wide = useContentWide();
+  const submitting = state.kind === 'submitting';
+  const alreadyAnswered = state.kind === 'answered';
   const schema = useMemo(
     () => createElicitationSchema(request.requestedSchema),
     [request.requestedSchema],
@@ -65,7 +61,7 @@ function RequestForm({
   const fieldMetadata = useStore(form.store, (state) => state.fieldMeta);
   const isValid = useStore(form.store, (state) => state.isValid);
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting);
-  const inactive = submitting || isSubmitting || !!alreadyAnswered;
+  const inactive = submitting || isSubmitting || alreadyAnswered;
   const invalid = schema.fields.filter(
     ({ key }) => fieldMetadata[key]?.errors.length,
   );
@@ -74,16 +70,38 @@ function RequestForm({
     if (action === 'accept') void form.handleSubmit();
     else onAnswer({ action });
   };
-  const nativeId = useRequestShortcuts({
-    inactive,
-    onEnter: () => answer('accept'),
-  });
   return (
-    <RequestCard nativeID={nativeId}>
-      <View
-        className={cn(alreadyAnswered && 'opacity-50')}
-        pointerEvents={inactive ? 'none' : 'auto'}
-      >
+    <RequestCard
+      state={
+        isSubmitting && state.kind === 'open' ? { kind: 'submitting' } : state
+      }
+      error={error}
+      onEnter={() => answer('accept')}
+      footerClassName="justify-between"
+      actions={
+        <>
+          <RequestAction disabled={inactive} onPress={() => answer('cancel')}>
+            Dismiss
+          </RequestAction>
+          <View className="flex-row gap-1">
+            <RequestAction
+              disabled={inactive}
+              onPress={() => answer('decline')}
+            >
+              Decline
+            </RequestAction>
+            <RequestAction
+              primary
+              disabled={inactive || !isValid}
+              onPress={() => answer('accept')}
+            >
+              {submitting || isSubmitting ? 'Sending…' : 'Submit'}
+            </RequestAction>
+          </View>
+        </>
+      }
+    >
+      <View pointerEvents={inactive ? 'none' : 'auto'}>
         <View className="gap-1 px-4 pt-4 pb-1">
           {source && (
             <View className="flex-row items-center gap-1.5">
@@ -137,39 +155,6 @@ function RequestForm({
           </Text>
         </View>
       )}
-      {error && (
-        <Text
-          role="alert"
-          className="px-4 pt-3 text-sm leading-5 text-destructive"
-        >
-          {error}
-        </Text>
-      )}
-      <View className="min-h-13 flex-row items-center justify-between gap-1 px-2 pt-3 pb-2">
-        {alreadyAnswered && <AlreadyAnswered reason={alreadyAnswered} />}
-        {(!alreadyAnswered || wide) && (
-          <>
-            <RequestAction disabled={inactive} onPress={() => answer('cancel')}>
-              Dismiss
-            </RequestAction>
-            <View className="flex-row gap-1">
-              <RequestAction
-                disabled={inactive}
-                onPress={() => answer('decline')}
-              >
-                Decline
-              </RequestAction>
-              <RequestAction
-                primary
-                disabled={inactive || !isValid}
-                onPress={() => answer('accept')}
-              >
-                {submitting || isSubmitting ? 'Sending…' : 'Submit'}
-              </RequestAction>
-            </View>
-          </>
-        )}
-      </View>
     </RequestCard>
   );
 }

@@ -29,7 +29,8 @@ const feed = (change: FeedChange): AgentEvent => ({
   type: 'agent.feed',
   change,
 });
-const upsert = (update: FeedUpdate) => feed({ type: 'upsert', update });
+const upsert = (update: FeedUpdate): AgentEvent =>
+  feed({ type: 'upsert', update });
 const textRow = (
   id: string,
   kind: TextKind,
@@ -221,14 +222,18 @@ function endTurn(
         details: turn.error.additionalDetails,
       },
     };
-  const unfinished = Object.entries(mappingState.openRows).map(([id, kind]) => {
-    const set: Record<string, unknown> = { state: 'settled' };
-    if (kind === 'tool_call_update' || kind === 'compaction_update')
-      set.status = ended.stopReason === 'cancelled' ? 'cancelled' : 'failed';
-    if (kind === 'tool_call_update' && endedAt !== undefined)
-      set._meta = { argo: { ...mappingState.toolMetadata[id]?.argo, endedAt } };
-    return feed({ type: 'patch', id, set });
-  });
+  const unfinished = Object.entries(mappingState.openRows).map(
+    ([id, kind]): AgentEvent => {
+      const set: Record<string, unknown> = { state: 'settled' };
+      if (kind === 'tool_call_update' || kind === 'compaction_update')
+        set.status = ended.stopReason === 'cancelled' ? 'cancelled' : 'failed';
+      if (kind === 'tool_call_update' && endedAt !== undefined)
+        set._meta = {
+          argo: { ...mappingState.toolMetadata[id]?.argo, endedAt },
+        };
+      return feed({ type: 'patch', id, set });
+    },
+  );
   return {
     events: [...unfinished, ended],
     mappingState: {

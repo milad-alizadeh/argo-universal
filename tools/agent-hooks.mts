@@ -39,9 +39,9 @@ type PatchCommand = HookInput['tool_input']['command'];
 
 function readStdin(): Promise<string> {
   const chunks: Buffer[] = [];
-  return new Promise<string>((resolve) => {
-    process.stdin.on('data', (chunk: Buffer) => chunks.push(chunk));
-    process.stdin.on('end', () =>
+  return new Promise<string>((resolve): void => {
+    process.stdin.on('data', (chunk: Buffer): number => chunks.push(chunk));
+    process.stdin.on('end', (): void =>
       resolve(Buffer.concat(chunks).toString('utf8')),
     );
   });
@@ -69,11 +69,11 @@ function isInsideRoot(absolute: string): boolean {
 function afterEdit(input: HookInput): number {
   const base = input.cwd ?? process.cwd();
   const files = editedPaths(input)
-    .map((edited) => path.resolve(base, edited))
-    .filter((file) => existsSync(file))
+    .map((edited): string => path.resolve(base, edited))
+    .filter((file): boolean => existsSync(file))
     .map((file): string => realpathSync(file))
     .filter(isInsideRoot)
-    .filter((file) => LINTED_FILE.test(file));
+    .filter((file): boolean => LINTED_FILE.test(file));
   if (files.length === 0) return 0;
   return block([lint({ files, typeAware: false, skipped: UNUSED_RULES })]);
 }
@@ -83,21 +83,21 @@ function changedFiles(): string[] {
   const untracked = run('git', ['ls-files', '--others', '--exclude-standard']);
   const names = `${tracked}\n${untracked.output}`
     .split('\n')
-    .filter((name) => FORMATTED_FILE.test(name));
-  return [...new Set(names)].filter((name) =>
+    .filter((name): boolean => FORMATTED_FILE.test(name));
+  return [...new Set(names)].filter((name): boolean =>
     existsSync(path.join(root, name)),
   );
 }
 
 function checkChanged(files: string[]): Result[] {
-  const linted = files.filter((name) => LINTED_FILE.test(name));
+  const linted = files.filter((name): boolean => LINTED_FILE.test(name));
   const lintRun = {
     files: linted,
     typeAware: true,
     skipped: new Set<string>(),
   };
   const lints = linted.length > 0 ? [lint(lintRun)] : [];
-  const typed = files.some((name) => TYPESCRIPT_FILE.test(name));
+  const typed = files.some((name): boolean => TYPESCRIPT_FILE.test(name));
   return typed ? [...lints, checkTypes()] : lints;
 }
 

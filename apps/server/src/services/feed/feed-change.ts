@@ -39,7 +39,7 @@ const envelopeFields = new Set<string>([
 ]);
 
 // The prompt a person sent, written as the Turn's first row (ADR 0012).
-export const userMessageId = (turnId: string) => `${turnId}:user`;
+export const userMessageId = (turnId: string): string => `${turnId}:user`;
 
 export const userMessageChange = (
   turnId: string,
@@ -56,7 +56,7 @@ export const userMessageChange = (
 });
 
 // The id of the row a change touches.
-export const changedRowId = (change: FeedChange) =>
+export const changedRowId = (change: FeedChange): string =>
   change.type === 'upsert' ? change.update.id : change.id;
 
 // Gives a change its revision and a new row its position, and works out the stream events; the result is checked against the row's kind.
@@ -123,7 +123,7 @@ export function applyFeedChange(
           revision,
           turnId: existing ? existing.turnId : turnId,
         },
-        (row) => ({ type: 'row.upsert', rev: revision, row }),
+        (row): RowUpsert => ({ type: 'row.upsert', rev: revision, row }),
       );
     }
     case 'append': {
@@ -143,7 +143,7 @@ export function applyFeedChange(
           ) as SessionUpdate),
           revision,
         },
-        () => ({
+        (): RowAppend => ({
           type: 'row.append',
           rev: revision,
           id,
@@ -155,21 +155,24 @@ export function applyFeedChange(
     }
     case 'patch': {
       if (!existing) return { rejection: `no row ${id}` };
-      const envelopeField = Object.keys(change.set).find((key) =>
+      const envelopeField = Object.keys(change.set).find((key): boolean =>
         envelopeFields.has(key),
       );
       if (envelopeField)
         return {
           rejection: `${envelopeField} of row ${id} is set by the Feed`,
         };
-      return accept({ ...existing, ...change.set, revision }, (row) => ({
-        type: 'row.patch',
-        rev: revision,
-        id,
-        set: Object.hasOwn(change.set, '_meta')
-          ? { ...change.set, _meta: row._meta }
-          : change.set,
-      }));
+      return accept(
+        { ...existing, ...change.set, revision },
+        (row): RowPatch => ({
+          type: 'row.patch',
+          rev: revision,
+          id,
+          set: Object.hasOwn(change.set, '_meta')
+            ? { ...change.set, _meta: row._meta }
+            : change.set,
+        }),
+      );
     }
   }
 }

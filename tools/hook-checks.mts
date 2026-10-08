@@ -66,7 +66,7 @@ function describe(diagnostic: Diagnostic): string {
 
 function findings(report: LintReport, skipped: ReadonlySet<string>): Result {
   const kept = report.diagnostics
-    .filter((diagnostic) => !skipped.has(diagnostic.code))
+    .filter((diagnostic): boolean => !skipped.has(diagnostic.code))
     .map(describe);
   return { status: kept.length > 0 ? 1 : 0, output: kept.join('\n') };
 }
@@ -96,9 +96,9 @@ export function checkTypes(): Result {
 
 // Prints the first lines of every failed check and returns the exit code that blocks the agent.
 export function block(results: Result[]): number {
-  const failed = results.filter((result) => result.status !== 0);
+  const failed = results.filter((result): boolean => result.status !== 0);
   if (failed.length === 0) return 0;
-  const output = failed.map((result) => result.output).join('\n');
+  const output = failed.map((result): string => result.output).join('\n');
   const head = output.split('\n').slice(0, OUTPUT_LINE_LIMIT).join('\n');
   process.stderr.write(`${head}\n${BLOCKED_HINT}`);
   return BLOCK_EXIT_CODE;

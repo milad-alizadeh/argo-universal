@@ -12,12 +12,21 @@ export const planProposalMocks = recordedRequestMocks.flatMap((mock) =>
   mock.pending.snapshot.pendingPlanProposal
     ? [
         {
+          agent: mock.agent,
           proposal: mock.pending.snapshot.pendingPlanProposal,
           answer: mock.answer.input,
         },
       ]
     : [],
 );
+
+if (
+  planProposalMocks[0]?.agent !== 'agent-1' ||
+  planProposalMocks[2]?.agent !== 'agent-2'
+)
+  throw new Error(
+    'Recorded catalog needs Plan proposal answers for both Agents.',
+  );
 
 const shortMock = planProposalMocks.at(-2);
 if (!shortMock) throw new Error('Plan proposal recording is missing.');
@@ -35,8 +44,12 @@ export const planProposalFeedback =
 
 export function PlanProposalPreview({
   retainProposalAfterAnswer = false,
+  state = { kind: 'open' },
   ...props
-}: PlanProposalCardProps & { retainProposalAfterAnswer?: boolean }) {
+}: Omit<PlanProposalCardProps, 'state'> & {
+  state?: PlanProposalCardProps['state'];
+  retainProposalAfterAnswer?: boolean;
+}) {
   const [draft, setDraft] = useState<ComposerDraft>({
     text: 'Keep my draft',
     images: [],
@@ -72,6 +85,7 @@ export function PlanProposalPreview({
                 ? undefined
                 : {
                     ...props,
+                    state,
                     onAnswer: (next) => {
                       props.onAnswer(next);
                       setAnswer(

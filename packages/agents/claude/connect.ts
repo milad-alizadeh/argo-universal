@@ -40,13 +40,17 @@ const STDERR_TAIL_LENGTH = 2000;
 const requestCancellationLimitMs = 3000;
 
 // Without an API key, so the CLI runs on the user's subscription (ADR-0004).
-export function cliEnvironment() {
+export function cliEnvironment(): { [key: string]: string | undefined } {
   const { ANTHROPIC_API_KEY: _apiKey, ...environment } = process.env;
   return environment;
 }
 
 // The prompts of one Session, as the streaming input `query()` reads.
-export function createPromptQueue() {
+export function createPromptQueue(): {
+  prompts: ReturnType<typeof prompts>;
+  push: (message: SDKUserMessage) => Promise<void>;
+  end: () => void;
+} {
   const waiting: {
     message: SDKUserMessage;
     dispatched: PromiseWithResolvers<void>;
@@ -66,22 +70,26 @@ export function createPromptQueue() {
           dispatching = null;
         }
       } else if (ended) return;
-      else await new Promise<void>((resolve) => (wake = resolve));
+      else
+        await new Promise<void>(
+          (resolve): ((value: void | PromiseLike<void>) => void) =>
+            (wake = resolve),
+        );
     }
   }
-  const notify = () => {
+  const notify = (): void => {
     wake?.();
     wake = null;
   };
   return {
     prompts: prompts(),
-    push: (message: SDKUserMessage) => {
+    push: (message: SDKUserMessage): Promise<void> => {
       const dispatched = Promise.withResolvers<void>();
       waiting.push({ message, dispatched });
       notify();
       return dispatched.promise;
     },
-    end: () => {
+    end: (): void => {
       ended = true;
       dispatching?.resolve();
       for (const { dispatched } of waiting.splice(0)) dispatched.resolve();
@@ -91,8 +99,16 @@ export function createPromptQueue() {
 }
 
 // Images and attachments are issue 3f; text goes as written.
-const toVendorContent = (content: AgentCommandOf<'agent.prompt'>['content']) =>
-  content.flatMap((block) =>
+const toVendorContent = (
+  content: AgentCommandOf<'agent.prompt'>['content'],
+): Pick<
+  Extract<
+    Exclude<SDKUserMessage['message']['content'], string>[number],
+    { type: 'text' }
+  >,
+  'type' | 'text'
+>[] =>
+  content.flatMap((block): { type: 'text'; text: string }[] =>
     block.type === 'text' ? [{ type: 'text' as const, text: block.text }] : [],
   );
 
@@ -109,7 +125,7 @@ export async function connect(
   let stopping = false;
   const controller = new AbortController();
   const requests = createRequestTracker(listener);
-  const withStderr = (error: unknown) => {
+  const withStderr = (error: unknown): string => {
     const tail = stderrTail.trim();
     return tail ? `${describeError(error)}\n${tail}` : describeError(error);
   };
@@ -129,7 +145,13 @@ export async function connect(
     forwardSubagentText: true,
     perTaskStopAffordance: true,
     verbatimPrompts: true,
-    canUseTool: (toolName, toolInput, options) => {
+    canUseTool: (
+      toolName,
+      toolInput,
+      options,
+    ):
+      | Promise<{ behavior: 'deny'; message: string }>
+      | Promise<PermissionResult> => {
       if (toolName === 'ExitPlanMode')
         return Promise.resolve({
           behavior: 'deny',
@@ -147,18 +169,18 @@ export async function connect(
         },
       };
       requests.add(message, answer.resolve);
-      const cancel = () =>
+      const cancel = (): void | undefined =>
         requests
           .remove(options.toolUseID)
           ?.resolve({ behavior: 'deny', message: 'Request cancelled' });
       options.signal.addEventListener('abort', cancel, { once: true });
       if (options.signal.aborted) cancel();
-      return answer.promise.finally(() =>
+      return answer.promise.finally((): void =>
         options.signal.removeEventListener('abort', cancel),
       );
     },
     thinking: { type: 'adaptive', display: 'summarized' },
-    stderr: (text) => {
+    stderr: (text): void => {
       stderrTail = `${stderrTail}${text}`.slice(-STDERR_TAIL_LENGTH);
     },
   };
@@ -172,24 +194,24 @@ export async function connect(
 
   const queue = createPromptQueue();
   let promptDispatched = Promise.resolve();
-  const abort = () => {
+  const abort = (): void => {
     stopping = true;
     queue.end();
-    void stopRequests().finally(() => controller.abort());
+    void stopRequests().finally((): void => controller.abort());
   };
   signal.addEventListener('abort', abort, { once: true });
   const vendor = query({ prompt: queue.prompts, options });
   let stoppingRequests: Promise<void> | undefined;
-  const stopRequests = () =>
-    (stoppingRequests ??= (async () => {
+  const stopRequests = (): Promise<void> =>
+    (stoppingRequests ??= (async (): Promise<undefined> => {
       if (!requests.cancel()) return;
       // An interrupt acknowledgement lets the SDK flush denied requests before closing its pipe.
-      await new Promise<void>((resolve) => {
+      await new Promise<void>((resolve): void => {
         const deadline = setTimeout(resolve, requestCancellationLimitMs);
         void vendor
           .interrupt()
-          .catch(() => {})
-          .finally(() => {
+          .catch((): void => {})
+          .finally((): void => {
             clearTimeout(deadline);
             resolve();
           });
@@ -197,7 +219,10 @@ export async function connect(
     })());
 
   // Sends the vendor the values that differ from the ones it runs with.
-  const applyValues = async (current: ConfigValues, next: ConfigValues) => {
+  const applyValues = async (
+    current: ConfigValues,
+    next: ConfigValues,
+  ): Promise<void> => {
     if (next.model !== current.model)
       await vendor.setModel(
         next.model === DEFAULT_VALUE ? undefined : next.model,
@@ -227,7 +252,7 @@ export async function connect(
     throw new Error(withStderr(error));
   }
 
-  const sendUsage = async () => {
+  const sendUsage = async (): Promise<void> => {
     const usage = await vendor.getContextUsage({ detail: 'summary' });
     listener.event({
       type: 'agent.usage',
@@ -235,12 +260,12 @@ export async function connect(
     });
   };
 
-  const messages = (async () => {
+  const messages = (async (): Promise<void> => {
     try {
       for await (const message of vendor) {
         listener.message({ ...message, receivedAt: Date.now() });
         // Usage failures are ignored; the streamed Turn still supplies its Feed.
-        if (message.type === 'result') void sendUsage().catch(() => {});
+        if (message.type === 'result') void sendUsage().catch((): void => {});
       }
       if (!stopping) listener.failed(withStderr('The Claude CLI exited.'));
     } catch (error) {
@@ -261,7 +286,7 @@ export async function connect(
       },
       continuedOutside: false,
     },
-    run: async (command) => {
+    run: async (command): Promise<void> => {
       switch (command.type) {
         case 'agent.prompt':
           promptDispatched = queue.push({
@@ -324,7 +349,7 @@ export async function connect(
               toQuestionAnswers(
                 command.action === 'accept' ? command.content : undefined,
               ),
-            ).map(([id, value]) => [id, value.join(', ')]),
+            ).map(([id, value]): [string, string] => [id, value.join(', ')]),
           );
           resolve?.(
             command.action === 'accept'
@@ -350,7 +375,7 @@ export async function connect(
         }
       }
     },
-    stop: async () => {
+    stop: async (): Promise<void> => {
       signal.removeEventListener('abort', abort);
       stopping = true;
       queue.end();
@@ -362,7 +387,25 @@ export async function connect(
 }
 
 // Owns SDK request resolution and exposes only the first unanswered question.
-function createRequestTracker(listener: VendorSessionListener<VendorMessage>) {
+function createRequestTracker(listener: VendorSessionListener<VendorMessage>): {
+  add: (
+    message: import('@anthropic-ai/claude-agent-sdk').SDKControlRequest & {
+      receivedAt?: number;
+    },
+    resolve: (answer: PermissionResult) => void,
+  ) => void;
+  head: () => { toolUseId: string; input: AskUserQuestionInput } | undefined;
+  remove: (
+    id: string,
+    advance?: boolean,
+  ) =>
+    | {
+        resolve: (answer: PermissionResult) => void;
+        message: Extract<VendorMessage, { type: 'control_request' }>;
+      }
+    | undefined;
+  cancel: () => number;
+} {
   type Request = {
     resolve: (answer: PermissionResult) => void;
     message: Extract<VendorMessage, { type: 'control_request' }>;
@@ -370,7 +413,7 @@ function createRequestTracker(listener: VendorSessionListener<VendorMessage>) {
   const pending = new Map<string, Request>();
   const questions: string[] = [];
   return {
-    add: (message: Request['message'], resolve: Request['resolve']) => {
+    add: (message: Request['message'], resolve: Request['resolve']): void => {
       if (message.request.subtype !== 'can_use_tool') return;
       const id = message.request.tool_use_id;
       pending.set(id, { resolve, message });
@@ -380,7 +423,9 @@ function createRequestTracker(listener: VendorSessionListener<VendorMessage>) {
       }
       listener.message(message);
     },
-    head: () => {
+    head: ():
+      | { toolUseId: string; input: AskUserQuestionInput }
+      | undefined => {
       const id = questions[0];
       if (!id) return;
       const request = pending.get(id)?.message.request;
@@ -391,7 +436,15 @@ function createRequestTracker(listener: VendorSessionListener<VendorMessage>) {
         input: request.input as unknown as AskUserQuestionInput,
       };
     },
-    remove: (id: string, advance = true) => {
+    remove: (
+      id: string,
+      advance = true,
+    ):
+      | {
+          resolve: (answer: PermissionResult) => void;
+          message: Extract<VendorMessage, { type: 'control_request' }>;
+        }
+      | undefined => {
       const request = pending.get(id);
       pending.delete(id);
       const index = questions.indexOf(id);
@@ -400,7 +453,7 @@ function createRequestTracker(listener: VendorSessionListener<VendorMessage>) {
       if (advance && index === 0 && next) listener.message(next.message);
       return request;
     },
-    cancel: () => {
+    cancel: (): number => {
       const cancelled = [...pending.values()];
       pending.clear();
       questions.length = 0;

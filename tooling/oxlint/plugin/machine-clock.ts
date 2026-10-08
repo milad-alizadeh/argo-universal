@@ -15,8 +15,12 @@ export const machineClock = defineRule({
       machineClock: 'Machines receive now and createId through their input.',
     },
   },
-  create: (context) => ({
-    ...onModuleSources((source) => {
+  create: (
+    context,
+  ): ReturnType<typeof onModuleSources> & {
+    'CallExpression:exit': (node: ESTree.CallExpression) => void;
+  } => ({
+    ...onModuleSources((source): void => {
       if (crypto.test(stringValue(source)))
         context.report({ node: source, messageId: 'machineClock' });
     }),

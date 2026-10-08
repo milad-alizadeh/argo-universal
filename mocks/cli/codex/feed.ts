@@ -8,7 +8,7 @@ import { recordedFeedEvents } from '../feed.ts';
 import { recordedDataUrlImage } from '../image.ts';
 import { findRecording, readRecording, recordedFrames } from '../recording.ts';
 
-export function feedEvents(name: string) {
+export function feedEvents(name: string): import('@repo/agents').AgentEvent[] {
   const file = findRecording(
     path.join(import.meta.dirname, 'recordings'),
     name,
@@ -19,15 +19,21 @@ export function feedEvents(name: string) {
   );
   return recordedFeedEvents(
     { initialMappingState, toAgentEvents },
-    messages.map((message) => ({
-      ...message,
-      receivedAt: message.emittedAtMs,
-    })) as VendorMessage[],
+    messages.map(
+      (message): VendorMessage & { receivedAt: number | undefined } => ({
+        ...message,
+        receivedAt: message.emittedAtMs,
+      }),
+    ) as VendorMessage[],
   );
 }
 
 // The first prompt the recording's Turns hold, or undefined without one.
-export function recordedPrompt(name: string) {
+export function recordedPrompt(
+  name: string,
+):
+  | import('../../../packages/agents/src/agent-adapter').AgentCommandOf<'agent.prompt'>['content']
+  | undefined {
   const file = findRecording(
     path.join(import.meta.dirname, 'recordings'),
     name,
@@ -37,7 +43,7 @@ export function recordedPrompt(name: string) {
     'messages',
   );
   const completed = messages.find(
-    (message) =>
+    (message): boolean =>
       message.method === 'item/completed' &&
       message.params.item.type === 'userMessage',
   );
@@ -46,11 +52,13 @@ export function recordedPrompt(name: string) {
     completed.params.item.type !== 'userMessage'
   )
     return;
-  return completed.params.item.content.flatMap((block) => {
-    if (block.type === 'text')
-      return [{ type: 'text' as const, text: block.text }];
-    if (block.type === 'image' && 'url' in block)
-      return [recordedDataUrlImage(block.url)];
-    throw new Error(`Unsupported recorded prompt block: ${block.type}`);
-  });
+  return completed.params.item.content.flatMap(
+    (block): NonNullable<ReturnType<typeof recordedPrompt>> => {
+      if (block.type === 'text')
+        return [{ type: 'text' as const, text: block.text }];
+      if (block.type === 'image' && 'url' in block)
+        return [recordedDataUrlImage(block.url)];
+      throw new Error(`Unsupported recorded prompt block: ${block.type}`);
+    },
+  );
 }

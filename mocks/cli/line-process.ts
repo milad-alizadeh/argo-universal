@@ -5,8 +5,20 @@ import { z } from 'zod';
 const LineMessage = z.record(z.string(), z.unknown());
 export type LineMessage = z.infer<typeof LineMessage>;
 
+export interface LineProcess {
+  output: LineMessage[];
+  exited: Promise<number | null>;
+  send(message: LineMessage[string]): boolean;
+  close(): import('node:stream').Writable;
+  next(): Promise<LineMessage>;
+  until(matches: (message: LineMessage) => boolean): Promise<LineMessage[]>;
+}
+
 // A child process that speaks one JSON message per line, driven by a test.
-export function startLineProcess(executable: string, args: string[]) {
+export function startLineProcess(
+  executable: string,
+  args: string[],
+): LineProcess {
   const child = spawn(executable, args, { stdio: 'pipe' });
   const output: LineMessage[] = [];
   const listeners = new Set<() => void>();
@@ -14,20 +26,20 @@ export function startLineProcess(executable: string, args: string[]) {
   let closed = false;
   let stderrText = '';
   let failure: Error | null = null;
-  const fail = (error: Error) => {
+  const fail = (error: Error): void => {
     failure ??= error;
     notify();
   };
-  const notify = () => {
+  const notify = (): void => {
     for (const listener of listeners) listener();
   };
 
   child.on('error', fail);
-  child.stdin.on('error', () => {});
-  child.stderr.on('data', (chunk) => {
+  child.stdin.on('error', (): void => {});
+  child.stderr.on('data', (chunk): void => {
     stderrText += chunk;
   });
-  createInterface({ input: child.stdout }).on('line', (line) => {
+  createInterface({ input: child.stdout }).on('line', (line): void => {
     try {
       output.push(LineMessage.parse(JSON.parse(line)));
       notify();
@@ -36,17 +48,18 @@ export function startLineProcess(executable: string, args: string[]) {
     }
   });
   // `close` waits for stdout to drain, so `output` is complete once it resolves.
-  const exited = new Promise<number | null>((resolve) =>
-    child.on('close', (code) => {
-      closed = true;
-      notify();
-      resolve(code);
-    }),
+  const exited = new Promise<number | null>(
+    (resolve): import('child_process').ChildProcessWithoutNullStreams =>
+      child.on('close', (code): void => {
+        closed = true;
+        notify();
+        resolve(code);
+      }),
   );
 
-  const waitFor = <Value>(take: () => Value | undefined) =>
-    new Promise<Value>((resolve, reject) => {
-      const check = () => {
+  const waitFor = <Value>(take: () => Value | undefined): Promise<Value> =>
+    new Promise<Value>((resolve, reject): void => {
+      const check = (): void => {
         const value = take();
         if (failure !== null) {
           listeners.delete(check);
@@ -66,19 +79,21 @@ export function startLineProcess(executable: string, args: string[]) {
   return {
     output,
     exited,
-    send: (message: unknown) =>
+    send: (message: unknown): boolean =>
       child.stdin.write(`${JSON.stringify(message)}\n`),
-    close: () => child.stdin.end(),
+    close: (): import('stream').Writable => child.stdin.end(),
     // The next message not read yet.
-    next: () =>
-      waitFor(() =>
+    next: (): Promise<LineMessage> =>
+      waitFor((): LineMessage | undefined =>
         readCount < output.length ? output[readCount++] : undefined,
       ),
     // The unread messages up to and including the first that matches.
-    until: (matches: (message: LineMessage) => boolean) =>
-      waitFor(() => {
+    until: (
+      matches: (message: LineMessage) => boolean,
+    ): Promise<LineMessage[]> =>
+      waitFor((): LineMessage[] | undefined => {
         const end = output.findIndex(
-          (message, index) => index >= readCount && matches(message),
+          (message, index): boolean => index >= readCount && matches(message),
         );
         if (end === -1) return;
         const messages = output.slice(readCount, end + 1);

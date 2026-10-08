@@ -17,7 +17,7 @@ export async function probe(signal: AbortSignal): Promise<AgentProbe> {
       configOptions: [],
     };
   const controller = new AbortController();
-  const abort = () => controller.abort();
+  const abort = (): void => controller.abort();
   signal.addEventListener('abort', abort, { once: true });
   // The CLI starts on a prompt stream that sends nothing and ends with the probe.
   const queue = createPromptQueue();

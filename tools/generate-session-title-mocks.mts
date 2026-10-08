@@ -2,7 +2,9 @@ import { writeFileSync } from 'node:fs';
 import { mockClis } from '../mocks/cli/index.ts';
 
 const title = Object.values(mockClis)
-  .flatMap((cli) => (cli.recordedTitle === null ? [] : [cli.recordedTitle()]))
+  .flatMap((cli): string[] =>
+    cli.recordedTitle === null ? [] : [cli.recordedTitle()],
+  )
   .at(0);
 if (title === undefined) throw new Error('Missing recorded Agent title');
 writeFileSync(

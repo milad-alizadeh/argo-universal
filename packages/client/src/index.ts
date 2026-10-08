@@ -60,6 +60,7 @@ export {
   PlanProposalCard,
   type PlanProposalCardProps,
 } from './components/plan-proposal-card';
+export type { RequestState } from './components/request-card';
 export { PlanProposalRegion } from './components/plan-proposal-region';
 export {
   ProjectHeading,

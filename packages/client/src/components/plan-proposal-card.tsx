@@ -6,10 +6,9 @@ import {
   ArrowElbowDownLeftIcon,
   ArrowsInSimpleIcon,
   ArrowsOutSimpleIcon,
-  InfoIcon,
   MapTrifoldIcon,
 } from 'phosphor-react-native';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
@@ -20,8 +19,8 @@ import { useContentWide } from './content-layout';
 import { FeedMarkdown } from './feed-markdown';
 import { Icon } from './icon';
 import { PlanProposalExpansion } from './plan-proposal-expansion';
+import { RequestCard, type RequestState } from './request-card';
 import { ScrollFade } from './scroll-fade';
-import { usePlanProposalKeyboard } from './use-plan-proposal-keyboard';
 
 export type PlanProposalAnswer =
   | Omit<
@@ -36,7 +35,7 @@ export type PlanProposalAnswer =
 export interface PlanProposalCardProps {
   proposal: PendingPlanProposal;
   onAnswer: (answer: PlanProposalAnswer) => void;
-  answered?: boolean;
+  state: Exclude<RequestState, { kind: 'submitting' }>;
 }
 
 export function PlanProposalCard(props: PlanProposalCardProps) {
@@ -46,11 +45,11 @@ export function PlanProposalCard(props: PlanProposalCardProps) {
 function PlanProposalInteraction({
   proposal,
   onAnswer,
-  answered = false,
+  state,
 }: PlanProposalCardProps) {
   const wide = useContentWide();
   const windowWide = useWide();
-  const card = useRef<View>(null);
+  const answered = state.kind === 'answered';
   const [planning, setPlanning] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [expanded, setExpanded] = useState(false);
@@ -69,33 +68,78 @@ function PlanProposalInteraction({
     if (planning) setPlanning(false);
     else setExpanded(false);
   };
-  usePlanProposalKeyboard(card, submit, back);
   const panel = (
-    <View
-      ref={card}
+    <RequestCard
+      state={state}
+      onEnter={submit}
+      onEscape={back}
       testID="plan-proposal-card"
+      mutedStatus
       className={cn(
-        'w-full z-10',
-        !expanded &&
-          'max-w-composer rounded-xl border border-input/80 bg-background/80 shadow-composer web:backdrop-blur-composer web:backdrop-saturate-110',
-        expanded && 'flex-1 min-h-0',
+        'z-10',
         expanded &&
-          windowWide &&
-          'rounded-xl border border-input/80 bg-background shadow-composer',
-        expanded && !windowWide && 'bg-popover',
+          'max-w-none flex-1 min-h-0 web:backdrop-blur-none web:backdrop-saturate-100',
+        expanded && windowWide && 'bg-background',
+        expanded &&
+          !windowWide &&
+          'rounded-none border-0 shadow-none bg-popover',
       )}
+      bodyClassName={expanded ? 'flex-1 min-h-0' : undefined}
+      footerClassName={cn(
+        'min-h-0',
+        planning || answered ? 'justify-between' : 'justify-end',
+        expanded && !windowWide && 'px-4',
+      )}
+      actions={
+        <>
+          <Button
+            disabled={answered}
+            onPress={() => setPlanning(!planning)}
+            variant={wide ? 'ghost' : 'secondary'}
+            className={cn(
+              'px-3',
+              wide
+                ? 'h-8 sm:h-8 flex-none rounded-md'
+                : 'h-11 sm:h-11 flex-1 rounded-lg',
+            )}
+          >
+            <Text className={planning ? 'text-muted-foreground' : undefined}>
+              {planning ? 'Back' : 'Keep planning'}
+            </Text>
+          </Button>
+          <Button
+            onPress={submit}
+            disabled={answered || (planning && !feedback.trim())}
+            className={cn(
+              'pl-3',
+              wide
+                ? 'h-8 sm:h-8 flex-none rounded-md pr-1.5'
+                : 'h-11 sm:h-11 flex-1 rounded-lg pr-3',
+            )}
+          >
+            <Text>{planning ? 'Keep planning' : 'Approve'}</Text>
+            {wide && (
+              <View className="size-5 rounded-sm items-center justify-center bg-primary-foreground/15">
+                <Icon
+                  as={ArrowElbowDownLeftIcon}
+                  className="text-primary-foreground"
+                />
+              </View>
+            )}
+          </Button>
+        </>
+      }
+      heading={
+        expanded &&
+        !windowWide && (
+          <View className="items-center pt-1.5 pb-2" aria-hidden>
+            <View className="w-9 h-1.25 rounded-full bg-muted-foreground/40" />
+          </View>
+        )
+      }
     >
-      {expanded && !windowWide && (
-        <View className="items-center pt-1.5 pb-2" aria-hidden>
-          <View className="w-9 h-1.25 rounded-full bg-muted-foreground/40" />
-        </View>
-      )}
       <View
-        className={cn(
-          'gap-2',
-          expanded ? 'flex-1 min-h-0' : 'px-4 pt-4 pb-1',
-          answered && 'opacity-50',
-        )}
+        className={cn('gap-2', expanded ? 'flex-1 min-h-0' : 'px-4 pt-4 pb-1')}
       >
         <View
           className={
@@ -141,62 +185,7 @@ function PlanProposalInteraction({
           </View>
         )}
       </View>
-      <View
-        className={cn(
-          'flex-row items-center gap-1 px-2 pb-2 pt-3',
-          planning || answered ? 'justify-between' : 'justify-end',
-          expanded && !windowWide && 'px-4',
-        )}
-      >
-        {answered && (
-          <View className="flex-1 flex-row items-center gap-1.5 px-2">
-            <Icon as={InfoIcon} className="text-muted-foreground" />
-            <Text className="text-sm leading-5 text-muted-foreground">
-              Already answered on another device
-            </Text>
-          </View>
-        )}
-        {(!answered || wide) && (
-          <>
-            <Button
-              disabled={answered}
-              onPress={() => setPlanning(!planning)}
-              variant={wide ? 'ghost' : 'secondary'}
-              className={cn(
-                'px-3',
-                wide
-                  ? 'h-8 sm:h-8 flex-none rounded-md'
-                  : 'h-11 sm:h-11 flex-1 rounded-lg',
-              )}
-            >
-              <Text className={planning ? 'text-muted-foreground' : undefined}>
-                {planning ? 'Back' : 'Keep planning'}
-              </Text>
-            </Button>
-            <Button
-              onPress={submit}
-              disabled={answered || (planning && !feedback.trim())}
-              className={cn(
-                'pl-3',
-                wide
-                  ? 'h-8 sm:h-8 flex-none rounded-md pr-1.5'
-                  : 'h-11 sm:h-11 flex-1 rounded-lg pr-3',
-              )}
-            >
-              <Text>{planning ? 'Keep planning' : 'Approve'}</Text>
-              {wide && (
-                <View className="size-5 rounded-sm items-center justify-center bg-primary-foreground/15">
-                  <Icon
-                    as={ArrowElbowDownLeftIcon}
-                    className="text-primary-foreground"
-                  />
-                </View>
-              )}
-            </Button>
-          </>
-        )}
-      </View>
-    </View>
+    </RequestCard>
   );
   return expanded ? (
     <PlanProposalExpansion onCollapse={() => setExpanded(false)}>

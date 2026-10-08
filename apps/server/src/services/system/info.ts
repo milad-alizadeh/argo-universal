@@ -8,7 +8,7 @@ export interface SystemDeps {
 }
 
 // macOS keeps the name people gave the computer apart from its network host name.
-function readComputerName() {
+function readComputerName(): string {
   if (process.platform === 'darwin') {
     try {
       const name = execFileSync('scutil', ['--get', 'ComputerName'], {

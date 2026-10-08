@@ -1,12 +1,13 @@
+import type { BlobUploadOutput } from '@repo/contracts';
 import { expect, it } from 'vitest';
 import { unreachableServices } from '../../mocks';
 import { appRouter } from '../root';
 
-it('accepts a file in FormData and returns its BlobRef', async () => {
+it('accepts a file in FormData and returns its BlobRef', async (): Promise<void> => {
   const caller = appRouter.createCaller({
     services: unreachableServices({
       blob: {
-        upload: async () => ({
+        upload: async (): Promise<BlobUploadOutput> => ({
           blobId: 'image-1',
           mime: 'image/png',
           bytes: 3,
@@ -25,7 +26,7 @@ it('accepts a file in FormData and returns its BlobRef', async () => {
 
 it.each(['missing', 'text', 'extra'])(
   'rejects %s file input',
-  async (shape) => {
+  async (shape): Promise<void> => {
     const form = new FormData();
     if (shape === 'text') form.set('file', 'plain text');
     if (shape === 'extra') {
@@ -39,7 +40,7 @@ it.each(['missing', 'text', 'extra'])(
   },
 );
 
-it('rejects JSON input in place of multipart FormData', async () => {
+it('rejects JSON input in place of multipart FormData', async (): Promise<void> => {
   const caller = appRouter.createCaller({ services: unreachableServices() });
   await expect(
     caller.blob.upload({ file: 'image' } as never),
