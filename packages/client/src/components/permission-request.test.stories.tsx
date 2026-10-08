@@ -1,44 +1,44 @@
 import type { RequestMock } from '@repo/api/mocks';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
+import { permissionProps, permissionMocks } from '../../mocks/request-mock';
 import {
   PermissionFeedPreview,
-  PermissionRequestPreview,
-  permissionMocks,
+  RequestFrame,
 } from '../../mocks/request-preview';
 import { settleViewport } from '../../mocks/settle-viewport';
+import { PermissionRequest } from './permission-request';
 
-const meta = {
+const meta: Meta<typeof PermissionRequest> = {
   title: 'Tests/PermissionRequest',
-  component: PermissionRequestPreview,
+  component: PermissionRequest,
   parameters: { previewPadding: false },
-  args: { onAnswer: fn() },
-} satisfies Meta<typeof PermissionRequestPreview>;
+  render: (args) => (
+    <RequestFrame>
+      <PermissionRequest {...permissionProps(args)} />
+    </RequestFrame>
+  ),
+  args: { ...permissionProps({}), onAnswer: fn(), onDenialMessageChange: fn() },
+};
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 function denial(width: number): Story {
   return {
+    args: { denialMessage: 'Keep the cache.' },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
-      await userEvent.click(canvas.getByRole('button', { name: 'Deny' }));
       const input = canvas.getByRole('textbox', {
         name: 'What should the Agent do instead?',
       });
       await expect(input).toHaveFocus();
-      await userEvent.type(input, 'Keep the cache.');
+      await expect(input).toHaveValue('Keep the cache.');
       await userEvent.click(canvas.getByRole('button', { name: 'Deny' }));
       await expect(args.onAnswer).toHaveBeenCalledTimes(1);
       await expect(args.onAnswer).toHaveBeenCalledWith({
         optionId: 'reject_once',
         message: 'Keep the cache.',
       });
-      await expect(
-        canvas.getByText('You denied: “Keep the cache.”'),
-      ).toBeVisible();
-      await expect(
-        canvas.getByRole('textbox', { name: 'Message' }),
-      ).toBeVisible();
     },
   };
 }
@@ -47,7 +47,11 @@ export const DenyWide = denial(1440);
 
 function allow(width: number, mock?: RequestMock): Story {
   return {
-    args: { mock },
+    args: permissionProps({
+      mock,
+      onAnswer: fn(),
+      onDenialMessageChange: fn(),
+    }),
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
       await expect(canvas.queryByRole('status')).not.toBeInTheDocument();
@@ -57,7 +61,6 @@ function allow(width: number, mock?: RequestMock): Story {
       await expect(args.onAnswer).toHaveBeenCalledWith({
         optionId: 'allow_once',
       });
-      await expect(canvas.getByText('You allowed this once')).toBeVisible();
     },
   };
 }
@@ -68,7 +71,10 @@ export const SecondAgentAllowWide = allow(1440, permissionMocks[1]);
 
 function submitting(width: number, mock?: RequestMock): Story {
   return {
-    args: { mock, state: { kind: 'submitting' } },
+    args: {
+      ...permissionProps({ mock, onAnswer: fn(), onDenialMessageChange: fn() }),
+      state: { kind: 'submitting' },
+    },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
       const sending = canvas.getByRole('button', { name: 'Sending…' });
@@ -87,7 +93,10 @@ export const SecondAgentSubmittingWide = submitting(1440, permissionMocks[1]);
 
 function responseError(width: number, mock?: RequestMock): Story {
   return {
-    args: { mock, error: 'Could not send the answer. Try again.' },
+    args: {
+      ...permissionProps({ mock, onAnswer: fn(), onDenialMessageChange: fn() }),
+      error: 'Could not send the answer. Try again.',
+    },
     play: async ({ canvas }) => {
       await settleViewport(width);
       await expect(canvas.getByRole('alert')).toHaveTextContent(
@@ -113,22 +122,17 @@ export const SecondAgentResponseErrorWide = responseError(
 
 function denyWithoutMessage(width: number): Story {
   return {
+    args: { denialMessage: '' },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
-      await userEvent.click(canvas.getByRole('button', { name: 'Deny' }));
       await userEvent.click(canvas.getByRole('button', { name: 'Back' }));
-      await expect(
-        canvas.getByRole('button', { name: 'Allow once' }),
-      ).toBeVisible();
-      await userEvent.click(canvas.getByRole('button', { name: 'Deny' }));
+      await expect(args.onDenialMessageChange).toHaveBeenCalledWith(undefined);
+      await expect(args.onAnswer).not.toHaveBeenCalled();
       await userEvent.click(canvas.getByRole('button', { name: 'Deny' }));
       await expect(args.onAnswer).toHaveBeenCalledTimes(1);
       await expect(args.onAnswer).toHaveBeenCalledWith({
         optionId: 'reject_once',
       });
-      await expect(
-        canvas.getByText('You denied', { exact: true }),
-      ).toBeVisible();
     },
   };
 }
@@ -136,18 +140,12 @@ export const DenyWithoutMessagePhone = denyWithoutMessage(390);
 export const DenyWithoutMessageWide = denyWithoutMessage(1440);
 
 export const Keyboard: Story = {
+  args: { denialMessage: 'Use a new branch.' },
   play: async ({ canvas, userEvent, args }) => {
     await settleViewport(1440);
-    await userEvent.keyboard('{Escape}');
     await expect(canvas.getByRole('textbox')).toHaveFocus();
     await userEvent.keyboard('{Escape}');
-    await expect(
-      canvas.queryByRole('textbox', {
-        name: 'What should the Agent do instead?',
-      }),
-    ).not.toBeInTheDocument();
-    await userEvent.keyboard('{Escape}');
-    await userEvent.type(canvas.getByRole('textbox'), 'Use a new branch.');
+    await expect(args.onDenialMessageChange).toHaveBeenCalledWith(undefined);
     await userEvent.keyboard('{Enter}');
     await expect(args.onAnswer).toHaveBeenCalledTimes(1);
     await expect(args.onAnswer).toHaveBeenCalledWith({
@@ -157,10 +155,19 @@ export const Keyboard: Story = {
   },
 };
 
+export const OpensDenial: Story = {
+  play: async ({ canvas, userEvent, args }) => {
+    await settleViewport(1440);
+    await userEvent.click(canvas.getByRole('button', { name: 'Deny' }));
+    await expect(args.onDenialMessageChange).toHaveBeenCalledWith('');
+    await expect(args.onAnswer).not.toHaveBeenCalled();
+  },
+};
+
 function conflict(width: number, mock?: RequestMock): Story {
   return {
     args: {
-      mock,
+      ...permissionProps({ mock, onAnswer: fn(), onDenialMessageChange: fn() }),
       state: { kind: 'answered', reason: 'Already answered on another device' },
     },
     play: async ({ canvas, args }) => {

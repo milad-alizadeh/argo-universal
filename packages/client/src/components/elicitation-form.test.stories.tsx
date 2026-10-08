@@ -4,23 +4,31 @@ import { expect, fn, within } from 'storybook/test';
 import {
   dateFormatsRequest,
   dateFormatsValues,
-  ElicitationFormPreview,
+  elicitationProps,
   elicitationMock,
   elicitationMocks,
   emptyAnswersRequest,
   fieldsRequest,
   fieldsValues,
   invalidSchemaRequest,
-} from '../../mocks/request-preview';
+} from '../../mocks/request-mock';
+import { RequestFrame } from '../../mocks/request-preview';
 import { settleViewport } from '../../mocks/settle-viewport';
+import { ElicitationForm } from './elicitation-form';
 import type { ElicitationValues } from './elicitation-form';
+import { ElicitationOutcome } from './elicitation-outcome';
 
-const meta = {
+const meta: Meta<typeof ElicitationForm> = {
   title: 'Tests/ElicitationForm',
-  component: ElicitationFormPreview,
+  component: ElicitationForm,
   parameters: { previewPadding: false },
-  args: { onAnswer: fn() },
-} satisfies Meta<typeof ElicitationFormPreview>;
+  render: (args) => (
+    <RequestFrame>
+      <ElicitationForm {...elicitationProps(args)} />
+    </RequestFrame>
+  ),
+  args: { ...elicitationProps({}), onAnswer: fn() },
+};
 export default meta;
 type Story = StoryObj<typeof meta>;
 
@@ -29,7 +37,7 @@ function choice(width: number, mock: RequestMock = elicitationMock): Story {
   if (answer.procedure !== 'answerElicitation')
     throw new Error('Recorded catalog needs an Elicitation answer.');
   return {
-    args: { mock },
+    args: elicitationProps({ mock, onAnswer: fn() }),
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
       await expect(canvas.queryByRole('status')).not.toBeInTheDocument();
@@ -46,17 +54,6 @@ function choice(width: number, mock: RequestMock = elicitationMock): Story {
         action: 'accept',
         content: answer.input.content,
       });
-      await expect(canvas.getByText('You answered')).toBeVisible();
-      await expect(
-        canvas.queryByText('Color preference'),
-      ).not.toBeInTheDocument();
-      await expect(
-        canvas.getByText('Which color do you prefer?'),
-      ).toBeVisible();
-      await expect(canvas.getByText('Blue', { exact: true })).toBeVisible();
-      await expect(
-        canvas.getByRole('textbox', { name: 'Message' }),
-      ).toBeVisible();
     },
   };
 }
@@ -67,7 +64,11 @@ export const SecondAgentChoiceWide = choice(1440, elicitationMocks[1]);
 
 function submitting(width: number, mock: RequestMock = elicitationMock): Story {
   return {
-    args: { mock, state: { kind: 'submitting' }, values: recordedValues(mock) },
+    args: {
+      ...elicitationProps({ mock, onAnswer: fn() }),
+      state: { kind: 'submitting' },
+      initialValues: recordedValues(mock),
+    },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
       const sending = canvas.getByRole('button', { name: 'Sending…' });
@@ -90,9 +91,9 @@ function responseError(
 ): Story {
   return {
     args: {
-      mock,
+      ...elicitationProps({ mock, onAnswer: fn() }),
       error: 'Could not send the answer. Try again.',
-      values: recordedValues(mock),
+      initialValues: recordedValues(mock),
     },
     play: async ({ canvas }) => {
       await settleViewport(width);
@@ -137,7 +138,11 @@ function stringAnswers(
 
 function validation(width: number): Story {
   return {
-    args: { request: fieldsRequest, values: fieldsValues, source: 'linear' },
+    args: {
+      request: fieldsRequest,
+      initialValues: fieldsValues,
+      source: 'linear',
+    },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
       await expect(
@@ -166,8 +171,6 @@ function validation(width: number): Story {
           notify: false,
         },
       });
-      await expect(canvas.getByText('You answered')).toBeVisible();
-      await expect(canvas.getByText('No', { exact: true })).toBeVisible();
     },
   };
 }
@@ -175,13 +178,15 @@ export const FieldsPhone = validation(390);
 export const FieldsWide = validation(1440);
 
 export const SubmitWithEnter: Story = {
-  args: { request: fieldsRequest, values: { ...fieldsValues, estimate: '5' } },
+  args: {
+    request: fieldsRequest,
+    initialValues: { ...fieldsValues, estimate: '5' },
+  },
   play: async ({ canvas, userEvent, args }) => {
     await settleViewport(1440);
     await userEvent.click(canvas.getByRole('textbox', { name: 'Title' }));
     await userEvent.keyboard('{Enter}');
     await expect(args.onAnswer).toHaveBeenCalledTimes(1);
-    await expect(canvas.getByText('You answered')).toBeVisible();
   },
 };
 
@@ -195,11 +200,6 @@ function dismiss(width: number, action: 'cancel' | 'decline'): Story {
         }),
       );
       await expect(args.onAnswer).toHaveBeenCalledWith({ action });
-      await expect(
-        canvas.getByText(
-          action === 'cancel' ? 'You dismissed' : 'You declined',
-        ),
-      ).toBeVisible();
     },
   };
 }
@@ -211,7 +211,7 @@ export const DeclineWide = dismiss(1440, 'decline');
 function conflict(width: number, mock?: RequestMock): Story {
   return {
     args: {
-      mock,
+      ...elicitationProps({ mock, onAnswer: fn() }),
       state: { kind: 'answered', reason: 'Already answered on another device' },
     },
     play: async ({ canvas }) => {
@@ -253,7 +253,6 @@ function emptyAnswers(width: number): Story {
         action: 'accept',
         content: { options: [], choice: '', 'detail.name': 'release' },
       });
-      await expect(canvas.getByText('None', { exact: true })).toBeVisible();
     },
   };
 }
@@ -262,7 +261,7 @@ export const EmptyAnswersWide = emptyAnswers(1440);
 
 function dateFormats(width: number): Story {
   return {
-    args: { request: dateFormatsRequest, values: dateFormatsValues },
+    args: { request: dateFormatsRequest, initialValues: dateFormatsValues },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
       await expect(canvas.getByText('Enter a valid date.')).toBeVisible();
@@ -303,7 +302,7 @@ export const InvalidSchema: Story = {
 
 function clearOptionalNumber(width: number): Story {
   return {
-    args: { request: fieldsRequest, values: fieldsValues },
+    args: { request: fieldsRequest, initialValues: fieldsValues },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
       await userEvent.clear(canvas.getByRole('textbox', { name: 'Estimate' }));
@@ -321,3 +320,59 @@ function clearOptionalNumber(width: number): Story {
 }
 export const ClearOptionalNumberPhone = clearOptionalNumber(390);
 export const ClearOptionalNumberWide = clearOptionalNumber(1440);
+
+export const AcceptedOutcome: Story = {
+  render: () => (
+    <ElicitationOutcome
+      request={fieldsRequest}
+      answer={{
+        action: 'accept',
+        content: {
+          title: 'Drafts vanish after a reconnect',
+          team: 'Mobile',
+          estimate: 8,
+          notify: false,
+        },
+      }}
+    />
+  ),
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('You answered')).toBeVisible();
+    await expect(canvas.getByText('No', { exact: true })).toBeVisible();
+    await expect(canvas.getByText('Mobile', { exact: true })).toBeVisible();
+  },
+};
+export const DeclinedOutcome: Story = {
+  render: () => (
+    <ElicitationOutcome
+      request={fieldsRequest}
+      answer={{ action: 'decline' }}
+    />
+  ),
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('You declined')).toBeVisible();
+  },
+};
+export const DismissedOutcome: Story = {
+  render: () => (
+    <ElicitationOutcome request={fieldsRequest} answer={{ action: 'cancel' }} />
+  ),
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('You dismissed')).toBeVisible();
+  },
+};
+
+export const EmptyAcceptedOutcome: Story = {
+  render: () => (
+    <ElicitationOutcome
+      request={emptyAnswersRequest}
+      answer={{
+        action: 'accept',
+        content: { options: [], choice: '', 'detail.name': 'release' },
+      }}
+    />
+  ),
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText('None', { exact: true })).toBeVisible();
+  },
+};

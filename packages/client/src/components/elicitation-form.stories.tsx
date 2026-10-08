@@ -3,34 +3,38 @@ import type { ComponentProps } from 'react';
 import { View } from 'react-native';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
 import {
-  ElicitationFormPreview,
+  elicitationProps,
   elicitationMock,
   elicitationMocks,
   elicitationRequest,
   fieldsRequest,
   fieldsValues,
-} from '../../mocks/request-preview';
+} from '../../mocks/request-mock';
+import { ElicitationForm } from './elicitation-form';
 import { ElicitationOutcome } from './elicitation-outcome';
 
-type GalleryArgs = ComponentProps<typeof ElicitationFormPreview> & {
+type GalleryArgs = ComponentProps<typeof ElicitationForm> & {
   agent: (typeof elicitationMock)['agent'];
   requestState: NonNullable<
-    ComponentProps<typeof ElicitationFormPreview>['state']
+    ComponentProps<typeof ElicitationForm>['state']
   >['kind'];
 };
 
 const meta = {
   title: 'Sessions/ElicitationForm',
-  component: ElicitationFormPreview,
+  component: ElicitationForm,
   parameters: { previewPadding: false },
-  args: { agent: elicitationMock.agent, requestState: 'open' },
+  args: {
+    ...elicitationProps({}),
+    agent: elicitationMock.agent,
+    requestState: 'open',
+  },
   argTypes: {
     agent: { options: ['agent-1', 'agent-2'], control: 'select' },
     requestState: {
       options: ['open', 'submitting', 'answered'],
       control: 'select',
     },
-    mock: { control: false },
     state: { control: false },
     error: { control: 'text' },
   },
@@ -43,27 +47,29 @@ export const Overview: StoryObj<GalleryArgs> = {
     <View className="w-full items-center py-4">
       <Variations className="max-w-composer!">
         <Variation label="Choice">
-          <ElicitationFormPreview
-            {...args}
-            mock={
-              elicitationMocks.find((mock) => mock.agent === args.agent) ??
-              elicitationMock
-            }
-            state={
-              args.requestState === 'answered'
-                ? {
-                    kind: 'answered',
-                    reason: 'Already answered on another device',
-                  }
-                : { kind: args.requestState }
-            }
+          <ElicitationForm
+            {...elicitationProps({
+              ...args,
+              mock:
+                elicitationMocks.find((mock) => mock.agent === args.agent) ??
+                elicitationMock,
+              state:
+                args.requestState === 'answered'
+                  ? {
+                      kind: 'answered',
+                      reason: 'Already answered on another device',
+                    }
+                  : { kind: args.requestState },
+            })}
           />
         </Variation>
         <Variation label="Form fields and validation">
-          <ElicitationFormPreview
-            request={fieldsRequest}
-            values={fieldsValues}
-            source="linear"
+          <ElicitationForm
+            {...elicitationProps({
+              request: fieldsRequest,
+              values: fieldsValues,
+              source: 'linear',
+            })}
           />
         </Variation>
         <Variation label="Submitted form">
@@ -89,11 +95,13 @@ export const Overview: StoryObj<GalleryArgs> = {
           />
         </Variation>
         <Variation label="Already answered">
-          <ElicitationFormPreview
-            state={{
-              kind: 'answered',
-              reason: 'Already answered on another device',
-            }}
+          <ElicitationForm
+            {...elicitationProps({
+              state: {
+                kind: 'answered',
+                reason: 'Already answered on another device',
+              },
+            })}
           />
         </Variation>
       </Variations>

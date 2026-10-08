@@ -2,10 +2,13 @@ import { newSessionCatalogs } from '@repo/api/mocks';
 import type { AgentInfo, SessionConfigSelectOption } from '@repo/contracts';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
+import { createRoot } from 'react-dom/client';
 import { View } from 'react-native';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import {
-  ComposerMock,
+  composerProps,
   composerImages,
   composerLongAgentCatalog,
   composerPlan,
@@ -13,7 +16,11 @@ import {
   oversizedComposerImage,
 } from '../../mocks/composer-mock';
 import { layoutWidths } from '../../mocks/each-layout';
+import { newSessionMocks } from '../../mocks/new-session-mock';
+import { idleSessionMocks } from '../../mocks/session-screen-mock';
 import { settleViewport } from '../../mocks/settle-viewport';
+import { NewSessionScreen } from '../screens/new-session-screen';
+import { SessionScreen } from '../screens/session-screen';
 import { Composer } from './composer';
 
 type PickerCatalog = {
@@ -101,7 +108,9 @@ const meta = {
   title: 'Tests/Composer',
   globals: { themeId: 'default', mode: 'light' },
   component: Composer,
-  render: (args): React.JSX.Element => <ComposerMock {...args} />,
+  render: (args): React.JSX.Element => (
+    <Composer {...composerProps({ ...args })} />
+  ),
   args: {
     draft: { text: '', images: [] },
     onDraftChange: fn(),
@@ -231,48 +240,88 @@ export const Empty: Story = {
 };
 
 function typing(width: number): Story {
+  const prompt = fn(() => ({ messageId: 'message-sent' }));
   return {
-    play: async ({ canvas, userEvent, args }) => {
+    render: () => <SessionScreen id="session-1" />,
+    parameters: {
+      screenPreview: true,
+      trpc: { ...idleSessionMocks, 'session.prompt': prompt },
+    },
+    play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
-      const input = canvas.getByRole('textbox', { name: 'Message' });
+      const input = await canvas.findByRole('textbox', { name: 'Message' });
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
       await userEvent.type(input, 'Match the spacing.');
       await expect(input).toHaveValue('Match the spacing.');
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeEnabled();
       await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
-      await expect(args.onSend).toHaveBeenCalledOnce();
-      await expect(args.onSend).toHaveBeenCalledWith({
-        text: 'Match the spacing.',
-        images: [],
-      });
+      await waitFor(() => expect(prompt).toHaveBeenCalledOnce());
+      await expect(prompt).toHaveBeenCalledWith(
+        {
+          sessionId: 'session-1',
+          prompt: [{ type: 'text', text: 'Match the spacing.' }],
+        },
+        expect.any(AbortSignal),
+      );
+      await waitFor(() => expect(input).toHaveValue(''));
     },
   };
 }
 export const TypingPhone = typing(layoutWidths.phone);
 export const TypingWide = typing(layoutWidths.wide);
 
+function imageComposer(
+  props: React.ComponentProps<typeof Composer>,
+): React.JSX.Element {
+  return (
+    <SafeAreaProvider>
+      <KeyboardProvider>
+        <Composer {...props} />
+      </KeyboardProvider>
+    </SafeAreaProvider>
+  );
+}
+
 function withImages(width: number): Story {
   return {
+    render: () => <View testID="controlled-images" />,
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
-      await expect(canvas.queryByRole('img')).not.toBeInTheDocument();
-      await userEvent.click(
-        canvas.getByRole('button', { name: 'Attach images' }),
-      );
-      await userEvent.click(
-        await within(document.body).findByRole('button', {
-          name: width >= 720 ? 'Files and Folder' : 'Photos',
-        }),
-      );
-      await expect(
-        canvas.getByRole('img', { name: 'screenshot.png' }),
-      ).toBeVisible();
-      await expect(canvas.getByRole('button', { name: 'Send' })).toBeEnabled();
-      await userEvent.click(
-        canvas.getByRole('button', { name: 'Remove screenshot.png' }),
-      );
-      await expect(canvas.queryByRole('img')).not.toBeInTheDocument();
-      await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
+      const root = createRoot(canvas.getByTestId('controlled-images'));
+      const onDraftChange = fn();
+      const props = composerProps({
+        draft: { text: '', images: composerImages.slice(0, 1) },
+        onDraftChange,
+        onSend: fn(),
+        onAttachImages: fn(),
+      });
+      try {
+        root.render(imageComposer(props));
+        await expect(
+          await canvas.findByRole('img', { name: 'screenshot.png' }),
+        ).toBeVisible();
+        await expect(
+          canvas.getByRole('button', { name: 'Send' }),
+        ).toBeEnabled();
+        await userEvent.click(
+          canvas.getByRole('button', { name: 'Remove screenshot.png' }),
+        );
+        await expect(onDraftChange).toHaveBeenCalledWith({
+          text: '',
+          images: [],
+        });
+        root.render(
+          imageComposer({ ...props, draft: { text: '', images: [] } }),
+        );
+        await waitFor(() =>
+          expect(canvas.queryByRole('img')).not.toBeInTheDocument(),
+        );
+        await expect(
+          canvas.getByRole('button', { name: 'Send' }),
+        ).toBeDisabled();
+      } finally {
+        root.unmount();
+      }
     },
   };
 }
@@ -324,8 +373,14 @@ export const AttachmentMenusPhone = attachmentMenus(layoutWidths.phone);
 export const AttachmentMenusWide = attachmentMenus(layoutWidths.wide);
 
 function multiline(width: number): Story {
+  const prompt = fn(() => ({ messageId: 'message-sent' }));
   return {
-    play: async ({ canvas, userEvent, args }) => {
+    render: () => <SessionScreen id="session-1" />,
+    parameters: {
+      screenPreview: true,
+      trpc: { ...idleSessionMocks, 'session.prompt': prompt },
+    },
+    play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       const input = canvas.getByRole('textbox', { name: 'Message' });
       await userEvent.type(
@@ -335,13 +390,22 @@ function multiline(width: number): Story {
       await expect(input).toHaveValue(
         'Match the spacing.\nKeep the phone readable.\nUse both themes.',
       );
-      await expect(args.onSend).not.toHaveBeenCalled();
+      await expect(prompt).not.toHaveBeenCalled();
       await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
-      await expect(args.onSend).toHaveBeenCalledOnce();
-      await expect(args.onSend).toHaveBeenCalledWith({
-        text: 'Match the spacing.\nKeep the phone readable.\nUse both themes.',
-        images: [],
-      });
+      await waitFor(() => expect(prompt).toHaveBeenCalledOnce());
+      await expect(prompt).toHaveBeenCalledWith(
+        {
+          sessionId: 'session-1',
+          prompt: [
+            {
+              type: 'text',
+              text: 'Match the spacing.\nKeep the phone readable.\nUse both themes.',
+            },
+          ],
+        },
+        expect.any(AbortSignal),
+      );
+      await waitFor(() => expect(input).toHaveValue(''));
     },
   };
 }
@@ -349,32 +413,50 @@ export const MultilinePhone = multiline(layoutWidths.phone);
 export const MultilineWide = multiline(layoutWidths.wide);
 
 export const ImageTooLarge: Story = {
-  args: {
-    draft: {
+  render: () => <View testID="controlled-images" />,
+  play: async ({ canvas, userEvent }) => {
+    const root = createRoot(canvas.getByTestId('controlled-images'));
+    const onDraftChange = fn();
+    const draft = {
       text: 'Match these screenshots.',
       images: [oversizedComposerImage],
-    },
-  },
-  play: async ({ canvas, userEvent }) => {
-    const { page } = await import('vitest/browser');
-    await page.viewport(layoutWidths.phone, 844);
-    await expect(canvas.getByRole('alert')).toHaveTextContent(
-      'Image exceeds 20 MB.',
-    );
-    await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
-    await page.viewport(layoutWidths.wide, 844);
-    await expect(canvas.getByRole('alert')).toHaveTextContent(
-      'Image exceeds 20 MB.',
-    );
-    await expect(canvas.getByRole('textbox')).toBeEnabled();
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Remove full-screen.png' }),
-    );
-    await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
-    await expect(canvas.getByRole('textbox')).toHaveValue(
-      'Match these screenshots.',
-    );
-    await expect(canvas.getByRole('button', { name: 'Send' })).toBeEnabled();
+    };
+    const props = composerProps({
+      draft,
+      onDraftChange,
+      onSend: fn(),
+      onAttachImages: fn(),
+    });
+    try {
+      root.render(imageComposer(props));
+      for (const width of [layoutWidths.phone, layoutWidths.wide]) {
+        await settleViewport(width);
+        await expect(await canvas.findByRole('alert')).toHaveTextContent(
+          'Image exceeds 20 MB.',
+        );
+        await expect(
+          canvas.getByRole('button', { name: 'Send' }),
+        ).toBeDisabled();
+      }
+      await expect(canvas.getByRole('textbox')).toBeEnabled();
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Remove full-screen.png' }),
+      );
+      await expect(onDraftChange).toHaveBeenCalledWith({
+        text: draft.text,
+        images: [],
+      });
+      root.render(
+        imageComposer({ ...props, draft: { text: draft.text, images: [] } }),
+      );
+      await waitFor(() =>
+        expect(canvas.queryByRole('alert')).not.toBeInTheDocument(),
+      );
+      await expect(canvas.getByRole('textbox')).toHaveValue(draft.text);
+      await expect(canvas.getByRole('button', { name: 'Send' })).toBeEnabled();
+    } finally {
+      root.unmount();
+    }
   },
 };
 
@@ -447,13 +529,14 @@ export const DisabledWide = disabled(layoutWidths.wide);
 
 function draftsStayOnTheirDevice(width: number): Story {
   return {
-    render: (args) => (
+    parameters: { screenPreview: true, trpc: idleSessionMocks },
+    render: () => (
       <View className="w-full gap-4">
         <View testID="first-device">
-          <ComposerMock {...args} />
+          <SessionScreen id="session-1" />
         </View>
         <View testID="second-device">
-          <ComposerMock {...args} />
+          <SessionScreen id="session-1" />
         </View>
       </View>
     ),
@@ -465,7 +548,7 @@ function draftsStayOnTheirDevice(width: number): Story {
       await expect(second.getByRole('textbox')).toHaveValue('');
       await userEvent.type(second.getByRole('textbox'), 'A different draft.');
       await userEvent.click(first.getByRole('button', { name: 'Send' }));
-      await expect(first.getByRole('textbox')).toHaveValue('');
+      await waitFor(() => expect(first.getByRole('textbox')).toHaveValue(''));
       await expect(second.getByRole('textbox')).toHaveValue(
         'A different draft.',
       );
@@ -485,11 +568,13 @@ function pickers(width: number, agentIndex: number): Story {
   if (!catalog)
     throw new Error(`Recorded catalog needs an Agent at index ${agentIndex}.`);
   return {
+    parameters: { screenPreview: true, trpc: newSessionMocks },
+    render: () => <NewSessionScreen />,
     play: async ({ canvas, userEvent }) => {
       const overlay = within(document.body);
       await settleViewport(width);
       await userEvent.click(
-        canvas.getByRole('button', { name: 'Agent and model' }),
+        await canvas.findByRole('button', { name: 'Agent and model' }),
       );
       if (width < 720)
         await userEvent.click(
@@ -684,10 +769,12 @@ async function expectDangerousMode({
 
 function checkout(width: number): Story {
   return {
+    parameters: { screenPreview: true, trpc: newSessionMocks },
+    render: () => <NewSessionScreen />,
     play: async ({ canvas, userEvent }) => {
       const overlay = within(document.body);
       await settleViewport(width);
-      const trigger = canvas.getByRole('button', { name: 'Checkout' });
+      const trigger = await canvas.findByRole('button', { name: 'Checkout' });
       if (width >= 720) {
         await expect(trigger.className).not.toContain('shadow-composer');
         const caret = trigger.lastElementChild?.getBoundingClientRect();
@@ -829,9 +916,21 @@ export const CreatedCheckoutIsReadOnlyWide = createdCheckoutIsReadOnly(
 );
 
 function sessionControls(width: number): Story {
+  const onCompact = fn();
   return {
     render: (args) => (
-      <ComposerMock {...args} sessionStarted running onStop={args.onStop} />
+      <Composer
+        {...composerProps({
+          ...args,
+          sessionStarted: true,
+          running: true,
+          onStop: args.onStop,
+          status: {
+            ...composerProps({ ...args, sessionStarted: true }).status,
+            context: { used: 34_000, size: 200_000, onCompact },
+          },
+        })}
+      />
     ),
     args: { onStop: fn() },
     play: async ({ canvas, userEvent, args }) => {
@@ -919,16 +1018,7 @@ function sessionControls(width: number): Story {
       await userEvent.click(
         await overlay.findByRole('button', { name: 'Compact' }),
       );
-      if (width >= 720)
-        await expect(
-          canvas.getByRole('button', { name: 'Context window' }),
-        ).toHaveTextContent('12k / 200k');
-      else
-        await expect(
-          within(
-            canvas.getByRole('button', { name: 'Context window' }),
-          ).getByText('12k'),
-        ).not.toBeVisible();
+      await expect(onCompact).toHaveBeenCalledOnce();
       await userEvent.click(canvas.getByRole('button', { name: 'Usage' }));
       await waitFor(() =>
         expect(overlay.getByText('5-hour limit')).toBeVisible(),
@@ -943,9 +1033,7 @@ function sessionControls(width: number): Story {
       await expect(args.onStop).not.toHaveBeenCalled();
       await userEvent.click(canvas.getByRole('button', { name: 'Stop' }));
       await expect(args.onStop).toHaveBeenCalledOnce();
-      await expect(
-        canvas.queryByRole('button', { name: 'Stop' }),
-      ).not.toBeInTheDocument();
+      await expect(canvas.getByRole('button', { name: 'Stop' })).toBeVisible();
     },
   };
 }
@@ -953,7 +1041,11 @@ export const SessionControlsPhone = sessionControls(layoutWidths.phone);
 export const SessionControlsWide = sessionControls(layoutWidths.wide);
 
 export const RunningWithoutStop: Story = {
-  render: (args) => <ComposerMock {...args} sessionStarted running />,
+  render: (args) => (
+    <Composer
+      {...composerProps({ ...args, sessionStarted: true, running: true })}
+    />
+  ),
   args: { draft: { text: 'A draft during a Turn.', images: [] } },
   play: async ({ canvas, args }) => {
     await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
@@ -1081,7 +1173,9 @@ function responsiveLayout(width: number, agentIndex: number): Story {
         },
       },
     },
-    render: (args) => <ComposerMock {...args} sessionStarted />,
+    render: (args) => (
+      <Composer {...composerProps({ ...args, sessionStarted: true })} />
+    ),
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       const input = canvas.getByRole('textbox', { name: 'Message' });
@@ -1229,7 +1323,9 @@ export const ShellsRunningFirstAgent = workCountTones(0, true);
 export const ShellsRunningSecondAgent = workCountTones(1, true);
 
 export const ResponsiveLayoutNarrowPhone: Story = {
-  render: (args) => <ComposerMock {...args} sessionStarted />,
+  render: (args) => (
+    <Composer {...composerProps({ ...args, sessionStarted: true })} />
+  ),
   play: async ({ canvas }) => {
     await settleViewport(320);
     const compact = canvas.getByRole('button', { name: 'Agent and model' });
@@ -1307,10 +1403,12 @@ async function expectWideAgentMenu(): Promise<void> {
 
 function editorScrollsAfterFourLines(width: number): Story {
   return {
+    render: () => <SessionScreen id="session-1" />,
+    parameters: { screenPreview: true, trpc: idleSessionMocks },
     play: async ({ canvas, userEvent }) => {
       const { userEvent: browserUserEvent } = await import('vitest/browser');
       await settleViewport(width);
-      const input = canvas.getByRole('textbox', { name: 'Message' });
+      const input = await canvas.findByRole('textbox', { name: 'Message' });
       await userEvent.type(
         input,
         'First line\nSecond line\nThird line\nFourth line',
@@ -1344,7 +1442,13 @@ export const EditorScrollsAfterFourLinesWide = editorScrollsAfterFourLines(
 function planDone(width: number): Story {
   return {
     render: (args) => (
-      <ComposerMock {...args} sessionStarted plan={composerPlanDone} />
+      <Composer
+        {...composerProps({
+          ...args,
+          sessionStarted: true,
+          plan: composerPlanDone,
+        })}
+      />
     ),
     play: async ({ canvas, userEvent }) => {
       const overlay = within(document.body);
@@ -1392,10 +1496,12 @@ function equalPlanSteps(width: number, agentIndex: number): Story {
       },
     },
     render: (args) => (
-      <ComposerMock
-        {...args}
-        sessionStarted
-        plan={[entry, { ...entry, status: 'in_progress' }]}
+      <Composer
+        {...composerProps({
+          ...args,
+          sessionStarted: true,
+          plan: [entry, { ...entry, status: 'in_progress' }],
+        })}
       />
     ),
     play: async ({ canvas, userEvent }) => {
@@ -1443,7 +1549,9 @@ export const EqualPlanStepsWideSecondAgent = equalPlanSteps(
 );
 
 export const NoPlan: Story = {
-  render: (args) => <ComposerMock {...args} sessionStarted plan={[]} />,
+  render: (args) => (
+    <Composer {...composerProps({ ...args, sessionStarted: true, plan: [] })} />
+  ),
   play: async ({ canvas }) => {
     for (const width of [layoutWidths.phone, layoutWidths.wide]) {
       await settleViewport(width);
@@ -1463,7 +1571,9 @@ export const NoPlan: Story = {
 export const NoPlanDark: Story = { ...NoPlan, ...dark };
 
 export const PlanExpandsSmoothly: Story = {
-  render: (args) => <ComposerMock {...args} sessionStarted />,
+  render: (args) => (
+    <Composer {...composerProps({ ...args, sessionStarted: true })} />
+  ),
   play: async ({ canvas, userEvent }) => {
     await settleViewport(layoutWidths.wide);
     const panel = canvas.getByTestId('composer-plan-steps');

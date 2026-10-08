@@ -1,20 +1,23 @@
+import { sessionRows } from '@repo/api/mocks';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
+import { createRoot } from 'react-dom/client';
 import { View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { expect, fn, waitFor } from 'storybook/test';
 import {
   delayFooterLayout,
   getDelayedFooterLayouts,
   installFooterLayoutDelay,
 } from '../../mocks/delayed-footer-layout';
-import { sessionsListProps } from '../../mocks/sessions-list-mock';
-import { SessionsNewSessionPreview } from '../../mocks/sessions-new-session-preview';
-import { SessionsPaginationPreview } from '../../mocks/sessions-pagination-preview';
+import { createSessionListUpdatesMock } from '../../mocks/session-list-updates-mock';
 import {
-  createSessionsRenderingMock,
-  SessionsRenderingPreview,
-} from '../../mocks/sessions-rendering-preview';
+  sessionsListProps,
+  largeSessions,
+} from '../../mocks/sessions-list-mock';
+import { renderingSessions } from '../../mocks/sessions-rendering-mock';
 import { settleViewport } from '../../mocks/settle-viewport';
+import { SessionsScreen } from '../screens/sessions-screen';
 import { scrollFadeHeight } from './scroll-fade';
 import { SessionsList } from './sessions-list';
 
@@ -45,37 +48,61 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const renderingMock = createSessionsRenderingMock();
+const insertion = createSessionListUpdatesMock({
+  sessions: largeSessions.slice(0, 12),
+});
+const pagination = createSessionListUpdatesMock({
+  sessions: largeSessions.slice(0, 100),
+  pageSize: 20,
+});
+
 export const MemoizedRows: Story = {
-  beforeEach: () => renderingMock.reset(),
-  render: (args) => <SessionsRenderingPreview {...args} mock={renderingMock} />,
-  play: async ({ canvas, userEvent }) => {
-    await canvas.findByRole('button', { name: 'Unchanged Session, Idle' });
-    await new Promise<void>((resolve) =>
-      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-    );
-    const activityReads = renderingMock.getActivityReads();
-    expect(activityReads).toBeGreaterThan(0);
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Selectable Session, Idle' }),
-    );
-    await waitFor(() =>
-      expect(
-        canvas.getByRole('button', { name: 'Selectable Session, Idle' }),
-      ).toHaveAttribute('aria-selected', 'true'),
-    );
-    expect(
-      renderingMock.getActivityReads(),
-      'Selecting another row must not recompute unchanged row content',
-    ).toBe(activityReads);
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Update Session' }),
-    );
-    await canvas.findByText('Session activity updated');
-    expect(
-      renderingMock.getActivityReads(),
-      'Updating another Session must not recompute unchanged row content',
-    ).toBe(activityReads);
+  name: 'Controlled selection and activity',
+  render: () => <View testID="controlled-list" />,
+  play: async ({ canvas, userEvent, args }) => {
+    const root = createRoot(canvas.getByTestId('controlled-list'));
+    const render = (props: React.ComponentProps<typeof SessionsList>): void =>
+      root.render(
+        <SafeAreaProvider>
+          <View style={{ height: 360 }}>
+            <SessionsList {...props} />
+          </View>
+        </SafeAreaProvider>,
+      );
+    const props = { ...args, sessions: renderingSessions };
+    try {
+      render(props);
+      const unchanged = await canvas.findByRole('button', {
+        name: 'Unchanged Session, Idle',
+      });
+      const selectable = canvas.getByRole('button', {
+        name: 'Selectable Session, Idle',
+      });
+      await userEvent.click(selectable);
+      await expect(args.onSelect).toHaveBeenCalledWith('memo-selectable');
+      render({ ...props, selectedSessionId: 'memo-selectable' });
+      await waitFor(() =>
+        expect(selectable).toHaveAttribute('aria-selected', 'true'),
+      );
+      await expect(
+        canvas.getByRole('button', { name: 'Unchanged Session, Idle' }),
+      ).toBe(unchanged);
+      render({
+        ...props,
+        selectedSessionId: 'memo-selectable',
+        sessions: renderingSessions.map((session) =>
+          session.sessionId === 'memo-updated'
+            ? { ...session, activity: 'Session activity updated' }
+            : session,
+        ),
+      });
+      await canvas.findByText('Session activity updated');
+      await expect(
+        canvas.getByRole('button', { name: 'Unchanged Session, Idle' }),
+      ).toBe(unchanged);
+    } finally {
+      root.unmount();
+    }
   },
 };
 
@@ -118,8 +145,9 @@ export const ProjectActionsDark: Story = {
 };
 
 export const InsertSessionOpaqueRows: Story = {
-  parameters: { screenPreview: true },
-  render: (args) => <SessionsNewSessionPreview {...args} />,
+  parameters: { screenPreview: true, trpc: insertion.fixtures },
+  beforeEach: () => insertion.reset(),
+  render: () => <SessionsScreen query="" archived={false} />,
   play: async ({ canvas, userEvent }) => {
     const heading = await canvas.findByRole('button', {
       name: 'Example Project',
@@ -144,9 +172,16 @@ export const InsertSessionOpaqueRows: Story = {
       }
       requestAnimationFrame(sample);
     });
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'New Session in Example Project' }),
-    );
+    insertion.publish({
+      type: 'changed',
+      session: {
+        ...sessionRows.idle,
+        sessionId: 'new-session-1',
+        title: 'New Session 1',
+        activity: 'Session created',
+        activityAt: 3000,
+      },
+    });
     const inserted = await canvas.findByRole('button', {
       name: 'New Session 1, Idle',
     });
@@ -195,7 +230,11 @@ export const InsertSessionOpaqueRowsDark: Story = {
 
 export const ScrollFadePadding: Story = {
   parameters: { screenPreview: true },
-  render: (args) => <SessionsNewSessionPreview {...args} />,
+  render: (args) => (
+    <View className="flex-1 w-full wide:w-shell-list" style={{ minHeight: 0 }}>
+      <SessionsList {...args} sessions={largeSessions.slice(0, 12)} />
+    </View>
+  ),
   play: async ({ canvas }) => {
     // At a phone's size twelve Sessions overflow the list, so it can scroll.
     if ('__vitest_browser__' in globalThis) await settleViewport(390);
@@ -270,15 +309,24 @@ export const ScrollFadePaddingDark: Story = {
 };
 
 export const PaginationSpinnerVisible: Story = {
-  beforeEach: delayFooterLayout,
-  parameters: { screenPreview: true },
-  render: (args) => <SessionsPaginationPreview {...args} />,
+  beforeEach: async () => {
+    pagination.reset();
+    const restore = delayFooterLayout();
+    await settleViewport(390);
+    return () => {
+      pagination.release();
+      restore();
+    };
+  },
+  parameters: { screenPreview: true, trpc: pagination.fixtures },
+  render: () => <SessionsScreen query="" archived={false} />,
   play: async ({ canvas }) => {
     const scroll = await canvas.findByTestId('sessions-scroll');
     await waitFor(() =>
       expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight),
     );
     const initialHeight = scroll.scrollHeight;
+    pagination.hold();
     scroll.scrollTop = initialHeight;
     const spinner = await canvas.findByRole('progressbar', {
       name: 'Loading more Sessions',
@@ -293,6 +341,7 @@ export const PaginationSpinnerVisible: Story = {
       },
       { timeout: 1000 },
     );
+    pagination.release();
     await waitFor(
       () => expect(canvas.queryByRole('progressbar')).not.toBeInTheDocument(),
       { timeout: 3000 },

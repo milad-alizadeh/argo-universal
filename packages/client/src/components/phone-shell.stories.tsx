@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { action } from 'storybook/actions';
-import { PhoneShellMock } from '../../mocks/phone-shell-mock';
+import { PhoneShellFrame } from '../../mocks/phone-shell-frame';
 
 const meta = {
   title: 'Shell/PhoneShell',
-  component: PhoneShellMock,
+  component: PhoneShellFrame,
   parameters: { screenPreview: true },
   argTypes: {
     selectedSection: {
@@ -15,7 +15,7 @@ const meta = {
     attentionCount: { control: 'number' },
     drawerOpen: { control: 'boolean' },
   },
-  render: (args): React.JSX.Element => <PhoneShellMock {...args} />,
+  render: (args): React.JSX.Element => <PhoneShellFrame {...args} />,
   args: {
     selectedSection: 'sessions',
     attentionCount: 1,
@@ -25,7 +25,7 @@ const meta = {
     onSearch: action('search'),
     onFilter: action('filter'),
   },
-} satisfies Meta<typeof PhoneShellMock>;
+} satisfies Meta<typeof PhoneShellFrame>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

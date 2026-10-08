@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { action } from 'storybook/actions';
-import { DesktopShellMock } from '../../mocks/desktop-shell-mock';
+import { DesktopShellFrame } from '../../mocks/desktop-shell-frame';
 import { InspectorFilesMock } from '../../mocks/inspector-files-mock';
 import { DesktopShell, type DesktopShellProps } from './desktop-shell';
 
@@ -22,7 +22,7 @@ const meta = {
     sidebarShown: { control: 'boolean' },
     attentionCount: { control: 'number' },
   },
-  render: (args): React.JSX.Element => <DesktopShellMock {...args} />,
+  render: (args): React.JSX.Element => <DesktopShellFrame {...args} />,
   args: {
     showInspectorControls: false,
     selectedSection: 'sessions',
@@ -44,7 +44,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-// The rail and dividers drive the shell; controls set the section, sidebar, Inspector and attention count.
+// Callbacks report rail and divider changes; controls set the displayed shell props.
 export const Overview: Story = { name: 'DesktopShell' };
 
 // Changed files in the Inspector: one list of file headers and lines that fades under the toolbar.
@@ -53,6 +53,6 @@ export const InspectorFiles: Story = {
   args: { inspectorState: 'open' },
   // An element in args holds React internals, which Storybook walks as a cyclic arg until the native catalog hangs.
   render: (args) => (
-    <DesktopShellMock {...args} inspector={<InspectorFilesMock />} />
+    <DesktopShellFrame {...args} inspector={<InspectorFilesMock />} />
   ),
 };

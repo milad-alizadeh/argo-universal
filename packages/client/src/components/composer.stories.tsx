@@ -4,18 +4,18 @@ import type * as React from 'react';
 import { Platform, ScrollView, View } from 'react-native';
 import { action } from 'storybook/actions';
 import {
-  ComposerMock,
+  composerProps,
+  type ComposerMockProps,
   composerImages,
   composerPlanDone,
   oversizedComposerImage,
 } from '../../mocks/composer-mock';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
+import { Composer } from './composer';
 import { imageSelectionFailureMessage } from './use-image-draft';
 
-function ComposerPreview(
-  args: React.ComponentProps<typeof ComposerMock>,
-): React.JSX.Element {
-  return <ComposerMock key={args.initialAgent} {...args} />;
+function ComposerPreview(args: ComposerMockProps): React.JSX.Element {
+  return <Composer {...composerProps(args)} />;
 }
 
 const [firstAgent] = newSessionCatalogs.bothAvailable;

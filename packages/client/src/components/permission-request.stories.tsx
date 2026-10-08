@@ -3,32 +3,36 @@ import type { ComponentProps } from 'react';
 import { View } from 'react-native';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
 import {
-  PermissionFeedPreview,
-  PermissionRequestPreview,
+  permissionProps,
   permissionMock,
   permissionMocks,
-} from '../../mocks/request-preview';
+} from '../../mocks/request-mock';
+import { PermissionFeedPreview } from '../../mocks/request-preview';
 import { PermissionOutcome } from './permission-outcome';
+import { PermissionRequest } from './permission-request';
 
-type GalleryArgs = ComponentProps<typeof PermissionRequestPreview> & {
+type GalleryArgs = ComponentProps<typeof PermissionRequest> & {
   agent: (typeof permissionMock)['agent'];
   requestState: NonNullable<
-    ComponentProps<typeof PermissionRequestPreview>['state']
+    ComponentProps<typeof PermissionRequest>['state']
   >['kind'];
 };
 
 const meta = {
   title: 'Sessions/PermissionRequest',
-  component: PermissionRequestPreview,
+  component: PermissionRequest,
   parameters: { previewPadding: false },
-  args: { agent: permissionMock.agent, requestState: 'open' },
+  args: {
+    ...permissionProps({}),
+    agent: permissionMock.agent,
+    requestState: 'open',
+  },
   argTypes: {
     agent: { options: ['agent-1', 'agent-2'], control: 'select' },
     requestState: {
       options: ['open', 'submitting', 'answered'],
       control: 'select',
     },
-    mock: { control: false },
     state: { control: false },
     error: { control: 'text' },
   },
@@ -41,31 +45,37 @@ export const Overview: StoryObj<GalleryArgs> = {
     <View className="w-full items-center py-4">
       <Variations className="max-w-composer!">
         <Variation label="Permission request">
-          <PermissionRequestPreview
-            {...args}
-            mock={
-              permissionMocks.find((mock) => mock.agent === args.agent) ??
-              permissionMock
-            }
-            state={
-              args.requestState === 'answered'
-                ? {
-                    kind: 'answered',
-                    reason: 'Already answered on another device',
-                  }
-                : { kind: args.requestState }
-            }
+          <PermissionRequest
+            {...permissionProps({
+              ...args,
+              mock:
+                permissionMocks.find((mock) => mock.agent === args.agent) ??
+                permissionMock,
+              state:
+                args.requestState === 'answered'
+                  ? {
+                      kind: 'answered',
+                      reason: 'Already answered on another device',
+                    }
+                  : { kind: args.requestState },
+            })}
           />
         </Variation>
         <Variation label="Deny with a message">
-          <PermissionRequestPreview denialMessage="Keep the cache. Run expo start --clear instead." />
+          <PermissionRequest
+            {...permissionProps({
+              denialMessage: 'Keep the cache. Run expo start --clear instead.',
+            })}
+          />
         </Variation>
         <Variation label="Already answered">
-          <PermissionRequestPreview
-            state={{
-              kind: 'answered',
-              reason: 'Already answered on another device',
-            }}
+          <PermissionRequest
+            {...permissionProps({
+              state: {
+                kind: 'answered',
+                reason: 'Already answered on another device',
+              },
+            })}
           />
         </Variation>
         <Variation label="Awaiting approval">

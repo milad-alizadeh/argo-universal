@@ -5,9 +5,12 @@ import type { ReactNode } from 'react';
 import { type ComponentType, useLayoutEffect } from 'react';
 import { Platform, ScrollView, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { applyTheme } from '../src/lib/theme';
 import { cn } from '../src/lib/utils';
+import { BlobUrlContext } from '../src/trpc/blob-url';
+import { recordedImageUrl } from './feed-message-mock';
 
 interface PreviewContext {
   globals: { themeId?: string; mode?: string };
@@ -75,8 +78,12 @@ function ReusablesPreview({
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider initialMetrics={initialMetrics}>
-        {preview}
-        {standalone && <PortalHost />}
+        <KeyboardProvider>
+          <BlobUrlContext.Provider value={recordedImageUrl}>
+            {preview}
+            {standalone && <PortalHost />}
+          </BlobUrlContext.Provider>
+        </KeyboardProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
