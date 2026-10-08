@@ -64,15 +64,17 @@ export function PanelResizeHandle({
   );
 }
 
+type ResizeGestureProps = Pick<
+  PanelResizeHandleProps,
+  'value' | 'direction' | 'onChange' | 'onDragStateChange'
+>;
+
 function useResizeGestureHandlers({
   value,
   direction,
   onChange,
   onDragStateChange,
-}: Pick<
-  PanelResizeHandleProps,
-  'value' | 'direction' | 'onChange' | 'onDragStateChange'
->): Pick<
+}: ResizeGestureProps): Pick<
   Parameters<typeof PanResponder.create>[0],
   | 'onPanResponderGrant'
   | 'onPanResponderRelease'
@@ -109,10 +111,7 @@ function useResizeGestureHandlers({
 }
 
 function useResizeResponder(
-  props: Pick<
-    PanelResizeHandleProps,
-    'value' | 'direction' | 'onChange' | 'onDragStateChange'
-  >,
+  props: ResizeGestureProps,
 ): ReturnType<typeof PanResponder.create> {
   const handlers = useResizeGestureHandlers(props);
   const [responder] = useState(() =>
