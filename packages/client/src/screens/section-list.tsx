@@ -1,16 +1,17 @@
 import type { ReactNode } from 'react';
 import { ScrollView } from 'react-native';
 import { Text } from '#primitives/text';
+import { SettingsNavigationList } from '../components/settings-navigation-list';
+import { shellSections } from '../components/shell-sections';
 import type { NavigationDestination } from '../navigation/context';
 import type { ScreenHeaderProps } from '../navigation/screen-header';
+import type { Section } from '../navigation/sections';
 import {
   SessionsHeader,
   SessionsScreen,
   sessionsHeaderItems,
   useSessionsFilter,
-} from '../screens/sessions-screen';
-import { SettingsNavigationList } from './settings-navigation-list';
-import { type ShellSection, shellSections } from './shell-sections';
+} from './sessions-screen';
 
 export interface SectionList {
   // The list's own part of the wide window's header row, when it has one.
@@ -22,7 +23,7 @@ export interface SectionList {
 
 // A section's list and its header row: full screen on a phone, and in the sidebar on a wide window.
 export function useSectionList(
-  section: ShellSection,
+  section: Section,
   selectedDestination?: NavigationDestination,
 ): SectionList {
   const sessionsFilter = useSessionsFilter();

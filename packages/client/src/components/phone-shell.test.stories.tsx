@@ -18,11 +18,12 @@ import {
   ScreenHeaderProvider,
 } from '../navigation/screen-header';
 import { sectionDestination } from '../navigation/sections';
+import type { Section } from '../navigation/sections';
 import { Text } from '../primitives/text';
-import { PhoneLayout } from './phone-layout';
+import { PhoneLayout } from '../screens/phone-layout';
 import { PhoneMenuButton } from './phone-menu-button';
 import { PhoneShell } from './phone-shell';
-import { shellSections, type ShellSection } from './shell-sections';
+import { shellSections } from './shell-sections';
 
 const openNavigationLabel = 'Open navigation';
 
@@ -47,13 +48,13 @@ function mountPhoneLayout(
   attention: number,
 ): {
   root: ReturnType<typeof createRoot>;
-  render: (section: ShellSection) => Promise<void>;
+  render: (section: Section) => Promise<void>;
   onNavigate: ReturnType<typeof fn>;
 } {
   const root = createRoot(element);
   const counts = createSessionCountsMock({ attention, running: 0 });
   const onNavigate = fn();
-  const render = async (section: ShellSection): Promise<void> => {
+  const render = async (section: Section): Promise<void> => {
     root.render(
       <SafeAreaProvider>
         <KeyboardProvider>
@@ -180,7 +181,7 @@ function menuOpensAndSelectionClosesDrawer(width: number): Story {
           'issues',
           'atlas',
           'settings',
-        ] satisfies ShellSection[]) {
+        ] satisfies Section[]) {
           await expect(
             canvas.queryByRole('button', { name: 'Sessions' }),
           ).toBeNull();
@@ -253,7 +254,7 @@ function attentionAndSectionStates(count: number, width: number): Story {
           'issues',
           'atlas',
           'settings',
-        ] satisfies ShellSection[]) {
+        ] satisfies Section[]) {
           await userEvent.click(
             canvas.getByRole('button', { name: openNavigationLabel }),
           );

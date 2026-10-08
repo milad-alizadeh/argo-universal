@@ -1,9 +1,10 @@
 import type * as React from 'react';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
+import { PhoneShell } from '../components/phone-shell';
 import { type NavigationDestination, useNavigate } from '../navigation/context';
 import { sectionDestination, sectionOf } from '../navigation/sections';
-import { PhoneShell, type ShellSection } from './phone-shell';
+import type { Section } from '../navigation/sections';
 import { useAttentionCount } from './use-attention-count';
 
 export interface PhoneLayoutProps {
@@ -23,7 +24,7 @@ export function PhoneLayout({
   const atSectionRoot = destination.to === sectionDestination(section).to;
   // Mounting the next section stalls the first frame, so a picked section's drawer shuts once it has mounted.
   const deferClose = useRef(false);
-  const pendingSection = useRef<ShellSection | null>(null);
+  const pendingSection = useRef<Section | null>(null);
   const shownSection = useRef(section);
   useEffect(() => {
     if (shownSection.current === section) return;

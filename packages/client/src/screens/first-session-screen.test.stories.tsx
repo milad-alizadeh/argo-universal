@@ -25,12 +25,12 @@ import { createSessionListUpdatesMock } from '../../mocks/session-list-updates-m
 import { idleSessionMocks } from '../../mocks/session-screen-mock';
 import { settleViewport } from '../../mocks/settle-viewport';
 import { fails, pending } from '../../mocks/trpc-mock-link';
-import { DesktopLayout } from '../components/desktop-layout';
 import { detailHeaderHost } from '../components/session-header';
 import {
   type NavigationDestination,
   NavigationProvider,
 } from '../navigation/context';
+import { DesktopLayout } from './desktop-layout';
 import { FirstSessionScreen } from './first-session-screen';
 import { SessionScreen } from './session-screen';
 import { SessionsScreen } from './sessions-screen';

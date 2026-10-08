@@ -18,7 +18,6 @@ import {
   SessionHeader,
   type SessionHeaderStatus,
 } from '#components/session-header';
-import { useImageDraft } from '../components/use-image-draft';
 import { useConnectionState } from '../connection/context';
 import { useFeedView } from '../feed/use-feed-view';
 import { useSessionFeed } from '../feed/use-session-feed';
@@ -28,6 +27,7 @@ import { useBlobUrl } from '../trpc/blob-url';
 import type { ClientError } from '../trpc/context';
 import { useTRPC } from '../trpc/context';
 import { useAgents } from '../trpc/use-agents';
+import { useImageDraft } from './use-image-draft';
 
 type SessionMutation<Name extends 'prompt' | 'cancel' | 'setConfigOption'> =
   ReturnType<

@@ -12,12 +12,12 @@ import { keyboardAvoidingStyle, Screen } from '#components/screen';
 import { StartSessionIn } from '#components/start-session-in';
 import { Text } from '#primitives/text';
 import { useContentWide } from '../components/content-layout';
-import { useImageDraft } from '../components/use-image-draft';
 import { useConnectionState } from '../connection/context';
 import { useNavigate } from '../navigation/context';
 import type { ClientError } from '../trpc/context';
 import { useTRPC } from '../trpc/context';
 import { useAgents } from '../trpc/use-agents';
+import { useImageDraft } from './use-image-draft';
 
 type ProjectsQuery = ReturnType<
   typeof useQuery<

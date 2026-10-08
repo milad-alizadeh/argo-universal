@@ -6,13 +6,13 @@ import { Badge } from '#primitives/badge';
 import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
 import { Icon } from '../lib/icon';
-import { type ShellSection, shellSections } from './shell-sections';
-import { maximumAttentionBadgeCount } from './use-attention-count';
+import { maximumAttentionBadgeCount } from './attention-badge';
+import { type Section, shellSections } from './shell-sections';
 
 interface DesktopRailProps {
-  selectedSection: ShellSection;
+  selectedSection: Section;
   attentionCount: number;
-  onSectionChange: (section: ShellSection) => void;
+  onSectionChange: (section: Section) => void;
 }
 
 const SectionButton = memo(function SectionButton({
@@ -21,7 +21,7 @@ const SectionButton = memo(function SectionButton({
   attentionCount,
   onSectionChange,
 }: Omit<DesktopRailProps, 'selectedSection'> & {
-  section: ShellSection;
+  section: Section;
   selected: boolean;
 }) {
   const { title, icon } = shellSections[section];
@@ -65,7 +65,7 @@ export const DesktopRail = memo(function DesktopRail({
   attentionCount,
   onSectionChange,
 }: DesktopRailProps) {
-  const sectionButton = (section: ShellSection): React.JSX.Element => (
+  const sectionButton = (section: Section): React.JSX.Element => (
     <SectionButton
       key={section}
       section={section}

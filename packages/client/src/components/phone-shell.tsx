@@ -8,12 +8,12 @@ import { Badge } from '#primitives/badge';
 import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
 import { Icon } from '../lib/icon';
+import { maximumAttentionBadgeCount } from './attention-badge';
 import { PhoneDrawer } from './phone-drawer';
 import { PhoneShellCard } from './phone-shell-card';
-import { type ShellSection, shellSections } from './shell-sections';
-import { maximumAttentionBadgeCount } from './use-attention-count';
+import { type Section, shellSections } from './shell-sections';
 
-export type { ShellSection } from './shell-sections';
+export type { Section } from '../navigation/sections';
 
 const OpenDrawerContext = createContext<() => void>(() => {});
 
@@ -30,12 +30,12 @@ export function useOpenDrawer(): () => void {
 }
 
 export interface PhoneShellProps {
-  selectedSection: ShellSection;
+  selectedSection: Section;
   attentionCount: number;
   drawerOpen: boolean;
   onDrawerOpenChange: (open: boolean) => void;
   onDrawerClosed?: () => void;
-  onSectionChange: (section: ShellSection) => void;
+  onSectionChange: (section: Section) => void;
   swipeEnabled?: boolean;
   children: ReactNode;
 }
@@ -68,12 +68,12 @@ export function PhoneShell({
   const chrome = useResolveClassNames('bg-shell-chrome');
   const { top } = useSafeAreaInsets();
 
-  function selectSection(section: ShellSection): void {
+  function selectSection(section: Section): void {
     onSectionChange(section);
     onDrawerOpenChange(false);
   }
 
-  function sectionButton(section: ShellSection): React.JSX.Element {
+  function sectionButton(section: Section): React.JSX.Element {
     const { title, icon } = shellSections[section];
     return (
       <Button

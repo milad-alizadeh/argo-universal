@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { sessionListMocks } from '../../mocks/session-list-mock';
-import { PhoneLayout } from '../components/phone-layout';
 import { sectionDestination } from '../navigation/sections';
+import { PhoneLayout } from './phone-layout';
 import { PhoneSectionScreen } from './phone-section-screen';
 
 const meta = {

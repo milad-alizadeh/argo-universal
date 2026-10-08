@@ -1,12 +1,13 @@
 import type * as React from 'react';
 import { View } from 'react-native';
 import { PhoneMenuButton } from '../components/phone-menu-button';
-import { useSectionList } from '../components/section-list';
-import { type ShellSection, shellSections } from '../components/shell-sections';
+import { shellSections } from '../components/shell-sections';
 import { ScreenHeader } from '../navigation/screen-header';
+import type { Section } from '../navigation/sections';
+import { useSectionList } from './section-list';
 
 export interface PhoneSectionScreenProps {
-  section: ShellSection;
+  section: Section;
 }
 
 // A phone section root: ☰, the section's title and its list's items in the native header, over the list.
