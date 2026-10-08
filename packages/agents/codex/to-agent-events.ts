@@ -6,6 +6,9 @@ import type { ThreadItem, TokenUsageBreakdown, Turn } from './protocol.gen';
 import { toRequestEvents } from './request-events';
 import { type ToolCallRow, toToolCall } from './tool-calls';
 
+const itemStartedNotification = 'item/started';
+const messageTextField = 'content.0.text';
+
 type TextKind = 'agent_message' | 'agent_thought';
 type TextRow = Extract<FeedUpdate, { sessionUpdate: TextKind }>;
 export interface MappingState {
@@ -115,13 +118,13 @@ export function toAgentEvents(
   switch (message.method) {
     case 'turn/completed':
       return endTurn(message.params.turn, mappingState, message.receivedAt);
-    case 'item/started':
+    case itemStartedNotification:
     case 'item/completed':
       return mapItem(
         message.params.item,
-        message.method === 'item/started' ? 'open' : 'settled',
+        message.method === itemStartedNotification ? 'open' : 'settled',
         mappingState,
-        message.method === 'item/started'
+        message.method === itemStartedNotification
           ? (message.params.startedAtMs ?? message.receivedAt)
           : (message.params.completedAtMs ?? message.receivedAt),
       );
@@ -129,7 +132,7 @@ export function toAgentEvents(
       return appendText(
         message.params.itemId,
         message.params.delta,
-        'content.0.text',
+        messageTextField,
         mappingState,
       );
     case 'item/commandExecution/outputDelta':
@@ -151,7 +154,7 @@ export function toAgentEvents(
       if (previous !== undefined && summaryIndex > previous)
         text = `\n\n${delta}`;
       events.push(
-        feed({ type: 'append', id: itemId, field: 'content.0.text', text }),
+        feed({ type: 'append', id: itemId, field: messageTextField, text }),
       );
       return {
         events,
@@ -170,7 +173,7 @@ export function toAgentEvents(
       return appendText(
         message.params.itemId,
         message.params.delta,
-        'content.0.text',
+        messageTextField,
         mappingState,
       );
     case 'thread/tokenUsage/updated': {

@@ -17,6 +17,8 @@ import {
   spawnSupervisor,
 } from './server-process';
 
+const failedConnectionTarget = '#serverConnection.failed';
+
 type ServerStateConfig = ReturnType<typeof serverSetup.createStateConfig>;
 type ReadingAddressState = Required<Pick<ServerStateConfig, 'invoke'>>;
 type WaitingForSupervisorExitState = Required<
@@ -164,7 +166,7 @@ const readingAddress = (noneTarget: string): ReadingAddressState =>
         { target: noneTarget },
       ],
       onError: {
-        target: '#serverConnection.failed',
+        target: failedConnectionTarget,
         actions: assign({
           failure: ({ event }): string =>
             `could not read server.json: ${String(event.error)}`,
@@ -319,9 +321,9 @@ export const serverConnectionMachine = serverSetup.createMachine({
       },
     },
     // Its Supervisor exited while starting; another one may have won the race to start.
-    rechecking: readingAddress('#serverConnection.failed'),
+    rechecking: readingAddress(failedConnectionTarget),
     // Stops the Supervisor that did not answer, so a Retry begins from nothing.
-    abandoning: waitingForSupervisorExit('#serverConnection.failed'),
+    abandoning: waitingForSupervisorExit(failedConnectionTarget),
     ready: { entry: 'announceReady' },
     failed: {
       entry: 'announceFailure',
@@ -335,7 +337,7 @@ export const serverConnectionMachine = serverSetup.createMachine({
     // The last attempt's Supervisor has not stopped yet; Retry stops it before it starts over.
     retrying: waitingForSupervisorExit(
       '#serverConnection.locating',
-      '#serverConnection.failed',
+      failedConnectionTarget,
     ),
     stopping: {
       ...waitingForSupervisorExit('#serverConnection.stopped'),

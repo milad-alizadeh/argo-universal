@@ -6,6 +6,9 @@ import { sessionRowMocks } from '../../mocks/session-row-mock';
 import { settleViewport } from '../../mocks/settle-viewport';
 import { SessionRow } from './session-row';
 
+const statusSelector = '[data-testid="session-status"]';
+const missingStatusFailure = 'Missing status container';
+
 const meta = {
   title: 'Tests/SessionRow',
   component: SessionRow,
@@ -300,8 +303,8 @@ export const StatusMotion: Story = {
     if (!runningLogo || !waitingLogo) throw new Error('Missing Agent logo');
     const rotation = getComputedStyle(runningLogo).transform;
     const waitingRotation = getComputedStyle(waitingLogo).transform;
-    const runningDot = running.querySelector('[data-testid="session-status"]');
-    const waitingDot = waiting.querySelector('[data-testid="session-status"]');
+    const runningDot = running.querySelector(statusSelector);
+    const waitingDot = waiting.querySelector(statusSelector);
     if (!runningDot || !waitingDot) throw new Error('Missing Session status');
     const runningOpacity = getComputedStyle(runningDot).opacity;
     const waitingOpacity = getComputedStyle(waitingDot).opacity;
@@ -323,7 +326,7 @@ export const StatusMotion: Story = {
         getComputedStyle(dot).backgroundColor,
       );
       const container = dot.parentElement;
-      if (!container) throw new Error('Missing status container');
+      if (!container) throw new Error(missingStatusFailure);
       await expect(getComputedStyle(container).boxShadow).toBe('none');
       await expect(getComputedStyle(container).opacity).toBe('1');
       await expect(getComputedStyle(container).backgroundColor).toBe(
@@ -332,7 +335,7 @@ export const StatusMotion: Story = {
       await expect(getComputedStyle(dot).borderWidth).toBe('0px');
       const bounds = container.getBoundingClientRect();
       const logoBounds = container.parentElement?.getBoundingClientRect();
-      if (!logoBounds) throw new Error('Missing status container');
+      if (!logoBounds) throw new Error(missingStatusFailure);
       await expect(bounds.top).toBeLessThan(logoBounds.top);
       await expect(bounds.right).toBeGreaterThan(logoBounds.right);
     }
@@ -345,7 +348,7 @@ export const StatusMotion: Story = {
     ]) {
       const dot = canvas
         .getByRole('button', { name: `First Agent: ${name}, ${label}` })
-        .querySelector('[data-testid="session-status"]');
+        .querySelector(statusSelector);
       if (!dot) throw new Error('Missing Session status');
       await expect(getComputedStyle(dot).opacity).toBe('1');
     }
@@ -431,7 +434,7 @@ function longTitleSelected(width: number): Story {
       const container = row.querySelector(
         '[data-testid="session-status-container"]',
       );
-      if (!container) throw new Error('Missing status container');
+      if (!container) throw new Error(missingStatusFailure);
       await expect(getComputedStyle(container).backgroundColor).toBe(
         getComputedStyle(container).borderTopColor,
       );

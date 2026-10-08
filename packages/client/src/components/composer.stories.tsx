@@ -14,6 +14,8 @@ import { Variation, Variations } from '../../mocks/primitive-story-variations';
 import { Composer } from './composer';
 import { imageSelectionFailureMessage } from './use-image-draft';
 
+const spacingAndColoursPrompt = 'Match the spacing and colours.';
+
 function ComposerPreview(args: ComposerMockProps): React.JSX.Element {
   return <Composer {...composerProps(args)} />;
 }
@@ -85,7 +87,7 @@ export const Overview: Story = {
             <Variation label="Typing">
               <ComposerPreview
                 {...args}
-                draft={{ text: 'Match the spacing and colours.', images: [] }}
+                draft={{ text: spacingAndColoursPrompt, images: [] }}
               />
             </Variation>
             <Variation label="Multi-line">
@@ -127,14 +129,14 @@ export const Overview: Story = {
             <Variation label="Sending">
               <ComposerPreview
                 {...args}
-                draft={{ text: 'Match the spacing and colours.', images: [] }}
+                draft={{ text: spacingAndColoursPrompt, images: [] }}
                 sending
               />
             </Variation>
             <Variation label="Disabled">
               <ComposerPreview
                 {...args}
-                draft={{ text: 'Match the spacing and colours.', images: [] }}
+                draft={{ text: spacingAndColoursPrompt, images: [] }}
                 disabled
               />
             </Variation>

@@ -24,6 +24,8 @@ import { PhoneMenuButton } from './phone-menu-button';
 import { PhoneShell } from './phone-shell';
 import { shellSections, type ShellSection } from './shell-sections';
 
+const openNavigationLabel = 'Open navigation';
+
 const meta = {
   title: 'Tests/PhoneShell',
   component: PhoneShell,
@@ -116,7 +118,7 @@ export const CardHeightAnimatesWithDrawer: Story = {
       const card = await canvas.findByTestId('phone-shell-card');
       const closedHeight = card.getBoundingClientRect().height;
       await userEvent.click(
-        canvas.getByRole('button', { name: 'Open navigation' }),
+        canvas.getByRole('button', { name: openNavigationLabel }),
       );
       await expect(onDrawerOpenChange).toHaveBeenCalledWith(true);
       render(true);
@@ -192,7 +194,7 @@ function menuOpensAndSelectionClosesDrawer(width: number): Story {
             ),
           );
           await userEvent.click(
-            canvas.getByRole('button', { name: 'Open navigation' }),
+            canvas.getByRole('button', { name: openNavigationLabel }),
           );
           await expect(
             canvas.getByRole('heading', { name: 'Argo' }),
@@ -251,7 +253,7 @@ function attentionAndSectionStates(count: number, width: number): Story {
           'settings',
         ] satisfies ShellSection[]) {
           await userEvent.click(
-            canvas.getByRole('button', { name: 'Open navigation' }),
+            canvas.getByRole('button', { name: openNavigationLabel }),
           );
           const badge = canvas.queryByLabelText(
             `${count} ${count === 1 ? 'Session needs' : 'Sessions need'} attention`,
@@ -272,7 +274,7 @@ function attentionAndSectionStates(count: number, width: number): Story {
             }),
           ).toBeVisible();
           await userEvent.click(
-            canvas.getByRole('button', { name: 'Open navigation' }),
+            canvas.getByRole('button', { name: openNavigationLabel }),
           );
           await expect(
             canvas.getByRole('button', { name: shellSections[section].title }),

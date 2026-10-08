@@ -13,6 +13,8 @@ import {
 import { type EventExecutor, TestModel } from 'xstate/graph';
 import { agentProbeMachine } from './agent-probe-machine';
 
+const refreshProbeEvent = 'agentProbe.refresh';
+
 afterEach((): import('vitest').VitestUtils => vi.useRealTimers());
 
 const available: AgentProbe = { availability: 'available', configOptions: [] };
@@ -29,7 +31,7 @@ type ProbeEvent = EventFromLogic<typeof machine>;
 type ProbeSnapshot = SnapshotFrom<typeof machine>;
 type ProbeExecutor = EventExecutor<ProbeSnapshot, ProbeEvent>;
 const events = [
-  { type: 'agentProbe.refresh' },
+  { type: refreshProbeEvent },
   { type: 'xstate.done.actor.probe', output: available },
   { type: 'xstate.error.actor.probe', error: new Error('Crashed') },
   { type: 'xstate.after.probeTimeout.agentProbe.probing' },
@@ -98,12 +100,12 @@ it('shares a running probe with a refresh, and probes again once settled', async
   const actor = createActor(agentProbeMachine, {
     input: { adapter: createMockAdapter({ probe }) },
   }).start();
-  actor.send({ type: 'agentProbe.refresh' });
+  actor.send({ type: refreshProbeEvent });
   expect(probe).toHaveBeenCalledTimes(1);
   settle.resolve(available);
   await waitFor(actor, (snapshot): boolean => snapshot.matches('probed'));
   expect(actor.getSnapshot().context.probe).toEqual(available);
-  actor.send({ type: 'agentProbe.refresh' });
+  actor.send({ type: refreshProbeEvent });
   expect(actor.getSnapshot().matches('probing')).toBe(true);
   expect(probe).toHaveBeenCalledTimes(2);
   actor.stop();

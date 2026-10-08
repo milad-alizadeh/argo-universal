@@ -21,8 +21,14 @@ import { SessionsScreen } from '../screens/sessions-screen';
 import { scrollFadeHeight } from './scroll-fade';
 import { SessionsList } from './sessions-list';
 
+const exampleProjectName = 'Example Project';
+const expandedAttribute = 'aria-expanded';
+
 const onNewSession = fn();
 const onProjectSettings = fn();
+const unchangedSessionLabel = 'Unchanged Session, Idle';
+const selectableSessionId = 'memo-selectable';
+
 const meta = {
   title: 'Tests/SessionsList',
   component: SessionsList,
@@ -73,23 +79,23 @@ export const MemoizedRows: Story = {
     try {
       render(props);
       const unchanged = await canvas.findByRole('button', {
-        name: 'Unchanged Session, Idle',
+        name: unchangedSessionLabel,
       });
       const selectable = canvas.getByRole('button', {
         name: 'Selectable Session, Idle',
       });
       await userEvent.click(selectable);
-      await expect(args.onSelect).toHaveBeenCalledWith('memo-selectable');
-      render({ ...props, selectedSessionId: 'memo-selectable' });
+      await expect(args.onSelect).toHaveBeenCalledWith(selectableSessionId);
+      render({ ...props, selectedSessionId: selectableSessionId });
       await waitFor(() =>
         expect(selectable).toHaveAttribute('aria-selected', 'true'),
       );
       await expect(
-        canvas.getByRole('button', { name: 'Unchanged Session, Idle' }),
+        canvas.getByRole('button', { name: unchangedSessionLabel }),
       ).toBe(unchanged);
       render({
         ...props,
-        selectedSessionId: 'memo-selectable',
+        selectedSessionId: selectableSessionId,
         sessions: renderingSessions.map((session) =>
           session.sessionId === 'memo-updated'
             ? { ...session, activity: 'Session activity updated' }
@@ -98,7 +104,7 @@ export const MemoizedRows: Story = {
       });
       await canvas.findByText('Session activity updated');
       await expect(
-        canvas.getByRole('button', { name: 'Unchanged Session, Idle' }),
+        canvas.getByRole('button', { name: unchangedSessionLabel }),
       ).toBe(unchanged);
     } finally {
       root.unmount();
@@ -109,7 +115,7 @@ export const MemoizedRows: Story = {
 export const ProjectActions: Story = {
   play: async ({ canvas, userEvent }) => {
     const heading = await canvas.findByRole('button', {
-      name: 'Example Project',
+      name: exampleProjectName,
     });
     await waitFor(() => expect(heading).toBeVisible());
     await userEvent.hover(heading);
@@ -125,18 +131,18 @@ export const ProjectActions: Story = {
     await expect(settings).toBeVisible();
     await expect(newSession).toBeVisible();
     await userEvent.click(settings);
-    await expect(onProjectSettings).toHaveBeenCalledWith('Example Project');
+    await expect(onProjectSettings).toHaveBeenCalledWith(exampleProjectName);
     await userEvent.click(newSession);
     await expect(onNewSession).toHaveBeenCalledWith(
       sessionsListProps.projects[0]?.id,
     );
-    await expect(heading).toHaveAttribute('aria-expanded', 'true');
+    await expect(heading).toHaveAttribute(expandedAttribute, 'true');
     await userEvent.click(heading);
-    await expect(heading).toHaveAttribute('aria-expanded', 'false');
+    await expect(heading).toHaveAttribute(expandedAttribute, 'false');
     await expect(heading).toHaveTextContent(/^Example Project$/);
     await userEvent.hover(heading);
     await userEvent.click(newSession);
-    await expect(heading).toHaveAttribute('aria-expanded', 'false');
+    await expect(heading).toHaveAttribute(expandedAttribute, 'false');
   },
 };
 export const ProjectActionsDark: Story = {
@@ -150,7 +156,7 @@ export const InsertSessionOpaqueRows: Story = {
   render: () => <SessionsScreen query="" archived={false} />,
   play: async ({ canvas, userEvent }) => {
     const heading = await canvas.findByRole('button', {
-      name: 'Example Project',
+      name: exampleProjectName,
     });
     const existing = canvas.getByRole('button', {
       name: 'Large Session 0, Idle',
@@ -244,7 +250,7 @@ export const ScrollFadePadding: Story = {
     if ('__vitest_browser__' in globalThis) await settleViewport(390);
     const scroll = canvas.getByTestId('sessions-scroll');
     const heading = await canvas.findByRole('button', {
-      name: 'Example Project',
+      name: exampleProjectName,
     });
     await waitFor(async () => {
       await expect(

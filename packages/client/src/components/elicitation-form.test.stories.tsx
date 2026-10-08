@@ -19,6 +19,10 @@ import type { ElicitationValues } from './elicitation-form';
 import galleryMeta, { Overview as Gallery } from './elicitation-form.stories';
 import { ElicitationOutcome } from './elicitation-outcome';
 
+const answeredLabel = 'You answered';
+
+const issueTitle = 'Drafts vanish after a reconnect';
+
 const meta: Meta<typeof ElicitationForm> = {
   title: 'Tests/ElicitationForm',
   component: ElicitationForm,
@@ -166,7 +170,7 @@ function validation(width: number): Story {
       await expect(args.onAnswer).toHaveBeenCalledWith({
         action: 'accept',
         content: {
-          title: 'Drafts vanish after a reconnect',
+          title: issueTitle,
           team: 'Mobile',
           estimate: 8,
           notify: false,
@@ -311,7 +315,7 @@ function clearOptionalNumber(width: number): Story {
       await expect(args.onAnswer).toHaveBeenCalledWith({
         action: 'accept',
         content: {
-          title: 'Drafts vanish after a reconnect',
+          title: issueTitle,
           team: 'Mobile',
           notify: true,
         },
@@ -329,7 +333,7 @@ export const AcceptedOutcome: Story = {
       answer={{
         action: 'accept',
         content: {
-          title: 'Drafts vanish after a reconnect',
+          title: issueTitle,
           team: 'Mobile',
           estimate: 8,
           notify: false,
@@ -338,7 +342,7 @@ export const AcceptedOutcome: Story = {
     />
   ),
   play: async ({ canvas }) => {
-    await expect(canvas.getByText('You answered')).toBeVisible();
+    await expect(canvas.getByText(answeredLabel)).toBeVisible();
     await expect(canvas.getByText('No', { exact: true })).toBeVisible();
     await expect(canvas.getByText('Mobile', { exact: true })).toBeVisible();
   },

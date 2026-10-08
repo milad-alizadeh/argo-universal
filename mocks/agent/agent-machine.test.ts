@@ -26,6 +26,20 @@ import {
   type MockAgentStreamEvent,
 } from './adapter';
 
+const agentPromptEvent = 'agent.prompt';
+const cancelAgentEvent = 'agent.cancel';
+const setAgentConfigOptionEvent = 'agent.setConfigOption';
+const agentFeedEvent = 'agent.feed';
+const stopAgentEvent = 'agent.stop';
+const vendorEvent = 'vendor.event';
+const agentTurnEndedEvent = 'agent.turnEnded';
+const rejectedAgentMessageEvent = 'agent.messageRejected';
+const unknownVendorMessageReason = 'Unknown vendor message';
+const vendorReadyEvent = 'vendor.ready';
+const agentUsageEvent = 'agent.usage';
+const existingVendorSessionId = 'existing-vendor-session';
+const agentShellOutputEvent = 'agent.shellOutput';
+
 const ready: AgentReady = {
   vendorSessionId: 'vendor-session-1',
   configOptions: [
@@ -119,7 +133,7 @@ afterEach((): void => {
 });
 
 const prompt: AgentCommand = {
-  type: 'agent.prompt',
+  type: agentPromptEvent,
   turnId: 'turn-1',
   content: [{ type: 'text', text: 'Read the project' }],
 };
@@ -142,16 +156,16 @@ const planAnswer: AgentCommand = {
 };
 const commandExamples: AgentCommand[] = [
   prompt,
-  { type: 'agent.cancel' },
+  { type: cancelAgentEvent },
   permissionAnswer,
   elicitationAnswer,
-  { type: 'agent.setConfigOption', configId: 'model', value: 'careful' },
+  { type: setAgentConfigOptionEvent, configId: 'model', value: 'careful' },
   planAnswer,
   { type: 'agent.rename', title: 'Read project' },
   { type: 'agent.stopShell', shellId: 'shell-1' },
 ];
 const feed: MockAgentStreamEvent = {
-  type: 'agent.feed',
+  type: agentFeedEvent,
   subagentToolCallId: 'child-tool-1',
   change: {
     type: 'upsert',
@@ -169,20 +183,23 @@ const feed: MockAgentStreamEvent = {
 const events = [
   ...commandExamples,
   { ...planAnswer, turnId: undefined },
-  { type: 'agent.stop' },
-  { type: 'vendor.event', event: { type: 'agent.turnStarted' } },
+  { type: stopAgentEvent },
+  { type: vendorEvent, event: { type: 'agent.turnStarted' } },
   {
-    type: 'vendor.event',
-    event: { type: 'agent.turnEnded', stopReason: 'end_turn' },
+    type: vendorEvent,
+    event: { type: agentTurnEndedEvent, stopReason: 'end_turn' },
   },
-  { type: 'vendor.event', event: feed },
+  { type: vendorEvent, event: feed },
   {
-    type: 'vendor.event',
-    event: { type: 'agent.messageRejected', reason: 'Unknown vendor message' },
+    type: vendorEvent,
+    event: {
+      type: rejectedAgentMessageEvent,
+      reason: unknownVendorMessageReason,
+    },
   },
-  { type: 'vendor.ready', ready },
+  { type: vendorReadyEvent, ready },
   {
-    type: 'vendor.ready',
+    type: vendorReadyEvent,
     ready: {
       ...ready,
       capabilities: {
@@ -199,7 +216,7 @@ const events = [
 ] as AnyEventObject[] as AgentMachineEvent[];
 
 const eventKey = (event: AgentMachineEvent): string => {
-  if (event.type === 'vendor.event') return `${event.type}:${event.event.type}`;
+  if (event.type === vendorEvent) return `${event.type}:${event.event.type}`;
   if (event.type === 'agent.answerPlanProposal')
     return `${event.type}:${!!event.turnId}`;
   return event.type;
@@ -242,13 +259,13 @@ const executors = Object.fromEntries(
           const previousCommands = [...commands];
           agent.send(command);
           await settle();
-          if (command.type !== 'agent.stop')
+          if (command.type !== stopAgentEvent)
             expect(commands).toEqual([...previousCommands, command]);
-        } else if (event.type === 'vendor.event') {
+        } else if (event.type === vendorEvent) {
           const previousEvents = [...received];
           stream.send(event.event as MockAgentStreamEvent);
           expect(received).toEqual([...previousEvents, event.event]);
-        } else if (event.type === 'vendor.ready') {
+        } else if (event.type === vendorReadyEvent) {
           await connect(event.ready);
           expect(received).toEqual([{ type: 'agent.ready', ...event.ready }]);
         } else if (event.type === 'vendor.failed') {
@@ -334,7 +351,7 @@ describe('Agent machine', (): void => {
       stream: (stream): undefined => {
         stream.receive((): void => {
           stream.send(feed);
-          stream.send({ type: 'agent.usage', usage: { used: 1, size: 2 } });
+          stream.send({ type: agentUsageEvent, usage: { used: 1, size: 2 } });
           stream.send(nextMessage);
         });
       },
@@ -353,8 +370,8 @@ describe('Agent machine', (): void => {
         mappingState: { mapped: number };
       } => {
         states.push(mappingState);
-        if (message.type === 'agent.usage')
-          throw new Error('Unknown vendor message');
+        if (message.type === agentUsageEvent)
+          throw new Error(unknownVendorMessageReason);
         return {
           events: [message],
           mappingState: { mapped: mappingState.mapped + 1 },
@@ -371,7 +388,7 @@ describe('Agent machine', (): void => {
     expect(received).toEqual([
       readyEvent,
       feed,
-      { type: 'agent.messageRejected', reason: 'Unknown vendor message' },
+      { type: rejectedAgentMessageEvent, reason: unknownVendorMessageReason },
       nextMessage,
     ]);
     expect(states).toEqual([{ mapped: 0 }, { mapped: 1 }, { mapped: 1 }]);
@@ -380,7 +397,7 @@ describe('Agent machine', (): void => {
     const messages = createMockAdapter({
       connect: async (): Promise<AgentReady> => ready,
       stream: (stream): undefined => {
-        stream.send({ type: 'agent.usage', usage: { used: 1, size: 2 } });
+        stream.send({ type: agentUsageEvent, usage: { used: 1, size: 2 } });
         stream.send(feed);
       },
     });
@@ -390,7 +407,7 @@ describe('Agent machine', (): void => {
         message,
         mappingState,
       ): import('@repo/agents').AgentMapping<null> => {
-        if (message.type === 'agent.usage')
+        if (message.type === agentUsageEvent)
           throw new Error('Unknown startup message');
         return messages.toAgentEvents(message, mappingState);
       },
@@ -402,7 +419,7 @@ describe('Agent machine', (): void => {
     expect(agent.getSnapshot().context.failure).toBeNull();
     expect(received).toEqual([
       readyEvent,
-      { type: 'agent.messageRejected', reason: 'Unknown startup message' },
+      { type: rejectedAgentMessageEvent, reason: 'Unknown startup message' },
       feed,
     ]);
   });
@@ -423,7 +440,7 @@ describe('Agent machine', (): void => {
   });
 
   it('reports a resumed connection and continued terminal activity without starting a Turn', async (): Promise<void> => {
-    input.vendorSessionId = 'existing-vendor-session';
+    input.vendorSessionId = existingVendorSessionId;
     start();
     expect(agent.getSnapshot().value).toBe('starting');
     expect(agent.getSnapshot().can(prompt)).toBe(false);
@@ -431,7 +448,7 @@ describe('Agent machine', (): void => {
       {
         sessionId: 'session-1',
         cwd: '/project',
-        vendorSessionId: 'existing-vendor-session',
+        vendorSessionId: existingVendorSessionId,
         configOptions: [{ configId: 'model', value: 'fast' }],
       },
     ]);
@@ -443,7 +460,7 @@ describe('Agent machine', (): void => {
     expect(received).toEqual([
       {
         ...readyEvent,
-        vendorSessionId: 'existing-vendor-session',
+        vendorSessionId: existingVendorSessionId,
         continuedOutside: true,
       },
     ]);
@@ -457,12 +474,12 @@ describe('Agent machine', (): void => {
     agent.send(prompt);
     expect(agent.getSnapshot().can(prompt)).toBe(false);
     agent.send(prompt);
-    agent.send({ type: 'agent.cancel' });
+    agent.send({ type: cancelAgentEvent });
     await settle();
-    expect(commands).toEqual([prompt, { type: 'agent.cancel' }]);
+    expect(commands).toEqual([prompt, { type: cancelAgentEvent }]);
     expect(agent.getSnapshot().value).toEqual({ ready: 'turn' });
     expect(received).toEqual([readyEvent]);
-    stream.send({ type: 'agent.turnEnded', stopReason: 'cancelled' });
+    stream.send({ type: agentTurnEndedEvent, stopReason: 'cancelled' });
     expect(agent.getSnapshot().value).toEqual({ ready: 'idle' });
     expect(cleanups).toBe(0);
   });
@@ -474,7 +491,7 @@ describe('Agent machine', (): void => {
     const changes: MockAgentStreamEvent[] = [
       feed,
       {
-        type: 'agent.feed',
+        type: agentFeedEvent,
         change: {
           type: 'append',
           id: 'message-1',
@@ -483,7 +500,7 @@ describe('Agent machine', (): void => {
         },
       },
       {
-        type: 'agent.feed',
+        type: agentFeedEvent,
         change: { type: 'patch', id: 'message-1', set: { state: 'settled' } },
       },
       {
@@ -513,7 +530,7 @@ describe('Agent machine', (): void => {
           requestedSchema: { properties: { branch: { type: 'string' } } },
         },
       },
-      { type: 'agent.usage', usage: { used: 100, size: 2000 } },
+      { type: agentUsageEvent, usage: { used: 100, size: 2000 } },
       {
         type: 'agent.configOptionsChanged',
         configOptions: ready.configOptions,
@@ -545,7 +562,7 @@ describe('Agent machine', (): void => {
           startedAt: 100,
         },
       },
-      { type: 'agent.shellOutput', shellId: 'shell-1', text: 'Listening' },
+      { type: agentShellOutputEvent, shellId: 'shell-1', text: 'Listening' },
       {
         type: 'agent.shellChanged',
         shell: {
@@ -560,7 +577,7 @@ describe('Agent machine', (): void => {
         },
       },
       {
-        type: 'agent.turnEnded',
+        type: agentTurnEndedEvent,
         stopReason: 'end_turn',
         usage: { totalTokens: 15, inputTokens: 10, outputTokens: 5 },
       },
@@ -569,12 +586,12 @@ describe('Agent machine', (): void => {
     expect(received).toEqual([readyEvent, ...changes]);
     expect(agent.getSnapshot().value).toEqual({ ready: 'idle' });
     stream.send({
-      type: 'agent.shellOutput',
+      type: agentShellOutputEvent,
       shellId: 'shell-1',
       text: 'Still listening',
     });
     expect(received.at(-1)).toEqual({
-      type: 'agent.shellOutput',
+      type: agentShellOutputEvent,
       shellId: 'shell-1',
       text: 'Still listening',
     });
@@ -602,7 +619,7 @@ describe('Agent machine', (): void => {
   it('cleans up the stream before shutdown and ignores its late events', async (): Promise<void> => {
     start();
     await connect();
-    agent.send({ type: 'agent.stop' });
+    agent.send({ type: stopAgentEvent });
     await settle();
     expect(cleanups).toBe(1);
     expect(agent.getSnapshot().value).toBe('stopping');
@@ -615,7 +632,7 @@ describe('Agent machine', (): void => {
 
   it('ignores a connection that resolves after stopping during startup', async (): Promise<void> => {
     start();
-    agent.send({ type: 'agent.stop' });
+    agent.send({ type: stopAgentEvent });
     await connect();
     expect(received).toEqual([]);
     expect(agent.getSnapshot().value).toBe('stopping');
@@ -648,7 +665,7 @@ describe('Agent machine', (): void => {
       },
     };
     start();
-    agent.send({ type: 'agent.stop' });
+    agent.send({ type: stopAgentEvent });
     await settle();
     expect(connectionSignal?.aborted).toBe(true);
     expect(received).toEqual([]);
@@ -663,7 +680,7 @@ describe('Agent machine', (): void => {
         ready,
         run: async (command): Promise<void> => {
           commands.push(command);
-          if (command.type !== 'agent.prompt') return;
+          if (command.type !== agentPromptEvent) return;
           listener.event({ type: 'agent.turnStarted' });
           await new Promise((_, reject): void => {
             signal.addEventListener(
@@ -685,11 +702,11 @@ describe('Agent machine', (): void => {
     agent.send(prompt);
     await settle();
     agent.send({
-      type: 'agent.setConfigOption',
+      type: setAgentConfigOptionEvent,
       configId: 'model',
       value: 'careful',
     });
-    agent.send({ type: 'agent.stop' });
+    agent.send({ type: stopAgentEvent });
     await settle();
     expect(commands).toEqual([prompt]);
     expect(shutdowns).toBe(1);
@@ -711,7 +728,7 @@ describe('Agent machine', (): void => {
     start();
     await connect();
     const setConfig: AgentCommand = {
-      type: 'agent.setConfigOption',
+      type: setAgentConfigOptionEvent,
       configId: 'model',
       value: 'careful',
     };
@@ -725,7 +742,7 @@ describe('Agent machine', (): void => {
     const configured = Promise.withResolvers<void>();
     const responded = Promise.withResolvers<void>();
     const setConfig: AgentCommand = {
-      type: 'agent.setConfigOption',
+      type: setAgentConfigOptionEvent,
       configId: 'model',
       value: 'careful',
     };
@@ -736,9 +753,9 @@ describe('Agent machine', (): void => {
         ready,
         run: async (command): Promise<void> => {
           commands.push(command);
-          if (command.type === 'agent.setConfigOption')
+          if (command.type === setAgentConfigOptionEvent)
             await configured.promise;
-          if (command.type === 'agent.prompt') await responded.promise;
+          if (command.type === agentPromptEvent) await responded.promise;
         },
         stop: async (): Promise<void> => {},
       }),
@@ -748,18 +765,18 @@ describe('Agent machine', (): void => {
     agent.send(setConfig);
     agent.send(prompt);
     agent.send(rename);
-    agent.send({ type: 'agent.cancel' });
+    agent.send({ type: cancelAgentEvent });
     await settle();
     expect(commands).toEqual([setConfig]);
     configured.resolve();
     await settle();
-    expect(commands).toEqual([setConfig, prompt, { type: 'agent.cancel' }]);
+    expect(commands).toEqual([setConfig, prompt, { type: cancelAgentEvent }]);
     responded.resolve();
     await settle();
     expect(commands).toEqual([
       setConfig,
       prompt,
-      { type: 'agent.cancel' },
+      { type: cancelAgentEvent },
       rename,
     ]);
   });

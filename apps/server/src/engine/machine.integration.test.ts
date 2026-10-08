@@ -22,6 +22,10 @@ import type { EngineMessage } from '../supervisor/engine-message';
 import type { HttpServer, HttpServerOptions } from './http-server';
 import { engineMachine } from './machine';
 
+const stopAllSessionsEvent = 'sessions.stopAll';
+const drainWriterEvent = 'writer.drain';
+const stopEngineEvent = 'engine.stop';
+
 // The Engine sends a heartbeat every second.
 const heartbeatIntervalMs = 1000;
 
@@ -108,8 +112,8 @@ const machineWithExternalMocks = engineMachine.provide({
 });
 const machine = machineWithExternalMocks.provide({
   actions: {
-    stopSessions: (): number => shutdownCommands.push('sessions.stopAll'),
-    drainWriter: (): number => shutdownCommands.push('writer.drain'),
+    stopSessions: (): number => shutdownCommands.push(stopAllSessionsEvent),
+    drainWriter: (): number => shutdownCommands.push(drainWriterEvent),
   },
 });
 type EngineSnapshot = SnapshotFrom<typeof machine>;
@@ -171,7 +175,7 @@ const payloads: Record<string, AnyEventObject> = {
     type: 'xstate.error.actor.databaseWriter',
     error: new Error('drain failed'),
   },
-  'engine.stop': { type: 'engine.stop', reason: 'SIGTERM' },
+  'engine.stop': { type: stopEngineEvent, reason: 'SIGTERM' },
 };
 const eventTypes = (node: DirectedGraphNode): string[] => [
   ...node.edges.map((edge): string => edge.label.text),
@@ -231,14 +235,14 @@ const executors: Record<string, EventExecutor<EngineSnapshot, EngineEvent>> = {
   'xstate.error.actor.closeHttpServer': (): Promise<void> =>
     settle((): void => latest(closeHttpServerCalls).reject(closeError)),
   'xstate.done.actor.sessions': (): void =>
-    engine.system.get('sessions').send({ type: 'sessions.stopAll' }),
+    engine.system.get('sessions').send({ type: stopAllSessionsEvent }),
   'xstate.error.actor.sessions': (): void =>
     engine.send({
       type: 'xstate.error.actor.sessions',
       error: new Error('stop failed'),
     }),
   'xstate.done.actor.databaseWriter': (): void =>
-    engine.system.get('databaseWriter').send({ type: 'writer.drain' }),
+    engine.system.get('databaseWriter').send({ type: drainWriterEvent }),
   'xstate.error.actor.databaseWriter': (): void =>
     engine.send({
       type: 'xstate.error.actor.databaseWriter',
@@ -263,7 +267,7 @@ const executors: Record<string, EventExecutor<EngineSnapshot, EngineEvent>> = {
     expect(messages).toHaveLength(sent + 1);
   },
   'engine.stop': (): void =>
-    processSignals.send({ type: 'engine.stop', reason: 'SIGTERM' }),
+    processSignals.send({ type: stopEngineEvent, reason: 'SIGTERM' }),
 };
 
 const expectModelState = (expected: EngineSnapshot): void => {
@@ -350,13 +354,13 @@ const states: Record<string, (snapshot: EngineSnapshot) => void> = {
   },
   'live.stopping.stoppingSessions': (snapshot): void => {
     expectModelState(snapshot);
-    expect(shutdownCommands).toEqual(['sessions.stopAll']);
+    expect(shutdownCommands).toEqual([stopAllSessionsEvent]);
     expect(databaseCloses).toBe(0);
     expect(engine.system.get('databaseWriter')).toBeDefined();
   },
   'live.stopping.drainingWriter': (snapshot): void => {
     expectModelState(snapshot);
-    expect(shutdownCommands).toEqual(['sessions.stopAll', 'writer.drain']);
+    expect(shutdownCommands).toEqual([stopAllSessionsEvent, drainWriterEvent]);
     expect(databaseCloses).toBe(0);
   },
   stopped: (snapshot): void => expectExit(snapshot, 0),
@@ -401,7 +405,7 @@ const startRunningEngine = async (logic = machine): Promise<void> => {
 
 it('finishes shutdown when the Session registry and writer complete immediately', async (): Promise<void> => {
   await startRunningEngine(machineWithExternalMocks);
-  engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
+  engine.send({ type: stopEngineEvent, reason: 'SIGTERM' });
   await settle((): void => latest(closeHttpServerCalls).resolve());
   expect(engine.getSnapshot().status).toBe('done');
   expect(engine.getSnapshot().output).toEqual({ exitCode: 0 });
@@ -413,17 +417,17 @@ it('finishes shutdown when the Session registry and writer complete immediately'
 
 it('keeps draining the writer when Sessions finish after their stop limit', async (): Promise<void> => {
   await startRunningEngine();
-  engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
+  engine.send({ type: stopEngineEvent, reason: 'SIGTERM' });
   await settle((): void => latest(closeHttpServerCalls).resolve());
   vi.advanceTimersByTime(10000);
   expect(logs).toContain('Session stop limit reached; draining the writer');
-  engine.system.get('sessions').send({ type: 'sessions.stopAll' });
+  engine.system.get('sessions').send({ type: stopAllSessionsEvent });
   expect(
     engine.getSnapshot().matches({ live: { stopping: 'drainingWriter' } }),
   ).toBe(true);
   expect(databaseCloses).toBe(0);
-  expect(shutdownCommands).toEqual(['sessions.stopAll', 'writer.drain']);
-  engine.system.get('databaseWriter').send({ type: 'writer.drain' });
+  expect(shutdownCommands).toEqual([stopAllSessionsEvent, drainWriterEvent]);
+  engine.system.get('databaseWriter').send({ type: drainWriterEvent });
   expect(engine.getSnapshot().status).toBe('done');
   expect(databaseCloses).toBe(1);
 });

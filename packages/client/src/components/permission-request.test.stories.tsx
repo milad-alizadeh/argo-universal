@@ -10,6 +10,11 @@ import { settleViewport } from '../../mocks/settle-viewport';
 import { PermissionRequest } from './permission-request';
 import galleryMeta, { Overview as Gallery } from './permission-request.stories';
 
+const allowOnceLabel = 'Allow once';
+const allowedOnceAnswer = 'You allowed this once';
+
+const denialFeedback = 'Keep the cache.';
+
 const meta: Meta<typeof PermissionRequest> = {
   title: 'Tests/PermissionRequest',
   component: PermissionRequest,
@@ -26,19 +31,19 @@ type Story = StoryObj<typeof meta>;
 
 function denial(width: number): Story {
   return {
-    args: { denialMessage: 'Keep the cache.' },
+    args: { denialMessage: denialFeedback },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
       const input = canvas.getByRole('textbox', {
         name: 'What should the Agent do instead?',
       });
       await expect(input).toHaveFocus();
-      await expect(input).toHaveValue('Keep the cache.');
+      await expect(input).toHaveValue(denialFeedback);
       await userEvent.click(canvas.getByRole('button', { name: 'Deny' }));
       await expect(args.onAnswer).toHaveBeenCalledTimes(1);
       await expect(args.onAnswer).toHaveBeenCalledWith({
         optionId: 'reject_once',
-        message: 'Keep the cache.',
+        message: denialFeedback,
       });
     },
   };
@@ -57,7 +62,9 @@ function allow(width: number, mock?: RequestMock): Story {
       await settleViewport(width);
       await expect(canvas.queryByRole('status')).not.toBeInTheDocument();
       await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
-      await userEvent.click(canvas.getByRole('button', { name: 'Allow once' }));
+      await userEvent.click(
+        canvas.getByRole('button', { name: allowOnceLabel }),
+      );
       await expect(args.onAnswer).toHaveBeenCalledTimes(1);
       await expect(args.onAnswer).toHaveBeenCalledWith({
         optionId: 'allow_once',
@@ -105,7 +112,7 @@ function responseError(width: number, mock?: RequestMock): Story {
       );
       await expect(canvas.queryByRole('status')).not.toBeInTheDocument();
       await expect(
-        canvas.getByRole('button', { name: 'Allow once' }),
+        canvas.getByRole('button', { name: allowOnceLabel }),
       ).toBeEnabled();
     },
   };
@@ -178,11 +185,11 @@ function conflict(width: number, mock?: RequestMock): Story {
       );
       if (width < 720)
         await expect(
-          canvas.queryByRole('button', { name: 'Allow once' }),
+          canvas.queryByRole('button', { name: allowOnceLabel }),
         ).not.toBeInTheDocument();
       else
         await expect(
-          canvas.getByRole('button', { name: 'Allow once' }),
+          canvas.getByRole('button', { name: allowOnceLabel }),
         ).toBeDisabled();
       await expect(args.onAnswer).not.toHaveBeenCalled();
       await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
@@ -206,13 +213,11 @@ function permissionFeed(
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       if (answered) {
-        await expect(canvas.getByText('You allowed this once')).toBeVisible();
+        await expect(canvas.getByText(allowedOnceAnswer)).toBeVisible();
         await userEvent.click(canvas.getByRole('button'));
-        await expect(canvas.getAllByText('You allowed this once')).toHaveLength(
-          1,
-        );
+        await expect(canvas.getAllByText(allowedOnceAnswer)).toHaveLength(1);
         await userEvent.click(canvas.getByRole('button'));
-        await expect(canvas.getByText('You allowed this once')).toBeVisible();
+        await expect(canvas.getByText(allowedOnceAnswer)).toBeVisible();
       } else {
         const row = mock.pending.rows.find(
           (row) =>

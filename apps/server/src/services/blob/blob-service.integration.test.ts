@@ -18,6 +18,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { openTestDatabase } from '#mocks/database';
 import { createBlobService, removeUnusedBlobs } from './blob-service';
 
+const newUnusedBlobId = 'new-unused';
+
 const png = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
   'base64',
@@ -108,7 +110,7 @@ describe('removeUnusedBlobs', (): void => {
   it('deletes a blob no prompt refers to once it is over a day old', async (): Promise<void> => {
     storeBlob('old-unused', now - day - 1);
     storeBlob('old-used', now - 2 * day);
-    storeBlob('new-unused', now - day + 1);
+    storeBlob(newUnusedBlobId, now - day + 1);
     database
       .insert(blobRef)
       .values({ blobId: 'old-used', sessionId: 'session-1' })
@@ -116,8 +118,11 @@ describe('removeUnusedBlobs', (): void => {
 
     await removeUnusedBlobs({ database, blobsFolder, now });
 
-    expect(storedIds()).toEqual(['new-unused', 'old-used']);
-    expect(readdirSync(blobsFolder).sort()).toEqual(['new-unused', 'old-used']);
+    expect(storedIds()).toEqual([newUnusedBlobId, 'old-used']);
+    expect(readdirSync(blobsFolder).sort()).toEqual([
+      newUnusedBlobId,
+      'old-used',
+    ]);
   });
 
   it('deletes a file left without a row once it is over a day old', async (): Promise<void> => {
