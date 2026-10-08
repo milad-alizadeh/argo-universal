@@ -119,7 +119,7 @@ describe('after-edit', () => {
     expect(result.stderr).toContain('no-explicit-any');
   });
 
-  it('reports a finding through a Checkout directory alias', () => {
+  it('reports a finding through a Checkout directory alias', (): void => {
     const alias = path.join(root, 'checkout-alias');
     symlinkSync(root, alias, 'dir');
     const result = runHook('after-edit', {
