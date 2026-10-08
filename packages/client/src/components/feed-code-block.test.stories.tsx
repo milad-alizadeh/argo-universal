@@ -7,6 +7,8 @@ import { recordedFile } from '../../mocks/feed-edit-mock';
 import { settleViewport } from '../../mocks/settle-viewport';
 import { FeedCodeBlock } from './feed-code-block';
 
+const codeScrollId = 'code-scroll';
+
 const meta = {
   title: 'Tests/FeedCodeBlock',
   component: FeedCodeBlock,
@@ -26,7 +28,7 @@ export const CodeBlockScrollsInsideTheBox: Story = {
     const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await settleViewport(width);
-      const box = canvas.getByTestId('code-scroll');
+      const box = canvas.getByTestId(codeScrollId);
       await expect(box.clientHeight).toBe(width < 720 ? 300 : 400);
       await expect(box.scrollHeight).toBeGreaterThan(box.clientHeight);
       box.scrollTop = box.scrollHeight;
@@ -80,11 +82,11 @@ function copyIconFollowsCssHoverAndFocus(width: number): Story {
       const { page } = await import('vitest/browser');
       await settleViewport(width);
       const copy = canvas.getByRole('button', { name: 'Copy code' });
-      const box = canvas.getByTestId('code-scroll').parentElement;
+      const box = canvas.getByTestId(codeScrollId).parentElement;
       if (!box) throw new Error('Missing code block');
       await page.elementLocator(box).unhover({ position: { x: 1, y: 1 } });
       await expect(getComputedStyle(copy).opacity).toBe('0');
-      await page.elementLocator(canvas.getByTestId('code-scroll')).hover();
+      await page.elementLocator(canvas.getByTestId(codeScrollId)).hover();
       await expect(getComputedStyle(copy).opacity).toBe('1');
       await page.elementLocator(box).unhover({ position: { x: 1, y: 1 } });
       await expect(getComputedStyle(copy).opacity).toBe('0');

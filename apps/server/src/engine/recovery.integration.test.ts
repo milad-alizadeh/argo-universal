@@ -35,6 +35,13 @@ import type { EngineMessage } from '../supervisor/engine-message';
 import { engineMachine } from './machine';
 import { recoverAfterRestart } from './recovery';
 
+const runningTurnId = 'running-turn';
+const partialReply = 'Partial reply';
+const editedFilePath = '/project/file';
+const completedToolId = 'completed-tool';
+const cancelledToolId = 'cancelled-tool';
+const invalidMessageId = 'invalid-message';
+
 let home: string;
 let engine: ActorRefFrom<typeof engineMachine>;
 let messages: EngineMessage[];
@@ -115,15 +122,15 @@ const messageRow = (
   id,
   position,
   revision,
-  turnId: 'running-turn',
+  turnId: runningTurnId,
   state: 'open',
   sessionUpdate: 'agent_message',
   payloadVersion: 1,
   payload: {
     messageId: id,
-    content: [{ type: 'text', text: 'Partial reply' }],
+    content: [{ type: 'text', text: partialReply }],
   },
-  searchText: 'Partial reply',
+  searchText: partialReply,
   sourceRef: { line: 7 },
 });
 
@@ -149,7 +156,7 @@ const toolRow = ({
     kind: 'read',
     status,
     content: [],
-    rawInput: { path: '/project/file' },
+    rawInput: { path: editedFilePath },
   },
 });
 
@@ -203,7 +210,7 @@ describe('Engine restart recovery', (): void => {
     writeJobs(database, [
       {
         type: 'turnInsert',
-        turn: { id: 'running-turn', sessionId: 'session-1', status: 'running' },
+        turn: { id: runningTurnId, sessionId: 'session-1', status: 'running' },
       },
       {
         type: 'turnInsert',
@@ -234,7 +241,7 @@ describe('Engine restart recovery', (): void => {
             status: 'in_progress',
           }),
           toolRow({
-            id: 'completed-tool',
+            id: completedToolId,
             position: 3,
             revision: 8,
             status: 'completed',
@@ -246,7 +253,7 @@ describe('Engine restart recovery', (): void => {
             status: 'failed',
           }),
           toolRow({
-            id: 'cancelled-tool',
+            id: cancelledToolId,
             position: 5,
             revision: 12,
             status: 'cancelled',
@@ -319,21 +326,21 @@ describe('Engine restart recovery', (): void => {
       ...[
         'pending-tool',
         'running-tool',
-        'completed-tool',
+        completedToolId,
         'failed-tool',
-        'cancelled-tool',
+        cancelledToolId,
         'settled-pending-tool',
       ].map((id, index): ReturnType<typeof expect.objectContaining> => {
         let status = 'failed';
-        if (id === 'completed-tool') status = 'completed';
-        else if (id === 'cancelled-tool') status = 'cancelled';
+        if (id === completedToolId) status = 'completed';
+        else if (id === cancelledToolId) status = 'cancelled';
         return expect.objectContaining({
           id,
           state: 'settled',
           revision: 22 + index,
           payload: expect.objectContaining({
             status,
-            rawInput: { path: '/project/file' },
+            rawInput: { path: editedFilePath },
           }),
         });
       }),
@@ -347,9 +354,9 @@ describe('Engine restart recovery', (): void => {
     expect(repaired.rows[7]).toEqual(unchangedRow);
     expect(repaired.rows[0]).toMatchObject({
       position: 0,
-      turnId: 'running-turn',
+      turnId: runningTurnId,
       sourceRef: { line: 7 },
-      searchText: 'Partial reply',
+      searchText: partialReply,
     });
     expect(
       repaired.sessions.map(
@@ -404,7 +411,7 @@ describe('Engine restart recovery', (): void => {
     writeJobs(database, [
       {
         type: 'turnInsert',
-        turn: { id: 'running-turn', sessionId: 'session-1', status: 'running' },
+        turn: { id: runningTurnId, sessionId: 'session-1', status: 'running' },
       },
       {
         type: 'feedRows',
@@ -445,7 +452,7 @@ describe('Engine restart recovery', (): void => {
     writeJobs(database, [
       {
         type: 'turnInsert',
-        turn: { id: 'running-turn', sessionId: 'session-1', status: 'running' },
+        turn: { id: runningTurnId, sessionId: 'session-1', status: 'running' },
       },
       {
         type: 'feedRows',
@@ -454,8 +461,8 @@ describe('Engine restart recovery', (): void => {
         rows: [
           messageRow('valid-message', 0, 1),
           {
-            ...messageRow('invalid-message', 1, 2),
-            payload: { messageId: 'invalid-message', content: 'not an array' },
+            ...messageRow(invalidMessageId, 1, 2),
+            payload: { messageId: invalidMessageId, content: 'not an array' },
           },
         ],
       },
@@ -509,12 +516,12 @@ describe('Engine restart recovery', (): void => {
         ),
       ).toEqual([
         { id: 'valid-message', revision: 10, state: 'settled' },
-        { id: 'invalid-message', revision: 11, state: 'settled' },
+        { id: invalidMessageId, revision: 11, state: 'settled' },
         { id: 'future-payload', revision: 5, state: 'settled' },
       ]);
       expect(repaired.rows[2]?.payload).toMatchObject({
         status: 'failed',
-        rawInput: { path: '/project/file' },
+        rawInput: { path: editedFilePath },
       });
       expect(repaired.turns[0]).toMatchObject({
         status: 'ended',

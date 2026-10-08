@@ -10,6 +10,8 @@ import { permissionOptions } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import { toFeedView } from './to-feed-view';
 
+const firstReadId = 'first-read';
+
 const workMocks = recordedFeedMocks.filter(
   (mock) => mock.recording === 'edit-and-command',
 );
@@ -464,7 +466,7 @@ describe('toFeedView', () => {
       const source = commandRow(rows);
       const first: ToolCallUpdate = {
         ...source,
-        id: 'first-read',
+        id: firstReadId,
         _meta: {
           argo: {
             commandActions: [{ type: 'read', command: 'read', path: 'a.ts' }],
@@ -488,13 +490,13 @@ describe('toFeedView', () => {
       expect(view.items).toEqual([
         {
           type: 'group',
-          id: 'first-read',
+          id: firstReadId,
           title: 'Read 2 files',
           state: 'settled',
           items: [
             {
               type: 'exploration',
-              id: 'first-read',
+              id: firstReadId,
               title: 'Explored',
               lines: ['Read a.ts, b.ts'],
               toolCalls: [first, second],

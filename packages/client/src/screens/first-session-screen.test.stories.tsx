@@ -34,6 +34,9 @@ import { FirstSessionScreen } from './first-session-screen';
 import { SessionScreen } from './session-screen';
 import { SessionsScreen } from './sessions-screen';
 
+const missingAgentsFailure = 'Recorded catalog needs both Agents.';
+const promptPlaceholder = 'What should we work on?';
+
 const meta = {
   title: 'Tests/FirstSessionScreen',
   component: FirstSessionScreen,
@@ -87,7 +90,7 @@ const sessionCatalogs = newSessionCatalogs.bothAvailable.map((agent, index) => {
 
 function keepsTheOpenSession(agentIndex: 0 | 1): Story {
   const catalog = sessionCatalogs[agentIndex];
-  if (!catalog) throw new Error('Recorded catalog needs both Agents.');
+  if (!catalog) throw new Error(missingAgentsFailure);
   const updates = createSessionListUpdatesMock();
   return {
     beforeEach: () => updates.reset(),
@@ -167,7 +170,7 @@ export const KeepsTheOpenSessionSecondAgent = keepsTheOpenSession(1);
 
 function listLoadFailure(width: number, agentIndex: 0 | 1): Story {
   const catalog = sessionCatalogs[agentIndex];
-  if (!catalog) throw new Error('Recorded catalog needs both Agents.');
+  if (!catalog) throw new Error(missingAgentsFailure);
   let calls = 0;
   return {
     beforeEach: () => {
@@ -196,7 +199,7 @@ function listLoadFailure(width: number, agentIndex: 0 | 1): Story {
         canvas.queryByRole('textbox', { name: 'Message' }),
       ).toBeNull();
       await expect(
-        canvas.queryByRole('heading', { name: 'What should we work on?' }),
+        canvas.queryByRole('heading', { name: promptPlaceholder }),
       ).toBeNull();
       await expect(calls).toBe(1);
       await userEvent.click(canvas.getByRole('button', { name: 'Retry' }));
@@ -231,7 +234,7 @@ export const PendingListStaysBlank: Story = {
     await expect(canvas.queryByRole('alert')).toBeNull();
     await expect(canvas.queryByRole('textbox', { name: 'Message' })).toBeNull();
     await expect(
-      canvas.queryByRole('heading', { name: 'What should we work on?' }),
+      canvas.queryByRole('heading', { name: promptPlaceholder }),
     ).toBeNull();
   },
 };
@@ -267,7 +270,7 @@ function sessionUpdateMocks(
 
 function keepsNewSessionUntilLeavingRoot(agentIndex: 0 | 1): Story {
   const catalog = sessionCatalogs[agentIndex];
-  if (!catalog) throw new Error('Recorded catalog needs both Agents.');
+  if (!catalog) throw new Error(missingAgentsFailure);
   const updates = createSessionListUpdatesMock();
   return {
     beforeEach: () => {
@@ -283,7 +286,7 @@ function keepsNewSessionUntilLeavingRoot(agentIndex: 0 | 1): Story {
     play: async ({ canvas, userEvent }) => {
       await settleViewport(layoutWidths.wide);
       await expect(
-        await canvas.findByRole('heading', { name: 'What should we work on?' }),
+        await canvas.findByRole('heading', { name: promptPlaceholder }),
       ).toBeVisible();
       await userEvent.type(
         await canvas.findByRole('textbox', { name: 'Message' }),
@@ -298,7 +301,7 @@ function keepsNewSessionUntilLeavingRoot(agentIndex: 0 | 1): Story {
       });
       await expect(row).toBeVisible();
       await expect(
-        canvas.getByRole('heading', { name: 'What should we work on?' }),
+        canvas.getByRole('heading', { name: promptPlaceholder }),
       ).toBeVisible();
       await expect(
         canvas.queryByRole('heading', { name: catalog.first.title }),
@@ -311,11 +314,11 @@ function keepsNewSessionUntilLeavingRoot(agentIndex: 0 | 1): Story {
         await canvas.findByRole('heading', { name: catalog.first.title }),
       ).toBeVisible();
       await expect(
-        canvas.queryByRole('heading', { name: 'What should we work on?' }),
+        canvas.queryByRole('heading', { name: promptPlaceholder }),
       ).toBeNull();
       await userEvent.click(canvas.getByRole('button', { name: /^Sessions$/ }));
       await expect(
-        canvas.queryByRole('heading', { name: 'What should we work on?' }),
+        canvas.queryByRole('heading', { name: promptPlaceholder }),
       ).toBeNull();
       await expect(
         await canvas.findByRole('textbox', { name: 'Message' }),

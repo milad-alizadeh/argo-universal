@@ -11,6 +11,8 @@ import { Variation, Variations } from '../../mocks/primitive-story-variations';
 import { Composer } from './composer';
 import { imageSelectionFailureMessage } from './use-image-draft';
 
+const spacingAndColoursPrompt = 'Match the spacing and colours.';
+
 const meta = {
   title: 'Sessions/Composer',
   component: Composer,
@@ -58,7 +60,7 @@ export const Overview: Story = {
             <Variation label="Typing">
               <ComposerMock
                 {...args}
-                draft={{ text: 'Match the spacing and colours.', images: [] }}
+                draft={{ text: spacingAndColoursPrompt, images: [] }}
               />
             </Variation>
             <Variation label="Multi-line">
@@ -100,14 +102,14 @@ export const Overview: Story = {
             <Variation label="Sending">
               <ComposerMock
                 {...args}
-                draft={{ text: 'Match the spacing and colours.', images: [] }}
+                draft={{ text: spacingAndColoursPrompt, images: [] }}
                 sending
               />
             </Variation>
             <Variation label="Disabled">
               <ComposerMock
                 {...args}
-                draft={{ text: 'Match the spacing and colours.', images: [] }}
+                draft={{ text: spacingAndColoursPrompt, images: [] }}
                 disabled
               />
             </Variation>

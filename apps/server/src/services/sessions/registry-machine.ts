@@ -16,6 +16,9 @@ import { agentProbeId, agentProbeMachine } from '../agents/agent-probe-machine';
 import type { SessionCreationInput } from './session-data';
 import { type SessionActorRef, sessionMachine } from './session-machine';
 
+const createSessionEvent = 'sessions.create';
+const closeSessionEvent = 'session.close';
+
 export interface RegistryInput {
   database: Database;
   runtimeDirectory: string;
@@ -74,7 +77,7 @@ export const registryMachine = setup({
     }),
     openSession: assign(
       ({ context, event, spawn }): Partial<RegistryContext> => {
-        assertEvent(event, ['sessions.create', 'sessions.open']);
+        assertEvent(event, [createSessionEvent, 'sessions.open']);
         if (context.sessions[event.sessionId]) return {};
         const session = spawn('session', {
           id: `session:${event.sessionId}`,
@@ -87,7 +90,7 @@ export const registryMachine = setup({
             createId: context.createId,
             adapter: findAgentAdapter(event.agent, context.adapters),
             sessionId: event.sessionId,
-            ...(event.type === 'sessions.create'
+            ...(event.type === createSessionEvent
               ? {
                   kind: 'new',
                   projectId: event.projectId,
@@ -125,7 +128,7 @@ export const registryMachine = setup({
     },
     closeSessions: enqueueActions(({ context, enqueue }): void => {
       for (const session of Object.values(context.sessions))
-        enqueue.sendTo(session, { type: 'session.close' });
+        enqueue.sendTo(session, { type: closeSessionEvent });
     }),
     closeReadySession: enqueueActions(({ context, event, enqueue }): void => {
       if (!('snapshot' in event)) return;
@@ -133,15 +136,15 @@ export const registryMachine = setup({
       const session = context.sessions[snapshot.context.sessionId];
       if (
         session &&
-        snapshot.can({ type: 'session.close' }) &&
+        snapshot.can({ type: closeSessionEvent }) &&
         !snapshot.matches({ open: { live: 'closing' } })
       )
-        enqueue.sendTo(session, { type: 'session.close' });
+        enqueue.sendTo(session, { type: closeSessionEvent });
     }),
   },
   guards: {
     isRegisteredAgent: ({ context, event }): boolean =>
-      (event.type === 'sessions.create' || event.type === 'sessions.open') &&
+      (event.type === createSessionEvent || event.type === 'sessions.open') &&
       context.adapters.some(
         (adapter): boolean => adapter.agent === event.agent,
       ),

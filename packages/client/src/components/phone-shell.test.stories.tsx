@@ -5,6 +5,8 @@ import { layoutWidths } from '../../mocks/each-layout';
 import { PhoneShellMock } from '../../mocks/phone-shell-mock';
 import { settleViewport } from '../../mocks/settle-viewport';
 
+const openNavigationLabel = 'Open navigation';
+
 const meta = {
   title: 'Tests/PhoneShell',
   component: PhoneShellMock,
@@ -23,7 +25,7 @@ export const CardHeightAnimatesWithDrawer: Story = {
     const card = canvas.getByTestId('phone-shell-card');
     const closedHeight = card.getBoundingClientRect().height;
     await userEvent.click(
-      canvas.getByRole('button', { name: 'Open navigation' }),
+      canvas.getByRole('button', { name: openNavigationLabel }),
     );
     const openingHeights: number[] = [];
     for (let frame = 0; frame < 12; frame += 1) {
@@ -81,7 +83,7 @@ function menuOpensAndSelectionClosesDrawer(width: number): Story {
           ),
         );
         await userEvent.click(
-          canvas.getByRole('button', { name: 'Open navigation' }),
+          canvas.getByRole('button', { name: openNavigationLabel }),
         );
         await expect(
           canvas.getByRole('heading', { name: 'Argo' }),
@@ -117,7 +119,7 @@ function attentionAndSectionStates(count: number, width: number): Story {
       await settleViewport(width);
       for (const section of ['Sessions', 'Issues', 'Atlas', 'Settings']) {
         await userEvent.click(
-          canvas.getByRole('button', { name: 'Open navigation' }),
+          canvas.getByRole('button', { name: openNavigationLabel }),
         );
         const badge = canvas.queryByLabelText(
           `${count} ${count === 1 ? 'Session needs' : 'Sessions need'} attention`,
@@ -129,7 +131,7 @@ function attentionAndSectionStates(count: number, width: number): Story {
           canvas.getByRole('heading', { name: section }),
         ).toBeVisible();
         await userEvent.click(
-          canvas.getByRole('button', { name: 'Open navigation' }),
+          canvas.getByRole('button', { name: openNavigationLabel }),
         );
         await expect(
           canvas.getByRole('button', { name: section }),

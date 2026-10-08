@@ -21,6 +21,8 @@ import {
   toSessionInsert,
 } from './session-data';
 
+const newSessionId = 'new-session';
+
 const cleanups: (() => void)[] = [];
 afterEach((): void => {
   for (const cleanup of cleanups.splice(0).reverse()) cleanup();
@@ -28,7 +30,7 @@ afterEach((): void => {
 
 const newSession = {
   kind: 'new' as const,
-  sessionId: 'new-session',
+  sessionId: newSessionId,
   turnId: 'turn-1',
   projectId: 'project-1',
   agent: 'mock',
@@ -96,11 +98,7 @@ it.each([
       checkout,
     };
     const readStoredSession = (): typeof session.$inferSelect | undefined =>
-      database
-        .select()
-        .from(session)
-        .where(eq(session.id, 'new-session'))
-        .get();
+      database.select().from(session).where(eq(session.id, newSessionId)).get();
     const created = await createSessionCheckout(input);
     expect(readStoredSession()).toBeUndefined();
     writeJobs(database, [
@@ -110,12 +108,12 @@ it.each([
       await loadSession({
         database,
         runtimeDirectory,
-        sessionId: 'new-session',
+        sessionId: newSessionId,
         kind: 'existing',
       }),
     ).toEqual({ ...created, vendorSessionId: 'vendor-1' });
     expect(created).toMatchObject({
-      sessionId: 'new-session',
+      sessionId: newSessionId,
       vendorSessionId: null,
       epoch: 0,
       maxRevision: 0,

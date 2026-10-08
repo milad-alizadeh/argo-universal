@@ -34,6 +34,8 @@ import { Slider } from '../primitives/slider';
 import { ComposerPopover } from './composer-popover';
 import { useContentWide } from './content-layout';
 
+const destructiveTextClassName = 'text-destructive';
+
 type SelectConfiguration = Extract<SessionConfigOption, { type: 'select' }>;
 export interface ComposerConfigurationProps {
   agents: AgentInfo[];
@@ -190,7 +192,7 @@ function Choice({
           className={cn(
             'select-none',
             'text-sm leading-5 font-normal',
-            dangerous && 'text-destructive',
+            dangerous && destructiveTextClassName,
           )}
         >
           {label}
@@ -756,7 +758,8 @@ export function ComposerModeControl({
             as={configurationIcon(current?._meta?.argo?.icon)}
             className={cn(
               'text-muted-foreground',
-              current?._meta?.argo?.tone === 'dangerous' && 'text-destructive',
+              current?._meta?.argo?.tone === 'dangerous' &&
+                destructiveTextClassName,
             )}
           />
           <Text
@@ -765,7 +768,8 @@ export function ComposerModeControl({
               'select-none',
               'text-sm leading-5 font-normal text-muted-foreground',
               !wide && 'hidden',
-              current?._meta?.argo?.tone === 'dangerous' && 'text-destructive',
+              current?._meta?.argo?.tone === 'dangerous' &&
+                destructiveTextClassName,
             )}
           >
             {current?.name.replace(/\s*\(recommended\)\s*$/i, '')}
@@ -801,7 +805,7 @@ export function ComposerModeControl({
                   className={cn(
                     'text-foreground',
                     choice._meta?.argo?.tone === 'dangerous' &&
-                      'text-destructive',
+                      destructiveTextClassName,
                   )}
                 />
               }

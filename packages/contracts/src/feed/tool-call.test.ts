@@ -7,6 +7,8 @@ import {
   ToolCallStatus,
 } from './tool-call';
 
+const commandTitle = 'Run command';
+
 const running: Record<ToolCallStatus, boolean> = {
   pending: true,
   in_progress: true,
@@ -39,7 +41,7 @@ it.each(
       sessionUpdate: 'tool_call_update',
       toolCallId: 'tool-1',
       kind: 'execute',
-      title: 'Run command',
+      title: commandTitle,
       status,
       content: [],
     });
@@ -117,7 +119,7 @@ it.each(actionCases)(
       sessionUpdate: 'tool_call_update',
       toolCallId: 'tool-1',
       kind: 'execute',
-      title: 'Run command',
+      title: commandTitle,
       status: 'completed',
       content: [],
       _meta: { argo: { commandActions: actions } },
@@ -138,7 +140,7 @@ it('returns no command actions when the Tool call has no extension metadata', ()
     sessionUpdate: 'tool_call_update',
     toolCallId: 'tool-1',
     kind: 'execute',
-    title: 'Run command',
+    title: commandTitle,
     status: 'completed',
     content: [],
   });

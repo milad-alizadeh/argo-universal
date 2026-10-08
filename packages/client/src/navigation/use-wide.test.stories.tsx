@@ -2,6 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect } from 'storybook/test';
 import { WideMock } from '../../mocks/wide-mock';
 
+const wideBreakpointLabel = 'Wide breakpoint';
+
 const meta = {
   title: 'Tests/UseWide',
   component: WideMock,
@@ -23,24 +25,24 @@ export const UpdatesAt720Pixels: Story = {
     await expect(
       await canvas.findByText('Phone layout', {}, layoutUpdate),
     ).toBeVisible();
-    await expect(canvas.getByText('Wide breakpoint')).not.toBeVisible();
+    await expect(canvas.getByText(wideBreakpointLabel)).not.toBeVisible();
 
     await page.viewport(720, 900);
     await expect(
       await canvas.findByText('Wide layout', {}, layoutUpdate),
     ).toBeVisible();
-    await expect(canvas.getByText('Wide breakpoint')).toBeVisible();
+    await expect(canvas.getByText(wideBreakpointLabel)).toBeVisible();
 
     await page.viewport(721, 900);
     await expect(
       await canvas.findByText('Wide layout', {}, layoutUpdate),
     ).toBeVisible();
-    await expect(canvas.getByText('Wide breakpoint')).toBeVisible();
+    await expect(canvas.getByText(wideBreakpointLabel)).toBeVisible();
 
     await page.viewport(719, 900);
     await expect(
       await canvas.findByText('Phone layout', {}, layoutUpdate),
     ).toBeVisible();
-    await expect(canvas.getByText('Wide breakpoint')).not.toBeVisible();
+    await expect(canvas.getByText(wideBreakpointLabel)).not.toBeVisible();
   },
 };

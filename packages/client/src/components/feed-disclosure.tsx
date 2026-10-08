@@ -12,6 +12,8 @@ import { Icon } from '../lib/icon';
 import { DisclosureCaret } from './disclosure-caret';
 import { ShimmerText } from './shimmer-text';
 
+const foregroundTextClassName = 'text-foreground';
+
 export interface FeedDisclosureProps {
   label: string;
   icon: PhosphorIcon;
@@ -52,7 +54,7 @@ export function FeedDisclosure({
             className={cn(
               'shrink-0 text-muted-foreground',
               failed && 'text-destructive',
-              hovered && 'text-foreground',
+              hovered && foregroundTextClassName,
             )}
           />
           <View className="min-w-0 shrink flex-row items-center gap-1">
@@ -68,7 +70,7 @@ export function FeedDisclosure({
                 selectable={false}
                 className={cn(
                   'min-w-0 shrink text-sm leading-5 text-muted-foreground',
-                  hovered && 'text-foreground',
+                  hovered && foregroundTextClassName,
                   awaitingApproval && 'text-warning',
                   denied && 'line-through',
                 )}
@@ -85,7 +87,7 @@ export function FeedDisclosure({
             )}
             <DisclosureCaret
               open={open}
-              className={hovered ? 'text-foreground' : undefined}
+              className={hovered ? foregroundTextClassName : undefined}
             />
           </View>
         </CollapsibleTrigger>

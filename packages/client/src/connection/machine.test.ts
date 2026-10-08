@@ -20,6 +20,9 @@ import {
 } from 'xstate/graph';
 import { type ConnectionInput, connectionMachine } from './machine';
 
+const connectionLostEvent = 'connection.lost';
+const connectionAttemptEvent = 'connection.attemptRequested';
+
 // Numbers written out so the model cannot grade itself.
 const offlineDelayMs = 10_000;
 const retryDelayMs = (attempts: number) =>
@@ -90,7 +93,7 @@ afterEach(() => {
 
 describe('connection model', () => {
   const payloads: Record<string, ConnectionEvent> = {
-    'connection.lost': { type: 'connection.lost', error: lostError },
+    'connection.lost': { type: connectionLostEvent, error: lostError },
   };
   const eventTypes = (node: DirectedGraphNode): string[] => [
     ...node.edges.map((edge) => edge.label.text),
@@ -130,11 +133,11 @@ describe('connection model', () => {
       expect(refetches).toBe(before.refetches + (before.down ? 1 : 0));
     },
     'connection.lost': () => {
-      watcher.send({ type: 'connection.lost', error: lostError });
+      watcher.send({ type: connectionLostEvent, error: lostError });
     },
     'connection.attemptRequested': (step) => {
       const before = allowedAttempts;
-      connection.send({ type: 'connection.attemptRequested' });
+      connection.send({ type: connectionAttemptEvent });
       // An attempt allowed at once leaves nothing waiting.
       expect(allowedAttempts).toBe(
         before + (attemptState(step.state) === 'idle' ? 1 : 0),
@@ -167,9 +170,9 @@ describe('connection model', () => {
   const shortestPaths = [
     ...model.getShortestPaths(),
     ...model.getPathsFromEvents([
-      { type: 'connection.attemptRequested' },
-      { type: 'connection.attemptRequested' },
-      { type: 'connection.lost', error: lostError },
+      { type: connectionAttemptEvent },
+      { type: connectionAttemptEvent },
+      { type: connectionLostEvent, error: lostError },
     ]),
   ];
   // Direct paths cover first-connect losses; simple paths cover later reconnect cycles.
@@ -177,7 +180,8 @@ describe('connection model', () => {
     filterEvents: (snapshot, event) =>
       snapshot.can(event) &&
       !(
-        linkState(snapshot) === 'connecting' && event.type === 'connection.lost'
+        linkState(snapshot) === 'connecting' &&
+        event.type === connectionLostEvent
       ),
   });
   const title = (path: TestPath<ConnectionSnapshot, ConnectionEvent>) =>
@@ -214,7 +218,7 @@ describe('connection model', () => {
 // The real timers, which the model sends as events.
 describe('connection', () => {
   const requestAttempt = () =>
-    connection.send({ type: 'connection.attemptRequested' });
+    connection.send({ type: connectionAttemptEvent });
 
   // Requests an attempt and returns how long the machine waited before it allowed it.
   const waitForAllowedAttempt = () => {
@@ -231,7 +235,7 @@ describe('connection', () => {
 
   const loseOpenConnection = () => {
     watcher.send({ type: 'connection.opened' });
-    watcher.send({ type: 'connection.lost', error: lostError });
+    watcher.send({ type: connectionLostEvent, error: lostError });
   };
 
   it('allows the first attempt at once', () => {
@@ -271,7 +275,7 @@ describe('connection', () => {
 
   it('a loss before the first open goes offline after offlineDelay', () => {
     startConnection();
-    watcher.send({ type: 'connection.lost', error: lostError });
+    watcher.send({ type: connectionLostEvent, error: lostError });
 
     expect(linkState(connection.getSnapshot())).toBe('reconnecting');
     vi.advanceTimersByTime(offlineDelayMs - 1);
@@ -322,7 +326,7 @@ describe('connection', () => {
     loseOpenConnection();
 
     vi.advanceTimersByTime(offlineDelayMs - 1);
-    watcher.send({ type: 'connection.lost', error: lostError });
+    watcher.send({ type: connectionLostEvent, error: lostError });
     vi.advanceTimersByTime(1);
 
     expect(linkState(connection.getSnapshot())).toBe('offline');

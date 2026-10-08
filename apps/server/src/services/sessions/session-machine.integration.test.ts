@@ -36,6 +36,25 @@ import { sendSessionCommand } from './session-command';
 import { type SessionMachineInput, sessionMachine } from './session-machine';
 import { toSessionSnapshot } from './session-snapshot';
 
+const rejectedAgentMessageEvent = 'agent.messageRejected';
+const unknownVendorMessageReason = 'Unknown vendor message';
+const agentFeedEvent = 'agent.feed';
+const sessionPromptEvent = 'session.prompt';
+const agentPromptEvent = 'agent.prompt';
+const agentTurnEndedEvent = 'agent.turnEnded';
+const agentPermissionRequestedEvent = 'agent.permissionRequested';
+const agentElicitationRequestedEvent = 'agent.elicitationRequested';
+const fileQuestion = 'Which file?';
+const answerPermissionEvent = 'session.answerPermission';
+const answerElicitationEvent = 'session.answerElicitation';
+const cancelSessionEvent = 'session.cancel';
+const closeSessionEvent = 'session.close';
+const agentUsageEvent = 'agent.usage';
+const setSessionConfigOptionEvent = 'session.setConfigOption';
+const agentConfigOptionsChangedEvent = 'agent.configOptionsChanged';
+const setAgentConfigOptionEvent = 'agent.setConfigOption';
+const modelRequestId = 'request-model';
+
 const cleanups: (() => void)[] = [];
 // The model paths' actors, stopped after each path.
 const actors: { stop: () => void }[] = [];
@@ -109,14 +128,14 @@ it('keeps the Session running while rejected messages show warning Notices', asy
   const { session, service, stream } = await openSession();
   sendSessionCommand(session, firstPrompt);
   stream.send({
-    type: 'agent.messageRejected',
-    reason: 'Unknown vendor message',
+    type: rejectedAgentMessageEvent,
+    reason: unknownVendorMessageReason,
   });
   stream.send({
-    type: 'agent.messageRejected',
+    type: rejectedAgentMessageEvent,
     reason: 'Another unknown message',
   });
-  stream.send({ type: 'agent.feed', change: messageChange('settled') });
+  stream.send({ type: agentFeedEvent, change: messageChange('settled') });
   const { rows } = await vi.waitFor((): ReturnType<typeof service.page> => {
     const page = service.page({
       sessionId: 'session-1',
@@ -134,7 +153,7 @@ it('keeps the Session running while rejected messages show warning Notices', asy
     expect.objectContaining({
       severity: 'warning',
       title: 'The Agent sent an unrecognised message',
-      description: 'Unknown vendor message',
+      description: unknownVendorMessageReason,
     }),
     expect.objectContaining({
       severity: 'warning',
@@ -165,7 +184,7 @@ it('keeps the Session running while rejected messages show warning Notices', asy
 it('runs one Turn and rejects a second prompt while it runs', async (): Promise<void> => {
   const { session, feed, service, commands, stream } = await openSession();
   sendSessionCommand(session, {
-    type: 'session.prompt',
+    type: sessionPromptEvent,
     turnId: 'turn-1',
     content: [{ type: 'text', text: 'Hello' }],
   });
@@ -185,19 +204,19 @@ it('runs one Turn and rejects a second prompt while it runs', async (): Promise<
   });
   await vi.waitFor((): void =>
     expect(commands).toContainEqual({
-      type: 'agent.prompt',
+      type: agentPromptEvent,
       turnId: 'turn-1',
       content: [{ type: 'text', text: 'Hello' }],
     }),
   );
   expect((): void =>
     sendSessionCommand(session, {
-      type: 'session.prompt',
+      type: sessionPromptEvent,
       turnId: 'turn-2',
       content: [],
     }),
   ).toThrow(expect.objectContaining({ code: 'CONFLICT' }));
-  stream.send({ type: 'agent.turnEnded', stopReason: 'end_turn' });
+  stream.send({ type: agentTurnEndedEvent, stopReason: 'end_turn' });
   expect(
     toSessionSnapshot(
       session.getSnapshot(),
@@ -215,16 +234,16 @@ it('answers only the head Permission request and keeps other requests visible', 
     title: 'Read a file',
     options: permissionOptions,
   };
-  stream.send({ type: 'agent.permissionRequested', request });
+  stream.send({ type: agentPermissionRequestedEvent, request });
   stream.send({
-    type: 'agent.permissionRequested',
+    type: agentPermissionRequestedEvent,
     request: { ...request, toolCallId: 'tool-2' },
   });
   stream.send({
-    type: 'agent.elicitationRequested',
+    type: agentElicitationRequestedEvent,
     request: {
       mode: 'form',
-      message: 'Which file?',
+      message: fileQuestion,
       requestedSchema: { properties: {} },
     },
   });
@@ -237,17 +256,17 @@ it('answers only the head Permission request and keeps other requests visible', 
   ).toMatchObject({
     state: 'requires_action',
     pendingPermission: request,
-    pendingElicitation: { message: 'Which file?' },
+    pendingElicitation: { message: fileQuestion },
   });
   expect((): void =>
     sendSessionCommand(session, {
-      type: 'session.answerPermission',
+      type: answerPermissionEvent,
       toolCallId: 'tool-2',
       optionId: 'allow_once' as const,
     }),
   ).toThrow(expect.objectContaining({ code: 'CONFLICT' }));
   sendSessionCommand(session, {
-    type: 'session.answerPermission',
+    type: answerPermissionEvent,
     toolCallId: 'tool-1',
     optionId: 'allow_once' as const,
   });
@@ -262,7 +281,7 @@ it('answers only the head Permission request and keeps other requests visible', 
     pendingPermission: { toolCallId: 'tool-2' },
   });
   sendSessionCommand(session, {
-    type: 'session.answerPermission',
+    type: answerPermissionEvent,
     toolCallId: 'tool-2',
     optionId: 'allow_once' as const,
   });
@@ -274,7 +293,7 @@ it('answers only the head Permission request and keeps other requests visible', 
     ),
   ).toMatchObject({ state: 'requires_action', pendingPermission: null });
   sendSessionCommand(session, {
-    type: 'session.answerElicitation',
+    type: answerElicitationEvent,
     action: 'accept',
     content: { file: 'README.md' },
   });
@@ -294,7 +313,7 @@ it('answers only the head Permission request and keeps other requests visible', 
   );
   expect((): void =>
     sendSessionCommand(session, {
-      type: 'session.answerElicitation',
+      type: answerElicitationEvent,
       action: 'decline',
     }),
   ).toThrow(expect.objectContaining({ code: 'CONFLICT' }));
@@ -304,7 +323,7 @@ it('cancels queued requests and waits for the Agent to end the Turn', async (): 
   const { session, feed, commands, stream } = await openSession();
   sendSessionCommand(session, firstPrompt);
   stream.send({
-    type: 'agent.permissionRequested',
+    type: agentPermissionRequestedEvent,
     request: {
       toolCallId: 'tool-1',
       title: 'Run a command',
@@ -312,14 +331,14 @@ it('cancels queued requests and waits for the Agent to end the Turn', async (): 
     },
   });
   stream.send({
-    type: 'agent.elicitationRequested',
+    type: agentElicitationRequestedEvent,
     request: {
       mode: 'form',
       message: 'Continue?',
       requestedSchema: { properties: {} },
     },
   });
-  sendSessionCommand(session, { type: 'session.cancel' });
+  sendSessionCommand(session, { type: cancelSessionEvent });
   await vi.waitFor((): void =>
     expect(commands).toEqual(
       expect.arrayContaining([
@@ -346,7 +365,7 @@ it('cancels queued requests and waits for the Agent to end the Turn', async (): 
     pendingElicitation: null,
     pendingPlanProposal: null,
   });
-  stream.send({ type: 'agent.turnEnded', stopReason: 'cancelled' });
+  stream.send({ type: agentTurnEndedEvent, stopReason: 'cancelled' });
   expect(
     toSessionSnapshot(
       session.getSnapshot(),
@@ -359,8 +378,8 @@ it('cancels queued requests and waits for the Agent to end the Turn', async (): 
 it('flushes Feed changes when closing and ends with no failure', async (): Promise<void> => {
   const { session, service, stream } = await openSession();
   sendSessionCommand(session, firstPrompt);
-  stream.send({ type: 'agent.feed', change: messageChange('open') });
-  sendSessionCommand(session, { type: 'session.close' });
+  stream.send({ type: agentFeedEvent, change: messageChange('open') });
+  sendSessionCommand(session, { type: closeSessionEvent });
   await waitFor(
     session,
     (snapshot): snapshot is Extract<typeof snapshot, { status: 'done' }> =>
@@ -378,9 +397,9 @@ it('flushes Feed changes when closing and ends with no failure', async (): Promi
 it('keeps a settled row in its original position when the Agent changes it later', async (): Promise<void> => {
   const { session, service, stream } = await openSession();
   sendSessionCommand(session, firstPrompt);
-  stream.send({ type: 'agent.feed', change: messageChange('settled') });
+  stream.send({ type: agentFeedEvent, change: messageChange('settled') });
   stream.send({
-    type: 'agent.feed',
+    type: agentFeedEvent,
     change: {
       type: 'patch',
       id: 'reply',
@@ -401,13 +420,13 @@ it('streams Session snapshots only when their projected value changes', async ()
     type: 'snapshot',
     snapshot: { state: 'idle', maxRevision: 0 },
   });
-  stream.send({ type: 'agent.usage', usage: { used: 10, size: 100 } });
+  stream.send({ type: agentUsageEvent, usage: { used: 10, size: 100 } });
   expect((await updates.next()).value).toMatchObject({
     type: 'snapshot',
     snapshot: { usage: { used: 10, size: 100 } },
   });
-  stream.send({ type: 'agent.usage', usage: { used: 10, size: 100 } });
-  stream.send({ type: 'agent.usage', usage: { used: 20, size: 100 } });
+  stream.send({ type: agentUsageEvent, usage: { used: 10, size: 100 } });
+  stream.send({ type: agentUsageEvent, usage: { used: 20, size: 100 } });
   expect((await updates.next()).value).toMatchObject({
     type: 'snapshot',
     snapshot: { usage: { used: 20, size: 100 } },
@@ -454,7 +473,7 @@ it('recovers when cancellation times out and writes a Notice for the Turn', asyn
   vi.useFakeTimers();
   const { session, service } = await openSession();
   sendSessionCommand(session, firstPrompt);
-  sendSessionCommand(session, { type: 'session.cancel' });
+  sendSessionCommand(session, { type: cancelSessionEvent });
   await vi.advanceTimersByTimeAsync(10_000);
   expect(
     service.row({ sessionId: 'session-1', id: 'turn-1:cancel-timeout' }),
@@ -465,7 +484,7 @@ it('recovers when cancellation times out and writes a Notice for the Turn', asyn
   });
   expect((): void =>
     sendSessionCommand(session, {
-      type: 'session.prompt',
+      type: sessionPromptEvent,
       turnId: 'turn-2',
       content: [],
     }),
@@ -473,7 +492,7 @@ it('recovers when cancellation times out and writes a Notice for the Turn', asyn
   await vi.advanceTimersByTimeAsync(1000);
   expect((): void =>
     sendSessionCommand(session, {
-      type: 'session.prompt',
+      type: sessionPromptEvent,
       turnId: 'turn-2',
       content: [],
     }),
@@ -514,7 +533,7 @@ it('keeps the latest held choices through updates and cancellation, then applies
   sendSessionCommand(session, firstPrompt);
   await expect
     .poll((): AgentCommand[] => commands)
-    .toEqual([{ ...firstPrompt, type: 'agent.prompt' }]);
+    .toEqual([{ ...firstPrompt, type: agentPromptEvent }]);
   for (const [configId, value] of [
     ['model', 'large'],
     ['mode', 'plan'],
@@ -522,12 +541,12 @@ it('keeps the latest held choices through updates and cancellation, then applies
     ['model', 'large'],
   ] as const)
     sendSessionCommand(session, {
-      type: 'session.setConfigOption',
+      type: setSessionConfigOptionEvent,
       configId,
       value,
     });
   stream.send({
-    type: 'agent.configOptionsChanged',
+    type: agentConfigOptionsChangedEvent,
     configOptions: options.map((option): typeof option => ({
       ...option,
       name: `Renamed ${option.name}`,
@@ -541,30 +560,30 @@ it('keeps the latest held choices through updates and cancellation, then applies
     },
     { currentValue: 'plan', _meta: { argo: { heldUntilNextTurn: true } } },
   ]);
-  expect(commands).toEqual([{ ...firstPrompt, type: 'agent.prompt' }]);
-  sendSessionCommand(session, { type: 'session.cancel' });
+  expect(commands).toEqual([{ ...firstPrompt, type: agentPromptEvent }]);
+  sendSessionCommand(session, { type: cancelSessionEvent });
   sendSessionCommand(session, {
-    type: 'session.setConfigOption',
+    type: setSessionConfigOptionEvent,
     configId: 'mode',
     value: 'auto',
   });
-  stream.send({ type: 'agent.turnEnded', stopReason: 'cancelled' });
+  stream.send({ type: agentTurnEndedEvent, stopReason: 'cancelled' });
   sendSessionCommand(session, {
-    type: 'session.prompt',
+    type: sessionPromptEvent,
     turnId: 'turn-2',
     content: [],
   });
   await expect
     .poll((): AgentCommand[] => commands)
     .toEqual([
-      { ...firstPrompt, type: 'agent.prompt' },
+      { ...firstPrompt, type: agentPromptEvent },
       { type: 'agent.cancel' },
-      { type: 'agent.setConfigOption', configId: 'model', value: 'large' },
-      { type: 'agent.setConfigOption', configId: 'mode', value: 'auto' },
-      { type: 'agent.prompt', turnId: 'turn-2', content: [] },
+      { type: setAgentConfigOptionEvent, configId: 'model', value: 'large' },
+      { type: setAgentConfigOptionEvent, configId: 'mode', value: 'auto' },
+      { type: agentPromptEvent, turnId: 'turn-2', content: [] },
     ]);
   expect(session.getSnapshot().context.heldConfigValues).toEqual([]);
-  stream.send({ type: 'agent.configOptionsChanged', configOptions: options });
+  stream.send({ type: agentConfigOptionsChangedEvent, configOptions: options });
   expect(session.getSnapshot().context.configOptions).toMatchObject([
     { currentValue: 'small' },
     { currentValue: 'auto' },
@@ -574,7 +593,7 @@ it('keeps the latest held choices through updates and cancellation, then applies
       ?.heldUntilNextTurn,
   ).not.toBe(true);
   stream.send({
-    type: 'agent.configOptionsChanged',
+    type: agentConfigOptionsChangedEvent,
     configOptions: options.map((option): typeof option => ({
       ...option,
       currentValue: option.configId === 'model' ? 'large' : 'auto',
@@ -594,7 +613,7 @@ it('closes after the Agent stop limit even when the Agent does not stop', async 
   const { session } = await openSession({
     stop: (): Promise<void> => new Promise((): void => {}),
   });
-  sendSessionCommand(session, { type: 'session.close' });
+  sendSessionCommand(session, { type: closeSessionEvent });
   await vi.advanceTimersByTimeAsync(4999);
   expect(session.getSnapshot().status).toBe('active');
   await vi.advanceTimersByTimeAsync(1);
@@ -662,34 +681,34 @@ const events = [
   { type: 'xstate.error.actor.loadSession', error: 'Could not load' },
   { type: 'xstate.error.actor.feed', error: 'Feed failed' },
   ready,
-  { type: 'session.prompt', turnId: 'turn-1', content: [] },
-  { type: 'session.setConfigOption', configId: 'mode', value: 'plan' },
+  { type: sessionPromptEvent, turnId: 'turn-1', content: [] },
+  { type: setSessionConfigOptionEvent, configId: 'mode', value: 'plan' },
   {
-    type: 'agent.permissionRequested',
+    type: agentPermissionRequestedEvent,
     request: {
       toolCallId: 'tool-1',
       title: 'Read',
       options: permissionOptions,
     },
   },
-  { type: 'session.answerPermission', toolCallId: 'tool-1', optionId: null },
+  { type: answerPermissionEvent, toolCallId: 'tool-1', optionId: null },
   {
-    type: 'agent.elicitationRequested',
+    type: agentElicitationRequestedEvent,
     request: {
       mode: 'form',
-      message: 'Which file?',
+      message: fileQuestion,
       requestedSchema: { properties: {} },
     },
   },
-  { type: 'session.answerElicitation', action: 'cancel' },
-  { type: 'agent.turnEnded', stopReason: 'end_turn' },
-  { type: 'session.cancel' },
-  { type: 'session.close' },
-  { type: 'agent.usage', usage: { used: 10, size: 100 } },
-  { type: 'agent.messageRejected', reason: 'Unknown vendor message' },
-  { type: 'agent.configOptionsChanged', configOptions: [] },
+  { type: answerElicitationEvent, action: 'cancel' },
+  { type: agentTurnEndedEvent, stopReason: 'end_turn' },
+  { type: cancelSessionEvent },
+  { type: closeSessionEvent },
+  { type: agentUsageEvent, usage: { used: 10, size: 100 } },
+  { type: rejectedAgentMessageEvent, reason: unknownVendorMessageReason },
+  { type: agentConfigOptionsChangedEvent, configOptions: [] },
   {
-    type: 'agent.feed',
+    type: agentFeedEvent,
     change: {
       type: 'upsert',
       update: {
@@ -734,7 +753,7 @@ const models = (['new', 'existing'] as const).map(
               runtimeDirectory,
               adapter,
               now: (): number => 1000,
-              createId: (): string => 'request-model',
+              createId: (): string => modelRequestId,
               kind,
               sessionId: 'session-1',
             }
@@ -743,7 +762,7 @@ const models = (['new', 'existing'] as const).map(
               runtimeDirectory,
               adapter,
               now: (): number => 1000,
-              createId: (): string => 'request-model',
+              createId: (): string => modelRequestId,
               kind,
               sessionId: 'session-1',
               projectId: 'project-1',
@@ -759,7 +778,7 @@ const models = (['new', 'existing'] as const).map(
       filterEvents: (snapshot, event): boolean =>
         snapshot.status === 'active' &&
         snapshot.can(event) &&
-        (event.type !== 'agent.permissionRequested' ||
+        (event.type !== agentPermissionRequestedEvent ||
           snapshot.context.permissionQueue.length < 2),
       serializeState: (snapshot, event, previous): string =>
         JSON.stringify({
@@ -823,17 +842,17 @@ it.each(
             else sessionActor.send(event);
             await vi.advanceTimersByTimeAsync(0);
             if (
-              event.type === 'session.prompt' &&
+              event.type === sessionPromptEvent &&
               before.can(event) &&
               before.context.heldConfigValues.length
             )
               expect(modelCommands.slice(commandIndex)).toEqual([
                 {
-                  type: 'agent.setConfigOption',
+                  type: setAgentConfigOptionEvent,
                   configId: 'mode',
                   value: 'plan',
                 },
-                { ...event, type: 'agent.prompt' },
+                { ...event, type: agentPromptEvent },
               ]);
             if (String(event.type) === 'xstate.error.actor.feed')
               expect(sessionActor.getSnapshot().output).toEqual({
@@ -871,7 +890,7 @@ it.each(
             ...projection,
             pendingElicitation: projection.pendingElicitation && {
               ...projection.pendingElicitation,
-              requestId: 'request-model',
+              requestId: modelRequestId,
             },
             liveHeader: liveHeader && {
               ...liveHeader,
@@ -943,10 +962,10 @@ it('attaches live Feed updates when a subscription starts while the Session load
     snapshot: { maxRevision: 0 },
   });
   await waitFor(sessionActor, (snapshot): boolean =>
-    snapshot.can({ type: 'session.prompt', turnId: 'turn-1', content: [] }),
+    snapshot.can({ type: sessionPromptEvent, turnId: 'turn-1', content: [] }),
   );
   sendSessionCommand(sessionActor, {
-    type: 'session.prompt',
+    type: sessionPromptEvent,
     turnId: 'turn-1',
     content: [],
   });

@@ -10,6 +10,8 @@ import { Text } from '#primitives/text';
 import { layoutWidths } from '../../mocks/each-layout';
 import { settleViewport } from '../../mocks/settle-viewport';
 
+const animatedDetailId = 'animated-detail';
+
 const meta = { title: 'Tests/Collapsible' } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -21,7 +23,7 @@ function animatedDisclosure(width: number): Story {
         <CollapsibleTrigger accessibilityLabel="Toggle details">
           <Text>Toggle details</Text>
         </CollapsibleTrigger>
-        <CollapsibleContent testID="animated-detail">
+        <CollapsibleContent testID={animatedDetailId}>
           <View className="h-32">
             <Text>Tool call detail</Text>
           </View>
@@ -32,10 +34,10 @@ function animatedDisclosure(width: number): Story {
       await settleViewport(width);
       const trigger = canvas.getByRole('button', { name: 'Toggle details' });
       await expect(
-        canvas.queryByTestId('animated-detail'),
+        canvas.queryByTestId(animatedDetailId),
       ).not.toBeInTheDocument();
       await userEvent.click(trigger);
-      const detail = canvas.getByTestId('animated-detail');
+      const detail = canvas.getByTestId(animatedDetailId);
       const opening = await heightsDuringTransition(detail);
       await expect(opening.some((height) => height > 0 && height < 128)).toBe(
         true,
@@ -50,7 +52,7 @@ function animatedDisclosure(width: number): Story {
         true,
       );
       await waitFor(() =>
-        expect(canvas.queryByTestId('animated-detail')).not.toBeInTheDocument(),
+        expect(canvas.queryByTestId(animatedDetailId)).not.toBeInTheDocument(),
       );
     },
   };

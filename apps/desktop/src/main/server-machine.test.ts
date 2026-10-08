@@ -25,6 +25,9 @@ import {
   serverConnectionMachine,
 } from './server-machine';
 
+const supervisorExitedEvent = 'server.exited';
+const retryServerEvent = 'server.retry';
+
 // Numbers written out so the model cannot grade itself.
 const pollDelayMs = 200;
 const startLimitMs = 30_000;
@@ -145,7 +148,7 @@ const reportSpawned = (): void =>
   });
 const reportExited = (): void =>
   latest(spawnCalls).input.parent.send({
-    type: 'server.exited',
+    type: supervisorExitedEvent,
     reason: exitReason,
   });
 
@@ -209,7 +212,7 @@ describe('server connection model', (): void => {
     'server.spawned': [
       { type: 'server.spawned', pid: startedAddress.pid, at: spawnedAt },
     ],
-    'server.exited': [{ type: 'server.exited', reason: exitReason }],
+    'server.exited': [{ type: supervisorExitedEvent, reason: exitReason }],
   };
   const eventTypes = (node: DirectedGraphNode): string[] => [
     ...node.edges.map((edge): string => edge.label.text),
@@ -290,7 +293,7 @@ describe('server connection model', (): void => {
       ),
     'server.spawned': reportSpawned,
     'server.exited': reportExited,
-    'server.retry': (): void => server.send({ type: 'server.retry' }),
+    'server.retry': (): void => server.send({ type: retryServerEvent }),
     'app.quit': (): void => server.send({ type: 'app.quit' }),
     ...Object.fromEntries(
       types
@@ -413,9 +416,9 @@ describe('server connection', (): void => {
   it('announces each Server startup failure once', async (): Promise<void> => {
     await abandonStuckSupervisor();
     expect(failures).toEqual([context().failure]);
-    server.send({ type: 'server.exited', reason: 'Late exit' });
+    server.send({ type: supervisorExitedEvent, reason: 'Late exit' });
     expect(failures).toHaveLength(1);
-    server.send({ type: 'server.retry' });
+    server.send({ type: retryServerEvent });
     await vi.advanceTimersByTimeAsync(stopLimitMs);
     expect(failures).toHaveLength(2);
     expect(failures[1]).toBe(context().failure);
@@ -494,7 +497,7 @@ describe('server connection', (): void => {
   it('stops the last Supervisor on Retry before it starts over', async (): Promise<void> => {
     await abandonStuckSupervisor();
 
-    server.send({ type: 'server.retry' });
+    server.send({ type: retryServerEvent });
     expect(signalledPids).toEqual([startedAddress.pid, startedAddress.pid]);
     await vi.advanceTimersByTimeAsync(pollDelayMs);
     await settle((): void => latest(checkRunningCalls).resolve(false));
@@ -508,7 +511,7 @@ describe('server connection', (): void => {
   it('fails Retry again, spawning nothing, while the last Supervisor does not stop', async (): Promise<void> => {
     await abandonStuckSupervisor();
 
-    server.send({ type: 'server.retry' });
+    server.send({ type: retryServerEvent });
     await vi.advanceTimersByTimeAsync(stopLimitMs);
 
     expect(value()).toBe('failed');

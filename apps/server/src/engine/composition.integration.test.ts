@@ -61,6 +61,23 @@ import { sessionMachine } from '../services/sessions/session-machine';
 import type { HttpServerOptions } from './http-server';
 import { engineMachine } from './machine';
 
+const stopEngineEvent = 'engine.stop';
+const agentFeedEvent = 'agent.feed';
+const checkingTestsThought = 'Checking the tests';
+const secondRetryNotice = 'Retrying (2 of 5)';
+const firstListRejection = 'sessions: rejected list shape #1';
+const editingPrompt = 'Edit the files and run a command.';
+const writeFeedEvent = 'writer.write';
+const commandPrompt = 'Run the command';
+const missingPermissionRequestFailure = 'No Permission request';
+const answeredRequestFailure = 'already answered';
+const recordedAnswersFile = 'answers.jsonl';
+const twoQuestionsPrompt = 'Ask two questions';
+const missingElicitationFailure = 'No Elicitation';
+const waitingForAnswerPrompt = 'Wait for my answer';
+const brokenSessionId = 'session-broken';
+const unobservedTitle = 'Changed alone';
+
 type StoredColumnCase<Table, Column> = {
   agent: string;
   table: Table;
@@ -197,7 +214,7 @@ function startEngine({
     vi.useRealTimers();
     try {
       if (engine.getSnapshot().status !== 'done') {
-        engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
+        engine.send({ type: stopEngineEvent, reason: 'SIGTERM' });
         await waitFor(
           engine,
           (
@@ -280,7 +297,7 @@ it.each(liveHeaderMocks)(
         ...update
       } = row;
       stream?.send({
-        type: 'agent.feed',
+        type: agentFeedEvent,
         change: { type: 'upsert', update },
       });
     };
@@ -294,9 +311,9 @@ it.each(liveHeaderMocks)(
     });
     await expectActivity('Running pnpm test');
     sendRow(thought);
-    await expectActivity('Checking the tests');
+    await expectActivity(checkingTestsThought);
     sendRow(retry);
-    await expectActivity('Retrying (2 of 5)');
+    await expectActivity(secondRetryNotice);
     // Settled rows have left the Feed actor by now; a fresh subscription must retain the retry.
     const reconnect = (
       await caller.feed.subscribe({ sessionId: 'session-1', after: null })
@@ -305,7 +322,7 @@ it.each(liveHeaderMocks)(
       type: 'snapshot',
       snapshot: {
         liveHeader: {
-          text: 'Retrying (2 of 5)',
+          text: secondRetryNotice,
           source: { type: 'retry' },
           startedAt: expect.any(Number),
         },
@@ -313,7 +330,7 @@ it.each(liveHeaderMocks)(
     });
     for (const row of progress) {
       sendRow(retry);
-      await expectActivity('Retrying (2 of 5)');
+      await expectActivity(secondRetryNotice);
       sendRow(row);
       await expect
         .poll(async (): Promise<boolean> =>
@@ -325,10 +342,10 @@ it.each(liveHeaderMocks)(
           ).rows.some((stored): boolean => stored.id === row.id),
         )
         .toBe(true);
-      await expectActivity('Checking the tests');
+      await expectActivity(checkingTestsThought);
     }
     sendRow({ ...command, status: 'completed', state: 'settled' });
-    await expectActivity('Checking the tests');
+    await expectActivity(checkingTestsThought);
     stream?.send({
       type: 'agent.permissionRequested',
       request: {
@@ -526,7 +543,7 @@ it.each(agentAdapters.map(({ agent }): string => agent))(
       'healthy',
     ]);
     expect(reported).toHaveBeenCalledWith(
-      'sessions: rejected list shape #1',
+      firstListRejection,
       expect.anything(),
     );
   },
@@ -561,7 +578,7 @@ it.each(agentAdapters.map(({ agent }): string => agent))(
       'healthy',
     ]);
     expect(reported).toHaveBeenCalledWith(
-      'sessions: rejected list shape #1',
+      firstListRejection,
       expect.anything(),
     );
   },
@@ -576,7 +593,7 @@ it('serves live Session procedures and drains their Feed before closing the data
       stream.receive((command): void => {
         if (command.type === 'agent.prompt')
           stream.send({
-            type: 'agent.feed',
+            type: agentFeedEvent,
             change: {
               type: 'upsert',
               update: {
@@ -611,7 +628,7 @@ it('serves live Session procedures and drains their Feed before closing the data
   ).toMatchObject({
     content: [{ type: 'text', text: 'Hello from the Agent' }],
   });
-  engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
+  engine.send({ type: stopEngineEvent, reason: 'SIGTERM' });
   await waitFor(
     engine,
     (snapshot): snapshot is Extract<typeof snapshot, { status: 'done' }> =>
@@ -663,7 +680,7 @@ it.each(agentAdapters)(
     const caller = await createCaller();
     const { messageId } = await caller.session.prompt({
       sessionId: 'session-1',
-      prompt: [{ type: 'text', text: 'Edit the files and run a command.' }],
+      prompt: [{ type: 'text', text: editingPrompt }],
     });
     await expect
       .poll(
@@ -680,7 +697,7 @@ it.each(agentAdapters)(
         { timeout: 10000 },
       )
       .toBe(true);
-    engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
+    engine.send({ type: stopEngineEvent, reason: 'SIGTERM' });
     await waitFor(
       engine,
       (snapshot): snapshot is Extract<typeof snapshot, { status: 'done' }> =>
@@ -693,7 +710,7 @@ it.each(agentAdapters)(
     expect(rows[0]).toMatchObject({
       id: messageId,
       sessionUpdate: 'user_message',
-      content: [{ type: 'text', text: 'Edit the files and run a command.' }],
+      content: [{ type: 'text', text: editingPrompt }],
     });
     expect(
       rows.filter(
@@ -811,7 +828,7 @@ it('sends live list changes and attention/running counts through request and Tur
   >;
   for (const sessionId of ['archived', 'subagent'])
     writer.send({
-      type: 'writer.write',
+      type: writeFeedEvent,
       job: {
         type: 'turnInsert',
         turn: { id: `turn-${sessionId}`, sessionId, status: 'running' },
@@ -838,7 +855,7 @@ it('sends live list changes and attention/running counts through request and Tur
     activity: 'Run a command',
   });
   stream?.send({
-    type: 'agent.feed',
+    type: agentFeedEvent,
     change: {
       type: 'upsert',
       update: {
@@ -905,7 +922,7 @@ it('seeds the Project from ARGO_PROJECT_PATH at Engine startup', async (): Promi
         ? { type: 'main' }
         : { type: 'worktree', baseBranch: currentBranch },
   });
-  engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
+  engine.send({ type: stopEngineEvent, reason: 'SIGTERM' });
   await waitFor(
     engine,
     (snapshot): snapshot is Extract<typeof snapshot, { status: 'done' }> =>
@@ -1003,7 +1020,7 @@ it('publishes stored list changes, changes counts only when needed, and aborts a
   >;
   const waitingCounts = counts.next();
   writer.send({
-    type: 'writer.write',
+    type: writeFeedEvent,
     job: {
       type: 'sessionRowUpdate',
       id: 'session-1',
@@ -1015,7 +1032,7 @@ it('publishes stored list changes, changes counts only when needed, and aborts a
     session: { title: 'Renamed' },
   });
   writer.send({
-    type: 'writer.write',
+    type: writeFeedEvent,
     job: {
       type: 'sessionRowUpdate',
       id: 'session-1',
@@ -1154,7 +1171,7 @@ for (const adapter of agentAdapters)
           agent: adapter.agent,
           checkout: { type: 'main' },
           configOptions: [],
-          prompt: [{ type: 'text', text: 'Run the command' }],
+          prompt: [{ type: 'text', text: commandPrompt }],
         });
         await expect
           .poll(
@@ -1165,7 +1182,7 @@ for (const adapter of agentAdapters)
           .not.toBeNull();
         const request = (await readSnapshot(root.createCaller, sessionId))
           .pendingPermission;
-        if (!request) throw new Error('No Permission request');
+        if (!request) throw new Error(missingPermissionRequestFailure);
         expect(request.options).toEqual(permissionOptions);
         const answer = {
           sessionId,
@@ -1177,7 +1194,7 @@ for (const adapter of agentAdapters)
           caller.session.answerPermission(answer),
         ).rejects.toMatchObject({
           code: 'CONFLICT',
-          message: 'already answered',
+          message: answeredRequestFailure,
         });
         await expect
           .poll(
@@ -1232,7 +1249,7 @@ it.each(
     const created = listed.find((row): boolean => row.sessionId === sessionId);
     expect(created).toMatchObject({
       agent: adapter.agent,
-      title: 'Edit the files and run a command.',
+      title: editingPrompt,
       titleSource: 'prompt',
       checkout:
         checkout.type === 'main'
@@ -1286,7 +1303,7 @@ it.each(
         model: expect.any(String),
       }),
     ]);
-    engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
+    engine.send({ type: stopEngineEvent, reason: 'SIGTERM' });
     await waitFor(
       engine,
       (snapshot): snapshot is Extract<typeof snapshot, { status: 'done' }> =>
@@ -1449,7 +1466,7 @@ it.each(
     const root = await startNewSessionEngine(adapter, {
       recording: 'permission',
     });
-    const file = path.join(root.home, 'answers.jsonl');
+    const file = path.join(root.home, recordedAnswersFile);
     stubScenario({ requestAnswersFile: file });
     const caller = await root.createCaller();
     const { sessionId } = await caller.session.new({
@@ -1457,7 +1474,7 @@ it.each(
       agent: adapter.agent,
       checkout: { type: 'main' },
       configOptions: [],
-      prompt: [{ type: 'text', text: 'Run the command' }],
+      prompt: [{ type: 'text', text: commandPrompt }],
     });
     await expect
       .poll(
@@ -1467,7 +1484,7 @@ it.each(
       .not.toBeNull();
     const pending = (await readSnapshot(root.createCaller, sessionId))
       .pendingPermission;
-    if (!pending) throw new Error('No Permission request');
+    if (!pending) throw new Error(missingPermissionRequestFailure);
     const session = root.engine.system.get(`session:${sessionId}`) as
       | SessionActorRef
       | undefined;
@@ -1525,7 +1542,7 @@ it.each(
     const root = await startNewSessionEngine(adapter, {
       recording: 'permission',
     });
-    const file = path.join(root.home, 'answers.jsonl');
+    const file = path.join(root.home, recordedAnswersFile);
     stubScenario({ requestAnswersFile: file });
     const caller = await root.createCaller();
     const { sessionId } = await caller.session.new({
@@ -1533,7 +1550,7 @@ it.each(
       agent: adapter.agent,
       checkout: { type: 'main' },
       configOptions: [],
-      prompt: [{ type: 'text', text: 'Run the command' }],
+      prompt: [{ type: 'text', text: commandPrompt }],
     });
     await expect
       .poll(
@@ -1543,7 +1560,7 @@ it.each(
       .not.toBeNull();
     const pending = (await readSnapshot(root.createCaller, sessionId))
       .pendingPermission;
-    if (!pending) throw new Error('No Permission request');
+    if (!pending) throw new Error(missingPermissionRequestFailure);
     await expect(
       caller.session.answerPermission({
         sessionId,
@@ -1582,7 +1599,7 @@ for (const adapter of agentAdapters)
     `answers a ${adapter.agent} other-thread $recording request; skipped where requests have no thread id`,
     async ({ recording, expected }): Promise<void> => {
       const root = await startNewSessionEngine(adapter, { recording });
-      const file = path.join(root.home, 'answers.jsonl');
+      const file = path.join(root.home, recordedAnswersFile);
       stubScenario({ otherThreadRequest: true, requestAnswersFile: file });
       const caller = await root.createCaller();
       const { sessionId } = await caller.session.new({
@@ -1616,7 +1633,7 @@ it.each(agentAdapters)(
     const root = await startNewSessionEngine(adapter, {
       recording: 'elicitation',
     });
-    const file = path.join(root.home, 'answers.jsonl');
+    const file = path.join(root.home, recordedAnswersFile);
     stubScenario({ concurrentQuestions: true, requestAnswersFile: file });
     const caller = await root.createCaller();
     const { sessionId } = await caller.session.new({
@@ -1624,7 +1641,7 @@ it.each(agentAdapters)(
       agent: adapter.agent,
       checkout: { type: 'main' },
       configOptions: [],
-      prompt: [{ type: 'text', text: 'Ask two questions' }],
+      prompt: [{ type: 'text', text: twoQuestionsPrompt }],
     });
     await expect
       .poll(
@@ -1659,7 +1676,7 @@ it.each(agentAdapters)(
     const root = await startNewSessionEngine(adapter, {
       recording: 'elicitation',
     });
-    const file = path.join(root.home, 'answers.jsonl');
+    const file = path.join(root.home, recordedAnswersFile);
     stubScenario({ concurrentQuestions: true, requestAnswersFile: file });
     const caller = await root.createCaller();
     const { sessionId } = await caller.session.new({
@@ -1667,7 +1684,7 @@ it.each(agentAdapters)(
       agent: adapter.agent,
       checkout: { type: 'main' },
       configOptions: [],
-      prompt: [{ type: 'text', text: 'Ask two questions' }],
+      prompt: [{ type: 'text', text: twoQuestionsPrompt }],
     });
     await expect
       .poll(
@@ -1675,7 +1692,7 @@ it.each(agentAdapters)(
           (await readSnapshot(root.createCaller, sessionId)).pendingElicitation,
       )
       .not.toBeNull();
-    root.engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
+    root.engine.send({ type: stopEngineEvent, reason: 'SIGTERM' });
     await waitFor(
       root.engine,
       (snapshot): snapshot is Extract<typeof snapshot, { status: 'done' }> =>
@@ -1698,7 +1715,7 @@ it.each(agentAdapters)(
     const root = await startNewSessionEngine(adapter, {
       recording: 'elicitation',
     });
-    const file = path.join(root.home, 'answers.jsonl');
+    const file = path.join(root.home, recordedAnswersFile);
     stubScenario({ concurrentQuestions: true, requestAnswersFile: file });
     const caller = await root.createCaller();
     const { sessionId } = await caller.session.new({
@@ -1706,7 +1723,7 @@ it.each(agentAdapters)(
       agent: adapter.agent,
       checkout: { type: 'main' },
       configOptions: [],
-      prompt: [{ type: 'text', text: 'Ask two questions' }],
+      prompt: [{ type: 'text', text: twoQuestionsPrompt }],
     });
     await expect
       .poll(
@@ -1774,7 +1791,7 @@ it.each(agentAdapters)(
     const root = await startNewSessionEngine(adapter, {
       recording: 'elicitation',
     });
-    const file = path.join(root.home, 'answers.jsonl');
+    const file = path.join(root.home, recordedAnswersFile);
     stubScenario({ requestAnswersFile: file });
     const caller = await root.createCaller();
     const { sessionId } = await caller.session.new({
@@ -1792,7 +1809,7 @@ it.each(agentAdapters)(
       .not.toBeNull();
     const pending = (await readSnapshot(root.createCaller, sessionId))
       .pendingElicitation;
-    if (!pending) throw new Error('No Elicitation');
+    if (!pending) throw new Error(missingElicitationFailure);
     const recorded =
       mockClis[adapter.agent]?.recordedRequestAnswer('elicitation');
     if (recorded?.type !== 'elicitation')
@@ -1810,7 +1827,7 @@ it.each(agentAdapters)(
       }),
     ).rejects.toMatchObject({
       code: 'CONFLICT',
-      message: 'already answered',
+      message: answeredRequestFailure,
     });
     expect(
       (await readSnapshot(root.createCaller, sessionId)).pendingElicitation,
@@ -1842,7 +1859,7 @@ it.each(agentAdapters)(
           result.status === 'rejected',
       ),
     ).toMatchObject({
-      reason: { code: 'CONFLICT', message: 'already answered' },
+      reason: { code: 'CONFLICT', message: answeredRequestFailure },
     });
     await expect
       .poll((): ReturnType<typeof readRequestAnswers> =>
@@ -1859,7 +1876,7 @@ it.each(agentAdapters)(
       caller.session.answerElicitation(answer),
     ).rejects.toMatchObject({
       code: 'CONFLICT',
-      message: 'already answered',
+      message: answeredRequestFailure,
     });
   },
 );
@@ -1878,7 +1895,7 @@ it.each(
     const root = await startNewSessionEngine(adapter, {
       recording: 'elicitation',
     });
-    const file = path.join(root.home, 'answers.jsonl');
+    const file = path.join(root.home, recordedAnswersFile);
     stubScenario({ requestAnswersFile: file });
     const caller = await root.createCaller();
     const { sessionId } = await caller.session.new({
@@ -1896,7 +1913,7 @@ it.each(
       .not.toBeNull();
     const pending = (await readSnapshot(root.createCaller, sessionId))
       .pendingElicitation;
-    if (!pending) throw new Error('No Elicitation');
+    if (!pending) throw new Error(missingElicitationFailure);
     await caller.session.answerElicitation({
       sessionId,
       requestId: pending.requestId,
@@ -1922,7 +1939,7 @@ it.each(
       }),
     ).rejects.toMatchObject({
       code: 'CONFLICT',
-      message: 'already answered',
+      message: answeredRequestFailure,
     });
   },
 );
@@ -1939,7 +1956,7 @@ it.each(agentAdapters)(
       agent: adapter.agent,
       checkout: { type: 'main' },
       configOptions: [],
-      prompt: [{ type: 'text', text: 'Wait for my answer' }],
+      prompt: [{ type: 'text', text: waitingForAnswerPrompt }],
     });
     await expect
       .poll(
@@ -1948,7 +1965,8 @@ it.each(agentAdapters)(
       )
       .toBe('requires_action');
     const before = await readSnapshot(root.createCaller, sessionId);
-    if (!before.pendingPermission) throw new Error('No Permission request');
+    if (!before.pendingPermission)
+      throw new Error(missingPermissionRequestFailure);
     await caller.session.cancel({ sessionId });
     await expect
       .poll(
@@ -1978,7 +1996,7 @@ it.each(agentAdapters)(
       }),
     ).rejects.toMatchObject({
       code: 'CONFLICT',
-      message: 'already answered',
+      message: answeredRequestFailure,
     });
     expect(
       await caller.feed.row({
@@ -2003,7 +2021,7 @@ it.each(agentAdapters)(
       agent: adapter.agent,
       checkout: { type: 'main' },
       configOptions: [],
-      prompt: [{ type: 'text', text: 'Wait for my answer' }],
+      prompt: [{ type: 'text', text: waitingForAnswerPrompt }],
     });
     await expect
       .poll(
@@ -2012,7 +2030,7 @@ it.each(agentAdapters)(
       )
       .toBe('requires_action');
     const before = await readSnapshot(root.createCaller, sessionId);
-    if (!before.pendingElicitation) throw new Error('No Elicitation');
+    if (!before.pendingElicitation) throw new Error(missingElicitationFailure);
     await caller.session.cancel({ sessionId });
     await expect
       .poll(
@@ -2043,7 +2061,7 @@ it.each(agentAdapters)(
       }),
     ).rejects.toMatchObject({
       code: 'CONFLICT',
-      message: 'already answered',
+      message: answeredRequestFailure,
     });
   },
 );
@@ -2060,7 +2078,7 @@ it.each(
   'keeps a $agent $recording request answerable after two days',
   async ({ adapter, recording }): Promise<void> => {
     const root = await startNewSessionEngine(adapter, { recording });
-    const file = path.join(root.home, 'answers.jsonl');
+    const file = path.join(root.home, recordedAnswersFile);
     stubScenario({ requestAnswersFile: file });
     const caller = await root.createCaller();
     const { sessionId } = await caller.session.new({
@@ -2068,7 +2086,7 @@ it.each(
       agent: adapter.agent,
       checkout: { type: 'main' },
       configOptions: [],
-      prompt: [{ type: 'text', text: 'Wait for my answer' }],
+      prompt: [{ type: 'text', text: waitingForAnswerPrompt }],
     });
     await expect
       .poll(
@@ -2140,10 +2158,10 @@ for (const adapter of agentAdapters)
             feed: feedMachine.provide({
               actions: {
                 sendToWriter: ({ context, system }, { job }): void => {
-                  if (context.sessionId === 'session-broken') throw failure;
+                  if (context.sessionId === brokenSessionId) throw failure;
                   system
                     .get('databaseWriter')
-                    .send({ type: 'writer.write', job });
+                    .send({ type: writeFeedEvent, job });
                 },
               },
             }),
@@ -2153,7 +2171,7 @@ for (const adapter of agentAdapters)
     });
     const root = await startNewSessionEngine(adapter, { sessions });
     insertSession(root.database, {
-      id: 'session-broken',
+      id: brokenSessionId,
       agent: adapter.agent,
       checkoutPath: root.project,
     });
@@ -2172,7 +2190,7 @@ for (const adapter of agentAdapters)
     if (!registry) throw new Error('No Session registry');
     registry.send({
       type: 'sessions.open',
-      sessionId: 'session-broken',
+      sessionId: brokenSessionId,
       agent: adapter.agent,
     });
     await expect
@@ -2185,7 +2203,7 @@ for (const adapter of agentAdapters)
       )
       .toBe(true);
     const feed = (
-      await caller.feed.subscribe({ sessionId: 'session-broken', after: null })
+      await caller.feed.subscribe({ sessionId: brokenSessionId, after: null })
     )[Symbol.asyncIterator]();
     expect((await feed.next()).value).toMatchObject({ type: 'snapshot' });
     const rejectedFeed = expect(
@@ -2204,7 +2222,7 @@ for (const adapter of agentAdapters)
       error: (error): number => engineErrors.push(error),
     });
     await caller.session.prompt({
-      sessionId: 'session-broken',
+      sessionId: brokenSessionId,
       prompt: [{ type: 'text', text: 'First Session' }],
     });
     await rejectedFeed;
@@ -2295,7 +2313,7 @@ it('shares one coalesced list read for three subscribers across fifty changes', 
     >;
     for (let index = 1; index <= 50; index += 1)
       writer.send({
-        type: 'writer.write',
+        type: writeFeedEvent,
         job: {
           type: 'sessionRowUpdate',
           id: 'session-1',
@@ -2321,7 +2339,7 @@ it('shares one coalesced list read for three subscribers across fifty changes', 
     const survivorChange = second.next();
     const survivorCounts = counts.next();
     writer.send({
-      type: 'writer.write',
+      type: writeFeedEvent,
       job: {
         type: 'sessionRowUpdate',
         id: 'session-1',
@@ -2339,7 +2357,7 @@ it('shares one coalesced list read for three subscribers across fifty changes', 
     controllers[2]?.abort();
     counted.metrics.sessionReads = 0;
     writer.send({
-      type: 'writer.write',
+      type: writeFeedEvent,
       job: {
         type: 'sessionRowUpdate',
         id: 'session-1',
@@ -2480,17 +2498,17 @@ it('reads only the changed Session and pages the shared cache', async (): Promis
     const writer: ActorRefFrom<typeof writerMachine> =
       engine.system.get('databaseWriter');
     writer.send({
-      type: 'writer.write',
+      type: writeFeedEvent,
       job: {
         type: 'sessionRowUpdate',
         id: 'session-1',
-        set: { title: 'Changed alone', maxRevision: 1 },
+        set: { title: unobservedTitle, maxRevision: 1 },
       },
     });
     await vi.advanceTimersByTimeAsync(100);
     expect((await changed).value).toMatchObject({
       type: 'changed',
-      session: { sessionId: 'session-1', title: 'Changed alone' },
+      session: { sessionId: 'session-1', title: unobservedTitle },
     });
     expect(counted.metrics.queries).toBeLessThanOrEqual(5);
     expect(counted.metrics.rows).toBeLessThanOrEqual(3);
@@ -2498,7 +2516,7 @@ it('reads only the changed Session and pages the shared cache', async (): Promis
     const page = await caller.session.list({ archived: false });
     expect(page.sessions[0]).toMatchObject({
       sessionId: 'session-1',
-      title: 'Changed alone',
+      title: unobservedTitle,
       status: 'unread',
     });
     expect(page.sessions).toHaveLength(50);
@@ -2540,7 +2558,7 @@ it('initializes a fresh list after all watchers leave and unwatched data changes
   const writer: ActorRefFrom<typeof writerMachine> =
     engine.system.get('databaseWriter');
   writer.send({
-    type: 'writer.write',
+    type: writeFeedEvent,
     job: {
       type: 'sessionRowUpdate',
       id: 'session-1',
@@ -2596,7 +2614,7 @@ it('pages current queued activity before the list publication delay', async (): 
     const writer: ActorRefFrom<typeof writerMachine> =
       engine.system.get('databaseWriter');
     writer.send({
-      type: 'writer.write',
+      type: writeFeedEvent,
       job: {
         type: 'sessionRowUpdate',
         id: 'session-1',
@@ -2650,7 +2668,7 @@ it('updates a cached parent when its stored Subagent Turn changes', async (): Pr
       engine.system.get('databaseWriter');
     const running = updates.next();
     writer.send({
-      type: 'writer.write',
+      type: writeFeedEvent,
       job: {
         type: 'turnInsert',
         turn: {
@@ -2667,7 +2685,7 @@ it('updates a cached parent when its stored Subagent Turn changes', async (): Pr
     });
     const stopped = updates.next();
     writer.send({
-      type: 'writer.write',
+      type: writeFeedEvent,
       job: {
         type: 'turnUpdate',
         id: 'child-turn',
@@ -2969,7 +2987,7 @@ it.each(
       'healthy',
     ]);
     expect(reported).toHaveBeenCalledWith(
-      'sessions: rejected list shape #1',
+      firstListRejection,
       expect.anything(),
     );
   },

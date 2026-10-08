@@ -6,10 +6,12 @@ import {
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
 import { AgentMessage } from './agent-message';
 
+const markdownAnswerId = 'markdown-answer';
+
 const meta = {
   title: 'Feed/AgentMessage',
   component: AgentMessage,
-  args: { row: recordedAgentMessage('agent-1', 'markdown-answer') },
+  args: { row: recordedAgentMessage('agent-1', markdownAnswerId) },
 } satisfies Meta<typeof AgentMessage>;
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -20,18 +22,14 @@ export const Overview: Story = {
   render: () => (
     <Variations>
       <Variation label="Agent 1 answer">
-        <AgentMessage
-          row={recordedAgentMessage('agent-1', 'markdown-answer')}
-        />
+        <AgentMessage row={recordedAgentMessage('agent-1', markdownAnswerId)} />
       </Variation>
       <Variation label="Agent 2 answer">
-        <AgentMessage
-          row={recordedAgentMessage('agent-2', 'markdown-answer')}
-        />
+        <AgentMessage row={recordedAgentMessage('agent-2', markdownAnswerId)} />
       </Variation>
       <Variation label="Streaming">
         <AgentMessage
-          row={streamingAgentMessage('agent-2', 'markdown-answer')}
+          row={streamingAgentMessage('agent-2', markdownAnswerId)}
         />
       </Variation>
     </Variations>

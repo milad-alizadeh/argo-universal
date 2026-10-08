@@ -10,9 +10,12 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { WebSocketServer } from 'ws';
 import { createTRPCClient } from './create-trpc-client';
 
+const serverStartedAt = '2026-10-03T00:00:00.000Z';
+const uploadedFileContent = 'file content';
+
 const systemInfo = {
   version: '1.2.3',
-  startedAt: '2026-10-03T00:00:00.000Z',
+  startedAt: serverStartedAt,
   pid: 4242,
   name: "Milad's Mac mini",
 };
@@ -21,7 +24,7 @@ const services = unreachableServices({
   system: {
     info: () => systemInfo,
     clock: async function* () {
-      yield { now: '2026-10-03T00:00:00.000Z' };
+      yield { now: serverStartedAt };
       yield { now: '2026-10-03T00:00:01.000Z' };
     },
   },
@@ -97,7 +100,7 @@ describe('createTRPCClient', () => {
 
     expect(info).toEqual(systemInfo);
     expect(ticks).toEqual([
-      { now: '2026-10-03T00:00:00.000Z' },
+      { now: serverStartedAt },
       { now: '2026-10-03T00:00:01.000Z' },
     ]);
     expect(server.connections()).toBe(1);
@@ -111,8 +114,8 @@ describe('createTRPCClient', () => {
     const client = trpc.client as unknown as TRPCClient<typeof uploadRouter>;
 
     const form = new FormData();
-    form.set('file', new File(['file content'], 'notes.txt'));
-    expect(await client.upload.mutate(form)).toBe('file content');
+    form.set('file', new File([uploadedFileContent], 'notes.txt'));
+    expect(await client.upload.mutate(form)).toBe(uploadedFileContent);
     expect(server.httpRequests()).toBe(1);
 
     expect(await client.ping.query()).toBe('pong');
@@ -131,8 +134,8 @@ describe('createTRPCClient', () => {
     const client = trpc.client as unknown as TRPCClient<typeof uploadRouter>;
 
     const form = new FormData();
-    form.set('file', new File(['file content'], 'notes.txt'));
-    expect(await client.upload.mutate(form)).toBe('file content');
+    form.set('file', new File([uploadedFileContent], 'notes.txt'));
+    expect(await client.upload.mutate(form)).toBe(uploadedFileContent);
     expect(server.connections()).toBe(0);
 
     allowAttempt();

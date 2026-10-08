@@ -31,6 +31,8 @@ import { useNavigate } from '../navigation/context';
 import { useWide } from '../navigation/use-wide';
 import { useTRPC } from '../trpc/context';
 
+const newSessionRoute = 'new-session';
+
 export interface SessionsFilter {
   query: string;
   onQueryChange: (query: string) => void;
@@ -107,7 +109,7 @@ export function sessionsHeaderItems(filter: SessionsFilter) {
   return [
     <SessionsFilterMenu key="filter" {...filter} />,
     ...(newSessionInHeader
-      ? [<NewSessionHeaderButton key="new-session" />]
+      ? [<NewSessionHeaderButton key={newSessionRoute} />]
       : []),
   ];
 }
@@ -119,7 +121,7 @@ function NewSessionHeaderButton() {
       icon={NotePencilIcon}
       paired
       accessibilityLabel="New Session"
-      onPress={() => navigate({ to: 'new-session' })}
+      onPress={() => navigate({ to: newSessionRoute })}
     />
   );
 }
@@ -165,7 +167,7 @@ export function SessionsScreen({ query, archived }: SessionsScreenProps) {
     [navigate],
   );
   const newSession = useCallback(
-    (projectId: string) => navigate({ to: 'new-session', projectId }),
+    (projectId: string) => navigate({ to: newSessionRoute, projectId }),
     [navigate],
   );
   const projectSettings = useCallback(
@@ -248,7 +250,7 @@ export function SessionsScreen({ query, archived }: SessionsScreenProps) {
       <View className="h-16 justify-center px-3">
         <Button
           accessibilityLabel="New Session"
-          onPress={() => navigate({ to: 'new-session' })}
+          onPress={() => navigate({ to: newSessionRoute })}
           className="h-9 sm:h-9 self-start flex-row gap-2 rounded-md px-3"
         >
           <Icon as={NotePencilIcon} className="text-primary-foreground" />
@@ -264,7 +266,7 @@ export function SessionsScreen({ query, archived }: SessionsScreenProps) {
         <FloatingActionButton
           accessibilityLabel="New Session"
           icon={NotePencilIcon}
-          onPress={() => navigate({ to: 'new-session' })}
+          onPress={() => navigate({ to: newSessionRoute })}
         />
       </View>
     );

@@ -14,6 +14,8 @@ import type { writerMachine } from '../feed/writer-machine';
 import type { RegistryActorRef } from './registry-machine';
 import type { SessionActorRef } from './session-machine';
 
+const listFailedEvent = 'list.failed';
+
 interface SessionListContext extends SessionListMachineInput {
   failure: unknown;
   rows: SessionListState | null;
@@ -96,7 +98,7 @@ export const sessionListMachine = setup({
         };
         const registry = input.sessions.subscribe({
           next: connect,
-          error: (error): void => sendBack({ type: 'list.failed', error }),
+          error: (error): void => sendBack({ type: listFailedEvent, error }),
           complete: (): void => sendBack({ type: 'list.stop' }),
         });
         let previous = new Set<WriterJob>();
@@ -110,7 +112,7 @@ export const sessionListMachine = setup({
             previous = current;
             if (changed.length) refresh(input.sessionIdsForJobs(changed));
           } catch (error) {
-            sendBack({ type: 'list.failed', error });
+            sendBack({ type: listFailedEvent, error });
           }
         };
         const writer = input.writer?.subscribe({
@@ -162,12 +164,12 @@ export const sessionListMachine = setup({
         enqueue.assign({ rows, dirty: new Set<string>() });
         enqueue.emit({ type: 'list.rows', rows });
       } catch (error) {
-        enqueue.raise({ type: 'list.failed', error });
+        enqueue.raise({ type: listFailedEvent, error });
       }
     }),
     rememberFailure: assign(
       ({ event }): Pick<SessionListContext, 'failure'> => {
-        assertEvent(event, 'list.failed');
+        assertEvent(event, listFailedEvent);
         return { failure: event.error };
       },
     ),

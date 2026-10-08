@@ -22,6 +22,10 @@ import { writerMachine } from '../feed/writer-machine';
 import { createServerServices } from '../server-services';
 import { registryMachine } from './registry-machine';
 
+const agentConfigOptionsChangedEvent = 'agent.configOptionsChanged';
+const signInFailure = 'Sign in first';
+const sessionActorId = 'session:session-1';
+
 type TestServer = {
   caller: ReturnType<typeof appRouter.createCaller>;
   root: import('xstate').Actor<
@@ -130,7 +134,7 @@ function openServer({
         if (command.type === 'agent.setConfigOption' && applyConfigOptions)
           queueMicrotask((): void =>
             stream.send({
-              type: 'agent.configOptionsChanged',
+              type: agentConfigOptionsChangedEvent,
               configOptions: configOptions.map((option): typeof option => ({
                 ...option,
                 currentValue: command.value as string,
@@ -186,7 +190,7 @@ function openServer({
               createMockAdapter(
                 {
                   connect: (): Promise<import('@repo/agents').AgentReady> =>
-                    Promise.reject(new Error('Sign in first')),
+                    Promise.reject(new Error(signInFailure)),
                   // Signed in when the Server starts, signed out by the first Session.
                   probe: vi
                     .fn<() => Promise<AgentProbe>>()
@@ -196,7 +200,7 @@ function openServer({
                     })
                     .mockResolvedValue({
                       availability: 'not_signed_in',
-                      installStep: 'Sign in first',
+                      installStep: signInFailure,
                       configOptions: [],
                     }),
                 },
@@ -357,7 +361,7 @@ it.each([{ type: 'main' }, { type: 'worktree', baseBranch: 'main' }] as const)(
       caller.session.new({ ...newSession, agent: 'unavailable', checkout }),
     ).rejects.toMatchObject({
       code: 'PRECONDITION_FAILED',
-      message: expect.stringContaining('Sign in first'),
+      message: expect.stringContaining(signInFailure),
     });
     // The failed start probes the Agent again, so the list catches up without a refresh.
     expect(await availability()).toBe('not_signed_in');
@@ -460,7 +464,7 @@ it('returns the chosen config value and delivers later Agent changes through the
   });
   const stream = streams.get(sessionId);
   stream?.send({
-    type: 'agent.configOptionsChanged',
+    type: agentConfigOptionsChangedEvent,
     configOptions: configOptions.map((option): typeof option => ({
       ...option,
       name: 'Renamed',
@@ -471,7 +475,7 @@ it('returns the chosen config value and delivers later Agent changes through the
     snapshot: { configOptions: [{ name: 'Renamed', currentValue: 'small' }] },
   });
   stream?.send({
-    type: 'agent.configOptionsChanged',
+    type: agentConfigOptionsChangedEvent,
     configOptions: configOptions.map((option): typeof option => ({
       ...option,
       currentValue: 'large',
@@ -528,7 +532,7 @@ it('rejects unknown Sessions and input that breaks the contract', async (): Prom
 
 it('reads a stored Session snapshot without opening an actor when its Feed is subscribed', async (): Promise<void> => {
   const { root, services } = openServer();
-  expect(root.system.get('session:session-1')).toBeUndefined();
+  expect(root.system.get(sessionActorId)).toBeUndefined();
   const controller = new AbortController();
   cleanups.push((): void => controller.abort());
   const caller = appRouter.createCaller(
@@ -544,7 +548,7 @@ it('reads a stored Session snapshot without opening an actor when its Feed is su
     type: 'snapshot',
     snapshot: { configOptions: [] },
   });
-  expect(root.system.get('session:session-1')).toBeUndefined();
+  expect(root.system.get(sessionActorId)).toBeUndefined();
   controller.abort();
   await iterator.return?.();
 });
@@ -556,7 +560,7 @@ it('removes a closed Session and resumes it with the stored Agent identity on th
     prompt: [{ type: 'text', text: 'First' }],
   });
   await caller.session.cancel({ sessionId: 'session-1' });
-  const first = root.system.get('session:session-1');
+  const first = root.system.get(sessionActorId);
   first.send({ type: 'session.close' });
   await waitFor(first, (snapshot): boolean => snapshot.status === 'done');
   await caller.session.prompt({
@@ -564,7 +568,7 @@ it('removes a closed Session and resumes it with the stored Agent identity on th
     prompt: [{ type: 'text', text: 'Resume' }],
   });
   expect(streams.get('session-1')?.input.vendorSessionId).toBe('vendor-1');
-  expect(root.system.get('session:session-1')).not.toBe(first);
+  expect(root.system.get(sessionActorId)).not.toBe(first);
 });
 
 it('resumes a closed Session with the config it last ran with', async (): Promise<void> => {
