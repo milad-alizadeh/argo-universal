@@ -211,6 +211,61 @@
       }
     },
     {
+      // Feed, connection and tRPC sit below components and screens (A2).
+      "files": [
+        "packages/client/src/feed/**",
+        "packages/client/src/connection/**",
+        "packages/client/src/trpc/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "#components/**",
+                  "../**/components",
+                  "../**/components/**",
+                  "../**/screens",
+                  "../**/screens/**",
+                  "@repo/client",
+                  "@repo/client/**"
+                ],
+                "message": "Client modules never import components, screens or the client barrel (A2)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // Screens repeat the useTRPC bans because only the last matching override's options apply.
+      "files": ["packages/client/src/screens/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@trpc/client",
+                "message": "Screens get tRPC from useTRPC() only (ADR-0009)."
+              },
+              {
+                "name": "../trpc/create-trpc-client",
+                "message": "Screens get tRPC from useTRPC() only (ADR-0009)."
+              },
+              {
+                "name": "../trpc/context",
+                "importNames": ["useTRPCClient"],
+                "message": "Screens get tRPC from useTRPC() only (ADR-0009)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       // End-to-end tests drive a real Server, mock only the Agent CLI and await every Playwright action (ADR-0011).
       "files": ["e2e/**"],
       "rules": {
