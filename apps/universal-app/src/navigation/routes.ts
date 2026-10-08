@@ -84,22 +84,22 @@ function settingsOrStaticHref(
 function sessionHref(
   destination: Extract<NavigationDestination, { to: 'session' }>,
 ): Href {
-  const { to: _to, ...params } = destination;
-  return { pathname: routes.session.pathname, params };
+  const { to, ...params } = destination;
+  return { pathname: routes[to].pathname, params };
 }
 
 function projectHref(
   destination: Extract<NavigationDestination, { to: 'settings-project' }>,
 ): Href {
-  const { to: _to, ...params } = destination;
-  return { pathname: routes['settings-project'].pathname, params };
+  const { to, ...params } = destination;
+  return { pathname: routes[to].pathname, params };
 }
 
 function agentHref(
   destination: Extract<NavigationDestination, { to: 'settings-agent' }>,
 ): Href {
-  const { to: _to, ...params } = destination;
-  return { pathname: routes['settings-agent'].pathname, params };
+  const { to, ...params } = destination;
+  return { pathname: routes[to].pathname, params };
 }
 
 // Reads the destination back from Expo Router's segments and params; any other route counts as the Sessions list.
