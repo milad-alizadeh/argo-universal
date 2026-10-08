@@ -28,6 +28,7 @@ import {
   sendTo,
   setup,
 } from 'xstate';
+import { countRejection } from '../../lib/count-rejections';
 import { agentProbeId } from '../agents/agent-probe-machine';
 import { userMessageChange } from '../feed/feed-change';
 import { feedMachine } from '../feed/feed-machine';
@@ -496,7 +497,8 @@ const sessionSetup = setup({
       });
     }),
     countRejectedMessage: assign({
-      rejectedMessages: ({ context }): number => context.rejectedMessages + 1,
+      rejectedMessages: ({ context }): number =>
+        countRejection(context.rejectedMessages),
     }),
     messageRejectedNotice: sendTo(
       'feed',
