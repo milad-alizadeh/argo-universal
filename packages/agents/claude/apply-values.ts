@@ -1,7 +1,11 @@
 import type { Query } from '@anthropic-ai/claude-agent-sdk';
 import { DEFAULT_VALUE, type ConfigValues } from './config-options';
+type ConfigPort = Pick<
+  Query,
+  'setModel' | 'setPermissionMode' | 'applyFlagSettings'
+>;
 export async function applyValues(
-  vendor: Query,
+  vendor: ConfigPort,
   current: ConfigValues,
   next: ConfigValues,
 ): Promise<void> {
@@ -10,7 +14,7 @@ export async function applyValues(
   await applyEffort(vendor, current.effort, next.effort);
 }
 async function applyEffort(
-  vendor: Query,
+  vendor: ConfigPort,
   current: ConfigValues['effort'],
   next: ConfigValues['effort'],
 ): Promise<void> {
@@ -21,7 +25,7 @@ async function applyEffort(
 }
 
 async function applyModel(
-  vendor: Query,
+  vendor: ConfigPort,
   current: string,
   next: string,
 ): Promise<void> {

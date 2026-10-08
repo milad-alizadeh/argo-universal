@@ -10,7 +10,7 @@ it.each([
   expect(
     changeValue(
       models,
-      { model: 'haiku', mode: 'default', effort: 'default' },
+      { model: 'compact', mode: 'default', effort: 'default' },
       change,
     ),
   ).toBeUndefined();
@@ -45,7 +45,7 @@ it('marks Plan and dangerous modes and keeps per-model support flags', (): void 
             },
           }),
           expect.objectContaining({
-            value: 'haiku',
+            value: 'compact',
             _meta: {
               argo: expect.objectContaining({
                 supportsEffort: false,
@@ -62,7 +62,7 @@ it('resolves the CLI alias to a model name in the adapter', (): void => {
   const catalog = [
     {
       ...requireModel(0),
-      description: 'Opus 5.5 · Best for everyday, complex tasks',
+      description: 'Example model · Best for everyday, complex tasks',
     },
     requireModel(1),
   ] satisfies ModelInfo[];
@@ -73,11 +73,14 @@ it('resolves the CLI alias to a model name in the adapter', (): void => {
     options: [
       {
         value: 'default',
-        name: 'Opus 5.5 (recommended)',
+        name: 'Example model (recommended)',
         description: 'Best for everyday, complex tasks',
-        _meta: { argo: { shortName: 'Opus 5.5' } },
+        _meta: { argo: { shortName: 'Example model' } },
       },
-      { value: 'haiku', _meta: { argo: { shortName: 'Haiku' } } },
+      {
+        value: 'compact',
+        _meta: { argo: { shortName: 'Compact model' } },
+      },
     ],
   });
 });

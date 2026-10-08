@@ -3,13 +3,17 @@ export const models: ModelInfo[] = [
   {
     value: 'default',
     displayName: 'Default (recommended)',
-    description: 'Opus 5.5 · Best for everyday, complex tasks',
-    resolvedModel: 'claude-opus-5-5',
+    description: 'Example model · Best for everyday, complex tasks',
+    resolvedModel: 'example-model',
     supportsEffort: true,
     supportedEffortLevels: ['low', 'medium', 'high', 'max'],
     supportsAutoMode: true,
   },
-  { value: 'haiku', displayName: 'Haiku', description: 'Fastest' },
+  {
+    value: 'compact',
+    displayName: 'Compact model',
+    description: 'Fastest',
+  },
 ];
 export function requireModel(index: number): ModelInfo {
   const model = models[index];

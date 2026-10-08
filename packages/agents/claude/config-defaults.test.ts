@@ -7,7 +7,7 @@ it('starts from the defaults and offers each model, mode and effort', (): void =
   expect(values).toEqual({
     mode: 'default',
     model: 'default',
-    effort: 'medium',
+    effort: 'default',
   });
   expect(toConfigOptions(models, values)).toMatchObject([
     {
@@ -31,8 +31,12 @@ it('starts from the defaults and offers each model, mode and effort', (): void =
       category: 'model',
       currentValue: 'default',
       options: [
-        { value: 'default', name: 'Opus 5.5 (recommended)' },
-        { value: 'haiku', name: 'Haiku', description: 'Fastest' },
+        { value: 'default', name: 'Example model (recommended)' },
+        {
+          value: 'compact',
+          name: 'Compact model',
+          description: 'Fastest',
+        },
       ],
     },
     {
@@ -40,8 +44,9 @@ it('starts from the defaults and offers each model, mode and effort', (): void =
       configId: 'effort',
       name: 'Effort',
       category: 'thought_level',
-      currentValue: 'medium',
+      currentValue: 'default',
       options: [
+        { value: 'default', name: 'Provider default' },
         { value: 'low', name: 'Low' },
         { value: 'medium', name: 'Medium' },
         { value: 'high', name: 'High' },
@@ -64,16 +69,16 @@ it('keeps saved values the models still allow', (): void => {
       { configId: 'mode', value: 'dontAsk' },
       { configId: 'effort', value: 'extreme' },
     ]),
-  ).toEqual({ model: 'default', mode: 'default', effort: 'medium' });
+  ).toEqual({ model: 'default', mode: 'default', effort: 'default' });
 });
 it('drops auto mode and effort for a model without them', (): void => {
   const values = changeValue(
     models,
     { model: 'default', mode: 'auto', effort: 'high' },
-    { configId: 'model', value: 'haiku' },
+    { configId: 'model', value: 'compact' },
   );
   expect(values).toEqual({
-    model: 'haiku',
+    model: 'compact',
     mode: 'default',
     effort: 'default',
   });
@@ -95,7 +100,11 @@ it('preserves fast-mode capability metadata from the provider', (): void => {
   const options = toConfigOptions(catalog, startingValues(catalog, []));
   const model = options.find((option): boolean => option.configId === 'model');
   if (model?.type !== 'select') throw new Error('Missing model options');
-  expect(model.options[0]).toHaveProperty('_meta.argo.supportsFastMode', true);
+  expect(
+    model.options.find(
+      (choice): boolean => 'value' in choice && choice.value === 'fast-capable',
+    ),
+  ).toHaveProperty('_meta.argo.supportsFastMode', true);
 });
 function requireValues(
   values: ReturnType<typeof changeValue>,

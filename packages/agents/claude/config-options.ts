@@ -4,11 +4,7 @@ import type { AgentConfigValue } from '../src/agent-events';
 import { changeValue as changeConfigValue } from '../src/config-options';
 import { modesFor, modeConfigOption } from './config-modes';
 import { DEFAULT_VALUE, type ConfigValues } from './config-values';
-import {
-  defaultEffort,
-  effortLevelsFor,
-  effortConfigOptions,
-} from './effort-config';
+import { effortLevelsFor, effortConfigOptions } from './effort-config';
 import { findModel, modelConfigOption } from './model-config';
 export { DEFAULT_VALUE, type ConfigValues } from './config-values';
 type Wanted = Record<keyof ConfigValues, unknown>;
@@ -33,7 +29,7 @@ function allowedEffort(
 ): ConfigValues['effort'] {
   return (
     effortLevelsFor(model).find((level): boolean => level === wanted) ??
-    defaultEffort(model)
+    DEFAULT_VALUE
   );
 }
 export function startingValues(
