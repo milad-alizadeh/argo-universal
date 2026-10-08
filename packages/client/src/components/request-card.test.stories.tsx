@@ -3,12 +3,11 @@ import type { ReactNode } from 'react';
 import { expect, fn, waitFor } from 'storybook/test';
 import { layoutWidths } from '../../mocks/each-layout';
 import { shortPlanProposal } from '../../mocks/plan-proposal-mock';
-import {
-  PermissionRequestPreview,
-  RequestFrame,
-} from '../../mocks/request-preview';
+import { permissionProps } from '../../mocks/request-mock';
+import { RequestFrame } from '../../mocks/request-preview';
 import { settleViewport } from '../../mocks/settle-viewport';
 import { ContentLayout } from './content-layout';
+import { PermissionRequest } from './permission-request';
 import type { PermissionRequestProps } from './permission-request';
 import {
   PlanProposalCard,
@@ -37,7 +36,9 @@ function ShortcutPreview({
           state={{ kind: 'open' }}
         />
         {secondCard && (
-          <PermissionRequestPreview onAnswer={onPermissionAnswer} />
+          <PermissionRequest
+            {...permissionProps({ onAnswer: onPermissionAnswer })}
+          />
         )}
       </ContentLayout>
     </RequestFrame>

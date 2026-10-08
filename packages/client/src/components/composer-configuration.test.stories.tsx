@@ -1,6 +1,11 @@
 import { newSessionCatalogs } from '@repo/api/mocks';
+import { PortalHost } from '@rn-primitives/portal';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, waitFor, within } from 'storybook/test';
+import type * as React from 'react';
+import { createRoot } from 'react-dom/client';
+import { View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { expect, fn, waitFor, within } from 'storybook/test';
 import { composerNoEffortSelections } from '../../mocks/composer-mock';
 import { layoutWidths } from '../../mocks/each-layout';
 import { settleViewport } from '../../mocks/settle-viewport';
@@ -30,11 +35,11 @@ const noSelectionCases = composerNoEffortSelections.map(
             .flatMap((entry) => ('groupId' in entry ? entry.options : [entry]))
             .find((entry) => entry.value === option.currentValue)
         : undefined;
-    if (!selected)
+    if (!selected || !option)
       throw new Error(
         'Recorded catalog needs a default effort for every Agent.',
       );
-    return { configuration, selected };
+    return { configuration, selected, configId: option.configId };
   },
 );
 
@@ -42,41 +47,90 @@ function noEffortSelection(width: number, agentIndex: number): Story {
   const recorded = noSelectionCases[agentIndex];
   if (!recorded)
     throw new Error('Recorded catalog needs two Agents with effort.');
-  const { configuration, selected } = recorded;
+  const { configuration, selected, configId } = recorded;
   return {
     args: { configuration },
+    render: () => (
+      <View testID="controlled-configuration" className="w-full p-4" />
+    ),
     play: async ({ canvas, userEvent }) => {
-      await settleViewport(width);
-      const trigger = canvas.getByRole('button', { name: 'Agent and model' });
-      await expect(trigger).not.toHaveTextContent(selected.name);
-      await userEvent.click(trigger);
-      const overlay = within(document.body);
-      const heading = await overlay.findByText(noSelectionLabel, {
-        exact: true,
-      });
-      await waitFor(() => expect(heading).toBeVisible());
-      const slider = overlay.getByRole('slider', { name: 'Effort' });
-      await expect(slider).toHaveAttribute('aria-valuetext', noSelectionLabel);
-      await expect(getComputedStyle(slider).backgroundImage).toBe('none');
-      for (const button of overlay.getAllByRole('button', {
-        name: /^Set effort to /,
-      }))
-        await expect(button).toHaveAttribute('aria-pressed', 'false');
-      await expect(
-        overlay.queryByRole('switch', { name: 'Fast mode' }),
-      ).not.toBeInTheDocument();
-      await userEvent.click(
-        overlay.getByRole('button', { name: `Set effort to ${selected.name}` }),
-      );
-      await expect(slider).toHaveAttribute('aria-valuetext', selected.name);
-      await expect(
-        overlay.getByRole('button', { name: `Set effort to ${selected.name}` }),
-      ).toHaveAttribute('aria-pressed', 'true');
-      await expect(
-        overlay.queryByText(noSelectionLabel, { exact: true }),
-      ).not.toBeInTheDocument();
-      if (width === layoutWidths.wide)
-        await expect(trigger).toHaveTextContent(selected.name);
+      const root = createRoot(canvas.getByTestId('controlled-configuration'));
+      const onConfigChange = fn();
+      const render = (
+        configuration: NonNullable<
+          React.ComponentProps<
+            typeof ComposerAgentModelControl
+          >['configuration']
+        >,
+      ): void =>
+        root.render(
+          <SafeAreaProvider>
+            <ComposerAgentModelControl
+              disabled={false}
+              configuration={{ ...configuration, onConfigChange }}
+            />
+            <PortalHost />
+          </SafeAreaProvider>,
+        );
+      try {
+        render(configuration);
+        await settleViewport(width);
+        const trigger = await canvas.findByRole('button', {
+          name: 'Agent and model',
+        });
+        await expect(trigger).not.toHaveTextContent(selected.name);
+        await userEvent.click(trigger);
+        const overlay = within(document.body);
+        const heading = await overlay.findByText(noSelectionLabel, {
+          exact: true,
+        });
+        await waitFor(() => expect(heading).toBeVisible());
+        const slider = overlay.getByRole('slider', { name: 'Effort' });
+        await expect(slider).toHaveAttribute(
+          'aria-valuetext',
+          noSelectionLabel,
+        );
+        await expect(getComputedStyle(slider).backgroundImage).toBe('none');
+        for (const button of overlay.getAllByRole('button', {
+          name: /^Set effort to /,
+        }))
+          await expect(button).toHaveAttribute('aria-pressed', 'false');
+        await expect(
+          overlay.queryByRole('switch', { name: 'Fast mode' }),
+        ).not.toBeInTheDocument();
+        await userEvent.click(
+          overlay.getByRole('button', {
+            name: `Set effort to ${selected.name}`,
+          }),
+        );
+        await expect(onConfigChange).toHaveBeenCalledWith(
+          configId,
+          selected.value,
+        );
+        render({
+          ...configuration,
+          configOptions: configuration.configOptions.map((option) =>
+            option.configId === configId && option.type === 'select'
+              ? { ...option, currentValue: selected.value }
+              : option,
+          ),
+        });
+        await waitFor(() =>
+          expect(slider).toHaveAttribute('aria-valuetext', selected.name),
+        );
+        await expect(
+          overlay.getByRole('button', {
+            name: `Set effort to ${selected.name}`,
+          }),
+        ).toHaveAttribute('aria-pressed', 'true');
+        await expect(
+          overlay.queryByText(noSelectionLabel, { exact: true }),
+        ).not.toBeInTheDocument();
+        if (width === layoutWidths.wide)
+          await expect(trigger).toHaveTextContent(selected.name);
+      } finally {
+        root.unmount();
+      }
     },
   };
 }

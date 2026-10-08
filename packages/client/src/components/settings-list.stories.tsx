@@ -1,9 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { useState } from 'react';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
 import { settingsListMocks } from '../../mocks/settings-list-mock';
-import type { NavigationDestination } from '../navigation/context';
 import { Text } from '../primitives/text';
 import { SettingsList } from './settings-list';
 
@@ -26,9 +24,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Settings: Story = {
   render: function SettingsPreview(args) {
-    const [selectedDestination, setSelectedDestination] = useState<
-      NavigationDestination | undefined
-    >(args.selectedDestination);
     return (
       <View
         className="w-full bg-background wide:w-shell-list wide:bg-sidebar"
@@ -43,14 +38,7 @@ export const Settings: Story = {
             Settings
           </Text>
         </View>
-        <SettingsList
-          {...args}
-          selectedDestination={selectedDestination}
-          onSelect={(destination) => {
-            setSelectedDestination(destination);
-            args.onSelect(destination);
-          }}
-        />
+        <SettingsList {...args} />
       </View>
     );
   },

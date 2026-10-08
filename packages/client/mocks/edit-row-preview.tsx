@@ -1,6 +1,5 @@
 import type { ToolCallUpdate } from '@repo/contracts';
 import type * as React from 'react';
-import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { DesktopShell } from '../src/components/desktop-shell';
 import { EditRow } from '../src/components/edit-row';
@@ -13,7 +12,6 @@ export function EditRowPreview({
   row: ToolCallUpdate;
 }): React.JSX.Element {
   const wide = useWide();
-  const [sidebarShown, setSidebarShown] = useState(true);
   const feed = (
     <ScrollView
       className="flex-1"
@@ -29,8 +27,8 @@ export function EditRowPreview({
     <DesktopShell
       selectedSection="sessions"
       attentionCount={0}
-      sidebarShown={sidebarShown}
-      onSidebarShownChange={setSidebarShown}
+      sidebarShown={true}
+      onSidebarShownChange={() => {}}
       onSectionChange={() => {}}
       listHeader={<Text className="text-base font-semibold">Sessions</Text>}
       list={null}

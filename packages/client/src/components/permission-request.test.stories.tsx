@@ -1,47 +1,50 @@
 import type { RequestMock } from '@repo/api/mocks';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
+import { permissionProps, permissionMocks } from '../../mocks/request-mock';
 import {
   PermissionFeedPreview,
-  PermissionRequestPreview,
-  permissionMocks,
+  RequestFrame,
 } from '../../mocks/request-preview';
 import { settleViewport } from '../../mocks/settle-viewport';
+import { PermissionRequest } from './permission-request';
+import galleryMeta, { Overview as Gallery } from './permission-request.stories';
 
 const allowOnceLabel = 'Allow once';
 const allowedOnceAnswer = 'You allowed this once';
 
-const meta = {
+const denialFeedback = 'Keep the cache.';
+
+const meta: Meta<typeof PermissionRequest> = {
   title: 'Tests/PermissionRequest',
-  component: PermissionRequestPreview,
+  component: PermissionRequest,
   parameters: { previewPadding: false },
-  args: { onAnswer: fn() },
-} satisfies Meta<typeof PermissionRequestPreview>;
+  render: (args) => (
+    <RequestFrame>
+      <PermissionRequest {...permissionProps(args)} />
+    </RequestFrame>
+  ),
+  args: { ...permissionProps({}), onAnswer: fn(), onDenialMessageChange: fn() },
+};
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 function denial(width: number): Story {
   return {
+    args: { denialMessage: denialFeedback },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
-      await userEvent.click(canvas.getByRole('button', { name: 'Deny' }));
       const input = canvas.getByRole('textbox', {
         name: 'What should the Agent do instead?',
       });
       await expect(input).toHaveFocus();
-      await userEvent.type(input, 'Keep the cache.');
+      await expect(input).toHaveValue(denialFeedback);
       await userEvent.click(canvas.getByRole('button', { name: 'Deny' }));
       await expect(args.onAnswer).toHaveBeenCalledTimes(1);
       await expect(args.onAnswer).toHaveBeenCalledWith({
         optionId: 'reject_once',
-        message: 'Keep the cache.',
+        message: denialFeedback,
       });
-      await expect(
-        canvas.getByText('You denied: “Keep the cache.”'),
-      ).toBeVisible();
-      await expect(
-        canvas.getByRole('textbox', { name: 'Message' }),
-      ).toBeVisible();
     },
   };
 }
@@ -50,7 +53,11 @@ export const DenyWide = denial(1440);
 
 function allow(width: number, mock?: RequestMock): Story {
   return {
-    args: { mock },
+    args: permissionProps({
+      mock,
+      onAnswer: fn(),
+      onDenialMessageChange: fn(),
+    }),
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
       await expect(canvas.queryByRole('status')).not.toBeInTheDocument();
@@ -62,7 +69,6 @@ function allow(width: number, mock?: RequestMock): Story {
       await expect(args.onAnswer).toHaveBeenCalledWith({
         optionId: 'allow_once',
       });
-      await expect(canvas.getByText(allowedOnceAnswer)).toBeVisible();
     },
   };
 }
@@ -73,7 +79,10 @@ export const SecondAgentAllowWide = allow(1440, permissionMocks[1]);
 
 function submitting(width: number, mock?: RequestMock): Story {
   return {
-    args: { mock, state: { kind: 'submitting' } },
+    args: {
+      ...permissionProps({ mock, onAnswer: fn(), onDenialMessageChange: fn() }),
+      state: { kind: 'submitting' },
+    },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
       const sending = canvas.getByRole('button', { name: 'Sending…' });
@@ -92,7 +101,10 @@ export const SecondAgentSubmittingWide = submitting(1440, permissionMocks[1]);
 
 function responseError(width: number, mock?: RequestMock): Story {
   return {
-    args: { mock, error: 'Could not send the answer. Try again.' },
+    args: {
+      ...permissionProps({ mock, onAnswer: fn(), onDenialMessageChange: fn() }),
+      error: 'Could not send the answer. Try again.',
+    },
     play: async ({ canvas }) => {
       await settleViewport(width);
       await expect(canvas.getByRole('alert')).toHaveTextContent(
@@ -118,22 +130,17 @@ export const SecondAgentResponseErrorWide = responseError(
 
 function denyWithoutMessage(width: number): Story {
   return {
+    args: { denialMessage: '' },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
-      await userEvent.click(canvas.getByRole('button', { name: 'Deny' }));
       await userEvent.click(canvas.getByRole('button', { name: 'Back' }));
-      await expect(
-        canvas.getByRole('button', { name: allowOnceLabel }),
-      ).toBeVisible();
-      await userEvent.click(canvas.getByRole('button', { name: 'Deny' }));
+      await expect(args.onDenialMessageChange).toHaveBeenCalledWith(undefined);
+      await expect(args.onAnswer).not.toHaveBeenCalled();
       await userEvent.click(canvas.getByRole('button', { name: 'Deny' }));
       await expect(args.onAnswer).toHaveBeenCalledTimes(1);
       await expect(args.onAnswer).toHaveBeenCalledWith({
         optionId: 'reject_once',
       });
-      await expect(
-        canvas.getByText('You denied', { exact: true }),
-      ).toBeVisible();
     },
   };
 }
@@ -141,18 +148,12 @@ export const DenyWithoutMessagePhone = denyWithoutMessage(390);
 export const DenyWithoutMessageWide = denyWithoutMessage(1440);
 
 export const Keyboard: Story = {
+  args: { denialMessage: 'Use a new branch.' },
   play: async ({ canvas, userEvent, args }) => {
     await settleViewport(1440);
-    await userEvent.keyboard('{Escape}');
     await expect(canvas.getByRole('textbox')).toHaveFocus();
     await userEvent.keyboard('{Escape}');
-    await expect(
-      canvas.queryByRole('textbox', {
-        name: 'What should the Agent do instead?',
-      }),
-    ).not.toBeInTheDocument();
-    await userEvent.keyboard('{Escape}');
-    await userEvent.type(canvas.getByRole('textbox'), 'Use a new branch.');
+    await expect(args.onDenialMessageChange).toHaveBeenCalledWith(undefined);
     await userEvent.keyboard('{Enter}');
     await expect(args.onAnswer).toHaveBeenCalledTimes(1);
     await expect(args.onAnswer).toHaveBeenCalledWith({
@@ -162,10 +163,19 @@ export const Keyboard: Story = {
   },
 };
 
+export const OpensDenial: Story = {
+  play: async ({ canvas, userEvent, args }) => {
+    await settleViewport(1440);
+    await userEvent.click(canvas.getByRole('button', { name: 'Deny' }));
+    await expect(args.onDenialMessageChange).toHaveBeenCalledWith('');
+    await expect(args.onAnswer).not.toHaveBeenCalled();
+  },
+};
+
 function conflict(width: number, mock?: RequestMock): Story {
   return {
     args: {
-      mock,
+      ...permissionProps({ mock, onAnswer: fn(), onDenialMessageChange: fn() }),
       state: { kind: 'answered', reason: 'Already answered on another device' },
     },
     play: async ({ canvas, args }) => {
@@ -238,3 +248,40 @@ export const FirstAgentOutcomePhone = permissionFeed(390, 0, true);
 export const FirstAgentOutcomeWide = permissionFeed(1440, 0, true);
 export const SecondAgentOutcomePhone = permissionFeed(390, 1, true);
 export const SecondAgentOutcomeWide = permissionFeed(1440, 1, true);
+
+function galleryFixture(mock: RequestMock, width: number): Story {
+  const props = permissionProps({ mock });
+  return {
+    render: () => Gallery.render({ ...galleryMeta.args, agent: mock.agent }),
+    play: async ({ canvas }) => {
+      await settleViewport(width);
+      await expect(
+        canvas.getAllByText(props.request.title).length,
+      ).toBeGreaterThan(0);
+      if (!props.input) throw new Error('Recorded permission needs input.');
+      await expect(
+        canvas.getAllByText(props.input, { normalizer: (text): string => text })
+          .length,
+      ).toBeGreaterThan(0);
+    },
+  };
+}
+const [firstGalleryAgent, secondGalleryAgent] = permissionMocks;
+if (!firstGalleryAgent || !secondGalleryAgent)
+  throw new Error('Recorded gallery needs both Agents.');
+export const GalleryFirstAgentPhone: Story = galleryFixture(
+  firstGalleryAgent,
+  390,
+);
+export const GalleryFirstAgentWide: Story = galleryFixture(
+  firstGalleryAgent,
+  1024,
+);
+export const GallerySecondAgentPhone: Story = galleryFixture(
+  secondGalleryAgent,
+  390,
+);
+export const GallerySecondAgentWide: Story = galleryFixture(
+  secondGalleryAgent,
+  1024,
+);

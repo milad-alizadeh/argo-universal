@@ -31,14 +31,17 @@ function surfaceBehind(fade: Element): string {
 }
 
 // Every gradient stop of a scroll fade is the colour of the surface behind it; pass the surface when it ignores pointer events.
-export function expectFadeColor(fade: Element, surface?: Element): void {
+export async function expectFadeColor(
+  fade: Element,
+  surface?: Element,
+): Promise<void> {
   const surfaceColor = surface
     ? getComputedStyle(surface).backgroundColor
     : surfaceBehind(fade);
   const stops = fade.querySelectorAll('stop');
-  expect(stops).toHaveLength(3);
+  await expect(stops).toHaveLength(3);
   for (const stop of stops)
-    expect(pixel(stop.getAttribute('stop-color') ?? '')).toEqual(
+    await expect(pixel(stop.getAttribute('stop-color') ?? '')).toEqual(
       pixel(surfaceColor),
     );
 }

@@ -387,17 +387,12 @@
       "rules": {
         "complexity": "off",
         "jsx-a11y/no-autofocus": "off",
-        "jsx-a11y/role-has-required-aria-props": "off",
         "max-lines": "off",
         "max-lines-per-function": "off",
         "max-statements": "off",
-        "react/set-state-in-effect": "off",
-        "sonarjs/cognitive-complexity": "off",
         "sonarjs/no-nested-conditional": "off",
         "stylistic/multiline-comment-style": "off",
         "typescript/consistent-type-assertions": "off",
-        "typescript/no-floating-promises": "off",
-        "unicorn-js/prefer-switch": "off",
         "unicorn/no-useless-undefined": "off",
         "unicorn/prefer-spread": "off"
       }
@@ -523,7 +518,6 @@
         "sonarjs/no-nested-functions": "off",
         "typescript/consistent-type-assertions": "off",
         "typescript/no-misused-promises": "off",
-        "unicorn-js/prefer-switch": "off",
         "unicorn/consistent-function-scoping": "off",
         "unicorn/prefer-ternary": "off"
       }
