@@ -13,6 +13,20 @@ Where the canon cannot apply as written, these are the recorded applications (ow
 7. **Pattern names.** PT1 names apply only where the pattern is unmistakable. "Repository" keeps its `GLOSSARY.md` meaning, a git repository.
 8. **Server Components.** A8 is met by ADR-0002: the Server owns the data and the logic beside it. The Expo app stays a bundled UI with no React Server Components, which is the canon's native default.
 
+9. **A2 folder mapping.** The existing folders implement the three tiers (Spec 0006, Owner #9, option (a)); no tier folder is renamed or added for this mapping.
+
+   | Tier | Packages | Inside a package |
+   |---|---|---|
+   | Local | the apps; each Agent adapter folder | client `screens/` and `components/<feature>/`; Server `services/<domain>/`, `engine/`, `supervisor/` |
+   | Product | contracts, db, api, the shared Agent module, git, client | client `feed/`, `trpc/`, `connection/`, `navigation/`; a Server domain's `index.ts` |
+   | Generic | machine-log, uniwind, `tooling/*` | client `src/lib/` and the vendored `src/primitives/`; Server `src/lib/` |
+
+   Git is product because Checkout is a `GLOSSARY.md` term (ADR-0008). Shell and Turn have UI homonyms, so their word matches need a person. Switch to `lib/generic/` and `lib/product/` when three or more shared product modules need a home outside the client's four named product folders.
+
+   The accepted exceptions are a mock CLI importing its own Agent's adapter by relative path (ADR-0015), `millisecondsPerSecond` defined once per package, and the Composer importing the Plan proposal card from `requests/` for its card swap (Spec 0006, Owner #17).
+
+   `pnpm quality:hoisting` reports production importers separately from tests, stories and mocks, follows barrels to declaring modules, and flags generic imports and names for review. It runs on demand and never gates CI. Update its tier mapping with the matching oxlint direction block when a tier folder is added.
+
 Enforcement lands through a spec issue, folder by folder, so CI stays green.
 
 ## Considered Options
