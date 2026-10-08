@@ -2,24 +2,26 @@ import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   type Actor,
-  type ActorLogic,
   type ActorOptions,
   type AnyEventObject,
   createActor,
-  matchesState,
-  type EventFromLogic,
   fromCallback,
   type SnapshotFrom,
 } from 'xstate';
 import {
   type DirectedGraphNode,
   type EventExecutor,
-  TestModel,
-  type TestPath,
+  type GraphEventFromLogic,
+  type AdjacencyMap,
+  type StatePath,
+  getAdjacencyMap,
+  getPathsFromEvents,
+  getShortestPaths,
+  getSimplePaths,
   toDirectedGraph,
 } from 'xstate/graph';
 import { createConnectionInput } from '../../mocks/connection-input';
-import { type ConnectionInput, connectionMachine } from './machine';
+import { connectionMachine } from './machine';
 
 // Numbers written out so the model cannot grade itself.
 const offlineDelayMs = 10_000;
@@ -50,14 +52,6 @@ const machine = connectionMachine.provide({
   },
 });
 type ConnectionSnapshot = SnapshotFrom<typeof machine>;
-type ConnectionEvent = EventFromLogic<typeof machine>;
-// xstate/graph types its logic without emitted events.
-const modelLogic = machine as unknown as ActorLogic<
-  ConnectionSnapshot,
-  ConnectionEvent,
-  ConnectionInput
->;
-
 // The machine reads neither while the watcher and refetch are mocks.
 const input = createConnectionInput();
 
@@ -131,23 +125,50 @@ afterEach(() => {
 
 describe('connection model', (): void => {
   let modelClock: ReturnType<typeof createModelClock>;
-  const payloads: Record<string, ConnectionEvent> = {
-    'connection.lost': { type: 'connection.lost', error: lostError },
+  const fixtures = [
+    { type: 'connection.opened' },
+    { type: 'connection.lost', error: lostError },
+    { type: 'connection.attemptRequested' },
+    { type: 'app.foreground' },
+    { type: 'xstate.after.retryDelay.connection.attempt.waiting' },
+    { type: 'xstate.after.offlineDelay.connection.link.reconnecting' },
+  ] satisfies GraphEventFromLogic<typeof machine>[];
+  type ConnectionGraphEvent = (typeof fixtures)[number];
+  const canGraphEvent = (
+    snapshot: ConnectionSnapshot,
+    event: ConnectionGraphEvent,
+  ): boolean => {
+    switch (event.type) {
+      case 'xstate.after.retryDelay.connection.attempt.waiting':
+        return snapshot.matches({ attempt: 'waiting' });
+      case 'xstate.after.offlineDelay.connection.link.reconnecting':
+        return snapshot.matches({ link: 'reconnecting' });
+      default:
+        return snapshot.can(event);
+    }
   };
   const eventTypes = (node: DirectedGraphNode): string[] => [
     ...node.edges.map((edge) => edge.label.text),
     ...node.children.flatMap(eventTypes),
   ];
   const events = [...new Set(eventTypes(toDirectedGraph(machine)))].map(
-    (type) => payloads[type] ?? ({ type } as ConnectionEvent),
+    (type): ConnectionGraphEvent => {
+      const fixture = fixtures.find((event) => event.type === type);
+      if (!fixture) throw new Error(`No fixture for Connection event ${type}`);
+      return fixture;
+    },
   );
 
-  const model = new TestModel(modelLogic, {
+  const options = {
     input,
     events,
-    filterEvents: (snapshot, event): boolean => snapshot.can(event),
+    filterEvents: canGraphEvent,
     // Only the first attempt is special, so more attempts make no new vertex; `retriedFrom` lets a retry return to a state that a path already passed.
-    serializeState: (snapshot, event, previous): string =>
+    serializeState: (
+      snapshot: ConnectionSnapshot,
+      event: ConnectionGraphEvent | undefined,
+      previous?: ConnectionSnapshot,
+    ): string =>
       JSON.stringify({
         value: snapshot.value,
         attempted: snapshot.context.attempts > 0,
@@ -155,13 +176,12 @@ describe('connection model', (): void => {
           ? previous?.value
           : undefined,
       }),
-    stateMatcher: (snapshot, key): boolean => matchesState(key, snapshot.value),
-  });
+  };
 
   // Select the actual scheduled callback so simultaneous retry and offline paths stay independent.
   const executors: Record<
     string,
-    EventExecutor<ConnectionSnapshot, ConnectionEvent>
+    EventExecutor<ConnectionSnapshot, ConnectionGraphEvent>
   > = {
     'xstate.init': () => {
       modelClock = createModelClock();
@@ -207,23 +227,55 @@ describe('connection model', (): void => {
     },
   };
 
+  const isPrefixOf = (
+    path: StatePath<ConnectionSnapshot, ConnectionGraphEvent>,
+    other: typeof path,
+  ): boolean =>
+    path.steps.every(
+      (step, index) =>
+        JSON.stringify(step.event) ===
+        JSON.stringify(other.steps[index]?.event),
+    );
+  const terminalPaths = (
+    paths: StatePath<ConnectionSnapshot, ConnectionGraphEvent>[],
+  ): typeof paths =>
+    paths.filter(
+      (path, index) =>
+        !paths.some(
+          (other, otherIndex) =>
+            (other.steps.length > path.steps.length ||
+              (other.steps.length === path.steps.length &&
+                otherIndex < index)) &&
+            isPrefixOf(path, other),
+        ),
+    );
   const shortestPaths = [
-    ...model.getShortestPaths(),
-    ...model.getPathsFromEvents([
-      { type: 'connection.attemptRequested' },
-      { type: 'connection.attemptRequested' },
-      { type: 'connection.lost', error: lostError },
-    ]),
+    ...terminalPaths(getShortestPaths(machine, options)),
+    ...getPathsFromEvents(
+      machine,
+      [
+        { type: 'connection.attemptRequested' },
+        { type: 'connection.attemptRequested' },
+        { type: 'connection.lost', error: lostError },
+      ],
+      options,
+    ),
   ];
   // Direct paths cover first-connect losses; simple paths cover later reconnect cycles.
-  const simplePaths = model.getSimplePaths({
-    filterEvents: (snapshot, event) =>
-      snapshot.can(event) &&
-      !(
-        linkState(snapshot) === 'connecting' && event.type === 'connection.lost'
-      ),
-  });
-  const title = (path: TestPath<ConnectionSnapshot, ConnectionEvent>): string =>
+  const simplePaths = terminalPaths(
+    getSimplePaths(machine, {
+      ...options,
+      filterEvents: (snapshot, event) =>
+        canGraphEvent(snapshot, event) &&
+        !(
+          linkState(snapshot) === 'connecting' &&
+          event.type === 'connection.lost'
+        ),
+    }),
+  );
+  const title = (
+    path: StatePath<ConnectionSnapshot, ConnectionGraphEvent>,
+  ): string =>
     path.steps
       .map(({ event }) =>
         event.type.replace(/^xstate\.after\.(\w+)\..*$/, 'after $1'),
@@ -237,7 +289,12 @@ describe('connection model', (): void => {
     it.each(paths.map((path) => [title(path), path] as const))(
       '%s',
       async (_, path) => {
-        await path.test({ events: executors, states });
+        for (const step of path.steps) {
+          const execute = executors[step.event.type];
+          if (!execute) throw new Error(`No executor for ${step.event.type}`);
+          await execute(step);
+          states['*']?.(step.state);
+        }
       },
     );
   });
@@ -245,7 +302,14 @@ describe('connection model', (): void => {
   it('the generated paths walk every transition', () => {
     expect(
       unwalkedTransitions({
-        models: [model],
+        models: [
+          {
+            getAdjacencyMap: (): AdjacencyMap<
+              ConnectionSnapshot,
+              ConnectionGraphEvent
+            > => getAdjacencyMap(machine, options),
+          },
+        ],
         paths: [...shortestPaths, ...simplePaths],
         stateKey: (snapshot) => JSON.stringify(snapshot.value),
         eventKey: (event) => event.type,
