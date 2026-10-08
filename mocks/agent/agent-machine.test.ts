@@ -10,16 +10,29 @@ import {
   findAgentAdapter,
 } from '@repo/agents';
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { terminalPaths } from '@repo/vitest/model-paths';
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 import {
   type Actor,
-  type AnyEventObject,
   createActor,
-  type EventFromLogic,
   fromCallback,
   type SnapshotFrom,
 } from 'xstate';
-import { TestModel } from 'xstate/graph';
+import {
+  type StatePath,
+  type GraphEventFromLogic,
+  getShortestPaths,
+  getPathsFromEvents,
+  getAdjacencyMap,
+} from 'xstate/graph';
 import {
   createMockAdapter,
   type MockAgentStream,
@@ -39,6 +52,8 @@ const vendorReadyEvent = 'vendor.ready';
 const agentUsageEvent = 'agent.usage';
 const existingVendorSessionId = 'existing-vendor-session';
 const agentShellOutputEvent = 'agent.shellOutput';
+const vendorSessionErrorEvent = 'xstate.error.actor.vendorSession';
+const agentStartDelayEvent = 'xstate.after.agentStartLimit.agent.starting';
 
 const ready: AgentReady = {
   vendorSessionId: 'vendor-session-1',
@@ -90,7 +105,6 @@ const adapter = createMockAdapter({
   },
 });
 type AgentSnapshot = SnapshotFrom<typeof agentMachine>;
-type AgentMachineEvent = EventFromLogic<typeof agentMachine>;
 
 const start = (): void => {
   agent = createActor(agentMachine, { input }).start();
@@ -211,9 +225,18 @@ const events = [
   },
   { type: 'vendor.failed', error: failure.message },
   { type: 'vendor.closed' },
-  { type: 'xstate.after.agentStartLimit.agent.starting' },
-  { type: 'xstate.error.actor.vendorSession', error: failure },
-] as AnyEventObject[] as AgentMachineEvent[];
+  { type: agentStartDelayEvent },
+  { type: vendorSessionErrorEvent, actorId: 'vendorSession', error: failure },
+] satisfies GraphEventFromLogic<typeof agentMachine>[];
+type AgentMachineEvent = (typeof events)[number];
+const isCommand = (
+  event: AgentMachineEvent,
+): event is Extract<AgentMachineEvent, AgentCommand> =>
+  event.type.startsWith('agent.');
+const graphParent = createActor(fromCallback<AgentEvent>(() => {})).start();
+afterAll((): void => {
+  graphParent.stop();
+});
 
 const eventKey = (event: AgentMachineEvent): string => {
   if (event.type === vendorEvent) return `${event.type}:${event.event.type}`;
@@ -221,28 +244,45 @@ const eventKey = (event: AgentMachineEvent): string => {
     return `${event.type}:${!!event.turnId}`;
   return event.type;
 };
-const model = new TestModel(agentMachine, {
+const canGraphEvent = (
+  snapshot: AgentSnapshot,
+  event: AgentMachineEvent,
+): boolean => {
+  switch (event.type) {
+    case agentStartDelayEvent:
+      return snapshot.matches('starting');
+    case vendorSessionErrorEvent:
+      return true;
+    default:
+      return snapshot.can(event);
+  }
+};
+const options = {
   input: {
     adapter,
     sessionId: 'model',
     cwd: '/project',
     vendorSessionId: null,
     configOptions: [],
-    parent: {} as AgentInput['parent'],
+    parent: graphParent,
   },
   events,
-  filterEvents: (snapshot, event): boolean =>
-    snapshot.status === 'active' && snapshot.can(event),
+  filterEvents: (snapshot: AgentSnapshot, event: AgentMachineEvent): boolean =>
+    snapshot.status === 'active' && canGraphEvent(snapshot, event),
   // Include the incoming edge so shortest paths also visit every self-transition.
-  serializeState: (snapshot, event, previous): string =>
+  serializeState: (
+    snapshot: AgentSnapshot,
+    event: AgentMachineEvent | undefined,
+    previous?: AgentSnapshot,
+  ): string =>
     JSON.stringify({
       value: snapshot.value,
       planApproval: snapshot.context.capabilities?.planApproval,
       failure: snapshot.context.failure,
       via: event && `${JSON.stringify(previous?.value)} ${eventKey(event)}`,
     }),
-});
-const paths = model.getShortestPaths();
+};
+const paths = terminalPaths(getShortestPaths(agentMachine, options));
 const executors = Object.fromEntries(
   events.map(
     ({
@@ -254,8 +294,8 @@ const executors = Object.fromEntries(
       type,
       async ({ event }: { event: AgentMachineEvent }): Promise<void> => {
         const state = agent.getSnapshot();
-        if (event.type.startsWith('agent.')) {
-          const command = event as AgentCommand;
+        if (isCommand(event)) {
+          const command = event;
           const previousCommands = [...commands];
           agent.send(command);
           await settle();
@@ -263,7 +303,7 @@ const executors = Object.fromEntries(
             expect(commands).toEqual([...previousCommands, command]);
         } else if (event.type === vendorEvent) {
           const previousEvents = [...received];
-          stream.send(event.event as MockAgentStreamEvent);
+          stream.send(event.event);
           expect(received).toEqual([...previousEvents, event.event]);
         } else if (event.type === vendorReadyEvent) {
           await connect(event.ready);
@@ -279,11 +319,12 @@ const executors = Object.fromEntries(
           connection.resolve(ready);
           shutdown.resolve();
           await settle();
-        } else if (event.type.startsWith('xstate.after.agentStartLimit')) {
+        } else if (event.type === agentStartDelayEvent) {
           await vi.advanceTimersByTimeAsync(10_000);
         } else {
-          // A callback error is modelled here; the example below exercises a real throw.
-          agent.send(event);
+          expect.unreachable(
+            'Callback errors use graph proof or the actual startup port',
+          );
         }
       },
     ],
@@ -302,6 +343,16 @@ const expectState = (expected: AgentSnapshot): void => {
   if (actual.matches('stopped')) expect(shutdowns).toBe(1);
 };
 
+const callbackErrorKind = (
+  path: StatePath<AgentSnapshot, AgentMachineEvent>,
+): 'startup' | 'late' | null => {
+  const index = path.steps.findIndex(
+    (step) => step.event.type === vendorSessionErrorEvent,
+  );
+  if (index < 1) return null;
+  return path.steps[index - 1]?.state.matches('starting') ? 'startup' : 'late';
+};
+
 describe('Agent machine model', (): void => {
   it.each(
     paths.map(
@@ -309,17 +360,62 @@ describe('Agent machine model', (): void => {
         path,
       ): [
         string,
-        import('xstate/graph').TestPath<AgentSnapshot, AgentMachineEvent>,
-      ] => [path.description, path] as const,
+        import('xstate/graph').StatePath<AgentSnapshot, AgentMachineEvent>,
+      ] =>
+        [
+          `${callbackErrorKind(path) === 'late' ? 'graph transition' : 'actor replay'}: ${path.steps.map((step) => eventKey(step.event)).join(' → ')}`,
+          path,
+        ] as const,
     ),
   )('%s', async (_, path): Promise<void> => {
-    await path.test({ events: executors, states: { '*': expectState } });
+    const errorKind = callbackErrorKind(path);
+    if (errorKind === 'late') {
+      const [proof] = getPathsFromEvents(
+        agentMachine,
+        path.steps.slice(1).map((step) => step.event),
+        options,
+      );
+      expect(proof?.state.value).toBe('failed');
+      expect(proof?.state.status).toBe('done');
+      expect(proof?.state.context.failure).toBe(failure.message);
+      expect(proof?.state.output).toEqual({ failure: failure.message });
+      return;
+    }
+    const modelExecutors = { ...executors };
+    if (errorKind === 'startup') {
+      input.adapter = {
+        ...adapter,
+        initialMappingState: (): never => {
+          throw failure;
+        },
+      };
+      modelExecutors['xstate.init'] = async (): Promise<void> => {
+        agent = createActor(agentMachine, { input });
+      };
+      modelExecutors[vendorSessionErrorEvent] = async (): Promise<void> => {
+        agent.start();
+        await settle();
+      };
+    }
+    for (const step of path.steps) {
+      const execute = modelExecutors[step.event.type];
+      if (!execute)
+        throw new Error(`Missing Agent executor for ${step.event.type}`);
+      await execute(step);
+      expectState(step.state);
+    }
   });
 
   it('the generated paths walk every transition', (): void => {
     expect(
       unwalkedTransitions({
-        models: [model],
+        models: [
+          {
+            getAdjacencyMap: (): ReturnType<
+              typeof getAdjacencyMap<typeof agentMachine, AgentMachineEvent>
+            > => getAdjacencyMap(agentMachine, options),
+          },
+        ],
         paths,
         stateKey: (snapshot): string => JSON.stringify(snapshot.value),
         eventKey: eventKey,
@@ -811,4 +907,20 @@ it('fails startup before accepting invalid ready data', async (): Promise<void> 
   expect(commands).toEqual([]);
   expect(cleanups).toBe(1);
   expect(shutdowns).toBe(1);
+});
+
+it('fails callback startup before connecting when adapter initialization throws', (): void => {
+  input.adapter = {
+    ...adapter,
+    initialMappingState: (): never => {
+      throw failure;
+    },
+  };
+  start();
+  expect(agent.getSnapshot().value).toBe('failed');
+  expect(agent.getSnapshot().status).toBe('done');
+  expect(agent.getSnapshot().output).toEqual({ failure: failure.message });
+  expect(inputs).toEqual([]);
+  expect(cleanups).toBe(0);
+  expect(shutdowns).toBe(0);
 });
