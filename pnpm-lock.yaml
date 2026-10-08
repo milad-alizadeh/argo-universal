@@ -419,6 +419,9 @@ catalogs:
     jscpd:
       specifier: 5.4.0
       version: 5.4.0
+    jsonc-parser:
+      specifier: 3.3.1
+      version: 3.3.1
     knip:
       specifier: 6.39.0
       version: 6.39.0
@@ -1333,6 +1336,9 @@ importers:
 
   tools:
     dependencies:
+      jsonc-parser:
+        specifier: 'catalog:'
+        version: 3.3.1
       zod:
         specifier: 'catalog:'
         version: 4.6.5
