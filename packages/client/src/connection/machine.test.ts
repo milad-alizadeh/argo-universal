@@ -1,6 +1,4 @@
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
-import type { QueryClient } from '@tanstack/react-query';
-import type { TRPCWebSocketClient } from '@trpc/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   type Actor,
@@ -18,6 +16,7 @@ import {
   type TestPath,
   toDirectedGraph,
 } from 'xstate/graph';
+import { createConnectionInput } from '../../mocks/connection-input';
 import { type ConnectionInput, connectionMachine } from './machine';
 
 // Numbers written out so the model cannot grade itself.
@@ -58,10 +57,7 @@ const modelLogic = machine as unknown as ActorLogic<
 >;
 
 // The machine reads neither while the watcher and refetch are mocks.
-const input: ConnectionInput = {
-  webSocketClient: {} as TRPCWebSocketClient,
-  queryClient: {} as QueryClient,
-};
+const input = createConnectionInput();
 
 const startConnection = (): ReturnType<typeof createActor<typeof machine>> => {
   connection = createActor(machine, { input });
