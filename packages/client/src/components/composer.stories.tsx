@@ -4,20 +4,20 @@ import type * as React from 'react';
 import { Platform, ScrollView, View } from 'react-native';
 import { action } from 'storybook/actions';
 import {
-  ComposerMock,
+  composerProps,
+  type ComposerMockProps,
   composerImages,
   composerPlanDone,
   oversizedComposerImage,
 } from '../../mocks/composer-mock';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
+import { Composer } from './composer';
 import { imageSelectionFailureMessage } from './use-image-draft';
 
 const spacingAndColoursPrompt = 'Match the spacing and colours.';
 
-function ComposerPreview(
-  args: React.ComponentProps<typeof ComposerMock>,
-): React.JSX.Element {
-  return <ComposerMock key={args.initialAgent} {...args} />;
+function ComposerPreview(args: ComposerMockProps): React.JSX.Element {
+  return <Composer {...composerProps(args)} />;
 }
 
 const [firstAgent] = newSessionCatalogs.bothAvailable;
@@ -25,7 +25,8 @@ if (!firstAgent) throw new Error('Recorded catalog needs an available Agent.');
 
 const meta = {
   title: 'Sessions/Composer',
-  component: ComposerPreview,
+  component: Composer,
+  render: (args): React.JSX.Element => <Composer {...composerProps(args)} />,
   parameters: {
     previewPadding: false,
     screenPreview: Platform.OS !== 'web',
@@ -55,7 +56,7 @@ const meta = {
       },
     },
   },
-} satisfies Meta<typeof ComposerPreview>;
+} satisfies Meta<ComposerMockProps>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 

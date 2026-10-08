@@ -1,20 +1,23 @@
+import { sessionRows } from '@repo/api/mocks';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
+import { createRoot } from 'react-dom/client';
 import { View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { expect, fn, waitFor } from 'storybook/test';
 import {
   delayFooterLayout,
   getDelayedFooterLayouts,
   installFooterLayoutDelay,
 } from '../../mocks/delayed-footer-layout';
-import { sessionsListProps } from '../../mocks/sessions-list-mock';
-import { SessionsNewSessionPreview } from '../../mocks/sessions-new-session-preview';
-import { SessionsPaginationPreview } from '../../mocks/sessions-pagination-preview';
+import { createSessionListUpdatesMock } from '../../mocks/session-list-updates-mock';
 import {
-  createSessionsRenderingMock,
-  SessionsRenderingPreview,
-} from '../../mocks/sessions-rendering-preview';
+  sessionsListProps,
+  largeSessions,
+} from '../../mocks/sessions-list-mock';
+import { renderingSessions } from '../../mocks/sessions-rendering-mock';
 import { settleViewport } from '../../mocks/settle-viewport';
+import { SessionsScreen } from '../screens/sessions-screen';
 import { scrollFadeHeight } from './scroll-fade';
 import { SessionsList } from './sessions-list';
 
@@ -23,6 +26,9 @@ const expandedAttribute = 'aria-expanded';
 
 const onNewSession = fn();
 const onProjectSettings = fn();
+const unchangedSessionLabel = 'Unchanged Session, Idle';
+const selectableSessionId = 'memo-selectable';
+
 const meta = {
   title: 'Tests/SessionsList',
   component: SessionsList,
@@ -48,37 +54,61 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const renderingMock = createSessionsRenderingMock();
+const insertion = createSessionListUpdatesMock({
+  sessions: largeSessions.slice(0, 12),
+});
+const pagination = createSessionListUpdatesMock({
+  sessions: largeSessions.slice(0, 100),
+  pageSize: 20,
+});
+
 export const MemoizedRows: Story = {
-  beforeEach: () => renderingMock.reset(),
-  render: (args) => <SessionsRenderingPreview {...args} mock={renderingMock} />,
-  play: async ({ canvas, userEvent }) => {
-    await canvas.findByRole('button', { name: 'Unchanged Session, Idle' });
-    await new Promise<void>((resolve) =>
-      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-    );
-    const activityReads = renderingMock.getActivityReads();
-    expect(activityReads).toBeGreaterThan(0);
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Selectable Session, Idle' }),
-    );
-    await waitFor(() =>
-      expect(
-        canvas.getByRole('button', { name: 'Selectable Session, Idle' }),
-      ).toHaveAttribute('aria-selected', 'true'),
-    );
-    expect(
-      renderingMock.getActivityReads(),
-      'Selecting another row must not recompute unchanged row content',
-    ).toBe(activityReads);
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Update Session' }),
-    );
-    await canvas.findByText('Session activity updated');
-    expect(
-      renderingMock.getActivityReads(),
-      'Updating another Session must not recompute unchanged row content',
-    ).toBe(activityReads);
+  name: 'Controlled selection and activity',
+  render: () => <View testID="controlled-list" />,
+  play: async ({ canvas, userEvent, args }) => {
+    const root = createRoot(canvas.getByTestId('controlled-list'));
+    const render = (props: React.ComponentProps<typeof SessionsList>): void =>
+      root.render(
+        <SafeAreaProvider>
+          <View style={{ height: 360 }}>
+            <SessionsList {...props} />
+          </View>
+        </SafeAreaProvider>,
+      );
+    const props = { ...args, sessions: renderingSessions };
+    try {
+      render(props);
+      const unchanged = await canvas.findByRole('button', {
+        name: unchangedSessionLabel,
+      });
+      const selectable = canvas.getByRole('button', {
+        name: 'Selectable Session, Idle',
+      });
+      await userEvent.click(selectable);
+      await expect(args.onSelect).toHaveBeenCalledWith(selectableSessionId);
+      render({ ...props, selectedSessionId: selectableSessionId });
+      await waitFor(() =>
+        expect(selectable).toHaveAttribute('aria-selected', 'true'),
+      );
+      await expect(
+        canvas.getByRole('button', { name: unchangedSessionLabel }),
+      ).toBe(unchanged);
+      render({
+        ...props,
+        selectedSessionId: selectableSessionId,
+        sessions: renderingSessions.map((session) =>
+          session.sessionId === 'memo-updated'
+            ? { ...session, activity: 'Session activity updated' }
+            : session,
+        ),
+      });
+      await canvas.findByText('Session activity updated');
+      await expect(
+        canvas.getByRole('button', { name: unchangedSessionLabel }),
+      ).toBe(unchanged);
+    } finally {
+      root.unmount();
+    }
   },
 };
 
@@ -121,8 +151,9 @@ export const ProjectActionsDark: Story = {
 };
 
 export const InsertSessionOpaqueRows: Story = {
-  parameters: { screenPreview: true },
-  render: (args) => <SessionsNewSessionPreview {...args} />,
+  parameters: { screenPreview: true, trpc: insertion.fixtures },
+  beforeEach: () => insertion.reset(),
+  render: () => <SessionsScreen query="" archived={false} />,
   play: async ({ canvas, userEvent }) => {
     const heading = await canvas.findByRole('button', {
       name: exampleProjectName,
@@ -131,10 +162,12 @@ export const InsertSessionOpaqueRows: Story = {
       name: 'Large Session 0, Idle',
     });
     await userEvent.hover(heading);
-    await waitFor(() => {
+    await waitFor(async () => {
       const firstRow = existing.getBoundingClientRect();
       const project = heading.getBoundingClientRect();
-      expect(Math.abs(firstRow.top - project.bottom)).toBeLessThanOrEqual(3);
+      await expect(Math.abs(firstRow.top - project.bottom)).toBeLessThanOrEqual(
+        3,
+      );
     });
     const initialTop = existing.getBoundingClientRect().top;
     const positions = [initialTop];
@@ -147,48 +180,57 @@ export const InsertSessionOpaqueRows: Story = {
       }
       requestAnimationFrame(sample);
     });
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'New Session in Example Project' }),
-    );
+    insertion.publish({
+      type: 'changed',
+      session: {
+        ...sessionRows.idle,
+        sessionId: 'new-session-1',
+        title: 'New Session 1',
+        activity: 'Session created',
+        activityAt: 3000,
+      },
+    });
     const inserted = await canvas.findByRole('button', {
       name: 'New Session 1, Idle',
     });
-    function assertOpaqueRow(button: HTMLElement): void {
+    async function assertOpaqueRow(button: HTMLElement): Promise<void> {
       const surface = button.parentElement;
       if (!surface) throw new Error('Missing Session row surface');
       const color = getComputedStyle(surface).backgroundColor;
-      expect(
+      await expect(
         color,
         'The animated row surface must be opaque, not only its button',
       ).not.toBe('rgba(0, 0, 0, 0)');
-      expect(color).not.toBe('transparent');
-      expect(getComputedStyle(surface).opacity).toBe('1');
-      expect(getComputedStyle(surface).overflow).toBe('hidden');
+      await expect(color).not.toBe('transparent');
+      await expect(getComputedStyle(surface).opacity).toBe('1');
+      await expect(getComputedStyle(surface).overflow).toBe('hidden');
     }
-    assertOpaqueRow(inserted);
-    assertOpaqueRow(existing);
+    await assertOpaqueRow(inserted);
+    await assertOpaqueRow(existing);
     for (let frame = 0; frame < 12; frame++) {
       await new Promise<void>((resolve) =>
         requestAnimationFrame(() => resolve()),
       );
-      assertOpaqueRow(inserted);
-      assertOpaqueRow(existing);
+      await assertOpaqueRow(inserted);
+      await assertOpaqueRow(existing);
       positions.push(existing.getBoundingClientRect().top);
     }
-    await waitFor(() => {
+    await waitFor(async () => {
       const newRectangle = inserted.getBoundingClientRect();
       const oldRectangle = existing.getBoundingClientRect();
-      expect(newRectangle.bottom).toBeLessThanOrEqual(oldRectangle.top + 1);
+      await expect(newRectangle.bottom).toBeLessThanOrEqual(
+        oldRectangle.top + 1,
+      );
     });
     await movement;
     const finalTop = existing.getBoundingClientRect().top;
-    expect(finalTop - initialTop).toBeGreaterThan(20);
-    expect(
+    await expect(finalTop - initialTop).toBeGreaterThan(20);
+    await expect(
       positions.some((top) => top > initialTop + 1 && top < finalTop - 1),
       'Existing rows must pass through intermediate positions, not jump',
     ).toBe(true);
     await userEvent.hover(inserted);
-    assertOpaqueRow(inserted);
+    await assertOpaqueRow(inserted);
   },
 };
 export const InsertSessionOpaqueRowsDark: Story = {
@@ -198,7 +240,11 @@ export const InsertSessionOpaqueRowsDark: Story = {
 
 export const ScrollFadePadding: Story = {
   parameters: { screenPreview: true },
-  render: (args) => <SessionsNewSessionPreview {...args} />,
+  render: (args) => (
+    <View className="flex-1 w-full wide:w-shell-list" style={{ minHeight: 0 }}>
+      <SessionsList {...args} sessions={largeSessions.slice(0, 12)} />
+    </View>
+  ),
   play: async ({ canvas }) => {
     // At a phone's size twelve Sessions overflow the list, so it can scroll.
     if ('__vitest_browser__' in globalThis) await settleViewport(390);
@@ -206,24 +252,24 @@ export const ScrollFadePadding: Story = {
     const heading = await canvas.findByRole('button', {
       name: exampleProjectName,
     });
-    await waitFor(() => {
-      expect(
+    await waitFor(async () => {
+      await expect(
         heading.getBoundingClientRect().top -
           scroll.getBoundingClientRect().top,
       ).toBeGreaterThanOrEqual(19);
     });
     // The top fade waits until content has scrolled under the header.
-    expect(canvas.queryByTestId('scroll-fade-top')).toBeNull();
+    await expect(canvas.queryByTestId('scroll-fade-top')).toBeNull();
     // Until the rows measure, the list is not yet tall enough to scroll.
-    await waitFor(() => {
+    await waitFor(async () => {
       scroll.scrollTop = 40;
-      expect(scroll.scrollTop).toBeGreaterThan(0);
+      await expect(scroll.scrollTop).toBeGreaterThan(0);
     });
     const topFade = await canvas.findByTestId('scroll-fade-top');
     const bottomFade = canvas.getByTestId('scroll-fade-bottom');
     const surface = topFade.parentElement;
     if (!surface) throw new Error('Missing list surface');
-    expect(
+    await expect(
       getComputedStyle(surface).maskImage,
       'The list surface must stay opaque instead of revealing the page behind it',
     ).toBe('none');
@@ -241,27 +287,29 @@ export const ScrollFadePadding: Story = {
     }
     for (const fade of [topFade, bottomFade]) {
       const stops = fade.querySelectorAll('stop');
-      expect(stops.length).toBeGreaterThan(0);
+      await expect(stops.length).toBeGreaterThan(0);
       for (const stop of stops)
-        expect(colorPixel(getComputedStyle(stop).stopColor)).toEqual(
+        await expect(colorPixel(getComputedStyle(stop).stopColor)).toEqual(
           colorPixel(surfaceColor),
         );
     }
-    expect(topFade.getBoundingClientRect().height).toBe(scrollFadeHeight.top);
-    expect(bottomFade.getBoundingClientRect().height).toBe(
+    await expect(topFade.getBoundingClientRect().height).toBe(
+      scrollFadeHeight.top,
+    );
+    await expect(bottomFade.getBoundingClientRect().height).toBe(
       scrollFadeHeight.bottom,
     );
     scroll.scrollTop = scroll.scrollHeight;
     const last = await canvas.findByRole('button', {
       name: 'Large Session 11, Idle',
     });
-    await waitFor(() => {
+    await waitFor(async () => {
       scroll.scrollTop = scroll.scrollHeight;
       const viewportBottom = scroll.getBoundingClientRect().bottom;
-      expect(
+      await expect(
         viewportBottom - last.getBoundingClientRect().bottom,
       ).toBeGreaterThanOrEqual(27);
-      expect(last.getBoundingClientRect().bottom).toBeGreaterThan(
+      await expect(last.getBoundingClientRect().bottom).toBeGreaterThan(
         scroll.getBoundingClientRect().top,
       );
     });
@@ -273,29 +321,41 @@ export const ScrollFadePaddingDark: Story = {
 };
 
 export const PaginationSpinnerVisible: Story = {
-  beforeEach: delayFooterLayout,
-  parameters: { screenPreview: true },
-  render: (args) => <SessionsPaginationPreview {...args} />,
+  beforeEach: async () => {
+    pagination.reset();
+    const restore = delayFooterLayout();
+    await settleViewport(390);
+    return () => {
+      pagination.release();
+      restore();
+    };
+  },
+  parameters: { screenPreview: true, trpc: pagination.fixtures },
+  render: () => <SessionsScreen query="" archived={false} />,
   play: async ({ canvas }) => {
     const scroll = await canvas.findByTestId('sessions-scroll');
     await waitFor(() =>
       expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight),
     );
     const initialHeight = scroll.scrollHeight;
+    pagination.hold();
     scroll.scrollTop = initialHeight;
     const spinner = await canvas.findByRole('progressbar', {
       name: 'Loading more Sessions',
     });
     await waitFor(() => expect(getDelayedFooterLayouts()).toBeGreaterThan(0));
     await waitFor(
-      () => {
+      async () => {
         const viewport = scroll.getBoundingClientRect();
         const indicator = spinner.getBoundingClientRect();
-        expect(indicator.top).toBeGreaterThanOrEqual(viewport.top + 20);
-        expect(indicator.bottom).toBeLessThanOrEqual(viewport.bottom - 28);
+        await expect(indicator.top).toBeGreaterThanOrEqual(viewport.top + 20);
+        await expect(indicator.bottom).toBeLessThanOrEqual(
+          viewport.bottom - 28,
+        );
       },
       { timeout: 1000 },
     );
+    pagination.release();
     await waitFor(
       () => expect(canvas.queryByRole('progressbar')).not.toBeInTheDocument(),
       { timeout: 3000 },

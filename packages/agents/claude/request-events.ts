@@ -3,7 +3,8 @@ import {
   permissionOptions,
   type PermissionOption,
 } from '@repo/contracts';
-import { parseAgentEvent, type AgentEvent } from '../src/agent-events';
+import type { AgentEvent } from '../src/agent-events';
+import { toElicitationRequest } from '../src/elicitation-form';
 import { dictionary } from './dictionary';
 import type { SDKControlRequest } from './messages';
 
@@ -43,46 +44,24 @@ export function toRequestEvents(message: SDKControlRequest): AgentEvent[] {
     const questions = input.questions.map(
       (question: unknown): Record<string, unknown> => dictionary(question),
     );
-    const names = questions.map((question): unknown => question.question);
-    const requestedSchema = {
-      type: 'object',
-      properties: Object.fromEntries(
-        questions.map((question, index): [string, unknown] => {
+    return [
+      toElicitationRequest(
+        request.tool_use_id,
+        questions.map((question) => {
           if (!Array.isArray(question.options))
             throw new Error('Expected question options');
-          const choices = question.options.map((option: unknown): object => {
-            const fields = dictionary(option);
-            return {
-              const: fields.label,
-              title: fields.label,
-              description: fields.description,
-            };
-          });
-          return [
-            typeof names[index] === 'string' ? names[index] : '',
-            {
-              type: question.multiSelect === true ? 'array' : 'string',
-              title: question.header,
-              description: question.question,
-              ...(question.multiSelect === true
-                ? { items: { anyOf: choices } }
-                : { oneOf: choices }),
-            },
-          ];
+          return {
+            id: question.question,
+            title: question.header,
+            question: question.question,
+            multiple: question.multiSelect === true,
+            options: question.options.map((option: unknown) => {
+              const fields = dictionary(option);
+              return { label: fields.label, description: fields.description };
+            }),
+          };
         }),
       ),
-      required: names,
-    };
-    return [
-      parseAgentEvent({
-        type: 'agent.elicitationRequested',
-        request: {
-          mode: 'form',
-          message: names.join('\n'),
-          toolCallId: request.tool_use_id,
-          requestedSchema,
-        },
-      }),
     ];
   }
   return [

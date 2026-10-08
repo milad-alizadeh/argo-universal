@@ -1,6 +1,5 @@
 import { DotsThreeIcon } from 'phosphor-react-native/src/icons/DotsThree';
 import type * as React from 'react';
-import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import {
   DesktopShell,
@@ -16,34 +15,29 @@ import {
 } from '../src/primitives/dropdown-menu';
 import { Text } from '../src/primitives/text';
 
-export function DesktopShellMock({
+export function DesktopShellFrame({
   selectedSection = 'sessions',
   attentionCount = 1,
   sidebarShown = true,
   inspectorState = 'closed',
-  showInspectorControls = false,
   inspector,
   children,
-}: Partial<DesktopShellProps> & {
-  showInspectorControls?: boolean;
-}): React.JSX.Element {
-  const [section, setSection] = useState(selectedSection);
-  const [shown, setShown] = useState(sidebarShown);
-  const [inspection, setInspection] = useState(inspectorState);
-  useEffect(() => setSection(selectedSection), [selectedSection]);
-  useEffect(() => setShown(sidebarShown), [sidebarShown]);
-  useEffect(() => setInspection(inspectorState), [inspectorState]);
-  const title = section.charAt(0).toUpperCase() + section.slice(1);
+  onSectionChange = () => {},
+  onSidebarShownChange = () => {},
+  onInspectorStateChange = () => {},
+}: Partial<DesktopShellProps>): React.JSX.Element {
+  const title =
+    selectedSection.charAt(0).toUpperCase() + selectedSection.slice(1);
   return (
     <View className="flex-1">
       <DesktopShell
-        selectedSection={section}
+        selectedSection={selectedSection}
         attentionCount={attentionCount}
-        sidebarShown={shown}
-        onSidebarShownChange={setShown}
-        onSectionChange={setSection}
-        inspectorState={inspection}
-        onInspectorStateChange={setInspection}
+        sidebarShown={sidebarShown}
+        onSidebarShownChange={onSidebarShownChange}
+        onSectionChange={onSectionChange}
+        inspectorState={inspectorState}
+        onInspectorStateChange={onInspectorStateChange}
         inspectorHeader={
           <Text className="text-sm font-semibold">Inspector</Text>
         }
@@ -106,14 +100,6 @@ export function DesktopShellMock({
           </View>
         )}
       </DesktopShell>
-      {showInspectorControls && (
-        <Button
-          accessibilityLabel="Open Inspector"
-          onPress={() => setInspection('open')}
-        >
-          <Text>Open Inspector</Text>
-        </Button>
-      )}
     </View>
   );
 }

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { useState } from 'react';
 import { View } from 'react-native';
+import { action } from 'storybook/actions';
 import {
   composerNoEffortSelections,
   composerUnavailableConfigurations,
@@ -19,32 +19,17 @@ export default meta;
 
 export const NoEffortSelection: StoryObj<typeof meta> = {
   name: 'No effort selection',
-  render: function NoEffortSelectionRender(args) {
-    const [options, setOptions] = useState(args.configuration.configOptions);
-    return (
-      <View className="p-4">
-        <ComposerAgentModelControl
-          {...args}
-          configuration={{
-            ...args.configuration,
-            configOptions: options,
-            onConfigChange: (configId, value) =>
-              setOptions((previous) =>
-                previous.map((option) => {
-                  if (
-                    option.configId === configId &&
-                    option.type === 'select' &&
-                    typeof value === 'string'
-                  )
-                    return { ...option, currentValue: value };
-                  return option;
-                }),
-              ),
-          }}
-        />
-      </View>
-    );
-  },
+  render: (args) => (
+    <View className="p-4">
+      <ComposerAgentModelControl
+        {...args}
+        configuration={{
+          ...args.configuration,
+          onConfigChange: action('configuration changed'),
+        }}
+      />
+    </View>
+  ),
 };
 
 const unavailableConfiguration = composerUnavailableConfigurations[0];
@@ -53,27 +38,16 @@ if (!unavailableConfiguration)
 export const UnavailableAgent: StoryObj<typeof meta> = {
   name: 'Agent unavailable',
   args: { configuration: unavailableConfiguration },
-  render: function UnavailableAgentRender(args) {
-    const [agents, setAgents] = useState(args.configuration.agents);
-    const [agent, setAgent] = useState(args.configuration.agent);
-    return (
-      <View className="p-4">
-        <ComposerAgentModelControl
-          {...args}
-          configuration={{
-            ...args.configuration,
-            agents,
-            agent,
-            configOptions:
-              agents.find((entry) => entry.agent === agent)?.configOptions ??
-              [],
-            onAgentChange: setAgent,
-            onAgentRetry: () => setAgents(newSessionCatalogs.bothAvailable),
-          }}
-        />
-      </View>
-    );
-  },
+  render: (args) => (
+    <View className="p-4">
+      <ComposerAgentModelControl
+        {...args}
+        configuration={{
+          ...args.configuration,
+          onAgentChange: action('Agent changed'),
+          onAgentRetry: action('retry Agent'),
+        }}
+      />
+    </View>
+  ),
 };
-
-import { newSessionCatalogs } from '@repo/api/mocks';

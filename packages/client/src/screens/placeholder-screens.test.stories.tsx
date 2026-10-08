@@ -1,65 +1,50 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import type * as React from 'react';
-import { View } from 'react-native';
-import { expect, waitFor } from 'storybook/test';
-import { SettingsListMock } from '../../mocks/settings-list-mock';
+import { expect } from 'storybook/test';
+import { settleViewport } from '../../mocks/settle-viewport';
+import {
+  AccountsScreen,
+  AtlasScreen,
+  IssuesScreen,
+  ProjectSettingsScreen,
+} from './placeholder-screens';
 
 const meta = {
   title: 'Tests/PlaceholderScreens',
-  component: SettingsListMock,
-  render: (args): React.JSX.Element => (
-    <View className="h-[796px] w-full">
-      <SettingsListMock {...args} />
-    </View>
-  ),
-} satisfies Meta<typeof SettingsListMock>;
+  component: AccountsScreen,
+  parameters: { screenPreview: true },
+} satisfies Meta<typeof AccountsScreen>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const checkPlaceholder: NonNullable<Story['play']> = async ({
-  canvas,
-  args,
-}) => {
-  const { page } = await import('vitest/browser');
-  let description = 'Accounts will appear here.';
-  if (args.page === 'project')
-    description = 'Settings for example-project will appear here.';
-  else if (args.page === 'issues') description = 'Issues will appear here.';
-  else if (args.page === 'atlas') description = 'Atlas will appear here.';
-  for (const width of [390, 1440]) {
-    await page.viewport(width, 844);
-    await waitFor(() => expect(canvas.getByText(description)).toBeVisible());
-    if (width === 1440)
-      await expect(await canvas.findByTestId('desktop-shell')).toBeVisible();
-    else if (args.page === 'issues' || args.page === 'atlas')
-      await expect(await canvas.findByTestId('phone-shell')).toBeVisible();
-    else
+function placeholder(description: string): NonNullable<Story['play']> {
+  return async ({ canvas }) => {
+    for (const width of [390, 1440]) {
+      await settleViewport(width);
+      await expect(canvas.getByText(description)).toBeVisible();
       await expect(
-        await canvas.findByRole('button', { name: 'Back to Settings' }),
-      ).toBeVisible();
-  }
-};
-
+        canvas.queryByRole('button', { name: 'Back to Settings' }),
+      ).not.toBeInTheDocument();
+    }
+  };
+}
 export const Issues: Story = {
-  args: { page: 'issues' },
-  play: checkPlaceholder,
+  render: () => <IssuesScreen />,
+  play: placeholder('Issues will appear here.'),
 };
-export const Atlas: Story = { args: { page: 'atlas' }, play: checkPlaceholder };
+export const Atlas: Story = {
+  render: () => <AtlasScreen />,
+  play: placeholder('Atlas will appear here.'),
+};
 export const Accounts: Story = {
-  args: { page: 'accounts' },
-  play: checkPlaceholder,
+  play: placeholder('Accounts will appear here.'),
 };
 export const ProjectSettings: Story = {
-  args: { page: 'project' },
-  play: checkPlaceholder,
+  render: () => <ProjectSettingsScreen name="example-project" />,
+  play: placeholder('Settings for example-project will appear here.'),
 };
-
 export const IssuesDark: Story = { ...Issues, globals: { mode: 'dark' } };
-
 export const AtlasDark: Story = { ...Atlas, globals: { mode: 'dark' } };
-
 export const AccountsDark: Story = { ...Accounts, globals: { mode: 'dark' } };
-
 export const ProjectSettingsDark: Story = {
   ...ProjectSettings,
   globals: { mode: 'dark' },
