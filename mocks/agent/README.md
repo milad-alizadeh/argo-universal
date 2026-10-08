@@ -12,4 +12,6 @@ Agent payloads project the exported types from `@repo/contracts` for Feed change
 
 The three capability fields describe the differences that shared code needs: `permissionFeedback` says whether the Agent can deliver feedback on a rejected Permission request (the Server refuses feedback unless it is `true`), `planApproval` selects whether answering a Plan proposal continues a running Turn or starts a new one, and `stopShell` says whether an individual Shell can be stopped. A Plan answer that starts a Turn carries the service's `turnId`. A `keep_planning` answer requires feedback. The script owns the ready data and config changes; the mock invents no vendor values.
 
-This mock is for machine composition tests. End-to-end tests continue to mock only the Agent CLI under `mocks/cli/<agent>/`.
+App E2E uses this same adapter with `app-fixtures.ts`: one shared completed Turn and image reply, plus availability setup states. Registered Agent identities and metadata come from the production registry; probes and Sessions use only the fixture methods. The E2E-only Engine bootstrap supplies those adapters without changing production startup. See ADR-0018.
+
+Change the shared Argo fixture when the product contract changes. Provider SDK updates belong to separate real-adapter contract tests; app fixtures do not regenerate expected values from those adapters.
