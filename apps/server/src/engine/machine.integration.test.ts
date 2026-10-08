@@ -14,6 +14,7 @@ import {
   type Actor,
   type AnyEventObject,
   createActor,
+  matchesState,
   type EventFromLogic,
   fromCallback,
   fromPromise,
@@ -203,7 +204,7 @@ const model = new TestModel(machine, {
       failure: snapshot.context.failure !== null,
       via: event && `${JSON.stringify(previous?.value)} ${event.type}`,
     }),
-  stateMatcher: (snapshot, key): boolean => snapshot.matches(key as never),
+  stateMatcher: (snapshot, key): boolean => matchesState(key, snapshot.value),
 });
 
 const latest = <TCall>(calls: TCall[]): NonNullable<TCall> =>

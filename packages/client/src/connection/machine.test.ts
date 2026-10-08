@@ -5,6 +5,7 @@ import {
   type ActorLogic,
   type AnyEventObject,
   createActor,
+  matchesState,
   type EventFromLogic,
   fromCallback,
   type SnapshotFrom,
@@ -112,7 +113,7 @@ describe('connection model', (): void => {
           ? previous?.value
           : undefined,
       }),
-    stateMatcher: (snapshot, key): boolean => snapshot.matches(key as never),
+    stateMatcher: (snapshot, key): boolean => matchesState(key, snapshot.value),
   });
 
   // Each sends the delayed event itself: the retry and offline timers run at once, so crossing one could fire the other. The example tests below time them.

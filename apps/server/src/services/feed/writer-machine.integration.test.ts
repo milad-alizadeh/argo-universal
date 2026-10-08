@@ -5,6 +5,7 @@ import {
   type Actor,
   type AnyEventObject,
   createActor,
+  matchesState,
   type EventFromLogic,
   fromPromise,
   type SnapshotFrom,
@@ -106,7 +107,7 @@ const model = new TestModel(machine, {
       waiting: snapshot.context.queue.length > snapshot.context.batchSize,
       via: event && `${JSON.stringify(previous?.value)} ${event.type}`,
     }),
-  stateMatcher: (snapshot, key): boolean => snapshot.matches(key as never),
+  stateMatcher: (snapshot, key): boolean => matchesState(key, snapshot.value),
 });
 
 const latestCall = (): WriteBatchCall =>

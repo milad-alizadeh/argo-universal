@@ -14,6 +14,7 @@ import {
   type Actor,
   type AnyEventObject,
   createActor,
+  matchesState,
   type EventFromLogic,
   fromCallback,
   type SnapshotFrom,
@@ -147,7 +148,7 @@ describe('supervisor model', (): void => {
         crashes: snapshot.context.crashTimes.length,
         via: event && `${JSON.stringify(previous?.value)} ${event.type}`,
       }),
-    stateMatcher: (snapshot, key): boolean => snapshot.matches(key as never),
+    stateMatcher: (snapshot, key): boolean => matchesState(key, snapshot.value),
   });
 
   // Moves to one millisecond short of a delay, checks the state held, then crosses it.

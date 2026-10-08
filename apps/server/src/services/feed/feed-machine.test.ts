@@ -6,6 +6,7 @@ import {
   type ActorLogic,
   type AnyEventObject,
   createActor,
+  matchesState,
   type EventFromLogic,
   type SnapshotFrom,
 } from 'xstate';
@@ -152,7 +153,7 @@ const modelOptions = {
   filterEvents: (snapshot: FeedSnapshot, event: FeedMachineEvent): boolean =>
     snapshot.status === 'active' && snapshot.can(event),
   stateMatcher: (snapshot: FeedSnapshot, key: string): boolean =>
-    snapshot.matches(key as never),
+    matchesState(key, snapshot.value),
 };
 // A vertex for each transition, so the shortest paths reach every transition, back edges too.
 const transitionModel = new TestModel(graphLogic, {

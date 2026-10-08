@@ -6,6 +6,7 @@ import {
   type ActorLogic,
   type AnyEventObject,
   createActor,
+  matchesState,
   type EventFromLogic,
   fromCallback,
   fromPromise,
@@ -251,7 +252,7 @@ describe('server connection model', (): void => {
         ...vertex(snapshot),
         via: event && `${JSON.stringify(previous?.value)} ${event.type}`,
       }),
-    stateMatcher: (snapshot, key): boolean => snapshot.matches(key as never),
+    stateMatcher: (snapshot, key): boolean => matchesState(key, snapshot.value),
   });
   // Without `via`: with it, the polling loops give thousands of simple paths.
   const simplePathModel = new TestModel(modelLogic, {
