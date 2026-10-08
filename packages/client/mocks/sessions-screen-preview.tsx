@@ -3,7 +3,7 @@ import {
   SessionsHeader,
   SessionsScreen,
   useSessionsFilter,
-} from '../src/screens/SessionsScreen';
+} from '../src/screens/sessions-screen';
 
 // The Sessions list under a plain header row, as a shell draws it.
 export function SessionsScreenPreview() {

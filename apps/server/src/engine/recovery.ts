@@ -2,6 +2,7 @@ import { runningToolCallStatuses } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
 import { and, eq, or, sql } from 'drizzle-orm';
+import { createRejectionCounter } from '../lib/count-rejections';
 import {
   decodeStoredFeedRow,
   fromFeedRow,
@@ -49,20 +50,16 @@ export function recoverAfterRestart(database: Database): void {
       .all();
 
     const revisions = new Map<string, number>();
-    let rejectedShapes = 0;
+    const rejections = createRejectionCounter('recovery');
     for (const { row, maxRevision } of rows) {
       try {
         fromFeedRow(row.sessionId, decodeStoredFeedRow(row));
       } catch (error) {
-        rejectedShapes += 1;
-        console.error(
-          `recovery: rejected Feed shape #${rejectedShapes} (${row.sessionId}/${row.id})`,
-          {
-            error,
-            payloadVersion: row.payloadVersion,
-            expectedPayloadVersion: payloadVersion,
-          },
-        );
+        rejections.report(`rejected Feed shape (${row.sessionId}/${row.id})`, {
+          error,
+          payloadVersion: row.payloadVersion,
+          expectedPayloadVersion: payloadVersion,
+        });
       }
 
       const revision = (revisions.get(row.sessionId) ?? maxRevision) + 1;
