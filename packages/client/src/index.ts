@@ -34,7 +34,7 @@ export {
   HeaderButton,
   type HeaderButtonProps,
 } from './components/header-button';
-export { Icon, type IconProps } from './components/icon';
+export { Icon, type IconProps } from './lib/icon';
 export {
   IssueIndicator,
   type IssueIndicatorProps,

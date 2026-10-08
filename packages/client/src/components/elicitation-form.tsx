@@ -6,16 +6,16 @@ import { useForm, useStore } from '@tanstack/react-form';
 import { PlugIcon, WarningCircleIcon } from 'phosphor-react-native';
 import { useMemo } from 'react';
 import { View } from 'react-native';
+import { Text } from '#primitives/text';
+import { Icon } from '../lib/icon';
+import { ElicitationField } from './elicitation-field';
 import {
   createElicitationSchema,
   type ElicitationValues,
-} from '#lib/elicitation-schema';
-import { Text } from '#primitives/text';
-import { ElicitationField } from './elicitation-field';
-import { Icon } from './icon';
+} from './elicitation-schema';
 import { RequestAction, RequestCard, type RequestState } from './request-card';
 
-export type { ElicitationValues } from '#lib/elicitation-schema';
+export type { ElicitationValues } from './elicitation-schema';
 export type ElicitationAnswer = Pick<
   SessionAnswerElicitationInput,
   'action' | 'content'

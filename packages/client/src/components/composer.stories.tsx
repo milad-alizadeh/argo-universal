@@ -10,7 +10,7 @@ import {
   oversizedComposerImage,
 } from '../../mocks/composer-mock';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
-import { imageSelectionFailureMessage } from '../lib/use-image-draft';
+import { imageSelectionFailureMessage } from './use-image-draft';
 
 function ComposerPreview(args: ComponentProps<typeof ComposerMock>) {
   return <ComposerMock key={args.initialAgent} {...args} />;

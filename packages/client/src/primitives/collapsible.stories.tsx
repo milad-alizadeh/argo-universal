@@ -3,13 +3,13 @@ import { CaretUpDownIcon } from 'phosphor-react-native/src/icons/CaretUpDown';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
+import { Icon } from '../lib/icon';
 import { Button } from './button';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from './collapsible';
-import { Icon } from './icon';
 import { Text } from './text';
 
 function CollapsibleExample({
