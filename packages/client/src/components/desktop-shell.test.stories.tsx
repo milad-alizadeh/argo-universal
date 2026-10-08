@@ -1,6 +1,7 @@
 import { PortalHost } from '@rn-primitives/portal';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
+import { useLayoutEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { View } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
@@ -65,6 +66,17 @@ const meta = {
   ),
 } satisfies Meta<typeof DesktopShell>;
 
+function CommittedShell({
+  children,
+  onCommit,
+}: {
+  children: React.ReactNode;
+  onCommit: () => void;
+}): React.ReactNode {
+  useLayoutEffect(onCommit, [onCommit]);
+  return children;
+}
+
 function mountShell(
   element: HTMLElement,
   initial: React.ComponentProps<typeof DesktopShellFrame>,
@@ -84,20 +96,24 @@ function mountShell(
   let props = initial;
   const render = async (next: Partial<typeof initial>): Promise<void> => {
     props = { ...props, ...next };
-    root.render(
-      <SafeAreaProvider>
-        <KeyboardProvider>
-          <View className="h-[700px] w-full">
-            <DesktopShellFrame
-              {...props}
-              onSectionChange={onSectionChange}
-              onSidebarShownChange={onSidebarShownChange}
-              onInspectorStateChange={onInspectorStateChange}
-            />
-          </View>
-          <PortalHost />
-        </KeyboardProvider>
-      </SafeAreaProvider>,
+    await new Promise<void>((resolve) =>
+      root.render(
+        <CommittedShell onCommit={resolve}>
+          <SafeAreaProvider>
+            <KeyboardProvider>
+              <View className="h-[700px] w-full">
+                <DesktopShellFrame
+                  {...props}
+                  onSectionChange={onSectionChange}
+                  onSidebarShownChange={onSidebarShownChange}
+                  onInspectorStateChange={onInspectorStateChange}
+                />
+              </View>
+              <PortalHost />
+            </KeyboardProvider>
+          </SafeAreaProvider>
+        </CommittedShell>,
+      ),
     );
     await new Promise(requestAnimationFrame);
   };
@@ -123,6 +139,7 @@ function controlledPlay(
     );
     try {
       await controlled.render({});
+      await context.canvas.findByTestId(desktopShellId);
       await play(context, controlled);
     } finally {
       controlled.root.unmount();
@@ -1038,9 +1055,11 @@ export const OneHeldDragCanCloseAndReopenPanels: Story = {
       'expanded',
     );
     await controlled.render({ inspectorState: 'expanded' });
-    await expect(
-      canvas.getByRole('button', { name: restoreInspectorLabel }),
-    ).toBeVisible();
+    await waitFor(() =>
+      expect(
+        canvas.getByRole('button', { name: restoreInspectorLabel }),
+      ).toBeVisible(),
+    );
     await expect(
       canvas.getByRole('separator', { name: resizeInspectorLabel }),
     ).toBe(inspector);
@@ -1116,9 +1135,11 @@ export const ExpandedInspectorKeepsBothDividerEdgesUsable: Story = {
     await expect(
       canvas.getByTestId(sessionListId).getBoundingClientRect().width,
     ).toBe(360);
-    await expect(
-      canvas.getByRole('button', { name: restoreInspectorLabel }),
-    ).toBeVisible();
+    await waitFor(() =>
+      expect(
+        canvas.getByRole('button', { name: restoreInspectorLabel }),
+      ).toBeVisible(),
+    );
   }),
 };
 
