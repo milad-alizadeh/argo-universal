@@ -7,6 +7,8 @@ import { recordedFile } from '../../mocks/feed-edit-mock';
 import { settleViewport } from '../../mocks/settle-viewport';
 import { DiffView } from './diff-view';
 
+const lastAddedLine = 'new value 60';
+
 const meta = {
   title: 'Tests/DiffView',
   component: DiffView,
@@ -106,13 +108,13 @@ function inlinePreview(width: number): Story {
         await userEvent.click(copy);
         await waitFor(() =>
           expect(clipboard).toHaveBeenCalledWith(
-            expect.stringContaining('new value 60'),
+            expect.stringContaining(lastAddedLine),
           ),
         );
         await expect(
           canvas.getByRole('button', { name: 'Copied' }),
         ).toBeVisible();
-        await expect(canvas.queryByText('new value 60')).toBeNull();
+        await expect(canvas.queryByText(lastAddedLine)).toBeNull();
         await userEvent.click(
           canvas.getByRole('button', { name: 'Show all 120 lines' }),
         );
@@ -124,7 +126,7 @@ function inlinePreview(width: number): Story {
         await expect(
           canvas.queryByRole('button', { name: 'Show all 120 lines' }),
         ).toBeNull();
-        await expect(within(box).getByText('new value 60')).toBeVisible();
+        await expect(within(box).getByText(lastAddedLine)).toBeVisible();
       } finally {
         clipboard.mockRestore();
       }

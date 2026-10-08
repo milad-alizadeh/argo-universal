@@ -7,6 +7,8 @@ import { settleViewport } from '../../mocks/settle-viewport';
 import { ComposerAgentModelControl } from './composer-configuration';
 import { NoEffortSelection } from './composer-configuration.stories';
 
+const noSelectionLabel = 'No selection';
+
 const meta = {
   title: 'Tests/ComposerConfiguration',
   component: ComposerAgentModelControl,
@@ -49,10 +51,12 @@ function noEffortSelection(width: number, agentIndex: number): Story {
       await expect(trigger).not.toHaveTextContent(selected.name);
       await userEvent.click(trigger);
       const overlay = within(document.body);
-      const heading = await overlay.findByText('No selection', { exact: true });
+      const heading = await overlay.findByText(noSelectionLabel, {
+        exact: true,
+      });
       await waitFor(() => expect(heading).toBeVisible());
       const slider = overlay.getByRole('slider', { name: 'Effort' });
-      await expect(slider).toHaveAttribute('aria-valuetext', 'No selection');
+      await expect(slider).toHaveAttribute('aria-valuetext', noSelectionLabel);
       await expect(getComputedStyle(slider).backgroundImage).toBe('none');
       for (const button of overlay.getAllByRole('button', {
         name: /^Set effort to /,
@@ -69,7 +73,7 @@ function noEffortSelection(width: number, agentIndex: number): Story {
         overlay.getByRole('button', { name: `Set effort to ${selected.name}` }),
       ).toHaveAttribute('aria-pressed', 'true');
       await expect(
-        overlay.queryByText('No selection', { exact: true }),
+        overlay.queryByText(noSelectionLabel, { exact: true }),
       ).not.toBeInTheDocument();
       if (width === layoutWidths.wide)
         await expect(trigger).toHaveTextContent(selected.name);

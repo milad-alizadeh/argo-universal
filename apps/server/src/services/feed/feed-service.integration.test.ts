@@ -35,6 +35,9 @@ import { createFeedService } from './feed-service';
 import { writeJobs } from './writer-job';
 import { writerMachine } from './writer-machine';
 
+const upsertRowEvent = 'row.upsert';
+const fifthMessageRowId = 'message-5#0';
+
 let database: Database;
 let runtimeDirectory: string;
 let removeDatabase: () => void;
@@ -207,7 +210,7 @@ const take = async (
 };
 const summary = (outputs: FeedSubscribeOutput[]): string[] =>
   outputs.map((output): string => {
-    if (output.type === 'row.upsert')
+    if (output.type === upsertRowEvent)
       return `upsert ${output.row.id} @${output.rev}`;
     if (output.type === 'row.append')
       return `append ${output.id} +${output.text} at ${output.off} @${output.rev}`;
@@ -357,10 +360,10 @@ describe('feed.page', (): void => {
   });
 
   it('reads rows that the feed actor wrote through the database writer', async (): Promise<void> => {
-    sendChange(openMessage('message-5#0', 'Hi'));
+    sendChange(openMessage(fifthMessageRowId, 'Hi'));
     sendChange({
       type: 'patch',
-      id: 'message-5#0',
+      id: fifthMessageRowId,
       set: { state: 'settled' },
     });
     await vi.advanceTimersByTimeAsync(0);
@@ -375,7 +378,7 @@ describe('feed.page', (): void => {
       maxRevision: 7,
       rows: [
         {
-          id: 'message-5#0',
+          id: fifthMessageRowId,
           position: 5,
           revision: 7,
           state: 'settled',
@@ -396,11 +399,14 @@ describe('feed.row', (): void => {
   });
 
   it('reads the newest version of an open row before it is written', async (): Promise<void> => {
-    sendChange(openMessage('message-5#0'));
-    sendChange(appendText('message-5#0', 'Hel'));
+    sendChange(openMessage(fifthMessageRowId));
+    sendChange(appendText(fifthMessageRowId, 'Hel'));
 
     expect(
-      await caller().feed.row({ sessionId: 'session-1', id: 'message-5#0' }),
+      await caller().feed.row({
+        sessionId: 'session-1',
+        id: fifthMessageRowId,
+      }),
     ).toMatchObject({ revision: 7, content: [{ type: 'text', text: 'Hel' }] });
   });
 
@@ -414,12 +420,12 @@ describe('feed.row', (): void => {
 describe('feed.subscribe', (): void => {
   it('with no sync point, sends the rows not yet stored, then live changes', async (): Promise<void> => {
     startHost();
-    sendChange(openMessage('message-5#0', 'Hel'));
+    sendChange(openMessage(fifthMessageRowId, 'Hel'));
     const updates = await subscribe(null);
 
     expect(summary(await take(updates, 1))).toEqual(['upsert message-5#0 @6']);
 
-    sendChange(appendText('message-5#0', 'lo'));
+    sendChange(appendText(fifthMessageRowId, 'lo'));
     sendChange(openMessage('message-6#0'));
     await vi.advanceTimersByTimeAsync(60);
     expect(summary(await take(updates, 2))).toEqual([
@@ -430,8 +436,8 @@ describe('feed.subscribe', (): void => {
 
   it('catches up from a revision with stored rows and rows not yet written, without repeats', async (): Promise<void> => {
     startHost();
-    sendChange(openMessage('message-5#0'));
-    sendChange(appendText('message-5#0', 'Hel'));
+    sendChange(openMessage(fifthMessageRowId));
+    sendChange(appendText(fifthMessageRowId, 'Hel'));
     const updates = await subscribe({ epoch: 3, revision: 4 });
 
     expect(summary(await take(updates, 2))).toEqual([
@@ -439,7 +445,7 @@ describe('feed.subscribe', (): void => {
       'upsert message-5#0 @7',
     ]);
 
-    sendChange(appendText('message-5#0', 'lo'));
+    sendChange(appendText(fifthMessageRowId, 'lo'));
     await vi.advanceTimersByTimeAsync(60);
     expect(summary(await take(updates, 1))).toEqual([
       'append message-5#0 +lo at 3 @8',
@@ -457,8 +463,12 @@ describe('feed.subscribe', (): void => {
         actions: { log: (): void => {} },
       }),
     );
-    sendChange(openMessage('message-5#0', 'Hi'));
-    sendChange({ type: 'patch', id: 'message-5#0', set: { state: 'settled' } });
+    sendChange(openMessage(fifthMessageRowId, 'Hi'));
+    sendChange({
+      type: 'patch',
+      id: fifthMessageRowId,
+      set: { state: 'settled' },
+    });
     await vi.advanceTimersByTimeAsync(0);
     expect(feedRef()?.getSnapshot().context.rows).toEqual({});
 
@@ -466,16 +476,19 @@ describe('feed.subscribe', (): void => {
 
     expect(await take(updates, 1)).toEqual([
       {
-        type: 'row.upsert',
+        type: upsertRowEvent,
         rev: 7,
-        row: expect.objectContaining({ id: 'message-5#0', state: 'settled' }),
+        row: expect.objectContaining({
+          id: fifthMessageRowId,
+          state: 'settled',
+        }),
       },
     ]);
   });
 
   it('resets a subscriber from another epoch, then sends the rows not yet stored', async (): Promise<void> => {
     startHost();
-    sendChange(openMessage('message-5#0'));
+    sendChange(openMessage(fifthMessageRowId));
     const updates = await subscribe({ epoch: 2, revision: 9 });
 
     expect(summary(await take(updates, 2))).toEqual([
@@ -591,7 +604,7 @@ it('ends a closed Session Feed after draining its last rows', async (): Promise<
   expect(events.at(-1)).toEqual({ type: 'closed', failure: null });
   expect(events).toContainEqual(
     expect.objectContaining({
-      type: 'row.upsert',
+      type: upsertRowEvent,
       row: expect.objectContaining({ id: 'last-row' }),
     }),
   );
@@ -626,11 +639,11 @@ it('ends a closed Session Feed after draining its last rows', async (): Promise<
       resumed,
   }) {
     nextEvents.push(event);
-    if (event.type === 'row.upsert' && event.row.id === 'next-row') break;
+    if (event.type === upsertRowEvent && event.row.id === 'next-row') break;
   }
   expect(nextEvents).toContainEqual(
     expect.objectContaining({
-      type: 'row.upsert',
+      type: upsertRowEvent,
       row: expect.objectContaining({ id: 'next-row' }),
     }),
   );
@@ -692,8 +705,8 @@ it('reads a closed Session Feed without opening a Session', async (): Promise<vo
       [Symbol.asyncIterator](),
   );
   expect(events.map((event): typeof event.type => event.type)).toEqual([
-    'row.upsert',
-    'row.upsert',
+    upsertRowEvent,
+    upsertRowEvent,
     'snapshot',
     'closed',
   ]);

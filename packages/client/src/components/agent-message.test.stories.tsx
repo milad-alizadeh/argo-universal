@@ -10,6 +10,10 @@ import {
 import { settleViewport } from '../../mocks/settle-viewport';
 import { AgentMessage } from './agent-message';
 
+const markdownAnswerId = 'markdown-answer';
+const nativeTextFont = 'SF Pro Text';
+const streamingCaretId = 'streaming-caret';
+
 const meta = {
   title: 'Tests/AgentMessage',
   globals: { themeId: 'default', mode: 'light' },
@@ -22,7 +26,7 @@ const meta = {
       </View>
     ),
   ],
-  args: { row: recordedAgentMessage('agent-1', 'markdown-answer') },
+  args: { row: recordedAgentMessage('agent-1', markdownAnswerId) },
 } satisfies Meta<typeof AgentMessage>;
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -59,7 +63,7 @@ function markdownPlay(heading: string, firstHeader: string) {
       await settleViewport(width);
       await expectType({
         element: canvas.getByText(heading),
-        family: 'SF Pro Text',
+        family: nativeTextFont,
         size: '16px',
         lineHeight: '24px',
         weight: '600',
@@ -67,7 +71,7 @@ function markdownPlay(heading: string, firstHeader: string) {
       const link = canvas.getByRole('link', { name: 'ADR 0007' });
       await expectType({
         element: link,
-        family: 'SF Pro Text',
+        family: nativeTextFont,
         size: '14px',
         lineHeight: '22px',
       });
@@ -80,7 +84,7 @@ function markdownPlay(heading: string, firstHeader: string) {
       });
       await expectType({
         element: canvas.getByText('1.'),
-        family: 'SF Pro Text',
+        family: nativeTextFont,
         size: '14px',
         lineHeight: '22px',
       });
@@ -92,12 +96,12 @@ function markdownPlay(heading: string, firstHeader: string) {
       });
       await expectType({
         element: canvas.getByText(firstHeader),
-        family: 'SF Pro Text',
+        family: nativeTextFont,
         size: '14px',
         lineHeight: '20px',
         weight: '600',
       });
-      await expect(canvas.queryByTestId('streaming-caret')).toBeNull();
+      await expect(canvas.queryByTestId(streamingCaretId)).toBeNull();
     }
   };
 }
@@ -107,26 +111,26 @@ export const FirstAgentMarkdown: Story = {
 };
 
 export const SecondAgentMarkdown: Story = {
-  args: { row: recordedAgentMessage('agent-2', 'markdown-answer') },
+  args: { row: recordedAgentMessage('agent-2', markdownAnswerId) },
   play: markdownPlay('Why every Feed row re-renders', 'Property'),
 };
 
 export const FirstAgentStreaming: Story = {
-  args: { row: streamingAgentMessage('agent-1', 'markdown-answer') },
+  args: { row: streamingAgentMessage('agent-1', markdownAnswerId) },
   play: async ({ canvas }) => {
     for (const width of widths) {
       await settleViewport(width);
-      await expect(canvas.getByTestId('streaming-caret')).toBeVisible();
+      await expect(canvas.getByTestId(streamingCaretId)).toBeVisible();
     }
   },
 };
 
 export const SecondAgentStreaming: Story = {
-  args: { row: streamingAgentMessage('agent-2', 'markdown-answer') },
+  args: { row: streamingAgentMessage('agent-2', markdownAnswerId) },
   play: async ({ canvas }) => {
     for (const width of widths) {
       await settleViewport(width);
-      await expect(canvas.getByTestId('streaming-caret')).toBeVisible();
+      await expect(canvas.getByTestId(streamingCaretId)).toBeVisible();
     }
   },
 };
@@ -180,7 +184,7 @@ export const CopyCodePhone = copyCode(layoutWidths.phone);
 export const CopyCodeWide = copyCode(layoutWidths.wide);
 
 export const TableScrollsSideways: Story = {
-  args: { row: recordedAgentMessage('agent-2', 'markdown-answer') },
+  args: { row: recordedAgentMessage('agent-2', markdownAnswerId) },
   play: async ({ canvas }) => {
     for (const width of widths) {
       await settleViewport(width);

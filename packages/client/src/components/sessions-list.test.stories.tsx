@@ -18,6 +18,9 @@ import { settleViewport } from '../../mocks/settle-viewport';
 import { scrollFadeHeight } from './scroll-fade';
 import { SessionsList } from './sessions-list';
 
+const exampleProjectName = 'Example Project';
+const expandedAttribute = 'aria-expanded';
+
 const onNewSession = fn();
 const onProjectSettings = fn();
 const meta = {
@@ -82,7 +85,7 @@ export const MemoizedRows: Story = {
 export const ProjectActions: Story = {
   play: async ({ canvas, userEvent }) => {
     const heading = await canvas.findByRole('button', {
-      name: 'Example Project',
+      name: exampleProjectName,
     });
     await waitFor(() => expect(heading).toBeVisible());
     await userEvent.hover(heading);
@@ -98,18 +101,18 @@ export const ProjectActions: Story = {
     await expect(settings).toBeVisible();
     await expect(newSession).toBeVisible();
     await userEvent.click(settings);
-    await expect(onProjectSettings).toHaveBeenCalledWith('Example Project');
+    await expect(onProjectSettings).toHaveBeenCalledWith(exampleProjectName);
     await userEvent.click(newSession);
     await expect(onNewSession).toHaveBeenCalledWith(
       sessionsListProps.projects[0]?.id,
     );
-    await expect(heading).toHaveAttribute('aria-expanded', 'true');
+    await expect(heading).toHaveAttribute(expandedAttribute, 'true');
     await userEvent.click(heading);
-    await expect(heading).toHaveAttribute('aria-expanded', 'false');
+    await expect(heading).toHaveAttribute(expandedAttribute, 'false');
     await expect(heading).toHaveTextContent(/^Example Project$/);
     await userEvent.hover(heading);
     await userEvent.click(newSession);
-    await expect(heading).toHaveAttribute('aria-expanded', 'false');
+    await expect(heading).toHaveAttribute(expandedAttribute, 'false');
   },
 };
 export const ProjectActionsDark: Story = {
@@ -122,7 +125,7 @@ export const InsertSessionOpaqueRows: Story = {
   render: (args) => <SessionsNewSessionPreview {...args} />,
   play: async ({ canvas, userEvent }) => {
     const heading = await canvas.findByRole('button', {
-      name: 'Example Project',
+      name: exampleProjectName,
     });
     const existing = canvas.getByRole('button', {
       name: 'Large Session 0, Idle',
@@ -201,7 +204,7 @@ export const ScrollFadePadding: Story = {
     if ('__vitest_browser__' in globalThis) await settleViewport(390);
     const scroll = canvas.getByTestId('sessions-scroll');
     const heading = await canvas.findByRole('button', {
-      name: 'Example Project',
+      name: exampleProjectName,
     });
     await waitFor(() => {
       expect(

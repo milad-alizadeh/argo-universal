@@ -26,6 +26,11 @@ import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
 import { ContentLayout } from '../components/content-layout';
 import { NewSessionScreen } from './new-session-screen';
 
+const agentModelLabel = 'Agent and model';
+const loginTestPrompt = 'Fix the flaky login test';
+const imagePickerDraft = 'Keep this draft while choosing images.';
+const failedImageName = 'failed-selection.png';
+
 const recorder = createNavigationRecorder();
 const started: SessionNewInput[] = [];
 const [exampleProject, landingProject] = newSessionProjects;
@@ -124,7 +129,7 @@ function unavailableAgentRetry(width: number, agentIndex: number): Story {
         await canvas.findByRole('button', { name: 'Send' }),
       ).toBeDisabled();
       await userEvent.click(
-        await canvas.findByRole('button', { name: 'Agent and model' }),
+        await canvas.findByRole('button', { name: agentModelLabel }),
       );
       if (width === layoutWidths.phone)
         await userEvent.click(
@@ -383,7 +388,7 @@ function agentSetup(
       await settleViewport(width);
       await expect(overlay.queryByText(status)).toBeNull();
       await userEvent.click(
-        await canvas.findByRole('button', { name: 'Agent and model' }),
+        await canvas.findByRole('button', { name: agentModelLabel }),
       );
       if (width === layoutWidths.phone)
         await userEvent.click(
@@ -473,7 +478,7 @@ export const Sending: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.type(
       await canvas.findByRole('textbox', { name: 'Message' }),
-      'Fix the flaky login test',
+      loginTestPrompt,
     );
     await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
     await eachLayout(async () => {
@@ -484,7 +489,7 @@ export const Sending: Story = {
       await expect(bounds.bottom).toBeLessThanOrEqual(window.innerHeight);
       await expect(
         canvas.getByRole('textbox', { name: 'Message' }),
-      ).toHaveValue('Fix the flaky login test');
+      ).toHaveValue(loginTestPrompt);
       await expect(
         canvas.getByRole('button', { name: `Project: ${exampleProject.name}` }),
       ).toBeDisabled();
@@ -523,7 +528,7 @@ export const FailedStart: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.type(
       await canvas.findByRole('textbox', { name: 'Message' }),
-      'Fix the flaky login test',
+      loginTestPrompt,
     );
     const callsBeforeSend = agentsListCalls;
     await userEvent.click(canvas.getByRole('button', { name: 'Send' }));
@@ -537,7 +542,7 @@ export const FailedStart: Story = {
       );
       await expect(
         canvas.getByRole('textbox', { name: 'Message' }),
-      ).toHaveValue('Fix the flaky login test');
+      ).toHaveValue(loginTestPrompt);
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeEnabled();
     });
     await expect(recorder.replacements).toEqual([]);
@@ -576,7 +581,7 @@ function effortFollowsModel(width: number, agentIndex: number): Story {
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       const trigger = await canvas.findByRole('button', {
-        name: 'Agent and model',
+        name: agentModelLabel,
       });
       await userEvent.click(trigger);
       await userEvent.click(
@@ -779,7 +784,7 @@ function failedPick(width: number, agentIndex: 0 | 1): Story {
       };
       await userEvent.type(
         await canvas.findByRole('textbox', { name: 'Message' }),
-        'Keep this draft while choosing images.',
+        imagePickerDraft,
       );
       await attachImage(catalog.image.name);
       await expect(
@@ -792,7 +797,7 @@ function failedPick(width: number, agentIndex: 0 | 1): Story {
       );
       restorePicker = (): void => picker.mockRestore();
       try {
-        await attachImage('failed-selection.png');
+        await attachImage(failedImageName);
         const alert = await canvas.findByRole('alert');
         await expect(alert.textContent).toBe(
           "Couldn't select images. Try again.",
@@ -800,12 +805,12 @@ function failedPick(width: number, agentIndex: 0 | 1): Story {
         await expect(alert).toBeVisible();
         await expect(
           canvas.getByRole('textbox', { name: 'Message' }),
-        ).toHaveValue('Keep this draft while choosing images.');
+        ).toHaveValue(imagePickerDraft);
         await expect(
           canvas.getByRole('img', { name: catalog.image.name }),
         ).toBeVisible();
         await expect(
-          canvas.queryByRole('img', { name: 'failed-selection.png' }),
+          canvas.queryByRole('img', { name: failedImageName }),
         ).toBeNull();
         await expect(
           canvas.getAllByRole('button', { name: /^Remove / }),
@@ -827,14 +832,14 @@ function failedPick(width: number, agentIndex: 0 | 1): Story {
         canvas.getByRole('img', { name: catalog.image.name }),
       ).toBeVisible();
       await expect(
-        canvas.queryByRole('img', { name: 'failed-selection.png' }),
+        canvas.queryByRole('img', { name: failedImageName }),
       ).toBeNull();
       await expect(
         canvas.getAllByRole('button', { name: /^Remove / }),
       ).toHaveLength(2);
       await expect(
         canvas.getByRole('textbox', { name: 'Message' }),
-      ).toHaveValue('Keep this draft while choosing images.');
+      ).toHaveValue(imagePickerDraft);
       await expect(calls).toBe(0);
     },
   };
