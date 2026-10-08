@@ -7,9 +7,7 @@ it('returns local branches and the current branch for a Project', async (): Prom
   const caller = appRouter.createCaller({
     services: unreachableServices({
       projects: {
-        branches: async (): Promise<
-          ProjectsBranchesOutput & { currentBranch: string }
-        > => ({
+        branches: async (): Promise<ProjectsBranchesOutput> => ({
           branches: ['main', 'feature'],
           currentBranch: 'feature',
         }),

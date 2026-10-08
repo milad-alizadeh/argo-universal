@@ -7,9 +7,7 @@ it('accepts a file in FormData and returns its BlobRef', async (): Promise<void>
   const caller = appRouter.createCaller({
     services: unreachableServices({
       blob: {
-        upload: async (): Promise<
-          Pick<BlobUploadOutput, 'blobId' | 'mime' | 'bytes'>
-        > => ({
+        upload: async (): Promise<BlobUploadOutput> => ({
           blobId: 'image-1',
           mime: 'image/png',
           bytes: 3,

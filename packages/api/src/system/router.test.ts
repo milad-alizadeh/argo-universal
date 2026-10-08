@@ -36,7 +36,7 @@ describe('system router', (): void => {
 
   it('rejects a system.info that breaks the contract', async (): Promise<void> => {
     const services = servicesWith([]);
-    services.system.info = (): Omit<SystemInfo, 'pid'> & { pid: never } => ({
+    services.system.info = (): SystemInfo => ({
       ...systemInfo,
       pid: 'one' as never,
     });

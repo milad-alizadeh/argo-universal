@@ -506,9 +506,10 @@ it('keeps the latest held choices through updates and cancellation, then applies
     },
   ] satisfies SessionConfigOption[];
   const { session, stream, commands } = await openSession({
-    connect: async (): Promise<
-      typeof mockReady & { configOptions: typeof options }
-    > => ({ ...mockReady, configOptions: options }),
+    connect: async (): Promise<typeof mockReady> => ({
+      ...mockReady,
+      configOptions: options,
+    }),
   });
   sendSessionCommand(session, firstPrompt);
   await expect

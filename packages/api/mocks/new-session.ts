@@ -99,13 +99,7 @@ export const newSessionBranches: ProjectsBranchesOutput = {
 };
 
 export const newSessionInputs: SessionNewInput[] = newSessionOptions.map(
-  ({
-    agent,
-    configOptions,
-    prompt,
-  }): Omit<SessionNewInput, 'checkout'> & {
-    checkout: Extract<SessionNewInput['checkout'], { type: 'worktree' }>;
-  } => ({
+  ({ agent, configOptions, prompt }): SessionNewInput => ({
     projectId: projectsList[0]?.id ?? 'project-1',
     agent,
     checkout: { type: 'worktree', baseBranch: 'main' },

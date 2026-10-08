@@ -40,13 +40,13 @@ type VendorEvent =
   | { type: 'vendor.failed'; error: unknown }
   | { type: 'vendor.closed' };
 
-// The adapter and parent ref are behaviour, so an Agent snapshot is not persistable.
 type AgentMachineEvent = AgentCommand | VendorEvent;
 
 type AgentTurnGuard = (
   args: Pick<GuardArgs<AgentContext, AgentMachineEvent>, 'event'>,
 ) => boolean;
 
+// The adapter and parent ref are behaviour, so an Agent snapshot is not persistable.
 interface AgentContext extends AgentInput {
   capabilities: AgentCapabilities | null;
   failure: string | null;

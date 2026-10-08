@@ -110,13 +110,7 @@ type MalformedFeedCase = {
 type CheckoutCase = {
   adapter: AgentAdapter;
   agent: AgentAdapter['agent'];
-  checkout:
-    | Readonly<
-        Extract<SessionNewInput['checkout'], { type: 'worktree' }> & {
-          baseBranch: 'feature';
-        }
-      >
-    | Readonly<Extract<SessionNewInput['checkout'], { type: 'main' }>>;
+  checkout: SessionNewInput['checkout'];
 };
 type UnavailableAgentCase = {
   adapter: AgentAdapter;

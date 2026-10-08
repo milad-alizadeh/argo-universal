@@ -47,9 +47,10 @@ export const createMockAdapter = (
     connect = async (): Promise<AgentReady> => mockReady,
     stream = (): undefined => undefined,
     stop = async (): Promise<void> => {},
-    probe = async (): Promise<
-      AgentProbe & { availability: 'available'; configOptions: never[] }
-    > => ({ availability: 'available', configOptions: [] }),
+    probe = async (): Promise<AgentProbe> => ({
+      availability: 'available',
+      configOptions: [],
+    }),
   }: MockAgentScript = {},
   agent = 'mock',
 ): AgentAdapter<MockAgentStreamEvent, null> => ({
@@ -58,10 +59,7 @@ export const createMockAdapter = (
   logo: '<svg xmlns="http://www.w3.org/2000/svg"/>',
   probe,
   initialMappingState: (): null => null,
-  toAgentEvents: (
-    event,
-    mappingState,
-  ): AgentMapping<null> & { events: MockAgentStreamEvent[] } => ({
+  toAgentEvents: (event, mappingState): AgentMapping<null> => ({
     events: [event],
     mappingState,
   }),

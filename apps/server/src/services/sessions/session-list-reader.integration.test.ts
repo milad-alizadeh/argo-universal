@@ -27,11 +27,7 @@ it('reads one Session with a thousand Turns without fetching its history', (): v
         ): Pick<
           typeof turn.$inferSelect,
           'id' | 'sessionId' | 'status' | 'startedAt' | 'endedAt' | 'stopReason'
-        > & {
-          status: 'ended';
-          endedAt: NonNullable<typeof turn.$inferSelect.endedAt>;
-          stopReason: 'end_turn';
-        } => ({
+        > => ({
           id: `turn-${index}`,
           sessionId: 'session-1',
           status: 'ended' as const,
@@ -79,7 +75,7 @@ it('reads the existence of a running Subagent Turn without fetching its history'
         ): Pick<
           typeof turn.$inferSelect,
           'id' | 'sessionId' | 'status' | 'startedAt'
-        > & { status: 'running' } => ({
+        > => ({
           id: `child-turn-${index}`,
           sessionId: 'child-1',
           status: 'running' as const,

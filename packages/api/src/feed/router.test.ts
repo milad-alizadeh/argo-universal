@@ -2,7 +2,6 @@ import type {
   AgentMessage,
   FeedPageOutput,
   FeedSubscribeOutput,
-  RowUpsert,
 } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import { unreachableServices } from '../../mocks';
@@ -123,7 +122,7 @@ describe('feed router', (): void => {
     const caller = createCaller({
       services: servicesWith({
         subscribe: async function* (): AsyncGenerator<
-          RowUpsert & { row: typeof row },
+          FeedSubscribeOutput,
           void,
           Parameters<typeof structuredClone>[0]
         > {

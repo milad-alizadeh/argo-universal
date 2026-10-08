@@ -1,9 +1,4 @@
-import type {
-  BlobRef,
-  ImageContent,
-  TextContent,
-  UserMessage,
-} from '@repo/contracts';
+import type { ImageContent, UserMessage } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import { storedMessage } from '#mocks/feed';
 import {
@@ -42,21 +37,12 @@ describe('fromFeedRow', (): void => {
 
 describe('promptBlobIds', (): void => {
   it('lists each blob a prompt shows once and skips other rows', (): void => {
-    const image = (
-      blobId: string,
-    ): Omit<ImageContent, 'blob' | '_meta'> & {
-      blob: Pick<BlobRef, 'blobId' | 'mime' | 'bytes'>;
-    } => ({
+    const image = (blobId: string): ImageContent => ({
       type: 'image' as const,
       mimeType: 'image/png',
       blob: { blobId, mime: 'image/png', bytes: 3 },
     });
-    const prompt = (
-      id: string,
-      blobIds: string[],
-    ): Omit<UserMessage, 'content'> & {
-      content: (TextContent | ReturnType<typeof image>)[];
-    } => ({
+    const prompt = (id: string, blobIds: string[]): UserMessage => ({
       ...message,
       id,
       sessionUpdate: 'user_message' as const,
