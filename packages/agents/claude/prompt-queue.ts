@@ -26,27 +26,24 @@ class PromptQueue {
     this.wake = null;
   }
   private async *read(): AsyncGenerator<SDKUserMessage> {
-    while (true) {
-      const next = await this.next();
-      if (!next) return;
-      yield* this.dispatch(next);
+    while (this.shouldRead()) {
+      const next = this.waiting.shift();
+      if (next) {
+        this.dispatching = next.dispatched;
+        try {
+          yield next.message;
+        } finally {
+          this.finishDispatch(next);
+        }
+      } else await this.wait();
     }
   }
-  private async next(): Promise<PendingPrompt | undefined> {
-    const next = this.waiting.shift();
-    if (next) return next;
-    if (this.ended) return undefined;
-    await this.wait();
-    return this.next();
+  private shouldRead(): boolean {
+    return !this.ended || this.waiting.length > 0;
   }
-  private async *dispatch(next: PendingPrompt): AsyncGenerator<SDKUserMessage> {
-    this.dispatching = next.dispatched;
-    try {
-      yield next.message;
-    } finally {
-      next.dispatched.resolve();
-      this.dispatching = null;
-    }
+  private finishDispatch(next: PendingPrompt): void {
+    next.dispatched.resolve();
+    this.dispatching = null;
   }
   private wait(): Promise<void> {
     return new Promise<void>((resolve): void => {

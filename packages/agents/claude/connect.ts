@@ -1,4 +1,8 @@
-import { getSessionInfo, query } from '@anthropic-ai/claude-agent-sdk';
+import {
+  getSessionInfo,
+  query,
+  type Options,
+} from '@anthropic-ai/claude-agent-sdk';
 import type {
   AgentConnectInput,
   VendorSession,
@@ -23,10 +27,17 @@ export async function connect(
   const options = sessionOptions({ ...context, input });
   await checkTranscript(input);
   signal.throwIfAborted();
+  const live = startQuery(context, options);
+  return connectedSession(live, await initialize(live, input));
+}
+function startQuery(
+  context: ReturnType<typeof prepareSession>,
+  options: Options,
+): QueryContext {
+  context.lifetime.listen();
   const vendor = query({ prompt: context.queue.prompts, options });
   context.lifetime.attach(vendor);
-  const live = { ...context, vendor };
-  return connectedSession(live, await initialize(live, input));
+  return { ...context, vendor };
 }
 async function checkTranscript(input: AgentConnectInput): Promise<void> {
   if (

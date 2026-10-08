@@ -21,6 +21,8 @@ class SessionLifetime {
   }
   public attach(vendor: Query): void {
     this.vendor = vendor;
+  }
+  public listen(): void {
     this.signal.addEventListener('abort', this.abort, { once: true });
   }
   public isStopping(): boolean {
