@@ -72,7 +72,7 @@ function NativeIndicator({ value, className }: IndicatorProps) {
     return {
       width: withSpring(
         `${interpolate(
-          progress.value,
+          progress.get(),
           [0, fullPercent],
           [minimumPercent, fullPercent],
           Extrapolation.CLAMP,

@@ -318,9 +318,9 @@ export const KeepsPlaceWhenOlderRowsLoad: Story = {
     await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
     // Reads back a screen at a time to the top; the page before is already on its way.
     await waitFor(
-      () => {
+      async () => {
         scrollUp(scroll, scroll.clientHeight);
-        expect(scroll.scrollTop).toBe(0);
+        await expect(scroll.scrollTop).toBe(0);
       },
       { timeout: 15000, interval: 100 },
     );
@@ -352,9 +352,9 @@ export const KeepsPlaceWhenOlderRowsJoinAGroup: Story = {
     const scroll = await canvas.findByTestId(feedScrollId);
     await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
     await waitFor(
-      () => {
+      async () => {
         scrollUp(scroll, scroll.clientHeight);
-        expect(scroll.scrollTop).toBe(0);
+        await expect(scroll.scrollTop).toBe(0);
       },
       { timeout: 15000, interval: 100 },
     );
@@ -463,11 +463,11 @@ export const KeepsPlaceWhenRowOpens: Story = {
     // Once the row stops growing, the open has finished.
     let lastHeight = heightBefore;
     await waitFor(
-      () => {
+      async () => {
         const height = collapsible.offsetHeight;
         const stoppedGrowing = height > heightBefore && height === lastHeight;
         lastHeight = height;
-        expect(stoppedGrowing).toBe(true);
+        await expect(stoppedGrowing).toBe(true);
       },
       { timeout: 5000, interval: 250 },
     );

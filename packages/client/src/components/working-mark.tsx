@@ -50,7 +50,7 @@ function Cell({
 }): React.JSX.Element {
   const style = useAnimatedStyle(() => {
     if (still) return { opacity: 0.4 };
-    const sinceLit = (step.value - index + cells.length) % cells.length;
+    const sinceLit = (step.get() - index + cells.length) % cells.length;
     return {
       opacity:
         sinceLit < fadeSteps
@@ -73,12 +73,14 @@ export function WorkingMark(): React.JSX.Element {
   const reducedMotion = useReducedMotion();
   useEffect(() => {
     if (!reducedMotion)
-      step.value = withRepeat(
-        withTiming(cells.length, {
-          duration: cells.length * stepMilliseconds,
-          easing: Easing.linear,
-        }),
-        -1,
+      step.set(
+        withRepeat(
+          withTiming(cells.length, {
+            duration: cells.length * stepMilliseconds,
+            easing: Easing.linear,
+          }),
+          -1,
+        ),
       );
     return (): void => cancelAnimation(step);
   }, [reducedMotion, step]);

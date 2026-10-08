@@ -1,7 +1,7 @@
 import { useRootContext } from '@rn-primitives/popover';
 import type * as React from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useResolveClassNames } from 'uniwind';
 import type { ButtonProps } from '#primitives/button';
 import { Popover, PopoverContent, PopoverTrigger } from '#primitives/popover';
@@ -42,19 +42,8 @@ export function ComposerPopover({
   const wide = useWide();
   const layout = useResolveClassNames(className ?? '');
   const [open, setOpen] = useState(false);
-  const afterClose = useRef<(() => void) | undefined>(undefined);
-  useEffect(() => {
-    if (trigger.props.disabled) setOpen(false);
-  }, [trigger.props.disabled]);
-  const content = children((after) => {
-    afterClose.current = after;
-    setOpen(false);
-  });
-  const closed = (): void => {
-    const after = afterClose.current;
-    afterClose.current = undefined;
-    after?.();
-  };
+  const { close, closed } = useAfterClose(setOpen);
+  if (trigger.props.disabled && open) setOpen(false);
   if (!wide)
     return (
       <ComposerSheet
@@ -65,7 +54,7 @@ export function ComposerPopover({
         trigger={trigger}
         label={label}
       >
-        {content}
+        {children(close)}
       </ComposerSheet>
     );
   return (
@@ -86,4 +75,25 @@ export function ComposerPopover({
       </PopoverContent>
     </Popover>
   );
+}
+
+function useAfterClose(setOpen: (open: boolean) => void): {
+  close: (after?: () => void) => void;
+  closed: () => void;
+} {
+  const afterClose = useRef<(() => void) | undefined>(undefined);
+  return {
+    close: useCallback(
+      (after?: () => void): void => {
+        afterClose.current = after;
+        setOpen(false);
+      },
+      [setOpen],
+    ),
+    closed: useCallback((): void => {
+      const after = afterClose.current;
+      afterClose.current = undefined;
+      after?.();
+    }, []),
+  };
 }

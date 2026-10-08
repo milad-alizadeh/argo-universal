@@ -56,7 +56,7 @@ function editRow(width: number, edit: RecordedEdit): Story {
           feed.queryByRole('button', { name: summaryName }),
         ).toBeNull();
       const button = feed.getByRole('button', { name: `${verb} ${path}` });
-      await waitFor(() => {
+      await waitFor(async () => {
         const feedRight = canvas
           .getByTestId('edit-feed')
           .getBoundingClientRect().right;
@@ -64,7 +64,7 @@ function editRow(width: number, edit: RecordedEdit): Story {
           button,
           ...feed.queryAllByRole('button', { name: summaryName }),
         ])
-          expect(element.getBoundingClientRect().right).toBeLessThan(
+          await expect(element.getBoundingClientRect().right).toBeLessThan(
             feedRight - 20,
           );
       });

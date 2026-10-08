@@ -20,15 +20,15 @@ export const FadesFollowScroll: Story = {
     const scroll = await canvas.findByTestId('scroll-fade-scroll');
     // At rest only the bottom edge hides content.
     await waitFor(() => expect(canvas.getByTestId(bottomFadeId)).toBeVisible());
-    expect(canvas.queryByTestId(topFadeId)).toBeNull();
+    await expect(canvas.queryByTestId(topFadeId)).toBeNull();
     scroll.scrollTop = 120;
     const top = await canvas.findByTestId(topFadeId);
     const header = canvas.getByText('pnpm dev');
     // The fade starts where the header ends, so content fades under it.
-    expect(top.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+    await expect(top.getBoundingClientRect().top).toBeGreaterThanOrEqual(
       header.getBoundingClientRect().bottom,
     );
-    expect(getComputedStyle(top).pointerEvents).toBe('none');
+    await expect(getComputedStyle(top).pointerEvents).toBe('none');
     scroll.scrollTop = scroll.scrollHeight;
     await waitFor(() => expect(canvas.queryByTestId(bottomFadeId)).toBeNull());
     scroll.scrollTop = 0;
@@ -51,7 +51,7 @@ export const NoFadeWhenContentFits: Story = {
   play: async ({ canvas }) => {
     await canvas.findByText('Starting Metro Bundler');
     await new Promise((resolve) => setTimeout(resolve, 100));
-    expect(canvas.queryByTestId(topFadeId)).toBeNull();
-    expect(canvas.queryByTestId(bottomFadeId)).toBeNull();
+    await expect(canvas.queryByTestId(topFadeId)).toBeNull();
+    await expect(canvas.queryByTestId(bottomFadeId)).toBeNull();
   },
 };

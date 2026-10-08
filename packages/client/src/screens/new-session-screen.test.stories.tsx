@@ -149,7 +149,7 @@ function unavailableAgentRetry(width: number, agentIndex: number): Story {
       });
       await expect(retry).toHaveTextContent('Retry');
       if (width === layoutWidths.wide)
-        await waitFor(() => {
+        await waitFor(async () => {
           const menu = overlay
             .getByTestId('composer-agents-scroll')
             .getBoundingClientRect();
@@ -160,8 +160,8 @@ function unavailableAgentRetry(width: number, agentIndex: number): Story {
             const action = overlay
               .getByRole('button', { name: `Retry ${unavailable.label}` })
               .getBoundingClientRect();
-            expect(choice.top).toBeGreaterThanOrEqual(menu.top);
-            expect(action.bottom).toBeLessThanOrEqual(menu.bottom);
+            await expect(choice.top).toBeGreaterThanOrEqual(menu.top);
+            await expect(action.bottom).toBeLessThanOrEqual(menu.bottom);
           }
         });
       await expect(

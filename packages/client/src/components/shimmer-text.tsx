@@ -34,14 +34,16 @@ export function ShimmerText({
   const reducedMotion = useReducedMotion();
   const characters = Array.from(text);
   useEffect(() => {
-    position.value = -bandHalfWidth;
+    position.set(-bandHalfWidth);
     if (!reducedMotion)
-      position.value = withRepeat(
-        withTiming(characters.length + bandHalfWidth, {
-          duration: sweepMilliseconds,
-          easing: Easing.linear,
-        }),
-        -1,
+      position.set(
+        withRepeat(
+          withTiming(characters.length + bandHalfWidth, {
+            duration: sweepMilliseconds,
+            easing: Easing.linear,
+          }),
+          -1,
+        ),
       );
     return (): void => cancelAnimation(position);
   }, [characters.length, reducedMotion, position]);
@@ -83,7 +85,7 @@ function ShimmerCharacter({
       opacity:
         resting +
         highlight *
-          Math.max(0, 1 - Math.abs(index - position.value) / bandHalfWidth),
+          Math.max(0, 1 - Math.abs(index - position.get()) / bandHalfWidth),
     }),
     [resting, highlight, index, position],
   );

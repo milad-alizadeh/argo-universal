@@ -43,17 +43,19 @@ function RetryIcon(): React.JSX.Element {
   const reducedMotion = useReducedMotion();
   useEffect(() => {
     if (!reducedMotion)
-      rotation.value = withRepeat(
-        withTiming(fullTurnDegrees, {
-          duration: millisecondsPerSecond,
-          easing: Easing.linear,
-        }),
-        -1,
+      rotation.set(
+        withRepeat(
+          withTiming(fullTurnDegrees, {
+            duration: millisecondsPerSecond,
+            easing: Easing.linear,
+          }),
+          -1,
+        ),
       );
     return (): void => cancelAnimation(rotation);
   }, [reducedMotion, rotation]);
   const style = useAnimatedStyle(
-    () => ({ transform: [{ rotate: `${rotation.value}deg` }] }),
+    () => ({ transform: [{ rotate: `${rotation.get()}deg` }] }),
     [rotation],
   );
   return (

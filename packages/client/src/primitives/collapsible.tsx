@@ -123,9 +123,13 @@ function LayoutSyncedContent({
   // A ref, so content resizing inside a still, open collapsible costs no render; a nested collapsible moving would otherwise render this one every frame.
   const contentHeight = useRef(0);
   const [measured, setMeasured] = useState(false);
-  const [progress, setProgress] = useState(open ? 1 : 0);
+  const [animatedProgress, setProgress] = useState(open ? 1 : 0);
+  const progress = reducedMotion ? (open ? 1 : 0) : animatedProgress;
   const latestProgress = useRef(progress);
-  latestProgress.current = progress;
+  useLayoutEffect(() => {
+    latestProgress.current = progress;
+  }, [progress]);
+  const [renderedHeight, setRenderedHeight] = useState(0);
   const content = useRef<View>(null);
   // Layout is ready once committed, so the opening content measures before paint instead of a frame later in `onLayout`.
   useLayoutEffect(() => {
@@ -133,6 +137,7 @@ function LayoutSyncedContent({
     content.current?.measure((_x, _y, _width, height) => {
       if (!height) return;
       contentHeight.current = height;
+      setRenderedHeight(height);
       setMeasured(true);
     });
   }, [open, measured]);
@@ -141,17 +146,11 @@ function LayoutSyncedContent({
     const target = open ? 1 : 0;
     // Opening waits for the first measurement, which sets the height to grow to.
     if (open && !measured) return;
-    if (reducedMotion) {
-      setProgress(target);
-      return;
-    }
+    if (reducedMotion) return;
     const from = latestProgress.current;
     const height = contentHeight.current;
     const remainingDuration = Math.abs(target - from) * durationFor(height);
-    if (!remainingDuration) {
-      setProgress(target);
-      return;
-    }
+    if (!remainingDuration) return;
     onMotionChange(true);
     let moving = true;
     const startTime = performance.now();
@@ -189,7 +188,7 @@ function LayoutSyncedContent({
         style={
           settled
             ? undefined
-            : { height: contentHeight.current * progress, overflow: 'hidden' }
+            : { height: renderedHeight * progress, overflow: 'hidden' }
         }
         pointerEvents={open ? 'auto' : 'none'}
         aria-hidden={!open}
@@ -202,6 +201,7 @@ function LayoutSyncedContent({
           style={settled ? undefined : movingContentStyle}
           onLayout={(event) => {
             contentHeight.current = event.nativeEvent.layout.height;
+            setRenderedHeight(event.nativeEvent.layout.height);
             setMeasured(true);
           }}
         >
@@ -230,35 +230,41 @@ function NativeContent({
   const height = useSharedValue(0);
   const progress = useSharedValue(open ? 1 : 0);
   const visibility = useRef({ open, forceMount });
-  visibility.current = { open, forceMount };
+  useLayoutEffect(() => {
+    visibility.current = { open, forceMount };
+  }, [open, forceMount]);
+  if (open && !mounted) setMounted(true);
   const unmountClosedContent = useCallback(() => {
     if (visibility.current.open || visibility.current.forceMount) return;
-    height.value = 0;
+    height.set(0);
     setMounted(false);
   }, [height]);
   useEffect(() => {
     if (open) {
-      setMounted(true);
-      if (height.value > 0)
-        progress.value = withTiming(1, {
-          duration,
-          reduceMotion: ReduceMotion.System,
-        });
+      if (height.get() > 0)
+        progress.set(
+          withTiming(1, {
+            duration,
+            reduceMotion: ReduceMotion.System,
+          }),
+        );
     } else {
-      progress.value = withTiming(
-        0,
-        { duration, reduceMotion: ReduceMotion.System },
-        (finished) => {
-          if (finished && !forceMount) {
-            runOnJS(unmountClosedContent)();
-          }
-        },
+      progress.set(
+        withTiming(
+          0,
+          { duration, reduceMotion: ReduceMotion.System },
+          (finished) => {
+            if (finished && !forceMount) {
+              runOnJS(unmountClosedContent)();
+            }
+          },
+        ),
       );
     }
     return () => cancelAnimation(progress);
   }, [open, forceMount, height, progress, unmountClosedContent]);
   const style = useAnimatedStyle(
-    () => ({ height: height.value * progress.value, overflow: 'hidden' }),
+    () => ({ height: height.get() * progress.get(), overflow: 'hidden' }),
     [height, progress],
   );
   if (!mounted && !forceMount) return null;
@@ -275,13 +281,15 @@ function NativeContent({
           className={className}
           style={{ position: 'absolute', top: 0, left: 0, right: 0 }}
           onLayout={(event) => {
-            const firstMeasurement = height.value === 0;
-            height.value = event.nativeEvent.layout.height;
+            const firstMeasurement = height.get() === 0;
+            height.set(event.nativeEvent.layout.height);
             if (open && firstMeasurement)
-              progress.value = withTiming(1, {
-                duration,
-                reduceMotion: ReduceMotion.System,
-              });
+              progress.set(
+                withTiming(1, {
+                  duration,
+                  reduceMotion: ReduceMotion.System,
+                }),
+              );
           }}
         >
           {children}

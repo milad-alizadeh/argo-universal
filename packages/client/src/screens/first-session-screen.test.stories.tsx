@@ -113,14 +113,14 @@ function keepsTheOpenSession(agentIndex: 0 | 1): Story {
         type: 'changed',
         session: { ...catalog.second, activityAt: 300 },
       });
-      await waitFor(() => {
+      await waitFor(async () => {
         const newest = canvas.getByRole('button', {
           name: `${catalog.second.title}, Idle`,
         });
         const previous = canvas.getByRole('button', {
           name: `${catalog.first.title}, Running`,
         });
-        expect(newest.getBoundingClientRect().top).toBeLessThan(
+        await expect(newest.getBoundingClientRect().top).toBeLessThan(
           previous.getBoundingClientRect().top,
         );
       });

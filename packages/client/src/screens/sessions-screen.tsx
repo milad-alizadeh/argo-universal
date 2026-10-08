@@ -304,9 +304,9 @@ export function SessionsScreen({
 }
 
 // Keeps content that doesn't scroll out from under a transparent header.
-function BelowHeader({ children }: { children: ReactNode }): React.JSX.Element {
+function BelowHeader({ children }: { children: ReactNode }): ReactNode {
   const wide = useWide();
-  if (!hasLiquidGlass || wide) return <>{children}</>;
+  if (!hasLiquidGlass || wide) return children;
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, minHeight: 0 }}>
       {children}

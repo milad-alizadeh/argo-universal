@@ -148,14 +148,10 @@ export function DiffView({
     0,
   );
   const limited = inline && !showAll && lineCount > previewLineCount;
-  let remaining = limited ? previewLineCount : lineCount;
-  const visibleHunks = file.hunks
-    .map((hunk) => {
-      const lines = hunk.lines.slice(0, remaining);
-      remaining -= lines.length;
-      return { ...hunk, lines };
-    })
-    .filter((hunk) => hunk.lines.length > 0);
+  const visibleHunks = visibleLines(
+    file.hunks,
+    limited ? previewLineCount : lineCount,
+  );
   return (
     <Collapsible
       open={open}
@@ -212,4 +208,18 @@ export function DiffView({
       </CollapsibleContent>
     </Collapsible>
   );
+}
+
+function visibleLines(
+  hunks: DiffViewProps['file']['hunks'],
+  limit: number,
+): DiffViewProps['file']['hunks'] {
+  let remaining = limit;
+  return hunks
+    .map((hunk) => {
+      const lines = hunk.lines.slice(0, remaining);
+      remaining -= lines.length;
+      return { ...hunk, lines };
+    })
+    .filter((hunk) => hunk.lines.length > 0);
 }

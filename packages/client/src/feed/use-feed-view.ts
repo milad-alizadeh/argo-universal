@@ -1,5 +1,5 @@
 import type { SessionSnapshot, SessionUpdate } from '@repo/contracts';
-import { useMemo, useRef } from 'react';
+import { useState } from 'react';
 import type { FeedView } from './feed-view';
 import { keepUnchangedItems } from './keep-unchanged-items';
 import { toFeedView } from './to-feed-view';
@@ -9,13 +9,15 @@ export function useFeedView(
   rows: readonly SessionUpdate[],
   snapshot: SessionSnapshot | null,
 ): FeedView | null {
-  const previousView = useRef<FeedView | null>(null);
-  return useMemo(() => {
-    if (!snapshot) return null;
-    previousView.current = keepUnchangedItems(
-      previousView.current,
-      toFeedView(rows, snapshot),
-    );
-    return previousView.current;
-  }, [rows, snapshot]);
+  const [held, setHeld] = useState(() => ({
+    rows,
+    snapshot,
+    view: snapshot ? toFeedView(rows, snapshot) : null,
+  }));
+  if (held.rows === rows && held.snapshot === snapshot) return held.view;
+  const view = snapshot
+    ? keepUnchangedItems(held.view, toFeedView(rows, snapshot))
+    : null;
+  setHeld({ rows, snapshot, view });
+  return view;
 }

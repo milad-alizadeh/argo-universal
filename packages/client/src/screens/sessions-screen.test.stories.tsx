@@ -8,6 +8,7 @@ import {
 import type { SessionListUpdate, SessionCounts } from '@repo/contracts';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
+import { useEffect } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 import { eachLayout, layoutWidths } from '../../mocks/each-layout';
 import {
@@ -422,7 +423,7 @@ export const LiveUpdates: Story = {
       ).toBeVisible(),
     );
     await eachLayout(async () =>
-      waitFor(() => {
+      waitFor(async () => {
         const rows = canvas
           .getAllByRole('button')
           .filter((row) =>
@@ -432,10 +433,9 @@ export const LiveUpdates: Story = {
             (a, b) =>
               a.getBoundingClientRect().top - b.getBoundingClientRect().top,
           );
-        expect(rows.map((row) => row.getAttribute('aria-label'))).toEqual([
-          'Newest activity, Running',
-          'Build the settings screen, Running',
-        ]);
+        await expect(rows.map((row) => row.getAttribute('aria-label'))).toEqual(
+          ['Newest activity, Running', 'Build the settings screen, Running'],
+        );
       }),
     );
     liveUpdates.publish({
@@ -488,13 +488,13 @@ export const NextPageLoading: Story = {
         name: 'Loading more Sessions',
       });
       await expect(spinner).toBeVisible();
-      await waitFor(() => {
+      await waitFor(async () => {
         const viewport = canvas
           .getByTestId(sessionsScrollId)
           .getBoundingClientRect();
         const indicator = spinner.getBoundingClientRect();
-        expect(indicator.top).toBeGreaterThanOrEqual(viewport.top);
-        expect(indicator.bottom).toBeLessThanOrEqual(viewport.bottom);
+        await expect(indicator.top).toBeGreaterThanOrEqual(viewport.top);
+        await expect(indicator.bottom).toBeLessThanOrEqual(viewport.bottom);
       });
       await expect(canvas.getByText(settingsPrompt)).toBeVisible();
     }),
@@ -574,7 +574,10 @@ export const ReconnectRestoresLiveSubscriptions: Story = {
 };
 
 function ReconnectingSessionsScreen(): React.JSX.Element {
-  reconnectConnection = useConnection();
+  const connection = useConnection();
+  useEffect(() => {
+    reconnectConnection = connection;
+  }, [connection]);
   return <DesktopLayout destination={{ to: 'sessions' }}>{null}</DesktopLayout>;
 }
 
@@ -755,12 +758,12 @@ function streamingPagination(width: number, agentIndex: 0 | 1): Story {
         name: 'Loading more Sessions',
       });
       await expect(spinner).toBeVisible();
-      await waitFor(() => {
+      await waitFor(async () => {
         scroll.scrollTop = scroll.scrollHeight;
         const viewport = scroll.getBoundingClientRect();
         const indicator = spinner.getBoundingClientRect();
-        expect(indicator.top).toBeGreaterThanOrEqual(viewport.top);
-        expect(indicator.bottom).toBeLessThanOrEqual(viewport.bottom);
+        await expect(indicator.top).toBeGreaterThanOrEqual(viewport.top);
+        await expect(indicator.bottom).toBeLessThanOrEqual(viewport.bottom);
       });
       updates.publish({
         type: 'changed',
@@ -773,9 +776,9 @@ function streamingPagination(width: number, agentIndex: 0 | 1): Story {
       });
       await waitFor(() => expect(updates.calls.delivered).toBe(2));
       updates.release();
-      await waitFor(() => {
+      await waitFor(async () => {
         scroll.scrollTop = scroll.scrollHeight;
-        expect(canvas.getByText(last.title)).toBeVisible();
+        await expect(canvas.getByText(last.title)).toBeVisible();
       });
       await waitFor(() => expect(updates.calls.active).toBe(0));
       await expect(canvas.queryByRole('progressbar')).toBeNull();
