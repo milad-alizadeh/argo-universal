@@ -27,6 +27,11 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Fetch main for the waiver merge base
+        run: git fetch origin main:refs/remotes/origin/main
 
       # Installs the pnpm version in package.json's packageManager.
       - uses: pnpm/action-setup@v6
