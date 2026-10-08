@@ -17,7 +17,7 @@ export const connectionScreenMocks = {
   'system.clock': async function* (
     _input,
     signal,
-  ): AsyncGenerator<FixtureTick<'system.clock'>> {
+  ): AsyncGenerator<FixtureTick<'system.clock'>, void> {
     for (let second = 0; !signal.aborted; second++) {
       yield { now: new Date(firstTick + second * 1000).toISOString() };
       await sleep(1000);

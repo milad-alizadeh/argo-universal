@@ -1,7 +1,7 @@
 export interface SubscriptionPublisher<Value> {
   reset: () => void;
   publish: (value: Value) => void;
-  subscribe: (signal: AbortSignal) => AsyncGenerator<Value>;
+  subscribe: (signal: AbortSignal) => AsyncGenerator<Value, void>;
 }
 
 // Feeds a subscription fixture: each published value goes to the open subscription, as the Server sends a change.
@@ -24,7 +24,7 @@ export function createSubscriptionPublisher<
       if (send) send(value);
       else queued.push(value);
     },
-    async *subscribe(signal: AbortSignal): AsyncGenerator<Value> {
+    async *subscribe(signal: AbortSignal): AsyncGenerator<Value, void> {
       const current = ++generation;
       active = true;
       try {

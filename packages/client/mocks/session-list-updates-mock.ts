@@ -22,7 +22,7 @@ interface SessionListUpdatesMock {
     ) => Promise<FixtureOutput<'session.list'>>;
     'session.listUpdates': (
       ...args: FixtureArguments<'session.listUpdates'>
-    ) => AsyncGenerator<SessionListUpdate>;
+    ) => AsyncGenerator<SessionListUpdate, void>;
   };
 }
 

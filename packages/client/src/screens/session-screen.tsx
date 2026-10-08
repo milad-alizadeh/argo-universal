@@ -34,7 +34,8 @@ type SessionMutation<Name extends 'prompt' | 'cancel' | 'setConfigOption'> =
     typeof useMutation<
       inferRouterOutputs<AppRouter>['session'][Name],
       ClientError,
-      inferRouterInputs<AppRouter>['session'][Name]
+      inferRouterInputs<AppRouter>['session'][Name],
+      undefined
     >
   >;
 type SessionCommands = Omit<

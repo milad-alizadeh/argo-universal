@@ -522,7 +522,8 @@ const reconnectMocks = {
     ),
   }),
   'session.listUpdates': async function* (): AsyncGenerator<
-    Extract<SessionListUpdate, { type: 'changed' }>
+    Extract<SessionListUpdate, { type: 'changed' }>,
+    void
   > {
     reconnectCalls.listUpdates += 1;
     if (reconnectCalls.listUpdates === 1)
@@ -532,7 +533,7 @@ const reconnectMocks = {
       session: { ...sessionRows.idle, title: recoveredTitle },
     };
   },
-  'session.counts': async function* (): AsyncGenerator<SessionCounts> {
+  'session.counts': async function* (): AsyncGenerator<SessionCounts, void> {
     reconnectCalls.counts += 1;
     if (reconnectCalls.counts === 1) throw new Error('Live counts stopped');
     yield { attention: 7, running: 0 };
@@ -610,7 +611,8 @@ function liveUpdatesRetry(width: number, agentIndex: 0 | 1): Story {
       nextCursor: null,
     }),
     'session.listUpdates': async function* (): AsyncGenerator<
-      Extract<SessionListUpdate, { type: 'changed' }>
+      Extract<SessionListUpdate, { type: 'changed' }>,
+      void
     > {
       calls += 1;
       if (calls === 1) fails('The live stream ended')();

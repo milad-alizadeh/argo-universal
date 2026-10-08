@@ -11,7 +11,7 @@ export interface FeedFixtures {
   ) => FixtureOutput<'feed.row'>;
   'feed.subscribe': (
     input: FixtureArguments<'feed.subscribe'>[0],
-  ) => AsyncGenerator<FeedMock['stream'][number]>;
+  ) => AsyncGenerator<FeedMock['stream'][number], void>;
 }
 
 export { recordedFeedMocks } from '@repo/api/mocks';

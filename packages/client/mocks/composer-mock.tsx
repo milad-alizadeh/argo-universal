@@ -17,6 +17,20 @@ import {
   type ComposerProps,
 } from '../src/components/composer';
 
+type MockComposerConfiguration<Agents extends AgentInfo[]> = Pick<
+  NonNullable<ComposerProps['configuration']>,
+  'agent' | 'configOptions'
+> & {
+  agents: Agents;
+  onConfigChange: () => void;
+  checkout: Required<
+    Pick<
+      NonNullable<NonNullable<ComposerProps['configuration']>['checkout']>,
+      'branch' | 'newWorktree'
+    >
+  >;
+};
+
 const imageUri =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKklEQVR4nGN4piFHU8QwasGoBaMWjFowasGoBaMWjFowasGoBaMWDBULANahsD1zXuJAAAAAAElFTkSuQmCC';
 
@@ -84,10 +98,7 @@ export const composerPlanDone: PlanEntry[] = composerPlan.map((entry) => ({
 export const composerNoEffortSelections = newSessionCatalogs.bothAvailable.map(
   (
     agent,
-  ): Pick<
-    NonNullable<ComposerProps['configuration']>,
-    'agents' | 'agent' | 'configOptions' | 'onConfigChange'
-  > & { checkout: { branch: string; newWorktree: boolean } } => ({
+  ): MockComposerConfiguration<typeof newSessionCatalogs.bothAvailable> => ({
     agents: newSessionCatalogs.bothAvailable,
     agent: agent.agent,
     configOptions: agent.configOptions.map((option) =>
@@ -104,10 +115,9 @@ export const composerUnavailableConfigurations =
   newSessionCatalogs.bothUnavailable.map(
     (
       agent,
-    ): Pick<
-      NonNullable<ComposerProps['configuration']>,
-      'agents' | 'agent' | 'configOptions' | 'onConfigChange'
-    > & { checkout: { branch: string; newWorktree: boolean } } => ({
+    ): MockComposerConfiguration<
+      typeof newSessionCatalogs.bothUnavailable
+    > => ({
       agents: newSessionCatalogs.bothUnavailable,
       agent: agent.agent,
       configOptions: agent.configOptions,

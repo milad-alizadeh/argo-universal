@@ -39,7 +39,9 @@ export const multipleProjectsMocks = {
 } satisfies Fixtures;
 export const nextPageFailureMocks = {
   ...sessionListMocks,
-  'session.list': ({ cursor }): FixtureOutput<'session.list'> => {
+  'session.list': ({
+    cursor,
+  }): { sessions: (typeof sessionRows.running)[]; nextCursor: string } => {
     if (cursor) throw new Error('Next page unavailable');
     return { sessions: [sessionRows.running], nextCursor: 'next-page' };
   },
@@ -48,7 +50,9 @@ export const nextPageFailureMocks = {
 const firstPageSessions = [sessionRows.running, sessionRows.idle];
 export const nextPageLoadingMocks = {
   ...sessionListMocks,
-  'session.list': ({ cursor }): FixtureOutput<'session.list'> =>
+  'session.list': ({
+    cursor,
+  }): { sessions: typeof firstPageSessions; nextCursor: string } =>
     cursor
       ? pending()()
       : { sessions: firstPageSessions, nextCursor: 'next-page' },

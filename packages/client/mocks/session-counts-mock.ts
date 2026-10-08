@@ -12,7 +12,7 @@ export function createSessionCountsMock(initial: SessionCounts): Pick<
     'session.counts': (
       input: void,
       signal: AbortSignal,
-    ) => AsyncGenerator<SessionCounts>;
+    ) => AsyncGenerator<SessionCounts, void>;
   };
 } {
   const counts = createSubscriptionPublisher<SessionCounts>();

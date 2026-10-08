@@ -27,8 +27,8 @@ export const sessionListMocks = {
       ),
     };
   },
-  'session.listUpdates': async function* (): AsyncGenerator<never> {},
-  'session.counts': async function* (): AsyncGenerator<SessionCounts> {
+  'session.listUpdates': async function* (): AsyncGenerator<never, void> {},
+  'session.counts': async function* (): AsyncGenerator<SessionCounts, void> {
     yield {
       attention: activeSessions.sessions.filter(
         (session) =>
@@ -47,7 +47,7 @@ export const emptySessionListMocks = {
     sessions: [],
     nextCursor: null,
   }),
-  'session.counts': async function* (): AsyncGenerator<SessionCounts> {
+  'session.counts': async function* (): AsyncGenerator<SessionCounts, void> {
     yield { attention: 0, running: 0 };
   },
 } satisfies Fixtures;
