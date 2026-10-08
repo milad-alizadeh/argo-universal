@@ -1,5 +1,5 @@
 import { expect, it, vi } from 'vitest';
-import { createRejectionCounter } from './count-rejections';
+import { countRejection, createRejectionCounter } from './count-rejections';
 
 const readerLabel = 'reader';
 const rejectedRow = 'rejected row';
@@ -41,4 +41,10 @@ it('reports successive rejections with a label and sequence number', (): void =>
     ['reader: rejected row #2'],
   ]);
   expect(counter.count()).toBe(2);
+});
+
+it('counts a rejection without changing the previous count', (): void => {
+  const previousCount = 4;
+  expect(countRejection(previousCount)).toBe(5);
+  expect(countRejection(previousCount)).toBe(5);
 });
