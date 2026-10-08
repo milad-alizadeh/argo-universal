@@ -1,10 +1,10 @@
-import { mockClis } from '@repo/mocks/cli';
+import { appFixtureAgentIds } from '@repo/mocks/agent/app-fixtures';
 import { z } from 'zod';
 import type { MockAgents } from '../mock-agents';
 
 const Availability = z.enum(['not installed', 'not signed in']);
 export type Unavailable = z.infer<typeof Availability>;
-export const agentIds = Object.keys(mockClis);
+export const agentIds = appFixtureAgentIds;
 
 export function agentId(ordinal: number): string {
   const id = agentIds[ordinal - 1];
@@ -40,8 +40,7 @@ function configurationForStep(step: string): MockAgents {
   const image = /^(?:Given|And) Agent (\d+) can inspect image prompts$/.exec(
     step,
   );
-  if (image)
-    return { [agentId(Number(image[1]))]: { recording: 'image-prompt' } };
+  if (image) return { [agentId(Number(image[1]))]: { scenario: 'image' } };
   return {};
 }
 

@@ -4,6 +4,7 @@ Feature: New Session
     And a New Session with Agent <agent>
     When I send the prompt "Fix the flaky login test"
     Then the Session Feed contains the text prompt "Fix the flaky login test"
+    And the Agent replies "The shared fixture completed this Turn."
     And Back returns to the Sessions list
 
     Examples:
@@ -17,6 +18,7 @@ Feature: New Session
     When I attach the red square image
     And I send the prompt "Name the dominant color in this image."
     Then the Session Feed contains the image prompt
+    And the Agent replies "The dominant color is red."
     And the Server preserves the attached image
 
     Examples:
