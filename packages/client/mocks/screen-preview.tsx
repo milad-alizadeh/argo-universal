@@ -1,10 +1,15 @@
+import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
 
 const phoneInsets = { top: 48, bottom: 24, left: 0, right: 0 };
 
-export function ScreenPreview({ children }: { children: ReactNode }) {
+export function ScreenPreview({
+  children,
+}: {
+  children: ReactNode;
+}): React.JSX.Element {
   return (
     <SafeAreaInsetsContext.Provider value={phoneInsets}>
       <View className="h-60 w-full border border-border">{children}</View>

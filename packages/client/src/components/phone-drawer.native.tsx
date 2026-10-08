@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import { useEffect, useRef } from 'react';
 import { View } from 'react-native';
 import { DrawerProgressContext } from 'react-native-drawer-layout';
@@ -18,7 +19,7 @@ export function PhoneDrawer({
   swipeEnabled = true,
   renderDrawerContent,
   children,
-}: PhoneDrawerProps) {
+}: PhoneDrawerProps): React.JSX.Element {
   const drawer = useRef<DrawerLayoutMethods>(null);
   const targetOpen = useRef(false);
   useEffect(() => {

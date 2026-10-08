@@ -6,6 +6,7 @@ import {
   PlusIcon,
   TargetIcon,
 } from 'phosphor-react-native';
+import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { Image, Platform, ScrollView, View } from 'react-native';
@@ -91,7 +92,7 @@ export function Composer({
   disabled = false,
   sendable = true,
   error,
-}: ComposerProps) {
+}: ComposerProps): React.JSX.Element {
   const wide = useContentWide();
   const [attachHighlighted, setAttachHighlighted] = useState(false);
   const [textHeight, setTextHeight] = useState(
@@ -444,7 +445,7 @@ function ComposerWarning({
 }: {
   numberOfLines?: number;
   children: string;
-}) {
+}): React.JSX.Element {
   return (
     <View role="alert" className="mx-4 mt-2 flex-row items-start gap-2">
       <ComposerGlyph name="warning" className="text-destructive" />

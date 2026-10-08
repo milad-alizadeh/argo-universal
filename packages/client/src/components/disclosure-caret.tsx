@@ -1,4 +1,5 @@
 import { CaretRightIcon } from 'phosphor-react-native/src/icons/CaretRight';
+import type * as React from 'react';
 import Animated, {
   ReduceMotion,
   useAnimatedStyle,
@@ -15,7 +16,7 @@ export function DisclosureCaret({
 }: {
   open: boolean;
   className?: string;
-}) {
+}): React.JSX.Element {
   const rotation = useDerivedValue(
     () =>
       withTiming(open ? quarterTurnDegrees : 0, {

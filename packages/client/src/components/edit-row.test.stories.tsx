@@ -1,5 +1,6 @@
 import type { ToolCallUpdate } from '@repo/contracts';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 import { layoutWidths } from '../../mocks/each-layout';
 import { EditRowPreview } from '../../mocks/edit-row-preview';
@@ -12,7 +13,9 @@ const meta = {
   component: EditRow,
   globals: { themeId: 'default', mode: 'light' },
   parameters: { screenPreview: true },
-  render: ({ row }) => <EditRowPreview key={row.id} row={row} />,
+  render: ({ row }): React.JSX.Element => (
+    <EditRowPreview key={row.id} row={row} />
+  ),
   args: { row: recordedEdit('agent-1') },
 } satisfies Meta<typeof EditRow>;
 export default meta;

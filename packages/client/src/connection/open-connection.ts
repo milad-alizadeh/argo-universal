@@ -3,10 +3,16 @@ import { type ActorRefFrom, createActor } from 'xstate';
 import { createTRPCClient } from '../trpc/create-trpc-client';
 import { connectionMachine } from './machine';
 
+export interface OpenConnection {
+  client: ReturnType<typeof createTRPCClient>['client'];
+  connection: ReturnType<typeof createActor<typeof connectionMachine>>;
+  close: () => Promise<void>;
+}
+
 export type ConnectionActor = ActorRefFrom<typeof connectionMachine>;
 
 // Resolves once the machine allows the attempt, and rejects once the machine stops.
-function waitForAttempt(connection: ConnectionActor) {
+function waitForAttempt(connection: ConnectionActor): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     if (connection.getSnapshot().status !== 'active') {
       reject(new Error('The Connection is closed'));
@@ -26,7 +32,7 @@ function waitForAttempt(connection: ConnectionActor) {
         reject(new Error('The Connection is closed'));
       },
     });
-    const settled = () => {
+    const settled = (): void => {
       allowed.unsubscribe();
       stopped.unsubscribe();
     };
@@ -35,7 +41,10 @@ function waitForAttempt(connection: ConnectionActor) {
 }
 
 // The App's Connection to the Server: a tRPC client whose WebSocket opens only when the Connection machine allows it.
-export function openConnection(serverUrl: string, queryClient: QueryClient) {
+export function openConnection(
+  serverUrl: string,
+  queryClient: QueryClient,
+): OpenConnection {
   let connection: ConnectionActor | undefined;
   const trpc = createTRPCClient(serverUrl, async () => {
     // wsClient asks for its first URL while it is built, before `connection` below exists.

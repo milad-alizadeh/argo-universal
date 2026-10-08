@@ -3,6 +3,7 @@ import type {
   SessionAnswerPermissionInput,
 } from '@repo/contracts';
 import { TerminalWindowIcon } from 'phosphor-react-native';
+import type * as React from 'react';
 import { Platform, View } from 'react-native';
 import { cn } from '#lib/utils';
 import { Text } from '#primitives/text';
@@ -36,14 +37,14 @@ export function PermissionRequest({
   onAnswer,
   state,
   error,
-}: PermissionRequestProps) {
+}: PermissionRequestProps): React.JSX.Element {
   const wide = useContentWide();
   const submitting = state.kind === 'submitting';
   const alreadyAnswered = state.kind === 'answered';
   const denying = denialMessage !== undefined;
   const inactive = submitting || alreadyAnswered;
   const answerLabel = denying ? 'Deny' : 'Allow once';
-  const answer = () => {
+  const answer = (): void => {
     if (inactive) return;
     onAnswer(
       denying

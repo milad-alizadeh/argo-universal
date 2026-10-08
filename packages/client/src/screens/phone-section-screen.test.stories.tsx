@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { expect } from 'storybook/test';
@@ -18,7 +19,11 @@ const recorder = createNavigationRecorder();
 const counts = createSessionCountsMock({ attention: 1, running: 1 });
 
 // Follows each navigation, so the drawer closes over the next section as in the app.
-function NavigatingPhoneLayout({ section }: { section: ShellSection }) {
+function NavigatingPhoneLayout({
+  section,
+}: {
+  section: ShellSection;
+}): React.JSX.Element {
   const [destination, setDestination] = useState<NavigationDestination>(
     sectionDestination(section),
   );
@@ -41,9 +46,11 @@ const meta = {
   title: 'Tests/PhoneSectionScreen',
   component: PhoneSectionScreen,
   args: { section: 'sessions' },
-  render: (args) => <NavigatingPhoneLayout section={args.section} />,
+  render: (args): React.JSX.Element => (
+    <NavigatingPhoneLayout section={args.section} />
+  ),
   parameters: { navigation: recorder, trpc: sessionListMocks },
-  beforeEach: async () => {
+  beforeEach: async (): Promise<void> => {
     recorder.reset();
     const { page } = await import('vitest/browser');
     await page.viewport(390, 844);

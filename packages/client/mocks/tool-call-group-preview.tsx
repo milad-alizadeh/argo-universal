@@ -1,9 +1,12 @@
+import type * as React from 'react';
 import { View } from 'react-native';
 import { CommandRow } from '../src/components/command-row';
 import { ToolCallRow } from '../src/components/tool-call-row';
 import type { FeedActivity } from '../src/feed/feed-view';
 
-export function renderRecordedActivity(activity: FeedActivity) {
+export function renderRecordedActivity(
+  activity: FeedActivity,
+): React.JSX.Element {
   if (activity.type === 'exploration')
     return (
       <View className="gap-2">

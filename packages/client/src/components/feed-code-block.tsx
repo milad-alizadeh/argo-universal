@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { Platform, ScrollView, View } from 'react-native';
 import { cn } from '#lib/utils';
@@ -17,7 +18,7 @@ export function FeedCodeBlock({
   language,
   footer,
   textClassName,
-}: FeedCodeBlockProps) {
+}: FeedCodeBlockProps): React.JSX.Element {
   return (
     <View
       className={cn(

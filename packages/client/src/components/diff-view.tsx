@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import { useState } from 'react';
 import { Platform, ScrollView, View } from 'react-native';
 import { withOccurrenceKeys } from '#lib/occurrence-keys';
@@ -23,7 +24,13 @@ const lineStyles = {
   note: { color: 'text-ring', sign: ' ' },
 };
 
-function CodeLine({ line, inline }: { line: DiffLine; inline: boolean }) {
+function CodeLine({
+  line,
+  inline,
+}: {
+  line: DiffLine;
+  inline: boolean;
+}): React.JSX.Element {
   return (
     <View
       className={cn(
@@ -68,7 +75,7 @@ function FileHeader({
   file: FileDiff;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}) {
+}): React.JSX.Element {
   const slash = file.path.lastIndexOf('/');
   const folder = file.path.slice(0, slash + 1);
   const name = file.path.slice(slash + 1);
@@ -124,7 +131,10 @@ function FileHeader({
 }
 
 // The same hunk rendering is used inline in the Feed and under a file header in the Inspector.
-export function DiffView({ file, inline = false }: DiffViewProps) {
+export function DiffView({
+  file,
+  inline = false,
+}: DiffViewProps): React.JSX.Element {
   const [showAll, setShowAll] = useState(false);
   const [open, setOpen] = useState(true);
   const patchText = file.hunks

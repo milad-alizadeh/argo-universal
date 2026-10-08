@@ -7,6 +7,7 @@ import {
   MagnifyingGlassIcon,
   MonitorIcon,
 } from 'phosphor-react-native';
+import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/utils';
@@ -42,7 +43,7 @@ export function StartSessionIn({
   onProjectChange,
   checkout,
   disabled = false,
-}: StartSessionInProps) {
+}: StartSessionInProps): React.JSX.Element {
   const wide = useContentWide();
   const project = projects.find((entry) => entry.id === projectId);
   const projectControl = (
@@ -193,7 +194,7 @@ export function ProjectPicker({
   projects,
   projectId,
   onSelect,
-}: ProjectPickerProps) {
+}: ProjectPickerProps): React.JSX.Element {
   const [query, setQuery] = useState('');
   const search = query.trim().toLowerCase();
   const found = projects.filter(

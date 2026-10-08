@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
+import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { ConnectionBanner } from '#components/connection-banner';
@@ -14,7 +15,7 @@ import { Text } from '#primitives/text';
 import { useTRPC } from '../trpc/context';
 
 // Placeholder until the Connection page is built: the Server's system.info and its live clock.
-export function ConnectionScreen() {
+export function ConnectionScreen(): React.JSX.Element {
   const trpc = useTRPC();
   const info = useQuery(trpc.system.info.queryOptions());
   const clock = useSubscription(trpc.system.clock.subscriptionOptions());
@@ -54,7 +55,13 @@ export function ConnectionScreen() {
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}): React.JSX.Element {
   return (
     <View className="flex-row justify-between gap-4">
       <Text className="text-muted-foreground text-sm">{label}</Text>

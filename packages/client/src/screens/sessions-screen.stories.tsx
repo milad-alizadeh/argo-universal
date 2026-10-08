@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { sessionListMocks } from '../../mocks/session-list-mock';
 import { SessionsScreenPreview } from '../../mocks/sessions-screen-preview';
 import { fails } from '../../mocks/trpc-mock-link';
@@ -9,7 +10,7 @@ const meta = {
   component: SessionsScreen,
   parameters: { trpc: sessionListMocks, screenPreview: true },
   args: { query: '', archived: false },
-  render: () => <SessionsScreenPreview />,
+  render: (): React.JSX.Element => <SessionsScreenPreview />,
 } satisfies Meta<typeof SessionsScreen>;
 export default meta;
 

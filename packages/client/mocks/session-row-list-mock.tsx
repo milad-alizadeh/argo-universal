@@ -1,5 +1,6 @@
 import { agentsList } from '@repo/api/mocks';
 import type { SessionInfo } from '@repo/contracts';
+import type * as React from 'react';
 import { View } from 'react-native';
 import {
   SessionRow,
@@ -20,7 +21,7 @@ export function SessionRowListMock({
     string,
     Pick<SessionRowProps, 'issue' | 'pullRequest' | 'subagentsFailed'>
   >;
-}) {
+}): React.JSX.Element {
   const wide = useWide();
   return (
     <View

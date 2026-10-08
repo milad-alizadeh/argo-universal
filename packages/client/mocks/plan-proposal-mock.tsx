@@ -1,4 +1,5 @@
 import { recordedRequestMocks } from '@repo/api/mocks';
+import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import type { ComposerDraft } from '../src/components/composer';
@@ -49,7 +50,7 @@ export function PlanProposalPreview({
 }: Omit<PlanProposalCardProps, 'state'> & {
   state?: PlanProposalCardProps['state'];
   retainProposalAfterAnswer?: boolean;
-}) {
+}): React.JSX.Element {
   const [draft, setDraft] = useState<ComposerDraft>({
     text: 'Keep my draft',
     images: [],

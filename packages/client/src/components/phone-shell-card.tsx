@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { useWindowDimensions, type ViewStyle } from 'react-native';
 import { useDrawerProgress } from 'react-native-drawer-layout';
@@ -9,7 +10,9 @@ export interface PhoneShellCardProps {
   children: ReactNode;
 }
 
-export function PhoneShellCard({ children }: PhoneShellCardProps) {
+export function PhoneShellCard({
+  children,
+}: PhoneShellCardProps): React.JSX.Element {
   const progress = useDrawerProgress();
   const { marginTop, borderRadius } = useResolveClassNames(
     'mt-3 rounded-xl',

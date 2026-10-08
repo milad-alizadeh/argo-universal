@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import type * as React from 'react';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { ConnectionContext } from '../connection/context';
 import { openConnection } from '../connection/open-connection';
@@ -13,7 +14,10 @@ export interface AppProvidersProps {
 type Connection = ReturnType<typeof openConnection>;
 
 // One QueryClient and one Connection for the App's lifetime; give it a new key to switch Servers.
-export function AppProviders({ serverUrl, children }: AppProvidersProps) {
+export function AppProviders({
+  serverUrl,
+  children,
+}: AppProvidersProps): React.JSX.Element | null {
   const [queryClient] = useState(() => new QueryClient());
   const [connection, setConnection] = useState<Connection | null>(null);
   const blobUrl = useMemo(() => createServerBlobUrl(serverUrl), [serverUrl]);
@@ -22,7 +26,7 @@ export function AppProviders({ serverUrl, children }: AppProvidersProps) {
   useEffect(() => {
     const opened = openConnection(serverUrl, queryClient);
     setConnection(opened);
-    return () => {
+    return (): void => {
       void opened.close();
     };
   }, [serverUrl, queryClient]);

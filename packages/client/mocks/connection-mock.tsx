@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import { StrictMode, useEffect, useState, useSyncExternalStore } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { AppProviders } from '../src/trpc/app-providers';
@@ -26,14 +27,14 @@ function buildReport(): ConnectionReport {
   };
 }
 
-function changed() {
+function changed(): void {
   report = buildReport();
   for (const listener of listeners) listener();
 }
 
 function subscribe(listener: () => void) {
   listeners.add(listener);
-  return () => listeners.delete(listener);
+  return (): boolean => listeners.delete(listener);
 }
 
 // Stands in for the Server's end of each WebSocket: it opens at once, answers PING, and never answers a request.
@@ -57,11 +58,11 @@ class WebSocketMock extends EventTarget {
     });
   }
 
-  isClosed() {
+  isClosed(): boolean {
     return this.readyState === WebSocketMock.CLOSED;
   }
 
-  send(data: string) {
+  send(data: string): void {
     if (data !== 'PING') return;
     setTimeout(() => {
       if (this.readyState !== WebSocketMock.OPEN) return;
@@ -69,7 +70,7 @@ class WebSocketMock extends EventTarget {
     });
   }
 
-  close() {
+  close(): void {
     if (this.isClosed()) return;
     this.readyState = WebSocketMock.CLOSED;
     this.dispatchEvent(new CloseEvent('close', { code: 1000 }));
@@ -85,7 +86,7 @@ export function mockWebSocket() {
   statesScreensSaw.clear();
   changed();
   globalThis.WebSocket = WebSocketMock as unknown as typeof WebSocket;
-  return () => {
+  return (): void => {
     globalThis.WebSocket = browserWebSocket;
   };
 }
@@ -95,7 +96,9 @@ export interface ConnectionMockProps {
 }
 
 // Shows AppProviders' Connections over WebSocketMock; it starts unmounted, so StrictMode's double effects reach AppProviders.
-export function ConnectionMock({ strictMode = false }: ConnectionMockProps) {
+export function ConnectionMock({
+  strictMode = false,
+}: ConnectionMockProps): React.JSX.Element {
   const [mounted, setMounted] = useState(false);
   const current = useSyncExternalStore(subscribe, () => report);
   const providers = mounted ? (
@@ -121,7 +124,7 @@ export function ConnectionMock({ strictMode = false }: ConnectionMockProps) {
 }
 
 // Stands in for a screen: subscribes over the Connection from context and records its states; a closed one reads idle.
-function ScreenMock() {
+function ScreenMock(): null {
   const client = useTRPCClient();
   useEffect(() => {
     screenSubscriptions += 1;
@@ -132,7 +135,7 @@ function ScreenMock() {
         changed();
       },
     });
-    return () => subscription.unsubscribe();
+    return (): void => subscription.unsubscribe();
   }, [client]);
   return null;
 }

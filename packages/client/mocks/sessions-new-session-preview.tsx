@@ -1,4 +1,5 @@
 import { sessionRows } from '@repo/api/mocks';
+import type * as React from 'react';
 import { useRef, useState } from 'react';
 import { View } from 'react-native';
 import {
@@ -7,11 +8,13 @@ import {
 } from '../src/components/sessions-list';
 import { largeSessions } from './sessions-list-mock';
 
-export function SessionsNewSessionPreview(props: SessionsListProps) {
+export function SessionsNewSessionPreview(
+  props: SessionsListProps,
+): React.JSX.Element {
   const [sessions, setSessions] = useState(largeSessions.slice(0, 12));
   const nextNumber = useRef(1);
 
-  function addSession(projectId: string) {
+  function addSession(projectId: string): void {
     const number = nextNumber.current++;
     props.onNewSession?.(projectId);
     setSessions((current) => [

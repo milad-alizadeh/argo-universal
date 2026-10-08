@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { PhoneLayout } from '../components/phone-layout';
 import { sectionDestination } from '../navigation/sections';
@@ -14,7 +15,7 @@ const meta = {
     },
   },
   args: { section: 'sessions' },
-  render: (args) => (
+  render: (args): React.JSX.Element => (
     <View className="h-[796px] w-full">
       <PhoneLayout destination={sectionDestination(args.section)}>
         <PhoneSectionScreen {...args} />

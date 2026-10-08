@@ -1,37 +1,38 @@
+import type * as React from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/text';
 
-export function IssuesScreen() {
+export function IssuesScreen(): React.JSX.Element {
   return <Placeholder title="Issues" description="Issues will appear here." />;
 }
 
-export function AtlasScreen() {
+export function AtlasScreen(): React.JSX.Element {
   return <Placeholder title="Atlas" description="Atlas will appear here." />;
 }
 
-export function AccountsScreen() {
+export function AccountsScreen(): React.JSX.Element {
   return (
     <Placeholder title="Accounts" description="Accounts will appear here." />
   );
 }
 
-export function ProjectsSettingsScreen() {
+export function ProjectsSettingsScreen(): React.JSX.Element {
   return (
     <Placeholder title="Projects" description="Projects will appear here." />
   );
 }
 
-export function AgentsSettingsScreen() {
+export function AgentsSettingsScreen(): React.JSX.Element {
   return <Placeholder title="Agents" description="Agents will appear here." />;
 }
 
-export function DevicesScreen() {
+export function DevicesScreen(): React.JSX.Element {
   return (
     <Placeholder title="Devices" description="Devices will appear here." />
   );
 }
 
-export function AppearanceScreen() {
+export function AppearanceScreen(): React.JSX.Element {
   return (
     <Placeholder
       title="Appearance"
@@ -40,7 +41,7 @@ export function AppearanceScreen() {
   );
 }
 
-export function NotificationsScreen() {
+export function NotificationsScreen(): React.JSX.Element {
   return (
     <Placeholder
       title="Notifications"
@@ -53,7 +54,9 @@ export interface ProjectSettingsScreenProps {
   name: string;
 }
 
-export function ProjectSettingsScreen({ name }: ProjectSettingsScreenProps) {
+export function ProjectSettingsScreen({
+  name,
+}: ProjectSettingsScreenProps): React.JSX.Element {
   return (
     <Placeholder
       title="Project settings"
@@ -66,7 +69,9 @@ export interface AgentSettingsScreenProps {
   agent: string;
 }
 
-export function AgentSettingsScreen({ agent }: AgentSettingsScreenProps) {
+export function AgentSettingsScreen({
+  agent,
+}: AgentSettingsScreenProps): React.JSX.Element {
   return (
     <Placeholder
       title="Agent"
@@ -81,7 +86,7 @@ function Placeholder({
 }: {
   title: string;
   description: string;
-}) {
+}): React.JSX.Element {
   return (
     <View className="flex-1 items-center justify-center gap-2 bg-background px-gutter py-6">
       <Text role="heading" aria-level={1} variant="h3">

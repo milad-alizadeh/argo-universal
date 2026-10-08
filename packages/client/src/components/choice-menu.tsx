@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import type { ReactElement } from 'react';
 import {
   DropdownMenu,
@@ -24,7 +25,7 @@ export function ChoiceMenu<Value extends string>({
   choices,
   onValueChange,
   trigger,
-}: ChoiceMenuProps<Value>) {
+}: ChoiceMenuProps<Value>): React.JSX.Element {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild accessibilityLabel={accessibilityLabel}>

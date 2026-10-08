@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import { View } from 'react-native';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { withUniwind } from 'uniwind';
@@ -46,7 +47,7 @@ export function ComposerGlyph({
   name: keyof typeof drawings;
   size?: IconSize;
   className?: string;
-}) {
+}): React.JSX.Element {
   let strokeWidth = defaultStrokeWidth;
   if (name === 'remove') strokeWidth = removeStrokeWidth;
   else if (name === 'warning') strokeWidth = warningStrokeWidth;
