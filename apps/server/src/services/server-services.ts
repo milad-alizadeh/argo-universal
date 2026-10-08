@@ -44,6 +44,7 @@ export function createServerServices(options: {
       database: options.database,
       readSession: createSessionReader(options.database),
       watchSessionSnapshot: createSessionSnapshotWatcher({
+        sessions: options.sessions,
         database: options.database,
         findSession,
         findFeed,

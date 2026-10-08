@@ -162,7 +162,6 @@ export function createFeedService(deps: FeedDeps): FeedService {
     let feed: FeedActorRef | undefined;
     let listener: Subscription | undefined;
     let closed = false;
-    let lastSnapshot = '';
     let failure: Extract<FeedSubscribeOutput, { type: 'closed' }>['failure'] =
       null;
     let snapshotFailure: { error: unknown } | undefined;
@@ -182,12 +181,7 @@ export function createFeedService(deps: FeedDeps): FeedService {
         if (event.type === 'closed') {
           closed = true;
           failure = event.failure;
-        } else {
-          const serialized = JSON.stringify(event.snapshot);
-          if (serialized === lastSnapshot) return;
-          lastSnapshot = serialized;
-          live.push(event);
-        }
+        } else live.push(event);
         wake?.();
       },
       error: (error): void => {
