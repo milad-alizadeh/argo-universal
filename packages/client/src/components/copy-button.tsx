@@ -1,5 +1,6 @@
 import { setStringAsync } from 'expo-clipboard';
 import { CheckIcon, CopyIcon } from 'phosphor-react-native';
+import type * as React from 'react';
 import { useEffect, useState } from 'react';
 import { Platform, Pressable } from 'react-native';
 import { cn } from '#lib/utils';
@@ -19,12 +20,12 @@ export function CopyButton({
   value,
   label,
   revealOnHover = false,
-}: CopyButtonProps) {
+}: CopyButtonProps): React.JSX.Element {
   const [copied, setCopied] = useState(false);
   useEffect(() => {
     if (!copied) return;
     const timeout = setTimeout(() => setCopied(false), copiedMilliseconds);
-    return () => clearTimeout(timeout);
+    return (): void => clearTimeout(timeout);
   }, [copied]);
   return (
     <Pressable

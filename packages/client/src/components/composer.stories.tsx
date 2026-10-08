@@ -1,6 +1,6 @@
 import { newSessionCatalogs } from '@repo/api/mocks';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import type { ComponentProps } from 'react';
+import type * as React from 'react';
 import { Platform, ScrollView, View } from 'react-native';
 import { action } from 'storybook/actions';
 import {
@@ -12,7 +12,9 @@ import {
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
 import { imageSelectionFailureMessage } from './use-image-draft';
 
-function ComposerPreview(args: ComponentProps<typeof ComposerMock>) {
+function ComposerPreview(
+  args: React.ComponentProps<typeof ComposerMock>,
+): React.JSX.Element {
   return <ComposerMock key={args.initialAgent} {...args} />;
 }
 

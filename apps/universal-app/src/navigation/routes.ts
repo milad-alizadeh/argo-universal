@@ -21,7 +21,10 @@ const routes = {
 
 type Route = keyof typeof routes;
 
-export function hrefFor({ to, ...params }: NavigationDestination) {
+export function hrefFor({ to, ...params }: NavigationDestination): {
+  pathname: (typeof routes)[Route];
+  params: Omit<NavigationDestination, 'to'>;
+} {
   return { pathname: routes[to], params };
 }
 

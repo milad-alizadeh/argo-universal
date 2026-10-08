@@ -27,7 +27,9 @@ afterEach(async () => {
 });
 
 // A Server on `port`; 0 picks a free one. `stop` drops every Connection, as an Engine restart does.
-async function startServer(port = 0) {
+async function startServer(
+  port = 0,
+): Promise<{ url: string; port: number; stop: () => Promise<void> }> {
   const server = new WebSocketServer({ host: '127.0.0.1', port });
   await new Promise((resolve) => server.once('listening', resolve));
   applyWSSHandler({
@@ -35,7 +37,7 @@ async function startServer(port = 0) {
     router: appRouter,
     createContext: () => ({ services }),
   });
-  const stop = () =>
+  const stop = (): Promise<void> =>
     new Promise<void>((resolve) => {
       for (const client of server.clients) client.terminate();
       server.close(() => resolve());
@@ -45,13 +47,16 @@ async function startServer(port = 0) {
   return { url: `ws://127.0.0.1:${address.port}`, port: address.port, stop };
 }
 
-const linkIs = (connection: ConnectionActor, link: string) =>
+const linkIs = (
+  connection: ConnectionActor,
+  link: string,
+): ReturnType<typeof waitFor<ConnectionActor>> =>
   waitFor(connection, (snapshot) => snapshot.value.link === link, {
     timeout: 5000,
   });
 
-describe('openConnection', () => {
-  it('reconnects after the Server restarts and fetches every query again', async () => {
+describe('openConnection', (): void => {
+  it('reconnects after the Server restarts and fetches every query again', async (): Promise<void> => {
     const server = await startServer();
     const queryClient = new QueryClient();
     const { client, connection, close } = openConnection(
@@ -63,7 +68,8 @@ describe('openConnection', () => {
     // An observed query, as a mounted screen has; invalidation refetches only those.
     const observer = new QueryObserver(queryClient, {
       queryKey: ['system.info'],
-      queryFn: () => client.system.info.query(),
+      queryFn: (): ReturnType<typeof client.system.info.query> =>
+        client.system.info.query(),
     });
     closers.push(observer.subscribe(() => {}));
     await vi.waitFor(() =>
@@ -81,7 +87,7 @@ describe('openConnection', () => {
     );
   });
 
-  it('connects after an initial failure when the Server becomes available', async () => {
+  it('connects after an initial failure when the Server becomes available', async (): Promise<void> => {
     const stopped = await startServer();
     await stopped.stop();
     const queryClient = new QueryClient();
@@ -92,7 +98,8 @@ describe('openConnection', () => {
     closers.push(close);
     const observer = new QueryObserver(queryClient, {
       queryKey: ['system.info'],
-      queryFn: () => client.system.info.query(),
+      queryFn: (): ReturnType<typeof client.system.info.query> =>
+        client.system.info.query(),
     });
     closers.push(observer.subscribe(() => {}));
     await linkIs(connection, 'reconnecting');

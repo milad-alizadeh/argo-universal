@@ -2,7 +2,7 @@ import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { StorybookConfig } from '@storybook/react-native-web-vite';
 
-function getAbsolutePath(value: string) {
+function getAbsolutePath(value: string): string {
   return dirname(fileURLToPath(import.meta.resolve(`${value}/package.json`)));
 }
 const config: StorybookConfig = {
@@ -24,7 +24,10 @@ const config: StorybookConfig = {
     const expoDeclarationImports = {
       name: 'expo-declaration-imports',
       enforce: 'pre' as const,
-      transform(code: string, id: string) {
+      transform(
+        code: string,
+        id: string,
+      ): { code: string; map: null } | undefined {
         // These four imports only supply Expo's ambient namespace declarations.
         if (
           id

@@ -1,5 +1,6 @@
 import * as DialogPrimitive from '@rn-primitives/dialog';
 import { Portal } from '@rn-primitives/portal';
+import type * as React from 'react';
 import { type ReactNode, useContext, useId } from 'react';
 import { useWide } from '../navigation/use-wide';
 import { PlanProposalHost } from './plan-proposal-region';
@@ -12,7 +13,7 @@ export interface PlanProposalExpansionProps {
 export function PlanProposalOverlay({
   onCollapse,
   children,
-}: PlanProposalExpansionProps) {
+}: PlanProposalExpansionProps): React.JSX.Element {
   const host = useContext(PlanProposalHost);
   const name = useId();
   const wide = useWide();

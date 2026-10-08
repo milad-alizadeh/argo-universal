@@ -1,4 +1,5 @@
 import { GitMergeIcon, GitPullRequestIcon } from 'phosphor-react-native';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/utils';
 import { Text } from '#primitives/text';
@@ -20,7 +21,7 @@ export interface PullRequestIndicatorProps {
 export function PullRequestIndicator({
   number,
   status,
-}: PullRequestIndicatorProps) {
+}: PullRequestIndicatorProps): React.JSX.Element {
   const appearance = statusAppearance[status];
   return (
     <View

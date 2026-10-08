@@ -1,4 +1,5 @@
 import type { ToolCallUpdate } from '@repo/contracts';
+import type * as React from 'react';
 import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { DesktopShell } from '../src/components/desktop-shell';
@@ -6,7 +7,11 @@ import { EditRow } from '../src/components/edit-row';
 import { useWide } from '../src/navigation/use-wide';
 import { Text } from '../src/primitives/text';
 
-export function EditRowPreview({ row }: { row: ToolCallUpdate }) {
+export function EditRowPreview({
+  row,
+}: {
+  row: ToolCallUpdate;
+}): React.JSX.Element {
   const wide = useWide();
   const [sidebarShown, setSidebarShown] = useState(true);
   const feed = (

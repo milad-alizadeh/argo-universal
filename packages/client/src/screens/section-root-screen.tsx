@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import type { ComponentType } from 'react';
 import type { ShellSection } from '../components/shell-sections';
 import { useWide } from '../navigation/use-wide';
@@ -22,7 +23,9 @@ export interface SectionRootScreenProps {
 }
 
 // A section root: its list on a phone, and its first page on a wide window.
-export function SectionRootScreen({ section }: SectionRootScreenProps) {
+export function SectionRootScreen({
+  section,
+}: SectionRootScreenProps): React.JSX.Element {
   const wide = useWide();
   if (!wide) return <PhoneSectionScreen section={section} />;
   const RootPage = rootPages[section];

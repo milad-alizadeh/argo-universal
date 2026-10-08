@@ -1,4 +1,5 @@
 import { isToolCallRunning, type ToolCallUpdate } from '@repo/contracts';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/text';
 import { toolCallTitle } from '../feed/tool-call-title';
@@ -18,7 +19,7 @@ export function ToolCallRow({
   initialOpen,
   permissionMessage,
   awaitingApproval = false,
-}: ToolCallRowProps) {
+}: ToolCallRowProps): React.JSX.Element {
   const path =
     row._meta?.argo?.commandActions?.find((action) => action.path)?.path ??
     row.locations?.[0]?.path;

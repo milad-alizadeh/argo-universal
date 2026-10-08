@@ -4,6 +4,7 @@ import type {
 } from '@repo/contracts';
 import { useForm, useStore } from '@tanstack/react-form';
 import { PlugIcon, WarningCircleIcon } from 'phosphor-react-native';
+import type * as React from 'react';
 import { useMemo } from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/text';
@@ -29,7 +30,9 @@ export interface ElicitationFormProps {
   error?: string;
 }
 
-export function ElicitationForm(props: ElicitationFormProps) {
+export function ElicitationForm(
+  props: ElicitationFormProps,
+): React.JSX.Element {
   return <RequestForm key={props.request.requestId} {...props} />;
 }
 
@@ -40,7 +43,7 @@ function RequestForm({
   source,
   state,
   error: responseError,
-}: ElicitationFormProps) {
+}: ElicitationFormProps): React.JSX.Element {
   const submitting = state.kind === 'submitting';
   const alreadyAnswered = state.kind === 'answered';
   const schema = useMemo(
@@ -65,7 +68,7 @@ function RequestForm({
   const invalid = schema.fields.filter(
     ({ key }) => fieldMetadata[key]?.errors.length,
   );
-  const answer = (action: ElicitationAnswer['action']) => {
+  const answer = (action: ElicitationAnswer['action']): void => {
     if (inactive) return;
     if (action === 'accept') void form.handleSubmit();
     else onAnswer({ action });

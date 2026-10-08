@@ -1,4 +1,5 @@
 import type { Icon as PhosphorIcon } from 'phosphor-react-native';
+import type * as React from 'react';
 import { Button } from '#primitives/button';
 import { Icon } from '../lib/icon';
 
@@ -13,7 +14,7 @@ export function FloatingActionButton({
   accessibilityLabel,
   icon,
   onPress,
-}: FloatingActionButtonProps) {
+}: FloatingActionButtonProps): React.JSX.Element {
   return (
     <Button
       accessibilityLabel={accessibilityLabel}

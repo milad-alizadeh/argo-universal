@@ -1,6 +1,7 @@
+import type * as React from 'react';
 import { View } from 'react-native';
 
-export function SessionsLoading() {
+export function SessionsLoading(): React.JSX.Element {
   return (
     <View
       role="status"

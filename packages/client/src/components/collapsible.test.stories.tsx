@@ -58,7 +58,9 @@ function animatedDisclosure(width: number): Story {
 export const AnimatedDisclosurePhone = animatedDisclosure(layoutWidths.phone);
 export const AnimatedDisclosureWide = animatedDisclosure(layoutWidths.wide);
 
-async function heightsDuringTransition(element: HTMLElement) {
+async function heightsDuringTransition(
+  element: HTMLElement,
+): Promise<number[]> {
   const heights: number[] = [];
   for (let frame = 0; frame < 16; frame++) {
     await new Promise<void>((resolve) =>

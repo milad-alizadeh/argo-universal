@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import { View, type ViewProps } from 'react-native';
 import { type Edge, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cn } from '#lib/utils';
@@ -19,7 +20,7 @@ export function Screen({
   style,
   children,
   ...props
-}: ScreenProps) {
+}: ScreenProps): React.JSX.Element {
   const insets = useSafeAreaInsets();
   return (
     <View

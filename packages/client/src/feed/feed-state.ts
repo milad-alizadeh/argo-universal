@@ -35,7 +35,7 @@ export interface SubscriptionEventResult {
   reset?: true;
 }
 
-const byPosition = (first: SessionUpdate, second: SessionUpdate) =>
+const byPosition = (first: SessionUpdate, second: SessionUpdate): number =>
   first.position - second.position;
 
 // Keeps the newer revision of each row, ordered by position.

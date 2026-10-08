@@ -5,7 +5,7 @@ import { PencilSimpleIcon } from 'phosphor-react-native/src/icons/PencilSimple';
 import { TerminalWindowIcon } from 'phosphor-react-native/src/icons/TerminalWindow';
 import { WrenchIcon } from 'phosphor-react-native/src/icons/Wrench';
 
-export function toolCallIcon(row: ToolCallUpdate) {
+export function toolCallIcon(row: ToolCallUpdate): typeof BookOpenIcon {
   const category = knownCommandActions(row)[0]?.type ?? row.kind;
   switch (category) {
     case 'read':

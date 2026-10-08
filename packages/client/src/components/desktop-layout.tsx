@@ -1,4 +1,5 @@
 import { PortalHost } from '@rn-primitives/portal';
+import type * as React from 'react';
 import { type ReactNode, useState } from 'react';
 import { Text } from '#primitives/text';
 import { type NavigationDestination, useNavigate } from '../navigation/context';
@@ -19,7 +20,10 @@ export interface DesktopLayoutProps {
 }
 
 // The wide window's shell: the open section's list in the sidebar, and `children` in the detail pane.
-export function DesktopLayout({ destination, children }: DesktopLayoutProps) {
+export function DesktopLayout({
+  destination,
+  children,
+}: DesktopLayoutProps): React.JSX.Element {
   const navigate = useNavigate();
   const attentionCount = useAttentionCount();
   const [sidebarShown, setSidebarShown] = useState(true);

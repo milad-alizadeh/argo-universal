@@ -1,11 +1,14 @@
+import type { SessionListUpdate } from '@repo/contracts';
 import {
   keepPreviousData,
   useInfiniteQuery,
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
+import type { TRPCSubscriptionResult } from '@trpc/tanstack-react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { NotePencilIcon, SlidersHorizontalIcon } from 'phosphor-react-native';
+import type * as React from 'react';
 import { type ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 import { Platform, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,7 +22,6 @@ import { SessionsLoading } from '#components/sessions-loading';
 import { hasLiquidGlass } from '#lib/native-header';
 import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
-// Relative, so Metro picks the .ios file.
 import { ChoiceMenu } from '../components/choice-menu';
 import { FloatingActionButton } from '../components/floating-action-button';
 import {
@@ -30,6 +32,9 @@ import { Icon } from '../lib/icon';
 import { useNavigate } from '../navigation/context';
 import { useWide } from '../navigation/use-wide';
 import { useTRPC } from '../trpc/context';
+import type { ClientError } from '../trpc/context';
+
+// Relative, so Metro picks the .ios file.
 
 export interface SessionsFilter {
   query: string;
@@ -51,7 +56,7 @@ export function useSessionsFilter(): SessionsFilter {
 }
 
 // The Sessions part of the wide window's list header row: the title with search, and the filter.
-export function SessionsHeader(filter: SessionsFilter) {
+export function SessionsHeader(filter: SessionsFilter): React.JSX.Element {
   return (
     <>
       <ListSearch
@@ -73,7 +78,7 @@ const sessionsFilterChoices = [
 export function SessionsFilterMenu({
   archived,
   onArchivedChange,
-}: Pick<SessionsFilter, 'archived' | 'onArchivedChange'>) {
+}: Pick<SessionsFilter, 'archived' | 'onArchivedChange'>): React.JSX.Element {
   const wide = useWide();
   return (
     <ChoiceMenu
@@ -103,7 +108,9 @@ export function SessionsFilterMenu({
 }
 
 // A phone's trailing header items, each its own button: the filter, then New Session on iOS, where it replaces the floating button.
-export function sessionsHeaderItems(filter: SessionsFilter) {
+export function sessionsHeaderItems(
+  filter: SessionsFilter,
+): React.JSX.Element[] {
   return [
     <SessionsFilterMenu key="filter" {...filter} />,
     ...(newSessionInHeader
@@ -112,7 +119,7 @@ export function sessionsHeaderItems(filter: SessionsFilter) {
   ];
 }
 
-function NewSessionHeaderButton() {
+function NewSessionHeaderButton(): React.JSX.Element {
   const navigate = useNavigate();
   return (
     <HeaderButton
@@ -132,7 +139,10 @@ export interface SessionsScreenProps {
 }
 
 // The Sessions list below the shell's header row: phone full screen, or the wide window's sidebar.
-export function SessionsScreen({ query, archived }: SessionsScreenProps) {
+export function SessionsScreen({
+  query,
+  archived,
+}: SessionsScreenProps): React.JSX.Element {
   const wide = useWide();
   const trpc = useTRPC();
   const navigate = useNavigate();
@@ -179,7 +189,7 @@ export function SessionsScreen({ query, archived }: SessionsScreenProps) {
   }, [sessions.hasNextPage, sessions.isFetchingNextPage, fetchNextPage]);
   const error = projects.isError || agents.isError || sessions.isLoadingError;
   const loading = projects.isPending || agents.isPending || sessions.isPending;
-  function retry() {
+  function retry(): void {
     void projects.refetch();
     void agents.refetch();
     void sessions.refetch();
@@ -292,7 +302,7 @@ export function SessionsScreen({ query, archived }: SessionsScreenProps) {
 }
 
 // Keeps content that doesn't scroll out from under a transparent header.
-function BelowHeader({ children }: { children: ReactNode }) {
+function BelowHeader({ children }: { children: ReactNode }): React.JSX.Element {
   const wide = useWide();
   if (!hasLiquidGlass || wide) return <>{children}</>;
   return (
@@ -303,7 +313,10 @@ function BelowHeader({ children }: { children: ReactNode }) {
 }
 
 // Live list updates refetch its pages and resume after Connection recovery.
-function useSessionListUpdates() {
+function useSessionListUpdates(): TRPCSubscriptionResult<
+  SessionListUpdate,
+  ClientError
+> {
   const trpc = useTRPC();
   const refetch = useCoalescedListRefetch();
   const subscription = useSubscription(
@@ -316,7 +329,7 @@ function useSessionListUpdates() {
   return subscription;
 }
 
-function useCoalescedListRefetch() {
+function useCoalescedListRefetch(): () => void {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const inFlight = useRef(false);
@@ -326,7 +339,7 @@ function useCoalescedListRefetch() {
       trailing.current = true;
       return;
     }
-    const refetch = async () => {
+    const refetch = async (): Promise<void> => {
       inFlight.current = true;
       try {
         do {
