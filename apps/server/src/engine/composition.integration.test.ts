@@ -16,8 +16,7 @@ import { createMockAdapter, type MockAgentStream } from '@repo/mocks/agent';
 import { createAppFixtureAdapter } from '@repo/mocks/agent/app-fixtures';
 import { eq, sql } from 'drizzle-orm';
 import { expect, it, onTestFinished, vi } from 'vitest';
-import type { Actor } from 'xstate';
-import type { ActorRefFrom } from 'xstate';
+import type { Actor, ActorRefFrom } from 'xstate';
 import { createActor, fromCallback, fromPromise, waitFor } from 'xstate';
 import {
   countDatabaseReads,
@@ -28,12 +27,13 @@ import { initTestRepository } from '#mocks/git';
 import { liveHeaderMocks } from '#mocks/live-header';
 import { feedMachine } from '../services/feed';
 import { type WriterJob, writeJobs } from '../services/feed';
-import { writerMachine } from '../services/feed';
+import { writerMachine, findDatabaseWriter } from '../services/feed';
 import { createServerServices } from '../services/server-services';
 import { registryMachine, sessionMachine } from '../services/sessions';
 import type { HttpServerOptions } from './http-server';
 import { engineMachine } from './machine';
 
+const missingWriterMessage = 'Writer actor is missing';
 const engineStopEvent = 'engine.stop';
 const agentFeedEvent = 'agent.feed';
 const checkingTestsStatus = 'Checking the tests';
@@ -653,9 +653,9 @@ it('sends live list changes and attention/running counts through request and Tur
     type: 'changed',
     session: { sessionId: 'session-1', status: 'idle' },
   });
-  const writer = engine.system.get('databaseWriter') as ActorRefFrom<
-    typeof writerMachine
-  >;
+  const writer =
+    findDatabaseWriter(engine.system) ??
+    expect.unreachable(missingWriterMessage);
   for (const sessionId of ['archived', 'subagent'])
     writer.send({
       type: writerWriteEvent,
@@ -845,9 +845,9 @@ it('publishes stored list changes, changes counts only when needed, and aborts a
   const updates = (await caller.session.listUpdates())[Symbol.asyncIterator]();
   expect((await counts.next()).value).toEqual({ attention: 1, running: 0 });
   await updates.next();
-  const writer = engine.system.get('databaseWriter') as ActorRefFrom<
-    typeof writerMachine
-  >;
+  const writer =
+    findDatabaseWriter(engine.system) ??
+    expect.unreachable(missingWriterMessage);
   const waitingCounts = counts.next();
   writer.send({
     type: writerWriteEvent,
@@ -941,9 +941,9 @@ it('shares one coalesced list read for three subscribers across fifty changes', 
     const firstChange = first.next();
     const secondChange = second.next();
     const nextCounts = counts.next();
-    const writer = engine.system.get('databaseWriter') as ActorRefFrom<
-      typeof writerMachine
-    >;
+    const writer =
+      findDatabaseWriter(engine.system) ??
+      expect.unreachable(missingWriterMessage);
     for (let index = 1; index <= 50; index += 1)
       writer.send({
         type: writerWriteEvent,
