@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { buildHoistingReport } from './hoist-check/report.mjs';
+import { buildHoistingReport } from './hoist-check/report.mts';
 
 try {
   process.stdout.write(

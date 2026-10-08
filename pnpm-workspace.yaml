@@ -19,6 +19,8 @@ catalog:
   eslint-plugin-sonarjs: 4.2.2
   eslint-plugin-unicorn: 77.0.0
   oxfmt: 0.72.0
+  oxc-parser: 0.150.0
+  oxc-resolver: 11.24.2
   oxlint: 1.87.0
   oxlint-tsgolint: 7.0.2003
   "@anthropic-ai/claude-agent-sdk": 0.3.289

@@ -1,9 +1,14 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { relative } from './scan.mjs';
-import { tierOf } from './tiers.mjs';
+import type { ImportEdge, ReportContext, ParsedModule } from './context.mts';
+import { relative } from './scan.mts';
+import { tierOf } from './tiers.mts';
 
-function upwardEdge(context, file, edge) {
+function upwardEdge(
+  context: ReportContext,
+  file: string,
+  edge: ImportEdge,
+): string[] {
   if (!edge.target) return [];
   const target = relative(context.root, edge.target);
   const tier = tierOf(target);
@@ -13,11 +18,13 @@ function upwardEdge(context, file, edge) {
   ];
 }
 
-export function genericImportReport(context) {
-  const lines = context.production.flatMap((module) => {
+export function genericImportReport(context: ReportContext): string[] {
+  const lines = context.production.flatMap((module): string[] => {
     const file = relative(context.root, module.file);
     if (tierOf(file).tier !== 'generic') return [];
-    return module.imports.flatMap((edge) => upwardEdge(context, file, edge));
+    return module.imports.flatMap((edge): string[] =>
+      upwardEdge(context, file, edge),
+    );
   });
   return [
     '\n## E. Generic tier importing product or local code',
@@ -26,52 +33,63 @@ export function genericImportReport(context) {
   ];
 }
 
-function glossaryTerms(root) {
+function glossaryTerms(root: string): string[][] {
   const file = path.join(root, 'GLOSSARY.md');
   if (!fs.existsSync(file)) return [];
   return [...fs.readFileSync(file, 'utf8').matchAll(/^\*\*([^*]+)\*\*:/gm)].map(
-    (match) => match[1].trim().toLowerCase().split(/\s+/),
+    (match): string[] => (match[1] ?? '').trim().toLowerCase().split(/\s+/),
   );
 }
 
-function wordsOf(name) {
+function wordsOf(name: string): string[] {
   return name
     .replaceAll(/([a-z0-9])([A-Z])/g, '$1 $2')
     .replaceAll(/([A-Z])([A-Z][a-z])/g, '$1 $2')
     .toLowerCase()
     .split(/[\s_$]+/)
     .filter(Boolean)
-    .map((word) => word.replace(/(?:es|s)$/, ''));
+    .map((word): string => word.replace(/(?:es|s)$/, ''));
 }
 
-function namedTerms(name, terms) {
+function namedTerms(name: string, terms: string[][]): string[][] {
   const words = wordsOf(name);
-  return terms.filter((term) =>
-    words.some((_, start) =>
+  return terms.filter((term): boolean =>
+    words.some((_, start): boolean =>
       term.every(
-        (part, offset) =>
+        (part, offset): boolean =>
           words[start + offset] === part.replace(/(?:es|s)$/, ''),
       ),
     ),
   );
 }
 
-function glossaryExports(context, module, terms) {
-  const file = relative(context.root, module.file);
-  if (tierOf(file).tier !== 'generic') return [];
-  return [...module.declared].flatMap((name) => {
-    const matched = namedTerms(name, terms);
-    return matched.length
-      ? [
-          `! ${file}: ${name} names ${matched.map((term) => term.join(' ')).join(', ')}`,
-        ]
-      : [];
-  });
+function glossaryName(
+  file: string,
+  name: string,
+  matched: string[][],
+): string[] {
+  return matched.length
+    ? [
+        `! ${file}: ${name} names ${matched.map((term): string => term.join(' ')).join(', ')}`,
+      ]
+    : [];
 }
 
-export function glossaryReport(context) {
+function glossaryExports(
+  context: ReportContext,
+  module: ParsedModule,
+  terms: string[][],
+): string[] {
+  const file = relative(context.root, module.file);
+  if (tierOf(file).tier !== 'generic') return [];
+  return [...module.declared].flatMap((name): string[] =>
+    glossaryName(file, name, namedTerms(name, terms)),
+  );
+}
+
+export function glossaryReport(context: ReportContext): string[] {
   const terms = glossaryTerms(context.root);
-  const lines = context.production.flatMap((module) =>
+  const lines = context.production.flatMap((module): string[] =>
     glossaryExports(context, module, terms),
   );
   return [
@@ -82,6 +100,6 @@ export function glossaryReport(context) {
   ];
 }
 
-function typeOnlyLabel(edge) {
+function typeOnlyLabel(edge: ImportEdge): string {
   return edge.typeOnly ? ', type-only' : '';
 }

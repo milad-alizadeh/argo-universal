@@ -4,14 +4,20 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "check-types": "tsc --noEmit",
     "test": "vitest run"
   },
   "dependencies": {
     "jsonc-parser": "catalog:",
+    "oxc-parser": "catalog:",
+    "oxc-resolver": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@repo/typescript": "workspace:*",
     "@repo/vitest": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
     "vitest": "catalog:"
   }
 }

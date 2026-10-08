@@ -1,13 +1,13 @@
-import { clientLibReport } from './client-lib.mjs';
-import { componentsReport } from './components.mjs';
-import { reportContext } from './context.mjs';
-import { genericImportReport, glossaryReport } from './generic-imports.mjs';
+import { clientLibReport } from './client-lib.mts';
+import { componentsReport } from './components.mts';
+import { reportContext, type ReportContext } from './context.mts';
+import { genericImportReport, glossaryReport } from './generic-imports.mts';
 import {
   genericPackagesReport,
   productPackagesReport,
-} from './shared-packages.mjs';
+} from './shared-packages.mts';
 
-export function buildHoistingReport(root) {
+export function buildHoistingReport(root: string): string {
   const context = reportContext(root);
   return (
     [
@@ -22,7 +22,9 @@ export function buildHoistingReport(root) {
   );
 }
 
-function reportHeader(context) {
+function reportHeader(
+  context: Pick<ReportContext, 'modules' | 'production' | 'packages'>,
+): string[] {
   return [
     '# hoist-check: three-tier hoisting report (read-only)',
     `modules parsed: ${context.modules.size} (${context.production.length} production); workspace packages: ${context.packages.size}`,

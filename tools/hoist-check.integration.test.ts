@@ -1,25 +1,9 @@
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { afterEach, expect, it } from 'vitest';
-import { buildHoistingReport } from './hoist-check/report.mjs';
-
-const roots: string[] = [];
-afterEach((): void => {
-  roots.splice(0).map((root): void => rmSync(root, { recursive: true }));
-});
-
-function workspace(files: Record<string, string>): string {
-  const root = mkdtempSync(join(tmpdir(), 'hoisting-report-'));
-  roots.push(root);
-  Object.entries(files).map(([file, source]): void => {
-    mkdirSync(dirname(join(root, file)), { recursive: true });
-    writeFileSync(join(root, file), source);
-  });
-  return root;
-}
+import { expect, it } from 'vitest';
+import { buildHoistingReport } from './hoist-check/report.mts';
+import { workspace } from './hoist-check/workspace-mock.ts';
 
 it('counts distinct production consumers through renamed barrel exports', (): void => {
   const root = workspace({
@@ -109,7 +93,7 @@ it('keeps the command successful when the report identifies misplaced helpers', 
   });
   const result = spawnSync(
     process.execPath,
-    [fileURLToPath(new URL('./hoist-check.mjs', import.meta.url)), root],
+    [fileURLToPath(new URL('./hoist-check.mts', import.meta.url)), root],
     { encoding: 'utf8' },
   );
   expect(result.status).toBe(0);
@@ -121,7 +105,7 @@ it('reports an unreadable workspace without failing the command', (): void => {
   const result = spawnSync(
     process.execPath,
     [
-      fileURLToPath(new URL('./hoist-check.mjs', import.meta.url)),
+      fileURLToPath(new URL('./hoist-check.mts', import.meta.url)),
       join(root, 'missing'),
     ],
     { encoding: 'utf8' },

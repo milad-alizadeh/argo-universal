@@ -14,7 +14,7 @@
     "postinstall": "sherif",
     "quality:dead-code": "knip --no-progress --max-issues 0",
     "quality:duplication": "jscpd --config .jscpd.json --baseline .jscpd-baseline.json --fail-on-new-clones=0 apps packages tooling tools e2e mocks",
-    "quality:hoisting": "node tools/hoist-check.mjs",
+    "quality:hoisting": "node tools/hoist-check.mts",
     "quality": "sherif && oxfmt --check && oxlint --type-aware --deny-warnings && node tools/not-yet-cleared.mts check && node tools/check-comments.mts && pnpm quality:duplication && turbo run check-types test --continue=dependencies-successful",
     "sherif": "sherif",
     "test": "vitest run",
