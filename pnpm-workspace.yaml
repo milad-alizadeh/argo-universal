@@ -158,3 +158,6 @@ allowBuilds:
 # pnpm's default, written out: Electron Forge refuses to start unless node-linker is hoisted or a hoist pattern is set (docs/research/electron.md).
 hoistPattern:
   - "*"
+
+patchedDependencies:
+  react-native@0.86.3: patches/react-native@0.86.3.patch

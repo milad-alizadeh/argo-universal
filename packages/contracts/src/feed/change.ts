@@ -89,10 +89,7 @@ export function writeFeedField(
   }
   if (value === null || typeof value !== 'object')
     throw new TypeError('A resolved Feed path needs an object before its text');
-  return {
-    ...value,
-    [key]: writeFeedField(Reflect.get(value, key), rest, text),
-  };
+  return writeObjectField(value, [key, ...rest], text);
 }
 
 export function writeFeedRowField(
@@ -101,6 +98,14 @@ export function writeFeedRowField(
   text: string,
 ): Record<string, unknown> {
   const [key = '', ...rest] = field.split('.');
+  return writeObjectField(value, [key, ...rest], text);
+}
+
+function writeObjectField(
+  value: object,
+  [key, ...rest]: readonly [string, ...string[]],
+  text: string,
+): Record<string, unknown> {
   return {
     ...value,
     [key]: writeFeedField(Reflect.get(value, key), rest, text),
