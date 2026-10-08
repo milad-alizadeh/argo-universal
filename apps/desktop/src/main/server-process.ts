@@ -8,7 +8,7 @@ import type { z } from 'zod';
 // One-shot I/O for the Server connection machine; the machine owns every wait.
 
 let unrecognisedShapes = 0;
-const reportUnrecognised = (source: string, error: z.ZodError) => {
+const reportUnrecognised = (source: string, error: z.ZodError): void => {
   unrecognisedShapes += 1;
   console.error(
     `desktop: unrecognised ${source} #${unrecognisedShapes}`,
@@ -40,7 +40,7 @@ async function readServerAddress(home: string): Promise<ServerAddress | null> {
   return null;
 }
 
-export const isRunning = (pid: number) => {
+export const isRunning = (pid: number): boolean => {
   try {
     process.kill(pid, 0);
     return true;
@@ -58,7 +58,7 @@ export async function readLiveServerAddress(
 }
 
 // Asks the Supervisor to stop; one that has already exited needs nothing.
-export function signalSupervisor(pid: number) {
+export function signalSupervisor(pid: number): void {
   try {
     process.kill(pid, 'SIGTERM');
   } catch {
@@ -91,10 +91,10 @@ export function spawnSupervisor(
     env: { ...environment, ARGO_HOME: paths.home },
   });
   child.unref();
-  child.once('error', (error) => {
+  child.once('error', (error): void => {
     if (listening) report.exited(`The Supervisor could not start: ${error}`);
   });
-  child.once('exit', (code, signal) => {
+  child.once('exit', (code, signal): void => {
     if (listening)
       report.exited(
         `The Supervisor exited while starting (${code ?? signal}); see ${join(paths.home, 'logs')}`,
@@ -102,7 +102,7 @@ export function spawnSupervisor(
   });
   // The pid exists once `spawn` returns; its `spawn` event only follows a tick later, too late for a quit in between.
   if (child.pid !== undefined) report.spawned(child.pid);
-  return () => {
+  return (): void => {
     listening = false;
   };
 }

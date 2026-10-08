@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { liveHeaderMocks } from '#mocks/live-header';
 import { type LiveHeaderInput, toLiveHeader } from './live-header';
 
-const headerText = (...input: Parameters<typeof toLiveHeader>) =>
+const headerText = (...input: Parameters<typeof toLiveHeader>): string | null =>
   toLiveHeader(...input)?.text ?? null;
 
 const running: LiveHeaderInput = {
@@ -16,15 +16,15 @@ const running: LiveHeaderInput = {
 
 describe.each(liveHeaderMocks)(
   'live header for $agent',
-  ({ command, thought, retry, recordedHeader }) => {
-    it('uses the recorded Agent description or supplied command action', () => {
+  ({ command, thought, retry, recordedHeader }): void => {
+    it('uses the recorded Agent description or supplied command action', (): void => {
       expect(toLiveHeader(running, [command])).toEqual({
         text: recordedHeader,
         source: { type: 'tool_call', toolCallId: command.toolCallId },
         startedAt: 1_000,
       });
     });
-    it('names the step that produced the text', () => {
+    it('names the step that produced the text', (): void => {
       expect(toLiveHeader(running, [command, thought, retry])?.source).toEqual({
         type: 'retry',
       });
@@ -52,7 +52,7 @@ describe.each(liveHeaderMocks)(
         startedAt: null,
       });
     });
-    it('puts a Permission request before running work', () => {
+    it('puts a Permission request before running work', (): void => {
       expect(
         headerText(
           {
@@ -92,20 +92,20 @@ describe.each(liveHeaderMocks)(
         },
         expected: 'Plan ready',
       },
-    ])('step 1: $step', ({ session, expected }) => {
+    ])('step 1: $step', ({ session, expected }): void => {
       expect(headerText(session, [command, thought, retry])).toBe(expected);
     });
-    it('step 2: puts a retry before a thought and a Tool call', () => {
+    it('step 2: puts a retry before a thought and a Tool call', (): void => {
       expect(headerText(running, [command, thought, retry])).toBe(
         'Retrying (2 of 5)',
       );
     });
-    it('step 3: uses the newest thought title before the Tool call', () => {
+    it('step 3: uses the newest thought title before the Tool call', (): void => {
       expect(headerText(running, [thought, command])).toBe(
         'Checking the tests',
       );
     });
-    it('step 4: keeps the Agent description before the kind label', () => {
+    it('step 4: keeps the Agent description before the kind label', (): void => {
       expect(
         headerText(running, [
           {
@@ -120,7 +120,7 @@ describe.each(liveHeaderMocks)(
       { kind: 'execute' as const, expected: 'Running pnpm test' },
       { kind: 'read' as const, expected: 'Reading spec.md' },
       { kind: 'edit' as const, expected: 'Editing spec.md' },
-    ])('step 5: uses the $kind label', ({ kind, expected }) => {
+    ])('step 5: uses the $kind label', ({ kind, expected }): void => {
       expect(
         headerText(running, [
           {
@@ -134,7 +134,7 @@ describe.each(liveHeaderMocks)(
         ]),
       ).toBe(expected);
     });
-    it('step 6: uses the Tool call name when no kind label applies', () => {
+    it('step 6: uses the Tool call name when no kind label applies', (): void => {
       expect(
         headerText(running, [
           {
@@ -147,7 +147,7 @@ describe.each(liveHeaderMocks)(
         ]),
       ).toBe('workspace.inspect');
     });
-    it('step 7: falls back to Working', () => {
+    it('step 7: falls back to Working', (): void => {
       expect(headerText(running, [])).toBe('Working');
       expect(
         headerText(running, [
@@ -166,7 +166,7 @@ describe.each(liveHeaderMocks)(
       { status: 'completed' as const, expected: recordedHeader },
     ])(
       'falls back to the earlier running Tool call when the newer is $status',
-      ({ status, expected }) => {
+      ({ status, expected }): void => {
         expect(
           headerText(running, [
             command,
@@ -183,7 +183,7 @@ describe.each(liveHeaderMocks)(
         ).toBe(expected);
       },
     );
-    it('uses supplied command actions without classifying shell text', () => {
+    it('uses supplied command actions without classifying shell text', (): void => {
       const tool = {
         ...command,
         title: 'Read spec.md',
@@ -210,7 +210,7 @@ describe.each(liveHeaderMocks)(
         ]),
       ).toBe('Running cat spec.md');
     });
-    it('ignores previous Turns, completed tools, and untitled thoughts', () => {
+    it('ignores previous Turns, completed tools, and untitled thoughts', (): void => {
       expect(
         headerText(running, [
           { ...command, turnId: 'previous' },
@@ -229,7 +229,7 @@ describe.each(liveHeaderMocks)(
         ]),
       ).toBeNull();
     });
-    it('clears a retry on new progress and uses the newest thought section without mutation', () => {
+    it('clears a retry on new progress and uses the newest thought section without mutation', (): void => {
       const newest = {
         ...thought,
         revision: retry.revision + 1,

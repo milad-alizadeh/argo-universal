@@ -15,10 +15,10 @@ const blobId = createHash('sha256').update(blobBytes).digest('hex');
 
 const t = initTRPC.create();
 const testRouter = t.router({
-  ping: t.procedure.query(() => 'pong'),
+  ping: t.procedure.query((): string => 'pong'),
   upload: t.procedure
     .input(z.instanceof(FormData))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input }): Promise<{ name: string; text: string }> => {
       const file = input.get('file');
       if (!(file instanceof File)) throw new Error('No file');
       return { name: file.name, text: await file.text() };
@@ -42,15 +42,20 @@ interface HttpResponse {
   body: string;
 }
 
-const send = ({ path, method = 'GET', headers = {}, body }: HttpRequest) =>
-  new Promise<HttpResponse>((resolve, reject) => {
+const send = ({
+  path,
+  method = 'GET',
+  headers = {},
+  body,
+}: HttpRequest): Promise<HttpResponse> =>
+  new Promise<HttpResponse>((resolve, reject): void => {
     const { port } = server.address() as AddressInfo;
     const outgoing = request(
       { host: '127.0.0.1', port, method, path, headers: { host, ...headers } },
-      (response) => {
+      (response): void => {
         const chunks: Buffer[] = [];
-        response.on('data', (chunk: Buffer) => chunks.push(chunk));
-        response.once('end', () =>
+        response.on('data', (chunk: Buffer): number => chunks.push(chunk));
+        response.once('end', (): void =>
           resolve({
             status: response.statusCode ?? 0,
             headers: response.headers,
@@ -64,7 +69,11 @@ const send = ({ path, method = 'GET', headers = {}, body }: HttpRequest) =>
   });
 
 // Encodes a form the way a browser's fetch does, so the request goes through node:http as bytes.
-async function formRequest(path: string, form: FormData, origin?: string) {
+async function formRequest(
+  path: string,
+  form: FormData,
+  origin?: string,
+): Promise<HttpResponse> {
   const encoded = new Request('http://localhost', {
     method: 'POST',
     body: form,
@@ -80,22 +89,30 @@ async function formRequest(path: string, form: FormData, origin?: string) {
   });
 }
 
-const uploadForm = () => {
-  const form = new FormData();
-  form.set('file', new File(['file content'], 'notes.txt'));
-  return form;
-};
+const uploadForm =
+  (): import('.pnpm/undici-types@7.24.6/node_modules/undici-types').FormData => {
+    const form = new FormData();
+    form.set('file', new File(['file content'], 'notes.txt'));
+    return form;
+  };
 
-beforeEach(async () => {
+beforeEach(async (): Promise<void> => {
   home = mkdtempSync(join(tmpdir(), 'server-request-listener-'));
   mkdirSync(join(home, 'blobs'));
   writeFileSync(join(home, 'blobs', blobId), blobBytes);
-  vi.spyOn(console, 'error').mockImplementation(() => {});
+  vi.spyOn(console, 'error').mockImplementation((): void => {});
 
   let listener: ReturnType<typeof createRequestListener> | undefined;
-  server = createServer((incoming, outgoing) => listener?.(incoming, outgoing));
-  await new Promise<void>((resolve) =>
-    server.listen(0, '127.0.0.1', () => resolve()),
+  server = createServer((incoming, outgoing): void | undefined =>
+    listener?.(incoming, outgoing),
+  );
+  await new Promise<void>(
+    (
+      resolve,
+    ): Server<
+      typeof import('http').IncomingMessage,
+      typeof import('http').ServerResponse
+    > => server.listen(0, '127.0.0.1', (): void => resolve()),
   );
   const { port } = server.address() as AddressInfo;
   host = `127.0.0.1:${port}`;
@@ -103,20 +120,27 @@ beforeEach(async () => {
     guard: createRequestGuard(port),
     blobsFolder: join(home, 'blobs'),
     router: testRouter,
-    createContext: () => ({}),
+    createContext: (): Record<never, never> => ({}),
   });
 });
 
-afterEach(async () => {
-  const closed = new Promise((resolve) => server.close(resolve));
+afterEach(async (): Promise<void> => {
+  const closed = new Promise(
+    (
+      resolve,
+    ): Server<
+      typeof import('http').IncomingMessage,
+      typeof import('http').ServerResponse
+    > => server.close(resolve),
+  );
   // A keep-alive socket that turns idle after close() would hold the server open until its timeout.
   server.closeAllConnections();
   await closed;
   rmSync(home, { recursive: true, force: true });
 });
 
-describe('request listener', () => {
-  it('streams a blob with its length', async () => {
+describe('request listener', (): void => {
+  it('streams a blob with its length', async (): Promise<void> => {
     const response = await send({ path: `/blobs/${blobId}` });
     expect(response.status).toBe(200);
     expect(response.headers['content-type']).toBe('application/octet-stream');
@@ -126,7 +150,7 @@ describe('request listener', () => {
     expect(response.body).toBe('blob content');
   });
 
-  it('answers 404 for an unknown blob id without counting it', async () => {
+  it('answers 404 for an unknown blob id without counting it', async (): Promise<void> => {
     const response = await send({ path: `/blobs/${'0'.repeat(64)}` });
     expect(response.status).toBe(404);
     expect(JSON.parse(response.body)).toEqual({ error: 'Not found' });
@@ -135,7 +159,7 @@ describe('request listener', () => {
 
   it.each(['abc', blobId.toUpperCase(), '..%2F..%2Fargo.db'])(
     'answers 404 for the malformed blob id %s and counts it',
-    async (id) => {
+    async (id): Promise<void> => {
       const response = await send({ path: `/blobs/${id}` });
       expect(response.status).toBe(404);
       expect(console.error).toHaveBeenCalledExactlyOnceWith(
@@ -146,14 +170,14 @@ describe('request listener', () => {
 
   it.each(['POST', 'HEAD', 'PUT', 'DELETE'])(
     'answers 405 to %s on a blob with Allow: GET',
-    async (method) => {
+    async (method): Promise<void> => {
       const response = await send({ path: `/blobs/${blobId}`, method });
       expect(response.status).toBe(405);
       expect(response.headers.allow).toBe('GET');
     },
   );
 
-  it('answers 405 to a blob POST with a body, and serves the next request', async () => {
+  it('answers 405 to a blob POST with a body, and serves the next request', async (): Promise<void> => {
     const response = await send({
       path: `/blobs/${blobId}`,
       method: 'POST',
@@ -163,13 +187,13 @@ describe('request listener', () => {
     expect((await send({ path: `/blobs/${blobId}` })).status).toBe(200);
   });
 
-  it('answers a tRPC query over HTTP at /trpc/', async () => {
+  it('answers a tRPC query over HTTP at /trpc/', async (): Promise<void> => {
     const response = await send({ path: '/trpc/ping' });
     expect(response.status).toBe(200);
     expect(JSON.parse(response.body)).toEqual({ result: { data: 'pong' } });
   });
 
-  it('hands an upload body to tRPC unread', async () => {
+  it('hands an upload body to tRPC unread', async (): Promise<void> => {
     const response = await formRequest('/trpc/upload', uploadForm());
     expect(response.status).toBe(200);
     expect(JSON.parse(response.body)).toEqual({
@@ -179,7 +203,7 @@ describe('request listener', () => {
 
   it.each(['/health', '/'])(
     'sends %s to tRPC, which finds no procedure',
-    async (path) => {
+    async (path): Promise<void> => {
       const response = await send({ path });
       expect(response.status).toBe(404);
       expect(JSON.parse(response.body)).toMatchObject({
@@ -191,15 +215,18 @@ describe('request listener', () => {
   it.each([
     ['the desktop app', 'app://app'],
     ['Expo web on localhost', 'http://localhost:8081'],
-  ])('lets %s call tRPC and read the answer', async (_name, origin) => {
-    const response = await formRequest('/trpc/upload', uploadForm(), origin);
-    expect(response.status).toBe(200);
-    expect(response.headers['access-control-allow-origin']).toBe(origin);
-  });
+  ])(
+    'lets %s call tRPC and read the answer',
+    async (_name, origin): Promise<void> => {
+      const response = await formRequest('/trpc/upload', uploadForm(), origin);
+      expect(response.status).toBe(200);
+      expect(response.headers['access-control-allow-origin']).toBe(origin);
+    },
+  );
 
   it.each(['https://evil.example', 'null'])(
     'refuses a tRPC call from the Origin %s and counts it',
-    async (origin) => {
+    async (origin): Promise<void> => {
       const response = await formRequest('/trpc/upload', uploadForm(), origin);
       expect(response.status).toBe(403);
       expect(response.headers['access-control-allow-origin']).toBeUndefined();
@@ -211,7 +238,7 @@ describe('request listener', () => {
 
   it.each([`/blobs/${blobId}`, '/trpc/ping'])(
     'answers 403 to %s from another Host and counts it',
-    async (path) => {
+    async (path): Promise<void> => {
       const response = await send({
         path,
         headers: { host: 'evil.example:7337' },
@@ -223,7 +250,7 @@ describe('request listener', () => {
     },
   );
 
-  it('answers 403 to a Host that is not a plain host and port', async () => {
+  it('answers 403 to a Host that is not a plain host and port', async (): Promise<void> => {
     const response = await send({
       path: '/trpc/ping',
       headers: { host: `evil.example@${host}` },

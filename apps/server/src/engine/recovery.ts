@@ -10,12 +10,14 @@ import {
 } from '../services/feed/feed-row';
 
 // Repairs the database before the Engine serves; any failure rolls back the whole repair.
-export function recoverAfterRestart(database: Database) {
+export function recoverAfterRestart(database: Database): void {
   const runningStatus = sql`case when json_valid(${feedRow.payload}) then json_extract(${feedRow.payload}, '$.status') in (${sql.join(
-    runningToolCallStatuses.map((status) => sql`${status}`),
+    runningToolCallStatuses.map(
+      (status): import('drizzle-orm').SQL<unknown> => sql`${status}`,
+    ),
     sql`, `,
   )}) else 0 end`;
-  void database.transaction((transaction) => {
+  void database.transaction((transaction): void => {
     transaction
       .update(turn)
       .set({

@@ -1,3 +1,4 @@
+type PortParameters = { port: number };
 import { readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ServerAddress } from '@repo/contracts';
@@ -31,7 +32,9 @@ const backoffCapMs = 30_000;
 const rememberEngine = [
   {
     type: 'setPort',
-    params: ({ event }: { event: { port: number } }) => ({ port: event.port }),
+    params: ({ event }: { event: { port: number } }): PortParameters => ({
+      port: event.port,
+    }),
   },
   { type: 'writeServerAddress' },
 ] as const;
@@ -44,18 +47,22 @@ export const supervisorMachine = setup({
   },
   actors: { engine: engineProcess },
   actions: {
-    setPort: assign({ port: (_, params: { port: number }) => params.port }),
+    setPort: assign({
+      port: (_, params: PortParameters): number => params.port,
+    }),
     recordCrash: assign({
-      crashTimes: ({ context }) => {
+      crashTimes: ({ context }): SupervisorContext['crashTimes'] => {
         const now = context.now();
         return [
-          ...context.crashTimes.filter((time) => now - time < crashWindowMs),
+          ...context.crashTimes.filter(
+            (time): boolean => now - time < crashWindowMs,
+          ),
           now,
         ];
       },
     }),
     // Writes a temp file and renames it, so a reader never sees half a file.
-    writeServerAddress: ({ context }) => {
+    writeServerAddress: ({ context }): void => {
       if (context.port === null) return;
       const filePath = join(context.home, serverAddressFile);
       const temporaryPath = `${filePath}.${process.pid}.tmp`;
@@ -70,7 +77,7 @@ export const supervisorMachine = setup({
     },
     askEngineToStop: sendTo('engine', { type: 'engine.stop' }),
     // Removes server.json only when it names this pid, so a failed second Supervisor leaves the running Server's file.
-    removeServerAddress: ({ context }) => {
+    removeServerAddress: ({ context }): void => {
       const filePath = join(context.home, serverAddressFile);
       let json: unknown;
       try {
@@ -84,11 +91,11 @@ export const supervisorMachine = setup({
     },
   },
   guards: {
-    crashedTooOften: ({ context }) =>
+    crashedTooOften: ({ context }): boolean =>
       context.crashTimes.length >= maxCrashesInWindow,
   },
   delays: {
-    backoff: ({ context }) =>
+    backoff: ({ context }): number =>
       Math.min(
         backoffBaseMs * 2 ** (context.crashTimes.length - 1),
         backoffCapMs,
@@ -98,7 +105,7 @@ export const supervisorMachine = setup({
   },
 }).createMachine({
   id: 'supervisor',
-  context: ({ input }) => ({
+  context: ({ input }): SupervisorContext => ({
     ...input,
     port: null,
     crashTimes: [],
@@ -111,7 +118,11 @@ export const supervisorMachine = setup({
     starting: {
       entry: spawnChild('engine', {
         id: 'engine',
-        input: ({ context }) => ({ watch: context.watch }),
+        input: ({
+          context,
+        }): import('xstate').InputFrom<typeof engineProcess> => ({
+          watch: context.watch,
+        }),
       }),
       after: { readyTimeout: { target: 'backingOff' } },
       on: {

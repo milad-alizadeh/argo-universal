@@ -15,7 +15,9 @@ export const noChanges: ChangesSummary = {
   deletions: 0,
 };
 
-export function isSessionReady(session: SnapshotFrom<typeof sessionMachine>) {
+export function isSessionReady(
+  session: SnapshotFrom<typeof sessionMachine>,
+): boolean {
   return (
     session.context.capabilities !== null &&
     !session.matches({ open: { live: 'starting' } }) &&

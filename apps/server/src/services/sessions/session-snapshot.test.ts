@@ -13,7 +13,7 @@ const { database, directory: runtimeDirectory, remove } = openTestDatabase();
 afterAll(remove);
 const context = createActor(sessionMachine, {
   input: {
-    now: () => Date.now(),
+    now: (): number => Date.now(),
     createId: randomUUID,
     database,
     runtimeDirectory,
@@ -37,7 +37,7 @@ const rows: [StateValue, string][] = [
   [{ open: 'flushing' }, 'idle'],
   ['closed', 'idle'],
 ];
-it.each(rows)('maps %j to %s', (value, state) => {
+it.each(rows)('maps %j to %s', (value, state): void => {
   const snapshot = sessionMachine.resolveState({ value, context });
   expect(
     toSessionSnapshot(
@@ -64,7 +64,7 @@ it.each(rows)('maps %j to %s', (value, state) => {
   });
 });
 
-it('projects the live context and the Feed revision without changing either', () => {
+it('projects the live context and the Feed revision without changing either', (): void => {
   const permission = {
     toolCallId: 'tool-1',
     title: 'Run a command',
@@ -128,7 +128,7 @@ it('projects the live context and the Feed revision without changing either', ()
 
 it.each(liveHeaderMocks)(
   'projects running activity for $agent',
-  ({ command }) => {
+  ({ command }): void => {
     const snapshot = sessionMachine.resolveState({
       value: { open: { live: { running: 'working' } } },
       context: { ...context, activeTurnId: 'turn-1' },
@@ -158,7 +158,7 @@ it.each(liveHeaderMocks)(
 
 it.each(['prompt', 'agent', 'user'] as const)(
   'projects a stored %s title even without a Session actor',
-  (titleSource) => {
+  (titleSource): void => {
     expect(
       toSessionSnapshot(
         null,

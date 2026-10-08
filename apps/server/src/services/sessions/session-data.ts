@@ -41,7 +41,7 @@ export interface SessionData {
   nextPosition: number;
 }
 
-const readProjectPath = (input: NewSessionInput) => {
+const readProjectPath = (input: NewSessionInput): string => {
   const stored = input.database
     .select()
     .from(project)
@@ -84,8 +84,10 @@ export async function createSessionCheckout(
 export function titleFromPrompt(prompt: SessionNewInput['prompt']): string {
   return (
     prompt
-      .flatMap((block) => (block.type === 'text' ? block.text.split('\n') : []))
-      .map((line) => line.trim())
+      .flatMap((block): string[] =>
+        block.type === 'text' ? block.text.split('\n') : [],
+      )
+      .map((line): string => line.trim())
       .find(Boolean) ?? ''
   );
 }
@@ -119,7 +121,7 @@ export async function discardSessionCheckout(
   input: NewSessionInput,
   checkout: Checkout,
   signal?: AbortSignal,
-) {
+): Promise<void> {
   if (input.checkout.type === 'worktree')
     await discardCheckout(readProjectPath(input), checkout, signal);
 }
@@ -162,7 +164,9 @@ export async function loadSession(
     nextPosition:
       Math.max(
         position ?? -1,
-        ...queued.flatMap((job) => job.rows.map((row) => row.position)),
+        ...queued.flatMap((job): number[] =>
+          job.rows.map((row): number => row.position),
+        ),
       ) + 1,
   };
 }

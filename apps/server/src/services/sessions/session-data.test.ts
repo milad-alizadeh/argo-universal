@@ -22,7 +22,7 @@ import {
 } from './session-data';
 
 const cleanups: (() => void)[] = [];
-afterEach(() => {
+afterEach((): void => {
   for (const cleanup of cleanups.splice(0).reverse()) cleanup();
 });
 
@@ -41,11 +41,13 @@ it.each([
   { type: 'worktree', baseBranch: 'feature' },
 ] as const)(
   'creates, stores and reloads a Session in the $type Checkout with a line break in its path',
-  async (checkout) => {
+  async (checkout): Promise<void> => {
     const directory = realpathSync(
       mkdtempSync(join(tmpdir(), 'session-checkout-\n')),
     );
-    cleanups.push(() => rmSync(directory, { recursive: true, force: true }));
+    cleanups.push((): void =>
+      rmSync(directory, { recursive: true, force: true }),
+    );
     const git = initTestRepository(directory);
     const {
       database,
@@ -59,7 +61,7 @@ it.each([
       runtimeDirectory: join(directory, '.argo'),
       checkout,
     };
-    const readStoredSession = () =>
+    const readStoredSession = (): typeof session.$inferSelect | undefined =>
       database
         .select()
         .from(session)
@@ -95,7 +97,7 @@ it.each([
     expect(
       database.select().from(project).where(eq(project.id, 'project-1')).get(),
     ).toMatchObject({ checkoutChoice: checkout });
-    const checkoutGit = (...arguments_: string[]) =>
+    const checkoutGit = (...arguments_: string[]): string =>
       git('-C', created.checkout.path, ...arguments_);
     expect(checkoutGit('branch', '--show-current')).toBe(
       created.checkout.branch,
@@ -140,26 +142,30 @@ it.each([
   [[], ''],
 ] satisfies [SessionNewInput['prompt'], string][])(
   'titles the prompt %j as %j',
-  (prompt, title) => {
+  (prompt, title): void => {
     expect(titleFromPrompt(prompt)).toBe(title);
   },
 );
 
-it('reloads Feed positions and the vendor Session from writes still queued', async () => {
+it('reloads Feed positions and the vendor Session from writes still queued', async (): Promise<void> => {
   const { database, directory: runtimeDirectory, remove } = openTestDatabase();
   cleanups.push(remove);
   const writer = createActor(
     writerMachine.provide({
-      actors: { writeBatch: fromPromise(() => new Promise(() => {})) },
+      actors: {
+        writeBatch: fromPromise(
+          (): Promise<void> => new Promise((): void => {}),
+        ),
+      },
     }),
     {
       input: {
-        now: () => Date.now(),
+        now: (): number => Date.now(),
         database,
       },
     },
   ).start();
-  cleanups.push(() => writer.stop());
+  cleanups.push((): typeof writer => writer.stop());
   writer.send({
     type: 'writer.write',
     job: {
@@ -189,7 +195,7 @@ it('reloads Feed positions and the vendor Session from writes still queued', asy
   });
 });
 
-it('rejects an unknown Session or Project', async () => {
+it('rejects an unknown Session or Project', async (): Promise<void> => {
   const { database, directory: runtimeDirectory, remove } = openTestDatabase();
   cleanups.push(remove);
   await expect(
@@ -211,9 +217,11 @@ it('rejects an unknown Session or Project', async () => {
   ).rejects.toThrow('No Project missing');
 });
 
-it('rejects and reports a git response that has no working Checkout', async () => {
+it('rejects and reports a git response that has no working Checkout', async (): Promise<void> => {
   const directory = mkdtempSync(join(tmpdir(), 'session-bare-'));
-  cleanups.push(() => rmSync(directory, { recursive: true, force: true }));
+  cleanups.push((): void =>
+    rmSync(directory, { recursive: true, force: true }),
+  );
   execFileSync('git', ['init', '--bare', directory]);
   const {
     database,
@@ -221,7 +229,7 @@ it('rejects and reports a git response that has no working Checkout', async () =
     remove,
   } = openTestDatabase({}, directory);
   cleanups.push(remove);
-  const report = vi.spyOn(console, 'error').mockImplementation(() => {});
+  const report = vi.spyOn(console, 'error').mockImplementation((): void => {});
   await expect(
     createSessionCheckout({
       ...newSession,

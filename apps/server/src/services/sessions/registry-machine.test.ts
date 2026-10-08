@@ -21,7 +21,7 @@ const registryGraphMachine = createRegistryModelMachine(true);
 const { database, directory: runtimeDirectory, remove } = openTestDatabase();
 afterAll(remove);
 const input: RegistryInput = {
-  now: () => Date.now(),
+  now: (): number => Date.now(),
   createId: randomUUID,
   database,
   runtimeDirectory,
@@ -56,7 +56,7 @@ const events: RegistryEvent[] = [
       type: `xstate.snapshot.session:${sessionId}`,
       snapshot: createActor(sessionMachine, {
         input: {
-          now: () => Date.now(),
+          now: (): number => Date.now(),
           createId: randomUUID,
           kind: 'existing',
           database,
@@ -75,7 +75,7 @@ const events: RegistryEvent[] = [
   },
 ];
 type RegistrySnapshot = SnapshotFrom<typeof registryModelMachine>;
-const key = (snapshot: RegistrySnapshot) =>
+const key = (snapshot: RegistrySnapshot): string =>
   JSON.stringify({
     value: snapshot.value,
     sessions: Object.keys(snapshot.context.sessions).sort(),
@@ -84,15 +84,15 @@ const model = new TestModel(registryGraphMachine, {
   input,
   events,
   // One pair of Sessions covers the branches; repeating an id adds no new lifecycle behavior.
-  filterEvents: (snapshot, event) =>
+  filterEvents: (snapshot, event): boolean =>
     snapshot.status === 'active' &&
     snapshot.can(event) &&
     (!('actorId' in event) ||
       event.actorId.startsWith('agentProbe:') ||
       Object.values(snapshot.context.sessions).some(
-        (session) => session.id === event.actorId,
+        (session): boolean => session.id === event.actorId,
       )),
-  serializeState: (snapshot, event, previous) =>
+  serializeState: (snapshot, event, previous): string =>
     JSON.stringify({
       key: key(snapshot),
       via: event && `${previous && key(previous)} ${event.type}`,
@@ -100,17 +100,25 @@ const model = new TestModel(registryGraphMachine, {
 });
 const paths = model.getShortestPaths();
 let registry: ReturnType<typeof createActor<typeof registryModelMachine>>;
-afterEach(() => registry?.stop());
+afterEach((): typeof registry => registry?.stop());
 
-it.each(paths.map((path, index) => [index, path] as const))(
-  'walks registry model path %i',
-  async (_, path) => {
-    registry = createActor(registryModelMachine, { input }).start();
-    await path.test({
-      events: Object.fromEntries(
-        events.map(({ type }) => [
+it.each(
+  paths.map(
+    (path, index): readonly [number, typeof path] => [index, path] as const,
+  ),
+)('walks registry model path %i', async (_, path): Promise<void> => {
+  registry = createActor(registryModelMachine, { input }).start();
+  await path.test({
+    events: Object.fromEntries(
+      events.map(
+        ({
           type,
-          ({ event }: { event: AnyEventObject }) => {
+        }): [
+          RegistryEvent['type'],
+          (args: { event: AnyEventObject }) => void,
+        ] => [
+          type,
+          ({ event }: { event: AnyEventObject }): void => {
             if ('actorId' in event && event.actorId.startsWith('session:')) {
               const session = registry.system.get(event.actorId);
               if (!session) throw new Error('No Session');
@@ -121,35 +129,43 @@ it.each(paths.map((path, index) => [index, path] as const))(
               });
             } else registry.send(event as RegistryEvent);
           },
-        ]),
+        ],
       ),
-      states: {
-        '*': (expected) => {
-          expect(key(registry.getSnapshot())).toBe(key(expected));
-          expect(registry.getSnapshot().status).toBe(expected.status);
-          for (const sessionId of Object.keys(expected.context.sessions))
-            expect(registry.system.get(`session:${sessionId}`)).toBeDefined();
-        },
+    ),
+    states: {
+      '*': (expected): void => {
+        expect(key(registry.getSnapshot())).toBe(key(expected));
+        expect(registry.getSnapshot().status).toBe(expected.status);
+        for (const sessionId of Object.keys(expected.context.sessions))
+          expect(registry.system.get(`session:${sessionId}`)).toBeDefined();
       },
-    });
-  },
-);
+    },
+  });
+});
 
-it('the generated registry paths walk every transition', () => {
+it('the generated registry paths walk every transition', (): void => {
   expect(
     unwalkedTransitions({
       models: [model],
       paths,
       stateKey: key,
-      eventKey: (event) => event.type,
+      eventKey: (
+        event,
+      ):
+        | 'sessions.create'
+        | 'sessions.open'
+        | 'sessions.stopAll'
+        | `xstate.done.actor.${string}`
+        | `xstate.error.actor.${string}`
+        | `xstate.snapshot.${string}` => event.type,
     }),
   ).toEqual([]);
 });
 
-it('removes a failed Session while keeping another Session available', () => {
+it('removes a failed Session while keeping another Session available', (): void => {
   const errors: unknown[] = [];
   registry = createActor(registryModelMachine, { input });
-  registry.subscribe({ error: (error) => errors.push(error) });
+  registry.subscribe({ error: (error): number => errors.push(error) });
   registry.start();
   for (const sessionId of ['one', 'two'])
     registry.send({ type: 'sessions.open', sessionId, agent: 'mock' });

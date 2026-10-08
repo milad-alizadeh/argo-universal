@@ -17,7 +17,7 @@ const contentSecurityPolicy = [
 ].join('; ');
 
 // Runs before `ready`: a standard, secure scheme gets relative URLs and web storage.
-export function registerAppScheme() {
+export function registerAppScheme(): void {
   protocol.registerSchemesAsPrivileged([
     {
       scheme: appScheme,
@@ -27,33 +27,40 @@ export function registerAppScheme() {
 }
 
 // Serves the Expo web export; a path without an extension is a route and gets index.html.
-export function handleAppProtocol(exportDirectory: string) {
-  protocol.handle(appScheme, async (request) => {
-    const { pathname, search, hash } = new URL(request.url);
-    const decodedPath = decodeURIComponent(pathname);
-    // Expo Router reads the route from the URL, so /index.html must become /.
-    if (decodedPath.endsWith('/index.html')) {
-      const route = decodedPath.slice(0, -'index.html'.length);
-      return Response.redirect(
-        `${appOrigin}${route}${search}${hash}`,
-        temporaryRedirectStatus,
-      );
-    }
-    const filePath = path.join(exportDirectory, decodedPath);
-    const relativePath = path.relative(exportDirectory, filePath);
-    if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
-      return new Response('Not found', { status: 404 });
-    }
-    const target =
-      relativePath && path.extname(relativePath)
-        ? filePath
-        : path.join(exportDirectory, 'index.html');
-    const response = await net.fetch(pathToFileURL(target).toString());
-    const headers = new Headers(response.headers);
-    headers.set('Content-Security-Policy', contentSecurityPolicy);
-    return new Response(response.body, {
-      status: response.status,
-      headers,
-    });
-  });
+export function handleAppProtocol(exportDirectory: string): void {
+  protocol.handle(
+    appScheme,
+    async (
+      request,
+    ): Promise<
+      import('.pnpm/undici-types@7.24.6/node_modules/undici-types').Response
+    > => {
+      const { pathname, search, hash } = new URL(request.url);
+      const decodedPath = decodeURIComponent(pathname);
+      // Expo Router reads the route from the URL, so /index.html must become /.
+      if (decodedPath.endsWith('/index.html')) {
+        const route = decodedPath.slice(0, -'index.html'.length);
+        return Response.redirect(
+          `${appOrigin}${route}${search}${hash}`,
+          temporaryRedirectStatus,
+        );
+      }
+      const filePath = path.join(exportDirectory, decodedPath);
+      const relativePath = path.relative(exportDirectory, filePath);
+      if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
+        return new Response('Not found', { status: 404 });
+      }
+      const target =
+        relativePath && path.extname(relativePath)
+          ? filePath
+          : path.join(exportDirectory, 'index.html');
+      const response = await net.fetch(pathToFileURL(target).toString());
+      const headers = new Headers(response.headers);
+      headers.set('Content-Security-Policy', contentSecurityPolicy);
+      return new Response(response.body, {
+        status: response.status,
+        headers,
+      });
+    },
+  );
 }

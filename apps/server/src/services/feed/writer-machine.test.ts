@@ -33,17 +33,17 @@ const mockDatabase = {} as Database;
 const machine = writerMachine.provide({
   actors: {
     writeBatch: fromPromise<void, { database: Database; jobs: WriterJob[] }>(
-      ({ input }) =>
-        new Promise<void>((resolve, reject) => {
+      ({ input }): Promise<void> =>
+        new Promise<void>((resolve, reject): void => {
           const call: WriteBatchCall = {
             jobs: input.jobs,
             settled: false,
-            resolve: () => {
+            resolve: (): void => {
               call.settled = true;
               committedJobs.push(...input.jobs);
               resolve();
             },
-            reject: (error) => {
+            reject: (error): void => {
               call.settled = true;
               reject(error);
             },
@@ -53,7 +53,7 @@ const machine = writerMachine.provide({
     ),
   },
   actions: {
-    log: (_, { line }) => {
+    log: (_, { line }): void => {
       logLines.push(line);
     },
   },
@@ -62,7 +62,7 @@ type WriterSnapshot = SnapshotFrom<typeof machine>;
 type WriterEvent = EventFromLogic<typeof machine>;
 
 const input = {
-  now: () => 1000,
+  now: (): number => 1000,
   database: mockDatabase,
 };
 const writeError = new Error('database is locked');
@@ -72,7 +72,7 @@ const job = (index: number): WriterJob => ({
   set: { endedAt: index },
 });
 // Sends the next numbered job and records it as sent.
-const sendWrite = () => {
+const sendWrite = (): void => {
   const sent = job(sentJobs.length + 1);
   sentJobs.push(sent);
   writer.send({ type: 'writer.write', job: sent });
@@ -96,38 +96,41 @@ const model = new TestModel(machine, {
   events,
   limit: 1000,
   // A done actor ignores events, so the model must not send any.
-  filterEvents: (snapshot, event) =>
+  filterEvents: (snapshot, event): boolean =>
     snapshot.status === 'active' && snapshot.can(event),
   // Never the jobs themselves, only whether a batch runs and jobs wait behind it; `via` gives each self-transition its own vertex.
-  serializeState: (snapshot, event, previous) =>
+  serializeState: (snapshot, event, previous): string =>
     JSON.stringify({
       value: snapshot.value,
       batch: snapshot.context.batchSize > 0,
       waiting: snapshot.context.queue.length > snapshot.context.batchSize,
       via: event && `${JSON.stringify(previous?.value)} ${event.type}`,
     }),
-  stateMatcher: (snapshot, key) => snapshot.matches(key as never),
+  stateMatcher: (snapshot, key): boolean => snapshot.matches(key as never),
 });
 
-const latestCall = () =>
+const latestCall = (): WriteBatchCall =>
   writeBatchCalls.at(-1) ?? expect.unreachable('writeBatch was not invoked');
 
 // Settles the running batch, then lets the machine take its done or error event.
-const settle = async (settleCall: (call: WriteBatchCall) => void) => {
+const settle = async (
+  settleCall: (call: WriteBatchCall) => void,
+): Promise<void> => {
   settleCall(latestCall());
   await vi.advanceTimersByTimeAsync(0);
 };
 
 const executors: Record<string, EventExecutor<WriterSnapshot, WriterEvent>> = {
-  'xstate.init': () => {
+  'xstate.init': (): void => {
     writer = createActor(machine, { input }).start();
   },
   'writer.write': sendWrite,
-  'writer.drain': () => writer.send({ type: 'writer.drain' }),
-  'xstate.done.actor.writeBatch': () => settle((call) => call.resolve()),
-  'xstate.error.actor.writeBatch': () =>
-    settle((call) => call.reject(writeError)),
-  'xstate.after.writeRetryDelay.databaseWriter.waitingToRetry': () => {
+  'writer.drain': (): void => writer.send({ type: 'writer.drain' }),
+  'xstate.done.actor.writeBatch': (): Promise<void> =>
+    settle((call): void => call.resolve()),
+  'xstate.error.actor.writeBatch': (): Promise<void> =>
+    settle((call): void => call.reject(writeError)),
+  'xstate.after.writeRetryDelay.databaseWriter.waitingToRetry': (): void => {
     const calls = writeBatchCalls.length;
     vi.advanceTimersByTime(writeRetryDelayMs - 1);
     expect(writeBatchCalls).toHaveLength(calls);
@@ -137,7 +140,7 @@ const executors: Record<string, EventExecutor<WriterSnapshot, WriterEvent>> = {
 };
 
 // Every job sent is committed or still queued, once each and in the order it arrived.
-const expectModelState = (expected: WriterSnapshot) => {
+const expectModelState = (expected: WriterSnapshot): void => {
   const actual = writer.getSnapshot();
   expect(actual.value).toEqual(expected.value);
   expect(actual.status).toBe(expected.status);
@@ -145,7 +148,7 @@ const expectModelState = (expected: WriterSnapshot) => {
   expect([...committedJobs, ...actual.context.queue]).toEqual(sentJobs);
 };
 // A running batch holds the oldest queued jobs, and no other batch runs.
-const expectBatchRunning = (snapshot: WriterSnapshot) => {
+const expectBatchRunning = (snapshot: WriterSnapshot): void => {
   expectModelState(snapshot);
   const { queue, batchSize } = writer.getSnapshot().context;
   expect(batchSize).toBeGreaterThan(0);
@@ -155,20 +158,22 @@ const expectBatchRunning = (snapshot: WriterSnapshot) => {
       jobs: queue.slice(0, batchSize),
     }),
   );
-  expect(writeBatchCalls.slice(0, -1).every((call) => call.settled)).toBe(true);
+  expect(
+    writeBatchCalls.slice(0, -1).every((call): boolean => call.settled),
+  ).toBe(true);
 };
-const expectNoBatchRunning = () => {
+const expectNoBatchRunning = (): void => {
   expect(writer.getSnapshot().context.batchSize).toBe(0);
-  expect(writeBatchCalls.every((call) => call.settled)).toBe(true);
+  expect(writeBatchCalls.every((call): boolean => call.settled)).toBe(true);
 };
 const states: Record<string, (snapshot: WriterSnapshot) => void> = {
-  idle: (snapshot) => {
+  idle: (snapshot): void => {
     expectModelState(snapshot);
     expectNoBatchRunning();
     expect(writer.getSnapshot().context.queue).toEqual([]);
   },
   writing: expectBatchRunning,
-  waitingToRetry: (snapshot) => {
+  waitingToRetry: (snapshot): void => {
     expectModelState(snapshot);
     expectNoBatchRunning();
     expect(writer.getSnapshot().context.queue.length).toBeGreaterThan(0);
@@ -177,7 +182,7 @@ const states: Record<string, (snapshot: WriterSnapshot) => void> = {
     );
   },
   draining: expectBatchRunning,
-  drained: (snapshot) => {
+  drained: (snapshot): void => {
     expectModelState(snapshot);
     expectNoBatchRunning();
     const lost = writer.getSnapshot().context.queue;
@@ -190,16 +195,16 @@ const states: Record<string, (snapshot: WriterSnapshot) => void> = {
 
 const shortestPaths = model.getShortestPaths();
 const simplePaths = model.getSimplePaths();
-const title = (path: TestPath<WriterSnapshot, WriterEvent>) =>
+const title = (path: TestPath<WriterSnapshot, WriterEvent>): string =>
   path.steps
-    .map(({ event }) =>
+    .map(({ event }): string =>
       event.type
         .replace(/^xstate\.after\.(\w+)\..*$/, 'after $1')
         .replace(/^xstate\.(done|error)\.actor\.(\w+)$/, '$2 $1'),
     )
     .join(' → ');
 
-beforeEach(() => {
+beforeEach((): void => {
   vi.useFakeTimers();
   writeBatchCalls = [];
   logLines = [];
@@ -207,58 +212,67 @@ beforeEach(() => {
   committedJobs = [];
 });
 
-afterEach(() => {
+afterEach((): void => {
   writer.stop();
   vi.useRealTimers();
 });
 
-describe('database writer model', () => {
+describe('database writer model', (): void => {
   describe.each([
     ['shortest path', shortestPaths],
     ['simple path', simplePaths],
-  ])('%s', (_, paths) => {
-    it.each(paths.map((path) => [title(path), path] as const))(
-      '%s',
-      async (_, path) => {
-        await path.test({ events: executors, states });
-      },
-    );
+  ])('%s', (_, paths): void => {
+    it.each(
+      paths.map(
+        (
+          path,
+        ): [
+          string,
+          TestPath<
+            WriterSnapshot,
+            { type: 'writer.write'; job: WriterJob } | { type: 'writer.drain' }
+          >,
+        ] => [title(path), path] as const,
+      ),
+    )('%s', async (_, path): Promise<void> => {
+      await path.test({ events: executors, states });
+    });
   });
 
-  it('the generated paths walk every transition', () => {
+  it('the generated paths walk every transition', (): void => {
     expect(
       unwalkedTransitions({
         models: [model],
         paths: [...shortestPaths, ...simplePaths],
-        stateKey: (snapshot) => JSON.stringify(snapshot.value),
-        eventKey: (event) => event.type,
+        stateKey: (snapshot): string => JSON.stringify(snapshot.value),
+        eventKey: (event): 'writer.drain' | 'writer.write' => event.type,
       }),
     ).toEqual([]);
   });
 });
 
-describe('database writer', () => {
-  beforeEach(() => {
+describe('database writer', (): void => {
+  beforeEach((): void => {
     writer = createActor(machine, { input }).start();
   });
 
-  it('retries a failed batch with the jobs that arrived meanwhile', async () => {
+  it('retries a failed batch with the jobs that arrived meanwhile', async (): Promise<void> => {
     sendWrite();
     sendWrite();
     sendWrite();
-    await settle((call) => call.reject(writeError));
+    await settle((call): void => call.reject(writeError));
 
     expect(logLines).toEqual([
       'could not write, keeping 3 jobs to retry: Error: database is locked',
     ]);
     vi.advanceTimersByTime(writeRetryDelayMs);
-    expect(writeBatchCalls.map((call) => call.jobs)).toEqual([
+    expect(writeBatchCalls.map((call): WriterJob[] => call.jobs)).toEqual([
       [job(1)],
       [job(1), job(2), job(3)],
     ]);
   });
 
-  it('keeps the enqueue clock value when a Feed write is retried', async () => {
+  it('keeps the enqueue clock value when a Feed write is retried', async (): Promise<void> => {
     writer.send({
       type: 'writer.write',
       job: {
@@ -268,10 +282,10 @@ describe('database writer', () => {
         maxRevision: 1,
       },
     });
-    await settle((call) => call.reject(writeError));
+    await settle((call): void => call.reject(writeError));
     vi.advanceTimersByTime(writeRetryDelayMs);
 
-    expect(writeBatchCalls.map((call) => call.jobs)).toEqual([
+    expect(writeBatchCalls.map((call): WriterJob[] => call.jobs)).toEqual([
       [
         {
           type: 'feedRows',
@@ -293,12 +307,12 @@ describe('database writer', () => {
     ]);
   });
 
-  it('logs each lost job when the drain fails', async () => {
+  it('logs each lost job when the drain fails', async (): Promise<void> => {
     sendWrite();
     writer.send({ type: 'writer.drain' });
     sendWrite();
-    await settle((call) => call.resolve());
-    await settle((call) => call.reject(writeError));
+    await settle((call): void => call.resolve());
+    await settle((call): void => call.reject(writeError));
 
     expect(writer.getSnapshot().status).toBe('done');
     expect(logLines).toEqual([
