@@ -1,9 +1,6 @@
-import { permissionOptions, type PermissionOption } from '@repo/contracts';
+import { permissionOptions } from '@repo/contracts';
 import type { AgentEvent } from '../src/agent-events';
-import {
-  toElicitationForm,
-  type ElicitationQuestion,
-} from '../src/elicitation-form';
+import { toElicitationForm } from '../src/elicitation-form';
 import type { VendorMessage } from './messages';
 
 export function toRequestEvents(message: VendorMessage): AgentEvent[] {
@@ -19,12 +16,21 @@ export function toRequestEvents(message: VendorMessage): AgentEvent[] {
             .join('\n'),
           toolCallId: itemId,
           requestedSchema: toElicitationForm(
-            questions.map((question): ElicitationQuestion => ({
-              id: question.id,
-              title: question.header,
-              question: question.question,
-              options: question.options ?? [],
-            })),
+            questions.map(
+              (
+                question,
+              ): {
+                id: string;
+                title: string;
+                question: string;
+                options: import('./protocol.gen').ToolRequestUserInputOption[];
+              } => ({
+                id: question.id,
+                title: question.header,
+                question: question.question,
+                options: question.options ?? [],
+              }),
+            ),
           ),
         },
       },
@@ -43,9 +49,15 @@ export function toRequestEvents(message: VendorMessage): AgentEvent[] {
             message.params.reason ??
             ('command' in message.params ? message.params.command : null) ??
             'Approve file changes',
-          options: permissionOptions.map((option): PermissionOption => ({
-            ...option,
-          })),
+          options: permissionOptions.map(
+            (
+              option,
+            ): {
+              optionId: 'allow_once' | 'reject_once';
+              name: string;
+              kind: 'allow_once' | 'reject_once';
+            } => ({ ...option }),
+          ),
         },
       },
     ];

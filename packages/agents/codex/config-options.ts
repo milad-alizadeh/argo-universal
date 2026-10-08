@@ -4,20 +4,8 @@ import type {
   SessionConfigSelectOption,
 } from '@repo/contracts';
 import type { AgentConfigValue } from '../src/agent-events';
-import type { Model as ProtocolModel, ReasoningEffort } from './protocol.gen';
-
-export type Model = Pick<
-  ProtocolModel,
-  | 'model'
-  | 'displayName'
-  | 'description'
-  | 'hidden'
-  | 'isDefault'
-  | 'supportedReasoningEfforts'
-  | 'defaultReasoningEffort'
-  | 'inputModalities'
-  | 'supportsPersonality'
->;
+import type { Model, ReasoningEffort } from './protocol.gen';
+export type { Model } from './protocol.gen';
 
 const modeNames = {
   plan: 'Plan mode',

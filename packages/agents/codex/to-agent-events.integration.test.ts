@@ -1,32 +1,32 @@
 import path from 'node:path';
 import type { CommandAction, ToolCallUpdate } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
-import { readRecording } from '../mocks/recording';
+import {
+  readRecording,
+  findRecording,
+  recordedFrames,
+} from '../../../mocks/cli/recording.ts';
 import type { AgentEvent, FeedUpdate } from '../src/agent-events';
-import { isRecord } from '../src/payload-shape.ts';
 import type { VendorMessage } from './messages';
+import { isIgnoredMethod } from './notification-kinds';
 import { isVendorMessage } from './payloads.ts';
 import type { CommandAction as SuppliedCommandAction } from './protocol.gen';
 import { initialMappingState, toAgentEvents } from './to-agent-events';
 import { isWireMessage } from './wire-payloads.ts';
 
 function recording(name: string): VendorMessage[] {
-  const captured: unknown = JSON.parse(
-    readRecording(
-      path.join(import.meta.dirname, '../../../mocks/cli/codex/recordings'),
-      name,
-    ),
+  const file = findRecording(
+    path.join(import.meta.dirname, '../../../mocks/cli/codex/recordings'),
+    name,
   );
-  if (
-    !isRecord(captured) ||
-    !isRecord(captured.payload) ||
-    !Array.isArray(captured.payload.messages)
-  )
-    throw new Error('Invalid recording messages');
-  return captured.payload.messages
-    .filter(
-      (message): message is VendorMessage & { emittedAtMs?: number } =>
-        isVendorMessage(message) && isWireMessage(message),
+  const frames = recordedFrames(
+    readRecording(file, 'codex-app-server').payload,
+    'messages',
+    isWireMessage,
+  );
+  return frames
+    .filter((message): message is VendorMessage & { emittedAtMs?: number } =>
+      acceptsRecordedMessage(message),
     )
     .map(
       (message: VendorMessage & { emittedAtMs?: number }): VendorMessage => ({
@@ -41,6 +41,8 @@ const mapMessages = (messages: unknown[]): AgentEvent[] => {
   let state = initialMappingState();
   const events: AgentEvent[] = [];
   for (const message of messages) {
+    if (!isVendorMessage(message))
+      throw new Error('Invalid provider response in test');
     const mapped = toAgentEvents(message, state);
     state = mapped.mappingState;
     events.push(...mapped.events);
@@ -385,12 +387,22 @@ it('reconciles a thought summary with its final record and drops raw thought tex
       method: 'turn/started',
       params: {
         threadId: 'thread',
-        turn: { id: 'thought-turn', status: 'inProgress', error: null },
+        turn: {
+          id: 'thought-turn',
+          status: 'inProgress',
+          error: null,
+          items: [],
+          itemsView: 'full',
+          startedAt: null,
+          completedAt: null,
+          durationMs: null,
+        },
       },
     },
     {
       method: 'item/started',
       params: {
+        startedAtMs: 0,
         threadId: 'thread',
         turnId: 'thought-turn',
         item: { type: 'reasoning', id: 'thought', summary: [], content: [] },
@@ -419,6 +431,7 @@ it('reconciles a thought summary with its final record and drops raw thought tex
     {
       method: 'item/completed',
       params: {
+        completedAtMs: 1,
         threadId: 'thread',
         turnId: 'thought-turn',
         item: {
@@ -458,7 +471,7 @@ it('reconciles a thought summary with its final record and drops raw thought tex
   ]);
 });
 
-it.each(['failed', 'interrupted'])(
+it.each(['failed', 'interrupted'] as const)(
   'keeps the vendor error and stop reason of a %s Turn',
   (status): void => {
     const started = toAgentEvents(
@@ -466,7 +479,16 @@ it.each(['failed', 'interrupted'])(
         method: 'turn/started',
         params: {
           threadId: 'thread',
-          turn: { id: 'failed-turn', status: 'inProgress', error: null },
+          turn: {
+            id: 'failed-turn',
+            status: 'inProgress',
+            error: null,
+            items: [],
+            itemsView: 'full',
+            startedAt: null,
+            completedAt: null,
+            durationMs: null,
+          },
         },
       },
       initialMappingState(),
@@ -478,11 +500,17 @@ it.each(['failed', 'interrupted'])(
           threadId: 'thread',
           turn: {
             id: 'failed-turn',
+            items: [],
+            itemsView: 'full',
+            startedAt: null,
+            completedAt: null,
+            durationMs: null,
             status,
             error: {
               message: 'The command failed',
               codexErrorInfo: 'other',
               additionalDetails: 'Exit 1',
+              misalignment: null,
             },
           },
         },
@@ -542,3 +570,15 @@ it('retains usage received while idle as the next Turn’s baseline', (): void =
   );
   expect(idle.mappingState.totalUsage).toEqual(breakdown);
 });
+
+function acceptsRecordedMessage(
+  message: unknown,
+): message is VendorMessage & { emittedAtMs?: number } {
+  if (!isWireMessage(message)) throw new Error('Invalid recorded envelope');
+  if (isIgnoredMethod(message.method)) return false;
+  if (!isVendorMessage(message))
+    throw new Error(
+      `Invalid recorded payload: ${message.method}: ${JSON.stringify(isVendorMessage.errors)}`,
+    );
+  return true;
+}

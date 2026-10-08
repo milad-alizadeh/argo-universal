@@ -1,5 +1,3 @@
-import type { ProjectedFields } from '../src/payload-shape.ts';
-import type { UnmappedNotification } from './notification-kinds.ts';
 import type {
   AgentMessageDeltaNotification,
   CommandExecutionOutputDeltaNotification,
@@ -11,57 +9,12 @@ import type {
   ItemStartedNotification,
   ReasoningSummaryTextDeltaNotification,
   ReasoningTextDeltaNotification,
-  ThreadItem,
   ThreadTokenUsageUpdatedNotification,
   ToolRequestUserInputParams,
   ToolRequestUserInputResponse,
-  Turn,
   TurnCompletedNotification,
   TurnStartedNotification,
-  UserInput,
 } from './protocol.gen';
-
-export type MappedUserInput = ProjectedFields<
-  UserInput,
-  'type' | 'text' | 'url' | 'fileId' | 'path' | 'name'
->;
-export type MappedTurn = Pick<Turn, 'id' | 'status'> & {
-  error: Pick<
-    NonNullable<Turn['error']>,
-    'message' | 'codexErrorInfo' | 'additionalDetails'
-  > | null;
-};
-type ItemFields =
-  | 'type'
-  | 'id'
-  | 'text'
-  | 'summary'
-  | 'content'
-  | 'command'
-  | 'cwd'
-  | 'status'
-  | 'commandActions'
-  | 'aggregatedOutput'
-  | 'exitCode'
-  | 'durationMs'
-  | 'changes';
-type MappedItemKind =
-  | 'agentMessage'
-  | 'plan'
-  | 'reasoning'
-  | 'commandExecution'
-  | 'fileChange';
-type ItemWithoutPrompt =
-  | ProjectedFields<Extract<ThreadItem, { type: MappedItemKind }>, ItemFields>
-  | ProjectedFields<
-      Exclude<ThreadItem, { type: MappedItemKind | 'userMessage' }>,
-      'type' | 'id'
-    >;
-export type MappedThreadItem =
-  | ItemWithoutPrompt
-  | (Pick<Extract<ThreadItem, { type: 'userMessage' }>, 'type' | 'id'> & {
-      content: MappedUserInput[];
-    });
 
 export interface VendorRequests {
   'item/commandExecution/requestApproval': [
@@ -77,54 +30,46 @@ export interface VendorRequests {
     ToolRequestUserInputResponse,
   ];
 }
-type RequestFields =
-  | 'threadId'
-  | 'turnId'
-  | 'itemId'
-  | 'command'
-  | 'reason'
-  | 'questions'
-  | 'isBlocking';
+
 export type VendorRequest = {
   [Method in keyof VendorRequests]: {
     method: Method;
     id: string | number;
-    params: ProjectedFields<VendorRequests[Method][0], RequestFields>;
+    params: VendorRequests[Method][0];
   };
 }[keyof VendorRequests];
-type TurnNotification<Notification> = ProjectedFields<
-  Notification,
-  'threadId'
-> & {
-  turn: MappedTurn;
-};
-type ItemNotification<Notification> = ProjectedFields<
-  Notification,
-  'threadId' | 'turnId'
-> & {
-  item: MappedThreadItem;
-} & Partial<ProjectedFields<Notification, 'startedAtMs' | 'completedAtMs'>>;
-interface Notifications {
-  'turn/started': TurnNotification<TurnStartedNotification>;
-  'turn/completed': TurnNotification<TurnCompletedNotification>;
-  'item/started': ItemNotification<ItemStartedNotification>;
-  'item/completed': ItemNotification<ItemCompletedNotification>;
-  'item/agentMessage/delta': AgentMessageDeltaNotification;
-  'item/reasoning/summaryTextDelta': ReasoningSummaryTextDeltaNotification;
-  'item/reasoning/textDelta': ProjectedFields<
-    ReasoningTextDeltaNotification,
-    'threadId' | 'turnId' | 'itemId' | 'delta'
-  >;
-  'item/commandExecution/outputDelta': CommandExecutionOutputDeltaNotification;
-  'thread/tokenUsage/updated': ThreadTokenUsageUpdatedNotification;
+
+// The notification families this first-Turn adapter maps; other families are dropped (ADR-0015).
+export type VendorMessage = ReceivedMessage &
+  (
+    | VendorRequest
+    | { method: 'turn/started'; params: TurnStartedNotification }
+    | { method: 'turn/completed'; params: TurnCompletedNotification }
+    | { method: 'item/started'; params: ItemStartedNotification }
+    | { method: 'item/completed'; params: ItemCompletedNotification }
+    | {
+        method: 'item/agentMessage/delta';
+        params: AgentMessageDeltaNotification;
+      }
+    | {
+        method: 'item/reasoning/summaryTextDelta';
+        params: ReasoningSummaryTextDeltaNotification;
+      }
+    | {
+        method: 'item/reasoning/textDelta';
+        params: ReasoningTextDeltaNotification;
+      }
+    | {
+        method: 'item/commandExecution/outputDelta';
+        params: CommandExecutionOutputDeltaNotification;
+      }
+    | {
+        method: 'thread/tokenUsage/updated';
+        params: ThreadTokenUsageUpdatedNotification;
+      }
+  );
+
+// Receipt time is supplied by the transport, keeping conversion pure when a Tool call has no final item.
+interface ReceivedMessage {
+  receivedAt?: number;
 }
-export type VendorMessage = { receivedAt?: number } & (
-  | VendorRequest
-  | UnmappedNotification<keyof Notifications>
-  | {
-      [Method in keyof Notifications]: {
-        method: Method;
-        params: Notifications[Method];
-      };
-    }[keyof Notifications]
-);

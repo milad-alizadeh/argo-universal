@@ -1,9 +1,8 @@
 import type { TurnUsage } from '@repo/contracts';
-import { rejectAgentMessage, type AgentMapping } from '../src/agent-adapter';
+import type { AgentMapping } from '../src/agent-adapter';
 import type { AgentEvent, FeedChange, FeedUpdate } from '../src/agent-events';
-import type { MappedThreadItem, MappedTurn } from './messages';
-import { isVendorMessage } from './payloads.ts';
-import type { TokenUsageBreakdown } from './protocol.gen';
+import type { VendorMessage } from './messages';
+import type { ThreadItem, TokenUsageBreakdown, Turn } from './protocol.gen';
 import { toRequestEvents } from './request-events';
 import { type ToolCallRow, toToolCall } from './tool-calls';
 
@@ -78,10 +77,9 @@ const usageOf = (
 
 // The Session owns Argo Turn ids; this converter tracks vendor identity and emits unenveloped changes.
 export function toAgentEvents(
-  message: unknown,
+  message: VendorMessage,
   mappingState: MappingState,
 ): AgentMapping<MappingState> {
-  if (!isVendorMessage(message)) return rejectAgentMessage(mappingState);
   if (!message.params) return dropped(mappingState);
   if (
     message.method === 'thread/tokenUsage/updated' &&
@@ -109,11 +107,7 @@ export function toAgentEvents(
   let vendorTurnId: string | undefined;
   if (message.method === 'turn/completed')
     vendorTurnId = message.params.turn.id;
-  else if (
-    'turnId' in message.params &&
-    typeof message.params.turnId === 'string'
-  )
-    vendorTurnId = message.params.turnId;
+  else if ('turnId' in message.params) vendorTurnId = message.params.turnId;
   if (!vendorTurnId || vendorTurnId !== mappingState.vendorTurnId)
     return dropped(mappingState);
   const requests = toRequestEvents(message);
@@ -207,7 +201,7 @@ export function toAgentEvents(
 }
 
 function endTurn(
-  turn: MappedTurn,
+  turn: Turn,
   mappingState: MappingState,
   endedAt?: number,
 ): AgentMapping<MappingState> {
@@ -259,7 +253,7 @@ function appendText(
   return { events: [feed({ type: 'append', id, field, text })], mappingState };
 }
 function mapItem(
-  item: MappedThreadItem,
+  item: ThreadItem,
   state: 'open' | 'settled',
   mappingState: MappingState,
   timestamp: number | undefined,

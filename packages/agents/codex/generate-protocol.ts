@@ -101,3 +101,5 @@ try {
 } finally {
   rmSync(directory, { recursive: true, force: true });
 }
+
+await import('./generate-runtime-schemas.ts');

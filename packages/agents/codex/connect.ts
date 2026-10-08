@@ -8,6 +8,7 @@ import { toQuestionAnswers } from '../src/elicitation-form';
 import { changeValue, startingValues, toConfigOptions } from './config-options';
 import { initialize, readModels, usesChatGpt } from './handshake';
 import type { VendorMessage } from './messages';
+import { isIgnoredMethod } from './notification-kinds';
 import { openAppServer } from './open-app-server';
 import { isVendorMessage } from './payloads.ts';
 import type {
@@ -68,15 +69,17 @@ export async function connect(
   signal.addEventListener('abort', cancelRequests, { once: true });
   const server = openAppServer(
     input.cwd,
-    (message: unknown): void => {
-      if (!isVendorMessage(message)) {
+    (message): void => {
+      if (isIgnoredMethod(message.method)) return;
+      const payload: unknown = message;
+      if (!isVendorMessage(payload)) {
         listener.event({
           type: 'agent.messageRejected',
           reason: 'Unrecognised app-server payload',
         });
         return;
       }
-      const notification: VendorMessage = message;
+      const notification: VendorMessage = payload;
       if (
         notification.method === 'item/commandExecution/requestApproval' ||
         notification.method === 'item/fileChange/requestApproval'
