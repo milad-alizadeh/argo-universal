@@ -34,7 +34,10 @@ export function ChoiceMenu<Value extends string>({
       <DropdownMenuContent align="end" className="w-60">
         <DropdownMenuRadioGroup
           value={value}
-          onValueChange={(next) => onValueChange(next as Value)}
+          onValueChange={(next) => {
+            const selected = choices.find((choice) => choice.value === next);
+            if (selected) onValueChange(selected.value);
+          }}
         >
           {choices.map((choice) => (
             <DropdownMenuRadioItem key={choice.value} value={choice.value}>

@@ -16,7 +16,9 @@ export function useNavigationTheme(): Theme {
       '--color-destructive',
       '--color-primary',
       '--color-foreground',
-    ]) as (string | undefined)[];
+    ]).map((value): string | undefined =>
+      typeof value === 'string' ? value : undefined,
+    );
   return {
     ...baseline,
     colors: {

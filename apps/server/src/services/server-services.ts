@@ -24,9 +24,7 @@ export function createServerServices(options: {
   const findSession = (sessionId: string): SessionActorRef | undefined =>
     findSessionActor(options.sessions.system, sessionId);
   const findFeed = (sessionId: string): FeedActorRef | undefined =>
-    findSession(sessionId)?.getSnapshot().children.feed as
-      | FeedActorRef
-      | undefined;
+    findSession(sessionId)?.getSnapshot().children.feed;
   const findWriter = (): ActorRefFrom<typeof writerMachine> | undefined =>
     findDatabaseWriter(options.sessions.system);
   const session = createSessionService(options);

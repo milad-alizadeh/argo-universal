@@ -274,7 +274,7 @@ function Block({
     case 'text':
       return <Prose tokens={token.tokens ?? [token]} caret={caret} />;
     case 'list':
-      return <List token={token as Tokens.List} caret={caret} />;
+      return isList(token) ? <List token={token} caret={caret} /> : null;
     case 'code':
       return (
         <View className="gap-2.5">
@@ -289,7 +289,7 @@ function Block({
     case 'table':
       return (
         <View className="gap-2.5">
-          <Table token={token as Tokens.Table} />
+          {isTable(token) && <Table token={token} />}
           {caret && <Caret />}
         </View>
       );
@@ -343,3 +343,11 @@ export const FeedMarkdown = memo(function FeedMarkdown({
     </MarkdownVariant.Provider>
   );
 });
+
+function isList(token: Token): token is Tokens.List {
+  return token.type === 'list';
+}
+
+function isTable(token: Token): token is Tokens.Table {
+  return token.type === 'table';
+}

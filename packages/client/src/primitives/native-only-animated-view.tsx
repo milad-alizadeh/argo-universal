@@ -16,11 +16,12 @@ function NativeOnlyAnimatedView(
   props:
     | (React.ComponentProps<typeof Animated.View> &
         React.RefAttributes<typeof Animated.View> & { as?: 'View' })
-    | (React.ComponentProps<typeof AnimatedPressable> &
-        React.RefAttributes<typeof AnimatedPressable> & { as: 'Pressable' }),
+    | (Omit<React.ComponentProps<typeof AnimatedPressable>, 'children'> & {
+        children?: React.ReactNode;
+      } & React.RefAttributes<typeof AnimatedPressable> & { as: 'Pressable' }),
 ) {
   if (Platform.OS === 'web') {
-    return <>{props.children as React.ReactNode}</>;
+    return <>{props.children}</>;
   } else {
     if (props.as === 'Pressable') {
       return <AnimatedPressable {...props} />;

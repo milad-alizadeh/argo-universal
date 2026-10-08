@@ -173,6 +173,7 @@ const permissionOutcomeChange = (
 const sessionSetup = setup({
   types: {
     input: {} as SessionMachineInput,
+    children: {} as { feed: 'feed' },
     context: {} as SessionContext,
     events: {} as SessionEvent,
     output: {} as AgentOutput,

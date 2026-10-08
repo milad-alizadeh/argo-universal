@@ -24,7 +24,10 @@ type ParsedValues<Yield> = AsyncGenerator<
 // `.output()` checks a subscription's whole return value, so this checks each yielded value (tRPC subscriptions docs).
 export function zAsyncIterable<TYieldIn, TYieldOut>(options: {
   yield: z.ZodType<TYieldOut, TYieldIn>;
-}): z.ZodType<AsyncIterable<TYieldOut, void>, AsyncIterable<TYieldIn, void>> {
+}): z.ZodPipe<
+  z.ZodCustom<AsyncIterable<TYieldIn>>,
+  z.ZodTransform<ParsedValues<TYieldOut>, AsyncIterable<TYieldIn>>
+> {
   return z
     .custom<AsyncIterable<TYieldIn>>(
       (value): value is AsyncIterable<Parameters<typeof isAsyncIterable>[0]> =>
@@ -32,8 +35,5 @@ export function zAsyncIterable<TYieldIn, TYieldOut>(options: {
     )
     .transform(async function* (iterable): ParsedValues<TYieldOut> {
       for await (const value of iterable) yield options.yield.parseAsync(value);
-    }) as unknown as z.ZodType<
-    AsyncIterable<TYieldOut, void, unknown>,
-    AsyncIterable<TYieldIn, void, unknown>
-  >;
+    });
 }

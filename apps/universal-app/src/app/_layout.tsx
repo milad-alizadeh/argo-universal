@@ -7,7 +7,7 @@ import {
 import '../../global.css';
 import { PortalHost } from '@rn-primitives/portal';
 import { registerDevMenuItems } from 'expo-dev-client';
-import { type Href, router, Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { ThemeProvider } from 'expo-router/react-navigation';
 import { StatusBar } from 'expo-status-bar';
 import type * as React from 'react';
@@ -54,8 +54,8 @@ const serverUrl =
 // Screens in @repo/client navigate through this.
 const navigate: Navigate = (destination, options) =>
   options?.replace
-    ? router.replace(hrefFor(destination) as Href)
-    : router.navigate(hrefFor(destination) as Href);
+    ? router.replace(hrefFor(destination))
+    : router.navigate(hrefFor(destination));
 
 export default function RootLayout(): React.JSX.Element {
   const { theme } = useUniwind();

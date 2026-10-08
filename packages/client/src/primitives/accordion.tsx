@@ -19,13 +19,15 @@ function Accordion({
   children,
   ref,
   ...props
-}: Omit<React.ComponentProps<typeof AccordionPrimitive.Root>, 'asChild'>) {
+}:
+  | Omit<Extract<AccordionPrimitive.RootProps, { type: 'single' }>, 'asChild'>
+  | Omit<
+      Extract<AccordionPrimitive.RootProps, { type: 'multiple' }>,
+      'asChild'
+    >) {
   return (
     <LayoutAnimationConfig skipEntering>
-      <AccordionPrimitive.Root
-        {...(props as AccordionPrimitive.RootProps)}
-        asChild={Platform.OS !== 'web'}
-      >
+      <AccordionPrimitive.Root {...props} asChild={Platform.OS !== 'web'}>
         <Animated.View layout={LinearTransition.duration(motionDuration.enter)}>
           {children}
         </Animated.View>

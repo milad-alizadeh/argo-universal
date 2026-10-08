@@ -62,10 +62,8 @@ export function createBlobService(options: {
 }): BlobService {
   return {
     upload: async (
-      form,
+      file,
     ): Promise<Pick<BlobUploadOutput, 'blobId' | 'mime' | 'bytes'>> => {
-      // The contract has checked that `file` holds a Blob.
-      const file = form.get('file') as Blob;
       if (file.size > maxBlobUploadBytes)
         throw new TRPCError({
           code: 'PAYLOAD_TOO_LARGE',
