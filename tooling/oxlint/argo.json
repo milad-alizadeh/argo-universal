@@ -242,6 +242,71 @@
       }
     },
     {
+      // Generic code imports neither product nor local code (A2, ADR-0016 item 9).
+      "files": [
+        "packages/client/src/lib/**",
+        "packages/client/src/primitives/**"
+      ],
+      "excludeFiles": ["**/*.test.*", "**/*.stories.*"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "#components/**",
+                  "../**/components",
+                  "../**/components/**",
+                  "../**/screens",
+                  "../**/screens/**",
+                  "../**/feed",
+                  "../**/feed/**",
+                  "../**/connection",
+                  "../**/connection/**",
+                  "../**/navigation",
+                  "../**/navigation/**",
+                  "../**/trpc",
+                  "../**/trpc/**",
+                  "@repo/**",
+                  "!@repo/uniwind",
+                  "!@repo/uniwind/**"
+                ],
+                "message": "Generic code imports neither product nor local code (A2)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // Generic tooling packages import only other tooling packages (A2, ADR-0016 item 9).
+      "files": ["tooling/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/**",
+                  "!@repo/oxlint",
+                  "!@repo/oxlint/**",
+                  "!@repo/typescript",
+                  "!@repo/typescript/**",
+                  "!@repo/uniwind",
+                  "!@repo/uniwind/**",
+                  "!@repo/vitest",
+                  "!@repo/vitest/**"
+                ],
+                "message": "Generic code imports neither product nor local code (A2)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       // Screens repeat the useTRPC bans because only the last matching override's options apply.
       "files": ["packages/client/src/screens/**"],
       "rules": {
