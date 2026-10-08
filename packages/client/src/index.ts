@@ -1,90 +1,90 @@
 import type {} from './lib/reusables-compatibility';
 
-export { CommandRow, type CommandRowProps } from './components/CommandRow';
+export { CommandRow, type CommandRowProps } from './components/command-row';
 export {
   Composer,
   type ComposerDraft,
   type ComposerImage,
   type ComposerProps,
-} from './components/Composer';
-export type { ComposerConfigurationProps } from './components/ComposerConfiguration';
-export type { ComposerStatusProps } from './components/ComposerStatus';
+} from './components/composer';
+export type { ComposerConfigurationProps } from './components/composer-configuration';
+export type { ComposerStatusProps } from './components/composer-status';
 export {
   DesktopLayout,
   type DesktopLayoutProps,
-} from './components/DesktopLayout';
+} from './components/desktop-layout';
 export {
   DesktopShell,
   type DesktopShellProps,
   type InspectorState,
-} from './components/DesktopShell';
-export { DiffView, type DiffViewProps } from './components/DiffView';
-export { EditRow, type EditRowProps } from './components/EditRow';
+} from './components/desktop-shell';
+export { DiffView, type DiffViewProps } from './components/diff-view';
+export { EditRow, type EditRowProps } from './components/edit-row';
 export {
   type ElicitationAnswer,
   ElicitationForm,
   type ElicitationFormProps,
   type ElicitationValues,
-} from './components/ElicitationForm';
+} from './components/elicitation-form';
 export {
   ElicitationOutcome,
   type ElicitationOutcomeProps,
-} from './components/ElicitationOutcome';
+} from './components/elicitation-outcome';
 export {
   HeaderButton,
   type HeaderButtonProps,
-} from './components/HeaderButton';
-export { Icon, type IconProps } from './components/Icon';
+} from './components/header-button';
+export { Icon, type IconProps } from './lib/icon';
 export {
   IssueIndicator,
   type IssueIndicatorProps,
-} from './components/IssueIndicator';
-export { LiveHeader, type LiveHeaderProps } from './components/LiveHeader';
+} from './components/issue-indicator';
+export { LiveHeader, type LiveHeaderProps } from './components/live-header';
 export {
   PermissionOutcome,
   type PermissionOutcomeProps,
-} from './components/PermissionOutcome';
+} from './components/permission-outcome';
 export {
   type PermissionAnswer,
   PermissionRequest,
   type PermissionRequestProps,
-} from './components/PermissionRequest';
-export { PhoneLayout, type PhoneLayoutProps } from './components/PhoneLayout';
+} from './components/permission-request';
+export { PhoneLayout, type PhoneLayoutProps } from './components/phone-layout';
 export {
   PhoneShell,
   type PhoneShellProps,
   type ShellSection,
-} from './components/PhoneShell';
+} from './components/phone-shell';
 export {
   type PlanProposalAnswer,
   PlanProposalCard,
   type PlanProposalCardProps,
-} from './components/PlanProposalCard';
-export type { RequestState } from './components/RequestCard';
-export { PlanProposalRegion } from './components/PlanProposalRegion';
+} from './components/plan-proposal-card';
+export type { RequestState } from './components/request-card';
+export { PlanProposalRegion } from './components/plan-proposal-region';
 export {
   ProjectHeading,
   type ProjectHeadingProps,
-} from './components/ProjectHeading';
+} from './components/project-heading';
 export {
   PullRequestIndicator,
   type PullRequestIndicatorProps,
-} from './components/PullRequestIndicator';
-export { Screen, type ScreenProps } from './components/Screen';
-export { SessionRow, type SessionRowProps } from './components/SessionRow';
+} from './components/pull-request-indicator';
+export { Screen, type ScreenProps } from './components/screen';
+export { SessionRow, type SessionRowProps } from './components/session-row';
 export {
   SettingsList,
   type SettingsListProps,
-} from './components/SettingsList';
+} from './components/settings-list';
 export {
   StatusIndicator,
   type StatusIndicatorProps,
-} from './components/StatusIndicator';
+} from './components/status-indicator';
 export {
   ToolCallGroup,
   type ToolCallGroupProps,
-} from './components/ToolCallGroup';
-export { ToolCallRow, type ToolCallRowProps } from './components/ToolCallRow';
+} from './components/tool-call-group';
+export { ToolCallRow, type ToolCallRowProps } from './components/tool-call-row';
 export {
   type ConnectionState,
   useConnection,
@@ -111,11 +111,11 @@ export {
   type ScreenHeaderSearch,
 } from './navigation/screen-header';
 export { useWide } from './navigation/use-wide';
-export { ConnectionScreen } from './screens/ConnectionScreen';
+export { ConnectionScreen } from './screens/connection-screen';
 export {
   NewSessionScreen,
   type NewSessionScreenProps,
-} from './screens/NewSessionScreen';
+} from './screens/new-session-screen';
 export {
   AccountsScreen,
   AgentSettingsScreen,
@@ -129,16 +129,16 @@ export {
   ProjectSettingsScreen,
   type ProjectSettingsScreenProps,
   ProjectsSettingsScreen,
-} from './screens/PlaceholderScreens';
+} from './screens/placeholder-screens';
 export {
   SectionRootScreen,
   type SectionRootScreenProps,
-} from './screens/SectionRootScreen';
+} from './screens/section-root-screen';
 export {
   SessionScreen,
   type SessionScreenProps,
-} from './screens/SessionScreen';
-export { SessionsScreen } from './screens/SessionsScreen';
+} from './screens/session-screen';
+export { SessionsScreen } from './screens/sessions-screen';
 export { AppProviders, type AppProvidersProps } from './trpc/app-providers';
 export { TRPCProvider, useTRPC, useTRPCClient } from './trpc/context';
 export { createTRPCClient, type TRPCClient } from './trpc/create-trpc-client';

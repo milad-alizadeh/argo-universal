@@ -14,7 +14,7 @@ import {
   Composer,
   type ComposerImage,
   type ComposerProps,
-} from '../src/components/Composer';
+} from '../src/components/composer';
 
 const imageUri =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKklEQVR4nGN4piFHU8QwasGoBaMWjFowasGoBaMWjFowasGoBaMWDBULANahsD1zXuJAAAAAAElFTkSuQmCC';
@@ -105,6 +105,7 @@ export const composerUnavailableConfigurations =
 
 export function ComposerMock(
   props: ComposerProps & {
+    initialAgent?: AgentInfo['agent'];
     sessionStarted?: boolean;
     running?: boolean;
     // Replaces the Session's Plan; an empty list means the Agent has none.
@@ -113,7 +114,7 @@ export function ComposerMock(
 ) {
   const [draft, setDraft] = useState(props.draft);
   const [agent, setAgent] = useState(
-    newSessionCatalogs.bothAvailable[0]?.agent ?? '',
+    props.initialAgent ?? newSessionCatalogs.bothAvailable[0]?.agent ?? '',
   );
   const catalog = newSessionOptions.find((entry) => entry.agent === agent);
   const [configOptions, setConfigOptions] = useState<SessionConfigOption[]>(

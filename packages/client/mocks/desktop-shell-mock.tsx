@@ -4,8 +4,8 @@ import { View } from 'react-native';
 import {
   DesktopShell,
   type DesktopShellProps,
-} from '../src/components/DesktopShell';
-import { Icon } from '../src/components/Icon';
+} from '../src/components/desktop-shell';
+import { Icon } from '../src/lib/icon';
 import { Button } from '../src/primitives/button';
 import {
   DropdownMenu,
