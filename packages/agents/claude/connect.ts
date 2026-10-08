@@ -26,6 +26,7 @@ import {
   startingValues,
   toConfigOptions,
 } from './config-options';
+import { isKnownMessage } from './known-messages';
 import type { VendorMessage } from './messages';
 
 // The values the CLI starts with; the saved ones follow once its model list can check them.
@@ -263,7 +264,13 @@ export async function connect(
   const messages = (async (): Promise<void> => {
     try {
       for await (const message of vendor) {
-        listener.message({ ...message, receivedAt: Date.now() });
+        if (isKnownMessage(message))
+          listener.message({ ...message, receivedAt: Date.now() });
+        else
+          listener.event({
+            type: 'agent.messageRejected',
+            reason: `Unsupported SDK message: ${message.type}`,
+          });
         // Usage failures are ignored; the streamed Turn still supplies its Feed.
         if (message.type === 'result') void sendUsage().catch((): void => {});
       }
@@ -389,12 +396,12 @@ export async function connect(
 // Owns SDK request resolution and exposes only the first unanswered question.
 function createRequestTracker(listener: VendorSessionListener<VendorMessage>): {
   add: (
-    message: import('@anthropic-ai/claude-agent-sdk').SDKControlRequest & {
+    message: Extract<VendorMessage, { type: 'control_request' }> & {
       receivedAt?: number;
     },
     resolve: (answer: PermissionResult) => void,
   ) => void;
-  head: () => { toolUseId: string; input: AskUserQuestionInput } | undefined;
+  head: () => { toolUseId: string; input: Record<string, unknown> } | undefined;
   remove: (
     id: string,
     advance?: boolean,
@@ -424,7 +431,7 @@ function createRequestTracker(listener: VendorSessionListener<VendorMessage>): {
       listener.message(message);
     },
     head: ():
-      | { toolUseId: string; input: AskUserQuestionInput }
+      | { toolUseId: string; input: Record<string, unknown> }
       | undefined => {
       const id = questions[0];
       if (!id) return;
@@ -433,7 +440,7 @@ function createRequestTracker(listener: VendorSessionListener<VendorMessage>): {
       // AskUserQuestionInput is the SDK's tool payload at this boundary.
       return {
         toolUseId: id,
-        input: request.input as unknown as AskUserQuestionInput,
+        input: request.input,
       };
     },
     remove: (

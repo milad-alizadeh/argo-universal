@@ -81,3 +81,14 @@ export interface AgentAdapter<Message = unknown, MappingState = unknown> {
     mappingState: MappingState,
   ): AgentMapping<MappingState>;
 }
+
+export function rejectAgentMessage<MappingState>(
+  mappingState: MappingState,
+): AgentMapping<MappingState> {
+  return {
+    events: [
+      { type: 'agent.messageRejected', reason: 'Unrecognised vendor payload' },
+    ],
+    mappingState,
+  };
+}

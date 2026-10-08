@@ -1,36 +1,48 @@
 import path from 'node:path';
 import type { CommandAction, ToolCallUpdate } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
-import { readRecording } from '../mocks/recording';
+import {
+  readRecording,
+  findRecording,
+  recordedFrames,
+} from '../../../mocks/cli/recording.ts';
 import type { AgentEvent, FeedUpdate } from '../src/agent-events';
 import type { VendorMessage } from './messages';
-import type {
-  ItemCompletedNotification,
-  ItemStartedNotification,
-  CommandAction as SuppliedCommandAction,
-} from './protocol.gen';
+import { isIgnoredMethod } from './notification-kinds';
+import { isVendorMessage } from './payloads.ts';
+import type { CommandAction as SuppliedCommandAction } from './protocol.gen';
 import { initialMappingState, toAgentEvents } from './to-agent-events';
+import { isWireMessage } from './wire-payloads.ts';
 
-const recording = (
-  name: string,
-): (VendorMessage & { receivedAt: number | undefined })[] =>
-  JSON.parse(
-    readRecording(
-      path.join(import.meta.dirname, '../../../mocks/cli/codex/recordings'),
-      name,
-    ),
-  ).payload.messages.map(
-    (
-      message: VendorMessage & { emittedAtMs?: number },
-    ): VendorMessage & { receivedAt: number | undefined } => ({
-      ...message,
-      receivedAt: message.emittedAtMs,
-    }),
+function recording(name: string): VendorMessage[] {
+  const file = findRecording(
+    path.join(import.meta.dirname, '../../../mocks/cli/codex/recordings'),
+    name,
   );
-const mapMessages = (messages: VendorMessage[]): AgentEvent[] => {
+  const frames = recordedFrames(
+    readRecording(file, 'codex-app-server').payload,
+    'messages',
+    isWireMessage,
+  );
+  return frames
+    .filter((message): message is VendorMessage & { emittedAtMs?: number } =>
+      acceptsRecordedMessage(message),
+    )
+    .map(
+      (message: VendorMessage & { emittedAtMs?: number }): VendorMessage => ({
+        ...message,
+        ...(message.emittedAtMs === undefined
+          ? {}
+          : { receivedAt: message.emittedAtMs }),
+      }),
+    );
+}
+const mapMessages = (messages: unknown[]): AgentEvent[] => {
   let state = initialMappingState();
   const events: AgentEvent[] = [];
   for (const message of messages) {
+    if (!isVendorMessage(message))
+      throw new Error('Invalid provider response in test');
     const mapped = toAgentEvents(message, state);
     state = mapped.mappingState;
     events.push(...mapped.events);
@@ -40,7 +52,10 @@ const mapMessages = (messages: VendorMessage[]): AgentEvent[] => {
 const mapRecording = (name: string): AgentEvent[] =>
   mapMessages(recording(name));
 const replaceCommandActions = <
-  Notification extends ItemStartedNotification | ItemCompletedNotification,
+  Notification extends Extract<
+    VendorMessage,
+    { method: 'item/started' | 'item/completed' }
+  >['params'],
 >(
   notification: Notification,
   commandActions: SuppliedCommandAction[],
@@ -368,10 +383,27 @@ it('retains the recorded cancellation time when the Tool call never sends a fina
 
 it('reconciles a thought summary with its final record and drops raw thought text once a summary streams', (): void => {
   const messages = [
-    { method: 'turn/started', params: { turn: { id: 'thought-turn' } } },
+    {
+      method: 'turn/started',
+      params: {
+        threadId: 'thread',
+        turn: {
+          id: 'thought-turn',
+          status: 'inProgress',
+          error: null,
+          items: [],
+          itemsView: 'full',
+          startedAt: null,
+          completedAt: null,
+          durationMs: null,
+        },
+      },
+    },
     {
       method: 'item/started',
       params: {
+        startedAtMs: 0,
+        threadId: 'thread',
         turnId: 'thought-turn',
         item: { type: 'reasoning', id: 'thought', summary: [], content: [] },
       },
@@ -379,6 +411,7 @@ it('reconciles a thought summary with its final record and drops raw thought tex
     {
       method: 'item/reasoning/summaryTextDelta',
       params: {
+        threadId: 'thread',
         turnId: 'thought-turn',
         itemId: 'thought',
         summaryIndex: 0,
@@ -388,6 +421,7 @@ it('reconciles a thought summary with its final record and drops raw thought tex
     {
       method: 'item/reasoning/textDelta',
       params: {
+        threadId: 'thread',
         turnId: 'thought-turn',
         itemId: 'thought',
         contentIndex: 0,
@@ -397,6 +431,8 @@ it('reconciles a thought summary with its final record and drops raw thought tex
     {
       method: 'item/completed',
       params: {
+        completedAtMs: 1,
+        threadId: 'thread',
         turnId: 'thought-turn',
         item: {
           type: 'reasoning',
@@ -407,7 +443,7 @@ it('reconciles a thought summary with its final record and drops raw thought tex
       },
     },
   ];
-  const events = mapMessages(messages as VendorMessage[]);
+  const events = mapMessages(messages);
   expect(settledRows(events)).toEqual([
     {
       id: 'thought',
@@ -435,31 +471,50 @@ it('reconciles a thought summary with its final record and drops raw thought tex
   ]);
 });
 
-it.each(['failed', 'interrupted'])(
+it.each(['failed', 'interrupted'] as const)(
   'keeps the vendor error and stop reason of a %s Turn',
   (status): void => {
     const started = toAgentEvents(
       {
         method: 'turn/started',
-        params: { turn: { id: 'failed-turn' } },
-      } as Parameters<typeof toAgentEvents>[0],
+        params: {
+          threadId: 'thread',
+          turn: {
+            id: 'failed-turn',
+            status: 'inProgress',
+            error: null,
+            items: [],
+            itemsView: 'full',
+            startedAt: null,
+            completedAt: null,
+            durationMs: null,
+          },
+        },
+      },
       initialMappingState(),
     );
     const ended = toAgentEvents(
       {
         method: 'turn/completed',
         params: {
+          threadId: 'thread',
           turn: {
             id: 'failed-turn',
+            items: [],
+            itemsView: 'full',
+            startedAt: null,
+            completedAt: null,
+            durationMs: null,
             status,
             error: {
               message: 'The command failed',
               codexErrorInfo: 'other',
               additionalDetails: 'Exit 1',
+              misalignment: null,
             },
           },
         },
-      } as Parameters<typeof toAgentEvents>[0],
+      },
       started.mappingState,
     );
     expect(ended.events).toEqual([
@@ -475,18 +530,6 @@ it.each(['failed', 'interrupted'])(
     ]);
   },
 );
-
-it('drops an unmapped notification without inspecting its payload', (): void => {
-  const mappingState = initialMappingState();
-  expect(
-    toAgentEvents(
-      { method: 'future/notification' } as unknown as Parameters<
-        typeof toAgentEvents
-      >[0],
-      mappingState,
-    ),
-  ).toEqual({ events: [], mappingState });
-});
 
 it('attributes only the resumed Turn’s recorded usage when no previous baseline is loaded', (): void => {
   const ended = mapRecording('interrupt').at(-1);
@@ -527,3 +570,15 @@ it('retains usage received while idle as the next Turn’s baseline', (): void =
   );
   expect(idle.mappingState.totalUsage).toEqual(breakdown);
 });
+
+function acceptsRecordedMessage(
+  message: unknown,
+): message is VendorMessage & { emittedAtMs?: number } {
+  if (!isWireMessage(message)) throw new Error('Invalid recorded envelope');
+  if (isIgnoredMethod(message.method)) return false;
+  if (!isVendorMessage(message))
+    throw new Error(
+      `Invalid recorded payload: ${message.method}: ${JSON.stringify(isVendorMessage.errors)}`,
+    );
+  return true;
+}

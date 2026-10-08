@@ -1,0 +1,11 @@
+{
+  "producer": "codex-app-server",
+  "version": "0.157.0",
+  "recordedAt": "2026-10-08T13:55:10.962Z",
+  "payload": {
+    "userAgent": "Codex Desktop/0.157.0 (Mac OS 26.5.1; arm64) dumb (argo-recording; 0.0.0)",
+    "codexHome": "/mock/home/.codex",
+    "platformFamily": "unix",
+    "platformOs": "macos"
+  }
+}

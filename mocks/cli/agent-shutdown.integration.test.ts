@@ -32,10 +32,13 @@ const isAlive = (processId: number): boolean => {
 
 async function start(
   adapter: AgentAdapter,
-  { scenario = {}, missingExecutable = false } = {} as {
+  {
+    scenario = {},
+    missingExecutable = false,
+  }: {
     scenario?: MockCliScenarioInput;
     missingExecutable?: boolean;
-  },
+  } = {},
 ): Promise<{
   agent: import('xstate').Actor<typeof agentMachine>;
   events: AgentEvent[];

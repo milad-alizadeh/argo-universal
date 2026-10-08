@@ -3,10 +3,14 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { isWireFrame } from '../../../packages/agents/codex/wire-payloads.ts';
 import { startLineProcess } from '../line-process.ts';
 import { mockCliScenarioEnvironment } from '../mock-cli.ts';
 import { findRecording, readRecording, recordedFrames } from '../recording.ts';
-import { readRequestAnswers } from '../request-answer.ts';
+import {
+  readRequestAnswers,
+  type RecordedRequestAnswer,
+} from '../request-answer.ts';
 import { recordedRequestAnswer } from './recorded-request-answer.ts';
 import { writeMockCodex } from './write-mock-codex.ts';
 
@@ -36,10 +40,7 @@ it.each(['permission', 'elicitation', 'plan-approved', 'plan-kept-planning'])(
       findRecording(path.join(import.meta.dirname, 'recordings'), recording),
       producer,
     ).payload;
-    for (const input of recordedFrames<Record<string, unknown>>(
-      payload,
-      'input',
-    ))
+    for (const input of recordedFrames(payload, 'input', isWireFrame))
       vendor.send(input);
     vendor.close();
     expect(await vendor.exited).toBe(0);
@@ -78,10 +79,12 @@ it.each([{}, { params: null }, { params: { input: 'text' } }])(
         { method: turnStart, ...nextTurn },
       ],
     });
-    const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => {});
-    expect(() => recordedRequestAnswer(name, directory)).toThrow(
-      'Unsupported codex request answer',
-    );
+    const diagnostic = vi
+      .spyOn(console, 'error')
+      .mockImplementation((): void => {});
+    expect((): RecordedRequestAnswer =>
+      recordedRequestAnswer(name, directory),
+    ).toThrow('Unsupported codex request answer');
     expect(diagnostic).toHaveBeenCalledExactlyOnceWith(
       'Mock CLI rejected request answer (1)',
     );

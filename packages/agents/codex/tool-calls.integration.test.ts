@@ -8,6 +8,7 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import type { ToolCallContent } from '@repo/contracts';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { FileUpdateChange } from './protocol.gen';
 import { toToolCall } from './tool-calls';
@@ -33,19 +34,8 @@ describe('file Tool call patches', (): void => {
       'settled',
     );
     const content = row.content.find(
-      (
-        entry,
-      ): entry is {
-        type: 'diff';
-        changes: {
-          operation: 'add' | 'delete' | 'modify' | 'move';
-          path: string;
-          oldPath?: string;
-          oldText?: string;
-          newText?: string;
-        }[];
-        patch?: { format: 'git_patch'; text: string };
-      } => entry.type === 'diff',
+      (entry): entry is Extract<ToolCallContent, { type: 'diff' }> =>
+        entry.type === 'diff',
     );
     if (!content?.patch) throw new Error('The Tool call has no patch.');
     execFileSync('git', ['apply', '--whitespace=nowarn', '-'], {

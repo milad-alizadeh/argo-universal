@@ -2,9 +2,16 @@ import path from 'node:path';
 import type {
   PermissionResult,
   SDKControlRequest,
-  SDKControlResponse,
-  SDKMessage,
 } from '../../../packages/agents/claude/messages.ts';
+import {
+  isControlRequest,
+  isControlResponse,
+  type SDKControlResponse,
+} from '../../../packages/agents/claude/wire.ts';
+import {
+  isRecordedFrame as isWireFrame,
+  type RecordedFrame as WireFrame,
+} from '../recording.ts';
 import { findRecording, readRecording, recordedFrames } from '../recording.ts';
 import {
   createRequestAnswerReader,
@@ -13,7 +20,9 @@ import {
 import { readPermissionResult, toRequestAnswer } from './request-answer.ts';
 
 export function recordedRequestAnswer(name: string): RecordedRequestAnswer {
-  return createRequestAnswerReader()(() => readRecordedAnswer(name));
+  return createRequestAnswerReader()((): RecordedRequestAnswer =>
+    readRecordedAnswer(name),
+  );
 }
 
 function readRecordedAnswer(name: string): RecordedRequestAnswer {
@@ -33,13 +42,9 @@ type ToolRequest = SDKControlRequest & {
 };
 
 function recordedRequest(payload: unknown): ToolRequest {
-  const request = recordedFrames<SDKMessage | SDKControlRequest>(
-    payload,
-    'output',
-  ).find(
+  const request = recordedFrames(payload, 'output', isWireFrame).find(
     (frame): frame is ToolRequest =>
-      frame.type === 'control_request' &&
-      frame.request.subtype === 'can_use_tool',
+      isControlRequest(frame) && frame.request.subtype === 'can_use_tool',
   );
   if (!request) throw new Error('Recording has no request');
   return request;
@@ -48,13 +53,12 @@ function recordedRequest(payload: unknown): ToolRequest {
 type SuccessfulResponse = SDKControlResponse & {
   response: Extract<SDKControlResponse['response'], { subtype: 'success' }>;
 };
-type RecordedFrame = SDKMessage | SDKControlRequest | SDKControlResponse;
 
 function recordedResponse(
   payload: unknown,
   requestId: string,
 ): PermissionResult {
-  const frame = recordedFrames<RecordedFrame>(payload, 'input').find(
+  const frame = recordedFrames(payload, 'input', isWireFrame).find(
     (frame): frame is SuccessfulResponse => matchesResponse(frame, requestId),
   );
   if (!frame) throw new Error('Recording has no matching answer');
@@ -62,11 +66,11 @@ function recordedResponse(
 }
 
 function matchesResponse(
-  frame: RecordedFrame,
+  frame: WireFrame,
   requestId: string,
 ): frame is SuccessfulResponse {
   return (
-    frame.type === 'control_response' &&
+    isControlResponse(frame) &&
     frame.response.subtype === 'success' &&
     frame.response.request_id === requestId
   );

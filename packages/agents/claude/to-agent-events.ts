@@ -1,15 +1,13 @@
+import type { SDKPartialAssistantMessage } from '@anthropic-ai/claude-agent-sdk';
+import type { StopReason, TurnUsage } from '@repo/contracts';
+import { type AgentMapping } from '../src/agent-adapter';
+import type { AgentEvent, FeedChange, FeedUpdate } from '../src/agent-events';
 import type {
   SDKAssistantMessage,
-  SDKMessage,
-  SDKPartialAssistantMessage,
-  SDKResultMessage,
   SDKUserMessage,
-  SDKUserMessageReplay,
-} from '@anthropic-ai/claude-agent-sdk';
-import type { StopReason, TurnUsage } from '@repo/contracts';
-import type { AgentMapping } from '../src/agent-adapter';
-import type { AgentEvent, FeedChange, FeedUpdate } from '../src/agent-events';
-import type { VendorMessage } from './messages';
+  VendorMessage,
+} from './messages';
+import type { SDKResultMessage, SDKMessage } from './messages';
 import { toRequestEvents } from './request-events';
 import { type ToolCallRow, toolCallEnded, toolCallStarted } from './tool-calls';
 
@@ -246,7 +244,7 @@ function mapBlock({
 
 // A user message carries Tool results; the Session writes the user's own prompt.
 function mapUser(
-  message: (SDKUserMessage | SDKUserMessageReplay) & { receivedAt?: number },
+  message: SDKUserMessage & { receivedAt?: number },
   mappingState: MappingState,
 ): AgentMapping<MappingState> {
   const { content } = message.message;

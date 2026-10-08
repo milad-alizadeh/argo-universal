@@ -9,10 +9,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   SDKControlRequest,
   SDKControlResponse,
-  SDKMessage,
 } from '../../../packages/agents/claude/messages.ts';
+import {
+  isControlRequest,
+  isControlResponse as isSDKControlResponse,
+} from '../../../packages/agents/claude/wire.ts';
 import { startLineProcess } from '../line-process.ts';
 import { mockCliScenarioEnvironment } from '../mock-cli.ts';
+import {
+  isRecordedFrame as isWireFrame,
+  type RecordedFrame as WireFrame,
+} from '../recording.ts';
 import {
   recordedFrames as captureFrames,
   findRecording,
@@ -26,29 +33,22 @@ const PRODUCER = 'claude-cli';
 const RECORDINGS = path.join(import.meta.dirname, 'recordings');
 const VERSION = recordingVersion(RECORDINGS);
 
-const recordedFrames = (name: string): SDKMessage[] =>
-  captureFrames<SDKMessage>(
+const recordedFrames = (name: string): WireFrame[] =>
+  captureFrames(
     readRecording(findRecording(RECORDINGS, name), PRODUCER).payload,
     'output',
+    isWireFrame,
   );
-
-// A recording of both pipes: what the SDK wrote to stdin, and what the CLI wrote to stdout.
 const recordedPipes = (
   name: string,
-): {
-  input: (SDKControlRequest | SDKMessage)[];
-  output: (SDKControlRequest | SDKControlResponse | SDKMessage)[];
-} => {
+): { input: WireFrame[]; output: WireFrame[] } => {
   const payload = readRecording(
     findRecording(RECORDINGS, name),
     PRODUCER,
   ).payload;
   return {
-    input: captureFrames<SDKMessage | SDKControlRequest>(payload, 'input'),
-    output: captureFrames<SDKMessage | SDKControlRequest | SDKControlResponse>(
-      payload,
-      'output',
-    ),
+    input: captureFrames(payload, 'input', isWireFrame),
+    output: captureFrames(payload, 'output', isWireFrame),
   };
 };
 
@@ -284,18 +284,16 @@ describe('mock Claude CLI', (): void => {
 
   it('answers initialize and get_context_usage with the recorded answers', async (): Promise<void> => {
     const { input, output } = recordedPipes('edit-and-command');
-    const recordedAnswer = (
-      subtype: string,
-    ): SDKControlRequest | SDKControlResponse | SDKMessage | undefined => {
+    const recordedAnswer = (subtype: string): WireFrame | undefined => {
       const request = input.find(
         (frame): boolean =>
-          frame.type === 'control_request' && frame.request.subtype === subtype,
+          isControlRequest(frame) && frame.request.subtype === subtype,
       );
       return output.find(
         (frame): boolean =>
           isControlResponse(frame) &&
           JSON.stringify(frame).includes(
-            `"request_id":"${request?.type === 'control_request' ? request.request_id : undefined}"`,
+            `"request_id":"${isControlRequest(request) ? request.request_id : undefined}"`,
           ),
       );
     };
@@ -309,7 +307,7 @@ describe('mock Claude CLI', (): void => {
       });
       const answer = recordedAnswer(subtype);
       if (
-        answer?.type !== 'control_response' ||
+        !isSDKControlResponse(answer) ||
         answer.response.subtype !== 'success'
       )
         throw new Error(`No recorded answer for ${subtype}`);

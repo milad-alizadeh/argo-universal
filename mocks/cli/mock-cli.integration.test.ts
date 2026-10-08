@@ -16,6 +16,7 @@ it('gives every scenario field its default when the variable is absent', (): voi
     processFile: null,
     blockInitialize: false,
     malformedLine: false,
+    malformedPayload: false,
     concurrentQuestions: false,
     otherThreadRequest: false,
     blockTurnStart: false,
@@ -44,7 +45,8 @@ it('carries a scenario through one environment variable', (): void => {
 });
 
 it('rejects a misspelt field where the scenario is written', (): void => {
+  const misspeltScenario = { blockTurnStart: false, blockTurnstart: true };
   expect((): { MOCK_CLI_SCENARIO: string } =>
-    mockCliScenarioEnvironment({ blockTurnstart: true } as never),
+    mockCliScenarioEnvironment(misspeltScenario),
   ).toThrow(/Unrecognized key/);
 });

@@ -1,37 +1,25 @@
-import path from 'node:path';
-import type { SDKMessage } from '@anthropic-ai/claude-agent-sdk';
+import { SessionUpdate } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
-import { readRecording } from '../mocks/recording';
 import type { FeedChange, FeedUpdate } from '../src/agent-events';
+import type { VendorMessage, SDKResultMessage } from './messages';
+import { compaction } from './mocks/sdk-compaction';
+import { interrupted } from './mocks/sdk-interrupt';
+import { assistant, user } from './mocks/sdk-messages';
+import { completed } from './mocks/sdk-result';
+import { edits } from './mocks/sdk-tools';
 import {
   initialMappingState,
   type MappingState,
   toAgentEvents,
 } from './to-agent-events';
-
-const RECORDINGS = path.join(
-  import.meta.dirname,
-  '../../../mocks/cli/claude/recordings',
-);
-
-// The stdout frames of a recording, without the control frames that the SDK consumes itself.
-function recordedMessages(name: string): SDKMessage[] {
-  const recording: { payload: { output: { type: string }[] } } = JSON.parse(
-    readRecording(RECORDINGS, name),
-  );
-  return recording.payload.output.filter(
-    (frame): boolean => !frame.type.startsWith('control_'),
-  ) as SDKMessage[];
-}
-
-// Fixtures carry only the fields the mapping reads.
+// SDK-owned messages exercise mapping without narrowing their provider shapes.
 function mapAll(
-  messages: object[],
+  messages: VendorMessage[],
   start = initialMappingState(),
 ): { events: import('../src').AgentEvent[]; mappingState: MappingState } {
   let mappingState: MappingState = start;
   const events = messages.flatMap((message): import('../src').AgentEvent[] => {
-    const result = toAgentEvents(message as SDKMessage, mappingState);
+    const result = toAgentEvents(message, mappingState);
     mappingState = result.mappingState;
     return result.events;
   });
@@ -46,7 +34,7 @@ const feedChanges = (
   );
 
 it('reconciles the recorded compacting status and boundary into one Compaction row', (): void => {
-  const changes = feedChanges(mapAll(recordedMessages('compaction')).events);
+  const changes = feedChanges(mapAll(compaction).events);
   const compactions = changes.flatMap(
     (change): Extract<FeedUpdate, { sessionUpdate: 'compaction_update' }>[] =>
       change.type === 'upsert' &&
@@ -73,9 +61,7 @@ it('reconciles the recorded compacting status and boundary into one Compaction r
 });
 
 it('keeps the Agent’s Bash description and timestamps without inventing command actions', (): void => {
-  const rows = foldRows(
-    feedChanges(mapAll(recordedMessages('edit-and-command')).events),
-  );
+  const rows = foldRows(feedChanges(mapAll(edits).events));
   const command = rows.find(
     (row): boolean =>
       row.sessionUpdate === 'tool_call_update' && row.kind === 'execute',
@@ -90,17 +76,19 @@ it('keeps the Agent’s Bash description and timestamps without inventing comman
 });
 
 it('uses the transport receipt time when an interrupted Tool call has no final result', (): void => {
-  const messages = recordedMessages('interrupt')
+  const messages = interrupted
     .filter(
-      (message): message is Exclude<SDKMessage, { type: 'user' }> =>
+      (message): message is Exclude<VendorMessage, { type: 'user' }> =>
         message.type !== 'user',
     )
     .map(
       (
         message,
       ):
-        | Exclude<SDKMessage, { type: 'user' | 'result' }>
-        | (Extract<SDKMessage, { type: 'result' }> & { receivedAt: number }) =>
+        | Exclude<VendorMessage, { type: 'user' | 'result' }>
+        | (Extract<VendorMessage, { type: 'result' }> & {
+            receivedAt: number;
+          }) =>
         message.type === 'result'
           ? { ...message, receivedAt: 1791165784000 }
           : message,
@@ -128,24 +116,26 @@ function foldRows(changes: FeedChange[]): FeedUpdate[] {
     const row = rows.get(change.id);
     if (!row) throw new Error(`No row ${change.id}`);
     if (change.type === 'patch') {
-      rows.set(change.id, { ...row, ...change.set } as FeedUpdate);
+      rows.set(change.id, parseFeedUpdate({ ...row, ...change.set }));
       continue;
     }
-    const copy = structuredClone(row) as Record<string, unknown>;
+    const copy: unknown = structuredClone(row);
     const keys = change.field.split('.');
-    const last = keys.pop() as string;
-    const target = keys.reduce<Record<string, unknown>>(
-      (value, key): typeof value => value[key] as Record<string, unknown>,
+    const last = keys.pop();
+    if (!last) throw new Error('Empty append path');
+    const target = keys.reduce<unknown>(
+      (value, key): unknown => pathValue(value, key),
       copy,
     );
+    if (!isRecord(target)) throw new Error('Invalid append target');
     target[last] = `${target[last]}${change.text}`;
-    rows.set(change.id, copy as FeedUpdate);
+    rows.set(change.id, parseFeedUpdate(copy));
   }
   return [...rows.values()];
 }
 
 describe('toAgentEvents on a Turn with edits and commands', (): void => {
-  const messages = recordedMessages('edit-and-command');
+  const messages = edits;
   const { events } = mapAll(messages);
   const rows = foldRows(feedChanges(events));
 
@@ -260,14 +250,16 @@ describe('toAgentEvents on a Turn with edits and commands', (): void => {
 
   it('gives text rows message.id#blockIndex, the same with or without streaming', (): void => {
     const firstMessage = messages.find(
-      (message): message is Extract<SDKMessage, { type: 'assistant' }> =>
+      (message): message is Extract<VendorMessage, { type: 'assistant' }> =>
         message.type === 'assistant',
     );
     expect(rows[0]?.id).toBe(`${firstMessage?.message.id}#0`);
 
     const recordsOnly = mapAll(
       messages.filter(
-        (message): message is Exclude<SDKMessage, { type: 'stream_event' }> =>
+        (
+          message,
+        ): message is Exclude<VendorMessage, { type: 'stream_event' }> =>
           message.type !== 'stream_event',
       ),
     );
@@ -306,7 +298,7 @@ describe('toAgentEvents on a Turn with edits and commands', (): void => {
 });
 
 describe('toAgentEvents on an interrupted Turn', (): void => {
-  const { events } = mapAll(recordedMessages('interrupt'));
+  const { events } = mapAll(interrupted);
   const rows = foldRows(feedChanges(events));
 
   it('cancels the running command and ends the Turn as cancelled', (): void => {
@@ -326,35 +318,14 @@ describe('toAgentEvents on an interrupted Turn', (): void => {
 });
 
 const result = (
-  fields: Record<string, unknown>,
-): {
-  type: string;
-  subtype: string;
-  is_error: boolean;
-  stop_reason: string;
-  usage: {
-    input_tokens: number;
-    output_tokens: number;
-    cache_read_input_tokens: number;
-    cache_creation_input_tokens: number;
-  };
-  uuid: string;
-  session_id: string;
-} => ({
-  type: 'result',
-  subtype: 'success',
-  is_error: false,
-  stop_reason: 'end_turn',
-  usage: {
-    input_tokens: 1,
-    output_tokens: 2,
-    cache_read_input_tokens: 3,
-    cache_creation_input_tokens: 4,
-  },
-  uuid: 'result-1',
-  session_id: 'vendor-1',
-  ...fields,
-});
+  fields: Partial<Extract<SDKResultMessage, { subtype: 'success' }>>,
+): SDKResultMessage => ({ ...completed, ...fields });
+const failedResult = (
+  fields: Partial<Exclude<SDKResultMessage, { subtype: 'success' }>>,
+): SDKResultMessage => {
+  const { result: _result, ...base } = completed;
+  return { ...base, subtype: 'error_during_execution', errors: [], ...fields };
+};
 
 describe('toAgentEvents on single messages', (): void => {
   it.each([
@@ -362,12 +333,12 @@ describe('toAgentEvents on single messages', (): void => {
     ['refusal', result({ stop_reason: 'refusal' }), 'refusal'],
     [
       'error_max_turns',
-      result({ subtype: 'error_max_turns', is_error: true, errors: [] }),
+      failedResult({ subtype: 'error_max_turns', is_error: true, errors: [] }),
       'max_turn_requests',
     ],
     [
       'aborted_streaming',
-      result({
+      failedResult({
         subtype: 'error_during_execution',
         is_error: true,
         terminal_reason: 'aborted_streaming',
@@ -390,7 +361,7 @@ describe('toAgentEvents on single messages', (): void => {
         terminal_reason: 'api_error',
         result: 'Failed to authenticate',
       }),
-      result({
+      failedResult({
         subtype: 'error_during_execution',
         is_error: true,
         errors: ['The tool runner crashed.'],
@@ -418,7 +389,7 @@ describe('toAgentEvents on single messages', (): void => {
         retry_delay_ms: 1000,
         error_status: 529,
         error: 'server_error',
-        uuid: 'retry-1',
+        uuid: '00000000-0000-0000-0000-000000000001',
         session_id: 'vendor-1',
       },
     ]);
@@ -426,7 +397,7 @@ describe('toAgentEvents on single messages', (): void => {
       {
         type: 'upsert',
         update: {
-          id: 'retry-1',
+          id: '00000000-0000-0000-0000-000000000001',
           sessionUpdate: 'notice',
           state: 'settled',
           severity: 'warning',
@@ -445,7 +416,7 @@ describe('toAgentEvents on single messages', (): void => {
         type: 'system',
         subtype: 'local_command_output',
         content: 'Compacted.',
-        uuid: 'local-1',
+        uuid: '00000000-0000-0000-0000-000000000002',
         session_id: 'vendor-1',
       },
     ]);
@@ -453,7 +424,7 @@ describe('toAgentEvents on single messages', (): void => {
       {
         type: 'upsert',
         update: {
-          id: 'local-1',
+          id: '00000000-0000-0000-0000-000000000002',
           sessionUpdate: 'notice',
           state: 'settled',
           severity: 'info',
@@ -466,46 +437,55 @@ describe('toAgentEvents on single messages', (): void => {
   it.each([
     [
       'the interrupt marker',
-      {
-        type: 'user',
-        message: {
-          role: 'user',
-          content: [{ type: 'text', text: '[Request interrupted by user]' }],
-        },
-        parent_tool_use_id: null,
-      },
+      user([{ type: 'text', text: '[Request interrupted by user]' }]),
     ],
     [
       'a synthetic user message',
       {
-        type: 'user',
-        message: { role: 'user', content: 'Injected context.' },
-        parent_tool_use_id: null,
+        ...user('Injected context.'),
         isSynthetic: true,
       },
     ],
     [
       "a Subagent's message",
       {
-        type: 'assistant',
-        message: { id: 'sub-1', content: [{ type: 'text', text: 'Hi' }] },
+        ...assistant('sub-1', [{ type: 'text', text: 'Hi', citations: [] }]),
         parent_tool_use_id: 'toolu_task',
-        uuid: 'sub-uuid',
+        uuid: '00000000-0000-0000-0000-000000000003',
         session_id: 'vendor-1',
       },
     ],
-    [
-      'a known message Argo does not show',
-      { type: 'rate_limit_event', uuid: 'rate-1', session_id: 'vendor-1' },
-    ],
-    [
-      'a system message Argo does not show',
-      { type: 'system', subtype: 'task_progress', uuid: 'task-1' },
-    ],
-  ])('drops %s', (_, message): void => {
+  ] satisfies [string, VendorMessage][])('drops %s', (_, message): void => {
     expect(mapAll([message])).toEqual({
       events: [],
       mappingState: initialMappingState(),
     });
   });
 });
+
+function pathValue(value: unknown, key: string): unknown {
+  if (Array.isArray(value)) return value[Number(key)];
+  if (isRecord(value)) return value[key];
+  throw new Error('Invalid append path');
+}
+function parseFeedUpdate(value: unknown): FeedUpdate {
+  if (!isRecord(value)) throw new Error('Invalid Feed row');
+  const {
+    sessionId: _sessionId,
+    turnId: _turnId,
+    position: _position,
+    revision: _revision,
+    ...update
+  } = SessionUpdate.parse({
+    ...value,
+    sessionId: 'session-1',
+    turnId: null,
+    position: 0,
+    revision: 0,
+  });
+  return update;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}

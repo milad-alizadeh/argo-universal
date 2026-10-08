@@ -24,6 +24,7 @@ const MockCliScenario = z.strictObject({
   processFile: z.string().nullable().default(null),
   blockInitialize: z.boolean().default(false),
   malformedLine: z.boolean().default(false),
+  malformedPayload: z.boolean().default(false),
   concurrentQuestions: z.boolean().default(false),
   otherThreadRequest: z.boolean().default(false),
   blockTurnStart: z.boolean().default(false),
@@ -123,12 +124,18 @@ export const send = (message: unknown): boolean =>
 let crashed = false;
 
 // Reads one JSON message per stdin line, and exits when the caller closes stdin.
-export function serveJsonLines<Frame>(handle: (message: Frame) => void): void {
+export function serveJsonLines<Frame>(
+  handle: (message: Frame) => void,
+  accepts: (value: unknown) => value is Frame,
+): void {
   const { processFile } = readMockCliEnvironment().scenario;
   if (processFile) writeFileSync(processFile, String(process.pid));
   createInterface({ input: process.stdin })
     .on('line', (line): void => {
-      if (!crashed) handle(z.looseObject({}).parse(JSON.parse(line)) as Frame);
+      if (crashed) return;
+      const frame: unknown = JSON.parse(line);
+      if (!accepts(frame)) throw new Error('Unrecognised mock CLI input');
+      handle(frame);
     })
     .on('close', (): void => {
       if (!crashed) process.exit(0);

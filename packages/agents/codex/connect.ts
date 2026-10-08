@@ -8,7 +8,9 @@ import { toQuestionAnswers } from '../src/elicitation-form';
 import { changeValue, startingValues, toConfigOptions } from './config-options';
 import { initialize, readModels, usesChatGpt } from './handshake';
 import type { VendorMessage } from './messages';
+import { isIgnoredMethod } from './notification-kinds';
 import { openAppServer } from './open-app-server';
+import { isVendorMessage } from './payloads.ts';
 import type {
   CommandExecutionRequestApprovalResponse,
   FileChangeRequestApprovalResponse,
@@ -16,6 +18,7 @@ import type {
   TurnInterruptParams,
   TurnInterruptResponse,
   TurnStartParams,
+  UserInput,
 } from './protocol.gen';
 
 interface VendorTurn {
@@ -67,7 +70,16 @@ export async function connect(
   const server = openAppServer(
     input.cwd,
     (message): void => {
-      const notification = message as VendorMessage;
+      if (isIgnoredMethod(message.method)) return;
+      const payload: unknown = message;
+      if (!isVendorMessage(payload)) {
+        listener.event({
+          type: 'agent.messageRejected',
+          reason: 'Unrecognised app-server payload',
+        });
+        return;
+      }
+      const notification: VendorMessage = payload;
       if (
         notification.method === 'item/commandExecution/requestApproval' ||
         notification.method === 'item/fileChange/requestApproval'
@@ -208,9 +220,7 @@ export async function connect(
           case 'agent.prompt':
             await prompt(
               command.content.flatMap(
-                (
-                  block,
-                ): { type: 'text'; text: string; text_elements: never[] }[] =>
+                (block): Extract<UserInput, { type: 'text' }>[] =>
                   block.type === 'text'
                     ? [
                         {
@@ -275,10 +285,14 @@ export async function connect(
                   toQuestionAnswers(
                     command.action === 'accept' ? command.content : undefined,
                   ),
-                ).map(([id, answers]): [string, { answers: string[] }] => [
-                  id,
-                  { answers },
-                ]),
+                ).map(
+                  ([id, answers]): [
+                    string,
+                    NonNullable<
+                      ToolRequestUserInputResponse['answers'][string]
+                    >,
+                  ] => [id, { answers }],
+                ),
               ),
             };
             server.respond(

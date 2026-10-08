@@ -3,23 +3,37 @@ import { randomUUID } from 'node:crypto';
 import type {
   AccountInfo,
   SDKAssistantMessage,
-  SDKControlInitializeResponse,
   SDKControlRequest,
-  SDKControlResponse,
+  VendorMessage,
+  SDKControlInitializeResponse,
   SDKMessage,
   SDKResultMessage,
   SDKSystemMessage,
 } from '../../../packages/agents/claude/messages.ts';
+import {
+  isControlRequest,
+  type SDKControlResponse,
+  isControlResponse,
+  isInitializeResponse,
+  isAssistantMessage,
+  isRecordedFrame,
+} from '../../../packages/agents/claude/wire.ts';
+import { isVendorMessage } from '../../../packages/agents/claude/wire.ts';
 import {
   readMockCliEnvironment,
   replayTurn,
   send,
   serveJsonLines,
 } from '../mock-cli.ts';
+import {
+  isRecordedFrame as isWireFrame,
+  type RecordedFrame as WireFrame,
+} from '../recording.ts';
 import { readRecording, recordedFrames, splitTurns } from '../recording.ts';
 import {
   createRequestAnswerReader,
   recordRequestAnswer,
+  type RecordedRequestAnswer,
 } from '../request-answer.ts';
 import { readPermissionResult, toRequestAnswer } from './request-answer.ts';
 
@@ -39,8 +53,13 @@ type ResultUsage = {
 
 const PRODUCER = 'claude-cli';
 
-type Frame = SDKMessage | SDKControlRequest | typeof INTERRUPT_POINT;
-type Output = SDKMessage | SDKControlRequest | SDKControlResponse;
+type Frame =
+  | VendorMessage
+  | SDKMessage
+  | SDKControlRequest
+  | WireFrame
+  | typeof INTERRUPT_POINT;
+type Output = VendorMessage | SDKControlResponse;
 const environment = readMockCliEnvironment();
 const readRequestAnswer = createRequestAnswerReader();
 const recording = readRecording(environment.recordingFile, PRODUCER);
@@ -53,11 +72,8 @@ if (process.argv.includes('--version')) {
 const pipes = {
   input: Array.isArray(recording.payload)
     ? []
-    : recordedFrames<SDKMessage | SDKControlRequest>(
-        recording.payload,
-        'input',
-      ),
-  output: recordedFrames<Output>(recording.payload, 'output'),
+    : recordedFrames(recording.payload, 'input', isWireFrame),
+  output: recordedFrames(recording.payload, 'output', isWireFrame),
 };
 // The recorded answer to each control request, keyed by the request's subtype.
 const requestSubtypes = new Map(
@@ -65,7 +81,7 @@ const requestSubtypes = new Map(
     (
       input,
     ): [] | [readonly [string, SDKControlRequest['request']['subtype']]] =>
-      input.type === 'control_request'
+      isControlRequest(input)
         ? [[input.request_id, input.request.subtype] as const]
         : [],
   ),
@@ -74,7 +90,7 @@ const recordedAnswers = new Map<string, unknown>();
 const INTERRUPT_POINT = { type: 'mock.interruptPoint' } as const;
 const frames: Frame[] = [];
 for (const frame of pipes.output) {
-  if (frame.type !== 'control_response') {
+  if (!isControlResponse(frame)) {
     frames.push(frame);
     continue;
   }
@@ -116,15 +132,17 @@ const flagValue = (flag: string): string | undefined => {
 const sessionId =
   flagValue('--session-id') ??
   flagValue('--resume') ??
-  frames.find((frame): frame is SDKMessage => 'session_id' in frame)
-    ?.session_id ??
+  frames.flatMap((frame): string[] =>
+    'session_id' in frame && typeof frame.session_id === 'string'
+      ? [frame.session_id]
+      : [],
+  )[0] ??
   randomUUID();
 const withSession = (frame: Frame): Frame =>
   'session_id' in frame ? { ...frame, session_id: sessionId } : frame;
 const assistantFrames = (turnFrames: Frame[]): SDKAssistantMessage[] =>
-  turnFrames.filter(
-    (frame): frame is Extract<Frame, { type: 'assistant' }> =>
-      frame.type === 'assistant',
+  turnFrames.filter((frame): frame is Extract<Frame, { type: 'assistant' }> =>
+    isAssistantMessage(frame),
   );
 let turnIndex = 0;
 
@@ -234,8 +252,10 @@ const apiKeyAccount: AccountInfo = {
   apiProvider: 'firstParty',
 };
 
-const isInit = (frame: Frame): frame is SDKSystemMessage =>
-  frame.type === 'system' && frame.subtype === 'init';
+const isInit = (
+  frame: Frame,
+): frame is Extract<VendorMessage, { type: 'system'; subtype: 'init' }> =>
+  isVendorMessage(frame) && frame.type === 'system' && frame.subtype === 'init';
 const crashAfter = environment.exitMidTurn
   ? (frame: Frame): frame is Exclude<Frame, SDKSystemMessage> => !isInit(frame)
   : null;
@@ -250,13 +270,11 @@ function replay(turn: Frame[]): void {
   const pause = turn.findIndex(
     (frame): boolean =>
       frame === INTERRUPT_POINT ||
-      (frame.type === 'control_request' &&
-        frame.request.subtype === 'can_use_tool'),
+      (isControlRequest(frame) && frame.request.subtype === 'can_use_tool'),
   );
   const request = turn[pause];
-  pendingRequestId =
-    request?.type === 'control_request' ? request.request_id : null;
-  pendingRequest = request?.type === 'control_request' ? request : null;
+  pendingRequestId = isControlRequest(request) ? request.request_id : null;
+  pendingRequest = isControlRequest(request) ? request : null;
   const now =
     pause === -1 ? turn : turn.slice(0, pause + (pendingRequestId ? 1 : 0));
   heldFrames = pause === -1 ? [] : turn.slice(pause + 1);
@@ -304,6 +322,10 @@ function playTurn(): void {
     return;
   }
   if (!turn.some(isInit)) send(initFrame());
+  if (environment.scenario.malformedPayload) {
+    send({ type: 'future_message' });
+    send({ type: 'http' });
+  }
   replay(turn);
 }
 
@@ -317,14 +339,14 @@ function answer(
       recordedAnswers.get(subtype) ?? (subtype === 'interrupt' ? {} : undefined)
     );
   // The recording's answer to `initialize` is the CLI's own, matched by request id.
-  const response =
-    (recordedAnswers.get(subtype) as
-      | SDKControlInitializeResponse
-      | undefined) ?? initializeResponse;
+  const recorded = recordedAnswers.get(subtype);
+  const response = isInitializeResponse(recorded)
+    ? recorded
+    : initializeResponse;
   return {
     ...response,
     account: signedInAccount(response.account),
-  } satisfies SDKControlInitializeResponse;
+  } satisfies Pick<SDKControlInitializeResponse, 'models' | 'account'>;
 }
 
 function signedInAccount(recorded: AccountInfo): AccountInfo {
@@ -355,7 +377,7 @@ serveJsonLines<Output>((input): void => {
       const response = input.response.response;
       if (request?.subtype === 'can_use_tool')
         recordRequestAnswer(
-          readRequestAnswer(() =>
+          readRequestAnswer((): RecordedRequestAnswer =>
             toRequestAnswer(request, readPermissionResult(response)),
           ),
         );
@@ -380,4 +402,4 @@ serveJsonLines<Output>((input): void => {
         : { subtype: 'success', request_id: input.request_id, response },
   });
   if (subtype === 'interrupt' && heldFrames.length > 0) replay(heldFrames);
-});
+}, isRecordedFrame);
