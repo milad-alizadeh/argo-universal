@@ -6,6 +6,7 @@ import {
   sendTo,
   setup,
 } from 'xstate';
+import type { ActorRef, Snapshot } from 'xstate';
 import type {
   AgentAdapter,
   AgentConnectInput,
@@ -16,10 +17,19 @@ import type {
   AgentCapabilities,
   AgentCommand,
   AgentEvent,
-  AgentInput,
-  AgentOutput,
 } from './agent-events';
 import { describeError } from './describe-error';
+
+export type AgentParent = ActorRef<Snapshot<unknown>, AgentEvent>;
+
+export interface AgentInput extends AgentConnectInput {
+  adapter: AgentAdapter;
+  parent: AgentParent;
+}
+
+export interface AgentOutput {
+  failure: string | null;
+}
 
 const agentStartLimit = 10_000;
 
@@ -185,14 +195,14 @@ export const agentMachine = setup({
       return { capabilities: event.ready.capabilities };
     }),
     sendReady: sendTo(
-      ({ context }): import('./agent-events').AgentParent => context.parent,
+      ({ context }): AgentParent => context.parent,
       ({ event }): AgentReady & { type: 'agent.ready' } => {
         assertEvent(event, 'vendor.ready');
         return { type: 'agent.ready', ...event.ready } satisfies AgentEvent;
       },
     ),
     sendEvent: sendTo(
-      ({ context }): import('./agent-events').AgentParent => context.parent,
+      ({ context }): AgentParent => context.parent,
       ({ event }): AgentEvent => {
         assertEvent(event, 'vendor.event');
         return event.event;
@@ -221,19 +231,12 @@ export const agentMachine = setup({
   },
 }).createMachine({
   id: 'agent',
-  context: ({
-    input,
-  }): {
-    sessionId: string;
-    cwd: string;
-    adapter: AgentAdapter;
-    vendorSessionId: string | null;
-    configOptions: import('./agent-events').AgentConfigValue[];
-    parent: import('./agent-events').AgentParent;
-    capabilities: null;
-    failure: null;
-  } => ({ ...input, capabilities: null, failure: null }),
-  output: ({ context }): { failure: string | null } => ({
+  context: ({ input }): AgentContext => ({
+    ...input,
+    capabilities: null,
+    failure: null,
+  }),
+  output: ({ context }): AgentOutput => ({
     failure: context.failure,
   }),
   invoke: {

@@ -21,8 +21,6 @@ import type {
   TurnError,
   TurnUsage,
 } from '@repo/contracts';
-import type { ActorRef, Snapshot } from 'xstate';
-import type { AgentAdapter } from './agent-adapter';
 
 // The Feed supplies these fields when it assigns a change to a Session and Turn.
 type FeedEnvelope = 'sessionId' | 'turnId' | 'position' | 'revision';
@@ -147,16 +145,3 @@ export type AgentEvent =
   | { type: 'agent.subagentChanged'; subagent: AgentSubagent }
   | { type: 'agent.shellChanged'; shell: AgentShell }
   | { type: 'agent.shellOutput'; shellId: AgentShell['id']; text: string };
-
-export type AgentParent = ActorRef<Snapshot<unknown>, AgentEvent>;
-
-export interface AgentInput extends Pick<SessionInfo, 'sessionId' | 'cwd'> {
-  adapter: AgentAdapter;
-  vendorSessionId: string | null;
-  configOptions: AgentConfigValue[];
-  parent: AgentParent;
-}
-
-export interface AgentOutput {
-  failure: string | null;
-}

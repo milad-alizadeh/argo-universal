@@ -494,6 +494,11 @@
       }
     },
     {
+      // The shared Agent vocabulary and machine depend one way, including type imports (Spec 0006).
+      "files": ["packages/agents/src/**"],
+      "rules": { "import/no-cycle": ["error", { "ignoreTypes": false }] }
+    },
+    {
       // D9
       "files": ["apps/server/**"],
       "rules": {
