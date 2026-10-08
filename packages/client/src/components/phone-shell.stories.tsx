@@ -30,5 +30,5 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-// The menu button opens the drawer; controls set the section, attention count and drawer.
+// Controls set the drawer and section; product controls report their callbacks.
 export const Overview: Story = { name: 'PhoneShell' };
