@@ -4,12 +4,15 @@ import {
   dateFormatsRequest,
   dateFormatsValues,
   ElicitationFormPreview,
+  elicitationMock,
+  elicitationMocks,
   emptyAnswersRequest,
   fieldsRequest,
   fieldsValues,
   invalidSchemaRequest,
 } from '../../mocks/request-preview';
 import { settleViewport } from '../../mocks/settle-viewport';
+import type { ElicitationValues } from './ElicitationForm';
 
 const meta = {
   title: 'Tests/ElicitationForm',
@@ -20,10 +23,16 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-function choice(width: number): Story {
+function choice(width: number, mock: RequestMock = elicitationMock): Story {
+  const answer = mock.answer;
+  if (answer.procedure !== 'answerElicitation')
+    throw new Error('Recorded catalog needs an Elicitation answer.');
   return {
+    args: { mock },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
+      await expect(canvas.queryByRole('status')).not.toBeInTheDocument();
+      await expect(canvas.getByRole('alert')).toHaveTextContent('Fix Color');
       await expect(
         canvas.getByRole('button', { name: 'Submit' }),
       ).toBeDisabled();
@@ -34,7 +43,7 @@ function choice(width: number): Story {
       await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
       await expect(args.onAnswer).toHaveBeenCalledWith({
         action: 'accept',
-        content: { 'Which color do you prefer?': 'Blue' },
+        content: answer.input.content,
       });
       await expect(canvas.getByText('You answered')).toBeVisible();
       await expect(
@@ -52,6 +61,78 @@ function choice(width: number): Story {
 }
 export const ChoicePhone = choice(390);
 export const ChoiceWide = choice(1440);
+export const SecondAgentChoicePhone = choice(390, elicitationMocks[1]);
+export const SecondAgentChoiceWide = choice(1440, elicitationMocks[1]);
+
+function submitting(width: number, mock: RequestMock = elicitationMock): Story {
+  return {
+    args: { mock, state: { kind: 'submitting' }, values: recordedValues(mock) },
+    play: async ({ canvas, userEvent, args }) => {
+      await settleViewport(width);
+      const sending = canvas.getByRole('button', { name: 'Sending…' });
+      await expect(sending).toBeDisabled();
+      await userEvent.keyboard('{Enter}');
+      await expect(args.onAnswer).not.toHaveBeenCalled();
+      await expect(canvas.queryByRole('status')).not.toBeInTheDocument();
+      await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
+    },
+  };
+}
+export const SubmittingPhone = submitting(390);
+export const SubmittingWide = submitting(1440);
+export const SecondAgentSubmittingPhone = submitting(390, elicitationMocks[1]);
+export const SecondAgentSubmittingWide = submitting(1440, elicitationMocks[1]);
+
+function responseError(
+  width: number,
+  mock: RequestMock = elicitationMock,
+): Story {
+  return {
+    args: {
+      mock,
+      error: 'Could not send the answer. Try again.',
+      values: recordedValues(mock),
+    },
+    play: async ({ canvas }) => {
+      await settleViewport(width);
+      await expect(canvas.getByRole('alert')).toHaveTextContent(
+        'Could not send the answer. Try again.',
+      );
+      await expect(canvas.queryByRole('status')).not.toBeInTheDocument();
+      await expect(
+        canvas.getByRole('button', { name: 'Decline' }),
+      ).toBeEnabled();
+    },
+  };
+}
+export const ResponseErrorPhone = responseError(390);
+export const ResponseErrorWide = responseError(1440);
+export const SecondAgentResponseErrorPhone = responseError(
+  390,
+  elicitationMocks[1],
+);
+export const SecondAgentResponseErrorWide = responseError(
+  1440,
+  elicitationMocks[1],
+);
+
+function recordedValues(mock: RequestMock): ElicitationValues {
+  const answer = mock.answer;
+  if (answer.procedure !== 'answerElicitation')
+    throw new Error('Recorded catalog needs an Elicitation answer.');
+  const content = answer.input.content;
+  if (!content || !stringAnswers(content))
+    throw new Error(
+      'Recorded catalog needs string answers for the color form.',
+    );
+  return content;
+}
+
+function stringAnswers(
+  content: Record<string, unknown>,
+): content is Record<string, string> {
+  return Object.values(content).every((value) => typeof value === 'string');
+}
 
 function validation(width: number): Story {
   return {
@@ -126,14 +207,18 @@ export const DismissWide = dismiss(1440, 'cancel');
 export const DeclinePhone = dismiss(390, 'decline');
 export const DeclineWide = dismiss(1440, 'decline');
 
-function conflict(width: number): Story {
+function conflict(width: number, mock?: RequestMock): Story {
   return {
-    args: { alreadyAnswered: 'Already answered on another device' },
+    args: {
+      mock,
+      state: { kind: 'answered', reason: 'Already answered on another device' },
+    },
     play: async ({ canvas }) => {
       await settleViewport(width);
       await expect(canvas.getByRole('status')).toHaveTextContent(
         'Already answered on another device',
       );
+      await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
       await expect(
         canvas.getByRole('button', { name: /^Color/ }),
       ).toBeDisabled();
@@ -150,6 +235,8 @@ function conflict(width: number): Story {
 }
 export const ConflictPhone = conflict(390);
 export const ConflictWide = conflict(1440);
+export const SecondAgentConflictPhone = conflict(390, elicitationMocks[1]);
+export const SecondAgentConflictWide = conflict(1440, elicitationMocks[1]);
 
 function emptyAnswers(width: number): Story {
   return {
@@ -233,3 +320,4 @@ function clearOptionalNumber(width: number): Story {
 }
 export const ClearOptionalNumberPhone = clearOptionalNumber(390);
 export const ClearOptionalNumberWide = clearOptionalNumber(1440);
+import type { RequestMock } from '@repo/api/mocks';

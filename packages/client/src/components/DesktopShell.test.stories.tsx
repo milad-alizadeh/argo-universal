@@ -37,7 +37,11 @@ export const MainContentUsesAvailableWidth: Story = {
               onDraftChange={fn()}
               onAttachImages={fn()}
               onSend={fn()}
-              planProposal={{ proposal: shortPlanProposal, onAnswer: fn() }}
+              planProposal={{
+                proposal: shortPlanProposal,
+                onAnswer: fn(),
+                state: { kind: 'open' },
+              }}
             />
           </View>
         </PlanProposalRegion>
