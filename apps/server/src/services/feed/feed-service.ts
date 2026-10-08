@@ -4,19 +4,25 @@ import type {
   FeedRowInput,
   FeedSubscribeInput,
   FeedSubscribeOutput,
-  SessionUpdate,
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
 import { and, asc, desc, eq, gt, lt } from 'drizzle-orm';
 import type { ActorRefFrom, Subscription } from 'xstate';
-import { readLiveHeaderRows } from '../sessions/live-header-rows';
+import { createLiveHeaderRowsReader } from '../sessions/live-header-rows';
 import type { SessionActorRef } from '../sessions/session-machine';
 import { createSessionReader } from '../sessions/session-record';
 import { toSessionSnapshot } from '../sessions/session-snapshot';
 import type { FeedActorRef } from './feed-machine';
-import { fromFeedRow, queuedFeedRows, readWrittenRow } from './feed-row';
+import {
+  decodeStoredFeedRow,
+  fromFeedRow,
+  newestRows,
+  readWrittenRow,
+  storedFeedColumns,
+} from './feed-row';
+import { queuedFeedRows } from './writer-job';
 import type { writerMachine } from './writer-machine';
 
 export interface FeedDeps {
@@ -24,27 +30,20 @@ export interface FeedDeps {
   // The feed actor of an open Session; a closed Session has none.
   findFeed: (sessionId: string) => FeedActorRef | undefined;
   findSession?: (sessionId: string) => SessionActorRef | undefined;
-  openSession?: (sessionId: string) => Promise<SessionActorRef>;
   findWriter: () => ActorRefFrom<typeof writerMachine> | undefined;
 }
-
-// Keeps the newest version of each row.
-const newestById = (rows: Iterable<SessionUpdate>) => {
-  const newest = new Map<string, SessionUpdate>();
-  for (const row of rows) {
-    const known = newest.get(row.id);
-    if (!known || known.revision < row.revision) newest.set(row.id, row);
-  }
-  return newest;
-};
 
 export function createFeedService(deps: FeedDeps): FeedService {
   const { database } = deps;
   const readSession = createSessionReader(database);
+  const readLiveHeaderRows = createLiveHeaderRowsReader({ database });
 
   // Rows the database does not hold yet: queued in the writer, then held by the feed actor.
   const readUnsaved = (sessionId: string) => {
-    const jobs = queuedFeedRows(deps.findWriter(), sessionId);
+    const jobs = queuedFeedRows(
+      deps.findWriter()?.getSnapshot().context.queue ?? [],
+      sessionId,
+    );
     const feed = deps.findFeed(sessionId)?.getSnapshot().context;
     return {
       rows: [
@@ -68,7 +67,7 @@ export function createFeedService(deps: FeedDeps): FeedService {
     const cursor =
       input.direction === 'before' && !staleCursor ? input.cursor : undefined;
     const newestFirst = database
-      .select()
+      .select(storedFeedColumns)
       .from(feedRow)
       .where(
         and(
@@ -82,7 +81,7 @@ export function createFeedService(deps: FeedDeps): FeedService {
     const rows = newestFirst
       .slice(0, input.limit)
       .reverse()
-      .map((row) => fromFeedRow(input.sessionId, row));
+      .map((row) => fromFeedRow(input.sessionId, decodeStoredFeedRow(row)));
     return {
       epoch,
       maxRevision,
@@ -111,15 +110,15 @@ export function createFeedService(deps: FeedDeps): FeedService {
   const catchUp = (sessionId: string, from: number, maxRevision: number) => {
     const unsaved = readUnsaved(sessionId);
     const stored = database
-      .select()
+      .select(storedFeedColumns)
       .from(feedRow)
       .where(and(eq(feedRow.sessionId, sessionId), gt(feedRow.revision, from)))
       .orderBy(asc(feedRow.revision))
       .all()
-      .map((stored) => fromFeedRow(sessionId, stored));
+      .map((stored) => fromFeedRow(sessionId, decodeStoredFeedRow(stored)));
     return {
       rows: [
-        ...newestById([
+        ...newestRows([
           ...stored,
           ...unsaved.rows.filter((row) => row.revision > from),
         ]).values(),
@@ -134,7 +133,6 @@ export function createFeedService(deps: FeedDeps): FeedService {
     signal: AbortSignal | undefined,
   ): AsyncGenerator<FeedSubscribeOutput> {
     const { epoch, maxRevision, parentSessionId } = readSession(sessionId);
-    if (parentSessionId === null) await deps.openSession?.(sessionId);
 
     const live: FeedSubscribeOutput[] = [];
     let wake: (() => void) | undefined;
@@ -142,6 +140,8 @@ export function createFeedService(deps: FeedDeps): FeedService {
     let listener: Subscription | undefined;
     let feedListener: Subscription | undefined;
     const sessionActor = deps.findSession?.(sessionId);
+    let closed = !sessionActor && parentSessionId === null;
+    let failure = sessionActor?.getSnapshot().output?.failure ?? null;
     let lastSnapshot = '';
     let snapshotFailure: { error: unknown } | undefined;
     const snapshotChanged = () => {
@@ -156,7 +156,13 @@ export function createFeedService(deps: FeedDeps): FeedService {
             live.push(...batch.events);
             wake?.();
           });
-          feedListener = feed.subscribe(snapshotChanged);
+          feedListener = feed.subscribe({
+            next: snapshotChanged,
+            error: (error) => {
+              snapshotFailure = { error };
+              wake?.();
+            },
+          });
         }
         const session = sessionActor?.getSnapshot() ?? null;
         const feedContext = feed?.getSnapshot().context ?? {
@@ -169,12 +175,11 @@ export function createFeedService(deps: FeedDeps): FeedService {
             context: {
               ...feedContext,
               rows: readLiveHeaderRows({
-                database,
                 writer: deps.findWriter(),
                 sessionId,
                 turnId: session?.context.activeTurnId ?? null,
                 rows: 'rows' in feedContext ? feedContext.rows : {},
-              }),
+              }).rows,
             },
           },
           readSession(sessionId),
@@ -189,7 +194,18 @@ export function createFeedService(deps: FeedDeps): FeedService {
         wake?.();
       }
     };
-    const sessionListener = sessionActor?.subscribe(snapshotChanged);
+    const sessionListener = sessionActor?.subscribe({
+      next: snapshotChanged,
+      complete: () => {
+        closed = true;
+        failure = sessionActor.getSnapshot().output?.failure ?? null;
+        wake?.();
+      },
+      error: (error) => {
+        snapshotFailure = { error };
+        wake?.();
+      },
+    });
     snapshotChanged();
     const wakeOnAbort = () => wake?.();
     signal?.addEventListener('abort', wakeOnAbort);
@@ -214,10 +230,14 @@ export function createFeedService(deps: FeedDeps): FeedService {
         if (event) {
           if (
             event.type === 'snapshot' ||
-            (event.type !== 'reset' && event.rev > caughtUpTo)
+            ('rev' in event && event.rev > caughtUpTo)
           )
             yield event;
           continue;
+        }
+        if (closed) {
+          yield { type: 'closed', failure };
+          return;
         }
         await new Promise<void>((resolve) => {
           wake = resolve;

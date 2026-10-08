@@ -103,6 +103,11 @@ export function Composer({
     Math.min(maximumVisibleLines, draft.text.split('\n').length) * lineHeight,
   );
   const inactive = sending || disabled;
+  const canRecoverAgent = Boolean(
+    configuration?.onAgentRetry &&
+      configuration.agents.every((agent) => agent.availability !== 'available'),
+  );
+  const configurationInactive = sending || (disabled && !canRecoverAgent);
   const showStop = configuration?.turnRunning && onStop;
   const oversized = draft.images.filter(
     (image) => image.bytes > maximumImageBytes,
@@ -262,7 +267,7 @@ export function Composer({
           </View>
           <View className="flex-row items-center justify-between gap-2 pl-3.75 pr-2.5 pb-2.5">
             <View
-              pointerEvents={inactive ? 'none' : 'auto'}
+              pointerEvents={configurationInactive ? 'none' : 'auto'}
               className={cn('min-w-0 flex-1 flex-row items-center gap-1')}
             >
               <ComposerPopover
@@ -369,7 +374,7 @@ export function Composer({
               {configuration && (
                 <ComposerAgentModelControl
                   configuration={configuration}
-                  disabled={inactive}
+                  disabled={configurationInactive}
                 />
               )}
               {!wide && status && (

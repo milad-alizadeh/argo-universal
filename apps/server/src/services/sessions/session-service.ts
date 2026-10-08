@@ -5,6 +5,7 @@ import type { Database } from '@repo/db';
 import { listBranches } from '@repo/git';
 import { TRPCError } from '@trpc/server';
 import { type ActorRefFrom, type SnapshotFrom, waitFor } from 'xstate';
+import { userMessageId } from '../feed/feed-change';
 import type { writerMachine } from '../feed/writer-machine';
 import { notImplemented } from '../not-implemented';
 import { readProjectPath } from '../projects/project-service';
@@ -25,9 +26,7 @@ export function createSessionService({
   database,
   sessions,
   createId = randomUUID,
-}: SessionServiceOptions): SessionService & {
-  openSession: (sessionId: string) => Promise<SessionActorRef>;
-} {
+}: SessionServiceOptions): SessionService {
   const readSession = createSessionReader(database);
   const send = (command: RegistryCommand) => {
     const snapshot = sessions.getSnapshot();
@@ -89,18 +88,22 @@ export function createSessionService({
       );
     const snapshot = await waitFor(
       writer,
-      (snapshot) => snapshot.status !== 'active' || !queued(snapshot),
+      (snapshot) =>
+        snapshot.status !== 'active' ||
+        !queued(snapshot) ||
+        snapshot.matches('waitingToRetry'),
       { timeout: Infinity },
     );
     if (queued(snapshot))
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
-        message: `Session ${sessionId} was not stored`,
+        message: snapshot.matches('waitingToRetry')
+          ? `Session ${sessionId} was not stored because the writer is retrying. Retry the Session.`
+          : `Session ${sessionId} was not stored`,
       });
   };
   return {
     ...createSessionList({ database, sessions }),
-    openSession: open,
     answerPermission: async ({ sessionId, toolCallId, optionId, message }) => {
       const actor = await open(sessionId);
       const request = actor.getSnapshot().context.permissionQueue[0];
@@ -199,7 +202,7 @@ export function createSessionService({
         turnId,
         content: prompt,
       });
-      return { messageId: `${turnId}:user` };
+      return { messageId: userMessageId(turnId) };
     },
     // Title persistence and Agent commands are issue #66.
     rename: async () => {

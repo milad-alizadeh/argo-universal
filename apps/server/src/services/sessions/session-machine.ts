@@ -1,8 +1,8 @@
-import { randomUUID } from 'node:crypto';
 import {
   type AgentAdapter,
   type AgentCapabilities,
   type AgentCommand,
+  type AgentConfigValue,
   type AgentEvent,
   type AgentInput,
   type AgentOutput,
@@ -44,7 +44,11 @@ import {
 } from './session-data';
 
 // The registry passes the adapter for the Session's Agent.
-export type SessionMachineInput = SessionInput & { adapter: AgentAdapter };
+export type SessionMachineInput = SessionInput & {
+  adapter: AgentAdapter;
+  now: () => number;
+  createId: () => string;
+};
 
 export type SessionCommand =
   | { type: 'session.prompt'; turnId: string; content: ContentBlock[] }
@@ -82,11 +86,15 @@ export interface SessionContext extends SessionData {
   permissionQueue: PendingPermission[];
   pendingElicitation: PendingElicitation | null;
   configOptions: SessionConfigOption[];
+  heldConfigValues: AgentConfigValue[];
   agentCrashes: number[];
+  rejectedMessages: number;
   failure: string | null;
   // False for a new Session until its Agent is ready and its row is written.
   stored: boolean;
 }
+
+const checkoutLimit = 10_000;
 
 // The Session gives up on its Agent after this many crashes within the window.
 const crashWindowMs = 600_000;
@@ -134,13 +142,15 @@ const sessionSetup = setup({
     output: {} as AgentOutput,
   },
   actors: {
-    createCheckout: fromPromise<SessionData, NewSessionInput>(({ input }) =>
-      createSessionCheckout(input),
+    createCheckout: fromPromise<SessionData, NewSessionInput>(
+      ({ input, signal }) => createSessionCheckout(input, signal),
     ),
     discardCheckout: fromPromise<
       void,
       { session: NewSessionInput; checkout: SessionData['checkout'] }
-    >(({ input }) => discardSessionCheckout(input.session, input.checkout)),
+    >(({ input, signal }) =>
+      discardSessionCheckout(input.session, input.checkout, signal),
+    ),
     loadSession: fromPromise<
       SessionData,
       {
@@ -189,7 +199,10 @@ const sessionSetup = setup({
       enqueue.assign({
         vendorSessionId: event.vendorSessionId,
         capabilities: event.capabilities,
-        configOptions: event.configOptions,
+        configOptions: keepHeldConfigChoices(
+          event.configOptions,
+          context.heldConfigValues,
+        ),
         configValues: toConfigValues(event.configOptions),
       });
     }),
@@ -207,7 +220,13 @@ const sessionSetup = setup({
         { context, enqueue },
         params: { turnId: string; content: ContentBlock[] },
       ) => {
-        const startedAt = Date.now();
+        for (const choice of context.heldConfigValues)
+          enqueue.sendTo('agent', {
+            type: 'agent.setConfigOption',
+            ...choice,
+          } satisfies AgentCommand);
+        enqueue.assign({ heldConfigValues: [] });
+        const startedAt = context.input.now();
         enqueue.assign({
           activeTurnId: params.turnId,
           activeTurnStartedAt: startedAt,
@@ -255,7 +274,7 @@ const sessionSetup = setup({
               set: {
                 status: 'ended',
                 stopReason: params.stopReason,
-                endedAt: Date.now(),
+                endedAt: context.input.now(),
                 usage: params.usage ?? null,
                 error: params.error ?? null,
               },
@@ -294,20 +313,54 @@ const sessionSetup = setup({
             set: { configValues },
           },
         });
-      enqueue.assign({ configOptions: event.configOptions, configValues });
+      enqueue.assign({
+        configOptions: keepHeldConfigChoices(
+          event.configOptions,
+          context.heldConfigValues,
+        ),
+        configValues,
+      });
     }),
-    forwardConfig: sendTo('agent', ({ event }) => {
+    forwardConfig: enqueueActions(({ context, event, enqueue }) => {
       assertEvent(event, 'session.setConfigOption');
-      return { ...event, type: 'agent.setConfigOption' } satisfies AgentCommand;
+      enqueue.assign({
+        configOptions: chooseConfigValue(context.configOptions, event, false),
+        heldConfigValues: context.heldConfigValues.filter(
+          (choice) => choice.configId !== event.configId,
+        ),
+      });
+      enqueue.sendTo('agent', {
+        ...event,
+        type: 'agent.setConfigOption',
+      } satisfies AgentCommand);
+    }),
+    holdConfig: assign(({ context, event }) => {
+      assertEvent(event, 'session.setConfigOption');
+      const choice = { configId: event.configId, value: event.value };
+      const previous = context.heldConfigValues;
+      const heldConfigValues = previous.some(
+        (value) => value.configId === choice.configId,
+      )
+        ? previous.map((value) =>
+            value.configId === choice.configId ? choice : value,
+          )
+        : [...previous, choice];
+      return {
+        heldConfigValues,
+        configOptions: chooseConfigValue(context.configOptions, choice, true),
+      };
     }),
     queuePermission: assign(({ context, event }) => {
       assertEvent(event, 'agent.permissionRequested');
       return { permissionQueue: [...context.permissionQueue, event.request] };
     }),
-    rememberElicitation: assign(({ event }) => {
+    rememberElicitation: assign(({ context, event }) => {
       assertEvent(event, 'agent.elicitationRequested');
       return {
-        pendingElicitation: { ...event.request, requestId: randomUUID() },
+        pendingElicitation: {
+          ...event.request,
+          requestId: context.input.createId(),
+        },
       };
     }),
     answerPermission: enqueueActions(({ context, event, enqueue }) => {
@@ -360,7 +413,7 @@ const sessionSetup = setup({
     } satisfies AgentCommand),
     stopAgent: sendTo('agent', { type: 'agent.stop' } satisfies AgentCommand),
     recordCrash: enqueueActions(({ context, enqueue }) => {
-      const now = Date.now();
+      const now = context.input.now();
       const agentCrashes = [
         ...context.agentCrashes.filter((at) => at > now - crashWindowMs),
         now,
@@ -393,6 +446,33 @@ const sessionSetup = setup({
         },
       });
     }),
+    countRejectedMessage: assign({
+      rejectedMessages: ({ context }) => context.rejectedMessages + 1,
+    }),
+    messageRejectedNotice: sendTo('feed', ({ context, event }) => {
+      assertEvent(event, 'agent.messageRejected');
+      return {
+        type: 'feed.change',
+        turnId: context.activeTurnId,
+        change: {
+          type: 'upsert',
+          update: {
+            id: context.input.createId(),
+            sessionUpdate: 'notice',
+            state: 'settled',
+            severity: 'warning',
+            title: 'The Agent sent an unrecognised message',
+            description: event.reason,
+          },
+        },
+      };
+    }),
+    logMessageRejected: ({ context, event }) => {
+      assertEvent(event, 'agent.messageRejected');
+      console.error(
+        `session ${context.sessionId}: rejected an Agent message: ${event.reason}`,
+      );
+    },
     cancelNotice: sendTo('feed', ({ context }) => ({
       type: 'feed.change',
       turnId: context.activeTurnId,
@@ -421,6 +501,7 @@ const sessionSetup = setup({
       context.agentCrashes.length >= maxCrashesInWindow,
   },
   delays: {
+    checkoutLimit,
     cancelLimit: 10_000,
     agentStopLimit: 5_000,
     agentRestartDelay: 1_000,
@@ -506,7 +587,9 @@ export const sessionMachine = sessionSetup.createMachine({
     permissionQueue: [],
     pendingElicitation: null,
     configOptions: [],
+    heldConfigValues: [],
     agentCrashes: [],
+    rejectedMessages: 0,
     failure: null,
     stored: input.kind === 'existing',
   }),
@@ -517,6 +600,17 @@ export const sessionMachine = sessionSetup.createMachine({
       always: [{ guard: 'isNew', target: 'creating' }, { target: 'loading' }],
     },
     creating: {
+      after: {
+        checkoutLimit: {
+          target: 'closed',
+          actions: {
+            type: 'rememberFailure',
+            params: {
+              error: `Checkout creation exceeded checkoutLimit (${checkoutLimit} ms). Retry the Session.`,
+            },
+          },
+        },
+      },
       invoke: {
         id: 'createCheckout',
         src: 'createCheckout',
@@ -547,6 +641,7 @@ export const sessionMachine = sessionSetup.createMachine({
           maxRevision: context.maxRevision,
           activityAt: context.activityAt,
           nextPosition: context.nextPosition,
+          now: context.input.now,
           findWrittenRow: (id) =>
             readWrittenRow({
               database: context.input.database,
@@ -558,6 +653,13 @@ export const sessionMachine = sessionSetup.createMachine({
             }),
         }),
         onDone: { target: 'closed' },
+        onError: {
+          target: 'closed',
+          actions: {
+            type: 'rememberFailure',
+            params: ({ event }) => ({ error: event.error }),
+          },
+        },
       },
       initial: 'live',
       states: {
@@ -585,6 +687,13 @@ export const sessionMachine = sessionSetup.createMachine({
           initial: 'starting',
           on: {
             'agent.feed': { actions: 'forwardFeed' },
+            'agent.messageRejected': {
+              actions: [
+                'countRejectedMessage',
+                'messageRejectedNotice',
+                'logMessageRejected',
+              ],
+            },
             'agent.usage': { actions: 'rememberUsage' },
             'agent.configOptionsChanged': { actions: 'rememberConfig' },
             'session.close': { target: '.closing' },
@@ -629,6 +738,7 @@ export const sessionMachine = sessionSetup.createMachine({
             running: {
               initial: 'working',
               on: {
+                'session.setConfigOption': { actions: 'holdConfig' },
                 'agent.permissionRequested': {
                   target: '.awaitingPermission',
                   actions: 'queuePermission',
@@ -663,7 +773,10 @@ export const sessionMachine = sessionSetup.createMachine({
             },
             cancelling: {
               entry: ['cancelAgent', 'cancelRequests'],
-              on: { 'agent.turnEnded': { target: 'idle', actions: endedTurn } },
+              on: {
+                'session.setConfigOption': { actions: 'holdConfig' },
+                'agent.turnEnded': { target: 'idle', actions: endedTurn },
+              },
               after: {
                 cancelLimit: {
                   target: '#session.open.recovering',
@@ -722,3 +835,34 @@ export const sessionMachine = sessionSetup.createMachine({
   },
 });
 export type SessionActorRef = ActorRefFrom<typeof sessionMachine>;
+
+function chooseConfigValue(
+  options: SessionConfigOption[],
+  choice: AgentConfigValue,
+  held: boolean,
+): SessionConfigOption[] {
+  return options.map((option) => {
+    if (option.configId !== choice.configId) return option;
+    const _meta = {
+      ...option._meta,
+      argo: { ...option._meta?.argo, heldUntilNextTurn: held },
+    };
+    if (option.type === 'boolean')
+      return typeof choice.value === 'boolean'
+        ? { ...option, currentValue: choice.value, _meta }
+        : option;
+    return typeof choice.value === 'string'
+      ? { ...option, currentValue: choice.value, _meta }
+      : option;
+  });
+}
+
+function keepHeldConfigChoices(
+  options: SessionConfigOption[],
+  held: AgentConfigValue[],
+): SessionConfigOption[] {
+  return held.reduce(
+    (current, choice) => chooseConfigValue(current, choice, true),
+    options,
+  );
+}

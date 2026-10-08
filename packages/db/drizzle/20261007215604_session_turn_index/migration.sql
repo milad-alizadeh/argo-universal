@@ -1,0 +1,1 @@
+CREATE INDEX `turn_session_id_started_at_index` ON `turn` (`session_id`,`started_at`);

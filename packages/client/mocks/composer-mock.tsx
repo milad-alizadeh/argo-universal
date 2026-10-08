@@ -80,6 +80,29 @@ export const composerPlanDone: PlanEntry[] = composerPlan.map((entry) => ({
   status: 'completed',
 }));
 
+export const composerNoEffortSelections = newSessionCatalogs.bothAvailable.map(
+  (agent) => ({
+    agents: newSessionCatalogs.bothAvailable,
+    agent: agent.agent,
+    configOptions: agent.configOptions.map((option) =>
+      option.category === 'thought_level' && option.type === 'select'
+        ? { ...option, currentValue: 'unsupported' }
+        : option,
+    ),
+    onConfigChange: () => {},
+    checkout: { branch: 'main', newWorktree: false },
+  }),
+);
+
+export const composerUnavailableConfigurations =
+  newSessionCatalogs.bothUnavailable.map((agent) => ({
+    agents: newSessionCatalogs.bothUnavailable,
+    agent: agent.agent,
+    configOptions: agent.configOptions,
+    onConfigChange: () => {},
+    checkout: { branch: 'main', newWorktree: false },
+  }));
+
 export function ComposerMock(
   props: ComposerProps & {
     sessionStarted?: boolean;
@@ -96,7 +119,6 @@ export function ComposerMock(
   const [configOptions, setConfigOptions] = useState<SessionConfigOption[]>(
     catalog?.configOptions ?? [],
   );
-  const [fastMode, setFastMode] = useState(false);
   const branch = newSessionBranches.currentBranch ?? 'main';
   const [newWorktree, setNewWorktree] = useState(true);
   const [running, setRunning] = useState(props.running ?? false);
@@ -152,9 +174,7 @@ export function ComposerMock(
           agents: newSessionCatalogs.bothAvailable,
           agent,
           configOptions,
-          fastMode,
           turnRunning: running,
-          onFastModeChange: setFastMode,
           onAgentChange: props.sessionStarted
             ? undefined
             : (nextAgent) => {
@@ -163,13 +183,12 @@ export function ComposerMock(
                   newSessionOptions.find((entry) => entry.agent === nextAgent)
                     ?.configOptions ?? [],
                 );
-                setFastMode(false);
               },
           onConfigChange: (configId, value) => {
             const option = configOptions.find(
               (entry) => entry.configId === configId,
             );
-            if (option?.category === 'model') {
+            if (props.sessionStarted && option?.category === 'model') {
               const options =
                 option.type === 'select'
                   ? option.options.flatMap((entry) =>

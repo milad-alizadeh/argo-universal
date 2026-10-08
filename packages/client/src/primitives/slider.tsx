@@ -1,9 +1,10 @@
 import { View } from 'react-native';
+import { cn } from '#lib/utils';
 
 const fullPercent = 100;
 
 export interface SliderProps {
-  value: number;
+  value?: number;
   minimumValue: number;
   maximumValue: number;
   step: number;
@@ -24,7 +25,8 @@ export function Slider({
   disabled,
 }: SliderProps) {
   const progress =
-    ((value - minimumValue) / (maximumValue - minimumValue)) * fullPercent;
+    (((value ?? minimumValue) - minimumValue) / (maximumValue - minimumValue)) *
+    fullPercent;
   const steps = Math.round((maximumValue - minimumValue) / step) + 1;
   return (
     <View className="relative h-4 justify-center">
@@ -33,14 +35,25 @@ export function Slider({
         min={minimumValue}
         max={maximumValue}
         step={step}
-        value={value}
+        value={value ?? minimumValue}
         disabled={disabled}
         aria-label={accessibilityLabel}
         aria-valuetext={valueLabel}
+        onPointerUp={(event) => {
+          if (value === undefined)
+            onValueChange(Number(event.currentTarget.value));
+        }}
         onChange={(event) => onValueChange(Number(event.currentTarget.value))}
-        className="m-0 h-1 w-full appearance-none rounded-full cursor-pointer disabled:opacity-50 focus-visible:outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-primary [&::-webkit-slider-thumb]:bg-background [&::-moz-range-thumb]:size-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border [&::-moz-range-thumb]:border-primary [&::-moz-range-thumb]:bg-background"
+        className={cn(
+          'm-0 h-1 w-full appearance-none rounded-full cursor-pointer disabled:opacity-50 focus-visible:outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-primary [&::-webkit-slider-thumb]:bg-background [&::-moz-range-thumb]:size-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border [&::-moz-range-thumb]:border-primary [&::-moz-range-thumb]:bg-background',
+          value === undefined &&
+            '[&::-webkit-slider-thumb]:opacity-0 [&::-moz-range-thumb]:opacity-0',
+        )}
         style={{
-          background: `linear-gradient(to right, var(--color-primary) ${progress}%, var(--color-muted) ${progress}%)`,
+          background:
+            value === undefined
+              ? 'var(--color-muted)'
+              : `linear-gradient(to right, var(--color-primary) ${progress}%, var(--color-muted) ${progress}%)`,
         }}
       />
       <View
@@ -51,7 +64,7 @@ export function Slider({
           <View
             key={index}
             className={
-              minimumValue + index * step < value
+              value !== undefined && minimumValue + index * step < value
                 ? 'size-1 rounded-full bg-primary-foreground'
                 : 'size-1 rounded-full bg-ring'
             }

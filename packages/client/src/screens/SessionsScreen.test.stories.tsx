@@ -1,4 +1,10 @@
-import { archivedSessions, projectsList, sessionRows } from '@repo/api/mocks';
+import {
+  activeSessions,
+  agentsList,
+  archivedSessions,
+  projectsList,
+  sessionRows,
+} from '@repo/api/mocks';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
 import { eachLayout, layoutWidths } from '../../mocks/each-layout';
@@ -12,11 +18,15 @@ import {
   multipleProjectsMocks,
   nextPageFailureMocks,
   nextPageLoadingMocks,
+  streamingSessionCatalogs,
 } from '../../mocks/sessions-list-mock';
 import { SessionsScreenPreview } from '../../mocks/sessions-screen-preview';
 import { settleViewport } from '../../mocks/settle-viewport';
 import { fails, pending } from '../../mocks/trpc-mock-link';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
+import { DesktopLayout } from '../components/DesktopLayout';
+import { useConnection } from '../connection/context';
+import type { ConnectionActor } from '../connection/open-connection';
 import { SessionsScreen } from './SessionsScreen';
 
 const recorder = createNavigationRecorder();
@@ -492,3 +502,298 @@ export const NextPageLoading: Story = {
       await expect(canvas.getByText('Build the settings screen')).toBeVisible();
     }),
 };
+
+let reconnectConnection: ConnectionActor | undefined;
+const reconnectCalls = { listUpdates: 0, counts: 0 };
+const recoveredTitle = 'Session updated after reconnect';
+const reconnectMocks = {
+  ...sessionListMocks,
+  'session.list': () => ({
+    ...activeSessions,
+    sessions: activeSessions.sessions.map((session) =>
+      session.title === sessionRows.idle.title && reconnectCalls.listUpdates > 1
+        ? { ...session, title: recoveredTitle }
+        : session,
+    ),
+  }),
+  'session.listUpdates': async function* () {
+    reconnectCalls.listUpdates += 1;
+    if (reconnectCalls.listUpdates === 1)
+      throw new Error('Live updates stopped');
+    yield {
+      type: 'changed' as const,
+      session: { ...sessionRows.idle, title: recoveredTitle },
+    };
+  },
+  'session.counts': async function* () {
+    reconnectCalls.counts += 1;
+    if (reconnectCalls.counts === 1) throw new Error('Live counts stopped');
+    yield { attention: 7, running: 0 };
+  },
+};
+export const ReconnectRestoresLiveSubscriptions: Story = {
+  parameters: { trpc: reconnectMocks },
+  beforeEach: () => {
+    reconnectConnection = undefined;
+    reconnectCalls.listUpdates = 0;
+    reconnectCalls.counts = 0;
+  },
+  render: () => <ReconnectingSessionsScreen />,
+  play: async ({ canvas }) => {
+    await settleViewport(layoutWidths.wide);
+    await expect(
+      (await canvas.findAllByText(sessionRows.idle.title ?? ''))[0],
+    ).toBeVisible();
+    await waitFor(() =>
+      expect(reconnectCalls).toEqual({ listUpdates: 1, counts: 1 }),
+    );
+    await expect(canvas.queryByText(recoveredTitle)).toBeNull();
+    await expect(
+      canvas.queryByLabelText('7 Sessions need attention'),
+    ).toBeNull();
+    if (!reconnectConnection)
+      throw new Error('Connection mock was not mounted');
+    reconnectConnection.send({
+      type: 'connection.lost',
+      error: new Error('Socket closed'),
+    });
+    await expect(
+      await canvas.findByText('Reconnecting to the Server…'),
+    ).toBeVisible();
+    reconnectConnection.send({ type: 'connection.opened' });
+    await waitFor(() =>
+      expect(reconnectCalls).toEqual({ listUpdates: 2, counts: 2 }),
+    );
+    await expect((await canvas.findAllByText(recoveredTitle))[0]).toBeVisible();
+    await expect(
+      await canvas.findByLabelText('7 Sessions need attention'),
+    ).toBeVisible();
+    await expect(canvas.queryByText('Reconnecting to the Server…')).toBeNull();
+    await expect(reconnectCalls).toEqual({ listUpdates: 2, counts: 2 });
+  },
+};
+
+function ReconnectingSessionsScreen() {
+  reconnectConnection = useConnection();
+  return <DesktopLayout destination={{ to: 'sessions' }}>{null}</DesktopLayout>;
+}
+
+const liveRetryCatalogs = agentsList.map((agent) => {
+  const row = activeSessions.sessions.find(
+    (session) =>
+      session.agent === agent.agent && session.title === sessionRows.idle.title,
+  );
+  if (!row)
+    throw new Error(
+      `Recorded catalog needs an idle Session for ${agent.label}.`,
+    );
+  return { row, updated: { ...row, title: `${row.title} — resumed` } };
+});
+
+function liveUpdatesRetry(width: number, agentIndex: 0 | 1): Story {
+  const catalog = liveRetryCatalogs[agentIndex];
+  if (!catalog) throw new Error('Recorded catalog needs both Agents.');
+  let calls = 0;
+  const mocks = {
+    ...sessionListMocks,
+    'session.list': () => ({
+      sessions: [calls > 1 ? catalog.updated : catalog.row],
+      nextCursor: null,
+    }),
+    'session.listUpdates': async function* () {
+      calls += 1;
+      if (calls === 1) fails('The live stream ended')();
+      yield { type: 'changed' as const, session: catalog.updated };
+    },
+  };
+  return {
+    beforeEach: () => {
+      calls = 0;
+    },
+    parameters: { trpc: mocks },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
+      const alert = await canvas.findByRole('alert');
+      await expect(alert).toHaveTextContent('Live updates stopped');
+      await expect(alert).toHaveTextContent(
+        'The Sessions shown may be out of date.',
+      );
+      await expect(canvas.getByText(catalog.row.title)).toBeVisible();
+      await expect(canvas.queryByText("Couldn't load Sessions")).toBeNull();
+      await expect(calls).toBe(1);
+      await userEvent.click(
+        within(alert).getByRole('button', { name: 'Retry' }),
+      );
+      await expect(
+        await canvas.findByText(catalog.updated.title),
+      ).toBeVisible();
+      await expect(canvas.queryByRole('alert')).toBeNull();
+      await expect(canvas.queryByText(catalog.row.title)).toBeNull();
+      await expect(calls).toBe(2);
+    },
+  };
+}
+export const LiveUpdatesRetryPhoneFirstAgent = liveUpdatesRetry(
+  layoutWidths.phone,
+  0,
+);
+export const LiveUpdatesRetryPhoneSecondAgent = liveUpdatesRetry(
+  layoutWidths.phone,
+  1,
+);
+export const LiveUpdatesRetryWideFirstAgent = liveUpdatesRetry(
+  layoutWidths.wide,
+  0,
+);
+export const LiveUpdatesRetryWideSecondAgent = liveUpdatesRetry(
+  layoutWidths.wide,
+  1,
+);
+
+export const OfflineDoesNotShowLiveUpdatesStopped: Story = {
+  parameters: {
+    connection: 'offline',
+    trpc: {
+      ...sessionListMocks,
+      'session.listUpdates': fails('The live stream ended'),
+    },
+  },
+  play: async ({ canvas }) =>
+    eachLayout(async () => {
+      await expect(
+        (await canvas.findAllByText(sessionRows.idle.title))[0],
+      ).toBeVisible();
+      await expect(canvas.getByRole('status')).toHaveTextContent(
+        'The Server is offline.',
+      );
+      await expect(canvas.queryByText('Live updates stopped')).toBeNull();
+      await expect(canvas.queryByRole('alert')).toBeNull();
+    }),
+};
+
+function burstRefetch(width: number, agentIndex: 0 | 1): Story {
+  const catalog = streamingSessionCatalogs[agentIndex];
+  if (!catalog) throw new Error('Recorded catalog needs both Agents.');
+  const updates = createSessionListUpdatesMock({ sessions: [catalog.row] });
+  const newestTitle = `${catalog.row.title} — update 30`;
+  return {
+    parameters: { trpc: updates.fixtures },
+    beforeEach: () => {
+      updates.reset();
+      return () => updates.reset();
+    },
+    play: async ({ canvas }) => {
+      await settleViewport(width);
+      await expect(await canvas.findByText(catalog.row.title)).toBeVisible();
+      await waitFor(() => expect(updates.calls.active).toBe(0));
+      const before = updates.calls.list;
+      updates.hold();
+      for (let index = 1; index <= 30; index++)
+        updates.publish({
+          type: 'changed',
+          session: {
+            ...catalog.row,
+            title: `${catalog.row.title} — update ${index}`,
+            activityAt: catalog.row.activityAt + index,
+          },
+        });
+      await waitFor(() => expect(updates.calls.delivered).toBe(30));
+      await expect(updates.calls.list - before).toBeLessThanOrEqual(2);
+      updates.release();
+      await expect(await canvas.findByText(newestTitle)).toBeVisible();
+      await waitFor(() => expect(updates.calls.active).toBe(0));
+      await expect(updates.calls.list - before).toBeGreaterThan(0);
+      await expect(updates.calls.list - before).toBeLessThanOrEqual(2);
+      await expect(canvas.queryByText(catalog.row.title)).toBeNull();
+      await expect(
+        canvas.queryByText(`${catalog.row.title} — update 1`),
+      ).toBeNull();
+    },
+  };
+}
+export const BurstRefetchPhoneFirstAgent = burstRefetch(layoutWidths.phone, 0);
+export const BurstRefetchPhoneSecondAgent = burstRefetch(layoutWidths.phone, 1);
+export const BurstRefetchWideFirstAgent = burstRefetch(layoutWidths.wide, 0);
+export const BurstRefetchWideSecondAgent = burstRefetch(layoutWidths.wide, 1);
+
+function streamingPagination(width: number, agentIndex: 0 | 1): Story {
+  const catalog = streamingSessionCatalogs[agentIndex];
+  const first = catalog?.pages[0];
+  const last = catalog?.pages.at(-1);
+  if (!catalog || !first || !last)
+    throw new Error('Recorded catalog needs two pages for both Agents.');
+  const updates = createSessionListUpdatesMock({ sessions: catalog.pages });
+  const newestTitle = `${first.title} — streaming`;
+  return {
+    parameters: { trpc: updates.fixtures },
+    beforeEach: () => {
+      updates.reset();
+      return () => updates.reset();
+    },
+    play: async ({ canvas }) => {
+      await settleViewport(width);
+      await expect(await canvas.findByText(first.title)).toBeVisible();
+      await waitFor(() => expect(updates.calls.active).toBe(0));
+      await expect(updates.calls.nextPage).toBe(0);
+      await expect(canvas.queryByText(last.title)).toBeNull();
+      updates.hold();
+      updates.publish({
+        type: 'changed',
+        session: { ...first, status: 'running', activity: 'Streaming work' },
+      });
+      await waitFor(() => expect(updates.calls.delivered).toBe(1));
+      await waitFor(() => expect(updates.calls.active).toBe(1));
+      const scroll = canvas.getByTestId('sessions-scroll');
+      scroll.scrollTop = scroll.scrollHeight;
+      await waitFor(() => expect(updates.calls.nextPage).toBeGreaterThan(0));
+      const spinner = await canvas.findByRole('progressbar', {
+        name: 'Loading more Sessions',
+      });
+      await expect(spinner).toBeVisible();
+      await waitFor(() => {
+        scroll.scrollTop = scroll.scrollHeight;
+        const viewport = scroll.getBoundingClientRect();
+        const indicator = spinner.getBoundingClientRect();
+        expect(indicator.top).toBeGreaterThanOrEqual(viewport.top);
+        expect(indicator.bottom).toBeLessThanOrEqual(viewport.bottom);
+      });
+      updates.publish({
+        type: 'changed',
+        session: {
+          ...first,
+          status: 'running',
+          title: newestTitle,
+          activity: 'Still streaming work',
+        },
+      });
+      await waitFor(() => expect(updates.calls.delivered).toBe(2));
+      updates.release();
+      await waitFor(() => {
+        scroll.scrollTop = scroll.scrollHeight;
+        expect(canvas.getByText(last.title)).toBeVisible();
+      });
+      await waitFor(() => expect(updates.calls.active).toBe(0));
+      await expect(canvas.queryByRole('progressbar')).toBeNull();
+      scroll.scrollTop = 0;
+      await expect(await canvas.findByText(newestTitle)).toBeVisible();
+      await expect(canvas.queryByText(first.title)).toBeNull();
+      await expect(canvas.queryByRole('alert')).toBeNull();
+    },
+  };
+}
+export const StreamingPaginationPhoneFirstAgent = streamingPagination(
+  layoutWidths.phone,
+  0,
+);
+export const StreamingPaginationPhoneSecondAgent = streamingPagination(
+  layoutWidths.phone,
+  1,
+);
+export const StreamingPaginationWideFirstAgent = streamingPagination(
+  layoutWidths.wide,
+  0,
+);
+export const StreamingPaginationWideSecondAgent = streamingPagination(
+  layoutWidths.wide,
+  1,
+);

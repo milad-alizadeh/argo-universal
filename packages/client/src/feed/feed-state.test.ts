@@ -9,7 +9,7 @@ import {
   mergeOlderPage,
 } from './feed-state';
 
-type RowEvent = Exclude<FeedSubscribeOutput, { type: 'snapshot' }>;
+type RowEvent = Exclude<FeedSubscribeOutput, { type: 'snapshot' | 'closed' }>;
 
 // What `feed.page` answers for a recorded Feed, as the Server pages it.
 function page(
@@ -32,7 +32,10 @@ function page(
 }
 
 const rowEvents = (stream: readonly FeedSubscribeOutput[]) =>
-  stream.filter((event): event is RowEvent => event.type !== 'snapshot');
+  stream.filter(
+    (event): event is RowEvent =>
+      event.type !== 'snapshot' && event.type !== 'closed',
+  );
 
 function replay(state: FeedState, events: readonly RowEvent[]) {
   return events.reduce((current, event) => {

@@ -36,13 +36,18 @@ export type FeedActivity =
   | FeedExploration
   | FeedNotice;
 
-export interface FeedGroup {
+export type FeedGroup = {
   type: 'group';
   id: string;
   title: string;
-  state: 'open' | 'settled';
   items: FeedActivity[];
-}
+} & (
+  | { state: 'settled' }
+  | {
+      state: 'open';
+      live?: { toolCall: ToolCallUpdate; awaitingApproval: boolean };
+    }
+);
 
 export interface FeedStandaloneRow {
   type: 'row';

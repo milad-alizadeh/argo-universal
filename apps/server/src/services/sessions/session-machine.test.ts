@@ -1,6 +1,7 @@
+import { randomUUID } from 'node:crypto';
 import { type AgentCommand, agentMachine } from '@repo/agents';
 import { sessionRows } from '@repo/api/mocks';
-import { permissionOptions } from '@repo/contracts';
+import { permissionOptions, type SessionConfigOption } from '@repo/contracts';
 import {
   createMockAdapter,
   type MockAgentScript,
@@ -86,6 +87,60 @@ async function openSession(overrides: Partial<MockAgentScript> = {}) {
     },
   };
 }
+
+it('keeps the Session running while rejected messages show warning Notices', async () => {
+  const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+  cleanups.push(() => {
+    log.mockRestore();
+  });
+  const { session, service, stream } = await openSession();
+  sendSessionCommand(session, firstPrompt);
+  stream.send({
+    type: 'agent.messageRejected',
+    reason: 'Unknown vendor message',
+  });
+  stream.send({
+    type: 'agent.messageRejected',
+    reason: 'Another unknown message',
+  });
+  stream.send({ type: 'agent.feed', change: messageChange('settled') });
+  const { rows } = await vi.waitFor(() => {
+    const page = service.page({
+      sessionId: 'session-1',
+      direction: 'tail',
+      limit: 40,
+    });
+    expect(
+      page.rows.filter((row) => row.sessionUpdate === 'notice'),
+    ).toHaveLength(2);
+    return page;
+  });
+  expect(rows.filter((row) => row.sessionUpdate === 'notice')).toEqual([
+    expect.objectContaining({
+      severity: 'warning',
+      title: 'The Agent sent an unrecognised message',
+      description: 'Unknown vendor message',
+    }),
+    expect.objectContaining({
+      severity: 'warning',
+      title: 'The Agent sent an unrecognised message',
+      description: 'Another unknown message',
+    }),
+  ]);
+  expect(session.getSnapshot().context.rejectedMessages).toBe(2);
+  expect(session.getSnapshot().context.failure).toBeNull();
+  expect(log).toHaveBeenNthCalledWith(
+    1,
+    'session session-1: rejected an Agent message: Unknown vendor message',
+  );
+  expect(log).toHaveBeenNthCalledWith(
+    2,
+    'session session-1: rejected an Agent message: Another unknown message',
+  );
+  expect(
+    rows.filter((row) => row.sessionUpdate === 'agent_message'),
+  ).toHaveLength(1);
+});
 
 it('runs one Turn and rejects a second prompt while it runs', async () => {
   const { session, feed, service, commands, stream } = await openSession();
@@ -399,6 +454,112 @@ it('recovers when cancellation times out and writes a Notice for the Turn', asyn
   ).not.toThrow();
 });
 
+it('keeps the latest held choices through updates and cancellation, then applies them in order', async () => {
+  const options = [
+    {
+      configId: 'model',
+      name: 'Model',
+      category: 'model',
+      type: 'select',
+      currentValue: 'small',
+      options: [
+        { value: 'small', name: 'Small' },
+        { value: 'large', name: 'Large' },
+      ],
+    },
+    {
+      configId: 'mode',
+      name: 'Mode',
+      category: 'mode',
+      type: 'select',
+      currentValue: 'auto',
+      options: [
+        { value: 'auto', name: 'Auto' },
+        { value: 'plan', name: 'Plan' },
+      ],
+    },
+  ] satisfies SessionConfigOption[];
+  const { session, stream, commands } = await openSession({
+    connect: async () => ({ ...mockReady, configOptions: options }),
+  });
+  sendSessionCommand(session, firstPrompt);
+  await expect
+    .poll(() => commands)
+    .toEqual([{ ...firstPrompt, type: 'agent.prompt' }]);
+  for (const [configId, value] of [
+    ['model', 'large'],
+    ['mode', 'plan'],
+    ['model', 'small'],
+    ['model', 'large'],
+  ] as const)
+    sendSessionCommand(session, {
+      type: 'session.setConfigOption',
+      configId,
+      value,
+    });
+  stream.send({
+    type: 'agent.configOptionsChanged',
+    configOptions: options.map((option) => ({
+      ...option,
+      name: `Renamed ${option.name}`,
+    })),
+  });
+  expect(session.getSnapshot().context.configOptions).toMatchObject([
+    {
+      currentValue: 'large',
+      name: 'Renamed Model',
+      _meta: { argo: { heldUntilNextTurn: true } },
+    },
+    { currentValue: 'plan', _meta: { argo: { heldUntilNextTurn: true } } },
+  ]);
+  expect(commands).toEqual([{ ...firstPrompt, type: 'agent.prompt' }]);
+  sendSessionCommand(session, { type: 'session.cancel' });
+  sendSessionCommand(session, {
+    type: 'session.setConfigOption',
+    configId: 'mode',
+    value: 'auto',
+  });
+  stream.send({ type: 'agent.turnEnded', stopReason: 'cancelled' });
+  sendSessionCommand(session, {
+    type: 'session.prompt',
+    turnId: 'turn-2',
+    content: [],
+  });
+  await expect
+    .poll(() => commands)
+    .toEqual([
+      { ...firstPrompt, type: 'agent.prompt' },
+      { type: 'agent.cancel' },
+      { type: 'agent.setConfigOption', configId: 'model', value: 'large' },
+      { type: 'agent.setConfigOption', configId: 'mode', value: 'auto' },
+      { type: 'agent.prompt', turnId: 'turn-2', content: [] },
+    ]);
+  expect(session.getSnapshot().context.heldConfigValues).toEqual([]);
+  stream.send({ type: 'agent.configOptionsChanged', configOptions: options });
+  expect(session.getSnapshot().context.configOptions).toMatchObject([
+    { currentValue: 'small' },
+    { currentValue: 'auto' },
+  ]);
+  expect(
+    session.getSnapshot().context.configOptions[1]?._meta?.argo
+      ?.heldUntilNextTurn,
+  ).not.toBe(true);
+  stream.send({
+    type: 'agent.configOptionsChanged',
+    configOptions: options.map((option) => ({
+      ...option,
+      currentValue: option.configId === 'model' ? 'large' : 'auto',
+    })),
+  });
+  expect(
+    session
+      .getSnapshot()
+      .context.configOptions.map(
+        (option) => option._meta?.argo?.heldUntilNextTurn,
+      ),
+  ).toEqual([undefined, undefined]);
+});
+
 it('closes after the Agent stop limit even when the Agent does not stop', async () => {
   vi.useFakeTimers();
   const { session } = await openSession({ stop: () => new Promise(() => {}) });
@@ -409,7 +570,7 @@ it('closes after the Agent stop limit even when the Agent does not stop', async 
   expect(session.getSnapshot().output).toEqual({ failure: null });
 });
 
-const { database, remove } = openTestDatabase();
+const { database, directory: runtimeDirectory, remove } = openTestDatabase();
 const data = {
   sessionId: 'session-1',
   projectId: 'project-1',
@@ -421,10 +582,12 @@ const data = {
   nextPosition: 0,
 };
 let stream: MockAgentStream | undefined;
+let modelCommands: AgentCommand[] = [];
 const ready = mockReadyEvent;
 const adapter = createMockAdapter({
   stream: (value) => {
     stream = value;
+    value.receive((command) => modelCommands.push(command));
     return () => {
       if (stream === value) stream = undefined;
     };
@@ -441,7 +604,7 @@ const machine = sessionMachine.provide({
       actions: { sendToWriter: () => {}, log: () => {} },
     }),
   },
-  actions: { flushFeed: () => {} },
+  actions: { flushFeed: () => {}, logMessageRejected: () => {} },
 });
 type SessionSnapshot = SnapshotFrom<typeof machine>;
 type SessionEvent = EventFromLogic<typeof machine>;
@@ -452,6 +615,7 @@ const events = [
   { type: 'xstate.error.actor.discardCheckout', error: 'Could not remove' },
   { type: 'xstate.done.actor.loadSession', output: data },
   { type: 'xstate.error.actor.loadSession', error: 'Could not load' },
+  { type: 'xstate.error.actor.feed', error: 'Feed failed' },
   ready,
   { type: 'session.prompt', turnId: 'turn-1', content: [] },
   { type: 'session.setConfigOption', configId: 'mode', value: 'plan' },
@@ -477,6 +641,7 @@ const events = [
   { type: 'session.cancel' },
   { type: 'session.close' },
   { type: 'agent.usage', usage: { used: 10, size: 100 } },
+  { type: 'agent.messageRejected', reason: 'Unknown vendor message' },
   { type: 'agent.configOptionsChanged', configOptions: [] },
   {
     type: 'agent.feed',
@@ -494,6 +659,7 @@ const events = [
   { type: 'xstate.done.actor.agent', output: { failure: null } },
   { type: 'xstate.error.actor.agent', error: 'Agent crashed' },
   { type: 'xstate.done.actor.feed' },
+  { type: 'xstate.after.checkoutLimit.session.creating' },
   { type: 'xstate.after.cancelLimit.session.open.live.cancelling' },
   { type: 'xstate.after.agentStopLimit.session.open.live.closing' },
   { type: 'xstate.after.agentRestartDelay.session.open.recovering' },
@@ -518,10 +684,21 @@ const models = (['new', 'existing'] as const).map(
     new TestModel(logic, {
       input:
         kind === 'existing'
-          ? { database, adapter, kind, sessionId: 'session-1' }
+          ? {
+              database,
+              runtimeDirectory,
+              adapter,
+              now: () => 1000,
+              createId: () => 'request-model',
+              kind,
+              sessionId: 'session-1',
+            }
           : {
               database,
+              runtimeDirectory,
               adapter,
+              now: () => 1000,
+              createId: () => 'request-model',
               kind,
               sessionId: 'session-1',
               projectId: 'project-1',
@@ -552,6 +729,7 @@ it.each(paths.map((path, index) => [index, path] as const))(
   async (_, path) => {
     vi.useFakeTimers();
     stream = undefined;
+    modelCommands = [];
     const input = path.steps[0]?.state.context.input;
     if (!input) throw new Error('No model input');
     // The model writer holds jobs so paths cannot alter the database.
@@ -575,6 +753,8 @@ it.each(paths.map((path, index) => [index, path] as const))(
       events.map(({ type }) => [
         type,
         async ({ event }: { event: SessionEvent }) => {
+          const before = sessionActor.getSnapshot();
+          const commandIndex = modelCommands.length;
           if (
             event.type.startsWith('agent.') &&
             event.type !== 'agent.ready' &&
@@ -583,6 +763,23 @@ it.each(paths.map((path, index) => [index, path] as const))(
             stream.send(event as MockAgentStreamEvent);
           else sessionActor.send(event);
           await vi.advanceTimersByTimeAsync(0);
+          if (
+            event.type === 'session.prompt' &&
+            before.can(event) &&
+            before.context.heldConfigValues.length
+          )
+            expect(modelCommands.slice(commandIndex)).toEqual([
+              {
+                type: 'agent.setConfigOption',
+                configId: 'mode',
+                value: 'plan',
+              },
+              { ...event, type: 'agent.prompt' },
+            ]);
+          if (String(event.type) === 'xstate.error.actor.feed')
+            expect(sessionActor.getSnapshot().output).toEqual({
+              failure: 'Feed failed',
+            });
         },
       ]),
     );
@@ -591,6 +788,12 @@ it.each(paths.map((path, index) => [index, path] as const))(
       states: {
         '*': (expected) => {
           const actual = sessionActor.getSnapshot();
+          expect(actual.context.heldConfigValues).toEqual(
+            expected.context.heldConfigValues,
+          );
+          expect(actual.context.rejectedMessages).toBe(
+            expected.context.rejectedMessages,
+          );
           const feed = actual.children.feed as FeedActorRef | undefined;
           const { epoch, maxRevision, liveHeader, ...projection } =
             toSessionSnapshot(
@@ -598,7 +801,6 @@ it.each(paths.map((path, index) => [index, path] as const))(
               { context: expected.context },
               sessionRows.idle,
             );
-          // The model was built on real time and the walk runs on fake timers, so only a Turn start's presence matches.
           expect(
             toSessionSnapshot(
               actual,
@@ -609,12 +811,11 @@ it.each(paths.map((path, index) => [index, path] as const))(
             ...projection,
             pendingElicitation: projection.pendingElicitation && {
               ...projection.pendingElicitation,
-              requestId: expect.any(String),
+              requestId: 'request-model',
             },
             liveHeader: liveHeader && {
               ...liveHeader,
-              startedAt:
-                liveHeader.startedAt === null ? null : expect.any(Number),
+              startedAt: liveHeader.startedAt === null ? null : 1000,
             },
           });
         },
@@ -622,6 +823,34 @@ it.each(paths.map((path, index) => [index, path] as const))(
     });
   },
 );
+
+it('ends Checkout creation with a retryable failure when git does not finish', async () => {
+  vi.useFakeTimers();
+  const actor = createActor(machine, {
+    input: {
+      now: () => Date.now(),
+      createId: randomUUID,
+      database,
+      runtimeDirectory,
+      adapter,
+      kind: 'new',
+      sessionId: 'session-blocked',
+      projectId: 'project-1',
+      agent: 'mock',
+      checkout: { type: 'worktree', baseBranch: 'main' },
+      configOptions: [],
+      prompt: [{ type: 'text', text: 'Build it' }],
+      turnId: 'turn-blocked',
+    },
+  }).start();
+  actors.push(actor);
+  await vi.advanceTimersByTimeAsync(10_000);
+  expect(actor.getSnapshot().status).toBe('done');
+  expect(actor.getSnapshot().output).toEqual({
+    failure:
+      'Checkout creation exceeded checkoutLimit (10000 ms). Retry the Session.',
+  });
+});
 
 it('the generated paths walk every reachable transition', () => {
   expect(

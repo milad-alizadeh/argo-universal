@@ -11,7 +11,11 @@ import { type ActorRefFrom, createActor } from 'xstate';
 import { z } from 'zod';
 import type { writerMachine } from '../feed/writer-machine';
 import type { RegistryActorRef } from './registry-machine';
-import { sessionListMachine } from './session-list-machine';
+import {
+  type SessionListMachineInput,
+  type SessionListState,
+  sessionListMachine,
+} from './session-list-machine';
 import { createSessionListReader } from './session-list-reader';
 
 const cursorSchema = z.strictObject({
@@ -29,10 +33,21 @@ export function createSessionList(options: {
     sessions.system.get('databaseWriter') as
       | ActorRefFrom<typeof writerMachine>
       | undefined;
-  const readAll = createSessionListReader({
+  const {
+    readRows: readAll,
+    sessionIdsForJobs,
+    relatedSessionIds,
+  } = createSessionListReader({
     database: options.database,
     sessions,
     writer,
+  });
+  const { watch, readCachedRows } = createSessionListWatch({
+    sessions,
+    writer,
+    readRows: readAll,
+    sessionIdsForJobs,
+    relatedSessionIds,
   });
   const list = async (input: SessionListInput) => {
     let cursor: z.infer<typeof cursorSchema> | undefined;
@@ -48,7 +63,7 @@ export function createSessionList(options: {
         });
       }
     }
-    const rows = readAll()
+    const rows = readCachedRows()
       .map((row) => row.information)
       .filter(
         (row) =>
@@ -97,41 +112,7 @@ export function createSessionList(options: {
       running: active.filter((row) => row.running).length,
     };
   };
-  async function* watch<Value>(
-    signal: AbortSignal | undefined,
-    changes: (rows: ReturnType<typeof readAll>) => Value[],
-  ): AsyncGenerator<Value> {
-    const events = new EventEmitter();
-    const controller = new AbortController();
-    const actor = createActor(sessionListMachine, {
-      input: { sessions, writer: writer(), readRows: readAll },
-    });
-    const rowsListener = actor.on('list.rows', ({ rows }) => {
-      for (const change of changes(rows)) events.emit('change', change);
-    });
-    const completion = actor.subscribe({ complete: () => controller.abort() });
-    const abort = () => {
-      actor.send({ type: 'list.stop' });
-      controller.abort();
-    };
-    signal?.addEventListener('abort', abort);
-    const stream = on(events, 'change', { signal: controller.signal });
-    try {
-      if (signal?.aborted) return;
-      actor.start();
-      for await (const [change] of stream) yield change as Value;
-    } catch (error) {
-      const snapshot = actor.getSnapshot();
-      if (snapshot.matches('failed')) throw snapshot.context.failure;
-      if (!controller.signal.aborted) throw error;
-    } finally {
-      actor.stop();
-      rowsListener.unsubscribe();
-      completion.unsubscribe();
-      signal?.removeEventListener('abort', abort);
-      controller.abort();
-    }
-  }
+
   return {
     list,
     listUpdates: (signal) => {
@@ -164,4 +145,101 @@ export function createSessionList(options: {
       });
     },
   };
+}
+
+function createSessionListWatch({
+  sessions,
+  writer,
+  readRows,
+  sessionIdsForJobs,
+  relatedSessionIds,
+}: Omit<SessionListMachineInput, 'writer'> & {
+  writer: () => SessionListMachineInput['writer'];
+}) {
+  let sharedActor: ActorRefFrom<typeof sessionListMachine> | undefined;
+  let references = 0;
+  const create = () =>
+    createActor(sessionListMachine, {
+      input: {
+        sessions,
+        writer: writer(),
+        readRows,
+        sessionIdsForJobs,
+        relatedSessionIds,
+      },
+    });
+  const readCachedRows = () => {
+    const actor = sharedActor ?? create().start();
+    try {
+      actor.send({ type: 'list.flush' });
+      const snapshot = actor.getSnapshot();
+      if (snapshot.status === 'error') throw snapshot.error;
+      if (snapshot.matches('failed')) throw snapshot.context.failure;
+      return snapshot.context.rows ?? [];
+    } finally {
+      if (!sharedActor) {
+        actor.send({ type: 'list.stop' });
+        actor.stop();
+      }
+    }
+  };
+  async function* watch<Value>(
+    signal: AbortSignal | undefined,
+    changes: (rows: SessionListState) => Value[],
+  ): AsyncGenerator<Value> {
+    if (signal?.aborted) return;
+    const events = new EventEmitter();
+    const controller = new AbortController();
+    const first = sharedActor === undefined;
+    sharedActor ??= create();
+    const actor = sharedActor;
+    references += 1;
+    const publish = (rows: SessionListState) => {
+      for (const change of changes(rows)) events.emit('change', change);
+    };
+    const rowsListener = actor.on('list.rows', ({ rows }) => {
+      publish(rows);
+    });
+    const stream = on(events, 'change', { signal: controller.signal });
+    const completion = actor.subscribe({
+      complete: () => controller.abort(),
+      error: (error) => controller.abort(error),
+    });
+    let attached = true;
+    const release = () => {
+      if (!attached) return;
+      attached = false;
+      rowsListener.unsubscribe();
+      completion.unsubscribe();
+      signal?.removeEventListener('abort', abort);
+      references -= 1;
+      if (references === 0) {
+        actor.send({ type: 'list.stop' });
+        actor.stop();
+        sharedActor = undefined;
+      }
+    };
+    const abort = () => {
+      controller.abort();
+      release();
+    };
+    signal?.addEventListener('abort', abort);
+    try {
+      if (first) actor.start();
+      else {
+        const rows = actor.getSnapshot().context.rows;
+        if (rows) publish(rows);
+      }
+      for await (const [change] of stream) yield change as Value;
+    } catch (error) {
+      const snapshot = actor.getSnapshot();
+      if (snapshot.status === 'error') throw snapshot.error;
+      if (snapshot.matches('failed')) throw snapshot.context.failure;
+      if (!controller.signal.aborted) throw error;
+    } finally {
+      controller.abort();
+      release();
+    }
+  }
+  return { watch, readCachedRows };
 }

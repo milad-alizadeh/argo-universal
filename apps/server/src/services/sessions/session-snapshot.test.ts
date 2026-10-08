@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { sessionRows } from '@repo/api/mocks';
 import { permissionOptions } from '@repo/contracts';
 import { createMockAdapter } from '@repo/mocks/agent';
@@ -8,11 +9,14 @@ import { liveHeaderMocks } from '#mocks/live-header';
 import { sessionMachine } from './session-machine';
 import { noChanges, toSessionSnapshot } from './session-snapshot';
 
-const { database, remove } = openTestDatabase();
+const { database, directory: runtimeDirectory, remove } = openTestDatabase();
 afterAll(remove);
 const context = createActor(sessionMachine, {
   input: {
+    now: () => Date.now(),
+    createId: randomUUID,
     database,
+    runtimeDirectory,
     adapter: createMockAdapter(),
     kind: 'existing',
     sessionId: 'session-1',

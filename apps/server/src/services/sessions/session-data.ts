@@ -1,6 +1,8 @@
-import { homedir } from 'node:os';
-import { join } from 'node:path';
-import { InitialConfigOption, type SessionNewInput } from '@repo/contracts';
+import {
+  InitialConfigOption,
+  type SessionNewInput,
+  SessionRecord,
+} from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow, project, session } from '@repo/db/schema';
 import { type Checkout, createCheckout, discardCheckout } from '@repo/git';
@@ -8,16 +10,20 @@ import { eq, max } from 'drizzle-orm';
 import { createSelectSchema } from 'drizzle-orm/zod';
 import type { ActorRefFrom } from 'xstate';
 import { z } from 'zod';
-import { queuedFeedRows } from '../feed/feed-row';
-import type { WriterJob } from '../feed/writer-job';
+import {
+  applyQueuedSession,
+  queuedFeedRows,
+  type WriterJob,
+} from '../feed/writer-job';
 import type { writerMachine } from '../feed/writer-machine';
+import { decodeStoredSession, storedSessionColumns } from './session-record';
 
 // The first Turn's id travels with the creation, so the Session prompts as soon as it is stored.
 export type SessionCreationInput = SessionNewInput & { turnId: string };
 
 export type SessionInput = {
   database: Database;
-  runtimeDirectory?: string;
+  runtimeDirectory: string;
   sessionId: string;
 } & (({ kind: 'new' } & SessionCreationInput) | { kind: 'existing' });
 export type NewSessionInput = Extract<SessionInput, { kind: 'new' }>;
@@ -48,14 +54,18 @@ const readProjectPath = (input: NewSessionInput) => {
 // Creates the Checkout only; the Session row waits until its Agent is ready, so no empty Session exists.
 export async function createSessionCheckout(
   input: NewSessionInput,
+  signal?: AbortSignal,
 ): Promise<SessionData> {
-  const checkout = await createCheckout({
-    projectPath: readProjectPath(input),
-    projectId: input.projectId,
-    sessionId: input.sessionId,
-    choice: input.checkout,
-    runtimeDirectory: input.runtimeDirectory ?? join(homedir(), '.argo'),
-  });
+  const checkout = await createCheckout(
+    {
+      projectPath: readProjectPath(input),
+      projectId: input.projectId,
+      sessionId: input.sessionId,
+      choice: input.checkout,
+      runtimeDirectory: input.runtimeDirectory,
+    },
+    signal,
+  );
   return {
     sessionId: input.sessionId,
     projectId: input.projectId,
@@ -108,9 +118,10 @@ export function toSessionInsert(
 export async function discardSessionCheckout(
   input: NewSessionInput,
   checkout: Checkout,
+  signal?: AbortSignal,
 ) {
   if (input.checkout.type === 'worktree')
-    await discardCheckout(readProjectPath(input), checkout);
+    await discardCheckout(readProjectPath(input), checkout, signal);
 }
 
 const storedConfigValues = z.array(InitialConfigOption);
@@ -120,17 +131,19 @@ export async function loadSession(
   writer?: ActorRefFrom<typeof writerMachine>,
 ): Promise<SessionData> {
   const stored = input.database
-    .select()
+    .select(storedSessionColumns)
     .from(session)
     .where(eq(session.id, input.sessionId))
     .get();
-  if (!stored) throw new Error(`No Session ${input.sessionId}`);
-  const pending = { ...stored };
-  for (const job of writer?.getSnapshot().context.queue ?? [])
-    if (job.type === 'sessionRowUpdate' && job.id === input.sessionId)
-      Object.assign(pending, job.set);
-  const row = createSelectSchema(session).parse(pending);
-  const queued = queuedFeedRows(writer, input.sessionId);
+  const jobs = writer?.getSnapshot().context.queue ?? [];
+  const pending = applyQueuedSession({
+    row: stored && decodeStoredSession(stored),
+    sessionId: input.sessionId,
+    jobs,
+  });
+  if (!pending) throw new Error(`No Session ${input.sessionId}`);
+  const row = SessionRecord.parse(pending);
+  const queued = queuedFeedRows(jobs, input.sessionId);
   const position = input.database
     .select({ highest: max(feedRow.position) })
     .from(feedRow)
@@ -144,14 +157,8 @@ export async function loadSession(
     checkout: { path: row.checkoutPath, branch: row.checkoutBranch },
     configValues: storedConfigValues.parse(row.configValues),
     epoch: row.epoch,
-    maxRevision: Math.max(
-      row.maxRevision,
-      ...queued.map((job) => job.maxRevision),
-    ),
-    activityAt: Math.max(
-      row.activityAt,
-      ...queued.map((job) => job.activityAt ?? row.activityAt),
-    ),
+    maxRevision: row.maxRevision,
+    activityAt: row.activityAt,
     nextPosition:
       Math.max(
         position ?? -1,

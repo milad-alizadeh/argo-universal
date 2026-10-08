@@ -1,14 +1,11 @@
 import { readFile } from 'node:fs/promises';
-import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
+import { resolveRuntimeDirectory } from '@repo/api/server-runtime';
 import { z } from 'zod';
 
 // `pnpm dev` starts the Server, Expo, and desktop together; desktop waits for the other two.
-const serverFile = join(
-  process.env.ARGO_HOME ?? join(homedir(), '.argo'),
-  'server.json',
-);
+const serverFile = join(resolveRuntimeDirectory(), 'server.json');
 const webUrl = process.env.ARGO_EXPO_WEB_URL ?? 'http://localhost:8081';
 const timeoutMs = 300_000;
 const requestTimeoutMs = 2000;

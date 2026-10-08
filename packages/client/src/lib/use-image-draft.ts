@@ -6,12 +6,16 @@ import { useTRPCClient } from '../trpc/context';
 import { draftPrompt } from './draft-prompt';
 import { pickImages } from './pick-images';
 
+export const imageSelectionFailureMessage =
+  "Couldn't select images. Try again.";
+
 const emptyDraft: ComposerDraft = { text: '', images: [] };
 
 // A Composer draft with attached images, and the prompt it sends once its images are uploaded.
 export function useImageDraft() {
   const client = useTRPCClient();
   const [draft, setDraft] = useState(emptyDraft);
+  const [imageSelectionError, setImageSelectionError] = useState<string>();
   // The file behind each attached image, by its id in the draft.
   const imageFiles = useRef(new Map<string, Blob>());
   // All of a draft's images upload together, as one mutation, so `imageUpload` reports them as one.
@@ -21,13 +25,18 @@ export function useImageDraft() {
   });
 
   async function attachImages() {
-    const picked = await pickImages();
-    for (const { image, file } of picked)
-      imageFiles.current.set(image.id, file);
-    setDraft((current) => ({
-      ...current,
-      images: [...current.images, ...picked.map(({ image }) => image)],
-    }));
+    try {
+      const picked = await pickImages();
+      setImageSelectionError(undefined);
+      for (const { image, file } of picked)
+        imageFiles.current.set(image.id, file);
+      setDraft((current) => ({
+        ...current,
+        images: [...current.images, ...picked.map(({ image }) => image)],
+      }));
+    } catch {
+      setImageSelectionError(imageSelectionFailureMessage);
+    }
   }
 
   // Keeps a file only while its image is in the draft.
@@ -64,7 +73,11 @@ export function useImageDraft() {
     changeDraft,
     attachImages,
     uploadDraftAsPrompt,
-    clearDraft: () => changeDraft(emptyDraft),
+    clearDraft: () => {
+      changeDraft(emptyDraft);
+      setImageSelectionError(undefined);
+    },
+    imageSelectionError,
     imageUpload,
   };
 }

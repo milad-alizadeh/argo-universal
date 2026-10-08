@@ -78,6 +78,7 @@ let checkRunningCalls: PendingCall<CheckRunningInput, boolean>[];
 let spawnCalls: SpawnCall[];
 let signalledPids: (number | null)[];
 let readyAddresses: ServerAddress[];
+let failures: (string | null)[];
 let server: Actor<typeof machine>;
 
 const machine = serverConnectionMachine.provide({
@@ -115,6 +116,9 @@ const startServerMachine = () => {
   server.on('server.ready', ({ address }) => {
     readyAddresses.push(address);
   });
+  server.on('server.failed', ({ failure }) => {
+    failures.push(failure);
+  });
   server.start();
   return server;
 };
@@ -148,6 +152,7 @@ beforeEach(() => {
   spawnCalls = [];
   signalledPids = [];
   readyAddresses = [];
+  failures = [];
 });
 
 afterEach(() => {
@@ -370,6 +375,17 @@ describe('server connection', () => {
     await vi.advanceTimersByTimeAsync(startLimitMs + stopLimitMs);
     expect(value()).toBe('failed');
   };
+
+  it('announces each Server startup failure once', async () => {
+    await abandonStuckSupervisor();
+    expect(failures).toEqual([context().failure]);
+    server.send({ type: 'server.exited', reason: 'Late exit' });
+    expect(failures).toHaveLength(1);
+    server.send({ type: 'server.retry' });
+    await vi.advanceTimersByTimeAsync(stopLimitMs);
+    expect(failures).toHaveLength(2);
+    expect(failures[1]).toBe(context().failure);
+  });
 
   it('reads server.json every 200 ms until it names the spawned Supervisor', async () => {
     await spawnSupervisor();

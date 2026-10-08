@@ -1,5 +1,5 @@
 import { useSelector } from '@xstate/react';
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useEffect, useRef } from 'react';
 import type { SnapshotFrom } from 'xstate';
 import type { connectionMachine } from './machine';
 import type { ConnectionActor } from './open-connection';
@@ -19,4 +19,19 @@ export function useConnection() {
 
 export function useConnectionState(): ConnectionState {
   return useSelector(useConnection(), (snapshot) => snapshot.value.link);
+}
+
+// Failed subscriptions restart once when the Connection reopens.
+export function useResubscribeOnReconnect(subscription: {
+  status: string;
+  reset: () => void;
+}) {
+  const state = useConnectionState();
+  const previous = useRef(state);
+  const { status, reset } = subscription;
+  useEffect(() => {
+    if (previous.current !== 'open' && state === 'open' && status === 'error')
+      reset();
+    previous.current = state;
+  }, [state, status, reset]);
 }

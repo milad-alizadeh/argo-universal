@@ -4,8 +4,13 @@ import {
   recordedFeedMocks,
 } from '@repo/api/mocks';
 import type { SessionSnapshot, SessionUpdate } from '@repo/contracts';
-import { recordedFeedMock, recordedUserMessage } from './feed-message-mock';
+import {
+  recordedAgentMessage,
+  recordedFeedMock,
+  recordedUserMessage,
+} from './feed-message-mock';
 import { createFeedMocks } from './feed-mock';
+import { unavailableNewSessionMocks } from './new-session-mock';
 import { createSubscriptionPublisher } from './subscription-publisher';
 import { completedCommand } from './tool-call-mock';
 import { type Fixtures, pending } from './trpc-mock-link';
@@ -70,6 +75,33 @@ export const emptySessionMocks = createSessionMocks(
     { ...editAndCommandRecording, rows: [] },
     { title: 'New Session', maxRevision: 0 },
   ),
+);
+
+export const unavailableSessionCases = newSessionCatalogs.bothAvailable.map(
+  (agent, index) => {
+    const recording = recordedFeedMocks.find(
+      (mock) =>
+        mock.recording === 'markdown-answer' &&
+        mock.agent === `agent-${index + 1}`,
+    );
+    const unavailable = newSessionCatalogs.bothUnavailable[index];
+    if (!recording || !unavailable?.installStep)
+      throw new Error(
+        'Recorded catalog needs a started Session and unavailable reason for both Agents',
+      );
+    const feed = withWholeTail(recording, {
+      agent: agent.agent,
+      configOptions: agent.configOptions,
+    });
+    return {
+      agent,
+      reason: unavailable.installStep,
+      fixtures: {
+        ...createSessionMocks(feed),
+        'agents.list': unavailableNewSessionMocks['agents.list'],
+      } satisfies Fixtures,
+    };
+  },
 );
 
 // Only the oldest page holds this recording, and only the arriving row holds the other, so their text marks each one.
@@ -223,3 +255,37 @@ export const twoSessionMocks: Fixtures = {
   'feed.row': (input) => feedMocksFor(input)['feed.row'](input),
   'feed.subscribe': (input) => feedMocksFor(input)['feed.subscribe'](input),
 };
+
+export const closureCatalogs = newSessionCatalogs.bothAvailable.map(
+  (agent, index) => {
+    const mockAgent = index === 0 ? 'agent-1' : 'agent-2';
+    const recording = recordedFeedMock(mockAgent, 'edit-and-command');
+    const lastRow = recording.rows.at(-1);
+    const message = recordedAgentMessage(mockAgent, 'image-prompt');
+    if (!lastRow)
+      throw new Error(`Recorded catalog needs a Feed for ${agent.label}.`);
+    const newest = {
+      ...message,
+      id: 'newest-held',
+      messageId: 'newest-held',
+      sessionId: 'session-1',
+      turnId: 'held-turn',
+      position: lastRow.position + 1,
+      revision: recording.snapshot.maxRevision + 1,
+    };
+    const snapshot = {
+      ...recording.snapshot,
+      agent: agent.agent,
+      state: 'idle' as const,
+      activeTurnId: null,
+      liveHeader: null,
+      configOptions: agent.configOptions,
+    };
+    return {
+      newest,
+      newestText: firstTextOf(message),
+      snapshot,
+      mocks: createFeedMocks({ ...recording, snapshot }),
+    };
+  },
+);

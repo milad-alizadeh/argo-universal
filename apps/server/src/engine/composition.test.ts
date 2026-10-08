@@ -1,14 +1,18 @@
 import { execFileSync } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import {
   existsSync,
   mkdirSync,
   mkdtempSync,
   readdirSync,
+  readFileSync,
   realpathSync,
   rmSync,
+  writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { setTimeout as wait } from 'node:timers/promises';
 import { type AgentAdapter, agentAdapters } from '@repo/agents';
 import { appRouter, type Services } from '@repo/api';
 import type {
@@ -17,8 +21,8 @@ import type {
   SessionUpdate,
 } from '@repo/contracts';
 import { permissionOptions } from '@repo/contracts';
-import { feedRow, turn } from '@repo/db/schema';
-import { listBranches } from '@repo/git';
+import { feedRow, session, turn } from '@repo/db/schema';
+import { listBranches, sessionBranch } from '@repo/git';
 import { createMockAdapter, type MockAgentStream } from '@repo/mocks/agent';
 import { mockClis } from '@repo/mocks/cli';
 import {
@@ -26,21 +30,32 @@ import {
   mockCliScenarioEnvironment,
 } from '@repo/mocks/cli/mock-cli';
 import { readRequestAnswers } from '@repo/mocks/cli/request-answer';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import type { ActorRefFrom } from 'xstate';
 import { createActor, fromCallback, fromPromise, waitFor } from 'xstate';
-import { insertSession, openTestDatabase } from '#mocks/database';
+import {
+  countDatabaseReads,
+  insertSession,
+  openTestDatabase,
+} from '#mocks/database';
 import { initTestRepository } from '#mocks/git';
 import { liveHeaderMocks } from '#mocks/live-header';
-import type { writerMachine } from '../services/feed/writer-machine';
+import { feedMachine } from '../services/feed/feed-machine';
+import { type WriterJob, writeJobs } from '../services/feed/writer-job';
+import { writerMachine } from '../services/feed/writer-machine';
 import { createServerServices } from '../services/server-services';
+import { registryMachine } from '../services/sessions/registry-machine';
 import type { SessionActorRef } from '../services/sessions/session-machine';
+import { sessionMachine } from '../services/sessions/session-machine';
 import type { HttpServerOptions } from './http-server';
 import { engineMachine } from './machine';
 
 // The longest the teardown waits for the Engine's graceful stop.
 const gracefulStopLimit = 5_000;
+
+// A crash Notice can land after the Session first reports idle.
+const cancellationSettleWait = 200;
 
 // An Engine on a mock Agent; without `database` it opens and closes its real database in `home`. It stops itself when the test ends.
 function startEngine({
@@ -48,17 +63,23 @@ function startEngine({
   adapter,
   home = '/unused',
   closeDatabase = () => {},
+  sessions = registryMachine,
+  databaseWriter = writerMachine,
 }: {
   database?: ReturnType<typeof openTestDatabase>['database'];
   adapter: AgentAdapter;
   home?: string;
   closeDatabase?: () => void;
+  sessions?: typeof registryMachine;
+  databaseWriter?: typeof writerMachine;
 }) {
   let services: Services | undefined;
   const machine = engineMachine.provide({
     actors: {
       ...(database && { openDatabase: fromPromise(async () => database) }),
       processSignals: fromCallback(() => {}),
+      sessions,
+      databaseWriter,
       startHttpServer: fromPromise(
         async ({ input }: { input: HttpServerOptions }) => {
           services = createServerServices({
@@ -77,6 +98,8 @@ function startEngine({
   });
   const engine = createActor(machine, {
     input: {
+      now: () => Date.now(),
+      createId: randomUUID,
       home,
       port: 7337,
       version: '1',
@@ -235,7 +258,7 @@ it.each(liveHeaderMocks)(
   },
 );
 
-it('rejects malformed stored activity through the Feed subscription', async () => {
+it('keeps the Feed subscription open after malformed stored activity', async () => {
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
   let stream: MockAgentStream | undefined;
@@ -272,12 +295,171 @@ it('rejects malformed stored activity through the Feed subscription', async () =
       payload: { messageId: 'malformed', content: 'invalid' },
     })
     .run();
-  const rejected = expect(subscription.next()).rejects.toThrow(
-    'Unrecognised live-header Feed data',
-  );
+  const reported = vi.spyOn(console, 'error').mockImplementation(() => {});
+  onTestFinished(() => reported.mockRestore());
+  const next = subscription.next();
   stream?.send({ type: 'agent.usage', usage: { used: 10, size: 100 } });
-  await rejected;
+  await expect(next).resolves.toMatchObject({
+    done: false,
+    value: {
+      type: 'snapshot',
+      snapshot: {
+        usage: { used: 10, size: 100 },
+        liveHeader: { text: 'Working', source: { type: 'working' } },
+      },
+    },
+  });
+  expect(reported).toHaveBeenCalledWith(
+    'sessions: rejected live-header shape #1',
+    expect.anything(),
+  );
+  const following = subscription.next();
+  stream?.send({ type: 'agent.usage', usage: { used: 11, size: 100 } });
+  await expect(following).resolves.toMatchObject({
+    done: false,
+    value: { type: 'snapshot', snapshot: { usage: { used: 11, size: 100 } } },
+  });
+  await expect(
+    caller.feed.page({
+      sessionId: 'session-1',
+      direction: 'tail',
+      limit: 50,
+    }),
+  ).rejects.toThrow();
+  const catchUp = (
+    await caller.feed.subscribe({
+      sessionId: 'session-1',
+      after: { epoch: initial.snapshot.epoch, revision: 0 },
+    })
+  )[Symbol.asyncIterator]();
+  await expect(catchUp.next()).rejects.toThrow();
 });
+
+it.each(
+  agentAdapters.flatMap(({ agent }) =>
+    (['agent_message', 'plan_update', 'agent_thought'] as const).map(
+      (kind) => ({ agent, kind }),
+    ),
+  ),
+)(
+  'degrades only the Session with a malformed $kind row for $agent',
+  async ({ agent, kind }) => {
+    const { database, remove } = openTestDatabase({ agent });
+    onTestFinished(remove);
+    const reported = vi.spyOn(console, 'error').mockImplementation(() => {});
+    onTestFinished(() => reported.mockRestore());
+    const { createCaller } = startEngine({
+      database,
+      adapter: createMockAdapter({}, agent),
+    });
+    const caller = await createCaller();
+    insertSession(database, { id: 'healthy', agent });
+    database
+      .insert(turn)
+      .values({ id: 'running', sessionId: 'session-1', status: 'running' })
+      .run();
+    database
+      .insert(feedRow)
+      .values([
+        {
+          sessionId: 'healthy',
+          id: 'reply',
+          position: 0,
+          revision: 1,
+          state: 'settled',
+          sessionUpdate: 'agent_message',
+          payloadVersion: 1,
+          payload: {
+            messageId: 'reply',
+            content: [{ type: 'text', text: 'Healthy reply' }],
+          },
+        },
+        {
+          sessionId: 'session-1',
+          id: 'bad',
+          turnId: 'running',
+          position: 0,
+          revision: 1,
+          state: 'settled',
+          sessionUpdate: kind,
+          payloadVersion: 1,
+          payload: { messageId: 'bad', content: 'invalid', plan: 'invalid' },
+        },
+      ])
+      .run();
+    const result = await caller.session.list({ archived: false });
+    expect(result.sessions).toHaveLength(2);
+    expect(
+      result.sessions.find((row) => row.sessionId === 'session-1'),
+    ).toMatchObject({ activity: '', plan: null });
+    expect(
+      result.sessions.find((row) => row.sessionId === 'healthy'),
+    ).toMatchObject({ activity: 'Healthy reply' });
+    expect(
+      reported.mock.calls.some(([message]) =>
+        String(message).includes('rejected'),
+      ),
+    ).toBe(true);
+  },
+);
+
+it.each(agentAdapters.map(({ agent }) => agent))(
+  'drops only a malformed Session for %s',
+  async (agent) => {
+    const { database, remove } = openTestDatabase({ agent });
+    onTestFinished(remove);
+    const reported = vi.spyOn(console, 'error').mockImplementation(() => {});
+    onTestFinished(() => reported.mockRestore());
+    const { createCaller } = startEngine({
+      database,
+      adapter: createMockAdapter({}, agent),
+    });
+    const caller = await createCaller();
+    insertSession(database, { id: 'healthy', agent });
+    database
+      .update(session)
+      .set({ titleSource: sql`'invalid'` })
+      .where(eq(session.id, 'session-1'))
+      .run();
+    const result = await caller.session.list({ archived: false });
+    expect(result.sessions.map((row) => row.sessionId)).toEqual(['healthy']);
+    expect(reported).toHaveBeenCalledWith(
+      'sessions: rejected list shape #1',
+      expect.anything(),
+    );
+  },
+);
+
+it.each(agentAdapters.map(({ agent }) => agent))(
+  'drops only the Session with a malformed Turn for %s',
+  async (agent) => {
+    const { database, remove } = openTestDatabase({ agent });
+    onTestFinished(remove);
+    const reported = vi.spyOn(console, 'error').mockImplementation(() => {});
+    onTestFinished(() => reported.mockRestore());
+    const { createCaller } = startEngine({
+      database,
+      adapter: createMockAdapter({}, agent),
+    });
+    const caller = await createCaller();
+    insertSession(database, { id: 'healthy', agent });
+    database
+      .insert(turn)
+      .values({
+        id: 'bad-turn',
+        sessionId: 'session-1',
+        status: 'ended',
+        usage: { totalTokens: 'invalid' },
+      })
+      .run();
+    const result = await caller.session.list({ archived: false });
+    expect(result.sessions.map((row) => row.sessionId)).toEqual(['healthy']);
+    expect(reported).toHaveBeenCalledWith(
+      'sessions: rejected list shape #1',
+      expect.anything(),
+    );
+  },
+);
 
 it('serves live Session procedures and drains their Feed before closing the database', async () => {
   const { database, remove } = openTestDatabase();
@@ -729,8 +911,10 @@ async function startNewSessionEngine(
   {
     recording,
     availability,
+    sessions,
     searchPath = (bin) => `${bin}${path.delimiter}${process.env.PATH ?? ''}`,
   }: {
+    sessions?: typeof registryMachine;
     recording?: string;
     availability?: 'available' | 'not_installed' | 'not_signed_in';
     searchPath?: (bin: string) => string;
@@ -752,7 +936,12 @@ async function startNewSessionEngine(
   vi.stubEnv('PATH', searchPath(bin));
   const { database, remove } = openTestDatabase({}, project);
   onTestFinished(remove);
-  const { engine, createCaller } = startEngine({ database, adapter, home });
+  const { engine, createCaller } = startEngine({
+    database,
+    adapter,
+    home,
+    sessions,
+  });
   return {
     project,
     home,
@@ -897,7 +1086,7 @@ it.each(
           : {
               type: 'worktree',
               path: path.join(root.home, 'worktrees', 'project-1', sessionId),
-              branch: `argo/${sessionId}`,
+              branch: sessionBranch(sessionId),
             },
     });
     expect(
@@ -1165,6 +1354,190 @@ it.each(
   },
 );
 
+for (const adapter of agentAdapters)
+  it
+    .skipIf(
+      mockClis[adapter.agent]?.unsupportedScenarios.includes(
+        'otherThreadRequest',
+      ),
+    )
+    .each([
+      {
+        recording: 'permission',
+        expected: { type: 'permission', optionId: 'reject_once' },
+      },
+      {
+        recording: 'elicitation',
+        expected: { type: 'elicitation', action: 'decline' },
+      },
+    ])(
+    `answers a ${adapter.agent} other-thread $recording request; skipped where requests have no thread id`,
+    async ({ recording, expected }) => {
+      const root = await startNewSessionEngine(adapter, { recording });
+      const file = path.join(root.home, 'answers.jsonl');
+      stubScenario({ otherThreadRequest: true, requestAnswersFile: file });
+      const caller = await root.createCaller();
+      const { sessionId } = await caller.session.new({
+        projectId: 'project-1',
+        agent: adapter.agent,
+        checkout: { type: 'main' },
+        configOptions: [],
+        prompt: [{ type: 'text', text: 'Run a Turn' }],
+      });
+      await expect.poll(() => readRequestAnswers(file)).toEqual([expected]);
+      await expect
+        .poll(
+          async () => (await readSnapshot(root.createCaller, sessionId)).state,
+        )
+        .toBe('idle');
+      expect(await readSnapshot(root.createCaller, sessionId)).toMatchObject({
+        pendingPermission: null,
+        pendingElicitation: null,
+      });
+    },
+  );
+
+it.each(agentAdapters)(
+  'cancel answers every $agent queued question',
+  async (adapter) => {
+    const root = await startNewSessionEngine(adapter, {
+      recording: 'elicitation',
+    });
+    const file = path.join(root.home, 'answers.jsonl');
+    stubScenario({ concurrentQuestions: true, requestAnswersFile: file });
+    const caller = await root.createCaller();
+    const { sessionId } = await caller.session.new({
+      projectId: 'project-1',
+      agent: adapter.agent,
+      checkout: { type: 'main' },
+      configOptions: [],
+      prompt: [{ type: 'text', text: 'Ask two questions' }],
+    });
+    await expect
+      .poll(
+        async () =>
+          (await readSnapshot(root.createCaller, sessionId)).pendingElicitation,
+      )
+      .not.toBeNull();
+    await caller.session.cancel({ sessionId });
+    await expect.poll(() => readRequestAnswers(file)).toHaveLength(2);
+    expect(await readRequestAnswers(file)).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ action: 'accept' })]),
+    );
+    await expect
+      .poll(
+        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+      )
+      .toBe('idle');
+    expect(
+      (await readSnapshot(root.createCaller, sessionId)).pendingElicitation,
+    ).toBeNull();
+  },
+);
+
+it.each(agentAdapters)(
+  'stop answers every $agent queued question',
+  async (adapter) => {
+    const root = await startNewSessionEngine(adapter, {
+      recording: 'elicitation',
+    });
+    const file = path.join(root.home, 'answers.jsonl');
+    stubScenario({ concurrentQuestions: true, requestAnswersFile: file });
+    const caller = await root.createCaller();
+    const { sessionId } = await caller.session.new({
+      projectId: 'project-1',
+      agent: adapter.agent,
+      checkout: { type: 'main' },
+      configOptions: [],
+      prompt: [{ type: 'text', text: 'Ask two questions' }],
+    });
+    await expect
+      .poll(
+        async () =>
+          (await readSnapshot(root.createCaller, sessionId)).pendingElicitation,
+      )
+      .not.toBeNull();
+    root.engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
+    await waitFor(root.engine, (snapshot) => snapshot.status === 'done', {
+      timeout: gracefulStopLimit,
+    });
+    expect(await readRequestAnswers(file)).toHaveLength(2);
+    expect(await readRequestAnswers(file)).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ action: 'accept' })]),
+    );
+    expect(root.engine.getSnapshot().output).toEqual({ exitCode: 0 });
+  },
+);
+
+it.each(agentAdapters)(
+  'shows two $agent questions in FIFO order and answers both',
+  async (adapter) => {
+    const root = await startNewSessionEngine(adapter, {
+      recording: 'elicitation',
+    });
+    const file = path.join(root.home, 'answers.jsonl');
+    stubScenario({ concurrentQuestions: true, requestAnswersFile: file });
+    const caller = await root.createCaller();
+    const { sessionId } = await caller.session.new({
+      projectId: 'project-1',
+      agent: adapter.agent,
+      checkout: { type: 'main' },
+      configOptions: [],
+      prompt: [{ type: 'text', text: 'Ask two questions' }],
+    });
+    await expect
+      .poll(
+        async () =>
+          (await readSnapshot(root.createCaller, sessionId)).pendingElicitation,
+      )
+      .not.toBeNull();
+    const first = (await readSnapshot(root.createCaller, sessionId))
+      .pendingElicitation;
+    if (!first) throw new Error('No first Elicitation');
+    expect(first.toolCallId).not.toContain('-second');
+    expect(await readRequestAnswers(file)).toEqual([]);
+    const recorded =
+      mockClis[adapter.agent]?.recordedRequestAnswer('elicitation');
+    if (recorded?.type !== 'elicitation')
+      throw new Error('No recorded Elicitation answer');
+    await caller.session.answerElicitation({
+      sessionId,
+      requestId: first.requestId,
+      action: 'accept',
+      content: recorded.content,
+    });
+    await expect
+      .poll(
+        async () =>
+          (await readSnapshot(root.createCaller, sessionId)).pendingElicitation
+            ?.toolCallId,
+      )
+      .toContain('-second');
+    const second = (await readSnapshot(root.createCaller, sessionId))
+      .pendingElicitation;
+    if (!second) throw new Error('No second Elicitation');
+    expect(second.requestId).not.toBe(first.requestId);
+    await expect.poll(() => readRequestAnswers(file)).toEqual([recorded]);
+    await caller.session.answerElicitation({
+      sessionId,
+      requestId: second.requestId,
+      action: 'accept',
+      content: recorded.content,
+    });
+    await expect
+      .poll(() => readRequestAnswers(file))
+      .toEqual([recorded, recorded]);
+    await expect
+      .poll(
+        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+      )
+      .toBe('idle');
+    expect(
+      (await readSnapshot(root.createCaller, sessionId)).pendingElicitation,
+    ).toBeNull();
+  },
+);
+
 it.each(agentAdapters)(
   'answers a $agent Elicitation once through tRPC',
   async (adapter) => {
@@ -1341,6 +1714,16 @@ it.each(agentAdapters)(
       pendingPermission: null,
       pendingElicitation: null,
     });
+    await wait(cancellationSettleWait);
+    const { rows } = await caller.feed.page({ sessionId, direction: 'tail' });
+    expect(rows).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sessionUpdate: 'notice',
+          title: 'The Agent stopped unexpectedly',
+        }),
+      ]),
+    );
     await expect(
       caller.session.answerPermission({
         sessionId,
@@ -1393,6 +1776,16 @@ it.each(agentAdapters)(
       pendingPermission: null,
       pendingElicitation: null,
     });
+    await wait(cancellationSettleWait);
+    const { rows } = await caller.feed.page({ sessionId, direction: 'tail' });
+    expect(rows).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sessionUpdate: 'notice',
+          title: 'The Agent stopped unexpectedly',
+        }),
+      ]),
+    );
     await expect(
       caller.session.answerElicitation({
         sessionId,
@@ -1486,3 +1879,874 @@ it('stops a started Engine when the test finishes', () => {
   started = startEngine({ database, adapter: createMockAdapter() }).engine;
   expect(started.getSnapshot().status).toBe('active');
 });
+
+for (const adapter of agentAdapters)
+  it(`keeps other ${adapter.agent} Sessions usable after a Feed actor fails`, async () => {
+    const failure = new Error('Feed failed on its first change');
+    const sessions = registryMachine.provide({
+      actors: {
+        session: sessionMachine.provide({
+          actors: {
+            feed: feedMachine.provide({
+              actions: {
+                sendToWriter: ({ context, system }, { job }) => {
+                  if (context.sessionId === 'session-broken') throw failure;
+                  system
+                    .get('databaseWriter')
+                    .send({ type: 'writer.write', job });
+                },
+              },
+            }),
+          },
+        }),
+      },
+    });
+    const root = await startNewSessionEngine(adapter, { sessions });
+    insertSession(root.database, {
+      id: 'session-broken',
+      agent: adapter.agent,
+      checkoutPath: root.project,
+    });
+    insertSession(root.database, {
+      id: 'session-2',
+      agent: adapter.agent,
+      checkoutPath: root.project,
+    });
+    const controller = new AbortController();
+    onTestFinished(() => controller.abort());
+    const caller = await root.createCaller(controller.signal);
+    const list = (await caller.session.listUpdates())[Symbol.asyncIterator]();
+    await list.next();
+    const registry: ActorRefFrom<typeof registryMachine> | undefined =
+      root.engine.system.get('sessions');
+    if (!registry) throw new Error('No Session registry');
+    registry.send({
+      type: 'sessions.open',
+      sessionId: 'session-broken',
+      agent: adapter.agent,
+    });
+    await expect
+      .poll(() =>
+        root.engine.system.get('session:session-broken')?.getSnapshot().can({
+          type: 'session.prompt',
+          turnId: 'readiness-check',
+          content: [],
+        }),
+      )
+      .toBe(true);
+    const feed = (
+      await caller.feed.subscribe({ sessionId: 'session-broken', after: null })
+    )[Symbol.asyncIterator]();
+    expect((await feed.next()).value).toMatchObject({ type: 'snapshot' });
+    const rejectedFeed = expect(
+      (async () => {
+        for await (const event of { [Symbol.asyncIterator]: () => feed })
+          expect(event).toMatchObject({ type: 'snapshot' });
+      })(),
+    ).rejects.toThrow(failure.message);
+    const engineErrors: unknown[] = [];
+    root.engine.subscribe({ error: (error) => engineErrors.push(error) });
+    await caller.session.prompt({
+      sessionId: 'session-broken',
+      prompt: [{ type: 'text', text: 'First Session' }],
+    });
+    await rejectedFeed;
+    await expect
+      .poll(() => root.engine.system.get('session:session-broken'))
+      .toBeUndefined();
+    await caller.session.prompt({
+      sessionId: 'session-2',
+      prompt: [{ type: 'text', text: 'Finish this Turn' }],
+    });
+    await expect
+      .poll(async () => {
+        const snapshot = await readSnapshot(root.createCaller, 'session-2');
+        return snapshot.state;
+      })
+      .toBe('idle');
+    await expect
+      .poll(async () =>
+        (
+          await caller.feed.page({ sessionId: 'session-2', direction: 'tail' })
+        ).rows.some((row) => row.sessionUpdate === 'agent_message'),
+      )
+      .toBe(true);
+    expect(root.engine.getSnapshot().status).toBe('active');
+    expect(engineErrors).toEqual([]);
+    controller.abort();
+    await list.return?.();
+  });
+
+it('shares one coalesced list read for three subscribers across fifty changes', async () => {
+  const { database, remove } = openTestDatabase();
+  onTestFinished(remove);
+  const counted = countDatabaseReads(database);
+  const { engine, createCaller } = startEngine({
+    database: counted.database,
+    adapter: createMockAdapter(),
+  });
+  const controllers = [
+    new AbortController(),
+    new AbortController(),
+    new AbortController(),
+    new AbortController(),
+  ];
+  onTestFinished(() => {
+    for (const controller of controllers) controller.abort();
+  });
+  const firstCaller = await createCaller(controllers[0]?.signal);
+  const secondCaller = await createCaller(controllers[1]?.signal);
+  const countsCaller = await createCaller(controllers[2]?.signal);
+  const resumedCaller = await createCaller(controllers[3]?.signal);
+  vi.useFakeTimers();
+  try {
+    const first = (await firstCaller.session.listUpdates())[
+      Symbol.asyncIterator
+    ]();
+    const second = (await secondCaller.session.listUpdates())[
+      Symbol.asyncIterator
+    ]();
+    const counts = (await countsCaller.session.counts())[
+      Symbol.asyncIterator
+    ]();
+    expect((await first.next()).value).toMatchObject({
+      type: 'changed',
+      session: { sessionId: 'session-1' },
+    });
+    expect((await second.next()).value).toMatchObject({
+      type: 'changed',
+      session: { sessionId: 'session-1' },
+    });
+    expect((await counts.next()).value).toEqual({ attention: 0, running: 0 });
+    const initialReads = counted.metrics.sessionReads;
+    await vi.advanceTimersByTimeAsync(100);
+    counted.metrics.sessionReads = 0;
+    const firstChange = first.next();
+    const secondChange = second.next();
+    const nextCounts = counts.next();
+    const writer = engine.system.get('databaseWriter') as ActorRefFrom<
+      typeof writerMachine
+    >;
+    for (let index = 1; index <= 50; index += 1)
+      writer.send({
+        type: 'writer.write',
+        job: {
+          type: 'sessionRowUpdate',
+          id: 'session-1',
+          set: { title: `Change ${index}`, maxRevision: index },
+        },
+      });
+    await vi.advanceTimersByTimeAsync(99);
+    expect(counted.metrics.sessionReads).toBe(0);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(counted.metrics.sessionReads).toBe(1);
+    expect(initialReads).toBe(1);
+    expect((await firstChange).value).toMatchObject({
+      type: 'changed',
+      session: { title: 'Change 50', status: 'unread' },
+    });
+    expect((await secondChange).value).toMatchObject({
+      type: 'changed',
+      session: { title: 'Change 50', status: 'unread' },
+    });
+    expect((await nextCounts).value).toEqual({ attention: 1, running: 0 });
+    expect(await first.return?.()).toMatchObject({ done: true });
+    counted.metrics.sessionReads = 0;
+    const survivorChange = second.next();
+    const survivorCounts = counts.next();
+    writer.send({
+      type: 'writer.write',
+      job: {
+        type: 'sessionRowUpdate',
+        id: 'session-1',
+        set: { title: 'Survives one disconnect', seenRevision: 50 },
+      },
+    });
+    await vi.advanceTimersByTimeAsync(100);
+    expect(counted.metrics.sessionReads).toBe(1);
+    expect((await survivorChange).value).toMatchObject({
+      type: 'changed',
+      session: { title: 'Survives one disconnect' },
+    });
+    expect((await survivorCounts).value).toEqual({ attention: 0, running: 0 });
+    controllers[1]?.abort();
+    controllers[2]?.abort();
+    counted.metrics.sessionReads = 0;
+    writer.send({
+      type: 'writer.write',
+      job: {
+        type: 'sessionRowUpdate',
+        id: 'session-1',
+        set: { title: 'No subscribers' },
+      },
+    });
+    await vi.advanceTimersByTimeAsync(100);
+    expect(counted.metrics.sessionReads).toBe(0);
+    expect(await second.next()).toMatchObject({ done: true });
+    expect(await counts.next()).toMatchObject({ done: true });
+    const resumed = (await resumedCaller.session.listUpdates())[
+      Symbol.asyncIterator
+    ]();
+    expect((await resumed.next()).value).toMatchObject({
+      type: 'changed',
+      session: { title: 'No subscribers' },
+    });
+    expect(counted.metrics.sessionReads).toBe(1);
+    controllers[3]?.abort();
+    expect(await resumed.next()).toMatchObject({ done: true });
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+for (const adapter of agentAdapters) {
+  it(`rejects a new ${adapter.agent} Session when CLI initialization exceeds agentStartLimit`, async () => {
+    stubScenario({ blockInitialize: true });
+    const root = await startNewSessionEngine(adapter);
+    const caller = await root.createCaller();
+    await expect(
+      caller.session.new({
+        projectId: 'project-1',
+        agent: adapter.agent,
+        checkout: { type: 'worktree', baseBranch: 'feature' },
+        configOptions: [],
+        prompt: [{ type: 'text', text: 'Start the Session' }],
+      }),
+    ).rejects.toMatchObject({
+      code: 'PRECONDITION_FAILED',
+      message:
+        'Agent startup exceeded agentStartLimit (10000 ms). Retry the Session.',
+    });
+    await expect
+      .poll(() => root.git('branch', '--list', 'argo/*').trim())
+      .toBe('');
+    expect(root.git('worktree', 'list')).not.toContain(root.home);
+    expect(
+      (await caller.session.list({ archived: false })).sessions,
+    ).not.toContainEqual(
+      expect.objectContaining({ title: 'Start the Session' }),
+    );
+    stubScenario({});
+    expect(
+      await caller.session.new({
+        projectId: 'project-1',
+        agent: adapter.agent,
+        checkout: { type: 'main' },
+        configOptions: [],
+        prompt: [{ type: 'text', text: 'Retry the Session' }],
+      }),
+    ).toEqual({ sessionId: expect.any(String) });
+  }, 15_000);
+
+  it(`rejects a new ${adapter.agent} Session when a Checkout hook exceeds checkoutLimit`, async () => {
+    const root = await startNewSessionEngine(adapter);
+    const marker = path.join(root.home, 'hook-started');
+    const hook = path.join(root.project, '.git', 'hooks', 'post-checkout');
+    writeFileSync(
+      hook,
+      [
+        '#!/bin/sh',
+        'checkout=$(/bin/pwd)',
+        `echo "$checkout" > '${marker}'`,
+        'while [ -d "$checkout" ]; do /bin/sleep 0.01; done',
+        '',
+      ].join('\n'),
+      { mode: 0o755 },
+    );
+    const caller = await root.createCaller();
+    const creation = caller.session.new({
+      projectId: 'project-1',
+      agent: adapter.agent,
+      checkout: { type: 'worktree', baseBranch: 'feature' },
+      configOptions: [],
+      prompt: [{ type: 'text', text: 'Wait for Checkout' }],
+    });
+    const rejected = expect(creation).rejects.toMatchObject({
+      code: 'PRECONDITION_FAILED',
+      message:
+        'Checkout creation exceeded checkoutLimit (10000 ms). Retry the Session.',
+    });
+    await expect.poll(() => existsSync(marker)).toBe(true);
+    const checkoutPath = readFileSync(marker, 'utf8').trim();
+    expect(checkoutPath).toContain(path.join(root.home, 'worktrees'));
+    expect(existsSync(checkoutPath)).toBe(true);
+    await rejected;
+    await expect.poll(() => existsSync(checkoutPath)).toBe(false);
+    await expect
+      .poll(() => root.git('branch', '--list', 'argo/*').trim())
+      .toBe('');
+    expect(root.git('worktree', 'list')).not.toContain(checkoutPath);
+    rmSync(hook);
+    expect(
+      await caller.session.new({
+        projectId: 'project-1',
+        agent: adapter.agent,
+        checkout: { type: 'worktree', baseBranch: 'feature' },
+        configOptions: [],
+        prompt: [{ type: 'text', text: 'Retry the Checkout' }],
+      }),
+    ).toEqual({ sessionId: expect.any(String) });
+  }, 15_000);
+}
+
+it('reads only the changed Session and pages the shared cache', async () => {
+  const { database, remove } = openTestDatabase();
+  onTestFinished(remove);
+  for (let index = 2; index <= 60; index++)
+    insertSession(database, { id: `session-${index}` });
+  const counted = countDatabaseReads(database);
+  const { engine, createCaller } = startEngine({
+    database: counted.database,
+    adapter: createMockAdapter(),
+  });
+  const controller = new AbortController();
+  onTestFinished(() => controller.abort());
+  const caller = await createCaller(controller.signal);
+  const updates = (await caller.session.listUpdates())[Symbol.asyncIterator]();
+  for (let index = 0; index < 60; index++)
+    expect((await updates.next()).value).toMatchObject({ type: 'changed' });
+  vi.useFakeTimers();
+  try {
+    await vi.advanceTimersByTimeAsync(100);
+    counted.metrics.queries = 0;
+    counted.metrics.rows = 0;
+    const changed = updates.next();
+    const writer: ActorRefFrom<typeof writerMachine> =
+      engine.system.get('databaseWriter');
+    writer.send({
+      type: 'writer.write',
+      job: {
+        type: 'sessionRowUpdate',
+        id: 'session-1',
+        set: { title: 'Changed alone', maxRevision: 1 },
+      },
+    });
+    await vi.advanceTimersByTimeAsync(100);
+    expect((await changed).value).toMatchObject({
+      type: 'changed',
+      session: { sessionId: 'session-1', title: 'Changed alone' },
+    });
+    expect(counted.metrics.queries).toBeLessThanOrEqual(5);
+    expect(counted.metrics.rows).toBeLessThanOrEqual(3);
+    counted.metrics.queries = 0;
+    const page = await caller.session.list({ archived: false });
+    expect(page.sessions[0]).toMatchObject({
+      sessionId: 'session-1',
+      title: 'Changed alone',
+      status: 'unread',
+    });
+    expect(page.sessions).toHaveLength(50);
+    expect(page.nextCursor).not.toBeNull();
+    const next = await caller.session.list({
+      archived: false,
+      cursor: page.nextCursor ?? undefined,
+    });
+    expect(next.sessions).toHaveLength(10);
+    expect(next.nextCursor).toBeNull();
+    expect(counted.metrics.queries).toBe(0);
+    controller.abort();
+    await updates.return?.();
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+it('initializes a fresh list after all watchers leave and unwatched data changes', async () => {
+  const { database, remove } = openTestDatabase();
+  onTestFinished(remove);
+  const { engine, createCaller } = startEngine({
+    database,
+    adapter: createMockAdapter(),
+  });
+  const controller = new AbortController();
+  onTestFinished(() => controller.abort());
+  const watchedCaller = await createCaller(controller.signal);
+  const caller = await createCaller();
+  const updates = (await watchedCaller.session.listUpdates())[
+    Symbol.asyncIterator
+  ]();
+  expect((await updates.next()).value).toMatchObject({
+    type: 'changed',
+    session: { title: '' },
+  });
+  controller.abort();
+  await updates.return?.();
+  const writer: ActorRefFrom<typeof writerMachine> =
+    engine.system.get('databaseWriter');
+  writer.send({
+    type: 'writer.write',
+    job: {
+      type: 'sessionRowUpdate',
+      id: 'session-1',
+      set: { title: 'Changed without watchers', maxRevision: 1 },
+    },
+  });
+  await waitFor(writer, (snapshot) => snapshot.context.queue.length === 0);
+  expect(
+    (await caller.session.list({ archived: false })).sessions,
+  ).toMatchObject([
+    {
+      sessionId: 'session-1',
+      title: 'Changed without watchers',
+      status: 'unread',
+    },
+  ]);
+});
+
+it('pages current queued activity before the list publication delay', async () => {
+  const { database, remove } = openTestDatabase();
+  onTestFinished(remove);
+  insertSession(database, { id: 'session-2', activityAt: 10 });
+  const counted = countDatabaseReads(database);
+  const batch = Promise.withResolvers<void>();
+  onTestFinished(() => batch.resolve());
+  const { engine, createCaller } = startEngine({
+    database: counted.database,
+    adapter: createMockAdapter(),
+    databaseWriter: writerMachine.provide({
+      actors: {
+        writeBatch: fromPromise<
+          void,
+          { database: Parameters<typeof writeJobs>[0]; jobs: WriterJob[] }
+        >(async ({ input }) => {
+          await batch.promise;
+          writeJobs(input.database, input.jobs);
+        }),
+      },
+    }),
+  });
+  const controller = new AbortController();
+  onTestFinished(() => controller.abort());
+  const caller = await createCaller(controller.signal);
+  const updates = (await caller.session.listUpdates())[Symbol.asyncIterator]();
+  await updates.next();
+  await updates.next();
+  vi.useFakeTimers();
+  try {
+    await vi.advanceTimersByTimeAsync(100);
+    const writer: ActorRefFrom<typeof writerMachine> =
+      engine.system.get('databaseWriter');
+    writer.send({
+      type: 'writer.write',
+      job: {
+        type: 'sessionRowUpdate',
+        id: 'session-1',
+        set: { title: 'Queued newest', maxRevision: 1 },
+        activityAt: 20,
+      },
+    });
+    expect(
+      (await caller.session.list({ archived: false })).sessions.map((row) => [
+        row.sessionId,
+        row.activityAt,
+      ]),
+    ).toEqual([
+      ['session-1', 20],
+      ['session-2', 10],
+    ]);
+    expect(writer.getSnapshot().context.queue).toHaveLength(1);
+    counted.metrics.sessionReads = 0;
+    batch.resolve();
+    await vi.advanceTimersByTimeAsync(100);
+    expect(writer.getSnapshot().context.queue).toHaveLength(0);
+    expect(counted.metrics.sessionReads).toBe(1);
+    expect(
+      (await caller.session.list({ archived: false })).sessions[0],
+    ).toMatchObject({ sessionId: 'session-1', activityAt: 20 });
+    controller.abort();
+    await updates.return?.();
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+it('updates a cached parent when its stored Subagent Turn changes', async () => {
+  const { database, remove } = openTestDatabase();
+  onTestFinished(remove);
+  insertSession(database, { id: 'child-1', parentSessionId: 'session-1' });
+  const { engine, createCaller } = startEngine({
+    database,
+    adapter: createMockAdapter(),
+  });
+  const controller = new AbortController();
+  onTestFinished(() => controller.abort());
+  const caller = await createCaller(controller.signal);
+  const updates = (await caller.session.listUpdates())[Symbol.asyncIterator]();
+  expect((await updates.next()).value).toMatchObject({
+    session: { subagents: { total: 1, running: 0 } },
+  });
+  vi.useFakeTimers();
+  try {
+    await vi.advanceTimersByTimeAsync(100);
+    const writer: ActorRefFrom<typeof writerMachine> =
+      engine.system.get('databaseWriter');
+    const running = updates.next();
+    writer.send({
+      type: 'writer.write',
+      job: {
+        type: 'turnInsert',
+        turn: {
+          id: 'child-turn',
+          sessionId: 'child-1',
+          status: 'running',
+          startedAt: 1,
+        },
+      },
+    });
+    await vi.advanceTimersByTimeAsync(100);
+    expect((await running).value).toMatchObject({
+      session: { sessionId: 'session-1', subagents: { total: 1, running: 1 } },
+    });
+    const stopped = updates.next();
+    writer.send({
+      type: 'writer.write',
+      job: {
+        type: 'turnUpdate',
+        id: 'child-turn',
+        set: { status: 'ended', endedAt: 2 },
+      },
+    });
+    await vi.advanceTimersByTimeAsync(100);
+    expect((await stopped).value).toMatchObject({
+      session: { sessionId: 'session-1', subagents: { total: 1, running: 0 } },
+    });
+    controller.abort();
+    await updates.return?.();
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+it.each(agentAdapters)(
+  'holds a $agent model choice until the next Turn',
+  async (adapter) => {
+    const root = await startNewSessionEngine(adapter, {
+      recording: 'interrupt',
+    });
+    const caller = await root.createCaller();
+    const { sessionId } = await caller.session.new({
+      projectId: 'project-1',
+      agent: adapter.agent,
+      checkout: { type: 'main' },
+      configOptions: [],
+      prompt: [{ type: 'text', text: 'Ask before making a choice' }],
+    });
+    await expect
+      .poll(
+        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+      )
+      .toBe('running');
+    const before = await readSnapshot(root.createCaller, sessionId);
+    const model = before.configOptions.find(
+      (option) => option.category === 'model',
+    );
+    if (model?.type !== 'select')
+      throw new Error('Recorded catalog needs model choices.');
+    const choice = model.options
+      .flatMap((entry) => ('groupId' in entry ? entry.options : [entry]))
+      .find((entry) => entry.value !== model.currentValue);
+    if (!choice) throw new Error('Recorded catalog needs a second model.');
+    const configured = await caller.session
+      .setConfigOption({
+        sessionId,
+        configId: model.configId,
+        type: 'id',
+        value: choice.value,
+      })
+      .then(
+        (result) => ({ result, error: undefined }),
+        (error: unknown) => ({ result: undefined, error }),
+      );
+    const held = await readSnapshot(root.createCaller, sessionId);
+    await caller.session.cancel({ sessionId });
+    await expect
+      .poll(
+        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+      )
+      .toBe('idle');
+    const { messageId } = await caller.session.prompt({
+      sessionId,
+      prompt: [{ type: 'text', text: 'Use the held model' }],
+    });
+    await expect
+      .poll(
+        async () =>
+          (await caller.feed.page({ sessionId, direction: 'tail' })).rows.find(
+            (row) => row.id === messageId,
+          )?.turnId,
+      )
+      .toEqual(expect.any(String));
+    const rows = (await caller.feed.page({ sessionId, direction: 'tail' }))
+      .rows;
+    const nextTurnId = rows.find((row) => row.id === messageId)?.turnId;
+    expect(
+      root.database
+        .select()
+        .from(turn)
+        .where(eq(turn.sessionId, sessionId))
+        .all(),
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: nextTurnId, model: choice.value }),
+      ]),
+    );
+    expect(configured.error).toBeUndefined();
+    expect(configured.result?.configOptions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          configId: model.configId,
+          currentValue: choice.value,
+          _meta: expect.objectContaining({
+            argo: expect.objectContaining({ heldUntilNextTurn: true }),
+          }),
+        }),
+      ]),
+    );
+    expect(held).toMatchObject({
+      configOptions: configured.result?.configOptions,
+    });
+    await expect
+      .poll(
+        async () =>
+          (await readSnapshot(root.createCaller, sessionId)).configOptions.find(
+            (option) => option.configId === model.configId,
+          )?.currentValue,
+      )
+      .toBe(choice.value);
+    await expect
+      .poll(
+        async () =>
+          (await readSnapshot(root.createCaller, sessionId)).configOptions.find(
+            (option) => option.configId === model.configId,
+          )?._meta?.argo?.heldUntilNextTurn,
+      )
+      .not.toBe(true);
+  },
+);
+
+it.each(agentAdapters)(
+  'shows the applied $agent effort after the next Turn clamps a held choice',
+  async (adapter) => {
+    const root = await startNewSessionEngine(adapter, {
+      recording: 'interrupt',
+    });
+    const caller = await root.createCaller();
+    const { sessionId } = await caller.session.new({
+      projectId: 'project-1',
+      agent: adapter.agent,
+      checkout: { type: 'main' },
+      configOptions: [],
+      prompt: [{ type: 'text', text: 'Hold my choices' }],
+    });
+    await expect
+      .poll(
+        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+      )
+      .toBe('running');
+    const before = await readSnapshot(root.createCaller, sessionId);
+    const model = before.configOptions.find(
+      (option) => option.category === 'model',
+    );
+    const effort = before.configOptions.find(
+      (option) => option.category === 'thought_level',
+    );
+    if (model?.type !== 'select' || effort?.type !== 'select')
+      throw new Error('Recorded catalog needs model and effort choices.');
+    const models = model.options.flatMap((entry) =>
+      'groupId' in entry ? entry.options : [entry],
+    );
+    const wide = models.find((entry) => entry.value === model.currentValue);
+    const levels = wide?._meta?.argo?.supportedEffortLevels ?? [];
+    const narrow = models.find(
+      (entry) =>
+        entry._meta?.argo?.supportsEffort &&
+        levels.some(
+          (level) => !entry._meta?.argo?.supportedEffortLevels?.includes(level),
+        ),
+    );
+    const unsupported = effort.options
+      .flatMap((entry) => ('groupId' in entry ? entry.options : [entry]))
+      .find(
+        (entry) =>
+          levels.includes(entry.value) &&
+          !narrow?._meta?.argo?.supportedEffortLevels?.includes(entry.value),
+      );
+    if (!wide || !narrow || !unsupported)
+      throw new Error('Recorded catalog needs a narrower model effort range.');
+    for (const [configId, value] of [
+      [model.configId, wide.value],
+      [effort.configId, unsupported.value],
+      [model.configId, narrow.value],
+    ] as const)
+      await caller.session.setConfigOption({
+        sessionId,
+        configId,
+        type: 'id',
+        value,
+      });
+    await caller.session.cancel({ sessionId });
+    await expect
+      .poll(
+        async () => (await readSnapshot(root.createCaller, sessionId)).state,
+      )
+      .toBe('idle');
+    await caller.session.prompt({
+      sessionId,
+      prompt: [{ type: 'text', text: 'Run the narrower model' }],
+    });
+    await expect
+      .poll(async () => {
+        const snapshot = await readSnapshot(root.createCaller, sessionId);
+        return snapshot.configOptions.find(
+          (option) => option.configId === effort.configId,
+        )?._meta?.argo?.heldUntilNextTurn;
+      })
+      .not.toBe(true);
+    const after = await readSnapshot(root.createCaller, sessionId);
+    expect(
+      after.configOptions.find((option) => option.configId === model.configId)
+        ?.currentValue,
+    ).toBe(narrow.value);
+    const applied = after.configOptions.find(
+      (option) => option.configId === effort.configId,
+    )?.currentValue;
+    expect(applied).not.toBe(unsupported.value);
+    expect(narrow._meta?.argo?.supportedEffortLevels).toContain(applied);
+    expect(
+      after.configOptions.some(
+        (option) => option._meta?.argo?.heldUntilNextTurn,
+      ),
+    ).toBe(false);
+  },
+);
+
+it.each(
+  agentAdapters.flatMap(({ agent }) => [
+    {
+      agent,
+      table: session,
+      column: session.configValues,
+      id: 'session-1',
+      field: 'Session config values',
+    },
+    {
+      agent,
+      table: session,
+      column: session.vendorRef,
+      id: 'session-1',
+      field: 'Session vendor reference',
+    },
+    {
+      agent,
+      table: turn,
+      column: turn.usage,
+      id: 'bad-turn',
+      field: 'Turn usage',
+    },
+    {
+      agent,
+      table: turn,
+      column: turn.error,
+      id: 'bad-turn',
+      field: 'Turn error',
+    },
+  ]),
+)(
+  'drops only the Session with unreadable $field JSON for $agent',
+  async ({ agent, table, column, id }) => {
+    const { database, remove } = openTestDatabase({ agent });
+    onTestFinished(remove);
+    const reported = vi.spyOn(console, 'error').mockImplementation(() => {});
+    onTestFinished(() => reported.mockRestore());
+    const { createCaller } = startEngine({
+      database,
+      adapter: createMockAdapter({}, agent),
+    });
+    const caller = await createCaller();
+    insertSession(database, { id: 'healthy', agent });
+    database
+      .insert(turn)
+      .values({ id: 'bad-turn', sessionId: 'session-1', status: 'ended' })
+      .run();
+    database.run(
+      sql`update ${table} set ${sql.identifier(column.name)} = 'broken-json' where ${table.id} = ${id}`,
+    );
+    const result = await caller.session.list({ archived: false });
+    expect(result.sessions.map((row) => row.sessionId)).toEqual(['healthy']);
+    expect(reported).toHaveBeenCalledWith(
+      'sessions: rejected list shape #1',
+      expect.anything(),
+    );
+  },
+);
+
+it.each(
+  agentAdapters.flatMap(({ agent }) =>
+    (['agent_message', 'agent_thought', 'tool_call_update'] as const).flatMap(
+      (kind) => [
+        { agent, kind, column: feedRow.payload, field: 'payload' },
+        { agent, kind, column: feedRow.sourceRef, field: 'source reference' },
+      ],
+    ),
+  ),
+)(
+  'degrades only the Session with unreadable $kind $field JSON for $agent',
+  async ({ agent, kind, column }) => {
+    const { database, remove } = openTestDatabase({ agent });
+    onTestFinished(remove);
+    const reported = vi.spyOn(console, 'error').mockImplementation(() => {});
+    onTestFinished(() => reported.mockRestore());
+    const { createCaller } = startEngine({
+      database,
+      adapter: createMockAdapter({}, agent),
+    });
+    const caller = await createCaller();
+    insertSession(database, { id: 'healthy', agent });
+    database
+      .insert(turn)
+      .values({ id: 'running', sessionId: 'session-1', status: 'running' })
+      .run();
+    database
+      .insert(feedRow)
+      .values({
+        sessionId: 'session-1',
+        id: 'bad',
+        position: 0,
+        revision: 1,
+        turnId: 'running',
+        state: 'settled',
+        sessionUpdate: kind,
+        payloadVersion: 1,
+        payload: {
+          messageId: 'bad',
+          content: [{ type: 'text', text: 'A stored reply' }],
+          toolCallId: 'bad',
+          title: 'Read a file',
+          status: 'in_progress',
+          kind: 'read',
+        },
+      })
+      .run();
+    database.run(
+      sql`update ${feedRow} set ${sql.identifier(column.name)} = 'broken-json' where ${feedRow.id} = 'bad'`,
+    );
+    const result = await caller.session.list({ archived: false });
+    expect(result.sessions).toHaveLength(2);
+    expect(
+      result.sessions.find((row) => row.sessionId === 'session-1'),
+    ).toMatchObject({ activity: '', plan: null });
+    expect(result.sessions.map((row) => row.sessionId)).toContain('healthy');
+    expect(
+      reported.mock.calls.some(([message]) =>
+        String(message).includes('rejected'),
+      ),
+    ).toBe(true);
+    await expect(
+      caller.feed.page({
+        sessionId: 'session-1',
+        direction: 'tail',
+        limit: 50,
+      }),
+    ).rejects.toThrow();
+  },
+);

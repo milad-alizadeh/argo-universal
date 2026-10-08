@@ -80,6 +80,10 @@ export const mockClis: Record<string, MockCli> = {
         scenario: { account: 'apiKey' },
         message: 'Sign in to Codex with ChatGPT',
       },
+      {
+        scenario: { malformedLine: true },
+        message: 'Invalid app-server error',
+      },
     ],
     recordings: {
       turn: 'edit-and-command',
@@ -91,12 +95,14 @@ export const mockClis: Record<string, MockCli> = {
     writeTranscript: writeCodexTranscript,
   },
   claude: {
-    // Each reorders a JSON-RPC response to a Turn's start, and Claude's streamed input gets no response to a user message.
+    // These JSON-RPC scenarios have no analogue in the streamed SDK input.
     unsupportedScenarios: [
       'notificationsFirst',
       'requestBeforeStartResponse',
       'turnResponseAfterNextStart',
       'completionBeforeResponse',
+      'malformedLine',
+      'otherThreadRequest',
     ],
     recordedTitle,
     recordedRequestAnswer: claudeRequestAnswer,

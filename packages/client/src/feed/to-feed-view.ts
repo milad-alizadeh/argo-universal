@@ -1,15 +1,21 @@
-import type {
-  CommandAction,
-  SessionSnapshot,
-  SessionUpdate,
-  ToolCallUpdate,
+import {
+  type CommandAction,
+  isToolCallRunning,
+  knownCommandActions,
+  type SessionSnapshot,
+  type SessionUpdate,
+  type ToolCallUpdate,
 } from '@repo/contracts';
-import type { FeedActivity, FeedExploration, FeedView } from './feed-view';
+import type {
+  FeedActivity,
+  FeedExploration,
+  FeedGroup,
+  FeedView,
+} from './feed-view';
 
 function explorationActions(row: ToolCallUpdate): CommandAction[] {
-  const actions = row._meta?.argo?.commandActions;
-  if (actions?.length && actions.every((action) => action.type !== 'unknown'))
-    return actions;
+  const actions = knownCommandActions(row);
+  if (actions.length) return actions;
   if (row.kind === 'read' || row.kind === 'search')
     return [{ type: row.kind, command: '', path: row.locations?.[0]?.path }];
   return [];
@@ -38,10 +44,6 @@ function explorationLines(toolCalls: ToolCallUpdate[]): string[] {
     }
   }
   return lines;
-}
-
-function isRunning(row: ToolCallUpdate): boolean {
-  return row.status === 'pending' || row.status === 'in_progress';
 }
 
 function editsSeveralFiles(row: ToolCallUpdate): boolean {
@@ -119,6 +121,7 @@ export function toFeedView(
   let exploration: FeedExploration | undefined;
   let previousTurnId: string | null | undefined;
   let liveTitle: string | undefined;
+  let live: Extract<FeedGroup, { state: 'open' }>['live'];
 
   function flushGroup() {
     const first = activities[0];
@@ -126,7 +129,7 @@ export function toFeedView(
     for (const activity of activities)
       if (activity.type === 'exploration') {
         activity.lines = explorationLines(activity.toolCalls);
-        activity.title = activity.toolCalls.some(isRunning)
+        activity.title = activity.toolCalls.some(isToolCallRunning)
           ? 'Exploring'
           : 'Explored';
       }
@@ -144,7 +147,9 @@ export function toFeedView(
         type: 'group',
         id: first.type === 'exploration' ? first.id : first.row.id,
         title: liveTitle ?? groupTitle(toolCalls),
-        state: liveTitle ? 'open' : 'settled',
+        ...(liveTitle
+          ? { state: 'open' as const, ...(live ? { live } : {}) }
+          : { state: 'settled' as const }),
         items: activities,
       });
     }
@@ -152,6 +157,7 @@ export function toFeedView(
     toolCalls = [];
     exploration = undefined;
     liveTitle = undefined;
+    live = undefined;
   }
 
   for (const row of rows) {
@@ -170,7 +176,11 @@ export function toFeedView(
         row.toolCallId === snapshot.pendingPermission?.toolCallId;
       toolCalls.push(row);
       const actions = explorationActions(row);
-      if (isRunning(row)) {
+      if (
+        isToolCallRunning(row) &&
+        (awaitingPermission || !live?.awaitingApproval)
+      ) {
+        live = { toolCall: row, awaitingApproval: awaitingPermission };
         if (awaitingPermission) {
           liveTitle = 'Awaiting approval';
         } else if (actions.length && !row._meta?.argo?.permissionOutcome) {

@@ -68,19 +68,44 @@ let threadId = recordedThreadId;
 let turnIndex = 0;
 let interruptedFrames: typeof messages | null = null;
 let activeTurnId: string | null = null;
+let cancelling = false;
 let heldRequestId: string | number | null = null;
 let heldRequest: VendorMessage | null = null;
 let requestFrames: typeof messages = [];
+const concurrentRequests = new Map<string | number, VendorMessage>();
 
 function replayRequestFrames(
-  frames: typeof messages,
+  recordedFrames: typeof messages,
   crashAfter: ((message: VendorMessage) => boolean) | null,
 ) {
+  let frames = recordedFrames;
   const index = frames.findIndex((frame) => 'id' in frame);
-  const request = frames[index];
+  let request = frames[index];
+  if (request && environment.scenario.otherThreadRequest) {
+    // Changing only threadId preserves the recording's generated payload family.
+    request = {
+      ...request,
+      params: { ...request.params, threadId: 'another-thread' },
+    } as VendorMessage;
+    frames = [...frames.slice(0, index), request, ...frames.slice(index + 1)];
+  }
   heldRequestId = request && 'id' in request ? request.id : null;
   heldRequest = request ?? null;
   requestFrames = index < 0 ? [] : frames.slice(index + 1);
+  if (
+    environment.scenario.concurrentQuestions &&
+    request?.method === 'item/tool/requestUserInput'
+  ) {
+    const second = {
+      ...request,
+      id: `${request.id}-second`,
+      params: { ...request.params, itemId: `${request.params.itemId}-second` },
+    } satisfies VendorMessage;
+    concurrentRequests.set(request.id, request);
+    concurrentRequests.set(second.id, second);
+    replayTurn([...frames.slice(0, index + 1), second], crashAfter);
+    return;
+  }
   const completed = replayTurn(
     index < 0 ? frames : frames.slice(0, index + 1),
     crashAfter,
@@ -141,6 +166,7 @@ function startTurn(
     : -1;
   if (command >= 0) interruptedFrames = turn.slice(command + 1);
   activeTurnId = started.params.turn.id;
+  cancelling = false;
   const frames = command >= 0 ? turn.slice(0, command + 1) : turn;
   if (environment.scenario.blockTurnStart) {
     replayTurn(frames.slice(0, frames.indexOf(started) + 1), null);
@@ -180,50 +206,12 @@ function startTurn(
 serveJsonLines<Request>(({ id, method, params, result }) => {
   switch (method) {
     case undefined:
-      if (id === heldRequestId) {
-        if (
-          heldRequest?.method === 'item/commandExecution/requestApproval' ||
-          heldRequest?.method === 'item/fileChange/requestApproval'
-        ) {
-          const answer = result as
-            | CommandExecutionRequestApprovalResponse
-            | FileChangeRequestApprovalResponse;
-          recordRequestAnswer({
-            type: 'permission',
-            optionId:
-              answer.decision === 'accept' ? 'allow_once' : 'reject_once',
-          });
-        }
-        if (heldRequest?.method === 'item/tool/requestUserInput') {
-          const answer = result as ToolRequestUserInputResponse;
-          recordRequestAnswer(
-            Object.keys(answer.answers).length
-              ? {
-                  type: 'elicitation',
-                  action: 'accept',
-                  content: Object.fromEntries(
-                    Object.entries(answer.answers).map(([key, value]) => [
-                      key,
-                      value?.answers.length === 1
-                        ? value.answers[0]
-                        : value?.answers,
-                    ]),
-                  ),
-                }
-              : { type: 'elicitation', action: 'decline' },
-          );
-        }
-        if (withheldStartResponse) {
-          send(withheldStartResponse);
-          withheldStartResponse = null;
-        }
-        replayRequestFrames(requestFrames, null);
-      }
-      return;
+      return answerRequest(id, result);
     case 'initialized':
       return;
     case 'initialize':
       if (environment.scenario.blockInitialize) return;
+      if (environment.scenario.malformedLine) return send({ id, error: {} });
       return send({ id, result: {} });
     case 'account/read': {
       const usesApiKey =
@@ -260,6 +248,27 @@ serveJsonLines<Request>(({ id, method, params, result }) => {
       return send({ id, result: { thread: { id: threadId } } });
     }
     case 'turn/interrupt':
+      cancelling = true;
+      if (environment.scenario.interruptError !== 'none') {
+        if (environment.scenario.interruptError === 'afterCompletion') {
+          const completed = requestFrames.find(
+            (message) => message.method === 'turn/completed',
+          );
+          if (completed?.method === 'turn/completed')
+            send({
+              ...completed,
+              params: {
+                ...completed.params,
+                turn: { ...completed.params.turn, status: 'interrupted' },
+              },
+            } satisfies VendorMessage);
+          activeTurnId = null;
+        }
+        return send({
+          id,
+          error: { code: INTERNAL_ERROR, message: 'Mock interrupt failed.' },
+        });
+      }
       if ((params as TurnInterruptParams)?.turnId !== activeTurnId)
         return send({
           id,
@@ -269,7 +278,8 @@ serveJsonLines<Request>(({ id, method, params, result }) => {
           },
         });
       if (heldRequest?.method === 'item/tool/requestUserInput') {
-        recordRequestAnswer({ type: 'elicitation', action: 'cancel' });
+        if (concurrentRequests.size === 0)
+          recordRequestAnswer({ type: 'elicitation', action: 'cancel' });
         const completed = requestFrames.find(
           (message) => message.method === 'turn/completed',
         );
@@ -310,3 +320,54 @@ serveJsonLines<Request>(({ id, method, params, result }) => {
       });
   }
 });
+
+// Correlates mock request replies and releases the Turn once every question has an answer.
+function answerRequest(id: string | number | undefined, result: unknown) {
+  if (id !== undefined && concurrentRequests.has(id)) {
+    heldRequest = concurrentRequests.get(id) ?? null;
+    heldRequestId = id;
+    concurrentRequests.delete(id);
+  }
+  if (id === heldRequestId) {
+    if (
+      heldRequest?.method === 'item/commandExecution/requestApproval' ||
+      heldRequest?.method === 'item/fileChange/requestApproval'
+    ) {
+      const answer = result as
+        | CommandExecutionRequestApprovalResponse
+        | FileChangeRequestApprovalResponse;
+      recordRequestAnswer({
+        type: 'permission',
+        optionId: answer.decision === 'accept' ? 'allow_once' : 'reject_once',
+      });
+    }
+    if (heldRequest?.method === 'item/tool/requestUserInput') {
+      const answer = result as ToolRequestUserInputResponse;
+      recordRequestAnswer(
+        Object.keys(answer.answers).length
+          ? {
+              type: 'elicitation',
+              action: 'accept',
+              content: Object.fromEntries(
+                Object.entries(answer.answers).map(([key, value]) => [
+                  key,
+                  value?.answers.length === 1
+                    ? value.answers[0]
+                    : value?.answers,
+                ]),
+              ),
+            }
+          : {
+              type: 'elicitation',
+              action: cancelling ? 'cancel' : 'decline',
+            },
+      );
+    }
+    if (withheldStartResponse) {
+      send(withheldStartResponse);
+      withheldStartResponse = null;
+    }
+    if (concurrentRequests.size === 0 && !cancelling)
+      replayRequestFrames(requestFrames, null);
+  }
+}

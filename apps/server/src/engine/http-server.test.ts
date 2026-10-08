@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { existsSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { request } from 'node:http';
 import { createServer } from 'node:net';
@@ -74,6 +75,7 @@ const readdirSafe = (folder: string) =>
   existsSync(folder) ? readdirSync(folder) : [];
 
 const options = () => ({
+  createId: randomUUID,
   home,
   port,
   version: '1.2.3',
@@ -87,7 +89,13 @@ beforeEach(async () => {
   port = await findFreePort();
   ({ database, remove: removeDatabase } = openTestDatabase());
   sessions = createActor(registryMachine, {
-    input: { database, adapters: [] },
+    input: {
+      now: () => Date.now(),
+      createId: randomUUID,
+      database,
+      runtimeDirectory: home,
+      adapters: [],
+    },
   }).start();
   ({ close: closeServer } = await startHttpServer(options()));
 });

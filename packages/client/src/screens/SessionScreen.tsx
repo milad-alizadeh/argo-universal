@@ -3,7 +3,7 @@ import type {
   SessionUpdate,
   ToolCallUpdate,
 } from '@repo/contracts';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { Composer, type ComposerDraft } from '#components/Composer';
@@ -18,6 +18,7 @@ import {
 import { useConnectionState } from '../connection/context';
 import { useFeedView } from '../feed/use-feed-view';
 import { useSessionFeed } from '../feed/use-session-feed';
+import { useAgents } from '../lib/use-agents';
 import { useImageDraft } from '../lib/use-image-draft';
 import { useNavigate } from '../navigation/context';
 import { useWide } from '../navigation/use-wide';
@@ -59,7 +60,6 @@ export function SessionScreen({ id, now }: SessionScreenProps) {
 }
 
 function SessionView({ sessionId, now }: { sessionId: string; now?: number }) {
-  const trpc = useTRPC();
   const navigate = useNavigate();
   const imageUrl = useBlobUrl();
   const connected = useConnectionState() === 'open';
@@ -72,33 +72,23 @@ function SessionView({ sessionId, now }: { sessionId: string; now?: number }) {
     retry,
     openError,
     retryOpen,
+    resumeAfterCommand,
     loadingOlder,
     loadOlder,
   } = useSessionFeed(sessionId);
-  const agents = useQuery(trpc.agents.list.queryOptions());
+  const agents = useAgents();
   const {
     draft,
     changeDraft,
     attachImages,
-    uploadDraftAsPrompt,
-    clearDraft,
     imageUpload,
-  } = useImageDraft();
-  const promptSession = useMutation(
-    trpc.session.prompt.mutationOptions({ onSuccess: clearDraft }),
-  );
-  const cancelTurn = useMutation(trpc.session.cancel.mutationOptions());
-  const setConfigOption = useMutation(
-    trpc.session.setConfigOption.mutationOptions(),
-  );
+    imageSelectionError,
+    promptSession,
+    cancelTurn,
+    setConfigOption,
+    sendDraft,
+  } = useSessionCommands(sessionId, resumeAfterCommand);
   const feedView = useFeedView(feed.rows, snapshot);
-
-  async function sendDraft(sent: ComposerDraft) {
-    promptSession.reset();
-    imageUpload.reset();
-    const prompt = await uploadDraftAsPrompt(sent);
-    if (prompt?.length) promptSession.mutate({ sessionId, prompt });
-  }
 
   if (error)
     return (
@@ -130,7 +120,8 @@ function SessionView({ sessionId, now }: { sessionId: string; now?: number }) {
   const fadeHeight = wide ? composerFadeHeight.wide : composerFadeHeight.phone;
   const startedAt = snapshot.liveHeader?.startedAt ?? null;
   let sendError: string | undefined;
-  if (promptSession.error)
+  if (imageSelectionError) sendError = imageSelectionError;
+  else if (promptSession.error)
     sendError = `Couldn't send. ${promptSession.error.message}`;
   else if (imageUpload.error)
     sendError = `Couldn't upload the image. ${imageUpload.error.message}`;
@@ -199,6 +190,7 @@ function SessionView({ sessionId, now }: { sessionId: string; now?: number }) {
                 ),
               onAgentSetup: (setup) =>
                 navigate({ to: 'settings-agent', agent: setup }),
+              onAgentRetry: agents.retry,
               turnRunning,
               checkout: {
                 branch: snapshot.checkout.branch ?? '',
@@ -212,4 +204,33 @@ function SessionView({ sessionId, now }: { sessionId: string; now?: number }) {
       </KeyboardAvoidingView>
     </Screen>
   );
+}
+
+// Draft uploads and successful commands resume a Feed that has closed.
+function useSessionCommands(sessionId: string, resumeAfterCommand: () => void) {
+  const trpc = useTRPC();
+  const { clearDraft, uploadDraftAsPrompt, ...draft } = useImageDraft();
+  const promptSession = useMutation(
+    trpc.session.prompt.mutationOptions({
+      onSuccess: () => {
+        clearDraft();
+        resumeAfterCommand();
+      },
+    }),
+  );
+  const cancelTurn = useMutation(
+    trpc.session.cancel.mutationOptions({ onSuccess: resumeAfterCommand }),
+  );
+  const setConfigOption = useMutation(
+    trpc.session.setConfigOption.mutationOptions({
+      onSuccess: resumeAfterCommand,
+    }),
+  );
+  async function sendDraft(sent: ComposerDraft) {
+    promptSession.reset();
+    draft.imageUpload.reset();
+    const prompt = await uploadDraftAsPrompt(sent);
+    if (prompt?.length) promptSession.mutate({ sessionId, prompt });
+  }
+  return { ...draft, promptSession, cancelTurn, setConfigOption, sendDraft };
 }

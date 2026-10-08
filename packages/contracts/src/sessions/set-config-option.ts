@@ -1,11 +1,28 @@
 import { z } from 'zod';
 import { sessionColumns } from '../columns';
 
+export const configOptionIcons = [
+  'ShieldWarning',
+  'Pencil',
+  'MapTrifold',
+  'Sparkles',
+  'WarningTriangle',
+] as const;
+export type ConfigOptionIcon = (typeof configOptionIcons)[number];
+const knownIcons = new Set<string>(configOptionIcons);
+let unknownIcons = 0;
+
 // ACP extension fields are kept; Argo's known fields are checked at this boundary.
 const ConfigOptionMeta = z.looseObject({
   argo: z
     .looseObject({
-      icon: z.string().optional(),
+      icon: z
+        .string()
+        .transform((icon) => {
+          if (!knownIcons.has(icon)) unknownIcons += 1;
+          return icon;
+        })
+        .optional(),
       shortName: z.string().optional(),
       tone: z.enum(['planning', 'safe', 'moderate', 'dangerous']).optional(),
       supportsEffort: z.boolean().optional(),
@@ -56,7 +73,7 @@ export const SessionConfigOptionCategory = z.string().transform((category) => {
   return category;
 });
 export function getConfigOptionDiagnostics() {
-  return { unknownCategories };
+  return { unknownCategories, unknownIcons };
 }
 export type SessionConfigOptionCategory = z.infer<
   typeof SessionConfigOptionCategory
