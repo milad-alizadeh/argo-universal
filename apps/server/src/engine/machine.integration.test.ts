@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { type Database, openDatabase } from '@repo/db';
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
+import { terminalPaths } from '@repo/vitest/model-paths';
 import {
   afterAll,
   afterEach,
@@ -16,6 +17,7 @@ import {
   createActor,
   matchesState,
   type EventFromLogic,
+  type ErrorActorEvent,
   fromCallback,
   fromPromise,
   type SnapshotFrom,
@@ -23,8 +25,11 @@ import {
 import {
   type DirectedGraphNode,
   type EventExecutor,
-  TestModel,
-  type TestPath,
+  type StatePath,
+  type GraphEventFromLogic,
+  type AdjacencyMap,
+  getShortestPaths,
+  getAdjacencyMap,
   toDirectedGraph,
 } from 'xstate/graph';
 import type { EngineMessage } from '../supervisor/engine-message';
@@ -123,7 +128,6 @@ const machine = machineWithExternalMocks.provide({
   },
 });
 type EngineSnapshot = SnapshotFrom<typeof machine>;
-type EngineEvent = EventFromLogic<typeof machine>;
 
 const input = {
   now: (): number => Date.now(),
@@ -142,47 +146,71 @@ const listenError = Object.assign(new Error('listen EADDRINUSE'), {
 });
 const closeError = new Error('close failed');
 // Done and error events of invoked actors are not in the machine's event type, but the model drives them.
-const payloads: Record<string, AnyEventObject> = {
-  'xstate.error.actor.recoverAfterRestart': {
-    type: 'xstate.error.actor.recoverAfterRestart',
-    error: recoveryError,
-    actorId: 'recoverAfterRestart',
-  },
-  'xstate.done.actor.openDatabase': {
+const sessionFailure = {
+  type: 'xstate.error.actor.sessions',
+  actorId: 'sessions',
+  error: new Error('stop failed'),
+} satisfies EventFromLogic<typeof machine> & ErrorActorEvent<Error, 'sessions'>;
+const writerFailure = {
+  type: 'xstate.error.actor.databaseWriter',
+  actorId: 'databaseWriter',
+  error: new Error('drain failed'),
+} satisfies EventFromLogic<typeof machine> &
+  ErrorActorEvent<Error, 'databaseWriter'>;
+const fixtures = [
+  {
     type: 'xstate.done.actor.openDatabase',
+    actorId: 'openDatabase',
     output: mockDatabase,
-    actorId: 'openDatabase',
   },
-  'xstate.error.actor.openDatabase': {
+  {
     type: 'xstate.error.actor.openDatabase',
-    error: openError,
     actorId: 'openDatabase',
+    error: openError,
   },
-  'xstate.done.actor.startHttpServer': {
+  {
+    type: 'xstate.done.actor.recoverAfterRestart',
+    actorId: 'recoverAfterRestart',
+    output: undefined,
+  },
+  {
+    type: 'xstate.error.actor.recoverAfterRestart',
+    actorId: 'recoverAfterRestart',
+    error: recoveryError,
+  },
+  {
     type: 'xstate.done.actor.startHttpServer',
+    actorId: 'startHttpServer',
     output: mockHttpServer,
-    actorId: 'startHttpServer',
   },
-  'xstate.error.actor.startHttpServer': {
+  {
     type: 'xstate.error.actor.startHttpServer',
-    error: listenError,
     actorId: 'startHttpServer',
+    error: listenError,
   },
-  'xstate.error.actor.closeHttpServer': {
-    type: 'xstate.error.actor.closeHttpServer',
-    error: closeError,
+  {
+    type: 'xstate.done.actor.closeHttpServer',
     actorId: 'closeHttpServer',
+    output: undefined,
   },
-  'xstate.error.actor.sessions': {
-    type: 'xstate.error.actor.sessions',
-    error: new Error('stop failed'),
+  {
+    type: 'xstate.error.actor.closeHttpServer',
+    actorId: 'closeHttpServer',
+    error: closeError,
   },
-  'xstate.error.actor.databaseWriter': {
-    type: 'xstate.error.actor.databaseWriter',
-    error: new Error('drain failed'),
+  { type: 'xstate.done.actor.sessions' },
+  sessionFailure,
+  { type: 'xstate.done.actor.databaseWriter' },
+  writerFailure,
+  { type: stopEngineEvent, reason: 'SIGTERM' },
+  { type: 'xstate.after.httpCloseLimit.engine.live.stopping.closingHttp' },
+  {
+    type: 'xstate.after.sessionStopLimit.engine.live.stopping.stoppingSessions',
   },
-  'engine.stop': { type: stopEngineEvent, reason: 'SIGTERM' },
-};
+  { type: 'xstate.after.writerDrainLimit.engine.live.stopping.drainingWriter' },
+  { type: 'xstate.after.heartbeatInterval.engine.live.running' },
+] satisfies GraphEventFromLogic<typeof machine>[];
+type EngineEvent = (typeof fixtures)[number];
 const eventTypes = (node: DirectedGraphNode): string[] => [
   ...node.edges.map((edge): string => edge.label.text),
   ...node.children.flatMap(eventTypes),
@@ -190,17 +218,54 @@ const eventTypes = (node: DirectedGraphNode): string[] => [
 // The machine raises `xstate.done.state.*` itself, so the model must not send it.
 const events = [...new Set(eventTypes(toDirectedGraph(machine)))]
   .filter((type): boolean => !type.startsWith('xstate.done.state.'))
-  .map((type): EngineEvent => (payloads[type] ?? { type }) as EngineEvent);
+  .map((type): EngineEvent => {
+    const fixture = fixtures.find((event) => event.type === type);
+    if (!fixture) throw new Error(`Missing Engine graph fixture for ${type}`);
+    return fixture;
+  });
 
-const model = new TestModel(machine, {
+const canGraphEvent = (
+  snapshot: EngineSnapshot,
+  event: EngineEvent,
+): boolean => {
+  switch (event.type) {
+    case 'xstate.done.actor.openDatabase':
+    case 'xstate.error.actor.openDatabase':
+      return snapshot.matches('openingDatabase');
+    case 'xstate.done.actor.recoverAfterRestart':
+    case 'xstate.error.actor.recoverAfterRestart':
+      return snapshot.matches('recovering');
+    case 'xstate.done.actor.startHttpServer':
+    case 'xstate.error.actor.startHttpServer':
+      return snapshot.matches({ live: 'listening' });
+    case 'xstate.done.actor.closeHttpServer':
+    case 'xstate.error.actor.closeHttpServer':
+    case 'xstate.after.httpCloseLimit.engine.live.stopping.closingHttp':
+      return snapshot.matches({ live: { stopping: 'closingHttp' } });
+    case 'xstate.after.sessionStopLimit.engine.live.stopping.stoppingSessions':
+      return snapshot.matches({ live: { stopping: 'stoppingSessions' } });
+    case 'xstate.after.writerDrainLimit.engine.live.stopping.drainingWriter':
+      return snapshot.matches({ live: { stopping: 'drainingWriter' } });
+    case 'xstate.after.heartbeatInterval.engine.live.running':
+      return snapshot.matches({ live: 'running' });
+    default:
+      return snapshot.can(event);
+  }
+};
+
+const options = {
   input,
   events,
   limit: 1000,
   // A done actor ignores events, so the model must not send any.
-  filterEvents: (snapshot, event): boolean =>
-    snapshot.status === 'active' && snapshot.can(event),
+  filterEvents: (snapshot: EngineSnapshot, event: EngineEvent): boolean =>
+    snapshot.status === 'active' && canGraphEvent(snapshot, event),
   // Never the handles themselves; `via` gives the heartbeat self-transition its own vertex.
-  serializeState: (snapshot, event, previous): string =>
+  serializeState: (
+    snapshot: EngineSnapshot,
+    event: EngineEvent | undefined,
+    previous?: EngineSnapshot,
+  ): string =>
     JSON.stringify({
       value: snapshot.value,
       database: snapshot.context.database !== null,
@@ -208,8 +273,7 @@ const model = new TestModel(machine, {
       failure: snapshot.context.failure !== null,
       via: event && `${JSON.stringify(previous?.value)} ${event.type}`,
     }),
-  stateMatcher: (snapshot, key): boolean => matchesState(key, snapshot.value),
-});
+};
 
 const latest = <TCall>(calls: TCall[]): NonNullable<TCall> =>
   calls.at(-1) ?? expect.unreachable('The actor was not invoked');
@@ -242,18 +306,10 @@ const executors: Record<string, EventExecutor<EngineSnapshot, EngineEvent>> = {
     settle((): void => latest(closeHttpServerCalls).reject(closeError)),
   'xstate.done.actor.sessions': (): void =>
     engine.system.get('sessions').send({ type: stopAllSessionsEvent }),
-  'xstate.error.actor.sessions': (): void =>
-    engine.send({
-      type: 'xstate.error.actor.sessions',
-      error: new Error('stop failed'),
-    }),
+  'xstate.error.actor.sessions': (): void => engine.send(sessionFailure),
   'xstate.done.actor.databaseWriter': (): void =>
     engine.system.get('databaseWriter').send({ type: drainWriterEvent }),
-  'xstate.error.actor.databaseWriter': (): void =>
-    engine.send({
-      type: 'xstate.error.actor.databaseWriter',
-      error: new Error('drain failed'),
-    }),
+  'xstate.error.actor.databaseWriter': (): void => engine.send(writerFailure),
   'xstate.after.httpCloseLimit.engine.live.stopping.closingHttp': (): void => {
     vi.advanceTimersByTime(5000);
   },
@@ -375,8 +431,8 @@ const states: Record<string, (snapshot: EngineSnapshot) => void> = {
   failed: (snapshot): void => expectExit(snapshot, 1),
 };
 
-const paths = model.getShortestPaths();
-const title = (path: TestPath<EngineSnapshot, EngineEvent>): string =>
+const paths = terminalPaths(getShortestPaths(machine, options));
+const title = (path: StatePath<EngineSnapshot, EngineEvent>): string =>
   path.steps
     .map(({ event }): string =>
       event.type
@@ -454,17 +510,30 @@ it('keeps draining the writer when Sessions finish after their stop limit', asyn
 describe('engine model', (): void => {
   it.each(
     paths.map(
-      (path): [string, TestPath<EngineSnapshot, EngineEvent>] =>
+      (path): [string, StatePath<EngineSnapshot, EngineEvent>] =>
         [title(path), path] as const,
     ),
   )('%s', async (_, path): Promise<void> => {
-    await path.test({ events: executors, states });
+    for (const step of path.steps) {
+      const execute = executors[step.event.type];
+      if (!execute)
+        throw new Error(`Missing Engine executor for ${step.event.type}`);
+      await execute(step);
+      for (const [key, assertState] of Object.entries(states)) {
+        if (matchesState(key, step.state.value)) assertState(step.state);
+      }
+    }
   });
 
   it('the generated paths walk every transition', (): void => {
     expect(
       unwalkedTransitions({
-        models: [model],
+        models: [
+          {
+            getAdjacencyMap: (): AdjacencyMap<EngineSnapshot, EngineEvent> =>
+              getAdjacencyMap(machine, options),
+          },
+        ],
         paths,
         stateKey: (snapshot): string => JSON.stringify(snapshot.value),
         eventKey: (event): typeof event.type => event.type,
