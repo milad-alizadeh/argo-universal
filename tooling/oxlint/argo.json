@@ -64,6 +64,7 @@
     "argo/json-parse-cast": "error",
     "argo/mock-environment": "error",
     "argo/database-client": "error",
+    "argo/drizzle-schema-boundary": "error",
     // A relative path into packages/, tooling/ or apps/ skips package.json, pnpm isolation and exports (A2).
     "argo/cross-package-import": "error",
     // oxlint cannot resolve the re-exported members of @rn-primitives namespaces; tsc checks every namespace member.
