@@ -4,10 +4,8 @@ import { Easing } from 'react-native-reanimated';
 export const motionDuration = {
   enter: 200,
   exit: 150,
-  tooltipEnter: 150,
+  jumpToLatestEnter: 150,
   enterDelay: 50,
-  expand: 250,
-  collapse: 200,
   shellPane: 280,
 };
 
@@ -29,5 +27,4 @@ export function bezierEasing({
 }
 
 export const fullTurnDegrees = 360;
-export const halfTurnDegrees = 180;
 export const quarterTurnDegrees = 90;

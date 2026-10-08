@@ -91,7 +91,7 @@ function JumpToLatest({
 }) {
   return (
     <Animated.View
-      entering={FadeIn.duration(motionDuration.tooltipEnter)}
+      entering={FadeIn.duration(motionDuration.jumpToLatestEnter)}
       exiting={FadeOut.duration(motionDuration.exit)}
       className="absolute bottom-16 self-center"
     >

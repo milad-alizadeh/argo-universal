@@ -284,7 +284,6 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
             error={
               agent && !agentAvailable ? agent.installStep : send.sendError
             }
-            phoneCheckout={false}
             configuration={{
               agents: agents.data,
               agent: agent?.agent ?? '',

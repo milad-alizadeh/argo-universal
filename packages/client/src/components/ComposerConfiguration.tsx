@@ -857,17 +857,11 @@ export function ComposerCheckoutControl({
   checkout: ComposerConfigurationProps['checkout'];
   disabled: boolean;
 }) {
-  const wide = useContentWide();
   const created = !!checkout.path;
   const editable = !created && !!checkout.onNewWorktreeChange;
   if (created || !editable)
     return (
-      <View
-        className={cn(
-          'h-7 min-w-0 px-1.5 flex-row items-center gap-1.5',
-          wide ? 'max-w-96' : 'max-w-full',
-        )}
-      >
+      <View className="h-7 min-w-0 max-w-96 px-1.5 flex-row items-center gap-1.5">
         <Icon
           as={checkout.newWorktree ? GitBranchIcon : FolderIcon}
           className="text-muted-foreground"
@@ -894,12 +888,7 @@ export function ComposerCheckoutControl({
           variant="ghost"
           disabled={disabled}
           accessibilityLabel="Checkout"
-          className={cn(
-            'h-6 sm:h-6 py-0 px-2.5 has-[>svg]:px-2.5 gap-1.5 rounded-full border border-border bg-card',
-            wide
-              ? 'h-7 sm:h-7 px-1.5 has-[>svg]:px-1.5 pr-0.25 has-[>svg]:pr-0.25 rounded-md border-0 bg-transparent shadow-none'
-              : 'shadow-composer',
-          )}
+          className="h-7 sm:h-7 py-0 px-1.5 has-[>svg]:px-1.5 pr-0.25 has-[>svg]:pr-0.25 gap-1.5 rounded-md border-0 bg-transparent shadow-none"
         >
           <Icon
             as={checkout.newWorktree ? GitBranchIcon : FolderIcon}
@@ -911,13 +900,11 @@ export function ComposerCheckoutControl({
           >
             {checkout.newWorktree ? 'New worktree' : 'Local'}
           </Text>
-          {wide && (
-            <Icon
-              size="sm"
-              as={CaretDownIcon}
-              className="text-muted-foreground"
-            />
-          )}
+          <Icon
+            size="sm"
+            as={CaretDownIcon}
+            className="text-muted-foreground"
+          />
         </Button>
       }
     >

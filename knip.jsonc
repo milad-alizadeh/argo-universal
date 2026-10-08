@@ -41,7 +41,41 @@
     },
     "packages/client": {
       // Vendored react-native-reusables components keep the kit's full export surface; screens pick from it.
-      "ignore": ["src/primitives/**"]
+      "ignore": [
+        "src/primitives/badge.stories.tsx",
+        "src/primitives/badge.tsx",
+        "src/primitives/button.stories.tsx",
+        "src/primitives/button.tsx",
+        "src/primitives/card.stories.tsx",
+        "src/primitives/card.tsx",
+        "src/primitives/checkbox.stories.tsx",
+        "src/primitives/checkbox.tsx",
+        "src/primitives/collapsible.stories.tsx",
+        "src/primitives/collapsible.tsx",
+        "src/primitives/dialog.stories.tsx",
+        "src/primitives/dialog.tsx",
+        "src/primitives/dropdown-menu.stories.tsx",
+        "src/primitives/dropdown-menu.tsx",
+        "src/primitives/icon.tsx",
+        "src/primitives/input.stories.tsx",
+        "src/primitives/input.tsx",
+        "src/primitives/label.stories.tsx",
+        "src/primitives/label.tsx",
+        "src/primitives/native-only-animated-view.stories.tsx",
+        "src/primitives/native-only-animated-view.tsx",
+        "src/primitives/popover.stories.tsx",
+        "src/primitives/popover.tsx",
+        "src/primitives/select.stories.tsx",
+        "src/primitives/select.tsx",
+        "src/primitives/slider.native.tsx",
+        "src/primitives/slider.tsx",
+        "src/primitives/switch.stories.tsx",
+        "src/primitives/switch.tsx",
+        "src/primitives/text.stories.tsx",
+        "src/primitives/text.tsx",
+        "src/primitives/textarea.stories.tsx",
+        "src/primitives/textarea.tsx"
+      ]
     }
   }
 }
