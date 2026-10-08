@@ -37,6 +37,8 @@ import { ScrollFade, useScrollFadeEdges } from './scroll-fade';
 import { SessionRow, type SessionRowProps } from './session-row';
 import { listEntries, type SessionsListEntry } from './sessions-list-entries';
 
+const endMeasurementTolerance = 8;
+
 const contentStyle = {
   paddingHorizontal: 8,
   paddingTop: 20,
@@ -103,13 +105,19 @@ function useRevealLoadingFooter(isFetchingNextPage: boolean): {
   const revealPending = useRef(false);
   useLayoutEffect(() => {
     revealPending.current = isFetchingNextPage && atEnd.current;
+    if (revealPending.current) {
+      requestAnimationFrame(() => {
+        scrollView.current?.scrollToEnd({ animated: false });
+      });
+    }
   }, [isFetchingNextPage]);
   return {
     scrollView,
     trackAtEnd: ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
       const { contentOffset, contentSize, layoutMeasurement } = nativeEvent;
       atEnd.current =
-        contentSize.height - contentOffset.y - layoutMeasurement.height <= 2;
+        contentSize.height - contentOffset.y - layoutMeasurement.height <=
+        endMeasurementTolerance;
     },
     revealIfPending: () => {
       if (!revealPending.current) return;

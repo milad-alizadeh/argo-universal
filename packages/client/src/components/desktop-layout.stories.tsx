@@ -1,12 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { sessionListMocks } from '../../mocks/session-list-mock';
 import { Text } from '../primitives/text';
 import { DesktopLayout } from './desktop-layout';
 
 const meta = {
   title: 'Shell/DesktopLayout',
   component: DesktopLayout,
+  parameters: { trpc: sessionListMocks },
   args: {
     destination: { to: 'sessions' },
     // JSX in args breaks on-device Storybook's arg inference, so render draws the detail.
