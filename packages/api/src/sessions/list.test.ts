@@ -2,9 +2,14 @@ import { describe, expect, it, vi } from 'vitest';
 import { unreachableServices } from '../../mocks';
 import { appRouter } from '../root';
 
-describe('session.list pagination input', () => {
-  it('accepts the forward direction supplied by tRPC infinite queries', async () => {
-    const list = vi.fn(async () => ({ sessions: [], nextCursor: null }));
+describe('session.list pagination input', (): void => {
+  it('accepts the forward direction supplied by tRPC infinite queries', async (): Promise<void> => {
+    const list = vi.fn(
+      async (): Promise<{ sessions: never[]; nextCursor: null }> => ({
+        sessions: [],
+        nextCursor: null,
+      }),
+    );
     const caller = appRouter.createCaller({
       services: unreachableServices({ session: { list } }),
     });
@@ -17,10 +22,15 @@ describe('session.list pagination input', () => {
     });
   });
 
-  it('keeps direct queries compatible without a direction', async () => {
+  it('keeps direct queries compatible without a direction', async (): Promise<void> => {
     const caller = appRouter.createCaller({
       services: unreachableServices({
-        session: { list: async () => ({ sessions: [], nextCursor: null }) },
+        session: {
+          list: async (): Promise<{ sessions: never[]; nextCursor: null }> => ({
+            sessions: [],
+            nextCursor: null,
+          }),
+        },
       }),
     });
     await expect(caller.session.list({ archived: false })).resolves.toEqual({
@@ -31,7 +41,7 @@ describe('session.list pagination input', () => {
 
   it.each([{ direction: 'backward' }, { unexpected: true }])(
     'rejects unsupported pagination and unknown fields: %j',
-    async (input) => {
+    async (input): Promise<void> => {
       const caller = appRouter.createCaller({
         services: unreachableServices(),
       });

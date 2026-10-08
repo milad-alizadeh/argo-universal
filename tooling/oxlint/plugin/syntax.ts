@@ -10,7 +10,7 @@ const isPlainTemplate = (node: Node): node is ESTree.TemplateLiteral =>
   node.type === 'TemplateLiteral' && node.expressions.length === 0;
 
 const templateText = (node: ESTree.TemplateLiteral): string =>
-  node.quasis.map((quasi) => quasi.value.cooked).join('');
+  node.quasis.map((quasi): string | null => quasi.value.cooked).join('');
 
 const staticText = (node: Node): string =>
   isPlainTemplate(node) ? templateText(node) : '';

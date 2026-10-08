@@ -45,7 +45,8 @@ export type CommandAction = z.infer<typeof CommandAction>;
 
 export function knownCommandActions(toolCall: ToolCallUpdate): CommandAction[] {
   const actions = toolCall._meta?.argo?.commandActions;
-  return actions?.length && actions.every((action) => action.type !== 'unknown')
+  return actions?.length &&
+    actions.every((action): boolean => action.type !== 'unknown')
     ? actions
     : [];
 }

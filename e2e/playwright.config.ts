@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
+import { defineBddConfig } from 'playwright-bdd';
 import type { AppOptions, ServerOptions } from './fixtures';
 import { findFreePort } from './own-server';
 
@@ -11,7 +12,11 @@ const webUrl = `http://127.0.0.1:${webPort}`;
 
 export default defineConfig<AppOptions & ServerOptions>({
   // Specs live in one folder per flow, e2e/<flow>/ (AGENTS.md).
-  testDir: '.',
+  testDir: defineBddConfig({
+    features: '**/*.feature',
+    steps: 'steps/**/*.ts',
+    outputDir: '.features-gen',
+  }),
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
@@ -36,6 +41,7 @@ export default defineConfig<AppOptions & ServerOptions>({
     // The desktop app in production mode; it starts its own Server.
     {
       name: 'electron',
+      grepInvert: /@web-only/,
       use: { appTarget: 'electron' },
     },
   ],

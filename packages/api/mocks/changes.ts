@@ -26,14 +26,19 @@ interface Change {
   binary?: true;
 }
 
-const count = (hunks: Hunk[], sign: string) =>
-  hunks.flatMap((hunk) => hunk.lines).filter((line) => line.startsWith(sign))
-    .length;
+const count = (hunks: Hunk[], sign: string): number =>
+  hunks
+    .flatMap((hunk): string[] => hunk.lines)
+    .filter((line): boolean => line.startsWith(sign)).length;
 
-const hunkText = ({ oldStart, newStart, lines }: Hunk) => {
-  const oldLines = lines.filter((line) => !line.startsWith('+')).length;
-  const newLines = lines.filter((line) => !line.startsWith('-')).length;
-  const body = lines.map((line) =>
+const hunkText = ({ oldStart, newStart, lines }: Hunk): string[] => {
+  const oldLines = lines.filter(
+    (line): boolean => !line.startsWith('+'),
+  ).length;
+  const newLines = lines.filter(
+    (line): boolean => !line.startsWith('-'),
+  ).length;
+  const body = lines.map((line): string =>
     line.startsWith('+') || line.startsWith('-') ? line : ` ${line}`,
   );
   return [
@@ -91,8 +96,14 @@ function toChangesMock(changes: Change[]): ChangesMock {
   return {
     summary: {
       files: files.length,
-      additions: files.reduce((sum, file) => sum + (file.additions ?? 0), 0),
-      deletions: files.reduce((sum, file) => sum + (file.deletions ?? 0), 0),
+      additions: files.reduce(
+        (sum, file): number => sum + (file.additions ?? 0),
+        0,
+      ),
+      deletions: files.reduce(
+        (sum, file): number => sum + (file.deletions ?? 0),
+        0,
+      ),
     },
     files,
     diffs,
@@ -100,8 +111,8 @@ function toChangesMock(changes: Change[]): ChangesMock {
 }
 
 // Counts from 1, as line and file numbers do.
-const range = <Item>(length: number, item: (number: number) => Item) =>
-  Array.from({ length }, (_, index) => item(index + 1));
+const range = <Item>(length: number, item: (number: number) => Item): Item[] =>
+  Array.from({ length }, (_, index): Item => item(index + 1));
 
 const fewFiles: Change[] = [
   {
@@ -198,8 +209,11 @@ const largeDiff: Change[] = [
         lines: [
           "import { z } from 'zod';",
           '',
-          ...range(1000, (line) => `-  field${line}: z.string(),`),
-          ...range(1200, (line) => `+  field${line}: z.string().min(1),`),
+          ...range(1000, (line): string => `-  field${line}: z.string(),`),
+          ...range(
+            1200,
+            (line): string => `+  field${line}: z.string().min(1),`,
+          ),
         ],
       },
     ],

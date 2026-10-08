@@ -13,7 +13,20 @@ export function recordedFrames<Frame>(payload: unknown, pipe: string): Frame[] {
   return z.array(z.looseObject({})).parse(frames) as Frame[];
 }
 
-const envelope = (producer: string, version: string) =>
+const envelope = (
+  producer: string,
+  version: string,
+): z.ZodObject<
+  {
+    producer: z.ZodLiteral<string>;
+    version: z.ZodLiteral<string>;
+    recordedAt: z.ZodNullable<
+      z.ZodUnion<readonly [z.ZodISODate, z.ZodISODateTime]>
+    >;
+    payload: z.ZodUnknown;
+  },
+  z.core.$strip
+> =>
   z.object({
     producer: z.literal(producer),
     version: z.literal(version),
@@ -29,13 +42,13 @@ export function readRecording(file: string, producer: string): Recording {
     const payload = text
       .trim()
       .split('\n')
-      .map((line) => JSON.parse(line));
+      .map((line): Recording['payload'] => JSON.parse(line));
     return { version, payload };
   }
   const tagged = envelope(producer, version).safeParse(JSON.parse(text));
   if (!tagged.success) {
     const fields = tagged.error.issues.map(
-      (issue) => `${issue.path.join('.')}: ${issue.message}`,
+      (issue): string => `${issue.path.join('.')}: ${issue.message}`,
     );
     throw new Error(`Invalid recording ${file}: ${fields.join('; ')}`, {
       cause: tagged.error,
@@ -49,8 +62,8 @@ const RECORDING_FILE = /\.jsonl?$/;
 // The one version folder in `recordings/`; new recordings replace the old version rather than join it.
 export function recordingVersion(recordings: string): string {
   const versions = readdirSync(recordings, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => entry.name);
+    .filter((entry): boolean => entry.isDirectory())
+    .map((entry): string => entry.name);
   const [version] = versions;
   if (version === undefined || versions.length > 1)
     throw new Error(
@@ -63,14 +76,14 @@ export function recordingVersion(recordings: string): string {
 export function recordingFiles(recordings: string): string[] {
   const folder = path.join(recordings, recordingVersion(recordings));
   return readdirSync(folder)
-    .filter((name) => RECORDING_FILE.test(name))
-    .map((name) => path.join(folder, name));
+    .filter((name): boolean => RECORDING_FILE.test(name))
+    .map((name): string => path.join(folder, name));
 }
 
 // The file of the recording called `name` in `recordings/<version>/`.
 export function findRecording(recordings: string, name: string): string {
   const file = recordingFiles(recordings).find(
-    (candidate) => path.parse(candidate).name === name,
+    (candidate): boolean => path.parse(candidate).name === name,
   );
   if (file === undefined)
     throw new Error(`No recording named ${name} in ${recordings}.`);

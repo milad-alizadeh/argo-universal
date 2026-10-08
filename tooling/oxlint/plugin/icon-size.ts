@@ -1,4 +1,4 @@
-import type { ESTree } from '@oxlint/plugins';
+import type { ESTree, Visitor } from '@oxlint/plugins';
 import { defineRule } from '@oxlint/plugins';
 
 type ValuedAttribute = ESTree.JSXAttribute & {
@@ -25,6 +25,10 @@ const attributeName = (attribute: ESTree.JSXAttribute): string =>
 const isRawSize = (name: string, text: string): boolean =>
   rawSizes.get(name)?.test(text) === true;
 
+type IconVisitor = {
+  JSXOpeningElement: NonNullable<Visitor['JSXOpeningElement']>;
+};
+
 export const iconSize = defineRule({
   meta: {
     type: 'problem',
@@ -33,7 +37,7 @@ export const iconSize = defineRule({
         'Icons take a named size: sm, md or lg. Remove numeric sizes and size-* classes.',
     },
   },
-  create: (context) => {
+  create: (context): IconVisitor => {
     const hasRawSize = (attribute: ESTree.JSXAttributeItem): boolean =>
       isValuedAttribute(attribute) &&
       isRawSize(

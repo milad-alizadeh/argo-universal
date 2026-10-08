@@ -17,8 +17,8 @@ export const apiTypeOnly = defineRule({
         'client imports @repo/api only with `import type`; move runtime data to @repo/contracts, or keep it in a test, story or mock.',
     },
   },
-  create: (context) =>
-    onModuleSources((source, statement) => {
+  create: (context): import('@oxlint/plugins').Visitor =>
+    onModuleSources((source, statement): void => {
       const isApi = apiPackage.test(stringValue(source));
       if (isApi && !isTypeOnly(statement))
         context.report({ node: source, messageId: 'apiTypeOnly' });

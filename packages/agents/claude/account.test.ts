@@ -23,7 +23,7 @@ it.each([
   ['a cloud provider', { apiProvider: 'bedrock' }, false],
 ] satisfies [string, AccountInfo, boolean][])(
   'accepts %s: %j → %s',
-  (_, account, expected) => {
+  (_, account, expected): void => {
     expect(usesSubscription(account)).toBe(expected);
   },
 );

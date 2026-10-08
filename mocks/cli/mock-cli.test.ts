@@ -1,16 +1,16 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { mockCliScenarioEnvironment, readMockCliEnvironment } from './mock-cli';
 
-afterEach(() => {
+afterEach((): void => {
   vi.unstubAllEnvs();
 });
 
-const stubShim = () => {
+const stubShim = (): void => {
   vi.stubEnv('MOCK_CLI_RECORDING', '/recording.json');
   vi.stubEnv('MOCK_CLI_EXIT_MID_TURN', '0');
 };
 
-it('gives every scenario field its default when the variable is absent', () => {
+it('gives every scenario field its default when the variable is absent', (): void => {
   stubShim();
   expect(readMockCliEnvironment().scenario).toEqual({
     processFile: null,
@@ -30,7 +30,7 @@ it('gives every scenario field its default when the variable is absent', () => {
   });
 });
 
-it('carries a scenario through one environment variable', () => {
+it('carries a scenario through one environment variable', (): void => {
   stubShim();
   for (const [key, value] of Object.entries(
     mockCliScenarioEnvironment({ blockTurnStart: true, account: 'apiKey' }),
@@ -43,8 +43,8 @@ it('carries a scenario through one environment variable', () => {
   });
 });
 
-it('rejects a misspelt field where the scenario is written', () => {
-  expect(() =>
+it('rejects a misspelt field where the scenario is written', (): void => {
+  expect((): { MOCK_CLI_SCENARIO: string } =>
     mockCliScenarioEnvironment({ blockTurnstart: true } as never),
   ).toThrow(/Unrecognized key/);
 });

@@ -56,13 +56,15 @@ if (command !== 'app-server') {
 const messages = recordedFrames<VendorMessage & { emittedAtMs?: number }>(
   recording.payload,
   'messages',
-).map(({ emittedAtMs: _, ...message }) => message);
+).map(({ emittedAtMs: _, ...message }): VendorMessage => message);
 const turns = splitTurns(
   messages,
-  (message) => message.method === 'turn/completed',
+  (message): message is Extract<VendorMessage, { method: 'turn/completed' }> =>
+    message.method === 'turn/completed',
 );
-const recordedThreadId = messages.find((message) => message.params.threadId)
-  ?.params.threadId;
+const recordedThreadId = messages.find(
+  (message): string => message.params.threadId,
+)?.params.threadId;
 if (!recordedThreadId) throw new Error('The recording has no thread id.');
 let threadId = recordedThreadId;
 let turnIndex = 0;
@@ -77,9 +79,12 @@ const concurrentRequests = new Map<string | number, VendorMessage>();
 function replayRequestFrames(
   recordedFrames: typeof messages,
   crashAfter: ((message: VendorMessage) => boolean) | null,
-) {
+): void {
   let frames = recordedFrames;
-  const index = frames.findIndex((frame) => 'id' in frame);
+  const index = frames.findIndex(
+    (frame): frame is Extract<VendorMessage, { id: string | number }> =>
+      'id' in frame,
+  );
   let request = frames[index];
   if (request && environment.scenario.otherThreadRequest) {
     // Changing only threadId preserves the recording's generated payload family.
@@ -118,7 +123,7 @@ let withheldStartResponse: {
 } | null = null;
 
 // Read on request, so a version folder without a model list still serves Turns.
-function listModels(id: string | number | undefined) {
+function listModels(id: string | number | undefined): void {
   try {
     const file = findRecording(
       path.join(import.meta.dirname, 'recordings'),
@@ -133,15 +138,18 @@ function listModels(id: string | number | undefined) {
 function startTurn(
   id: string | number | undefined,
   notificationsFirst = false,
-) {
+): void {
   const turn = turns[turnIndex++]?.map(
-    (message) =>
+    (message): VendorMessage =>
       ({
         ...message,
         params: { ...message.params, threadId },
       }) as VendorMessage,
   );
-  const started = turn?.find((message) => message.method === 'turn/started');
+  const started = turn?.find(
+    (message): message is Extract<VendorMessage, { method: 'turn/started' }> =>
+      message.method === 'turn/started',
+  );
   if (turn === undefined || started === undefined) {
     send({
       id,
@@ -159,7 +167,7 @@ function startTurn(
     final.params.turn.status === 'interrupted';
   const command = interrupted
     ? turn.findIndex(
-        (message) =>
+        (message): boolean =>
           message.method === 'item/started' &&
           message.params.item.type === 'commandExecution',
       )
@@ -174,7 +182,7 @@ function startTurn(
   }
   const response = { id, result: { turn: started.params?.turn } };
   const crashAfter = environment.exitMidTurn
-    ? (message: (typeof frames)[number]) => message === started
+    ? (message: (typeof frames)[number]): boolean => message === started
     : null;
   if (turnIndex === 1 && environment.scenario.turnResponseAfterNextStart) {
     withheldStartResponse = response;
@@ -203,7 +211,7 @@ function startTurn(
   else replayRequestFrames(frames.slice(before), crashAfter);
 }
 
-serveJsonLines<Request>(({ id, method, params, result }) => {
+serveJsonLines<Request>(({ id, method, params, result }): void | boolean => {
   switch (method) {
     case undefined:
       return answerRequest(id, result);
@@ -252,7 +260,12 @@ serveJsonLines<Request>(({ id, method, params, result }) => {
       if (environment.scenario.interruptError !== 'none') {
         if (environment.scenario.interruptError === 'afterCompletion') {
           const completed = requestFrames.find(
-            (message) => message.method === 'turn/completed',
+            (
+              message,
+            ): message is Extract<
+              VendorMessage,
+              { method: 'turn/completed' }
+            > => message.method === 'turn/completed',
           );
           if (completed?.method === 'turn/completed')
             send({
@@ -281,7 +294,10 @@ serveJsonLines<Request>(({ id, method, params, result }) => {
         if (concurrentRequests.size === 0)
           recordRequestAnswer({ type: 'elicitation', action: 'cancel' });
         const completed = requestFrames.find(
-          (message) => message.method === 'turn/completed',
+          (
+            message,
+          ): message is Extract<VendorMessage, { method: 'turn/completed' }> =>
+            message.method === 'turn/completed',
         );
         send({ id, result: {} });
         if (completed?.method === 'turn/completed')
@@ -322,7 +338,7 @@ serveJsonLines<Request>(({ id, method, params, result }) => {
 });
 
 // Correlates mock request replies and releases the Turn once every question has an answer.
-function answerRequest(id: string | number | undefined, result: unknown) {
+function answerRequest(id: string | number | undefined, result: unknown): void {
   if (id !== undefined && concurrentRequests.has(id)) {
     heldRequest = concurrentRequests.get(id) ?? null;
     heldRequestId = id;
@@ -349,12 +365,14 @@ function answerRequest(id: string | number | undefined, result: unknown) {
               type: 'elicitation',
               action: 'accept',
               content: Object.fromEntries(
-                Object.entries(answer.answers).map(([key, value]) => [
-                  key,
-                  value?.answers.length === 1
-                    ? value.answers[0]
-                    : value?.answers,
-                ]),
+                Object.entries(answer.answers).map(
+                  ([key, value]): [string, string | string[] | undefined] => [
+                    key,
+                    value?.answers.length === 1
+                      ? value.answers[0]
+                      : value?.answers,
+                  ],
+                ),
               ),
             }
           : {

@@ -22,8 +22,8 @@ export const crossPackageImport = defineRule({
         'Import another workspace package by its name and an exports entry, not by a relative path into packages/, tooling/ or apps/ (A2).',
     },
   },
-  create: (context) =>
-    onModuleSources((source) => {
+  create: (context): import('@oxlint/plugins').Visitor =>
+    onModuleSources((source): void => {
       const path = stringValue(source);
       if (
         intoWorkspacePackage.test(path) &&

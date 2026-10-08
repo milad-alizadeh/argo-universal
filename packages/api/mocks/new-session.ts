@@ -22,22 +22,36 @@ export const newSessionOptions = z
   )
   .parse(recordedOptions);
 
-const available: AgentsListOutput = agentsList.map((agent) => ({
-  ...agent,
-  configOptions:
-    newSessionOptions.find((options) => options.agent === agent.agent)
-      ?.configOptions ?? [],
-}));
+const available: AgentsListOutput = agentsList.map(
+  (agent): AgentsListOutput[number] => ({
+    ...agent,
+    configOptions:
+      newSessionOptions.find(
+        (options): boolean => options.agent === agent.agent,
+      )?.configOptions ?? [],
+  }),
+);
 
 export const newSessionCatalogs = {
   bothAvailable: available,
-  bothUnavailable: available.map((agent) => ({
-    ...agent,
-    availability: 'unavailable' as const,
-    installStep: "CLI didn't start",
-    configOptions: [],
-  })),
-  oneNotInstalled: available.map((agent, index) =>
+  bothUnavailable: available.map(
+    (
+      agent,
+    ): {
+      agent: string;
+      label: string;
+      logo: string;
+      availability: 'unavailable';
+      installStep: string;
+      configOptions: never[];
+    } => ({
+      ...agent,
+      availability: 'unavailable' as const,
+      installStep: "CLI didn't start",
+      configOptions: [],
+    }),
+  ),
+  oneNotInstalled: available.map((agent, index): AgentsListOutput[number] =>
     index === 0
       ? {
           ...agent,
@@ -47,7 +61,7 @@ export const newSessionCatalogs = {
         }
       : agent,
   ),
-  oneNotSignedIn: available.map((agent, index) =>
+  oneNotSignedIn: available.map((agent, index): AgentsListOutput[number] =>
     index === 1
       ? {
           ...agent,
@@ -60,13 +74,23 @@ export const newSessionCatalogs = {
 };
 
 export const dangerousModeOptions = newSessionOptions.map(
-  ({ agent, configOptions }) => ({
+  ({
     agent,
-    configOptions: configOptions.map((option) => {
+    configOptions,
+  }): { agent: string; configOptions: SessionConfigOption[] } => ({
+    agent,
+    configOptions: configOptions.map((option): SessionConfigOption => {
       if (option.category !== 'mode' || option.type !== 'select') return option;
       const dangerous = option.options
-        .flatMap((choice) => ('groupId' in choice ? choice.options : [choice]))
-        .find((choice) => choice._meta?.argo?.tone === 'dangerous');
+        .flatMap(
+          (
+            choice,
+          ): Exclude<
+            Extract<SessionConfigOption, { type: 'select' }>['options'][number],
+            { groupId: string }
+          >[] => ('groupId' in choice ? choice.options : [choice]),
+        )
+        .find((choice): boolean => choice._meta?.argo?.tone === 'dangerous');
       if (!dangerous) throw new Error('Missing dangerous mode mock');
       return { ...option, currentValue: dangerous.value };
     }),
@@ -79,14 +103,25 @@ export const newSessionBranches: ProjectsBranchesOutput = {
 };
 
 export const newSessionInputs: SessionNewInput[] = newSessionOptions.map(
-  ({ agent, configOptions, prompt }) => ({
+  ({
+    agent,
+    configOptions,
+    prompt,
+  }): Omit<SessionNewInput, 'checkout'> & {
+    checkout: { type: 'worktree'; baseBranch: string };
+  } => ({
     projectId: projectsList[0]?.id ?? 'project-1',
     agent,
     checkout: { type: 'worktree', baseBranch: 'main' },
-    configOptions: configOptions.map(({ configId, currentValue }) => ({
-      configId,
-      value: currentValue,
-    })),
+    configOptions: configOptions.map(
+      ({
+        configId,
+        currentValue,
+      }): { configId: string; value: string | boolean } => ({
+        configId,
+        value: currentValue,
+      }),
+    ),
     prompt,
   }),
 );

@@ -2,7 +2,10 @@ import path from 'node:path';
 import { type MockCliOptions, writeMockCliShim } from '../mock-cli.ts';
 
 // Writes a `codex` into `directory` whose `app-server` replays a recording from ./recordings.
-export const writeMockCodex = (directory: string, options: MockCliOptions) =>
+export const writeMockCodex = (
+  directory: string,
+  options: MockCliOptions,
+): Promise<string> =>
   writeMockCliShim({
     directory,
     name: 'codex',

@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
+  type Recording,
   findRecording,
   readRecording,
   recordingVersion,
@@ -11,20 +12,20 @@ import {
 
 let directory: string;
 
-beforeEach(async () => {
+beforeEach(async (): Promise<void> => {
   directory = await mkdtemp(path.join(os.tmpdir(), 'mock-recording-'));
   await mkdir(path.join(directory, '1.2.3'));
 });
 
-afterEach(() => rm(directory, { recursive: true, force: true }));
+afterEach((): Promise<void> => rm(directory, { recursive: true, force: true }));
 
-const write = async (name: string, value: string) => {
+const write = async (name: string, value: string): Promise<string> => {
   const file = path.join(directory, '1.2.3', name);
   await writeFile(file, value);
   return file;
 };
 
-const tagged = (fields: Record<string, unknown>) =>
+const tagged = (fields: Record<string, unknown>): string =>
   JSON.stringify({
     producer: 'agent-cli',
     version: '1.2.3',
@@ -33,8 +34,8 @@ const tagged = (fields: Record<string, unknown>) =>
     ...fields,
   });
 
-describe('readRecording', () => {
-  it('reads a tagged recording with the version of its folder', async () => {
+describe('readRecording', (): void => {
+  it('reads a tagged recording with the version of its folder', async (): Promise<void> => {
     const file = await write('turn.json', tagged({}));
 
     expect(readRecording(file, 'agent-cli')).toEqual({
@@ -43,7 +44,7 @@ describe('readRecording', () => {
     });
   });
 
-  it('reads a JSONL recording as one frame per line', async () => {
+  it('reads a JSONL recording as one frame per line', async (): Promise<void> => {
     const file = await write('turn.jsonl', '{"type":"a"}\n{"type":"b"}\n');
 
     expect(readRecording(file, 'agent-cli')).toEqual({
@@ -52,33 +53,33 @@ describe('readRecording', () => {
     });
   });
 
-  it('rejects a version that disagrees with the folder', async () => {
+  it('rejects a version that disagrees with the folder', async (): Promise<void> => {
     const file = await write('turn.json', tagged({ version: '9.9.9' }));
 
-    expect(() => readRecording(file, 'agent-cli')).toThrow(
+    expect((): Recording => readRecording(file, 'agent-cli')).toThrow(
       /turn\.json.*version/,
     );
   });
 
-  it('rejects a producer the caller did not ask for', async () => {
+  it('rejects a producer the caller did not ask for', async (): Promise<void> => {
     const file = await write('turn.json', tagged({ producer: 'other-cli' }));
 
-    expect(() => readRecording(file, 'agent-cli')).toThrow(
+    expect((): Recording => readRecording(file, 'agent-cli')).toThrow(
       /turn\.json.*producer/,
     );
   });
 
-  it('requires the capture date field, even when it is unknown', async () => {
+  it('requires the capture date field, even when it is unknown', async (): Promise<void> => {
     const file = await write('turn.json', tagged({ recordedAt: undefined }));
 
-    expect(() => readRecording(file, 'agent-cli')).toThrow(
+    expect((): Recording => readRecording(file, 'agent-cli')).toThrow(
       /turn\.json.*recordedAt/,
     );
   });
 });
 
-describe('findRecording', () => {
-  it('finds a recording by name in the version folder, past stray files', async () => {
+describe('findRecording', (): void => {
+  it('finds a recording by name in the version folder, past stray files', async (): Promise<void> => {
     await writeFile(path.join(directory, '.DS_Store'), '');
     const file = await write('turn.jsonl', '{"type":"a"}\n');
     await write('notes.txt', '');
@@ -87,20 +88,24 @@ describe('findRecording', () => {
     expect(recordingVersion(directory)).toBe('1.2.3');
   });
 
-  it('refuses a name with no recording', () => {
-    expect(() => findRecording(directory, 'missing')).toThrow(/missing/);
+  it('refuses a name with no recording', (): void => {
+    expect((): string => findRecording(directory, 'missing')).toThrow(
+      /missing/,
+    );
   });
 
-  it('refuses a second version folder', async () => {
+  it('refuses a second version folder', async (): Promise<void> => {
     await mkdir(path.join(directory, '1.10.0'));
 
-    expect(() => recordingVersion(directory)).toThrow(/one version folder/);
+    expect((): string => recordingVersion(directory)).toThrow(
+      /one version folder/,
+    );
   });
 });
 
-describe('splitTurns', () => {
-  it('ends a Turn at each end frame and keeps a trailing Turn', () => {
-    const ends = (frame: string) => frame === 'end';
+describe('splitTurns', (): void => {
+  it('ends a Turn at each end frame and keeps a trailing Turn', (): void => {
+    const ends = (frame: string): boolean => frame === 'end';
 
     expect(splitTurns(['a', 'end', 'b', 'c', 'end', 'd'], ends)).toEqual([
       ['a', 'end'],

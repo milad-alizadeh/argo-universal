@@ -6,8 +6,13 @@ import { promisify } from 'node:util';
 import { z } from 'zod';
 
 const execute = promisify(execFile);
-const run = (arguments_: string[], signal?: AbortSignal) =>
-  execute('git', arguments_, { signal });
+const run = (
+  arguments_: string[],
+  signal?: AbortSignal,
+): import('child_process').PromiseWithChild<{
+  stdout: string;
+  stderr: string;
+}> => execute('git', arguments_, { signal });
 let rejectedResponses = 0;
 const branchRefPrefix = 'refs/heads/';
 const sessionBranchPrefix = 'argo/';
@@ -16,7 +21,7 @@ const branchName = z
   .string()
   .startsWith(branchRefPrefix)
   .min(branchRefPrefix.length + 1)
-  .transform((ref) => ref.slice(branchRefPrefix.length));
+  .transform((ref): string => ref.slice(branchRefPrefix.length));
 
 // Reports and counts a git answer this module does not recognise, then throws.
 const rejectResponse = (what: string, detail?: string): never => {
@@ -36,14 +41,15 @@ const checkoutRecord = z
     prunable: z.union([z.literal(true), z.string()]).optional(),
   })
   .refine(
-    (record) => (record.branch !== undefined) !== (record.detached === true),
+    (record): boolean =>
+      (record.branch !== undefined) !== (record.detached === true),
   );
 
 // NUL-delimited porcelain keeps paths containing line breaks intact.
 const readMainCheckout = (output: string): Checkout => {
   const fields = (output.split('\0\0')[0] ?? '').split('\0').filter(Boolean);
   const record = Object.fromEntries(
-    fields.map((field) => {
+    fields.map((field): [string, string] | [string, boolean] => {
       const separator = field.indexOf(' ');
       return separator === -1
         ? [field, true]
@@ -82,7 +88,7 @@ export async function readRepository(
       z.string().trim().min(1).refine(isAbsolute),
       z.string().trim().min(1),
     ])
-    .safeParse(responses.map(({ stdout }) => stdout));
+    .safeParse(responses.map(({ stdout }): string => stdout));
   if (!paths.success)
     return rejectResponse('repository paths', paths.error.message);
   return {
@@ -96,13 +102,17 @@ export async function listBranches(
   projectPath: string,
   signal?: AbortSignal,
 ): Promise<{ branches: string[]; currentBranch: string | null }> {
-  const git = (...arguments_: string[]) =>
-    run(['-C', projectPath, ...arguments_], signal);
+  const git = (
+    ...arguments_: string[]
+  ): import('child_process').PromiseWithChild<{
+    stdout: string;
+    stderr: string;
+  }> => run(['-C', projectPath, ...arguments_], signal);
   const [{ stdout }, head] = await Promise.all([
     git('for-each-ref', '--format=%(refname)', 'refs/heads/'),
     git('symbolic-ref', '--quiet', 'HEAD').then(
-      ({ stdout }) => stdout.trim(),
-      () => null,
+      ({ stdout }): string => stdout.trim(),
+      (): null => null,
     ),
   ]);
   signal?.throwIfAborted();
@@ -115,8 +125,9 @@ export async function listBranches(
 }
 
 // The prefix is stored data and must survive a product rename.
-export const sessionBranch = (id: string) => `${sessionBranchPrefix}${id}`;
-export const isSessionBranch = (branch: string | null, id: string) =>
+export const sessionBranch = (id: string): string =>
+  `${sessionBranchPrefix}${id}`;
+export const isSessionBranch = (branch: string | null, id: string): boolean =>
   branch === sessionBranch(id);
 
 // The Project may have been registered through any of its working trees.
@@ -130,7 +141,7 @@ export async function createCheckout(
   },
   signal?: AbortSignal,
 ): Promise<Checkout> {
-  const git = async (...arguments_: string[]) =>
+  const git = async (...arguments_: string[]): Promise<string> =>
     (await run(['-C', input.projectPath, ...arguments_], signal)).stdout.trim();
   const main = readMainCheckout(
     await git('worktree', 'list', '--porcelain', '-z'),

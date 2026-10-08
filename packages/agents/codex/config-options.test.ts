@@ -13,7 +13,7 @@ const recorded: { payload: ModelListResponse } = JSON.parse(
   ),
 );
 const models = recorded.payload.data;
-it('offers the recorded models and the selected model’s effort choices', () => {
+it('offers the recorded models and the selected model’s effort choices', (): void => {
   const values = startingValues(models, [
     { configId: 'model', value: 'gpt-5.6-luna' },
     { configId: 'effort', value: 'high' },
@@ -42,7 +42,7 @@ it('offers the recorded models and the selected model’s effort choices', () =>
     ]),
   );
 });
-it('uses the catalog default when the saved model no longer exists and rejects an unoffered value', () => {
+it('uses the catalog default when the saved model no longer exists and rejects an unoffered value', (): void => {
   const values = startingValues(models, [
     { configId: 'model', value: 'missing-model' },
     { configId: 'effort', value: 'unknown' },
@@ -60,7 +60,7 @@ it('uses the catalog default when the saved model no longer exists and rejects a
   ).toBeUndefined();
 });
 
-it('marks Plan and dangerous modes and previews each model’s support flags', () => {
+it('marks Plan and dangerous modes and previews each model’s support flags', (): void => {
   const options = toConfigOptions(models, startingValues(models, []));
   expect(options).toEqual(
     expect.arrayContaining([

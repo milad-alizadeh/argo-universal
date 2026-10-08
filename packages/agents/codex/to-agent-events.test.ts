@@ -3,10 +3,16 @@ import type { CommandAction } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import type { AgentEvent, FeedUpdate } from '../src/agent-events';
 import type { VendorMessage } from './messages';
-import type { CommandAction as SuppliedCommandAction } from './protocol.gen';
+import type {
+  ItemCompletedNotification,
+  ItemStartedNotification,
+  CommandAction as SuppliedCommandAction,
+} from './protocol.gen';
 import { initialMappingState, toAgentEvents } from './to-agent-events';
 
-const recording = (name: string) =>
+const recording = (
+  name: string,
+): (VendorMessage & { receivedAt: number | undefined })[] =>
   JSON.parse(
     readFileSync(
       new URL(
@@ -16,12 +22,14 @@ const recording = (name: string) =>
       'utf8',
     ),
   ).payload.messages.map(
-    (message: VendorMessage & { emittedAtMs?: number }) => ({
+    (
+      message: VendorMessage & { emittedAtMs?: number },
+    ): VendorMessage & { receivedAt: number | undefined } => ({
       ...message,
       receivedAt: message.emittedAtMs,
     }),
   );
-const mapMessages = (messages: VendorMessage[]) => {
+const mapMessages = (messages: VendorMessage[]): AgentEvent[] => {
   let state = initialMappingState();
   const events: AgentEvent[] = [];
   for (const message of messages) {
@@ -31,27 +39,41 @@ const mapMessages = (messages: VendorMessage[]) => {
   }
   return events;
 };
-const mapRecording = (name: string) => mapMessages(recording(name));
+const mapRecording = (name: string): AgentEvent[] =>
+  mapMessages(recording(name));
+const replaceCommandActions = <
+  Notification extends ItemStartedNotification | ItemCompletedNotification,
+>(
+  notification: Notification,
+  commandActions: SuppliedCommandAction[],
+): Notification => ({
+  ...notification,
+  item: { ...notification.item, commandActions },
+});
 const withCommandActions = (
   commandActions: SuppliedCommandAction[],
 ): VendorMessage[] =>
-  recording('edit-and-command').map((message: VendorMessage) => {
+  recording('edit-and-command').map((message: VendorMessage): VendorMessage => {
     if (
-      (message.method === 'item/started' ||
-        message.method === 'item/completed') &&
+      message.method === 'item/started' &&
       message.params.item.type === 'commandExecution'
     )
       return {
         ...message,
-        params: {
-          ...message.params,
-          item: { ...message.params.item, commandActions },
-        },
+        params: replaceCommandActions(message.params, commandActions),
+      };
+    if (
+      message.method === 'item/completed' &&
+      message.params.item.type === 'commandExecution'
+    )
+      return {
+        ...message,
+        params: replaceCommandActions(message.params, commandActions),
       };
     return message;
   });
 const settledRows = (events: AgentEvent[]): FeedUpdate[] =>
-  events.flatMap((event) =>
+  events.flatMap((event): FeedUpdate[] =>
     event.type === 'agent.feed' &&
     event.change.type === 'upsert' &&
     event.change.update.state === 'settled'
@@ -59,14 +81,15 @@ const settledRows = (events: AgentEvent[]): FeedUpdate[] =>
       : [],
   );
 
-it('reconciles the recorded Compaction start and completion into one row', () => {
+it('reconciles the recorded Compaction start and completion into one row', (): void => {
   const events = mapRecording('compaction');
-  const rows = events.flatMap((event) =>
-    event.type === 'agent.feed' &&
-    event.change.type === 'upsert' &&
-    event.change.update.sessionUpdate === 'compaction_update'
-      ? [event.change.update]
-      : [],
+  const rows = events.flatMap(
+    (event): Extract<FeedUpdate, { sessionUpdate: 'compaction_update' }>[] =>
+      event.type === 'agent.feed' &&
+      event.change.type === 'upsert' &&
+      event.change.update.sessionUpdate === 'compaction_update'
+        ? [event.change.update]
+        : [],
   );
   expect(rows).toEqual([
     {
@@ -86,10 +109,15 @@ it('reconciles the recorded Compaction start and completion into one row', () =>
   ]);
 });
 
-it('exposes only the command actions the Agent supplied, including unknown actions', () => {
+it('exposes only the command actions the Agent supplied, including unknown actions', (): void => {
   const tools = settledRows(mapRecording('edit-and-command'))
-    .filter((row) => row.sessionUpdate === 'tool_call_update')
-    .filter((row) => row.kind === 'execute');
+    .filter(
+      (
+        row,
+      ): row is Extract<FeedUpdate, { sessionUpdate: 'tool_call_update' }> =>
+        row.sessionUpdate === 'tool_call_update',
+    )
+    .filter((row): boolean => row.kind === 'execute');
   expect(tools).toEqual([
     expect.objectContaining({
       _meta: {
@@ -112,11 +140,34 @@ it('exposes only the command actions the Agent supplied, including unknown actio
   ]);
 });
 
-it('keeps the recorded Tool call start and end times', () => {
+it('keeps the recorded Tool call start and end times', (): void => {
   const tools = settledRows(mapRecording('edit-and-command'))
-    .filter((row) => row.sessionUpdate === 'tool_call_update')
-    .filter((row) => row.kind === 'execute');
-  expect(tools.map((row) => row._meta?.argo)).toEqual([
+    .filter(
+      (
+        row,
+      ): row is Extract<FeedUpdate, { sessionUpdate: 'tool_call_update' }> =>
+        row.sessionUpdate === 'tool_call_update',
+    )
+    .filter((row): boolean => row.kind === 'execute');
+  expect(
+    tools.map(
+      (
+        row,
+      ):
+        | {
+            truncated?: boolean;
+            permissionOutcome?:
+              | { outcome: 'cancelled' }
+              | { outcome: 'selected'; optionId: string };
+            commandActions?: CommandAction[];
+            startedAt?: number;
+            endedAt?: number;
+            shellId?: string;
+            description?: string;
+          }
+        | undefined => row._meta?.argo,
+    ),
+  ).toEqual([
     expect.objectContaining({
       startedAt: 1791172062416,
       endedAt: 1791172062416,
@@ -128,11 +179,16 @@ it('keeps the recorded Tool call start and end times', () => {
   ]);
 });
 
-it('omits command actions when the Agent supplies none, even for a read-shaped command', () => {
+it('omits command actions when the Agent supplies none, even for a read-shaped command', (): void => {
   const messages = withCommandActions([]);
   const tools = settledRows(mapMessages(messages))
-    .filter((row) => row.sessionUpdate === 'tool_call_update')
-    .filter((row) => row.kind === 'execute');
+    .filter(
+      (
+        row,
+      ): row is Extract<FeedUpdate, { sessionUpdate: 'tool_call_update' }> =>
+        row.sessionUpdate === 'tool_call_update',
+    )
+    .filter((row): boolean => row.kind === 'execute');
   expect(tools).toHaveLength(2);
   for (const tool of tools)
     expect(tool._meta?.argo).not.toHaveProperty('commandActions');
@@ -158,45 +214,74 @@ it.each([
   },
 ] satisfies { supplied: SuppliedCommandAction; expected: CommandAction }[])(
   'maps supplied $supplied.type metadata without inventing a missing path',
-  ({ supplied, expected }) => {
+  ({ supplied, expected }): void => {
     const messages = withCommandActions([supplied]);
     const tools = settledRows(mapMessages(messages))
-      .filter((row) => row.sessionUpdate === 'tool_call_update')
-      .filter((row) => row.kind === 'execute');
-    expect(tools.map((tool) => tool._meta?.argo?.commandActions)).toEqual([
-      [expected],
-      [expected],
-    ]);
+      .filter(
+        (
+          row,
+        ): row is Extract<FeedUpdate, { sessionUpdate: 'tool_call_update' }> =>
+          row.sessionUpdate === 'tool_call_update',
+      )
+      .filter((row): boolean => row.kind === 'execute');
+    expect(
+      tools.map(
+        (tool): CommandAction[] | undefined => tool._meta?.argo?.commandActions,
+      ),
+    ).toEqual([[expected], [expected]]);
   },
 );
 
-describe('recorded Turns', () => {
+describe('recorded Turns', (): void => {
   it.each(['reply', 'file-change'])(
     'maps %s with one start, one end and no vendor user messages',
-    (name) => {
+    (name): void => {
       const events = mapRecording(name);
       expect(
-        events.filter((event) => event.type === 'agent.turnStarted'),
+        events.filter(
+          (
+            event,
+          ): event is Extract<AgentEvent, { type: 'agent.turnStarted' }> =>
+            event.type === 'agent.turnStarted',
+        ),
       ).toEqual([{ type: 'agent.turnStarted' }]);
       expect(
-        events.filter((event) => event.type === 'agent.turnEnded'),
+        events.filter(
+          (event): event is Extract<AgentEvent, { type: 'agent.turnEnded' }> =>
+            event.type === 'agent.turnEnded',
+        ),
       ).toEqual([{ type: 'agent.turnEnded', stopReason: 'end_turn' }]);
       expect(
-        settledRows(events).some((row) => row.sessionUpdate === 'user_message'),
+        settledRows(events).some(
+          (
+            row,
+          ): row is Extract<FeedUpdate, { sessionUpdate: 'user_message' }> =>
+            row.sessionUpdate === 'user_message',
+        ),
       ).toBe(false);
       expect(
         settledRows(events)
-          .filter((row) => row.sessionUpdate === 'agent_message')
-          .map((row) => row.content),
+          .filter(
+            (
+              row,
+            ): row is Extract<FeedUpdate, { sessionUpdate: 'agent_message' }> =>
+              row.sessionUpdate === 'agent_message',
+          )
+          .map((row): typeof row.content => row.content),
       ).toEqual([[{ type: 'text', text: name === 'reply' ? 'OK' : 'done' }]]);
     },
   );
 });
 
-it('preserves every recorded file change and patch in one Tool call', () => {
+it('preserves every recorded file change and patch in one Tool call', (): void => {
   const rows = settledRows(mapRecording('file-change'));
   expect(
-    rows.filter((row) => row.sessionUpdate === 'tool_call_update'),
+    rows.filter(
+      (
+        row,
+      ): row is Extract<FeedUpdate, { sessionUpdate: 'tool_call_update' }> =>
+        row.sessionUpdate === 'tool_call_update',
+    ),
   ).toEqual([
     expect.objectContaining({
       kind: 'edit',
@@ -219,10 +304,11 @@ it('preserves every recorded file change and patch in one Tool call', () => {
   ]);
 });
 
-it('maps recorded command output, exit status and usage without repeating the final text', () => {
+it('maps recorded command output, exit status and usage without repeating the final text', (): void => {
   const events = mapRecording('edit-and-command');
   const tools = settledRows(events).filter(
-    (row) => row.sessionUpdate === 'tool_call_update',
+    (row): row is Extract<FeedUpdate, { sessionUpdate: 'tool_call_update' }> =>
+      row.sessionUpdate === 'tool_call_update',
   );
   expect(tools).toEqual(
     expect.arrayContaining([
@@ -251,7 +337,7 @@ it('maps recorded command output, exit status and usage without repeating the fi
   });
 });
 
-it('ends the recorded interrupted Turn and settles its unfinished command', () => {
+it('ends the recorded interrupted Turn and settles its unfinished command', (): void => {
   const events = mapRecording('interrupt');
   expect(events.at(-1)).toMatchObject({
     type: 'agent.turnEnded',
@@ -273,7 +359,7 @@ it('ends the recorded interrupted Turn and settles its unfinished command', () =
   );
 });
 
-it('retains the recorded cancellation time when the Tool call never sends a final item', () => {
+it('retains the recorded cancellation time when the Tool call never sends a final item', (): void => {
   const events = mapRecording('interrupt');
   expect(events).toEqual(
     expect.arrayContaining([
@@ -296,7 +382,7 @@ it('retains the recorded cancellation time when the Tool call never sends a fina
   );
 });
 
-it('reconciles a thought summary with its final record and drops raw thought text once a summary streams', () => {
+it('reconciles a thought summary with its final record and drops raw thought text once a summary streams', (): void => {
   const messages = [
     { method: 'turn/started', params: { turn: { id: 'thought-turn' } } },
     {
@@ -349,7 +435,8 @@ it('reconciles a thought summary with its final record and drops raw thought tex
   ]);
   expect(
     events.filter(
-      (event) => event.type === 'agent.feed' && event.change.type === 'append',
+      (event): boolean =>
+        event.type === 'agent.feed' && event.change.type === 'append',
     ),
   ).toEqual([
     {
@@ -366,7 +453,7 @@ it('reconciles a thought summary with its final record and drops raw thought tex
 
 it.each(['failed', 'interrupted'])(
   'keeps the vendor error and stop reason of a %s Turn',
-  (status) => {
+  (status): void => {
     const started = toAgentEvents(
       {
         method: 'turn/started',
@@ -405,7 +492,7 @@ it.each(['failed', 'interrupted'])(
   },
 );
 
-it('drops an unmapped notification without inspecting its payload', () => {
+it('drops an unmapped notification without inspecting its payload', (): void => {
   const mappingState = initialMappingState();
   expect(
     toAgentEvents(
@@ -417,7 +504,7 @@ it('drops an unmapped notification without inspecting its payload', () => {
   ).toEqual({ events: [], mappingState });
 });
 
-it('attributes only the resumed Turn’s recorded usage when no previous baseline is loaded', () => {
+it('attributes only the resumed Turn’s recorded usage when no previous baseline is loaded', (): void => {
   const ended = mapRecording('interrupt').at(-1);
   expect(ended).toMatchObject({
     type: 'agent.turnEnded',
@@ -430,7 +517,7 @@ it('attributes only the resumed Turn’s recorded usage when no previous baselin
   });
 });
 
-it('retains usage received while idle as the next Turn’s baseline', () => {
+it('retains usage received while idle as the next Turn’s baseline', (): void => {
   const breakdown = {
     totalTokens: 100,
     inputTokens: 80,

@@ -21,6 +21,20 @@ import {
 import { readRecording, recordedFrames, splitTurns } from '../recording.ts';
 import { recordRequestAnswer } from '../request-answer.ts';
 
+type ResultUsage = {
+  [
+    Key in keyof Omit<
+      SDKResultMessage['usage'],
+      'fallback_credit' | 'iterations' | 'service_tier' | 'speed'
+    >
+  ]: NonNullable<SDKResultMessage['usage'][Key]>;
+} & {
+  fallback_credit: null;
+  iterations: never[];
+  service_tier: 'standard';
+  speed: 'standard';
+};
+
 const PRODUCER = 'claude-cli';
 
 type Frame = SDKMessage | SDKControlRequest | typeof INTERRUPT_POINT;
@@ -44,10 +58,13 @@ const pipes = {
 };
 // The recorded answer to each control request, keyed by the request's subtype.
 const requestSubtypes = new Map(
-  pipes.input.flatMap((input) =>
-    input.type === 'control_request'
-      ? [[input.request_id, input.request.subtype] as const]
-      : [],
+  pipes.input.flatMap(
+    (
+      input,
+    ): [] | [readonly [string, SDKControlRequest['request']['subtype']]] =>
+      input.type === 'control_request'
+        ? [[input.request_id, input.request.subtype] as const]
+        : [],
   ),
 );
 const recordedAnswers = new Map<string, unknown>();
@@ -70,16 +87,26 @@ for (const frame of pipes.output) {
 }
 
 // Frames after a Turn's `result`, such as the idle state, belong to that Turn.
-const turns = splitTurns(frames, (frame) => frame.type === 'result');
+const turns = splitTurns(
+  frames,
+  (frame): frame is Extract<Frame, { type: 'result' }> =>
+    frame.type === 'result',
+);
 const lastTurn = turns.at(-1);
 const turnBefore = turns.at(-2);
-if (lastTurn && turnBefore && !lastTurn.some((f) => f.type === 'result')) {
+if (
+  lastTurn &&
+  turnBefore &&
+  !lastTurn.some(
+    (f): f is Extract<Frame, { type: 'result' }> => f.type === 'result',
+  )
+) {
   turnBefore.push(...lastTurn);
   turns.pop();
 }
 
 // The SDK names the vendor session with `--session-id` or `--resume`.
-const flagValue = (flag: string) => {
+const flagValue = (flag: string): string | undefined => {
   const index = process.argv.indexOf(flag);
   return index === -1 ? undefined : process.argv[index + 1];
 };
@@ -89,11 +116,12 @@ const sessionId =
   frames.find((frame): frame is SDKMessage => 'session_id' in frame)
     ?.session_id ??
   randomUUID();
-const withSession = (frame: Frame) =>
+const withSession = (frame: Frame): Frame =>
   'session_id' in frame ? { ...frame, session_id: sessionId } : frame;
-const assistantFrames = (turnFrames: Frame[]) =>
+const assistantFrames = (turnFrames: Frame[]): SDKAssistantMessage[] =>
   turnFrames.filter(
-    (frame): frame is SDKAssistantMessage => frame.type === 'assistant',
+    (frame): frame is Extract<Frame, { type: 'assistant' }> =>
+      frame.type === 'assistant',
   );
 let turnIndex = 0;
 
@@ -117,7 +145,20 @@ const initFrame = (): SDKSystemMessage => ({
 });
 
 // The fields every `result` frame carries, zeroed because a mock spends nothing.
-const resultFields = () => ({
+const resultFields = (): Pick<
+  SDKResultMessage,
+  | 'type'
+  | 'duration_ms'
+  | 'duration_api_ms'
+  | 'num_turns'
+  | 'total_cost_usd'
+  | 'uuid'
+  | 'session_id'
+> & {
+  usage: ResultUsage;
+  modelUsage: Record<string, never>;
+  permission_denials: never[];
+} => ({
   type: 'result' as const,
   duration_ms: 0,
   duration_api_ms: 0,
@@ -153,8 +194,15 @@ const resultFrame = (turn: Frame[]): SDKResultMessage => ({
   is_error: false,
   result:
     assistantFrames(turn)
-      .flatMap((frame) => frame.message.content)
-      .filter((block) => block.type === 'text')
+      .flatMap((frame): typeof frame.message.content => frame.message.content)
+      .filter(
+        (
+          block,
+        ): block is Extract<
+          SDKAssistantMessage['message']['content'][number],
+          { type: 'text' }
+        > => block.type === 'text',
+      )
       .at(-1)?.text ?? '',
   stop_reason: 'end_turn',
 });
@@ -183,10 +231,10 @@ const apiKeyAccount: AccountInfo = {
   apiProvider: 'firstParty',
 };
 
-const isInit = (frame: Frame) =>
+const isInit = (frame: Frame): frame is SDKSystemMessage =>
   frame.type === 'system' && frame.subtype === 'init';
 const crashAfter = environment.exitMidTurn
-  ? (frame: Frame) => !isInit(frame)
+  ? (frame: Frame): frame is Exclude<Frame, SDKSystemMessage> => !isInit(frame)
   : null;
 
 // The frames of the running Turn held back until an interrupt arrives.
@@ -195,9 +243,9 @@ let pendingRequestId: string | null = null;
 let pendingRequest: SDKControlRequest | null = null;
 const concurrentRequests = new Map<string, SDKControlRequest>();
 
-function replay(turn: Frame[]) {
+function replay(turn: Frame[]): void {
   const pause = turn.findIndex(
-    (frame) =>
+    (frame): boolean =>
       frame === INTERRUPT_POINT ||
       (frame.type === 'control_request' &&
         frame.request.subtype === 'can_use_tool'),
@@ -228,11 +276,17 @@ function replay(turn: Frame[]) {
     return;
   }
   const finished = replayTurn(now.map(withSession), crashAfter);
-  if (finished && pause === -1 && !turn.some((f) => f.type === 'result'))
+  if (
+    finished &&
+    pause === -1 &&
+    !turn.some(
+      (f): f is Extract<Frame, { type: 'result' }> => f.type === 'result',
+    )
+  )
     send(withSession(resultFrame(turn)));
 }
 
-function playTurn() {
+function playTurn(): void {
   const turn = turns[turnIndex++];
   if (turn === undefined) {
     send(noTurnFrame(turnIndex));
@@ -242,7 +296,7 @@ function playTurn() {
   if (environment.scenario.blockTurnStart) {
     heldFrames = [
       ...(turn.some(isInit) ? [] : [initFrame()]),
-      ...turn.filter((frame) => frame !== INTERRUPT_POINT),
+      ...turn.filter((frame): boolean => frame !== INTERRUPT_POINT),
     ];
     return;
   }
@@ -250,7 +304,9 @@ function playTurn() {
   replay(turn);
 }
 
-function answer(subtype: string | undefined) {
+function answer(
+  subtype: string | undefined,
+): NonNullable<ReturnType<typeof recordedAnswers.get>> | undefined {
   if (subtype === undefined) return;
   if (subtype === 'set_model') return {};
   if (subtype !== 'initialize')
@@ -280,7 +336,7 @@ function signedInAccount(recorded: AccountInfo): AccountInfo {
   return recorded;
 }
 
-serveJsonLines<Output>((input) => {
+serveJsonLines<Output>((input): void => {
   if (input.type === 'control_response') {
     if (concurrentRequests.has(input.response.request_id)) {
       pendingRequest =

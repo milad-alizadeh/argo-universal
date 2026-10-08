@@ -56,7 +56,7 @@ export async function connect(
     VendorMessage,
     { method: 'item/tool/requestUserInput' }
   >[] = [];
-  const cancelRequests = () => {
+  const cancelRequests = (): void => {
     for (const request of permissions.values())
       server.respond(request, { decision: 'cancel' });
     permissions.clear();
@@ -66,7 +66,7 @@ export async function connect(
   signal.addEventListener('abort', cancelRequests, { once: true });
   const server = openAppServer(
     input.cwd,
-    (message) => {
+    (message): void => {
       const notification = message as VendorMessage;
       if (
         notification.method === 'item/commandExecution/requestApproval' ||
@@ -131,8 +131,8 @@ export async function connect(
       : await server.request('thread/start', settings);
     vendorSessionId = started.thread.id;
     // Both cancellation paths share one interrupt for this vendor Turn.
-    const interrupt = (turn: VendorTurn) =>
-      (turn.interrupted ??= (async () => {
+    const interrupt = (turn: VendorTurn): Promise<void> =>
+      (turn.interrupted ??= (async (): Promise<undefined> => {
         const turnId = await turn.identity.promise;
         if (!turnId || activeTurn !== turn) return;
         try {
@@ -144,7 +144,7 @@ export async function connect(
           if (!turn.completed) throw error;
         }
       })());
-    const prompt = async (content: TurnStartParams['input']) => {
+    const prompt = async (content: TurnStartParams['input']): Promise<void> => {
       const turn = createVendorTurn();
       activeTurn = turn;
       const fullAccess = values.mode === 'fullAccess';
@@ -175,7 +175,7 @@ export async function connect(
               },
             },
           })
-          .then((result) => {
+          .then((result): void => {
             // A completed Turn's late response must not replace the next Turn's identity.
             if (activeTurn !== turn) return;
             if (result.turn.status === 'inProgress') {
@@ -203,20 +203,23 @@ export async function connect(
         },
         continuedOutside: false,
       },
-      run: async (command) => {
+      run: async (command): Promise<void> => {
         switch (command.type) {
           case 'agent.prompt':
             await prompt(
-              command.content.flatMap((block) =>
-                block.type === 'text'
-                  ? [
-                      {
-                        type: 'text' as const,
-                        text: block.text,
-                        text_elements: [],
-                      },
-                    ]
-                  : [],
+              command.content.flatMap(
+                (
+                  block,
+                ): { type: 'text'; text: string; text_elements: never[] }[] =>
+                  block.type === 'text'
+                    ? [
+                        {
+                          type: 'text' as const,
+                          text: block.text,
+                          text_elements: [],
+                        },
+                      ]
+                    : [],
               ),
             );
             return;
@@ -272,7 +275,10 @@ export async function connect(
                   toQuestionAnswers(
                     command.action === 'accept' ? command.content : undefined,
                   ),
-                ).map(([id, answers]) => [id, { answers }]),
+                ).map(([id, answers]): [string, { answers: string[] }] => [
+                  id,
+                  { answers },
+                ]),
               ),
             };
             server.respond(
@@ -295,7 +301,7 @@ export async function connect(
           }
         }
       },
-      stop: async () => {
+      stop: async (): Promise<void> => {
         signal.removeEventListener('abort', cancelRequests);
         cancelRequests();
         await server.close();
