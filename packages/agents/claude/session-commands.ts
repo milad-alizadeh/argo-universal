@@ -82,7 +82,7 @@ async function runCommand(command: Command, dispatch: Dispatch): Promise<void> {
   return runConfigOrAnswer(command, dispatch);
 }
 async function runConfigOrAnswer(
-  command: Command,
+  command: ConfigurationCommand,
   dispatch: Dispatch,
 ): Promise<void> {
   if (command.type === 'agent.setConfigOption') return dispatch.config(command);
@@ -91,12 +91,12 @@ async function runConfigOrAnswer(
   return runElicitation(command, dispatch.requests);
 }
 async function runElicitation(
-  command: Command,
+  command: AnswerCommand,
   requests: Requests,
 ): Promise<void> {
   if (command.type === 'agent.answerElicitation')
     return answerElicitation(requests, command);
-  throw new UnsupportedCommandError(command);
+  return unsupported(command);
 }
 function userPrompt(command: AgentCommandOf<'agent.prompt'>): SDKUserMessage {
   return {
@@ -120,3 +120,18 @@ const toVendorContent = (
       { type: 'text' }
     >[] => (block.type === 'text' ? [{ type: 'text', text: block.text }] : []),
   );
+
+type ConfigurationCommand = Exclude<
+  Command,
+  { type: 'agent.prompt' | 'agent.cancel' }
+>;
+type AnswerCommand = Exclude<
+  ConfigurationCommand,
+  { type: 'agent.setConfigOption' | 'agent.answerPermission' }
+>;
+type UnsupportedCommand = AgentCommandOf<
+  'agent.answerPlanProposal' | 'agent.rename' | 'agent.stopShell'
+>;
+function unsupported(command: UnsupportedCommand): never {
+  throw new UnsupportedCommandError(command);
+}
