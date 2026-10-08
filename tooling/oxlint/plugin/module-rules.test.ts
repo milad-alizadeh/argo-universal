@@ -3,7 +3,6 @@ import { crossPackageImport } from './cross-package-import.ts';
 import { ruleTester } from './rule-tester.ts';
 
 const clientFile = '/repo/packages/client/src/screen.tsx';
-const claudeMock = '/repo/mocks/cli/claude/mock-claude.ts';
 const crossPackage = [{ messageId: 'crossPackageImport' }];
 const apiValue = [{ messageId: 'apiTypeOnly' }];
 
@@ -12,10 +11,6 @@ ruleTester.run('cross-package-import', crossPackageImport, {
     "import { db } from '@repo/db';",
     "import { local } from './local';",
     "import { sibling } from '../sibling';",
-    {
-      code: "import type { Event } from '../../../packages/agents/claude/types';",
-      filename: claudeMock,
-    },
   ],
   invalid: [
     {
@@ -33,7 +28,6 @@ ruleTester.run('cross-package-import', crossPackageImport, {
     { code: "require('../../packages/git/src');", errors: crossPackage },
     {
       code: "import type { Event } from '../../../packages/agents/codex/types';",
-      filename: claudeMock,
       errors: crossPackage,
     },
   ],

@@ -10,14 +10,12 @@ The adapter covers text prompts, messages, thoughts, file edits, commands, Compa
 
 Request answers follow the installed Codex desktop app's behavior, as requested for issue #57. Deny sends `decision: "decline"`; the protocol and desktop approval panel offer no feedback text. The adapter registers `permissionFeedback: false`, so the Server rejects a Deny message before consuming the request. Accepted question answers map each supplied field to its string answers; skipped questions remain absent. Decline sends an empty answer map. Cancelling a blocking question interrupts its Turn; cancelling a nonblocking question sends an empty answer map. Requests have no deadline and replies keep the original server request id. This behavior was verified against the installed desktop app's approval and question handlers (app version 26.928.31416) and CLI 0.157.0 generated protocol types.
 
-The transport stamps each notification with its receipt time. Conversion remains pure, and a Tool call that never sends a final item receives its end time when the Turn ends. Recording mocks restore receipt times from the recorder's `emittedAtMs`.
+The transport stamps each notification with its receipt time. Conversion remains pure, and a Tool call that never sends a final item receives its end time when the Turn ends. Typed response mocks supply deterministic receipt times for pure translation tests.
 
-## Refreshing the provider contract and recordings
+## Updating the provider contract
 
-Use the same pinned CLI for generation and capture. `node packages/agents/codex/generate-protocol.ts` now also generates the runtime schemas and known notification methods. The schemas come mechanically from the generated TypeScript, using `ts-json-schema-generator`; Ajv checks raw responses and consumed notifications at the transport boundary. Unknown provider fields remain unconstrained, and extra fields are preserved. The generated artifacts record the CLI version, generator version and protocol source hash. Run package type checking separately: the schema generator skips compiler diagnostics for the standalone generated source.
+Run `node packages/agents/codex/generate-protocol.ts` against the upgraded CLI to refresh its official protocol types. Response fixtures satisfy these types; incompatible shapes fail type checking. Unit tests pass those fixtures through the real pure mapper and compare independent expected Argo events, without CLI processes or transport stubs.
 
-The TypeScript generator and the CLI's JSON Schema generator differ on required fields, including `Turn.itemsView` and `ModelListResponse.nextCursor`. Generating runtime schemas from the same TypeScript Argo consumes keeps those required fields intact without handwritten vendor schemas or projections.
+`pnpm install` generates the ignored production decoder artifacts from the checked-in protocol types with `ts-json-schema-generator`. Package type checking and tests regenerate them too. Ajv decodes raw production responses and consumed notifications once at the transport boundary. App bundlers include the imported decoder data. No provider process or network is needed to generate these artifacts. Generated schemas are build output and are never committed.
 
-The native contract tests replay the existing versioned recordings and complete startup responses captured from that provider version. App end-to-end tests use shared Argo fixtures at the AgentAdapter port (ADR-0018). Updating protocol types and schemas does not replace reviewing the expected adapter translations.
-
-Semantic adapter assertions remain fixed for review rather than being regenerated from a changed adapter.
+App E2E uses shared Argo fixtures at the Agent adapter port (ADR-0018). Updating protocol types does not automatically update semantic expectations or the App fixtures.

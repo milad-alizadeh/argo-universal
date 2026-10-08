@@ -62,7 +62,6 @@
     // Vendor names stay in the adapter and mock CLI folders (ADR-0004).
     "argo/vendor-name": "error",
     "argo/json-parse-cast": "error",
-    "argo/mock-environment": "error",
     "argo/database-client": "error",
     "argo/drizzle-schema-boundary": "error",
     // A relative path into packages/, tooling/ or apps/ skips package.json, pnpm isolation and exports (A2).
@@ -136,24 +135,14 @@
       "rules": { "argo/icon-size": "error" }
     },
     {
-      // Vendor names and vendor types belong in the adapter and mock CLI folders (ADR-0015).
-      "files": [
-        "packages/agents/claude/**",
-        "packages/agents/codex/**",
-        "mocks/cli/claude/**",
-        "mocks/cli/codex/**"
-      ],
+      // Vendor names and vendor types belong in the adapter folders (ADR-0015).
+      "files": ["packages/agents/claude/**", "packages/agents/codex/**"],
       "rules": { "argo/vendor-name": "off", "argo/json-parse-cast": "off" }
     },
     {
       // The rule names the vendors it keeps out.
       "files": ["tooling/oxlint/plugin/vendor-name*"],
       "rules": { "argo/vendor-name": "off" }
-    },
-    {
-      // Mock CLI settings are read once, through readMockCliEnvironment() here.
-      "files": ["mocks/cli/mock-cli.ts"],
-      "rules": { "argo/mock-environment": "off" }
     },
     {
       // Only packages/db opens SQLite.
@@ -366,29 +355,6 @@
               {
                 "group": ["@repo/**", "!@repo/mocks", "!@repo/mocks/**"],
                 "message": "App E2E imports shared Agent adapter fixtures through @repo/mocks (ADR-0018)."
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      // Recording converters and mock CLIs use the same vendor types as their adapters (ADR-0015).
-      "files": ["mocks/cli/*/**"],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          {
-            "paths": [
-              {
-                "name": "zod",
-                "message": "Use vendor SDK or generated protocol types; validate generic recording and transport envelopes in mocks/cli (ADR-0015)."
-              }
-            ],
-            "patterns": [
-              {
-                "group": ["zod/*"],
-                "message": "Use vendor SDK or generated protocol types (ADR-0015)."
               }
             ]
           }
