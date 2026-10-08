@@ -882,22 +882,20 @@ function sessionControls(width: number): Story {
         name: 'Update the shared controls in progress',
       });
       await expect(spinner).toBeVisible();
-      await expect(
-        getComputedStyle(spinner.firstElementChild as Element).width,
-      ).toBe('16px');
-      await expect(
-        getComputedStyle(spinner.firstElementChild as Element).height,
-      ).toBe('16px');
-      const spinnerColor = getComputedStyle(
-        overlay
-          .getAllByText(
-            width < 720
-              ? 'Inspect the Composer layout'
-              : 'Update the shared controls',
-            { exact: true },
-          )
-          .at(-1) as Element,
-      ).color;
+      const spinnerGraphic = spinner.firstElementChild;
+      if (!spinnerGraphic) throw new Error('Spinner graphic is missing');
+      await expect(getComputedStyle(spinnerGraphic).width).toBe('16px');
+      await expect(getComputedStyle(spinnerGraphic).height).toBe('16px');
+      const spinnerLabel = overlay
+        .getAllByText(
+          width < 720
+            ? 'Inspect the Composer layout'
+            : 'Update the shared controls',
+          { exact: true },
+        )
+        .at(-1);
+      if (!spinnerLabel) throw new Error('Spinner label is missing');
+      const spinnerColor = getComputedStyle(spinnerLabel).color;
       for (const circle of spinner.querySelectorAll('circle')) {
         await expect(getComputedStyle(circle).stroke).toBe(spinnerColor);
       }
@@ -1104,9 +1102,11 @@ function responsiveLayout(width: number, agentIndex: number): Story {
       );
       const plus = attachButton.querySelector('svg');
       if (!plus) throw new Error('Attach icon is missing.');
-      await expect(
-        Number(getComputedStyle(plus.parentElement as Element).zIndex),
-      ).toBeGreaterThan(Number(getComputedStyle(highlight).zIndex));
+      const iconLayer = plus.parentElement;
+      if (!iconLayer) throw new Error('Attach icon layer is missing');
+      await expect(Number(getComputedStyle(iconLayer).zIndex)).toBeGreaterThan(
+        Number(getComputedStyle(highlight).zIndex),
+      );
       await userEvent.unhover(attachButton);
       const trigger = canvas.getByRole('button', { name: 'Agent and model' });
       await expect(trigger.getBoundingClientRect().height).toBe(28);
