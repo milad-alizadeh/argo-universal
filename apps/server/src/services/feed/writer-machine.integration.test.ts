@@ -1,4 +1,4 @@
-import type { Database } from '@repo/db';
+import { type Database, openDatabase } from '@repo/db';
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -29,7 +29,7 @@ let sentJobs: WriterJob[];
 let committedJobs: WriterJob[];
 let writer: Actor<typeof machine>;
 
-const mockDatabase = {} as Database;
+const mockDatabase = openDatabase(':memory:');
 const machine = writerMachine.provide({
   actors: {
     writeBatch: fromPromise<void, { database: Database; jobs: WriterJob[] }>(
@@ -195,6 +195,7 @@ const states: Record<string, (snapshot: WriterSnapshot) => void> = {
 
 const shortestPaths = model.getShortestPaths();
 const simplePaths = model.getSimplePaths();
+mockDatabase.$client.close();
 const title = (path: TestPath<WriterSnapshot, WriterEvent>): string =>
   path.steps
     .map(({ event }): string =>
@@ -205,6 +206,7 @@ const title = (path: TestPath<WriterSnapshot, WriterEvent>): string =>
     .join(' → ');
 
 beforeEach((): void => {
+  input.database = openDatabase(':memory:');
   vi.useFakeTimers();
   writeBatchCalls = [];
   logLines = [];
@@ -214,6 +216,7 @@ beforeEach((): void => {
 
 afterEach((): void => {
   writer.stop();
+  input.database.$client.close();
   vi.useRealTimers();
 });
 

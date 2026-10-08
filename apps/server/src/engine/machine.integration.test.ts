@@ -1,7 +1,15 @@
 import { randomUUID } from 'node:crypto';
-import type { Database } from '@repo/db';
+import { type Database, openDatabase } from '@repo/db';
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 import {
   type Actor,
   type AnyEventObject,
@@ -60,13 +68,10 @@ let messages: EngineMessage[];
 let databaseCloses: number;
 let engine: Actor<typeof machine>;
 
-const mockDatabase = {
-  $client: {
-    close: (): void => {
-      databaseCloses += 1;
-    },
-  },
-} as unknown as Database;
+const graphDatabase = openDatabase(':memory:');
+afterAll((): void => graphDatabase.$client.close());
+let mockDatabase = graphDatabase;
+let removeDatabase: () => void;
 // The closeHttpServer mock stands in for `close()`, so the handle itself is never called.
 const mockHttpServer: HttpServer = {
   close: (): never =>
@@ -270,7 +275,9 @@ const expectModelState = (expected: EngineSnapshot): void => {
   const actual = engine.getSnapshot();
   expect(actual.value).toEqual(expected.value);
   expect(actual.status).toBe(expected.status);
-  expect(actual.context.database).toBe(expected.context.database);
+  expect(actual.context.database).toBe(
+    expected.context.database === null ? null : mockDatabase,
+  );
   expect(actual.context.server).toBe(expected.context.server);
   expect(actual.context.failure).toBe(expected.context.failure);
 };
@@ -374,6 +381,16 @@ const title = (path: TestPath<EngineSnapshot, EngineEvent>): string =>
     .join(' → ');
 
 beforeEach((): void => {
+  mockDatabase = openDatabase(':memory:');
+  const close = vi
+    .spyOn(mockDatabase.$client, 'close')
+    .mockImplementation((): void => {
+      databaseCloses += 1;
+    });
+  removeDatabase = (): void => {
+    close.mockRestore();
+    mockDatabase.$client.close();
+  };
   vi.useFakeTimers();
   openDatabaseCalls = [];
   recoveryCalls = [];
@@ -387,6 +404,7 @@ beforeEach((): void => {
 
 afterEach((): void => {
   engine.stop();
+  removeDatabase();
   vi.useRealTimers();
 });
 
