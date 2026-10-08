@@ -1,13 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
 import {
   multipleProjects,
   sessionsListProps,
+  largeSessions,
 } from '../../mocks/sessions-list-mock';
-import { SessionsNewSessionPreview } from '../../mocks/sessions-new-session-preview';
-import { SessionsPaginationPreview } from '../../mocks/sessions-pagination-preview';
 import { SessionsList, type SessionsListProps } from './sessions-list';
 
 const meta = {
@@ -20,6 +20,11 @@ const meta = {
     onNewSession: action('new Session in Project'),
     onProjectSettings: action('Project settings'),
   },
+  render: (args): React.JSX.Element => (
+    <View className="flex-1 w-full wide:w-shell-list" style={{ minHeight: 0 }}>
+      <SessionsList {...args} />
+    </View>
+  ),
 } satisfies Meta<typeof SessionsList>;
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -39,7 +44,7 @@ const states: { label: string; props: Partial<SessionsListProps> }[] = [
 
 // Each frame bounds the virtualized list the way the Sessions screen does.
 export const States: Story = {
-  render: (args) => (
+  render: (args): React.JSX.Element => (
     <Variations>
       {states.map(({ label, props }) => (
         <Variation key={label} label={label}>
@@ -54,11 +59,11 @@ export const States: Story = {
 
 export const Pagination: Story = {
   parameters: { screenPreview: true },
-  render: (args) => <SessionsPaginationPreview {...args} />,
+  args: { sessions: largeSessions.slice(0, 20), isFetchingNextPage: true },
 };
 
 export const NewSession: Story = {
   name: 'New Session',
   parameters: { screenPreview: true },
-  render: (args) => <SessionsNewSessionPreview {...args} />,
+  args: { sessions: largeSessions.slice(0, 12) },
 };

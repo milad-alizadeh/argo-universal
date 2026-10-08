@@ -1,12 +1,12 @@
 import { recordedRequestMocks } from '@repo/api/mocks';
 import type * as React from 'react';
-import { useState } from 'react';
 import { View } from 'react-native';
-import type { ComposerDraft } from '../src/components/composer';
-import type { PlanProposalCardProps } from '../src/components/plan-proposal-card';
+import {
+  PlanProposalCard,
+  type PlanProposalCardProps,
+} from '../src/components/plan-proposal-card';
 import { PlanProposalRegion } from '../src/components/plan-proposal-region';
 import { Text } from '../src/primitives/text';
-import { ComposerMock } from './composer-mock';
 
 export const planProposalMocks = recordedRequestMocks.flatMap((mock) =>
   mock.answer.procedure === 'answerPlanProposal' &&
@@ -43,25 +43,12 @@ export const planProposalFeedback =
   planProposalMocks.find(({ answer }) => answer.decision === 'keep_planning')
     ?.answer.feedback ?? '';
 
-export function PlanProposalPreview({
-  retainProposalAfterAnswer = false,
-  state = { kind: 'open' },
-  ...props
-}: Omit<PlanProposalCardProps, 'state'> & {
-  state?: PlanProposalCardProps['state'];
-  retainProposalAfterAnswer?: boolean;
-}): React.JSX.Element {
-  const [draft, setDraft] = useState<ComposerDraft>({
-    text: 'Keep my draft',
-    images: [],
-  });
-  const [answer, setAnswer] = useState<string>();
+export function PlanProposalPreview(
+  props: PlanProposalCardProps,
+): React.JSX.Element {
   return (
     <View className="flex-1 min-h-0 flex-row">
-      <View
-        testID="plan-proposal-sidebar"
-        className="hidden wide:flex w-56 bg-sidebar border-r border-border p-4"
-      >
+      <View className="hidden wide:flex w-56 bg-sidebar border-r border-border p-4">
         <Text className="text-sm font-semibold">Sessions</Text>
       </View>
       <PlanProposalRegion
@@ -69,41 +56,11 @@ export function PlanProposalPreview({
         className="relative flex-1 min-h-0 w-full bg-card"
       >
         <View className="flex-1 min-h-0" />
-        {answer && (
-          <Text role="status" className="px-4 py-2 text-sm">
-            {answer}
-          </Text>
-        )}
         <View className="items-center px-4 pb-4 wide:px-6">
-          <ComposerMock
-            sessionStarted
-            draft={draft}
-            onDraftChange={setDraft}
-            onAttachImages={() => {}}
-            onSend={() => {}}
-            planProposal={
-              answer && !retainProposalAfterAnswer
-                ? undefined
-                : {
-                    ...props,
-                    state,
-                    onAnswer: (next) => {
-                      props.onAnswer(next);
-                      setAnswer(
-                        next.decision === 'approve'
-                          ? 'Plan approved'
-                          : `You kept planning: ${next.feedback}`,
-                      );
-                    },
-                  }
-            }
-          />
+          <PlanProposalCard {...props} />
         </View>
       </PlanProposalRegion>
-      <View
-        testID="plan-proposal-inspector"
-        className="hidden wide:flex w-64 bg-sidebar border-l border-border p-4"
-      >
+      <View className="hidden wide:flex w-64 bg-sidebar border-l border-border p-4">
         <Text className="text-sm font-semibold">Inspector</Text>
       </View>
     </View>

@@ -41,20 +41,11 @@ type Story = StoryObj<typeof meta>;
 const dark = { globals: { mode: 'dark' } };
 
 export const ShortPlan: Story = {
-  play: async ({ canvas, userEvent }) => {
+  play: async ({ canvas, userEvent, args }) => {
     for (const width of [layoutWidths.phone, layoutWidths.wide]) {
       await settleViewport(width);
       await expect(canvas.getByText(approvePlanQuestion)).toBeVisible();
       await expect(canvas.getByText(/then verify its contents/)).toBeVisible();
-      await waitFor(() => {
-        if (width === layoutWidths.phone) {
-          expect(
-            canvas.queryByText('session', { exact: true }),
-          ).not.toBeInTheDocument();
-        } else {
-          expect(canvas.getByText('session', { exact: true })).toBeVisible();
-        }
-      });
       await expect(canvas.getByText('hello.txt', { exact: true })).toHaveStyle({
         fontSize: '14px',
       });
@@ -66,11 +57,12 @@ export const ShortPlan: Story = {
       ).toBeEnabled();
     }
     await userEvent.click(canvas.getByRole('button', { name: 'Approve' }));
-    await expect(canvas.getByRole('status')).toHaveTextContent('Plan approved');
-    await expect(canvas.getByRole('textbox')).toHaveValue('Keep my draft');
-    await expect(
-      canvas.queryByText(approvePlanQuestion),
-    ).not.toBeInTheDocument();
+    await expect(args.onAnswer).toHaveBeenCalledWith({
+      planId: args.proposal.planId,
+      decision: 'approve',
+    });
+    await expect(canvas.getByText(approvePlanQuestion)).toBeVisible();
+    await expect(canvas.queryByRole('status')).not.toBeInTheDocument();
   },
 };
 
@@ -80,9 +72,9 @@ export const LongPlan: Story = {
     for (const width of [layoutWidths.phone, layoutWidths.wide]) {
       await settleViewport(width);
       const scroll = canvas.getByTestId(planScrollId);
-      await waitFor(() => {
-        expect(scroll.getBoundingClientRect().height).toBe(280);
-        expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight);
+      await waitFor(async () => {
+        await expect(scroll.getBoundingClientRect().height).toBe(280);
+        await expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight);
       });
       const card = canvas.getByTestId('plan-proposal-card');
       const titleTop =
@@ -158,9 +150,6 @@ function keepPlanningWithFeedback(width: number): Story {
         await expect(args.onAnswer).not.toHaveBeenCalled();
       } else {
         await userEvent.keyboard('{Enter}');
-        await expect(canvas.getByRole('status')).toHaveTextContent(
-          `You kept planning: ${planProposalFeedback}`,
-        );
         await expect(args.onAnswer).toHaveBeenCalledWith({
           planId: args.proposal.planId,
           decision: 'keep_planning',
@@ -316,9 +305,7 @@ export const SecondAgentOpenWide = open(layoutWidths.wide, 2);
 function answerCollapsesExpansion(width: number): Story {
   return {
     args: { proposal: longPlanProposal },
-    render: (args) => (
-      <PlanProposalPreview {...args} retainProposalAfterAnswer />
-    ),
+    render: (args) => <PlanProposalPreview {...args} />,
     play: async ({ canvas, userEvent, args }) => {
       const overlay = within(document.body);
       await settleViewport(width);
@@ -405,7 +392,6 @@ function recordedAnswer(index: number): Story {
         await userEvent.click(canvas.getByRole('button', { name: 'Approve' }));
       const { sessionId: _, ...answer } = mock.answer;
       await expect(args.onAnswer).toHaveBeenCalledWith(answer);
-      await expect(canvas.getByRole('textbox')).toHaveValue('Keep my draft');
     },
   };
 }
