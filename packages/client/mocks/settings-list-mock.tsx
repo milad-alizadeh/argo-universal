@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
@@ -43,7 +44,7 @@ export function SettingsListMock({
   page = 'settings',
 }: {
   page?: PlaceholderPage;
-}) {
+}): React.JSX.Element {
   const wide = useWide();
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -153,8 +154,8 @@ export function SettingsListMock({
     detail = <AccountsScreen />;
   }
 
-  function selectSection(next: ShellSection) {
-    navigate(next === 'settings' ? { to: accountsSectionId } : { to: next });
+  function selectSection(next: ShellSection): void {
+    navigate(next === 'settings' ? { to: 'settings-accounts' } : { to: next });
   }
 
   if (wide) {

@@ -4,6 +4,7 @@ import {
   FolderOpenIcon,
   PlusIcon,
 } from 'phosphor-react-native';
+import type * as React from 'react';
 import { memo, useState } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 import { cn } from '#lib/utils';
@@ -27,15 +28,15 @@ export const ProjectHeading = memo(function ProjectHeading({
   onAdd,
   addLabel = `Add to ${name}`,
   onProjectSettings,
-}: ProjectHeadingProps) {
+}: ProjectHeadingProps): React.JSX.Element {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const actionsVisible = Platform.OS !== 'web' || hovered || focused;
   const interactionEvents = {
-    onHoverIn: () => setHovered(true),
-    onHoverOut: () => setHovered(false),
-    onFocus: () => setFocused(true),
-    onBlur: () => setFocused(false),
+    onHoverIn: (): void => setHovered(true),
+    onHoverOut: (): void => setHovered(false),
+    onFocus: (): void => setFocused(true),
+    onBlur: (): void => setFocused(false),
   };
   return (
     <Pressable

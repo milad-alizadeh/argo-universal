@@ -50,8 +50,12 @@ const uploadRouter = t.router({
 });
 
 // Serves one router over the WebSocket and over HTTP at /trpc/ on one server, as the Engine does.
-async function startMockServer(router: AnyTRPCRouter = appRouter) {
-  const createContext = () => ({ services });
+async function startMockServer(router: AnyTRPCRouter = appRouter): Promise<{
+  url: string;
+  connections: () => number;
+  httpRequests: () => number;
+}> {
+  const createContext = (): { services: typeof services } => ({ services });
   const handleTRPC = createHTTPHandler({
     router,
     createContext,
@@ -125,7 +129,7 @@ describe('createTRPCClient', () => {
 
   it('waits before each WebSocket attempt, but not before an upload', async () => {
     const server = await startMockServer(uploadRouter);
-    let allowAttempt = () => {};
+    let allowAttempt = (): void => {};
     const attemptAllowed = new Promise<void>((resolve) => {
       allowAttempt = resolve;
     });

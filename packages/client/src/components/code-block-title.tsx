@@ -1,7 +1,12 @@
+import type * as React from 'react';
 import { Platform } from 'react-native';
 import { Text } from '#primitives/text';
 
-export function CodeBlockTitle({ title }: { title: string }) {
+export function CodeBlockTitle({
+  title,
+}: {
+  title: string;
+}): React.JSX.Element {
   return (
     <Text
       numberOfLines={1}

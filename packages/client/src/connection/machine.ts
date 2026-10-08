@@ -63,7 +63,7 @@ export const connectionMachine = setup({
             } satisfies ConnectionEvent);
         },
       });
-      return () => subscription.unsubscribe();
+      return (): void => subscription.unsubscribe();
     }),
   },
   actions: {
@@ -80,7 +80,7 @@ export const connectionMachine = setup({
   guards: {
     firstAttempt: and([
       stateIn({ link: 'connecting' }),
-      ({ context }) => context.attempts === 0,
+      ({ context }): boolean => context.attempts === 0,
     ]),
     isDown,
   },

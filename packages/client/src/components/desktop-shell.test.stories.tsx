@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, fn, screen, waitFor, within } from 'storybook/test';
 import { ComposerMock } from '../../mocks/composer-mock';
@@ -40,7 +41,7 @@ const reducedMotionQuery = '(prefers-reduced-motion: reduce)';
 const meta = {
   title: 'Tests/DesktopShell',
   component: DesktopShellMock,
-  render: (args) => (
+  render: (args): React.JSX.Element => (
     <View className="h-[700px] w-full">
       <DesktopShellMock {...args} showInspectorControls />
     </View>
@@ -78,7 +79,8 @@ export const MainContentUsesAvailableWidth: Story = {
     const { page } = await import('vitest/browser');
     await page.viewport(1440, 844);
     const content = canvas.getByTestId('responsive-main-content');
-    const approve = () => canvas.getByRole('button', { name: 'Approve' });
+    const approve = (): HTMLElement =>
+      canvas.getByRole('button', { name: 'Approve' });
     await waitFor(() =>
       expect(approve().getBoundingClientRect().height).toBe(32),
     );
@@ -594,7 +596,7 @@ export const DragToCollapseExpandAndReopen: Story = {
   play: async ({ canvas, userEvent }) => {
     const { page } = await import('vitest/browser');
     await page.viewport(1440, 844);
-    const drag = async (name: string, distance: number) => {
+    const drag = async (name: string, distance: number): Promise<void> => {
       const divider = canvas.getByRole('separator', { name });
       const start = divider.getBoundingClientRect();
       await expect(start.height).toBeGreaterThan(100);
@@ -679,8 +681,8 @@ export const ReversingAToggleKeepsTheCurrentVisualPosition: Story = {
   play: async ({ canvas, userEvent }) => {
     const { page } = await import('vitest/browser');
     await page.viewport(1440, 844);
-    const viewport = canvas.getByTestId(listViewportId);
-    const visibleWidth = () =>
+    const viewport = canvas.getByTestId('desktop-list-viewport');
+    const visibleWidth = (): number =>
       viewport.getBoundingClientRect().width -
       Number.parseFloat(
         getComputedStyle(viewport).clipPath.match(

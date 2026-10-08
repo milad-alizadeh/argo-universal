@@ -5,6 +5,7 @@ import {
   sessionRows,
 } from '@repo/api/mocks';
 import { sessionListMocks } from './session-list-mock';
+import type { FixtureOutput } from './trpc-mock-link';
 import { type Fixtures, pending } from './trpc-mock-link';
 
 export const sessionsListProps = {
@@ -28,15 +29,19 @@ export const largeSessions = Array.from({ length: 2000 }, (_, index) => ({
 }));
 export const largeSessionListMocks = {
   ...sessionListMocks,
-  'session.list': () => ({ sessions: largeSessions, nextCursor: null }),
+  'session.list': (): Omit<FixtureOutput<'session.list'>, 'nextCursor'> & {
+    nextCursor: null;
+  } => ({ sessions: largeSessions, nextCursor: null }),
 } satisfies Fixtures;
 export const multipleProjectsMocks = {
   ...sessionListMocks,
-  'projects.list': () => multipleProjects,
+  'projects.list': (): typeof multipleProjects => multipleProjects,
 } satisfies Fixtures;
 export const nextPageFailureMocks = {
   ...sessionListMocks,
-  'session.list': ({ cursor }) => {
+  'session.list': ({
+    cursor,
+  }): { sessions: (typeof sessionRows.running)[]; nextCursor: string } => {
     if (cursor) throw new Error('Next page unavailable');
     return { sessions: [sessionRows.running], nextCursor: 'next-page' };
   },
@@ -45,7 +50,9 @@ export const nextPageFailureMocks = {
 const firstPageSessions = [sessionRows.running, sessionRows.idle];
 export const nextPageLoadingMocks = {
   ...sessionListMocks,
-  'session.list': ({ cursor }) =>
+  'session.list': ({
+    cursor,
+  }): { sessions: typeof firstPageSessions; nextCursor: string } =>
     cursor
       ? pending()()
       : { sessions: firstPageSessions, nextCursor: 'next-page' },

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
 import { layoutWidths } from '../../mocks/each-layout';
@@ -19,7 +20,7 @@ const meta = {
   component: AgentMessage,
   // The Feed gives every row its full width.
   decorators: [
-    (Story) => (
+    (Story): React.JSX.Element => (
       <View className="w-full">
         <Story />
       </View>
@@ -44,7 +45,7 @@ async function expectType({
   size: string;
   lineHeight: string;
   weight?: string;
-}) {
+}): Promise<void> {
   const style = getComputedStyle(element);
   await expect(style.fontFamily).toContain(family);
   await expect(style.fontSize).toBe(size);
@@ -57,7 +58,7 @@ function markdownPlay(heading: string, firstHeader: string) {
     canvas,
   }: {
     canvas: Parameters<NonNullable<Story['play']>>[0]['canvas'];
-  }) => {
+  }): Promise<void> => {
     for (const width of widths) {
       await settleViewport(width);
       await expectType({

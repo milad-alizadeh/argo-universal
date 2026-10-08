@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, spyOn, waitFor, within } from 'storybook/test';
 import { layoutWidths } from '../../mocks/each-layout';
@@ -13,7 +14,7 @@ const meta = {
   component: DiffView,
   globals: { themeId: 'default', mode: 'light' },
   decorators: [
-    (Story) => (
+    (Story): React.JSX.Element => (
       <View className="w-full">
         <Story />
       </View>

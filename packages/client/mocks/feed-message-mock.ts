@@ -6,14 +6,14 @@ import type {
   UserMessage,
 } from '@repo/contracts';
 
-// The bytes of `mocks/cli/red-square.png`, the image both Agents' `image-prompt` recordings sent.
+// The bytes of `mocks/agent/red-square.png`, the shared image attachment mock.
 export const redSquareDataUrl =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKklEQVR4nGN4piFHU8QwasGoBaMWjFowasGoBaMWjFowasGoBaMWDBULANahsD1zXuJAAAAAAElFTkSuQmCC';
 
 export type MockAgent = 'agent-1' | 'agent-2';
 
 // Serves recorded images the way the Server's `/blobs/:id` would.
-export function recordedImageUrl(blob: BlobRef) {
+export function recordedImageUrl(blob: BlobRef): typeof redSquareDataUrl | '' {
   const recorded = recordedUserMessage('agent-1', 'image-prompt').content.some(
     (block) => block.type === 'image' && block.blob.blobId === blob.blobId,
   );
@@ -35,7 +35,7 @@ function recordedRow<Kind extends SessionUpdate['sessionUpdate']>(
   agent: MockAgent,
   recording: string,
   kind: Kind,
-) {
+): Extract<SessionUpdate, { sessionUpdate: Kind }> {
   const row = recordedFeedMock(agent, recording).rows.findLast(
     (row) => row.sessionUpdate === kind,
   );
@@ -53,7 +53,7 @@ export const recordedAgentMessage = (
   recording: string,
 ): AgentMessage => recordedRow(agent, recording, 'agent_message');
 
-const textLength = (row: AgentMessage) =>
+const textLength = (row: AgentMessage): number =>
   row.content
     .map((block) => (block.type === 'text' ? block.text.length : 0))
     .reduce((total, length) => total + length, 0);

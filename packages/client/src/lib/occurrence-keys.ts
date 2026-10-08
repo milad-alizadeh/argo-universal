@@ -2,7 +2,7 @@
 export function withOccurrenceKeys<Item>(
   items: readonly Item[],
   keyOf: (item: Item) => string,
-) {
+): { item: Item; key: string }[] {
   const seen = new Map<string, number>();
   return items.map((item) => {
     const base = keyOf(item);

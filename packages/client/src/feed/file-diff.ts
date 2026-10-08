@@ -21,7 +21,7 @@ export interface FileDiff extends Pick<
   hunks: DiffHunk[];
 }
 
-const matchingPath = (path: string) => path.replace(/^\//, '');
+const matchingPath = (path: string): string => path.replace(/^\//, '');
 
 // Both recorded patches and ACP text changes become the same diff for the Feed and Changed files.
 export function toFileDiffs(diff: ToolCallDiff): FileDiff[] {

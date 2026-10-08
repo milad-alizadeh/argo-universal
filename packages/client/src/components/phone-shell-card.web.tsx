@@ -1,8 +1,12 @@
+import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/utils';
 import type { PhoneShellCardProps } from './phone-shell-card';
 
-export function PhoneShellCard({ drawerOpen, children }: PhoneShellCardProps) {
+export function PhoneShellCard({
+  drawerOpen,
+  children,
+}: PhoneShellCardProps): React.JSX.Element {
   return (
     <View
       testID="phone-shell-card"

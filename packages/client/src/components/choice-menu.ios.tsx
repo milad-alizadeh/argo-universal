@@ -4,6 +4,7 @@ import {
   pickerStyle,
   tag,
 } from '@expo/ui/swift-ui/modifiers';
+import type * as React from 'react';
 import { View } from 'react-native';
 import type { ChoiceMenuProps } from './choice-menu';
 
@@ -14,7 +15,7 @@ export function ChoiceMenu<Value extends string>({
   choices,
   onValueChange,
   trigger,
-}: ChoiceMenuProps<Value>) {
+}: ChoiceMenuProps<Value>): React.JSX.Element {
   return (
     <Host matchContents>
       <Menu

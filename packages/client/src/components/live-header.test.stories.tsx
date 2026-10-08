@@ -20,7 +20,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const textColor = (row: HTMLElement) =>
+const textColor = (row: HTMLElement): string =>
   getComputedStyle(row.lastElementChild ?? row).color;
 
 export const EveryStep: Story = {
@@ -162,7 +162,7 @@ export const WorkingMarkWalks: Story = {
   play: async ({ canvas }) => {
     const cells = canvas.getAllByTestId('working-mark-cell');
     await expect(cells).toHaveLength(9);
-    const opacities = () =>
+    const opacities = (): string =>
       cells.map((cell) => getComputedStyle(cell).opacity).join();
     const first = opacities();
     await waitFor(() => expect(opacities()).not.toBe(first));

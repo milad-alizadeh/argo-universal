@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import { layoutWidths } from '../../mocks/each-layout';
 import {
@@ -32,7 +33,7 @@ const meta = {
     onAnswer: fn(),
     state: { kind: 'open' },
   },
-  render: (args) => <PlanProposalPreview {...args} />,
+  render: (args): React.JSX.Element => <PlanProposalPreview {...args} />,
 } satisfies Meta<typeof PlanProposalCard>;
 export default meta;
 type Story = StoryObj<typeof meta>;

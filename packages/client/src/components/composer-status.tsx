@@ -8,6 +8,7 @@ import {
   RobotIcon,
   TerminalIcon,
 } from 'phosphor-react-native';
+import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { Platform, ScrollView, View } from 'react-native';
@@ -64,7 +65,7 @@ function Meter({
   percent: number;
   warning?: boolean;
   className?: string;
-}) {
+}): React.JSX.Element {
   return (
     <View
       role="progressbar"
@@ -97,7 +98,7 @@ const ThemedCircle = withUniwind(Circle, {
   },
 });
 
-function ContextRing({ percent }: { percent: number }) {
+function ContextRing({ percent }: { percent: number }): React.JSX.Element {
   const circumference = 2 * Math.PI * contextRingRadius;
   return (
     <View className="size-icon-md shrink-0 items-center justify-center">
@@ -132,7 +133,7 @@ function ContextRing({ percent }: { percent: number }) {
   );
 }
 
-const compactNumber = (value: number) =>
+const compactNumber = (value: number): string =>
   new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 0 })
     .format(value)
     .toLowerCase();
@@ -143,7 +144,7 @@ export function ComposerPlan({
 }: {
   entries: PlanEntry[];
   disabled: boolean;
-}) {
+}): React.JSX.Element {
   const done = entries.filter((entry) => entry.status === 'completed').length;
   const wide = useContentWide();
   const [expanded, setExpanded] = useState(false);
@@ -154,7 +155,7 @@ export function ComposerPlan({
       duration: 200,
       easing: Easing.out(Easing.cubic),
     });
-    return () => cancelAnimation(revealHeight);
+    return (): void => cancelAnimation(revealHeight);
   }, [expanded, stepsHeight, revealHeight]);
   const revealStyle = useAnimatedStyle(
     () => ({
@@ -170,7 +171,7 @@ export function ComposerPlan({
       accessibilityLabel="Plan"
       accessibilityState={{ expanded: wide ? expanded : undefined }}
       aria-expanded={wide ? expanded : undefined}
-      onPress={wide ? () => setExpanded(!expanded) : undefined}
+      onPress={wide ? (): void => setExpanded(!expanded) : undefined}
       className={cn(
         'h-6 sm:h-6 py-0 px-2.5 gap-1.5 rounded-full border border-border bg-card',
         wide
@@ -286,7 +287,7 @@ export function ComposerPlan({
   );
 }
 
-function NativePlanSpinner({ label }: { label: string }) {
+function NativePlanSpinner({ label }: { label: string }): React.JSX.Element {
   const rotation = useSharedValue(0);
   useEffect(() => {
     rotation.value = withRepeat(
@@ -296,7 +297,7 @@ function NativePlanSpinner({ label }: { label: string }) {
       }),
       -1,
     );
-    return () => cancelAnimation(rotation);
+    return (): void => cancelAnimation(rotation);
   }, [rotation]);
   const style = useAnimatedStyle(
     () => ({ transform: [{ rotate: `${rotation.value}deg` }] }),
@@ -335,7 +336,7 @@ function NativePlanSpinner({ label }: { label: string }) {
   );
 }
 
-function PlanSteps({ entries }: { entries: PlanEntry[] }) {
+function PlanSteps({ entries }: { entries: PlanEntry[] }): React.JSX.Element {
   const wide = useWide();
   const occurrences = new Map<string, number>();
   const steps = (
@@ -421,7 +422,7 @@ export function ComposerStatusControls({
 }: {
   status: ComposerStatusProps;
   disabled: boolean;
-}) {
+}): React.JSX.Element {
   const wide = useContentWide();
   const context = status.context;
   const percent =
@@ -677,7 +678,7 @@ export function ComposerWorkChips({
 }: {
   status: ComposerStatusProps;
   disabled: boolean;
-}) {
+}): React.JSX.Element {
   return (
     <>
       {(

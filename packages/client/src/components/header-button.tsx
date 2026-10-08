@@ -1,4 +1,5 @@
 import type { Icon as PhosphorIcon } from 'phosphor-react-native';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { hasLiquidGlass } from '#lib/native-header';
 import { cn } from '#lib/utils';
@@ -28,7 +29,7 @@ export function HeaderButton({
   leading = false,
   dot,
   ...props
-}: HeaderButtonProps) {
+}: HeaderButtonProps): React.JSX.Element {
   const narrow = paired || hasLiquidGlass;
   let hitSlop: ButtonProps['hitSlop'];
   if (hasLiquidGlass) hitSlop = 10;

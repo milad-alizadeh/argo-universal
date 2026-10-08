@@ -1,5 +1,6 @@
 import { recordedFeedMocks } from '@repo/api/mocks';
 import type { DiffChange, ToolCallUpdate } from '@repo/contracts';
+import type { FileDiff } from '../src';
 import { toFileDiffs } from '../src/feed/file-diff';
 import type { MockAgent } from './feed-message-mock';
 
@@ -28,7 +29,7 @@ export function recordedFile(
   agent: MockAgent,
   recording = 'edit-and-command',
   operation: DiffChange['operation'] = 'modify',
-) {
+): FileDiff {
   const row = recordedEdit(agent, recording, operation);
   const file = row.content
     .flatMap((block) => (block.type === 'diff' ? toFileDiffs(block) : []))

@@ -4,6 +4,7 @@ import {
   ScreenHeaderProvider,
 } from '@repo/client';
 import { Stack } from 'expo-router';
+import type * as React from 'react';
 import type { ComponentProps, ReactElement } from 'react';
 import { Platform, View } from 'react-native';
 
@@ -16,7 +17,11 @@ const screenOptions = {
 } satisfies ComponentProps<typeof Stack>['screenOptions'];
 
 // A phone section's native stack; its screens set their header through ScreenHeader.
-export function PhoneStack({ children }: { children: React.ReactNode }) {
+export function PhoneStack({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.JSX.Element {
   return (
     <ScreenHeaderProvider header={NativeScreenHeader}>
       <Stack screenOptions={screenOptions}>{children}</Stack>
@@ -24,7 +29,12 @@ export function PhoneStack({ children }: { children: React.ReactNode }) {
   );
 }
 
-function NativeScreenHeader({ title, left, right, search }: ScreenHeaderProps) {
+function NativeScreenHeader({
+  title,
+  left,
+  right,
+  search,
+}: ScreenHeaderProps): React.JSX.Element {
   return (
     <>
       <Stack.Screen
@@ -39,7 +49,9 @@ function NativeScreenHeader({ title, left, right, search }: ScreenHeaderProps) {
               }
             : {
                 headerRight: right
-                  ? () => <View className="flex-row gap-1">{right}</View>
+                  ? (): React.JSX.Element => (
+                      <View className="flex-row gap-1">{right}</View>
+                    )
                   : undefined,
               }),
           // Android has no search yet; its header SearchView misdraws.
@@ -69,7 +81,12 @@ function NativeScreenHeader({ title, left, right, search }: ScreenHeaderProps) {
 }
 
 // Spaced items, so iOS 26 draws each in its own glass bubble.
-function separateItems(elements: readonly ReactElement[]) {
+function separateItems(
+  elements: readonly ReactElement[],
+): (
+  | { type: 'custom'; element: ReactElement; spacing?: never }
+  | { type: 'spacing'; spacing: number; index: number }
+)[] {
   const items = elements.flatMap((element, index) => [
     ...(index > 0 ? [{ type: 'spacing' as const, spacing: 8 }] : []),
     { type: 'custom' as const, element },

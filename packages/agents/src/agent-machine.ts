@@ -19,16 +19,16 @@ import { acceptAgentEvent, AgentReadyData } from './agent-events';
 import type { VendorSessionInput } from './agent-input';
 import { describeError } from './describe-error';
 
-const vendorEvent = 'vendor.event';
-const vendorReadyEvent = 'vendor.ready';
-const stopAgentEvent = 'agent.stop';
+const vendorEventType = 'vendor.event';
+const vendorReadyType = 'vendor.ready';
+const agentStopEvent = 'agent.stop';
 
 const agentStartLimit = 10_000;
 
 // Wrapped, because Agent event types share the `agent.` prefix with commands.
 type VendorEvent =
-  | { type: 'vendor.ready'; ready: AgentReady }
-  | { type: 'vendor.event'; event: AgentEvent }
+  | { type: typeof vendorReadyType; ready: AgentReady }
+  | { type: typeof vendorEventType; event: AgentEvent }
   | { type: 'vendor.failed'; error: unknown }
   | { type: 'vendor.closed' };
 
@@ -47,7 +47,7 @@ interface AgentContext extends AgentInput {
 const isTurnEvent =
   (type: 'agent.turnStarted' | 'agent.turnEnded'): AgentTurnGuard =>
   ({ event }): boolean =>
-    event.type === vendorEvent && event.event.type === type;
+    event.type === vendorEventType && event.event.type === type;
 
 // One machine runs every Agent; the Session passes in the adapter to run.
 // Starts the adapter's vendor session, maps its messages, and reports both as vendor events.
@@ -67,7 +67,7 @@ function startVendorSession(
   const sendEvent = (event: AgentEvent): void => {
     if (controller.signal.aborted) return;
     const accepted = acceptAgentEvent(event);
-    if (isReady) sendBack({ type: vendorEvent, event: accepted });
+    if (isReady) sendBack({ type: vendorEventType, event: accepted });
     else early.push(accepted);
   };
   // Resolves to null when starting fails, after reporting it.
@@ -105,10 +105,10 @@ function startVendorSession(
           fail(ready.error);
           return session;
         }
-        sendBack({ type: vendorReadyEvent, ready: ready.data });
+        sendBack({ type: vendorReadyType, ready: ready.data });
         isReady = true;
         for (const event of early.splice(0))
-          sendBack({ type: vendorEvent, event });
+          sendBack({ type: vendorEventType, event });
         return session;
       },
       (error: unknown): null => {
@@ -130,7 +130,7 @@ function startVendorSession(
 
   const run = async (command: AgentCommand): Promise<void> => {
     try {
-      if (command.type === stopAgentEvent) {
+      if (command.type === agentStopEvent) {
         await stop();
         sendBack({ type: 'vendor.closed' });
         return;
@@ -139,7 +139,7 @@ function startVendorSession(
       const session = await starting;
       if (!controller.signal.aborted) await session?.run(command);
     } catch (error) {
-      if (command.type === stopAgentEvent || !controller.signal.aborted)
+      if (command.type === agentStopEvent || !controller.signal.aborted)
         fail(error);
     }
   };
@@ -162,7 +162,7 @@ export const agentMachine = setup({
         let queue = Promise.resolve();
         let beforeTurn = queue;
         receive((command): void => {
-          if (command.type === stopAgentEvent) {
+          if (command.type === agentStopEvent) {
             void session.run(command);
             return;
           }
@@ -192,26 +192,26 @@ export const agentMachine = setup({
       failure: `Agent startup exceeded agentStartLimit (${agentStartLimit} ms). Retry the Session.`,
     }),
     rememberReady: assign(({ event }): Pick<AgentReady, 'capabilities'> => {
-      assertEvent(event, vendorReadyEvent);
+      assertEvent(event, vendorReadyType);
       return { capabilities: event.ready.capabilities };
     }),
     sendReady: sendTo(
       ({ context }): AgentParent => context.parent,
       ({ event }): Extract<AgentEvent, { type: 'agent.ready' }> => {
-        assertEvent(event, vendorReadyEvent);
+        assertEvent(event, vendorReadyType);
         return { type: 'agent.ready', ...event.ready } satisfies AgentEvent;
       },
     ),
     sendEvent: sendTo(
       ({ context }): AgentParent => context.parent,
       ({ event }): AgentEvent => {
-        assertEvent(event, vendorEvent);
+        assertEvent(event, vendorEventType);
         return event.event;
       },
     ),
     sendCommand: forwardTo('vendorSession'),
     stopVendorSession: sendTo('vendorSession', {
-      type: stopAgentEvent,
+      type: agentStopEvent,
     } satisfies AgentCommand),
     // Runs on `vendor.failed` and on the vendor session actor's error event.
     rememberFailure: assign({
@@ -256,7 +256,7 @@ export const agentMachine = setup({
   },
   initial: 'starting',
   on: {
-    'agent.stop': { target: '.stopping' },
+    [agentStopEvent]: { target: '.stopping' },
     'vendor.failed': { target: '.failed', actions: 'rememberFailure' },
   },
   states: {
@@ -265,7 +265,7 @@ export const agentMachine = setup({
         agentStartLimit: { target: 'failed', actions: 'rememberStartLimit' },
       },
       on: {
-        'vendor.ready': {
+        [vendorReadyType]: {
           target: 'ready',
           actions: ['rememberReady', 'sendReady'],
         },
@@ -276,7 +276,7 @@ export const agentMachine = setup({
         'agent.setConfigOption': { actions: 'sendCommand' },
         'agent.rename': { actions: 'sendCommand' },
         'agent.stopShell': { guard: 'canStopShell', actions: 'sendCommand' },
-        'vendor.event': { actions: 'sendEvent' },
+        [vendorEventType]: { actions: 'sendEvent' },
       },
       initial: 'idle',
       states: {
@@ -288,7 +288,7 @@ export const agentMachine = setup({
               target: 'turn',
               actions: 'sendCommand',
             },
-            'vendor.event': {
+            [vendorEventType]: {
               guard: 'startsTurn',
               target: 'turn',
               actions: 'sendEvent',
@@ -301,7 +301,7 @@ export const agentMachine = setup({
             'agent.answerPermission': { actions: 'sendCommand' },
             'agent.answerElicitation': { actions: 'sendCommand' },
             'agent.answerPlanProposal': { actions: 'sendCommand' },
-            'vendor.event': {
+            [vendorEventType]: {
               guard: 'endsTurn',
               target: 'idle',
               actions: 'sendEvent',
@@ -313,7 +313,7 @@ export const agentMachine = setup({
     stopping: {
       entry: 'stopVendorSession',
       on: {
-        'agent.stop': {},
+        [agentStopEvent]: {},
         'vendor.closed': { target: 'stopped' },
       },
     },

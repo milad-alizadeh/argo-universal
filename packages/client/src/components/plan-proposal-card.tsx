@@ -8,6 +8,7 @@ import {
   ArrowsOutSimpleIcon,
   MapTrifoldIcon,
 } from 'phosphor-react-native';
+import type * as React from 'react';
 import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { cn } from '#lib/utils';
@@ -37,10 +38,13 @@ export type PlanProposalAnswer =
 export interface PlanProposalCardProps {
   proposal: PendingPlanProposal;
   onAnswer: (answer: PlanProposalAnswer) => void;
-  state: Exclude<RequestState, { kind: 'submitting' }>;
+  state: RequestState;
+  error?: string;
 }
 
-export function PlanProposalCard(props: PlanProposalCardProps) {
+export function PlanProposalCard(
+  props: PlanProposalCardProps,
+): React.JSX.Element {
   return <PlanProposalInteraction key={props.proposal.planId} {...props} />;
 }
 
@@ -48,15 +52,19 @@ function PlanProposalInteraction({
   proposal,
   onAnswer,
   state,
-}: PlanProposalCardProps) {
+  error,
+}: PlanProposalCardProps): React.JSX.Element {
   const wide = useContentWide();
   const windowWide = useWide();
   const answered = state.kind === 'answered';
+  const submitting = state.kind === 'submitting';
+  const inactive = state.kind !== 'open';
   const [planning, setPlanning] = useState(false);
+  const answerLabel = planning ? 'Keep planning' : 'Approve';
   const [feedback, setFeedback] = useState('');
   const [expanded, setExpanded] = useState(false);
-  const submit = () => {
-    if (answered || (planning && !feedback.trim())) return;
+  const submit = (): void => {
+    if (inactive || (planning && !feedback.trim())) return;
     setExpanded(false);
     if (planning) {
       onAnswer({
@@ -66,13 +74,14 @@ function PlanProposalInteraction({
       });
     } else onAnswer({ planId: proposal.planId, decision: 'approve' });
   };
-  const back = () => {
+  const back = (): void => {
     if (planning) setPlanning(false);
     else setExpanded(false);
   };
   const panel = (
     <RequestCard
       state={state}
+      error={error}
       onEnter={submit}
       onEscape={back}
       testID="plan-proposal-card"
@@ -95,7 +104,7 @@ function PlanProposalInteraction({
       actions={
         <>
           <Button
-            disabled={answered}
+            disabled={inactive}
             onPress={() => setPlanning(!planning)}
             variant={wide ? 'ghost' : 'secondary'}
             className={cn(
@@ -111,7 +120,7 @@ function PlanProposalInteraction({
           </Button>
           <Button
             onPress={submit}
-            disabled={answered || (planning && !feedback.trim())}
+            disabled={inactive || (planning && !feedback.trim())}
             className={cn(
               'pl-3',
               wide
@@ -119,7 +128,9 @@ function PlanProposalInteraction({
                 : 'h-11 sm:h-11 flex-1 rounded-lg pr-3',
             )}
           >
-            <Text>{planning ? 'Keep planning' : 'Approve'}</Text>
+            <Text role={submitting ? 'status' : undefined}>
+              {submitting ? 'Sending…' : answerLabel}
+            </Text>
             {wide && (
               <View className="size-5 rounded-sm items-center justify-center bg-primary-foreground/15">
                 <Icon
@@ -181,6 +192,7 @@ function PlanProposalInteraction({
               accessibilityLabel="What should change in the plan?"
               placeholder="Tell the Agent what to change"
               value={feedback}
+              editable={!inactive}
               onChangeText={setFeedback}
               className="min-h-16 max-h-32 text-sm leading-5 bg-background dark:bg-background focus:border-ring focus:ring-[3px] focus:ring-ring/25 focus-visible:ring-ring/25 web:resize-none"
             />
@@ -207,7 +219,7 @@ function PlanProposalBody({
 }: {
   content: string;
   expanded: boolean;
-}) {
+}): React.JSX.Element {
   const [contentHeight, setContentHeight] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(0);
   const [offset, setOffset] = useState(0);

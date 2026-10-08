@@ -78,7 +78,7 @@ const dropped = (mappingState: MappingState): AgentMapping<MappingState> => ({
   mappingState,
 });
 
-// Maps one SDK message to Agent events (ADR-0006); pure, so recordings can drive it.
+// Maps one SDK message to Agent events (ADR-0006); pure, so typed response fixtures can drive it.
 export function toAgentEvents(
   message: VendorMessage,
   mappingState: MappingState,

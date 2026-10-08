@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { expect } from 'storybook/test';
 import { SettingsListMock } from '../../mocks/settings-list-mock';
@@ -11,13 +12,13 @@ const meta = {
   title: 'Tests/SettingsNavigation',
   component: SettingsListMock,
   args: { page: 'settings' },
-  render: (args) => (
+  render: (args): React.JSX.Element => (
     <View className="h-[796px] w-full">
       <SettingsListMock {...args} />
     </View>
   ),
   parameters: { navigation: recorder },
-  beforeEach: () => recorder.reset(),
+  beforeEach: (): void => recorder.reset(),
 } satisfies Meta<typeof SettingsListMock>;
 export default meta;
 type Story = StoryObj<typeof meta>;

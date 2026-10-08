@@ -1,4 +1,5 @@
 import type { ElicitationPropertySchema } from '@repo/contracts';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/utils';
 import { Checkbox } from '#primitives/checkbox';
@@ -36,7 +37,7 @@ export function ElicitationField({
   onChange: (value: ElicitationValue) => void;
   onBlur: () => void;
   inactive: boolean;
-}) {
+}): React.JSX.Element {
   const label = property.title ?? name;
   let displayedValue = value;
   if (displayedValue === undefined) {
@@ -105,7 +106,7 @@ function FieldControl({
   invalid: boolean;
   change: (value: ElicitationValue) => void;
   onBlur: () => void;
-}) {
+}): React.JSX.Element {
   const options = elicitationChoices(property);
   if (property.type === 'boolean')
     return (

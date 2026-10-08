@@ -25,7 +25,7 @@ const connectionAttemptEvent = 'connection.attemptRequested';
 
 // Numbers written out so the model cannot grade itself.
 const offlineDelayMs = 10_000;
-const retryDelayMs = (attempts: number) =>
+const retryDelayMs = (attempts: number): number =>
   Math.min(500 * 2 ** attempts, 30_000);
 
 const lostError = new Error('WebSocket closed');
@@ -40,7 +40,7 @@ const machine = connectionMachine.provide({
     watchConnectionState: fromCallback(({ sendBack }) => {
       const watching = { send: sendBack, live: true };
       watcher = watching;
-      return () => {
+      return (): void => {
         watching.live = false;
       };
     }),
@@ -66,7 +66,7 @@ const input: ConnectionInput = {
   queryClient: {} as QueryClient,
 };
 
-const startConnection = () => {
+const startConnection = (): ReturnType<typeof createActor<typeof machine>> => {
   connection = createActor(machine, { input });
   connection.on('connection.attemptAllowed', () => {
     allowedAttempts += 1;
@@ -75,9 +75,12 @@ const startConnection = () => {
   return connection;
 };
 
-const linkState = (snapshot: ConnectionSnapshot) => snapshot.value.link;
-const attemptState = (snapshot: ConnectionSnapshot) => snapshot.value.attempt;
-const isDown = (snapshot: ConnectionSnapshot) =>
+const linkState = (
+  snapshot: ConnectionSnapshot,
+): 'open' | 'connecting' | 'reconnecting' | 'offline' => snapshot.value.link;
+const attemptState = (snapshot: ConnectionSnapshot): 'idle' | 'waiting' =>
+  snapshot.value.attempt;
+const isDown = (snapshot: ConnectionSnapshot): boolean =>
   ['reconnecting', 'offline'].includes(linkState(snapshot));
 
 beforeEach(() => {
@@ -91,7 +94,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe('connection model', () => {
+describe('connection model', (): void => {
   const payloads: Record<string, ConnectionEvent> = {
     'connection.lost': { type: connectionLostEvent, error: lostError },
   };
@@ -106,9 +109,9 @@ describe('connection model', () => {
   const model = new TestModel(modelLogic, {
     input,
     events,
-    filterEvents: (snapshot, event) => snapshot.can(event),
+    filterEvents: (snapshot, event): boolean => snapshot.can(event),
     // Only the first attempt is special, so more attempts make no new vertex; `retriedFrom` lets a retry return to a state that a path already passed.
-    serializeState: (snapshot, event, previous) =>
+    serializeState: (snapshot, event, previous): string =>
       JSON.stringify({
         value: snapshot.value,
         attempted: snapshot.context.attempts > 0,
@@ -116,7 +119,7 @@ describe('connection model', () => {
           ? previous?.value
           : undefined,
       }),
-    stateMatcher: (snapshot, key) => snapshot.matches(key as never),
+    stateMatcher: (snapshot, key): boolean => snapshot.matches(key as never),
   });
 
   // Each sends the delayed event itself: the retry and offline timers run at once, so crossing one could fire the other. The example tests below time them.
@@ -184,7 +187,7 @@ describe('connection model', () => {
         event.type === connectionLostEvent
       ),
   });
-  const title = (path: TestPath<ConnectionSnapshot, ConnectionEvent>) =>
+  const title = (path: TestPath<ConnectionSnapshot, ConnectionEvent>): string =>
     path.steps
       .map(({ event }) =>
         event.type.replace(/^xstate\.after\.(\w+)\..*$/, 'after $1'),
@@ -217,11 +220,11 @@ describe('connection model', () => {
 
 // The real timers, which the model sends as events.
 describe('connection', () => {
-  const requestAttempt = () =>
-    connection.send({ type: connectionAttemptEvent });
+  const requestAttempt = (): void =>
+    connection.send({ type: 'connection.attemptRequested' });
 
   // Requests an attempt and returns how long the machine waited before it allowed it.
-  const waitForAllowedAttempt = () => {
+  const waitForAllowedAttempt = (): number => {
     const before = allowedAttempts;
     requestAttempt();
     let waited = 0;
@@ -233,7 +236,7 @@ describe('connection', () => {
     return waited;
   };
 
-  const loseOpenConnection = () => {
+  const loseOpenConnection = (): void => {
     watcher.send({ type: 'connection.opened' });
     watcher.send({ type: connectionLostEvent, error: lostError });
   };

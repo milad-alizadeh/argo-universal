@@ -9,12 +9,27 @@ import type {
   PlanEntry,
   SessionConfigOption,
 } from '@repo/contracts';
+import type * as React from 'react';
 import { useState } from 'react';
 import {
   Composer,
   type ComposerImage,
   type ComposerProps,
 } from '../src/components/composer';
+
+type MockComposerConfiguration<Agents extends AgentInfo[]> = Pick<
+  NonNullable<ComposerProps['configuration']>,
+  'agent' | 'configOptions'
+> & {
+  agents: Agents;
+  onConfigChange: () => void;
+  checkout: Required<
+    Pick<
+      NonNullable<NonNullable<ComposerProps['configuration']>['checkout']>,
+      'branch' | 'newWorktree'
+    >
+  >;
+};
 
 const imageUri =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKklEQVR4nGN4piFHU8QwasGoBaMWjFowasGoBaMWjFowasGoBaMWDBULANahsD1zXuJAAAAAAElFTkSuQmCC';
@@ -81,7 +96,9 @@ export const composerPlanDone: PlanEntry[] = composerPlan.map((entry) => ({
 }));
 
 export const composerNoEffortSelections = newSessionCatalogs.bothAvailable.map(
-  (agent) => ({
+  (
+    agent,
+  ): MockComposerConfiguration<typeof newSessionCatalogs.bothAvailable> => ({
     agents: newSessionCatalogs.bothAvailable,
     agent: agent.agent,
     configOptions: agent.configOptions.map((option) =>
@@ -95,25 +112,32 @@ export const composerNoEffortSelections = newSessionCatalogs.bothAvailable.map(
 );
 
 export const composerUnavailableConfigurations =
-  newSessionCatalogs.bothUnavailable.map((agent) => ({
-    agents: newSessionCatalogs.bothUnavailable,
-    agent: agent.agent,
-    configOptions: agent.configOptions,
-    onConfigChange: () => {},
-    checkout: { branch: 'main', newWorktree: false },
-  }));
+  newSessionCatalogs.bothUnavailable.map(
+    (
+      agent,
+    ): MockComposerConfiguration<
+      typeof newSessionCatalogs.bothUnavailable
+    > => ({
+      agents: newSessionCatalogs.bothUnavailable,
+      agent: agent.agent,
+      configOptions: agent.configOptions,
+      onConfigChange: () => {},
+      checkout: { branch: 'main', newWorktree: false },
+    }),
+  );
 
 export function ComposerMock(
   props: ComposerProps & {
+    initialAgent?: AgentInfo['agent'];
     sessionStarted?: boolean;
     running?: boolean;
     // Replaces the Session's Plan; an empty list means the Agent has none.
     plan?: PlanEntry[];
   },
-) {
+): React.JSX.Element {
   const [draft, setDraft] = useState(props.draft);
   const [agent, setAgent] = useState(
-    newSessionCatalogs.bothAvailable[0]?.agent ?? '',
+    props.initialAgent ?? newSessionCatalogs.bothAvailable[0]?.agent ?? '',
   );
   const catalog = newSessionOptions.find((entry) => entry.agent === agent);
   const [configOptions, setConfigOptions] = useState<SessionConfigOption[]>(
@@ -133,7 +157,7 @@ export function ComposerMock(
       onCreateGoal={props.onCreateGoal}
       onStop={
         props.onStop
-          ? () => {
+          ? (): void => {
               setRunning(false);
               props.onStop?.();
             }
@@ -177,7 +201,7 @@ export function ComposerMock(
           turnRunning: running,
           onAgentChange: props.sessionStarted
             ? undefined
-            : (nextAgent) => {
+            : (nextAgent): void => {
                 setAgent(nextAgent);
                 setConfigOptions(
                   newSessionOptions.find((entry) => entry.agent === nextAgent)

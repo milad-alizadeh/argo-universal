@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import { useEffect } from 'react';
 import Animated, {
   cancelAnimation,
@@ -26,7 +27,7 @@ export function BlinkingDot({
   blinking = true,
   className,
   testID,
-}: BlinkingDotProps) {
+}: BlinkingDotProps): React.JSX.Element {
   const { backgroundColor } = useResolveClassNames(colorClassName);
   const opacity = useSharedValue(1);
   useEffect(() => {
@@ -37,7 +38,7 @@ export function BlinkingDot({
           true,
         )
       : 1;
-    return () => cancelAnimation(opacity);
+    return (): void => cancelAnimation(opacity);
   }, [blinking, opacity]);
   const style = useAnimatedStyle(
     () => ({

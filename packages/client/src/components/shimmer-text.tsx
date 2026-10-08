@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import { useEffect } from 'react';
 import Animated, {
   cancelAnimation,
@@ -28,7 +29,7 @@ export function ShimmerText({
   text: string;
   className?: string;
   emphasized?: boolean;
-}) {
+}): React.JSX.Element {
   const position = useSharedValue(-bandHalfWidth);
   const reducedMotion = useReducedMotion();
   const characters = Array.from(text);
@@ -42,7 +43,7 @@ export function ShimmerText({
         }),
         -1,
       );
-    return () => cancelAnimation(position);
+    return (): void => cancelAnimation(position);
   }, [characters.length, reducedMotion, position]);
   return (
     <Text numberOfLines={1} selectable={false} className={className}>
@@ -73,7 +74,7 @@ function ShimmerCharacter({
   index: number;
   position: SharedValue<number>;
   emphasized: boolean;
-}) {
+}): React.JSX.Element {
   const { resting, highlight } = emphasized
     ? shimmerOpacity.emphasized
     : shimmerOpacity.plain;

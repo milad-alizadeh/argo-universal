@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, fn, waitFor } from 'storybook/test';
 import {
@@ -32,12 +33,12 @@ const meta = {
     onNewSession,
     onProjectSettings,
   },
-  render: (args) => (
+  render: (args): React.JSX.Element => (
     <View className="w-full wide:w-shell-list" style={{ height: 320 }}>
       <SessionsList {...args} />
     </View>
   ),
-  beforeEach: () => {
+  beforeEach: (): (() => void) => {
     const restoreResizeObserver = installFooterLayoutDelay();
     onNewSession.mockClear();
     onProjectSettings.mockClear();
@@ -139,7 +140,7 @@ export const InsertSessionOpaqueRows: Story = {
     const positions = [initialTop];
     const movement = new Promise<void>((resolve) => {
       const started = performance.now();
-      function sample() {
+      function sample(): void {
         positions.push(existing.getBoundingClientRect().top);
         if (performance.now() - started < 600) requestAnimationFrame(sample);
         else resolve();
@@ -152,7 +153,7 @@ export const InsertSessionOpaqueRows: Story = {
     const inserted = await canvas.findByRole('button', {
       name: 'New Session 1, Idle',
     });
-    function assertOpaqueRow(button: HTMLElement) {
+    function assertOpaqueRow(button: HTMLElement): void {
       const surface = button.parentElement;
       if (!surface) throw new Error('Missing Session row surface');
       const color = getComputedStyle(surface).backgroundColor;
@@ -231,7 +232,7 @@ export const ScrollFadePadding: Story = {
     colorCanvas.width = colorCanvas.height = 1;
     const context = colorCanvas.getContext('2d');
     if (!context) throw new Error('Missing browser color context');
-    function colorPixel(color: string) {
+    function colorPixel(color: string): number[] {
       if (!context) throw new Error('Missing browser color context');
       context.clearRect(0, 0, 1, 1);
       context.fillStyle = color;

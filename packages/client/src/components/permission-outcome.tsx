@@ -1,5 +1,6 @@
 import type { PermissionOutcome as Outcome } from '@repo/contracts';
 import { CheckIcon, XIcon } from 'phosphor-react-native';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/text';
 import { Icon } from '../lib/icon';
@@ -12,7 +13,7 @@ export interface PermissionOutcomeProps {
 export function PermissionOutcome({
   outcome,
   message,
-}: PermissionOutcomeProps) {
+}: PermissionOutcomeProps): React.JSX.Element | null {
   const allowed =
     outcome.outcome === 'selected' && outcome.optionId === 'allow_once';
   if (

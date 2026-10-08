@@ -1,6 +1,8 @@
 import { newSessionCatalogs } from '@repo/api/mocks';
 import type { AgentInfo, SessionConfigSelectOption } from '@repo/contracts';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type { ReactElement } from 'react';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import {
@@ -14,12 +16,14 @@ import {
 import { layoutWidths } from '../../mocks/each-layout';
 import { settleViewport } from '../../mocks/settle-viewport';
 import { Composer } from './composer';
+import { ContentLayout } from './content-layout';
+
+const attachImagesLabel = 'Attach images';
 
 const missingAvailableAgentFailure =
   'Recorded catalog needs an available Agent.';
 const agentModelLabel = 'Agent and model';
 const newCheckoutLabel = 'New worktree';
-const attachImagesLabel = 'Attach images';
 const filesFolderLabel = 'Files and Folder';
 const agentIconId = 'composer-agent-icon';
 const spacingPrompt = 'Match the spacing.';
@@ -46,7 +50,9 @@ type PickerCatalog = {
 // What the picker stories need from each recorded catalog; a recording that loses one fails here by name.
 const pickerCatalogs = newSessionCatalogs.bothAvailable.map(
   (agent): PickerCatalog => {
-    const select = (category: string) => {
+    const select = (
+      category: string,
+    ): { choices: SessionConfigSelectOption[]; current: string } => {
       const option = agent.configOptions.find(
         (entry) => entry.category === category && entry.type === 'select',
       );
@@ -108,12 +114,15 @@ if (
 const [firstCatalog] = pickerCatalogs;
 if (!firstCatalog) throw new Error(missingAvailableAgentFailure);
 const firstAgent = firstCatalog.agent;
+const secondAgent = pickerCatalogs[1]?.agent;
+if (!secondAgent)
+  throw new Error('Recorded catalog needs a second available Agent.');
 
 const meta = {
   title: 'Tests/Composer',
   globals: { themeId: 'default', mode: 'light' },
   component: Composer,
-  render: (args) => <ComposerMock {...args} />,
+  render: (args): React.JSX.Element => <ComposerMock {...args} />,
   args: {
     draft: { text: '', images: [] },
     onDraftChange: fn(),
@@ -166,7 +175,9 @@ function typography(width: number): Story {
         await expect(checkout.fontWeight).toBe('400');
       }
       await userEvent.click(
-        canvas.getByRole('button', { name: attachImagesLabel }),
+        canvas.getByRole('button', {
+          name: width >= 720 ? 'Attach' : attachImagesLabel,
+        }),
       );
       const attachment = await within(document.body).findByRole('button', {
         name: width >= 720 ? filesFolderLabel : 'Camera',
@@ -213,7 +224,9 @@ export const Empty: Story = {
       ).toHaveValue('');
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
       await expect(
-        canvas.getByRole('button', { name: attachImagesLabel }),
+        canvas.getByRole('button', {
+          name: width >= 720 ? 'Attach' : attachImagesLabel,
+        }),
       ).toBeEnabled();
       await expect(
         canvas.getByRole('button', { name: agentModelLabel }),
@@ -269,7 +282,9 @@ function withImages(width: number): Story {
       await settleViewport(width);
       await expect(canvas.queryByRole('img')).not.toBeInTheDocument();
       await userEvent.click(
-        canvas.getByRole('button', { name: attachImagesLabel }),
+        canvas.getByRole('button', {
+          name: width >= 720 ? 'Attach' : attachImagesLabel,
+        }),
       );
       await userEvent.click(
         await within(document.body).findByRole('button', {
@@ -316,7 +331,9 @@ function attachmentMenus(width: number): Story {
             ] as const);
       for (const [label, callback] of choices) {
         await userEvent.click(
-          canvas.getByRole('button', { name: attachImagesLabel }),
+          canvas.getByRole('button', {
+            name: width >= 720 ? 'Attach' : attachImagesLabel,
+          }),
         );
         await expect(
           overlay.queryByRole('button', {
@@ -334,6 +351,35 @@ function attachmentMenus(width: number): Story {
 }
 export const AttachmentMenusPhone = attachmentMenus(layoutWidths.phone);
 export const AttachmentMenusWide = attachmentMenus(layoutWidths.wide);
+
+export const AttachmentInNarrowContent: Story = {
+  render: (args): ReactElement => (
+    <View style={{ width: layoutWidths.phone }}>
+      <ContentLayout>
+        <ComposerMock {...args} />
+      </ContentLayout>
+    </View>
+  ),
+  play: async ({ canvas, userEvent }): Promise<void> => {
+    await settleViewport(layoutWidths.wide);
+    const attach = await canvas.findByRole('button', {
+      name: attachImagesLabel,
+    });
+    await expect(
+      canvas.queryByRole('button', { name: 'Attach' }),
+    ).not.toBeInTheDocument();
+    await userEvent.click(attach);
+    await waitFor(() =>
+      expect(
+        within(document.body).getByRole('button', { name: 'Photos' }),
+      ).toBeVisible(),
+    );
+    await expect(
+      within(document.body).queryByRole('button', { name: 'Files and Folder' }),
+    ).not.toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
+  },
+};
 
 function multiline(width: number): Story {
   return {
@@ -404,7 +450,9 @@ function sending(width: number): Story {
       await userEvent.type(canvas.getByRole('textbox'), 'Another prompt');
       await expect(canvas.getByRole('textbox')).toHaveValue(spacingPrompt);
       await expect(
-        canvas.getByRole('button', { name: attachImagesLabel }),
+        canvas.getByRole('button', {
+          name: width >= 720 ? 'Attach' : attachImagesLabel,
+        }),
       ).toBeDisabled();
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
       await expect(args.onSend).not.toHaveBeenCalled();
@@ -428,7 +476,9 @@ function disabled(width: number): Story {
       await userEvent.type(canvas.getByRole('textbox'), 'Another prompt');
       await expect(canvas.getByRole('textbox')).toHaveValue(spacingPrompt);
       await expect(
-        canvas.getByRole('button', { name: attachImagesLabel }),
+        canvas.getByRole('button', {
+          name: width >= 720 ? 'Attach' : attachImagesLabel,
+        }),
       ).toBeDisabled();
       await expect(
         canvas.getByRole('button', { name: 'Remove screenshot.png' }),
@@ -526,7 +576,7 @@ async function chooseModel({
   userEvent,
   width,
   name,
-}: Omit<PickerStep, 'canvas'> & { name: string }) {
+}: Omit<PickerStep, 'canvas'> & { name: string }): Promise<void> {
   const overlay = within(document.body);
   if (width < 720)
     await userEvent.click(
@@ -539,7 +589,7 @@ async function chooseModel({
     ).toBeVisible();
 }
 
-async function expectEffortScale() {
+async function expectEffortScale(): Promise<void> {
   const overlay = within(document.body);
   const effortSlider = overlay.getByRole('slider', { name: 'Effort' });
   await Promise.all(
@@ -588,7 +638,7 @@ async function expectHighEffort({
   userEvent,
   width,
   catalog,
-}: PickerStep & { catalog: PickerCatalog }) {
+}: PickerStep & { catalog: PickerCatalog }): Promise<void> {
   const overlay = within(document.body);
   const { userEvent: browserUserEvent } = await import('vitest/browser');
   const model = catalog.highEffortModel;
@@ -620,7 +670,7 @@ async function expectEffortFollowsModel({
   userEvent,
   width,
   model,
-}: PickerStep & { model: SessionConfigSelectOption }) {
+}: PickerStep & { model: SessionConfigSelectOption }): Promise<void> {
   const overlay = within(document.body);
   await chooseModel({ userEvent, width, name: model.name });
   if (model._meta?.argo?.supportsEffort)
@@ -644,11 +694,11 @@ async function expectDangerousMode({
   userEvent,
   width,
   catalog,
-}: PickerStep & { catalog: PickerCatalog }) {
+}: PickerStep & { catalog: PickerCatalog }): Promise<void> {
   const overlay = within(document.body);
   const { planning, dangerous } = catalog;
   await userEvent.click(canvas.getByRole('button', { name: 'Mode' }));
-  const labelColor = (name: string) =>
+  const labelColor = (name: string): string =>
     getComputedStyle(
       within(overlay.getByRole('button', { name })).getByText(name),
     ).color;
@@ -737,7 +787,45 @@ function checkout(width: number): Story {
     },
   };
 }
-export const CheckoutPhone = checkout(layoutWidths.phone);
+function phoneStatusControls(
+  agent: Pick<AgentInfo, 'agent' | 'configOptions'>,
+): Story {
+  return {
+    args: {
+      configuration: {
+        agents: newSessionCatalogs.bothAvailable,
+        agent: agent.agent,
+        configOptions: agent.configOptions,
+        onConfigChange: fn(),
+        checkout: {
+          branch: 'main',
+          newWorktree: true,
+          onNewWorktreeChange: fn(),
+        },
+      },
+      status: {
+        plan: composerPlan,
+        subagents: { count: 2, running: true, onPress: fn() },
+        shells: { count: 1, running: false, onPress: fn() },
+      },
+    },
+    play: async ({ canvas }) => {
+      await settleViewport(layoutWidths.phone);
+      await expect(
+        canvas.queryByRole('button', { name: 'Checkout' }),
+      ).not.toBeInTheDocument();
+      await expect(canvas.getByRole('button', { name: 'Plan' })).toBeVisible();
+      await expect(
+        canvas.getByRole('button', { name: 'Subagents: 2' }),
+      ).toBeVisible();
+      await expect(
+        canvas.getByRole('button', { name: 'Shells: 1' }),
+      ).toBeVisible();
+    },
+  };
+}
+export const CheckoutPhone = phoneStatusControls(firstAgent);
+export const CheckoutPhoneSecondAgent = phoneStatusControls(secondAgent);
 export const CheckoutWide = checkout(layoutWidths.wide);
 
 function createdCheckoutIsReadOnly(width: number): Story {
@@ -900,7 +988,12 @@ function sessionControls(width: number): Story {
       ).not.toBeInTheDocument();
       await userEvent.keyboard('{Escape}');
       await expect(args.onStop).not.toHaveBeenCalled();
-      await userEvent.click(canvas.getByRole('button', { name: 'Stop' }));
+      const stop = canvas.getByRole('button', { name: 'Stop' });
+      await expect(stop).toBeEnabled();
+      await expect(
+        canvas.queryByRole('button', { name: 'Send' }),
+      ).not.toBeInTheDocument();
+      await userEvent.click(stop);
       await expect(args.onStop).toHaveBeenCalledOnce();
       await expect(
         canvas.queryByRole('button', { name: 'Stop' }),
@@ -911,11 +1004,97 @@ function sessionControls(width: number): Story {
 export const SessionControlsPhone = sessionControls(layoutWidths.phone);
 export const SessionControlsWide = sessionControls(layoutWidths.wide);
 
+function stopPrecedence(
+  width: number,
+  agentIndex: number,
+  disabled: boolean,
+): Story {
+  const catalog = pickerCatalogs[agentIndex];
+  if (!catalog)
+    throw new Error(`Recorded catalog needs an Agent at index ${agentIndex}.`);
+  return {
+    args: {
+      draft: {
+        text: 'A draft during a Turn.',
+        images: [oversizedComposerImage],
+      },
+      sending: true,
+      disabled,
+      sendable: false,
+      onStop: fn(),
+      configuration: {
+        agents: newSessionCatalogs.bothAvailable,
+        agent: catalog.agent.agent,
+        configOptions: catalog.agent.configOptions,
+        onConfigChange: fn(),
+        checkout: { branch: 'main', newWorktree: false },
+        turnRunning: true,
+      },
+    },
+    play: async ({ canvas, userEvent, args }): Promise<void> => {
+      await settleViewport(width);
+      const stop = canvas.getByRole('button', { name: 'Stop' });
+      await expect(stop).toHaveProperty('disabled', disabled);
+      await expect(
+        canvas.queryByRole('button', { name: 'Send' }),
+      ).not.toBeInTheDocument();
+      await expect(
+        canvas.queryByRole('progressbar', { name: 'Sending' }),
+      ).not.toBeInTheDocument();
+      if (!disabled) await userEvent.click(stop);
+      await expect(args.onStop).toHaveBeenCalledTimes(disabled ? 0 : 1);
+      await expect(args.onSend).not.toHaveBeenCalled();
+    },
+  };
+}
+export const StopPrecedenceClaudePhone = stopPrecedence(
+  layoutWidths.phone,
+  0,
+  false,
+);
+export const StopPrecedenceClaudeWide = stopPrecedence(
+  layoutWidths.wide,
+  0,
+  false,
+);
+export const StopPrecedenceCodexPhone = stopPrecedence(
+  layoutWidths.phone,
+  1,
+  false,
+);
+export const StopPrecedenceCodexWide = stopPrecedence(
+  layoutWidths.wide,
+  1,
+  false,
+);
+export const DisabledStopClaudePhone = stopPrecedence(
+  layoutWidths.phone,
+  0,
+  true,
+);
+export const DisabledStopClaudeWide = stopPrecedence(
+  layoutWidths.wide,
+  0,
+  true,
+);
+export const DisabledStopCodexPhone = stopPrecedence(
+  layoutWidths.phone,
+  1,
+  true,
+);
+export const DisabledStopCodexWide = stopPrecedence(layoutWidths.wide, 1, true);
+
 export const RunningWithoutStop: Story = {
   render: (args) => <ComposerMock {...args} sessionStarted running />,
   args: { draft: { text: 'A draft during a Turn.', images: [] } },
   play: async ({ canvas, args }) => {
     await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
+    await expect(
+      canvas.queryByRole('button', { name: 'Stop' }),
+    ).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByRole('progressbar', { name: 'Sending' }),
+    ).not.toBeInTheDocument();
     await expect(args.onSend).not.toHaveBeenCalled();
   },
 };
@@ -1049,7 +1228,7 @@ function responsiveLayout(width: number, agentIndex: number): Story {
       const bounds = card.getBoundingClientRect();
       await expect(bounds.height).toBe(80);
       const attachButton = canvas.getByRole('button', {
-        name: attachImagesLabel,
+        name: width >= 720 ? 'Attach' : attachImagesLabel,
       });
       await expect(attachButton.getBoundingClientRect().width).toBe(16);
       await expect(attachButton.getBoundingClientRect().height).toBe(28);
@@ -1207,7 +1386,7 @@ export const ResponsiveLayoutNarrowPhone: Story = {
 
 type FooterCheck = Pick<PlayContext, 'canvas'> & { card: Element };
 
-async function expectPhoneFooter({ canvas, card }: FooterCheck) {
+async function expectPhoneFooter({ canvas, card }: FooterCheck): Promise<void> {
   const bounds = card.getBoundingClientRect();
   const trigger = canvas.getByRole('button', { name: agentModelLabel });
   await expect(within(trigger).queryAllByTestId(agentIconId)).toHaveLength(0);
@@ -1231,8 +1410,8 @@ async function expectPhoneFooter({ canvas, card }: FooterCheck) {
   ).not.toBeInTheDocument();
 }
 
-async function expectWideFooter({ canvas, card }: FooterCheck) {
-  const trigger = canvas.getByRole('button', { name: agentModelLabel });
+async function expectWideFooter({ canvas, card }: FooterCheck): Promise<void> {
+  const trigger = canvas.getByRole('button', { name: 'Agent and model' });
   await expect(
     within(trigger).getByTestId(agentIconId).getBoundingClientRect().width,
   ).toBe(14);
@@ -1248,7 +1427,7 @@ async function expectWideFooter({ canvas, card }: FooterCheck) {
   await expect(size.left).toBeGreaterThanOrEqual(used.right);
 }
 
-async function expectWideAgentMenu() {
+async function expectWideAgentMenu(): Promise<void> {
   const overlay = within(document.body);
   await waitFor(() => {
     expect(overlay.getByRole('dialog').getBoundingClientRect().width).toBe(580);
@@ -1423,7 +1602,7 @@ export const PlanExpandsSmoothly: Story = {
     const panel = canvas.getByTestId(planStepsId);
     const heights: number[] = [];
     let collecting = true;
-    const sample = () => {
+    const sample = (): void => {
       heights.push(panel.getBoundingClientRect().height);
       if (collecting) requestAnimationFrame(sample);
     };

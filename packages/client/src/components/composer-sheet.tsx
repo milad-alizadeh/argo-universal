@@ -1,4 +1,5 @@
 import * as DialogPrimitive from '@rn-primitives/dialog';
+import type * as React from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { useEffect } from 'react';
 import { ScrollView, type StyleProp, View, type ViewStyle } from 'react-native';
@@ -23,7 +24,7 @@ export function ComposerSheet({
   trigger,
   label,
   children,
-}: ComposerSheetProps) {
+}: ComposerSheetProps): React.JSX.Element {
   useEffect(() => {
     if (!open) onClosed();
   }, [open, onClosed]);

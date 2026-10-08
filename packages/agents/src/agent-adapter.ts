@@ -75,7 +75,7 @@ export interface AgentAdapter<Message = unknown, MappingState = unknown> {
     signal: AbortSignal,
   ): Promise<VendorSession>;
   initialMappingState(): MappingState;
-  // Pure, so recordings can drive it (ADR-0006).
+  // Pure, so typed response fixtures can drive it (ADR-0006).
   toAgentEvents(
     message: Message,
     mappingState: MappingState,

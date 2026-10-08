@@ -29,11 +29,11 @@ import {
   setup,
 } from 'xstate';
 import { countRejection } from '../../lib/count-rejections';
-import { agentProbeId } from '../agents/agent-probe-machine';
-import { userMessageChange } from '../feed/feed-change';
-import { feedMachine } from '../feed/feed-machine';
-import { readWrittenRow } from '../feed/feed-row';
-import type { writerMachine } from '../feed/writer-machine';
+import { agentProbeId } from '../agents';
+import { userMessageChange } from '../feed';
+import { feedMachine } from '../feed';
+import { readWrittenRow } from '../feed';
+import type { writerMachine } from '../feed';
 import {
   createSessionCheckout,
   discardSessionCheckout,
@@ -49,7 +49,7 @@ const feedChangeEvent = 'feed.change';
 const flushingSessionTarget = '#session.open.flushing';
 
 type FeedChangeEvent = Extract<
-  import('../feed/feed-machine').FeedEvent,
+  import('../feed').FeedEvent,
   { type: 'feed.change' }
 >;
 type SessionDataParameters = { data: SessionData };
@@ -321,10 +321,7 @@ const sessionSetup = setup({
       ({
         context,
         event,
-      }): Extract<
-        import('./../feed/feed-machine').FeedEvent,
-        { type: 'feed.change' }
-      > => {
+      }): Extract<import('../feed').FeedEvent, { type: 'feed.change' }> => {
         assertEvent(event, 'agent.feed');
         return {
           type: feedChangeEvent,

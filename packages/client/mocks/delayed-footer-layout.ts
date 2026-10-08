@@ -2,7 +2,7 @@ let delayedLayouts = 0;
 let active = false;
 const timers = new Set<ReturnType<typeof setTimeout>>();
 
-export function getDelayedFooterLayouts() {
+export function getDelayedFooterLayouts(): number {
   return delayedLayouts;
 }
 
@@ -32,7 +32,7 @@ export function installFooterLayoutDelay() {
       });
     }
   };
-  return () => {
+  return (): void => {
     window.ResizeObserver = OriginalResizeObserver;
   };
 }
@@ -40,7 +40,7 @@ export function installFooterLayoutDelay() {
 export function delayFooterLayout() {
   delayedLayouts = 0;
   active = true;
-  return () => {
+  return (): void => {
     active = false;
     for (const timer of timers) clearTimeout(timer);
     timers.clear();

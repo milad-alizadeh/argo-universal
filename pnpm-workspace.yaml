@@ -4,7 +4,7 @@ packages:
   - tooling/*
   # Playwright suite as its own package, as Turborepo's Playwright guide recommends (docs/research/playwright.md).
   - e2e
-  # Mock CLIs and their recordings, as a package so Vitest and check-types reach them.
+  # Shared Agent fixtures, as a package so Vitest and check-types reach them.
   - mocks
   # Repository scripts and agent hooks, as a package so turbo runs their tests.
   - tools

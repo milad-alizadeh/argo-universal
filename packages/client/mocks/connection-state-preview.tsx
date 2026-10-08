@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import { type ReactNode, useEffect, useState } from 'react';
 import {
   ConnectionContext,
@@ -12,10 +13,10 @@ export function ConnectionStatePreview({
 }: {
   state: ConnectionState;
   children: ReactNode;
-}) {
+}): React.JSX.Element {
   const [connection] = useState(() => createConnectionStateMock(state));
   useEffect(
-    () => () => {
+    () => (): void => {
       connection.stop();
     },
     [connection],

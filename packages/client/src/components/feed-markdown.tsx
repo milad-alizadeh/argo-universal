@@ -1,4 +1,5 @@
 import { lexer, type Token, type Tokens } from 'marked';
+import type * as React from 'react';
 import {
   createContext,
   Fragment,
@@ -26,7 +27,7 @@ const MarkdownVariant = createContext<'feed' | 'proposal'>('feed');
 export const inlineCodeClassName =
   'rounded-sm bg-foreground/5 px-1.5 py-px font-mono text-xs leading-4.5 text-foreground';
 
-function Caret() {
+function Caret(): React.JSX.Element {
   return (
     <View
       testID="streaming-caret"
@@ -42,7 +43,7 @@ function InlineTokens({
 }: {
   tokens: Token[] | undefined;
   codeClassName?: string;
-}) {
+}): (React.JSX.Element | '\n' | null)[] | undefined {
   const { color: linkUnderline } = useResolveClassNames('text-ring');
   return tokens?.map((token, index) => {
     const key = `${token.type}-${index}`;
@@ -118,7 +119,7 @@ function Prose({
   tokens: Token[] | undefined;
   caret: boolean;
   className?: string;
-}) {
+}): React.JSX.Element {
   const variant = useContext(MarkdownVariant);
   return (
     <Text
@@ -141,7 +142,13 @@ function Prose({
   );
 }
 
-function List({ token, caret }: { token: Tokens.List; caret: boolean }) {
+function List({
+  token,
+  caret,
+}: {
+  token: Tokens.List;
+  caret: boolean;
+}): React.JSX.Element {
   const variant = useContext(MarkdownVariant);
   const start = typeof token.start === 'number' ? token.start : 1;
   return (
@@ -172,7 +179,7 @@ function List({ token, caret }: { token: Tokens.List; caret: boolean }) {
   );
 }
 
-function Table({ token }: { token: Tokens.Table }) {
+function Table({ token }: { token: Tokens.Table }): React.JSX.Element {
   const variant = useContext(MarkdownVariant);
   const cellCodeClassName = cn(
     'font-mono leading-5 text-foreground',
@@ -234,14 +241,20 @@ function Table({ token }: { token: Tokens.Table }) {
   );
 }
 
-function cellClassName(column: number) {
+function cellClassName(column: number): string {
   return cn(
     'px-3 py-1.5',
     column === 0 ? 'w-[180px] shrink-0' : 'min-w-[180px] flex-1',
   );
 }
 
-function Block({ token, caret }: { token: Token; caret: boolean }) {
+function Block({
+  token,
+  caret,
+}: {
+  token: Token;
+  caret: boolean;
+}): React.JSX.Element | null {
   const variant = useContext(MarkdownVariant);
   switch (token.type) {
     case 'heading':
@@ -297,7 +310,7 @@ function Blocks({
 }: {
   tokens: Token[] | undefined;
   caret: boolean;
-}) {
+}): ReactNode[] {
   const blocks = (tokens ?? []).filter(
     (token) => token.type !== 'space' && token.type !== 'hr',
   );

@@ -1,4 +1,5 @@
 import type { SessionInfo } from '@repo/contracts';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/utils';
 import { BlinkingDot } from './blinking-dot';
@@ -31,7 +32,7 @@ export function StatusIndicator({
   size = 'default',
   className,
   testID = 'status-indicator',
-}: StatusIndicatorProps) {
+}: StatusIndicatorProps): React.JSX.Element {
   const active = status === 'running' || status === 'needs_input';
   return (
     <View

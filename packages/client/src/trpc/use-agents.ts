@@ -1,7 +1,13 @@
+import type { AppRouter } from '@repo/api';
+import type { AgentInfo } from '@repo/contracts';
+import type { UseQueryResult } from '@tanstack/react-query';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { TRPCClientErrorLike } from '@trpc/client';
 import { useTRPC } from '../trpc/context';
 
-export function useAgents() {
+type AgentsQuery = UseQueryResult<AgentInfo[], TRPCClientErrorLike<AppRouter>>;
+
+export function useAgents(): AgentsQuery & { retry: () => void } {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const agents = useQuery(trpc.agents.list.queryOptions());

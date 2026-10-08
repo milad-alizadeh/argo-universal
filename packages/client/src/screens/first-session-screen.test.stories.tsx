@@ -10,6 +10,7 @@ import type {
 } from '@repo/contracts';
 import { PortalHost } from '@rn-primitives/portal';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
@@ -71,7 +72,7 @@ const sessionCatalogs = newSessionCatalogs.bothAvailable.map((agent, index) => {
     throw new Error(`Recorded catalog needs a Feed for ${agent.label}.`);
   const first = { ...sessionRows.running, agent: agent.agent, activityAt: 200 };
   const second = { ...sessionRows.idle, agent: agent.agent, activityAt: 100 };
-  const feedFor = (sessionId: string) => {
+  const feedFor = (sessionId: string): ReturnType<typeof createFeedMocks> => {
     const row = sessionId === first.sessionId ? first : second;
     const snapshot = {
       ...feed.snapshot,
@@ -151,7 +152,7 @@ function keepsTheOpenSession(agentIndex: 0 | 1): Story {
   };
 }
 
-function FirstSessionBesideList() {
+function FirstSessionBesideList(): React.JSX.Element {
   return (
     <View className="flex-1 flex-row">
       <View className="w-80">
@@ -242,7 +243,17 @@ export const PendingListStaysBlank: Story = {
 function sessionUpdateMocks(
   catalog: (typeof sessionCatalogs)[number],
   updates: ReturnType<typeof createSessionListUpdatesMock>,
-) {
+): Omit<
+  typeof idleSessionMocks,
+  keyof typeof updates.fixtures | keyof ReturnType<typeof createFeedMocks>
+> &
+  typeof updates.fixtures &
+  Omit<ReturnType<typeof createFeedMocks>, 'feed.page'> & {
+    'agents.list': () => (typeof catalog)['agent'][];
+    'feed.page': (
+      input: FeedPageInput,
+    ) => ReturnType<ReturnType<typeof createFeedMocks>['feed.page']>;
+  } {
   return {
     ...idleSessionMocks,
     ...updates.fixtures,
@@ -327,7 +338,7 @@ function keepsNewSessionUntilLeavingRoot(agentIndex: 0 | 1): Story {
   };
 }
 
-function NavigatingFirstSession() {
+function NavigatingFirstSession(): React.JSX.Element {
   const [destination, setDestination] = useState<NavigationDestination>({
     to: 'sessions',
   });

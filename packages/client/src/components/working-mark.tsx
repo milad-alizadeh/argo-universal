@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import { useEffect } from 'react';
 import { View } from 'react-native';
 import Animated, {
@@ -46,7 +47,7 @@ function Cell({
   top: number;
   step: SharedValue<number>;
   still: boolean;
-}) {
+}): React.JSX.Element {
   const style = useAnimatedStyle(() => {
     if (still) return { opacity: 0.4 };
     const sinceLit = (step.value - index + cells.length) % cells.length;
@@ -67,7 +68,7 @@ function Cell({
 }
 
 // Paper's Working mark: a 3×3 grid where one cell at a time lights and fades.
-export function WorkingMark() {
+export function WorkingMark(): React.JSX.Element {
   const step = useSharedValue(0);
   const reducedMotion = useReducedMotion();
   useEffect(() => {
@@ -79,7 +80,7 @@ export function WorkingMark() {
         }),
         -1,
       );
-    return () => cancelAnimation(step);
+    return (): void => cancelAnimation(step);
   }, [reducedMotion, step]);
   return (
     <View testID="working-mark" className="size-icon-md shrink-0">

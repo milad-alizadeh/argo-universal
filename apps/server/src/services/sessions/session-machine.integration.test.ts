@@ -29,31 +29,29 @@ import { TestModel } from 'xstate/graph';
 import { openTestDatabase } from '#mocks/database';
 import { messageChange } from '#mocks/feed';
 import { createSessionHost, firstPrompt } from '#mocks/session';
-import { type FeedActorRef, feedMachine } from '../feed/feed-machine';
-import type { createFeedService } from '../feed/feed-service';
-import type { WriterEvent } from '../feed/writer-machine';
+import { type FeedActorRef, feedMachine } from '../feed';
+import type { createFeedService } from '../feed';
+import type { WriterEvent } from '../feed';
 import { sendSessionCommand } from './session-command';
 import { type SessionMachineInput, sessionMachine } from './session-machine';
 import { toSessionSnapshot } from './session-snapshot';
 
-const rejectedAgentMessageEvent = 'agent.messageRejected';
-const unknownVendorMessageReason = 'Unknown vendor message';
+const agentUsageEvent = 'agent.usage';
 const agentFeedEvent = 'agent.feed';
 const sessionPromptEvent = 'session.prompt';
 const agentPromptEvent = 'agent.prompt';
 const agentTurnEndedEvent = 'agent.turnEnded';
-const agentPermissionRequestedEvent = 'agent.permissionRequested';
-const agentElicitationRequestedEvent = 'agent.elicitationRequested';
+const permissionRequestedEvent = 'agent.permissionRequested';
+const elicitationRequestedEvent = 'agent.elicitationRequested';
 const fileQuestion = 'Which file?';
 const answerPermissionEvent = 'session.answerPermission';
 const answerElicitationEvent = 'session.answerElicitation';
-const cancelSessionEvent = 'session.cancel';
-const closeSessionEvent = 'session.close';
-const agentUsageEvent = 'agent.usage';
-const setSessionConfigOptionEvent = 'session.setConfigOption';
-const agentConfigOptionsChangedEvent = 'agent.configOptionsChanged';
-const setAgentConfigOptionEvent = 'agent.setConfigOption';
-const modelRequestId = 'request-model';
+const sessionCancelEvent = 'session.cancel';
+const sessionCloseEvent = 'session.close';
+const sessionSetConfigEvent = 'session.setConfigOption';
+const configOptionsChangedEvent = 'agent.configOptionsChanged';
+const agentSetConfigEvent = 'agent.setConfigOption';
+const requestModel = 'request-model';
 
 const cleanups: (() => void)[] = [];
 // The model paths' actors, stopped after each path.
@@ -132,7 +130,7 @@ it('keeps the Session running while rejected messages show warning Notices', asy
     usage: { used: Number.NaN, size: 100 },
   });
   stream.send({
-    type: rejectedAgentMessageEvent,
+    type: 'agent.messageRejected',
     reason: 'Another unknown message',
   });
   stream.send({ type: agentFeedEvent, change: messageChange('settled') });
@@ -235,13 +233,13 @@ it('answers only the head Permission request and keeps other requests visible', 
     title: 'Read a file',
     options: permissionOptions,
   };
-  stream.send({ type: agentPermissionRequestedEvent, request });
+  stream.send({ type: permissionRequestedEvent, request });
   stream.send({
-    type: agentPermissionRequestedEvent,
+    type: permissionRequestedEvent,
     request: { ...request, toolCallId: 'tool-2' },
   });
   stream.send({
-    type: agentElicitationRequestedEvent,
+    type: elicitationRequestedEvent,
     request: {
       mode: 'form',
       message: fileQuestion,
@@ -324,7 +322,7 @@ it('cancels queued requests and waits for the Agent to end the Turn', async (): 
   const { session, feed, commands, stream } = await openSession();
   sendSessionCommand(session, firstPrompt);
   stream.send({
-    type: agentPermissionRequestedEvent,
+    type: permissionRequestedEvent,
     request: {
       toolCallId: 'tool-1',
       title: 'Run a command',
@@ -332,14 +330,14 @@ it('cancels queued requests and waits for the Agent to end the Turn', async (): 
     },
   });
   stream.send({
-    type: agentElicitationRequestedEvent,
+    type: elicitationRequestedEvent,
     request: {
       mode: 'form',
       message: 'Continue?',
       requestedSchema: { properties: {} },
     },
   });
-  sendSessionCommand(session, { type: cancelSessionEvent });
+  sendSessionCommand(session, { type: sessionCancelEvent });
   await vi.waitFor((): void =>
     expect(commands).toEqual(
       expect.arrayContaining([
@@ -380,7 +378,7 @@ it('flushes Feed changes when closing and ends with no failure', async (): Promi
   const { session, service, stream } = await openSession();
   sendSessionCommand(session, firstPrompt);
   stream.send({ type: agentFeedEvent, change: messageChange('open') });
-  sendSessionCommand(session, { type: closeSessionEvent });
+  sendSessionCommand(session, { type: sessionCloseEvent });
   await waitFor(
     session,
     (snapshot): snapshot is Extract<typeof snapshot, { status: 'done' }> =>
@@ -474,7 +472,7 @@ it('recovers when cancellation times out and writes a Notice for the Turn', asyn
   vi.useFakeTimers();
   const { session, service } = await openSession();
   sendSessionCommand(session, firstPrompt);
-  sendSessionCommand(session, { type: cancelSessionEvent });
+  sendSessionCommand(session, { type: sessionCancelEvent });
   await vi.advanceTimersByTimeAsync(10_000);
   expect(
     service.row({ sessionId: 'session-1', id: 'turn-1:cancel-timeout' }),
@@ -542,12 +540,12 @@ it('keeps the latest held choices through updates and cancellation, then applies
     ['model', 'large'],
   ] as const)
     sendSessionCommand(session, {
-      type: setSessionConfigOptionEvent,
+      type: sessionSetConfigEvent,
       configId,
       value,
     });
   stream.send({
-    type: agentConfigOptionsChangedEvent,
+    type: configOptionsChangedEvent,
     configOptions: options.map((option): typeof option => ({
       ...option,
       name: `Renamed ${option.name}`,
@@ -562,9 +560,9 @@ it('keeps the latest held choices through updates and cancellation, then applies
     { currentValue: 'plan', _meta: { argo: { heldUntilNextTurn: true } } },
   ]);
   expect(commands).toEqual([{ ...firstPrompt, type: agentPromptEvent }]);
-  sendSessionCommand(session, { type: cancelSessionEvent });
+  sendSessionCommand(session, { type: sessionCancelEvent });
   sendSessionCommand(session, {
-    type: setSessionConfigOptionEvent,
+    type: sessionSetConfigEvent,
     configId: 'mode',
     value: 'auto',
   });
@@ -579,12 +577,12 @@ it('keeps the latest held choices through updates and cancellation, then applies
     .toEqual([
       { ...firstPrompt, type: agentPromptEvent },
       { type: 'agent.cancel' },
-      { type: setAgentConfigOptionEvent, configId: 'model', value: 'large' },
-      { type: setAgentConfigOptionEvent, configId: 'mode', value: 'auto' },
+      { type: agentSetConfigEvent, configId: 'model', value: 'large' },
+      { type: agentSetConfigEvent, configId: 'mode', value: 'auto' },
       { type: agentPromptEvent, turnId: 'turn-2', content: [] },
     ]);
   expect(session.getSnapshot().context.heldConfigValues).toEqual([]);
-  stream.send({ type: agentConfigOptionsChangedEvent, configOptions: options });
+  stream.send({ type: configOptionsChangedEvent, configOptions: options });
   expect(session.getSnapshot().context.configOptions).toMatchObject([
     { currentValue: 'small' },
     { currentValue: 'auto' },
@@ -594,7 +592,7 @@ it('keeps the latest held choices through updates and cancellation, then applies
       ?.heldUntilNextTurn,
   ).not.toBe(true);
   stream.send({
-    type: agentConfigOptionsChangedEvent,
+    type: configOptionsChangedEvent,
     configOptions: options.map((option): typeof option => ({
       ...option,
       currentValue: option.configId === 'model' ? 'large' : 'auto',
@@ -614,7 +612,7 @@ it('closes after the Agent stop limit even when the Agent does not stop', async 
   const { session } = await openSession({
     stop: (): Promise<void> => new Promise((): void => {}),
   });
-  sendSessionCommand(session, { type: closeSessionEvent });
+  sendSessionCommand(session, { type: sessionCloseEvent });
   await vi.advanceTimersByTimeAsync(4999);
   expect(session.getSnapshot().status).toBe('active');
   await vi.advanceTimersByTimeAsync(1);
@@ -683,9 +681,9 @@ const events = [
   { type: 'xstate.error.actor.feed', error: 'Feed failed' },
   ready,
   { type: sessionPromptEvent, turnId: 'turn-1', content: [] },
-  { type: setSessionConfigOptionEvent, configId: 'mode', value: 'plan' },
+  { type: sessionSetConfigEvent, configId: 'mode', value: 'plan' },
   {
-    type: agentPermissionRequestedEvent,
+    type: permissionRequestedEvent,
     request: {
       toolCallId: 'tool-1',
       title: 'Read',
@@ -694,7 +692,7 @@ const events = [
   },
   { type: answerPermissionEvent, toolCallId: 'tool-1', optionId: null },
   {
-    type: agentElicitationRequestedEvent,
+    type: elicitationRequestedEvent,
     request: {
       mode: 'form',
       message: fileQuestion,
@@ -703,11 +701,11 @@ const events = [
   },
   { type: answerElicitationEvent, action: 'cancel' },
   { type: agentTurnEndedEvent, stopReason: 'end_turn' },
-  { type: cancelSessionEvent },
-  { type: closeSessionEvent },
+  { type: sessionCancelEvent },
+  { type: sessionCloseEvent },
   { type: agentUsageEvent, usage: { used: 10, size: 100 } },
-  { type: rejectedAgentMessageEvent, reason: unknownVendorMessageReason },
-  { type: agentConfigOptionsChangedEvent, configOptions: [] },
+  { type: 'agent.messageRejected', reason: 'Unknown vendor message' },
+  { type: configOptionsChangedEvent, configOptions: [] },
   {
     type: agentFeedEvent,
     change: {
@@ -754,7 +752,7 @@ const models = (['new', 'existing'] as const).map(
               runtimeDirectory,
               adapter,
               now: (): number => 1000,
-              createId: (): string => modelRequestId,
+              createId: (): string => requestModel,
               kind,
               sessionId: 'session-1',
             }
@@ -763,7 +761,7 @@ const models = (['new', 'existing'] as const).map(
               runtimeDirectory,
               adapter,
               now: (): number => 1000,
-              createId: (): string => modelRequestId,
+              createId: (): string => requestModel,
               kind,
               sessionId: 'session-1',
               projectId: 'project-1',
@@ -779,7 +777,7 @@ const models = (['new', 'existing'] as const).map(
       filterEvents: (snapshot, event): boolean =>
         snapshot.status === 'active' &&
         snapshot.can(event) &&
-        (event.type !== agentPermissionRequestedEvent ||
+        (event.type !== permissionRequestedEvent ||
           snapshot.context.permissionQueue.length < 2),
       serializeState: (snapshot, event, previous): string =>
         JSON.stringify({
@@ -849,7 +847,7 @@ it.each(
             )
               expect(modelCommands.slice(commandIndex)).toEqual([
                 {
-                  type: setAgentConfigOptionEvent,
+                  type: agentSetConfigEvent,
                   configId: 'mode',
                   value: 'plan',
                 },
@@ -891,7 +889,7 @@ it.each(
             ...projection,
             pendingElicitation: projection.pendingElicitation && {
               ...projection.pendingElicitation,
-              requestId: modelRequestId,
+              requestId: requestModel,
             },
             liveHeader: liveHeader && {
               ...liveHeader,

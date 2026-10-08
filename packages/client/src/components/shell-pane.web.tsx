@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import { useLayoutEffect, useRef } from 'react';
 import { View } from 'react-native';
 import type { ShellPaneProps } from './shell-pane';
@@ -15,7 +16,7 @@ export function ShellPane({
   card,
   header,
   children,
-}: ShellPaneProps) {
+}: ShellPaneProps): React.JSX.Element {
   const viewport = useRef<HTMLDivElement>(null);
   const frame = useRef<HTMLDivElement>(null);
   // Content that reflows with the pane needs real width; a transform would move it twice.
@@ -140,7 +141,7 @@ export function ShellPane({
   ]);
 
   useLayoutEffect(
-    () => () => {
+    () => (): void => {
       for (const animation of motion.current) animation.cancel();
     },
     [],

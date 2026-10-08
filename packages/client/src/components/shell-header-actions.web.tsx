@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import type { ShellHeaderActionsProps } from './shell-header-actions';
 import { useShellHeaderMotion } from './use-shell-header-motion.web';
 
@@ -7,7 +8,7 @@ export function ShellHeaderActions({
   animate,
   testID,
   children,
-}: ShellHeaderActionsProps) {
+}: ShellHeaderActionsProps): React.JSX.Element {
   const element = useShellHeaderMotion(position, transitionKey, animate);
   return (
     <div

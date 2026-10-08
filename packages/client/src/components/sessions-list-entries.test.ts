@@ -15,7 +15,7 @@ const newer = { ...sessionRows.needsInput, activityAt: 2000 };
 // Ties with `newer`, and its id sorts first.
 const tiedEarlierId = { ...sessionRows.failed, activityAt: 2000 };
 
-const entryIds = (...args: Parameters<typeof listEntries>) =>
+const entryIds = (...args: Parameters<typeof listEntries>): string[] =>
   listEntries(...args).map((entry) => entry.id);
 
 describe('listEntries', () => {

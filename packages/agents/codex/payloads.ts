@@ -3,19 +3,13 @@ import type { VendorMessage } from './messages';
 import type { Requests } from './open-app-server';
 import schemas from './protocol-schemas.gen.json' with { type: 'json' };
 import type {
-  CommandExecutionRequestApprovalResponse,
-  FileChangeRequestApprovalResponse,
   ModelListResponse,
   InitializeResponse,
   ThreadResumeResponse,
   TurnStartResponse,
   TurnInterruptResponse,
   GetAccountResponse,
-  ThreadResumeParams,
   ThreadStartResponse,
-  TurnInterruptParams,
-  TurnStartParams,
-  ToolRequestUserInputResponse,
 } from './protocol.gen';
 
 const validator = new Ajv({ strict: false });
@@ -23,39 +17,6 @@ validator.addSchema(schemas, 'protocol');
 export const isVendorMessage = validator.compile<VendorMessage>({
   $ref: 'protocol#/definitions/VendorMessage',
 });
-export const isModelListResponse = validator.compile<ModelListResponse>({
-  $ref: 'protocol#/definitions/ModelListResponse',
-});
-export const isResumeInput = validator.compile<ThreadResumeParams>({
-  $ref: 'protocol#/definitions/ThreadResumeParams',
-});
-export const isInterruptInput = validator.compile<TurnInterruptParams>({
-  $ref: 'protocol#/definitions/TurnInterruptParams',
-});
-export const isTurnStartInput = validator.compile<TurnStartParams>({
-  $ref: 'protocol#/definitions/TurnStartParams',
-});
-export const isQuestionResponse =
-  validator.compile<ToolRequestUserInputResponse>({
-    $ref: 'protocol#/definitions/ToolRequestUserInputResponse',
-  });
-export const isCommandResponse =
-  validator.compile<CommandExecutionRequestApprovalResponse>({
-    $ref: 'protocol#/definitions/CommandExecutionRequestApprovalResponse',
-  });
-export const isFileResponse =
-  validator.compile<FileChangeRequestApprovalResponse>({
-    $ref: 'protocol#/definitions/FileChangeRequestApprovalResponse',
-  });
-
-export const isThreadStartResponse = validator.compile<ThreadStartResponse>({
-  $ref: 'protocol#/definitions/ThreadStartResponse',
-});
-
-export const isAccountResponse = validator.compile<GetAccountResponse>({
-  $ref: 'protocol#/definitions/GetAccountResponse',
-});
-
 export const responseValidators: {
   [Method in keyof Requests]: ValidateFunction<Requests[Method][1]>;
 } = {

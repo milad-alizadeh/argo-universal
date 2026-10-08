@@ -15,12 +15,12 @@ It also describes its Agent before any Session starts, for `agents.list` and the
 
 The Agent machine runs ordinary commands one at a time and in order, so a config change lands before the prompt that follows it. Cancel and stop interrupt pending commands. It finds the start and end of a Turn in the Agent events, so no adapter decides a lifecycle transition. A vendor session reports `capabilities` with its ready data, because what a Session can do depends on that session, not only on the vendor. Biome stops an adapter from importing `xstate`.
 
-Inside an adapter and its CLI mocks, the vendor SDK's TypeScript types or generated protocol types describe vendor messages. Recording converters and mock CLIs use the same types. Shared recording and transport readers validate their generic envelopes with Zod; vendor directories use SDK types, with Biome enforcing the import boundary. The Feed checks every change an adapter makes against the contract's `SessionUpdate` schema, in `feed-change.ts`, and rejects, logs and counts one that does not match. That is the one check at the boundary between an adapter and the Server.
+Inside an adapter and its response mocks, the vendor SDK's TypeScript types or generated protocol types describe vendor messages. ADR-0018 replaces CLI replay with pure translation unit tests and shared App fixtures. The Feed checks every change an adapter makes against the contract's `SessionUpdate` schema, in `feed-change.ts`, and rejects, logs and counts one that does not match. That is the one check at the boundary between an adapter and the Server. ADR-0016 records production decoding of raw protocol JSON before it becomes a provider-owned value.
 
 This follows old Argo's ADR-0047, which replaced its per-vendor machines with async clients and one generic session machine. Paseo has the same split between generic and vendor code, without XState.
 
 ## Considered Options
 
 - A machine per adapter, as first designed. Replaced: the copies drift, every adapter needs its own model-based tests for the same states, and the Claude machine mapped each message twice to decide whether a Turn ended.
-- A stateful class per vendor, as Paseo's `ClaudeAgentSession` is. Rejected: the mapping stays a pure function that recordings drive, with its state in the machine's context.
+- A stateful class per vendor, as Paseo's `ClaudeAgentSession` is. Rejected: the mapping stays a pure function that typed response fixtures drive, with its state in the machine's context.
 - Zod schemas for every vendor message. Replaced: the SDK already types its messages, and the Feed checks the result against the contract.

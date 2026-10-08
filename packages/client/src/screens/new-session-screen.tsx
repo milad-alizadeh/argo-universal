@@ -1,5 +1,8 @@
+import type { AppRouter } from '@repo/api';
 import type { SessionConfigOption, SessionNewInput } from '@repo/contracts';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import type { inferRouterOutputs } from '@trpc/server';
+import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
@@ -12,8 +15,31 @@ import { useContentWide } from '../components/content-layout';
 import { useImageDraft } from '../components/use-image-draft';
 import { useConnectionState } from '../connection/context';
 import { useNavigate } from '../navigation/context';
+import type { ClientError } from '../trpc/context';
 import { useTRPC } from '../trpc/context';
 import { useAgents } from '../trpc/use-agents';
+
+type ProjectsQuery = ReturnType<
+  typeof useQuery<
+    inferRouterOutputs<AppRouter>['projects']['list'],
+    ClientError
+  >
+>;
+interface SessionChoices {
+  projects: ProjectsQuery;
+  agents: ReturnType<typeof useAgents>;
+  project: NonNullable<ProjectsQuery['data']>[number] | undefined;
+  agent: NonNullable<ReturnType<typeof useAgents>['data']>[number] | undefined;
+  configOptions: SessionConfigOption[];
+  inNewWorktree: boolean;
+  baseBranch: string;
+  baseBranchLoaded: boolean;
+  settings: SessionSettings | undefined;
+  chooseProject: (id: string) => void;
+  chooseAgent: (agent: string) => void;
+  chooseConfigValue: (configId: string, value: string | boolean) => void;
+  chooseNewWorktree: React.Dispatch<React.SetStateAction<boolean | undefined>>;
+}
 
 export interface NewSessionScreenProps {
   // The Project whose heading + opened this page.
@@ -36,7 +62,7 @@ function withChosenValue(
 }
 
 // The reader's choices of where and how the Session runs, over the Project's and Agents' defaults.
-function useSessionChoices(projectId: string | undefined) {
+function useSessionChoices(projectId: string | undefined): SessionChoices {
   const trpc = useTRPC();
   const projects = useQuery(trpc.projects.list.queryOptions());
   const agents = useAgents();
@@ -145,7 +171,18 @@ function sendErrorMessage(
 }
 
 // The Composer's draft, and the Send that uploads its images, starts the Session, and opens it in this page's place.
-function useStartSession(onStartFailed: () => void) {
+function useStartSession(onStartFailed: () => void): Pick<
+  ReturnType<typeof useImageDraft>,
+  'draft' | 'changeDraft' | 'attachImages'
+> & {
+  startSession: (
+    sent: ComposerDraft,
+    settings: SessionSettings,
+  ) => Promise<void>;
+  clearSendErrors: () => void;
+  sending: boolean;
+  sendError: string | undefined;
+} {
   const trpc = useTRPC();
   const navigate = useNavigate();
   const {
@@ -165,12 +202,15 @@ function useStartSession(onStartFailed: () => void) {
   );
 
   // Clears the last Send's upload or start error.
-  function clearSendErrors() {
+  function clearSendErrors(): void {
     imageUpload.reset();
     newSession.reset();
   }
 
-  async function startSession(sent: ComposerDraft, settings: SessionSettings) {
+  async function startSession(
+    sent: ComposerDraft,
+    settings: SessionSettings,
+  ): Promise<void> {
     clearSendErrors();
     const prompt = await uploadDraftAsPrompt(sent);
     if (prompt) newSession.mutate({ ...settings, prompt });
@@ -189,7 +229,7 @@ function useStartSession(onStartFailed: () => void) {
   };
 }
 
-function NewSessionHeading() {
+function NewSessionHeading(): React.JSX.Element {
   return (
     <View className="w-full max-w-composer gap-2 px-4">
       <Text
@@ -204,7 +244,9 @@ function NewSessionHeading() {
 }
 
 // Starts a Session: where it runs, then the Composer; sending replaces this page with the Session.
-export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
+export function NewSessionScreen({
+  projectId,
+}: NewSessionScreenProps): React.JSX.Element {
   const wide = useContentWide();
   const trpc = useTRPC();
   const navigate = useNavigate();
@@ -284,7 +326,6 @@ export function NewSessionScreen({ projectId }: NewSessionScreenProps) {
             error={
               agent && !agentAvailable ? agent.installStep : send.sendError
             }
-            phoneCheckout={false}
             configuration={{
               agents: agents.data,
               agent: agent?.agent ?? '',
