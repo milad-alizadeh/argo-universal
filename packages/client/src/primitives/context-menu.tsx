@@ -18,10 +18,7 @@ import { cn } from '#lib/utils';
 import { Icon } from '#primitives/icon';
 import { NativeOnlyAnimatedView } from '#primitives/native-only-animated-view';
 import { TextClassContext } from '#primitives/text';
-
-const menuItemClassName =
-  'focus:bg-accent focus:text-accent-foreground cursor-default outline-none data-[disabled]:pointer-events-none';
-const disabledClassName = 'opacity-50';
+import { disabledMenuItemClassName, menuItemClassName } from './menu-styles';
 
 const ContextMenu = ContextMenuPrimitive.Root;
 const ContextMenuTrigger = ContextMenuPrimitive.Trigger;
@@ -181,7 +178,7 @@ function ContextMenuItem({
           }),
           variant === 'destructive' &&
             'active:bg-destructive/10 dark:active:bg-destructive/20',
-          props.disabled && disabledClassName,
+          props.disabled && disabledMenuItemClassName,
           inset && 'pl-8',
           className,
         )}
@@ -206,7 +203,7 @@ function ContextMenuCheckboxItem({
           Platform.select({
             web: menuItemClassName,
           }),
-          props.disabled && disabledClassName,
+          props.disabled && disabledMenuItemClassName,
           className,
         )}
         {...props}
@@ -243,7 +240,7 @@ function ContextMenuRadioItem({
           Platform.select({
             web: menuItemClassName,
           }),
-          props.disabled && disabledClassName,
+          props.disabled && disabledMenuItemClassName,
           className,
         )}
         {...props}
