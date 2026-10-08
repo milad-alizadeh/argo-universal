@@ -53,8 +53,7 @@ interface AppServer {
 export function openAppServer(input: AppServerInput): AppServer {
   const { state, close } = transport(input);
   return {
-    request: (method, params): ReturnType<AppServer['request']> =>
-      requestMethod(state, method, params),
+    request: requestFor(state),
     respond: (request, result): boolean =>
       sendFrame(state, { id: request.id, result }),
     notify: (method): boolean => sendFrame(state, { method }),
@@ -63,3 +62,11 @@ export function openAppServer(input: AppServerInput): AppServer {
 }
 export type AccountIdentity = Account;
 export type ModelListPage = ModelListResponse;
+
+const requestFor =
+  (state: ReturnType<typeof createProcessState>): AppServer['request'] =>
+  <Method extends keyof Requests>(
+    method: Method,
+    params: Requests[Method][0],
+  ): Promise<Requests[Method][1]> =>
+    requestMethod(state, method, params);

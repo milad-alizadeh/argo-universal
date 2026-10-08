@@ -29,12 +29,13 @@ import { type ProcessState, withStderr } from './app-server-process';
 import { responseValidators } from './payloads';
 export const sendFrame = (state: ProcessState, message: unknown): boolean =>
   state.child.stdin.write(`${JSON.stringify(message)}\n`);
-const resolveResponse = <Method extends keyof Requests>(input: {
-  method: Method;
-  result: unknown;
-  resolve: (response: Requests[Method][1]) => void;
-  reject: (error: Error) => void;
-}): void => {
+type ResponseInput<Method extends keyof Requests> = Pick<
+  PendingRequest<Method>,
+  'method' | 'resolve' | 'reject'
+> & { result: unknown };
+const resolveResponse = <Method extends keyof Requests>(
+  input: ResponseInput<Method>,
+): void => {
   if (responseValidators[input.method](input.result))
     input.resolve(input.result);
   else input.reject(new Error(`Invalid app-server response: ${input.method}`));
