@@ -4,6 +4,11 @@ import type {
   SessionConfigSelectOption,
 } from '@repo/contracts';
 import type { AgentConfigValue } from '../src/agent-events';
+import {
+  changeValue as changeConfigValue,
+  effortLevelName,
+  hasEffortLevels,
+} from '../src/config-options';
 import type { Model, ReasoningEffort } from './protocol.gen';
 export type { Model } from './protocol.gen';
 
@@ -26,10 +31,7 @@ const modeMetadata = {
   Mode,
   NonNullable<SessionConfigOption['_meta']>['argo'] & { icon: ConfigOptionIcon }
 >;
-
 const isMode = (value: string): value is Mode => value in modeNames;
-const isConfigId = (value: string): value is keyof ConfigValues =>
-  value === 'mode' || value === 'model' || value === 'effort';
 
 export interface ConfigValues {
   model: string;
@@ -73,18 +75,20 @@ export function changeValue(
   values: ConfigValues,
   change: AgentConfigValue,
 ): ConfigValues | undefined {
-  if (!isConfigId(change.configId)) return undefined;
-  const next = allowedValues(models, {
-    ...values,
-    [change.configId]: change.value,
-  });
-  return next[change.configId] === change.value ? next : undefined;
+  return changeConfigValue(
+    (wanted): ConfigValues => allowedValues(models, wanted),
+    values,
+    change,
+  );
 }
+
 export function toConfigOptions(
   models: Model[],
   values: ConfigValues,
 ): SessionConfigOption[] {
-  return [
+  const levels =
+    modelFor(models, values.model)?.supportedReasoningEfforts ?? [];
+  const options: SessionConfigOption[] = [
     {
       type: 'select',
       configId: 'mode',
@@ -96,8 +100,8 @@ export function toConfigOptions(
         .map((value): SessionConfigSelectOption => ({
           value,
           name: modeNames[value],
-          _meta: { argo: modeMetadata[value] },
           description: modeDescriptions[value],
+          _meta: { argo: modeMetadata[value] },
         })),
     },
     {
@@ -122,20 +126,19 @@ export function toConfigOptions(
         },
       })),
     },
+  ];
+  if (!hasEffortLevels(levels)) return options;
+  return [
+    ...options,
     {
       type: 'select',
       configId: 'effort',
       name: 'Effort',
       category: 'thought_level',
       currentValue: values.effort,
-      options: (
-        modelFor(models, values.model)?.supportedReasoningEfforts ?? []
-      ).map((option): SessionConfigSelectOption => ({
+      options: levels.map((option): SessionConfigSelectOption => ({
         value: option.reasoningEffort,
-        name:
-          option.reasoningEffort === 'xhigh'
-            ? 'Extra high'
-            : `${option.reasoningEffort.charAt(0).toUpperCase()}${option.reasoningEffort.slice(1)}`,
+        name: effortLevelName(option.reasoningEffort),
         description: option.description,
       })),
     },
