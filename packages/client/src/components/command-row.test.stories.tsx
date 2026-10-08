@@ -14,6 +14,11 @@ import {
 } from '../../mocks/tool-call-mock';
 import { CommandRow } from './command-row';
 
+const commandTitle = 'Show hello.txt and short git status';
+const shellCommand = '$ cat hello.txt && git status --short';
+const expandedAttribute = 'aria-expanded';
+const completedCommandTitle = 'Ran command';
+
 const meta = {
   title: 'Tests/CommandRow',
   component: CommandRow,
@@ -27,13 +32,13 @@ function completed(width: number): Story {
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       const row = canvas.getByRole('button', {
-        name: 'Show hello.txt and short git status',
+        name: commandTitle,
       });
       await expect(row).toBeVisible();
       await expect(row).toHaveTextContent('short git status 0.3s');
       await expect(canvas.queryByText('Shell')).not.toBeInTheDocument();
       await expect(
-        canvas.queryByText('$ cat hello.txt && git status --short', {
+        canvas.queryByText(shellCommand, {
           exact: false,
         }),
       ).not.toBeInTheDocument();
@@ -41,18 +46,18 @@ function completed(width: number): Story {
         'cat hello.txt && git status --short',
       );
       await expect(canvas.queryByText(/hello Argo/)).not.toBeInTheDocument();
-      await expect(row).toHaveAttribute('aria-expanded', 'false');
+      await expect(row).toHaveAttribute(expandedAttribute, 'false');
       await userEvent.click(row);
       await expect(canvas.getByText('Shell')).toBeVisible();
       await expect(
-        canvas.getByText('$ cat hello.txt && git status --short', {
+        canvas.getByText(shellCommand, {
           exact: false,
         }),
       ).toBeVisible();
       await expect(canvas.getByText('Completed')).toBeVisible();
       await expect(row).toHaveTextContent(completedCommand.title);
       await userEvent.click(row);
-      await expect(row).toHaveAttribute('aria-expanded', 'false');
+      await expect(row).toHaveAttribute(expandedAttribute, 'false');
       await waitFor(() =>
         expect(canvas.queryByText('Shell')).not.toBeInTheDocument(),
       );
@@ -67,14 +72,14 @@ function outputDisclosure(width: number): Story {
     args: { row: longOutputCommand },
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
-      const row = canvas.getByRole('button', { name: 'Ran command' });
+      const row = canvas.getByRole('button', { name: completedCommandTitle });
       await expect(
         canvas.queryByText(/\nPreparing checks\nChecking files/, {
           normalizer: (value) => value,
         }),
       ).not.toBeInTheDocument();
       await expect(canvas.queryByText('Shell')).not.toBeInTheDocument();
-      await expect(row).toHaveAccessibleName('Ran command');
+      await expect(row).toHaveAccessibleName(completedCommandTitle);
       await expect(
         canvas.queryByText(/hello Argo\n M hello.txt\n\?\? notes.md$/, {
           normalizer: (value) => value,
@@ -107,7 +112,7 @@ function failed(width: number): Story {
       await expect(failure).toBeVisible();
       await expect(canvas.queryByText('Exit 2')).not.toBeInTheDocument();
       await userEvent.click(
-        canvas.getByRole('button', { name: 'Ran command' }),
+        canvas.getByRole('button', { name: completedCommandTitle }),
       );
       const exit = canvas.getByText('Exit 2');
       await expect(exit).toBeVisible();
@@ -126,13 +131,13 @@ function running(width: number): Story {
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       const row = canvas.getByRole('button', {
-        name: 'Show hello.txt and short git status',
+        name: commandTitle,
       });
       await expect(row).toBeVisible();
       await expect(row).toHaveTextContent('short git status 23s');
       await expect(canvas.queryByText('Shell')).not.toBeInTheDocument();
       await expect(
-        canvas.queryByText('$ cat hello.txt && git status --short', {
+        canvas.queryByText(shellCommand, {
           exact: false,
         }),
       ).not.toBeInTheDocument();
@@ -144,7 +149,7 @@ function running(width: number): Story {
       await userEvent.click(row);
       await expect(canvas.getByText('Shell')).toBeVisible();
       await expect(
-        canvas.getByText('$ cat hello.txt && git status --short', {
+        canvas.getByText(shellCommand, {
           exact: false,
         }),
       ).toBeVisible();
@@ -171,15 +176,12 @@ function agentParity(width: number): Story {
     ),
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
-      for (const label of [
-        'Show hello.txt and short git status',
-        'Ran command',
-      ]) {
+      for (const label of [commandTitle, completedCommandTitle]) {
         const row = canvas.getByRole('button', { name: label });
         await expect(row).toBeVisible();
-        await expect(row).toHaveAttribute('aria-expanded', 'false');
+        await expect(row).toHaveAttribute(expandedAttribute, 'false');
         await userEvent.click(row);
-        await expect(row).toHaveAttribute('aria-expanded', 'true');
+        await expect(row).toHaveAttribute(expandedAttribute, 'true');
       }
     },
   };

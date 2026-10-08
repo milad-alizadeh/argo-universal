@@ -2,14 +2,17 @@ import { expect, it } from 'vitest';
 import { changeValue, startingValues, toConfigOptions } from './config-options';
 import { response } from './mocks/models';
 
+const savedModelId = 'gpt-5.6-luna';
+const defaultModelId = 'gpt-6-astra';
+
 const models = response.data;
 it('offers the recorded models and the selected model’s effort choices', (): void => {
   const values = startingValues(models, [
-    { configId: 'model', value: 'gpt-5.6-luna' },
+    { configId: 'model', value: savedModelId },
     { configId: 'effort', value: 'high' },
   ]);
   expect(values).toEqual({
-    model: 'gpt-5.6-luna',
+    model: savedModelId,
     effort: 'high',
     mode: 'default',
   });
@@ -17,9 +20,9 @@ it('offers the recorded models and the selected model’s effort choices', (): v
     expect.arrayContaining([
       expect.objectContaining({
         configId: 'model',
-        currentValue: 'gpt-5.6-luna',
+        currentValue: savedModelId,
         options: expect.arrayContaining([
-          expect.objectContaining({ value: 'gpt-6-astra' }),
+          expect.objectContaining({ value: defaultModelId }),
         ]),
       }),
       expect.objectContaining({
@@ -38,7 +41,7 @@ it('uses the catalog default when the saved model no longer exists and rejects a
     { configId: 'effort', value: 'unknown' },
   ]);
   expect(values).toEqual({
-    model: 'gpt-6-astra',
+    model: defaultModelId,
     effort: 'medium',
     mode: 'default',
   });
@@ -71,7 +74,7 @@ it('marks Plan and dangerous modes and previews each model’s support flags', (
         configId: 'model',
         options: expect.arrayContaining([
           expect.objectContaining({
-            value: 'gpt-6-astra',
+            value: defaultModelId,
             _meta: { argo: expect.objectContaining({ supportsEffort: true }) },
           }),
         ]),

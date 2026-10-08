@@ -11,6 +11,10 @@ import {
 } from '../../mocks/tool-call-mock';
 import { ToolCallGroup } from './tool-call-group';
 
+const commandAndFileSummary = 'Ran 1 command, Read 1 file';
+const readFileTitle = 'Read /project/hello.txt';
+const commandTitle = 'Show hello.txt and short git status';
+
 const meta = {
   title: 'Tests/ToolCallGroup',
   component: ToolCallGroup,
@@ -28,7 +32,7 @@ function settled(width: number): Story {
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       const group = canvas.getByRole('button', {
-        name: 'Ran 1 command, Read 1 file',
+        name: commandAndFileSummary,
       });
       await expect(group).toBeVisible();
       await expect(within(group).queryByText('0.3s')).not.toBeInTheDocument();
@@ -37,11 +41,11 @@ function settled(width: number): Story {
       ).toHaveLength(0);
       await userEvent.click(group);
       await expect(
-        canvas.getByRole('button', { name: 'Read /project/hello.txt' }),
+        canvas.getByRole('button', { name: readFileTitle }),
       ).toBeVisible();
       await expect(
         canvas.getAllByRole('button', {
-          name: 'Show hello.txt and short git status',
+          name: commandTitle,
         }),
       ).toHaveLength(1);
       await userEvent.click(group);
@@ -62,7 +66,7 @@ function running(width: number): Story {
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       const group = canvas.getByRole('button', {
-        name: 'Show hello.txt and short git status',
+        name: commandTitle,
       });
       await expect(group).toBeVisible();
       await expect(canvas.queryByRole('progressbar')).not.toBeInTheDocument();
@@ -74,11 +78,11 @@ function running(width: number): Story {
       ).toHaveLength(0);
       await userEvent.click(group);
       await expect(
-        canvas.getByRole('button', { name: 'Read /project/hello.txt' }),
+        canvas.getByRole('button', { name: readFileTitle }),
       ).toBeVisible();
       await expect(
         canvas.getAllByRole('button', {
-          name: 'Show hello.txt and short git status',
+          name: commandTitle,
         }),
       ).toHaveLength(1);
       await expect(canvas.queryByText('Shell')).not.toBeInTheDocument();
@@ -145,12 +149,12 @@ export const OpenCompletedHistory: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(
       canvas.getByRole('button', {
-        name: 'Ran 1 command, Read 1 file',
+        name: commandAndFileSummary,
       }),
     );
     await expect(
       canvas.getAllByRole('button', {
-        name: 'Show hello.txt and short git status',
+        name: commandTitle,
       }),
     ).toHaveLength(1);
   },
@@ -168,14 +172,14 @@ function agentParity(width: number): Story {
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       const groups = canvas.getAllByRole('button', {
-        name: 'Ran 1 command, Read 1 file',
+        name: commandAndFileSummary,
       });
       await expect(
         canvas.queryAllByRole('button', { name: /^Read / }),
       ).toHaveLength(0);
       for (const group of groups) await userEvent.click(group);
       await expect(
-        canvas.getByRole('button', { name: 'Read /project/hello.txt' }),
+        canvas.getByRole('button', { name: readFileTitle }),
       ).toBeVisible();
       await expect(
         canvas.getByRole('button', { name: 'Read /repo/app.txt' }),
@@ -207,12 +211,12 @@ function runningReadGroup(width: number): Story {
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       const header = canvas.getByRole('button', {
-        name: 'Read /project/hello.txt',
+        name: readFileTitle,
       });
       await expect(header).toHaveTextContent('Read /project/hello.txt 23s');
       await userEvent.click(header);
       await expect(
-        canvas.getAllByRole('button', { name: 'Read /project/hello.txt' }),
+        canvas.getAllByRole('button', { name: readFileTitle }),
       ).toHaveLength(1);
       await expect(canvas.queryByText('hello.txt', { exact: true })).toBeNull();
     },

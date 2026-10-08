@@ -10,6 +10,9 @@ import { z } from 'zod';
 import { createRequestGuard } from './request-guard';
 import { createRequestListener } from './request-listener';
 
+const pingRoute = '/trpc/ping';
+const uploadRoute = '/trpc/upload';
+
 const blobBytes = new TextEncoder().encode('blob content');
 const blobId = createHash('sha256').update(blobBytes).digest('hex');
 
@@ -187,13 +190,13 @@ describe('request listener', (): void => {
   });
 
   it('answers a tRPC query over HTTP at /trpc/', async (): Promise<void> => {
-    const response = await send({ path: '/trpc/ping' });
+    const response = await send({ path: pingRoute });
     expect(response.status).toBe(200);
     expect(JSON.parse(response.body)).toEqual({ result: { data: 'pong' } });
   });
 
   it('hands an upload body to tRPC unread', async (): Promise<void> => {
-    const response = await formRequest('/trpc/upload', uploadForm());
+    const response = await formRequest(uploadRoute, uploadForm());
     expect(response.status).toBe(200);
     expect(JSON.parse(response.body)).toEqual({
       result: { data: { name: 'notes.txt', text: 'file content' } },
@@ -217,7 +220,7 @@ describe('request listener', (): void => {
   ])(
     'lets %s call tRPC and read the answer',
     async (_name, origin): Promise<void> => {
-      const response = await formRequest('/trpc/upload', uploadForm(), origin);
+      const response = await formRequest(uploadRoute, uploadForm(), origin);
       expect(response.status).toBe(200);
       expect(response.headers['access-control-allow-origin']).toBe(origin);
     },
@@ -226,7 +229,7 @@ describe('request listener', (): void => {
   it.each(['https://evil.example', 'null'])(
     'refuses a tRPC call from the Origin %s and counts it',
     async (origin): Promise<void> => {
-      const response = await formRequest('/trpc/upload', uploadForm(), origin);
+      const response = await formRequest(uploadRoute, uploadForm(), origin);
       expect(response.status).toBe(403);
       expect(response.headers['access-control-allow-origin']).toBeUndefined();
       expect(console.error).toHaveBeenCalledExactlyOnceWith(
@@ -235,7 +238,7 @@ describe('request listener', (): void => {
     },
   );
 
-  it.each([`/blobs/${blobId}`, '/trpc/ping'])(
+  it.each([`/blobs/${blobId}`, pingRoute])(
     'answers 403 to %s from another Host and counts it',
     async (path): Promise<void> => {
       const response = await send({
@@ -251,7 +254,7 @@ describe('request listener', (): void => {
 
   it('answers 403 to a Host that is not a plain host and port', async (): Promise<void> => {
     const response = await send({
-      path: '/trpc/ping',
+      path: pingRoute,
       headers: { host: `evil.example@${host}` },
     });
     expect(response.status).toBe(403);

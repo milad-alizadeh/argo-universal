@@ -33,6 +33,14 @@ import { useConnection } from '../connection/context';
 import type { ConnectionActor } from '../connection/open-connection';
 import { SessionsScreen } from './sessions-screen';
 
+const settingsPrompt = 'Build the settings screen';
+const exampleProjectName = 'Example Project';
+const sessionsLoadFailure = "Couldn't load Sessions";
+const searchPlaceholder = 'Search Sessions';
+const sessionsScrollId = 'sessions-scroll';
+const topFadeId = 'scroll-fade-top';
+const subscriptionStoppedMessage = 'Live updates stopped';
+
 const recorder = createNavigationRecorder();
 const meta = {
   title: 'Tests/SessionsScreen',
@@ -55,23 +63,21 @@ function projectCollapse(width: number, mode: Mode): Story {
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       await expect(
-        (await canvas.findAllByText('Build the settings screen'))[0],
+        (await canvas.findAllByText(settingsPrompt))[0],
       ).toBeVisible();
       await userEvent.click(
-        canvas.getByRole('button', { name: 'Example Project' }),
+        canvas.getByRole('button', { name: exampleProjectName }),
       );
       await waitFor(() =>
-        expect(canvas.queryAllByText('Build the settings screen')).toHaveLength(
-          0,
-        ),
+        expect(canvas.queryAllByText(settingsPrompt)).toHaveLength(0),
       );
       const heading = canvas.getByRole('button', {
-        name: 'Example Project',
+        name: exampleProjectName,
       });
       await expect(heading).toHaveAttribute('aria-expanded', 'false');
       await userEvent.click(heading);
       await expect(
-        (await canvas.findAllByText('Build the settings screen'))[0],
+        (await canvas.findAllByText(settingsPrompt))[0],
       ).toBeVisible();
     },
   };
@@ -120,7 +126,7 @@ export const Empty: Story = {
     eachLayout(async () => {
       await expect(await canvas.findByText('No Sessions yet.')).toBeVisible();
       await expect(
-        canvas.getByRole('button', { name: 'Example Project' }),
+        canvas.getByRole('button', { name: exampleProjectName }),
       ).toBeVisible();
     }),
 };
@@ -130,13 +136,9 @@ function errorAndRetry(width: number, mode: Mode): Story {
     globals: { mode },
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
-      await expect(
-        await canvas.findByText("Couldn't load Sessions"),
-      ).toBeVisible();
+      await expect(await canvas.findByText(sessionsLoadFailure)).toBeVisible();
       await userEvent.click(canvas.getByRole('button', { name: 'Retry' }));
-      await expect(
-        await canvas.findByText("Couldn't load Sessions"),
-      ).toBeVisible();
+      await expect(await canvas.findByText(sessionsLoadFailure)).toBeVisible();
     },
   };
 }
@@ -154,13 +156,13 @@ function search(width: number, mode: Mode): Story {
       await settleViewport(width);
       await expect(canvas.queryByRole('textbox')).toBeNull();
       await userEvent.click(
-        canvas.getByRole('button', { name: 'Search Sessions' }),
+        canvas.getByRole('button', { name: searchPlaceholder }),
       );
-      const input = canvas.getByRole('textbox', { name: 'Search Sessions' });
+      const input = canvas.getByRole('textbox', { name: searchPlaceholder });
       await waitFor(() => expect(input).toHaveFocus());
       await userEvent.type(input, 'settings');
       await expect(
-        (await canvas.findAllByText('Build the settings screen'))[0],
+        (await canvas.findAllByText(settingsPrompt))[0],
       ).toBeVisible();
       await waitFor(() =>
         expect(
@@ -173,7 +175,7 @@ function search(width: number, mode: Mode): Story {
         await canvas.findByText('No matching Sessions'),
       ).toBeVisible();
       await expect(
-        canvas.queryByRole('button', { name: 'Example Project' }),
+        canvas.queryByRole('button', { name: exampleProjectName }),
       ).toBeNull();
       await userEvent.keyboard('{Escape}');
       await expect(
@@ -219,7 +221,7 @@ function searchMorph(width: number, mode: Mode): Story {
       await waitFor(() =>
         expect(surface.getBoundingClientRect().width).toBeCloseTo(
           canvas
-            .getByRole('button', { name: 'Search Sessions' })
+            .getByRole('button', { name: searchPlaceholder })
             .getBoundingClientRect().width,
           0,
         ),
@@ -227,11 +229,11 @@ function searchMorph(width: number, mode: Mode): Story {
       const collapsedWidth = surface.getBoundingClientRect().width;
       // One plain open and close. Closing with a query clears the list filter, and that render can swallow the whole animation, so the query is checked below.
       const openingWidths = await measureTransition(
-        canvas.getByRole('button', { name: 'Search Sessions' }),
+        canvas.getByRole('button', { name: searchPlaceholder }),
       );
       await waitFor(() =>
         expect(
-          canvas.getByRole('textbox', { name: 'Search Sessions' }),
+          canvas.getByRole('textbox', { name: searchPlaceholder }),
         ).toHaveFocus(),
       );
       const expandedWidth = surface.getBoundingClientRect().width;
@@ -251,10 +253,10 @@ function searchMorph(width: number, mode: Mode): Story {
       await expect(openingWidths.some(isBetween)).toBe(true);
       await expect(closingWidths.some(isBetween)).toBe(true);
       await userEvent.click(
-        canvas.getByRole('button', { name: 'Search Sessions' }),
+        canvas.getByRole('button', { name: searchPlaceholder }),
       );
       await userEvent.type(
-        canvas.getByRole('textbox', { name: 'Search Sessions' }),
+        canvas.getByRole('textbox', { name: searchPlaceholder }),
         'settings',
       );
       await userEvent.click(
@@ -262,14 +264,14 @@ function searchMorph(width: number, mode: Mode): Story {
       );
       await waitFor(() => expect(canvas.queryByRole('textbox')).toBeNull());
       await userEvent.click(
-        canvas.getByRole('button', { name: 'Search Sessions' }),
+        canvas.getByRole('button', { name: searchPlaceholder }),
       );
       await expect(
-        canvas.getByRole('textbox', { name: 'Search Sessions' }),
+        canvas.getByRole('textbox', { name: searchPlaceholder }),
       ).toHaveValue('');
       await waitFor(() =>
         expect(
-          canvas.getByRole('textbox', { name: 'Search Sessions' }),
+          canvas.getByRole('textbox', { name: searchPlaceholder }),
         ).toHaveFocus(),
       );
       await userEvent.keyboard('{Escape}');
@@ -290,7 +292,7 @@ function archivedFilter(width: number, mode: Mode): Story {
       const archivedTitle = archivedSessions.sessions[0]?.title;
       if (!archivedTitle) throw new Error('Missing archived Session mock');
       await expect(
-        (await canvas.findAllByText('Build the settings screen'))[0],
+        (await canvas.findAllByText(settingsPrompt))[0],
       ).toBeVisible();
       await expect(canvas.queryByText(archivedTitle)).toBeNull();
       await userEvent.click(
@@ -300,9 +302,7 @@ function archivedFilter(width: number, mode: Mode): Story {
         within(document.body).getByRole('menuitemradio', { name: 'Archived' }),
       );
       await expect(await canvas.findByText(archivedTitle)).toBeVisible();
-      await expect(
-        canvas.queryAllByText('Build the settings screen'),
-      ).toHaveLength(0);
+      await expect(canvas.queryAllByText(settingsPrompt)).toHaveLength(0);
       await userEvent.click(
         canvas.getByRole('button', { name: 'Filter Sessions' }),
       );
@@ -310,7 +310,7 @@ function archivedFilter(width: number, mode: Mode): Story {
         within(document.body).getByRole('menuitemradio', { name: 'Active' }),
       );
       await expect(
-        (await canvas.findAllByText('Build the settings screen'))[0],
+        (await canvas.findAllByText(settingsPrompt))[0],
       ).toBeVisible();
     },
   };
@@ -349,7 +349,7 @@ function navigation(width: number, mode: Mode): Story {
       await expect(recorder.destinations).toEqual([
         { to: 'session', id: 'agent-one:session-running' },
       ]);
-      const heading = canvas.getByRole('button', { name: 'Example Project' });
+      const heading = canvas.getByRole('button', { name: exampleProjectName });
       await userEvent.hover(heading);
       recorder.reset();
       await userEvent.click(
@@ -366,7 +366,7 @@ function navigation(width: number, mode: Mode): Story {
         }),
       );
       await expect(recorder.destinations).toEqual([
-        { to: 'settings-project', name: 'Example Project' },
+        { to: 'settings-project', name: exampleProjectName },
       ]);
       await expect(heading).toHaveAttribute('aria-expanded', 'true');
     },
@@ -442,9 +442,7 @@ export const LiveUpdates: Story = {
       type: 'removed',
       sessionId: sessionRows.running.sessionId,
     });
-    await waitFor(() =>
-      expect(canvas.queryByText('Build the settings screen')).toBeNull(),
-    );
+    await waitFor(() => expect(canvas.queryByText(settingsPrompt)).toBeNull());
   },
 };
 
@@ -454,8 +452,8 @@ export const NextPageFailure: Story = {
     await expect(
       await canvas.findByText("Couldn't load more Sessions"),
     ).toBeVisible();
-    await expect(canvas.getByText('Build the settings screen')).toBeVisible();
-    await expect(canvas.queryByText("Couldn't load Sessions")).toBeNull();
+    await expect(canvas.getByText(settingsPrompt)).toBeVisible();
+    await expect(canvas.queryByText(sessionsLoadFailure)).toBeNull();
     await expect(canvas.getAllByRole('button', { name: 'Retry' })).toHaveLength(
       1,
     );
@@ -465,26 +463,20 @@ export const NextPageFailure: Story = {
 export const ScrollFade: Story = {
   play: async ({ canvas }) =>
     eachLayout(async () => {
-      const scroll = await canvas.findByTestId('sessions-scroll');
+      const scroll = await canvas.findByTestId(sessionsScrollId);
       scroll.scrollTop = 0;
       await waitFor(() =>
         expect(canvas.getByTestId('scroll-fade-bottom')).toBeVisible(),
       );
-      await waitFor(() =>
-        expect(canvas.queryByTestId('scroll-fade-top')).toBeNull(),
-      );
+      await waitFor(() => expect(canvas.queryByTestId(topFadeId)).toBeNull());
       scroll.scrollTop = 200;
-      await waitFor(() =>
-        expect(canvas.getByTestId('scroll-fade-top')).toBeVisible(),
-      );
+      await waitFor(() => expect(canvas.getByTestId(topFadeId)).toBeVisible());
       scroll.scrollTop = scroll.scrollHeight;
       await waitFor(() =>
         expect(canvas.getByTestId('scroll-fade-bottom')).toBeVisible(),
       );
       scroll.scrollTop = 0;
-      await waitFor(() =>
-        expect(canvas.queryByTestId('scroll-fade-top')).toBeNull(),
-      );
+      await waitFor(() => expect(canvas.queryByTestId(topFadeId)).toBeNull());
     }),
 };
 
@@ -498,13 +490,13 @@ export const NextPageLoading: Story = {
       await expect(spinner).toBeVisible();
       await waitFor(async () => {
         const viewport = canvas
-          .getByTestId('sessions-scroll')
+          .getByTestId(sessionsScrollId)
           .getBoundingClientRect();
         const indicator = spinner.getBoundingClientRect();
         await expect(indicator.top).toBeGreaterThanOrEqual(viewport.top);
         await expect(indicator.bottom).toBeLessThanOrEqual(viewport.bottom);
       });
-      await expect(canvas.getByText('Build the settings screen')).toBeVisible();
+      await expect(canvas.getByText(settingsPrompt)).toBeVisible();
     }),
 };
 
@@ -527,7 +519,7 @@ const reconnectMocks = {
   > {
     reconnectCalls.listUpdates += 1;
     if (reconnectCalls.listUpdates === 1)
-      throw new Error('Live updates stopped');
+      throw new Error(subscriptionStoppedMessage);
     yield {
       type: 'changed' as const,
       session: { ...sessionRows.idle, title: recoveredTitle },
@@ -630,12 +622,12 @@ function liveUpdatesRetry(width: number, agentIndex: 0 | 1): Story {
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       const alert = await canvas.findByRole('alert');
-      await expect(alert).toHaveTextContent('Live updates stopped');
+      await expect(alert).toHaveTextContent(subscriptionStoppedMessage);
       await expect(alert).toHaveTextContent(
         'The Sessions shown may be out of date.',
       );
       await expect(canvas.getByText(catalog.row.title)).toBeVisible();
-      await expect(canvas.queryByText("Couldn't load Sessions")).toBeNull();
+      await expect(canvas.queryByText(sessionsLoadFailure)).toBeNull();
       await expect(calls).toBe(1);
       await userEvent.click(
         within(alert).getByRole('button', { name: 'Retry' }),
@@ -682,7 +674,7 @@ export const OfflineDoesNotShowLiveUpdatesStopped: Story = {
       await expect(canvas.getByRole('status')).toHaveTextContent(
         'The Server is offline.',
       );
-      await expect(canvas.queryByText('Live updates stopped')).toBeNull();
+      await expect(canvas.queryByText(subscriptionStoppedMessage)).toBeNull();
       await expect(canvas.queryByRole('alert')).toBeNull();
     }),
 };
@@ -759,7 +751,7 @@ function streamingPagination(width: number, agentIndex: 0 | 1): Story {
       });
       await waitFor(() => expect(updates.calls.delivered).toBe(1));
       await waitFor(() => expect(updates.calls.active).toBe(1));
-      const scroll = canvas.getByTestId('sessions-scroll');
+      const scroll = canvas.getByTestId(sessionsScrollId);
       scroll.scrollTop = scroll.scrollHeight;
       await waitFor(() => expect(updates.calls.nextPage).toBeGreaterThan(0));
       const spinner = await canvas.findByRole('progressbar', {

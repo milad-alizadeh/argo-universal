@@ -10,7 +10,7 @@ import type { Database } from '@repo/db';
 import { TRPCError } from '@trpc/server';
 import { type ActorRefFrom, createActor } from 'xstate';
 import { z } from 'zod';
-import type { writerMachine } from '../feed';
+import { findDatabaseWriter, type writerMachine } from '../feed';
 import type { RegistryActorRef } from './registry-machine';
 import {
   type SessionListMachineInput,
@@ -31,9 +31,7 @@ export function createSessionList(options: {
 }): Pick<SessionService, 'list' | 'listUpdates' | 'counts'> {
   const { sessions } = options;
   const writer = (): ActorRefFrom<typeof writerMachine> | undefined =>
-    sessions.system.get('databaseWriter') as
-      | ActorRefFrom<typeof writerMachine>
-      | undefined;
+    findDatabaseWriter(sessions.system);
   const {
     readRows: readAll,
     sessionIdsForJobs,

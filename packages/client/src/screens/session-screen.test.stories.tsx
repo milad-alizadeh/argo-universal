@@ -37,6 +37,12 @@ import { createSubscriptionPublisher } from '../../mocks/subscription-publisher'
 import { type Fixtures, fails } from '../../mocks/trpc-mock-link';
 import { SessionScreen } from './session-screen';
 
+const feedScrollId = 'feed-scroll';
+const earlierFeedLoadingLabel = 'Loading earlier';
+const missingAgentsFailure = 'Recorded catalog needs both Agents.';
+const imagePickerDraft = 'Keep this draft while choosing images.';
+const failedImageName = 'failed-selection.png';
+
 const meta = {
   title: 'Tests/SessionScreen',
   component: SessionScreen,
@@ -195,7 +201,7 @@ export const Idle: Story = {
         expect(fullyInViewport(canvas.getByText('Redraws'))).toBe(true),
       );
       // Rows keep the screen's side margin, however narrow the Feed.
-      const feedScroll = canvas.getByTestId('feed-scroll');
+      const feedScroll = canvas.getByTestId(feedScrollId);
       const feed = feedScroll.getBoundingClientRect();
       const row = within(feedScroll)
         .getByText('Why every Feed row re-renders')
@@ -208,11 +214,11 @@ export const Idle: Story = {
 export const LoadingEarlier: Story = {
   parameters: { trpc: loadingOlderSessionMocks },
   play: async ({ canvas }) => {
-    const scroll = await canvas.findByTestId('feed-scroll');
+    const scroll = await canvas.findByTestId(feedScrollId);
     scrollUp(scroll, scroll.scrollTop);
     await eachLayout(async () => {
       const indicator = await canvas.findByRole('progressbar', {
-        name: 'Loading earlier',
+        name: earlierFeedLoadingLabel,
       });
       await waitFor(() => expect(fullyInViewport(indicator)).toBe(true));
     });
@@ -222,7 +228,7 @@ export const LoadingEarlier: Story = {
 export const PagesOlderRows: Story = {
   parameters: { trpc: longSessionMocks },
   play: async ({ canvas }) => {
-    const scroll = await canvas.findByTestId('feed-scroll');
+    const scroll = await canvas.findByTestId(feedScrollId);
     const feed = within(scroll);
     await expect(feed.queryAllByText(oldestMessage)).toHaveLength(0);
     // Reads back a screen at a time, as a reader does, until the oldest page has loaded and drawn.
@@ -302,7 +308,7 @@ export const KeepsPlaceWhenOlderRowsLoad: Story = {
   parameters: { trpc: heldOlderPageSessionMocks },
   play: async ({ canvas }) => {
     await resizeToPhoneWidth();
-    const scroll = await canvas.findByTestId('feed-scroll');
+    const scroll = await canvas.findByTestId(feedScrollId);
     await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
     // Reads back a screen at a time to the top; the page before is already on its way.
     await waitFor(
@@ -313,7 +319,7 @@ export const KeepsPlaceWhenOlderRowsLoad: Story = {
       { timeout: 15000, interval: 100 },
     );
     await expect(
-      canvas.getByRole('progressbar', { name: 'Loading earlier' }),
+      canvas.getByRole('progressbar', { name: earlierFeedLoadingLabel }),
     ).toBeVisible();
     // A screen down, past the top group, which an older page can extend.
     scroll.scrollTop = scroll.clientHeight;
@@ -337,7 +343,7 @@ export const KeepsPlaceWhenOlderRowsJoinAGroup: Story = {
   parameters: { trpc: splitGroupSessionMocks },
   play: async ({ canvas, userEvent }) => {
     await resizeToPhoneWidth();
-    const scroll = await canvas.findByTestId('feed-scroll');
+    const scroll = await canvas.findByTestId(feedScrollId);
     await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
     await waitFor(
       async () => {
@@ -347,7 +353,7 @@ export const KeepsPlaceWhenOlderRowsJoinAGroup: Story = {
       { timeout: 15000, interval: 100 },
     );
     await expect(
-      canvas.getByRole('progressbar', { name: 'Loading earlier' }),
+      canvas.getByRole('progressbar', { name: earlierFeedLoadingLabel }),
     ).toBeVisible();
     // The reader opens the group and reads one of its commands.
     await userEvent.click(
@@ -369,7 +375,7 @@ export const JumpsToLatest: Story = {
   parameters: { trpc: arrivingRowSessionMocks },
   play: async ({ canvas }) => {
     await resizeToPhoneWidth();
-    const scroll = await canvas.findByTestId('feed-scroll');
+    const scroll = await canvas.findByTestId(feedScrollId);
     const feed = within(scroll);
     await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
     await expect(
@@ -408,7 +414,7 @@ export const KeepsPlaceWhenRowOpens: Story = {
   parameters: { trpc: longSessionMocks },
   play: async ({ canvas }) => {
     await resizeToPhoneWidth();
-    const scroll = await canvas.findByTestId('feed-scroll');
+    const scroll = await canvas.findByTestId(feedScrollId);
     await waitFor(() => expect(scrolledToEnd(scroll)).toBe(true));
     // Away from the end, opening a row grows the Feed below it and leaves the rows above where they were.
     const closedRowInTopHalf = (): HTMLElement | undefined => {
@@ -496,7 +502,7 @@ export const EmptyFeed: Story = {
       await expect(
         await canvas.findByRole('heading', { name: 'What should we build?' }),
       ).toBeVisible();
-      await expect(canvas.queryByTestId('feed-scroll')).toBeNull();
+      await expect(canvas.queryByTestId(feedScrollId)).toBeNull();
       await expect(
         canvas.getByRole('textbox', { name: 'Message' }),
       ).toBeVisible();
@@ -536,7 +542,7 @@ export const AgentFailedToOpen: Story = {
 
 function closedFailure(width: number, agentIndex: 0 | 1): Story {
   const catalog = closureCatalogs[agentIndex];
-  if (!catalog) throw new Error('Recorded catalog needs both Agents.');
+  if (!catalog) throw new Error(missingAgentsFailure);
   const inputs: (FeedSyncPoint | null)[] = [];
   const mocks: Fixtures = {
     ...idleSessionMocks,
@@ -594,7 +600,7 @@ export const ClosedFailureWideSecondAgent = closedFailure(layoutWidths.wide, 1);
 
 function resumesClosedFeed(width: number, agentIndex: 0 | 1): Story {
   const catalog = closureCatalogs[agentIndex];
-  if (!catalog) throw new Error('Recorded catalog needs both Agents.');
+  if (!catalog) throw new Error(missingAgentsFailure);
   const inputs: (FeedSyncPoint | null)[] = [];
   let prompts = 0;
   const mocks: Fixtures = {
@@ -691,7 +697,7 @@ const uploadCatalogs = newSessionCatalogs.bothAvailable.map((agent, index) => {
 
 function failedUpload(width: number, agentIndex: 0 | 1): Story {
   const catalog = uploadCatalogs[agentIndex];
-  if (!catalog) throw new Error('Recorded catalog needs both Agents.');
+  if (!catalog) throw new Error(missingAgentsFailure);
   let calls = 0;
   const failure = 'The Server could not store the image.';
   return {
@@ -928,7 +934,7 @@ export const HeldConfigurationWideAgentTwo = heldConfiguration(
 );
 function failedPick(width: number, agentIndex: 0 | 1): Story {
   const catalog = uploadCatalogs[agentIndex];
-  if (!catalog) throw new Error('Recorded catalog needs both Agents.');
+  if (!catalog) throw new Error(missingAgentsFailure);
   let calls = 0;
   let restorePicker = (): void => {};
   return {
@@ -976,7 +982,7 @@ function failedPick(width: number, agentIndex: 0 | 1): Story {
       };
       await userEvent.type(
         await canvas.findByRole('textbox', { name: 'Message' }),
-        'Keep this draft while choosing images.',
+        imagePickerDraft,
       );
       await attachImage(catalog.image.name);
       await expect(
@@ -989,7 +995,7 @@ function failedPick(width: number, agentIndex: 0 | 1): Story {
       );
       restorePicker = (): void => picker.mockRestore();
       try {
-        await attachImage('failed-selection.png');
+        await attachImage(failedImageName);
         const alert = await canvas.findByRole('alert');
         await expect(alert.textContent).toBe(
           "Couldn't select images. Try again.",
@@ -997,12 +1003,12 @@ function failedPick(width: number, agentIndex: 0 | 1): Story {
         await expect(alert).toBeVisible();
         await expect(
           canvas.getByRole('textbox', { name: 'Message' }),
-        ).toHaveValue('Keep this draft while choosing images.');
+        ).toHaveValue(imagePickerDraft);
         await expect(
           canvas.getByRole('img', { name: catalog.image.name }),
         ).toBeVisible();
         await expect(
-          canvas.queryByRole('img', { name: 'failed-selection.png' }),
+          canvas.queryByRole('img', { name: failedImageName }),
         ).toBeNull();
         await expect(
           canvas.getAllByRole('button', { name: /^Remove / }),
@@ -1024,14 +1030,14 @@ function failedPick(width: number, agentIndex: 0 | 1): Story {
         canvas.getByRole('img', { name: catalog.image.name }),
       ).toBeVisible();
       await expect(
-        canvas.queryByRole('img', { name: 'failed-selection.png' }),
+        canvas.queryByRole('img', { name: failedImageName }),
       ).toBeNull();
       await expect(
         canvas.getAllByRole('button', { name: /^Remove / }),
       ).toHaveLength(2);
       await expect(
         canvas.getByRole('textbox', { name: 'Message' }),
-      ).toHaveValue('Keep this draft while choosing images.');
+      ).toHaveValue(imagePickerDraft);
       await expect(calls).toBe(0);
     },
   };

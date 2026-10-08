@@ -15,6 +15,8 @@ import { openTestDatabase } from '#mocks/database';
 import { registryMachine } from './registry-machine';
 import { sessionListMachine } from './session-list-machine';
 
+const refreshListEvent = 'list.refresh';
+
 const { database, directory: runtimeDirectory, remove } = openTestDatabase();
 afterAll(remove);
 const sessions = createActor(registryMachine, {
@@ -40,7 +42,7 @@ type ListEvent = EventFromLogic<typeof machine>;
 type ListSnapshot = SnapshotFrom<typeof machine>;
 // The model drives the pending state's named delay event as well as public events.
 const events = [
-  { type: 'list.refresh' },
+  { type: refreshListEvent },
   { type: 'list.failed', error: 'Unavailable database' },
   { type: 'list.stop' },
   { type: 'list.flush' },
@@ -58,7 +60,7 @@ const model = new TestModel(graphLogic, {
   events,
   filterEvents: (snapshot, event): boolean =>
     snapshot.status === 'active' &&
-    (event.type === 'list.refresh' || snapshot.can(event)),
+    (event.type === refreshListEvent || snapshot.can(event)),
   serializeState: (snapshot, event, previous): string =>
     JSON.stringify({
       value: snapshot.value,
@@ -144,10 +146,11 @@ it('publishes once after 100 ms even when fifty refreshes arrive while pending',
   });
   actor.on('list.rows', (): number => publications++);
   actor.start();
-  for (let index = 0; index < 50; index++) actor.send({ type: 'list.refresh' });
+  for (let index = 0; index < 50; index++)
+    actor.send({ type: refreshListEvent });
   clock.increment(99);
   expect([reads, publications]).toEqual([1, 1]);
-  actor.send({ type: 'list.refresh' });
+  actor.send({ type: refreshListEvent });
   clock.increment(1);
   expect([reads, publications]).toEqual([2, 2]);
   actor.stop();
@@ -177,7 +180,7 @@ it('owns a delayed projection failure and cancels its observation', (): void => 
       },
     },
   ).start();
-  actor.send({ type: 'list.refresh' });
+  actor.send({ type: refreshListEvent });
   expect(observations).toBe(1);
   clock.increment(100);
   expect(actor.getSnapshot()).toMatchObject({

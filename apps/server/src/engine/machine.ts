@@ -3,12 +3,13 @@ import { join } from 'node:path';
 import { type Database, openDatabase } from '@repo/db';
 import { assign, fromPromise, sendTo, setup } from 'xstate';
 import { blobsFolderIn, removeUnusedBlobs } from '../services/blob';
-import { writerMachine } from '../services/feed';
+import { writerMachine, databaseWriterId } from '../services/feed';
 import { seedProject } from '../services/projects';
 import {
-  type RegistryActorRef,
   type RegistryInput,
   registryMachine,
+  sessionRegistryId,
+  findSessionRegistry,
 } from '../services/sessions';
 import type { EngineMessage } from '../supervisor/engine-message';
 import {
@@ -18,6 +19,8 @@ import {
 } from './http-server';
 import { type EngineStop, processSignals } from './process-signals';
 import { recoverAfterRestart } from './recovery';
+
+const finishingEngineTarget = '#engine.finishing';
 
 type EngineLogParameters = { line: string };
 type EngineOutput = { exitCode: number };
@@ -190,7 +193,7 @@ export const engineMachine = setup({
       invoke: [
         {
           id: 'databaseWriter',
-          systemId: 'databaseWriter',
+          systemId: databaseWriterId,
           src: 'databaseWriter',
           input: ({
             context,
@@ -202,7 +205,7 @@ export const engineMachine = setup({
         },
         {
           id: 'sessions',
-          systemId: 'sessions',
+          systemId: sessionRegistryId,
           src: 'sessions',
           input: ({ context }): RegistryInput => ({
             database: openDatabaseOf(context),
@@ -232,7 +235,7 @@ export const engineMachine = setup({
             src: 'startHttpServer',
             input: ({ context, self }): HttpServerOptions => ({
               createId: context.createId,
-              sessions: self.system.get('sessions') as RegistryActorRef,
+              sessions: requireSessionRegistry(self.system),
               home: context.home,
               port: context.port,
               version: context.version,
@@ -344,10 +347,10 @@ export const engineMachine = setup({
               entry: 'drainWriter',
               on: {
                 'xstate.done.actor.databaseWriter': {
-                  target: '#engine.finishing',
+                  target: finishingEngineTarget,
                 },
                 'xstate.error.actor.databaseWriter': {
-                  target: '#engine.finishing',
+                  target: finishingEngineTarget,
                   actions: {
                     type: 'log',
                     params: ({ event }): EngineLogParameters => ({
@@ -358,7 +361,7 @@ export const engineMachine = setup({
               },
               after: {
                 writerDrainLimit: {
-                  target: '#engine.finishing',
+                  target: finishingEngineTarget,
                   actions: {
                     type: 'log',
                     params: {
@@ -396,3 +399,11 @@ export const engineMachine = setup({
     exitCode: context.failure === null ? 0 : 1,
   }),
 });
+
+function requireSessionRegistry(
+  system: import('xstate').AnyActorRef['system'],
+): import('../services/sessions').RegistryActorRef {
+  const actor = findSessionRegistry(system);
+  if (!actor) throw new Error('The Session registry is not running');
+  return actor;
+}
