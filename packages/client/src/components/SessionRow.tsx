@@ -17,7 +17,7 @@ import { cn } from '#lib/utils';
 import { Badge } from '#primitives/badge';
 import { Button } from '#primitives/button';
 import { Text, TextClassContext } from '#primitives/text';
-import { Icon } from './Icon';
+import { Icon } from '../lib/icon';
 import { IssueIndicator, type IssueIndicatorProps } from './IssueIndicator';
 import {
   PullRequestIndicator,

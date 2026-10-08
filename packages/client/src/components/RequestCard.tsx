@@ -3,8 +3,8 @@ import type { ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
 import { cn } from '#lib/utils';
 import { Text } from '#primitives/text';
+import { Icon } from '../lib/icon';
 import { useContentWide } from './ContentLayout';
-import { Icon } from './Icon';
 import { useRequestKeyboard } from './use-request-keyboard';
 export { RequestAction } from './request-action';
 

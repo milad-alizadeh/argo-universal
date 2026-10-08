@@ -6,7 +6,7 @@ import { cn } from '#lib/utils';
 import { Badge } from '#primitives/badge';
 import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
-import { Icon } from './Icon';
+import { Icon } from '../lib/icon';
 import { PhoneDrawer } from './PhoneDrawer';
 import { PhoneShellCard } from './PhoneShellCard';
 import { type ShellSection, shellSections } from './shell-sections';

@@ -8,8 +8,8 @@ import {
   CollapsibleTrigger,
 } from '#primitives/collapsible';
 import { Text, TextClassContext } from '#primitives/text';
+import { Icon } from '../lib/icon';
 import { DisclosureCaret } from './DisclosureCaret';
-import { Icon } from './Icon';
 import { ShimmerText } from './ShimmerText';
 
 export interface FeedDisclosureProps {

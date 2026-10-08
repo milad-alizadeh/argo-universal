@@ -26,10 +26,10 @@ import { withOccurrenceKeys } from '#lib/occurrence-keys';
 import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
+import { Icon, IconSpinner } from '../lib/icon';
 import { useWide } from '../navigation/use-wide';
 import { ComposerPopover } from './ComposerPopover';
 import { useContentWide } from './ContentLayout';
-import { Icon, IconSpinner } from './Icon';
 
 const fullPercent = 100;
 // Context use below this percent is the Smart zone; at or above, the Dumb zone.

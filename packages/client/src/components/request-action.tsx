@@ -4,8 +4,8 @@ import { View } from 'react-native';
 import { cn } from '#lib/utils';
 import { Button, type ButtonProps } from '#primitives/button';
 import { Text } from '#primitives/text';
+import { Icon } from '../lib/icon';
 import { useContentWide } from './ContentLayout';
-import { Icon } from './Icon';
 
 type RequestActionProps = Omit<ButtonProps, 'children'> & {
   children: string;

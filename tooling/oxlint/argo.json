@@ -247,17 +247,7 @@
         "packages/client/src/lib/**",
         "packages/client/src/primitives/**"
       ],
-      "excludeFiles": [
-        "**/*.test.*",
-        "**/*.stories.*",
-        // Product code still in lib/ and a primitive that re-exports a component; move them, then delete these lines.
-        "packages/client/src/lib/draft-prompt.ts",
-        "packages/client/src/lib/elicitation-schema.ts",
-        "packages/client/src/lib/pick-images.ts",
-        "packages/client/src/lib/use-agents.ts",
-        "packages/client/src/lib/use-image-draft.ts",
-        "packages/client/src/primitives/icon.tsx"
-      ],
+      "excludeFiles": ["**/*.test.*", "**/*.stories.*"],
       "rules": {
         "no-restricted-imports": [
           "error",

@@ -7,10 +7,10 @@ import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
 import { formatElapsed } from '../feed/format-elapsed';
 import { useClock } from '../feed/use-clock';
+import { Icon } from '../lib/icon';
 import { ScreenHeader } from '../navigation/screen-header';
 import { useWide } from '../navigation/use-wide';
 import { HeaderButton } from './HeaderButton';
-import { Icon } from './Icon';
 import { StatusIndicator, statusLabels } from './StatusIndicator';
 
 // The wide shell's detail header slots, filled by the open Session's header.

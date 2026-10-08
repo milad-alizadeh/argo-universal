@@ -27,12 +27,12 @@ import { withUniwind } from 'uniwind';
 import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
+import { Icon } from '../lib/icon';
 import { listTestIdProps } from '../lib/list-test-id';
 import { useWide } from '../navigation/use-wide';
 import { Slider } from '../primitives/slider';
 import { ComposerPopover } from './ComposerPopover';
 import { useContentWide } from './ContentLayout';
-import { Icon } from './Icon';
 
 type SelectConfiguration = Extract<SessionConfigOption, { type: 'select' }>;
 export interface ComposerConfigurationProps {

@@ -17,8 +17,8 @@ import {
 import { withOccurrenceKeys } from '#lib/occurrence-keys';
 import { Dialog, DialogContent, DialogTitle } from '#primitives/dialog';
 import { Text } from '#primitives/text';
+import { Icon } from '../lib/icon';
 import { inlineCodeClassName } from './FeedMarkdown';
-import { Icon } from './Icon';
 
 export interface UserMessageProps {
   row: UserMessageRow;

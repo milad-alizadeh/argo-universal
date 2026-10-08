@@ -2,7 +2,7 @@ import { GitMergeIcon, GitPullRequestIcon } from 'phosphor-react-native';
 import { View } from 'react-native';
 import { cn } from '#lib/utils';
 import { Text } from '#primitives/text';
-import { Icon } from './Icon';
+import { Icon } from '../lib/icon';
 
 const statusAppearance = {
   open: { icon: GitPullRequestIcon, className: 'text-success' },

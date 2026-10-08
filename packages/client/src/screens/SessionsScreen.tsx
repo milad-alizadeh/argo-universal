@@ -11,7 +11,6 @@ import { Platform, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ConnectionBanner } from '#components/ConnectionBanner';
 import { HeaderButton } from '#components/HeaderButton';
-import { Icon } from '#components/Icon';
 import { ListSearch } from '#components/ListSearch';
 import { LoadError } from '#components/LoadError';
 import { Screen } from '#components/Screen';
@@ -27,6 +26,7 @@ import {
   useConnectionState,
   useResubscribeOnReconnect,
 } from '../connection/context';
+import { Icon } from '../lib/icon';
 import { useNavigate } from '../navigation/context';
 import { useWide } from '../navigation/use-wide';
 import { useTRPC } from '../trpc/context';

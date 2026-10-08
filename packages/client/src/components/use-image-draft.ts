@@ -1,8 +1,7 @@
 import type { BlobRef, SessionNewInput } from '@repo/contracts';
-import { useMutation } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
-import type { ComposerDraft } from '#components/Composer';
-import { useTRPCClient } from '../trpc/context';
+import { useBlobUpload } from '../trpc/use-blob-upload';
+import type { ComposerDraft } from './Composer';
 import { draftPrompt } from './draft-prompt';
 import { pickImages } from './pick-images';
 
@@ -13,16 +12,12 @@ const emptyDraft: ComposerDraft = { text: '', images: [] };
 
 // A Composer draft with attached images, and the prompt it sends once its images are uploaded.
 export function useImageDraft() {
-  const client = useTRPCClient();
   const [draft, setDraft] = useState(emptyDraft);
   const [imageSelectionError, setImageSelectionError] = useState<string>();
   // The file behind each attached image, by its id in the draft.
   const imageFiles = useRef(new Map<string, Blob>());
-  // All of a draft's images upload together, as one mutation, so `imageUpload` reports them as one.
-  const imageUpload = useMutation({
-    mutationFn: (forms: FormData[]) =>
-      Promise.all(forms.map((form) => client.blob.upload.mutate(form))),
-  });
+  // All of a draft's images upload together, so `imageUpload` reports them as one.
+  const imageUpload = useBlobUpload();
 
   async function attachImages() {
     try {

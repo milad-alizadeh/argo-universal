@@ -13,13 +13,13 @@ import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
 import { Input } from '#primitives/input';
 import { Text } from '#primitives/text';
+import { Icon } from '../lib/icon';
 import {
   CheckoutContents,
   type ComposerConfigurationProps,
 } from './ComposerConfiguration';
 import { ComposerPopover } from './ComposerPopover';
 import { useContentWide } from './ContentLayout';
-import { Icon } from './Icon';
 
 export interface StartSessionInProps {
   serverName: string;

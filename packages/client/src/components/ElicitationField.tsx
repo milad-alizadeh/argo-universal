@@ -1,9 +1,5 @@
 import type { ElicitationPropertySchema } from '@repo/contracts';
 import { View } from 'react-native';
-import {
-  type ElicitationValue,
-  elicitationChoices,
-} from '#lib/elicitation-schema';
 import { cn } from '#lib/utils';
 import { Checkbox } from '#primitives/checkbox';
 import { Input } from '#primitives/input';
@@ -15,6 +11,10 @@ import {
   SelectValue,
 } from '#primitives/select';
 import { Text } from '#primitives/text';
+import {
+  type ElicitationValue,
+  elicitationChoices,
+} from './elicitation-schema';
 
 export function ElicitationField({
   name,

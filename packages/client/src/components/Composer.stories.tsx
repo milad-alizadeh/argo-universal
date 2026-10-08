@@ -8,8 +8,8 @@ import {
   oversizedComposerImage,
 } from '../../mocks/composer-mock';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
-import { imageSelectionFailureMessage } from '../lib/use-image-draft';
 import { Composer } from './Composer';
+import { imageSelectionFailureMessage } from './use-image-draft';
 
 const meta = {
   title: 'Sessions/Composer',

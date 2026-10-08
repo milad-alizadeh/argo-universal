@@ -12,6 +12,7 @@ import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
 import { Textarea } from '#primitives/textarea';
+import { Icon, IconSpinner } from '../lib/icon';
 import {
   ComposerAgentModelControl,
   ComposerCheckoutControl,
@@ -27,7 +28,6 @@ import {
   ComposerWorkChips,
 } from './ComposerStatus';
 import { useContentWide } from './ContentLayout';
-import { Icon, IconSpinner } from './Icon';
 import {
   PlanProposalCard,
   type PlanProposalCardProps,

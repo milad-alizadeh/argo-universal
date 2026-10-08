@@ -7,7 +7,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { motionDuration, quarterTurnDegrees } from '#lib/motion';
 import { cn } from '#lib/utils';
-import { Icon } from './Icon';
+import { Icon } from '../lib/icon';
 
 export function DisclosureCaret({
   open,

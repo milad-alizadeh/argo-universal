@@ -5,7 +5,7 @@ import {
   DesktopShell,
   type DesktopShellProps,
 } from '../src/components/DesktopShell';
-import { Icon } from '../src/components/Icon';
+import { Icon } from '../src/lib/icon';
 import { Button } from '../src/primitives/button';
 import {
   DropdownMenu,
