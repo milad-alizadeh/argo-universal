@@ -1,17 +1,15 @@
 import type {
   ContentBlock,
   ContextUsage,
+  FeedChange,
   PendingElicitation,
   PendingPermission,
   PermissionOption,
   PlanMarkdown,
-  RowAppend,
-  RowPatch,
   SessionInfo,
   SessionPromptInput,
   SessionSetConfigOptionInput,
   SessionSetConfigOptionOutput,
-  SessionUpdate,
   StopReason,
   SubagentState,
   TerminalExitStatus,
@@ -22,17 +20,7 @@ import type {
   TurnUsage,
 } from '@repo/contracts';
 
-// The Feed supplies these fields when it assigns a change to a Session and Turn.
-type FeedEnvelope = 'sessionId' | 'turnId' | 'position' | 'revision';
-type WithoutEnvelope<Update> = Update extends SessionUpdate
-  ? Omit<Update, FeedEnvelope>
-  : never;
-
-export type FeedUpdate = WithoutEnvelope<SessionUpdate>;
-export type FeedChange =
-  | { type: 'upsert'; update: FeedUpdate }
-  | ({ type: 'append' } & Pick<RowAppend, 'id' | 'field' | 'text'>)
-  | ({ type: 'patch' } & Pick<RowPatch, 'id' | 'set'>);
+export type { FeedChange, FeedUpdate } from '@repo/contracts';
 
 export interface AgentCapabilities {
   permissionFeedback: boolean;
