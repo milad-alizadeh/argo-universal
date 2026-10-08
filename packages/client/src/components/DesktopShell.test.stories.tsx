@@ -607,9 +607,11 @@ export const DragToCollapseExpandAndReopen: Story = {
       ).toBe(300),
     );
     await drag('Resize Inspector', -240);
-    await expect(
-      canvas.getByRole('button', { name: 'Close Inspector' }),
-    ).toBeVisible();
+    await waitFor(() =>
+      expect(
+        canvas.getByRole('button', { name: 'Close Inspector' }),
+      ).toBeVisible(),
+    );
     await waitFor(() =>
       expect(
         canvas.getByTestId('desktop-inspector').getBoundingClientRect().width,
