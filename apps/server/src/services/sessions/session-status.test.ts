@@ -26,6 +26,6 @@ it.each([
   ['unread', { maxRevision: 2, seenRevision: 1 }],
   ['idle', { maxRevision: 2, seenRevision: 2 }],
   ['idle', { latestTurnFailed: true, latestTurnInterrupted: true }],
-] as const)('derives %s with %j', (expected, input) => {
+] as const)('derives %s with %j', (expected, input): void => {
   expect(deriveSessionStatus({ ...idle, ...input })).toBe(expected);
 });

@@ -16,7 +16,13 @@ export const storedSessionColumns = {
   configValues: sql<unknown>`${session.configValues}`,
 };
 
-export function decodeStoredSession(row: typeof session.$inferSelect) {
+export function decodeStoredSession(row: typeof session.$inferSelect): Omit<
+  typeof session.$inferSelect,
+  'vendorRef' | 'configValues'
+> & {
+  vendorRef: ReturnType<typeof JSON.parse>;
+  configValues: ReturnType<typeof JSON.parse>;
+} {
   return {
     ...row,
     vendorRef:
@@ -51,9 +57,11 @@ export function toSessionCheckout(row: {
   };
 }
 
-export function createSessionReader(database: Database) {
+export function createSessionReader(
+  database: Database,
+): (sessionId: string) => import('zod').infer<typeof sessionRecord> {
   let rejectedRows = 0;
-  return (sessionId: string) => {
+  return (sessionId: string): import('zod').infer<typeof sessionRecord> => {
     const stored = database
       .select({
         title: session.title,

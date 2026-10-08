@@ -20,7 +20,7 @@ export function createServerServices(options: {
   startedAt: string;
   createId?: () => string;
 }): Services {
-  const findSession = (sessionId: string) =>
+  const findSession = (sessionId: string): SessionActorRef | undefined =>
     options.sessions.system.get(`session:${sessionId}`) as
       | SessionActorRef
       | undefined;
@@ -34,11 +34,11 @@ export function createServerServices(options: {
     feed: createFeedService({
       database: options.database,
       findSession,
-      findFeed: (sessionId) =>
+      findFeed: (sessionId): FeedActorRef | undefined =>
         findSession(sessionId)?.getSnapshot().children.feed as
           | FeedActorRef
           | undefined,
-      findWriter: () =>
+      findWriter: (): ActorRefFrom<typeof writerMachine> | undefined =>
         options.sessions.system.get('databaseWriter') as
           | ActorRefFrom<typeof writerMachine>
           | undefined,

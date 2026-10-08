@@ -29,19 +29,29 @@ const tool: ToolCallUpdate = {
   locations: [{ path: 'first.ts' }],
 };
 
-it('reads a 500-row Turn with three bounded seeks after many settled Tool calls', () => {
+it('reads a 500-row Turn with three bounded seeks after many settled Tool calls', (): void => {
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
-  const previous = Array.from({ length: 500 }, (_, position) => ({
-    ...tool,
-    id: `previous-${position}`,
-    toolCallId: `previous-${position}`,
-    turnId: 'previous',
-    position,
-    revision: position + 1,
-    state: 'settled' as const,
-    status: 'completed' as const,
-  }));
+  const previous = Array.from(
+    { length: 500 },
+    (
+      _,
+      position,
+    ): typeof tool & {
+      turnId: string;
+      state: 'settled';
+      status: 'completed';
+    } => ({
+      ...tool,
+      id: `previous-${position}`,
+      toolCallId: `previous-${position}`,
+      turnId: 'previous',
+      position,
+      revision: position + 1,
+      state: 'settled' as const,
+      status: 'completed' as const,
+    }),
+  );
   const current: SessionUpdate[] = Array.from(
     { length: 500 },
     (_, index): AgentMessage => ({
@@ -111,7 +121,7 @@ it('reads a 500-row Turn with three bounded seeks after many settled Tool calls'
   ]);
 });
 
-it('keeps the earlier running Tool call after writer and memory overlays complete the newer one', () => {
+it('keeps the earlier running Tool call after writer and memory overlays complete the newer one', (): void => {
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
   const newer = {
@@ -129,17 +139,19 @@ it('keeps the earlier running Tool call after writer and memory overlays complet
   const writer = createActor(
     writerMachine.provide({
       actors: {
-        writeBatch: fromPromise(() => new Promise<void>(() => {})),
+        writeBatch: fromPromise(
+          (): Promise<void> => new Promise<void>((): void => {}),
+        ),
       },
     }),
     {
       input: {
-        now: () => Date.now(),
+        now: (): number => Date.now(),
         database,
       },
     },
   ).start();
-  onTestFinished(() => {
+  onTestFinished((): void => {
     writer.stop();
   });
   writer.send({
@@ -181,7 +193,7 @@ it('keeps the earlier running Tool call after writer and memory overlays complet
   });
 });
 
-it('excludes the newest thought when it belongs to an earlier Turn', () => {
+it('excludes the newest thought when it belongs to an earlier Turn', (): void => {
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
   const thought: SessionUpdate = {
@@ -212,7 +224,7 @@ it('excludes the newest thought when it belongs to an earlier Turn', () => {
   expect(counted.metrics.queries).toBeLessThanOrEqual(3);
 });
 
-it('reads no stored rows without an active Turn', () => {
+it('reads no stored rows without an active Turn', (): void => {
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
   const counted = countDatabaseReads(database);
@@ -227,22 +239,33 @@ it('reads no stored rows without an active Turn', () => {
   expect(counted.metrics).toEqual({ queries: 0, rows: 0, sessionReads: 0 });
 });
 
-it('reads only the newest malformed Tool call while retaining all running calls', () => {
+it('reads only the newest malformed Tool call while retaining all running calls', (): void => {
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
-  const reported = vi.spyOn(console, 'error').mockImplementation(() => {});
-  onTestFinished(() => reported.mockRestore());
-  const malformed = Array.from({ length: 500 }, (_, position) => ({
-    ...toFeedRowWrite({
-      ...tool,
-      id: `bad-${position}`,
-      toolCallId: `bad-${position}`,
+  const reported = vi
+    .spyOn(console, 'error')
+    .mockImplementation((): void => {});
+  onTestFinished((): void => reported.mockRestore());
+  const malformed = Array.from(
+    { length: 500 },
+    (
+      _,
       position,
-      revision: position + 1,
+    ): Omit<ReturnType<typeof toFeedRowWrite>, 'payload'> & {
+      sessionId: string;
+      payload: ReturnType<typeof sql>;
+    } => ({
+      ...toFeedRowWrite({
+        ...tool,
+        id: `bad-${position}`,
+        toolCallId: `bad-${position}`,
+        position,
+        revision: position + 1,
+      }),
+      sessionId: 'session-1',
+      payload: sql`'broken-json'`,
     }),
-    sessionId: 'session-1',
-    payload: sql`'broken-json'`,
-  }));
+  );
   database.insert(feedRow).values(malformed).run();
   const current: SessionUpdate[] = [
     { ...tool, position: 500, revision: 501 },

@@ -363,7 +363,7 @@ const rules: { rule: string; input: SessionInfoInput; expected: unknown }[] = [
     },
   },
 ];
-it.each(rules)('$rule', ({ input, expected }) => {
+it.each(rules)('$rule', ({ input, expected }): void => {
   const before = structuredClone(input);
   expect(toSessionInfo(input)).toEqual(expected);
   expect(input).toEqual(before);

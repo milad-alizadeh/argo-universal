@@ -12,42 +12,48 @@ import { and, eq, lt, notExists, sql } from 'drizzle-orm';
 const unusedBlobAge = 86_400_000;
 
 // Where a Server home keeps its uploads (ADR-0005).
-export const blobsFolderIn = (home: string) => join(home, 'blobs');
+export const blobsFolderIn = (home: string): string => join(home, 'blobs');
 
 // A missing file or folder gives `fallback`; any other error still throws.
 const unlessMissing =
-  <T>(fallback: T) =>
-  (error: NodeJS.ErrnoException) => {
+  <T>(fallback: T): ((error: NodeJS.ErrnoException) => T) =>
+  (error: NodeJS.ErrnoException): T => {
     if (error.code === 'ENOENT') return fallback;
     throw error;
   };
 
 // The image types an Agent reads, known by their first bytes; a fetched Blob on iOS arrives as text/plain.
-const hasBytesAt = (bytes: Buffer, offset: number, expected: Buffer) =>
+const hasBytesAt = (bytes: Buffer, offset: number, expected: Buffer): boolean =>
   bytes.subarray(offset, offset + expected.length).equals(expected);
 // A WebP file is a RIFF container whose format tag follows the 4-byte tag and 4-byte size.
 const webpFormatOffset = 8;
 const imageSignatures: [mime: string, matches: (bytes: Buffer) => boolean][] = [
   [
     'image/png',
-    (bytes) => hasBytesAt(bytes, 0, Buffer.from('89504e47', 'hex')),
+    (bytes): boolean => hasBytesAt(bytes, 0, Buffer.from('89504e47', 'hex')),
   ],
-  ['image/jpeg', (bytes) => hasBytesAt(bytes, 0, Buffer.from('ffd8ff', 'hex'))],
-  ['image/gif', (bytes) => hasBytesAt(bytes, 0, Buffer.from('GIF8', 'latin1'))],
+  [
+    'image/jpeg',
+    (bytes): boolean => hasBytesAt(bytes, 0, Buffer.from('ffd8ff', 'hex')),
+  ],
+  [
+    'image/gif',
+    (bytes): boolean => hasBytesAt(bytes, 0, Buffer.from('GIF8', 'latin1')),
+  ],
   [
     'image/webp',
-    (bytes) =>
+    (bytes): boolean =>
       hasBytesAt(bytes, 0, Buffer.from('RIFF', 'latin1')) &&
       hasBytesAt(bytes, webpFormatOffset, Buffer.from('WEBP', 'latin1')),
   ],
 ];
 
-const mimeOf = (bytes: Buffer, declared: string) =>
-  imageSignatures.find(([, matches]) => matches(bytes))?.[0] ??
+const mimeOf = (bytes: Buffer, declared: string): string =>
+  imageSignatures.find(([, matches]): boolean => matches(bytes))?.[0] ??
   (declared || 'application/octet-stream');
 
-const exists = (path: string) =>
-  stat(path).then(() => true, unlessMissing(false));
+const exists = (path: string): Promise<boolean> =>
+  stat(path).then((): boolean => true, unlessMissing(false));
 
 // Stores each upload once at `blobs/<sha256>` with a `blob` row (ADR-0005).
 export function createBlobService(options: {
@@ -55,7 +61,9 @@ export function createBlobService(options: {
   blobsFolder: string;
 }): BlobService {
   return {
-    upload: async (form) => {
+    upload: async (
+      form,
+    ): Promise<{ blobId: string; mime: string; bytes: number }> => {
       // The contract has checked that `file` holds a Blob.
       const file = form.get('file') as Blob;
       if (file.size > maxBlobUploadBytes)
@@ -93,7 +101,7 @@ export async function removeUnusedBlobs(options: {
   database: Database;
   blobsFolder: string;
   now?: number;
-}) {
+}): Promise<void> {
   const cutoff = (options.now ?? Date.now()) - unusedBlobAge;
   const { database } = options;
   const removed = database
@@ -118,7 +126,7 @@ export async function removeUnusedBlobs(options: {
       .select({ id: blob.id })
       .from(blob)
       .all()
-      .map(({ id }) => id),
+      .map(({ id }): string => id),
   );
   const names = await readdir(options.blobsFolder).catch(
     unlessMissing<string[]>([]),

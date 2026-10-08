@@ -3,16 +3,16 @@ import { createSystemService } from '.';
 
 const deps = { version: '1.2.3', startedAt: '2026-10-03T00:00:00.000Z' };
 
-describe('system service', () => {
-  beforeEach(() => {
+describe('system service', (): void => {
+  beforeEach((): void => {
     vi.useFakeTimers({ now: new Date('2026-10-03T12:00:00.000Z') });
   });
 
-  afterEach(() => {
+  afterEach((): void => {
     vi.useRealTimers();
   });
 
-  it('reports the version, start time, process id, and computer name', () => {
+  it('reports the version, start time, process id, and computer name', (): void => {
     expect(createSystemService(deps).info()).toEqual({
       version: '1.2.3',
       startedAt: '2026-10-03T00:00:00.000Z',
@@ -21,7 +21,7 @@ describe('system service', () => {
     });
   });
 
-  it('ticks the clock at once and then every second', async () => {
+  it('ticks the clock at once and then every second', async (): Promise<void> => {
     const ticks = createSystemService(deps)
       .clock(new AbortController().signal)
       [Symbol.asyncIterator]();
@@ -34,7 +34,7 @@ describe('system service', () => {
     expect((await second).value).toEqual({ now: '2026-10-03T12:00:01.000Z' });
   });
 
-  it('stops the clock when the signal aborts', async () => {
+  it('stops the clock when the signal aborts', async (): Promise<void> => {
     const controller = new AbortController();
     const ticks = createSystemService(deps)
       .clock(controller.signal)

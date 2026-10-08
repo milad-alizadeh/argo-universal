@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { type AgentCommand, agentMachine } from '@repo/agents';
 import { sessionRows } from '@repo/api/mocks';
+import type { Notice, SessionUpdate } from '@repo/contracts';
+import type { FeedSubscribeOutput } from '@repo/contracts';
 import { permissionOptions, type SessionConfigOption } from '@repo/contracts';
 import {
   createMockAdapter,
@@ -37,32 +39,43 @@ import { toSessionSnapshot } from './session-snapshot';
 const cleanups: (() => void)[] = [];
 // The model paths' actors, stopped after each path.
 const actors: { stop: () => void }[] = [];
-afterEach(() => {
+afterEach((): void => {
   for (const cleanup of cleanups.splice(0).reverse()) cleanup();
   for (const actor of actors.splice(0)) actor.stop();
   vi.useRealTimers();
 });
 // The model paths share one database, removed after the last test.
-afterAll(() => remove());
+afterAll((): void => remove());
 
-function subscribeToSession(service: ReturnType<typeof createFeedService>) {
+function subscribeToSession(service: ReturnType<typeof createFeedService>): {
+  updates: AsyncIterator<FeedSubscribeOutput, void>;
+  controller: AbortController;
+} {
   const controller = new AbortController();
-  cleanups.push(() => controller.abort());
+  cleanups.push((): void => controller.abort());
   const updates = service
     .subscribe({ sessionId: 'session-1', after: null }, controller.signal)
     [Symbol.asyncIterator]();
   return { updates, controller };
 }
 
-async function openSession(overrides: Partial<MockAgentScript> = {}) {
+async function openSession(overrides: Partial<MockAgentScript> = {}): Promise<{
+  session: import('xstate').ActorRefFromLogic<typeof sessionMachine>;
+  feed: FeedActorRef;
+  service: import('@repo/api').FeedService;
+  commands: AgentCommand[];
+  stream: MockAgentStream;
+  database: import('@repo/db').Database;
+  currentStream: () => MockAgentStream;
+}> {
   const { database, remove } = openTestDatabase();
   cleanups.push(remove);
   const commands: AgentCommand[] = [];
   let stream: MockAgentStream | undefined;
   const adapter = createMockAdapter({
-    stream: (value) => {
+    stream: (value): undefined => {
       stream = value;
-      value.receive((command) => commands.push(command));
+      value.receive((command): number => commands.push(command));
     },
     ...overrides,
   });
@@ -70,8 +83,8 @@ async function openSession(overrides: Partial<MockAgentScript> = {}) {
     database,
     adapter,
   );
-  cleanups.push(() => root.stop());
-  await waitFor(session, (snapshot) => snapshot.can(firstPrompt));
+  cleanups.push((): typeof root => root.stop());
+  await waitFor(session, (snapshot): boolean => snapshot.can(firstPrompt));
   const feed = findFeed();
   if (!feed || !stream) throw new Error('Session not ready');
   return {
@@ -81,16 +94,16 @@ async function openSession(overrides: Partial<MockAgentScript> = {}) {
     commands,
     stream,
     database,
-    currentStream: () => {
+    currentStream: (): MockAgentStream => {
       if (!stream) throw new Error('No Agent stream');
       return stream;
     },
   };
 }
 
-it('keeps the Session running while rejected messages show warning Notices', async () => {
-  const log = vi.spyOn(console, 'error').mockImplementation(() => {});
-  cleanups.push(() => {
+it('keeps the Session running while rejected messages show warning Notices', async (): Promise<void> => {
+  const log = vi.spyOn(console, 'error').mockImplementation((): void => {});
+  cleanups.push((): void => {
     log.mockRestore();
   });
   const { session, service, stream } = await openSession();
@@ -104,18 +117,20 @@ it('keeps the Session running while rejected messages show warning Notices', asy
     reason: 'Another unknown message',
   });
   stream.send({ type: 'agent.feed', change: messageChange('settled') });
-  const { rows } = await vi.waitFor(() => {
+  const { rows } = await vi.waitFor((): ReturnType<typeof service.page> => {
     const page = service.page({
       sessionId: 'session-1',
       direction: 'tail',
       limit: 40,
     });
     expect(
-      page.rows.filter((row) => row.sessionUpdate === 'notice'),
+      page.rows.filter((row): row is Notice => row.sessionUpdate === 'notice'),
     ).toHaveLength(2);
     return page;
   });
-  expect(rows.filter((row) => row.sessionUpdate === 'notice')).toEqual([
+  expect(
+    rows.filter((row): row is Notice => row.sessionUpdate === 'notice'),
+  ).toEqual([
     expect.objectContaining({
       severity: 'warning',
       title: 'The Agent sent an unrecognised message',
@@ -138,11 +153,16 @@ it('keeps the Session running while rejected messages show warning Notices', asy
     'session session-1: rejected an Agent message: Another unknown message',
   );
   expect(
-    rows.filter((row) => row.sessionUpdate === 'agent_message'),
+    rows.filter(
+      (
+        row,
+      ): row is Extract<SessionUpdate, { sessionUpdate: 'agent_message' }> =>
+        row.sessionUpdate === 'agent_message',
+    ),
   ).toHaveLength(1);
 });
 
-it('runs one Turn and rejects a second prompt while it runs', async () => {
+it('runs one Turn and rejects a second prompt while it runs', async (): Promise<void> => {
   const { session, feed, service, commands, stream } = await openSession();
   sendSessionCommand(session, {
     type: 'session.prompt',
@@ -163,14 +183,14 @@ it('runs one Turn and rejects a second prompt while it runs', async () => {
     sessionUpdate: 'user_message',
     content: [{ type: 'text', text: 'Hello' }],
   });
-  await vi.waitFor(() =>
+  await vi.waitFor((): void =>
     expect(commands).toContainEqual({
       type: 'agent.prompt',
       turnId: 'turn-1',
       content: [{ type: 'text', text: 'Hello' }],
     }),
   );
-  expect(() =>
+  expect((): void =>
     sendSessionCommand(session, {
       type: 'session.prompt',
       turnId: 'turn-2',
@@ -187,7 +207,7 @@ it('runs one Turn and rejects a second prompt while it runs', async () => {
   ).toMatchObject({ state: 'idle', activeTurnId: null });
 });
 
-it('answers only the head Permission request and keeps other requests visible', async () => {
+it('answers only the head Permission request and keeps other requests visible', async (): Promise<void> => {
   const { session, feed, commands, stream } = await openSession();
   sendSessionCommand(session, firstPrompt);
   const request = {
@@ -219,7 +239,7 @@ it('answers only the head Permission request and keeps other requests visible', 
     pendingPermission: request,
     pendingElicitation: { message: 'Which file?' },
   });
-  expect(() =>
+  expect((): void =>
     sendSessionCommand(session, {
       type: 'session.answerPermission',
       toolCallId: 'tool-2',
@@ -265,14 +285,14 @@ it('answers only the head Permission request and keeps other requests visible', 
       sessionRows.idle,
     ),
   ).toMatchObject({ state: 'running', pendingElicitation: null });
-  await vi.waitFor(() =>
+  await vi.waitFor((): void =>
     expect(commands).toContainEqual({
       type: 'agent.answerElicitation',
       action: 'accept',
       content: { file: 'README.md' },
     }),
   );
-  expect(() =>
+  expect((): void =>
     sendSessionCommand(session, {
       type: 'session.answerElicitation',
       action: 'decline',
@@ -280,7 +300,7 @@ it('answers only the head Permission request and keeps other requests visible', 
   ).toThrow(expect.objectContaining({ code: 'CONFLICT' }));
 });
 
-it('cancels queued requests and waits for the Agent to end the Turn', async () => {
+it('cancels queued requests and waits for the Agent to end the Turn', async (): Promise<void> => {
   const { session, feed, commands, stream } = await openSession();
   sendSessionCommand(session, firstPrompt);
   stream.send({
@@ -300,7 +320,7 @@ it('cancels queued requests and waits for the Agent to end the Turn', async () =
     },
   });
   sendSessionCommand(session, { type: 'session.cancel' });
-  await vi.waitFor(() =>
+  await vi.waitFor((): void =>
     expect(commands).toEqual(
       expect.arrayContaining([
         { type: 'agent.cancel' },
@@ -336,14 +356,18 @@ it('cancels queued requests and waits for the Agent to end the Turn', async () =
   ).toMatchObject({ state: 'idle', activeTurnId: null });
 });
 
-it('flushes Feed changes when closing and ends with no failure', async () => {
+it('flushes Feed changes when closing and ends with no failure', async (): Promise<void> => {
   const { session, service, stream } = await openSession();
   sendSessionCommand(session, firstPrompt);
   stream.send({ type: 'agent.feed', change: messageChange('open') });
   sendSessionCommand(session, { type: 'session.close' });
-  await waitFor(session, (snapshot) => snapshot.status === 'done');
+  await waitFor(
+    session,
+    (snapshot): snapshot is Extract<typeof snapshot, { status: 'done' }> =>
+      snapshot.status === 'done',
+  );
   expect(session.getSnapshot().output).toEqual({ failure: null });
-  await vi.waitFor(() =>
+  await vi.waitFor((): void =>
     expect(
       service.page({ sessionId: 'session-1', direction: 'tail', limit: 40 })
         .rows,
@@ -351,7 +375,7 @@ it('flushes Feed changes when closing and ends with no failure', async () => {
   );
 });
 
-it('keeps a settled row in its original position when the Agent changes it later', async () => {
+it('keeps a settled row in its original position when the Agent changes it later', async (): Promise<void> => {
   const { session, service, stream } = await openSession();
   sendSessionCommand(session, firstPrompt);
   stream.send({ type: 'agent.feed', change: messageChange('settled') });
@@ -370,7 +394,7 @@ it('keeps a settled row in its original position when the Agent changes it later
   });
 });
 
-it('streams Session snapshots only when their projected value changes', async () => {
+it('streams Session snapshots only when their projected value changes', async (): Promise<void> => {
   const { session, service, stream } = await openSession();
   const { updates, controller } = subscribeToSession(service);
   expect((await updates.next()).value).toMatchObject({
@@ -398,11 +422,11 @@ it('streams Session snapshots only when their projected value changes', async ()
   expect(await updates.next()).toMatchObject({ done: true });
 });
 
-it('restarts the Agent with its vendor Session and gives up after three crashes in ten minutes', async () => {
+it('restarts the Agent with its vendor Session and gives up after three crashes in ten minutes', async (): Promise<void> => {
   vi.useFakeTimers();
   const resumed: (string | null)[] = [];
   const { session, service, currentStream } = await openSession({
-    connect: async (input) => {
+    connect: async (input): Promise<import('@repo/agents').AgentReady> => {
       resumed.push(input.vendorSessionId);
       return mockReady;
     },
@@ -421,10 +445,12 @@ it('restarts the Agent with its vendor Session and gives up after three crashes 
     direction: 'tail',
     limit: 40,
   }).rows;
-  expect(rows.filter((row) => row.sessionUpdate === 'notice')).toHaveLength(3);
+  expect(
+    rows.filter((row): row is Notice => row.sessionUpdate === 'notice'),
+  ).toHaveLength(3);
 });
 
-it('recovers when cancellation times out and writes a Notice for the Turn', async () => {
+it('recovers when cancellation times out and writes a Notice for the Turn', async (): Promise<void> => {
   vi.useFakeTimers();
   const { session, service } = await openSession();
   sendSessionCommand(session, firstPrompt);
@@ -437,7 +463,7 @@ it('recovers when cancellation times out and writes a Notice for the Turn', asyn
     turnId: 'turn-1',
     title: 'The Agent did not stop after cancellation',
   });
-  expect(() =>
+  expect((): void =>
     sendSessionCommand(session, {
       type: 'session.prompt',
       turnId: 'turn-2',
@@ -445,7 +471,7 @@ it('recovers when cancellation times out and writes a Notice for the Turn', asyn
     }),
   ).toThrow(expect.objectContaining({ code: 'CONFLICT' }));
   await vi.advanceTimersByTimeAsync(1000);
-  expect(() =>
+  expect((): void =>
     sendSessionCommand(session, {
       type: 'session.prompt',
       turnId: 'turn-2',
@@ -454,7 +480,7 @@ it('recovers when cancellation times out and writes a Notice for the Turn', asyn
   ).not.toThrow();
 });
 
-it('keeps the latest held choices through updates and cancellation, then applies them in order', async () => {
+it('keeps the latest held choices through updates and cancellation, then applies them in order', async (): Promise<void> => {
   const options = [
     {
       configId: 'model',
@@ -480,11 +506,16 @@ it('keeps the latest held choices through updates and cancellation, then applies
     },
   ] satisfies SessionConfigOption[];
   const { session, stream, commands } = await openSession({
-    connect: async () => ({ ...mockReady, configOptions: options }),
+    connect: async (): Promise<{
+      vendorSessionId: string;
+      capabilities: import('@repo/agents').AgentCapabilities;
+      continuedOutside: boolean;
+      configOptions: typeof options;
+    }> => ({ ...mockReady, configOptions: options }),
   });
   sendSessionCommand(session, firstPrompt);
   await expect
-    .poll(() => commands)
+    .poll((): AgentCommand[] => commands)
     .toEqual([{ ...firstPrompt, type: 'agent.prompt' }]);
   for (const [configId, value] of [
     ['model', 'large'],
@@ -499,10 +530,21 @@ it('keeps the latest held choices through updates and cancellation, then applies
     });
   stream.send({
     type: 'agent.configOptionsChanged',
-    configOptions: options.map((option) => ({
-      ...option,
-      name: `Renamed ${option.name}`,
-    })),
+    configOptions: options.map(
+      (
+        option,
+      ): {
+        configId: string;
+        category: string;
+        type: 'select';
+        currentValue: string;
+        options: { value: string; name: string }[];
+        name: string;
+      } => ({
+        ...option,
+        name: `Renamed ${option.name}`,
+      }),
+    ),
   });
   expect(session.getSnapshot().context.configOptions).toMatchObject([
     {
@@ -526,7 +568,7 @@ it('keeps the latest held choices through updates and cancellation, then applies
     content: [],
   });
   await expect
-    .poll(() => commands)
+    .poll((): AgentCommand[] => commands)
     .toEqual([
       { ...firstPrompt, type: 'agent.prompt' },
       { type: 'agent.cancel' },
@@ -546,23 +588,36 @@ it('keeps the latest held choices through updates and cancellation, then applies
   ).not.toBe(true);
   stream.send({
     type: 'agent.configOptionsChanged',
-    configOptions: options.map((option) => ({
-      ...option,
-      currentValue: option.configId === 'model' ? 'large' : 'auto',
-    })),
+    configOptions: options.map(
+      (
+        option,
+      ): {
+        configId: string;
+        name: string;
+        category: string;
+        type: 'select';
+        options: { value: string; name: string }[];
+        currentValue: string;
+      } => ({
+        ...option,
+        currentValue: option.configId === 'model' ? 'large' : 'auto',
+      }),
+    ),
   });
   expect(
     session
       .getSnapshot()
       .context.configOptions.map(
-        (option) => option._meta?.argo?.heldUntilNextTurn,
+        (option): boolean | undefined => option._meta?.argo?.heldUntilNextTurn,
       ),
   ).toEqual([undefined, undefined]);
 });
 
-it('closes after the Agent stop limit even when the Agent does not stop', async () => {
+it('closes after the Agent stop limit even when the Agent does not stop', async (): Promise<void> => {
   vi.useFakeTimers();
-  const { session } = await openSession({ stop: () => new Promise(() => {}) });
+  const { session } = await openSession({
+    stop: (): Promise<void> => new Promise((): void => {}),
+  });
   sendSessionCommand(session, { type: 'session.close' });
   await vi.advanceTimersByTimeAsync(4999);
   expect(session.getSnapshot().status).toBe('active');
@@ -585,26 +640,40 @@ let stream: MockAgentStream | undefined;
 let modelCommands: AgentCommand[] = [];
 const ready = mockReadyEvent;
 const adapter = createMockAdapter({
-  stream: (value) => {
+  stream: (value): (() => void) => {
     stream = value;
-    value.receive((command) => modelCommands.push(command));
-    return () => {
+    value.receive((command): number => modelCommands.push(command));
+    return (): void => {
       if (stream === value) stream = undefined;
     };
   },
-  stop: () => new Promise(() => {}),
+  stop: (): Promise<void> => new Promise((): void => {}),
 });
 const machine = sessionMachine.provide({
   actors: {
-    createCheckout: fromPromise(() => new Promise(() => {})),
-    discardCheckout: fromPromise(() => new Promise(() => {})),
-    loadSession: fromPromise(() => new Promise(() => {})),
-    agent: agentMachine.provide({ actions: { sendReady: () => {} } }),
+    createCheckout: fromPromise(
+      (): Promise<import('./session-data').SessionData> =>
+        new Promise((): void => {}),
+    ),
+    discardCheckout: fromPromise(
+      (): Promise<void> => new Promise((): void => {}),
+    ),
+    loadSession: fromPromise(
+      (): Promise<import('./session-data').SessionData> =>
+        new Promise((): void => {}),
+    ),
+    agent: agentMachine.provide({ actions: { sendReady: (): void => {} } }),
     feed: feedMachine.provide({
-      actions: { sendToWriter: () => {}, log: () => {} },
+      actions: {
+        sendToWriter: (): void => {},
+        log: (): void => {},
+      },
     }),
   },
-  actions: { flushFeed: () => {}, logMessageRejected: () => {} },
+  actions: {
+    flushFeed: (): void => {},
+    logMessageRejected: (): void => {},
+  },
 });
 type SessionSnapshot = SnapshotFrom<typeof machine>;
 type SessionEvent = EventFromLogic<typeof machine>;
@@ -665,7 +734,7 @@ const events = [
   { type: 'xstate.after.agentRestartDelay.session.open.recovering' },
   { type: 'xstate.after.feedFlushLimit.session.open.flushing' },
 ] as AnyEventObject[] as SessionEvent[];
-const key = (snapshot: SessionSnapshot | undefined) =>
+const key = (snapshot: SessionSnapshot | undefined): string | undefined =>
   snapshot &&
   JSON.stringify({
     value: snapshot.value,
@@ -680,16 +749,16 @@ const logic = machine as unknown as ActorLogic<
   SessionMachineInput
 >;
 const models = (['new', 'existing'] as const).map(
-  (kind) =>
-    new TestModel(logic, {
+  (kind): TestModel<SessionSnapshot, SessionEvent, SessionMachineInput> =>
+    new TestModel<SessionSnapshot, SessionEvent, SessionMachineInput>(logic, {
       input:
         kind === 'existing'
           ? {
               database,
               runtimeDirectory,
               adapter,
-              now: () => 1000,
-              createId: () => 'request-model',
+              now: (): number => 1000,
+              createId: (): string => 'request-model',
               kind,
               sessionId: 'session-1',
             }
@@ -697,8 +766,8 @@ const models = (['new', 'existing'] as const).map(
               database,
               runtimeDirectory,
               adapter,
-              now: () => 1000,
-              createId: () => 'request-model',
+              now: (): number => 1000,
+              createId: (): string => 'request-model',
               kind,
               sessionId: 'session-1',
               projectId: 'project-1',
@@ -710,23 +779,30 @@ const models = (['new', 'existing'] as const).map(
             },
       events,
       // Two queued requests cover both queue branches; snapshot equality bounds crash timestamps and repeated Turns.
-      filterEvents: (snapshot, event) =>
+      filterEvents: (snapshot, event): boolean =>
         snapshot.status === 'active' &&
         snapshot.can(event) &&
         (event.type !== 'agent.permissionRequested' ||
           snapshot.context.permissionQueue.length < 2),
-      serializeState: (snapshot, event, previous) =>
+      serializeState: (snapshot, event, previous): string =>
         JSON.stringify({
           key: key(snapshot),
           via: event && `${key(previous)} ${event.type}`,
         }),
     }),
 );
-const paths = models.flatMap((model) => model.getShortestPaths());
+const paths = models.flatMap(
+  (model): ReturnType<typeof model.getShortestPaths> =>
+    model.getShortestPaths(),
+);
 
-it.each(paths.map((path, index) => [index, path] as const))(
+it.each(
+  paths.map(
+    (path, index): readonly [number, typeof path] => [index, path] as const,
+  ),
+)(
   'walks Session model path %i with the mock Agent',
-  async (_, path) => {
+  async (_, path): Promise<void> => {
     vi.useFakeTimers();
     stream = undefined;
     modelCommands = [];
@@ -737,7 +813,7 @@ it.each(paths.map((path, index) => [index, path] as const))(
       setup({
         actors: {
           session: machine,
-          writer: fromCallback<WriterEvent>(() => {}),
+          writer: fromCallback<WriterEvent>((): void => {}),
         },
       }).createMachine({
         invoke: [
@@ -750,43 +826,50 @@ it.each(paths.map((path, index) => [index, path] as const))(
     const sessionActor = root.getSnapshot().children.session;
     if (!sessionActor) throw new Error('No Session actor');
     const executors = Object.fromEntries(
-      events.map(({ type }) => [
-        type,
-        async ({ event }: { event: SessionEvent }) => {
-          const before = sessionActor.getSnapshot();
-          const commandIndex = modelCommands.length;
-          if (
-            event.type.startsWith('agent.') &&
-            event.type !== 'agent.ready' &&
-            stream
-          )
-            stream.send(event as MockAgentStreamEvent);
-          else sessionActor.send(event);
-          await vi.advanceTimersByTimeAsync(0);
-          if (
-            event.type === 'session.prompt' &&
-            before.can(event) &&
-            before.context.heldConfigValues.length
-          )
-            expect(modelCommands.slice(commandIndex)).toEqual([
-              {
-                type: 'agent.setConfigOption',
-                configId: 'mode',
-                value: 'plan',
-              },
-              { ...event, type: 'agent.prompt' },
-            ]);
-          if (String(event.type) === 'xstate.error.actor.feed')
-            expect(sessionActor.getSnapshot().output).toEqual({
-              failure: 'Feed failed',
-            });
-        },
-      ]),
+      events.map(
+        ({
+          type,
+        }): [
+          SessionEvent['type'],
+          (args: { event: SessionEvent }) => Promise<void>,
+        ] => [
+          type,
+          async ({ event }: { event: SessionEvent }): Promise<void> => {
+            const before = sessionActor.getSnapshot();
+            const commandIndex = modelCommands.length;
+            if (
+              event.type.startsWith('agent.') &&
+              event.type !== 'agent.ready' &&
+              stream
+            )
+              stream.send(event as MockAgentStreamEvent);
+            else sessionActor.send(event);
+            await vi.advanceTimersByTimeAsync(0);
+            if (
+              event.type === 'session.prompt' &&
+              before.can(event) &&
+              before.context.heldConfigValues.length
+            )
+              expect(modelCommands.slice(commandIndex)).toEqual([
+                {
+                  type: 'agent.setConfigOption',
+                  configId: 'mode',
+                  value: 'plan',
+                },
+                { ...event, type: 'agent.prompt' },
+              ]);
+            if (String(event.type) === 'xstate.error.actor.feed')
+              expect(sessionActor.getSnapshot().output).toEqual({
+                failure: 'Feed failed',
+              });
+          },
+        ],
+      ),
     );
     await path.test({
       events: executors,
       states: {
-        '*': (expected) => {
+        '*': (expected): void => {
           const actual = sessionActor.getSnapshot();
           expect(actual.context.heldConfigValues).toEqual(
             expected.context.heldConfigValues,
@@ -824,11 +907,11 @@ it.each(paths.map((path, index) => [index, path] as const))(
   },
 );
 
-it('ends Checkout creation with a retryable failure when git does not finish', async () => {
+it('ends Checkout creation with a retryable failure when git does not finish', async (): Promise<void> => {
   vi.useFakeTimers();
   const actor = createActor(machine, {
     input: {
-      now: () => Date.now(),
+      now: (): number => Date.now(),
       createId: randomUUID,
       database,
       runtimeDirectory,
@@ -852,36 +935,36 @@ it('ends Checkout creation with a retryable failure when git does not finish', a
   });
 });
 
-it('the generated paths walk every reachable transition', () => {
+it('the generated paths walk every reachable transition', (): void => {
   expect(
     unwalkedTransitions({
       models,
       paths,
-      stateKey: (snapshot) => String(key(snapshot)),
-      eventKey: (event) => event.type,
+      stateKey: (snapshot): string => String(key(snapshot)),
+      eventKey: (event): typeof event.type => event.type,
     }),
   ).toEqual([]);
 });
 
-it('attaches live Feed updates when a subscription starts while the Session loads', async () => {
+it('attaches live Feed updates when a subscription starts while the Session loads', async (): Promise<void> => {
   vi.useFakeTimers();
   const { database, remove } = openTestDatabase();
   cleanups.push(remove);
   const adapter = createMockAdapter({
-    stream: () => {},
+    stream: (): undefined => {},
   });
   const {
     root,
     session: sessionActor,
     service,
   } = createSessionHost(database, adapter);
-  cleanups.push(() => root.stop());
+  cleanups.push((): typeof root => root.stop());
   const { updates } = subscribeToSession(service);
   expect((await updates.next()).value).toMatchObject({
     type: 'snapshot',
     snapshot: { maxRevision: 0 },
   });
-  await waitFor(sessionActor, (snapshot) =>
+  await waitFor(sessionActor, (snapshot): boolean =>
     snapshot.can({ type: 'session.prompt', turnId: 'turn-1', content: [] }),
   );
   sendSessionCommand(sessionActor, {

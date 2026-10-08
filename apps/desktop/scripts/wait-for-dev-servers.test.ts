@@ -9,9 +9,9 @@ import { serverAnswers } from './wait-for-dev-servers.mjs';
 let home: string;
 let mockServer: Server | undefined;
 
-const serverFile = () => join(home, 'server.json');
+const serverFile = (): string => join(home, 'server.json');
 
-const writeServerFile = (port: number) =>
+const writeServerFile = (port: number): void =>
   writeFileSync(
     serverFile(),
     JSON.stringify({
@@ -23,8 +23,8 @@ const writeServerFile = (port: number) =>
   );
 
 // Starts an HTTP server whose tRPC system.info answers with `body`, and returns its port.
-async function startMockServer(body: unknown) {
-  mockServer = createServer((request, response) => {
+async function startMockServer(body: unknown): Promise<number> {
+  mockServer = createServer((request, response): void => {
     if (request.url !== '/trpc/system.info') {
       response.writeHead(404).end();
       return;
@@ -33,28 +33,33 @@ async function startMockServer(body: unknown) {
     response.end(JSON.stringify(body));
   });
   const server = mockServer;
-  await new Promise<void>((resolve) =>
-    server.listen(0, '127.0.0.1', () => resolve()),
+  await new Promise<void>(
+    (
+      resolve,
+    ): Server<
+      typeof import('http').IncomingMessage,
+      typeof import('http').ServerResponse
+    > => server.listen(0, '127.0.0.1', (): void => resolve()),
   );
   return (server.address() as AddressInfo).port;
 }
 
-beforeEach(() => {
+beforeEach((): void => {
   home = mkdtempSync(join(tmpdir(), 'desktop-dev-servers-'));
 });
 
-afterEach(() => {
+afterEach((): void => {
   mockServer?.close();
   mockServer = undefined;
   rmSync(home, { recursive: true, force: true });
 });
 
-describe('serverAnswers', () => {
-  it('is false without server.json', async () => {
+describe('serverAnswers', (): void => {
+  it('is false without server.json', async (): Promise<void> => {
     expect(await serverAnswers(serverFile())).toBe(false);
   });
 
-  it('is false while nothing answers on the port in server.json', async () => {
+  it('is false while nothing answers on the port in server.json', async (): Promise<void> => {
     const port = await startMockServer({});
     mockServer?.close();
     writeServerFile(port);
@@ -62,13 +67,13 @@ describe('serverAnswers', () => {
     expect(await serverAnswers(serverFile())).toBe(false);
   });
 
-  it('is false when system.info answers with another shape', async () => {
+  it('is false when system.info answers with another shape', async (): Promise<void> => {
     writeServerFile(await startMockServer({ result: { data: { ok: true } } }));
 
     expect(await serverAnswers(serverFile())).toBe(false);
   });
 
-  it('is true once system.info answers on the port in server.json', async () => {
+  it('is true once system.info answers on the port in server.json', async (): Promise<void> => {
     writeServerFile(
       await startMockServer({
         result: {

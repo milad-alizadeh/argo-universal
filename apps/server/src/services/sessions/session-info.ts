@@ -83,16 +83,17 @@ export function toSessionInfo(input: SessionInfoInput): {
         input.plan?.plan.type === 'items'
           ? {
               done: input.plan.plan.entries.filter(
-                (entry) => entry.status === 'completed',
+                (entry): boolean => entry.status === 'completed',
               ).length,
               total: input.plan.plan.entries.length,
             }
           : null,
       subagents: {
         total: input.children.length,
-        running: input.children.filter((child) =>
+        running: input.children.filter((child): boolean =>
           input.turns.some(
-            (turn) => turn.sessionId === child.id && turn.status === 'running',
+            (turn): boolean =>
+              turn.sessionId === child.id && turn.status === 'running',
           ),
         ).length,
       },
@@ -110,9 +111,9 @@ export function latestTurnOf(
   sessionId: string,
 ): Turn | undefined {
   return turns
-    .filter((turn) => turn.sessionId === sessionId)
+    .filter((turn): boolean => turn.sessionId === sessionId)
     .toSorted(
-      (first, second) =>
+      (first, second): number =>
         second.startedAt - first.startedAt || second.id.localeCompare(first.id),
     )[0];
 }
@@ -129,8 +130,11 @@ function activityOf(input: {
   if (input.running) return input.header?.text ?? 'Working';
   return (
     input.message?.content
-      .filter((block) => block.type === 'text')
-      .map((block) => block.text)
+      .filter(
+        (block): block is { type: 'text'; text: string } =>
+          block.type === 'text',
+      )
+      .map((block): string => block.text)
       .join('\n')
       .split('\n')[0] ?? ''
   );

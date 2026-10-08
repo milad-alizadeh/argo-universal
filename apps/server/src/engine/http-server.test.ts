@@ -23,13 +23,13 @@ let sessions: RegistryActorRef;
 let removeDatabase: () => void;
 let closeServer: () => Promise<void>;
 
-const findFreePort = () =>
-  new Promise<number>((resolve, reject) => {
+const findFreePort = (): Promise<number> =>
+  new Promise<number>((resolve, reject): void => {
     const server = createServer();
     server.once('error', reject);
-    server.listen(0, '127.0.0.1', () => {
+    server.listen(0, '127.0.0.1', (): void => {
       const address = server.address();
-      server.close(() =>
+      server.close((): void =>
         typeof address === 'object' && address
           ? resolve(address.port)
           : reject(new Error('No free port')),
@@ -38,14 +38,14 @@ const findFreePort = () =>
   });
 
 // Resolves with the HTTP status of the upgrade: 101 when the WebSocket opens.
-const upgradeStatus = (headers: Record<string, string>) =>
-  new Promise<number>((resolve, reject) => {
+const upgradeStatus = (headers: Record<string, string>): Promise<number> =>
+  new Promise<number>((resolve, reject): void => {
     const socket = new WebSocket(`ws://127.0.0.1:${port}`, { headers });
-    socket.once('open', () => {
+    socket.once('open', (): void => {
       socket.close();
       resolve(101);
     });
-    socket.once('unexpected-response', (_request, response) => {
+    socket.once('unexpected-response', (_request, response): void => {
       resolve(response.statusCode ?? 0);
       response.resume();
     });
@@ -53,8 +53,10 @@ const upgradeStatus = (headers: Record<string, string>) =>
   });
 
 // Resolves with the HTTP status of system.info over HTTP.
-const systemInfoStatus = (headers: Record<string, string> = {}) =>
-  new Promise<number>((resolve, reject) => {
+const systemInfoStatus = (
+  headers: Record<string, string> = {},
+): Promise<number> =>
+  new Promise<number>((resolve, reject): void => {
     const outgoing = request(
       {
         host: '127.0.0.1',
@@ -62,7 +64,7 @@ const systemInfoStatus = (headers: Record<string, string> = {}) =>
         path: '/trpc/system.info',
         headers: { host: `127.0.0.1:${port}`, ...headers },
       },
-      (response) => {
+      (response): void => {
         resolve(response.statusCode ?? 0);
         response.resume();
       },
@@ -71,10 +73,20 @@ const systemInfoStatus = (headers: Record<string, string> = {}) =>
     outgoing.end();
   });
 
-const readdirSafe = (folder: string) =>
+const readdirSafe = (folder: string): string[] =>
   existsSync(folder) ? readdirSync(folder) : [];
 
-const options = () => ({
+const options = (): {
+  createId: (
+    options?: import('crypto').RandomUUIDOptions,
+  ) => import('crypto').UUID;
+  home: string;
+  port: number;
+  version: string;
+  startedAt: string;
+  database: Database;
+  sessions: RegistryActorRef;
+} => ({
   createId: randomUUID,
   home,
   port,
@@ -84,13 +96,13 @@ const options = () => ({
   sessions,
 });
 
-beforeEach(async () => {
+beforeEach(async (): Promise<void> => {
   home = mkdtempSync(join(tmpdir(), 'server-http-server-'));
   port = await findFreePort();
   ({ database, remove: removeDatabase } = openTestDatabase());
   sessions = createActor(registryMachine, {
     input: {
-      now: () => Date.now(),
+      now: (): number => Date.now(),
       createId: randomUUID,
       database,
       runtimeDirectory: home,
@@ -100,29 +112,29 @@ beforeEach(async () => {
   ({ close: closeServer } = await startHttpServer(options()));
 });
 
-afterEach(async () => {
+afterEach(async (): Promise<void> => {
   await closeServer();
   sessions.stop();
   removeDatabase();
   rmSync(home, { recursive: true, force: true });
 });
 
-describe('http server', () => {
+describe('http server', (): void => {
   it.each([
     ['no Origin', {}],
     ['the desktop app', { origin: 'app://app' }],
     ['Expo web on localhost', { origin: 'http://localhost:8081' }],
     ['a web App on 127.0.0.1', { origin: 'http://127.0.0.1:6006' }],
-  ])('accepts a WebSocket from %s', async (_name, headers) => {
+  ])('accepts a WebSocket from %s', async (_name, headers): Promise<void> => {
     expect(await upgradeStatus(headers)).toBe(101);
   });
 
-  it('accepts a WebSocket and HTTP on localhost', async () => {
+  it('accepts a WebSocket and HTTP on localhost', async (): Promise<void> => {
     expect(await upgradeStatus({ host: `localhost:${port}` })).toBe(101);
     expect(await systemInfoStatus({ host: `localhost:${port}` })).toBe(200);
   });
 
-  it('answers system.info over HTTP', async () => {
+  it('answers system.info over HTTP', async (): Promise<void> => {
     const response = await fetch(`http://127.0.0.1:${port}/trpc/system.info`);
     expect(await response.json()).toEqual({
       result: {
@@ -136,7 +148,7 @@ describe('http server', () => {
     });
   });
 
-  it('answers feed.page from the database', async () => {
+  it('answers feed.page from the database', async (): Promise<void> => {
     const input = encodeURIComponent(
       JSON.stringify({ sessionId: 'session-1', direction: 'tail' }),
     );
@@ -148,7 +160,7 @@ describe('http server', () => {
     });
   });
 
-  it('stores an upload sent as multipart FormData over HTTP', async () => {
+  it('stores an upload sent as multipart FormData over HTTP', async (): Promise<void> => {
     const form = new FormData();
     form.set('file', new Blob(['png'], { type: 'image/png' }), 'image.png');
     const response = await fetch(`http://127.0.0.1:${port}/trpc/blob.upload`, {
@@ -168,7 +180,7 @@ describe('http server', () => {
     expect(await stored.text()).toBe('png');
   });
 
-  it('refuses an upload over 20 MB before reading all of it', async () => {
+  it('refuses an upload over 20 MB before reading all of it', async (): Promise<void> => {
     const form = new FormData();
     form.set('file', new Blob([new Uint8Array(maxBlobUploadBytes + 1)]));
     const response = await fetch(`http://127.0.0.1:${port}/trpc/blob.upload`, {
@@ -180,8 +192,8 @@ describe('http server', () => {
     expect(readdirSafe(join(home, 'blobs'))).toEqual([]);
   });
 
-  it('refuses a call from another origin over the WebSocket and over HTTP', async () => {
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+  it('refuses a call from another origin over the WebSocket and over HTTP', async (): Promise<void> => {
+    vi.spyOn(console, 'error').mockImplementation((): void => {});
     const origin = 'https://evil.example';
     expect(await upgradeStatus({ origin })).toBe(403);
     expect(await systemInfoStatus({ origin })).toBe(403);
@@ -189,36 +201,38 @@ describe('http server', () => {
 
   it.each(['https://evil.example', 'http://localhost.evil.example', 'null'])(
     'rejects a WebSocket from %s',
-    async (origin) => {
+    async (origin): Promise<void> => {
       expect(await upgradeStatus({ origin })).toBe(403);
     },
   );
 
-  it('rejects a WebSocket with another Host', async () => {
+  it('rejects a WebSocket with another Host', async (): Promise<void> => {
     expect(await upgradeStatus({ host: 'evil.example:7337' })).toBe(403);
     expect(await upgradeStatus({ host: `127.0.0.1:${port + 1}` })).toBe(403);
   });
 
-  it('rejects HTTP with another Host', async () => {
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+  it('rejects HTTP with another Host', async (): Promise<void> => {
+    vi.spyOn(console, 'error').mockImplementation((): void => {});
     expect(await systemInfoStatus()).toBe(200);
     expect(await systemInfoStatus({ host: 'evil.example:7337' })).toBe(403);
   });
 
-  it('rejects a second server on the same port', async () => {
+  it('rejects a second server on the same port', async (): Promise<void> => {
     await expect(startHttpServer(options())).rejects.toMatchObject({
       code: 'EADDRINUSE',
     });
     expect(await systemInfoStatus()).toBe(200);
   });
 
-  it('closes while a WebSocket client is connected', async () => {
+  it('closes while a WebSocket client is connected', async (): Promise<void> => {
     const socket = new WebSocket(`ws://127.0.0.1:${port}`);
-    await new Promise((resolve, reject) => {
+    await new Promise((resolve, reject): void => {
       socket.once('open', resolve);
       socket.once('error', reject);
     });
-    const closed = new Promise((resolve) => socket.once('close', resolve));
+    const closed = new Promise((resolve): WebSocket =>
+      socket.once('close', resolve),
+    );
     await closeServer();
     await closed;
     expect(socket.readyState).toBe(WebSocket.CLOSED);
