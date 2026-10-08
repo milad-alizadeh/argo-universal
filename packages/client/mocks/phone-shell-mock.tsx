@@ -4,9 +4,12 @@ import {
 } from 'phosphor-react-native';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
-import { HeaderButton } from '../src/components/HeaderButton';
-import { PhoneMenuButton } from '../src/components/PhoneMenuButton';
-import { PhoneShell, type PhoneShellProps } from '../src/components/PhoneShell';
+import { HeaderButton } from '../src/components/header-button';
+import { PhoneMenuButton } from '../src/components/phone-menu-button';
+import {
+  PhoneShell,
+  type PhoneShellProps,
+} from '../src/components/phone-shell';
 import { shellSections } from '../src/components/shell-sections';
 import { ScreenHeader } from '../src/navigation/screen-header';
 import { Text } from '../src/primitives/text';

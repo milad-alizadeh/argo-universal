@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { SessionScreenProps } from '../src/screens/SessionScreen';
+import type { SessionScreenProps } from '../src/screens/session-screen';
 import { SessionScreenPreview } from './session-screen-preview';
 
 let openSession = (_id: string) => {};

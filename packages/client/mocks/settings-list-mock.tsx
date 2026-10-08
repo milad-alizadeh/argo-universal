@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { DesktopShell } from '../src/components/DesktopShell';
-import { PhoneMenuButton } from '../src/components/PhoneMenuButton';
-import { PhoneShell, type ShellSection } from '../src/components/PhoneShell';
-import { SettingsList } from '../src/components/SettingsList';
+import { DesktopShell } from '../src/components/desktop-shell';
+import { PhoneMenuButton } from '../src/components/phone-menu-button';
+import { PhoneShell, type ShellSection } from '../src/components/phone-shell';
+import { SettingsList } from '../src/components/settings-list';
 import { shellSections } from '../src/components/shell-sections';
 import {
   type NavigationDestination,
@@ -19,7 +19,7 @@ import {
   AtlasScreen,
   IssuesScreen,
   ProjectSettingsScreen,
-} from '../src/screens/PlaceholderScreens';
+} from '../src/screens/placeholder-screens';
 
 export const settingsListMocks = {
   projects: [{ name: 'example-project' }],
