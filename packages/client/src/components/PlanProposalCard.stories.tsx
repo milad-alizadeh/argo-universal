@@ -29,7 +29,10 @@ const meta = {
   },
   argTypes: {
     agent: { options: ['agent-1', 'agent-2'], control: 'select' },
-    requestState: { options: ['open', 'answered'], control: 'select' },
+    requestState: {
+      options: ['open', 'submitting', 'answered'],
+      control: 'select',
+    },
     proposal: { control: false },
     state: { control: false },
   },
@@ -56,7 +59,7 @@ export const Overview: Story = {
                       kind: 'answered',
                       reason: 'Already answered on another device',
                     }
-                  : { kind: 'open' }
+                  : { kind: args.requestState }
               }
             />
           </View>
@@ -64,6 +67,20 @@ export const Overview: Story = {
         <Variation label="Long Plan proposal">
           <View testID="proposal-preview-long" className="h-144">
             <PlanProposalPreview {...args} proposal={longPlanProposal} />
+          </View>
+        </Variation>
+        <Variation label="Sending answer">
+          <View className="h-144">
+            <PlanProposalPreview {...args} state={{ kind: 'submitting' }} />
+          </View>
+        </Variation>
+        <Variation label="Answer failed">
+          <View className="h-144">
+            <PlanProposalPreview
+              {...args}
+              state={{ kind: 'open' }}
+              error="Could not send your answer. Try again."
+            />
           </View>
         </Variation>
         <Variation label="Already answered">
