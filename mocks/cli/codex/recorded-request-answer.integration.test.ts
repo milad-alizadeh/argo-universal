@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
@@ -11,17 +11,13 @@ import { recordedRequestAnswer } from './recorded-request-answer.ts';
 import { writeMockCodex } from './write-mock-codex.ts';
 
 let directory: string;
-const recordingFiles: string[] = [];
 const producer = 'codex-app-server';
 const turnStart = 'turn/start';
 
 beforeEach(async (): Promise<void> => {
   directory = await mkdtemp(path.join(os.tmpdir(), 'recorded-answers-'));
 });
-afterEach(async (): Promise<void> => {
-  await rm(directory, { recursive: true, force: true });
-  for (const file of recordingFiles.splice(0)) await rm(file);
-});
+afterEach((): Promise<void> => rm(directory, { recursive: true, force: true }));
 
 it.each(['permission', 'elicitation', 'plan-approved', 'plan-kept-planning'])(
   'records the live %s answer like its recorded reader',
@@ -83,7 +79,7 @@ it.each([{}, { params: null }, { params: { input: 'text' } }])(
       ],
     });
     const diagnostic = vi.spyOn(console, 'error').mockImplementation(() => {});
-    expect(() => recordedRequestAnswer(name)).toThrow(
+    expect(() => recordedRequestAnswer(name, directory)).toThrow(
       'Unsupported codex request answer',
     );
     expect(diagnostic).toHaveBeenCalledExactlyOnceWith(
@@ -102,7 +98,7 @@ it.each([
       messages: [{ id: 99, method: 'item/tool/requestUserInput' }],
       input: [input],
     });
-    expect(recordedRequestAnswer(name)).toEqual({
+    expect(recordedRequestAnswer(name, directory)).toEqual({
       type: 'elicitation',
       action,
     });
@@ -116,10 +112,10 @@ async function writeRecording(payload: unknown): Promise<string> {
     'plan-approved',
   );
   const { version } = readRecording(source, producer);
-  const file = path.join(path.dirname(source), `${name}.json`);
-  recordingFiles.push(file);
+  const folder = path.join(directory, version);
+  await mkdir(folder);
   await writeFile(
-    file,
+    path.join(folder, `${name}.json`),
     JSON.stringify({ producer, version, recordedAt: null, payload }),
   );
   return name;

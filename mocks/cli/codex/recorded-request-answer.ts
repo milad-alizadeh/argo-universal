@@ -17,13 +17,21 @@ type RecordedInput = {
   result?: unknown;
 };
 
-export function recordedRequestAnswer(name: string): RecordedRequestAnswer {
-  return createRequestAnswerReader()(() => readRecordedAnswer(name));
+export function recordedRequestAnswer(
+  name: string,
+  recordingsDirectory = path.join(import.meta.dirname, 'recordings'),
+): RecordedRequestAnswer {
+  return createRequestAnswerReader()(() =>
+    readRecordedAnswer(name, recordingsDirectory),
+  );
 }
 
-function readRecordedAnswer(name: string): RecordedRequestAnswer {
+function readRecordedAnswer(
+  name: string,
+  recordingsDirectory: string,
+): RecordedRequestAnswer {
   const { payload } = readRecording(
-    findRecording(path.join(import.meta.dirname, 'recordings'), name),
+    findRecording(recordingsDirectory, name),
     'codex-app-server',
   );
   const request = recordedFrames<VendorMessage>(payload, 'messages').find(
