@@ -100,6 +100,26 @@ describe('Claude config options', (): void => {
     ).toEqual(['mode', 'model']);
   });
 
+  it('preserves fast-mode capability metadata from the provider', (): void => {
+    const catalog: ModelInfo[] = [
+      {
+        value: 'fast-capable',
+        displayName: 'Fast-capable model',
+        description: '',
+        supportsFastMode: true,
+      },
+    ];
+    const options = toConfigOptions(catalog, startingValues(catalog, []));
+    const model = options.find(
+      (option): boolean => option.configId === 'model',
+    );
+    if (model?.type !== 'select') throw new Error('Missing model options');
+    expect(model.options[0]).toHaveProperty(
+      '_meta.argo.supportsFastMode',
+      true,
+    );
+  });
+
   it.each([
     { configId: 'mode', value: 'dontAsk' },
     { configId: 'colour', value: 'blue' },
