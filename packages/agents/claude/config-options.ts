@@ -4,38 +4,39 @@ import type {
   PermissionMode,
 } from '@anthropic-ai/claude-agent-sdk';
 import type {
-  ConfigOptionIcon,
   SessionConfigOption,
   SessionConfigSelectOption,
 } from '@repo/contracts';
 import type { AgentConfigValue } from '../src/agent-events';
+import {
+  changeValue as changeConfigValue,
+  effortLevelName,
+  hasEffortLevels,
+  sharedModes,
+} from '../src/config-options';
 
 // The SDK names its modes only as a type, so this list and its names are ours; `dontAsk` is not offered.
-const modeNames = {
-  plan: 'Plan mode',
-  default: 'Ask first',
-  acceptEdits: 'Accept edits',
-  auto: 'Auto',
-  bypassPermissions: 'Bypass permissions',
-} satisfies Partial<Record<PermissionMode, string>>;
-type Mode = keyof typeof modeNames;
-const modeDescriptions = {
-  default: 'Asks before edits and commands',
-  acceptEdits: 'Edits files without asking, asks before commands',
-  plan: 'Reads and plans, changes nothing',
-  auto: 'Automatically checks permissions for each action',
-  bypassPermissions: 'Runs everything without asking',
-} satisfies Record<Mode, string>;
-const modeMetadata = {
-  default: { icon: 'ShieldWarning', tone: 'safe' },
-  acceptEdits: { icon: 'Pencil', tone: 'moderate' },
-  plan: { icon: 'MapTrifold', tone: 'planning' },
-  auto: { icon: 'Sparkles', tone: 'moderate' },
-  bypassPermissions: { icon: 'WarningTriangle', tone: 'dangerous' },
-} satisfies Record<
-  Mode,
-  NonNullable<SessionConfigOption['_meta']>['argo'] & { icon: ConfigOptionIcon }
+const modes = {
+  ...sharedModes,
+  acceptEdits: {
+    name: 'Accept edits',
+    description: 'Edits files without asking, asks before commands',
+    _meta: { argo: { icon: 'Pencil', tone: 'moderate' } },
+  },
+  auto: {
+    name: 'Auto',
+    description: 'Automatically checks permissions for each action',
+    _meta: { argo: { icon: 'Sparkles', tone: 'moderate' } },
+  },
+  bypassPermissions: {
+    name: 'Bypass permissions',
+    description: 'Runs everything without asking',
+    _meta: { argo: { icon: 'WarningTriangle', tone: 'dangerous' } },
+  },
+} satisfies Partial<
+  Record<PermissionMode, Omit<SessionConfigSelectOption, 'value'>>
 >;
+type Mode = keyof typeof modes;
 
 // `default` identifies the recommended model; supported effort defaults resolve to a concrete level.
 export const DEFAULT_VALUE = 'default';
@@ -55,8 +56,8 @@ const findModel = (
 
 // Models and their effort levels come from the CLI's model list.
 const modesFor = (model: ModelInfo | undefined): Mode[] =>
-  Object.keys(modeNames)
-    .filter((mode): mode is Mode => mode in modeNames)
+  Object.keys(modes)
+    .filter((mode): mode is Mode => mode in modes)
     .filter(
       (mode): boolean | undefined => mode !== 'auto' || model?.supportsAutoMode,
     );
@@ -132,25 +133,18 @@ export function startingValues(
   });
 }
 
-const isConfigId = (value: string): value is keyof ConfigValues =>
-  value === 'mode' || value === 'model' || value === 'effort';
-
 // The values after the user picks one option, or undefined for a value that was not offered.
 export function changeValue(
   models: ModelInfo[],
   values: ConfigValues,
   change: AgentConfigValue,
 ): ConfigValues | undefined {
-  const configId = change.configId;
-  if (!isConfigId(configId)) return undefined;
-  const next = allowedValues(models, { ...values, [configId]: change.value });
-  return next[configId] === change.value ? next : undefined;
+  return changeConfigValue(
+    (wanted): ConfigValues => allowedValues(models, wanted),
+    values,
+    change,
+  );
 }
-
-const effortName = (level: EffortLevel): string =>
-  level === 'xhigh'
-    ? 'Extra high'
-    : `${level.charAt(0).toUpperCase()}${level.slice(1)}`;
 
 export function toConfigOptions(
   models: ModelInfo[],
@@ -166,9 +160,7 @@ export function toConfigOptions(
       currentValue: values.mode,
       options: modesFor(model).map((mode): SessionConfigSelectOption => ({
         value: mode,
-        name: modeNames[mode],
-        description: modeDescriptions[mode],
-        _meta: { argo: modeMetadata[mode] },
+        ...modes[mode],
       })),
     },
     {
@@ -205,7 +197,7 @@ export function toConfigOptions(
     },
   ];
   const levels = effortLevelsFor(model);
-  if (levels.length === 0) return options;
+  if (!hasEffortLevels(levels)) return options;
   const effort: SessionConfigOption = {
     type: 'select',
     configId: 'effort',
@@ -215,7 +207,7 @@ export function toConfigOptions(
       values.effort === DEFAULT_VALUE ? defaultEffort(model) : values.effort,
     options: levels.map((level): SessionConfigSelectOption => ({
       value: level,
-      name: effortName(level),
+      name: effortLevelName(level),
     })),
   };
   return [...options, effort];

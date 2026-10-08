@@ -16,3 +16,5 @@ export { toLiveHeader } from './live-header';
 export { titleFromPrompt } from './session-data';
 export { noChanges } from './session-snapshot';
 export { toSessionCheckout } from './session-record';
+export { sessionRegistryId, findSessionRegistry } from './registry-system';
+export { sessionActorId, findSessionActor } from './session-system';
