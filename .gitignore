@@ -35,3 +35,8 @@ coverage/
 *storybook.log
 storybook-static
 __screenshots__/
+
+# Generated Gherkin journeys
+/e2e/.features-gen/
+/e2e/playwright-report/
+/e2e/test-results/

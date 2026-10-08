@@ -20,6 +20,7 @@
     "**/playwright-report/**",
     "**/blob-report/**",
     "**/test-results/**",
+    "**/.features-gen/**",
     "packages/db/drizzle/**",
     "**/.rnstorybook/storybook.requires.ts",
     "**/*.gen.*",
