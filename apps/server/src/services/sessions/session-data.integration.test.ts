@@ -40,6 +40,39 @@ it.each([
   { type: 'main' },
   { type: 'worktree', baseBranch: 'feature' },
 ] as const)(
+  'creates the $type Checkout from the Project path supplied at creation',
+  async (checkout): Promise<void> => {
+    const directory = realpathSync(
+      mkdtempSync(join(tmpdir(), 'session-project-path-')),
+    );
+    cleanups.push((): void =>
+      rmSync(directory, { recursive: true, force: true }),
+    );
+    initTestRepository(directory);
+    const { database, remove } = openTestDatabase(
+      {},
+      join(directory, 'stale-project-path'),
+    );
+    cleanups.push(remove);
+    const created = await createSessionCheckout({
+      ...newSession,
+      database,
+      runtimeDirectory: join(directory, '.argo'),
+      projectPath: directory,
+      checkout,
+    });
+    expect(created.checkout.path).toBe(
+      checkout.type === 'main'
+        ? directory
+        : join(directory, '.argo/worktrees/project-1/new-session'),
+    );
+  },
+);
+
+it.each([
+  { type: 'main' },
+  { type: 'worktree', baseBranch: 'feature' },
+] as const)(
   'creates, stores and reloads a Session in the $type Checkout with a line break in its path',
   async (checkout): Promise<void> => {
     const directory = realpathSync(
@@ -58,6 +91,7 @@ it.each([
     const input = {
       ...newSession,
       database,
+      projectPath: directory,
       runtimeDirectory: join(directory, '.argo'),
       checkout,
     };
@@ -195,7 +229,7 @@ it('reloads Feed positions and the vendor Session from writes still queued', asy
   });
 });
 
-it('rejects an unknown Session or Project', async (): Promise<void> => {
+it('rejects an unknown Session', async (): Promise<void> => {
   const { database, directory: runtimeDirectory, remove } = openTestDatabase();
   cleanups.push(remove);
   await expect(
@@ -206,15 +240,6 @@ it('rejects an unknown Session or Project', async (): Promise<void> => {
       kind: 'existing',
     }),
   ).rejects.toThrow('No Session missing');
-  await expect(
-    createSessionCheckout({
-      ...newSession,
-      database,
-      runtimeDirectory,
-      projectId: 'missing',
-      checkout: { type: 'main' },
-    }),
-  ).rejects.toThrow('No Project missing');
 });
 
 it('rejects and reports a git response that has no working Checkout', async (): Promise<void> => {
@@ -235,6 +260,7 @@ it('rejects and reports a git response that has no working Checkout', async (): 
       ...newSession,
       database,
       runtimeDirectory,
+      projectPath: directory,
       checkout: { type: 'main' },
     }),
   ).rejects.toThrow('Unrecognised git worktree list response');

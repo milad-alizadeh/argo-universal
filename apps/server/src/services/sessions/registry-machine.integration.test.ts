@@ -35,6 +35,7 @@ const events: RegistryEvent[] = [
       type: 'sessions.create',
       sessionId,
       projectId: 'project-1',
+      projectPath: '/project',
       agent: 'mock',
       checkout: { type: 'main' },
       configOptions: [],
