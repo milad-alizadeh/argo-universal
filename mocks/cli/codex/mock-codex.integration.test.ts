@@ -5,7 +5,10 @@ import path from 'node:path';
 import { promisify } from 'node:util';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { VendorMessage } from '../../../packages/agents/codex/messages.ts';
-import { isVendorMessage } from '../../../packages/agents/codex/payloads.ts';
+import {
+  isVendorMessage,
+  isThreadStartResponse,
+} from '../../../packages/agents/codex/payloads.ts';
 import { codexProtocolVersion } from '../../../packages/agents/codex/protocol.gen.ts';
 import {
   type WireMessage,
@@ -63,10 +66,12 @@ const startTurn = async (
   threadId: string | undefined,
 ): Promise<void> => {
   codex.send({ id: 2, method: 'thread/start', params: {} });
-  expect(await codex.next()).toEqual({
+  const started = await codex.next();
+  expect(started).toMatchObject({
     id: 2,
     result: { thread: { id: threadId } },
   });
+  expect(isThreadStartResponse(started.result)).toBe(true);
   codex.send({
     id: 3,
     method: 'turn/start',

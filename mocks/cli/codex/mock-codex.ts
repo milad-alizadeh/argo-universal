@@ -1,14 +1,15 @@
 // A stand-in `codex app-server` over JSON-RPC. Each `turn/start` replays the next recorded Turn.
 import path from 'node:path';
+import type { VendorMessage } from '../../../packages/agents/codex/messages.ts';
+import {
+  isVendorMessage,
+  isThreadStartResponse,
+  isAccountResponse,
+} from '../../../packages/agents/codex/payloads.ts';
 import type {
-  MappedTurn,
-  VendorMessage,
-} from '../../../packages/agents/codex/messages.ts';
-import { isVendorMessage } from '../../../packages/agents/codex/payloads.ts';
-import type {
+  Turn,
   Account,
   GetAccountResponse,
-  InitializeResponse,
 } from '../../../packages/agents/codex/protocol.gen.ts';
 import {
   isResumeInput,
@@ -132,7 +133,7 @@ function replayRequestFrames(
 }
 let withheldStartResponse: {
   id: string | number | undefined;
-  result: { turn: MappedTurn };
+  result: { turn: Turn };
 } | null = null;
 
 // Read on request, so a version folder without a model list still serves Turns.
@@ -198,18 +199,29 @@ function startTurn(
     replayTurn(frames.slice(0, frames.indexOf(started) + 1), null);
     return;
   }
-  const response = { id, result: { turn: started.params?.turn } };
+  const incompleteTurn: Partial<typeof started.params.turn> = {
+    ...started.params.turn,
+  };
+  delete incompleteTurn.itemsView;
+  const response = {
+    id,
+    result: {
+      turn: environment.scenario.malformedPayload
+        ? incompleteTurn
+        : started.params.turn,
+    },
+  };
   const crashAfter = environment.exitMidTurn
     ? (message: (typeof frames)[number]): boolean => message === started
     : null;
   if (turnIndex === 1 && environment.scenario.turnResponseAfterNextStart) {
-    withheldStartResponse = response;
+    withheldStartResponse = { id, result: { turn: started.params.turn } };
     replayTurn(frames, crashAfter);
     if (command < 0) activeTurnId = null;
     return;
   }
   if (environment.scenario.requestBeforeStartResponse) {
-    withheldStartResponse = response;
+    withheldStartResponse = { id, result: { turn: started.params.turn } };
     replayRequestFrames(frames, crashAfter);
     return;
   }
@@ -238,34 +250,30 @@ serveJsonLines<WireFrame>(({ id, method, params, result }): void | boolean => {
     case 'initialize':
       if (environment.scenario.blockInitialize) return;
       if (environment.scenario.malformedLine) return send({ id, error: {} });
-      return send({
-        id,
-        result: {
-          userAgent: 'mock',
-          codexHome: path.dirname(environment.recordingFile),
-          platformFamily: process.platform,
-          platformOs: process.platform,
-        } satisfies InitializeResponse,
-      });
+      if (environment.scenario.malformedPayload)
+        return send({ id, result: {} });
+      return send({ id, result: startupResponse('initialize') });
     case 'account/read': {
       const usesApiKey =
         process.env.OPENAI_API_KEY ||
         process.env.CODEX_API_KEY ||
         environment.scenario.account === 'apiKey';
-      const account: Account = usesApiKey
-        ? { type: 'apiKey' }
-        : { type: 'chatgpt', email: 'mock@example.com', planType: 'plus' };
+      const captured = startupResponse('account-read');
+      if (!isAccountResponse(captured))
+        throw new Error('Invalid account recording');
+      const account = usesApiKey
+        ? ({ type: 'apiKey' } satisfies Account)
+        : captured.account;
       const response: GetAccountResponse = {
+        ...captured,
         account: environment.availability === 'not_signed_in' ? null : account,
-        requiresOpenaiAuth: true,
-        workspaceRouting: null,
       };
       return send({ id, result: response });
     }
     case 'model/list':
       return listModels(id);
     case 'thread/start':
-      return send({ id, result: { thread: { id: threadId } } });
+      return send({ id, result: startupResponse('thread-start') });
     case 'thread/resume': {
       const file = environment.scenario.transcriptFile;
       const stored = file ? readMockTranscript(file) : null;
@@ -281,7 +289,7 @@ serveJsonLines<WireFrame>(({ id, method, params, result }): void | boolean => {
           },
         });
       threadId = stored.vendorSessionId;
-      return send({ id, result: { thread: { id: threadId } } });
+      return send({ id, result: startupResponse('thread-resume') });
     }
     case 'turn/interrupt':
       cancelling = true;
@@ -404,3 +412,23 @@ const notificationsFirstRequested = (value: unknown): boolean =>
   isWireFrame(value) &&
   'notificationsFirst' in value &&
   value.notificationsFirst === true;
+
+function startupResponse(method: string): unknown {
+  const file = findRecording(
+    path.join(import.meta.dirname, 'recordings'),
+    `startup-${method}`,
+  );
+  const captured = readRecording(file, PRODUCER).payload;
+  const identityFile = findRecording(
+    path.join(import.meta.dirname, 'recordings'),
+    'startup-thread-start',
+  );
+  const identity = readRecording(identityFile, PRODUCER).payload;
+  if (!isThreadStartResponse(identity))
+    throw new Error('Invalid startup recording');
+  return JSON.parse(
+    JSON.stringify(captured)
+      .replaceAll(identity.thread.id, threadId)
+      .replaceAll(identity.cwd, process.cwd()),
+  );
+}

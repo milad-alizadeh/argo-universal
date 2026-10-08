@@ -24,6 +24,7 @@ const MockCliScenario = z.strictObject({
   processFile: z.string().nullable().default(null),
   blockInitialize: z.boolean().default(false),
   malformedLine: z.boolean().default(false),
+  malformedPayload: z.boolean().default(false),
   concurrentQuestions: z.boolean().default(false),
   otherThreadRequest: z.boolean().default(false),
   blockTurnStart: z.boolean().default(false),

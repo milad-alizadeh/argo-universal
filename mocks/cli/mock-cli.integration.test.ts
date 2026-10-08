@@ -16,6 +16,7 @@ it('gives every scenario field its default when the variable is absent', (): voi
     processFile: null,
     blockInitialize: false,
     malformedLine: false,
+    malformedPayload: false,
     concurrentQuestions: false,
     otherThreadRequest: false,
     blockTurnStart: false,

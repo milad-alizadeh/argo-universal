@@ -108,10 +108,7 @@ it('keeps the Session running while rejected messages show warning Notices', asy
   });
   const { session, service, stream } = await openSession();
   sendSessionCommand(session, firstPrompt);
-  stream.send({
-    type: 'agent.messageRejected',
-    reason: 'Unknown vendor message',
-  });
+  stream.send({ type: 'agent.usage', usage: { used: Number.NaN, size: 100 } });
   stream.send({
     type: 'agent.messageRejected',
     reason: 'Another unknown message',
@@ -134,7 +131,7 @@ it('keeps the Session running while rejected messages show warning Notices', asy
     expect.objectContaining({
       severity: 'warning',
       title: 'The Agent sent an unrecognised message',
-      description: 'Unknown vendor message',
+      description: 'Invalid Argo event: agent.usage',
     }),
     expect.objectContaining({
       severity: 'warning',
@@ -144,9 +141,10 @@ it('keeps the Session running while rejected messages show warning Notices', asy
   ]);
   expect(session.getSnapshot().context.rejectedMessages).toBe(2);
   expect(session.getSnapshot().context.failure).toBeNull();
+  expect(session.getSnapshot().context.usage).toBeNull();
   expect(log).toHaveBeenNthCalledWith(
     1,
-    'session session-1: rejected an Agent message: Unknown vendor message',
+    'session session-1: rejected an Agent message: Invalid Argo event: agent.usage',
   );
   expect(log).toHaveBeenNthCalledWith(
     2,

@@ -27,8 +27,6 @@ import {
   toConfigOptions,
 } from './config-options';
 import type { VendorMessage } from './messages';
-import { isVendorMessage, isIgnoredCliExtension } from './payloads.ts';
-import { isAskUserQuestionInput } from './tool-inputs.ts';
 
 // The values the CLI starts with; the saved ones follow once its model list can check them.
 const CLI_START: ConfigValues = {
@@ -265,14 +263,7 @@ export async function connect(
   const messages = (async (): Promise<void> => {
     try {
       for await (const message of vendor) {
-        const payload: unknown = { ...message, receivedAt: Date.now() };
-        if (isIgnoredCliExtension(payload)) continue;
-        if (isVendorMessage(payload)) listener.message(payload);
-        else
-          listener.event({
-            type: 'agent.messageRejected',
-            reason: 'Unrecognised vendor payload',
-          });
+        listener.message({ ...message, receivedAt: Date.now() });
         // Usage failures are ignored; the streamed Turn still supplies its Feed.
         if (message.type === 'result') void sendUsage().catch((): void => {});
       }
@@ -403,7 +394,7 @@ function createRequestTracker(listener: VendorSessionListener<VendorMessage>): {
     },
     resolve: (answer: PermissionResult) => void,
   ) => void;
-  head: () => { toolUseId: string; input: AskUserQuestionInput } | undefined;
+  head: () => { toolUseId: string; input: Record<string, unknown> } | undefined;
   remove: (
     id: string,
     advance?: boolean,
@@ -433,13 +424,12 @@ function createRequestTracker(listener: VendorSessionListener<VendorMessage>): {
       listener.message(message);
     },
     head: ():
-      | { toolUseId: string; input: AskUserQuestionInput }
+      | { toolUseId: string; input: Record<string, unknown> }
       | undefined => {
       const id = questions[0];
       if (!id) return;
       const request = pending.get(id)?.message.request;
       if (request?.subtype !== 'can_use_tool') return;
-      if (!isAskUserQuestionInput(request.input)) return;
       // AskUserQuestionInput is the SDK's tool payload at this boundary.
       return {
         toolUseId: id,

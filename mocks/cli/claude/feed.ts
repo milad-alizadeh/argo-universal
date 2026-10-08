@@ -1,14 +1,18 @@
 import path from 'node:path';
 import {
-  isWireFrame,
-  isUserMessage,
-} from '../../../packages/agents/claude/control-payloads.ts';
-import {
   initialMappingState,
   toAgentEvents,
 } from '../../../packages/agents/claude/to-agent-events.ts';
+import {
+  isVendorMessage,
+  isUserMessage,
+} from '../../../packages/agents/claude/wire.ts';
 import { recordedFeedEvents } from '../feed.ts';
 import { recordedImage } from '../image.ts';
+import {
+  isRecordedFrame as isWireFrame,
+  type RecordedFrame as WireFrame,
+} from '../recording.ts';
 import { findRecording, readRecording, recordedFrames } from '../recording.ts';
 
 export function feedEvents(name: string): import('@repo/agents').AgentEvent[] {
@@ -24,6 +28,7 @@ export function feedEvents(name: string): import('@repo/agents').AgentEvent[] {
   return recordedFeedEvents(
     { initialMappingState, toAgentEvents },
     frames
+      .filter(isVendorMessage)
       .filter(
         (frame): boolean =>
           !frame.type.startsWith('control_') ||
@@ -31,7 +36,10 @@ export function feedEvents(name: string): import('@repo/agents').AgentEvent[] {
       )
       .map((frame): typeof frame & { receivedAt: number | undefined } => ({
         ...frame,
-        receivedAt: frame.emittedAtMs,
+        receivedAt:
+          'emittedAtMs' in frame && typeof frame.emittedAtMs === 'number'
+            ? frame.emittedAtMs
+            : undefined,
       })),
   );
 }

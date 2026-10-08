@@ -1,0 +1,18 @@
+{
+  "producer": "codex-app-server",
+  "version": "0.157.0",
+  "recordedAt": "2026-10-08T13:55:11.610Z",
+  "payload": {
+    "account": {
+      "type": "chatgpt",
+      "email": "mock@example.com",
+      "planType": "pro"
+    },
+    "requiresOpenaiAuth": true,
+    "workspaceRouting": {
+      "chatgptAccountId": "00000000-0000-4000-8000-000000000000",
+      "backendOrigin": "https://chatgpt.com",
+      "accountRoutingOverride": "NO_CONSTRAINT"
+    }
+  }
+}

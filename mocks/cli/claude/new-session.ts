@@ -4,12 +4,15 @@ import {
   toConfigOptions,
 } from '../../../packages/agents/claude/config-options';
 import {
-  isWireFrame,
   isControlResponse,
   isInitializeResponse,
-} from '../../../packages/agents/claude/control-payloads.ts';
+} from '../../../packages/agents/claude/wire.ts';
 import { recordedImagePrompt } from '../image';
 import { findRecording, readRecording, recordedFrames } from '../recording';
+import {
+  isRecordedFrame as isWireFrame,
+  type RecordedFrame as WireFrame,
+} from '../recording.ts';
 
 const initialization = recordedFrames(
   readRecording(

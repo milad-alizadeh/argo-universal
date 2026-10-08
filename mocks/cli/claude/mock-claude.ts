@@ -1,33 +1,34 @@
 // A stand-in `claude` that the Agent SDK drives over stream-json. Each prompt replays the next recorded Turn.
 import { randomUUID } from 'node:crypto';
-import {
-  type WireFrame,
-  isWireFrame,
-  isControlRequest,
-  type MappedControlResponse,
-  isControlResponse,
-  isInitializeResponse,
-  isAssistantMessage,
-  isRecordedFrame,
-} from '../../../packages/agents/claude/control-payloads.ts';
 import type {
   AccountInfo,
-  MappedAssistant,
-  MappedControlRequest,
+  SDKAssistantMessage,
+  SDKControlRequest,
   VendorMessage,
   SDKControlInitializeResponse,
-  SDKControlRequest,
   SDKMessage,
   SDKResultMessage,
   SDKSystemMessage,
 } from '../../../packages/agents/claude/messages.ts';
-import { isVendorMessage } from '../../../packages/agents/claude/payloads.ts';
+import {
+  isControlRequest,
+  type SDKControlResponse,
+  isControlResponse,
+  isInitializeResponse,
+  isAssistantMessage,
+  isRecordedFrame,
+} from '../../../packages/agents/claude/wire.ts';
+import { isVendorMessage } from '../../../packages/agents/claude/wire.ts';
 import {
   readMockCliEnvironment,
   replayTurn,
   send,
   serveJsonLines,
 } from '../mock-cli.ts';
+import {
+  isRecordedFrame as isWireFrame,
+  type RecordedFrame as WireFrame,
+} from '../recording.ts';
 import { readRecording, recordedFrames, splitTurns } from '../recording.ts';
 import {
   createRequestAnswerReader,
@@ -58,7 +59,7 @@ type Frame =
   | SDKControlRequest
   | WireFrame
   | typeof INTERRUPT_POINT;
-type Output = VendorMessage | MappedControlResponse;
+type Output = VendorMessage | SDKControlResponse;
 const environment = readMockCliEnvironment();
 const readRequestAnswer = createRequestAnswerReader();
 const recording = readRecording(environment.recordingFile, PRODUCER);
@@ -139,7 +140,7 @@ const sessionId =
   randomUUID();
 const withSession = (frame: Frame): Frame =>
   'session_id' in frame ? { ...frame, session_id: sessionId } : frame;
-const assistantFrames = (turnFrames: Frame[]): MappedAssistant[] =>
+const assistantFrames = (turnFrames: Frame[]): SDKAssistantMessage[] =>
   turnFrames.filter((frame): frame is Extract<Frame, { type: 'assistant' }> =>
     isAssistantMessage(frame),
   );
@@ -219,7 +220,7 @@ const resultFrame = (turn: Frame[]): SDKResultMessage => ({
         (
           block,
         ): block is Extract<
-          MappedAssistant['message']['content'][number],
+          SDKAssistantMessage['message']['content'][number],
           { type: 'text' }
         > => block.type === 'text',
       )
@@ -262,8 +263,8 @@ const crashAfter = environment.exitMidTurn
 // The frames of the running Turn held back until an interrupt arrives.
 let heldFrames: Frame[] = [];
 let pendingRequestId: string | null = null;
-let pendingRequest: MappedControlRequest | null = null;
-const concurrentRequests = new Map<string, MappedControlRequest>();
+let pendingRequest: SDKControlRequest | null = null;
+const concurrentRequests = new Map<string, SDKControlRequest>();
 
 function replay(turn: Frame[]): void {
   const pause = turn.findIndex(
@@ -282,7 +283,7 @@ function replay(turn: Frame[]): void {
     pendingRequest?.request.subtype === 'can_use_tool' &&
     pendingRequest.request.tool_name === 'AskUserQuestion'
   ) {
-    const second: MappedControlRequest = {
+    const second: SDKControlRequest = {
       ...pendingRequest,
       request_id: `${pendingRequest.request_id}-second`,
       request: {

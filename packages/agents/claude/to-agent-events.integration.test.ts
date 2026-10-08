@@ -1,38 +1,20 @@
-import path from 'node:path';
 import { SessionUpdate } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
-import { readRecording } from '../mocks/recording';
 import type { FeedChange, FeedUpdate } from '../src/agent-events';
-import { isRecord } from '../src/payload-shape.ts';
-import type { VendorMessage } from './messages';
-import { isVendorMessage } from './payloads.ts';
+import type { VendorMessage, SDKResultMessage } from './messages';
+import { compaction } from './mocks/sdk-compaction';
+import { interrupted } from './mocks/sdk-interrupt';
+import { assistant, user } from './mocks/sdk-messages';
+import { completed } from './mocks/sdk-result';
+import { edits } from './mocks/sdk-tools';
 import {
   initialMappingState,
   type MappingState,
   toAgentEvents,
 } from './to-agent-events';
-
-const RECORDINGS = path.join(
-  import.meta.dirname,
-  '../../../mocks/cli/claude/recordings',
-);
-
-// The stdout frames of a recording, without the control frames that the SDK consumes itself.
-function recordedMessages(name: string): VendorMessage[] {
-  const recording: unknown = JSON.parse(readRecording(RECORDINGS, name));
-  if (!isRecord(recording) || !isRecord(recording.payload))
-    throw new Error('Invalid recording envelope');
-  const output = recording.payload.output;
-  if (!Array.isArray(output)) throw new Error('Invalid recording output');
-  return output.filter(
-    (frame): frame is VendorMessage =>
-      isVendorMessage(frame) && frame.type !== 'control_request',
-  );
-}
-
-// Fixtures carry only the fields the mapping reads.
+// SDK-owned messages exercise mapping without narrowing their provider shapes.
 function mapAll(
-  messages: object[],
+  messages: VendorMessage[],
   start = initialMappingState(),
 ): { events: import('../src').AgentEvent[]; mappingState: MappingState } {
   let mappingState: MappingState = start;
@@ -52,7 +34,7 @@ const feedChanges = (
   );
 
 it('reconciles the recorded compacting status and boundary into one Compaction row', (): void => {
-  const changes = feedChanges(mapAll(recordedMessages('compaction')).events);
+  const changes = feedChanges(mapAll(compaction).events);
   const compactions = changes.flatMap(
     (change): Extract<FeedUpdate, { sessionUpdate: 'compaction_update' }>[] =>
       change.type === 'upsert' &&
@@ -79,9 +61,7 @@ it('reconciles the recorded compacting status and boundary into one Compaction r
 });
 
 it('keeps the Agent’s Bash description and timestamps without inventing command actions', (): void => {
-  const rows = foldRows(
-    feedChanges(mapAll(recordedMessages('edit-and-command')).events),
-  );
+  const rows = foldRows(feedChanges(mapAll(edits).events));
   const command = rows.find(
     (row): boolean =>
       row.sessionUpdate === 'tool_call_update' && row.kind === 'execute',
@@ -96,7 +76,7 @@ it('keeps the Agent’s Bash description and timestamps without inventing comman
 });
 
 it('uses the transport receipt time when an interrupted Tool call has no final result', (): void => {
-  const messages = recordedMessages('interrupt')
+  const messages = interrupted
     .filter(
       (message): message is Exclude<VendorMessage, { type: 'user' }> =>
         message.type !== 'user',
@@ -155,7 +135,7 @@ function foldRows(changes: FeedChange[]): FeedUpdate[] {
 }
 
 describe('toAgentEvents on a Turn with edits and commands', (): void => {
-  const messages = recordedMessages('edit-and-command');
+  const messages = edits;
   const { events } = mapAll(messages);
   const rows = foldRows(feedChanges(events));
 
@@ -318,7 +298,7 @@ describe('toAgentEvents on a Turn with edits and commands', (): void => {
 });
 
 describe('toAgentEvents on an interrupted Turn', (): void => {
-  const { events } = mapAll(recordedMessages('interrupt'));
+  const { events } = mapAll(interrupted);
   const rows = foldRows(feedChanges(events));
 
   it('cancels the running command and ends the Turn as cancelled', (): void => {
@@ -338,37 +318,14 @@ describe('toAgentEvents on an interrupted Turn', (): void => {
 });
 
 const result = (
-  fields: Record<string, unknown>,
-): {
-  type: string;
-  subtype: string;
-  result: string;
-  is_error: boolean;
-  stop_reason: string;
-  usage: {
-    input_tokens: number;
-    output_tokens: number;
-    cache_read_input_tokens: number;
-    cache_creation_input_tokens: number;
-  };
-  uuid: string;
-  session_id: string;
-} => ({
-  type: 'result',
-  subtype: 'success',
-  result: '',
-  is_error: false,
-  stop_reason: 'end_turn',
-  usage: {
-    input_tokens: 1,
-    output_tokens: 2,
-    cache_read_input_tokens: 3,
-    cache_creation_input_tokens: 4,
-  },
-  uuid: 'result-1',
-  session_id: 'vendor-1',
-  ...fields,
-});
+  fields: Partial<Extract<SDKResultMessage, { subtype: 'success' }>>,
+): SDKResultMessage => ({ ...completed, ...fields });
+const failedResult = (
+  fields: Partial<Exclude<SDKResultMessage, { subtype: 'success' }>>,
+): SDKResultMessage => {
+  const { result: _result, ...base } = completed;
+  return { ...base, subtype: 'error_during_execution', errors: [], ...fields };
+};
 
 describe('toAgentEvents on single messages', (): void => {
   it.each([
@@ -376,12 +333,12 @@ describe('toAgentEvents on single messages', (): void => {
     ['refusal', result({ stop_reason: 'refusal' }), 'refusal'],
     [
       'error_max_turns',
-      result({ subtype: 'error_max_turns', is_error: true, errors: [] }),
+      failedResult({ subtype: 'error_max_turns', is_error: true, errors: [] }),
       'max_turn_requests',
     ],
     [
       'aborted_streaming',
-      result({
+      failedResult({
         subtype: 'error_during_execution',
         is_error: true,
         terminal_reason: 'aborted_streaming',
@@ -404,7 +361,7 @@ describe('toAgentEvents on single messages', (): void => {
         terminal_reason: 'api_error',
         result: 'Failed to authenticate',
       }),
-      result({
+      failedResult({
         subtype: 'error_during_execution',
         is_error: true,
         errors: ['The tool runner crashed.'],
@@ -480,47 +437,25 @@ describe('toAgentEvents on single messages', (): void => {
   it.each([
     [
       'the interrupt marker',
-      {
-        type: 'user',
-        message: {
-          role: 'user',
-          content: [{ type: 'text', text: '[Request interrupted by user]' }],
-        },
-        parent_tool_use_id: null,
-      },
+      user([{ type: 'text', text: '[Request interrupted by user]' }]),
     ],
     [
       'a synthetic user message',
       {
-        type: 'user',
-        message: { role: 'user', content: 'Injected context.' },
-        parent_tool_use_id: null,
+        ...user('Injected context.'),
         isSynthetic: true,
       },
     ],
     [
       "a Subagent's message",
       {
-        type: 'assistant',
-        message: { id: 'sub-1', content: [{ type: 'text', text: 'Hi' }] },
+        ...assistant('sub-1', [{ type: 'text', text: 'Hi', citations: [] }]),
         parent_tool_use_id: 'toolu_task',
-        uuid: 'sub-uuid',
+        uuid: '00000000-0000-0000-0000-000000000003',
         session_id: 'vendor-1',
       },
     ],
-    [
-      'a known message Argo does not show',
-      { type: 'rate_limit_event', uuid: 'rate-1', session_id: 'vendor-1' },
-    ],
-    [
-      'a system message Argo does not show',
-      {
-        type: 'system',
-        subtype: 'task_progress',
-        uuid: '00000000-0000-0000-0000-000000000003',
-      },
-    ],
-  ])('drops %s', (_, message): void => {
+  ] satisfies [string, VendorMessage][])('drops %s', (_, message): void => {
     expect(mapAll([message])).toEqual({
       events: [],
       mappingState: initialMappingState(),
@@ -549,4 +484,8 @@ function parseFeedUpdate(value: unknown): FeedUpdate {
     revision: 0,
   });
   return update;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

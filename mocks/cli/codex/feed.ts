@@ -1,4 +1,6 @@
 import path from 'node:path';
+import type { VendorMessage } from '../../../packages/agents/codex/messages.ts';
+import { isIgnoredMethod } from '../../../packages/agents/codex/notification-kinds.ts';
 import { isVendorMessage } from '../../../packages/agents/codex/payloads.ts';
 import {
   initialMappingState,
@@ -21,12 +23,7 @@ export function feedEvents(name: string): import('@repo/agents').AgentEvent[] {
   );
   return recordedFeedEvents(
     { initialMappingState, toAgentEvents },
-    messages.map(
-      (message): typeof message & { receivedAt: number | undefined } => ({
-        ...message,
-        receivedAt: message.emittedAtMs,
-      }),
-    ),
+    messages.flatMap(decodeMessage),
   );
 }
 
@@ -66,4 +63,21 @@ export function recordedPrompt(
       throw new Error(`Unsupported recorded prompt block: ${block.type}`);
     },
   );
+}
+
+function decodeMessage(
+  message: import('../../../packages/agents/codex/wire-payloads.ts').WireMessage,
+): VendorMessage[] {
+  if (isIgnoredMethod(message.method)) return [];
+  const payload: unknown = message;
+  if (!isVendorMessage(payload))
+    throw new Error(`Invalid recorded payload: ${message.method}`);
+  return [
+    {
+      ...payload,
+      ...(message.emittedAtMs === undefined
+        ? {}
+        : { receivedAt: message.emittedAtMs }),
+    },
+  ];
 }

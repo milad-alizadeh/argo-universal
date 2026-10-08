@@ -1,15 +1,17 @@
 import path from 'node:path';
-import {
-  isWireFrame,
-  isControlRequest,
-  isControlResponse,
-  type WireFrame,
-  type MappedControlResponse,
-} from '../../../packages/agents/claude/control-payloads.ts';
 import type {
   PermissionResult,
-  MappedControlRequest,
+  SDKControlRequest,
 } from '../../../packages/agents/claude/messages.ts';
+import {
+  isControlRequest,
+  isControlResponse,
+  type SDKControlResponse,
+} from '../../../packages/agents/claude/wire.ts';
+import {
+  isRecordedFrame as isWireFrame,
+  type RecordedFrame as WireFrame,
+} from '../recording.ts';
 import { findRecording, readRecording, recordedFrames } from '../recording.ts';
 import {
   createRequestAnswerReader,
@@ -35,11 +37,8 @@ function readRecordedAnswer(name: string): RecordedRequestAnswer {
   );
 }
 
-type ToolRequest = MappedControlRequest & {
-  request: Extract<
-    MappedControlRequest['request'],
-    { subtype: 'can_use_tool' }
-  >;
+type ToolRequest = SDKControlRequest & {
+  request: Extract<SDKControlRequest['request'], { subtype: 'can_use_tool' }>;
 };
 
 function recordedRequest(payload: unknown): ToolRequest {
@@ -51,8 +50,8 @@ function recordedRequest(payload: unknown): ToolRequest {
   return request;
 }
 
-type SuccessfulResponse = MappedControlResponse & {
-  response: Extract<MappedControlResponse['response'], { subtype: 'success' }>;
+type SuccessfulResponse = SDKControlResponse & {
+  response: Extract<SDKControlResponse['response'], { subtype: 'success' }>;
 };
 
 function recordedResponse(

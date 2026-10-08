@@ -1,101 +1,108 @@
-import type { DiffChange, ToolCallContent, ToolKind } from '@repo/contracts';
+import type { ToolCallContent, ToolKind } from '@repo/contracts';
+import {
+  ContentBlock,
+  DiffChange,
+  ToolCallLocation,
+  ToolCallTerminal,
+  ToolCallUpdate,
+} from '@repo/contracts';
 import type { FeedUpdate } from '../src/agent-events';
-import type { MappedContent, MappedUser } from './messages';
-import {
-  isBashInput,
-  isEditInput,
-  isGlobInput,
-  isGrepInput,
-  isReadInput,
-  isWebFetchInput,
-  isWebSearchInput,
-  isWriteInput,
-} from './tool-inputs.ts';
-import {
-  isTextReadResult,
-  isToolResultMeta,
-  isWriteResult,
-} from './tool-results.ts';
-
+import { dictionary } from './dictionary';
+import type { SDKAssistantMessage, SDKUserMessage } from './messages';
 export type ToolCallRow = Extract<
   FeedUpdate,
   { sessionUpdate: 'tool_call_update' }
 >;
 
-type ToolUseBlock = Extract<MappedContent, { type: 'tool_use' }>;
-export type ToolResultBlock = Extract<MappedContent, { type: 'tool_result' }>;
+type ToolUseBlock = Extract<
+  SDKAssistantMessage['message']['content'][number],
+  { type: 'tool_use' }
+>;
+export type ToolResultBlock = Extract<
+  Exclude<SDKUserMessage['message']['content'], string>[number],
+  { type: 'tool_result' }
+>;
 
 type ToolShape = Pick<ToolCallRow, 'title' | 'kind' | 'content' | 'locations'>;
 
 // How each built-in tool reads; any other tool shows as `other`.
-const toolShapes: Record<string, (input: unknown) => ToolShape | undefined> = {
-  Write: (input): ToolShape | undefined => {
-    if (!isWriteInput(input)) return;
-    const { file_path: path, content } = input;
+const toolShapes: Record<string, (input: unknown) => ToolShape> = {
+  Write: (input): ToolShape => {
+    const fields = dictionary(input);
+    const location = ToolCallLocation.parse({ path: fields.file_path });
+    const change = DiffChange.parse({
+      operation: 'add',
+      path: location.path,
+      newText: fields.content,
+    });
+    const { path } = location;
     return {
       title: `Write ${path}`,
       kind: 'edit',
-      locations: [{ path }],
-      content: [
-        {
-          type: 'diff',
-          changes: [{ operation: 'add', path, newText: content }],
-        },
-      ],
+      locations: [location],
+      content: [{ type: 'diff', changes: [change] }],
     };
   },
-  Edit: (input): ToolShape | undefined => {
-    if (!isEditInput(input)) return;
-    const { file_path: path, old_string, new_string } = input;
+  Edit: (input): ToolShape => {
+    const fields = dictionary(input);
+    const change = DiffChange.parse({
+      operation: 'modify',
+      path: fields.file_path,
+      oldText: fields.old_string,
+      newText: fields.new_string,
+    });
+    const { path } = change;
     return {
       title: `Edit ${path}`,
       kind: 'edit',
       locations: [{ path }],
-      content: [
-        {
-          type: 'diff',
-          changes: [
-            {
-              operation: 'modify',
-              path,
-              oldText: old_string,
-              newText: new_string,
-            },
-          ],
-        },
-      ],
+      content: [{ type: 'diff', changes: [change] }],
     };
   },
-  Read: (input): ToolShape | undefined => {
-    if (!isReadInput(input)) return;
-    const { file_path: path, offset: line } = input;
+  Read: (input): ToolShape => {
+    const fields = dictionary(input);
+    const location = ToolCallLocation.parse({
+      path: fields.file_path,
+      line: fields.offset,
+    });
+    const { path } = location;
     return {
       title: `Read ${path}`,
       kind: 'read',
-      locations: [line === undefined ? { path } : { path, line }],
+      locations: [location],
       content: [],
     };
   },
-  Bash: (input): ToolShape | undefined => {
-    if (!isBashInput(input)) return;
+  Bash: (input): ToolShape => {
+    const fields = dictionary(input);
+    const terminal = ToolCallTerminal.parse({
+      type: 'terminal',
+      command: fields.command,
+      output: '',
+    });
+    const title = ToolCallUpdate.shape.title.parse(
+      fields.description ?? terminal.command,
+    );
     return {
-      title: input.description ?? input.command,
+      title,
       kind: 'execute',
-      content: [{ type: 'terminal', command: input.command, output: '' }],
+      content: [terminal],
     };
   },
-  Grep: (input): ToolShape | undefined =>
-    isGrepInput(input) ? search('Grep', input.pattern) : undefined,
-  Glob: (input): ToolShape | undefined =>
-    isGlobInput(input) ? search('Glob', input.pattern) : undefined,
-  WebFetch: (input): ToolShape | undefined =>
-    isWebFetchInput(input)
-      ? { title: `Fetch ${input.url}`, kind: 'fetch', content: [] }
-      : undefined,
-  WebSearch: (input): ToolShape | undefined =>
-    isWebSearchInput(input)
-      ? { title: `Search ${input.query}`, kind: 'fetch', content: [] }
-      : undefined,
+  Grep: (input): ToolShape =>
+    search('Grep', ToolCallUpdate.shape.title.parse(dictionary(input).pattern)),
+  Glob: (input): ToolShape =>
+    search('Glob', ToolCallUpdate.shape.title.parse(dictionary(input).pattern)),
+  WebFetch: (input): ToolShape => ({
+    title: `Fetch ${ToolCallUpdate.shape.title.parse(dictionary(input).url)}`,
+    kind: 'fetch',
+    content: [],
+  }),
+  WebSearch: (input): ToolShape => ({
+    title: `Search ${ToolCallUpdate.shape.title.parse(dictionary(input).query)}`,
+    kind: 'fetch',
+    content: [],
+  }),
   ExitPlanMode: (): ToolShape => ({
     title: 'Leave plan mode',
     kind: 'switch_mode',
@@ -120,8 +127,11 @@ export function toolCallStarted(
     content: [],
   };
   const description =
-    block.name === 'Bash' && isBashInput(block.input)
-      ? block.input.description
+    block.name === 'Bash'
+      ? ToolCallUpdate.shape._meta
+          .unwrap()
+          .shape.argo.unwrap()
+          .shape.description.parse(dictionary(block.input).description)
       : undefined;
   return {
     id: block.id,
@@ -152,21 +162,30 @@ function resultText(result: ToolResultBlock): string {
     .join('\n');
 }
 
-function userRejected(message: MappedUser, toolCallId: string): boolean {
-  const meta = isToolResultMeta(message)
-    ? (message.tool_result_meta ?? [])
-    : [];
-  return meta.some(
-    (entry): boolean =>
-      entry.id === toolCallId && entry.non_execution_kind === 'user-rejected',
-  );
+function userRejected(message: SDKUserMessage, toolCallId: string): boolean {
+  if (!('tool_result_meta' in message)) return false;
+  const entries = message.tool_result_meta;
+  if (!Array.isArray(entries)) return false;
+  return entries.some((entry: unknown): boolean => {
+    const fields = dictionary(entry);
+    return (
+      fields.id === toolCallId && fields.non_execution_kind === 'user-rejected'
+    );
+  });
 }
 
 // What the Write tool found at the path before it wrote; null for a new file.
-function overwrittenText(row: ToolCallRow, message: MappedUser): string | null {
+function overwrittenText(
+  row: ToolCallRow,
+  message: SDKUserMessage,
+): string | null {
   if (row.name !== 'Write') return null;
   const output = message.tool_use_result;
-  return isWriteResult(output) ? output.originalFile : null;
+  if (output === undefined) return null;
+  return DiffChange.shape.oldText
+    .unwrap()
+    .nullable()
+    .parse(dictionary(output).originalFile);
 }
 
 const settled = (
@@ -179,7 +198,7 @@ const settled = (
 export function toolCallEnded(
   startedRow: ToolCallRow,
   result: ToolResultBlock,
-  message: MappedUser & { receivedAt?: number },
+  message: SDKUserMessage & { receivedAt?: number },
 ): ToolCallRow {
   const endedAt =
     message.timestamp === undefined
@@ -201,13 +220,11 @@ export function toolCallEnded(
   const content = row.content.map((block): ToolCallContent => {
     if (block.type === 'terminal') return { ...block, output };
     if (block.type !== 'diff' || oldText === null) return block;
-    const changes = block.changes.map(
-      (change): DiffChange & { operation: 'modify'; oldText: string } => ({
-        ...change,
-        operation: 'modify' as const,
-        oldText,
-      }),
-    );
+    const changes = block.changes.map((change): DiffChange => ({
+      ...change,
+      operation: 'modify' as const,
+      oldText,
+    }));
     return { ...block, changes };
   });
 
@@ -216,27 +233,19 @@ export function toolCallEnded(
     if (row.kind === 'read' || row.kind === 'search') {
       const read = message.tool_use_result;
       const text =
-        row.kind === 'read' && isTextReadResult(read)
-          ? read.file.content
+        row.kind === 'read' &&
+        read !== undefined &&
+        dictionary(read).type === 'text'
+          ? ContentBlock.options[0].shape.text.parse(
+              dictionary(dictionary(read).file).content,
+            )
           : output;
       content.push({ type: 'content', content: { type: 'text', text } });
     }
     return settled(row, 'completed', content);
   }
   // A failed call shows its error, unless a terminal already shows the output.
-  if (
-    content.some(
-      (
-        block,
-      ): block is {
-        type: 'terminal';
-        command: string;
-        cwd?: string;
-        output: string;
-        exitStatus?: { exitCode?: number; signal?: string };
-      } => block.type === 'terminal',
-    )
-  )
+  if (content.some((block): boolean => block.type === 'terminal'))
     return settled(row, 'failed', content);
   const error: ToolCallContent = {
     type: 'content',

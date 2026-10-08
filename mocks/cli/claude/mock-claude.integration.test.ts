@@ -6,18 +6,20 @@ import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  type WireFrame,
-  isWireFrame,
-  isControlRequest,
-  isControlResponse as isSDKControlResponse,
-} from '../../../packages/agents/claude/control-payloads.ts';
 import type {
   SDKControlRequest,
   SDKControlResponse,
 } from '../../../packages/agents/claude/messages.ts';
+import {
+  isControlRequest,
+  isControlResponse as isSDKControlResponse,
+} from '../../../packages/agents/claude/wire.ts';
 import { startLineProcess } from '../line-process.ts';
 import { mockCliScenarioEnvironment } from '../mock-cli.ts';
+import {
+  isRecordedFrame as isWireFrame,
+  type RecordedFrame as WireFrame,
+} from '../recording.ts';
 import {
   recordedFrames as captureFrames,
   findRecording,

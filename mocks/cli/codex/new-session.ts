@@ -3,7 +3,7 @@ import {
   startingValues,
   toConfigOptions,
 } from '../../../packages/agents/codex/config-options';
-import { isModelListResponse } from '../../../packages/agents/codex/open-app-server';
+import { isModelListResponse } from '../../../packages/agents/codex/payloads';
 import { recordedImagePrompt } from '../image';
 import { findRecording, readRecording } from '../recording';
 

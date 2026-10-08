@@ -122,3 +122,10 @@ export function splitTurns<Frame>(
   if (turn.length > 0) turns.push(turn);
   return turns;
 }
+
+export const RecordedFrame = z
+  .object({ type: z.string(), emittedAtMs: z.number().optional() })
+  .catchall(z.unknown());
+export type RecordedFrame = z.infer<typeof RecordedFrame>;
+export const isRecordedFrame = (value: unknown): value is RecordedFrame =>
+  RecordedFrame.safeParse(value).success;

@@ -13,12 +13,16 @@
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "catalog:",
     "@repo/contracts": "workspace:*",
-    "xstate": "catalog:"
+    "ajv": "catalog:",
+    "ajv-formats": "catalog:",
+    "xstate": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@repo/typescript": "workspace:*",
     "@repo/vitest": "workspace:*",
     "@types/node": "catalog:",
+    "ts-json-schema-generator": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }
