@@ -2,7 +2,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { BlobService } from '@repo/api';
-import { maxBlobUploadBytes } from '@repo/contracts';
+import { type BlobUploadOutput, maxBlobUploadBytes } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { blob, blobRef } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
@@ -63,7 +63,7 @@ export function createBlobService(options: {
   return {
     upload: async (
       form,
-    ): Promise<{ blobId: string; mime: string; bytes: number }> => {
+    ): Promise<Pick<BlobUploadOutput, 'blobId' | 'mime' | 'bytes'>> => {
       // The contract has checked that `file` holds a Blob.
       const file = form.get('file') as Blob;
       if (file.size > maxBlobUploadBytes)

@@ -15,6 +15,7 @@ import {
   type PermissionAnswer,
   PermissionRequest,
 } from '../src/components/PermissionRequest';
+import type { RequestState } from '../src/components/RequestCard';
 import { ToolCallGroup } from '../src/components/ToolCallGroup';
 import { ToolCallRow } from '../src/components/ToolCallRow';
 import { toFeedView } from '../src/feed/to-feed-view';
@@ -27,7 +28,8 @@ export const elicitationMocks = recordedRequestMocks.filter(
 );
 function firstRecording(mocks: RequestMock[]): RequestMock {
   const mock = mocks[0];
-  if (!mock) throw new Error('Request previews need the #54 recordings.');
+  if (mock?.agent !== 'agent-1' || mocks[1]?.agent !== 'agent-2')
+    throw new Error('Recorded catalog needs both Agents in recording order.');
   return mock;
 }
 export const permissionMock = firstRecording(permissionMocks);
@@ -130,20 +132,22 @@ function ResumedComposer() {
 
 export function PermissionRequestPreview({
   denialMessage: initialMessage,
-  alreadyAnswered,
-  submitting,
+  state = { kind: 'open' },
+  error,
+  mock = permissionMock,
   onAnswer,
 }: {
   denialMessage?: string;
-  alreadyAnswered?: string;
-  submitting?: boolean;
+  state?: RequestState;
+  error?: string;
+  mock?: RequestMock;
   onAnswer?: (answer: PermissionAnswer) => void;
 }) {
   const [denialMessage, setDenialMessage] = useState(initialMessage);
   const [answer, setAnswer] = useState<PermissionAnswer>();
-  const request = permissionMock.pending.snapshot.pendingPermission;
+  const request = mock.pending.snapshot.pendingPermission;
   if (!request) throw new Error('Recording needs a Permission request.');
-  const row = permissionMock.pending.rows.find(
+  const row = mock.pending.rows.find(
     (row) =>
       row.sessionUpdate === 'tool_call_update' &&
       row.toolCallId === request.toolCallId,
@@ -180,8 +184,8 @@ export function PermissionRequestPreview({
             onAnswer?.(next);
             setAnswer(next);
           }}
-          alreadyAnswered={alreadyAnswered}
-          submitting={submitting}
+          state={state}
+          error={error}
         />
       )}
     </RequestFrame>
@@ -189,18 +193,24 @@ export function PermissionRequestPreview({
 }
 
 export function ElicitationFormPreview({
-  request = elicitationRequest,
+  request: suppliedRequest,
+  mock = elicitationMock,
   values: initialValues = {},
-  alreadyAnswered,
+  state = { kind: 'open' },
+  error,
   source,
   onAnswer,
 }: {
   request?: PendingElicitation;
+  mock?: RequestMock;
   values?: ElicitationValues;
-  alreadyAnswered?: string;
+  state?: RequestState;
+  error?: string;
   source?: string;
   onAnswer?: (answer: ElicitationAnswer) => void;
 }) {
+  const request = suppliedRequest ?? mock.pending.snapshot.pendingElicitation;
+  if (!request) throw new Error('Recording needs an Elicitation.');
   const [answer, setAnswer] = useState<ElicitationAnswer>();
   return (
     <RequestFrame>
@@ -218,7 +228,8 @@ export function ElicitationFormPreview({
             setAnswer(next);
           }}
           source={source}
-          alreadyAnswered={alreadyAnswered}
+          state={state}
+          error={error}
         />
       )}
     </RequestFrame>

@@ -1,3 +1,4 @@
+import type { RequestMock } from '@repo/api/mocks';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import {
@@ -44,10 +45,13 @@ function denial(width: number): Story {
 export const DenyPhone = denial(390);
 export const DenyWide = denial(1440);
 
-function allow(width: number): Story {
+function allow(width: number, mock?: RequestMock): Story {
   return {
+    args: { mock },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
+      await expect(canvas.queryByRole('status')).not.toBeInTheDocument();
+      await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
       await userEvent.click(canvas.getByRole('button', { name: 'Allow once' }));
       await expect(args.onAnswer).toHaveBeenCalledTimes(1);
       await expect(args.onAnswer).toHaveBeenCalledWith({
@@ -59,6 +63,53 @@ function allow(width: number): Story {
 }
 export const AllowPhone = allow(390);
 export const AllowWide = allow(1440);
+export const SecondAgentAllowPhone = allow(390, permissionMocks[1]);
+export const SecondAgentAllowWide = allow(1440, permissionMocks[1]);
+
+function submitting(width: number, mock?: RequestMock): Story {
+  return {
+    args: { mock, state: { kind: 'submitting' } },
+    play: async ({ canvas, userEvent, args }) => {
+      await settleViewport(width);
+      const sending = canvas.getByRole('button', { name: 'Sending…' });
+      await expect(sending).toBeDisabled();
+      await userEvent.keyboard('{Enter}');
+      await expect(args.onAnswer).not.toHaveBeenCalled();
+      await expect(canvas.queryByRole('status')).not.toBeInTheDocument();
+      await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
+    },
+  };
+}
+export const SubmittingPhone = submitting(390);
+export const SubmittingWide = submitting(1440);
+export const SecondAgentSubmittingPhone = submitting(390, permissionMocks[1]);
+export const SecondAgentSubmittingWide = submitting(1440, permissionMocks[1]);
+
+function responseError(width: number, mock?: RequestMock): Story {
+  return {
+    args: { mock, error: 'Could not send the answer. Try again.' },
+    play: async ({ canvas }) => {
+      await settleViewport(width);
+      await expect(canvas.getByRole('alert')).toHaveTextContent(
+        'Could not send the answer. Try again.',
+      );
+      await expect(canvas.queryByRole('status')).not.toBeInTheDocument();
+      await expect(
+        canvas.getByRole('button', { name: 'Allow once' }),
+      ).toBeEnabled();
+    },
+  };
+}
+export const ResponseErrorPhone = responseError(390);
+export const ResponseErrorWide = responseError(1440);
+export const SecondAgentResponseErrorPhone = responseError(
+  390,
+  permissionMocks[1],
+);
+export const SecondAgentResponseErrorWide = responseError(
+  1440,
+  permissionMocks[1],
+);
 
 function denyWithoutMessage(width: number): Story {
   return {
@@ -106,9 +157,12 @@ export const Keyboard: Story = {
   },
 };
 
-function conflict(width: number): Story {
+function conflict(width: number, mock?: RequestMock): Story {
   return {
-    args: { alreadyAnswered: 'Already answered on another device' },
+    args: {
+      mock,
+      state: { kind: 'answered', reason: 'Already answered on another device' },
+    },
     play: async ({ canvas, args }) => {
       await settleViewport(width);
       await expect(canvas.getByRole('status')).toHaveTextContent(
@@ -123,11 +177,14 @@ function conflict(width: number): Story {
           canvas.getByRole('button', { name: 'Allow once' }),
         ).toBeDisabled();
       await expect(args.onAnswer).not.toHaveBeenCalled();
+      await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
     },
   };
 }
 export const ConflictPhone = conflict(390);
 export const ConflictWide = conflict(1440);
+export const SecondAgentConflictPhone = conflict(390, permissionMocks[1]);
+export const SecondAgentConflictWide = conflict(1440, permissionMocks[1]);
 
 function permissionFeed(
   width: number,

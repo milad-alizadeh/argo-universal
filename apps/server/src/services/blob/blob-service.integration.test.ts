@@ -11,7 +11,7 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { maxBlobUploadBytes } from '@repo/contracts';
+import { type BlobUploadOutput, maxBlobUploadBytes } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { blob, blobRef } from '@repo/db/schema';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -34,15 +34,8 @@ const formWith = (file: Blob): FormData => {
   form.set('file', file, 'image.png');
   return form;
 };
-const upload = (
-  file: Blob,
-): Promise<{
-  blobId: string;
-  mime: string;
-  bytes: number;
-  width?: number;
-  height?: number;
-}> => createBlobService({ database, blobsFolder }).upload(formWith(file));
+const upload = (file: Blob): Promise<BlobUploadOutput> =>
+  createBlobService({ database, blobsFolder }).upload(formWith(file));
 const storedIds = (): string[] =>
   database
     .select({ id: blob.id })

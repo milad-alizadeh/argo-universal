@@ -36,6 +36,7 @@ import type { writerMachine } from '../feed/writer-machine';
 import { createLiveHeaderRowsReader } from './live-header-rows';
 import type { RegistryActorRef } from './registry-machine';
 import { latestTurnOf, toSessionInfo } from './session-info';
+import type { SessionListState } from './session-list-machine';
 import { decodeStoredSession, storedSessionColumns } from './session-record';
 
 const storedTurnColumns = {
@@ -69,9 +70,7 @@ export function createSessionListReader(options: {
   sessions: RegistryActorRef;
   writer: () => ActorRefFrom<typeof writerMachine> | undefined;
 }): {
-  readRows: (
-    sessionIds?: readonly string[],
-  ) => { information: SessionInfo; running: boolean }[];
+  readRows: (sessionIds?: readonly string[]) => SessionListState;
   sessionIdsForJobs: (jobs: readonly WriterJob[]) => string[];
   relatedSessionIds: (sessionIds: readonly string[]) => string[];
 } {
@@ -88,9 +87,7 @@ export function createSessionListReader(options: {
     }
   };
   const parents = new Map<string, string | null>();
-  const readRows = (
-    sessionIds?: readonly string[],
-  ): { information: SessionInfo; running: boolean }[] => {
+  const readRows = (sessionIds?: readonly string[]): SessionListState => {
     const input = {
       database,
       writer: writer(),
@@ -131,7 +128,7 @@ export function createSessionListReader(options: {
         (row): boolean =>
           row.parentSessionId === null && (!ids || ids.has(row.id)),
       )
-      .flatMap((row): { information: SessionInfo; running: boolean }[] => {
+      .flatMap((row): SessionListState => {
         const children = rows.filter(
           (child): boolean => child.parentSessionId === row.id,
         );
@@ -387,7 +384,7 @@ function readSessionInformation(
     rows: readonly SessionRecord[];
     turns: readonly Turn[];
   },
-): { information: SessionInfo; running: boolean } | undefined {
+): SessionListState[number] | undefined {
   const {
     database,
     writer,
