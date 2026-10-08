@@ -15,9 +15,6 @@ interface AgentProbeContext extends AgentProbeInput {
 
 export type AgentProbeEvent = { type: 'agentProbe.refresh' };
 
-// The system id under which each Agent's probe runs.
-export const agentProbeId = (agent: string): string => `agentProbe:${agent}`;
-
 const probeTimeout = 20_000;
 const millisecondsPerSecond = 1000;
 

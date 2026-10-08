@@ -29,7 +29,8 @@ import {
   setup,
 } from 'xstate';
 import { countRejection } from '../../lib/count-rejections';
-import { agentProbeId } from '../agents';
+import { findAgentProbe } from '../agents';
+import { findDatabaseWriter } from '../feed';
 import { userMessageChange } from '../feed';
 import { feedMachine } from '../feed';
 import { readWrittenRow } from '../feed';
@@ -128,10 +129,11 @@ const maxCrashesInWindow = 3;
 
 const writer = ({
   system,
+  self,
 }: {
-  system: { get: (id: string) => unknown };
-}): ActorRefFrom<typeof writerMachine> =>
-  system.get('databaseWriter') as ActorRefFrom<typeof writerMachine>;
+  system: import('xstate').AnyActorRef['system'];
+  self: import('xstate').AnyActorRef;
+}): import('xstate').AnyActorRef => findDatabaseWriter(system) ?? self;
 
 // The values an Agent reconnects with, read from the options it last reported.
 const toConfigValues = (
@@ -216,7 +218,7 @@ const sessionSetup = setup({
     ),
     // An Agent that could not start may have been signed out or removed since its last probe.
     refreshAgentProbe: enqueueActions(({ context, system, enqueue }): void => {
-      const probe = system.get(agentProbeId(context.input.adapter.agent));
+      const probe = findAgentProbe(system, context.input.adapter.agent);
       if (probe) enqueue.sendTo(probe, { type: 'agentProbe.refresh' });
     }),
     rememberReady: enqueueActions(({ context, event, enqueue }): void => {
@@ -695,9 +697,7 @@ export const sessionMachine = sessionSetup.createMachine({
         src: 'loadSession',
         input: ({ context, self }): LoadSessionInput => ({
           session: context.input,
-          writer: self.system.get('databaseWriter') as
-            | ActorRefFrom<typeof writerMachine>
-            | undefined,
+          writer: findDatabaseWriter(self.system),
         }),
         ...sessionEntryOutcome,
       },
@@ -719,9 +719,7 @@ export const sessionMachine = sessionSetup.createMachine({
           findWrittenRow: (id): ReturnType<typeof readWrittenRow> =>
             readWrittenRow({
               database: context.input.database,
-              writer: self.system.get('databaseWriter') as
-                | ActorRefFrom<typeof writerMachine>
-                | undefined,
+              writer: findDatabaseWriter(self.system),
               sessionId: context.sessionId,
               id,
             }),
