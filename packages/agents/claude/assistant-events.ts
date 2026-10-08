@@ -2,9 +2,9 @@ import type { AgentMapping } from '../src/agent-adapter';
 import { dropped, upsert } from './feed-rows';
 import { textOf, textRow } from './feed-rows';
 import type { MappingState } from './mapping-state';
-import type { SDKAssistantMessage } from './messages';
+import type { VendorMessage } from './messages';
 import { toolCallStarted } from './tool-calls';
-type Assistant = SDKAssistantMessage & { receivedAt?: number };
+type Assistant = Extract<VendorMessage, { type: 'assistant' }>;
 type Block = Assistant['message']['content'][number];
 type BlockInput = {
   block: Block;

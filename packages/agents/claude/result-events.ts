@@ -4,10 +4,10 @@ import type { AgentEvent } from '../src/agent-events';
 import { feed, upsert } from './feed-rows';
 import type { MappingState } from './mapping-state';
 import { initialMappingState } from './mapping-state';
-import type { SDKResultMessage } from './messages';
+import type { SDKResultMessage, VendorMessage } from './messages';
 import { compaction } from './notice-events';
 import type { ToolCallRow } from './tool-calls';
-type Result = SDKResultMessage & { receivedAt?: number };
+type Result = Extract<VendorMessage, { type: 'result' }>;
 const TURN_ERROR_CODE = -32603;
 export function mapResult(
   result: Result,

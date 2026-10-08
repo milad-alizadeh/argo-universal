@@ -1,9 +1,9 @@
 import type { AgentMapping } from '../src/agent-adapter';
 import { dropped, upsert } from './feed-rows';
 import type { MappingState } from './mapping-state';
-import type { SDKUserMessage } from './messages';
+import type { VendorMessage } from './messages';
 import { toolCallEnded, type ToolResultBlock } from './tool-calls';
-type User = SDKUserMessage & { receivedAt?: number };
+type User = Extract<VendorMessage, { type: 'user' }>;
 export function mapUser(
   message: User,
   state: MappingState,

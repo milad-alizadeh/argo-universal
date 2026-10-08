@@ -2,7 +2,7 @@ import type { ToolCallContent } from '@repo/contracts';
 import { ContentBlock } from '@repo/contracts';
 import { DiffChange } from '@repo/contracts';
 import { dictionary } from './dictionary';
-import type { SDKUserMessage } from './messages';
+import type { SDKUserMessage, VendorMessage } from './messages';
 import type { ToolCallRow, ToolResultBlock } from './tool-rows';
 function resultText(result: ToolResultBlock): string {
   if (typeof result.content === 'string') return result.content;
@@ -43,7 +43,7 @@ const settled = (
   content: ToolCallContent[],
 ): ToolCallRow => ({ ...row, state: 'settled', status, content });
 
-type User = SDKUserMessage & { receivedAt?: number };
+type User = Extract<VendorMessage, { type: 'user' }>;
 export function toolCallEnded(
   startedRow: ToolCallRow,
   result: ToolResultBlock,
