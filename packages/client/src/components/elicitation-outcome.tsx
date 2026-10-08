@@ -3,6 +3,7 @@ import type {
   PendingElicitation,
 } from '@repo/contracts';
 import { QuestionIcon } from 'phosphor-react-native';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/text';
 import { Icon } from '../lib/icon';
@@ -16,7 +17,7 @@ export interface ElicitationOutcomeProps {
 export function ElicitationOutcome({
   request,
   answer,
-}: ElicitationOutcomeProps) {
+}: ElicitationOutcomeProps): React.JSX.Element {
   const label = {
     accept: 'You answered',
     cancel: 'You dismissed',

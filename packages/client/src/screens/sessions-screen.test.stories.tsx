@@ -5,7 +5,9 @@ import {
   projectsList,
   sessionRows,
 } from '@repo/api/mocks';
+import type { SessionListUpdate, SessionCounts } from '@repo/contracts';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 import { eachLayout, layoutWidths } from '../../mocks/each-layout';
 import {
@@ -22,6 +24,7 @@ import {
 } from '../../mocks/sessions-list-mock';
 import { SessionsScreenPreview } from '../../mocks/sessions-screen-preview';
 import { settleViewport } from '../../mocks/settle-viewport';
+import type { FixtureOutput } from '../../mocks/trpc-mock-link';
 import { fails, pending } from '../../mocks/trpc-mock-link';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
 import { DesktopLayout } from '../components/desktop-layout';
@@ -39,7 +42,7 @@ const meta = {
     navigation: recorder,
   },
   args: { query: '', archived: false },
-  render: () => <SessionsScreenPreview />,
+  render: (): React.JSX.Element => <SessionsScreenPreview />,
 } satisfies Meta<typeof SessionsScreen>;
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -188,14 +191,16 @@ function searchMorph(width: number, mode: Mode): Story {
     play: async ({ canvas, userEvent }) => {
       if ('__vitest_browser__' in globalThis) await settleViewport(width);
       const surface = canvas.getByTestId('list-search-surface');
-      const measureTransition = async (button: HTMLElement) => {
+      const measureTransition = async (
+        button: HTMLElement,
+      ): Promise<number[]> => {
         const samples = new Promise<number[]>((resolve) => {
           button.addEventListener(
             'click',
             () => {
               const widths: number[] = [];
               const started = performance.now();
-              function measure() {
+              function measure(): void {
                 widths.push(surface.getBoundingClientRect().width);
                 if (performance.now() - started < 400)
                   requestAnimationFrame(measure);
@@ -240,7 +245,7 @@ function searchMorph(width: number, mode: Mode): Story {
           0,
         ),
       );
-      const isBetween = (width: number) =>
+      const isBetween = (width: number): boolean =>
         width > collapsedWidth + 1 && width < expandedWidth - 1;
       await expect(openingWidths.some(isBetween)).toBe(true);
       await expect(closingWidths.some(isBetween)).toBe(true);
@@ -508,7 +513,7 @@ const reconnectCalls = { listUpdates: 0, counts: 0 };
 const recoveredTitle = 'Session updated after reconnect';
 const reconnectMocks = {
   ...sessionListMocks,
-  'session.list': () => ({
+  'session.list': (): FixtureOutput<'session.list'> => ({
     ...activeSessions,
     sessions: activeSessions.sessions.map((session) =>
       session.title === sessionRows.idle.title && reconnectCalls.listUpdates > 1
@@ -516,7 +521,10 @@ const reconnectMocks = {
         : session,
     ),
   }),
-  'session.listUpdates': async function* () {
+  'session.listUpdates': async function* (): AsyncGenerator<
+    Extract<SessionListUpdate, { type: 'changed' }>,
+    void
+  > {
     reconnectCalls.listUpdates += 1;
     if (reconnectCalls.listUpdates === 1)
       throw new Error('Live updates stopped');
@@ -525,7 +533,7 @@ const reconnectMocks = {
       session: { ...sessionRows.idle, title: recoveredTitle },
     };
   },
-  'session.counts': async function* () {
+  'session.counts': async function* (): AsyncGenerator<SessionCounts, void> {
     reconnectCalls.counts += 1;
     if (reconnectCalls.counts === 1) throw new Error('Live counts stopped');
     yield { attention: 7, running: 0 };
@@ -573,7 +581,7 @@ export const ReconnectRestoresLiveSubscriptions: Story = {
   },
 };
 
-function ReconnectingSessionsScreen() {
+function ReconnectingSessionsScreen(): React.JSX.Element {
   reconnectConnection = useConnection();
   return <DesktopLayout destination={{ to: 'sessions' }}>{null}</DesktopLayout>;
 }
@@ -596,11 +604,16 @@ function liveUpdatesRetry(width: number, agentIndex: 0 | 1): Story {
   let calls = 0;
   const mocks = {
     ...sessionListMocks,
-    'session.list': () => ({
+    'session.list': (): Omit<FixtureOutput<'session.list'>, 'nextCursor'> & {
+      nextCursor: null;
+    } => ({
       sessions: [calls > 1 ? catalog.updated : catalog.row],
       nextCursor: null,
     }),
-    'session.listUpdates': async function* () {
+    'session.listUpdates': async function* (): AsyncGenerator<
+      Extract<SessionListUpdate, { type: 'changed' }>,
+      void
+    > {
       calls += 1;
       if (calls === 1) fails('The live stream ended')();
       yield { type: 'changed' as const, session: catalog.updated };

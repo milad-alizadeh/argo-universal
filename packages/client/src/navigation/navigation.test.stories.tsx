@@ -9,7 +9,7 @@ const meta = {
   title: 'Tests/Navigation',
   component: NavigationMock,
   parameters: { navigation: recorder },
-  beforeEach: () => recorder.reset(),
+  beforeEach: (): void => recorder.reset(),
 } satisfies Meta<typeof NavigationMock>;
 
 export default meta;

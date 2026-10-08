@@ -2,6 +2,7 @@ import type {
   Icon as PhosphorIcon,
   IconProps as PhosphorIconProps,
 } from 'phosphor-react-native';
+import type * as React from 'react';
 import { useContext } from 'react';
 import {
   ActivityIndicator,
@@ -22,7 +23,7 @@ export const iconSizeClasses = {
 export type IconSize = keyof typeof iconSizeClasses;
 
 // Phosphor and ActivityIndicator take a number, so this is the one place a variant becomes pixels.
-export function useIconPixels(size: IconSize) {
+export function useIconPixels(size: IconSize): number {
   const pixels = useCSSVariable(`--spacing-icon-${size}`);
   return typeof pixels === 'number'
     ? pixels
@@ -40,7 +41,7 @@ function IconComponent({
   pixels,
   style,
   ...props
-}: Omit<IconProps, 'size'> & { pixels: number }) {
+}: Omit<IconProps, 'size'> & { pixels: number }): React.JSX.Element {
   return (
     <Component
       {...props}
@@ -62,7 +63,7 @@ export function Icon({
   size = 'md',
   weight = 'regular',
   ...props
-}: IconProps) {
+}: IconProps): React.JSX.Element {
   const textClass = useContext(TextClassContext);
   const pixels = useIconPixels(size);
   return (
@@ -78,7 +79,9 @@ export function Icon({
 export function IconSpinner({
   size = 'md',
   ...props
-}: Omit<ActivityIndicatorProps, 'size'> & { size?: IconSize }) {
+}: Omit<ActivityIndicatorProps, 'size'> & {
+  size?: IconSize;
+}): React.JSX.Element {
   const pixels = useIconPixels(size);
   return <ActivityIndicator {...props} size={pixels} />;
 }

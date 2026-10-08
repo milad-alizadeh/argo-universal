@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import { createContext, type ReactNode, useContext } from 'react';
 
 export type NavigationDestination =
@@ -37,7 +38,7 @@ export interface NavigationProviderProps {
 export function NavigationProvider({
   navigate,
   children,
-}: NavigationProviderProps) {
+}: NavigationProviderProps): React.JSX.Element {
   return (
     <NavigateContext.Provider value={navigate}>
       {children}

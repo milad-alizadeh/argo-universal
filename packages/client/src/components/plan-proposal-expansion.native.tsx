@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import { KeyboardAvoidingView, Modal, Platform } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useResolveClassNames } from 'uniwind';
@@ -10,7 +11,7 @@ import {
 export function PlanProposalExpansion({
   onCollapse,
   children,
-}: PlanProposalExpansionProps) {
+}: PlanProposalExpansionProps): React.JSX.Element {
   const surface = useResolveClassNames('flex-1 bg-popover');
   const wide = useWide();
   if (wide)

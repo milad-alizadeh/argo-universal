@@ -57,7 +57,7 @@ function editsSeveralFiles(row: ToolCallUpdate): boolean {
 
 function groupTitle(toolCalls: ToolCallUpdate[]): string {
   const parts: string[] = [];
-  const add = (verb: string, count: number, noun: string) => {
+  const add = (verb: string, count: number, noun: string): void => {
     if (count) parts.push(`${verb} ${count} ${noun}${count === 1 ? '' : 's'}`);
   };
   add(
@@ -123,7 +123,7 @@ export function toFeedView(
   let liveTitle: string | undefined;
   let live: Extract<FeedGroup, { state: 'open' }>['live'];
 
-  function flushGroup() {
+  function flushGroup(): void {
     const first = activities[0];
     if (!first) return;
     for (const activity of activities)

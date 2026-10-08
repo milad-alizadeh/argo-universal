@@ -1,4 +1,5 @@
 import { sessionRows } from '@repo/api/mocks';
+import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import {
@@ -8,7 +9,11 @@ import {
 import { Button } from '../src/primitives/button';
 import { Text } from '../src/primitives/text';
 
-export function createSessionsRenderingMock() {
+export function createSessionsRenderingMock(): {
+  sessions: (typeof sessionRows)['idle'][];
+  getActivityReads: () => number;
+  reset: () => void;
+} {
   let activityReads = 0;
   const sessions = [
     {
@@ -16,7 +21,7 @@ export function createSessionsRenderingMock() {
       sessionId: 'memo-unchanged',
       title: 'Unchanged Session',
       activityAt: 300,
-      get activity() {
+      get activity(): string {
         activityReads++;
         return sessionRows.idle.activity;
       },
@@ -48,7 +53,7 @@ export function SessionsRenderingPreview({
   ...props
 }: SessionsListProps & {
   mock: ReturnType<typeof createSessionsRenderingMock>;
-}) {
+}): React.JSX.Element {
   const [sessions, setSessions] = useState(mock.sessions);
   const [selectedSessionId, setSelectedSessionId] = useState<string>();
   return (

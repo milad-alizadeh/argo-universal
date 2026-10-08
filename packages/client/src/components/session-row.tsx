@@ -67,7 +67,7 @@ export const SessionRow = memo(function SessionRow({
             -1,
           )
         : 0;
-    return () => cancelAnimation(logoRotation);
+    return (): void => cancelAnimation(logoRotation);
   }, [session.status, logoRotation]);
   const logoStyle = useAnimatedStyle(
     () => ({ transform: [{ rotate: `${logoRotation.value}deg` }] }),

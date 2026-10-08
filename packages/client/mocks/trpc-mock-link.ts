@@ -8,6 +8,15 @@ import type {
 } from '@trpc/server';
 import { observable } from '@trpc/server/observable';
 
+export type FixtureTick<Path extends keyof Fixtures> =
+  FixtureOutput<Path> extends AsyncIterable<infer Value> ? Value : never;
+export type FixtureArguments<Path extends keyof Fixtures> = Parameters<
+  NonNullable<Fixtures[Path]>
+>;
+export type FixtureOutput<Path extends keyof Fixtures> = Awaited<
+  ReturnType<NonNullable<Fixtures[Path]>>
+>;
+
 type RouterRecord = AppRouter['_def']['record'];
 
 type ProcedurePath<TRecord, TPrefix extends string = ''> = {
@@ -56,7 +65,7 @@ export function trpcMockLink(fixtures: Fixtures): TRPCLink<AppRouter> {
           op.path
         ];
         const controller = new AbortController();
-        (async () => {
+        (async (): Promise<void> => {
           if (!fixture) throw new Error(`No story mock for ${op.path}`);
           if (op.type === 'subscription') {
             observer.next({ result: { type: 'started' } });

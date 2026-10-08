@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import { type NavigationDestination, useNavigate } from '../navigation/context';
@@ -11,7 +12,10 @@ export interface PhoneLayoutProps {
 }
 
 // The phone's shell: one drawer for every section, so picking a section animates it shut over the new list.
-export function PhoneLayout({ destination, children }: PhoneLayoutProps) {
+export function PhoneLayout({
+  destination,
+  children,
+}: PhoneLayoutProps): React.JSX.Element {
   const navigate = useNavigate();
   const attentionCount = useAttentionCount();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -25,7 +29,7 @@ export function PhoneLayout({ destination, children }: PhoneLayoutProps) {
     if (shownSection.current === section) return;
     shownSection.current = section;
     const frame = requestAnimationFrame(() => setDrawerOpen(false));
-    return () => cancelAnimationFrame(frame);
+    return (): void => cancelAnimationFrame(frame);
   }, [section]);
 
   return (

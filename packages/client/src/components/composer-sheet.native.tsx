@@ -2,6 +2,7 @@ import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetScrollView,
 } from '@gorhom/bottom-sheet';
+import type * as React from 'react';
 import { useCallback, useEffect } from 'react';
 import { Modal, Platform, useWindowDimensions } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -21,7 +22,7 @@ export function ComposerSheet({
   trigger,
   label,
   children,
-}: ComposerSheetProps) {
+}: ComposerSheetProps): React.JSX.Element {
   const { height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const background = useResolveClassNames('bg-popover rounded-t-xl');

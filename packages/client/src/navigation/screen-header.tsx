@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import {
   type ComponentType,
   createContext,
@@ -32,7 +33,7 @@ export interface ScreenHeaderProviderProps {
 export function ScreenHeaderProvider({
   header,
   children,
-}: ScreenHeaderProviderProps) {
+}: ScreenHeaderProviderProps): React.JSX.Element {
   return (
     <ScreenHeaderContext.Provider value={header}>
       {children}
@@ -41,7 +42,9 @@ export function ScreenHeaderProvider({
 }
 
 // Sets the header of the phone stack screen it renders in; outside a phone stack it draws nothing.
-export function ScreenHeader(props: ScreenHeaderProps) {
+export function ScreenHeader(
+  props: ScreenHeaderProps,
+): React.JSX.Element | null {
   const Header = useContext(ScreenHeaderContext);
   return Header ? <Header {...props} /> : null;
 }

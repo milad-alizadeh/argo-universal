@@ -13,7 +13,7 @@ export const redSquareDataUrl =
 export type MockAgent = 'agent-1' | 'agent-2';
 
 // Serves recorded images the way the Server's `/blobs/:id` would.
-export function recordedImageUrl(blob: BlobRef) {
+export function recordedImageUrl(blob: BlobRef): typeof redSquareDataUrl | '' {
   const recorded = recordedUserMessage('agent-1', 'image-prompt').content.some(
     (block) => block.type === 'image' && block.blob.blobId === blob.blobId,
   );
@@ -35,7 +35,7 @@ function recordedRow<Kind extends SessionUpdate['sessionUpdate']>(
   agent: MockAgent,
   recording: string,
   kind: Kind,
-) {
+): Extract<SessionUpdate, { sessionUpdate: Kind }> {
   const row = recordedFeedMock(agent, recording).rows.findLast(
     (row) => row.sessionUpdate === kind,
   );
@@ -53,7 +53,7 @@ export const recordedAgentMessage = (
   recording: string,
 ): AgentMessage => recordedRow(agent, recording, 'agent_message');
 
-const textLength = (row: AgentMessage) =>
+const textLength = (row: AgentMessage): number =>
   row.content
     .map((block) => (block.type === 'text' ? block.text.length : 0))
     .reduce((total, length) => total + length, 0);

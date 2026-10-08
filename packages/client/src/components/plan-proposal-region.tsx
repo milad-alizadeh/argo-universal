@@ -1,4 +1,5 @@
 import { PortalHost } from '@rn-primitives/portal';
+import type * as React from 'react';
 import { createContext, type ReactNode, useId } from 'react';
 import type { ViewProps } from 'react-native';
 import { cn } from '#lib/utils';
@@ -11,7 +12,7 @@ export function PlanProposalRegion({
   children,
   className,
   ...props
-}: ViewProps & { children: ReactNode }) {
+}: ViewProps & { children: ReactNode }): React.JSX.Element {
   const host = useId();
   return (
     <PlanProposalHost.Provider value={host}>

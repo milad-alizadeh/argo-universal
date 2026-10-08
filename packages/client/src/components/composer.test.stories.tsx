@@ -1,6 +1,7 @@
 import { newSessionCatalogs } from '@repo/api/mocks';
 import type { AgentInfo, SessionConfigSelectOption } from '@repo/contracts';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import {
@@ -27,7 +28,9 @@ type PickerCatalog = {
 // What the picker stories need from each recorded catalog; a recording that loses one fails here by name.
 const pickerCatalogs = newSessionCatalogs.bothAvailable.map(
   (agent): PickerCatalog => {
-    const select = (category: string) => {
+    const select = (
+      category: string,
+    ): { choices: SessionConfigSelectOption[]; current: string } => {
       const option = agent.configOptions.find(
         (entry) => entry.category === category && entry.type === 'select',
       );
@@ -98,7 +101,7 @@ const meta = {
   title: 'Tests/Composer',
   globals: { themeId: 'default', mode: 'light' },
   component: Composer,
-  render: (args) => <ComposerMock {...args} />,
+  render: (args): React.JSX.Element => <ComposerMock {...args} />,
   args: {
     draft: { text: '', images: [] },
     onDraftChange: fn(),
@@ -522,7 +525,7 @@ async function chooseModel({
   userEvent,
   width,
   name,
-}: Omit<PickerStep, 'canvas'> & { name: string }) {
+}: Omit<PickerStep, 'canvas'> & { name: string }): Promise<void> {
   const overlay = within(document.body);
   if (width < 720)
     await userEvent.click(
@@ -535,7 +538,7 @@ async function chooseModel({
     ).toBeVisible();
 }
 
-async function expectEffortScale() {
+async function expectEffortScale(): Promise<void> {
   const overlay = within(document.body);
   const effortSlider = overlay.getByRole('slider', { name: 'Effort' });
   await Promise.all(
@@ -584,7 +587,7 @@ async function expectHighEffort({
   userEvent,
   width,
   catalog,
-}: PickerStep & { catalog: PickerCatalog }) {
+}: PickerStep & { catalog: PickerCatalog }): Promise<void> {
   const overlay = within(document.body);
   const { userEvent: browserUserEvent } = await import('vitest/browser');
   const model = catalog.highEffortModel;
@@ -616,7 +619,7 @@ async function expectEffortFollowsModel({
   userEvent,
   width,
   model,
-}: PickerStep & { model: SessionConfigSelectOption }) {
+}: PickerStep & { model: SessionConfigSelectOption }): Promise<void> {
   const overlay = within(document.body);
   await chooseModel({ userEvent, width, name: model.name });
   if (model._meta?.argo?.supportsEffort)
@@ -640,11 +643,11 @@ async function expectDangerousMode({
   userEvent,
   width,
   catalog,
-}: PickerStep & { catalog: PickerCatalog }) {
+}: PickerStep & { catalog: PickerCatalog }): Promise<void> {
   const overlay = within(document.body);
   const { planning, dangerous } = catalog;
   await userEvent.click(canvas.getByRole('button', { name: 'Mode' }));
-  const labelColor = (name: string) =>
+  const labelColor = (name: string): string =>
     getComputedStyle(
       within(overlay.getByRole('button', { name })).getByText(name),
     ).color;
@@ -1241,7 +1244,7 @@ export const ResponsiveLayoutNarrowPhone: Story = {
 
 type FooterCheck = Pick<PlayContext, 'canvas'> & { card: Element };
 
-async function expectPhoneFooter({ canvas, card }: FooterCheck) {
+async function expectPhoneFooter({ canvas, card }: FooterCheck): Promise<void> {
   const bounds = card.getBoundingClientRect();
   const trigger = canvas.getByRole('button', { name: 'Agent and model' });
   await expect(
@@ -1267,7 +1270,7 @@ async function expectPhoneFooter({ canvas, card }: FooterCheck) {
   ).not.toBeInTheDocument();
 }
 
-async function expectWideFooter({ canvas, card }: FooterCheck) {
+async function expectWideFooter({ canvas, card }: FooterCheck): Promise<void> {
   const trigger = canvas.getByRole('button', { name: 'Agent and model' });
   await expect(
     within(trigger).getByTestId('composer-agent-icon').getBoundingClientRect()
@@ -1285,7 +1288,7 @@ async function expectWideFooter({ canvas, card }: FooterCheck) {
   await expect(size.left).toBeGreaterThanOrEqual(used.right);
 }
 
-async function expectWideAgentMenu() {
+async function expectWideAgentMenu(): Promise<void> {
   const overlay = within(document.body);
   await waitFor(() => {
     expect(overlay.getByRole('dialog').getBoundingClientRect().width).toBe(580);
@@ -1466,7 +1469,7 @@ export const PlanExpandsSmoothly: Story = {
     const panel = canvas.getByTestId('composer-plan-steps');
     const heights: number[] = [];
     let collecting = true;
-    const sample = () => {
+    const sample = (): void => {
       heights.push(panel.getBoundingClientRect().height);
       if (collecting) requestAnimationFrame(sample);
     };

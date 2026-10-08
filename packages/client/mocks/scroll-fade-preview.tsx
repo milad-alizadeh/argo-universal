@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import { View } from 'react-native';
 import { ScrollFadeView } from '../src/components/scroll-fade';
 import { Text } from '../src/primitives/text';
@@ -13,7 +14,7 @@ export function ScrollFadePreview({
   lines = outputLines,
 }: {
   lines?: string[];
-}) {
+}): React.JSX.Element {
   return (
     <View
       className="w-full max-w-sm overflow-hidden rounded-xl bg-sidebar"
