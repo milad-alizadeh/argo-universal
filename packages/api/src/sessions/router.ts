@@ -101,36 +101,13 @@ export const sessionRouter = router({
   changes: publicProcedure
     .input(SessionChangesInput)
     .output(SessionChangesOutput)
-    .query(
-      ({
-        ctx,
-        input,
-      }): Promise<
-        {
-          operation: 'add' | 'delete' | 'modify' | 'move';
-          path: string;
-          oldPath?: string;
-          additions: number | null;
-          deletions: number | null;
-        }[]
-      > => ctx.services.session.changes(input),
+    .query(({ ctx, input }): Promise<SessionChangesOutput> =>
+      ctx.services.session.changes(input),
     ),
   diff: publicProcedure
     .input(SessionDiffInput)
     .output(SessionDiffOutput)
-    .query(
-      ({
-        ctx,
-        input,
-      }): Promise<{
-        file: {
-          operation: 'add' | 'delete' | 'modify' | 'move';
-          path: string;
-          oldPath?: string;
-          additions: number | null;
-          deletions: number | null;
-        };
-        patch: { format: 'git_patch'; text: string };
-      }> => ctx.services.session.diff(input),
+    .query(({ ctx, input }): Promise<SessionDiffOutput> =>
+      ctx.services.session.diff(input),
     ),
 });

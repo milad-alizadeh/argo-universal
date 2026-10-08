@@ -1,6 +1,7 @@
-import { readFileSync } from 'node:fs';
-import type { CommandAction } from '@repo/contracts';
+import path from 'node:path';
+import type { CommandAction, ToolCallUpdate } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
+import { readRecording } from '../mocks/recording';
 import type { AgentEvent, FeedUpdate } from '../src/agent-events';
 import type { VendorMessage } from './messages';
 import type {
@@ -14,12 +15,9 @@ const recording = (
   name: string,
 ): (VendorMessage & { receivedAt: number | undefined })[] =>
   JSON.parse(
-    readFileSync(
-      new URL(
-        `../../../mocks/cli/codex/recordings/0.157.0/${name}.json`,
-        import.meta.url,
-      ),
-      'utf8',
+    readRecording(
+      path.join(import.meta.dirname, '../../../mocks/cli/codex/recordings'),
+      name,
     ),
   ).payload.messages.map(
     (
@@ -151,21 +149,7 @@ it('keeps the recorded Tool call start and end times', (): void => {
     .filter((row): boolean => row.kind === 'execute');
   expect(
     tools.map(
-      (
-        row,
-      ):
-        | {
-            truncated?: boolean;
-            permissionOutcome?:
-              | { outcome: 'cancelled' }
-              | { outcome: 'selected'; optionId: string };
-            commandActions?: CommandAction[];
-            startedAt?: number;
-            endedAt?: number;
-            shellId?: string;
-            description?: string;
-          }
-        | undefined => row._meta?.argo,
+      (row): NonNullable<ToolCallUpdate['_meta']>['argo'] => row._meta?.argo,
     ),
   ).toEqual([
     expect.objectContaining({

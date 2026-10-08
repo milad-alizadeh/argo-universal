@@ -6,7 +6,7 @@ import { readMockCliEnvironment } from './mock-cli.ts';
 const RequestAnswer = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('permission'),
-    optionId: z.enum(['allow_once', 'reject_once']),
+    optionId: z.enum(['allow_once', 'reject_once']).nullable(),
     message: z.string().optional(),
   }),
   z.object({
@@ -41,10 +41,7 @@ export function readRequestAnswers(
 export type RecordedRequestAnswer =
   | {
       type: 'permission';
-      optionId: Exclude<
-        AgentCommandOf<'agent.answerPermission'>['optionId'],
-        null
-      >;
+      optionId: AgentCommandOf<'agent.answerPermission'>['optionId'];
       message?: string;
     }
   | ({ type: 'elicitation' } & Pick<
@@ -55,3 +52,24 @@ export type RecordedRequestAnswer =
       | { decision: 'approve'; feedback?: string }
       | { decision: 'keep_planning'; feedback: string }
     ));
+
+export function rejectRequestAnswer(agent: string): never {
+  throw new Error(`Unsupported ${agent} request answer`);
+}
+
+type RequestAnswerReader = (
+  read: () => RecordedRequestAnswer,
+) => RecordedRequestAnswer;
+
+export function createRequestAnswerReader(): RequestAnswerReader {
+  let rejectedAnswers = 0;
+  return (read): RecordedRequestAnswer => {
+    try {
+      return read();
+    } catch (error) {
+      rejectedAnswers += 1;
+      console.error(`Mock CLI rejected request answer (${rejectedAnswers})`);
+      throw error;
+    }
+  };
+}

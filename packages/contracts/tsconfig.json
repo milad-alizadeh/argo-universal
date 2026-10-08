@@ -1,5 +1,8 @@
 {
   "extends": "@repo/typescript/base.json",
-  "compilerOptions": { "lib": ["es2025", "DOM"] },
+  "compilerOptions": {
+    "exactOptionalPropertyTypes": true,
+    "lib": ["es2025", "DOM"]
+  },
   "include": ["src"]
 }

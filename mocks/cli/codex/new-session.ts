@@ -1,19 +1,22 @@
-import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import {
   startingValues,
   toConfigOptions,
 } from '../../../packages/agents/codex/config-options';
 import type { ModelListResponse } from '../../../packages/agents/codex/protocol.gen';
 import { recordedImagePrompt } from '../image';
+import { findRecording, readRecording, recordedFrames } from '../recording';
 
-const recording: { payload: ModelListResponse } = JSON.parse(
-  readFileSync(
-    new URL('./recordings/0.157.0/model-list.json', import.meta.url),
-    'utf8',
-  ),
+const modelsPayload = readRecording(
+  findRecording(path.join(import.meta.dirname, 'recordings'), 'model-list'),
+  'codex-app-server',
+).payload;
+const recordedModels = recordedFrames<ModelListResponse['data'][number]>(
+  modelsPayload,
+  'data',
 );
 const efforts = new Set<string>();
-const models = recording.payload.data.filter((model): boolean => {
+const models = recordedModels.filter((model): boolean => {
   const key = JSON.stringify(
     model.supportedReasoningEfforts.map(
       (effort): string => effort.reasoningEffort,

@@ -95,7 +95,7 @@ try {
   }
   writeFileSync(
     new URL('./protocol.gen.ts', import.meta.url),
-    `// Generated from ${version}; run node packages/agents/codex/generate-protocol.ts.\n\n${declarations.join('\n\n')}\n`,
+    `// Generated from ${version}; run node packages/agents/codex/generate-protocol.ts.\n\nexport const codexProtocolVersion = ${JSON.stringify(version.replace(/^codex-cli /, ''))};\n\n${declarations.join('\n\n')}\n`,
   );
 } finally {
   rmSync(directory, { recursive: true, force: true });

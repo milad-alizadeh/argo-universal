@@ -1,5 +1,7 @@
 import { execFile } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
@@ -98,6 +100,25 @@ const startClaude = async (
   );
 
 describe('claude recordings', (): void => {
+  it('matches the SDK Claude Code major.minor version', (): void => {
+    const sdk = createRequire(
+      new URL('../../../packages/agents/package.json', import.meta.url),
+    ).resolve('@anthropic-ai/claude-agent-sdk');
+    const metadata: unknown = JSON.parse(
+      readFileSync(path.join(path.dirname(sdk), 'package.json'), 'utf8'),
+    );
+    if (
+      typeof metadata !== 'object' ||
+      metadata === null ||
+      !('claudeCodeVersion' in metadata)
+    )
+      throw new Error('SDK has no Claude Code version');
+    if (typeof metadata.claudeCodeVersion !== 'string')
+      throw new Error('SDK Claude Code version is not a string');
+    expect(VERSION.split('.').slice(0, 2)).toEqual(
+      metadata.claudeCodeVersion.split('.').slice(0, 2),
+    );
+  });
   it.each(recordingFiles(RECORDINGS))(
     '%s reads as a recording',
     (file): void => {

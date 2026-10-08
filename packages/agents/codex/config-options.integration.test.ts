@@ -1,15 +1,13 @@
-import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { expect, it } from 'vitest';
+import { readRecording } from '../mocks/recording';
 import { changeValue, startingValues, toConfigOptions } from './config-options';
 import type { ModelListResponse } from './protocol.gen';
 
 const recorded: { payload: ModelListResponse } = JSON.parse(
-  readFileSync(
-    new URL(
-      '../../../mocks/cli/codex/recordings/0.157.0/model-list.json',
-      import.meta.url,
-    ),
-    'utf8',
+  readRecording(
+    path.join(import.meta.dirname, '../../../mocks/cli/codex/recordings'),
+    'model-list',
   ),
 );
 const models = recorded.payload.data;

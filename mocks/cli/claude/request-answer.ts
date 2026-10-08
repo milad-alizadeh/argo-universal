@@ -1,64 +1,69 @@
-import path from 'node:path';
 import type {
   AskUserQuestionInput,
   PermissionResult,
   SDKControlRequest,
-  SDKControlResponse,
-  SDKMessage,
 } from '../../../packages/agents/claude/messages.ts';
-import { findRecording, readRecording, recordedFrames } from '../recording.ts';
-import type { RecordedRequestAnswer } from '../request-answer.ts';
+import {
+  rejectRequestAnswer,
+  type RecordedRequestAnswer,
+} from '../request-answer.ts';
 
-export function recordedRequestAnswer(name: string): RecordedRequestAnswer {
-  const { payload } = readRecording(
-    findRecording(path.join(import.meta.dirname, 'recordings'), name),
-    'claude-cli',
-  );
-  const request = recordedFrames<SDKMessage | SDKControlRequest>(
-    payload,
-    'output',
-  ).find(
-    (frame): boolean =>
-      frame.type === 'control_request' &&
-      frame.request.subtype === 'can_use_tool',
-  );
-  if (
-    request?.type !== 'control_request' ||
-    request.request.subtype !== 'can_use_tool'
-  )
-    throw new Error('Recording has no request');
-  const frame = recordedFrames<
-    SDKMessage | SDKControlRequest | SDKControlResponse
-  >(payload, 'input').find(
-    (frame): boolean =>
-      frame.type === 'control_response' &&
-      frame.response.request_id === request.request_id,
-  );
-  if (
-    frame?.type !== 'control_response' ||
-    frame.response.subtype !== 'success' ||
-    !frame.response.response
-  )
-    throw new Error('Recording has no matching answer');
-  const response = frame.response.response as PermissionResult;
-  if (request.request.tool_name === 'ExitPlanMode') {
-    if (response.behavior === 'allow')
-      return { type: 'plan', decision: 'approve' };
-    return {
-      type: 'plan',
-      decision: 'keep_planning',
-      feedback: response.message,
-    };
-  }
-  if (request.request.tool_name === 'AskUserQuestion')
-    return {
-      type: 'elicitation',
-      action: response.behavior === 'allow' ? 'accept' : 'decline',
-      content:
-        response.behavior === 'allow'
-          ? (response.updatedInput?.answers as AskUserQuestionInput['answers'])
-          : undefined,
-    };
+type ToolRequest = Extract<
+  SDKControlRequest['request'],
+  { subtype: 'can_use_tool' }
+>;
+
+export function readPermissionResult(response: unknown): PermissionResult {
+  if (!isObject(response)) return rejectRequestAnswer('claude');
+  if (response.behavior === 'deny') return deniedPermission(response);
+  return allowedPermission(response);
+}
+
+function allowedPermission(
+  response: Record<string, unknown>,
+): PermissionResult {
+  if (response.behavior !== 'allow') return rejectRequestAnswer('claude');
+  const updatedInput = response.updatedInput;
+  if (updatedInput === undefined) return { behavior: 'allow' };
+  return { behavior: 'allow', updatedInput: readUpdatedInput(updatedInput) };
+}
+
+function readUpdatedInput(input: unknown): Record<string, unknown> {
+  if (!isObject(input)) return rejectRequestAnswer('claude');
+  return input;
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function deniedPermission(response: Record<string, unknown>): PermissionResult {
+  if (typeof response.message !== 'string')
+    return rejectRequestAnswer('claude');
+  return {
+    behavior: 'deny',
+    message: response.message,
+    interrupt: readInterrupt(response.interrupt),
+  };
+}
+
+function readInterrupt(interrupt: unknown): boolean {
+  if (interrupt === undefined) return false;
+  if (typeof interrupt !== 'boolean') return rejectRequestAnswer('claude');
+  return interrupt;
+}
+
+export function toRequestAnswer(
+  request: ToolRequest,
+  response: PermissionResult,
+): RecordedRequestAnswer {
+  if (request.tool_name === 'ExitPlanMode') return planAnswer(response);
+  if (request.tool_name === 'AskUserQuestion')
+    return elicitationAnswer(response);
+  return permissionAnswer(response);
+}
+
+function permissionAnswer(response: PermissionResult): RecordedRequestAnswer {
   return response.behavior === 'allow'
     ? { type: 'permission', optionId: 'allow_once' }
     : {
@@ -66,4 +71,36 @@ export function recordedRequestAnswer(name: string): RecordedRequestAnswer {
         optionId: 'reject_once',
         message: response.message,
       };
+}
+
+function planAnswer(response: PermissionResult): RecordedRequestAnswer {
+  return response.behavior === 'allow'
+    ? { type: 'plan', decision: 'approve' }
+    : { type: 'plan', decision: 'keep_planning', feedback: response.message };
+}
+
+function elicitationAnswer(response: PermissionResult): RecordedRequestAnswer {
+  if (response.behavior === 'deny')
+    return {
+      type: 'elicitation',
+      action: response.interrupt ? 'cancel' : 'decline',
+    };
+  return acceptedElicitation(response);
+}
+
+function acceptedElicitation(
+  response: Extract<PermissionResult, { behavior: 'allow' }>,
+): RecordedRequestAnswer {
+  const answers = response.updatedInput?.answers;
+  if (!isQuestionAnswers(answers)) return rejectRequestAnswer('claude');
+  return { type: 'elicitation', action: 'accept', content: answers };
+}
+
+function isQuestionAnswers(
+  value: unknown,
+): value is NonNullable<AskUserQuestionInput['answers']> {
+  return (
+    isObject(value) &&
+    Object.values(value).every((answer): boolean => typeof answer === 'string')
+  );
 }
