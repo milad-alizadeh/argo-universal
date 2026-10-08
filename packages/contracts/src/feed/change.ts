@@ -7,6 +7,7 @@ import {
   Notice,
   PlanUpdate,
   SubagentUpdate,
+  type SessionUpdate,
   TaskUpdate,
   ToolCallUpdate,
   UserMessage,
@@ -86,8 +87,24 @@ export function writeFeedField(
     copy[Number(key)] = writeFeedField(value[Number(key)], rest, text);
     return copy;
   }
-  const record = value as Record<string, unknown>;
-  return { ...record, [key]: writeFeedField(record[key], rest, text) };
+  if (value === null || typeof value !== 'object')
+    throw new TypeError('A resolved Feed path needs an object before its text');
+  return {
+    ...value,
+    [key]: writeFeedField(Reflect.get(value, key), rest, text),
+  };
+}
+
+export function writeFeedRowField(
+  value: SessionUpdate,
+  field: string,
+  text: string,
+): Record<string, unknown> {
+  const [key = '', ...rest] = field.split('.');
+  return {
+    ...value,
+    [key]: writeFeedField(Reflect.get(value, key), rest, text),
+  };
 }
 
 // Top-level fields of a row to replace; `state: 'settled'` settles it.

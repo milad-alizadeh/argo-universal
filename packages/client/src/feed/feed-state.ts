@@ -3,7 +3,7 @@ import {
   type FeedSubscribeOutput,
   readFeedField,
   type SessionUpdate,
-  writeFeedField,
+  writeFeedRowField,
 } from '@repo/contracts';
 
 // The rows an App holds for one Session: a window of the newest rows, kept in sync by revision (ADR 0007).
@@ -133,7 +133,7 @@ export function applySubscriptionEvent(
         ...known,
         ...event.set,
         revision: event.rev,
-      } as SessionUpdate),
+      }),
     };
   const path = event.field.split('.');
   const heldText = readFeedField(known, path);
@@ -141,7 +141,8 @@ export function applySubscriptionEvent(
     return { feed, missingRowId: event.id };
   return {
     feed: replaceHeldRow(feed, {
-      ...(writeFeedField(known, path, heldText + event.text) as SessionUpdate),
+      ...known,
+      ...writeFeedRowField(known, event.field, heldText + event.text),
       revision: event.rev,
     }),
   };
