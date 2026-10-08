@@ -8,7 +8,7 @@ import {
   type OutputFrom,
   setup,
 } from 'xstate';
-import { agentProbeId, agentProbeMachine } from '../agents/agent-probe-machine';
+import { agentProbeId, agentProbeMachine } from '../agents';
 import { createRegistrySessionInput } from './registry-session-input';
 import type { SessionCreationInput } from './session-data';
 import { type SessionActorRef, sessionMachine } from './session-machine';

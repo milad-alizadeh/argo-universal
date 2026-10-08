@@ -4,7 +4,7 @@ import type {
   SessionUpdate,
 } from '@repo/contracts';
 import type { SnapshotFrom } from 'xstate';
-import type { feedMachine } from '../feed/feed-machine';
+import type { feedMachine } from '../feed';
 import { toLiveHeader } from './live-header';
 import type { sessionMachine } from './session-machine';
 

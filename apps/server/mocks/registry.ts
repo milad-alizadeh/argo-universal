@@ -6,10 +6,12 @@ import {
   fromPromise,
   type SnapshotFrom,
 } from 'xstate';
-import { registryMachine } from '../src/services/sessions/registry-machine';
-import { createRegistrySessionInput } from '../src/services/sessions/registry-session-input';
-import type { SessionData } from '../src/services/sessions/session-data';
-import { sessionMachine } from '../src/services/sessions/session-machine';
+import {
+  registryMachine,
+  createRegistrySessionInput,
+  type SessionData,
+  sessionMachine,
+} from '../src/services/sessions';
 
 const session = sessionMachine.provide({
   actors: {
