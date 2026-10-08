@@ -207,6 +207,7 @@ export function toConfigOptions(
                 | 'xhigh'
               )[];
               supportsAdaptiveThinking: boolean;
+              supportsFastMode: boolean;
               supportsAutoMode: boolean;
             };
           };
@@ -224,6 +225,7 @@ export function toConfigOptions(
               supportedEffortLevels: option.supportedEffortLevels ?? [],
               supportsAdaptiveThinking:
                 option.supportsAdaptiveThinking ?? false,
+              supportsFastMode: option.supportsFastMode ?? false,
               supportsAutoMode: option.supportsAutoMode ?? false,
             },
           },

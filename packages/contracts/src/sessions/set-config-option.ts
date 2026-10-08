@@ -29,6 +29,7 @@ const ConfigOptionMeta = z.looseObject({
       supportedEffortLevels: z.array(z.string()).optional(),
       supportsImages: z.boolean().optional(),
       supportsAdaptiveThinking: z.boolean().optional(),
+      supportsFastMode: z.boolean().optional(),
       supportsAutoMode: z.boolean().optional(),
       supportsPersonality: z.boolean().optional(),
       heldUntilNextTurn: z.boolean().optional(),

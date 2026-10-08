@@ -1,5 +1,5 @@
 import { View } from 'react-native';
-import { ScrollFadeView } from '../src/components/ScrollFade';
+import { ScrollFadeView } from '../src/components/scroll-fade';
 import { Text } from '../src/primitives/text';
 
 const outputLines = Array.from(

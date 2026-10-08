@@ -1,5 +1,5 @@
 import { View } from 'react-native';
-import { DiffView } from '../src/components/DiffView';
+import { DiffView } from '../src/components/diff-view';
 import { withOccurrenceKeys } from '../src/lib/occurrence-keys';
 import { recordedFile } from './feed-edit-mock';
 

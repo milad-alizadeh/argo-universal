@@ -88,6 +88,7 @@
                   "max"
                 ],
                 "supportsAdaptiveThinking": true,
+                "supportsFastMode": true,
                 "supportsAutoMode": true
               }
             },
@@ -102,6 +103,7 @@
                 "supportsEffort": false,
                 "supportedEffortLevels": [],
                 "supportsAdaptiveThinking": false,
+                "supportsFastMode": false,
                 "supportsAutoMode": false
               }
             },
@@ -116,6 +118,7 @@
                 "supportsEffort": true,
                 "supportedEffortLevels": ["low", "medium", "high", "max"],
                 "supportsAdaptiveThinking": true,
+                "supportsFastMode": false,
                 "supportsAutoMode": true
               }
             },
@@ -241,6 +244,7 @@
                     "max"
                   ],
                   "supportsAdaptiveThinking": true,
+                  "supportsFastMode": true,
                   "supportsAutoMode": true
                 }
               },
@@ -255,6 +259,7 @@
                   "supportsEffort": false,
                   "supportedEffortLevels": [],
                   "supportsAdaptiveThinking": false,
+                  "supportsFastMode": false,
                   "supportsAutoMode": false
                 }
               },
@@ -269,6 +274,7 @@
                   "supportsEffort": true,
                   "supportedEffortLevels": ["low", "medium", "high", "max"],
                   "supportsAdaptiveThinking": true,
+                  "supportsFastMode": false,
                   "supportsAutoMode": true
                 }
               },
@@ -382,6 +388,7 @@
                     "max"
                   ],
                   "supportsAdaptiveThinking": true,
+                  "supportsFastMode": true,
                   "supportsAutoMode": true
                 }
               },
@@ -396,6 +403,7 @@
                   "supportsEffort": false,
                   "supportedEffortLevels": [],
                   "supportsAdaptiveThinking": false,
+                  "supportsFastMode": false,
                   "supportsAutoMode": false
                 }
               },
@@ -410,6 +418,7 @@
                   "supportsEffort": true,
                   "supportedEffortLevels": ["low", "medium", "high", "max"],
                   "supportsAdaptiveThinking": true,
+                  "supportsFastMode": false,
                   "supportsAutoMode": true
                 }
               },
@@ -505,6 +514,7 @@
                     "max"
                   ],
                   "supportsAdaptiveThinking": true,
+                  "supportsFastMode": true,
                   "supportsAutoMode": true
                 }
               },
@@ -519,6 +529,7 @@
                   "supportsEffort": false,
                   "supportedEffortLevels": [],
                   "supportsAdaptiveThinking": false,
+                  "supportsFastMode": false,
                   "supportsAutoMode": false
                 }
               },
@@ -533,6 +544,7 @@
                   "supportsEffort": true,
                   "supportedEffortLevels": ["low", "medium", "high", "max"],
                   "supportsAdaptiveThinking": true,
+                  "supportsFastMode": false,
                   "supportsAutoMode": true
                 }
               },

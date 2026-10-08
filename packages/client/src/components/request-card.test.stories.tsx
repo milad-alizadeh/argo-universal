@@ -8,12 +8,12 @@ import {
   RequestFrame,
 } from '../../mocks/request-preview';
 import { settleViewport } from '../../mocks/settle-viewport';
-import { ContentLayout } from './ContentLayout';
-import type { PermissionRequestProps } from './PermissionRequest';
+import { ContentLayout } from './content-layout';
+import type { PermissionRequestProps } from './permission-request';
 import {
   PlanProposalCard,
   type PlanProposalCardProps,
-} from './PlanProposalCard';
+} from './plan-proposal-card';
 
 interface ShortcutPreviewProps {
   width: number;
