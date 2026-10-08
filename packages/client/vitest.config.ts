@@ -1,10 +1,11 @@
-import { nodeTest } from '@repo/vitest/node';
+import { createNodeTestProjects } from '@repo/vitest/node';
 import { defineProject } from 'vitest/config';
 
-// Plain Vitest runs non-UI code only; components are tested with play functions.
+// Node projects cover non-UI code; the Storybook browser project covers stories.
 export default defineProject({
   test: {
-    ...nodeTest,
-    include: ['src/**/*.test.ts', 'mocks/**/*.test.ts'],
+    projects: createNodeTestProjects({
+      include: ['src/**/*.test.ts', 'mocks/**/*.test.ts'],
+    }),
   },
 });

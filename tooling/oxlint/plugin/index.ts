@@ -8,6 +8,7 @@ import { jsonParseCast } from './json-parse-cast.ts';
 import { machineClock } from './machine-clock.ts';
 import { mockEnvironment } from './mock-environment.ts';
 import { noInternalMock } from './no-internal-mock.ts';
+import { unitTestIo } from './unit-test-io.ts';
 import { vendorName } from './vendor-name.ts';
 
 // Argo's own rules; argo.json switches each on for the folders it guards.
@@ -24,5 +25,6 @@ export default definePlugin({
     'mock-environment': mockEnvironment,
     'no-internal-mock': noInternalMock,
     'vendor-name': vendorName,
+    'unit-test-io': unitTestIo,
   },
 });
