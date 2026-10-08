@@ -19,6 +19,7 @@ import {
 import { promptBlobIds, toFeedRowWrite } from './feed-row';
 import type { WriterJob } from './writer-job';
 import type { WriterEvent } from './writer-machine';
+import { findDatabaseWriter } from './writer-system';
 
 type FeedLogParameters = { line: string };
 
@@ -154,8 +155,8 @@ export const feedMachine = setup({
     })),
     clearBatch: assign({ streamEvents: [] }),
     sendToWriter: sendTo(
-      ({ system }): ReturnType<typeof system.get> =>
-        system.get('databaseWriter'),
+      ({ system, self }): import('xstate').AnyActorRef =>
+        findDatabaseWriter(system) ?? self,
       (_, params: WriterJobParameters): WriterEvent => ({
         type: 'writer.write',
         job: params.job,
