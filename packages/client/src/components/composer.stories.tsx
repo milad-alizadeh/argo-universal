@@ -12,6 +12,8 @@ import {
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
 import { imageSelectionFailureMessage } from './use-image-draft';
 
+const spacingAndColoursPrompt = 'Match the spacing and colours.';
+
 function ComposerPreview(
   args: React.ComponentProps<typeof ComposerMock>,
 ): React.JSX.Element {
