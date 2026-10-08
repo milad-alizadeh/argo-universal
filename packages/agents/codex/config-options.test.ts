@@ -59,16 +59,26 @@ it('marks Plan and dangerous modes and previews each model’s support flags', (
     expect.arrayContaining([
       expect.objectContaining({
         configId: 'mode',
-        options: expect.arrayContaining([
-          expect.objectContaining({
+        options: [
+          {
             value: 'plan',
+            name: 'Plan mode',
+            description: 'Reads and plans, changes nothing',
             _meta: { argo: { icon: 'MapTrifold', tone: 'planning' } },
-          }),
-          expect.objectContaining({
+          },
+          {
+            value: 'default',
+            name: 'Ask first',
+            description: 'Asks before edits and commands',
+            _meta: { argo: { icon: 'ShieldWarning', tone: 'safe' } },
+          },
+          {
             value: 'fullAccess',
+            name: 'Full access',
+            description: 'Runs without sandbox or permission requests.',
             _meta: { argo: { icon: 'WarningTriangle', tone: 'dangerous' } },
-          }),
-        ]),
+          },
+        ],
       }),
       expect.objectContaining({
         configId: 'model',

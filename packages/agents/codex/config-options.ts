@@ -1,4 +1,5 @@
 import type {
+  ConfigOptionIcon,
   SessionConfigOption,
   SessionConfigSelectOption,
 } from '@repo/contracts';
@@ -7,26 +8,35 @@ import {
   changeValue as changeConfigValue,
   effortLevelName,
   hasEffortLevels,
-  sharedModes,
 } from '../src/config-options';
 import type { Model, ReasoningEffort } from './protocol.gen';
 export type { Model } from './protocol.gen';
 
-const modes = {
-  ...sharedModes,
-  fullAccess: {
-    name: 'Full access',
-    description: 'Runs without sandbox or permission requests.',
-    _meta: { argo: { icon: 'WarningTriangle', tone: 'dangerous' } },
-  },
-} satisfies Record<string, Omit<SessionConfigSelectOption, 'value'>>;
-type Mode = keyof typeof modes;
-const isMode = (value: string): value is Mode => value in modes;
+const modeNames = {
+  plan: 'Plan mode',
+  default: 'Ask first',
+  fullAccess: 'Full access',
+};
+type Mode = keyof typeof modeNames;
+const modeDescriptions = {
+  default: 'Asks before edits and commands',
+  plan: 'Reads and plans, changes nothing',
+  fullAccess: 'Runs without sandbox or permission requests.',
+} satisfies Record<Mode, string>;
+const modeMetadata = {
+  default: { icon: 'ShieldWarning', tone: 'safe' },
+  plan: { icon: 'MapTrifold', tone: 'planning' },
+  fullAccess: { icon: 'WarningTriangle', tone: 'dangerous' },
+} satisfies Record<
+  Mode,
+  NonNullable<SessionConfigOption['_meta']>['argo'] & { icon: ConfigOptionIcon }
+>;
+const isMode = (value: string): value is Mode => value in modeNames;
 
 export interface ConfigValues {
   model: string;
   effort: ReasoningEffort;
-  mode: keyof typeof modes;
+  mode: keyof typeof modeNames;
 }
 const modelFor = (models: Model[], value: unknown): Model | undefined =>
   models.find((model): boolean => model.model === value) ??
@@ -42,7 +52,7 @@ function allowedValues(
     model.supportedReasoningEfforts.find(
       (option): boolean => option.reasoningEffort === wanted.effort,
     )?.reasoningEffort ?? model.defaultReasoningEffort;
-  const mode = Object.keys(modes)
+  const mode = Object.keys(modeNames)
     .filter(isMode)
     .find((mode): boolean => mode === wanted.mode);
   return { model: model.model, effort, mode: mode ?? 'default' };
@@ -85,11 +95,13 @@ export function toConfigOptions(
       name: 'Mode',
       category: 'mode',
       currentValue: values.mode,
-      options: Object.keys(modes)
+      options: Object.keys(modeNames)
         .filter(isMode)
         .map((value): SessionConfigSelectOption => ({
           value,
-          ...modes[value],
+          name: modeNames[value],
+          description: modeDescriptions[value],
+          _meta: { argo: modeMetadata[value] },
         })),
     },
     {
