@@ -2,6 +2,7 @@ import {
   MagnifyingGlassIcon,
   SlidersHorizontalIcon,
 } from 'phosphor-react-native';
+import type * as React from 'react';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { HeaderButton } from '../src/components/header-button';
@@ -29,7 +30,7 @@ export function PhoneShellMock({
   onSectionChange,
   onSearch,
   onFilter,
-}: PhoneShellMockProps) {
+}: PhoneShellMockProps): React.JSX.Element {
   const [section, setSection] = useState(selectedSection);
   const [open, setOpen] = useState(drawerOpen);
   const [action, setAction] = useState('');

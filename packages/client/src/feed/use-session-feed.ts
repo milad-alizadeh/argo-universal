@@ -1,5 +1,8 @@
+import type { AppRouter } from '@repo/api';
 import type { FeedSyncPoint, SessionSnapshot } from '@repo/contracts';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import type { TRPCClientErrorLike } from '@trpc/client';
+import type { inferRouterOutputs } from '@trpc/server';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTRPC } from '../trpc/context';
@@ -11,6 +14,23 @@ import {
   mergeOlderPage,
 } from './feed-state';
 
+type FeedPageQuery = ReturnType<
+  typeof useQuery<
+    inferRouterOutputs<AppRouter>['feed']['page'],
+    TRPCClientErrorLike<AppRouter>
+  >
+>;
+interface SessionFeed extends ReturnType<typeof useOlderPages> {
+  feed: FeedState;
+  snapshot: SessionSnapshot | null;
+  ready: boolean;
+  error: FeedPageQuery['error'];
+  retry: FeedPageQuery['refetch'];
+  openError: Error | TRPCClientErrorLike<AppRouter> | null;
+  retryOpen: () => void;
+  resumeAfterCommand: () => void;
+}
+
 // Rows per page (ADR-0007 pages by position): long enough that paging rarely shows while reading back.
 const pageSize = 150;
 
@@ -18,7 +38,7 @@ const pageSize = 150;
 const uncached = { staleTime: 0, gcTime: 0 };
 
 // A Session's Feed rows and snapshot: the newest page, older pages on request, and live changes after them (ADR 0007).
-export function useSessionFeed(sessionId: string) {
+export function useSessionFeed(sessionId: string): SessionFeed {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const newestPage = useQuery(
@@ -143,7 +163,7 @@ function useOlderPages({
   sessionId: string;
   feedRef: { current: FeedState };
   replaceFeed: (next: FeedState) => void;
-}) {
+}): { loadingOlder: boolean; loadOlder: () => Promise<void> } {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [loadingOlder, setLoadingOlder] = useState(false);

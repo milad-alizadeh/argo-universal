@@ -1,4 +1,5 @@
 import type { PermissionOutcome as Outcome } from '@repo/contracts';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { FeedDisclosure, type FeedDisclosureProps } from './feed-disclosure';
 import { PermissionOutcome } from './permission-outcome';
@@ -10,7 +11,7 @@ export function ToolCallDisclosure({
 }: Omit<FeedDisclosureProps, 'denied'> & {
   permissionOutcome?: Outcome;
   permissionMessage?: string;
-}) {
+}): React.JSX.Element {
   return (
     <View className="gap-1">
       <FeedDisclosure

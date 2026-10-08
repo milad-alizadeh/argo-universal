@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import { useCallback, useId, useRef, useState } from 'react';
 import {
   type LayoutChangeEvent,
@@ -39,7 +40,7 @@ export function ScrollFade({
   edge,
   className = 'bg-background',
   height,
-}: ScrollFadeProps) {
+}: ScrollFadeProps): React.JSX.Element {
   const gradientId = `${useId().replace(/:/g, '')}-${edge}`;
   const { backgroundColor } = useResolveClassNames(className);
   return (
@@ -82,7 +83,12 @@ export function ScrollFade({
 }
 
 // Which edges have content hidden past them, fed by a scroll view's events.
-export function useScrollFadeEdges() {
+export function useScrollFadeEdges(): {
+  edges: { top: boolean; bottom: boolean };
+  onScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+  onContentSizeChange: (width: number, height: number) => void;
+  onLayout: (event: LayoutChangeEvent) => void;
+} {
   const [edges, setEdges] = useState({ top: false, bottom: false });
   const metrics = useRef({ offset: 0, inset: 0, content: 0, viewport: 0 });
   const update = useCallback(() => {
@@ -137,7 +143,7 @@ export function ScrollFadeView({
   onContentSizeChange,
   onLayout,
   ...props
-}: ScrollFadeViewProps) {
+}: ScrollFadeViewProps): React.JSX.Element {
   const fade = useScrollFadeEdges();
   return (
     <View className={cn('relative min-h-0 flex-1', className)}>

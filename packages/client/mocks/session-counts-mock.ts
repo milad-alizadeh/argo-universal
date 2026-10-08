@@ -4,7 +4,17 @@ import { createSubscriptionPublisher } from './subscription-publisher';
 import type { Fixtures } from './trpc-mock-link';
 
 // A `session.counts` that starts at `initial` and sends each published count, as the Server does when a Session changes.
-export function createSessionCountsMock(initial: SessionCounts) {
+export function createSessionCountsMock(initial: SessionCounts): Pick<
+  ReturnType<typeof createSubscriptionPublisher<SessionCounts>>,
+  'reset' | 'publish'
+> & {
+  fixtures: Omit<typeof sessionListMocks, 'session.counts'> & {
+    'session.counts': (
+      input: void,
+      signal: AbortSignal,
+    ) => AsyncGenerator<SessionCounts, void>;
+  };
+} {
   const counts = createSubscriptionPublisher<SessionCounts>();
   return {
     reset: counts.reset,

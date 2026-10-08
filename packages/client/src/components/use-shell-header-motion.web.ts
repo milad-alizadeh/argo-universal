@@ -1,10 +1,11 @@
+import type * as React from 'react';
 import { useLayoutEffect, useRef } from 'react';
 
 export function useShellHeaderMotion(
   position: number,
   transitionKey: string,
   animate: boolean,
-) {
+): React.RefObject<HTMLDivElement | null> {
   const element = useRef<HTMLDivElement>(null);
   const previous = useRef({ position, transitionKey });
   const motion = useRef<Animation | null>(null);
@@ -34,6 +35,6 @@ export function useShellHeaderMotion(
     }
     previous.current = { position, transitionKey };
   }, [position, transitionKey, animate]);
-  useLayoutEffect(() => () => motion.current?.cancel(), []);
+  useLayoutEffect(() => (): void | undefined => motion.current?.cancel(), []);
   return element;
 }

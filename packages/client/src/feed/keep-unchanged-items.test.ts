@@ -19,8 +19,10 @@ function bumpRevision(
 }
 
 // For each next item, whether it is the previous item's own object.
-const keptObjects = (previous: readonly unknown[], next: readonly unknown[]) =>
-  next.map((item, index) => item === previous[index]);
+const keptObjects = (
+  previous: readonly unknown[],
+  next: readonly unknown[],
+): boolean[] => next.map((item, index) => item === previous[index]);
 
 describe('keepUnchangedItems', () => {
   it.each(mocks)(

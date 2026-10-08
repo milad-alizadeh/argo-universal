@@ -6,7 +6,7 @@ import { useTRPC } from '../trpc/context';
 export const maximumAttentionBadgeCount = 99;
 
 // The Sessions that need input or are Unread, live from the Server, for every badge.
-export function useAttentionCount() {
+export function useAttentionCount(): number {
   const trpc = useTRPC();
   const counts = useSubscription(trpc.session.counts.subscriptionOptions());
   useResubscribeOnReconnect(counts);

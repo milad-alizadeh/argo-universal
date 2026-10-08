@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import { type ComponentType, type ReactNode, useState } from 'react';
 import {
   type Navigate,
@@ -40,7 +41,7 @@ interface StoryContext {
 export function withNavigationMocks(
   Story: ComponentType,
   context: StoryContext,
-) {
+): React.JSX.Element {
   return (
     <NavigationMocks key={context.id} recorder={context.parameters.navigation}>
       <Story />
@@ -54,7 +55,7 @@ function NavigationMocks({
 }: {
   recorder?: NavigationRecorder;
   children: ReactNode;
-}) {
+}): React.JSX.Element {
   const [navigation] = useState(() => recorder ?? createNavigationRecorder());
   return (
     <NavigationProvider navigate={navigation.navigate}>

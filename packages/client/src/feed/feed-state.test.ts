@@ -31,13 +31,13 @@ function page(
   };
 }
 
-const rowEvents = (stream: readonly FeedSubscribeOutput[]) =>
+const rowEvents = (stream: readonly FeedSubscribeOutput[]): RowEvent[] =>
   stream.filter(
     (event): event is RowEvent =>
       event.type !== 'snapshot' && event.type !== 'closed',
   );
 
-function replay(state: FeedState, events: readonly RowEvent[]) {
+function replay(state: FeedState, events: readonly RowEvent[]): FeedState {
   return events.reduce((current, event) => {
     const result = applySubscriptionEvent(current, event);
     expect(result.missingRowId).toBeUndefined();

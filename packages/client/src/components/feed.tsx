@@ -10,6 +10,7 @@ import type {
   ToolCallUpdate,
 } from '@repo/contracts';
 import { ArrowDownIcon } from 'phosphor-react-native/src/icons/ArrowDown';
+import type * as React from 'react';
 import {
   type ReactNode,
   useCallback,
@@ -50,7 +51,7 @@ export interface FeedProps {
   now?: number;
 }
 
-function LoadingEarlier() {
+function LoadingEarlier(): React.JSX.Element {
   return (
     <View
       role="progressbar"
@@ -66,7 +67,7 @@ function LoadingEarlier() {
   );
 }
 
-function EmptyFeed({ branch }: { branch?: string }) {
+function EmptyFeed({ branch }: { branch?: string }): React.JSX.Element {
   return (
     <View className="flex-1 items-center justify-center gap-1.5 p-6">
       <Text role="heading" aria-level={2} className="text-base font-semibold">
@@ -88,7 +89,7 @@ function JumpToLatest({
 }: {
   hasNewRows: boolean;
   onPress: () => void;
-}) {
+}): React.JSX.Element {
   return (
     <Animated.View
       entering={FadeIn.duration(motionDuration.tooltipEnter)}
@@ -117,7 +118,7 @@ const phoneContentStyle = { paddingTop: 16 };
 const wideContentStyle = { paddingTop: 24 };
 
 // With the last row's own pb-4, Paper's 72 (wide 60) clear the Composer's overlap; a footer, since `alignItemsAtEnd` ignores bottom padding.
-function FeedEnd() {
+function FeedEnd(): React.JSX.Element {
   return <View className="h-14 wide:h-11" />;
 }
 
@@ -156,10 +157,12 @@ function FeedRow({
   onMotionChange: (moving: boolean) => void;
   onGrow: (itemKey: string, height: number) => void;
   children: ReactNode;
-}) {
+}): React.JSX.Element {
   const syncLayout = useSyncLayout();
   const layoutSync = useMemo(
-    () => ({
+    (): NonNullable<
+      React.ContextType<typeof CollapsibleLayoutSyncContext>
+    > => ({
       syncLayout,
       onMotionChange,
       grow: (height: number) => onGrow(itemKey, height),
@@ -184,10 +187,14 @@ type FeedEntry =
       toolCall?: ToolCallUpdate;
     };
 
-const entryType = (entry: FeedEntry) =>
+const entryType = (
+  entry: FeedEntry,
+):
+  | Exclude<FeedEntry['type'], 'row'>
+  | Extract<FeedEntry, { type: 'row' }>['row']['sessionUpdate'] =>
   entry.type === 'row' ? entry.row.sessionUpdate : entry.type;
 
-const entryKey = (entry: FeedEntry) =>
+const entryKey = (entry: FeedEntry): string =>
   entry.type === 'live_header' ? 'live-header' : feedItemKey(entry);
 
 // Dragging the Feed takes the keyboard down: with the finger on iOS, at once on Android. Web's list is a plain element, which takes neither.
@@ -210,7 +217,7 @@ export function Feed({
   liveToolCall,
   checkoutBranch,
   ...props
-}: FeedProps) {
+}: FeedProps): React.JSX.Element {
   const drawnItems = useMemo(() => items.filter(isDrawnFeedItem), [items]);
   const entries = useMemo<FeedEntry[]>(
     () =>
@@ -249,7 +256,7 @@ function FeedList({
   onStartReached,
   imageUrl,
   now,
-}: FeedListProps) {
+}: FeedListProps): React.JSX.Element {
   const wide = useWide();
   const list = useRef<LegendListRef>(null);
   // Opens on the newest row by estimated sizes, then a frame later at the very end; from there `followEnd` keeps it there as rows measure.
@@ -258,7 +265,7 @@ function FeedList({
     const frame = requestAnimationFrame(() =>
       list.current?.scrollToEnd({ animated: false }),
     );
-    return () => cancelAnimationFrame(frame);
+    return (): void => cancelAnimationFrame(frame);
   }, []);
 
   // The list asks for older rows once until the reader scrolls well away, so a reader still near the top asks again as each page lands.
@@ -311,7 +318,7 @@ function FeedList({
   // Legend keeps the first row fully in view still, so content added inside a row above the reader's line, the middle of the view, would push what they read down.
   const growthStarts = useRef(new Map<string, number>());
   const feedGrowth = useMemo<FeedGrowth>(
-    () => ({
+    (): FeedGrowth => ({
       willGrowAbove: (key) => {
         const state = list.current?.getState();
         const top = state?.positionByKey(key);
@@ -330,7 +337,7 @@ function FeedList({
         // Until rows stop measuring, the row's old content stays where it was, whichever row Legend anchors.
         const startedAt = performance.now();
         let stillFrames = 0;
-        const keepPlace = () => {
+        const keepPlace = (): void => {
           const ref = list.current;
           const state = ref?.getState();
           const top = state?.positionByKey(key);

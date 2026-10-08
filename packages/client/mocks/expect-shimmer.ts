@@ -1,6 +1,9 @@
 import { expect, waitFor } from 'storybook/test';
 
-export async function expectShimmerMovement(row: HTMLElement, suffix?: string) {
+export async function expectShimmerMovement(
+  row: HTMLElement,
+  suffix?: string,
+): Promise<void> {
   let characters = Array.from(row.querySelectorAll('span')).filter(
     (element) => element.textContent?.length === 1,
   );
@@ -11,7 +14,7 @@ export async function expectShimmerMovement(row: HTMLElement, suffix?: string) {
     ).toBe(suffix);
   }
   await expect(characters.length).toBeGreaterThan(1);
-  const opacities = () =>
+  const opacities = (): string =>
     characters.map((element) => getComputedStyle(element).opacity).join(',');
   const before = opacities();
   await waitFor(() => expect(opacities()).not.toBe(before), { timeout: 2500 });

@@ -20,6 +20,7 @@ import {
   unavailableNewSessionMocks,
 } from '../../mocks/new-session-mock';
 import { settleViewport } from '../../mocks/settle-viewport';
+import type { FixtureOutput } from '../../mocks/trpc-mock-link';
 import { fails, pending } from '../../mocks/trpc-mock-link';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
 import { ContentLayout } from '../components/content-layout';
@@ -91,13 +92,13 @@ const meta = {
     navigation: recorder,
     trpc: {
       ...newSessionMocks,
-      'session.new': (input: SessionNewInput) => {
+      'session.new': (input: SessionNewInput): FixtureOutput<'session.new'> => {
         started.push(input);
         return { sessionId: 'new-session' };
       },
     },
   },
-  beforeEach: () => {
+  beforeEach: (): void => {
     recorder.reset();
     started.length = 0;
   },
@@ -448,7 +449,7 @@ export const NoAgentReady: Story = {
   parameters: {
     trpc: {
       ...newSessionMocks,
-      'agents.list': () =>
+      'agents.list': (): FixtureOutput<'agents.list'> =>
         newSessionCatalogs.oneNotSignedIn.filter(
           (entry) => entry.availability !== 'available',
         ),
@@ -513,7 +514,7 @@ export const FailedStart: Story = {
   parameters: {
     trpc: {
       ...failedStartNewSessionMocks,
-      'agents.list': () => {
+      'agents.list': (): FixtureOutput<'agents.list'> => {
         agentsListCalls += 1;
         return newSessionCatalogs.bothAvailable;
       },
@@ -547,7 +548,7 @@ export const LoadFailure: Story = {
   parameters: {
     trpc: {
       ...newSessionMocks,
-      'projects.list': () => {
+      'projects.list': (): FixtureOutput<'projects.list'> => {
         throw new Error('Server is down');
       },
     },
@@ -569,7 +570,9 @@ function effortFollowsModel(width: number, agentIndex: number): Story {
   const { agent, model, effort, nextModel, unsupported, defaultEffort } =
     recorded;
   return {
-    parameters: { trpc: { 'agents.list': () => [agent] } },
+    parameters: {
+      trpc: { 'agents.list': (): FixtureOutput<'agents.list'> => [agent] },
+    },
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       const trigger = await canvas.findByRole('button', {
@@ -670,9 +673,9 @@ function failedUpload(width: number, agentIndex: 0 | 1): Story {
     parameters: {
       trpc: {
         ...newSessionMocks,
-        'agents.list': () => [catalog.agent],
+        'agents.list': (): FixtureOutput<'agents.list'> => [catalog.agent],
         'blob.upload': fails(failure),
-        'session.new': () => {
+        'session.new': (): FixtureOutput<'session.new'> => {
           calls += 1;
           return { sessionId: 'unexpected-session' };
         },
@@ -729,7 +732,7 @@ function failedPick(width: number, agentIndex: 0 | 1): Story {
   const catalog = uploadCatalogs[agentIndex];
   if (!catalog) throw new Error('Recorded catalog needs both Agents.');
   let calls = 0;
-  let restorePicker = () => {};
+  let restorePicker = (): void => {};
   return {
     beforeEach: () => {
       restorePicker();
@@ -739,8 +742,8 @@ function failedPick(width: number, agentIndex: 0 | 1): Story {
     parameters: {
       trpc: {
         ...newSessionMocks,
-        'agents.list': () => [catalog.agent],
-        'session.new': () => {
+        'agents.list': (): FixtureOutput<'agents.list'> => [catalog.agent],
+        'session.new': (): FixtureOutput<'session.new'> => {
           calls += 1;
           return { sessionId: 'unexpected-session' };
         },
@@ -749,7 +752,7 @@ function failedPick(width: number, agentIndex: 0 | 1): Story {
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       const bytes = await (await fetch(catalog.image.uri)).blob();
-      const attachImage = async (name: string) => {
+      const attachImage = async (name: string): Promise<void> => {
         await userEvent.click(
           canvas.getByRole('button', { name: 'Attach images' }),
         );
@@ -783,7 +786,7 @@ function failedPick(width: number, agentIndex: 0 | 1): Story {
           throw new Error('Image selection failed');
         },
       );
-      restorePicker = () => picker.mockRestore();
+      restorePicker = (): void => picker.mockRestore();
       try {
         await attachImage('failed-selection.png');
         const alert = await canvas.findByRole('alert');

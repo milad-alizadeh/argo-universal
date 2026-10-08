@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { LoadError } from '../components/load-error';
@@ -7,7 +8,7 @@ import { NewSessionScreen } from './new-session-screen';
 import { SessionScreen } from './session-screen';
 
 // The wide window's `/`: the first active Session, or New Session when there is none.
-export function FirstSessionScreen() {
+export function FirstSessionScreen(): React.JSX.Element {
   const trpc = useTRPC();
   const list = useQuery(trpc.session.list.queryOptions({ archived: false }));
   const [chosenId, setChosenId] = useState<string | null | undefined>();

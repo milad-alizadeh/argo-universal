@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import { View } from 'react-native';
 import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
@@ -8,7 +9,11 @@ export interface LoadErrorProps {
   onRetry: () => void;
 }
 
-export function LoadError({ title, description, onRetry }: LoadErrorProps) {
+export function LoadError({
+  title,
+  description,
+  onRetry,
+}: LoadErrorProps): React.JSX.Element {
   return (
     <View role="alert" className="items-center gap-1 px-4 py-8">
       <Text className="text-center text-sm font-medium leading-5">{title}</Text>

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
 import { createSessionCountsMock } from '../../mocks/session-counts-mock';
@@ -16,13 +17,13 @@ const meta = {
     destination: { to: 'sessions' },
     children: <Text testID="detail-content">Detail</Text>,
   },
-  render: (args) => (
+  render: (args): React.JSX.Element => (
     <View className="h-[700px] w-full">
       <DesktopLayout {...args} />
     </View>
   ),
   parameters: { navigation: recorder, trpc: sessionListMocks },
-  beforeEach: async () => {
+  beforeEach: async (): Promise<void> => {
     recorder.reset();
     const { page } = await import('vitest/browser');
     await page.viewport(1440, 844);

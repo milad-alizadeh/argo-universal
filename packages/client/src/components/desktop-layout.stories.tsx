@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { Text } from '../primitives/text';
 import { DesktopLayout } from './desktop-layout';
@@ -11,7 +12,7 @@ const meta = {
     // JSX in args breaks on-device Storybook's arg inference, so render draws the detail.
     children: null,
   },
-  render: (args) => (
+  render: (args): React.JSX.Element => (
     <View className="h-[600px] w-full">
       <DesktopLayout {...args}>
         <View className="flex-1 p-4">

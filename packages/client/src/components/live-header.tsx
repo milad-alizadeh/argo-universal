@@ -6,6 +6,7 @@ import type {
 import { ArrowClockwiseIcon } from 'phosphor-react-native/src/icons/ArrowClockwise';
 import { BrainIcon } from 'phosphor-react-native/src/icons/Brain';
 import { WrenchIcon } from 'phosphor-react-native/src/icons/Wrench';
+import type * as React from 'react';
 import { useEffect } from 'react';
 import { View } from 'react-native';
 import Animated, {
@@ -37,7 +38,7 @@ export interface LiveHeaderProps {
 }
 
 // The retry arrow turns once a second, and holds still under reduced motion.
-function RetryIcon() {
+function RetryIcon(): React.JSX.Element {
   const rotation = useSharedValue(0);
   const reducedMotion = useReducedMotion();
   useEffect(() => {
@@ -49,7 +50,7 @@ function RetryIcon() {
         }),
         -1,
       );
-    return () => cancelAnimation(rotation);
+    return (): void => cancelAnimation(rotation);
   }, [reducedMotion, rotation]);
   const style = useAnimatedStyle(
     () => ({ transform: [{ rotate: `${rotation.value}deg` }] }),
@@ -68,7 +69,7 @@ function SourceIcon({
 }: {
   source: LiveHeaderSource;
   toolCall?: ToolCallUpdate;
-}) {
+}): React.JSX.Element {
   switch (source.type) {
     case 'request':
       return <StatusIndicator testID="live-header-dot" status="needs_input" />;
@@ -89,7 +90,11 @@ function SourceIcon({
 }
 
 // The last line of the Feed while a Turn runs; it waits on you in amber, otherwise it shimmers.
-export function LiveHeader({ liveHeader, toolCall, now }: LiveHeaderProps) {
+export function LiveHeader({
+  liveHeader,
+  toolCall,
+  now,
+}: LiveHeaderProps): React.JSX.Element {
   const { text, source, startedAt } = liveHeader;
   const clock = useClock(startedAt !== null, now);
   const title =

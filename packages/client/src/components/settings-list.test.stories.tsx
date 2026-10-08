@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
 import { layoutWidths } from '../../mocks/each-layout';
@@ -18,13 +19,13 @@ const meta = {
     deviceCount: 2,
     onSelect: recorder.navigate,
   },
-  render: (args) => (
+  render: (args): React.JSX.Element => (
     <View className="h-[700px] w-full">
       <SettingsList {...args} />
     </View>
   ),
   parameters: { navigation: recorder },
-  beforeEach: () => recorder.reset(),
+  beforeEach: (): void => recorder.reset(),
 } satisfies Meta<typeof SettingsList>;
 export default meta;
 type Story = StoryObj<typeof meta>;

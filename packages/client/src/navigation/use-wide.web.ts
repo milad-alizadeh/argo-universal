@@ -12,7 +12,8 @@ export function useWide(): boolean {
   const subscribe = useCallback(
     (listener: () => void) => {
       mediaQuery?.addEventListener('change', listener);
-      return () => mediaQuery?.removeEventListener('change', listener);
+      return (): void | undefined =>
+        mediaQuery?.removeEventListener('change', listener);
     },
     [mediaQuery],
   );

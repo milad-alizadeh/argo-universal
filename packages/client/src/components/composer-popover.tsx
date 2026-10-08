@@ -1,4 +1,5 @@
 import { useRootContext } from '@rn-primitives/popover';
+import type * as React from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useResolveClassNames } from 'uniwind';
@@ -13,7 +14,7 @@ function PopoverPanel({
 }: {
   children: (close: (after?: () => void) => void) => ReactNode;
   disabled?: boolean;
-}) {
+}): ReactNode {
   const { onOpenChange } = useRootContext();
   useEffect(() => {
     if (disabled) onOpenChange(false);
@@ -37,7 +38,7 @@ export function ComposerPopover({
   className?: string;
   // `after` runs once the overlay has left the screen, so it may present a system picker.
   children: (close: (after?: () => void) => void) => ReactNode;
-}) {
+}): React.JSX.Element {
   const wide = useWide();
   const layout = useResolveClassNames(className ?? '');
   const [open, setOpen] = useState(false);
@@ -49,7 +50,7 @@ export function ComposerPopover({
     afterClose.current = after;
     setOpen(false);
   });
-  const closed = () => {
+  const closed = (): void => {
     const after = afterClose.current;
     afterClose.current = undefined;
     after?.();

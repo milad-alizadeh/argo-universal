@@ -7,7 +7,7 @@ export type BlobUrl = (blob: BlobRef) => string;
 export const BlobUrlContext = createContext<BlobUrl | null>(null);
 
 // Where an image the Server stores is fetched: its `/blobs/:id` route, or a story's mock.
-export function useBlobUrl() {
+export function useBlobUrl(): BlobUrl {
   const blobUrl = useContext(BlobUrlContext);
   if (!blobUrl) throw new Error('useBlobUrl needs AppProviders');
   return blobUrl;

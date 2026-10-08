@@ -1,5 +1,6 @@
 import { type RequestMock, recordedRequestMocks } from '@repo/api/mocks';
 import type { PendingElicitation } from '@repo/contracts';
+import type * as React from 'react';
 import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
 import { CommandRow } from '../src/components/command-row';
@@ -110,7 +111,11 @@ export const invalidSchemaRequest: PendingElicitation = {
   },
 };
 
-export function RequestFrame({ children }: { children: ReactNode }) {
+export function RequestFrame({
+  children,
+}: {
+  children: ReactNode;
+}): React.JSX.Element {
   return (
     <View className="w-full items-center p-4 wide:px-6">
       <View className="w-full max-w-composer">{children}</View>
@@ -118,7 +123,7 @@ export function RequestFrame({ children }: { children: ReactNode }) {
   );
 }
 
-function ResumedComposer() {
+function ResumedComposer(): React.JSX.Element {
   const [draft, setDraft] = useState<ComposerDraft>({ text: '', images: [] });
   return (
     <Composer
@@ -142,7 +147,7 @@ export function PermissionRequestPreview({
   error?: string;
   mock?: RequestMock;
   onAnswer?: (answer: PermissionAnswer) => void;
-}) {
+}): React.JSX.Element {
   const [denialMessage, setDenialMessage] = useState(initialMessage);
   const [answer, setAnswer] = useState<PermissionAnswer>();
   const request = mock.pending.snapshot.pendingPermission;
@@ -208,7 +213,7 @@ export function ElicitationFormPreview({
   error?: string;
   source?: string;
   onAnswer?: (answer: ElicitationAnswer) => void;
-}) {
+}): React.JSX.Element {
   const request = suppliedRequest ?? mock.pending.snapshot.pendingElicitation;
   if (!request) throw new Error('Recording needs an Elicitation.');
   const [answer, setAnswer] = useState<ElicitationAnswer>();
@@ -242,7 +247,7 @@ export function PermissionFeedPreview({
 }: {
   mock?: RequestMock;
   answered?: boolean;
-}) {
+}): React.JSX.Element {
   const state = answered ? mock.answered : mock.pending;
   const groups = toFeedView(state.rows, state.snapshot).items.filter(
     (item) => item.type === 'group',
