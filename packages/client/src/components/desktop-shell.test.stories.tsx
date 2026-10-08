@@ -197,8 +197,10 @@ export const MainContentUsesAvailableWidth: Story = {
     const keepPlanning = canvas.getByRole('button', {
       name: 'Keep planning',
     });
-    await expect(keepPlanning.getBoundingClientRect().width).toBe(
-      approve().getBoundingClientRect().width,
+    await waitFor(() =>
+      expect(keepPlanning.getBoundingClientRect().width).toBe(
+        approve().getBoundingClientRect().width,
+      ),
     );
     await expect(approve().getBoundingClientRect().right).toBeLessThanOrEqual(
       content.getBoundingClientRect().right,
@@ -1091,9 +1093,11 @@ export const OneHeldDragCanCloseAndReopenPanels: Story = {
       'open',
     );
     await controlled.render({ inspectorState: 'open' });
-    await expect(
-      canvas.getByRole('button', { name: closeInspectorLabel }),
-    ).toBeVisible();
+    await waitFor(() =>
+      expect(
+        canvas.getByRole('button', { name: closeInspectorLabel }),
+      ).toBeVisible(),
+    );
     await userEvent.pointer({ keys: pointerRelease });
   }),
 };
