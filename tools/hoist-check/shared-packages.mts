@@ -7,7 +7,7 @@ import {
 } from './context.mts';
 import { packageOfFile, type WorkspacePackage } from './packages.mts';
 import { relative } from './scan.mts';
-import { shortList, tierOf } from './tiers.mts';
+import { hoistingConsumerThreshold, shortList, tierOf } from './tiers.mts';
 
 function outsideConsumers(
   context: ReportContext,
@@ -57,7 +57,7 @@ function productLine(context: ReportContext, name: string): string[] {
     (module): number => outsideConsumers(context, module, owner).size,
   );
   return [
-    `  ${name}: ${modules.length} modules; reached from another package by 1 file: ${counts.filter((count): boolean => count === 1).length}, by 2: ${counts.filter((count): boolean => count === 2).length}, by 3+: ${counts.filter((count): boolean => count >= 3).length}`,
+    `  ${name}: ${modules.length} modules; reached from another package by 1 file: ${counts.filter((count): boolean => count === 1).length}, by 2: ${counts.filter((count): boolean => count === 2).length}, by 3+: ${counts.filter((count): boolean => count >= hoistingConsumerThreshold).length}`,
   ];
 }
 
@@ -71,7 +71,7 @@ export function productPackagesReport(context: ReportContext): string[] {
 }
 
 function reportGeneric(outside: Set<string>, consumers: Consumers): boolean {
-  if (outside.size >= 3) return false;
+  if (outside.size >= hoistingConsumerThreshold) return false;
   return outside.size > 0 || consumers.production.size === 0;
 }
 

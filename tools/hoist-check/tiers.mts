@@ -1,4 +1,6 @@
 type Tier = { tier: 'generic' | 'local' | 'product' | 'none'; label: string };
+export const hoistingConsumerThreshold = 3;
+const displayedConsumers = 4;
 const tierRules: [RegExp, Tier['tier'], string][] = [
   [/^packages\/client\/src\/lib\//, 'generic', 'client lib'],
   [/^packages\/client\/src\/primitives\//, 'generic', 'client primitives'],
@@ -34,8 +36,11 @@ export function shortList(consumers: Set<string>): string {
   return (
     [...consumers]
       .sort((a, b): number => a.localeCompare(b))
-      .slice(0, 4)
-      .join(', ') + (consumers.size > 4 ? `, +${consumers.size - 4}` : '')
+      .slice(0, displayedConsumers)
+      .join(', ') +
+    (consumers.size > displayedConsumers
+      ? `, +${consumers.size - displayedConsumers}`
+      : '')
   );
 }
 

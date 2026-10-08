@@ -41,9 +41,16 @@ const resolutionOptions = {
 
 export function createResolver(packages: WorkspacePackages): ResolveSpecifier {
   const resolver = new ResolverFactory(resolutionOptions);
+  const archiveResolver = new ResolverFactory({
+    ...resolutionOptions,
+    tsconfig: undefined,
+  });
   return (specifier, fromFile): string | undefined =>
     repositoryTarget(resolver.resolveFileSync(fromFile, specifier).path) ??
-    workspaceTarget(resolver, packages, specifier);
+    repositoryTarget(
+      archiveResolver.resolveFileSync(fromFile, specifier).path,
+    ) ??
+    workspaceTarget(archiveResolver, packages, specifier);
 }
 
 function workspaceTarget(

@@ -9,7 +9,12 @@ import {
   type ReportContext,
 } from './context.mts';
 import { relative } from './scan.mts';
-import { shortList, tierOf, verdict } from './tiers.mts';
+import {
+  hoistingConsumerThreshold,
+  shortList,
+  tierOf,
+  verdict,
+} from './tiers.mts';
 
 function exportLines(context: ReportContext, module: ParsedModule): string[] {
   return [...module.declared]
@@ -46,7 +51,8 @@ export function clientLibReport(context: ReportContext): string[] {
     .filter((module): boolean => !module.file.endsWith('.d.ts'))
     .filter(
       (module): boolean =>
-        consumersOf(context.counts, module.file).production.size < 3,
+        consumersOf(context.counts, module.file).production.size <
+        hoistingConsumerThreshold,
     ).length;
   return [
     '\n## A. Client lib modules (generic tier)',
@@ -65,5 +71,5 @@ function consumerLine(
   const barrel = context.counts.barrelExposed.has(moduleFile)
     ? '; re-exported by a barrel'
     : '';
-  return `${count < 3 ? '!' : ' '} ${file} [${tierOf(file).tier}]: ${count} production (${shortList(consumers.production)}), ${consumers.test.size} test; ${verdict(count)}${barrel}`;
+  return `${count < hoistingConsumerThreshold ? '!' : ' '} ${file} [${tierOf(file).tier}]: ${count} production (${shortList(consumers.production)}), ${consumers.test.size} test; ${verdict(count)}${barrel}`;
 }
