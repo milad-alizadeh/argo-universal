@@ -1,3 +1,4 @@
+import { maxBlobUploadBytes, maxBlobUploadMebibytes } from '@repo/contracts';
 import {
   ArrowUpIcon,
   CodeIcon,
@@ -33,9 +34,6 @@ import {
   type PlanProposalCardProps,
 } from './PlanProposalCard';
 
-const bytesPerMebibyte = 1_048_576;
-const maximumImageMebibytes = 20;
-const maximumImageBytes = maximumImageMebibytes * bytesPerMebibyte;
 // The message field grows a line at a time up to this many lines, then scrolls.
 const maximumVisibleLines = 4;
 const lineHeight = 20;
@@ -110,7 +108,7 @@ export function Composer({
   const configurationInactive = sending || (disabled && !canRecoverAgent);
   const showStop = configuration?.turnRunning && onStop;
   const oversized = draft.images.filter(
-    (image) => image.bytes > maximumImageBytes,
+    (image) => image.bytes > maxBlobUploadBytes,
   );
   const canSend =
     !inactive &&
@@ -185,7 +183,7 @@ export function Composer({
                   <View
                     className={cn(
                       'group relative w-40 h-30 overflow-hidden rounded-md border bg-muted',
-                      image.bytes > maximumImageBytes
+                      image.bytes > maxBlobUploadBytes
                         ? 'border-destructive'
                         : 'border-border',
                     )}
@@ -234,7 +232,7 @@ export function Composer({
           )}
           {oversized.length > 0 && (
             <ComposerWarning numberOfLines={1}>
-              Image exceeds 20 MB.
+              {`Image exceeds ${maxBlobUploadMebibytes} MB.`}
             </ComposerWarning>
           )}
           {error && <ComposerWarning>{error}</ComposerWarning>}
@@ -284,7 +282,7 @@ export function Composer({
                     onPressIn={() => setAttachHighlighted(true)}
                     onPressOut={() => setAttachHighlighted(false)}
                     hitSlop={8}
-                    accessibilityLabel="Attach images"
+                    accessibilityLabel={wide ? 'Attach' : 'Attach images'}
                   >
                     <View
                       pointerEvents="none"

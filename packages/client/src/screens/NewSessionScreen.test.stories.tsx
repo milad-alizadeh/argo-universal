@@ -683,7 +683,9 @@ function failedUpload(width: number, agentIndex: 0 | 1): Story {
       const message = await canvas.findByRole('textbox', { name: 'Message' });
       await userEvent.type(message, 'Name the dominant color in this image.');
       await userEvent.click(
-        canvas.getByRole('button', { name: 'Attach images' }),
+        canvas.getByRole('button', {
+          name: width >= 720 ? 'Attach' : 'Attach images',
+        }),
       );
       await userEvent.click(
         await within(document.body).findByRole('button', {
@@ -751,7 +753,9 @@ function failedPick(width: number, agentIndex: 0 | 1): Story {
       const bytes = await (await fetch(catalog.image.uri)).blob();
       const attachImage = async (name: string) => {
         await userEvent.click(
-          canvas.getByRole('button', { name: 'Attach images' }),
+          canvas.getByRole('button', {
+            name: width >= 720 ? 'Attach' : 'Attach images',
+          }),
         );
         const menuName =
           width === layoutWidths.wide ? 'Files and Folder' : 'Photos';

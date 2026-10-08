@@ -1,6 +1,7 @@
 import { newSessionCatalogs } from '@repo/api/mocks';
 import type { AgentInfo, SessionConfigSelectOption } from '@repo/contracts';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import type { ReactElement } from 'react';
 import { View } from 'react-native';
 import { expect, fn, waitFor, within } from 'storybook/test';
 import {
@@ -14,6 +15,7 @@ import {
 import { layoutWidths } from '../../mocks/each-layout';
 import { settleViewport } from '../../mocks/settle-viewport';
 import { Composer } from './Composer';
+import { ContentLayout } from './ContentLayout';
 
 type PickerCatalog = {
   agent: AgentInfo;
@@ -148,7 +150,9 @@ function typography(width: number): Story {
         await expect(checkout.fontWeight).toBe('400');
       }
       await userEvent.click(
-        canvas.getByRole('button', { name: 'Attach images' }),
+        canvas.getByRole('button', {
+          name: width >= 720 ? 'Attach' : 'Attach images',
+        }),
       );
       const attachment = await within(document.body).findByRole('button', {
         name: width >= 720 ? 'Files and Folder' : 'Camera',
@@ -195,7 +199,9 @@ export const Empty: Story = {
       ).toHaveValue('');
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
       await expect(
-        canvas.getByRole('button', { name: 'Attach images' }),
+        canvas.getByRole('button', {
+          name: width >= 720 ? 'Attach' : 'Attach images',
+        }),
       ).toBeEnabled();
       await expect(
         canvas.getByRole('button', { name: 'Agent and model' }),
@@ -251,7 +257,9 @@ function withImages(width: number): Story {
       await settleViewport(width);
       await expect(canvas.queryByRole('img')).not.toBeInTheDocument();
       await userEvent.click(
-        canvas.getByRole('button', { name: 'Attach images' }),
+        canvas.getByRole('button', {
+          name: width >= 720 ? 'Attach' : 'Attach images',
+        }),
       );
       await userEvent.click(
         await within(document.body).findByRole('button', {
@@ -298,7 +306,9 @@ function attachmentMenus(width: number): Story {
             ] as const);
       for (const [label, callback] of choices) {
         await userEvent.click(
-          canvas.getByRole('button', { name: 'Attach images' }),
+          canvas.getByRole('button', {
+            name: width >= 720 ? 'Attach' : 'Attach images',
+          }),
         );
         await expect(
           overlay.queryByRole('button', {
@@ -316,6 +326,33 @@ function attachmentMenus(width: number): Story {
 }
 export const AttachmentMenusPhone = attachmentMenus(layoutWidths.phone);
 export const AttachmentMenusWide = attachmentMenus(layoutWidths.wide);
+
+export const AttachmentInNarrowContent: Story = {
+  render: (args): ReactElement => (
+    <View style={{ width: layoutWidths.phone }}>
+      <ContentLayout>
+        <ComposerMock {...args} />
+      </ContentLayout>
+    </View>
+  ),
+  play: async ({ canvas, userEvent }): Promise<void> => {
+    await settleViewport(layoutWidths.wide);
+    const attach = await canvas.findByRole('button', {
+      name: 'Attach images',
+    });
+    await expect(
+      canvas.queryByRole('button', { name: 'Attach' }),
+    ).not.toBeInTheDocument();
+    await userEvent.click(attach);
+    await expect(
+      await within(document.body).findByRole('button', { name: 'Photos' }),
+    ).toBeVisible();
+    await expect(
+      within(document.body).queryByRole('button', { name: 'Files and Folder' }),
+    ).not.toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
+  },
+};
 
 function multiline(width: number): Story {
   return {
@@ -395,7 +432,9 @@ function sending(width: number): Story {
         'Match the spacing.',
       );
       await expect(
-        canvas.getByRole('button', { name: 'Attach images' }),
+        canvas.getByRole('button', {
+          name: width >= 720 ? 'Attach' : 'Attach images',
+        }),
       ).toBeDisabled();
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
       await expect(args.onSend).not.toHaveBeenCalled();
@@ -421,7 +460,9 @@ function disabled(width: number): Story {
         'Match the spacing.',
       );
       await expect(
-        canvas.getByRole('button', { name: 'Attach images' }),
+        canvas.getByRole('button', {
+          name: width >= 720 ? 'Attach' : 'Attach images',
+        }),
       ).toBeDisabled();
       await expect(
         canvas.getByRole('button', { name: 'Remove screenshot.png' }),
@@ -1046,7 +1087,7 @@ function responsiveLayout(width: number, agentIndex: number): Story {
       const bounds = card.getBoundingClientRect();
       await expect(bounds.height).toBe(80);
       const attachButton = canvas.getByRole('button', {
-        name: 'Attach images',
+        name: width >= 720 ? 'Attach' : 'Attach images',
       });
       await expect(attachButton.getBoundingClientRect().width).toBe(16);
       await expect(attachButton.getBoundingClientRect().height).toBe(28);
