@@ -20,20 +20,20 @@ import {
 } from 'drizzle-orm/sqlite-core';
 import type { ActorRefFrom } from 'xstate';
 import { createRejectionCounter } from '../../lib/count-rejections';
-import type { FeedActorRef } from '../feed/feed-machine';
+import type { FeedActorRef } from '../feed';
 import {
   decodeStoredFeedRow,
   fromFeedRow,
   newestRows,
   storedFeedColumns,
-} from '../feed/feed-row';
+} from '../feed';
 import {
   applyQueuedSession,
   applyQueuedTurns,
   queuedFeedRows,
   type WriterJob,
-} from '../feed/writer-job';
-import type { writerMachine } from '../feed/writer-machine';
+} from '../feed';
+import type { writerMachine } from '../feed';
 import { createLiveHeaderRowsReader } from './live-header-rows';
 import type { RegistryActorRef } from './registry-machine';
 import { latestTurnOf, toSessionInfo } from './session-info';

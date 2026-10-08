@@ -6,13 +6,14 @@ import type { AgentAdapter } from '@repo/agents';
 import type { Database } from '@repo/db';
 import { onTestFinished } from 'vitest';
 import { createActor, setup } from 'xstate';
-import type { FeedActorRef } from '../src/services/feed/feed-machine';
-import { createFeedService } from '../src/services/feed/feed-service';
-import { writerMachine } from '../src/services/feed/writer-machine';
+import type { FeedActorRef } from '../src/services/feed';
+import { createFeedService } from '../src/services/feed';
+import { writerMachine } from '../src/services/feed';
 import {
-  type SessionCommand,
-  sessionMachine,
-} from '../src/services/sessions/session-machine';
+  createSessionReader,
+  createSessionSnapshotWatcher,
+} from '../src/services/sessions';
+import { type SessionCommand, sessionMachine } from '../src/services/sessions';
 
 export const firstPrompt: Extract<SessionCommand, { type: 'session.prompt' }> =
   { type: 'session.prompt', turnId: 'turn-1', content: [] };
@@ -98,9 +99,17 @@ export function createSessionHost(
     findWriter: ():
       | import('xstate').ActorRefFromLogic<typeof writerMachine>
       | undefined => root.getSnapshot().children.databaseWriter,
-    findSession: (): import('xstate').ActorRefFromLogic<
-      typeof sessionMachine
-    > => session,
+    readSession: createSessionReader(database),
+    watchSessionSnapshot: createSessionSnapshotWatcher({
+      database,
+      findFeed,
+      findWriter: ():
+        | import('xstate').ActorRefFromLogic<typeof writerMachine>
+        | undefined => root.getSnapshot().children.databaseWriter,
+      findSession: (): import('xstate').ActorRefFromLogic<
+        typeof sessionMachine
+      > => session,
+    }),
   });
   return { root, session, service, findFeed };
 }

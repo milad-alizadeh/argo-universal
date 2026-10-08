@@ -8,8 +8,8 @@ import { sql } from 'drizzle-orm';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import { createActor, fromPromise } from 'xstate';
 import { countDatabaseReads, openTestDatabase } from '#mocks/database';
-import { toFeedRowWrite } from '../feed/feed-row';
-import { writerMachine } from '../feed/writer-machine';
+import { toFeedRowWrite } from '../feed';
+import { writerMachine } from '../feed';
 import { toLiveHeader } from './live-header';
 import { createLiveHeaderRowsReader } from './live-header-rows';
 

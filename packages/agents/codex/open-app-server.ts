@@ -1,8 +1,10 @@
 import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
-import { describeError } from '../src/describe-error';
+import { describeError } from '../src/describe-error.ts';
 import type { VendorRequests } from './messages';
+import { responseValidators } from './payloads.ts';
 import type {
+  Account,
   GetAccountParams,
   GetAccountResponse,
   InitializeParams,
@@ -21,7 +23,7 @@ import type {
 
 export const EXECUTABLE = 'codex';
 
-interface Requests {
+export interface Requests {
   initialize: [InitializeParams, InitializeResponse];
   'account/read': [GetAccountParams, GetAccountResponse];
   'model/list': [ModelListParams, ModelListResponse];
@@ -151,7 +153,10 @@ export function openAppServer(
       }
       const id = ++nextId;
       pending.set(id, {
-        resolve: (result): void => resolve(result as Requests[Method][1]),
+        resolve: (result): void => {
+          if (responseValidators[method](result)) resolve(result);
+          else reject(new Error(`Invalid app-server response: ${method}`));
+        },
         reject,
       });
       send({ id, method, params });
@@ -243,3 +248,6 @@ function readAppServerFrame(line: string): AppServerFrame {
     throw new Error(`Unrecognised app-server message: ${preview}`);
   return { kind: 'result', id, result: message.result };
 }
+
+export type AccountIdentity = Account;
+export type ModelListPage = ModelListResponse;

@@ -2,17 +2,14 @@ import { appendFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { type Database, openDatabase } from '@repo/db';
 import { assign, fromPromise, sendTo, setup } from 'xstate';
-import {
-  blobsFolderIn,
-  removeUnusedBlobs,
-} from '../services/blob/blob-service';
-import { writerMachine } from '../services/feed/writer-machine';
-import { seedProject } from '../services/projects/project-service';
+import { blobsFolderIn, removeUnusedBlobs } from '../services/blob';
+import { writerMachine } from '../services/feed';
+import { seedProject } from '../services/projects';
 import {
   type RegistryActorRef,
   type RegistryInput,
   registryMachine,
-} from '../services/sessions/registry-machine';
+} from '../services/sessions';
 import type { EngineMessage } from '../supervisor/engine-message';
 import {
   type HttpServer,

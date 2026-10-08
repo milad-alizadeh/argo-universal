@@ -40,3 +40,8 @@ __screenshots__/
 /e2e/.features-gen/
 /e2e/playwright-report/
 /e2e/test-results/
+
+# Provider decoder artifacts generated from the installed SDK and checked-in protocol
+/packages/agents/codex/protocol-schemas.gen.json
+/packages/agents/codex/notification-methods.gen.json
+/packages/agents/claude/message-tags.gen.json

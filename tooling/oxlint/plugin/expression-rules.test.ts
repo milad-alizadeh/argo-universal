@@ -1,6 +1,5 @@
 import { databaseClient } from './database-client.ts';
 import { jsonParseCast } from './json-parse-cast.ts';
-import { mockEnvironment } from './mock-environment.ts';
 import { noInternalMock } from './no-internal-mock.ts';
 import { ruleTester } from './rule-tester.ts';
 import { vendorName } from './vendor-name.ts';
@@ -52,22 +51,5 @@ ruleTester.run('no-internal-mock', noInternalMock, {
       errors: [{ messageId: 'noInternalMock' }],
     },
     { code: 'vi.mock(`../store`);', errors: [{ messageId: 'noInternalMock' }] },
-  ],
-});
-
-ruleTester.run('mock-environment', mockEnvironment, {
-  valid: [
-    'const home = process.env.HOME;',
-    'const settings = readMockCliEnvironment();',
-  ],
-  invalid: [
-    {
-      code: 'const delay = process.env.MOCK_CLI_DELAY;',
-      errors: [{ messageId: 'mockEnvironment' }],
-    },
-    {
-      code: "const delay = process.env['MOCK_CLI_DELAY'];",
-      errors: [{ messageId: 'mockEnvironment' }],
-    },
   ],
 });

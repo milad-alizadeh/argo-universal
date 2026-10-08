@@ -10,10 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { WebSocket } from 'ws';
 import { createActor } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
-import {
-  type RegistryActorRef,
-  registryMachine,
-} from '../services/sessions/registry-machine';
+import { type RegistryActorRef, registryMachine } from '../services/sessions';
 import { startHttpServer } from './http-server';
 
 let home: string;

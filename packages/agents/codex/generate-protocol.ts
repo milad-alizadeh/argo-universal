@@ -34,6 +34,7 @@ const roots = [
   'v2/FileChangeRequestApprovalResponse',
   'v2/ToolRequestUserInputParams',
   'v2/ToolRequestUserInputResponse',
+  'ServerNotification',
 ];
 try {
   const version = execFileSync('codex', ['--version'], {
@@ -100,3 +101,5 @@ try {
 } finally {
   rmSync(directory, { recursive: true, force: true });
 }
+
+await import('./generate-runtime-schemas.ts');
