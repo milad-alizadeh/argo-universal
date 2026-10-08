@@ -1,27 +1,36 @@
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
-import type { QueryClient } from '@tanstack/react-query';
-import type { TRPCWebSocketClient } from '@trpc/client';
+import { terminalPaths } from '@repo/vitest/model-paths';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   type Actor,
-  type ActorLogic,
+  type ActorOptions,
   type AnyEventObject,
   createActor,
-  type EventFromLogic,
   fromCallback,
   type SnapshotFrom,
 } from 'xstate';
 import {
   type DirectedGraphNode,
   type EventExecutor,
-  TestModel,
-  type TestPath,
+  type GraphEventFromLogic,
+  type AdjacencyMap,
+  type StatePath,
+  getAdjacencyMap,
+  getPathsFromEvents,
+  getShortestPaths,
+  getSimplePaths,
   toDirectedGraph,
 } from 'xstate/graph';
-import { type ConnectionInput, connectionMachine } from './machine';
+import { createConnectionInput } from '../../mocks/connection-input';
+import { connectionMachine } from './machine';
 
 const connectionLostEvent = 'connection.lost';
+const connectionOpenedEvent = 'connection.opened';
+const foregroundEvent = 'app.foreground';
 const connectionAttemptEvent = 'connection.attemptRequested';
+const retryDelayEvent = 'xstate.after.retryDelay.connection.attempt.waiting';
+const offlineDelayEvent =
+  'xstate.after.offlineDelay.connection.link.reconnecting';
 
 // Numbers written out so the model cannot grade itself.
 const offlineDelayMs = 10_000;
@@ -52,22 +61,51 @@ const machine = connectionMachine.provide({
   },
 });
 type ConnectionSnapshot = SnapshotFrom<typeof machine>;
-type ConnectionEvent = EventFromLogic<typeof machine>;
-// xstate/graph types its logic without emitted events.
-const modelLogic = machine as unknown as ActorLogic<
-  ConnectionSnapshot,
-  ConnectionEvent,
-  ConnectionInput
->;
-
 // The machine reads neither while the watcher and refetch are mocks.
-const input: ConnectionInput = {
-  webSocketClient: {} as TRPCWebSocketClient,
-  queryClient: {} as QueryClient,
+const input = createConnectionInput();
+
+type ConnectionClock = NonNullable<ActorOptions<typeof machine>['clock']>;
+
+const createModelClock = (): {
+  clock: ConnectionClock;
+  fire: (eventType: string) => void;
+} => {
+  const callbacks = new Map<
+    number,
+    { callback: Parameters<ConnectionClock['setTimeout']>[0]; delay: number }
+  >();
+  let nextId = 0;
+  return {
+    clock: {
+      setTimeout: (callback, delay): number => {
+        const id = nextId++;
+        callbacks.set(id, { callback, delay });
+        return id;
+      },
+      clearTimeout: (id: unknown): void => {
+        if (typeof id === 'number') callbacks.delete(id);
+      },
+    },
+    fire: (eventType): void => {
+      const event = Object.values(
+        connection.system.getSnapshot()._scheduledEvents,
+      ).find((scheduled) => scheduled.event.type === eventType);
+      if (!event) throw new Error(`No event scheduled for ${eventType}`);
+      const scheduled = [...callbacks].find(
+        ([, timer]) => timer.delay === event.delay,
+      );
+      if (!scheduled) throw new Error(`No callback scheduled for ${eventType}`);
+      const [id, timer] = scheduled;
+      callbacks.delete(id);
+      timer.callback();
+    },
+  };
 };
 
-const startConnection = (): ReturnType<typeof createActor<typeof machine>> => {
-  connection = createActor(machine, { input });
+const startConnection = (
+  clock?: ConnectionClock,
+): ReturnType<typeof createActor<typeof machine>> => {
+  connection = createActor(machine, { input, ...(clock ? { clock } : {}) });
   connection.on('connection.attemptAllowed', () => {
     allowedAttempts += 1;
   });
@@ -95,23 +133,51 @@ afterEach(() => {
 });
 
 describe('connection model', (): void => {
-  const payloads: Record<string, ConnectionEvent> = {
-    'connection.lost': { type: connectionLostEvent, error: lostError },
+  let modelClock: ReturnType<typeof createModelClock>;
+  const fixtures = [
+    { type: connectionOpenedEvent },
+    { type: connectionLostEvent, error: lostError },
+    { type: connectionAttemptEvent },
+    { type: foregroundEvent },
+    { type: retryDelayEvent },
+    { type: offlineDelayEvent },
+  ] satisfies GraphEventFromLogic<typeof machine>[];
+  type ConnectionGraphEvent = (typeof fixtures)[number];
+  const canGraphEvent = (
+    snapshot: ConnectionSnapshot,
+    event: ConnectionGraphEvent,
+  ): boolean => {
+    switch (event.type) {
+      case retryDelayEvent:
+        return snapshot.matches({ attempt: 'waiting' });
+      case offlineDelayEvent:
+        return snapshot.matches({ link: 'reconnecting' });
+      default:
+        return snapshot.can(event);
+    }
   };
   const eventTypes = (node: DirectedGraphNode): string[] => [
     ...node.edges.map((edge) => edge.label.text),
     ...node.children.flatMap(eventTypes),
   ];
   const events = [...new Set(eventTypes(toDirectedGraph(machine)))].map(
-    (type) => payloads[type] ?? ({ type } as ConnectionEvent),
+    (type): ConnectionGraphEvent => {
+      const fixture = fixtures.find((event) => event.type === type);
+      if (!fixture) throw new Error(`No fixture for Connection event ${type}`);
+      return fixture;
+    },
   );
 
-  const model = new TestModel(modelLogic, {
+  const options = {
     input,
     events,
-    filterEvents: (snapshot, event): boolean => snapshot.can(event),
+    filterEvents: canGraphEvent,
     // Only the first attempt is special, so more attempts make no new vertex; `retriedFrom` lets a retry return to a state that a path already passed.
-    serializeState: (snapshot, event, previous): string =>
+    serializeState: (
+      snapshot: ConnectionSnapshot,
+      event: ConnectionGraphEvent | undefined,
+      previous?: ConnectionSnapshot,
+    ): string =>
       JSON.stringify({
         value: snapshot.value,
         attempted: snapshot.context.attempts > 0,
@@ -119,26 +185,26 @@ describe('connection model', (): void => {
           ? previous?.value
           : undefined,
       }),
-    stateMatcher: (snapshot, key): boolean => snapshot.matches(key as never),
-  });
+  };
 
-  // Each sends the delayed event itself: the retry and offline timers run at once, so crossing one could fire the other. The example tests below time them.
+  // Select the actual scheduled callback so simultaneous retry and offline paths stay independent.
   const executors: Record<
     string,
-    EventExecutor<ConnectionSnapshot, ConnectionEvent>
+    EventExecutor<ConnectionSnapshot, ConnectionGraphEvent>
   > = {
     'xstate.init': () => {
-      startConnection();
+      modelClock = createModelClock();
+      startConnection(modelClock.clock);
     },
-    'connection.opened': () => {
+    [connectionOpenedEvent]: () => {
       const before = { refetches, down: isDown(connection.getSnapshot()) };
-      watcher.send({ type: 'connection.opened' });
+      watcher.send({ type: connectionOpenedEvent });
       expect(refetches).toBe(before.refetches + (before.down ? 1 : 0));
     },
-    'connection.lost': () => {
+    [connectionLostEvent]: () => {
       watcher.send({ type: connectionLostEvent, error: lostError });
     },
-    'connection.attemptRequested': (step) => {
+    [connectionAttemptEvent]: (step) => {
       const before = allowedAttempts;
       connection.send({ type: connectionAttemptEvent });
       // An attempt allowed at once leaves nothing waiting.
@@ -146,18 +212,18 @@ describe('connection model', (): void => {
         before + (attemptState(step.state) === 'idle' ? 1 : 0),
       );
     },
-    'app.foreground': () => {
+    [foregroundEvent]: () => {
       const before = allowedAttempts;
-      connection.send({ type: 'app.foreground' });
+      connection.send({ type: foregroundEvent });
       expect(allowedAttempts).toBe(before + 1);
     },
-    'xstate.after.retryDelay.connection.attempt.waiting': (step) => {
+    [retryDelayEvent]: (step) => {
       const before = allowedAttempts;
-      connection.send({ type: step.event.type } as never);
+      modelClock.fire(step.event.type);
       expect(allowedAttempts).toBe(before + 1);
     },
-    'xstate.after.offlineDelay.connection.link.reconnecting': (step) => {
-      connection.send({ type: step.event.type } as never);
+    [offlineDelayEvent]: (step) => {
+      modelClock.fire(step.event.type);
     },
   };
 
@@ -171,23 +237,32 @@ describe('connection model', (): void => {
   };
 
   const shortestPaths = [
-    ...model.getShortestPaths(),
-    ...model.getPathsFromEvents([
-      { type: connectionAttemptEvent },
-      { type: connectionAttemptEvent },
-      { type: connectionLostEvent, error: lostError },
-    ]),
+    ...terminalPaths(getShortestPaths(machine, options)),
+    ...getPathsFromEvents(
+      machine,
+      [
+        { type: connectionAttemptEvent },
+        { type: connectionAttemptEvent },
+        { type: connectionLostEvent, error: lostError },
+      ],
+      options,
+    ),
   ];
   // Direct paths cover first-connect losses; simple paths cover later reconnect cycles.
-  const simplePaths = model.getSimplePaths({
-    filterEvents: (snapshot, event) =>
-      snapshot.can(event) &&
-      !(
-        linkState(snapshot) === 'connecting' &&
-        event.type === connectionLostEvent
-      ),
-  });
-  const title = (path: TestPath<ConnectionSnapshot, ConnectionEvent>): string =>
+  const simplePaths = terminalPaths(
+    getSimplePaths(machine, {
+      ...options,
+      filterEvents: (snapshot, event) =>
+        canGraphEvent(snapshot, event) &&
+        !(
+          linkState(snapshot) === 'connecting' &&
+          event.type === connectionLostEvent
+        ),
+    }),
+  );
+  const title = (
+    path: StatePath<ConnectionSnapshot, ConnectionGraphEvent>,
+  ): string =>
     path.steps
       .map(({ event }) =>
         event.type.replace(/^xstate\.after\.(\w+)\..*$/, 'after $1'),
@@ -201,7 +276,12 @@ describe('connection model', (): void => {
     it.each(paths.map((path) => [title(path), path] as const))(
       '%s',
       async (_, path) => {
-        await path.test({ events: executors, states });
+        for (const step of path.steps) {
+          const execute = executors[step.event.type];
+          if (!execute) throw new Error(`No executor for ${step.event.type}`);
+          await execute(step);
+          states['*']?.(step.state);
+        }
       },
     );
   });
@@ -209,7 +289,14 @@ describe('connection model', (): void => {
   it('the generated paths walk every transition', () => {
     expect(
       unwalkedTransitions({
-        models: [model],
+        models: [
+          {
+            getAdjacencyMap: (): AdjacencyMap<
+              ConnectionSnapshot,
+              ConnectionGraphEvent
+            > => getAdjacencyMap(machine, options),
+          },
+        ],
         paths: [...shortestPaths, ...simplePaths],
         stateKey: (snapshot) => JSON.stringify(snapshot.value),
         eventKey: (event) => event.type,
@@ -218,10 +305,10 @@ describe('connection model', (): void => {
   });
 });
 
-// The real timers, which the model sends as events.
+// The real timers, exercised with the default actor clock.
 describe('connection', () => {
   const requestAttempt = (): void =>
-    connection.send({ type: 'connection.attemptRequested' });
+    connection.send({ type: connectionAttemptEvent });
 
   // Requests an attempt and returns how long the machine waited before it allowed it.
   const waitForAllowedAttempt = (): number => {
@@ -237,7 +324,7 @@ describe('connection', () => {
   };
 
   const loseOpenConnection = (): void => {
-    watcher.send({ type: 'connection.opened' });
+    watcher.send({ type: connectionOpenedEvent });
     watcher.send({ type: connectionLostEvent, error: lostError });
   };
 
@@ -317,7 +404,7 @@ describe('connection', () => {
     loseOpenConnection();
     requestAttempt();
 
-    connection.send({ type: 'app.foreground' });
+    connection.send({ type: foregroundEvent });
 
     expect(allowedAttempts).toBe(1);
     vi.advanceTimersByTime(retryDelayMs(0));

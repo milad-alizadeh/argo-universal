@@ -9,20 +9,25 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
+import { terminalPaths } from '@repo/vitest/model-paths';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   type Actor,
   type AnyEventObject,
   createActor,
-  type EventFromLogic,
+  matchesState,
   fromCallback,
   type SnapshotFrom,
 } from 'xstate';
 import {
   type DirectedGraphNode,
   type EventExecutor,
-  TestModel,
-  type TestPath,
+  type StatePath,
+  type GraphEventFromLogic,
+  type AdjacencyMap,
+  getShortestPaths,
+  getSimplePaths,
+  getAdjacencyMap,
   toDirectedGraph,
 } from 'xstate/graph';
 import type { EngineCommand } from './engine-message';
@@ -32,6 +37,12 @@ const supervisorStartedAt = '2026-10-03T00:00:00.000Z';
 const readyEngineEvent = 'engine.ready';
 const engineExitedEvent = 'engine.exit';
 const stopServerEvent = 'server.stop';
+const heartbeatEngineEvent = 'engine.heartbeat';
+const engineStoppedEvent = 'engine.exited';
+const readyDelayEvent = 'xstate.after.readyTimeout.supervisor.starting';
+const heartbeatDelayEvent = 'xstate.after.heartbeatTimeout.supervisor.running';
+const backoffDelayEvent =
+  'xstate.after.backoff.supervisor.backingOff.delay.waiting';
 
 // Numbers written out so the model cannot grade itself.
 const readyTimeoutMs = 15_000;
@@ -62,7 +73,7 @@ const createMockEngine = (options: {
     ({ sendBack, receive }): (() => void) => {
       const engine: MockEngine = {
         send: sendBack,
-        exit: (): void => sendBack({ type: 'engine.exited' }),
+        exit: (): void => sendBack({ type: engineStoppedEvent }),
         askedToStop: false,
         stopped: false,
       };
@@ -112,7 +123,6 @@ describe('supervisor model', (): void => {
     },
   });
   type SupervisorSnapshot = SnapshotFrom<typeof machine>;
-  type SupervisorEvent = EventFromLogic<typeof machine>;
 
   const input = {
     now: (): number => 1000,
@@ -121,10 +131,17 @@ describe('supervisor model', (): void => {
     startedAt: supervisorStartedAt,
     watch: false,
   };
-  const payloads: Record<string, SupervisorEvent> = {
-    'engine.ready': { type: readyEngineEvent, port: 7337 },
-    'engine.exit': { type: engineExitedEvent, code: 1 },
-  };
+  const fixtures = [
+    { type: readyEngineEvent, port: 7337 },
+    { type: engineExitedEvent, code: 1 },
+    { type: heartbeatEngineEvent },
+    { type: engineStoppedEvent },
+    { type: stopServerEvent },
+    { type: readyDelayEvent },
+    { type: heartbeatDelayEvent },
+    { type: backoffDelayEvent },
+  ] satisfies GraphEventFromLogic<typeof machine>[];
+  type SupervisorEvent = (typeof fixtures)[number];
   const eventTypes = (node: DirectedGraphNode): string[] => [
     ...node.edges.map((edge): string => edge.label.text),
     ...node.children.flatMap(eventTypes),
@@ -132,28 +149,52 @@ describe('supervisor model', (): void => {
   // The machine raises `xstate.done.state.*` itself, so the model must not send it.
   const events = [...new Set(eventTypes(toDirectedGraph(machine)))]
     .filter((type): boolean => !type.startsWith('xstate.done.state.'))
-    .map(
-      (type): SupervisorEvent =>
-        payloads[type] ?? ({ type } as SupervisorEvent),
-    );
+    .map((type): SupervisorEvent => {
+      const fixture = fixtures.find((event) => event.type === type);
+      if (!fixture)
+        throw new Error(`Missing Supervisor graph fixture for ${type}`);
+      return fixture;
+    });
 
-  const model = new TestModel(machine, {
+  const canGraphEvent = (
+    snapshot: SupervisorSnapshot,
+    event: SupervisorEvent,
+  ): boolean => {
+    switch (event.type) {
+      case readyDelayEvent:
+        return snapshot.matches('starting');
+      case heartbeatDelayEvent:
+        return snapshot.matches('running');
+      case backoffDelayEvent:
+        return snapshot.matches({ backingOff: { delay: 'waiting' } });
+      default:
+        return snapshot.can(event);
+    }
+  };
+
+  const options = {
     input,
     events,
     limit: 10_000,
     // A done actor ignores events, but traversal still leaves a final state through the root `on`.
-    filterEvents: (snapshot, event): boolean =>
-      snapshot.status === 'active' && snapshot.can(event),
+    filterEvents: (
+      snapshot: SupervisorSnapshot,
+      event: SupervisorEvent,
+    ): boolean =>
+      snapshot.status === 'active' && canGraphEvent(snapshot, event),
     // Crash count, not crash times; `via` gives self-transitions their own vertex.
-    serializeState: (snapshot, event, previous): string =>
+    serializeState: (
+      snapshot: SupervisorSnapshot,
+      event: SupervisorEvent | undefined,
+      previous?: SupervisorSnapshot,
+    ): string =>
       JSON.stringify({
         value: snapshot.value,
         port: snapshot.context.port,
         crashes: snapshot.context.crashTimes.length,
         via: event && `${JSON.stringify(previous?.value)} ${event.type}`,
       }),
-    stateMatcher: (snapshot, key): boolean => snapshot.matches(key as never),
-  });
+  };
 
   // Moves to one millisecond short of a delay, checks the state held, then crosses it.
   const crossDelay = (milliseconds: number): void => {
@@ -172,22 +213,20 @@ describe('supervisor model', (): void => {
     },
     'engine.ready': (): void =>
       latestEngine().send({ type: readyEngineEvent, port: 7337 }),
-    'engine.heartbeat': (): void => {
+    [heartbeatEngineEvent]: (): void => {
       vi.advanceTimersByTime(heartbeatTimeoutMs - 1);
-      latestEngine().send({ type: 'engine.heartbeat' });
+      latestEngine().send({ type: heartbeatEngineEvent });
     },
     'engine.exit': (): void =>
       latestEngine().send({ type: engineExitedEvent, code: 1 }),
-    'engine.exited': (): void => {
+    [engineStoppedEvent]: (): void => {
       expect(latestEngine().askedToStop).toBe(true);
       latestEngine().exit();
     },
     'server.stop': (): void => supervisor.send({ type: stopServerEvent }),
-    'xstate.after.readyTimeout.supervisor.starting': (): void =>
-      crossDelay(readyTimeoutMs),
-    'xstate.after.heartbeatTimeout.supervisor.running': (): void =>
-      crossDelay(heartbeatTimeoutMs),
-    'xstate.after.backoff.supervisor.backingOff.delay.waiting': (): void =>
+    [readyDelayEvent]: (): void => crossDelay(readyTimeoutMs),
+    [heartbeatDelayEvent]: (): void => crossDelay(heartbeatTimeoutMs),
+    [backoffDelayEvent]: (): void =>
       crossDelay(backoffMs(supervisor.getSnapshot().context.crashTimes.length)),
   };
 
@@ -236,11 +275,16 @@ describe('supervisor model', (): void => {
     },
   };
 
-  const shortestPaths = model.getShortestPaths();
-  const simplePaths = model.getSimplePaths({
-    stopWhen: (snapshot): boolean => snapshot.context.crashTimes.length >= 2,
-  });
-  const title = (path: TestPath<SupervisorSnapshot, SupervisorEvent>): string =>
+  const shortestPaths = terminalPaths(getShortestPaths(machine, options));
+  const simplePaths = terminalPaths(
+    getSimplePaths(machine, {
+      ...options,
+      stopWhen: (snapshot): boolean => snapshot.context.crashTimes.length >= 2,
+    }),
+  );
+  const title = (
+    path: StatePath<SupervisorSnapshot, SupervisorEvent>,
+  ): string =>
     path.steps
       .map(({ event }): string =>
         event.type.replace(/^xstate\.after\.(\w+)\..*$/, 'after $1'),
@@ -258,18 +302,33 @@ describe('supervisor model', (): void => {
   ])('%s', (_, paths): void => {
     it.each(
       paths.map(
-        (path): [string, TestPath<SupervisorSnapshot, SupervisorEvent>] =>
+        (path): [string, StatePath<SupervisorSnapshot, SupervisorEvent>] =>
           [title(path), path] as const,
       ),
     )('%s', async (_, path): Promise<void> => {
-      await path.test({ events: executors, states });
+      for (const step of path.steps) {
+        const execute = executors[step.event.type];
+        if (!execute)
+          throw new Error(`Missing Supervisor executor for ${step.event.type}`);
+        await execute(step);
+        for (const [key, assertState] of Object.entries(states)) {
+          if (matchesState(key, step.state.value)) assertState(step.state);
+        }
+      }
     });
   });
 
   it('the generated paths walk every transition', (): void => {
     expect(
       unwalkedTransitions({
-        models: [model],
+        models: [
+          {
+            getAdjacencyMap: (): AdjacencyMap<
+              SupervisorSnapshot,
+              SupervisorEvent
+            > => getAdjacencyMap(machine, options),
+          },
+        ],
         paths: [...shortestPaths, ...simplePaths],
         stateKey: (snapshot): string => JSON.stringify(snapshot.value),
         eventKey: (event): typeof event.type => event.type,
@@ -332,7 +391,7 @@ describe('supervisor', (): void => {
     latestEngine().send({ type: readyEngineEvent, port: 7337 });
     for (let waited = 0; waited < milliseconds; waited += 1000) {
       vi.advanceTimersByTime(1000);
-      latestEngine().send({ type: 'engine.heartbeat' });
+      latestEngine().send({ type: heartbeatEngineEvent });
     }
   };
 

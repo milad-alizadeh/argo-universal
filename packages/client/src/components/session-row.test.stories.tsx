@@ -95,9 +95,9 @@ export const PaperMetadataDimensions: Story = {
       await expect(bar.getBoundingClientRect().width).toBe(40);
       await expect(bar.getBoundingClientRect().height).toBe(4);
       await expect(getComputedStyle(bar).gap).toBe('2px');
-      await expect(getComputedStyle(bar.parentElement as Element).gap).toBe(
-        '6px',
-      );
+      const parent = bar.parentElement;
+      if (!parent) throw new Error('Status indicator has no parent');
+      await expect(getComputedStyle(parent).gap).toBe('6px');
       for (let index = 1; index < groups.length; index++) {
         const previous = groups[index - 1]?.getBoundingClientRect();
         const current = groups[index]?.getBoundingClientRect();
@@ -238,20 +238,20 @@ export const StableTextWhenPressedDark: Story = {
   globals: { mode: 'dark' },
 };
 
-const states = {
-  needsInput: 'Needs input',
-  running: 'Running',
-  failed: 'Failed',
-  unread: 'Unread',
-  idle: 'Idle',
-} as const;
+const states = [
+  ['needsInput', 'Needs input'],
+  ['running', 'Running'],
+  ['failed', 'Failed'],
+  ['unread', 'Unread'],
+  ['idle', 'Idle'],
+] satisfies [keyof typeof sessionRows, string][];
 
 export const StatusParity: Story = {
   render: (args) => (
     <>
       {agentsList.flatMap((agent) =>
-        Object.keys(states).map((name) => {
-          const session = sessionRows[name as keyof typeof states];
+        states.map(([name]) => {
+          const session = sessionRows[name];
           return (
             <SessionRow
               {...args}
@@ -272,8 +272,8 @@ export const StatusParity: Story = {
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       for (const agent of agentsList) {
-        for (const [name, label] of Object.entries(states)) {
-          const session = sessionRows[name as keyof typeof states];
+        for (const [name, label] of states) {
+          const session = sessionRows[name];
           await expect(
             canvas.getByRole('button', {
               name: `${agent.label}: ${session.title}, ${label}`,

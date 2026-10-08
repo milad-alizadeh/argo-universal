@@ -3,10 +3,15 @@ import { describe, expect, it } from 'vitest';
 import { toFileDiffs } from '../src/feed/file-diff';
 import { createChangesMocks } from './changes-mock';
 
+const isChangesMockName = (name: string): name is keyof typeof changesMocks =>
+  Object.hasOwn(changesMocks, name);
+
 describe.each(Object.entries(changesMocks))(
   'the %s changes mock',
   (name, mock) => {
-    const fixtures = createChangesMocks(name as keyof typeof changesMocks);
+    if (!isChangesMockName(name))
+      throw new Error('Changes mock name is not registered');
+    const fixtures = createChangesMocks(name);
 
     it('draws each file diff with the counts the file list shows', () => {
       const files = fixtures['session.changes']();

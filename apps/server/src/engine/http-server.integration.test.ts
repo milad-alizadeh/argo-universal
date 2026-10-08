@@ -4,11 +4,12 @@ import { request } from 'node:http';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { maxBlobUploadBytes } from '@repo/contracts';
+import { BlobUploadOutput, maxBlobUploadBytes } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { WebSocket } from 'ws';
 import { createActor } from 'xstate';
+import { z } from 'zod';
 import { openTestDatabase } from '#mocks/database';
 import { type RegistryActorRef, registryMachine } from '../services/sessions';
 import { startHttpServer } from './http-server';
@@ -164,9 +165,9 @@ describe('http server', (): void => {
       method: 'POST',
       body: form,
     });
-    const { result } = (await response.json()) as {
-      result: { data: { blobId: string; bytes: number } };
-    };
+    const { result } = z
+      .object({ result: z.object({ data: BlobUploadOutput }) })
+      .parse(await response.json());
 
     expect(response.status).toBe(200);
     expect(result.data).toMatchObject({ bytes: 3 });

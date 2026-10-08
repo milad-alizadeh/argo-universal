@@ -77,12 +77,12 @@ describe('feed router', (): void => {
   });
 
   it('rejects a row that breaks the contract', async (): Promise<void> => {
-    const caller = createCaller({
-      services: servicesWith({
-        row: (): never =>
-          ({ ...row, sessionUpdate: 'agent_monologue' }) as never,
-      }),
-    });
+    const services = servicesWith({});
+    Reflect.set(services.feed, 'row', () => ({
+      ...row,
+      sessionUpdate: 'agent_monologue',
+    }));
+    const caller = createCaller({ services });
 
     await expect(
       caller.feed.row({ sessionId: 'session-1', id: firstMessageRowId }),

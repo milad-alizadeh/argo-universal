@@ -37,10 +37,11 @@ function recordedRow<Kind extends SessionUpdate['sessionUpdate']>(
   kind: Kind,
 ): Extract<SessionUpdate, { sessionUpdate: Kind }> {
   const row = recordedFeedMock(agent, recording).rows.findLast(
-    (row) => row.sessionUpdate === kind,
+    (row): row is Extract<SessionUpdate, { sessionUpdate: Kind }> =>
+      row.sessionUpdate === kind,
   );
   if (!row) throw new Error(`No ${kind} in ${agent}/${recording}`);
-  return row as Extract<SessionUpdate, { sessionUpdate: Kind }>;
+  return row;
 }
 
 export const recordedUserMessage = (
@@ -68,18 +69,22 @@ export function streamingAgentMessage(
   const fullLength = textLength(settled);
   let row: AgentMessage | undefined;
   for (const event of mock.stream) {
-    if (event.type === 'row.upsert' && event.row.id === settled.id)
-      row = event.row as AgentMessage;
-    if (event.type === 'row.append' && event.id === settled.id && row) {
-      const [, index] = event.field.split('.');
-      const content = [...row.content];
-      const block = content[Number(index)];
-      if (block?.type !== 'text' || block.text.length !== event.off)
-        throw new Error(`Append out of order in ${agent}/${recording}`);
-      content[Number(index)] = { ...block, text: block.text + event.text };
-      row = { ...row, content, revision: event.rev };
-      if (textLength(row) >= fullLength * 0.6) break;
+    if (event.type === 'row.upsert' && event.row.id === settled.id) {
+      if (event.row.sessionUpdate !== 'agent_message')
+        throw new Error('Streamed row is not an Agent message');
+      row = event.row;
+      continue;
     }
+    if (event.type !== 'row.append' || event.id !== settled.id || !row)
+      continue;
+    const [, index] = event.field.split('.');
+    const content = [...row.content];
+    const block = content[Number(index)];
+    if (block?.type !== 'text' || block.text.length !== event.off)
+      throw new Error(`Append out of order in ${agent}/${recording}`);
+    content[Number(index)] = { ...block, text: block.text + event.text };
+    row = { ...row, content, revision: event.rev };
+    if (textLength(row) >= fullLength * 0.6) break;
   }
   if (row?.state !== 'open')
     throw new Error(`No open Agent message streamed in ${agent}/${recording}`);

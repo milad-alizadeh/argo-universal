@@ -57,7 +57,9 @@ describe('Session title contracts', (): void => {
     { sessionId: 'session-1', title: 'Title', titleSource: 'agent' },
   ])('rejects malformed rename input: %j', async (input): Promise<void> => {
     const caller = appRouter.createCaller({ services: unreachableServices() });
-    await expect(caller.session.rename(input as never)).rejects.toMatchObject({
+    await expect(
+      Reflect.apply(caller.session.rename, undefined, [input]),
+    ).rejects.toMatchObject({
       code: 'BAD_REQUEST',
     });
   });
