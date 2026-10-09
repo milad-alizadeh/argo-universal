@@ -27,11 +27,6 @@ export function unreachableServices(
       branches: unreachable('projects.branches'),
       ...overrides.projects,
     },
-    system: {
-      info: unreachable('system.info'),
-      clock: unreachable('system.clock'),
-      ...overrides.system,
-    },
     feed: {
       page: unreachable('feed.page'),
       row: unreachable('feed.row'),
