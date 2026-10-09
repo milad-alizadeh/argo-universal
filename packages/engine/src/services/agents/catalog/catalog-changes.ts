@@ -1,14 +1,21 @@
 import { EventEmitter, on } from 'node:events';
-import type { CatalogSyncSupervisor } from './catalog';
+import type { Database } from '@repo/db';
+import { agents } from '@repo/db/schema';
+import { eq } from 'drizzle-orm';
+import type { ActorRefFrom } from 'xstate';
+import type { writerMachine } from '../../feed';
 
 export async function* watchCommittedCatalogChanges(
-  actor: CatalogSyncSupervisor,
+  input: { database: Database; writer: ActorRefFrom<typeof writerMachine> },
   signal: AbortSignal,
 ): AsyncGenerator<string[]> {
   const events = new EventEmitter<{ change: [string[]] }>();
-  const subscription = actor.on('catalog.committed', ({ changedIds }) =>
-    events.emit('change', changedIds),
-  );
+  const subscription = input.writer.on('catalog.sqlCommitted', ({ commits }) => {
+    if (!commits.some(({ kind }) => kind === 'agentCatalogReplace' || kind === 'catalogSyncFailure')) return;
+    const changedIds = input.database.select({ id: agents.id }).from(agents)
+      .where(eq(agents.catalogPresent, true)).all().map(({ id }) => id);
+    events.emit('change', changedIds);
+  });
   try {
     yield* readCatalogChangeStream(events, signal);
   } finally {

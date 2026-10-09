@@ -11,6 +11,8 @@ import { blob, blobRef } from '@repo/db/schema';
 import { TRPCError } from '@trpc/server';
 import { and, eq, lt, notExists, sql } from 'drizzle-orm';
 import type { z } from 'zod';
+import type { ActorRefFrom } from 'xstate';
+import { writeDatabaseJobAndWaitForCommit, type writerMachine } from '../feed';
 
 const unusedBlobAge = 86_400_000;
 
@@ -55,7 +57,7 @@ const exists = (path: string): Promise<boolean> =>
   stat(path).then((): boolean => true, unlessMissing(false));
 
 export async function uploadBlob(
-  resources: { database: Database; blobsFolder: string },
+  resources: { databaseWriter: ActorRefFrom<typeof writerMachine>; blobsFolder: string },
   file: z.output<typeof BlobUploadInput>,
 ): Promise<BlobUploadOutput> {
   if (file.size > maxBlobUploadBytes)
@@ -73,19 +75,14 @@ export async function uploadBlob(
     await rename(partial, path);
   }
   const mime = mimeOf(bytes, file.type);
-  resources.database
-    .insert(blob)
-    .values({ id: blobId, mime, bytes: bytes.length })
-    .onConflictDoUpdate({
-      target: blob.id,
-      set: { createdAt: sql`excluded.created_at` },
-    })
-    .run();
+  await writeDatabaseJobAndWaitForCommit(resources.databaseWriter, {
+    type: 'blobMetadataUpsert', blob: { id: blobId, mime, bytes: bytes.length },
+  });
   return { blobId, mime, bytes: bytes.length };
 }
 
 export async function removeUnusedBlobs(
-  options: Parameters<typeof uploadBlob>[0] & { now?: number },
+  options: { database: Database; blobsFolder: string; now?: number },
 ): Promise<void> {
   const cutoff = (options.now ?? Date.now()) - unusedBlobAge;
   const { database } = options;

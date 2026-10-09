@@ -7,23 +7,24 @@ import {
 import { publicProcedure, router } from '../../engine/trpc';
 import { listAgents } from './agent-list';
 import {
-  readAgentCatalogFromSupervisor,
-  syncAgentCatalog,
-} from './catalog/catalog';
+  readAgentCatalog,
+} from './catalog/browse';
+import { requestAgentCatalogSync } from './catalog/catalog-request';
 import { watchCommittedCatalogChanges } from './catalog/catalog-changes';
 
 export const agentsRouter = router({
   catalog: publicProcedure
     .input(AgentsCatalogInput)
     .query(({ ctx, input }): AgentsCatalogOutput =>
-      readAgentCatalogFromSupervisor(ctx.catalogSync, input),
+      readAgentCatalog({ database: ctx.database, ...ctx.catalogRead }, input),
     ),
   syncCatalog: publicProcedure.mutation(({ ctx }) =>
-    syncAgentCatalog(ctx.catalogSync),
+    requestAgentCatalogSync({ database: ctx.database, writer: ctx.databaseWriter,
+      reader: ctx.catalogRead.reader, requestId: ctx.createId(), signal: ctx.sessionCommandSignal }),
   ),
   catalogChanges: publicProcedure.subscription(({ ctx, signal }) => {
     if (!signal) throw new Error('Catalog subscription signal is missing');
-    return watchCommittedCatalogChanges(ctx.catalogSync, signal);
+    return watchCommittedCatalogChanges({ database: ctx.database, writer: ctx.databaseWriter }, signal);
   }),
   list: publicProcedure
     .input(AgentsListInput)

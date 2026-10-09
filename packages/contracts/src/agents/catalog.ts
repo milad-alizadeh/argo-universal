@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { agentColumns } from '../columns';
+import { agentColumns, agentCatalogSyncRequestColumns } from '../columns';
 import type {
   ACPAgent,
   BinaryTarget,
@@ -9,6 +9,8 @@ import type {
 export type { ACPAgent, ACPAgentRegistry } from './upstream/registry.gen';
 export const AgentRecord = agentColumns;
 export type AgentRecord = z.infer<typeof AgentRecord>;
+export const AgentCatalogSyncRequestRecord = agentCatalogSyncRequestColumns;
+export type AgentCatalogSyncRequestRecord = z.infer<typeof AgentCatalogSyncRequestRecord>;
 
 export const AgentsCatalogInput = z
   .object({

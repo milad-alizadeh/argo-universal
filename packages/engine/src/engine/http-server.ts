@@ -2,10 +2,8 @@ import { createServer, type Server } from 'node:http';
 import type { Database } from '@repo/db';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { WebSocketServer } from 'ws';
-import {
-  shutdownCatalogSyncSupervisor,
-  type FetchAgents,
-} from '../services/agents';
+import type { ActorRefFrom } from 'xstate';
+import type { writerMachine } from '../services/feed';
 import { blobsFolderIn } from '../services/blob';
 import type { RegistryActorRef } from '../services/sessions';
 import { createEngineContext, type Context } from './context';
@@ -21,7 +19,9 @@ export interface HttpServerOptions {
   startedAt: string;
   database: Database;
   sessions: RegistryActorRef;
-  fetchAgents?: FetchAgents;
+  databaseWriter: ActorRefFrom<typeof writerMachine>;
+  platform?: string;
+  commandAdmission?: AbortController;
 }
 
 export interface HttpServer {
@@ -49,7 +49,7 @@ export async function startHttpServer(
   options: HttpServerOptions,
 ): Promise<HttpServer> {
   const blobsFolder = blobsFolderIn(options.home);
-  const commandAdmission = new AbortController();
+  const commandAdmission = options.commandAdmission ?? new AbortController();
   const context = createEngineContext({
     ...options,
     blobsFolder,
@@ -103,9 +103,7 @@ export async function startHttpServer(
   let closing: Promise<void> | undefined;
   const close = (): Promise<void> => {
     commandAdmission.abort();
-    closing ??= shutdownCatalogSyncSupervisor(context.catalogSync).then(
-      closeHttpServerConnections,
-    );
+    closing ??= closeHttpServerConnections();
     return closing;
   };
 

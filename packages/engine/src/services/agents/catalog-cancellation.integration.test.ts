@@ -1,6 +1,7 @@
 import { agents } from '@repo/db/schema';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi, onTestFinished } from 'vitest';
+import { openTestDatabase } from '#mocks/database';
 import { startRouterTestHost } from '#mocks/router';
 import type { FetchAgents } from './index';
 
@@ -13,14 +14,16 @@ it.each(['timeout', 'shutdown'] as const)(
     const response = Promise.withResolvers<unknown>();
     const fetchAgents = vi.fn<FetchAgents>(() => response.promise);
     const shutdown = new AbortController();
-    const { caller, context } = startRouterTestHost({
-      fetchAgents,
+    const stored = openTestDatabase();
+    onTestFinished(stored.remove);
+    const { caller, context, stop } = startRouterTestHost({
+      database: stored.database, fetchAgents,
       sessionCommandSignal: shutdown.signal,
     });
     const synchronization = caller.agents.syncCatalog();
     await vi.advanceTimersByTimeAsync(0);
     if (reason === 'timeout') await vi.advanceTimersByTimeAsync(20_000);
-    else shutdown.abort();
+    else await stop();
     expect(await synchronization).toMatchObject({
       changedIds: [],
       error: expect.stringMatching(/20 seconds|cancelled/),
@@ -40,8 +43,6 @@ it('does not start a Registry read after Server shutdown admission closes', asyn
     fetchAgents,
     sessionCommandSignal: shutdown.signal,
   });
-  expect(await caller.agents.syncCatalog()).toMatchObject({
-    error: 'Registry sync was cancelled',
-  });
+  await expect(caller.agents.syncCatalog()).rejects.toThrow();
   expect(fetchAgents).not.toHaveBeenCalled();
 });

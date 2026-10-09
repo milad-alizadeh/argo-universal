@@ -7,6 +7,9 @@ import {
   type AcpResources,
   type AcpResourceInput,
   type FetchAgents,
+  syncSupervisorMachine,
+  fetchAgents,
+  createRegistryReader,
 } from '../services/agents';
 import { blobsFolderIn, removeUnusedBlobs } from '../services/blob';
 import { writerMachine, databaseWriterId } from '../services/feed';
@@ -33,6 +36,8 @@ type EngineOutput = { exitCode: number };
 type OpenDatabaseInput = { home: string };
 type RecoveryInput = { database: Database; blobsFolder: string };
 type CloseHttpServerInput = { server: HttpServer | null };
+type SyncSupervisorActor = import('xstate').ActorRefFrom<typeof syncSupervisorMachine>;
+type AwaitSyncSupervisorInput = { supervisor: SyncSupervisorActor };
 type CloseAcpResourcesInput = {
   resources: AcpResources;
   sessions: import('../services/sessions').RegistryActorRef | undefined;
@@ -69,9 +74,11 @@ interface EngineContext extends EngineInput {
   server: HttpServer | null;
   failure: string | null;
   acpResources: AcpResources;
+  commandAdmission: AbortController;
 }
 
 type EngineEvent =
+  | { type: 'catalog.requestsCommitted'; requestIds: string[] }
   | EngineStop
   | {
       type: 'xstate.done.actor.sessions' | 'xstate.done.actor.databaseWriter';
@@ -119,6 +126,14 @@ export const engineMachine = setup({
         await removeUnusedBlobs(input);
       },
     ),
+    syncSupervisor: syncSupervisorMachine,
+    awaitSyncRecovery: fromPromise<void, AwaitSyncSupervisorInput>(async ({ input }) => {
+      await waitFor(input.supervisor, (snapshot) => !snapshot.matches('recovering'), { timeout: Infinity });
+    }),
+    awaitSyncDrain: fromPromise<void, AwaitSyncSupervisorInput>(async ({ input }) => {
+      await waitFor(input.supervisor, (snapshot) => snapshot.status !== 'active', { timeout: Infinity });
+      if (input.supervisor.getSnapshot().matches('interruptionFailed')) throw new Error('Catalog interruption could not commit');
+    }),
     databaseWriter: writerMachine,
     sessions: registryMachine,
     startHttpServer: fromPromise<HttpServer, HttpServerOptions>(
@@ -136,6 +151,13 @@ export const engineMachine = setup({
   actions: {
     stopSessions: sendTo('sessions', { type: 'sessions.stopAll' }),
     drainWriter: sendTo('databaseWriter', { type: 'writer.drain' }),
+    stopSync: sendTo('syncSupervisor', { type: 'catalog.shutdown' }),
+    closeCommandAdmission: ({ context }): void => context.commandAdmission.abort(),
+    routeCatalogRequests: ({ event, self }): void => {
+      if (event.type !== 'catalog.requestsCommitted') return;
+      const supervisor = requireSyncSupervisor(self.system, self.getSnapshot().children.syncSupervisor);
+      for (const requestId of event.requestIds) supervisor.send({ type: 'catalog.requested', requestId });
+    },
     sendToSupervisor: (_, message: EngineMessage): void => {
       process.send?.(message);
     },
@@ -161,6 +183,7 @@ export const engineMachine = setup({
     server: null,
     failure: null,
     acpResources: createAcpResources(input.acp),
+    commandAdmission: new AbortController(),
   }),
   invoke: { id: 'processSignals', src: 'processSignals' },
   initial: 'openingDatabase',
@@ -230,6 +253,12 @@ export const engineMachine = setup({
           }),
         },
         {
+          id: 'syncSupervisor', systemId: 'syncSupervisor', src: 'syncSupervisor',
+          input: ({ context, self }) => ({ database: openDatabaseOf(context),
+            writer: requireDatabaseWriter(self.system), fetchAgents: context.fetchAgents ?? fetchAgents,
+            reader: createRegistryReader(), now: context.now }),
+        },
+        {
           id: 'sessions',
           systemId: sessionRegistryId,
           src: 'sessions',
@@ -244,8 +273,9 @@ export const engineMachine = setup({
           }),
         },
       ],
-      initial: 'listening',
+      initial: 'preparingSync',
       on: {
+        'catalog.requestsCommitted': { actions: 'routeCatalogRequests' },
         'engine.stop': {
           target: '.stopping',
           actions: {
@@ -257,6 +287,8 @@ export const engineMachine = setup({
         },
       },
       states: {
+        preparingSync: { invoke: { id: 'awaitSyncRecovery', src: 'awaitSyncRecovery',
+          input: ({ self }) => ({ supervisor: requireSyncSupervisor(self.system, self.getSnapshot().children.syncSupervisor) }), onDone: 'listening' } },
         listening: {
           invoke: {
             id: 'startHttpServer',
@@ -264,7 +296,8 @@ export const engineMachine = setup({
             input: ({ context, self }): HttpServerOptions => ({
               createId: context.createId,
               sessions: requireSessionRegistry(self.system),
-              fetchAgents: context.fetchAgents,
+              databaseWriter: requireDatabaseWriter(self.system),
+              commandAdmission: context.commandAdmission,
               home: context.home,
               port: context.port,
               version: context.version,
@@ -315,6 +348,7 @@ export const engineMachine = setup({
           },
         },
         stopping: {
+          entry: ['closeCommandAdmission', 'stopSync'],
           initial: 'closingHttp',
           on: { 'engine.stop': {} },
           states: {
@@ -380,7 +414,7 @@ export const engineMachine = setup({
                   resources: context.acpResources,
                   sessions: findSessionRegistry(self.system),
                 }),
-                onDone: { target: 'drainingWriter' },
+                onDone: { target: 'drainingSync' },
                 onError: {
                   target: 'retainingAgentCleanup',
                   actions: assign({
@@ -398,6 +432,11 @@ export const engineMachine = setup({
                 }),
               },
             },
+            drainingSync: { invoke: { id: 'awaitSyncDrain', src: 'awaitSyncDrain',
+              input: ({ self }) => ({ supervisor: requireSyncSupervisor(self.system, self.getSnapshot().children.syncSupervisor) }),
+              onDone: 'drainingWriter', onError: { target: 'retainingSyncCleanup',
+                actions: assign({ failure: ({ event }) => String(event.error) }) } } },
+            retainingSyncCleanup: {},
             drainingWriter: {
               entry: 'drainWriter',
               on: {
@@ -460,5 +499,16 @@ function requireSessionRegistry(
 ): import('../services/sessions').RegistryActorRef {
   const actor = findSessionRegistry(system);
   if (!actor) throw new Error('The Session registry is not running');
+  return actor;
+}
+
+function requireDatabaseWriter(system: import('xstate').AnyActorRef['system']): import('xstate').ActorRefFrom<typeof writerMachine> {
+  const actor = system.get(databaseWriterId);
+  if (!actor) throw new Error('Database Writer is not running');
+  return actor;
+}
+function requireSyncSupervisor(system: import('xstate').AnyActorRef['system'], ownedChild?: SyncSupervisorActor): SyncSupervisorActor {
+  const actor = ownedChild ?? system.get('syncSupervisor');
+  if (!actor) throw new Error('Sync supervisor is not running');
   return actor;
 }

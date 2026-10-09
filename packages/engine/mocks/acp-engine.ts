@@ -8,6 +8,7 @@ import { createActor, waitFor, type Actor } from 'xstate';
 import { createEngineContext, type Context } from '../src/engine/context';
 import { engineMachine } from '../src/engine/machine';
 import { appRouter } from '../src/engine/router';
+import { findDatabaseWriter } from '../src/services/feed';
 import { findSessionRegistry } from '../src/services/sessions';
 import { createResourcePeer, resourceLaunch } from './acp-resource';
 import { openTestDatabase } from './database';
@@ -75,9 +76,11 @@ const createEngineCaller = (
   const { database, home, version, startedAt, createId } =
     engine.getSnapshot().context;
   const sessions = findSessionRegistry(engine.system);
-  if (!database || !sessions) throw new Error('Engine is not ready');
+  const databaseWriter = findDatabaseWriter(engine.system);
+  if (!database || !sessions || !databaseWriter) throw new Error('Engine is not ready');
   const context = createEngineContext({
     database,
+    databaseWriter,
     sessions,
     version,
     startedAt,

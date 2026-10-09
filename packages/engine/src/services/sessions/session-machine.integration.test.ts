@@ -968,7 +968,7 @@ it.each(
           writer: writerMachine.provide({
             actors: {
               writeBatch: fromPromise(
-                (): Promise<void> => new Promise((): void => {}),
+                (): Promise<import('../feed').CatalogSqlCommit[]> => new Promise((): void => {}),
               ),
             },
           }),

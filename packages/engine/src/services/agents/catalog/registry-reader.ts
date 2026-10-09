@@ -12,6 +12,7 @@ const validator = addFormats(new Ajv({ strict: false })).addSchema(
 );
 const acceptsRegistry = validator.compile<ACPAgentRegistry>(registrySchema);
 const acceptsAgent = validator.compile<ACPAgent>(registryAgentSchema);
+export type RegistryReader = ReturnType<typeof createRegistryReader>;
 export function createRegistryReader(): {
   parse(value: unknown): ACPAgentRegistry;
   parseAgent(value: unknown): ACPAgent;

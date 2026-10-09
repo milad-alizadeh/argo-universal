@@ -11,7 +11,8 @@ import { session } from '@repo/db/schema';
 import { createMockAdapter, mockReady } from '@repo/mocks/agent';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { WebSocket } from 'ws';
-import { createActor } from 'xstate';
+import { createActor, type ActorRefFrom } from 'xstate';
+import { writerMachine, databaseWriterId } from '../services/feed';
 import { z } from 'zod';
 import { openTestDatabase } from '#mocks/database';
 import { startRouterTestHost } from '#mocks/router';
@@ -22,6 +23,7 @@ let home: string;
 let port: number;
 let database: Database;
 let sessions: RegistryActorRef;
+let databaseWriter: ActorRefFrom<typeof writerMachine>;
 let removeDatabase: () => void;
 let closeServer: () => Promise<void>;
 
@@ -88,6 +90,7 @@ const options = (): {
   startedAt: string;
   database: Database;
   sessions: RegistryActorRef;
+  databaseWriter: ActorRefFrom<typeof writerMachine>;
 } => ({
   createId: randomUUID,
   home,
@@ -96,6 +99,7 @@ const options = (): {
   startedAt: '2026-10-03T00:00:00.000Z',
   database,
   sessions,
+  databaseWriter,
 });
 
 beforeEach(async (): Promise<void> => {
@@ -111,12 +115,14 @@ beforeEach(async (): Promise<void> => {
       adapters: [],
     },
   }).start();
+  databaseWriter = createActor(writerMachine, { parent: sessions, systemId: databaseWriterId, input: { database, now: Date.now } }).start();
   ({ close: closeServer } = await startHttpServer(options()));
 });
 
 afterEach(async (): Promise<void> => {
   await closeServer();
   sessions.stop();
+  databaseWriter.stop();
   removeDatabase();
   rmSync(home, { recursive: true, force: true });
 });

@@ -43,16 +43,16 @@ let writer: Actor<typeof machine>;
 const mockDatabase = openDatabase(':memory:');
 const machine = writerMachine.provide({
   actors: {
-    writeBatch: fromPromise<void, { database: Database; jobs: WriterJob[] }>(
-      ({ input }): Promise<void> =>
-        new Promise<void>((resolve, reject): void => {
+    writeBatch: fromPromise<ReturnType<typeof import('./writer-job').writeJobs>, { database: Database; jobs: WriterJob[] }>(
+      ({ input }): Promise<ReturnType<typeof import('./writer-job').writeJobs>> =>
+        new Promise<ReturnType<typeof import('./writer-job').writeJobs>>((resolve, reject): void => {
           const call: WriteBatchCall = {
             jobs: input.jobs,
             settled: false,
             resolve: (): void => {
               call.settled = true;
               committedJobs.push(...input.jobs);
-              resolve();
+              resolve([]);
             },
             reject: (error): void => {
               call.settled = true;
@@ -95,7 +95,7 @@ const events = [
   {
     type: 'xstate.done.actor.writeBatch',
     actorId: 'writeBatch',
-    output: undefined,
+    output: [],
   },
   {
     type: 'xstate.error.actor.writeBatch',

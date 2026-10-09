@@ -1139,11 +1139,11 @@ it('pages current queued activity before the list publication delay', async (): 
     databaseWriter: writerMachine.provide({
       actors: {
         writeBatch: fromPromise<
-          void,
+          ReturnType<typeof writeJobs>,
           { database: Parameters<typeof writeJobs>[0]; jobs: WriterJob[] }
-        >(async ({ input }): Promise<void> => {
+        >(async ({ input }) => {
           await batch.promise;
-          writeJobs(input.database, input.jobs);
+          return writeJobs(input.database, input.jobs);
         }),
       },
     }),

@@ -172,6 +172,13 @@ export function createSessionListReader(options: {
               turnId: job.id,
               validate,
             });
+          case 'blobMetadataUpsert':
+          case 'agentCatalogSearchProjection':
+          case 'agentCatalogReplace':
+          case 'catalogSyncRequest':
+          case 'catalogSyncJoin':
+          case 'catalogSyncFailure':
+            return [];
           default: {
             const unhandled: never = job;
             throw new Error(`Unhandled writer job ${unhandled}`);

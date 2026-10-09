@@ -10,9 +10,13 @@ import {
 } from '@repo/db/schema';
 import { and, eq, gt, inArray, sql } from 'drizzle-orm';
 import { toFeedRowWrite } from './feed-row';
+import { applyCatalogSqlJob } from './writer-catalog-job';
+import { isCatalogSqlJob, type CatalogSqlJob, type CatalogSqlCommit } from './writer-catalog-sync';
 
 // One unit of work for the database writer.
 export type WriterJob =
+  | CatalogSqlJob
+  | { type: 'blobMetadataUpsert'; blob: Pick<typeof blob.$inferInsert, 'id' | 'mime' | 'bytes'> }
   | {
       type: 'feedRows';
       sessionId: string;
@@ -58,10 +62,20 @@ const feedRowUpdate = {
 export function writeJobs(
   database: Database,
   jobs: readonly WriterJob[],
-): void {
+): CatalogSqlCommit[] {
+  const catalogCommits: CatalogSqlCommit[] = [];
   void database.transaction((transaction): void => {
     for (const job of jobs) {
+      if (isCatalogSqlJob(job)) {
+        catalogCommits.push(applyCatalogSqlJob(transaction, job));
+        continue;
+      }
       switch (job.type) {
+        case 'blobMetadataUpsert':
+          transaction.insert(blob).values(job.blob).onConflictDoUpdate({
+            target: blob.id, set: { createdAt: sql`excluded.created_at` },
+          }).run();
+          break;
         case 'feedRows': {
           if (job.rows.length > 0)
             transaction
@@ -146,11 +160,24 @@ export function writeJobs(
       }
     }
   });
+  return catalogCommits;
 }
 
 // One line naming what a job would have written, for the log of lost jobs.
 export function describeJob(job: WriterJob): string {
   switch (job.type) {
+    case 'blobMetadataUpsert':
+      return `upsert Blob metadata ${job.blob.id}`;
+    case 'agentCatalogSearchProjection':
+      return `populate catalog search text for ${job.rows.length} saved Agent rows`;
+    case 'agentCatalogReplace':
+      return `replace catalog with ${job.rows.length} accepted Agent rows`;
+    case 'catalogSyncRequest':
+      return `request catalog sync ${job.requestId}`;
+    case 'catalogSyncJoin':
+      return `join catalog requests ${job.requestIds.join(', ')} to ${job.syncId}`;
+    case 'catalogSyncFailure':
+      return `record ${job.status} catalog sync`;
     case 'feedRows':
       return `Feed rows ${job.rows.map((row): string => row.id).join(', ')} of Session ${job.sessionId} at maxRevision ${job.maxRevision}`;
     case 'sessionInsert':
@@ -230,6 +257,12 @@ export function applyQueuedSession({
         break;
       case 'turnInsert':
       case 'turnUpdate':
+      case 'blobMetadataUpsert':
+      case 'agentCatalogSearchProjection':
+      case 'agentCatalogReplace':
+      case 'catalogSyncRequest':
+      case 'catalogSyncJoin':
+      case 'catalogSyncFailure':
         break;
       default: {
         const unhandled: never = job;
@@ -269,6 +302,12 @@ export function applyQueuedTurns(
       case 'sessionInsert':
       case 'sessionRowUpdate':
       case 'feedRows':
+      case 'blobMetadataUpsert':
+      case 'agentCatalogSearchProjection':
+      case 'agentCatalogReplace':
+      case 'catalogSyncRequest':
+      case 'catalogSyncJoin':
+      case 'catalogSyncFailure':
         break;
       default: {
         const unhandled: never = job;
@@ -295,6 +334,12 @@ export function queuedFeedRows(
       case 'sessionRowUpdate':
       case 'turnInsert':
       case 'turnUpdate':
+      case 'blobMetadataUpsert':
+      case 'agentCatalogSearchProjection':
+      case 'agentCatalogReplace':
+      case 'catalogSyncRequest':
+      case 'catalogSyncJoin':
+      case 'catalogSyncFailure':
         break;
       default: {
         const unhandled: never = job;
@@ -329,6 +374,12 @@ export function stampWriterJob(job: WriterJob, now: number): WriterJob {
         ? job
         : { ...job, activityAt: job.activityAt ?? now };
     case 'turnUpdate':
+    case 'blobMetadataUpsert':
+    case 'agentCatalogSearchProjection':
+    case 'agentCatalogReplace':
+    case 'catalogSyncRequest':
+    case 'catalogSyncJoin':
+    case 'catalogSyncFailure':
       return job;
     default: {
       const unhandled: never = job;

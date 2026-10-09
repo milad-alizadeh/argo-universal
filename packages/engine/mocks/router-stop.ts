@@ -1,15 +1,16 @@
 import { onTestFinished } from 'vitest';
-import { type Actor, waitFor } from 'xstate';
+import { type Actor, type ActorRefFrom, waitFor } from 'xstate';
 import {
-  shutdownCatalogSyncSupervisor,
-  type CatalogSyncSupervisor,
+  syncSupervisorMachine,
 } from '../src/services/agents';
 import { type writerMachine } from '../src/services/feed';
 import { type RegistryActorRef } from '../src/services/sessions';
 import type { openTestDatabase } from './database';
 
 type RouterActors = {
-  catalogSync: CatalogSyncSupervisor;
+  syncSupervisor: ActorRefFrom<typeof syncSupervisorMachine>;
+  commandAdmission: AbortController;
+  unsubscribe(): void;
   sessionRegistry: RegistryActorRef;
   databaseWriter: Actor<typeof writerMachine>;
 };
@@ -21,7 +22,12 @@ export function registerRouterStop(
   ownedDatabase: ReturnType<typeof openTestDatabase> | undefined,
 ): () => Promise<void> {
   const stop = async (): Promise<void> => {
-    await shutdownCatalogSyncSupervisor(actors.catalogSync);
+    actors.commandAdmission.abort();
+    if (actors.syncSupervisor.getSnapshot().status === 'active') {
+      actors.syncSupervisor.send({ type: 'catalog.shutdown' });
+      await waitFor(actors.syncSupervisor, (snapshot) => snapshot.status !== 'active');
+    }
+    actors.unsubscribe();
     await stopRouterActors(actors);
     if (ownedDatabase?.database.$client.isOpen) ownedDatabase.remove();
   };

@@ -24,13 +24,10 @@ it.each([
     let stopped: Promise<void> | undefined;
     stored.database.$client.function('request_catalog_shutdown', () => {
       stopped = host.stop();
-      expect(host.context.catalogSync.getSnapshot().matches('stopping')).toBe(
-        true,
-      );
       expect(stored.database.$client.isTransaction).toBe(true);
       return 0;
     });
-    host.context.catalogSync.on('catalog.committed', () =>
+    host.databaseWriter.on('catalog.sqlCommitted', () =>
       expect(stored.database.$client.isTransaction).toBe(false),
     );
     const failure =
@@ -40,10 +37,11 @@ it.each([
     stored.database.$client.exec(
       `CREATE TEMP TRIGGER stop_catalog BEFORE INSERT ON agents BEGIN SELECT request_catalog_shutdown(); ${failure} END`,
     );
-    const result = await host.caller.agents.syncCatalog();
+    const sync = host.caller.agents.syncCatalog();
+    const result = outcome === 'rollback' ? await sync.catch((error: Error) => ({ error: error.message, changedIds: [] })) : await sync;
     expect(stopped).toBeDefined();
     await stopped;
-    expect(host.context.catalogSync.getSnapshot().status).toBe('done');
+    expect(host.databaseWriter.getSnapshot().status).toBe('done');
     expect(result).toMatchObject({
       error: expectedError,
       changedIds: outcome === 'rollback' ? [] : accepted.map(({ id }) => id),

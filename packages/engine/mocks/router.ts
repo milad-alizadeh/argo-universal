@@ -12,9 +12,10 @@ import {
   type RegistryActorRef,
 } from '../src/services/sessions';
 import { openTestDatabase } from './database';
+import { syncSupervisorMachine, createRegistryReader, type FetchAgents } from '../src/services/agents';
 import { registerRouterStop } from './router-stop';
 
-type RouterTestHostOptions = Partial<
+type RouterTestHostOptions = { fetchAgents?: FetchAgents } & Partial<
   Omit<Parameters<typeof createEngineContext>[0], 'sessions'>
 > &
   Partial<
@@ -59,7 +60,7 @@ export function startRouterTestHost(
   return createRouterTestHost(
     {
       ...engineOptions,
-      fetchAgents: engineOptions.fetchAgents ?? fetchEmptyAgents,
+      databaseWriter,
       database,
       sessions: sessionRegistry,
       createId,
@@ -67,7 +68,7 @@ export function startRouterTestHost(
       version: engineOptions.version ?? '1.2.3',
       startedAt: engineOptions.startedAt ?? '2026-10-03T00:00:00.000Z',
     },
-    { sessionRegistry, databaseWriter },
+    { sessionRegistry, databaseWriter, fetchAgents: engineOptions.fetchAgents ?? fetchEmptyAgents },
     ownedDatabase,
   );
 }
@@ -77,12 +78,21 @@ function createRouterTestHost(
   actors: {
     sessionRegistry: RegistryActorRef;
     databaseWriter: Actor<typeof writerMachine>;
+    fetchAgents: FetchAgents;
   },
   ownedDatabase: ReturnType<typeof openTestDatabase> | undefined,
 ): ReturnType<typeof startRouterTestHost> {
-  const context = createEngineContext(options);
+  const commandAdmission = new AbortController();
+  const context = createEngineContext({ ...options, sessionCommandSignal: options.sessionCommandSignal ?? commandAdmission.signal });
+  const syncSupervisor = createActor(syncSupervisorMachine, { parent: actors.sessionRegistry, systemId: 'syncSupervisor',
+    input: { database: options.database, writer: actors.databaseWriter, fetchAgents: actors.fetchAgents,
+      reader: createRegistryReader(), now: Date.now } }).start();
+  const subscription = actors.databaseWriter.on('catalog.sqlCommitted', ({ commits }) => {
+    for (const requestId of commits.flatMap((commit) => commit.requestedIds))
+      syncSupervisor.send({ type: 'catalog.requested', requestId });
+  });
   const stop = registerRouterStop(
-    { ...actors, catalogSync: context.catalogSync },
+    { ...actors, syncSupervisor, commandAdmission, unsubscribe: () => subscription.unsubscribe() },
     ownedDatabase,
   );
   return { context, caller: appRouter.createCaller(context), ...actors, stop };

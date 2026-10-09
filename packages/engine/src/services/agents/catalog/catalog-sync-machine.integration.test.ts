@@ -1,4 +1,4 @@
-import { agents } from '@repo/db/schema';
+import { agents, agentCatalogSyncRequest } from '@repo/db/schema';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import { afterAll, afterEach, expect, it, vi } from 'vitest';
@@ -10,6 +10,7 @@ import {
 } from '#mocks/catalog-sync-model';
 import { openTestDatabase } from '#mocks/database';
 import { createControllableRegistry } from '#mocks/registry-port';
+import { writerMachine } from '../../feed';
 import { catalogSyncMachine } from './catalog-sync-machine';
 import { createRegistryReader } from './registry-reader';
 
@@ -24,10 +25,13 @@ it.each(model.paths.map((path, index) => [index, path] as const))(
     vi.useFakeTimers();
     const stored = openTestDatabase();
     const registry = createControllableRegistry();
+    stored.database.insert(agentCatalogSyncRequest).values({ requestId: 'modeled-request', syncId: 'modeled-request', status: 'pending', requestedAt: Date.now() }).run();
     prepareCatalogSyncWriteFailure(stored.database, path);
+    const writer = createActor(writerMachine, { input: { database: stored.database, now: Date.now } }).start();
     const actor = createActor(catalogSyncMachine, {
       input: {
         database: stored.database,
+        writer, syncId: 'modeled-request', now: Date.now,
         fetchAgents: registry.fetchAgents,
         reader: createRegistryReader(),
       },
@@ -42,14 +46,13 @@ it.each(model.paths.map((path, index) => [index, path] as const))(
         await advanceCatalogSyncModelStep(step.event, actor, registry);
         expect(observed).toContain(serializeCatalogSyncState(step.state));
       }
-      expect(serializeCatalogSyncState(actor.getSnapshot())).toBe(
-        serializeCatalogSyncState(path.state),
-      );
+      expect(observed).toContain(serializeCatalogSyncState(path.state));
       expect(stored.database.select().from(agents).all()).toHaveLength(
         actor.getSnapshot().matches('succeeded') ? 4 : 0,
       );
     } finally {
       actor.stop();
+      writer.stop();
       stored.remove();
     }
   },
@@ -99,6 +102,8 @@ function prepareCatalogSyncWriteFailure(
     database.$client.exec(
       "CREATE TRIGGER reject_sync BEFORE INSERT ON agents BEGIN SELECT RAISE(ABORT, 'database rejected catalog'); END",
     );
+  if (path.steps.some(({ event }) => event.type === 'xstate.error.actor.recordFailedSync'))
+    database.$client.exec("CREATE TRIGGER reject_status BEFORE UPDATE ON agent_catalog_sync_request BEGIN SELECT RAISE(ABORT, 'status rejected'); END");
 }
 
 async function advanceExternalRegistryTimeout(

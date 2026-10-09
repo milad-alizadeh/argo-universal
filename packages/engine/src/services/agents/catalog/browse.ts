@@ -7,13 +7,12 @@ import type {
 import type { Database } from '@repo/db';
 import { readCatalogAgentRecords } from './records';
 import type { createRegistryReader } from './registry-reader';
+import { readCatalogSqlState } from './catalog-sql';
 
 export interface CatalogReadInput {
   database: Database;
   reader: ReturnType<typeof createRegistryReader>;
   platform: string;
-  error: string | null;
-  syncedAt: number | null;
 }
 
 export function selectAgentDistribution(
@@ -38,12 +37,6 @@ function selectPackageDistribution(
   };
 }
 
-function matchesSearch(agent: ACPAgent, normalizedSearch: string): boolean {
-  return `${agent.id} ${agent.name} ${agent.description}`
-    .toLowerCase()
-    .includes(normalizedSearch);
-}
-
 function normalizeCatalogSearch(request: AgentsCatalogInput): string {
   return (request?.search ?? '').trim().toLowerCase();
 }
@@ -63,13 +56,16 @@ function buildCatalogResult(
   input: CatalogReadInput,
   request: AgentsCatalogInput,
 ): AgentsCatalogOutput {
-  const result = readCatalogEntriesWithSyncTime(input, request);
+  const search = normalizeCatalogSearch(request);
+  const records = readCatalogAgentRecords(input.database, input.reader, search);
+  const state = readCatalogSqlState(input);
   return {
-    ...result,
+    agents: buildCatalogEntries(records, input.platform),
+    fetchedAt: state.fetchedAt,
     serverPlatform: input.platform,
-    status: deriveCatalogStatus(result.fetchedAt, input.error),
-    error: input.error,
-    rejectedValues: input.reader.count(),
+    status: deriveCatalogStatus(state.fetchedAt, state.error),
+    error: state.error,
+    rejectedValues: state.rejectedValues + input.reader.count(),
   };
 }
 
@@ -77,26 +73,10 @@ type CatalogRecords = ReturnType<typeof readCatalogAgentRecords>;
 
 function buildCatalogEntries(
   records: CatalogRecords,
-  normalizedSearch: string,
   serverPlatform: string,
 ): AgentsCatalogOutput['agents'] {
   return records
-    .filter(
-      ({ record, agent }) =>
-        record.catalogPresent && matchesSearch(agent, normalizedSearch),
-    )
     .map((row) => buildCatalogEntry(row, serverPlatform));
-}
-
-function readCatalogSyncTimestamp(
-  records: CatalogRecords,
-  lastSyncAt: number | null,
-): number | null {
-  if (!records.length) return lastSyncAt;
-  return (
-    Math.max(...records.map(({ record }) => record.catalogSyncedAt ?? 0)) ||
-    null
-  );
 }
 
 function deriveCatalogStatus(
@@ -142,14 +122,3 @@ function buildCatalogEntry(
   };
 }
 
-function readCatalogEntriesWithSyncTime(
-  input: CatalogReadInput,
-  request: AgentsCatalogInput,
-): Pick<AgentsCatalogOutput, 'agents' | 'fetchedAt'> {
-  const records = readCatalogAgentRecords(input.database, input.reader);
-  const search = normalizeCatalogSearch(request);
-  return {
-    agents: buildCatalogEntries(records, search, input.platform),
-    fetchedAt: readCatalogSyncTimestamp(records, input.syncedAt),
-  };
-}

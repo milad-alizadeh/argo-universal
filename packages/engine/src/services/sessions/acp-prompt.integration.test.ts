@@ -50,7 +50,7 @@ it('a negotiated image prompt delivers every byte from the stored Blob', async (
   const bytes = new Uint8Array([137, 80, 78, 71, 1, 2, 3, 255]);
   const image = await uploadBlob(
     {
-      database: host.context.database,
+      databaseWriter: host.context.databaseWriter,
       blobsFolder: blobsFolderIn(host.engine.getSnapshot().context.home),
     },
     new Blob([bytes], { type: 'image/png' }),

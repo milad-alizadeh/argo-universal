@@ -24,7 +24,21 @@ export {
 } from './writer-job';
 export { type WriterEvent, writerMachine } from './writer-machine';
 export type { WriterCommit } from './writer-commit';
+export { writeDatabaseJobAndWaitForCommit } from './database-write';
+export type {
+  AgentCatalogReplaceJob,
+  AgentCatalogWriteRow,
+} from './writer-agent-catalog';
+export type {
+  CatalogSqlJob,
+  CatalogSqlCommit,
+  CatalogSyncRequestJob,
+  CatalogSyncJoinJob,
+  CatalogSyncFailureJob,
+} from './writer-catalog-sync';
 export { publishTurnContent } from './publication';
 export { databaseWriterId, findDatabaseWriter } from './writer-system';
 
 export { feedRouter } from './router';
+
+export type { AgentCatalogSearchProjectionJob } from './writer-catalog-search';

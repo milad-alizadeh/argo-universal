@@ -10,4 +10,5 @@ export const agents = snakeCase.table('agents', {
   registryMetadata: text(),
   catalogPresent: integer({ mode: 'boolean' }).notNull().default(false),
   catalogSyncedAt: integer(),
+  catalogSearchText: text().notNull().default(''),
 });

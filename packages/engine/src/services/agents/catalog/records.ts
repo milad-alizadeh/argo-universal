@@ -6,7 +6,8 @@ import {
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { agents } from '@repo/db/schema';
-import { eq } from 'drizzle-orm';
+import type { AgentCatalogSearchProjectionJob, AgentCatalogWriteRow } from '../../feed';
+import { and, eq, sql } from 'drizzle-orm';
 import { createRegistryReader } from './registry-reader';
 
 function createCatalogAgentRecord(
@@ -19,76 +20,23 @@ function createCatalogAgentRecord(
   };
 }
 
-type CatalogTransaction = Pick<Database, 'select' | 'update' | 'insert'>;
-
-export function commitCatalogAgents(
-  database: Database,
-  registry: ACPAgentRegistry,
-): string[] {
-  return database.transaction((transaction) =>
-    replaceCatalogOwnedFields(transaction, registry, Date.now()),
-  );
-}
-
-function replaceCatalogOwnedFields(
-  database: CatalogTransaction,
+export function prepareAgentCatalogRows(
   registry: ACPAgentRegistry,
   syncedAt: number,
-): string[] {
-  const previousIds = readPresentCatalogAgentIds(database);
-  markCatalogAgentsRemoved(database, syncedAt);
-  for (const agent of registry.agents)
-    upsertCatalogAgent(database, agent, syncedAt);
-  return [
-    ...new Set([...previousIds, ...readPresentCatalogAgentIds(database)]),
-  ];
-}
-
-function readPresentCatalogAgentIds(
-  database: Pick<Database, 'select'>,
-): string[] {
-  return database
-    .select({ id: agents.id })
-    .from(agents)
-    .where(eq(agents.catalogPresent, true))
-    .all()
-    .map(({ id }) => id);
-}
-
-function markCatalogAgentsRemoved(
-  database: Pick<Database, 'update'>,
-  syncedAt: number,
-): void {
-  database
-    .update(agents)
-    .set({ catalogPresent: false, catalogSyncedAt: syncedAt })
-    .where(eq(agents.catalogPresent, true))
-    .run();
-}
-
-function upsertCatalogAgent(
-  database: Pick<Database, 'insert'>,
-  agent: ACPAgent,
-  syncedAt: number,
-): void {
-  const record = createCatalogAgentRecord(agent, syncedAt);
-  database
-    .insert(agents)
-    .values(record)
-    .onConflictDoUpdate({
-      target: agents.registryId,
-      set: createCatalogOwnedFields(agent, syncedAt),
-    })
-    .run();
+): AgentCatalogWriteRow[] {
+  return registry.agents.map((agent) => createCatalogAgentRecord(agent, syncedAt));
 }
 
 export function readCatalogAgentRecords(
   database: Database,
   reader: ReturnType<typeof createRegistryReader>,
+  normalizedSearch = '',
 ): { record: AgentRecord; agent: ACPAgent }[] {
   return database
     .select()
     .from(agents)
+    .where(and(eq(agents.catalogPresent, true),
+      sql`instr(${agents.catalogSearchText}, ${normalizedSearch}) > 0`))
     .all()
     .filter(isCatalogAgentRecord)
     .map((row) => hydrateCatalogAgentRecord(row, reader));
@@ -117,6 +65,7 @@ function createCatalogOwnedFields(
     registryMetadata: JSON.stringify(agent),
     catalogPresent: true,
     catalogSyncedAt: syncedAt,
+    catalogSearchText: `${agent.id} ${agent.name} ${agent.description}`.toLowerCase(),
   };
 }
 
@@ -126,4 +75,19 @@ function isCatalogAgentRecord(row: AgentRecord): boolean {
     row.registryMetadata !== null ||
     row.catalogPresent
   );
+}
+
+export function prepareSavedCatalogSearchProjection(
+  database: Database,
+  reader: ReturnType<typeof createRegistryReader>,
+): AgentCatalogSearchProjectionJob {
+  const rows = database.select().from(agents).where(and(eq(agents.catalogPresent, true),
+    eq(agents.catalogSearchText, ''))).all();
+  return { type: 'agentCatalogSearchProjection', rows: rows.flatMap((row) => {
+    try {
+      const { agent } = hydrateCatalogAgentRecord(row, reader);
+      return [{ id: row.id, expectedRegistryMetadata: row.registryMetadata ?? '',
+        catalogSearchText: `${agent.id} ${agent.name} ${agent.description}`.toLowerCase() }];
+    } catch { return []; }
+  }) };
 }
