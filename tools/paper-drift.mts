@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { auditReport } from './paper-drift/audit-report.mts';
 import { auditSummary, runAudit } from './paper-drift/audit.mts';
 import type { Scope } from './paper-drift/master-kind.mts';
@@ -126,7 +126,7 @@ function planAll(taken: Snapshot, names: string[]): SyncPlans {
   const nested = nestedPairs(taken, masters, names);
   if (nested.length > 0)
     throw new Error(
-      `Sync these in separate runs, inner first (pnpm paper:levels): ${nested.join('; ')}`,
+      `Sync these in separate runs, inner first (pnpm -F @repo/tools paper:levels): ${nested.join('; ')}`,
     );
   const found = names.map((name): SyncPlans => {
     const plans = planSync(taken, masters, name);
@@ -191,11 +191,16 @@ async function applyRename(paper: PaperPort, plan: RenamePlan): Promise<void> {
   console.log(`Renamed ${plan.updates.length} layers and ${registryPath}.`);
 }
 
+// pnpm runs the script in tools/, so a path argument is read from where pnpm was called.
+function callerPath(argument: string): string {
+  return resolve(process.env.INIT_CWD ?? '', argument);
+}
+
 // Renames masters, their copies and the registry together; changes Paper only with --apply.
 async function rename(args: string[]): Promise<void> {
   const mapPath = args.find((arg): boolean => !arg.startsWith('--'));
   if (mapPath === undefined) throw new Error(usage);
-  const map = readRenameMap(mapPath);
+  const map = readRenameMap(callerPath(mapPath));
   const masters = readRegistry(registryPath);
   if (args.includes('--offline')) {
     renameReport(planRename(readSnapshot(), masters, map));

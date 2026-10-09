@@ -79,7 +79,7 @@ function warn(lines: string[]): string | undefined {
 
 function warningsFor(edit: PaperEdit): string | undefined {
   if (!existsSync(snapshotPath) || !existsSync(registryPath))
-    return 'Paper drift check skipped: there is no snapshot or registry yet. Run pnpm paper:snapshot.';
+    return 'Paper drift check skipped: there is no snapshot or registry yet. Run pnpm -F @repo/tools paper:snapshot.';
   return warn(editWarnings(readSnapshot(), readRegistry(registryPath), edit));
 }
 

@@ -78,11 +78,11 @@ function masterWarning(
 ): string {
   const { name } = hit.entry;
   const count = checkedCopies(snapshot, registry, hit.entry).length;
-  return `You edited the master "${name}"; its ${count} copies may now drift. When the master is done, run pnpm paper:snapshot, then pnpm paper:sync "${name}" and check the dry run.`;
+  return `You edited the master "${name}"; its ${count} copies may now drift. When the master is done, run pnpm -F @repo/tools paper:snapshot, then pnpm -F @repo/tools paper:sync "${name}" and check the dry run.`;
 }
 
 function copyWarning(entry: MasterEntry): string {
-  return `You edited a copy of "${entry.name}" beyond its text, hiding and placement. Make the change on the master and sync it, or pnpm paper:audit will report this copy.`;
+  return `You edited a copy of "${entry.name}" beyond its text, hiding and placement. Make the change on the master and sync it, or pnpm -F @repo/tools paper:audit will report this copy.`;
 }
 
 interface Check {

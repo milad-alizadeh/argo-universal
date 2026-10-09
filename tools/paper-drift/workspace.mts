@@ -28,7 +28,7 @@ export function readSnapshot(): Snapshot {
     return snapshotSchema.parse(JSON.parse(readFileSync(snapshotPath, 'utf8')));
   } catch (error) {
     throw new Error(
-      `No usable snapshot at ${snapshotPath}; run pnpm paper:snapshot first.`,
+      `No usable snapshot at ${snapshotPath}; run pnpm -F @repo/tools paper:snapshot first.`,
       { cause: error },
     );
   }

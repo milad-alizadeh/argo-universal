@@ -10,7 +10,7 @@ This doc is temporary. When Paper ships components ("Components with slots" on i
 - A master's name is `<CodeName> / <State>`, with `(phone)` right after the code name for the phone version: `SessionRow / Done`, `SessionRow (phone) / Done`. CodeName is the PascalCase code component; a master with one state drops ` / <State>`. Desktop takes no suffix.
 - A page is built only from **copies** of masters, made with `duplicate_nodes`. A copy keeps its master's layer name: the name is the link.
 - A copy may change its text, hide items, and switch to a named state. Any other difference from its master is **drift**.
-- To change a component, edit the master, then run `pnpm paper:sync "<Name>"` and, once its dry run reads right, again with `--apply`. Work inside out: a master nested in another master (Session row inside List column) is synced before the masters that hold it.
+- To change a component, edit the master, then run `pnpm -F @repo/tools paper:sync "<Name>"` and, once its dry run reads right, again with `--apply`. Work inside out: a master nested in another master (Session row inside List column) is synced before the masters that hold it.
 - Column masters carry content only. The surface (background, border, radius, shadow) comes from the shell's Card and Sidebar plate, so a master and its copies cannot drift on it.
 
 ## Tokens
@@ -28,14 +28,14 @@ This doc is temporary. When Paper ships components ("Components with slots" on i
 - `name` is the layer name, which is also the name every copy carries.
 - `shell: true` marks a container whose content changes with each use, such as a sheet. Only its root is compared.
 - A **variation** is one master per state, grouped into a family: `variantOf` names the base, and `props` lists what the variation sets differently, keyed by layer path (`""` is the root, `"0/2"` the base's first child's third child). A `null` value unsets the property. Anything else that differs from the base is drift.
-- `pnpm paper:registry` proposes a registry from the component cards: the first frame in each `Cell`, `Desktop`, `Phone`, `Content`, `Popover`, `Sheet` or `Demo` slot. It writes `masters.json` when there is none, otherwise `.paper-drift/masters.proposed.json` to compare with it. Review every entry before committing it.
+- `pnpm -F @repo/tools paper:registry` proposes a registry from the component cards: the first frame in each `Cell`, `Desktop`, `Phone`, `Content`, `Popover`, `Sheet` or `Demo` slot. It writes `masters.json` when there is none, otherwise `.paper-drift/masters.proposed.json` to compare with it. Review every entry before committing it.
 
 ## Drift audit
 
 The tools in `tools/paper-drift/` read the whole file through the Paper MCP. Only `paper:sync --apply`, `paper:rename --apply` and `paper:tokens --apply` write to Paper.
 
-- `pnpm paper:snapshot` reads every layer, its styles and the tokens into `.paper-drift/snapshot.json`. It takes about a minute; run it again whenever the file has changed.
-- `pnpm paper:audit` checks the last snapshot and writes `.paper-drift/audit.md` and `audit.json`:
+- `pnpm -F @repo/tools paper:snapshot` reads every layer, its styles and the tokens into `.paper-drift/snapshot.json`. It takes about a minute; run it again whenever the file has changed.
+- `pnpm -F @repo/tools paper:audit` checks the last snapshot and writes `.paper-drift/audit.md` and `audit.json`:
   - every copy against its master, apart from the allowed changes;
   - every variation against its base with its props applied;
   - registry entries whose layer is gone or renamed, and presented frames that are not registered;
@@ -44,10 +44,10 @@ The tools in `tools/paper-drift/` read the whole file through the Paper MCP. Onl
   - literal values in a style that has a token scale, with the matching token or "off the scale".
 
   A change that keeps the value and only swaps the token (`--text-sm` for `--text-body-wide`) is marked "same value".
-- `pnpm paper:levels` writes `.paper-drift/levels.json`: the masters grouped by nesting depth, innermost first. `paper:sync` takes several names at once from one snapshot, so pass names from one level only, and take a new snapshot between levels. `--offline` plans from the last snapshot without touching Paper.
-- `pnpm paper:rename <map.json>` renames masters, every copy and the registry together, from a map of `renames` (`id`, `from`, `to`) and `aliases` (other spellings found on copies). It is a dry run against a fresh snapshot (`--offline` uses the last one) until you add `--apply`, which refuses while the plan lists problems.
-- `pnpm paper:tokens` plans to write the tokens in `theme.css`, with the Tailwind defaults their aliases name, into Paper: what it would add, change and leave alone. An alias stays an alias; any other value is written resolved, in px. A Paper token whose resolved value already matches is left as it is. Tokens only in Paper are listed, never deleted. Tokens Paper has no type for (shadows, blur) or whose value it cannot hold (`hairlineWidth()`) are listed and counted as unmapped. It reads Paper's tokens (`--offline` uses the last snapshot) and writes only with `--apply`.
-- `pnpm paper:sync "<Name>"` takes a fresh snapshot and plans, for each drifted copy of that master, to clone the master beside it, put back the copy's text, hidden items, placement and nested masters, and delete the old copy. Copies whose layers differ from the master's are listed for a person instead. Add `--apply` to carry it out; before and after screenshots go to `.paper-drift/sync/`. Never apply while someone else is editing the same artboards.
+- `pnpm -F @repo/tools paper:levels` writes `.paper-drift/levels.json`: the masters grouped by nesting depth, innermost first. `paper:sync` takes several names at once from one snapshot, so pass names from one level only, and take a new snapshot between levels. `--offline` plans from the last snapshot without touching Paper.
+- `pnpm -F @repo/tools paper:rename <map.json>` renames masters, every copy and the registry together, from a map of `renames` (`id`, `from`, `to`) and `aliases` (other spellings found on copies). It is a dry run against a fresh snapshot (`--offline` uses the last one) until you add `--apply`, which refuses while the plan lists problems.
+- `pnpm -F @repo/tools paper:tokens` plans to write the tokens in `theme.css`, with the Tailwind defaults their aliases name, into Paper: what it would add, change and leave alone. An alias stays an alias; any other value is written resolved, in px. A Paper token whose resolved value already matches is left as it is. Tokens only in Paper are listed, never deleted. Tokens Paper has no type for (shadows, blur) or whose value it cannot hold (`hairlineWidth()`) are listed and counted as unmapped. It reads Paper's tokens (`--offline` uses the last snapshot) and writes only with `--apply`.
+- `pnpm -F @repo/tools paper:sync "<Name>"` takes a fresh snapshot and plans, for each drifted copy of that master, to clone the master beside it, put back the copy's text, hidden items, placement and nested masters, and delete the old copy. Copies whose layers differ from the master's are listed for a person instead. Add `--apply` to carry it out; before and after screenshots go to `.paper-drift/sync/`. Never apply while someone else is editing the same artboards.
 
 After any Paper write tool, a PostToolUse hook (`tools/agent-hooks.mts after-paper-edit`, which loads `tools/paper-drift/edit-hook.mts`) warns when the edit touched a master, whose copies now drift, or a copy outside its allowed changes. It reads the last snapshot and the registry, so it never calls Paper and never blocks. Layers made after the last snapshot are not checked, and input it does not recognise is reported as a skipped check.
 
