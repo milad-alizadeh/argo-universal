@@ -4,8 +4,7 @@ import { feedRow, session, turn } from '@repo/db/schema';
 import { and, eq, or, sql } from 'drizzle-orm';
 import { createRejectionCounter } from '../lib/count-rejections';
 import {
-  decodeStoredFeedRow,
-  fromFeedRow,
+  hydrateStoredFeedRow,
   payloadVersion,
   storedFeedColumns,
 } from '../services/feed';
@@ -53,7 +52,7 @@ export function recoverAfterRestart(database: Database): void {
     const rejections = createRejectionCounter('recovery');
     for (const { row, maxRevision } of rows) {
       try {
-        fromFeedRow(row.sessionId, decodeStoredFeedRow(row));
+        hydrateStoredFeedRow(row.sessionId, row);
       } catch (error) {
         rejections.report(`rejected Feed shape (${row.sessionId}/${row.id})`, {
           error,

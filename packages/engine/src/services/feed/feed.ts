@@ -17,8 +17,7 @@ import type {
 } from '../sessions';
 import type { FeedActorRef } from './feed-machine';
 import {
-  decodeStoredFeedRow,
-  fromFeedRow,
+  hydrateStoredFeedRow,
   newestRows,
   readWrittenRow,
   storedFeedColumns,
@@ -47,9 +46,7 @@ const readUnsavedRows = (
   const feed = feedResources.findFeed(sessionId)?.getSnapshot().context;
   return {
     rows: [
-      ...jobs.flatMap((job): SessionUpdate[] =>
-        job.rows.map((row): SessionUpdate => fromFeedRow(sessionId, row)),
-      ),
+      ...jobs.flatMap((job): SessionUpdate[] => job.rows),
       ...Object.values(feed?.rows ?? {}),
     ],
     maxRevision: Math.max(
@@ -88,7 +85,7 @@ export function readFeedPage(
     .slice(0, pageInput.limit)
     .reverse()
     .map((row): SessionUpdate =>
-      fromFeedRow(pageInput.sessionId, decodeStoredFeedRow(row)),
+      hydrateStoredFeedRow(pageInput.sessionId, row),
     );
   return {
     epoch,
@@ -143,9 +140,7 @@ const readChangedRows = (
     )
     .orderBy(asc(feedRow.revision))
     .all()
-    .map((stored): SessionUpdate =>
-      fromFeedRow(sessionId, decodeStoredFeedRow(stored)),
-    );
+    .map((stored): SessionUpdate => hydrateStoredFeedRow(sessionId, stored));
   return {
     rows: [
       ...newestRows([

@@ -6,8 +6,8 @@ export {
 } from './feed-change';
 export { type FeedActorRef, type FeedEvent, feedMachine } from './feed-machine';
 export {
-  decodeStoredFeedRow,
-  fromFeedRow,
+  type FeedRowWrite,
+  hydrateStoredFeedRow,
   newestRows,
   payloadVersion,
   readWrittenRow,
@@ -16,7 +16,6 @@ export {
 } from './feed-row';
 export type { FeedDeps } from './feed';
 export {
-  type FeedRowWrite,
   type WriterJob,
   applyQueuedSession,
   applyQueuedTurns,

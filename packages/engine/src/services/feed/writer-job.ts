@@ -1,4 +1,4 @@
-import { SessionRecord, Turn } from '@repo/contracts';
+import { SessionRecord, type SessionUpdate, Turn } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import {
   blob,
@@ -9,19 +9,14 @@ import {
   turn,
 } from '@repo/db/schema';
 import { and, eq, gt, inArray, sql } from 'drizzle-orm';
-
-// A Feed row as a job carries it; the job's `sessionId` fills the column.
-export type FeedRowWrite = Omit<
-  typeof feedRow.$inferInsert,
-  'sessionId' | 'createdAt' | 'updatedAt'
->;
+import { toFeedRowWrite } from './feed-row';
 
 // One unit of work for the database writer.
 export type WriterJob =
   | {
       type: 'feedRows';
       sessionId: string;
-      rows: FeedRowWrite[];
+      rows: SessionUpdate[];
       maxRevision: number;
       activityAt?: number;
       // The blobs the job's prompt rows show.
@@ -73,7 +68,7 @@ export function writeJobs(
               .insert(feedRow)
               .values(
                 job.rows.map((row): typeof feedRow.$inferInsert => ({
-                  ...row,
+                  ...toFeedRowWrite(row),
                   sessionId: job.sessionId,
                 })),
               )

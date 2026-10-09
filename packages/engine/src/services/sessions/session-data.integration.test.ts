@@ -10,7 +10,6 @@ import { createActor, fromPromise } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
 import { storedMessage } from '#mocks/feed';
 import { initTestRepository } from '#mocks/git';
-import { toFeedRowWrite } from '../feed';
 import { writeJobs } from '../feed';
 import { writerMachine } from '../feed';
 import {
@@ -212,7 +211,7 @@ it('reloads Feed positions and the vendor Session from writes still queued', asy
       type: 'feedRows',
       sessionId: 'session-1',
       maxRevision: 12,
-      rows: [toFeedRowWrite(storedMessage(4, 12))],
+      rows: [storedMessage(4, 12)],
     },
   });
   expect(

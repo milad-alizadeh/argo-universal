@@ -160,7 +160,7 @@ it('keeps the earlier running Tool call after writer and memory overlays complet
       type: 'feedRows',
       sessionId: 'session-1',
       maxRevision: 3,
-      rows: [toFeedRowWrite({ ...newer, revision: 3, title: 'Queued title' })],
+      rows: [{ ...newer, revision: 3, title: 'Queued title' }],
     },
   });
   const completed = {

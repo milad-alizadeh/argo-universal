@@ -1,16 +1,15 @@
-import type { SessionUpdate } from '@repo/contracts';
+import type { AgentMessage, SessionUpdate } from '@repo/contracts';
 import { SessionRecord, Turn } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { blob, blobRef, feedRow, session, turn } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { openTestDatabase } from '#mocks/database';
-import { fromFeedRow } from './feed-row';
+import { hydrateStoredFeedRow, storedFeedColumns } from './feed-row';
 import {
   applyQueuedSession,
   applyQueuedTurns,
   describeJob,
-  type FeedRowWrite,
   queuedFeedRows,
   stampWriterJob,
   type WriterJob,
@@ -20,19 +19,20 @@ import {
 let database: Database;
 let removeDatabase: () => void;
 
-const row = (overrides: Partial<FeedRowWrite> = {}): FeedRowWrite => ({
+const row = (overrides: Partial<AgentMessage> = {}): AgentMessage => ({
+  sessionId: 'session-1',
   id: 'row-1',
   position: 0,
   sessionUpdate: 'agent_message',
   revision: 1,
   turnId: 'turn-1',
   state: 'open',
-  payload: { messageId: 'message-1', content: [] },
-  payloadVersion: 1,
+  messageId: 'message-1',
+  content: [],
   ...overrides,
 });
 const feedRows = (
-  rows: FeedRowWrite[],
+  rows: SessionUpdate[],
   maxRevision: number,
 ): Extract<WriterJob, { type: 'feedRows' }> => ({
   type: 'feedRows',
@@ -92,6 +92,10 @@ describe('writeJobs', (): void => {
 
   it('updates a Feed row it wrote before, by id, and keeps its position', (): void => {
     writeJobs(database, [feedRows([row()], 1)]);
+    database
+      .update(feedRow)
+      .set({ sourceRef: { line: 4 }, searchText: 'Older' })
+      .run();
     writeJobs(database, [
       feedRows(
         [
@@ -99,9 +103,7 @@ describe('writeJobs', (): void => {
             position: 7,
             revision: 3,
             state: 'settled',
-            payload: { messageId: 'message-1', content: ['done'] },
-            sourceRef: { line: 4 },
-            searchText: 'done',
+            content: [{ type: 'text', text: 'done' }],
           }),
         ],
         3,
@@ -114,9 +116,13 @@ describe('writeJobs', (): void => {
         position: 0,
         revision: 3,
         state: 'settled',
-        payload: { messageId: 'message-1', content: ['done'] },
-        sourceRef: { line: 4 },
-        searchText: 'done',
+        payload: {
+          messageId: 'message-1',
+          content: [{ type: 'text', text: 'done' }],
+        },
+        payloadVersion: 1,
+        sourceRef: null,
+        searchText: null,
       }),
     ]);
     expect(selectSession()?.maxRevision).toBe(3);
@@ -129,7 +135,7 @@ describe('writeJobs', (): void => {
       .run();
     const job = {
       ...feedRows(
-        [row({ sessionUpdate: 'user_message', state: 'settled' })],
+        [{ ...row({ state: 'settled' }), sessionUpdate: 'user_message' }],
         1,
       ),
       blobIds: ['image-1', 'no-such-blob'],
@@ -356,10 +362,7 @@ it('projects queued Feed rows and their Session revision exactly as their commit
       ...feedRows(
         [
           row({
-            payload: {
-              messageId: 'message-1',
-              content: [{ type: 'text', text: 'Complete' }],
-            },
+            content: [{ type: 'text', text: 'Complete' }],
           }),
         ],
         1,
@@ -373,14 +376,17 @@ it('projects queued Feed rows and their Session revision exactly as their commit
     jobs,
   });
   const rows = queuedFeedRows(jobs, 'session-1').flatMap(
-    (job): SessionUpdate[] =>
-      job.rows.map((row): SessionUpdate => fromFeedRow('session-1', row)),
+    (job): SessionUpdate[] => job.rows,
   );
   writeJobs(database, jobs);
   const data = SessionRecord.omit({ createdAt: true, updatedAt: true });
   expect(data.parse(projected)).toEqual(data.parse(selectSession()));
   expect(rows).toEqual(
-    selectRows().map((row): SessionUpdate => fromFeedRow('session-1', row)),
+    database
+      .select(storedFeedColumns)
+      .from(feedRow)
+      .all()
+      .map((row): SessionUpdate => hydrateStoredFeedRow('session-1', row)),
   );
 });
 

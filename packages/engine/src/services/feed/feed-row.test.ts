@@ -2,7 +2,7 @@ import type { ImageContent, UserMessage } from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
 import { storedMessage } from '#mocks/feed';
 import {
-  fromFeedRow,
+  hydrateStoredFeedRow,
   newestRows,
   promptBlobIds,
   toFeedRowWrite,
@@ -10,14 +10,22 @@ import {
 
 const message = storedMessage(0);
 
-describe('fromFeedRow', (): void => {
+describe('hydrateStoredFeedRow', (): void => {
   it('reads back the row toFeedRowWrite stores', (): void => {
-    expect(fromFeedRow('session-1', toFeedRowWrite(message))).toEqual(message);
+    expect(
+      hydrateStoredFeedRow('session-1', {
+        ...toFeedRowWrite(message),
+        payload: JSON.stringify({
+          messageId: 'message-0',
+          content: [{ type: 'text', text: 'Message 0' }],
+        }),
+      }),
+    ).toEqual(message);
   });
 
   it('rejects a row from another payload version', (): void => {
-    expect((): ReturnType<typeof fromFeedRow> =>
-      fromFeedRow('session-1', {
+    expect((): ReturnType<typeof hydrateStoredFeedRow> =>
+      hydrateStoredFeedRow('session-1', {
         ...toFeedRowWrite(message),
         payloadVersion: 2,
       }),
@@ -29,10 +37,10 @@ describe('fromFeedRow', (): void => {
     const payload = row.payload;
     if (!payload || typeof payload !== 'object')
       throw new Error('Message payload is not an object');
-    expect((): ReturnType<typeof fromFeedRow> =>
-      fromFeedRow('session-1', {
+    expect((): ReturnType<typeof hydrateStoredFeedRow> =>
+      hydrateStoredFeedRow('session-1', {
         ...row,
-        payload: { ...payload, position: 9 },
+        payload: JSON.stringify({ ...payload, position: 9 }),
       }),
     ).toThrow('row message-0#0 has position in its payload');
   });
