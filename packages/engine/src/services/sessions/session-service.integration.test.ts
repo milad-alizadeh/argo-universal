@@ -19,7 +19,7 @@ import { beforeEach, expect, it, onTestFinished, vi } from 'vitest';
 import { waitFor } from 'xstate';
 import { insertSession, openTestDatabase } from '#mocks/database';
 import { initTestRepository } from '#mocks/git';
-import { createRouterHost } from '#mocks/router';
+import { startRouterTestHost } from '#mocks/router';
 import { appRouter } from '../../engine/router';
 import type { Services } from '../services';
 
@@ -27,7 +27,10 @@ const agentConfigOptionsChangedEvent = 'agent.configOptionsChanged';
 const signInFailure = 'Sign in first';
 const sessionActorId = 'session:session-1';
 
-type TestServer = Omit<ReturnType<typeof createRouterHost>, 'writer'> & {
+type SessionTestServer = Omit<
+  ReturnType<typeof startRouterTestHost>,
+  'databaseWriter'
+> & {
   streams: Map<string, MockAgentStream>;
   commands: Map<string, VendorCommand[]>;
   configOptions: Extract<
@@ -46,7 +49,9 @@ beforeEach((): void => {
   });
 });
 
-function openServer({ applyConfigOptions = true } = {}): TestServer {
+function startSessionTestServer({
+  applyConfigOptions = true,
+} = {}): SessionTestServer {
   const directory = realpathSync(
     mkdtempSync(join(tmpdir(), 'session-service-')),
   );
@@ -56,7 +61,7 @@ function openServer({ applyConfigOptions = true } = {}): TestServer {
   const git = initTestRepository(directory);
   const { database, remove } = openTestDatabase({}, directory);
   cleanups.push(remove);
-  const configOptions: TestServer['configOptions'] = [
+  const configOptions: SessionTestServer['configOptions'] = [
     {
       configId: 'model',
       name: 'Model',
@@ -109,7 +114,7 @@ function openServer({ applyConfigOptions = true } = {}): TestServer {
       });
     },
   };
-  const { root, context, caller } = createRouterHost({
+  const { sessionRegistry, context, caller } = startRouterTestHost({
     database,
     runtimeDirectory: join(directory, '.argo'),
     adapters: [
@@ -156,7 +161,7 @@ function openServer({ applyConfigOptions = true } = {}): TestServer {
   return {
     context,
     caller,
-    root,
+    sessionRegistry,
     streams,
     commands,
     configOptions,
@@ -175,7 +180,7 @@ const newSession: SessionNewInput = {
 };
 
 it('rejects a new Session when the writer keeps its insert queued for retry', async (): Promise<void> => {
-  const { caller, database } = openServer();
+  const { caller, database } = startSessionTestServer();
   database.$client.exec(
     "CREATE TRIGGER reject_session_insert BEFORE INSERT ON session BEGIN SELECT RAISE(ABORT, 'database is locked'); END",
   );
@@ -191,11 +196,11 @@ it('rejects a new Session when the writer keeps its insert queued for retry', as
 });
 
 it('rejects a new Session whose insert is queued behind another retrying job', async (): Promise<void> => {
-  const { caller, database, root } = openServer();
+  const { caller, database, sessionRegistry } = startSessionTestServer();
   database.$client.exec(
     "CREATE TRIGGER reject_session_update BEFORE UPDATE ON session BEGIN SELECT RAISE(ABORT, 'another job cannot be written'); END",
   );
-  const databaseWriter = root.system.get('databaseWriter');
+  const databaseWriter = sessionRegistry.system.get('databaseWriter');
   databaseWriter.send({
     type: 'writer.write',
     job: { type: 'sessionRowUpdate', id: 'session-1', set: { title: 'Held' } },
@@ -215,7 +220,7 @@ it('rejects a new Session whose insert is queued behind another retrying job', a
 });
 
 it('creates the Checkout, starts the Agent with the chosen options and runs the first Turn in one call', async (): Promise<void> => {
-  const { caller, streams, database, commands } = openServer();
+  const { caller, streams, database, commands } = startSessionTestServer();
   const { sessionId } = await caller.session.new({
     ...newSession,
     checkout: { type: 'worktree', baseBranch: 'feature' },
@@ -271,8 +276,8 @@ it('creates the Checkout, starts the Agent with the chosen options and runs the 
 it.each([{ type: 'main' }, { type: 'worktree', baseBranch: 'main' }] as const)(
   'leaves no Session and no worktree when the Agent cannot start in the $type checkout',
   async (checkout): Promise<void> => {
-    const { caller, git } = openServer();
-    const availability = async (): Promise<
+    const { caller, git } = startSessionTestServer();
+    const readAgentAvailability = async (): Promise<
       | 'available'
       | 'not_installed'
       | 'not_signed_in'
@@ -282,7 +287,7 @@ it.each([{ type: 'main' }, { type: 'worktree', baseBranch: 'main' }] as const)(
       (await caller.agents.list()).find(
         ({ agent }): boolean => agent === 'unavailable',
       )?.availability;
-    expect(await availability()).toBe('available');
+    expect(await readAgentAvailability()).toBe('available');
     await expect(
       caller.session.new({ ...newSession, agent: 'unavailable', checkout }),
     ).rejects.toMatchObject({
@@ -290,7 +295,7 @@ it.each([{ type: 'main' }, { type: 'worktree', baseBranch: 'main' }] as const)(
       message: expect.stringContaining(signInFailure),
     });
     // The failed start probes the Agent again, so the list catches up without a refresh.
-    expect(await availability()).toBe('not_signed_in');
+    expect(await readAgentAvailability()).toBe('not_signed_in');
     expect(
       (await caller.session.list({ archived: false })).sessions.map(
         (row): string => row.sessionId,
@@ -309,7 +314,7 @@ it.each([{ type: 'main' }, { type: 'worktree', baseBranch: 'main' }] as const)(
 );
 
 it('refuses a New Session for an unknown Project, base branch or Agent', async (): Promise<void> => {
-  const { caller } = openServer();
+  const { caller } = startSessionTestServer();
   await expect(
     caller.session.new({ ...newSession, projectId: 'missing' }),
   ).rejects.toMatchObject({ code: 'NOT_FOUND' });
@@ -325,7 +330,7 @@ it('refuses a New Session for an unknown Project, base branch or Agent', async (
 });
 
 it('lists local branches with the current one, and null when HEAD is detached', async (): Promise<void> => {
-  const { caller, git } = openServer();
+  const { caller, git } = startSessionTestServer();
   expect(await caller.projects.branches({ projectId: 'project-1' })).toEqual({
     branches: ['feature', 'main'],
     currentBranch: 'main',
@@ -341,30 +346,33 @@ it('lists local branches with the current one, and null when HEAD is detached', 
 });
 
 it('defaults the checkout choice to a worktree from the current branch, and the main checkout when HEAD is detached', async (): Promise<void> => {
-  const { caller, git } = openServer();
-  const checkoutChoice = async (): Promise<
+  const { caller, git } = startSessionTestServer();
+  const readCheckoutChoice = async (): Promise<
     { type: 'worktree'; baseBranch: string } | { type: 'main' } | undefined
   > => (await caller.projects.list())[0]?.checkoutChoice;
-  expect(await checkoutChoice()).toEqual({
+  expect(await readCheckoutChoice()).toEqual({
     type: 'worktree',
     baseBranch: 'main',
   });
   git('switch', '-q', '--detach', 'feature');
-  expect(await checkoutChoice()).toEqual({ type: 'main' });
+  expect(await readCheckoutChoice()).toEqual({ type: 'main' });
 });
 
 it('returns the chosen config value and delivers later Agent changes through the Feed', async (): Promise<void> => {
-  const { caller, root, streams, configOptions, services } = openServer({
-    applyConfigOptions: false,
-  });
+  const { caller, sessionRegistry, streams, configOptions, services } =
+    startSessionTestServer({
+      applyConfigOptions: false,
+    });
   const sessionId = 'session-1';
-  root.system.get('sessions').send({
+  sessionRegistry.system.get('sessions').send({
     type: 'sessions.open',
     sessionId,
     agent: 'mock',
   });
-  await waitFor(root.system.get(`session:${sessionId}`), (snapshot): boolean =>
-    snapshot.can({ type: 'session.prompt', turnId: 'ready', content: [] }),
+  await waitFor(
+    sessionRegistry.system.get(`session:${sessionId}`),
+    (snapshot): boolean =>
+      snapshot.can({ type: 'session.prompt', turnId: 'ready', content: [] }),
   );
   const controller = new AbortController();
   cleanups.push((): void => controller.abort());
@@ -416,7 +424,7 @@ it('returns the chosen config value and delivers later Agent changes through the
 });
 
 it('prompts and cancels through tRPC, with the same Session reopened only once', async (): Promise<void> => {
-  const { caller, streams } = openServer();
+  const { caller, streams } = startSessionTestServer();
   const { messageId } = await caller.session.prompt({
     sessionId: 'session-1',
     prompt: [{ type: 'text', text: 'Hello' }],
@@ -444,7 +452,7 @@ it('prompts and cancels through tRPC, with the same Session reopened only once',
 });
 
 it('rejects unknown Sessions and input that breaks the contract', async (): Promise<void> => {
-  const { caller } = openServer();
+  const { caller } = startSessionTestServer();
   await expect(
     caller.session.prompt({
       sessionId: 'missing',
@@ -457,8 +465,8 @@ it('rejects unknown Sessions and input that breaks the contract', async (): Prom
 });
 
 it('reads a stored Session snapshot without opening an actor when its Feed is subscribed', async (): Promise<void> => {
-  const { root, context } = openServer();
-  expect(root.system.get(sessionActorId)).toBeUndefined();
+  const { sessionRegistry, context } = startSessionTestServer();
+  expect(sessionRegistry.system.get(sessionActorId)).toBeUndefined();
   const controller = new AbortController();
   cleanups.push((): void => controller.abort());
   const caller = appRouter.createCaller(context, { signal: controller.signal });
@@ -471,19 +479,19 @@ it('reads a stored Session snapshot without opening an actor when its Feed is su
     type: 'snapshot',
     snapshot: { configOptions: [] },
   });
-  expect(root.system.get(sessionActorId)).toBeUndefined();
+  expect(sessionRegistry.system.get(sessionActorId)).toBeUndefined();
   controller.abort();
   await iterator.return?.();
 });
 
 it('removes a closed Session and resumes it with the stored Agent identity on the next prompt', async (): Promise<void> => {
-  const { caller, root, streams } = openServer();
+  const { caller, sessionRegistry, streams } = startSessionTestServer();
   await caller.session.prompt({
     sessionId: 'session-1',
     prompt: [{ type: 'text', text: 'First' }],
   });
   await caller.session.cancel({ sessionId: 'session-1' });
-  const first = root.system.get(sessionActorId);
+  const first = sessionRegistry.system.get(sessionActorId);
   first.send({ type: 'session.close' });
   await waitFor(first, (snapshot): boolean => snapshot.status === 'done');
   await caller.session.prompt({
@@ -491,11 +499,11 @@ it('removes a closed Session and resumes it with the stored Agent identity on th
     prompt: [{ type: 'text', text: 'Resume' }],
   });
   expect(streams.get('session-1')?.input.vendorSessionId).toBe('vendor-1');
-  expect(root.system.get(sessionActorId)).not.toBe(first);
+  expect(sessionRegistry.system.get(sessionActorId)).not.toBe(first);
 });
 
 it('resumes a closed Session with the config it last ran with', async (): Promise<void> => {
-  const { caller, root, streams } = openServer();
+  const { caller, sessionRegistry, streams } = startSessionTestServer();
   const { sessionId } = await caller.session.new(newSession);
   await caller.session.cancel({ sessionId });
   await caller.session.setConfigOption({
@@ -504,7 +512,7 @@ it('resumes a closed Session with the config it last ran with', async (): Promis
     type: 'id',
     value: 'small',
   });
-  const first = root.system.get(`session:${sessionId}`);
+  const first = sessionRegistry.system.get(`session:${sessionId}`);
   await vi.waitFor((): void =>
     expect(first.getSnapshot().context.configOptions).toMatchObject([
       { currentValue: 'small' },
@@ -522,7 +530,7 @@ it('resumes a closed Session with the config it last ran with', async (): Promis
 });
 
 it('refuses commands for a Subagent while keeping its stored Feed readable', async (): Promise<void> => {
-  const { caller, root, database } = openServer();
+  const { caller, sessionRegistry, database } = startSessionTestServer();
   insertSession(database, { id: 'subagent', parentSessionId: 'session-1' });
   await expect(
     caller.session.cancel({ sessionId: 'subagent' }),
@@ -533,11 +541,11 @@ it('refuses commands for a Subagent while keeping its stored Feed readable', asy
   expect(
     await caller.feed.page({ sessionId: 'subagent', direction: 'tail' }),
   ).toMatchObject({ rows: [] });
-  expect(root.system.get('session:subagent')).toBeUndefined();
+  expect(sessionRegistry.system.get('session:subagent')).toBeUndefined();
 });
 
 it('rejects config choices that the Agent did not offer', async (): Promise<void> => {
-  const { caller } = openServer();
+  const { caller } = startSessionTestServer();
   await expect(
     caller.session.setConfigOption({
       sessionId: 'session-1',
@@ -553,7 +561,7 @@ it('keeps the Session failure when the registry removes a Session during its Fee
   cleanups.push((): void => {
     vi.useRealTimers();
   });
-  const { caller, streams } = openServer();
+  const { caller, streams } = startSessionTestServer();
   await caller.session.prompt({
     sessionId: 'session-1',
     prompt: [{ type: 'text', text: 'Start a Turn' }],
@@ -580,7 +588,7 @@ it('keeps the Session failure when the registry removes a Session during its Fee
 });
 
 it('rejects a Permission answer for a different Tool call through the router', async (): Promise<void> => {
-  const { caller, streams } = openServer();
+  const { caller, streams } = startSessionTestServer();
   await caller.session.prompt({
     sessionId: 'session-1',
     prompt: [{ type: 'text', text: 'Start' }],
@@ -605,7 +613,7 @@ it('rejects a Permission answer for a different Tool call through the router', a
 it.each(newSessionInputs)(
   'creates an image prompt Session from the $agent App mock through the real router',
   async (input): Promise<void> => {
-    const { caller, streams, commands } = openServer();
+    const { caller, streams, commands } = startSessionTestServer();
     const configOptions = [{ configId: 'fast', value: true }];
     const { sessionId } = await caller.session.new({
       ...newSession,

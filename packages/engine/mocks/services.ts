@@ -1,5 +1,5 @@
 import type { Services } from '../src/services/services';
-export { createRouterHost } from './router';
+export { startRouterTestHost } from './router';
 
 export const mockUpload: Services['blob']['upload'] = async (file) => ({
   blobId: await file.text(),
@@ -9,28 +9,34 @@ export const mockUpload: Services['blob']['upload'] = async (file) => ({
 
 type ServiceOverrides = { [Name in keyof Services]?: Partial<Services[Name]> };
 
-const unreachable =
+const createUnexpectedCallRejection =
   (procedure: string): (() => never) =>
   (): never => {
     throw new Error(`Unexpected call to ${procedure}`);
   };
 
 // Services whose every method throws, except the ones a test gives.
-export function unreachableServices(
+export function createRejectingServices(
   overrides: ServiceOverrides = {},
 ): Services {
   return {
-    blob: { upload: unreachable('blob.upload'), ...overrides.blob },
-    agents: { list: unreachable('agents.list'), ...overrides.agents },
+    blob: {
+      upload: createUnexpectedCallRejection('blob.upload'),
+      ...overrides.blob,
+    },
+    agents: {
+      list: createUnexpectedCallRejection('agents.list'),
+      ...overrides.agents,
+    },
     projects: {
-      list: unreachable('projects.list'),
-      branches: unreachable('projects.branches'),
+      list: createUnexpectedCallRejection('projects.list'),
+      branches: createUnexpectedCallRejection('projects.branches'),
       ...overrides.projects,
     },
     feed: {
-      page: unreachable('feed.page'),
-      row: unreachable('feed.row'),
-      subscribe: unreachable('feed.subscribe'),
+      page: createUnexpectedCallRejection('feed.page'),
+      row: createUnexpectedCallRejection('feed.row'),
+      subscribe: createUnexpectedCallRejection('feed.subscribe'),
       ...overrides.feed,
     },
   };

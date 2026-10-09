@@ -1,6 +1,6 @@
 import { createServer, type Server } from 'node:http';
 import { ClockTick } from '@repo/contracts';
-import { createRouterHost } from '@repo/engine/mocks';
+import { startRouterTestHost } from '@repo/engine/mocks';
 import { appRouter } from '@repo/engine/router';
 import { createHTTPHandler } from '@trpc/server/adapters/standalone';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
@@ -26,7 +26,7 @@ afterEach(() => {
   for (const close of closers.splice(0)) close();
 });
 
-const tcpPort = (server: Pick<Server, 'address'>): number => {
+const readTcpPort = (server: Pick<Server, 'address'>): number => {
   const address = server.address();
   if (!address || typeof address === 'string')
     throw new Error('Server has no TCP address');
@@ -34,14 +34,14 @@ const tcpPort = (server: Pick<Server, 'address'>): number => {
 };
 
 // Serves one router over the WebSocket and over HTTP at /trpc/ on one server, as the Engine does.
-async function startMockServer(): Promise<{
+async function startTransportTestServer(): Promise<{
   url: string;
   connections: () => number;
   httpRequests: () => number;
 }> {
-  const { context } = createRouterHost({ startedAt: serverStartedAt });
+  const { context } = startRouterTestHost({ startedAt: serverStartedAt });
   const createContext = (): typeof context => context;
-  const handleTRPC = createHTTPHandler({
+  const handleTrpcRequest = createHTTPHandler({
     router: appRouter,
     createContext,
     basePath: '/trpc/',
@@ -49,7 +49,7 @@ async function startMockServer(): Promise<{
   let httpRequests = 0;
   const server = createServer((request, response) => {
     httpRequests++;
-    handleTRPC(request, response);
+    handleTrpcRequest(request, response);
   });
   await new Promise<void>((resolve) =>
     server.listen(0, '127.0.0.1', () => resolve()),
@@ -63,7 +63,7 @@ async function startMockServer(): Promise<{
     server.closeAllConnections();
     server.close();
   });
-  const port = tcpPort(server);
+  const port = readTcpPort(server);
   return {
     url: `ws://127.0.0.1:${port}`,
     connections: () => connections,
@@ -73,7 +73,7 @@ async function startMockServer(): Promise<{
 
 describe('createTRPCClient', () => {
   it('sends queries and subscriptions over one WebSocket', async () => {
-    const server = await startMockServer();
+    const server = await startTransportTestServer();
     const { client, close } = createTRPCClient(server.url);
     closers.push(close);
 
@@ -101,7 +101,7 @@ describe('createTRPCClient', () => {
   });
 
   it('sends a file over HTTP and everything else over the WebSocket', async () => {
-    const server = await startMockServer();
+    const server = await startTransportTestServer();
     const trpc = createTRPCClient(server.url);
     closers.push(trpc.close);
     const { client } = trpc;
@@ -121,7 +121,7 @@ describe('createTRPCClient', () => {
   });
 
   it('waits before each WebSocket attempt, but not before an upload', async () => {
-    const server = await startMockServer();
+    const server = await startTransportTestServer();
     let allowAttempt = (): void => {};
     const attemptAllowed = new Promise<void>((resolve) => {
       allowAttempt = resolve;

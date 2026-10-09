@@ -13,35 +13,39 @@ import {
   type MockAgentStream,
 } from '@repo/mocks/agent';
 import { expect, it, vi } from 'vitest';
-import { createRouterHost } from '#mocks/router';
+import { startRouterTestHost } from '#mocks/router';
 
 const alreadyAnswered = 'already answered';
 const permissionAnswer = 'agent.answerPermission';
 
-async function snapshot(
-  subscribe: ReturnType<typeof createRouterHost>['caller']['feed']['subscribe'],
+async function readSessionSnapshot(
+  subscribeToFeed: ReturnType<
+    typeof startRouterTestHost
+  >['caller']['feed']['subscribe'],
 ): Promise<SessionSnapshot> {
-  const events = await subscribe({ sessionId: 'session-1', after: null });
+  const events = await subscribeToFeed({ sessionId: 'session-1', after: null });
   for await (const event of events)
     if (event.type === 'snapshot') return event.snapshot;
   throw new Error('No Session snapshot');
 }
 
-async function answering(ready: AgentReady = mockReady): Promise<
-  ReturnType<typeof createRouterHost> & {
+async function startPromptedSession(
+  agentReady: AgentReady = mockReady,
+): Promise<
+  ReturnType<typeof startRouterTestHost> & {
     stream: MockAgentStream;
     commands: VendorCommand[];
   }
 > {
   let stream: MockAgentStream | undefined;
   const commands: VendorCommand[] = [];
-  const host = createRouterHost({
+  const host = startRouterTestHost({
     adapters: [
       createMockAdapter({
-        connect: async (): Promise<AgentReady> => ready,
-        stream: (connected): undefined => {
-          stream = connected;
-          connected.receive((command): number => commands.push(command));
+        connect: async (): Promise<AgentReady> => agentReady,
+        stream: (agentStream): undefined => {
+          stream = agentStream;
+          agentStream.receive((command): number => commands.push(command));
         },
       }),
     ],
@@ -54,10 +58,10 @@ async function answering(ready: AgentReady = mockReady): Promise<
   return { ...host, stream, commands };
 }
 
-async function permitting(
-  ready: AgentReady = mockReady,
-): Promise<Awaited<ReturnType<typeof answering>>> {
-  const host = await answering(ready);
+async function startPermissionRequestSession(
+  agentReady: AgentReady = mockReady,
+): Promise<Awaited<ReturnType<typeof startPromptedSession>>> {
+  const host = await startPromptedSession(agentReady);
   host.stream.send({
     type: 'agent.permissionRequested',
     request: {
@@ -69,10 +73,10 @@ async function permitting(
   return host;
 }
 
-async function answeredPermission(): Promise<
-  Awaited<ReturnType<typeof permitting>>
+async function startAnsweredPermissionSession(): Promise<
+  Awaited<ReturnType<typeof startPermissionRequestSession>>
 > {
-  const host = await permitting();
+  const host = await startPermissionRequestSession();
   await host.caller.session.answerPermission({
     sessionId: 'session-1',
     toolCallId: 'current',
@@ -82,7 +86,7 @@ async function answeredPermission(): Promise<
 }
 
 it('preserves the current Permission option and feedback when answering', async (): Promise<void> => {
-  const { caller, commands } = await permitting();
+  const { caller, commands } = await startPermissionRequestSession();
   expect(
     await caller.session.answerPermission({
       sessionId: 'session-1',
@@ -102,7 +106,7 @@ it('preserves the current Permission option and feedback when answering', async 
 });
 
 it('rejects an already answered Permission', async (): Promise<void> => {
-  const { caller } = await answeredPermission();
+  const { caller } = await startAnsweredPermissionSession();
   await expect(
     caller.session.answerPermission({
       sessionId: 'session-1',
@@ -113,7 +117,7 @@ it('rejects an already answered Permission', async (): Promise<void> => {
 });
 
 it('rejects unsupported Permission feedback without consuming the request', async (): Promise<void> => {
-  const { caller, commands } = await permitting({
+  const { caller, commands } = await startPermissionRequestSession({
     ...mockReady,
     capabilities: { ...mockReady.capabilities, permissionFeedback: false },
   });
@@ -129,7 +133,7 @@ it('rejects unsupported Permission feedback without consuming the request', asyn
     message: 'The Agent does not support Permission feedback',
   });
   expect(
-    (await snapshot(caller.feed.subscribe)).pendingPermission,
+    (await readSessionSnapshot(caller.feed.subscribe)).pendingPermission,
   ).toMatchObject({
     toolCallId: 'current',
   });
@@ -139,7 +143,7 @@ it('rejects unsupported Permission feedback without consuming the request', asyn
 });
 
 it('answers a Permission without feedback when feedback is unsupported', async (): Promise<void> => {
-  const { caller, commands } = await permitting({
+  const { caller, commands } = await startPermissionRequestSession({
     ...mockReady,
     capabilities: { ...mockReady.capabilities, permissionFeedback: false },
   });
@@ -160,11 +164,11 @@ it('answers a Permission without feedback when feedback is unsupported', async (
   );
 });
 
-async function eliciting(): Promise<
-  Awaited<ReturnType<typeof answering>> &
+async function startElicitationRequestSession(): Promise<
+  Awaited<ReturnType<typeof startPromptedSession>> &
     Pick<SessionAnswerElicitationInput, 'requestId'>
 > {
-  const host = await answering();
+  const host = await startPromptedSession();
   host.stream.send({
     type: 'agent.elicitationRequested',
     request: {
@@ -176,16 +180,16 @@ async function eliciting(): Promise<
       },
     },
   });
-  const requestId = (await snapshot(host.caller.feed.subscribe))
+  const requestId = (await readSessionSnapshot(host.caller.feed.subscribe))
     .pendingElicitation?.requestId;
   if (!requestId) throw new Error('No Elicitation request');
   return { ...host, requestId };
 }
 
-async function answeredElicitation(): Promise<
-  Awaited<ReturnType<typeof eliciting>>
+async function startAnsweredElicitationSession(): Promise<
+  Awaited<ReturnType<typeof startElicitationRequestSession>>
 > {
-  const host = await eliciting();
+  const host = await startElicitationRequestSession();
   await host.caller.session.answerElicitation({
     sessionId: 'session-1',
     requestId: host.requestId,
@@ -196,7 +200,7 @@ async function answeredElicitation(): Promise<
 }
 
 it('rejects a stale Elicitation identity', async (): Promise<void> => {
-  const { caller } = await eliciting();
+  const { caller } = await startElicitationRequestSession();
   await expect(
     caller.session.answerElicitation({
       sessionId: 'session-1',
@@ -208,7 +212,7 @@ it('rejects a stale Elicitation identity', async (): Promise<void> => {
 });
 
 it('rejects content outside the offered Elicitation form without consuming it', async (): Promise<void> => {
-  const { caller, requestId } = await eliciting();
+  const { caller, requestId } = await startElicitationRequestSession();
   await expect(
     caller.session.answerElicitation({
       sessionId: 'session-1',
@@ -221,12 +225,14 @@ it('rejects content outside the offered Elicitation form without consuming it', 
     message: 'The answer does not match the Elicitation form',
   });
   expect(
-    (await snapshot(caller.feed.subscribe)).pendingElicitation?.requestId,
+    (await readSessionSnapshot(caller.feed.subscribe)).pendingElicitation
+      ?.requestId,
   ).toBe(requestId);
 });
 
 it('delivers a valid current Elicitation answer', async (): Promise<void> => {
-  const { caller, requestId, commands } = await eliciting();
+  const { caller, requestId, commands } =
+    await startElicitationRequestSession();
   expect(
     await caller.session.answerElicitation({
       sessionId: 'session-1',
@@ -245,7 +251,7 @@ it('delivers a valid current Elicitation answer', async (): Promise<void> => {
 });
 
 it('rejects an already answered Elicitation', async (): Promise<void> => {
-  const { caller, requestId } = await answeredElicitation();
+  const { caller, requestId } = await startAnsweredElicitationSession();
   await expect(
     caller.session.answerElicitation({
       sessionId: 'session-1',
@@ -281,7 +287,7 @@ const heldChoices: SessionSetConfigOptionInput[] = [
 it.each(heldChoices)(
   'returns the held $configId choice',
   async (input): Promise<void> => {
-    const { caller, commands } = await answering({
+    const { caller, commands } = await startPromptedSession({
       ...mockReady,
       configOptions,
     });
@@ -306,7 +312,10 @@ const unofferedChoices: SessionSetConfigOptionInput[] = [
 it.each(unofferedChoices)(
   'rejects the unoffered $configId=$value choice',
   async (input): Promise<void> => {
-    const { caller } = await answering({ ...mockReady, configOptions });
+    const { caller } = await startPromptedSession({
+      ...mockReady,
+      configOptions,
+    });
     await expect(caller.session.setConfigOption(input)).rejects.toMatchObject({
       code: 'BAD_REQUEST',
     });
@@ -323,7 +332,7 @@ it.each(pagingInputs)(
     const connect = vi
       .fn<NonNullable<MockAgentScript['connect']>>()
       .mockResolvedValue(mockReady);
-    const { caller } = createRouterHost({
+    const { caller } = startRouterTestHost({
       adapters: [createMockAdapter({ connect })],
     });
     expect(await caller.session.list(input)).toMatchObject({
@@ -335,7 +344,7 @@ it.each(pagingInputs)(
 );
 
 it('rejects an unsupported Session paging direction', async (): Promise<void> => {
-  const { caller } = createRouterHost();
+  const { caller } = startRouterTestHost();
   await expect(
     Reflect.apply(caller.session.list, undefined, [
       { archived: false, direction: 'backward' },
@@ -367,7 +376,7 @@ it.each([
 ] as const)(
   'preserves the unimplemented $procedure error',
   async ({ procedure, input, message }): Promise<void> => {
-    const { caller } = createRouterHost();
+    const { caller } = startRouterTestHost();
     await expect(
       Reflect.apply(caller.session[procedure], undefined, [input]),
     ).rejects.toMatchObject({ code: 'NOT_IMPLEMENTED', message });
@@ -381,7 +390,7 @@ it.each([
 ])(
   'rejects a malformed rename input before its handler: %j',
   async (input): Promise<void> => {
-    const { caller } = createRouterHost();
+    const { caller } = startRouterTestHost();
     await expect(
       Reflect.apply(caller.session.rename, undefined, [input]),
     ).rejects.toMatchObject({ code: 'BAD_REQUEST' });

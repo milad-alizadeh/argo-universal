@@ -8,30 +8,37 @@ import { describe, expect, it } from 'vitest';
 
 describe.each(Object.entries(changesMocks))(
   'the %s changes mock',
-  (_, mock): void => {
+  (_, changesMock): void => {
     it('satisfies the changes and diff contracts', (): void => {
-      expect(SessionChangesOutput.parse(mock.files)).toEqual(mock.files);
-      for (const file of mock.files)
-        expect(SessionDiffOutput.parse(mock.diffs[file.path])).toEqual(
-          mock.diffs[file.path],
+      expect(SessionChangesOutput.parse(changesMock.files)).toEqual(
+        changesMock.files,
+      );
+      for (const file of changesMock.files)
+        expect(SessionDiffOutput.parse(changesMock.diffs[file.path])).toEqual(
+          changesMock.diffs[file.path],
         );
     });
 
     it('counts each diff its own added and removed lines', (): void => {
-      expect(mock.summary.files).toBe(mock.files.length);
-      for (const file of mock.files) {
-        const lines = mock.diffs[file.path]?.patch.text.split('\n') ?? [];
-        const binary = lines.some((line): boolean =>
+      expect(changesMock.summary.files).toBe(changesMock.files.length);
+      for (const file of changesMock.files) {
+        const lines =
+          changesMock.diffs[file.path]?.patch.text.split('\n') ?? [];
+        const isBinary = lines.some((line): boolean =>
           line.startsWith('Binary files '),
         );
-        const count = (sign: string, header: string): number =>
+        const countChangedLines = (sign: string, header: string): number =>
           lines.filter(
             (line): boolean =>
               line.startsWith(sign) && !line.startsWith(header),
           ).length;
-        expect(mock.diffs[file.path]?.file).toEqual(file);
-        expect(file.additions).toBe(binary ? null : count('+', '+++ '));
-        expect(file.deletions).toBe(binary ? null : count('-', '--- '));
+        expect(changesMock.diffs[file.path]?.file).toEqual(file);
+        expect(file.additions).toBe(
+          isBinary ? null : countChangedLines('+', '+++ '),
+        );
+        expect(file.deletions).toBe(
+          isBinary ? null : countChangedLines('-', '--- '),
+        );
       }
     });
   },

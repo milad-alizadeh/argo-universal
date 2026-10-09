@@ -28,13 +28,13 @@ import { TRPCError } from '@trpc/server';
 import { publicProcedure, router, zAsyncIterable } from '../../engine/trpc';
 import { userMessageId } from '../feed';
 import {
-  requirePermissionAnswer,
-  requireElicitationAnswer,
-  requireConfigChoice,
+  validatePermissionAnswer,
+  validateElicitationAnswer,
+  validateConfigChoice,
 } from './session-admission';
 import { sendSessionCommand } from './session-command';
 import { createSession } from './session-creation';
-import { openSession } from './session-opening';
+import { openReadySession } from './session-opening';
 
 export const sessionRouter = router({
   list: publicProcedure
@@ -69,9 +69,9 @@ export const sessionRouter = router({
     .input(SessionPromptInput)
     .output(SessionPromptOutput)
     .mutation(async ({ ctx, input }): Promise<SessionPromptOutput> => {
-      const actor = await openSession(ctx, input.sessionId);
+      const sessionActor = await openReadySession(ctx, input.sessionId);
       const turnId = ctx.createId();
-      sendSessionCommand(actor, {
+      sendSessionCommand(sessionActor, {
         type: 'session.prompt',
         turnId,
         content: input.prompt,
@@ -82,13 +82,13 @@ export const sessionRouter = router({
     .input(SessionRenameInput)
     .output(SessionRenameOutput)
     .mutation((): never =>
-      notImplemented('Session rename is not implemented yet'),
+      rejectUnimplementedProcedure('Session rename is not implemented yet'),
     ),
   cancel: publicProcedure
     .input(SessionCancelInput)
     .output(SessionCancelOutput)
     .mutation(async ({ ctx, input }): Promise<SessionCancelOutput> => {
-      sendSessionCommand(await openSession(ctx, input.sessionId), {
+      sendSessionCommand(await openReadySession(ctx, input.sessionId), {
         type: 'session.cancel',
       });
       return {};
@@ -97,23 +97,25 @@ export const sessionRouter = router({
     .input(SessionSetConfigOptionInput)
     .output(SessionSetConfigOptionOutput)
     .mutation(async ({ ctx, input }): Promise<SessionSetConfigOptionOutput> => {
-      const actor = await openSession(ctx, input.sessionId);
-      requireConfigChoice(actor, input);
-      sendSessionCommand(actor, {
+      const sessionActor = await openReadySession(ctx, input.sessionId);
+      validateConfigChoice(sessionActor, input);
+      sendSessionCommand(sessionActor, {
         type: 'session.setConfigOption',
         configId: input.configId,
         value: input.value,
       });
-      return { configOptions: actor.getSnapshot().context.configOptions };
+      return {
+        configOptions: sessionActor.getSnapshot().context.configOptions,
+      };
     }),
   answerPermission: publicProcedure
     .input(SessionAnswerPermissionInput)
     .output(SessionAnswerPermissionOutput)
     .mutation(
       async ({ ctx, input }): Promise<SessionAnswerPermissionOutput> => {
-        const actor = await openSession(ctx, input.sessionId);
-        requirePermissionAnswer(actor, input);
-        sendSessionCommand(actor, {
+        const sessionActor = await openReadySession(ctx, input.sessionId);
+        validatePermissionAnswer(sessionActor, input);
+        sendSessionCommand(sessionActor, {
           type: 'session.answerPermission',
           toolCallId: input.toolCallId,
           optionId: input.optionId,
@@ -127,9 +129,9 @@ export const sessionRouter = router({
     .output(SessionAnswerElicitationOutput)
     .mutation(
       async ({ ctx, input }): Promise<SessionAnswerElicitationOutput> => {
-        const actor = await openSession(ctx, input.sessionId);
-        requireElicitationAnswer(actor, input);
-        sendSessionCommand(actor, {
+        const sessionActor = await openReadySession(ctx, input.sessionId);
+        validateElicitationAnswer(sessionActor, input);
+        sendSessionCommand(sessionActor, {
           type: 'session.answerElicitation',
           action: input.action,
           content: input.content,
@@ -141,19 +143,21 @@ export const sessionRouter = router({
     .input(SessionAnswerPlanProposalInput)
     .output(SessionAnswerPlanProposalOutput)
     .mutation((): never =>
-      notImplemented('Plan proposal answers are not implemented yet'),
+      rejectUnimplementedProcedure(
+        'Plan proposal answers are not implemented yet',
+      ),
     ),
   changes: publicProcedure
     .input(SessionChangesInput)
     .output(SessionChangesOutput)
-    .query((): never => notImplemented()),
+    .query((): never => rejectUnimplementedProcedure()),
   diff: publicProcedure
     .input(SessionDiffInput)
     .output(SessionDiffOutput)
-    .query((): never => notImplemented()),
+    .query((): never => rejectUnimplementedProcedure()),
 });
 
-function notImplemented(
+function rejectUnimplementedProcedure(
   message = 'This procedure is not implemented yet',
 ): never {
   throw new TRPCError({ code: 'NOT_IMPLEMENTED', message });

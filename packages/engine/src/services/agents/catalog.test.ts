@@ -37,7 +37,10 @@ it('keeps extension categories and metadata on options, groups and values', (): 
       ],
     },
   ];
-  const before = getConfigOptionDiagnostics().unknownCategories;
+  const initialUnknownCategoryCount =
+    getConfigOptionDiagnostics().unknownCategories;
   expect(AgentsListOutput.parse(catalog)).toEqual(catalog);
-  expect(getConfigOptionDiagnostics().unknownCategories).toBe(before + 1);
+  expect(getConfigOptionDiagnostics().unknownCategories).toBe(
+    initialUnknownCategoryCount + 1,
+  );
 });

@@ -1,6 +1,6 @@
 import type { ClockTick } from '@repo/contracts';
 import { afterEach, beforeEach, expect, it, onTestFinished, vi } from 'vitest';
-import { createRouterHost } from '#mocks/router';
+import { startRouterTestHost } from '#mocks/router';
 import { appRouter } from '../../engine/router';
 
 beforeEach((): void => {
@@ -11,7 +11,7 @@ afterEach((): void => {
 });
 
 it('reports configured System metadata with the current process and computer name', async (): Promise<void> => {
-  const { caller } = createRouterHost({
+  const { caller } = startRouterTestHost({
     version: '9.8.7',
     startedAt: '2026-10-09T00:00:00.000Z',
   });
@@ -24,15 +24,15 @@ it('reports configured System metadata with the current process and computer nam
 });
 
 it('keeps the computer name stable across Engine contexts', async (): Promise<void> => {
-  const first = await createRouterHost().caller.system.info();
-  const { caller } = createRouterHost({ version: '9.8.7' });
+  const first = await startRouterTestHost().caller.system.info();
+  const { caller } = startRouterTestHost({ version: '9.8.7' });
   expect((await caller.system.info()).name).toBe(first.name);
 });
 
 async function subscribeToClock(
   controller = new AbortController(),
 ): Promise<AsyncIterator<ClockTick>> {
-  const { context } = createRouterHost();
+  const { context } = startRouterTestHost();
   onTestFinished((): void => controller.abort());
   const caller = appRouter.createCaller(context, { signal: controller.signal });
   return (await caller.system.clock())[Symbol.asyncIterator]();

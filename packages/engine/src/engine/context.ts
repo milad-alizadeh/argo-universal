@@ -16,16 +16,16 @@ export type Context = Pick<
   };
 
 export function createEngineContext(
-  options: Parameters<typeof createServerServices>[0] & SystemDeps,
+  engineOptions: Parameters<typeof createServerServices>[0] & SystemDeps,
 ): Context {
   return {
-    database: options.database,
-    version: options.version,
-    startedAt: options.startedAt,
-    sessions: options.sessions,
-    createId: options.createId ?? randomUUID,
-    services: createServerServices(options),
-    readSession: createSessionReader(options.database),
-    sessionList: createSessionList(options),
+    database: engineOptions.database,
+    version: engineOptions.version,
+    startedAt: engineOptions.startedAt,
+    sessions: engineOptions.sessions,
+    createId: engineOptions.createId ?? randomUUID,
+    services: createServerServices(engineOptions),
+    readSession: createSessionReader(engineOptions.database),
+    sessionList: createSessionList(engineOptions),
   };
 }
