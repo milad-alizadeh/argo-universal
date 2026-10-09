@@ -2,6 +2,8 @@ import type {
   FeedSubscribeOutput,
   FeedSyncPoint,
   SessionSnapshot,
+  SessionUpdate,
+  ToolCallUpdate,
 } from '@repo/contracts';
 import type { AppRouter } from '@repo/engine/router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -17,6 +19,9 @@ import {
   mergeNewestPage,
   mergeOlderPage,
 } from './feed-state';
+import type { FeedView } from './feed-view';
+import { keepUnchangedItems } from './keep-unchanged-items';
+import { toFeedView } from './to-feed-view';
 
 type FeedPageQuery = ReturnType<
   typeof useQuery<
@@ -25,7 +30,8 @@ type FeedPageQuery = ReturnType<
   >
 >;
 interface SessionFeed extends ReturnType<typeof useOlderPages> {
-  feed: FeedState;
+  view: FeedView | null;
+  liveToolCall: ToolCallUpdate | undefined;
   snapshot: SessionSnapshot | null;
   ready: boolean;
   error: FeedPageQuery['error'];
@@ -41,7 +47,7 @@ const pageSize = 150;
 // A fetch the hook keeps in its own state, so the query cache never holds it.
 const uncached = { staleTime: 0, gcTime: 0 };
 
-// A Session's Feed rows and snapshot: the newest page, older pages on request, and live changes after them (ADR 0007).
+// A Session's held Feed view, paging and live changes (ADR 0007).
 export function useSessionFeed(sessionId: string): SessionFeed {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -141,8 +147,22 @@ export function useSessionFeed(sessionId: string): SessionFeed {
     else setSyncPoint(next);
   }, [syncPoint, reset]);
 
+  const [held, setHeld] = useState(() => ({
+    rows: feed.rows,
+    snapshot,
+    view: snapshot ? toFeedView(feed.rows, snapshot) : null,
+  }));
+  let view = held.view;
+  if (held.rows !== feed.rows || held.snapshot !== snapshot) {
+    view = snapshot
+      ? keepUnchangedItems(held.view, toFeedView(feed.rows, snapshot))
+      : null;
+    setHeld({ rows: feed.rows, snapshot, view });
+  }
+
   return {
-    feed,
+    view,
+    liveToolCall: findLiveToolCall(feed.rows, snapshot),
     snapshot,
     // The first page and the snapshot have both arrived.
     ready: feed.epoch !== null && snapshot !== null,
@@ -200,4 +220,17 @@ function useOlderPages({
   }, [queryClient, trpc, sessionId, replaceFeed, getFeed]);
 
   return { loadingOlder, loadOlder };
+}
+
+function findLiveToolCall(
+  rows: readonly SessionUpdate[],
+  snapshot: SessionSnapshot | null,
+): ToolCallUpdate | undefined {
+  const source = snapshot?.liveHeader?.source;
+  if (source?.type !== 'tool_call') return undefined;
+  return rows.findLast(
+    (row): row is ToolCallUpdate =>
+      row.sessionUpdate === 'tool_call_update' &&
+      row.toolCallId === source.toolCallId,
+  );
 }

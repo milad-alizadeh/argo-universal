@@ -1,5 +1,9 @@
 import { newSessionCatalogs, recordedFeedMocks } from '@repo/api/mocks';
-import type { FeedSnapshot, FeedSyncPoint } from '@repo/contracts';
+import type {
+  FeedSnapshot,
+  FeedSyncPoint,
+  FeedSubscribeOutput,
+} from '@repo/contracts';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { createRoot } from 'react-dom/client';
@@ -1082,3 +1086,97 @@ export const FailedPickPhoneFirstAgent = failedPick(layoutWidths.phone, 0);
 export const FailedPickPhoneSecondAgent = failedPick(layoutWidths.phone, 1);
 export const FailedPickWideFirstAgent = failedPick(layoutWidths.wide, 0);
 export const FailedPickWideSecondAgent = failedPick(layoutWidths.wide, 1);
+
+const incompleteReply = 'Incomplete reply';
+const recoveredReply = 'Recovered complete reply';
+
+const recoveryCatalogs = newSessionCatalogs.bothAvailable.map(
+  (agent, index) => {
+    const recording = recordedFeedMocks.find(
+      (mock) =>
+        mock.agent === `agent-${index + 1}` &&
+        mock.recording === 'markdown-answer',
+    );
+    const message = recording?.rows.find(
+      (row) => row.sessionUpdate === 'agent_message',
+    );
+    if (!recording || !message)
+      throw new Error(
+        'Recorded catalog needs an Agent message for offset recovery',
+      );
+    const held = {
+      ...message,
+      content: [{ type: 'text' as const, text: incompleteReply }],
+      position: 1,
+    };
+    const recovered = {
+      ...held,
+      revision: recording.snapshot.maxRevision + 1,
+      content: [{ type: 'text' as const, text: recoveredReply }],
+    };
+    const snapshot = {
+      ...recording.snapshot,
+      agent: agent.agent,
+      configOptions: agent.configOptions,
+      state: 'idle' as const,
+      activeTurnId: null,
+      liveHeader: null,
+    };
+    return { ...recording, rows: [held], snapshot, recovered };
+  },
+);
+
+function recoversOffset(width: number, agentIndex: number): Story {
+  const catalog = recoveryCatalogs[agentIndex];
+  if (!catalog) throw new Error(missingAgentsFailure);
+  const updates = createSubscriptionPublisher<FeedSubscribeOutput>();
+  return {
+    parameters: {
+      trpc: {
+        ...idleSessionMocks,
+        ...createFeedMocks(catalog),
+        'feed.row': () => catalog.recovered,
+        'feed.subscribe': async function* (
+          _input: object,
+          signal: AbortSignal,
+        ) {
+          yield { type: 'snapshot', snapshot: catalog.snapshot };
+          yield* updates.subscribe(signal);
+        },
+      },
+    },
+    beforeEach: () => updates.reset(),
+    play: async ({ canvas }) => {
+      await settleViewport(width);
+      await expect(await canvas.findByText(incompleteReply)).toBeVisible();
+      updates.publish({
+        type: 'row.append',
+        id: catalog.recovered.id,
+        rev: catalog.recovered.revision,
+        field: 'content.0.text',
+        off: 999,
+        text: 'Incompatible append',
+      });
+      await expect(await canvas.findByText(recoveredReply)).toBeVisible();
+      await expect(canvas.queryByText(incompleteReply)).toBeNull();
+      await expect(canvas.queryByText(/Incompatible append/)).toBeNull();
+    },
+  };
+}
+
+export const RecoversOffsetPhoneFirstAgent = recoversOffset(
+  layoutWidths.phone,
+  0,
+);
+export const RecoversOffsetPhoneSecondAgent = recoversOffset(
+  layoutWidths.phone,
+  1,
+);
+export const RecoversOffsetWideFirstAgent = recoversOffset(
+  layoutWidths.wide,
+  0,
+);
+export const RecoversOffsetWideSecondAgent = recoversOffset(
+  layoutWidths.wide,
+  1,
+);
