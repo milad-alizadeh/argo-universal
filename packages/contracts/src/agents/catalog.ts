@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { agentCatalogCacheColumns } from '../columns';
+import { agentColumns } from '../columns';
 import type {
   ACPAgent,
   BinaryTarget,
@@ -7,13 +7,12 @@ import type {
 } from './upstream/registry.gen';
 
 export type { ACPAgent, ACPAgentRegistry } from './upstream/registry.gen';
-export const AgentCatalogCacheRecord = agentCatalogCacheColumns;
-export type AgentCatalogCacheRecord = z.infer<typeof AgentCatalogCacheRecord>;
+export const AgentRecord = agentColumns;
+export type AgentRecord = z.infer<typeof AgentRecord>;
 
 export const AgentsCatalogInput = z
   .object({
     search: z.string().optional(),
-    refresh: z.boolean().optional(),
   })
   .optional();
 export type AgentsCatalogInput = z.infer<typeof AgentsCatalogInput>;
@@ -24,10 +23,20 @@ export type RegistrySupport =
   | { kind: 'unsupported'; reason: string };
 
 export interface AgentsCatalogOutput {
-  agents: { entry: ACPAgent; support: RegistrySupport }[];
+  agents: {
+    id: AgentRecord['id'];
+    entry: ACPAgent;
+    support: RegistrySupport;
+  }[];
   serverPlatform: string;
   status: 'fresh' | 'stale' | 'unavailable';
-  fetchedAt: AgentCatalogCacheRecord['fetchedAt'] | null;
+  fetchedAt: AgentRecord['catalogSyncedAt'];
+  error: string | null;
+  rejectedValues: number;
+}
+
+export interface AgentsCatalogSyncOutput {
+  changedIds: AgentRecord['id'][];
   error: string | null;
   rejectedValues: number;
 }

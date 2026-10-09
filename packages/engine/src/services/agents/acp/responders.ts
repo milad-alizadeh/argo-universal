@@ -9,7 +9,7 @@ const pendingRequestLimit = 32;
 type PermissionHandler =
   ClientRequestHandlersByMethod['session/request_permission'];
 type ElicitationHandler = ClientRequestHandlersByMethod['elicitation/create'];
-type SessionQuestionResponderFactory<Handler> = (
+type ClientRequestHandlerFactory<Handler> = (
   findSessionReservation: (
     sessionId: string | undefined,
   ) => AcpReservation | undefined,
@@ -66,7 +66,7 @@ const startResponse = <Response>(
   ]);
   return trackReservationWork(reservation, response);
 };
-export const createPermissionResponder: SessionQuestionResponderFactory<
+export const createPermissionResponder: ClientRequestHandlerFactory<
   PermissionHandler
 > = (findSessionReservation, responseWrites) => (context) =>
   respond({
@@ -85,7 +85,7 @@ const readElicitationSessionId = (
     return request.sessionId;
   return undefined;
 };
-export const createElicitationResponder: SessionQuestionResponderFactory<
+export const createElicitationResponder: ClientRequestHandlerFactory<
   ElicitationHandler
 > = (findSessionReservation, responseWrites) => (context) =>
   respond({

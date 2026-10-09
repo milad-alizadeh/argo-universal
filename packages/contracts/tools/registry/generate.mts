@@ -16,7 +16,7 @@ interface Placeholder {
   value: unknown[];
 }
 
-async function readProducer(): Promise<string> {
+async function readVerifiedRegistryProducer(): Promise<string> {
   const source = await readFile(producerUrl);
   const digest = createHash('sha256').update(source).digest('hex');
   if (digest !== producerDigest)
@@ -26,29 +26,38 @@ async function readProducer(): Promise<string> {
   return source.toString('utf8');
 }
 
-function producerPlaceholder(source: string): Placeholder {
-  const matches = [...source.matchAll(new RegExp(placeholderPattern, 'gu'))];
+function extractPublishedExtensionsPlaceholder(
+  producerSource: string,
+): Placeholder {
+  const matches = [
+    ...producerSource.matchAll(new RegExp(placeholderPattern, 'gu')),
+  ];
   if (matches.length !== 1)
     throw new Error('Expected one published empty extensions placeholder');
   const [match] = matches;
   if (!match) throw new Error('Registry producer placeholder is missing');
-  return matchedPlaceholder(match);
+  return parseExtensionsPlaceholderMatch(match);
 }
 
-function matchedPlaceholder(match: RegExpMatchArray): Placeholder {
-  const [, name, literal] = match;
+function parseExtensionsPlaceholderMatch(
+  placeholderMatch: RegExpMatchArray,
+): Placeholder {
+  const [, name, literal] = placeholderMatch;
   if (!name || !literal)
     throw new Error('Registry producer placeholder is incomplete');
-  return emptyPlaceholder(name, JSON.parse(literal));
+  return requireEmptyExtensionsPlaceholder(name, JSON.parse(literal));
 }
 
-function emptyPlaceholder(name: string, value: unknown): Placeholder {
-  if (!Array.isArray(value) || value.length !== 0)
+function requireEmptyExtensionsPlaceholder(
+  extensionName: string,
+  extensionValue: unknown,
+): Placeholder {
+  if (!Array.isArray(extensionValue) || extensionValue.length !== 0)
     throw new Error('Nonempty registry extension semantics are unsupported');
-  return { name, value };
+  return { name: extensionName, value: extensionValue };
 }
 
-function publishedSchema({ name, value }: Placeholder): object {
+function derivePublishedRegistrySchema({ name, value }: Placeholder): object {
   return {
     ...registrySchema,
     properties: {
@@ -59,8 +68,10 @@ function publishedSchema({ name, value }: Placeholder): object {
   };
 }
 
-const placeholder = producerPlaceholder(await readProducer());
+const placeholder = extractPublishedExtensionsPlaceholder(
+  await readVerifiedRegistryProducer(),
+);
 await writeFile(
   outputUrl,
-  `${JSON.stringify(publishedSchema(placeholder), null, 2)}\n`,
+  `${JSON.stringify(derivePublishedRegistrySchema(placeholder), null, 2)}\n`,
 );

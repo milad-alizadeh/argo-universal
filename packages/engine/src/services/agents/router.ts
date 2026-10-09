@@ -6,14 +6,20 @@ import {
 } from '@repo/contracts';
 import { publicProcedure, router } from '../../engine/trpc';
 import { listAgents } from './agent-list';
-import { browseAgentCatalog } from './catalog/browse';
 
 export const agentsRouter = router({
   catalog: publicProcedure
     .input(AgentsCatalogInput)
-    .query(({ ctx, input }): Promise<AgentsCatalogOutput> =>
-      browseAgentCatalog(ctx.sessions.system, input),
+    .query(({ ctx, input }): AgentsCatalogOutput =>
+      ctx.agentCatalog.readCatalog(input),
     ),
+  syncCatalog: publicProcedure.mutation(({ ctx }) =>
+    ctx.agentCatalog.syncCatalog(),
+  ),
+  catalogChanges: publicProcedure.subscription(({ ctx, signal }) => {
+    if (!signal) throw new Error('Catalog subscription signal is missing');
+    return ctx.agentCatalog.watchCatalogChanges(signal);
+  }),
   list: publicProcedure
     .input(AgentsListInput)
     .output(AgentsListOutput)

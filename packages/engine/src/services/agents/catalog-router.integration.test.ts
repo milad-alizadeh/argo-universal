@@ -21,6 +21,7 @@ it('browses upstream metadata through Agents without opening a conversation', as
     adapters: [adapter],
   });
   const startupProbes = probe.mock.calls.length;
+  await caller.agents.syncCatalog();
   const catalog = await caller.agents.catalog({ search: exampleSearch });
   expect(catalog).toMatchObject({
     status: 'fresh',
@@ -43,12 +44,12 @@ it.each(['offline', 'malformed'] as const)(
       .fn<() => Promise<unknown>>()
       .mockResolvedValueOnce(publishedRegistry);
     const { caller } = startRouterTestHost({ registry: { readRegistry } });
-    await caller.agents.catalog();
+    await caller.agents.syncCatalog();
     if (failure === 'offline')
       readRegistry.mockRejectedValue(new Error(offlineMessage));
     else readRegistry.mockResolvedValue(malformedRegistry);
+    await caller.agents.syncCatalog();
     const refreshed = await caller.agents.catalog({
-      refresh: true,
       search: exampleSearch,
     });
     expect(refreshed).toMatchObject({
@@ -70,6 +71,7 @@ it('shows the Server recipe rather than the App platform', async (): Promise<voi
     platform: 'darwin-aarch64',
     registry: { readRegistry: async (): Promise<unknown> => publishedRegistry },
   });
+  await caller.agents.syncCatalog();
   const catalog = await caller.agents.catalog();
   expect(catalog.serverPlatform).toBe('darwin-aarch64');
   expect(
@@ -86,6 +88,7 @@ it('reports malformed registry JSON once without a success-shaped empty catalog'
   const { caller } = startRouterTestHost({
     registry: { readRegistry: async (): Promise<unknown> => '{broken' },
   });
+  await caller.agents.syncCatalog();
   expect(await caller.agents.catalog()).toMatchObject({
     status: 'unavailable',
     rejectedValues: 1,

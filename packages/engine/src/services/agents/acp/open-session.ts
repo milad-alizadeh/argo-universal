@@ -14,15 +14,14 @@ type OpeningInput = {
   readers: ReturnType<typeof createAcpResponseReaders>;
 };
 type Opened = Pick<AcpSessionLease, 'response' | 'sessionId'>;
-export const readSessionCapabilities = (
+export const sessionCapabilities = (
   initialization: InitializeResponse,
 ): import('@agentclientprotocol/sdk').SessionCapabilities | undefined =>
   initialization.agentCapabilities?.sessionCapabilities;
 export const openProtocolSession = async (
   input: OpeningInput,
 ): Promise<Opened> => {
-  if (input.opening.method === 'session/new')
-    return createProtocolSession(input);
+  if (input.opening.method === 'session/new') return newSession(input);
   return openExisting(input);
 };
 const openExisting = (input: OpeningInput): Promise<Opened> => {
@@ -32,7 +31,7 @@ const openExisting = (input: OpeningInput): Promise<Opened> => {
     return resumeSession(input, input.opening.params);
   throw new Error('Expected a known ACP session');
 };
-const createProtocolSession = async ({
+const newSession = async ({
   agent,
   opening,
   readers,
@@ -59,7 +58,7 @@ const resumeSession = async (
   { agent, initialization, readers }: OpeningInput,
   params: ResumeSessionRequest,
 ): Promise<Opened> => {
-  const capabilities = readSessionCapabilities(initialization);
+  const capabilities = sessionCapabilities(initialization);
   if (!capabilities?.resume)
     throw new Error('Agent does not support session/resume');
   return {

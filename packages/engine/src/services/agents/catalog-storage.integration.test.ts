@@ -1,80 +1,107 @@
-import { agentCatalogCache } from '@repo/db/schema';
+import { agents } from '@repo/db/schema';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
-import { rejectedRegistryValues } from '@repo/mocks/registry/published';
-import { expect, it, onTestFinished, vi } from 'vitest';
-import { openTestDatabase } from '#mocks/database';
+import { expect, it, vi } from 'vitest';
 import { startRouterTestHost } from '#mocks/router';
+import { appRouter } from '../../engine/router';
 
-it.each(rejectedRegistryValues.map((value, index) => [index, value] as const))(
-  'counts corrupt SQLite metadata %i once during hydration',
-  async (_, value): Promise<void> => {
-    const stored = openTestDatabase();
-    onTestFinished(stored.remove);
-    stored.database
-      .insert(agentCatalogCache)
+const [exampleAgent, pythonAgent] = publishedRegistry.agents;
+if (!exampleAgent || !pythonAgent)
+  throw new Error('Registry mock needs package Agents');
+
+it('rolls back every changed/removed row and timestamp when a later insert fails', async (): Promise<void> => {
+  const changed = {
+    ...publishedRegistry,
+    agents: [
+      { ...exampleAgent, name: 'Changed' },
+      { ...pythonAgent, id: 'new-agent' },
+    ],
+  };
+  const readRegistry = vi
+    .fn<() => Promise<unknown>>()
+    .mockResolvedValueOnce(publishedRegistry)
+    .mockResolvedValue(changed);
+  const { caller, context } = startRouterTestHost({
+    registry: { readRegistry },
+  });
+  await caller.agents.syncCatalog();
+  const before = context.database.select().from(agents).all();
+  const controller = new AbortController();
+  const observer = appRouter.createCaller(context, {
+    signal: controller.signal,
+  });
+  const changes = await observer.agents.catalogChanges();
+  const notification = changes[Symbol.asyncIterator]().next();
+  context.database.$client.exec(
+    "CREATE TRIGGER reject_new_agent BEFORE INSERT ON agents WHEN NEW.registry_id = 'new-agent' BEGIN SELECT RAISE(ABORT, 'catalog is locked'); END",
+  );
+  expect(await caller.agents.syncCatalog()).toMatchObject({
+    error: expect.stringContaining('Failed query'),
+  });
+  expect(context.database.select().from(agents).all()).toEqual(before);
+  expect(await caller.agents.catalog()).toMatchObject({
+    status: 'stale',
+    fetchedAt: before[0]?.catalogSyncedAt,
+  });
+  controller.abort();
+  expect(await notification).toMatchObject({ done: true });
+});
+
+it.each(['{broken', '{"id":"bad"}'])(
+  'rejects corrupt stored Agent metadata %s once per hydration',
+  async (metadata): Promise<void> => {
+    const { caller, context } = startRouterTestHost();
+    context.database
+      .insert(agents)
       .values({
-        id: 1,
-        payload: JSON.stringify(value),
-        fetchedAt: 1791504000000,
+        id: 'saved',
+        registryId: 'bad',
+        registryMetadata: metadata,
+        catalogPresent: true,
+        catalogSyncedAt: 1,
       })
       .run();
-    const { caller } = startRouterTestHost({
-      database: stored.database,
-      registry: offlineRegistry,
-    });
     expect(await caller.agents.catalog()).toMatchObject({
       status: 'unavailable',
       agents: [],
-      fetchedAt: null,
       rejectedValues: 1,
-      error: 'Registry is offline',
+      error: expect.stringMatching(/malformed/),
     });
   },
 );
 
-it('rejects a malformed SQLite fetched time through its canonical columns', async (): Promise<void> => {
-  const stored = openTestDatabase();
-  onTestFinished(stored.remove);
-  stored.database.$client
-    .prepare('insert into agent_catalog_cache values (1, ?, ?)')
-    .run(JSON.stringify(publishedRegistry), 'unknown');
-  const { caller } = startRouterTestHost({
-    database: stored.database,
-    registry: offlineRegistry,
-  });
+it('rejects malformed SQLite timestamps through the canonical Agent columns', async (): Promise<void> => {
+  const { caller, context } = startRouterTestHost();
+  context.database.$client
+    .prepare('INSERT INTO agents VALUES (?, ?, ?, ?, ?)')
+    .run(
+      'saved',
+      exampleAgent.id,
+      JSON.stringify(publishedRegistry.agents[0]),
+      1,
+      'unknown',
+    );
   expect(await caller.agents.catalog()).toMatchObject({
     status: 'unavailable',
-    fetchedAt: null,
+    agents: [],
     rejectedValues: 1,
   });
 });
 
-it('keeps the last-good catalog and timestamp when the database rejects replacement', async (): Promise<void> => {
-  const readRegistry = vi
-    .fn<() => Promise<unknown>>()
-    .mockResolvedValueOnce(publishedRegistry)
-    .mockResolvedValue({ ...publishedRegistry, version: '2.0.0' });
-  const { caller, context } = startRouterTestHost({
-    registry: { readRegistry },
+it('reports a catalog row with missing metadata rather than hiding it as an empty catalog', async (): Promise<void> => {
+  const { caller, context } = startRouterTestHost();
+  context.database
+    .insert(agents)
+    .values({
+      id: 'saved',
+      registryId: 'missing-agent',
+      catalogPresent: true,
+      catalogSyncedAt: 1,
+    })
+    .run();
+  expect(await caller.agents.catalog()).toMatchObject({
+    status: 'unavailable',
+    agents: [],
+    rejectedValues: 1,
+    error: expect.stringMatching(/malformed/),
   });
-  const before = await caller.agents.catalog();
-  const row = context.database.select().from(agentCatalogCache).get();
-  context.database.$client.exec(
-    "CREATE TRIGGER reject_catalog_insert BEFORE INSERT ON agent_catalog_cache BEGIN SELECT RAISE(ABORT, 'cache is locked'); END",
-  );
-  const after = await caller.agents.catalog({ refresh: true });
-  expect(after).toMatchObject({
-    status: 'stale',
-    error: expect.stringContaining('Failed query'),
-    agents: before.agents,
-    fetchedAt: before.fetchedAt,
-    rejectedValues: 0,
-  });
-  expect(context.database.select().from(agentCatalogCache).get()).toEqual(row);
 });
-
-const offlineRegistry = {
-  readRegistry: async (): Promise<never> => {
-    throw new Error('Registry is offline');
-  },
-};

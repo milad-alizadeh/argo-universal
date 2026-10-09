@@ -1,6 +1,7 @@
 import type { AgentsCatalogOutput } from '@repo/contracts';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import type { Fixtures } from './trpc-mock-link';
+import { pending } from './trpc-mock-link';
 
 const [example, python, binary, windows] = publishedRegistry.agents;
 if (!example || !python || !binary || !windows)
@@ -14,6 +15,7 @@ const catalog: AgentsCatalogOutput = {
   rejectedValues: 0,
   agents: [
     {
+      id: example.id,
       entry: example,
       support: {
         kind: 'npx',
@@ -21,10 +23,12 @@ const catalog: AgentsCatalogOutput = {
       },
     },
     {
+      id: python.id,
       entry: python,
       support: { kind: 'uvx', recipe: { package: 'python-agent==1.2.3' } },
     },
     {
+      id: binary.id,
       entry: binary,
       support: {
         kind: 'binary',
@@ -36,6 +40,7 @@ const catalog: AgentsCatalogOutput = {
       },
     },
     {
+      id: windows.id,
       entry: windows,
       support: {
         kind: 'unsupported',
@@ -46,6 +51,12 @@ const catalog: AgentsCatalogOutput = {
 };
 
 export const agentCatalogMocks: Fixtures = {
+  'agents.syncCatalog': () => ({
+    changedIds: [],
+    error: null,
+    rejectedValues: 0,
+  }),
+  'agents.catalogChanges': pending(),
   'agents.catalog': (input) => {
     const search = (input?.search ?? '').toLowerCase();
     return {
