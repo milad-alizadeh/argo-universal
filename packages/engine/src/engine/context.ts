@@ -18,8 +18,9 @@ import type { SystemDeps } from '../services/system';
 import type { HttpServerOptions } from './http-server';
 
 export type Context = Pick<HttpServerOptions, 'sessions' | 'createId'> &
-  Parameters<typeof uploadBlob>[0] & { database: import('@repo/db').Database } &
-  SystemDeps &
+  Parameters<typeof uploadBlob>[0] & {
+    database: import('@repo/db').Database;
+  } & SystemDeps &
   FeedDeps & {
     sessionCommandSignal?: AbortSignal;
     projectRejections: ReturnType<typeof createRejectionCounter>;
@@ -31,8 +32,9 @@ export type Context = Pick<HttpServerOptions, 'sessions' | 'createId'> &
 export function createEngineContext(
   engineOptions: Pick<HttpServerOptions, 'sessions'> &
     Partial<Pick<HttpServerOptions, 'createId'>> &
-    Parameters<typeof uploadBlob>[0] & { database: import('@repo/db').Database } &
-    SystemDeps &
+    Parameters<typeof uploadBlob>[0] & {
+      database: import('@repo/db').Database;
+    } & SystemDeps &
     Pick<Context, 'sessionCommandSignal'> &
     Pick<HttpServerOptions, 'databaseWriter' | 'platform'>,
 ): Context {
@@ -62,7 +64,9 @@ export function createEngineContext(
     }),
     sessionList: createSessionList(engineOptions),
     databaseWriter: engineOptions.databaseWriter,
-    catalogRead: { reader: createRegistryReader(),
-      platform: engineOptions.platform ?? resolveRegistryServerPlatform() },
+    catalogRead: {
+      reader: createRegistryReader(),
+      platform: engineOptions.platform ?? resolveRegistryServerPlatform(),
+    },
   };
 }

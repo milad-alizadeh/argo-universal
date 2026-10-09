@@ -28,7 +28,7 @@ it.each(['unavailable', 'corrupt'])(
     });
     const blobsFolder = blobsFolderIn(host.home);
     const blob = await uploadBlob(
-      { database: host.database, blobsFolder },
+      { databaseWriter: host.databaseWriter, blobsFolder },
       new Blob(['complete original bytes'], { type: 'image/png' }),
     );
     if (failure === 'corrupt')

@@ -1,10 +1,14 @@
 import type { AgentsCatalogSyncOutput } from '@repo/contracts';
 import type { Database } from '@repo/db';
-import { agents } from '@repo/db/schema';
-import { eq } from 'drizzle-orm';
 import type { ActorRefFrom } from 'xstate';
-import { writeDatabaseJobAndWaitForCommit, type writerMachine } from '../../feed';
-import { readCatalogSyncRequest } from './catalog-sql';
+import {
+  writeDatabaseJobAndWaitForCommit,
+  type writerMachine,
+} from '../../feed';
+import {
+  readCatalogSyncRequest,
+  readCatalogRequestChangeIds,
+} from './catalog-sql';
 import type { RegistryReader } from './registry-reader';
 
 interface CatalogRequestInput {
@@ -12,6 +16,7 @@ interface CatalogRequestInput {
   writer: ActorRefFrom<typeof writerMachine>;
   reader: RegistryReader;
   requestId: string;
+  admissionSignal?: AbortSignal;
   signal?: AbortSignal;
 }
 
@@ -19,11 +24,10 @@ export async function requestAgentCatalogSync(
   input: CatalogRequestInput,
 ): Promise<AgentsCatalogSyncOutput> {
   input.signal?.throwIfAborted();
+  input.admissionSignal?.throwIfAborted();
   const completion = observeCatalogRequestCompletion(input);
   try {
-    const admitted = writeDatabaseJobAndWaitForCommit(input.writer, {
-      type: 'catalogSyncRequest', requestId: input.requestId, requestedAt: Date.now(),
-    });
+    const admitted = admitCatalogRequest(input);
     const [, result] = await Promise.all([admitted, completion.promise]);
     return result;
   } finally {
@@ -31,30 +35,76 @@ export async function requestAgentCatalogSync(
   }
 }
 
+function admitCatalogRequest(input: CatalogRequestInput): Promise<void> {
+  return writeDatabaseJobAndWaitForCommit(input.writer, {
+    type: 'catalogSyncRequest',
+    requestId: input.requestId,
+    requestedAt: Date.now(),
+  });
+}
+
+type CatalogOutcome = PromiseWithResolvers<AgentsCatalogSyncOutput>;
 function observeCatalogRequestCompletion(input: CatalogRequestInput): {
   promise: Promise<AgentsCatalogSyncOutput>;
   unsubscribe(): void;
 } {
   const outcome = Promise.withResolvers<AgentsCatalogSyncOutput>();
-  const readCommittedOutcome = (): void => settleCatalogSqlOutcome(input, outcome);
-  const committed = input.writer.on('catalog.sqlCommitted', readCommittedOutcome);
-  const failed = input.writer.on('catalog.writeFailed', (notice) => {
-    if (notice.requestIds.includes(input.requestId)) outcome.reject(notice.error);
-  });
-  return { promise: outcome.promise,
-    unsubscribe: () => { committed.unsubscribe(); failed.unsubscribe();
- } };
+  const stopObservingAbort = observeCatalogCallerAbort(input.signal, outcome);
+  const stopObservingWriter = observeCatalogWriterOutcome(input, outcome);
+  return {
+    promise: outcome.promise,
+    unsubscribe: () => {
+      stopObservingWriter();
+      stopObservingAbort();
+    },
+  };
+}
+
+function observeCatalogCallerAbort(
+  signal: AbortSignal | undefined,
+  outcome: CatalogOutcome,
+): () => void {
+  const abort = (): void => outcome.reject(signal?.reason);
+  signal?.addEventListener('abort', abort, { once: true });
+  return () => signal?.removeEventListener('abort', abort);
 }
 
 function settleCatalogSqlOutcome(
   input: CatalogRequestInput,
-  outcome: Pick<PromiseWithResolvers<AgentsCatalogSyncOutput>, 'resolve' | 'reject'>,
+  outcome: CatalogOutcome,
 ): void {
   try {
-    const row = readCatalogSyncRequest(input, input.requestId);
-    if (!row || row.status === 'pending') return;
-    const changedIds = row.status === 'succeeded' ? input.database.select({ id: agents.id })
-      .from(agents).where(eq(agents.catalogSyncedAt, row.fetchedAt ?? 0)).all().map(({ id }) => id) : [];
-    outcome.resolve({ changedIds, error: row.error, rejectedValues: row.rejectedValues });
-  } catch (error) { outcome.reject(error); }
+    const result = readCompletedCatalogRequest(input);
+    if (result) outcome.resolve(result);
+  } catch (error) {
+    outcome.reject(error);
+  }
+}
+
+function readCompletedCatalogRequest(
+  input: CatalogRequestInput,
+): AgentsCatalogSyncOutput | undefined {
+  const row = readCatalogSyncRequest(input, input.requestId);
+  if (!row || row.status === 'pending') return undefined;
+  return {
+    changedIds: readCatalogRequestChangeIds(input.database, row),
+    error: row.error,
+    rejectedValues: row.rejectedValues,
+  };
+}
+
+function observeCatalogWriterOutcome(
+  input: CatalogRequestInput,
+  outcome: CatalogOutcome,
+): () => void {
+  const { writer, requestId } = input;
+  const readOutcome = (): void => settleCatalogSqlOutcome(input, outcome);
+  const committed = writer.on('catalog.sqlCommitted', readOutcome);
+  const failed = writer.on('catalog.writeFailed', (notice) => {
+    if (notice.requestIds.includes(requestId)) outcome.reject(notice.error);
+  });
+  return () => {
+    committed.unsubscribe();
+    failed.unsubscribe();
+  };
 }

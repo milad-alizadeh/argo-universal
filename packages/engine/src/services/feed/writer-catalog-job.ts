@@ -1,6 +1,6 @@
 import type { Database } from '@repo/db';
-import { populateAgentCatalogSearchRows } from './writer-catalog-search';
 import { replaceAgentCatalogRows } from './writer-agent-catalog';
+import { populateAgentCatalogSearchRows } from './writer-catalog-search';
 import {
   completeCatalogSyncRequests,
   failCatalogSyncRequests,

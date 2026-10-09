@@ -6,8 +6,11 @@ import {
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { agents } from '@repo/db/schema';
-import type { AgentCatalogSearchProjectionJob, AgentCatalogWriteRow } from '../../feed';
 import { and, eq, sql } from 'drizzle-orm';
+import type {
+  AgentCatalogSearchProjectionJob,
+  AgentCatalogWriteRow,
+} from '../../feed';
 import { createRegistryReader } from './registry-reader';
 
 function createCatalogAgentRecord(
@@ -24,7 +27,9 @@ export function prepareAgentCatalogRows(
   registry: ACPAgentRegistry,
   syncedAt: number,
 ): AgentCatalogWriteRow[] {
-  return registry.agents.map((agent) => createCatalogAgentRecord(agent, syncedAt));
+  return registry.agents.map((agent) =>
+    createCatalogAgentRecord(agent, syncedAt),
+  );
 }
 
 export function readCatalogAgentRecords(
@@ -32,14 +37,12 @@ export function readCatalogAgentRecords(
   reader: ReturnType<typeof createRegistryReader>,
   normalizedSearch = '',
 ): { record: AgentRecord; agent: ACPAgent }[] {
-  return database
-    .select()
-    .from(agents)
-    .where(and(eq(agents.catalogPresent, true),
-      sql`instr(${agents.catalogSearchText}, ${normalizedSearch}) > 0`))
-    .all()
-    .filter(isCatalogAgentRecord)
-    .map((row) => hydrateCatalogAgentRecord(row, reader));
+  const predicate = and(
+    eq(agents.catalogPresent, true),
+    sql`instr(${agents.catalogSearchText}, ${normalizedSearch}) > 0`,
+  );
+  const rows = database.select().from(agents).where(predicate).all();
+  return rows.map((row) => hydrateCatalogAgentRecord(row, reader));
 }
 
 function hydrateCatalogAgentRecord(
@@ -65,29 +68,39 @@ function createCatalogOwnedFields(
     registryMetadata: JSON.stringify(agent),
     catalogPresent: true,
     catalogSyncedAt: syncedAt,
-    catalogSearchText: `${agent.id} ${agent.name} ${agent.description}`.toLowerCase(),
+    catalogSearchText: normalizeAgentSearchText(agent),
   };
-}
-
-function isCatalogAgentRecord(row: AgentRecord): boolean {
-  return (
-    row.registryId !== null ||
-    row.registryMetadata !== null ||
-    row.catalogPresent
-  );
 }
 
 export function prepareSavedCatalogSearchProjection(
   database: Database,
   reader: ReturnType<typeof createRegistryReader>,
 ): AgentCatalogSearchProjectionJob {
-  const rows = database.select().from(agents).where(and(eq(agents.catalogPresent, true),
-    eq(agents.catalogSearchText, ''))).all();
-  return { type: 'agentCatalogSearchProjection', rows: rows.flatMap((row) => {
-    try {
-      const { agent } = hydrateCatalogAgentRecord(row, reader);
-      return [{ id: row.id, expectedRegistryMetadata: row.registryMetadata ?? '',
-        catalogSearchText: `${agent.id} ${agent.name} ${agent.description}`.toLowerCase() }];
-    } catch { return []; }
-  }) };
+  const predicate = and(
+    eq(agents.catalogPresent, true),
+    eq(agents.catalogSearchText, ''),
+  );
+  const rows = database.select().from(agents).where(predicate).all();
+  return {
+    type: 'agentCatalogSearchProjection',
+    rows: rows.flatMap((row) => prepareSavedAgentSearchRow(row, reader)),
+  };
+}
+
+function prepareSavedAgentSearchRow(
+  row: AgentRecord,
+  reader: ReturnType<typeof createRegistryReader>,
+): AgentCatalogSearchProjectionJob['rows'] {
+  try {
+    const { agent } = hydrateCatalogAgentRecord(row, reader);
+    const catalogSearchText = normalizeAgentSearchText(agent);
+    const expectedRegistryMetadata = row.registryMetadata ?? '';
+    return [{ id: row.id, expectedRegistryMetadata, catalogSearchText }];
+  } catch {
+    return [];
+  }
+}
+
+function normalizeAgentSearchText(agent: ACPAgent): string {
+  return `${agent.id} ${agent.name} ${agent.description}`.toLowerCase();
 }

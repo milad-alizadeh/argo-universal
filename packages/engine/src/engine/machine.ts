@@ -1,13 +1,21 @@
 import { appendFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { type Database, openDatabase } from '@repo/db';
-import { assign, fromPromise, sendTo, setup, waitFor } from 'xstate';
+import {
+  assign,
+  enqueueActions,
+  fromPromise,
+  sendTo,
+  setup,
+  waitFor,
+} from 'xstate';
 import {
   createAcpResources,
   type AcpResources,
   type AcpResourceInput,
   type FetchAgents,
   syncSupervisorMachine,
+  type SyncSupervisorInput,
   fetchAgents,
   createRegistryReader,
 } from '../services/agents';
@@ -36,7 +44,9 @@ type EngineOutput = { exitCode: number };
 type OpenDatabaseInput = { home: string };
 type RecoveryInput = { database: Database; blobsFolder: string };
 type CloseHttpServerInput = { server: HttpServer | null };
-type SyncSupervisorActor = import('xstate').ActorRefFrom<typeof syncSupervisorMachine>;
+type SyncSupervisorActor = import('xstate').ActorRefFrom<
+  typeof syncSupervisorMachine
+>;
 type AwaitSyncSupervisorInput = { supervisor: SyncSupervisorActor };
 type CloseAcpResourcesInput = {
   resources: AcpResources;
@@ -127,13 +137,26 @@ export const engineMachine = setup({
       },
     ),
     syncSupervisor: syncSupervisorMachine,
-    awaitSyncRecovery: fromPromise<void, AwaitSyncSupervisorInput>(async ({ input }) => {
-      await waitFor(input.supervisor, (snapshot) => !snapshot.matches('recovering'), { timeout: Infinity });
-    }),
-    awaitSyncDrain: fromPromise<void, AwaitSyncSupervisorInput>(async ({ input }) => {
-      await waitFor(input.supervisor, (snapshot) => snapshot.status !== 'active', { timeout: Infinity });
-      if (input.supervisor.getSnapshot().matches('interruptionFailed')) throw new Error('Catalog interruption could not commit');
-    }),
+    awaitSyncRecovery: fromPromise<void, AwaitSyncSupervisorInput>(
+      async ({ input }) => {
+        await waitFor(
+          input.supervisor,
+          (snapshot) => !snapshot.matches('recovering'),
+          { timeout: Infinity },
+        );
+      },
+    ),
+    awaitSyncDrain: fromPromise<void, AwaitSyncSupervisorInput>(
+      async ({ input }) => {
+        await waitFor(
+          input.supervisor,
+          (snapshot) => snapshot.status !== 'active',
+          { timeout: Infinity },
+        );
+        if (input.supervisor.getSnapshot().matches('interruptionFailed'))
+          throw new Error('Catalog interruption could not commit');
+      },
+    ),
     databaseWriter: writerMachine,
     sessions: registryMachine,
     startHttpServer: fromPromise<HttpServer, HttpServerOptions>(
@@ -152,12 +175,16 @@ export const engineMachine = setup({
     stopSessions: sendTo('sessions', { type: 'sessions.stopAll' }),
     drainWriter: sendTo('databaseWriter', { type: 'writer.drain' }),
     stopSync: sendTo('syncSupervisor', { type: 'catalog.shutdown' }),
-    closeCommandAdmission: ({ context }): void => context.commandAdmission.abort(),
-    routeCatalogRequests: ({ event, self }): void => {
+    closeCommandAdmission: ({ context }): void =>
+      context.commandAdmission.abort(),
+    routeCatalogRequests: enqueueActions(({ event, enqueue }) => {
       if (event.type !== 'catalog.requestsCommitted') return;
-      const supervisor = requireSyncSupervisor(self.system, self.getSnapshot().children.syncSupervisor);
-      for (const requestId of event.requestIds) supervisor.send({ type: 'catalog.requested', requestId });
-    },
+      for (const requestId of event.requestIds)
+        enqueue.sendTo('syncSupervisor', {
+          type: 'catalog.requested',
+          requestId,
+        });
+    }),
     sendToSupervisor: (_, message: EngineMessage): void => {
       process.send?.(message);
     },
@@ -253,10 +280,16 @@ export const engineMachine = setup({
           }),
         },
         {
-          id: 'syncSupervisor', systemId: 'syncSupervisor', src: 'syncSupervisor',
-          input: ({ context, self }) => ({ database: openDatabaseOf(context),
-            writer: requireDatabaseWriter(self.system), fetchAgents: context.fetchAgents ?? fetchAgents,
-            reader: createRegistryReader(), now: context.now }),
+          id: 'syncSupervisor',
+          systemId: 'syncSupervisor',
+          src: 'syncSupervisor',
+          input: ({ context, self }): SyncSupervisorInput => ({
+            database: openDatabaseOf(context),
+            writer: requireDatabaseWriter(self.system),
+            fetchAgents: context.fetchAgents ?? fetchAgents,
+            reader: createRegistryReader(),
+            now: context.now,
+          }),
         },
         {
           id: 'sessions',
@@ -287,8 +320,16 @@ export const engineMachine = setup({
         },
       },
       states: {
-        preparingSync: { invoke: { id: 'awaitSyncRecovery', src: 'awaitSyncRecovery',
-          input: ({ self }) => ({ supervisor: requireSyncSupervisor(self.system, self.getSnapshot().children.syncSupervisor) }), onDone: 'listening' } },
+        preparingSync: {
+          invoke: {
+            id: 'awaitSyncRecovery',
+            src: 'awaitSyncRecovery',
+            input: ({ self }) => ({
+              supervisor: requireSyncSupervisor(self.system),
+            }),
+            onDone: 'listening',
+          },
+        },
         listening: {
           invoke: {
             id: 'startHttpServer',
@@ -432,11 +473,33 @@ export const engineMachine = setup({
                 }),
               },
             },
-            drainingSync: { invoke: { id: 'awaitSyncDrain', src: 'awaitSyncDrain',
-              input: ({ self }) => ({ supervisor: requireSyncSupervisor(self.system, self.getSnapshot().children.syncSupervisor) }),
-              onDone: 'drainingWriter', onError: { target: 'retainingSyncCleanup',
-                actions: assign({ failure: ({ event }) => String(event.error) }) } } },
-            retainingSyncCleanup: {},
+            drainingSync: {
+              invoke: {
+                id: 'awaitSyncDrain',
+                src: 'awaitSyncDrain',
+                input: ({ self }) => ({
+                  supervisor: requireSyncSupervisor(
+                    self.system,
+                    self.getSnapshot()?.children?.syncSupervisor,
+                  ),
+                }),
+                onDone: 'drainingWriter',
+                onError: {
+                  target: 'retainingSyncCleanup',
+                  actions: assign({
+                    failure: ({ event }) => String(event.error),
+                  }),
+                },
+              },
+            },
+            retainingSyncCleanup: {
+              entry: {
+                type: 'log',
+                params: {
+                  line: 'Catalog interruption could not commit; retaining SQLite until forced shutdown',
+                },
+              },
+            },
             drainingWriter: {
               entry: 'drainWriter',
               on: {
@@ -502,12 +565,17 @@ function requireSessionRegistry(
   return actor;
 }
 
-function requireDatabaseWriter(system: import('xstate').AnyActorRef['system']): import('xstate').ActorRefFrom<typeof writerMachine> {
+function requireDatabaseWriter(
+  system: import('xstate').AnyActorRef['system'],
+): import('xstate').ActorRefFrom<typeof writerMachine> {
   const actor = system.get(databaseWriterId);
   if (!actor) throw new Error('Database Writer is not running');
   return actor;
 }
-function requireSyncSupervisor(system: import('xstate').AnyActorRef['system'], ownedChild?: SyncSupervisorActor): SyncSupervisorActor {
+function requireSyncSupervisor(
+  system: import('xstate').AnyActorRef['system'],
+  ownedChild?: SyncSupervisorActor,
+): SyncSupervisorActor {
   const actor = ownedChild ?? system.get('syncSupervisor');
   if (!actor) throw new Error('Sync supervisor is not running');
   return actor;

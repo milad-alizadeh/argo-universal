@@ -11,12 +11,19 @@ import {
 import { and, eq, gt, inArray, sql } from 'drizzle-orm';
 import { toFeedRowWrite } from './feed-row';
 import { applyCatalogSqlJob } from './writer-catalog-job';
-import { isCatalogSqlJob, type CatalogSqlJob, type CatalogSqlCommit } from './writer-catalog-sync';
+import {
+  isCatalogSqlJob,
+  type CatalogSqlJob,
+  type CatalogSqlCommit,
+} from './writer-catalog-sync';
 
 // One unit of work for the database writer.
 export type WriterJob =
   | CatalogSqlJob
-  | { type: 'blobMetadataUpsert'; blob: Pick<typeof blob.$inferInsert, 'id' | 'mime' | 'bytes'> }
+  | {
+      type: 'blobMetadataUpsert';
+      blob: Pick<typeof blob.$inferInsert, 'id' | 'mime' | 'bytes'>;
+    }
   | {
       type: 'feedRows';
       sessionId: string;
@@ -72,9 +79,14 @@ export function writeJobs(
       }
       switch (job.type) {
         case 'blobMetadataUpsert':
-          transaction.insert(blob).values(job.blob).onConflictDoUpdate({
-            target: blob.id, set: { createdAt: sql`excluded.created_at` },
-          }).run();
+          transaction
+            .insert(blob)
+            .values(job.blob)
+            .onConflictDoUpdate({
+              target: blob.id,
+              set: { createdAt: sql`excluded.created_at` },
+            })
+            .run();
           break;
         case 'feedRows': {
           if (job.rows.length > 0)

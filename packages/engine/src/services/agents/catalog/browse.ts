@@ -5,9 +5,9 @@ import type {
   RegistrySupport,
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
+import { readCatalogSqlState } from './catalog-sql';
 import { readCatalogAgentRecords } from './records';
 import type { createRegistryReader } from './registry-reader';
-import { readCatalogSqlState } from './catalog-sql';
 
 export interface CatalogReadInput {
   database: Database;
@@ -61,10 +61,9 @@ function buildCatalogResult(
   const state = readCatalogSqlState(input);
   return {
     agents: buildCatalogEntries(records, input.platform),
-    fetchedAt: state.fetchedAt,
+    ...state,
     serverPlatform: input.platform,
     status: deriveCatalogStatus(state.fetchedAt, state.error),
-    error: state.error,
     rejectedValues: state.rejectedValues + input.reader.count(),
   };
 }
@@ -75,8 +74,7 @@ function buildCatalogEntries(
   records: CatalogRecords,
   serverPlatform: string,
 ): AgentsCatalogOutput['agents'] {
-  return records
-    .map((row) => buildCatalogEntry(row, serverPlatform));
+  return records.map((row) => buildCatalogEntry(row, serverPlatform));
 }
 
 function deriveCatalogStatus(
@@ -121,4 +119,3 @@ function buildCatalogEntry(
     support: selectAgentDistribution(agent, serverPlatform),
   };
 }
-

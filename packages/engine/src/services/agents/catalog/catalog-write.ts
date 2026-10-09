@@ -2,7 +2,11 @@ import type { Database } from '@repo/db';
 import { agents } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import type { ActorRefFrom } from 'xstate';
-import { writeDatabaseJobAndWaitForCommit, type AgentCatalogReplaceJob, type writerMachine } from '../../feed';
+import {
+  writeDatabaseJobAndWaitForCommit,
+  type AgentCatalogReplaceJob,
+  type writerMachine,
+} from '../../feed';
 
 export async function writeAgentCatalogThroughWriter(input: {
   database: Database;

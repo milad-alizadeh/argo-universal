@@ -14,10 +14,7 @@ import {
 
 // Table definitions only: no Node APIs, so contracts and the Apps can import this file.
 export { agents } from './schema/agents';
-export {
-  agentCatalogSyncRequest,
-  agentCatalogSyncStatuses,
-} from './schema/agent-catalog-sync-request';
+export * from './schema/agent-catalog-sync-request';
 
 export const sessionUpdateKinds = [
   'user_message',

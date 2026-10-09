@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { openDatabase } from '@repo/db';
-import { agents } from '@repo/db/schema';
+import { agents, agentCatalogSyncRequest } from '@repo/db/schema';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
-import { expect, it, onTestFinished } from 'vitest';
+import { expect, it, onTestFinished, vi } from 'vitest';
 import { openTestDatabase } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 
@@ -49,3 +49,46 @@ it('hydrates exact upstream metadata after a disk database restart while offline
 const fetchOfflineAgents = async (): Promise<never> => {
   throw new Error('Registry is offline');
 };
+
+it('interrupts unfinished durable Refresh requests during startup without fetching', async () => {
+  const stored = openTestDatabase();
+  onTestFinished(stored.remove);
+  stored.database
+    .insert(agentCatalogSyncRequest)
+    .values([
+      {
+        requestId: 'first',
+        syncId: 'first',
+        status: 'pending',
+        requestedAt: 1,
+      },
+      {
+        requestId: 'joined',
+        syncId: 'first',
+        status: 'pending',
+        requestedAt: 1,
+      },
+    ])
+    .run();
+  const fetchAgents = vi.fn<() => Promise<unknown>>(
+    async () => publishedRegistry,
+  );
+  const host = await startEngineTestHost({
+    database: stored.database,
+    fetchAgents,
+  });
+  expect(fetchAgents).not.toHaveBeenCalled();
+  expect(
+    host.database.$client
+      .prepare(
+        'SELECT status FROM agent_catalog_sync_request ORDER BY sequence',
+      )
+      .all(),
+  ).toEqual([{ status: 'interrupted' }, { status: 'interrupted' }]);
+  expect(await host.caller.agents.catalog()).toMatchObject({
+    status: 'unavailable',
+    error: 'Registry sync was interrupted',
+  });
+  expect(await host.caller.agents.syncCatalog()).toMatchObject({ error: null });
+  expect(fetchAgents).toHaveBeenCalledTimes(1);
+});

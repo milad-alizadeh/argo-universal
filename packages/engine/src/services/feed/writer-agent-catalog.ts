@@ -5,7 +5,12 @@ import { eq } from 'drizzle-orm';
 type CatalogTransaction = Pick<Database, 'select' | 'update' | 'insert'>;
 export type AgentCatalogWriteRow = Pick<
   typeof agents.$inferInsert,
-  'id' | 'registryId' | 'registryMetadata' | 'catalogPresent' | 'catalogSyncedAt' | 'catalogSearchText'
+  | 'id'
+  | 'registryId'
+  | 'registryMetadata'
+  | 'catalogPresent'
+  | 'catalogSyncedAt'
+  | 'catalogSearchText'
 >;
 export type AgentCatalogReplaceJob = {
   type: 'agentCatalogReplace';
@@ -30,8 +35,12 @@ export function replaceAgentCatalogRows(
 }
 
 function readPresentAgentIds(transaction: Pick<Database, 'select'>): string[] {
-  return transaction.select({ id: agents.id }).from(agents)
-    .where(eq(agents.catalogPresent, true)).all().map(({ id }) => id);
+  return transaction
+    .select({ id: agents.id })
+    .from(agents)
+    .where(eq(agents.catalogPresent, true))
+    .all()
+    .map(({ id }) => id);
 }
 
 function upsertAgentCatalogRow(

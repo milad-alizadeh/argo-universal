@@ -2,7 +2,6 @@ import type { Database } from '@repo/db';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { terminalPaths } from '@repo/vitest/model-paths';
 import { createActor, type SnapshotFrom } from 'xstate';
-import { writerMachine } from '../src/services/feed';
 import {
   getAdjacencyMap,
   getShortestPaths,
@@ -14,6 +13,7 @@ import {
   catalogSyncMachine,
   createRegistryReader,
 } from '../src/services/agents';
+import { writerMachine } from '../src/services/feed';
 
 export const catalogSyncEvents = [
   { type: 'catalog.cancel' },
@@ -34,8 +34,16 @@ export const catalogSyncEvents = [
     error: new Error('Database rejected catalog'),
   },
   { type: 'xstate.after.fetchLimit.catalogSync.fetching' },
-  { type: 'xstate.done.actor.recordFailedSync', actorId: 'recordFailedSync', output: undefined },
-  { type: 'xstate.error.actor.recordFailedSync', actorId: 'recordFailedSync', error: new Error('Status could not commit') },
+  {
+    type: 'xstate.done.actor.recordFailedSync',
+    actorId: 'recordFailedSync',
+    output: undefined,
+  },
+  {
+    type: 'xstate.error.actor.recordFailedSync',
+    actorId: 'recordFailedSync',
+    error: new Error('Status could not commit'),
+  },
 ] satisfies GraphEventFromLogic<typeof catalogSyncMachine>[];
 export type CatalogSyncModelEvent = (typeof catalogSyncEvents)[number];
 type CatalogSnapshot = SnapshotFrom<typeof catalogSyncMachine>;
@@ -49,7 +57,8 @@ function canApplyCatalogSyncModelEvent(
   event: CatalogSyncModelEvent,
 ): boolean {
   if (snapshot.status !== 'active') return false;
-  if (event.type.endsWith('recordFailedSync')) return snapshot.matches('recordingFailure');
+  if (event.type.endsWith('recordFailedSync'))
+    return snapshot.matches('recordingFailure');
   const saving = event.type.endsWith('saveCatalog');
   return snapshot.matches(saving ? 'saving' : 'fetching');
 }
@@ -60,7 +69,8 @@ export function createCatalogSyncModel(database: Database): {
 } {
   const input = {
     database,
-    syncId: 'modeled-request', now: Date.now,
+    syncId: 'modeled-request',
+    now: Date.now,
     writer: createActor(writerMachine, { input: { database, now: Date.now } }),
     reader: createRegistryReader(),
     fetchAgents: async (): Promise<never> => new Promise(() => {}),

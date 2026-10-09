@@ -1,12 +1,18 @@
 import type { ACPAgentRegistry } from '@repo/contracts';
 import type { Database } from '@repo/db';
-import { assign, fromPromise, setup, type ActorRefFrom, type ErrorActorEvent } from 'xstate';
+import {
+  assign,
+  fromPromise,
+  setup,
+  type ActorRefFrom,
+  type ErrorActorEvent,
+} from 'xstate';
 import type { writerMachine } from '../../feed';
+import { writeDatabaseJobAndWaitForCommit } from '../../feed';
+import { readCatalogRejectionCount } from './catalog-sql';
 import { writeAgentCatalogThroughWriter } from './catalog-write';
 import type { FetchAgents } from './fetch-agents';
 import { prepareAgentCatalogRows } from './records';
-import { writeDatabaseJobAndWaitForCommit } from '../../feed';
-import { readCatalogRejectionCount } from './catalog-sql';
 import type { createRegistryReader } from './registry-reader';
 
 export interface CatalogSyncInput {
@@ -35,15 +41,23 @@ export const catalogSyncMachine = setup({
     input: {} as CatalogSyncInput,
     context: {} as CatalogSyncContext,
     events: {} as { type: 'catalog.cancel' },
-    output: {} as { changedIds: string[]; error: string | null; abandoned: boolean },
+    output: {} as {
+      changedIds: string[];
+      error: string | null;
+      abandoned: boolean;
+    },
   },
   actors: {
     recordFailedSync: fromPromise<void, CatalogSyncContext>(async ({ input }) =>
       writeDatabaseJobAndWaitForCommit(input.writer, {
-        type: 'catalogSyncFailure', syncIds: [input.syncId], status: 'failed',
-        error: input.error ?? 'Registry sync failed', completedAt: input.now(),
-        rejectedValues: readCatalogRejectionCount(input.database) + input.reader.count() - input.rejectionCountBeforeFetch,
-      })),
+        type: 'catalogSyncFailure',
+        syncIds: [input.syncId],
+        status: 'failed',
+        error: input.error ?? 'Registry sync failed',
+        completedAt: input.now(),
+        rejectedValues: countCatalogSyncRejections(input),
+      }),
+    ),
     fetchCatalog: fromPromise<ACPAgentRegistry, CatalogSyncInput>(
       async ({ input, signal }) =>
         input.reader.parse(await input.fetchAgents(signal)),
@@ -127,9 +141,15 @@ export const catalogSyncMachine = setup({
       },
     },
     succeeded: { type: 'final' },
-    recordingFailure: { invoke: { id: 'recordFailedSync', src: 'recordFailedSync',
-      input: ({ context }) => context, onDone: 'failed',
-      onError: { target: 'failed', actions: assign({ abandoned: true }) } } },
+    recordingFailure: {
+      invoke: {
+        id: 'recordFailedSync',
+        src: 'recordFailedSync',
+        input: ({ context }) => context,
+        onDone: 'failed',
+        onError: { target: 'failed', actions: assign({ abandoned: true }) },
+      },
+    },
     failed: { type: 'final' },
   },
   output: ({ context }) => ({
@@ -139,9 +159,24 @@ export const catalogSyncMachine = setup({
   }),
 });
 
-function prepareCatalogReplacement(input: CatalogSyncContext): import('../../feed').AgentCatalogReplaceJob {
+function prepareCatalogReplacement(
+  input: CatalogSyncContext,
+): import('../../feed').AgentCatalogReplaceJob {
   if (!input.metadata) throw new Error('Validated catalog is missing');
   const syncedAt = input.now();
-  return { type: 'agentCatalogReplace', rows: prepareAgentCatalogRows(input.metadata, syncedAt),
-    syncId: input.syncId, syncedAt, rejectedValues: readCatalogRejectionCount(input.database) + input.reader.count() - input.rejectionCountBeforeFetch };
+  return {
+    type: 'agentCatalogReplace',
+    rows: prepareAgentCatalogRows(input.metadata, syncedAt),
+    syncId: input.syncId,
+    syncedAt,
+    rejectedValues: countCatalogSyncRejections(input),
+  };
+}
+
+function countCatalogSyncRejections(input: CatalogSyncContext): number {
+  return (
+    readCatalogRejectionCount(input.database) +
+    input.reader.count() -
+    input.rejectionCountBeforeFetch
+  );
 }

@@ -1,21 +1,24 @@
 import { EventEmitter, on } from 'node:events';
 import type { Database } from '@repo/db';
-import { agents } from '@repo/db/schema';
-import { eq } from 'drizzle-orm';
 import type { ActorRefFrom } from 'xstate';
 import type { writerMachine } from '../../feed';
+import { readLatestCatalogChangeIds } from './catalog-sql';
+
+type CatalogChangeEvents = EventEmitter<{
+  change: [string[]];
+  error: [unknown];
+}>;
+type CatalogWatchInput = {
+  database: Database;
+  writer: ActorRefFrom<typeof writerMachine>;
+};
 
 export async function* watchCommittedCatalogChanges(
-  input: { database: Database; writer: ActorRefFrom<typeof writerMachine> },
+  input: CatalogWatchInput,
   signal: AbortSignal,
 ): AsyncGenerator<string[]> {
-  const events = new EventEmitter<{ change: [string[]] }>();
-  const subscription = input.writer.on('catalog.sqlCommitted', ({ commits }) => {
-    if (!commits.some(({ kind }) => kind === 'agentCatalogReplace' || kind === 'catalogSyncFailure')) return;
-    const changedIds = input.database.select({ id: agents.id }).from(agents)
-      .where(eq(agents.catalogPresent, true)).all().map(({ id }) => id);
-    events.emit('change', changedIds);
-  });
+  const events: CatalogChangeEvents = new EventEmitter();
+  const subscription = subscribeCatalogCommitNotifications(input, events);
   try {
     yield* readCatalogChangeStream(events, signal);
   } finally {
@@ -23,8 +26,35 @@ export async function* watchCommittedCatalogChanges(
   }
 }
 
+function subscribeCatalogCommitNotifications(
+  input: CatalogWatchInput,
+  events: CatalogChangeEvents,
+): { unsubscribe(): void } {
+  return input.writer.on('catalog.sqlCommitted', ({ commits }) => {
+    if (
+      !commits.some(
+        ({ kind }) =>
+          kind === 'agentCatalogReplace' || kind === 'catalogSyncFailure',
+      )
+    )
+      return;
+    publishCommittedCatalogChanges(input.database, events);
+  });
+}
+
+function publishCommittedCatalogChanges(
+  database: Database,
+  events: CatalogChangeEvents,
+): void {
+  try {
+    events.emit('change', readLatestCatalogChangeIds(database));
+  } catch (error) {
+    events.emit('error', error);
+  }
+}
+
 async function* readCatalogChangeStream(
-  events: EventEmitter<{ change: [string[]] }>,
+  events: CatalogChangeEvents,
   signal: AbortSignal,
 ): AsyncGenerator<string[]> {
   const stream: AsyncIterable<string[][]> = on(events, 'change', { signal });

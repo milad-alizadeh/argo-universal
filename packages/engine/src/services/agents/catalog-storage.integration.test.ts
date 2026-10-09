@@ -33,16 +33,19 @@ it('rolls back every changed/removed row and timestamp when a later insert fails
   database.$client.exec(
     "CREATE TRIGGER reject_new_agent BEFORE INSERT ON agents WHEN NEW.registry_id = 'new-agent' BEGIN SELECT RAISE(ABORT, 'catalog is locked'); END",
   );
-  expect(await caller.agents.syncCatalog()).toMatchObject({
-    error: expect.stringContaining('Failed query'),
-  });
+  await expect(caller.agents.syncCatalog()).rejects.toThrow('Failed query');
+  await vi.waitFor(async () =>
+    expect(await caller.agents.catalog()).toMatchObject({ status: 'stale' }),
+  );
   expect(database.select().from(agents).all()).toEqual(before);
   expect(await caller.agents.catalog()).toMatchObject({
     status: 'stale',
     fetchedAt: before[0]?.catalogSyncedAt,
   });
+  expect(await notification).toMatchObject({
+    value: before.map(({ id }) => id),
+  });
   controller.abort();
-  expect(await notification).toMatchObject({ done: true });
 });
 
 it.each(['{broken', '{"id":"bad"}'])(
@@ -71,7 +74,9 @@ it.each(['{broken', '{"id":"bad"}'])(
 it('rejects malformed SQLite timestamps through the canonical Agent columns', async (): Promise<void> => {
   const { caller, database } = await startEngineTestHost();
   database.$client
-    .prepare('INSERT INTO agents VALUES (?, ?, ?, ?, ?)')
+    .prepare(
+      'INSERT INTO agents (id, registry_id, registry_metadata, catalog_present, catalog_synced_at) VALUES (?, ?, ?, ?, ?)',
+    )
     .run(
       'saved',
       exampleAgent.id,
@@ -103,4 +108,32 @@ it('reports a catalog row with missing metadata rather than hiding it as an empt
     rejectedValues: 1,
     error: expect.stringMatching(/malformed/),
   });
+});
+
+it('notifies catalog subscribers about removed Agents after the replacement commits', async (): Promise<void> => {
+  const fetchAgents = vi
+    .fn<() => Promise<unknown>>()
+    .mockResolvedValueOnce(publishedRegistry)
+    .mockResolvedValue({ ...publishedRegistry, agents: [] });
+  const { caller, database, createCaller } = await startEngineTestHost({
+    fetchAgents,
+  });
+  await caller.agents.syncCatalog();
+  const previousIds = database
+    .select({ id: agents.id })
+    .from(agents)
+    .all()
+    .map(({ id }) => id);
+  const controller = new AbortController();
+  const changes = await createCaller({
+    signal: controller.signal,
+  }).agents.catalogChanges();
+  const notification = changes[Symbol.asyncIterator]().next();
+  await caller.agents.syncCatalog();
+  expect(new Set((await notification).value)).toEqual(new Set(previousIds));
+  expect((await caller.agents.catalog()).agents).toEqual([]);
+  expect(
+    database.select({ present: agents.catalogPresent }).from(agents).all(),
+  ).toEqual(previousIds.map(() => ({ present: false })));
+  controller.abort();
 });

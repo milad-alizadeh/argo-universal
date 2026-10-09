@@ -37,8 +37,6 @@ it('does not start a Registry read after Server shutdown admission closes', asyn
   const fetchAgents = vi.fn<FetchAgents>(async () => publishedRegistry);
   const { caller, stop } = await startEngineTestHost({ fetchAgents });
   await stop();
-  expect(await caller.agents.syncCatalog()).toMatchObject({
-    error: 'Registry sync was cancelled',
-  });
+  await expect(caller.agents.syncCatalog()).rejects.toThrow('aborted');
   expect(fetchAgents).not.toHaveBeenCalled();
 });

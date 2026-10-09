@@ -18,7 +18,7 @@ import {
   getShortestPaths,
   getSimplePaths,
 } from 'xstate/graph';
-import type { WriterJob } from './writer-job';
+import type { WriterJob, writeJobs } from './writer-job';
 import { writerMachine } from './writer-machine';
 
 const writeFeedEvent = 'writer.write';
@@ -43,9 +43,12 @@ let writer: Actor<typeof machine>;
 const mockDatabase = openDatabase(':memory:');
 const machine = writerMachine.provide({
   actors: {
-    writeBatch: fromPromise<ReturnType<typeof import('./writer-job').writeJobs>, { database: Database; jobs: WriterJob[] }>(
-      ({ input }): Promise<ReturnType<typeof import('./writer-job').writeJobs>> =>
-        new Promise<ReturnType<typeof import('./writer-job').writeJobs>>((resolve, reject): void => {
+    writeBatch: fromPromise<
+      ReturnType<typeof writeJobs>,
+      { database: Database; jobs: WriterJob[] }
+    >(
+      ({ input }): Promise<ReturnType<typeof writeJobs>> =>
+        new Promise<ReturnType<typeof writeJobs>>((resolve, reject): void => {
           const call: WriteBatchCall = {
             jobs: input.jobs,
             settled: false,
