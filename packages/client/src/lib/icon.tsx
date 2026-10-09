@@ -49,9 +49,11 @@ export function Icon({
 }: IconProps): React.JSX.Element {
   const textClass = useContext(TextClassContext);
   const symbol: NativeSymbol = iconSymbols[name];
+  const colorClassName = cn('text-foreground', textClass, className);
   return (
     <TintedSymbol
-      className={cn('text-foreground', textClass, className)}
+      className={colorClassName}
+      colorClassName={colorClassName}
       sf={(filled && symbol.sfFilled) || symbol.sf}
       material={symbol.material}
       pixels={useIconPixels(size)}

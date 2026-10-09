@@ -1,6 +1,5 @@
 import { SymbolView } from 'expo-symbols';
 import type * as React from 'react';
-import type { ColorValue } from 'react-native';
 import type { SymbolGlyphProps } from './symbol-glyph';
 import {
   type RenderSymbolImage,
@@ -14,7 +13,7 @@ export function SymbolGlyph({
   sf,
   material,
   pixels,
-  tintColor,
+  colorClassName,
   testID,
 }: SymbolGlyphProps): React.JSX.Element {
   const render = useSymbolImageRenderer();
@@ -24,12 +23,12 @@ export function SymbolGlyph({
       data-icon
       data-testid={testID}
       aria-hidden
+      className={colorClassName}
       style={{
         display: 'flex',
         flexShrink: 0,
         width: pixels,
         height: pixels,
-        color: cssColor(tintColor),
         userSelect: 'none',
       }}
     >
@@ -40,7 +39,7 @@ export function SymbolGlyph({
           name={{ web: material }}
           size={pixels}
           weight={symbolWeight}
-          tintColor={tintColor}
+          tintColor="currentColor"
         />
       )}
     </span>
@@ -75,8 +74,4 @@ function MaskedSymbol({
       }}
     />
   );
-}
-
-function cssColor(color: ColorValue | undefined): string | undefined {
-  return typeof color === 'string' ? color : undefined;
 }
