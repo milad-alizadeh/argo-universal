@@ -2,7 +2,10 @@ import { createServer, type Server } from 'node:http';
 import type { Database } from '@repo/db';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { WebSocketServer } from 'ws';
-import type { RegistryPort } from '../services/agents';
+import {
+  shutdownCatalogSyncSupervisor,
+  type FetchAgents,
+} from '../services/agents';
 import { blobsFolderIn } from '../services/blob';
 import type { RegistryActorRef } from '../services/sessions';
 import { createEngineContext, type Context } from './context';
@@ -18,7 +21,7 @@ export interface HttpServerOptions {
   startedAt: string;
   database: Database;
   sessions: RegistryActorRef;
-  registry?: RegistryPort;
+  fetchAgents?: FetchAgents;
 }
 
 export interface HttpServer {
@@ -100,7 +103,9 @@ export async function startHttpServer(
   let closing: Promise<void> | undefined;
   const close = (): Promise<void> => {
     commandAdmission.abort();
-    closing ??= closeHttpServerConnections();
+    closing ??= shutdownCatalogSyncSupervisor(context.catalogSync).then(
+      closeHttpServerConnections,
+    );
     return closing;
   };
 

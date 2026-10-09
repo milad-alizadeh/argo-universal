@@ -11,7 +11,7 @@ it('hydrates exact upstream metadata after a disk database restart while offline
   onTestFinished(stored.remove);
   const first = startRouterTestHost({
     database: stored.database,
-    registry: { readRegistry: async (): Promise<unknown> => publishedRegistry },
+    fetchAgents: async (): Promise<unknown> => publishedRegistry,
   });
   const history = (await first.caller.session.list({ archived: false }))
     .sessions;
@@ -23,7 +23,7 @@ it('hydrates exact upstream metadata after a disk database restart while offline
   onTestFinished((): void => database.$client.close());
   const restarted = startRouterTestHost({
     database,
-    registry: offlineRegistry,
+    fetchAgents: fetchOfflineAgents,
   });
   await restarted.caller.agents.syncCatalog();
   const catalog = await restarted.caller.agents.catalog();
@@ -46,8 +46,6 @@ it('hydrates exact upstream metadata after a disk database restart while offline
   ).toEqual(history);
 });
 
-const offlineRegistry = {
-  readRegistry: async (): Promise<never> => {
-    throw new Error('Registry is offline');
-  },
+const fetchOfflineAgents = async (): Promise<never> => {
+  throw new Error('Registry is offline');
 };

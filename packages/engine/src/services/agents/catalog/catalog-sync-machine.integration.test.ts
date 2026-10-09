@@ -11,7 +11,7 @@ import {
 import { openTestDatabase } from '#mocks/database';
 import { createControllableRegistry } from '#mocks/registry-port';
 import { catalogSyncMachine } from './catalog-sync-machine';
-import { createRegistryReader } from './registry';
+import { createRegistryReader } from './registry-reader';
 
 const modeledDatabase = openTestDatabase();
 afterAll(modeledDatabase.remove);
@@ -28,7 +28,7 @@ it.each(model.paths.map((path, index) => [index, path] as const))(
     const actor = createActor(catalogSyncMachine, {
       input: {
         database: stored.database,
-        registry: registry.port,
+        fetchAgents: registry.fetchAgents,
         reader: createRegistryReader(),
       },
     });

@@ -6,7 +6,7 @@ import type {
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { readCatalogAgentRecords } from './records';
-import type { createRegistryReader } from './registry';
+import type { createRegistryReader } from './registry-reader';
 
 export interface CatalogReadInput {
   database: Database;

@@ -1,80 +1,46 @@
 import { join } from 'node:path';
 import { openDatabase } from '@repo/db';
-import { openLegacyCatalogDatabase } from '@repo/db/mocks';
+import { openPreSpecDatabaseWithHistory } from '@repo/db/mocks';
 import { agents, session, turn, feedRow } from '@repo/db/schema';
+import { appFixtureAgentIds } from '@repo/mocks/agent/app-fixtures';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
-import { expect, it, onTestFinished, vi } from 'vitest';
-import { legacyLocalAgentId } from '#mocks/legacy-catalog-identities';
-import { serializeLegacyCatalogAgentRows } from './catalog/records';
+import { expect, it, onTestFinished } from 'vitest';
+import { startRouterTestHost } from '#mocks/router';
 
-it.each(['valid', 'malformed', 'missing', 'duplicate'] as const)(
-  'migrates %s legacy metadata without losing Session history',
-  (kind): void => {
-    const stored = openLegacyCatalogDatabase(legacyLocalAgentId);
-    onTestFinished(() => stored.remove());
-    const history = stored.database.select().from(session).all();
-    const turns = stored.database.select().from(turn).all();
-    const feed = stored.database.select().from(feedRow).all();
-    const metadata =
-      kind === 'duplicate'
-        ? {
-            ...publishedRegistry,
-            agents: [publishedRegistry.agents[0], publishedRegistry.agents[0]],
-          }
-        : publishedRegistry;
-    if (kind !== 'missing')
-      stored.database.$client
-        .prepare('INSERT INTO agent_catalog_cache VALUES (1, ?, ?)')
-        .run(
-          kind === 'malformed' ? '{broken' : JSON.stringify(metadata),
-          1791504000000,
-        );
-    stored.database.$client.close();
-    const report = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const database = openDatabase(join(stored.directory, 'argo.db'), {
-      convertLegacyAgentCatalog: serializeLegacyCatalogAgentRows,
-    });
-    onTestFinished(() => database.$client.close());
-    expect(database.select().from(session).all()).toEqual(history);
-    expect(database.select().from(turn).all()).toEqual(turns);
-    expect(database.select().from(feedRow).all()).toEqual(feed);
-    const rows = database.select().from(agents).all();
-    expect(
-      rows.map((row) => JSON.parse(row.registryMetadata ?? 'null')),
-    ).toEqual(kind === 'valid' ? publishedRegistry.agents : []);
-    expect(
-      database.$client
-        .prepare(
-          "SELECT name FROM sqlite_master WHERE name = 'agent_catalog_cache'",
-        )
-        .all(),
-    ).toEqual([]);
-    expect(report).toHaveBeenCalledTimes(
-      kind === 'malformed' || kind === 'duplicate' ? 1 : 0,
-    );
-    expect(report.mock.calls.map(([message]) => message)).toEqual(
-      Array.from(
-        { length: kind === 'malformed' || kind === 'duplicate' ? 1 : 0 },
-        () => expect.stringContaining('#1'),
-      ),
-    );
-  },
-);
-
-it('refuses to silently discard an existing legacy catalog without its converter', (): void => {
-  const stored = openLegacyCatalogDatabase(legacyLocalAgentId);
+it('adds Agents to the main schema and preserves saved Session history through restart', async (): Promise<void> => {
+  const stored = openPreSpecDatabaseWithHistory(appFixtureAgentIds);
   onTestFinished(() => stored.remove());
-  stored.database.$client
-    .prepare('INSERT INTO agent_catalog_cache VALUES (1, ?, 1)')
-    .run(JSON.stringify(publishedRegistry));
   const history = stored.database.select().from(session).all();
-  expect(() => openDatabase(join(stored.directory, 'argo.db'))).toThrow(
-    'Failed query',
+  const turns = stored.database.select().from(turn).all();
+  const feed = stored.database.select().from(feedRow).all();
+  stored.database.$client.close();
+  const database = openDatabase(join(stored.directory, 'argo.db'));
+  const first = startRouterTestHost({
+    database,
+    fetchAgents: async (): Promise<unknown> => publishedRegistry,
+  });
+  expect(database.select().from(session).all()).toEqual(history);
+  expect(database.select().from(turn).all()).toEqual(turns);
+  expect(database.select().from(feedRow).all()).toEqual(feed);
+  expect(database.select().from(agents).all()).toEqual([]);
+  const savedSessions = (await first.caller.session.list({ archived: false }))
+    .sessions;
+  expect(savedSessions.map(({ agent }) => agent).sort()).toEqual(
+    [...appFixtureAgentIds].sort(),
   );
+  await first.caller.agents.syncCatalog();
+  const accepted = await first.caller.agents.catalog();
+  await first.stop();
+  database.$client.close();
+  const reopened = openDatabase(join(stored.directory, 'argo.db'));
+  onTestFinished(() => reopened.$client.close());
+  const second = startRouterTestHost({ database: reopened });
   expect(
-    stored.database.$client
-      .prepare('SELECT payload FROM agent_catalog_cache')
-      .get(),
-  ).toEqual({ payload: JSON.stringify(publishedRegistry) });
-  expect(stored.database.select().from(session).all()).toEqual(history);
+    (await second.caller.session.list({ archived: false })).sessions,
+  ).toEqual(savedSessions);
+  expect(reopened.select().from(turn).all()).toEqual(turns);
+  expect(reopened.select().from(feedRow).all()).toEqual(feed);
+  expect((await second.caller.agents.catalog()).agents).toEqual(
+    accepted.agents,
+  );
 });

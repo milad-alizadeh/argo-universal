@@ -1,7 +1,7 @@
-import type { RegistryPort } from '../src/services/agents';
+import type { FetchAgents } from '../src/services/agents';
 
 interface ControllableRegistry {
-  port: RegistryPort;
+  fetchAgents: FetchAgents;
   resolve(value: unknown): void;
   reject(error: Error): void;
 }
@@ -9,11 +9,9 @@ interface ControllableRegistry {
 export function createControllableRegistry(): ControllableRegistry {
   let pending = Promise.withResolvers<unknown>();
   return {
-    port: {
-      readRegistry: (): Promise<unknown> => {
-        pending = Promise.withResolvers<unknown>();
-        return pending.promise;
-      },
+    fetchAgents: (): Promise<unknown> => {
+      pending = Promise.withResolvers<unknown>();
+      return pending.promise;
     },
     resolve: (value): void => pending.resolve(value),
     reject: (error): void => pending.reject(error),

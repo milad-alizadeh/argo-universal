@@ -1,38 +1,61 @@
 import { agents } from '@repo/db/schema';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
-import { expect, it, vi } from 'vitest';
-import {
-  legacyLocalAgentId,
-  legacyRegistryAgentId,
-} from '#mocks/legacy-catalog-identities';
+import { expect, it, onTestFinished, vi } from 'vitest';
+import { openTestDatabase } from '#mocks/database';
 import { startRouterTestHost } from '#mocks/router';
 import { appRouter } from '../../engine/router';
+import type { FetchAgents } from './index';
 
 const savedLocalId = 'saved-local-id';
 
+it('settles an active sync before the router host finishes shutdown', async (): Promise<void> => {
+  const stored = openTestDatabase();
+  onTestFinished(stored.remove);
+  const response = Promise.withResolvers<unknown>();
+  const fetchAgents = vi.fn<FetchAgents>(() => response.promise);
+  const host = startRouterTestHost({
+    database: stored.database,
+    fetchAgents,
+  });
+  const synchronization = host.caller.agents.syncCatalog();
+  await vi.waitFor(() => expect(fetchAgents).toHaveBeenCalledTimes(1));
+  try {
+    await host.stop();
+    expect(fetchAgents.mock.calls[0]?.[0]?.aborted).toBe(true);
+    expect(await synchronization).toMatchObject({
+      changedIds: [],
+      error: 'Registry sync was cancelled',
+    });
+    expect(stored.database.select().from(agents).all()).toEqual([]);
+  } finally {
+    response.resolve(publishedRegistry);
+    await synchronization;
+  }
+});
+
 it('reads SQLite without fetching, then commits an explicit page visit sync', async (): Promise<void> => {
-  const readRegistry = vi.fn<() => Promise<unknown>>(
+  const fetchAgents = vi.fn<() => Promise<unknown>>(
     async (): Promise<unknown> => publishedRegistry,
   );
-  const { caller } = startRouterTestHost({ registry: { readRegistry } });
+  const { caller } = startRouterTestHost({ fetchAgents });
   expect(await caller.agents.catalog()).toMatchObject({
     agents: [],
     status: 'unavailable',
   });
-  expect(readRegistry).not.toHaveBeenCalled();
+  expect(fetchAgents).not.toHaveBeenCalled();
   expect(await caller.agents.syncCatalog()).toMatchObject({ error: null });
   expect(await caller.agents.catalog({ search: 'example' })).toMatchObject({
     agents: [{ entry: publishedRegistry.agents[0] }],
     status: 'fresh',
   });
-  expect(readRegistry).toHaveBeenCalledTimes(1);
+  expect(fetchAgents).toHaveBeenCalledTimes(1);
 });
 
 it('coalesces concurrent Apps and publishes changed IDs after the SQLite commit', async (): Promise<void> => {
   const pending = Promise.withResolvers<unknown>();
-  const readRegistry = vi.fn<() => Promise<unknown>>(() => pending.promise);
+  const fetchAgents = vi.fn<() => Promise<unknown>>(() => pending.promise);
   const { caller, context } = startRouterTestHost({
-    registry: { readRegistry },
+    fetchAgents,
   });
   const signal = new AbortController();
   const secondApp = appRouter.createCaller(context, { signal: signal.signal });
@@ -40,7 +63,7 @@ it('coalesces concurrent Apps and publishes changed IDs after the SQLite commit'
   const changed = subscription[Symbol.asyncIterator]().next();
   const firstVisit = caller.agents.syncCatalog();
   const secondVisit = secondApp.agents.syncCatalog();
-  await vi.waitFor(() => expect(readRegistry).toHaveBeenCalledTimes(1));
+  await vi.waitFor(() => expect(fetchAgents).toHaveBeenCalledTimes(1));
   expect(context.database.select().from(agents).all()).toEqual([]);
   pending.resolve(publishedRegistry);
   const results = await Promise.all([firstVisit, secondVisit]);
@@ -57,13 +80,13 @@ it('preserves saved local identity and custom rows across changed, removed and r
   const agent = publishedRegistry.agents[0];
   if (!agent) throw new Error('Registry mock needs an Agent');
   const changed = { ...agent, name: 'Updated Example', version: '2.0.0' };
-  const readRegistry = vi
+  const fetchAgents = vi
     .fn<() => Promise<unknown>>()
     .mockResolvedValueOnce({ ...publishedRegistry, agents: [changed] })
     .mockResolvedValueOnce({ ...publishedRegistry, agents: [] })
     .mockResolvedValue({ ...publishedRegistry, agents: [agent] });
   const { caller, context } = startRouterTestHost({
-    registry: { readRegistry },
+    fetchAgents,
   });
   context.database
     .insert(agents)
@@ -97,26 +120,22 @@ it('preserves saved local identity and custom rows across changed, removed and r
   expect(context.database.select().from(agents).all()[1]).toEqual(custom);
 });
 
-it('gives new upstream IDs independent local identities without colliding with legacy rows', async (): Promise<void> => {
+it('gives new upstream entries distinct independent local identities', async (): Promise<void> => {
   const agent = publishedRegistry.agents[0];
   if (!agent) throw new Error('Registry mock needs an Agent');
   const registry = {
     ...publishedRegistry,
-    agents: [
-      { ...agent, id: legacyRegistryAgentId },
-      { ...agent, id: legacyLocalAgentId },
-    ],
+    agents: [agent, { ...agent, id: `${agent.id}-2` }],
   };
   const { caller } = startRouterTestHost({
-    registry: { readRegistry: async (): Promise<unknown> => registry },
+    fetchAgents: async (): Promise<unknown> => registry,
   });
   expect(await caller.agents.syncCatalog()).toMatchObject({ error: null });
   const catalog = await caller.agents.catalog();
   expect(catalog.agents).toHaveLength(2);
-  expect(catalog.agents[0]).toMatchObject({
-    id: legacyLocalAgentId,
-    entry: { id: legacyRegistryAgentId },
-  });
-  expect(catalog.agents[1]?.id).not.toBe(legacyLocalAgentId);
-  expect(catalog.agents[1]?.id).not.toBe(legacyRegistryAgentId);
+  const [first, second] = catalog.agents;
+  expect(first?.entry.id).toBe(agent.id);
+  expect(first?.id).not.toBe(first?.entry.id);
+  expect(second?.id).not.toBe(second?.entry.id);
+  expect(first?.id).not.toBe(second?.id);
 });

@@ -16,12 +16,12 @@ it('rolls back every changed/removed row and timestamp when a later insert fails
       { ...pythonAgent, id: 'new-agent' },
     ],
   };
-  const readRegistry = vi
+  const fetchAgents = vi
     .fn<() => Promise<unknown>>()
     .mockResolvedValueOnce(publishedRegistry)
     .mockResolvedValue(changed);
   const { caller, context } = startRouterTestHost({
-    registry: { readRegistry },
+    fetchAgents,
   });
   await caller.agents.syncCatalog();
   const before = context.database.select().from(agents).all();

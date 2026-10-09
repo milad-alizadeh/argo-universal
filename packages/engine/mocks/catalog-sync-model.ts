@@ -57,9 +57,7 @@ export function createCatalogSyncModel(database: Database): {
   const input = {
     database,
     reader: createRegistryReader(),
-    registry: {
-      readRegistry: async (): Promise<never> => new Promise(() => {}),
-    },
+    fetchAgents: async (): Promise<never> => new Promise(() => {}),
   };
   const options = {
     input,

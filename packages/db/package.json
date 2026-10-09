@@ -6,7 +6,7 @@
   "exports": {
     ".": "./src/database.ts",
     "./schema": "./src/schema.ts",
-    "./mocks": "./mocks/legacy-agent-catalog.ts"
+    "./mocks": "./mocks/pre-spec-session-history.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

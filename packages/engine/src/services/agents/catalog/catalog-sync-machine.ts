@@ -1,12 +1,13 @@
 import type { ACPAgentRegistry } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { assign, fromPromise, setup, type ErrorActorEvent } from 'xstate';
+import type { FetchAgents } from './fetch-agents';
 import { commitCatalogAgents } from './records';
-import { type RegistryPort, type createRegistryReader } from './registry';
+import type { createRegistryReader } from './registry-reader';
 
 export interface CatalogSyncInput {
   database: Database;
-  registry: RegistryPort;
+  fetchAgents: FetchAgents;
   reader: ReturnType<typeof createRegistryReader>;
 }
 interface CatalogSyncContext extends CatalogSyncInput {
@@ -30,7 +31,7 @@ export const catalogSyncMachine = setup({
   actors: {
     fetchCatalog: fromPromise<ACPAgentRegistry, CatalogSyncInput>(
       async ({ input, signal }) =>
-        input.reader.parse(await input.registry.readRegistry(signal)),
+        input.reader.parse(await input.fetchAgents(signal)),
     ),
     saveCatalog: fromPromise<string[], CatalogSyncContext>(
       async ({ input }) => {
