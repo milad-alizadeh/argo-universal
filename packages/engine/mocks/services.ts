@@ -21,7 +21,6 @@ export function unreachableServices(
 ): Services {
   return {
     blob: { upload: unreachable('blob.upload'), ...overrides.blob },
-    agents: { list: unreachable('agents.list'), ...overrides.agents },
     projects: {
       list: unreachable('projects.list'),
       branches: unreachable('projects.branches'),
