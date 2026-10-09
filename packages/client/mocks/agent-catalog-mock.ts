@@ -51,6 +51,15 @@ export const catalog: AgentsCatalogOutput = {
   ],
 };
 
+export const unavailableCatalog: AgentsCatalogOutput = {
+  ...catalog,
+  agents: [],
+  fetchedAt: null,
+  status: 'unavailable',
+  syncStatus: 'failed',
+  error: 'Registry is offline',
+};
+
 const [exampleCatalog, pythonCatalog, binaryCatalog, windowsCatalog] =
   catalog.agents;
 if (!exampleCatalog || !pythonCatalog || !binaryCatalog || !windowsCatalog)
