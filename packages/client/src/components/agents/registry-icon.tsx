@@ -7,7 +7,7 @@ import { Icon, useIconPixels } from '../../lib/icon';
 
 interface RegistryIconProps {
   uri: string | undefined;
-  name: string;
+  agentName: string;
 }
 type IconSource =
   | { kind: 'inline'; xml: string }
@@ -22,31 +22,34 @@ type ImageProps = Pick<
 
 export function RegistryIcon({
   uri,
-  name,
+  agentName,
 }: RegistryIconProps): React.JSX.Element {
-  if (!uri) return <UnavailableIcon name={name} />;
-  return <RegistryImage uri={uri} name={name} />;
+  if (!uri) return <UnavailableIcon agentName={agentName} />;
+  return <RegistryImage uri={uri} agentName={agentName} />;
 }
 
 function RegistryImage({
   uri,
-  name,
+  agentName,
 }: {
   uri: string;
-  name: string;
+  agentName: string;
 }): React.JSX.Element {
-  const source = useMemo((): IconSource => readIconSource(uri), [uri]);
-  return renderIcon(source, useImageProps(name));
+  const source = useMemo(
+    (): IconSource => decodeRegistryIconSource(uri),
+    [uri],
+  );
+  return renderIcon(source, useImageProps(agentName));
 }
 
-function useImageProps(name: string): ImageProps {
+function useImageProps(agentName: string): ImageProps {
   const pixels = useIconPixels('lg');
   return {
     width: pixels,
     height: pixels,
     accessibilityRole: 'image',
-    accessibilityLabel: `${name} icon`,
-    fallback: <UnavailableIcon name={name} />,
+    accessibilityLabel: `${agentName} icon`,
+    fallback: <UnavailableIcon agentName={agentName} />,
   };
 }
 
@@ -59,30 +62,36 @@ function renderIcon(source: IconSource, props: ImageProps): React.JSX.Element {
   );
 }
 
-function readIconSource(uri: string): IconSource {
+function decodeRegistryIconSource(iconUri: string): IconSource {
   try {
-    const xml = inlineSvg(uri);
-    return xml === null ? { kind: 'uri', uri } : { kind: 'inline', xml };
+    const xml = decodeInlineSvgDataUri(iconUri);
+    return xml === null
+      ? { kind: 'uri', uri: iconUri }
+      : { kind: 'inline', xml };
   } catch (error) {
     console.error('Registry icon decoding failed', error);
     return { kind: 'unavailable' };
   }
 }
 
-function inlineSvg(uri: string): string | null {
-  const comma = uri.indexOf(',');
-  const header = uri.slice(0, comma).split(';');
+function decodeInlineSvgDataUri(iconUri: string): string | null {
+  const comma = iconUri.indexOf(',');
+  const header = iconUri.slice(0, comma).split(';');
   if (header[0] !== 'data:image/svg+xml') return null;
   if (header.includes('base64')) return null;
-  return decodeURIComponent(uri.slice(comma + 1));
+  return decodeURIComponent(iconUri.slice(comma + 1));
 }
 
-function UnavailableIcon({ name }: { name: string }): React.JSX.Element {
+function UnavailableIcon({
+  agentName,
+}: {
+  agentName: string;
+}): React.JSX.Element {
   return (
     <View
       accessible
       accessibilityRole="image"
-      accessibilityLabel={`${name} icon unavailable`}
+      accessibilityLabel={`${agentName} icon unavailable`}
     >
       <Icon as={RobotIcon} size="lg" />
     </View>

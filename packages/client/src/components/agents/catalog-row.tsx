@@ -19,7 +19,7 @@ export function CatalogRow({ agent }: RowProps): React.JSX.Element {
       accessibilityLabel={agent.entry.name}
       className="flex-row gap-3 border-b border-border px-gutter py-4"
     >
-      <RegistryIcon name={agent.entry.name} uri={agent.entry.icon} />
+      <RegistryIcon agentName={agent.entry.name} uri={agent.entry.icon} />
       <CatalogDescription agent={agent} />
     </View>
   );

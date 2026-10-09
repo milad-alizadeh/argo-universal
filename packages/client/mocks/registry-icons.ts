@@ -5,6 +5,7 @@ const entry = publishedRegistry.agents[0];
 if (!entry?.icon) throw new Error('Registry mock needs an encoded SVG icon');
 
 export const iconAgent: AgentsCatalogOutput['agents'][number] = {
+  id: entry.id,
   entry,
   support: { kind: 'npx', recipe: { package: 'example-agent@1.2.3' } },
 };

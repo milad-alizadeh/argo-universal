@@ -24,7 +24,7 @@ function CatalogEntries({ catalog }: CatalogProps): React.JSX.Element {
       style={{ flex: 1 }}
       estimatedItemSize={120}
       recycleItems={false}
-      keyExtractor={({ entry }): string => entry.id}
+      keyExtractor={({ id }): string => id}
       renderItem={({ item }): React.JSX.Element => <CatalogRow agent={item} />}
       ListEmptyComponent={<CatalogEmpty catalog={catalog} />}
     />
@@ -35,7 +35,7 @@ function CatalogEmpty({ catalog }: CatalogProps): React.JSX.Element {
   return (
     <Text className="px-gutter py-6 text-muted-foreground">
       {catalog.status === 'unavailable'
-        ? 'No cached catalog is available.'
+        ? 'No saved catalog is available.'
         : 'No Agents found.'}
     </Text>
   );

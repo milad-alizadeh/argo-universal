@@ -2,6 +2,7 @@ import { createServer, type Server } from 'node:http';
 import type { Database } from '@repo/db';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { WebSocketServer } from 'ws';
+import type { RegistryPort } from '../services/agents';
 import { blobsFolderIn } from '../services/blob';
 import type { RegistryActorRef } from '../services/sessions';
 import { createEngineContext, type Context } from './context';
@@ -17,6 +18,7 @@ export interface HttpServerOptions {
   startedAt: string;
   database: Database;
   sessions: RegistryActorRef;
+  registry?: RegistryPort;
 }
 
 export interface HttpServer {

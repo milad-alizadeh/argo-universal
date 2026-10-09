@@ -1,15 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { createMockAdapter } from '@repo/mocks/agent';
-import { onTestFinished } from 'vitest';
 import { type Actor, createActor } from 'xstate';
 import { createEngineContext, type Context } from '../src/engine/context';
 import { appRouter } from '../src/engine/router';
-import {
-  agentCatalogId,
-  catalogMachine,
-  type CatalogInput,
-} from '../src/services/agents';
 import { databaseWriterId, writerMachine } from '../src/services/feed';
 import {
   registryMachine,
@@ -28,8 +22,7 @@ type RouterTestHostOptions = Partial<
       RegistryInput,
       'adapters' | 'runtimeDirectory' | 'acpResources' | 'resolveAgentLaunch'
     >
-  > &
-  Pick<CatalogInput, 'registry' | 'platform'>;
+  >;
 
 export function startRouterTestHost(
   engineOptions: RouterTestHostOptions = {},
@@ -58,7 +51,6 @@ export function startRouterTestHost(
       resolveAgentLaunch: engineOptions.resolveAgentLaunch,
     },
   }).start();
-  startCatalogForTest(sessionRegistry, { ...engineOptions, database });
   const databaseWriter = createActor(writerMachine, {
     parent: sessionRegistry,
     systemId: databaseWriterId,
@@ -68,9 +60,10 @@ export function startRouterTestHost(
     { sessionRegistry, databaseWriter },
     ownedDatabase,
   );
-  return routerTestHost(
+  return createRouterTestHost(
     {
       ...engineOptions,
+      registry: engineOptions.registry ?? emptyRegistry,
       database,
       sessions: sessionRegistry,
       createId,
@@ -82,7 +75,7 @@ export function startRouterTestHost(
   );
 }
 
-function routerTestHost(
+function createRouterTestHost(
   options: Parameters<typeof createEngineContext>[0],
   actors: {
     sessionRegistry: RegistryActorRef;
@@ -100,19 +93,3 @@ const emptyRegistry = {
     agents: [],
   }),
 };
-
-function startCatalogForTest(
-  sessionRegistry: RegistryActorRef,
-  engineOptions: CatalogInput,
-): void {
-  const catalog = createActor(catalogMachine, {
-    parent: sessionRegistry,
-    systemId: agentCatalogId,
-    input: {
-      database: engineOptions.database,
-      registry: engineOptions.registry ?? emptyRegistry,
-      platform: engineOptions.platform,
-    },
-  }).start();
-  onTestFinished((): void => catalog.send({ type: 'catalog.stop' }));
-}

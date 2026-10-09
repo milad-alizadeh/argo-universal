@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { openDatabase } from '@repo/db';
-import { agentCatalogCache } from '@repo/db/schema';
+import { agents } from '@repo/db/schema';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { expect, it, onTestFinished } from 'vitest';
 import { openTestDatabase } from '#mocks/database';
@@ -15,6 +15,7 @@ it('hydrates exact upstream metadata after a disk database restart while offline
   });
   const history = (await first.caller.session.list({ archived: false }))
     .sessions;
+  await first.caller.agents.syncCatalog();
   const accepted = await first.caller.agents.catalog();
   await first.stop();
   stored.database.$client.close();
@@ -24,6 +25,7 @@ it('hydrates exact upstream metadata after a disk database restart while offline
     database,
     registry: offlineRegistry,
   });
+  await restarted.caller.agents.syncCatalog();
   const catalog = await restarted.caller.agents.catalog();
   expect(catalog).toMatchObject({
     status: 'stale',
@@ -32,9 +34,13 @@ it('hydrates exact upstream metadata after a disk database restart while offline
     fetchedAt: accepted.fetchedAt,
     agents: accepted.agents,
   });
-  const cache = database.select().from(agentCatalogCache).get();
-  expect(cache && JSON.parse(cache.payload)).toEqual(publishedRegistry);
-  expect(cache && JSON.parse(cache.payload).extensions).toEqual([]);
+  expect(
+    database
+      .select()
+      .from(agents)
+      .all()
+      .map((row) => JSON.parse(row.registryMetadata ?? 'null')),
+  ).toEqual(publishedRegistry.agents);
   expect(
     (await restarted.caller.session.list({ archived: false })).sessions,
   ).toEqual(history);

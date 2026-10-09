@@ -26,7 +26,7 @@ export async function startCatalogEngine(
   home: string,
   registry: RegistryPort,
 ): Promise<StartedCatalogEngine> {
-  const port = await freePort();
+  const port = await findFreePort();
   const engine = createActor(engineMachine, {
     input: { ...defaults, home, registry, port },
   }).start();
@@ -45,7 +45,7 @@ function registerEngineStop(engine: CatalogEngine): () => Promise<void> {
   return stop;
 }
 
-function freePort(): Promise<number> {
+function findFreePort(): Promise<number> {
   return new Promise((resolve, reject): void => {
     const socket = createServer();
     socket.once('error', reject);
