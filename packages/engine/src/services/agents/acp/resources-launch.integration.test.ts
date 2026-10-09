@@ -13,11 +13,11 @@ it('equivalent reordered launches reuse one startup and ignore extra caller fiel
   });
   const resources = createAcpResources(peer);
   const base = resourceOpening();
-  const launch = { ...base.launch, env: { B: 'b', A: 'a' } };
+  const launch = { ...base.launch, env: { '\u00c5': 'a', 'A\u030a': 'b' } };
   const reordered = {
     authContext: launch.authContext,
     cwd: launch.cwd,
-    env: { A: 'a', B: 'b' },
+    env: { 'A\u030a': 'b', '\u00c5': 'a' },
     args: launch.args,
     version: launch.version,
     executable: launch.executable,

@@ -7,6 +7,13 @@ import type {
   AgentLaunch,
 } from './resource-types';
 
+const compareEnvironmentKeys = (
+  [left]: [string, string],
+  [right]: [string, string],
+): number => {
+  if (left === right) return 0;
+  return left < right ? -1 : 1;
+};
 const captureLaunch = (launch: AgentLaunch): AgentLaunch => ({
   projectId: launch.projectId,
   agentId: launch.agentId,
@@ -15,9 +22,7 @@ const captureLaunch = (launch: AgentLaunch): AgentLaunch => ({
   args: [...launch.args],
   cwd: launch.cwd,
   env: Object.fromEntries(
-    Object.entries(launch.env).sort(([left], [right]) =>
-      left.localeCompare(right),
-    ),
+    Object.entries(launch.env).sort(compareEnvironmentKeys),
   ),
   authContext: launch.authContext,
 });
