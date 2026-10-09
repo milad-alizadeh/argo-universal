@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { createRejectionCounter } from '../lib/count-rejections';
 import { createServerServices } from '../services/server-services';
 import type { Services } from '../services/services';
 import { createSessionList, createSessionReader } from '../services/sessions';
@@ -9,6 +10,7 @@ export type Context = Pick<
   'database' | 'sessions' | 'createId'
 > & {
   services: Services;
+  projectRejections: ReturnType<typeof createRejectionCounter>;
   readSession: ReturnType<typeof createSessionReader>;
   sessionList: ReturnType<typeof createSessionList>;
 };
@@ -21,6 +23,7 @@ export function createEngineContext(
     sessions: engineOptions.sessions,
     createId: engineOptions.createId ?? randomUUID,
     services: createServerServices(engineOptions),
+    projectRejections: createRejectionCounter('projects'),
     readSession: createSessionReader(engineOptions.database),
     sessionList: createSessionList(engineOptions),
   };

@@ -28,11 +28,6 @@ export function createRejectingServices(
       list: createUnexpectedCallRejection('agents.list'),
       ...overrides.agents,
     },
-    projects: {
-      list: createUnexpectedCallRejection('projects.list'),
-      branches: createUnexpectedCallRejection('projects.branches'),
-      ...overrides.projects,
-    },
     system: {
       info: createUnexpectedCallRejection('system.info'),
       clock: createUnexpectedCallRejection('system.clock'),
