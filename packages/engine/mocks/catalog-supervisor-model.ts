@@ -58,10 +58,7 @@ export function createCatalogSupervisorModel(database: Database): {
       fetchAgents: async (): Promise<never> => new Promise(() => {}),
     },
     events: supervisorEvents,
-    filterEvents: (
-      snapshot: SupervisorSnapshot,
-      event: SupervisorModelEvent,
-    ): boolean => snapshot.can(event),
+    filterEvents: canApplyCatalogSupervisorModelEvent,
     serializeState: serializeCatalogSupervisorPathState,
   };
   return {
@@ -86,4 +83,13 @@ function serializeCatalogSupervisorPathState(
       event &&
       `${previous && serializeCatalogSupervisorState(previous)} ${serializeCatalogSupervisorEvent(event)}`,
   });
+}
+
+function canApplyCatalogSupervisorModelEvent(
+  snapshot: SupervisorSnapshot,
+  event: SupervisorModelEvent,
+): boolean {
+  if (snapshot.status !== 'active') return false;
+  if (event.type === 'catalog.sync') return !snapshot.matches('stopping');
+  return snapshot.can(event);
 }

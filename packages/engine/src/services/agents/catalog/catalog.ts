@@ -4,7 +4,12 @@ import type {
   AgentsCatalogSyncOutput,
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
-import { createActor, waitFor, type ActorRefFrom } from 'xstate';
+import {
+  createActor,
+  waitFor,
+  type ActorRefFrom,
+  type SnapshotFrom,
+} from 'xstate';
 import { readAgentCatalog, resolveRegistryServerPlatform } from './browse';
 import { catalogSyncSupervisorMachine } from './catalog-sync-supervisor-machine';
 import { fetchAgents, type FetchAgents } from './fetch-agents';
@@ -48,7 +53,7 @@ export async function syncAgentCatalog(
   actor: CatalogSyncSupervisor,
 ): Promise<AgentsCatalogSyncOutput> {
   const before = actor.getSnapshot();
-  if (!before.can({ type: 'catalog.sync' })) return cancelledCatalogSync(actor);
+  if (catalogSyncAdmissionIsClosed(before)) return cancelledCatalogSync(actor);
   const completed = waitFor(
     actor,
     (snapshot) =>
@@ -92,4 +97,10 @@ function cancelledCatalogSync(
     error: 'Registry sync was cancelled',
     rejectedValues: actor.getSnapshot().context.reader.count(),
   };
+}
+
+function catalogSyncAdmissionIsClosed(
+  snapshot: SnapshotFrom<typeof catalogSyncSupervisorMachine>,
+): boolean {
+  return snapshot.status !== 'active' || snapshot.matches('stopping');
 }
