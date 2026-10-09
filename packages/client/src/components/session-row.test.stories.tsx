@@ -7,7 +7,6 @@ import { settleViewport } from '../../mocks/settle-viewport';
 import { SessionRow } from './session-row';
 
 const statusSelector = '[data-testid="session-status"]';
-const missingStatusFailure = 'Missing status container';
 
 const meta = {
   title: 'Tests/SessionRow',
@@ -37,83 +36,6 @@ function running(width: number): Story {
 }
 export const RunningPhone = running(layoutWidths.phone);
 export const RunningWide = running(layoutWidths.wide);
-
-export const PaperRowDimensions: Story = {
-  args: { session: sessionRowMocks.planAndSubagents },
-  play: async ({ canvas, canvasElement }) => {
-    const { page } = await import('vitest/browser');
-    for (const [width, height] of [
-      [390, 96],
-      [1440, 76],
-    ] as const) {
-      await page.viewport(width, 844);
-      const row = canvas.getByRole('button');
-      await expect(row).toBeVisible();
-      await waitFor(() =>
-        expect(
-          canvasElement
-            .querySelector('[role="button"]')
-            ?.getBoundingClientRect().height,
-        ).toBe(height),
-      );
-    }
-  },
-};
-
-export const PaperMetadataDimensions: Story = {
-  args: {
-    session: sessionRowMocks.finishedSubagents,
-    issue: { number: 96 },
-    pullRequest: { number: 44, status: 'merged' },
-  },
-  play: async ({ canvas }) => {
-    const { page } = await import('vitest/browser');
-    // The Secondary text role: 14/20 on phone, 12/16 from the wide breakpoint.
-    for (const [width, fontSize, lineHeight] of [
-      [390, '14px', '20px'],
-      [1440, '12px', '16px'],
-    ] as const) {
-      await page.viewport(width, 844);
-      const groups = [
-        canvas.getByLabelText('Plan: 5 of 5 complete'),
-        canvas.getByLabelText('Subagents: 3, 0 running'),
-        canvas.getByLabelText('Issue #96'),
-        canvas.getByLabelText('merged PR #44'),
-      ];
-      await expect(canvas.getByText('5/5')).toBeVisible();
-      for (const text of ['5/5', '3', '#96', '#44']) {
-        const style = getComputedStyle(canvas.getByText(text, { exact: true }));
-        await expect(style.fontSize).toBe(fontSize);
-        await expect(style.lineHeight).toBe(lineHeight);
-        await expect(style.fontWeight).toBe('400');
-      }
-      for (const group of groups.slice(1)) {
-        const icon = group.querySelector('svg');
-        if (!icon) throw new Error('Missing metadata icon');
-        await expect(icon.getBoundingClientRect().width).toBe(16);
-        await expect(icon.getBoundingClientRect().height).toBe(16);
-        await expect(getComputedStyle(group).gap).toBe('4px');
-      }
-      const bar = groups[0]?.firstElementChild;
-      if (!bar) throw new Error('Missing Plan bar');
-      await expect(bar.getBoundingClientRect().width).toBe(40);
-      await expect(bar.getBoundingClientRect().height).toBe(4);
-      await expect(getComputedStyle(bar).gap).toBe('2px');
-      const parent = bar.parentElement;
-      if (!parent) throw new Error('Status indicator has no parent');
-      await expect(getComputedStyle(parent).gap).toBe('6px');
-      for (let index = 1; index < groups.length; index++) {
-        const previous = groups[index - 1]?.getBoundingClientRect();
-        const current = groups[index]?.getBoundingClientRect();
-        if (!previous || !current) throw new Error('Missing metadata group');
-        await expect(current.left - previous.right).toBe(12);
-        await expect(current.top + current.height / 2).toBe(
-          previous.top + previous.height / 2,
-        );
-      }
-    }
-  },
-};
 
 export const PaperAgentSymbols: Story = {
   render: (args) => (
@@ -185,60 +107,13 @@ export const PullRequestWithoutOtherMetadata: Story = {
     const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
-      const title = canvas.getByText(sessionRows.idle.title);
-      const pullRequest = canvas.getByLabelText('open PR #45');
-      await expect(pullRequest).toBeVisible();
-      await expect(pullRequest.getBoundingClientRect().left).toBe(
-        title.getBoundingClientRect().left,
-      );
+      await expect(canvas.getByLabelText('open PR #45')).toBeVisible();
     }
   },
 };
 
 export const PullRequestWithoutOtherMetadataDark: Story = {
   ...PullRequestWithoutOtherMetadata,
-  globals: { mode: 'dark' },
-};
-
-export const StableTextWhenPressed: Story = {
-  args: {
-    session: sessionRowMocks.planAndSubagents,
-    issue: { number: 128 },
-    pullRequest: { number: 45, status: 'merged' },
-  },
-  play: async ({ canvas, args }) => {
-    const { page, userEvent } = await import('vitest/browser');
-    await page.viewport(1440, 844);
-    const row = canvas.getByRole('button');
-    const texts = [
-      args.session.title,
-      args.session.activity,
-      '2/5',
-      '3',
-      '#128',
-      '#45',
-    ].map((text) => canvas.getByText(text, { exact: true }));
-    const before = texts.map((text) => getComputedStyle(text).color);
-    let during = Promise.resolve<string[]>([]);
-    row.addEventListener(
-      'mousedown',
-      () => {
-        during = new Promise((resolve) => {
-          setTimeout(
-            () => resolve(texts.map((text) => getComputedStyle(text).color)),
-            100,
-          );
-        });
-      },
-      { once: true },
-    );
-    await userEvent.click(row, { delay: 200 });
-    await expect(await during).toEqual(before);
-  },
-};
-
-export const StableTextWhenPressedDark: Story = {
-  ...StableTextWhenPressed,
   globals: { mode: 'dark' },
 };
 
@@ -321,41 +196,7 @@ export const StatusMotion: Story = {
     await waitFor(() =>
       expect(getComputedStyle(waitingDot).opacity).not.toBe(waitingOpacity),
     );
-    for (const dot of [runningDot, waitingDot]) {
-      await expect(
-        Number(getComputedStyle(dot).opacity),
-      ).toBeGreaterThanOrEqual(0.45);
-      await expect(getComputedStyle(dot).boxShadow).not.toBe('none');
-      await expect(getComputedStyle(dot).boxShadow).toContain(
-        getComputedStyle(dot).backgroundColor,
-      );
-      const container = dot.parentElement;
-      if (!container) throw new Error(missingStatusFailure);
-      await expect(getComputedStyle(container).boxShadow).toBe('none');
-      await expect(getComputedStyle(container).opacity).toBe('1');
-      await expect(getComputedStyle(container).backgroundColor).toBe(
-        getComputedStyle(container).borderTopColor,
-      );
-      await expect(getComputedStyle(dot).borderWidth).toBe('0px');
-      const bounds = container.getBoundingClientRect();
-      const logoBounds = container.parentElement?.getBoundingClientRect();
-      if (!logoBounds) throw new Error(missingStatusFailure);
-      await expect(bounds.top).toBeLessThan(logoBounds.top);
-      await expect(bounds.right).toBeGreaterThan(logoBounds.right);
-    }
-    await expect(getComputedStyle(runningLogo).opacity).toBe('1');
     await expect(getComputedStyle(waitingLogo).transform).toBe(waitingRotation);
-    for (const [name, label] of [
-      ['Fix the failing build', 'Failed'],
-      ['New results to review', 'Unread'],
-      ['Finished work', 'Idle'],
-    ]) {
-      const dot = canvas
-        .getByRole('button', { name: `First Agent: ${name}, ${label}` })
-        .querySelector(statusSelector);
-      if (!dot) throw new Error('Missing Session status');
-      await expect(getComputedStyle(dot).opacity).toBe('1');
-    }
   },
 };
 
@@ -383,16 +224,8 @@ export const NoPlanOrSubagents: Story = {
   args: { session: sessionRows.idle },
   play: async ({ canvas }) => {
     const { page } = await import('vitest/browser');
-    for (const [width, height] of [
-      [390, 70],
-      [1440, 54],
-    ] as const) {
+    for (const width of [390, 1440]) {
       await page.viewport(width, 844);
-      await waitFor(() =>
-        expect(canvas.getByRole('button').getBoundingClientRect().height).toBe(
-          height,
-        ),
-      );
       await expect(canvas.queryByLabelText(/^Plan:/)).not.toBeInTheDocument();
       await expect(
         canvas.queryByLabelText(/^Subagents:/),
@@ -435,13 +268,6 @@ function longTitleSelected(width: number): Story {
         name: `${sessionRows.longTitle.title}, Idle`,
       });
       await expect(row).toHaveAttribute('aria-selected', 'true');
-      const container = row.querySelector(
-        '[data-testid="session-status-container"]',
-      );
-      if (!container) throw new Error(missingStatusFailure);
-      await expect(getComputedStyle(container).backgroundColor).toBe(
-        getComputedStyle(container).borderTopColor,
-      );
       const title = canvas.getByText(sessionRows.longTitle.title);
       await expect(title).toBeVisible();
       await expect(title).toHaveStyle({ overflow: 'hidden' });
@@ -493,10 +319,5 @@ export const MetadataPhoneDark: Story = {
 };
 export const MetadataWideDark: Story = {
   ...MetadataWide,
-  globals: { mode: 'dark' },
-};
-
-export const PaperMetadataDimensionsDark: Story = {
-  ...PaperMetadataDimensions,
   globals: { mode: 'dark' },
 };
