@@ -17,7 +17,7 @@ const sleep = (
     }
   });
 
-export async function* clock(
+export async function* streamClock(
   signal: AbortSignal | undefined,
 ): AsyncGenerator<ClockTick> {
   while (!signal?.aborted) {
