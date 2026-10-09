@@ -116,7 +116,7 @@ export const registryMachine = setup({
       if (
         session &&
         snapshot.can({ type: closeSessionEvent }) &&
-        !snapshot.matches({ open: { live: 'closing' } })
+        !snapshot.matches({ open: 'draining' })
       )
         enqueue.sendTo(session, { type: closeSessionEvent });
     }),

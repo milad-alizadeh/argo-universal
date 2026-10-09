@@ -63,16 +63,12 @@ The git working tree that a Session runs in: its own worktree, or the Project's 
 _Avoid_: Workspace, worktree (when the main checkout is also possible)
 
 **Turn**:
-One prompt to an Agent and everything the Agent does until it stops, ending with a stop reason.
+A stretch of Agent work started by a prompt or by the Agent, ending with a stop reason when the Agent finishes or the Session ends it.
 _Avoid_: Run, request, exchange
 
 **Agent adapter**:
 The plain functions that connect Argo to one Agent: start or resume its vendor session, and map its messages into Agent events.
 _Avoid_: Driver, provider, integration
-
-**Agent machine**:
-The one state machine that runs every Agent adapter for a Session: it starts the vendor session, runs commands in order, and tracks the Turn.
-_Avoid_: Claude machine, adapter machine
 
 **Vendor session**:
 The Agent's own live session that an Agent adapter starts or resumes, identified by the Agent's session id.

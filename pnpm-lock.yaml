@@ -958,9 +958,6 @@ importers:
       ajv:
         specifier: 'catalog:'
         version: 8.20.0
-      xstate:
-        specifier: 'catalog:'
-        version: 5.33.2(patch_hash=515e52fcbbcdb6786c4f9c868f284309c5ad4de4a35e522342d0a514e9f35759)
       zod:
         specifier: 'catalog:'
         version: 4.6.5
