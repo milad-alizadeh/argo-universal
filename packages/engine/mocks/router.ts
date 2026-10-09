@@ -14,52 +14,62 @@ import {
 } from '../src/services/sessions';
 import { openTestDatabase } from './database';
 
-type RouterHostOptions = Partial<
+type RouterTestHostOptions = Partial<
   Omit<Parameters<typeof createEngineContext>[0], 'sessions'>
 > &
   Partial<Pick<RegistryInput, 'adapters' | 'runtimeDirectory'>>;
 
-export function createRouterHost(options: RouterHostOptions = {}): {
+export function startRouterTestHost(
+  engineOptions: RouterTestHostOptions = {},
+): {
   context: Context;
   caller: ReturnType<typeof appRouter.createCaller>;
-  root: RegistryActorRef;
-  writer: Actor<typeof writerMachine>;
+  sessionRegistry: RegistryActorRef;
+  databaseWriter: Actor<typeof writerMachine>;
 } {
-  const owned = options.database ? undefined : openTestDatabase();
-  const database = options.database ?? owned?.database;
+  const ownedDatabase = engineOptions.database ? undefined : openTestDatabase();
+  const database = engineOptions.database ?? ownedDatabase?.database;
   if (!database) throw new Error('Test database is missing');
   const runtimeDirectory =
-    options.runtimeDirectory ?? owned?.directory ?? '/unused';
-  const createId = options.createId ?? randomUUID;
-  const root = createActor(registryMachine, {
+    engineOptions.runtimeDirectory ?? ownedDatabase?.directory ?? '/unused';
+  const createId = engineOptions.createId ?? randomUUID;
+  const sessionRegistry = createActor(registryMachine, {
     systemId: sessionRegistryId,
     input: {
       database,
       runtimeDirectory,
       createId,
       now: (): number => Date.now(),
-      adapters: options.adapters ?? [createMockAdapter()],
+      adapters: engineOptions.adapters ?? [createMockAdapter()],
     },
   }).start();
-  const writer = createActor(writerMachine, {
-    parent: root,
+  const databaseWriter = createActor(writerMachine, {
+    parent: sessionRegistry,
     systemId: databaseWriterId,
     input: { database, now: (): number => Date.now() },
   }).start();
   onTestFinished(async (): Promise<void> => {
-    writer.send({ type: 'writer.drain' });
-    await waitFor(writer, (snapshot): boolean => snapshot.status === 'done');
-    root.stop();
-    owned?.remove();
+    databaseWriter.send({ type: 'writer.drain' });
+    await waitFor(
+      databaseWriter,
+      (snapshot): boolean => snapshot.status === 'done',
+    );
+    sessionRegistry.stop();
+    ownedDatabase?.remove();
   });
   const context = createEngineContext({
-    ...options,
+    ...engineOptions,
     database,
-    sessions: root,
+    sessions: sessionRegistry,
     createId,
-    blobsFolder: options.blobsFolder ?? join(runtimeDirectory, 'blobs'),
-    version: options.version ?? '1.2.3',
-    startedAt: options.startedAt ?? '2026-10-03T00:00:00.000Z',
+    blobsFolder: engineOptions.blobsFolder ?? join(runtimeDirectory, 'blobs'),
+    version: engineOptions.version ?? '1.2.3',
+    startedAt: engineOptions.startedAt ?? '2026-10-03T00:00:00.000Z',
   });
-  return { context, caller: appRouter.createCaller(context), root, writer };
+  return {
+    context,
+    caller: appRouter.createCaller(context),
+    sessionRegistry,
+    databaseWriter,
+  };
 }

@@ -29,7 +29,7 @@ import type {
 import { type Actor, createActor, fromPromise, setup } from 'xstate';
 import { insertSession, openTestDatabase } from '#mocks/database';
 import { storedMessage as message } from '#mocks/feed';
-import { createRouterHost } from '#mocks/router';
+import { startRouterTestHost } from '#mocks/router';
 import { createEngineContext } from '../../engine/context';
 import { appRouter } from '../../engine/router';
 import {
@@ -51,11 +51,11 @@ const fifthMessageRowId = 'message-5#0';
 let database: Database;
 let runtimeDirectory: string;
 let removeDatabase: () => void;
-let host: Actor<ReturnType<typeof hostMachine>>;
+let host: Actor<ReturnType<typeof createFeedTestMachine>>;
 let controller: AbortController;
 
 // The Engine's writer and one Session's feed actor in one actor system, as the Engine will run them.
-const hostMachine = (
+const createFeedTestMachine = (
   writer = writerMachine,
 ): StateMachine<
   MachineContext,
@@ -137,14 +137,16 @@ const hostMachine = (
     ],
   });
 
-const startHost = (writer = writerMachine): void => {
-  host = createActor(hostMachine(writer)).start();
+const startFeedTestHost = (writer = writerMachine): void => {
+  host = createActor(createFeedTestMachine(writer)).start();
 };
-const feedRef = (): ActorRefFromLogic<typeof feedMachine> | undefined =>
+const findFeedActor = (): ActorRefFromLogic<typeof feedMachine> | undefined =>
   host.getSnapshot().children.feed;
 
-const caller = (): ReturnType<typeof appRouter.createCaller> => {
-  const context = createRouterHost({ database }).context;
+const createFeedRouterCaller = (): ReturnType<
+  typeof appRouter.createCaller
+> => {
+  const context = startRouterTestHost({ database }).context;
   return appRouter.createCaller(
     {
       ...context,
@@ -162,14 +164,14 @@ const caller = (): ReturnType<typeof appRouter.createCaller> => {
               sessionId === 'session-1'
                 ? host.getSnapshot().children.session
                 : undefined,
-            findFeed: (): ReturnType<typeof feedRef> => feedRef(),
+            findFeed: (): ReturnType<typeof findFeedActor> => findFeedActor(),
             findWriter: (): ReturnType<typeof host.system.get> =>
               host.system.get('databaseWriter'),
           }),
           findFeed: (
             sessionId,
           ): ActorRefFromLogic<typeof feedMachine> | undefined =>
-            sessionId === 'session-1' ? feedRef() : undefined,
+            sessionId === 'session-1' ? findFeedActor() : undefined,
           findWriter: (): ReturnType<typeof host.system.get> =>
             host.system.get('databaseWriter'),
         }),
@@ -180,8 +182,8 @@ const caller = (): ReturnType<typeof appRouter.createCaller> => {
 };
 
 const sendChange = (change: FeedChange): void | undefined =>
-  feedRef()?.send({ type: 'feed.change', change, turnId: 'turn-1' });
-const openMessage = (id: string, text = ''): FeedChange => ({
+  findFeedActor()?.send({ type: 'feed.change', change, turnId: 'turn-1' });
+const createOpenMessageChange = (id: string, text = ''): FeedChange => ({
   type: 'upsert',
   update: {
     id,
@@ -191,7 +193,7 @@ const openMessage = (id: string, text = ''): FeedChange => ({
     content: [{ type: 'text', text }],
   },
 });
-const appendText = (id: string, text: string): FeedChange => ({
+const createTextAppendChange = (id: string, text: string): FeedChange => ({
   type: 'append',
   id,
   field: 'content.0.text',
@@ -202,20 +204,22 @@ const subscribe = async (
   after: FeedSyncPoint | null,
   sessionId = 'session-1',
 ): Promise<AsyncIterator<FeedSubscribeOutput, void>> =>
-  (await caller().feed.subscribe({ sessionId, after }))[Symbol.asyncIterator]();
-const take = async (
-  iterator: AsyncIterator<FeedSubscribeOutput>,
-  count: number,
+  (await createFeedRouterCaller().feed.subscribe({ sessionId, after }))[
+    Symbol.asyncIterator
+  ]();
+const takeFeedChanges = async (
+  feedUpdates: AsyncIterator<FeedSubscribeOutput>,
+  changeCount: number,
 ): Promise<FeedSubscribeOutput[]> => {
   const values: FeedSubscribeOutput[] = [];
-  while (values.length < count) {
-    const next = await iterator.next();
+  while (values.length < changeCount) {
+    const next = await feedUpdates.next();
     if (next.done) break;
     if (next.value.type !== 'snapshot') values.push(next.value);
   }
   return values;
 };
-const summary = (outputs: FeedSubscribeOutput[]): string[] =>
+const summarizeFeedChanges = (outputs: FeedSubscribeOutput[]): string[] =>
   outputs.map((output): string => {
     if (output.type === upsertRowEvent)
       return `upsert ${output.row.id} @${output.rev}`;
@@ -252,11 +256,11 @@ afterEach((): void => {
 });
 
 describe('feed.page', (): void => {
-  beforeEach((): void => startHost());
+  beforeEach((): void => startFeedTestHost());
 
   it('reads the newest rows in position order', async (): Promise<void> => {
     expect(
-      await caller().feed.page({
+      await createFeedRouterCaller().feed.page({
         sessionId: 'session-1',
         direction: 'tail',
         limit: 2,
@@ -273,7 +277,7 @@ describe('feed.page', (): void => {
 
   it('reads the rows before a cursor', async (): Promise<void> => {
     expect(
-      await caller().feed.page({
+      await createFeedRouterCaller().feed.page({
         sessionId: 'session-1',
         direction: 'before',
         cursor: 3,
@@ -287,7 +291,7 @@ describe('feed.page', (): void => {
       staleCursor: false,
     });
     expect(
-      await caller().feed.page({
+      await createFeedRouterCaller().feed.page({
         sessionId: 'session-1',
         direction: 'before',
         cursor: 1,
@@ -298,7 +302,7 @@ describe('feed.page', (): void => {
 
   it('answers a cursor from another epoch with the tail', async (): Promise<void> => {
     expect(
-      await caller().feed.page({
+      await createFeedRouterCaller().feed.page({
         sessionId: 'session-1',
         direction: 'before',
         cursor: 2,
@@ -315,7 +319,7 @@ describe('feed.page', (): void => {
 
   it('flags a tail request from another epoch', async (): Promise<void> => {
     expect(
-      await caller().feed.page({
+      await createFeedRouterCaller().feed.page({
         sessionId: 'session-1',
         direction: 'tail',
         epoch: 2,
@@ -328,7 +332,10 @@ describe('feed.page', (): void => {
     insertSession(database, { id: 'session-2' });
 
     expect(
-      await caller().feed.page({ sessionId: 'session-2', direction: 'tail' }),
+      await createFeedRouterCaller().feed.page({
+        sessionId: 'session-2',
+        direction: 'tail',
+      }),
     ).toEqual({
       epoch: 0,
       maxRevision: 0,
@@ -341,7 +348,10 @@ describe('feed.page', (): void => {
 
   it('fails with NOT_FOUND for an unknown Session', async (): Promise<void> => {
     await expect(
-      caller().feed.page({ sessionId: 'session-9', direction: 'tail' }),
+      createFeedRouterCaller().feed.page({
+        sessionId: 'session-9',
+        direction: 'tail',
+      }),
     ).rejects.toMatchObject({ code: 'NOT_FOUND' });
   });
 
@@ -354,7 +364,7 @@ describe('feed.page', (): void => {
     await vi.advanceTimersByTimeAsync(0);
 
     expect(
-      await caller().feed.page({
+      await createFeedRouterCaller().feed.page({
         sessionId: 'session-1',
         direction: 'tail',
         limit: 2,
@@ -366,7 +376,7 @@ describe('feed.page', (): void => {
   });
 
   it('reads rows that the feed actor wrote through the database writer', async (): Promise<void> => {
-    sendChange(openMessage(fifthMessageRowId, 'Hi'));
+    sendChange(createOpenMessageChange(fifthMessageRowId, 'Hi'));
     sendChange({
       type: 'patch',
       id: fifthMessageRowId,
@@ -375,7 +385,7 @@ describe('feed.page', (): void => {
     await vi.advanceTimersByTimeAsync(0);
 
     expect(
-      await caller().feed.page({
+      await createFeedRouterCaller().feed.page({
         sessionId: 'session-1',
         direction: 'tail',
         limit: 1,
@@ -396,20 +406,23 @@ describe('feed.page', (): void => {
 });
 
 describe('feed.row', (): void => {
-  beforeEach((): void => startHost());
+  beforeEach((): void => startFeedTestHost());
 
   it('reads a stored row', async (): Promise<void> => {
     expect(
-      await caller().feed.row({ sessionId: 'session-1', id: 'message-2#0' }),
+      await createFeedRouterCaller().feed.row({
+        sessionId: 'session-1',
+        id: 'message-2#0',
+      }),
     ).toEqual(message(2));
   });
 
   it('reads the newest version of an open row before it is written', async (): Promise<void> => {
-    sendChange(openMessage(fifthMessageRowId));
-    sendChange(appendText(fifthMessageRowId, 'Hel'));
+    sendChange(createOpenMessageChange(fifthMessageRowId));
+    sendChange(createTextAppendChange(fifthMessageRowId, 'Hel'));
 
     expect(
-      await caller().feed.row({
+      await createFeedRouterCaller().feed.row({
         sessionId: 'session-1',
         id: fifthMessageRowId,
       }),
@@ -418,48 +431,53 @@ describe('feed.row', (): void => {
 
   it('fails with NOT_FOUND for an unknown row', async (): Promise<void> => {
     await expect(
-      caller().feed.row({ sessionId: 'session-1', id: 'message-9#0' }),
+      createFeedRouterCaller().feed.row({
+        sessionId: 'session-1',
+        id: 'message-9#0',
+      }),
     ).rejects.toMatchObject({ code: 'NOT_FOUND' });
   });
 });
 
 describe('feed.subscribe', (): void => {
   it('with no sync point, sends the rows not yet stored, then live changes', async (): Promise<void> => {
-    startHost();
-    sendChange(openMessage(fifthMessageRowId, 'Hel'));
+    startFeedTestHost();
+    sendChange(createOpenMessageChange(fifthMessageRowId, 'Hel'));
     const updates = await subscribe(null);
 
-    expect(summary(await take(updates, 1))).toEqual(['upsert message-5#0 @6']);
+    expect(summarizeFeedChanges(await takeFeedChanges(updates, 1))).toEqual([
+      'upsert message-5#0 @6',
+    ]);
 
-    sendChange(appendText(fifthMessageRowId, 'lo'));
-    sendChange(openMessage('message-6#0'));
+    sendChange(createTextAppendChange(fifthMessageRowId, 'lo'));
+    sendChange(createOpenMessageChange('message-6#0'));
     await vi.advanceTimersByTimeAsync(60);
-    expect(summary(await take(updates, 2))).toEqual([
+    expect(summarizeFeedChanges(await takeFeedChanges(updates, 2))).toEqual([
       'append message-5#0 +lo at 3 @7',
       'upsert message-6#0 @8',
     ]);
   });
 
   it('catches up from a revision with stored rows and rows not yet written, without repeats', async (): Promise<void> => {
-    startHost();
-    sendChange(openMessage(fifthMessageRowId));
-    sendChange(appendText(fifthMessageRowId, 'Hel'));
+    startFeedTestHost();
+    sendChange(createOpenMessageChange(fifthMessageRowId));
+    sendChange(createTextAppendChange(fifthMessageRowId, 'Hel'));
     const updates = await subscribe({ epoch: 3, revision: 4 });
 
-    expect(summary(await take(updates, 2))).toEqual([
+    expect(summarizeFeedChanges(await takeFeedChanges(updates, 2))).toEqual([
       'upsert message-4#0 @5',
       'upsert message-5#0 @7',
     ]);
 
-    sendChange(appendText(fifthMessageRowId, 'lo'));
+    sendChange(createTextAppendChange(fifthMessageRowId, 'lo'));
     await vi.advanceTimersByTimeAsync(60);
-    expect(summary(await take(updates, 1))).toEqual([
+    expect(summarizeFeedChanges(await takeFeedChanges(updates, 1))).toEqual([
       'append message-5#0 +lo at 3 @8',
     ]);
   });
 
   it('catches up with rows the database writer still holds', async (): Promise<void> => {
-    startHost(
+    startFeedTestHost(
       writerMachine.provide({
         actors: {
           writeBatch: fromPromise((): Promise<void> =>
@@ -469,18 +487,18 @@ describe('feed.subscribe', (): void => {
         actions: { log: (): void => {} },
       }),
     );
-    sendChange(openMessage(fifthMessageRowId, 'Hi'));
+    sendChange(createOpenMessageChange(fifthMessageRowId, 'Hi'));
     sendChange({
       type: 'patch',
       id: fifthMessageRowId,
       set: { state: 'settled' },
     });
     await vi.advanceTimersByTimeAsync(0);
-    expect(feedRef()?.getSnapshot().context.rows).toEqual({});
+    expect(findFeedActor()?.getSnapshot().context.rows).toEqual({});
 
     const updates = await subscribe({ epoch: 3, revision: 5 });
 
-    expect(await take(updates, 1)).toEqual([
+    expect(await takeFeedChanges(updates, 1)).toEqual([
       {
         type: upsertRowEvent,
         rev: 7,
@@ -493,22 +511,22 @@ describe('feed.subscribe', (): void => {
   });
 
   it('resets a subscriber from another epoch, then sends the rows not yet stored', async (): Promise<void> => {
-    startHost();
-    sendChange(openMessage(fifthMessageRowId));
+    startFeedTestHost();
+    sendChange(createOpenMessageChange(fifthMessageRowId));
     const updates = await subscribe({ epoch: 2, revision: 9 });
 
-    expect(summary(await take(updates, 2))).toEqual([
+    expect(summarizeFeedChanges(await takeFeedChanges(updates, 2))).toEqual([
       'reset',
       'upsert message-5#0 @6',
     ]);
   });
 
   it('sends stored rows and one snapshot before a closed Session stream ends', async (): Promise<void> => {
-    startHost();
+    startFeedTestHost();
     host.stop();
     const updates = await subscribe({ epoch: 3, revision: 3 });
 
-    expect(summary(await take(updates, 2))).toEqual([
+    expect(summarizeFeedChanges(await takeFeedChanges(updates, 2))).toEqual([
       'upsert message-3#0 @4',
       'upsert message-4#0 @5',
     ]);
@@ -529,7 +547,7 @@ describe('feed.subscribe', (): void => {
   });
 
   it('fails with NOT_FOUND for an unknown Session', async (): Promise<void> => {
-    startHost();
+    startFeedTestHost();
     const updates = await subscribe(null, 'session-9');
 
     await expect(updates.next()).rejects.toMatchObject({ code: 'NOT_FOUND' });
@@ -601,7 +619,7 @@ it('ends a closed Session Feed after draining its last rows', async (): Promise<
   if (!stream) throw new Error('No Agent stream');
   stream.send({
     type: 'agent.feed',
-    change: openMessage('last-row', 'Last message'),
+    change: createOpenMessageChange('last-row', 'Last message'),
   });
   const sessionActor = sessions.getSnapshot().context.sessions['session-1'];
   if (!sessionActor) throw new Error('No registered Session');
@@ -638,7 +656,7 @@ it('ends a closed Session Feed after draining its last rows', async (): Promise<
   const nextEvents: FeedSubscribeOutput[] = [resumedFirst.value];
   stream.send({
     type: 'agent.feed',
-    change: openMessage('next-row', 'Next message'),
+    change: createOpenMessageChange('next-row', 'Next message'),
   });
   for await (const event of {
     [Symbol.asyncIterator]: (): AsyncIterator<FeedSubscribeOutput, void> =>
@@ -725,7 +743,7 @@ it('reads a closed Session Feed without opening a Session', async (): Promise<vo
 });
 
 it('keeps a Subagent Feed stream open until its caller aborts', async (): Promise<void> => {
-  startHost();
+  startFeedTestHost();
   insertSession(database, { id: 'subagent', parentSessionId: 'session-1' });
   const updates = await subscribe(null, 'subagent');
   expect((await updates.next()).value).toMatchObject({ type: 'snapshot' });

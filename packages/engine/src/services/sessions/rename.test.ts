@@ -20,20 +20,22 @@ describe('Session title contracts', (): void => {
     { sessionId: 'session-1' },
     { sessionId: 'session-1', title: 42 },
     { sessionId: 'session-1', title: 'Title', titleSource: 'agent' },
-  ])('rejects malformed rename mock input: %j', (input): void => {
-    expect(SessionRenameInput.safeParse(input).success).toBe(false);
+  ])('rejects malformed rename mock input: %j', (renameInput): void => {
+    expect(SessionRenameInput.safeParse(renameInput).success).toBe(false);
   });
 
   it('rejects an unrecognised title source in the list and snapshot', (): void => {
-    const mock = sessionTitleMocks[0];
-    if (!mock) throw new Error('Missing title mock');
+    const titleMock = sessionTitleMocks[0];
+    if (!titleMock) throw new Error('Missing title mock');
     expect(
-      SessionInfo.safeParse({ ...mock.session, titleSource: 'unknown' })
+      SessionInfo.safeParse({ ...titleMock.session, titleSource: 'unknown' })
         .success,
     ).toBe(false);
     expect(
-      SessionSnapshot.safeParse({ ...mock.snapshot, titleSource: 'unknown' })
-        .success,
+      SessionSnapshot.safeParse({
+        ...titleMock.snapshot,
+        titleSource: 'unknown',
+      }).success,
     ).toBe(false);
   });
 });

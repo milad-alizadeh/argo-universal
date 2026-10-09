@@ -14,14 +14,14 @@ export type Context = Pick<
 };
 
 export function createEngineContext(
-  options: Parameters<typeof createServerServices>[0],
+  engineOptions: Parameters<typeof createServerServices>[0],
 ): Context {
   return {
-    database: options.database,
-    sessions: options.sessions,
-    createId: options.createId ?? randomUUID,
-    services: createServerServices(options),
-    readSession: createSessionReader(options.database),
-    sessionList: createSessionList(options),
+    database: engineOptions.database,
+    sessions: engineOptions.sessions,
+    createId: engineOptions.createId ?? randomUUID,
+    services: createServerServices(engineOptions),
+    readSession: createSessionReader(engineOptions.database),
+    sessionList: createSessionList(engineOptions),
   };
 }

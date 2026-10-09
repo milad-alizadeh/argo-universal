@@ -171,7 +171,7 @@ function startEngine({
       await waitFor(engine, (snapshot): boolean =>
         snapshot.matches({ live: 'running' }),
       );
-      if (!context) throw new Error('No services');
+      if (!context) throw new Error('No Engine context');
       return appRouter.createCaller(context, { signal });
     },
   };
@@ -1472,7 +1472,10 @@ for (const adapter of agentAdapters)
     });
     await expect
       .poll(async (): Promise<SessionSnapshot['state']> => {
-        const snapshot = await readSnapshot(root.createCaller, 'session-2');
+        const snapshot = await readSessionSnapshot(
+          root.createCaller,
+          'session-2',
+        );
         return snapshot.state;
       })
       .toBe('idle');
@@ -1578,7 +1581,7 @@ it.each(agentAdapters)(
   },
 );
 
-async function readSnapshot(
+async function readSessionSnapshot(
   createCaller: Awaited<
     ReturnType<typeof startNewSessionEngine>
   >['createCaller'],

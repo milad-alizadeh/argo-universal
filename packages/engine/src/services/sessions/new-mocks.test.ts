@@ -21,9 +21,9 @@ it.each(Object.entries(newSessionCatalogs))(
 
 it.each(newSessionInputs)(
   'validates the recorded image prompt for $agent',
-  (input): void => {
-    expect(SessionNewInput.parse(input)).toEqual(input);
-    expect(input.prompt).toContainEqual(
+  (newSessionInput): void => {
+    expect(SessionNewInput.parse(newSessionInput)).toEqual(newSessionInput);
+    expect(newSessionInput.prompt).toContainEqual(
       expect.objectContaining({
         type: 'image',
         blob: expect.objectContaining({ width: 32, height: 32 }),
