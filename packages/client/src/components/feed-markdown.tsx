@@ -19,10 +19,10 @@ export interface FeedMarkdownProps {
   text: string;
   // An open row ends its text with a caret.
   streaming?: boolean;
-  variant?: 'feed' | 'proposal';
+  variant?: 'feed' | 'proposal' | 'summary';
 }
 
-const MarkdownVariant = createContext<'feed' | 'proposal'>('feed');
+const MarkdownVariant = createContext<FeedMarkdownProps['variant']>('feed');
 
 export const inlineCodeClassName =
   'rounded-sm bg-foreground/5 px-1.5 py-px font-mono text-xs leading-4.5 text-foreground';
@@ -126,6 +126,7 @@ function Prose({
       className={cn(
         proseClassName,
         variant === 'proposal' && 'leading-5',
+        variant === 'summary' && 'text-muted-foreground',
         className,
       )}
     >

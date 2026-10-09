@@ -9,6 +9,7 @@ export interface FeedCodeBlockProps {
   code: string;
   language?: string;
   footer?: ReactNode;
+  header?: ReactNode;
   textClassName?: string;
 }
 
@@ -17,6 +18,7 @@ export function FeedCodeBlock({
   code,
   language,
   footer,
+  header,
   textClassName,
 }: FeedCodeBlockProps): React.JSX.Element {
   return (
@@ -26,7 +28,7 @@ export function FeedCodeBlock({
         'cursor-auto overflow-hidden rounded-xl border border-border bg-sidebar',
       )}
     >
-      <CodeBlockHeader title={language ?? ''} code={code} />
+      {header ?? <CodeBlockHeader title={language ?? ''} code={code} />}
       <ScrollView testID="code-scroll" className="max-h-75 wide:max-h-100">
         <ScrollView
           horizontal

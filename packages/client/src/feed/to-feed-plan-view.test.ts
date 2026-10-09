@@ -42,7 +42,7 @@ it.each([
   {
     name: 'a later removal of an older Plan preserves the current read-only Plan',
     rows: [removedOld, current],
-    expected: { plan: current.plan, items: [{ type: 'row', row: current }] },
+    expected: { plan: current.plan, items: [] },
   },
   {
     name: 'removing the current Plan clears it',

@@ -10,7 +10,7 @@ import { toFileDiffs } from '../feed/file-diff';
 import { DiffView } from './diff-view';
 import { FeedCodeBlock } from './feed-code-block';
 import { FeedContent } from './feed-content';
-import { UnsupportedFeedContent } from './feed-reference';
+import { UnsupportedFeedContent } from './feed-notice';
 
 function ToolDiffOutput({ block }: { block: ToolCallDiff }): React.JSX.Element {
   return (

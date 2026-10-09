@@ -5,8 +5,9 @@ import type { FeedActivity, FeedViewItem } from '../feed/feed-view';
 import { AgentMessage } from './agent-message';
 import { CommandRow } from './command-row';
 import { EditRow } from './edit-row';
-import { FeedCompaction, FeedNotice } from './feed-advisory';
-import { FeedPlan } from './feed-plan';
+import { FeedCompaction } from './feed-advisory';
+import { FeedImageUrlContext } from './feed-image';
+import { FeedNotice } from './feed-notice';
 import { ToolCallGroup } from './tool-call-group';
 import { ToolCallRow } from './tool-call-row';
 import { UserMessage } from './user-message';
@@ -59,8 +60,7 @@ export function isDrawnFeedItem(item: FeedViewItem): boolean {
         item.row.sessionUpdate === 'user_message' ||
         item.row.sessionUpdate === 'agent_message' ||
         item.row.sessionUpdate === 'notice' ||
-        item.row.sessionUpdate === 'compaction_update' ||
-        item.row.sessionUpdate === 'plan_update'
+        item.row.sessionUpdate === 'compaction_update'
       );
   }
 }
@@ -70,6 +70,17 @@ export const FeedItem = memo(function FeedItem({
   item,
   imageUrl,
 }: FeedItemProps) {
+  return (
+    <FeedImageUrlContext.Provider value={imageUrl}>
+      {renderFeedItem(item, imageUrl)}
+    </FeedImageUrlContext.Provider>
+  );
+});
+
+function renderFeedItem(
+  item: FeedViewItem,
+  imageUrl: FeedItemProps['imageUrl'],
+): React.JSX.Element | null {
   if (item.type === 'group')
     return <ToolCallGroup group={item} renderActivity={renderActivity} />;
   if (item.type === 'exploration')
@@ -93,6 +104,5 @@ export const FeedItem = memo(function FeedItem({
   if (row.sessionUpdate === 'notice') return <FeedNotice row={row} />;
   if (row.sessionUpdate === 'compaction_update')
     return <FeedCompaction row={row} />;
-  if (row.sessionUpdate === 'plan_update') return <FeedPlan plan={row.plan} />;
   return null;
-});
+}
