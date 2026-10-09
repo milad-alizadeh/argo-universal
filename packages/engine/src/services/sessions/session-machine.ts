@@ -4,9 +4,13 @@ import {
   type AgentCommand,
   type AgentConfigValue,
   type AgentEvent,
-  type AgentInput,
-  type AgentOutput,
-  agentMachine,
+  type AgentConnectInput,
+  type AgentMapping,
+  type VendorCommand,
+  type VendorSession,
+  acceptAgentEvent,
+  AgentReadyData,
+  describeError,
 } from '@repo/agents';
 import type {
   ContentBlock,
@@ -25,8 +29,10 @@ import {
   assign,
   enqueueActions,
   fromPromise,
+  fromCallback,
   sendTo,
   setup,
+  stateIn,
 } from 'xstate';
 import { countRejection } from '../../lib/count-rejections';
 import { findAgentProbe } from '../agents';
@@ -45,9 +51,13 @@ import {
   toSessionInsert,
 } from './session-data';
 
+const nativeFailedEvent = 'native.failed';
+const rejectedMessageEvent = 'agent.messageRejected';
+const drainingNativeTarget = '#session.open.draining';
+const answerPermissionCommand = 'agent.answerPermission';
+const answerElicitationCommand = 'agent.answerElicitation';
 const writeFeedEvent = 'writer.write';
 const feedChangeEvent = 'feed.change';
-const flushingSessionTarget = '#session.open.flushing';
 
 type FeedChangeEvent = Extract<
   import('../feed').FeedEvent,
@@ -98,11 +108,15 @@ export type SessionCommand =
   | { type: 'session.cancel' }
   | { type: 'session.close' };
 
+type NativeFailure = { type: typeof nativeFailedEvent; error: unknown };
 type SessionEvent =
   | SessionCommand
   | AgentEvent
-  | { type: 'xstate.done.actor.agent'; output: AgentOutput }
-  | { type: 'xstate.error.actor.agent'; error: unknown };
+  | NativeFailure
+  | { type: 'xstate.error.actor.vendorSession'; error: unknown };
+type NativeSessionInput = AgentConnectInput &
+  Pick<SessionMachineInput, 'adapter'> &
+  Pick<SessionContext, 'pendingNativeStops'>;
 export interface SessionContext extends SessionData {
   input: SessionMachineInput;
   capabilities: AgentCapabilities | null;
@@ -117,11 +131,13 @@ export interface SessionContext extends SessionData {
   agentCrashes: number[];
   rejectedMessages: number;
   failure: string | null;
+  pendingNativeStops: Set<Promise<void>>;
   // False for a new Session until its Agent is ready and its row is written.
   stored: boolean;
 }
 
 const checkoutLimit = 10_000;
+const agentStartLimit = 10_000;
 
 // The Session gives up on its Agent after this many crashes within the window.
 const crashWindowMs = 600_000;
@@ -176,7 +192,7 @@ const sessionSetup = setup({
     children: {} as { feed: 'feed' },
     context: {} as SessionContext,
     events: {} as SessionEvent,
-    output: {} as AgentOutput,
+    output: {} as Pick<SessionContext, 'failure'>,
   },
   actors: {
     createCheckout: fromPromise<SessionData, NewSessionInput>(
@@ -192,7 +208,129 @@ const sessionSetup = setup({
         loadSession(input.session, input.writer),
     ),
     feed: feedMachine,
-    agent: agentMachine,
+    drainNative: fromPromise<void, SessionContext['pendingNativeStops']>(
+      async ({ input }): Promise<void> => {
+        await Promise.allSettled(input);
+      },
+    ),
+    vendorSession: fromCallback<
+      VendorCommand,
+      NativeSessionInput,
+      AgentEvent | NativeFailure
+    >(({ input: nativeSessionInput, receive, sendBack }): (() => void) => {
+      const nativeAbort = new AbortController();
+      let mappingState = nativeSessionInput.adapter.initialMappingState();
+      let bufferedEvents: AgentEvent[] | null = [];
+      let nativeStop: Promise<void> | undefined;
+      const reportNativeFailure = (error: unknown): void => {
+        if (!nativeAbort.signal.aborted)
+          sendBack({ type: nativeFailedEvent, error });
+      };
+      const sendAcceptedEvent = (event: AgentEvent): void => {
+        if (nativeAbort.signal.aborted) return;
+        const accepted = acceptAgentEvent(event);
+        if (bufferedEvents) bufferedEvents.push(accepted);
+        else sendBack(accepted);
+      };
+      const connection = nativeSessionInput.adapter
+        .connect(
+          {
+            sessionId: nativeSessionInput.sessionId,
+            cwd: nativeSessionInput.cwd,
+            vendorSessionId: nativeSessionInput.vendorSessionId,
+            configOptions: nativeSessionInput.configOptions,
+          },
+          {
+            event: sendAcceptedEvent,
+            failed: reportNativeFailure,
+            message: (message): void => {
+              if (nativeAbort.signal.aborted) return;
+              let mapped: AgentMapping<unknown>;
+              try {
+                mapped = nativeSessionInput.adapter.toAgentEvents(
+                  message,
+                  mappingState,
+                );
+              } catch (error) {
+                sendAcceptedEvent({
+                  type: rejectedMessageEvent,
+                  reason: describeError(error),
+                });
+                return;
+              }
+              mappingState = mapped.mappingState;
+              for (const event of mapped.events) sendAcceptedEvent(event);
+            },
+          },
+          nativeAbort.signal,
+        )
+        .then(
+          (session): VendorSession => {
+            if (nativeAbort.signal.aborted) return session;
+            const ready = AgentReadyData.safeParse(session.ready);
+            if (!ready.success) {
+              reportNativeFailure(ready.error);
+              return session;
+            }
+            sendBack({ type: 'agent.ready', ...ready.data });
+            const readyEvents = bufferedEvents;
+            bufferedEvents = null;
+            for (const event of readyEvents ?? [])
+              if (!nativeAbort.signal.aborted) sendBack(event);
+            return session;
+          },
+          (error: unknown): null => {
+            reportNativeFailure(error);
+            return null;
+          },
+        );
+      const stopNative = (): void => {
+        if (nativeStop) return;
+        nativeStop = connection.then((session): Promise<void> | undefined =>
+          session?.stop(),
+        );
+        nativeSessionInput.pendingNativeStops.add(nativeStop);
+        const settled = nativeStop;
+        void settled.then(
+          (): boolean => nativeSessionInput.pendingNativeStops.delete(settled),
+          (): boolean => nativeSessionInput.pendingNativeStops.delete(settled),
+        );
+        nativeAbort.abort();
+      };
+      const runCommand = async (command: VendorCommand): Promise<void> => {
+        try {
+          if (nativeAbort.signal.aborted) return;
+          const session = await connection;
+          if (!nativeAbort.signal.aborted) await session?.run(command);
+        } catch (error) {
+          reportNativeFailure(error);
+        }
+      };
+      let commandQueue = Promise.resolve();
+      let beforeTurnCommands = commandQueue;
+      receive((command): void => {
+        if (
+          command.type === 'agent.cancel' ||
+          command.type === answerPermissionCommand ||
+          command.type === answerElicitationCommand
+        ) {
+          void beforeTurnCommands.then((): Promise<void> =>
+            runCommand(command),
+          );
+          return;
+        }
+        if (
+          command.type === 'agent.prompt' ||
+          (command.type === 'agent.answerPlanProposal' &&
+            command.turnId !== undefined)
+        )
+          beforeTurnCommands = commandQueue;
+        commandQueue = commandQueue.then((): Promise<void> =>
+          runCommand(command),
+        );
+      });
+      return stopNative;
+    }),
   },
   actions: {
     rememberSession: assign(
@@ -203,12 +341,16 @@ const sessionSetup = setup({
         failure: String(params.error),
       }),
     ),
+    rememberStartLimit: assign({
+      failure: `Agent startup exceeded agentStartLimit (${agentStartLimit} ms). Retry the Session.`,
+    }),
     rememberStartFailure: assign(
       ({ event }): Pick<SessionContext, 'failure'> => {
-        if (event.type === 'xstate.error.actor.agent')
-          return { failure: String(event.error) };
-        if (event.type === 'xstate.done.actor.agent' && event.output.failure)
-          return { failure: event.output.failure };
+        if (
+          event.type === 'xstate.error.actor.vendorSession' ||
+          event.type === nativeFailedEvent
+        )
+          return { failure: describeError(event.error) };
         return { failure: 'The Session closed before its Agent started' };
       },
     ),
@@ -256,14 +398,11 @@ const sessionSetup = setup({
         job: toSessionInsert(context.input, context),
       });
     }),
-    startTurn: enqueueActions(
-      ({ context, enqueue }, params: StartTurnParameters): void => {
-        for (const choice of context.heldConfigValues)
-          enqueue.sendTo('agent', {
-            type: 'agent.setConfigOption',
-            ...choice,
-          } satisfies AgentCommand);
-        enqueue.assign({ heldConfigValues: [] });
+    persistTurn: enqueueActions(
+      (
+        { context, enqueue },
+        params: Pick<StartTurnParameters, 'turnId'>,
+      ): void => {
         const startedAt = context.input.now();
         enqueue.assign({
           activeTurnId: params.turnId,
@@ -282,12 +421,22 @@ const sessionSetup = setup({
             },
           },
         });
+      },
+    ),
+    startTurn: enqueueActions(
+      ({ context, enqueue }, params: StartTurnParameters): void => {
+        for (const choice of context.heldConfigValues)
+          enqueue.sendTo('vendorSession', {
+            type: 'agent.setConfigOption',
+            ...choice,
+          } satisfies AgentCommand);
+        enqueue.assign({ heldConfigValues: [] });
         enqueue.sendTo('feed', {
           type: feedChangeEvent,
           turnId: params.turnId,
           change: userMessageChange(params.turnId, params.content),
         });
-        enqueue.sendTo('agent', {
+        enqueue.sendTo('vendorSession', {
           type: 'agent.prompt',
           turnId: params.turnId,
           content: params.content,
@@ -366,7 +515,7 @@ const sessionSetup = setup({
           (choice): boolean => choice.configId !== event.configId,
         ),
       });
-      enqueue.sendTo('agent', {
+      enqueue.sendTo('vendorSession', {
         ...event,
         type: 'agent.setConfigOption',
       } satisfies AgentCommand);
@@ -417,9 +566,9 @@ const sessionSetup = setup({
         turnId: context.activeTurnId,
         change,
       });
-      enqueue.sendTo('agent', {
+      enqueue.sendTo('vendorSession', {
         ...event,
-        type: 'agent.answerPermission',
+        type: answerPermissionCommand,
       } satisfies AgentCommand);
     }),
     removePermission: assign({
@@ -427,14 +576,14 @@ const sessionSetup = setup({
         context.permissionQueue.slice(1),
     }),
     answerElicitation: sendTo(
-      'agent',
+      'vendorSession',
       ({
         event,
-      }): Extract<AgentCommand, { type: 'agent.answerElicitation' }> => {
+      }): Extract<AgentCommand, { type: typeof answerElicitationCommand }> => {
         assertEvent(event, 'session.answerElicitation');
         return {
           ...event,
-          type: 'agent.answerElicitation',
+          type: answerElicitationCommand,
         } satisfies AgentCommand;
       },
     ),
@@ -447,23 +596,22 @@ const sessionSetup = setup({
           turnId: context.activeTurnId,
           change,
         });
-        enqueue.sendTo('agent', {
-          type: 'agent.answerPermission',
+        enqueue.sendTo('vendorSession', {
+          type: answerPermissionCommand,
           toolCallId: request.toolCallId,
           optionId: null,
         } satisfies AgentCommand);
       }
       if (context.pendingElicitation)
-        enqueue.sendTo('agent', {
-          type: 'agent.answerElicitation',
+        enqueue.sendTo('vendorSession', {
+          type: answerElicitationCommand,
           action: 'cancel',
         } satisfies AgentCommand);
       enqueue.assign({ permissionQueue: [], pendingElicitation: null });
     }),
-    cancelAgent: sendTo('agent', {
+    cancelAgent: sendTo('vendorSession', {
       type: 'agent.cancel',
     } satisfies AgentCommand),
-    stopAgent: sendTo('agent', { type: 'agent.stop' } satisfies AgentCommand),
     recordCrash: enqueueActions(({ context, enqueue }): void => {
       const now = context.input.now();
       const agentCrashes = [
@@ -507,7 +655,7 @@ const sessionSetup = setup({
     messageRejectedNotice: sendTo(
       'feed',
       ({ context, event }): FeedChangeEvent => {
-        assertEvent(event, 'agent.messageRejected');
+        assertEvent(event, rejectedMessageEvent);
         return {
           type: feedChangeEvent,
           turnId: context.activeTurnId,
@@ -526,7 +674,7 @@ const sessionSetup = setup({
       },
     ),
     logMessageRejected: ({ context, event }): void => {
-      assertEvent(event, 'agent.messageRejected');
+      assertEvent(event, rejectedMessageEvent);
       console.error(
         `session ${context.sessionId}: rejected an Agent message: ${event.reason}`,
       );
@@ -556,11 +704,13 @@ const sessionSetup = setup({
     hasPermission: ({ context }): boolean => context.permissionQueue.length > 0,
     hasElicitation: ({ context }): boolean =>
       context.pendingElicitation !== null,
+    nativeAlreadyDrained: stateIn({ open: 'flushing' }),
     tooManyCrashes: ({ context }): boolean =>
       context.agentCrashes.length >= maxCrashesInWindow,
   },
   delays: {
     checkoutLimit,
+    agentStartLimit,
     cancelLimit: 10_000,
     agentStopLimit: 5_000,
     agentRestartDelay: 1_000,
@@ -608,11 +758,17 @@ const firstTurn = ({
   return { turnId: context.input.turnId, content: context.input.prompt };
 };
 
+const promptTurn = ({
+  event,
+}: {
+  event: Extract<SessionCommand, { type: 'session.prompt' }>;
+}): StartTurnParameters => ({ turnId: event.turnId, content: event.content });
+
 // An Agent that ends before its Session is stored discards the Session; a stored one recovers.
-const agentEnded = [
+const nativeFailed = [
   {
     guard: 'isUnstored',
-    target: '#session.discarding',
+    target: drainingNativeTarget,
     actions: ['rememberStartFailure', 'refreshAgentProbe'],
   },
   {
@@ -662,9 +818,10 @@ export const sessionMachine = sessionSetup.createMachine({
     agentCrashes: [],
     rejectedMessages: 0,
     failure: null,
+    pendingNativeStops: new Set(),
     stored: input.kind === 'existing',
   }),
-  output: ({ context }): AgentOutput => ({
+  output: ({ context }): Pick<SessionContext, 'failure'> => ({
     failure: context.failure,
   }),
   initial: 'entering',
@@ -725,42 +882,52 @@ export const sessionMachine = sessionSetup.createMachine({
               id,
             }),
         }),
-        onDone: { target: 'closed' },
-        onError: {
-          target: 'closed',
-          actions: {
-            type: 'rememberFailure',
-            params: ({ event }): FailureParameters => ({ error: event.error }),
+        onDone: [
+          { guard: 'nativeAlreadyDrained', target: 'closed' },
+          { target: 'stopping' },
+        ],
+        onError: [
+          {
+            guard: 'nativeAlreadyDrained',
+            target: 'closed',
+            actions: {
+              type: 'rememberFailure',
+              params: ({ event }): FailureParameters => ({
+                error: event.error,
+              }),
+            },
           },
-        },
+          {
+            target: 'stopping',
+            actions: {
+              type: 'rememberFailure',
+              params: ({ event }): FailureParameters => ({
+                error: event.error,
+              }),
+            },
+          },
+        ],
       },
       initial: 'live',
       states: {
         live: {
           invoke: {
-            id: 'agent',
-            src: 'agent',
-            input: ({
-              context,
-              self,
-            }: {
-              context: SessionContext;
-              self: AgentInput['parent'];
-            }): AgentInput => ({
+            id: 'vendorSession',
+            src: 'vendorSession',
+            input: ({ context }): NativeSessionInput => ({
               adapter: context.input.adapter,
               sessionId: context.sessionId,
               cwd: context.checkout.path,
               vendorSessionId: context.vendorSessionId,
               configOptions: context.configValues,
-              parent: self,
+              pendingNativeStops: context.pendingNativeStops,
             }),
-            onDone: agentEnded,
-            onError: agentEnded,
+            onError: nativeFailed,
           },
           initial: 'starting',
           on: {
             'agent.feed': { actions: 'forwardFeed' },
-            'agent.messageRejected': {
+            [rejectedMessageEvent]: {
               actions: [
                 'countRejectedMessage',
                 'messageRejectedNotice',
@@ -769,10 +936,27 @@ export const sessionMachine = sessionSetup.createMachine({
             },
             'agent.usage': { actions: 'rememberUsage' },
             'agent.configOptionsChanged': { actions: 'rememberConfig' },
+            [nativeFailedEvent]: nativeFailed,
             'session.close': { target: '.closing' },
           },
           states: {
             starting: {
+              after: {
+                agentStartLimit: [
+                  {
+                    guard: 'isUnstored',
+                    target: drainingNativeTarget,
+                    actions: ['rememberStartLimit', 'refreshAgentProbe'],
+                  },
+                  {
+                    target: '#session.open.recovering',
+                    actions: [
+                      'recordCrash',
+                      { type: 'endTurn', params: { stopReason: 'error' } },
+                    ],
+                  },
+                ],
+              },
               on: {
                 'agent.ready': [
                   {
@@ -781,6 +965,7 @@ export const sessionMachine = sessionSetup.createMachine({
                     actions: [
                       'rememberReady',
                       'storeSession',
+                      { type: 'persistTurn', params: firstTurn },
                       { type: 'startTurn', params: firstTurn },
                     ],
                   },
@@ -788,22 +973,30 @@ export const sessionMachine = sessionSetup.createMachine({
                 ],
                 'session.close': {
                   guard: 'isUnstored',
-                  target: '#session.discarding',
+                  target: drainingNativeTarget,
                   actions: 'rememberStartFailure',
                 },
               },
             },
             idle: {
               on: {
-                'session.prompt': {
+                'agent.turnStarted': {
                   target: 'running',
                   actions: {
-                    type: 'startTurn',
-                    params: ({ event }): StartTurnParameters => ({
-                      turnId: event.turnId,
-                      content: event.content,
+                    type: 'persistTurn',
+                    params: ({
+                      context,
+                    }): Pick<StartTurnParameters, 'turnId'> => ({
+                      turnId: context.input.createId(),
                     }),
                   },
+                },
+                'session.prompt': {
+                  target: 'running',
+                  actions: [
+                    { type: 'persistTurn', params: promptTurn },
+                    { type: 'startTurn', params: promptTurn },
+                  ],
                 },
                 'session.setConfigOption': { actions: 'forwardConfig' },
               },
@@ -864,31 +1057,60 @@ export const sessionMachine = sessionSetup.createMachine({
               entry: [
                 'cancelRequests',
                 { type: 'endTurn', params: { stopReason: 'cancelled' } },
-                'stopAgent',
               ],
-              on: {
-                'xstate.done.actor.agent': { target: flushingSessionTarget },
-                'xstate.error.actor.agent': {
-                  target: flushingSessionTarget,
-                },
-              },
-              after: { agentStopLimit: flushingSessionTarget },
+              always: drainingNativeTarget,
             },
           },
         },
         recovering: {
           always: {
             guard: 'tooManyCrashes',
-            target: 'flushing',
+            target: 'draining',
             actions: 'giveUp',
           },
           after: { agentRestartDelay: 'live' },
-          on: { 'session.close': 'flushing' },
+          on: { 'session.close': 'draining' },
+        },
+        draining: {
+          invoke: {
+            id: 'drainNative',
+            src: 'drainNative',
+            input: ({ context }): SessionContext['pendingNativeStops'] =>
+              context.pendingNativeStops,
+            onDone: [
+              { guard: 'isUnstored', target: '#session.discarding' },
+              { target: 'flushing' },
+            ],
+          },
+          after: {
+            agentStopLimit: [
+              { guard: 'isUnstored', target: '#session.discarding' },
+              { target: 'flushing' },
+            ],
+          },
         },
         flushing: {
           entry: 'flushFeed',
           after: { feedFlushLimit: '#session.closed' },
         },
+      },
+    },
+    stopping: {
+      invoke: {
+        id: 'drainNative',
+        src: 'drainNative',
+        input: ({ context }): SessionContext['pendingNativeStops'] =>
+          context.pendingNativeStops,
+        onDone: [
+          { guard: 'isUnstored', target: 'discarding' },
+          { target: 'closed' },
+        ],
+      },
+      after: {
+        agentStopLimit: [
+          { guard: 'isUnstored', target: 'discarding' },
+          { target: 'closed' },
+        ],
       },
     },
     // A new Session whose Agent never started leaves no worktree behind.

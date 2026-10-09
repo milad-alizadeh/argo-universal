@@ -1,6 +1,6 @@
 # XState runs every lifecycle, and the Server address lives in a file
 
-Logic that waits on the outside world, runs a timer, or can be cancelled is an XState machine. That covers the Server (the Supervisor, the Engine, Sessions, Agents, and the Feed writer), the Electron main process, and an App's Connection to the Server (owner, 2026-10-03). Everything else stays out of machines: pure functions turn data into other data, Zod holds shapes, and TanStack Query holds an App's copy of Server data.
+Logic that waits on the outside world, runs a timer, or can be cancelled belongs to an XState machine. That covers the Server (the Supervisor, the Engine, Sessions, and the Feed writer), the Electron main process, and an App's Connection to the Server (owner, 2026-10-03). Each Session owns its Agent adapter's native instance and Turn lifecycle; there is no separate Agent machine (owner, 2026-10-09, ADR-0015). Everything else stays out of machines: pure functions turn data into other data, Zod holds shapes, and TanStack Query holds an App's copy of Server data.
 
 Machines are small and run as actors that send each other events, so `xstate/graph` can walk every transition of each one. A machine's state is never saved. The database is the only record (ADR 0005), so after an Engine restart each Session starts as `idle`, and a Turn that was running ends with the stop reason `error`.
 

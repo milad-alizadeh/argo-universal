@@ -70,10 +70,6 @@ _Avoid_: Run, request, exchange
 The plain functions that connect Argo to one Agent: start or resume its vendor session, and map its messages into Agent events.
 _Avoid_: Driver, provider, integration
 
-**Agent machine**:
-The one state machine that runs every Agent adapter for a Session: it starts the vendor session, runs commands in order, and tracks the Turn.
-_Avoid_: Claude machine, adapter machine
-
 **Vendor session**:
 The Agent's own live session that an Agent adapter starts or resumes, identified by the Agent's session id.
 _Avoid_: Agent connection, connection, process

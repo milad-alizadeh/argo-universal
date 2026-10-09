@@ -21,8 +21,9 @@ export function isSessionReady(
   return (
     session.context.capabilities !== null &&
     !session.matches({ open: { live: 'starting' } }) &&
-    !session.matches({ open: { live: 'closing' } }) &&
-    !session.matches({ open: 'flushing' })
+    !session.matches({ open: 'draining' }) &&
+    !session.matches({ open: 'flushing' }) &&
+    !session.matches('stopping')
   );
 }
 

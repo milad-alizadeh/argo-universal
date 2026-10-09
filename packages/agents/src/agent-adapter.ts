@@ -23,8 +23,8 @@ export interface AgentConnectInput extends Pick<
   configOptions: AgentConfigValue[];
 }
 
-// How a vendor session reports to the Agent machine; vendor messages go through `toAgentEvents`.
-// A vendor session may report before `connect` resolves; the Agent machine holds those events until ready.
+// How a vendor session reports to the Session; vendor messages go through `toAgentEvents`.
+// A vendor session may report before `connect` resolves; the Session holds those events until ready.
 export interface VendorSessionListener<Message> {
   message(message: Message): void;
   event(event: AgentEvent): void;
@@ -59,7 +59,7 @@ export type AgentProbe = Pick<
   'availability' | 'installStep' | 'configOptions'
 >;
 
-// An Agent adapter is plain functions; the one Agent machine owns the lifecycle.
+// An Agent adapter is plain functions; the Session owns the lifecycle.
 export interface AgentAdapter<Message = unknown, MappingState = unknown> {
   agent: SessionNewInput['agent'];
   label: AgentInfo['label'];
@@ -71,7 +71,7 @@ export interface AgentAdapter<Message = unknown, MappingState = unknown> {
   connect(
     input: AgentConnectInput,
     listener: VendorSessionListener<Message>,
-    // Aborts startup and pending commands when the Agent machine stops.
+    // Aborts startup and pending commands when the Session stops.
     signal: AbortSignal,
   ): Promise<VendorSession>;
   initialMappingState(): MappingState;
