@@ -16,7 +16,7 @@ export type AcpSessionDependencies = {
 export type AcpLifetimeEvent =
   | { type: 'acp.update'; notification: SessionNotification }
   | { type: 'acp.failed'; error: unknown };
-const openingRequest = (
+const createNewSessionRequest = (
   session: SessionData,
 ): import('@agentclientprotocol/sdk').NewSessionRequest => ({
   cwd: session.checkout.path,
@@ -24,8 +24,8 @@ const openingRequest = (
 });
 const isWithdrawn = (error: unknown): boolean =>
   error instanceof Error && error.name === 'AbortError';
-const sessionOpening = (session: SessionData): AcpSessionOpening => {
-  const params = openingRequest(session);
+const selectSessionOpening = (session: SessionData): AcpSessionOpening => {
+  const params = createNewSessionRequest(session);
   if (session.vendorSessionId === null)
     return { method: 'session/new', params };
   return {
@@ -45,13 +45,13 @@ export class AcpSessionLifetime {
   ) {}
   public bind(sendBack: (event: AcpLifetimeEvent) => void): () => void {
     this.attached = true;
-    this.bound.resolve(this.destination(sendBack));
+    this.bound.resolve(this.createSessionDestination(sendBack));
     return () => {
       this.attached = false;
       void this.close().catch(() => {});
     };
   }
-  private destination(
+  private createSessionDestination(
     sendBack: (event: AcpLifetimeEvent) => void,
   ): AcpSessionDestination {
     return {
@@ -72,16 +72,16 @@ export class AcpSessionLifetime {
   private async openOwned(session: SessionData): Promise<AcpSessionLease> {
     const dependencies = this.requireDependencies();
     const destination = await this.bound.promise;
-    const launch = await this.launch(session, dependencies);
+    const launch = await this.resolveSessionAgentLaunch(session, dependencies);
     this.lease = await dependencies.resources.open({
       launch,
-      opening: sessionOpening(session),
+      opening: selectSessionOpening(session),
       destination,
       signal: this.controller.signal,
     });
     return this.lease;
   }
-  private launch(
+  private resolveSessionAgentLaunch(
     session: SessionData,
     dependencies: AcpSessionDependencies,
   ): ReturnType<ResolveAgentLaunch> {
@@ -111,7 +111,7 @@ export class AcpSessionLifetime {
     const lease = await this.opening;
     await lease?.close();
   }
-  public async released(): Promise<void> {
+  public async waitForRelease(): Promise<void> {
     await this.lease?.released;
   }
 }

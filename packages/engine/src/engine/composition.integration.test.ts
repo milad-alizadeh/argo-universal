@@ -13,6 +13,7 @@ import type { Database } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
 import { listBranches } from '@repo/git';
 import { createMockAdapter, type MockAgentStream } from '@repo/mocks/agent';
+import { createAppFixtureProcessLauncher } from '@repo/mocks/agent/acp-fixtures';
 import { createAppFixtureAdapter } from '@repo/mocks/agent/app-fixtures';
 import { eq, sql } from 'drizzle-orm';
 import { expect, it, onTestFinished, vi } from 'vitest';
@@ -31,7 +32,7 @@ import { writerMachine, findDatabaseWriter } from '../services/feed';
 import { registryMachine, sessionMachine } from '../services/sessions';
 import { createEngineContext, type Context } from './context';
 import type { HttpServerOptions } from './http-server';
-import { engineMachine } from './machine';
+import { engineMachine, type EngineInput } from './machine';
 import { appRouter } from './router';
 
 const missingWriterMessage = 'Writer actor is missing';
@@ -90,6 +91,7 @@ function startEngine({
   closeDatabase = (): void => {},
   sessions = registryMachine,
   databaseWriter = writerMachine,
+  acpComposition,
 }: {
   database?: ReturnType<typeof openTestDatabase>['database'];
   adapter: AgentAdapter;
@@ -97,6 +99,7 @@ function startEngine({
   closeDatabase?: () => void;
   sessions?: typeof registryMachine;
   databaseWriter?: typeof writerMachine;
+  acpComposition?: Pick<EngineInput, 'acp' | 'resolveAgentLaunch'>;
 }): StartedEngine {
   let context: Context | undefined;
   const machine = engineMachine.provide({
@@ -136,6 +139,7 @@ function startEngine({
       version: '1',
       startedAt: new Date().toISOString(),
       adapters: [adapter],
+      ...acpComposition,
     },
   }).start();
   onTestFinished(async (): Promise<void> => {
@@ -1393,11 +1397,14 @@ for (const adapter of agentAdapters)
           actors: {
             feed: feedMachine.provide({
               actions: {
-                sendToWriter: ({ context, system }, { job }): void => {
+                sendToWriter: (
+                  { context, system },
+                  { job, committed },
+                ): void => {
                   if (context.sessionId === brokenSessionId) throw failure;
                   system
                     .get('databaseWriter')
-                    .send({ type: writerWriteEvent, job });
+                    .send({ type: writerWriteEvent, job, committed });
                 },
               },
             }),
@@ -1456,10 +1463,12 @@ for (const adapter of agentAdapters)
     root.engine.subscribe({
       error: (error): number => engineErrors.push(error),
     });
-    await caller.session.prompt({
-      sessionId: brokenSessionId,
-      prompt: [{ type: 'text', text: 'First Session' }],
-    });
+    await expect(
+      caller.session.prompt({
+        sessionId: brokenSessionId,
+        prompt: [{ type: 'text', text: 'First Session' }],
+      }),
+    ).rejects.toThrow('could not be saved');
     expect(await rejectedFeed).toMatchObject({ message: failure.message });
     await expect
       .poll((): ReturnType<typeof root.engine.system.get> =>
@@ -1523,6 +1532,19 @@ async function startNewSessionEngine(
     ...startEngine({
       database,
       adapter: createAppFixtureAdapter(identity),
+      acpComposition: {
+        acp: { launchProcess: createAppFixtureProcessLauncher({}) },
+        resolveAgentLaunch: async (input) => ({
+          agentId: input.agent,
+          projectId: input.projectId,
+          executable: '/mock-agent',
+          version: '1',
+          args: [],
+          cwd: input.projectPath,
+          env: {},
+          authContext: 'shared-fixture',
+        }),
+      },
       home,
       sessions,
     }),

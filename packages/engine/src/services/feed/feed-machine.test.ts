@@ -115,6 +115,16 @@ const events = [
   openMessage,
   appendText,
   settleMessage,
+  {
+    type: 'feed.acpUpdate',
+    turnId: 'turn-1',
+    update: {
+      sessionUpdate: 'agent_message_chunk',
+      messageId: 'model-message',
+      content: { type: 'text', text: 'model text' },
+    },
+  },
+  { type: 'feed.completeTurn', turnId: 'turn-1' },
   { type: 'feed.flush' },
   { type: streamBatchDelayEvent },
   { type: storeDelayEvent },
@@ -177,6 +187,10 @@ const transitionOptions = {
 // A vertex only for each self-transition keeps simple paths below 1,000.
 const orderingOptions = {
   ...modelOptions,
+  events: events.filter(
+    (event) =>
+      event.type !== 'feed.acpUpdate' && event.type !== 'feed.completeTurn',
+  ),
   serializeState: serializeWith((sameAsPrevious): boolean => sameAsPrevious),
 };
 

@@ -1,3 +1,4 @@
+import type { SessionNotification } from '@agentclientprotocol/sdk';
 import type { FeedChange, SessionUpdate } from '@repo/contracts';
 import type { session } from '@repo/db/schema';
 import {
@@ -6,7 +7,6 @@ import {
   assign,
   emit,
   enqueueActions,
-  sendTo,
   setup,
 } from 'xstate';
 import { countRejection } from '../../lib/count-rejections';
@@ -17,9 +17,16 @@ import {
   type FeedStreamEvent,
 } from './feed-change';
 import { promptBlobIds } from './feed-row';
+import type { FeedPublication } from './publication';
+import { assembleAcpMessage, type MessageStreams } from './updates/messages';
+import { settleFeedTurn } from './updates/settlement';
+import type { WriterCommit } from './writer-commit';
 import type { WriterJob } from './writer-job';
 import type { WriterEvent } from './writer-machine';
 import { findDatabaseWriter } from './writer-system';
+
+const feedChangeApplied = 'feed.changeApplied';
+const feedChangeRejected = 'feed.changeRejected';
 
 type FeedLogParameters = { line: string };
 
@@ -45,35 +52,57 @@ export interface FeedContext
   // Stream events waiting for the next batch.
   streamEvents: FeedStreamEvent[];
   rejectedChanges: number;
+  messageStreams: MessageStreams;
 }
 
 export type FeedEvent =
-  | { type: 'feed.change'; change: FeedChange; turnId: string | null }
+  | {
+      type: 'feed.change';
+      change: FeedChange;
+      turnId: string | null;
+      committed?: WriterCommit;
+    }
+  | {
+      type: 'feed.acpUpdate';
+      update: SessionNotification['update'];
+      turnId: string | null;
+    }
+  | { type: 'feed.completeTurn'; turnId: string; published?: FeedPublication }
   | { type: 'feed.flush' };
 
 // Raised after `feed.change` is applied, so each region reacts to it once.
-type FeedChangeApplied = { type: 'feed.changeApplied'; settled: boolean };
+type FeedChangeApplied = {
+  type: 'feed.changeApplied';
+  settled: boolean;
+  committed?: WriterCommit;
+};
 type FeedChangeRejected = { type: 'feed.changeRejected'; reason: string };
-type FeedInternalEvent = FeedChangeApplied | FeedChangeRejected;
+type FeedInternalEvent =
+  | FeedChangeApplied
+  | FeedChangeRejected
+  | { type: 'feed.publish'; published?: FeedPublication };
 
 export type FeedBatch = { type: 'feed.batch'; events: FeedStreamEvent[] };
 
 type WriterJobParameters = Pick<
   Extract<WriterEvent, { type: 'writer.write' }>,
-  'job'
+  'job' | 'committed'
 >;
 
 // Every changed row with the newest revision, as one job for the database writer.
 const rowsJob = ({
   context,
+  event,
 }: {
   context: FeedContext;
+  event: FeedEvent | FeedInternalEvent;
 }): WriterJobParameters & { job: Extract<WriterJob, { type: 'feedRows' }> } => {
   const rows = context.changedRowIds.flatMap((id): SessionUpdate[] => {
     const row = context.rows[id];
     return row ? [row] : [];
   });
   return {
+    committed: 'committed' in event ? event.committed : undefined,
     job: {
       type: 'feedRows',
       sessionId: context.sessionId,
@@ -98,6 +127,69 @@ export const feedMachine = setup({
     emitted: {} as FeedBatch,
   },
   actions: {
+    applyAcpUpdate: enqueueActions(({ context, event, enqueue }): void => {
+      assertEvent(event, 'feed.acpUpdate');
+      const result = assembleAcpMessage({
+        update: event.update,
+        turnId: event.turnId,
+        feed: context,
+        streams: context.messageStreams,
+      });
+      if (!result) return;
+      if ('rejection' in result) {
+        enqueue.raise({
+          type: feedChangeRejected,
+          reason: result.rejection,
+        });
+        return;
+      }
+      enqueue.assign({ messageStreams: result.streams });
+      enqueue.raise({
+        type: 'feed.change',
+        change: result.change,
+        turnId: event.turnId,
+      });
+    }),
+    settleTurnRows: enqueueActions(({ context, event, enqueue }): void => {
+      assertEvent(event, 'feed.completeTurn');
+      const result = settleFeedTurn(context, event.turnId);
+      if ('rejection' in result) {
+        event.published?.reject(new Error(result.rejection));
+        enqueue.raise({
+          type: feedChangeRejected,
+          reason: result.rejection,
+        });
+        return;
+      }
+      enqueue.assign({
+        rows: result.feed.rows,
+        maxRevision: result.feed.maxRevision,
+        nextPosition: result.feed.nextPosition,
+        streamEvents: [...context.streamEvents, ...result.events],
+        changedRowIds: [
+          ...new Set([
+            ...context.changedRowIds,
+            ...result.events.map((change) =>
+              change.type === 'row.upsert' ? change.row.id : change.id,
+            ),
+          ]),
+        ],
+      });
+      enqueue.assign({
+        messageStreams: Object.fromEntries(
+          Object.entries(context.messageStreams).filter(
+            ([, stream]) => stream.turnId !== event.turnId,
+          ),
+        ),
+      });
+      if (result.events.length > 0)
+        enqueue.raise({ type: feedChangeApplied, settled: true });
+      enqueue.raise({ type: 'feed.publish', published: event.published });
+    }),
+    acknowledgePublication: ({ event }): void => {
+      assertEvent(event, 'feed.publish');
+      event.published?.resolve();
+    },
     applyChange: enqueueActions(({ context, event, enqueue }): void => {
       assertEvent(event, 'feed.change');
       const id = changedRowId(event.change);
@@ -108,8 +200,9 @@ export const feedMachine = setup({
         try {
           written = context.findWrittenRow(id);
         } catch (error) {
+          event.committed?.reject(error);
           enqueue.raise({
-            type: 'feed.changeRejected',
+            type: feedChangeRejected,
             reason: `could not read written row ${id}: ${error instanceof Error ? error.message : String(error)}`,
           });
           return;
@@ -125,8 +218,9 @@ export const feedMachine = setup({
         event.turnId,
       );
       if ('rejection' in result) {
+        event.committed?.reject(new Error(result.rejection));
         enqueue.raise({
-          type: 'feed.changeRejected',
+          type: feedChangeRejected,
           reason: result.rejection,
         });
         return;
@@ -141,8 +235,9 @@ export const feedMachine = setup({
         streamEvents: [...context.streamEvents, streamEvent],
       });
       enqueue.raise({
-        type: 'feed.changeApplied',
+        type: feedChangeApplied,
         settled: feed.rows[id]?.state === 'settled',
+        committed: event.committed,
       });
     }),
     countRejectedChange: assign({
@@ -154,14 +249,14 @@ export const feedMachine = setup({
       events: context.streamEvents,
     })),
     clearBatch: assign({ streamEvents: [] }),
-    sendToWriter: sendTo(
-      ({ system, self }): import('xstate').AnyActorRef =>
-        findDatabaseWriter(system) ?? self,
-      (_, params: WriterJobParameters): WriterEvent => ({
-        type: 'writer.write',
-        job: params.job,
-      }),
-    ),
+    sendToWriter: ({ system }, params: WriterJobParameters): void => {
+      const writer = findDatabaseWriter(system);
+      if (writer?.getSnapshot().status !== 'active') {
+        params.committed?.reject(new Error('Database Writer is unavailable'));
+        return;
+      }
+      writer.send({ type: 'writer.write', ...params });
+    },
     // Settled rows leave memory once written; open rows stay for their next change.
     dropWrittenRows: assign({
       rows: ({ context }): FeedContext['rows'] =>
@@ -192,12 +287,15 @@ export const feedMachine = setup({
     changedRowIds: [],
     streamEvents: [],
     rejectedChanges: 0,
+    messageStreams: {},
   }),
   initial: 'active',
   states: {
     active: {
       type: 'parallel',
       on: {
+        'feed.acpUpdate': { actions: 'applyAcpUpdate' },
+        'feed.completeTurn': { actions: 'settleTurnRows' },
         'feed.change': { actions: 'applyChange' },
         'feed.changeRejected': {
           actions: [
@@ -227,6 +325,12 @@ export const feedMachine = setup({
         // Sends the changes of each 60 ms to `feed.subscribe`.
         stream: {
           initial: 'quiet',
+          on: {
+            'feed.publish': {
+              target: '.quiet',
+              actions: ['emitBatch', 'clearBatch', 'acknowledgePublication'],
+            },
+          },
           states: {
             quiet: { on: { 'feed.changeApplied': 'batching' } },
             batching: {

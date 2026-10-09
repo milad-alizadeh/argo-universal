@@ -1,6 +1,12 @@
 import type { Database } from '@repo/db';
 import { and, assertEvent, assign, fromPromise, setup, stateIn } from 'xstate';
 import {
+  commitWrittenPrefix,
+  rejectPendingCommits,
+  type PendingWriterCommit,
+  type WriterCommit,
+} from './writer-commit';
+import {
   describeJob,
   stampWriterJob,
   type WriterJob,
@@ -21,10 +27,11 @@ interface WriterContext extends WriterInput {
   queue: WriterJob[];
   // How many jobs at the front of `queue` the running `writeBatch` holds.
   batchSize: number;
+  pendingCommits: PendingWriterCommit[];
 }
 
 export type WriterEvent =
-  | { type: 'writer.write'; job: WriterJob }
+  | { type: 'writer.write'; job: WriterJob; committed?: WriterCommit }
   | { type: 'writer.drain' };
 
 // The jobs `takeBatch` counted, oldest first.
@@ -50,6 +57,15 @@ export const writerMachine = setup({
   },
   actions: {
     enqueue: assign({
+      pendingCommits: ({ context, event }): PendingWriterCommit[] => {
+        assertEvent(event, 'writer.write');
+        return event.committed
+          ? [
+              ...context.pendingCommits,
+              { through: context.queue.length + 1, committed: event.committed },
+            ]
+          : context.pendingCommits;
+      },
       queue: ({ context, event }): WriterContext['queue'] => {
         assertEvent(event, 'writer.write');
         return [...context.queue, stampWriterJob(event.job, context.now())];
@@ -59,11 +75,20 @@ export const writerMachine = setup({
       batchSize: ({ context }): number => context.queue.length,
     }),
     dropBatch: assign({
+      pendingCommits: ({ context }): PendingWriterCommit[] =>
+        commitWrittenPrefix(context.pendingCommits, context.batchSize),
       queue: ({ context }): WriterContext['queue'] =>
         context.queue.slice(context.batchSize),
       batchSize: 0,
     }),
     releaseBatch: assign({ batchSize: 0 }),
+    rejectCommits: assign({
+      pendingCommits: ({ context, event }): PendingWriterCommit[] =>
+        rejectPendingCommits(
+          context.pendingCommits,
+          'error' in event ? event.error : new Error('Writer cannot commit'),
+        ),
+    }),
     log: ({ context }, params: WriterLogParameters): void => {
       const line = `databaseWriter: ${params.line}`;
       if (context.log) context.log(line);
@@ -82,6 +107,7 @@ export const writerMachine = setup({
     ...input,
     queue: [],
     batchSize: 0,
+    pendingCommits: [],
   }),
   initial: 'idle',
   on: { 'writer.write': { actions: 'enqueue' } },
@@ -120,6 +146,7 @@ export const writerMachine = setup({
             guard: 'drainRequested',
             target: 'draining',
             actions: [
+              'rejectCommits',
               {
                 type: 'log',
                 params: ({ event }): WriterLogParameters => ({
@@ -132,6 +159,7 @@ export const writerMachine = setup({
           {
             target: 'waitingToRetry',
             actions: [
+              'rejectCommits',
               {
                 type: 'log',
                 params: ({ context, event }): WriterLogParameters => ({
@@ -151,7 +179,10 @@ export const writerMachine = setup({
     },
     waitingToRetry: {
       after: { writeRetryDelay: 'writing' },
-      on: { 'writer.drain': 'draining' },
+      on: {
+        'writer.drain': 'draining',
+        'writer.write': { actions: ['enqueue', 'rejectCommits'] },
+      },
     },
     draining: {
       entry: 'takeBatch',
@@ -172,6 +203,7 @@ export const writerMachine = setup({
         onError: {
           target: 'drained',
           actions: [
+            'rejectCommits',
             {
               type: 'log',
               params: ({ context, event }): WriterLogParameters => ({

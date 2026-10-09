@@ -14,6 +14,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@agentclientprotocol/sdk": "catalog:",
     "@repo/agents": "workspace:*",
     "@repo/contracts": "workspace:*",
     "xstate": "catalog:",

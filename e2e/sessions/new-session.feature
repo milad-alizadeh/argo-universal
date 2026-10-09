@@ -12,6 +12,19 @@ Feature: New Session
       | 1     |
       | 2     |
 
+  Scenario Outline: Successive prompts share one ACP Session with Agent <agent>
+    Given a phone Frame
+    And a New Session with Agent <agent>
+    When I send the prompt "First prompt"
+    Then the Agent replies "The shared fixture completed this Turn."
+    When I send the prompt "Second prompt"
+    Then both submitted prompts have separate completed Turns
+
+    Examples:
+      | agent |
+      | 1     |
+      | 2     |
+
   Scenario Outline: An image prompt starts a Session with Agent <agent>
     Given a phone Frame
     And Agent <agent> can inspect image prompts
