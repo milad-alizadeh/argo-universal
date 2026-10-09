@@ -11,6 +11,7 @@ packages:
 
 # Every shared dependency is pinned here; packages refer to it as "catalog:".
 catalog:
+  "@agentclientprotocol/sdk": 1.7.0
   "@legendapp/list": 3.6.0
   # Exact pins for the OXC toolchain and the ESLint plugins it runs as JS plugins, which are alpha; oxfmt is pre-1.0 (ADR-0017).
   "@oxlint/plugins": 1.87.0
