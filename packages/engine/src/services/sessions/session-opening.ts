@@ -6,63 +6,67 @@ import type { SessionActorRef } from './session-machine';
 import { isSessionReady } from './session-snapshot';
 import { findSessionActor } from './session-system';
 
-export function sendRegistryCommand(
-  sessions: RegistryActorRef,
-  command: RegistryCommand,
+export function sendCheckedRegistryCommand(
+  sessionRegistry: RegistryActorRef,
+  registryCommand: RegistryCommand,
 ): void {
-  const snapshot = sessions.getSnapshot();
-  if (!snapshot.can(command))
+  const registrySnapshot = sessionRegistry.getSnapshot();
+  if (!registrySnapshot.can(registryCommand))
     throw new TRPCError({
       code: 'CONFLICT',
-      message: `Session registry cannot accept ${command.type} in ${JSON.stringify(snapshot.value)}`,
+      message: `Session registry cannot accept ${registryCommand.type} in ${JSON.stringify(registrySnapshot.value)}`,
     });
-  sessions.send(command);
+  sessionRegistry.send(registryCommand);
 }
 
-export function requireSessionActor(
-  sessions: RegistryActorRef,
+export function requireOpenSessionActor(
+  sessionRegistry: RegistryActorRef,
   sessionId: string,
 ): SessionActorRef {
-  const actor = findSessionActor(sessions.system, sessionId);
-  if (!actor)
+  const sessionActor = findSessionActor(sessionRegistry.system, sessionId);
+  if (!sessionActor)
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
       message: `Session ${sessionId} did not open`,
     });
-  return actor;
+  return sessionActor;
 }
 
-async function ready(actor: SessionActorRef): Promise<SessionActorRef> {
-  const snapshot = await waitFor(
-    actor,
-    (snapshot): boolean =>
-      snapshot.status !== 'active' || isSessionReady(snapshot),
+async function waitForSessionReady(
+  sessionActor: SessionActorRef,
+): Promise<SessionActorRef> {
+  const sessionSnapshot = await waitFor(
+    sessionActor,
+    (sessionSnapshot): boolean =>
+      sessionSnapshot.status !== 'active' || isSessionReady(sessionSnapshot),
     { timeout: Infinity },
   );
-  if (snapshot.status !== 'active')
+  if (sessionSnapshot.status !== 'active')
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
       message:
-        snapshot.context.failure ??
-        `Session ${snapshot.context.sessionId} closed`,
+        sessionSnapshot.context.failure ??
+        `Session ${sessionSnapshot.context.sessionId} closed`,
     });
-  return actor;
+  return sessionActor;
 }
 
-export async function openSession(
+export async function openReadySession(
   context: Pick<Context, 'sessions' | 'readSession'>,
   sessionId: string,
 ): Promise<SessionActorRef> {
-  const row = context.readSession(sessionId);
-  if (row.parentSessionId !== null)
+  const sessionRecord = context.readSession(sessionId);
+  if (sessionRecord.parentSessionId !== null)
     throw new TRPCError({
       code: 'CONFLICT',
       message: 'A Subagent is read-only',
     });
-  sendRegistryCommand(context.sessions, {
+  sendCheckedRegistryCommand(context.sessions, {
     type: 'sessions.open',
     sessionId,
-    agent: row.agent,
+    agent: sessionRecord.agent,
   });
-  return ready(requireSessionActor(context.sessions, sessionId));
+  return waitForSessionReady(
+    requireOpenSessionActor(context.sessions, sessionId),
+  );
 }

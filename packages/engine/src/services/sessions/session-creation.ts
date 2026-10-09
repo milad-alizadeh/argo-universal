@@ -7,70 +7,75 @@ import { findDatabaseWriter, type writerMachine } from '../feed';
 import { readProjectPath } from '../projects';
 import type { RegistryActorRef } from './registry-machine';
 import type { SessionActorRef } from './session-machine';
-import { requireSessionActor, sendRegistryCommand } from './session-opening';
+import {
+  requireOpenSessionActor,
+  sendCheckedRegistryCommand,
+} from './session-opening';
 
-async function checkoutProject(
+async function requireCheckoutProjectPath(
   database: Context['database'],
-  input: Pick<SessionNewInput, 'projectId' | 'checkout'>,
+  newSession: Pick<SessionNewInput, 'projectId' | 'checkout'>,
 ): Promise<string> {
-  const projectPath = readProjectPath(database, input.projectId);
+  const projectPath = readProjectPath(database, newSession.projectId);
   if (
-    input.checkout.type === 'worktree' &&
+    newSession.checkout.type === 'worktree' &&
     !(await listBranches(projectPath)).branches.includes(
-      input.checkout.baseBranch,
+      newSession.checkout.baseBranch,
     )
   )
     throw new TRPCError({
       code: 'BAD_REQUEST',
-      message: `No local branch ${input.checkout.baseBranch}`,
+      message: `No local branch ${newSession.checkout.baseBranch}`,
     });
   return projectPath;
 }
 
-async function stored(actor: SessionActorRef): Promise<void> {
-  const snapshot = await waitFor(
-    actor,
-    (snapshot): boolean =>
-      snapshot.status !== 'active' || snapshot.context.stored,
+async function waitForSessionStored(
+  sessionActor: SessionActorRef,
+): Promise<void> {
+  const sessionSnapshot = await waitFor(
+    sessionActor,
+    (sessionSnapshot): boolean =>
+      sessionSnapshot.status !== 'active' || sessionSnapshot.context.stored,
     { timeout: Infinity },
   );
-  if (!snapshot.context.stored)
+  if (!sessionSnapshot.context.stored)
     throw new TRPCError({
       code: 'PRECONDITION_FAILED',
       message:
-        snapshot.context.failure ??
-        `Session ${snapshot.context.sessionId} closed`,
+        sessionSnapshot.context.failure ??
+        `Session ${sessionSnapshot.context.sessionId} closed`,
     });
 }
 
-function insertQueued(
-  snapshot: SnapshotFrom<typeof writerMachine>,
+function isSessionInsertQueued(
+  writerSnapshot: SnapshotFrom<typeof writerMachine>,
   sessionId: string,
 ): boolean {
-  return snapshot.context.queue.some(
+  return writerSnapshot.context.queue.some(
     (job): boolean =>
       job.type === 'sessionInsert' && job.session.id === sessionId,
   );
 }
 
-async function written(
-  sessions: RegistryActorRef,
+async function waitForSessionInsertCommitted(
+  sessionRegistry: RegistryActorRef,
   sessionId: string,
 ): Promise<void> {
-  const writer = findDatabaseWriter(sessions.system);
-  if (!writer) return;
-  const snapshot = await waitFor(
-    writer,
-    (snapshot): boolean =>
-      snapshot.status !== 'active' ||
-      !insertQueued(snapshot, sessionId) ||
-      snapshot.matches('waitingToRetry'),
+  const databaseWriter = findDatabaseWriter(sessionRegistry.system);
+  if (!databaseWriter) return;
+  const writerSnapshot = await waitFor(
+    databaseWriter,
+    (writerSnapshot): boolean =>
+      writerSnapshot.status !== 'active' ||
+      !isSessionInsertQueued(writerSnapshot, sessionId) ||
+      writerSnapshot.matches('waitingToRetry'),
     { timeout: Infinity },
   );
-  if (insertQueued(snapshot, sessionId))
+  if (isSessionInsertQueued(writerSnapshot, sessionId))
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
-      message: snapshot.matches('waitingToRetry')
+      message: writerSnapshot.matches('waitingToRetry')
         ? `Session ${sessionId} was not stored because the writer is retrying. Retry the Session.`
         : `Session ${sessionId} was not stored`,
     });
@@ -78,18 +83,23 @@ async function written(
 
 export async function createSession(
   context: Pick<Context, 'database' | 'sessions' | 'createId'>,
-  input: SessionNewInput,
+  newSession: SessionNewInput,
 ): Promise<SessionNewOutput> {
-  const projectPath = await checkoutProject(context.database, input);
+  const projectPath = await requireCheckoutProjectPath(
+    context.database,
+    newSession,
+  );
   const sessionId = context.createId();
-  sendRegistryCommand(context.sessions, {
+  sendCheckedRegistryCommand(context.sessions, {
     type: 'sessions.create',
     sessionId,
     turnId: context.createId(),
-    ...input,
+    ...newSession,
     projectPath,
   });
-  await stored(requireSessionActor(context.sessions, sessionId));
-  await written(context.sessions, sessionId);
+  await waitForSessionStored(
+    requireOpenSessionActor(context.sessions, sessionId),
+  );
+  await waitForSessionInsertCommitted(context.sessions, sessionId);
   return { sessionId };
 }

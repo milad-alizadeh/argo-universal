@@ -25,7 +25,7 @@ export interface HttpServer {
 
 const forbiddenStatus = 403;
 
-const listen = (server: Server, port: number): Promise<void> =>
+const listenOnLoopback = (server: Server, port: number): Promise<void> =>
   new Promise<void>((resolve, reject): void => {
     server.once('error', reject);
     server.listen(port, '127.0.0.1', (): void => {
@@ -58,7 +58,7 @@ export async function startHttpServer(
     }),
   );
 
-  await listen(server, options.port);
+  await listenOnLoopback(server, options.port);
 
   // Attached after listen: ws re-emits the server's 'error', so a failed listen would throw from it.
   const webSocketServer = new WebSocketServer({
@@ -81,7 +81,7 @@ export async function startHttpServer(
   });
 
   // server.close() waits for upgraded sockets, so the WebSocket clients go first.
-  const closeAll = async (): Promise<void> => {
+  const closeHttpServerConnections = async (): Promise<void> => {
     handler.broadcastReconnectNotification();
     for (const client of webSocketServer.clients) client.terminate();
     webSocketServer.close();
@@ -92,7 +92,7 @@ export async function startHttpServer(
   };
   let closing: Promise<void> | undefined;
   const close = (): Promise<void> => {
-    closing ??= closeAll();
+    closing ??= closeHttpServerConnections();
     return closing;
   };
 
