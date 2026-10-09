@@ -33,7 +33,7 @@ function applyCatalogSqlMutation(
 ): string[] {
   if (job.type === 'agentCatalogReplace') {
     const changedIds = replaceAgentCatalogRows(transaction, job);
-    completeCatalogSyncRequests(transaction, job);
+    completeCatalogSyncRequests(transaction, job, changedIds);
     return changedIds;
   }
   applyCatalogRequestMutation(transaction, job);

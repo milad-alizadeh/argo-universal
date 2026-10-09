@@ -7,6 +7,7 @@ CREATE TABLE `agent_catalog_sync_request` (
 	`completed_at` integer,
 	`fetched_at` integer,
 	`error` text,
+	`changed_ids` text DEFAULT '[]' NOT NULL,
 	`rejected_values` integer DEFAULT 0 NOT NULL
 );
 --> statement-breakpoint

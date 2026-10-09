@@ -1,15 +1,16 @@
 import { EventEmitter, on } from 'node:events';
-import type { Database } from '@repo/db';
 import type { ActorRefFrom } from 'xstate';
 import type { writerMachine } from '../../feed';
-import { readLatestCatalogChangeIds } from './catalog-sql';
+import {
+  readLatestCatalogChangeIds,
+  type CatalogSqlReadInput,
+} from './catalog-sql';
 
 type CatalogChangeEvents = EventEmitter<{
   change: [string[]];
   error: [unknown];
 }>;
-type CatalogWatchInput = {
-  database: Database;
+type CatalogWatchInput = CatalogSqlReadInput & {
   writer: ActorRefFrom<typeof writerMachine>;
 };
 
@@ -38,16 +39,16 @@ function subscribeCatalogCommitNotifications(
       )
     )
       return;
-    publishCommittedCatalogChanges(input.database, events);
+    publishCommittedCatalogChanges(input, events);
   });
 }
 
 function publishCommittedCatalogChanges(
-  database: Database,
+  input: CatalogSqlReadInput,
   events: CatalogChangeEvents,
 ): void {
   try {
-    events.emit('change', readLatestCatalogChangeIds(database));
+    events.emit('change', readLatestCatalogChangeIds(input));
   } catch (error) {
     events.emit('error', error);
   }

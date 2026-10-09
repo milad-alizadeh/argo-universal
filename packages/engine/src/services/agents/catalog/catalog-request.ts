@@ -5,10 +5,7 @@ import {
   writeDatabaseJobAndWaitForCommit,
   type writerMachine,
 } from '../../feed';
-import {
-  readCatalogSyncRequest,
-  readCatalogRequestChangeIds,
-} from './catalog-sql';
+import { readCatalogSyncRequest } from './catalog-sql';
 import type { RegistryReader } from './registry-reader';
 
 interface CatalogRequestInput {
@@ -87,7 +84,7 @@ function readCompletedCatalogRequest(
   const row = readCatalogSyncRequest(input, input.requestId);
   if (!row || row.status === 'pending') return undefined;
   return {
-    changedIds: readCatalogRequestChangeIds(input.database, row),
+    changedIds: row.changedIds,
     error: row.error,
     rejectedValues: row.rejectedValues,
   };

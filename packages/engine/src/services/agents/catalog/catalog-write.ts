@@ -1,5 +1,5 @@
 import type { Database } from '@repo/db';
-import { agents } from '@repo/db/schema';
+import { agentCatalogSyncRequest } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import type { ActorRefFrom } from 'xstate';
 import {
@@ -14,10 +14,11 @@ export async function writeAgentCatalogThroughWriter(input: {
   job: AgentCatalogReplaceJob;
 }): Promise<string[]> {
   await writeDatabaseJobAndWaitForCommit(input.writer, input.job);
-  return input.database
-    .select({ id: agents.id })
-    .from(agents)
-    .where(eq(agents.catalogSyncedAt, input.job.syncedAt))
-    .all()
-    .map(({ id }) => id);
+  return (
+    input.database
+      .select({ changedIds: agentCatalogSyncRequest.changedIds })
+      .from(agentCatalogSyncRequest)
+      .where(eq(agentCatalogSyncRequest.requestId, input.job.syncId))
+      .get()?.changedIds ?? []
+  );
 }

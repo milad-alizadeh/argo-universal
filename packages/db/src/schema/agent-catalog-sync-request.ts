@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import { index, integer, snakeCase, text } from 'drizzle-orm/sqlite-core';
 
 export const agentCatalogSyncStatuses = [
@@ -18,6 +19,10 @@ export const agentCatalogSyncRequest = snakeCase.table(
     completedAt: integer(),
     fetchedAt: integer(),
     error: text(),
+    changedIds: text({ mode: 'json' })
+      .$type<string[]>()
+      .notNull()
+      .default(sql`'[]'`),
     rejectedValues: integer().notNull().default(0),
   },
   (table) => [

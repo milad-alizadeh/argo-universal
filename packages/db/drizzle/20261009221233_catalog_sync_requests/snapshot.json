@@ -1,15 +1,11 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "57cb2735-437c-4db6-9d95-0aa88959d58a",
+  "id": "71586756-2992-4c4d-ac43-7a211a029aeb",
   "prevIds": [
     "e9d3b8d9-dc75-4f50-b764-a5768d29534f"
   ],
   "ddl": [
-    {
-      "name": "agent_catalog_sync_request",
-      "entityType": "tables"
-    },
     {
       "name": "agents",
       "entityType": "tables"
@@ -39,94 +35,8 @@
       "entityType": "tables"
     },
     {
-      "type": "integer",
-      "notNull": false,
-      "autoincrement": true,
-      "default": null,
-      "generated": null,
-      "name": "sequence",
-      "entityType": "columns",
-      "table": "agent_catalog_sync_request"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "request_id",
-      "entityType": "columns",
-      "table": "agent_catalog_sync_request"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "sync_id",
-      "entityType": "columns",
-      "table": "agent_catalog_sync_request"
-    },
-    {
-      "type": "text",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "status",
-      "entityType": "columns",
-      "table": "agent_catalog_sync_request"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "requested_at",
-      "entityType": "columns",
-      "table": "agent_catalog_sync_request"
-    },
-    {
-      "type": "integer",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "completed_at",
-      "entityType": "columns",
-      "table": "agent_catalog_sync_request"
-    },
-    {
-      "type": "integer",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "fetched_at",
-      "entityType": "columns",
-      "table": "agent_catalog_sync_request"
-    },
-    {
-      "type": "text",
-      "notNull": false,
-      "autoincrement": false,
-      "default": null,
-      "generated": null,
-      "name": "error",
-      "entityType": "columns",
-      "table": "agent_catalog_sync_request"
-    },
-    {
-      "type": "integer",
-      "notNull": true,
-      "autoincrement": false,
-      "default": "0",
-      "generated": null,
-      "name": "rejected_values",
-      "entityType": "columns",
-      "table": "agent_catalog_sync_request"
+      "name": "agent_catalog_sync_request",
+      "entityType": "tables"
     },
     {
       "type": "text",
@@ -739,6 +649,106 @@
       "table": "turn"
     },
     {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": true,
+      "default": null,
+      "generated": null,
+      "name": "sequence",
+      "entityType": "columns",
+      "table": "agent_catalog_sync_request"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "request_id",
+      "entityType": "columns",
+      "table": "agent_catalog_sync_request"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "sync_id",
+      "entityType": "columns",
+      "table": "agent_catalog_sync_request"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "status",
+      "entityType": "columns",
+      "table": "agent_catalog_sync_request"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "requested_at",
+      "entityType": "columns",
+      "table": "agent_catalog_sync_request"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "completed_at",
+      "entityType": "columns",
+      "table": "agent_catalog_sync_request"
+    },
+    {
+      "type": "integer",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "fetched_at",
+      "entityType": "columns",
+      "table": "agent_catalog_sync_request"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "error",
+      "entityType": "columns",
+      "table": "agent_catalog_sync_request"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "'[]'",
+      "generated": null,
+      "name": "changed_ids",
+      "entityType": "columns",
+      "table": "agent_catalog_sync_request"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "0",
+      "generated": null,
+      "name": "rejected_values",
+      "entityType": "columns",
+      "table": "agent_catalog_sync_request"
+    },
+    {
       "columns": [
         "blob_id"
       ],
@@ -850,15 +860,6 @@
     },
     {
       "columns": [
-        "sequence"
-      ],
-      "nameExplicit": false,
-      "name": "agent_catalog_sync_request_pk",
-      "table": "agent_catalog_sync_request",
-      "entityType": "pks"
-    },
-    {
-      "columns": [
         "id"
       ],
       "nameExplicit": false,
@@ -904,31 +905,12 @@
     },
     {
       "columns": [
-        {
-          "value": "sync_id",
-          "isExpression": false
-        }
+        "sequence"
       ],
-      "isUnique": false,
-      "where": null,
-      "origin": "manual",
-      "name": "agent_catalog_sync_request_sync_id_index",
-      "entityType": "indexes",
-      "table": "agent_catalog_sync_request"
-    },
-    {
-      "columns": [
-        {
-          "value": "status",
-          "isExpression": false
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "origin": "manual",
-      "name": "agent_catalog_sync_request_status_index",
-      "entityType": "indexes",
-      "table": "agent_catalog_sync_request"
+      "nameExplicit": false,
+      "name": "agent_catalog_sync_request_pk",
+      "table": "agent_catalog_sync_request",
+      "entityType": "pks"
     },
     {
       "columns": [
@@ -1008,11 +990,30 @@
     },
     {
       "columns": [
-        "request_id"
+        {
+          "value": "sync_id",
+          "isExpression": false
+        }
       ],
-      "nameExplicit": false,
-      "name": "agent_catalog_sync_request_request_id_unique",
-      "entityType": "uniques",
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "agent_catalog_sync_request_sync_id_index",
+      "entityType": "indexes",
+      "table": "agent_catalog_sync_request"
+    },
+    {
+      "columns": [
+        {
+          "value": "status",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "agent_catalog_sync_request_status_index",
+      "entityType": "indexes",
       "table": "agent_catalog_sync_request"
     },
     {
@@ -1032,6 +1033,15 @@
       "name": "project_path_unique",
       "entityType": "uniques",
       "table": "project"
+    },
+    {
+      "columns": [
+        "request_id"
+      ],
+      "nameExplicit": false,
+      "name": "agent_catalog_sync_request_request_id_unique",
+      "entityType": "uniques",
+      "table": "agent_catalog_sync_request"
     }
   ],
   "renames": []

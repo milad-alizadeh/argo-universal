@@ -1,10 +1,13 @@
 import { AgentCatalogSyncRequestRecord } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { agentCatalogSyncRequest, agents } from '@repo/db/schema';
-import { desc, eq, max, sql } from 'drizzle-orm';
+import { desc, eq, inArray, max } from 'drizzle-orm';
 import type { RegistryReader } from './registry-reader';
 
-type CatalogSqlReadInput = { database: Database; reader: RegistryReader };
+export type CatalogSqlReadInput = {
+  database: Database;
+  reader: RegistryReader;
+};
 
 export function readCatalogSyncRequest(
   input: CatalogSqlReadInput,
@@ -20,67 +23,60 @@ export function readCatalogSyncRequest(
   );
 }
 
-export function readCatalogSqlState(input: CatalogSqlReadInput): {
+type CatalogSqlState = {
   fetchedAt: number | null;
   error: string | null;
   rejectedValues: number;
-} {
-  const latest = readLatestCatalogRequest(input);
+};
+export function readCatalogSqlState(
+  input: CatalogSqlReadInput,
+): CatalogSqlState {
+  const latest = readLatestCatalogOutcome(input, [
+    'succeeded',
+    'failed',
+    'interrupted',
+  ]);
   return {
-    fetchedAt: readLastAcceptedCatalogTime(input.database),
+    fetchedAt: readLastAcceptedCatalogTime(input),
     error: latest?.error ?? null,
     rejectedValues: readCatalogRejectionCount(input.database),
   };
 }
 
-function readLatestCatalogRequest(
+function readLatestCatalogOutcome(
   input: CatalogSqlReadInput,
+  statuses: AgentCatalogSyncRequestRecord['status'][],
 ): AgentCatalogSyncRequestRecord | undefined {
   const row = input.database
     .select()
     .from(agentCatalogSyncRequest)
+    .where(inArray(agentCatalogSyncRequest.status, statuses))
     .orderBy(desc(agentCatalogSyncRequest.sequence))
     .get();
   return hydrateCatalogSyncRequest(input.reader, row);
 }
 
-function readLastAcceptedCatalogTime(database: Database): number | null {
-  const saved = database
+function readLastAcceptedCatalogTime(
+  input: CatalogSqlReadInput,
+): number | null {
+  const accepted = readLatestCatalogOutcome(input, ['succeeded']);
+  if (accepted) return accepted.fetchedAt;
+  const saved = input.database
     .select({ at: max(agents.catalogSyncedAt) })
-    .from(agents);
-  return (
-    database
-      .select({
-        at: sql<
-          number | null
-        >`coalesce(${max(agentCatalogSyncRequest.fetchedAt)}, (${saved}))`,
-      })
-      .from(agentCatalogSyncRequest)
-      .get()?.at ?? null
-  );
-}
-
-export function readLatestCatalogChangeIds(database: Database): string[] {
-  const latest = database
-    .select({ at: max(agents.catalogSyncedAt) })
-    .from(agents);
-  return database
-    .select({ id: agents.id })
     .from(agents)
-    .where(eq(agents.catalogSyncedAt, latest))
-    .all()
-    .map(({ id }) => id);
+    .get() ?? { at: null };
+  return saved.at;
 }
 
-export function readCatalogRequestChangeIds(
-  database: Database,
-  row: AgentCatalogSyncRequestRecord,
+export function readLatestCatalogChangeIds(
+  input: CatalogSqlReadInput,
 ): string[] {
-  if (row.status !== 'succeeded' || row.fetchedAt === null) return [];
-  return database
+  const accepted = readLatestCatalogOutcome(input, ['succeeded']);
+  if (accepted) return accepted.changedIds;
+  return input.database
     .select({ id: agents.id })
     .from(agents)
-    .where(eq(agents.catalogSyncedAt, row.fetchedAt))
+    .where(eq(agents.catalogPresent, true))
     .all()
     .map(({ id }) => id);
 }

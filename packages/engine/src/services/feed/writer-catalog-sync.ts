@@ -80,6 +80,7 @@ export function joinCatalogSyncRequests(
       status: source.status,
       completedAt: source.completedAt,
       fetchedAt: source.fetchedAt,
+      changedIds: source.changedIds,
       error: source.error,
       rejectedValues: source.rejectedValues,
     })
@@ -95,11 +96,13 @@ export function joinCatalogSyncRequests(
 export function completeCatalogSyncRequests(
   transaction: Pick<Database, 'update'>,
   job: AgentCatalogReplaceJob,
+  changedIds: string[],
 ): void {
   transaction
     .update(agentCatalogSyncRequest)
     .set({
       status: 'succeeded',
+      changedIds,
       completedAt: job.syncedAt,
       fetchedAt: job.syncedAt,
       error: null,

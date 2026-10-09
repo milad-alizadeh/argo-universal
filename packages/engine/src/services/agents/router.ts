@@ -29,7 +29,11 @@ export const agentsRouter = router({
   catalogChanges: publicProcedure.subscription(({ ctx, signal }) => {
     if (!signal) throw new Error('Catalog subscription signal is missing');
     return watchCommittedCatalogChanges(
-      { database: ctx.database, writer: ctx.databaseWriter },
+      {
+        database: ctx.database,
+        writer: ctx.databaseWriter,
+        reader: ctx.catalogRead.reader,
+      },
       signal,
     );
   }),

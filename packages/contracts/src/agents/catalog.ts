@@ -9,7 +9,8 @@ import type {
 export type { ACPAgent, ACPAgentRegistry } from './upstream/registry.gen';
 export const AgentRecord = agentColumns;
 export type AgentRecord = z.infer<typeof AgentRecord>;
-export const AgentCatalogSyncRequestRecord = agentCatalogSyncRequestColumns;
+export const AgentCatalogSyncRequestRecord =
+  agentCatalogSyncRequestColumns.extend({ changedIds: z.array(z.string()) });
 export type AgentCatalogSyncRequestRecord = z.infer<
   typeof AgentCatalogSyncRequestRecord
 >;
