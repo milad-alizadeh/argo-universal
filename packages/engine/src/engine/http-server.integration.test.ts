@@ -4,13 +4,17 @@ import { request } from 'node:http';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { agentAdapters, type VendorCommand } from '@repo/agents';
 import { BlobUploadOutput, maxBlobUploadBytes } from '@repo/contracts';
 import type { Database } from '@repo/db';
+import { session } from '@repo/db/schema';
+import { createMockAdapter, mockReady } from '@repo/mocks/agent';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { WebSocket } from 'ws';
 import { createActor } from 'xstate';
 import { z } from 'zod';
 import { openTestDatabase } from '#mocks/database';
+import { startRouterTestHost } from '#mocks/router';
 import { type RegistryActorRef, registryMachine } from '../services/sessions';
 import { startHttpServer } from './http-server';
 
@@ -236,3 +240,55 @@ describe('http server', (): void => {
     expect(socket.readyState).toBe(WebSocket.CLOSED);
   });
 });
+
+it.each(agentAdapters.map((adapter): string => adapter.agent))(
+  'does not send the waiting %s prompt after HTTP closure begins',
+  async (agent): Promise<void> => {
+    await closeServer();
+    const startup = Promise.withResolvers<typeof mockReady>();
+    const began = Promise.withResolvers<void>();
+    const connected = Promise.withResolvers<void>();
+    const commands: VendorCommand[] = [];
+    const host = startRouterTestHost({
+      database,
+      runtimeDirectory: home,
+      adapters: [
+        createMockAdapter(
+          {
+            connect: (): Promise<typeof mockReady> => {
+              began.resolve();
+              return startup.promise;
+            },
+            stream: (stream): undefined => {
+              stream.receive((command): number => commands.push(command));
+              connected.resolve();
+            },
+          },
+          agent,
+        ),
+      ],
+    });
+    database.update(session).set({ agent }).run();
+    ({ close: closeServer } = await startHttpServer({
+      ...options(),
+      sessions: host.sessionRegistry,
+    }));
+    const response = fetch(`http://127.0.0.1:${port}/trpc/session.prompt`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: 'session-1',
+        prompt: [{ type: 'text', text: 'Too late' }],
+      }),
+    }).catch((): null => null);
+    await began.promise;
+    await closeServer();
+    startup.resolve(mockReady);
+    await connected.promise;
+    await new Promise<void>((resolve): NodeJS.Immediate =>
+      setImmediate(resolve),
+    );
+    expect(commands).toEqual([]);
+    await response;
+  },
+);

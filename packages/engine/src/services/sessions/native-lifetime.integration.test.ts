@@ -602,7 +602,10 @@ it('keeps a starting Session owned until native cleanup completes during collect
   await vi.advanceTimersByTimeAsync(0);
   expect(host.sessionRegistry.getSnapshot().status).toBe('done');
   expect(stopCalls).toBe(1);
-  expect(await prompt).toMatchObject({ code: 'INTERNAL_SERVER_ERROR' });
+  expect(await prompt).toMatchObject({
+    code: 'CONFLICT',
+    message: expect.stringContaining('cannot accept'),
+  });
 });
 
 it('stops the new native instance before discarding a failed Session Checkout', async (): Promise<void> => {

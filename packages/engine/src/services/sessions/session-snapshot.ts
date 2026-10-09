@@ -20,10 +20,8 @@ export function isSessionReady(
 ): boolean {
   return (
     session.context.capabilities !== null &&
-    !session.matches({ open: { live: 'starting' } }) &&
-    !session.matches({ open: 'draining' }) &&
-    !session.matches({ open: 'flushing' }) &&
-    !session.matches('stopping')
+    session.matches({ open: 'live' }) &&
+    !session.matches({ open: { live: 'starting' } })
   );
 }
 

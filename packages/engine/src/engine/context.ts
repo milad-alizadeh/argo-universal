@@ -16,6 +16,7 @@ export type Context = Pick<HttpServerOptions, 'sessions' | 'createId'> &
   Parameters<typeof uploadBlob>[0] &
   SystemDeps &
   FeedDeps & {
+    sessionCommandSignal?: AbortSignal;
     projectRejections: ReturnType<typeof createRejectionCounter>;
     sessionList: ReturnType<typeof createSessionList>;
   };
@@ -24,7 +25,8 @@ export function createEngineContext(
   engineOptions: Pick<HttpServerOptions, 'sessions'> &
     Partial<Pick<HttpServerOptions, 'createId'>> &
     Parameters<typeof uploadBlob>[0] &
-    SystemDeps,
+    SystemDeps &
+    Pick<Context, 'sessionCommandSignal'>,
 ): Context {
   const findSession = (sessionId: string): SessionActorRef | undefined =>
     findSessionActor(engineOptions.sessions.system, sessionId);
@@ -38,6 +40,7 @@ export function createEngineContext(
     version: engineOptions.version,
     startedAt: engineOptions.startedAt,
     sessions: engineOptions.sessions,
+    sessionCommandSignal: engineOptions.sessionCommandSignal,
     createId: engineOptions.createId ?? randomUUID,
     projectRejections: createRejectionCounter('projects'),
     readSession: createSessionReader(engineOptions.database),
