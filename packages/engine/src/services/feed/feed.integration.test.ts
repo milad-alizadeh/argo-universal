@@ -20,19 +20,22 @@ import {
   onTestFinished,
   vi,
 } from 'vitest';
-import { waitFor } from 'xstate';
 import { insertSession, openTestDatabase } from '#mocks/database';
+import { startEngineTestHost } from '#mocks/engine';
 import { storedMessage as message } from '#mocks/feed';
-import { startRouterTestHost } from '#mocks/router';
 import { appRouter } from '../../engine/router';
-import { findSessionActor } from '../sessions';
-import type { FeedActorRef } from './feed-machine';
 import { writeJobs } from './writer-job';
 
-const upsertRowEvent = 'row.upsert';
 const agentFeedEvent = 'agent.feed';
+const afterRejectionRowId = 'after-rejection';
+const storedBeforeStreamText = 'Stored first';
+const overlappingTimersRowId = 'overlapping-timers';
+const turnStartedEvent = 'agent.turnStarted';
+const thirdMessageRowId = 'message-2#0';
+const missingAgentStream = 'The Agent has no stream';
+const appendRowEvent = 'row.append';
+const upsertRowEvent = 'row.upsert';
 const fifthMessageRowId = 'message-5#0';
-const sessionFeedId = 'session:session-1';
 const recoveredRowId = 'recovered-row';
 const lastRowId = 'last-row';
 const teardownRowId = 'teardown-row';
@@ -43,43 +46,53 @@ const queuedToolActivity = 'Reading files';
 let database: Database;
 let runtimeDirectory: string;
 let removeDatabase: () => void;
-let feedTestHost: ReturnType<typeof startRouterTestHost>;
+let feedTestHost: Awaited<ReturnType<typeof startEngineTestHost>>;
 let controller: AbortController;
+let agentStream: MockAgentStream | undefined;
 
 const startFeedTestHost = async (
   script: MockAgentScript = {},
   agent = 'mock',
 ): Promise<void> => {
-  feedTestHost = startRouterTestHost({
+  let identity = 0;
+  feedTestHost = await startEngineTestHost({
     database,
     runtimeDirectory,
-    adapters: [createMockAdapter(script, agent)],
+    createId: () => (++identity === 1 ? 'turn-1' : `feed-fixture-${identity}`),
+    adapters: [
+      createMockAdapter(
+        {
+          ...script,
+          stream: (stream) => {
+            agentStream = stream;
+            return script.stream?.(stream);
+          },
+        },
+        agent,
+      ),
+    ],
   });
   feedTestHost.sessionRegistry.send({
     type: 'sessions.open',
     sessionId: 'session-1',
     agent,
   });
-  const sessionActor = findSessionActor(
-    feedTestHost.sessionRegistry.system,
-    'session-1',
-  );
-  if (!sessionActor) throw new Error('Session did not open');
-  await waitFor(sessionActor, (snapshot): boolean =>
-    snapshot.can({ type: 'session.prompt', turnId: 'turn-1', content: [] }),
+  await vi.waitFor(() =>
+    expect(
+      database.$client
+        .prepare('SELECT vendor_session_id FROM session WHERE id = ?')
+        .get('session-1'),
+    ).toMatchObject({ vendor_session_id: 'vendor-1' }),
   );
 };
-const findFeedActor = (): FeedActorRef | undefined =>
-  findSessionActor(
-    feedTestHost.sessionRegistry.system,
-    'session-1',
-  )?.getSnapshot().children.feed;
 
 const createFeedRouterCaller = (): ReturnType<typeof appRouter.createCaller> =>
-  appRouter.createCaller(feedTestHost.context, { signal: controller.signal });
+  feedTestHost.createCaller({ signal: controller.signal });
 
-const sendChange = (change: FeedChange): void | undefined =>
-  findFeedActor()?.send({ type: 'feed.change', change, turnId: 'turn-1' });
+const sendAgentFeedChange = (change: FeedChange): void => {
+  if (!agentStream) throw new Error(missingAgentStream);
+  agentStream.send({ type: agentFeedEvent, change });
+};
 const createOpenMessageChange = (id: string, text = ''): FeedChange => ({
   type: 'upsert',
   update: {
@@ -120,7 +133,7 @@ const summarizeFeedChanges = (outputs: FeedSubscribeOutput[]): string[] =>
   outputs.map((output): string => {
     if (output.type === upsertRowEvent)
       return `upsert ${output.row.id} @${output.rev}`;
-    if (output.type === 'row.append')
+    if (output.type === appendRowEvent)
       return `append ${output.id} +${output.text} at ${output.off} @${output.rev}`;
     return output.type;
   });
@@ -253,7 +266,7 @@ describe('feed.page', (): void => {
   });
 
   it('keeps the place of a stored row that a change brings back', async (): Promise<void> => {
-    sendChange({
+    sendAgentFeedChange({
       type: 'patch',
       id: 'message-3#0',
       set: { messageId: 'plan-3' },
@@ -273,8 +286,8 @@ describe('feed.page', (): void => {
   });
 
   it('reads rows that the feed actor wrote through the database writer', async (): Promise<void> => {
-    sendChange(createOpenMessageChange(fifthMessageRowId, 'Hi'));
-    sendChange({
+    sendAgentFeedChange(createOpenMessageChange(fifthMessageRowId, 'Hi'));
+    sendAgentFeedChange({
       type: 'patch',
       id: fifthMessageRowId,
       set: { state: 'settled' },
@@ -309,14 +322,14 @@ describe('feed.row', (): void => {
     expect(
       await createFeedRouterCaller().feed.row({
         sessionId: 'session-1',
-        id: 'message-2#0',
+        id: thirdMessageRowId,
       }),
     ).toEqual(message(2));
   });
 
   it('reads the newest version of an open row before it is written', async (): Promise<void> => {
-    sendChange(createOpenMessageChange(fifthMessageRowId));
-    sendChange(createTextAppendChange(fifthMessageRowId, 'Hel'));
+    sendAgentFeedChange(createOpenMessageChange(fifthMessageRowId));
+    sendAgentFeedChange(createTextAppendChange(fifthMessageRowId, 'Hel'));
 
     expect(
       await createFeedRouterCaller().feed.row({
@@ -339,15 +352,15 @@ describe('feed.row', (): void => {
 describe('feed.subscribe', (): void => {
   it('with no sync point, sends the rows not yet stored, then live changes', async (): Promise<void> => {
     await startFeedTestHost();
-    sendChange(createOpenMessageChange(fifthMessageRowId, 'Hel'));
+    sendAgentFeedChange(createOpenMessageChange(fifthMessageRowId, 'Hel'));
     const updates = await subscribe(null);
 
     expect(summarizeFeedChanges(await takeFeedChanges(updates, 1))).toEqual([
       'upsert message-5#0 @6',
     ]);
 
-    sendChange(createTextAppendChange(fifthMessageRowId, 'lo'));
-    sendChange(createOpenMessageChange('message-6#0'));
+    sendAgentFeedChange(createTextAppendChange(fifthMessageRowId, 'lo'));
+    sendAgentFeedChange(createOpenMessageChange('message-6#0'));
     await vi.advanceTimersByTimeAsync(60);
     expect(summarizeFeedChanges(await takeFeedChanges(updates, 2))).toEqual([
       'append message-5#0 +lo at 3 @7',
@@ -357,8 +370,8 @@ describe('feed.subscribe', (): void => {
 
   it('catches up from a revision with stored rows and rows not yet written, without repeats', async (): Promise<void> => {
     await startFeedTestHost();
-    sendChange(createOpenMessageChange(fifthMessageRowId));
-    sendChange(createTextAppendChange(fifthMessageRowId, 'Hel'));
+    sendAgentFeedChange(createOpenMessageChange(fifthMessageRowId));
+    sendAgentFeedChange(createTextAppendChange(fifthMessageRowId, 'Hel'));
     const updates = await subscribe({ epoch: 3, revision: 4 });
 
     expect(summarizeFeedChanges(await takeFeedChanges(updates, 2))).toEqual([
@@ -366,7 +379,7 @@ describe('feed.subscribe', (): void => {
       'upsert message-5#0 @7',
     ]);
 
-    sendChange(createTextAppendChange(fifthMessageRowId, 'lo'));
+    sendAgentFeedChange(createTextAppendChange(fifthMessageRowId, 'lo'));
     await vi.advanceTimersByTimeAsync(60);
     expect(summarizeFeedChanges(await takeFeedChanges(updates, 1))).toEqual([
       'append message-5#0 +lo at 3 @8',
@@ -381,8 +394,8 @@ describe('feed.subscribe', (): void => {
     onTestFinished((): void => {
       database.$client.exec('DROP TRIGGER IF EXISTS hold_feed_writes');
     });
-    sendChange(createOpenMessageChange(fifthMessageRowId, 'Hi'));
-    sendChange({
+    sendAgentFeedChange(createOpenMessageChange(fifthMessageRowId, 'Hi'));
+    sendAgentFeedChange({
       type: 'patch',
       id: fifthMessageRowId,
       set: { state: 'settled' },
@@ -408,14 +421,12 @@ describe('feed.subscribe', (): void => {
     database.$client
       .exec(`CREATE TRIGGER hold_feed_writes BEFORE INSERT ON feed_row
       BEGIN SELECT RAISE(ABORT, 'database is locked'); END`);
-    feedTestHost.databaseWriter.send({
-      type: 'writer.write',
-      job: {
-        type: 'feedRows',
-        sessionId: 'session-1',
-        rows: [message(5, 6)],
-        maxRevision: 6,
-      },
+    if (!agentStream) throw new Error(missingAgentStream);
+    agentStream.send({ type: turnStartedEvent });
+    const { id, state, sessionUpdate, messageId, content } = message(5, 6);
+    sendAgentFeedChange({
+      type: 'upsert',
+      update: { id, state, sessionUpdate, messageId, content },
     });
     await vi.advanceTimersByTimeAsync(0);
     expect(
@@ -440,8 +451,8 @@ describe('feed.subscribe', (): void => {
     database.$client
       .exec(`CREATE TRIGGER hold_feed_writes BEFORE INSERT ON feed_row
       BEGIN SELECT RAISE(ABORT, 'database is locked'); END`);
-    sendChange(createOpenMessageChange(fifthMessageRowId, 'Queued'));
-    sendChange({
+    sendAgentFeedChange(createOpenMessageChange(fifthMessageRowId, 'Queued'));
+    sendAgentFeedChange({
       type: 'patch',
       id: fifthMessageRowId,
       set: { state: 'settled' },
@@ -452,7 +463,7 @@ describe('feed.subscribe', (): void => {
       fourthStoredUpsert,
       'upsert message-5#0 @7',
     ]);
-    sendChange({
+    sendAgentFeedChange({
       type: 'patch',
       id: fifthMessageRowId,
       set: { content: [{ type: 'text', text: 'Newest' }] },
@@ -469,7 +480,7 @@ describe('feed.subscribe', (): void => {
     const reconnected = await subscribe({ epoch: 3, revision: 5 });
     expect(await takeFeedChanges(reconnected, 1)).toEqual([
       {
-        type: 'row.upsert',
+        type: upsertRowEvent,
         rev: 8,
         row: expect.objectContaining({
           id: fifthMessageRowId,
@@ -501,7 +512,7 @@ describe('feed.subscribe', (): void => {
 
   it('resets a subscriber from another epoch, then sends the rows not yet stored', async (): Promise<void> => {
     await startFeedTestHost();
-    sendChange(createOpenMessageChange(fifthMessageRowId));
+    sendAgentFeedChange(createOpenMessageChange(fifthMessageRowId));
     const updates = await subscribe({ epoch: 2, revision: 9 });
 
     expect(summarizeFeedChanges(await takeFeedChanges(updates, 2))).toEqual([
@@ -512,16 +523,7 @@ describe('feed.subscribe', (): void => {
 
   it('sends stored rows and one snapshot before a closed Session stream ends', async (): Promise<void> => {
     await startFeedTestHost();
-    const sessionActor = findSessionActor(
-      feedTestHost.sessionRegistry.system,
-      'session-1',
-    );
-    if (!sessionActor) throw new Error('Session missing');
-    sessionActor.send({ type: 'session.close' });
-    await waitFor(
-      sessionActor,
-      (snapshot): boolean => snapshot.status === 'done',
-    );
+    await feedTestHost.caller.session.close({ sessionId: 'session-1' });
     const updates = await subscribe({ epoch: 3, revision: 3 });
 
     expect(summarizeFeedChanges(await takeFeedChanges(updates, 2))).toEqual([
@@ -562,19 +564,18 @@ it('ends a closed Session Feed after draining its last rows', async (): Promise<
       stream = current;
     },
   });
-  feedTestHost = startRouterTestHost({
+  feedTestHost = await startEngineTestHost({
     database,
     runtimeDirectory,
     adapters: [adapter],
   });
-  const { sessionRegistry: sessions, context } = feedTestHost;
-  await appRouter.createCaller(context).session.prompt({
+  await feedTestHost.caller.session.prompt({
     sessionId: 'session-1',
     prompt: [{ type: 'text', text: 'Start a Turn' }],
   });
   const updates = (
-    await appRouter
-      .createCaller(context, { signal: controller.signal })
+    await feedTestHost
+      .createCaller({ signal: controller.signal })
       .feed.subscribe({
         sessionId: 'session-1',
         after: { epoch: 3, revision: 5 },
@@ -587,9 +588,7 @@ it('ends a closed Session Feed after draining its last rows', async (): Promise<
     type: agentFeedEvent,
     change: createOpenMessageChange(lastRowId, 'Last message'),
   });
-  const sessionActor = sessions.getSnapshot().context.sessions['session-1'];
-  if (!sessionActor) throw new Error('No registered Session');
-  sessionActor.send({ type: 'session.close' });
+  const closing = feedTestHost.caller.session.close({ sessionId: 'session-1' });
   const events = await drainClosedFeed(updates);
   expect(events.at(-1)).toEqual({ type: 'closed', failure: null });
   expect(events).toContainEqual(
@@ -598,18 +597,18 @@ it('ends a closed Session Feed after draining its last rows', async (): Promise<
       row: expect.objectContaining({ id: lastRowId }),
     }),
   );
-  expect(sessions.system.get(sessionFeedId)).toBeUndefined();
+  await closing;
   const heldRevision = Math.max(
     5,
     ...events.flatMap((event): number[] => ('rev' in event ? [event.rev] : [])),
   );
-  await appRouter.createCaller(context).session.prompt({
+  await feedTestHost.caller.session.prompt({
     sessionId: 'session-1',
     prompt: [{ type: 'text', text: 'Continue the Session' }],
   });
   const resumed = (
-    await appRouter
-      .createCaller(context, { signal: controller.signal })
+    await feedTestHost
+      .createCaller({ signal: controller.signal })
       .feed.subscribe({
         sessionId: 'session-1',
         after: { epoch: 3, revision: heldRevision },
@@ -645,12 +644,18 @@ it('ends a closed Session Feed after draining its last rows', async (): Promise<
 
 it('reads a closed Session Feed without opening a Session', async (): Promise<void> => {
   vi.useRealTimers();
-  feedTestHost = startRouterTestHost({ database, runtimeDirectory });
-  const { sessionRegistry: sessions, context } = feedTestHost;
+  const connect = vi.fn<() => Promise<never>>(async () => {
+    throw new Error('Reading a closed Feed must not launch the Agent');
+  });
+  feedTestHost = await startEngineTestHost({
+    database,
+    runtimeDirectory,
+    adapters: [{ ...createMockAdapter(), connect }],
+  });
   const events = await drainClosedFeed(
     (
-      await appRouter
-        .createCaller(context, { signal: controller.signal })
+      await feedTestHost
+        .createCaller({ signal: controller.signal })
         .feed.subscribe({
           sessionId: 'session-1',
           after: { epoch: 3, revision: 3 },
@@ -667,8 +672,7 @@ it('reads a closed Session Feed without opening a Session', async (): Promise<vo
   expect(events[2]).toMatchObject({
     snapshot: { state: 'idle', configOptions: [], maxRevision: 5 },
   });
-  expect(Object.keys(sessions.getSnapshot().context.sessions)).toEqual([]);
-  expect(sessions.system.get(sessionFeedId)).toBeUndefined();
+  expect(connect).not.toHaveBeenCalled();
 });
 
 it('keeps a Subagent Feed stream open until its caller aborts', async (): Promise<void> => {
@@ -698,8 +702,8 @@ it('keeps another Feed subscriber live after a caller aborts', async (): Promise
   const continuingController = new AbortController();
   onTestFinished((): void => continuingController.abort());
   const continuing = (
-    await appRouter
-      .createCaller(feedTestHost.context, {
+    await feedTestHost
+      .createCaller({
         signal: continuingController.signal,
       })
       .feed.subscribe({ sessionId: 'session-1', after: null })
@@ -707,7 +711,9 @@ it('keeps another Feed subscriber live after a caller aborts', async (): Promise
   await continuing.next();
   controller.abort();
   await pendingAbort;
-  sendChange(createOpenMessageChange('remaining-reader', 'Still connected'));
+  sendAgentFeedChange(
+    createOpenMessageChange('remaining-reader', 'Still connected'),
+  );
   await vi.advanceTimersByTimeAsync(60);
   expect(await takeFeedChanges(continuing, 1)).toEqual([
     expect.objectContaining({
@@ -723,7 +729,7 @@ it('rejects a Feed stream when stored Session hydration fails', async (): Promis
   const updates = await subscribe(null);
   await updates.next();
   database.$client.exec("UPDATE session SET title_source = 'unrecognised'");
-  sendChange(createOpenMessageChange('snapshot-rejection'));
+  sendAgentFeedChange(createOpenMessageChange('snapshot-rejection'));
   await expect(updates.next()).rejects.toMatchObject({
     code: 'INTERNAL_SERVER_ERROR',
     message: 'Unrecognised Session row',
@@ -812,36 +818,25 @@ async function drainClosedFeed(
   }
 }
 
-it('persists the final buffered Feed row during real router host teardown', async (): Promise<void> => {
-  let stream: MockAgentStream | undefined;
-  onTestFinished(async (): Promise<void> => {
-    expect(
-      await feedTestHost.caller.feed.row({
-        sessionId: 'session-1',
-        id: teardownRowId,
-      }),
-    ).toMatchObject({
-      id: teardownRowId,
-      state: 'open',
-      content: [{ type: 'text', text: 'Before shutdown' }],
-    });
-  });
-  await startFeedTestHost({
-    stream: (nativeStream): undefined => {
-      stream = nativeStream;
-    },
-  });
-  if (!stream) throw new Error('The Agent has no stream');
-  stream.send({
-    type: agentFeedEvent,
-    change: createOpenMessageChange(teardownRowId, 'Before shutdown'),
-  });
+it('persists the final buffered Feed row during real Engine shutdown', async (): Promise<void> => {
+  await startFeedTestHost();
+  sendAgentFeedChange(
+    createOpenMessageChange(teardownRowId, 'Before shutdown'),
+  );
   expect(
     await feedTestHost.caller.feed.row({
       sessionId: 'session-1',
       id: teardownRowId,
     }),
   ).toMatchObject({ state: 'open' });
+  await feedTestHost.stop();
+  expect(
+    database.$client
+      .prepare('SELECT payload FROM feed_row WHERE id = ?')
+      .get(teardownRowId),
+  ).toMatchObject({
+    payload: expect.stringContaining('Before shutdown'),
+  });
 });
 
 it.each(agentAdapters.map((adapter): string => adapter.agent))(
@@ -860,7 +855,7 @@ it.each(agentAdapters.map((adapter): string => adapter.agent))(
     database.$client
       .exec(`CREATE TRIGGER hold_feed_writes BEFORE INSERT ON feed_row
       BEGIN SELECT RAISE(ABORT, 'database is locked'); END`);
-    stream.send({ type: 'agent.turnStarted' });
+    stream.send({ type: turnStartedEvent });
     stream.send({
       type: 'agent.feed',
       change: {
@@ -894,5 +889,174 @@ it.each(agentAdapters.map((adapter): string => adapter.agent))(
       (await createFeedRouterCaller().session.list({ archived: false }))
         .sessions,
     ).toMatchObject([{ sessionId: 'session-1', activity: queuedToolActivity }]);
+  },
+);
+
+it('streams buffered Agent changes after 60 ms while SQL waits for the store timer', async () => {
+  await startFeedTestHost();
+  const updates = await subscribe({ epoch: 3, revision: 5 });
+  await updates.next();
+  // Establish the autonomous Turn before observing the row batch.
+  if (!agentStream) throw new Error(missingAgentStream);
+  agentStream.send({ type: turnStartedEvent });
+  await updates.next();
+  let received = false;
+  const next = takeFeedChanges(updates, 2).then((events) => {
+    received = true;
+    return events;
+  });
+  sendAgentFeedChange(createOpenMessageChange('timed-row'));
+  await vi.advanceTimersByTimeAsync(30);
+  sendAgentFeedChange(createTextAppendChange('timed-row', 'Hello'));
+  await vi.advanceTimersByTimeAsync(29);
+  expect(received).toBe(false);
+  expect(
+    database.$client
+      .prepare('SELECT id FROM feed_row WHERE id = ?')
+      .get('timed-row'),
+  ).toBeUndefined();
+  await vi.advanceTimersByTimeAsync(1);
+  expect((await next).map((event) => event.type)).toEqual([
+    upsertRowEvent,
+    appendRowEvent,
+  ]);
+  await vi.advanceTimersByTimeAsync(939);
+  expect(
+    database.$client
+      .prepare('SELECT id FROM feed_row WHERE id = ?')
+      .get('timed-row'),
+  ).toBeUndefined();
+  await vi.advanceTimersByTimeAsync(1);
+  expect(
+    await createFeedRouterCaller().feed.page({
+      sessionId: 'session-1',
+      direction: 'tail',
+      limit: 1,
+    }),
+  ).toMatchObject({
+    rows: [
+      {
+        id: 'timed-row',
+        revision: 7,
+        state: 'open',
+        content: [{ text: 'Hello' }],
+      },
+    ],
+  });
+});
+
+it('persists the latest open row when the store timer expires before its next stream batch', async () => {
+  await startFeedTestHost();
+  const updates = await subscribe({ epoch: 3, revision: 5 });
+  await updates.next();
+  sendAgentFeedChange(createOpenMessageChange(overlappingTimersRowId));
+  await vi.advanceTimersByTimeAsync(950);
+  await takeFeedChanges(updates, 1);
+  sendAgentFeedChange(
+    createTextAppendChange(overlappingTimersRowId, storedBeforeStreamText),
+  );
+  let streamed = false;
+  const next = takeFeedChanges(updates, 1).then((events) => {
+    streamed = true;
+    return events;
+  });
+  await vi.advanceTimersByTimeAsync(50);
+  expect(streamed).toBe(false);
+  expect(
+    await createFeedRouterCaller().feed.page({
+      sessionId: 'session-1',
+      direction: 'tail',
+      limit: 1,
+    }),
+  ).toMatchObject({
+    rows: [
+      {
+        id: overlappingTimersRowId,
+        revision: 7,
+        content: [{ text: storedBeforeStreamText }],
+      },
+    ],
+  });
+  await vi.advanceTimersByTimeAsync(10);
+  expect(await next).toMatchObject([
+    { type: appendRowEvent, text: storedBeforeStreamText },
+  ]);
+});
+
+it('rejects unreadable and missing stored rows without writing changes, then accepts the next Agent row', async () => {
+  await startFeedTestHost();
+  const updates = await subscribe({ epoch: 3, revision: 5 });
+  await updates.next();
+  let streamed = false;
+  const firstChange = takeFeedChanges(updates, 1).then((events) => {
+    streamed = true;
+    return events;
+  });
+  const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+  onTestFinished(() => log.mockRestore());
+  database.$client
+    .prepare('UPDATE feed_row SET payload = ? WHERE id = ?')
+    .run('{}', thirdMessageRowId);
+  sendAgentFeedChange(createTextAppendChange(thirdMessageRowId, 'Rejected'));
+  sendAgentFeedChange(createTextAppendChange('missing-row', 'Rejected'));
+  await vi.advanceTimersByTimeAsync(1000);
+  expect(
+    database.$client
+      .prepare('SELECT max_revision FROM session WHERE id = ?')
+      .get('session-1'),
+  ).toMatchObject({ max_revision: 5 });
+  expect(streamed).toBe(false);
+  expect(log.mock.calls.map(([line]) => line)).toEqual([
+    expect.stringContaining('could not read written row message-2#0'),
+    expect.stringContaining('no row missing-row'),
+  ]);
+  sendAgentFeedChange(
+    createOpenMessageChange(afterRejectionRowId, 'Still working'),
+  );
+  sendAgentFeedChange({
+    type: 'patch',
+    id: afterRejectionRowId,
+    set: { state: 'settled' },
+  });
+  await vi.advanceTimersByTimeAsync(60);
+  expect(await firstChange).toMatchObject([
+    { type: upsertRowEvent, row: { id: afterRejectionRowId } },
+  ]);
+  expect(
+    await createFeedRouterCaller().feed.page({
+      sessionId: 'session-1',
+      direction: 'tail',
+      limit: 1,
+    }),
+  ).toMatchObject({
+    maxRevision: 7,
+    rows: [{ id: afterRejectionRowId, content: [{ text: 'Still working' }] }],
+  });
+});
+
+it.each(['prompt', 'agent', 'user'] as const)(
+  'reads a stored %s title from the public Feed without opening the Session',
+  async (titleSource) => {
+    database.$client
+      .prepare('UPDATE session SET title = ?, title_source = ? WHERE id = ?')
+      .run('Session list reconnect investigation', titleSource, 'session-1');
+    const connect = vi.fn<() => Promise<never>>(async () => {
+      throw new Error('A stored snapshot must not launch the Agent');
+    });
+    feedTestHost = await startEngineTestHost({
+      database,
+      adapters: [{ ...createMockAdapter(), connect }],
+    });
+    const updates = await subscribe(null);
+    expect((await updates.next()).value).toMatchObject({
+      type: 'snapshot',
+      snapshot: {
+        title: 'Session list reconnect investigation',
+        titleSource,
+        state: 'idle',
+        changes: { files: 0, additions: 0, deletions: 0 },
+      },
+    });
+    expect(connect).not.toHaveBeenCalled();
   },
 );

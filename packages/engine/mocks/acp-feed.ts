@@ -2,8 +2,6 @@ import type {
   AgentRequestHandlersByMethod,
   SessionNotification,
 } from '@agentclientprotocol/sdk';
-import { waitFor } from 'xstate';
-import { findSessionActor } from '../src/services/sessions';
 import { emptySessionInput, startAcpEngine } from './acp-engine';
 
 export type AcpFeedUpdates = SessionNotification['update'][];
@@ -24,11 +22,15 @@ export const waitForAcpSessionIdle = async (
   host: Awaited<ReturnType<typeof startAcpEngine>>,
   sessionId: string,
 ): Promise<void> => {
-  const actor = findSessionActor(host.engine.system, sessionId);
-  if (!actor) throw new Error('Session is missing');
-  await waitFor(actor, (snapshot) =>
-    snapshot.matches({ open: { acp: 'idle' } }),
-  );
+  const events = await host.caller.feed.subscribe({ sessionId, after: null });
+  for await (const event of events)
+    if (
+      event.type === 'snapshot' &&
+      event.snapshot.state === 'idle' &&
+      event.snapshot.activeTurnId === null
+    )
+      return;
+  throw new Error('The Feed closed before the Session became idle');
 };
 export const openAcpFeedSession = async (
   updates: AcpFeedUpdates,

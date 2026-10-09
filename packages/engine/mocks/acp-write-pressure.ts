@@ -1,6 +1,4 @@
 import type { AnyMessage, Stream } from '@agentclientprotocol/sdk';
-import { createAcpResources } from '../src/services/agents';
-import { createResourcePeer } from './acp-resource';
 
 export const pauseAcpResponses = (
   stream: Stream,
@@ -30,34 +28,6 @@ export const pauseAcpResponses = (
         close: () => writer.close(),
         abort: (reason: unknown) => writer.abort(reason),
       }),
-    },
-  };
-};
-
-export const createPressuredResource = (
-  input: Parameters<typeof createResourcePeer>[0],
-  closeTimeoutMs?: number,
-): {
-  peer: ReturnType<typeof createResourcePeer>;
-  resources: ReturnType<typeof createAcpResources>;
-  pressure: () => ReturnType<typeof pauseAcpResponses>;
-} => {
-  const peer = createResourcePeer(input);
-  let paused: ReturnType<typeof pauseAcpResponses> | undefined;
-  const resources = createAcpResources({
-    closeTimeoutMs,
-    launchProcess: async (launch) => {
-      const process = await peer.launchProcess(launch);
-      paused = pauseAcpResponses(process.stream);
-      return { ...process, stream: paused.stream };
-    },
-  });
-  return {
-    peer,
-    resources,
-    pressure: () => {
-      if (!paused) throw new Error('Missing pressured stream');
-      return paused;
     },
   };
 };

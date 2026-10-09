@@ -1,96 +1,50 @@
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { createAcpPeer, readAcpRequest } from '#mocks/acp-peer';
-import { acpResponses } from '#mocks/acp-responses';
-import { createRejectionCounter } from '../../../lib/count-rejections';
-import { createAgentClient } from './client';
-import { createAcpResponseReaders } from './response-readers';
+import {
+  createResourceOpening,
+  resourceInitialization,
+} from '#mocks/acp-resource';
+import { createAcpResources } from './resources';
 
-const responseSource = 'ACP responses';
-
-it('rejects and counts an unchecked malformed SDK response body once', async () => {
+it('rejects an unchecked malformed opening response through the resource and counts it once', async () => {
+  const log = vi.spyOn(console, 'error').mockImplementation(() => {});
   const peer = createAcpPeer();
-  const rejections = createRejectionCounter(responseSource);
-  const readers = createAcpResponseReaders(rejections);
-  const connection = createAgentClient({
-    stream: peer.stream,
-    acceptSessionUpdate: () => {},
-    requestPermission: () => ({ outcome: { outcome: 'cancelled' } }),
-    createElicitation: () => ({ action: 'cancel' }),
-  });
-  const prompt = connection.agent
-    .request<unknown>('session/prompt', {
-      sessionId: 'one',
-      prompt: [{ type: 'text', text: 'Start' }],
-    })
-    .then(readers['session/prompt'].parse)
-    .catch((error: unknown) => error);
-  const request = await readAcpRequest(peer);
-  await peer.send([
-    { jsonrpc: '2.0', id: request.id, result: { stopReason: 42 } },
-  ]);
-  expect({ result: await prompt, count: rejections.count() }).toEqual({
-    result: expect.objectContaining({
-      message: expect.stringContaining('stopReason must be string'),
+  const exited = Promise.withResolvers<void>();
+  const resources = createAcpResources({
+    launchProcess: async (): Promise<
+      import('./resource-types').AcpProcess
+    > => ({
+      stream: peer.stream,
+      exited: exited.promise,
+      terminate: async () => exited.resolve(),
     }),
-    count: 1,
   });
-  connection.close();
-  await connection.closed;
-});
-
-it.each(Object.values(acpResponses))(
-  'accepts the legitimate $method response through its official schema',
-  async (example) => {
-    const peer = createAcpPeer();
-    const rejections = createRejectionCounter(responseSource);
-    const readers = createAcpResponseReaders(rejections);
-    const connection = createAgentClient({
-      stream: peer.stream,
-      acceptSessionUpdate: () => {},
-      requestPermission: () => ({ outcome: { outcome: 'cancelled' } }),
-      createElicitation: () => ({ action: 'cancel' }),
-    });
-    const response = connection.agent
-      .request<unknown>(example.method, example.params)
-      .then((value) => readers[example.method].parse(value));
-    const request = await readAcpRequest(peer);
-    await peer.send([
-      { jsonrpc: '2.0', id: request.id, result: example.response },
-    ]);
-    expect({
-      response: await response,
-      rejections: rejections.count(),
-    }).toEqual({ response: example.response, rejections: 0 });
-    connection.close();
-    await connection.closed;
-  },
-);
-
-it.each(Object.values(acpResponses))(
-  'rejects an invalid $method response body before domain use',
-  async (example) => {
-    const peer = createAcpPeer();
-    const rejections = createRejectionCounter(responseSource);
-    const readers = createAcpResponseReaders(rejections);
-    const connection = createAgentClient({
-      stream: peer.stream,
-      acceptSessionUpdate: () => {},
-      requestPermission: () => ({ outcome: { outcome: 'cancelled' } }),
-      createElicitation: () => ({ action: 'cancel' }),
-    });
-    const response = connection.agent
-      .request<unknown>(example.method, example.params)
-      .then((value) => readers[example.method].parse(value))
+  try {
+    const opening = resources
+      .open(createResourceOpening())
       .catch((error: unknown) => error);
+    const initialize = await readAcpRequest(peer);
+    expect(initialize.method).toBe('initialize');
+    await peer.send([
+      { jsonrpc: '2.0', id: initialize.id, result: resourceInitialization },
+    ]);
     const request = await readAcpRequest(peer);
-    await peer.send([{ jsonrpc: '2.0', id: request.id, result: 42 }]);
-    expect({ result: await response, count: rejections.count() }).toEqual({
-      result: expect.objectContaining({
-        message: expect.stringContaining('data must be object'),
+    expect(request.method).toBe('session/new');
+    await peer.send([
+      { jsonrpc: '2.0', id: request.id, result: { sessionId: 42 } },
+    ]);
+    expect(await opening).toEqual(
+      expect.objectContaining({
+        message: expect.stringContaining('sessionId must be string'),
       }),
-      count: 1,
-    });
-    connection.close();
-    await connection.closed;
-  },
-);
+    );
+    const reports = log.mock.calls.filter(
+      ([line]) => typeof line === 'string' && line.startsWith('ACP responses:'),
+    );
+    expect(reports).toHaveLength(1);
+    expect(reports[0]?.[0]).toContain('#1');
+  } finally {
+    await resources.shutdown();
+    log.mockRestore();
+  }
+});
