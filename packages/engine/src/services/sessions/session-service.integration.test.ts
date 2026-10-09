@@ -1,9 +1,10 @@
-import { randomUUID } from 'node:crypto';
 import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { AgentProbe, AgentReady, VendorCommand } from '@repo/agents';
+import { newSessionInputs } from '@repo/api/mocks';
 import type { FeedSubscribeOutput, SessionNewInput } from '@repo/contracts';
+import { permissionOptions } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { turn } from '@repo/db/schema';
 import { sessionBranch } from '@repo/git';
@@ -14,88 +15,38 @@ import {
   mockReady,
 } from '@repo/mocks/agent';
 import { eq } from 'drizzle-orm';
-import { afterEach, expect, it, vi } from 'vitest';
-import type {
-  Actor,
-  StateMachine,
-  MachineContext,
-  AnyEventObject,
-  ActorRefFromLogic,
-  NonReducibleUnknown,
-  EventObject,
-  MetaObject,
-} from 'xstate';
-import { createActor, fromPromise, setup, waitFor } from 'xstate';
+import { beforeEach, expect, it, onTestFinished, vi } from 'vitest';
+import { waitFor } from 'xstate';
 import { insertSession, openTestDatabase } from '#mocks/database';
 import { initTestRepository } from '#mocks/git';
+import { createRouterHost } from '#mocks/router';
 import { appRouter } from '../../engine/router';
-import { writerMachine } from '../feed';
-import { createServerServices } from '../server-services';
 import type { Services } from '../services';
-import { registryMachine } from './registry-machine';
 
 const agentConfigOptionsChangedEvent = 'agent.configOptionsChanged';
 const signInFailure = 'Sign in first';
 const sessionActorId = 'session:session-1';
 
-type TestServer = {
-  caller: ReturnType<typeof appRouter.createCaller>;
-  root: Actor<
-    StateMachine<
-      MachineContext,
-      AnyEventObject,
-      {
-        [x: string]:
-          | ActorRefFromLogic<typeof registryMachine | typeof writerMachine>
-          | undefined;
-      },
-      | {
-          src: 'sessions';
-          logic: typeof registryMachine;
-          id: string | undefined;
-        }
-      | { src: 'writer'; logic: typeof writerMachine; id: string | undefined },
-      never,
-      never,
-      never,
-      Record<never, never>,
-      string,
-      NonReducibleUnknown,
-      NonReducibleUnknown,
-      EventObject,
-      MetaObject,
-      Record<never, never>,
-      MetaObject
-    >
-  >;
+type TestServer = Omit<ReturnType<typeof createRouterHost>, 'writer'> & {
   streams: Map<string, MockAgentStream>;
   commands: Map<string, VendorCommand[]>;
-  configOptions: {
-    configId: string;
-    name: string;
-    category: string;
-    type: 'select';
-    currentValue: string;
-    options: { value: string; name: string }[];
-  }[];
+  configOptions: Extract<
+    AgentReady['configOptions'][number],
+    { type: 'select' }
+  >[];
   services: Services;
   database: Database;
-  git: (...arguments_: string[]) => string;
-};
-type AlternateReady = typeof mockReady & {
-  configOptions: TestServer['configOptions'];
-  capabilities: { planApproval: 'startTurn' };
+  git: ReturnType<typeof initTestRepository>;
 };
 
 const cleanups: (() => void)[] = [];
-afterEach((): void => {
-  for (const cleanup of cleanups.splice(0).reverse()) cleanup();
+beforeEach((): void => {
+  onTestFinished((): void => {
+    for (const cleanup of cleanups.splice(0).reverse()) cleanup();
+  });
 });
 
-function openServer({
-  applyConfigOptions = true,
-  writer = writerMachine,
-} = {}): TestServer {
+function openServer({ applyConfigOptions = true } = {}): TestServer {
   const directory = realpathSync(
     mkdtempSync(join(tmpdir(), 'session-service-')),
   );
@@ -105,7 +56,7 @@ function openServer({
   const git = initTestRepository(directory);
   const { database, remove } = openTestDatabase({}, directory);
   cleanups.push(remove);
-  const configOptions = [
+  const configOptions: TestServer['configOptions'] = [
     {
       configId: 'model',
       name: 'Model',
@@ -158,92 +109,58 @@ function openServer({
       });
     },
   };
-  const root = createActor(
-    setup({
-      actors: { sessions: registryMachine, writer },
-    }).createMachine({
-      invoke: [
-        {
-          src: 'writer',
-          systemId: 'databaseWriter',
-          input: {
-            now: (): number => Date.now(),
-            database,
-          },
-        },
-        {
-          src: 'sessions',
-          systemId: 'sessions',
-          input: {
-            now: (): number => Date.now(),
-            createId: randomUUID,
-            database,
-            runtimeDirectory: join(directory, '.argo'),
-            adapters: [
-              createMockAdapter(script),
-              createMockAdapter(
-                {
-                  ...script,
-                  connect: async (): Promise<AlternateReady> => ({
-                    ...ready,
-                    configOptions: configOptions.map(
-                      (option): typeof option => ({
-                        ...option,
-                        currentValue: 'large',
-                      }),
-                    ),
-                    capabilities: {
-                      permissionFeedback: true,
-                      planApproval: 'startTurn',
-                      stopShell: true,
-                    },
-                  }),
-                },
-                'alternate',
-              ),
-              createMockAdapter(
-                {
-                  connect: (): Promise<AgentReady> =>
-                    Promise.reject(new Error(signInFailure)),
-                  // Signed in when the Server starts, signed out by the first Session.
-                  probe: vi
-                    .fn<() => Promise<AgentProbe>>()
-                    .mockResolvedValueOnce({
-                      availability: 'available',
-                      configOptions: [],
-                    })
-                    .mockResolvedValue({
-                      availability: 'not_signed_in',
-                      installStep: signInFailure,
-                      configOptions: [],
-                    }),
-                },
-                'unavailable',
-              ),
-            ],
-          },
-        },
-      ],
-    }),
-  ).start();
-  cleanups.push((): typeof root => root.stop());
-  const sessions = root.system.get('sessions');
-  const services = createServerServices({
+  const { root, context, caller } = createRouterHost({
     database,
-    // These tests never upload, so no blob reaches the folder.
-    blobsFolder: '/no-uploads',
-    sessions,
-    version: '1',
-    startedAt: new Date().toISOString(),
+    runtimeDirectory: join(directory, '.argo'),
+    adapters: [
+      createMockAdapter(script),
+      createMockAdapter(
+        {
+          ...script,
+          connect: async (): Promise<AgentReady> => ({
+            ...ready,
+            configOptions: configOptions.map((option): typeof option => ({
+              ...option,
+              currentValue: 'large',
+            })),
+            capabilities: {
+              permissionFeedback: true,
+              planApproval: 'startTurn',
+              stopShell: true,
+            },
+          }),
+        },
+        'alternate',
+      ),
+      createMockAdapter(
+        {
+          connect: (): Promise<AgentReady> =>
+            Promise.reject(new Error(signInFailure)),
+          // Signed in when the Server starts, signed out by the first Session.
+          probe: vi
+            .fn<() => Promise<AgentProbe>>()
+            .mockResolvedValueOnce({
+              availability: 'available',
+              configOptions: [],
+            })
+            .mockResolvedValue({
+              availability: 'not_signed_in',
+              installStep: signInFailure,
+              configOptions: [],
+            }),
+        },
+        'unavailable',
+      ),
+    ],
   });
-  const caller = appRouter.createCaller({ services });
   return {
+    context,
     caller,
     root,
     streams,
     commands,
     configOptions,
-    services,
+    services: context.services,
     database,
     git,
   };
@@ -258,16 +175,13 @@ const newSession: SessionNewInput = {
 };
 
 it('rejects a new Session when the writer keeps its insert queued for retry', async (): Promise<void> => {
-  const writer = writerMachine.provide({
-    actors: {
-      writeBatch: fromPromise(async (): Promise<void> => {
-        throw new Error('database is locked');
-      }),
-    },
-    delays: { writeRetryDelay: 60_000 },
-    actions: { log: (): void => {} },
-  });
-  const { caller } = openServer({ writer });
+  const { caller, database } = openServer();
+  database.$client.exec(
+    "CREATE TRIGGER reject_session_insert BEFORE INSERT ON session BEGIN SELECT RAISE(ABORT, 'database is locked'); END",
+  );
+  onTestFinished((): void =>
+    database.$client.exec('DROP TRIGGER reject_session_insert'),
+  );
   await expect(caller.session.new(newSession)).rejects.toMatchObject({
     code: 'INTERNAL_SERVER_ERROR',
     message: expect.stringContaining(
@@ -277,23 +191,21 @@ it('rejects a new Session when the writer keeps its insert queued for retry', as
 });
 
 it('rejects a new Session whose insert is queued behind another retrying job', async (): Promise<void> => {
-  const retryReported = vi.fn();
-  const writer = writerMachine.provide({
-    actors: {
-      writeBatch: fromPromise(async (): Promise<void> => {
-        throw new Error('another job cannot be written');
-      }),
-    },
-    delays: { writeRetryDelay: 60_000 },
-    actions: { log: (): ReturnType<typeof retryReported> => retryReported() },
-  });
-  const { caller, root } = openServer({ writer });
+  const { caller, database, root } = openServer();
+  database.$client.exec(
+    "CREATE TRIGGER reject_session_update BEFORE UPDATE ON session BEGIN SELECT RAISE(ABORT, 'another job cannot be written'); END",
+  );
   const databaseWriter = root.system.get('databaseWriter');
   databaseWriter.send({
     type: 'writer.write',
-    job: { type: 'turnUpdate', id: 'other-turn', set: { endedAt: 1 } },
+    job: { type: 'sessionRowUpdate', id: 'session-1', set: { title: 'Held' } },
   });
-  await vi.waitFor((): void => expect(retryReported).toHaveBeenCalledOnce());
+  await waitFor(databaseWriter, (snapshot): boolean =>
+    snapshot.matches('waitingToRetry'),
+  );
+  onTestFinished((): void =>
+    database.$client.exec('DROP TRIGGER reject_session_update'),
+  );
   await expect(caller.session.new(newSession)).rejects.toMatchObject({
     code: 'INTERNAL_SERVER_ERROR',
     message: expect.stringContaining(
@@ -545,14 +457,11 @@ it('rejects unknown Sessions and input that breaks the contract', async (): Prom
 });
 
 it('reads a stored Session snapshot without opening an actor when its Feed is subscribed', async (): Promise<void> => {
-  const { root, services } = openServer();
+  const { root, context } = openServer();
   expect(root.system.get(sessionActorId)).toBeUndefined();
   const controller = new AbortController();
   cleanups.push((): void => controller.abort());
-  const caller = appRouter.createCaller(
-    { services },
-    { signal: controller.signal },
-  );
+  const caller = appRouter.createCaller(context, { signal: controller.signal });
   const updates = await caller.feed.subscribe({
     sessionId: 'session-1',
     after: null,
@@ -669,3 +578,55 @@ it('keeps the Session failure when the registry removes a Session during its Fee
     failure: 'The Agent stopped three times in ten minutes',
   });
 });
+
+it('rejects a Permission answer for a different Tool call through the router', async (): Promise<void> => {
+  const { caller, streams } = openServer();
+  await caller.session.prompt({
+    sessionId: 'session-1',
+    prompt: [{ type: 'text', text: 'Start' }],
+  });
+  streams.get('session-1')?.send({
+    type: 'agent.permissionRequested',
+    request: {
+      toolCallId: 'current-tool',
+      title: 'Run a command',
+      options: permissionOptions,
+    },
+  });
+  await expect(
+    caller.session.answerPermission({
+      sessionId: 'session-1',
+      toolCallId: 'stale-tool',
+      optionId: 'allow_once',
+    }),
+  ).rejects.toMatchObject({ code: 'CONFLICT', message: 'already answered' });
+});
+
+it.each(newSessionInputs)(
+  'creates an image prompt Session from the $agent App mock through the real router',
+  async (input): Promise<void> => {
+    const { caller, streams, commands } = openServer();
+    const configOptions = [{ configId: 'fast', value: true }];
+    const { sessionId } = await caller.session.new({
+      ...newSession,
+      prompt: input.prompt,
+      configOptions,
+    });
+    expect(streams.get(sessionId)?.input.configOptions).toEqual(configOptions);
+    await vi.waitFor((): void =>
+      expect(commands.get(sessionId)).toContainEqual({
+        type: 'agent.prompt',
+        turnId: expect.any(String),
+        content: input.prompt,
+      }),
+    );
+    expect(
+      (await caller.feed.page({ sessionId, direction: 'tail' })).rows,
+    ).toContainEqual(
+      expect.objectContaining({
+        sessionUpdate: 'user_message',
+        content: input.prompt,
+      }),
+    );
+  },
+);

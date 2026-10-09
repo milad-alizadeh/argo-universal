@@ -28,9 +28,8 @@ import { liveHeaderMocks } from '#mocks/live-header';
 import { feedMachine } from '../services/feed';
 import { type WriterJob, writeJobs } from '../services/feed';
 import { writerMachine, findDatabaseWriter } from '../services/feed';
-import { createServerServices } from '../services/server-services';
-import type { Services } from '../services/services';
 import { registryMachine, sessionMachine } from '../services/sessions';
+import { createEngineContext, type Context } from './context';
 import type { HttpServerOptions } from './http-server';
 import { engineMachine } from './machine';
 import { appRouter } from './router';
@@ -99,7 +98,7 @@ function startEngine({
   sessions?: typeof registryMachine;
   databaseWriter?: typeof writerMachine;
 }): StartedEngine {
-  let services: Services | undefined;
+  let context: Context | undefined;
   const machine = engineMachine.provide({
     actors: {
       ...(database && {
@@ -114,7 +113,7 @@ function startEngine({
         }: {
           input: HttpServerOptions;
         }): Promise<{ close: () => Promise<void> }> => {
-          services = createServerServices({
+          context = createEngineContext({
             ...input,
             blobsFolder: path.join(input.home, 'blobs'),
           });
@@ -172,8 +171,8 @@ function startEngine({
       await waitFor(engine, (snapshot): boolean =>
         snapshot.matches({ live: 'running' }),
       );
-      if (!services) throw new Error('No services');
-      return appRouter.createCaller({ services }, { signal });
+      if (!context) throw new Error('No services');
+      return appRouter.createCaller(context, { signal });
     },
   };
 }

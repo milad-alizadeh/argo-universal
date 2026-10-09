@@ -4,7 +4,7 @@ import { createServer, request, type Server } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { mockUpload, unreachableServices } from '#mocks/services';
+import { createRouterHost } from '#mocks/router';
 import { createRequestGuard } from './request-guard';
 import { createRequestListener } from './request-listener';
 import { appRouter } from './router';
@@ -20,13 +20,9 @@ const blobId = createHash('sha256').update(blobBytes).digest('hex');
 const systemInfo = {
   version: '1.2.3',
   startedAt: '2026-10-03T00:00:00.000Z',
-  pid: 4242,
-  name: 'Test machine',
+  pid: process.pid,
+  name: expect.stringMatching(/\S/),
 };
-const services = unreachableServices({
-  system: { info: () => systemInfo },
-  blob: { upload: mockUpload },
-});
 
 let home: string;
 let server: Server;
@@ -107,6 +103,9 @@ beforeEach(async (): Promise<void> => {
   writeFileSync(join(home, 'blobs', blobId), blobBytes);
   vi.spyOn(console, 'error').mockImplementation((): void => {});
 
+  const { context } = createRouterHost({
+    blobsFolder: join(home, 'blobs'),
+  });
   let listener: ReturnType<typeof createRequestListener> | undefined;
   server = createServer((incoming, outgoing): void | undefined =>
     listener?.(incoming, outgoing),
@@ -123,7 +122,7 @@ beforeEach(async (): Promise<void> => {
     guard: createRequestGuard(port),
     blobsFolder: join(home, 'blobs'),
     router: appRouter,
-    createContext: () => ({ services }),
+    createContext: () => context,
   });
 });
 
@@ -195,7 +194,8 @@ describe('request listener', (): void => {
     expect(JSON.parse(response.body)).toEqual({
       result: {
         data: {
-          blobId: 'file content',
+          blobId:
+            'e0ac3601005dfa1864f5392aabaf7d898b1b5bab854f1acb4491bcd806b76b0c',
           mime: binaryMime,
           bytes: 12,
         },

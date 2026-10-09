@@ -1,73 +1,24 @@
-import type { ClockTick, SystemInfo } from '@repo/contracts';
-import { describe, expect, it } from 'vitest';
-import { unreachableServices } from '#mocks/services';
-import { appRouter } from '../../engine/router';
-import { createCallerFactory } from '../../engine/trpc';
-import type { Services } from '../services';
+import { ClockTick, SystemInfo } from '@repo/contracts';
+import { expect, it } from 'vitest';
 
-const createCaller = createCallerFactory(appRouter);
-
-const systemInfo: SystemInfo = {
+const systemInfo = {
   version: '1.2.3',
   startedAt: '2026-10-03T00:00:00.000Z',
   pid: 4242,
-  name: "Milad's Mac mini",
+  name: 'Test machine',
 };
-
-const servicesWith = (ticks: ClockTick[]): Services =>
-  unreachableServices({
-    system: {
-      info: (): SystemInfo => systemInfo,
-      clock: async function* (): AsyncGenerator<
-        ClockTick,
-        void,
-        Parameters<typeof structuredClone>[0]
-      > {
-        yield* ticks;
-      },
-    },
-  });
-
-describe('system router', (): void => {
-  it('answers system.info from the system service', async (): Promise<void> => {
-    const caller = createCaller({ services: servicesWith([]) });
-
-    expect(await caller.system.info()).toEqual(systemInfo);
-  });
-
-  it('rejects a system.info that breaks the contract', async (): Promise<void> => {
-    const services = servicesWith([]);
-    Reflect.set(services.system, 'info', () => ({ ...systemInfo, pid: 'one' }));
-    const caller = createCaller({ services });
-
-    await expect(caller.system.info()).rejects.toThrow(
-      'Output validation failed',
-    );
-  });
-
-  it('streams system.clock ticks from the system service', async (): Promise<void> => {
-    const ticks = [
-      { now: '2026-10-03T00:00:00.000Z' },
-      { now: '2026-10-03T00:00:01.000Z' },
-    ];
-    const caller = createCaller({ services: servicesWith(ticks) });
-
-    const received: ClockTick[] = [];
-    for await (const tick of await caller.system.clock()) received.push(tick);
-
-    expect(received).toEqual(ticks);
-  });
-
-  it('rejects a system.clock tick that breaks the contract', async (): Promise<void> => {
-    const caller = createCaller({
-      services: servicesWith([{ now: 'not a time' }]),
-    });
-
-    const iterate = async (): Promise<void> => {
-      const ticks = await caller.system.clock();
-      await ticks[Symbol.asyncIterator]().next();
-    };
-
-    await expect(iterate()).rejects.toThrow(/Invalid ISO datetime/);
-  });
+it('keeps the System info mock aligned with the public contract', (): void => {
+  expect(SystemInfo.parse(systemInfo)).toEqual(systemInfo);
+});
+it('rejects a malformed process id', (): void => {
+  expect(SystemInfo.safeParse({ ...systemInfo, pid: 'one' }).success).toBe(
+    false,
+  );
+});
+it('keeps clock mocks aligned with the public contract', (): void => {
+  const tick = { now: '2026-10-03T00:00:00.000Z' };
+  expect(ClockTick.parse(tick)).toEqual(tick);
+});
+it('rejects a malformed clock time', (): void => {
+  expect(ClockTick.safeParse({ now: 'not a time' }).success).toBe(false);
 });

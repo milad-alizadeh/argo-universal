@@ -1,4 +1,4 @@
-import { unreachableServices } from '@repo/engine/mocks';
+import { createRouterHost } from '@repo/engine/mocks';
 import { appRouter } from '@repo/engine/router';
 import { QueryClient, QueryObserver } from '@tanstack/react-query';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
@@ -6,19 +6,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { WebSocketServer } from 'ws';
 import { waitFor } from 'xstate';
 import { type ConnectionActor, openConnection } from './open-connection';
-
-let pid = 4242;
-const services = unreachableServices({
-  system: {
-    info: () => ({
-      version: '1.2.3',
-      startedAt: '2026-10-03T00:00:00.000Z',
-      pid,
-      name: "Milad's Mac mini",
-    }),
-    clock: async function* () {},
-  },
-});
 
 const closers: (() => unknown)[] = [];
 afterEach(async () => {
@@ -28,13 +15,15 @@ afterEach(async () => {
 // A Server on `port`; 0 picks a free one. `stop` drops every Connection, as an Engine restart does.
 async function startServer(
   port = 0,
+  version = '1.2.3',
 ): Promise<{ url: string; port: number; stop: () => Promise<void> }> {
+  const { context } = createRouterHost({ version });
   const server = new WebSocketServer({ host: '127.0.0.1', port });
   await new Promise((resolve) => server.once('listening', resolve));
   applyWSSHandler({
     wss: server,
     router: appRouter,
-    createContext: () => ({ services }),
+    createContext: () => context,
   });
   const stop = (): Promise<void> =>
     new Promise<void>((resolve) => {
@@ -74,17 +63,16 @@ describe('openConnection', (): void => {
     });
     closers.push(observer.subscribe(() => {}));
     await vi.waitFor(() =>
-      expect(observer.getCurrentResult().data?.pid).toBe(4242),
+      expect(observer.getCurrentResult().data?.version).toBe('1.2.3'),
     );
 
     await server.stop();
     await linkIs(connection, 'reconnecting');
-    pid = 4343;
-    await startServer(server.port);
+    await startServer(server.port, '1.2.4');
     await linkIs(connection, 'open');
 
     await vi.waitFor(() =>
-      expect(observer.getCurrentResult().data?.pid).toBe(4343),
+      expect(observer.getCurrentResult().data?.version).toBe('1.2.4'),
     );
   });
 

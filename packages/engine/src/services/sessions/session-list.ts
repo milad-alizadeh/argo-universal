@@ -11,7 +11,6 @@ import { type Actor, type ActorRefFrom, createActor } from 'xstate';
 import { z } from 'zod';
 import { findDatabaseWriter, type writerMachine } from '../feed';
 import type { RegistryActorRef } from './registry-machine';
-import type { SessionService } from './service';
 import {
   type SessionListMachineInput,
   type SessionListState,
@@ -28,7 +27,13 @@ const pageSize = 50;
 export function createSessionList(options: {
   database: Database;
   sessions: RegistryActorRef;
-}): Pick<SessionService, 'list' | 'listUpdates' | 'counts'> {
+}): {
+  list: (input: SessionListInput) => Promise<SessionListOutput>;
+  listUpdates: (
+    signal: AbortSignal | undefined,
+  ) => AsyncIterable<SessionListUpdate>;
+  counts: (signal: AbortSignal | undefined) => AsyncIterable<SessionCounts>;
+} {
   const { sessions } = options;
   const writer = (): ActorRefFrom<typeof writerMachine> | undefined =>
     findDatabaseWriter(sessions.system);
