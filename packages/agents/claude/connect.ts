@@ -15,8 +15,6 @@ import { sessionCommands } from './session-commands';
 import { initialize, type InitializedSession } from './session-initialization';
 import { readMessages } from './session-messages';
 import { prepareSession, type QueryContext } from './session-resources';
-export { cliEnvironment, EXECUTABLE } from './cli-environment';
-export { createPromptQueue } from './prompt-queue';
 export async function connect(
   input: AgentConnectInput,
   listener: VendorSessionListener<VendorMessage>,

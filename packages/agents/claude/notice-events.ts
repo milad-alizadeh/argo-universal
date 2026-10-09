@@ -6,18 +6,6 @@ import type { SDKMessage } from './messages';
 type SystemMessage = Extract<SDKMessage, { type: 'system' }>;
 type Notice = Extract<FeedUpdate, { sessionUpdate: 'notice' }>;
 type NoticeContent = Omit<Notice, 'id' | 'sessionUpdate' | 'state'>;
-const noticeHandlers: Partial<
-  Record<
-    SystemMessage['subtype'],
-    (message: SystemMessage) => NoticeContent | undefined
-  >
-> = {
-  api_retry: retryNotice,
-  local_command_output: commandNotice,
-  informational: informationalNotice,
-  notification: notificationNotice,
-  hook_response: hookNotice,
-};
 export function mapNotice(
   message: SystemMessage,
   state: MappingState,
@@ -29,13 +17,25 @@ function mapOrdinaryNotice(
   message: SystemMessage,
   state: MappingState,
 ): AgentMapping<MappingState> {
-  const content = noticeHandlers[message.subtype]?.(message);
+  const content = readNoticeContent(message);
   return content
     ? {
         events: [upsert(noticeRow(message.uuid, content))],
         mappingState: state,
       }
     : dropped(state);
+}
+function readNoticeContent(message: SystemMessage): NoticeContent | undefined {
+  if (message.subtype === 'api_retry') return mapRetryNotice(message);
+  if (message.subtype === 'hook_response') return mapHookNotice(message);
+  return mapTextNotice(message);
+}
+function mapTextNotice(message: SystemMessage): NoticeContent | undefined {
+  if (message.subtype === 'local_command_output')
+    return { severity: 'info', title: message.content };
+  if (message.subtype === 'notification')
+    return { severity: 'info', title: message.text };
+  return mapInformationalNotice(message);
 }
 function noticeRow(id: string, content: NoticeContent): Notice {
   return { id, sessionUpdate: 'notice', state: 'settled', ...content };
@@ -82,20 +82,16 @@ function failedCompaction(
     mappingState: { ...state, compactionId: null },
   };
 }
-function retryNotice(message: SystemMessage): NoticeContent | undefined {
-  if (message.subtype !== 'api_retry') return undefined;
+function mapRetryNotice(
+  message: Extract<SystemMessage, { subtype: 'api_retry' }>,
+): NoticeContent {
   return {
     severity: 'warning',
     title: `Retrying (${message.attempt} of ${message.max_retries})`,
     _meta: retryMetadata(message),
   };
 }
-function commandNotice(message: SystemMessage): NoticeContent | undefined {
-  return message.subtype === 'local_command_output'
-    ? { severity: 'info', title: message.content }
-    : undefined;
-}
-function informationalNotice(
+function mapInformationalNotice(
   message: SystemMessage,
 ): NoticeContent | undefined {
   if (message.subtype !== 'informational') return undefined;
@@ -104,14 +100,10 @@ function informationalNotice(
     title: message.content,
   };
 }
-function notificationNotice(message: SystemMessage): NoticeContent | undefined {
-  return message.subtype === 'notification'
-    ? { severity: 'info', title: message.text }
-    : undefined;
-}
-function hookNotice(message: SystemMessage): NoticeContent | undefined {
-  if (message.subtype !== 'hook_response' || message.outcome !== 'error')
-    return undefined;
+function mapHookNotice(
+  message: Extract<SystemMessage, { subtype: 'hook_response' }>,
+): NoticeContent | undefined {
+  if (message.outcome !== 'error') return undefined;
   return {
     severity: 'warning',
     title: `Hook ${message.hook_name} failed`,

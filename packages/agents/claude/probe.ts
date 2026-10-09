@@ -3,8 +3,9 @@ import { query } from '@anthropic-ai/claude-agent-sdk';
 import type { AgentProbe } from '../src/agent-adapter';
 import { findExecutable } from '../src/find-executable';
 import { usesSubscription } from './account';
+import { cliEnvironment, EXECUTABLE } from './cli-environment';
 import { startingValues, toConfigOptions } from './config-options';
-import { cliEnvironment, createPromptQueue, EXECUTABLE } from './connect';
+import { createPromptQueue } from './prompt-queue';
 
 export async function probe(signal: AbortSignal): Promise<AgentProbe> {
   const environment = cliEnvironment();

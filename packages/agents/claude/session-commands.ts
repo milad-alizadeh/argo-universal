@@ -21,7 +21,7 @@ import { answerElicitation, answerPermission } from './request-answers';
 import type { Requests } from './request-tracker';
 import type { Lifetime } from './session-lifetime';
 type CommandsInput = {
-  vendor: Query;
+  vendor: Parameters<typeof applyValues>[0] & Pick<Query, 'interrupt'>;
   listener: VendorSessionListener<VendorMessage>;
   lifetime: Lifetime;
   queue: ReturnType<typeof createPromptQueue>;
@@ -38,13 +38,21 @@ class SessionCommands {
     this.input = input;
     this.values = input.values;
   }
-  public run(command: Command): Promise<void> {
-    return runCommand(command, {
-      requests: this.input.requests,
-      prompt: this.prompt,
-      cancel: this.cancel,
-      config: this.config,
-    });
+  public async run(command: Command): Promise<void> {
+    if (command.type === 'agent.prompt') return this.prompt(command);
+    if (command.type === 'agent.cancel') return this.cancel();
+    return this.configureOrAnswer(command);
+  }
+  private async configureOrAnswer(command: Command): Promise<void> {
+    if (command.type === 'agent.setConfigOption') return this.config(command);
+    if (command.type === 'agent.answerPermission')
+      return answerPermission(this.input.requests, command);
+    return this.answerQuestion(command);
+  }
+  private async answerQuestion(command: Command): Promise<void> {
+    if (command.type === 'agent.answerElicitation')
+      return answerElicitation(this.input.requests, command);
+    throw new UnsupportedCommandError(command);
   }
   private prompt = (command: AgentCommandOf<'agent.prompt'>): Promise<void> =>
     (this.promptDispatched = this.input.queue.push(userPrompt(command)));
@@ -71,33 +79,6 @@ export function sessionCommands(input: CommandsInput): VendorSession['run'] {
   const commands = new SessionCommands(input);
   return (command): Promise<void> => commands.run(command);
 }
-type Dispatch = Pick<CommandsInput, 'requests'> & {
-  prompt: (command: AgentCommandOf<'agent.prompt'>) => Promise<void>;
-  cancel: () => Promise<void>;
-  config: (command: AgentCommandOf<'agent.setConfigOption'>) => Promise<void>;
-};
-async function runCommand(command: Command, dispatch: Dispatch): Promise<void> {
-  if (command.type === 'agent.prompt') return dispatch.prompt(command);
-  if (command.type === 'agent.cancel') return dispatch.cancel();
-  return runConfigOrAnswer(command, dispatch);
-}
-async function runConfigOrAnswer(
-  command: ConfigurationCommand,
-  dispatch: Dispatch,
-): Promise<void> {
-  if (command.type === 'agent.setConfigOption') return dispatch.config(command);
-  if (command.type === 'agent.answerPermission')
-    return answerPermission(dispatch.requests, command);
-  return runElicitation(command, dispatch.requests);
-}
-async function runElicitation(
-  command: AnswerCommand,
-  requests: Requests,
-): Promise<void> {
-  if (command.type === 'agent.answerElicitation')
-    return answerElicitation(requests, command);
-  return unsupported(command);
-}
 function userPrompt(command: AgentCommandOf<'agent.prompt'>): SDKUserMessage {
   return {
     type: 'user',
@@ -120,18 +101,3 @@ const toVendorContent = (
       { type: 'text' }
     >[] => (block.type === 'text' ? [{ type: 'text', text: block.text }] : []),
   );
-
-type ConfigurationCommand = Exclude<
-  Command,
-  { type: 'agent.prompt' | 'agent.cancel' }
->;
-type AnswerCommand = Exclude<
-  ConfigurationCommand,
-  { type: 'agent.setConfigOption' | 'agent.answerPermission' }
->;
-type UnsupportedCommand = AgentCommandOf<
-  'agent.answerPlanProposal' | 'agent.rename' | 'agent.stopShell'
->;
-function unsupported(command: UnsupportedCommand): never {
-  throw new UnsupportedCommandError(command);
-}
