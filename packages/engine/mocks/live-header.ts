@@ -95,7 +95,7 @@ export const liveHeaderMocks = recordedFeedMocks
         revision: command.revision + 2,
         sessionUpdate: 'notice',
         state: 'settled',
-        severity: 'warning',
+        severity: 'warning' as const,
         title: 'Retrying',
         _meta: {
           argo: { retry: { attempt: 2, maxAttempts: 5, delayMs: 1000 } },
@@ -121,7 +121,7 @@ export const liveHeaderMocks = recordedFeedMocks
           state: 'settled',
           sessionUpdate: 'compaction_update',
           compactionId: 'compaction-1',
-          status: 'completed',
+          status: 'completed' as const,
         },
       ] satisfies SessionUpdate[],
     };

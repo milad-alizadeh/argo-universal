@@ -330,7 +330,7 @@ describe('toFeedView', () => {
   );
 
   it.each(workMocks)(
-    'keeps the latest checklist outside the Feed for $agent',
+    'keeps checklists outside the Feed and draws read-only markdown Plans for $agent',
     ({ rows, snapshot }) => {
       const source = commandRow(rows);
       const first: PlanUpdate = {
@@ -352,6 +352,7 @@ describe('toFeedView', () => {
       const latest: PlanUpdate = {
         ...first,
         id: 'latest-plan',
+        revision: first.revision + 1,
         plan: {
           type: 'items',
           planId: 'checklist',
@@ -363,6 +364,7 @@ describe('toFeedView', () => {
       const proposal: PlanUpdate = {
         ...first,
         id: 'proposal',
+        revision: first.revision + 2,
         plan: {
           type: 'markdown',
           planId: 'proposal',
@@ -370,8 +372,11 @@ describe('toFeedView', () => {
         },
       };
       expect(toFeedView([first, source, latest, proposal], snapshot)).toEqual({
-        items: [{ type: 'tool_call', row: source }],
-        plan: latest.plan,
+        items: [
+          { type: 'tool_call', row: source },
+          { type: 'row', row: proposal },
+        ],
+        plan: proposal.plan,
       });
     },
   );

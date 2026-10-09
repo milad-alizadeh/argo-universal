@@ -2,6 +2,7 @@ import {
   type CommandAction,
   isToolCallRunning,
   knownCommandActions,
+  selectActivePlan,
   type SessionSnapshot,
   type SessionUpdate,
   type ToolCallUpdate,
@@ -115,7 +116,7 @@ export function toFeedView(
   rows: readonly SessionUpdate[],
   snapshot: SessionSnapshot,
 ): FeedView {
-  const view: FeedView = { items: [], plan: null };
+  const view: FeedView = { items: [], plan: selectActivePlan(rows) };
   let activities: FeedActivity[] = [];
   let toolCalls: ToolCallUpdate[] = [];
   let exploration: FeedExploration | undefined;
@@ -165,7 +166,10 @@ export function toFeedView(
       flushGroup();
     previousTurnId = row.turnId;
     if (row.sessionUpdate === 'plan_update') {
-      if (row.plan.type === 'items') view.plan = row.plan;
+      if (row.plan.type !== 'items' && !row._meta?.argo?.removed) {
+        flushGroup();
+        view.items.push({ type: 'row', row });
+      }
     } else if (row.sessionUpdate === 'agent_thought') {
       activities.push({ type: 'thought', row });
       if (row.state === 'open') liveTitle = 'Thinking';

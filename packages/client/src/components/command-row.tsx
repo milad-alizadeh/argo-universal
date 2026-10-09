@@ -11,6 +11,7 @@ import { useToolCallDuration } from '../feed/use-tool-call-duration';
 import { Icon } from '../lib/icon';
 import { FeedCodeBlock } from './feed-code-block';
 import { ToolCallDisclosure } from './tool-call-disclosure';
+import { ToolOutput } from './tool-output';
 
 export interface CommandRowProps {
   row: ToolCallUpdate;
@@ -78,6 +79,9 @@ export function CommandRow({
             </Text>
           </View>
         }
+      />
+      <ToolOutput
+        content={row.content.filter((block) => block.type !== 'terminal')}
       />
     </ToolCallDisclosure>
   );

@@ -80,7 +80,7 @@ export function toSessionInfo(
           : row.activityAt,
       checkout: toSessionCheckout(row),
       plan:
-        input.plan?.plan.type === 'items'
+        input.plan?.plan.type === 'items' && !input.plan._meta?.argo?.removed
           ? {
               done: input.plan.plan.entries.filter(
                 (entry): boolean => entry.status === 'completed',

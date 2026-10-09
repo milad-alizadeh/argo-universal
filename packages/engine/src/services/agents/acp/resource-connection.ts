@@ -1,6 +1,7 @@
 import type {
   ClientConnection,
   InitializeResponse,
+  InitializeRequest,
 } from '@agentclientprotocol/sdk';
 import { createRejectionCounter } from '../../../lib/count-rejections';
 import { createAgentClient } from './client';
@@ -21,6 +22,10 @@ import { createAcpResponseReaders } from './response-readers';
 import { AcpResponseWrites } from './response-writes';
 import type { AcpRouting } from './routing';
 
+const initializeRequest: InitializeRequest = {
+  protocolVersion: 1,
+  clientCapabilities: { plan: {}, session: { notices: {}, compaction: {} } },
+};
 type Ready = {
   connection: ClientConnection;
   initialization: InitializeResponse;
@@ -78,9 +83,7 @@ export class AcpResourceConnection {
     connection: ClientConnection,
   ): Promise<InitializeResponse> {
     const response = this.readers.initialize.parse(
-      await connection.agent.request<unknown>('initialize', {
-        protocolVersion: 1,
-      }),
+      await connection.agent.request<unknown>('initialize', initializeRequest),
     );
     const capabilities = sessionCapabilities(response);
     if (!capabilities?.close)

@@ -36,6 +36,7 @@ const stopEngine = async (
 export const startAcpEngine = async (
   peerInput: Parameters<typeof createResourcePeer>[0] = {},
   createId: () => string = randomUUID,
+  agentId = 'mock',
 ): Promise<AcpEngineHost> => {
   const directory = mkdtempSync(join(tmpdir(), 'argo-acp-engine-'));
   initTestRepository(directory);
@@ -49,7 +50,7 @@ export const startAcpEngine = async (
       startedAt: new Date().toISOString(),
       now: Date.now,
       createId,
-      adapters: [createMockAdapter()],
+      adapters: [{ ...createMockAdapter(), agent: agentId }],
       acp: peer,
       fetchAgents: async () => ({ version: '1.0.0', agents: [] }),
       resolveAgentLaunch: async (input) => ({

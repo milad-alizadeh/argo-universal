@@ -23,6 +23,8 @@ import { feedMachine } from './feed-machine';
 import { findQueuedRow } from './feed-row';
 import type { FeedRowsJob } from './writer-job';
 
+const acpUpdateEventType = 'feed.acpUpdate';
+const modelAcpSessionId = 'model-session';
 const firstMessageRowId = 'message-1#0';
 
 // A batch every 60 ms, and open rows written after 1 second.
@@ -116,13 +118,50 @@ const events = [
   appendText,
   settleMessage,
   {
-    type: 'feed.acpUpdate',
+    type: acpUpdateEventType,
+    acpSessionId: modelAcpSessionId,
     turnId: 'turn-1',
     update: {
       sessionUpdate: 'agent_message_chunk',
       messageId: 'model-message',
       content: { type: 'text', text: 'model text' },
     },
+  },
+  {
+    type: acpUpdateEventType,
+    acpSessionId: modelAcpSessionId,
+    turnId: 'turn-1',
+    update: {
+      sessionUpdate: 'tool_call_update',
+      toolCallId: 'model-tool',
+      status: 'completed',
+    },
+  },
+  {
+    type: acpUpdateEventType,
+    acpSessionId: modelAcpSessionId,
+    turnId: 'turn-1',
+    update: {
+      sessionUpdate: 'notice',
+      severity: 'info',
+      title: 'Model notice',
+    },
+  },
+  {
+    type: acpUpdateEventType,
+    acpSessionId: modelAcpSessionId,
+    turnId: 'turn-1',
+    update: {
+      sessionUpdate: 'compaction_update',
+      compactionId: 'model-compaction',
+      status: 'completed',
+    },
+  },
+  {
+    type: acpUpdateEventType,
+    acpSessionId: modelAcpSessionId,
+    turnId: 'turn-1',
+    update: { sessionUpdate: 'plan_removed', planId: 'unknown-plan' },
   },
   { type: 'feed.completeTurn', turnId: 'turn-1' },
   { type: 'feed.flush' },
@@ -189,7 +228,7 @@ const orderingOptions = {
   ...modelOptions,
   events: events.filter(
     (event) =>
-      event.type !== 'feed.acpUpdate' && event.type !== 'feed.completeTurn',
+      event.type !== acpUpdateEventType && event.type !== 'feed.completeTurn',
   ),
   serializeState: serializeWith((sameAsPrevious): boolean => sameAsPrevious),
 };
@@ -331,6 +370,7 @@ const simplePaths = terminalPaths(getSimplePaths(machine, orderingOptions));
 const title = (path: StatePath<FeedSnapshot, FeedMachineEvent>): string =>
   path.steps
     .map(({ event }): string => {
+      if (event.type === acpUpdateEventType) return event.update.sessionUpdate;
       if (event.type !== 'feed.change')
         return event.type.replace(/^xstate\.after\.(\w+)\..*$/, 'after $1');
       if (event.change.type === 'upsert') return 'open';

@@ -46,6 +46,15 @@ const readSupportedContext = (
     resource: { ...context.resource, text: context.resource.text },
   });
 };
+const readTextOrReferencePrompt = (
+  block: Exclude<ContentBlock, { type: 'image' | 'resource' }>,
+): Promise<AcpContentBlock> => {
+  if (block.type === 'unsupported')
+    return Promise.reject(
+      new Error('Unsupported output placeholders cannot be sent as prompts'),
+    );
+  return Promise.resolve(block);
+};
 const convertPromptBlock = (
   input: Omit<PromptContentInput, 'content'>,
   block: ContentBlock,
@@ -56,7 +65,7 @@ const convertPromptBlock = (
     case 'resource':
       return readSupportedContext(input.capabilities, block);
     default:
-      return Promise.resolve(block);
+      return readTextOrReferencePrompt(block);
   }
 };
 export const readAcpPromptContent = (

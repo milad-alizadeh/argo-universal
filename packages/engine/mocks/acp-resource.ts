@@ -94,6 +94,7 @@ export const createResourcePeer = (
   launchProcess: (launch: AgentLaunch) => Promise<AcpProcess>;
 } => {
   const processes: ResourceProcess[] = [];
+  let nextSession = 0;
   return {
     processes,
     launchProcess: async (launch): Promise<AcpProcess> => {
@@ -109,7 +110,7 @@ export const createResourcePeer = (
           'session/new',
           input.newSession ??
             ((): NewSessionResponse => ({
-              sessionId: `owned-${processes.length}`,
+              sessionId: `owned-${++nextSession}`,
             })),
         )
         .onRequest(

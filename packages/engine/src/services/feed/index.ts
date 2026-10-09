@@ -25,6 +25,7 @@ export {
 export { type WriterEvent, writerMachine } from './writer-machine';
 export type { WriterCommit } from './writer-commit';
 export { publishTurnContent } from './publication';
+export { readUnaddressedPlan } from './unaddressed-plan';
 export { databaseWriterId, findDatabaseWriter } from './writer-system';
 
 export { feedRouter } from './router';
