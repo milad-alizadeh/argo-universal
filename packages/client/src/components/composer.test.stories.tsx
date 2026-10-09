@@ -787,7 +787,7 @@ async function expectDangerousMode({
   const planMode = await overlay.findByRole('button', { name: planning.name });
   await waitFor(() => expect(planMode).toBeVisible());
   await expect(
-    within(planMode).getByTestId('phosphor-react-native-map-trifold-regular'),
+    within(planMode).getByTestId('icon-plan-mode'),
   ).toBeInTheDocument();
   const red = labelColor(dangerous.name);
   await expect(labelColor(planning.name)).not.toBe(red);
@@ -799,9 +799,9 @@ async function expectDangerousMode({
     expect(overlay.queryByRole('dialog')).not.toBeInTheDocument(),
   );
   const modeTrigger = canvas.getByRole('button', { name: 'Mode' });
-  const glyph = modeTrigger.querySelector('svg path');
+  const glyph = modeTrigger.querySelector('[data-icon]');
   if (!glyph) throw new Error('Mode trigger icon is missing.');
-  await expect(getComputedStyle(glyph).fill).toBe(red);
+  await expect(getComputedStyle(glyph).color).toBe(red);
   if (width >= 720)
     await waitFor(() =>
       expect(
@@ -1329,7 +1329,7 @@ function responsiveLayout(width: number, agentIndex: number): Story {
       await expect(getComputedStyle(highlight).backgroundColor).toBe(
         'rgb(245, 245, 245)',
       );
-      const plus = attachButton.querySelector('svg');
+      const plus = attachButton.querySelector('[data-icon]');
       if (!plus) throw new Error('Attach icon is missing.');
       const iconLayer = plus.parentElement;
       if (!iconLayer) throw new Error('Attach icon layer is missing');

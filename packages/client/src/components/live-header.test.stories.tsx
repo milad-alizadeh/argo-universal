@@ -66,7 +66,7 @@ export const EveryStep: Story = {
           if (!mark) throw new Error(`${text} has no Working mark.`);
           await expect(mark.getBoundingClientRect().width).toBe(16);
         } else {
-          const icon = row.querySelector('svg');
+          const icon = row.querySelector('[data-icon]');
           if (!icon) throw new Error(`${text} has no icon.`);
           await waitFor(() =>
             expect(getComputedStyle(icon).width).toBe('16px'),

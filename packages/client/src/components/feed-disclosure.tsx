@@ -1,7 +1,7 @@
-import type { Icon as PhosphorIcon } from 'phosphor-react-native';
 import type * as React from 'react';
 import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
+import type { IconName } from '#lib/icon-names';
 import { cn } from '#lib/utils';
 import {
   Collapsible,
@@ -17,7 +17,7 @@ const foregroundTextClassName = 'text-foreground';
 
 export interface FeedDisclosureProps {
   label: string;
-  icon: PhosphorIcon;
+  icon: IconName;
   running?: boolean;
   failed?: boolean;
   initialOpen?: boolean;
@@ -51,7 +51,7 @@ export function FeedDisclosure({
           className="min-h-5 max-w-full self-start flex-row items-center gap-1.5"
         >
           <Icon
-            as={icon}
+            name={icon}
             className={cn(
               'shrink-0 text-muted-foreground',
               failed && 'text-destructive',

@@ -9,7 +9,19 @@ const serverUrl =
     .find((argument): boolean => argument.startsWith(serverUrlPrefix))
     ?.slice(serverUrlPrefix.length) ?? null;
 
-// The renderer gets the Server address and window controls, nothing else (ADR 0002).
+// Only macOS has SF Symbols to draw; elsewhere the page falls back to Material Symbols.
+const symbols =
+  process.platform === 'darwin'
+    ? {
+        render: (request: {
+          name: string;
+          pointSize: number;
+        }): Promise<string | null> =>
+          ipcRenderer.invoke('symbol:render', request),
+      }
+    : undefined;
+
+// The renderer gets the Server address, window controls and system symbols, nothing else (ADR 0002).
 contextBridge.exposeInMainWorld('argo', {
   serverUrl,
   window: {
@@ -17,4 +29,5 @@ contextBridge.exposeInMainWorld('argo', {
     maximize: (): void => ipcRenderer.send('window:maximize'),
     close: (): void => ipcRenderer.send('window:close'),
   },
+  symbols,
 });

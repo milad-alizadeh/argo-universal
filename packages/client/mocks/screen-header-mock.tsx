@@ -1,4 +1,3 @@
-import { MagnifyingGlassIcon, XIcon } from 'phosphor-react-native';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
@@ -39,7 +38,7 @@ export function ScreenHeaderMock({
       <View className="w-23 flex-row justify-end gap-1">
         {search && (
           <HeaderButton
-            icon={searching ? XIcon : MagnifyingGlassIcon}
+            icon={searching ? 'close' : 'search'}
             paired
             accessibilityLabel={searching ? 'Close search' : search.placeholder}
             onPress={() => {

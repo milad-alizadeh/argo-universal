@@ -2,6 +2,8 @@ import {
   AppProviders,
   type Navigate,
   NavigationProvider,
+  type RenderSymbolImage,
+  SymbolImagesProvider,
   useConnection,
 } from '@repo/client';
 import '../../global.css';
@@ -41,6 +43,8 @@ declare global {
     argo?: {
       serverUrl: string | null;
       window: { minimize(): void; maximize(): void; close(): void };
+      // Only on macOS, where the desktop app draws SF Symbols.
+      symbols?: { render: RenderSymbolImage };
     };
   }
 }
@@ -50,6 +54,8 @@ const serverUrl =
   globalThis.window?.argo?.serverUrl ??
   process.env.EXPO_PUBLIC_ARGO_SERVER_URL ??
   'ws://127.0.0.1:7337';
+
+const renderSymbolImage = globalThis.window?.argo?.symbols?.render;
 
 // Screens in @repo/client navigate through this.
 const navigate: Navigate = (destination, options) =>
@@ -66,20 +72,22 @@ export default function RootLayout(): React.JSX.Element {
     <GestureHandlerRootView style={{ flex: 1 }}>
       {/* Screens follow the keyboard frame by frame through this. */}
       <KeyboardProvider>
-        <AppProviders serverUrl={serverUrl}>
-          <ForegroundSignal />
-          <ThemeProvider value={navigationTheme}>
-            <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
-            <NavigationProvider navigate={navigate}>
-              {/* Storybook stays outside the shell. */}
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="(shell)" />
-                <Stack.Screen name="(dev)/storybook" />
-              </Stack>
-            </NavigationProvider>
-            <PortalHost />
-          </ThemeProvider>
-        </AppProviders>
+        <SymbolImagesProvider render={renderSymbolImage}>
+          <AppProviders serverUrl={serverUrl}>
+            <ForegroundSignal />
+            <ThemeProvider value={navigationTheme}>
+              <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
+              <NavigationProvider navigate={navigate}>
+                {/* Storybook stays outside the shell. */}
+                <Stack screenOptions={{ headerShown: false }}>
+                  <Stack.Screen name="(shell)" />
+                  <Stack.Screen name="(dev)/storybook" />
+                </Stack>
+              </NavigationProvider>
+              <PortalHost />
+            </ThemeProvider>
+          </AppProviders>
+        </SymbolImagesProvider>
       </KeyboardProvider>
     </GestureHandlerRootView>
   );

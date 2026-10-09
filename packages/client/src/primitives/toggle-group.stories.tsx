@@ -1,7 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { TextBIcon } from 'phosphor-react-native/src/icons/TextB';
-import { TextItalicIcon } from 'phosphor-react-native/src/icons/TextItalic';
-import { TextUnderlineIcon } from 'phosphor-react-native/src/icons/TextUnderline';
 import { useState } from 'react';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
 import { ToggleGroup, ToggleGroupIcon, ToggleGroupItem } from './toggle-group';
@@ -20,9 +17,9 @@ function ToggleGroupExample({
   const [single, setSingle] = useState<string | undefined>('bold');
   const [multiple, setMultiple] = useState<string[]>(['bold']);
   const items = [
-    ['bold', TextBIcon],
-    ['italic', TextItalicIcon],
-    ['underline', TextUnderlineIcon],
+    ['bold', 'bold'],
+    ['italic', 'italic'],
+    ['underline', 'underline'],
   ] as const;
   const props = {
     variant,
@@ -30,7 +27,7 @@ function ToggleGroupExample({
     disabled,
     children: items.map(([value, icon]) => (
       <ToggleGroupItem key={value} value={value} accessibilityLabel={value}>
-        <ToggleGroupIcon as={icon} />
+        <ToggleGroupIcon name={icon} />
       </ToggleGroupItem>
     )),
   };

@@ -1,4 +1,3 @@
-import { InfoIcon } from 'phosphor-react-native';
 import type { ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
 import { cn } from '#lib/utils';
@@ -142,11 +141,7 @@ function AlreadyAnswered(props: AnsweredStatusProps): ReactNode {
       role="status"
       className="min-w-0 flex-1 flex-row items-center gap-1.5 px-2"
     >
-      <Icon
-        as={InfoIcon}
-        size="md"
-        className="shrink-0 text-muted-foreground"
-      />
+      <Icon name="info" size="md" className="shrink-0 text-muted-foreground" />
       <AnsweredText {...props} />
     </View>
   );

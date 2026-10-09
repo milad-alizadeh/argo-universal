@@ -1,6 +1,6 @@
-import type { Icon as PhosphorIcon } from 'phosphor-react-native';
 import * as React from 'react';
 import { View } from 'react-native';
+import type { IconName } from '#lib/icon-names';
 import { cn } from '#lib/utils';
 import { Icon } from '#primitives/icon';
 import { Text, TextClassContext } from '#primitives/text';
@@ -16,7 +16,7 @@ function Alert({
   ...props
 }: React.ComponentProps<typeof View> &
   React.RefAttributes<View> & {
-    icon: PhosphorIcon;
+    icon: IconName;
     variant?: 'default' | 'destructive';
     iconClassName?: string;
   }) {
@@ -38,7 +38,7 @@ function Alert({
       >
         <View className="absolute left-3.5 top-3">
           <Icon
-            as={icon}
+            name={icon}
             className={cn(
               variant === 'destructive' && destructiveTextClassName,
               iconClassName,

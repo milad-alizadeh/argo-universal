@@ -1,4 +1,3 @@
-import { BookOpenIcon } from 'phosphor-react-native/src/icons/BookOpen';
 import type * as React from 'react';
 import {
   type ReactNode,
@@ -87,7 +86,7 @@ export function ToolCallGroup({
       label={
         live ? toolCallTitle(live.toolCall, live.awaitingApproval) : group.title
       }
-      icon={live ? toolCallIcon(live.toolCall) : BookOpenIcon}
+      icon={live ? toolCallIcon(live.toolCall) : 'read'}
       running={running}
       awaitingApproval={live?.awaitingApproval ?? false}
       initialOpen={initialOpen}

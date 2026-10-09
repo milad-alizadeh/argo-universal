@@ -84,7 +84,7 @@ export const PaperMetadataDimensions: Story = {
         await expect(style.fontWeight).toBe('400');
       }
       for (const group of groups.slice(1)) {
-        const icon = group.querySelector('svg');
+        const icon = group.querySelector('[data-icon]');
         if (!icon) throw new Error('Missing metadata icon');
         await expect(icon.getBoundingClientRect().width).toBe(16);
         await expect(icon.getBoundingClientRect().height).toBe(16);

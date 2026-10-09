@@ -5,7 +5,6 @@ import type {
   ImageContent,
   UserMessage as UserMessageRow,
 } from '@repo/contracts';
-import { FileIcon, FolderIcon } from 'phosphor-react-native';
 import type * as React from 'react';
 import { memo, useLayoutEffect, useRef, useState } from 'react';
 import {
@@ -166,7 +165,7 @@ function ReferenceChip({
   return (
     <View className="h-[26px] flex-row items-center gap-1.5 rounded-md border border-border bg-card px-2">
       <Icon
-        as={isFolder(reference) ? FolderIcon : FileIcon}
+        name={isFolder(reference) ? 'folder' : 'file'}
         className="text-muted-foreground"
       />
       <Text className="font-sans text-sm leading-5 text-foreground">

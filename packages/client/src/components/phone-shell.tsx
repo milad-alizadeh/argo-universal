@@ -90,8 +90,8 @@ export function PhoneShell({
       >
         <Icon
           size="lg"
-          as={icon}
-          weight={selectedSection === section ? 'fill' : 'regular'}
+          name={icon}
+          filled={selectedSection === section}
           className={cn(selectedSection !== section && 'text-muted-foreground')}
         />
         <Text

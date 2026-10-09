@@ -3,7 +3,6 @@ import type {
   SessionAnswerElicitationInput,
 } from '@repo/contracts';
 import { useForm, useStore } from '@tanstack/react-form';
-import { PlugIcon, WarningCircleIcon } from 'phosphor-react-native';
 import type * as React from 'react';
 import { useMemo } from 'react';
 import { View } from 'react-native';
@@ -108,7 +107,7 @@ function RequestForm({
         <View className="gap-1 px-4 pt-4 pb-1">
           {source && (
             <View className="flex-row items-center gap-1.5">
-              <Icon as={PlugIcon} size="md" className="text-muted-foreground" />
+              <Icon name="plug" size="md" className="text-muted-foreground" />
               <Text className="text-sm leading-5 text-muted-foreground">
                 {source} asks
               </Text>
@@ -144,11 +143,7 @@ function RequestForm({
       </View>
       {!alreadyAnswered && invalid.length > 0 && (
         <View role="alert" className="flex-row items-center gap-1.5 px-4 pt-3">
-          <Icon
-            as={WarningCircleIcon}
-            size="md"
-            className="shrink-0 text-destructive"
-          />
+          <Icon name="error" size="md" className="shrink-0 text-destructive" />
           <Text className="min-w-0 flex-1 text-sm leading-5 text-destructive">
             Fix{' '}
             {invalid

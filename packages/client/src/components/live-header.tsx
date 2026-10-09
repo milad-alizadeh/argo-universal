@@ -3,9 +3,6 @@ import type {
   LiveHeader as LiveHeaderValue,
   ToolCallUpdate,
 } from '@repo/contracts';
-import { ArrowClockwiseIcon } from 'phosphor-react-native/src/icons/ArrowClockwise';
-import { BrainIcon } from 'phosphor-react-native/src/icons/Brain';
-import { WrenchIcon } from 'phosphor-react-native/src/icons/Wrench';
 import type * as React from 'react';
 import { useEffect } from 'react';
 import { View } from 'react-native';
@@ -60,7 +57,7 @@ function RetryIcon(): React.JSX.Element {
   );
   return (
     <Animated.View testID="live-header-retry" style={style}>
-      <Icon as={ArrowClockwiseIcon} className="text-muted-foreground" />
+      <Icon name="retry" className="text-muted-foreground" />
     </Animated.View>
   );
 }
@@ -80,11 +77,11 @@ function SourceIcon({
     case 'working':
       return <WorkingMark />;
     case 'thought':
-      return <Icon as={BrainIcon} className="text-muted-foreground" />;
+      return <Icon name="thinking" className="text-muted-foreground" />;
     case 'tool_call':
       return (
         <Icon
-          as={toolCall ? toolCallIcon(toolCall) : WrenchIcon}
+          name={toolCall ? toolCallIcon(toolCall) : 'tool'}
           className="text-muted-foreground"
         />
       );

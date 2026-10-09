@@ -1,5 +1,4 @@
 import type { PermissionOutcome as Outcome } from '@repo/contracts';
-import { CheckIcon, XIcon } from 'phosphor-react-native';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/text';
@@ -28,7 +27,7 @@ export function PermissionOutcome({
         className={`${allowed ? 'w-icon-sm' : 'w-icon-md'} h-5 shrink-0 justify-center`}
       >
         <Icon
-          as={allowed ? CheckIcon : XIcon}
+          name={allowed ? 'check' : 'close'}
           size={allowed ? 'sm' : 'md'}
           className="text-muted-foreground"
         />

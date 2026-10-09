@@ -1,17 +1,11 @@
-import type {
-  Icon as PhosphorIcon,
-  IconProps as PhosphorIconProps,
-} from 'phosphor-react-native';
 import type * as React from 'react';
 import { useContext } from 'react';
-import {
-  ActivityIndicator,
-  type ActivityIndicatorProps,
-  StyleSheet,
-} from 'react-native';
+import { ActivityIndicator, type ActivityIndicatorProps } from 'react-native';
 import { useCSSVariable, withUniwind } from 'uniwind';
 import { cn } from '#lib/utils';
 import { TextClassContext } from '#primitives/text';
+import { type IconName, iconSymbols, type NativeSymbol } from './icon-names';
+import { SymbolGlyph } from './symbol-glyph';
 
 // sm for chevrons, carets and check marks; md for every other icon; lg for phone shell controls and the desktop rail.
 export const iconSizeClasses = {
@@ -22,7 +16,7 @@ export const iconSizeClasses = {
 
 export type IconSize = keyof typeof iconSizeClasses;
 
-// Phosphor and ActivityIndicator take a number, so this is the one place a variant becomes pixels.
+// Symbols and ActivityIndicator take a number, so this is the one place a variant becomes pixels.
 export function useIconPixels(size: IconSize): number {
   const pixels = useCSSVariable(`--spacing-icon-${size}`);
   return typeof pixels === 'number'
@@ -30,48 +24,38 @@ export function useIconPixels(size: IconSize): number {
     : Number.parseFloat(String(pixels));
 }
 
-export type IconProps = Omit<PhosphorIconProps, 'size'> & {
-  as: PhosphorIcon;
+export interface IconProps {
+  name: IconName;
   size?: IconSize;
+  // Draws the SF Symbol's filled variant where it has one; Material Symbols stay outlined.
+  filled?: boolean;
   className?: string;
-};
-
-function IconComponent({
-  as: Component,
-  pixels,
-  style,
-  ...props
-}: Omit<IconProps, 'size'> & { pixels: number }): React.JSX.Element {
-  return (
-    <Component
-      {...props}
-      size={pixels}
-      style={{ ...StyleSheet.flatten(style), width: pixels, height: pixels }}
-    />
-  );
+  testID?: string;
 }
 
-const StyledIcon = withUniwind(IconComponent, {
-  color: {
+const TintedSymbol = withUniwind(SymbolGlyph, {
+  tintColor: {
     fromClassName: 'className',
     styleProperty: 'color',
   },
 });
 
 export function Icon({
-  className,
+  name,
   size = 'md',
-  weight = 'regular',
-  ...props
+  filled = false,
+  className,
+  testID = `icon-${name}`,
 }: IconProps): React.JSX.Element {
   const textClass = useContext(TextClassContext);
-  const pixels = useIconPixels(size);
+  const symbol: NativeSymbol = iconSymbols[name];
   return (
-    <StyledIcon
+    <TintedSymbol
       className={cn('text-foreground', textClass, className)}
-      pixels={pixels}
-      weight={weight}
-      {...props}
+      sf={(filled && symbol.sfFilled) || symbol.sf}
+      material={symbol.material}
+      pixels={useIconPixels(size)}
+      testID={testID}
     />
   );
 }

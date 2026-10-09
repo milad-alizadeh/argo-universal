@@ -1,28 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import type { IconWeight } from 'phosphor-react-native';
-import { CaretRightIcon } from 'phosphor-react-native/src/icons/CaretRight';
-import { CheckIcon } from 'phosphor-react-native/src/icons/Check';
-import { HeartIcon } from 'phosphor-react-native/src/icons/Heart';
-import { MagnifyingGlassIcon } from 'phosphor-react-native/src/icons/MagnifyingGlass';
-import { PlusIcon } from 'phosphor-react-native/src/icons/Plus';
 import { View } from 'react-native';
 import { Button } from '#primitives/button';
+import { Text } from '#primitives/text';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
 import { Icon } from '../lib/icon';
-
-const weights: IconWeight[] = [
-  'thin',
-  'light',
-  'regular',
-  'bold',
-  'fill',
-  'duotone',
-];
+import { iconNames } from '../lib/icon-names';
 
 const meta = {
   title: 'Design System/Components/Icon',
   component: Icon,
-  args: { as: PlusIcon },
+  args: { name: 'add' },
   tags: ['third-party'],
 } satisfies Meta<typeof Icon>;
 export default meta;
@@ -32,30 +19,44 @@ export const Overview: Story = {
   name: 'Icon',
   render: () => (
     <Variations>
+      <Variation label="Every Argo icon">
+        <View className="flex-row flex-wrap gap-x-2 gap-y-3">
+          {iconNames.map((name) => (
+            <View key={name} className="w-28 items-center gap-1">
+              <Icon name={name} />
+              <Text className="text-xs leading-4 text-muted-foreground">
+                {name}
+              </Text>
+            </View>
+          ))}
+        </View>
+      </Variation>
       <Variation label="Inside icon buttons">
         <View className="flex-row gap-3">
-          {[
-            { label: 'Add', icon: PlusIcon },
-            { label: 'Confirm', icon: CheckIcon },
-            { label: 'Search', icon: MagnifyingGlassIcon },
-          ].map(({ label, icon }) => (
+          {(
+            [
+              { label: 'Add', icon: 'add' },
+              { label: 'Confirm', icon: 'check' },
+              { label: 'Search', icon: 'search' },
+            ] as const
+          ).map(({ label, icon }) => (
             <Button key={label} size="icon" aria-label={label}>
-              <Icon as={icon} />
+              <Icon name={icon} />
             </Button>
           ))}
         </View>
       </Variation>
       <Variation label="Sizes: sm 12 for carets, md 16 by default, lg 20 for phone shell controls">
         <View className="flex-row items-center gap-3">
-          <Icon as={CaretRightIcon} size="sm" />
-          <Icon as={PlusIcon} size="md" />
-          <Icon as={PlusIcon} size="lg" />
+          <Icon name="chevron-right" size="sm" />
+          <Icon name="add" size="md" />
+          <Icon name="add" size="lg" />
         </View>
       </Variation>
-      <Variation label={`Weights: ${weights.join(', ')}`}>
+      <Variation label="Filled: selected shell sections draw the SF fill; Material stays outlined">
         <View className="flex-row items-center gap-3">
-          {weights.map((weight) => (
-            <Icon key={weight} as={HeartIcon} weight={weight} />
+          {(['sessions', 'issue', 'atlas', 'settings'] as const).map((name) => (
+            <Icon key={name} name={name} size="lg" filled />
           ))}
         </View>
       </Variation>
@@ -67,7 +68,7 @@ export const Overview: Story = {
             'text-primary',
             'text-destructive',
           ].map((className) => (
-            <Icon key={className} as={HeartIcon} className={className} />
+            <Icon key={className} name="warning" className={className} />
           ))}
         </View>
       </Variation>

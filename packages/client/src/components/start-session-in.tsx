@@ -1,12 +1,4 @@
 import type { ProjectInfo } from '@repo/contracts';
-import {
-  CaretDownIcon,
-  CheckIcon,
-  FolderIcon,
-  GitBranchIcon,
-  MagnifyingGlassIcon,
-  MonitorIcon,
-} from 'phosphor-react-native';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
@@ -58,11 +50,11 @@ export function StartSessionIn({
           className={cn(
             'gap-1.5 justify-start shadow-none',
             wide
-              ? 'h-7 sm:h-7 px-1.5 has-[>svg]:px-1.5 rounded-md'
-              : 'h-10 sm:h-10 px-4 has-[>svg]:px-4 rounded-md',
+              ? 'h-7 sm:h-7 px-1.5 has-[>[data-icon]]:px-1.5 rounded-md'
+              : 'h-10 sm:h-10 px-4 has-[>[data-icon]]:px-4 rounded-md',
           )}
         >
-          <Icon as={FolderIcon} className="text-muted-foreground" />
+          <Icon name="folder" className="text-muted-foreground" />
           <Text
             selectable={false}
             numberOfLines={1}
@@ -72,7 +64,7 @@ export function StartSessionIn({
           </Text>
           <Icon
             size="sm"
-            as={CaretDownIcon}
+            name="chevron-down"
             className="-ml-0.5 text-muted-foreground"
           />
         </Button>
@@ -97,7 +89,7 @@ export function StartSessionIn({
         wide ? 'h-7 px-1.5' : 'h-10 px-4',
       )}
     >
-      <Icon as={MonitorIcon} className="text-muted-foreground" />
+      <Icon name="computer" className="text-muted-foreground" />
       <Text numberOfLines={1} className="text-sm leading-5 text-foreground">
         {serverName}
       </Text>
@@ -143,10 +135,10 @@ export function StartSessionIn({
             variant="ghost"
             disabled={disabled || !checkout.onNewWorktreeChange}
             accessibilityLabel="Checkout"
-            className="h-10 sm:h-10 px-4 has-[>svg]:px-4 gap-1.5 justify-start rounded-md shadow-none"
+            className="h-10 sm:h-10 px-4 has-[>[data-icon]]:px-4 gap-1.5 justify-start rounded-md shadow-none"
           >
             <Icon
-              as={checkout.newWorktree ? GitBranchIcon : FolderIcon}
+              name={checkout.newWorktree ? 'branch' : 'folder'}
               className="text-muted-foreground"
             />
             <Text
@@ -165,7 +157,7 @@ export function StartSessionIn({
             )}
             <Icon
               size="sm"
-              as={CaretDownIcon}
+              name="chevron-down"
               className="-ml-0.5 text-muted-foreground"
             />
           </Button>
@@ -207,7 +199,7 @@ export function ProjectPicker({
     <View className="p-1">
       <View className="py-1">
         <View className="h-8 flex-row items-center gap-1.5 rounded-md px-2">
-          <Icon as={MagnifyingGlassIcon} className="text-muted-foreground" />
+          <Icon name="search" className="text-muted-foreground" />
           <Input
             accessibilityLabel="Find a Project"
             placeholder="Find a Project…"
@@ -231,12 +223,12 @@ export function ProjectPicker({
               aria-pressed={selected}
               onPress={() => onSelect(project.id)}
               className={cn(
-                'h-auto sm:h-auto items-start justify-start gap-1.5 p-2 has-[>svg]:p-2 rounded-md web:focus-visible:ring-0 web:focus-visible:bg-accent',
+                'h-auto sm:h-auto items-start justify-start gap-1.5 p-2 has-[>[data-icon]]:p-2 rounded-md web:focus-visible:ring-0 web:focus-visible:bg-accent',
                 selected && 'bg-accent',
               )}
             >
               <View className="h-5 shrink-0 justify-center">
-                <Icon as={FolderIcon} className="text-muted-foreground" />
+                <Icon name="folder" className="text-muted-foreground" />
               </View>
               <View className="min-w-0 flex-1 gap-0.5">
                 <Text
@@ -255,9 +247,7 @@ export function ProjectPicker({
                 </Text>
               </View>
               <View className="h-5 w-4 shrink-0 items-center justify-center">
-                {selected && (
-                  <Icon as={CheckIcon} className="text-foreground" />
-                )}
+                {selected && <Icon name="check" className="text-foreground" />}
               </View>
             </Button>
           );

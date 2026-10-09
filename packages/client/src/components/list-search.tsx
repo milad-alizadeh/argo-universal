@@ -1,4 +1,3 @@
-import { MagnifyingGlassIcon, XIcon } from 'phosphor-react-native';
 import type * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { type TextInput, View } from 'react-native';
@@ -179,14 +178,14 @@ export function ListSearch({
           style={[{ width: buttonSize, height: buttonSize }, magnifierStyle]}
         >
           <Icon
-            as={MagnifyingGlassIcon}
+            name="search"
             size={wide ? 'md' : 'lg'}
             className="text-foreground wide:text-muted-foreground"
           />
         </Animated.View>
         <Animated.View style={closeStyle}>
           <Icon
-            as={XIcon}
+            name="close"
             size={wide ? 'md' : 'lg'}
             className="text-foreground wide:text-muted-foreground"
           />

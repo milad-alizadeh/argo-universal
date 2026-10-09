@@ -1,7 +1,4 @@
 import { isToolCallRunning, type ToolCallUpdate } from '@repo/contracts';
-import { CheckIcon } from 'phosphor-react-native/src/icons/Check';
-import { TerminalWindowIcon } from 'phosphor-react-native/src/icons/TerminalWindow';
-import { XIcon } from 'phosphor-react-native/src/icons/X';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/utils';
@@ -48,7 +45,7 @@ export function CommandRow({
   return (
     <ToolCallDisclosure
       label={toolCallTitle(row, awaitingApproval)}
-      icon={TerminalWindowIcon}
+      icon="terminal"
       failed={failed}
       running={running}
       initialOpen={initialOpen}
@@ -64,7 +61,7 @@ export function CommandRow({
           <View className="flex-row items-center gap-1.5 px-3 pb-2">
             {!running && !stopped && (
               <Icon
-                as={failed ? XIcon : CheckIcon}
+                name={failed ? 'close' : 'check'}
                 className={cn('text-success', failed && 'text-destructive')}
               />
             )}

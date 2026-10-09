@@ -1,7 +1,3 @@
-import { ArrowsInSimpleIcon } from 'phosphor-react-native/src/icons/ArrowsInSimple';
-import { ArrowsOutSimpleIcon } from 'phosphor-react-native/src/icons/ArrowsOutSimple';
-import { SidebarSimpleIcon } from 'phosphor-react-native/src/icons/SidebarSimple';
-import { XIcon } from 'phosphor-react-native/src/icons/X';
 import type * as React from 'react';
 import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
@@ -144,7 +140,7 @@ export function DesktopShell({
           accessibilityLabel={sidebarShown ? 'Hide sidebar' : 'Show sidebar'}
           onPress={() => onSidebarShownChange(!sidebarShown)}
         >
-          <Icon as={SidebarSimpleIcon} className="text-muted-foreground" />
+          <Icon name="sidebar" className="text-muted-foreground" />
         </Button>
       </View>
       <DesktopRail
@@ -298,11 +294,7 @@ export function DesktopShell({
                   }
                 >
                   <Icon
-                    as={
-                      inspectorExpanded
-                        ? ArrowsInSimpleIcon
-                        : ArrowsOutSimpleIcon
-                    }
+                    name={inspectorExpanded ? 'collapse' : 'expand'}
                     className="text-muted-foreground"
                   />
                 </Button>
@@ -312,7 +304,7 @@ export function DesktopShell({
                   accessibilityLabel="Close Inspector"
                   onPress={() => onInspectorStateChange('closed')}
                 >
-                  <Icon as={XIcon} className="text-muted-foreground" />
+                  <Icon name="close" className="text-muted-foreground" />
                 </Button>
               </ShellHeaderActions>
             </View>

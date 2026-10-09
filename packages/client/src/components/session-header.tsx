@@ -1,6 +1,5 @@
 import type { SessionStatus } from '@repo/contracts';
 import { Portal } from '@rn-primitives/portal';
-import { DotsThreeIcon, GitPullRequestIcon } from 'phosphor-react-native';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/utils';
@@ -80,13 +79,13 @@ export function SessionHeader({
           // Changed files and the Session menu get their actions in later issues.
           <HeaderButton
             key="changes"
-            icon={GitPullRequestIcon}
+            icon="pull-request"
             paired
             accessibilityLabel="Changes"
           />,
           <HeaderButton
             key="more"
-            icon={DotsThreeIcon}
+            icon="more"
             paired
             accessibilityLabel="More"
           />,
@@ -115,7 +114,7 @@ export function SessionHeader({
           className="size-8 sm:size-8"
           accessibilityLabel="More"
         >
-          <Icon as={DotsThreeIcon} className="text-foreground" />
+          <Icon name="more" className="text-foreground" />
         </Button>
       </Portal>
     </>

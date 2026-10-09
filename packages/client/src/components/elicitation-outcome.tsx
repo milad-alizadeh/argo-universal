@@ -2,7 +2,6 @@ import type {
   ElicitationEnumOption,
   PendingElicitation,
 } from '@repo/contracts';
-import { QuestionIcon } from 'phosphor-react-native';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/text';
@@ -28,7 +27,7 @@ export function ElicitationOutcome({
     <View className="w-full gap-2">
       <View className="flex-row items-center gap-1.5">
         <Icon
-          as={QuestionIcon}
+          name="question"
           size="md"
           className="shrink-0 text-muted-foreground"
         />

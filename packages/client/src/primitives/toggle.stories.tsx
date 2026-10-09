@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { TextBIcon } from 'phosphor-react-native/src/icons/TextB';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
@@ -27,7 +26,7 @@ function ToggleExample({
         onPressedChange={setPressed}
         accessibilityLabel="Toggle bold"
       >
-        <ToggleIcon as={TextBIcon} />
+        <ToggleIcon name="bold" />
       </Toggle>
     </View>
   );

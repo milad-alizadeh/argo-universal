@@ -40,6 +40,24 @@ const config: StorybookConfig = {
           };
       },
     };
+    const expoSymbolsWebImports = {
+      name: 'expo-symbols-web-imports',
+      enforce: 'pre' as const,
+      transform(
+        code: string,
+        id: string,
+      ): { code: string; map: null } | undefined {
+        // React Native Web has no PlatformColor, which SymbolView reads only on Android; ESM rejects the missing export that Metro allows.
+        if (id.split('?')[0]?.endsWith('/expo-symbols/build/SymbolView.js'))
+          return {
+            code: code.replace(
+              'import { Platform, PlatformColor, Text, View }',
+              'const PlatformColor = undefined;\nimport { Platform, Text, View }',
+            ),
+            map: null,
+          };
+      },
+    };
     return mergeConfig(config, {
       // Resolve public font URLs during CSS compilation; staticDirs copies the files.
       publicDir: `${import.meta.dirname}/../../universal-app/public`,
@@ -52,11 +70,12 @@ const config: StorybookConfig = {
           '@repo/client > react-native-keyboard-controller',
           '@repo/client > expo-haptics',
           '@repo/client > expo-image-picker',
+          '@repo/client > expo-symbols',
           '@repo/client > react-native-drawer-layout',
           'storybook/actions',
         ],
         rolldownOptions: {
-          plugins: [expoDeclarationImports],
+          plugins: [expoDeclarationImports, expoSymbolsWebImports],
           moduleTypes: { '.ts': 'ts' },
         },
       },
@@ -75,6 +94,7 @@ const config: StorybookConfig = {
       },
       plugins: [
         expoDeclarationImports,
+        expoSymbolsWebImports,
         tailwindcss(),
         // Uniwind resolves these from process.cwd(), so they are absolute.
         uniwind({
