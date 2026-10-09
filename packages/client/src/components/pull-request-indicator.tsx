@@ -32,9 +32,7 @@ export function PullRequestIndicator({
         as={appearance.icon}
         className={cn('shrink-0', appearance.className)}
       />
-      <Text
-        className={cn('text-xs font-normal leading-4', appearance.className)}
-      >
+      <Text className={cn('type-secondary', appearance.className)}>
         #{number}
       </Text>
     </View>

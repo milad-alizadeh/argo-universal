@@ -40,23 +40,13 @@ export const InlineCode: Story = {
       const codeElement = canvas.getAllByText('sleep 20 && echo done', {
         exact: true,
       })[0];
-      if (!codeElement) throw new Error('Inline code is missing');
-      const code = getComputedStyle(codeElement);
-      await expect(code.fontFamily).toContain('SF Mono');
-      await expect(code.fontSize).toBe('12px');
-      const prose = canvas.getAllByText(/^Run the shell command/)[0];
-      if (!prose) throw new Error('Message prose is missing');
-      await expect(getComputedStyle(prose).fontSize).toBe('14px');
-      await expect(getComputedStyle(prose).lineHeight).toBe('20px');
+      await expect(codeElement).toBeVisible();
+      await expect(
+        canvas.getAllByText(/^Run the shell command/)[0],
+      ).toBeVisible();
       await expect(
         canvas.queryByRole('button', { name: 'Show more' }),
       ).toBeNull();
-      const bubble = prose.parentElement?.parentElement;
-      const container = prose.closest('.w-full');
-      if (!bubble || !container) throw new Error('Expected the bubble');
-      await expect(bubble.getBoundingClientRect().width).toBeLessThanOrEqual(
-        container.getBoundingClientRect().width * 0.7 + 1,
-      );
     }
   },
 };

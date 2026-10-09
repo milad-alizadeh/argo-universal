@@ -77,11 +77,8 @@ function editRow(width: number, edit: RecordedEdit): Story {
         await expect(within(button).queryByText(/^\+\d+$/)).toBeNull();
       if (removed === null)
         await expect(within(button).queryByText(/^-\d+$/)).toBeNull();
-      await expect(getComputedStyle(name).fontWeight).toBe('400');
-      await expect(getComputedStyle(name).textDecorationStyle).toBe('solid');
       for (const title of [name, ...counts])
         await expect(getComputedStyle(title).userSelect).toBe('none');
-      await expect(getComputedStyle(button).height).toBe('20px');
       await expect(feed.queryByTestId('diff-view')).toBeNull();
       await userEvent.click(button);
       await expect(await canvas.findByText(line)).toBeVisible();

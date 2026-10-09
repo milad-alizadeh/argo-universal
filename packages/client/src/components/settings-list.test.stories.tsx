@@ -59,17 +59,6 @@ function allGroupsNavigate(width: number): Story {
         { to: 'settings-connection' },
         { to: 'settings-appearance' },
       ]);
-      const projects = canvas.getByRole('button', { name: 'Projects' });
-      await expect(projects.getBoundingClientRect().height).toBe(
-        width === layoutWidths.phone ? 44 : 32,
-      );
-      const label = canvas.getByText('Projects', { exact: true });
-      await expect(getComputedStyle(label).fontSize).toBe(
-        width === layoutWidths.phone ? '16px' : '14px',
-      );
-      await expect(getComputedStyle(label).lineHeight).toBe(
-        width === layoutWidths.phone ? '24px' : '20px',
-      );
       if (width === layoutWidths.phone) {
         await expect(
           canvas.queryByRole('button', { name: 'Devices' }),
@@ -147,10 +136,9 @@ export const ChildSelectionAndAttention: Story = {
         ).toHaveAttribute('aria-selected', width === 390 ? 'false' : 'true'),
       );
       for (const kind of ['projects', 'agents']) {
-        const dot = canvas.getByTestId(`settings-${kind}-attention`);
-        await expect(dot).toBeVisible();
-        await expect(dot.getBoundingClientRect().width).toBe(6);
-        await expect(dot.getBoundingClientRect().height).toBe(6);
+        await expect(
+          canvas.getByTestId(`settings-${kind}-attention`),
+        ).toBeVisible();
       }
       await expect(canvas.queryByText('1', { exact: true })).toBeNull();
     }

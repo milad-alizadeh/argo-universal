@@ -117,9 +117,9 @@ function JumpToLatest({
 const phoneContentStyle = { paddingTop: 16 };
 const wideContentStyle = { paddingTop: 24 };
 
-// With the last row's own pb-4, Paper's 72 (wide 60) clear the Composer's overlap; a footer, since `alignItemsAtEnd` ignores bottom padding.
+// Paper's 72 (wide 60) clear the Composer's overlap; a footer, since `alignItemsAtEnd` ignores bottom padding.
 function FeedEnd(): React.JSX.Element {
-  return <View className="h-14 wide:h-11" />;
+  return <View className="h-18 wide:h-15" />;
 }
 
 // Streaming rows grow at the end, so the Feed follows rows as they measure.
@@ -149,11 +149,13 @@ const fillShrinkable = { flex: 1, minHeight: 0 };
 // A row's collapsibles resize it in the list each frame they move, so the rows below move in the same frame.
 function FeedRow({
   itemKey,
+  spaceBelow,
   onMotionChange,
   onGrow,
   children,
 }: {
   itemKey: string;
+  spaceBelow: string;
   onMotionChange: (moving: boolean) => void;
   onGrow: (itemKey: string, height: number) => void;
   children: ReactNode;
@@ -172,7 +174,7 @@ function FeedRow({
   return (
     <CollapsibleLayoutSyncContext.Provider value={layoutSync}>
       <View className="px-4 wide:px-6">
-        <View className={`${columnClassName} pb-4`}>{children}</View>
+        <View className={`${columnClassName} ${spaceBelow}`}>{children}</View>
       </View>
     </CollapsibleLayoutSyncContext.Provider>
   );
@@ -196,6 +198,24 @@ const entryType = (
 
 const entryKey = (entry: FeedEntry): string =>
   entry.type === 'live_header' ? 'live-header' : feedItemKey(entry);
+
+// Thoughts, tool calls and the live header: what the Agent does between messages.
+const isActivity = (entry: FeedEntry): boolean => entry.type !== 'row';
+
+const isAgentMessage = (entry: FeedEntry | undefined): boolean =>
+  entry?.type === 'row' && entry.row.sessionUpdate === 'agent_message';
+
+// The Feed's rhythm, set below a row by the row after it, so older rows paging in above never resize a row the reader sees.
+function spaceBelowEntry(
+  entry: FeedEntry,
+  next: FeedEntry | undefined,
+): string {
+  if (!next) return '';
+  if (isActivity(entry) && isActivity(next)) return 'pb-2 wide:pb-1.5';
+  if (isAgentMessage(entry) && isAgentMessage(next))
+    return 'pb-paragraph wide:pb-paragraph-wide';
+  return 'pb-6 wide:pb-5';
+}
 
 // Dragging the Feed takes the keyboard down: with the finger on iOS, at once on Android. Web's list is a plain element, which takes neither.
 const keyboardProps = Platform.select({
@@ -364,9 +384,10 @@ function FeedList({
     [],
   );
   const renderItem = useCallback(
-    ({ item }: LegendListRenderItemProps<FeedEntry>) => (
+    ({ item, index }: LegendListRenderItemProps<FeedEntry>) => (
       <FeedRow
         itemKey={entryKey(item)}
+        spaceBelow={spaceBelowEntry(item, entries[index + 1])}
         onMotionChange={onMotionChange}
         onGrow={growRow}
       >
@@ -381,7 +402,7 @@ function FeedList({
         )}
       </FeedRow>
     ),
-    [imageUrl, now, onMotionChange, growRow],
+    [entries, imageUrl, now, onMotionChange, growRow],
   );
 
   return (

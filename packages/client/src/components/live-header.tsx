@@ -106,7 +106,7 @@ export function LiveHeader({
     <View
       role="status"
       accessibilityLabel={title}
-      className="h-5 w-full flex-row items-center gap-1.5"
+      className="w-full flex-row items-center gap-1.5"
     >
       <View className="size-4 shrink-0 items-center justify-center">
         <SourceIcon source={source} toolCall={toolCall} />
@@ -114,15 +114,12 @@ export function LiveHeader({
       {request ? (
         <Text
           numberOfLines={1}
-          className="min-w-0 shrink text-sm leading-5 text-warning"
+          className="min-w-0 shrink type-body text-warning"
         >
           {title}
         </Text>
       ) : (
-        <ShimmerText
-          text={title}
-          className="min-w-0 shrink text-sm leading-5 text-foreground"
-        />
+        <ShimmerText text={title} className="min-w-0 shrink type-body" />
       )}
     </View>
   );

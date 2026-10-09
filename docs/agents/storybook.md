@@ -12,6 +12,7 @@
 - Data: use stable mock IDs, dates, and ordering. Keep interactive changes predictable and reproducible.
 - Platforms: share presentation stories and mock data across web and iOS. Check both previews when changing shared UI; preserve intentional platform differences.
 - Tests: `*.test.stories.tsx`, titled `Tests/<ComponentName>`, uses browser play functions for functionality assertions and test-only scenarios. Assert observable outcomes: loading indicators must be inside the viewport, and animation checks must catch missing movement or overlapping text. Await observable asynchronous states. Plain Vitest tests non-UI code only.
+- Styling: tests never assert how things look. No font sizes, line heights, weights, colours, spacing, radii, or fixed widths and heights; Paper owns those. When a design change breaks one, delete the assertion. Layout bugs a user would see, such as overflow, clipping or a covered control, are behaviour and stay.
   - A play function that clicks, types or selects runs at one viewport for one Agent. Make one story per viewport and Agent with a file-local factory, as `conflict(width)` in `PermissionRequest.test.stories.tsx` does, reusing `settleViewport` and `layoutWidths` from `packages/client/mocks/`.
   - Take expectations from the story's own recorded catalog, and state what a catalog must contain in one module-level check that throws "Recorded catalog needs …".
   - Assert absence as well as presence; never guard an assertion with `if (found)`.

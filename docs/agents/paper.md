@@ -17,8 +17,11 @@ This doc is temporary. When Paper ships components ("Components with slots" on i
 
 - Paper tokens use the Tailwind names in `tooling/uniwind/theme.css`. Fractional steps take an underscore: `--spacing-0_5`, `--leading-4_5`.
 - Icon width and height take a size token, never px: `--spacing-icon-sm` (12) for chevrons and carets, `--spacing-icon-mark` (14) for full-box shapes such as the Agent logo, Context ring, Linear and Checks ring, `--spacing-icon-md` (16) for every other icon, and `--spacing-icon-lg` (20) for phone shell controls and the desktop rail. A box that holds an icon takes the same token.
+- Text takes one of four roles from the "Components / Typography" master on the Global Components page: Title, Heading, Body, Secondary. Each role is a set of tokens, `--text-<role>`, `--leading-<role>` and `--font-weight-<role>`; desktop text uses the `-wide` size and leading (`--text-body-wide`), phone text the plain ones. Text nodes reference these role tokens, never a scale step such as `--text-sm`. In code they are the `type-title`, `type-heading`, `type-body` and `type-secondary` classes in `theme.css`. Buttons, inputs, chips, the native phone header and mono code keep their own styles.
+- Token values live in `theme.css` only. Paper's tokens are a copy of them: change a value in `theme.css`, then write the same value into Paper. Never keep a second copy of the tokens in the repository.
+- Paper stores oklch with one decimal. When that rounding changes the colour, store the exact hex instead.
 - Colours come from the Tailwind palette only. Every semantic token (`--color-success`, `--color-sidebar`) aliases a palette token.
-- Paper leads how things look. When a Paper token is missing from `theme.css` or holds a different value, report it as drift; code catches up in its own change.
+- Paper leads how things look; `theme.css` leads token values. When a Paper token is missing from `theme.css` or holds a different value, report it as drift and fix Paper.
 
 ## Registry
 
@@ -51,7 +54,7 @@ The tools in `tools/paper-drift/` read the whole file through the Paper MCP. Onl
 
 After any Paper write tool, a PostToolUse hook (`tools/agent-hooks.mts after-paper-edit`, which loads `tools/paper-drift/edit-hook.mts`) warns when the edit touched a master, whose copies now drift, or a copy outside its allowed changes. It reads the last snapshot and the registry, so it never calls Paper and never blocks. Layers made after the last snapshot are not checked, and input it does not recognise is reported as a skipped check.
 
-An audit is done when the report has been read and each difference is either fixed or listed with the artboard, the layer name and what differs. Two checks stay manual: every master names a code component, built or planned, and every master's Storybook coverage follows the [Storybook rules](storybook.md).
+An audit is done when the report has been read and each difference is either fixed or listed with the artboard, the layer name and what differs. These checks stay manual: every role token in `theme.css` exists in Paper; every text node references role tokens, apart from the exceptions listed under Tokens; every master names a code component, built or planned; and every master's Storybook coverage follows the [Storybook rules](storybook.md).
 
 ## Building from Paper
 

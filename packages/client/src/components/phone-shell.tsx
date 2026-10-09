@@ -96,8 +96,8 @@ export function PhoneShell({
         />
         <Text
           className={cn(
-            'flex-1 text-base',
-            selectedSection === section ? 'font-semibold' : 'font-normal',
+            'flex-1 type-body',
+            selectedSection === section && 'font-semibold',
           )}
         >
           {title}
@@ -141,11 +141,7 @@ export function PhoneShell({
           >
             <View style={{ height: top }} />
             <View className="h-14 justify-center px-6">
-              <Text
-                role="heading"
-                aria-level={2}
-                className="text-xl font-semibold"
-              >
+              <Text role="heading" aria-level={2} className="type-title">
                 Argo
               </Text>
             </View>

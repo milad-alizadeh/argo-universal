@@ -93,7 +93,7 @@ export function ToolCallGroup({
       initialOpen={initialOpen}
       trailing={running && !live?.awaitingApproval ? duration : undefined}
     >
-      <View className="gap-2 pb-1" onLayout={onActivitiesLayout}>
+      <View className="gap-2 pb-1 wide:gap-1.5" onLayout={onActivitiesLayout}>
         {items.map((activity) => (
           <View key={activityKey(activity)}>{renderActivity(activity)}</View>
         ))}

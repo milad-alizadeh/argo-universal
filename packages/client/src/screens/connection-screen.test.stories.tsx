@@ -21,13 +21,6 @@ export const ShowsServerInfoAndClock: Story = {
     await expect(
       await canvas.findByText('2026-10-03T10:00:00.000Z'),
     ).toBeVisible();
-    // Uniwind's rounded-xl on the Card: --radius (10px) + 4px.
-    const card = canvas
-      .getByRole('heading', { name: 'Server' })
-      .closest('[class*="rounded-xl"]');
-    await expect(card).not.toBeNull();
-    if (!card) throw new Error('Server card is missing');
-    await expect(getComputedStyle(card).borderTopLeftRadius).toBe('14px');
     // An open Connection shows no banner.
     await expect(canvas.queryByRole('status')).toBeNull();
   },
