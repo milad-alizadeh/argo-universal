@@ -2,9 +2,9 @@ import { expect, it, vi } from 'vitest';
 import { acpPermission } from '#mocks/acp-requests';
 import {
   createResourcePeer,
-  resourceOpening,
-  resourceDestination,
-  resourceProcessAt,
+  createResourceOpening,
+  createResourceDestination,
+  requireResourceProcessAt,
 } from '#mocks/acp-resource';
 import { createAcpResources } from '../index';
 
@@ -14,15 +14,15 @@ it('owned callback overflow reports resource failure and cannot release without 
   const failures: unknown[] = [];
   const pending = Promise.withResolvers<never>();
   const lease = await resources.open(
-    resourceOpening({
-      ...resourceDestination(),
+    createResourceOpening({
+      ...createResourceDestination(),
       failed: (error) => {
         failures.push(error);
       },
       requestPermission: () => pending.promise,
     }),
   );
-  const process = resourceProcessAt(peer.processes);
+  const process = requireResourceProcessAt(peer.processes);
   const answers = Array.from({ length: 17 }, () =>
     process.connection.client
       .request('session/request_permission', {
@@ -36,7 +36,7 @@ it('owned callback overflow reports resource failure and cannot release without 
       new Error('ACP pending request limit reached'),
     ),
   );
-  await expect(resources.open(resourceOpening())).rejects.toThrow(
+  await expect(resources.open(createResourceOpening())).rejects.toThrow(
     'unavailable',
   );
   await expect(lease.close()).rejects.toThrow('requires observed process exit');

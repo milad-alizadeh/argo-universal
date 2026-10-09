@@ -32,14 +32,14 @@ export class AcpResourceCleanup {
     );
   }
   public fail(error: unknown): void {
-    if (this.fenced()) return;
+    if (this.hasFailedOrStartedTermination()) return;
     this.broken = true;
     this.retired = true;
     this.input.routing.fence();
     for (const reservation of this.input.reservations)
       reservation.input.destination.failed(error);
   }
-  private fenced(): boolean {
+  private hasFailedOrStartedTermination(): boolean {
     return this.termination !== undefined || this.broken;
   }
   public requireLocalProof(): void {

@@ -27,7 +27,7 @@ export const resourceLaunch: AgentLaunch = {
   env: {},
   authContext: 'subscription',
 };
-export const resourceDestination = (
+export const createResourceDestination = (
   updates: SessionNotification[] = [],
 ): AcpSessionDestination => ({
   update: (notification): undefined => {
@@ -37,8 +37,8 @@ export const resourceDestination = (
   requestPermission: () => ({ outcome: { outcome: 'cancelled' } }),
   createElicitation: () => ({ action: 'cancel' }),
 });
-export const resourceOpening = (
-  destination = resourceDestination(),
+export const createResourceOpening = (
+  destination = createResourceDestination(),
 ): AcpOpenInput => ({
   launch: resourceLaunch,
   opening: {
@@ -54,7 +54,9 @@ export const resourceInitialization = {
     sessionCapabilities: { close: {}, resume: {} },
   },
 };
-export const resourceUpdate = (sessionId: string): SessionNotification => ({
+export const createResourceUpdate = (
+  sessionId: string,
+): SessionNotification => ({
   sessionId,
   update: {
     sessionUpdate: 'agent_message_chunk',
@@ -76,7 +78,7 @@ type ResourceProcess = {
   exited: ReturnType<typeof Promise.withResolvers<void>>;
   terminations: number;
 };
-export const resourceProcessAt = (
+export const requireResourceProcessAt = (
   processes: ResourceProcess[],
   index = 0,
 ): ResourceProcess => {

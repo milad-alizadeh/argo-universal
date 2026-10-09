@@ -26,7 +26,8 @@ const captureLaunch = (launch: AgentLaunch): AgentLaunch => ({
   ),
   authContext: launch.authContext,
 });
-const launchKey = (launch: AgentLaunch): string => JSON.stringify(launch);
+const createLaunchReuseKey = (launch: AgentLaunch): string =>
+  JSON.stringify(launch);
 class EngineAcpResources implements AcpResources {
   private readonly entries = new Map<string, AcpResourceEntry>();
   private stopped = false;
@@ -35,10 +36,10 @@ class EngineAcpResources implements AcpResources {
     if (this.stopped)
       return Promise.reject(new Error('ACP resources are stopped'));
     const launch = captureLaunch(opening.launch);
-    return this.entry(launch).open({ ...opening, launch });
+    return this.getOrStartResource(launch).open({ ...opening, launch });
   };
-  private entry(launch: AgentLaunch): AcpResourceEntry {
-    const key = launchKey(launch);
+  private getOrStartResource(launch: AgentLaunch): AcpResourceEntry {
+    const key = createLaunchReuseKey(launch);
     const existing = this.entries.get(key);
     if (existing) return existing;
     const entry = new AcpResourceEntry(this.input, launch);

@@ -1,10 +1,10 @@
 import { expect, it } from 'vitest';
 import { createAcpPeer, readAcpRequest } from '#mocks/acp-peer';
 import {
-  resourceDestination,
+  createResourceDestination,
   resourceInitialization,
-  resourceOpening,
-  resourceUpdate,
+  createResourceOpening,
+  createResourceUpdate,
 } from '#mocks/acp-resource';
 import { createAcpResources } from '../index';
 import type { AcpProcess } from '../index';
@@ -23,7 +23,7 @@ it('an owned empty session releases its process only after protocol closure', as
       },
     }),
   });
-  const opening = resources.open(resourceOpening());
+  const opening = resources.open(createResourceOpening());
   const initialize = await readAcpRequest(peer);
   await peer.send([
     { jsonrpc: '2.0', id: initialize.id, result: resourceInitialization },
@@ -60,13 +60,13 @@ it('compatible openings share startup and route early updates by the proven iden
       };
     },
   });
-  const firstUpdates: ReturnType<typeof resourceUpdate>[] = [];
-  const secondUpdates: ReturnType<typeof resourceUpdate>[] = [];
+  const firstUpdates: ReturnType<typeof createResourceUpdate>[] = [];
+  const secondUpdates: ReturnType<typeof createResourceUpdate>[] = [];
   const first = resources.open(
-    resourceOpening(resourceDestination(firstUpdates)),
+    createResourceOpening(createResourceDestination(firstUpdates)),
   );
   const second = resources.open(
-    resourceOpening(resourceDestination(secondUpdates)),
+    createResourceOpening(createResourceDestination(secondUpdates)),
   );
   const initialize = await readAcpRequest(peer);
   await peer.send([
@@ -78,19 +78,19 @@ it('compatible openings share startup and route early updates by the proven iden
     {
       jsonrpc: '2.0',
       method: 'session/update',
-      params: resourceUpdate('second'),
+      params: createResourceUpdate('second'),
     },
     {
       jsonrpc: '2.0',
       method: 'session/update',
-      params: resourceUpdate('first'),
+      params: createResourceUpdate('first'),
     },
     { jsonrpc: '2.0', id: secondRequest.id, result: { sessionId: 'second' } },
     { jsonrpc: '2.0', id: firstRequest.id, result: { sessionId: 'first' } },
   ]);
   await Promise.all([first, second]);
   expect(launches).toBe(1);
-  expect(firstUpdates).toEqual([resourceUpdate('first')]);
-  expect(secondUpdates).toEqual([resourceUpdate('second')]);
+  expect(firstUpdates).toEqual([createResourceUpdate('first')]);
+  expect(secondUpdates).toEqual([createResourceUpdate('second')]);
   await resources.shutdown();
 });

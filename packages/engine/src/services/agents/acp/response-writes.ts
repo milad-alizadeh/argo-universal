@@ -12,11 +12,14 @@ export class AcpResponseWrites {
   private readonly pending = new Map<JsonRpcId, PendingWrite>();
   private readonly rejections = createRejectionCounter('ACP callbacks');
   public constructor(private readonly failed: (error: unknown) => void) {}
-  public retain(reservation: AcpReservation, id: JsonRpcId): void {
-    if (this.pending.has(id))
+  public retainRequestResponseWrite(
+    reservation: AcpReservation,
+    requestId: JsonRpcId,
+  ): void {
+    if (this.pending.has(requestId))
       this.reject(new Error('ACP request identity is already pending'));
     const pending = Promise.withResolvers<void>();
-    this.pending.set(id, pending);
+    this.pending.set(requestId, pending);
     void trackReservationWork(reservation, pending.promise);
   }
   public reject(error: Error): never {
@@ -24,10 +27,10 @@ export class AcpResponseWrites {
     this.failed(error);
     throw error;
   }
-  public stream(stream: Stream): Stream {
-    const writer = stream.writable.getWriter();
+  public observeResponseWrites(protocolStream: Stream): Stream {
+    const writer = protocolStream.writable.getWriter();
     return {
-      readable: stream.readable,
+      readable: protocolStream.readable,
       writable: new WritableStream<AnyMessage>({
         write: (message) => this.write(writer, message),
         close: () => writer.close(),
@@ -55,7 +58,7 @@ export class AcpResponseWrites {
     this.pending.delete(message.id);
     settleWrite(pending, result);
   }
-  public afterExit(): void {
+  public settlePendingWritesAfterProcessClose(): void {
     for (const pending of this.pending.values()) pending.resolve();
     this.pending.clear();
   }
