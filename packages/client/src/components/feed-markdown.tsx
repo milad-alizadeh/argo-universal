@@ -125,8 +125,8 @@ function Prose({
         variant !== 'proposal' &&
           headingLevel === undefined &&
           'wide:leading-5.5',
-        variant === 'summary' && 'text-muted-foreground',
         className,
+        variant === 'summary' && 'text-muted-foreground',
       )}
     >
       <InlineTokens tokens={tokens} codeClassName={inlineCodeClassName} />

@@ -42,7 +42,7 @@ export const compactionStates = [
     summary: [
       {
         type: 'text',
-        text: 'Built the Session layout. The Feed reader now uses sequence cursors.',
+        text: '## Session layout\n\nBuilt the Session layout. The Feed reader now uses sequence cursors.',
       },
     ],
   },
