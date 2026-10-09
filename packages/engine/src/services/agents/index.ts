@@ -15,9 +15,18 @@ export type {
   AgentLaunch,
   ResolveAgentLaunch,
 } from './acp/resource-types';
-export { serializeLegacyCatalogAgentRows } from './catalog/records';
-export type { RegistryPort } from './catalog/registry';
+export type { FetchAgents } from './catalog/fetch-agents';
 
-export { createAgentCatalog, type AgentCatalogInput } from './catalog/catalog';
+export {
+  startCatalogSyncSupervisor,
+  readAgentCatalogFromSupervisor,
+  syncAgentCatalog,
+  shutdownCatalogSyncSupervisor,
+  type StartCatalogSyncSupervisorInput,
+  type CatalogSyncSupervisor,
+} from './catalog/catalog';
+export { watchCommittedCatalogChanges } from './catalog/catalog-changes';
 export { catalogSyncMachine } from './catalog/catalog-sync-machine';
-export { createRegistryReader } from './catalog/registry';
+export { createRegistryReader } from './catalog/registry-reader';
+
+export { catalogSyncSupervisorMachine } from './catalog/catalog-sync-supervisor-machine';

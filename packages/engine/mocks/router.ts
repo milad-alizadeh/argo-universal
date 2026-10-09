@@ -56,14 +56,10 @@ export function startRouterTestHost(
     systemId: databaseWriterId,
     input: { database, now: (): number => Date.now() },
   }).start();
-  const stop = registerRouterStop(
-    { sessionRegistry, databaseWriter },
-    ownedDatabase,
-  );
   return createRouterTestHost(
     {
       ...engineOptions,
-      registry: engineOptions.registry ?? emptyRegistry,
+      fetchAgents: engineOptions.fetchAgents ?? fetchEmptyAgents,
       database,
       sessions: sessionRegistry,
       createId,
@@ -71,7 +67,8 @@ export function startRouterTestHost(
       version: engineOptions.version ?? '1.2.3',
       startedAt: engineOptions.startedAt ?? '2026-10-03T00:00:00.000Z',
     },
-    { sessionRegistry, databaseWriter, stop },
+    { sessionRegistry, databaseWriter },
+    ownedDatabase,
   );
 }
 
@@ -80,16 +77,18 @@ function createRouterTestHost(
   actors: {
     sessionRegistry: RegistryActorRef;
     databaseWriter: Actor<typeof writerMachine>;
-    stop(): Promise<void>;
   },
+  ownedDatabase: ReturnType<typeof openTestDatabase> | undefined,
 ): ReturnType<typeof startRouterTestHost> {
   const context = createEngineContext(options);
-  return { context, caller: appRouter.createCaller(context), ...actors };
+  const stop = registerRouterStop(
+    { ...actors, catalogSync: context.catalogSync },
+    ownedDatabase,
+  );
+  return { context, caller: appRouter.createCaller(context), ...actors, stop };
 }
 
-const emptyRegistry = {
-  readRegistry: async (): Promise<unknown> => ({
-    version: '1.0.0',
-    agents: [],
-  }),
-};
+const fetchEmptyAgents = async (): Promise<unknown> => ({
+  version: '1.0.0',
+  agents: [],
+});

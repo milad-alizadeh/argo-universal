@@ -5,8 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/database.ts",
-    "./schema": "./src/schema.ts",
-    "./mocks": "./mocks/legacy-agent-catalog.ts"
+    "./schema": "./src/schema.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

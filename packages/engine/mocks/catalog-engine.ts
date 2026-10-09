@@ -4,7 +4,7 @@ import { createMockAdapter } from '@repo/mocks/agent';
 import { onTestFinished } from 'vitest';
 import { createActor, waitFor, type SnapshotFrom } from 'xstate';
 import { engineMachine } from '../src/engine/machine';
-import type { RegistryPort } from '../src/services/agents';
+import type { FetchAgents } from '../src/services/agents';
 
 type CatalogEngine = ReturnType<typeof createActor<typeof engineMachine>>;
 type StartedCatalogEngine = {
@@ -24,11 +24,11 @@ const isRunning = (snapshot: SnapshotFrom<typeof engineMachine>): boolean =>
 
 export async function startCatalogEngine(
   home: string,
-  registry: RegistryPort,
+  fetchAgents: FetchAgents,
 ): Promise<StartedCatalogEngine> {
   const port = await findFreePort();
   const engine = createActor(engineMachine, {
-    input: { ...defaults, home, registry, port },
+    input: { ...defaults, home, fetchAgents, port },
   }).start();
   const stop = registerEngineStop(engine);
   await waitFor(engine, isRunning);

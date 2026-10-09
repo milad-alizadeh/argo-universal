@@ -9,12 +9,12 @@ import { startRouterTestHost } from '#mocks/router';
 it.each(rejectedRegistryValues.map((value, index) => [index, value] as const))(
   'keeps exact published metadata and the last-good row after rejected refresh %i',
   async (_, value): Promise<void> => {
-    const readRegistry = vi
+    const fetchAgents = vi
       .fn<() => Promise<unknown>>()
       .mockResolvedValueOnce(publishedRegistryResponse)
       .mockResolvedValue(value);
     const { caller, context } = startRouterTestHost({
-      registry: { readRegistry },
+      fetchAgents,
     });
     await caller.agents.syncCatalog();
     const before = await caller.agents.catalog();

@@ -10,14 +10,14 @@ const exampleSearch = 'example';
 const offlineMessage = 'Registry is offline';
 
 it('browses upstream metadata through Agents without opening a conversation', async (): Promise<void> => {
-  const readRegistry = vi.fn<() => Promise<unknown>>(
+  const fetchAgents = vi.fn<() => Promise<unknown>>(
     async () => publishedRegistry,
   );
   const adapter = createMockAdapter();
   const connect = vi.spyOn(adapter, 'connect');
   const probe = vi.spyOn(adapter, 'probe');
   const { caller } = startRouterTestHost({
-    registry: { readRegistry },
+    fetchAgents,
     adapters: [adapter],
   });
   const startupProbes = probe.mock.calls.length;
@@ -32,7 +32,7 @@ it('browses upstream metadata through Agents without opening a conversation', as
   expect(
     (await caller.session.list({ archived: false })).sessions,
   ).toHaveLength(1);
-  expect(readRegistry).toHaveBeenCalledTimes(1);
+  expect(fetchAgents).toHaveBeenCalledTimes(1);
   expect(connect).not.toHaveBeenCalled();
   expect(probe).toHaveBeenCalledTimes(startupProbes);
 });
@@ -40,14 +40,14 @@ it('browses upstream metadata through Agents without opening a conversation', as
 it.each(['offline', 'malformed'] as const)(
   'keeps last-good metadata after a %s refresh',
   async (failure): Promise<void> => {
-    const readRegistry = vi
+    const fetchAgents = vi
       .fn<() => Promise<unknown>>()
       .mockResolvedValueOnce(publishedRegistry);
-    const { caller } = startRouterTestHost({ registry: { readRegistry } });
+    const { caller } = startRouterTestHost({ fetchAgents });
     await caller.agents.syncCatalog();
     if (failure === 'offline')
-      readRegistry.mockRejectedValue(new Error(offlineMessage));
-    else readRegistry.mockResolvedValue(malformedRegistry);
+      fetchAgents.mockRejectedValue(new Error(offlineMessage));
+    else fetchAgents.mockResolvedValue(malformedRegistry);
     await caller.agents.syncCatalog();
     const refreshed = await caller.agents.catalog({
       search: exampleSearch,
@@ -62,14 +62,14 @@ it.each(['offline', 'malformed'] as const)(
     expect(searched.agents.map(({ entry }) => entry.id)).toEqual([
       'python-agent',
     ]);
-    expect(readRegistry).toHaveBeenCalledTimes(2);
+    expect(fetchAgents).toHaveBeenCalledTimes(2);
   },
 );
 
 it('shows the Server recipe rather than the App platform', async (): Promise<void> => {
   const { caller } = startRouterTestHost({
     platform: 'darwin-aarch64',
-    registry: { readRegistry: async (): Promise<unknown> => publishedRegistry },
+    fetchAgents: async (): Promise<unknown> => publishedRegistry,
   });
   await caller.agents.syncCatalog();
   const catalog = await caller.agents.catalog();
@@ -86,7 +86,7 @@ it('shows the Server recipe rather than the App platform', async (): Promise<voi
 
 it('reports malformed registry JSON once without a success-shaped empty catalog', async (): Promise<void> => {
   const { caller } = startRouterTestHost({
-    registry: { readRegistry: async (): Promise<unknown> => '{broken' },
+    fetchAgents: async (): Promise<unknown> => '{broken',
   });
   await caller.agents.syncCatalog();
   expect(await caller.agents.catalog()).toMatchObject({

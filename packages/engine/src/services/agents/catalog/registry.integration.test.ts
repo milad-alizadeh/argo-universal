@@ -3,16 +3,13 @@ import {
   rejectedRegistryValues,
 } from '@repo/mocks/registry/published';
 import { expect, it } from 'vitest';
-import { createRegistryReader, type RegistryPort } from './registry';
+import type { FetchAgents } from './fetch-agents';
+import { createRegistryReader } from './registry-reader';
 
 it('accepts the official published empty placeholder without stripping metadata', async (): Promise<void> => {
-  const port: RegistryPort = {
-    readRegistry: async (): Promise<unknown> =>
-      JSON.stringify(publishedRegistryResponse),
-  };
   const reader = createRegistryReader();
   const registry = reader.parse(
-    await port.readRegistry(new AbortController().signal),
+    await fetchPublishedRegistryAgents(new AbortController().signal),
   );
   expect(registry).toEqual(publishedRegistryResponse);
   expect(registry.extensions).toEqual([]);
@@ -27,3 +24,7 @@ it.each(rejectedRegistryValues.map((value, index) => [index, value] as const))(
     expect(reader.count()).toBe(1);
   },
 );
+
+const fetchPublishedRegistryAgents: FetchAgents = async (
+  _signal: AbortSignal,
+): Promise<unknown> => JSON.stringify(publishedRegistryResponse);

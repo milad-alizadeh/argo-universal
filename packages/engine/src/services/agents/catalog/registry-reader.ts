@@ -12,22 +12,6 @@ const validator = addFormats(new Ajv({ strict: false })).addSchema(
 );
 const acceptsRegistry = validator.compile<ACPAgentRegistry>(registrySchema);
 const acceptsAgent = validator.compile<ACPAgent>(registryAgentSchema);
-export const registryUrl =
-  'https://cdn.agentclientprotocol.com/registry/v1/latest/registry.json';
-
-export interface RegistryPort {
-  readRegistry(signal: AbortSignal): Promise<unknown>;
-}
-
-export const publicRegistry: RegistryPort = {
-  readRegistry: async (signal): Promise<unknown> => {
-    const response = await fetch(registryUrl, { signal });
-    if (!response.ok)
-      throw new Error(`Registry returned HTTP ${response.status}`);
-    return response.text();
-  },
-};
-
 export function createRegistryReader(): {
   parse(value: unknown): ACPAgentRegistry;
   parseAgent(value: unknown): ACPAgent;
