@@ -1,117 +1,120 @@
-import { EventEmitter, on } from 'node:events';
 import type {
   AgentsCatalogInput,
   AgentsCatalogOutput,
   AgentsCatalogSyncOutput,
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
-import { createActor, toPromise } from 'xstate';
-import { readAgentCatalog, resolveRegistryServerPlatform } from './browse';
-import { catalogSyncMachine } from './catalog-sync-machine';
 import {
-  createRegistryReader,
-  publicRegistry,
-  type RegistryPort,
-} from './registry';
+  createActor,
+  waitFor,
+  type ActorRefFrom,
+  type SnapshotFrom,
+} from 'xstate';
+import { readAgentCatalog, resolveRegistryServerPlatform } from './browse';
+import { catalogSyncSupervisorMachine } from './catalog-sync-supervisor-machine';
+import { fetchAgents, type FetchAgents } from './fetch-agents';
+import { createRegistryReader } from './registry-reader';
 
-export interface AgentCatalogInput {
+export interface StartCatalogSyncSupervisorInput {
   database: Database;
-  registry?: RegistryPort;
+  fetchAgents?: FetchAgents;
   platform?: string;
   sessionCommandSignal?: AbortSignal;
 }
+export type CatalogSyncSupervisor = ActorRefFrom<
+  typeof catalogSyncSupervisorMachine
+>;
+type CatalogSupervisorSnapshot = SnapshotFrom<
+  typeof catalogSyncSupervisorMachine
+>;
 
-export function createAgentCatalog(input: AgentCatalogInput): AgentCatalog {
-  return new AgentCatalog(input);
+export function startCatalogSyncSupervisor(
+  input: StartCatalogSyncSupervisorInput,
+): CatalogSyncSupervisor {
+  const actor = createActor(catalogSyncSupervisorMachine, {
+    input: {
+      database: input.database,
+      fetchAgents: input.fetchAgents ?? fetchAgents,
+      platform: input.platform ?? resolveRegistryServerPlatform(),
+      reader: createRegistryReader(),
+      now: Date.now,
+    },
+  }).start();
+  bindCatalogShutdownSignal(actor, input.sessionCommandSignal);
+  return actor;
 }
 
-class AgentCatalog {
-  private readonly reader = createRegistryReader();
-  private readonly events = new EventEmitter<{ change: [string[]] }>();
-  private error: string | null = null;
-  private syncedAt: number | null = null;
-  private pending: Promise<AgentsCatalogSyncOutput> | undefined;
-  constructor(private readonly input: AgentCatalogInput) {}
-
-  readCatalog(request: AgentsCatalogInput): AgentsCatalogOutput {
-    return readAgentCatalog(
-      {
-        ...this.input,
-        reader: this.reader,
-        error: this.error,
-        syncedAt: this.syncedAt,
-        platform: this.input.platform ?? resolveRegistryServerPlatform(),
-      },
-      request,
-    );
-  }
-
-  syncCatalog(): Promise<AgentsCatalogSyncOutput> {
-    this.pending ??= this.runCatalogSync().finally(() => {
-      this.pending = undefined;
-    });
-    return this.pending;
-  }
-
-  private async runCatalogSync(): Promise<AgentsCatalogSyncOutput> {
-    const result = await syncAgentCatalog(this.input, this.reader);
-    this.error = result.error;
-    if (result.error === null) this.publishCommittedCatalog(result.changedIds);
-    return { ...result, rejectedValues: this.reader.count() };
-  }
-
-  private publishCommittedCatalog(changedIds: string[]): void {
-    this.syncedAt = Date.now();
-    this.events.emit('change', changedIds);
-  }
-
-  async *watchCatalogChanges(signal: AbortSignal): AsyncGenerator<string[]> {
-    const stream: AsyncIterable<string[][]> = on(this.events, 'change', {
-      signal,
-    });
-    try {
-      for await (const changes of stream) yield* changes;
-    } catch (error) {
-      rethrowUnlessAborted(signal, error);
-    }
-  }
+export function readAgentCatalogFromSupervisor(
+  actor: CatalogSyncSupervisor,
+  request: AgentsCatalogInput,
+): AgentsCatalogOutput {
+  const { context } = actor.getSnapshot();
+  return readAgentCatalog({ ...context, error: context.result.error }, request);
 }
 
-function syncAgentCatalog(
-  input: AgentCatalogInput,
-  reader: ReturnType<typeof createRegistryReader>,
-): Promise<CatalogSyncResult> {
-  const registry = input.registry ?? publicRegistry;
-  const actor = createActor(catalogSyncMachine, {
-    input: { database: input.database, reader, registry },
-  });
-  return runCatalogSyncActor(
+export async function syncAgentCatalog(
+  actor: CatalogSyncSupervisor,
+): Promise<AgentsCatalogSyncOutput> {
+  const before = actor.getSnapshot();
+  if (catalogSyncAdmissionIsClosed(before))
+    return createCancelledCatalogSyncOutput(actor);
+  const completed = observeNextCatalogSyncCompletion(
     actor,
-    input.sessionCommandSignal ?? new AbortController().signal,
+    before.context.completedSyncs,
+  );
+  actor.send({ type: 'catalog.sync' });
+  return (await completed).context.result;
+}
+
+export async function shutdownCatalogSyncSupervisor(
+  actor: CatalogSyncSupervisor,
+): Promise<void> {
+  if (actor.getSnapshot().status !== 'active') return;
+  const stopped = waitFor(actor, (snapshot) => snapshot.status !== 'active', {
+    timeout: Infinity,
+  });
+  actor.send({ type: 'catalog.shutdown' });
+  await stopped;
+}
+
+function bindCatalogShutdownSignal(
+  actor: CatalogSyncSupervisor,
+  signal: AbortSignal | undefined,
+): void {
+  if (!signal) return;
+  const shutdown = (): void => actor.send({ type: 'catalog.shutdown' });
+  signal.addEventListener('abort', shutdown, { once: true });
+  actor.subscribe({
+    complete: () => signal.removeEventListener('abort', shutdown),
+  });
+  if (signal.aborted) shutdown();
+}
+
+function createCancelledCatalogSyncOutput(
+  actor: CatalogSyncSupervisor,
+): AgentsCatalogSyncOutput {
+  return {
+    changedIds: [],
+    error: 'Registry sync was cancelled',
+    rejectedValues: actor.getSnapshot().context.reader.count(),
+  };
+}
+
+function catalogSyncAdmissionIsClosed(
+  snapshot: CatalogSupervisorSnapshot,
+): boolean {
+  return snapshot.status !== 'active' || snapshot.matches('stopping');
+}
+
+function observeNextCatalogSyncCompletion(
+  actor: CatalogSyncSupervisor,
+  previousCompletedSyncs: number,
+): Promise<CatalogSupervisorSnapshot> {
+  return waitFor(
+    actor,
+    (snapshot) =>
+      snapshot.context.completedSyncs > previousCompletedSyncs ||
+      snapshot.status !== 'active',
+    { timeout: Infinity },
   );
 }
-
-async function runCatalogSyncActor(
-  actor: CatalogSyncActor,
-  signal: AbortSignal,
-): Promise<CatalogSyncResult> {
-  if (signal.aborted)
-    return { changedIds: [], error: 'Registry sync was cancelled' };
-  const cancel = (): void => actor.send({ type: 'catalog.cancel' });
-  signal.addEventListener('abort', cancel, { once: true });
-  actor.start();
-  try {
-    return await toPromise(actor);
-  } finally {
-    signal.removeEventListener('abort', cancel);
-  }
-}
-
-function rethrowUnlessAborted(signal: AbortSignal, error: unknown): void {
-  if (!signal.aborted) throw error;
-}
-
-type CatalogSyncResult = { changedIds: string[]; error: string | null };
-type CatalogSyncActor = ReturnType<
-  typeof createActor<typeof catalogSyncMachine>
->;

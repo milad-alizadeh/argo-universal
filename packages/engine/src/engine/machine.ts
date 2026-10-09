@@ -6,8 +6,7 @@ import {
   createAcpResources,
   type AcpResources,
   type AcpResourceInput,
-  serializeLegacyCatalogAgentRows,
-  type RegistryPort,
+  type FetchAgents,
 } from '../services/agents';
 import { blobsFolderIn, removeUnusedBlobs } from '../services/blob';
 import { writerMachine, databaseWriterId } from '../services/feed';
@@ -62,7 +61,7 @@ export interface EngineInput extends Pick<
   version: string;
   startedAt: string;
   acp?: AcpResourceInput;
-  registry?: RegistryPort;
+  fetchAgents?: FetchAgents;
 }
 
 interface EngineContext extends EngineInput {
@@ -104,9 +103,7 @@ export const engineMachine = setup({
     // `openDatabase` also runs the Drizzle migrations.
     openDatabase: fromPromise<Database, OpenDatabaseInput>(
       async ({ input }): Promise<Database> => {
-        const database = openDatabase(join(input.home, 'argo.db'), {
-          convertLegacyAgentCatalog: serializeLegacyCatalogAgentRows,
-        });
+        const database = openDatabase(join(input.home, 'argo.db'));
         try {
           await seedProject(database);
           return database;
@@ -267,7 +264,7 @@ export const engineMachine = setup({
             input: ({ context, self }): HttpServerOptions => ({
               createId: context.createId,
               sessions: requireSessionRegistry(self.system),
-              registry: context.registry,
+              fetchAgents: context.fetchAgents,
               home: context.home,
               port: context.port,
               version: context.version,

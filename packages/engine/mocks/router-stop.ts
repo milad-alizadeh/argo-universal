@@ -1,10 +1,15 @@
 import { onTestFinished } from 'vitest';
 import { type Actor, waitFor } from 'xstate';
+import {
+  shutdownCatalogSyncSupervisor,
+  type CatalogSyncSupervisor,
+} from '../src/services/agents';
 import { type writerMachine } from '../src/services/feed';
 import { type RegistryActorRef } from '../src/services/sessions';
 import type { openTestDatabase } from './database';
 
 type RouterActors = {
+  catalogSync: CatalogSyncSupervisor;
   sessionRegistry: RegistryActorRef;
   databaseWriter: Actor<typeof writerMachine>;
 };
@@ -16,6 +21,7 @@ export function registerRouterStop(
   ownedDatabase: ReturnType<typeof openTestDatabase> | undefined,
 ): () => Promise<void> {
   const stop = async (): Promise<void> => {
+    await shutdownCatalogSyncSupervisor(actors.catalogSync);
     await stopRouterActors(actors);
     if (ownedDatabase?.database.$client.isOpen) ownedDatabase.remove();
   };

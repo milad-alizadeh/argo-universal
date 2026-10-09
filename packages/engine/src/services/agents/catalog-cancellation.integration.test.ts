@@ -2,7 +2,7 @@ import { agents } from '@repo/db/schema';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { afterEach, expect, it, vi } from 'vitest';
 import { startRouterTestHost } from '#mocks/router';
-import type { RegistryPort } from './index';
+import type { FetchAgents } from './index';
 
 afterEach(() => vi.useRealTimers());
 
@@ -11,12 +11,10 @@ it.each(['timeout', 'shutdown'] as const)(
   async (reason): Promise<void> => {
     vi.useFakeTimers();
     const response = Promise.withResolvers<unknown>();
-    const readRegistry = vi.fn<RegistryPort['readRegistry']>(
-      () => response.promise,
-    );
+    const fetchAgents = vi.fn<FetchAgents>(() => response.promise);
     const shutdown = new AbortController();
     const { caller, context } = startRouterTestHost({
-      registry: { readRegistry },
+      fetchAgents,
       sessionCommandSignal: shutdown.signal,
     });
     const synchronization = caller.agents.syncCatalog();
@@ -27,7 +25,7 @@ it.each(['timeout', 'shutdown'] as const)(
       changedIds: [],
       error: expect.stringMatching(/20 seconds|cancelled/),
     });
-    expect(readRegistry.mock.calls[0]?.[0].aborted).toBe(true);
+    expect(fetchAgents.mock.calls[0]?.[0].aborted).toBe(true);
     response.resolve(publishedRegistry);
     await vi.advanceTimersByTimeAsync(0);
     expect(context.database.select().from(agents).all()).toEqual([]);
@@ -35,17 +33,15 @@ it.each(['timeout', 'shutdown'] as const)(
 );
 
 it('does not start a Registry read after Server shutdown admission closes', async (): Promise<void> => {
-  const readRegistry = vi.fn<RegistryPort['readRegistry']>(
-    async () => publishedRegistry,
-  );
+  const fetchAgents = vi.fn<FetchAgents>(async () => publishedRegistry);
   const shutdown = new AbortController();
   shutdown.abort();
   const { caller } = startRouterTestHost({
-    registry: { readRegistry },
+    fetchAgents,
     sessionCommandSignal: shutdown.signal,
   });
   expect(await caller.agents.syncCatalog()).toMatchObject({
     error: 'Registry sync was cancelled',
   });
-  expect(readRegistry).not.toHaveBeenCalled();
+  expect(fetchAgents).not.toHaveBeenCalled();
 });

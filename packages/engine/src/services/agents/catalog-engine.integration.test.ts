@@ -9,16 +9,16 @@ it('serves its SQLite last-good catalog over HTTP after the actual Engine restar
   const history = stored.database.select().from(session).all();
   stored.database.$client.close();
   onTestFinished(stored.remove);
-  const readRegistry = vi.fn<() => Promise<unknown>>(
+  const fetchAgents = vi.fn<() => Promise<unknown>>(
     async (): Promise<unknown> => publishedRegistry,
   );
-  const first = await startCatalogEngine(stored.directory, { readRegistry });
-  expect(readRegistry).not.toHaveBeenCalled();
+  const first = await startCatalogEngine(stored.directory, fetchAgents);
+  expect(fetchAgents).not.toHaveBeenCalled();
   const beforeSync = await fetch(first.url);
   expect(await beforeSync.json()).toMatchObject({
     result: { data: { agents: [], status: 'unavailable' } },
   });
-  expect(readRegistry).not.toHaveBeenCalled();
+  expect(fetchAgents).not.toHaveBeenCalled();
   await fetch(first.url.replace('agents.catalog', 'agents.syncCatalog'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -42,11 +42,12 @@ it('serves its SQLite last-good catalog over HTTP after the actual Engine restar
     .from(agents)
     .all();
   await first.stop();
-  const restarted = await startCatalogEngine(stored.directory, {
-    readRegistry: async (): Promise<never> => {
+  const restarted = await startCatalogEngine(
+    stored.directory,
+    async (): Promise<never> => {
       throw new Error('Registry is offline');
     },
-  });
+  );
   await fetch(restarted.url.replace('agents.catalog', 'agents.syncCatalog'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

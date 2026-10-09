@@ -7,23 +7,16 @@ import {
 import type { Database } from '@repo/db';
 import { agents } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
-import { createRegistryReader } from './registry';
+import { createRegistryReader } from './registry-reader';
 
-export function createCatalogAgentRecord(
+function createCatalogAgentRecord(
   agent: ACPAgent,
   syncedAt: number,
 ): AgentRecord {
   return {
-    id: createInitialLocalAgentId(agent.id),
+    id: randomUUID(),
     ...createCatalogOwnedFields(agent, syncedAt),
   };
-}
-
-function createInitialLocalAgentId(registryId: string): string {
-  const legacyRegistryIds = new Set(['claude-acp', 'codex-acp']);
-  return legacyRegistryIds.has(registryId)
-    ? registryId.replace(/-acp$/u, '')
-    : randomUUID();
 }
 
 type CatalogTransaction = Pick<Database, 'select' | 'update' | 'insert'>;
@@ -89,22 +82,6 @@ function upsertCatalogAgent(
     .run();
 }
 
-export function serializeLegacyCatalogAgentRows(
-  payload: unknown,
-  fetchedAt: unknown,
-): string {
-  const reader = createRegistryReader();
-  try {
-    const syncedAt = readLegacyCatalogTimestamp(fetchedAt, reader);
-    const registry = reader.parse(payload);
-    return JSON.stringify(
-      registry.agents.map((agent) => createCatalogAgentRecord(agent, syncedAt)),
-    );
-  } catch {
-    return '[]';
-  }
-}
-
 export function readCatalogAgentRecords(
   database: Database,
   reader: ReturnType<typeof createRegistryReader>,
@@ -129,17 +106,6 @@ function hydrateCatalogAgentRecord(
   if (agent.id !== record.registryId)
     reader.reject('Stored Agent registry identity does not match metadata');
   return { record, agent };
-}
-
-function readLegacyCatalogTimestamp(
-  fetchedAt: unknown,
-  reader: ReturnType<typeof createRegistryReader>,
-): number {
-  if (typeof fetchedAt !== 'number')
-    return reader.reject('Legacy registry timestamp is malformed');
-  if (!Number.isSafeInteger(fetchedAt))
-    return reader.reject('Legacy registry timestamp is malformed');
-  return fetchedAt;
 }
 
 function createCatalogOwnedFields(

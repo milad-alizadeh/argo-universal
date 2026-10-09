@@ -1,6 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { createRejectionCounter } from '../lib/count-rejections';
-import { createAgentCatalog, type AgentCatalogInput } from '../services/agents';
+import {
+  startCatalogSyncSupervisor,
+  type StartCatalogSyncSupervisorInput,
+} from '../services/agents';
 import type { uploadBlob } from '../services/blob';
 import { type FeedDeps, findDatabaseWriter } from '../services/feed';
 import {
@@ -20,7 +23,7 @@ export type Context = Pick<HttpServerOptions, 'sessions' | 'createId'> &
     sessionCommandSignal?: AbortSignal;
     projectRejections: ReturnType<typeof createRejectionCounter>;
     sessionList: ReturnType<typeof createSessionList>;
-    agentCatalog: ReturnType<typeof createAgentCatalog>;
+    catalogSync: ReturnType<typeof startCatalogSyncSupervisor>;
   };
 
 export function createEngineContext(
@@ -29,7 +32,7 @@ export function createEngineContext(
     Parameters<typeof uploadBlob>[0] &
     SystemDeps &
     Pick<Context, 'sessionCommandSignal'> &
-    Pick<AgentCatalogInput, 'registry' | 'platform'>,
+    Pick<StartCatalogSyncSupervisorInput, 'fetchAgents' | 'platform'>,
 ): Context {
   const findSession = (sessionId: string): SessionActorRef | undefined =>
     findSessionActor(engineOptions.sessions.system, sessionId);
@@ -56,6 +59,6 @@ export function createEngineContext(
       findWriter,
     }),
     sessionList: createSessionList(engineOptions),
-    agentCatalog: createAgentCatalog(engineOptions),
+    catalogSync: startCatalogSyncSupervisor(engineOptions),
   };
 }
