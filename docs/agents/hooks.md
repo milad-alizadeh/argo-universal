@@ -6,6 +6,7 @@ Claude Code and Codex run one script, `tools/agent-hooks.mts`, from `.claude/set
 
 - **After each edit:** oxlint checks the JavaScript and TypeScript files you just edited and reports; it never rewrites them. Every finding counts, warnings included, except unused imports and variables, because your next edit often adds the use. A finding comes back to you as feedback: fix it in your next edit.
 - **Before you finish:** when a JavaScript, TypeScript, JSON, JSONC, CSS or YAML file changed, the hook formats the changed files with oxfmt, runs oxlint with type-aware rules on the changed scripts, and runs `turbo run check-types --affected` if TypeScript changed. A failure blocks your stop once and shows the first lines of output: fix them. The formatter may have rewritten files, so read a file again before you edit it. A second stop always passes, so report anything you leave failing.
+- **After each Paper write:** `tools/paper-drift-hook.mts` warns when the edit touched a registered master or a copy of one; see [Paper](paper.md). It only adds context and never blocks.
 - A finding in a folder that `tooling/oxlint/not-yet-cleared.json` lists is off for that folder; never add a folder or a rule to that list, fix the code.
 - Run `node tools/not-yet-cleared.mts prune` after clearing a folder or rule; it removes stale waivers and empty entries.
 - Hooks run no tests. Run the Vitest, Storybook or Playwright tests your change touches yourself, and `pnpm quality` before you hand back.
