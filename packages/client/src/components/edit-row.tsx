@@ -17,6 +17,7 @@ import { DiffView } from './diff-view';
 import { DisclosureCaret } from './disclosure-caret';
 import { FileName } from './file-name';
 import { fileTypeIcon } from './file-type-icon';
+import { ToolOutput } from './tool-output';
 
 export interface EditRowProps {
   row: ToolCallUpdate;
@@ -96,7 +97,7 @@ function FileEdit({
 }
 
 // One Tool call can edit several files; each expands its diff inline.
-export function EditRow({ row }: EditRowProps): React.JSX.Element {
+function FileEdits({ row }: EditRowProps): React.JSX.Element {
   const files = useMemo(
     () =>
       row.content.flatMap((block) =>
@@ -161,5 +162,16 @@ export function EditRow({ row }: EditRowProps): React.JSX.Element {
         ))}
       </CollapsibleContent>
     </Collapsible>
+  );
+}
+
+export function EditRow({ row }: EditRowProps): React.JSX.Element {
+  return (
+    <View className="gap-2">
+      <FileEdits row={row} />
+      <ToolOutput
+        content={row.content.filter((block) => block.type !== 'diff')}
+      />
+    </View>
   );
 }

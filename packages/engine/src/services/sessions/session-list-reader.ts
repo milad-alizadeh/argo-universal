@@ -1,5 +1,10 @@
 import type { SessionUpdate } from '@repo/contracts';
-import { SessionInfo, SessionRecord, Turn } from '@repo/contracts';
+import {
+  SessionInfo,
+  SessionRecord,
+  Turn,
+  selectLatestPlanRow,
+} from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
 import {
@@ -402,7 +407,13 @@ function readSessionInformation(
           .where(
             and(eq(feedRow.sessionId, row.id), eq(feedRow.sessionUpdate, kind)),
           )
-          .orderBy(desc(feedRow.position))
+          .orderBy(
+            desc(
+              kind === 'plan_update'
+                ? sql`coalesce(json_extract(${feedRow.payload}, '$._meta.argo.contentRevision'), ${feedRow.revision})`
+                : feedRow.position,
+            ),
+          )
           .limit(1)
           .all()
           .map((stored): SessionUpdate | undefined =>
@@ -442,14 +453,7 @@ function readSessionInformation(
         { sessionUpdate: 'agent_message' }
       > => update.sessionUpdate === 'agent_message',
     ),
-    plan: updates.findLast(
-      (
-        update,
-      ): update is Extract<
-        import('@repo/contracts').SessionUpdate,
-        { sessionUpdate: 'plan_update' }
-      > => update.sessionUpdate === 'plan_update',
-    ),
+    plan: selectLatestPlanRow(updates),
     live: live?.context ?? null,
     feed: feedContext ?? null,
     liveHeaderRows: Object.values(header.rows),

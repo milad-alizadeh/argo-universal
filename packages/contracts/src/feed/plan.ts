@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { createFeedMeta } from './metadata';
 
 export const PlanEntryPriority = z.enum(['high', 'medium', 'low']);
 export type PlanEntryPriority = z.infer<typeof PlanEntryPriority>;
@@ -15,11 +16,7 @@ export const PlanEntry = z.strictObject({
   content: z.string(),
   priority: PlanEntryPriority,
   status: PlanEntryStatus,
-  _meta: z
-    .strictObject({
-      argo: z.strictObject({ activeForm: z.string().optional() }).optional(),
-    })
-    .optional(),
+  _meta: createFeedMeta(z.strictObject({ activeForm: z.string().optional() })),
 });
 export type PlanEntry = z.infer<typeof PlanEntry>;
 
@@ -28,6 +25,7 @@ export const PlanItems = z.strictObject({
   type: z.literal('items'),
   planId: z.string(),
   entries: z.array(PlanEntry),
+  _meta: createFeedMeta(z.strictObject({})),
 });
 export type PlanItems = z.infer<typeof PlanItems>;
 
@@ -36,19 +34,27 @@ export const PlanMarkdown = z.strictObject({
   type: z.literal('markdown'),
   planId: z.string(),
   content: z.string(),
-  _meta: z
-    .strictObject({
-      argo: z
-        .strictObject({
-          requestId: z.string().optional(),
-          filePath: z.string().optional(),
-          proposalOutcome: z.enum(['approved', 'kept_planning']).optional(),
-        })
-        .optional(),
-    })
-    .optional(),
+  _meta: createFeedMeta(
+    z.strictObject({
+      requestId: z.string().optional(),
+      filePath: z.string().optional(),
+      proposalOutcome: z.enum(['approved', 'kept_planning']).optional(),
+    }),
+  ),
 });
 export type PlanMarkdown = z.infer<typeof PlanMarkdown>;
 
-export const Plan = z.discriminatedUnion('type', [PlanItems, PlanMarkdown]);
+export const PlanFile = z.strictObject({
+  type: z.literal('file'),
+  planId: z.string(),
+  uri: z.string(),
+  _meta: createFeedMeta(z.strictObject({})),
+});
+export type PlanFile = z.infer<typeof PlanFile>;
+
+export const Plan = z.discriminatedUnion('type', [
+  PlanItems,
+  PlanMarkdown,
+  PlanFile,
+]);
 export type Plan = z.infer<typeof Plan>;

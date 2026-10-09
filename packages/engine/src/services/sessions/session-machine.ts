@@ -45,7 +45,7 @@ import { blobsFolderIn } from '../blob';
 import { findDatabaseWriter, publishTurnContent } from '../feed';
 import { userMessageChange } from '../feed';
 import { feedMachine } from '../feed';
-import { readWrittenRow } from '../feed';
+import { readWrittenRow, readUnaddressedPlan } from '../feed';
 import type { writerMachine } from '../feed';
 import {
   AcpSessionLifetime,
@@ -436,6 +436,7 @@ const sessionSetup = setup({
         assertEvent(event, 'acp.update');
         return {
           type: 'feed.acpUpdate',
+          acpSessionId: event.notification.sessionId,
           update: event.notification.update,
           turnId: context.activeTurnId,
         };
@@ -1082,6 +1083,15 @@ export const sessionMachine = sessionSetup.createMachine({
               writer: findDatabaseWriter(self.system),
               sessionId: context.sessionId,
               id,
+            }),
+          findUnaddressedPlan: (
+            acpSessionId,
+          ): ReturnType<typeof readUnaddressedPlan> =>
+            readUnaddressedPlan({
+              database: context.input.database,
+              writer: findDatabaseWriter(self.system),
+              sessionId: context.sessionId,
+              acpSessionId,
             }),
         }),
         onDone: [

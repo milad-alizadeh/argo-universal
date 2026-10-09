@@ -2,6 +2,7 @@ import { sessionUpdateKinds, sessionUpdateStates } from '@repo/db/schema';
 import { z } from 'zod';
 import { feedRowColumns } from '../columns';
 import { ContentBlock } from './content-block';
+import { createFeedMeta as meta } from './metadata';
 import { Plan } from './plan';
 import {
   CommandAction,
@@ -35,11 +36,6 @@ const kind = <Kind extends SessionUpdateKind>(
   feedRowColumns.shape.sessionUpdate.extract([value]);
 
 // `_meta` is ACP's extension slot; Argo's own fields live under `_meta.argo` (ADR-0006).
-const meta = <Extension extends z.ZodObject>(
-  extension: Extension,
-): z.ZodOptional<
-  z.ZodObject<{ argo: z.ZodOptional<Extension> }, z.core.$strict>
-> => z.strictObject({ argo: extension.optional() }).optional();
 const noExtensionMeta = meta(z.strictObject({}));
 
 const message = {
@@ -99,16 +95,23 @@ export const PlanUpdate = z.strictObject({
   ...envelope,
   sessionUpdate: kind('plan_update'),
   plan: Plan,
-  _meta: noExtensionMeta,
+  _meta: meta(
+    z.strictObject({
+      removed: z.boolean().optional(),
+      contentRevision: z.int().optional(),
+      unaddressedPlanAcpSessionId: z.string().optional(),
+    }),
+  ),
 });
 export type PlanUpdate = z.infer<typeof PlanUpdate>;
 
-export const CompactionStatus = z.enum([
+export const knownCompactionStatuses = [
   'in_progress',
   'completed',
   'failed',
   'cancelled',
-]);
+] as const;
+export const CompactionStatus = z.string();
 export type CompactionStatus = z.infer<typeof CompactionStatus>;
 
 export const CompactionUpdate = z.strictObject({
@@ -117,6 +120,7 @@ export const CompactionUpdate = z.strictObject({
   compactionId: z.string(),
   status: CompactionStatus,
   summary: z.array(ContentBlock).optional(),
+  error: z.string().optional(),
   _meta: noExtensionMeta,
 });
 export type CompactionUpdate = z.infer<typeof CompactionUpdate>;
@@ -135,7 +139,8 @@ export const SubagentUpdate = z.strictObject({
 });
 export type SubagentUpdate = z.infer<typeof SubagentUpdate>;
 
-export const NoticeSeverity = z.enum(['info', 'warning', 'error']);
+export const knownNoticeSeverities = ['info', 'warning', 'error'] as const;
+export const NoticeSeverity = z.string();
 export type NoticeSeverity = z.infer<typeof NoticeSeverity>;
 
 export const Notice = z.strictObject({

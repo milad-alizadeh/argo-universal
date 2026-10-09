@@ -5,6 +5,8 @@ import type { FeedActivity, FeedViewItem } from '../feed/feed-view';
 import { AgentMessage } from './agent-message';
 import { CommandRow } from './command-row';
 import { EditRow } from './edit-row';
+import { FeedCompaction, FeedNotice } from './feed-advisory';
+import { FeedPlan } from './feed-plan';
 import { ToolCallGroup } from './tool-call-group';
 import { ToolCallRow } from './tool-call-row';
 import { UserMessage } from './user-message';
@@ -14,7 +16,6 @@ export interface FeedItemProps {
   imageUrl: (blob: BlobRef) => string;
 }
 
-// Thoughts, Notices, Compaction and Turn ends get their rows in #148.
 const FeedActivityRow = memo(function FeedActivityRow({
   activity,
 }: {
@@ -24,10 +25,18 @@ const FeedActivityRow = memo(function FeedActivityRow({
     return activity.toolCalls.map((row) => (
       <ToolCallRow key={row.id} row={row} />
     ));
+  if (activity.type === 'row') return <FeedNotice row={activity.row} />;
   if (activity.type !== 'tool_call') return null;
   const { row } = activity;
-  if (row.kind === 'execute') return <CommandRow row={row} />;
-  if (row.kind === 'edit' || row.kind === 'delete' || row.kind === 'move')
+  if (
+    row.kind === 'execute' &&
+    row.content.some((block) => block.type === 'terminal')
+  )
+    return <CommandRow row={row} />;
+  if (
+    ['edit', 'delete', 'move'].includes(row.kind) &&
+    row.content.some((block) => block.type === 'diff')
+  )
     return <EditRow row={row} />;
   return <ToolCallRow row={row} />;
 });
@@ -48,7 +57,10 @@ export function isDrawnFeedItem(item: FeedViewItem): boolean {
     case 'row':
       return (
         item.row.sessionUpdate === 'user_message' ||
-        item.row.sessionUpdate === 'agent_message'
+        item.row.sessionUpdate === 'agent_message' ||
+        item.row.sessionUpdate === 'notice' ||
+        item.row.sessionUpdate === 'compaction_update' ||
+        item.row.sessionUpdate === 'plan_update'
       );
   }
 }
@@ -78,5 +90,9 @@ export const FeedItem = memo(function FeedItem({
   if (row.sessionUpdate === 'user_message')
     return <UserMessage row={row} imageUrl={imageUrl} />;
   if (row.sessionUpdate === 'agent_message') return <AgentMessage row={row} />;
+  if (row.sessionUpdate === 'notice') return <FeedNotice row={row} />;
+  if (row.sessionUpdate === 'compaction_update')
+    return <FeedCompaction row={row} />;
+  if (row.sessionUpdate === 'plan_update') return <FeedPlan plan={row.plan} />;
   return null;
 });

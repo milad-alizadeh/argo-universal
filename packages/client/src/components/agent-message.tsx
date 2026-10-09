@@ -1,6 +1,6 @@
 import type { AgentMessage as AgentMessageRow } from '@repo/contracts';
 import { memo } from 'react';
-import { FeedMarkdown } from './feed-markdown';
+import { FeedContent } from './feed-content';
 
 export interface AgentMessageProps {
   row: AgentMessageRow;
@@ -10,8 +10,5 @@ export interface AgentMessageProps {
 export const AgentMessage = memo(function AgentMessage({
   row,
 }: AgentMessageProps) {
-  const text = row.content
-    .flatMap((block) => (block.type === 'text' ? [block.text] : []))
-    .join('\n\n');
-  return <FeedMarkdown text={text} streaming={row.state === 'open'} />;
+  return <FeedContent content={row.content} streaming={row.state === 'open'} />;
 });

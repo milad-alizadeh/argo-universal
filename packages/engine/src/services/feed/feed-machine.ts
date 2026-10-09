@@ -1,5 +1,5 @@
 import type { SessionNotification } from '@agentclientprotocol/sdk';
-import type { FeedChange, SessionUpdate } from '@repo/contracts';
+import type { FeedChange, PlanUpdate, SessionUpdate } from '@repo/contracts';
 import type { session } from '@repo/db/schema';
 import {
   type ActorRefFrom,
@@ -18,7 +18,8 @@ import {
 } from './feed-change';
 import { promptBlobIds } from './feed-row';
 import type { FeedPublication } from './publication';
-import { assembleAcpMessage, type MessageStreams } from './updates/messages';
+import { applyAcpContentUpdate } from './updates/application';
+import type { MessageStreams } from './updates/message-identity';
 import { settleFeedTurn } from './updates/settlement';
 import type { WriterCommit } from './writer-commit';
 import type { WriterJob } from './writer-job';
@@ -42,10 +43,16 @@ export interface FeedInput extends Pick<
   nextPosition: number;
   // A row that has left memory, as last handed to the database writer.
   findWrittenRow: (id: string) => SessionUpdate | undefined;
+  findUnaddressedPlan?: (acpSessionId: string) => PlanUpdate | undefined;
 }
 
 export interface FeedContext
-  extends Feed, Pick<FeedInput, 'epoch' | 'findWrittenRow' | 'now'> {
+  extends
+    Feed,
+    Pick<
+      FeedInput,
+      'epoch' | 'findWrittenRow' | 'findUnaddressedPlan' | 'now'
+    > {
   activityAt: number;
   // Rows changed since the last write, in the order they first changed.
   changedRowIds: string[];
@@ -53,6 +60,7 @@ export interface FeedContext
   streamEvents: FeedStreamEvent[];
   rejectedChanges: number;
   messageStreams: MessageStreams;
+  unaddressedPlan?: { acpSessionId: string; rowId: string };
 }
 
 export type FeedEvent =
@@ -64,6 +72,7 @@ export type FeedEvent =
     }
   | {
       type: 'feed.acpUpdate';
+      acpSessionId: SessionNotification['sessionId'];
       update: SessionNotification['update'];
       turnId: string | null;
     }
@@ -129,11 +138,15 @@ export const feedMachine = setup({
   actions: {
     applyAcpUpdate: enqueueActions(({ context, event, enqueue }): void => {
       assertEvent(event, 'feed.acpUpdate');
-      const result = assembleAcpMessage({
+      const result = applyAcpContentUpdate({
         update: event.update,
+        acpSessionId: event.acpSessionId,
         turnId: event.turnId,
         feed: context,
         streams: context.messageStreams,
+        findWrittenRow: context.findWrittenRow,
+        findUnaddressedPlan: context.findUnaddressedPlan,
+        unaddressedPlan: context.unaddressedPlan,
       });
       if (!result) return;
       if ('rejection' in result) {
@@ -143,12 +156,24 @@ export const feedMachine = setup({
         });
         return;
       }
-      enqueue.assign({ messageStreams: result.streams });
-      enqueue.raise({
-        type: 'feed.change',
-        change: result.change,
-        turnId: event.turnId,
+      const id =
+        result.streamEvent.type === 'row.upsert'
+          ? result.streamEvent.row.id
+          : result.streamEvent.id;
+      enqueue.assign({
+        ...result.feed,
+        messageStreams: result.streams ?? context.messageStreams,
+        unaddressedPlan: result.unaddressedPlan ?? context.unaddressedPlan,
+        activityAt: context.now(),
+        changedRowIds: [...new Set([...context.changedRowIds, id])],
+        streamEvents: [...context.streamEvents, result.streamEvent],
       });
+      enqueue.raise({
+        type: feedChangeApplied,
+        settled: result.feed.rows[id]?.state === 'settled',
+      });
+      for (const reason of result.diagnostics ?? [])
+        enqueue.raise({ type: feedChangeRejected, reason });
     }),
     settleTurnRows: enqueueActions(({ context, event, enqueue }): void => {
       assertEvent(event, 'feed.completeTurn');

@@ -53,13 +53,13 @@ export interface FeedStandaloneRow {
   type: 'row';
   row: Exclude<
     SessionUpdate,
-    { sessionUpdate: 'tool_call_update' | 'agent_thought' | 'plan_update' }
+    { sessionUpdate: 'tool_call_update' | 'agent_thought' }
   >;
 }
 
 export type FeedViewItem = FeedActivity | FeedGroup | FeedStandaloneRow;
 
-// `toFeedView(rows, snapshot)` returns this shape; Plans sit outside the Feed flow.
+// Checklist Plans also sit above the Composer; markdown and file Plans are Feed rows.
 export interface FeedView {
   items: FeedViewItem[];
   plan: Plan | null;
