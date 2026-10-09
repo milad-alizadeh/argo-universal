@@ -23,7 +23,12 @@ import { registerRouterStop } from './router-stop';
 type RouterTestHostOptions = Partial<
   Omit<Parameters<typeof createEngineContext>[0], 'sessions'>
 > &
-  Partial<Pick<RegistryInput, 'adapters' | 'runtimeDirectory'>> &
+  Partial<
+    Pick<
+      RegistryInput,
+      'adapters' | 'runtimeDirectory' | 'acpResources' | 'resolveAgentLaunch'
+    >
+  > &
   Pick<CatalogInput, 'registry' | 'platform'>;
 
 export function startRouterTestHost(
@@ -49,6 +54,8 @@ export function startRouterTestHost(
       createId,
       now: (): number => Date.now(),
       adapters: engineOptions.adapters ?? [createMockAdapter()],
+      acpResources: engineOptions.acpResources,
+      resolveAgentLaunch: engineOptions.resolveAgentLaunch,
     },
   }).start();
   startCatalogForTest(sessionRegistry, { ...engineOptions, database });

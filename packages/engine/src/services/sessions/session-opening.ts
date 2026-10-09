@@ -40,6 +40,7 @@ function isInitialSessionStartup(
   const initialStates = [
     'loading',
     'creating',
+    { open: { acp: 'opening' } },
     { open: { live: 'starting' } },
   ] as const;
   return (
