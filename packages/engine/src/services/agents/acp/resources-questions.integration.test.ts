@@ -3,9 +3,9 @@ import { expect, it, vi } from 'vitest';
 import { acpPermission } from '#mocks/acp-requests';
 import {
   createResourcePeer,
-  resourceOpening,
-  resourceDestination,
-  resourceProcessAt,
+  createResourceOpening,
+  createResourceDestination,
+  requireResourceProcessAt,
 } from '#mocks/acp-resource';
 import { createAcpResources } from '../index';
 
@@ -20,12 +20,12 @@ it('unknown and withdrawn question ownership returns cancellation without consul
     },
   });
   const resources = createAcpResources(peer);
-  const survivor = await resources.open(resourceOpening());
+  const survivor = await resources.open(createResourceOpening());
   const abort = new AbortController();
   const opening = resources
     .open({
-      ...resourceOpening({
-        ...resourceDestination(),
+      ...createResourceOpening({
+        ...createResourceDestination(),
         requestPermission: () => {
           questions += 1;
           return { outcome: { outcome: 'cancelled' } };
@@ -44,7 +44,7 @@ it('unknown and withdrawn question ownership returns cancellation without consul
     .catch((error: unknown): unknown => error);
   await vi.waitFor(() => expect(requestedLoad).toBe(true));
   abort.abort();
-  const process = resourceProcessAt(peer.processes);
+  const process = requireResourceProcessAt(peer.processes);
   for (const sessionId of ['unknown', 'withdrawn']) {
     const response = await process.connection.client.request(
       'session/request_permission',

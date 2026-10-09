@@ -23,21 +23,25 @@ export class AcpRouting {
 
   public reserve(reservation: AcpReservation): void {
     if (reservation.sessionId !== undefined)
-      this.identify(reservation, reservation.sessionId);
+      this.bindSessionDestination(reservation, reservation.sessionId);
   }
-  public dispatch(reservation: AcpReservation): void {
+  public markOpeningEligibleForUpdates(reservation: AcpReservation): void {
     if (reservation.sessionId === undefined) this.openings.add(reservation);
   }
-  public find = (id: string | undefined): AcpReservation | undefined => {
-    const destination = this.locate(id);
+  public findSessionReservation = (
+    sessionId: string | undefined,
+  ): AcpReservation | undefined => {
+    const destination = this.locateSessionReservation(sessionId);
     if (!destination)
       this.rejections.report('Unknown or unavailable ACP session destination');
     return destination;
   };
-  private locate(id: string | undefined): AcpReservation | undefined {
-    return this.fenced || id === undefined
+  private locateSessionReservation(
+    sessionId: string | undefined,
+  ): AcpReservation | undefined {
+    return this.fenced || sessionId === undefined
       ? undefined
-      : this.destinations.get(id);
+      : this.destinations.get(sessionId);
   }
   public accept = (notification: SessionNotification): undefined => {
     if (this.fenced) return undefined;
@@ -46,20 +50,23 @@ export class AcpRouting {
     else this.buffer(notification);
     return undefined;
   };
-  public identify(reservation: AcpReservation, id: string): void {
-    if (this.destinations.has(id))
+  public bindSessionDestination(
+    reservation: AcpReservation,
+    sessionId: string,
+  ): void {
+    if (this.destinations.has(sessionId))
       throw new Error('ACP session identity is already owned');
-    reservation.sessionId = id;
-    this.destinations.set(id, reservation);
-    this.claim(reservation);
+    reservation.sessionId = sessionId;
+    this.destinations.set(sessionId, reservation);
+    this.deliverReservedEarlyUpdates(reservation);
     this.openings.delete(reservation);
-    this.expire();
+    this.rejectUnclaimableEarlyUpdates();
   }
   public release(reservation: AcpReservation): void {
     if (reservation.sessionId !== undefined)
       this.destinations.delete(reservation.sessionId);
     this.openings.delete(reservation);
-    this.expire();
+    this.rejectUnclaimableEarlyUpdates();
   }
   public fence(): void {
     this.fenced = true;
@@ -99,27 +106,28 @@ export class AcpRouting {
     this.fence();
     this.failed(error);
   }
-  private claim(reservation: AcpReservation): void {
-    const claimed = this.buffered.filter(
+  private deliverReservedEarlyUpdates(reservation: AcpReservation): void {
+    const reservedUpdates = this.buffered.filter(
       (row) =>
         row.notification.sessionId === reservation.sessionId &&
         row.eligible.has(reservation),
     );
-    for (const row of claimed) this.deliver(reservation, row.notification);
-    this.remove(new Set(claimed));
+    for (const row of reservedUpdates)
+      this.deliver(reservation, row.notification);
+    this.remove(new Set(reservedUpdates));
   }
-  private expire(): void {
-    const expired = this.buffered.filter(
+  private rejectUnclaimableEarlyUpdates(): void {
+    const unclaimableUpdates = this.buffered.filter(
       (row) =>
         ![...row.eligible].some((reservation) =>
           this.openings.has(reservation),
         ),
     );
-    for (const row of expired)
+    for (const row of unclaimableUpdates)
       this.rejections.report(
         `Unclaimed ACP early session update (${row.bytes} bytes)`,
       );
-    this.remove(new Set(expired));
+    this.remove(new Set(unclaimableUpdates));
   }
   private remove(rows: Set<EarlyUpdate>): void {
     this.buffered = this.buffered.filter((row) => !rows.has(row));

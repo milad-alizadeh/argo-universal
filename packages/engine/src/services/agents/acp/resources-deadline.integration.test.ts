@@ -1,10 +1,10 @@
 import { expect, it, onTestFinished, vi } from 'vitest';
 import { acpPermission } from '#mocks/acp-requests';
 import {
-  resourceOpening,
-  resourceDestination,
-  resourceProcessAt,
-  resourceUpdate,
+  createResourceOpening,
+  createResourceDestination,
+  requireResourceProcessAt,
+  createResourceUpdate,
   observeAcpRelease,
 } from '#mocks/acp-resource';
 import { createPressuredResource } from '#mocks/acp-write-pressure';
@@ -22,8 +22,8 @@ it('the close deadline bounds a blocked accepted write and retains ownership whi
   const pending = Promise.withResolvers<never>();
   let requested = false;
   const lease = await resources.open(
-    resourceOpening({
-      ...resourceDestination(),
+    createResourceOpening({
+      ...createResourceDestination(),
       failed: (error) => {
         failures.push(error);
       },
@@ -33,13 +33,13 @@ it('the close deadline bounds a blocked accepted write and retains ownership whi
       },
     }),
   );
-  const updates: ReturnType<typeof resourceUpdate>[] = [];
+  const updates: ReturnType<typeof createResourceUpdate>[] = [];
   const sibling = await resources.open(
-    resourceOpening(resourceDestination(updates)),
+    createResourceOpening(createResourceDestination(updates)),
   );
   const paused = pressure();
   onTestFinished(paused.resume);
-  const process = resourceProcessAt(peer.processes);
+  const process = requireResourceProcessAt(peer.processes);
   const permission = process.connection.client.request(
     'session/request_permission',
     {
@@ -59,15 +59,15 @@ it('the close deadline bounds a blocked accepted write and retains ownership whi
     new Error('ACP session close timed out; cleanup retained'),
   );
   const release = observeAcpRelease(lease);
-  await expect(resources.open(resourceOpening())).rejects.toThrow(
+  await expect(resources.open(createResourceOpening())).rejects.toThrow(
     'unavailable',
   );
   await process.connection.client.notify(
     'session/update',
-    resourceUpdate(sibling.sessionId),
+    createResourceUpdate(sibling.sessionId),
   );
   await vi.waitFor(() =>
-    expect(updates).toEqual([resourceUpdate(sibling.sessionId)]),
+    expect(updates).toEqual([createResourceUpdate(sibling.sessionId)]),
   );
   expect(process.terminations).toBe(0);
   expect(release.state.settled).toBe(false);

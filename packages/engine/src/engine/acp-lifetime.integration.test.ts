@@ -1,7 +1,7 @@
 import { expect, it, vi } from 'vitest';
 import { waitFor } from 'xstate';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
-import { resourceProcessAt } from '#mocks/acp-resource';
+import { requireResourceProcessAt } from '#mocks/acp-resource';
 import { findSessionActor } from '../services/sessions';
 
 it('Engine owns shared empty Sessions across App disconnection and waits for observed process exit', async () => {
@@ -23,7 +23,7 @@ it('Engine owns shared empty Sessions across App disconnection and waits for obs
     snapshot: { state: 'idle', activeTurnId: null },
   });
   await feed.return?.();
-  const process = resourceProcessAt(host.peer.processes);
+  const process = requireResourceProcessAt(host.peer.processes);
   expect(host.peer.processes).toHaveLength(1);
   expect(process.terminations).toBe(0);
   await host.caller.session.close({ sessionId: first.sessionId });
@@ -62,7 +62,7 @@ it('a failed Session close reports failure while retaining Feed until its proces
     'Internal error',
   );
   expect(closes).toBe(1);
-  const process = resourceProcessAt(host.peer.processes);
+  const process = requireResourceProcessAt(host.peer.processes);
   expect(process.terminations).toBe(1);
   process.exited.resolve();
   await vi.waitFor(() =>

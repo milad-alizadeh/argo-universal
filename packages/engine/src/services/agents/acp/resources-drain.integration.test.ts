@@ -2,9 +2,9 @@ import { expect, it, onTestFinished, vi } from 'vitest';
 import { acpPermission } from '#mocks/acp-requests';
 import {
   createResourcePeer,
-  resourceOpening,
-  resourceDestination,
-  resourceProcessAt,
+  createResourceOpening,
+  createResourceDestination,
+  requireResourceProcessAt,
 } from '#mocks/acp-resource';
 import { pauseAcpResponses } from '#mocks/acp-write-pressure';
 import { createAcpResources } from '../index';
@@ -22,8 +22,8 @@ it('closure waits for an accepted responder to finish writing under stream press
   const pending = Promise.withResolvers<never>();
   let requested = false;
   const lease = await resources.open(
-    resourceOpening({
-      ...resourceDestination(),
+    createResourceOpening({
+      ...createResourceDestination(),
       requestPermission: () => {
         requested = true;
         return pending.promise;
@@ -32,7 +32,7 @@ it('closure waits for an accepted responder to finish writing under stream press
   );
   if (!paused) throw new Error('Missing pressured stream');
   onTestFinished(paused.resume);
-  const process = resourceProcessAt(peer.processes);
+  const process = requireResourceProcessAt(peer.processes);
   const permission = process.connection.client
     .request('session/request_permission', {
       ...acpPermission,
@@ -63,8 +63,8 @@ it('a rejected accepted response write is surfaced and release still requires pr
   const failures: unknown[] = [];
   let requested = false;
   const lease = await resources.open(
-    resourceOpening({
-      ...resourceDestination(),
+    createResourceOpening({
+      ...createResourceDestination(),
       failed: (error) => {
         failures.push(error);
       },
@@ -76,7 +76,7 @@ it('a rejected accepted response write is surfaced and release still requires pr
   );
   if (!paused) throw new Error('Missing pressured stream');
   onTestFinished(paused.resume);
-  const process = resourceProcessAt(peer.processes);
+  const process = requireResourceProcessAt(peer.processes);
   const permission = process.connection.client
     .request('session/request_permission', {
       ...acpPermission,

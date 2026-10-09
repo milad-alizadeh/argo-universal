@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { expect, it, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
-import { resourceProcessAt } from '#mocks/acp-resource';
+import { requireResourceProcessAt } from '#mocks/acp-resource';
 import { findSessionActor } from '../services/sessions';
 const failedSessionId = 'opening-failed';
 
@@ -22,7 +22,7 @@ it('failed ACP startup retains an unstored Checkout and Feed until process clean
     })
     .catch((error: unknown): unknown => error);
   await vi.waitFor(() =>
-    expect(resourceProcessAt(host.peer.processes).terminations).toBe(1),
+    expect(requireResourceProcessAt(host.peer.processes).terminations).toBe(1),
   );
   const actor = findSessionActor(host.engine.system, failedSessionId);
   if (!actor) throw new Error('The opening Session lost its cleanup ownership');
@@ -31,7 +31,7 @@ it('failed ACP startup retains an unstored Checkout and Feed until process clean
   expect(host.context.findFeed(failedSessionId)?.getSnapshot().status).toBe(
     'active',
   );
-  resourceProcessAt(host.peer.processes).exited.resolve();
+  requireResourceProcessAt(host.peer.processes).exited.resolve();
   expect(await opening).toBeInstanceOf(Error);
   await vi.waitFor(() =>
     expect(

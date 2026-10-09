@@ -35,7 +35,9 @@ export class AcpResourceEntry {
       routing: this.routing,
       reservations: this.reservations,
     });
-    this.connection.observe((error) => this.cleanup.fail(error));
+    this.connection.observeResourceFailures((error) =>
+      this.cleanup.fail(error),
+    );
   }
   public closed(): Promise<void> {
     return this.cleanup.closed();
@@ -72,10 +74,10 @@ export class AcpResourceEntry {
       if (reservation.withdrawn)
         throw new DOMException('ACP opening was withdrawn', 'AbortError');
       reservation.dispatched = true;
-      this.routing.dispatch(reservation);
+      this.routing.markOpeningEligibleForUpdates(reservation);
     });
     if (reservation.sessionId === undefined)
-      this.routing.identify(reservation, opened.sessionId);
+      this.routing.bindSessionDestination(reservation, opened.sessionId);
     return this.handover(reservation, opened);
   }
   private async handover(
