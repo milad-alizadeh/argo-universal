@@ -1,7 +1,7 @@
 import type { Database } from '@repo/db';
 import { and, assertEvent, assign, fromPromise, setup, stateIn } from 'xstate';
 import {
-  commitWrittenPrefix,
+  acknowledgeWrittenPrefix,
   rejectPendingCommits,
   type PendingWriterCommit,
   type WriterCommit,
@@ -76,7 +76,7 @@ export const writerMachine = setup({
     }),
     dropBatch: assign({
       pendingCommits: ({ context }): PendingWriterCommit[] =>
-        commitWrittenPrefix(context.pendingCommits, context.batchSize),
+        acknowledgeWrittenPrefix(context.pendingCommits, context.batchSize),
       queue: ({ context }): WriterContext['queue'] =>
         context.queue.slice(context.batchSize),
       batchSize: 0,

@@ -4,21 +4,21 @@ export type WriterCommit = Pick<
 >;
 export type PendingWriterCommit = { through: number; committed: WriterCommit };
 
-export const commitWrittenPrefix = (
-  pending: PendingWriterCommit[],
-  batchSize: number,
+export const acknowledgeWrittenPrefix = (
+  pendingCommits: PendingWriterCommit[],
+  writtenCount: number,
 ): PendingWriterCommit[] => {
-  for (const entry of pending)
-    if (entry.through <= batchSize) entry.committed.resolve();
-  return pending
-    .filter((entry) => entry.through > batchSize)
-    .map((entry) => ({ ...entry, through: entry.through - batchSize }));
+  for (const entry of pendingCommits)
+    if (entry.through <= writtenCount) entry.committed.resolve();
+  return pendingCommits
+    .filter((entry) => entry.through > writtenCount)
+    .map((entry) => ({ ...entry, through: entry.through - writtenCount }));
 };
 
 export const rejectPendingCommits = (
-  pending: PendingWriterCommit[],
+  pendingCommits: PendingWriterCommit[],
   error: unknown,
 ): PendingWriterCommit[] => {
-  for (const entry of pending) entry.committed.reject(error);
+  for (const entry of pendingCommits) entry.committed.reject(error);
   return [];
 };

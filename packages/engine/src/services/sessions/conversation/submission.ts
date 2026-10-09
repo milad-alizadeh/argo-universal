@@ -35,16 +35,14 @@ const rejectPromptStorage = (error: unknown): never => {
     cause: error,
   });
 };
-const detachCommitLifetime =
-  (
-    subscription: Subscription,
-    signal: AbortSignal,
-    abort: () => void,
-  ): (() => void) =>
-  () => {
-    subscription.unsubscribe();
-    signal.removeEventListener('abort', abort);
-  };
+const stopWatchingCommitLifetime = (
+  subscription: Subscription,
+  signal: AbortSignal,
+  abort: () => void,
+): void => {
+  subscription.unsubscribe();
+  signal.removeEventListener('abort', abort);
+};
 const watchCommitLifetime = (
   feed: FeedActorRef,
   committed: PromiseWithResolvers<void>,
@@ -57,7 +55,7 @@ const watchCommitLifetime = (
     error: committed.reject,
   });
   signal.addEventListener('abort', abort, { once: true });
-  return detachCommitLifetime(subscription, signal, abort);
+  return () => stopWatchingCommitLifetime(subscription, signal, abort);
 };
 const enqueuePromptRow = (
   feed: FeedActorRef,
@@ -71,7 +69,7 @@ const enqueuePromptRow = (
     committed,
   });
 };
-const waitForPromptCommit = (
+const enqueuePromptAndWaitForCommit = (
   input: PromptCommitInput,
   signal: AbortSignal,
 ): Promise<void> => {
@@ -80,7 +78,7 @@ const waitForPromptCommit = (
   enqueuePromptRow(input.feed, input.submission, committed);
   return committed.promise.catch(rejectPromptStorage).finally(detach);
 };
-const preparePromptBlocks = (
+const readSupportedPromptBlocks = (
   input: PromptCommitInput,
 ): Promise<PromptRequest['prompt']> =>
   readAcpPromptContent({
@@ -93,9 +91,9 @@ export const commitLocalPrompt = async (
   input: PromptCommitInput,
   signal: AbortSignal,
 ): Promise<PromptRequest> => {
-  const prompt = await preparePromptBlocks(input);
+  const prompt = await readSupportedPromptBlocks(input);
   requirePromptAdmission(input.feed, signal);
-  await waitForPromptCommit(input, signal);
+  await enqueuePromptAndWaitForCommit(input, signal);
   signal.throwIfAborted();
   return { sessionId: input.lease.sessionId, prompt };
 };

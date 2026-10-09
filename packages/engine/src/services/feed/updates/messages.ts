@@ -55,7 +55,7 @@ const createMessageStream = (
   upstreamId,
   turnId: input.turnId,
 });
-const selectMessageStream = (
+const selectOrCreateMessageStream = (
   input: MessageInput,
   kind: MessageKind,
   upstreamId: string | null,
@@ -78,7 +78,7 @@ const createTextMessageRow = (message: TextMessage): FeedChange => ({
     content: [{ type: 'text', text: message.text }],
   },
 });
-const appendOrCreateMessage = (
+const createTextMessageChange = (
   feed: Feed,
   message: TextMessage,
 ): FeedChange => {
@@ -99,9 +99,9 @@ const createTextChunkChange = (
   const upstreamId = isMessageChunk(input.update)
     ? (input.update.messageId ?? null)
     : null;
-  const stream = selectMessageStream(input, kind, upstreamId);
+  const stream = selectOrCreateMessageStream(input, kind, upstreamId);
   return {
-    change: appendOrCreateMessage(input.feed, { id: stream.id, kind, text }),
+    change: createTextMessageChange(input.feed, { id: stream.id, kind, text }),
     streams: { ...input.streams, [kind]: stream },
   };
 };

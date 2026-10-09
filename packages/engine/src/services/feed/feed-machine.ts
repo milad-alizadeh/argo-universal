@@ -90,7 +90,7 @@ type WriterJobParameters = Pick<
 >;
 
 // Every changed row with the newest revision, as one job for the database writer.
-const rowsJob = ({
+const createRowsWriteRequest = ({
   context,
   event,
 }: {
@@ -115,7 +115,7 @@ const rowsJob = ({
 };
 
 const writeRows = [
-  { type: 'sendToWriter', params: rowsJob },
+  { type: 'sendToWriter', params: createRowsWriteRequest },
   'dropWrittenRows',
 ] as const;
 

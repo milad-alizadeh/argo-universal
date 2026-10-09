@@ -14,7 +14,7 @@ const CompletedRow = z.object({
 const CompletedFeed = z.object({
   rows: z.tuple([CompletedRow, CompletedRow, CompletedRow, CompletedRow]),
 });
-const readCompletedTurns = (
+const readCompletedPromptFeed = (
   page: Page,
   httpUrl: string,
 ): Promise<z.infer<typeof CompletedFeed>> =>
@@ -52,6 +52,8 @@ Then(
         .getByTestId('feed-scroll')
         .getByText('The shared fixture completed this Turn.', { exact: true }),
     ).toHaveCount(2);
-    expectSeparatePromptTurns(await readCompletedTurns(page, server.httpUrl));
+    expectSeparatePromptTurns(
+      await readCompletedPromptFeed(page, server.httpUrl),
+    );
   },
 );

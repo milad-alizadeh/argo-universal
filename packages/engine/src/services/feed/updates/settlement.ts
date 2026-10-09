@@ -11,7 +11,7 @@ const settleRow = (feed: Feed, rowId: string): FeedChangeResult =>
     { type: 'patch', id: rowId, set: { state: 'settled' } },
     feed.rows[rowId]?.turnId ?? null,
   );
-const openTurnRows = (feed: Feed, turnId: string): Feed['rows'][string][] =>
+const readOpenTurnRows = (feed: Feed, turnId: string): Feed['rows'][string][] =>
   Object.values(feed.rows).filter(
     (row) => row.turnId === turnId && row.state === 'open',
   );
@@ -19,7 +19,7 @@ export const settleFeedTurn = (
   feed: Feed,
   turnId: string,
 ): { feed: Feed; events: FeedStreamEvent[] } | { rejection: string } => {
-  const rows = openTurnRows(feed, turnId);
+  const rows = readOpenTurnRows(feed, turnId);
   const events: FeedStreamEvent[] = [];
   let currentFeed = feed;
   for (const row of rows) {

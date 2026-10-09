@@ -7,7 +7,7 @@ import { findDatabaseWriter } from '../feed';
 const commitFailureMessage = 'could not be saved';
 const rejectFeedInsertion =
   "CREATE TRIGGER reject_feed BEFORE INSERT ON feed_row BEGIN SELECT RAISE(FAIL, 'prompt storage unavailable'); END";
-const waitForWriterRetrySuccess = async (
+const dropFeedFailureTriggerAndWaitForWriter = async (
   host: Awaited<ReturnType<typeof startAcpEngine>>,
 ): Promise<void> => {
   host.context.database.$client.exec('DROP TRIGGER reject_feed');
@@ -31,7 +31,7 @@ it('initial prompted creation rejects a failed prompt commit and later retry nev
       prompt: [{ type: 'text', text: 'Never start' }],
     }),
   ).rejects.toThrow(commitFailureMessage);
-  await waitForWriterRetrySuccess(host);
+  await dropFeedFailureTriggerAndWaitForWriter(host);
   expect(requests).toEqual([]);
   expect(
     host.context.database.$client
@@ -134,7 +134,7 @@ it('a new explicit submission succeeds after a rejected commit and does not inhe
       prompt: [{ type: 'text', text: 'Failed' }],
     }),
   ).rejects.toThrow(commitFailureMessage);
-  await waitForWriterRetrySuccess(host);
+  await dropFeedFailureTriggerAndWaitForWriter(host);
   await host.caller.session.prompt({
     ...created,
     prompt: [{ type: 'text', text: 'Explicit retry' }],

@@ -31,7 +31,7 @@ const createPromptReplyHandler =
     });
     return { stopReason: 'end_turn' };
   };
-const createAppFixturePeer = (
+const createAppFixtureAgentApp = (
   scenario: AppFixtureOptions['scenario'],
 ): AgentApp =>
   agent()
@@ -70,7 +70,7 @@ export const createAppFixtureProcessLauncher =
   ): ((launch: { agentId: string }) => Promise<AppFixtureProcess>) =>
   async ({ agentId }) =>
     connectAppFixtureProcess(
-      createAppFixturePeer(
+      createAppFixtureAgentApp(
         AppFixtureOptions.parse(options[agentId] ?? {}).scenario,
       ),
     );

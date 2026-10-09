@@ -455,7 +455,7 @@ const sessionSetup = setup({
         return { pendingSubmission: event };
       },
     ),
-    acknowledgeSubmission: assign(
+    acknowledgeLocalPromptCommit: assign(
       (
         { context },
         prompt: PromptRequest,
@@ -960,6 +960,32 @@ const endedTurn = {
   }),
 } as const;
 
+const acpReleaseTransitions = [
+  {
+    guard: 'isUnstored',
+    target: discardingSessionTarget,
+    actions: {
+      type: 'endTurn',
+      params: { stopReason: 'cancelled' },
+    },
+  },
+  {
+    guard: 'hasEndedFeed',
+    target: closedSessionTarget,
+    actions: {
+      type: 'endTurn',
+      params: { stopReason: 'cancelled' },
+    },
+  },
+  {
+    target: 'flushing',
+    actions: {
+      type: 'endTurn',
+      params: { stopReason: 'cancelled' },
+    },
+  },
+] as const;
+
 export const sessionMachine = sessionSetup.createMachine({
   id: 'session',
   context: ({ input }): SessionContext => ({
@@ -1170,7 +1196,7 @@ export const sessionMachine = sessionSetup.createMachine({
                 onDone: {
                   target: 'activeTurn',
                   actions: {
-                    type: 'acknowledgeSubmission',
+                    type: 'acknowledgeLocalPromptCommit',
                     params: ({ event }) => event.output,
                   },
                 },
@@ -1274,31 +1300,7 @@ export const sessionMachine = sessionSetup.createMachine({
                   context,
                   findFeed: () => self.getSnapshot().children.feed,
                 }),
-                onDone: [
-                  {
-                    guard: 'isUnstored',
-                    target: discardingSessionTarget,
-                    actions: {
-                      type: 'endTurn',
-                      params: { stopReason: 'cancelled' },
-                    },
-                  },
-                  {
-                    guard: 'hasEndedFeed',
-                    target: closedSessionTarget,
-                    actions: {
-                      type: 'endTurn',
-                      params: { stopReason: 'cancelled' },
-                    },
-                  },
-                  {
-                    target: 'flushing',
-                    actions: {
-                      type: 'endTurn',
-                      params: { stopReason: 'cancelled' },
-                    },
-                  },
-                ],
+                onDone: acpReleaseTransitions,
                 onError: {
                   target: 'retainingCleanup',
                   actions: {
@@ -1319,31 +1321,7 @@ export const sessionMachine = sessionSetup.createMachine({
                   context,
                   findFeed: () => self.getSnapshot().children.feed,
                 }),
-                onDone: [
-                  {
-                    guard: 'isUnstored',
-                    target: discardingSessionTarget,
-                    actions: {
-                      type: 'endTurn',
-                      params: { stopReason: 'cancelled' },
-                    },
-                  },
-                  {
-                    guard: 'hasEndedFeed',
-                    target: closedSessionTarget,
-                    actions: {
-                      type: 'endTurn',
-                      params: { stopReason: 'cancelled' },
-                    },
-                  },
-                  {
-                    target: 'flushing',
-                    actions: {
-                      type: 'endTurn',
-                      params: { stopReason: 'cancelled' },
-                    },
-                  },
-                ],
+                onDone: acpReleaseTransitions,
               },
             },
             flushing: {

@@ -19,7 +19,7 @@ const readStoredBlob = (database: Database, reference: BlobRef): BlobRef => {
     throw new Error('The attached Blob metadata does not match storage');
   return accepted;
 };
-const requireBlobBounds = (reference: BlobRef): void => {
+const requireStoredBlobIdentityAndSize = (reference: BlobRef): void => {
   if (!/^[a-f0-9]{64}$/.test(reference.blobId))
     throw new Error('The attached Blob identity is invalid');
   if (reference.bytes > maxBlobUploadBytes)
@@ -30,7 +30,7 @@ export const readBlobBytes = async (
   reference: BlobRef,
 ): Promise<Buffer> => {
   const stored = readStoredBlob(storage.database, reference);
-  requireBlobBounds(stored);
+  requireStoredBlobIdentityAndSize(stored);
   const bytes = await readFile(join(storage.blobsFolder, stored.blobId));
   if (
     bytes.length !== stored.bytes ||
