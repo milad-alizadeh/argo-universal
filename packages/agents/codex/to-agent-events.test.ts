@@ -77,40 +77,26 @@ describe('recorded Turns', (): void => {
   );
 });
 
-it.each(['item/futureNotification', 'toString', 'constructor'])(
-  'rejects an unrecognised method %s without changing the Turn mapping',
-  (method): void => {
-    const mappingState = {
-      ...initialMappingState(),
-      vendorTurnId: 'unknown-method-turn',
-    };
-    const message = {
-      method,
-      params: { turnId: 'unknown-method-turn' },
-    };
+const unknownMethods = ['item/futureNotification', 'toString', 'constructor'];
+const turnContexts = [
+  {
+    name: 'active',
+    vendorTurnId: 'unknown-method-turn',
+    turnId: 'unknown-method-turn',
+  },
+  { name: 'idle/stale', vendorTurnId: null, turnId: 'stale-turn' },
+];
+it.each(
+  turnContexts.flatMap((context) =>
+    unknownMethods.map((method) => ({ ...context, method })),
+  ),
+)(
+  'rejects $method with the $name Turn context without changing its mapping',
+  ({ method, vendorTurnId, turnId }): void => {
+    const mappingState = { ...initialMappingState(), vendorTurnId };
+    const message = { method, params: { turnId } };
     expect(
       Reflect.apply(toAgentEvents, undefined, [message, mappingState]),
-    ).toEqual({
-      events: [
-        {
-          type: 'agent.messageRejected',
-          reason: 'Unrecognised vendor payload',
-        },
-      ],
-      mappingState,
-    });
-  },
-);
-
-it.each(['item/futureNotification', 'toString', 'constructor'])(
-  'rejects an unrecognised method %s even outside the current Turn',
-  (method): void => {
-    const mappingState = initialMappingState();
-    expect(
-      Reflect.apply(toAgentEvents, undefined, [
-        { method, params: { turnId: 'stale-turn' } },
-        mappingState,
-      ]),
     ).toEqual({
       events: [
         {
