@@ -36,7 +36,7 @@
   "exports": {
     "./machine": "./src/engine/machine.ts",
     "./router": "./src/engine/router.ts",
-    "./mocks": "./mocks/router.ts",
+    "./mocks": "./mocks/engine.ts",
     "./ipc": "./src/engine/ipc.ts",
     "./rejections": "./src/lib/count-rejections.ts",
     "./server-runtime": "./src/server-runtime.mts"
