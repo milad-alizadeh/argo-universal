@@ -108,12 +108,36 @@ function beforeStop(input: HookInput): number {
   return block(checkChanged(files));
 }
 
-const command = process.argv[2];
-if (command !== 'after-edit' && command !== 'before-stop') {
-  process.stderr.write('usage: agent-hooks.mts after-edit|before-stop\n');
+// Context for the agent that neither Claude Code nor Codex treats as a failure.
+function addContext(additionalContext: string | undefined): void {
+  if (additionalContext === undefined) return;
+  const hookSpecificOutput = {
+    hookEventName: 'PostToolUse',
+    additionalContext,
+  };
+  process.stdout.write(JSON.stringify({ hookSpecificOutput }));
+}
+
+// Loaded only in this mode, so the lint hooks never depend on the Paper tools.
+async function afterPaperEdit(raw: unknown): Promise<void> {
+  const { paperEditContext } = await import('./paper-drift/edit-hook.mts');
+  addContext(paperEditContext(raw));
+}
+
+const COMMANDS = new Set(['after-edit', 'after-paper-edit', 'before-stop']);
+const command = process.argv[2] ?? '';
+if (!COMMANDS.has(command)) {
+  process.stderr.write(
+    'usage: agent-hooks.mts after-edit|after-paper-edit|before-stop\n',
+  );
   process.exit(1);
 }
-const parsed = hookInput.safeParse(parseJson(await readStdin()));
+const raw = parseJson(await readStdin());
+if (command === 'after-paper-edit') {
+  await afterPaperEdit(raw);
+  process.exit(0);
+}
+const parsed = hookInput.safeParse(raw);
 if (!parsed.success) {
   process.stderr.write('agent-hooks: unrecognised hook input; skipped\n');
   process.exit(0);

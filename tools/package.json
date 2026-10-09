@@ -4,14 +4,29 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "check-types": "tsc --noEmit",
+    "paper:audit": "node paper-drift.mts audit",
+    "paper:levels": "node paper-drift.mts levels",
+    "paper:registry": "node paper-drift.mts registry",
+    "paper:rename": "node paper-drift.mts rename",
+    "paper:snapshot": "node paper-drift.mts snapshot",
+    "paper:sync": "node paper-drift.mts sync",
+    "paper:tokens": "node paper-drift.mts tokens",
     "test": "vitest run"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "catalog:",
+    "culori": "catalog:",
     "jsonc-parser": "catalog:",
+    "tailwindcss": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@repo/typescript": "workspace:*",
     "@repo/vitest": "workspace:*",
+    "@types/culori": "catalog:",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
     "vitest": "catalog:"
   }
 }
