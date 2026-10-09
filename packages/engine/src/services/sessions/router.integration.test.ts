@@ -1,14 +1,31 @@
 import type { AgentReady, VendorCommand } from '@repo/agents';
-import { permissionOptions } from '@repo/contracts';
+import {
+  permissionOptions,
+  type SessionSnapshot,
+  type SessionAnswerElicitationInput,
+  type SessionSetConfigOptionInput,
+  type SessionListInput,
+} from '@repo/contracts';
 import {
   createMockAdapter,
   mockReady,
+  type MockAgentScript,
   type MockAgentStream,
 } from '@repo/mocks/agent';
 import { expect, it, vi } from 'vitest';
 import { createRouterHost } from '#mocks/router';
 
 const alreadyAnswered = 'already answered';
+const permissionAnswer = 'agent.answerPermission';
+
+async function snapshot(
+  subscribe: ReturnType<typeof createRouterHost>['caller']['feed']['subscribe'],
+): Promise<SessionSnapshot> {
+  const events = await subscribe({ sessionId: 'session-1', after: null });
+  for await (const event of events)
+    if (event.type === 'snapshot') return event.snapshot;
+  throw new Error('No Session snapshot');
+}
 
 async function answering(ready: AgentReady = mockReady): Promise<
   ReturnType<typeof createRouterHost> & {
@@ -37,9 +54,11 @@ async function answering(ready: AgentReady = mockReady): Promise<
   return { ...host, stream, commands };
 }
 
-it('answers only the current Permission and preserves its option and feedback', async (): Promise<void> => {
-  const { caller, stream, commands } = await answering();
-  stream.send({
+async function permitting(
+  ready: AgentReady = mockReady,
+): Promise<Awaited<ReturnType<typeof answering>>> {
+  const host = await answering(ready);
+  host.stream.send({
     type: 'agent.permissionRequested',
     request: {
       toolCallId: 'current',
@@ -47,6 +66,23 @@ it('answers only the current Permission and preserves its option and feedback', 
       options: permissionOptions,
     },
   });
+  return host;
+}
+
+async function answeredPermission(): Promise<
+  Awaited<ReturnType<typeof permitting>>
+> {
+  const host = await permitting();
+  await host.caller.session.answerPermission({
+    sessionId: 'session-1',
+    toolCallId: 'current',
+    optionId: 'allow_once',
+  });
+  return host;
+}
+
+it('preserves the current Permission option and feedback when answering', async (): Promise<void> => {
+  const { caller, commands } = await permitting();
   expect(
     await caller.session.answerPermission({
       sessionId: 'session-1',
@@ -57,12 +93,16 @@ it('answers only the current Permission and preserves its option and feedback', 
   ).toEqual({});
   await vi.waitFor((): void =>
     expect(commands).toContainEqual({
-      type: 'agent.answerPermission',
+      type: permissionAnswer,
       toolCallId: 'current',
       optionId: 'reject_once',
       message: 'Use a safer command',
     }),
   );
+});
+
+it('rejects an already answered Permission', async (): Promise<void> => {
+  const { caller } = await answeredPermission();
   await expect(
     caller.session.answerPermission({
       sessionId: 'session-1',
@@ -73,17 +113,9 @@ it('answers only the current Permission and preserves its option and feedback', 
 });
 
 it('rejects unsupported Permission feedback without consuming the request', async (): Promise<void> => {
-  const { caller, stream } = await answering({
+  const { caller, commands } = await permitting({
     ...mockReady,
     capabilities: { ...mockReady.capabilities, permissionFeedback: false },
-  });
-  stream.send({
-    type: 'agent.permissionRequested',
-    request: {
-      toolCallId: 'current',
-      title: 'Run command',
-      options: permissionOptions,
-    },
   });
   await expect(
     caller.session.answerPermission({
@@ -97,17 +129,43 @@ it('rejects unsupported Permission feedback without consuming the request', asyn
     message: 'The Agent does not support Permission feedback',
   });
   expect(
+    (await snapshot(caller.feed.subscribe)).pendingPermission,
+  ).toMatchObject({
+    toolCallId: 'current',
+  });
+  expect(
+    commands.some((command): boolean => command.type === permissionAnswer),
+  ).toBe(false);
+});
+
+it('answers a Permission without feedback when feedback is unsupported', async (): Promise<void> => {
+  const { caller, commands } = await permitting({
+    ...mockReady,
+    capabilities: { ...mockReady.capabilities, permissionFeedback: false },
+  });
+  expect(
     await caller.session.answerPermission({
       sessionId: 'session-1',
       toolCallId: 'current',
       optionId: 'allow_once',
     }),
   ).toEqual({});
+  await vi.waitFor((): void =>
+    expect(commands).toContainEqual({
+      type: permissionAnswer,
+      toolCallId: 'current',
+      optionId: 'allow_once',
+      message: undefined,
+    }),
+  );
 });
 
-it('validates Elicitation content against the current offered form before answering', async (): Promise<void> => {
-  const { caller, root, stream, commands } = await answering();
-  stream.send({
+async function eliciting(): Promise<
+  Awaited<ReturnType<typeof answering>> &
+    Pick<SessionAnswerElicitationInput, 'requestId'>
+> {
+  const host = await answering();
+  host.stream.send({
     type: 'agent.elicitationRequested',
     request: {
       mode: 'form',
@@ -118,11 +176,27 @@ it('validates Elicitation content against the current offered form before answer
       },
     },
   });
-  const requestId = root
-    .getSnapshot()
-    .context.sessions['session-1']?.getSnapshot().context
+  const requestId = (await snapshot(host.caller.feed.subscribe))
     .pendingElicitation?.requestId;
   if (!requestId) throw new Error('No Elicitation request');
+  return { ...host, requestId };
+}
+
+async function answeredElicitation(): Promise<
+  Awaited<ReturnType<typeof eliciting>>
+> {
+  const host = await eliciting();
+  await host.caller.session.answerElicitation({
+    sessionId: 'session-1',
+    requestId: host.requestId,
+    action: 'accept',
+    content: { count: 2 },
+  });
+  return host;
+}
+
+it('rejects a stale Elicitation identity', async (): Promise<void> => {
+  const { caller } = await eliciting();
   await expect(
     caller.session.answerElicitation({
       sessionId: 'session-1',
@@ -131,6 +205,10 @@ it('validates Elicitation content against the current offered form before answer
       content: { count: 2 },
     }),
   ).rejects.toMatchObject({ code: 'CONFLICT', message: alreadyAnswered });
+});
+
+it('rejects content outside the offered Elicitation form without consuming it', async (): Promise<void> => {
+  const { caller, requestId } = await eliciting();
   await expect(
     caller.session.answerElicitation({
       sessionId: 'session-1',
@@ -142,6 +220,13 @@ it('validates Elicitation content against the current offered form before answer
     code: 'BAD_REQUEST',
     message: 'The answer does not match the Elicitation form',
   });
+  expect(
+    (await snapshot(caller.feed.subscribe)).pendingElicitation?.requestId,
+  ).toBe(requestId);
+});
+
+it('delivers a valid current Elicitation answer', async (): Promise<void> => {
+  const { caller, requestId, commands } = await eliciting();
   expect(
     await caller.session.answerElicitation({
       sessionId: 'session-1',
@@ -157,6 +242,10 @@ it('validates Elicitation content against the current offered form before answer
       content: { count: 2 },
     }),
   );
+});
+
+it('rejects an already answered Elicitation', async (): Promise<void> => {
+  const { caller, requestId } = await answeredElicitation();
   await expect(
     caller.session.answerElicitation({
       sessionId: 'session-1',
@@ -166,87 +255,87 @@ it('validates Elicitation content against the current offered form before answer
   ).rejects.toMatchObject({ code: 'CONFLICT', message: alreadyAnswered });
 });
 
-it('returns held boolean and grouped select choices and rejects unoffered values', async (): Promise<void> => {
-  const configOptions: AgentReady['configOptions'] = [
-    { configId: 'fast', name: 'Fast', type: 'boolean', currentValue: false },
-    {
-      configId: 'model',
-      name: 'Model',
-      type: 'select',
-      currentValue: 'small',
-      options: [
-        {
-          groupId: 'models',
-          name: 'Models',
-          options: [
-            { value: 'small', name: 'Small' },
-            { value: 'large', name: 'Large' },
-          ],
-        },
-      ],
-    },
-  ];
-  const { caller, commands } = await answering({ ...mockReady, configOptions });
-  expect(
-    await caller.session.setConfigOption({
-      sessionId: 'session-1',
-      configId: 'fast',
-      type: 'boolean',
-      value: true,
-    }),
-  ).toMatchObject({
-    configOptions: [
-      { configId: 'fast', currentValue: true },
-      { configId: 'model' },
+const configOptions: AgentReady['configOptions'] = [
+  { configId: 'fast', name: 'Fast', type: 'boolean', currentValue: false },
+  {
+    configId: 'model',
+    name: 'Model',
+    type: 'select',
+    currentValue: 'small',
+    options: [
+      {
+        groupId: 'models',
+        name: 'Models',
+        options: [
+          { value: 'small', name: 'Small' },
+          { value: 'large', name: 'Large' },
+        ],
+      },
     ],
-  });
-  expect(
-    await caller.session.setConfigOption({
-      sessionId: 'session-1',
-      configId: 'model',
-      type: 'id',
-      value: 'large',
-    }),
-  ).toMatchObject({
-    configOptions: [
-      { configId: 'fast', currentValue: true },
-      { configId: 'model', currentValue: 'large' },
-    ],
-  });
-  await expect(
-    caller.session.setConfigOption({
-      sessionId: 'session-1',
-      configId: 'fast',
-      type: 'id',
-      value: 'true',
-    }),
-  ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
-  await expect(
-    caller.session.setConfigOption({
-      sessionId: 'session-1',
-      configId: 'model',
-      type: 'id',
-      value: 'unknown',
-    }),
-  ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
-  expect(
-    commands.filter(
-      (command): boolean => command.type === 'agent.setConfigOption',
-    ),
-  ).toEqual([]);
-});
+  },
+];
+const heldChoices: SessionSetConfigOptionInput[] = [
+  { sessionId: 'session-1', configId: 'fast', type: 'boolean', value: true },
+  { sessionId: 'session-1', configId: 'model', type: 'id', value: 'large' },
+];
+it.each(heldChoices)(
+  'returns the held $configId choice',
+  async (input): Promise<void> => {
+    const { caller, commands } = await answering({
+      ...mockReady,
+      configOptions,
+    });
+    const response = await caller.session.setConfigOption(input);
+    expect(
+      response.configOptions.find(
+        (option): boolean => option.configId === input.configId,
+      )?.currentValue,
+    ).toBe(input.value);
+    expect(
+      commands.some(
+        (command): boolean => command.type === 'agent.setConfigOption',
+      ),
+    ).toBe(false);
+  },
+);
 
-it('lists stored Sessions with both supported paging inputs through the real router', async (): Promise<void> => {
-  const { caller, root } = createRouterHost();
-  const expected = await caller.session.list({ archived: false });
-  expect(expected).toMatchObject({
-    sessions: [{ sessionId: 'session-1' }],
-    nextCursor: null,
-  });
-  expect(
-    await caller.session.list({ archived: false, direction: 'forward' }),
-  ).toEqual(expected);
-  expect(root.getSnapshot().context.sessions).toEqual({});
+const unofferedChoices: SessionSetConfigOptionInput[] = [
+  { sessionId: 'session-1', configId: 'fast', type: 'id', value: 'true' },
+  { sessionId: 'session-1', configId: 'model', type: 'id', value: 'unknown' },
+];
+it.each(unofferedChoices)(
+  'rejects the unoffered $configId=$value choice',
+  async (input): Promise<void> => {
+    const { caller } = await answering({ ...mockReady, configOptions });
+    await expect(caller.session.setConfigOption(input)).rejects.toMatchObject({
+      code: 'BAD_REQUEST',
+    });
+  },
+);
+
+const pagingInputs: SessionListInput[] = [
+  { archived: false },
+  { archived: false, direction: 'forward' },
+];
+it.each(pagingInputs)(
+  'lists stored Sessions without starting their Agent: %j',
+  async (input): Promise<void> => {
+    const connect = vi
+      .fn<NonNullable<MockAgentScript['connect']>>()
+      .mockResolvedValue(mockReady);
+    const { caller } = createRouterHost({
+      adapters: [createMockAdapter({ connect })],
+    });
+    expect(await caller.session.list(input)).toMatchObject({
+      sessions: [{ sessionId: 'session-1' }],
+      nextCursor: null,
+    });
+    expect(connect).not.toHaveBeenCalled();
+  },
+);
+
+it('rejects an unsupported Session paging direction', async (): Promise<void> => {
+  const { caller } = createRouterHost();
   await expect(
     Reflect.apply(caller.session.list, undefined, [
       { archived: false, direction: 'backward' },
@@ -254,39 +343,47 @@ it('lists stored Sessions with both supported paging inputs through the real rou
   ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
 });
 
-it('preserves the four unimplemented-operation errors and still validates their inputs', async (): Promise<void> => {
-  const { caller } = createRouterHost();
-  await expect(
-    caller.session.rename({ sessionId: 'session-1', title: 'New title' }),
-  ).rejects.toMatchObject({
-    code: 'NOT_IMPLEMENTED',
+it.each([
+  {
+    procedure: 'rename',
+    input: { sessionId: 'session-1', title: 'New title' },
     message: 'Session rename is not implemented yet',
-  });
-  await expect(
-    caller.session.answerPlanProposal({
-      sessionId: 'session-1',
-      planId: 'plan',
-      decision: 'approve',
-    }),
-  ).rejects.toMatchObject({
-    code: 'NOT_IMPLEMENTED',
+  },
+  {
+    procedure: 'answerPlanProposal',
+    input: { sessionId: 'session-1', planId: 'plan', decision: 'approve' },
     message: 'Plan proposal answers are not implemented yet',
-  });
-  await expect(
-    caller.session.changes({ sessionId: 'session-1' }),
-  ).rejects.toMatchObject({
-    code: 'NOT_IMPLEMENTED',
+  },
+  {
+    procedure: 'changes',
+    input: { sessionId: 'session-1' },
     message: 'This procedure is not implemented yet',
-  });
-  await expect(
-    caller.session.diff({ sessionId: 'session-1', path: 'file.ts' }),
-  ).rejects.toMatchObject({
-    code: 'NOT_IMPLEMENTED',
+  },
+  {
+    procedure: 'diff',
+    input: { sessionId: 'session-1', path: 'file.ts' },
     message: 'This procedure is not implemented yet',
-  });
-  await expect(
-    Reflect.apply(caller.session.rename, undefined, [
-      { sessionId: 'session-1', title: 42 },
-    ]),
-  ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
-});
+  },
+] as const)(
+  'preserves the unimplemented $procedure error',
+  async ({ procedure, input, message }): Promise<void> => {
+    const { caller } = createRouterHost();
+    await expect(
+      Reflect.apply(caller.session[procedure], undefined, [input]),
+    ).rejects.toMatchObject({ code: 'NOT_IMPLEMENTED', message });
+  },
+);
+
+it.each([
+  { sessionId: 'session-1' },
+  { sessionId: 'session-1', title: 42 },
+  { sessionId: 'session-1', title: 'New title', titleSource: 'manual' },
+])(
+  'rejects a malformed rename input before its handler: %j',
+  async (input): Promise<void> => {
+    const { caller } = createRouterHost();
+    await expect(
+      Reflect.apply(caller.session.rename, undefined, [input]),
+    ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
+  },
+);

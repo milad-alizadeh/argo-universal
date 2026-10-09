@@ -11,7 +11,7 @@ import { requireSessionActor, sendRegistryCommand } from './session-opening';
 
 async function checkoutProject(
   database: Context['database'],
-  input: SessionNewInput,
+  input: Pick<SessionNewInput, 'projectId' | 'checkout'>,
 ): Promise<string> {
   const projectPath = readProjectPath(database, input.projectId);
   if (

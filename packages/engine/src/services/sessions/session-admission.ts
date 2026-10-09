@@ -12,7 +12,10 @@ const alreadyAnswered = 'already answered';
 
 export function requirePermissionAnswer(
   actor: SessionActorRef,
-  input: SessionAnswerPermissionInput,
+  input: Pick<
+    SessionAnswerPermissionInput,
+    'toolCallId' | 'optionId' | 'message'
+  >,
 ): void {
   const snapshot = actor.getSnapshot();
   const request = snapshot.context.permissionQueue[0];
@@ -40,7 +43,10 @@ export function requirePermissionAnswer(
 
 export function requireElicitationAnswer(
   actor: SessionActorRef,
-  input: SessionAnswerElicitationInput,
+  input: Pick<
+    SessionAnswerElicitationInput,
+    'requestId' | 'action' | 'content'
+  >,
 ): void {
   const request = actor.getSnapshot().context.pendingElicitation;
   if (request?.requestId !== input.requestId)
@@ -59,7 +65,7 @@ export function requireElicitationAnswer(
 
 export function requireConfigChoice(
   actor: SessionActorRef,
-  input: SessionSetConfigOptionInput,
+  input: Pick<SessionSetConfigOptionInput, 'configId' | 'value'>,
 ): void {
   const option = actor
     .getSnapshot()
