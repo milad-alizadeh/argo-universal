@@ -17,9 +17,7 @@ export function IssueIndicator({
       className="flex-row items-center gap-1"
     >
       <Icon as={TicketIcon} className="shrink-0 text-muted-foreground" />
-      <Text className="text-xs font-normal leading-4 text-muted-foreground">
-        #{number}
-      </Text>
+      <Text className="type-secondary">#{number}</Text>
     </View>
   );
 }

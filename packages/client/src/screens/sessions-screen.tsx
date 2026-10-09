@@ -207,7 +207,7 @@ export function SessionsScreen({
           onRetry={listUpdates.reset}
         />
       )}
-      <Text className="h-8 pl-gutter pr-3 py-2 wide:pl-4.5 text-xs leading-4 font-medium text-muted-foreground">
+      <Text className="pl-gutter pr-3 py-1.5 wide:py-2 wide:pl-4.5 type-secondary">
         Projects
       </Text>
     </>

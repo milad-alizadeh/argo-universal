@@ -43,7 +43,7 @@ export const PaperRowDimensions: Story = {
   play: async ({ canvas, canvasElement }) => {
     const { page } = await import('vitest/browser');
     for (const [width, height] of [
-      [390, 92],
+      [390, 96],
       [1440, 76],
     ] as const) {
       await page.viewport(width, 844);
@@ -68,7 +68,11 @@ export const PaperMetadataDimensions: Story = {
   },
   play: async ({ canvas }) => {
     const { page } = await import('vitest/browser');
-    for (const width of [390, 1440]) {
+    // The Secondary text role: 14/20 on phone, 12/16 from the wide breakpoint.
+    for (const [width, fontSize, lineHeight] of [
+      [390, '14px', '20px'],
+      [1440, '12px', '16px'],
+    ] as const) {
       await page.viewport(width, 844);
       const groups = [
         canvas.getByLabelText('Plan: 5 of 5 complete'),
@@ -79,8 +83,8 @@ export const PaperMetadataDimensions: Story = {
       await expect(canvas.getByText('5/5')).toBeVisible();
       for (const text of ['5/5', '3', '#96', '#44']) {
         const style = getComputedStyle(canvas.getByText(text, { exact: true }));
-        await expect(style.fontSize).toBe('12px');
-        await expect(style.lineHeight).toBe('16px');
+        await expect(style.fontSize).toBe(fontSize);
+        await expect(style.lineHeight).toBe(lineHeight);
         await expect(style.fontWeight).toBe('400');
       }
       for (const group of groups.slice(1)) {
