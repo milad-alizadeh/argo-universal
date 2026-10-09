@@ -114,10 +114,27 @@ async function payloadFrom(
   }
 }
 
+const READ_ATTEMPTS = 3;
+
+// Paper times out now and then on one read of a long run; reads change nothing, so they are asked again.
+async function retried(read: () => Promise<unknown>): Promise<unknown> {
+  for (let attempt = 1; attempt < READ_ATTEMPTS; attempt += 1) {
+    try {
+      return await read();
+    } catch {
+      // The last attempt below reports the error.
+    }
+  }
+  return read();
+}
+
 function portFor(client: Client, fileId: string): PaperPort {
   return {
-    call: (tool, args): Promise<unknown> =>
-      payloadFrom(client, fileId, { tool, args }),
+    call: (tool, args): Promise<unknown> => {
+      const ask = (): Promise<unknown> =>
+        payloadFrom(client, fileId, { tool, args });
+      return tool.startsWith('get_') ? retried(ask) : ask();
+    },
     close: async (): Promise<void> => client.close(),
   };
 }

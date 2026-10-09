@@ -37,7 +37,7 @@ This doc is temporary. When Paper ships components ("Components with slots" on i
 
 The tools in `tools/paper-drift/` read the whole file through the Paper MCP. Only `paper:sync --apply`, `paper:rename --apply` and `paper:tokens --apply` write to Paper.
 
-- `pnpm -F @repo/tools paper:snapshot` reads every layer, its styles and the tokens into `.paper-drift/snapshot.json`. It takes about a minute; run it again whenever the file has changed.
+- `pnpm -F @repo/tools paper:snapshot` reads every layer, its styles and the tokens into `.paper-drift/snapshot.json`. It reads styles in small, paced batches, because whole-file reads have made Paper Desktop quit, so it takes several minutes; run it again whenever the file has changed.
 - `pnpm -F @repo/tools paper:audit` checks the last snapshot and writes `.paper-drift/audit.md` and `audit.json`:
   - every copy against its master, apart from the allowed changes;
   - every variation against its base with its props applied;
@@ -48,7 +48,7 @@ The tools in `tools/paper-drift/` read the whole file through the Paper MCP. Onl
 
   A change that keeps the value and only swaps the token (`--text-sm` for `--text-body-wide`) is marked "same value".
 - `pnpm -F @repo/tools paper:levels` writes `.paper-drift/levels.json`: the masters grouped by nesting depth, innermost first. `paper:sync` takes several names at once from one snapshot, so pass names from one level only, and take a new snapshot between levels. `--offline` plans from the last snapshot without touching Paper.
-- `pnpm -F @repo/tools paper:rename <map.json>` renames masters, every copy and the registry together, from a map of `renames` (`id`, `from`, `to`) and `aliases` (other spellings found on copies). It is a dry run against a fresh snapshot (`--offline` uses the last one) until you add `--apply`, which refuses while the plan lists problems.
+- `pnpm -F @repo/tools paper:rename <map.json>` renames masters, every copy and the registry together, from a map of `renames` (`id`, `from`, `to`) and `aliases` (other spellings found on copies). It is a dry run against a fresh read of the layer names, without styles (`--offline` uses the last snapshot), until you add `--apply`, which refuses while the plan lists problems.
 - `pnpm -F @repo/tools paper:tokens` plans to write the tokens in `theme.css`, with the Tailwind defaults their aliases name, into Paper: what it would add, change and leave alone. An alias stays an alias; any other value is written resolved, in px. A Paper token whose resolved value already matches is left as it is. Tokens only in Paper are listed, never deleted. Tokens Paper has no type for (shadows, blur) or whose value it cannot hold (`hairlineWidth()`) are listed and counted as unmapped. It reads Paper's tokens (`--offline` uses the last snapshot) and writes only with `--apply`.
 - `pnpm -F @repo/tools paper:sync "<Name>"` takes a fresh snapshot and plans, for each drifted copy of that master, to clone the master beside it, put back the copy's text, hidden items, placement and nested masters, and delete the old copy. Copies whose layers differ from the master's are listed for a person instead. Add `--apply` to carry it out; before and after screenshots go to `.paper-drift/sync/`. Never apply while someone else is editing the same artboards.
 
