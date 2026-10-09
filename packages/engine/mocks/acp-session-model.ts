@@ -11,13 +11,19 @@ import { sessionMachine } from '../src/services/sessions';
 
 export type AcpModelSnapshot = SnapshotFrom<typeof sessionMachine>;
 const closeEvent = 'session.close';
-const canLifecycleEvent = (
+const canApplyLifecycleEvent = (
   snapshot: AcpModelSnapshot,
   event: AcpModelEvent,
 ): boolean => {
   const invoking = {
     'xstate.done.actor.openAcp': 'opening',
     'xstate.error.actor.openAcp': 'opening',
+    'xstate.done.actor.commitPrompt': 'committing',
+    'xstate.error.actor.commitPrompt': 'committing',
+    'xstate.done.actor.promptAcp': { activeTurn: 'working' },
+    'xstate.error.actor.promptAcp': { activeTurn: 'working' },
+    'xstate.done.actor.publishTurn': 'publishing',
+    'xstate.error.actor.publishTurn': 'publishing',
     'xstate.done.actor.closeAcp': 'closing',
     'xstate.error.actor.closeAcp': 'closing',
     'xstate.done.actor.awaitAcpRelease': 'retainingCleanup',
@@ -31,10 +37,11 @@ const canLifecycleEvent = (
     );
   }
   if (event.type === closeEvent) return snapshot.can({ type: closeEvent });
+  if (event.type === 'session.prompt') return snapshot.can(event);
   return snapshot.matches({ open: 'acp' });
 };
 type AcpModelEvent = GraphEventFromLogic<typeof sessionMachine>;
-export const acpModel = (
+export const createAcpSessionModel = (
   initial: AcpModelSnapshot,
 ): {
   paths: StatePath<AcpModelSnapshot, AcpModelEvent>[];
@@ -56,6 +63,54 @@ export const acpModel = (
   });
   Object.assign(fromState.children, initial.children);
   const events = [
+    {
+      type: 'session.prompt',
+      turnId: 'model-turn',
+      content: [{ type: 'text', text: 'Model prompt' }],
+    },
+    {
+      type: 'xstate.done.actor.commitPrompt',
+      actorId: 'commitPrompt',
+      output: {
+        sessionId: lease.sessionId,
+        prompt: [{ type: 'text', text: 'Model prompt' }],
+      },
+    },
+    {
+      type: 'xstate.error.actor.commitPrompt',
+      actorId: 'commitPrompt',
+      error: new Error('commit failed'),
+    },
+    {
+      type: 'xstate.done.actor.promptAcp',
+      actorId: 'promptAcp',
+      output: { stopReason: 'end_turn' },
+    },
+    {
+      type: 'xstate.error.actor.promptAcp',
+      actorId: 'promptAcp',
+      error: new Error('prompt failed'),
+    },
+    {
+      type: 'xstate.done.actor.publishTurn',
+      actorId: 'publishTurn',
+      output: undefined,
+    },
+    {
+      type: 'xstate.error.actor.publishTurn',
+      actorId: 'publishTurn',
+      error: new Error('publication failed'),
+    },
+    {
+      type: 'acp.update',
+      notification: {
+        sessionId: lease.sessionId,
+        update: {
+          sessionUpdate: 'agent_message_chunk',
+          content: { type: 'text', text: 'Model reply' },
+        },
+      },
+    },
     { type: closeEvent },
     { type: 'acp.failed', error: new Error('connection failed') },
     { type: 'xstate.done.actor.openAcp', actorId: 'openAcp', output: lease },
@@ -93,7 +148,7 @@ export const acpModel = (
     limit: 1000,
     serializeEvent: (event: AcpModelEvent): string => event.type,
     filterEvents: (snapshot: AcpModelSnapshot, event: AcpModelEvent): boolean =>
-      snapshot.status === 'active' && canLifecycleEvent(snapshot, event),
+      snapshot.status === 'active' && canApplyLifecycleEvent(snapshot, event),
     serializeState: (
       snapshot: AcpModelSnapshot,
       event: AcpModelEvent | undefined,
@@ -103,6 +158,7 @@ export const acpModel = (
         value: snapshot.value,
         failure: snapshot.context.failure !== null,
         stored: snapshot.context.stored,
+        feedEnded: snapshot.context.feedEnded,
         via: event && `${JSON.stringify(previous?.value)} ${event.type}`,
       }),
   };

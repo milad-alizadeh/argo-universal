@@ -9,7 +9,7 @@ export const SessionPromptInput = z.strictObject({
 });
 export type SessionPromptInput = z.infer<typeof SessionPromptInput>;
 
-// Output of `session.prompt`, after ACP v2 `PromptResponse`: the id of the user message.
+// Local acknowledgement after saving the prompt; Agent completion arrives through the Session Feed.
 export const SessionPromptOutput = z.strictObject({
   messageId: z.string(),
 });

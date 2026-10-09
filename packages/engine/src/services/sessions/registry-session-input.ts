@@ -10,7 +10,7 @@ type OpenSession = Extract<
   { type: 'sessions.create' | 'sessions.open' }
 >;
 type SessionSource = { context: RegistryInput; event: OpenSession };
-const acpDependencies = (
+const createAcpSessionDependencies = (
   context: RegistryInput,
 ): AcpSessionDependencies | undefined => {
   if (!context.acpResources || !context.resolveAgentLaunch) return undefined;
@@ -21,7 +21,7 @@ const acpDependencies = (
   };
 };
 
-const creationInput = (
+const createSessionCreationInput = (
   event: Extract<RegistryCommand, { type: 'sessions.create' }>,
 ): Omit<NewSessionInput, 'database' | 'runtimeDirectory' | 'sessionId'> => ({
   kind: 'new',
@@ -43,9 +43,9 @@ export const createRegistrySessionInput = ({
   now: context.now,
   createId: context.createId,
   adapter: findAgentAdapter(event.agent, context.adapters ?? agentAdapters),
-  acp: acpDependencies(context),
+  acp: createAcpSessionDependencies(context),
   sessionId: event.sessionId,
   ...(event.type === 'sessions.create'
-    ? creationInput(event)
+    ? createSessionCreationInput(event)
     : { kind: 'existing' }),
 });

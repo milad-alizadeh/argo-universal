@@ -924,6 +924,9 @@ importers:
 
   mocks:
     dependencies:
+      '@agentclientprotocol/sdk':
+        specifier: 'catalog:'
+        version: 1.7.0(zod@4.6.5)
       '@repo/agents':
         specifier: workspace:*
         version: link:../packages/agents

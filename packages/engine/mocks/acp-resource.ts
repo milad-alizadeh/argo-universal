@@ -71,6 +71,7 @@ type ResourcePeerInput = {
   closeSession?: AgentRequestHandlersByMethod['session/close'];
   loadSession?: AgentRequestHandlersByMethod['session/load'];
   resumeSession?: AgentRequestHandlersByMethod['session/resume'];
+  prompt?: AgentRequestHandlersByMethod['session/prompt'];
 };
 type ResourceProcess = {
   launch: AgentLaunch;
@@ -122,6 +123,13 @@ export const createResourcePeer = (
         .onRequest(
           'session/resume',
           input.resumeSession ?? ((): ResumeSessionResponse => ({})),
+        )
+        .onRequest(
+          'session/prompt',
+          input.prompt ??
+            ((): import('@agentclientprotocol/sdk').PromptResponse => ({
+              stopReason: 'end_turn',
+            })),
         )
         .connect(ndJsonStream(incoming.writable, outgoing.readable));
       const process = {

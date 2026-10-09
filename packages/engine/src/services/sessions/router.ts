@@ -41,6 +41,7 @@ import {
 } from './session-command';
 import { createSession } from './session-creation';
 import { openReadySession } from './session-opening';
+import { submitSessionPrompt } from './session-submission';
 import { findSessionActor, requireLiveSessionActor } from './session-system';
 
 export const sessionRouter = router({
@@ -79,8 +80,7 @@ export const sessionRouter = router({
       const sessionActor = await openReadySession(ctx, input.sessionId);
       const turnId = ctx.createId();
       validateSessionCommandAdmission(ctx);
-      sendSessionCommand(sessionActor, {
-        type: 'session.prompt',
+      await submitSessionPrompt(sessionActor, {
         turnId,
         content: input.prompt,
       });
