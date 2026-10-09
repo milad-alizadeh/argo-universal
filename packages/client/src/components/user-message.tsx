@@ -62,12 +62,12 @@ function Bubble({ text }: { text: string }): React.JSX.Element {
     syncLayout();
   }, [clamped, syncLayout]);
   return (
-    <View className="max-w-[70%] gap-0.5 rounded-xl bg-muted px-4 py-2.5">
+    <View className="max-w-[70%] gap-0.5 rounded-xl bg-muted px-3.5 py-2.5 wide:px-3 wide:py-2">
       <View>
         <Text
           numberOfLines={expanded ? undefined : clampedLines}
           onLayout={(event) => setShownHeight(event.nativeEvent.layout.height)}
-          className="font-sans text-sm leading-5 text-foreground"
+          className="font-sans type-feed"
         >
           <TypedText text={text} />
         </Text>
@@ -75,7 +75,7 @@ function Bubble({ text }: { text: string }): React.JSX.Element {
           <Text
             aria-hidden
             onLayout={(event) => setFullHeight(event.nativeEvent.layout.height)}
-            className="pointer-events-none absolute top-0 right-0 left-0 font-sans text-sm leading-5 opacity-0"
+            className="pointer-events-none absolute top-0 right-0 left-0 font-sans type-feed opacity-0"
           >
             <TypedText text={text} />
           </Text>
@@ -83,7 +83,7 @@ function Bubble({ text }: { text: string }): React.JSX.Element {
       </View>
       {clamped && (
         <Pressable role="button" onPress={() => setExpanded(true)}>
-          <Text className="font-sans text-sm leading-5 text-muted-foreground">
+          <Text className="font-sans type-feed text-muted-foreground">
             Show more
           </Text>
         </Pressable>

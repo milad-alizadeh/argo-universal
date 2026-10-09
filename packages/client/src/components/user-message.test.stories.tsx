@@ -46,8 +46,14 @@ export const InlineCode: Story = {
       await expect(code.fontSize).toBe('12px');
       const prose = canvas.getAllByText(/^Run the shell command/)[0];
       if (!prose) throw new Error('Message prose is missing');
-      await expect(getComputedStyle(prose).fontSize).toBe('14px');
-      await expect(getComputedStyle(prose).lineHeight).toBe('20px');
+      // The Feed text role: 16/24 on phone, 14/22 from the wide breakpoint.
+      const phone = width === layoutWidths.phone;
+      await expect(getComputedStyle(prose).fontSize).toBe(
+        phone ? '16px' : '14px',
+      );
+      await expect(getComputedStyle(prose).lineHeight).toBe(
+        phone ? '24px' : '22px',
+      );
       await expect(
         canvas.queryByRole('button', { name: 'Show more' }),
       ).toBeNull();

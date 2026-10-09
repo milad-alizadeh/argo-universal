@@ -51,12 +51,12 @@ function FileEdit({
         variant="link"
         aria-label={`${verb} ${file.path}`}
         aria-expanded={open}
-        className="h-5 max-w-full self-start justify-start gap-1.5 rounded-none p-0 sm:h-5 has-[>svg]:px-0"
+        className="h-auto max-w-full self-start justify-start gap-1.5 rounded-none p-0 sm:h-auto has-[>svg]:px-0"
         onPress={() => setOpen(!open)}
       >
         <TextClassContext.Provider
           value={cn(
-            'select-none text-sm font-normal leading-5 text-muted-foreground group-hover:text-foreground',
+            'select-none type-feed text-muted-foreground group-hover:text-foreground',
             open && 'text-foreground',
           )}
         >
@@ -117,19 +117,19 @@ export function EditRow({ row }: EditRowProps): React.JSX.Element {
     return (
       <View className="min-h-5 flex-row items-center gap-1.5">
         <Icon as={PencilSimpleIcon} className="shrink-0 text-destructive" />
-        <Text className="text-sm font-normal leading-5 text-destructive">
+        <Text className="type-feed text-destructive">
           Couldn't edit
         </Text>
         {path ? (
           <FileName
             path={path}
-            className="text-sm leading-5 text-muted-foreground"
+            className="type-feed text-muted-foreground"
           />
         ) : null}
         {error ? (
           <Text
             numberOfLines={1}
-            className="min-w-0 shrink text-sm leading-5 text-muted-foreground"
+            className="min-w-0 shrink type-feed text-muted-foreground"
           >
             · {error}
           </Text>
@@ -142,14 +142,14 @@ export function EditRow({ row }: EditRowProps): React.JSX.Element {
     <Collapsible open={expanded}>
       <Button
         variant="link"
-        className="h-5 max-w-full self-start justify-start gap-1.5 rounded-none p-0 sm:h-5 has-[>svg]:px-0"
+        className="h-auto max-w-full self-start justify-start gap-1.5 rounded-none p-0 sm:h-auto has-[>svg]:px-0"
         aria-expanded={expanded}
         onPress={() => setExpanded(!expanded)}
       >
         <Icon as={PencilSimpleIcon} className="text-muted-foreground" />
         <Text
           selectable={false}
-          className="select-none text-sm font-normal leading-5 text-muted-foreground"
+          className="select-none type-feed text-muted-foreground"
         >
           Edited {files.length} files
         </Text>

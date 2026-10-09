@@ -256,6 +256,18 @@
   }
 }
 
+@utility type-feed {
+  font-size: var(--text-feed);
+  line-height: var(--leading-feed);
+  font-weight: var(--font-weight-feed);
+  color: var(--color-foreground);
+
+  @variant wide {
+    font-size: var(--text-feed-wide);
+    line-height: var(--leading-feed-wide);
+  }
+}
+
 @layer utilities {
   .shadow-composer {
     box-shadow: var(--shadow-composer);

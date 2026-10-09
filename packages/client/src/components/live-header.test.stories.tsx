@@ -56,7 +56,10 @@ export const EveryStep: Story = {
         await expect(row).toBeVisible();
         await expect(row).toHaveAccessibleName(`${text} ${elapsed}`);
         await expect(row).toHaveTextContent(`${text} ${elapsed}`);
-        await expect(row.getBoundingClientRect().height).toBe(20);
+        // One line of the Feed text role: 24 on phone, 22 from the wide breakpoint.
+        await expect(row.getBoundingClientRect().height).toBe(
+          width === 390 ? 24 : 22,
+        );
         const shimmering = row.querySelectorAll('span').length > 1;
         await expect(shimmering).toBe(source.type !== 'request');
         if (source.type === 'request')
@@ -133,7 +136,7 @@ export const LongTextKeepsOneLine: Story = {
     const { page } = await import('vitest/browser');
     await page.viewport(390, 844);
     const row = canvas.getByRole('status');
-    await expect(row.getBoundingClientRect().height).toBe(20);
+    await expect(row.getBoundingClientRect().height).toBe(24);
     const container = row.parentElement;
     if (!container) throw new Error('Live header has no container.');
     await expect(row.scrollWidth).toBeLessThanOrEqual(container.clientWidth);

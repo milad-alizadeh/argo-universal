@@ -33,6 +33,12 @@ type Story = StoryObj<typeof meta>;
 
 const widths = [layoutWidths.phone, layoutWidths.wide];
 
+// The Feed text role: 16/24 on phone, 14/22 from the wide breakpoint.
+const feedType = (width: number): { size: string; lineHeight: string } =>
+  width === layoutWidths.phone
+    ? { size: '16px', lineHeight: '24px' }
+    : { size: '14px', lineHeight: '22px' };
+
 async function expectType({
   element,
   family,
@@ -72,8 +78,7 @@ function markdownPlay(heading: string, firstHeader: string) {
       await expectType({
         element: link,
         family: nativeTextFont,
-        size: '14px',
-        lineHeight: '22px',
+        ...feedType(width),
       });
       await expect(getComputedStyle(link).textDecorationLine).toBe('underline');
       const code = canvas.getAllByText('feed.rows')[0];
@@ -87,8 +92,7 @@ function markdownPlay(heading: string, firstHeader: string) {
       await expectType({
         element: canvas.getByText('1.'),
         family: nativeTextFont,
-        size: '14px',
-        lineHeight: '22px',
+        ...feedType(width),
       });
       await expectType({
         element: canvas.getByText('tsx'),
