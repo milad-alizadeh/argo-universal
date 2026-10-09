@@ -49,6 +49,13 @@ export function startRouterTestHost(
     input: { database, now: (): number => Date.now() },
   }).start();
   onTestFinished(async (): Promise<void> => {
+    if (sessionRegistry.getSnapshot().status === 'active') {
+      sessionRegistry.send({ type: 'sessions.stopAll' });
+      await waitFor(
+        sessionRegistry,
+        (snapshot): boolean => snapshot.status === 'done',
+      );
+    }
     if (databaseWriter.getSnapshot().status === 'active') {
       databaseWriter.send({ type: 'writer.drain' });
       await waitFor(
@@ -56,7 +63,6 @@ export function startRouterTestHost(
         (snapshot): boolean => snapshot.status === 'done',
       );
     }
-    sessionRegistry.stop();
     ownedDatabase?.remove();
   });
   const context = createEngineContext({

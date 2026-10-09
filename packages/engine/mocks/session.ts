@@ -1,29 +1,12 @@
-import { randomUUID } from 'node:crypto';
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import type { AgentAdapter } from '@repo/agents';
 import type { Database } from '@repo/db';
-import { onTestFinished } from 'vitest';
-import type {
-  Actor,
-  StateMachine,
-  MachineContext,
-  AnyEventObject,
-  ActorRefFromLogic,
-  NonReducibleUnknown,
-  EventObject,
-  MetaObject,
-} from 'xstate';
-import { createActor, setup } from 'xstate';
-import type { FeedActorRef, FeedService } from '../src/services/feed';
-import { createFeedService } from '../src/services/feed';
-import { writerMachine } from '../src/services/feed';
+import type { FeedActorRef } from '../src/services/feed';
 import {
-  createSessionReader,
-  createSessionSnapshotWatcher,
+  findSessionActor,
+  type SessionActorRef,
+  type SessionCommand,
 } from '../src/services/sessions';
-import { type SessionCommand, sessionMachine } from '../src/services/sessions';
+import { startRouterTestHost } from './router';
 
 export const firstPrompt: Extract<SessionCommand, { type: 'session.prompt' }> =
   { type: 'session.prompt', turnId: 'turn-1', content: [] };
@@ -31,89 +14,25 @@ export const firstPrompt: Extract<SessionCommand, { type: 'session.prompt' }> =
 export function createSessionHost(
   database: Database,
   adapter: AgentAdapter,
-): {
-  root: Actor<
-    StateMachine<
-      MachineContext,
-      AnyEventObject,
-      {
-        databaseWriter?: ActorRefFromLogic<typeof writerMachine>;
-        session?: ActorRefFromLogic<typeof sessionMachine>;
-      },
-      | { src: 'session'; logic: typeof sessionMachine; id: 'session' }
-      | { src: 'writer'; logic: typeof writerMachine; id: 'databaseWriter' },
-      never,
-      never,
-      never,
-      Record<never, never>,
-      string,
-      NonReducibleUnknown,
-      NonReducibleUnknown,
-      EventObject,
-      MetaObject,
-      Record<never, never>,
-      MetaObject
-    >
-  >;
-  session: ActorRefFromLogic<typeof sessionMachine>;
-  service: FeedService;
+): ReturnType<typeof startRouterTestHost> & {
+  session: SessionActorRef;
   findFeed: () => FeedActorRef | undefined;
 } {
-  const runtimeDirectory = mkdtempSync(join(tmpdir(), 'session-runtime-'));
-  onTestFinished((): void =>
-    rmSync(runtimeDirectory, { recursive: true, force: true }),
-  );
-  const root = createActor(
-    setup({
-      actors: {
-        session: sessionMachine,
-        writer: writerMachine,
-      },
-    }).createMachine({
-      invoke: [
-        {
-          id: 'databaseWriter',
-          systemId: 'databaseWriter',
-          src: 'writer',
-          input: {
-            now: (): number => Date.now(),
-            database,
-          },
-        },
-        {
-          id: 'session',
-          systemId: 'session:session-1',
-          src: 'session',
-          input: {
-            now: (): number => Date.now(),
-            createId: randomUUID,
-            database,
-            runtimeDirectory,
-            adapter,
-            kind: 'existing',
-            sessionId: 'session-1',
-          },
-        },
-      ],
-    }),
-  ).start();
-  const session = root.getSnapshot().children.session;
-  if (!session) throw new Error('Session not started');
-  const findFeed = (): FeedActorRef | undefined =>
-    session.getSnapshot().children.feed;
-  const service = createFeedService({
-    database,
-    findFeed,
-    findWriter: (): ActorRefFromLogic<typeof writerMachine> | undefined =>
-      root.getSnapshot().children.databaseWriter,
-    readSession: createSessionReader(database),
-    watchSessionSnapshot: createSessionSnapshotWatcher({
-      database,
-      findFeed,
-      findWriter: (): ActorRefFromLogic<typeof writerMachine> | undefined =>
-        root.getSnapshot().children.databaseWriter,
-      findSession: (): ActorRefFromLogic<typeof sessionMachine> => session,
-    }),
+  const sessionHost = startRouterTestHost({ database, adapters: [adapter] });
+  sessionHost.sessionRegistry.send({
+    type: 'sessions.open',
+    sessionId: 'session-1',
+    agent: adapter.agent,
   });
-  return { root, session, service, findFeed };
+  const session = findSessionActor(
+    sessionHost.sessionRegistry.system,
+    'session-1',
+  );
+  if (!session) throw new Error('Session not started');
+  return {
+    ...sessionHost,
+    session,
+    findFeed: (): FeedActorRef | undefined =>
+      session.getSnapshot().children.feed,
+  };
 }
