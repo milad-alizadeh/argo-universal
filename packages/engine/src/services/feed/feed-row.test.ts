@@ -12,13 +12,11 @@ const message = storedMessage(0);
 
 describe('hydrateStoredFeedRow', (): void => {
   it('reads back the row toFeedRowWrite stores', (): void => {
+    const row = toFeedRowWrite(message);
     expect(
       hydrateStoredFeedRow('session-1', {
-        ...toFeedRowWrite(message),
-        payload: JSON.stringify({
-          messageId: 'message-0',
-          content: [{ type: 'text', text: 'Message 0' }],
-        }),
+        ...row,
+        payload: JSON.stringify(row.payload),
       }),
     ).toEqual(message);
   });
