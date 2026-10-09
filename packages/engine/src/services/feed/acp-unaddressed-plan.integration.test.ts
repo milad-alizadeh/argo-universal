@@ -1,11 +1,9 @@
 import { expect, it } from 'vitest';
-import { waitFor } from 'xstate';
 import {
   openAcpFeedSession,
   waitForAcpSessionIdle,
   type AcpFeedUpdates,
 } from '#mocks/acp-feed';
-import { findSessionActor } from '../sessions';
 
 it('unaddressed Plans reuse their local identity through successive Turns and close/reopen', async () => {
   const updates: AcpFeedUpdates = [
@@ -26,10 +24,7 @@ it('unaddressed Plans reuse their local identity through successive Turns and cl
     prompt: [{ type: 'text', text: 'Replace the checklist' }],
   });
   await waitForAcpSessionIdle(host, sessionId);
-  const actor = findSessionActor(host.engine.system, sessionId);
-  if (!actor) throw new Error('Session is missing');
   await host.caller.session.close({ sessionId });
-  await waitFor(actor, (snapshot) => snapshot.status === 'done');
   await host.caller.session.prompt({
     sessionId,
     prompt: [{ type: 'text', text: 'Resume this Session' }],

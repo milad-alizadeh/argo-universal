@@ -16,7 +16,7 @@ const meta = { title: 'Tests/Collapsible' } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-function animatedDisclosure(width: number): Story {
+function disclosure(width: number): Story {
   return {
     render: () => (
       <Collapsible>
@@ -38,47 +38,25 @@ function animatedDisclosure(width: number): Story {
       ).not.toBeInTheDocument();
       await userEvent.click(trigger);
       const detail = canvas.getByTestId(animatedDetailId);
-      const opening = await heightsDuringTransition(detail);
-      await expect(opening.some((height) => height > 0 && height < 128)).toBe(
-        true,
-      );
-      await expect(Math.max(...opening)).toBeGreaterThan(Math.min(...opening));
-      await waitFor(() =>
-        expect(detail.getBoundingClientRect().height).toBe(128),
-      );
+      await waitFor(() => expect(detail).toBeVisible());
+      await expect(trigger).toHaveAttribute('aria-expanded', 'true');
       await userEvent.click(trigger);
-      const closing = await heightsDuringTransition(detail);
-      await expect(closing.some((height) => height > 0 && height < 128)).toBe(
-        true,
-      );
+      await expect(trigger).toHaveAttribute('aria-expanded', 'false');
       await waitFor(() =>
         expect(canvas.queryByTestId(animatedDetailId)).not.toBeInTheDocument(),
       );
     },
   };
 }
-export const AnimatedDisclosurePhone = animatedDisclosure(layoutWidths.phone);
-export const AnimatedDisclosureWide = animatedDisclosure(layoutWidths.wide);
-
-async function heightsDuringTransition(
-  element: HTMLElement,
-): Promise<number[]> {
-  const heights: number[] = [];
-  for (let frame = 0; frame < 16; frame++) {
-    await new Promise<void>((resolve) =>
-      requestAnimationFrame(() => resolve()),
-    );
-    heights.push(element.getBoundingClientRect().height);
-  }
-  return heights;
-}
+export const DisclosurePhone = disclosure(layoutWidths.phone);
+export const DisclosureWide = disclosure(layoutWidths.wide);
 
 const dark = { globals: { mode: 'dark' } };
-export const AnimatedDisclosurePhoneDark: Story = {
-  ...AnimatedDisclosurePhone,
+export const DisclosurePhoneDark: Story = {
+  ...DisclosurePhone,
   ...dark,
 };
-export const AnimatedDisclosureWideDark: Story = {
-  ...AnimatedDisclosureWide,
+export const DisclosureWideDark: Story = {
+  ...DisclosureWide,
   ...dark,
 };

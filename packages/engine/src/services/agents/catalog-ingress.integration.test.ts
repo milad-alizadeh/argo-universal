@@ -4,7 +4,7 @@ import {
   rejectedRegistryValues,
 } from '@repo/mocks/registry/published';
 import { expect, it, vi } from 'vitest';
-import { startRouterTestHost } from '#mocks/router';
+import { startEngineTestHost } from '#mocks/engine';
 
 it.each(rejectedRegistryValues.map((value, index) => [index, value] as const))(
   'keeps exact published metadata and the last-good row after rejected refresh %i',
@@ -13,12 +13,12 @@ it.each(rejectedRegistryValues.map((value, index) => [index, value] as const))(
       .fn<() => Promise<unknown>>()
       .mockResolvedValueOnce(publishedRegistryResponse)
       .mockResolvedValue(value);
-    const { caller, context } = startRouterTestHost({
+    const { caller, database } = await startEngineTestHost({
       fetchAgents,
     });
     await caller.agents.syncCatalog();
     const before = await caller.agents.catalog();
-    const stored = context.database.select().from(agents).all();
+    const stored = database.select().from(agents).all();
     await caller.agents.syncCatalog();
     const after = await caller.agents.catalog();
     expect(after).toMatchObject({
@@ -28,7 +28,7 @@ it.each(rejectedRegistryValues.map((value, index) => [index, value] as const))(
       fetchedAt: before.fetchedAt,
       error: 'Registry metadata is malformed',
     });
-    expect(context.database.select().from(agents).all()).toEqual(stored);
+    expect(database.select().from(agents).all()).toEqual(stored);
     expect(
       stored.map((row) => JSON.parse(row.registryMetadata ?? 'null')),
     ).toEqual(publishedRegistryResponse.agents);

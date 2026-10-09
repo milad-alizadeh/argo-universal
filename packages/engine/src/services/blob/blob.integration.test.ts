@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { type BlobUploadOutput, maxBlobUploadBytes } from '@repo/contracts';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { startRouterTestHost } from '#mocks/router';
+import { startEngineTestHost } from '#mocks/engine';
 
 const png = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
@@ -14,8 +14,8 @@ const pngId =
   '6b7fa434f92a8b80aab02d9bf1a12e49ffcae424e4013a1c4f68b67e3d2bbcd0';
 
 let blobsFolder: string;
-let uploadFile: ReturnType<
-  typeof startRouterTestHost
+let uploadFile: Awaited<
+  ReturnType<typeof startEngineTestHost>
 >['caller']['blob']['upload'];
 
 const formWith = (file: Blob): FormData => {
@@ -25,9 +25,10 @@ const formWith = (file: Blob): FormData => {
 };
 const upload = (file: Blob): Promise<BlobUploadOutput> =>
   uploadFile(formWith(file));
-beforeEach((): void => {
-  const { context, caller } = startRouterTestHost();
-  blobsFolder = context.blobsFolder;
+beforeEach(async (): Promise<void> => {
+  const { blobsFolder: storedBlobsFolder, caller } =
+    await startEngineTestHost();
+  blobsFolder = storedBlobsFolder;
   uploadFile = caller.blob.upload;
 });
 

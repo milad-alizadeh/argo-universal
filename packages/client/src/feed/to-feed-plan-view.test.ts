@@ -14,39 +14,46 @@ const oldPlan: PlanUpdate = {
   sessionUpdate: 'plan_update',
   plan: { type: 'items', planId: 'old-plan', entries: [] },
 };
-it('the active Plan follows content revisions, keeps read-only Plans visible and ignores a later removal of an older Plan', () => {
-  const current: PlanUpdate = {
-    ...oldPlan,
-    id: 'current',
-    position: 1,
-    revision: 2,
-    plan: { type: 'file', planId: 'current', uri: 'file:///project/plan.md' },
-    _meta: { argo: { contentRevision: 2 } },
-  };
-  const removedOld: PlanUpdate = {
-    ...oldPlan,
-    revision: 4,
-    _meta: { argo: { contentRevision: 1, removed: true } },
-  };
-  expect(toFeedView([removedOld, current], snapshot)).toEqual({
-    plan: current.plan,
-    items: [{ type: 'row', row: current }],
-  });
-  const removedCurrent = {
-    ...current,
-    revision: 5,
-    _meta: { argo: { contentRevision: 2, removed: true } },
-  };
-  expect(toFeedView([removedOld, removedCurrent], snapshot)).toEqual({
-    plan: null,
-    items: [],
-  });
-  const replacedOld: PlanUpdate = {
-    ...oldPlan,
-    revision: 6,
-    _meta: { argo: { contentRevision: 6, removed: false } },
-  };
-  expect(toFeedView([replacedOld, removedCurrent], snapshot).plan).toEqual(
-    oldPlan.plan,
-  );
+
+const current: PlanUpdate = {
+  ...oldPlan,
+  id: 'current',
+  position: 1,
+  revision: 2,
+  plan: { type: 'file', planId: 'current', uri: 'file:///project/plan.md' },
+  _meta: { argo: { contentRevision: 2 } },
+};
+const removedOld: PlanUpdate = {
+  ...oldPlan,
+  revision: 4,
+  _meta: { argo: { contentRevision: 1, removed: true } },
+};
+const removedCurrent = {
+  ...current,
+  revision: 5,
+  _meta: { argo: { contentRevision: 2, removed: true } },
+};
+const replacedOld: PlanUpdate = {
+  ...oldPlan,
+  revision: 6,
+  _meta: { argo: { contentRevision: 6, removed: false } },
+};
+it.each([
+  {
+    name: 'a later removal of an older Plan preserves the current read-only Plan',
+    rows: [removedOld, current],
+    expected: { plan: current.plan, items: [{ type: 'row', row: current }] },
+  },
+  {
+    name: 'removing the current Plan clears it',
+    rows: [removedOld, removedCurrent],
+    expected: { plan: null, items: [] },
+  },
+  {
+    name: 'replacing an older Plan makes it current',
+    rows: [replacedOld, removedCurrent],
+    expected: { plan: oldPlan.plan, items: [] },
+  },
+])('$name', ({ rows, expected }) => {
+  expect(toFeedView(rows, snapshot)).toEqual(expected);
 });

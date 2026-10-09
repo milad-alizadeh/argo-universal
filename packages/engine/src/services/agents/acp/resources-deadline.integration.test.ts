@@ -2,22 +2,30 @@ import { expect, it, onTestFinished, vi } from 'vitest';
 import { acpPermission } from '#mocks/acp-requests';
 import {
   createResourceOpening,
+  createResourcePeer,
   createResourceDestination,
   requireResourceProcessAt,
   createResourceUpdate,
   observeAcpRelease,
 } from '#mocks/acp-resource';
-import { createPressuredResource } from '#mocks/acp-write-pressure';
+import { pauseAcpResponses } from '#mocks/acp-write-pressure';
+import { createAcpResources } from '../index';
 
 it('the close deadline bounds a blocked accepted write and retains ownership while preserving siblings', async () => {
   let identity = 0;
-  const { peer, resources, pressure } = createPressuredResource(
-    {
-      autoExit: false,
-      newSession: () => ({ sessionId: String(++identity) }),
+  const peer = createResourcePeer({
+    autoExit: false,
+    newSession: () => ({ sessionId: String(++identity) }),
+  });
+  let paused: ReturnType<typeof pauseAcpResponses> | undefined;
+  const resources = createAcpResources({
+    closeTimeoutMs: 50,
+    launchProcess: async (launch) => {
+      const process = await peer.launchProcess(launch);
+      paused = pauseAcpResponses(process.stream);
+      return { ...process, stream: paused.stream };
     },
-    50,
-  );
+  });
   const failures: unknown[] = [];
   const pending = Promise.withResolvers<never>();
   let requested = false;
@@ -37,7 +45,7 @@ it('the close deadline bounds a blocked accepted write and retains ownership whi
   const sibling = await resources.open(
     createResourceOpening(createResourceDestination(updates)),
   );
-  const paused = pressure();
+  if (!paused) throw new Error('Missing pressured stream');
   onTestFinished(paused.resume);
   const process = requireResourceProcessAt(peer.processes);
   const permission = process.connection.client.request(
@@ -69,13 +77,19 @@ it('the close deadline bounds a blocked accepted write and retains ownership whi
   await vi.waitFor(() =>
     expect(updates).toEqual([createResourceUpdate(sibling.sessionId)]),
   );
-  expect(process.terminations).toBe(0);
-  expect(release.state.settled).toBe(false);
+  expect({
+    terminations: process.terminations,
+    released: release.state.settled,
+  }).toEqual({ terminations: 0, released: false });
   paused.resume();
   expect(await permission).toEqual({ outcome: { outcome: 'cancelled' } });
   const siblingClosing = sibling.close();
-  await vi.waitFor(() => expect(process.terminations).toBe(1));
-  expect(release.state.settled).toBe(false);
+  await vi.waitFor(() =>
+    expect({
+      terminations: process.terminations,
+      released: release.state.settled,
+    }).toEqual({ terminations: 1, released: false }),
+  );
   process.exited.resolve();
   await Promise.all([siblingClosing, release.promise]);
 });

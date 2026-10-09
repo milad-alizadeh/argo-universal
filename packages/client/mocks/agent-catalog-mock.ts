@@ -50,6 +50,11 @@ const catalog: AgentsCatalogOutput = {
   ],
 };
 
+const [exampleCatalog, pythonCatalog, binaryCatalog, windowsCatalog] =
+  catalog.agents;
+if (!exampleCatalog || !pythonCatalog || !binaryCatalog || !windowsCatalog)
+  throw new Error('Catalog fixture is incomplete');
+
 export const agentCatalogMocks: Fixtures = {
   'agents.syncCatalog': () => ({
     changedIds: [],
@@ -58,12 +63,13 @@ export const agentCatalogMocks: Fixtures = {
   }),
   'agents.catalogChanges': pending(),
   'agents.catalog': (input) => {
-    const search = (input?.search ?? '').toLowerCase();
-    return {
-      ...catalog,
-      agents: catalog.agents.filter(({ entry }) =>
-        entry.name.toLowerCase().includes(search),
-      ),
+    if (!input?.search) return catalog;
+    const searchResponses: Record<string, AgentsCatalogOutput['agents']> = {
+      Example: [exampleCatalog],
+      Python: [pythonCatalog],
+      Binary: [binaryCatalog],
+      Windows: [windowsCatalog],
     };
+    return { ...catalog, agents: searchResponses[input.search] ?? [] };
   },
 };

@@ -1,3 +1,4 @@
+import { AgentMessage as AgentMessageSchema } from '@repo/contracts';
 import type {
   AgentMessage,
   BlobRef,
@@ -5,6 +6,7 @@ import type {
   UserMessage,
 } from '@repo/contracts';
 import { type FeedMock, recordedFeedMocks } from '@repo/mocks/app';
+import intermediateMessages from './streaming-messages.json';
 
 // The bytes of `mocks/agent/red-square.png`, the shared image attachment mock.
 export const redSquareDataUrl =
@@ -54,39 +56,19 @@ export const recordedAgentMessage = (
   recording: string,
 ): AgentMessage => recordedRow(agent, recording, 'agent_message');
 
-const textLength = (row: AgentMessage): number =>
-  row.content
-    .map((block) => (block.type === 'text' ? block.text.length : 0))
-    .reduce((total, length) => total + length, 0);
-
-// The newest Agent message as it stood mid-stream: the recorded stream replayed until 60% of its text arrived.
+// Saved from recorded events through the real Feed reducer during fixture preparation.
+const streamingMessages = intermediateMessages.map((entry) => ({
+  ...entry,
+  row: AgentMessageSchema.parse(entry.row),
+}));
 export function streamingAgentMessage(
   agent: MockAgent,
   recording: string,
 ): AgentMessage {
-  const mock = recordedFeedMock(agent, recording);
-  const settled = recordedAgentMessage(agent, recording);
-  const fullLength = textLength(settled);
-  let row: AgentMessage | undefined;
-  for (const event of mock.stream) {
-    if (event.type === 'row.upsert' && event.row.id === settled.id) {
-      if (event.row.sessionUpdate !== 'agent_message')
-        throw new Error('Streamed row is not an Agent message');
-      row = event.row;
-      continue;
-    }
-    if (event.type !== 'row.append' || event.id !== settled.id || !row)
-      continue;
-    const [, index] = event.field.split('.');
-    const content = [...row.content];
-    const block = content[Number(index)];
-    if (block?.type !== 'text' || block.text.length !== event.off)
-      throw new Error(`Append out of order in ${agent}/${recording}`);
-    content[Number(index)] = { ...block, text: block.text + event.text };
-    row = { ...row, content, revision: event.rev };
-    if (textLength(row) >= fullLength * 0.6) break;
-  }
-  if (row?.state !== 'open')
-    throw new Error(`No open Agent message streamed in ${agent}/${recording}`);
-  return row;
+  const entry = streamingMessages.find(
+    (message) => message.agent === agent && message.recording === recording,
+  );
+  if (!entry)
+    throw new Error(`No recorded streaming message ${agent}/${recording}`);
+  return entry.row;
 }

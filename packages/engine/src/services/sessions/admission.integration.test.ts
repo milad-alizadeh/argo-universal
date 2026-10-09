@@ -7,8 +7,7 @@ import { session } from '@repo/db/schema';
 import { createMockAdapter, mockReady } from '@repo/mocks/agent';
 import { eq } from 'drizzle-orm';
 import { expect, it, onTestFinished, vi } from 'vitest';
-import { startRouterTestHost } from '#mocks/router';
-import { findSessionActor } from './session-system';
+import { startEngineTestHost } from '#mocks/engine';
 
 const identities = agentAdapters.map((adapter): string => adapter.agent);
 const ready: AgentReady = {
@@ -20,13 +19,13 @@ const ready: AgentReady = {
 const promptCommand = 'agent.prompt';
 const prompt = [{ type: 'text', text: 'Continue' }] as const;
 
-async function startAdmittedSession(
-  agent: string,
-): Promise<
-  ReturnType<typeof startRouterTestHost> & { commands: VendorCommand[] }
+async function startAdmittedSession(agent: string): Promise<
+  Awaited<ReturnType<typeof startEngineTestHost>> & {
+    commands: VendorCommand[];
+  }
 > {
   const commands: VendorCommand[] = [];
-  const host = startRouterTestHost({
+  const host = await startEngineTestHost({
     adapters: [
       createMockAdapter(
         {
@@ -39,7 +38,7 @@ async function startAdmittedSession(
       ),
     ],
   });
-  host.context.database.update(session).set({ agent }).run();
+  host.database.update(session).set({ agent }).run();
   await host.caller.session.setConfigOption({
     sessionId: 'session-1',
     configId: 'fast',
@@ -52,8 +51,8 @@ async function startAdmittedSession(
 it.each(identities)(
   'keeps the admitted %s Session eligible after an unsupported stored reparent',
   async (agent): Promise<void> => {
-    const { context, caller, commands } = await startAdmittedSession(agent);
-    context.database
+    const { database, caller, commands } = await startAdmittedSession(agent);
+    database
       .update(session)
       .set({ parentSessionId: 'session-1' })
       .where(eq(session.id, 'session-1'))
@@ -83,7 +82,7 @@ const absentCommands = [
     code: 'NOT_FOUND',
     message: 'No Session session-1',
     call: (
-      caller: ReturnType<typeof startRouterTestHost>['caller'],
+      caller: Awaited<ReturnType<typeof startEngineTestHost>>['caller'],
     ): ReturnType<typeof caller.session.cancel> =>
       caller.session.cancel({ sessionId: 'session-1' }),
   },
@@ -92,7 +91,7 @@ const absentCommands = [
     code: 'CONFLICT',
     message: 'already answered',
     call: (
-      caller: ReturnType<typeof startRouterTestHost>['caller'],
+      caller: Awaited<ReturnType<typeof startEngineTestHost>>['caller'],
     ): ReturnType<typeof caller.session.answerPermission> =>
       caller.session.answerPermission({
         sessionId: 'session-1',
@@ -105,7 +104,7 @@ const absentCommands = [
     code: 'CONFLICT',
     message: 'already answered',
     call: (
-      caller: ReturnType<typeof startRouterTestHost>['caller'],
+      caller: Awaited<ReturnType<typeof startEngineTestHost>>['caller'],
     ): ReturnType<typeof caller.session.answerElicitation> =>
       caller.session.answerElicitation({
         sessionId: 'session-1',
@@ -127,10 +126,10 @@ it.each(
   'rejects an absent $agent Session $name without starting native work',
   async ({ agent, code, message, call }): Promise<void> => {
     const connect = vi.fn<() => Promise<AgentReady>>().mockResolvedValue(ready);
-    const { caller, context } = startRouterTestHost({
+    const { caller, database } = await startEngineTestHost({
       adapters: [createMockAdapter({ connect }, agent)],
     });
-    context.database.update(session).set({ agent }).run();
+    database.update(session).set({ agent }).run();
     await expect(call(caller)).rejects.toMatchObject({ code, message });
     expect(connect).not.toHaveBeenCalled();
   },
@@ -142,10 +141,10 @@ it.each(identities)(
     const connect = vi
       .fn<() => Promise<AgentReady>>()
       .mockRejectedValue(new Error('Native startup failed'));
-    const { caller, context } = startRouterTestHost({
+    const { caller, database } = await startEngineTestHost({
       adapters: [createMockAdapter({ connect }, agent)],
     });
-    context.database.update(session).set({ agent }).run();
+    database.update(session).set({ agent }).run();
     await expect(
       caller.session.prompt({ sessionId: 'session-1', prompt: [...prompt] }),
     ).rejects.toMatchObject({
@@ -168,7 +167,7 @@ it.each(identities)(
         return startup.promise;
       },
     );
-    const { caller, context } = startRouterTestHost({
+    const { caller, database } = await startEngineTestHost({
       adapters: [
         createMockAdapter(
           {
@@ -181,7 +180,7 @@ it.each(identities)(
         ),
       ],
     });
-    context.database.update(session).set({ agent }).run();
+    database.update(session).set({ agent }).run();
     const first = caller.session.prompt({
       sessionId: 'session-1',
       prompt: [...prompt],
@@ -222,7 +221,7 @@ it.each(identities)(
     onTestFinished((): void => stopped.resolve());
     const began = Promise.withResolvers<void>();
     const commands: VendorCommand[] = [];
-    const host = startRouterTestHost({
+    const host = await startEngineTestHost({
       adapters: [
         createMockAdapter(
           {
@@ -239,19 +238,14 @@ it.each(identities)(
         ),
       ],
     });
-    host.context.database.update(session).set({ agent }).run();
+    host.database.update(session).set({ agent }).run();
     await host.caller.session.setConfigOption({
       sessionId: 'session-1',
       configId: 'fast',
       type: 'boolean',
       value: false,
     });
-    const liveSession = findSessionActor(
-      host.sessionRegistry.system,
-      'session-1',
-    );
-    if (!liveSession) throw new Error('The Session has no live actor');
-    liveSession.send({ type: 'session.close' });
+    const closure = host.caller.session.close({ sessionId: 'session-1' });
     await began.promise;
     await expect(
       host.caller.session.prompt({
@@ -266,16 +260,17 @@ it.each(identities)(
       commands.filter((command): boolean => command.type === promptCommand),
     ).toEqual([]);
     stopped.resolve();
+    await closure;
   },
 );
 
 it.each(identities)(
-  'rejects the waiting %s prompt when Registry shutdown starts',
+  'rejects the waiting %s prompt when Engine shutdown starts',
   async (agent): Promise<void> => {
     const startup = Promise.withResolvers<AgentReady>();
     const began = Promise.withResolvers<void>();
     const commands: VendorCommand[] = [];
-    const { caller, context, sessionRegistry } = startRouterTestHost({
+    const { caller, database, engine } = await startEngineTestHost({
       adapters: [
         createMockAdapter(
           {
@@ -291,18 +286,18 @@ it.each(identities)(
         ),
       ],
     });
-    context.database.update(session).set({ agent }).run();
+    database.update(session).set({ agent }).run();
     const outcome = caller.session.prompt({
       sessionId: 'session-1',
       prompt: [...prompt],
     });
     const rejected = outcome.catch((error: unknown): unknown => error);
     await began.promise;
-    sessionRegistry.send({ type: 'sessions.stopAll' });
+    engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
     startup.resolve(ready);
     expect(await rejected).toMatchObject({
       code: 'CONFLICT',
-      message: expect.stringContaining('cannot accept'),
+      message: 'The Engine is stopping',
     });
     expect(commands).toEqual([]);
   },

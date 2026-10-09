@@ -17,22 +17,25 @@ export interface FeedFixtures {
 export { recordedFeedMocks } from '@repo/mocks/app';
 
 // One recorded Feed at the tRPC link, for any Session screen story (ADR 0010).
-export function createFeedMocks(mock: FeedMock): FeedFixtures {
+export function createFeedMocks(
+  mock: FeedMock,
+  pages?: Record<string, FixtureOutput<'feed.page'>>,
+): FeedFixtures {
   return {
-    'feed.page': ({ direction, cursor, limit = 40, epoch }) => {
-      const staleCursor = epoch !== undefined && epoch !== mock.snapshot.epoch;
-      const available =
-        direction === 'before' && cursor !== undefined && !staleCursor
-          ? mock.rows.filter((row) => row.position < cursor)
-          : mock.rows;
-      const rows = available.slice(-limit);
+    'feed.page': ({ direction, cursor }) => {
+      if (pages) {
+        const page = pages[direction === 'before' ? String(cursor) : 'tail'];
+        if (!page)
+          throw new Error(`No recorded Feed page for ${direction}/${cursor}`);
+        return page;
+      }
       return {
         epoch: mock.snapshot.epoch,
         maxRevision: mock.snapshot.maxRevision,
-        rows,
-        hasOlder: available.length > rows.length,
-        startCursor: rows[0]?.position ?? null,
-        staleCursor,
+        rows: mock.rows,
+        hasOlder: false,
+        startCursor: mock.rows[0]?.position ?? null,
+        staleCursor: false,
       };
     },
     'feed.row': ({ id }) => {
@@ -40,10 +43,8 @@ export function createFeedMocks(mock: FeedMock): FeedFixtures {
       if (!row) throw new Error(`No recorded Feed row ${id}`);
       return row;
     },
-    'feed.subscribe': async function* ({ after }) {
-      const revision = after?.revision ?? mock.snapshot.maxRevision;
-      for (const event of mock.stream)
-        if (!('rev' in event) || event.rev > revision) yield event;
+    'feed.subscribe': async function* () {
+      yield { type: 'snapshot', snapshot: mock.snapshot };
     },
   } satisfies Fixtures;
 }

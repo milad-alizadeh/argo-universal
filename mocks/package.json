@@ -10,8 +10,7 @@
     "./registry/*": "./registry/*.ts"
   },
   "scripts": {
-    "check-types": "tsc --noEmit",
-    "test": "vitest run"
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "@agentclientprotocol/sdk": "catalog:",
@@ -22,9 +21,7 @@
   },
   "devDependencies": {
     "@repo/typescript": "workspace:*",
-    "@repo/vitest": "workspace:*",
     "@types/node": "catalog:",
-    "typescript": "catalog:",
-    "vitest": "catalog:"
+    "typescript": "catalog:"
   }
 }

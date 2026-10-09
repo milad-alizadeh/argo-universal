@@ -51,7 +51,7 @@ export const createAcpSessionModel = (
   lease: AcpSessionLease;
 } => {
   const lease = initial.context.acpLease;
-  if (!lease) throw new Error('The public ACP Session has no lease');
+  if (!lease) throw new Error('The ACP structural model has no lease');
   const fromState = sessionMachine.resolveState({
     value: { open: { acp: 'opening' } },
     context: {
@@ -61,6 +61,10 @@ export const createAcpSessionModel = (
       failure: null,
     },
   });
+  /*
+   * Graph transitions resolve symbolic sends against these existing child identities;
+   * no actors are executed by the graph and no protocol or storage effect is proved.
+   */
   Object.assign(fromState.children, initial.children);
   const events = [
     {

@@ -1,7 +1,6 @@
 import { expect, it } from 'vitest';
-import { waitFor } from 'xstate';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
-import { findSessionActor } from '../sessions';
+import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 
 const toolCallId = 'read-1';
 const sourcePath = 'src/index.ts';
@@ -43,11 +42,7 @@ it('official tool updates retain creation fields when a partial update completes
     ...emptySessionInput,
     prompt: [{ type: 'text', text: toolTitle }],
   });
-  const actor = findSessionActor(host.engine.system, created.sessionId);
-  if (!actor) throw new Error('Session is missing');
-  await waitFor(actor, (snapshot) =>
-    snapshot.matches({ open: { acp: 'idle' } }),
-  );
+  await waitForAcpSessionIdle(host, created.sessionId);
   const page = await host.caller.feed.page({ ...created, direction: 'tail' });
   expect(page.rows).toMatchObject([
     { sessionUpdate: 'user_message' },

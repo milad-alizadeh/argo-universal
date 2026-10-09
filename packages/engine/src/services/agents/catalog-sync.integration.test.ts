@@ -2,8 +2,7 @@ import { agents } from '@repo/db/schema';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import { openTestDatabase } from '#mocks/database';
-import { startRouterTestHost } from '#mocks/router';
-import { appRouter } from '../../engine/router';
+import { startEngineTestHost } from '#mocks/engine';
 import type { FetchAgents } from './index';
 
 const savedLocalId = 'saved-local-id';
@@ -13,7 +12,7 @@ it('settles an active sync before the router host finishes shutdown', async (): 
   onTestFinished(stored.remove);
   const response = Promise.withResolvers<unknown>();
   const fetchAgents = vi.fn<FetchAgents>(() => response.promise);
-  const host = startRouterTestHost({
+  const host = await startEngineTestHost({
     database: stored.database,
     fetchAgents,
   });
@@ -37,7 +36,7 @@ it('reads SQLite without fetching, then commits an explicit page visit sync', as
   const fetchAgents = vi.fn<() => Promise<unknown>>(
     async (): Promise<unknown> => publishedRegistry,
   );
-  const { caller } = startRouterTestHost({ fetchAgents });
+  const { caller } = await startEngineTestHost({ fetchAgents });
   expect(await caller.agents.catalog()).toMatchObject({
     agents: [],
     status: 'unavailable',
@@ -54,22 +53,26 @@ it('reads SQLite without fetching, then commits an explicit page visit sync', as
 it('coalesces concurrent Apps and publishes changed IDs after the SQLite commit', async (): Promise<void> => {
   const pending = Promise.withResolvers<unknown>();
   const fetchAgents = vi.fn<() => Promise<unknown>>(() => pending.promise);
-  const { caller, context } = startRouterTestHost({
+  const { database, createCaller, url } = await startEngineTestHost({
     fetchAgents,
   });
   const signal = new AbortController();
-  const secondApp = appRouter.createCaller(context, { signal: signal.signal });
+  const secondApp = createCaller({ signal: signal.signal });
   const subscription = await secondApp.agents.catalogChanges();
   const changed = subscription[Symbol.asyncIterator]().next();
-  const firstVisit = caller.agents.syncCatalog();
-  const secondVisit = secondApp.agents.syncCatalog();
+  const firstVisit = fetch(`${url}/trpc/agents.syncCatalog`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  }).then((response): Promise<unknown> => response.json());
   await vi.waitFor(() => expect(fetchAgents).toHaveBeenCalledTimes(1));
-  expect(context.database.select().from(agents).all()).toEqual([]);
+  const secondVisit = secondApp.agents.syncCatalog();
+  expect(database.select().from(agents).all()).toEqual([]);
   pending.resolve(publishedRegistry);
   const results = await Promise.all([firstVisit, secondVisit]);
   const notification = await changed;
-  expect(results[0]).toEqual(results[1]);
-  expect(notification.value).toEqual(results[0]?.changedIds);
+  expect(results[0]).toEqual({ result: { data: results[1] } });
+  expect(fetchAgents).toHaveBeenCalledTimes(1);
+  expect(notification.value).toEqual(results[1]?.changedIds);
   expect((await secondApp.agents.catalog()).agents.map(({ id }) => id)).toEqual(
     notification.value,
   );
@@ -85,10 +88,10 @@ it('preserves saved local identity and custom rows across changed, removed and r
     .mockResolvedValueOnce({ ...publishedRegistry, agents: [changed] })
     .mockResolvedValueOnce({ ...publishedRegistry, agents: [] })
     .mockResolvedValue({ ...publishedRegistry, agents: [agent] });
-  const { caller, context } = startRouterTestHost({
+  const { caller, database } = await startEngineTestHost({
     fetchAgents,
   });
-  context.database
+  database
     .insert(agents)
     .values([
       {
@@ -101,14 +104,14 @@ it('preserves saved local identity and custom rows across changed, removed and r
       { id: 'custom-local-id' },
     ])
     .run();
-  const custom = context.database.select().from(agents).all()[1];
+  const custom = database.select().from(agents).all()[1];
   await caller.agents.syncCatalog();
   expect((await caller.agents.catalog()).agents).toMatchObject([
     { id: savedLocalId, entry: changed },
   ]);
   await caller.agents.syncCatalog();
   expect((await caller.agents.catalog()).agents).toEqual([]);
-  expect(context.database.select().from(agents).all()[0]).toMatchObject({
+  expect(database.select().from(agents).all()[0]).toMatchObject({
     id: savedLocalId,
     catalogPresent: false,
     registryMetadata: JSON.stringify(changed),
@@ -117,7 +120,7 @@ it('preserves saved local identity and custom rows across changed, removed and r
   expect((await caller.agents.catalog()).agents).toMatchObject([
     { id: savedLocalId, entry: agent },
   ]);
-  expect(context.database.select().from(agents).all()[1]).toEqual(custom);
+  expect(database.select().from(agents).all()[1]).toEqual(custom);
 });
 
 it('gives new upstream entries distinct independent local identities', async (): Promise<void> => {
@@ -127,7 +130,7 @@ it('gives new upstream entries distinct independent local identities', async ():
     ...publishedRegistry,
     agents: [agent, { ...agent, id: `${agent.id}-2` }],
   };
-  const { caller } = startRouterTestHost({
+  const { caller } = await startEngineTestHost({
     fetchAgents: async (): Promise<unknown> => registry,
   });
   expect(await caller.agents.syncCatalog()).toMatchObject({ error: null });
