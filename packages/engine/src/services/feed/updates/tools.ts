@@ -71,20 +71,20 @@ const setToolRowState = (tool: ToolRow): ToolRow => ({
       ? 'settled'
       : 'open',
 });
-const readExistingTool = (input: ToolInput): ToolRow => {
+const readOrCreateToolRow = (toolInput: ToolInput): ToolRow => {
   const id = createScopedFeedRowId({
-    acpSessionId: input.acpSessionId,
+    acpSessionId: toolInput.acpSessionId,
     kind: 'tool_call_update',
-    upstreamId: input.update.toolCallId,
+    upstreamId: toolInput.update.toolCallId,
   });
-  const previous = input.findRow(id);
+  const previous = toolInput.findRow(id);
   return previous?.sessionUpdate === 'tool_call_update'
     ? previous
-    : createInitialToolRow(id, input.update.toolCallId);
+    : createInitialToolRow(id, toolInput.update.toolCallId);
 };
 export const assembleToolCall = (input: ToolInput): AssembledContent => {
   const update = setToolRowState(
-    mergeToolCallUpdate(readExistingTool(input), input.update),
+    mergeToolCallUpdate(readOrCreateToolRow(input), input.update),
   );
   return {
     change: { type: 'upsert', update },

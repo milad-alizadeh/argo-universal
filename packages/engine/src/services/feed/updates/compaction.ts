@@ -69,12 +69,12 @@ export const createCompactionRowId = (
     kind: 'compaction_update',
     upstreamId: compactionId,
   });
-const readCompactionRow = (
-  input: CompactionInput,
+const readOrCreateCompactionRow = (
+  compactionInput: CompactionInput,
   update: AcpCompactionUpdate,
 ): CompactionRow => {
-  const id = createCompactionRowId(input, update.compactionId);
-  const previous = input.findRow(id);
+  const id = createCompactionRowId(compactionInput, update.compactionId);
+  const previous = compactionInput.findRow(id);
   return previous?.sessionUpdate === 'compaction_update'
     ? previous
     : createCompactionRow(id, update);
@@ -122,7 +122,7 @@ const createCompactionReplacement = (
   update: AcpCompactionUpdate,
 ): AssembledContent => {
   const row = replaceCompactionDetails(
-    readCompactionRow(input, update),
+    readOrCreateCompactionRow(input, update),
     update,
   );
   return {

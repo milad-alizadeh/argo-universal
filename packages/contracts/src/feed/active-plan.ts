@@ -1,14 +1,15 @@
 import type { Plan } from './plan';
 import type { PlanUpdate, SessionUpdate } from './session-update';
 
-export const planContentRevision = (row: PlanUpdate): number =>
-  row._meta?.argo?.contentRevision ?? row.revision;
+export const readPlanContentRevision = (planRow: PlanUpdate): number =>
+  planRow._meta?.argo?.contentRevision ?? planRow.revision;
 const selectLaterPlanContent = (
   selectedPlanRow: PlanUpdate | undefined,
   candidatePlanRow: PlanUpdate,
 ): PlanUpdate =>
   !selectedPlanRow ||
-  planContentRevision(candidatePlanRow) > planContentRevision(selectedPlanRow)
+  readPlanContentRevision(candidatePlanRow) >
+    readPlanContentRevision(selectedPlanRow)
     ? candidatePlanRow
     : selectedPlanRow;
 export const selectPlanRowWithLatestContent = (

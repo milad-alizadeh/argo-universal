@@ -28,10 +28,13 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const projectGuideTitle = 'Project guide';
-const supportedContent = (width: number, agent: MockAgent): Story => ({
+const createSupportedContentStory = (
+  viewportWidth: number,
+  agent: MockAgent,
+): Story => ({
   render: (): React.JSX.Element => <AcpFeedContentPreview agent={agent} />,
   play: async ({ canvas, userEvent }) => {
-    await settleViewport(width);
+    await settleViewport(viewportWidth);
     await expect(canvas.getByText(projectGuideTitle)).toBeVisible();
     await expect(canvas.getByText('file:///project/guide.md')).toBeVisible();
     await expect(canvas.getByText('Embedded result')).toBeVisible();
@@ -71,7 +74,19 @@ const supportedContent = (width: number, agent: MockAgent): Story => ({
     ).toBeTruthy();
   },
 });
-export const FirstAgentPhone = supportedContent(layoutWidths.phone, 'agent-1');
-export const FirstAgentWide = supportedContent(layoutWidths.wide, 'agent-1');
-export const SecondAgentPhone = supportedContent(layoutWidths.phone, 'agent-2');
-export const SecondAgentWide = supportedContent(layoutWidths.wide, 'agent-2');
+export const FirstAgentPhone = createSupportedContentStory(
+  layoutWidths.phone,
+  'agent-1',
+);
+export const FirstAgentWide = createSupportedContentStory(
+  layoutWidths.wide,
+  'agent-1',
+);
+export const SecondAgentPhone = createSupportedContentStory(
+  layoutWidths.phone,
+  'agent-2',
+);
+export const SecondAgentWide = createSupportedContentStory(
+  layoutWidths.wide,
+  'agent-2',
+);

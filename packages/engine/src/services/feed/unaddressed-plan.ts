@@ -31,7 +31,7 @@ export const selectUnaddressedPlanRow = (
   [...newestRows(rows).values()]
     .filter((row): row is PlanUpdate => isUnaddressedPlan(row, acpSessionId))
     .toSorted((first, second) => second.revision - first.revision)[0];
-const readQueuedPlanRows = (
+const readQueuedSessionFeedRows = (
   jobs: readonly WriterJob[],
   sessionId: string,
 ): SessionUpdate[] =>
@@ -70,7 +70,7 @@ export const readUnaddressedPlan = (
   input: UnaddressedPlanRead,
 ): PlanUpdate | undefined => {
   const stored = readStoredUnaddressedPlan(input);
-  const queued = readQueuedPlanRows(
+  const queued = readQueuedSessionFeedRows(
     input.writer?.getSnapshot().context.queue ?? [],
     input.sessionId,
   );

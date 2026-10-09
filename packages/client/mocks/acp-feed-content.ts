@@ -1,7 +1,7 @@
 import type { SessionUpdate } from '@repo/contracts';
 import { recordedAgentMessage, type MockAgent } from './feed-message-mock';
 
-export const acpContentRows = (agent: MockAgent): SessionUpdate[] => {
+export const createAcpContentRows = (agent: MockAgent): SessionUpdate[] => {
   const message = recordedAgentMessage(agent, 'markdown-answer');
   const envelope = {
     sessionId: message.sessionId,

@@ -1,6 +1,6 @@
 import type { SessionNotification } from '@agentclientprotocol/sdk';
 import {
-  planContentRevision,
+  readPlanContentRevision,
   type FeedChange,
   type Plan,
   type PlanUpdate,
@@ -53,7 +53,7 @@ const createRemovedPlanMetadata = (
   argo: {
     ...existing._meta?.argo,
     removed: true,
-    contentRevision: planContentRevision(existing),
+    contentRevision: readPlanContentRevision(existing),
   },
 });
 const removePlanFromActivePresentation = (
