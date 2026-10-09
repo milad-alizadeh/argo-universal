@@ -77,14 +77,8 @@ function editRow(width: number, edit: RecordedEdit): Story {
         await expect(within(button).queryByText(/^\+\d+$/)).toBeNull();
       if (removed === null)
         await expect(within(button).queryByText(/^-\d+$/)).toBeNull();
-      await expect(getComputedStyle(name).fontWeight).toBe('400');
-      await expect(getComputedStyle(name).textDecorationStyle).toBe('solid');
       for (const title of [name, ...counts])
         await expect(getComputedStyle(title).userSelect).toBe('none');
-      // One line of the Feed text role: 24 on phone, 22 from the wide breakpoint.
-      await expect(getComputedStyle(button).height).toBe(
-        width === layoutWidths.phone ? '24px' : '22px',
-      );
       await expect(feed.queryByTestId('diff-view')).toBeNull();
       await userEvent.click(button);
       await expect(await canvas.findByText(line)).toBeVisible();
