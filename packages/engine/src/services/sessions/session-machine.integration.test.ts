@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { type AgentCommand, type AgentReady, agentMachine } from '@repo/agents';
+import { type AgentCommand, type AgentReady } from '@repo/agents';
 import { sessionRows } from '@repo/api/mocks';
 import type { Notice, SessionUpdate } from '@repo/contracts';
 import type { FeedSubscribeOutput } from '@repo/contracts';
@@ -23,9 +23,9 @@ import {
   type SnapshotFrom,
   setup,
   waitFor,
+  getNextSnapshot,
 } from 'xstate';
 import {
-  type TestModel,
   type GraphEventFromLogic,
   getShortestPaths,
   getAdjacencyMap,
@@ -42,6 +42,7 @@ import type { SessionData } from './session-data';
 import { type SessionMachineInput, sessionMachine } from './session-machine';
 import { toSessionSnapshot } from './session-snapshot';
 
+const callbackFailedEvent = 'xstate.error.actor.vendorSession';
 const agentUsageEvent = 'agent.usage';
 const agentFeedEvent = 'agent.feed';
 const sessionPromptEvent = 'session.prompt';
@@ -682,8 +683,12 @@ const feedFlushedEvent = 'xstate.done.actor.feed';
 const checkoutDelayEvent = 'xstate.after.checkoutLimit.session.creating';
 const cancelDelayEvent =
   'xstate.after.cancelLimit.session.open.live.cancelling';
-const agentStopDelayEvent =
-  'xstate.after.agentStopLimit.session.open.live.closing';
+const agentStopDelayEvent = 'xstate.after.agentStopLimit.session.open.draining';
+const feedFailureStopDelayEvent =
+  'xstate.after.agentStopLimit.session.stopping';
+const agentStartDelayEvent =
+  'xstate.after.agentStartLimit.session.open.live.starting';
+const nativeDrainedEvent = 'xstate.done.actor.drainNative';
 const agentRestartDelayEvent =
   'xstate.after.agentRestartDelay.session.open.recovering';
 const feedFlushDelayEvent = 'xstate.after.feedFlushLimit.session.open.flushing';
@@ -704,10 +709,16 @@ const data = {
 let createCheckoutCall = Promise.withResolvers<SessionData>();
 let discardCheckoutCall = Promise.withResolvers<void>();
 let loadSessionCall = Promise.withResolvers<SessionData>();
+let readyCall = Promise.withResolvers<AgentReady>();
+let nativeDrainCall = Promise.withResolvers<void>();
 let stream: MockAgentStream | undefined;
 let modelCommands: AgentCommand[] = [];
 const ready = mockReadyEvent;
 const adapter = createMockAdapter({
+  connect: (): Promise<AgentReady> => {
+    readyCall = Promise.withResolvers<AgentReady>();
+    return readyCall.promise;
+  },
   stream: (value): (() => void) => {
     stream = value;
     value.receive((command): number => modelCommands.push(command));
@@ -731,7 +742,10 @@ const machine = sessionMachine.provide({
       loadSessionCall = Promise.withResolvers<SessionData>();
       return loadSessionCall.promise;
     }),
-    agent: agentMachine.provide({ actions: { sendReady: (): void => {} } }),
+    drainNative: fromPromise((): Promise<void> => {
+      nativeDrainCall = Promise.withResolvers<void>();
+      return nativeDrainCall.promise;
+    }),
     feed: feedMachine.provide({
       actions: {
         sendToWriter: (): void => {},
@@ -817,12 +831,20 @@ const events = [
       },
     },
   },
-  { type: 'xstate.done.actor.agent', output: { failure: null } },
-  { type: 'xstate.error.actor.agent', error: 'Agent crashed' },
+  { type: 'native.failed', error: 'Agent crashed' },
+  {
+    type: callbackFailedEvent,
+    actorId: 'vendorSession',
+    error: 'Agent callback crashed',
+  },
+  { type: nativeDrainedEvent, actorId: 'drainNative', output: undefined },
+  { type: 'agent.turnStarted' },
   { type: feedFlushedEvent, actorId: 'feed', output: undefined },
   { type: checkoutDelayEvent },
   { type: cancelDelayEvent },
   { type: agentStopDelayEvent },
+  { type: feedFailureStopDelayEvent },
+  { type: agentStartDelayEvent },
   { type: agentRestartDelayEvent },
   { type: feedFlushDelayEvent },
 ] satisfies GraphEventFromLogic<typeof machine>[];
@@ -835,6 +857,7 @@ const key = (snapshot: SessionSnapshot | undefined): string | undefined =>
     elicitation: snapshot.context.pendingElicitation !== null,
     crashes: snapshot.context.agentCrashes.length,
     stored: snapshot.context.stored,
+    activeTurnId: snapshot.context.activeTurnId,
   });
 const canGraphEvent = (
   snapshot: SessionSnapshot,
@@ -857,7 +880,15 @@ const canGraphEvent = (
     case cancelDelayEvent:
       return snapshot.matches({ open: { live: 'cancelling' } });
     case agentStopDelayEvent:
-      return snapshot.matches({ open: { live: 'closing' } });
+      return snapshot.matches({ open: 'draining' });
+    case feedFailureStopDelayEvent:
+      return snapshot.matches('stopping');
+    case nativeDrainedEvent:
+      return (
+        snapshot.matches('stopping') || snapshot.matches({ open: 'draining' })
+      );
+    case agentStartDelayEvent:
+      return snapshot.matches({ open: { live: 'starting' } });
     case agentRestartDelayEvent:
       return snapshot.matches({ open: 'recovering' });
     case feedFlushDelayEvent:
@@ -922,9 +953,16 @@ const isStreamEvent = (
   event.type.startsWith('agent.') && event.type !== 'agent.ready';
 
 it.each(
-  paths.map(
-    (path, index): readonly [number, typeof path] => [index, path] as const,
-  ),
+  paths
+    .filter(
+      (path): boolean =>
+        !path.steps.some(
+          (step): boolean => step.event.type === callbackFailedEvent,
+        ),
+    )
+    .map(
+      (path, index): readonly [number, typeof path] => [index, path] as const,
+    ),
 )(
   'walks Session model path %i with the mock Agent',
   async (_, path): Promise<void> => {
@@ -985,6 +1023,16 @@ it.each(
             const before = sessionActor.getSnapshot();
             const commandIndex = modelCommands.length;
             switch (event.type) {
+              case 'agent.ready':
+                readyCall.resolve(mockReady);
+                break;
+              case 'native.failed':
+                if (stream) stream.fail(event.error);
+                else readyCall.reject(event.error);
+                break;
+              case nativeDrainedEvent:
+                nativeDrainCall.resolve();
+                break;
               case checkoutCreatedEvent:
                 createCheckoutCall.resolve(data);
                 break;
@@ -1031,9 +1079,11 @@ it.each(
               }
               case checkoutDelayEvent:
               case cancelDelayEvent:
+              case agentStartDelayEvent:
                 await vi.advanceTimersByTimeAsync(10_000);
                 break;
               case agentStopDelayEvent:
+              case feedFailureStopDelayEvent:
               case feedFlushDelayEvent:
                 await vi.advanceTimersByTimeAsync(5_000);
                 break;
@@ -1058,10 +1108,6 @@ it.each(
                 },
                 { ...event, type: agentPromptEvent },
               ]);
-            if (event.type === feedFailedEvent)
-              expect(sessionActor.getSnapshot().output).toEqual({
-                failure: feedFailureMessage,
-              });
           },
         ],
       ),
@@ -1140,27 +1186,53 @@ it('ends Checkout creation with a retryable failure when git does not finish', a
   });
 });
 
-it('the generated paths walk every reachable transition', (): void => {
-  expect(
-    unwalkedTransitions({
-      models: models.map(
-        (
-          options,
-        ): Pick<
-          TestModel<SessionSnapshot, SessionEvent, SessionMachineInput>,
-          'getAdjacencyMap'
-        > => ({
-          getAdjacencyMap: (): ReturnType<
-            typeof getAdjacencyMap<typeof machine, SessionEvent>
-          > => getAdjacencyMap(machine, options),
-        }),
+it.each(models)(
+  'walks every transition of the $input.kind Session model',
+  (options): void => {
+    expect(
+      unwalkedTransitions({
+        models: [
+          {
+            getAdjacencyMap: (): ReturnType<
+              typeof getAdjacencyMap<typeof machine, SessionEvent>
+            > => getAdjacencyMap(machine, options),
+          },
+        ],
+        paths: paths.filter(
+          (path): boolean =>
+            path.steps[0]?.state.context.input.kind === options.input?.kind,
+        ),
+        stateKey: (snapshot): string => String(key(snapshot)),
+        eventKey: (event): typeof event.type => event.type,
+      }),
+    ).toEqual([]);
+  },
+);
+
+const callbackFailureStates = new Map<string, SessionSnapshot>();
+for (const path of paths)
+  for (const [index, step] of path.steps.entries()) {
+    if (step.event.type !== callbackFailedEvent) continue;
+    const previous = path.steps[index - 1]?.state;
+    if (previous) callbackFailureStates.set(String(key(previous)), previous);
+  }
+it.each([...callbackFailureStates.values()])(
+  'covers defensive native callback failure in $value',
+  (before): void => {
+    const failed = getNextSnapshot(machine, before, {
+      type: callbackFailedEvent,
+      error: 'Native callback crashed',
+    });
+    expect(
+      failed.matches(
+        before.context.stored && before.context.agentCrashes.length < 2
+          ? { open: 'recovering' }
+          : { open: 'draining' },
       ),
-      paths,
-      stateKey: (snapshot): string => String(key(snapshot)),
-      eventKey: (event): typeof event.type => event.type,
-    }),
-  ).toEqual([]);
-});
+    ).toBe(true);
+    expect(failed.context.activeTurnId).toBeNull();
+  },
+);
 
 it('attaches live Feed updates when a subscription starts while the Session loads', async (): Promise<void> => {
   vi.useFakeTimers();
