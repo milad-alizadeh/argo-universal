@@ -11,11 +11,14 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@agentclientprotocol/sdk": "catalog:",
     "@repo/agents": "workspace:*",
     "@repo/contracts": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/git": "workspace:*",
     "@trpc/server": "catalog:",
+    "ajv": "catalog:",
+    "ajv-formats": "catalog:",
     "drizzle-orm": "catalog:",
     "ws": "catalog:",
     "xstate": "catalog:",
