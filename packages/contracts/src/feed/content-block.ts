@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { blobColumns } from '../columns';
-import { createFeedMeta } from './metadata';
+import { createFeedMetadataSchema } from './metadata';
 
 // A reference to a content-addressed file in `~/.argo/blobs/` (ADR-0005), from the `blob` table.
 export const BlobRef = z.strictObject({
@@ -15,10 +15,10 @@ export type BlobRef = z.infer<typeof BlobRef>;
 export const AttachmentSource = z.enum(['upload', 'pasted']);
 export type AttachmentSource = z.infer<typeof AttachmentSource>;
 
-const AttachmentMeta = createFeedMeta(
+const AttachmentMeta = createFeedMetadataSchema(
   z.strictObject({ source: AttachmentSource.optional() }),
 );
-const noExtensionMeta = createFeedMeta(z.strictObject({}));
+const noExtensionMeta = createFeedMetadataSchema(z.strictObject({}));
 
 export const TextContent = z.strictObject({
   type: z.literal('text'),

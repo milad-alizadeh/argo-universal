@@ -2,7 +2,7 @@ import { sessionUpdateKinds, sessionUpdateStates } from '@repo/db/schema';
 import { z } from 'zod';
 import { feedRowColumns } from '../columns';
 import { ContentBlock } from './content-block';
-import { createFeedMeta as meta } from './metadata';
+import { createFeedMetadataSchema } from './metadata';
 import { Plan } from './plan';
 import {
   CommandAction,
@@ -36,7 +36,7 @@ const kind = <Kind extends SessionUpdateKind>(
   feedRowColumns.shape.sessionUpdate.extract([value]);
 
 // `_meta` is ACP's extension slot; Argo's own fields live under `_meta.argo` (ADR-0006).
-const noExtensionMeta = meta(z.strictObject({}));
+const noExtensionMeta = createFeedMetadataSchema(z.strictObject({}));
 
 const message = {
   messageId: z.string(),
@@ -77,7 +77,7 @@ export const ToolCallUpdate = z.strictObject({
   locations: z.array(ToolCallLocation).optional(),
   rawInput: z.unknown().optional(),
   rawOutput: z.unknown().optional(),
-  _meta: meta(
+  _meta: createFeedMetadataSchema(
     z.strictObject({
       truncated: z.boolean().optional(),
       permissionOutcome: PermissionOutcome.optional(),
@@ -95,7 +95,7 @@ export const PlanUpdate = z.strictObject({
   ...envelope,
   sessionUpdate: kind('plan_update'),
   plan: Plan,
-  _meta: meta(
+  _meta: createFeedMetadataSchema(
     z.strictObject({
       removed: z.boolean().optional(),
       contentRevision: z.int().optional(),
@@ -149,7 +149,7 @@ export const Notice = z.strictObject({
   severity: NoticeSeverity,
   title: z.string(),
   description: z.string().optional(),
-  _meta: meta(
+  _meta: createFeedMetadataSchema(
     z.strictObject({
       retry: z
         .strictObject({

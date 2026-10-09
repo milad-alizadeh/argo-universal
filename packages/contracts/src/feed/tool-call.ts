@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ContentBlock, UnsupportedContent } from './content-block';
-import { createFeedMeta } from './metadata';
+import { createFeedMetadataSchema } from './metadata';
 import type { ToolCallUpdate } from './session-update';
 
 export const ToolKind = z.enum([
@@ -83,7 +83,7 @@ export type TerminalExitStatus = z.infer<typeof TerminalExitStatus>;
 export const ToolCallContentBlock = z.strictObject({
   type: z.literal('content'),
   content: ContentBlock,
-  _meta: createFeedMeta(z.strictObject({})),
+  _meta: createFeedMetadataSchema(z.strictObject({})),
 });
 export type ToolCallContentBlock = z.infer<typeof ToolCallContentBlock>;
 
@@ -91,7 +91,7 @@ export const ToolCallDiff = z.strictObject({
   type: z.literal('diff'),
   changes: z.array(DiffChange),
   patch: DiffPatch.optional(),
-  _meta: createFeedMeta(z.strictObject({})),
+  _meta: createFeedMetadataSchema(z.strictObject({})),
 });
 export type ToolCallDiff = z.infer<typeof ToolCallDiff>;
 
@@ -101,7 +101,7 @@ export const ToolCallTerminal = z.strictObject({
   cwd: z.string().optional(),
   output: z.string(),
   exitStatus: TerminalExitStatus.optional(),
-  _meta: createFeedMeta(z.strictObject({})),
+  _meta: createFeedMetadataSchema(z.strictObject({})),
 });
 export type ToolCallTerminal = z.infer<typeof ToolCallTerminal>;
 

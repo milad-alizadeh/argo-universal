@@ -3,7 +3,7 @@ import {
   SessionInfo,
   SessionRecord,
   Turn,
-  selectLatestPlanRow,
+  selectPlanRowWithLatestContent,
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
@@ -453,7 +453,7 @@ function readSessionInformation(
         { sessionUpdate: 'agent_message' }
       > => update.sessionUpdate === 'agent_message',
     ),
-    plan: selectLatestPlanRow(updates),
+    plan: selectPlanRowWithLatestContent(updates),
     live: live?.context ?? null,
     feed: feedContext ?? null,
     liveHeaderRows: Object.values(header.rows),

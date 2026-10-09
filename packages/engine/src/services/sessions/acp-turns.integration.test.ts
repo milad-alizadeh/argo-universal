@@ -15,7 +15,7 @@ it('one lifetime receives successive Turns and idle text without inventing human
         sessionId: params.sessionId,
         update: {
           sessionUpdate: 'agent_message_chunk',
-          messageId: 'reused',
+          messageId: `reply-${requests.length}`,
           content: { type: 'text', text: `Reply ${requests.length}` },
         },
       });

@@ -4,13 +4,14 @@ import type { PlanUpdate, SessionUpdate } from './session-update';
 export const planContentRevision = (row: PlanUpdate): number =>
   row._meta?.argo?.contentRevision ?? row.revision;
 const selectLaterPlanContent = (
-  first: PlanUpdate | undefined,
-  second: PlanUpdate,
+  selectedPlanRow: PlanUpdate | undefined,
+  candidatePlanRow: PlanUpdate,
 ): PlanUpdate =>
-  !first || planContentRevision(second) > planContentRevision(first)
-    ? second
-    : first;
-export const selectLatestPlanRow = (
+  !selectedPlanRow ||
+  planContentRevision(candidatePlanRow) > planContentRevision(selectedPlanRow)
+    ? candidatePlanRow
+    : selectedPlanRow;
+export const selectPlanRowWithLatestContent = (
   rows: Iterable<SessionUpdate>,
 ): PlanUpdate | undefined => {
   let latest: PlanUpdate | undefined;
@@ -22,6 +23,6 @@ export const selectLatestPlanRow = (
 export const selectActivePlan = (
   rows: Iterable<SessionUpdate>,
 ): Plan | null => {
-  const latest = selectLatestPlanRow(rows);
+  const latest = selectPlanRowWithLatestContent(rows);
   return latest?._meta?.argo?.removed ? null : (latest?.plan ?? null);
 };
