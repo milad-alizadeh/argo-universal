@@ -54,6 +54,7 @@
     {"name":"AgentCatalog / Searching","id":"2QZG-0"},
     {"name":"AgentMessage / Spoken summary","id":"V9X-0"},
     {"name":"AgentModelMenu / Agent page","id":"28CV-0"},
+    {"name":"AgentModelMenu / Agent unavailable","id":"2N5S-0"},
     {"name":"AgentModelMenu / Drill-in root","id":"28B4-0"},
     {"name":"AgentModelMenu / Drill-in root (Running)","id":"28ER-0"},
     {"name":"AgentModelMenu / Model page","id":"28DY-0"},
@@ -104,6 +105,9 @@
     {"name":"Card / Sending (wide)","id":"2DZP-0"},
     {"name":"CheckoutPicker","id":"2EUC-0"},
     {"name":"ChecksList","id":"21G7-0"},
+    {"name":"Chip / Subagents running","id":"2NA4-0"},
+    {"name":"Chip / Subagents settled","id":"2N9X-0"},
+    {"name":"Chip / Written plan","id":"31CX-1"},
     {"name":"Combobox","id":"2I34-0"},
     {"name":"Command line","id":"J4F-0"},
     {"name":"Composer area","id":"2DHB-0"},
@@ -183,6 +187,7 @@
     {"name":"Panel header (Subagent)","id":"IYT-0"},
     {"name":"PhoneDrawer","id":"Q88-0"},
     {"name":"Plan proposal (expanded)","id":"2L1J-0"},
+    {"name":"PlanRow / Written plan","id":"31CP-1"},
     {"name":"PlanSteps","id":"2DYM-0"},
     {"name":"Popover / Session actions","id":"AQ2-0"},
     {"name":"Popover / Session actions (right-click)","id":"AQE-0"},
@@ -202,6 +207,9 @@
     {"name":"Questionnaire row (answered)","id":"LIP-0","shell":true},
     {"name":"Questionnaire row (dismissed)","id":"MNU-0"},
     {"name":"Questionnaire row (waiting)","id":"MN6-0"},
+    {"name":"ResourceReference / Described","id":"312U-1"},
+    {"name":"ResourceReference / Embedded text","id":"314J-1"},
+    {"name":"ResourceReference / Name only","id":"313E-1"},
     {"name":"Scroll fade","id":"291N-0"},
     {"name":"Separator","id":"QOB-0"},
     {"name":"Session header","id":"AH6-0"},
@@ -222,6 +230,7 @@
     {"name":"SessionsScreen / Empty","id":"1M9P-0"},
     {"name":"SessionsScreen / Error","id":"1MCL-0"},
     {"name":"SessionsScreen / Filters open","id":"ACC-0"},
+    {"name":"SessionsScreen / Live updates stopped","id":"2MUO-0"},
     {"name":"SessionsScreen / Loading","id":"1M2H-0"},
     {"name":"SessionsScreen / No search results","id":"1MUP-0"},
     {"name":"SessionsScreen / Search expanded","id":"1MIU-0"},
@@ -282,6 +291,7 @@
     {"name":"VoicePill / Permission request","id":"YZ3-0"},
     {"name":"VoicePill / Turn failed","id":"YY8-0","variantOf":"VoicePill / Turn finished","props":{"1":{"width":"204px"}}},
     {"name":"VoicePill / Turn finished","id":"YWP-0"},
-    {"name":"VoicePillStack","id":"YG4-0"}
+    {"name":"VoicePillStack","id":"YG4-0"},
+    {"name":"WrittenPlan / URI only","id":"31QC-1"}
   ]
 }
