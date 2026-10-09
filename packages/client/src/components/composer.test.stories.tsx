@@ -764,10 +764,10 @@ async function expectEffortFollowsModel({
       overlay.queryByRole('slider', { name: 'Effort' }),
     ).not.toBeInTheDocument();
     await expect(
-      canvas
-        .getByRole('button', { name: agentModelLabel, hidden: true })
-        .textContent?.trim(),
-    ).toBe(model.name.replace(/\s*\(recommended\)/i, ''));
+      within(
+        canvas.getByRole('button', { name: agentModelLabel, hidden: true }),
+      ).getByText(model.name.replace(/\s*\(recommended\)/i, '')),
+    ).toBeInTheDocument();
   }
 }
 
@@ -799,8 +799,12 @@ async function expectDangerousMode({
     expect(overlay.queryByRole('dialog')).not.toBeInTheDocument(),
   );
   const modeTrigger = canvas.getByRole('button', { name: 'Mode' });
-  const glyph = modeTrigger.querySelector('[data-icon]');
-  if (!glyph) throw new Error('Mode trigger icon is missing.');
+  // The glyph appears only once the symbol font has loaded.
+  const glyph = await waitFor(() => {
+    const symbol = modeTrigger.querySelector('[data-icon] [dir]');
+    if (!symbol?.textContent) throw new Error('Mode trigger icon is missing.');
+    return symbol;
+  });
   await expect(getComputedStyle(glyph).color).toBe(red);
   if (width >= 720)
     await waitFor(() =>

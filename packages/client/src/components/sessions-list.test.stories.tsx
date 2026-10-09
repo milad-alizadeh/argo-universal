@@ -139,7 +139,7 @@ export const ProjectActions: Story = {
     await expect(heading).toHaveAttribute(expandedAttribute, 'true');
     await userEvent.click(heading);
     await expect(heading).toHaveAttribute(expandedAttribute, 'false');
-    await expect(heading).toHaveTextContent(/^Example Project$/);
+    await expect(heading).toHaveAccessibleName('Example Project');
     await userEvent.hover(heading);
     await userEvent.click(newSession);
     await expect(heading).toHaveAttribute(expandedAttribute, 'false');

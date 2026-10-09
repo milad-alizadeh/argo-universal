@@ -5,7 +5,8 @@ export async function expectShimmerMovement(
   suffix?: string,
 ): Promise<void> {
   let characters = Array.from(row.querySelectorAll('span')).filter(
-    (element) => element.textContent?.length === 1,
+    (element) =>
+      element.textContent?.length === 1 && !element.closest('[data-icon]'),
   );
   if (suffix) {
     characters = characters.slice(-suffix.length);
