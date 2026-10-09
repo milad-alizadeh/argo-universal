@@ -53,6 +53,7 @@
     {"name":"AgentCatalog / refresh failed","id":"2RS6-0"},
     {"name":"AgentCatalog / searching","id":"2QZG-0"},
     {"name":"AgentModelMenu / Agent page","id":"28CV-0"},
+    {"name":"AgentModelMenu / Agent unavailable","id":"2N5S-0"},
     {"name":"AgentModelMenu / Drill-in root","id":"28B4-0"},
     {"name":"AgentModelMenu / Drill-in root (Running)","id":"28ER-0"},
     {"name":"AgentModelMenu / Model page","id":"28DY-0"},
@@ -98,6 +99,9 @@
     {"name":"Card / Sending (wide)","id":"2DZP-0"},
     {"name":"CheckoutPicker","id":"2EUC-0"},
     {"name":"ChecksList","id":"21G7-0"},
+    {"name":"Chip / Subagents running","id":"2NA4-0"},
+    {"name":"Chip / Subagents settled","id":"2N9X-0"},
+    {"name":"Chip / Written plan","id":"31CX-1"},
     {"name":"Combobox","id":"2I34-0"},
     {"name":"Command line","id":"J4F-0"},
     {"name":"Composer area","id":"2DHB-0"},
@@ -192,6 +196,7 @@
     {"name":"Pill / Turn finished","id":"YWP-0"},
     {"name":"Pill stack","id":"YG4-0"},
     {"name":"Plan proposal (expanded)","id":"2L1J-0"},
+    {"name":"PlanRow / Written plan","id":"31CP-1"},
     {"name":"PlanSteps","id":"2DYM-0"},
     {"name":"Popover / Filters","id":"R26-0"},
     {"name":"Popover / Group by","id":"R1T-0"},
@@ -218,6 +223,9 @@
     {"name":"Rail / Issues active","id":"PWA-0"},
     {"name":"Rail / Sessions active","id":"PSE-0"},
     {"name":"Rail / Settings active","id":"1GDF-0"},
+    {"name":"ResourceReference / Described","id":"312U-1"},
+    {"name":"ResourceReference / Embedded text","id":"314J-1"},
+    {"name":"ResourceReference / Name only","id":"313E-1"},
     {"name":"Scroll fade","id":"291N-0"},
     {"name":"Section / About","id":"2UH7-0"},
     {"name":"Section / Account","id":"2WRD-0","shell":true},
@@ -246,6 +254,7 @@
     {"name":"SessionsScreen / Empty","id":"1M9P-0"},
     {"name":"SessionsScreen / Error","id":"1MCL-0"},
     {"name":"SessionsScreen / Filters open","id":"ACC-0"},
+    {"name":"SessionsScreen / Live updates stopped","id":"2MUO-0"},
     {"name":"SessionsScreen / Loading","id":"1M2H-0"},
     {"name":"SessionsScreen / No search results","id":"1MUP-0"},
     {"name":"SessionsScreen / Search expanded","id":"1MIU-0"},
@@ -282,6 +291,7 @@
     {"name":"Voice bar / Turn finished","id":"ZDC-0"},
     {"name":"Voice card","id":"UZ9-0"},
     {"name":"Voice island (expanded)","id":"V1I-0"},
-    {"name":"Write button / New Session","id":"G7V-0"}
+    {"name":"Write button / New Session","id":"G7V-0"},
+    {"name":"WrittenPlan / URI only","id":"31QC-1"}
   ]
 }
