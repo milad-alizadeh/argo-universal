@@ -1,9 +1,8 @@
 import type { AgentAdapter, AgentProbe } from '@repo/agents';
 import { createMockAdapter } from '@repo/mocks/agent';
 import { afterEach, expect, it, vi } from 'vitest';
-import { waitFor } from 'xstate';
 import { availableAgentProbe } from '#mocks/agent-catalog';
-import { startRouterTestHost } from '#mocks/router';
+import { startEngineTestHost } from '#mocks/engine';
 
 afterEach((): void => {
   vi.useRealTimers();
@@ -20,7 +19,7 @@ it('shares one pending native discovery between concurrent refresh queries', asy
       refreshStarted.resolve();
       return refreshed.promise;
     });
-  const { caller } = startRouterTestHost({
+  const { caller } = await startEngineTestHost({
     adapters: [createMockAdapter({ probe: discoverAgent })],
   });
   await caller.agents.list();
@@ -42,7 +41,7 @@ it('shares one pending native discovery between concurrent refresh queries', asy
 });
 
 it('reports failed native discovery through the public unavailable result', async (): Promise<void> => {
-  const { caller } = startRouterTestHost({
+  const { caller } = await startEngineTestHost({
     adapters: [
       createMockAdapter(
         {
@@ -68,7 +67,7 @@ it('reports failed native discovery through the public unavailable result', asyn
 it('aborts timed-out native discovery before returning an unavailable result', async (): Promise<void> => {
   vi.useFakeTimers();
   const discoverySignal = Promise.withResolvers<AbortSignal>();
-  const { caller } = startRouterTestHost({
+  const { caller } = await startEngineTestHost({
     adapters: [
       createMockAdapter(
         {
@@ -98,7 +97,7 @@ it('aborts timed-out native discovery before returning an unavailable result', a
 
 it('cancels pending native discovery when the owning registry shuts down', async (): Promise<void> => {
   const abortedDiscovery = Promise.withResolvers<void>();
-  const { sessionRegistry, databaseWriter } = startRouterTestHost({
+  const { stop } = await startEngineTestHost({
     adapters: [
       createMockAdapter({
         probe: (signal): Promise<AgentProbe> => {
@@ -112,11 +111,6 @@ it('cancels pending native discovery when the owning registry shuts down', async
       }),
     ],
   });
-  databaseWriter.send({ type: 'writer.drain' });
-  await waitFor(
-    databaseWriter,
-    (snapshot): boolean => snapshot.status === 'done',
-  );
-  sessionRegistry.send({ type: 'sessions.stopAll' });
+  await stop();
   await expect(abortedDiscovery.promise).resolves.toBeUndefined();
 });

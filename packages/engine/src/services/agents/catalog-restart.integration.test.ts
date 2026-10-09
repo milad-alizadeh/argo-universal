@@ -4,12 +4,12 @@ import { agents } from '@repo/db/schema';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { expect, it, onTestFinished } from 'vitest';
 import { openTestDatabase } from '#mocks/database';
-import { startRouterTestHost } from '#mocks/router';
+import { startEngineTestHost } from '#mocks/engine';
 
 it('hydrates exact upstream metadata after a disk database restart while offline', async (): Promise<void> => {
   const stored = openTestDatabase();
   onTestFinished(stored.remove);
-  const first = startRouterTestHost({
+  const first = await startEngineTestHost({
     database: stored.database,
     fetchAgents: async (): Promise<unknown> => publishedRegistry,
   });
@@ -21,7 +21,7 @@ it('hydrates exact upstream metadata after a disk database restart while offline
   stored.database.$client.close();
   const database = openDatabase(join(stored.directory, 'argo.db'));
   onTestFinished((): void => database.$client.close());
-  const restarted = startRouterTestHost({
+  const restarted = await startEngineTestHost({
     database,
     fetchAgents: fetchOfflineAgents,
   });

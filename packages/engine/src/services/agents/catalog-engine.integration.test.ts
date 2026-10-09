@@ -1,8 +1,8 @@
 import { agents, session } from '@repo/db/schema';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { expect, it, onTestFinished, vi } from 'vitest';
-import { startCatalogEngine } from '#mocks/catalog-engine';
 import { openTestDatabase } from '#mocks/database';
+import { startEngineTestHost } from '#mocks/engine';
 
 it('serves its SQLite last-good catalog over HTTP after the actual Engine restarts offline', async (): Promise<void> => {
   const stored = openTestDatabase();
@@ -12,18 +12,21 @@ it('serves its SQLite last-good catalog over HTTP after the actual Engine restar
   const fetchAgents = vi.fn<() => Promise<unknown>>(
     async (): Promise<unknown> => publishedRegistry,
   );
-  const first = await startCatalogEngine(stored.directory, fetchAgents);
+  const first = await startEngineTestHost({
+    home: stored.directory,
+    fetchAgents,
+  });
   expect(fetchAgents).not.toHaveBeenCalled();
-  const beforeSync = await fetch(first.url);
+  const beforeSync = await fetch(`${first.url}/trpc/agents.catalog`);
   expect(await beforeSync.json()).toMatchObject({
     result: { data: { agents: [], status: 'unavailable' } },
   });
   expect(fetchAgents).not.toHaveBeenCalled();
-  await fetch(first.url.replace('agents.catalog', 'agents.syncCatalog'), {
+  await fetch(`${first.url}/trpc/agents.syncCatalog`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
   });
-  const accepted = await fetch(first.url);
+  const accepted = await fetch(`${first.url}/trpc/agents.catalog`);
   expect(accepted.status).toBe(200);
   expect(await accepted.json()).toMatchObject({
     result: {
@@ -36,23 +39,19 @@ it('serves its SQLite last-good catalog over HTTP after the actual Engine restar
       },
     },
   });
-  const row = first.engine
-    .getSnapshot()
-    .context.database?.select()
-    .from(agents)
-    .all();
+  const row = first.database.select().from(agents).all();
   await first.stop();
-  const restarted = await startCatalogEngine(
-    stored.directory,
-    async (): Promise<never> => {
+  const restarted = await startEngineTestHost({
+    home: stored.directory,
+    fetchAgents: async (): Promise<never> => {
       throw new Error('Registry is offline');
     },
-  );
-  await fetch(restarted.url.replace('agents.catalog', 'agents.syncCatalog'), {
+  });
+  await fetch(`${restarted.url}/trpc/agents.syncCatalog`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
   });
-  const stale = await fetch(restarted.url);
+  const stale = await fetch(`${restarted.url}/trpc/agents.catalog`);
   expect(stale.status).toBe(200);
   expect(await stale.json()).toMatchObject({
     result: {
@@ -67,7 +66,7 @@ it('serves its SQLite last-good catalog over HTTP after the actual Engine restar
       },
     },
   });
-  const database = restarted.engine.getSnapshot().context.database;
+  const { database } = restarted;
   expect(database?.select().from(agents).all()).toEqual(row);
   expect(database?.select().from(session).all()).toEqual(history);
 });

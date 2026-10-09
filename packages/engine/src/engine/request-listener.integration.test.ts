@@ -1,13 +1,10 @@
 import { createHash } from 'node:crypto';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { createServer, request, type Server } from 'node:http';
+import { request } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { startRouterTestHost } from '#mocks/router';
-import { createRequestGuard } from './request-guard';
-import { createRequestListener } from './request-listener';
-import { appRouter } from './router';
+import { startEngineTestHost } from '#mocks/engine';
 
 const binaryMime = 'application/octet-stream';
 
@@ -25,7 +22,8 @@ const systemInfo = {
 };
 
 let home: string;
-let server: Server;
+let stopEngine: () => Promise<void>;
+let port: number;
 let host: string;
 
 interface HttpRequest {
@@ -48,10 +46,6 @@ const sendHttpRequest = ({
   body,
 }: HttpRequest): Promise<HttpResponse> =>
   new Promise<HttpResponse>((resolve, reject): void => {
-    const address = server.address();
-    if (!address || typeof address === 'string')
-      throw new Error('Server has no TCP address');
-    const { port } = address;
     const outgoing = request(
       { host: '127.0.0.1', port, method, path, headers: { host, ...headers } },
       (response): void => {
@@ -103,34 +97,14 @@ beforeEach(async (): Promise<void> => {
   writeFileSync(join(home, 'blobs', blobId), blobBytes);
   vi.spyOn(console, 'error').mockImplementation((): void => {});
 
-  const { context } = startRouterTestHost({
-    blobsFolder: join(home, 'blobs'),
-  });
-  let listener: ReturnType<typeof createRequestListener> | undefined;
-  server = createServer((incoming, outgoing): void | undefined =>
-    listener?.(incoming, outgoing),
-  );
-  await new Promise<void>((resolve): Server =>
-    server.listen(0, '127.0.0.1', (): void => resolve()),
-  );
-  const address = server.address();
-  if (!address || typeof address === 'string')
-    throw new Error('Server has no TCP address');
-  const { port } = address;
+  const started = await startEngineTestHost({ home });
+  stopEngine = started.stop;
+  port = Number(new URL(started.url).port);
   host = `127.0.0.1:${port}`;
-  listener = createRequestListener({
-    guard: createRequestGuard(port),
-    blobsFolder: join(home, 'blobs'),
-    router: appRouter,
-    createContext: () => context,
-  });
 });
 
 afterEach(async (): Promise<void> => {
-  const closed = new Promise((resolve): Server => server.close(resolve));
-  // A keep-alive socket that turns idle after close() would hold the server open until its timeout.
-  server.closeAllConnections();
-  await closed;
+  await stopEngine();
   rmSync(home, { recursive: true, force: true });
 });
 

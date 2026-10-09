@@ -45,7 +45,7 @@ export async function startEngineTestHost(
       ? dirname(options.database.$client.location() ?? '')
       : (options.runtimeDirectory ?? storage?.directory));
   if (!home) throw new Error('Engine test storage is missing');
-  const port = options.port ?? (await reserveAvailablePort());
+  const port = options.port ?? (await findAvailableLoopbackPort());
   const engine = createActor(engineMachine, {
     input: {
       version: '1.2.3',
@@ -104,7 +104,7 @@ function registerEngineCleanup(
   return stop;
 }
 
-function reserveAvailablePort(): Promise<number> {
+function findAvailableLoopbackPort(): Promise<number> {
   return new Promise((resolve, reject) => {
     const socket = createServer();
     socket.once('error', reject);
