@@ -15,7 +15,7 @@ import {
   type RenamePlan,
 } from './paper-drift/rename-plan.mts';
 import type { Snapshot } from './paper-drift/snapshot-model.mts';
-import { takeSnapshot } from './paper-drift/snapshot.mts';
+import { takeLayerSnapshot, takeSnapshot } from './paper-drift/snapshot.mts';
 import { applySync } from './paper-drift/sync-apply.mts';
 import type { SyncPlans } from './paper-drift/sync-model.mts';
 import { planSync } from './paper-drift/sync-plan.mts';
@@ -207,7 +207,8 @@ async function rename(args: string[]): Promise<void> {
     return;
   }
   await withPaper(async (paper): Promise<void> => {
-    const plan = planRename(await freshSnapshot(paper), masters, map);
+    const layers = await takeLayerSnapshot({ paper, fileId, report });
+    const plan = planRename(layers, masters, map);
     renameReport(plan);
     if (args.includes('--apply')) await applyRename(paper, plan);
     else console.log('Dry run: nothing changed. Add --apply to rename.');

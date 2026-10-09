@@ -1,3 +1,4 @@
+import { setTimeout } from 'node:timers/promises';
 import type { PaperPort } from './paper-port.mts';
 import {
   readBasicInfo,
@@ -22,7 +23,9 @@ import {
 
 // get_tree_summary silently stops after this many layers.
 const SUMMARY_CAP = 1000;
-const STYLE_BATCH = 250;
+// Small batches with a pause between them: whole-file style reads have made Paper Desktop quit.
+const STYLE_BATCH = 100;
+const STYLE_PAUSE_MS = 200;
 
 async function indexChildren(index: Index, nodeId: string): Promise<void> {
   for (const child of await readChildren(index.paper, nodeId))
@@ -57,11 +60,11 @@ async function readStyles(
   ids: string[],
 ): Promise<Record<string, Styles>> {
   const styles: Record<string, Styles> = {};
-  for (let start = 0; start < ids.length; start += STYLE_BATCH)
-    Object.assign(
-      styles,
-      await readComputedStyles(paper, ids.slice(start, start + STYLE_BATCH)),
-    );
+  for (let start = 0; start < ids.length; start += STYLE_BATCH) {
+    const batch = ids.slice(start, start + STYLE_BATCH);
+    Object.assign(styles, await readComputedStyles(paper, batch));
+    await setTimeout(STYLE_PAUSE_MS);
+  }
   return styles;
 }
 
@@ -99,9 +102,23 @@ async function indexArtboards(
   return index.layers;
 }
 
-export async function takeSnapshot(run: SnapshotRun): Promise<Snapshot> {
+// Names and structure only, without styles or tokens: enough to plan a rename.
+export async function takeLayerSnapshot(run: SnapshotRun): Promise<Snapshot> {
   const artboards = await listArtboards(run.paper);
   const layers = await indexArtboards(run, artboards);
+  const takenAt = new Date().toISOString();
+  return {
+    fileId: run.fileId,
+    takenAt,
+    artboards,
+    layers,
+    styles: {},
+    tokens: {},
+  };
+}
+
+export async function takeSnapshot(run: SnapshotRun): Promise<Snapshot> {
+  const { artboards, layers } = await takeLayerSnapshot(run);
   run.report(`Reading styles of ${Object.keys(layers).length} layers`);
   const styles = await readStyles(run.paper, Object.keys(layers));
   const tokens = await readTokens(run.paper);
