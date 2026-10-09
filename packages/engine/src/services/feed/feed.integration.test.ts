@@ -928,6 +928,13 @@ it('streams buffered Agent changes after 60 ms while SQL waits for the store tim
   ).toBeUndefined();
   await vi.advanceTimersByTimeAsync(1);
   expect(
+    database.$client
+      .prepare(
+        "SELECT revision, state, json_extract(payload, '$.content[0].text') AS text FROM feed_row WHERE session_id = ? AND id = ?",
+      )
+      .get('session-1', 'timed-row'),
+  ).toEqual({ revision: 7, state: 'open', text: 'Hello' });
+  expect(
     await createFeedRouterCaller().feed.page({
       sessionId: 'session-1',
       direction: 'tail',
@@ -962,6 +969,13 @@ it('persists the latest open row when the store timer expires before its next st
   });
   await vi.advanceTimersByTimeAsync(50);
   expect(streamed).toBe(false);
+  expect(
+    database.$client
+      .prepare(
+        "SELECT revision, state, json_extract(payload, '$.content[0].text') AS text FROM feed_row WHERE session_id = ? AND id = ?",
+      )
+      .get('session-1', overlappingTimersRowId),
+  ).toEqual({ revision: 7, state: 'open', text: 'Stored first' });
   expect(
     await createFeedRouterCaller().feed.page({
       sessionId: 'session-1',
