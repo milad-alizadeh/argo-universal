@@ -11,9 +11,9 @@ import { Pressable, Text as Span, View } from 'react-native';
 import { withOccurrenceKeys } from '#lib/occurrence-keys';
 import { Text } from '#primitives/text';
 import { Icon } from '../lib/icon';
+import { resourceName } from '../lib/resource-name';
 import { FeedImage } from './feed-image';
 import { inlineCodeClassName } from './feed-markdown';
-import { resourceName } from './feed-reference';
 
 export interface UserMessageProps {
   row: UserMessageRow;
