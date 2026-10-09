@@ -9,13 +9,10 @@ import { createSessionReader, createSessionSnapshotWatcher } from './sessions';
 import type { RegistryActorRef } from './sessions';
 import type { SessionActorRef } from './sessions';
 import { findSessionActor } from './sessions';
-import { createSystemService } from './system';
 
 export function createServerServices(options: {
   database: Database;
   sessions: RegistryActorRef;
-  version: string;
-  startedAt: string;
   createId?: () => string;
 }): Services {
   const findSession = (sessionId: string): SessionActorRef | undefined =>
@@ -26,7 +23,6 @@ export function createServerServices(options: {
     findDatabaseWriter(options.sessions.system);
   return {
     projects: createProjectService(options.database),
-    system: createSystemService(options),
     feed: createFeedService({
       database: options.database,
       readSession: createSessionReader(options.database),

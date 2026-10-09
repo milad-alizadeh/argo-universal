@@ -19,11 +19,6 @@ export function createRejectingServices(
       branches: createUnexpectedCallRejection('projects.branches'),
       ...overrides.projects,
     },
-    system: {
-      info: createUnexpectedCallRejection('system.info'),
-      clock: createUnexpectedCallRejection('system.clock'),
-      ...overrides.system,
-    },
     feed: {
       page: createUnexpectedCallRejection('feed.page'),
       row: createUnexpectedCallRejection('feed.row'),
