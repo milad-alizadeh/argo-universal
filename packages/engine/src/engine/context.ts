@@ -1,8 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { createRejectionCounter } from '../lib/count-rejections';
+import type { uploadBlob } from '../services/blob';
 import { type FeedDeps, findDatabaseWriter } from '../services/feed';
-import { createServerServices } from '../services/server-services';
-import type { Services } from '../services/services';
 import {
   createSessionList,
   createSessionReader,
@@ -13,19 +12,19 @@ import {
 import type { SystemDeps } from '../services/system';
 import type { HttpServerOptions } from './http-server';
 
-export type Context = Pick<
-  HttpServerOptions,
-  'database' | 'sessions' | 'createId'
-> &
+export type Context = Pick<HttpServerOptions, 'sessions' | 'createId'> &
+  Parameters<typeof uploadBlob>[0] &
   SystemDeps &
   FeedDeps & {
-    services: Services;
     projectRejections: ReturnType<typeof createRejectionCounter>;
     sessionList: ReturnType<typeof createSessionList>;
   };
 
 export function createEngineContext(
-  engineOptions: Parameters<typeof createServerServices>[0] & SystemDeps,
+  engineOptions: Pick<HttpServerOptions, 'sessions'> &
+    Partial<Pick<HttpServerOptions, 'createId'>> &
+    Parameters<typeof uploadBlob>[0] &
+    SystemDeps,
 ): Context {
   const findSession = (sessionId: string): SessionActorRef | undefined =>
     findSessionActor(engineOptions.sessions.system, sessionId);
@@ -35,11 +34,11 @@ export function createEngineContext(
     findDatabaseWriter(engineOptions.sessions.system);
   return {
     database: engineOptions.database,
+    blobsFolder: engineOptions.blobsFolder,
     version: engineOptions.version,
     startedAt: engineOptions.startedAt,
     sessions: engineOptions.sessions,
     createId: engineOptions.createId ?? randomUUID,
-    services: createServerServices(engineOptions),
     projectRejections: createRejectionCounter('projects'),
     readSession: createSessionReader(engineOptions.database),
     findFeed,

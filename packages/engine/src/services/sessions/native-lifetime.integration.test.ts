@@ -40,7 +40,9 @@ const closeEvent = 'session.close';
 const setConfigCommand = 'agent.setConfigOption';
 const promptCommand = 'agent.prompt';
 
-afterEach((): void => vi.useRealTimers());
+afterEach((): void => {
+  vi.useRealTimers();
+});
 
 function createNativeSessionHost(
   adapter: AgentAdapter,
