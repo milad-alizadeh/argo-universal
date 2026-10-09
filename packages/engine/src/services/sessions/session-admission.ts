@@ -11,14 +11,14 @@ import type { SessionActorRef } from './session-machine';
 const alreadyAnswered = 'already answered';
 
 export function validatePermissionAnswer(
-  sessionActor: SessionActorRef,
+  sessionActor: SessionActorRef | undefined,
   answer: Pick<
     SessionAnswerPermissionInput,
     'toolCallId' | 'optionId' | 'message'
   >,
-): void {
-  const sessionSnapshot = sessionActor.getSnapshot();
-  const request = sessionSnapshot.context.permissionQueue[0];
+): asserts sessionActor is SessionActorRef {
+  const sessionSnapshot = sessionActor?.getSnapshot();
+  const request = sessionSnapshot?.context.permissionQueue[0];
   if (request?.toolCallId !== answer.toolCallId)
     throw new TRPCError({ code: 'CONFLICT', message: alreadyAnswered });
   if (
@@ -33,7 +33,7 @@ export function validatePermissionAnswer(
   if (
     answer.optionId === 'reject_once' &&
     answer.message &&
-    sessionSnapshot.context.capabilities?.permissionFeedback !== true
+    sessionSnapshot?.context.capabilities?.permissionFeedback !== true
   )
     throw new TRPCError({
       code: 'BAD_REQUEST',
@@ -42,13 +42,13 @@ export function validatePermissionAnswer(
 }
 
 export function validateElicitationAnswer(
-  sessionActor: SessionActorRef,
+  sessionActor: SessionActorRef | undefined,
   answer: Pick<
     SessionAnswerElicitationInput,
     'requestId' | 'action' | 'content'
   >,
-): void {
-  const request = sessionActor.getSnapshot().context.pendingElicitation;
+): asserts sessionActor is SessionActorRef {
+  const request = sessionActor?.getSnapshot().context.pendingElicitation;
   if (request?.requestId !== answer.requestId)
     throw new TRPCError({ code: 'CONFLICT', message: alreadyAnswered });
   if (answer.action !== 'accept') return;

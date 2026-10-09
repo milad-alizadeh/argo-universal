@@ -1,4 +1,5 @@
 import { expect, it } from 'vitest';
+import { isKnownMessage } from './known-messages';
 import { stream } from './mocks/sdk-messages';
 import { initialMappingState, toAgentEvents } from './to-agent-events';
 
@@ -39,3 +40,24 @@ it('ignores the SDK file image source without rejecting its message', (): void =
   );
   expect(result).toEqual({ events: [], mappingState: state });
 });
+
+const knownExtensions = [
+  { type: 'command_lifecycle' },
+  { type: 'system', subtype: 'post_turn_summary' },
+  { type: 'system', subtype: 'session_title_changed' },
+];
+it.each(knownExtensions)(
+  'accepts the approved $type/$subtype extension tag',
+  (extension): void => {
+    expect(Reflect.apply(isKnownMessage, undefined, [extension])).toBe(true);
+  },
+);
+it.each(knownExtensions)(
+  'ignores the approved $type/$subtype extension payload',
+  (extension): void => {
+    const state = initialMappingState();
+    expect(Reflect.apply(toAgentEvents, undefined, [extension, state])).toEqual(
+      { events: [], mappingState: state },
+    );
+  },
+);

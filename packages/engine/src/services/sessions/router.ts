@@ -32,9 +32,13 @@ import {
   validateElicitationAnswer,
   validateConfigChoice,
 } from './session-admission';
-import { sendSessionCommand } from './session-command';
+import {
+  sendSessionCommand,
+  validateSessionCommandAdmission,
+} from './session-command';
 import { createSession } from './session-creation';
 import { openReadySession } from './session-opening';
+import { findSessionActor, requireLiveSessionActor } from './session-system';
 
 export const sessionRouter = router({
   list: publicProcedure
@@ -71,6 +75,7 @@ export const sessionRouter = router({
     .mutation(async ({ ctx, input }): Promise<SessionPromptOutput> => {
       const sessionActor = await openReadySession(ctx, input.sessionId);
       const turnId = ctx.createId();
+      validateSessionCommandAdmission(ctx);
       sendSessionCommand(sessionActor, {
         type: 'session.prompt',
         turnId,
@@ -87,18 +92,27 @@ export const sessionRouter = router({
   cancel: publicProcedure
     .input(SessionCancelInput)
     .output(SessionCancelOutput)
-    .mutation(async ({ ctx, input }): Promise<SessionCancelOutput> => {
-      sendSessionCommand(await openReadySession(ctx, input.sessionId), {
-        type: 'session.cancel',
-      });
+    .mutation(({ ctx, input }): SessionCancelOutput => {
+      validateSessionCommandAdmission(ctx);
+      sendSessionCommand(
+        requireLiveSessionActor(ctx.sessions.system, input.sessionId),
+        {
+          type: 'session.cancel',
+        },
+      );
       return {};
     }),
   setConfigOption: publicProcedure
     .input(SessionSetConfigOptionInput)
     .output(SessionSetConfigOptionOutput)
     .mutation(async ({ ctx, input }): Promise<SessionSetConfigOptionOutput> => {
-      const sessionActor = await openReadySession(ctx, input.sessionId);
+      const sessionActor = await openReadySession(
+        ctx,
+        input.sessionId,
+        'session.setConfigOption',
+      );
       validateConfigChoice(sessionActor, input);
+      validateSessionCommandAdmission(ctx);
       sendSessionCommand(sessionActor, {
         type: 'session.setConfigOption',
         configId: input.configId,
@@ -111,34 +125,38 @@ export const sessionRouter = router({
   answerPermission: publicProcedure
     .input(SessionAnswerPermissionInput)
     .output(SessionAnswerPermissionOutput)
-    .mutation(
-      async ({ ctx, input }): Promise<SessionAnswerPermissionOutput> => {
-        const sessionActor = await openReadySession(ctx, input.sessionId);
-        validatePermissionAnswer(sessionActor, input);
-        sendSessionCommand(sessionActor, {
-          type: 'session.answerPermission',
-          toolCallId: input.toolCallId,
-          optionId: input.optionId,
-          message: input.message,
-        });
-        return {};
-      },
-    ),
+    .mutation(({ ctx, input }): SessionAnswerPermissionOutput => {
+      validateSessionCommandAdmission(ctx);
+      const sessionActor = findSessionActor(
+        ctx.sessions.system,
+        input.sessionId,
+      );
+      validatePermissionAnswer(sessionActor, input);
+      sendSessionCommand(sessionActor, {
+        type: 'session.answerPermission',
+        toolCallId: input.toolCallId,
+        optionId: input.optionId,
+        message: input.message,
+      });
+      return {};
+    }),
   answerElicitation: publicProcedure
     .input(SessionAnswerElicitationInput)
     .output(SessionAnswerElicitationOutput)
-    .mutation(
-      async ({ ctx, input }): Promise<SessionAnswerElicitationOutput> => {
-        const sessionActor = await openReadySession(ctx, input.sessionId);
-        validateElicitationAnswer(sessionActor, input);
-        sendSessionCommand(sessionActor, {
-          type: 'session.answerElicitation',
-          action: input.action,
-          content: input.content,
-        });
-        return {};
-      },
-    ),
+    .mutation(({ ctx, input }): SessionAnswerElicitationOutput => {
+      validateSessionCommandAdmission(ctx);
+      const sessionActor = findSessionActor(
+        ctx.sessions.system,
+        input.sessionId,
+      );
+      validateElicitationAnswer(sessionActor, input);
+      sendSessionCommand(sessionActor, {
+        type: 'session.answerElicitation',
+        action: input.action,
+        content: input.content,
+      });
+      return {};
+    }),
   answerPlanProposal: publicProcedure
     .input(SessionAnswerPlanProposalInput)
     .output(SessionAnswerPlanProposalOutput)

@@ -6,6 +6,7 @@ import type { Context } from '../../engine/context';
 import { findDatabaseWriter, type writerMachine } from '../feed';
 import { readProjectPath } from '../projects';
 import type { RegistryActorRef } from './registry-machine';
+import { validateSessionCommandAdmission } from './session-command';
 import type { SessionActorRef } from './session-machine';
 import {
   requireOpenSessionActor,
@@ -82,13 +83,17 @@ async function waitForSessionInsertCommitted(
 }
 
 export async function createSession(
-  context: Pick<Context, 'database' | 'sessions' | 'createId'>,
+  context: Pick<
+    Context,
+    'database' | 'sessions' | 'createId' | 'sessionCommandSignal'
+  >,
   newSession: SessionNewInput,
 ): Promise<SessionNewOutput> {
   const projectPath = await requireCheckoutProjectPath(
     context.database,
     newSession,
   );
+  validateSessionCommandAdmission(context);
   const sessionId = context.createId();
   sendCheckedRegistryCommand(context.sessions, {
     type: 'sessions.create',

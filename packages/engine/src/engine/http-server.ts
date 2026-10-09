@@ -44,7 +44,12 @@ export async function startHttpServer(
   options: HttpServerOptions,
 ): Promise<HttpServer> {
   const blobsFolder = blobsFolderIn(options.home);
-  const context = createEngineContext({ ...options, blobsFolder });
+  const commandAdmission = new AbortController();
+  const context = createEngineContext({
+    ...options,
+    blobsFolder,
+    sessionCommandSignal: commandAdmission.signal,
+  });
 
   const createContext = (): Context => context;
 
@@ -92,6 +97,7 @@ export async function startHttpServer(
   };
   let closing: Promise<void> | undefined;
   const close = (): Promise<void> => {
+    commandAdmission.abort();
     closing ??= closeHttpServerConnections();
     return closing;
   };
