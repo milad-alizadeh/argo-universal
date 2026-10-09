@@ -90,6 +90,8 @@ let mockDatabase = graphDatabase;
 let removeDatabase: () => void;
 // The closeHttpServer mock stands in for `close()`, so the handle itself is never called.
 const mockHttpServer: HttpServer = {
+  createCaller: (): never =>
+    expect.unreachable('Structural model does not call procedures'),
   close: (): never =>
     expect.unreachable('The machine closes through closeHttpServer'),
 };

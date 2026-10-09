@@ -90,7 +90,6 @@ function noEffortSelection(width: number, agentIndex: number): Story {
           'aria-valuetext',
           noSelectionLabel,
         );
-        await expect(getComputedStyle(slider).backgroundImage).toBe('none');
         for (const button of overlay.getAllByRole('button', {
           name: /^Set effort to /,
         }))

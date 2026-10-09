@@ -1,7 +1,7 @@
 import { agentAdapters } from '@repo/agents';
-import type { AgentAdapter, AgentReady, AgentProbe } from '@repo/agents';
+import type { AgentAdapter, AgentProbe } from '@repo/agents';
 import { z } from 'zod';
-import { createMockAdapter, mockReady, type MockAgentScript } from './adapter';
+import { createMockAdapter, type MockAgentScript } from './adapter';
 
 export const AppFixtureOptions = z.object({
   availability: z
@@ -31,10 +31,9 @@ function createAppFixtureScript(
 ): MockAgentScript {
   return {
     probe: async (): Promise<AgentProbe> => fixtureProbe(options),
-    connect: async (input): Promise<AgentReady> => ({
-      ...mockReady,
-      vendorSessionId: `fixture-${input.sessionId}`,
-    }),
+    connect: (): never => {
+      throw new Error('App fixtures require the ACP process port');
+    },
   };
 }
 

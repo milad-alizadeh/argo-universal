@@ -9,21 +9,25 @@ import { join } from 'node:path';
 import type { Database } from '@repo/db';
 import { blob, blobRef } from '@repo/db/schema';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { startRouterTestHost } from '#mocks/router';
+import { startEngineTestHost } from '#mocks/engine';
 import { removeUnusedBlobs } from './blob';
 
 const newUnusedBlobId = 'new-unused';
 const day = 24 * 60 * 60 * 1000;
 let database: Database;
 let blobsFolder: string;
-let uploadFile: ReturnType<
-  typeof startRouterTestHost
+let uploadFile: Awaited<
+  ReturnType<typeof startEngineTestHost>
 >['caller']['blob']['upload'];
 
-beforeEach((): void => {
-  const { context, caller } = startRouterTestHost();
-  database = context.database;
-  blobsFolder = context.blobsFolder;
+beforeEach(async (): Promise<void> => {
+  const {
+    database: storedDatabase,
+    blobsFolder: storedBlobsFolder,
+    caller,
+  } = await startEngineTestHost();
+  database = storedDatabase;
+  blobsFolder = storedBlobsFolder;
   uploadFile = caller.blob.upload;
 });
 

@@ -25,6 +25,9 @@ export interface HttpServerOptions {
 }
 
 export interface HttpServer {
+  createCaller: (
+    options?: Parameters<typeof appRouter.createCaller>[1],
+  ) => ReturnType<typeof appRouter.createCaller>;
   close: () => Promise<void>;
 }
 
@@ -107,5 +110,9 @@ export async function startHttpServer(
     return closing;
   };
 
-  return { close };
+  return {
+    close,
+    createCaller: (callerOptions) =>
+      appRouter.createCaller(context, callerOptions),
+  };
 }

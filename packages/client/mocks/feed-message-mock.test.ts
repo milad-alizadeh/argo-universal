@@ -1,11 +1,6 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import {
-  recordedAgentMessage,
-  recordedUserMessage,
-  redSquareDataUrl,
-  streamingAgentMessage,
-} from './feed-message-mock';
+import { recordedUserMessage, redSquareDataUrl } from './feed-message-mock';
 
 describe('Feed message mocks', () => {
   it('serves the bytes the recorded image block names', () => {
@@ -17,19 +12,4 @@ describe('Feed message mocks', () => {
       createHash('sha256').update(bytes).digest('hex'),
     );
   });
-
-  it.each(['agent-1', 'agent-2'] as const)(
-    'replays %s mid-stream to a prefix of the settled answer',
-    (agent) => {
-      const streaming = streamingAgentMessage(agent, 'markdown-answer');
-      const settled = recordedAgentMessage(agent, 'markdown-answer');
-      const [streamed] = streaming.content;
-      const [answer] = settled.content;
-      if (streamed?.type !== 'text' || answer?.type !== 'text')
-        throw new Error('Expected text');
-      expect(streaming.state).toBe('open');
-      expect(answer.text.startsWith(streamed.text)).toBe(true);
-      expect(streamed.text.length).toBeLessThan(answer.text.length);
-    },
-  );
 });

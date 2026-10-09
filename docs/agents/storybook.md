@@ -1,5 +1,7 @@
 # Storybook
 
+Read [Testing seams](testing-seams.md) for fixture boundaries, wrapper scope and what each test proves. [ADR-0010](../adr/0010-storybook-mocks-data-at-the-trpc-link.md) owns Storybook's data boundary.
+
 - Presentation: `*.stories.tsx` renders the actual component for people to inspect and use. Name stories for visible states or experiences, not a prop inventory. A file with one story names it after the component (`name: 'Button'`) so the sidebar shows a single entry.
 - Screens: every screen has `<ScreenName>.stories.tsx`, titled `Screens/<ScreenName>`, showing the complete normal screen at the full available viewport with its providers and mocks. Child stories do not replace it. `parameters.screenPreview` fills the viewport; use it for screens, shells and interactive lists.
 - Uniqueness: present each distinct result once. Identical appearance and behavior make stories duplicates even when props differ. Keep the normal state once; additional loading, empty, or error stories must visibly differ.
@@ -11,8 +13,8 @@
 - Isolation: reset story state between visits; clean up timers, subscriptions, and mocks. A story's result must not depend on which story ran before it. `apps/storybook/vitest.setup.ts` restores the viewport before each test.
 - Data: use stable mock IDs, dates, and ordering. Keep interactive changes predictable and reproducible.
 - Platforms: share presentation stories and mock data across web and iOS. Check both previews when changing shared UI; preserve intentional platform differences.
-- Tests: `*.test.stories.tsx`, titled `Tests/<ComponentName>`, uses browser play functions for functionality assertions and test-only scenarios. Assert observable outcomes: loading indicators must be inside the viewport, and animation checks must catch missing movement or overlapping text. Await observable asynchronous states. Plain Vitest tests non-UI code only.
+- Tests: `*.test.stories.tsx`, titled `Tests/<ComponentName>`, uses browser play functions for behaviour, content and accessibility assertions. Apply the [testing seam rule](testing-seams.md) for appearance: styling belongs in visual review; geometry checks must prove a functional outcome such as reachable controls or scroll completion. Await observable asynchronous states. Plain Vitest tests non-UI code only.
   - A play function that clicks, types or selects runs at one viewport for one Agent. Make one story per viewport and Agent with a file-local factory, as `conflict(width)` in `PermissionRequest.test.stories.tsx` does, reusing `settleViewport` and `layoutWidths` from `packages/client/mocks/`.
-  - Take expectations from the story's own recorded catalog, and state what a catalog must contain in one module-level check that throws "Recorded catalog needs …".
+  - Take expected facts from the story's own recorded catalog, independently of the production calculation under test. State what a catalog must contain in one module-level check that throws "Recorded catalog needs …".
   - Assert absence as well as presence; never guard an assertion with `if (found)`.
 - SettingsList: keep one interactive `Settings` presentation story; clicking its rows demonstrates selection.

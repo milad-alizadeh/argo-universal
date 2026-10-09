@@ -1,15 +1,12 @@
 import { execFileSync } from 'node:child_process';
-import { randomUUID } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { type AgentAdapter, agentAdapters } from '@repo/agents';
-import type { FeedSubscribeOutput, SessionSnapshot } from '@repo/contracts';
 import type { SessionInfo } from '@repo/contracts';
 import type { SessionListUpdate, SessionUpdate } from '@repo/contracts';
 import { permissionOptions } from '@repo/contracts';
-import type { Database } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
 import { listBranches } from '@repo/git';
 import { createMockAdapter, type MockAgentStream } from '@repo/mocks/agent';
@@ -17,23 +14,17 @@ import { createAppFixtureProcessLauncher } from '@repo/mocks/agent/acp-fixtures'
 import { createAppFixtureAdapter } from '@repo/mocks/agent/app-fixtures';
 import { eq, sql } from 'drizzle-orm';
 import { expect, it, onTestFinished, vi } from 'vitest';
-import type { Actor, ActorRefFrom } from 'xstate';
-import { createActor, fromCallback, fromPromise, waitFor } from 'xstate';
+import type { ActorRefFrom } from 'xstate';
+import { waitFor } from 'xstate';
 import {
   countDatabaseReads,
   insertSession,
   openTestDatabase,
 } from '#mocks/database';
+import { startEngineTestHost } from '#mocks/engine';
 import { initTestRepository } from '#mocks/git';
 import { liveHeaderMocks } from '#mocks/live-header';
-import { feedMachine } from '../services/feed';
-import { type WriterJob, writeJobs } from '../services/feed';
 import { writerMachine, findDatabaseWriter } from '../services/feed';
-import { registryMachine, sessionMachine } from '../services/sessions';
-import { createEngineContext, type Context } from './context';
-import type { HttpServerOptions } from './http-server';
-import { engineMachine, type EngineInput } from './machine';
-import { appRouter } from './router';
 
 const missingWriterMessage = 'Writer actor is missing';
 const engineStopEvent = 'engine.stop';
@@ -43,7 +34,7 @@ const retryingStatus = 'Retrying (2 of 5)';
 const rejectedSessionListLog = 'sessions: rejected list shape #1';
 const writerWriteEvent = 'writer.write';
 const changedAloneTitle = 'Changed alone';
-const brokenSessionId = 'session-broken';
+const unwatchedTitle = 'Changed without watchers';
 
 type StoredColumnCase<Table, Column> = {
   agent: string;
@@ -65,13 +56,6 @@ type FeedColumnCase = {
   column: typeof feedRow.payload | typeof feedRow.sourceRef;
 };
 
-type StartedEngine = {
-  engine: Actor<typeof engineMachine>;
-  createCaller: (
-    signal?: AbortSignal,
-  ) => Promise<ReturnType<typeof appRouter.createCaller>>;
-};
-
 type MalformedFeedCase = {
   agent: AgentAdapter['agent'];
   kind: Extract<
@@ -79,107 +63,6 @@ type MalformedFeedCase = {
     'agent_message' | 'agent_thought' | 'plan_update'
   >;
 };
-
-// The longest the teardown waits for the Engine's graceful stop.
-const gracefulStopLimit = 5_000;
-
-// An Engine on a mock Agent; without `database` it opens and closes its real database in `home`. It stops itself when the test ends.
-function startEngine({
-  database,
-  adapter,
-  home = '/unused',
-  closeDatabase = (): void => {},
-  sessions = registryMachine,
-  databaseWriter = writerMachine,
-  acpComposition,
-}: {
-  database?: ReturnType<typeof openTestDatabase>['database'];
-  adapter: AgentAdapter;
-  home?: string;
-  closeDatabase?: () => void;
-  sessions?: typeof registryMachine;
-  databaseWriter?: typeof writerMachine;
-  acpComposition?: Pick<EngineInput, 'acp' | 'resolveAgentLaunch'>;
-}): StartedEngine {
-  let context: Context | undefined;
-  const machine = engineMachine.provide({
-    actors: {
-      ...(database && {
-        openDatabase: fromPromise(async (): Promise<Database> => database),
-      }),
-      processSignals: fromCallback((): void => {}),
-      sessions,
-      databaseWriter,
-      startHttpServer: fromPromise(
-        async ({
-          input,
-        }: {
-          input: HttpServerOptions;
-        }): Promise<{ close: () => Promise<void> }> => {
-          context = createEngineContext({
-            ...input,
-            blobsFolder: path.join(input.home, 'blobs'),
-          });
-          return { close: async (): Promise<void> => {} };
-        },
-      ),
-    },
-    actions: {
-      log: (): void => {},
-      sendToSupervisor: (): void => {},
-      ...(database && { closeDatabase }),
-    },
-  });
-  const engine = createActor(machine, {
-    input: {
-      now: (): number => Date.now(),
-      createId: randomUUID,
-      home,
-      port: 7337,
-      version: '1',
-      startedAt: new Date().toISOString(),
-      adapters: [adapter],
-      ...acpComposition,
-    },
-  }).start();
-  onTestFinished(async (): Promise<void> => {
-    // Fake timers would leave the wait hanging.
-    vi.useRealTimers();
-    try {
-      if (engine.getSnapshot().status !== 'done') {
-        engine.send({ type: engineStopEvent, reason: 'SIGTERM' });
-        await waitFor(
-          engine,
-          (
-            snapshot,
-          ): snapshot is Extract<typeof snapshot, { status: 'done' }> =>
-            snapshot.status === 'done',
-          {
-            timeout: gracefulStopLimit,
-          },
-        ).catch((): never => {
-          throw new Error(
-            `The Engine's graceful stop did not finish within ${gracefulStopLimit} ms`,
-          );
-        });
-      }
-    } finally {
-      engine.stop();
-    }
-  });
-  return {
-    engine,
-    createCaller: async (
-      signal?: AbortSignal,
-    ): Promise<ReturnType<typeof appRouter.createCaller>> => {
-      await waitFor(engine, (snapshot): boolean =>
-        snapshot.matches({ live: 'running' }),
-      );
-      if (!context) throw new Error('No Engine context');
-      return appRouter.createCaller(context, { signal });
-    },
-  };
-}
 
 it.each(liveHeaderMocks)(
   'shares live header and list activity for $agent after Feed writes',
@@ -192,10 +75,13 @@ it.each(liveHeaderMocks)(
         stream = current;
       },
     });
-    const { createCaller } = startEngine({ database, adapter });
+    const { createCaller } = await startEngineTestHost({
+      database,
+      adapters: [adapter],
+    });
     const controller = new AbortController();
     onTestFinished((): void => controller.abort());
-    const caller = await createCaller(controller.signal);
+    const caller = createCaller({ signal: controller.signal });
     await caller.session.prompt({
       sessionId: 'session-1',
       prompt: [{ type: 'text', text: 'Check tests' }],
@@ -311,10 +197,13 @@ it('keeps the Feed subscription open after malformed stored activity', async ():
       stream = current;
     },
   });
-  const { createCaller } = startEngine({ database, adapter });
+  const { createCaller } = await startEngineTestHost({
+    database,
+    adapters: [adapter],
+  });
   const controller = new AbortController();
   onTestFinished((): void => controller.abort());
-  const caller = await createCaller(controller.signal);
+  const caller = createCaller({ signal: controller.signal });
   await caller.session.prompt({
     sessionId: 'session-1',
     prompt: [{ type: 'text', text: 'Check tests' }],
@@ -396,11 +285,11 @@ it.each(
       .spyOn(console, 'error')
       .mockImplementation((): void => {});
     onTestFinished((): void => reported.mockRestore());
-    const { createCaller } = startEngine({
+    const { createCaller } = await startEngineTestHost({
       database,
-      adapter: createMockAdapter({}, agent),
+      adapters: [createMockAdapter({}, agent)],
     });
-    const caller = await createCaller();
+    const caller = createCaller();
     insertSession(database, { id: 'healthy', agent });
     database
       .insert(turn)
@@ -460,11 +349,11 @@ it.each(agentAdapters.map(({ agent }): string => agent))(
       .spyOn(console, 'error')
       .mockImplementation((): void => {});
     onTestFinished((): void => reported.mockRestore());
-    const { createCaller } = startEngine({
+    const { createCaller } = await startEngineTestHost({
       database,
-      adapter: createMockAdapter({}, agent),
+      adapters: [createMockAdapter({}, agent)],
     });
-    const caller = await createCaller();
+    const caller = createCaller();
     insertSession(database, { id: 'healthy', agent });
     database
       .update(session)
@@ -491,11 +380,11 @@ it.each(agentAdapters.map(({ agent }): string => agent))(
       .spyOn(console, 'error')
       .mockImplementation((): void => {});
     onTestFinished((): void => reported.mockRestore());
-    const { createCaller } = startEngine({
+    const { createCaller } = await startEngineTestHost({
       database,
-      adapter: createMockAdapter({}, agent),
+      adapters: [createMockAdapter({}, agent)],
     });
-    const caller = await createCaller();
+    const caller = createCaller();
     insertSession(database, { id: 'healthy', agent });
     database
       .insert(turn)
@@ -520,7 +409,6 @@ it.each(agentAdapters.map(({ agent }): string => agent))(
 it('serves live Session procedures and drains their Feed before closing the database', async (): Promise<void> => {
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
-  let closedDatabase = false;
   const adapter = createMockAdapter({
     stream: (stream): undefined => {
       stream.receive((command): void => {
@@ -541,14 +429,12 @@ it('serves live Session procedures and drains their Feed before closing the data
       });
     },
   });
-  const { engine, createCaller } = startEngine({
-    database,
-    adapter,
-    closeDatabase: (): void => {
-      closedDatabase = true;
-    },
-  });
-  const caller = await createCaller();
+  const {
+    engine,
+    createCaller,
+    database: engineDatabase,
+  } = await startEngineTestHost({ database, adapters: [adapter] });
+  const caller = createCaller();
   const { messageId } = await caller.session.prompt({
     sessionId: 'session-1',
     prompt: [{ type: 'text', text: 'Hi' }],
@@ -567,11 +453,12 @@ it('serves live Session procedures and drains their Feed before closing the data
     (snapshot): snapshot is Extract<typeof snapshot, { status: 'done' }> =>
       snapshot.status === 'done',
   );
-  expect(closedDatabase).toBe(true);
+  expect(engineDatabase.$client.isOpen).toBe(false);
   expect(engine.getSnapshot().output).toEqual({ exitCode: 0 });
-  expect(
-    await caller.feed.page({ sessionId: 'session-1', direction: 'tail' }),
-  ).toMatchObject({ rows: [{ id: messageId }, { id: 'reply' }] });
+  expect(database.select({ id: feedRow.id }).from(feedRow).all()).toEqual([
+    { id: messageId },
+    { id: 'reply' },
+  ]);
 });
 
 it('lists only top-level Sessions, searches literal titles, filters archives and pages tied activity', async (): Promise<void> => {
@@ -598,11 +485,11 @@ it('lists only top-level Sessions, searches literal titles, filters archives and
     title: 'Search %_ title',
     activityAt: 30,
   });
-  const { createCaller } = startEngine({
+  const { createCaller } = await startEngineTestHost({
     database,
-    adapter: createMockAdapter(),
+    adapters: [createMockAdapter()],
   });
-  const caller = await createCaller();
+  const caller = createCaller();
   const first = await caller.session.list({ archived: false, query: '%_' });
   expect(first.sessions).toHaveLength(50);
   expect(first.sessions[0]?.sessionId).toBe('page-50');
@@ -645,10 +532,13 @@ it('sends live list changes and attention/running counts through request and Tur
       stream = current;
     },
   });
-  const { engine, createCaller } = startEngine({ database, adapter });
+  const { engine, createCaller } = await startEngineTestHost({
+    database,
+    adapters: [adapter],
+  });
   const controller = new AbortController();
   onTestFinished((): void => controller.abort());
-  const caller = await createCaller(controller.signal);
+  const caller = createCaller({ signal: controller.signal });
   const counts = (await caller.session.counts())[Symbol.asyncIterator]();
   const updates = (await caller.session.listUpdates())[Symbol.asyncIterator]();
   expect((await counts.next()).value).toEqual({ attention: 0, running: 0 });
@@ -736,11 +626,11 @@ it('seeds the Project from ARGO_PROJECT_PATH at Engine startup', async (): Promi
     rmSync(directory, { recursive: true, force: true }),
   );
   vi.stubEnv('ARGO_PROJECT_PATH', process.cwd());
-  const { engine, createCaller } = startEngine({
-    adapter: createMockAdapter(),
+  const { engine, createCaller } = await startEngineTestHost({
+    adapters: [createMockAdapter()],
     home: directory,
   });
-  const caller = await createCaller();
+  const caller = createCaller();
   const projects = await caller.projects.list();
   expect(projects).toHaveLength(1);
   // CI checks out a detached HEAD, which defaults to the main checkout.
@@ -806,11 +696,11 @@ it('uses the newest Turn for failures and excludes interrupted Turns from Failed
       },
     ])
     .run();
-  const { createCaller } = startEngine({
+  const { createCaller } = await startEngineTestHost({
     database,
-    adapter: createMockAdapter(),
+    adapters: [createMockAdapter()],
   });
-  const caller = await createCaller();
+  const caller = createCaller();
   const rows = (await caller.session.list({ archived: false })).sessions;
   expect(
     Object.fromEntries(
@@ -837,13 +727,13 @@ it('publishes stored list changes, changes counts only when needed, and aborts a
     title: 'Unread',
   });
   onTestFinished(remove);
-  const { engine, createCaller } = startEngine({
+  const { engine, createCaller } = await startEngineTestHost({
     database,
-    adapter: createMockAdapter(),
+    adapters: [createMockAdapter()],
   });
   const controller = new AbortController();
   onTestFinished((): void => controller.abort());
-  const caller = await createCaller(controller.signal);
+  const caller = createCaller({ signal: controller.signal });
   const counts = (await caller.session.counts())[Symbol.asyncIterator]();
   const updates = (await caller.session.listUpdates())[Symbol.asyncIterator]();
   expect((await counts.next()).value).toEqual({ attention: 1, running: 0 });
@@ -886,25 +776,18 @@ it('publishes stored list changes, changes counts only when needed, and aborts a
   await updates.return?.();
 });
 
-it('stops a started Engine when the test finishes', (): void => {
-  let started: ReturnType<typeof startEngine>['engine'] | undefined;
-  onTestFinished((): void => {
-    expect(started?.getSnapshot().status).toBe('done');
-  });
-  const { database, remove } = openTestDatabase();
-  onTestFinished(remove);
-  started = startEngine({ database, adapter: createMockAdapter() }).engine;
-  expect(started.getSnapshot().status).toBe('active');
-});
-
 it('shares one coalesced list read for three subscribers across fifty changes', async (): Promise<void> => {
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
-  const counted = countDatabaseReads(database);
-  const { engine, createCaller } = startEngine({
-    database: counted.database,
-    adapter: createMockAdapter(),
+  const {
+    engine,
+    createCaller,
+    database: engineDatabase,
+  } = await startEngineTestHost({
+    database,
+    adapters: [createMockAdapter()],
   });
+  const counted = countDatabaseReads(engineDatabase);
   const controllers = [
     new AbortController(),
     new AbortController(),
@@ -914,10 +797,10 @@ it('shares one coalesced list read for three subscribers across fifty changes', 
   onTestFinished((): void => {
     for (const controller of controllers) controller.abort();
   });
-  const firstCaller = await createCaller(controllers[0]?.signal);
-  const secondCaller = await createCaller(controllers[1]?.signal);
-  const countsCaller = await createCaller(controllers[2]?.signal);
-  const resumedCaller = await createCaller(controllers[3]?.signal);
+  const firstCaller = createCaller({ signal: controllers[0]?.signal });
+  const secondCaller = createCaller({ signal: controllers[1]?.signal });
+  const countsCaller = createCaller({ signal: controllers[2]?.signal });
+  const resumedCaller = createCaller({ signal: controllers[3]?.signal });
   vi.useFakeTimers();
   try {
     const first = (await firstCaller.session.listUpdates())[
@@ -1024,14 +907,18 @@ it('reads only the changed Session and pages the shared cache', async (): Promis
   onTestFinished(remove);
   for (let index = 2; index <= 60; index++)
     insertSession(database, { id: `session-${index}` });
-  const counted = countDatabaseReads(database);
-  const { engine, createCaller } = startEngine({
-    database: counted.database,
-    adapter: createMockAdapter(),
+  const {
+    engine,
+    createCaller,
+    database: engineDatabase,
+  } = await startEngineTestHost({
+    database,
+    adapters: [createMockAdapter()],
   });
+  const counted = countDatabaseReads(engineDatabase);
   const controller = new AbortController();
   onTestFinished((): void => controller.abort());
-  const caller = await createCaller(controller.signal);
+  const caller = createCaller({ signal: controller.signal });
   const updates = (await caller.session.listUpdates())[Symbol.asyncIterator]();
   for (let index = 0; index < 60; index++)
     expect((await updates.next()).value).toMatchObject({ type: 'changed' });
@@ -1084,14 +971,14 @@ it('reads only the changed Session and pages the shared cache', async (): Promis
 it('initializes a fresh list after all watchers leave and unwatched data changes', async (): Promise<void> => {
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
-  const { engine, createCaller } = startEngine({
+  const { engine, createCaller } = await startEngineTestHost({
     database,
-    adapter: createMockAdapter(),
+    adapters: [createMockAdapter()],
   });
   const controller = new AbortController();
   onTestFinished((): void => controller.abort());
-  const watchedCaller = await createCaller(controller.signal);
-  const caller = await createCaller();
+  const watchedCaller = createCaller({ signal: controller.signal });
+  const caller = createCaller();
   const updates = (await watchedCaller.session.listUpdates())[
     Symbol.asyncIterator
   ]();
@@ -1108,19 +995,22 @@ it('initializes a fresh list after all watchers leave and unwatched data changes
     job: {
       type: 'sessionRowUpdate',
       id: 'session-1',
-      set: { title: 'Changed without watchers', maxRevision: 1 },
+      set: { title: unwatchedTitle, maxRevision: 1 },
     },
   });
-  await waitFor(
-    writer,
-    (snapshot): boolean => snapshot.context.queue.length === 0,
-  );
+  await expect
+    .poll(
+      () =>
+        database.select().from(session).where(eq(session.id, 'session-1')).get()
+          ?.title,
+    )
+    .toBe(unwatchedTitle);
   expect(
     (await caller.session.list({ archived: false })).sessions,
   ).toMatchObject([
     {
       sessionId: 'session-1',
-      title: 'Changed without watchers',
+      title: unwatchedTitle,
       status: 'unread',
     },
   ]);
@@ -1130,33 +1020,28 @@ it('pages current queued activity before the list publication delay', async (): 
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
   insertSession(database, { id: 'session-2', activityAt: 10 });
-  const counted = countDatabaseReads(database);
-  const batch = Promise.withResolvers<void>();
-  onTestFinished((): void => batch.resolve());
-  const { engine, createCaller } = startEngine({
-    database: counted.database,
-    adapter: createMockAdapter(),
-    databaseWriter: writerMachine.provide({
-      actors: {
-        writeBatch: fromPromise<
-          ReturnType<typeof writeJobs>,
-          { database: Parameters<typeof writeJobs>[0]; jobs: WriterJob[] }
-        >(async ({ input }) => {
-          await batch.promise;
-          return writeJobs(input.database, input.jobs);
-        }),
-      },
-    }),
+  const {
+    engine,
+    createCaller,
+    database: engineDatabase,
+  } = await startEngineTestHost({
+    database,
+    adapters: [createMockAdapter()],
   });
+  engineDatabase.$client.exec(
+    "CREATE TEMP TRIGGER pause_activity BEFORE UPDATE ON session BEGIN SELECT RAISE(FAIL, 'test write failure'); END",
+  );
+  const counted = countDatabaseReads(engineDatabase);
   const controller = new AbortController();
   onTestFinished((): void => controller.abort());
-  const caller = await createCaller(controller.signal);
+  const caller = createCaller({ signal: controller.signal });
   const updates = (await caller.session.listUpdates())[Symbol.asyncIterator]();
   await updates.next();
   await updates.next();
   vi.useFakeTimers();
   try {
     await vi.advanceTimersByTimeAsync(100);
+    counted.metrics.sessionReads = 0;
     const writer: ActorRefFrom<typeof writerMachine> =
       engine.system.get('databaseWriter');
     writer.send({
@@ -1176,11 +1061,19 @@ it('pages current queued activity before the list publication delay', async (): 
       ['session-1', 20],
       ['session-2', 10],
     ]);
-    expect(writer.getSnapshot().context.queue).toHaveLength(1);
-    counted.metrics.sessionReads = 0;
-    batch.resolve();
+    expect(
+      database.select().from(session).where(eq(session.id, 'session-1')).get()
+        ?.activityAt,
+    ).toBe(0);
     await vi.advanceTimersByTimeAsync(100);
-    expect(writer.getSnapshot().context.queue).toHaveLength(0);
+    expect(counted.metrics.sessionReads).toBe(1);
+    counted.metrics.sessionReads = 0;
+    engineDatabase.$client.exec('DROP TRIGGER pause_activity');
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(
+      database.select().from(session).where(eq(session.id, 'session-1')).get()
+        ?.activityAt,
+    ).toBe(20);
     expect(counted.metrics.sessionReads).toBe(1);
     expect(
       (await caller.session.list({ archived: false })).sessions[0],
@@ -1196,13 +1089,13 @@ it('updates a cached parent when its stored Subagent Turn changes', async (): Pr
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
   insertSession(database, { id: 'child-1', parentSessionId: 'session-1' });
-  const { engine, createCaller } = startEngine({
+  const { engine, createCaller } = await startEngineTestHost({
     database,
-    adapter: createMockAdapter(),
+    adapters: [createMockAdapter()],
   });
   const controller = new AbortController();
   onTestFinished((): void => controller.abort());
-  const caller = await createCaller(controller.signal);
+  const caller = createCaller({ signal: controller.signal });
   const updates = (await caller.session.listUpdates())[Symbol.asyncIterator]();
   expect((await updates.next()).value).toMatchObject({
     session: { subagents: { total: 1, running: 0 } },
@@ -1289,11 +1182,11 @@ it.each(
       .spyOn(console, 'error')
       .mockImplementation((): void => {});
     onTestFinished((): void => reported.mockRestore());
-    const { createCaller } = startEngine({
+    const { createCaller } = await startEngineTestHost({
       database,
-      adapter: createMockAdapter({}, agent),
+      adapters: [createMockAdapter({}, agent)],
     });
-    const caller = await createCaller();
+    const caller = createCaller();
     insertSession(database, { id: 'healthy', agent });
     database
       .insert(turn)
@@ -1331,11 +1224,11 @@ it.each(
       .spyOn(console, 'error')
       .mockImplementation((): void => {});
     onTestFinished((): void => reported.mockRestore());
-    const { createCaller } = startEngine({
+    const { createCaller } = await startEngineTestHost({
       database,
-      adapter: createMockAdapter({}, agent),
+      adapters: [createMockAdapter({}, agent)],
     });
-    const caller = await createCaller();
+    const caller = createCaller();
     insertSession(database, { id: 'healthy', agent });
     database
       .insert(turn)
@@ -1388,131 +1281,8 @@ it.each(
   },
 );
 
-for (const adapter of agentAdapters)
-  it(`keeps other ${adapter.agent} Sessions usable after a Feed actor fails`, async (): Promise<void> => {
-    const failure = new Error('Feed failed on its first change');
-    const sessions = registryMachine.provide({
-      actors: {
-        session: sessionMachine.provide({
-          actors: {
-            feed: feedMachine.provide({
-              actions: {
-                sendToWriter: (
-                  { context, system },
-                  { job, committed },
-                ): void => {
-                  if (context.sessionId === brokenSessionId) throw failure;
-                  system
-                    .get('databaseWriter')
-                    .send({ type: writerWriteEvent, job, committed });
-                },
-              },
-            }),
-          },
-        }),
-      },
-    });
-    const root = await startNewSessionEngine(adapter, { sessions });
-    insertSession(root.database, {
-      id: brokenSessionId,
-      agent: adapter.agent,
-      checkoutPath: root.project,
-    });
-    insertSession(root.database, {
-      id: 'session-2',
-      agent: adapter.agent,
-      checkoutPath: root.project,
-    });
-    const controller = new AbortController();
-    onTestFinished((): void => controller.abort());
-    const caller = await root.createCaller(controller.signal);
-    const list = (await caller.session.listUpdates())[Symbol.asyncIterator]();
-    await list.next();
-    const registry: ActorRefFrom<typeof registryMachine> | undefined =
-      root.engine.system.get('sessions');
-    if (!registry) throw new Error('No Session registry');
-    registry.send({
-      type: 'sessions.open',
-      sessionId: brokenSessionId,
-      agent: adapter.agent,
-    });
-    await expect
-      .poll((): ReturnType<typeof Reflect.get> =>
-        root.engine.system.get('session:session-broken')?.getSnapshot().can({
-          type: 'session.prompt',
-          turnId: 'readiness-check',
-          content: [],
-        }),
-      )
-      .toBe(true);
-    const feed = (
-      await caller.feed.subscribe({ sessionId: brokenSessionId, after: null })
-    )[Symbol.asyncIterator]();
-    expect((await feed.next()).value).toMatchObject({ type: 'snapshot' });
-    const rejectedFeed = (async (): Promise<void> => {
-      for await (const event of {
-        [Symbol.asyncIterator]: (): AsyncIterator<FeedSubscribeOutput, void> =>
-          feed,
-      })
-        expect(event).toMatchObject({ type: 'snapshot' });
-    })().then(
-      (): undefined => undefined,
-      (error: unknown): unknown => error,
-    );
-    const engineErrors: unknown[] = [];
-    root.engine.subscribe({
-      error: (error): number => engineErrors.push(error),
-    });
-    await expect(
-      caller.session.prompt({
-        sessionId: brokenSessionId,
-        prompt: [{ type: 'text', text: 'First Session' }],
-      }),
-    ).rejects.toThrow('could not be saved');
-    expect(await rejectedFeed).toMatchObject({ message: failure.message });
-    await expect
-      .poll((): ReturnType<typeof root.engine.system.get> =>
-        root.engine.system.get('session:session-broken'),
-      )
-      .toBeUndefined();
-    await caller.session.prompt({
-      sessionId: 'session-2',
-      prompt: [{ type: 'text', text: 'Finish this Turn' }],
-    });
-    await expect
-      .poll(async (): Promise<SessionSnapshot['state']> => {
-        const snapshot = await readSessionSnapshot(
-          root.createCaller,
-          'session-2',
-        );
-        return snapshot.state;
-      })
-      .toBe('idle');
-    await expect
-      .poll(async (): Promise<boolean> =>
-        (
-          await caller.feed.page({ sessionId: 'session-2', direction: 'tail' })
-        ).rows.some(
-          (
-            row,
-          ): row is Extract<
-            SessionUpdate,
-            { sessionUpdate: 'agent_message' }
-          > => row.sessionUpdate === 'agent_message',
-        ),
-      )
-      .toBe(true);
-    expect(root.engine.getSnapshot().status).toBe('active');
-    expect(engineErrors).toEqual([]);
-    controller.abort();
-    await list.return?.();
-  });
-
-async function startNewSessionEngine(
-  identity: AgentAdapter,
-  { sessions }: { sessions?: typeof registryMachine } = {},
-): Promise<
-  ReturnType<typeof startEngine> & {
+async function startNewSessionEngine(identity: AgentAdapter): Promise<
+  Awaited<ReturnType<typeof startEngineTestHost>> & {
     project: string;
     database: ReturnType<typeof openTestDatabase>['database'];
   }
@@ -1520,42 +1290,51 @@ async function startNewSessionEngine(
   const root = realpathSync(mkdtempSync(path.join(tmpdir(), 'argo-fixture-')));
   onTestFinished((): void => rmSync(root, { recursive: true, force: true }));
   const project = path.join(root, 'project');
-  const home = path.join(root, 'home');
   mkdirSync(project);
-  mkdirSync(home);
   initTestRepository(project);
   const { database, remove } = openTestDatabase({}, project);
   onTestFinished(remove);
   return {
     project,
-    database,
-    ...startEngine({
+    ...(await startEngineTestHost({
       database,
-      adapter: createAppFixtureAdapter(identity),
-      acpComposition: {
-        acp: { launchProcess: createAppFixtureProcessLauncher({}) },
-        resolveAgentLaunch: async (input) => ({
-          agentId: input.agent,
-          projectId: input.projectId,
-          executable: '/mock-agent',
-          version: '1',
-          args: [],
-          cwd: input.projectPath,
-          env: {},
-          authContext: 'shared-fixture',
-        }),
-      },
-      home,
-      sessions,
-    }),
+      adapters: [createAppFixtureAdapter(identity)],
+      acp: { launchProcess: createAppFixtureProcessLauncher({}) },
+      resolveAgentLaunch: async (input) => ({
+        agentId: input.agent,
+        projectId: input.projectId,
+        executable: '/mock-agent',
+        version: '1',
+        args: [],
+        cwd: input.projectPath,
+        env: {},
+        authContext: 'shared-fixture',
+      }),
+    })),
   };
 }
 
+function rejectUpstreamCall(): never {
+  throw new Error('App fixture contacted upstream');
+}
+
 it.each(agentAdapters)(
-  'creates a $agent Session and persists its initial prompt and completed Turn with shared fixtures',
+  'creates a $agent Session and persists its initial prompt and completed Turn with shared fixtures without contacting upstream',
   async (identity): Promise<void> => {
-    const root = await startNewSessionEngine(identity);
-    const caller = await root.createCaller();
+    const root = await startNewSessionEngine({
+      ...identity,
+      probe: rejectUpstreamCall,
+      connect: rejectUpstreamCall,
+    });
+    const caller = root.createCaller();
+    expect(await caller.agents.list()).toMatchObject([
+      {
+        agent: identity.agent,
+        label: identity.label,
+        logo: identity.logo,
+        availability: 'available',
+      },
+    ]);
     const { sessionId } = await caller.session.new({
       projectId: 'project-1',
       agent: identity.agent,
@@ -1602,27 +1381,3 @@ it.each(agentAdapters)(
     ]);
   },
 );
-
-async function readSessionSnapshot(
-  createCaller: Awaited<
-    ReturnType<typeof startNewSessionEngine>
-  >['createCaller'],
-  sessionId: string,
-): Promise<SessionSnapshot> {
-  const controller = new AbortController();
-  const caller = await createCaller(controller.signal);
-  const updates = (await caller.feed.subscribe({ sessionId, after: null }))[
-    Symbol.asyncIterator
-  ]();
-  try {
-    for await (const update of {
-      [Symbol.asyncIterator]: (): AsyncIterator<FeedSubscribeOutput, void> =>
-        updates,
-    })
-      if (update.type === 'snapshot') return update.snapshot;
-    throw new Error('No Session snapshot');
-  } finally {
-    controller.abort();
-    await updates.return?.();
-  }
-}

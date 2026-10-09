@@ -2,7 +2,6 @@ import { expect, it, vi } from 'vitest';
 import { waitFor } from 'xstate';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { requireResourceProcessAt } from '#mocks/acp-resource';
-import { findSessionActor } from '../services/sessions';
 
 it('Engine owns shared empty Sessions across App disconnection and waits for observed process exit', async () => {
   let identity = 0;
@@ -31,14 +30,17 @@ it('Engine owns shared empty Sessions across App disconnection and waits for obs
   host.engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
   await vi.waitFor(() => expect(process.terminations).toBe(1));
   expect(host.engine.getSnapshot().status).toBe('active');
-  expect(host.context.readSession(second.sessionId).agent).toBe('mock');
-  expect(host.context.findWriter()?.getSnapshot().status).toBe('active');
+  expect(
+    host.database.$client
+      .prepare('SELECT agent FROM session WHERE id = ?')
+      .get(second.sessionId)?.agent,
+  ).toBe('mock');
   process.exited.resolve();
   await waitFor(host.engine, (snapshot) => snapshot.status === 'done');
   expect(host.engine.getSnapshot().output).toEqual({ exitCode: 0 });
 });
 
-it('a failed Session close reports failure while retaining Feed until its process exits', async () => {
+it('a failed Session close reports failure and Engine shutdown waits for its process exit', async () => {
   let closes = 0;
   const host = await startAcpEngine({
     autoExit: false,
@@ -51,24 +53,14 @@ it('a failed Session close reports failure while retaining Feed until its proces
   await expect(host.caller.session.close(created)).rejects.toThrow(
     'Internal error',
   );
-  const actor = findSessionActor(host.engine.system, created.sessionId);
-  expect(
-    actor?.getSnapshot().matches({ open: { acp: 'retainingCleanup' } }),
-  ).toBe(true);
-  expect(host.context.findFeed(created.sessionId)?.getSnapshot().status).toBe(
-    'active',
-  );
   await expect(host.caller.session.close(created)).rejects.toThrow(
     'Internal error',
   );
   expect(closes).toBe(1);
   const process = requireResourceProcessAt(host.peer.processes);
   expect(process.terminations).toBe(1);
+  host.engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
+  expect(host.engine.getSnapshot().status).toBe('active');
   process.exited.resolve();
-  await vi.waitFor(() =>
-    expect(
-      findSessionActor(host.engine.system, created.sessionId),
-    ).toBeUndefined(),
-  );
-  expect(host.context.readSession(created.sessionId).agent).toBe('mock');
+  await waitFor(host.engine, (snapshot) => snapshot.status === 'done');
 });

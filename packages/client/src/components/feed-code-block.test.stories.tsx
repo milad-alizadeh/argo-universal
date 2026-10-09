@@ -70,7 +70,7 @@ export const LongTitleKeepsFilenameVisible: Story = {
   },
 };
 
-function copyIconFollowsCssHoverAndFocus(width: number): Story {
+function copyControlFollowsHoverAndFocus(width: number): Story {
   return {
     render: (args) => (
       <View className="p-4">
@@ -85,19 +85,19 @@ function copyIconFollowsCssHoverAndFocus(width: number): Story {
       const box = canvas.getByTestId(codeScrollId).parentElement;
       if (!box) throw new Error('Missing code block');
       await page.elementLocator(box).unhover({ position: { x: 1, y: 1 } });
-      await expect(getComputedStyle(copy).opacity).toBe('0');
+      await expect(copy).not.toBeVisible();
       await page.elementLocator(canvas.getByTestId(codeScrollId)).hover();
-      await expect(getComputedStyle(copy).opacity).toBe('1');
+      await expect(copy).toBeVisible();
       await page.elementLocator(box).unhover({ position: { x: 1, y: 1 } });
-      await expect(getComputedStyle(copy).opacity).toBe('0');
+      await expect(copy).not.toBeVisible();
       await expect(copy).not.toHaveFocus();
       await userEvent.tab();
       await expect(copy).toHaveFocus();
-      await expect(getComputedStyle(copy).opacity).toBe('1');
+      await expect(copy).toBeVisible();
     },
   };
 }
-export const CopyIconFollowsCssHoverAndFocusPhone =
-  copyIconFollowsCssHoverAndFocus(layoutWidths.phone);
-export const CopyIconFollowsCssHoverAndFocusWide =
-  copyIconFollowsCssHoverAndFocus(layoutWidths.wide);
+export const CopyControlFollowsHoverAndFocusPhone =
+  copyControlFollowsHoverAndFocus(layoutWidths.phone);
+export const CopyControlFollowsHoverAndFocusWide =
+  copyControlFollowsHoverAndFocus(layoutWidths.wide);

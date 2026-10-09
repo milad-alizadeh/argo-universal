@@ -2,10 +2,9 @@ import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { PromptRequest } from '@agentclientprotocol/sdk';
 import { expect, it } from 'vitest';
-import { waitFor } from 'xstate';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
+import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 import { uploadBlob, blobsFolderIn } from '../blob';
-import { findSessionActor } from './index';
 
 const updateMethod = 'session/update';
 const createImageCapableInitializeResponse =
@@ -27,9 +26,9 @@ it.each(['unavailable', 'corrupt'])(
         return { stopReason: 'end_turn' };
       },
     });
-    const blobsFolder = blobsFolderIn(host.engine.getSnapshot().context.home);
+    const blobsFolder = blobsFolderIn(host.home);
     const blob = await uploadBlob(
-      { database: host.context.database, blobsFolder },
+      { database: host.database, blobsFolder },
       new Blob(['complete original bytes'], { type: 'image/png' }),
     );
     if (failure === 'corrupt')
@@ -47,7 +46,7 @@ it.each(['unavailable', 'corrupt'])(
     );
     expect(requests).toEqual([]);
     expect(
-      host.context.database.$client
+      host.database.$client
         .prepare('SELECT COUNT(*) AS count FROM feed_row')
         .get(),
     ).toEqual({ count: 0 });
@@ -87,11 +86,7 @@ it('thoughts and messages keep separate identities while an Agent user echo adds
     ...emptySessionInput,
     prompt: [{ type: 'text', text: 'Human prompt' }],
   });
-  const actor = findSessionActor(host.engine.system, created.sessionId);
-  if (!actor) throw new Error('Session is missing');
-  await waitFor(actor, (snapshot) =>
-    snapshot.matches({ open: { acp: 'idle' } }),
-  );
+  await waitForAcpSessionIdle(host, created.sessionId);
   const page = await host.caller.feed.page({ ...created, direction: 'tail' });
   expect(page.rows).toMatchObject([
     { sessionUpdate: 'user_message', content: [{ text: 'Human prompt' }] },

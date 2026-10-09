@@ -1,5 +1,5 @@
-import { SessionNewInput } from '@repo/contracts';
 import { expect, it } from 'vitest';
+import { SessionNewInput } from './new';
 
 const validNewSessionInput = {
   projectId: 'project-1',
@@ -17,7 +17,7 @@ it.each([
     prompt: [{ type: 'resource_link', name: 'File', uri: 'file:///repo/file' }],
   },
 ])(
-  'rejects incomplete or obsolete New Session mock inputs: %j',
+  'rejects incomplete or obsolete New Session inputs: %j',
   (invalidFields): void => {
     expect(
       SessionNewInput.safeParse({ ...validNewSessionInput, ...invalidFields })

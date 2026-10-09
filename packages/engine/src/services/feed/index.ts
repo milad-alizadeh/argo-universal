@@ -37,6 +37,7 @@ export type {
   CatalogSyncFailureJob,
 } from './writer-catalog-sync';
 export { publishTurnContent } from './publication';
+export { readUnaddressedPlan } from './unaddressed-plan';
 export { databaseWriterId, findDatabaseWriter } from './writer-system';
 
 export { feedRouter } from './router';

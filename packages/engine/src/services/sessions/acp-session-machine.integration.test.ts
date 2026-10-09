@@ -26,11 +26,12 @@ const expectAcpState = (
     expect(snapshot.context.failure).not.toBeNull();
 };
 
-it('the public ACP Session model walks every opening, closing and retained-cleanup transition', async () => {
+it('the ACP structural graph walks every opening, closing and retained-cleanup transition', async () => {
   const host = await startAcpEngine();
   const created = await host.caller.session.new(emptySessionInput);
   const actor = findSessionActor(host.engine.system, created.sessionId);
-  if (!actor) throw new Error('The public Session actor is missing');
+  if (!actor)
+    throw new Error('The Session for the structural graph is missing');
   const { model, paths, lease } = createAcpSessionModel(actor.getSnapshot());
   for (const path of paths)
     for (const step of path.steps) expectAcpState(step.state, lease);

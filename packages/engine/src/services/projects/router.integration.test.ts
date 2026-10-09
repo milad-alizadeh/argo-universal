@@ -1,35 +1,41 @@
 import { mkdtempSync, realpathSync, rmSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
-import type { Database } from '@repo/db';
 import { project } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import { openTestDatabase } from '#mocks/database';
+import { startEngineTestHost } from '#mocks/engine';
 import { initTestRepository } from '#mocks/git';
-import { startRouterTestHost } from '#mocks/router';
 import { seedProject } from './index';
 
 const internalServerError = 'INTERNAL_SERVER_ERROR';
 const firstShapeRejection = 'projects: rejected shape #1';
 
-function startProjectTestHost(): ReturnType<typeof startRouterTestHost> & {
-  database: Database;
-  projectPath: string;
-  git: ReturnType<typeof initTestRepository>;
-} {
+async function startProjectTestHost(): Promise<
+  Awaited<ReturnType<typeof startEngineTestHost>> & {
+    projectPath: string;
+    git: ReturnType<typeof initTestRepository>;
+  }
+> {
   const projectPath = realpathSync(mkdtempSync(join(tmpdir(), 'project-')));
   const git = initTestRepository(projectPath);
   const { database, remove } = openTestDatabase({}, projectPath);
   onTestFinished((): void => {
+    vi.unstubAllEnvs();
     remove();
     rmSync(projectPath, { recursive: true, force: true });
   });
-  return { ...startRouterTestHost({ database }), database, projectPath, git };
+  vi.stubEnv('ARGO_PROJECT_PATH', projectPath);
+  return {
+    ...(await startEngineTestHost({ database })),
+    projectPath,
+    git,
+  };
 }
 
 it('preserves a registered Project identity and stored metadata through a nested path', async (): Promise<void> => {
-  const { database, caller, projectPath } = startProjectTestHost();
+  const { database, caller, projectPath } = await startProjectTestHost();
   database
     .update(project)
     .set({
@@ -54,7 +60,7 @@ it('preserves a registered Project identity and stored metadata through a nested
 });
 
 it('registers linked Checkouts as one Project identified by the Git common directory', async (): Promise<void> => {
-  const { database, caller, projectPath, git } = startProjectTestHost();
+  const { database, caller, projectPath, git } = await startProjectTestHost();
   database.$client.exec('DELETE FROM session; DELETE FROM project');
   await seedProject(database, projectPath);
   const originalProjects = await caller.projects.list();
@@ -74,49 +80,41 @@ it('registers linked Checkouts as one Project identified by the Git common direc
   ]);
 });
 
-it('reports successive invalid stored Project choices once per request with one Engine counter', async (): Promise<void> => {
-  const { database, caller } = startProjectTestHost();
-  database
-    .update(project)
-    .set({ checkoutChoice: { type: 'unrecognised' } })
-    .run();
-  const errors = vi.spyOn(console, 'error').mockImplementation((): void => {});
-  onTestFinished((): void => errors.mockRestore());
-  await expect(caller.projects.list()).rejects.toMatchObject({
-    code: internalServerError,
-  });
-  await expect(caller.projects.list()).rejects.toMatchObject({
-    code: internalServerError,
-  });
-  expect(errors.mock.calls.map(([line]): string => String(line))).toEqual([
-    firstShapeRejection,
-    'projects: rejected shape #2',
-  ]);
-});
-
-it('starts Project rejection reporting afresh for another Engine context', async (): Promise<void> => {
-  const { database, caller } = startProjectTestHost();
-  database
-    .update(project)
-    .set({ checkoutChoice: { type: 'unrecognised' } })
-    .run();
-  const errors = vi.spyOn(console, 'error').mockImplementation((): void => {});
-  onTestFinished((): void => errors.mockRestore());
-  await expect(caller.projects.list()).rejects.toMatchObject({
-    code: internalServerError,
-  });
-  const nextEngine = startRouterTestHost({ database });
-  await expect(nextEngine.caller.projects.list()).rejects.toMatchObject({
-    code: internalServerError,
-  });
-  expect(errors.mock.calls.map(([line]): string => String(line))).toEqual([
-    firstShapeRejection,
-    firstShapeRejection,
-  ]);
-});
+it.each([
+  {
+    newEngine: false,
+    expected: [firstShapeRejection, 'projects: rejected shape #2'],
+  },
+  { newEngine: true, expected: [firstShapeRejection, firstShapeRejection] },
+])(
+  'counts each invalid Project request within its Engine: new Engine $newEngine',
+  async ({ newEngine, expected }): Promise<void> => {
+    const { database, caller } = await startProjectTestHost();
+    database
+      .update(project)
+      .set({ checkoutChoice: { type: 'unrecognised' } })
+      .run();
+    const errors = vi
+      .spyOn(console, 'error')
+      .mockImplementation((): void => {});
+    onTestFinished((): void => errors.mockRestore());
+    await expect(caller.projects.list()).rejects.toMatchObject({
+      code: internalServerError,
+    });
+    const nextCaller = newEngine
+      ? (await startEngineTestHost({ database })).caller
+      : caller;
+    await expect(nextCaller.projects.list()).rejects.toMatchObject({
+      code: internalServerError,
+    });
+    expect(errors.mock.calls.map(([line]): string => String(line))).toEqual(
+      expected,
+    );
+  },
+);
 
 it('preserves the exact missing Project error through its real branches procedure', async (): Promise<void> => {
-  const { caller } = startProjectTestHost();
+  const { caller } = await startProjectTestHost();
   await expect(
     caller.projects.branches({ projectId: 'missing' }),
   ).rejects.toMatchObject({
@@ -128,7 +126,7 @@ it('preserves the exact missing Project error through its real branches procedur
 it.each([{ projectId: 42 }, { projectId: 'project-1', extra: true }])(
   'rejects malformed Project branch requests before Git: %j',
   async (input): Promise<void> => {
-    const { caller } = startProjectTestHost();
+    const { caller } = await startProjectTestHost();
     await expect(
       Reflect.apply(caller.projects.branches, undefined, [input]),
     ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
@@ -138,7 +136,7 @@ it.each([{ projectId: 42 }, { projectId: 'project-1', extra: true }])(
 it.each(['branches', 'list'] as const)(
   'preserves Git failures from the real Project %s procedure',
   async (procedure): Promise<void> => {
-    const { caller, projectPath } = startProjectTestHost();
+    const { caller, projectPath } = await startProjectTestHost();
     rmSync(join(projectPath, '.git'), { recursive: true });
     await expect(
       Reflect.apply(caller.projects[procedure], undefined, [
@@ -152,7 +150,7 @@ it.each(['branches', 'list'] as const)(
 );
 
 it('preserves the registration error when stored Project JSON cannot be decoded', async (): Promise<void> => {
-  const { database, projectPath } = startProjectTestHost();
+  const { database, projectPath } = await startProjectTestHost();
   database.$client.exec("UPDATE project SET checkout_choice = 'not JSON'");
   await expect(seedProject(database, projectPath)).rejects.toThrow(
     'Unexpected token',

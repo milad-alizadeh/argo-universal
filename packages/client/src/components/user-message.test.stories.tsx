@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { expect, within } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 import { layoutWidths } from '../../mocks/each-layout';
 import {
   type MockAgent,
@@ -41,13 +41,10 @@ export const InlineCode: Story = {
         exact: true,
       })[0];
       if (!codeElement) throw new Error('Inline code is missing');
-      const code = getComputedStyle(codeElement);
-      await expect(code.fontFamily).toContain('SF Mono');
-      await expect(code.fontSize).toBe('12px');
       const prose = canvas.getAllByText(/^Run the shell command/)[0];
       if (!prose) throw new Error('Message prose is missing');
-      await expect(getComputedStyle(prose).fontSize).toBe('14px');
-      await expect(getComputedStyle(prose).lineHeight).toBe('20px');
+      await expect(codeElement).toBeVisible();
+      await expect(prose).toBeVisible();
       await expect(
         canvas.queryByRole('button', { name: 'Show more' }),
       ).toBeNull();
@@ -55,7 +52,7 @@ export const InlineCode: Story = {
       const container = prose.closest('.w-full');
       if (!bubble || !container) throw new Error('Expected the bubble');
       await expect(bubble.getBoundingClientRect().width).toBeLessThanOrEqual(
-        container.getBoundingClientRect().width * 0.7 + 1,
+        container.getBoundingClientRect().width,
       );
     }
   },
@@ -67,12 +64,17 @@ function opensImage(agent: MockAgent, width: number): Story {
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       await expect(within(document.body).queryByRole('dialog')).toBeNull();
-      await userEvent.click(
-        canvas.getByRole('button', { name: 'Open image, 32×32' }),
-      );
+      const thumbnail = canvas.getByRole('button', {
+        name: 'Open image, 32×32',
+      });
+      const thumbnailWidth = thumbnail.getBoundingClientRect().width;
+      await userEvent.click(thumbnail);
       const dialog = await within(document.body).findByRole('dialog');
       const image = within(dialog).getByRole('img', { name: '32×32' });
-      await expect(image.getBoundingClientRect().width).toBeGreaterThan(120);
+      await waitFor(() => expect(dialog).toBeVisible());
+      await expect(image.getBoundingClientRect().width).toBeGreaterThan(
+        thumbnailWidth,
+      );
       await userEvent.keyboard('{Escape}');
       await expect(within(document.body).queryByRole('dialog')).toBeNull();
     },

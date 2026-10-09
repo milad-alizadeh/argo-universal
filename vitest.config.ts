@@ -6,7 +6,6 @@ export default defineConfig({
     projects: [
       'packages/*',
       'apps/*/vitest.config.{ts,mts}',
-      'mocks',
       'tooling/vitest',
       'tooling/oxlint',
       'tools/vitest.config.mts',

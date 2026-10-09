@@ -4,6 +4,10 @@ How designs in Paper stay in sync with each other and with the code while Paper 
 
 This doc is temporary. When Paper ships components ("Components with slots" on its roadmap), convert the masters to components first, then swap the copies over one artboard at a time, then delete this doc and its line in `AGENTS.md`.
 
+## Design before implementation
+
+Every new UI or visible state needs a Paper design, including new rows, cards, placeholders and error states inside an existing screen. Identify the Paper master and state before implementing the appearance, and link that design in the PR evidence. Reuse an existing matching master; when none exists, report the design gap before writing the UI. A functional requirement, passing tests or a simulator screenshot does not supply the missing design.
+
 ## Masters and copies
 
 - A **master** lives on an artboard named `Components / <Name>`. Name it for the code component it becomes, and name its states for that component's props: `Toggle / Changed files (pressed)` is the `pressed` prop.

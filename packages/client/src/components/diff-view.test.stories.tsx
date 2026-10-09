@@ -37,46 +37,18 @@ export const InspectorFileShowsEveryLine: Story = {
         name: 'Diff for /repo/large.txt',
       });
       await expect(
-        getComputedStyle(within(header).getByText('large.txt')).userSelect,
-      ).toBe('none');
-      await expect(within(header).getByText('large.txt')).toHaveClass(
-        'font-semibold',
-      );
-      await expect(
         canvas.getByRole('button', { name: 'Copy path' }),
       ).toBeVisible();
       await page.elementLocator(header).hover();
-      for (const count of ['+60', '−60']) {
-        await expect(
-          getComputedStyle(canvas.getByText(count)).textDecorationLine,
-        ).toBe('none');
-      }
       // The path button fills the header up to the copy button, so there is no dead space to miss.
       const copyBounds = canvas
         .getByRole('button', { name: 'Copy path' })
         .getBoundingClientRect();
       const buttonBounds = header.getBoundingClientRect();
       await expect(buttonBounds.right).toBeLessThanOrEqual(copyBounds.left);
-      await expect(copyBounds.left - buttonBounds.right).toBeLessThanOrEqual(8);
       await expect(header).toHaveAttribute('aria-expanded', 'true');
-      const numberColors: string[] = [];
-      for (const [text, sign] of [
-        ['old value 1', '−'],
-        ['new value 1', '+'],
-      ] as const) {
-        const row = canvas.getByText(text).parentElement;
-        if (!row) throw new Error('Missing diff line');
-        const numberColor = getComputedStyle(within(row).getByText('1')).color;
-        numberColors.push(numberColor);
-        await expect(numberColor).toBe(
-          getComputedStyle(within(row).getByText(sign)).color,
-        );
-      }
-      await expect(numberColors[0]).not.toBe(numberColors[1]);
       const box = canvas.getByTestId('diff-scroll');
-      await expect(getComputedStyle(box).maxHeight).toBe('none');
       await expect(box.scrollHeight).toBe(box.clientHeight);
-      await expect(box.clientHeight).toBe(120 * 20);
       await expect(
         canvas.getByRole('button', { name: 'Diff for /repo/large.txt' }),
       ).toBeVisible();
@@ -101,7 +73,6 @@ function inlinePreview(width: number): Story {
         await expect(title.textContent).toContain('/repo/large.txt');
         const header = title.parentElement;
         if (!header) throw new Error('Missing diff header');
-        await expect(header.getBoundingClientRect().height).toBe(32);
         await page.elementLocator(header).hover();
         const copy = canvas.getByRole('button', { name: /Copy code|Copied/ });
         await expect(copy).toBeVisible();

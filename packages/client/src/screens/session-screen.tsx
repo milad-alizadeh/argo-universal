@@ -186,6 +186,9 @@ function SessionView({
             sending={imageUpload.isPending || promptSession.isPending}
             sendable={connected}
             error={sendError}
+            writtenPlan={
+              view.plan && view.plan.type !== 'items' ? view.plan : undefined
+            }
             status={
               view.plan?.type === 'items'
                 ? { plan: view.plan.entries }
