@@ -39,7 +39,7 @@ it.each(model.paths.map((path, index) => [index, path] as const))(
     actor.start();
     try {
       for (const step of path.steps.slice(1)) {
-        await applyExternalRegistryEvent(step.event, actor, registry);
+        await advanceCatalogSyncModelStep(step.event, actor, registry);
         expect(observed).toContain(serializeCatalogSyncState(step.state));
       }
       expect(serializeCatalogSyncState(actor.getSnapshot())).toBe(
@@ -66,25 +66,25 @@ it('walks every finite sync transition', (): void => {
   ).toEqual([]);
 });
 
-async function applyExternalRegistryEvent(
-  event: CatalogSyncModelEvent,
+async function advanceCatalogSyncModelStep(
+  modelEvent: CatalogSyncModelEvent,
   actor: ReturnType<typeof createActor<typeof catalogSyncMachine>>,
   registry: ReturnType<typeof createControllableRegistry>,
 ): Promise<void> {
-  if (event.type === 'catalog.cancel') actor.send(event);
-  else await settleExternalRegistryEvent(event, registry);
+  if (modelEvent.type === 'catalog.cancel') actor.send(modelEvent);
+  else await settleRegistryFetchForModelStep(modelEvent, registry);
   await vi.advanceTimersByTimeAsync(0);
 }
 
-async function settleExternalRegistryEvent(
-  event: Exclude<CatalogSyncModelEvent, { type: 'catalog.cancel' }>,
+async function settleRegistryFetchForModelStep(
+  modelEvent: Exclude<CatalogSyncModelEvent, { type: 'catalog.cancel' }>,
   registry: ReturnType<typeof createControllableRegistry>,
 ): Promise<void> {
-  if (event.type === 'xstate.done.actor.fetchCatalog')
+  if (modelEvent.type === 'xstate.done.actor.fetchCatalog')
     registry.resolve(publishedRegistry);
-  else if (event.type === 'xstate.error.actor.fetchCatalog')
-    registry.reject(event.error);
-  else await advanceExternalRegistryTimeout(event);
+  else if (modelEvent.type === 'xstate.error.actor.fetchCatalog')
+    registry.reject(modelEvent.error);
+  else await advanceExternalRegistryTimeout(modelEvent);
 }
 
 function prepareCatalogSyncWriteFailure(
@@ -102,8 +102,8 @@ function prepareCatalogSyncWriteFailure(
 }
 
 async function advanceExternalRegistryTimeout(
-  event: CatalogSyncModelEvent,
+  modelEvent: CatalogSyncModelEvent,
 ): Promise<void> {
-  if (event.type.startsWith('xstate.after'))
+  if (modelEvent.type.startsWith('xstate.after'))
     await vi.advanceTimersByTimeAsync(20_000);
 }
