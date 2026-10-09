@@ -1,6 +1,7 @@
 import type { AgentAdapter, AgentProbe } from '@repo/agents';
 import { createMockAdapter } from '@repo/mocks/agent';
 import { afterEach, expect, it, vi } from 'vitest';
+import { waitFor } from 'xstate';
 import { availableAgentProbe } from '#mocks/agent-catalog';
 import { startRouterTestHost } from '#mocks/router';
 
@@ -97,7 +98,7 @@ it('aborts timed-out native discovery before returning an unavailable result', a
 
 it('cancels pending native discovery when the owning registry shuts down', async (): Promise<void> => {
   const abortedDiscovery = Promise.withResolvers<void>();
-  const { sessionRegistry } = startRouterTestHost({
+  const { sessionRegistry, databaseWriter } = startRouterTestHost({
     adapters: [
       createMockAdapter({
         probe: (signal): Promise<AgentProbe> => {
@@ -111,6 +112,11 @@ it('cancels pending native discovery when the owning registry shuts down', async
       }),
     ],
   });
+  databaseWriter.send({ type: 'writer.drain' });
+  await waitFor(
+    databaseWriter,
+    (snapshot): boolean => snapshot.status === 'done',
+  );
   sessionRegistry.send({ type: 'sessions.stopAll' });
   await expect(abortedDiscovery.promise).resolves.toBeUndefined();
 });

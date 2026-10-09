@@ -49,11 +49,13 @@ export function startRouterTestHost(
     input: { database, now: (): number => Date.now() },
   }).start();
   onTestFinished(async (): Promise<void> => {
-    databaseWriter.send({ type: 'writer.drain' });
-    await waitFor(
-      databaseWriter,
-      (snapshot): boolean => snapshot.status === 'done',
-    );
+    if (databaseWriter.getSnapshot().status === 'active') {
+      databaseWriter.send({ type: 'writer.drain' });
+      await waitFor(
+        databaseWriter,
+        (snapshot): boolean => snapshot.status === 'done',
+      );
+    }
     sessionRegistry.stop();
     ownedDatabase?.remove();
   });
