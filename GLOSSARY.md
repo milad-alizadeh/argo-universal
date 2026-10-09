@@ -63,7 +63,7 @@ The git working tree that a Session runs in: its own worktree, or the Project's 
 _Avoid_: Workspace, worktree (when the main checkout is also possible)
 
 **Turn**:
-One prompt to an Agent and everything the Agent does until it stops, ending with a stop reason.
+A stretch of Agent work started by a prompt or by the Agent, ending with a stop reason when the Agent finishes or the Session ends it.
 _Avoid_: Run, request, exchange
 
 **Agent adapter**:

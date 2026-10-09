@@ -16,6 +16,7 @@ It also describes its Agent before any Session starts, for `agents.list` and the
 - `probe(signal)` starts the vendor CLI briefly and resolves to the Agent's `availability`, its `installStep`, and the `configOptions` a New Session offers. It rejects when the CLI does not start, and the Server reports that as `unavailable`. The Server aborts the signal after a timeout. A probe applies the same sign-in rule as `connect`, so an Agent that `agents.list` shows as available can start a Session.
 
 Session runs ordinary commands in order so configuration precedes the next prompt. Cancel, Permission and Elicitation answers wait for prior configuration, then bypass the pending prompt they can release. Accepted idle `agent.turnStarted` creates and persists an Argo Turn without a human prompt; duplicate starts retain the running Turn. Both Agent identities use this rule, with no guessed native start event. Ready data carries Session capabilities. Oxlint enforces the adapter's XState import boundary.
+
 Inside an adapter and its response mocks, the vendor SDK's TypeScript types or generated protocol types describe vendor messages. ADR-0018 replaces CLI replay with pure translation unit tests and shared App fixtures. The shared Agent intake validates translated non-Feed events before Session mutation. The Feed validates the completed row after applying a translated change against the contract's `SessionUpdate` schema. Rejections are reported and counted; accepted early events are buffered without parsing them again when ready. ADR-0016 records production decoding of raw protocol JSON before it becomes a provider-owned value.
 
 This follows old Argo's ADR-0047, which replaced its per-vendor machines with async clients and one generic session machine. Paseo has the same split between generic and vendor code, without XState.
@@ -25,5 +26,4 @@ This follows old Argo's ADR-0047, which replaced its per-vendor machines with as
 - A machine per adapter, as first designed. Replaced: the copies drift, every adapter needs its own model-based tests for the same states, and the Claude machine mapped each message twice to decide whether a Turn ended.
 - A stateful class per vendor, as Paseo's `ClaudeAgentSession` is. Rejected: pure mapping is driven by typed response fixtures, with state owned by the Session's native lifetime.
 - Zod schemas for every vendor message. Replaced: the SDK already types its messages, and the Feed checks the result against the contract.
-
 - A shared Agent machine beneath each Session, the previous design. Replaced: Session already owns Turn state and recovery; its private resource callback preserves native ordering and cleanup without another lifecycle or event hop.
