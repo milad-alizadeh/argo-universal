@@ -1228,6 +1228,9 @@ importers:
       '@repo/vitest':
         specifier: workspace:*
         version: link:../../tooling/vitest
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.19.1
       json-schema-to-typescript:
         specifier: 'catalog:'
         version: 16.0.0

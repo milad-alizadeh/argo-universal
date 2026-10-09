@@ -204,7 +204,7 @@ export const engineMachine = setup({
           systemId: agentCatalogId,
           src: 'catalog',
           input: ({ context }): CatalogInput => ({
-            runtimeDirectory: context.home,
+            database: openDatabaseOf(context),
             registry: context.registry,
           }),
         },

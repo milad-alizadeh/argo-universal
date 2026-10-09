@@ -9,7 +9,7 @@ if (!example || !python || !binary || !windows)
 const catalog: AgentsCatalogOutput = {
   status: 'fresh',
   serverPlatform: 'darwin-aarch64',
-  fetchedAt: '2026-10-09T00:00:00.000Z',
+  fetchedAt: 1791504000000,
   error: null,
   rejectedValues: 0,
   agents: [

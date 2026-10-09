@@ -1,0 +1,4 @@
+packages/contracts/tools/registry/upstream/* linguist-vendored=true
+packages/contracts/src/agents/upstream/*.schema.json linguist-vendored=true
+**/*.gen.* linguist-generated=true
+packages/db/drizzle/**/snapshot.json linguist-generated=true

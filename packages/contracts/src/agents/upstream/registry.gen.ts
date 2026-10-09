@@ -1,4 +1,4 @@
-/* Generated from ACP Registry 669691cfb847b6e7c911326aabea14e8586c5ae1 by json-schema-to-typescript 16.0.0. */
+/* Generated from ACP Registry 33a1a101ef68ab20a97624ac89d4b977eeac0daf schema and publisher literal by json-schema-to-typescript 16.0.0. */
 
 /**
  * Schema for the aggregated ACP agent registry index
@@ -12,6 +12,10 @@ export interface ACPAgentRegistry {
    * List of registered agents
    */
   agents: ACPAgent[];
+  /**
+   * @maxItems 0
+   */
+  extensions?: [];
 }
 /**
  * Schema for ACP agent registry entries

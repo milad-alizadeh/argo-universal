@@ -4,7 +4,6 @@ import {
   malformedRegistry,
 } from '@repo/mocks/registry/catalog';
 import { expect, it, vi } from 'vitest';
-import { openTestDatabase } from '#mocks/database';
 import { startRouterTestHost } from '#mocks/router';
 
 const exampleSearch = 'example';
@@ -65,38 +64,6 @@ it.each(['offline', 'malformed'] as const)(
     expect(readRegistry).toHaveBeenCalledTimes(2);
   },
 );
-
-it('restores a validated last-good cache after Engine restart with the registry offline', async (): Promise<void> => {
-  const stored = openTestDatabase();
-  try {
-    const first = startRouterTestHost({
-      database: stored.database,
-      runtimeDirectory: stored.directory,
-      registry: {
-        readRegistry: async (): Promise<unknown> => publishedRegistry,
-      },
-    });
-    await first.caller.agents.catalog();
-    const restarted = startRouterTestHost({
-      database: stored.database,
-      runtimeDirectory: stored.directory,
-      registry: {
-        readRegistry: async (): Promise<never> => {
-          throw new Error(offlineMessage);
-        },
-      },
-    });
-    expect(
-      await restarted.caller.agents.catalog({ search: exampleSearch }),
-    ).toMatchObject({
-      status: 'stale',
-      error: offlineMessage,
-      agents: [{ entry: publishedRegistry.agents[0] }],
-    });
-  } finally {
-    stored.remove();
-  }
-});
 
 it('shows the Server recipe rather than the App platform', async (): Promise<void> => {
   const { caller } = startRouterTestHost({

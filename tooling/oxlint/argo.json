@@ -362,14 +362,19 @@
       }
     },
     {
-      // D1: contracts, the db schema and client/src never import Node APIs, node:sqlite and node:sea included.
+      // D1: runtime Contracts, the db schema and client/src never import Node APIs, node:sqlite and node:sea included.
       "files": [
         "packages/contracts/**",
         "packages/db/src/schema.ts",
         "packages/db/src/schema/**",
         "packages/client/src/**"
       ],
-      "excludeFiles": ["**/*.test.*", "**/*.stories.*", "**/mocks/**"],
+      "excludeFiles": [
+        "**/*.test.*",
+        "**/*.stories.*",
+        "**/mocks/**",
+        "packages/contracts/tools/**"
+      ],
       "rules": { "import/no-nodejs-modules": "error" }
     },
     {

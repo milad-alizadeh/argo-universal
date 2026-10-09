@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { createMockAdapter } from '@repo/mocks/agent';
 import { onTestFinished } from 'vitest';
-import { type Actor, createActor, waitFor } from 'xstate';
+import { type Actor, createActor } from 'xstate';
 import { createEngineContext, type Context } from '../src/engine/context';
 import { appRouter } from '../src/engine/router';
 import {
@@ -18,6 +18,7 @@ import {
   type RegistryActorRef,
 } from '../src/services/sessions';
 import { openTestDatabase } from './database';
+import { registerRouterStop } from './router-stop';
 
 type RouterTestHostOptions = Partial<
   Omit<Parameters<typeof createEngineContext>[0], 'sessions'>
@@ -32,6 +33,7 @@ export function startRouterTestHost(
   caller: ReturnType<typeof appRouter.createCaller>;
   sessionRegistry: RegistryActorRef;
   databaseWriter: Actor<typeof writerMachine>;
+  stop(): Promise<void>;
 } {
   const ownedDatabase = engineOptions.database ? undefined : openTestDatabase();
   const database = engineOptions.database ?? ownedDatabase?.database;
@@ -49,29 +51,16 @@ export function startRouterTestHost(
       adapters: engineOptions.adapters ?? [createMockAdapter()],
     },
   }).start();
-  startCatalogForTest(sessionRegistry, { ...engineOptions, runtimeDirectory });
+  startCatalogForTest(sessionRegistry, { ...engineOptions, database });
   const databaseWriter = createActor(writerMachine, {
     parent: sessionRegistry,
     systemId: databaseWriterId,
     input: { database, now: (): number => Date.now() },
   }).start();
-  onTestFinished(async (): Promise<void> => {
-    if (sessionRegistry.getSnapshot().status === 'active') {
-      sessionRegistry.send({ type: 'sessions.stopAll' });
-      await waitFor(
-        sessionRegistry,
-        (snapshot): boolean => snapshot.status === 'done',
-      );
-    }
-    if (databaseWriter.getSnapshot().status === 'active') {
-      databaseWriter.send({ type: 'writer.drain' });
-      await waitFor(
-        databaseWriter,
-        (snapshot): boolean => snapshot.status === 'done',
-      );
-    }
-    ownedDatabase?.remove();
-  });
+  const stop = registerRouterStop(
+    { sessionRegistry, databaseWriter },
+    ownedDatabase,
+  );
   return routerTestHost(
     {
       ...engineOptions,
@@ -82,7 +71,7 @@ export function startRouterTestHost(
       version: engineOptions.version ?? '1.2.3',
       startedAt: engineOptions.startedAt ?? '2026-10-03T00:00:00.000Z',
     },
-    { sessionRegistry, databaseWriter },
+    { sessionRegistry, databaseWriter, stop },
   );
 }
 
@@ -91,6 +80,7 @@ function routerTestHost(
   actors: {
     sessionRegistry: RegistryActorRef;
     databaseWriter: Actor<typeof writerMachine>;
+    stop(): Promise<void>;
   },
 ): ReturnType<typeof startRouterTestHost> {
   const context = createEngineContext(options);
@@ -112,7 +102,7 @@ function startCatalogForTest(
     parent: sessionRegistry,
     systemId: agentCatalogId,
     input: {
-      runtimeDirectory: engineOptions.runtimeDirectory,
+      database: engineOptions.database,
       registry: engineOptions.registry ?? emptyRegistry,
       platform: engineOptions.platform,
     },

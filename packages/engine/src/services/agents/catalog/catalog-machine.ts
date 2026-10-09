@@ -1,4 +1,4 @@
-import { join } from 'node:path';
+import type { Database } from '@repo/db';
 import { type ActorRefFrom, assign, fromPromise, setup } from 'xstate';
 import {
   type RegistrySnapshot,
@@ -14,7 +14,7 @@ import {
 
 export const agentCatalogId = 'agentCatalog';
 export interface CatalogInput {
-  runtimeDirectory: string;
+  database: Database;
   registry?: RegistryPort;
   platform?: string;
 }
@@ -69,7 +69,7 @@ export const catalogMachine = setup({
     error: null,
     platform: input.platform ?? serverPlatform(),
     storage: {
-      cachePath: join(input.runtimeDirectory, 'agent-registry.json'),
+      database: input.database,
       reader: createRegistryReader(),
       port: input.registry ?? publicRegistry,
     },

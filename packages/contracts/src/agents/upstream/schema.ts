@@ -1,2 +1,2 @@
-export { default as registrySchema } from './registry.schema.json';
+export { default as registrySchema } from './registry.published.schema.gen.json';
 export { default as registryAgentSchema } from './agent.schema.json';

@@ -1,5 +1,4 @@
-import { writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { agentCatalogCache } from '@repo/db/schema';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import { openTestDatabase } from '#mocks/database';
@@ -20,10 +19,27 @@ it('coalesces concurrent catalog requests into one registry read', async (): Pro
   expect(readRegistry).toHaveBeenCalledTimes(1);
 });
 
+it('stores accepted metadata and fetched time in the Server database', async (): Promise<void> => {
+  const { caller, context } = startRouterTestHost({
+    registry: { readRegistry: async (): Promise<unknown> => publishedRegistry },
+  });
+  const catalog = await caller.agents.catalog();
+  const row = context.database.$client
+    .prepare('select payload, fetched_at from agent_catalog_cache where id = 1')
+    .get();
+  expect(row).toEqual({
+    payload: JSON.stringify(publishedRegistry),
+    fetched_at: catalog.fetchedAt,
+  });
+});
+
 it('rejects a malformed on-disk cache before serving metadata', async (): Promise<void> => {
   const stored = openTestDatabase();
   onTestFinished(stored.remove);
-  await writeFile(join(stored.directory, 'agent-registry.json'), '{broken');
+  stored.database
+    .insert(agentCatalogCache)
+    .values({ id: 1, payload: '{broken', fetchedAt: 1791504000000 })
+    .run();
   const { caller } = startRouterTestHost({
     database: stored.database,
     runtimeDirectory: stored.directory,

@@ -8,7 +8,7 @@
     "./registry-schema": "./src/agents/upstream/schema.ts"
   },
   "scripts": {
-    "generate:registry": "json2ts -i src/agents/upstream/registry.schema.json -o src/agents/upstream/registry.gen.ts --cwd src/agents/upstream --unknownAny --bannerComment '/* Generated from ACP Registry 669691cfb847b6e7c911326aabea14e8586c5ae1 by json-schema-to-typescript 16.0.0. */'",
+    "generate:registry": "node tools/registry/generate.mts && json2ts -i src/agents/upstream/registry.published.schema.gen.json -o src/agents/upstream/registry.gen.ts --cwd src/agents/upstream --unknownAny --bannerComment '/* Generated from ACP Registry 33a1a101ef68ab20a97624ac89d4b977eeac0daf schema and publisher literal by json-schema-to-typescript 16.0.0. */'",
     "check-types": "tsc --noEmit",
     "test": "vitest run"
   },
@@ -20,6 +20,7 @@
   "devDependencies": {
     "@repo/typescript": "workspace:*",
     "@repo/vitest": "workspace:*",
+    "@types/node": "catalog:",
     "json-schema-to-typescript": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

@@ -1,47 +1,57 @@
-import { mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
-import { dirname } from 'node:path';
-import type { ACPAgentRegistry } from '@repo/contracts';
+import {
+  type ACPAgentRegistry,
+  type AgentsCatalogOutput,
+  AgentCatalogCacheRecord,
+} from '@repo/contracts';
+import type { Database } from '@repo/db';
+import { agentCatalogCache } from '@repo/db/schema';
+import { eq } from 'drizzle-orm';
 import type { createRegistryReader, RegistryPort } from './registry';
 
 export interface RegistrySnapshot {
   registry: ACPAgentRegistry | null;
-  fetchedAt: string | null;
+  fetchedAt: AgentsCatalogOutput['fetchedAt'];
   error: string | null;
 }
 
 export interface RegistryStorage {
-  cachePath: string;
+  database: Database;
   reader: ReturnType<typeof createRegistryReader>;
   port: RegistryPort;
-}
-
-const errorMessage = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error);
-
-function cacheFailure(error: unknown): RegistrySnapshot {
-  return {
-    registry: null,
-    fetchedAt: null,
-    error: isMissingCache(error) ? null : errorMessage(error),
-  };
-}
-
-function isMissingCache(error: unknown): boolean {
-  if (!(error instanceof Error)) return false;
-  return 'code' in error && error.code === 'ENOENT';
 }
 
 export async function readRegistryCache(
   storage: RegistryStorage,
 ): Promise<RegistrySnapshot> {
   try {
-    const text = await readFile(storage.cachePath, 'utf8');
-    const registry = storage.reader.parse(text);
-    const cached = await stat(storage.cachePath);
-    return { registry, fetchedAt: cached.mtime.toISOString(), error: null };
+    const row = storage.database
+      .select()
+      .from(agentCatalogCache)
+      .where(eq(agentCatalogCache.id, 1))
+      .get();
+    return row ? hydrateCache(row, storage.reader) : emptyCache(null);
   } catch (error) {
-    return cacheFailure(error);
+    return emptyCache(errorMessage(error));
   }
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function emptyCache(error: string | null): RegistrySnapshot {
+  return { registry: null, fetchedAt: null, error };
+}
+
+function hydrateCache(
+  row: unknown,
+  reader: ReturnType<typeof createRegistryReader>,
+): RegistrySnapshot {
+  const accepted = AgentCatalogCacheRecord.safeParse(row);
+  if (!accepted.success)
+    reader.reject('Registry cache row is malformed', accepted.error);
+  const { payload, fetchedAt } = accepted.data;
+  return { registry: reader.parse(payload), fetchedAt, error: null };
 }
 
 export async function refreshRegistry(
@@ -52,17 +62,22 @@ export async function refreshRegistry(
     await storage.port.readRegistry(signal),
   );
   signal.throwIfAborted();
-  await writeRegistryCache(storage.cachePath, registry, signal);
-  return { registry, fetchedAt: new Date().toISOString(), error: null };
+  const fetchedAt = Date.now();
+  replaceCache(storage.database, registry, fetchedAt);
+  return { registry, fetchedAt, error: null };
 }
 
-async function writeRegistryCache(
-  cachePath: string,
+function replaceCache(
+  database: Database,
   registry: ACPAgentRegistry,
-  signal: AbortSignal,
-): Promise<void> {
-  await mkdir(dirname(cachePath), { recursive: true });
-  await writeFile(`${cachePath}.next`, JSON.stringify(registry), { signal });
-  signal.throwIfAborted();
-  await rename(`${cachePath}.next`, cachePath);
+  fetchedAt: number,
+): void {
+  const values = { id: 1, payload: JSON.stringify(registry), fetchedAt };
+  database.transaction((transaction): void => {
+    transaction
+      .insert(agentCatalogCache)
+      .values(values)
+      .onConflictDoUpdate({ target: agentCatalogCache.id, set: values })
+      .run();
+  });
 }

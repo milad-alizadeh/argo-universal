@@ -9,6 +9,7 @@ const metadata = {
 
 export const publishedRegistry: ACPAgentRegistry = {
   version: '1.0.0',
+  extensions: [],
   agents: [
     {
       ...metadata,

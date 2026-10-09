@@ -30,11 +30,16 @@ export const publicRegistry: RegistryPort = {
 export function createRegistryReader(): {
   parse(value: unknown): ACPAgentRegistry;
   count(): number;
+  reject(message: string, details?: unknown): never;
 } {
   const rejections = createRejectionCounter('Agent registry');
   return {
     parse: (value): ACPAgentRegistry => parseRegistry(value, rejections),
     count: (): number => rejections.count(),
+    reject: (message, details): never => {
+      rejections.report(message, details);
+      throw new Error(message);
+    },
   };
 }
 

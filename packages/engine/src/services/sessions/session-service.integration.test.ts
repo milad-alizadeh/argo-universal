@@ -28,7 +28,7 @@ const sessionActorId = 'session:session-1';
 
 type SessionTestServer = Omit<
   ReturnType<typeof startRouterTestHost>,
-  'databaseWriter'
+  'databaseWriter' | 'stop'
 > & {
   streams: Map<string, MockAgentStream>;
   commands: Map<string, VendorCommand[]>;
