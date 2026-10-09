@@ -2,10 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { hostname } from 'node:os';
 import type { SystemInfo } from '@repo/contracts';
 
-export interface SystemDeps {
-  version: string;
-  startedAt: string;
-}
+export type SystemDeps = Pick<SystemInfo, 'version' | 'startedAt'>;
 
 // macOS keeps the name people gave the computer apart from its network host name.
 function readComputerName(): string {
@@ -22,11 +19,11 @@ function readComputerName(): string {
 
 let computerName: string | undefined;
 
-export const info = (deps: SystemDeps): SystemInfo => {
+export const readSystemInfo = (systemMetadata: SystemDeps): SystemInfo => {
   computerName ??= readComputerName();
   return {
-    version: deps.version,
-    startedAt: deps.startedAt,
+    version: systemMetadata.version,
+    startedAt: systemMetadata.startedAt,
     pid: process.pid,
     name: computerName,
   };

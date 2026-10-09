@@ -24,11 +24,6 @@ export function createRejectingServices(
       upload: createUnexpectedCallRejection('blob.upload'),
       ...overrides.blob,
     },
-    system: {
-      info: createUnexpectedCallRejection('system.info'),
-      clock: createUnexpectedCallRejection('system.clock'),
-      ...overrides.system,
-    },
     feed: {
       page: createUnexpectedCallRejection('feed.page'),
       row: createUnexpectedCallRejection('feed.row'),
