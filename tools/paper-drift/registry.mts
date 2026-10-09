@@ -76,11 +76,14 @@ export function readRegistry(path: string): Registry {
   return parseRegistry(readFileSync(path, 'utf8'));
 }
 
+// One line per master, so a diff names the master that changed.
 export function formatRegistry(registry: Registry): string {
-  const masters = registry.masters.toSorted((a, b): number =>
-    a.name.localeCompare(b.name),
-  );
-  return `${JSON.stringify({ ...registry, masters }, null, 2)}\n`;
+  const lines = registry.masters
+    .toSorted((a, b): number => a.name.localeCompare(b.name))
+    .map((entry): string => `    ${JSON.stringify(entry)}`);
+  const rest = JSON.stringify({ ...registry, masters: [] }, null, 2);
+  const masters = `"masters": [\n${lines.join(',\n')}\n  ]`;
+  return `${rest.replace('"masters": []', masters)}\n`;
 }
 
 function familyOf(

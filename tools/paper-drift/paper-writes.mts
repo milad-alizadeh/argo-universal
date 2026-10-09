@@ -1,8 +1,9 @@
 import { z } from 'zod';
 import type { PaperPort } from './paper-port.mts';
 import type { Styles } from './snapshot-model.mts';
+import type { TokenWrite } from './token-mapping.mts';
 
-// Typed writes the sync uses; only `paper:sync --apply` calls these.
+// Typed writes; only the `--apply` runs of paper:sync, paper:rename and paper:tokens call these.
 const duplicateSchema = z.object({
   duplicatedNodes: z.array(
     z.object({
@@ -85,4 +86,44 @@ export async function renameNodes(
     await paper.call('rename_nodes', {
       updates: updates.slice(start, start + RENAME_BATCH),
     });
+}
+
+// Paper answers create_tokens and set_tokens with one result per token; failures come back in-band.
+const tokenResultSchema = z.object({
+  name: z.string().optional(),
+  result: z.string(),
+  message: z.string().optional(),
+});
+const tokenResultsSchema = z.union([
+  z.array(tokenResultSchema),
+  z.object({ results: z.array(tokenResultSchema) }),
+]);
+type TokenResult = z.infer<typeof tokenResultSchema>;
+
+function failuresOf(payload: unknown): string[] {
+  const parsed = tokenResultsSchema.parse(payload);
+  const results = Array.isArray(parsed) ? parsed : parsed.results;
+  return results
+    .filter((entry): boolean => entry.result === 'error')
+    .map(
+      (entry: TokenResult): string =>
+        `${entry.name ?? '?'}: ${entry.message ?? 'error'}`,
+    );
+}
+
+// Each returns the tokens Paper refused, with its reason.
+export async function createTokens(
+  paper: PaperPort,
+  tokens: TokenWrite[],
+): Promise<string[]> {
+  if (tokens.length === 0) return [];
+  return failuresOf(await paper.call('create_tokens', { tokens }));
+}
+
+export async function setTokenValues(
+  paper: PaperPort,
+  tokens: Pick<TokenWrite, 'name' | 'value'>[],
+): Promise<string[]> {
+  if (tokens.length === 0) return [];
+  return failuresOf(await paper.call('set_tokens', { tokens }));
 }

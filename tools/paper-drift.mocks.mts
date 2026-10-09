@@ -1,5 +1,7 @@
+import type { PaperPort } from './paper-drift/paper-port.mts';
 import type { Registry } from './paper-drift/registry.mts';
 import type { Layer, Snapshot, Styles } from './paper-drift/snapshot-model.mts';
+import type { CodeTokens } from './paper-drift/theme-tokens.mts';
 
 // A small Paper file described as nested layers, turned into a snapshot.
 export interface LayerMock {
@@ -147,3 +149,32 @@ export const chipRegistry: Registry = {
     },
   ],
 };
+
+// The code's tokens: the theme's own on top of Tailwind defaults.
+export function codeTokensOf(
+  own: Record<string, string>,
+  defaults: Record<string, string> = {},
+): CodeTokens {
+  return { all: { ...defaults, ...own }, own };
+}
+
+export interface PaperCall {
+  tool: string;
+  args: Record<string, unknown>;
+}
+
+// A Paper port that records each call and answers from a table by tool name.
+export function recordingPaper(answers: Record<string, unknown>): {
+  paper: PaperPort;
+  calls: PaperCall[];
+} {
+  const calls: PaperCall[] = [];
+  const paper: PaperPort = {
+    call: (tool, args): Promise<unknown> => {
+      calls.push({ tool, args });
+      return Promise.resolve(answers[tool]);
+    },
+    close: (): Promise<void> => Promise.resolve(),
+  };
+  return { paper, calls };
+}
