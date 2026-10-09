@@ -19,6 +19,7 @@ export function AgentCatalog({ catalog }: CatalogProps): React.JSX.Element {
 function CatalogEntries({ catalog }: CatalogProps): React.JSX.Element {
   return (
     <LegendList
+      role="list"
       data={catalog.agents}
       style={{ flex: 1 }}
       estimatedItemSize={120}

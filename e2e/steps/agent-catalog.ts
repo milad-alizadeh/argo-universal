@@ -1,4 +1,5 @@
 import { writeFile } from 'node:fs/promises';
+import type { Locator, Page } from '@playwright/test';
 import {
   malformedRegistry,
   offlineRegistry,
@@ -7,6 +8,37 @@ import { expect } from '../fixtures';
 import { When, Then } from './fixtures';
 
 const exampleAgentName = 'Example Agent';
+const exampleMetadata = [
+  'example-agent',
+  'A compatible coding Agent',
+  'Version 1.2.3',
+  'npm package · requires Node.js and npm',
+];
+
+async function expectExampleMetadata(row: Locator): Promise<void> {
+  for (const text of exampleMetadata)
+    await expect(row.getByText(text, { exact: true })).toBeVisible();
+  await expect(row.getByLabel(`${exampleAgentName} icon`)).toBeVisible();
+}
+
+async function serverPlatform(page: Page): Promise<string> {
+  const text = await page.getByText(/^Server platform: /).textContent();
+  if (!text) throw new Error('The catalog must show the Server platform');
+  return text.replace('Server platform: ', '');
+}
+
+async function expectWindowsRecipe(page: Page): Promise<void> {
+  const platform = await serverPlatform(page);
+  const recipe =
+    platform === 'windows-x86_64'
+      ? 'Binary for this Server'
+      : `No distribution for ${platform}`;
+  const windows = page.getByRole('listitem', {
+    name: 'Windows Agent',
+    exact: true,
+  });
+  await expect(windows.getByText(recipe, { exact: true })).toBeVisible();
+}
 
 When('I browse available Agents', async ({ page }): Promise<void> => {
   const viewport = page.viewportSize();
@@ -22,18 +54,12 @@ When('I browse available Agents', async ({ page }): Promise<void> => {
 Then(
   'the catalog shows upstream Agent metadata',
   async ({ page }): Promise<void> => {
-    await expect(
-      page.getByText('example-agent', { exact: true }),
-    ).toBeVisible();
-    await expect(
-      page.getByText('A compatible coding Agent').first(),
-    ).toBeVisible();
-    await expect(page.getByText('Version 1.2.3').first()).toBeVisible();
-    await expect(page.getByLabel(`${exampleAgentName} icon`)).toBeVisible();
-    await expect(
-      page.getByText('npm package · requires Node.js and npm').first(),
-    ).toBeVisible();
-    await expect(page.getByText(/No distribution for/)).toBeVisible();
+    const example = page.getByRole('listitem', {
+      name: exampleAgentName,
+      exact: true,
+    });
+    await expectExampleMetadata(example);
+    await expectWindowsRecipe(page);
   },
 );
 
