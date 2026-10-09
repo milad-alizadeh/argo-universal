@@ -24,6 +24,9 @@ export interface StartCatalogSyncSupervisorInput {
 export type CatalogSyncSupervisor = ActorRefFrom<
   typeof catalogSyncSupervisorMachine
 >;
+type CatalogSupervisorSnapshot = SnapshotFrom<
+  typeof catalogSyncSupervisorMachine
+>;
 
 export function startCatalogSyncSupervisor(
   input: StartCatalogSyncSupervisorInput,
@@ -53,13 +56,11 @@ export async function syncAgentCatalog(
   actor: CatalogSyncSupervisor,
 ): Promise<AgentsCatalogSyncOutput> {
   const before = actor.getSnapshot();
-  if (catalogSyncAdmissionIsClosed(before)) return cancelledCatalogSync(actor);
-  const completed = waitFor(
+  if (catalogSyncAdmissionIsClosed(before))
+    return createCancelledCatalogSyncOutput(actor);
+  const completed = observeNextCatalogSyncCompletion(
     actor,
-    (snapshot) =>
-      snapshot.context.completedSyncs > before.context.completedSyncs ||
-      snapshot.status !== 'active',
-    { timeout: Infinity },
+    before.context.completedSyncs,
   );
   actor.send({ type: 'catalog.sync' });
   return (await completed).context.result;
@@ -89,7 +90,7 @@ function bindCatalogShutdownSignal(
   if (signal.aborted) shutdown();
 }
 
-function cancelledCatalogSync(
+function createCancelledCatalogSyncOutput(
   actor: CatalogSyncSupervisor,
 ): AgentsCatalogSyncOutput {
   return {
@@ -100,7 +101,20 @@ function cancelledCatalogSync(
 }
 
 function catalogSyncAdmissionIsClosed(
-  snapshot: SnapshotFrom<typeof catalogSyncSupervisorMachine>,
+  snapshot: CatalogSupervisorSnapshot,
 ): boolean {
   return snapshot.status !== 'active' || snapshot.matches('stopping');
+}
+
+function observeNextCatalogSyncCompletion(
+  actor: CatalogSyncSupervisor,
+  previousCompletedSyncs: number,
+): Promise<CatalogSupervisorSnapshot> {
+  return waitFor(
+    actor,
+    (snapshot) =>
+      snapshot.context.completedSyncs > previousCompletedSyncs ||
+      snapshot.status !== 'active',
+    { timeout: Infinity },
+  );
 }
