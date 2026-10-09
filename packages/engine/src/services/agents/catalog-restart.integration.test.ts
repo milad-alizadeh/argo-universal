@@ -1,0 +1,47 @@
+import { join } from 'node:path';
+import { openDatabase } from '@repo/db';
+import { agentCatalogCache } from '@repo/db/schema';
+import { publishedRegistry } from '@repo/mocks/registry/catalog';
+import { expect, it, onTestFinished } from 'vitest';
+import { openTestDatabase } from '#mocks/database';
+import { startRouterTestHost } from '#mocks/router';
+
+it('hydrates exact upstream metadata after a disk database restart while offline', async (): Promise<void> => {
+  const stored = openTestDatabase();
+  onTestFinished(stored.remove);
+  const first = startRouterTestHost({
+    database: stored.database,
+    registry: { readRegistry: async (): Promise<unknown> => publishedRegistry },
+  });
+  const history = (await first.caller.session.list({ archived: false }))
+    .sessions;
+  const accepted = await first.caller.agents.catalog();
+  await first.stop();
+  stored.database.$client.close();
+  const database = openDatabase(join(stored.directory, 'argo.db'));
+  onTestFinished((): void => database.$client.close());
+  const restarted = startRouterTestHost({
+    database,
+    registry: offlineRegistry,
+  });
+  const catalog = await restarted.caller.agents.catalog();
+  expect(catalog).toMatchObject({
+    status: 'stale',
+    error: 'Registry is offline',
+    rejectedValues: 0,
+    fetchedAt: accepted.fetchedAt,
+    agents: accepted.agents,
+  });
+  const cache = database.select().from(agentCatalogCache).get();
+  expect(cache && JSON.parse(cache.payload)).toEqual(publishedRegistry);
+  expect(cache && JSON.parse(cache.payload).extensions).toEqual([]);
+  expect(
+    (await restarted.caller.session.list({ archived: false })).sessions,
+  ).toEqual(history);
+});
+
+const offlineRegistry = {
+  readRegistry: async (): Promise<never> => {
+    throw new Error('Registry is offline');
+  },
+};

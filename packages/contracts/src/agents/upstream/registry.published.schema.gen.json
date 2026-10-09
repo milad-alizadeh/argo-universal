@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://cdn.agentclientprotocol.com/registry/v1/latest/registry.schema.json",
+  "title": "ACP Agent Registry",
+  "description": "Schema for the aggregated ACP agent registry index",
+  "type": "object",
+  "required": [
+    "version",
+    "agents"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+",
+      "description": "Registry schema version"
+    },
+    "agents": {
+      "type": "array",
+      "description": "List of registered agents",
+      "items": {
+        "$ref": "agent.schema.json"
+      }
+    },
+    "extensions": {
+      "type": "array",
+      "const": [],
+      "maxItems": 0
+    }
+  },
+  "additionalProperties": false,
+  "$comment": "Derived from official registry schema and producer 33a1a101ef68ab20a97624ac89d4b977eeac0daf; producer SHA-256 ac3e7008ccccdb42852bc9e3780d46078cfaf9e0f92c39d59427d3294eb12207. Only its literal empty extensions placeholder is added."
+}

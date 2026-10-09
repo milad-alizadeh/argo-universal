@@ -6,6 +6,10 @@ import {
   createAcpResources,
   type AcpResources,
   type AcpResourceInput,
+  agentCatalogId,
+  catalogMachine,
+  type CatalogInput,
+  type RegistryPort,
 } from '../services/agents';
 import { blobsFolderIn, removeUnusedBlobs } from '../services/blob';
 import { writerMachine, databaseWriterId } from '../services/feed';
@@ -60,6 +64,7 @@ export interface EngineInput extends Pick<
   version: string;
   startedAt: string;
   acp?: AcpResourceInput;
+  registry?: RegistryPort;
 }
 
 interface EngineContext extends EngineInput {
@@ -118,6 +123,7 @@ export const engineMachine = setup({
       },
     ),
     databaseWriter: writerMachine,
+    catalog: catalogMachine,
     sessions: registryMachine,
     startHttpServer: fromPromise<HttpServer, HttpServerOptions>(
       async ({ input, signal }): Promise<HttpServer> => {
@@ -215,6 +221,15 @@ export const engineMachine = setup({
     },
     live: {
       invoke: [
+        {
+          id: 'catalog',
+          systemId: agentCatalogId,
+          src: 'catalog',
+          input: ({ context }): CatalogInput => ({
+            database: openDatabaseOf(context),
+            registry: context.registry,
+          }),
+        },
         {
           id: 'databaseWriter',
           systemId: databaseWriterId,

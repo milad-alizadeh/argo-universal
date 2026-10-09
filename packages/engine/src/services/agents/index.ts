@@ -14,3 +14,9 @@ export type {
   AgentLaunch,
   ResolveAgentLaunch,
 } from './acp/resource-types';
+export {
+  agentCatalogId,
+  catalogMachine,
+  type CatalogInput,
+} from './catalog/catalog-machine';
+export type { RegistryPort } from './catalog/registry';

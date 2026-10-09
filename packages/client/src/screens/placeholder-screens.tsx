@@ -22,10 +22,6 @@ export function ProjectsSettingsScreen(): React.JSX.Element {
   );
 }
 
-export function AgentsSettingsScreen(): React.JSX.Element {
-  return <Placeholder title="Agents" description="Agents will appear here." />;
-}
-
 export function DevicesScreen(): React.JSX.Element {
   return (
     <Placeholder title="Devices" description="Devices will appear here." />

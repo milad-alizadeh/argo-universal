@@ -55,7 +55,7 @@ export type ServerOptions = {
   mockAgents: MockAgents;
 };
 
-type App = { page: Page; httpUrl: string };
+type App = { page: Page; httpUrl: string; registryPath: string };
 
 // Polls system.info, so a test never calls a Server that is still starting.
 const waitForServer = (httpUrl: string): Promise<true> =>
@@ -91,7 +91,11 @@ export const test = base.extend<
         const page = await context.newPage();
         await pointAppAtServer(page, server.serverUrl);
         await page.goto('/');
-        await use({ page, httpUrl: server.httpUrl });
+        await use({
+          page,
+          httpUrl: server.httpUrl,
+          registryPath: server.registryPath,
+        });
       } finally {
         await server.stop();
       }
@@ -123,7 +127,11 @@ export const test = base.extend<
       });
       const httpUrl = fixtureServer.httpUrl;
       await waitForServer(httpUrl);
-      await use({ page: await electronApp.firstWindow(), httpUrl });
+      await use({
+        page: await electronApp.firstWindow(),
+        httpUrl,
+        registryPath: fixtureServer.registryPath,
+      });
     } finally {
       // Close the App before gracefully stopping its fixture Engine.
       try {

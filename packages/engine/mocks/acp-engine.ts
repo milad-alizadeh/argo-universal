@@ -51,6 +51,9 @@ export const startAcpEngine = async (
       createId,
       adapters: [createMockAdapter()],
       acp: peer,
+      registry: {
+        readRegistry: async () => ({ version: '1.0.0', agents: [] }),
+      },
       resolveAgentLaunch: async (input) => ({
         ...resourceLaunch,
         agentId: input.agent,
