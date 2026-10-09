@@ -3,12 +3,12 @@ import type { FeedUpdate } from '../src/agent-events';
 import { type ItemInput, itemRow } from './item-rows';
 import { type MappingState, dropped, upsert } from './mapping-state';
 import type { ThreadItem } from './protocol.gen';
-const planItem = ({
-  item,
-  state,
-  mappingState,
-}: ItemInput): AgentMapping<MappingState> => {
-  if (item.type !== 'plan' || state === 'open') return dropped(mappingState);
+type PlanItem = Extract<ThreadItem, { type: 'plan' }>;
+const planItem = (
+  item: PlanItem,
+  { state, mappingState }: Pick<ItemInput, 'state' | 'mappingState'>,
+): AgentMapping<MappingState> => {
+  if (state === 'open') return dropped(mappingState);
   return {
     mappingState,
     events: [
@@ -48,13 +48,13 @@ const trackedItem = (
   },
 });
 export function mapItem(input: ItemInput): AgentMapping<MappingState> {
-  if (input.item.type === 'plan') return planItem(input);
+  if (input.item.type === 'plan') return planItem(input.item, input);
   const row = itemRow(input);
   return row ? trackedItem(input, row) : dropped(input.mappingState);
 }
 
 const planRow = (
-  item: Extract<ThreadItem, { type: 'plan' }>,
+  item: PlanItem,
   state: ItemInput['state'],
 ): Extract<FeedUpdate, { sessionUpdate: 'plan_update' }> => ({
   id: item.id,
