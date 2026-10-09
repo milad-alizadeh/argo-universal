@@ -1,11 +1,14 @@
-import type { SessionInfo, SessionListUpdate } from '@repo/contracts';
+import type { SessionListUpdate } from '@repo/contracts';
 import { sessionRows } from '@repo/mocks/app';
 import { sessionListMocks } from './session-list-mock';
 import { createSubscriptionPublisher } from './subscription-publisher';
 import type { FixtureArguments, FixtureOutput } from './trpc-mock-link';
 import type { Fixtures } from './trpc-mock-link';
 
+export type SessionListPages = Record<string, FixtureOutput<'session.list'>>;
+
 interface SessionListUpdatesMock {
+  respondWith: (pages: SessionListPages) => void;
   calls: Record<'list' | 'active' | 'nextPage' | 'delivered', number>;
   reset: () => void;
   hold: () => void;
@@ -26,29 +29,32 @@ interface SessionListUpdatesMock {
   };
 }
 
-export function createSessionListUpdatesMock(options?: {
-  sessions: readonly SessionInfo[];
-  pageSize?: number;
-}): SessionListUpdatesMock {
-  const initialSessions = (): SessionInfo[] =>
-    options
-      ? [...options.sessions]
-      : [
-          { ...sessionRows.running, activityAt: 200 },
-          { ...sessionRows.idle, activityAt: 100 },
-        ];
-  let sessions = initialSessions();
+export function createSessionListUpdatesMock(
+  initialPages: SessionListPages = {
+    first: {
+      sessions: [
+        { ...sessionRows.running, activityAt: 200 },
+        { ...sessionRows.idle, activityAt: 100 },
+      ],
+      nextCursor: null,
+    },
+  },
+): SessionListUpdatesMock {
+  let pages = initialPages;
   let generation = 0;
   let held: ReturnType<typeof Promise.withResolvers<void>> | undefined;
   const calls = { list: 0, active: 0, nextPage: 0, delivered: 0 };
   const updates = createSubscriptionPublisher<SessionListUpdate>();
   return {
     calls,
+    respondWith(nextPages): void {
+      pages = nextPages;
+    },
     reset(): void {
       generation += 1;
       held?.resolve();
       held = undefined;
-      sessions = initialSessions();
+      pages = initialPages;
       Object.assign(calls, { list: 0, active: 0, nextPage: 0, delivered: 0 });
       updates.reset();
     },
@@ -59,39 +65,17 @@ export function createSessionListUpdatesMock(options?: {
       held?.resolve();
       held = undefined;
     },
-    publish(update: SessionListUpdate): void {
-      sessions = sessions.filter(
-        (session) =>
-          session.sessionId !==
-          (update.type === 'changed'
-            ? update.session.sessionId
-            : update.sessionId),
-      );
-      if (update.type === 'changed') sessions.push(update.session);
-      updates.publish(update);
-    },
+    publish: updates.publish,
     fixtures: {
       ...sessionListMocks,
-      'session.list': async ({ projectId, archived, query, cursor }) => {
+      'session.list': async ({ cursor }) => {
         const current = generation;
         calls.list += 1;
         calls.active += 1;
         if (cursor) calls.nextPage += 1;
-        const rows = sessions
-          .filter(
-            (session) =>
-              (!projectId || session.projectId === projectId) &&
-              Boolean(session.archivedAt !== null) === archived &&
-              (!query ||
-                session.title.toLowerCase().includes(query.toLowerCase())),
-          )
-          .sort((first, second) => second.activityAt - first.activityAt);
-        const start = cursor ? Number(cursor) : 0;
-        const end = start + (options?.pageSize ?? 50);
-        const result = {
-          sessions: rows.slice(start, end),
-          nextCursor: rows.length > end ? String(end) : null,
-        };
+        const result = pages[cursor ?? 'first'];
+        if (!result)
+          throw new Error(`No Session list response for cursor ${cursor}`);
         try {
           await held?.promise;
           return result;

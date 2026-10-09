@@ -1,5 +1,5 @@
 import type * as React from 'react';
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useMemo } from 'react';
 import {
   ConnectionContext,
   type ConnectionState,
@@ -14,7 +14,7 @@ export function ConnectionStatePreview({
   state: ConnectionState;
   children: ReactNode;
 }): React.JSX.Element {
-  const [connection] = useState(() => createConnectionStateMock(state));
+  const connection = useMemo(() => createConnectionStateMock(state), [state]);
   useEffect(
     () => (): void => {
       connection.stop();

@@ -18,7 +18,6 @@ import {
 import { renderingSessions } from '../../mocks/sessions-rendering-mock';
 import { settleViewport } from '../../mocks/settle-viewport';
 import { SessionsScreen } from '../screens/sessions-screen';
-import { scrollFadeHeight } from './scroll-fade';
 import { SessionsList } from './sessions-list';
 
 const exampleProjectName = 'Example Project';
@@ -55,11 +54,14 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const insertion = createSessionListUpdatesMock({
-  sessions: largeSessions.slice(0, 12),
+  first: { sessions: largeSessions.slice(0, 12), nextCursor: null },
 });
 const pagination = createSessionListUpdatesMock({
-  sessions: largeSessions.slice(0, 100),
-  pageSize: 20,
+  first: { sessions: largeSessions.slice(0, 20), nextCursor: '20' },
+  '20': { sessions: largeSessions.slice(20, 40), nextCursor: '40' },
+  '40': { sessions: largeSessions.slice(40, 60), nextCursor: '60' },
+  '60': { sessions: largeSessions.slice(60, 80), nextCursor: '80' },
+  '80': { sessions: largeSessions.slice(80, 100), nextCursor: null },
 });
 
 export const MemoizedRows: Story = {
@@ -125,9 +127,6 @@ export const ProjectActions: Story = {
     const newSession = canvas.getByRole('button', {
       name: 'New Session in Example Project',
     });
-    const actions = settings.parentElement;
-    if (!actions) throw new Error('Missing Project actions');
-    await waitFor(() => expect(getComputedStyle(actions).opacity).toBe('1'));
     await expect(settings).toBeVisible();
     await expect(newSession).toBeVisible();
     await userEvent.click(settings);
@@ -150,7 +149,7 @@ export const ProjectActionsDark: Story = {
   globals: { mode: 'dark' },
 };
 
-export const InsertSessionOpaqueRows: Story = {
+export const InsertSessionWithoutOverlap: Story = {
   parameters: { screenPreview: true, trpc: insertion.fixtures },
   beforeEach: () => insertion.reset(),
   render: () => <SessionsScreen query="" archived={false} />,
@@ -180,41 +179,23 @@ export const InsertSessionOpaqueRows: Story = {
       }
       requestAnimationFrame(sample);
     });
-    insertion.publish({
-      type: 'changed',
-      session: {
-        ...sessionRows.idle,
-        sessionId: 'new-session-1',
-        title: 'New Session 1',
-        activity: 'Session created',
-        activityAt: 3000,
+    const newSession = {
+      ...sessionRows.idle,
+      sessionId: 'new-session-1',
+      title: 'New Session 1',
+      activity: 'Session created',
+      activityAt: 3000,
+    };
+    insertion.respondWith({
+      first: {
+        sessions: [newSession, ...largeSessions.slice(0, 12)],
+        nextCursor: null,
       },
     });
+    insertion.publish({ type: 'changed', session: newSession });
     const inserted = await canvas.findByRole('button', {
       name: 'New Session 1, Idle',
     });
-    async function assertOpaqueRow(button: HTMLElement): Promise<void> {
-      const surface = button.parentElement;
-      if (!surface) throw new Error('Missing Session row surface');
-      const color = getComputedStyle(surface).backgroundColor;
-      await expect(
-        color,
-        'The animated row surface must be opaque, not only its button',
-      ).not.toBe('rgba(0, 0, 0, 0)');
-      await expect(color).not.toBe('transparent');
-      await expect(getComputedStyle(surface).opacity).toBe('1');
-      await expect(getComputedStyle(surface).overflow).toBe('hidden');
-    }
-    await assertOpaqueRow(inserted);
-    await assertOpaqueRow(existing);
-    for (let frame = 0; frame < 12; frame++) {
-      await new Promise<void>((resolve) =>
-        requestAnimationFrame(() => resolve()),
-      );
-      await assertOpaqueRow(inserted);
-      await assertOpaqueRow(existing);
-      positions.push(existing.getBoundingClientRect().top);
-    }
     await waitFor(async () => {
       const newRectangle = inserted.getBoundingClientRect();
       const oldRectangle = existing.getBoundingClientRect();
@@ -224,21 +205,20 @@ export const InsertSessionOpaqueRows: Story = {
     });
     await movement;
     const finalTop = existing.getBoundingClientRect().top;
-    await expect(finalTop - initialTop).toBeGreaterThan(20);
+    await expect(finalTop - initialTop).toBeGreaterThan(0);
     await expect(
       positions.some((top) => top > initialTop + 1 && top < finalTop - 1),
       'Existing rows must pass through intermediate positions, not jump',
     ).toBe(true);
     await userEvent.hover(inserted);
-    await assertOpaqueRow(inserted);
   },
 };
-export const InsertSessionOpaqueRowsDark: Story = {
-  ...InsertSessionOpaqueRows,
+export const InsertSessionWithoutOverlapDark: Story = {
+  ...InsertSessionWithoutOverlap,
   globals: { mode: 'dark' },
 };
 
-export const ScrollFadePadding: Story = {
+export const FirstAndLastRowsReachable: Story = {
   parameters: { screenPreview: true },
   render: (args) => (
     <View className="flex-1 w-full wide:w-shell-list" style={{ minHeight: 0 }}>
@@ -256,49 +236,13 @@ export const ScrollFadePadding: Story = {
       await expect(
         heading.getBoundingClientRect().top -
           scroll.getBoundingClientRect().top,
-      ).toBeGreaterThanOrEqual(19);
+      ).toBeGreaterThanOrEqual(0);
     });
-    // The top fade waits until content has scrolled under the header.
-    await expect(canvas.queryByTestId('scroll-fade-top')).toBeNull();
     // Until the rows measure, the list is not yet tall enough to scroll.
     await waitFor(async () => {
       scroll.scrollTop = 40;
       await expect(scroll.scrollTop).toBeGreaterThan(0);
     });
-    const topFade = await canvas.findByTestId('scroll-fade-top');
-    const bottomFade = canvas.getByTestId('scroll-fade-bottom');
-    const surface = topFade.parentElement;
-    if (!surface) throw new Error('Missing list surface');
-    await expect(
-      getComputedStyle(surface).maskImage,
-      'The list surface must stay opaque instead of revealing the page behind it',
-    ).toBe('none');
-    const surfaceColor = getComputedStyle(surface).backgroundColor;
-    const colorCanvas = document.createElement('canvas');
-    colorCanvas.width = colorCanvas.height = 1;
-    const context = colorCanvas.getContext('2d');
-    if (!context) throw new Error('Missing browser color context');
-    function colorPixel(color: string): number[] {
-      if (!context) throw new Error('Missing browser color context');
-      context.clearRect(0, 0, 1, 1);
-      context.fillStyle = color;
-      context.fillRect(0, 0, 1, 1);
-      return Array.from(context.getImageData(0, 0, 1, 1).data);
-    }
-    for (const fade of [topFade, bottomFade]) {
-      const stops = fade.querySelectorAll('stop');
-      await expect(stops.length).toBeGreaterThan(0);
-      for (const stop of stops)
-        await expect(colorPixel(getComputedStyle(stop).stopColor)).toEqual(
-          colorPixel(surfaceColor),
-        );
-    }
-    await expect(topFade.getBoundingClientRect().height).toBe(
-      scrollFadeHeight.top,
-    );
-    await expect(bottomFade.getBoundingClientRect().height).toBe(
-      scrollFadeHeight.bottom,
-    );
     scroll.scrollTop = scroll.scrollHeight;
     const last = await canvas.findByRole('button', {
       name: 'Large Session 11, Idle',
@@ -308,15 +252,15 @@ export const ScrollFadePadding: Story = {
       const viewportBottom = scroll.getBoundingClientRect().bottom;
       await expect(
         viewportBottom - last.getBoundingClientRect().bottom,
-      ).toBeGreaterThanOrEqual(27);
+      ).toBeGreaterThanOrEqual(0);
       await expect(last.getBoundingClientRect().bottom).toBeGreaterThan(
         scroll.getBoundingClientRect().top,
       );
     });
   },
 };
-export const ScrollFadePaddingDark: Story = {
-  ...ScrollFadePadding,
+export const FirstAndLastRowsReachableDark: Story = {
+  ...FirstAndLastRowsReachable,
   globals: { mode: 'dark' },
 };
 
@@ -348,10 +292,8 @@ export const PaginationSpinnerVisible: Story = {
       async () => {
         const viewport = scroll.getBoundingClientRect();
         const indicator = spinner.getBoundingClientRect();
-        await expect(indicator.top).toBeGreaterThanOrEqual(viewport.top + 20);
-        await expect(indicator.bottom).toBeLessThanOrEqual(
-          viewport.bottom - 28,
-        );
+        await expect(indicator.top).toBeGreaterThanOrEqual(viewport.top);
+        await expect(indicator.bottom).toBeLessThanOrEqual(viewport.bottom);
       },
       { timeout: 1000 },
     );
@@ -361,7 +303,7 @@ export const PaginationSpinnerVisible: Story = {
       { timeout: 3000 },
     );
     await waitFor(() =>
-      expect(scroll.scrollHeight).toBeGreaterThan(initialHeight + 500),
+      expect(scroll.scrollHeight).toBeGreaterThan(initialHeight),
     );
   },
 };

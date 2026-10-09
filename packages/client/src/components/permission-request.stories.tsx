@@ -8,7 +8,8 @@ import {
   permissionMock,
   permissionMocks,
 } from '../../mocks/request-mock';
-import { PermissionFeedPreview } from '../../mocks/request-preview';
+import { toFeedView } from '../feed/to-feed-view';
+import { FeedItem } from './feed-item';
 import { PermissionOutcome } from './permission-outcome';
 import { PermissionRequest } from './permission-request';
 
@@ -86,10 +87,24 @@ export const Overview = {
             />
           </Variation>
           <Variation label="Awaiting approval">
-            <PermissionFeedPreview />
+            {toFeedView(
+              permissionMock.pending.rows,
+              permissionMock.pending.snapshot,
+            )
+              .items.filter((item) => item.type === 'group')
+              .map((item) => (
+                <FeedItem key={item.id} item={item} imageUrl={() => ''} />
+              ))}
           </Variation>
           <Variation label="Allowed once">
-            <PermissionFeedPreview answered />
+            {toFeedView(
+              permissionMock.answered.rows,
+              permissionMock.answered.snapshot,
+            )
+              .items.filter((item) => item.type === 'group')
+              .map((item) => (
+                <FeedItem key={item.id} item={item} imageUrl={() => ''} />
+              ))}
           </Variation>
           <Variation label="Denied">
             <PermissionOutcome

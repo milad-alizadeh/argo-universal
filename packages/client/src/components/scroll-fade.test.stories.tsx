@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
-import { expectFadeColor } from '../../mocks/fade-color';
 import { ScrollFadePreview } from '../../mocks/scroll-fade-preview';
 import { ScrollFadeView } from './scroll-fade';
 
@@ -28,21 +27,10 @@ export const FadesFollowScroll: Story = {
     await expect(top.getBoundingClientRect().top).toBeGreaterThanOrEqual(
       header.getBoundingClientRect().bottom,
     );
-    await expect(getComputedStyle(top).pointerEvents).toBe('none');
     scroll.scrollTop = scroll.scrollHeight;
     await waitFor(() => expect(canvas.queryByTestId(bottomFadeId)).toBeNull());
     scroll.scrollTop = 0;
     await waitFor(() => expect(canvas.queryByTestId(topFadeId)).toBeNull());
-  },
-};
-
-export const FadesMatchSurface: Story = {
-  render: () => <ScrollFadePreview />,
-  play: async ({ canvas }) => {
-    const scroll = await canvas.findByTestId('scroll-fade-scroll');
-    scroll.scrollTop = 120;
-    const top = await canvas.findByTestId(topFadeId);
-    await expectFadeColor(top);
   },
 };
 

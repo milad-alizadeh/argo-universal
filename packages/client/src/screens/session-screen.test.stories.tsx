@@ -866,7 +866,39 @@ function heldConfiguration(width: number, agentIndex: number): Story {
     activeTurnId: 'held-config-turn',
     liveHeader: runningHeader,
   };
+  const heldEffort = {
+    ...initial,
+    configOptions: initial.configOptions.map((option) =>
+      option.category === 'thought_level' && option.type === 'select'
+        ? {
+            ...option,
+            currentValue: selected.value,
+            _meta: {
+              ...option._meta,
+              argo: { ...option._meta?.argo, heldUntilNextTurn: true },
+            },
+          }
+        : option,
+    ),
+  };
+  const heldModel = {
+    ...heldEffort,
+    configOptions: heldEffort.configOptions.map((option) =>
+      option.category === 'model' && option.type === 'select'
+        ? {
+            ...option,
+            currentValue: narrower.value,
+            _meta: {
+              ...option._meta,
+              argo: { ...option._meta?.argo, heldUntilNextTurn: true },
+            },
+          }
+        : option,
+    ),
+  };
   let snapshot = initial;
+  const responses = [heldEffort, heldModel];
+  let responseIndex = 0;
   const snapshots = createSubscriptionPublisher<FeedSnapshot>();
   const mocks: Fixtures = {
     ...runningSessionMocks,
@@ -875,32 +907,19 @@ function heldConfiguration(width: number, agentIndex: number): Story {
       yield { type: 'snapshot', snapshot };
       yield* snapshots.subscribe(signal);
     },
-    'session.setConfigOption': ({ configId, value }) => {
-      const configOptions = snapshot.configOptions.map((option) => {
-        if (
-          option.configId !== configId ||
-          option.type !== 'select' ||
-          typeof value !== 'string'
-        )
-          return option;
-        return {
-          ...option,
-          currentValue: value,
-          _meta: {
-            ...option._meta,
-            argo: { ...option._meta?.argo, heldUntilNextTurn: true },
-          },
-        };
-      });
-      snapshot = { ...snapshot, configOptions };
+    'session.setConfigOption': () => {
+      const response = responses[responseIndex++];
+      if (!response) throw new Error('No declared held configuration response');
+      snapshot = response;
       snapshots.publish({ type: 'snapshot', snapshot });
-      return { configOptions };
+      return { configOptions: snapshot.configOptions };
     },
   };
   return {
     parameters: { trpc: mocks },
     beforeEach: () => {
       snapshot = initial;
+      responseIndex = 0;
       snapshots.reset();
       return () => snapshots.reset();
     },

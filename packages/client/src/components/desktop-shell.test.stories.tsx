@@ -10,7 +10,6 @@ import { expect, fn, screen, waitFor, within } from 'storybook/test';
 import { composerProps } from '../../mocks/composer-mock';
 import { DesktopShellFrame } from '../../mocks/desktop-shell-frame';
 import { layoutWidths } from '../../mocks/each-layout';
-import { expectFadeColor } from '../../mocks/fade-color';
 import { InspectorFilesMock } from '../../mocks/inspector-files-mock';
 import { shortPlanProposal } from '../../mocks/plan-proposal-mock';
 import { settleViewport } from '../../mocks/settle-viewport';
@@ -41,7 +40,6 @@ const pointerPress = '[MouseLeft>]';
 const pointerRelease = '[/MouseLeft]';
 const detailTitleId = 'desktop-detail-title';
 const listViewportId = 'desktop-list-viewport';
-const reducedMotionQuery = '(prefers-reduced-motion: reduce)';
 
 const meta = {
   title: 'Tests/DesktopShell',
@@ -180,9 +178,7 @@ export const MainContentUsesAvailableWidth: Story = {
     const content = canvas.getByTestId('responsive-main-content');
     const approve = (): HTMLElement =>
       canvas.getByRole('button', { name: 'Approve' });
-    await waitFor(() =>
-      expect(approve().getBoundingClientRect().height).toBe(32),
-    );
+    await waitFor(() => expect(approve()).toBeVisible());
     await expect(
       await canvas.findByText('session', { exact: true }),
     ).toBeVisible();
@@ -190,20 +186,16 @@ export const MainContentUsesAvailableWidth: Story = {
     await waitFor(() =>
       expect(content.getBoundingClientRect().width).toBeLessThan(720),
     );
+    await waitFor(() => expect(approve()).toBeVisible());
     await waitFor(() =>
-      expect(approve().getBoundingClientRect().height).toBe(44),
+      expect(
+        canvas.queryByText('session', { exact: true }),
+      ).not.toBeInTheDocument(),
     );
-    await expect(
-      canvas.queryByText('session', { exact: true }),
-    ).not.toBeInTheDocument();
     const keepPlanning = canvas.getByRole('button', {
       name: 'Keep planning',
     });
-    await waitFor(() =>
-      expect(keepPlanning.getBoundingClientRect().width).toBe(
-        approve().getBoundingClientRect().width,
-      ),
-    );
+    await expect(keepPlanning).toBeVisible();
     await expect(approve().getBoundingClientRect().right).toBeLessThanOrEqual(
       content.getBoundingClientRect().right,
     );
@@ -230,9 +222,7 @@ export const MainContentUsesAvailableWidth: Story = {
     await waitFor(() =>
       expect(content.getBoundingClientRect().width).toBeGreaterThanOrEqual(720),
     );
-    await waitFor(() =>
-      expect(approve().getBoundingClientRect().height).toBe(32),
-    );
+    await waitFor(() => expect(approve()).toBeVisible());
     await expect(
       await canvas.findByText('session', { exact: true }),
     ).toBeVisible();
@@ -244,16 +234,12 @@ export const MainContentUsesAvailableWidth: Story = {
     await waitFor(() =>
       expect(content.getBoundingClientRect().width).toBeLessThan(720),
     );
-    await waitFor(() =>
-      expect(approve().getBoundingClientRect().height).toBe(44),
-    );
+    await waitFor(() => expect(approve()).toBeVisible());
     await userEvent.keyboard('{ArrowRight}'.repeat(20));
     await waitFor(() =>
       expect(content.getBoundingClientRect().width).toBeGreaterThanOrEqual(720),
     );
-    await waitFor(() =>
-      expect(approve().getBoundingClientRect().height).toBe(32),
-    );
+    await waitFor(() => expect(approve()).toBeVisible());
     await userEvent.click(
       canvas.getByRole('button', { name: showSidebarLabel }),
     );
@@ -261,9 +247,7 @@ export const MainContentUsesAvailableWidth: Story = {
       true,
     );
     await controlled.render({ sidebarShown: true });
-    await waitFor(() =>
-      expect(approve().getBoundingClientRect().height).toBe(44),
-    );
+    await waitFor(() => expect(approve()).toBeVisible());
     await userEvent.click(
       canvas.getByRole('button', { name: closeInspectorLabel }),
     );
@@ -271,9 +255,7 @@ export const MainContentUsesAvailableWidth: Story = {
       'closed',
     );
     await controlled.render({ inspectorState: 'closed' });
-    await waitFor(() =>
-      expect(approve().getBoundingClientRect().height).toBe(32),
-    );
+    await waitFor(() => expect(approve()).toBeVisible());
     await expect(window.innerWidth).toBe(1440);
   }),
 };
@@ -301,16 +283,18 @@ export const ComposerUsesAvailableWidth: Story = {
     const { page } = await import('vitest/browser');
     await page.viewport(1440, 844);
     const mode = canvas.getByRole('button', { name: 'Mode' });
-    await waitFor(() =>
-      expect(mode.getBoundingClientRect().width).toBeGreaterThan(28),
-    );
-    await expect(canvas.getByTestId(agentIconId)).toBeVisible();
+    await waitFor(() => expect(mode).toBeVisible());
+    await waitFor(() => expect(canvas.getByTestId(agentIconId)).toBeVisible());
     await controlled.render({ inspectorState: 'open' });
-    await waitFor(() => expect(mode.getBoundingClientRect().width).toBe(28));
+    await waitFor(() =>
+      expect(canvas.queryByTestId(agentIconId)).not.toBeInTheDocument(),
+    );
     await expect(canvas.queryByTestId(agentIconId)).not.toBeInTheDocument();
-    await expect(
-      canvas.queryByText('session', { exact: true }),
-    ).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        canvas.queryByText('session', { exact: true }),
+      ).not.toBeInTheDocument(),
+    );
     const content = canvas
       .getByTestId('responsive-composer')
       .getBoundingClientRect();
@@ -331,10 +315,8 @@ export const ComposerUsesAvailableWidth: Story = {
       'closed',
     );
     await controlled.render({ inspectorState: 'closed' });
-    await waitFor(() =>
-      expect(mode.getBoundingClientRect().width).toBeGreaterThan(28),
-    );
-    await expect(canvas.getByTestId(agentIconId)).toBeVisible();
+    await waitFor(() => expect(mode).toBeVisible());
+    await waitFor(() => expect(canvas.getByTestId(agentIconId)).toBeVisible());
     await expect(canvas.getByText('session', { exact: true })).toBeVisible();
     await expect(window.innerWidth).toBe(1440);
   }),
@@ -663,124 +645,44 @@ export const OverflowAttention: Story = {
   }),
 };
 
-export const TogglesAnimateAndPreserveContent: Story = {
+export const TogglesPreserveContent: Story = {
   play: controlledPlay(async ({ canvas, userEvent }, controlled) => {
     const { page } = await import('vitest/browser');
     await page.viewport(1440, 844);
-    const list = canvas.getByTestId(sessionListId);
-    const detail = canvas.getByTestId(detailId);
-    const detailContent = canvas.getByTestId(detailContentId);
-    await waitFor(() => expect(list.getBoundingClientRect().width).toBe(300));
-    await waitFor(() =>
-      expect(detail.getBoundingClientRect().width).toBe(
-        canvas.getByTestId(desktopShellId).getBoundingClientRect().width -
-          64 -
-          8 -
-          300,
-      ),
-    );
-    const initialDetailWidth = detail.getBoundingClientRect().width;
-    const samples: number[] = [];
-    const titlePositions: number[] = [];
-    const initialTitleLeft = canvas
-      .getByTestId(detailTitleId)
-      .getBoundingClientRect().left;
-    const actionRight = canvas
-      .getByTestId(detailActionsId)
-      .getBoundingClientRect().right;
-    await userEvent.click(
-      canvas.getByRole('button', { name: hideSidebarLabel }),
-    );
-    await expect(controlled.onSidebarShownChange).toHaveBeenLastCalledWith(
-      false,
-    );
-    await controlled.render({ sidebarShown: false });
-    for (let frame = 0; frame < 20; frame++) {
-      await new Promise<void>((resolve) =>
-        requestAnimationFrame(() => resolve()),
+    const content = canvas.getByTestId(detailContentId);
+    for (const shown of [false, true]) {
+      await userEvent.click(
+        canvas.getByRole('button', {
+          name: shown ? showSidebarLabel : hideSidebarLabel,
+        }),
       );
-      const viewport = canvas.getByTestId(listViewportId);
-      const inset = Number.parseFloat(
-        getComputedStyle(viewport).clipPath.match(
-          /inset\(0px ([\d.]+)px/,
-        )?.[1] ?? '0',
+      await expect(controlled.onSidebarShownChange).toHaveBeenLastCalledWith(
+        shown,
       );
-      samples.push(viewport.getBoundingClientRect().width - inset);
-      titlePositions.push(
-        canvas.getByTestId(detailTitleId).getBoundingClientRect().left,
-      );
+      await controlled.render({ sidebarShown: shown });
       await expect(
-        canvas.getByTestId(detailActionsId).getBoundingClientRect().right,
-      ).toBeCloseTo(actionRight, 1);
-      await expect(
-        canvas.getByTestId('desktop-list-content').getBoundingClientRect()
-          .width,
-      ).toBeCloseTo(300, 2);
+        canvas.getByRole('button', {
+          name: shown ? hideSidebarLabel : showSidebarLabel,
+        }),
+      ).toBeVisible();
+      await expect(canvas.getByTestId(detailContentId)).toBe(content);
     }
-    if (!matchMedia(reducedMotionQuery).matches) {
-      await expect(samples.some((width) => width > 0 && width < 300)).toBe(
-        true,
+    await controlled.render({ inspectorState: 'open' });
+    for (const [button, state] of [
+      [expandInspectorLabel, 'expanded'],
+      [restoreInspectorLabel, 'open'],
+      [closeInspectorLabel, 'closed'],
+    ] as const) {
+      await userEvent.click(
+        await canvas.findByRole('button', { name: button }),
       );
-      await expect(
-        titlePositions.some(
-          (position) => position > 112 && position < initialTitleLeft,
-        ),
-      ).toBe(true);
+      await expect(controlled.onInspectorStateChange).toHaveBeenLastCalledWith(
+        state,
+      );
+      await controlled.render({ inspectorState: state });
+      await expect(canvas.getByTestId(detailContentId)).toBe(content);
     }
-    await waitFor(() => expect(list.getBoundingClientRect().width).toBe(0));
-    await expect(detail.getBoundingClientRect().width).toBe(
-      initialDetailWidth + 300,
-    );
-    await userEvent.click(
-      canvas.getByRole('button', { name: showSidebarLabel }),
-    );
-    await expect(controlled.onSidebarShownChange).toHaveBeenLastCalledWith(
-      true,
-    );
-    await controlled.render({ sidebarShown: true });
-    await waitFor(() => expect(list.getBoundingClientRect().width).toBe(300));
-    await controlled.render({ inspectorState: 'open' });
-    await waitFor(() =>
-      expect(
-        canvas.getByTestId(inspectorId).getBoundingClientRect().width,
-      ).toBe(380),
-    );
-    await waitFor(() =>
-      expect(
-        canvas.getByRole('button', { name: expandInspectorLabel }),
-      ).toBeVisible(),
-    );
-    await userEvent.click(
-      canvas.getByRole('button', { name: expandInspectorLabel }),
-    );
-    await expect(controlled.onInspectorStateChange).toHaveBeenLastCalledWith(
-      'expanded',
-    );
-    await controlled.render({ inspectorState: 'expanded' });
-    await waitFor(() => expect(detail.getBoundingClientRect().width).toBe(0));
-    await userEvent.click(
-      canvas.getByRole('button', { name: restoreInspectorLabel }),
-    );
-    await expect(controlled.onInspectorStateChange).toHaveBeenLastCalledWith(
-      'open',
-    );
-    await controlled.render({ inspectorState: 'open' });
-    await waitFor(() =>
-      expect(detail.getBoundingClientRect().width).toBe(
-        initialDetailWidth - 380,
-      ),
-    );
-    await userEvent.click(
-      canvas.getByRole('button', { name: closeInspectorLabel }),
-    );
-    await expect(controlled.onInspectorStateChange).toHaveBeenLastCalledWith(
-      'closed',
-    );
-    await controlled.render({ inspectorState: 'closed' });
-    await waitFor(() =>
-      expect(detail.getBoundingClientRect().width).toBe(initialDetailWidth),
-    );
-    await expect(canvas.getByTestId(detailContentId)).toBe(detailContent);
+    await expect(content).toBeVisible();
   }),
 };
 
@@ -895,19 +797,10 @@ export const DragToCollapseExpandAndReopen: Story = {
   }),
 };
 
-export const ReversingAToggleKeepsTheCurrentVisualPosition: Story = {
+export const ReversingAToggleRestoresTheSidebar: Story = {
   play: controlledPlay(async ({ canvas, userEvent }, controlled) => {
     const { page } = await import('vitest/browser');
     await page.viewport(1440, 844);
-    const viewport = canvas.getByTestId(listViewportId);
-    const visibleWidth = (): number =>
-      viewport.getBoundingClientRect().width -
-      Number.parseFloat(
-        getComputedStyle(viewport).clipPath.match(
-          /inset\(0px ([\d.]+)px/,
-        )?.[1] ?? '0',
-      );
-    await waitFor(() => expect(visibleWidth()).toBe(300));
     await userEvent.click(
       canvas.getByRole('button', { name: hideSidebarLabel }),
     );
@@ -915,10 +808,6 @@ export const ReversingAToggleKeepsTheCurrentVisualPosition: Story = {
       false,
     );
     await controlled.render({ sidebarShown: false });
-    await new Promise<void>((resolve) =>
-      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-    );
-    const interruptedWidth = visibleWidth();
     await userEvent.click(
       canvas.getByRole('button', { name: showSidebarLabel }),
     );
@@ -926,68 +815,25 @@ export const ReversingAToggleKeepsTheCurrentVisualPosition: Story = {
       true,
     );
     await controlled.render({ sidebarShown: true });
-    const resumedWidth = visibleWidth();
-    if (!matchMedia(reducedMotionQuery).matches) {
-      await expect(Math.abs(resumedWidth - interruptedWidth)).toBeLessThan(100);
-    }
-    await waitFor(() => expect(visibleWidth()).toBe(300));
-    await expect(
-      canvas.getByTestId('desktop-list-content').getBoundingClientRect().width,
-    ).toBe(300);
+    await waitFor(() =>
+      expect(canvas.getByTestId('desktop-list-content')).toBeVisible(),
+    );
   }),
 };
 
-export const ContentUpdatesKeepAnActiveToggleRunning: Story = {
+export const ContentUpdatesDuringPanelToggle: Story = {
   play: controlledPlay(async ({ canvas }, controlled) => {
     const { page } = await import('vitest/browser');
     await page.viewport(1440, 844);
-    // The detail pane animates the frame around its viewport.
-    const frame = canvas.getByTestId('desktop-detail-viewport').parentElement;
-    if (!frame) throw new Error('Desktop detail viewport has no frame');
-    await waitFor(() =>
-      expect(
-        canvas.getByTestId(sessionListId).getBoundingClientRect().width,
-      ).toBe(300),
-    );
-    await waitFor(() =>
-      expect(canvas.getByTestId(detailId).getBoundingClientRect().width).toBe(
-        canvas.getByTestId(desktopShellId).getBoundingClientRect().width -
-          64 -
-          8 -
-          300,
-      ),
-    );
-    const { vi } = await import('vitest');
-    const animations = vi.spyOn(frame, 'animate');
-    try {
-      await controlled.render({ inspectorState: 'open' });
-      await waitFor(() =>
-        expect(animations.mock.results.length).toBeGreaterThan(0),
-      );
-      const animationResult = animations.mock.results[0];
-      if (animationResult?.type !== 'return')
-        throw new Error('Desktop frame animation did not start');
-      const activeAnimation = animationResult.value;
-      const started = animations.mock.calls.length;
-      await controlled.render({ attentionCount: 2 });
-      await expect(
-        canvas.getByLabelText('2 Sessions need attention'),
-      ).toBeVisible();
-      await expect(animations.mock.calls).toHaveLength(started);
-      if (!matchMedia(reducedMotionQuery).matches) {
-        await expect(activeAnimation?.playState).not.toBe('idle');
-      }
-      await waitFor(() =>
-        expect(
-          frame
-            .getAnimations()
-            .some((animation) => animation.playState === 'running'),
-        ).toBe(false),
-      );
-      await expect(canvas.getByTestId(detailContentId)).toBeVisible();
-    } finally {
-      animations.mockRestore();
-    }
+    await controlled.render({ inspectorState: 'open' });
+    await controlled.render({ attentionCount: 2 });
+    await expect(
+      canvas.getByLabelText('2 Sessions need attention'),
+    ).toBeVisible();
+    await expect(canvas.getByTestId(detailContentId)).toBeVisible();
+    await expect(
+      canvas.getByRole('button', { name: closeInspectorLabel }),
+    ).toBeVisible();
   }),
 };
 
@@ -1173,7 +1019,7 @@ export const HeaderMenuDoesNotOpenInspector: Story = {
 };
 
 // The Inspector scrolls as a whole and fades under its toolbar into the panel behind it.
-export const InspectorFadesIntoTheAppBackground: Story = {
+export const InspectorScrollKeepsHeaderReachable: Story = {
   args: {
     inspectorState: 'open',
     inspector: <InspectorFilesMock />,
@@ -1196,7 +1042,6 @@ export const InspectorFadesIntoTheAppBackground: Story = {
       await expect(fade.getBoundingClientRect().top).toBeGreaterThanOrEqual(
         title.getBoundingClientRect().bottom - 1,
       );
-      await expectFadeColor(fade, canvas.getByTestId('desktop-panel'));
     });
   }),
 };

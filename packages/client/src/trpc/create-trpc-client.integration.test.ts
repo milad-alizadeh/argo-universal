@@ -1,11 +1,6 @@
-import { createServer, type Server } from 'node:http';
 import { ClockTick } from '@repo/contracts';
-import { startRouterTestHost } from '@repo/engine/mocks';
-import { appRouter } from '@repo/engine/router';
-import { createHTTPHandler } from '@trpc/server/adapters/standalone';
-import { applyWSSHandler } from '@trpc/server/adapters/ws';
-import { afterEach, describe, expect, it } from 'vitest';
-import { WebSocketServer } from 'ws';
+import { startEngineTestHost } from '@repo/engine/mocks';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createTRPCClient } from './create-trpc-client';
 
 const binaryMime = 'application/octet-stream';
@@ -26,48 +21,23 @@ afterEach(() => {
   for (const close of closers.splice(0)) close();
 });
 
-const readTcpPort = (server: Pick<Server, 'address'>): number => {
-  const address = server.address();
-  if (!address || typeof address === 'string')
-    throw new Error('Server has no TCP address');
-  return address.port;
-};
-
-// Serves one router over the WebSocket and over HTTP at /trpc/ on one server, as the Engine does.
+// Observe browser transport calls while the real Engine owns its listener and router.
 async function startTransportTestServer(): Promise<{
   url: string;
   connections: () => number;
   httpRequests: () => number;
 }> {
-  const { context } = startRouterTestHost({ startedAt: serverStartedAt });
-  const createContext = (): typeof context => context;
-  const handleTrpcRequest = createHTTPHandler({
-    router: appRouter,
-    createContext,
-    basePath: '/trpc/',
-  });
-  let httpRequests = 0;
-  const server = createServer((request, response) => {
-    httpRequests++;
-    handleTrpcRequest(request, response);
-  });
-  await new Promise<void>((resolve) =>
-    server.listen(0, '127.0.0.1', () => resolve()),
-  );
-  const webSocketServer = new WebSocketServer({ server });
-  let connections = 0;
-  webSocketServer.on('connection', () => connections++);
-  applyWSSHandler({ wss: webSocketServer, router: appRouter, createContext });
+  const host = await startEngineTestHost({ startedAt: serverStartedAt });
+  const sockets = vi.spyOn(globalThis, 'WebSocket');
+  const requests = vi.spyOn(globalThis, 'fetch');
   closers.push(() => {
-    webSocketServer.close();
-    server.closeAllConnections();
-    server.close();
+    sockets.mockRestore();
+    requests.mockRestore();
   });
-  const port = readTcpPort(server);
   return {
-    url: `ws://127.0.0.1:${port}`,
-    connections: () => connections,
-    httpRequests: () => httpRequests,
+    url: host.url.replace(/^http/, 'ws'),
+    connections: (): number => sockets.mock.calls.length,
+    httpRequests: (): number => requests.mock.calls.length,
   };
 }
 

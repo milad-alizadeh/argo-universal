@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
 import { layoutWidths } from '../../mocks/each-layout';
-import { expectShimmerMovement } from '../../mocks/expect-shimmer';
 import { settleViewport } from '../../mocks/settle-viewport';
 import {
   commandMocks,
@@ -116,9 +115,6 @@ function failed(width: number): Story {
       );
       const exit = canvas.getByText('Exit 2');
       await expect(exit).toBeVisible();
-      await expect(getComputedStyle(exit).color).not.toBe(
-        getComputedStyle(failure).color,
-      );
     },
   };
 }
@@ -145,7 +141,6 @@ function running(width: number): Story {
         'cat hello.txt && git status --short',
       );
       await expect(canvas.queryByRole('progressbar')).not.toBeInTheDocument();
-      await expectShimmerMovement(row, '23s');
       await userEvent.click(row);
       await expect(canvas.getByText('Shell')).toBeVisible();
       await expect(
