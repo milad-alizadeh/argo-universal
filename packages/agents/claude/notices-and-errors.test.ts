@@ -87,6 +87,7 @@ const noticeIdentity = {
 } as const;
 it.each([
   [
+    'warning information',
     {
       ...noticeIdentity,
       subtype: 'informational',
@@ -96,6 +97,7 @@ it.each([
     { severity: 'warning', title: 'Limit approaching.' },
   ],
   [
+    'task notification',
     {
       ...noticeIdentity,
       subtype: 'notification',
@@ -106,6 +108,7 @@ it.each([
     { severity: 'info', title: 'Task finished.' },
   ],
   [
+    'failed hook',
     {
       ...noticeIdentity,
       subtype: 'hook_response',
@@ -124,9 +127,9 @@ it.each([
       description: 'Hook exited.',
     },
   ],
-] satisfies [Extract<VendorMessage, { type: 'system' }>, object][])(
-  'shows the SDK $0.subtype Notice',
-  (message, content): void => {
+] satisfies [string, Extract<VendorMessage, { type: 'system' }>, object][])(
+  'shows %s as a Notice',
+  (_, message, content): void => {
     expect(feedChanges(mapAll([message]).events)).toEqual([
       {
         type: 'upsert',

@@ -75,7 +75,7 @@ it('dispatches the prompt before native cancellation', async (): Promise<void> =
   expect(calls).toEqual(['prompt', 'interrupt']);
 });
 
-it('applies the requested SDK effort and publishes the selected option', async (): Promise<void> => {
+it('uses the selected effort for native work', async (): Promise<void> => {
   const events: AgentEvent[] = [];
   const resources = createCommandResources(events);
   const vendor = createSdkCommandPort();
