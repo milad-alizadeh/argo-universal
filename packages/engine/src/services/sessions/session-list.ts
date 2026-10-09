@@ -35,25 +35,27 @@ export function createSessionList(options: {
   counts: (signal: AbortSignal | undefined) => AsyncIterable<SessionCounts>;
 } {
   const { sessions } = options;
-  const writer = (): ActorRefFrom<typeof writerMachine> | undefined =>
+  const findWriterActor = (): ActorRefFrom<typeof writerMachine> | undefined =>
     findDatabaseWriter(sessions.system);
   const {
-    readRows: readAll,
+    readRows: readAllSessionRows,
     sessionIdsForJobs,
     relatedSessionIds,
   } = createSessionListReader({
     database: options.database,
     sessions,
-    writer,
+    writer: findWriterActor,
   });
-  const { watch, readCachedRows } = createSessionListWatch({
+  const { watchSessionRows, readCachedRows } = createSessionListObserver({
     sessions,
-    writer,
-    readRows: readAll,
+    writer: findWriterActor,
+    readRows: readAllSessionRows,
     sessionIdsForJobs,
     relatedSessionIds,
   });
-  const list = async (input: SessionListInput): Promise<SessionListOutput> => {
+  const listSessions = async (
+    input: SessionListInput,
+  ): Promise<SessionListOutput> => {
     let cursor: z.infer<typeof cursorSchema> | undefined;
     if (input.cursor !== undefined) {
       try {
@@ -105,7 +107,9 @@ export function createSessionList(options: {
           : null,
     };
   };
-  const readCounts = (rows: ReturnType<typeof readAll>): SessionCounts => {
+  const countActiveSessions = (
+    rows: ReturnType<typeof readAllSessionRows>,
+  ): SessionCounts => {
     const active = rows.filter(
       (row): boolean => row.information.archivedAt === null,
     );
@@ -120,49 +124,57 @@ export function createSessionList(options: {
   };
 
   return {
-    list,
-    listUpdates: (signal): ReturnType<typeof watch<SessionListUpdate>> => {
+    list: listSessions,
+    listUpdates: (
+      signal,
+    ): ReturnType<typeof watchSessionRows<SessionListUpdate>> => {
       let previous = new Map<string, string>();
-      return watch<SessionListUpdate>(signal, (state): SessionListUpdate[] => {
-        const rows = state.map(
-          (row): typeof row.information => row.information,
-        );
-        const next = new Map(
-          rows.map((row): [string, string] => [
-            row.sessionId,
-            JSON.stringify(row),
-          ]),
-        );
-        const changed: SessionListUpdate[] = rows
-          .filter(
-            (row): boolean =>
-              previous.get(row.sessionId) !== next.get(row.sessionId),
-          )
-          .map((row): Extract<SessionListUpdate, { type: 'changed' }> => ({
-            type: 'changed',
-            session: row,
-          }));
-        for (const sessionId of previous.keys())
-          if (!next.has(sessionId))
-            changed.push({ type: 'removed', sessionId });
-        previous = next;
-        return changed;
-      });
+      return watchSessionRows<SessionListUpdate>(
+        signal,
+        (state): SessionListUpdate[] => {
+          const rows = state.map(
+            (row): typeof row.information => row.information,
+          );
+          const next = new Map(
+            rows.map((row): [string, string] => [
+              row.sessionId,
+              JSON.stringify(row),
+            ]),
+          );
+          const changed: SessionListUpdate[] = rows
+            .filter(
+              (row): boolean =>
+                previous.get(row.sessionId) !== next.get(row.sessionId),
+            )
+            .map((row): Extract<SessionListUpdate, { type: 'changed' }> => ({
+              type: 'changed',
+              session: row,
+            }));
+          for (const sessionId of previous.keys())
+            if (!next.has(sessionId))
+              changed.push({ type: 'removed', sessionId });
+          previous = next;
+          return changed;
+        },
+      );
     },
-    counts: (signal): ReturnType<typeof watch<SessionCounts>> => {
+    counts: (signal): ReturnType<typeof watchSessionRows<SessionCounts>> => {
       let previous = '';
-      return watch<SessionCounts>(signal, (rows): SessionCounts[] => {
-        const counts = readCounts(rows);
-        const serialized = JSON.stringify(counts);
-        if (serialized === previous) return [];
-        previous = serialized;
-        return [counts];
-      });
+      return watchSessionRows<SessionCounts>(
+        signal,
+        (rows): SessionCounts[] => {
+          const counts = countActiveSessions(rows);
+          const serialized = JSON.stringify(counts);
+          if (serialized === previous) return [];
+          previous = serialized;
+          return [counts];
+        },
+      );
     },
   };
 }
 
-function createSessionListWatch({
+function createSessionListObserver({
   sessions,
   writer,
   readRows,
@@ -171,15 +183,15 @@ function createSessionListWatch({
 }: Omit<SessionListMachineInput, 'writer'> & {
   writer: () => SessionListMachineInput['writer'];
 }): {
-  watch: <Value>(
+  watchSessionRows: <Value>(
     signal: AbortSignal | undefined,
-    changes: (rows: SessionListState) => Value[],
+    selectChanges: (rows: SessionListState) => Value[],
   ) => AsyncGenerator<Value>;
   readCachedRows: () => SessionListState;
 } {
   let sharedActor: ActorRefFrom<typeof sessionListMachine> | undefined;
   let references = 0;
-  const create = (): Actor<typeof sessionListMachine> =>
+  const createSessionListActor = (): Actor<typeof sessionListMachine> =>
     createActor(sessionListMachine, {
       input: {
         sessions,
@@ -190,7 +202,7 @@ function createSessionListWatch({
       },
     });
   const readCachedRows = (): SessionListState => {
-    const actor = sharedActor ?? create().start();
+    const actor = sharedActor ?? createSessionListActor().start();
     try {
       actor.send({ type: 'list.flush' });
       const snapshot = actor.getSnapshot();
@@ -204,22 +216,22 @@ function createSessionListWatch({
       }
     }
   };
-  async function* watch<Value>(
+  async function* watchSessionRows<Value>(
     signal: AbortSignal | undefined,
-    changes: (rows: SessionListState) => Value[],
+    selectChanges: (rows: SessionListState) => Value[],
   ): AsyncGenerator<Value> {
     if (signal?.aborted) return;
     const events = new EventEmitter<{ change: [Value] }>();
     const controller = new AbortController();
     const first = sharedActor === undefined;
-    sharedActor ??= create();
+    sharedActor ??= createSessionListActor();
     const actor = sharedActor;
     references += 1;
-    const publish = (rows: SessionListState): void => {
-      for (const change of changes(rows)) events.emit('change', change);
+    const publishRowChanges = (rows: SessionListState): void => {
+      for (const change of selectChanges(rows)) events.emit('change', change);
     };
     const rowsListener = actor.on('list.rows', ({ rows }): void => {
-      publish(rows);
+      publishRowChanges(rows);
     });
     const stream: AsyncIterable<Value[]> = on(events, 'change', {
       signal: controller.signal,
@@ -229,12 +241,12 @@ function createSessionListWatch({
       error: (error): void => controller.abort(error),
     });
     let attached = true;
-    const release = (): void => {
+    const releaseSubscription = (): void => {
       if (!attached) return;
       attached = false;
       rowsListener.unsubscribe();
       completion.unsubscribe();
-      signal?.removeEventListener('abort', abort);
+      signal?.removeEventListener('abort', abortSubscription);
       references -= 1;
       if (references === 0) {
         actor.send({ type: 'list.stop' });
@@ -242,16 +254,16 @@ function createSessionListWatch({
         sharedActor = undefined;
       }
     };
-    const abort = (): void => {
+    const abortSubscription = (): void => {
       controller.abort();
-      release();
+      releaseSubscription();
     };
-    signal?.addEventListener('abort', abort);
+    signal?.addEventListener('abort', abortSubscription);
     try {
       if (first) actor.start();
       else {
         const rows = actor.getSnapshot().context.rows;
-        if (rows) publish(rows);
+        if (rows) publishRowChanges(rows);
       }
       for await (const changes of stream) yield* changes;
     } catch (error) {
@@ -261,8 +273,8 @@ function createSessionListWatch({
       if (!controller.signal.aborted) throw error;
     } finally {
       controller.abort();
-      release();
+      releaseSubscription();
     }
   }
-  return { watch, readCachedRows };
+  return { watchSessionRows, readCachedRows };
 }

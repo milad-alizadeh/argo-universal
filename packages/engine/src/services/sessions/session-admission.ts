@@ -10,20 +10,20 @@ import type { SessionActorRef } from './session-machine';
 
 const alreadyAnswered = 'already answered';
 
-export function requirePermissionAnswer(
-  actor: SessionActorRef,
-  input: Pick<
+export function validatePermissionAnswer(
+  sessionActor: SessionActorRef,
+  answer: Pick<
     SessionAnswerPermissionInput,
     'toolCallId' | 'optionId' | 'message'
   >,
 ): void {
-  const snapshot = actor.getSnapshot();
-  const request = snapshot.context.permissionQueue[0];
-  if (request?.toolCallId !== input.toolCallId)
+  const sessionSnapshot = sessionActor.getSnapshot();
+  const request = sessionSnapshot.context.permissionQueue[0];
+  if (request?.toolCallId !== answer.toolCallId)
     throw new TRPCError({ code: 'CONFLICT', message: alreadyAnswered });
   if (
     !request.options.some(
-      (option): boolean => option.optionId === input.optionId,
+      (option): boolean => option.optionId === answer.optionId,
     )
   )
     throw new TRPCError({
@@ -31,9 +31,9 @@ export function requirePermissionAnswer(
       message: 'The Agent did not offer that option',
     });
   if (
-    input.optionId === 'reject_once' &&
-    input.message &&
-    snapshot.context.capabilities?.permissionFeedback !== true
+    answer.optionId === 'reject_once' &&
+    answer.message &&
+    sessionSnapshot.context.capabilities?.permissionFeedback !== true
   )
     throw new TRPCError({
       code: 'BAD_REQUEST',
@@ -41,48 +41,48 @@ export function requirePermissionAnswer(
     });
 }
 
-export function requireElicitationAnswer(
-  actor: SessionActorRef,
-  input: Pick<
+export function validateElicitationAnswer(
+  sessionActor: SessionActorRef,
+  answer: Pick<
     SessionAnswerElicitationInput,
     'requestId' | 'action' | 'content'
   >,
 ): void {
-  const request = actor.getSnapshot().context.pendingElicitation;
-  if (request?.requestId !== input.requestId)
+  const request = sessionActor.getSnapshot().context.pendingElicitation;
+  if (request?.requestId !== answer.requestId)
     throw new TRPCError({ code: 'CONFLICT', message: alreadyAnswered });
-  if (input.action !== 'accept') return;
-  const answer = createElicitationAnswerSchema(
+  if (answer.action !== 'accept') return;
+  const parsedAnswer = createElicitationAnswerSchema(
     request.requestedSchema,
-  ).safeParse(input.content ?? {});
-  if (!answer.success)
+  ).safeParse(answer.content ?? {});
+  if (!parsedAnswer.success)
     throw new TRPCError({
       code: 'BAD_REQUEST',
       message: 'The answer does not match the Elicitation form',
-      cause: answer.error,
+      cause: parsedAnswer.error,
     });
 }
 
-export function requireConfigChoice(
-  actor: SessionActorRef,
-  input: Pick<SessionSetConfigOptionInput, 'configId' | 'value'>,
+export function validateConfigChoice(
+  sessionActor: SessionActorRef,
+  configChoice: Pick<SessionSetConfigOptionInput, 'configId' | 'value'>,
 ): void {
-  const option = actor
+  const option = sessionActor
     .getSnapshot()
     .context.configOptions.find(
-      (option): boolean => option.configId === input.configId,
+      (option): boolean => option.configId === configChoice.configId,
     );
-  const allowed =
+  const isOfferedChoice =
     option?.type === 'boolean'
-      ? typeof input.value === 'boolean'
+      ? typeof configChoice.value === 'boolean'
       : option?.options
           .flatMap((choice): SessionConfigSelectOption[] =>
             'groupId' in choice ? choice.options : [choice],
           )
-          .some((choice): boolean => choice.value === input.value);
-  if (!allowed)
+          .some((choice): boolean => choice.value === configChoice.value);
+  if (!isOfferedChoice)
     throw new TRPCError({
       code: 'BAD_REQUEST',
-      message: `The Agent did not offer ${input.configId}=${String(input.value)}`,
+      message: `The Agent did not offer ${configChoice.configId}=${String(configChoice.value)}`,
     });
 }

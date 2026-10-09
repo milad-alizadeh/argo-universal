@@ -2,13 +2,13 @@ import type { AgentAdapter, AgentProbe } from '@repo/agents';
 import { createMockAdapter } from '@repo/mocks/agent';
 import { expect, it, vi } from 'vitest';
 import { agentCatalog, availableAgentProbe } from '#mocks/agent-catalog';
-import { createRouterHost } from '#mocks/router';
+import { startRouterTestHost } from '#mocks/router';
 
 it('answers concurrent availability queries from one discovery result', async (): Promise<void> => {
   const discoverAgent = vi.fn<AgentAdapter['probe']>(
     async () => availableAgentProbe,
   );
-  const { caller } = createRouterHost({
+  const { caller } = startRouterTestHost({
     adapters: [createMockAdapter({ probe: discoverAgent }, 'agent-one')],
   });
   const results = await Promise.all([
@@ -31,7 +31,7 @@ it('answers a later availability query without another native probe', async (): 
   const discoverAgent = vi.fn<AgentAdapter['probe']>(
     async () => availableAgentProbe,
   );
-  const { caller } = createRouterHost({
+  const { caller } = startRouterTestHost({
     adapters: [createMockAdapter({ probe: discoverAgent })],
   });
   await caller.agents.list();
@@ -52,7 +52,7 @@ it('refreshes every Agent before returning its current availability', async (): 
   const discoverSecondAgent = vi.fn<AgentAdapter['probe']>(
     async () => availableAgentProbe,
   );
-  const { caller } = createRouterHost({
+  const { caller } = startRouterTestHost({
     adapters: [
       createMockAdapter({ probe: discoverFirstAgent }, 'agent-one'),
       createMockAdapter({ probe: discoverSecondAgent }, 'agent-two'),
@@ -71,7 +71,7 @@ it('refreshes every Agent before returning its current availability', async (): 
 it('preserves native extension metadata in the public Agent catalog', async (): Promise<void> => {
   const firstAgent = agentCatalog[0];
   if (!firstAgent) throw new Error('Agent catalog is missing');
-  const { caller } = createRouterHost({
+  const { caller } = startRouterTestHost({
     adapters: [
       {
         ...createMockAdapter(
@@ -94,7 +94,7 @@ it('preserves native extension metadata in the public Agent catalog', async (): 
 it.each(['not_installed', 'not_signed_in'] as const)(
   'returns the %s installation guidance and current options',
   async (availability): Promise<void> => {
-    const { caller } = createRouterHost({
+    const { caller } = startRouterTestHost({
       adapters: [
         createMockAdapter({
           probe: async (): Promise<AgentProbe> => ({
@@ -113,7 +113,7 @@ it.each(['not_installed', 'not_signed_in'] as const)(
 
 it('returns Agents in registry order when later discovery finishes first', async (): Promise<void> => {
   const firstDiscovery = Promise.withResolvers<AgentProbe>();
-  const { caller } = createRouterHost({
+  const { caller } = startRouterTestHost({
     adapters: [
       createMockAdapter(
         { probe: (): Promise<AgentProbe> => firstDiscovery.promise },

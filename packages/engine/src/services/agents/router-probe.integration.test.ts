@@ -2,7 +2,7 @@ import type { AgentAdapter, AgentProbe } from '@repo/agents';
 import { createMockAdapter } from '@repo/mocks/agent';
 import { afterEach, expect, it, vi } from 'vitest';
 import { availableAgentProbe } from '#mocks/agent-catalog';
-import { createRouterHost } from '#mocks/router';
+import { startRouterTestHost } from '#mocks/router';
 
 afterEach((): void => {
   vi.useRealTimers();
@@ -19,7 +19,7 @@ it('shares one pending native discovery between concurrent refresh queries', asy
       refreshStarted.resolve();
       return refreshed.promise;
     });
-  const { caller } = createRouterHost({
+  const { caller } = startRouterTestHost({
     adapters: [createMockAdapter({ probe: discoverAgent })],
   });
   await caller.agents.list();
@@ -41,7 +41,7 @@ it('shares one pending native discovery between concurrent refresh queries', asy
 });
 
 it('reports failed native discovery through the public unavailable result', async (): Promise<void> => {
-  const { caller } = createRouterHost({
+  const { caller } = startRouterTestHost({
     adapters: [
       createMockAdapter(
         {
@@ -67,7 +67,7 @@ it('reports failed native discovery through the public unavailable result', asyn
 it('aborts timed-out native discovery before returning an unavailable result', async (): Promise<void> => {
   vi.useFakeTimers();
   const discoverySignal = Promise.withResolvers<AbortSignal>();
-  const { caller } = createRouterHost({
+  const { caller } = startRouterTestHost({
     adapters: [
       createMockAdapter(
         {
@@ -97,7 +97,7 @@ it('aborts timed-out native discovery before returning an unavailable result', a
 
 it('cancels pending native discovery when the owning registry shuts down', async (): Promise<void> => {
   const abortedDiscovery = Promise.withResolvers<void>();
-  const { root } = createRouterHost({
+  const { sessionRegistry } = startRouterTestHost({
     adapters: [
       createMockAdapter({
         probe: (signal): Promise<AgentProbe> => {
@@ -111,6 +111,6 @@ it('cancels pending native discovery when the owning registry shuts down', async
       }),
     ],
   });
-  root.send({ type: 'sessions.stopAll' });
+  sessionRegistry.send({ type: 'sessions.stopAll' });
   await expect(abortedDiscovery.promise).resolves.toBeUndefined();
 });

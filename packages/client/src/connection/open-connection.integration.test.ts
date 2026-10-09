@@ -1,4 +1,4 @@
-import { createRouterHost } from '@repo/engine/mocks';
+import { startRouterTestHost } from '@repo/engine/mocks';
 import { appRouter } from '@repo/engine/router';
 import { QueryClient, QueryObserver } from '@tanstack/react-query';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
@@ -17,7 +17,7 @@ async function startServer(
   port = 0,
   version = '1.2.3',
 ): Promise<{ url: string; port: number; stop: () => Promise<void> }> {
-  const { context } = createRouterHost({ version });
+  const { context } = startRouterTestHost({ version });
   const server = new WebSocketServer({ host: '127.0.0.1', port });
   await new Promise((resolve) => server.once('listening', resolve));
   applyWSSHandler({
@@ -37,11 +37,11 @@ async function startServer(
   return { url: `ws://127.0.0.1:${address.port}`, port: address.port, stop };
 }
 
-const linkIs = (
+const waitForConnectionLink = (
   connection: ConnectionActor,
-  link: string,
+  expectedLink: string,
 ): ReturnType<typeof waitFor<ConnectionActor>> =>
-  waitFor(connection, (snapshot) => snapshot.value.link === link, {
+  waitFor(connection, (snapshot) => snapshot.value.link === expectedLink, {
     timeout: 5000,
   });
 
@@ -54,7 +54,7 @@ describe('openConnection', (): void => {
       queryClient,
     );
     closers.push(close);
-    await linkIs(connection, 'open');
+    await waitForConnectionLink(connection, 'open');
     // An observed query, as a mounted screen has; invalidation refetches only those.
     const observer = new QueryObserver(queryClient, {
       queryKey: ['system.info'],
@@ -67,9 +67,9 @@ describe('openConnection', (): void => {
     );
 
     await server.stop();
-    await linkIs(connection, 'reconnecting');
+    await waitForConnectionLink(connection, 'reconnecting');
     await startServer(server.port, '1.2.4');
-    await linkIs(connection, 'open');
+    await waitForConnectionLink(connection, 'open');
 
     await vi.waitFor(() =>
       expect(observer.getCurrentResult().data?.version).toBe('1.2.4'),
@@ -91,11 +91,11 @@ describe('openConnection', (): void => {
         client.system.info.query(),
     });
     closers.push(observer.subscribe(() => {}));
-    await linkIs(connection, 'reconnecting');
+    await waitForConnectionLink(connection, 'reconnecting');
     expect(observer.getCurrentResult().data).toBeUndefined();
 
     await startServer(stopped.port);
-    await linkIs(connection, 'open');
+    await waitForConnectionLink(connection, 'open');
     await vi.waitFor(() =>
       expect(observer.getCurrentResult().data?.version).toBe('1.2.3'),
     );

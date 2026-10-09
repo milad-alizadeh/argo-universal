@@ -3,15 +3,15 @@ import { expect, it } from 'vitest';
 
 it.each([{ archived: false }, { archived: false, direction: 'forward' }])(
   'accepts the Session list paging mock %j',
-  (input): void => {
-    expect(SessionListInput.parse(input)).toEqual(input);
+  (pagingInput): void => {
+    expect(SessionListInput.parse(pagingInput)).toEqual(pagingInput);
   },
 );
 it.each([{ direction: 'backward' }, { unexpected: true }])(
   'rejects unsupported paging mock fields %j',
-  (input): void => {
+  (pagingInput): void => {
     expect(
-      SessionListInput.safeParse({ archived: false, ...input }).success,
+      SessionListInput.safeParse({ archived: false, ...pagingInput }).success,
     ).toBe(false);
   },
 );

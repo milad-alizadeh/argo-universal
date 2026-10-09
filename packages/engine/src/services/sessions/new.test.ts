@@ -1,7 +1,7 @@
 import { SessionNewInput } from '@repo/contracts';
 import { expect, it } from 'vitest';
 
-const initial = {
+const validNewSessionInput = {
   projectId: 'project-1',
   agent: 'agent-one',
   checkout: { type: 'main' },
@@ -19,9 +19,10 @@ it.each([
   },
 ])(
   'rejects incomplete or obsolete New Session mock inputs: %j',
-  (invalid): void => {
-    expect(SessionNewInput.safeParse({ ...initial, ...invalid }).success).toBe(
-      false,
-    );
+  (invalidFields): void => {
+    expect(
+      SessionNewInput.safeParse({ ...validNewSessionInput, ...invalidFields })
+        .success,
+    ).toBe(false);
   },
 );

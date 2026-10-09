@@ -3,7 +3,10 @@ import { expect, it } from 'vitest';
 import { agentCatalog } from '#mocks/agent-catalog';
 
 it('keeps extension categories and metadata on options, groups and values', (): void => {
-  const before = getConfigOptionDiagnostics().unknownCategories;
+  const initialUnknownCategoryCount =
+    getConfigOptionDiagnostics().unknownCategories;
   expect(AgentsListOutput.parse(agentCatalog)).toEqual(agentCatalog);
-  expect(getConfigOptionDiagnostics().unknownCategories).toBe(before + 1);
+  expect(getConfigOptionDiagnostics().unknownCategories).toBe(
+    initialUnknownCategoryCount + 1,
+  );
 });

@@ -4,7 +4,7 @@ import { createServer, request, type Server } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createRouterHost } from '#mocks/router';
+import { startRouterTestHost } from '#mocks/router';
 import { createRequestGuard } from './request-guard';
 import { createRequestListener } from './request-listener';
 import { appRouter } from './router';
@@ -41,7 +41,7 @@ interface HttpResponse {
   body: string;
 }
 
-const send = ({
+const sendHttpRequest = ({
   path,
   method = 'GET',
   headers = {},
@@ -71,17 +71,17 @@ const send = ({
   });
 
 // Encodes a form the way a browser's fetch does, so the request goes through node:http as bytes.
-async function formRequest(
-  path: string,
-  form: FormData,
+async function sendFormRequest(
+  requestPath: string,
+  formData: FormData,
   origin?: string,
 ): Promise<HttpResponse> {
   const encoded = new Request('http://localhost', {
     method: 'POST',
-    body: form,
+    body: formData,
   });
-  return send({
-    path,
+  return sendHttpRequest({
+    path: requestPath,
     method: 'POST',
     headers: {
       'content-type': encoded.headers.get('content-type') ?? '',
@@ -91,7 +91,7 @@ async function formRequest(
   });
 }
 
-const uploadForm = (): FormData => {
+const createUploadForm = (): FormData => {
   const form = new FormData();
   form.set('file', new File(['file content'], 'notes.txt'));
   return form;
@@ -103,7 +103,7 @@ beforeEach(async (): Promise<void> => {
   writeFileSync(join(home, 'blobs', blobId), blobBytes);
   vi.spyOn(console, 'error').mockImplementation((): void => {});
 
-  const { context } = createRouterHost({
+  const { context } = startRouterTestHost({
     blobsFolder: join(home, 'blobs'),
   });
   let listener: ReturnType<typeof createRequestListener> | undefined;
@@ -136,7 +136,7 @@ afterEach(async (): Promise<void> => {
 
 describe('request listener', (): void => {
   it('streams a blob with its length', async (): Promise<void> => {
-    const response = await send({ path: `/blobs/${blobId}` });
+    const response = await sendHttpRequest({ path: `/blobs/${blobId}` });
     expect(response.status).toBe(200);
     expect(response.headers['content-type']).toBe('application/octet-stream');
     expect(response.headers['content-length']).toBe(
@@ -146,7 +146,9 @@ describe('request listener', (): void => {
   });
 
   it('answers 404 for an unknown blob id without counting it', async (): Promise<void> => {
-    const response = await send({ path: `/blobs/${'0'.repeat(64)}` });
+    const response = await sendHttpRequest({
+      path: `/blobs/${'0'.repeat(64)}`,
+    });
     expect(response.status).toBe(404);
     expect(JSON.parse(response.body)).toEqual({ error: 'Not found' });
     expect(console.error).not.toHaveBeenCalled();
@@ -155,7 +157,7 @@ describe('request listener', (): void => {
   it.each(['abc', blobId.toUpperCase(), '..%2F..%2Fargo.db'])(
     'answers 404 for the malformed blob id %s and counts it',
     async (id): Promise<void> => {
-      const response = await send({ path: `/blobs/${id}` });
+      const response = await sendHttpRequest({ path: `/blobs/${id}` });
       expect(response.status).toBe(404);
       expect(console.error).toHaveBeenCalledExactlyOnceWith(
         expect.stringMatching(/^engine: rejected blob id .* #1$/),
@@ -166,30 +168,35 @@ describe('request listener', (): void => {
   it.each(['POST', 'HEAD', 'PUT', 'DELETE'])(
     'answers 405 to %s on a blob with Allow: GET',
     async (method): Promise<void> => {
-      const response = await send({ path: `/blobs/${blobId}`, method });
+      const response = await sendHttpRequest({
+        path: `/blobs/${blobId}`,
+        method,
+      });
       expect(response.status).toBe(405);
       expect(response.headers.allow).toBe('GET');
     },
   );
 
   it('answers 405 to a blob POST with a body, and serves the next request', async (): Promise<void> => {
-    const response = await send({
+    const response = await sendHttpRequest({
       path: `/blobs/${blobId}`,
       method: 'POST',
       body: '{}',
     });
     expect(response.status).toBe(405);
-    expect((await send({ path: `/blobs/${blobId}` })).status).toBe(200);
+    expect((await sendHttpRequest({ path: `/blobs/${blobId}` })).status).toBe(
+      200,
+    );
   });
 
   it('answers a tRPC query over HTTP at /trpc/', async (): Promise<void> => {
-    const response = await send({ path: infoRoute });
+    const response = await sendHttpRequest({ path: infoRoute });
     expect(response.status).toBe(200);
     expect(JSON.parse(response.body)).toEqual({ result: { data: systemInfo } });
   });
 
   it('hands an upload body to tRPC unread', async (): Promise<void> => {
-    const response = await formRequest(uploadRoute, uploadForm());
+    const response = await sendFormRequest(uploadRoute, createUploadForm());
     expect(response.status).toBe(200);
     expect(JSON.parse(response.body)).toEqual({
       result: {
@@ -206,7 +213,7 @@ describe('request listener', (): void => {
   it.each(['/health', '/'])(
     'sends %s to tRPC, which finds no procedure',
     async (path): Promise<void> => {
-      const response = await send({ path });
+      const response = await sendHttpRequest({ path });
       expect(response.status).toBe(404);
       expect(JSON.parse(response.body)).toMatchObject({
         error: { data: { code: 'NOT_FOUND' } },
@@ -220,7 +227,11 @@ describe('request listener', (): void => {
   ])(
     'lets %s call tRPC and read the answer',
     async (_name, origin): Promise<void> => {
-      const response = await formRequest(uploadRoute, uploadForm(), origin);
+      const response = await sendFormRequest(
+        uploadRoute,
+        createUploadForm(),
+        origin,
+      );
       expect(response.status).toBe(200);
       expect(response.headers['access-control-allow-origin']).toBe(origin);
     },
@@ -229,7 +240,11 @@ describe('request listener', (): void => {
   it.each(['https://evil.example', 'null'])(
     'refuses a tRPC call from the Origin %s and counts it',
     async (origin): Promise<void> => {
-      const response = await formRequest(uploadRoute, uploadForm(), origin);
+      const response = await sendFormRequest(
+        uploadRoute,
+        createUploadForm(),
+        origin,
+      );
       expect(response.status).toBe(403);
       expect(response.headers['access-control-allow-origin']).toBeUndefined();
       expect(console.error).toHaveBeenCalledExactlyOnceWith(
@@ -241,7 +256,7 @@ describe('request listener', (): void => {
   it.each([`/blobs/${blobId}`, infoRoute])(
     'answers 403 to %s from another Host and counts it',
     async (path): Promise<void> => {
-      const response = await send({
+      const response = await sendHttpRequest({
         path,
         headers: { host: 'evil.example:7337' },
       });
@@ -253,7 +268,7 @@ describe('request listener', (): void => {
   );
 
   it('answers 403 to a Host that is not a plain host and port', async (): Promise<void> => {
-    const response = await send({
+    const response = await sendHttpRequest({
       path: infoRoute,
       headers: { host: `evil.example@${host}` },
     });
