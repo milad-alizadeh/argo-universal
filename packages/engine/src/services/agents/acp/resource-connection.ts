@@ -4,7 +4,7 @@ import type {
 } from '@agentclientprotocol/sdk';
 import { createRejectionCounter } from '../../../lib/count-rejections';
 import { createAgentClient } from './client';
-import { openProtocolSession, readSessionCapabilities } from './open-session';
+import { openProtocolSession, sessionCapabilities } from './open-session';
 import { launchAcpProcess } from './process';
 import type {
   AcpProcess,
@@ -25,7 +25,7 @@ type Ready = {
   connection: ClientConnection;
   initialization: InitializeResponse;
 };
-type SessionQuestionResponders = Pick<
+type ClientRequestHandlers = Pick<
   Parameters<typeof createAgentClient>[0],
   'requestPermission' | 'createElicitation'
 >;
@@ -55,14 +55,14 @@ export class AcpResourceConnection {
     this.connection = createAgentClient({
       stream: this.writes.observeResponseWrites(process.stream),
       acceptSessionUpdate: this.routing.accept,
-      ...this.createSessionQuestionResponders(),
+      ...this.createClientRequestHandlers(),
     });
     return {
       connection: this.connection,
       initialization: await this.negotiate(this.connection),
     };
   }
-  private createSessionQuestionResponders(): SessionQuestionResponders {
+  private createClientRequestHandlers(): ClientRequestHandlers {
     return {
       requestPermission: createPermissionResponder(
         this.routing.findSessionReservation,
@@ -82,7 +82,7 @@ export class AcpResourceConnection {
         protocolVersion: 1,
       }),
     );
-    const capabilities = readSessionCapabilities(response);
+    const capabilities = sessionCapabilities(response);
     if (!capabilities?.close)
       throw new Error('Agent cannot close independent ACP sessions');
     return response;
