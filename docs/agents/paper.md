@@ -33,6 +33,13 @@ Every section page (Session, Voice, Atlas, Setup, Issues, Settings) has the same
 - Colours come from the Tailwind palette only. Every semantic token (`--color-success`, `--color-sidebar`) aliases a palette token.
 - Paper leads how things look; `theme.css` leads token values. When a Paper token is missing from `theme.css` or holds a different value, report it as drift and fix Paper.
 
+## Icons
+
+- Icons are SF Symbols, drawn as SVG paths so the design matches iOS and macOS (ADR-0019). The SVGs are mockups in Paper only; the app draws the real symbol through expo-symbols.
+- An icon layer is named `Icon / <name>`, where `<name>` is a key of `iconSymbols` in `packages/client/src/lib/icon-names.ts`. That map is the only list of icons. An icon a design needs that the app lacks is added there first, with its SF and Material names.
+- The library is "Components / Icons" on the Global Components page, one tile per app icon. Copy icons from it.
+- `tools/sf-symbols/sf-symbol-svg.swift` prints an SF Symbol's path at 16 points, in the symbol's own box. Use it with that viewBox, the fill on a `--color-*` token, and the size on an icon token.
+
 ## Registry
 
 `tools/paper-drift/masters.json` names every master and its layer id. It is the only list of masters; a frame on a component card that is not in it is not checked.
@@ -54,7 +61,8 @@ The tools in `tools/paper-drift/` read the whole file through the Paper MCP. Onl
   - registry entries whose layer is gone or renamed, and presented frames that are not registered;
   - frame names that differ only in case, spacing or punctuation;
   - every Paper token against `theme.css` on top of Tailwind's defaults, after resolving `var()`;
-  - literal values in a style that has a token scale, with the matching token or "off the scale".
+  - literal values in a style that has a token scale, with the matching token or "off the scale";
+  - `Icon / <name>` layers whose name is not in `icon-names.ts`, and app icons with no tile in the library.
 
   A change that keeps the value and only swaps the token (`--text-sm` for `--text-body-wide`) is marked "same value".
 - `pnpm -F @repo/tools paper:levels` writes `.paper-drift/levels.json`: the masters grouped by nesting depth, innermost first. `paper:sync` takes several names at once from one snapshot, so pass names from one level only, and take a new snapshot between levels. `--offline` plans from the last snapshot without touching Paper.

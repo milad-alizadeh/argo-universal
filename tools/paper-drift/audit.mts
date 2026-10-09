@@ -1,6 +1,7 @@
 import { bindingOnly, markBindings } from './binding-drift.mts';
 import { findCopyDrift } from './copy-drift.mts';
 import type { CopyDrift } from './drift-model.mts';
+import { findIconDrift, type IconDrift } from './icon-drift.mts';
 import { findLiteralDrift, type LiteralUse } from './literal-drift.mts';
 import { findNameDrift, type NameVariant } from './name-drift.mts';
 import { checkRegistry, type RegistryHealth } from './registry-health.mts';
@@ -19,6 +20,7 @@ export interface Audit {
   names: NameVariant[][];
   tokens: TokenDrift;
   literals: LiteralUse[];
+  icons: IconDrift;
 }
 
 function structureDrift(
@@ -32,18 +34,25 @@ function structureDrift(
   };
 }
 
+// What the code says the file should hold: theme tokens and app icon names.
+export interface CodeTruth {
+  tokens: CodeTokens;
+  icons: Set<string>;
+}
+
 export function runAudit(
   snapshot: Snapshot,
   registry: Registry,
-  code: CodeTokens,
+  code: CodeTruth,
 ): Audit {
   return {
     takenAt: snapshot.takenAt,
     registry: checkRegistry(snapshot, registry),
     ...structureDrift(snapshot, registry),
     names: findNameDrift(snapshot),
-    tokens: findTokenDrift(snapshot.tokens, code),
+    tokens: findTokenDrift(snapshot.tokens, code.tokens),
     literals: findLiteralDrift(snapshot),
+    icons: findIconDrift(snapshot, code.icons),
   };
 }
 
@@ -63,5 +72,6 @@ export function auditSummary(audit: Audit): string[] {
     `Names spelled more than one way: ${audit.names.length}`,
     `Tokens that differ from theme.css: ${audit.tokens.mismatches.length}`,
     `Literal values with a matching token: ${audit.literals.length - offScale.length}; off the scale: ${offScale.length}`,
+    `Icon names the app does not have: ${audit.icons.unknown.length}; app icons missing from the library: ${audit.icons.unlisted.length}`,
   ];
 }
