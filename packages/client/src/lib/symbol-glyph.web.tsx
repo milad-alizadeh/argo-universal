@@ -7,6 +7,7 @@ import {
   useSymbolImage,
   useSymbolImageRenderer,
 } from './symbol-images';
+import { symbolWeight } from './symbol-weight';
 
 // The desktop app on macOS draws SF Symbols from the system; the browser and other desktops draw Material Symbols.
 export function SymbolGlyph({
@@ -38,6 +39,7 @@ export function SymbolGlyph({
         <SymbolView
           name={{ web: material }}
           size={pixels}
+          weight={symbolWeight}
           tintColor={tintColor}
         />
       )}

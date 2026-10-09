@@ -1,6 +1,7 @@
 import { type AndroidSymbol, type SFSymbol, SymbolView } from 'expo-symbols';
 import type * as React from 'react';
 import type { ColorValue } from 'react-native';
+import { symbolWeight } from './symbol-weight';
 
 export interface SymbolGlyphProps {
   sf: SFSymbol;
@@ -22,6 +23,7 @@ export function SymbolGlyph({
     <SymbolView
       name={{ ios: sf, android: material }}
       size={pixels}
+      weight={symbolWeight}
       tintColor={tintColor}
       testID={testID}
     />

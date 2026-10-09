@@ -49,11 +49,11 @@ const config: StorybookConfig = {
         to: 'const PlatformColor = undefined;\nimport { Platform, Text, View }',
       },
       // A required font would become a module object; expo-font needs its URL.
-      {
-        file: '/@expo-google-fonts/material-symbols/400Regular/index.js',
-        from: "export const MaterialSymbols_400Regular = require('./MaterialSymbols_400Regular.ttf');",
-        to: "import font from './MaterialSymbols_400Regular.ttf?url';\nexport const MaterialSymbols_400Regular = font;",
-      },
+      ...['400Regular', '300Light'].map((weight) => ({
+        file: `/@expo-google-fonts/material-symbols/${weight}/index.js`,
+        from: `export const MaterialSymbols_${weight} = require('./MaterialSymbols_${weight}.ttf');`,
+        to: `import font from './MaterialSymbols_${weight}.ttf?url';\nexport const MaterialSymbols_${weight} = font;`,
+      })),
     ];
     const expoSymbolsWebImports = {
       name: 'expo-symbols-web-imports',
@@ -82,6 +82,7 @@ const config: StorybookConfig = {
           '@repo/client > expo-haptics',
           '@repo/client > expo-image-picker',
           '@repo/client > expo-symbols',
+          '@repo/client > expo-symbols/androidWeights/light',
           '@repo/client > react-native-drawer-layout',
           'storybook/actions',
         ],
