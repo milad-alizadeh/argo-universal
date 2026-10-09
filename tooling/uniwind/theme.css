@@ -89,17 +89,9 @@
   --leading-feed: var(--leading-6);
   --leading-feed-wide: var(--leading-5_5);
   --font-weight-feed: var(--font-weight-normal);
-  /* Feed rhythm: paragraphs, activity rows in a cluster, then turns, each a step apart. */
-  --spacing-feed-paragraph: var(--spacing-3);
-  --spacing-feed-paragraph-wide: var(--spacing-2_5);
-  --spacing-feed-cluster: var(--spacing-2);
-  --spacing-feed-cluster-wide: var(--spacing-1_5);
-  --spacing-feed-turn: var(--spacing-6);
-  --spacing-feed-turn-wide: var(--spacing-5);
-  --spacing-feed-bubble-x: var(--spacing-3_5);
-  --spacing-feed-bubble-x-wide: var(--spacing-3);
-  --spacing-feed-bubble-y: var(--spacing-2_5);
-  --spacing-feed-bubble-y-wide: var(--spacing-2);
+  /* The gap between paragraphs, wherever text runs to more than one. */
+  --spacing-paragraph: var(--spacing-3);
+  --spacing-paragraph-wide: var(--spacing-2_5);
   /* The native phone header, as iOS draws its navigation title and text buttons. */
   --text-nav-title: 17px;
   --leading-nav-title: var(--leading-5_5);
