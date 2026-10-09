@@ -1,7 +1,7 @@
 import { permissionOptions } from '@repo/contracts';
 import type { AgentEvent } from '../src/agent-events';
 import { toElicitationRequest } from '../src/elicitation-form';
-import type { VendorMessage } from './messages';
+import type { VendorMessage, VendorRequest } from './messages';
 import type {
   ToolRequestUserInputQuestion,
   CommandExecutionRequestApprovalParams,
@@ -43,13 +43,8 @@ const permissionEvent = (message: PermissionRequest): AgentEvent[] => [
     },
   },
 ];
-const permissionEvents = (message: VendorMessage): AgentEvent[] =>
-  message.method === 'item/commandExecution/requestApproval' ||
-  message.method === 'item/fileChange/requestApproval'
-    ? permissionEvent(message)
-    : [];
-export function toRequestEvents(message: VendorMessage): AgentEvent[] {
+export function toRequestEvents(message: VendorRequest): AgentEvent[] {
   return message.method === 'item/tool/requestUserInput'
     ? elicitationEvent(message)
-    : permissionEvents(message);
+    : permissionEvent(message);
 }

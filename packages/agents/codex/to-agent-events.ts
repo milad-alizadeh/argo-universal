@@ -3,7 +3,6 @@ import type { AgentMapping } from '../src/agent-adapter';
 import { type MappingState, dropped } from './mapping-state';
 import type { VendorMessage } from './messages';
 import {
-  type NotificationHandler,
   turnStarted,
   turnCompleted,
   itemStarted,
@@ -12,33 +11,13 @@ import {
   commandOutputDelta,
   reasoningTextDelta,
 } from './notification-events';
+import methods from './notification-methods.gen.json' with { type: 'json' };
 import { toRequestEvents } from './request-events';
 import {
   reasoningSummaryDelta,
   tokenUsageUpdated,
 } from './usage-and-reasoning-events';
 export { type MappingState, initialMappingState } from './mapping-state';
-const requestEvent: NotificationHandler = (
-  message,
-  mappingState,
-): AgentMapping<MappingState> => ({
-  events: toRequestEvents(message),
-  mappingState,
-});
-const handlers = {
-  'turn/started': turnStarted,
-  'turn/completed': turnCompleted,
-  'item/started': itemStarted,
-  'item/completed': itemCompleted,
-  'item/agentMessage/delta': agentMessageDelta,
-  'item/commandExecution/outputDelta': commandOutputDelta,
-  'item/reasoning/summaryTextDelta': reasoningSummaryDelta,
-  'item/reasoning/textDelta': reasoningTextDelta,
-  'thread/tokenUsage/updated': tokenUsageUpdated,
-  'item/tool/requestUserInput': requestEvent,
-  'item/fileChange/requestApproval': requestEvent,
-  'item/commandExecution/requestApproval': requestEvent,
-} satisfies Record<VendorMessage['method'], NotificationHandler>;
 const isTurnIndependent = (
   message: VendorMessage,
   mappingState: MappingState,
@@ -62,19 +41,65 @@ export function toAgentEvents(
   message: VendorMessage,
   mappingState: MappingState,
 ): AgentMapping<MappingState> {
-  if (!Object.hasOwn(handlers, message.method))
+  if (!methods.handled.includes(message.method))
     return rejectAgentMessage(mappingState);
-  const handler = handlers[message.method];
-  return mapRecognised(message, mappingState, handler);
+  return mapCurrentTurn(message, mappingState);
 }
-const mapRecognised = (
+const mapCurrentTurn = (
   message: VendorMessage,
   mappingState: MappingState,
-  handler: NotificationHandler,
-): AgentMapping<MappingState> => {
-  if (isTurnIndependent(message, mappingState))
-    return handler(message, mappingState);
-  return belongsToTurn(message, mappingState)
-    ? handler(message, mappingState)
+): AgentMapping<MappingState> =>
+  isTurnIndependent(message, mappingState) ||
+  belongsToTurn(message, mappingState)
+    ? mapTurnNotification(message, mappingState)
     : dropped(mappingState);
+const mapTurnNotification = (
+  message: VendorMessage,
+  mappingState: MappingState,
+): AgentMapping<MappingState> => {
+  if (message.method === 'turn/started')
+    return turnStarted(message, mappingState);
+  if (message.method === 'turn/completed')
+    return turnCompleted(message, mappingState);
+  return mapItemNotification(message, mappingState);
+};
+const mapItemNotification = (
+  message: VendorMessage,
+  mappingState: MappingState,
+): AgentMapping<MappingState> => {
+  if (message.method === 'item/started')
+    return itemStarted(message, mappingState);
+  if (message.method === 'item/completed')
+    return itemCompleted(message, mappingState);
+  return mapTextDelta(message, mappingState);
+};
+const mapTextDelta = (
+  message: VendorMessage,
+  mappingState: MappingState,
+): AgentMapping<MappingState> => {
+  if (message.method === 'item/agentMessage/delta')
+    return agentMessageDelta(message, mappingState);
+  if (message.method === 'item/commandExecution/outputDelta')
+    return commandOutputDelta(message, mappingState);
+  return mapReasoningDelta(message, mappingState);
+};
+const mapReasoningDelta = (
+  message: VendorMessage,
+  mappingState: MappingState,
+): AgentMapping<MappingState> => {
+  if (message.method === 'item/reasoning/summaryTextDelta')
+    return reasoningSummaryDelta(message, mappingState);
+  if (message.method === 'item/reasoning/textDelta')
+    return reasoningTextDelta(message, mappingState);
+  return mapUsageOrRequest(message, mappingState);
+};
+const mapUsageOrRequest = (
+  message: VendorMessage,
+  mappingState: MappingState,
+): AgentMapping<MappingState> => {
+  if (message.method === 'thread/tokenUsage/updated')
+    return tokenUsageUpdated(message, mappingState);
+  if ('id' in message)
+    return { events: toRequestEvents(message), mappingState };
+  return rejectAgentMessage(mappingState);
 };

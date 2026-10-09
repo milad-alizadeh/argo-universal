@@ -10,7 +10,6 @@ import {
 } from './mapping-state';
 import { subtractUsage } from './mapping-usage';
 import type { VendorMessage } from './messages';
-import type { NotificationHandler } from './notification-events';
 type SummaryMessage = Extract<
   VendorMessage,
   { method: 'item/reasoning/summaryTextDelta' }
@@ -58,16 +57,13 @@ const summaryMapping = (
     summaryIndexes: summaryIndexes(message, mappingState),
   },
 });
-export const reasoningSummaryDelta: NotificationHandler = (
-  message,
-  mappingState,
-): AgentMapping<MappingState> => {
-  if (message.method !== 'item/reasoning/summaryTextDelta')
-    return dropped(mappingState);
-  return mappingState.openRows[message.params.itemId] === 'agent_thought'
+export const reasoningSummaryDelta = (
+  message: SummaryMessage,
+  mappingState: MappingState,
+): AgentMapping<MappingState> =>
+  mappingState.openRows[message.params.itemId] === 'agent_thought'
     ? summaryMapping(message, mappingState)
     : dropped(mappingState);
-};
 const usageEvents = ({ params: { tokenUsage } }: UsageMessage): AgentEvent[] =>
   tokenUsage.modelContextWindow === null
     ? []
@@ -91,16 +87,13 @@ const usageMapping = (
     startingUsage: startingUsage(message, mappingState),
   },
 });
-export const tokenUsageUpdated: NotificationHandler = (
-  message,
-  mappingState,
-): AgentMapping<MappingState> => {
-  if (message.method !== 'thread/tokenUsage/updated')
-    return dropped(mappingState);
-  return mappingState.vendorTurnId === null
+export const tokenUsageUpdated = (
+  message: UsageMessage,
+  mappingState: MappingState,
+): AgentMapping<MappingState> =>
+  mappingState.vendorTurnId === null
     ? dropped({ ...mappingState, totalUsage: message.params.tokenUsage.total })
     : usageMapping(message, mappingState);
-};
 
 const summaryIndexes = (
   message: SummaryMessage,
