@@ -26,7 +26,7 @@ function fixtureProbe(options: z.output<typeof AppFixtureOptions>): AgentProbe {
   };
 }
 
-function fixtureScript(
+function createAppFixtureScript(
   options: z.output<typeof AppFixtureOptions>,
 ): MockAgentScript {
   return {
@@ -44,7 +44,7 @@ export function createAppFixtureAdapter(
 ): ReturnType<typeof createMockAdapter> {
   return {
     ...createMockAdapter(
-      fixtureScript(AppFixtureOptions.parse(options)),
+      createAppFixtureScript(AppFixtureOptions.parse(options)),
       identity.agent,
     ),
     agent: identity.agent,

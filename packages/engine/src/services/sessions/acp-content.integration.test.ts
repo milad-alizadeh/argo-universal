@@ -8,7 +8,7 @@ import { uploadBlob, blobsFolderIn } from '../blob';
 import { findSessionActor } from './index';
 
 const updateMethod = 'session/update';
-const initializationWithImages =
+const createImageCapableInitializeResponse =
   (): import('@agentclientprotocol/sdk').InitializeResponse => ({
     protocolVersion: 1,
     agentCapabilities: {
@@ -21,7 +21,7 @@ it.each(['unavailable', 'corrupt'])(
   async (failure) => {
     const requests: PromptRequest[] = [];
     const host = await startAcpEngine({
-      initialize: initializationWithImages,
+      initialize: createImageCapableInitializeResponse,
       prompt: ({ params }) => {
         requests.push(params);
         return { stopReason: 'end_turn' };
