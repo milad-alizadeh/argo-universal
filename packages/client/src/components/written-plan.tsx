@@ -8,9 +8,10 @@ import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
 import { Icon } from '../lib/icon';
+import { resourceName } from '../lib/resource-name';
 import { ComposerSheet } from './composer-sheet';
 import { useContentWide } from './content-layout';
-import { ResourceReference, resourceName } from './feed-reference';
+import { FeedCodeBlock } from './feed-code-block';
 import { PlanDocument } from './plan-document';
 import { useWrittenPlanEscape } from './use-written-plan-escape';
 
@@ -81,9 +82,7 @@ export function WrittenPlan({
       >
         <View className="flex-row items-center gap-1.5 px-4 py-2">
           <Icon as={FileTextIcon} className="text-muted-foreground" />
-          <Text className="min-w-0 flex-1 text-sm leading-5.5 font-semibold">
-            {title}
-          </Text>
+          <Text className="min-w-0 flex-1 type-heading">{title}</Text>
         </View>
         <WrittenPlanContent plan={plan} title={title} layout="sheet" />
       </ComposerSheet>
@@ -111,8 +110,8 @@ function WrittenPlanContent({
         <PlanDocument content={plan.content} layout={layout} />
       ) : (
         <View className="gap-2 px-4 pt-2 pb-4">
-          <ResourceReference name={title} uri={plan.uri} />
-          <Text className="text-xs leading-4 text-muted-foreground">
+          <FeedCodeBlock resource={{ name: title, uri: plan.uri }} />
+          <Text className="type-secondary">
             The Agent shared where the plan is, not its text.
           </Text>
         </View>

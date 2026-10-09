@@ -63,7 +63,7 @@ function opensWrittenPlan(
           expect(
             within(
               body.getByRole('region', { name: writtenPlanRegionName }),
-            ).getByText('Read-only Plan'),
+            ).getByRole('heading', { name: 'Read-only Plan', level: 1 }),
           ).toBeVisible(),
         );
       else {

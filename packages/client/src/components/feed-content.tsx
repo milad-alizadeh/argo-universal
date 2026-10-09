@@ -2,10 +2,11 @@ import type { ContentBlock } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { withOccurrenceKeys } from '#lib/occurrence-keys';
+import { resourceName } from '../lib/resource-name';
+import { FeedCodeBlock } from './feed-code-block';
 import { FeedImage } from './feed-image';
 import { FeedMarkdown, type FeedMarkdownProps } from './feed-markdown';
 import { UnsupportedFeedContent } from './feed-notice';
-import { ResourceReference, resourceName } from './feed-reference';
 
 function FeedContentBlock({
   block,
@@ -26,10 +27,12 @@ function FeedContentBlock({
     );
   if (block.type === 'resource_link')
     return (
-      <ResourceReference
-        name={block.title ?? block.name}
-        uri={block.uri}
-        description={block.description}
+      <FeedCodeBlock
+        resource={{
+          name: block.title ?? block.name,
+          uri: block.uri,
+          description: block.description,
+        }}
       />
     );
   return <FeedNonTextContent block={block} />;
@@ -41,10 +44,12 @@ function FeedNonTextContent({
 }): React.JSX.Element {
   if (block.type === 'resource')
     return (
-      <ResourceReference
-        name={resourceName(block.resource.uri)}
-        uri={block.resource.uri}
-        text={block.resource.text}
+      <FeedCodeBlock
+        resource={{
+          name: resourceName(block.resource.uri),
+          uri: block.resource.uri,
+        }}
+        code={block.resource.text}
       />
     );
   if (block.type === 'unsupported')

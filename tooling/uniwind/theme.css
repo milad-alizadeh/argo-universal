@@ -189,3 +189,47 @@
       var(--shadow-2xl);
   }
 }
+
+@utility type-title {
+  font-family: var(--font-sans);
+  font-size: var(--text-xl);
+  line-height: var(--leading-6);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-foreground);
+}
+
+@utility type-heading {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading-6);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-foreground);
+  @variant wide {
+    font-size: var(--text-sm);
+    line-height: var(--leading-5);
+  }
+}
+
+@utility type-body {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading-6);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-foreground);
+  @variant wide {
+    font-size: var(--text-sm);
+    line-height: var(--leading-5);
+  }
+}
+
+@utility type-secondary {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: var(--leading-5);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-muted-foreground);
+  @variant wide {
+    font-size: var(--text-xs);
+    line-height: var(--leading-4);
+  }
+}

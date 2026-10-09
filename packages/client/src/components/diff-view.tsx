@@ -162,7 +162,7 @@ export function DiffView({
       )}
       testID="diff-view"
     >
-      {inline && <CodeBlockHeader title={file.path} code={patchText} />}
+      {inline && <CodeBlockHeader title={file.path} copyValue={patchText} />}
       {!inline && <FileHeader file={file} open={open} onOpenChange={setOpen} />}
       <CollapsibleContent>
         <ScrollView

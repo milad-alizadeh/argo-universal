@@ -1,28 +1,31 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { embeddedResource, resourceReferences } from '../../mocks/feed-paper';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
-import { ResourceReference } from './feed-reference';
+import { FeedCodeBlock } from './feed-code-block';
 
 const [reference] = resourceReferences;
 if (!reference) throw new Error('Resource gallery needs a reference');
 const meta = {
-  title: 'Feed/ResourceReference',
-  component: ResourceReference,
-  args: reference,
-} satisfies Meta<typeof ResourceReference>;
+  title: 'Feed/CodeBlock',
+  component: FeedCodeBlock,
+  args: { resource: reference },
+} satisfies Meta<typeof FeedCodeBlock>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 export const References: Story = {
-  name: 'ResourceReference',
+  name: 'Resources',
   render: () => (
     <Variations>
       {resourceReferences.map((reference) => (
         <Variation key={reference.uri} label={reference.name}>
-          <ResourceReference {...reference} />
+          <FeedCodeBlock resource={reference} />
         </Variation>
       ))}
       <Variation label="Embedded text">
-        <ResourceReference {...embeddedResource} />
+        <FeedCodeBlock
+          resource={embeddedResource}
+          code={embeddedResource.text}
+        />
       </Variation>
     </Variations>
   ),
