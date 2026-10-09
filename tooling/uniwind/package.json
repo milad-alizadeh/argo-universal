@@ -13,8 +13,6 @@
     "./theme.css": "./theme.css",
     "./react-native-web.css": "./react-native-web.css",
     "./themes": "./themes.ts",
-    "./native-token-values": "./native-token-values.ts",
-    "./paper-tokens.css": "./paper-tokens.css",
-    "./paper-token-drift": "./paper-token-drift.ts"
+    "./native-token-values": "./native-token-values.ts"
   }
 }
