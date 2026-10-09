@@ -15,10 +15,7 @@ export function createCatalogAgentRecord(
 ): AgentRecord {
   return {
     id: createInitialLocalAgentId(agent.id),
-    registryId: agent.id,
-    registryMetadata: JSON.stringify(agent),
-    catalogPresent: true,
-    catalogSyncedAt: syncedAt,
+    ...createCatalogOwnedFields(agent, syncedAt),
   };
 }
 
