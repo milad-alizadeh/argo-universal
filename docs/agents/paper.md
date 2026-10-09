@@ -67,6 +67,7 @@ An audit is done when the report has been read and each difference is either fix
 ## Paper gotchas
 
 - Text nodes do not inherit `font-family`. Set `font-family: var(--font-sans)` on every text node, and check with `find_nodes` for `*system-ui*`.
+- A `var(--token)` font family does not resolve: Paper draws it in SF Pro. Write mono text as `font-family: "SF Mono"`, which stands for `--font-mono`. Mono text is paths, file names, branch names, commands, code, diffs and inline code in markdown.
 - A `var(--token)` inside a gradient renders transparent. Write the literal colour there.
 - `z-index` and negative margins apply only through `update_styles`.
 - A CSS `filter` on a parent breaks `backdrop-filter` in its children.
