@@ -14,7 +14,7 @@ export {
   storedFeedColumns,
   toFeedRowWrite,
 } from './feed-row';
-export { type FeedDeps, createFeedService } from './feed-service';
+export type { FeedDeps } from './feed';
 export {
   type FeedRowWrite,
   type WriterJob,
@@ -27,4 +27,3 @@ export { type WriterEvent, writerMachine } from './writer-machine';
 export { databaseWriterId, findDatabaseWriter } from './writer-system';
 
 export { feedRouter } from './router';
-export type { FeedService } from './service';

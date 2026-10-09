@@ -7,17 +7,18 @@ import {
   FeedSubscribeOutput,
 } from '@repo/contracts';
 import { publicProcedure, router, zAsyncIterable } from '../../engine/trpc';
+import { readFeedPage, readFeedRow, streamFeed } from './feed';
 
 // The Feed procedures.
 export const feedRouter = router({
   page: publicProcedure
     .input(FeedPageInput)
     .output(FeedPageOutput)
-    .query(({ ctx, input }): FeedPageOutput => ctx.services.feed.page(input)),
+    .query(({ ctx, input }): FeedPageOutput => readFeedPage(ctx, input)),
   row: publicProcedure
     .input(FeedRowInput)
     .output(FeedRowOutput)
-    .query(({ ctx, input }): FeedRowOutput => ctx.services.feed.row(input)),
+    .query(({ ctx, input }): FeedRowOutput => readFeedRow(ctx, input)),
   subscribe: publicProcedure
     .input(FeedSubscribeInput)
     .output(zAsyncIterable({ yield: FeedSubscribeOutput }))
@@ -26,6 +27,6 @@ export const feedRouter = router({
       input,
       signal,
     }): AsyncGenerator<FeedSubscribeOutput, void> {
-      yield* ctx.services.feed.subscribe(input, signal);
+      yield* streamFeed(ctx, input, signal);
     }),
 });
