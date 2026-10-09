@@ -1,6 +1,5 @@
 import type { Database } from '@repo/db';
 import type { ActorRefFrom } from 'xstate';
-import { createAgentService } from './agents';
 import { createBlobService } from './blob';
 import type { FeedActorRef } from './feed';
 import { createFeedService, findDatabaseWriter } from './feed';
@@ -28,7 +27,6 @@ export function createServerServices(options: {
     findDatabaseWriter(options.sessions.system);
   return {
     blob: createBlobService(options),
-    agents: createAgentService(options.sessions),
     system: createSystemService(options),
     feed: createFeedService({
       database: options.database,
