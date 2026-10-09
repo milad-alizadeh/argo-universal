@@ -6,7 +6,7 @@ import type {
 import { feedRow } from '@repo/db/schema';
 import { sql } from 'drizzle-orm';
 import { expect, it, onTestFinished, vi } from 'vitest';
-import { createActor, fromPromise } from 'xstate';
+import { createActor, waitFor } from 'xstate';
 import { countDatabaseReads, openTestDatabase } from '#mocks/database';
 import { toFeedRowWrite } from '../feed';
 import { writerMachine } from '../feed';
@@ -121,7 +121,7 @@ it('reads a 500-row Turn with three bounded seeks after many settled Tool calls'
   ]);
 });
 
-it('keeps the earlier running Tool call after writer and memory overlays complete the newer one', (): void => {
+it('keeps the earlier running Tool call after writer and memory overlays complete the newer one', async (): Promise<void> => {
   const { database, remove } = openTestDatabase();
   onTestFinished(remove);
   const newer = {
@@ -136,21 +136,12 @@ it('keeps the earlier running Tool call after writer and memory overlays complet
       .insert(feedRow)
       .values({ ...toFeedRowWrite(row), sessionId: 'session-1' })
       .run();
-  const writer = createActor(
-    writerMachine.provide({
-      actors: {
-        writeBatch: fromPromise(
-          (): Promise<void> => new Promise<void>((): void => {}),
-        ),
-      },
-    }),
-    {
-      input: {
-        now: (): number => Date.now(),
-        database,
-      },
-    },
-  ).start();
+  database.$client
+    .exec(`CREATE TRIGGER hold_header_write BEFORE INSERT ON feed_row
+    BEGIN SELECT RAISE(ABORT, 'database is locked'); END`);
+  const writer = createActor(writerMachine, {
+    input: { now: (): number => Date.now(), database },
+  }).start();
   onTestFinished((): void => {
     writer.stop();
   });
@@ -163,6 +154,9 @@ it('keeps the earlier running Tool call after writer and memory overlays complet
       rows: [{ ...newer, revision: 3, title: 'Queued title' }],
     },
   });
+  await waitFor(writer, (snapshot): boolean =>
+    snapshot.matches('waitingToRetry'),
+  );
   const completed = {
     ...newer,
     revision: 4,
