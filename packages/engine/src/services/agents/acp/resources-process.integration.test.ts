@@ -1,13 +1,16 @@
 import { fileURLToPath } from 'node:url';
 import { expect, it, onTestFinished, vi } from 'vitest';
-import { resourceDestination, resourceOpening } from '#mocks/acp-resource';
+import {
+  createResourceDestination,
+  createResourceOpening,
+} from '#mocks/acp-resource';
 import { createAcpResources } from '../index';
 
 it('a missing executable rejects opening and releases the production resource after child closure', async () => {
   const resources = createAcpResources();
   const failures: unknown[] = [];
-  const base = resourceOpening({
-    ...resourceDestination(),
+  const base = createResourceOpening({
+    ...createResourceDestination(),
     failed: (error) => {
       failures.push(error);
     },
@@ -36,7 +39,7 @@ it('a missing executable rejects opening and releases the production resource af
 });
 
 it('the production launch port owns a real stdio process and observes its final exit', async () => {
-  const base = resourceOpening();
+  const base = createResourceOpening();
   const resources = createAcpResources();
   onTestFinished(() => resources.shutdown());
   vi.stubEnv('ARGO_348_AMBIENT', 'ambient');

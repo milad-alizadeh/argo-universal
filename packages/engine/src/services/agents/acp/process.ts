@@ -1,15 +1,15 @@
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { Readable, Writable } from 'node:stream';
-import { ndJsonStream } from '@agentclientprotocol/sdk';
+import { ndJsonStream, type Stream } from '@agentclientprotocol/sdk';
 import type { AcpProcess, AgentLaunch } from './resource-types';
 
-const exactEnvironment = (launch: AgentLaunch): NodeJS.ProcessEnv => {
+const createCapturedEnvironment = (launch: AgentLaunch): NodeJS.ProcessEnv => {
   const environment = { ...process.env, ...launch.env };
   for (const key of Object.keys(environment))
     if (!Object.hasOwn(launch.env, key)) delete environment[key];
   return environment;
 };
-const processOutput = (
+const createProcessOutputStream = (
   child: ChildProcessWithoutNullStreams,
 ): ReadableStream<Uint8Array> => {
   const bridge = new TransformStream<Uint8Array, Uint8Array>({
@@ -22,15 +22,23 @@ const processOutput = (
     .catch(() => {});
   return bridge.readable;
 };
-const observeExit = (child: ChildProcessWithoutNullStreams): Promise<void> =>
+const observeChildClose = (
+  child: ChildProcessWithoutNullStreams,
+): Promise<void> =>
   new Promise((resolve) => {
     child.once('close', () => resolve());
   });
-const observeStart = (child: ChildProcessWithoutNullStreams): Promise<void> =>
+const observeChildSpawn = (
+  child: ChildProcessWithoutNullStreams,
+): Promise<void> =>
   new Promise((resolve, reject) => {
     child.once('spawn', resolve);
     child.once('error', reject);
   });
+const createAcpProtocolStream = (
+  child: ChildProcessWithoutNullStreams,
+): Stream =>
+  ndJsonStream(Writable.toWeb(child.stdin), createProcessOutputStream(child));
 const isOwnedPid = (pid: number | undefined): boolean =>
   typeof pid === 'number' && Number.isInteger(pid) && pid > 0;
 const signalOwnedProcess = (child: ChildProcessWithoutNullStreams): void => {
@@ -40,33 +48,35 @@ const signalOwnedProcess = (child: ChildProcessWithoutNullStreams): void => {
 };
 const terminateChild = async (
   child: ChildProcessWithoutNullStreams,
-  started: Promise<void>,
-  exited: Promise<void>,
+  spawned: Promise<void>,
+  closed: Promise<void>,
 ): Promise<void> => {
-  await started.then(
+  await spawned.then(
     () => signalOwnedProcess(child),
     () => {},
   );
-  await exited;
+  await closed;
 };
-const processLifetime = (child: ChildProcessWithoutNullStreams): AcpProcess => {
+const ownAcpChildProcess = (
+  child: ChildProcessWithoutNullStreams,
+): AcpProcess => {
   child.stderr.resume();
-  const exited = observeExit(child);
-  const started = observeStart(child);
-  void started.catch(() => {});
+  const closed = observeChildClose(child);
+  const spawned = observeChildSpawn(child);
+  void spawned.catch(() => {});
   return {
-    stream: ndJsonStream(Writable.toWeb(child.stdin), processOutput(child)),
-    exited,
-    terminate: () => terminateChild(child, started, exited),
+    stream: createAcpProtocolStream(child),
+    exited: closed,
+    terminate: () => terminateChild(child, spawned, closed),
   };
 };
 export const launchAcpProcess = async (
   launch: AgentLaunch,
 ): Promise<AcpProcess> =>
-  processLifetime(
+  ownAcpChildProcess(
     spawn(launch.executable, [...launch.args], {
       cwd: launch.cwd,
-      env: exactEnvironment(launch),
+      env: createCapturedEnvironment(launch),
       stdio: 'pipe',
     }),
   );

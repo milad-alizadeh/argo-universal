@@ -12,13 +12,13 @@ export type AcpReservation = {
   closing: Promise<void> | undefined;
   stopWithdrawal: () => void;
 };
-const knownIdentity = (input: AcpOpenInput): string | undefined =>
-  input.opening.method === 'session/new'
+const readKnownSessionId = (openingInput: AcpOpenInput): string | undefined =>
+  openingInput.opening.method === 'session/new'
     ? undefined
-    : input.opening.params.sessionId;
+    : openingInput.opening.params.sessionId;
 export const reserveOpening = (input: AcpOpenInput): AcpReservation => ({
   input,
-  sessionId: knownIdentity(input),
+  sessionId: readKnownSessionId(input),
   withdrawn: input.signal?.aborted ?? false,
   dispatched: false,
   controller: new AbortController(),

@@ -69,9 +69,9 @@ export const startAcpEngine = async (
     rmSync(directory, { recursive: true, force: true });
   });
   await waitFor(engine, (snapshot) => snapshot.matches({ live: 'running' }));
-  return { engine, peer, ...engineCaller(engine) };
+  return { engine, peer, ...createEngineCaller(engine) };
 };
-const engineCaller = (
+const createEngineCaller = (
   engine: Actor<typeof engineMachine>,
 ): Pick<AcpEngineHost, 'context' | 'caller'> => {
   const { database, home, version, startedAt, createId } =
