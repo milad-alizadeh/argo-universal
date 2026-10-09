@@ -17,6 +17,8 @@
     "@repo/db": "workspace:*",
     "@repo/git": "workspace:*",
     "@trpc/server": "catalog:",
+    "ajv": "catalog:",
+    "ajv-formats": "catalog:",
     "drizzle-orm": "catalog:",
     "ws": "catalog:",
     "xstate": "catalog:",

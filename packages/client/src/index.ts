@@ -19,13 +19,13 @@ export { NewSessionScreen } from './screens/new-session-screen';
 export {
   AccountsScreen,
   AgentSettingsScreen,
-  AgentsSettingsScreen,
   AppearanceScreen,
   DevicesScreen,
   NotificationsScreen,
   ProjectSettingsScreen,
   ProjectsSettingsScreen,
 } from './screens/placeholder-screens';
+export { AgentsSettingsScreen } from './screens/agents/agents-settings-screen';
 export { SectionRootScreen } from './screens/section-root-screen';
 export { SessionScreen } from './screens/session-screen';
 export { AppProviders } from './trpc/app-providers';

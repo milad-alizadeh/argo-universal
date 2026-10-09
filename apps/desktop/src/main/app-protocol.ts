@@ -13,7 +13,8 @@ const contentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: http://127.0.0.1:*",
   "font-src 'self' data:",
-  "connect-src 'self' ws://127.0.0.1:* http://127.0.0.1:*",
+  // Registry SVG icons use fetch for data URIs and the official CDN.
+  "connect-src 'self' data: https://cdn.agentclientprotocol.com ws://127.0.0.1:* http://127.0.0.1:*",
 ].join('; ');
 
 // Runs before `ready`: a standard, secure scheme gets relative URLs and web storage.

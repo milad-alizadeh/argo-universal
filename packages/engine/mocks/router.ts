@@ -5,6 +5,11 @@ import { onTestFinished } from 'vitest';
 import { type Actor, createActor, waitFor } from 'xstate';
 import { createEngineContext, type Context } from '../src/engine/context';
 import { appRouter } from '../src/engine/router';
+import {
+  agentCatalogId,
+  catalogMachine,
+  type CatalogInput,
+} from '../src/services/agents';
 import { databaseWriterId, writerMachine } from '../src/services/feed';
 import {
   registryMachine,
@@ -17,7 +22,8 @@ import { openTestDatabase } from './database';
 type RouterTestHostOptions = Partial<
   Omit<Parameters<typeof createEngineContext>[0], 'sessions'>
 > &
-  Partial<Pick<RegistryInput, 'adapters' | 'runtimeDirectory'>>;
+  Partial<Pick<RegistryInput, 'adapters' | 'runtimeDirectory'>> &
+  Pick<CatalogInput, 'registry' | 'platform'>;
 
 export function startRouterTestHost(
   engineOptions: RouterTestHostOptions = {},
@@ -43,6 +49,7 @@ export function startRouterTestHost(
       adapters: engineOptions.adapters ?? [createMockAdapter()],
     },
   }).start();
+  startCatalogForTest(sessionRegistry, { ...engineOptions, runtimeDirectory });
   const databaseWriter = createActor(writerMachine, {
     parent: sessionRegistry,
     systemId: databaseWriterId,
@@ -65,19 +72,50 @@ export function startRouterTestHost(
     }
     ownedDatabase?.remove();
   });
-  const context = createEngineContext({
-    ...engineOptions,
-    database,
-    sessions: sessionRegistry,
-    createId,
-    blobsFolder: engineOptions.blobsFolder ?? join(runtimeDirectory, 'blobs'),
-    version: engineOptions.version ?? '1.2.3',
-    startedAt: engineOptions.startedAt ?? '2026-10-03T00:00:00.000Z',
-  });
-  return {
-    context,
-    caller: appRouter.createCaller(context),
-    sessionRegistry,
-    databaseWriter,
-  };
+  return routerTestHost(
+    {
+      ...engineOptions,
+      database,
+      sessions: sessionRegistry,
+      createId,
+      blobsFolder: engineOptions.blobsFolder ?? join(runtimeDirectory, 'blobs'),
+      version: engineOptions.version ?? '1.2.3',
+      startedAt: engineOptions.startedAt ?? '2026-10-03T00:00:00.000Z',
+    },
+    { sessionRegistry, databaseWriter },
+  );
+}
+
+function routerTestHost(
+  options: Parameters<typeof createEngineContext>[0],
+  actors: {
+    sessionRegistry: RegistryActorRef;
+    databaseWriter: Actor<typeof writerMachine>;
+  },
+): ReturnType<typeof startRouterTestHost> {
+  const context = createEngineContext(options);
+  return { context, caller: appRouter.createCaller(context), ...actors };
+}
+
+const emptyRegistry = {
+  readRegistry: async (): Promise<unknown> => ({
+    version: '1.0.0',
+    agents: [],
+  }),
+};
+
+function startCatalogForTest(
+  sessionRegistry: RegistryActorRef,
+  engineOptions: CatalogInput,
+): void {
+  const catalog = createActor(catalogMachine, {
+    parent: sessionRegistry,
+    systemId: agentCatalogId,
+    input: {
+      runtimeDirectory: engineOptions.runtimeDirectory,
+      registry: engineOptions.registry ?? emptyRegistry,
+      platform: engineOptions.platform,
+    },
+  }).start();
+  onTestFinished((): void => catalog.send({ type: 'catalog.stop' }));
 }

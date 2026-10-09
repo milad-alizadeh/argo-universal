@@ -2,6 +2,12 @@ import { appendFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { type Database, openDatabase } from '@repo/db';
 import { assign, fromPromise, sendTo, setup } from 'xstate';
+import {
+  agentCatalogId,
+  catalogMachine,
+  type CatalogInput,
+  type RegistryPort,
+} from '../services/agents';
 import { blobsFolderIn, removeUnusedBlobs } from '../services/blob';
 import { writerMachine, databaseWriterId } from '../services/feed';
 import { seedProject } from '../services/projects';
@@ -49,6 +55,7 @@ export interface EngineInput extends Pick<
   port: number;
   version: string;
   startedAt: string;
+  registry?: RegistryPort;
 }
 
 interface EngineContext extends EngineInput {
@@ -95,6 +102,7 @@ export const engineMachine = setup({
       },
     ),
     databaseWriter: writerMachine,
+    catalog: catalogMachine,
     sessions: registryMachine,
     startHttpServer: fromPromise<HttpServer, HttpServerOptions>(
       async ({ input, signal }): Promise<HttpServer> => {
@@ -191,6 +199,15 @@ export const engineMachine = setup({
     },
     live: {
       invoke: [
+        {
+          id: 'catalog',
+          systemId: agentCatalogId,
+          src: 'catalog',
+          input: ({ context }): CatalogInput => ({
+            runtimeDirectory: context.home,
+            registry: context.registry,
+          }),
+        },
         {
           id: 'databaseWriter',
           systemId: databaseWriterId,
