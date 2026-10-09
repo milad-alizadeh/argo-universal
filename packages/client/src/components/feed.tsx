@@ -200,14 +200,12 @@ const entryKey = (entry: FeedEntry): string =>
   entry.type === 'live_header' ? 'live-header' : feedItemKey(entry);
 
 // Thoughts, tool calls and the live header: what the Agent does between messages.
-const isActivity = (entry: FeedEntry): boolean =>
-  entry.type !== 'row';
+const isActivity = (entry: FeedEntry): boolean => entry.type !== 'row';
 
 const isAgentMessage = (entry: FeedEntry | undefined): boolean =>
   entry?.type === 'row' && entry.row.sessionUpdate === 'agent_message';
 
-// The Feed's rhythm: activity rows sit close together, an Agent's messages a paragraph apart, and each turn a wider step apart.
-// Set below a row by the row after it, so older rows paging in above never resize a row the reader sees.
+// The Feed's rhythm, set below a row by the row after it, so older rows paging in above never resize a row the reader sees.
 function spaceBelowEntry(
   entry: FeedEntry,
   next: FeedEntry | undefined,
