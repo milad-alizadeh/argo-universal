@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { z } from 'zod';
+import { breaksConvention } from './master-naming.mts';
 import type { MasterEntry, Registry } from './registry.mts';
 import type { Snapshot } from './snapshot-model.mts';
 
@@ -49,11 +50,18 @@ function renamedEntry(
   return { ...entry, name, variantOf: renamed(names, base) };
 }
 
+// A master already under its new name was renamed by an earlier run that stopped partway.
+function isFound(
+  snapshot: Snapshot,
+  rename: RenameMap['renames'][number],
+): boolean {
+  const name = snapshot.layers[rename.id]?.name;
+  return name === rename.from || name === rename.to;
+}
+
 function missingMasters(snapshot: Snapshot, map: RenameMap): string[] {
   return map.renames
-    .filter(
-      (rename): boolean => snapshot.layers[rename.id]?.name !== rename.from,
-    )
+    .filter((rename): boolean => !isFound(snapshot, rename))
     .map(
       (rename): string =>
         `"${rename.from}" (${rename.id}) is not in the snapshot under that name`,
@@ -61,9 +69,26 @@ function missingMasters(snapshot: Snapshot, map: RenameMap): string[] {
 }
 
 // An alias may point at a name already in use; a master's new name may not.
+function misnamedTargets(map: RenameMap): string[] {
+  return map.renames
+    .filter((rename): boolean => breaksConvention(rename.to))
+    .map((rename): string => `"${rename.to}" breaks CodeName (phone) / State`);
+}
+
+// A master already under its new name was renamed by an earlier run; its copies may be too.
+function pendingTargets(snapshot: Snapshot, map: RenameMap): Set<string> {
+  return new Set(
+    map.renames
+      .filter(
+        (rename): boolean => snapshot.layers[rename.id]?.name === rename.from,
+      )
+      .map((rename): string => rename.to),
+  );
+}
+
 function takenNames(snapshot: Snapshot, map: RenameMap): string[] {
   const names = newNames(map);
-  const targets = new Set(map.renames.map((rename): string => rename.to));
+  const targets = pendingTargets(snapshot, map);
   const clashes = Object.values(snapshot.layers)
     .filter(
       (layer): boolean => targets.has(layer.name) && !names.has(layer.name),
@@ -73,6 +98,14 @@ function takenNames(snapshot: Snapshot, map: RenameMap): string[] {
     (name): string =>
       `"${name}" is already used by a layer that is not renamed`,
   );
+}
+
+function problemsOf(snapshot: Snapshot, map: RenameMap): string[] {
+  return [
+    ...missingMasters(snapshot, map),
+    ...misnamedTargets(map),
+    ...takenNames(snapshot, map),
+  ];
 }
 
 function layerRenames(
@@ -104,6 +137,6 @@ export function planRename(
   return {
     updates: layerRenames(snapshot, names),
     registry: renamedRegistry(registry, names),
-    problems: [...missingMasters(snapshot, map), ...takenNames(snapshot, map)],
+    problems: problemsOf(snapshot, map),
   };
 }

@@ -1,5 +1,5 @@
-import { copiesOf } from './copy-drift.mts';
-import { kindOf, type Kind } from './master-kind.mts';
+import { checkedCopies } from './copy-drift.mts';
+import { kindOf, type Kind, type Scope } from './master-kind.mts';
 import { presentedFrames } from './presented.mts';
 import type { MasterEntry, Registry } from './registry.mts';
 import type { Layer, Snapshot } from './snapshot-model.mts';
@@ -26,11 +26,14 @@ interface Candidate {
   kind: Kind;
 }
 
-function candidatesOf(snapshot: Snapshot): Candidate[] {
-  return presentedFrames(snapshot).map((layer): Candidate => ({
-    layer,
-    kind: kindOf(snapshot, layer),
-  }));
+function candidatesOf(snapshot: Snapshot, scope: Scope): Candidate[] {
+  const demos = new Set(scope.notComponents);
+  return presentedFrames(snapshot)
+    .filter((layer): boolean => !demos.has(layer.name))
+    .map((layer): Candidate => ({
+      layer,
+      kind: kindOf(snapshot, scope, layer),
+    }));
 }
 
 function layersOf(candidates: Candidate[], kind: Kind): Layer[] {
@@ -39,10 +42,14 @@ function layersOf(candidates: Candidate[], kind: Kind): Layer[] {
     .map((candidate): Layer => candidate.layer);
 }
 
-function skippedOf(snapshot: Snapshot, candidates: Candidate[]): SkippedName[] {
+function skippedOf(
+  snapshot: Snapshot,
+  scope: Scope,
+  candidates: Candidate[],
+): SkippedName[] {
   return layersOf(candidates, 'skip').map((layer): SkippedName => ({
     name: layer.name,
-    reason: `${copiesOf(snapshot, layer).length} frames share the name, but most match neither its children nor its root styles`,
+    reason: `${checkedCopies(snapshot, scope, layer).length} frames share the name, but most match neither its children nor its root styles`,
   }));
 }
 
@@ -59,11 +66,15 @@ function entriesOf(snapshot: Snapshot, candidates: Candidate[]): MasterEntry[] {
   ];
 }
 
-export function bootstrapRegistry(snapshot: Snapshot): Bootstrap {
-  const candidates = candidatesOf(snapshot);
+// The scope comes from the committed registry, so a proposal keeps its ignored boards and demos.
+export function bootstrapRegistry(
+  snapshot: Snapshot,
+  scope: Scope = {},
+): Bootstrap {
+  const candidates = candidatesOf(snapshot, scope);
   const masters = entriesOf(snapshot, candidates);
   return {
-    registry: { fileId: snapshot.fileId, masters },
-    skipped: skippedOf(snapshot, candidates),
+    registry: { fileId: snapshot.fileId, ...scope, masters },
+    skipped: skippedOf(snapshot, scope, candidates),
   };
 }

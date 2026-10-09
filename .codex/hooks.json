@@ -12,11 +12,11 @@
         ]
       },
       {
-        "matcher": "mcp__paper__(update_styles|write_html|set_text_content|rename_nodes|delete_nodes|duplicate_nodes|move_nodes)",
+        "matcher": "mcp__paper__.*",
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$(git rev-parse --show-toplevel)/tools/paper-drift-hook.mts\"",
+            "command": "node \"$(git rev-parse --show-toplevel)/tools/agent-hooks.mts\" after-paper-edit",
             "timeout": 30
           }
         ]

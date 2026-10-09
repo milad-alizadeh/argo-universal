@@ -1,3 +1,4 @@
+import { breaksConvention } from './master-naming.mts';
 import { presentedFrames } from './presented.mts';
 import type { Registry } from './registry.mts';
 import type { Snapshot } from './snapshot-model.mts';
@@ -7,6 +8,8 @@ export interface RegistryHealth {
   missing: string[];
   renamed: { name: string; now: string }[];
   unregistered: string[];
+  // Masters whose name breaks `CodeName (phone) / State`.
+  misnamed: string[];
 }
 
 function renamedOf(
@@ -20,6 +23,12 @@ function renamedOf(
   });
 }
 
+function misnamedOf(registry: Registry): string[] {
+  return registry.masters
+    .map((entry): string => entry.name)
+    .filter(breaksConvention);
+}
+
 function knownNames(registry: Registry): Set<string> {
   return new Set([
     ...registry.masters.map((entry): string => entry.name),
@@ -31,14 +40,19 @@ export function checkRegistry(
   snapshot: Snapshot,
   registry: Registry,
 ): RegistryHealth {
-  const names = knownNames(registry);
   return {
     missing: registry.masters
       .filter((entry): boolean => snapshot.layers[entry.id] === undefined)
       .map((entry): string => entry.name),
     renamed: renamedOf(snapshot, registry),
-    unregistered: presentedFrames(snapshot)
-      .map((layer): string => layer.name)
-      .filter((name): boolean => !names.has(name)),
+    unregistered: unregisteredOf(snapshot, registry),
+    misnamed: misnamedOf(registry),
   };
+}
+
+function unregisteredOf(snapshot: Snapshot, registry: Registry): string[] {
+  const names = knownNames(registry);
+  return presentedFrames(snapshot)
+    .map((layer): string => layer.name)
+    .filter((name): boolean => !names.has(name));
 }

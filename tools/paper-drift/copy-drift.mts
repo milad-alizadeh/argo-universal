@@ -9,11 +9,16 @@ import {
 } from './drift-model.mts';
 import { pairLayers, type LayerPair } from './layer-pairing.mts';
 import { pairingRules, type MasterEntry, type Registry } from './registry.mts';
-import { stylesOf, type Layer, type Snapshot } from './snapshot-model.mts';
+import {
+  nameOf,
+  stylesOf,
+  type Layer,
+  type Snapshot,
+} from './snapshot-model.mts';
 import { diffStyles } from './style-diff.mts';
 
 // Every other layer with a master's name is a copy of it, on screens and boards alike.
-export function copiesOf(
+function copiesOf(
   snapshot: Snapshot,
   master: { name: string; id: string },
 ): Layer[] {
@@ -22,19 +27,15 @@ export function copiesOf(
   );
 }
 
-function artboardName(snapshot: Snapshot, layer: Layer): string {
-  return snapshot.layers[layer.artboard]?.name ?? '';
-}
-
 // The copies the audit and sync check: none on an ignored artboard.
 export function checkedCopies(
   snapshot: Snapshot,
-  registry: Registry,
-  master: MasterEntry,
+  registry: Pick<Registry, 'ignoredArtboards'>,
+  master: { name: string; id: string },
 ): Layer[] {
   const ignored = new Set(registry.ignoredArtboards);
   return copiesOf(snapshot, master).filter(
-    (copy): boolean => !ignored.has(artboardName(snapshot, copy)),
+    (copy): boolean => !ignored.has(nameOf(snapshot, copy.artboard)),
   );
 }
 

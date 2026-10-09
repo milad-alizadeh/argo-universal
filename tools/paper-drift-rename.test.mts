@@ -7,7 +7,7 @@ import {
   screen,
   snapshotOf,
 } from './paper-drift.mocks.mts';
-import { masterLevels } from './paper-drift/master-levels.mts';
+import { masterLevels, nestedPairs } from './paper-drift/master-levels.mts';
 import { planRename } from './paper-drift/rename-plan.mts';
 
 const NEW_NAME = 'Chip / Default';
@@ -55,4 +55,30 @@ it('orders a nested master before the master that holds it', (): void => {
     { depth: 0, names: ['Dot / Off', 'Dot / On'] },
     { depth: 1, names: ['Chip'] },
   ]);
+});
+
+it('resumes a rename that stopped after the master was renamed', (): void => {
+  const resumed = snapshotOf([
+    componentBoard({ ...chipMaster(), name: NEW_NAME }),
+    screen(chipCopy('a')),
+  ]);
+  const plan = planRename(resumed, chipRegistry, {
+    renames: [{ id: 'chip', from: 'Chip', to: NEW_NAME }],
+    aliases: [],
+  });
+  expect(plan.updates).toEqual([{ nodeId: 'a', name: NEW_NAME }]);
+  expect(plan.problems).toEqual([]);
+});
+
+it('refuses a new name that breaks the naming convention', (): void => {
+  expect(renameChipTo('Chip / Default (phone)').problems).toEqual([
+    '"Chip / Default (phone)" breaks CodeName (phone) / State',
+  ]);
+});
+
+it('finds masters that hold another master asked for in the same sync', (): void => {
+  expect(nestedPairs(snapshot, chipRegistry, ['Chip', 'Dot / On'])).toEqual([
+    '"Chip" holds "Dot / On"',
+  ]);
+  expect(nestedPairs(snapshot, chipRegistry, ['Dot / On'])).toEqual([]);
 });

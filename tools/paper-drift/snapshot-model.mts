@@ -44,6 +44,11 @@ export function boardKind(artboardName: string): BoardKind {
   return artboardName.includes('Components') ? 'components' : 'screens';
 }
 
+// A layer's name, or '' when the id is not in the snapshot.
+export function nameOf(snapshot: Snapshot, id: string): string {
+  return snapshot.layers[id]?.name ?? '';
+}
+
 export function layerAt(snapshot: Snapshot, id: string): Layer {
   const layer = snapshot.layers[id];
   if (!layer) throw new Error(`The snapshot has no layer ${id}.`);

@@ -32,7 +32,7 @@ This doc is temporary. When Paper ships components ("Components with slots" on i
 
 ## Drift audit
 
-The tools in `tools/paper-drift/` read the whole file through the Paper MCP. Only `paper:sync --apply` writes to Paper.
+The tools in `tools/paper-drift/` read the whole file through the Paper MCP. Only `paper:sync --apply` and `paper:rename --apply` write to Paper.
 
 - `pnpm paper:snapshot` reads every layer, its styles and the tokens into `.paper-drift/snapshot.json`. It takes about a minute; run it again whenever the file has changed.
 - `pnpm paper:audit` checks the last snapshot and writes `.paper-drift/audit.md` and `audit.json`:
@@ -48,7 +48,7 @@ The tools in `tools/paper-drift/` read the whole file through the Paper MCP. Onl
 - `pnpm paper:rename <map.json>` renames masters, every copy and the registry together, from a map of `renames` (`id`, `from`, `to`) and `aliases` (other spellings found on copies). It is a dry run against a fresh snapshot (`--offline` uses the last one) until you add `--apply`, which refuses while the plan lists problems.
 - `pnpm paper:sync "<Name>"` takes a fresh snapshot and plans, for each drifted copy of that master, to clone the master beside it, put back the copy's text, hidden items, placement and nested masters, and delete the old copy. Copies whose layers differ from the master's are listed for a person instead. Add `--apply` to carry it out; before and after screenshots go to `.paper-drift/sync/`. Never apply while someone else is editing the same artboards.
 
-After any Paper write tool, a PostToolUse hook (`tools/paper-drift-hook.mts`, in `.claude/settings.json` and `.codex/hooks.json`) warns when the edit touched a master, whose copies now drift, or a copy outside its allowed changes. It reads the last snapshot and the registry, so it never calls Paper and never blocks.
+After any Paper write tool, a PostToolUse hook (`tools/agent-hooks.mts after-paper-edit`, which loads `tools/paper-drift/edit-hook.mts`) warns when the edit touched a master, whose copies now drift, or a copy outside its allowed changes. It reads the last snapshot and the registry, so it never calls Paper and never blocks. Layers made after the last snapshot are not checked, and input it does not recognise is reported as a skipped check.
 
 An audit is done when the report has been read and each difference is either fixed or listed with the artboard, the layer name and what differs. Two checks stay manual: every master names a code component, built or planned, and every master's Storybook coverage follows the [Storybook rules](storybook.md).
 

@@ -43,20 +43,48 @@ function assertSameFile(header: string | undefined, fileId: string): void {
     throw new Error(`Paper answered for file ${answered}, not ${fileId}.`);
 }
 
-// A few tools answer in plain text, such as finish_working_on_nodes with "OK".
+// The one plain-text answer Paper gives, from tools such as finish_working_on_nodes.
+const PLAIN_ANSWERS = new Set(['OK']);
 const JSON_START = /^\s*[[{"]/;
+
+function plainAnswer(body: string): string {
+  if (PLAIN_ANSWERS.has(body.trim())) return body.trim();
+  throw new Error(`Unrecognised plain-text answer: ${body.slice(0, 200)}`);
+}
 
 function jsonBody(body: string | undefined): unknown {
   if (body === undefined) return null;
-  return JSON_START.test(body) ? JSON.parse(body) : body;
+  return JSON_START.test(body) ? JSON.parse(body) : plainAnswer(body);
+}
+
+function imageOf(
+  result: ToolResult,
+): ToolResult['content'][number] | undefined {
+  const images = result.content.filter(
+    (part): boolean => part.type === 'image',
+  );
+  if (images.length > 1)
+    throw new Error(`Expected one image, got ${images.length}.`);
+  return images[0];
+}
+
+// Paper answers with a file header and at most one body.
+function headerAndBody(
+  result: ToolResult,
+): [string | undefined, string | undefined] {
+  const [header, body, ...extra] = texts(result);
+  if (extra.length > 0)
+    throw new Error(
+      `Expected a header and one body, got ${extra.length} more text parts.`,
+    );
+  return [header, body];
 }
 
 function payloadOf(result: ToolResult, fileId: string): unknown {
-  const [header, body] = texts(result);
   if (result.isError) throw new Error(texts(result).join('\n'));
+  const [header, body] = headerAndBody(result);
   assertSameFile(header, fileId);
-  const image = result.content.find((part): boolean => part.type === 'image');
-  return image ?? jsonBody(body);
+  return imageOf(result) ?? jsonBody(body);
 }
 
 async function callTool(
@@ -71,10 +99,25 @@ async function callTool(
   );
 }
 
+async function payloadFrom(
+  client: Client,
+  fileId: string,
+  call: { tool: string; args: Record<string, unknown> },
+): Promise<unknown> {
+  const result = await callTool(client, call.tool, { fileId, ...call.args });
+  try {
+    return payloadOf(result, fileId);
+  } catch (error) {
+    throw new Error(`Paper ${call.tool} answered unexpectedly.`, {
+      cause: error,
+    });
+  }
+}
+
 function portFor(client: Client, fileId: string): PaperPort {
   return {
-    call: async (tool, args): Promise<unknown> =>
-      payloadOf(await callTool(client, tool, { fileId, ...args }), fileId),
+    call: (tool, args): Promise<unknown> =>
+      payloadFrom(client, fileId, { tool, args }),
     close: async (): Promise<void> => client.close(),
   };
 }

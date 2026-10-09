@@ -15,7 +15,7 @@ function section(title: string, lines: string[]): string[] {
 }
 
 function registryLines(audit: Audit): string[] {
-  const { missing, renamed, unregistered } = audit.registry;
+  const { missing, renamed, unregistered, misnamed } = audit.registry;
   return [
     ...missing.map((name): string => `- Missing from the file: ${name}`),
     ...renamed.map(
@@ -23,6 +23,9 @@ function registryLines(audit: Audit): string[] {
     ),
     ...unregistered.map(
       (name): string => `- Presented on a card but not registered: ${name}`,
+    ),
+    ...misnamed.map(
+      (name): string => `- Breaks CodeName (phone) / State: ${name}`,
     ),
   ];
 }

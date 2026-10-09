@@ -57,7 +57,7 @@ export function auditSummary(audit: Audit): string[] {
     (use): boolean => use.tokens.length === 0,
   );
   return [
-    `Registry: ${audit.registry.missing.length} missing, ${audit.registry.renamed.length} renamed, ${audit.registry.unregistered.length} unregistered`,
+    `Registry: ${audit.registry.missing.length} missing, ${audit.registry.renamed.length} renamed, ${audit.registry.unregistered.length} unregistered, ${audit.registry.misnamed.length} misnamed`,
     driftCount('Copies that drifted from their master', audit.copies),
     driftCount('Variations that drifted from their base', audit.variations),
     `Names spelled more than one way: ${audit.names.length}`,

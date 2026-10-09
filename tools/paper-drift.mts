@@ -2,7 +2,8 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { auditReport } from './paper-drift/audit-report.mts';
 import { auditSummary, runAudit } from './paper-drift/audit.mts';
-import { masterLevels } from './paper-drift/master-levels.mts';
+import type { Scope } from './paper-drift/master-kind.mts';
+import { masterLevels, nestedPairs } from './paper-drift/master-levels.mts';
 import { connectPaper, type PaperPort } from './paper-drift/paper-port.mts';
 import { finishWorking, renameNodes } from './paper-drift/paper-writes.mts';
 import { bootstrapRegistry } from './paper-drift/registry-bootstrap.mts';
@@ -67,9 +68,19 @@ async function snapshot(): Promise<void> {
   });
 }
 
+// Ignored boards and demos carry over from the committed registry into a proposal.
+function committedScope(): Scope {
+  if (!existsSync(registryPath)) return {};
+  const { ignoredArtboards, notComponents } = readRegistry(registryPath);
+  return { ignoredArtboards, notComponents };
+}
+
 // Writes the registry only when there is none; otherwise a proposal to compare with it.
 function registry(): Promise<void> {
-  const { registry: proposed, skipped } = bootstrapRegistry(readSnapshot());
+  const { registry: proposed, skipped } = bootstrapRegistry(
+    readSnapshot(),
+    committedScope(),
+  );
   const target = existsSync(registryPath) ? proposedRegistryPath : registryPath;
   writeLocal(target, formatRegistry(proposed));
   for (const name of skipped)
@@ -109,6 +120,11 @@ async function applyPlans(
 
 function planAll(taken: Snapshot, names: string[]): SyncPlans {
   const masters = readRegistry(registryPath);
+  const nested = nestedPairs(taken, masters, names);
+  if (nested.length > 0)
+    throw new Error(
+      `Sync these in separate runs, inner first (pnpm paper:levels): ${nested.join('; ')}`,
+    );
   const found = names.map((name): SyncPlans => {
     const plans = planSync(taken, masters, name);
     for (const line of syncReport(name, plans)) console.log(line);

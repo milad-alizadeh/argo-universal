@@ -37,34 +37,24 @@ function childPath(path: string, index: number): string {
   return path === '' ? String(index) : `${path}/${index}`;
 }
 
-function renamedVerdict(
-  rules: PairingRules,
-  master: Layer,
-  copy: Layer,
-): ChildVerdict {
+function renamedVerdict(rules: PairingRules, pair: LayerPair): ChildVerdict {
+  const { master, copy } = pair;
   if (rules.isStateSwitch(master.name, copy.name)) return 'skip';
   return {
     problem: `is named "${copy.name}"; the master has "${master.name}"`,
   };
 }
 
-function nameVerdict(
-  rules: PairingRules,
-  master: Layer,
-  copy: Layer,
-): ChildVerdict {
-  if (master.name !== copy.name) return renamedVerdict(rules, master, copy);
-  return rules.isMaster(master.name) ? 'skip' : 'walk';
+function nameVerdict(rules: PairingRules, pair: LayerPair): ChildVerdict {
+  if (pair.master.name !== pair.copy.name) return renamedVerdict(rules, pair);
+  return rules.isMaster(pair.master.name) ? 'skip' : 'walk';
 }
 
-function childVerdict(
-  rules: PairingRules,
-  master: Layer,
-  copy: Layer,
-): ChildVerdict {
+function childVerdict(rules: PairingRules, pair: LayerPair): ChildVerdict {
+  const { master, copy } = pair;
   if (master.type !== copy.type)
     return { problem: `is a ${copy.type}; the master has a ${master.type}` };
-  return master.type === 'Frame' ? nameVerdict(rules, master, copy) : 'walk';
+  return master.type === 'Frame' ? nameVerdict(rules, pair) : 'walk';
 }
 
 function childrenProblem(walk: Walk, pair: LayerPair): string | undefined {
@@ -78,7 +68,7 @@ function childrenProblem(walk: Walk, pair: LayerPair): string | undefined {
 }
 
 function visitChild(walk: Walk, pair: LayerPair): void {
-  const verdict = childVerdict(walk.rules, pair.master, pair.copy);
+  const verdict = childVerdict(walk.rules, pair);
   if (verdict === 'walk') visit(walk, pair);
   else if (verdict === 'skip') walk.pairing.kept.push(pair);
   else walk.pairing.drift.push({ ...pair, ...verdict });

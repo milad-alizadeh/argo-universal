@@ -1,5 +1,6 @@
-import { copiesOf } from './copy-drift.mts';
+import { checkedCopies } from './copy-drift.mts';
 import { copyRoot } from './drift-model.mts';
+import type { Registry } from './registry.mts';
 import {
   layerAt,
   stylesOf,
@@ -32,8 +33,10 @@ function isMostly(copies: Layer[], test: (copy: Layer) => boolean): boolean {
   return copies.length === 0 || matching / copies.length > MOSTLY;
 }
 
-export function kindOf(snapshot: Snapshot, master: Layer): Kind {
-  const copies = copiesOf(snapshot, master);
+export type Scope = Pick<Registry, 'ignoredArtboards' | 'notComponents'>;
+
+export function kindOf(snapshot: Snapshot, scope: Scope, master: Layer): Kind {
+  const copies = checkedCopies(snapshot, scope, master);
   const shape = shapeOf(snapshot, master);
   if (isMostly(copies, (copy): boolean => shapeOf(snapshot, copy) === shape))
     return 'master';
