@@ -7,6 +7,8 @@ import {
   SessionAnswerPlanProposalOutput,
   SessionCancelInput,
   SessionCancelOutput,
+  SessionCloseInput,
+  SessionCloseOutput,
   SessionChangesInput,
   SessionChangesOutput,
   SessionCounts,
@@ -32,6 +34,7 @@ import {
   validateElicitationAnswer,
   validateConfigChoice,
 } from './session-admission';
+import { closeSession } from './session-closure';
 import {
   sendSessionCommand,
   validateSessionCommandAdmission,
@@ -83,6 +86,12 @@ export const sessionRouter = router({
       });
       return { messageId: userMessageId(turnId) };
     }),
+  close: publicProcedure
+    .input(SessionCloseInput)
+    .output(SessionCloseOutput)
+    .mutation(({ ctx, input }): Promise<SessionCloseOutput> =>
+      closeSession(ctx, input.sessionId),
+    ),
   rename: publicProcedure
     .input(SessionRenameInput)
     .output(SessionRenameOutput)

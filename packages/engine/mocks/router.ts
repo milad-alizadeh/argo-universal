@@ -17,7 +17,12 @@ import { openTestDatabase } from './database';
 type RouterTestHostOptions = Partial<
   Omit<Parameters<typeof createEngineContext>[0], 'sessions'>
 > &
-  Partial<Pick<RegistryInput, 'adapters' | 'runtimeDirectory'>>;
+  Partial<
+    Pick<
+      RegistryInput,
+      'adapters' | 'runtimeDirectory' | 'acpResources' | 'resolveAgentLaunch'
+    >
+  >;
 
 export function startRouterTestHost(
   engineOptions: RouterTestHostOptions = {},
@@ -41,6 +46,8 @@ export function startRouterTestHost(
       createId,
       now: (): number => Date.now(),
       adapters: engineOptions.adapters ?? [createMockAdapter()],
+      acpResources: engineOptions.acpResources,
+      resolveAgentLaunch: engineOptions.resolveAgentLaunch,
     },
   }).start();
   const databaseWriter = createActor(writerMachine, {

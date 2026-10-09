@@ -928,13 +928,14 @@
       }
     },
     {
-      // Apps launch processes only at the three launchers; all git work stays in packages/git (ADR-0008).
+      // Process ownership stays at the launchers; all git work stays in packages/git (ADR-0008).
       "files": ["apps/**", "packages/engine/**"],
       "excludeFiles": [
         "**/*.test.*",
         "**/mocks/**",
         "apps/server/src/supervisor/engine-process.ts",
         "packages/engine/src/services/system/info.ts",
+        "packages/engine/src/services/agents/acp/process.ts",
         "apps/desktop/src/main/server-process.ts"
       ],
       "rules": { "argo/child-process": "error" }

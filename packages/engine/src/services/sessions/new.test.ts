@@ -12,7 +12,6 @@ const validNewSessionInput = {
 it.each([
   { checkout: { type: 'worktree' } },
   { checkout: 'main' },
-  { prompt: [] },
   { configOptions: [{ id: 'model', value: 'small' }] },
   {
     prompt: [{ type: 'resource_link', name: 'File', uri: 'file:///repo/file' }],
@@ -26,3 +25,9 @@ it.each([
     ).toBe(false);
   },
 );
+
+it('accepts an empty Session creation before its first prompt', (): void => {
+  expect(
+    SessionNewInput.parse({ ...validNewSessionInput, prompt: [] }).prompt,
+  ).toEqual([]);
+});
