@@ -25,6 +25,7 @@ import { startRouterTestHost } from '#mocks/router';
 import { createSessionHost, firstPrompt } from '#mocks/session';
 import { toSessionSnapshot } from './session-snapshot';
 
+const nativeCrash = 'Native instance crashed';
 const missingStream = 'The Agent has no stream';
 const turnStartedEvent = 'agent.turnStarted';
 const answerPermissionCommand = 'agent.answerPermission';
@@ -115,105 +116,41 @@ it.each(agentAdapters.map((adapter): string => adapter.agent))(
 );
 
 it.each(agentAdapters.map((adapter): string => adapter.agent))(
-  'owns prompting, answers, cancellation, recovery and closure for Agent %s',
+  'waits for a retired native stop when closing the recovered Session for Agent %s',
   async (agent): Promise<void> => {
     vi.useFakeTimers();
     onTestFinished((): void => {
       vi.useRealTimers();
     });
-    const streams: MockAgentStream[] = [];
-    const commands: VendorCommand[] = [];
-    let closedInstances = 0;
+    const retiredStop = Promise.withResolvers<void>();
+    let stream: MockAgentStream | undefined;
+    let stopCalls = 0;
     const host = await startSession(
       createMockAdapter(
         {
           stream: (nativeStream): undefined => {
-            streams.push(nativeStream);
-            nativeStream.receive((command): number => commands.push(command));
+            stream = nativeStream;
           },
-          stop: async (): Promise<void> => {
-            closedInstances += 1;
-          },
+          stop: (): Promise<void> =>
+            ++stopCalls === 1 ? retiredStop.promise : Promise.resolve(),
         },
         agent,
       ),
     );
-    const stream = streams[0];
     if (!stream) throw new Error(missingStream);
-    host.session.send(firstPrompt);
-    stream.send({
-      type: 'agent.permissionRequested',
-      request: {
-        toolCallId: 'current',
-        title: 'Run command',
-        options: permissionOptions,
-      },
-    });
-    host.session.send({
-      type: 'session.answerPermission',
-      toolCallId: 'current',
-      optionId: null,
-    });
-    stream.send({
-      type: 'agent.elicitationRequested',
-      request: {
-        mode: 'form',
-        message: 'Which file?',
-        requestedSchema: { properties: {} },
-      },
-    });
-    host.session.send({ type: 'session.answerElicitation', action: 'cancel' });
-    host.session.send({ type: 'session.cancel' });
-    await vi.advanceTimersByTimeAsync(0);
-    expect(commands.map((command): string => command.type)).toEqual([
-      promptCommand,
-      answerPermissionCommand,
-      answerElicitationCommand,
-      cancelCommand,
-    ]);
-    stream.send({ type: turnEndedEvent, stopReason: 'cancelled' });
-    expect(publicSnapshot(host).state).toBe('idle');
-    stream.fail(new Error('Native instance crashed'));
+    stream.fail(new Error(nativeCrash));
     await vi.advanceTimersByTimeAsync(1000);
-    expect(publicSnapshot(host).state).toBe('idle');
-    expect(streams).toHaveLength(2);
     host.session.send({ type: closeEvent });
     await vi.advanceTimersByTimeAsync(0);
-    expect(host.session.getSnapshot().status).toBe('done');
-    expect(closedInstances).toBe(2);
+    expect(host.session.getSnapshot().status).toBe('active');
+    retiredStop.resolve();
+    await waitFor(
+      host.session,
+      (snapshot): boolean => snapshot.status === 'done',
+    );
+    expect(stopCalls).toBe(2);
   },
 );
-
-it('waits for a retired native stop when closing the recovered Session', async (): Promise<void> => {
-  vi.useFakeTimers();
-  onTestFinished((): void => {
-    vi.useRealTimers();
-  });
-  const retiredStop = Promise.withResolvers<void>();
-  let stream: MockAgentStream | undefined;
-  let stopCalls = 0;
-  const host = await startSession(
-    createMockAdapter({
-      stream: (nativeStream): undefined => {
-        stream = nativeStream;
-      },
-      stop: (): Promise<void> =>
-        ++stopCalls === 1 ? retiredStop.promise : Promise.resolve(),
-    }),
-  );
-  if (!stream) throw new Error(missingStream);
-  stream.fail(new Error('Native instance crashed'));
-  await vi.advanceTimersByTimeAsync(1000);
-  host.session.send({ type: closeEvent });
-  await vi.advanceTimersByTimeAsync(0);
-  expect(host.session.getSnapshot().status).toBe('active');
-  retiredStop.resolve();
-  await waitFor(
-    host.session,
-    (snapshot): boolean => snapshot.status === 'done',
-  );
-  expect(stopCalls).toBe(2);
-});
 
 it('waits for native stop before publishing the final Feed batch', async (): Promise<void> => {
   vi.useFakeTimers();
@@ -366,7 +303,7 @@ it('ignores callbacks from the retired native instance after recovery', async ()
   );
   const retired = streams[0];
   if (!retired) throw new Error(missingStream);
-  retired.fail(new Error('Native instance crashed'));
+  retired.fail(new Error(nativeCrash));
   await vi.advanceTimersByTimeAsync(1000);
   retired.send({ type: turnStartedEvent });
   retired.send({ type: feedEvent, change: messageChange('settled') });
@@ -419,51 +356,61 @@ it('rejects invalid usage before changing the public Session snapshot', async ()
   expect(errors.flat().join(' ')).toContain('Invalid Argo event: agent.usage');
 });
 
-it('cancels a pending prompt after its prior configuration completes', async (): Promise<void> => {
-  vi.useFakeTimers();
-  onTestFinished((): void => {
-    vi.useRealTimers();
-  });
-  const configured = Promise.withResolvers<void>();
-  const prompted = Promise.withResolvers<void>();
-  const commands: VendorCommand[] = [];
-  const host = await startSession({
-    ...createMockAdapter(),
-    connect: async (): Promise<VendorSession> => ({
-      ready: mockReady,
-      run: async (command): Promise<void> => {
-        commands.push(command);
-        if (command.type === setConfigCommand) await configured.promise;
-        if (command.type === promptCommand) await prompted.promise;
-        if (command.type === cancelCommand) prompted.resolve();
-      },
-      stop: async (): Promise<void> => {},
-    }),
-  });
-  host.session.send({
-    type: 'session.setConfigOption',
-    configId: 'model',
-    value: 'careful',
-  });
-  host.session.send(firstPrompt);
-  await vi.advanceTimersByTimeAsync(0);
-  host.session.send({ type: 'session.cancel' });
-  await vi.advanceTimersByTimeAsync(0);
-  expect(commands.map((command): string => command.type)).toEqual([
-    setConfigCommand,
-  ]);
-  configured.resolve();
-  await vi.advanceTimersByTimeAsync(0);
-  expect(commands.map((command): string => command.type)).toEqual([
-    setConfigCommand,
-    promptCommand,
-    cancelCommand,
-  ]);
-});
+it.each(agentAdapters.map((adapter): string => adapter.agent))(
+  'cancels a pending prompt after its prior configuration completes for Agent %s',
+  async (agent): Promise<void> => {
+    vi.useFakeTimers();
+    onTestFinished((): void => {
+      vi.useRealTimers();
+    });
+    const configured = Promise.withResolvers<void>();
+    const prompted = Promise.withResolvers<void>();
+    const commands: VendorCommand[] = [];
+    const host = await startSession({
+      ...createMockAdapter({}, agent),
+      connect: async (): Promise<VendorSession> => ({
+        ready: mockReady,
+        run: async (command): Promise<void> => {
+          commands.push(command);
+          if (command.type === setConfigCommand) await configured.promise;
+          if (command.type === promptCommand) await prompted.promise;
+          if (command.type === cancelCommand) prompted.resolve();
+        },
+        stop: async (): Promise<void> => {},
+      }),
+    });
+    host.session.send({
+      type: 'session.setConfigOption',
+      configId: 'model',
+      value: 'careful',
+    });
+    host.session.send(firstPrompt);
+    await vi.advanceTimersByTimeAsync(0);
+    host.session.send({ type: 'session.cancel' });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(commands.map((command): string => command.type)).toEqual([
+      setConfigCommand,
+    ]);
+    configured.resolve();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(commands.map((command): string => command.type)).toEqual([
+      setConfigCommand,
+      promptCommand,
+      cancelCommand,
+    ]);
+  },
+);
 
-it.each(['permission', 'elicitation'] as const)(
-  'answers %s while the native prompt is pending',
-  async (requestKind): Promise<void> => {
+it.each(
+  agentAdapters.flatMap(({ agent }) =>
+    ['permission', 'elicitation'].map((requestKind) => ({
+      agent,
+      requestKind,
+    })),
+  ),
+)(
+  'answers $requestKind while the native prompt is pending for Agent $agent',
+  async ({ agent, requestKind }): Promise<void> => {
     vi.useFakeTimers();
     onTestFinished((): void => {
       vi.useRealTimers();
@@ -471,7 +418,7 @@ it.each(['permission', 'elicitation'] as const)(
     const responded = Promise.withResolvers<void>();
     const commands: VendorCommand[] = [];
     const host = await startSession({
-      ...createMockAdapter(),
+      ...createMockAdapter({}, agent),
       connect: async (_connectInput, listener): Promise<VendorSession> => ({
         ready: mockReady,
         run: async (command): Promise<void> => {
