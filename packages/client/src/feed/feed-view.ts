@@ -59,7 +59,7 @@ export interface FeedStandaloneRow {
 
 export type FeedViewItem = FeedActivity | FeedGroup | FeedStandaloneRow;
 
-// Checklist Plans also sit above the Composer; markdown and file Plans are Feed rows.
+// The active Plan sits above the Composer.
 export interface FeedView {
   items: FeedViewItem[];
   plan: Plan | null;

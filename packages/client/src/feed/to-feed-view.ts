@@ -165,12 +165,8 @@ export function toFeedView(
     if (previousTurnId !== undefined && row.turnId !== previousTurnId)
       flushGroup();
     previousTurnId = row.turnId;
-    if (row.sessionUpdate === 'plan_update') {
-      if (row.plan.type !== 'items' && !row._meta?.argo?.removed) {
-        flushGroup();
-        view.items.push({ type: 'row', row });
-      }
-    } else if (row.sessionUpdate === 'agent_thought') {
+    if (row.sessionUpdate === 'plan_update') continue;
+    if (row.sessionUpdate === 'agent_thought') {
       activities.push({ type: 'thought', row });
       if (row.state === 'open') liveTitle = 'Thinking';
     } else if (row.sessionUpdate === 'notice' && row.severity !== 'error') {

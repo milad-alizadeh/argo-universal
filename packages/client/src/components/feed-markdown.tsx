@@ -19,13 +19,13 @@ export interface FeedMarkdownProps {
   text: string;
   // An open row ends its text with a caret.
   streaming?: boolean;
-  variant?: 'feed' | 'proposal';
+  variant?: 'feed' | 'proposal' | 'summary';
 }
 
-const MarkdownVariant = createContext<'feed' | 'proposal'>('feed');
+const MarkdownVariant = createContext<FeedMarkdownProps['variant']>('feed');
 
 export const inlineCodeClassName =
-  'rounded-sm bg-foreground/5 px-1.5 py-px font-mono text-xs leading-4.5 text-foreground';
+  'rounded-sm bg-foreground/5 px-1.5 py-px font-mono text-xs leading-4 text-foreground';
 
 function Caret(): React.JSX.Element {
   return (
@@ -104,39 +104,32 @@ function InlineTokens({
   });
 }
 
-const proposalInlineCodeClassName = cn(
-  inlineCodeClassName,
-  'text-sm leading-5',
-);
-
-const proseClassName = 'font-sans text-sm leading-5.5 text-foreground';
-
 function Prose({
   tokens,
   caret,
   className,
+  headingLevel,
 }: {
   tokens: Token[] | undefined;
   caret: boolean;
   className?: string;
+  headingLevel?: number;
 }): React.JSX.Element {
   const variant = useContext(MarkdownVariant);
   return (
     <Text
+      role={headingLevel === undefined ? undefined : 'heading'}
+      aria-level={headingLevel === undefined ? undefined : String(headingLevel)}
       className={cn(
-        proseClassName,
-        variant === 'proposal' && 'leading-5',
+        'type-body',
+        variant !== 'proposal' &&
+          headingLevel === undefined &&
+          'wide:leading-5.5',
         className,
+        variant === 'summary' && 'text-muted-foreground',
       )}
     >
-      <InlineTokens
-        tokens={tokens}
-        codeClassName={
-          variant === 'proposal'
-            ? proposalInlineCodeClassName
-            : inlineCodeClassName
-        }
-      />
+      <InlineTokens tokens={tokens} codeClassName={inlineCodeClassName} />
       {caret && <Caret />}
     </Text>
   );
@@ -158,10 +151,9 @@ function List({
           <View key={key} className="flex-row gap-2">
             <Text
               className={cn(
-                'w-4 shrink-0 font-sans text-sm',
-                variant === 'proposal'
-                  ? 'leading-5 text-foreground'
-                  : 'leading-5.5 text-muted-foreground',
+                'w-4 shrink-0 type-body',
+                variant !== 'proposal' &&
+                  'text-muted-foreground wide:leading-5.5',
               )}
             >
               {token.ordered ? `${start + index}.` : '•'}
@@ -180,11 +172,7 @@ function List({
 }
 
 function Table({ token }: { token: Tokens.Table }): React.JSX.Element {
-  const variant = useContext(MarkdownVariant);
-  const cellCodeClassName = cn(
-    'font-mono leading-5 text-foreground',
-    variant === 'proposal' ? 'text-sm' : 'text-xs',
-  );
+  const cellCodeClassName = 'font-mono text-xs leading-4 text-foreground';
   return (
     <View className="overflow-hidden rounded-xl border border-border">
       <ScrollView
@@ -197,14 +185,10 @@ function Table({ token }: { token: Tokens.Table }): React.JSX.Element {
             {withOccurrenceKeys(token.header, (cell) => cell.text).map(
               ({ item: cell, key }, column) => (
                 <View key={key} className={cellClassName(column)}>
-                  <Text className="font-sans text-sm leading-5 font-semibold text-foreground">
+                  <Text className="type-heading">
                     <InlineTokens
                       tokens={cell.tokens}
-                      codeClassName={
-                        variant === 'proposal'
-                          ? proposalInlineCodeClassName
-                          : inlineCodeClassName
-                      }
+                      codeClassName={inlineCodeClassName}
                     />
                   </Text>
                 </View>
@@ -224,7 +208,7 @@ function Table({ token }: { token: Tokens.Table }): React.JSX.Element {
               {withOccurrenceKeys(row, (cell) => cell.text).map(
                 ({ item: cell, key }, column) => (
                   <View key={key} className={cellClassName(column)}>
-                    <Text className="font-sans text-sm leading-5 text-foreground">
+                    <Text className="type-body">
                       <InlineTokens
                         tokens={cell.tokens}
                         codeClassName={cellCodeClassName}
@@ -255,18 +239,14 @@ function Block({
   token: Token;
   caret: boolean;
 }): React.JSX.Element | null {
-  const variant = useContext(MarkdownVariant);
   switch (token.type) {
     case 'heading':
       return (
         <Prose
           tokens={token.tokens}
           caret={caret}
-          className={
-            variant === 'proposal'
-              ? 'font-semibold'
-              : 'pt-1 text-base leading-6 font-semibold'
-          }
+          headingLevel={token.depth}
+          className={token.depth === 1 ? 'type-title' : 'type-heading'}
         />
       );
     case 'paragraph':
@@ -278,11 +258,7 @@ function Block({
     case 'code':
       return (
         <View className="gap-2.5">
-          <FeedCodeBlock
-            code={token.text}
-            language={token.lang || undefined}
-            textClassName={variant === 'proposal' ? 'text-sm' : undefined}
-          />
+          <FeedCodeBlock code={token.text} language={token.lang || undefined} />
           {caret && <Caret />}
         </View>
       );
