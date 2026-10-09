@@ -11,6 +11,16 @@
             "timeout": 30
           }
         ]
+      },
+      {
+        "matcher": "mcp__paper__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/tools/agent-hooks.mts\" after-paper-edit",
+            "timeout": 30
+          }
+        ]
       }
     ],
     "Stop": [
