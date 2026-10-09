@@ -36,6 +36,7 @@ const fifthMessageRowId = 'message-5#0';
 const sessionFeedId = 'session:session-1';
 const recoveredRowId = 'recovered-row';
 const lastRowId = 'last-row';
+const teardownRowId = 'teardown-row';
 
 let database: Database;
 let runtimeDirectory: string;
@@ -146,18 +147,6 @@ beforeEach((): void => {
 afterEach(async (): Promise<void> => {
   controller.abort();
   database.$client.exec('DROP TRIGGER IF EXISTS hold_feed_writes');
-  if (feedTestHost) {
-    feedTestHost.sessionRegistry.send({ type: 'sessions.stopAll' });
-    await waitFor(
-      feedTestHost.sessionRegistry,
-      (snapshot): boolean => snapshot.status === 'done',
-    );
-    feedTestHost.databaseWriter.send({ type: 'writer.drain' });
-    await waitFor(
-      feedTestHost.databaseWriter,
-      (snapshot): boolean => snapshot.status === 'done',
-    );
-  }
   vi.useRealTimers();
 });
 
@@ -724,3 +713,35 @@ async function drainClosedFeed(
     clearTimeout(timer);
   }
 }
+
+it('persists the final buffered Feed row during real router host teardown', async (): Promise<void> => {
+  let stream: MockAgentStream | undefined;
+  onTestFinished(async (): Promise<void> => {
+    expect(
+      await feedTestHost.caller.feed.row({
+        sessionId: 'session-1',
+        id: teardownRowId,
+      }),
+    ).toMatchObject({
+      id: teardownRowId,
+      state: 'open',
+      content: [{ type: 'text', text: 'Before shutdown' }],
+    });
+  });
+  await startFeedTestHost({
+    stream: (nativeStream): undefined => {
+      stream = nativeStream;
+    },
+  });
+  if (!stream) throw new Error('The Agent has no stream');
+  stream.send({
+    type: agentFeedEvent,
+    change: createOpenMessageChange(teardownRowId, 'Before shutdown'),
+  });
+  expect(
+    await feedTestHost.caller.feed.row({
+      sessionId: 'session-1',
+      id: teardownRowId,
+    }),
+  ).toMatchObject({ state: 'open' });
+});

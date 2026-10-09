@@ -15,7 +15,7 @@ import {
 } from '@repo/mocks/agent';
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import { terminalPaths } from '@repo/vitest/model-paths';
-import { afterAll, afterEach, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, expect, it, onTestFinished, vi } from 'vitest';
 import {
   createActor,
   type ActorRefFromLogic,
@@ -71,25 +71,6 @@ afterEach(async (): Promise<void> => {
 // The model paths share one database, removed after the last test.
 afterAll((): void => remove());
 
-async function stopSessionHost({
-  databaseWriter,
-  sessionRegistry,
-}: Pick<
-  ReturnType<typeof createSessionHost>,
-  'databaseWriter' | 'sessionRegistry'
->): Promise<void> {
-  sessionRegistry.send({ type: 'sessions.stopAll' });
-  await waitFor(
-    sessionRegistry,
-    (snapshot): boolean => snapshot.status === 'done',
-  );
-  databaseWriter.send({ type: 'writer.drain' });
-  await waitFor(
-    databaseWriter,
-    (snapshot): boolean => snapshot.status === 'done',
-  );
-}
-
 async function subscribeToSession(context: Context): Promise<{
   updates: AsyncIterator<FeedSubscribeOutput, void>;
   controller: AbortController;
@@ -115,7 +96,7 @@ async function openSession(overrides: Partial<MockAgentScript> = {}): Promise<{
   currentStream: () => MockAgentStream;
 }> {
   const { database, remove } = openTestDatabase();
-  cleanups.push(remove);
+  onTestFinished(remove);
   const commands: AgentCommand[] = [];
   let stream: MockAgentStream | undefined;
   const adapter = createMockAdapter({
@@ -125,17 +106,14 @@ async function openSession(overrides: Partial<MockAgentScript> = {}): Promise<{
     },
     ...overrides,
   });
-  const {
-    sessionRegistry,
-    databaseWriter,
-    session,
-    caller,
-    context,
-    findFeed,
-  } = createSessionHost(database, adapter);
-  cleanups.push((): Promise<void> =>
-    stopSessionHost({ databaseWriter, sessionRegistry }),
+  const { session, caller, context, findFeed } = createSessionHost(
+    database,
+    adapter,
   );
+  cleanups.push(async (): Promise<void> => {
+    session.send({ type: sessionCloseEvent });
+    await waitFor(session, (snapshot): boolean => snapshot.status === 'done');
+  });
   await waitFor(session, (snapshot): boolean => snapshot.can(firstPrompt));
   const feed = findFeed();
   if (!feed || !stream) throw new Error('Session not ready');
@@ -1237,19 +1215,21 @@ it.each([...callbackFailureStates.values()])(
 it('attaches live Feed updates when a subscription starts while the Session loads', async (): Promise<void> => {
   vi.useFakeTimers();
   const { database, remove } = openTestDatabase();
-  cleanups.push(remove);
+  onTestFinished(remove);
   const adapter = createMockAdapter({
     stream: (): undefined => {},
   });
-  const {
-    sessionRegistry,
-    databaseWriter,
-    session: sessionActor,
-    context,
-  } = createSessionHost(database, adapter);
-  cleanups.push((): Promise<void> =>
-    stopSessionHost({ databaseWriter, sessionRegistry }),
+  const { session: sessionActor, context } = createSessionHost(
+    database,
+    adapter,
   );
+  cleanups.push(async (): Promise<void> => {
+    sessionActor.send({ type: sessionCloseEvent });
+    await waitFor(
+      sessionActor,
+      (snapshot): boolean => snapshot.status === 'done',
+    );
+  });
   const { updates } = await subscribeToSession(context);
   expect((await updates.next()).value).toMatchObject({
     type: 'snapshot',

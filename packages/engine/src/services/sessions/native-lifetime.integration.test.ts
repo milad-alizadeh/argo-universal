@@ -16,13 +16,14 @@ import {
   type MockAgentStreamEvent,
   mockReady,
 } from '@repo/mocks/agent';
-import { expect, it, onTestFinished, vi } from 'vitest';
+import { afterEach, expect, it, onTestFinished, vi } from 'vitest';
 import { waitFor } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
 import { messageChange } from '#mocks/feed';
 import { initTestRepository } from '#mocks/git';
 import { startRouterTestHost } from '#mocks/router';
 import { createSessionHost, firstPrompt } from '#mocks/session';
+import { appRouter } from '../../engine/router';
 import { toSessionSnapshot } from './session-snapshot';
 
 const nativeCrash = 'Native instance crashed';
@@ -39,16 +40,14 @@ const closeEvent = 'session.close';
 const setConfigCommand = 'agent.setConfigOption';
 const promptCommand = 'agent.prompt';
 
+afterEach((): void => vi.useRealTimers());
+
 function createNativeSessionHost(
   adapter: AgentAdapter,
 ): ReturnType<typeof createSessionHost> {
   const { database, remove } = openTestDatabase({ agent: adapter.agent });
-  const host = createSessionHost(database, adapter);
-  onTestFinished((): void => {
-    host.root.stop();
-    remove();
-  });
-  return host;
+  onTestFinished(remove);
+  return createSessionHost(database, adapter);
 }
 async function startSession(
   adapter: AgentAdapter,
@@ -94,22 +93,23 @@ it.each(agentAdapters.map((adapter): string => adapter.agent))(
       state: 'running',
       activeTurnId: expect.any(String),
     });
-    expect(host.service.row({ sessionId: sessionId, id: 'reply' }).turnId).toBe(
-      snapshot.activeTurnId,
-    );
+    expect(
+      (await host.caller.feed.row({ sessionId: sessionId, id: 'reply' }))
+        .turnId,
+    ).toBe(snapshot.activeTurnId);
     expect(commands).toEqual([]);
     host.session.send({ type: closeEvent });
     await waitFor(
       host.session,
       (current): boolean => current.status === 'done',
     );
-    const writer = host.root.getSnapshot().children.databaseWriter;
-    if (!writer) throw new Error('The Session has no Writer');
+    const writer = host.databaseWriter;
     writer.send({ type: 'writer.drain' });
     await waitFor(writer, (current): boolean => current.status === 'done');
-    expect(host.service.row({ sessionId: sessionId, id: 'reply' }).turnId).toBe(
-      snapshot.activeTurnId,
-    );
+    expect(
+      (await host.caller.feed.row({ sessionId: sessionId, id: 'reply' }))
+        .turnId,
+    ).toBe(snapshot.activeTurnId);
   },
 );
 
@@ -140,9 +140,6 @@ it.each(agentAdapters.map((adapter): string => adapter.agent))(
   'waits for a retired native stop when closing the recovered Session for Agent %s',
   async (agent): Promise<void> => {
     vi.useFakeTimers();
-    onTestFinished((): void => {
-      vi.useRealTimers();
-    });
     const retiredStop = Promise.withResolvers<void>();
     let stream: MockAgentStream | undefined;
     let stopCalls = 0;
@@ -175,9 +172,6 @@ it.each(agentAdapters.map((adapter): string => adapter.agent))(
 
 it('waits for native stop before publishing the final Feed batch', async (): Promise<void> => {
   vi.useFakeTimers();
-  onTestFinished((): void => {
-    vi.useRealTimers();
-  });
   const stopped = Promise.withResolvers<void>();
   let stream: MockAgentStream | undefined;
   const host = await startSession(
@@ -190,9 +184,11 @@ it('waits for native stop before publishing the final Feed batch', async (): Pro
   );
   const subscriber = new AbortController();
   onTestFinished((): void => subscriber.abort());
-  const updates = host.service
-    .subscribe({ sessionId, after: null }, subscriber.signal)
-    [Symbol.asyncIterator]();
+  const updates = (
+    await appRouter
+      .createCaller(host.context, { signal: subscriber.signal })
+      .feed.subscribe({ sessionId, after: null })
+  )[Symbol.asyncIterator]();
   await updates.next();
   if (!stream) throw new Error(missingStream);
   stream.send({ type: feedEvent, change: messageChange('open') });
@@ -212,9 +208,6 @@ it('waits for native stop before publishing the final Feed batch', async (): Pro
 
 it('keeps the original native close deadline when close repeats', async (): Promise<void> => {
   vi.useFakeTimers();
-  onTestFinished((): void => {
-    vi.useRealTimers();
-  });
   const host = await startSession(
     createMockAdapter({
       stop: (): Promise<void> => new Promise((): void => {}),
@@ -253,9 +246,6 @@ it('finishes shutdown when native stop rejects without restarting', async (): Pr
 
 it('retries timed-out startup after the existing one-second recovery delay', async (): Promise<void> => {
   vi.useFakeTimers();
-  onTestFinished((): void => {
-    vi.useRealTimers();
-  });
   let connects = 0;
   const began = Promise.withResolvers<void>();
   const host = createNativeSessionHost(
@@ -276,9 +266,6 @@ it('retries timed-out startup after the existing one-second recovery delay', asy
 
 it('closes a native instance once when startup resolves after the close deadline', async (): Promise<void> => {
   vi.useFakeTimers();
-  onTestFinished((): void => {
-    vi.useRealTimers();
-  });
   const ready = Promise.withResolvers<typeof mockReady>();
   const began = Promise.withResolvers<void>();
   let signal: AbortSignal | undefined;
@@ -304,16 +291,18 @@ it('closes a native instance once when startup resolves after the close deadline
   await vi.advanceTimersByTimeAsync(0);
   expect(stopCalls).toBe(1);
   expect(
-    host.service.page({ sessionId: sessionId, direction: 'tail', limit: 40 })
-      .rows,
+    (
+      await host.caller.feed.page({
+        sessionId: sessionId,
+        direction: 'tail',
+        limit: 40,
+      })
+    ).rows,
   ).toEqual([]);
 });
 
 it('ignores callbacks from the retired native instance after recovery', async (): Promise<void> => {
   vi.useFakeTimers();
-  onTestFinished((): void => {
-    vi.useRealTimers();
-  });
   const streams: MockAgentStream[] = [];
   const host = await startSession(
     createMockAdapter({
@@ -332,9 +321,9 @@ it('ignores callbacks from the retired native instance after recovery', async ()
     state: 'idle',
     activeTurnId: null,
   });
-  expect((): unknown =>
-    host.service.row({ sessionId: sessionId, id: 'reply' }),
-  ).toThrow('No row reply');
+  await expect(
+    host.caller.feed.row({ sessionId: sessionId, id: 'reply' }),
+  ).rejects.toThrow('No row reply');
 });
 
 it('admits early events only after readiness', async (): Promise<void> => {
@@ -350,9 +339,9 @@ it('admits early events only after readiness', async (): Promise<void> => {
     }),
   );
   expect(publicSnapshot(host).state).toBe('running');
-  expect(host.service.row({ sessionId: sessionId, id: 'reply' }).turnId).toBe(
-    publicSnapshot(host).activeTurnId,
-  );
+  expect(
+    (await host.caller.feed.row({ sessionId: sessionId, id: 'reply' })).turnId,
+  ).toBe(publicSnapshot(host).activeTurnId);
 });
 
 it('rejects invalid usage before changing the public Session snapshot', async (): Promise<void> => {
@@ -381,9 +370,6 @@ it.each(agentAdapters.map((adapter): string => adapter.agent))(
   'cancels a pending prompt after its prior configuration completes for Agent %s',
   async (agent): Promise<void> => {
     vi.useFakeTimers();
-    onTestFinished((): void => {
-      vi.useRealTimers();
-    });
     const configured = Promise.withResolvers<void>();
     const prompted = Promise.withResolvers<void>();
     const commands: VendorCommand[] = [];
@@ -433,9 +419,6 @@ it.each(
   'answers $requestKind while the native prompt is pending for Agent $agent',
   async ({ agent, requestKind }): Promise<void> => {
     vi.useFakeTimers();
-    onTestFinished((): void => {
-      vi.useRealTimers();
-    });
     const responded = Promise.withResolvers<void>();
     const commands: VendorCommand[] = [];
     const host = await startSession({
@@ -528,9 +511,6 @@ it('waits for native cleanup after a real Feed failure', async (): Promise<void>
 
 it('rejects malformed native readiness before admitting a prompt', async (): Promise<void> => {
   vi.useFakeTimers();
-  onTestFinished((): void => {
-    vi.useRealTimers();
-  });
   const connected = Promise.withResolvers<void>();
   const commands: VendorCommand[] = [];
   let stopCalls = 0;
@@ -580,9 +560,9 @@ it('reports a mapping rejection then continues from the last accepted mapping st
   stream.send({ type: usageEvent, usage: { used: 1, size: 2 } });
   stream.send({ type: feedEvent, change: messageChange('settled') });
   expect(observed).toEqual([0, 1, 1]);
-  expect(host.service.row({ sessionId: sessionId, id: 'reply' })).toMatchObject(
-    { sessionUpdate: 'agent_message' },
-  );
+  expect(
+    await host.caller.feed.row({ sessionId: sessionId, id: 'reply' }),
+  ).toMatchObject({ sessionUpdate: 'agent_message' });
   expect(log).toHaveBeenCalledWith(
     'session session-1: rejected an Agent message: Unrecognised native response',
   );
@@ -590,9 +570,6 @@ it('reports a mapping rejection then continues from the last accepted mapping st
 
 it('keeps a starting Session owned until native cleanup completes during collective shutdown', async (): Promise<void> => {
   vi.useFakeTimers();
-  onTestFinished((): void => {
-    vi.useRealTimers();
-  });
   const ready = Promise.withResolvers<typeof mockReady>();
   const began = Promise.withResolvers<void>();
   let stopCalls = 0;
@@ -679,9 +656,6 @@ it('stops the new native instance before discarding a failed Session Checkout', 
 
 it('handles callback initialization failure without launching the native Agent', async (): Promise<void> => {
   vi.useFakeTimers();
-  onTestFinished((): void => {
-    vi.useRealTimers();
-  });
   let connects = 0;
   const host = createNativeSessionHost({
     ...createMockAdapter(),
