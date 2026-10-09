@@ -69,8 +69,7 @@ export function hydrateStoredFeedRow(
     throw new Error(
       `row ${row.id} has payload version ${row.payloadVersion}, not ${payloadVersion}`,
     );
-  if (row.sourceRef !== null && row.sourceRef !== undefined)
-    JSON.parse(String(row.sourceRef));
+  JSON.parse(String(row.sourceRef ?? null));
   const envelope = {
     id: row.id,
     sessionId,
