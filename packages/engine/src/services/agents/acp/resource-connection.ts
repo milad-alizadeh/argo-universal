@@ -4,7 +4,7 @@ import type {
 } from '@agentclientprotocol/sdk';
 import { createRejectionCounter } from '../../../lib/count-rejections';
 import { createAgentClient } from './client';
-import { openProtocolSession, sessionCapabilities } from './open-session';
+import { openProtocolSession, readSessionCapabilities } from './open-session';
 import { launchAcpProcess } from './process';
 import type {
   AcpProcess,
@@ -13,7 +13,10 @@ import type {
   AcpSessionOpening,
   AgentLaunch,
 } from './resource-types';
-import { permissionResponder, elicitationResponder } from './responders';
+import {
+  createPermissionResponder,
+  createElicitationResponder,
+} from './responders';
 import { createAcpResponseReaders } from './response-readers';
 import { AcpResponseWrites } from './response-writes';
 import type { AcpRouting } from './routing';
@@ -22,10 +25,14 @@ type Ready = {
   connection: ClientConnection;
   initialization: InitializeResponse;
 };
+type SessionQuestionResponders = Pick<
+  Parameters<typeof createAgentClient>[0],
+  'requestPermission' | 'createElicitation'
+>;
 export class AcpResourceConnection {
-  private failed: ((error: unknown) => void) | undefined;
+  private onResourceFailure: ((error: unknown) => void) | undefined;
   private readonly writes = new AcpResponseWrites((error) =>
-    this.failed?.(error),
+    this.onResourceFailure?.(error),
   );
   private readonly readers = createAcpResponseReaders(
     createRejectionCounter('ACP responses'),
@@ -46,14 +53,25 @@ export class AcpResourceConnection {
   private async initialize(): Promise<Ready> {
     const process = await this.process;
     this.connection = createAgentClient({
-      stream: this.writes.stream(process.stream),
+      stream: this.writes.observeResponseWrites(process.stream),
       acceptSessionUpdate: this.routing.accept,
-      requestPermission: permissionResponder(this.routing.find, this.writes),
-      createElicitation: elicitationResponder(this.routing.find, this.writes),
+      ...this.createSessionQuestionResponders(),
     });
     return {
       connection: this.connection,
       initialization: await this.negotiate(this.connection),
+    };
+  }
+  private createSessionQuestionResponders(): SessionQuestionResponders {
+    return {
+      requestPermission: createPermissionResponder(
+        this.routing.findSessionReservation,
+        this.writes,
+      ),
+      createElicitation: createElicitationResponder(
+        this.routing.findSessionReservation,
+        this.writes,
+      ),
     };
   }
   private async negotiate(
@@ -64,24 +82,31 @@ export class AcpResourceConnection {
         protocolVersion: 1,
       }),
     );
-    const capabilities = sessionCapabilities(response);
+    const capabilities = readSessionCapabilities(response);
     if (!capabilities?.close)
       throw new Error('Agent cannot close independent ACP sessions');
     return response;
   }
-  public observe(failed: (error: unknown) => void): void {
-    this.failed = failed;
+  public observeResourceFailures(
+    onResourceFailure: (error: unknown) => void,
+  ): void {
+    this.onResourceFailure = onResourceFailure;
+    this.observeAcpConnectionClose(onResourceFailure);
+    void this.process
+      .then((process) => process.exited)
+      .then(() => onResourceFailure(new Error('ACP process exited')))
+      .catch(onResourceFailure);
+  }
+  private observeAcpConnectionClose(
+    onResourceFailure: (error: unknown) => void,
+  ): void {
     void this.startup
       .then(({ connection }) =>
         connection.closed.then(() =>
-          failed(new Error('ACP connection closed')),
+          onResourceFailure(new Error('ACP connection closed')),
         ),
       )
       .catch(() => {});
-    void this.process
-      .then((process) => process.exited)
-      .then(() => failed(new Error('ACP process exited')))
-      .catch(failed);
   }
   public async open(
     opening: AcpSessionOpening,
@@ -112,6 +137,6 @@ export class AcpResourceConnection {
     this.connection?.close();
     await process.terminate();
     await process.exited;
-    this.writes.afterExit();
+    this.writes.settlePendingWritesAfterProcessClose();
   }
 }
