@@ -16,7 +16,7 @@ import {
   type Feed,
   type FeedStreamEvent,
 } from './feed-change';
-import { promptBlobIds, toFeedRowWrite } from './feed-row';
+import { promptBlobIds } from './feed-row';
 import type { WriterJob } from './writer-job';
 import type { WriterEvent } from './writer-machine';
 import { findDatabaseWriter } from './writer-system';
@@ -77,7 +77,7 @@ const rowsJob = ({
     job: {
       type: 'feedRows',
       sessionId: context.sessionId,
-      rows: rows.map(toFeedRowWrite),
+      rows,
       maxRevision: context.maxRevision,
       activityAt: context.activityAt,
       blobIds: promptBlobIds(rows),

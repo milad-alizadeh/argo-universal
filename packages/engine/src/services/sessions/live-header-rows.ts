@@ -5,12 +5,7 @@ import { and, desc, eq, gt, isNull, ne, or, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/sqlite-core';
 import type { ActorRefFrom } from 'xstate';
 import { createRejectionCounter } from '../../lib/count-rejections';
-import {
-  decodeStoredFeedRow,
-  fromFeedRow,
-  newestRows,
-  storedFeedColumns,
-} from '../feed';
+import { hydrateStoredFeedRow, newestRows, storedFeedColumns } from '../feed';
 import { type FeedRowWrite, queuedFeedRows } from '../feed';
 import type { writerMachine } from '../feed';
 
@@ -36,29 +31,26 @@ export function createLiveHeaderRowsReader({
   }): ReturnType<LiveHeaderRowsReader> => {
     if (turnId === null) return { rows: {}, rejected: false };
     const stored = readStoredHeaderRows({ database, sessionId, turnId });
-    const storedRows = new Set(stored);
     const queued = queuedFeedRows(
       writer?.getSnapshot().context.queue ?? [],
       sessionId,
-    ).flatMap((job): FeedRowWrite[] =>
+    ).flatMap((job): SessionUpdate[] =>
       job.rows.filter((row): boolean => row.turnId === turnId),
     );
     let rejected = false;
     const parsed = [
       ...new Map(
-        [...stored, ...queued].map((row): [string, FeedRowWrite] => [
-          `${row.id}/${row.revision}`,
-          row,
-        ]),
+        [...stored, ...queued].map(
+          (row): [string, FeedRowWrite | SessionUpdate] => [
+            `${row.id}/${row.revision}`,
+            row,
+          ],
+        ),
       ).values(),
     ].flatMap((row): SessionUpdate[] => {
+      if (!('payloadVersion' in row)) return [row];
       try {
-        return [
-          fromFeedRow(
-            sessionId,
-            storedRows.has(row) ? decodeStoredFeedRow(row) : row,
-          ),
-        ];
+        return [hydrateStoredFeedRow(sessionId, row)];
       } catch (error) {
         rejected = true;
         rejections.report('rejected live-header shape', error);

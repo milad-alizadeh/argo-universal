@@ -20,12 +20,7 @@ import {
 } from 'drizzle-orm/sqlite-core';
 import type { ActorRefFrom } from 'xstate';
 import { createRejectionCounter } from '../../lib/count-rejections';
-import {
-  decodeStoredFeedRow,
-  fromFeedRow,
-  newestRows,
-  storedFeedColumns,
-} from '../feed';
+import { hydrateStoredFeedRow, newestRows, storedFeedColumns } from '../feed';
 import {
   applyQueuedSession,
   applyQueuedTurns,
@@ -411,19 +406,13 @@ function readSessionInformation(
           .limit(1)
           .all()
           .map((stored): SessionUpdate | undefined =>
-            validate((): SessionUpdate =>
-              fromFeedRow(row.id, decodeStoredFeedRow(stored)),
-            ),
+            validate((): SessionUpdate => hydrateStoredFeedRow(row.id, stored)),
           ),
     ),
     ...queuedFeedRows(
       writer?.getSnapshot().context.queue ?? [],
       row.id,
-    ).flatMap((job): (SessionUpdate | undefined)[] =>
-      job.rows.map((stored): SessionUpdate | undefined =>
-        validate((): SessionUpdate => fromFeedRow(row.id, stored)),
-      ),
-    ),
+    ).flatMap((job): SessionUpdate[] => job.rows),
     ...Object.values(feedContext?.rows ?? {}),
   ];
   const rejected = changes.includes(undefined);

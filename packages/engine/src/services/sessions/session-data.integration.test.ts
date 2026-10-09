@@ -6,11 +6,10 @@ import type { SessionNewInput } from '@repo/contracts';
 import { project, session } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
 import { afterEach, expect, it, vi } from 'vitest';
-import { createActor, fromPromise } from 'xstate';
+import { createActor, waitFor } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
 import { storedMessage } from '#mocks/feed';
 import { initTestRepository } from '#mocks/git';
-import { toFeedRowWrite } from '../feed';
 import { writeJobs } from '../feed';
 import { writerMachine } from '../feed';
 import {
@@ -182,21 +181,12 @@ it.each([
 it('reloads Feed positions and the vendor Session from writes still queued', async (): Promise<void> => {
   const { database, directory: runtimeDirectory, remove } = openTestDatabase();
   cleanups.push(remove);
-  const writer = createActor(
-    writerMachine.provide({
-      actors: {
-        writeBatch: fromPromise(
-          (): Promise<void> => new Promise((): void => {}),
-        ),
-      },
-    }),
-    {
-      input: {
-        now: (): number => Date.now(),
-        database,
-      },
-    },
-  ).start();
+  database.$client
+    .exec(`CREATE TRIGGER hold_session_write BEFORE UPDATE OF vendor_session_id ON session
+    BEGIN SELECT RAISE(ABORT, 'database is locked'); END`);
+  const writer = createActor(writerMachine, {
+    input: { now: (): number => Date.now(), database },
+  }).start();
   cleanups.push((): typeof writer => writer.stop());
   writer.send({
     type: 'writer.write',
@@ -212,9 +202,12 @@ it('reloads Feed positions and the vendor Session from writes still queued', asy
       type: 'feedRows',
       sessionId: 'session-1',
       maxRevision: 12,
-      rows: [toFeedRowWrite(storedMessage(4, 12))],
+      rows: [storedMessage(4, 12)],
     },
   });
+  await waitFor(writer, (snapshot): boolean =>
+    snapshot.matches('waitingToRetry'),
+  );
   expect(
     await loadSession(
       { database, runtimeDirectory, sessionId: 'session-1', kind: 'existing' },

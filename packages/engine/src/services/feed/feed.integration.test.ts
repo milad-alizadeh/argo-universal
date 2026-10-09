@@ -27,8 +27,7 @@ import { startRouterTestHost } from '#mocks/router';
 import { appRouter } from '../../engine/router';
 import { findSessionActor } from '../sessions';
 import type { FeedActorRef } from './feed-machine';
-import { toFeedRowWrite } from './feed-row';
-import { writeJobs, type FeedRowWrite } from './writer-job';
+import { writeJobs } from './writer-job';
 
 const upsertRowEvent = 'row.upsert';
 const agentFeedEvent = 'agent.feed';
@@ -37,6 +36,9 @@ const sessionFeedId = 'session:session-1';
 const recoveredRowId = 'recovered-row';
 const lastRowId = 'last-row';
 const teardownRowId = 'teardown-row';
+const fourthStoredUpsert = 'upsert message-4#0 @5';
+const dropFeedWriteTrigger = 'DROP TRIGGER hold_feed_writes';
+const queuedToolActivity = 'Reading files';
 
 let database: Database;
 let runtimeDirectory: string;
@@ -135,8 +137,8 @@ beforeEach((): void => {
     {
       type: 'feedRows',
       sessionId: 'session-1',
-      rows: [0, 1, 2, 3, 4].map((position): FeedRowWrite =>
-        toFeedRowWrite(message(position)),
+      rows: [0, 1, 2, 3, 4].map((position): ReturnType<typeof message> =>
+        message(position),
       ),
       maxRevision: 5,
     },
@@ -360,7 +362,7 @@ describe('feed.subscribe', (): void => {
     const updates = await subscribe({ epoch: 3, revision: 4 });
 
     expect(summarizeFeedChanges(await takeFeedChanges(updates, 2))).toEqual([
-      'upsert message-4#0 @5',
+      fourthStoredUpsert,
       'upsert message-5#0 @7',
     ]);
 
@@ -401,6 +403,102 @@ describe('feed.subscribe', (): void => {
     ]);
   });
 
+  it('reads a canonical queued row before its transaction retries', async (): Promise<void> => {
+    await startFeedTestHost();
+    database.$client
+      .exec(`CREATE TRIGGER hold_feed_writes BEFORE INSERT ON feed_row
+      BEGIN SELECT RAISE(ABORT, 'database is locked'); END`);
+    feedTestHost.databaseWriter.send({
+      type: 'writer.write',
+      job: {
+        type: 'feedRows',
+        sessionId: 'session-1',
+        rows: [message(5, 6)],
+        maxRevision: 6,
+      },
+    });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(
+      await createFeedRouterCaller().feed.row({
+        sessionId: 'session-1',
+        id: fifthMessageRowId,
+      }),
+    ).toEqual(message(5, 6));
+    database.$client.exec(dropFeedWriteTrigger);
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(
+      await createFeedRouterCaller().feed.page({
+        sessionId: 'session-1',
+        direction: 'tail',
+        limit: 1,
+      }),
+    ).toMatchObject({ rows: [message(5, 6)], maxRevision: 6 });
+  });
+
+  it('reconnects across stored, queued and live revisions before retry commits', async (): Promise<void> => {
+    await startFeedTestHost();
+    database.$client
+      .exec(`CREATE TRIGGER hold_feed_writes BEFORE INSERT ON feed_row
+      BEGIN SELECT RAISE(ABORT, 'database is locked'); END`);
+    sendChange(createOpenMessageChange(fifthMessageRowId, 'Queued'));
+    sendChange({
+      type: 'patch',
+      id: fifthMessageRowId,
+      set: { state: 'settled' },
+    });
+    await vi.advanceTimersByTimeAsync(0);
+    const updates = await subscribe({ epoch: 3, revision: 4 });
+    expect(summarizeFeedChanges(await takeFeedChanges(updates, 2))).toEqual([
+      fourthStoredUpsert,
+      'upsert message-5#0 @7',
+    ]);
+    sendChange({
+      type: 'patch',
+      id: fifthMessageRowId,
+      set: { content: [{ type: 'text', text: 'Newest' }] },
+    });
+    await vi.advanceTimersByTimeAsync(60);
+    expect(await takeFeedChanges(updates, 1)).toEqual([
+      {
+        type: 'row.patch',
+        id: fifthMessageRowId,
+        rev: 8,
+        set: { content: [{ type: 'text', text: 'Newest' }] },
+      },
+    ]);
+    const reconnected = await subscribe({ epoch: 3, revision: 5 });
+    expect(await takeFeedChanges(reconnected, 1)).toEqual([
+      {
+        type: 'row.upsert',
+        rev: 8,
+        row: expect.objectContaining({
+          id: fifthMessageRowId,
+          position: 5,
+          content: [{ type: 'text', text: 'Newest' }],
+        }),
+      },
+    ]);
+    database.$client.exec(dropFeedWriteTrigger);
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(
+      await createFeedRouterCaller().feed.page({
+        sessionId: 'session-1',
+        direction: 'tail',
+        limit: 1,
+      }),
+    ).toMatchObject({
+      maxRevision: 8,
+      rows: [
+        {
+          id: fifthMessageRowId,
+          position: 5,
+          revision: 8,
+          content: [{ type: 'text', text: 'Newest' }],
+        },
+      ],
+    });
+  });
+
   it('resets a subscriber from another epoch, then sends the rows not yet stored', async (): Promise<void> => {
     await startFeedTestHost();
     sendChange(createOpenMessageChange(fifthMessageRowId));
@@ -428,7 +526,7 @@ describe('feed.subscribe', (): void => {
 
     expect(summarizeFeedChanges(await takeFeedChanges(updates, 2))).toEqual([
       'upsert message-3#0 @4',
-      'upsert message-4#0 @5',
+      fourthStoredUpsert,
     ]);
     expect((await updates.next()).value).toMatchObject({
       type: 'snapshot',
@@ -745,3 +843,56 @@ it('persists the final buffered Feed row during real router host teardown', asyn
     }),
   ).toMatchObject({ state: 'open' });
 });
+
+it.each(agentAdapters.map((adapter): string => adapter.agent))(
+  'keeps %s queued Tool-call headers visible before persistence',
+  async (agent): Promise<void> => {
+    let stream: MockAgentStream | undefined;
+    await startFeedTestHost(
+      {
+        stream: (current): undefined => {
+          stream = current;
+        },
+      },
+      agent,
+    );
+    if (!stream) throw new Error('No Agent stream');
+    database.$client
+      .exec(`CREATE TRIGGER hold_feed_writes BEFORE INSERT ON feed_row
+      BEGIN SELECT RAISE(ABORT, 'database is locked'); END`);
+    stream.send({ type: 'agent.turnStarted' });
+    stream.send({
+      type: 'agent.feed',
+      change: {
+        type: 'upsert',
+        update: {
+          id: 'queued-tool',
+          sessionUpdate: 'tool_call_update',
+          state: 'settled',
+          toolCallId: 'queued-tool',
+          title: 'Read queued file',
+          kind: 'read',
+          status: 'in_progress',
+          content: [],
+        },
+      },
+    });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(
+      (await createFeedRouterCaller().session.list({ archived: false }))
+        .sessions,
+    ).toMatchObject([{ sessionId: 'session-1', activity: queuedToolActivity }]);
+    const updates = await subscribe({ epoch: 3, revision: 5 });
+    await takeFeedChanges(updates, 1);
+    expect((await updates.next()).value).toMatchObject({
+      type: 'snapshot',
+      snapshot: { state: 'running', liveHeader: { text: queuedToolActivity } },
+    });
+    database.$client.exec(dropFeedWriteTrigger);
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(
+      (await createFeedRouterCaller().session.list({ archived: false }))
+        .sessions,
+    ).toMatchObject([{ sessionId: 'session-1', activity: queuedToolActivity }]);
+  },
+);

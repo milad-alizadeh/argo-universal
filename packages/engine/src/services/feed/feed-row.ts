@@ -4,12 +4,13 @@ import { feedRow } from '@repo/db/schema';
 import { and, eq, getTableColumns, sql } from 'drizzle-orm';
 import type { ActorRefFrom } from 'xstate';
 import { z } from 'zod';
-import {
-  type FeedRowsJob,
-  type FeedRowWrite,
-  queuedFeedRows,
-} from './writer-job';
+import type { WriterJob } from './writer-job';
 import type { writerMachine } from './writer-machine';
+
+export type FeedRowWrite = Omit<
+  typeof feedRow.$inferInsert,
+  'sessionId' | 'createdAt' | 'updatedAt'
+>;
 
 type WriterRef = ActorRefFrom<typeof writerMachine>;
 
@@ -18,15 +19,6 @@ export const storedFeedColumns = {
   payload: sql<unknown>`${feedRow.payload}`,
   sourceRef: sql<unknown>`${feedRow.sourceRef}`,
 };
-
-export function decodeStoredFeedRow<Row extends FeedRowWrite>(row: Row): Row {
-  return {
-    ...row,
-    payload: JSON.parse(String(row.payload)),
-    sourceRef:
-      row.sourceRef === null ? null : JSON.parse(String(row.sourceRef)),
-  };
-}
 
 // The shape version of `payload` in the rows this Server writes.
 export const payloadVersion = 1;
@@ -69,7 +61,7 @@ export function toFeedRowWrite(row: SessionUpdate): FeedRowWrite {
 }
 
 // A stored row as a Session update, checked against its kind; a row from another payload version, or with envelope fields in its payload, fails.
-export function fromFeedRow(
+export function hydrateStoredFeedRow(
   sessionId: string,
   row: FeedRowWrite,
 ): SessionUpdate {
@@ -77,6 +69,7 @@ export function fromFeedRow(
     throw new Error(
       `row ${row.id} has payload version ${row.payloadVersion}, not ${payloadVersion}`,
     );
+  JSON.parse(String(row.sourceRef ?? null));
   const envelope = {
     id: row.id,
     sessionId,
@@ -86,7 +79,9 @@ export function fromFeedRow(
     state: row.state,
     sessionUpdate: row.sessionUpdate,
   };
-  const payload = z.record(z.string(), z.unknown()).parse(row.payload);
+  const payload = z
+    .record(z.string(), z.unknown())
+    .parse(JSON.parse(String(row.payload)));
   const clash = Object.keys(payload).find((key): boolean =>
     Object.hasOwn(envelope, key),
   );
@@ -96,13 +91,13 @@ export function fromFeedRow(
 
 // The newest version of a row in jobs that have not committed.
 export function findQueuedRow(
-  jobs: readonly FeedRowsJob[],
+  jobs: readonly WriterJob[],
   sessionId: string,
   id: string,
 ): SessionUpdate | undefined {
   return newestRows(
-    queuedFeedRows(jobs, sessionId).flatMap((job): SessionUpdate[] =>
-      job.rows.map((row): SessionUpdate => fromFeedRow(sessionId, row)),
+    jobs.flatMap((job): SessionUpdate[] =>
+      job.type === 'feedRows' && job.sessionId === sessionId ? job.rows : [],
     ),
   ).get(id);
 }
@@ -120,7 +115,7 @@ export function readWrittenRow({
   id: string;
 }): SessionUpdate | undefined {
   const queued = findQueuedRow(
-    queuedFeedRows(writer?.getSnapshot().context.queue ?? [], sessionId),
+    writer?.getSnapshot().context.queue ?? [],
     sessionId,
     id,
   );
@@ -130,7 +125,7 @@ export function readWrittenRow({
     .from(feedRow)
     .where(and(eq(feedRow.sessionId, sessionId), eq(feedRow.id, id)))
     .get();
-  return stored && fromFeedRow(sessionId, decodeStoredFeedRow(stored));
+  return stored && hydrateStoredFeedRow(sessionId, stored);
 }
 
 // Higher revision wins; a tie goes to the later input (stored, queued, then in memory).

@@ -17,7 +17,7 @@ import {
   session,
   turn,
 } from '@repo/db/schema';
-import { sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import {
   afterEach,
   beforeEach,
@@ -30,7 +30,7 @@ import {
 import { type ActorRefFrom, createActor, waitFor } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
 import { storedFeedColumns } from '../services/feed';
-import { type FeedRowWrite, writeJobs } from '../services/feed';
+import { type FeedRowWrite, type WriterJob, writeJobs } from '../services/feed';
 import type { EngineMessage } from './ipc';
 import { engineMachine } from './machine';
 import { recoverAfterRestart } from './recovery';
@@ -134,6 +134,29 @@ const messageRow = (
   sourceRef: { line: 7 },
 });
 
+const seedStoredFeedRows = (
+  database: Database,
+  input: Pick<
+    Extract<WriterJob, { type: 'feedRows' }>,
+    'sessionId' | 'maxRevision'
+  > & { rows: FeedRowWrite[] },
+): void => {
+  database
+    .insert(feedRow)
+    .values(
+      input.rows.map((row): typeof feedRow.$inferInsert => ({
+        ...row,
+        sessionId: input.sessionId,
+      })),
+    )
+    .run();
+  database
+    .update(session)
+    .set({ maxRevision: input.maxRevision })
+    .where(eq(session.id, input.sessionId))
+    .run();
+};
+
 const toolRow = ({
   id,
   position,
@@ -222,65 +245,63 @@ describe('Engine restart recovery', (): void => {
           endedAt: 10,
         },
       },
-      {
-        type: 'feedRows',
-        sessionId: 'session-1',
-        maxRevision: 20,
-        rows: [
-          messageRow('message', 0, 2),
-          toolRow({
-            id: 'pending-tool',
-            position: 1,
-            revision: 4,
-            status: 'pending',
-          }),
-          toolRow({
-            id: 'running-tool',
-            position: 2,
-            revision: 6,
-            status: 'in_progress',
-          }),
-          toolRow({
-            id: completedToolId,
-            position: 3,
-            revision: 8,
-            status: 'completed',
-          }),
-          toolRow({
-            id: 'failed-tool',
-            position: 4,
-            revision: 10,
-            status: 'failed',
-          }),
-          toolRow({
-            id: cancelledToolId,
-            position: 5,
-            revision: 12,
-            status: 'cancelled',
-          }),
-          toolRow({
-            id: 'settled-pending-tool',
-            position: 6,
-            revision: 14,
-            status: 'pending',
-            state: 'settled',
-          }),
-          toolRow({
-            id: 'settled-completed-tool',
-            position: 7,
-            revision: 16,
-            status: 'completed',
-            state: 'settled',
-          }),
-        ],
-      },
-      {
-        type: 'feedRows',
-        sessionId: 'session-2',
-        maxRevision: 5,
-        rows: [messageRow('message', 0, 1)],
-      },
     ]);
+    seedStoredFeedRows(database, {
+      sessionId: 'session-1',
+      maxRevision: 20,
+      rows: [
+        messageRow('message', 0, 2),
+        toolRow({
+          id: 'pending-tool',
+          position: 1,
+          revision: 4,
+          status: 'pending',
+        }),
+        toolRow({
+          id: 'running-tool',
+          position: 2,
+          revision: 6,
+          status: 'in_progress',
+        }),
+        toolRow({
+          id: completedToolId,
+          position: 3,
+          revision: 8,
+          status: 'completed',
+        }),
+        toolRow({
+          id: 'failed-tool',
+          position: 4,
+          revision: 10,
+          status: 'failed',
+        }),
+        toolRow({
+          id: cancelledToolId,
+          position: 5,
+          revision: 12,
+          status: 'cancelled',
+        }),
+        toolRow({
+          id: 'settled-pending-tool',
+          position: 6,
+          revision: 14,
+          status: 'pending',
+          state: 'settled',
+        }),
+        toolRow({
+          id: 'settled-completed-tool',
+          position: 7,
+          revision: 16,
+          status: 'completed',
+          state: 'settled',
+        }),
+      ],
+    });
+    seedStoredFeedRows(database, {
+      sessionId: 'session-2',
+      maxRevision: 5,
+      rows: [messageRow('message', 0, 1)],
+    });
     const unchangedTurn = readRows(database).turns[0];
     const unchangedRow = readRows(database).rows[7];
     const interruptedAt = Date.now();
@@ -413,21 +434,19 @@ describe('Engine restart recovery', (): void => {
         type: 'turnInsert',
         turn: { id: runningTurnId, sessionId: 'session-1', status: 'running' },
       },
-      {
-        type: 'feedRows',
-        sessionId: 'session-1',
-        maxRevision: 9,
-        rows: [
-          toolRow({ id: 'tool', position: 0, revision: 9, status: 'pending' }),
-        ],
-      },
-      {
-        type: 'feedRows',
-        sessionId: 'session-2',
-        maxRevision: 4,
-        rows: [messageRow('message', 0, 4)],
-      },
     ]);
+    seedStoredFeedRows(database, {
+      sessionId: 'session-1',
+      maxRevision: 9,
+      rows: [
+        toolRow({ id: 'tool', position: 0, revision: 9, status: 'pending' }),
+      ],
+    });
+    seedStoredFeedRows(database, {
+      sessionId: 'session-2',
+      maxRevision: 4,
+      rows: [messageRow('message', 0, 4)],
+    });
     database.$client.exec(`
       CREATE TRIGGER reject_recovery BEFORE UPDATE OF max_revision ON session
       WHEN NEW.id = 'session-2' BEGIN SELECT RAISE(ABORT, 'repair rejected'); END;
@@ -454,36 +473,34 @@ describe('Engine restart recovery', (): void => {
         type: 'turnInsert',
         turn: { id: runningTurnId, sessionId: 'session-1', status: 'running' },
       },
-      {
-        type: 'feedRows',
-        sessionId: 'session-1',
-        maxRevision: 9,
-        rows: [
-          messageRow('valid-message', 0, 1),
-          {
-            ...messageRow(invalidMessageId, 1, 2),
-            payload: { messageId: invalidMessageId, content: 'not an array' },
-          },
-        ],
-      },
-      {
-        type: 'feedRows',
-        sessionId: 'session-2',
-        maxRevision: 4,
-        rows: [
-          {
-            ...toolRow({
-              id: 'future-payload',
-              position: 0,
-              revision: 4,
-              status: 'in_progress',
-              state: 'settled',
-            }),
-            payloadVersion: 2,
-          },
-        ],
-      },
     ]);
+    seedStoredFeedRows(database, {
+      sessionId: 'session-1',
+      maxRevision: 9,
+      rows: [
+        messageRow('valid-message', 0, 1),
+        {
+          ...messageRow(invalidMessageId, 1, 2),
+          payload: { messageId: invalidMessageId, content: 'not an array' },
+        },
+      ],
+    });
+    seedStoredFeedRows(database, {
+      sessionId: 'session-2',
+      maxRevision: 4,
+      rows: [
+        {
+          ...toolRow({
+            id: 'future-payload',
+            position: 0,
+            revision: 4,
+            status: 'in_progress',
+            state: 'settled',
+          }),
+          payloadVersion: 2,
+        },
+      ],
+    });
     const reported = vi
       .spyOn(console, 'error')
       .mockImplementation((): void => {});
