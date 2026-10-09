@@ -1,6 +1,5 @@
 import type { Database } from '@repo/db';
 import type { ActorRefFrom } from 'xstate';
-import { createBlobService } from './blob';
 import type { FeedActorRef } from './feed';
 import { createFeedService, findDatabaseWriter } from './feed';
 import type { writerMachine } from './feed';
@@ -12,7 +11,6 @@ import { findSessionActor } from './sessions';
 
 export function createServerServices(options: {
   database: Database;
-  blobsFolder: string;
   sessions: RegistryActorRef;
   createId?: () => string;
 }): Services {
@@ -23,7 +21,6 @@ export function createServerServices(options: {
   const findWriter = (): ActorRefFrom<typeof writerMachine> | undefined =>
     findDatabaseWriter(options.sessions.system);
   return {
-    blob: createBlobService(options),
     feed: createFeedService({
       database: options.database,
       readSession: createSessionReader(options.database),
