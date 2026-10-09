@@ -43,12 +43,14 @@ function assertSameFile(header: string | undefined, fileId: string): void {
     throw new Error(`Paper answered for file ${answered}, not ${fileId}.`);
 }
 
-// The one plain-text answer Paper gives, from tools such as finish_working_on_nodes.
+// The plain-text answers Paper gives: "OK" from tools such as finish_working_on_nodes, and get_jsx's markup.
 const PLAIN_ANSWERS = new Set(['OK']);
 const JSON_START = /^\s*[[{"]/;
+const JSX_START = /^\s*(?:\(\s*)?<[a-z]/;
 
 function plainAnswer(body: string): string {
   if (PLAIN_ANSWERS.has(body.trim())) return body.trim();
+  if (JSX_START.test(body)) return body;
   throw new Error(`Unrecognised plain-text answer: ${body.slice(0, 200)}`);
 }
 

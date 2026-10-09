@@ -47,7 +47,7 @@ Every section page (Session, Voice, Atlas, Setup, Issues, Settings) has the same
 
 The tools in `tools/paper-drift/` read the whole file through the Paper MCP. Only `paper:sync --apply`, `paper:rename --apply` and `paper:tokens --apply` write to Paper.
 
-- `pnpm -F @repo/tools paper:snapshot` reads every layer, its styles and the tokens into `.paper-drift/snapshot.json`. It reads styles in small, paced batches, because whole-file reads have made Paper Desktop quit, so it takes several minutes; run it again whenever the file has changed.
+- `pnpm -F @repo/tools paper:snapshot` reads every layer, its styles and the tokens into `.paper-drift/snapshot.json`; run it again whenever the file has changed. It reads styles in small, paced batches, because whole-file reads have made Paper Desktop quit, so a full read takes about 15 minutes. To keep runs short it reuses styles: each subtree of up to 500 layers (a card, a screen frame, or part of a bigger one) is fingerprinted from its `get_jsx` output and its layer ids, names, hidden flags and texts, and keeps the last snapshot's styles while its fingerprint is unchanged. Artboards, containers too big for one unit and every unit's root are read on each run. After a small edit a run takes a minute or two. `--full` reads every layer's styles, and so does a run with no earlier snapshot, an earlier snapshot without fingerprints, or changed tokens. `paper:sync` reuses styles the same way.
 - `pnpm -F @repo/tools paper:audit` checks the last snapshot and writes `.paper-drift/audit.md` and `audit.json`:
   - every copy against its master, apart from the allowed changes;
   - every variation against its base with its props applied;

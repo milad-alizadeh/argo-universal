@@ -28,6 +28,7 @@ import {
   auditReportPath,
   levelsPath,
   proposedRegistryPath,
+  readPreviousSnapshot,
   readSnapshot,
   registryPath,
   snapshotPath,
@@ -39,7 +40,7 @@ import {
 // The Argo design file in Paper.
 const fileId = '01M44G6AG3HPXGPPPMKS9S3H8J';
 const usage =
-  'Usage: node tools/paper-drift.mts snapshot | registry | audit | levels | sync "<master>"... [--apply | --offline] | rename <map.json> [--apply | --offline] | tokens [--apply | --offline]';
+  'Usage: node tools/paper-drift.mts snapshot [--full] | registry | audit | levels | sync "<master>"... [--apply | --offline] | rename <map.json> [--apply | --offline] | tokens [--apply | --offline]';
 
 function report(message: string): void {
   console.error(message);
@@ -56,8 +57,13 @@ async function withPaper(
   }
 }
 
-async function freshSnapshot(paper: PaperPort): Promise<Snapshot> {
-  const taken = await takeSnapshot({ paper, fileId, report });
+// Reuses the styles of units unchanged since the last snapshot, unless full.
+async function freshSnapshot(
+  paper: PaperPort,
+  { full }: { full: boolean } = { full: false },
+): Promise<Snapshot> {
+  const previous = full ? undefined : readPreviousSnapshot();
+  const taken = await takeSnapshot({ paper, fileId, report }, previous);
   writeLocal(snapshotPath, JSON.stringify(taken));
   console.log(
     `Snapshot: ${Object.keys(taken.layers).length} layers on ${taken.artboards.length} artboards → ${snapshotPath}`,
@@ -65,9 +71,9 @@ async function freshSnapshot(paper: PaperPort): Promise<Snapshot> {
   return taken;
 }
 
-async function snapshot(): Promise<void> {
+async function snapshot(args: string[]): Promise<void> {
   await withPaper(async (paper): Promise<void> => {
-    await freshSnapshot(paper);
+    await freshSnapshot(paper, { full: args.includes('--full') });
   });
 }
 

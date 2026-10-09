@@ -37,6 +37,8 @@ export const snapshotSchema = z.object({
   layers: z.record(z.string(), layerSchema),
   styles: z.record(z.string(), stylesSchema),
   tokens: z.record(z.string(), z.string()),
+  // Keyed by a style unit's root layer; lets the next snapshot reuse the unit's styles. Older snapshots have none.
+  fingerprints: z.record(z.string(), z.string()).optional(),
 });
 export type Snapshot = z.infer<typeof snapshotSchema>;
 

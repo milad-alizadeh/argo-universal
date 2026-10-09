@@ -83,3 +83,15 @@ export async function readText(
 ): Promise<string> {
   return (await readNodeInfo(paper, nodeId)).textContent ?? '';
 }
+
+// The layer and its descendants as JSX with inline styles; the JSX carries no layer ids.
+export async function readJsx(
+  paper: PaperPort,
+  nodeId: string,
+): Promise<string> {
+  const payload = await paper.call('get_jsx', {
+    nodeId,
+    format: 'inline-styles',
+  });
+  return z.string().parse(payload);
+}
