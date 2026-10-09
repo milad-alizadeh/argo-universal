@@ -1,9 +1,9 @@
+import type { SessionSnapshot, SessionUpdate } from '@repo/contracts';
 import {
   type FeedMock,
   newSessionCatalogs,
   recordedFeedMocks,
-} from '@repo/api/mocks';
-import type { SessionSnapshot, SessionUpdate } from '@repo/contracts';
+} from '@repo/mocks/app';
 import {
   recordedAgentMessage,
   recordedFeedMock,

@@ -1,4 +1,4 @@
-import type { RequestMock } from '@repo/api/mocks';
+import type { RequestMock } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, within } from 'storybook/test';
 import {

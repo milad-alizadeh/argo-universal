@@ -1,5 +1,5 @@
-import { sessionRows } from '@repo/api/mocks';
 import type { SessionInfo } from '@repo/contracts';
+import { sessionRows } from '@repo/mocks/app';
 
 export const sessionRowMocks = {
   planAndSubagents: {

@@ -1,4 +1,4 @@
-import { projectsList, sessionRows } from '@repo/api/mocks';
+import { projectsList, sessionRows } from '@repo/mocks/app';
 import { describe, expect, it } from 'vitest';
 import { listEntries } from './sessions-list-entries';
 

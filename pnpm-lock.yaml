@@ -575,12 +575,12 @@ importers:
 
   apps/desktop:
     dependencies:
-      '@repo/api':
-        specifier: workspace:*
-        version: link:../../packages/api
       '@repo/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@repo/engine':
+        specifier: workspace:*
+        version: link:../../packages/engine
       xstate:
         specifier: 'catalog:'
         version: 5.33.2(patch_hash=515e52fcbbcdb6786c4f9c868f284309c5ad4de4a35e522342d0a514e9f35759)
@@ -627,9 +627,6 @@ importers:
 
   apps/server:
     dependencies:
-      '@repo/api':
-        specifier: workspace:*
-        version: link:../../packages/api
       '@repo/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
@@ -924,6 +921,9 @@ importers:
       '@repo/agents':
         specifier: workspace:*
         version: link:../packages/agents
+      '@repo/contracts':
+        specifier: workspace:*
+        version: link:../packages/contracts
       xstate:
         specifier: 'catalog:'
         version: 5.33.2(patch_hash=515e52fcbbcdb6786c4f9c868f284309c5ad4de4a35e522342d0a514e9f35759)
@@ -980,25 +980,6 @@ importers:
       vitest:
         specifier: 'catalog:'
         version: 5.0.3(@types/node@24.19.1)(@vitest/browser-playwright@5.0.3)(@vitest/coverage-v8@5.0.3)(@vitest/ui@5.0.3)(jsdom@30.1.1)(vite@8.3.2(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
-
-  packages/api:
-    dependencies:
-      '@repo/contracts':
-        specifier: workspace:*
-        version: link:../contracts
-      zod:
-        specifier: 'catalog:'
-        version: 4.6.5
-    devDependencies:
-      '@repo/typescript':
-        specifier: workspace:*
-        version: link:../../tooling/typescript
-      '@types/node':
-        specifier: 'catalog:'
-        version: 24.19.1
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
 
   packages/client:
     dependencies:
@@ -1174,12 +1155,12 @@ importers:
         specifier: 'catalog:'
         version: 5.33.2(patch_hash=515e52fcbbcdb6786c4f9c868f284309c5ad4de4a35e522342d0a514e9f35759)
     devDependencies:
-      '@repo/api':
-        specifier: workspace:*
-        version: link:../api
       '@repo/engine':
         specifier: workspace:*
         version: link:../engine
+      '@repo/mocks':
+        specifier: workspace:*
+        version: link:../../mocks
       '@repo/typescript':
         specifier: workspace:*
         version: link:../../tooling/typescript
@@ -1297,9 +1278,6 @@ importers:
         specifier: 'catalog:'
         version: 4.6.5
     devDependencies:
-      '@repo/api':
-        specifier: workspace:*
-        version: link:../api
       '@repo/mocks':
         specifier: workspace:*
         version: link:../../mocks

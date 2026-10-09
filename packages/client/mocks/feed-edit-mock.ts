@@ -1,5 +1,5 @@
-import { recordedFeedMocks } from '@repo/api/mocks';
 import type { DiffChange, ToolCallUpdate } from '@repo/contracts';
+import { recordedFeedMocks } from '@repo/mocks/app';
 import type { FileDiff } from '../src/feed/file-diff';
 import { toFileDiffs } from '../src/feed/file-diff';
 import type { MockAgent } from './feed-message-mock';

@@ -1,6 +1,5 @@
 import { randomUUID } from 'node:crypto';
 import { type AgentCommand, type AgentReady } from '@repo/agents';
-import { sessionRows } from '@repo/api/mocks';
 import type { Notice, SessionUpdate } from '@repo/contracts';
 import type { FeedSubscribeOutput } from '@repo/contracts';
 import { permissionOptions, type SessionConfigOption } from '@repo/contracts';
@@ -13,6 +12,7 @@ import {
   mockReady,
   mockReadyEvent,
 } from '@repo/mocks/agent';
+import { sessionRows } from '@repo/mocks/app';
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import { terminalPaths } from '@repo/vitest/model-paths';
 import { afterAll, afterEach, expect, it, onTestFinished, vi } from 'vitest';

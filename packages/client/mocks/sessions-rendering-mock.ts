@@ -1,4 +1,4 @@
-import { sessionRows } from '@repo/api/mocks';
+import { sessionRows } from '@repo/mocks/app';
 
 export const renderingSessions = [
   {

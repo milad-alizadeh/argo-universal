@@ -10,7 +10,6 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@repo/api": "workspace:*",
     "@repo/contracts": "workspace:*",
     "@repo/engine": "workspace:*",
     "tsx": "catalog:",

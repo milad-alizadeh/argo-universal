@@ -1,11 +1,11 @@
+import type { AgentsListInput } from '@repo/contracts';
 import {
   newSessionBranches,
   newSessionCatalogs,
   newSessionInputs,
   newSessionProjects,
   serverInfo,
-} from '@repo/api/mocks';
-import type { AgentsListInput } from '@repo/contracts';
+} from '@repo/mocks/app';
 import type { FixtureOutput } from './trpc-mock-link';
 import { type Fixtures, fails, pending } from './trpc-mock-link';
 

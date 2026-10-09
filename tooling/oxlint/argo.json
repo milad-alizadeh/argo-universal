@@ -362,20 +362,14 @@
       }
     },
     {
-      // D1: contracts, api, the db schema and client/src never import Node APIs, node:sqlite and node:sea included.
+      // D1: contracts, the db schema and client/src never import Node APIs, node:sqlite and node:sea included.
       "files": [
         "packages/contracts/**",
-        "packages/api/**",
         "packages/db/src/schema.ts",
         "packages/db/src/schema/**",
         "packages/client/src/**"
       ],
-      "excludeFiles": [
-        "**/*.test.*",
-        "**/*.stories.*",
-        "**/mocks/**",
-        "packages/api/src/server-runtime.mts"
-      ],
+      "excludeFiles": ["**/*.test.*", "**/*.stories.*", "**/mocks/**"],
       "rules": { "import/no-nodejs-modules": "error" }
     },
     {
@@ -429,9 +423,10 @@
       }
     },
     {
-      // D5
-      "files": ["packages/api/**"],
+      // D5: App mocks remain browser-safe and import only Contracts.
+      "files": ["mocks/app/**"],
       "rules": {
+        "import/no-nodejs-modules": "error",
         "no-restricted-imports": [
           "error",
           {
@@ -440,11 +435,9 @@
                 "group": [
                   "@repo/**",
                   "!@repo/contracts",
-                  "!@repo/contracts/**",
-                  "!@repo/vitest",
-                  "!@repo/vitest/**"
+                  "!@repo/contracts/**"
                 ],
-                "message": "api imports only contracts from the workspace."
+                "message": "App mocks import only Contracts from the workspace."
               }
             ]
           }
@@ -900,11 +893,11 @@
                   "@repo/**",
                   "!@repo/contracts",
                   "!@repo/contracts/**",
-                  "!@repo/api/server-runtime",
+                  "!@repo/engine/server-runtime",
                   "!@repo/vitest",
                   "!@repo/vitest/**"
                 ],
-                "message": "desktop imports only contracts and the Node-only API server-runtime subpath from the workspace."
+                "message": "desktop imports only contracts and the Node-only Engine server-runtime subpath from the workspace."
               }
             ]
           }
