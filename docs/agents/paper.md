@@ -6,12 +6,22 @@ This doc is temporary. When Paper ships components ("Components with slots" on i
 
 ## Masters and copies
 
-- A **master** lives on an artboard named `Components / <Name>`. Name it for the code component it becomes, and name its states for that component's props: `Toggle / Changed files (pressed)` is the `pressed` prop.
+- A **master** lives on a family card named `Components / <CodeName>` on its section's Components board (see Page layout). Name it for the code component it becomes, and name its states for that component's props: `Toggle / Changed files (pressed)` is the `pressed` prop.
 - A master's name is `<CodeName> / <State>`, with `(phone)` right after the code name for the phone version: `SessionRow / Done`, `SessionRow (phone) / Done`. CodeName is the PascalCase code component; a master with one state drops ` / <State>`. Desktop takes no suffix.
 - A page is built only from **copies** of masters, made with `duplicate_nodes`. A copy keeps its master's layer name: the name is the link.
 - A copy may change its text, hide items, and switch to a named state. Any other difference from its master is **drift**.
 - To change a component, edit the master, then run `pnpm -F @repo/tools paper:sync "<Name>"` and, once its dry run reads right, again with `--apply`. Work inside out: a master nested in another master (Session row inside List column) is synced before the masters that hold it.
 - Column masters carry content only. The surface (background, border, radius, shadow) comes from the shell's Card and Sidebar plate, so a master and its copies cannot drift on it.
+
+## Page layout
+
+Every section page (Session, Voice, Atlas, Setup, Issues, Settings) has the same artboards, top-aligned at y 0, left to right, 400px apart. Nothing is placed by hand: every board is auto layout, so adding something moves its neighbours instead of overlapping them.
+
+- `<Section> Components`: a flex row of columns named `Column / <Group>`, each a flex column of family cards `Components / <CodeName>`. A card has its heading, a Desktop | Phone header (or Content | Popover | Sheet for overlays) and one row per state. A new component is a new card in a column, never a loose artboard.
+- `<Section> Desktop` and `<Section> Mobile`: a flex column of flows named `Flow / <Name>`, each a heading and a row of `Screen / <State>` frames. A screen frame holds a label, then the screen, named `<Section> — <State>`: no device word (the board says it) and no "(light)". Desktop and Mobile use the same flow names in the same order.
+- `<Section> Explorations`, only when needed: option boards, comparisons and A/B variants, wrapped like screens. Finished work never sits here.
+- Global Components has only its Components board, plus the two Typography comparison boards, which stay as they are.
+- Move existing layers into place with `move_nodes`, which keeps their ids; never re-create them to move them.
 
 ## Tokens
 
@@ -37,7 +47,7 @@ This doc is temporary. When Paper ships components ("Components with slots" on i
 
 The tools in `tools/paper-drift/` read the whole file through the Paper MCP. Only `paper:sync --apply`, `paper:rename --apply` and `paper:tokens --apply` write to Paper.
 
-- `pnpm -F @repo/tools paper:snapshot` reads every layer, its styles and the tokens into `.paper-drift/snapshot.json`. It takes about a minute; run it again whenever the file has changed.
+- `pnpm -F @repo/tools paper:snapshot` reads every layer, its styles and the tokens into `.paper-drift/snapshot.json`; run it again whenever the file has changed. It reads styles in small, paced batches, because whole-file reads have made Paper Desktop quit, so a full read takes about 15 minutes. To keep runs short it reuses styles: each subtree of up to 500 layers (a card, a screen frame, or part of a bigger one) is fingerprinted from its `get_jsx` output and its layer ids, names, hidden flags and texts, and keeps the last snapshot's styles while its fingerprint is unchanged. Artboards, containers too big for one unit and every unit's root are read on each run. After a small edit a run takes a minute or two. `--full` reads every layer's styles, and so does a run with no earlier snapshot, an earlier snapshot without fingerprints, or changed tokens. `paper:sync` reuses styles the same way.
 - `pnpm -F @repo/tools paper:audit` checks the last snapshot and writes `.paper-drift/audit.md` and `audit.json`:
   - every copy against its master, apart from the allowed changes;
   - every variation against its base with its props applied;
@@ -48,7 +58,7 @@ The tools in `tools/paper-drift/` read the whole file through the Paper MCP. Onl
 
   A change that keeps the value and only swaps the token (`--text-sm` for `--text-body-wide`) is marked "same value".
 - `pnpm -F @repo/tools paper:levels` writes `.paper-drift/levels.json`: the masters grouped by nesting depth, innermost first. `paper:sync` takes several names at once from one snapshot, so pass names from one level only, and take a new snapshot between levels. `--offline` plans from the last snapshot without touching Paper.
-- `pnpm -F @repo/tools paper:rename <map.json>` renames masters, every copy and the registry together, from a map of `renames` (`id`, `from`, `to`) and `aliases` (other spellings found on copies). It is a dry run against a fresh snapshot (`--offline` uses the last one) until you add `--apply`, which refuses while the plan lists problems.
+- `pnpm -F @repo/tools paper:rename <map.json>` renames masters, every copy and the registry together, from a map of `renames` (`id`, `from`, `to`) and `aliases` (other spellings found on copies). It is a dry run against a fresh read of the layer names, without styles (`--offline` uses the last snapshot), until you add `--apply`, which refuses while the plan lists problems.
 - `pnpm -F @repo/tools paper:tokens` plans to write the tokens in `theme.css`, with the Tailwind defaults their aliases name, into Paper: what it would add, change and leave alone. An alias stays an alias; any other value is written resolved, in px. A Paper token whose resolved value already matches is left as it is. Tokens only in Paper are listed, never deleted. Tokens Paper has no type for (shadows, blur) or whose value it cannot hold (`hairlineWidth()`) are listed and counted as unmapped. It reads Paper's tokens (`--offline` uses the last snapshot) and writes only with `--apply`.
 - `pnpm -F @repo/tools paper:sync "<Name>"` takes a fresh snapshot and plans, for each drifted copy of that master, to clone the master beside it, put back the copy's text, hidden items, placement and nested masters, and delete the old copy. Copies whose layers differ from the master's are listed for a person instead. Add `--apply` to carry it out; before and after screenshots go to `.paper-drift/sync/`. Never apply while someone else is editing the same artboards.
 

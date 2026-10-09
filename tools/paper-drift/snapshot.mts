@@ -2,7 +2,6 @@ import type { PaperPort } from './paper-port.mts';
 import {
   readBasicInfo,
   readChildren,
-  readComputedStyles,
   readTokens,
   readTreeSummary,
 } from './paper-tools.mts';
@@ -11,8 +10,8 @@ import {
   type Artboard,
   type Layer,
   type Snapshot,
-  type Styles,
 } from './snapshot-model.mts';
+import { readSnapshotStyles, type StyleRun } from './snapshot-styles.mts';
 import { placeRows, type Index } from './summary-placement.mts';
 import {
   layerCount,
@@ -22,7 +21,6 @@ import {
 
 // get_tree_summary silently stops after this many layers.
 const SUMMARY_CAP = 1000;
-const STYLE_BATCH = 250;
 
 async function indexChildren(index: Index, nodeId: string): Promise<void> {
   for (const child of await readChildren(index.paper, nodeId))
@@ -52,19 +50,6 @@ async function indexSubtree(
     await indexChildren(index, id);
 }
 
-async function readStyles(
-  paper: PaperPort,
-  ids: string[],
-): Promise<Record<string, Styles>> {
-  const styles: Record<string, Styles> = {};
-  for (let start = 0; start < ids.length; start += STYLE_BATCH)
-    Object.assign(
-      styles,
-      await readComputedStyles(paper, ids.slice(start, start + STYLE_BATCH)),
-    );
-  return styles;
-}
-
 async function listArtboards(paper: PaperPort): Promise<Artboard[]> {
   const artboards: Artboard[] = [];
   for (const page of (await readBasicInfo(paper)).pages)
@@ -77,11 +62,7 @@ async function listArtboards(paper: PaperPort): Promise<Artboard[]> {
   return artboards;
 }
 
-export interface SnapshotRun {
-  paper: PaperPort;
-  fileId: string;
-  report: (message: string) => void;
-}
+export type SnapshotRun = StyleRun;
 
 async function indexArtboards(
   { paper, report }: SnapshotRun,
@@ -99,18 +80,30 @@ async function indexArtboards(
   return index.layers;
 }
 
-export async function takeSnapshot(run: SnapshotRun): Promise<Snapshot> {
+// Names and structure only, without styles or tokens: enough to plan a rename.
+export async function takeLayerSnapshot(run: SnapshotRun): Promise<Snapshot> {
   const artboards = await listArtboards(run.paper);
   const layers = await indexArtboards(run, artboards);
-  run.report(`Reading styles of ${Object.keys(layers).length} layers`);
-  const styles = await readStyles(run.paper, Object.keys(layers));
-  const tokens = await readTokens(run.paper);
+  const takenAt = new Date().toISOString();
   return {
     fileId: run.fileId,
-    takenAt: new Date().toISOString(),
+    takenAt,
     artboards,
     layers,
-    styles,
-    tokens,
+    styles: {},
+    tokens: {},
   };
+}
+
+// Reuses the styles of units unchanged since the previous snapshot, when one is given.
+export async function takeSnapshot(
+  run: SnapshotRun,
+  previous?: Snapshot,
+): Promise<Snapshot> {
+  const structure = await takeLayerSnapshot(run);
+  const tokens = await readTokens(run.paper);
+  const current = { layers: structure.layers, tokens };
+  const styles = await readSnapshotStyles(run, current, previous);
+  const takenAt = new Date().toISOString();
+  return { ...structure, takenAt, tokens, ...styles };
 }

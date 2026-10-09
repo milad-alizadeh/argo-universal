@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { snapshotSchema, type Snapshot } from './snapshot-model.mts';
@@ -31,5 +31,15 @@ export function readSnapshot(): Snapshot {
       `No usable snapshot at ${snapshotPath}; run pnpm -F @repo/tools paper:snapshot first.`,
       { cause: error },
     );
+  }
+}
+
+// The last snapshot to reuse styles from, or undefined when there is none or it no longer parses.
+export function readPreviousSnapshot(): Snapshot | undefined {
+  if (!existsSync(snapshotPath)) return undefined;
+  try {
+    return readSnapshot();
+  } catch {
+    return undefined;
   }
 }

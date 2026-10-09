@@ -68,6 +68,7 @@ const answers: Record<string, (args: Record<string, unknown>) => unknown> = {
     styles: { '2-0': { display: 'none' } },
   }),
   get_tokens: (): unknown => ({ tokens: [{ name: '--a', value: '1px' }] }),
+  get_jsx: (): unknown => '<div />',
 };
 
 const paper: PaperPort = {

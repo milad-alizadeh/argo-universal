@@ -43,12 +43,14 @@ function assertSameFile(header: string | undefined, fileId: string): void {
     throw new Error(`Paper answered for file ${answered}, not ${fileId}.`);
 }
 
-// The one plain-text answer Paper gives, from tools such as finish_working_on_nodes.
+// The plain-text answers Paper gives: "OK" from tools such as finish_working_on_nodes, and get_jsx's markup.
 const PLAIN_ANSWERS = new Set(['OK']);
 const JSON_START = /^\s*[[{"]/;
+const JSX_START = /^\s*(?:\(\s*)?<[a-z]/;
 
 function plainAnswer(body: string): string {
   if (PLAIN_ANSWERS.has(body.trim())) return body.trim();
+  if (JSX_START.test(body)) return body;
   throw new Error(`Unrecognised plain-text answer: ${body.slice(0, 200)}`);
 }
 
@@ -114,10 +116,27 @@ async function payloadFrom(
   }
 }
 
+const READ_ATTEMPTS = 3;
+
+// Paper times out now and then on one read of a long run; reads change nothing, so they are asked again.
+async function retried(read: () => Promise<unknown>): Promise<unknown> {
+  for (let attempt = 1; attempt < READ_ATTEMPTS; attempt += 1) {
+    try {
+      return await read();
+    } catch {
+      // The last attempt below reports the error.
+    }
+  }
+  return read();
+}
+
 function portFor(client: Client, fileId: string): PaperPort {
   return {
-    call: (tool, args): Promise<unknown> =>
-      payloadFrom(client, fileId, { tool, args }),
+    call: (tool, args): Promise<unknown> => {
+      const ask = (): Promise<unknown> =>
+        payloadFrom(client, fileId, { tool, args });
+      return tool.startsWith('get_') ? retried(ask) : ask();
+    },
     close: async (): Promise<void> => client.close(),
   };
 }

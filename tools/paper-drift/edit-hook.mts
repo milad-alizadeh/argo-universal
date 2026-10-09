@@ -35,6 +35,9 @@ const nodeRef = z.strictObject({
 type NodeRef = z.infer<typeof nodeRef>;
 const toolInput = z.strictObject({
   fileId: z.string().optional(),
+  pageId: z.string().optional(),
+  nodeId: z.string().optional(),
+  parentId: z.string().optional(),
   html: z.string().optional(),
   mode: z.string().optional(),
   nodeIds: z.array(z.string()).optional(),
@@ -58,9 +61,11 @@ function targetsOf(input: ToolInput): EditTarget[] {
   const refs = [input.updates, input.nodes, input.moves].flatMap(
     (list): NodeRef[] => list ?? [],
   );
-  const direct = [input.targetNodeId, ...(input.nodeIds ?? [])].filter(
-    (id): id is string => id !== undefined,
-  );
+  const direct = [
+    input.targetNodeId,
+    input.nodeId,
+    ...(input.nodeIds ?? []),
+  ].filter((id): id is string => id !== undefined);
   return [
     ...direct.map((nodeId): EditTarget => ({ nodeId, styles: [] })),
     ...refs.flatMap(refTargets),
