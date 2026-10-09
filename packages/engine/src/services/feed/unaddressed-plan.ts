@@ -31,14 +31,16 @@ export const selectUnaddressedPlanRow = (
   [...newestRows(rows).values()]
     .filter((row): row is PlanUpdate => isUnaddressedPlan(row, acpSessionId))
     .toSorted((first, second) => second.revision - first.revision)[0];
-const queuedPlanRows = (
+const readQueuedPlanRows = (
   jobs: readonly WriterJob[],
   sessionId: string,
 ): SessionUpdate[] =>
   jobs.flatMap((job) =>
     job.type === 'feedRows' && job.sessionId === sessionId ? job.rows : [],
   );
-const unaddressedPlanFilter = (input: UnaddressedPlanRead): SQL | undefined =>
+const createUnaddressedPlanFilter = (
+  input: UnaddressedPlanRead,
+): SQL | undefined =>
   and(
     eq(feedRow.sessionId, input.sessionId),
     eq(feedRow.sessionUpdate, 'plan_update'),
@@ -53,7 +55,7 @@ const readStoredUnaddressedPlan = (
   const stored = input.database
     .select(storedFeedColumns)
     .from(feedRow)
-    .where(unaddressedPlanFilter(input))
+    .where(createUnaddressedPlanFilter(input))
     .orderBy(desc(feedRow.revision))
     .limit(1)
     .get();
@@ -68,7 +70,7 @@ export const readUnaddressedPlan = (
   input: UnaddressedPlanRead,
 ): PlanUpdate | undefined => {
   const stored = readStoredUnaddressedPlan(input);
-  const queued = queuedPlanRows(
+  const queued = readQueuedPlanRows(
     input.writer?.getSnapshot().context.queue ?? [],
     input.sessionId,
   );

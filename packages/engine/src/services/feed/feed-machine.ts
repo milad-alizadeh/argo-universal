@@ -18,7 +18,7 @@ import {
 } from './feed-change';
 import { promptBlobIds } from './feed-row';
 import type { FeedPublication } from './publication';
-import { applyAcpContentUpdate } from './updates/application';
+import { prepareAcpFeedApplication } from './updates/application';
 import type { MessageStreams } from './updates/message-identity';
 import { settleFeedTurn } from './updates/settlement';
 import type { WriterCommit } from './writer-commit';
@@ -86,7 +86,7 @@ type FeedChangeApplied = {
   committed?: WriterCommit;
 };
 type FeedChangeRejected = { type: 'feed.changeRejected'; reason: string };
-type FeedInternalEvent =
+export type FeedInternalEvent =
   | FeedChangeApplied
   | FeedChangeRejected
   | { type: 'feed.publish'; published?: FeedPublication };
@@ -138,42 +138,15 @@ export const feedMachine = setup({
   actions: {
     applyAcpUpdate: enqueueActions(({ context, event, enqueue }): void => {
       assertEvent(event, 'feed.acpUpdate');
-      const result = applyAcpContentUpdate({
-        update: event.update,
-        acpSessionId: event.acpSessionId,
-        turnId: event.turnId,
-        feed: context,
-        streams: context.messageStreams,
-        findWrittenRow: context.findWrittenRow,
-        findUnaddressedPlan: context.findUnaddressedPlan,
-        unaddressedPlan: context.unaddressedPlan,
-      });
+      const result = prepareAcpFeedApplication(context, event);
       if (!result) return;
-      if ('rejection' in result) {
-        enqueue.raise({
+      if ('rejection' in result)
+        return enqueue.raise({
           type: feedChangeRejected,
           reason: result.rejection,
         });
-        return;
-      }
-      const id =
-        result.streamEvent.type === 'row.upsert'
-          ? result.streamEvent.row.id
-          : result.streamEvent.id;
-      enqueue.assign({
-        ...result.feed,
-        messageStreams: result.streams ?? context.messageStreams,
-        unaddressedPlan: result.unaddressedPlan ?? context.unaddressedPlan,
-        activityAt: context.now(),
-        changedRowIds: [...new Set([...context.changedRowIds, id])],
-        streamEvents: [...context.streamEvents, result.streamEvent],
-      });
-      enqueue.raise({
-        type: feedChangeApplied,
-        settled: result.feed.rows[id]?.state === 'settled',
-      });
-      for (const reason of result.diagnostics ?? [])
-        enqueue.raise({ type: feedChangeRejected, reason });
+      enqueue.assign(result.state);
+      for (const raised of result.events) enqueue.raise(raised);
     }),
     settleTurnRows: enqueueActions(({ context, event, enqueue }): void => {
       assertEvent(event, 'feed.completeTurn');

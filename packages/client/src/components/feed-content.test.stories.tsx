@@ -14,6 +14,7 @@ import { FeedItem } from './feed-item';
 const meta = {
   title: 'Tests/FeedContent',
   component: FeedItem,
+  parameters: { screenPreview: true },
   args: {
     item: {
       type: 'row',

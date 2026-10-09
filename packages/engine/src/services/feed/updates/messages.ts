@@ -11,7 +11,10 @@ import type {
   ContentAssemblyInput,
   ContentAssemblyResult,
 } from './assembly';
-import { mapSupportedContentBlock, unsupportedContentReasons } from './content';
+import {
+  mapSupportedContentBlock,
+  collectUnsupportedContentReasons,
+} from './content';
 import {
   selectMessageStream,
   type MessageKind,
@@ -101,7 +104,7 @@ const assembleMessageChunk = (input: MessageInput): AssembledContent => {
   return {
     change: createMessageChunkChange(input, stream, message),
     streams: { ...input.streams, [message.kind]: stream },
-    diagnostics: unsupportedContentReasons([message.block]),
+    diagnostics: collectUnsupportedContentReasons([message.block]),
   };
 };
 export const assembleAcpMessage = (

@@ -3,8 +3,8 @@ import type { ToolCallContent, ToolCallDiff } from '@repo/contracts';
 import {
   createAcpContentMetadata,
   mapSupportedContentBlock,
-  unsupportedContent,
-  unsupportedContentReasons,
+  createUnsupportedContent,
+  collectUnsupportedContentReasons,
 } from './content';
 
 const mapToolDiff = (
@@ -24,7 +24,7 @@ const mapToolDiff = (
 const createUnavailableTerminalContent = (
   block: Extract<AcpToolCallContent, { type: 'terminal' }>,
 ): ToolCallContent => ({
-  ...unsupportedContent(
+  ...createUnsupportedContent(
     'terminal',
     'Terminal output is unavailable without a Client terminal resource',
   ),
@@ -41,11 +41,13 @@ export const mapToolCallContent = (
     _meta: createAcpContentMetadata(block._meta),
   };
 };
-const unsupportedToolBlock = (block: ToolCallContent): string[] => {
+const collectUnsupportedToolBlockReasons = (
+  block: ToolCallContent,
+): string[] => {
   if (block.type === 'unsupported') return [block.reason];
   if (block.type !== 'content') return [];
-  return unsupportedContentReasons([block.content]);
+  return collectUnsupportedContentReasons([block.content]);
 };
-export const unsupportedToolContentReasons = (
+export const collectUnsupportedToolContentReasons = (
   content: ToolCallContent[],
-): string[] => content.flatMap(unsupportedToolBlock);
+): string[] => content.flatMap(collectUnsupportedToolBlockReasons);

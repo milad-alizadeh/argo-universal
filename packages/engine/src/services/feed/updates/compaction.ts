@@ -94,13 +94,13 @@ const collectCompactionDiagnostics = (
     ),
   ];
 };
-const invalidCompactionSummary = (
+const describeInvalidCompactionSummary = (
   update: AcpCompactionUpdate,
 ): string | undefined => {
   if (update.summary == null) return undefined;
-  return invalidNonNullCompactionSummary(update.summary, update.status);
+  return describeInvalidNonNullCompactionSummary(update.summary, update.status);
 };
-const invalidNonNullCompactionSummary = (
+const describeInvalidNonNullCompactionSummary = (
   summary: NonNullable<AcpCompactionUpdate['summary']>,
   status: string,
 ): string | undefined => {
@@ -109,7 +109,7 @@ const invalidNonNullCompactionSummary = (
     ? undefined
     : 'A replacement Compaction summary requires completed status';
 };
-const invalidCompactionError = (
+const describeInvalidCompactionError = (
   update: AcpCompactionUpdate,
 ): string | undefined => {
   if (update.error == null) return undefined;
@@ -135,6 +135,7 @@ export const applyCompactionUpdate = (
   update: AcpCompactionUpdate,
 ): CompactionResult => {
   const rejection =
-    invalidCompactionSummary(update) ?? invalidCompactionError(update);
+    describeInvalidCompactionSummary(update) ??
+    describeInvalidCompactionError(update);
   return rejection ? { rejection } : createCompactionReplacement(input, update);
 };

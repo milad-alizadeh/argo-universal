@@ -5,6 +5,7 @@ const meta = {
   title: 'Feed/SupportedContent',
   component: AcpFeedContentPreview,
   args: { agent: 'agent-1' },
+  parameters: { screenPreview: true },
 } satisfies Meta<typeof AcpFeedContentPreview>;
 export default meta;
 type Story = StoryObj<typeof meta>;

@@ -41,7 +41,7 @@ const readInertReference = (
   if (uri == null) return undefined;
   return isInertReference(uri) ? parseInertReference(uri) : undefined;
 };
-export const unsupportedContent = (
+export const createUnsupportedContent = (
   contentKind: string,
   reason: string,
   uri?: string | null,
@@ -80,7 +80,7 @@ const mapTextResource = (
 });
 type AcpEmbeddedResource = Extract<AcpContentBlock, { type: 'resource' }>;
 const mapBinaryResource = (block: AcpEmbeddedResource): UnsupportedContent => ({
-  ...unsupportedContent(
+  ...createUnsupportedContent(
     'resource',
     'Binary resource output requires stored Blob materialization',
     block.resource.uri,
@@ -101,7 +101,7 @@ const mapEmbeddedResource = (
 const mapUnmaterializedImage = (
   block: Extract<AcpContentBlock, { type: 'image' }>,
 ): UnsupportedContent => ({
-  ...unsupportedContent(
+  ...createUnsupportedContent(
     'image',
     'Image output requires stored Blob materialization',
     block.uri,
@@ -116,7 +116,7 @@ const mapMediaOrEmbeddedContent = (block: AcpMediaBlock): ContentBlock => {
   if (block.type === 'resource') return mapEmbeddedResource(block);
   if (block.type === 'image') return mapUnmaterializedImage(block);
   return {
-    ...unsupportedContent('audio', 'Audio output is not supported'),
+    ...createUnsupportedContent('audio', 'Audio output is not supported'),
     _meta: createAcpContentMetadata(block._meta),
   };
 };
@@ -133,7 +133,9 @@ export const mapSupportedContentBlock = (
   return mapMediaOrEmbeddedContent(block);
 };
 
-export const unsupportedContentReasons = (content: ContentBlock[]): string[] =>
+export const collectUnsupportedContentReasons = (
+  content: ContentBlock[],
+): string[] =>
   content.flatMap((block) =>
     block.type === 'unsupported' ? [block.reason] : [],
   );

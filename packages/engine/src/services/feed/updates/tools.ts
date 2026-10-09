@@ -5,7 +5,7 @@ import { createAcpContentMetadata } from './content';
 import { createScopedFeedRowId } from './identity';
 import {
   mapToolCallContent,
-  unsupportedToolContentReasons,
+  collectUnsupportedToolContentReasons,
 } from './tool-content';
 
 type ToolUpdate = Extract<
@@ -89,7 +89,7 @@ export const assembleToolCall = (input: ToolInput): AssembledContent => {
   return {
     change: { type: 'upsert', update },
     diagnostics: input.update.content
-      ? unsupportedToolContentReasons(update.content)
+      ? collectUnsupportedToolContentReasons(update.content)
       : [],
   };
 };
