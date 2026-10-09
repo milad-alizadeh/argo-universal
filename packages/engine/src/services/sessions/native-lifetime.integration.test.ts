@@ -27,6 +27,10 @@ import { toSessionSnapshot } from './session-snapshot';
 
 const missingStream = 'The Agent has no stream';
 const turnStartedEvent = 'agent.turnStarted';
+const answerPermissionCommand = 'agent.answerPermission';
+const answerElicitationCommand = 'agent.answerElicitation';
+const cancelCommand = 'agent.cancel';
+const turnEndedEvent = 'agent.turnEnded';
 const usageEvent = 'agent.usage';
 const feedEvent = 'agent.feed';
 const sessionId = 'session-1';
@@ -107,6 +111,76 @@ it.each(agentAdapters.map((adapter): string => adapter.agent))(
     expect(host.service.row({ sessionId: sessionId, id: 'reply' }).turnId).toBe(
       snapshot.activeTurnId,
     );
+  },
+);
+
+it.each(agentAdapters.map((adapter): string => adapter.agent))(
+  'owns prompting, answers, cancellation, recovery and closure for Agent %s',
+  async (agent): Promise<void> => {
+    vi.useFakeTimers();
+    onTestFinished((): void => {
+      vi.useRealTimers();
+    });
+    const streams: MockAgentStream[] = [];
+    const commands: VendorCommand[] = [];
+    let closedInstances = 0;
+    const host = await startSession(
+      createMockAdapter(
+        {
+          stream: (nativeStream): undefined => {
+            streams.push(nativeStream);
+            nativeStream.receive((command): number => commands.push(command));
+          },
+          stop: async (): Promise<void> => {
+            closedInstances += 1;
+          },
+        },
+        agent,
+      ),
+    );
+    const stream = streams[0];
+    if (!stream) throw new Error(missingStream);
+    host.session.send(firstPrompt);
+    stream.send({
+      type: 'agent.permissionRequested',
+      request: {
+        toolCallId: 'current',
+        title: 'Run command',
+        options: permissionOptions,
+      },
+    });
+    host.session.send({
+      type: 'session.answerPermission',
+      toolCallId: 'current',
+      optionId: null,
+    });
+    stream.send({
+      type: 'agent.elicitationRequested',
+      request: {
+        mode: 'form',
+        message: 'Which file?',
+        requestedSchema: { properties: {} },
+      },
+    });
+    host.session.send({ type: 'session.answerElicitation', action: 'cancel' });
+    host.session.send({ type: 'session.cancel' });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(commands.map((command): string => command.type)).toEqual([
+      promptCommand,
+      answerPermissionCommand,
+      answerElicitationCommand,
+      cancelCommand,
+    ]);
+    stream.send({ type: turnEndedEvent, stopReason: 'cancelled' });
+    expect(publicSnapshot(host).state).toBe('idle');
+    stream.fail(new Error('Native instance crashed'));
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(publicSnapshot(host).state).toBe('idle');
+    expect(streams).toHaveLength(2);
+    host.session.send({ type: closeEvent });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(host.session.getSnapshot().status).toBe('done');
+    expect(closedInstances).toBe(2);
   },
 );
 
@@ -361,7 +435,7 @@ it('cancels a pending prompt after its prior configuration completes', async ():
         commands.push(command);
         if (command.type === setConfigCommand) await configured.promise;
         if (command.type === promptCommand) await prompted.promise;
-        if (command.type === 'agent.cancel') prompted.resolve();
+        if (command.type === cancelCommand) prompted.resolve();
       },
       stop: async (): Promise<void> => {},
     }),
@@ -383,7 +457,7 @@ it('cancels a pending prompt after its prior configuration completes', async ():
   expect(commands.map((command): string => command.type)).toEqual([
     setConfigCommand,
     promptCommand,
-    'agent.cancel',
+    cancelCommand,
   ]);
 });
 
@@ -424,11 +498,11 @@ it.each(['permission', 'elicitation'] as const)(
             );
             await responded.promise;
           } else if (
-            command.type === 'agent.answerPermission' ||
-            command.type === 'agent.answerElicitation'
+            command.type === answerPermissionCommand ||
+            command.type === answerElicitationCommand
           ) {
             responded.resolve();
-            listener.event({ type: 'agent.turnEnded', stopReason: 'end_turn' });
+            listener.event({ type: turnEndedEvent, stopReason: 'end_turn' });
           }
         },
         stop: async (): Promise<void> => {},
@@ -449,8 +523,8 @@ it.each(['permission', 'elicitation'] as const)(
     expect(commands.map((command): string => command.type)).toEqual([
       promptCommand,
       requestKind === 'permission'
-        ? 'agent.answerPermission'
-        : 'agent.answerElicitation',
+        ? answerPermissionCommand
+        : answerElicitationCommand,
     ]);
     expect(publicSnapshot(host).state).toBe('idle');
   },
