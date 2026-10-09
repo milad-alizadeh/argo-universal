@@ -18,7 +18,9 @@ const exampleMetadata = [
 async function expectExampleMetadata(row: Locator): Promise<void> {
   for (const text of exampleMetadata)
     await expect(row.getByText(text, { exact: true })).toBeVisible();
-  await expect(row.getByLabel(`${exampleAgentName} icon`)).toBeVisible();
+  await expect(
+    row.getByLabel(`${exampleAgentName} icon`, { exact: true }),
+  ).toBeVisible();
 }
 
 async function serverPlatform(page: Page): Promise<string> {
