@@ -3,8 +3,10 @@ import { View } from 'react-native';
 import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
+import { renderStorybookSymbol } from '../../mocks/sf-symbol-images';
 import { Icon } from '../lib/icon';
-import { iconNames } from '../lib/icon-names';
+import { iconNames, iconSymbols } from '../lib/icon-names';
+import { SymbolImagesProvider } from '../lib/symbol-images';
 
 const meta = {
   title: 'Design System/Components/Icon',
@@ -73,5 +75,40 @@ export const Overview: Story = {
         </View>
       </Variation>
     </Variations>
+  ),
+};
+
+// SF is drawn by this Mac through Storybook's dev server, so the SF column is empty off macOS.
+export const SfAndMaterial: Story = {
+  name: 'SF and Material',
+  render: () => (
+    <View className="gap-1 p-4">
+      <View className="flex-row gap-4 pb-2">
+        <Text className="w-36 text-xs text-muted-foreground">Name</Text>
+        <Text className="w-10 text-xs text-muted-foreground">SF</Text>
+        <Text className="w-10 text-xs text-muted-foreground">Material</Text>
+        <Text className="w-64 text-xs text-muted-foreground">SF Symbol</Text>
+        <Text className="text-xs text-muted-foreground">Material Symbol</Text>
+      </View>
+      {iconNames.map((name) => (
+        <View key={name} className="flex-row items-center gap-4">
+          <Text className="w-36 text-sm">{name}</Text>
+          <View className="w-10">
+            <SymbolImagesProvider render={renderStorybookSymbol}>
+              <Icon name={name} size="lg" testID={`sf-${name}`} />
+            </SymbolImagesProvider>
+          </View>
+          <View className="w-10">
+            <Icon name={name} size="lg" testID={`material-${name}`} />
+          </View>
+          <Text className="w-64 font-mono text-xs text-muted-foreground">
+            {iconSymbols[name].sf}
+          </Text>
+          <Text className="font-mono text-xs text-muted-foreground">
+            {iconSymbols[name].material}
+          </Text>
+        </View>
+      ))}
+    </View>
   ),
 };

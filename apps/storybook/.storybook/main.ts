@@ -1,6 +1,7 @@
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { StorybookConfig } from '@storybook/react-native-web-vite';
+import { sfSymbolImages } from '../../../tools/sf-symbols/sf-symbol-images.mts';
 
 function getAbsolutePath(value: string): string {
   return dirname(fileURLToPath(import.meta.resolve(`${value}/package.json`)));
@@ -107,6 +108,7 @@ const config: StorybookConfig = {
       plugins: [
         expoDeclarationImports,
         expoSymbolsWebImports,
+        sfSymbolImages,
         tailwindcss(),
         // Uniwind resolves these from process.cwd(), so they are absolute.
         uniwind({
