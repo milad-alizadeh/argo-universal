@@ -2,6 +2,7 @@ import type {
   FeedSnapshot,
   FeedSyncPoint,
   FeedSubscribeOutput,
+  SessionSetConfigOptionInput,
 } from '@repo/contracts';
 import { newSessionCatalogs, recordedFeedMocks } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
@@ -850,14 +851,14 @@ const heldChoiceCatalogs = newSessionCatalogs.bothAvailable.map(
       throw new Error(
         'Recorded catalog needs two model effort ranges and an effort outside the narrower range.',
       );
-    return { agent, recording, selected, narrower };
+    return { agent, recording, selected, narrower, model, effort };
   },
 );
 
 function heldConfiguration(width: number, agentIndex: number): Story {
   const catalog = heldChoiceCatalogs[agentIndex];
   if (!catalog) throw new Error('Recorded catalog needs two Agents.');
-  const { agent, recording, selected, narrower } = catalog;
+  const { agent, recording, selected, narrower, model, effort } = catalog;
   const initial = {
     ...recording.snapshot,
     agent: agent.agent,
@@ -899,6 +900,7 @@ function heldConfiguration(width: number, agentIndex: number): Story {
   let snapshot = initial;
   const responses = [heldEffort, heldModel];
   let responseIndex = 0;
+  const requests: SessionSetConfigOptionInput[] = [];
   const snapshots = createSubscriptionPublisher<FeedSnapshot>();
   const mocks: Fixtures = {
     ...runningSessionMocks,
@@ -907,7 +909,8 @@ function heldConfiguration(width: number, agentIndex: number): Story {
       yield { type: 'snapshot', snapshot };
       yield* snapshots.subscribe(signal);
     },
-    'session.setConfigOption': () => {
+    'session.setConfigOption': (input) => {
+      requests.push(input);
       const response = responses[responseIndex++];
       if (!response) throw new Error('No declared held configuration response');
       snapshot = response;
@@ -920,6 +923,7 @@ function heldConfiguration(width: number, agentIndex: number): Story {
     beforeEach: () => {
       snapshot = initial;
       responseIndex = 0;
+      requests.length = 0;
       snapshots.reset();
       return () => snapshots.reset();
     },
@@ -941,6 +945,16 @@ function heldConfiguration(width: number, agentIndex: number): Story {
           name: `Set effort to ${selected.name}`,
         }),
       );
+      await waitFor(() =>
+        expect(requests).toEqual([
+          {
+            sessionId: 'session-1',
+            configId: effort.configId,
+            type: 'id',
+            value: selected.value,
+          },
+        ]),
+      );
       const slider = overlay.getByRole('slider', { name: 'Effort' });
       await waitFor(() =>
         expect(slider).toHaveAttribute('aria-valuetext', selected.name),
@@ -954,6 +968,22 @@ function heldConfiguration(width: number, agentIndex: number): Story {
         );
       await userEvent.click(
         await overlay.findByRole('button', { name: narrower.name }),
+      );
+      await waitFor(() =>
+        expect(requests).toEqual([
+          {
+            sessionId: 'session-1',
+            configId: effort.configId,
+            type: 'id',
+            value: selected.value,
+          },
+          {
+            sessionId: 'session-1',
+            configId: model.configId,
+            type: 'id',
+            value: narrower.value,
+          },
+        ]),
       );
       await waitFor(() =>
         expect(overlay.getByRole('slider', { name: 'Effort' })).toHaveAttribute(

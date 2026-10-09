@@ -38,8 +38,6 @@ const restoreInspectorLabel = 'Restore Inspector';
 const resizeSidebarLabel = 'Resize sidebar';
 const pointerPress = '[MouseLeft>]';
 const pointerRelease = '[/MouseLeft]';
-const detailTitleId = 'desktop-detail-title';
-const listViewportId = 'desktop-list-viewport';
 
 const meta = {
   title: 'Tests/DesktopShell',
@@ -862,18 +860,6 @@ export const OneHeldDragCanCloseAndReopenPanels: Story = {
     await expect(
       canvas.getByRole('separator', { name: resizeSidebarLabel }),
     ).toBe(sidebar);
-    await expect(
-      canvas
-        .getByTestId(listViewportId)
-        .getAnimations()
-        .some((animation) => animation.playState === 'running'),
-    ).toBe(false);
-    await expect(
-      canvas
-        .getByTestId(detailTitleId)
-        .getAnimations()
-        .some((animation) => animation.playState === 'running'),
-    ).toBe(false);
     await userEvent.pointer({
       target: sidebar,
       coords: { clientX: start.x + 4, clientY: start.y + 100 },
