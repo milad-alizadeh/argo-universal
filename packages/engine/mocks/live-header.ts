@@ -1,10 +1,10 @@
-import { recordedFeedMocks } from '@repo/api/mocks';
 import type {
   AgentThought,
   Notice,
   SessionUpdate,
   ToolCallUpdate,
 } from '@repo/contracts';
+import { recordedFeedMocks } from '@repo/mocks/app';
 
 type LiveHeaderMock = {
   agent: string;

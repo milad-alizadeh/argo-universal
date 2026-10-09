@@ -1,5 +1,5 @@
-import { agentsList } from '@repo/api/mocks';
 import type { SessionInfo } from '@repo/contracts';
+import { agentsList } from '@repo/mocks/app';
 import type * as React from 'react';
 import { View } from 'react-native';
 import {

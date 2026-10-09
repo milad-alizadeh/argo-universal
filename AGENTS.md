@@ -29,6 +29,7 @@ One `GLOSSARY.md` and one `docs/adr/` folder at the repo root ("single-context")
 
 - Put all evidence and images in the PR body; upload images with `gh pr create --attach` or `gh pr edit --attach`, never commit them to Git.
 - Claude and Codex Sessions draw the same UI. Parity is part of every Session change.
+- Use LegendList (`@legendapp/list/react-native`) by default for lists in the App.
 - App end-to-end tests inject shared Argo fixtures at the Agent adapter port (`mocks/agent/`); provider translation unit tests verify typed SDK/protocol response fixtures through the real pure mapping. See ADR-0018.
 - Test assets live outside `src/`: `e2e/<flow>/`, `mocks/`, `tools/`. Call them mocks.
 - Every XState machine has model-based tests from `xstate/graph` that walk all of its transitions.

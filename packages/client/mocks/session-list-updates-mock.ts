@@ -1,5 +1,5 @@
-import { sessionRows } from '@repo/api/mocks';
 import type { SessionInfo, SessionListUpdate } from '@repo/contracts';
+import { sessionRows } from '@repo/mocks/app';
 import { sessionListMocks } from './session-list-mock';
 import { createSubscriptionPublisher } from './subscription-publisher';
 import type { FixtureArguments, FixtureOutput } from './trpc-mock-link';

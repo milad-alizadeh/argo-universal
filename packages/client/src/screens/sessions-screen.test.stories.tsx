@@ -1,11 +1,11 @@
+import type { SessionListUpdate, SessionCounts } from '@repo/contracts';
 import {
   activeSessions,
   agentsList,
   archivedSessions,
   projectsList,
   sessionRows,
-} from '@repo/api/mocks';
-import type { SessionListUpdate, SessionCounts } from '@repo/contracts';
+} from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useEffect } from 'react';

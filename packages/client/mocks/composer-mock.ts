@@ -1,10 +1,10 @@
+import type { AgentInfo, PlanEntry } from '@repo/contracts';
 import {
   newSessionBranches,
   newSessionCatalogs,
   newSessionInputs,
   newSessionOptions,
-} from '@repo/api/mocks';
-import type { AgentInfo, PlanEntry } from '@repo/contracts';
+} from '@repo/mocks/app';
 import {
   type ComposerImage,
   type ComposerProps,

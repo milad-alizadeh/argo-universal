@@ -1,5 +1,5 @@
-import { recordedFeedMocks } from '@repo/api/mocks';
 import type { SessionUpdate } from '@repo/contracts';
+import { recordedFeedMocks } from '@repo/mocks/app';
 import { describe, expect, it } from 'vitest';
 import { keepUnchangedItems } from './keep-unchanged-items';
 import { toFeedView } from './to-feed-view';

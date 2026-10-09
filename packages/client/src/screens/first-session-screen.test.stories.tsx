@@ -1,13 +1,13 @@
-import {
-  newSessionCatalogs,
-  recordedFeedMocks,
-  sessionRows,
-} from '@repo/api/mocks';
 import type {
   FeedPageInput,
   FeedRowInput,
   FeedSubscribeInput,
 } from '@repo/contracts';
+import {
+  newSessionCatalogs,
+  recordedFeedMocks,
+  sessionRows,
+} from '@repo/mocks/app';
 import { PortalHost } from '@rn-primitives/portal';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';

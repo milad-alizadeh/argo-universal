@@ -25,7 +25,6 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@repo/api": "workspace:*",
     "@repo/mocks": "workspace:*",
     "@repo/typescript": "workspace:*",
     "@repo/vitest": "workspace:*",
@@ -39,6 +38,7 @@
     "./router": "./src/engine/router.ts",
     "./mocks": "./mocks/router.ts",
     "./ipc": "./src/engine/ipc.ts",
-    "./rejections": "./src/lib/count-rejections.ts"
+    "./rejections": "./src/lib/count-rejections.ts",
+    "./server-runtime": "./src/server-runtime.mts"
   }
 }

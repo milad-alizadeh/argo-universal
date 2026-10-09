@@ -1,4 +1,4 @@
-import { sessionRows } from '@repo/api/mocks';
+import { sessionRows } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { createRoot } from 'react-dom/client';

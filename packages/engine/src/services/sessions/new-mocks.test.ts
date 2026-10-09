@@ -1,15 +1,15 @@
 import {
+  AgentsListOutput,
+  SessionNewInput,
+  ProjectsBranchesOutput,
+} from '@repo/contracts';
+import {
   dangerousModeOptions,
   newSessionBranches,
   newSessionCatalogs,
   newSessionInputs,
   newSessionOptions,
-} from '@repo/api/mocks';
-import {
-  AgentsListOutput,
-  SessionNewInput,
-  ProjectsBranchesOutput,
-} from '@repo/contracts';
+} from '@repo/mocks/app';
 import { expect, it } from 'vitest';
 
 it.each(Object.entries(newSessionCatalogs))(

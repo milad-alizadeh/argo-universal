@@ -3,6 +3,9 @@ import { evaluateWaivers } from './not-yet-cleared/evaluate.mts';
 
 const oldFolder = 'apps/server/src/engine/*';
 const engineFolder = 'packages/engine/src/engine/*';
+const oldAppMocksFolder = 'packages/api/mocks/*';
+const appMocksFolder = 'mocks/app/*';
+const complexityCode = 'eslint(complexity)';
 const waiver = (glob: string): string =>
   JSON.stringify({
     overrides: [{ files: [glob], rules: { complexity: 'off' } }],
@@ -11,20 +14,33 @@ const report = JSON.stringify({
   diagnostics: [
     {
       filename: 'packages/engine/src/engine/example.ts',
-      code: 'eslint(complexity)',
+      code: complexityCode,
     },
   ],
 });
 
-it('retains the historical Engine waiver identity after extraction', (): void => {
-  expect(
-    evaluateWaivers({
-      current: waiver(engineFolder),
-      baseline: waiver(oldFolder),
-      report,
-    }).problems,
-  ).toEqual([]);
-});
+it.each([
+  [oldFolder, engineFolder],
+  [oldAppMocksFolder, appMocksFolder],
+])(
+  'retains the historical waiver identity from %s to %s',
+  (old, moved): void => {
+    expect(
+      evaluateWaivers({
+        current: waiver(moved),
+        baseline: waiver(old),
+        report: JSON.stringify({
+          diagnostics: [
+            {
+              filename: moved.replace('*', 'example.ts'),
+              code: complexityCode,
+            },
+          ],
+        }),
+      }).problems,
+    ).toEqual([]);
+  },
+);
 
 it.each([
   'mocks',
@@ -42,7 +58,7 @@ it.each([
     diagnostics: [
       {
         filename: `packages/engine/${folder}/example.ts`,
-        code: 'eslint(complexity)',
+        code: complexityCode,
       },
     ],
   });
@@ -58,6 +74,8 @@ it.each([
 it.each([
   [oldFolder, engineFolder],
   [engineFolder, oldFolder],
+  [oldAppMocksFolder, appMocksFolder],
+  [appMocksFolder, oldAppMocksFolder],
 ])(
   'rejects both historical aliases together: %s, %s',
   (first, second): void => {
@@ -74,31 +92,37 @@ it.each([
   },
 );
 
-it.each(['packages/engine/src/engine/**', 'packages/engine/src/supervisor/*'])(
-  'rejects an unlisted Engine glob: %s',
-  (glob): void => {
-    expect(
-      evaluateWaivers({
-        current: waiver(glob),
-        baseline: waiver(oldFolder),
-        report,
-      }).problems,
-    ).toContain(`${glob}: added entry or changed glob`);
-  },
-);
+it.each([
+  'packages/engine/src/engine/**',
+  'packages/engine/src/supervisor/*',
+  'mocks/app/**',
+  'mocks/app/nested/*',
+  'mocks/*',
+])('rejects an unlisted relocation glob: %s', (glob): void => {
+  expect(
+    evaluateWaivers({
+      current: waiver(glob),
+      baseline: waiver(oldFolder),
+      report,
+    }).problems,
+  ).toContain(`${glob}: added entry or changed glob`);
+});
 
-it('rejects a rule added during relocation', (): void => {
+it.each([
+  [oldFolder, engineFolder],
+  [oldAppMocksFolder, appMocksFolder],
+])('rejects a rule added while relocating %s to %s', (old, moved): void => {
   const current = JSON.stringify({
     overrides: [
       {
-        files: [engineFolder],
+        files: [moved],
         rules: { complexity: 'off', 'max-depth': 'off' },
       },
     ],
   });
   expect(
-    evaluateWaivers({ current, baseline: waiver(oldFolder), report }).problems,
-  ).toContain(`${engineFolder}: added rule max-depth`);
+    evaluateWaivers({ current, baseline: waiver(old), report }).problems,
+  ).toContain(`${moved}: added rule max-depth`);
 });
 
 it('still prunes a relocated rule with no findings', (): void => {

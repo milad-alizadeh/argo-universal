@@ -1,6 +1,7 @@
 import type { Entry } from './document.mts';
 
-const engineFolders = new Map([
+const relocatedFolders = new Map([
+  ['mocks/app/*', 'packages/api/mocks/*'],
   ['packages/engine/mocks/*', 'apps/server/mocks/*'],
   ['packages/engine/src/engine/*', 'apps/server/src/engine/*'],
   ['packages/engine/src/services/*', 'apps/server/src/services/*'],
@@ -25,7 +26,7 @@ const engineFolders = new Map([
 ]);
 
 const historicalFolder = (glob: string): string =>
-  engineFolders.get(glob) ?? glob;
+  relocatedFolders.get(glob) ?? glob;
 
 function duplicateIdentities(entries: Entry[]): string[] {
   const seen = new Set<string>();

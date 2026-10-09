@@ -2,10 +2,10 @@ import { randomUUID } from 'node:crypto';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { agentAdapters } from '@repo/agents';
-import { resolveRuntimeDirectory } from '@repo/api/server-runtime';
 import { ServerAddress } from '@repo/contracts';
 import type { EngineMessage } from '@repo/engine/ipc';
 import { engineMachine } from '@repo/engine/machine';
+import { resolveRuntimeDirectory } from '@repo/engine/server-runtime';
 import {
   AppFixtureAgents,
   createAppFixtureAdapters,
