@@ -830,7 +830,7 @@ export const ContentUpdatesDuringPanelToggle: Story = {
     ).toBeVisible();
     await expect(canvas.getByTestId(detailContentId)).toBeVisible();
     await expect(
-      canvas.getByRole('button', { name: closeInspectorLabel }),
+      await canvas.findByRole('button', { name: closeInspectorLabel }),
     ).toBeVisible();
   }),
 };
