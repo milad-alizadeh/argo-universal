@@ -4,7 +4,7 @@ const colorCanvas = document.createElement('canvas');
 colorCanvas.width = colorCanvas.height = 1;
 
 // Draws a colour to one pixel so any CSS colour syntax compares equal, without touching the page.
-function pixel(color: string) {
+function pixel(color: string): number[] {
   const context = colorCanvas.getContext('2d', { willReadFrequently: true });
   if (!context) throw new Error('Missing canvas context');
   context.clearRect(0, 0, 1, 1);
@@ -14,7 +14,7 @@ function pixel(color: string) {
 }
 
 // The first opaque surface hit under the middle of a fade, skipping the scrolled content it covers.
-function surfaceBehind(fade: Element) {
+function surfaceBehind(fade: Element): string {
   const box = fade.getBoundingClientRect();
   const scroll = fade.parentElement?.querySelector(
     ':scope > :not([data-testid^="scroll-fade"])',
@@ -31,14 +31,17 @@ function surfaceBehind(fade: Element) {
 }
 
 // Every gradient stop of a scroll fade is the colour of the surface behind it; pass the surface when it ignores pointer events.
-export function expectFadeColor(fade: Element, surface?: Element) {
+export async function expectFadeColor(
+  fade: Element,
+  surface?: Element,
+): Promise<void> {
   const surfaceColor = surface
     ? getComputedStyle(surface).backgroundColor
     : surfaceBehind(fade);
   const stops = fade.querySelectorAll('stop');
-  expect(stops.length).toBe(3);
+  await expect(stops).toHaveLength(3);
   for (const stop of stops)
-    expect(pixel(stop.getAttribute('stop-color') ?? '')).toEqual(
+    await expect(pixel(stop.getAttribute('stop-color') ?? '')).toEqual(
       pixel(surfaceColor),
     );
 }

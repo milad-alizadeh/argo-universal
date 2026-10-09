@@ -29,12 +29,17 @@ const envelope = feedRowColumns.pick({
 }).shape;
 
 // One value of the `sessionUpdate` column, so a kind the table does not list fails `tsc`.
-const kind = <Kind extends SessionUpdateKind>(value: Kind) =>
+const kind = <Kind extends SessionUpdateKind>(
+  value: Kind,
+): z.ZodEnum<{ [Key in Kind]: Key }> =>
   feedRowColumns.shape.sessionUpdate.extract([value]);
 
 // `_meta` is ACP's extension slot; Argo's own fields live under `_meta.argo` (ADR-0006).
-const meta = <Extension extends z.ZodObject>(extension: Extension) =>
-  z.strictObject({ argo: extension.optional() }).optional();
+const meta = <Extension extends z.ZodObject>(
+  extension: Extension,
+): z.ZodOptional<
+  z.ZodObject<{ argo: z.ZodOptional<Extension> }, z.core.$strict>
+> => z.strictObject({ argo: extension.optional() }).optional();
 const noExtensionMeta = meta(z.strictObject({}));
 
 const message = {

@@ -62,8 +62,8 @@
     // Vendor names stay in the adapter and mock CLI folders (ADR-0004).
     "argo/vendor-name": "error",
     "argo/json-parse-cast": "error",
-    "argo/mock-environment": "error",
     "argo/database-client": "error",
+    "argo/drizzle-schema-boundary": "error",
     // A relative path into packages/, tooling/ or apps/ skips package.json, pnpm isolation and exports (A2).
     "argo/cross-package-import": "error",
     // oxlint cannot resolve the re-exported members of @rn-primitives namespaces; tsc checks every namespace member.
@@ -92,7 +92,7 @@
         "**/mocks/**",
         "tools/**",
         "apps/*/scripts/**",
-        "apps/server/src/engine/machine.ts",
+        "packages/engine/src/engine/machine.ts",
         "apps/server/src/supervisor/index.ts"
       ],
       "rules": { "no-console": "off" }
@@ -135,24 +135,14 @@
       "rules": { "argo/icon-size": "error" }
     },
     {
-      // Vendor names and vendor types belong in the adapter and mock CLI folders (ADR-0015).
-      "files": [
-        "packages/agents/claude/**",
-        "packages/agents/codex/**",
-        "mocks/cli/claude/**",
-        "mocks/cli/codex/**"
-      ],
+      // Vendor names and vendor types belong in the adapter folders (ADR-0015).
+      "files": ["packages/agents/claude/**", "packages/agents/codex/**"],
       "rules": { "argo/vendor-name": "off", "argo/json-parse-cast": "off" }
     },
     {
       // The rule names the vendors it keeps out.
       "files": ["tooling/oxlint/plugin/vendor-name*"],
       "rules": { "argo/vendor-name": "off" }
-    },
-    {
-      // Mock CLI settings are read once, through readMockCliEnvironment() here.
-      "files": ["mocks/cli/mock-cli.ts"],
-      "rules": { "argo/mock-environment": "off" }
     },
     {
       // Only packages/db opens SQLite.
@@ -168,6 +158,7 @@
       "files": ["**/*.test.ts", "**/*.test.tsx", "**/*.test.mts"],
       "rules": {
         "argo/no-internal-mock": "error",
+        "argo/unit-test-io": "error",
         "vitest/no-disabled-tests": "error",
         "vitest/no-conditional-expect": "error",
         "vitest/no-identical-title": "error",
@@ -178,7 +169,7 @@
     },
     {
       // xstate/graph model tests assert per path, so a branch around expect is how they read the path.
-      "files": ["**/*machine.test.ts"],
+      "files": ["**/*machine.test.ts", "**/*machine.integration.test.ts"],
       "rules": { "vitest/no-conditional-expect": "off" }
     },
     {
@@ -211,7 +202,127 @@
       }
     },
     {
-      // End-to-end tests drive a real Server, mock only the Agent CLI and await every Playwright action (ADR-0011).
+      // Feed, connection and tRPC sit below components and screens (A2).
+      "files": [
+        "packages/client/src/feed/**",
+        "packages/client/src/connection/**",
+        "packages/client/src/trpc/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "#components/**",
+                  "../**/components",
+                  "../**/components/**",
+                  "../**/screens",
+                  "../**/screens/**",
+                  "@repo/client",
+                  "@repo/client/**"
+                ],
+                "message": "Client modules never import components, screens or the client barrel (A2)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // Generic code imports neither product nor local code (A2, ADR-0016 item 9).
+      "files": [
+        "packages/client/src/lib/**",
+        "packages/client/src/primitives/**"
+      ],
+      "excludeFiles": ["**/*.test.*", "**/*.stories.*"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "#components/**",
+                  "../**/components",
+                  "../**/components/**",
+                  "../**/screens",
+                  "../**/screens/**",
+                  "../**/feed",
+                  "../**/feed/**",
+                  "../**/connection",
+                  "../**/connection/**",
+                  "../**/navigation",
+                  "../**/navigation/**",
+                  "../**/trpc",
+                  "../**/trpc/**",
+                  "@repo/**",
+                  "!@repo/uniwind",
+                  "!@repo/uniwind/**"
+                ],
+                "message": "Generic code imports neither product nor local code (A2)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // Generic tooling packages import only other tooling packages (A2, ADR-0016 item 9).
+      "files": ["tooling/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/**",
+                  "!@repo/oxlint",
+                  "!@repo/oxlint/**",
+                  "!@repo/typescript",
+                  "!@repo/typescript/**",
+                  "!@repo/uniwind",
+                  "!@repo/uniwind/**",
+                  "!@repo/vitest",
+                  "!@repo/vitest/**"
+                ],
+                "message": "Generic code imports neither product nor local code (A2)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // Screens repeat the useTRPC bans because only the last matching override's options apply.
+      "files": ["packages/client/src/screens/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@trpc/client",
+                "message": "Screens get tRPC from useTRPC() only (ADR-0009)."
+              },
+              {
+                "name": "../trpc/create-trpc-client",
+                "message": "Screens get tRPC from useTRPC() only (ADR-0009)."
+              },
+              {
+                "name": "../trpc/context",
+                "importNames": ["useTRPCClient"],
+                "message": "Screens get tRPC from useTRPC() only (ADR-0009)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // App E2E drives a real Engine, injects fixture adapters and awaits every action (ADR-0018).
       "files": ["e2e/**"],
       "rules": {
         "playwright/no-element-handle": "error",
@@ -243,30 +354,7 @@
             "patterns": [
               {
                 "group": ["@repo/**", "!@repo/mocks", "!@repo/mocks/**"],
-                "message": "End-to-end tests mock only the Agent CLI and import only @repo/mocks."
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      // Recording converters and mock CLIs use the same vendor types as their adapters (ADR-0015).
-      "files": ["mocks/cli/*/**"],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          {
-            "paths": [
-              {
-                "name": "zod",
-                "message": "Use vendor SDK or generated protocol types; validate generic recording and transport envelopes in mocks/cli (ADR-0015)."
-              }
-            ],
-            "patterns": [
-              {
-                "group": ["zod/*"],
-                "message": "Use vendor SDK or generated protocol types (ADR-0015)."
+                "message": "App E2E imports shared Agent adapter fixtures through @repo/mocks (ADR-0018)."
               }
             ]
           }
@@ -291,7 +379,7 @@
       "rules": { "import/no-nodejs-modules": "error" }
     },
     {
-      // D4: client/src takes @repo/api with import type only; @repo/api is a devDependency for tests, so pnpm resolves a value import too.
+      // D4: only AppRouter from the real Engine router may cross into client/src, with import type (ADR-0016).
       "files": ["packages/client/src/**"],
       "excludeFiles": ["**/*.test.*", "**/*.stories.*", "**/mocks/**"],
       "rules": { "argo/api-type-only": "error" }
@@ -437,8 +525,13 @@
       }
     },
     {
+      // The shared Agent vocabulary and machine depend one way, including type imports (Spec 0006).
+      "files": ["packages/agents/src/**"],
+      "rules": { "import/no-cycle": ["error", { "ignoreTypes": false }] }
+    },
+    {
       // D9
-      "files": ["apps/server/**"],
+      "files": ["apps/server/**", "packages/engine/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -453,9 +546,341 @@
                   "@repo/storybook",
                   "@repo/storybook/**",
                   "@repo/desktop",
-                  "@repo/desktop/**"
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
                 ],
-                "message": "The Server never imports client or an App."
+                "message": "The Engine and Supervisor never import client or an App."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/engine/src/services/feed/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/client",
+                  "@repo/client/**",
+                  "@repo/universal-app",
+                  "@repo/universal-app/**",
+                  "@repo/storybook",
+                  "@repo/storybook/**",
+                  "@repo/desktop",
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
+                ],
+                "message": "The Engine and Supervisor never import client or an App."
+              },
+              {
+                "group": [
+                  "../sessions/**",
+                  "**/services/sessions/**",
+                  "../agents/**",
+                  "**/services/agents/**",
+                  "../blob/**",
+                  "**/services/blob/**",
+                  "../projects/**",
+                  "**/services/projects/**",
+
+                  "!../agents/index",
+                  "!../agents/index.ts",
+                  "!**/services/agents/index",
+                  "!**/services/agents/index.ts",
+                  "!../blob/index",
+                  "!../blob/index.ts",
+                  "!**/services/blob/index",
+                  "!**/services/blob/index.ts",
+                  "!../projects/index",
+                  "!../projects/index.ts",
+                  "!**/services/projects/index",
+                  "!**/services/projects/index.ts"
+                ],
+                "message": "Import another Engine domain through its index.ts face."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/engine/src/services/sessions/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/client",
+                  "@repo/client/**",
+                  "@repo/universal-app",
+                  "@repo/universal-app/**",
+                  "@repo/storybook",
+                  "@repo/storybook/**",
+                  "@repo/desktop",
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
+                ],
+                "message": "The Engine and Supervisor never import client or an App."
+              },
+              {
+                "group": [
+                  "../feed/**",
+                  "**/services/feed/**",
+                  "../agents/**",
+                  "**/services/agents/**",
+                  "../blob/**",
+                  "**/services/blob/**",
+                  "../projects/**",
+                  "**/services/projects/**",
+                  "!../feed/index",
+                  "!../feed/index.ts",
+                  "!**/services/feed/index",
+                  "!**/services/feed/index.ts",
+                  "!../agents/index",
+                  "!../agents/index.ts",
+                  "!**/services/agents/index",
+                  "!**/services/agents/index.ts",
+                  "!../blob/index",
+                  "!../blob/index.ts",
+                  "!**/services/blob/index",
+                  "!**/services/blob/index.ts",
+                  "!../projects/index",
+                  "!../projects/index.ts",
+                  "!**/services/projects/index",
+                  "!**/services/projects/index.ts"
+                ],
+                "message": "Import another Engine domain through its index.ts face."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/engine/src/services/agents/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/client",
+                  "@repo/client/**",
+                  "@repo/universal-app",
+                  "@repo/universal-app/**",
+                  "@repo/storybook",
+                  "@repo/storybook/**",
+                  "@repo/desktop",
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
+                ],
+                "message": "The Engine and Supervisor never import client or an App."
+              },
+              {
+                "group": [
+                  "../feed/**",
+                  "**/services/feed/**",
+                  "../sessions/**",
+                  "**/services/sessions/**",
+                  "../blob/**",
+                  "**/services/blob/**",
+                  "../projects/**",
+                  "**/services/projects/**",
+                  "!../feed/index",
+                  "!../feed/index.ts",
+                  "!**/services/feed/index",
+                  "!**/services/feed/index.ts",
+                  "!../sessions/index",
+                  "!../sessions/index.ts",
+                  "!**/services/sessions/index",
+                  "!**/services/sessions/index.ts",
+                  "!../blob/index",
+                  "!../blob/index.ts",
+                  "!**/services/blob/index",
+                  "!**/services/blob/index.ts",
+                  "!../projects/index",
+                  "!../projects/index.ts",
+                  "!**/services/projects/index",
+                  "!**/services/projects/index.ts"
+                ],
+                "message": "Import another Engine domain through its index.ts face."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/engine/src/services/blob/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/client",
+                  "@repo/client/**",
+                  "@repo/universal-app",
+                  "@repo/universal-app/**",
+                  "@repo/storybook",
+                  "@repo/storybook/**",
+                  "@repo/desktop",
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
+                ],
+                "message": "The Engine and Supervisor never import client or an App."
+              },
+              {
+                "group": [
+                  "../feed/**",
+                  "**/services/feed/**",
+                  "../sessions/**",
+                  "**/services/sessions/**",
+                  "../agents/**",
+                  "**/services/agents/**",
+                  "../projects/**",
+                  "**/services/projects/**",
+                  "!../feed/index",
+                  "!../feed/index.ts",
+                  "!**/services/feed/index",
+                  "!**/services/feed/index.ts",
+                  "!../sessions/index",
+                  "!../sessions/index.ts",
+                  "!**/services/sessions/index",
+                  "!**/services/sessions/index.ts",
+                  "!../agents/index",
+                  "!../agents/index.ts",
+                  "!**/services/agents/index",
+                  "!**/services/agents/index.ts",
+                  "!../projects/index",
+                  "!../projects/index.ts",
+                  "!**/services/projects/index",
+                  "!**/services/projects/index.ts"
+                ],
+                "message": "Import another Engine domain through its index.ts face."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/engine/src/services/projects/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/client",
+                  "@repo/client/**",
+                  "@repo/universal-app",
+                  "@repo/universal-app/**",
+                  "@repo/storybook",
+                  "@repo/storybook/**",
+                  "@repo/desktop",
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
+                ],
+                "message": "The Engine and Supervisor never import client or an App."
+              },
+              {
+                "group": [
+                  "../feed/**",
+                  "**/services/feed/**",
+                  "../sessions/**",
+                  "**/services/sessions/**",
+                  "../agents/**",
+                  "**/services/agents/**",
+                  "../blob/**",
+                  "**/services/blob/**",
+                  "!../feed/index",
+                  "!../feed/index.ts",
+                  "!**/services/feed/index",
+                  "!**/services/feed/index.ts",
+                  "!../sessions/index",
+                  "!../sessions/index.ts",
+                  "!**/services/sessions/index",
+                  "!**/services/sessions/index.ts",
+                  "!../agents/index",
+                  "!../agents/index.ts",
+                  "!**/services/agents/index",
+                  "!**/services/agents/index.ts",
+                  "!../blob/index",
+                  "!../blob/index.ts",
+                  "!**/services/blob/index",
+                  "!**/services/blob/index.ts"
+                ],
+                "message": "Import another Engine domain through its index.ts face."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["apps/server/**", "packages/engine/**"],
+      "excludeFiles": [
+        "packages/engine/src/services/feed/**",
+        "packages/engine/src/services/sessions/**",
+        "packages/engine/src/services/agents/**",
+        "packages/engine/src/services/blob/**",
+        "packages/engine/src/services/projects/**"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/client",
+                  "@repo/client/**",
+                  "@repo/universal-app",
+                  "@repo/universal-app/**",
+                  "@repo/storybook",
+                  "@repo/storybook/**",
+                  "@repo/desktop",
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
+                ],
+                "message": "The Engine and Supervisor never import client or an App."
+              },
+              {
+                "group": [
+                  "**/services/feed/**",
+                  "**/services/sessions/**",
+                  "**/services/agents/**",
+                  "**/services/blob/**",
+                  "**/services/projects/**",
+                  "!**/services/*/index",
+                  "!**/services/*/index.ts",
+                  "./feed/**",
+                  "./sessions/**",
+                  "./agents/**",
+                  "./blob/**",
+                  "./projects/**",
+                  "!./*/index",
+                  "!./*/index.ts"
+                ],
+                "message": "Import an Engine domain through its index.ts face."
               }
             ]
           }
@@ -511,19 +936,22 @@
     },
     {
       // Apps launch processes only at the three launchers; all git work stays in packages/git (ADR-0008).
-      "files": ["apps/**"],
+      "files": ["apps/**", "packages/engine/**"],
       "excludeFiles": [
         "**/*.test.*",
         "**/mocks/**",
         "apps/server/src/supervisor/engine-process.ts",
-        "apps/server/src/services/system/info.ts",
+        "packages/engine/src/services/system/info.ts",
         "apps/desktop/src/main/server-process.ts"
       ],
       "rules": { "argo/child-process": "error" }
     },
     {
       // Server machines take their clock and id generator from input.
-      "files": ["apps/server/src/**/*machine.ts"],
+      "files": [
+        "apps/server/src/**/*machine.ts",
+        "packages/engine/src/**/*machine.ts"
+      ],
       "rules": { "argo/machine-clock": "error" }
     }
   ]

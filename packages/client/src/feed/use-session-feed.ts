@@ -1,5 +1,14 @@
-import type { FeedSyncPoint, SessionSnapshot } from '@repo/contracts';
+import type {
+  FeedSubscribeOutput,
+  FeedSyncPoint,
+  SessionSnapshot,
+  SessionUpdate,
+  ToolCallUpdate,
+} from '@repo/contracts';
+import type { AppRouter } from '@repo/engine/router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import type { TRPCClientErrorLike } from '@trpc/client';
+import type { inferRouterOutputs } from '@trpc/server';
 import { useSubscription } from '@trpc/tanstack-react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTRPC } from '../trpc/context';
@@ -10,6 +19,27 @@ import {
   mergeNewestPage,
   mergeOlderPage,
 } from './feed-state';
+import type { FeedView } from './feed-view';
+import { keepUnchangedItems } from './keep-unchanged-items';
+import { toFeedView } from './to-feed-view';
+
+type FeedPageQuery = ReturnType<
+  typeof useQuery<
+    inferRouterOutputs<AppRouter>['feed']['page'],
+    TRPCClientErrorLike<AppRouter>
+  >
+>;
+interface SessionFeed extends ReturnType<typeof useOlderPages> {
+  view: FeedView | null;
+  liveToolCall: ToolCallUpdate | undefined;
+  snapshot: SessionSnapshot | null;
+  ready: boolean;
+  error: FeedPageQuery['error'];
+  retry: FeedPageQuery['refetch'];
+  openError: Error | TRPCClientErrorLike<AppRouter> | null;
+  retryOpen: () => void;
+  resumeAfterCommand: () => void;
+}
 
 // Rows per page (ADR-0007 pages by position): long enough that paging rarely shows while reading back.
 const pageSize = 150;
@@ -17,8 +47,8 @@ const pageSize = 150;
 // A fetch the hook keeps in its own state, so the query cache never holds it.
 const uncached = { staleTime: 0, gcTime: 0 };
 
-// A Session's Feed rows and snapshot: the newest page, older pages on request, and live changes after them (ADR 0007).
-export function useSessionFeed(sessionId: string) {
+// A Session's held Feed view, paging and live changes (ADR 0007).
+export function useSessionFeed(sessionId: string): SessionFeed {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const newestPage = useQuery(
@@ -40,7 +70,7 @@ export function useSessionFeed(sessionId: string) {
   const [syncPoint, setSyncPoint] = useState<FeedSyncPoint | null>(null);
   const { loadingOlder, loadOlder } = useOlderPages({
     sessionId,
-    feedRef,
+    getFeed: useCallback(() => feedRef.current, []),
     replaceFeed,
   });
 
@@ -78,31 +108,31 @@ export function useSessionFeed(sessionId: string) {
   );
 
   const { refetch } = newestPage;
-  const liveChanges = useSubscription(
-    trpc.feed.subscribe.subscriptionOptions(
-      { sessionId, after: syncPoint },
-      {
-        enabled: syncPoint !== null,
-        onData: (event) => {
-          if (event.type === 'closed') {
-            closed.current = true;
-            setClosureError(
-              event.failure === null ? null : new Error(event.failure),
-            );
-            return;
-          }
-          if (event.type === 'snapshot') {
-            setSnapshot(event.snapshot);
-            return;
-          }
-          const result = applySubscriptionEvent(feedRef.current, event);
-          replaceFeed(result.feed);
-          if (result.missingRowId) void fetchWholeRow(result.missingRowId);
-          if (result.reset) void refetch();
-        },
-      },
-    ),
+  const onLiveData = useCallback(
+    (event: FeedSubscribeOutput): void => {
+      if (event.type === 'closed') {
+        closed.current = true;
+        setClosureError(
+          event.failure === null ? null : new Error(event.failure),
+        );
+        return;
+      }
+      if (event.type === 'snapshot') {
+        setSnapshot(event.snapshot);
+        return;
+      }
+      const result = applySubscriptionEvent(feedRef.current, event);
+      replaceFeed(result.feed);
+      if (result.missingRowId) void fetchWholeRow(result.missingRowId);
+      if (result.reset) void refetch();
+    },
+    [replaceFeed, fetchWholeRow, refetch],
   );
+  const liveChanges = useSubscription({
+    ...trpc.feed.subscribe.subscriptionOptions({ sessionId, after: syncPoint }),
+    enabled: syncPoint !== null,
+    onData: onLiveData,
+  });
 
   const reset = liveChanges.reset;
   const retryOpen = useCallback(() => {
@@ -117,8 +147,22 @@ export function useSessionFeed(sessionId: string) {
     else setSyncPoint(next);
   }, [syncPoint, reset]);
 
+  const [held, setHeld] = useState(() => ({
+    rows: feed.rows,
+    snapshot,
+    view: snapshot ? toFeedView(feed.rows, snapshot) : null,
+  }));
+  let view = held.view;
+  if (held.rows !== feed.rows || held.snapshot !== snapshot) {
+    view = snapshot
+      ? keepUnchangedItems(held.view, toFeedView(feed.rows, snapshot))
+      : null;
+    setHeld({ rows: feed.rows, snapshot, view });
+  }
+
   return {
-    feed,
+    view,
+    liveToolCall: findLiveToolCall(feed.rows, snapshot),
     snapshot,
     // The first page and the snapshot have both arrived.
     ready: feed.epoch !== null && snapshot !== null,
@@ -137,20 +181,20 @@ export function useSessionFeed(sessionId: string) {
 
 function useOlderPages({
   sessionId,
-  feedRef,
+  getFeed,
   replaceFeed,
 }: {
   sessionId: string;
-  feedRef: { current: FeedState };
+  getFeed: () => FeedState;
   replaceFeed: (next: FeedState) => void;
-}) {
+}): { loadingOlder: boolean; loadOlder: () => Promise<void> } {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [loadingOlder, setLoadingOlder] = useState(false);
   const olderInFlight = useRef(false);
   // Pages the rows before the oldest held one, one request at a time.
   const loadOlder = useCallback(async () => {
-    const { hasOlder, startCursor, epoch } = feedRef.current;
+    const { hasOlder, startCursor, epoch } = getFeed();
     if (olderInFlight.current || !hasOlder) return;
     if (startCursor === null || epoch === null) return;
     olderInFlight.current = true;
@@ -166,14 +210,27 @@ function useOlderPages({
         }),
         ...uncached,
       });
-      replaceFeed(mergeOlderPage(feedRef.current, page));
+      replaceFeed(mergeOlderPage(getFeed(), page));
     } catch {
       // The rows stay as they were; the reader asks again by scrolling back to the top.
     } finally {
       olderInFlight.current = false;
       setLoadingOlder(false);
     }
-  }, [queryClient, trpc, sessionId, replaceFeed, feedRef]);
+  }, [queryClient, trpc, sessionId, replaceFeed, getFeed]);
 
   return { loadingOlder, loadOlder };
+}
+
+function findLiveToolCall(
+  rows: readonly SessionUpdate[],
+  snapshot: SessionSnapshot | null,
+): ToolCallUpdate | undefined {
+  const source = snapshot?.liveHeader?.source;
+  if (source?.type !== 'tool_call') return undefined;
+  return rows.findLast(
+    (row): row is ToolCallUpdate =>
+      row.sessionUpdate === 'tool_call_update' &&
+      row.toolCallId === source.toolCallId,
+  );
 }

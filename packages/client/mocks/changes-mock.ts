@@ -1,8 +1,14 @@
 import { changesMocks } from '@repo/api/mocks';
+import type { FixtureArguments } from './trpc-mock-link';
 import type { Fixtures } from './trpc-mock-link';
 
 // `session.changes` and `session.diff` for one Checkout from the contract mocks (ADR 0010).
-export function createChangesMocks(name: keyof typeof changesMocks) {
+export function createChangesMocks(name: keyof typeof changesMocks): {
+  'session.changes': () => (typeof changesMocks)[keyof typeof changesMocks]['files'];
+  'session.diff': (
+    input: FixtureArguments<'session.diff'>[0],
+  ) => (typeof changesMocks)[keyof typeof changesMocks]['diffs'][string];
+} {
   const mock = changesMocks[name];
   return {
     'session.changes': () => mock.files,

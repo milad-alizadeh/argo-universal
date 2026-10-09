@@ -1,9 +1,9 @@
 export const millisecondsPerSecond = 1000;
 
-const pad = (value: number) => String(value).padStart(2, '0');
+const pad = (value: number): string => String(value).padStart(2, '0');
 
 // A Turn's elapsed time for the live header: "41s", "2m 14s", "1h 02m".
-export function formatElapsed(milliseconds: number) {
+export function formatElapsed(milliseconds: number): string {
   const seconds = Math.floor(Math.max(0, milliseconds) / millisecondsPerSecond);
   if (seconds < 60) return `${seconds}s`;
   const minutes = Math.floor(seconds / 60);

@@ -29,11 +29,11 @@ One `GLOSSARY.md` and one `docs/adr/` folder at the repo root ("single-context")
 
 - Put all evidence and images in the PR body; upload images with `gh pr create --attach` or `gh pr edit --attach`, never commit them to Git.
 - Claude and Codex Sessions draw the same UI. Parity is part of every Session change.
-- End-to-end tests mock only the Agent CLI, with mocks in `mocks/cli/<agent>/`.
+- App end-to-end tests inject shared Argo fixtures at the Agent adapter port (`mocks/agent/`); provider translation unit tests verify typed SDK/protocol response fixtures through the real pure mapping. See ADR-0018.
 - Test assets live outside `src/`: `e2e/<flow>/`, `mocks/`, `tools/`. Call them mocks.
 - Every XState machine has model-based tests from `xstate/graph` that walk all of its transitions.
 - The product name lives only in app config, environment variables and UI text, so a rename stays small. The Session branch prefix in `packages/git` is stored data and stays as it is.
-- Reject, report and count unrecognised outside data. Before changing an adapter or its CLI mocks, read ADR-0015 and the installed SDK or generated protocol types.
+- Reject, report and count unrecognised outside data. Before changing an adapter or its response mocks, read ADR-0015 and the installed SDK or generated protocol types.
 
 <!-- BEGIN:turborepo-agent-rules -->
 

@@ -15,7 +15,7 @@ import { createSubscriptionPublisher } from './subscription-publisher';
 import { completedCommand } from './tool-call-mock';
 import { type Fixtures, pending } from './trpc-mock-link';
 
-const catalogAgent = (() => {
+const catalogAgent = ((): (typeof newSessionCatalogs.bothAvailable)[number] => {
   const [agent] = newSessionCatalogs.bothAvailable;
   if (!agent) throw new Error('No Agent in the catalog mock');
   return agent;
@@ -110,7 +110,7 @@ const arrivingRecording = recordedFeedMock('agent-2', 'command-outcomes');
 
 function firstTextOf(row: {
   content: readonly { type: string; text?: string }[];
-}) {
+}): string {
   const [block] = row.content;
   if (block?.type !== 'text' || block.text === undefined)
     throw new Error('Recorded message has no text');
@@ -123,13 +123,13 @@ export const oldestMessage = firstTextOf(
 );
 
 // Each recording's rows as one more copy, with ids and positions after the copies before it.
-const rowsAsCopy = (mock: FeedMock, copy: number) =>
-  mock.rows.map((row) => ({
+const rowsAsCopy = (mock: FeedMock, copy: number): FeedMock['rows'] =>
+  mock.rows.map((row): SessionUpdate => ({
     ...row,
     id: `${copy}-${row.id}`,
     position: copy * 1000 + row.position,
     ...('toolCallId' in row ? { toolCallId: `${copy}-${row.toolCallId}` } : {}),
-  })) as SessionUpdate[];
+  }));
 
 // The oldest recording, then every other recording seven times over, so the Feed spans several pages.
 const repeatedRecordings = Array.from({ length: 7 }, () =>
@@ -154,7 +154,7 @@ export const loadingOlderSessionMocks: Fixtures = {
     input.direction === 'before' ? pending()() : longFeedPage(input),
 };
 
-let releaseOlderPage = () => {};
+let releaseOlderPage = (): void => {};
 
 // Each older page waits until a test sends it, so the test can mark the reader's place first.
 function holdOlderPages(feed: FeedMock): Fixtures {
@@ -213,7 +213,7 @@ export const splitGroupSessionMocks = holdOlderPages(
 );
 
 // Sends the older page the Feed is waiting for.
-export const sendOlderPage = () => releaseOlderPage();
+export const sendOlderPage = (): void => releaseOlderPage();
 
 // The row the Agent sends while the reader is scrolled up.
 // Its first message, since plain text matches exactly where the last one ends in `done`, which other recordings send too.
@@ -233,7 +233,7 @@ const arrivingRow: SessionUpdate = {
 
 const arrivingRows = createSubscriptionPublisher<SessionUpdate>();
 // Sends the arriving row, once a test has scrolled away from the end.
-export const sendArrivingRow = () => arrivingRows.publish(arrivingRow);
+export const sendArrivingRow = (): void => arrivingRows.publish(arrivingRow);
 
 export const arrivingRowSessionMocks: Fixtures = {
   ...longSessionMocks,
@@ -245,7 +245,11 @@ export const arrivingRowSessionMocks: Fixtures = {
 };
 const runningFeedMocks = createFeedMocks(runningFeed);
 const idleFeedMocks = createFeedMocks(idleFeed);
-const feedMocksFor = ({ sessionId }: { sessionId: string }) =>
+const feedMocksFor = ({
+  sessionId,
+}: {
+  sessionId: string;
+}): ReturnType<typeof createFeedMocks> =>
   sessionId === 'session-2' ? idleFeedMocks : runningFeedMocks;
 
 // `session-1` is the running recording and `session-2` the idle one, so a story can switch between them.

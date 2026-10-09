@@ -1,227 +1,21 @@
-import { type RequestMock, recordedRequestMocks } from '@repo/api/mocks';
-import type { PendingElicitation } from '@repo/contracts';
-import { type ReactNode, useState } from 'react';
+import type { RequestMock } from '@repo/api/mocks';
+import type * as React from 'react';
+import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { CommandRow } from '../src/components/CommandRow';
-import { Composer, type ComposerDraft } from '../src/components/Composer';
-import {
-  type ElicitationAnswer,
-  ElicitationForm,
-  type ElicitationValues,
-} from '../src/components/ElicitationForm';
-import { ElicitationOutcome } from '../src/components/ElicitationOutcome';
-import { PermissionOutcome } from '../src/components/PermissionOutcome';
-import {
-  type PermissionAnswer,
-  PermissionRequest,
-} from '../src/components/PermissionRequest';
-import { ToolCallGroup } from '../src/components/ToolCallGroup';
-import { ToolCallRow } from '../src/components/ToolCallRow';
+import { CommandRow } from '../src/components/command-row';
+import { ToolCallGroup } from '../src/components/tool-call-group';
+import { ToolCallRow } from '../src/components/tool-call-row';
 import { toFeedView } from '../src/feed/to-feed-view';
-
-export const permissionMocks = recordedRequestMocks.filter(
-  (mock) => mock.recording === 'permission',
-);
-export const elicitationMocks = recordedRequestMocks.filter(
-  (mock) => mock.recording === 'elicitation',
-);
-function firstRecording(mocks: RequestMock[]): RequestMock {
-  const mock = mocks[0];
-  if (!mock) throw new Error('Request previews need the #54 recordings.');
-  return mock;
-}
-export const permissionMock = firstRecording(permissionMocks);
-export const elicitationMock = firstRecording(elicitationMocks);
-
-export const recordedElicitation =
-  elicitationMock.pending.snapshot.pendingElicitation;
-if (!recordedElicitation) throw new Error('Recording needs an Elicitation.');
-export const elicitationRequest: PendingElicitation = recordedElicitation;
-
-export const fieldsRequest: PendingElicitation = {
-  ...elicitationRequest,
-  message: 'A few details for the new issue',
-  requestedSchema: {
-    properties: {
-      title: { type: 'string', title: 'Title', minLength: 1 },
-      team: { type: 'string', title: 'Team', enum: ['Mobile', 'Desktop'] },
-      estimate: { type: 'integer', title: 'Estimate', minimum: 1, maximum: 8 },
-      notify: {
-        type: 'boolean',
-        title: 'Notify the team',
-        description: "Posts the issue to the team's channel.",
-      },
-    },
-    required: ['title'],
-  },
-};
-export const fieldsValues: ElicitationValues = {
-  title: 'Drafts vanish after a reconnect',
-  team: 'Mobile',
-  estimate: '12',
-  notify: true,
-};
-
-export const emptyAnswersRequest: PendingElicitation = {
-  ...fieldsRequest,
-  requestedSchema: {
-    properties: {
-      options: {
-        type: 'array',
-        title: 'Options',
-        minItems: 0,
-        default: [],
-        items: { type: 'string', enum: ['One'] },
-      },
-      choice: {
-        type: 'string',
-        title: 'Choice',
-        oneOf: [
-          { const: '', title: 'None' },
-          { const: 'Blue', title: 'Blue' },
-        ],
-      },
-      optional: { type: 'string', title: 'Optional' },
-      'detail.name': { type: 'string', title: 'Detail', default: 'release' },
-    },
-    required: ['options', 'choice'],
-  },
-};
-export const dateFormatsRequest: PendingElicitation = {
-  ...fieldsRequest,
-  requestedSchema: {
-    properties: {
-      date: { type: 'string', title: 'Date', format: 'date' },
-      time: { type: 'string', title: 'Date and time', format: 'date-time' },
-    },
-    required: ['date', 'time'],
-  },
-};
-export const dateFormatsValues: ElicitationValues = {
-  date: '2026-02-30',
-  time: '2026-10-06',
-};
-export const invalidSchemaRequest: PendingElicitation = {
-  ...fieldsRequest,
-  requestedSchema: {
-    properties: { value: { type: 'string', title: 'Value', pattern: '[' } },
-  },
-};
-
-export function RequestFrame({ children }: { children: ReactNode }) {
+import { permissionMock } from './request-mock';
+export function RequestFrame({
+  children,
+}: {
+  children: ReactNode;
+}): React.JSX.Element {
   return (
     <View className="w-full items-center p-4 wide:px-6">
       <View className="w-full max-w-composer">{children}</View>
     </View>
-  );
-}
-
-function ResumedComposer() {
-  const [draft, setDraft] = useState<ComposerDraft>({ text: '', images: [] });
-  return (
-    <Composer
-      draft={draft}
-      onDraftChange={setDraft}
-      onAttachImages={() => {}}
-      onSend={() => setDraft({ text: '', images: [] })}
-    />
-  );
-}
-
-export function PermissionRequestPreview({
-  denialMessage: initialMessage,
-  alreadyAnswered,
-  submitting,
-  onAnswer,
-}: {
-  denialMessage?: string;
-  alreadyAnswered?: string;
-  submitting?: boolean;
-  onAnswer?: (answer: PermissionAnswer) => void;
-}) {
-  const [denialMessage, setDenialMessage] = useState(initialMessage);
-  const [answer, setAnswer] = useState<PermissionAnswer>();
-  const request = permissionMock.pending.snapshot.pendingPermission;
-  if (!request) throw new Error('Recording needs a Permission request.');
-  const row = permissionMock.pending.rows.find(
-    (row) =>
-      row.sessionUpdate === 'tool_call_update' &&
-      row.toolCallId === request.toolCallId,
-  );
-  const input =
-    row?.sessionUpdate === 'tool_call_update'
-      ? (row.content.find((block) => block.type === 'terminal')?.command ??
-        (row.rawInput === undefined
-          ? undefined
-          : JSON.stringify(row.rawInput, null, 2)))
-      : undefined;
-  return (
-    <RequestFrame>
-      {answer ? (
-        <View className="gap-8">
-          <PermissionOutcome
-            outcome={{ outcome: 'selected', optionId: answer.optionId }}
-            message={answer.message}
-          />
-          <ResumedComposer />
-        </View>
-      ) : (
-        <PermissionRequest
-          request={request}
-          input={input}
-          reason={
-            row?.sessionUpdate === 'tool_call_update'
-              ? row._meta?.argo?.description
-              : undefined
-          }
-          denialMessage={denialMessage}
-          onDenialMessageChange={setDenialMessage}
-          onAnswer={(next) => {
-            onAnswer?.(next);
-            setAnswer(next);
-          }}
-          alreadyAnswered={alreadyAnswered}
-          submitting={submitting}
-        />
-      )}
-    </RequestFrame>
-  );
-}
-
-export function ElicitationFormPreview({
-  request = elicitationRequest,
-  values: initialValues = {},
-  alreadyAnswered,
-  source,
-  onAnswer,
-}: {
-  request?: PendingElicitation;
-  values?: ElicitationValues;
-  alreadyAnswered?: string;
-  source?: string;
-  onAnswer?: (answer: ElicitationAnswer) => void;
-}) {
-  const [answer, setAnswer] = useState<ElicitationAnswer>();
-  return (
-    <RequestFrame>
-      {answer ? (
-        <View className="gap-8">
-          <ElicitationOutcome request={request} answer={answer} />
-          <ResumedComposer />
-        </View>
-      ) : (
-        <ElicitationForm
-          request={request}
-          initialValues={initialValues}
-          onAnswer={(next) => {
-            onAnswer?.(next);
-            setAnswer(next);
-          }}
-          source={source}
-          alreadyAnswered={alreadyAnswered}
-        />
-      )}
-    </RequestFrame>
   );
 }
 
@@ -231,7 +25,7 @@ export function PermissionFeedPreview({
 }: {
   mock?: RequestMock;
   answered?: boolean;
-}) {
+}): React.JSX.Element {
   const state = answered ? mock.answered : mock.pending;
   const groups = toFeedView(state.rows, state.snapshot).items.filter(
     (item) => item.type === 'group',

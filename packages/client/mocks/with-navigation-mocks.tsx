@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import { type ComponentType, type ReactNode, useState } from 'react';
 import {
   type Navigate,
@@ -6,6 +7,7 @@ import {
 } from '../src/navigation/context';
 import { ScreenHeaderProvider } from '../src/navigation/screen-header';
 import { ScreenHeaderMock } from './screen-header-mock';
+import type { Fixtures } from './trpc-mock-link';
 
 export interface NavigationRecorder {
   readonly destinations: readonly NavigationDestination[];
@@ -34,13 +36,23 @@ export function createNavigationRecorder(): NavigationRecorder {
 
 interface StoryContext {
   id: string;
-  parameters: { navigation?: NavigationRecorder };
+  parameters: {
+    navigation?: NavigationRecorder;
+    screenPreview?: boolean;
+    trpc?: Fixtures;
+  };
 }
 
 export function withNavigationMocks(
   Story: ComponentType,
   context: StoryContext,
-) {
+): React.JSX.Element {
+  if (
+    !context.parameters.navigation &&
+    !context.parameters.screenPreview &&
+    !context.parameters.trpc
+  )
+    return <Story />;
   return (
     <NavigationMocks key={context.id} recorder={context.parameters.navigation}>
       <Story />
@@ -54,7 +66,7 @@ function NavigationMocks({
 }: {
   recorder?: NavigationRecorder;
   children: ReactNode;
-}) {
+}): React.JSX.Element {
   const [navigation] = useState(() => recorder ?? createNavigationRecorder());
   return (
     <NavigationProvider navigate={navigation.navigate}>

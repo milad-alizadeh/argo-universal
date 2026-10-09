@@ -6,13 +6,15 @@ import type {
   SessionListUpdate,
 } from '@repo/contracts';
 
+const exampleProjectPath = '/projects/example';
+
 const activityAt = Date.parse('2026-10-05T12:00:00.000Z');
 
 export const projectsList: ProjectsListOutput = [
   {
     id: 'project-1',
     name: 'Example Project',
-    path: '/projects/example',
+    path: exampleProjectPath,
     createdAt: activityAt - 60_000,
     checkoutChoice: { type: 'worktree', baseBranch: 'main' },
   },
@@ -40,13 +42,13 @@ const baseSession: SessionInfo = {
   projectId: 'project-1',
   agent: 'agent-one',
   parentSessionId: null,
-  cwd: '/projects/example',
+  cwd: exampleProjectPath,
   status: 'idle',
   title: 'Finished work',
   titleSource: 'agent',
   activity: 'The change is ready to review.',
   activityAt,
-  checkout: { type: 'main', path: '/projects/example', branch: 'main' },
+  checkout: { type: 'main', path: exampleProjectPath, branch: 'main' },
   plan: null,
   subagents: { running: 0, total: 0 },
   shells: { running: 0, total: 0 },
@@ -135,10 +137,10 @@ export const sessionRows = {
 
 // Each Agent has all row variations, so stories can check parity without naming vendors.
 export const activeSessions: SessionListOutput = {
-  sessions: agentsList.flatMap(({ agent }) =>
+  sessions: agentsList.flatMap(({ agent }): SessionInfo[] =>
     Object.values(sessionRows)
-      .filter((row) => row.archivedAt === null)
-      .map((row) => ({
+      .filter((row): boolean => row.archivedAt === null)
+      .map((row): typeof row => ({
         ...row,
         agent,
         sessionId: `${agent}:${row.sessionId}`,

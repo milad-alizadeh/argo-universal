@@ -1,0 +1,41 @@
+{
+  "name": "@repo/engine",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#mocks/*": "./mocks/*.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@repo/agents": "workspace:*",
+    "@repo/contracts": "workspace:*",
+    "@repo/db": "workspace:*",
+    "@repo/git": "workspace:*",
+    "@trpc/server": "catalog:",
+    "drizzle-orm": "catalog:",
+    "ws": "catalog:",
+    "xstate": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@repo/api": "workspace:*",
+    "@repo/mocks": "workspace:*",
+    "@repo/typescript": "workspace:*",
+    "@repo/vitest": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/ws": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "exports": {
+    "./machine": "./src/engine/machine.ts",
+    "./router": "./src/engine/router.ts",
+    "./mocks": "./mocks/router.ts",
+    "./ipc": "./src/engine/ipc.ts",
+    "./rejections": "./src/lib/count-rejections.ts"
+  }
+}

@@ -18,12 +18,12 @@ function Skeleton({
   const sv = useSharedValue(1);
 
   React.useEffect(() => {
-    sv.value = withRepeat(withTiming(dimmedOpacity, { duration }), -1, true);
+    sv.set(withRepeat(withTiming(dimmedOpacity, { duration }), -1, true));
   }, []);
 
   const style = useAnimatedStyle(
     () => ({
-      opacity: sv.value,
+      opacity: sv.get(),
     }),
     [sv],
   );

@@ -1,7 +1,8 @@
 import { MagnifyingGlassIcon, XIcon } from 'phosphor-react-native';
+import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { HeaderButton } from '../src/components/HeaderButton';
+import { HeaderButton } from '../src/components/header-button';
 import type { ScreenHeaderProps } from '../src/navigation/screen-header';
 import { Input } from '../src/primitives/input';
 import { Text } from '../src/primitives/text';
@@ -12,7 +13,7 @@ export function ScreenHeaderMock({
   left,
   right,
   search,
-}: ScreenHeaderProps) {
+}: ScreenHeaderProps): React.JSX.Element {
   const [searching, setSearching] = useState(false);
   return (
     <View className="h-11 flex-row items-center bg-background px-1">

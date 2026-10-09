@@ -1,4 +1,4 @@
-import type { ElicitationSchema } from '@repo/contracts';
+import { parseAgentEvent, type AgentEvent } from './agent-events';
 
 export interface ElicitationQuestion {
   id: string;
@@ -12,7 +12,7 @@ export function toQuestionAnswers(
   content: Record<string, unknown> = {},
 ): Record<string, string[]> {
   return Object.fromEntries(
-    Object.entries(content).map(([name, value]) => {
+    Object.entries(content).map(([name, value]): [string, string[]] => {
       if (typeof value === 'string') return [name, [value]];
       if (
         Array.isArray(value) &&
@@ -24,37 +24,64 @@ export function toQuestionAnswers(
   );
 }
 
-// Both Agents' question tools become the same ACP form.
-export function toElicitationForm(
-  questions: ElicitationQuestion[],
-): ElicitationSchema {
+type QuestionProjection = {
+  [
+    Field in Exclude<keyof ElicitationQuestion, 'options' | 'multiple'>
+  ]: unknown;
+} & {
+  options: {
+    [Field in keyof ElicitationQuestion['options'][number]]: unknown;
+  }[];
+  multiple?: boolean;
+};
+
+function questionChoices(question: QuestionProjection): object[] {
+  return question.options.map((option): object => ({
+    const: option.label,
+    title: option.label,
+    ...(option.description === undefined
+      ? {}
+      : { description: option.description }),
+  }));
+}
+
+function questionProperty(question: QuestionProjection): object {
+  const choices = questionChoices(question);
+  return {
+    title: question.title,
+    description: question.question,
+    ...(question.multiple
+      ? { type: 'array', items: { anyOf: choices } }
+      : { type: 'string', oneOf: choices }),
+  };
+}
+
+function questionSchema(questions: QuestionProjection[]): object {
   return {
     type: 'object',
     properties: Object.fromEntries(
-      questions.map((question) => {
-        const choices = question.options.map((option) => ({
-          const: option.label,
-          title: option.label,
-          ...(option.description ? { description: option.description } : {}),
-        }));
-        return [
-          question.id,
-          question.multiple
-            ? {
-                type: 'array',
-                title: question.title,
-                description: question.question,
-                items: { anyOf: choices },
-              }
-            : {
-                type: 'string',
-                title: question.title,
-                description: question.question,
-                oneOf: choices,
-              },
-        ];
-      }),
+      questions.map((question): [unknown, object] => [
+        question.id,
+        questionProperty(question),
+      ]),
     ),
-    required: questions.map((question) => question.id),
+    required: questions.map((question): unknown => question.id),
   };
+}
+
+export function toElicitationRequest(
+  toolCallId: string,
+  questions: QuestionProjection[],
+): AgentEvent {
+  return parseAgentEvent({
+    type: 'agent.elicitationRequested',
+    request: {
+      mode: 'form',
+      toolCallId,
+      message: questions
+        .map((question): unknown => question.question)
+        .join('\n'),
+      requestedSchema: questionSchema(questions),
+    },
+  });
 }

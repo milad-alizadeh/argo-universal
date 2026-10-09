@@ -1,20 +1,27 @@
 import { z } from 'zod';
 import { BlobRef } from '../feed/content-block';
 
-// The largest file `blob.upload` stores, 20 MiB.
-export const maxBlobUploadBytes = 20_971_520;
+const bytesPerMebibyte = 1_048_576;
+
+export const maxBlobUploadMebibytes = 20;
+export const maxBlobUploadBytes = maxBlobUploadMebibytes * bytesPerMebibyte;
 
 // One file in the `file` field; tRPC parses multipart input over HTTP.
 export const BlobUploadInput = z
   .custom<FormData>(
-    (value) => typeof FormData !== 'undefined' && value instanceof FormData,
+    (value): boolean =>
+      typeof FormData !== 'undefined' && value instanceof FormData,
   )
-  .refine((form) => {
-    let entries = 0;
-    for (const _ of form) entries += 1;
-    return entries === 1 && form.get('file') instanceof Blob;
-  }, 'Expected FormData with one file in the file field');
-export type BlobUploadInput = z.infer<typeof BlobUploadInput>;
+  .transform((form, context): Blob => {
+    const file = form.get('file');
+    if ([...form].length === 1 && file instanceof Blob) return file;
+    context.addIssue({
+      code: 'custom',
+      message: 'Expected FormData with one file in the file field',
+    });
+    return z.NEVER;
+  });
+export type BlobUploadInput = z.input<typeof BlobUploadInput>;
 
 export const BlobUploadOutput = BlobRef;
 export type BlobUploadOutput = z.infer<typeof BlobUploadOutput>;

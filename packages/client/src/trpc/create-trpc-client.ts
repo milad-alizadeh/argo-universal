@@ -1,8 +1,14 @@
-import type { AppRouter } from '@repo/api';
+import type { AppRouter } from '@repo/engine/router';
 import * as trpc from '@trpc/client';
 
+export interface ServerClient {
+  client: trpc.TRPCClient<AppRouter>;
+  webSocketClient: ReturnType<typeof trpc.createWSClient>;
+  close: ReturnType<typeof trpc.createWSClient>['close'];
+}
+
 // An HTTP route on the Server's WebSocket address, such as tRPC at /trpc (ADR 0002).
-export function serverHttpUrl(serverUrl: string, path: string) {
+export function serverHttpUrl(serverUrl: string, path: string): string {
   const url = new URL(path, serverUrl);
   url.protocol = url.protocol === 'wss:' ? 'https:' : 'http:';
   return url.toString();
@@ -11,8 +17,8 @@ export function serverHttpUrl(serverUrl: string, path: string) {
 // Every tRPC call goes over one WebSocket to the Server, except a call with a file, which goes over HTTP (ADR 0002).
 export function createTRPCClient(
   serverUrl: string,
-  beforeConnect: () => Promise<void> = async () => {},
-) {
+  beforeConnect: () => Promise<void> = async (): Promise<void> => {},
+): ServerClient {
   const webSocketClient = trpc.createWSClient({
     // `beforeConnect` waits out the retry delay, so the Connection machine can cut it short.
     url: async () => {
@@ -35,3 +41,5 @@ export function createTRPCClient(
 }
 
 export type TRPCClient = ReturnType<typeof createTRPCClient>['client'];
+
+export type ClientError = trpc.TRPCClientErrorLike<AppRouter>;

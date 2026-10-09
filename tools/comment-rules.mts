@@ -54,8 +54,8 @@ const commentText = (line: string): string | undefined => {
 
 const messages = (rules: CommentRule[], text: string): string[] =>
   rules
-    .filter(({ pattern }) => pattern.test(text))
-    .map(({ message }) => message);
+    .filter(({ pattern }): boolean => pattern.test(text))
+    .map(({ message }): string => message);
 
 const ruleList = (suppression: string): string =>
   suppression.split('*/', 1).join('').split('--', 1).join('');

@@ -24,7 +24,9 @@ export function bezierEasing({
   y1,
   x2,
   y2,
-}: (typeof easingCurve)[keyof typeof easingCurve]) {
+}: (typeof easingCurve)[keyof typeof easingCurve]): ReturnType<
+  typeof Easing.bezier
+> {
   return Easing.bezier(x1, y1, x2, y2);
 }
 

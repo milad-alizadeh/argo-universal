@@ -19,7 +19,7 @@ export function toNativeTokenValue(
 
   if (name === '--shadow' || name.startsWith('--shadow-')) {
     return value
-      .replace(shadowColorPattern, (color) => {
+      .replace(shadowColorPattern, (color): string => {
         const parsedColor = parse(color);
         if (!parsedColor) {
           throw new Error(`Invalid theme shadow colour: ${color}`);
@@ -28,7 +28,7 @@ export function toNativeTokenValue(
       })
       .replace(
         shadowRemPattern,
-        (_length, amount: string) => `${Number(amount) * remSize}px`,
+        (_length, amount: string): string => `${Number(amount) * remSize}px`,
       );
   }
 

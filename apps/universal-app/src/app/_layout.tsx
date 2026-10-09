@@ -1,15 +1,16 @@
-import '../../global.css';
 import {
   AppProviders,
   type Navigate,
   NavigationProvider,
   useConnection,
 } from '@repo/client';
+import '../../global.css';
 import { PortalHost } from '@rn-primitives/portal';
 import { registerDevMenuItems } from 'expo-dev-client';
-import { type Href, router, Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { ThemeProvider } from 'expo-router/react-navigation';
 import { StatusBar } from 'expo-status-bar';
+import type * as React from 'react';
 import { useEffect } from 'react';
 import { AppState, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -28,7 +29,7 @@ if (__DEV__ && Platform.OS !== 'web') {
   void registerDevMenuItems([
     {
       name: 'Open Storybook',
-      callback: () => router.push('/(dev)/storybook'),
+      callback: (): void => router.push('/(dev)/storybook'),
       shouldCollapse: true,
     },
   ]);
@@ -53,10 +54,10 @@ const serverUrl =
 // Screens in @repo/client navigate through this.
 const navigate: Navigate = (destination, options) =>
   options?.replace
-    ? router.replace(hrefFor(destination) as Href)
-    : router.navigate(hrefFor(destination) as Href);
+    ? router.replace(hrefFor(destination))
+    : router.navigate(hrefFor(destination));
 
-export default function RootLayout() {
+export default function RootLayout(): React.JSX.Element {
   const { theme } = useUniwind();
   const navigationTheme = useNavigationTheme();
 
@@ -85,13 +86,13 @@ export default function RootLayout() {
 }
 
 // Coming to the foreground lets a waiting reconnect attempt go at once.
-function ForegroundSignal() {
+function ForegroundSignal(): null {
   const connection = useConnection();
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
       if (state === 'active') connection.send({ type: 'app.foreground' });
     });
-    return () => subscription.remove();
+    return (): void => subscription.remove();
   }, [connection]);
   return null;
 }

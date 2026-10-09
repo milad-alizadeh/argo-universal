@@ -1,0 +1,56 @@
+diff --git a/dist/declarations/src/graph/adjacency.d.ts b/dist/declarations/src/graph/adjacency.d.ts
+index c9401779fe3b2a071d37959691d2e7f8f81cbc42..eb6476c22a9e1aaef52b91c74380b1268fa79863 100644
+--- a/dist/declarations/src/graph/adjacency.d.ts
++++ b/dist/declarations/src/graph/adjacency.d.ts
+@@ -1,6 +1,6 @@
+-import { ActorLogic, ActorSystem, EventObject, Snapshot } from "../index.js";
+-import { TraversalOptions, AdjacencyMap } from "./types.js";
+-export declare function getAdjacencyMap<TSnapshot extends Snapshot<unknown>, TEvent extends EventObject, TInput, TSystem extends ActorSystem<any> = ActorSystem<any>>(logic: ActorLogic<TSnapshot, TEvent, TInput, TSystem>, options: TraversalOptions<TSnapshot, TEvent, TInput>): AdjacencyMap<TSnapshot, TEvent>;
++import { AnyActorLogic, EventFromLogic, InputFrom } from "../index.js";
++import { GraphEventFromLogic, TraversalOptions, AdjacencyMap } from "./types.js";
++export declare function getAdjacencyMap<TLogic extends AnyActorLogic, TGraphEvent extends GraphEventFromLogic<NoInfer<TLogic>> = EventFromLogic<TLogic>>(logic: TLogic, options: TraversalOptions<ReturnType<TLogic['transition']>, TGraphEvent, InputFrom<TLogic>>): AdjacencyMap<ReturnType<TLogic['transition']>, TGraphEvent>;
+ export declare function adjacencyMapToArray<TSnapshot, TEvent>(adjMap: AdjacencyMap<TSnapshot, TEvent>): Array<{
+     state: TSnapshot;
+     event: TEvent;
+diff --git a/dist/declarations/src/graph/pathFromEvents.d.ts b/dist/declarations/src/graph/pathFromEvents.d.ts
+index e9abcdb425a4eba9158491ff4be765318daae03c..933c42bef6cd009bda04963a374a57c7e4ca801f 100644
+--- a/dist/declarations/src/graph/pathFromEvents.d.ts
++++ b/dist/declarations/src/graph/pathFromEvents.d.ts
+@@ -1,3 +1,3 @@
+-import { ActorLogic, ActorSystem, EventObject, Snapshot } from "../index.js";
+-import { StatePath, TraversalOptions } from "./types.js";
+-export declare function getPathsFromEvents<TSnapshot extends Snapshot<unknown>, TEvent extends EventObject, TInput, TSystem extends ActorSystem<any> = ActorSystem<any>>(logic: ActorLogic<TSnapshot, TEvent, TInput, TSystem>, events: TEvent[], options?: TraversalOptions<TSnapshot, TEvent, TInput>): Array<StatePath<TSnapshot, TEvent>>;
++import { AnyActorLogic, EventFromLogic, InputFrom } from "../index.js";
++import { GraphEventFromLogic, StatePath, TraversalOptions } from "./types.js";
++export declare function getPathsFromEvents<TLogic extends AnyActorLogic, TGraphEvent extends GraphEventFromLogic<NoInfer<TLogic>> = EventFromLogic<TLogic>>(logic: TLogic, events: TGraphEvent[], options?: TraversalOptions<ReturnType<TLogic['transition']>, TGraphEvent, InputFrom<TLogic>>): Array<StatePath<ReturnType<TLogic['transition']>, TGraphEvent>>;
+diff --git a/dist/declarations/src/graph/shortestPaths.d.ts b/dist/declarations/src/graph/shortestPaths.d.ts
+index d722046fca6c28a25933c9805f8e702e41c964d4..fe6de99d9be945ec59ba66b30e8a5ccc08ac9a9d 100644
+--- a/dist/declarations/src/graph/shortestPaths.d.ts
++++ b/dist/declarations/src/graph/shortestPaths.d.ts
+@@ -1,3 +1,3 @@
+ import { AnyActorLogic, EventFromLogic, InputFrom } from "../index.js";
+-import { StatePath, TraversalOptions } from "./types.js";
+-export declare function getShortestPaths<TLogic extends AnyActorLogic>(logic: TLogic, options?: TraversalOptions<ReturnType<TLogic['transition']>, EventFromLogic<TLogic>, InputFrom<TLogic>>): Array<StatePath<ReturnType<TLogic['transition']>, EventFromLogic<TLogic>>>;
++import { GraphEventFromLogic, StatePath, TraversalOptions } from "./types.js";
++export declare function getShortestPaths<TLogic extends AnyActorLogic, TGraphEvent extends GraphEventFromLogic<NoInfer<TLogic>> = EventFromLogic<TLogic>>(logic: TLogic, options?: TraversalOptions<ReturnType<TLogic['transition']>, TGraphEvent, InputFrom<TLogic>>): Array<StatePath<ReturnType<TLogic['transition']>, TGraphEvent>>;
+diff --git a/dist/declarations/src/graph/simplePaths.d.ts b/dist/declarations/src/graph/simplePaths.d.ts
+index b4349bc8c32f24ffc211e86ac71dc39927a7e36e..c6b1d5af19db2c9dd29ab59d514dc515ab3ed1a3 100644
+--- a/dist/declarations/src/graph/simplePaths.d.ts
++++ b/dist/declarations/src/graph/simplePaths.d.ts
+@@ -1,3 +1,3 @@
+ import { AnyActorLogic, EventFromLogic, InputFrom } from "../index.js";
+-import { StatePath, TraversalOptions } from "./types.js";
+-export declare function getSimplePaths<TLogic extends AnyActorLogic>(logic: TLogic, options?: TraversalOptions<ReturnType<TLogic['transition']>, EventFromLogic<TLogic>, InputFrom<TLogic>>): Array<StatePath<ReturnType<TLogic['transition']>, EventFromLogic<TLogic>>>;
++import { GraphEventFromLogic, StatePath, TraversalOptions } from "./types.js";
++export declare function getSimplePaths<TLogic extends AnyActorLogic, TGraphEvent extends GraphEventFromLogic<NoInfer<TLogic>> = EventFromLogic<TLogic>>(logic: TLogic, options?: TraversalOptions<ReturnType<TLogic['transition']>, TGraphEvent, InputFrom<TLogic>>): Array<StatePath<ReturnType<TLogic['transition']>, TGraphEvent>>;
+diff --git a/dist/declarations/src/graph/types.d.ts b/dist/declarations/src/graph/types.d.ts
+index a6f3ebd2624a6785cab7a693e7eae126925d7fa0..a4d79c5d0532c9f66e308812382f673655d0189f 100644
+--- a/dist/declarations/src/graph/types.d.ts
++++ b/dist/declarations/src/graph/types.d.ts
+@@ -1,4 +1,5 @@
+-import { AnyStateNode, EventObject, AnyTransitionDefinition, Snapshot, MachineContext, ActorLogic, MachineSnapshot } from "../index.js";
++import { AnyStateNode, EventFromLogic, AnyActorLogic, DoneActorEvent, ErrorActorEvent, SnapshotEvent, DoneStateEvent, EventObject, AnyTransitionDefinition, Snapshot, MachineContext, ActorLogic, MachineSnapshot } from "../index.js";
++export type GraphEventFromLogic<TLogic extends AnyActorLogic> = EventFromLogic<TLogic> | DoneActorEvent | ErrorActorEvent | SnapshotEvent | DoneStateEvent | (EventObject & { type: `xstate.after.${string}` });
+ export type { AnyStateNode };
+ type JSONSerializable<T extends object, U> = T & {
+     toJSON: () => U;

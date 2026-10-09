@@ -1,162 +1,59 @@
-import type {
-  ContentBlock,
-  ContextUsage,
-  PendingElicitation,
-  PendingPermission,
-  PermissionOption,
-  PlanMarkdown,
-  RowAppend,
-  RowPatch,
-  SessionInfo,
-  SessionPromptInput,
-  SessionSetConfigOptionInput,
-  SessionSetConfigOptionOutput,
-  SessionUpdate,
-  StopReason,
-  SubagentState,
-  TerminalExitStatus,
-  ToolCallTerminal,
-  ToolCallUpdate,
-  Turn,
-  TurnError,
-  TurnUsage,
-} from '@repo/contracts';
-import type { ActorRef, Snapshot } from 'xstate';
-import type { AgentAdapter } from './agent-adapter';
+import type { FeedChange } from '@repo/contracts';
+import type { z } from 'zod';
+import { AgentLifecycleEvent } from './agent-lifecycle';
+import type { PresentOptional } from './agent-optionals';
+import type { AgentShell } from './agent-shell';
+import type { AgentSubagent } from './agent-subagent';
 
-// The Feed supplies these fields when it assigns a change to a Session and Turn.
-type FeedEnvelope = 'sessionId' | 'turnId' | 'position' | 'revision';
-type WithoutEnvelope<Update> = Update extends SessionUpdate
-  ? Omit<Update, FeedEnvelope>
-  : never;
-
-export type FeedUpdate = WithoutEnvelope<SessionUpdate>;
-export type FeedChange =
-  | { type: 'upsert'; update: FeedUpdate }
-  | ({ type: 'append' } & Pick<RowAppend, 'id' | 'field' | 'text'>)
-  | ({ type: 'patch' } & Pick<RowPatch, 'id' | 'set'>);
-
-export interface AgentCapabilities {
-  permissionFeedback: boolean;
-  planApproval: 'continueTurn' | 'startTurn';
-  stopShell: boolean;
-}
-
-export type AgentConfigValue = Pick<
-  SessionSetConfigOptionInput,
-  'configId' | 'value'
->;
-
-export type AgentCommand =
-  | {
-      type: 'agent.prompt';
-      turnId: Turn['id'];
-      content: SessionPromptInput['prompt'];
-    }
-  | { type: 'agent.cancel' }
-  | {
-      type: 'agent.answerPermission';
-      toolCallId: PendingPermission['toolCallId'];
-      optionId: PermissionOption['optionId'] | null;
-      message?: string;
-    }
-  | {
-      type: 'agent.answerElicitation';
-      action: 'accept' | 'decline' | 'cancel';
-      content?: Record<string, unknown>;
-    }
-  | ({ type: 'agent.setConfigOption' } & AgentConfigValue)
-  | {
-      type: 'agent.answerPlanProposal';
-      planId: PlanMarkdown['planId'];
-      decision: 'approve';
-      turnId?: Turn['id'];
-    }
-  | {
-      type: 'agent.answerPlanProposal';
-      planId: PlanMarkdown['planId'];
-      decision: 'keep_planning';
-      feedback: string;
-      turnId?: Turn['id'];
-    }
-  | { type: 'agent.rename'; title: NonNullable<SessionInfo['title']> }
-  | { type: 'agent.stopShell'; shellId: AgentShell['id'] }
-  | { type: 'agent.stop' };
-
-export interface AgentSubagent extends Partial<Pick<SessionInfo, 'title'>> {
-  toolCallId: ToolCallUpdate['toolCallId'];
-  vendorSessionId: string;
-  prompt: ContentBlock[];
-  role?: string;
-  state: SubagentState;
-  turn?: {
-    vendorTurnId: string;
-    model?: string;
-    startedAt: Turn['startedAt'];
-    endedAt?: NonNullable<Turn['endedAt']>;
-    stopReason?: StopReason;
-    usage?: TurnUsage;
-    error?: TurnError;
-  };
-}
-
-export interface AgentShell {
-  id: string;
-  toolCallId: ToolCallUpdate['toolCallId'];
-  command: ToolCallTerminal['command'];
-  cwd: SessionInfo['cwd'];
-  status: 'running' | 'exited' | 'stopped' | 'lost';
-  startedAt: Turn['startedAt'];
-  endedAt?: NonNullable<Turn['endedAt']>;
-  exitCode?: TerminalExitStatus['exitCode'] | null;
-}
+export type { FeedChange, FeedUpdate } from '@repo/contracts';
+export type { AgentCommand, AgentConfigValue } from './agent-command';
+export { AgentCapabilities } from './agent-capabilities';
+export { AgentReadyData, AgentReadyEvent } from './agent-lifecycle';
+export { AgentShell } from './agent-shell';
+export { AgentSubagent } from './agent-subagent';
 
 export type AgentEvent =
-  | {
-      type: 'agent.ready';
-      vendorSessionId: string;
-      configOptions: SessionSetConfigOptionOutput['configOptions'];
-      capabilities: AgentCapabilities;
-      continuedOutside: boolean;
-    }
+  | AcceptedLifecycleEvent<z.infer<typeof AgentLifecycleEvent>>
   | {
       type: 'agent.feed';
       change: FeedChange;
       subagentToolCallId?: AgentSubagent['toolCallId'];
-    }
-  | { type: 'agent.messageRejected'; reason: string }
-  | { type: 'agent.permissionRequested'; request: PendingPermission }
-  | {
-      type: 'agent.elicitationRequested';
-      request: Omit<PendingElicitation, 'requestId'>;
-    }
-  | { type: 'agent.usage'; usage: ContextUsage }
-  | {
-      type: 'agent.configOptionsChanged';
-      configOptions: SessionSetConfigOptionOutput['configOptions'];
-    }
-  | { type: 'agent.turnStarted' }
-  | {
-      type: 'agent.turnEnded';
-      stopReason: StopReason;
-      usage?: TurnUsage;
-      error?: TurnError;
-    }
-  | ({ type: 'agent.planProposed' } & Pick<PlanMarkdown, 'planId' | 'content'>)
-  | { type: 'agent.titleChanged'; title: NonNullable<SessionInfo['title']> }
-  | { type: 'agent.subagentChanged'; subagent: AgentSubagent }
-  | { type: 'agent.shellChanged'; shell: AgentShell }
-  | { type: 'agent.shellOutput'; shellId: AgentShell['id']; text: string };
+    };
 
-export type AgentParent = ActorRef<Snapshot<unknown>, AgentEvent>;
+const acceptedEvents = new WeakSet<AgentEvent>();
 
-export interface AgentInput extends Pick<SessionInfo, 'sessionId' | 'cwd'> {
-  adapter: AgentAdapter;
-  vendorSessionId: string | null;
-  configOptions: AgentConfigValue[];
-  parent: AgentParent;
+export function parseAgentEvent(candidate: unknown): AgentEvent {
+  const event = AgentLifecycleEvent.parse(candidate);
+  if (!isPresentEvent(event)) throw new Error('Expected present event fields');
+  acceptedEvents.add(event);
+  return event;
 }
 
-export interface AgentOutput {
-  failure: string | null;
+export function acceptAgentEvent(event: AgentEvent): AgentEvent {
+  if (event.type === 'agent.feed') return event;
+  if (acceptedEvents.has(event)) return event;
+  return rejectInvalidEvent(event);
 }
+
+function rejectInvalidEvent(event: AgentEvent): AgentEvent {
+  try {
+    return parseAgentEvent(event);
+  } catch {
+    return {
+      type: 'agent.messageRejected',
+      reason: `Invalid Argo event: ${event.type}`,
+    };
+  }
+}
+
+function isPresentEvent(
+  event: z.infer<typeof AgentLifecycleEvent>,
+): event is AcceptedLifecycleEvent<typeof event> {
+  return Object.values(event).every((value): boolean => value !== undefined);
+}
+
+type AcceptedLifecycleEvent<Event> = Event extends { subagent: unknown }
+  ? PresentOptional<Omit<Event, 'subagent'>> & { subagent: AgentSubagent }
+  : Event extends { shell: unknown }
+    ? PresentOptional<Omit<Event, 'shell'>> & { shell: AgentShell }
+    : PresentOptional<Event>;

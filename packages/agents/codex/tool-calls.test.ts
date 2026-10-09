@@ -1,51 +1,24 @@
-import { execFileSync } from 'node:child_process';
-import {
-  existsSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { ToolCallContent } from '@repo/contracts';
+import { describe, expect, it } from 'vitest';
 import type { FileUpdateChange } from './protocol.gen';
 import { toToolCall } from './tool-calls';
 
-describe('file Tool call patches', () => {
-  let checkout: string;
-  beforeEach(() => {
-    checkout = mkdtempSync(join(tmpdir(), 'agent-patch-'));
-    execFileSync('git', ['init', '--quiet'], { cwd: checkout });
-  });
-  afterEach(() => rmSync(checkout, { recursive: true, force: true }));
+const diffContent = (
+  change: FileUpdateChange,
+): Extract<ToolCallContent, { type: 'diff' }> => {
+  const row = toToolCall(
+    { type: 'fileChange', id: 'edit', status: 'completed', changes: [change] },
+    'settled',
+  );
+  const content = row.content.find(
+    (entry): entry is Extract<ToolCallContent, { type: 'diff' }> =>
+      entry.type === 'diff',
+  );
+  if (!content) throw new Error('Missing diff');
+  return content;
+};
 
-  const applyChange = (change: FileUpdateChange) => {
-    const row = toToolCall(
-      {
-        type: 'fileChange',
-        id: 'edit',
-        status: 'completed',
-        changes: [change],
-      },
-      'settled',
-    );
-    const content = row.content.find((entry) => entry.type === 'diff');
-    if (!content?.patch) throw new Error('The Tool call has no patch.');
-    execFileSync('git', ['apply', '--whitespace=nowarn', '-'], {
-      cwd: checkout,
-      input: content.patch.text,
-    });
-    return content.changes;
-  };
-
-  const contents = [
-    { name: 'empty content', text: '' },
-    { name: 'one newline', text: '\n' },
-    { name: 'a final newline', text: 'first\nsecond\n' },
-    { name: 'no final newline', text: 'first\nsecond' },
-  ];
-
+describe('file Tool call translation', (): void => {
   it.each([
     'space name.txt',
     'tab\tname.txt',
@@ -55,77 +28,57 @@ describe('file Tool call patches', () => {
     'back\\slash.txt',
     'accent-é.txt',
     'accent-é\tname.txt',
-  ])('preserves path %j when adding, moving and deleting', (filePath) => {
-    const text = 'content\n';
-    applyChange({ path: filePath, kind: { type: 'add' }, diff: text });
-    expect(readFileSync(join(checkout, filePath), 'utf8')).toBe(text);
-    const movedPath = `moved-${filePath}`;
-    applyChange({
-      path: filePath,
-      kind: { type: 'update', move_path: movedPath },
-      diff: '',
-    });
-    expect(existsSync(join(checkout, filePath))).toBe(false);
-    expect(readFileSync(join(checkout, movedPath), 'utf8')).toBe(text);
-    applyChange({ path: movedPath, kind: { type: 'delete' }, diff: text });
-    expect(existsSync(join(checkout, movedPath))).toBe(false);
-  });
-
-  it.each(contents)(
-    'adds a file with $name without changing its bytes',
-    ({ text }) => {
-      expect(
-        applyChange({ path: 'file.txt', kind: { type: 'add' }, diff: text }),
-      ).toEqual([{ operation: 'add', path: 'file.txt', newText: text }]);
-      expect(readFileSync(join(checkout, 'file.txt'), 'utf8')).toBe(text);
-    },
-  );
-
-  it.each(contents)('deletes a file with $name', ({ text }) => {
-    writeFileSync(join(checkout, 'file.txt'), text);
+  ])('preserves path %j in Argo add, move and delete values', (path): void => {
     expect(
-      applyChange({ path: 'file.txt', kind: { type: 'delete' }, diff: text }),
-    ).toEqual([{ operation: 'delete', path: 'file.txt', oldText: text }]);
-    expect(existsSync(join(checkout, 'file.txt'))).toBe(false);
+      diffContent({ path, kind: { type: 'add' }, diff: 'content\n' }).changes,
+    ).toEqual([{ operation: 'add', path, newText: 'content\n' }]);
+    expect(
+      diffContent({
+        path,
+        kind: { type: 'update', move_path: 'moved.txt' },
+        diff: '',
+      }).changes,
+    ).toEqual([{ operation: 'move', path: 'moved.txt', oldPath: path }]);
+    expect(
+      diffContent({ path, kind: { type: 'delete' }, diff: 'content\n' })
+        .changes,
+    ).toEqual([{ operation: 'delete', path, oldText: 'content\n' }]);
   });
-
-  it.each(contents)(
-    'moves a file with $name without changing its bytes',
-    ({ text }) => {
-      writeFileSync(join(checkout, 'old.txt'), text);
+  it.each(['', '\n', 'first\nsecond\n', 'first\nsecond'])(
+    'preserves provider file content %j',
+    (text): void => {
       expect(
-        applyChange({
-          path: 'old.txt',
-          kind: { type: 'update', move_path: 'new.txt' },
-          diff: '',
-        }),
-      ).toEqual([{ operation: 'move', path: 'new.txt', oldPath: 'old.txt' }]);
-      expect(existsSync(join(checkout, 'old.txt'))).toBe(false);
-      expect(readFileSync(join(checkout, 'new.txt'), 'utf8')).toBe(text);
+        diffContent({ path: 'file.txt', kind: { type: 'add' }, diff: text })
+          .changes,
+      ).toEqual([{ operation: 'add', path: 'file.txt', newText: text }]);
+      expect(
+        diffContent({ path: 'file.txt', kind: { type: 'delete' }, diff: text })
+          .changes,
+      ).toEqual([{ operation: 'delete', path: 'file.txt', oldText: text }]);
     },
   );
-
-  it.each([
-    {
-      name: 'a final newline',
-      before: 'before\n',
-      after: 'after\n',
-      diff: '@@ -1 +1 @@\n-before\n+after\n',
-    },
-    {
-      name: 'no final newline',
-      before: 'before',
-      after: 'after',
-      diff: '@@ -1 +1 @@\n-before\n\\ No newline at end of file\n+after\n\\ No newline at end of file\n',
-    },
-  ])('moves and edits a file with $name', ({ before, after, diff }) => {
-    writeFileSync(join(checkout, 'old.txt'), before);
-    applyChange({
-      path: 'old.txt',
-      kind: { type: 'update', move_path: 'new.txt' },
-      diff,
+  it('adds a complete Git patch for a provider file addition', (): void => {
+    expect(
+      diffContent({
+        path: 'file.txt',
+        kind: { type: 'add' },
+        diff: 'content\n',
+      }).patch,
+    ).toEqual({
+      format: 'git_patch',
+      text: 'diff --git a/file.txt b/file.txt\nnew file mode 100644\n--- /dev/null\n+++ b/file.txt\n@@ -0,0 +1,1 @@\n+content\n',
     });
-    expect(existsSync(join(checkout, 'old.txt'))).toBe(false);
-    expect(readFileSync(join(checkout, 'new.txt'), 'utf8')).toBe(after);
+  });
+  it('keeps provider edit hunks in a move patch', (): void => {
+    expect(
+      diffContent({
+        path: 'old.txt',
+        kind: { type: 'update', move_path: 'new.txt' },
+        diff: '@@ -1 +1 @@\n-before\n+after\n',
+      }).patch,
+    ).toEqual({
+      format: 'git_patch',
+      text: 'diff --git a/old.txt b/new.txt\nrename from old.txt\nrename to new.txt\n--- a/old.txt\n+++ b/new.txt\n@@ -1 +1 @@\n-before\n+after\n',
+    });
   });
 });

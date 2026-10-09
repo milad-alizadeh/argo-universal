@@ -2,6 +2,7 @@
   "extends": "@repo/typescript/base.json",
   // DOM supplies subscription globals; Node types check the isolated server-runtime entry.
   "compilerOptions": {
+    "exactOptionalPropertyTypes": true,
     "lib": ["es2025", "DOM"],
     "types": ["node"]
   },

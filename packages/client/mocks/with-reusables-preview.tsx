@@ -1,12 +1,16 @@
 import { type ThemeId, themes } from '@repo/uniwind/themes';
 import { PortalHost } from '@rn-primitives/portal';
+import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { type ComponentType, useLayoutEffect } from 'react';
 import { Platform, ScrollView, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { applyTheme } from '../src/lib/theme';
 import { cn } from '../src/lib/utils';
+import { BlobUrlContext } from '../src/trpc/blob-url';
+import { recordedImageUrl } from './feed-message-mock';
 
 interface PreviewContext {
   globals: { themeId?: string; mode?: string };
@@ -36,7 +40,7 @@ function ReusablesPreview({
   standalone: boolean;
   padding: boolean;
   screen: boolean;
-}) {
+}): React.JSX.Element {
   useLayoutEffect(() => {
     applyTheme(themeId, mode);
   }, [themeId, mode]);
@@ -74,8 +78,12 @@ function ReusablesPreview({
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider initialMetrics={initialMetrics}>
-        {preview}
-        {standalone && <PortalHost />}
+        <KeyboardProvider>
+          <BlobUrlContext.Provider value={recordedImageUrl}>
+            {preview}
+            {standalone && <PortalHost />}
+          </BlobUrlContext.Provider>
+        </KeyboardProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
@@ -84,7 +92,7 @@ function ReusablesPreview({
 export function withReusablesPreview(
   Story: ComponentType,
   context: PreviewContext,
-) {
+): React.JSX.Element {
   return (
     <ReusablesPreview
       Story={Story}

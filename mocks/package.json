@@ -5,8 +5,7 @@
   "type": "module",
   "exports": {
     "./agent": "./agent/adapter.ts",
-    "./cli": "./cli/index.ts",
-    "./cli/*": "./cli/*.ts"
+    "./agent/*": "./agent/*.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

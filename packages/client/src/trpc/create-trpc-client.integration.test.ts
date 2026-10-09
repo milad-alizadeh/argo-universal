@@ -1,0 +1,146 @@
+import { createServer, type Server } from 'node:http';
+import { ClockTick } from '@repo/contracts';
+import { startRouterTestHost } from '@repo/engine/mocks';
+import { appRouter } from '@repo/engine/router';
+import { createHTTPHandler } from '@trpc/server/adapters/standalone';
+import { applyWSSHandler } from '@trpc/server/adapters/ws';
+import { afterEach, describe, expect, it } from 'vitest';
+import { WebSocketServer } from 'ws';
+import { createTRPCClient } from './create-trpc-client';
+
+const binaryMime = 'application/octet-stream';
+
+const serverStartedAt = '2026-10-03T00:00:00.000Z';
+const uploadedFileContent = 'file content';
+const uploadedBlobId =
+  'e0ac3601005dfa1864f5392aabaf7d898b1b5bab854f1acb4491bcd806b76b0c';
+const systemInfo = {
+  version: '1.2.3',
+  startedAt: serverStartedAt,
+  pid: process.pid,
+  name: expect.stringMatching(/\S/),
+};
+
+const closers: (() => void)[] = [];
+afterEach(() => {
+  for (const close of closers.splice(0)) close();
+});
+
+const readTcpPort = (server: Pick<Server, 'address'>): number => {
+  const address = server.address();
+  if (!address || typeof address === 'string')
+    throw new Error('Server has no TCP address');
+  return address.port;
+};
+
+// Serves one router over the WebSocket and over HTTP at /trpc/ on one server, as the Engine does.
+async function startTransportTestServer(): Promise<{
+  url: string;
+  connections: () => number;
+  httpRequests: () => number;
+}> {
+  const { context } = startRouterTestHost({ startedAt: serverStartedAt });
+  const createContext = (): typeof context => context;
+  const handleTrpcRequest = createHTTPHandler({
+    router: appRouter,
+    createContext,
+    basePath: '/trpc/',
+  });
+  let httpRequests = 0;
+  const server = createServer((request, response) => {
+    httpRequests++;
+    handleTrpcRequest(request, response);
+  });
+  await new Promise<void>((resolve) =>
+    server.listen(0, '127.0.0.1', () => resolve()),
+  );
+  const webSocketServer = new WebSocketServer({ server });
+  let connections = 0;
+  webSocketServer.on('connection', () => connections++);
+  applyWSSHandler({ wss: webSocketServer, router: appRouter, createContext });
+  closers.push(() => {
+    webSocketServer.close();
+    server.closeAllConnections();
+    server.close();
+  });
+  const port = readTcpPort(server);
+  return {
+    url: `ws://127.0.0.1:${port}`,
+    connections: () => connections,
+    httpRequests: () => httpRequests,
+  };
+}
+
+describe('createTRPCClient', () => {
+  it('sends queries and subscriptions over one WebSocket', async () => {
+    const server = await startTransportTestServer();
+    const { client, close } = createTRPCClient(server.url);
+    closers.push(close);
+
+    const info = await client.system.info.query();
+    const ticks = await new Promise<unknown[]>((resolve, reject) => {
+      const received: unknown[] = [];
+      const subscription = client.system.clock.subscribe(undefined, {
+        onData: (tick) => {
+          received.push(tick);
+          if (received.length === 2) {
+            subscription.unsubscribe();
+            resolve(received);
+          }
+        },
+        onError: reject,
+      });
+    });
+
+    expect(info).toEqual(systemInfo);
+    expect(ticks).toHaveLength(2);
+    for (const tick of ticks)
+      expect(ClockTick.safeParse(tick).success).toBe(true);
+    expect(server.connections()).toBe(1);
+    expect(server.httpRequests()).toBe(0);
+  });
+
+  it('sends a file over HTTP and everything else over the WebSocket', async () => {
+    const server = await startTransportTestServer();
+    const trpc = createTRPCClient(server.url);
+    closers.push(trpc.close);
+    const { client } = trpc;
+
+    const form = new FormData();
+    form.set('file', new File([uploadedFileContent], 'notes.txt'));
+    expect(await client.blob.upload.mutate(form)).toEqual({
+      blobId: uploadedBlobId,
+      mime: binaryMime,
+      bytes: 12,
+    });
+    expect(server.httpRequests()).toBe(1);
+
+    expect(await client.system.info.query()).toEqual(systemInfo);
+    expect(server.httpRequests()).toBe(1);
+    expect(server.connections()).toBe(1);
+  });
+
+  it('waits before each WebSocket attempt, but not before an upload', async () => {
+    const server = await startTransportTestServer();
+    let allowAttempt = (): void => {};
+    const attemptAllowed = new Promise<void>((resolve) => {
+      allowAttempt = resolve;
+    });
+    const trpc = createTRPCClient(server.url, () => attemptAllowed);
+    closers.push(trpc.close);
+    const { client } = trpc;
+
+    const form = new FormData();
+    form.set('file', new File([uploadedFileContent], 'notes.txt'));
+    expect(await client.blob.upload.mutate(form)).toEqual({
+      blobId: uploadedBlobId,
+      mime: binaryMime,
+      bytes: 12,
+    });
+    expect(server.connections()).toBe(0);
+
+    allowAttempt();
+    expect(await client.system.info.query()).toEqual(systemInfo);
+    expect(server.connections()).toBe(1);
+  });
+});

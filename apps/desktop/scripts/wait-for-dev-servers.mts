@@ -34,7 +34,7 @@ const isRecognised = <Shape extends z.ZodType>(
 };
 
 // True once server.json names a port and system.info, over tRPC's HTTP handler on that port, answers.
-export async function serverAnswers(file: string) {
+export async function serverAnswers(file: string): Promise<boolean> {
   let address: unknown;
   try {
     address = JSON.parse(await readFile(file, 'utf8'));
@@ -56,7 +56,7 @@ export async function serverAnswers(file: string) {
   return isRecognised('system.info answer', SystemInfoResponse, info);
 }
 
-const webAnswers = async () => {
+const webAnswers = async (): Promise<boolean> => {
   try {
     const response = await fetch(webUrl, {
       signal: AbortSignal.timeout(requestTimeoutMs),

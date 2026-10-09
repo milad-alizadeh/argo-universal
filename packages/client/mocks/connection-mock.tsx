@@ -1,9 +1,11 @@
+import type * as React from 'react';
 import { StrictMode, useEffect, useState, useSyncExternalStore } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { AppProviders } from '../src/trpc/app-providers';
 import { useTRPCClient } from '../src/trpc/context';
 
 interface ConnectionReport {
+  serverUrl: string;
   open: number;
   closed: number;
   screenSubscriptions: number;
@@ -19,6 +21,7 @@ let report = buildReport();
 function buildReport(): ConnectionReport {
   const closed = sockets.filter((socket) => socket.isClosed()).length;
   return {
+    serverUrl: sockets.at(-1)?.url ?? '',
     open: sockets.length - closed,
     closed,
     screenSubscriptions,
@@ -26,28 +29,56 @@ function buildReport(): ConnectionReport {
   };
 }
 
-function changed() {
+function changed(): void {
   report = buildReport();
   for (const listener of listeners) listener();
 }
 
 function subscribe(listener: () => void) {
   listeners.add(listener);
-  return () => listeners.delete(listener);
+  return (): boolean => listeners.delete(listener);
 }
 
 // Stands in for the Server's end of each WebSocket: it opens at once, answers PING, and never answers a request.
-class WebSocketMock extends EventTarget {
+class WebSocketMock extends EventTarget implements WebSocket {
   static readonly CONNECTING = 0;
   static readonly OPEN = 1;
   static readonly CLOSING = 2;
   static readonly CLOSED = 3;
 
-  readyState: number = WebSocketMock.CONNECTING;
-  binaryType: BinaryType = 'blob';
+  readonly CONNECTING = WebSocketMock.CONNECTING;
+  readonly OPEN = WebSocketMock.OPEN;
+  readonly CLOSING = WebSocketMock.CLOSING;
+  readonly CLOSED = WebSocketMock.CLOSED;
+  readonly bufferedAmount = 0;
+  readonly extensions = '';
+  readonly protocol = '';
+  readonly url: WebSocket['url'];
+  onopen: WebSocket['onopen'] = null;
+  onerror: WebSocket['onerror'] = null;
+  onclose: WebSocket['onclose'] = null;
+  onmessage: WebSocket['onmessage'] = null;
+  readyState: WebSocket['readyState'] = WebSocketMock.CONNECTING;
+  binaryType: WebSocket['binaryType'] = 'blob';
 
-  constructor(readonly url: string) {
+  constructor(
+    url: ConstructorParameters<typeof WebSocket>[0],
+    _protocols?: ConstructorParameters<typeof WebSocket>[1],
+  ) {
     super();
+    this.url = url.toString();
+    this.addEventListener('open', (event): void => {
+      this.onopen?.call(this, event);
+    });
+    this.addEventListener('error', (event): void => {
+      this.onerror?.call(this, event);
+    });
+    this.addEventListener('close', (event): void => {
+      if (event instanceof CloseEvent) this.onclose?.call(this, event);
+    });
+    this.addEventListener('message', (event): void => {
+      if (event instanceof MessageEvent) this.onmessage?.call(this, event);
+    });
     sockets.push(this);
     changed();
     setTimeout(() => {
@@ -57,11 +88,11 @@ class WebSocketMock extends EventTarget {
     });
   }
 
-  isClosed() {
+  isClosed(): boolean {
     return this.readyState === WebSocketMock.CLOSED;
   }
 
-  send(data: string) {
+  send(data: Parameters<WebSocket['send']>[0]): void {
     if (data !== 'PING') return;
     setTimeout(() => {
       if (this.readyState !== WebSocketMock.OPEN) return;
@@ -69,10 +100,19 @@ class WebSocketMock extends EventTarget {
     });
   }
 
-  close() {
+  // Native control pongs have no JavaScript event; only the connecting-state error is observable.
+  ping(): void {
+    if (this.readyState === WebSocketMock.CONNECTING)
+      throw new Error('INVALID_STATE_ERR');
+  }
+
+  close(
+    code: Parameters<WebSocket['close']>[0] = 1000,
+    reason: Parameters<WebSocket['close']>[1] = '',
+  ): void {
     if (this.isClosed()) return;
     this.readyState = WebSocketMock.CLOSED;
-    this.dispatchEvent(new CloseEvent('close', { code: 1000 }));
+    this.dispatchEvent(new CloseEvent('close', { code, reason }));
     changed();
   }
 }
@@ -84,8 +124,8 @@ export function mockWebSocket() {
   screenSubscriptions = 0;
   statesScreensSaw.clear();
   changed();
-  globalThis.WebSocket = WebSocketMock as unknown as typeof WebSocket;
-  return () => {
+  globalThis.WebSocket = WebSocketMock;
+  return (): void => {
     globalThis.WebSocket = browserWebSocket;
   };
 }
@@ -95,11 +135,14 @@ export interface ConnectionMockProps {
 }
 
 // Shows AppProviders' Connections over WebSocketMock; it starts unmounted, so StrictMode's double effects reach AppProviders.
-export function ConnectionMock({ strictMode = false }: ConnectionMockProps) {
+export function ConnectionMock({
+  strictMode = false,
+}: ConnectionMockProps): React.JSX.Element {
   const [mounted, setMounted] = useState(false);
+  const [serverUrl, setServerUrl] = useState('ws://127.0.0.1:7337');
   const current = useSyncExternalStore(subscribe, () => report);
   const providers = mounted ? (
-    <AppProviders serverUrl="ws://127.0.0.1:7337">
+    <AppProviders serverUrl={serverUrl}>
       <ScreenMock />
     </AppProviders>
   ) : null;
@@ -109,7 +152,14 @@ export function ConnectionMock({ strictMode = false }: ConnectionMockProps) {
       <Pressable role="button" onPress={() => setMounted(!mounted)}>
         <Text>{mounted ? 'Unmount' : 'Mount'}</Text>
       </Pressable>
+      <Pressable
+        role="button"
+        onPress={() => setServerUrl('ws://127.0.0.1:7338')}
+      >
+        <Text>Switch Server</Text>
+      </Pressable>
       {strictMode ? <StrictMode>{providers}</StrictMode> : providers}
+      <Text>{`Server: ${current.serverUrl}`}</Text>
       <Text>{`Open Connections: ${current.open}`}</Text>
       <Text>{`Closed Connections: ${current.closed}`}</Text>
       <Text>{`Screen subscriptions: ${current.screenSubscriptions}`}</Text>
@@ -121,7 +171,7 @@ export function ConnectionMock({ strictMode = false }: ConnectionMockProps) {
 }
 
 // Stands in for a screen: subscribes over the Connection from context and records its states; a closed one reads idle.
-function ScreenMock() {
+function ScreenMock(): null {
   const client = useTRPCClient();
   useEffect(() => {
     screenSubscriptions += 1;
@@ -132,7 +182,7 @@ function ScreenMock() {
         changed();
       },
     });
-    return () => subscription.unsubscribe();
+    return (): void => subscription.unsubscribe();
   }, [client]);
   return null;
 }

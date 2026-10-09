@@ -2,4 +2,7 @@ export { agentAdapters, findAgentAdapter } from './adapters';
 export type * from './agent-adapter';
 export { UnsupportedCommandError } from './agent-adapter';
 export type * from './agent-events';
-export { agentMachine } from './agent-machine';
+export { acceptAgentEvent, AgentReadyData } from './agent-events';
+export { describeError } from './describe-error';
+export { effortLevelName, changeValue } from './config-options';
+export { toElicitationRequest } from './elicitation-form';

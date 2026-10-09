@@ -1,25 +1,18 @@
-import { readFileSync } from 'node:fs';
 import { expect, it } from 'vitest';
 import { changeValue, startingValues, toConfigOptions } from './config-options';
-import type { ModelListResponse } from './protocol.gen';
+import { response } from './mocks/models';
 
-const recorded: { payload: ModelListResponse } = JSON.parse(
-  readFileSync(
-    new URL(
-      '../../../mocks/cli/codex/recordings/0.157.0/model-list.json',
-      import.meta.url,
-    ),
-    'utf8',
-  ),
-);
-const models = recorded.payload.data;
-it('offers the recorded models and the selected model’s effort choices', () => {
+const savedModelId = 'gpt-5.6-luna';
+const defaultModelId = 'gpt-6-astra';
+
+const models = response.data;
+it('offers the recorded models and the selected model’s effort choices', (): void => {
   const values = startingValues(models, [
-    { configId: 'model', value: 'gpt-5.6-luna' },
+    { configId: 'model', value: savedModelId },
     { configId: 'effort', value: 'high' },
   ]);
   expect(values).toEqual({
-    model: 'gpt-5.6-luna',
+    model: savedModelId,
     effort: 'high',
     mode: 'default',
   });
@@ -27,9 +20,9 @@ it('offers the recorded models and the selected model’s effort choices', () =>
     expect.arrayContaining([
       expect.objectContaining({
         configId: 'model',
-        currentValue: 'gpt-5.6-luna',
+        currentValue: savedModelId,
         options: expect.arrayContaining([
-          expect.objectContaining({ value: 'gpt-6-astra' }),
+          expect.objectContaining({ value: defaultModelId }),
         ]),
       }),
       expect.objectContaining({
@@ -42,13 +35,13 @@ it('offers the recorded models and the selected model’s effort choices', () =>
     ]),
   );
 });
-it('uses the catalog default when the saved model no longer exists and rejects an unoffered value', () => {
+it('uses the catalog default when the saved model no longer exists and rejects an unoffered value', (): void => {
   const values = startingValues(models, [
     { configId: 'model', value: 'missing-model' },
     { configId: 'effort', value: 'unknown' },
   ]);
   expect(values).toEqual({
-    model: 'gpt-6-astra',
+    model: defaultModelId,
     effort: 'medium',
     mode: 'default',
   });
@@ -60,28 +53,38 @@ it('uses the catalog default when the saved model no longer exists and rejects a
   ).toBeUndefined();
 });
 
-it('marks Plan and dangerous modes and previews each model’s support flags', () => {
+it('marks Plan and dangerous modes and previews each model’s support flags', (): void => {
   const options = toConfigOptions(models, startingValues(models, []));
   expect(options).toEqual(
     expect.arrayContaining([
       expect.objectContaining({
         configId: 'mode',
-        options: expect.arrayContaining([
-          expect.objectContaining({
+        options: [
+          {
             value: 'plan',
+            name: 'Plan mode',
+            description: 'Reads and plans, changes nothing',
             _meta: { argo: { icon: 'MapTrifold', tone: 'planning' } },
-          }),
-          expect.objectContaining({
+          },
+          {
+            value: 'default',
+            name: 'Ask first',
+            description: 'Asks before edits and commands',
+            _meta: { argo: { icon: 'ShieldWarning', tone: 'safe' } },
+          },
+          {
             value: 'fullAccess',
+            name: 'Full access',
+            description: 'Runs without sandbox or permission requests.',
             _meta: { argo: { icon: 'WarningTriangle', tone: 'dangerous' } },
-          }),
-        ]),
+          },
+        ],
       }),
       expect.objectContaining({
         configId: 'model',
         options: expect.arrayContaining([
           expect.objectContaining({
-            value: 'gpt-6-astra',
+            value: defaultModelId,
             _meta: { argo: expect.objectContaining({ supportsEffort: true }) },
           }),
         ]),

@@ -1,10 +1,11 @@
+import type * as React from 'react';
 import { View } from 'react-native';
-import { DiffView } from '../src/components/DiffView';
+import { DiffView } from '../src/components/diff-view';
 import { withOccurrenceKeys } from '../src/lib/occurrence-keys';
 import { recordedFile } from './feed-edit-mock';
 
 // Recorded changed files stacked as one list, the way the Inspector shows them.
-export function InspectorFilesMock() {
+export function InspectorFilesMock(): React.JSX.Element {
   return (
     <View>
       {withOccurrenceKeys(

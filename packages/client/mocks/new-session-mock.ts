@@ -6,37 +6,43 @@ import {
   serverInfo,
 } from '@repo/api/mocks';
 import type { AgentsListInput } from '@repo/contracts';
+import type { FixtureOutput } from './trpc-mock-link';
 import { type Fixtures, fails, pending } from './trpc-mock-link';
 
 export const newSessionMocks = {
-  'system.info': () => serverInfo,
-  'projects.list': () => newSessionProjects,
-  'projects.branches': () => newSessionBranches,
-  'agents.list': () => newSessionCatalogs.bothAvailable,
-  'blob.upload': () => {
+  'system.info': (): typeof serverInfo => serverInfo,
+  'projects.list': (): typeof newSessionProjects => newSessionProjects,
+  'projects.branches': (): typeof newSessionBranches => newSessionBranches,
+  'agents.list': (): typeof newSessionCatalogs.bothAvailable =>
+    newSessionCatalogs.bothAvailable,
+  'blob.upload': (): FixtureOutput<'blob.upload'> => {
     const image = newSessionInputs[0]?.prompt.find(
       (block) => block.type === 'image',
     );
     if (image?.type !== 'image') throw new Error('Missing image mock');
     return image.blob;
   },
-  'session.new': () => ({ sessionId: 'new-session' }),
+  'session.new': (): FixtureOutput<'session.new'> => ({
+    sessionId: 'new-session',
+  }),
 } satisfies Fixtures;
 
 export const notInstalledNewSessionMocks = {
   ...newSessionMocks,
-  'agents.list': () => newSessionCatalogs.oneNotInstalled,
+  'agents.list': (): typeof newSessionCatalogs.oneNotInstalled =>
+    newSessionCatalogs.oneNotInstalled,
 } satisfies Fixtures;
 
 export const notSignedInNewSessionMocks = {
   ...newSessionMocks,
-  'agents.list': () => newSessionCatalogs.oneNotSignedIn,
+  'agents.list': (): typeof newSessionCatalogs.oneNotSignedIn =>
+    newSessionCatalogs.oneNotSignedIn,
 } satisfies Fixtures;
 
 export const agentProbeRequests: AgentsListInput[] = [];
 export const unavailableNewSessionMocks = {
   ...newSessionMocks,
-  'agents.list': (input) => {
+  'agents.list': (input): FixtureOutput<'agents.list'> => {
     agentProbeRequests.push(input ?? undefined);
     return input?.refresh
       ? newSessionCatalogs.bothAvailable

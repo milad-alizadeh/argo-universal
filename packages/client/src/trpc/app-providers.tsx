@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import type * as React from 'react';
+import { type ReactNode, useMemo, useState, useSyncExternalStore } from 'react';
 import { ConnectionContext } from '../connection/context';
 import { openConnection } from '../connection/open-connection';
 import { BlobUrlContext, createServerBlobUrl } from './blob-url';
@@ -13,19 +14,21 @@ export interface AppProvidersProps {
 type Connection = ReturnType<typeof openConnection>;
 
 // One QueryClient and one Connection for the App's lifetime; give it a new key to switch Servers.
-export function AppProviders({ serverUrl, children }: AppProvidersProps) {
+export function AppProviders({
+  serverUrl,
+  children,
+}: AppProvidersProps): React.JSX.Element | null {
   const [queryClient] = useState(() => new QueryClient());
-  const [connection, setConnection] = useState<Connection | null>(null);
+  const connectionStore = useMemo(
+    () => connectionSubscription(serverUrl, queryClient),
+    [serverUrl, queryClient],
+  );
+  const connection = useSyncExternalStore(
+    connectionStore.subscribe,
+    connectionStore.getSnapshot,
+    emptyConnection,
+  );
   const blobUrl = useMemo(() => createServerBlobUrl(serverUrl), [serverUrl]);
-
-  // An effect owns the Connection, so unmounting closes it and StrictMode's remount opens a fresh one.
-  useEffect(() => {
-    const opened = openConnection(serverUrl, queryClient);
-    setConnection(opened);
-    return () => {
-      void opened.close();
-    };
-  }, [serverUrl, queryClient]);
 
   if (!connection) return null;
   return (
@@ -39,4 +42,30 @@ export function AppProviders({ serverUrl, children }: AppProvidersProps) {
       </TRPCProvider>
     </QueryClientProvider>
   );
+}
+
+function emptyConnection(): null {
+  return null;
+}
+
+function connectionSubscription(
+  serverUrl: string,
+  queryClient: QueryClient,
+): {
+  subscribe: (changed: () => void) => () => void;
+  getSnapshot: () => Connection | null;
+} {
+  let opened: Connection | null = null;
+  return {
+    getSnapshot: () => opened,
+    subscribe: (changed) => {
+      const connection = openConnection(serverUrl, queryClient);
+      opened = connection;
+      changed();
+      return () => {
+        opened = null;
+        void connection.close();
+      };
+    },
+  };
 }

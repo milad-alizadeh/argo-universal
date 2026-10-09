@@ -5,7 +5,7 @@ import { useClock } from './use-clock';
 export function useToolCallDuration(
   row: ToolCallUpdate | undefined,
   now?: number,
-) {
+): string | undefined {
   const running = row ? isToolCallRunning(row) : false;
   const clock = useClock(running, now);
   const timing = row?._meta?.argo;
