@@ -1,12 +1,6 @@
 import type { Services } from '../src/services/services';
 export { startRouterTestHost } from './router';
 
-export const mockUpload: Services['blob']['upload'] = async (file) => ({
-  blobId: await file.text(),
-  mime: file.type || 'application/octet-stream',
-  bytes: file.size,
-});
-
 type ServiceOverrides = { [Name in keyof Services]?: Partial<Services[Name]> };
 
 const createUnexpectedCallRejection =
@@ -20,10 +14,6 @@ export function createRejectingServices(
   overrides: ServiceOverrides = {},
 ): Services {
   return {
-    blob: {
-      upload: createUnexpectedCallRejection('blob.upload'),
-      ...overrides.blob,
-    },
     agents: {
       list: createUnexpectedCallRejection('agents.list'),
       ...overrides.agents,
