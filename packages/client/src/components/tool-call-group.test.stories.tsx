@@ -71,7 +71,7 @@ function running(width: number): Story {
       await expect(group).toBeVisible();
       await expect(canvas.queryByRole('progressbar')).not.toBeInTheDocument();
       await expectShimmerMovement(group, '23s');
-      await expect(group.querySelectorAll('svg')).toHaveLength(2);
+      await expect(group.querySelectorAll('[data-icon]')).toHaveLength(2);
       await expect(group).toHaveTextContent('short git status 23s');
       await expect(
         canvas.queryAllByRole('button', { name: /^Read / }),

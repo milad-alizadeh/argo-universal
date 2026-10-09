@@ -1,5 +1,4 @@
 import type { SessionInfo } from '@repo/contracts';
-import { RobotIcon } from 'phosphor-react-native';
 import { memo, useEffect } from 'react';
 import { View } from 'react-native';
 import Animated, {
@@ -147,7 +146,7 @@ export const SessionRow = memo(function SessionRow({
                   className="shrink-0 flex-row items-center gap-1"
                 >
                   <View className="relative">
-                    <Icon as={RobotIcon} className="text-muted-foreground" />
+                    <Icon name="agent" className="text-muted-foreground" />
                     {(subagentsFailed || session.subagents.running > 0) && (
                       <StatusIndicator
                         testID="subagents-status"

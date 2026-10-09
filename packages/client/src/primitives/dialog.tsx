@@ -1,5 +1,4 @@
 import * as DialogPrimitive from '@rn-primitives/dialog';
-import { XIcon } from 'phosphor-react-native/src/icons/X';
 import * as React from 'react';
 import {
   type GestureResponderEvent,
@@ -113,7 +112,7 @@ function DialogContent({
             hitSlop={12}
           >
             <Icon
-              as={XIcon}
+              name="close"
               className={cn(
                 'text-accent-foreground web:pointer-events-none shrink-0',
               )}

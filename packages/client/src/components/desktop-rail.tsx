@@ -40,8 +40,8 @@ const SectionButton = memo(function SectionButton({
     >
       <Icon
         size="lg"
-        as={icon}
-        weight={selected ? 'fill' : 'regular'}
+        name={icon}
+        filled={selected}
         className={cn(!selected && 'text-muted-foreground')}
       />
       {section === 'sessions' && attentionCount > 0 && (

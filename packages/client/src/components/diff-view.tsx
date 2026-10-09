@@ -83,7 +83,7 @@ function FileHeader({
     <View className="h-9 flex-row items-center gap-2 bg-muted pr-3 pl-2">
       <Button
         variant="link"
-        className="h-5 min-w-0 flex-1 justify-start gap-2 rounded-none p-0 sm:h-5 has-[>svg]:px-0"
+        className="h-5 min-w-0 flex-1 justify-start gap-2 rounded-none p-0 sm:h-5 has-[>[data-icon]]:px-0"
         aria-label={`Diff for ${file.path}`}
         aria-expanded={open}
         onPress={() => onOpenChange(!open)}

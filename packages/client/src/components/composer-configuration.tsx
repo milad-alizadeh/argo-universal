@@ -6,25 +6,12 @@ import type {
   SessionConfigOption,
   SessionConfigSelectOption,
 } from '@repo/contracts';
-import {
-  CaretDownIcon,
-  CaretLeftIcon,
-  CaretRightIcon,
-  CheckIcon,
-  FolderIcon,
-  GitBranchIcon,
-  HourglassSimpleIcon,
-  MapTrifoldIcon,
-  PencilIcon,
-  ShieldWarningIcon,
-  SparkleIcon,
-  WarningIcon,
-} from 'phosphor-react-native';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import { withUniwind } from 'uniwind';
+import type { IconName } from '#lib/icon-names';
 import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
@@ -97,20 +84,20 @@ function currentEffort(configuration: ComposerConfigurationProps): {
   };
 }
 
-const configurationIcons: Record<string, typeof ShieldWarningIcon> = {
-  ShieldWarning: ShieldWarningIcon,
-  Pencil: PencilIcon,
-  MapTrifold: MapTrifoldIcon,
-  Sparkles: SparkleIcon,
-  WarningTriangle: WarningIcon,
-} satisfies Record<ConfigOptionIcon, typeof ShieldWarningIcon>;
+const configurationIcons: Record<string, IconName> = {
+  ShieldWarning: 'permission',
+  Pencil: 'edit',
+  MapTrifold: 'plan-mode',
+  Sparkles: 'sparkle',
+  WarningTriangle: 'warning',
+} satisfies Record<ConfigOptionIcon, IconName>;
 const agentModelMenuWidth = 580;
 const agentMenuWidth = 280;
-function configurationIcon(name?: string): typeof SparkleIcon {
+function configurationIcon(name?: string): IconName {
   return (
     (name && Object.hasOwn(configurationIcons, name)
       ? configurationIcons[name]
-      : undefined) ?? ShieldWarningIcon
+      : undefined) ?? 'permission'
   );
 }
 const agentAvailability = {
@@ -217,7 +204,7 @@ function Choice({
           leading && 'h-5',
         )}
       >
-        {selected && <Icon as={CheckIcon} />}
+        {selected && <Icon name="check" />}
       </View>
     </Button>
   );
@@ -278,7 +265,7 @@ function AgentChoices({
           }}
           aria-pressed={agent.agent === configuration.agent}
           className={cn(
-            'min-h-11 wide:min-h-8 h-auto sm:h-auto py-1.5 px-2 has-[>svg]:px-2 rounded-sm justify-start gap-2.5 wide:gap-2 web:focus-visible:ring-0 web:focus-visible:bg-accent',
+            'min-h-11 wide:min-h-8 h-auto sm:h-auto py-1.5 px-2 has-[>[data-icon]]:px-2 rounded-sm justify-start gap-2.5 wide:gap-2 web:focus-visible:ring-0 web:focus-visible:bg-accent',
             configuration.onAgentChange &&
               agent.agent === configuration.agent &&
               'bg-accent',
@@ -320,7 +307,7 @@ function AgentChoices({
             )}
           </View>
           {configuration.onAgentChange &&
-            agent.agent === configuration.agent && <Icon as={CheckIcon} />}
+            agent.agent === configuration.agent && <Icon name="check" />}
         </Button>
         {availability && onAvailabilityAction && (
           <Button
@@ -539,7 +526,7 @@ function AgentModelMenu({
             className="size-11 sm:size-11"
             onPress={() => setPage('settings')}
           >
-            <Icon size="lg" as={CaretLeftIcon} className="text-foreground" />
+            <Icon size="lg" name="chevron-left" className="text-foreground" />
           </Button>
           <Text
             selectable={false}
@@ -608,7 +595,7 @@ function AgentModelMenu({
               {configuration.onAgentChange && (
                 <Icon
                   size="sm"
-                  as={CaretRightIcon}
+                  name="chevron-right"
                   className="-ml-0.5 text-muted-foreground"
                 />
               )}
@@ -641,7 +628,7 @@ function AgentModelMenu({
               </Text>
               <Icon
                 size="sm"
-                as={CaretRightIcon}
+                name="chevron-right"
                 className="-ml-0.5 text-muted-foreground"
               />
             </Button>
@@ -650,7 +637,7 @@ function AgentModelMenu({
         <EffortControl configuration={configuration} />
         {configuration.turnRunning && (
           <View className="flex-row gap-2 px-3 py-2.5 bg-muted">
-            <Icon as={HourglassSimpleIcon} className="text-muted-foreground" />
+            <Icon name="waiting" className="text-muted-foreground" />
             <Text
               selectable={false}
               className="select-none flex-1 text-xs leading-4 text-muted-foreground"
@@ -691,7 +678,7 @@ export function ComposerAgentModelControl({
           variant="ghost"
           disabled={disabled}
           accessibilityLabel="Agent and model"
-          className="h-7 sm:h-7 py-0 px-1.5 has-[>svg]:px-1.5 gap-1.5 shrink min-w-0"
+          className="h-7 sm:h-7 py-0 px-1.5 has-[>[data-icon]]:px-1.5 gap-1.5 shrink min-w-0"
         >
           {wide && <Logo agent={agent} />}
           <Text
@@ -719,7 +706,7 @@ export function ComposerAgentModelControl({
           {wide && (
             <Icon
               size="sm"
-              as={CaretDownIcon}
+              name="chevron-down"
               className="-ml-0.5 text-muted-foreground"
             />
           )}
@@ -755,12 +742,12 @@ export function ComposerModeControl({
           className={cn(
             'h-7 sm:h-7 py-0 gap-1.5',
             wide
-              ? 'w-auto px-1.5 has-[>svg]:px-1.5'
-              : 'w-7 p-0 has-[>svg]:px-0',
+              ? 'w-auto px-1.5 has-[>[data-icon]]:px-1.5'
+              : 'w-7 p-0 has-[>[data-icon]]:px-0',
           )}
         >
           <Icon
-            as={configurationIcon(current?._meta?.argo?.icon)}
+            name={configurationIcon(current?._meta?.argo?.icon)}
             className={cn(
               'text-muted-foreground',
               current?._meta?.argo?.tone === 'dangerous' &&
@@ -782,7 +769,7 @@ export function ComposerModeControl({
           <View className={cn('-ml-0.5', !wide && 'hidden')}>
             <Icon
               size="sm"
-              as={CaretDownIcon}
+              name="chevron-down"
               className="text-muted-foreground"
             />
           </View>
@@ -806,7 +793,7 @@ export function ComposerModeControl({
               dangerous={choice._meta?.argo?.tone === 'dangerous'}
               leading={
                 <Icon
-                  as={configurationIcon(choice._meta?.argo?.icon)}
+                  name={configurationIcon(choice._meta?.argo?.icon)}
                   className={cn(
                     'text-foreground',
                     choice._meta?.argo?.tone === 'dangerous' &&
@@ -844,7 +831,7 @@ export function CheckoutContents({
           selected={checkout.newWorktree === newWorktree}
           leading={
             <Icon
-              as={newWorktree ? GitBranchIcon : FolderIcon}
+              name={newWorktree ? 'branch' : 'folder'}
               className="text-muted-foreground"
             />
           }
@@ -872,7 +859,7 @@ export function ComposerCheckoutControl({
     return (
       <View className="h-7 min-w-0 max-w-96 px-1.5 flex-row items-center gap-1.5">
         <Icon
-          as={checkout.newWorktree ? GitBranchIcon : FolderIcon}
+          name={checkout.newWorktree ? 'branch' : 'folder'}
           className="text-muted-foreground"
         />
         <Text
@@ -897,10 +884,10 @@ export function ComposerCheckoutControl({
           variant="ghost"
           disabled={disabled}
           accessibilityLabel="Checkout"
-          className="h-7 sm:h-7 py-0 px-1.5 has-[>svg]:px-1.5 pr-0.25 has-[>svg]:pr-0.25 gap-1.5 rounded-md border-0 bg-transparent shadow-none"
+          className="h-7 sm:h-7 py-0 px-1.5 has-[>[data-icon]]:px-1.5 pr-0.25 has-[>[data-icon]]:pr-0.25 gap-1.5 rounded-md border-0 bg-transparent shadow-none"
         >
           <Icon
-            as={checkout.newWorktree ? GitBranchIcon : FolderIcon}
+            name={checkout.newWorktree ? 'branch' : 'folder'}
             className="text-muted-foreground"
           />
           <Text
@@ -911,7 +898,7 @@ export function ComposerCheckoutControl({
           </Text>
           <Icon
             size="sm"
-            as={CaretDownIcon}
+            name="chevron-down"
             className="text-muted-foreground"
           />
         </Button>

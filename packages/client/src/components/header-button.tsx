@@ -1,6 +1,6 @@
-import type { Icon as PhosphorIcon } from 'phosphor-react-native';
 import type * as React from 'react';
 import { View } from 'react-native';
+import type { IconName } from '#lib/icon-names';
 import { hasLiquidGlass } from '#lib/native-header';
 import { cn } from '#lib/utils';
 import { Button, type ButtonProps } from '#primitives/button';
@@ -11,7 +11,7 @@ export interface HeaderButtonProps extends Pick<
   'ref' | 'accessibilityState'
 > {
   onPress?: () => void;
-  icon: PhosphorIcon;
+  icon: IconName;
   accessibilityLabel: string;
   // Paired trailing items are 32pt wide; a lone item fills its 44pt slot.
   paired?: boolean;
@@ -54,7 +54,7 @@ export function HeaderButton({
       accessibilityLabel={accessibilityLabel}
       {...props}
     >
-      <Icon size="lg" as={icon} className="text-foreground" />
+      <Icon size="lg" name={icon} className="text-foreground" />
       {dot && (
         <View
           testID="header-button-dot"

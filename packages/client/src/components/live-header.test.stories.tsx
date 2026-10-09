@@ -53,7 +53,7 @@ export const EveryStep: Story = {
             row.querySelector('[data-testid="working-mark"]'),
           ).not.toBeNull();
         else if (source.type !== 'request')
-          await expect(row.querySelector('svg')).not.toBeNull();
+          await expect(row.querySelector('[data-icon]')).not.toBeNull();
       }
     }
   },

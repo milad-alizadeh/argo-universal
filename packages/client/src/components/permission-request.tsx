@@ -2,7 +2,6 @@ import type {
   PendingPermission,
   SessionAnswerPermissionInput,
 } from '@repo/contracts';
-import { TerminalWindowIcon } from 'phosphor-react-native';
 import type * as React from 'react';
 import { Platform, View } from 'react-native';
 import { cn } from '#lib/utils';
@@ -88,7 +87,7 @@ export function PermissionRequest({
       <View className="gap-2 px-4 pt-4 pb-1">
         <View className="flex-row items-center gap-1.5">
           <Icon
-            as={TerminalWindowIcon}
+            name="terminal"
             size="md"
             className="shrink-0 text-muted-foreground"
           />

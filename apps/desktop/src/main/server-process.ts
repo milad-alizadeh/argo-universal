@@ -3,18 +3,9 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { resolveRuntimeDirectory } from '@repo/api/server-runtime';
 import { ServerAddress } from '@repo/contracts';
-import type { z } from 'zod';
+import { reportUnrecognised } from './report-unrecognised';
 
 // One-shot I/O for the Server connection machine; the machine owns every wait.
-
-let unrecognisedShapes = 0;
-const reportUnrecognised = (source: string, error: z.ZodError): void => {
-  unrecognisedShapes += 1;
-  console.error(
-    `desktop: unrecognised ${source} #${unrecognisedShapes}`,
-    error.issues,
-  );
-};
 
 // ARGO_HOME overrides ~/.argo, as in the Server.
 export const resolveHome = resolveRuntimeDirectory;

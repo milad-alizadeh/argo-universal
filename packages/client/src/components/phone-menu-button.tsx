@@ -1,5 +1,4 @@
 import { ImpactFeedbackStyle, impactAsync } from 'expo-haptics';
-import { ListIcon } from 'phosphor-react-native';
 import type * as React from 'react';
 import { HeaderButton } from './header-button';
 import { useOpenDrawer, useShellAttentionCount } from './phone-shell';
@@ -10,7 +9,7 @@ export function PhoneMenuButton(): React.JSX.Element {
   const attentionCount = useShellAttentionCount();
   return (
     <HeaderButton
-      icon={ListIcon}
+      icon="menu"
       leading
       dot={attentionCount > 0 ? 'attention' : undefined}
       accessibilityLabel="Open navigation"

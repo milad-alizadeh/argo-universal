@@ -1,11 +1,4 @@
 import { maxBlobUploadBytes, maxBlobUploadMebibytes } from '@repo/contracts';
-import {
-  ArrowUpIcon,
-  CodeIcon,
-  FolderIcon,
-  PlusIcon,
-  TargetIcon,
-} from 'phosphor-react-native';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
@@ -132,7 +125,7 @@ export function Composer({
     );
   } else {
     sendButtonContent = (
-      <Icon as={ArrowUpIcon} className="text-primary-foreground" />
+      <Icon name="arrow-up" className="text-primary-foreground" />
     );
   }
   return (
@@ -277,7 +270,7 @@ export function Composer({
                       )}
                     />
                     <View className="relative z-10">
-                      <Icon as={PlusIcon} className="text-muted-foreground" />
+                      <Icon name="add" className="text-muted-foreground" />
                     </View>
                   </Button>
                 }
@@ -288,17 +281,17 @@ export function Composer({
                       ? [
                           {
                             label: 'Files and Folder',
-                            icon: FolderIcon,
+                            icon: 'folder' as const,
                             onPress: onAttachFiles ?? onAttachImages,
                           },
                           {
                             label: 'Slash Commands',
-                            icon: CodeIcon,
+                            icon: 'code' as const,
                             onPress: onSelectSlashCommand,
                           },
                           {
                             label: 'Goal',
-                            icon: TargetIcon,
+                            icon: 'goal' as const,
                             onPress: onCreateGoal,
                           },
                         ]
@@ -340,7 +333,10 @@ export function Composer({
                           {'glyph' in item ? (
                             <ComposerGlyph name={item.glyph} />
                           ) : (
-                            <Icon as={item.icon} className="text-foreground" />
+                            <Icon
+                              name={item.icon}
+                              className="text-foreground"
+                            />
                           )}
                         </View>
                         <Text

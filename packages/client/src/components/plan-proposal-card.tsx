@@ -2,12 +2,6 @@ import type {
   PendingPlanProposal,
   SessionAnswerPlanProposalInput,
 } from '@repo/contracts';
-import {
-  ArrowElbowDownLeftIcon,
-  ArrowsInSimpleIcon,
-  ArrowsOutSimpleIcon,
-  MapTrifoldIcon,
-} from 'phosphor-react-native';
 import type * as React from 'react';
 import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
@@ -133,10 +127,7 @@ function PlanProposalInteraction({
             </Text>
             {wide && (
               <View className="size-5 rounded-sm items-center justify-center bg-primary-foreground/15">
-                <Icon
-                  as={ArrowElbowDownLeftIcon}
-                  className="text-primary-foreground"
-                />
+                <Icon name="return" className="text-primary-foreground" />
               </View>
             )}
           </Button>
@@ -163,7 +154,7 @@ function PlanProposalInteraction({
           }
         >
           <View className="flex-row items-center gap-1.5">
-            <Icon as={MapTrifoldIcon} className="text-muted-foreground" />
+            <Icon name="plan-mode" className="text-muted-foreground" />
             <Text className="min-w-0 flex-1 text-sm leading-5.5 font-semibold">
               Approve this plan?
             </Text>
@@ -175,7 +166,7 @@ function PlanProposalInteraction({
               className="size-7 sm:size-7 -my-0.75 -mr-1.5"
             >
               <Icon
-                as={expanded ? ArrowsInSimpleIcon : ArrowsOutSimpleIcon}
+                name={expanded ? 'collapse' : 'expand'}
                 className="text-muted-foreground"
               />
             </Button>

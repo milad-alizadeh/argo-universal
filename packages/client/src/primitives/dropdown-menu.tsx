@@ -1,8 +1,4 @@
 import * as DropdownMenuPrimitive from '@rn-primitives/dropdown-menu';
-import { CaretDownIcon } from 'phosphor-react-native/src/icons/CaretDown';
-import { CaretRightIcon } from 'phosphor-react-native/src/icons/CaretRight';
-import { CaretUpIcon } from 'phosphor-react-native/src/icons/CaretUp';
-import { CheckIcon } from 'phosphor-react-native/src/icons/Check';
 import * as React from 'react';
 import {
   Platform,
@@ -14,6 +10,7 @@ import {
 } from 'react-native';
 import { FadeIn, ReduceMotion } from 'react-native-reanimated';
 import { FullWindowOverlay as RNFullWindowOverlay } from 'react-native-screens';
+import type { IconName } from '#lib/icon-names';
 import { cn } from '#lib/utils';
 import { Icon } from '#primitives/icon';
 import { NativeOnlyAnimatedView } from '#primitives/native-only-animated-view';
@@ -44,9 +41,9 @@ function DropdownMenuSubTrigger({
   inset?: boolean;
 }) {
   const { open } = DropdownMenuPrimitive.useSubContext();
-  let icon = CaretDownIcon;
-  if (Platform.OS === 'web') icon = CaretRightIcon;
-  else if (open) icon = CaretUpIcon;
+  let icon: IconName = 'chevron-down';
+  if (Platform.OS === 'web') icon = 'chevron-right';
+  else if (open) icon = 'chevron-up';
   return (
     <TextClassContext.Provider
       value={cn(
@@ -69,7 +66,7 @@ function DropdownMenuSubTrigger({
         <>{children}</>
         <Icon
           size="sm"
-          as={icon}
+          name={icon}
           className={cn('text-foreground shrink-0', iconClassName)}
         />
       </DropdownMenuPrimitive.SubTrigger>
@@ -214,7 +211,7 @@ function DropdownMenuCheckboxItem({
         <View className="absolute left-2 flex size-icon-md items-center justify-center">
           <DropdownMenuPrimitive.ItemIndicator>
             <Icon
-              as={CheckIcon}
+              name="check"
               className={cn(
                 'text-foreground',
                 Platform.select({ web: 'pointer-events-none' }),

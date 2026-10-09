@@ -1,13 +1,4 @@
 import type { ContextUsage, PlanEntry } from '@repo/contracts';
-import {
-  ArrowsInLineVerticalIcon,
-  CaretUpIcon,
-  CheckIcon,
-  ClockCountdownIcon,
-  ListChecksIcon,
-  RobotIcon,
-  TerminalIcon,
-} from 'phosphor-react-native';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
@@ -215,7 +206,7 @@ export function ComposerPlan({
           </Text>
           <Icon
             size="sm"
-            as={CaretUpIcon}
+            name="chevron-up"
             className={cn(
               'text-muted-foreground web:transition-transform web:duration-200',
               !expanded && 'rotate-180',
@@ -259,7 +250,7 @@ export function ComposerPlan({
         <View>
           <View className="px-4 py-3 gap-1.5">
             <View className="flex-row items-center gap-2">
-              <Icon as={ListChecksIcon} className="text-foreground" />
+              <Icon name="checklist" className="text-foreground" />
               <Text
                 selectable={false}
                 className="select-none text-sm leading-5 font-medium"
@@ -361,9 +352,7 @@ function PlanSteps({ entries }: { entries: PlanEntry[] }): React.JSX.Element {
             />
           );
         } else if (entry.status === 'completed') {
-          stepIndicator = (
-            <Icon as={CheckIcon} className={mutedTextClassName} />
-          );
+          stepIndicator = <Icon name="check" className={mutedTextClassName} />;
         } else {
           stepIndicator = (
             <View className="size-icon-md">
@@ -447,11 +436,11 @@ export function ComposerStatusControls({
               className={cn(
                 'h-7 sm:h-7 py-0 gap-1.5',
                 wide
-                  ? 'w-auto px-1.5 has-[>svg]:px-1.5'
-                  : 'w-7 px-0 has-[>svg]:px-0',
+                  ? 'w-auto px-1.5 has-[>[data-icon]]:px-1.5'
+                  : 'w-7 px-0 has-[>[data-icon]]:px-0',
               )}
             >
-              <Icon as={ClockCountdownIcon} className={mutedTextClassName} />
+              <Icon name="scheduled" className={mutedTextClassName} />
               <Text
                 selectable={false}
                 className={cn(
@@ -524,8 +513,8 @@ export function ComposerStatusControls({
               className={cn(
                 'h-7 sm:h-7 py-0 gap-1.5',
                 wide
-                  ? 'w-auto px-1.5 has-[>svg]:px-1.5'
-                  : 'w-7 px-0 has-[>svg]:px-0',
+                  ? 'w-auto px-1.5 has-[>[data-icon]]:px-1.5'
+                  : 'w-7 px-0 has-[>[data-icon]]:px-0',
               )}
             >
               <ContextRing percent={percent} />
@@ -653,13 +642,13 @@ export function ComposerStatusControls({
                 </Text>
                 <Button
                   variant="outline"
-                  className="h-7 sm:h-7 py-0 rounded-md gap-1.5 px-2.5 has-[>svg]:px-2.5"
+                  className="h-7 sm:h-7 py-0 rounded-md gap-1.5 px-2.5 has-[>[data-icon]]:px-2.5"
                   onPress={() => {
                     context.onCompact();
                     close();
                   }}
                 >
-                  <Icon as={ArrowsInLineVerticalIcon} />
+                  <Icon name="compaction" />
                   <Text
                     selectable={false}
                     className="select-none text-xs leading-4 font-medium"
@@ -687,8 +676,8 @@ export function ComposerWorkChips({
     <>
       {(
         [
-          ['Subagents', RobotIcon, status.subagents],
-          ['Shells', TerminalIcon, status.shells],
+          ['Subagents', 'agent', status.subagents],
+          ['Shells', 'terminal', status.shells],
         ] as const
       ).map(
         ([label, icon, work]) =>
@@ -699,9 +688,9 @@ export function ComposerWorkChips({
               disabled={disabled}
               accessibilityLabel={`${label}: ${work.count}`}
               onPress={work.onPress}
-              className="h-6 sm:h-6 py-0 px-2.5 has-[>svg]:px-2.5 gap-1.5 rounded-full border border-border bg-card shadow-composer"
+              className="h-6 sm:h-6 py-0 px-2.5 has-[>[data-icon]]:px-2.5 gap-1.5 rounded-full border border-border bg-card shadow-composer"
             >
-              <Icon as={icon} className={mutedTextClassName} />
+              <Icon name={icon} className={mutedTextClassName} />
               <View className="flex-row items-center gap-1">
                 <Text
                   selectable={false}

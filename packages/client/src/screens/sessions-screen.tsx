@@ -7,7 +7,6 @@ import {
 } from '@tanstack/react-query';
 import type { TRPCSubscriptionResult } from '@trpc/tanstack-react-query';
 import { useSubscription } from '@trpc/tanstack-react-query';
-import { NotePencilIcon, SlidersHorizontalIcon } from 'phosphor-react-native';
 import type * as React from 'react';
 import { type ReactNode, useCallback, useMemo, useRef, useState } from 'react';
 import { Platform, View } from 'react-native';
@@ -91,14 +90,11 @@ export function SessionsFilterMenu({
       trigger={
         wide ? (
           <Button variant="ghost" size="icon" className="size-8 sm:size-8">
-            <Icon
-              as={SlidersHorizontalIcon}
-              className="text-muted-foreground"
-            />
+            <Icon name="filters" className="text-muted-foreground" />
           </Button>
         ) : (
           <HeaderButton
-            icon={SlidersHorizontalIcon}
+            icon="filters"
             paired
             dot={archived ? 'filter' : undefined}
             accessibilityLabel="Filter Sessions"
@@ -125,7 +121,7 @@ function NewSessionHeaderButton(): React.JSX.Element {
   const navigate = useNavigate();
   return (
     <HeaderButton
-      icon={NotePencilIcon}
+      icon="new-session"
       paired
       accessibilityLabel="New Session"
       onPress={() => navigate({ to: newSessionRoute })}
@@ -263,7 +259,7 @@ export function SessionsScreen({
           onPress={() => navigate({ to: newSessionRoute })}
           className="h-9 sm:h-9 self-start flex-row gap-2 rounded-md px-3"
         >
-          <Icon as={NotePencilIcon} className="text-primary-foreground" />
+          <Icon name="new-session" className="text-primary-foreground" />
           <Text className="text-sm text-primary-foreground">New Session</Text>
         </Button>
       </View>
@@ -275,7 +271,7 @@ export function SessionsScreen({
       <View className="absolute bottom-6 right-4">
         <FloatingActionButton
           accessibilityLabel="New Session"
-          icon={NotePencilIcon}
+          icon="new-session"
           onPress={() => navigate({ to: newSessionRoute })}
         />
       </View>

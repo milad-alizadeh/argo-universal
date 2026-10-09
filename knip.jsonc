@@ -14,7 +14,7 @@
       "ignoreBinaries": ["unset"]
     },
     "apps/universal-app": {
-      // Native modules the app must list itself so Expo autolinks them; phosphor-react-native and Expo Router reach them at runtime.
+      // Native modules the app must list itself so Expo autolinks them; @repo/client, expo-symbols and Expo Router reach them at runtime.
       "ignoreDependencies": ["expo-font", "react-native-svg", "expo-updates"]
     },
     "apps/storybook": {

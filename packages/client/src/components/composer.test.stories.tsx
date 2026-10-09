@@ -658,10 +658,10 @@ async function expectEffortFollowsModel({
       overlay.queryByRole('slider', { name: 'Effort' }),
     ).not.toBeInTheDocument();
     await expect(
-      canvas
-        .getByRole('button', { name: agentModelLabel, hidden: true })
-        .textContent?.trim(),
-    ).toBe(model.name.replace(/\s*\(recommended\)/i, ''));
+      within(
+        canvas.getByRole('button', { name: agentModelLabel, hidden: true }),
+      ).getByText(model.name.replace(/\s*\(recommended\)/i, '')),
+    ).toBeInTheDocument();
   }
 }
 
@@ -676,7 +676,7 @@ async function expectDangerousMode({
   const planMode = await overlay.findByRole('button', { name: planning.name });
   await waitFor(() => expect(planMode).toBeVisible());
   await expect(
-    within(planMode).getByTestId('phosphor-react-native-map-trifold-regular'),
+    within(planMode).getByTestId('icon-plan-mode'),
   ).toBeInTheDocument();
   await expect(
     overlay.getByRole('button', { name: dangerous.name }),
@@ -1150,7 +1150,7 @@ function responsiveLayout(width: number, agentIndex: number): Story {
       await userEvent.hover(attachButton);
       const highlight = attachButton.firstElementChild;
       if (!highlight) throw new Error('Attach highlight is missing.');
-      const plus = attachButton.querySelector('svg');
+      const plus = attachButton.querySelector('[data-icon]');
       if (!plus) throw new Error('Attach icon is missing.');
       const iconLayer = plus.parentElement;
       if (!iconLayer) throw new Error('Attach icon layer is missing');

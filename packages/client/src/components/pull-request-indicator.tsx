@@ -1,17 +1,18 @@
-import { GitMergeIcon, GitPullRequestIcon } from 'phosphor-react-native';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/utils';
 import { Text } from '#primitives/text';
 import { Icon } from '../lib/icon';
 
+const pullRequest = 'pull-request';
+
 const statusAppearance = {
-  open: { icon: GitPullRequestIcon, className: 'text-success' },
-  draft: { icon: GitPullRequestIcon, className: 'text-muted-foreground' },
-  merged: { icon: GitMergeIcon, className: 'text-merged' },
-  conflict: { icon: GitPullRequestIcon, className: 'text-warning' },
-  closed: { icon: GitPullRequestIcon, className: 'text-destructive' },
-};
+  open: { icon: pullRequest, className: 'text-success' },
+  draft: { icon: pullRequest, className: 'text-muted-foreground' },
+  merged: { icon: 'merged', className: 'text-merged' },
+  conflict: { icon: pullRequest, className: 'text-warning' },
+  closed: { icon: pullRequest, className: 'text-destructive' },
+} as const;
 
 export interface PullRequestIndicatorProps {
   number: number;
@@ -29,7 +30,7 @@ export function PullRequestIndicator({
       className="flex-row items-center gap-1"
     >
       <Icon
-        as={appearance.icon}
+        name={appearance.icon}
         className={cn('shrink-0', appearance.className)}
       />
       <Text className={cn('type-secondary', appearance.className)}>

@@ -1,9 +1,4 @@
 import type { ToolCallUpdate } from '@repo/contracts';
-import {
-  ArrowRightIcon,
-  PencilSimpleIcon,
-  TrashIcon,
-} from 'phosphor-react-native';
 import type * as React from 'react';
 import { useMemo, useState } from 'react';
 import { View } from 'react-native';
@@ -23,11 +18,11 @@ export interface EditRowProps {
 }
 
 const editIcons = {
-  modify: PencilSimpleIcon,
-  add: PencilSimpleIcon,
-  delete: TrashIcon,
-  move: ArrowRightIcon,
-};
+  modify: 'edit',
+  add: 'edit',
+  delete: 'delete',
+  move: 'arrow-right',
+} as const;
 
 const verbs = {
   modify: 'Edited',
@@ -51,7 +46,7 @@ function FileEdit({
         variant="link"
         aria-label={`${verb} ${file.path}`}
         aria-expanded={open}
-        className="h-auto max-w-full self-start justify-start gap-1.5 rounded-none p-0 sm:h-auto has-[>svg]:px-0"
+        className="h-auto max-w-full self-start justify-start gap-1.5 rounded-none p-0 sm:h-auto has-[>[data-icon]]:px-0"
         onPress={() => setOpen(!open)}
       >
         <TextClassContext.Provider
@@ -61,7 +56,7 @@ function FileEdit({
           )}
         >
           <Icon
-            as={nested ? fileTypeIcon(file.path) : editIcons[file.operation]}
+            name={nested ? fileTypeIcon(file.path) : editIcons[file.operation]}
             className={cn('shrink-0', nested && 'text-muted-foreground')}
           />
           <View className="min-w-0 shrink flex-row items-center gap-1">
@@ -116,7 +111,7 @@ export function EditRow({ row }: EditRowProps): React.JSX.Element {
       .join(' ');
     return (
       <View className="min-h-5 flex-row items-center gap-1.5">
-        <Icon as={PencilSimpleIcon} className="shrink-0 text-destructive" />
+        <Icon name="edit" className="shrink-0 text-destructive" />
         <Text className="type-body text-destructive">Couldn't edit</Text>
         {path ? (
           <FileName path={path} className="type-body text-muted-foreground" />
@@ -137,11 +132,11 @@ export function EditRow({ row }: EditRowProps): React.JSX.Element {
     <Collapsible open={expanded}>
       <Button
         variant="link"
-        className="h-auto max-w-full self-start justify-start gap-1.5 rounded-none p-0 sm:h-auto has-[>svg]:px-0"
+        className="h-auto max-w-full self-start justify-start gap-1.5 rounded-none p-0 sm:h-auto has-[>[data-icon]]:px-0"
         aria-expanded={expanded}
         onPress={() => setExpanded(!expanded)}
       >
-        <Icon as={PencilSimpleIcon} className="text-muted-foreground" />
+        <Icon name="edit" className="text-muted-foreground" />
         <Text
           selectable={false}
           className="select-none type-body text-muted-foreground"

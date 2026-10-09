@@ -1,4 +1,3 @@
-import { KeyReturnIcon } from 'phosphor-react-native';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/utils';
@@ -73,7 +72,7 @@ function ReturnKey({ wide }: { wide: boolean }): ReactNode {
         !wide && 'hidden',
       )}
     >
-      <Icon as={KeyReturnIcon} size="md" className="text-primary-foreground" />
+      <Icon name="return" size="md" className="text-primary-foreground" />
     </View>
   );
 }

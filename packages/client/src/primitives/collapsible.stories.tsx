@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { CaretUpDownIcon } from 'phosphor-react-native/src/icons/CaretUpDown';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
@@ -37,7 +36,7 @@ function CollapsibleExample({
             size="icon"
             accessibilityLabel="Toggle repositories"
           >
-            <Icon as={CaretUpDownIcon} />
+            <Icon name="chevron-up-down" />
           </Button>
         </CollapsibleTrigger>
       </View>
