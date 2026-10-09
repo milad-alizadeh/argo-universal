@@ -17,11 +17,7 @@ export type {
 } from './acp/resource-types';
 export { fetchAgents, type FetchAgents } from './catalog/fetch-agents';
 
-export {
-  readAgentCatalog,
-  resolveRegistryServerPlatform,
-  type CatalogReadInput,
-} from './catalog/browse';
+export { readAgentCatalog } from './catalog/browse';
 export { requestAgentCatalogSync } from './catalog/sync-supervisor-machine';
 export {
   syncSupervisorMachine,

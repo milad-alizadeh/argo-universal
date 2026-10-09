@@ -1,4 +1,4 @@
-import type { Query } from '@anthropic-ai/claude-agent-sdk';
+import type { Query, PermissionResult } from '@anthropic-ai/claude-agent-sdk';
 import { expect, it, vi, type Mock } from 'vitest';
 import { UnsupportedCommandError } from '../src/agent-adapter';
 import type { AgentEvent } from '../src/agent-events';
@@ -100,10 +100,7 @@ it('uses the selected effort for native work', async (): Promise<void> => {
 
 it('answers the pending SDK permission with its allowed result', async (): Promise<void> => {
   const resources = createCommandResources();
-  const answered =
-    Promise.withResolvers<
-      import('@anthropic-ai/claude-agent-sdk').PermissionResult
-    >();
+  const answered = Promise.withResolvers<PermissionResult>();
   resources.requests.add(permission, answered.resolve);
   const run = sessionCommands({ ...resources, vendor: createSdkCommandPort() });
   await run({

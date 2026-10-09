@@ -3,6 +3,7 @@ import type {
   InitializeResponse,
   LoadSessionRequest,
   ResumeSessionRequest,
+  SessionCapabilities,
 } from '@agentclientprotocol/sdk';
 import type { AcpSessionOpening, AcpSessionLease } from './resource-types';
 import type { createAcpResponseReaders } from './response-readers';
@@ -16,7 +17,7 @@ type OpeningInput = {
 type Opened = Pick<AcpSessionLease, 'response' | 'sessionId'>;
 export const sessionCapabilities = (
   initialization: InitializeResponse,
-): import('@agentclientprotocol/sdk').SessionCapabilities | undefined =>
+): SessionCapabilities | undefined =>
   initialization.agentCapabilities?.sessionCapabilities;
 export const openProtocolSession = async (
   input: OpeningInput,

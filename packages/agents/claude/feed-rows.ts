@@ -1,6 +1,7 @@
 import type { AgentMapping } from '../src/agent-adapter';
 import type { AgentEvent, FeedChange, FeedUpdate } from '../src/agent-events';
 import type { MappingState, TextKind } from './mapping-state';
+import type { SDKAssistantMessage } from './messages';
 export const feed = (change: FeedChange): AgentEvent => ({
   type: 'agent.feed',
   change,
@@ -32,7 +33,7 @@ export const textRow = ({
 // A text or thinking block as the row kind and text it becomes.
 export const textOf = (
   block: Extract<
-    import('./messages').SDKAssistantMessage['message']['content'][number],
+    SDKAssistantMessage['message']['content'][number],
     { type: 'text' | 'thinking' }
   >,
 ):

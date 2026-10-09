@@ -7,9 +7,9 @@ import type {
 import type { Database } from '@repo/db';
 import { readCatalogSqlState } from './catalog-sql';
 import { readCatalogAgentRecords } from './records';
-import type { createRegistryReader } from './registry-reader';
+import { createRegistryReader } from './registry-reader';
 
-export interface CatalogReadInput {
+interface CatalogReadInput {
   database: Database;
   reader: ReturnType<typeof createRegistryReader>;
   platform: string;
@@ -42,9 +42,14 @@ function normalizeCatalogSearch(request: AgentsCatalogInput): string {
 }
 
 export function readAgentCatalog(
-  input: CatalogReadInput,
+  database: Database,
   request: AgentsCatalogInput,
 ): AgentsCatalogOutput {
+  const input = {
+    database,
+    reader: createRegistryReader(),
+    platform: resolveRegistryServerPlatform(),
+  };
   try {
     return buildCatalogResult(input, request);
   } catch (error) {
@@ -100,7 +105,7 @@ function buildUnavailableCatalogResult(
   };
 }
 
-export function resolveRegistryServerPlatform(): string {
+function resolveRegistryServerPlatform(): string {
   const os = process.platform === 'win32' ? 'windows' : process.platform;
   return `${os}-${resolveRegistryServerArchitecture()}`;
 }

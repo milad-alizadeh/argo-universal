@@ -42,12 +42,8 @@ type LiveHeaderMock = {
 const thought = recordedFeedMocks
   .flatMap((mock): SessionUpdate[] => mock.rows)
   .find(
-    (
-      row,
-    ): row is Extract<
-      import('@repo/contracts').SessionUpdate,
-      { sessionUpdate: 'agent_thought' }
-    > => row.sessionUpdate === 'agent_thought',
+    (row): row is Extract<SessionUpdate, { sessionUpdate: 'agent_thought' }> =>
+      row.sessionUpdate === 'agent_thought',
   );
 if (!thought) throw new Error('Recording needs an Agent thought');
 
@@ -57,10 +53,8 @@ export const liveHeaderMocks = recordedFeedMocks
     const command = mock.rows.find(
       (
         row,
-      ): row is Extract<
-        import('@repo/contracts').SessionUpdate,
-        { sessionUpdate: 'tool_call_update' }
-      > => row.sessionUpdate === 'tool_call_update' && row.kind === 'execute',
+      ): row is Extract<SessionUpdate, { sessionUpdate: 'tool_call_update' }> =>
+        row.sessionUpdate === 'tool_call_update' && row.kind === 'execute',
     );
     if (!command) throw new Error('Recording needs a command');
     return {

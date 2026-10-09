@@ -12,15 +12,17 @@ import {
   type CatalogSyncInput,
   type CatalogSyncResult,
 } from './catalog-sync-machine';
+import { fetchAgents, type FetchAgents } from './fetch-agents';
+import { createRegistryReader, type RegistryReader } from './registry-reader';
 
-export interface SyncSupervisorInput extends Omit<
-  CatalogSyncInput,
-  'source' | 'scope' | 'rejectedValues'
-> {
+export interface SyncSupervisorInput extends Pick<CatalogSyncInput, 'now'> {
+  fetchAgents?: FetchAgents;
   database: Database;
   writer: ActorRefFrom<typeof writerMachine>;
 }
 interface SyncContext extends SyncSupervisorInput {
+  fetchAgents: FetchAgents;
+  reader: RegistryReader;
   admissions: WriterCommit[];
   result: CatalogSyncResult;
   attempts: number;
@@ -121,6 +123,8 @@ export const syncSupervisorMachine = setup({
   id: 'syncSupervisor',
   context: ({ input }) => ({
     ...input,
+    fetchAgents: input.fetchAgents ?? fetchAgents,
+    reader: createRegistryReader(),
     admissions: [],
     result: { error: '', rejectedValues: 0, retryable: false },
     attempts: 0,

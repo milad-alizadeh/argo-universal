@@ -14,7 +14,7 @@ export const agentsRouter = router({
   catalog: publicProcedure
     .input(AgentsCatalogInput)
     .query(({ ctx, input }): AgentsCatalogOutput =>
-      readAgentCatalog({ database: ctx.database, ...ctx.catalogRead }, input),
+      readAgentCatalog(ctx.database, input),
     ),
   syncCatalog: publicProcedure.mutation(({ ctx }) => {
     ctx.sessionCommandSignal?.throwIfAborted();
@@ -26,7 +26,6 @@ export const agentsRouter = router({
       {
         database: ctx.database,
         writer: ctx.databaseWriter,
-        reader: ctx.catalogRead.reader,
       },
       signal,
     );

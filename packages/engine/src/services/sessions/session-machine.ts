@@ -35,6 +35,8 @@ import {
   setup,
   stateIn,
   or,
+  type AnyActorRef,
+  type InputFrom,
 } from 'xstate';
 import { countRejection } from '../../lib/count-rejections';
 import { createRejectionCounter } from '../../lib/count-rejections';
@@ -42,7 +44,12 @@ import { findAgentProbe } from '../agents';
 import type { AcpSessionLease } from '../agents';
 import { createAcpResponseReaders } from '../agents';
 import { blobsFolderIn } from '../blob';
-import { findDatabaseWriter, publishTurnContent } from '../feed';
+import {
+  findDatabaseWriter,
+  publishTurnContent,
+  type FeedEvent,
+  type FeedActorRef,
+} from '../feed';
 import { userMessageChange } from '../feed';
 import { feedMachine } from '../feed';
 import { readWrittenRow, readUnaddressedPlan } from '../feed';
@@ -76,10 +83,7 @@ const answerElicitationCommand = 'agent.answerElicitation';
 const writeFeedEvent = 'writer.write';
 const feedChangeEvent = 'feed.change';
 
-type FeedChangeEvent = Extract<
-  import('../feed').FeedEvent,
-  { type: 'feed.change' }
->;
+type FeedChangeEvent = Extract<FeedEvent, { type: 'feed.change' }>;
 type SessionDataParameters = { data: SessionData };
 type FailureParameters = { error: unknown };
 type LoadSessionInput = {
@@ -98,7 +102,7 @@ type EndTurnParameters = {
 type StartTurnParameters = { turnId: string; content: ContentBlock[] };
 type AcpOperationInput = {
   context: SessionContext;
-  findFeed: () => import('../feed').FeedActorRef | undefined;
+  findFeed: () => FeedActorRef | undefined;
 };
 const publishActiveTurnContent = (input: AcpOperationInput): Promise<void> => {
   if (!input.context.activeTurnId) return Promise.resolve();
@@ -183,9 +187,9 @@ const writer = ({
   system,
   self,
 }: {
-  system: import('xstate').AnyActorRef['system'];
-  self: import('xstate').AnyActorRef;
-}): import('xstate').AnyActorRef => findDatabaseWriter(system) ?? self;
+  system: AnyActorRef['system'];
+  self: AnyActorRef;
+}): AnyActorRef => findDatabaseWriter(system) ?? self;
 
 // The values an Agent reconnects with, read from the options it last reported.
 const toConfigValues = (
@@ -429,10 +433,7 @@ const sessionSetup = setup({
   actions: {
     forwardAcpUpdate: sendTo(
       'feed',
-      ({
-        context,
-        event,
-      }): Extract<import('../feed').FeedEvent, { type: 'feed.acpUpdate' }> => {
+      ({ context, event }): Extract<FeedEvent, { type: 'feed.acpUpdate' }> => {
         assertEvent(event, 'acp.update');
         return {
           type: 'feed.acpUpdate',
@@ -631,10 +632,7 @@ const sessionSetup = setup({
     ),
     forwardFeed: sendTo(
       'feed',
-      ({
-        context,
-        event,
-      }): Extract<import('../feed').FeedEvent, { type: 'feed.change' }> => {
+      ({ context, event }): Extract<FeedEvent, { type: 'feed.change' }> => {
         assertEvent(event, 'agent.feed');
         return {
           type: feedChangeEvent,
@@ -1067,10 +1065,7 @@ export const sessionMachine = sessionSetup.createMachine({
       invoke: {
         id: 'feed',
         src: 'feed',
-        input: ({
-          context,
-          self,
-        }): import('xstate').InputFrom<typeof feedMachine> => ({
+        input: ({ context, self }): InputFrom<typeof feedMachine> => ({
           sessionId: context.sessionId,
           epoch: context.epoch,
           maxRevision: context.maxRevision,

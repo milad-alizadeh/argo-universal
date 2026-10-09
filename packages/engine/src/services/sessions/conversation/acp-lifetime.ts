@@ -1,4 +1,7 @@
-import type { SessionNotification } from '@agentclientprotocol/sdk';
+import type {
+  SessionNotification,
+  NewSessionRequest,
+} from '@agentclientprotocol/sdk';
 import type {
   AcpResources,
   AcpSessionDestination,
@@ -16,9 +19,7 @@ export type AcpSessionDependencies = {
 export type AcpLifetimeEvent =
   | { type: 'acp.update'; notification: SessionNotification }
   | { type: 'acp.failed'; error: unknown };
-const createNewSessionRequest = (
-  session: SessionData,
-): import('@agentclientprotocol/sdk').NewSessionRequest => ({
+const createNewSessionRequest = (session: SessionData): NewSessionRequest => ({
   cwd: session.checkout.path,
   mcpServers: [],
 });

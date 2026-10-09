@@ -8,6 +8,7 @@ import { session } from '@repo/db/schema';
 import { isSessionBranch } from '@repo/git';
 import { TRPCError } from '@trpc/server';
 import { eq, getTableColumns, sql } from 'drizzle-orm';
+import type { infer as Infer } from 'zod';
 import { createRejectionCounter } from '../../lib/count-rejections';
 
 // JSON is decoded per row at the reader boundary, after SQLite has returned the bounded result.
@@ -44,7 +45,7 @@ const sessionSnapshotFields = SessionInfo.pick({
     checkout: true,
   }).shape,
 );
-type SessionSnapshotFields = import('zod').infer<typeof sessionSnapshotFields>;
+type SessionSnapshotFields = Infer<typeof sessionSnapshotFields>;
 
 // A worktree Session runs on its own Session branch; any other branch is the main checkout.
 export function toSessionCheckout(row: {

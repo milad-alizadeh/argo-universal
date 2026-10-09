@@ -22,7 +22,6 @@ export interface HttpServerOptions {
   sessions: RegistryActorRef;
   databaseWriter: ActorRefFrom<typeof writerMachine>;
   syncSupervisor: ActorRefFrom<typeof syncSupervisorMachine>;
-  platform?: string;
   commandAdmission?: AbortController;
 }
 

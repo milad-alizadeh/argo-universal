@@ -7,6 +7,7 @@ import { View } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { expect, fn, screen, waitFor, within } from 'storybook/test';
+import { page } from 'vitest/browser';
 import { composerProps } from '../../mocks/composer-mock';
 import { DesktopShellFrame } from '../../mocks/desktop-shell-frame';
 import { layoutWidths } from '../../mocks/each-layout';
@@ -171,7 +172,6 @@ export const MainContentUsesAvailableWidth: Story = {
     ),
   },
   play: controlledPlay(async ({ canvas, userEvent }, controlled) => {
-    const { page } = await import('vitest/browser');
     await page.viewport(1440, 844);
     const content = canvas.getByTestId('responsive-main-content');
     const approve = (): HTMLElement =>
@@ -278,7 +278,6 @@ export const ComposerUsesAvailableWidth: Story = {
     ),
   },
   play: controlledPlay(async ({ canvas, userEvent }, controlled) => {
-    const { page } = await import('vitest/browser');
     await page.viewport(1440, 844);
     const mode = canvas.getByRole('button', { name: 'Mode' });
     await waitFor(() => expect(mode).toBeVisible());
@@ -507,7 +506,6 @@ export const InspectorTakesTheDetailAreaAndRestoresItPhone =
 
 export const DividersResizeAndRememberWidths: Story = {
   play: controlledPlay(async ({ canvas, userEvent }, controlled) => {
-    const { page } = await import('vitest/browser');
     await page.viewport(1440, 844);
     const list = canvas.getByTestId(sessionListId);
     await waitFor(() => expect(list.getBoundingClientRect().width).toBe(300));
@@ -607,7 +605,6 @@ export const DividersResizeAndRememberWidths: Story = {
 export const NoAttention: Story = {
   args: { attentionCount: 0 },
   play: controlledPlay(async ({ canvas }) => {
-    const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       await expect(
@@ -620,7 +617,6 @@ export const NoAttention: Story = {
 export const OneAttention: Story = {
   args: { attentionCount: 1 },
   play: controlledPlay(async ({ canvas }) => {
-    const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       await expect(
@@ -633,7 +629,6 @@ export const OneAttention: Story = {
 export const OverflowAttention: Story = {
   args: { attentionCount: 100 },
   play: controlledPlay(async ({ canvas }) => {
-    const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       await expect(
@@ -645,7 +640,6 @@ export const OverflowAttention: Story = {
 
 export const TogglesPreserveContent: Story = {
   play: controlledPlay(async ({ canvas, userEvent }, controlled) => {
-    const { page } = await import('vitest/browser');
     await page.viewport(1440, 844);
     const content = canvas.getByTestId(detailContentId);
     for (const shown of [false, true]) {
@@ -686,7 +680,6 @@ export const TogglesPreserveContent: Story = {
 
 export const DragToCollapseExpandAndReopen: Story = {
   play: controlledPlay(async ({ canvas, userEvent }, controlled) => {
-    const { page } = await import('vitest/browser');
     await page.viewport(1440, 844);
     const drag = async (name: string, distance: number): Promise<void> => {
       const divider = canvas.getByRole('separator', { name });
@@ -797,7 +790,6 @@ export const DragToCollapseExpandAndReopen: Story = {
 
 export const ReversingAToggleRestoresTheSidebar: Story = {
   play: controlledPlay(async ({ canvas, userEvent }, controlled) => {
-    const { page } = await import('vitest/browser');
     await page.viewport(1440, 844);
     await userEvent.click(
       canvas.getByRole('button', { name: hideSidebarLabel }),
@@ -821,7 +813,6 @@ export const ReversingAToggleRestoresTheSidebar: Story = {
 
 export const ContentUpdatesDuringPanelToggle: Story = {
   play: controlledPlay(async ({ canvas }, controlled) => {
-    const { page } = await import('vitest/browser');
     await page.viewport(1440, 844);
     await controlled.render({ inspectorState: 'open' });
     await controlled.render({ attentionCount: 2 });
@@ -837,7 +828,6 @@ export const ContentUpdatesDuringPanelToggle: Story = {
 
 export const OneHeldDragCanCloseAndReopenPanels: Story = {
   play: controlledPlay(async ({ canvas, userEvent }, controlled) => {
-    const { page } = await import('vitest/browser');
     await page.viewport(1440, 844);
     const sidebar = canvas.getByRole('separator', { name: resizeSidebarLabel });
     const start = sidebar.getBoundingClientRect();
@@ -944,7 +934,6 @@ export const OneHeldDragCanCloseAndReopenPanels: Story = {
 export const ExpandedInspectorKeepsBothDividerEdgesUsable: Story = {
   args: { inspectorState: 'expanded' },
   play: controlledPlay(async ({ canvas, userEvent }) => {
-    const { page } = await import('vitest/browser');
     await page.viewport(1440, 844);
     await waitFor(() =>
       expect(
@@ -1011,7 +1000,6 @@ export const InspectorScrollKeepsHeaderReachable: Story = {
     inspector: <InspectorFilesMock />,
   },
   play: controlledPlay(async ({ canvas }) => {
-    const { page } = await import('vitest/browser');
     await page.viewport(1440, 844);
     const inspector = await canvas.findByTestId('desktop-inspector-scroll');
     await waitFor(() =>

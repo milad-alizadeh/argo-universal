@@ -1,7 +1,16 @@
 import { appendFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { type Database, openDatabase } from '@repo/db';
-import { assign, fromPromise, sendTo, setup, waitFor } from 'xstate';
+import {
+  assign,
+  fromPromise,
+  sendTo,
+  setup,
+  waitFor,
+  type ActorRefFrom,
+  type InputFrom,
+  type AnyActorRef,
+} from 'xstate';
 import {
   createAcpResources,
   type AcpResources,
@@ -9,8 +18,6 @@ import {
   type FetchAgents,
   syncSupervisorMachine,
   type SyncSupervisorInput,
-  fetchAgents,
-  createRegistryReader,
 } from '../services/agents';
 import { blobsFolderIn, removeUnusedBlobs } from '../services/blob';
 import { writerMachine, databaseWriterId } from '../services/feed';
@@ -20,6 +27,7 @@ import {
   registryMachine,
   sessionRegistryId,
   findSessionRegistry,
+  type RegistryActorRef,
 } from '../services/sessions';
 import {
   type HttpServer,
@@ -37,12 +45,10 @@ type EngineOutput = { exitCode: number };
 type OpenDatabaseInput = { home: string };
 type RecoveryInput = { database: Database; blobsFolder: string };
 type CloseHttpServerInput = { server: HttpServer | null };
-type SyncSupervisorActor = import('xstate').ActorRefFrom<
-  typeof syncSupervisorMachine
->;
+type SyncSupervisorActor = ActorRefFrom<typeof syncSupervisorMachine>;
 type CloseAcpResourcesInput = {
   resources: AcpResources;
-  sessions: import('../services/sessions').RegistryActorRef | undefined;
+  sessions: RegistryActorRef | undefined;
 };
 const closingAgentsTarget = 'closingAgents';
 
@@ -234,9 +240,7 @@ export const engineMachine = setup({
           id: 'databaseWriter',
           systemId: databaseWriterId,
           src: 'databaseWriter',
-          input: ({
-            context,
-          }): import('xstate').InputFrom<typeof writerMachine> => ({
+          input: ({ context }): InputFrom<typeof writerMachine> => ({
             database: openDatabaseOf(context),
             now: context.now,
             log: (line: string): void => writeEngineLog(context.home, line),
@@ -249,8 +253,7 @@ export const engineMachine = setup({
           input: ({ context, self }): SyncSupervisorInput => ({
             database: openDatabaseOf(context),
             writer: requireDatabaseWriter(self.system),
-            fetchAgents: context.fetchAgents ?? fetchAgents,
-            reader: createRegistryReader(),
+            fetchAgents: context.fetchAgents,
             now: context.now,
           }),
         },
@@ -484,22 +487,22 @@ export const engineMachine = setup({
 });
 
 function requireSessionRegistry(
-  system: import('xstate').AnyActorRef['system'],
-): import('../services/sessions').RegistryActorRef {
+  system: AnyActorRef['system'],
+): RegistryActorRef {
   const actor = findSessionRegistry(system);
   if (!actor) throw new Error('The Session registry is not running');
   return actor;
 }
 
 function requireDatabaseWriter(
-  system: import('xstate').AnyActorRef['system'],
-): import('xstate').ActorRefFrom<typeof writerMachine> {
+  system: AnyActorRef['system'],
+): ActorRefFrom<typeof writerMachine> {
   const actor = system.get(databaseWriterId);
   if (!actor) throw new Error('Database Writer is not running');
   return actor;
 }
 function requireSyncSupervisor(
-  system: import('xstate').AnyActorRef['system'],
+  system: AnyActorRef['system'],
 ): SyncSupervisorActor {
   const actor = system.get('syncSupervisor');
   if (!actor) throw new Error('Sync supervisor is not running');

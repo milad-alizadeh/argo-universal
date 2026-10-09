@@ -4,6 +4,7 @@ import {
   createResourceOpening,
   resourceInitialization,
 } from '#mocks/acp-resource';
+import type { AcpProcess } from './resource-types';
 import { createAcpResources } from './resources';
 
 it('rejects an unchecked malformed opening response through the resource and counts it once', async () => {
@@ -11,9 +12,7 @@ it('rejects an unchecked malformed opening response through the resource and cou
   const peer = createAcpPeer();
   const exited = Promise.withResolvers<void>();
   const resources = createAcpResources({
-    launchProcess: async (): Promise<
-      import('./resource-types').AcpProcess
-    > => ({
+    launchProcess: async (): Promise<AcpProcess> => ({
       stream: peer.stream,
       exited: exited.promise,
       terminate: async () => exited.resolve(),

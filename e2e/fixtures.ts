@@ -6,6 +6,7 @@ import {
   _electron as electron,
   type Page,
   type ElectronApplication,
+  type Disposable,
 } from '@playwright/test';
 import { test as base } from 'playwright-bdd';
 import { z } from 'zod';
@@ -42,10 +43,7 @@ const readServerPid = async (home: string): Promise<number | null> => {
 };
 
 // The App prefers the Server URL the desktop preload sets over its built-in one, so tests can point it at any port.
-const pointAppAtServer = (
-  page: Page,
-  serverUrl: string,
-): Promise<import('@playwright/test').Disposable> =>
+const pointAppAtServer = (page: Page, serverUrl: string): Promise<Disposable> =>
   page.addInitScript((url): void => {
     Object.assign(globalThis, { argo: { serverUrl: url } });
   }, serverUrl);

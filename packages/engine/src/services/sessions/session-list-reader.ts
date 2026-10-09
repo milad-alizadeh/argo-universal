@@ -452,10 +452,8 @@ function readSessionInformation(
     message: updates.findLast(
       (
         update,
-      ): update is Extract<
-        import('@repo/contracts').SessionUpdate,
-        { sessionUpdate: 'agent_message' }
-      > => update.sessionUpdate === 'agent_message',
+      ): update is Extract<SessionUpdate, { sessionUpdate: 'agent_message' }> =>
+        update.sessionUpdate === 'agent_message',
     ),
     plan: selectPlanRowWithLatestContent(updates),
     live: live?.context ?? null,

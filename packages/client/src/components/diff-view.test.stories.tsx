@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, spyOn, waitFor, within } from 'storybook/test';
+import { page } from 'vitest/browser';
 import { layoutWidths } from '../../mocks/each-layout';
 import { recordedFile } from '../../mocks/feed-edit-mock';
 import { settleViewport } from '../../mocks/settle-viewport';
@@ -29,7 +30,6 @@ type Story = StoryObj<typeof meta>;
 export const InspectorFileShowsEveryLine: Story = {
   play: async ({ canvas }) => {
     if (process.env.NODE_ENV !== 'test') return;
-    const { page } = await import('vitest/browser');
     for (const width of [layoutWidths.phone, layoutWidths.wide]) {
       await settleViewport(width);
       await expect(canvas.queryByText(/@@/)).toBeNull();
@@ -62,7 +62,6 @@ function inlinePreview(width: number): Story {
     args: { inline: true },
     play: async ({ canvas, userEvent }) => {
       if (process.env.NODE_ENV !== 'test') return;
-      const { page } = await import('vitest/browser');
       const clipboard = spyOn(
         navigator.clipboard,
         'writeText',

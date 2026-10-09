@@ -1,7 +1,7 @@
 import { runningToolCallStatuses, type SessionUpdate } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow } from '@repo/db/schema';
-import { and, desc, eq, gt, isNull, ne, or, sql } from 'drizzle-orm';
+import { and, desc, eq, gt, isNull, ne, or, sql, type SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/sqlite-core';
 import type { ActorRefFrom } from 'xstate';
 import { createRejectionCounter } from '../../lib/count-rejections';
@@ -138,7 +138,7 @@ function readStoredHeaderRows({
         sql`case when json_valid(${feedRow.payload})
           then json_extract(${feedRow.payload}, '$.status') in (${sql.join(
             runningToolCallStatuses.map(
-              (status): import('drizzle-orm').SQL<unknown> => sql`${status}`,
+              (status): SQL<unknown> => sql`${status}`,
             ),
             sql`, `,
           )}) else ${feedRow.position} = (${newestInvalid}) end`,

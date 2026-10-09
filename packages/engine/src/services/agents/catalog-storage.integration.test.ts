@@ -84,6 +84,7 @@ it.each(['{broken', '{"id":"bad"}'])(
       rejectedValues: 1,
       error: expect.stringMatching(/malformed/),
     });
+    expect((await caller.agents.catalog()).rejectedValues).toBe(1);
   },
 );
 

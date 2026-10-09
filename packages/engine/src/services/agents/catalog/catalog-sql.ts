@@ -55,10 +55,8 @@ export function readCatalogSqlState(input: CatalogSqlReadInput): {
     syncStatus: job.status,
   };
 }
-export function readLatestCatalogChangeIds(
-  input: CatalogSqlReadInput,
-): string[] {
-  return input.database
+export function readLatestCatalogChangeIds(database: Database): string[] {
+  return database
     .select({ id: agents.id })
     .from(agents)
     .where(isNotNull(agents.registryId))

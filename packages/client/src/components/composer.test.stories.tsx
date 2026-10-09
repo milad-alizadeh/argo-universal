@@ -8,6 +8,7 @@ import { View } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { expect, fn, waitFor, within } from 'storybook/test';
+import { userEvent as browserUserEvent } from 'vitest/browser';
 import {
   composerProps,
   composerImages,
@@ -607,7 +608,6 @@ async function expectHighEffort({
   catalog,
 }: PickerStep & { catalog: PickerCatalog }): Promise<void> {
   const overlay = within(document.body);
-  const { userEvent: browserUserEvent } = await import('vitest/browser');
   const model = catalog.highEffortModel;
   await chooseModel({ userEvent, width, name: model.name });
   await userEvent.click(
@@ -1304,7 +1304,6 @@ function editorScrollsAfterFourLines(width: number): Story {
     render: () => <SessionScreen id="session-1" />,
     parameters: { screenPreview: true, trpc: idleSessionMocks },
     play: async ({ canvas, userEvent }) => {
-      const { userEvent: browserUserEvent } = await import('vitest/browser');
       await settleViewport(width);
       const input = await canvas.findByRole('textbox', { name: 'Message' });
       await userEvent.type(

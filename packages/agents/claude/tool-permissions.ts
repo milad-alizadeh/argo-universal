@@ -2,6 +2,7 @@ import type {
   CanUseTool,
   PermissionResult,
 } from '@anthropic-ai/claude-agent-sdk';
+import type { SDKControlRequest } from './messages';
 import type { Requests } from './request-tracker';
 import { cancelledRequestReason } from './request-tracker';
 export const toolPermissions =
@@ -33,9 +34,7 @@ function requestPermission(
     options.signal.removeEventListener('abort', cancel),
   );
 }
-function permissionMessage(
-  input: PermissionInput,
-): import('./messages').SDKControlRequest {
+function permissionMessage(input: PermissionInput): SDKControlRequest {
   return {
     type: 'control_request',
     request_id: input.options.requestId,
@@ -47,7 +46,7 @@ function permissionRequest({
   input,
   options,
 }: PermissionInput): Extract<
-  import('./messages').SDKControlRequest['request'],
+  SDKControlRequest['request'],
   { subtype: 'can_use_tool' }
 > {
   return {

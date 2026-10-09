@@ -352,9 +352,9 @@ export const MultipleProjects: Story = {
   parameters: { trpc: multipleProjectsMocks },
   play: async ({ canvas }) =>
     eachLayout(async () => {
+      const scroll = await canvas.findByTestId(sessionsScrollId);
+      scroll.scrollTop = scroll.scrollHeight;
       const project = await canvas.findByText('Empty Project');
-      // The list draws only rows near the view, so bring the Project's rows in.
-      project.scrollIntoView();
       await expect(project).toBeVisible();
       await expect(await canvas.findByText('No Sessions yet.')).toBeVisible();
     }),

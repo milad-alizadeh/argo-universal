@@ -8,10 +8,7 @@ import {
   type StatePath,
   type AdjacencyMap,
 } from 'xstate/graph';
-import {
-  createRegistryReader,
-  syncSupervisorMachine,
-} from '../src/services/agents';
+import { syncSupervisorMachine } from '../src/services/agents';
 import { writerMachine } from '../src/services/feed';
 
 type SupervisorSnapshot = SnapshotFrom<typeof syncSupervisorMachine>;
@@ -115,7 +112,6 @@ export function createCatalogSupervisorModel(database: Database): {
   const options = {
     input: {
       database,
-      reader: createRegistryReader(),
       now: Date.now,
       writer: createActor(writerMachine, {
         input: { database, now: Date.now },
