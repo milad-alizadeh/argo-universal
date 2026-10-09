@@ -1,4 +1,4 @@
-import type { FeedMock } from '@repo/api/mocks';
+import type { FeedMock } from '@repo/mocks/app';
 import type { FixtureArguments, FixtureOutput } from './trpc-mock-link';
 import type { Fixtures } from './trpc-mock-link';
 
@@ -14,7 +14,7 @@ export interface FeedFixtures {
   ) => AsyncGenerator<FeedMock['stream'][number], void>;
 }
 
-export { recordedFeedMocks } from '@repo/api/mocks';
+export { recordedFeedMocks } from '@repo/mocks/app';
 
 // One recorded Feed at the tRPC link, for any Session screen story (ADR 0010).
 export function createFeedMocks(mock: FeedMock): FeedFixtures {

@@ -1,4 +1,4 @@
-import { changesMocks } from '@repo/api/mocks';
+import { changesMocks } from '@repo/mocks/app';
 import type { FixtureArguments } from './trpc-mock-link';
 import type { Fixtures } from './trpc-mock-link';
 

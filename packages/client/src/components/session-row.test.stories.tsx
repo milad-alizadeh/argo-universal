@@ -1,4 +1,4 @@
-import { agentsList, sessionRows } from '@repo/api/mocks';
+import { agentsList, sessionRows } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn, waitFor } from 'storybook/test';
 import { layoutWidths } from '../../mocks/each-layout';

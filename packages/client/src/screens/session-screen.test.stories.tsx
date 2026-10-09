@@ -1,9 +1,9 @@
-import { newSessionCatalogs, recordedFeedMocks } from '@repo/api/mocks';
 import type {
   FeedSnapshot,
   FeedSyncPoint,
   FeedSubscribeOutput,
 } from '@repo/contracts';
+import { newSessionCatalogs, recordedFeedMocks } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { createRoot } from 'react-dom/client';

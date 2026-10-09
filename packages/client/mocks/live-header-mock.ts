@@ -1,5 +1,5 @@
-import { recordedFeedMocks } from '@repo/api/mocks';
 import type { LiveHeader, ToolCallUpdate } from '@repo/contracts';
+import { recordedFeedMocks } from '@repo/mocks/app';
 
 // Every live header the Server's producer gave over the recorded Turns, once per text.
 export const liveHeaderSteps = recordedFeedMocks

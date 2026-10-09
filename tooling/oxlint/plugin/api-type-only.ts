@@ -2,7 +2,7 @@ import type { ESTree, Visitor } from '@oxlint/plugins';
 import { defineRule } from '@oxlint/plugins';
 import { onModuleSources, stringValue } from './syntax.ts';
 
-const apiPackage = /^@repo\/api(?:\/|$)/;
+const mocksPackage = /^@repo\/mocks(?:\/|$)/;
 const serverPackage = /^@repo\/server(?:\/|$)/;
 const enginePackage = /^@repo\/engine(?:\/|$)/;
 
@@ -51,7 +51,7 @@ const isForbiddenServerImport = (
   (enginePackage.test(source) && !isPublicRouterType(source, statement));
 
 const isForbiddenImport = (source: string, statement: ESTree.Node): boolean =>
-  (apiPackage.test(source) && !isTypeOnly(statement)) ||
+  (mocksPackage.test(source) && !isTypeOnly(statement)) ||
   isForbiddenServerImport(source, statement);
 
 export const apiTypeOnly = defineRule({
@@ -59,7 +59,7 @@ export const apiTypeOnly = defineRule({
     type: 'problem',
     messages: {
       apiTypeOnly:
-        'The App imports only AppRouter from @repo/engine/router with `import type`; Engine runtime stays outside App bundles (ADR-0016). @repo/api runtime belongs in tests, stories or mocks.',
+        'The App imports only AppRouter from @repo/engine/router with `import type`; Engine runtime stays outside App bundles (ADR-0016). @repo/mocks runtime belongs in tests, stories or mocks.',
     },
   },
   create: (context): Visitor =>

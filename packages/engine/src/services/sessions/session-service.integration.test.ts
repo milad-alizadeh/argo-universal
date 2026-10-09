@@ -2,7 +2,6 @@ import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { AgentProbe, AgentReady, VendorCommand } from '@repo/agents';
-import { newSessionInputs } from '@repo/api/mocks';
 import type { FeedSubscribeOutput, SessionNewInput } from '@repo/contracts';
 import { permissionOptions } from '@repo/contracts';
 import type { Database } from '@repo/db';
@@ -14,6 +13,7 @@ import {
   type MockAgentStream,
   mockReady,
 } from '@repo/mocks/agent';
+import { newSessionInputs } from '@repo/mocks/app';
 import { eq } from 'drizzle-orm';
 import { beforeEach, expect, it, onTestFinished, vi } from 'vitest';
 import { waitFor } from 'xstate';

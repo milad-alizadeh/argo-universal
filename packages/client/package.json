@@ -80,8 +80,8 @@
     "react-native": "catalog:"
   },
   "devDependencies": {
-    "@repo/api": "workspace:*",
     "@repo/engine": "workspace:*",
+    "@repo/mocks": "workspace:*",
     "@repo/typescript": "workspace:*",
     "@repo/vitest": "workspace:*",
     "@storybook/react-native-web-vite": "catalog:",

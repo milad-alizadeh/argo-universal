@@ -1,9 +1,9 @@
+import type { SessionNewInput } from '@repo/contracts';
 import {
   newSessionCatalogs,
   newSessionProjects,
   serverInfo,
-} from '@repo/api/mocks';
-import type { SessionNewInput } from '@repo/contracts';
+} from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, spyOn, waitFor, within } from 'storybook/test';
