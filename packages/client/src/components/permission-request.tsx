@@ -91,20 +91,16 @@ export function PermissionRequest({
             size="md"
             className="shrink-0 text-muted-foreground"
           />
-          <Text className="min-w-0 flex-1 text-sm font-semibold leading-5.5">
-            {request.title}
-          </Text>
+          <Text className="min-w-0 flex-1 type-heading">{request.title}</Text>
         </View>
         {input && (
           <View className="rounded-md bg-secondary px-3 py-2">
-            <Text className="font-mono text-xs leading-5">{input}</Text>
+            <Text className="type-code-block">{input}</Text>
           </View>
         )}
         {denying && !alreadyAnswered ? (
           <View className="gap-1.5 pt-1">
-            <Text className="text-sm font-medium leading-5">
-              What should the Agent do instead?
-            </Text>
+            <Text className="type-body">What should the Agent do instead?</Text>
             <Textarea
               accessibilityLabel="What should the Agent do instead?"
               autoFocus
@@ -114,17 +110,15 @@ export function PermissionRequest({
               submitBehavior="submit"
               returnKeyType="send"
               onSubmitEditing={Platform.OS === 'web' ? undefined : answer}
-              className="min-h-16 bg-background dark:bg-background text-sm leading-5 web:resize-none web:focus-visible:ring-ring/25"
+              className="min-h-16 bg-background dark:bg-background type-control web:resize-none web:focus-visible:ring-ring/25"
             />
-            <Text className="text-sm leading-5 text-muted-foreground">
+            <Text className="type-secondary">
               Optional. The Agent reads it with the denial.
             </Text>
           </View>
         ) : null}
         {(!denying || alreadyAnswered) && reason && (
-          <Text className="text-sm leading-5 text-muted-foreground">
-            {reason}
-          </Text>
+          <Text className="type-secondary">{reason}</Text>
         )}
       </View>
     </RequestCard>

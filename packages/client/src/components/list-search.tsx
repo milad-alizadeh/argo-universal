@@ -129,7 +129,7 @@ export function ListSearch({
         <Text
           role="heading"
           aria-level={1}
-          className="pl-2 text-xl wide:text-base font-semibold"
+          className="pl-2 type-title"
           numberOfLines={1}
         >
           {title}
@@ -156,7 +156,7 @@ export function ListSearch({
           onKeyPress={({ nativeEvent }) => {
             if (nativeEvent.key === 'Escape') closeSearch();
           }}
-          className="h-8 sm:h-8 w-full rounded-none border-0 bg-transparent dark:bg-transparent pl-8 py-0 text-sm leading-5 ios:leading-none font-normal shadow-none focus-visible:ring-0"
+          className="h-8 sm:h-8 w-full rounded-none border-0 bg-transparent dark:bg-transparent pl-8 py-0 type-control ios:leading-none shadow-none focus-visible:ring-0"
           style={{ paddingRight: buttonSize, textAlignVertical: 'center' }}
         />
       </Animated.View>

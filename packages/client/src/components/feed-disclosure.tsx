@@ -17,6 +17,8 @@ const foregroundTextClassName = 'text-foreground';
 
 export interface FeedDisclosureProps {
   label: string;
+  // Parts of the label to draw in mono.
+  paths?: readonly string[];
   icon: IconName;
   running?: boolean;
   failed?: boolean;
@@ -27,8 +29,29 @@ export interface FeedDisclosureProps {
   children: ReactNode;
 }
 
+function withMonoPaths(title: string, paths: readonly string[]): ReactNode[] {
+  const pattern = paths
+    .filter(Boolean)
+    .map((path) => path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('|');
+  if (!pattern) return [title];
+  let offset = 0;
+  return title.split(new RegExp(`(${pattern})`)).map((part) => {
+    const key = `${offset}`;
+    offset += part.length;
+    return paths.includes(part) ? (
+      <Text key={key} className="type-code">
+        {part}
+      </Text>
+    ) : (
+      part
+    );
+  });
+}
+
 export function FeedDisclosure({
   label,
+  paths = [],
   icon,
   running = false,
   failed = false,
@@ -76,12 +99,12 @@ export function FeedDisclosure({
                   denied && 'line-through',
                 )}
               >
-                {title}
+                {withMonoPaths(title, paths)}
               </Text>
             )}
             {awaitingApproval && (
               <View className="rounded-sm border border-warning/20 bg-warning/10 px-1.5">
-                <Text className="text-xs leading-4.5 text-warning">
+                <Text className="type-badge text-warning">
                   Awaiting approval
                 </Text>
               </View>

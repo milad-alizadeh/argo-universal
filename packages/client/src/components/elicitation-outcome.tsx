@@ -31,8 +31,8 @@ export function ElicitationOutcome({
           size="md"
           className="shrink-0 text-muted-foreground"
         />
-        <Text className="text-sm leading-5 text-muted-foreground">{label}</Text>
-        <Text className="text-sm leading-5 text-muted-foreground">
+        <Text className="type-body text-muted-foreground">{label}</Text>
+        <Text className="type-body text-muted-foreground">
           {properties.length}{' '}
           {properties.length === 1 ? 'question' : 'questions'}
         </Text>
@@ -57,14 +57,11 @@ export function ElicitationOutcome({
                   });
             return (
               <View key={name} className="gap-1">
-                <Text className="text-sm leading-5">
+                <Text className="type-body">
                   {property.description ?? property.title ?? name}
                 </Text>
                 {answers.map((text) => (
-                  <Text
-                    key={text}
-                    className="text-sm leading-5 text-muted-foreground"
-                  >
+                  <Text key={text} className="type-body text-muted-foreground">
                     {text}
                   </Text>
                 ))}

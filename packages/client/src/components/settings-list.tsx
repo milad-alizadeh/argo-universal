@@ -184,7 +184,7 @@ function Group({
         <Text
           role="heading"
           aria-level={2}
-          className="text-sm leading-5 font-medium text-muted-foreground wide:text-xs wide:leading-4"
+          className="type-secondary"
           numberOfLines={1}
         >
           {title}

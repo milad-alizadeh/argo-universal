@@ -58,7 +58,7 @@ function ActionContent({
 }): ReactNode {
   return (
     <>
-      <Text className="text-sm leading-5 font-medium">{children}</Text>
+      <Text className="type-control">{children}</Text>
       {primary && <ReturnKey wide={wide} />}
     </>
   );

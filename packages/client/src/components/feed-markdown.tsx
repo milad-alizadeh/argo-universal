@@ -25,7 +25,7 @@ export interface FeedMarkdownProps {
 const MarkdownVariant = createContext<'feed' | 'proposal'>('feed');
 
 export const inlineCodeClassName =
-  'rounded-sm bg-foreground/5 px-1.5 py-px font-mono text-xs leading-4.5 text-foreground';
+  'rounded-sm bg-foreground/5 px-1.5 py-px type-code text-foreground';
 
 function Caret(): React.JSX.Element {
   return (
@@ -104,14 +104,6 @@ function InlineTokens({
   });
 }
 
-const proposalInlineCodeClassName = cn(
-  inlineCodeClassName,
-  'text-sm leading-5',
-);
-
-const proseClassName = 'font-sans type-body';
-const proposalProseClassName = 'font-sans text-sm leading-5 text-foreground';
-
 function Prose({
   tokens,
   caret,
@@ -121,22 +113,9 @@ function Prose({
   caret: boolean;
   className?: string;
 }): React.JSX.Element {
-  const variant = useContext(MarkdownVariant);
   return (
-    <Text
-      className={cn(
-        variant === 'proposal' ? proposalProseClassName : proseClassName,
-        className,
-      )}
-    >
-      <InlineTokens
-        tokens={tokens}
-        codeClassName={
-          variant === 'proposal'
-            ? proposalInlineCodeClassName
-            : inlineCodeClassName
-        }
-      />
+    <Text className={cn('font-sans type-body', className)}>
+      <InlineTokens tokens={tokens} />
       {caret && <Caret />}
     </Text>
   );
@@ -158,10 +137,8 @@ function List({
           <View key={key} className="flex-row gap-2">
             <Text
               className={cn(
-                'w-4 shrink-0 font-sans',
-                variant === 'proposal'
-                  ? 'text-sm leading-5 text-foreground'
-                  : 'type-body text-muted-foreground',
+                'w-4 shrink-0 font-sans type-body',
+                variant !== 'proposal' && 'text-muted-foreground',
               )}
             >
               {token.ordered ? `${start + index}.` : '•'}
@@ -180,11 +157,6 @@ function List({
 }
 
 function Table({ token }: { token: Tokens.Table }): React.JSX.Element {
-  const variant = useContext(MarkdownVariant);
-  const cellCodeClassName = cn(
-    'font-mono leading-5 text-foreground',
-    variant === 'proposal' ? 'text-sm' : 'text-xs',
-  );
   return (
     <View className="overflow-hidden rounded-xl border border-border">
       <ScrollView
@@ -197,15 +169,8 @@ function Table({ token }: { token: Tokens.Table }): React.JSX.Element {
             {withOccurrenceKeys(token.header, (cell) => cell.text).map(
               ({ item: cell, key }, column) => (
                 <View key={key} className={cellClassName(column)}>
-                  <Text className="font-sans text-sm leading-5 font-semibold text-foreground">
-                    <InlineTokens
-                      tokens={cell.tokens}
-                      codeClassName={
-                        variant === 'proposal'
-                          ? proposalInlineCodeClassName
-                          : inlineCodeClassName
-                      }
-                    />
+                  <Text className="font-sans type-heading">
+                    <InlineTokens tokens={cell.tokens} />
                   </Text>
                 </View>
               ),
@@ -224,10 +189,10 @@ function Table({ token }: { token: Tokens.Table }): React.JSX.Element {
               {withOccurrenceKeys(row, (cell) => cell.text).map(
                 ({ item: cell, key }, column) => (
                   <View key={key} className={cellClassName(column)}>
-                    <Text className="font-sans text-sm leading-5 text-foreground">
+                    <Text className="font-sans type-body">
                       <InlineTokens
                         tokens={cell.tokens}
-                        codeClassName={cellCodeClassName}
+                        codeClassName="type-code text-foreground"
                       />
                     </Text>
                   </View>
@@ -263,9 +228,7 @@ function Block({
           tokens={token.tokens}
           caret={caret}
           className={
-            variant === 'proposal'
-              ? 'font-semibold'
-              : 'pt-1 text-base leading-6 font-semibold'
+            variant === 'proposal' ? 'type-heading' : 'pt-1 type-heading'
           }
         />
       );
@@ -278,11 +241,7 @@ function Block({
     case 'code':
       return (
         <View className="gap-2.5">
-          <FeedCodeBlock
-            code={token.text}
-            language={token.lang || undefined}
-            textClassName={variant === 'proposal' ? 'text-sm' : undefined}
-          />
+          <FeedCodeBlock code={token.text} language={token.lang || undefined} />
           {caret && <Caret />}
         </View>
       );

@@ -13,7 +13,7 @@ export function CodeBlockTitle({
       ellipsizeMode="head"
       accessibilityLabel={title}
       testID="code-block-title"
-      className="min-w-0 flex-1 font-mono text-xs font-normal leading-5 text-muted-foreground web:[direction:rtl] web:text-left"
+      className="min-w-0 flex-1 type-code text-muted-foreground web:[direction:rtl] web:text-left"
     >
       {Platform.OS === 'web' && title.includes('/')
         ? `\u2066${title}\u2069`

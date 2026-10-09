@@ -94,20 +94,13 @@ export function PhoneShell({
           filled={selectedSection === section}
           className={cn(selectedSection !== section && 'text-muted-foreground')}
         />
-        <Text
-          className={cn(
-            'flex-1 type-body',
-            selectedSection === section && 'font-semibold',
-          )}
-        >
-          {title}
-        </Text>
+        <Text className="flex-1 type-body">{title}</Text>
         {section === 'sessions' && attentionCount > 0 && (
           <Badge
             className="h-phone-shell-badge min-w-phone-shell-badge border-0 bg-warning px-1.5"
             accessibilityLabel={`${attentionCount} ${attentionCount === 1 ? 'Session needs' : 'Sessions need'} attention`}
           >
-            <Text className="text-xs font-semibold text-warning-foreground">
+            <Text className="type-badge text-warning-foreground">
               {attentionCount > maximumAttentionBadgeCount
                 ? `${maximumAttentionBadgeCount}+`
                 : attentionCount}

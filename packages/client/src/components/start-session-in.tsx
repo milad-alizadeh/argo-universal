@@ -58,7 +58,7 @@ export function StartSessionIn({
           <Text
             selectable={false}
             numberOfLines={1}
-            className="select-none shrink text-sm leading-5 font-normal text-foreground"
+            className="select-none shrink type-body"
           >
             {project?.name ?? 'Choose a Project'}
           </Text>
@@ -90,7 +90,7 @@ export function StartSessionIn({
       )}
     >
       <Icon name="computer" className="text-muted-foreground" />
-      <Text numberOfLines={1} className="text-sm leading-5 text-foreground">
+      <Text numberOfLines={1} className="type-body">
         {serverName}
       </Text>
       <View
@@ -102,9 +102,7 @@ export function StartSessionIn({
         )}
       />
       {!serverConnected && (
-        <Text className="pl-1 text-xs leading-4 text-warning">
-          Reconnecting…
-        </Text>
+        <Text className="pl-1 type-secondary text-warning">Reconnecting…</Text>
       )}
     </View>
   );
@@ -114,7 +112,7 @@ export function StartSessionIn({
         accessibilityLabel="Start the Session in"
         className="w-full max-w-composer flex-row items-center gap-4 pl-2.5"
       >
-        <Text className="pl-1.5 shrink-0 text-xs leading-4 text-muted-foreground">
+        <Text className="pl-1.5 shrink-0 type-secondary">
           Start the Session in
         </Text>
         {server}
@@ -123,9 +121,7 @@ export function StartSessionIn({
     );
   return (
     <View accessibilityLabel="Start the Session in" className="w-full">
-      <Text className="pl-4 pb-1 text-xs leading-4 text-muted-foreground">
-        Start the Session in
-      </Text>
+      <Text className="pl-4 pb-1 type-secondary">Start the Session in</Text>
       {server}
       {projectControl}
       <ComposerPopover
@@ -143,14 +139,14 @@ export function StartSessionIn({
             />
             <Text
               selectable={false}
-              className="select-none text-sm leading-5 font-normal text-muted-foreground"
+              className="select-none type-body text-muted-foreground"
             >
               {checkout.newWorktree ? 'New worktree from' : 'Local'}
             </Text>
             {checkout.newWorktree && (
               <Text
                 selectable={false}
-                className="select-none -ml-0.5 font-mono text-sm leading-5 font-normal text-foreground"
+                className="select-none -ml-0.5 type-code text-foreground"
               >
                 {checkout.branch.toLowerCase()}
               </Text>
@@ -207,7 +203,7 @@ export function ProjectPicker({
             onChangeText={setQuery}
             autoCapitalize="none"
             autoCorrect={false}
-            className="h-5 sm:h-5 flex-1 border-0 bg-transparent dark:bg-transparent p-0 px-0 text-sm md:text-sm leading-5 shadow-none web:focus-visible:ring-0"
+            className="h-5 sm:h-5 flex-1 border-0 bg-transparent dark:bg-transparent p-0 px-0 type-control shadow-none web:focus-visible:ring-0"
           />
         </View>
       </View>
@@ -234,14 +230,14 @@ export function ProjectPicker({
                 <Text
                   selectable={false}
                   numberOfLines={1}
-                  className="select-none text-sm leading-5 font-normal text-foreground"
+                  className="select-none type-body"
                 >
                   {project.name}
                 </Text>
                 <Text
                   selectable={false}
                   numberOfLines={1}
-                  className="select-none font-mono text-xs leading-4 font-normal text-muted-foreground"
+                  className="select-none type-code text-muted-foreground"
                 >
                   {project.path}
                 </Text>
@@ -253,9 +249,7 @@ export function ProjectPicker({
           );
         })}
         {found.length === 0 && (
-          <Text className="px-2 py-2 text-sm leading-5 text-muted-foreground">
-            No Project matches.
-          </Text>
+          <Text className="px-2 py-2 type-secondary">No Project matches.</Text>
         )}
       </View>
     </View>

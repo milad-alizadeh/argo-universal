@@ -9,7 +9,7 @@ export function ConnectionBanner(): React.JSX.Element | null {
   if (state !== 'reconnecting' && state !== 'offline') return null;
   return (
     <View role="status" className="w-full bg-muted px-4 py-2">
-      <Text className="text-center text-muted-foreground text-sm">
+      <Text className="text-center type-secondary">
         {state === 'reconnecting'
           ? 'Reconnecting to the Server…'
           : 'The Server is offline. Argo keeps trying to reconnect.'}

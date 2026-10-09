@@ -8,7 +8,7 @@ import {
 } from 'react';
 import { type LayoutChangeEvent, View } from 'react-native';
 import type { FeedActivity, FeedGroup } from '../feed/feed-view';
-import { toolCallTitle } from '../feed/tool-call-title';
+import { toolCallTitle, toolCallTitlePaths } from '../feed/tool-call-title';
 import { useToolCallDuration } from '../feed/use-tool-call-duration';
 import { FeedGrowthContext } from './feed-growth-context';
 import { ToolCallDisclosure } from './tool-call-disclosure';
@@ -85,6 +85,9 @@ export function ToolCallGroup({
       permissionOutcome={live?.toolCall._meta?.argo?.permissionOutcome}
       label={
         live ? toolCallTitle(live.toolCall, live.awaitingApproval) : group.title
+      }
+      paths={
+        live ? toolCallTitlePaths(live.toolCall, live.awaitingApproval) : []
       }
       icon={live ? toolCallIcon(live.toolCall) : 'read'}
       running={running}

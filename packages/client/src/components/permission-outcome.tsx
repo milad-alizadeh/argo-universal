@@ -24,7 +24,7 @@ export function PermissionOutcome({
   return (
     <View className="flex-row items-start gap-1.5">
       <View
-        className={`${allowed ? 'w-icon-sm' : 'w-icon-md'} h-5 shrink-0 justify-center`}
+        className={`${allowed ? 'w-icon-sm' : 'w-icon-md'} h-6 shrink-0 justify-center wide:h-5`}
       >
         <Icon
           name={allowed ? 'check' : 'close'}
@@ -32,7 +32,7 @@ export function PermissionOutcome({
           className="text-muted-foreground"
         />
       </View>
-      <Text className="min-w-0 flex-1 text-sm leading-5 text-muted-foreground">
+      <Text className="min-w-0 flex-1 type-body text-muted-foreground">
         {allowed ? 'You allowed this once' : label}
       </Text>
     </View>

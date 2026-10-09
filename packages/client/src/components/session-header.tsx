@@ -51,11 +51,11 @@ function StatusLine({
       <View className="size-2 items-center justify-center">
         <StatusIndicator status={status} size="small" testID="session-status" />
       </View>
-      <Text className={cn('text-xs font-medium', statusTextColor[status])}>
+      <Text className={cn('type-badge', statusTextColor[status])}>
         {statusLabels[status]}
       </Text>
       {startedAt !== null && (
-        <Text className="text-xs text-muted-foreground">
+        <Text className="type-secondary">
           for {formatElapsed(clock - startedAt)}
         </Text>
       )}
@@ -100,7 +100,7 @@ export function SessionHeader({
             role="heading"
             aria-level={2}
             numberOfLines={1}
-            className="text-base font-semibold"
+            className="type-heading"
           >
             {title}
           </Text>

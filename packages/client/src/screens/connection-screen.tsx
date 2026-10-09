@@ -23,11 +23,11 @@ export function ConnectionScreen(): React.JSX.Element {
   let serverInformation: ReactNode;
   if (info.isPending) {
     serverInformation = (
-      <Text className="text-muted-foreground">Connecting to the Server…</Text>
+      <Text className="type-secondary">Connecting to the Server…</Text>
     );
   } else if (info.isError) {
     serverInformation = (
-      <Text className="text-destructive">{info.error.message}</Text>
+      <Text className="type-body text-destructive">{info.error.message}</Text>
     );
   } else {
     serverInformation = (
@@ -45,8 +45,10 @@ export function ConnectionScreen(): React.JSX.Element {
       <View className="flex-1 items-center justify-center p-6">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>Server</CardTitle>
-            <CardDescription>The local Argo Server</CardDescription>
+            <CardTitle className="type-heading">Server</CardTitle>
+            <CardDescription className="type-secondary">
+              The local Argo Server
+            </CardDescription>
           </CardHeader>
           <CardContent className="gap-3">{serverInformation}</CardContent>
         </Card>
@@ -64,8 +66,8 @@ function Row({
 }): React.JSX.Element {
   return (
     <View className="flex-row justify-between gap-4">
-      <Text className="text-muted-foreground text-sm">{label}</Text>
-      <Text className="font-mono text-sm">{value}</Text>
+      <Text className="type-secondary">{label}</Text>
+      <Text className="type-code">{value}</Text>
     </View>
   );
 }

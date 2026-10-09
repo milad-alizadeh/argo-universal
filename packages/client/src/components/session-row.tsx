@@ -166,7 +166,7 @@ export const SessionRow = memo(function SessionRow({
               )}
               {session.archivedAt !== null && (
                 <Badge variant="secondary" className="py-0">
-                  <Text className="text-xs font-normal leading-4 text-muted-foreground">
+                  <Text className="type-badge text-muted-foreground">
                     Archived
                   </Text>
                 </Badge>
