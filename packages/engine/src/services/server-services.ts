@@ -4,7 +4,6 @@ import { createBlobService } from './blob';
 import type { FeedActorRef } from './feed';
 import { createFeedService, findDatabaseWriter } from './feed';
 import type { writerMachine } from './feed';
-import { createProjectService } from './projects';
 import type { Services } from './services';
 import { createSessionReader, createSessionSnapshotWatcher } from './sessions';
 import type { RegistryActorRef } from './sessions';
@@ -25,7 +24,6 @@ export function createServerServices(options: {
     findDatabaseWriter(options.sessions.system);
   return {
     blob: createBlobService(options),
-    projects: createProjectService(options.database),
     feed: createFeedService({
       database: options.database,
       readSession: createSessionReader(options.database),

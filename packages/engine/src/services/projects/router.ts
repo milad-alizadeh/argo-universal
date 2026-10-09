@@ -3,18 +3,20 @@ import {
   ProjectsBranchesOutput,
   ProjectsListOutput,
 } from '@repo/contracts';
+import { listBranches } from '@repo/git';
 import { publicProcedure, router } from '../../engine/trpc';
+import { readProjects, readProjectPath } from './project';
 
 export const projectsRouter = router({
   branches: publicProcedure
     .input(ProjectsBranchesInput)
     .output(ProjectsBranchesOutput)
     .query(({ ctx, input }): Promise<ProjectsBranchesOutput> =>
-      ctx.services.projects.branches(input),
+      listBranches(readProjectPath(ctx.database, input.projectId)),
     ),
   list: publicProcedure
     .output(ProjectsListOutput)
     .query(({ ctx }): Promise<ProjectsListOutput> =>
-      ctx.services.projects.list(),
+      readProjects(ctx.database, ctx.projectRejections),
     ),
 });
