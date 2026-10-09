@@ -5,6 +5,7 @@ import { normaliseValue, resolveTokens, type Tokens } from './token-values.mts';
 // Values typed straight into a style where the design system has a scale for them.
 const COLOR = /^--color-/;
 const SPACING = /^--spacing-/;
+const FONT_TOKEN = /^--font-(?!weight-)/;
 const SCALES: Record<string, RegExp> = {
   color: COLOR,
   backgroundColor: COLOR,
@@ -12,7 +13,7 @@ const SCALES: Record<string, RegExp> = {
   fontSize: /^--text-/,
   lineHeight: /^--leading-/,
   fontWeight: /^--font-weight-/,
-  fontFamily: /^--font-(?!weight-)/,
+  fontFamily: FONT_TOKEN,
   gap: SPACING,
   padding: SPACING,
   paddingInline: SPACING,
@@ -92,10 +93,29 @@ function literalOf(
   return [{ property, value, count: uses.length, tokens, examples }];
 }
 
+function firstFamily(stack: string): string {
+  return (stack.split(',')[0] ?? '').trim().replaceAll(/["']/g, '');
+}
+
+// Paper draws var(--font-*) in its default font, so a font token's first family is written as a literal.
+function tokenFamilies(paper: Tokens): Set<string> {
+  return new Set(
+    Object.entries(paper)
+      .filter(([name]): boolean => FONT_TOKEN.test(name))
+      .map(([, stack]): string => firstFamily(stack)),
+  );
+}
+
+function isExpected(use: Use, families: Set<string>): boolean {
+  if (NEUTRAL.has(normaliseValue(use.value))) return true;
+  return use.property === 'fontFamily' && families.has(firstFamily(use.value));
+}
+
 export function findLiteralDrift(snapshot: Snapshot): LiteralUse[] {
   const paper = resolveTokens(snapshot.tokens);
+  const families = tokenFamilies(paper);
   const uses = usesOf(snapshot).filter(
-    (use): boolean => !NEUTRAL.has(normaliseValue(use.value)),
+    (use): boolean => !isExpected(use, families),
   );
   return grouped(uses)
     .flatMap((group): LiteralUse[] => literalOf(snapshot, paper, group))

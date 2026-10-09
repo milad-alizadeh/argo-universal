@@ -53,6 +53,14 @@ it('reports tokens whose resolved values differ, or that code lacks', (): void =
   });
 });
 
+it("accepts a font token's first family written as a literal", (): void => {
+  const styles = { fontFamily: '"SF Mono"' };
+  const snapshot = snapshotOf([screen({ id: 'a', name: 'A', styles })], {
+    '--font-mono': '"SF Mono", ui-monospace, monospace',
+  });
+  expect(findLiteralDrift(snapshot)).toEqual([]);
+});
+
 it('suggests the token for a literal on its scale', (): void => {
   const snapshot = snapshotOf(
     [
