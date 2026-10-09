@@ -1,6 +1,5 @@
 import type { Database } from '@repo/db';
 import type { ActorRefFrom } from 'xstate';
-import { createAgentService } from './agents';
 import type { FeedActorRef } from './feed';
 import { createFeedService, findDatabaseWriter } from './feed';
 import type { writerMachine } from './feed';
@@ -26,7 +25,6 @@ export function createServerServices(options: {
   const findWriter = (): ActorRefFrom<typeof writerMachine> | undefined =>
     findDatabaseWriter(options.sessions.system);
   return {
-    agents: createAgentService(options.sessions),
     projects: createProjectService(options.database),
     system: createSystemService(options),
     feed: createFeedService({
