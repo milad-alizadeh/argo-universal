@@ -24,10 +24,6 @@ export function createRejectingServices(
       upload: createUnexpectedCallRejection('blob.upload'),
       ...overrides.blob,
     },
-    agents: {
-      list: createUnexpectedCallRejection('agents.list'),
-      ...overrides.agents,
-    },
     projects: {
       list: createUnexpectedCallRejection('projects.list'),
       branches: createUnexpectedCallRejection('projects.branches'),
