@@ -1,8 +1,4 @@
-import type {
-  SessionSnapshot,
-  SessionUpdate,
-  ToolCallUpdate,
-} from '@repo/contracts';
+import type { SessionSnapshot } from '@repo/contracts';
 import type { AppRouter } from '@repo/engine/router';
 import { useMutation } from '@tanstack/react-query';
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
@@ -19,7 +15,6 @@ import {
   type SessionHeaderStatus,
 } from '#components/session-header';
 import { useConnectionState } from '../connection/context';
-import { useFeedView } from '../feed/use-feed-view';
 import { useSessionFeed } from '../feed/use-session-feed';
 import { useNavigate } from '../navigation/context';
 import { useWide } from '../navigation/use-wide';
@@ -60,20 +55,6 @@ const headerStatus = {
   idle: 'idle',
 } satisfies Record<SessionSnapshot['state'], SessionHeaderStatus>;
 
-// The Feed row a `tool_call` live header names.
-function findLiveToolCall(
-  rows: readonly SessionUpdate[],
-  snapshot: SessionSnapshot,
-): ToolCallUpdate | undefined {
-  const source = snapshot.liveHeader?.source;
-  if (source?.type !== 'tool_call') return undefined;
-  return rows.findLast(
-    (row): row is ToolCallUpdate =>
-      row.sessionUpdate === 'tool_call_update' &&
-      row.toolCallId === source.toolCallId,
-  );
-}
-
 // How far above the Composer the Feed fades out; a phone starts it higher, so the pills above the Composer sit on a quiet surface.
 const composerFadeHeight = { phone: 88, wide: 64 };
 
@@ -97,7 +78,8 @@ function SessionView({
   const connected = useConnectionState() === 'open';
   const wide = useWide();
   const {
-    feed,
+    view,
+    liveToolCall,
     snapshot,
     ready,
     error,
@@ -120,7 +102,6 @@ function SessionView({
     setConfigOption,
     sendDraft,
   } = useSessionCommands(sessionId, resumeAfterCommand);
-  const feedView = useFeedView(feed.rows, snapshot);
 
   if (error)
     return (
@@ -146,7 +127,7 @@ function SessionView({
         </View>
       </Screen>
     );
-  if (!ready || !snapshot || !feedView) return <Screen edges={['bottom']} />;
+  if (!ready || !snapshot || !view) return <Screen edges={['bottom']} />;
 
   const turnRunning = snapshot.state !== 'idle';
   const fadeHeight = wide ? composerFadeHeight.wide : composerFadeHeight.phone;
@@ -174,9 +155,9 @@ function SessionView({
         style={keyboardAvoidingStyle}
       >
         <Feed
-          items={feedView.items}
+          items={view.items}
           liveHeader={snapshot.liveHeader}
-          liveToolCall={findLiveToolCall(feed.rows, snapshot)}
+          liveToolCall={liveToolCall}
           loadingOlder={loadingOlder}
           onStartReached={loadOlder}
           imageUrl={imageUrl}
@@ -206,8 +187,8 @@ function SessionView({
             sendable={connected}
             error={sendError}
             status={
-              feedView.plan?.type === 'items'
-                ? { plan: feedView.plan.entries }
+              view.plan?.type === 'items'
+                ? { plan: view.plan.entries }
                 : undefined
             }
             configuration={{
