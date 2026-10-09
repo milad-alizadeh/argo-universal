@@ -1,4 +1,5 @@
 import { expect, it } from 'vitest';
+import type { VendorMessage } from './messages';
 import { mapAll, feedChanges, result, failedResult } from './mocks/mapping';
 it('ends a failed Turn with the error', (): void => {
   const { events } = mapAll([
@@ -78,3 +79,64 @@ it('shows local command output as a Notice', (): void => {
     },
   ]);
 });
+
+const noticeIdentity = {
+  type: 'system',
+  uuid: '00000000-0000-0000-0000-000000000003',
+  session_id: 'vendor-1',
+} as const;
+it.each([
+  [
+    {
+      ...noticeIdentity,
+      subtype: 'informational',
+      level: 'warning',
+      content: 'Limit approaching.',
+    },
+    { severity: 'warning', title: 'Limit approaching.' },
+  ],
+  [
+    {
+      ...noticeIdentity,
+      subtype: 'notification',
+      key: 'task',
+      priority: 'low',
+      text: 'Task finished.',
+    },
+    { severity: 'info', title: 'Task finished.' },
+  ],
+  [
+    {
+      ...noticeIdentity,
+      subtype: 'hook_response',
+      hook_name: 'after-tool',
+      hook_id: 'hook-1',
+      hook_event: 'PostToolUse',
+      outcome: 'error',
+      stdout: '',
+      stderr: 'Hook exited.',
+      output: '',
+      exit_code: 1,
+    },
+    {
+      severity: 'warning',
+      title: 'Hook after-tool failed',
+      description: 'Hook exited.',
+    },
+  ],
+] satisfies [Extract<VendorMessage, { type: 'system' }>, object][])(
+  'shows the SDK $0.subtype Notice',
+  (message, content): void => {
+    expect(feedChanges(mapAll([message]).events)).toEqual([
+      {
+        type: 'upsert',
+        update: {
+          id: noticeIdentity.uuid,
+          sessionUpdate: 'notice',
+          state: 'settled',
+          ...content,
+        },
+      },
+    ]);
+  },
+);
