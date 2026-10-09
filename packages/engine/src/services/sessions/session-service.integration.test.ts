@@ -21,7 +21,6 @@ import { insertSession, openTestDatabase } from '#mocks/database';
 import { initTestRepository } from '#mocks/git';
 import { startRouterTestHost } from '#mocks/router';
 import { appRouter } from '../../engine/router';
-import type { Services } from '../services';
 
 const agentConfigOptionsChangedEvent = 'agent.configOptionsChanged';
 const signInFailure = 'Sign in first';
@@ -37,7 +36,6 @@ type SessionTestServer = Omit<
     AgentReady['configOptions'][number],
     { type: 'select' }
   >[];
-  services: Services;
   database: Database;
   git: ReturnType<typeof initTestRepository>;
 };
@@ -165,7 +163,6 @@ function startSessionTestServer({
     streams,
     commands,
     configOptions,
-    services: context.services,
     database,
     git,
   };
@@ -359,7 +356,7 @@ it('defaults the checkout choice to a worktree from the current branch, and the 
 });
 
 it('returns the chosen config value and delivers later Agent changes through the Feed', async (): Promise<void> => {
-  const { caller, sessionRegistry, streams, configOptions, services } =
+  const { caller, sessionRegistry, streams, configOptions, context } =
     startSessionTestServer({
       applyConfigOptions: false,
     });
@@ -376,10 +373,9 @@ it('returns the chosen config value and delivers later Agent changes through the
   );
   const controller = new AbortController();
   cleanups.push((): void => controller.abort());
-  const updates = services.feed.subscribe(
-    { sessionId, after: null },
-    controller.signal,
-  );
+  const updates = await appRouter
+    .createCaller(context, { signal: controller.signal })
+    .feed.subscribe({ sessionId, after: null });
   const iterator = updates[Symbol.asyncIterator]();
   await iterator.next();
   expect(
