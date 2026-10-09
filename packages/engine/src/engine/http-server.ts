@@ -3,9 +3,8 @@ import type { Database } from '@repo/db';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { WebSocketServer } from 'ws';
 import { blobsFolderIn } from '../services/blob';
-import { createServerServices } from '../services/server-services';
-import type { Services } from '../services/services';
 import type { RegistryActorRef } from '../services/sessions';
+import { createEngineContext, type Context } from './context';
 import { createRequestGuard } from './request-guard';
 import { createRequestListener } from './request-listener';
 import { appRouter } from './router';
@@ -45,14 +44,9 @@ export async function startHttpServer(
   options: HttpServerOptions,
 ): Promise<HttpServer> {
   const blobsFolder = blobsFolderIn(options.home);
-  const services = createServerServices({ ...options, blobsFolder });
+  const context = createEngineContext({ ...options, blobsFolder });
 
-  const createContext = (): Extract<
-    Parameters<typeof appRouter.createCaller>[0],
-    { services: Services }
-  > => ({
-    services,
-  });
+  const createContext = (): Context => context;
 
   const guard = createRequestGuard(options.port);
   const server = createServer(

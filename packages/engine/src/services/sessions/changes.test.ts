@@ -1,37 +1,20 @@
 import { changesMocks, recordedFeedMocks } from '@repo/api/mocks';
-import { SessionSnapshot } from '@repo/contracts';
+import {
+  SessionSnapshot,
+  SessionChangesOutput,
+  SessionDiffOutput,
+} from '@repo/contracts';
 import { describe, expect, it } from 'vitest';
-import { unreachableServices } from '#mocks/services';
-import { appRouter } from '../../engine/router';
-
-const callerFor = (
-  mock: (typeof changesMocks)[keyof typeof changesMocks],
-): ReturnType<typeof appRouter.createCaller> =>
-  appRouter.createCaller({
-    services: unreachableServices({
-      session: {
-        changes: async (): Promise<typeof mock.files> => mock.files,
-        diff: async ({ path }): Promise<(typeof mock.diffs)[string]> => {
-          const diff = mock.diffs[path];
-          if (!diff) throw new Error(`No diff mock for ${path}`);
-          return diff;
-        },
-      },
-    }),
-  });
 
 describe.each(Object.entries(changesMocks))(
   'the %s changes mock',
   (_, mock): void => {
-    it('is served through session.changes and session.diff', async (): Promise<void> => {
-      const caller = callerFor(mock);
-      await expect(
-        caller.session.changes({ sessionId: 'session-1' }),
-      ).resolves.toEqual(mock.files);
+    it('satisfies the changes and diff contracts', (): void => {
+      expect(SessionChangesOutput.parse(mock.files)).toEqual(mock.files);
       for (const file of mock.files)
-        await expect(
-          caller.session.diff({ sessionId: 'session-1', path: file.path }),
-        ).resolves.toEqual(mock.diffs[file.path]);
+        expect(SessionDiffOutput.parse(mock.diffs[file.path])).toEqual(
+          mock.diffs[file.path],
+        );
     });
 
     it('counts each diff its own added and removed lines', (): void => {

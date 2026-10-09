@@ -5,38 +5,24 @@ import {
   newSessionInputs,
   newSessionOptions,
 } from '@repo/api/mocks';
-import type { SessionNewOutput } from '@repo/contracts';
+import {
+  AgentsListOutput,
+  SessionNewInput,
+  ProjectsBranchesOutput,
+} from '@repo/contracts';
 import { expect, it } from 'vitest';
-import { unreachableServices } from '#mocks/services';
-import { appRouter } from '../../engine/router';
 
 it.each(Object.entries(newSessionCatalogs))(
-  'serves the %s New Session catalog mock',
-  async (_, catalog): Promise<void> => {
-    const caller = appRouter.createCaller({
-      services: unreachableServices({
-        agents: { list: async (): Promise<typeof catalog> => catalog },
-      }),
-    });
-    await expect(caller.agents.list()).resolves.toEqual(catalog);
+  'validates the %s New Session catalog mock',
+  (_, catalog): void => {
+    expect(AgentsListOutput.parse(catalog)).toEqual(catalog);
   },
 );
 
 it.each(newSessionInputs)(
-  'serves the recorded image prompt for $agent',
-  async (input): Promise<void> => {
-    const caller = appRouter.createCaller({
-      services: unreachableServices({
-        session: {
-          new: async (): Promise<SessionNewOutput> => ({
-            sessionId: 'image-session',
-          }),
-        },
-      }),
-    });
-    await expect(caller.session.new(input)).resolves.toEqual({
-      sessionId: 'image-session',
-    });
+  'validates the recorded image prompt for $agent',
+  (input): void => {
+    expect(SessionNewInput.parse(input)).toEqual(input);
     expect(input.prompt).toContainEqual(
       expect.objectContaining({
         type: 'image',
@@ -80,18 +66,8 @@ it('offers model-specific efforts, including a model without effort, and a selec
   }
 });
 
-it('serves the branch mock through its procedure contract', async (): Promise<void> => {
-  const caller = appRouter.createCaller({
-    services: unreachableServices({
-      projects: {
-        branches: async (): Promise<typeof newSessionBranches> =>
-          newSessionBranches,
-      },
-    }),
-  });
-  await expect(
-    caller.projects.branches({ projectId: 'project-1' }),
-  ).resolves.toEqual({
+it('validates the branch mock against the public contract', (): void => {
+  expect(ProjectsBranchesOutput.parse(newSessionBranches)).toEqual({
     branches: ['main', 'feature/new-session', 'release'],
     currentBranch: 'main',
   });

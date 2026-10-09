@@ -1,12 +1,7 @@
-import {
-  type AgentsListOutput,
-  getConfigOptionDiagnostics,
-} from '@repo/contracts';
+import { AgentsListOutput, getConfigOptionDiagnostics } from '@repo/contracts';
 import { expect, it } from 'vitest';
-import { unreachableServices } from '#mocks/services';
-import { appRouter } from '../../engine/router';
 
-it('keeps extension categories and metadata on options, groups and values', async (): Promise<void> => {
+it('keeps extension categories and metadata on options, groups and values', (): void => {
   const catalog: AgentsListOutput = [
     {
       agent: 'agent-one',
@@ -42,12 +37,7 @@ it('keeps extension categories and metadata on options, groups and values', asyn
       ],
     },
   ];
-  const caller = appRouter.createCaller({
-    services: unreachableServices({
-      agents: { list: async (): Promise<AgentsListOutput> => catalog },
-    }),
-  });
   const before = getConfigOptionDiagnostics().unknownCategories;
-  await expect(caller.agents.list()).resolves.toEqual(catalog);
+  expect(AgentsListOutput.parse(catalog)).toEqual(catalog);
   expect(getConfigOptionDiagnostics().unknownCategories).toBe(before + 1);
 });

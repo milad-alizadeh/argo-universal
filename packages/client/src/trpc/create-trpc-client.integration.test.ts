@@ -1,5 +1,6 @@
 import { createServer, type Server } from 'node:http';
-import { mockUpload, unreachableServices } from '@repo/engine/mocks';
+import { ClockTick } from '@repo/contracts';
+import { createRouterHost } from '@repo/engine/mocks';
 import { appRouter } from '@repo/engine/router';
 import { createHTTPHandler } from '@trpc/server/adapters/standalone';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
@@ -11,24 +12,14 @@ const binaryMime = 'application/octet-stream';
 
 const serverStartedAt = '2026-10-03T00:00:00.000Z';
 const uploadedFileContent = 'file content';
-
+const uploadedBlobId =
+  'e0ac3601005dfa1864f5392aabaf7d898b1b5bab854f1acb4491bcd806b76b0c';
 const systemInfo = {
   version: '1.2.3',
   startedAt: serverStartedAt,
-  pid: 4242,
-  name: "Milad's Mac mini",
+  pid: process.pid,
+  name: expect.stringMatching(/\S/),
 };
-
-const services = unreachableServices({
-  blob: { upload: mockUpload },
-  system: {
-    info: () => systemInfo,
-    clock: async function* () {
-      yield { now: serverStartedAt };
-      yield { now: '2026-10-03T00:00:01.000Z' };
-    },
-  },
-});
 
 const closers: (() => void)[] = [];
 afterEach(() => {
@@ -48,7 +39,8 @@ async function startMockServer(): Promise<{
   connections: () => number;
   httpRequests: () => number;
 }> {
-  const createContext = (): { services: typeof services } => ({ services });
+  const { context } = createRouterHost({ startedAt: serverStartedAt });
+  const createContext = (): typeof context => context;
   const handleTRPC = createHTTPHandler({
     router: appRouter,
     createContext,
@@ -88,18 +80,22 @@ describe('createTRPCClient', () => {
     const info = await client.system.info.query();
     const ticks = await new Promise<unknown[]>((resolve, reject) => {
       const received: unknown[] = [];
-      client.system.clock.subscribe(undefined, {
-        onData: (tick) => received.push(tick),
-        onComplete: () => resolve(received),
+      const subscription = client.system.clock.subscribe(undefined, {
+        onData: (tick) => {
+          received.push(tick);
+          if (received.length === 2) {
+            subscription.unsubscribe();
+            resolve(received);
+          }
+        },
         onError: reject,
       });
     });
 
     expect(info).toEqual(systemInfo);
-    expect(ticks).toEqual([
-      { now: serverStartedAt },
-      { now: '2026-10-03T00:00:01.000Z' },
-    ]);
+    expect(ticks).toHaveLength(2);
+    for (const tick of ticks)
+      expect(ClockTick.safeParse(tick).success).toBe(true);
     expect(server.connections()).toBe(1);
     expect(server.httpRequests()).toBe(0);
   });
@@ -113,7 +109,7 @@ describe('createTRPCClient', () => {
     const form = new FormData();
     form.set('file', new File([uploadedFileContent], 'notes.txt'));
     expect(await client.blob.upload.mutate(form)).toEqual({
-      blobId: uploadedFileContent,
+      blobId: uploadedBlobId,
       mime: binaryMime,
       bytes: 12,
     });
@@ -137,7 +133,7 @@ describe('createTRPCClient', () => {
     const form = new FormData();
     form.set('file', new File([uploadedFileContent], 'notes.txt'));
     expect(await client.blob.upload.mutate(form)).toEqual({
-      blobId: uploadedFileContent,
+      blobId: uploadedBlobId,
       mime: binaryMime,
       bytes: 12,
     });

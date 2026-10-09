@@ -1,10 +1,6 @@
 import { initTRPC } from '@trpc/server';
 import { z } from 'zod';
-import type { Services } from '../services/services';
-
-export interface Context {
-  services: Services;
-}
+import type { Context } from './context';
 
 const t = initTRPC.context<Context>().create();
 

@@ -1,4 +1,5 @@
 import type { Services } from '../src/services/services';
+export { createRouterHost } from './router';
 
 export const mockUpload: Services['blob']['upload'] = async (file) => ({
   blobId: await file.text(),
@@ -36,23 +37,6 @@ export function unreachableServices(
       row: unreachable('feed.row'),
       subscribe: unreachable('feed.subscribe'),
       ...overrides.feed,
-    },
-    session: {
-      list: unreachable('session.list'),
-      listUpdates: unreachable('session.listUpdates'),
-      counts: unreachable('session.counts'),
-      new: unreachable('session.new'),
-      prompt: unreachable('session.prompt'),
-      cancel: unreachable('session.cancel'),
-      rename: unreachable('session.rename'),
-      answerPermission: unreachable('session.answerPermission'),
-      answerElicitation: unreachable('session.answerElicitation'),
-      answerPlanProposal: unreachable('session.answerPlanProposal'),
-
-      setConfigOption: unreachable('session.setConfigOption'),
-      changes: unreachable('session.changes'),
-      diff: unreachable('session.diff'),
-      ...overrides.session,
     },
   };
 }

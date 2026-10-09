@@ -29,9 +29,9 @@ import type {
 import { type Actor, createActor, fromPromise, setup } from 'xstate';
 import { insertSession, openTestDatabase } from '#mocks/database';
 import { storedMessage as message } from '#mocks/feed';
-import { unreachableServices } from '#mocks/services';
+import { createRouterHost } from '#mocks/router';
+import { createEngineContext } from '../../engine/context';
 import { appRouter } from '../../engine/router';
-import { createServerServices } from '../server-services';
 import {
   createSessionReader,
   createSessionSnapshotWatcher,
@@ -39,7 +39,6 @@ import {
   sessionMachine,
 } from '../sessions';
 import type { SessionData } from '../sessions';
-import { createSystemService } from '../system';
 import { feedMachine } from './feed-machine';
 import { readWrittenRow, toFeedRowWrite } from './feed-row';
 import { createFeedService } from './feed-service';
@@ -144,12 +143,13 @@ const startHost = (writer = writerMachine): void => {
 const feedRef = (): ActorRefFromLogic<typeof feedMachine> | undefined =>
   host.getSnapshot().children.feed;
 
-const caller = (): ReturnType<typeof appRouter.createCaller> =>
-  appRouter.createCaller(
+const caller = (): ReturnType<typeof appRouter.createCaller> => {
+  const context = createRouterHost({ database }).context;
+  return appRouter.createCaller(
     {
+      ...context,
       services: {
-        ...unreachableServices(),
-        system: createSystemService({ version: '0.0.0', startedAt: '' }),
+        ...context.services,
         feed: createFeedService({
           database,
           readSession: createSessionReader(database),
@@ -177,6 +177,7 @@ const caller = (): ReturnType<typeof appRouter.createCaller> =>
     },
     { signal: controller.signal },
   );
+};
 
 const sendChange = (change: FeedChange): void | undefined =>
   feedRef()?.send({ type: 'feed.change', change, turnId: 'turn-1' });
@@ -578,18 +579,18 @@ it('ends a closed Session Feed after draining its last rows', async (): Promise<
   });
   const sessions = root.getSnapshot().children.sessions;
   if (!sessions) throw new Error('No Session registry');
-  const services = createServerServices({
+  const context = createEngineContext({
     database,
     sessions,
     blobsFolder: '/unused',
     version: '1',
     startedAt: '',
   });
-  await services.session.prompt({
+  await appRouter.createCaller(context).session.prompt({
     sessionId: 'session-1',
     prompt: [{ type: 'text', text: 'Start a Turn' }],
   });
-  const updates = services.feed
+  const updates = context.services.feed
     .subscribe(
       { sessionId: 'session-1', after: { epoch: 3, revision: 5 } },
       controller.signal,
@@ -618,11 +619,11 @@ it('ends a closed Session Feed after draining its last rows', async (): Promise<
     5,
     ...events.flatMap((event): number[] => ('rev' in event ? [event.rev] : [])),
   );
-  await services.session.prompt({
+  await appRouter.createCaller(context).session.prompt({
     sessionId: 'session-1',
     prompt: [{ type: 'text', text: 'Continue the Session' }],
   });
-  const resumed = services.feed
+  const resumed = context.services.feed
     .subscribe(
       {
         sessionId: 'session-1',
@@ -694,7 +695,7 @@ it('reads a closed Session Feed without opening a Session', async (): Promise<vo
   });
   const sessions = root.getSnapshot().children.sessions;
   if (!sessions) throw new Error('No Session registry');
-  const services = createServerServices({
+  const context = createEngineContext({
     database,
     sessions,
     blobsFolder: '/unused',
@@ -702,7 +703,7 @@ it('reads a closed Session Feed without opening a Session', async (): Promise<vo
     startedAt: '',
   });
   const events = await drainClosedFeed(
-    services.feed
+    context.services.feed
       .subscribe(
         { sessionId: 'session-1', after: { epoch: 3, revision: 3 } },
         controller.signal,

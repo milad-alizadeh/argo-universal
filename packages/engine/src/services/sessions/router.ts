@@ -1,4 +1,3 @@
-// jscpd ignores this import list (`ignorePattern` in .jscpd.json): the router and service name the same contracts, a false positive.
 import {
   SessionAnswerElicitationInput,
   SessionAnswerElicitationOutput,
@@ -25,14 +24,24 @@ import {
   SessionSetConfigOptionInput,
   SessionSetConfigOptionOutput,
 } from '@repo/contracts';
+import { TRPCError } from '@trpc/server';
 import { publicProcedure, router, zAsyncIterable } from '../../engine/trpc';
+import { userMessageId } from '../feed';
+import {
+  requirePermissionAnswer,
+  requireElicitationAnswer,
+  requireConfigChoice,
+} from './session-admission';
+import { sendSessionCommand } from './session-command';
+import { createSession } from './session-creation';
+import { openSession } from './session-opening';
 
 export const sessionRouter = router({
   list: publicProcedure
     .input(SessionListInput)
     .output(SessionListOutput)
     .query(({ ctx, input }): Promise<SessionListOutput> =>
-      ctx.services.session.list(input),
+      ctx.sessionList.list(input),
     ),
   listUpdates: publicProcedure
     .output(zAsyncIterable({ yield: SessionListUpdate }))
@@ -40,7 +49,7 @@ export const sessionRouter = router({
       ctx,
       signal,
     }): AsyncGenerator<SessionListUpdate, void> {
-      yield* ctx.services.session.listUpdates(signal);
+      yield* ctx.sessionList.listUpdates(signal);
     }),
   counts: publicProcedure
     .output(zAsyncIterable({ yield: SessionCounts }))
@@ -48,66 +57,104 @@ export const sessionRouter = router({
       ctx,
       signal,
     }): AsyncGenerator<SessionCounts, void> {
-      yield* ctx.services.session.counts(signal);
+      yield* ctx.sessionList.counts(signal);
     }),
   new: publicProcedure
     .input(SessionNewInput)
     .output(SessionNewOutput)
     .mutation(({ ctx, input }): Promise<SessionNewOutput> =>
-      ctx.services.session.new(input),
+      createSession(ctx, input),
     ),
   prompt: publicProcedure
     .input(SessionPromptInput)
     .output(SessionPromptOutput)
-    .mutation(({ ctx, input }): Promise<SessionPromptOutput> =>
-      ctx.services.session.prompt(input),
-    ),
+    .mutation(async ({ ctx, input }): Promise<SessionPromptOutput> => {
+      const actor = await openSession(ctx, input.sessionId);
+      const turnId = ctx.createId();
+      sendSessionCommand(actor, {
+        type: 'session.prompt',
+        turnId,
+        content: input.prompt,
+      });
+      return { messageId: userMessageId(turnId) };
+    }),
   rename: publicProcedure
     .input(SessionRenameInput)
     .output(SessionRenameOutput)
-    .mutation(({ ctx, input }): Promise<SessionRenameOutput> =>
-      ctx.services.session.rename(input),
+    .mutation((): never =>
+      notImplemented('Session rename is not implemented yet'),
     ),
   cancel: publicProcedure
     .input(SessionCancelInput)
     .output(SessionCancelOutput)
-    .mutation(({ ctx, input }): Promise<SessionCancelOutput> =>
-      ctx.services.session.cancel(input),
-    ),
+    .mutation(async ({ ctx, input }): Promise<SessionCancelOutput> => {
+      sendSessionCommand(await openSession(ctx, input.sessionId), {
+        type: 'session.cancel',
+      });
+      return {};
+    }),
   setConfigOption: publicProcedure
     .input(SessionSetConfigOptionInput)
     .output(SessionSetConfigOptionOutput)
-    .mutation(({ ctx, input }): Promise<SessionSetConfigOptionOutput> =>
-      ctx.services.session.setConfigOption(input),
-    ),
+    .mutation(async ({ ctx, input }): Promise<SessionSetConfigOptionOutput> => {
+      const actor = await openSession(ctx, input.sessionId);
+      requireConfigChoice(actor, input);
+      sendSessionCommand(actor, {
+        type: 'session.setConfigOption',
+        configId: input.configId,
+        value: input.value,
+      });
+      return { configOptions: actor.getSnapshot().context.configOptions };
+    }),
   answerPermission: publicProcedure
     .input(SessionAnswerPermissionInput)
     .output(SessionAnswerPermissionOutput)
-    .mutation(({ ctx, input }): Promise<SessionAnswerPermissionOutput> =>
-      ctx.services.session.answerPermission(input),
+    .mutation(
+      async ({ ctx, input }): Promise<SessionAnswerPermissionOutput> => {
+        const actor = await openSession(ctx, input.sessionId);
+        requirePermissionAnswer(actor, input);
+        sendSessionCommand(actor, {
+          type: 'session.answerPermission',
+          toolCallId: input.toolCallId,
+          optionId: input.optionId,
+          message: input.message,
+        });
+        return {};
+      },
     ),
   answerElicitation: publicProcedure
     .input(SessionAnswerElicitationInput)
     .output(SessionAnswerElicitationOutput)
-    .mutation(({ ctx, input }): Promise<SessionAnswerElicitationOutput> =>
-      ctx.services.session.answerElicitation(input),
+    .mutation(
+      async ({ ctx, input }): Promise<SessionAnswerElicitationOutput> => {
+        const actor = await openSession(ctx, input.sessionId);
+        requireElicitationAnswer(actor, input);
+        sendSessionCommand(actor, {
+          type: 'session.answerElicitation',
+          action: input.action,
+          content: input.content,
+        });
+        return {};
+      },
     ),
   answerPlanProposal: publicProcedure
     .input(SessionAnswerPlanProposalInput)
     .output(SessionAnswerPlanProposalOutput)
-    .mutation(({ ctx, input }): Promise<SessionAnswerPlanProposalOutput> =>
-      ctx.services.session.answerPlanProposal(input),
+    .mutation((): never =>
+      notImplemented('Plan proposal answers are not implemented yet'),
     ),
   changes: publicProcedure
     .input(SessionChangesInput)
     .output(SessionChangesOutput)
-    .query(({ ctx, input }): Promise<SessionChangesOutput> =>
-      ctx.services.session.changes(input),
-    ),
+    .query((): never => notImplemented()),
   diff: publicProcedure
     .input(SessionDiffInput)
     .output(SessionDiffOutput)
-    .query(({ ctx, input }): Promise<SessionDiffOutput> =>
-      ctx.services.session.diff(input),
-    ),
+    .query((): never => notImplemented()),
 });
+
+function notImplemented(
+  message = 'This procedure is not implemented yet',
+): never {
+  throw new TRPCError({ code: 'NOT_IMPLEMENTED', message });
+}

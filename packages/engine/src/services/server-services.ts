@@ -10,7 +10,7 @@ import type { Services } from './services';
 import { createSessionReader, createSessionSnapshotWatcher } from './sessions';
 import type { RegistryActorRef } from './sessions';
 import type { SessionActorRef } from './sessions';
-import { createSessionService, findSessionActor } from './sessions';
+import { findSessionActor } from './sessions';
 import { createSystemService } from './system';
 
 export function createServerServices(options: {
@@ -27,13 +27,11 @@ export function createServerServices(options: {
     findSession(sessionId)?.getSnapshot().children.feed;
   const findWriter = (): ActorRefFrom<typeof writerMachine> | undefined =>
     findDatabaseWriter(options.sessions.system);
-  const session = createSessionService(options);
   return {
     blob: createBlobService(options),
     agents: createAgentService(options.sessions),
     projects: createProjectService(options.database),
     system: createSystemService(options),
-    session,
     feed: createFeedService({
       database: options.database,
       readSession: createSessionReader(options.database),
