@@ -1,7 +1,39 @@
 import { fileURLToPath } from 'node:url';
 import { expect, it, onTestFinished, vi } from 'vitest';
-import { resourceOpening } from '#mocks/acp-resource';
+import { resourceDestination, resourceOpening } from '#mocks/acp-resource';
 import { createAcpResources } from '../index';
+
+it('a missing executable rejects opening and releases the production resource after child closure', async () => {
+  const resources = createAcpResources();
+  const failures: unknown[] = [];
+  const base = resourceOpening({
+    ...resourceDestination(),
+    failed: (error) => {
+      failures.push(error);
+    },
+  });
+  const executable = `/missing-argo-agent-${crypto.randomUUID()}`;
+  const input = {
+    ...base,
+    launch: { ...base.launch, executable, cwd: process.cwd() },
+  };
+  const opening = resources.open(input);
+  void opening.catch(() => {});
+  await vi.waitFor(() =>
+    expect(failures).toContainEqual(
+      expect.objectContaining({ code: 'ENOENT' }),
+    ),
+  );
+  await expect(opening).rejects.toMatchObject({
+    code: 'ENOENT',
+    path: executable,
+  });
+  await expect(resources.open(input)).rejects.toMatchObject({
+    code: 'ENOENT',
+    path: executable,
+  });
+  await expect(resources.shutdown()).resolves.toBeUndefined();
+});
 
 it('the production launch port owns a real stdio process and observes its final exit', async () => {
   const base = resourceOpening();
