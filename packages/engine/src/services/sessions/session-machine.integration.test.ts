@@ -33,8 +33,9 @@ import {
 import { openTestDatabase } from '#mocks/database';
 import { messageChange } from '#mocks/feed';
 import { createSessionHost, firstPrompt } from '#mocks/session';
+import type { Context } from '../../engine/context';
+import { appRouter } from '../../engine/router';
 import { type FeedActorRef, feedMachine } from '../feed';
-import type { createFeedService, FeedService } from '../feed';
 import { databaseWriterId, writerMachine } from '../feed';
 import { sendSessionCommand } from './session-command';
 import type { SessionData } from './session-data';
@@ -58,33 +59,55 @@ const configOptionsChangedEvent = 'agent.configOptionsChanged';
 const agentSetConfigEvent = 'agent.setConfigOption';
 const requestModel = 'request-model';
 
-const cleanups: (() => void)[] = [];
+const cleanups: (() => void | Promise<void>)[] = [];
 // The model paths' actors, stopped after each path.
 const actors: { stop: () => void }[] = [];
-afterEach((): void => {
-  for (const cleanup of cleanups.splice(0).reverse()) cleanup();
+afterEach(async (): Promise<void> => {
+  for (const cleanup of cleanups.splice(0).reverse()) await cleanup();
   for (const actor of actors.splice(0)) actor.stop();
   vi.useRealTimers();
 });
 // The model paths share one database, removed after the last test.
 afterAll((): void => remove());
 
-function subscribeToSession(service: ReturnType<typeof createFeedService>): {
+async function stopSessionHost({
+  databaseWriter,
+  sessionRegistry,
+}: Pick<
+  ReturnType<typeof createSessionHost>,
+  'databaseWriter' | 'sessionRegistry'
+>): Promise<void> {
+  sessionRegistry.send({ type: 'sessions.stopAll' });
+  await waitFor(
+    sessionRegistry,
+    (snapshot): boolean => snapshot.status === 'done',
+  );
+  databaseWriter.send({ type: 'writer.drain' });
+  await waitFor(
+    databaseWriter,
+    (snapshot): boolean => snapshot.status === 'done',
+  );
+}
+
+async function subscribeToSession(context: Context): Promise<{
   updates: AsyncIterator<FeedSubscribeOutput, void>;
   controller: AbortController;
-} {
+}> {
   const controller = new AbortController();
   cleanups.push((): void => controller.abort());
-  const updates = service
-    .subscribe({ sessionId: 'session-1', after: null }, controller.signal)
-    [Symbol.asyncIterator]();
+  const updates = (
+    await appRouter
+      .createCaller(context, { signal: controller.signal })
+      .feed.subscribe({ sessionId: 'session-1', after: null })
+  )[Symbol.asyncIterator]();
   return { updates, controller };
 }
 
 async function openSession(overrides: Partial<MockAgentScript> = {}): Promise<{
   session: ActorRefFromLogic<typeof sessionMachine>;
   feed: FeedActorRef;
-  service: FeedService;
+  caller: ReturnType<typeof appRouter.createCaller>;
+  context: Context;
   commands: AgentCommand[];
   stream: MockAgentStream;
   database: Database;
@@ -101,18 +124,25 @@ async function openSession(overrides: Partial<MockAgentScript> = {}): Promise<{
     },
     ...overrides,
   });
-  const { root, session, service, findFeed } = createSessionHost(
-    database,
-    adapter,
+  const {
+    sessionRegistry,
+    databaseWriter,
+    session,
+    caller,
+    context,
+    findFeed,
+  } = createSessionHost(database, adapter);
+  cleanups.push((): Promise<void> =>
+    stopSessionHost({ databaseWriter, sessionRegistry }),
   );
-  cleanups.push((): typeof root => root.stop());
   await waitFor(session, (snapshot): boolean => snapshot.can(firstPrompt));
   const feed = findFeed();
   if (!feed || !stream) throw new Error('Session not ready');
   return {
     session,
     feed,
-    service,
+    caller,
+    context,
     commands,
     stream,
     database,
@@ -128,7 +158,7 @@ it('keeps the Session running while rejected messages show warning Notices', asy
   cleanups.push((): void => {
     log.mockRestore();
   });
-  const { session, service, stream } = await openSession();
+  const { session, caller, stream } = await openSession();
   sendSessionCommand(session, firstPrompt);
   stream.send({
     type: agentUsageEvent,
@@ -139,17 +169,21 @@ it('keeps the Session running while rejected messages show warning Notices', asy
     reason: 'Another unknown message',
   });
   stream.send({ type: agentFeedEvent, change: messageChange('settled') });
-  const { rows } = await vi.waitFor((): ReturnType<typeof service.page> => {
-    const page = service.page({
-      sessionId: 'session-1',
-      direction: 'tail',
-      limit: 40,
-    });
-    expect(
-      page.rows.filter((row): row is Notice => row.sessionUpdate === 'notice'),
-    ).toHaveLength(2);
-    return page;
-  });
+  const { rows } = await vi.waitFor(
+    async (): Promise<Awaited<ReturnType<typeof caller.feed.page>>> => {
+      const page = await caller.feed.page({
+        sessionId: 'session-1',
+        direction: 'tail',
+        limit: 40,
+      });
+      expect(
+        page.rows.filter(
+          (row): row is Notice => row.sessionUpdate === 'notice',
+        ),
+      ).toHaveLength(2);
+      return page;
+    },
+  );
   expect(
     rows.filter((row): row is Notice => row.sessionUpdate === 'notice'),
   ).toEqual([
@@ -186,7 +220,7 @@ it('keeps the Session running while rejected messages show warning Notices', asy
 });
 
 it('runs one Turn and rejects a second prompt while it runs', async (): Promise<void> => {
-  const { session, feed, service, commands, stream } = await openSession();
+  const { session, feed, caller, commands, stream } = await openSession();
   sendSessionCommand(session, {
     type: sessionPromptEvent,
     turnId: 'turn-1',
@@ -200,7 +234,7 @@ it('runs one Turn and rejects a second prompt while it runs', async (): Promise<
     ),
   ).toMatchObject({ state: 'running', activeTurnId: 'turn-1' });
   expect(
-    service.row({ sessionId: 'session-1', id: 'turn-1:user' }),
+    await caller.feed.row({ sessionId: 'session-1', id: 'turn-1:user' }),
   ).toMatchObject({
     position: 0,
     sessionUpdate: 'user_message',
@@ -380,7 +414,7 @@ it('cancels queued requests and waits for the Agent to end the Turn', async (): 
 });
 
 it('flushes Feed changes when closing and ends with no failure', async (): Promise<void> => {
-  const { session, service, stream } = await openSession();
+  const { session, caller, stream } = await openSession();
   sendSessionCommand(session, firstPrompt);
   stream.send({ type: agentFeedEvent, change: messageChange('open') });
   sendSessionCommand(session, { type: sessionCloseEvent });
@@ -390,16 +424,21 @@ it('flushes Feed changes when closing and ends with no failure', async (): Promi
       snapshot.status === 'done',
   );
   expect(session.getSnapshot().output).toEqual({ failure: null });
-  await vi.waitFor((): void =>
+  await vi.waitFor(async (): Promise<void> =>
     expect(
-      service.page({ sessionId: 'session-1', direction: 'tail', limit: 40 })
-        .rows,
+      (
+        await caller.feed.page({
+          sessionId: 'session-1',
+          direction: 'tail',
+          limit: 40,
+        })
+      ).rows,
     ).toHaveLength(2),
   );
 });
 
 it('keeps a settled row in its original position when the Agent changes it later', async (): Promise<void> => {
-  const { session, service, stream } = await openSession();
+  const { session, caller, stream } = await openSession();
   sendSessionCommand(session, firstPrompt);
   stream.send({ type: agentFeedEvent, change: messageChange('settled') });
   stream.send({
@@ -410,7 +449,9 @@ it('keeps a settled row in its original position when the Agent changes it later
       set: { content: [{ type: 'text', text: 'Updated' }] },
     },
   });
-  expect(service.row({ sessionId: 'session-1', id: 'reply' })).toMatchObject({
+  expect(
+    await caller.feed.row({ sessionId: 'session-1', id: 'reply' }),
+  ).toMatchObject({
     position: 1,
     revision: 3,
     content: [{ type: 'text', text: 'Updated' }],
@@ -418,8 +459,8 @@ it('keeps a settled row in its original position when the Agent changes it later
 });
 
 it('streams Session snapshots only when their projected value changes', async (): Promise<void> => {
-  const { session, service, stream } = await openSession();
-  const { updates, controller } = subscribeToSession(service);
+  const { session, context, stream } = await openSession();
+  const { updates, controller } = await subscribeToSession(context);
   expect((await updates.next()).value).toMatchObject({
     type: 'snapshot',
     snapshot: { state: 'idle', maxRevision: 0 },
@@ -448,7 +489,7 @@ it('streams Session snapshots only when their projected value changes', async ()
 it('restarts the Agent with its vendor Session and gives up after three crashes in ten minutes', async (): Promise<void> => {
   vi.useFakeTimers();
   const resumed: (string | null)[] = [];
-  const { session, service, currentStream } = await openSession({
+  const { session, caller, currentStream } = await openSession({
     connect: async (input): Promise<AgentReady> => {
       resumed.push(input.vendorSessionId);
       return mockReady;
@@ -463,11 +504,13 @@ it('restarts the Agent with its vendor Session and gives up after three crashes 
   expect(session.getSnapshot().output).toEqual({
     failure: 'The Agent stopped three times in ten minutes',
   });
-  const rows = service.page({
-    sessionId: 'session-1',
-    direction: 'tail',
-    limit: 40,
-  }).rows;
+  const rows = (
+    await caller.feed.page({
+      sessionId: 'session-1',
+      direction: 'tail',
+      limit: 40,
+    })
+  ).rows;
   expect(
     rows.filter((row): row is Notice => row.sessionUpdate === 'notice'),
   ).toHaveLength(3);
@@ -475,12 +518,15 @@ it('restarts the Agent with its vendor Session and gives up after three crashes 
 
 it('recovers when cancellation times out and writes a Notice for the Turn', async (): Promise<void> => {
   vi.useFakeTimers();
-  const { session, service } = await openSession();
+  const { session, caller } = await openSession();
   sendSessionCommand(session, firstPrompt);
   sendSessionCommand(session, { type: sessionCancelEvent });
   await vi.advanceTimersByTimeAsync(10_000);
   expect(
-    service.row({ sessionId: 'session-1', id: 'turn-1:cancel-timeout' }),
+    await caller.feed.row({
+      sessionId: 'session-1',
+      id: 'turn-1:cancel-timeout',
+    }),
   ).toMatchObject({
     sessionUpdate: 'notice',
     turnId: 'turn-1',
@@ -1124,12 +1170,15 @@ it('attaches live Feed updates when a subscription starts while the Session load
     stream: (): undefined => {},
   });
   const {
-    root,
+    sessionRegistry,
+    databaseWriter,
     session: sessionActor,
-    service,
+    context,
   } = createSessionHost(database, adapter);
-  cleanups.push((): typeof root => root.stop());
-  const { updates } = subscribeToSession(service);
+  cleanups.push((): Promise<void> =>
+    stopSessionHost({ databaseWriter, sessionRegistry }),
+  );
+  const { updates } = await subscribeToSession(context);
   expect((await updates.next()).value).toMatchObject({
     type: 'snapshot',
     snapshot: { maxRevision: 0 },

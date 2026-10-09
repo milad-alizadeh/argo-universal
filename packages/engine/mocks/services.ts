@@ -29,11 +29,5 @@ export function createRejectingServices(
       branches: createUnexpectedCallRejection('projects.branches'),
       ...overrides.projects,
     },
-    feed: {
-      page: createUnexpectedCallRejection('feed.page'),
-      row: createUnexpectedCallRejection('feed.row'),
-      subscribe: createUnexpectedCallRejection('feed.subscribe'),
-      ...overrides.feed,
-    },
   };
 }
