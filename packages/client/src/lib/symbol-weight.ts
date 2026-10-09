@@ -1,4 +1,4 @@
-import light from 'expo-symbols/androidWeights/light';
+import extraLight from 'expo-symbols/androidWeights/extraLight';
 
-// Material's Regular weight is drawn for 24px and reads heavy at icon sizes; Light matches SF's regular stroke.
-export const symbolWeight = { ios: 'regular', android: light } as const;
+// Material Symbols are drawn for 24px and read heavy at our 12–20px icon sizes; ExtraLight matches SF's regular stroke.
+export const symbolWeight = { ios: 'regular', android: extraLight } as const;
