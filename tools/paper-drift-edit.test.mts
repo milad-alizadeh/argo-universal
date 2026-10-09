@@ -61,6 +61,18 @@ it('reports Paper tool input it does not recognise', (): void => {
   );
 });
 
+it('reads the page and target ids agents pass to Paper writes', (): void => {
+  const context = paperEditContext({
+    tool_name: 'mcp__paper__update_styles',
+    tool_input: {
+      fileId: 'f',
+      pageId: 'p',
+      updates: [{ nodeIds: ['a'], styles: { left: 0 } }],
+    },
+  });
+  expect(context ?? '').not.toContain('skipped');
+});
+
 it('ignores Paper tools that only read', (): void => {
   const context = paperEditContext({
     tool_name: 'mcp__paper__get_screenshot',

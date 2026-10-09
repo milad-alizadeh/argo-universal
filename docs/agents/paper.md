@@ -6,12 +6,22 @@ This doc is temporary. When Paper ships components ("Components with slots" on i
 
 ## Masters and copies
 
-- A **master** lives on an artboard named `Components / <Name>`. Name it for the code component it becomes, and name its states for that component's props: `Toggle / Changed files (pressed)` is the `pressed` prop.
+- A **master** lives on a family card named `Components / <CodeName>` on its section's Components board (see Page layout). Name it for the code component it becomes, and name its states for that component's props: `Toggle / Changed files (pressed)` is the `pressed` prop.
 - A master's name is `<CodeName> / <State>`, with `(phone)` right after the code name for the phone version: `SessionRow / Done`, `SessionRow (phone) / Done`. CodeName is the PascalCase code component; a master with one state drops ` / <State>`. Desktop takes no suffix.
 - A page is built only from **copies** of masters, made with `duplicate_nodes`. A copy keeps its master's layer name: the name is the link.
 - A copy may change its text, hide items, and switch to a named state. Any other difference from its master is **drift**.
 - To change a component, edit the master, then run `pnpm -F @repo/tools paper:sync "<Name>"` and, once its dry run reads right, again with `--apply`. Work inside out: a master nested in another master (Session row inside List column) is synced before the masters that hold it.
 - Column masters carry content only. The surface (background, border, radius, shadow) comes from the shell's Card and Sidebar plate, so a master and its copies cannot drift on it.
+
+## Page layout
+
+Every section page (Session, Voice, Atlas, Setup, Issues, Settings) has the same artboards, top-aligned at y 0, left to right, 400px apart. Nothing is placed by hand: every board is auto layout, so adding something moves its neighbours instead of overlapping them.
+
+- `<Section> Components`: a flex row of columns named `Column / <Group>`, each a flex column of family cards `Components / <CodeName>`. A card has its heading, a Desktop | Phone header (or Content | Popover | Sheet for overlays) and one row per state. A new component is a new card in a column, never a loose artboard.
+- `<Section> Desktop` and `<Section> Mobile`: a flex column of flows named `Flow / <Name>`, each a heading and a row of `Screen / <State>` frames. A screen frame holds a label, then the screen, named `<Section> — <State>`: no device word (the board says it) and no "(light)". Desktop and Mobile use the same flow names in the same order.
+- `<Section> Explorations`, only when needed: option boards, comparisons and A/B variants, wrapped like screens. Finished work never sits here.
+- Global Components has only its Components board, plus the two Typography comparison boards, which stay as they are.
+- Move existing layers into place with `move_nodes`, which keeps their ids; never re-create them to move them.
 
 ## Tokens
 
