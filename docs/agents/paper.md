@@ -28,6 +28,14 @@ An audit is done when every item below is checked and each difference is listed 
 - Every master names a code component, built or planned.
 - Every master's Storybook coverage follows the [Storybook rules](storybook.md).
 
+## Building from Paper
+
+- Map the whole artboard before you write JSX: the shell, its regions, and every repeated group with the master it is a copy of. A group that repeats without a master is drift; report it.
+- Build from the artboard the user names as canonical. When other artboards of the same screen differ, list the differences and ask.
+- Name a new component for its structural role (`LabeledList`), not its content (`FailureList`).
+- Rebuild a chart from its data model (values, ranges, segments) read with `get_computed_styles`, and label every figure you could not recover as a placeholder.
+- The build is done when a screenshot of it sits beside the artboard's screenshot at the same width, and each difference is fixed or listed.
+
 ## Paper gotchas
 
 - Text nodes do not inherit `font-family`. Set `font-family: var(--font-sans)` on every text node, and check with `find_nodes` for `*system-ui*`.
