@@ -23,14 +23,14 @@ async function expectExampleMetadata(row: Locator): Promise<void> {
   ).toBeVisible();
 }
 
-async function serverPlatform(page: Page): Promise<string> {
+async function readDisplayedServerPlatform(page: Page): Promise<string> {
   const text = await page.getByText(/^Server platform: /).textContent();
   if (!text) throw new Error('The catalog must show the Server platform');
   return text.replace('Server platform: ', '');
 }
 
 async function expectWindowsRecipe(page: Page): Promise<void> {
-  const platform = await serverPlatform(page);
+  const platform = await readDisplayedServerPlatform(page);
   const recipe =
     platform === 'windows-x86_64'
       ? 'Binary for this Server'

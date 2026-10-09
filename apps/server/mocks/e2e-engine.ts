@@ -10,7 +10,7 @@ import {
   AppFixtureAgents,
   createAppFixtureAdapters,
 } from '@repo/mocks/agent/app-fixtures';
-import { createRegistryPort } from '@repo/mocks/registry/port';
+import { createFileRegistryPort } from '@repo/mocks/registry/port';
 import { createActor } from 'xstate';
 import { z } from 'zod';
 import packageJson from '../package.json' with { type: 'json' };
@@ -56,7 +56,7 @@ const engine = createActor(
       now: Date.now,
       createId: randomUUID,
       adapters: createAppFixtureAdapters(agentAdapters, options),
-      registry: createRegistryPort(
+      registry: createFileRegistryPort(
         z.string().parse(process.env.ARGO_E2E_REGISTRY_PATH),
       ),
     },

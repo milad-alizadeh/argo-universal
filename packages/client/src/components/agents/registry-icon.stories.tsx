@@ -5,7 +5,7 @@ import { RegistryIcon } from './registry-icon';
 const meta = {
   title: 'Components/RegistryIcon',
   component: RegistryIcon,
-  args: { name: iconAgent.entry.name, uri: undefined },
+  args: { agentName: iconAgent.entry.name, uri: undefined },
   argTypes: { uri: { control: 'text' } },
 } satisfies Meta<typeof RegistryIcon>;
 export default meta;

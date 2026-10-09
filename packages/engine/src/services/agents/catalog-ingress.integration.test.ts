@@ -1,4 +1,4 @@
-import { agentCatalogCache } from '@repo/db/schema';
+import { agents } from '@repo/db/schema';
 import {
   publishedRegistryResponse,
   rejectedRegistryValues,
@@ -16,9 +16,11 @@ it.each(rejectedRegistryValues.map((value, index) => [index, value] as const))(
     const { caller, context } = startRouterTestHost({
       registry: { readRegistry },
     });
+    await caller.agents.syncCatalog();
     const before = await caller.agents.catalog();
-    const stored = context.database.select().from(agentCatalogCache).get();
-    const after = await caller.agents.catalog({ refresh: true });
+    const stored = context.database.select().from(agents).all();
+    await caller.agents.syncCatalog();
+    const after = await caller.agents.catalog();
     expect(after).toMatchObject({
       status: 'stale',
       rejectedValues: 1,
@@ -26,12 +28,9 @@ it.each(rejectedRegistryValues.map((value, index) => [index, value] as const))(
       fetchedAt: before.fetchedAt,
       error: 'Registry metadata is malformed',
     });
-    expect(context.database.select().from(agentCatalogCache).get()).toEqual(
-      stored,
-    );
-    expect(stored && JSON.parse(stored.payload)).toEqual(
-      publishedRegistryResponse,
-    );
-    expect(stored && JSON.parse(stored.payload).extensions).toEqual([]);
+    expect(context.database.select().from(agents).all()).toEqual(stored);
+    expect(
+      stored.map((row) => JSON.parse(row.registryMetadata ?? 'null')),
+    ).toEqual(publishedRegistryResponse.agents);
   },
 );

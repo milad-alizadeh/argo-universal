@@ -6,7 +6,7 @@ interface ControllableRegistry {
   reject(error: Error): void;
 }
 
-export function controllableRegistry(): ControllableRegistry {
+export function createControllableRegistry(): ControllableRegistry {
   let pending = Promise.withResolvers<unknown>();
   return {
     port: {

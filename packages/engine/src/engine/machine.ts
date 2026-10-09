@@ -6,9 +6,7 @@ import {
   createAcpResources,
   type AcpResources,
   type AcpResourceInput,
-  agentCatalogId,
-  catalogMachine,
-  type CatalogInput,
+  serializeLegacyCatalogAgentRows,
   type RegistryPort,
 } from '../services/agents';
 import { blobsFolderIn, removeUnusedBlobs } from '../services/blob';
@@ -106,7 +104,9 @@ export const engineMachine = setup({
     // `openDatabase` also runs the Drizzle migrations.
     openDatabase: fromPromise<Database, OpenDatabaseInput>(
       async ({ input }): Promise<Database> => {
-        const database = openDatabase(join(input.home, 'argo.db'));
+        const database = openDatabase(join(input.home, 'argo.db'), {
+          convertLegacyAgentCatalog: serializeLegacyCatalogAgentRows,
+        });
         try {
           await seedProject(database);
           return database;
@@ -123,7 +123,6 @@ export const engineMachine = setup({
       },
     ),
     databaseWriter: writerMachine,
-    catalog: catalogMachine,
     sessions: registryMachine,
     startHttpServer: fromPromise<HttpServer, HttpServerOptions>(
       async ({ input, signal }): Promise<HttpServer> => {
@@ -222,15 +221,6 @@ export const engineMachine = setup({
     live: {
       invoke: [
         {
-          id: 'catalog',
-          systemId: agentCatalogId,
-          src: 'catalog',
-          input: ({ context }): CatalogInput => ({
-            database: openDatabaseOf(context),
-            registry: context.registry,
-          }),
-        },
-        {
           id: 'databaseWriter',
           systemId: databaseWriterId,
           src: 'databaseWriter',
@@ -277,6 +267,7 @@ export const engineMachine = setup({
             input: ({ context, self }): HttpServerOptions => ({
               createId: context.createId,
               sessions: requireSessionRegistry(self.system),
+              registry: context.registry,
               home: context.home,
               port: context.port,
               version: context.version,

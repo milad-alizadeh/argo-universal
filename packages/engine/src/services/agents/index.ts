@@ -14,9 +14,9 @@ export type {
   AgentLaunch,
   ResolveAgentLaunch,
 } from './acp/resource-types';
-export {
-  agentCatalogId,
-  catalogMachine,
-  type CatalogInput,
-} from './catalog/catalog-machine';
+export { serializeLegacyCatalogAgentRows } from './catalog/records';
 export type { RegistryPort } from './catalog/registry';
+
+export { createAgentCatalog, type AgentCatalogInput } from './catalog/catalog';
+export { catalogSyncMachine } from './catalog/catalog-sync-machine';
+export { createRegistryReader } from './catalog/registry';

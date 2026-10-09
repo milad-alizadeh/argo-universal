@@ -13,7 +13,7 @@ import {
 } from 'drizzle-orm/sqlite-core';
 
 // Table definitions only: no Node APIs, so contracts and the Apps can import this file.
-export { agentCatalogCache } from './schema/agent-catalog';
+export { agents } from './schema/agents';
 
 export const sessionUpdateKinds = [
   'user_message',
