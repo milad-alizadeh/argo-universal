@@ -4,6 +4,8 @@ Web Storybook is its own app, `apps/storybook` (`@storybook/react-native-web-vit
 
 A story decorator builds a tRPC client whose custom link returns typed fixtures for each procedure, keyed by procedure path. This follows Storybook's "mocking providers" pattern, and it works the same on web and on device. Only screens get tRPC fixtures. Feed fixtures come from recorded vendor sessions that run through the real converter, never from hand-written rows.
 
+Under the [testing seam rule](../agents/testing-seams.md), a Feed story renders the actual Feed after explicit fixture preparation through the real converter. Required context and layout may wrap it; a separate feature preview component solely to prepare and forward those props is unnecessary. Presentation coverage proves visible behaviour, while projection tests use independent expected outputs at the public projection function. Running the converter for presentation setup does not itself prove that conversion is correct (owner, 2026-10-09).
+
 ## Considered Options
 
 - MSW through `msw-storybook-addon`. Rejected: its React Native package is an experiment that fails its own tests, and it cannot mock tRPC subscriptions on device.

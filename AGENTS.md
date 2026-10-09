@@ -7,6 +7,7 @@ Argo for iOS, Android, web, and macOS: one Expo app, an Electron shell, and a lo
 - Words: `GLOSSARY.md`. Use its terms in code, docs, and messages.
 - Decisions: `docs/adr/`. Name any ADR that your change contradicts, and ask before you contradict it.
 - Specs: GitHub Issues, as transient briefs for implementation; never commit one. Build a spec as written. When it is unclear or wrong, stop and ask.
+- Tests: before adding, changing or auditing tests, fixtures or test wrappers, read `docs/agents/testing-seams.md`.
 - Storybook: before authoring stories or testing UI components, read `docs/agents/storybook.md`.
 - Designs: Paper. Before you edit a Paper file or build UI from one, read `docs/agents/paper.md`. It holds until Paper ships component instances.
 - Prickles: before you write or review code, read the pillar files in `docs/agents/prickles/`, the Prickles canon v2.0 verbatim (https://prickles.org, CC BY-NC 4.0). It wins over everything else here; ADR-0016 records how it applies where it cannot as written.
@@ -30,7 +31,6 @@ One `GLOSSARY.md` and one `docs/adr/` folder at the repo root ("single-context")
 - Put all evidence and images in the PR body; upload images with `gh pr create --attach` or `gh pr edit --attach`, never commit them to Git.
 - Claude and Codex Sessions draw the same UI. Parity is part of every Session change.
 - Use LegendList (`@legendapp/list/react-native`) by default for lists in the App.
-- App end-to-end tests inject shared Argo fixtures at the Agent adapter port (`mocks/agent/`); provider translation unit tests verify typed SDK/protocol response fixtures through the real pure mapping. See ADR-0018.
 - Test assets live outside `src/`: `e2e/<flow>/`, `mocks/`, `tools/`. Call them mocks.
 - Every XState machine has model-based tests from `xstate/graph` that walk all of its transitions.
 - The product name lives only in app config, environment variables and UI text, so a rename stays small. The Session branch prefix in `packages/git` is stored data and stays as it is.
