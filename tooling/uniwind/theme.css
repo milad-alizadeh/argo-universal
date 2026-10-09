@@ -84,11 +84,6 @@
   --text-code-block: var(--text-xs);
   --leading-code-block: var(--leading-5);
   --font-weight-code-block: var(--font-weight-normal);
-  --text-feed: var(--text-base);
-  --text-feed-wide: var(--text-sm);
-  --leading-feed: var(--leading-6);
-  --leading-feed-wide: var(--leading-5_5);
-  --font-weight-feed: var(--font-weight-normal);
   /* The gap between paragraphs, wherever text runs to more than one. */
   --spacing-paragraph: var(--spacing-3);
   --spacing-paragraph-wide: var(--spacing-2_5);
@@ -253,18 +248,6 @@
   @variant wide {
     font-size: var(--text-secondary-wide);
     line-height: var(--leading-secondary-wide);
-  }
-}
-
-@utility type-feed {
-  font-size: var(--text-feed);
-  line-height: var(--leading-feed);
-  font-weight: var(--font-weight-feed);
-  color: var(--color-foreground);
-
-  @variant wide {
-    font-size: var(--text-feed-wide);
-    line-height: var(--leading-feed-wide);
   }
 }
 

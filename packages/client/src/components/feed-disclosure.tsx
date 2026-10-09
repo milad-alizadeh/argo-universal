@@ -63,14 +63,14 @@ export function FeedDisclosure({
               <ShimmerText
                 text={title}
                 emphasized={hovered}
-                className="min-w-0 shrink type-feed"
+                className="min-w-0 shrink type-body"
               />
             ) : (
               <Text
                 numberOfLines={1}
                 selectable={false}
                 className={cn(
-                  'min-w-0 shrink type-feed text-muted-foreground',
+                  'min-w-0 shrink type-body text-muted-foreground',
                   hovered && foregroundTextClassName,
                   awaitingApproval && 'text-warning',
                   denied && 'line-through',

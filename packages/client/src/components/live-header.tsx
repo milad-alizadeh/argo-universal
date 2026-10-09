@@ -114,15 +114,12 @@ export function LiveHeader({
       {request ? (
         <Text
           numberOfLines={1}
-          className="min-w-0 shrink type-feed text-warning"
+          className="min-w-0 shrink type-body text-warning"
         >
           {title}
         </Text>
       ) : (
-        <ShimmerText
-          text={title}
-          className="min-w-0 shrink type-feed"
-        />
+        <ShimmerText text={title} className="min-w-0 shrink type-body" />
       )}
     </View>
   );

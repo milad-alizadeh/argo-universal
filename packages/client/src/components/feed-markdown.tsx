@@ -109,7 +109,7 @@ const proposalInlineCodeClassName = cn(
   'text-sm leading-5',
 );
 
-const proseClassName = 'font-sans type-feed';
+const proseClassName = 'font-sans type-body';
 const proposalProseClassName = 'font-sans text-sm leading-5 text-foreground';
 
 function Prose({
@@ -161,7 +161,7 @@ function List({
                 'w-4 shrink-0 font-sans',
                 variant === 'proposal'
                   ? 'text-sm leading-5 text-foreground'
-                  : 'type-feed text-muted-foreground',
+                  : 'type-body text-muted-foreground',
               )}
             >
               {token.ordered ? `${start + index}.` : '•'}

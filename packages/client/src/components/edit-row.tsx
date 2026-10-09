@@ -56,7 +56,7 @@ function FileEdit({
       >
         <TextClassContext.Provider
           value={cn(
-            'select-none type-feed text-muted-foreground group-hover:text-foreground',
+            'select-none type-body text-muted-foreground group-hover:text-foreground',
             open && 'text-foreground',
           )}
         >
@@ -117,19 +117,14 @@ export function EditRow({ row }: EditRowProps): React.JSX.Element {
     return (
       <View className="min-h-5 flex-row items-center gap-1.5">
         <Icon as={PencilSimpleIcon} className="shrink-0 text-destructive" />
-        <Text className="type-feed text-destructive">
-          Couldn't edit
-        </Text>
+        <Text className="type-body text-destructive">Couldn't edit</Text>
         {path ? (
-          <FileName
-            path={path}
-            className="type-feed text-muted-foreground"
-          />
+          <FileName path={path} className="type-body text-muted-foreground" />
         ) : null}
         {error ? (
           <Text
             numberOfLines={1}
-            className="min-w-0 shrink type-feed text-muted-foreground"
+            className="min-w-0 shrink type-body text-muted-foreground"
           >
             · {error}
           </Text>
@@ -149,7 +144,7 @@ export function EditRow({ row }: EditRowProps): React.JSX.Element {
         <Icon as={PencilSimpleIcon} className="text-muted-foreground" />
         <Text
           selectable={false}
-          className="select-none type-feed text-muted-foreground"
+          className="select-none type-body text-muted-foreground"
         >
           Edited {files.length} files
         </Text>
