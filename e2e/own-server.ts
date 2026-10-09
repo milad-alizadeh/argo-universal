@@ -1,18 +1,17 @@
 import { type ChildProcess, spawn } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
-import { createServer } from 'node:net';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { z } from 'zod';
 import type { MockAgents } from './mock-agents';
 import { createProjectRepository } from './project-repository';
+import { findFreePort, serverHttpUrl, serverUrlFor } from './server-port';
+
+export { findFreePort, serverHttpUrl } from './server-port';
 
 const serverDirectory = path.resolve(import.meta.dirname, '../apps/server');
 const fixtureEngineArguments = ['--import', 'tsx', 'mocks/e2e-engine.ts'];
 
-const serverHost = '127.0.0.1';
-const serverUrlFor = (port: number): string => `ws://${serverHost}:${port}`;
-export const serverHttpUrl = (port: number): string =>
-  `http://${serverHost}:${port}`;
 const serverStartMilliseconds = 30_000;
 const serverPollMilliseconds = 200;
 
@@ -31,20 +30,6 @@ export async function pollServer<T>(
   }
   throw new Error(timeoutMessage(serverStartMilliseconds / 1000));
 }
-
-export const findFreePort = (): Promise<number> =>
-  new Promise<number>((resolve, reject): void => {
-    const server = createServer();
-    server.once('error', reject);
-    server.listen(0, serverHost, (): void => {
-      const address = server.address();
-      server.close((): void =>
-        typeof address === 'object' && address
-          ? resolve(address.port)
-          : reject(new Error('No free port')),
-      );
-    });
-  });
 
 const ServerFile = z.object({ port: z.int() });
 const portTakenPattern = /EADDRINUSE/;
@@ -99,9 +84,17 @@ const withStderr = (tail: string): string =>
 export async function startOwnServer(
   directory: string,
   agents: MockAgents,
-): Promise<{ serverUrl: string; httpUrl: string; stop: () => Promise<void> }> {
+): Promise<{
+  serverUrl: string;
+  httpUrl: string;
+  registryPath: string;
+  stop: () => Promise<void>;
+}> {
   const projectPath = path.join(directory, 'project');
   const home = path.join(directory, 'server-home');
+  const registryPath = path.join(directory, 'registry.json');
+  await mkdir(directory, { recursive: true });
+  await writeFile(registryPath, JSON.stringify(publishedRegistry));
   await createProjectRepository(projectPath);
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     const port = await findFreePort();
@@ -113,6 +106,7 @@ export async function startOwnServer(
         ARGO_SERVER_PORT: String(port),
         ARGO_PROJECT_PATH: projectPath,
         ARGO_E2E_AGENTS: JSON.stringify(agents),
+        ARGO_E2E_REGISTRY_PATH: registryPath,
         PATH: '/usr/bin:/bin',
       },
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -148,6 +142,7 @@ export async function startOwnServer(
         return {
           serverUrl: serverUrlFor(port),
           httpUrl: serverHttpUrl(port),
+          registryPath,
           stop,
         };
       }

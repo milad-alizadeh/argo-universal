@@ -20,7 +20,7 @@ export function openTestDatabase(
     database,
     directory,
     remove: (): void => {
-      database.$client.close();
+      if (database.$client.isOpen) database.$client.close();
       rmSync(directory, { recursive: true, force: true });
     },
   };
