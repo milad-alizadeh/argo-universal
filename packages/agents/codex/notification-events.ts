@@ -8,15 +8,10 @@ import {
 } from './mapping-state';
 import type { VendorMessage } from './messages';
 import { endTurn } from './turn-events';
-export type NotificationHandler = (
-  message: VendorMessage,
+export const turnStarted = (
+  message: Extract<VendorMessage, { method: 'turn/started' }>,
   mappingState: MappingState,
-) => AgentMapping<MappingState>;
-export const turnStarted: NotificationHandler = (
-  message,
-  mappingState,
 ): AgentMapping<MappingState> => {
-  if (message.method !== 'turn/started') return dropped(mappingState);
   if (mappingState.vendorTurnId === message.params.turn.id)
     return dropped(mappingState);
   return {
@@ -24,37 +19,31 @@ export const turnStarted: NotificationHandler = (
     mappingState: startTurnMapping(message.params.turn.id, mappingState),
   };
 };
-export const turnCompleted: NotificationHandler = (
-  message,
-  mappingState,
+export const turnCompleted = (
+  message: Extract<VendorMessage, { method: 'turn/completed' }>,
+  mappingState: MappingState,
 ): AgentMapping<MappingState> =>
-  message.method === 'turn/completed'
-    ? endTurn(message.params.turn, mappingState, message.receivedAt)
-    : dropped(mappingState);
-export const itemStarted: NotificationHandler = (
-  message,
-  mappingState,
+  endTurn(message.params.turn, mappingState, message.receivedAt);
+export const itemStarted = (
+  message: Extract<VendorMessage, { method: 'item/started' }>,
+  mappingState: MappingState,
 ): AgentMapping<MappingState> =>
-  message.method === 'item/started'
-    ? mapItem({
-        item: message.params.item,
-        state: 'open',
-        mappingState,
-        timestamp: message.params.startedAtMs ?? message.receivedAt,
-      })
-    : dropped(mappingState);
-export const itemCompleted: NotificationHandler = (
-  message,
-  mappingState,
+  mapItem({
+    item: message.params.item,
+    state: 'open',
+    mappingState,
+    timestamp: message.params.startedAtMs ?? message.receivedAt,
+  });
+export const itemCompleted = (
+  message: Extract<VendorMessage, { method: 'item/completed' }>,
+  mappingState: MappingState,
 ): AgentMapping<MappingState> =>
-  message.method === 'item/completed'
-    ? mapItem({
-        item: message.params.item,
-        state: 'settled',
-        mappingState,
-        timestamp: message.params.completedAtMs ?? message.receivedAt,
-      })
-    : dropped(mappingState);
+  mapItem({
+    item: message.params.item,
+    state: 'settled',
+    mappingState,
+    timestamp: message.params.completedAtMs ?? message.receivedAt,
+  });
 const appendText = ({
   id,
   text,
@@ -69,36 +58,33 @@ const appendText = ({
   if (!(id in mappingState.openRows)) return dropped(mappingState);
   return { events: [feed({ type: 'append', id, field, text })], mappingState };
 };
-export const agentMessageDelta: NotificationHandler = (
-  message,
-  mappingState,
+export const agentMessageDelta = (
+  message: Extract<VendorMessage, { method: 'item/agentMessage/delta' }>,
+  mappingState: MappingState,
 ): AgentMapping<MappingState> =>
-  message.method === 'item/agentMessage/delta'
-    ? appendText({
-        id: message.params.itemId,
-        text: message.params.delta,
-        field: messageTextField,
-        mappingState,
-      })
-    : dropped(mappingState);
-export const commandOutputDelta: NotificationHandler = (
-  message,
-  mappingState,
+  appendText({
+    id: message.params.itemId,
+    text: message.params.delta,
+    field: messageTextField,
+    mappingState,
+  });
+export const commandOutputDelta = (
+  message: Extract<
+    VendorMessage,
+    { method: 'item/commandExecution/outputDelta' }
+  >,
+  mappingState: MappingState,
 ): AgentMapping<MappingState> =>
-  message.method === 'item/commandExecution/outputDelta'
-    ? appendText({
-        id: message.params.itemId,
-        text: message.params.delta,
-        field: 'content.0.output',
-        mappingState,
-      })
-    : dropped(mappingState);
-export const reasoningTextDelta: NotificationHandler = (
-  message,
-  mappingState,
+  appendText({
+    id: message.params.itemId,
+    text: message.params.delta,
+    field: 'content.0.output',
+    mappingState,
+  });
+export const reasoningTextDelta = (
+  message: Extract<VendorMessage, { method: 'item/reasoning/textDelta' }>,
+  mappingState: MappingState,
 ): AgentMapping<MappingState> => {
-  if (message.method !== 'item/reasoning/textDelta')
-    return dropped(mappingState);
   if (message.params.itemId in mappingState.summaryIndexes)
     return dropped(mappingState);
   return appendText({

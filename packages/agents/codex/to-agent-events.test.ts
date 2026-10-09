@@ -101,3 +101,24 @@ it.each(['item/futureNotification', 'toString', 'constructor'])(
     });
   },
 );
+
+it.each(['item/futureNotification', 'toString', 'constructor'])(
+  'rejects an unrecognised method %s even outside the current Turn',
+  (method): void => {
+    const mappingState = initialMappingState();
+    expect(
+      Reflect.apply(toAgentEvents, undefined, [
+        { method, params: { turnId: 'stale-turn' } },
+        mappingState,
+      ]),
+    ).toEqual({
+      events: [
+        {
+          type: 'agent.messageRejected',
+          reason: 'Unrecognised vendor payload',
+        },
+      ],
+      mappingState,
+    });
+  },
+);
