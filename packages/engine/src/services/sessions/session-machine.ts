@@ -1349,7 +1349,7 @@ export const sessionMachine = sessionSetup.createMachine({
             flushing: {
               on: { 'session.close': {} },
               entry: 'flushFeed',
-              after: { feedFlushLimit: '#session.closed' },
+              after: { feedFlushLimit: closedSessionTarget },
             },
           },
         },
@@ -1534,7 +1534,7 @@ export const sessionMachine = sessionSetup.createMachine({
         },
         flushing: {
           entry: 'flushFeed',
-          after: { feedFlushLimit: '#session.closed' },
+          after: { feedFlushLimit: closedSessionTarget },
         },
       },
     },
