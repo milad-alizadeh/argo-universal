@@ -140,6 +140,20 @@ export function Composer({
       <Icon as={ArrowUpIcon} className="text-primary-foreground" />
     );
   }
+  const planControls = (
+    <>
+      {!!status?.plan?.length && (
+        <ComposerPlan entries={status.plan} disabled={inactive} />
+      )}
+      {!!shownWrittenPlan && (
+        <WrittenPlan
+          key={shownWrittenPlan.planId}
+          plan={shownWrittenPlan}
+          composerId={composerId}
+        />
+      )}
+    </>
+  );
   return (
     <View nativeID={composerId} className="w-full max-w-composer items-center">
       {!wide &&
@@ -148,16 +162,7 @@ export function Composer({
           status?.subagents ||
           status?.shells) && (
           <View className="min-h-7 max-w-full mb-1 flex-row flex-wrap items-center justify-center gap-2">
-            {!!status?.plan?.length && (
-              <ComposerPlan entries={status.plan} disabled={inactive} />
-            )}
-            {!!shownWrittenPlan && (
-              <WrittenPlan
-                key={shownWrittenPlan.planId}
-                plan={shownWrittenPlan}
-                composerId={composerId}
-              />
-            )}
+            {planControls}
             {status && (
               <ComposerWorkChips status={status} disabled={inactive} />
             )}
@@ -167,16 +172,7 @@ export function Composer({
         !planProposal &&
         (!!shownWrittenPlan || !!status?.plan?.length) && (
           <View className="self-stretch mx-1.75 -mb-3 pb-3 rounded-t-lg border border-b-0 border-border bg-sidebar/80 shadow-composer web:backdrop-blur-composer web:backdrop-saturate-110">
-            {!!status?.plan?.length && (
-              <ComposerPlan entries={status.plan} disabled={inactive} />
-            )}
-            {!!shownWrittenPlan && (
-              <WrittenPlan
-                key={shownWrittenPlan.planId}
-                plan={shownWrittenPlan}
-                composerId={composerId}
-              />
-            )}
+            {planControls}
           </View>
         )}
       {planProposal ? (
