@@ -533,7 +533,10 @@ it('refuses commands for a Subagent while keeping its stored Feed readable', asy
   const { caller, sessionRegistry, database } = startSessionTestServer();
   insertSession(database, { id: 'subagent', parentSessionId: 'session-1' });
   await expect(
-    caller.session.cancel({ sessionId: 'subagent' }),
+    caller.session.prompt({
+      sessionId: 'subagent',
+      prompt: [{ type: 'text', text: 'Start' }],
+    }),
   ).rejects.toMatchObject({
     code: 'CONFLICT',
     message: 'A Subagent is read-only',
