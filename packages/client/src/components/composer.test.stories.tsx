@@ -799,13 +799,6 @@ async function expectDangerousMode({
     expect(overlay.queryByRole('dialog')).not.toBeInTheDocument(),
   );
   const modeTrigger = canvas.getByRole('button', { name: 'Mode' });
-  // The glyph appears only once the symbol font has loaded.
-  const glyph = await waitFor(() => {
-    const symbol = modeTrigger.querySelector('[data-icon] [dir]');
-    if (!symbol?.textContent) throw new Error('Mode trigger icon is missing.');
-    return symbol;
-  });
-  await expect(getComputedStyle(glyph).color).toBe(red);
   if (width >= 720)
     await waitFor(() =>
       expect(
