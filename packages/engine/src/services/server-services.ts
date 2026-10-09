@@ -3,7 +3,6 @@ import type { ActorRefFrom } from 'xstate';
 import type { FeedActorRef } from './feed';
 import { createFeedService, findDatabaseWriter } from './feed';
 import type { writerMachine } from './feed';
-import { createProjectService } from './projects';
 import type { Services } from './services';
 import { createSessionReader, createSessionSnapshotWatcher } from './sessions';
 import type { RegistryActorRef } from './sessions';
@@ -22,7 +21,6 @@ export function createServerServices(options: {
   const findWriter = (): ActorRefFrom<typeof writerMachine> | undefined =>
     findDatabaseWriter(options.sessions.system);
   return {
-    projects: createProjectService(options.database),
     feed: createFeedService({
       database: options.database,
       readSession: createSessionReader(options.database),

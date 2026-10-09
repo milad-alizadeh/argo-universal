@@ -14,11 +14,6 @@ export function createRejectingServices(
   overrides: ServiceOverrides = {},
 ): Services {
   return {
-    projects: {
-      list: createUnexpectedCallRejection('projects.list'),
-      branches: createUnexpectedCallRejection('projects.branches'),
-      ...overrides.projects,
-    },
     feed: {
       page: createUnexpectedCallRejection('feed.page'),
       row: createUnexpectedCallRejection('feed.row'),
