@@ -10,11 +10,10 @@ import {
 } from '@repo/db/schema';
 import { and, eq, gt, inArray, sql } from 'drizzle-orm';
 import { toFeedRowWrite } from './feed-row';
-import { applyCatalogSqlJob } from './writer-catalog-job';
 import {
+  applyCatalogSqlJob,
   isCatalogSqlJob,
   type CatalogSqlJob,
-  type CatalogSqlCommit,
 } from './writer-catalog-sync';
 
 // One unit of work for the database writer.
@@ -69,12 +68,11 @@ const feedRowUpdate = {
 export function writeJobs(
   database: Database,
   jobs: readonly WriterJob[],
-): CatalogSqlCommit[] {
-  const catalogCommits: CatalogSqlCommit[] = [];
+): void {
   void database.transaction((transaction): void => {
     for (const job of jobs) {
       if (isCatalogSqlJob(job)) {
-        catalogCommits.push(applyCatalogSqlJob(transaction, job));
+        applyCatalogSqlJob(transaction, job);
         continue;
       }
       switch (job.type) {
@@ -172,7 +170,6 @@ export function writeJobs(
       }
     }
   });
-  return catalogCommits;
 }
 
 // One line naming what a job would have written, for the log of lost jobs.
@@ -180,16 +177,10 @@ export function describeJob(job: WriterJob): string {
   switch (job.type) {
     case 'blobMetadataUpsert':
       return `upsert Blob metadata ${job.blob.id}`;
-    case 'agentCatalogSearchProjection':
-      return `populate catalog search text for ${job.rows.length} saved Agent rows`;
     case 'agentCatalogReplace':
       return `replace catalog with ${job.rows.length} accepted Agent rows`;
-    case 'catalogSyncRequest':
-      return `request catalog sync ${job.requestId}`;
-    case 'catalogSyncJoin':
-      return `join catalog requests ${job.requestIds.join(', ')} to ${job.syncId}`;
-    case 'catalogSyncFailure':
-      return `record ${job.status} catalog sync`;
+    case 'syncJobUpdate':
+      return `update sync job ${job.source}/${job.scope}`;
     case 'feedRows':
       return `Feed rows ${job.rows.map((row): string => row.id).join(', ')} of Session ${job.sessionId} at maxRevision ${job.maxRevision}`;
     case 'sessionInsert':
@@ -270,11 +261,8 @@ export function applyQueuedSession({
       case 'turnInsert':
       case 'turnUpdate':
       case 'blobMetadataUpsert':
-      case 'agentCatalogSearchProjection':
       case 'agentCatalogReplace':
-      case 'catalogSyncRequest':
-      case 'catalogSyncJoin':
-      case 'catalogSyncFailure':
+      case 'syncJobUpdate':
         break;
       default: {
         const unhandled: never = job;
@@ -315,11 +303,8 @@ export function applyQueuedTurns(
       case 'sessionRowUpdate':
       case 'feedRows':
       case 'blobMetadataUpsert':
-      case 'agentCatalogSearchProjection':
       case 'agentCatalogReplace':
-      case 'catalogSyncRequest':
-      case 'catalogSyncJoin':
-      case 'catalogSyncFailure':
+      case 'syncJobUpdate':
         break;
       default: {
         const unhandled: never = job;
@@ -347,11 +332,8 @@ export function queuedFeedRows(
       case 'turnInsert':
       case 'turnUpdate':
       case 'blobMetadataUpsert':
-      case 'agentCatalogSearchProjection':
       case 'agentCatalogReplace':
-      case 'catalogSyncRequest':
-      case 'catalogSyncJoin':
-      case 'catalogSyncFailure':
+      case 'syncJobUpdate':
         break;
       default: {
         const unhandled: never = job;
@@ -387,11 +369,8 @@ export function stampWriterJob(job: WriterJob, now: number): WriterJob {
         : { ...job, activityAt: job.activityAt ?? now };
     case 'turnUpdate':
     case 'blobMetadataUpsert':
-    case 'agentCatalogSearchProjection':
     case 'agentCatalogReplace':
-    case 'catalogSyncRequest':
-    case 'catalogSyncJoin':
-    case 'catalogSyncFailure':
+    case 'syncJobUpdate':
       return job;
     default: {
       const unhandled: never = job;

@@ -1,14 +1,7 @@
 import { appendFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { type Database, openDatabase } from '@repo/db';
-import {
-  assign,
-  enqueueActions,
-  fromPromise,
-  sendTo,
-  setup,
-  waitFor,
-} from 'xstate';
+import { assign, fromPromise, sendTo, setup, waitFor } from 'xstate';
 import {
   createAcpResources,
   type AcpResources,
@@ -47,7 +40,6 @@ type CloseHttpServerInput = { server: HttpServer | null };
 type SyncSupervisorActor = import('xstate').ActorRefFrom<
   typeof syncSupervisorMachine
 >;
-type AwaitSyncSupervisorInput = { supervisor: SyncSupervisorActor };
 type CloseAcpResourcesInput = {
   resources: AcpResources;
   sessions: import('../services/sessions').RegistryActorRef | undefined;
@@ -88,7 +80,6 @@ interface EngineContext extends EngineInput {
 }
 
 type EngineEvent =
-  | { type: 'catalog.requestsCommitted'; requestIds: string[] }
   | EngineStop
   | {
       type: 'xstate.done.actor.sessions' | 'xstate.done.actor.databaseWriter';
@@ -137,26 +128,6 @@ export const engineMachine = setup({
       },
     ),
     syncSupervisor: syncSupervisorMachine,
-    awaitSyncRecovery: fromPromise<void, AwaitSyncSupervisorInput>(
-      async ({ input }) => {
-        await waitFor(
-          input.supervisor,
-          (snapshot) => !snapshot.matches('recovering'),
-          { timeout: Infinity },
-        );
-      },
-    ),
-    awaitSyncDrain: fromPromise<void, AwaitSyncSupervisorInput>(
-      async ({ input }) => {
-        await waitFor(
-          input.supervisor,
-          (snapshot) => snapshot.status !== 'active',
-          { timeout: Infinity },
-        );
-        if (input.supervisor.getSnapshot().matches('interruptionFailed'))
-          throw new Error('Catalog interruption could not commit');
-      },
-    ),
     databaseWriter: writerMachine,
     sessions: registryMachine,
     startHttpServer: fromPromise<HttpServer, HttpServerOptions>(
@@ -174,17 +145,9 @@ export const engineMachine = setup({
   actions: {
     stopSessions: sendTo('sessions', { type: 'sessions.stopAll' }),
     drainWriter: sendTo('databaseWriter', { type: 'writer.drain' }),
-    stopSync: sendTo('syncSupervisor', { type: 'catalog.shutdown' }),
+    stopSync: sendTo('syncSupervisor', { type: 'sync.stop' }),
     closeCommandAdmission: ({ context }): void =>
       context.commandAdmission.abort(),
-    routeCatalogRequests: enqueueActions(({ event, enqueue }) => {
-      if (event.type !== 'catalog.requestsCommitted') return;
-      for (const requestId of event.requestIds)
-        enqueue.sendTo('syncSupervisor', {
-          type: 'catalog.requested',
-          requestId,
-        });
-    }),
     sendToSupervisor: (_, message: EngineMessage): void => {
       process.send?.(message);
     },
@@ -306,9 +269,8 @@ export const engineMachine = setup({
           }),
         },
       ],
-      initial: 'preparingSync',
+      initial: 'listening',
       on: {
-        'catalog.requestsCommitted': { actions: 'routeCatalogRequests' },
         'engine.stop': {
           target: '.stopping',
           actions: {
@@ -320,16 +282,6 @@ export const engineMachine = setup({
         },
       },
       states: {
-        preparingSync: {
-          invoke: {
-            id: 'awaitSyncRecovery',
-            src: 'awaitSyncRecovery',
-            input: ({ self }) => ({
-              supervisor: requireSyncSupervisor(self.system),
-            }),
-            onDone: 'listening',
-          },
-        },
         listening: {
           invoke: {
             id: 'startHttpServer',
@@ -338,6 +290,7 @@ export const engineMachine = setup({
               createId: context.createId,
               sessions: requireSessionRegistry(self.system),
               databaseWriter: requireDatabaseWriter(self.system),
+              syncSupervisor: requireSyncSupervisor(self.system),
               commandAdmission: context.commandAdmission,
               home: context.home,
               port: context.port,
@@ -455,7 +408,7 @@ export const engineMachine = setup({
                   resources: context.acpResources,
                   sessions: findSessionRegistry(self.system),
                 }),
-                onDone: { target: 'drainingSync' },
+                onDone: { target: 'drainingWriter' },
                 onError: {
                   target: 'retainingAgentCleanup',
                   actions: assign({
@@ -471,33 +424,6 @@ export const engineMachine = setup({
                 params: ({ context }): EngineLogParameters => ({
                   line: context.failure ?? 'Agent cleanup remains unresolved',
                 }),
-              },
-            },
-            drainingSync: {
-              invoke: {
-                id: 'awaitSyncDrain',
-                src: 'awaitSyncDrain',
-                input: ({ self }) => ({
-                  supervisor: requireSyncSupervisor(
-                    self.system,
-                    self.getSnapshot()?.children?.syncSupervisor,
-                  ),
-                }),
-                onDone: 'drainingWriter',
-                onError: {
-                  target: 'retainingSyncCleanup',
-                  actions: assign({
-                    failure: ({ event }) => String(event.error),
-                  }),
-                },
-              },
-            },
-            retainingSyncCleanup: {
-              entry: {
-                type: 'log',
-                params: {
-                  line: 'Catalog interruption could not commit; retaining SQLite until forced shutdown',
-                },
               },
             },
             drainingWriter: {
@@ -574,9 +500,8 @@ function requireDatabaseWriter(
 }
 function requireSyncSupervisor(
   system: import('xstate').AnyActorRef['system'],
-  ownedChild?: SyncSupervisorActor,
 ): SyncSupervisorActor {
-  const actor = ownedChild ?? system.get('syncSupervisor');
+  const actor = system.get('syncSupervisor');
   if (!actor) throw new Error('Sync supervisor is not running');
   return actor;
 }

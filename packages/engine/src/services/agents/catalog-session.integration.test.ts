@@ -62,16 +62,13 @@ it.each(['accepted', 'rejected'] as const)(
       expect.objectContaining({ session_update: 'user_message' }),
       expect.objectContaining({ session_update: 'agent_message' }),
     ]);
-    if (catalogResult === 'rejected')
-      host.database.$client.exec(
-        "CREATE TEMP TRIGGER reject_catalog BEFORE INSERT ON agents BEGIN SELECT RAISE(ABORT, 'catalog failed'); END",
-      );
-    response.resolve(publishedRegistry);
-    expect(await refresh).toMatchObject(
-      catalogResult === 'accepted'
-        ? { error: null }
-        : { code: 'INTERNAL_SERVER_ERROR' },
+    response.resolve(
+      catalogResult === 'accepted' ? publishedRegistry : { malformed: true },
     );
+    expect(await refresh).toEqual({ accepted: true });
+    await expect
+      .poll(async () => (await host.caller.agents.catalog()).syncStatus)
+      .toBe(catalogResult === 'accepted' ? 'idle' : 'failed');
     expect(
       host.database.$client
         .prepare(

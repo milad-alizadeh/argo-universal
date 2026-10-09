@@ -1,165 +1,62 @@
 import type { Database } from '@repo/db';
-import { agentCatalogSyncRequest } from '@repo/db/schema';
-import { and, eq, inArray } from 'drizzle-orm';
-import type { AgentCatalogReplaceJob } from './writer-agent-catalog';
-import type { AgentCatalogSearchProjectionJob } from './writer-catalog-search';
+import { syncJobs } from '@repo/db/schema';
+import { and, eq } from 'drizzle-orm';
+import {
+  replaceAgentCatalogRows,
+  type AgentCatalogReplaceJob,
+} from './writer-agent-catalog';
 
-export type CatalogSyncRequestJob = {
-  type: 'catalogSyncRequest';
-  requestId: string;
-  requestedAt: number;
+export type SyncJobWrite = {
+  type: 'syncJobUpdate';
+  source: string;
+  scope: string;
+  set: Pick<typeof syncJobs.$inferInsert, 'status'> &
+    Partial<Omit<typeof syncJobs.$inferInsert, 'source' | 'scope'>>;
 };
-export type CatalogSyncJoinJob = {
-  type: 'catalogSyncJoin';
-  requestIds: readonly string[];
-  syncId: string;
-};
-export type CatalogSyncFailureJob = {
-  type: 'catalogSyncFailure';
-  syncIds: readonly string[] | null;
-  status: 'failed' | 'interrupted';
-  error: string;
-  rejectedValues: number;
-  completedAt: number;
-  waitingRequestIds?: readonly string[];
-  finalShutdownAttempt?: true;
-};
-export type CatalogSqlJob =
-  | CatalogSyncRequestJob
-  | CatalogSyncJoinJob
-  | CatalogSyncFailureJob
-  | AgentCatalogReplaceJob
-  | AgentCatalogSearchProjectionJob;
-export type CatalogSqlCommit = {
-  kind: CatalogSqlJob['type'];
-  requestedIds: string[];
-  requestIds: string[];
-  changedIds: string[];
-};
-type CatalogTransaction = Pick<Database, 'select' | 'insert' | 'update'>;
-
+export type CatalogSqlJob = SyncJobWrite | AgentCatalogReplaceJob;
 export function isCatalogSqlJob(job: { type: string }): job is CatalogSqlJob {
-  return (
-    job.type === 'catalogSyncRequest' ||
-    job.type === 'catalogSyncJoin' ||
-    job.type === 'catalogSyncFailure' ||
-    job.type === 'agentCatalogReplace' ||
-    job.type === 'agentCatalogSearchProjection'
-  );
+  return job.type === 'syncJobUpdate' || job.type === 'agentCatalogReplace';
 }
-
-export function insertCatalogSyncRequest(
-  transaction: Pick<Database, 'insert'>,
-  job: CatalogSyncRequestJob,
+export function updateSyncJob(
+  database: Pick<Database, 'insert' | 'update'>,
+  job: SyncJobWrite,
 ): void {
-  transaction
-    .insert(agentCatalogSyncRequest)
+  database
+    .insert(syncJobs)
     .values({
-      requestId: job.requestId,
-      syncId: job.requestId,
-      status: 'pending',
-      requestedAt: job.requestedAt,
+      source: job.source,
+      scope: job.scope,
+      requestedAt: 0,
+      ...job.set,
+    })
+    .onConflictDoUpdate({
+      target: [syncJobs.source, syncJobs.scope],
+      set: job.set,
     })
     .run();
 }
-
-export function joinCatalogSyncRequests(
-  transaction: CatalogTransaction,
-  job: CatalogSyncJoinJob,
-): void {
-  const source = transaction
-    .select()
-    .from(agentCatalogSyncRequest)
-    .where(eq(agentCatalogSyncRequest.requestId, job.syncId))
-    .get();
-  if (!source) throw new Error('Catalog sync request is missing');
-  transaction
-    .update(agentCatalogSyncRequest)
-    .set({
-      syncId: job.syncId,
-      status: source.status,
-      completedAt: source.completedAt,
-      fetchedAt: source.fetchedAt,
-      changedIds: source.changedIds,
-      error: source.error,
-      rejectedValues: source.rejectedValues,
-    })
-    .where(
-      and(
-        inArray(agentCatalogSyncRequest.requestId, [...job.requestIds]),
-        eq(agentCatalogSyncRequest.status, 'pending'),
-      ),
-    )
-    .run();
-}
-
-export function completeCatalogSyncRequests(
-  transaction: Pick<Database, 'update'>,
+export function completeSyncJob(
+  database: Pick<Database, 'update'>,
   job: AgentCatalogReplaceJob,
-  changedIds: string[],
 ): void {
-  transaction
-    .update(agentCatalogSyncRequest)
+  database
+    .update(syncJobs)
     .set({
-      status: 'succeeded',
-      changedIds,
+      status: 'idle',
       completedAt: job.syncedAt,
       fetchedAt: job.syncedAt,
       error: null,
       rejectedValues: job.rejectedValues,
     })
-    .where(
-      and(
-        eq(agentCatalogSyncRequest.syncId, job.syncId),
-        eq(agentCatalogSyncRequest.status, 'pending'),
-      ),
-    )
+    .where(and(eq(syncJobs.source, job.source), eq(syncJobs.scope, job.scope)))
     .run();
 }
 
-export function failCatalogSyncRequests(
-  transaction: Pick<Database, 'update'>,
-  job: CatalogSyncFailureJob,
-): void {
-  transaction
-    .update(agentCatalogSyncRequest)
-    .set({
-      status: job.status,
-      completedAt: job.completedAt,
-      error: job.error,
-      rejectedValues: job.rejectedValues,
-    })
-    .where(
-      and(
-        eq(agentCatalogSyncRequest.status, 'pending'),
-        job.syncIds
-          ? inArray(agentCatalogSyncRequest.syncId, [...job.syncIds])
-          : undefined,
-      ),
-    )
-    .run();
-}
-
-export function readCatalogJobRequestIds(
-  database: Pick<Database, 'select'>,
+export function applyCatalogSqlJob(
+  transaction: Pick<Database, 'select' | 'insert' | 'update'>,
   job: CatalogSqlJob,
-): string[] {
-  if (job.type === 'agentCatalogSearchProjection') return [];
-  if (job.type === 'catalogSyncRequest') return [job.requestId];
-  if (job.type === 'catalogSyncJoin') return [...job.requestIds];
-  const syncIds =
-    job.type === 'agentCatalogReplace' ? [job.syncId] : job.syncIds;
-  const rows = database
-    .select({ requestId: agentCatalogSyncRequest.requestId })
-    .from(agentCatalogSyncRequest)
-    .where(
-      syncIds
-        ? inArray(agentCatalogSyncRequest.syncId, [...syncIds])
-        : undefined,
-    )
-    .all();
-  return [
-    ...rows.map(({ requestId }) => requestId),
-    ...('waitingRequestIds' in job ? (job.waitingRequestIds ?? []) : []),
-  ];
+): void {
+  if (job.type === 'syncJobUpdate') return updateSyncJob(transaction, job);
+  replaceAgentCatalogRows(transaction, job);
+  completeSyncJob(transaction, job);
 }

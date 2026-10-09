@@ -17,9 +17,15 @@ it.each(rejectedRegistryValues.map((value, index) => [index, value] as const))(
       fetchAgents,
     });
     await caller.agents.syncCatalog();
+    await expect
+      .poll(async () => (await caller.agents.catalog()).syncStatus)
+      .not.toMatch(/pending|running/);
     const before = await caller.agents.catalog();
     const stored = database.select().from(agents).all();
     await caller.agents.syncCatalog();
+    await expect
+      .poll(async () => (await caller.agents.catalog()).syncStatus)
+      .not.toMatch(/pending|running/);
     const after = await caller.agents.catalog();
     expect(after).toMatchObject({
       status: 'stale',

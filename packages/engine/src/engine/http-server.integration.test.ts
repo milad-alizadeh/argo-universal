@@ -62,6 +62,8 @@ const systemInfoStatus = (
 const readdirSafe = (folder: string): string[] =>
   existsSync(folder) ? readdirSync(folder) : [];
 
+let syncSupervisor: HttpServerOptions['syncSupervisor'];
+
 const options = (): HttpServerOptions => ({
   createId: randomUUID,
   home,
@@ -71,6 +73,7 @@ const options = (): HttpServerOptions => ({
   database,
   sessions,
   databaseWriter,
+  syncSupervisor,
 });
 
 beforeEach(async (): Promise<void> => {
@@ -78,6 +81,7 @@ beforeEach(async (): Promise<void> => {
   database = stored.database;
   removeDatabase = stored.remove;
   const started = await startEngineTestHost({ database });
+  syncSupervisor = started.engine.system.get('syncSupervisor');
   home = started.home;
   port = Number(new URL(started.url).port);
   sessions = started.sessionRegistry;

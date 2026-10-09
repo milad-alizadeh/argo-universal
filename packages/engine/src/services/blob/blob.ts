@@ -78,10 +78,14 @@ export async function uploadBlob(
     await rename(partial, path);
   }
   const mime = mimeOf(bytes, file.type);
-  await writeDatabaseJobAndWaitForCommit(resources.databaseWriter, {
-    type: 'blobMetadataUpsert',
-    blob: { id: blobId, mime, bytes: bytes.length },
-  });
+  await writeDatabaseJobAndWaitForCommit(
+    resources.databaseWriter,
+    {
+      type: 'blobMetadataUpsert',
+      blob: { id: blobId, mime, bytes: bytes.length },
+    },
+    true,
+  );
   return { blobId, mime, bytes: bytes.length };
 }
 

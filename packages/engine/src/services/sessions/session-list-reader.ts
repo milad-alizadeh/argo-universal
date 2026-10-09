@@ -178,11 +178,8 @@ export function createSessionListReader(options: {
               validate,
             });
           case 'blobMetadataUpsert':
-          case 'agentCatalogSearchProjection':
           case 'agentCatalogReplace':
-          case 'catalogSyncRequest':
-          case 'catalogSyncJoin':
-          case 'catalogSyncFailure':
+          case 'syncJobUpdate':
             return [];
           default: {
             const unhandled: never = job;

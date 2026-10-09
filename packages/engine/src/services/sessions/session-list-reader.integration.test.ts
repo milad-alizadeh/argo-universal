@@ -178,12 +178,9 @@ it('resolves a changed queued Turn through its earlier unwritten insertion', ():
   const writer = createActor(
     writerMachine.provide({
       actors: {
-        writeBatch: fromPromise(
-          async (): Promise<import('../feed').CatalogSqlCommit[]> => {
-            await batch.promise;
-            return [];
-          },
-        ),
+        writeBatch: fromPromise(async (): Promise<void> => {
+          await batch.promise;
+        }),
       },
     }),
     {

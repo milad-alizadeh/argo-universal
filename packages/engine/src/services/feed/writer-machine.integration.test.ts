@@ -55,7 +55,7 @@ const machine = writerMachine.provide({
             resolve: (): void => {
               call.settled = true;
               committedJobs.push(...input.jobs);
-              resolve([]);
+              resolve();
             },
             reject: (error): void => {
               call.settled = true;

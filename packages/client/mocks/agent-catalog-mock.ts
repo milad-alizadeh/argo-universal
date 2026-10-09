@@ -7,8 +7,9 @@ const [example, python, binary, windows] = publishedRegistry.agents;
 if (!example || !python || !binary || !windows)
   throw new Error('Registry mock needs four distribution examples');
 
-const catalog: AgentsCatalogOutput = {
+export const catalog: AgentsCatalogOutput = {
   status: 'fresh',
+  syncStatus: 'idle',
   serverPlatform: 'darwin-aarch64',
   fetchedAt: 1791504000000,
   error: null,
@@ -56,11 +57,7 @@ if (!exampleCatalog || !pythonCatalog || !binaryCatalog || !windowsCatalog)
   throw new Error('Catalog fixture is incomplete');
 
 export const agentCatalogMocks: Fixtures = {
-  'agents.syncCatalog': () => ({
-    changedIds: [],
-    error: null,
-    rejectedValues: 0,
-  }),
+  'agents.syncCatalog': () => ({ accepted: true }),
   'agents.catalogChanges': pending(),
   'agents.catalog': (input) => {
     if (!input?.search) return catalog;

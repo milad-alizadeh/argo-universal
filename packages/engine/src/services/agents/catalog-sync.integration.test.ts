@@ -1,36 +1,9 @@
 import { agents } from '@repo/db/schema';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
-import { expect, it, onTestFinished, vi } from 'vitest';
-import { openTestDatabase } from '#mocks/database';
+import { expect, it, vi } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
-import type { FetchAgents } from './index';
 
 const savedLocalId = 'saved-local-id';
-
-it('settles an active sync before the router host finishes shutdown', async (): Promise<void> => {
-  const stored = openTestDatabase();
-  onTestFinished(stored.remove);
-  const response = Promise.withResolvers<unknown>();
-  const fetchAgents = vi.fn<FetchAgents>(() => response.promise);
-  const host = await startEngineTestHost({
-    database: stored.database,
-    fetchAgents,
-  });
-  const synchronization = host.caller.agents.syncCatalog();
-  await vi.waitFor(() => expect(fetchAgents).toHaveBeenCalledTimes(1));
-  try {
-    await host.stop();
-    expect(fetchAgents.mock.calls[0]?.[0]?.aborted).toBe(true);
-    expect(await synchronization).toMatchObject({
-      changedIds: [],
-      error: 'Registry sync was cancelled',
-    });
-    expect(stored.database.select().from(agents).all()).toEqual([]);
-  } finally {
-    response.resolve(publishedRegistry);
-    await synchronization;
-  }
-});
 
 it('reads SQLite without fetching, then commits an explicit page visit sync', async (): Promise<void> => {
   const fetchAgents = vi.fn<() => Promise<unknown>>(
@@ -42,41 +15,15 @@ it('reads SQLite without fetching, then commits an explicit page visit sync', as
     status: 'unavailable',
   });
   expect(fetchAgents).not.toHaveBeenCalled();
-  expect(await caller.agents.syncCatalog()).toMatchObject({ error: null });
+  await caller.agents.syncCatalog();
+  await expect
+    .poll(async () => (await caller.agents.catalog()).syncStatus)
+    .toBe('idle');
   expect(await caller.agents.catalog({ search: 'example' })).toMatchObject({
     agents: [{ entry: publishedRegistry.agents[0] }],
     status: 'fresh',
   });
   expect(fetchAgents).toHaveBeenCalledTimes(1);
-});
-
-it('coalesces concurrent Apps and publishes changed IDs after the SQLite commit', async (): Promise<void> => {
-  const pending = Promise.withResolvers<unknown>();
-  const fetchAgents = vi.fn<() => Promise<unknown>>(() => pending.promise);
-  const { database, createCaller, url } = await startEngineTestHost({
-    fetchAgents,
-  });
-  const signal = new AbortController();
-  const secondApp = createCaller({ signal: signal.signal });
-  const subscription = await secondApp.agents.catalogChanges();
-  const changed = subscription[Symbol.asyncIterator]().next();
-  const firstVisit = fetch(`${url}/trpc/agents.syncCatalog`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-  }).then((response): Promise<unknown> => response.json());
-  await vi.waitFor(() => expect(fetchAgents).toHaveBeenCalledTimes(1));
-  const secondVisit = secondApp.agents.syncCatalog();
-  expect(database.select().from(agents).all()).toEqual([]);
-  pending.resolve(publishedRegistry);
-  const results = await Promise.all([firstVisit, secondVisit]);
-  const notification = await changed;
-  expect(results[0]).toEqual({ result: { data: results[1] } });
-  expect(fetchAgents).toHaveBeenCalledTimes(1);
-  expect(notification.value).toEqual(results[1]?.changedIds);
-  expect((await secondApp.agents.catalog()).agents.map(({ id }) => id)).toEqual(
-    notification.value,
-  );
-  signal.abort();
 });
 
 it('preserves saved local identity and custom rows across changed, removed and reappearing catalog entries', async (): Promise<void> => {
@@ -106,10 +53,16 @@ it('preserves saved local identity and custom rows across changed, removed and r
     .run();
   const custom = database.select().from(agents).all()[1];
   await caller.agents.syncCatalog();
+  await expect
+    .poll(async () => (await caller.agents.catalog()).syncStatus)
+    .toBe('idle');
   expect((await caller.agents.catalog()).agents).toMatchObject([
     { id: savedLocalId, entry: changed },
   ]);
   await caller.agents.syncCatalog();
+  await expect
+    .poll(async () => (await caller.agents.catalog()).syncStatus)
+    .toBe('idle');
   expect((await caller.agents.catalog()).agents).toEqual([]);
   expect(database.select().from(agents).all()[0]).toMatchObject({
     id: savedLocalId,
@@ -117,6 +70,9 @@ it('preserves saved local identity and custom rows across changed, removed and r
     registryMetadata: JSON.stringify(changed),
   });
   await caller.agents.syncCatalog();
+  await expect
+    .poll(async () => (await caller.agents.catalog()).syncStatus)
+    .toBe('idle');
   expect((await caller.agents.catalog()).agents).toMatchObject([
     { id: savedLocalId, entry: agent },
   ]);
@@ -133,7 +89,10 @@ it('gives new upstream entries distinct independent local identities', async ():
   const { caller } = await startEngineTestHost({
     fetchAgents: async (): Promise<unknown> => registry,
   });
-  expect(await caller.agents.syncCatalog()).toMatchObject({ error: null });
+  await caller.agents.syncCatalog();
+  await expect
+    .poll(async () => (await caller.agents.catalog()).syncStatus)
+    .toBe('idle');
   const catalog = await caller.agents.catalog();
   expect(catalog.agents).toHaveLength(2);
   const [first, second] = catalog.agents;

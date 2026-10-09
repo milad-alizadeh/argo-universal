@@ -27,6 +27,7 @@ export type Context = Pick<HttpServerOptions, 'sessions' | 'createId'> &
     sessionList: ReturnType<typeof createSessionList>;
     catalogRead: Pick<CatalogReadInput, 'reader' | 'platform'>;
     databaseWriter: NonNullable<ReturnType<typeof findDatabaseWriter>>;
+    syncSupervisor: HttpServerOptions['syncSupervisor'];
   };
 
 export function createEngineContext(
@@ -36,7 +37,7 @@ export function createEngineContext(
       database: import('@repo/db').Database;
     } & SystemDeps &
     Pick<Context, 'sessionCommandSignal'> &
-    Pick<HttpServerOptions, 'databaseWriter' | 'platform'>,
+    Pick<HttpServerOptions, 'databaseWriter' | 'platform' | 'syncSupervisor'>,
 ): Context {
   const findSession = (sessionId: string): SessionActorRef | undefined =>
     findSessionActor(engineOptions.sessions.system, sessionId);
@@ -64,6 +65,7 @@ export function createEngineContext(
     }),
     sessionList: createSessionList(engineOptions),
     databaseWriter: engineOptions.databaseWriter,
+    syncSupervisor: engineOptions.syncSupervisor,
     catalogRead: {
       reader: createRegistryReader(),
       platform: engineOptions.platform ?? resolveRegistryServerPlatform(),

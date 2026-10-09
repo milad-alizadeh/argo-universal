@@ -1,3 +1,4 @@
+import type { AgentsCatalogOutput } from '@repo/contracts';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
@@ -72,18 +73,31 @@ function RefreshCatalog({ catalog }: CatalogViewProps): React.JSX.Element {
   );
 }
 
-function CatalogResult({
-  catalog,
-}: {
-  catalog: CatalogState;
-}): React.JSX.Element {
-  if (catalog.query.data) return <AgentCatalog catalog={catalog.query.data} />;
+function CatalogResult({ catalog }: CatalogViewProps): React.JSX.Element {
+  if (catalog.query.data)
+    return (
+      <AgentCatalog
+        catalog={catalogResult(catalog.query.data, catalog.syncError)}
+      />
+    );
   if (catalog.query.isError) return <CatalogError catalog={catalog} />;
   return (
     <Text role="status" className="px-gutter py-4 text-muted-foreground">
       Loading the Agent catalog…
     </Text>
   );
+}
+
+function catalogResult(
+  saved: AgentsCatalogOutput,
+  error: CatalogState['syncError'],
+): AgentsCatalogOutput {
+  if (!error) return saved;
+  return {
+    ...saved,
+    status: saved.fetchedAt === null ? 'unavailable' : 'stale',
+    error: error.message,
+  };
 }
 
 function CatalogError({

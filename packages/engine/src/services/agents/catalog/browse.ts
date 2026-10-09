@@ -93,6 +93,7 @@ function buildUnavailableCatalogResult(
     agents: [],
     serverPlatform: input.platform,
     status: 'unavailable',
+    syncStatus: 'failed',
     fetchedAt: null,
     error: String(error),
     rejectedValues: input.reader.count(),

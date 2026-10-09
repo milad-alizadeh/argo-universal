@@ -14,61 +14,75 @@ import {
 } from '../src/services/agents';
 import { writerMachine } from '../src/services/feed';
 
-const workerDoneEvent = 'xstate.done.actor.catalogWorker';
 type SupervisorSnapshot = SnapshotFrom<typeof syncSupervisorMachine>;
+const synchronized = 'xstate.done.actor.synchronize';
 export const supervisorEvents = [
-  { type: 'catalog.requested', requestId: 'request' },
-  { type: 'catalog.shutdown' },
   {
-    type: 'xstate.done.actor.recoverCatalogRequests',
-    actorId: 'recoverCatalogRequests',
+    type: 'sync.request',
+    admitted: { resolve: (): void => {}, reject: (): void => {} },
+  },
+  { type: 'sync.stop' },
+  {
+    type: 'xstate.done.actor.schedule',
+    actorId: 'schedule',
     output: undefined,
   },
   {
-    type: 'xstate.error.actor.recoverCatalogRequests',
-    actorId: 'recoverCatalogRequests',
-    error: new Error('Recovery rejected'),
+    type: 'xstate.error.actor.schedule',
+    actorId: 'schedule',
+    error: new Error('Scheduling failed'),
+  },
+  { type: 'xstate.done.actor.start', actorId: 'start', output: undefined },
+  {
+    type: 'xstate.error.actor.start',
+    actorId: 'start',
+    error: new Error('Starting failed'),
   },
   {
-    type: 'xstate.done.actor.cleanAbandonedRequests',
-    actorId: 'cleanAbandonedRequests',
-    output: undefined,
+    type: synchronized,
+    actorId: 'synchronize',
+    output: {
+      job: {
+        type: 'agentCatalogReplace',
+        source: 'agent-catalog',
+        scope: 'default',
+        rows: [],
+        syncedAt: 1,
+        rejectedValues: 0,
+      },
+    },
   },
   {
-    type: 'xstate.error.actor.cleanAbandonedRequests',
-    actorId: 'cleanAbandonedRequests',
-    error: new Error('Interruption rejected'),
+    type: synchronized,
+    actorId: 'synchronize',
+    output: {
+      error: 'Registry is offline',
+      retryable: true,
+      rejectedValues: 0,
+    },
   },
   {
-    type: 'xstate.done.actor.catalogJoins',
-    actorId: 'catalogJoins',
-    output: undefined,
+    type: synchronized,
+    actorId: 'synchronize',
+    output: {
+      error: 'Registry is invalid',
+      retryable: false,
+      rejectedValues: 1,
+    },
   },
   {
-    type: 'xstate.error.actor.catalogJoins',
-    actorId: 'catalogJoins',
-    error: new Error('Join rejected'),
+    type: 'xstate.error.actor.synchronize',
+    actorId: 'synchronize',
+    error: new Error('Sync failed'),
   },
+  { type: 'xstate.done.actor.save', actorId: 'save', output: undefined },
   {
-    type: workerDoneEvent,
-    actorId: 'catalogWorker',
-    output: { changedIds: [], error: null, abandoned: false },
+    type: 'xstate.error.actor.save',
+    actorId: 'save',
+    error: new Error('Saving failed'),
   },
-  {
-    type: workerDoneEvent,
-    actorId: 'catalogWorker',
-    output: { changedIds: [], error: 'Storage failed', abandoned: true },
-  },
-  {
-    type: 'xstate.done.actor.interruptPendingRequests',
-    actorId: 'interruptPendingRequests',
-    output: undefined,
-  },
-  {
-    type: 'xstate.error.actor.interruptPendingRequests',
-    actorId: 'interruptPendingRequests',
-    error: new Error('Shutdown interruption rejected'),
-  },
+  { type: 'xstate.after.fetchLimit.syncSupervisor.syncing' },
+  { type: 'xstate.after.retryDelay.syncSupervisor.waiting' },
 ] satisfies GraphEventFromLogic<typeof syncSupervisorMachine>[];
 export type SupervisorModelEvent = (typeof supervisorEvents)[number];
 
@@ -77,18 +91,20 @@ export function serializeCatalogSupervisorState(
 ): string {
   return JSON.stringify({
     state: snapshot.value,
-    joins: snapshot.context.joinRequestIds.length,
-    joining: snapshot.context.joinBatchSize > 0,
-    abandoned: snapshot.context.abandonedSyncIds.length > 0,
-    requested: snapshot.context.syncId !== '',
+    admissions: snapshot.context.admissions.length,
+    attempts: snapshot.context.attempts,
+    retryable:
+      snapshot.context.result !== null &&
+      'retryable' in snapshot.context.result &&
+      snapshot.context.result.retryable,
   });
 }
 
 export function serializeCatalogSupervisorEvent(
   event: SupervisorModelEvent,
 ): string {
-  return event.type === workerDoneEvent
-    ? `${event.type}:${event.output.abandoned}`
+  return event.type === synchronized
+    ? `${event.type}:${'job' in event.output ? 'success' : event.output.retryable}`
     : event.type;
 }
 
@@ -112,10 +128,7 @@ export function createCatalogSupervisorModel(database: Database): {
   };
   return {
     paths: terminalPaths(getShortestPaths(syncSupervisorMachine, options)),
-    getAdjacencyMap: (): AdjacencyMap<
-      SupervisorSnapshot,
-      SupervisorModelEvent
-    > => getAdjacencyMap(syncSupervisorMachine, options),
+    getAdjacencyMap: () => getAdjacencyMap(syncSupervisorMachine, options),
   };
 }
 
@@ -137,17 +150,13 @@ function canApplyCatalogSupervisorModelEvent(
   event: SupervisorModelEvent,
 ): boolean {
   if (snapshot.status !== 'active') return false;
-  if (event.type === 'catalog.requested')
-    return snapshot.context.joinRequestIds.length < 2 && snapshot.can(event);
-  if (event.type.endsWith('catalogJoins'))
-    return snapshot.context.joinBatchSize > 0;
-  if (event.type.endsWith('catalogWorker'))
-    return snapshot.matches('syncing') || snapshot.matches('stoppingWorker');
-  if (event.type.endsWith('recoverCatalogRequests'))
-    return snapshot.matches('recovering');
-  if (event.type.endsWith('cleanAbandonedRequests'))
-    return snapshot.matches('cleaningAbandoned');
-  if (event.type.endsWith('interruptPendingRequests'))
-    return snapshot.matches('interruptingShutdown');
-  return event.type === 'catalog.shutdown' && snapshot.can(event);
+  if (event.type === 'sync.request')
+    return snapshot.context.admissions.length < 2 && snapshot.can(event);
+  if (event.type.endsWith('schedule')) return snapshot.matches('scheduling');
+  if (event.type.endsWith('start')) return snapshot.matches('starting');
+  if (event.type.endsWith('synchronize') || event.type.includes('fetchLimit'))
+    return snapshot.matches('syncing');
+  if (event.type.endsWith('save')) return snapshot.matches('saving');
+  if (event.type.includes('retryDelay')) return snapshot.matches('waiting');
+  return event.type === 'sync.stop' && snapshot.can(event);
 }

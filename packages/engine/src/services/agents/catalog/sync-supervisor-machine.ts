@@ -1,293 +1,242 @@
-import { assign, sendTo, setup, spawnChild, stopChild, stateIn } from 'xstate';
-import { catalogSyncMachine } from './catalog-sync-machine';
+import type { Database } from '@repo/db';
+import { assign, fromPromise, setup, type ActorRefFrom } from 'xstate';
 import {
-  catalogSqlActors,
-  readPendingSyncIds,
-  type SyncSupervisorInput,
-  type SyncSupervisorContext,
-  type SyncSupervisorEvent,
-} from './sync-supervisor-sql';
-export type { SyncSupervisorInput } from './sync-supervisor-sql';
-const finishJoin = ['stopJoins', 'dropJoinBatch'] as const;
-const finishWorker = ['rememberAbandonedWorker', 'stopWorker'] as const;
+  writeDatabaseJobAndWaitForCommit,
+  type WriterCommit,
+  type WriterJob,
+  type writerMachine,
+} from '../../feed';
+import { catalogSyncKey, readCatalogSyncJob } from './catalog-sql';
+import {
+  catalogSyncActor,
+  type CatalogSyncInput,
+  type CatalogSyncResult,
+} from './catalog-sync-machine';
+
+export interface SyncSupervisorInput extends Omit<
+  CatalogSyncInput,
+  'source' | 'scope' | 'rejectedValues'
+> {
+  database: Database;
+  writer: ActorRefFrom<typeof writerMachine>;
+}
+interface SyncContext extends SyncSupervisorInput {
+  admissions: WriterCommit[];
+  result: CatalogSyncResult;
+  attempts: number;
+}
+type SyncEvent =
+  | { type: 'sync.request'; admitted: WriterCommit }
+  | { type: 'sync.stop' };
+
+const syncRequestEvent = 'sync.request';
+const maximumAttempts = 3;
+const initialRetryDelay = 1000;
+function canRetrySync(context: SyncContext): boolean {
+  if ('job' in context.result) return false;
+  return context.result.retryable && context.attempts < maximumAttempts;
+}
+function resultWrite(context: SyncContext): WriterJob {
+  const result = context.result;
+  if ('job' in result) return result.job;
+  return {
+    type: 'syncJobUpdate',
+    ...catalogSyncKey,
+    set: {
+      status: canRetrySync(context) ? 'pending' : 'failed',
+      completedAt: context.now(),
+      error: result.error,
+      rejectedValues: result.rejectedValues,
+    },
+  };
+}
+
 export const syncSupervisorMachine = setup({
   types: {
     input: {} as SyncSupervisorInput,
-    context: {} as SyncSupervisorContext,
-    events: {} as SyncSupervisorEvent,
+    context: {} as SyncContext,
+    events: {} as SyncEvent,
   },
   actors: {
-    catalogWorker: catalogSyncMachine,
-    ...catalogSqlActors,
+    synchronize: catalogSyncActor,
+    schedule: fromPromise<void, SyncContext>(async ({ input }) =>
+      writeDatabaseJobAndWaitForCommit(
+        input.writer,
+        {
+          type: 'syncJobUpdate',
+          ...catalogSyncKey,
+          set: { status: 'pending', requestedAt: input.now() },
+        },
+        true,
+      ),
+    ),
+    start: fromPromise<void, SyncContext>(async ({ input }) =>
+      writeDatabaseJobAndWaitForCommit(
+        input.writer,
+        {
+          type: 'syncJobUpdate',
+          ...catalogSyncKey,
+          set: { status: 'running' },
+        },
+        true,
+      ),
+    ),
+    save: fromPromise<void, SyncContext>(async ({ input }) =>
+      writeDatabaseJobAndWaitForCommit(input.writer, resultWrite(input), true),
+    ),
   },
   guards: {
-    joinsFinished: ({ context }) =>
-      context.joinBatchSize === 0 && context.joinRequestIds.length === 0,
-    moreJoins: ({ context }) =>
-      context.joinRequestIds.length > context.joinBatchSize,
-    noJoinRunning: ({ context }) => context.joinBatchSize === 0,
-    unresolvedSyncs: ({ context }) => context.abandonedSyncIds.length > 0,
-    queuedJoins: ({ context }) => context.joinRequestIds.length > 0,
-    hasExplicitRequest: ({ context }) => context.syncId !== '',
-    startupShutdownRequested: stateIn({ recovering: 'shutdownRequested' }),
-    cleanupShutdownRequested: stateIn({
-      cleaningAbandoned: 'shutdownRequested',
-    }),
+    interrupted: ({ context }) =>
+      ['pending', 'running'].includes(
+        readCatalogSyncJob(context)?.status ?? 'idle',
+      ),
+    retryable: ({ context }) => canRetrySync(context),
   },
   actions: {
-    rejectWaitingSqlObservers: sendTo(
-      ({ context }) => context.writer,
-      ({ context, event }) => ({
-        type: 'writer.catalogStorageFailed',
-        requestIds: [context.syncId, ...context.joinRequestIds],
-        error:
-          'error' in event
-            ? event.error
-            : new Error('Catalog storage is unavailable'),
-      }),
-    ),
-    rememberRequest: assign(({ event }) =>
-      event.type === 'catalog.requested'
-        ? { syncId: event.requestId, joinRequestIds: [] }
-        : {},
-    ),
-    enqueueJoin: assign(({ context, event }) =>
-      event.type === 'catalog.requested'
-        ? { joinRequestIds: [...context.joinRequestIds, event.requestId] }
-        : {},
-    ),
-    takeJoinBatch: assign({
-      joinBatchSize: ({ context }) => context.joinRequestIds.length,
+    enqueueAdmission: assign({
+      admissions: ({ context, event }) =>
+        event.type === syncRequestEvent
+          ? [...context.admissions, event.admitted]
+          : context.admissions,
     }),
-    startJoins: spawnChild('joinRequests', {
-      id: 'catalogJoins',
-      input: ({ context }) => ({
-        ...context,
-        requestIds: context.joinRequestIds.slice(0, context.joinBatchSize),
-      }),
-    }),
-    stopJoins: stopChild('catalogJoins'),
-    dropJoinBatch: assign({
-      joinRequestIds: ({ context }) =>
-        context.joinRequestIds.slice(context.joinBatchSize),
-      joinBatchSize: 0,
-    }),
-    rememberAbandonedJoin: assign({
-      abandonedSyncIds: ({ context }) => [
-        ...context.abandonedSyncIds,
-        ...context.joinRequestIds.slice(0, context.joinBatchSize),
-      ],
-    }),
-    startWorker: spawnChild('catalogWorker', {
-      id: 'catalogWorker',
-      input: ({ context }) => context,
-    }),
-    stopWorker: stopChild('catalogWorker'),
-    cancelWorkerFetch: sendTo('catalogWorker', { type: 'catalog.cancel' }),
-    rememberAbandonedWorker: assign(({ context, event }) =>
-      event.type === 'xstate.done.actor.catalogWorker' && event.output.abandoned
-        ? { abandonedSyncIds: [...context.abandonedSyncIds, context.syncId] }
-        : {},
-    ),
-    rememberPendingSqlGroups: assign({
-      abandonedSyncIds: ({ context }) => readPendingSyncIds(context.database),
-    }),
-    abandonWaitingRequests: assign({
-      abandonedSyncIds: ({ context }) => [
-        ...context.abandonedSyncIds,
-        context.syncId,
-        ...context.joinRequestIds,
-      ],
-      joinRequestIds: [],
-      joinBatchSize: 0,
-    }),
-    clearAbandonedSyncs: assign({ abandonedSyncIds: [] }),
+    acceptRequest: ({ event }) => {
+      if (event.type === syncRequestEvent) event.admitted.resolve();
+    },
+    acceptAdmissions: ({ context }) => {
+      for (const admission of context.admissions) admission.resolve();
+    },
+    clearAdmissions: assign({ admissions: [] }),
+    rejectAdmissions: ({ context, event }) => {
+      const error =
+        'error' in event ? event.error : new Error('Sync supervisor stopped');
+      for (const admission of context.admissions) admission.reject(error);
+    },
+  },
+  delays: {
+    fetchLimit: 20_000,
+    retryDelay: ({ context }) =>
+      initialRetryDelay * 2 ** (context.attempts - 1),
   },
 }).createMachine({
   id: 'syncSupervisor',
   context: ({ input }) => ({
     ...input,
-    syncId: '',
-    joinRequestIds: [],
-    joinBatchSize: 0,
-    abandonedSyncIds: [],
+    admissions: [],
+    result: { error: '', rejectedValues: 0, retryable: false },
+    attempts: 0,
   }),
-  initial: 'recovering',
+  initial: 'checking',
   on: {
-    'xstate.done.actor.catalogJoins': [
-      {
-        guard: 'moreJoins',
-        actions: [...finishJoin, 'takeJoinBatch', 'startJoins'],
-      },
-      { actions: finishJoin },
-    ],
-    'xstate.error.actor.catalogJoins': [
-      {
-        guard: 'moreJoins',
-        actions: [
-          'rememberAbandonedJoin',
-          ...finishJoin,
-          'takeJoinBatch',
-          'startJoins',
-        ],
-      },
-      { actions: ['rememberAbandonedJoin', ...finishJoin] },
-    ],
+    'sync.stop': {
+      target: '.stopped',
+      actions: ['rejectAdmissions', 'clearAdmissions'],
+    },
   },
   states: {
-    recovering: {
-      initial: 'continuing',
-      states: {
-        continuing: { on: { 'catalog.shutdown': 'shutdownRequested' } },
-        shutdownRequested: {},
-      },
-      on: {
-        'catalog.requested': [
-          { guard: 'hasExplicitRequest', actions: 'enqueueJoin' },
-          { actions: 'rememberRequest' },
-        ],
-      },
-      invoke: {
-        id: 'recoverCatalogRequests',
-        src: 'recoverCatalogSql',
-        input: ({ context }) => ({
-          ...context,
-          syncIds: null,
-          waitingRequestIds: [],
-        }),
-        onDone: [
-          { guard: 'startupShutdownRequested', target: 'interruptingShutdown' },
-          {
-            guard: 'queuedJoins',
-            target: 'syncing',
-            actions: ['startWorker', 'takeJoinBatch', 'startJoins'],
-          },
-          {
-            guard: 'hasExplicitRequest',
-            target: 'syncing',
-            actions: 'startWorker',
-          },
-          { target: 'idle' },
-        ],
-        onError: [
-          { guard: 'startupShutdownRequested', target: 'interruptionFailed' },
-          { target: 'idle', actions: 'rememberPendingSqlGroups' },
-        ],
-      },
+    checking: {
+      always: [
+        { guard: 'interrupted', target: 'starting' },
+        { target: 'idle' },
+      ],
     },
     idle: {
       on: {
-        'catalog.requested': [
-          {
-            guard: 'unresolvedSyncs',
-            target: 'cleaningAbandoned',
-            actions: 'rememberRequest',
-          },
-          { target: 'syncing', actions: ['rememberRequest', 'startWorker'] },
-        ],
-        'catalog.shutdown': 'interruptingShutdown',
+        'sync.request': {
+          target: 'scheduling',
+          actions: ['enqueueAdmission', assign({ attempts: 0 })],
+        },
       },
     },
-    cleaningAbandoned: {
-      initial: 'continuing',
-      states: {
-        continuing: { on: { 'catalog.shutdown': 'shutdownRequested' } },
-        shutdownRequested: {},
-      },
-      on: { 'catalog.requested': { actions: 'enqueueJoin' } },
+    scheduling: {
+      on: { 'sync.request': { actions: 'enqueueAdmission' } },
       invoke: {
-        id: 'cleanAbandonedRequests',
-        src: 'interruptRequests',
-        input: ({ context }) => ({
-          ...context,
-          syncIds: context.abandonedSyncIds,
-          waitingRequestIds: [context.syncId, ...context.joinRequestIds],
-        }),
-        onDone: [
-          {
-            guard: 'cleanupShutdownRequested',
-            target: 'interruptingShutdown',
-            actions: 'clearAbandonedSyncs',
-          },
-          {
-            guard: 'queuedJoins',
-            target: 'syncing',
-            actions: [
-              'clearAbandonedSyncs',
-              'startWorker',
-              'takeJoinBatch',
-              'startJoins',
-            ],
-          },
-          {
-            target: 'syncing',
-            actions: ['clearAbandonedSyncs', 'startWorker'],
-          },
-        ],
-        onError: [
-          { guard: 'cleanupShutdownRequested', target: 'interruptionFailed' },
-          {
-            target: 'idle',
-            actions: ['rejectWaitingSqlObservers', 'abandonWaitingRequests'],
-          },
-        ],
+        id: 'schedule',
+        src: 'schedule',
+        input: ({ context }) => context,
+        onDone: {
+          target: 'starting',
+          actions: ['acceptAdmissions', 'clearAdmissions'],
+        },
+        onError: {
+          target: 'idle',
+          actions: ['rejectAdmissions', 'clearAdmissions'],
+        },
+      },
+    },
+    starting: {
+      on: { 'sync.request': { actions: 'acceptRequest' } },
+      invoke: {
+        id: 'start',
+        src: 'start',
+        input: ({ context }) => context,
+        onDone: 'syncing',
+        onError: 'idle',
       },
     },
     syncing: {
-      on: {
-        'catalog.requested': [
-          {
-            guard: 'noJoinRunning',
-            actions: ['enqueueJoin', 'takeJoinBatch', 'startJoins'],
-          },
-          { actions: 'enqueueJoin' },
-        ],
-        'catalog.shutdown': {
-          target: 'stoppingWorker',
-          actions: 'cancelWorkerFetch',
-        },
-        'xstate.done.actor.catalogWorker': {
-          target: 'finishing',
-          actions: finishWorker,
+      after: {
+        fetchLimit: {
+          target: 'saving',
+          actions: assign({
+            result: ({ context }) => ({
+              error: 'Registry did not answer within 20 seconds',
+              rejectedValues: readCatalogSyncJob(context)?.rejectedValues ?? 0,
+              retryable: true,
+            }),
+          }),
         },
       },
-    },
-    finishing: {
-      always: { guard: 'joinsFinished', target: 'idle' },
-      on: {
-        'catalog.requested': { actions: 'enqueueJoin' },
-        'catalog.shutdown': 'drainingJoins',
-      },
-    },
-    stoppingWorker: {
-      on: {
-        'catalog.requested': {},
-        'xstate.done.actor.catalogWorker': {
-          target: 'drainingJoins',
-          actions: finishWorker,
-        },
-      },
-    },
-    drainingJoins: {
-      always: { guard: 'joinsFinished', target: 'interruptingShutdown' },
-      on: { 'catalog.requested': {}, 'catalog.shutdown': {} },
-    },
-    interruptingShutdown: {
+      entry: assign({ attempts: ({ context }) => context.attempts + 1 }),
+      on: { 'sync.request': { actions: 'acceptRequest' } },
       invoke: {
-        id: 'interruptPendingRequests',
-        src: 'interruptRequests',
+        id: 'synchronize',
+        src: 'synchronize',
         input: ({ context }) => ({
           ...context,
-          syncIds: null,
-          waitingRequestIds: [],
-          finalShutdownAttempt: true,
+          ...catalogSyncKey,
+          rejectedValues: readCatalogSyncJob(context)?.rejectedValues ?? 0,
         }),
-        onDone: 'stopped',
-        onError: 'interruptionFailed',
+        onDone: {
+          target: 'saving',
+          actions: assign({ result: ({ event }) => event.output }),
+        },
+        onError: {
+          target: 'saving',
+          actions: assign({
+            result: ({ event }) => ({
+              error: String(event.error),
+              rejectedValues: 0,
+              retryable: false,
+            }),
+          }),
+        },
       },
-      on: { 'catalog.requested': {}, 'catalog.shutdown': {} },
     },
-    interruptionFailed: { type: 'final' },
+    saving: {
+      on: { 'sync.request': { actions: 'acceptRequest' } },
+      invoke: {
+        id: 'save',
+        src: 'save',
+        input: ({ context }) => context,
+        onDone: [{ guard: 'retryable', target: 'waiting' }, { target: 'idle' }],
+        onError: 'idle',
+      },
+    },
+    waiting: {
+      on: { 'sync.request': { actions: 'acceptRequest' } },
+      after: { retryDelay: 'starting' },
+    },
     stopped: { type: 'final' },
   },
 });
+
+export async function requestAgentCatalogSync(
+  supervisor: ActorRefFrom<typeof syncSupervisorMachine>,
+): Promise<{ accepted: true }> {
+  if (supervisor.getSnapshot().status !== 'active')
+    throw new Error('Sync supervisor is not available');
+  const admitted = Promise.withResolvers<void>();
+  supervisor.send({ type: syncRequestEvent, admitted });
+  await admitted.promise;
+  return { accepted: true };
+}

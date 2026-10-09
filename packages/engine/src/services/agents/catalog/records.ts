@@ -7,10 +7,7 @@ import {
 import type { Database } from '@repo/db';
 import { agents } from '@repo/db/schema';
 import { and, eq, sql } from 'drizzle-orm';
-import type {
-  AgentCatalogSearchProjectionJob,
-  AgentCatalogWriteRow,
-} from '../../feed';
+import type { AgentCatalogWriteRow } from '../../feed';
 import { createRegistryReader } from './registry-reader';
 
 function createCatalogAgentRecord(
@@ -70,35 +67,6 @@ function createCatalogOwnedFields(
     catalogSyncedAt: syncedAt,
     catalogSearchText: normalizeAgentSearchText(agent),
   };
-}
-
-export function prepareSavedCatalogSearchProjection(
-  database: Database,
-  reader: ReturnType<typeof createRegistryReader>,
-): AgentCatalogSearchProjectionJob {
-  const predicate = and(
-    eq(agents.catalogPresent, true),
-    eq(agents.catalogSearchText, ''),
-  );
-  const rows = database.select().from(agents).where(predicate).all();
-  return {
-    type: 'agentCatalogSearchProjection',
-    rows: rows.flatMap((row) => prepareSavedAgentSearchRow(row, reader)),
-  };
-}
-
-function prepareSavedAgentSearchRow(
-  row: AgentRecord,
-  reader: ReturnType<typeof createRegistryReader>,
-): AgentCatalogSearchProjectionJob['rows'] {
-  try {
-    const { agent } = hydrateCatalogAgentRecord(row, reader);
-    const catalogSearchText = normalizeAgentSearchText(agent);
-    const expectedRegistryMetadata = row.registryMetadata ?? '';
-    return [{ id: row.id, expectedRegistryMetadata, catalogSearchText }];
-  } catch {
-    return [];
-  }
 }
 
 function normalizeAgentSearchText(agent: ACPAgent): string {

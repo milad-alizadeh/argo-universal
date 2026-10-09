@@ -1,4 +1,4 @@
-import { agentCatalogSyncRequest } from '@repo/db/schema';
+import { syncJobs } from '@repo/db/schema';
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import { afterAll, expect, it } from 'vitest';
 import {
@@ -8,24 +8,30 @@ import {
 } from '#mocks/catalog-supervisor-model';
 import { openTestDatabase } from '#mocks/database';
 
-const modeled = openTestDatabase();
-modeled.database
-  .insert(agentCatalogSyncRequest)
+const idle = openTestDatabase();
+const interrupted = openTestDatabase();
+interrupted.database
+  .insert(syncJobs)
   .values({
-    requestId: 'unfinished',
-    syncId: 'unfinished',
-    status: 'pending',
+    source: 'agent-catalog',
+    scope: 'default',
+    status: 'running',
     requestedAt: 1,
   })
   .run();
-afterAll(modeled.remove);
-const model = createCatalogSupervisorModel(modeled.database);
+afterAll((): void => {
+  idle.remove();
+  interrupted.remove();
+});
+const models = [idle, interrupted].map(({ database }) =>
+  createCatalogSupervisorModel(database),
+);
 
-it('structurally walks every sync supervisor transition including SQL failure and shutdown branches', (): void => {
+it('structurally walks every sync supervisor transition including retry, SQL failure and shutdown branches', (): void => {
   expect(
     unwalkedTransitions({
-      models: [model],
-      paths: model.paths,
+      models,
+      paths: models.flatMap(({ paths }) => paths),
       stateKey: serializeCatalogSupervisorState,
       eventKey: serializeCatalogSupervisorEvent,
     }),

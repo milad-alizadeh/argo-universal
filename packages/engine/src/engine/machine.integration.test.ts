@@ -22,7 +22,6 @@ import {
   fromPromise,
   type SnapshotFrom,
 } from 'xstate';
-import type { ActorRefFrom } from 'xstate';
 import {
   type DirectedGraphNode,
   type EventExecutor,
@@ -33,8 +32,7 @@ import {
   getAdjacencyMap,
   toDirectedGraph,
 } from 'xstate/graph';
-import type { AcpResources, syncSupervisorMachine } from '../services/agents';
-type SyncWaitInput = { supervisor: ActorRefFrom<typeof syncSupervisorMachine> };
+import type { AcpResources } from '../services/agents';
 import type { RegistryActorRef } from '../services/sessions';
 import type { HttpServer, HttpServerOptions } from './http-server';
 import type { EngineMessage } from './ipc';
@@ -79,8 +77,6 @@ let closeResourceCalls: PendingCall<
   { resources: AcpResources; sessions: RegistryActorRef | undefined },
   void
 >[];
-let syncRecoveryCalls: PendingCall<SyncWaitInput, void>[];
-let syncDrainCalls: PendingCall<SyncWaitInput, void>[];
 let shutdownCommands: string[];
 let logs: string[];
 let processSignals: { send: (event: AnyEventObject) => void; live: boolean };
@@ -136,8 +132,6 @@ const machineWithExternalMocks = engineMachine.provide({
 const machine = machineWithExternalMocks.provide({
   actors: {
     closeAcpResources: createPromiseMock(() => closeResourceCalls),
-    awaitSyncRecovery: createPromiseMock(() => syncRecoveryCalls),
-    awaitSyncDrain: createPromiseMock(() => syncDrainCalls),
   },
   actions: {
     stopSessions: (): number => shutdownCommands.push(stopAllSessionsEvent),
@@ -175,22 +169,6 @@ const writerFailure = {
 } satisfies EventFromLogic<typeof machine> &
   ErrorActorEvent<Error, 'databaseWriter'>;
 const fixtures = [
-  { type: 'catalog.requestsCommitted', requestIds: [] },
-  {
-    type: 'xstate.done.actor.awaitSyncRecovery',
-    actorId: 'awaitSyncRecovery',
-    output: undefined,
-  },
-  {
-    type: 'xstate.done.actor.awaitSyncDrain',
-    actorId: 'awaitSyncDrain',
-    output: undefined,
-  },
-  {
-    type: 'xstate.error.actor.awaitSyncDrain',
-    actorId: 'awaitSyncDrain',
-    error: new Error('Catalog interruption could not commit'),
-  },
   {
     type: 'xstate.done.actor.openDatabase',
     actorId: 'openDatabase',
@@ -272,11 +250,6 @@ const canGraphEvent = (
   event: EngineEvent,
 ): boolean => {
   switch (event.type) {
-    case 'xstate.done.actor.awaitSyncRecovery':
-      return snapshot.matches({ live: 'preparingSync' });
-    case 'xstate.done.actor.awaitSyncDrain':
-    case 'xstate.error.actor.awaitSyncDrain':
-      return snapshot.matches({ live: { stopping: 'drainingSync' } });
     case 'xstate.done.actor.openDatabase':
     case 'xstate.error.actor.openDatabase':
       return snapshot.matches('openingDatabase');
@@ -336,19 +309,6 @@ const settle = async (settleCall: () => void): Promise<void> => {
 };
 
 const executors: Record<string, EventExecutor<EngineSnapshot, EngineEvent>> = {
-  'catalog.requestsCommitted': ({ event }): void => {
-    if (event.type === 'catalog.requestsCommitted') engine.send(event);
-  },
-  'xstate.done.actor.awaitSyncRecovery': (): Promise<void> =>
-    settle(() => latest(syncRecoveryCalls).resolve()),
-  'xstate.done.actor.awaitSyncDrain': (): Promise<void> =>
-    settle(() => latest(syncDrainCalls).resolve()),
-  'xstate.error.actor.awaitSyncDrain': (): Promise<void> =>
-    settle(() =>
-      latest(syncDrainCalls).reject(
-        new Error('Catalog interruption could not commit'),
-      ),
-    ),
   'xstate.init': (): void => {
     engine = createActor(machine, { input }).start();
   },
@@ -443,10 +403,6 @@ const states: Record<string, (snapshot: EngineSnapshot) => void> = {
     expect(messages).toEqual([]);
     expect(databaseCloses).toBe(0);
   },
-  'live.preparingSync': (snapshot): void => expectModelState(snapshot),
-  'live.stopping.drainingSync': (snapshot): void => expectModelState(snapshot),
-  'live.stopping.retainingSyncCleanup': (snapshot): void =>
-    expectModelState(snapshot),
   'live.listening': (snapshot): void => {
     expectModelState(snapshot);
     const sessions = startHttpServerCalls[0]?.input.sessions;
@@ -468,6 +424,7 @@ const states: Record<string, (snapshot: EngineSnapshot) => void> = {
           database: mockDatabase,
           sessions: expect.anything(),
           databaseWriter: expect.anything(),
+          syncSupervisor: expect.anything(),
           commandAdmission: expect.any(AbortController),
         },
       }),
@@ -545,8 +502,6 @@ beforeEach((): void => {
   startHttpServerCalls = [];
   closeHttpServerCalls = [];
   closeResourceCalls = [];
-  syncRecoveryCalls = [];
-  syncDrainCalls = [];
   shutdownCommands = [];
   logs = [];
   messages = [];
@@ -563,8 +518,6 @@ const startRunningEngine = async (logic = machine): Promise<void> => {
   engine = createActor(logic, { input }).start();
   await settle((): void => latest(openDatabaseCalls).resolve(mockDatabase));
   await settle((): void => latest(recoveryCalls).resolve());
-  if (logic === machine)
-    await settle(() => latest(syncRecoveryCalls).resolve());
   await settle((): void =>
     latest(startHttpServerCalls).resolve(mockHttpServer),
   );
@@ -590,7 +543,6 @@ it('closes Agent resources before draining the writer when Sessions exceed their
   expect(logs).toContain('Session stop limit reached; closing Agent resources');
   engine.system.get('sessions').send({ type: stopAllSessionsEvent });
   await settle(() => latest(closeResourceCalls).resolve());
-  await settle(() => latest(syncDrainCalls).resolve());
   expect(
     engine.getSnapshot().matches({ live: { stopping: 'drainingWriter' } }),
   ).toBe(true);

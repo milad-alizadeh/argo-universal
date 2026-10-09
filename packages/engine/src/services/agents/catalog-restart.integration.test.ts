@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { openDatabase } from '@repo/db';
-import { agents, agentCatalogSyncRequest } from '@repo/db/schema';
+import { agents, syncJobs } from '@repo/db/schema';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import { openTestDatabase } from '#mocks/database';
@@ -16,6 +16,9 @@ it('hydrates exact upstream metadata after a disk database restart while offline
   const history = (await first.caller.session.list({ archived: false }))
     .sessions;
   await first.caller.agents.syncCatalog();
+  await expect
+    .poll(async () => (await first.caller.agents.catalog()).syncStatus)
+    .toBe('idle');
   const accepted = await first.caller.agents.catalog();
   await first.stop();
   stored.database.$client.close();
@@ -26,6 +29,11 @@ it('hydrates exact upstream metadata after a disk database restart while offline
     fetchAgents: fetchOfflineAgents,
   });
   await restarted.caller.agents.syncCatalog();
+  await expect
+    .poll(async () => (await restarted.caller.agents.catalog()).syncStatus, {
+      timeout: 4500,
+    })
+    .toBe('failed');
   const catalog = await restarted.caller.agents.catalog();
   expect(catalog).toMatchObject({
     status: 'stale',
@@ -50,45 +58,34 @@ const fetchOfflineAgents = async (): Promise<never> => {
   throw new Error('Registry is offline');
 };
 
-it('interrupts unfinished durable Refresh requests during startup without fetching', async () => {
-  const stored = openTestDatabase();
-  onTestFinished(stored.remove);
-  stored.database
-    .insert(agentCatalogSyncRequest)
-    .values([
-      {
-        requestId: 'first',
-        syncId: 'first',
-        status: 'pending',
+it.each(['pending', 'running'] as const)(
+  'resumes a %s catalog job after Engine startup',
+  async (status) => {
+    const stored = openTestDatabase();
+    onTestFinished(stored.remove);
+    stored.database
+      .insert(syncJobs)
+      .values({
+        source: 'agent-catalog',
+        scope: 'default',
+        status,
         requestedAt: 1,
-      },
-      {
-        requestId: 'joined',
-        syncId: 'first',
-        status: 'pending',
-        requestedAt: 1,
-      },
-    ])
-    .run();
-  const fetchAgents = vi.fn<() => Promise<unknown>>(
-    async () => publishedRegistry,
-  );
-  const host = await startEngineTestHost({
-    database: stored.database,
-    fetchAgents,
-  });
-  expect(fetchAgents).not.toHaveBeenCalled();
-  expect(
-    host.database.$client
-      .prepare(
-        'SELECT status FROM agent_catalog_sync_request ORDER BY sequence',
-      )
-      .all(),
-  ).toEqual([{ status: 'interrupted' }, { status: 'interrupted' }]);
-  expect(await host.caller.agents.catalog()).toMatchObject({
-    status: 'unavailable',
-    error: 'Registry sync was interrupted',
-  });
-  expect(await host.caller.agents.syncCatalog()).toMatchObject({ error: null });
-  expect(fetchAgents).toHaveBeenCalledTimes(1);
-});
+      })
+      .run();
+    const fetchAgents = vi.fn<() => Promise<unknown>>(
+      async () => publishedRegistry,
+    );
+    const host = await startEngineTestHost({
+      database: stored.database,
+      fetchAgents,
+    });
+    await expect
+      .poll(async () => (await host.caller.agents.catalog()).syncStatus)
+      .toBe('idle');
+    expect(fetchAgents).toHaveBeenCalledTimes(1);
+    expect((await host.caller.agents.catalog()).agents).toHaveLength(
+      publishedRegistry.agents.length,
+    );
+    expect(host.database.select().from(syncJobs).all()).toHaveLength(1);
+  },
+);

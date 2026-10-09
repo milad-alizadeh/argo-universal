@@ -31,16 +31,9 @@ function subscribeCatalogCommitNotifications(
   input: CatalogWatchInput,
   events: CatalogChangeEvents,
 ): { unsubscribe(): void } {
-  return input.writer.on('catalog.sqlCommitted', ({ commits }) => {
-    if (
-      !commits.some(
-        ({ kind }) =>
-          kind === 'agentCatalogReplace' || kind === 'catalogSyncFailure',
-      )
-    )
-      return;
-    publishCommittedCatalogChanges(input, events);
-  });
+  return input.writer.on('catalog.sqlCommitted', () =>
+    publishCommittedCatalogChanges(input, events),
+  );
 }
 
 function publishCommittedCatalogChanges(

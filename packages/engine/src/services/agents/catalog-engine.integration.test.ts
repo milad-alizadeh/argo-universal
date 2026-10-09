@@ -26,6 +26,9 @@ it('serves its SQLite last-good catalog over HTTP after the actual Engine restar
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
   });
+  await expect
+    .poll(async () => (await first.caller.agents.catalog()).syncStatus)
+    .toBe('idle');
   const accepted = await fetch(`${first.url}/trpc/agents.catalog`);
   expect(accepted.status).toBe(200);
   expect(await accepted.json()).toMatchObject({
@@ -51,6 +54,11 @@ it('serves its SQLite last-good catalog over HTTP after the actual Engine restar
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
   });
+  await expect
+    .poll(async () => (await restarted.caller.agents.catalog()).syncStatus, {
+      timeout: 4500,
+    })
+    .toBe('failed');
   const stale = await fetch(`${restarted.url}/trpc/agents.catalog`);
   expect(stale.status).toBe(200);
   expect(await stale.json()).toMatchObject({

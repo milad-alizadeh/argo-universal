@@ -3,6 +3,7 @@ import type { Database } from '@repo/db';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { WebSocketServer } from 'ws';
 import type { ActorRefFrom } from 'xstate';
+import type { syncSupervisorMachine } from '../services/agents';
 import { blobsFolderIn } from '../services/blob';
 import type { writerMachine } from '../services/feed';
 import type { RegistryActorRef } from '../services/sessions';
@@ -20,6 +21,7 @@ export interface HttpServerOptions {
   database: Database;
   sessions: RegistryActorRef;
   databaseWriter: ActorRefFrom<typeof writerMachine>;
+  syncSupervisor: ActorRefFrom<typeof syncSupervisorMachine>;
   platform?: string;
   commandAdmission?: AbortController;
 }

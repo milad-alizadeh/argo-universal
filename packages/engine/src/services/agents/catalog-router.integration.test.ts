@@ -22,6 +22,11 @@ it('browses upstream metadata through Agents without opening a conversation', as
   });
   const startupProbes = probe.mock.calls.length;
   await caller.agents.syncCatalog();
+  await expect
+    .poll(async () => (await caller.agents.catalog()).syncStatus, {
+      timeout: 4500,
+    })
+    .not.toMatch(/pending|running/);
   const catalog = await caller.agents.catalog({ search: exampleSearch });
   expect(catalog).toMatchObject({
     status: 'fresh',
@@ -45,10 +50,20 @@ it.each(['offline', 'malformed'] as const)(
       .mockResolvedValueOnce(publishedRegistry);
     const { caller } = await startEngineTestHost({ fetchAgents });
     await caller.agents.syncCatalog();
+    await expect
+      .poll(async () => (await caller.agents.catalog()).syncStatus, {
+        timeout: 4500,
+      })
+      .not.toMatch(/pending|running/);
     if (failure === 'offline')
       fetchAgents.mockRejectedValue(new Error(offlineMessage));
     else fetchAgents.mockResolvedValue(malformedRegistry);
     await caller.agents.syncCatalog();
+    await expect
+      .poll(async () => (await caller.agents.catalog()).syncStatus, {
+        timeout: 4500,
+      })
+      .not.toMatch(/pending|running/);
     const refreshed = await caller.agents.catalog({
       search: exampleSearch,
     });
@@ -62,7 +77,7 @@ it.each(['offline', 'malformed'] as const)(
     expect(searched.agents.map(({ entry }) => entry.id)).toEqual([
       'python-agent',
     ]);
-    expect(fetchAgents).toHaveBeenCalledTimes(2);
+    expect(fetchAgents).toHaveBeenCalledTimes(failure === 'offline' ? 4 : 2);
   },
 );
 
@@ -71,6 +86,11 @@ it('shows the Server recipe rather than the App platform', async (): Promise<voi
     fetchAgents: async (): Promise<unknown> => publishedRegistry,
   });
   await caller.agents.syncCatalog();
+  await expect
+    .poll(async () => (await caller.agents.catalog()).syncStatus, {
+      timeout: 4500,
+    })
+    .not.toMatch(/pending|running/);
   const catalog = await caller.agents.catalog();
   const expectedByHost: Record<string, readonly string[]> = {
     'darwin:arm64': ['darwin-aarch64', 'binary', 'unsupported'],
@@ -98,6 +118,11 @@ it('reports malformed registry JSON once without a success-shaped empty catalog'
     fetchAgents: async (): Promise<unknown> => '{broken',
   });
   await caller.agents.syncCatalog();
+  await expect
+    .poll(async () => (await caller.agents.catalog()).syncStatus, {
+      timeout: 4500,
+    })
+    .not.toMatch(/pending|running/);
   expect(await caller.agents.catalog()).toMatchObject({
     status: 'unavailable',
     rejectedValues: 1,

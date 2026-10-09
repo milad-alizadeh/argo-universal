@@ -29,17 +29,9 @@ export type {
   AgentCatalogReplaceJob,
   AgentCatalogWriteRow,
 } from './writer-agent-catalog';
-export type {
-  CatalogSqlJob,
-  CatalogSqlCommit,
-  CatalogSyncRequestJob,
-  CatalogSyncJoinJob,
-  CatalogSyncFailureJob,
-} from './writer-catalog-sync';
+export type { CatalogSqlJob, SyncJobWrite } from './writer-catalog-sync';
 export { publishTurnContent } from './publication';
 export { readUnaddressedPlan } from './unaddressed-plan';
 export { databaseWriterId, findDatabaseWriter } from './writer-system';
 
 export { feedRouter } from './router';
-
-export type { AgentCatalogSearchProjectionJob } from './writer-catalog-search';

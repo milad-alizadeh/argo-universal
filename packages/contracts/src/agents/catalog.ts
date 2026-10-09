@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { agentColumns, agentCatalogSyncRequestColumns } from '../columns';
+import { agentColumns, syncJobsColumns } from '../columns';
 import type {
   ACPAgent,
   BinaryTarget,
@@ -9,11 +9,8 @@ import type {
 export type { ACPAgent, ACPAgentRegistry } from './upstream/registry.gen';
 export const AgentRecord = agentColumns;
 export type AgentRecord = z.infer<typeof AgentRecord>;
-export const AgentCatalogSyncRequestRecord =
-  agentCatalogSyncRequestColumns.extend({ changedIds: z.array(z.string()) });
-export type AgentCatalogSyncRequestRecord = z.infer<
-  typeof AgentCatalogSyncRequestRecord
->;
+export const SyncJobRecord = syncJobsColumns;
+export type SyncJobRecord = z.infer<typeof SyncJobRecord>;
 
 export const AgentsCatalogInput = z
   .object({
@@ -35,13 +32,12 @@ export interface AgentsCatalogOutput {
   }[];
   serverPlatform: string;
   status: 'fresh' | 'stale' | 'unavailable';
+  syncStatus: SyncJobRecord['status'];
   fetchedAt: AgentRecord['catalogSyncedAt'];
   error: string | null;
   rejectedValues: number;
 }
 
 export interface AgentsCatalogSyncOutput {
-  changedIds: AgentRecord['id'][];
-  error: string | null;
-  rejectedValues: number;
+  accepted: true;
 }
