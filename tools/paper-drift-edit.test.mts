@@ -70,7 +70,7 @@ it('reads the page and target ids agents pass to Paper writes', (): void => {
       updates: [{ nodeIds: ['a'], styles: { left: 0 } }],
     },
   });
-  expect(context ?? '').not.toContain('skipped');
+  expect(context ?? '').not.toContain('unrecognised');
 });
 
 it('ignores Paper tools that only read', (): void => {
