@@ -3,7 +3,7 @@ import {
   agentsList,
   projectsList,
   sessionRows,
-} from '@repo/api/mocks';
+} from '@repo/mocks/app';
 import { sessionListMocks } from './session-list-mock';
 import type { FixtureOutput } from './trpc-mock-link';
 import { type Fixtures, pending } from './trpc-mock-link';

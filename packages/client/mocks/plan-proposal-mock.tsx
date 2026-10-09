@@ -1,4 +1,4 @@
-import { recordedRequestMocks } from '@repo/api/mocks';
+import { recordedRequestMocks } from '@repo/mocks/app';
 import type * as React from 'react';
 import { View } from 'react-native';
 import {

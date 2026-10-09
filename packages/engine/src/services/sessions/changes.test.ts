@@ -1,9 +1,9 @@
-import { changesMocks, recordedFeedMocks } from '@repo/api/mocks';
 import {
   SessionSnapshot,
   SessionChangesOutput,
   SessionDiffOutput,
 } from '@repo/contracts';
+import { changesMocks, recordedFeedMocks } from '@repo/mocks/app';
 import { describe, expect, it } from 'vitest';
 
 describe.each(Object.entries(changesMocks))(

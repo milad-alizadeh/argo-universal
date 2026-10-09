@@ -1,4 +1,4 @@
-import type { RequestMock } from '@repo/api/mocks';
+import type { RequestMock } from '@repo/mocks/app';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';

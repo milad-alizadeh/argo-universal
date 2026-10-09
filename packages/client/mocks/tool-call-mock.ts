@@ -1,5 +1,5 @@
-import { recordedFeedMocks } from '@repo/api/mocks';
 import type { ToolCallUpdate } from '@repo/contracts';
+import { recordedFeedMocks } from '@repo/mocks/app';
 import type { FeedGroup } from '../src/feed/feed-view';
 import { toFeedView } from '../src/feed/to-feed-view';
 

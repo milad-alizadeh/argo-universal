@@ -1,10 +1,10 @@
+import type { SessionCounts } from '@repo/contracts';
 import {
   activeSessions,
   agentsList,
   archivedSessions,
   projectsList,
-} from '@repo/api/mocks';
-import type { SessionCounts } from '@repo/contracts';
+} from '@repo/mocks/app';
 import type { FixtureOutput } from './trpc-mock-link';
 import type { Fixtures } from './trpc-mock-link';
 

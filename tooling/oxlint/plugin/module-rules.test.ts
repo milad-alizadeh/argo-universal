@@ -36,20 +36,20 @@ ruleTester.run('cross-package-import', crossPackageImport, {
 ruleTester.run('api-type-only', apiTypeOnly, {
   valid: [
     {
-      code: "import type { AppRouter } from '@repo/api';",
+      code: "import type { RequestMock } from '@repo/mocks/app';",
       filename: clientFile,
     },
     {
-      code: "export type { AppRouter } from '@repo/api';",
+      code: "export type { RequestMock } from '@repo/mocks/app';",
       filename: clientFile,
     },
-    { code: "import { z } from '@repo/apis';", filename: clientFile },
+    { code: "import { z } from '@repo/mocksville';", filename: clientFile },
     {
-      code: "import type Router = require('@repo/api');",
+      code: "import type Router = require('@repo/mocks/app');",
       filename: clientFile,
     },
     {
-      code: "type Router = import('@repo/api').AppRouter;",
+      code: "type Router = import('@repo/mocks/app').RequestMock;",
       filename: clientFile,
     },
     {
@@ -78,7 +78,7 @@ ruleTester.run('api-type-only', apiTypeOnly, {
       errors: apiValue,
     },
     {
-      code: "import router = require('@repo/api');",
+      code: "import router = require('@repo/mocks/app');",
       filename: clientFile,
       errors: apiValue,
     },
@@ -118,22 +118,22 @@ ruleTester.run('api-type-only', apiTypeOnly, {
       errors: apiValue,
     },
     {
-      code: "import { appRouter } from '@repo/api';",
+      code: "import { recordedFeedMocks } from '@repo/mocks/app';",
       filename: clientFile,
       errors: apiValue,
     },
     {
-      code: "import { type AppRouter } from '@repo/api/router';",
+      code: "import { type RequestMock } from '@repo/mocks/app';",
       filename: clientFile,
       errors: apiValue,
     },
     {
-      code: "export * from '@repo/api';",
+      code: "export * from '@repo/mocks/app';",
       filename: clientFile,
       errors: apiValue,
     },
     {
-      code: "await import('@repo/api');",
+      code: "await import('@repo/mocks/app');",
       filename: clientFile,
       errors: apiValue,
     },

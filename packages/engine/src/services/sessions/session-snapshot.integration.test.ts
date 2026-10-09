@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
-import { sessionRows } from '@repo/api/mocks';
 import { permissionOptions } from '@repo/contracts';
 import { createMockAdapter } from '@repo/mocks/agent';
+import { sessionRows } from '@repo/mocks/app';
 import { afterAll, expect, it } from 'vitest';
 import { createActor, type StateValue } from 'xstate';
 import { openTestDatabase } from '#mocks/database';

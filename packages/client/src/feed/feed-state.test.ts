@@ -1,5 +1,5 @@
-import { recordedFeedMocks } from '@repo/api/mocks';
 import type { FeedPageOutput, FeedSubscribeOutput } from '@repo/contracts';
+import { recordedFeedMocks } from '@repo/mocks/app';
 import { describe, expect, it } from 'vitest';
 import {
   applySubscriptionEvent,

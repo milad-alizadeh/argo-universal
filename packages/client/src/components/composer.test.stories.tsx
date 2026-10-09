@@ -1,5 +1,5 @@
-import { newSessionCatalogs } from '@repo/api/mocks';
 import type { AgentInfo, SessionConfigSelectOption } from '@repo/contracts';
+import { newSessionCatalogs } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import type * as React from 'react';

@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     "./agent": "./agent/adapter.ts",
-    "./agent/*": "./agent/*.ts"
+    "./agent/*": "./agent/*.ts",
+    "./app": "./app/index.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
@@ -13,6 +14,7 @@
   },
   "dependencies": {
     "@repo/agents": "workspace:*",
+    "@repo/contracts": "workspace:*",
     "xstate": "catalog:",
     "zod": "catalog:"
   },

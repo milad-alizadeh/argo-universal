@@ -8,7 +8,6 @@ import {
   type VendorCommand,
   type VendorSession,
 } from '@repo/agents';
-import { sessionRows } from '@repo/api/mocks';
 import { permissionOptions } from '@repo/contracts';
 import {
   createMockAdapter,
@@ -16,6 +15,7 @@ import {
   type MockAgentStreamEvent,
   mockReady,
 } from '@repo/mocks/agent';
+import { sessionRows } from '@repo/mocks/app';
 import { afterEach, expect, it, onTestFinished, vi } from 'vitest';
 import { waitFor } from 'xstate';
 import { openTestDatabase } from '#mocks/database';

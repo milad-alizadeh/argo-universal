@@ -1,4 +1,3 @@
-import { recordedFeedMocks } from '@repo/api/mocks';
 import type {
   CommandAction,
   Notice,
@@ -7,6 +6,7 @@ import type {
   ToolCallUpdate,
 } from '@repo/contracts';
 import { permissionOptions } from '@repo/contracts';
+import { recordedFeedMocks } from '@repo/mocks/app';
 import { describe, expect, it } from 'vitest';
 import { toFeedView } from './to-feed-view';
 

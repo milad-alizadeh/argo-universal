@@ -1,9 +1,9 @@
-import { sessionTitleMocks } from '@repo/api/mocks';
 import {
   SessionInfo,
   SessionSnapshot,
   SessionRenameInput,
 } from '@repo/contracts';
+import { sessionTitleMocks } from '@repo/mocks/app';
 import { describe, expect, it } from 'vitest';
 
 describe('Session title contracts', (): void => {

@@ -1,4 +1,4 @@
-import { agentsList, sessionRows } from '@repo/api/mocks';
+import { agentsList, sessionRows } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { action } from 'storybook/actions';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';

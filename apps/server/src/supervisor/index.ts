@@ -1,6 +1,6 @@
 import { appendFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { resolveRuntimeDirectory } from '@repo/api/server-runtime';
+import { resolveRuntimeDirectory } from '@repo/engine/server-runtime';
 import { createActor } from 'xstate';
 import packageJson from '../../package.json' with { type: 'json' };
 import { supervisorMachine } from './machine';

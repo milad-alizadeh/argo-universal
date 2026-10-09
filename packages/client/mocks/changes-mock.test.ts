@@ -1,4 +1,4 @@
-import { changesMocks } from '@repo/api/mocks';
+import { changesMocks } from '@repo/mocks/app';
 import { describe, expect, it } from 'vitest';
 import { toFileDiffs } from '../src/feed/file-diff';
 import { createChangesMocks } from './changes-mock';

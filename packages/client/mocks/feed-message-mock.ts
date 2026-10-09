@@ -1,10 +1,10 @@
-import { type FeedMock, recordedFeedMocks } from '@repo/api/mocks';
 import type {
   AgentMessage,
   BlobRef,
   SessionUpdate,
   UserMessage,
 } from '@repo/contracts';
+import { type FeedMock, recordedFeedMocks } from '@repo/mocks/app';
 
 // The bytes of `mocks/agent/red-square.png`, the shared image attachment mock.
 export const redSquareDataUrl =

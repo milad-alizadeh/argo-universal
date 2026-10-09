@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { resolveRuntimeDirectory } from '@repo/api/server-runtime';
 import { engineMachine } from '@repo/engine/machine';
+import { resolveRuntimeDirectory } from '@repo/engine/server-runtime';
 import { createActor } from 'xstate';
 import { z } from 'zod';
 import packageJson from '../../package.json' with { type: 'json' };

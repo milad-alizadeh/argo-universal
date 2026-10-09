@@ -1,5 +1,5 @@
-import { type RequestMock, recordedRequestMocks } from '@repo/api/mocks';
 import type { PendingElicitation } from '@repo/contracts';
+import { type RequestMock, recordedRequestMocks } from '@repo/mocks/app';
 import type {
   ElicitationFormProps,
   ElicitationValues,

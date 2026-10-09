@@ -1,8 +1,9 @@
 {
   "extends": "@repo/typescript/node.json",
-  // Mock CLIs run under plain `node`, whose type stripping needs `.ts` in relative imports.
   "compilerOptions": {
-    "allowImportingTsExtensions": true
+    "allowImportingTsExtensions": true,
+    "exactOptionalPropertyTypes": true,
+    "lib": ["es2025", "DOM"]
   },
-  "include": ["agent", "cli"]
+  "include": ["agent", "app"]
 }
