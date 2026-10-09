@@ -9,6 +9,7 @@ import {
   setup,
 } from 'xstate';
 import { agentProbeId, agentProbeMachine } from '../agents';
+import type { AcpResources, ResolveAgentLaunch } from '../agents';
 import { createRegistrySessionInput } from './registry-session-input';
 import type { SessionCreationInput } from './session-data';
 import { type SessionActorRef, sessionMachine } from './session-machine';
@@ -23,6 +24,8 @@ export interface RegistryInput {
   now: () => number;
   createId: () => string;
   adapters?: readonly AgentAdapter[];
+  acpResources?: AcpResources;
+  resolveAgentLaunch?: ResolveAgentLaunch;
 }
 
 interface RegistryContext extends RegistryInput {

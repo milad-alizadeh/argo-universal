@@ -33,14 +33,21 @@ import {
   sendTo,
   setup,
   stateIn,
+  or,
 } from 'xstate';
 import { countRejection } from '../../lib/count-rejections';
 import { findAgentProbe } from '../agents';
+import type { AcpSessionLease } from '../agents';
 import { findDatabaseWriter } from '../feed';
 import { userMessageChange } from '../feed';
 import { feedMachine } from '../feed';
 import { readWrittenRow } from '../feed';
 import type { writerMachine } from '../feed';
+import {
+  AcpSessionLifetime,
+  type AcpLifetimeEvent,
+  type AcpSessionDependencies,
+} from './conversation/acp-lifetime';
 import {
   createSessionCheckout,
   discardSessionCheckout,
@@ -53,6 +60,7 @@ import {
 
 const nativeFailedEvent = 'native.failed';
 const rejectedMessageEvent = 'agent.messageRejected';
+const discardingSessionTarget = '#session.discarding';
 const drainingNativeTarget = '#session.open.draining';
 const answerPermissionCommand = 'agent.answerPermission';
 const answerElicitationCommand = 'agent.answerElicitation';
@@ -85,6 +93,7 @@ export type SessionMachineInput = SessionInput & {
   adapter: AgentAdapter;
   now: () => number;
   createId: () => string;
+  acp?: AcpSessionDependencies;
 };
 
 export type SessionCommand =
@@ -112,6 +121,7 @@ type NativeFailure = { type: typeof nativeFailedEvent; error: unknown };
 type SessionEvent =
   | SessionCommand
   | AgentEvent
+  | AcpLifetimeEvent
   | NativeFailure
   | { type: 'xstate.error.actor.vendorSession'; error: unknown };
 type NativeSessionInput = AgentConnectInput &
@@ -134,6 +144,8 @@ export interface SessionContext extends SessionData {
   pendingNativeStops: Set<Promise<void>>;
   // False for a new Session until its Agent is ready and its row is written.
   stored: boolean;
+  acpLifetime: AcpSessionLifetime;
+  acpLease: AcpSessionLease | null;
 }
 
 const checkoutLimit = 10_000;
@@ -195,6 +207,20 @@ const sessionSetup = setup({
     output: {} as Pick<SessionContext, 'failure'>,
   },
   actors: {
+    acpSubscription: fromCallback<
+      AcpLifetimeEvent,
+      AcpSessionLifetime,
+      AcpLifetimeEvent
+    >(({ input, sendBack }) => input.bind(sendBack)),
+    openAcp: fromPromise<AcpSessionLease, SessionContext>(({ input }) =>
+      input.acpLifetime.open(input),
+    ),
+    closeAcp: fromPromise<void, AcpSessionLifetime>(({ input }) =>
+      input.close(),
+    ),
+    awaitAcpRelease: fromPromise<void, AcpSessionLifetime>(({ input }) =>
+      input.released(),
+    ),
     createCheckout: fromPromise<SessionData, NewSessionInput>(
       ({ input, signal }): Promise<SessionData> =>
         createSessionCheckout(input, signal),
@@ -333,6 +359,19 @@ const sessionSetup = setup({
     }),
   },
   actions: {
+    rememberAcpLease: assign(
+      (
+        _,
+        lease: AcpSessionLease,
+      ): Pick<SessionContext, 'acpLease' | 'vendorSessionId'> => ({
+        acpLease: lease,
+        vendorSessionId: lease.sessionId,
+      }),
+    ),
+    rememberAcpFailure: assign(({ event }): Pick<SessionContext, 'failure'> => {
+      assertEvent(event, 'acp.failed');
+      return { failure: String(event.error) };
+    }),
     rememberSession: assign(
       (_, params: SessionDataParameters): SessionData => params.data,
     ),
@@ -389,7 +428,7 @@ const sessionSetup = setup({
         configValues: toConfigValues(event.configOptions),
       });
     }),
-    // Writes the new Session's row once its Agent is ready, so no empty Session exists.
+    // The Agent must be ready before the Session row is written.
     storeSession: enqueueActions(({ context, enqueue }): void => {
       if (context.input.kind !== 'new') return;
       enqueue.assign({ stored: true });
@@ -696,6 +735,10 @@ const sessionSetup = setup({
     flushFeed: sendTo('feed', { type: 'feed.flush' }),
   },
   guards: {
+    usesAcp: ({ context }): boolean =>
+      context.input.kind === 'new'
+        ? context.input.prompt.length === 0
+        : context.input.acp !== undefined,
     isNew: ({ context }): boolean => context.input.kind === 'new',
     isUnstored: ({ context }): boolean => !context.stored,
     isPermissionHead: ({ context, event }): boolean =>
@@ -704,7 +747,10 @@ const sessionSetup = setup({
     hasPermission: ({ context }): boolean => context.permissionQueue.length > 0,
     hasElicitation: ({ context }): boolean =>
       context.pendingElicitation !== null,
-    nativeAlreadyDrained: stateIn({ open: 'flushing' }),
+    nativeAlreadyDrained: or([
+      stateIn({ open: 'flushing' }),
+      stateIn({ open: { acp: 'flushing' } }),
+    ]),
     tooManyCrashes: ({ context }): boolean =>
       context.agentCrashes.length >= maxCrashesInWindow,
   },
@@ -820,6 +866,8 @@ export const sessionMachine = sessionSetup.createMachine({
     failure: null,
     pendingNativeStops: new Set(),
     stored: input.kind === 'existing',
+    acpLifetime: new AcpSessionLifetime(input.acp),
+    acpLease: null,
   }),
   output: ({ context }): Pick<SessionContext, 'failure'> => ({
     failure: context.failure,
@@ -884,12 +932,23 @@ export const sessionMachine = sessionSetup.createMachine({
         }),
         onDone: [
           { guard: 'nativeAlreadyDrained', target: 'closed' },
+          { guard: 'usesAcp', target: '.acp.closing' },
           { target: 'stopping' },
         ],
         onError: [
           {
             guard: 'nativeAlreadyDrained',
             target: 'closed',
+            actions: {
+              type: 'rememberFailure',
+              params: ({ event }): FailureParameters => ({
+                error: event.error,
+              }),
+            },
+          },
+          {
+            guard: 'usesAcp',
+            target: '.acp.closing',
             actions: {
               type: 'rememberFailure',
               params: ({ event }): FailureParameters => ({
@@ -908,8 +967,87 @@ export const sessionMachine = sessionSetup.createMachine({
           },
         ],
       },
-      initial: 'live',
+      initial: 'choosing',
       states: {
+        choosing: {
+          always: [{ guard: 'usesAcp', target: 'acp' }, { target: 'live' }],
+        },
+        acp: {
+          invoke: {
+            id: 'acpSubscription',
+            src: 'acpSubscription',
+            input: ({ context }): AcpSessionLifetime => context.acpLifetime,
+          },
+          initial: 'opening',
+          on: { 'acp.failed': { actions: 'rememberAcpFailure' } },
+          states: {
+            opening: {
+              invoke: {
+                id: 'openAcp',
+                src: 'openAcp',
+                input: ({ context }): SessionContext => context,
+                onDone: {
+                  target: 'idle',
+                  actions: [
+                    {
+                      type: 'rememberAcpLease',
+                      params: ({ event }): AcpSessionLease => event.output,
+                    },
+                    'storeSession',
+                  ],
+                },
+                onError: {
+                  target: 'closing',
+                  actions: {
+                    type: 'rememberFailure',
+                    params: ({ event }): FailureParameters => ({
+                      error: event.error,
+                    }),
+                  },
+                },
+              },
+              on: { 'session.close': { target: 'closing' } },
+            },
+            idle: { on: { 'session.close': { target: 'closing' } } },
+            closing: {
+              on: { 'session.close': {} },
+              invoke: {
+                id: 'closeAcp',
+                src: 'closeAcp',
+                input: ({ context }): AcpSessionLifetime => context.acpLifetime,
+                onDone: [
+                  { guard: 'isUnstored', target: discardingSessionTarget },
+                  { target: 'flushing' },
+                ],
+                onError: {
+                  target: 'retainingCleanup',
+                  actions: {
+                    type: 'rememberFailure',
+                    params: ({ event }): FailureParameters => ({
+                      error: event.error,
+                    }),
+                  },
+                },
+              },
+            },
+            retainingCleanup: {
+              on: { 'session.close': {} },
+              invoke: {
+                id: 'awaitAcpRelease',
+                src: 'awaitAcpRelease',
+                input: ({ context }): AcpSessionLifetime => context.acpLifetime,
+                onDone: [
+                  { guard: 'isUnstored', target: discardingSessionTarget },
+                  { target: 'flushing' },
+                ],
+              },
+            },
+            flushing: {
+              entry: 'flushFeed',
+              after: { feedFlushLimit: '#session.closed' },
+            },
+          },
+        },
         live: {
           invoke: {
             id: 'vendorSession',
@@ -1078,13 +1216,13 @@ export const sessionMachine = sessionSetup.createMachine({
             input: ({ context }): SessionContext['pendingNativeStops'] =>
               context.pendingNativeStops,
             onDone: [
-              { guard: 'isUnstored', target: '#session.discarding' },
+              { guard: 'isUnstored', target: discardingSessionTarget },
               { target: 'flushing' },
             ],
           },
           after: {
             agentStopLimit: [
-              { guard: 'isUnstored', target: '#session.discarding' },
+              { guard: 'isUnstored', target: discardingSessionTarget },
               { target: 'flushing' },
             ],
           },

@@ -8,7 +8,7 @@ export const childProcessImport = defineRule({
     type: 'problem',
     messages: {
       childProcess:
-        'Apps run git through packages/git (ADR-0008); only the three process launchers open subprocesses.',
+        'Apps run git through packages/git (ADR-0008); only the named process owners open subprocesses.',
     },
   },
   create: (context): import('@oxlint/plugins').Visitor =>
