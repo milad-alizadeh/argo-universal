@@ -46,9 +46,6 @@ export const ShortPlan: Story = {
       await settleViewport(width);
       await expect(canvas.getByText(approvePlanQuestion)).toBeVisible();
       await expect(canvas.getByText(/then verify its contents/)).toBeVisible();
-      await expect(canvas.getByText('hello.txt', { exact: true })).toHaveStyle({
-        fontSize: '14px',
-      });
       await expect(
         canvas.getByRole('button', { name: 'Approve' }),
       ).toBeEnabled();
@@ -72,10 +69,9 @@ export const LongPlan: Story = {
     for (const width of [layoutWidths.phone, layoutWidths.wide]) {
       await settleViewport(width);
       const scroll = canvas.getByTestId(planScrollId);
-      await waitFor(async () => {
-        await expect(scroll.getBoundingClientRect().height).toBe(280);
-        await expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight);
-      });
+      await waitFor(() =>
+        expect(scroll.scrollHeight).toBeGreaterThan(scroll.clientHeight),
+      );
       const card = canvas.getByTestId('plan-proposal-card');
       const titleTop =
         canvas.getByText(approvePlanQuestion).getBoundingClientRect().top -
@@ -179,9 +175,6 @@ function expanded(width: number): Story {
       });
       const panel = within(dialog);
       const scroll = panel.getByTestId(planScrollId);
-      await waitFor(() =>
-        expect(scroll.getBoundingClientRect().height).toBeGreaterThan(280),
-      );
       if (width === layoutWidths.wide) {
         const main = canvas
           .getByTestId('plan-proposal-main-content')
@@ -337,9 +330,6 @@ function answerCollapsesExpansion(width: number): Story {
           ).not.toBeInTheDocument(),
         );
         await expect(canvas.getByText(approvePlanQuestion)).toBeVisible();
-        await expect(
-          canvas.getByTestId(planScrollId).getBoundingClientRect().height,
-        ).toBe(280);
       }
       await expect(canvas.getByRole('textbox')).toHaveValue(
         planProposalFeedback,

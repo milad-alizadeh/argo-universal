@@ -107,16 +107,10 @@ export const SessionRow = memo(function SessionRow({
           />
         </View>
         <View className="min-w-0 flex-1 gap-0.5">
-          <Text
-            numberOfLines={1}
-            className="text-base font-medium leading-6 wide:text-sm wide:leading-5"
-          >
+          <Text numberOfLines={1} className="type-body">
             {session.title}
           </Text>
-          <Text
-            numberOfLines={1}
-            className="text-sm font-normal leading-5 text-muted-foreground wide:text-xs wide:leading-4"
-          >
+          <Text numberOfLines={1} className="type-secondary">
             {session.activity}
           </Text>
           {hasMetadata && (
@@ -141,7 +135,7 @@ export const SessionRow = memo(function SessionRow({
                       />
                     ))}
                   </View>
-                  <Text className="text-xs font-normal leading-4 text-muted-foreground">
+                  <Text className="type-secondary">
                     {plan.done}/{plan.total}
                   </Text>
                 </View>
@@ -165,7 +159,7 @@ export const SessionRow = memo(function SessionRow({
                       />
                     )}
                   </View>
-                  <Text className="text-xs font-normal leading-4 text-muted-foreground">
+                  <Text className="type-secondary">
                     {session.subagents.total}
                   </Text>
                 </View>

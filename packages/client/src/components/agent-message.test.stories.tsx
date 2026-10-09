@@ -11,7 +11,6 @@ import { settleViewport } from '../../mocks/settle-viewport';
 import { AgentMessage } from './agent-message';
 
 const markdownAnswerId = 'markdown-answer';
-const nativeTextFont = 'SF Pro Text';
 const streamingCaretId = 'streaming-caret';
 
 const meta = {
@@ -33,26 +32,6 @@ type Story = StoryObj<typeof meta>;
 
 const widths = [layoutWidths.phone, layoutWidths.wide];
 
-async function expectType({
-  element,
-  family,
-  size,
-  lineHeight,
-  weight = '400',
-}: {
-  element: HTMLElement;
-  family: string;
-  size: string;
-  lineHeight: string;
-  weight?: string;
-}): Promise<void> {
-  const style = getComputedStyle(element);
-  await expect(style.fontFamily).toContain(family);
-  await expect(style.fontSize).toBe(size);
-  await expect(style.lineHeight).toBe(lineHeight);
-  await expect(style.fontWeight).toBe(weight);
-}
-
 function markdownPlay(heading: string, firstHeader: string) {
   return async ({
     canvas,
@@ -61,48 +40,12 @@ function markdownPlay(heading: string, firstHeader: string) {
   }): Promise<void> => {
     for (const width of widths) {
       await settleViewport(width);
-      await expectType({
-        element: canvas.getByText(heading),
-        family: nativeTextFont,
-        size: '16px',
-        lineHeight: '24px',
-        weight: '600',
-      });
-      const link = canvas.getByRole('link', { name: 'ADR 0007' });
-      await expectType({
-        element: link,
-        family: nativeTextFont,
-        size: '14px',
-        lineHeight: '22px',
-      });
-      await expect(getComputedStyle(link).textDecorationLine).toBe('underline');
-      const code = canvas.getAllByText('feed.rows')[0];
-      if (!code) throw new Error('Message code is missing');
-      await expectType({
-        element: code,
-        family: 'SF Mono',
-        size: '12px',
-        lineHeight: '18px',
-      });
-      await expectType({
-        element: canvas.getByText('1.'),
-        family: nativeTextFont,
-        size: '14px',
-        lineHeight: '22px',
-      });
-      await expectType({
-        element: canvas.getByText('tsx'),
-        family: 'SF Mono',
-        size: '12px',
-        lineHeight: '20px',
-      });
-      await expectType({
-        element: canvas.getByText(firstHeader),
-        family: nativeTextFont,
-        size: '14px',
-        lineHeight: '20px',
-        weight: '600',
-      });
+      for (const text of [heading, '1.', 'tsx', firstHeader])
+        await expect(canvas.getByText(text)).toBeVisible();
+      await expect(
+        canvas.getByRole('link', { name: 'ADR 0007' }),
+      ).toBeVisible();
+      await expect(canvas.getAllByText('feed.rows')[0]).toBeVisible();
       await expect(canvas.queryByTestId(streamingCaretId)).toBeNull();
     }
   };

@@ -109,7 +109,8 @@ const proposalInlineCodeClassName = cn(
   'text-sm leading-5',
 );
 
-const proseClassName = 'font-sans text-sm leading-5.5 text-foreground';
+const proseClassName = 'font-sans type-body';
+const proposalProseClassName = 'font-sans text-sm leading-5 text-foreground';
 
 function Prose({
   tokens,
@@ -124,8 +125,7 @@ function Prose({
   return (
     <Text
       className={cn(
-        proseClassName,
-        variant === 'proposal' && 'leading-5',
+        variant === 'proposal' ? proposalProseClassName : proseClassName,
         className,
       )}
     >
@@ -158,10 +158,10 @@ function List({
           <View key={key} className="flex-row gap-2">
             <Text
               className={cn(
-                'w-4 shrink-0 font-sans text-sm',
+                'w-4 shrink-0 font-sans',
                 variant === 'proposal'
-                  ? 'leading-5 text-foreground'
-                  : 'leading-5.5 text-muted-foreground',
+                  ? 'text-sm leading-5 text-foreground'
+                  : 'type-body text-muted-foreground',
               )}
             >
               {token.ordered ? `${start + index}.` : '•'}
@@ -337,7 +337,13 @@ export const FeedMarkdown = memo(function FeedMarkdown({
   const tokens = useMemo(() => lexer(text), [text]);
   return (
     <MarkdownVariant.Provider value={variant}>
-      <View className={variant === 'proposal' ? 'gap-2' : 'gap-2.5'}>
+      <View
+        className={
+          variant === 'proposal'
+            ? 'gap-2'
+            : 'gap-paragraph wide:gap-paragraph-wide'
+        }
+      >
         <Blocks tokens={tokens} caret={streaming} />
       </View>
     </MarkdownVariant.Provider>
