@@ -98,8 +98,6 @@ it.each(agentAdapters.map((adapter): string => adapter.agent))(
       snapshot.activeTurnId,
     );
     expect(commands).toEqual([]);
-    stream.send({ type: turnStartedEvent });
-    expect(publicSnapshot(host).activeTurnId).toBe(snapshot.activeTurnId);
     host.session.send({ type: closeEvent });
     await waitFor(
       host.session,
@@ -112,6 +110,29 @@ it.each(agentAdapters.map((adapter): string => adapter.agent))(
     expect(host.service.row({ sessionId: sessionId, id: 'reply' }).turnId).toBe(
       snapshot.activeTurnId,
     );
+  },
+);
+
+it.each(agentAdapters.map((adapter): string => adapter.agent))(
+  'keeps the running autonomous Turn identity on duplicate start for Agent %s',
+  async (agent): Promise<void> => {
+    let stream: MockAgentStream | undefined;
+    const host = await startSession(
+      createMockAdapter(
+        {
+          stream: (nativeStream): undefined => {
+            stream = nativeStream;
+            nativeStream.send({ type: turnStartedEvent });
+          },
+        },
+        agent,
+      ),
+    );
+    if (!stream) throw new Error(missingStream);
+    const runningTurn = publicSnapshot(host);
+    expect(runningTurn.state).toBe('running');
+    stream.send({ type: turnStartedEvent });
+    expect(publicSnapshot(host).activeTurnId).toBe(runningTurn.activeTurnId);
   },
 );
 

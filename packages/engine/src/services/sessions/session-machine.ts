@@ -758,7 +758,7 @@ const firstTurn = ({
   return { turnId: context.input.turnId, content: context.input.prompt };
 };
 
-const promptTurn = ({
+const toPromptTurn = ({
   event,
 }: {
   event: Extract<SessionCommand, { type: 'session.prompt' }>;
@@ -994,8 +994,8 @@ export const sessionMachine = sessionSetup.createMachine({
                 'session.prompt': {
                   target: 'running',
                   actions: [
-                    { type: 'persistTurn', params: promptTurn },
-                    { type: 'startTurn', params: promptTurn },
+                    { type: 'persistTurn', params: toPromptTurn },
+                    { type: 'startTurn', params: toPromptTurn },
                   ],
                 },
                 'session.setConfigOption': { actions: 'forwardConfig' },
