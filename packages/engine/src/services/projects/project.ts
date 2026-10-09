@@ -41,10 +41,10 @@ export async function seedProject(
     .run();
 }
 
-async function defaultCheckoutChoice(
-  path: string,
+async function readDefaultCheckoutChoice(
+  projectPath: string,
 ): Promise<ProjectCheckoutChoice> {
-  const { currentBranch } = await listBranches(path);
+  const { currentBranch } = await listBranches(projectPath);
   return currentBranch === null
     ? { type: 'main' }
     : { type: 'worktree', baseBranch: currentBranch };
@@ -68,11 +68,11 @@ export function readProjectPath(
 
 async function readStoredProject(
   storedProject: typeof project.$inferSelect,
-  rejections: ReturnType<typeof createRejectionCounter>,
+  rejections: Pick<ReturnType<typeof createRejectionCounter>, 'report'>,
 ): Promise<ProjectInfo> {
   const checkoutChoice =
     storedProject.checkoutChoice ??
-    (await defaultCheckoutChoice(storedProject.path));
+    (await readDefaultCheckoutChoice(storedProject.path));
   const result = ProjectInfo.safeParse({ ...storedProject, checkoutChoice });
   if (!result.success) {
     rejections.report('rejected shape', result.error);
@@ -83,7 +83,7 @@ async function readStoredProject(
 
 export function readProjects(
   database: Database,
-  rejections: ReturnType<typeof createRejectionCounter>,
+  rejections: Pick<ReturnType<typeof createRejectionCounter>, 'report'>,
 ): Promise<ProjectsListOutput> {
   return Promise.all(
     database
