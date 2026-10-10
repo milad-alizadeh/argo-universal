@@ -673,6 +673,7 @@ const data = {
   nextPosition: 0,
   configValues: [],
   activityAt: 1000,
+  undisclosedInterruptedTurnId: null,
 } satisfies SessionData;
 /*
  * Graph traversal is structural: promise completions and failures are symbolic events.

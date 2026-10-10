@@ -17,17 +17,20 @@ import type {
 import { AcpRouting } from './routing';
 
 const reservationLimit = 64;
+type RetireFailedGeneration = (checkouts: readonly string[]) => void;
+type ConfirmCheckoutRelease = () => Promise<void>;
 export class AcpResourceEntry {
   private readonly rejections = createRejectionCounter('ACP resources');
   private readonly reservations = new Set<AcpReservation>();
   private readonly routing = new AcpRouting(this.rejections, (error) =>
-    this.cleanup.fail(error),
+    this.failGeneration(error),
   );
   private readonly connection: AcpResourceConnection;
   private readonly cleanup: AcpResourceCleanup;
   public constructor(
     private readonly input: AcpResourceInput,
     launch: AgentLaunch,
+    private readonly retireFailedGeneration: RetireFailedGeneration,
   ) {
     this.connection = new AcpResourceConnection(input, this.routing, launch);
     this.cleanup = new AcpResourceCleanup({
@@ -36,21 +39,42 @@ export class AcpResourceEntry {
       reservations: this.reservations,
     });
     this.connection.observeResourceFailures((error) =>
-      this.cleanup.fail(error),
+      this.failGeneration(error),
     );
   }
   public closed(): Promise<void> {
     return this.cleanup.closed();
   }
-  public async open(input: AcpOpenInput): Promise<AcpSessionLease> {
+  private failGeneration(error: unknown): void {
+    const checkouts = [...this.reservations].map(
+      (reservation) => reservation.input.opening.params.cwd,
+    );
+    if (!this.cleanup.fail(error)) return;
+    this.retireFailedGeneration(checkouts);
+    void this.cleanup.shutdown().catch(() => {});
+  }
+  public async open(
+    input: AcpOpenInput,
+    confirmCheckoutRelease: ConfirmCheckoutRelease,
+  ): Promise<AcpSessionLease> {
     this.requireAvailable();
     const reservation = this.reserve(input);
     try {
+      await this.awaitCheckoutRelease(reservation, confirmCheckoutRelease);
       return await this.completeOpening(reservation);
     } catch (error) {
       await this.cleanup.abandon(reservation, error);
       throw error;
     }
+  }
+  private async awaitCheckoutRelease(
+    reservation: AcpReservation,
+    confirmCheckoutRelease: ConfirmCheckoutRelease,
+  ): Promise<void> {
+    await confirmCheckoutRelease().catch((error: unknown) => {
+      reservation.withdrawn = true;
+      throw error;
+    });
   }
   private requireAvailable(): void {
     if (this.cleanup.retired || this.reservations.size >= reservationLimit)

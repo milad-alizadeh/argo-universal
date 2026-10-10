@@ -8,6 +8,8 @@ import {
 import type { AcpSessionLease } from '../agents';
 import { findSessionActor } from './index';
 
+const feedFlushDelayEvent =
+  'xstate.after.feedFlushLimit.session.open.acp.flushing';
 const expectAcpState = (
   snapshot: AcpModelSnapshot,
   lease: AcpSessionLease,
@@ -23,10 +25,13 @@ const expectAcpState = (
     expect(snapshot.context.stored).toBe(true);
   }
   if (snapshot.matches({ open: { acp: 'retainingCleanup' } }))
-    expect(snapshot.context.failure).not.toBeNull();
+    expect(
+      snapshot.context.failure !== null ||
+        snapshot.context.agentCrashes.length > 0,
+    ).toBe(true);
 };
 
-it('the ACP structural graph walks every opening, closing and retained-cleanup transition', async () => {
+it('the ACP structural graph walks every opening, recovery, closing and retained-cleanup transition', async () => {
   const host = await startAcpEngine();
   const created = await host.caller.session.new(emptySessionInput);
   const actor = findSessionActor(host.engine.system, created.sessionId);
@@ -34,7 +39,11 @@ it('the ACP structural graph walks every opening, closing and retained-cleanup t
     throw new Error('The Session for the structural graph is missing');
   const { model, paths, lease } = createAcpSessionModel(actor.getSnapshot());
   for (const path of paths)
-    for (const step of path.steps) expectAcpState(step.state, lease);
+    for (const step of path.steps) {
+      expectAcpState(step.state, lease);
+      if (step.event.type === feedFlushDelayEvent)
+        expect(step.state.context.failure).not.toBeNull();
+    }
   expect(
     unwalkedTransitions({
       models: [model],

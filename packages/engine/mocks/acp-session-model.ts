@@ -7,6 +7,7 @@ import {
   type AdjacencyMap,
 } from 'xstate/graph';
 import type { AcpSessionLease } from '../src/services/agents';
+import { RecoveryBlockedError } from '../src/services/agents';
 import { sessionMachine } from '../src/services/sessions';
 
 export type AcpModelSnapshot = SnapshotFrom<typeof sessionMachine>;
@@ -28,6 +29,11 @@ const canApplyLifecycleEvent = (
     'xstate.done.actor.closeAcp': 'closing',
     'xstate.error.actor.closeAcp': 'closing',
     'xstate.done.actor.awaitAcpRelease': 'retainingCleanup',
+    'xstate.done.actor.publishInterruptedTurn': 'interrupting',
+    'xstate.error.actor.publishInterruptedTurn': 'interrupting',
+    'xstate.after.agentRestartDelay.session.open.acp.recovering': 'recovering',
+    'xstate.done.actor.reopenAcp': 'reopening',
+    'xstate.error.actor.reopenAcp': 'reopening',
     'xstate.after.feedFlushLimit.session.open.acp.flushing': 'flushing',
   } as const;
   if (event.type in invoking) {
@@ -37,6 +43,7 @@ const canApplyLifecycleEvent = (
   if (event.type === closeEvent) return snapshot.can({ type: closeEvent });
   if (
     event.type === 'session.prompt' ||
+    event.type === 'session.cancel' ||
     event.type === 'session.answerPermission' ||
     event.type === 'session.answerElicitation'
   )
@@ -44,6 +51,15 @@ const canApplyLifecycleEvent = (
   return snapshot.matches({ open: 'acp' });
 };
 type AcpModelEvent = GraphEventFromLogic<typeof sessionMachine>;
+// After a crash the model walks only the recovery loop, which keeps the crash count from multiplying every state.
+const walksAfterCrash = (
+  snapshot: AcpModelSnapshot,
+  event: AcpModelEvent,
+): boolean =>
+  snapshot.context.agentCrashes.length === 0 ||
+  event.type === 'acp.failed' ||
+  event.type === closeEvent ||
+  event.type.startsWith('xstate.');
 export const createAcpSessionModel = (
   initial: AcpModelSnapshot,
 ): {
@@ -150,9 +166,36 @@ export const createAcpSessionModel = (
     },
     { type: 'acp.requestWithdrawn', requestId: modelRequest },
     { type: 'agent.messageRejected', reason: 'Malformed model question' },
+    { type: 'session.cancel' },
     { type: closeEvent },
     { type: 'acp.failed', error: new Error('connection failed') },
     { type: 'xstate.done.actor.openAcp', actorId: 'openAcp', output: lease },
+    {
+      type: 'xstate.done.actor.publishInterruptedTurn',
+      actorId: 'publishInterruptedTurn',
+      output: undefined,
+    },
+    {
+      type: 'xstate.error.actor.publishInterruptedTurn',
+      actorId: 'publishInterruptedTurn',
+      error: new Error('publication failed'),
+    },
+    { type: 'xstate.after.agentRestartDelay.session.open.acp.recovering' },
+    {
+      type: 'xstate.done.actor.reopenAcp',
+      actorId: 'reopenAcp',
+      output: lease,
+    },
+    {
+      type: 'xstate.error.actor.reopenAcp',
+      actorId: 'reopenAcp',
+      error: new Error('recovery failed'),
+    },
+    {
+      type: 'xstate.error.actor.reopenAcp',
+      actorId: 'reopenAcp',
+      error: new RecoveryBlockedError(new Error('No exit')),
+    },
     {
       type: 'xstate.error.actor.openAcp',
       actorId: 'openAcp',
@@ -185,9 +228,14 @@ export const createAcpSessionModel = (
     fromState,
     events,
     limit: 10_000,
-    serializeEvent: (event: AcpModelEvent): string => event.type,
+    serializeEvent: (event: AcpModelEvent): string =>
+      'error' in event && event.error instanceof RecoveryBlockedError
+        ? `${event.type} blocked`
+        : event.type,
     filterEvents: (snapshot: AcpModelSnapshot, event: AcpModelEvent): boolean =>
-      snapshot.status === 'active' && canApplyLifecycleEvent(snapshot, event),
+      snapshot.status === 'active' &&
+      walksAfterCrash(snapshot, event) &&
+      canApplyLifecycleEvent(snapshot, event),
     serializeState: (
       snapshot: AcpModelSnapshot,
       event: AcpModelEvent | undefined,
@@ -198,6 +246,7 @@ export const createAcpSessionModel = (
         failure: snapshot.context.failure !== null,
         stored: snapshot.context.stored,
         feedEnded: snapshot.context.feedEnded,
+        crashes: snapshot.context.agentCrashes.length,
         via: event && `${JSON.stringify(previous?.value)} ${event.type}`,
       }),
   };

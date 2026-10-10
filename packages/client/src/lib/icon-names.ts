@@ -7,7 +7,7 @@ export const iconSymbols = {
   ...statusSymbols,
   activity: { sf: 'waveform.path.ecg', material: 'monitor_heart' },
   add: { sf: 'plus', material: 'add' },
-  agent: { sf: 'teddybear', sfFilled: 'teddybear.fill', material: 'smart_toy' },
+  agent: { sf: 'custom.robot', material: 'smart_toy' },
   'all-issues': { sf: 'square.stack.3d.up', material: 'stacks' },
   'app-window': { sf: 'macwindow', material: 'web_asset' },
   appearance: { sf: 'circle.lefthalf.filled', material: 'contrast' },

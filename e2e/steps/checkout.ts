@@ -8,7 +8,8 @@ Given('a New Session', async ({ page }): Promise<void> => {
 
 When('I choose the local Checkout', async ({ page }): Promise<void> => {
   const checkout = page.getByRole('button', { name: 'Checkout' });
-  await expect(checkout).toHaveText(/New worktree from\s*main/);
+  await expect(checkout).toContainText('New worktree');
+  await expect(checkout).not.toContainText('main');
   await checkout.click();
   await page.getByRole('button', { name: 'Local' }).click();
   await expect(checkout).toHaveText(/Local/);

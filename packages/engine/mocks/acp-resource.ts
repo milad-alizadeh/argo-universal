@@ -2,6 +2,7 @@ import {
   agent,
   ndJsonStream,
   type AgentConnection,
+  type AgentNotificationHandlersByMethod,
   type AgentRequestHandlersByMethod,
   type SessionNotification,
   type InitializeResponse,
@@ -74,12 +75,15 @@ type ResourcePeerInput = {
   loadSession?: AgentRequestHandlersByMethod['session/load'];
   resumeSession?: AgentRequestHandlersByMethod['session/resume'];
   prompt?: AgentRequestHandlersByMethod['session/prompt'];
+  cancel?: AgentNotificationHandlersByMethod['session/cancel'];
 };
 type ResourceProcess = {
   launch: AgentLaunch;
   connection: AgentConnection;
   exited: ReturnType<typeof Promise.withResolvers<void>>;
   terminations: number;
+  // Breaks the transport while the process itself stays alive.
+  disconnect: () => void;
 };
 export const requireResourceProcessAt = (
   processes: ResourceProcess[],
@@ -134,16 +138,25 @@ export const createResourcePeer = (
               stopReason: 'end_turn',
             })),
         )
+        .onNotification('session/cancel', input.cancel ?? ((): void => {}))
         .connect(ndJsonStream(incoming.writable, outgoing.readable));
+      const transport = new AbortController();
       const process = {
         launch,
         connection,
         exited: Promise.withResolvers<void>(),
         terminations: 0,
+        disconnect: (): void =>
+          transport.abort(new Error('ACP transport broke')),
       };
       processes.push(process);
       return {
-        stream: ndJsonStream(outgoing.writable, incoming.readable),
+        stream: ndJsonStream(
+          outgoing.writable,
+          incoming.readable.pipeThrough(new TransformStream(), {
+            signal: transport.signal,
+          }),
+        ),
         exited: process.exited.promise,
         terminate: async () => {
           process.terminations += 1;

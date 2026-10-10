@@ -20,7 +20,11 @@ import {
   onTestFinished,
   vi,
 } from 'vitest';
-import { insertSession, openTestDatabase } from '#mocks/database';
+import {
+  countDatabaseReads,
+  insertSession,
+  openTestDatabase,
+} from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 import { storedMessage as message } from '#mocks/feed';
 import { appRouter } from '../../engine/router';
@@ -137,6 +141,24 @@ const summarizeFeedChanges = (outputs: FeedSubscribeOutput[]): string[] =>
       return `append ${output.id} +${output.text} at ${output.off} @${output.rev}`;
     return output.type;
   });
+
+const longHistoryRows = 450;
+const longHistoryPositions = Array.from(
+  { length: longHistoryRows },
+  (_, position): number => position,
+);
+// Stored rows after the five every test starts with, so one catch-up spans three pages.
+const storeLongHistory = (): void =>
+  writeJobs(database, [
+    {
+      type: 'feedRows',
+      sessionId: 'session-1',
+      rows: longHistoryPositions
+        .slice(5)
+        .map((position): ReturnType<typeof message> => message(position)),
+      maxRevision: longHistoryRows,
+    },
+  ]);
 
 beforeEach((): void => {
   vi.useFakeTimers();
@@ -509,6 +531,85 @@ describe('feed.subscribe', (): void => {
       ],
     });
   });
+
+  it('catches up more rows than one page once each, in revision order, before live changes', async (): Promise<void> => {
+    storeLongHistory();
+    await startFeedTestHost();
+    const updates = await subscribe({ epoch: 3, revision: 0 });
+
+    const caughtUp = await takeFeedChanges(updates, longHistoryRows);
+    sendAgentFeedChange(createOpenMessageChange('live-row'));
+    await vi.advanceTimersByTimeAsync(60);
+
+    expect(
+      summarizeFeedChanges([
+        ...caughtUp,
+        ...(await takeFeedChanges(updates, 1)),
+      ]),
+    ).toEqual([
+      ...longHistoryPositions.map(
+        (position): string => `upsert message-${position}#0 @${position + 1}`,
+      ),
+      `upsert live-row @${longHistoryRows + 1}`,
+    ]);
+  });
+
+  it('reads a long catch-up from storage one page at a time', async (): Promise<void> => {
+    storeLongHistory();
+    await startFeedTestHost();
+    const counted = countDatabaseReads(feedTestHost.database);
+    const updates = await subscribe({ epoch: 3, revision: 0 });
+
+    await takeFeedChanges(updates, longHistoryRows);
+
+    expect(counted.metrics.largestRead).toBeLessThanOrEqual(200);
+  });
+
+  it.each([
+    { copy: 'stored', holdWrites: false },
+    { copy: 'queued', holdWrites: true },
+  ])(
+    'sends a row that changed between catch-up pages once, whole, at its newest $copy revision',
+    async ({ holdWrites }): Promise<void> => {
+      storeLongHistory();
+      await startFeedTestHost();
+      if (holdWrites)
+        database.$client
+          .exec(`CREATE TRIGGER hold_feed_writes BEFORE UPDATE ON feed_row
+        BEGIN SELECT RAISE(ABORT, 'database is locked'); END`);
+      const updates = await subscribe({ epoch: 3, revision: 0 });
+      const firstPage = await takeFeedChanges(updates, 200);
+      sendAgentFeedChange({
+        type: 'patch',
+        id: 'message-300#0',
+        set: { content: [{ type: 'text', text: 'Changed' }] },
+      });
+      await vi.advanceTimersByTimeAsync(60);
+
+      const rest = await takeFeedChanges(updates, longHistoryRows - 200);
+
+      expect({
+        revisions: summarizeFeedChanges([...firstPage, ...rest]),
+        changed: rest.at(-1),
+      }).toEqual({
+        revisions: [
+          ...longHistoryPositions
+            .filter((position): boolean => position !== 300)
+            .map(
+              (position): string =>
+                `upsert message-${position}#0 @${position + 1}`,
+            ),
+          `upsert message-300#0 @${longHistoryRows + 1}`,
+        ],
+        changed: expect.objectContaining({
+          row: expect.objectContaining({
+            position: 300,
+            content: [{ type: 'text', text: 'Changed' }],
+          }),
+        }),
+      });
+    },
+  );
 
   it('resets a subscriber from another epoch, then sends the rows not yet stored', async (): Promise<void> => {
     await startFeedTestHost();
