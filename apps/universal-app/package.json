@@ -15,7 +15,6 @@
   },
   "dependencies": {
     "@expo/ui": "catalog:",
-    "@gorhom/bottom-sheet": "catalog:",
     "@react-native-async-storage/async-storage": "catalog:",
     "@react-native-community/datetimepicker": "catalog:",
     "@react-native-community/slider": "catalog:",
@@ -55,6 +54,7 @@
     "uniwind": "catalog:"
   },
   "devDependencies": {
+    "@gorhom/bottom-sheet": "catalog:",
     "@repo/typescript": "workspace:*",
     "@repo/vitest": "workspace:*",
     "@types/react": "catalog:",

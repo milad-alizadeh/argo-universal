@@ -28,19 +28,19 @@
 
 /* Content Presence observes Radix's outer node; Portal Presence observes the
    inner RN view. Both must finish closing before focus and picker handoff. */
-[role="dialog"]:has(> .composer-sheet),
+[role="dialog"]:has(> .bottom-sheet),
 [role="dialog"]:has(> .popover-content),
-[data-state]:has(> .composer-sheet-overlay) {
+[data-state]:has(> .bottom-sheet-overlay) {
   animation-duration: 200ms;
   animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
-[role="dialog"]:has(> .composer-sheet) {
+[role="dialog"]:has(> .bottom-sheet) {
   position: fixed;
   inset: auto 0 0;
   z-index: 50;
-  animation-name: composer-sheet-in;
+  animation-name: bottom-sheet-in;
 }
-[data-state]:has(> .composer-sheet-overlay) {
+[data-state]:has(> .bottom-sheet-overlay) {
   position: fixed;
   inset: 0;
   z-index: 50;
@@ -50,23 +50,23 @@
   transform-origin: var(--radix-popover-content-transform-origin);
   animation-name: popover-in;
 }
-[data-state="closed"]:has(> .composer-sheet-overlay),
-[role="dialog"][data-state="closed"]:has(> .composer-sheet),
+[data-state="closed"]:has(> .bottom-sheet-overlay),
+[role="dialog"][data-state="closed"]:has(> .bottom-sheet),
 [role="dialog"][data-state="closed"]:has(> .popover-content) {
   animation-duration: 150ms;
   animation-timing-function: ease-in;
 }
-[role="dialog"][data-state="closed"]:has(> .composer-sheet) {
-  animation-name: composer-sheet-out;
+[role="dialog"][data-state="closed"]:has(> .bottom-sheet) {
+  animation-name: bottom-sheet-out;
 }
-[data-state="closed"]:has(> .composer-sheet-overlay) {
+[data-state="closed"]:has(> .bottom-sheet-overlay) {
   animation-name: overlay-out;
 }
 [role="dialog"][data-state="closed"]:has(> .popover-content) {
   animation-name: popover-out;
 }
-.composer-sheet[data-state="closed"],
-.composer-sheet-overlay[data-state="closed"],
+.bottom-sheet[data-state="closed"],
+.bottom-sheet-overlay[data-state="closed"],
 .popover-content[data-state="closed"] {
   animation: overlay-presence-out 150ms ease-in;
 }
@@ -94,7 +94,7 @@
     opacity: 0;
   }
 }
-@keyframes composer-sheet-in {
+@keyframes bottom-sheet-in {
   from {
     transform: translateY(100%);
   }
@@ -102,7 +102,7 @@
     transform: translateY(0);
   }
 }
-@keyframes composer-sheet-out {
+@keyframes bottom-sheet-out {
   from {
     transform: translateY(0);
   }
@@ -131,11 +131,11 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  [role="dialog"]:has(> .composer-sheet),
+  [role="dialog"]:has(> .bottom-sheet),
   [role="dialog"]:has(> .popover-content),
-  [data-state]:has(> .composer-sheet-overlay),
-  .composer-sheet[data-state="closed"],
-  .composer-sheet-overlay[data-state="closed"],
+  [data-state]:has(> .bottom-sheet-overlay),
+  .bottom-sheet[data-state="closed"],
+  .bottom-sheet-overlay[data-state="closed"],
   .popover-content[data-state="closed"] {
     animation-duration: 0.01ms;
   }

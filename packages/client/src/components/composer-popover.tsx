@@ -5,8 +5,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useResolveClassNames } from 'uniwind';
 import type { ButtonProps } from '#primitives/button';
 import { useWide } from '../navigation/use-wide';
+import { BottomSheet } from '../primitives/bottom-sheet';
 import { Popover, PopoverContent, PopoverTrigger } from '../primitives/popover';
-import { ComposerSheet } from './composer-sheet';
 
 function PopoverPanel({
   children,
@@ -48,7 +48,7 @@ export function ComposerPopover({
   if (trigger.props.disabled && open) setOpen(false);
   if (!wide)
     return (
-      <ComposerSheet
+      <BottomSheet
         style={layout}
         open={open}
         onOpenChange={onOpenChange}
@@ -57,7 +57,7 @@ export function ComposerPopover({
         label={label}
       >
         {children(close)}
-      </ComposerSheet>
+      </BottomSheet>
     );
   return (
     <Popover style={layout} onOpenChange={onOpenChange}>

@@ -8,7 +8,7 @@ import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
 import { Icon } from '../lib/icon';
 import { resourceName } from '../lib/resource-name';
-import { ComposerSheet } from './composer-sheet';
+import { BottomSheet } from '../primitives/bottom-sheet';
 import { useContentWide } from './content-layout';
 import { FeedCodeBlock } from './feed-code-block';
 import { PlanDocument } from './plan-document';
@@ -72,10 +72,9 @@ export function WrittenPlan({
   );
   if (!wide)
     return (
-      <ComposerSheet
+      <BottomSheet
         open={open}
         onOpenChange={setOpen}
-        onClosed={() => {}}
         trigger={trigger}
         label={title}
       >
@@ -84,7 +83,7 @@ export function WrittenPlan({
           <Text className="min-w-0 flex-1 type-heading">{title}</Text>
         </View>
         <WrittenPlanContent plan={plan} title={title} layout="sheet" />
-      </ComposerSheet>
+      </BottomSheet>
     );
   return (
     <View>
