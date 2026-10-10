@@ -13,3 +13,9 @@ export { sessionRegistryId } from './registry-system';
 export { sessionActorId } from './session-system';
 
 export { sessionRouter } from './router';
+export { recoverAfterRestart } from './recovery';
+export {
+  SessionRowUpdateJob,
+  TurnInsertJob,
+  TurnUpdateJob,
+} from './session-storage';

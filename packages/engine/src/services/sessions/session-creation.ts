@@ -4,7 +4,7 @@ import { TRPCError } from '@trpc/server';
 import { waitFor } from 'xstate';
 import type { Context } from '../../engine/context';
 import { findMachineActor } from '../../lib/machine-actor';
-import { databaseWriterId, writerMachine } from '../feed';
+import { databaseWriterId, writerMachine } from '../../storage';
 import { readProjectPath } from '../projects';
 import {
   submitSessionPrompt,

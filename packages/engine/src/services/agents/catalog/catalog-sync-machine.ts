@@ -1,5 +1,5 @@
 import { fromPromise } from 'xstate';
-import type { AgentCatalogReplaceJob } from '../../feed';
+import { AgentCatalogReplaceJob } from '../agent-storage';
 import { RegistryHttpError, type FetchAgents } from './fetch-agents';
 import { prepareAgentCatalogRows } from './records';
 import type { RegistryReader } from './registry-reader';
@@ -22,14 +22,13 @@ function catalogReplacement(
 ): AgentCatalogReplaceJob {
   const registry = input.reader.parse(response);
   const syncedAt = input.now();
-  return {
-    type: 'agentCatalogReplace',
+  return new AgentCatalogReplaceJob({
     source: input.source,
     scope: input.scope,
     rows: prepareAgentCatalogRows(registry, syncedAt),
     syncedAt,
     rejectedValues: input.rejectedValues,
-  };
+  });
 }
 function isTransient(error: unknown): boolean {
   if (!(error instanceof RegistryHttpError)) return true;

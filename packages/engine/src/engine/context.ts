@@ -5,7 +5,6 @@ import type { ActorRefFrom } from 'xstate';
 import { findMachineActor } from '../lib/machine-actor';
 import type { uploadBlob } from '../services/blob';
 import { type FeedDeps } from '../services/feed';
-import { databaseWriterId, writerMachine } from '../services/feed';
 import {
   createSessionList,
   createSessionReader,
@@ -14,6 +13,7 @@ import {
 } from '../services/sessions';
 import { sessionActorId, sessionMachine } from '../services/sessions';
 import type { SystemDeps } from '../services/system';
+import { databaseWriterId, writerMachine } from '../storage';
 import type { HttpServerOptions } from './http-server';
 
 export type Context = Pick<HttpServerOptions, 'sessions' | 'createId'> &

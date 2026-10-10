@@ -82,3 +82,11 @@ This move changes the rules above in one way. One old folder may now split into 
 
 - ESLint with the pack as published. Rejected by the owner for the OXC toolchain, which runs the same rules natively where it can (2026-10-07).
 - Rewriting the pack as GritQL plugins. Rejected: a second copy of the pack that drifts from it.
+
+## Storage owns the Writer
+
+Spec 0011 #449 moves the Writer, with behaviour unchanged, out of the Feed into `packages/engine/src/storage/`, which imports no module. Owner approval of this row is pending in the pull request. The new folder keeps the Feed's historical waiver identity, with only the `complexity`, `max-lines` and `vitest/expect-expect` rules the moved files still break:
+
+| New folder entry | Original folder entries |
+|---|---|
+| `packages/engine/src/storage/*` | `packages/engine/src/services/feed/*`, `apps/server/src/services/feed/*` |

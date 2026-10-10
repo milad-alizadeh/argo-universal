@@ -10,7 +10,7 @@ import {
 import type { Database } from '@repo/db';
 import { agents } from '@repo/db/schema';
 import { and, eq, sql } from 'drizzle-orm';
-import type { AgentCatalogWriteRow } from '../../feed';
+import type { AgentCatalogWriteRow } from '../agent-storage';
 import type { RegistryReader } from './registry-reader';
 
 function createCatalogAgentRecord(

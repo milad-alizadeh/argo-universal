@@ -4,13 +4,10 @@ import {
   assertEvent,
   assign,
   emit,
-  enqueueActions,
   fromPromise,
   setup,
   stateIn,
 } from 'xstate';
-import { isCatalogSqlJob } from './writer-catalog-sync';
-import { describeWriterChanges, type WriterChange } from './writer-changes';
 import {
   acknowledgeWrittenPrefix,
   rejectPendingCommits,
@@ -21,7 +18,7 @@ import {
   describeLostJobs,
   stampWriterJob,
   type WriterJob,
-  writeJobBlobFiles,
+  writeJobFiles,
   writeJobs,
 } from './writer-job';
 
@@ -32,8 +29,8 @@ type WriterBatchInput = {
 };
 type WriterLogParameters = { line: string };
 const writeEvent = 'writer.write';
-// Feed row jobs the Writer keeps queued by default; past the limit it refuses more, while lifecycle jobs still queue.
-const defaultFeedRowJobLimit = 256;
+// Refusable jobs the Writer keeps queued by default; past the limit it refuses more, while other jobs still queue.
+const defaultRefusableJobLimit = 256;
 const storageFailingMessage = 'Storage is failing';
 
 export interface WriterInput {
@@ -42,26 +39,32 @@ export interface WriterInput {
   log?: (line: string) => void;
   // Where content-addressed Blob files live (ADR-0005).
   blobsFolder?: string;
-  feedRowJobLimit?: number;
+  refusableJobLimit?: number;
 }
 
 interface WriterContext extends WriterInput {
-  feedRowJobLimit: number;
+  refusableJobLimit: number;
   // Jobs not yet committed, oldest first.
   queue: WriterJob[];
   // How many jobs at the front of `queue` the running `writeBatch` holds.
   batchSize: number;
   pendingCommits: PendingWriterCommit[];
-  // True from the first refused Feed row job until a batch commits.
+  // True from the first refused job until a batch commits.
   refusing: boolean;
 }
+
+// Queued jobs are announced when accepted, then again when their batch commits.
+export type WriterJobsEvent = {
+  type: 'writer.queued' | 'writer.committed';
+  jobs: readonly WriterJob[];
+};
 
 export type WriterEvent =
   | {
       type: typeof writeEvent;
       job: WriterJob;
       committed?: WriterCommit;
-      // Called when the Writer refuses the job because its Feed row budget is spent.
+      // Called when the Writer refuses the job because its refusable job budget is spent.
       refused?: () => void;
     }
   | { type: 'writer.drain' };
@@ -80,11 +83,11 @@ const batchInput = ({
 // The first refusal is logged; later ones wait for a batch to commit.
 const refuseOverBudget = [
   {
-    guard: and(['isOverFeedRowBudget', 'isRefusing']),
+    guard: and(['isOverRefusableBudget', 'isRefusing']),
     actions: 'refuseJob',
   },
   {
-    guard: 'isOverFeedRowBudget',
+    guard: 'isOverRefusableBudget',
     actions: [
       'refuseJob',
       'startRefusing',
@@ -95,7 +98,7 @@ const refuseOverBudget = [
         }: {
           context: WriterContext;
         }): WriterLogParameters => ({
-          line: `${storageFailingMessage}: refusing Feed rows while ${context.feedRowJobLimit} Feed row jobs wait`,
+          line: `${storageFailingMessage}: refusing jobs while ${context.refusableJobLimit} refusable jobs wait`,
         }),
       },
     ],
@@ -107,28 +110,25 @@ export const writerMachine = setup({
     input: {} as WriterInput,
     context: {} as WriterContext,
     events: {} as WriterEvent,
-    emitted: {} as { type: 'catalog.sqlCommitted' } | WriterChange,
+    emitted: {} as WriterJobsEvent,
   },
   actors: {
     writeBatch: fromPromise<void, WriterBatchInput>(
       async ({ input }): Promise<void> => {
-        await writeJobBlobFiles(input.blobsFolder, input.jobs);
+        await writeJobFiles(input.blobsFolder, input.jobs);
         writeJobs(input.database, input.jobs);
       },
     ),
   },
   actions: {
-    announceAccepted: emit(({ event }) => {
+    announceAccepted: emit(({ event }): WriterJobsEvent => {
       assertEvent(event, writeEvent);
-      return describeWriterChanges([event.job]);
+      return { type: 'writer.queued', jobs: [event.job] };
     }),
-    announceWritten: emit(({ context }) =>
-      describeWriterChanges(context.queue.slice(0, context.batchSize)),
-    ),
-    announceCatalogCommit: enqueueActions(({ context, enqueue }) => {
-      if (context.queue.slice(0, context.batchSize).some(isCatalogSqlJob))
-        enqueue(emit({ type: 'catalog.sqlCommitted' }));
-    }),
+    announceWritten: emit(({ context }): WriterJobsEvent => ({
+      type: 'writer.committed',
+      jobs: context.queue.slice(0, context.batchSize),
+    })),
 
     enqueue: assign({
       pendingCommits: ({ context, event }): PendingWriterCommit[] => {
@@ -185,12 +185,12 @@ export const writerMachine = setup({
     },
   },
   guards: {
-    isOverFeedRowBudget: ({ context, event }): boolean => {
+    isOverRefusableBudget: ({ context, event }): boolean => {
       assertEvent(event, writeEvent);
       return (
-        event.job.type === 'feedRows' &&
-        context.queue.filter((job): boolean => job.type === 'feedRows')
-          .length >= context.feedRowJobLimit
+        event.job.refusable === true &&
+        context.queue.filter((job): boolean => job.refusable === true).length >=
+          context.refusableJobLimit
       );
     },
     isRefusing: ({ context }): boolean => context.refusing,
@@ -203,7 +203,7 @@ export const writerMachine = setup({
   id: 'databaseWriter',
   context: ({ input }): WriterContext => ({
     ...input,
-    feedRowJobLimit: input.feedRowJobLimit ?? defaultFeedRowJobLimit,
+    refusableJobLimit: input.refusableJobLimit ?? defaultRefusableJobLimit,
     queue: [],
     batchSize: 0,
     pendingCommits: [],
@@ -237,22 +237,22 @@ export const writerMachine = setup({
           {
             guard: and(['drainRequested', 'hasJobsAfterBatch']),
             target: 'draining',
-            actions: ['announceCatalogCommit', 'announceWritten', 'dropBatch'],
+            actions: ['announceWritten', 'dropBatch'],
           },
           {
             guard: 'drainRequested',
             target: 'drained',
-            actions: ['announceCatalogCommit', 'announceWritten', 'dropBatch'],
+            actions: ['announceWritten', 'dropBatch'],
           },
           {
             guard: 'hasJobsAfterBatch',
             target: 'writing',
             reenter: true,
-            actions: ['announceCatalogCommit', 'announceWritten', 'dropBatch'],
+            actions: ['announceWritten', 'dropBatch'],
           },
           {
             target: 'idle',
-            actions: ['announceCatalogCommit', 'announceWritten', 'dropBatch'],
+            actions: ['announceWritten', 'dropBatch'],
           },
         ],
         // While draining, a failed batch is tried once more at once, not after `writeRetryDelay`.
@@ -313,11 +313,11 @@ export const writerMachine = setup({
             guard: 'hasJobsAfterBatch',
             target: 'draining',
             reenter: true,
-            actions: ['announceCatalogCommit', 'announceWritten', 'dropBatch'],
+            actions: ['announceWritten', 'dropBatch'],
           },
           {
             target: 'drained',
-            actions: ['announceCatalogCommit', 'announceWritten', 'dropBatch'],
+            actions: ['announceWritten', 'dropBatch'],
           },
         ],
         // The jobs stay in `queue`, so the drained snapshot holds what was lost.

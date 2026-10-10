@@ -7,7 +7,8 @@ import type {
   CustomAgentEditInput,
 } from '@repo/contracts';
 import type { Context } from '../../../engine/context';
-import { writeDatabaseJobAndWaitForCommit } from '../../feed';
+import { writeDatabaseJobAndWaitForCommit } from '../../../storage';
+import { AgentConfigurationSaveJob } from '../agent-storage';
 import { type CustomCheck, checkCustomDefinition } from './agent-check';
 import { readConfiguredAgent } from './configuration-sql';
 
@@ -27,10 +28,13 @@ const saveConfiguration = (
   context: ConfigurationContext,
   agent: SavedAgent,
 ): Promise<void> =>
-  writeDatabaseJobAndWaitForCommit(context.databaseWriter, {
-    type: 'agentConfigurationSave',
-    agent: { ...agent, configuration: serializeConfiguration(agent) },
-  });
+  writeDatabaseJobAndWaitForCommit(
+    context.databaseWriter,
+    new AgentConfigurationSaveJob({
+      ...agent,
+      configuration: serializeConfiguration(agent),
+    }),
+  );
 const requireAgent = (
   context: ConfigurationContext,
   agentId: string,

@@ -8,8 +8,11 @@ import {
   type StatePath,
   type AdjacencyMap,
 } from 'xstate/graph';
-import { syncSupervisorMachine } from '../src/services/agents';
-import { writerMachine } from '../src/services/feed';
+import {
+  AgentCatalogReplaceJob,
+  syncSupervisorMachine,
+} from '../src/services/agents';
+import { writerMachine } from '../src/storage';
 
 type SupervisorSnapshot = SnapshotFrom<typeof syncSupervisorMachine>;
 const synchronized = 'xstate.done.actor.synchronize';
@@ -39,14 +42,13 @@ const supervisorEvents = [
     type: synchronized,
     actorId: 'synchronize',
     output: {
-      job: {
-        type: 'agentCatalogReplace',
+      job: new AgentCatalogReplaceJob({
         source: 'agent-catalog',
         scope: 'default',
         rows: [],
         syncedAt: 1,
         rejectedValues: 0,
-      },
+      }),
     },
   },
   {

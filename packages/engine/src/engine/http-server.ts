@@ -5,8 +5,8 @@ import { WebSocketServer } from 'ws';
 import type { ActorRefFrom } from 'xstate';
 import type { syncSupervisorMachine } from '../services/agents';
 import { blobsFolderIn } from '../services/blob';
-import type { writerMachine } from '../services/feed';
 import type { RegistryActorRef } from '../services/sessions';
+import type { WriterActorRef } from '../storage';
 import { createEngineContext, type Context } from './context';
 import { createRequestGuard } from './request-guard';
 import { createRequestListener } from './request-listener';
@@ -20,7 +20,7 @@ export interface HttpServerOptions {
   startedAt: string;
   database: Database;
   sessions: RegistryActorRef;
-  databaseWriter: ActorRefFrom<typeof writerMachine>;
+  databaseWriter: WriterActorRef;
   syncSupervisor: ActorRefFrom<typeof syncSupervisorMachine>;
   commandAdmission?: AbortController;
 }

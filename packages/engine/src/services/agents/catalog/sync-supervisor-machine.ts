@@ -1,11 +1,12 @@
 import type { Database } from '@repo/db';
-import { assign, fromPromise, setup, type ActorRefFrom } from 'xstate';
+import { type ActorRefFrom, assign, fromPromise, setup } from 'xstate';
 import {
   writeDatabaseJobAndWaitForCommit,
+  type WriterActorRef,
   type WriterCommit,
   type WriterJob,
-  type writerMachine,
-} from '../../feed';
+} from '../../../storage';
+import { SyncJobUpdateJob } from '../agent-storage';
 import { catalogSyncKey, readCatalogSyncJob } from './catalog-sql';
 import {
   catalogSyncActor,
@@ -18,7 +19,7 @@ import { createRegistryReader, type RegistryReader } from './registry-reader';
 export interface SyncSupervisorInput extends Pick<CatalogSyncInput, 'now'> {
   fetchAgents?: FetchAgents;
   database: Database;
-  writer: ActorRefFrom<typeof writerMachine>;
+  writer: WriterActorRef;
 }
 interface SyncContext extends SyncSupervisorInput {
   fetchAgents: FetchAgents;
@@ -41,8 +42,7 @@ function canRetrySync(context: SyncContext): boolean {
 function resultWrite(context: SyncContext): WriterJob {
   const result = context.result;
   if ('job' in result) return result.job;
-  return {
-    type: 'syncJobUpdate',
+  return new SyncJobUpdateJob({
     ...catalogSyncKey,
     set: {
       status: canRetrySync(context) ? 'pending' : 'failed',
@@ -50,7 +50,7 @@ function resultWrite(context: SyncContext): WriterJob {
       error: result.error,
       rejectedValues: result.rejectedValues,
     },
-  };
+  });
 }
 
 export const syncSupervisorMachine = setup({
@@ -64,22 +64,20 @@ export const syncSupervisorMachine = setup({
     schedule: fromPromise<void, SyncContext>(async ({ input }) =>
       writeDatabaseJobAndWaitForCommit(
         input.writer,
-        {
-          type: 'syncJobUpdate',
+        new SyncJobUpdateJob({
           ...catalogSyncKey,
           set: { status: 'pending', requestedAt: input.now() },
-        },
+        }),
         true,
       ),
     ),
     start: fromPromise<void, SyncContext>(async ({ input }) =>
       writeDatabaseJobAndWaitForCommit(
         input.writer,
-        {
-          type: 'syncJobUpdate',
+        new SyncJobUpdateJob({
           ...catalogSyncKey,
           set: { status: 'running' },
-        },
+        }),
         true,
       ),
     ),

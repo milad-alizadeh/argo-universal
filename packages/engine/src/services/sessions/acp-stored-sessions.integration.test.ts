@@ -5,7 +5,8 @@ import type {
 import { expect, it } from 'vitest';
 import { startAcpEngine } from '#mocks/acp-engine';
 import { storedMessage } from '#mocks/feed';
-import { writeJobs } from '../feed';
+import { writeJobs } from '../../storage';
+import { FeedRowsJob } from '../feed';
 
 const nativeSessionId = 'native-thread-1';
 const storedHistory = [storedMessage(0), storedMessage(1)];
@@ -18,12 +19,11 @@ const startEngineWithStoredSession = async (
     .prepare('UPDATE session SET vendor_session_id = ? WHERE id = ?')
     .run(nativeSessionId, 'session-1');
   writeJobs(host.database, [
-    {
-      type: 'feedRows',
+    new FeedRowsJob({
       sessionId: 'session-1',
       rows: storedHistory,
       maxRevision: 2,
-    },
+    }),
   ]);
   return host;
 };

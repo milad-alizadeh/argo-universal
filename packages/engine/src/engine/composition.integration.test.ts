@@ -29,8 +29,13 @@ import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { createScriptedAgentLauncher } from '#mocks/scripted-agent';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
 import { findMachineActor } from '../lib/machine-actor';
-import { writerMachine } from '../services/feed';
-import { databaseWriterId } from '../services/feed';
+import { FeedRowsJob } from '../services/feed';
+import {
+  SessionRowUpdateJob,
+  TurnInsertJob,
+  TurnUpdateJob,
+} from '../services/sessions';
+import { databaseWriterId, writerMachine } from '../storage';
 
 const missingWriterMessage = 'Writer actor is missing';
 const engineStopEvent = 'engine.stop';
@@ -132,15 +137,14 @@ it.each(liveHeaderMocks)(
       if (!writer) throw new Error(missingWriterMessage);
       writer.send({
         type: writerWriteEvent,
-        job: {
-          type: 'feedRows',
+        job: new FeedRowsJob({
           sessionId: 'session-1',
           rows: [
             { ...row, sessionId: 'session-1', turnId: activeTurn.id, revision },
           ],
           maxRevision: revision,
           activityAt: Date.now(),
-        },
+        }),
       });
       await expect
         .poll(
@@ -656,10 +660,9 @@ it('sends live list changes and attention/running counts through request and Tur
   for (const sessionId of ['archived', 'subagent'])
     writer.send({
       type: writerWriteEvent,
-      job: {
-        type: 'turnInsert',
+      job: new TurnInsertJob({
         turn: { id: `turn-${sessionId}`, sessionId, status: 'running' },
-      },
+      }),
     });
   await caller.session.prompt({
     sessionId: 'session-1',
@@ -852,11 +855,10 @@ it('publishes stored list changes, changes counts only when needed, and aborts a
   const waitingCounts = counts.next();
   writer.send({
     type: writerWriteEvent,
-    job: {
-      type: 'sessionRowUpdate',
+    job: new SessionRowUpdateJob({
       id: 'session-1',
       set: { title: 'Renamed' },
-    },
+    }),
   });
   expect((await updates.next()).value).toMatchObject({
     type: 'changed',
@@ -864,11 +866,7 @@ it('publishes stored list changes, changes counts only when needed, and aborts a
   });
   writer.send({
     type: writerWriteEvent,
-    job: {
-      type: 'sessionRowUpdate',
-      id: 'session-1',
-      set: { archivedAt: 5 },
-    },
+    job: new SessionRowUpdateJob({ id: 'session-1', set: { archivedAt: 5 } }),
   });
   expect((await waitingCounts).value).toEqual({ attention: 0, running: 0 });
   let archived: SessionListUpdate | undefined;
@@ -941,11 +939,10 @@ it('shares one coalesced list read for three subscribers across fifty changes', 
     for (let index = 1; index <= 50; index += 1)
       writer.send({
         type: writerWriteEvent,
-        job: {
-          type: 'sessionRowUpdate',
+        job: new SessionRowUpdateJob({
           id: 'session-1',
           set: { title: `Change ${index}`, maxRevision: index },
-        },
+        }),
       });
     await vi.advanceTimersByTimeAsync(99);
     expect(counted.metrics.sessionReads).toBe(0);
@@ -967,11 +964,10 @@ it('shares one coalesced list read for three subscribers across fifty changes', 
     const survivorCounts = counts.next();
     writer.send({
       type: writerWriteEvent,
-      job: {
-        type: 'sessionRowUpdate',
+      job: new SessionRowUpdateJob({
         id: 'session-1',
         set: { title: 'Survives one disconnect', seenRevision: 50 },
-      },
+      }),
     });
     await vi.advanceTimersByTimeAsync(100);
     expect(counted.metrics.sessionReads).toBe(1);
@@ -985,11 +981,10 @@ it('shares one coalesced list read for three subscribers across fifty changes', 
     counted.metrics.sessionReads = 0;
     writer.send({
       type: writerWriteEvent,
-      job: {
-        type: 'sessionRowUpdate',
+      job: new SessionRowUpdateJob({
         id: 'session-1',
         set: { title: 'No subscribers' },
-      },
+      }),
     });
     await vi.advanceTimersByTimeAsync(100);
     expect(counted.metrics.sessionReads).toBe(0);
@@ -1040,11 +1035,10 @@ it('reads only the changed Session and pages the shared cache', async (): Promis
       engine.system.get('databaseWriter');
     writer.send({
       type: writerWriteEvent,
-      job: {
-        type: 'sessionRowUpdate',
+      job: new SessionRowUpdateJob({
         id: 'session-1',
         set: { title: changedAloneTitle, maxRevision: 1 },
-      },
+      }),
     });
     await vi.advanceTimersByTimeAsync(100);
     expect((await changed).value).toMatchObject({
@@ -1100,11 +1094,10 @@ it('initializes a fresh list after all watchers leave and unwatched data changes
     engine.system.get('databaseWriter');
   writer.send({
     type: writerWriteEvent,
-    job: {
-      type: 'sessionRowUpdate',
+    job: new SessionRowUpdateJob({
       id: 'session-1',
       set: { title: unwatchedTitle, maxRevision: 1 },
-    },
+    }),
   });
   await expect
     .poll(
@@ -1154,12 +1147,11 @@ it('pages current queued activity before the list publication delay', async (): 
       engine.system.get('databaseWriter');
     writer.send({
       type: writerWriteEvent,
-      job: {
-        type: 'sessionRowUpdate',
+      job: new SessionRowUpdateJob({
         id: 'session-1',
         set: { title: 'Queued newest', maxRevision: 1 },
         activityAt: 20,
-      },
+      }),
     });
     expect(
       (await caller.session.list({ archived: false })).sessions.map(
@@ -1216,15 +1208,14 @@ it('updates a cached parent when its stored Subagent Turn changes', async (): Pr
     const running = updates.next();
     writer.send({
       type: writerWriteEvent,
-      job: {
-        type: 'turnInsert',
+      job: new TurnInsertJob({
         turn: {
           id: 'child-turn',
           sessionId: 'child-1',
           status: 'running',
           startedAt: 1,
         },
-      },
+      }),
     });
     await vi.advanceTimersByTimeAsync(100);
     expect((await running).value).toMatchObject({
@@ -1233,11 +1224,10 @@ it('updates a cached parent when its stored Subagent Turn changes', async (): Pr
     const stopped = updates.next();
     writer.send({
       type: writerWriteEvent,
-      job: {
-        type: 'turnUpdate',
+      job: new TurnUpdateJob({
         id: 'child-turn',
         set: { status: 'ended', endedAt: 2 },
-      },
+      }),
     });
     await vi.advanceTimersByTimeAsync(100);
     expect((await stopped).value).toMatchObject({

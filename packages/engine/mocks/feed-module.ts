@@ -6,13 +6,13 @@ import { appRouter } from '../src/engine/router';
 import { findMachineActor } from '../src/lib/machine-actor';
 import {
   feedMachine,
-  readWriterProjection,
+  readQueuedFeedRow,
   readWrittenRow,
   type FeedActorRef,
 } from '../src/services/feed';
-import { databaseWriterId, writerMachine } from '../src/services/feed';
 import { createSessionSnapshotWatcher } from '../src/services/sessions';
 import { sessionActorId, sessionMachine } from '../src/services/sessions';
+import { databaseWriterId, writerMachine } from '../src/storage';
 import { waitForAcpSessionIdle } from './acp-feed';
 import { startEngineTestHost } from './engine';
 import { scriptedEngineInput } from './scripted-engine';
@@ -67,13 +67,14 @@ export const startFeedModuleTestHost = async ({
       findWrittenRow: (id) =>
         readWrittenRow({
           database: host.database,
-          pending: readWriterProjection(
+          pending: readQueuedFeedRow(
             findMachineActor(
               host.engine.system,
               databaseWriterId,
               writerMachine,
             ),
-          ).feedRow('session-1', id),
+            { sessionId: 'session-1', id },
+          ),
           sessionId: 'session-1',
           id,
         }),

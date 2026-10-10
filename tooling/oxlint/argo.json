@@ -1020,8 +1020,40 @@
       }
     },
     {
+      "files": ["packages/engine/src/storage/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@repo/client",
+                  "@repo/client/**",
+                  "@repo/universal-app",
+                  "@repo/universal-app/**",
+                  "@repo/storybook",
+                  "@repo/storybook/**",
+                  "@repo/desktop",
+                  "@repo/desktop/**",
+                  "@repo/server",
+                  "@repo/server/**"
+                ],
+                "message": "The Engine and Supervisor never import client or an App."
+              },
+              {
+                "group": ["**/services/**", "**/engine/**", "../**"],
+                "message": "Storage imports no module: each module brings its own jobs."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "files": ["apps/server/**", "packages/engine/**"],
       "excludeFiles": [
+        "packages/engine/src/storage/**",
         "packages/engine/src/services/feed/**",
         "packages/engine/src/services/sessions/**",
         "packages/engine/src/services/agents/**",
