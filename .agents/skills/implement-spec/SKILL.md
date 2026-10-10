@@ -29,7 +29,7 @@ Communication to and from subagents should be sparse. Communicate primarily thro
    - calls the Skill tool with `tdd` to build the ticket;
    - merges the integration branch tip into its own branch before reporting done
 
-5. Once an **implementer subagent** completes, merge its work to the integration branch with a **merger subagent**.
+5. Once an **implementer subagent** completes, inspect the child diff for test, fixture, mock or test-wrapper changes. For each affected child, use an independent **reviewer subagent** to apply `docs/agents/testing-seams.md` against the diff and relevant existing suites. Give it the child base and head commits, ticket and suite pointers. The implementer fixes findings; the reviewer rechecks the relevant revisions. Record compact review evidence in the child PR, or the integration PR or review report when no child PR exists, including no-findings results and the reviewed head commit. Carry report-only evidence into the integration PR when it is created. Integrate only when the review covers the child head and has no unresolved findings; then merge with a **merger subagent**. Children without these changes proceed directly to the merger.
 
 6. If this changes the **frontier** of available tickets, kick off more **implementer subagents** to work on the new tickets. This allows for maximum concurrency.
 

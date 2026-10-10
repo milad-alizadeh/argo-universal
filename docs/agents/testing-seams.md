@@ -38,7 +38,16 @@ For Feed presentation, follow [ADR-0010](../adr/0010-storybook-mocks-data-at-the
 
 ## Review each test's claim
 
-The test name, setup and assertions must make these four facts clear: the public surface, which dependencies run for real, which boundary is replaced, and the observable outcome. Record any remaining limitation in the PR evidence. No per-test metadata wrapper or comment template is required.
+The test name, setup and assertions must make these four facts clear: the public surface, which dependencies run for real, which boundary is replaced, and the observable outcome. Record any remaining limitation in the PR evidence.
+
+For changes to tests, fixtures, mocks or wrappers, review coverage against existing suites, including relevant tests outside the diff:
+
+- Compare every added or changed scenario with coverage of the same public behaviour. Identify its independent observable claim or failure path. Group suites by behaviour within the repository's caps, rather than by implementation file. Consolidate equivalent claims into an existing behaviour suite or parameterise repeated scenarios; helper extraction alone does not remove duplicate coverage.
+- Repeated coverage at another layer earns its place when it proves a distinct composition, transport or lifecycle claim. Name that distinction; equivalent assertions through another entry point alone do not justify it. Preserve mandatory graph traversal alongside the integration claims described above.
+- For removed or consolidated cases, trace every unique assertion and failure path to retained coverage, including parameterised rows. Test counts and passing results alone do not prove coverage was preserved.
+- Apply the fixture and boundary rules above to every new or changed mock and wrapper. Identify the controlled boundary and scenario for a mock, or the required context, realistic layout or shared setup for a wrapper. Check existing boundary code for reuse first and verify that integration seams keep owned collaborators real.
+
+Report compact PR evidence with test or source references: suites compared, distinct claims, boundary decisions and original-to-retained coverage for removals. Include this evidence when there are no findings. Ordinary test names and references suffice; no per-test metadata wrapper, comment template or new framework is required.
 
 Apply TS3 and TS8: parameterise repeated scenarios and keep one behaviour per test. Expected results come from the contract and fixture facts, independently of the production calculation being checked. Calling that calculation to generate both actual and expected results proves nothing. Await observable completion; reset storage and clean up processes, actors, timers and subscriptions between runs.
 
