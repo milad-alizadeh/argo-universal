@@ -6,6 +6,8 @@ Images and large tool output go to content-addressed files at `~/.argo/blobs/<sh
 
 Claude deletes its transcripts after 30 days by default. After that, the Feed stays readable from our rows, but the Session cannot resume. A mirror of the transcript through the SDK `SessionStore` is deferred until we measure real Session sizes.
 
+Under ACP (Spec 0009, #356), reading a Feed never opens the Agent. A Session from the native integration resumes with `session/resume` and its stored upstream id; Argo never loads or lists Agent sessions to rebuild one. When the Agent cannot resume it, the Session fails with the Agent's reason, its Feed stays readable from our rows, and no prompt is sent.
+
 ## Considered Options
 
 - Vendor transcript plus memory, as Paseo does. Rejected: it loses history after the 30-day sweep, it breaks when a vendor changes its file format, and it needs epochs and gap repair on every resume.

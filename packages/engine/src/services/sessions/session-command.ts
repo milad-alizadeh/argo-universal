@@ -34,9 +34,12 @@ export function rejectSessionCommand(
   session: SessionActorRef,
   commandType: SessionCommand['type'],
 ): never {
+  const { value, context } = session.getSnapshot();
+  const refusal = `Session cannot accept ${commandType} in ${JSON.stringify(value)}`;
   throw new TRPCError({
     code: 'CONFLICT',
-    message: `Session cannot accept ${commandType} in ${JSON.stringify(session.getSnapshot().value)}`,
+    message:
+      context.failure === null ? refusal : `${refusal}: ${context.failure}`,
   });
 }
 

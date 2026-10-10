@@ -230,7 +230,12 @@ it('reads no stored rows without an active Turn', (): void => {
       rows: { 'tool-1': tool },
     }).rows,
   ).toEqual({});
-  expect(counted.metrics).toEqual({ queries: 0, rows: 0, sessionReads: 0 });
+  expect(counted.metrics).toEqual({
+    queries: 0,
+    rows: 0,
+    largestRead: 0,
+    sessionReads: 0,
+  });
 });
 
 it('reads only the newest malformed Tool call while retaining all running calls', (): void => {

@@ -10,6 +10,10 @@ A Turn completes through a nonterminal Feed publication barrier. Feed applies an
 
 Plans keep their original row position and Turn through later replacements. Their `_meta.argo.contentRevision` records the last whole content replacement independently of removal; removing an older Plan cannot displace the latest Plan. Removal retains stored history and clears active presentation. An unaddressed ACP Plan persists the narrow `unaddressedPlanAcpSessionId` marker so the existing live/queued/stored revision reconciliation can recover its local row after close/reopen. Existing payload version 1 and stored row IDs remain readable.
 
+Spec 0009 bounds reconnect catch-up (owner, 2026-10-09, #356). On subscribe the Server captures a high-water mark: the newest revision stored, queued or held by the Feed actor. It sends the rows changed after the App's revision and up to that mark in revision order, at most 200 rows per read, then switches to live changes after the mark. Stored, queued and in-memory copies of a row meet one rule: the higher revision wins. A row that changes past the mark while a long catch-up is still paging goes out whole at its own revision, in place of its older live changes, so the stream never moves backwards in revision and a reconnect from any revision the App applied leaves no gap.
+
+Stored rows keep payload version 1. The ACP contracts only widened row shapes, so rows written by the native integration read back unchanged and need no migration or reset. Hydration reads one payload version. An incompatible change ships one migration that rewrites stored payloads to the new version, not a reader for every past shape.
+
 ## Considered Options
 
 - Send the whole row again on every change. Rejected: it costs 20 to 100 times more data, and the cost grows with the square of the message length.
