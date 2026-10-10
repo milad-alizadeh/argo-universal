@@ -1,5 +1,4 @@
 import { setStringAsync } from 'expo-clipboard';
-import { CheckIcon, CopyIcon } from 'phosphor-react-native';
 import type * as React from 'react';
 import { useEffect, useState } from 'react';
 import { Platform, Pressable } from 'react-native';
@@ -41,7 +40,7 @@ export function CopyButton({
       )}
     >
       <Icon
-        as={copied ? CheckIcon : CopyIcon}
+        name={copied ? 'check' : 'copy'}
         className="text-muted-foreground"
       />
     </Pressable>

@@ -1,12 +1,4 @@
 import type { ProjectInfo } from '@repo/contracts';
-import {
-  CaretDownIcon,
-  CheckIcon,
-  FolderIcon,
-  GitBranchIcon,
-  MagnifyingGlassIcon,
-  MonitorIcon,
-} from 'phosphor-react-native';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
@@ -58,21 +50,21 @@ export function StartSessionIn({
           className={cn(
             'gap-1.5 justify-start shadow-none',
             wide
-              ? 'h-7 sm:h-7 px-1.5 has-[>svg]:px-1.5 rounded-md'
-              : 'h-10 sm:h-10 px-4 has-[>svg]:px-4 rounded-md',
+              ? 'h-7 sm:h-7 px-1.5 has-[>[data-icon]]:px-1.5 rounded-md'
+              : 'h-10 sm:h-10 px-4 has-[>[data-icon]]:px-4 rounded-md',
           )}
         >
-          <Icon as={FolderIcon} className="text-muted-foreground" />
+          <Icon name="folder" className="text-muted-foreground" />
           <Text
             selectable={false}
             numberOfLines={1}
-            className="select-none shrink text-sm leading-5 font-normal text-foreground"
+            className="select-none shrink type-body"
           >
             {project?.name ?? 'Choose a Project'}
           </Text>
           <Icon
             size="sm"
-            as={CaretDownIcon}
+            name="chevron-down"
             className="-ml-0.5 text-muted-foreground"
           />
         </Button>
@@ -97,8 +89,8 @@ export function StartSessionIn({
         wide ? 'h-7 px-1.5' : 'h-10 px-4',
       )}
     >
-      <Icon as={MonitorIcon} className="text-muted-foreground" />
-      <Text numberOfLines={1} className="text-sm leading-5 text-foreground">
+      <Icon name="computer" className="text-muted-foreground" />
+      <Text numberOfLines={1} className="type-body">
         {serverName}
       </Text>
       <View
@@ -110,9 +102,7 @@ export function StartSessionIn({
         )}
       />
       {!serverConnected && (
-        <Text className="pl-1 text-xs leading-4 text-warning">
-          Reconnecting…
-        </Text>
+        <Text className="pl-1 type-secondary text-warning">Reconnecting…</Text>
       )}
     </View>
   );
@@ -122,7 +112,7 @@ export function StartSessionIn({
         accessibilityLabel="Start the Session in"
         className="w-full max-w-composer flex-row items-center gap-4 pl-2.5"
       >
-        <Text className="pl-1.5 shrink-0 text-xs leading-4 text-muted-foreground">
+        <Text className="pl-1.5 shrink-0 type-secondary">
           Start the Session in
         </Text>
         {server}
@@ -131,9 +121,7 @@ export function StartSessionIn({
     );
   return (
     <View accessibilityLabel="Start the Session in" className="w-full">
-      <Text className="pl-4 pb-1 text-xs leading-4 text-muted-foreground">
-        Start the Session in
-      </Text>
+      <Text className="pl-4 pb-1 type-secondary">Start the Session in</Text>
       {server}
       {projectControl}
       <ComposerPopover
@@ -143,29 +131,29 @@ export function StartSessionIn({
             variant="ghost"
             disabled={disabled || !checkout.onNewWorktreeChange}
             accessibilityLabel="Checkout"
-            className="h-10 sm:h-10 px-4 has-[>svg]:px-4 gap-1.5 justify-start rounded-md shadow-none"
+            className="h-10 sm:h-10 px-4 has-[>[data-icon]]:px-4 gap-1.5 justify-start rounded-md shadow-none"
           >
             <Icon
-              as={checkout.newWorktree ? GitBranchIcon : FolderIcon}
+              name={checkout.newWorktree ? 'branch' : 'folder'}
               className="text-muted-foreground"
             />
             <Text
               selectable={false}
-              className="select-none text-sm leading-5 font-normal text-muted-foreground"
+              className="select-none type-body text-muted-foreground"
             >
               {checkout.newWorktree ? 'New worktree from' : 'Local'}
             </Text>
             {checkout.newWorktree && (
               <Text
                 selectable={false}
-                className="select-none -ml-0.5 font-mono text-sm leading-5 font-normal text-foreground"
+                className="select-none -ml-0.5 type-code text-foreground"
               >
                 {checkout.branch.toLowerCase()}
               </Text>
             )}
             <Icon
               size="sm"
-              as={CaretDownIcon}
+              name="chevron-down"
               className="-ml-0.5 text-muted-foreground"
             />
           </Button>
@@ -207,7 +195,7 @@ export function ProjectPicker({
     <View className="p-1">
       <View className="py-1">
         <View className="h-8 flex-row items-center gap-1.5 rounded-md px-2">
-          <Icon as={MagnifyingGlassIcon} className="text-muted-foreground" />
+          <Icon name="search" className="text-muted-foreground" />
           <Input
             accessibilityLabel="Find a Project"
             placeholder="Find a Project…"
@@ -215,7 +203,7 @@ export function ProjectPicker({
             onChangeText={setQuery}
             autoCapitalize="none"
             autoCorrect={false}
-            className="h-5 sm:h-5 flex-1 border-0 bg-transparent dark:bg-transparent p-0 px-0 text-sm md:text-sm leading-5 shadow-none web:focus-visible:ring-0"
+            className="h-5 sm:h-5 flex-1 border-0 bg-transparent dark:bg-transparent p-0 px-0 type-control shadow-none web:focus-visible:ring-0"
           />
         </View>
       </View>
@@ -231,41 +219,37 @@ export function ProjectPicker({
               aria-pressed={selected}
               onPress={() => onSelect(project.id)}
               className={cn(
-                'h-auto sm:h-auto items-start justify-start gap-1.5 p-2 has-[>svg]:p-2 rounded-md web:focus-visible:ring-0 web:focus-visible:bg-accent',
+                'h-auto sm:h-auto items-start justify-start gap-1.5 p-2 has-[>[data-icon]]:p-2 rounded-md web:focus-visible:ring-0 web:focus-visible:bg-accent',
                 selected && 'bg-accent',
               )}
             >
               <View className="h-5 shrink-0 justify-center">
-                <Icon as={FolderIcon} className="text-muted-foreground" />
+                <Icon name="folder" className="text-muted-foreground" />
               </View>
               <View className="min-w-0 flex-1 gap-0.5">
                 <Text
                   selectable={false}
                   numberOfLines={1}
-                  className="select-none text-sm leading-5 font-normal text-foreground"
+                  className="select-none type-body"
                 >
                   {project.name}
                 </Text>
                 <Text
                   selectable={false}
                   numberOfLines={1}
-                  className="select-none font-mono text-xs leading-4 font-normal text-muted-foreground"
+                  className="select-none type-code text-muted-foreground"
                 >
                   {project.path}
                 </Text>
               </View>
               <View className="h-5 w-4 shrink-0 items-center justify-center">
-                {selected && (
-                  <Icon as={CheckIcon} className="text-foreground" />
-                )}
+                {selected && <Icon name="check" className="text-foreground" />}
               </View>
             </Button>
           );
         })}
         {found.length === 0 && (
-          <Text className="px-2 py-2 text-sm leading-5 text-muted-foreground">
-            No Project matches.
-          </Text>
+          <Text className="px-2 py-2 type-secondary">No Project matches.</Text>
         )}
       </View>
     </View>

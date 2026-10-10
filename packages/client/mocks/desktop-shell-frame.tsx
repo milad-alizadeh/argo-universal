@@ -1,4 +1,3 @@
-import { DotsThreeIcon } from 'phosphor-react-native/src/icons/DotsThree';
 import type * as React from 'react';
 import { View } from 'react-native';
 import {
@@ -80,10 +79,7 @@ export function DesktopShellFrame({
                 className="size-8 p-0 sm:size-8"
                 accessibilityLabel="More actions"
               >
-                <Icon
-                  as={DotsThreeIcon}
-                  className="size-4 text-muted-foreground"
-                />
+                <Icon name="more" className="size-4 text-muted-foreground" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>

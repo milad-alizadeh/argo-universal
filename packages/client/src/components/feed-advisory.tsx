@@ -1,5 +1,4 @@
 import type { CompactionUpdate } from '@repo/contracts';
-import { ArrowsInLineVerticalIcon, XCircleIcon } from 'phosphor-react-native';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
@@ -90,7 +89,7 @@ function CompactionHeading({
     >
       <View className="h-px min-w-2 flex-1 bg-border" />
       <Icon
-        as={status === 'failed' ? XCircleIcon : ArrowsInLineVerticalIcon}
+        name={status === 'failed' ? 'failed' : 'compaction'}
         className={
           status === 'failed' ? 'text-destructive' : 'text-muted-foreground'
         }

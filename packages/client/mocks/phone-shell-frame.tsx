@@ -1,7 +1,3 @@
-import {
-  MagnifyingGlassIcon,
-  SlidersHorizontalIcon,
-} from 'phosphor-react-native';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { HeaderButton } from '../src/components/header-button';
@@ -46,7 +42,7 @@ export function PhoneShellFrame({
         right={[
           <HeaderButton
             key="search"
-            icon={MagnifyingGlassIcon}
+            icon="search"
             paired
             accessibilityLabel={`Search ${title}`}
             onPress={() => {
@@ -55,7 +51,7 @@ export function PhoneShellFrame({
           />,
           <HeaderButton
             key="filter"
-            icon={SlidersHorizontalIcon}
+            icon="filters"
             paired
             accessibilityLabel={`Filter ${title}`}
             onPress={() => {

@@ -1,4 +1,3 @@
-import { CaretRightIcon } from 'phosphor-react-native/src/icons/CaretRight';
 import type * as React from 'react';
 import Animated, {
   ReduceMotion,
@@ -33,7 +32,7 @@ export function DisclosureCaret({
     <Animated.View style={style} className="shrink-0">
       <Icon
         size="sm"
-        as={CaretRightIcon}
+        name="chevron-right"
         className={cn('text-muted-foreground', className)}
       />
     </Animated.View>

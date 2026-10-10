@@ -55,10 +55,7 @@ export function FeedCodeBlock({
           >
             <Text
               selectable
-              className={cn(
-                'font-mono text-xs leading-5 text-foreground',
-                textClassName,
-              )}
+              className={cn('type-code-block text-foreground', textClassName)}
             >
               {code}
             </Text>

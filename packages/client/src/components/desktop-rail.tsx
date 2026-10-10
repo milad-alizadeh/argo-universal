@@ -40,8 +40,8 @@ const SectionButton = memo(function SectionButton({
     >
       <Icon
         size="lg"
-        as={icon}
-        weight={selected ? 'fill' : 'regular'}
+        name={icon}
+        filled={selected}
         className={cn(!selected && 'text-muted-foreground')}
       />
       {section === 'sessions' && attentionCount > 0 && (
@@ -49,7 +49,7 @@ const SectionButton = memo(function SectionButton({
           className="absolute -right-1 -top-1 min-w-4 border-0 bg-warning px-1 py-0"
           accessibilityLabel={`${attentionCount} ${attentionCount === 1 ? 'Session needs' : 'Sessions need'} attention`}
         >
-          <Text className="text-[10px] font-semibold text-warning-foreground">
+          <Text className="type-badge text-warning-foreground">
             {attentionCount > maximumAttentionBadgeCount
               ? `${maximumAttentionBadgeCount}+`
               : attentionCount}

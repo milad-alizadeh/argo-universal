@@ -1,4 +1,3 @@
-import { InfoIcon } from 'phosphor-react-native';
 import type { ReactNode } from 'react';
 import { View, type ViewProps } from 'react-native';
 import { cn } from '#lib/utils';
@@ -81,10 +80,7 @@ function RequestBody({
 function RequestError({ error }: Pick<RequestCardProps, 'error'>): ReactNode {
   return (
     error && (
-      <Text
-        role="alert"
-        className="px-4 pt-3 text-sm leading-5 text-destructive"
-      >
+      <Text role="alert" className="px-4 pt-3 type-secondary text-destructive">
         {error}
       </Text>
     )
@@ -142,11 +138,7 @@ function AlreadyAnswered(props: AnsweredStatusProps): ReactNode {
       role="status"
       className="min-w-0 flex-1 flex-row items-center gap-1.5 px-2"
     >
-      <Icon
-        as={InfoIcon}
-        size="md"
-        className="shrink-0 text-muted-foreground"
-      />
+      <Icon name="info" size="md" className="shrink-0 text-muted-foreground" />
       <AnsweredText {...props} />
     </View>
   );
@@ -156,7 +148,7 @@ function AnsweredText({ reason, muted }: AnsweredStatusProps): ReactNode {
   return (
     <Text
       className={cn(
-        'min-w-0 flex-1 text-sm leading-5',
+        'min-w-0 flex-1 type-body',
         muted && 'text-muted-foreground',
       )}
     >

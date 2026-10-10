@@ -1,4 +1,3 @@
-import { FileDashedIcon, FileIcon } from 'phosphor-react-native';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/utils';
@@ -34,9 +33,7 @@ export function CodeBlockHeader({
         <>
           <View className="h-5 w-icon-md shrink-0 items-center justify-center">
             <Icon
-              as={
-                resource.uri.startsWith('file://') ? FileIcon : FileDashedIcon
-              }
+              name={resource.uri.startsWith('file://') ? 'file' : 'resource'}
               className="text-muted-foreground"
             />
           </View>

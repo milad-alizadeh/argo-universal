@@ -1,6 +1,6 @@
 # Hooks
 
-Claude Code and Codex run one script, `tools/agent-hooks.mts`, from `.claude/settings.json` and `.codex/hooks.json`. Hooks give early feedback only; `pnpm quality` and the required CI check are the gate.
+Claude Code and Codex run one script, `tools/agent-hooks.mts`, from `.claude/settings.json` and `.codex/hooks.json`, in one of two modes: `after-edit` and `before-stop`. Hooks give early feedback only; `pnpm quality` and the required CI check are the gate.
 
 ## What runs
 

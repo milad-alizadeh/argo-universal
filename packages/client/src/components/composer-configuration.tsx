@@ -6,25 +6,12 @@ import type {
   SessionConfigOption,
   SessionConfigSelectOption,
 } from '@repo/contracts';
-import {
-  CaretDownIcon,
-  CaretLeftIcon,
-  CaretRightIcon,
-  CheckIcon,
-  FolderIcon,
-  GitBranchIcon,
-  HourglassSimpleIcon,
-  MapTrifoldIcon,
-  PencilIcon,
-  ShieldWarningIcon,
-  SparkleIcon,
-  WarningIcon,
-} from 'phosphor-react-native';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import { withUniwind } from 'uniwind';
+import type { IconName } from '#lib/icon-names';
 import { cn } from '#lib/utils';
 import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
@@ -97,20 +84,20 @@ function currentEffort(configuration: ComposerConfigurationProps): {
   };
 }
 
-const configurationIcons: Record<string, typeof ShieldWarningIcon> = {
-  ShieldWarning: ShieldWarningIcon,
-  Pencil: PencilIcon,
-  MapTrifold: MapTrifoldIcon,
-  Sparkles: SparkleIcon,
-  WarningTriangle: WarningIcon,
-} satisfies Record<ConfigOptionIcon, typeof ShieldWarningIcon>;
+const configurationIcons: Record<string, IconName> = {
+  ShieldWarning: 'permission',
+  Pencil: 'edit',
+  MapTrifold: 'plan-mode',
+  Sparkles: 'sparkle',
+  WarningTriangle: 'warning',
+} satisfies Record<ConfigOptionIcon, IconName>;
 const agentModelMenuWidth = 580;
 const agentMenuWidth = 280;
-function configurationIcon(name?: string): typeof SparkleIcon {
+function configurationIcon(name?: string): IconName {
   return (
     (name && Object.hasOwn(configurationIcons, name)
       ? configurationIcons[name]
-      : undefined) ?? ShieldWarningIcon
+      : undefined) ?? 'permission'
   );
 }
 const agentAvailability = {
@@ -195,18 +182,14 @@ function Choice({
         <Text
           selectable={false}
           className={cn(
-            'select-none',
-            'text-sm leading-5 font-normal',
+            'select-none type-body',
             dangerous && destructiveTextClassName,
           )}
         >
           {label}
         </Text>
         {description && (
-          <Text
-            selectable={false}
-            className="select-none text-xs leading-4 font-normal text-muted-foreground"
-          >
+          <Text selectable={false} className="select-none type-secondary">
             {description}
           </Text>
         )}
@@ -217,7 +200,7 @@ function Choice({
           leading && 'h-5',
         )}
       >
-        {selected && <Icon as={CheckIcon} />}
+        {selected && <Icon name="check" />}
       </View>
     </Button>
   );
@@ -235,7 +218,7 @@ function MenuHeading({ children }: { children: string }): React.JSX.Element {
   return (
     <Text
       selectable={false}
-      className="select-none px-2 py-1 text-xs leading-4 font-medium text-muted-foreground"
+      className="select-none px-2 py-1 type-badge text-muted-foreground"
     >
       {children}
     </Text>
@@ -278,7 +261,7 @@ function AgentChoices({
           }}
           aria-pressed={agent.agent === configuration.agent}
           className={cn(
-            'min-h-11 wide:min-h-8 h-auto sm:h-auto py-1.5 px-2 has-[>svg]:px-2 rounded-sm justify-start gap-2.5 wide:gap-2 web:focus-visible:ring-0 web:focus-visible:bg-accent',
+            'min-h-11 wide:min-h-8 h-auto sm:h-auto py-1.5 px-2 has-[>[data-icon]]:px-2 rounded-sm justify-start gap-2.5 wide:gap-2 web:focus-visible:ring-0 web:focus-visible:bg-accent',
             configuration.onAgentChange &&
               agent.agent === configuration.agent &&
               'bg-accent',
@@ -291,36 +274,28 @@ function AgentChoices({
         >
           {wide && <Logo agent={agent} />}
           <View className="flex-1 min-w-0 gap-0.5">
-            <Text
-              selectable={false}
-              className="select-none text-sm leading-5 font-normal"
-            >
+            <Text selectable={false} className="select-none type-body">
               {agent.label}
             </Text>
             {availability && (
               <Text
                 selectable={false}
                 className={cn(
-                  'select-none text-xs leading-4',
-                  availability.reason
-                    ? 'text-muted-foreground'
-                    : 'text-warning',
+                  'select-none type-secondary',
+                  !availability.reason && 'text-warning',
                 )}
               >
                 {availability.label}
               </Text>
             )}
             {availability?.reason && agent.installStep && (
-              <Text
-                selectable={false}
-                className="select-none text-xs leading-4 text-muted-foreground"
-              >
+              <Text selectable={false} className="select-none type-secondary">
                 {agent.installStep}
               </Text>
             )}
           </View>
           {configuration.onAgentChange &&
-            agent.agent === configuration.agent && <Icon as={CheckIcon} />}
+            agent.agent === configuration.agent && <Icon name="check" />}
         </Button>
         {availability && onAvailabilityAction && (
           <Button
@@ -332,7 +307,7 @@ function AgentChoices({
             <Text
               selectable={false}
               className={cn(
-                'select-none text-xs',
+                'select-none type-control',
                 availability.action === 'retry' && 'underline',
               )}
             >
@@ -346,10 +321,7 @@ function AgentChoices({
   // In a View, since bare Text in a list footer is inline on web and pads only its first line.
   const footer = configuration.onAgentChange ? null : (
     <View className="pl-8 pr-2 pb-1">
-      <Text
-        selectable={false}
-        className="select-none text-xs leading-4 text-muted-foreground"
-      >
+      <Text selectable={false} className="select-none type-secondary">
         Start a new Session to switch Agent
       </Text>
     </View>
@@ -434,14 +406,11 @@ function EffortControl({
       <View className="gap-0.5">
         <Text
           selectable={false}
-          className="select-none text-xs leading-4 font-medium text-muted-foreground"
+          className="select-none type-badge text-muted-foreground"
         >
           {selected ? 'Effort' : 'No selection'}
         </Text>
-        <Text
-          selectable={false}
-          className="select-none text-xs leading-4 text-muted-foreground"
-        >
+        <Text selectable={false} className="select-none type-secondary">
           More effort trades speed for deeper reasoning.
         </Text>
       </View>
@@ -491,7 +460,7 @@ function EffortControl({
                     selectable={false}
                     numberOfLines={1}
                     className={cn(
-                      'select-none text-xs leading-4 font-normal text-muted-foreground',
+                      'select-none type-secondary',
                       choice === selected && 'text-foreground',
                     )}
                   >
@@ -539,11 +508,11 @@ function AgentModelMenu({
             className="size-11 sm:size-11"
             onPress={() => setPage('settings')}
           >
-            <Icon size="lg" as={CaretLeftIcon} className="text-foreground" />
+            <Icon size="lg" name="chevron-left" className="text-foreground" />
           </Button>
           <Text
             selectable={false}
-            className="select-none flex-1 text-center text-sm leading-5 font-medium"
+            className="select-none flex-1 text-center type-control"
           >
             {page === 'agent' ? 'Agent' : 'Model'}
           </Text>
@@ -592,23 +561,20 @@ function AgentModelMenu({
               onPress={() => setPage('agent')}
               className="h-11 sm:h-11 px-2 gap-2 justify-start"
             >
-              <Text
-                selectable={false}
-                className="select-none flex-1 text-sm font-normal"
-              >
+              <Text selectable={false} className="select-none flex-1 type-body">
                 Agent
               </Text>
               <Logo agent={agent} />
               <Text
                 selectable={false}
-                className="select-none text-sm font-normal text-muted-foreground"
+                className="select-none type-body text-muted-foreground"
               >
                 {agent?.label}
               </Text>
               {configuration.onAgentChange && (
                 <Icon
                   size="sm"
-                  as={CaretRightIcon}
+                  name="chevron-right"
                   className="-ml-0.5 text-muted-foreground"
                 />
               )}
@@ -616,7 +582,7 @@ function AgentModelMenu({
             {!configuration.onAgentChange && (
               <Text
                 selectable={false}
-                className="select-none text-xs leading-4 text-muted-foreground px-2 pb-1"
+                className="select-none type-secondary px-2 pb-1"
               >
                 Start a new Session to switch Agent
               </Text>
@@ -627,21 +593,18 @@ function AgentModelMenu({
               onPress={() => setPage('model')}
               className="h-11 sm:h-11 px-2 gap-2 justify-start"
             >
-              <Text
-                selectable={false}
-                className="select-none flex-1 text-sm font-normal"
-              >
+              <Text selectable={false} className="select-none flex-1 type-body">
                 Model
               </Text>
               <Text
                 selectable={false}
-                className="select-none text-sm font-normal text-muted-foreground"
+                className="select-none type-body text-muted-foreground"
               >
                 {modelName(current)}
               </Text>
               <Icon
                 size="sm"
-                as={CaretRightIcon}
+                name="chevron-right"
                 className="-ml-0.5 text-muted-foreground"
               />
             </Button>
@@ -650,10 +613,10 @@ function AgentModelMenu({
         <EffortControl configuration={configuration} />
         {configuration.turnRunning && (
           <View className="flex-row gap-2 px-3 py-2.5 bg-muted">
-            <Icon as={HourglassSimpleIcon} className="text-muted-foreground" />
+            <Icon name="waiting" className="text-muted-foreground" />
             <Text
               selectable={false}
-              className="select-none flex-1 text-xs leading-4 text-muted-foreground"
+              className="select-none flex-1 type-secondary"
             >
               A Turn is running. Changes apply from the next Turn.
             </Text>
@@ -691,15 +654,13 @@ export function ComposerAgentModelControl({
           variant="ghost"
           disabled={disabled}
           accessibilityLabel="Agent and model"
-          className="h-7 sm:h-7 py-0 px-1.5 has-[>svg]:px-1.5 gap-1.5 shrink min-w-0"
+          className="h-7 sm:h-7 py-0 px-1.5 has-[>[data-icon]]:px-1.5 gap-1.5 shrink min-w-0"
         >
           {wide && <Logo agent={agent} />}
           <Text
             selectable={false}
             numberOfLines={1}
-            className={cn(
-              'select-none text-sm leading-5 font-normal min-w-0 shrink',
-            )}
+            className="select-none type-control min-w-0 shrink"
           >
             {modelName(current) || agent?.label}
           </Text>
@@ -708,9 +669,7 @@ export function ComposerAgentModelControl({
             effortLabel && (
               <Text
                 selectable={false}
-                className={cn(
-                  'select-none text-sm leading-5 font-normal text-muted-foreground shrink-0',
-                )}
+                className="select-none type-control text-muted-foreground shrink-0"
                 numberOfLines={1}
               >
                 {effortLabel}
@@ -719,7 +678,7 @@ export function ComposerAgentModelControl({
           {wide && (
             <Icon
               size="sm"
-              as={CaretDownIcon}
+              name="chevron-down"
               className="-ml-0.5 text-muted-foreground"
             />
           )}
@@ -755,12 +714,12 @@ export function ComposerModeControl({
           className={cn(
             'h-7 sm:h-7 py-0 gap-1.5',
             wide
-              ? 'w-auto px-1.5 has-[>svg]:px-1.5'
-              : 'w-7 p-0 has-[>svg]:px-0',
+              ? 'w-auto px-1.5 has-[>[data-icon]]:px-1.5'
+              : 'w-7 p-0 has-[>[data-icon]]:px-0',
           )}
         >
           <Icon
-            as={configurationIcon(current?._meta?.argo?.icon)}
+            name={configurationIcon(current?._meta?.argo?.icon)}
             className={cn(
               'text-muted-foreground',
               current?._meta?.argo?.tone === 'dangerous' &&
@@ -770,8 +729,7 @@ export function ComposerModeControl({
           <Text
             selectable={false}
             className={cn(
-              'select-none',
-              'text-sm leading-5 font-normal text-muted-foreground',
+              'select-none type-control text-muted-foreground',
               !wide && 'hidden',
               current?._meta?.argo?.tone === 'dangerous' &&
                 destructiveTextClassName,
@@ -782,7 +740,7 @@ export function ComposerModeControl({
           <View className={cn('-ml-0.5', !wide && 'hidden')}>
             <Icon
               size="sm"
-              as={CaretDownIcon}
+              name="chevron-down"
               className="text-muted-foreground"
             />
           </View>
@@ -793,7 +751,7 @@ export function ComposerModeControl({
         <View className="p-1 gap-0.5">
           <Text
             selectable={false}
-            className="select-none px-2 pt-1.5 pb-1 text-xs leading-4 font-medium text-muted-foreground"
+            className="select-none px-2 pt-1.5 pb-1 type-badge text-muted-foreground"
           >
             Mode
           </Text>
@@ -806,7 +764,7 @@ export function ComposerModeControl({
               dangerous={choice._meta?.argo?.tone === 'dangerous'}
               leading={
                 <Icon
-                  as={configurationIcon(choice._meta?.argo?.icon)}
+                  name={configurationIcon(choice._meta?.argo?.icon)}
                   className={cn(
                     'text-foreground',
                     choice._meta?.argo?.tone === 'dangerous' &&
@@ -844,7 +802,7 @@ export function CheckoutContents({
           selected={checkout.newWorktree === newWorktree}
           leading={
             <Icon
-              as={newWorktree ? GitBranchIcon : FolderIcon}
+              name={newWorktree ? 'branch' : 'folder'}
               className="text-muted-foreground"
             />
           }
@@ -872,13 +830,16 @@ export function ComposerCheckoutControl({
     return (
       <View className="h-7 min-w-0 max-w-96 px-1.5 flex-row items-center gap-1.5">
         <Icon
-          as={checkout.newWorktree ? GitBranchIcon : FolderIcon}
+          name={checkout.newWorktree ? 'branch' : 'folder'}
           className="text-muted-foreground"
         />
         <Text
           selectable={false}
           numberOfLines={1}
-          className="select-none min-w-0 shrink text-xs leading-4 font-normal font-mono"
+          className={cn(
+            'select-none min-w-0 shrink',
+            checkout.newWorktree ? 'type-code' : 'type-secondary',
+          )}
         >
           {checkout.newWorktree
             ? checkout.path
@@ -897,21 +858,18 @@ export function ComposerCheckoutControl({
           variant="ghost"
           disabled={disabled}
           accessibilityLabel="Checkout"
-          className="h-7 sm:h-7 py-0 px-1.5 has-[>svg]:px-1.5 pr-0.25 has-[>svg]:pr-0.25 gap-1.5 rounded-md border-0 bg-transparent shadow-none"
+          className="h-7 sm:h-7 py-0 px-1.5 has-[>[data-icon]]:px-1.5 pr-0.25 has-[>[data-icon]]:pr-0.25 gap-1.5 rounded-md border-0 bg-transparent shadow-none"
         >
           <Icon
-            as={checkout.newWorktree ? GitBranchIcon : FolderIcon}
+            name={checkout.newWorktree ? 'branch' : 'folder'}
             className="text-muted-foreground"
           />
-          <Text
-            selectable={false}
-            className="select-none text-xs leading-4 font-normal text-muted-foreground"
-          >
+          <Text selectable={false} className="select-none type-secondary">
             {checkout.newWorktree ? 'New worktree' : 'Local'}
           </Text>
           <Icon
             size="sm"
-            as={CaretDownIcon}
+            name="chevron-down"
             className="text-muted-foreground"
           />
         </Button>

@@ -9,6 +9,7 @@ import {
 } from './app-protocol';
 import { serverConnectionMachine } from './server-machine';
 import { resolveHome } from './server-process';
+import { handleSymbolImages } from './symbol-images';
 
 // The dev script sets the Expo web dev URL; without it the window loads the web export over app://.
 const webDevelopmentUrl = process.env.ARGO_EXPO_WEB_URL;
@@ -82,6 +83,8 @@ for (const action of ['minimize', 'maximize', 'close'] as const) {
     else window.maximize();
   });
 }
+
+if (process.platform === 'darwin') handleSymbolImages(windowOrigin);
 
 let serverStarted = false;
 

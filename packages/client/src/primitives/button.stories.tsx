@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { PlusIcon } from 'phosphor-react-native/src/icons/Plus';
 import type { ComponentProps } from 'react';
 import { View } from 'react-native';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
@@ -42,7 +41,7 @@ export const Overview: Story = {
       <Variation label="Icon">
         <View className="flex-row">
           <Button size="icon" accessibilityLabel="Add">
-            <Icon as={PlusIcon} />
+            <Icon name="add" />
           </Button>
         </View>
       </Variation>

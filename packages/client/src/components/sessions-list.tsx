@@ -256,7 +256,7 @@ export function SessionsList({
 
 function NoSessionsYet(): React.JSX.Element {
   return (
-    <Text className="pb-1 pl-session-name pr-1 text-xs leading-4 text-muted-foreground">
+    <Text className="pb-1 pl-session-name pr-1 type-secondary">
       No Sessions yet.
     </Text>
   );
@@ -293,11 +293,11 @@ function EmptySessionsList({
 }): React.JSX.Element {
   return (
     <View className="items-center gap-1 px-4 py-8">
-      <Text className="text-center text-sm font-medium">
+      <Text className="text-center type-heading">
         {emptyListTitle(query, archived)}
       </Text>
       {query ? (
-        <Text className="text-center text-xs text-muted-foreground">
+        <Text className="text-center type-secondary">
           No {archived ? 'Archived' : 'Active'} Session has "{query}" in its
           title.
         </Text>

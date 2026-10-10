@@ -1,12 +1,9 @@
 import { isToolCallRunning, type ToolCallUpdate } from '@repo/contracts';
-import { CheckIcon } from 'phosphor-react-native/src/icons/Check';
-import { TerminalWindowIcon } from 'phosphor-react-native/src/icons/TerminalWindow';
-import { XIcon } from 'phosphor-react-native/src/icons/X';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/utils';
 import { Text } from '#primitives/text';
-import { toolCallTitle } from '../feed/tool-call-title';
+import { toolCallTitle, toolCallTitlePaths } from '../feed/tool-call-title';
 import { useToolCallDuration } from '../feed/use-tool-call-duration';
 import { Icon } from '../lib/icon';
 import { FeedCodeBlock } from './feed-code-block';
@@ -49,7 +46,8 @@ export function CommandRow({
   return (
     <ToolCallDisclosure
       label={toolCallTitle(row, awaitingApproval)}
-      icon={TerminalWindowIcon}
+      paths={toolCallTitlePaths(row, awaitingApproval)}
+      icon="terminal"
       failed={failed}
       running={running}
       initialOpen={initialOpen}
@@ -65,13 +63,13 @@ export function CommandRow({
           <View className="flex-row items-center gap-1.5 px-3 pb-2">
             {!running && !stopped && (
               <Icon
-                as={failed ? XIcon : CheckIcon}
+                name={failed ? 'close' : 'check'}
                 className={cn('text-success', failed && 'text-destructive')}
               />
             )}
             <Text
               className={cn(
-                'font-mono text-xs leading-5 text-muted-foreground',
+                'type-code-block text-muted-foreground',
                 failed && 'text-destructive',
               )}
             >

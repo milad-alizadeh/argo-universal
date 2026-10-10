@@ -1,9 +1,3 @@
-import {
-  DotsThreeIcon,
-  FolderIcon,
-  FolderOpenIcon,
-  PlusIcon,
-} from 'phosphor-react-native';
 import type * as React from 'react';
 import { memo, useState } from 'react';
 import { Platform, Pressable, View } from 'react-native';
@@ -52,19 +46,19 @@ export const ProjectHeading = memo(function ProjectHeading({
         accessibilityLabel={name}
         accessibilityState={{ expanded: !collapsed }}
         aria-expanded={!collapsed}
-        className="h-full sm:h-full min-w-0 flex-1 justify-start gap-2 pl-2.5 pr-2 py-1 hover:bg-transparent dark:hover:bg-transparent web:has-[>svg]:pl-2.5 web:has-[>svg]:pr-2"
+        className="h-full sm:h-full min-w-0 flex-1 justify-start gap-2 pl-2.5 pr-2 py-1 hover:bg-transparent dark:hover:bg-transparent web:has-[>[data-icon]]:pl-2.5 web:has-[>[data-icon]]:pr-2"
         onPress={onToggle}
         {...interactionEvents}
       >
         <TextClassContext.Provider value={undefined}>
           <Icon
-            as={collapsed ? FolderIcon : FolderOpenIcon}
+            name={collapsed ? 'folder' : 'folder-open'}
             className="text-muted-foreground wide:text-foreground"
           />
           <Text
             selectable={false}
             numberOfLines={1}
-            className="select-none min-w-0 flex-1 text-base leading-6 font-semibold wide:text-sm wide:leading-5 wide:font-medium"
+            className="select-none min-w-0 flex-1 type-heading"
           >
             {name}
           </Text>
@@ -79,22 +73,22 @@ export const ProjectHeading = memo(function ProjectHeading({
         <Button
           variant="ghost"
           accessibilityLabel={`Project settings for ${name}`}
-          className="size-6 sm:size-6 rounded-sm p-0 web:has-[>svg]:px-0"
+          className="size-6 sm:size-6 rounded-sm p-0 web:has-[>[data-icon]]:px-0"
           onPress={onProjectSettings}
           disabled={!onProjectSettings}
           {...interactionEvents}
         >
-          <Icon as={DotsThreeIcon} className="text-foreground" />
+          <Icon name="more" className="text-foreground" />
         </Button>
         <Button
           variant="ghost"
           accessibilityLabel={addLabel}
-          className="size-6 sm:size-6 rounded-sm p-0 web:has-[>svg]:px-0"
+          className="size-6 sm:size-6 rounded-sm p-0 web:has-[>[data-icon]]:px-0"
           onPress={onAdd}
           disabled={!onAdd}
           {...interactionEvents}
         >
-          <Icon as={PlusIcon} className="text-foreground" />
+          <Icon name="add" className="text-foreground" />
         </Button>
       </View>
     </Pressable>

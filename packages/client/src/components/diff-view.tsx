@@ -41,7 +41,7 @@ function CodeLine({
     >
       <Text
         className={cn(
-          'shrink-0 text-right font-mono text-xs leading-5',
+          'shrink-0 text-right type-code-block',
           lineStyles[line.kind].color,
           inline ? 'w-7' : 'w-9',
         )}
@@ -50,14 +50,14 @@ function CodeLine({
       </Text>
       <Text
         className={cn(
-          'w-5 shrink-0 text-center font-mono text-xs leading-5',
+          'w-5 shrink-0 text-center type-code-block',
           lineStyles[line.kind].color,
         )}
       >
         {line.kind === 'removed' ? '\u2212' : lineStyles[line.kind].sign}
       </Text>
       <Text
-        className="shrink-0 pr-3 font-mono text-xs leading-5 text-foreground"
+        className="shrink-0 pr-3 type-code-block text-foreground"
         selectable
       >
         {line.text}
@@ -83,7 +83,7 @@ function FileHeader({
     <View className="h-9 flex-row items-center gap-2 bg-muted pr-3 pl-2">
       <Button
         variant="link"
-        className="h-5 min-w-0 flex-1 justify-start gap-2 rounded-none p-0 sm:h-5 has-[>svg]:px-0"
+        className="h-5 min-w-0 flex-1 justify-start gap-2 rounded-none p-0 sm:h-5 has-[>[data-icon]]:px-0"
         aria-label={`Diff for ${file.path}`}
         aria-expanded={open}
         onPress={() => onOpenChange(!open)}
@@ -95,14 +95,14 @@ function FileHeader({
               selectable={false}
               numberOfLines={1}
               ellipsizeMode="head"
-              className="min-w-0 shrink font-mono text-xs leading-4 text-muted-foreground web:[direction:rtl] web:text-left"
+              className="min-w-0 shrink type-code text-muted-foreground web:[direction:rtl] web:text-left"
             >
               {Platform.OS === 'web' ? `\u2066${folder}\u2069` : folder}
             </Text>
             <Text
               selectable={false}
               numberOfLines={1}
-              className="shrink-0 font-mono text-xs font-semibold leading-4 text-foreground"
+              className="shrink-0 type-code text-foreground"
             >
               {name}
             </Text>
@@ -113,7 +113,7 @@ function FileHeader({
       {file.added > 0 && (
         <Text
           selectable={false}
-          className="select-none font-mono text-xs font-normal leading-4 text-success"
+          className="select-none type-badge text-success"
         >
           +{file.added}
         </Text>
@@ -121,7 +121,7 @@ function FileHeader({
       {file.removed > 0 && (
         <Text
           selectable={false}
-          className="select-none font-mono text-xs font-normal leading-4 text-destructive"
+          className="select-none type-badge text-destructive"
         >
           {`\u2212${file.removed}`}
         </Text>
@@ -199,7 +199,7 @@ export function DiffView({
           >
             <Text
               selectable={false}
-              className="select-none text-sm font-normal leading-5 text-muted-foreground no-underline group-hover:no-underline group-active:no-underline"
+              className="select-none type-secondary no-underline group-hover:no-underline group-active:no-underline"
             >
               Show all {lineCount} lines
             </Text>

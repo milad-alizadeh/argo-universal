@@ -34,7 +34,7 @@ function git(...args: string[]): void {
 function runHook(
   command: string,
   input: unknown,
-): { status: number | null; stderr: string } {
+): { status: number | null; stderr: string; stdout: string } {
   const stdin = typeof input === 'string' ? input : JSON.stringify(input);
   const result = spawnSync(
     'node',
@@ -45,7 +45,11 @@ function runHook(
       encoding: 'utf8',
     },
   );
-  return { status: result.status, stderr: result.stderr };
+  return {
+    status: result.status,
+    stderr: result.stderr,
+    stdout: result.stdout,
+  };
 }
 
 // Recorded input shapes: an Edit or Write call carries file_path; an apply_patch call carries a command.

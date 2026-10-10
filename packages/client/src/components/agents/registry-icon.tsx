@@ -1,4 +1,3 @@
-import { RobotIcon } from 'phosphor-react-native';
 import type * as React from 'react';
 import { useMemo } from 'react';
 import { View } from 'react-native';
@@ -93,7 +92,7 @@ function UnavailableIcon({
       accessibilityRole="image"
       accessibilityLabel={`${agentName} icon unavailable`}
     >
-      <Icon as={RobotIcon} size="mark" />
+      <Icon name="agent" size="mark" />
     </View>
   );
 }

@@ -15,6 +15,5 @@
     "ui": "#primitives",
     "lib": "#lib",
     "hooks": "#lib/hooks"
-  },
-  "iconLibrary": "phosphor"
+  }
 }

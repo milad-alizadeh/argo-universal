@@ -1,7 +1,7 @@
-import type { Icon as PhosphorIcon } from 'phosphor-react-native';
 import type * as React from 'react';
 import { type ReactNode, useState } from 'react';
 import { View } from 'react-native';
+import type { IconName } from '#lib/icon-names';
 import { cn } from '#lib/utils';
 import {
   Collapsible,
@@ -17,7 +17,9 @@ const foregroundTextClassName = 'text-foreground';
 
 export interface FeedDisclosureProps {
   label: string;
-  icon: PhosphorIcon;
+  // Parts of the label to draw in mono.
+  paths?: readonly string[];
+  icon: IconName;
   running?: boolean;
   failed?: boolean;
   initialOpen?: boolean;
@@ -27,8 +29,29 @@ export interface FeedDisclosureProps {
   children: ReactNode;
 }
 
+function withMonoPaths(title: string, paths: readonly string[]): ReactNode[] {
+  const pattern = paths
+    .filter(Boolean)
+    .map((path) => path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('|');
+  if (!pattern) return [title];
+  let offset = 0;
+  return title.split(new RegExp(`(${pattern})`)).map((part) => {
+    const key = `${offset}`;
+    offset += part.length;
+    return paths.includes(part) ? (
+      <Text key={key} className="type-code">
+        {part}
+      </Text>
+    ) : (
+      part
+    );
+  });
+}
+
 export function FeedDisclosure({
   label,
+  paths = [],
   icon,
   running = false,
   failed = false,
@@ -51,7 +74,7 @@ export function FeedDisclosure({
           className="min-h-5 max-w-full self-start flex-row items-center gap-1.5"
         >
           <Icon
-            as={icon}
+            name={icon}
             className={cn(
               'shrink-0 text-muted-foreground',
               failed && 'text-destructive',
@@ -63,25 +86,25 @@ export function FeedDisclosure({
               <ShimmerText
                 text={title}
                 emphasized={hovered}
-                className="min-w-0 shrink text-sm leading-5 text-foreground"
+                className="min-w-0 shrink type-body"
               />
             ) : (
               <Text
                 numberOfLines={1}
                 selectable={false}
                 className={cn(
-                  'min-w-0 shrink text-sm leading-5 text-muted-foreground',
+                  'min-w-0 shrink type-body text-muted-foreground',
                   hovered && foregroundTextClassName,
                   awaitingApproval && 'text-warning',
                   denied && 'line-through',
                 )}
               >
-                {title}
+                {withMonoPaths(title, paths)}
               </Text>
             )}
             {awaitingApproval && (
               <View className="rounded-sm border border-warning/20 bg-warning/10 px-1.5">
-                <Text className="text-xs leading-4.5 text-warning">
+                <Text className="type-badge text-warning">
                   Awaiting approval
                 </Text>
               </View>

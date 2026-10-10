@@ -3,9 +3,6 @@ import type {
   LiveHeader as LiveHeaderValue,
   ToolCallUpdate,
 } from '@repo/contracts';
-import { ArrowClockwiseIcon } from 'phosphor-react-native/src/icons/ArrowClockwise';
-import { BrainIcon } from 'phosphor-react-native/src/icons/Brain';
-import { WrenchIcon } from 'phosphor-react-native/src/icons/Wrench';
 import type * as React from 'react';
 import { useEffect } from 'react';
 import { View } from 'react-native';
@@ -60,7 +57,7 @@ function RetryIcon(): React.JSX.Element {
   );
   return (
     <Animated.View testID="live-header-retry" style={style}>
-      <Icon as={ArrowClockwiseIcon} className="text-muted-foreground" />
+      <Icon name="retry" className="text-muted-foreground" />
     </Animated.View>
   );
 }
@@ -80,11 +77,11 @@ function SourceIcon({
     case 'working':
       return <WorkingMark />;
     case 'thought':
-      return <Icon as={BrainIcon} className="text-muted-foreground" />;
+      return <Icon name="thinking" className="text-muted-foreground" />;
     case 'tool_call':
       return (
         <Icon
-          as={toolCall ? toolCallIcon(toolCall) : WrenchIcon}
+          name={toolCall ? toolCallIcon(toolCall) : 'tool'}
           className="text-muted-foreground"
         />
       );
@@ -106,7 +103,7 @@ export function LiveHeader({
     <View
       role="status"
       accessibilityLabel={title}
-      className="h-5 w-full flex-row items-center gap-1.5"
+      className="w-full flex-row items-center gap-1.5"
     >
       <View className="size-4 shrink-0 items-center justify-center">
         <SourceIcon source={source} toolCall={toolCall} />
@@ -114,15 +111,12 @@ export function LiveHeader({
       {request ? (
         <Text
           numberOfLines={1}
-          className="min-w-0 shrink text-sm leading-5 text-warning"
+          className="min-w-0 shrink type-body text-warning"
         >
           {title}
         </Text>
       ) : (
-        <ShimmerText
-          text={title}
-          className="min-w-0 shrink text-sm leading-5 text-foreground"
-        />
+        <ShimmerText text={title} className="min-w-0 shrink type-body" />
       )}
     </View>
   );

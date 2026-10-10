@@ -1,6 +1,5 @@
 import { LegendList } from '@legendapp/list/react-native';
 import type { AgentsCatalogOutput } from '@repo/contracts';
-import { WarningCircleIcon } from 'phosphor-react-native';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Button } from '#primitives/button';
@@ -128,7 +127,7 @@ function CatalogNotice({ catalog }: CatalogStatusProps): React.JSX.Element {
       role="alert"
       className="flex-row items-start gap-2.5 rounded-lg bg-warning/8 p-3"
     >
-      <Icon as={WarningCircleIcon} className="text-warning" />
+      <Icon name="warning" className="text-warning" />
       <View className="min-w-0 flex-1 gap-0.5">
         <Text className="type-heading">{title}</Text>
         <Text className="type-secondary">{catalog.error}</Text>

@@ -1,5 +1,4 @@
 import * as AccordionPrimitive from '@rn-primitives/accordion';
-import { CaretDownIcon } from 'phosphor-react-native/src/icons/CaretDown';
 import { Platform, Pressable, View } from 'react-native';
 import Animated, {
   FadeOutUp,
@@ -111,7 +110,7 @@ function AccordionTrigger({
             <Animated.View style={chevronStyle}>
               <Icon
                 size="sm"
-                as={CaretDownIcon}
+                name="chevron-down"
                 className={cn(
                   'text-muted-foreground shrink-0',
                   Platform.select({

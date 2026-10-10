@@ -1,6 +1,5 @@
 import type { Plan } from '@repo/contracts';
 import { lexer, type Tokens } from 'marked';
-import { CaretUpIcon, FileTextIcon } from 'phosphor-react-native';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
@@ -49,7 +48,7 @@ export function WrittenPlan({
           'h-8 sm:h-8 w-full justify-start pl-2 pr-1.5 rounded-none border-0 bg-transparent shadow-none',
       )}
     >
-      <Icon as={FileTextIcon} className="text-muted-foreground" />
+      <Icon name="file-text" className="text-muted-foreground" />
       <Text
         className={cn(
           'text-xs leading-4 font-normal',
@@ -66,7 +65,7 @@ export function WrittenPlan({
           >
             {title}
           </Text>
-          <Icon size="sm" as={CaretUpIcon} className="text-muted-foreground" />
+          <Icon size="sm" name="chevron-up" className="text-muted-foreground" />
         </>
       )}
     </Button>
@@ -81,7 +80,7 @@ export function WrittenPlan({
         label={title}
       >
         <View className="flex-row items-center gap-1.5 px-4 py-2">
-          <Icon as={FileTextIcon} className="text-muted-foreground" />
+          <Icon name="file-text" className="text-muted-foreground" />
           <Text className="min-w-0 flex-1 type-heading">{title}</Text>
         </View>
         <WrittenPlanContent plan={plan} title={title} layout="sheet" />

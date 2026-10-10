@@ -25,7 +25,7 @@ export interface FeedMarkdownProps {
 const MarkdownVariant = createContext<FeedMarkdownProps['variant']>('feed');
 
 export const inlineCodeClassName =
-  'rounded-sm bg-foreground/5 px-1.5 py-px font-mono text-xs leading-4 text-foreground';
+  'rounded-sm bg-foreground/5 px-1.5 py-px type-code text-foreground';
 
 function Caret(): React.JSX.Element {
   return (
@@ -121,10 +121,7 @@ function Prose({
       role={headingLevel === undefined ? undefined : 'heading'}
       aria-level={headingLevel === undefined ? undefined : String(headingLevel)}
       className={cn(
-        'type-body',
-        variant !== 'proposal' &&
-          headingLevel === undefined &&
-          'wide:leading-5.5',
+        'font-sans type-body',
         className,
         variant === 'summary' && 'text-muted-foreground',
       )}
@@ -151,9 +148,8 @@ function List({
           <View key={key} className="flex-row gap-2">
             <Text
               className={cn(
-                'w-4 shrink-0 type-body',
-                variant !== 'proposal' &&
-                  'text-muted-foreground wide:leading-5.5',
+                'w-4 shrink-0 font-sans type-body',
+                variant !== 'proposal' && 'text-muted-foreground',
               )}
             >
               {token.ordered ? `${start + index}.` : '•'}
@@ -172,7 +168,6 @@ function List({
 }
 
 function Table({ token }: { token: Tokens.Table }): React.JSX.Element {
-  const cellCodeClassName = 'font-mono text-xs leading-4 text-foreground';
   return (
     <View className="overflow-hidden rounded-xl border border-border">
       <ScrollView
@@ -185,7 +180,7 @@ function Table({ token }: { token: Tokens.Table }): React.JSX.Element {
             {withOccurrenceKeys(token.header, (cell) => cell.text).map(
               ({ item: cell, key }, column) => (
                 <View key={key} className={cellClassName(column)}>
-                  <Text className="type-heading">
+                  <Text className="font-sans type-heading">
                     <InlineTokens
                       tokens={cell.tokens}
                       codeClassName={inlineCodeClassName}
@@ -208,10 +203,10 @@ function Table({ token }: { token: Tokens.Table }): React.JSX.Element {
               {withOccurrenceKeys(row, (cell) => cell.text).map(
                 ({ item: cell, key }, column) => (
                   <View key={key} className={cellClassName(column)}>
-                    <Text className="type-body">
+                    <Text className="font-sans type-body">
                       <InlineTokens
                         tokens={cell.tokens}
-                        codeClassName={cellCodeClassName}
+                        codeClassName="type-code text-foreground"
                       />
                     </Text>
                   </View>
@@ -313,7 +308,13 @@ export const FeedMarkdown = memo(function FeedMarkdown({
   const tokens = useMemo(() => lexer(text), [text]);
   return (
     <MarkdownVariant.Provider value={variant}>
-      <View className={variant === 'proposal' ? 'gap-2' : 'gap-2.5'}>
+      <View
+        className={
+          variant === 'proposal'
+            ? 'gap-2'
+            : 'gap-paragraph wide:gap-paragraph-wide'
+        }
+      >
         <Blocks tokens={tokens} caret={streaming} />
       </View>
     </MarkdownVariant.Provider>

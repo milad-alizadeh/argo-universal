@@ -1,16 +1,7 @@
-import {
-  BellIcon,
-  CircleHalfIcon,
-  DeviceMobileIcon,
-  FolderIcon,
-  HardDrivesIcon,
-  KeyIcon,
-  type Icon as PhosphorIcon,
-  RobotIcon,
-} from 'phosphor-react-native';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
 import { Platform, Pressable, ScrollView, View } from 'react-native';
+import type { IconName } from '#lib/icon-names';
 import { cn } from '#lib/utils';
 import { Text } from '#primitives/text';
 import { Icon } from '../lib/icon';
@@ -64,7 +55,7 @@ export function SettingsList({
     attention = false,
   }: {
     label: string;
-    icon: PhosphorIcon;
+    icon: IconName;
     destination: NavigationDestination;
     state?: string;
     attention?: boolean;
@@ -87,10 +78,7 @@ export function SettingsList({
       );
     } else if (state !== undefined) {
       rowStatus = (
-        <Text
-          className="shrink-0 text-sm leading-5 text-muted-foreground wide:text-xs wide:leading-4"
-          numberOfLines={1}
-        >
+        <Text className="shrink-0 type-secondary" numberOfLines={1}>
           {state}
         </Text>
       );
@@ -108,16 +96,13 @@ export function SettingsList({
         onPress={() => onSelect(destination)}
       >
         <Icon
-          as={icon}
+          name={icon}
           className={cn(
             'shrink-0 text-muted-foreground',
             selected && 'text-foreground',
           )}
         />
-        <Text
-          className="min-w-0 flex-1 text-base leading-6 font-normal wide:text-sm wide:leading-5"
-          numberOfLines={1}
-        >
+        <Text className="min-w-0 flex-1 type-body" numberOfLines={1}>
           {label}
         </Text>
         {rowStatus}
@@ -133,34 +118,34 @@ export function SettingsList({
       <Group title={serverName ? `Server · ${serverName}` : 'Server'}>
         {row({
           label: 'Projects',
-          icon: FolderIcon,
+          icon: 'folder',
           destination: { to: 'settings-projects' },
           state: String(projects.length),
           attention: projectsNeedAttention,
         })}
         {row({
           label: 'Agents',
-          icon: RobotIcon,
+          icon: 'agent',
           destination: { to: 'settings-agents' },
           state: String(agents.length),
           attention: agentsNeedAttention,
         })}
         {row({
           label: 'Accounts',
-          icon: KeyIcon,
+          icon: 'key',
           destination: { to: 'settings-accounts' },
           state: accountState,
         })}
         {row({
           label: 'Connection',
-          icon: HardDrivesIcon,
+          icon: 'server',
           destination: { to: 'settings-connection' },
           state: connectionState ?? (wide ? 'This Mac' : 'Direct'),
         })}
         {wide &&
           row({
             label: 'Devices',
-            icon: DeviceMobileIcon,
+            icon: 'phone',
             destination: { to: 'settings-devices' },
             state: deviceCount === undefined ? undefined : String(deviceCount),
           })}
@@ -169,14 +154,14 @@ export function SettingsList({
         <Group title={device}>
           {row({
             label: 'Appearance',
-            icon: CircleHalfIcon,
+            icon: 'appearance',
             destination: { to: 'settings-appearance' },
             state: appearanceState,
           })}
           {wide &&
             row({
               label: 'Notifications',
-              icon: BellIcon,
+              icon: 'notifications',
               destination: { to: 'settings-notifications' },
               state: notificationsState,
             })}
@@ -199,7 +184,7 @@ function Group({
         <Text
           role="heading"
           aria-level={2}
-          className="text-sm leading-5 font-medium text-muted-foreground wide:text-xs wide:leading-4"
+          className="type-secondary"
           numberOfLines={1}
         >
           {title}

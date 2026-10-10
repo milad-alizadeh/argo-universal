@@ -90,24 +90,17 @@ export function PhoneShell({
       >
         <Icon
           size="lg"
-          as={icon}
-          weight={selectedSection === section ? 'fill' : 'regular'}
+          name={icon}
+          filled={selectedSection === section}
           className={cn(selectedSection !== section && 'text-muted-foreground')}
         />
-        <Text
-          className={cn(
-            'flex-1 text-base',
-            selectedSection === section ? 'font-semibold' : 'font-normal',
-          )}
-        >
-          {title}
-        </Text>
+        <Text className="flex-1 type-body">{title}</Text>
         {section === 'sessions' && attentionCount > 0 && (
           <Badge
             className="h-phone-shell-badge min-w-phone-shell-badge border-0 bg-warning px-1.5"
             accessibilityLabel={`${attentionCount} ${attentionCount === 1 ? 'Session needs' : 'Sessions need'} attention`}
           >
-            <Text className="text-xs font-semibold text-warning-foreground">
+            <Text className="type-badge text-warning-foreground">
               {attentionCount > maximumAttentionBadgeCount
                 ? `${maximumAttentionBadgeCount}+`
                 : attentionCount}
@@ -141,11 +134,7 @@ export function PhoneShell({
           >
             <View style={{ height: top }} />
             <View className="h-14 justify-center px-6">
-              <Text
-                role="heading"
-                aria-level={2}
-                className="text-xl font-semibold"
-              >
+              <Text role="heading" aria-level={2} className="type-title">
                 Argo
               </Text>
             </View>

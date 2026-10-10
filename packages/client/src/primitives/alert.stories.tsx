@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { TerminalIcon } from 'phosphor-react-native/src/icons/Terminal';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
 import { Alert, AlertDescription, AlertTitle } from './alert';
 
@@ -8,7 +7,7 @@ function VariantExamples() {
     <Variations>
       {(['default', 'destructive'] as const).map((variant) => (
         <Variation key={variant} label={variant}>
-          <Alert variant={variant} icon={TerminalIcon}>
+          <Alert variant={variant} icon="terminal">
             <AlertTitle>Heads up!</AlertTitle>
             <AlertDescription>
               You can add components to your app using the CLI.

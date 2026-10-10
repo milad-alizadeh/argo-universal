@@ -108,12 +108,14 @@ function beforeStop(input: HookInput): number {
   return block(checkChanged(files));
 }
 
-const command = process.argv[2];
-if (command !== 'after-edit' && command !== 'before-stop') {
+const COMMANDS = new Set(['after-edit', 'before-stop']);
+const command = process.argv[2] ?? '';
+if (!COMMANDS.has(command)) {
   process.stderr.write('usage: agent-hooks.mts after-edit|before-stop\n');
   process.exit(1);
 }
-const parsed = hookInput.safeParse(parseJson(await readStdin()));
+const raw = parseJson(await readStdin());
+const parsed = hookInput.safeParse(raw);
 if (!parsed.success) {
   process.stderr.write('agent-hooks: unrecognised hook input; skipped\n');
   process.exit(0);

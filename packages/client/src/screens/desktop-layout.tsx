@@ -48,11 +48,7 @@ export function DesktopLayout({
       onSectionChange={(next) => navigate(sectionDestination(next))}
       listHeader={
         header ?? (
-          <Text
-            role="heading"
-            aria-level={2}
-            className="pl-2 text-base font-semibold"
-          >
+          <Text role="heading" aria-level={2} className="pl-2 type-heading">
             {title}
           </Text>
         )
@@ -66,7 +62,7 @@ export function DesktopLayout({
           <Text
             role="heading"
             aria-level={2}
-            className="text-sm font-semibold"
+            className="type-heading"
             numberOfLines={1}
           >
             {destinationTitle(detail)}

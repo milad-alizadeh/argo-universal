@@ -1,11 +1,11 @@
-import type { Icon as PhosphorIcon } from 'phosphor-react-native';
 import type * as React from 'react';
+import type { IconName } from '#lib/icon-names';
 import { Button } from '#primitives/button';
 import { Icon } from '../lib/icon';
 
 export interface FloatingActionButtonProps {
   accessibilityLabel: string;
-  icon: PhosphorIcon;
+  icon: IconName;
   onPress: () => void;
 }
 
@@ -21,7 +21,7 @@ export function FloatingActionButton({
       onPress={onPress}
       className="size-14 sm:size-14 rounded-full"
     >
-      <Icon size="lg" as={icon} className="text-primary-foreground" />
+      <Icon size="lg" name={icon} className="text-primary-foreground" />
     </Button>
   );
 }

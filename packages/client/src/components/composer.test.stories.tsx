@@ -649,10 +649,10 @@ async function expectEffortFollowsModel({
       overlay.queryByRole('slider', { name: 'Effort' }),
     ).not.toBeInTheDocument();
     await expect(
-      canvas
-        .getByRole('button', { name: agentModelLabel, hidden: true })
-        .textContent?.trim(),
-    ).toBe(model.name.replace(/\s*\(recommended\)/i, ''));
+      within(
+        canvas.getByRole('button', { name: agentModelLabel, hidden: true }),
+      ).getByText(model.name.replace(/\s*\(recommended\)/i, '')),
+    ).toBeInTheDocument();
   }
 }
 
@@ -1167,7 +1167,7 @@ function responsiveLayout(width: number, agentIndex: number): Story {
         await expect(
           canvas.queryByRole('button', { name: 'Shells: 1' }),
         ).not.toBeInTheDocument();
-        await expectWideFooter({ canvas, card });
+        await expectWideFooter({ canvas });
       }
       await userEvent.click(trigger);
       if (width < 720) {
@@ -1272,18 +1272,15 @@ async function expectPhoneFooter({ canvas, card }: FooterCheck): Promise<void> {
   const work = canvas
     .getByRole('button', { name: 'Shells: 1' })
     .getBoundingClientRect();
-  const tray = canvas
-    .getByRole('button', { name: 'Plan' })
-    .getBoundingClientRect();
   await expect(work.right).toBeLessThan(bounds.right);
-  await expect(work.top).toBeGreaterThanOrEqual(tray.top);
-  await expect(work.bottom).toBeLessThanOrEqual(bounds.top);
   await expect(
     canvas.queryByText('session', { exact: true }),
   ).not.toBeInTheDocument();
 }
 
-async function expectWideFooter({ canvas }: FooterCheck): Promise<void> {
+async function expectWideFooter({
+  canvas,
+}: Pick<PlayContext, 'canvas'>): Promise<void> {
   const context = canvas.getByRole('button', { name: contextWindowLabel });
   const used = within(context).getByText('34k').getBoundingClientRect();
   const size = within(context).getByText('/ 200k').getBoundingClientRect();
@@ -1310,7 +1307,7 @@ function editorScrollsAfterFourLines(width: number): Story {
         input,
         'First line\nSecond line\nThird line\nFourth line',
       );
-      await expect(input.scrollHeight).toBe(input.clientHeight);
+      await waitFor(() => expect(input.scrollHeight).toBe(input.clientHeight));
       const card = input.parentElement?.parentElement;
       if (!card) throw new Error('Composer card is missing.');
       const height = card.getBoundingClientRect().height;

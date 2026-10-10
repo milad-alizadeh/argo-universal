@@ -108,6 +108,14 @@ _Avoid_: Todo list, task list
 A written plan that the Agent offers and that the user approves or rejects.
 _Avoid_: Plan (for the document), exit-plan
 
+**Written plan**:
+A plan document the Agent keeps without asking for approval, as Markdown text or only as a URI.
+_Avoid_: Plan (for the document), Plan proposal (when nothing is asked)
+
+**Resource reference**:
+A resource the Agent names in its content by URI, with a name and optionally a description and embedded text. Argo shows it and does not open it.
+_Avoid_: Link, attachment
+
 **Permission request**:
 A question from the Agent to let a Tool call run, with options to allow or reject.
 _Avoid_: Approval, prompt

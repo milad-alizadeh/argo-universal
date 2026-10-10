@@ -1,6 +1,5 @@
 import type { SessionStatus } from '@repo/contracts';
 import { Portal } from '@rn-primitives/portal';
-import { DotsThreeIcon, GitPullRequestIcon } from 'phosphor-react-native';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/utils';
@@ -52,11 +51,11 @@ function StatusLine({
       <View className="size-2 items-center justify-center">
         <StatusIndicator status={status} size="small" testID="session-status" />
       </View>
-      <Text className={cn('text-xs font-medium', statusTextColor[status])}>
+      <Text className={cn('type-badge', statusTextColor[status])}>
         {statusLabels[status]}
       </Text>
       {startedAt !== null && (
-        <Text className="text-xs text-muted-foreground">
+        <Text className="type-secondary">
           for {formatElapsed(clock - startedAt)}
         </Text>
       )}
@@ -80,13 +79,13 @@ export function SessionHeader({
           // Changed files and the Session menu get their actions in later issues.
           <HeaderButton
             key="changes"
-            icon={GitPullRequestIcon}
+            icon="pull-request"
             paired
             accessibilityLabel="Changes"
           />,
           <HeaderButton
             key="more"
-            icon={DotsThreeIcon}
+            icon="more"
             paired
             accessibilityLabel="More"
           />,
@@ -101,7 +100,7 @@ export function SessionHeader({
             role="heading"
             aria-level={2}
             numberOfLines={1}
-            className="text-base font-semibold"
+            className="type-heading"
           >
             {title}
           </Text>
@@ -115,7 +114,7 @@ export function SessionHeader({
           className="size-8 sm:size-8"
           accessibilityLabel="More"
         >
-          <Icon as={DotsThreeIcon} className="text-foreground" />
+          <Icon name="more" className="text-foreground" />
         </Button>
       </Portal>
     </>

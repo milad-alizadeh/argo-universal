@@ -1,5 +1,4 @@
 import type { AgentsCatalogOutput } from '@repo/contracts';
-import { MagnifyingGlassIcon } from 'phosphor-react-native';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
@@ -128,7 +127,7 @@ function CatalogError({
 function CatalogSearch(props: CatalogSearchProps): React.JSX.Element {
   return (
     <View className="h-10 flex-row items-center gap-2 rounded-lg bg-muted px-3">
-      <Icon as={MagnifyingGlassIcon} className="text-muted-foreground" />
+      <Icon name="search" className="text-muted-foreground" />
       <CatalogSearchInput {...props} />
     </View>
   );

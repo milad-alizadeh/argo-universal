@@ -1,4 +1,3 @@
-import { BookOpenIcon } from 'phosphor-react-native/src/icons/BookOpen';
 import type * as React from 'react';
 import {
   type ReactNode,
@@ -9,7 +8,7 @@ import {
 } from 'react';
 import { type LayoutChangeEvent, View } from 'react-native';
 import type { FeedActivity, FeedGroup } from '../feed/feed-view';
-import { toolCallTitle } from '../feed/tool-call-title';
+import { toolCallTitle, toolCallTitlePaths } from '../feed/tool-call-title';
 import { useToolCallDuration } from '../feed/use-tool-call-duration';
 import { FeedGrowthContext } from './feed-growth-context';
 import { ToolCallDisclosure } from './tool-call-disclosure';
@@ -87,13 +86,16 @@ export function ToolCallGroup({
       label={
         live ? toolCallTitle(live.toolCall, live.awaitingApproval) : group.title
       }
-      icon={live ? toolCallIcon(live.toolCall) : BookOpenIcon}
+      paths={
+        live ? toolCallTitlePaths(live.toolCall, live.awaitingApproval) : []
+      }
+      icon={live ? toolCallIcon(live.toolCall) : 'read'}
       running={running}
       awaitingApproval={live?.awaitingApproval ?? false}
       initialOpen={initialOpen}
       trailing={running && !live?.awaitingApproval ? duration : undefined}
     >
-      <View className="gap-2 pb-1" onLayout={onActivitiesLayout}>
+      <View className="gap-2 pb-1 wide:gap-1.5" onLayout={onActivitiesLayout}>
         {items.map((activity) => (
           <View key={activityKey(activity)}>{renderActivity(activity)}</View>
         ))}

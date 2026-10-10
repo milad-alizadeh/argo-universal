@@ -23,7 +23,9 @@
   --spacing-2: 8px;
   --spacing-2_5: 10px;
   --spacing-3: 12px;
+  --spacing-3_5: 14px;
   --spacing-4: 16px;
+  --spacing-5: 20px;
   --spacing-6: 24px;
   --spacing-8: 32px;
   --spacing-10: 40px;
@@ -32,6 +34,17 @@
   --spacing-icon-mark: 14px;
   --spacing-icon-md: 16px;
   --spacing-icon-lg: 20px;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 30px;
   --leading-4: 16px;
   --leading-4_5: 18px;
   --leading-5: 20px;
@@ -39,6 +52,49 @@
   --leading-6: 24px;
   --leading-8: 32px;
   --leading-9: 36px;
+  /* Text roles, the same tokens as Paper. "-wide" is the desktop step. */
+  --text-title: var(--text-xl);
+  --leading-title: var(--leading-6);
+  --font-weight-title: var(--font-weight-semibold);
+  --text-heading: var(--text-base);
+  --text-heading-wide: var(--text-sm);
+  --leading-heading: var(--leading-6);
+  --leading-heading-wide: var(--leading-5);
+  --font-weight-heading: var(--font-weight-semibold);
+  --text-body: var(--text-base);
+  --text-body-wide: var(--text-sm);
+  --leading-body: var(--leading-6);
+  --leading-body-wide: var(--leading-5);
+  --font-weight-body: var(--font-weight-normal);
+  --text-secondary: var(--text-sm);
+  --text-secondary-wide: var(--text-xs);
+  --leading-secondary: var(--leading-5);
+  --leading-secondary-wide: var(--leading-4);
+  --font-weight-secondary: var(--font-weight-normal);
+  /* Roles below are the same on every width, apart from the Feed. */
+  --text-control: var(--text-sm);
+  --leading-control: var(--leading-5);
+  --font-weight-control: var(--font-weight-medium);
+  --text-badge: var(--text-xs);
+  --leading-badge: var(--leading-4);
+  --font-weight-badge: var(--font-weight-medium);
+  --text-code: var(--text-xs);
+  --leading-code: var(--leading-4);
+  --font-weight-code: var(--font-weight-normal);
+  --text-code-block: var(--text-xs);
+  --leading-code-block: var(--leading-5);
+  --font-weight-code-block: var(--font-weight-normal);
+  /* The gap between paragraphs, wherever text runs to more than one. */
+  --spacing-paragraph: var(--spacing-3);
+  --spacing-paragraph-wide: var(--spacing-2_5);
+  /* The native phone header, as iOS draws its navigation title and text buttons. */
+  --text-nav-title: 17px;
+  --leading-nav-title: var(--leading-5_5);
+  --font-weight-nav-title: var(--font-weight-semibold);
+  --tracking-nav-title: -0.025em;
+  --text-nav-action: 17px;
+  --leading-nav-action: var(--leading-5_5);
+  --font-weight-nav-action: var(--font-weight-normal);
   --radius: 10px;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -93,7 +149,7 @@
       --color-muted-foreground: var(--color-neutral-500);
       --color-accent: var(--color-neutral-100);
       --color-accent-foreground: var(--color-neutral-900);
-      --color-destructive: oklch(63.7% 0.237 25.3);
+      --color-destructive: var(--color-red-500);
       --color-border: var(--color-neutral-200);
       --color-input: var(--color-neutral-200);
       --color-ring: var(--color-neutral-400);
@@ -103,10 +159,10 @@
       --color-chart-4: hsl(43 74% 66%);
       --color-chart-5: hsl(27 87% 67%);
       --color-sidebar-accent: var(--color-neutral-100);
-      --color-merged: oklch(54.1% 0.281 293);
-      --color-success: oklch(62.7% 0.194 149.2);
-      --color-info: oklch(54.6% 0.245 262.9);
-      --color-warning: oklch(66.6% 0.179 58.3);
+      --color-merged: var(--color-violet-600);
+      --color-success: var(--color-green-600);
+      --color-info: var(--color-blue-600);
+      --color-warning: var(--color-amber-600);
       --color-warning-foreground: var(--color-white);
       --color-sidebar: var(--color-neutral-50);
       --color-shell-chrome: oklch(94% 0 0);
@@ -151,6 +207,90 @@
   }
 }
 
+/* Text roles: phone tokens first, the "-wide" tokens from the wide breakpoint. */
+@utility type-title {
+  font-size: var(--text-title);
+  line-height: var(--leading-title);
+  font-weight: var(--font-weight-title);
+  color: var(--color-foreground);
+}
+
+@utility type-heading {
+  font-size: var(--text-heading);
+  line-height: var(--leading-heading);
+  font-weight: var(--font-weight-heading);
+  color: var(--color-foreground);
+
+  @variant wide {
+    font-size: var(--text-heading-wide);
+    line-height: var(--leading-heading-wide);
+  }
+}
+
+@utility type-body {
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  font-weight: var(--font-weight-body);
+  color: var(--color-foreground);
+
+  @variant wide {
+    font-size: var(--text-body-wide);
+    line-height: var(--leading-body-wide);
+  }
+}
+
+@utility type-secondary {
+  font-size: var(--text-secondary);
+  line-height: var(--leading-secondary);
+  font-weight: var(--font-weight-secondary);
+  color: var(--color-muted-foreground);
+
+  @variant wide {
+    font-size: var(--text-secondary-wide);
+    line-height: var(--leading-secondary-wide);
+  }
+}
+
+/* Roles that look the same on every width and keep the colour they are given. */
+@utility type-control {
+  font-size: var(--text-control);
+  line-height: var(--leading-control);
+  font-weight: var(--font-weight-control);
+}
+
+@utility type-badge {
+  font-size: var(--text-badge);
+  line-height: var(--leading-badge);
+  font-weight: var(--font-weight-badge);
+}
+
+@utility type-code {
+  font-family: var(--font-mono);
+  font-size: var(--text-code);
+  line-height: var(--leading-code);
+  font-weight: var(--font-weight-code);
+}
+
+@utility type-code-block {
+  font-family: var(--font-mono);
+  font-size: var(--text-code-block);
+  line-height: var(--leading-code-block);
+  font-weight: var(--font-weight-code-block);
+}
+
+@utility type-nav-title {
+  font-size: var(--text-nav-title);
+  line-height: var(--leading-nav-title);
+  font-weight: var(--font-weight-nav-title);
+  letter-spacing: var(--tracking-nav-title);
+}
+
+@utility type-nav-action {
+  font-size: var(--text-nav-action);
+  line-height: var(--leading-nav-action);
+  font-weight: var(--font-weight-nav-action);
+}
+
 @layer utilities {
   .shadow-composer {
     box-shadow: var(--shadow-composer);
@@ -187,49 +327,5 @@
       var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000),
       var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
       var(--shadow-2xl);
-  }
-}
-
-@utility type-title {
-  font-family: var(--font-sans);
-  font-size: var(--text-xl);
-  line-height: var(--leading-6);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-foreground);
-}
-
-@utility type-heading {
-  font-family: var(--font-sans);
-  font-size: var(--text-base);
-  line-height: var(--leading-6);
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-foreground);
-  @variant wide {
-    font-size: var(--text-sm);
-    line-height: var(--leading-5);
-  }
-}
-
-@utility type-body {
-  font-family: var(--font-sans);
-  font-size: var(--text-base);
-  line-height: var(--leading-6);
-  font-weight: var(--font-weight-normal);
-  color: var(--color-foreground);
-  @variant wide {
-    font-size: var(--text-sm);
-    line-height: var(--leading-5);
-  }
-}
-
-@utility type-secondary {
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  line-height: var(--leading-5);
-  font-weight: var(--font-weight-normal);
-  color: var(--color-muted-foreground);
-  @variant wide {
-    font-size: var(--text-xs);
-    line-height: var(--leading-4);
   }
 }

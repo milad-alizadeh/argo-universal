@@ -5,6 +5,10 @@ export { PhoneLayout } from './screens/phone-layout';
 export { useConnection } from './connection/context';
 export { hasLiquidGlass } from './lib/native-header';
 export {
+  type RenderSymbolImage,
+  SymbolImagesProvider,
+} from './lib/symbol-images';
+export {
   type Navigate,
   type NavigationDestination,
   NavigationProvider,

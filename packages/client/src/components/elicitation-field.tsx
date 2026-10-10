@@ -49,12 +49,8 @@ export function ElicitationField({
     <View className="gap-1.5">
       {property.type !== 'boolean' && (
         <View className="flex-row items-center gap-1">
-          <Text className="text-sm font-medium leading-5">{label}</Text>
-          {required && (
-            <Text className="text-sm leading-5 text-muted-foreground">
-              Required
-            </Text>
-          )}
+          <Text className="type-body">{label}</Text>
+          {required && <Text className="type-secondary">Required</Text>}
         </View>
       )}
       <FieldControl
@@ -71,7 +67,7 @@ export function ElicitationField({
       {property.description && (
         <Text
           className={cn(
-            'text-sm leading-5 text-muted-foreground',
+            'type-secondary',
             property.type === 'boolean' && 'pl-7',
           )}
         >
@@ -79,7 +75,7 @@ export function ElicitationField({
         </Text>
       )}
       {showError && error && (
-        <Text role="alert" className="text-sm leading-5 text-destructive">
+        <Text role="alert" className="type-secondary text-destructive">
           {error}
         </Text>
       )}
@@ -119,7 +115,7 @@ function FieldControl({
             onCheckedChange={change}
           />
         </View>
-        <Text className="min-w-0 flex-1 text-sm font-medium leading-5">
+        <Text className="min-w-0 flex-1 type-body">
           {label}
           {required ? ' · Required' : ''}
         </Text>
@@ -149,7 +145,7 @@ function FieldControl({
             invalid && 'border-destructive',
           )}
         >
-          <SelectValue placeholder="Choose…" />
+          <SelectValue className="type-control" placeholder="Choose…" />
         </SelectTrigger>
         <SelectContent>
           {options.map((option) => (
@@ -181,7 +177,7 @@ function FieldControl({
                 )
               }
             />
-            <Text className="text-sm leading-5">{option.title}</Text>
+            <Text className="type-body">{option.title}</Text>
           </View>
         ))}
       </View>
@@ -199,7 +195,7 @@ function FieldControl({
           : 'default'
       }
       className={cn(
-        'h-9 sm:h-9 bg-background dark:bg-background text-sm leading-5',
+        'h-9 sm:h-9 bg-background dark:bg-background type-control',
         invalid && 'border-destructive',
       )}
     />

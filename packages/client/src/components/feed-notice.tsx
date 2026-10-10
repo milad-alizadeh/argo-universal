@@ -1,23 +1,18 @@
 import type { Notice, UnsupportedContent } from '@repo/contracts';
-import {
-  InfoIcon,
-  QuestionIcon,
-  WarningIcon,
-  XCircleIcon,
-} from 'phosphor-react-native';
 import type * as React from 'react';
 import { View } from 'react-native';
+import type { IconName } from '#lib/icon-names';
 import { cn } from '#lib/utils';
 import { Text } from '#primitives/text';
 import { Icon } from '../lib/icon';
 
-const noticeAppearance = new Map([
-  ['info', { icon: InfoIcon, color: 'text-muted-foreground' }],
-  ['warning', { icon: WarningIcon, color: 'text-warning' }],
-  ['error', { icon: XCircleIcon, color: 'text-destructive' }],
+const noticeAppearance = new Map<string, { icon: IconName; color: string }>([
+  ['info', { icon: 'info', color: 'text-muted-foreground' }],
+  ['warning', { icon: 'warning', color: 'text-warning' }],
+  ['error', { icon: 'failed', color: 'text-destructive' }],
 ]);
 const unrecognisedAppearance = {
-  icon: QuestionIcon,
+  icon: 'question' as const,
   color: 'text-muted-foreground',
 };
 
@@ -40,7 +35,7 @@ function NoticeMessage({
       className="min-h-5 flex-row items-start gap-1.5"
     >
       <View className="h-5 w-icon-md shrink-0 items-center justify-center">
-        <Icon as={appearance.icon} className={appearance.color} />
+        <Icon name={appearance.icon} className={appearance.color} />
       </View>
       <View className="min-w-0 flex-1 gap-0.5">
         <Text
