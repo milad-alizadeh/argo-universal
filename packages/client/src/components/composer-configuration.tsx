@@ -17,6 +17,7 @@ import { Text } from '#primitives/text';
 import { Icon } from '../lib/icon';
 import { listTestIdProps } from '../lib/list-test-id';
 import { useWide } from '../navigation/use-wide';
+import { FieldGroup } from '../primitives/field-group';
 import { InfoPopover } from '../primitives/info-popover';
 import { Slider } from '../primitives/slider';
 import { Switch } from '../primitives/switch';
@@ -517,8 +518,8 @@ function EffortControl({
   if (!wide)
     return (
       // The same insets as the Agent and Model rows, so the labels line up.
-      <View className="px-gutter-list pb-3">
-        <View className="px-2.5 web:px-3 gap-1.5">
+      <View className="px-gutter-list native:px-0 pb-3">
+        <View className="px-2.5 web:px-3 native:px-0 gap-1.5">
           <View className="h-11 flex-row items-center gap-2">
             <Text selectable={false} className="select-none type-body">
               Effort
@@ -579,7 +580,7 @@ function SwitchOptions({
   if (!options.length) return null;
   return (
     // The same insets as the rows above, so the labels line up.
-    <View className="px-gutter-list wide:px-0">
+    <View className="px-gutter-list native:px-0 wide:px-0">
       {options.map((option) => {
         const label = (
           <Text selectable={false} className="select-none type-body">
@@ -613,7 +614,7 @@ function SwitchOptions({
             <Pressable
               key={option.configId}
               {...rowProps}
-              className="h-11 px-2.5 web:px-3 flex-row items-center gap-2"
+              className="h-11 px-2.5 web:px-3 native:px-0 flex-row items-center gap-2"
             >
               {label}
               {option.description ? (
@@ -729,54 +730,73 @@ export function AgentModelMenu({
             <ModelList configuration={configuration} />
           </>
         ) : (
-          <View className="px-gutter-list py-1 wide:p-1 gap-0.5">
-            <Button
-              variant="ghost"
-              accessibilityLabel="Choose Agent"
-              onPress={() => openPage('agent')}
-              className="h-11 sm:h-11 px-2.5 gap-2 justify-start"
-            >
-              <Text selectable={false} className="select-none flex-1 type-body">
-                Agent
-              </Text>
-              <Logo agent={agent} />
-              <Text
-                selectable={false}
-                className="select-none type-body text-muted-foreground"
+          <FieldGroup>
+            <FieldGroup.Section className="px-gutter-list py-1 gap-0.5">
+              <Button
+                variant="ghost"
+                accessibilityLabel="Choose Agent"
+                onPress={() => openPage('agent')}
+                className="h-11 sm:h-11 px-2.5 native:px-0 gap-2 justify-start"
               >
-                {agent?.label}
-              </Text>
-              <Icon
-                size="sm"
-                name="chevron-right"
-                className="-ml-0.5 text-muted-foreground"
-              />
-            </Button>
-            <Button
-              variant="ghost"
-              accessibilityLabel="Choose model"
-              onPress={() => openPage('model')}
-              className="h-11 sm:h-11 px-2.5 gap-2 justify-start"
-            >
-              <Text selectable={false} className="select-none flex-1 type-body">
-                Model
-              </Text>
-              <Text
-                selectable={false}
-                className="select-none type-body text-muted-foreground"
+                <Text
+                  selectable={false}
+                  className="select-none flex-1 type-body"
+                >
+                  Agent
+                </Text>
+                <Logo agent={agent} />
+                <Text
+                  selectable={false}
+                  className="select-none type-body text-muted-foreground"
+                >
+                  {agent?.label}
+                </Text>
+                <Icon
+                  size="sm"
+                  name="chevron-right"
+                  className="-ml-0.5 text-muted-foreground"
+                />
+              </Button>
+              <Button
+                variant="ghost"
+                accessibilityLabel="Choose model"
+                onPress={() => openPage('model')}
+                className="h-11 sm:h-11 px-2.5 native:px-0 gap-2 justify-start"
               >
-                {modelName(current)}
-              </Text>
-              <Icon
-                size="sm"
-                name="chevron-right"
-                className="-ml-0.5 text-muted-foreground"
-              />
-            </Button>
-          </View>
+                <Text
+                  selectable={false}
+                  className="select-none flex-1 type-body"
+                >
+                  Model
+                </Text>
+                <Text
+                  selectable={false}
+                  className="select-none type-body text-muted-foreground"
+                >
+                  {modelName(current)}
+                </Text>
+                <Icon
+                  size="sm"
+                  name="chevron-right"
+                  className="-ml-0.5 text-muted-foreground"
+                />
+              </Button>
+            </FieldGroup.Section>
+            {(switches(configuration).length > 0 ||
+              currentEffort(configuration).selected) && (
+              <FieldGroup.Section>
+                {switches(configuration).length > 0 && (
+                  <SwitchOptions configuration={configuration} />
+                )}
+                {currentEffort(configuration).selected && (
+                  <EffortControl configuration={configuration} />
+                )}
+              </FieldGroup.Section>
+            )}
+          </FieldGroup>
         )}
-        <SwitchOptions configuration={configuration} />
-        <EffortControl configuration={configuration} />
+        {wide && <SwitchOptions configuration={configuration} />}
+        {wide && <EffortControl configuration={configuration} />}
         {configuration.turnRunning && (
           <View className="flex-row gap-2 px-gutter wide:px-3 py-2.5 bg-muted">
             <Icon name="waiting" className="text-muted-foreground" />
