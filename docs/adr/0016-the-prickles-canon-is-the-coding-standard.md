@@ -23,19 +23,21 @@ Where the canon cannot apply as written, these are the recorded applications (ow
 7. **Pattern names.** PT1 names apply only where the pattern is unmistakable. "Repository" keeps its `GLOSSARY.md` meaning, a git repository.
 8. **Server Components.** A8 is met by ADR-0002: the Server owns the data and the logic beside it. The Expo app stays a bundled UI with no React Server Components, which is the canon's native default.
 
-9. **A2 folder mapping.** The existing folders implement the three tiers (Spec 0006, Owner #9, option (a)); no tier folder is renamed or added for this mapping.
+9. **A2 folder mapping.** The tiers map onto screaming feature folders (Spec 0011, owner, 2026-10-10, amending the Spec 0006 mapping that kept the existing folders). The client's features are sessions, composer, feed, requests, agents, settings, connection and frame. Inside a feature, `components/` draws from props only, `screens/` holds thin shells, `hooks/` holds data and behaviour hooks, and `state/` holds machines, contexts, stored preferences and extracted pure rules; each appears only where needed. The Feed adds `view/`, the one client translator from Feed rows to the Feed view, and the Connection adds `trpc/`.
 
    | Tier | Packages | Inside a package |
    |---|---|---|
-   | Local | the apps; each Agent adapter folder | client `screens/` and `components/<feature>/`; Engine `services/<domain>/` and `engine/`; Supervisor `supervisor/` |
-   | Product | contracts, db, engine, the shared Agent module, git, client | client `feed/`, `trpc/`, `connection/`, `navigation/`; a Server domain's `index.ts` |
-   | Generic | machine-log, uniwind, `tooling/*` | client `src/lib/` and the vendored `src/primitives/`; Engine `src/lib/` |
+   | Local | the apps; each Agent adapter folder | client `features/<feature>/`; Engine `src/<module>/`; Supervisor `supervisor/` |
+   | Product | contracts, db, engine, the shared Agent module, git, client | client `lib/product/` and each feature's `index.ts`; an Engine module's `index.ts` |
+   | Generic | machine-log, uniwind, `tooling/*` | client `lib/generic/`, with the primitives in `lib/generic/primitives/`; Engine `src/lib/` |
 
-   Git is product because Checkout is a `GLOSSARY.md` term (ADR-0008). Shell and Turn have UI homonyms, so their word matches need a person. Switch to `lib/generic/` and `lib/product/` when three or more shared product modules need a home outside the client's four named product folders.
+   Git is product because Checkout is a `GLOSSARY.md` term (ADR-0008). Shell and Turn have UI homonyms, so their word matches need a person. `lib/product/` holds product code that two or more features share, including navigation, which sits there to avoid a frame–sessions cycle. `lib/generic/` holds code that would compile after an npm publish and never imports a product word.
 
-   The accepted exceptions are `millisecondsPerSecond` defined once per package, and the Composer importing the Plan proposal card from `requests/` for its card swap (Spec 0006, Owner #17).
+   Other features import a feature only through its `index.ts`, which is product tier (owner, 2026-10-10). The allowed feature edges are: sessions uses composer, feed, agents and connection; frame hosts section screens from sessions and settings; data hooks use connection. In the Engine, `rpc/` holds the base procedure and error mapping and sits below the modules, and each router takes its own dependencies.
 
-   oxlint enforces the import direction with `no-restricted-imports` blocks in `tooling/oxlint/argo.json`; add a block when a tier folder is added. When to hoist and whether a name belongs to the product stay with code review, as A2 and TA1 leave them.
+   The accepted exceptions are `millisecondsPerSecond` defined once per package, and the Composer importing the Plan proposal card from the requests feature for its card swap (Spec 0006, Owner #17).
+
+   oxlint enforces the import direction with `no-restricted-imports` blocks in `tooling/oxlint/argo.json`; add a block when a tier folder is added. Spec 0011 moves the folders and their blocks ticket by ticket, so CI stays green. When to hoist and whether a name belongs to the product stay with code review, as A2 and TA1 leave them.
 
 10. **Thin Session handlers.** A5 permits the Session tRPC procedure to resolve its actor, apply the current admission checks, send one validated event and return the existing acknowledgement (Spec 0008, owner, 2026-10-08). This routing work stays beside the Session domain. Substantive rules, persistence and native lifecycle belong to domain operations and machines; there is no mandatory forwarding service or actor request/reply protocol.
 
