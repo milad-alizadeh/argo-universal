@@ -17,6 +17,19 @@ Every new UI or visible state needs a Paper design, including new rows, cards, p
 - To change a component, edit the master, then make the same change in each of its copies, found by layer name. Work inside out: a master nested in another master (Session row inside List column) is changed before the masters that hold it.
 - Column masters carry content only. The surface (background, border, radius, shadow) comes from the shell's Card and Sidebar plate, so a master and its copies cannot drift on it.
 
+## Platforms
+
+Argo owns its primitives (ADR-0020), so Paper designs desktop, iOS and Android.
+
+- **Cards** have **Desktop | iOS | Android** columns. A single Phone column stays only where both phones match. Overlay cards have **Content | Popover | Sheet (iOS) | Sheet (Android)**.
+- **Master names** take an `(ios)` or `(android)` suffix after the code name: `Switch (ios)`, `Switch (android)`. `(phone)` means both. Desktop takes no suffix.
+- **Mobile flows** get an iOS row. An Android row sits inside the same `Flow / <Name>` only where Android differs from iOS. Platform-only flows are allowed, in a shared order.
+- **Light only:** Paper draws light mode only, with no dark frames, cards or flows. Dark mode is checked in the code, through the PR evidence.
+- **Native frames** use the platform's type scale and system text colours as literals, the way mono uses literal "SF Mono": SF Pro text styles on iOS, literal Roboto on Android. Everything else keeps Argo's tokens.
+- **Icons:** Android frames use Material Symbols; iOS frames use SF Symbols (ADR-0019). Each tile in "Components / Icons" has a Material cell beside the SF cell.
+- **Promotion:** an exploration frame moves into card format on the Components, Desktop or Mobile board with `move_nodes`, which keeps its id. The master it replaces is then deleted.
+- **Approval:** the owner is the only approver. Each ticket's Paper is approved in its issue or PR thread, against named flows, before it is built. After approval, edit the master first, then its copies.
+
 ## Page layout
 
 Every section page (Session, Voice, Atlas, Setup, Issues, Settings) has the same artboards, top-aligned at y 0, left to right, 400px apart. Nothing is placed by hand: every board is auto layout, so adding something moves its neighbours instead of overlapping them.
