@@ -1,7 +1,22 @@
+import { useEffect, useRef } from 'react';
 import { Platform, Pressable } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+export function usePresentationClosed(
+  mounted: boolean,
+  onClosed?: () => void,
+): void {
+  const wasMounted = useRef(false);
+  useEffect(() => {
+    if (mounted) wasMounted.current = true;
+    else if (wasMounted.current) {
+      wasMounted.current = false;
+      onClosed?.();
+    }
+  }, [mounted, onClosed]);
+}
 
 /**
  * This component is used to wrap animated views that should only be animated on native.

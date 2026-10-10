@@ -11,6 +11,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useResolveClassNames } from 'uniwind';
 import { BottomSheetContent } from './bottom-sheet-content';
 import type { BottomSheetProps } from './bottom-sheet.types';
+import { usePresentationClosed } from './native-only-animated-view';
 
 export function BottomSheet({
   style,
@@ -53,7 +54,6 @@ function useSheetDismissal(open: boolean, onClosed?: () => void) {
   const sheetRef = useRef<ModalBottomSheetRef>(null);
   const [mounted, setMounted] = useState(open);
   const closing = useRef(false);
-  const wasMounted = useRef(false);
   if (open && !mounted) setMounted(true);
   useEffect(() => {
     const sheet = sheetRef.current;
@@ -72,12 +72,6 @@ function useSheetDismissal(open: boolean, onClosed?: () => void) {
       cancelled = true;
     };
   }, [open, mounted]);
-  useEffect(() => {
-    if (mounted) wasMounted.current = true;
-    else if (wasMounted.current) {
-      wasMounted.current = false;
-      onClosed?.();
-    }
-  }, [mounted, onClosed]);
+  usePresentationClosed(mounted, onClosed);
   return { mounted, sheetRef };
 }

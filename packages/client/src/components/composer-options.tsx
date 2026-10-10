@@ -9,7 +9,10 @@ import { Button } from '#primitives/button';
 import { Text } from '#primitives/text';
 import { Icon } from '../lib/icon';
 import { listTestIdProps } from '../lib/list-test-id';
-import type { ComposerConfigurationProps } from './composer-configuration';
+import {
+  type ComposerConfigurationProps,
+  configurationChoices,
+} from './composer-configuration';
 import { ComposerPopover } from './composer-popover';
 
 const settingsRowEstimate = 44;
@@ -49,14 +52,12 @@ function settingRows(options: SessionConfigOption[]): SettingsRow[] {
         type: 'header',
         name: option.name,
       },
-      ...option.options
-        .flatMap((choice) => ('groupId' in choice ? choice.options : [choice]))
-        .map((choice): SettingsRow => ({
-          id: JSON.stringify(['choice', option.configId, choice.value]),
-          type: 'choice',
-          option,
-          choice,
-        })),
+      ...configurationChoices(option).map((choice): SettingsRow => ({
+        id: JSON.stringify(['choice', option.configId, choice.value]),
+        type: 'choice',
+        option,
+        choice,
+      })),
     ];
   });
 }
@@ -69,11 +70,7 @@ function SettingRow({
   onConfigChange: ComposerConfigurationProps['onConfigChange'];
 }): React.JSX.Element {
   if (row.type === 'header')
-    return (
-      <Text className="px-2 pt-1.5 pb-1 text-xs font-medium text-muted-foreground">
-        {row.name}
-      </Text>
-    );
+    return <Text className="px-2 pt-1.5 pb-1 type-secondary">{row.name}</Text>;
   const { option } = row;
   const boolean = row.type === 'boolean';
   const selected = boolean

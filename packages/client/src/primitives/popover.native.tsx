@@ -12,7 +12,10 @@ import {
 import { FullWindowOverlay as RNFullWindowOverlay } from 'react-native-screens';
 import { motionDuration } from '#lib/motion';
 import { cn } from '#lib/utils';
-import { NativeOnlyAnimatedView } from '#primitives/native-only-animated-view';
+import {
+  NativeOnlyAnimatedView,
+  usePresentationClosed,
+} from '#primitives/native-only-animated-view';
 import { TextClassContext } from '#primitives/text';
 
 const Popover = PopoverPrimitive.Root;
@@ -69,7 +72,6 @@ function usePopoverDismissal(open: boolean, onClosed?: () => void) {
   const [mounted, setMounted] = React.useState(open);
   if (open && !mounted) setMounted(true);
   const visibility = React.useRef(open);
-  const wasMounted = React.useRef(false);
   const opacity = useSharedValue(0);
   React.useLayoutEffect(() => {
     visibility.current = open;
@@ -92,13 +94,7 @@ function usePopoverDismissal(open: boolean, onClosed?: () => void) {
     );
     return () => cancelAnimation(opacity);
   }, [open, opacity, finishDismissal]);
-  React.useEffect(() => {
-    if (mounted) wasMounted.current = true;
-    else if (wasMounted.current) {
-      wasMounted.current = false;
-      onClosed?.();
-    }
-  }, [mounted, onClosed]);
+  usePresentationClosed(mounted, onClosed);
   const style = useAnimatedStyle(() => ({ opacity: opacity.get() }));
   return { mounted, style };
 }
