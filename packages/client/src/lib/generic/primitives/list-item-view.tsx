@@ -57,10 +57,7 @@ function ListItemContent(props: ListItemProps): React.JSX.Element {
       )}
     >
       <RowIcon icon={props.icon} />
-      <Text
-        role="body"
-        className={cn('min-w-0 flex-1', props.selected && 'font-medium')}
-      >
+      <Text role="body" className="min-w-0 flex-1">
         {props.title}
       </Text>
       <ListItemTrailing {...props} />
