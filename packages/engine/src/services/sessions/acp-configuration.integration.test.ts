@@ -1,22 +1,21 @@
-import { RequestError } from '@agentclientprotocol/sdk';
-import type { SetSessionConfigOptionRequest } from '@agentclientprotocol/sdk';
 import type {
-  PromptResponse,
+  NewSessionRequest,
+  PromptRequest,
+  SetSessionConfigOptionRequest,
   SessionConfigOption,
-  SetSessionConfigOptionResponse,
 } from '@agentclientprotocol/sdk';
 import { agentAdapters } from '@repo/agents';
 import { acpConfiguration } from '@repo/mocks/agent/acp-configuration';
 import { expect, it, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
-import { requireResourceProcessAt } from '#mocks/acp-resource';
+import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
 const configuredSessionId = 'configured-session';
 
 it.each(agentAdapters.map(({ agent }) => agent))(
   '%s names an empty Session from its first prompt and keeps that title on later prompts',
   async (agent) => {
-    const host = await startAcpEngine({}, undefined, agent);
+    const host = await startAcpEngine({ steps: [] }, undefined, agent);
     const created = await host.caller.session.new({
       ...emptySessionInput,
       agent,
@@ -48,14 +47,23 @@ it.each(agentAdapters.map(({ agent }) => agent))(
 );
 
 it('an empty Session shows configuration returned for its actual Checkout before any prompt', async () => {
+  const openings: NewSessionRequest[] = [];
   const host = await startAcpEngine({
-    newSession: ({ params }) => ({
-      sessionId: configuredSessionId,
-      configOptions: acpConfiguration.map((option) => ({
-        ...option,
-        description: params.cwd,
-      })),
-    }),
+    steps: [],
+    responses: {
+      'session/new': [
+        {
+          requests: openings,
+          result: {
+            sessionId: configuredSessionId,
+            configOptions: acpConfiguration.map((option) => ({
+              ...option,
+              description: 'Checkout configuration',
+            })),
+          },
+        },
+      ],
+    },
   });
   const created = await host.caller.session.new(emptySessionInput);
   const feed = (await host.caller.feed.subscribe({ ...created, after: null }))[
@@ -78,6 +86,11 @@ it('an empty Session shows configuration returned for its actual Checkout before
       ],
     },
   });
+  expect(openings[0]?.cwd).toBe(
+    (await host.caller.session.list({ archived: false })).sessions.find(
+      (session) => session.sessionId === created.sessionId,
+    )?.cwd,
+  );
   await feed.return?.();
 });
 
@@ -87,19 +100,22 @@ it.each(agentAdapters.map(({ agent }) => agent))(
     const requests: SetSessionConfigOptionRequest[] = [];
     const host = await startAcpEngine(
       {
-        newSession: () => ({
-          sessionId: configuredSessionId,
-          configOptions: acpConfiguration,
-        }),
-        setConfigOption: ({ params }) => {
-          requests.push(params);
-          return {
-            configOptions: acpConfiguration.map((option) =>
-              option.id === 'fast' && option.type === 'boolean'
-                ? { ...option, currentValue: true }
-                : option,
-            ),
-          };
+        steps: [],
+        configOptions: acpConfiguration,
+        sessionIds: [configuredSessionId],
+        responses: {
+          'session/set_config_option': [
+            {
+              requests,
+              result: {
+                configOptions: acpConfiguration.map((option) =>
+                  option.id === 'fast' && option.type === 'boolean'
+                    ? { ...option, currentValue: true }
+                    : option,
+                ),
+              },
+            },
+          ],
         },
       },
       undefined,
@@ -134,28 +150,21 @@ it.each(agentAdapters.map(({ agent }) => agent))(
 );
 
 it('a subsequent prompt waits for authoritative configuration while another Session can prompt', async () => {
-  const started = Promise.withResolvers<void>();
+  const started = Promise.withResolvers<SetSessionConfigOptionRequest>();
   const finish = Promise.withResolvers<void>();
-  const order: string[] = [];
-  let nextSession = 0;
+  const prompts: PromptRequest[] = [];
   const host = await startAcpEngine({
-    newSession: () => ({
-      sessionId: `configured-${++nextSession}`,
-      configOptions: acpConfiguration,
-    }),
-    setConfigOption: async () => {
-      started.resolve();
-      await finish.promise;
-      order.push('configured');
-      return { configOptions: acpConfiguration };
-    },
-    prompt: ({ params }) => {
-      order.push(
-        params.prompt[0]?.type === 'text'
-          ? params.prompt[0].text
-          : 'attachment',
-      );
-      return { stopReason: 'end_turn' };
+    steps: [],
+    configOptions: acpConfiguration,
+    responses: {
+      'session/set_config_option': [
+        {
+          received: started,
+          waitFor: finish.promise,
+          result: { configOptions: acpConfiguration },
+        },
+      ],
+      'session/prompt': [{ requests: prompts }],
     },
   });
   const first = await host.caller.session.new(emptySessionInput);
@@ -175,11 +184,18 @@ it('a subsequent prompt waits for authoritative configuration while another Sess
     ...sibling,
     prompt: [{ type: 'text', text: 'sibling' }],
   });
-  expect(order).toEqual(['sibling']);
+  await expect
+    .poll(() => prompts.map((request) => request.prompt))
+    .toEqual([[{ type: 'text', text: 'sibling' }]]);
   finish.resolve();
   await applied;
   await prompt;
-  await expect.poll(() => order).toEqual(['sibling', 'configured', 'first']);
+  await expect
+    .poll(() => prompts.map((request) => request.prompt))
+    .toEqual([
+      [{ type: 'text', text: 'sibling' }],
+      [{ type: 'text', text: 'first' }],
+    ]);
 });
 
 it('the full returned configuration replaces guessed model-dependent choices', async () => {
@@ -202,11 +218,12 @@ it('the full returned configuration replaces guessed model-dependent choices', a
     },
   ];
   const host = await startAcpEngine({
-    newSession: () => ({
-      sessionId: configuredSessionId,
-      configOptions: acpConfiguration,
-    }),
-    setConfigOption: () => ({ configOptions: returned }),
+    steps: [],
+    configOptions: acpConfiguration,
+    sessionIds: [configuredSessionId],
+    responses: {
+      'session/set_config_option': [{ result: { configOptions: returned } }],
+    },
   });
   const created = await host.caller.session.new(emptySessionInput);
   const applied = await host.caller.session.setConfigOption({
@@ -237,12 +254,13 @@ it('the full returned configuration replaces guessed model-dependent choices', a
 
 it('an upstream configuration rejection leaves the Session actual values unchanged', async () => {
   const host = await startAcpEngine({
-    newSession: () => ({
-      sessionId: configuredSessionId,
-      configOptions: acpConfiguration,
-    }),
-    setConfigOption: () => {
-      throw new RequestError(-32602, 'Model unavailable');
+    steps: [],
+    configOptions: acpConfiguration,
+    sessionIds: [configuredSessionId],
+    responses: {
+      'session/set_config_option': [
+        { error: { code: -32602, message: 'Model unavailable' } },
+      ],
     },
   });
   const created = await host.caller.session.new(emptySessionInput);
@@ -272,27 +290,24 @@ it('an upstream configuration rejection leaves the Session actual values unchang
 });
 
 it('cancellation bypasses configuration held behind an active prompt', async () => {
-  const completion = Promise.withResolvers<PromptResponse>();
-  const prompted = Promise.withResolvers<void>();
-  const order: string[] = [];
+  const prompted = Promise.withResolvers<PromptRequest>();
+  const commands: { sessionId: string }[] = [];
   const host = await startAcpEngine({
-    newSession: () => ({
-      sessionId: configuredSessionId,
-      configOptions: acpConfiguration,
-    }),
-    prompt: () => {
-      order.push('prompt');
-      prompted.resolve();
-      return completion.promise;
+    steps: [{ type: 'wait-for-cancel' }],
+    configOptions: acpConfiguration,
+    sessionIds: [configuredSessionId],
+    responses: {
+      'session/prompt': [
+        {
+          requests: commands,
+          received: prompted,
+          steps: [{ type: 'wait-for-cancel' }],
+          result: { stopReason: 'cancelled' },
+        },
+      ],
+      'session/set_config_option': [{ requests: commands }],
     },
-    cancel: () => {
-      order.push('cancel');
-      completion.resolve({ stopReason: 'cancelled' });
-    },
-    setConfigOption: () => {
-      order.push('configuration');
-      return { configOptions: acpConfiguration };
-    },
+    notifications: { 'session/cancel': { requests: commands } },
   });
   const created = await host.caller.session.new(emptySessionInput);
   await host.caller.session.prompt({
@@ -308,23 +323,22 @@ it('cancellation bypasses configuration held behind an active prompt', async () 
   });
   await host.caller.session.cancel(created);
   await setting;
-  expect(order).toEqual(['prompt', 'cancel', 'configuration']);
+  expect(commands).toMatchObject([
+    { prompt: [{ text: 'Wait for cancellation' }] },
+    { sessionId: configuredSessionId },
+    { configId: 'mode' },
+  ]);
 });
 
 it('initial settings finish before prompted creation dispatches any Agent work', async () => {
-  const order: string[] = [];
+  const commands: { sessionId: string }[] = [];
   const host = await startAcpEngine({
-    newSession: () => ({
-      sessionId: configuredSessionId,
-      configOptions: acpConfiguration,
-    }),
-    setConfigOption: () => {
-      order.push('configuration');
-      return { configOptions: acpConfiguration };
-    },
-    prompt: () => {
-      order.push('prompt');
-      return { stopReason: 'end_turn' };
+    steps: [],
+    configOptions: acpConfiguration,
+    sessionIds: [configuredSessionId],
+    responses: {
+      'session/set_config_option': [{ requests: commands }],
+      'session/prompt': [{ requests: commands }],
     },
   });
   await host.caller.session.new({
@@ -332,20 +346,25 @@ it('initial settings finish before prompted creation dispatches any Agent work',
     configOptions: [{ configId: 'mode', value: 'plan' }],
     prompt: [{ type: 'text', text: 'Plan first' }],
   });
-  await expect.poll(() => order).toEqual(['configuration', 'prompt']);
+  await expect
+    .poll(() => commands)
+    .toMatchObject([
+      { configId: 'mode' },
+      { prompt: [{ text: 'Plan first' }] },
+    ]);
 });
 
 it('explicit closure rejects a pending configuration instead of reporting false success', async () => {
-  const started = Promise.withResolvers<void>();
-  const completion = Promise.withResolvers<SetSessionConfigOptionResponse>();
+  const started = Promise.withResolvers<SetSessionConfigOptionRequest>();
+  const completion = Promise.withResolvers<void>();
   const host = await startAcpEngine({
-    newSession: () => ({
-      sessionId: configuredSessionId,
-      configOptions: acpConfiguration,
-    }),
-    setConfigOption: () => {
-      started.resolve();
-      return completion.promise;
+    steps: [],
+    configOptions: acpConfiguration,
+    sessionIds: [configuredSessionId],
+    responses: {
+      'session/set_config_option': [
+        { received: started, waitFor: completion.promise },
+      ],
     },
   });
   const created = await host.caller.session.new(emptySessionInput);
@@ -358,7 +377,7 @@ it('explicit closure rejects a pending configuration instead of reporting false 
   const rejection = setting.catch((error: unknown): unknown => error);
   await started.promise;
   await host.caller.session.close(created);
-  completion.resolve({ configOptions: acpConfiguration });
+  completion.resolve();
   expect(await rejection).toMatchObject({
     message: 'Session closed before configuration completed',
   });
@@ -373,20 +392,23 @@ it.each(
 )(
   '$agent applies the offered $configId choice without changing a sibling Session',
   async ({ agent, configId, value }) => {
-    let nextSession = 0;
     const host = await startAcpEngine(
       {
-        newSession: () => ({
-          sessionId: `configured-${++nextSession}`,
-          configOptions: acpConfiguration,
-        }),
-        setConfigOption: ({ params }) => ({
-          configOptions: acpConfiguration.map((option) =>
-            option.type === 'select' && option.id === params.configId
-              ? { ...option, currentValue: value }
-              : option,
-          ),
-        }),
+        steps: [],
+        configOptions: acpConfiguration,
+        responses: {
+          'session/set_config_option': [
+            {
+              result: {
+                configOptions: acpConfiguration.map((option) =>
+                  option.type === 'select' && option.id === configId
+                    ? { ...option, currentValue: value }
+                    : option,
+                ),
+              },
+            },
+          ],
+        },
       },
       undefined,
       agent,
@@ -428,23 +450,26 @@ it.each(
 );
 
 it('a queued choice is rechecked after a model removes its offered option', async () => {
-  const started = Promise.withResolvers<void>();
+  const started = Promise.withResolvers<SetSessionConfigOptionRequest>();
   const finish = Promise.withResolvers<void>();
-  const requests: string[] = [];
+  const requests: SetSessionConfigOptionRequest[] = [];
   const host = await startAcpEngine({
-    newSession: () => ({
-      sessionId: configuredSessionId,
-      configOptions: acpConfiguration,
-    }),
-    setConfigOption: async ({ params }) => {
-      requests.push(params.configId);
-      started.resolve();
-      await finish.promise;
-      return {
-        configOptions: acpConfiguration.filter(
-          (option) => option.id !== 'effort',
-        ),
-      };
+    steps: [],
+    configOptions: acpConfiguration,
+    sessionIds: [configuredSessionId],
+    responses: {
+      'session/set_config_option': [
+        {
+          requests,
+          received: started,
+          waitFor: finish.promise,
+          result: {
+            configOptions: acpConfiguration.filter(
+              (option) => option.id !== 'effort',
+            ),
+          },
+        },
+      ],
     },
   });
   const created = await host.caller.session.new(emptySessionInput);
@@ -467,15 +492,14 @@ it('a queued choice is rechecked after a model removes its offered option', asyn
   expect(await rejected).toMatchObject({
     message: expect.stringContaining('effort'),
   });
-  expect(requests).toEqual(['model']);
+  expect(requests.map((request) => request.configId)).toEqual(['model']);
 });
 
 it('the lifetime subscription applies authoritative configuration updates to the actual Session', async () => {
   const host = await startAcpEngine({
-    newSession: () => ({
-      sessionId: configuredSessionId,
-      configOptions: acpConfiguration,
-    }),
+    steps: [],
+    configOptions: acpConfiguration,
+    sessionIds: [configuredSessionId],
   });
   const created = await host.caller.session.new(emptySessionInput);
   const updated: SessionConfigOption[] = [
@@ -499,12 +523,17 @@ it('the lifetime subscription applies authoritative configuration updates to the
       _meta: null,
     },
   ];
-  await requireResourceProcessAt(host.peer.processes).connection.client.notify(
-    'session/update',
-    {
-      sessionId: configuredSessionId,
-      update: { sessionUpdate: 'config_option_update', configOptions: updated },
-    },
+  await requireScriptedProcessAt(host.agent.processes).play(
+    [
+      {
+        type: 'update',
+        update: {
+          sessionUpdate: 'config_option_update',
+          configOptions: updated,
+        },
+      },
+    ],
+    configuredSessionId,
   );
   const feed = (await host.caller.feed.subscribe({ ...created, after: null }))[
     Symbol.asyncIterator
@@ -536,30 +565,36 @@ it('the lifetime subscription applies authoritative configuration updates to the
 
 it('malformed Argo configuration metadata is reported, counted and closes the failed opening', async () => {
   const report = vi.spyOn(console, 'error').mockImplementation(() => {});
-  const closed: string[] = [];
+  const closed: { sessionId: string }[] = [];
   try {
     const host = await startAcpEngine({
-      newSession: () => ({
-        sessionId: configuredSessionId,
-        configOptions: [
+      steps: [],
+      responses: {
+        'session/new': [
           {
-            id: 'fast',
-            name: 'Fast mode',
-            type: 'boolean',
-            currentValue: false,
-            _meta: { argo: { tone: 'invented' } },
+            result: {
+              sessionId: configuredSessionId,
+              configOptions: [
+                {
+                  id: 'fast',
+                  name: 'Fast mode',
+                  type: 'boolean',
+                  currentValue: false,
+                  _meta: { argo: { tone: 'invented' } },
+                },
+              ],
+            },
           },
         ],
-      }),
-      closeSession: ({ params }) => {
-        closed.push(params.sessionId);
-        return {};
+        'session/close': [{ requests: closed }],
       },
     });
     await expect(host.caller.session.new(emptySessionInput)).rejects.toThrow(
       'tone',
     );
-    await expect.poll(() => closed).toEqual([configuredSessionId]);
+    await expect
+      .poll(() => closed)
+      .toEqual([{ sessionId: configuredSessionId }]);
     expect(report).toHaveBeenCalledWith(
       expect.stringMatching(/Rejected Session configuration metadata #1/),
       expect.any(Error),

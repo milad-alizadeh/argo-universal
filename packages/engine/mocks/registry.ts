@@ -1,5 +1,4 @@
-import type { AgentReady } from '@repo/agents';
-import { createMockAdapter } from '@repo/mocks/agent';
+import { createAgentMetadata } from '@repo/mocks/agent';
 import {
   assertEvent,
   assign,
@@ -51,6 +50,4 @@ export const createRegistryModelMachine = (
       : {},
   });
 
-export const registryModelAdapter = createMockAdapter({
-  connect: (): Promise<AgentReady> => new Promise((): void => {}),
-});
+export const registryModelAdapter = createAgentMetadata();

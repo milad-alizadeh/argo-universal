@@ -1,63 +1,45 @@
-import { createMockAdapter } from '@repo/mocks/agent';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { expect, it, vi } from 'vitest';
-import { startEngineTestHost } from '#mocks/engine';
-import { messageChange } from '#mocks/feed';
+import { startAcpEngine, emptySessionInput } from '#mocks/acp-engine';
 
 it.each(['accepted', 'rejected'] as const)(
   'keeps a live Session and Feed durable while a catalog replacement is %s',
   async (catalogResult) => {
     const response = Promise.withResolvers<unknown>();
     const fetchAgents = vi.fn<() => Promise<unknown>>(() => response.promise);
-    const host = await startEngineTestHost({
+    const host = await startAcpEngine({
       fetchAgents,
-      adapters: [
-        createMockAdapter({
-          stream: (peer) => {
-            peer.receive((command) => {
-              if (command.type !== 'agent.prompt') return;
-              peer.send({
-                type: 'agent.feed',
-                change: messageChange('settled'),
-              });
-              peer.send({ type: 'agent.turnEnded', stopReason: 'end_turn' });
-            });
+      steps: [
+        {
+          type: 'update',
+          update: {
+            sessionUpdate: 'agent_message_chunk',
+            content: { type: 'text', text: 'Live catalog reply' },
           },
-        }),
+        },
       ],
     });
-    host.sessionRegistry.send({
-      type: 'sessions.open',
-      sessionId: 'session-1',
-      agent: 'mock',
-    });
-    await vi.waitFor(() =>
-      expect(
-        host.database.$client
-          .prepare('SELECT vendor_session_id FROM session WHERE id = ?')
-          .get('session-1'),
-      ).toEqual({ vendor_session_id: 'vendor-1' }),
-    );
+    const { sessionId } = await host.caller.session.new(emptySessionInput);
     const refresh = host.caller.agents
       .syncCatalog()
       .catch((error: unknown) => error);
     await vi.waitFor(() => expect(fetchAgents).toHaveBeenCalledTimes(1));
     await host.caller.session.prompt({
-      sessionId: 'session-1',
+      sessionId,
       prompt: [{ type: 'text', text: 'Keep working' }],
     });
     await vi.waitFor(() =>
       expect(
         host.database.$client
           .prepare('SELECT status FROM turn WHERE session_id = ?')
-          .get('session-1'),
+          .get(sessionId),
       ).toEqual({ status: 'ended' }),
     );
     const savedFeed = host.database.$client
       .prepare(
         'SELECT session_update, payload FROM feed_row WHERE session_id = ? ORDER BY rowid',
       )
-      .all('session-1');
+      .all(sessionId);
     expect(savedFeed).toEqual([
       expect.objectContaining({ session_update: 'user_message' }),
       expect.objectContaining({ session_update: 'agent_message' }),
@@ -74,16 +56,16 @@ it.each(['accepted', 'rejected'] as const)(
         .prepare(
           'SELECT session_update, payload FROM feed_row WHERE session_id = ? ORDER BY rowid',
         )
-        .all('session-1'),
+        .all(sessionId),
     ).toEqual(savedFeed);
     expect(
       (
         await host.caller.feed.page({
-          sessionId: 'session-1',
+          sessionId,
           direction: 'tail',
         })
       ).rows,
     ).toHaveLength(2);
-    await host.caller.session.close({ sessionId: 'session-1' });
+    await host.caller.session.close({ sessionId });
   },
 );

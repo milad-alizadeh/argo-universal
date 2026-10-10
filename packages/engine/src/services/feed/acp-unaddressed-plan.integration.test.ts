@@ -1,3 +1,4 @@
+import { feedScenario } from '@repo/mocks/agent/feed-scenarios';
 import { expect, it } from 'vitest';
 import {
   openAcpFeedSession,
@@ -12,13 +13,18 @@ it('unaddressed Plans reuse their local identity through successive Turns and cl
       entries: [{ content: 'First', priority: 'high', status: 'pending' }],
     },
   ];
-  const { host, sessionId } = await openAcpFeedSession(updates);
+  const scenario = feedScenario(updates);
+  const { host, sessionId } = await openAcpFeedSession(scenario);
   const first = (await host.caller.feed.page({ sessionId, direction: 'tail' }))
     .rows[1];
-  updates.splice(0, 1, {
-    sessionUpdate: 'plan',
-    entries: [{ content: 'Replacement', priority: 'low', status: 'completed' }],
-  });
+  scenario.steps = feedScenario([
+    {
+      sessionUpdate: 'plan',
+      entries: [
+        { content: 'Replacement', priority: 'low', status: 'completed' },
+      ],
+    },
+  ]).steps;
   await host.caller.session.prompt({
     sessionId,
     prompt: [{ type: 'text', text: 'Replace the checklist' }],

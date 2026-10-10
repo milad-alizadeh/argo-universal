@@ -5,17 +5,18 @@ import { pathToFileURL } from 'node:url';
 import type { AgentInfo } from '@repo/contracts';
 import { expect, it, onTestFinished } from 'vitest';
 import {
-  acpProgram,
   customAgentDefinition,
   startCustomAgentEngine,
 } from '#mocks/custom-agent';
 
 // A removable launcher for the fixture program, so the saved executable can disappear.
 const writeLauncher = (): string => {
+  const [entry] = customAgentDefinition.args;
+  if (!entry) throw new Error('Missing scripted Agent program');
   const directory = mkdtempSync(join(tmpdir(), 'argo-custom-program-'));
   onTestFinished(() => rmSync(directory, { recursive: true, force: true }));
   const launcher = join(directory, 'agent.mjs');
-  writeFileSync(launcher, `await import('${pathToFileURL(acpProgram).href}');`);
+  writeFileSync(launcher, `await import('${pathToFileURL(entry).href}');`);
   return launcher;
 };
 
@@ -24,7 +25,7 @@ it('lists an enabled custom Agent with availability from a fresh check, not from
   const host = await startCustomAgentEngine();
   const registration = await host.caller.agents.registerCustom({
     ...customAgentDefinition,
-    args: [program],
+    args: [program, ...customAgentDefinition.args.slice(1)],
   });
   if (registration.status !== 'ready') throw new Error(registration.failure);
   const listed = (): Promise<AgentInfo | undefined> =>

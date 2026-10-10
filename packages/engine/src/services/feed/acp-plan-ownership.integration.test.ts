@@ -1,3 +1,4 @@
+import { feedScenario } from '@repo/mocks/agent/feed-scenarios';
 import { expect, it } from 'vitest';
 import { emptySessionInput } from '#mocks/acp-engine';
 import {
@@ -8,18 +9,24 @@ import {
 
 it('unaddressed Plans never adopt addressed rows or another actual ACP Session', async () => {
   const updates: AcpFeedUpdates = [{ sessionUpdate: 'plan', entries: [] }];
-  const { host, sessionId } = await openAcpFeedSession(updates);
+  const scenario = feedScenario(updates);
+  const { host, sessionId } = await openAcpFeedSession(scenario);
   const first = (await host.caller.feed.page({ sessionId, direction: 'tail' }))
     .rows[1];
   if (!first) throw new Error('Unaddressed Plan is missing');
-  updates.unshift({
-    sessionUpdate: 'plan_update',
-    plan: {
-      type: 'items',
-      planId: first.id,
-      entries: [{ content: 'Addressed', priority: 'high', status: 'pending' }],
+  scenario.steps = feedScenario([
+    {
+      sessionUpdate: 'plan_update',
+      plan: {
+        type: 'items',
+        planId: first.id,
+        entries: [
+          { content: 'Addressed', priority: 'high', status: 'pending' },
+        ],
+      },
     },
-  });
+    ...updates,
+  ]).steps;
   await host.caller.session.prompt({
     sessionId,
     prompt: [{ type: 'text', text: 'Both Plans' }],

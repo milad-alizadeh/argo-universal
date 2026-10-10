@@ -1,7 +1,6 @@
 import type {
-  AgentRequestHandlersByMethod,
-  CreateElicitationRequest,
   CreateElicitationResponse,
+  ElicitationSchema,
   RequestPermissionRequest,
   RequestPermissionResponse,
 } from '@agentclientprotocol/sdk';
@@ -12,26 +11,25 @@ import type {
   SessionSnapshot,
 } from '@repo/contracts';
 import { appFixtureAgentIds } from '@repo/mocks/agent/app-fixtures';
+import type { ScriptedStep } from '@repo/mocks/agent/scripted-scenario';
 import { describe, expect, it, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
-import {
-  sendAcpFeedUpdates,
-  waitForAcpSessionIdle,
-  waitForAcpSnapshot,
-} from '#mocks/acp-feed';
+import { waitForAcpSessionIdle, waitForAcpSnapshot } from '#mocks/acp-feed';
+import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 
-type PromptHandler = AgentRequestHandlersByMethod['session/prompt'];
+type PromptSteps = readonly ScriptedStep[];
 type AcpEngine = Awaited<ReturnType<typeof startAcpEngine>>;
-type Outcomes = Map<string, RequestPermissionResponse['outcome']>;
+type Outcomes = RequestPermissionResponse[];
 
 const alwaysAllow = 'edit-always';
 const allowOnce = 'edit-once';
 const reject = 'edit-reject';
-const requestPermission = 'session/request_permission';
 const createElicitation = 'elicitation/create';
 const alreadyAnswered = 'already answered';
 const unrecognised = 'The Agent sent an unrecognised message';
 const issueMessage = 'A few details for the new issue';
+const editToolTitle = 'Edit tool-a';
+const unknownElicitationId = 'unknown-elicitation';
 const cancelled = { outcome: { outcome: 'cancelled' } };
 
 const exactOptions: RequestPermissionRequest['options'] = [
@@ -46,26 +44,7 @@ const issueSchema = {
     estimate: { type: 'integer', minimum: 1 },
   },
   required: ['title'],
-} as const;
-const permissionRequest = (
-  sessionId: string,
-  toolCallId: string,
-): RequestPermissionRequest => ({
-  sessionId,
-  toolCall: { toolCallId, title: `Edit ${toolCallId}` },
-  options: exactOptions,
-});
-const issueForm = (
-  sessionId: string,
-  message = issueMessage,
-): CreateElicitationRequest => ({
-  mode: 'form',
-  sessionId,
-  toolCallId: 'tool-a',
-  message,
-  requestedSchema: issueSchema,
-});
-
+} satisfies ElicitationSchema;
 const promptSession = (host: AcpEngine, sessionId: string): Promise<unknown> =>
   host.caller.session.prompt({
     sessionId,
@@ -73,9 +52,9 @@ const promptSession = (host: AcpEngine, sessionId: string): Promise<unknown> =>
   });
 const startSession = async (
   agent: string,
-  prompt: PromptHandler,
+  steps: PromptSteps,
 ): Promise<{ host: AcpEngine; sessionId: string }> => {
-  const host = await startAcpEngine({ prompt }, undefined, agent);
+  const host = await startAcpEngine({ steps }, undefined, agent);
   const { sessionId } = await host.caller.session.new({
     ...emptySessionInput,
     agent,
@@ -131,20 +110,22 @@ const readNotices = async (
   (
     await host.caller.feed.page({ sessionId, direction: 'tail', limit: 40 })
   ).rows.filter((row): row is Notice => row.sessionUpdate === 'notice');
-const recordPermissionOutcomes =
-  (outcomes: Outcomes, toolCallIds: readonly string[]): PromptHandler =>
-  async ({ params, client }) => {
-    await Promise.all(
-      toolCallIds.map(async (toolCallId) => {
-        const response = await client.request(
-          requestPermission,
-          permissionRequest(params.sessionId, toolCallId),
-        );
-        outcomes.set(toolCallId, response.outcome);
-      }),
-    );
-    return { stopReason: 'end_turn' };
-  };
+const permissionSteps = (
+  responses: Outcomes,
+  toolCallIds: readonly string[],
+): PromptSteps => [
+  {
+    type: 'parallel',
+    steps: toolCallIds.map((toolCallId) => ({
+      type: 'permission',
+      request: {
+        toolCall: { toolCallId, title: `Edit ${toolCallId}` },
+        options: exactOptions,
+      },
+      responses,
+    })),
+  },
+];
 const readPermissionOutcome = async (
   host: AcpEngine,
   sessionId: string,
@@ -156,38 +137,24 @@ const readPermissionOutcome = async (
     (row) =>
       row.sessionUpdate === 'tool_call_update' && row.toolCallId === toolCallId,
   )?._meta?.argo;
-const recordElicitationResults =
-  (
-    results: Map<string, CreateElicitationResponse>,
-    messages: readonly string[],
-  ): PromptHandler =>
-  async ({ params, client }) => {
-    await Promise.all(
-      messages.map(async (message) => {
-        results.set(
-          message,
-          await client.request(
-            createElicitation,
-            issueForm(params.sessionId, message),
-          ),
-        );
-      }),
-    );
-    return { stopReason: 'end_turn' };
-  };
-
-const requestWithdrawablePermission =
-  (cancellationSignal: AbortSignal): PromptHandler =>
-  async ({ params, client }) => {
-    await client
-      .request(
-        requestPermission,
-        permissionRequest(params.sessionId, 'tool-a'),
-        { cancellationSignal },
-      )
-      .catch((): null => null);
-    return new Promise(() => {});
-  };
+const elicitationSteps = (
+  responses: CreateElicitationResponse[],
+  messages: readonly string[],
+): PromptSteps => [
+  {
+    type: 'parallel',
+    steps: messages.map((message) => ({
+      type: 'elicitation',
+      request: {
+        mode: 'form',
+        toolCallId: 'tool-a',
+        message,
+        requestedSchema: issueSchema,
+      },
+      responses,
+    })),
+  },
+];
 
 it.each(
   appFixtureAgentIds.flatMap((agent) =>
@@ -196,25 +163,16 @@ it.each(
 )(
   '$agent Stop cancels a pending $kind, refuses late answers and ends its Turn',
   async ({ agent, kind }) => {
-    const response = Promise.withResolvers<
-      RequestPermissionResponse | CreateElicitationResponse
-    >();
-    const cancelReceived = Promise.withResolvers<void>();
+    const permissionResponses: RequestPermissionResponse[] = [];
+    const elicitationResponses: CreateElicitationResponse[] = [];
     const host = await startAcpEngine(
       {
-        cancel: () => cancelReceived.resolve(),
-        prompt: async ({ params, client }) => {
-          response.resolve(
-            await (kind === 'Permission'
-              ? client.request(
-                  requestPermission,
-                  permissionRequest(params.sessionId, 'tool-a'),
-                )
-              : client.request(createElicitation, issueForm(params.sessionId))),
-          );
-          await cancelReceived.promise;
-          return { stopReason: 'cancelled' };
-        },
+        steps: [
+          ...(kind === 'Permission'
+            ? permissionSteps(permissionResponses, ['tool-a'])
+            : elicitationSteps(elicitationResponses, [issueMessage])),
+          { type: 'wait-for-cancel' },
+        ],
       },
       undefined,
       agent,
@@ -228,9 +186,10 @@ it.each(
       ? waitForPermission(host, sessionId)
       : waitForElicitation(host, sessionId));
     await host.caller.session.cancel({ sessionId });
-    expect(await response.promise).toEqual(
-      kind === 'Permission' ? cancelled : { action: 'cancel' },
-    );
+    await waitForTurnEnd(host, sessionId);
+    expect(
+      kind === 'Permission' ? permissionResponses[0] : elicitationResponses[0],
+    ).toEqual(kind === 'Permission' ? cancelled : { action: 'cancel' });
     await expect(
       kind === 'Permission'
         ? host.caller.session.answerPermission({
@@ -254,21 +213,21 @@ describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
   it('presents the exact options the Agent offered', async () => {
     const { host, sessionId } = await startSession(
       agent,
-      recordPermissionOutcomes(new Map(), ['tool-a']),
+      permissionSteps([], ['tool-a']),
     );
     expect(await waitForPermission(host, sessionId)).toEqual({
       requestId: expect.any(String),
       toolCallId: 'tool-a',
-      title: 'Edit tool-a',
+      title: editToolTitle,
       options: exactOptions,
     });
   });
 
   it('settles only the answered request with its exact option while the prompt still runs', async () => {
-    const outcomes: Outcomes = new Map();
+    const outcomes: Outcomes = [];
     const { host, sessionId } = await startSession(
       agent,
-      recordPermissionOutcomes(outcomes, ['tool-a', 'tool-b']),
+      permissionSteps(outcomes, ['tool-a', 'tool-b']),
     );
     const first = await waitForPermission(host, sessionId, 'tool-a');
     await host.caller.session.answerPermission({
@@ -277,9 +236,9 @@ describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
       optionId: alwaysAllow,
     });
     await waitForPermission(host, sessionId, 'tool-b');
-    expect(outcomes).toEqual(
-      new Map([['tool-a', { outcome: 'selected', optionId: alwaysAllow }]]),
-    );
+    expect(outcomes).toEqual([
+      { outcome: { outcome: 'selected', optionId: alwaysAllow } },
+    ]);
   });
 
   it.each([
@@ -288,12 +247,17 @@ describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
   ])(
     'the Feed keeps the name and kind of the chosen %s option on its Tool call',
     async (optionId, name, kind) => {
-      const { host, sessionId } = await startSession(agent, async (request) => {
-        await sendAcpFeedUpdates(request, [
-          { sessionUpdate: 'tool_call', toolCallId: 'tool-a', title: 'Edit' },
-        ]);
-        return recordPermissionOutcomes(new Map(), ['tool-a'])(request);
-      });
+      const { host, sessionId } = await startSession(agent, [
+        {
+          type: 'update',
+          update: {
+            sessionUpdate: 'tool_call',
+            toolCallId: 'tool-a',
+            title: 'Edit',
+          },
+        },
+        ...permissionSteps([], ['tool-a']),
+      ]);
       const pending = await waitForPermission(host, sessionId);
       await host.caller.session.answerPermission({
         sessionId,
@@ -308,17 +272,10 @@ describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
   );
 
   it('an answer in one Session never settles a request in another', async () => {
-    const outcomes: Outcomes = new Map();
+    const outcomes: Outcomes = [];
     const { host, sessionId } = await startSession(
       agent,
-      async ({ params, client }) => {
-        const response = await client.request(
-          requestPermission,
-          permissionRequest(params.sessionId, `tool-${params.sessionId}`),
-        );
-        outcomes.set(params.sessionId, response.outcome);
-        return { stopReason: 'end_turn' };
-      },
+      permissionSteps(outcomes, ['tool-a']),
     );
     const other = await host.caller.session.new({
       ...emptySessionInput,
@@ -334,15 +291,15 @@ describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
         optionId: allowOnce,
       }),
     ).rejects.toThrow(alreadyAnswered);
-    expect(outcomes.size).toBe(0);
+    expect(outcomes).toHaveLength(0);
     expect(await waitForPermission(host, sessionId)).toEqual(waiting);
   });
 
   it('a duplicate answer is rejected without consuming the next request', async () => {
-    const outcomes: Outcomes = new Map();
+    const outcomes: Outcomes = [];
     const { host, sessionId } = await startSession(
       agent,
-      recordPermissionOutcomes(outcomes, ['tool-a', 'tool-b']),
+      permissionSteps(outcomes, ['tool-a', 'tool-b']),
     );
     const first = await waitForPermission(host, sessionId, 'tool-a');
     const answer = {
@@ -355,13 +312,13 @@ describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
       alreadyAnswered,
     );
     await waitForPermission(host, sessionId, 'tool-b');
-    expect(outcomes.has('tool-b')).toBe(false);
+    expect(outcomes).toHaveLength(1);
   });
 
   it('an option the Agent did not offer is refused and the request stays pending', async () => {
     const { host, sessionId } = await startSession(
       agent,
-      recordPermissionOutcomes(new Map(), ['tool-a']),
+      permissionSteps([], ['tool-a']),
     );
     const pending = await waitForPermission(host, sessionId);
     await expect(
@@ -377,10 +334,10 @@ describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
   it.each([reject, allowOnce])(
     'feedback with %s is refused as undeliverable and the request stays pending',
     async (optionId) => {
-      const outcomes: Outcomes = new Map();
+      const outcomes: Outcomes = [];
       const { host, sessionId } = await startSession(
         agent,
-        recordPermissionOutcomes(outcomes, ['tool-a']),
+        permissionSteps(outcomes, ['tool-a']),
       );
       const pending = await waitForPermission(host, sessionId);
       await expect(
@@ -392,15 +349,15 @@ describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
         }),
       ).rejects.toThrow('does not support Permission feedback');
       expect(await waitForPermission(host, sessionId)).toEqual(pending);
-      expect(outcomes.size).toBe(0);
+      expect(outcomes).toHaveLength(0);
     },
   );
 
   it('a request stays answerable after one App stops watching the Session', async () => {
-    const outcomes: Outcomes = new Map();
+    const outcomes: Outcomes = [];
     const { host, sessionId } = await startSession(
       agent,
-      recordPermissionOutcomes(outcomes, ['tool-a']),
+      permissionSteps(outcomes, ['tool-a']),
     );
     const pending = await waitForPermission(host, sessionId);
     const departingApp = host.createCaller();
@@ -415,29 +372,30 @@ describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
       optionId: allowOnce,
     });
     await waitForAcpSessionIdle(host, sessionId);
-    expect(outcomes.get('tool-a')).toEqual({
+    expect(outcomes[0]?.outcome).toEqual({
       outcome: 'selected',
       optionId: allowOnce,
     });
   });
 
   it('a request still pending when its Turn ends is cancelled and no longer answerable', async () => {
-    const response = Promise.withResolvers<RequestPermissionResponse>();
-    const { host, sessionId } = await startSession(
-      agent,
-      async ({ params, client }) => {
-        void client
-          .request(
-            requestPermission,
-            permissionRequest(params.sessionId, 'tool-a'),
-          )
-          .then(response.resolve, response.reject);
-        await new Promise((resolve) => setTimeout(resolve, 50));
-        return { stopReason: 'end_turn' };
+    const responses: RequestPermissionResponse[] = [];
+    const finish = Promise.withResolvers<void>();
+    const { host, sessionId } = await startSession(agent, [
+      {
+        type: 'permission',
+        request: {
+          toolCall: { toolCallId: 'tool-a', title: editToolTitle },
+          options: exactOptions,
+        },
+        responses,
+        detached: true,
       },
-    );
+      { type: 'gate', waitFor: finish.promise },
+    ]);
     const pending = await waitForPermission(host, sessionId);
-    expect(await response.promise).toEqual(cancelled);
+    finish.resolve();
+    await vi.waitFor(() => expect(responses[0]).toEqual(cancelled));
     expect(
       (await waitForTurnEnd(host, sessionId)).pendingPermission,
     ).toBeNull();
@@ -451,30 +409,30 @@ describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
   });
 
   it('closing the Session cancels its pending request', async () => {
-    const response = Promise.withResolvers<RequestPermissionResponse>();
-    const { host, sessionId } = await startSession(
-      agent,
-      async ({ params, client }) => {
-        response.resolve(
-          await client.request(
-            requestPermission,
-            permissionRequest(params.sessionId, 'tool-a'),
-          ),
-        );
-        return new Promise(() => {});
-      },
-    );
+    const responses: RequestPermissionResponse[] = [];
+    const { host, sessionId } = await startSession(agent, [
+      ...permissionSteps(responses, ['tool-a']),
+      { type: 'hold' },
+    ]);
     await waitForPermission(host, sessionId);
     await host.caller.session.close({ sessionId });
-    expect(await response.promise).toEqual(cancelled);
+    await vi.waitFor(() => expect(responses[0]).toEqual(cancelled));
   });
 
   it('a request the Agent withdraws is no longer answerable', async () => {
     const withdraw = new AbortController();
-    const { host, sessionId } = await startSession(
-      agent,
-      requestWithdrawablePermission(withdraw.signal),
-    );
+    const { host, sessionId } = await startSession(agent, [
+      {
+        type: 'permission',
+        request: {
+          toolCall: { toolCallId: 'tool-a', title: editToolTitle },
+          options: exactOptions,
+        },
+        signal: withdraw.signal,
+        detached: true,
+      },
+      { type: 'hold' },
+    ]);
     const pending = await waitForPermission(host, sessionId);
     withdraw.abort();
     await waitForAcpSnapshot(
@@ -493,20 +451,19 @@ describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
   });
 
   it('a malformed request is cancelled and reported', async () => {
-    const response = Promise.withResolvers<RequestPermissionResponse>();
-    const { host, sessionId } = await startSession(
-      agent,
-      async ({ params, client }) => {
-        response.resolve(
-          await client.request(requestPermission, {
-            ...permissionRequest(params.sessionId, 'tool-a'),
-            options: [],
-          }),
-        );
-        return new Promise(() => {});
+    const responses: RequestPermissionResponse[] = [];
+    const { host, sessionId } = await startSession(agent, [
+      {
+        type: 'permission',
+        request: {
+          toolCall: { toolCallId: 'tool-a', title: editToolTitle },
+          options: [],
+        },
+        responses,
       },
-    );
-    expect(await response.promise).toEqual(cancelled);
+      { type: 'hold' },
+    ]);
+    await vi.waitFor(() => expect(responses[0]).toEqual(cancelled));
     await vi.waitFor(async () =>
       expect(await readNotices(host, sessionId)).toEqual([
         expect.objectContaining({ severity: 'warning', title: unrecognised }),
@@ -519,7 +476,7 @@ describe.each(appFixtureAgentIds)('%s Elicitations', (agent) => {
   it('presents a form Elicitation with its exact schema', async () => {
     const { host, sessionId } = await startSession(
       agent,
-      recordElicitationResults(new Map(), [issueMessage]),
+      elicitationSteps([], [issueMessage]),
     );
     expect(await waitForElicitation(host, sessionId)).toEqual({
       requestId: expect.any(String),
@@ -531,10 +488,10 @@ describe.each(appFixtureAgentIds)('%s Elicitations', (agent) => {
   });
 
   it('delivers the accepted form content to the exact Elicitation', async () => {
-    const results = new Map<string, CreateElicitationResponse>();
+    const results: CreateElicitationResponse[] = [];
     const { host, sessionId } = await startSession(
       agent,
-      recordElicitationResults(results, [issueMessage]),
+      elicitationSteps(results, [issueMessage]),
     );
     const pending = await waitForElicitation(host, sessionId);
     await host.caller.session.answerElicitation({
@@ -544,7 +501,7 @@ describe.each(appFixtureAgentIds)('%s Elicitations', (agent) => {
       content: { title: 'Drafts vanish after a reconnect', estimate: 3 },
     });
     await waitForTurnEnd(host, sessionId);
-    expect(results.get(issueMessage)).toEqual({
+    expect(results[0]).toEqual({
       action: 'accept',
       content: { title: 'Drafts vanish after a reconnect', estimate: 3 },
     });
@@ -553,7 +510,7 @@ describe.each(appFixtureAgentIds)('%s Elicitations', (agent) => {
   it('refuses content that does not match the form and keeps it pending', async () => {
     const { host, sessionId } = await startSession(
       agent,
-      recordElicitationResults(new Map(), [issueMessage]),
+      elicitationSteps([], [issueMessage]),
     );
     const pending = await waitForElicitation(host, sessionId);
     await expect(
@@ -568,10 +525,10 @@ describe.each(appFixtureAgentIds)('%s Elicitations', (agent) => {
   });
 
   it('queues concurrent Elicitations and settles each with its own answer', async () => {
-    const results = new Map<string, CreateElicitationResponse>();
+    const results: CreateElicitationResponse[] = [];
     const { host, sessionId } = await startSession(
       agent,
-      recordElicitationResults(results, ['First', 'Second']),
+      elicitationSteps(results, ['First', 'Second']),
     );
     const first = await waitForElicitation(host, sessionId, 'First');
     await host.caller.session.answerElicitation({
@@ -580,14 +537,14 @@ describe.each(appFixtureAgentIds)('%s Elicitations', (agent) => {
       action: 'decline',
     });
     await waitForElicitation(host, sessionId, 'Second');
-    expect(results).toEqual(new Map([['First', { action: 'decline' }]]));
+    expect(results).toEqual([{ action: 'decline' }]);
   });
 
   it('a duplicate answer is rejected without consuming the next Elicitation', async () => {
-    const results = new Map<string, CreateElicitationResponse>();
+    const results: CreateElicitationResponse[] = [];
     const { host, sessionId } = await startSession(
       agent,
-      recordElicitationResults(results, ['First', 'Second']),
+      elicitationSteps(results, ['First', 'Second']),
     );
     const first = await waitForElicitation(host, sessionId, 'First');
     const answer = {
@@ -600,48 +557,50 @@ describe.each(appFixtureAgentIds)('%s Elicitations', (agent) => {
       alreadyAnswered,
     );
     await waitForElicitation(host, sessionId, 'Second');
-    expect(results.has('Second')).toBe(false);
+    expect(results).toHaveLength(1);
   });
 
   it('a URL Elicitation is cancelled without being presented', async () => {
-    const answered = Promise.withResolvers<CreateElicitationResponse>();
-    const { host, sessionId } = await startSession(
-      agent,
-      async ({ params, client }) => {
-        answered.resolve(
-          await client.request(createElicitation, {
-            mode: 'url',
-            sessionId: params.sessionId,
-            elicitationId: 'sign-in',
-            url: 'https://example.com/sign-in',
-            message: 'Sign in',
-          }),
-        );
-        return { stopReason: 'end_turn' };
+    const responses: CreateElicitationResponse[] = [];
+    const { host, sessionId } = await startSession(agent, [
+      {
+        type: 'elicitation',
+        request: {
+          mode: 'url',
+          elicitationId: 'sign-in',
+          url: 'https://example.com/sign-in',
+          message: 'Sign in',
+        },
+        responses,
       },
-    );
-    expect(await answered.promise).toEqual({ action: 'cancel' });
+    ]);
+    await vi.waitFor(() => expect(responses[0]).toEqual({ action: 'cancel' }));
     expect(
       (await waitForTurnEnd(host, sessionId)).pendingElicitation,
     ).toBeNull();
   });
 
   it('an Elicitation in an unknown mode is cancelled and reported', async () => {
-    const answered = Promise.withResolvers<CreateElicitationResponse>();
-    const { host, sessionId } = await startSession(
-      agent,
-      async ({ params, client }) => {
-        answered.resolve(
-          await client.request(createElicitation, {
-            mode: 'voice',
-            sessionId: params.sessionId,
-            message: 'Say it',
-          }),
-        );
-        return new Promise(() => {});
+    const { host, sessionId } = await startSession(agent, [
+      {
+        type: 'raw',
+        frame: JSON.stringify({
+          jsonrpc: '2.0',
+          id: unknownElicitationId,
+          method: createElicitation,
+          params: { mode: 'voice', sessionId: '$sessionId', message: 'Say it' },
+        }),
       },
-    );
-    expect(await answered.promise).toEqual({ action: 'cancel' });
+      { type: 'hold' },
+    ]);
+    const process = requireScriptedProcessAt(host.agent.processes);
+    let reply = await process.receive();
+    while (!('id' in reply) || reply.id !== unknownElicitationId)
+      reply = await process.receive();
+    expect(reply).toMatchObject({
+      id: unknownElicitationId,
+      result: { action: 'cancel' },
+    });
     await vi.waitFor(async () =>
       expect(await readNotices(host, sessionId)).toEqual([
         expect.objectContaining({

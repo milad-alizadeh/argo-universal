@@ -3,16 +3,16 @@ import type {
   RequestPermissionRequest,
   RequestPermissionResponse,
 } from '@agentclientprotocol/sdk';
+import { acpPermission } from '@repo/mocks/agent/permission-scenario';
 import { expect, it } from 'vitest';
-import { createAcpPeer } from '#mocks/acp-peer';
-import { acpPermission } from '#mocks/acp-requests';
+import { createScriptedAgentWire } from '#mocks/scripted-agent';
 import { createAgentClient } from './client';
 
 const permissionId = 'permission-one';
 const permissionMethod = 'session/request_permission';
 
 it('preserves request IDs when two permission responses settle in reverse order', async () => {
-  const peer = createAcpPeer();
+  const peer = createScriptedAgentWire({ steps: [] });
   const arrived = Promise.withResolvers<void>();
   const first = Promise.withResolvers<RequestPermissionResponse>();
   const second = Promise.withResolvers<RequestPermissionResponse>();
@@ -71,7 +71,7 @@ it('preserves request IDs when two permission responses settle in reverse order'
 });
 
 it('cancels the protocol request signal while retaining its connection', async () => {
-  const peer = createAcpPeer();
+  const peer = createScriptedAgentWire({ steps: [] });
   const pending =
     Promise.withResolvers<ClientRequestContext<RequestPermissionRequest>>();
   const answer = Promise.withResolvers<RequestPermissionResponse>();

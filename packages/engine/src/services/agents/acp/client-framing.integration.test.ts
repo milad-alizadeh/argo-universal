@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { createAcpPeer } from '#mocks/acp-peer';
+import { createScriptedAgentWire } from '#mocks/scripted-agent';
 import { createAgentClient } from './client';
 
 it.each([
@@ -8,7 +8,7 @@ it.each([
 ])(
   'returns an SDK framing error for $label without another decoder',
   async ({ frame, code }) => {
-    const peer = createAcpPeer();
+    const peer = createScriptedAgentWire({ steps: [] });
     const connection = createAgentClient({
       stream: peer.stream,
       acceptSessionUpdate: () => {},

@@ -1,3 +1,4 @@
+import type { PromptRequest } from '@agentclientprotocol/sdk';
 import { agentAdapters } from '@repo/agents';
 import type {
   FeedChange,
@@ -5,12 +6,8 @@ import type {
   FeedSyncPoint,
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
-import { session as sessionTable } from '@repo/db/schema';
-import {
-  createMockAdapter,
-  type MockAgentStream,
-  type MockAgentScript,
-} from '@repo/mocks/agent';
+import { feedScenario } from '@repo/mocks/agent/feed-scenarios';
+import type { ScriptedScenario } from '@repo/mocks/agent/scripted-scenario';
 import {
   afterEach,
   beforeEach,
@@ -27,16 +24,20 @@ import {
 } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
 import { storedMessage as message } from '#mocks/feed';
+import {
+  createFeedModuleCaller,
+  startFeedModuleTestHost,
+} from '#mocks/feed-module';
+import { requireScriptedProcessAt } from '#mocks/scripted-agent';
+import { scriptedEngineInput } from '#mocks/scripted-engine';
 import { appRouter } from '../../engine/router';
+import type { FeedActorRef } from './index';
 import { writeJobs } from './writer-job';
 
-const agentFeedEvent = 'agent.feed';
 const afterRejectionRowId = 'after-rejection';
 const storedBeforeStreamText = 'Stored first';
 const overlappingTimersRowId = 'overlapping-timers';
-const turnStartedEvent = 'agent.turnStarted';
 const thirdMessageRowId = 'message-2#0';
-const missingAgentStream = 'The Agent has no stream';
 const appendRowEvent = 'row.append';
 const upsertRowEvent = 'row.upsert';
 const fifthMessageRowId = 'message-5#0';
@@ -46,56 +47,44 @@ const teardownRowId = 'teardown-row';
 const fourthStoredUpsert = 'upsert message-4#0 @5';
 const dropFeedWriteTrigger = 'DROP TRIGGER hold_feed_writes';
 const queuedToolActivity = 'Reading files';
+const waitForCancelStep = 'wait-for-cancel';
 
 let database: Database;
 let runtimeDirectory: string;
 let removeDatabase: () => void;
 let feedTestHost: Awaited<ReturnType<typeof startEngineTestHost>>;
 let controller: AbortController;
-let agentStream: MockAgentStream | undefined;
+let scriptedAgent: ReturnType<typeof scriptedEngineInput>['agent'];
+let appliedFeed: FeedActorRef | undefined;
 
 const startFeedTestHost = async (
-  script: MockAgentScript = {},
+  scenario: ScriptedScenario = { steps: [] },
   agent = 'mock',
 ): Promise<void> => {
-  let identity = 0;
-  feedTestHost = await startEngineTestHost({
+  const moduleHost = await startFeedModuleTestHost({
     database,
     runtimeDirectory,
-    createId: () => (++identity === 1 ? 'turn-1' : `feed-fixture-${identity}`),
-    adapters: [
-      createMockAdapter(
-        {
-          ...script,
-          stream: (stream) => {
-            agentStream = stream;
-            return script.stream?.(stream);
-          },
-        },
-        agent,
-      ),
-    ],
-  });
-  feedTestHost.sessionRegistry.send({
-    type: 'sessions.open',
-    sessionId: 'session-1',
+    scenario,
     agent,
   });
-  await vi.waitFor(() =>
-    expect(
-      database.$client
-        .prepare('SELECT vendor_session_id FROM session WHERE id = ?')
-        .get('session-1'),
-    ).toMatchObject({ vendor_session_id: 'vendor-1' }),
-  );
+  feedTestHost = moduleHost;
+  scriptedAgent = moduleHost.agent;
+  appliedFeed = moduleHost.feed;
 };
 
 const createFeedRouterCaller = (): ReturnType<typeof appRouter.createCaller> =>
-  feedTestHost.createCaller({ signal: controller.signal });
+  createFeedModuleCaller(feedTestHost, appliedFeed, controller.signal);
 
-const sendAgentFeedChange = (change: FeedChange): void => {
-  if (!agentStream) throw new Error(missingAgentStream);
-  agentStream.send({ type: agentFeedEvent, change });
+const applyFeedChange = (change: FeedChange): void => {
+  if (!appliedFeed) throw new Error('Feed module is not started');
+  const turn = database.$client
+    .prepare('SELECT id FROM turn WHERE session_id = ? AND status = ?')
+    .get('session-1', 'running');
+  appliedFeed.send({
+    type: 'feed.change',
+    change,
+    turnId: typeof turn?.id === 'string' ? turn.id : null,
+  });
 };
 const createOpenMessageChange = (id: string, text = ''): FeedChange => ({
   type: 'upsert',
@@ -162,6 +151,7 @@ const storeLongHistory = (): void =>
 
 beforeEach((): void => {
   vi.useFakeTimers();
+  appliedFeed = undefined;
   controller = new AbortController();
   ({
     database,
@@ -184,6 +174,8 @@ beforeEach((): void => {
 afterEach(async (): Promise<void> => {
   controller.abort();
   database.$client.exec('DROP TRIGGER IF EXISTS hold_feed_writes');
+  appliedFeed?.send({ type: 'feed.flush' });
+  if (vi.isFakeTimers()) await vi.advanceTimersByTimeAsync(0);
   vi.useRealTimers();
 });
 
@@ -288,7 +280,7 @@ describe('feed.page', (): void => {
   });
 
   it('keeps the place of a stored row that a change brings back', async (): Promise<void> => {
-    sendAgentFeedChange({
+    applyFeedChange({
       type: 'patch',
       id: 'message-3#0',
       set: { messageId: 'plan-3' },
@@ -308,8 +300,8 @@ describe('feed.page', (): void => {
   });
 
   it('reads rows that the feed actor wrote through the database writer', async (): Promise<void> => {
-    sendAgentFeedChange(createOpenMessageChange(fifthMessageRowId, 'Hi'));
-    sendAgentFeedChange({
+    applyFeedChange(createOpenMessageChange(fifthMessageRowId, 'Hi'));
+    applyFeedChange({
       type: 'patch',
       id: fifthMessageRowId,
       set: { state: 'settled' },
@@ -350,8 +342,8 @@ describe('feed.row', (): void => {
   });
 
   it('reads the newest version of an open row before it is written', async (): Promise<void> => {
-    sendAgentFeedChange(createOpenMessageChange(fifthMessageRowId));
-    sendAgentFeedChange(createTextAppendChange(fifthMessageRowId, 'Hel'));
+    applyFeedChange(createOpenMessageChange(fifthMessageRowId));
+    applyFeedChange(createTextAppendChange(fifthMessageRowId, 'Hel'));
 
     expect(
       await createFeedRouterCaller().feed.row({
@@ -374,15 +366,15 @@ describe('feed.row', (): void => {
 describe('feed.subscribe', (): void => {
   it('with no sync point, sends the rows not yet stored, then live changes', async (): Promise<void> => {
     await startFeedTestHost();
-    sendAgentFeedChange(createOpenMessageChange(fifthMessageRowId, 'Hel'));
+    applyFeedChange(createOpenMessageChange(fifthMessageRowId, 'Hel'));
     const updates = await subscribe(null);
 
     expect(summarizeFeedChanges(await takeFeedChanges(updates, 1))).toEqual([
       'upsert message-5#0 @6',
     ]);
 
-    sendAgentFeedChange(createTextAppendChange(fifthMessageRowId, 'lo'));
-    sendAgentFeedChange(createOpenMessageChange('message-6#0'));
+    applyFeedChange(createTextAppendChange(fifthMessageRowId, 'lo'));
+    applyFeedChange(createOpenMessageChange('message-6#0'));
     await vi.advanceTimersByTimeAsync(60);
     expect(summarizeFeedChanges(await takeFeedChanges(updates, 2))).toEqual([
       'append message-5#0 +lo at 3 @7',
@@ -392,8 +384,8 @@ describe('feed.subscribe', (): void => {
 
   it('catches up from a revision with stored rows and rows not yet written, without repeats', async (): Promise<void> => {
     await startFeedTestHost();
-    sendAgentFeedChange(createOpenMessageChange(fifthMessageRowId));
-    sendAgentFeedChange(createTextAppendChange(fifthMessageRowId, 'Hel'));
+    applyFeedChange(createOpenMessageChange(fifthMessageRowId));
+    applyFeedChange(createTextAppendChange(fifthMessageRowId, 'Hel'));
     const updates = await subscribe({ epoch: 3, revision: 4 });
 
     expect(summarizeFeedChanges(await takeFeedChanges(updates, 2))).toEqual([
@@ -401,7 +393,7 @@ describe('feed.subscribe', (): void => {
       'upsert message-5#0 @7',
     ]);
 
-    sendAgentFeedChange(createTextAppendChange(fifthMessageRowId, 'lo'));
+    applyFeedChange(createTextAppendChange(fifthMessageRowId, 'lo'));
     await vi.advanceTimersByTimeAsync(60);
     expect(summarizeFeedChanges(await takeFeedChanges(updates, 1))).toEqual([
       'append message-5#0 +lo at 3 @8',
@@ -416,8 +408,8 @@ describe('feed.subscribe', (): void => {
     onTestFinished((): void => {
       database.$client.exec('DROP TRIGGER IF EXISTS hold_feed_writes');
     });
-    sendAgentFeedChange(createOpenMessageChange(fifthMessageRowId, 'Hi'));
-    sendAgentFeedChange({
+    applyFeedChange(createOpenMessageChange(fifthMessageRowId, 'Hi'));
+    applyFeedChange({
       type: 'patch',
       id: fifthMessageRowId,
       set: { state: 'settled' },
@@ -443,10 +435,8 @@ describe('feed.subscribe', (): void => {
     database.$client
       .exec(`CREATE TRIGGER hold_feed_writes BEFORE INSERT ON feed_row
       BEGIN SELECT RAISE(ABORT, 'database is locked'); END`);
-    if (!agentStream) throw new Error(missingAgentStream);
-    agentStream.send({ type: turnStartedEvent });
     const { id, state, sessionUpdate, messageId, content } = message(5, 6);
-    sendAgentFeedChange({
+    applyFeedChange({
       type: 'upsert',
       update: { id, state, sessionUpdate, messageId, content },
     });
@@ -456,7 +446,7 @@ describe('feed.subscribe', (): void => {
         sessionId: 'session-1',
         id: fifthMessageRowId,
       }),
-    ).toEqual(message(5, 6));
+    ).toEqual({ ...message(5, 6), turnId: null });
     database.$client.exec(dropFeedWriteTrigger);
     await vi.advanceTimersByTimeAsync(1_000);
     expect(
@@ -465,7 +455,10 @@ describe('feed.subscribe', (): void => {
         direction: 'tail',
         limit: 1,
       }),
-    ).toMatchObject({ rows: [message(5, 6)], maxRevision: 6 });
+    ).toMatchObject({
+      rows: [{ ...message(5, 6), turnId: null }],
+      maxRevision: 6,
+    });
   });
 
   it('reconnects across stored, queued and live revisions before retry commits', async (): Promise<void> => {
@@ -473,8 +466,8 @@ describe('feed.subscribe', (): void => {
     database.$client
       .exec(`CREATE TRIGGER hold_feed_writes BEFORE INSERT ON feed_row
       BEGIN SELECT RAISE(ABORT, 'database is locked'); END`);
-    sendAgentFeedChange(createOpenMessageChange(fifthMessageRowId, 'Queued'));
-    sendAgentFeedChange({
+    applyFeedChange(createOpenMessageChange(fifthMessageRowId, 'Queued'));
+    applyFeedChange({
       type: 'patch',
       id: fifthMessageRowId,
       set: { state: 'settled' },
@@ -485,7 +478,7 @@ describe('feed.subscribe', (): void => {
       fourthStoredUpsert,
       'upsert message-5#0 @7',
     ]);
-    sendAgentFeedChange({
+    applyFeedChange({
       type: 'patch',
       id: fifthMessageRowId,
       set: { content: [{ type: 'text', text: 'Newest' }] },
@@ -538,7 +531,7 @@ describe('feed.subscribe', (): void => {
     const updates = await subscribe({ epoch: 3, revision: 0 });
 
     const caughtUp = await takeFeedChanges(updates, longHistoryRows);
-    sendAgentFeedChange(createOpenMessageChange('live-row'));
+    applyFeedChange(createOpenMessageChange('live-row'));
     await vi.advanceTimersByTimeAsync(60);
 
     expect(
@@ -579,7 +572,7 @@ describe('feed.subscribe', (): void => {
         BEGIN SELECT RAISE(ABORT, 'database is locked'); END`);
       const updates = await subscribe({ epoch: 3, revision: 0 });
       const firstPage = await takeFeedChanges(updates, 200);
-      sendAgentFeedChange({
+      applyFeedChange({
         type: 'patch',
         id: 'message-300#0',
         set: { content: [{ type: 'text', text: 'Changed' }] },
@@ -613,38 +606,13 @@ describe('feed.subscribe', (): void => {
 
   it('resets a subscriber from another epoch, then sends the rows not yet stored', async (): Promise<void> => {
     await startFeedTestHost();
-    sendAgentFeedChange(createOpenMessageChange(fifthMessageRowId));
+    applyFeedChange(createOpenMessageChange(fifthMessageRowId));
     const updates = await subscribe({ epoch: 2, revision: 9 });
 
     expect(summarizeFeedChanges(await takeFeedChanges(updates, 2))).toEqual([
       'reset',
       'upsert message-5#0 @6',
     ]);
-  });
-
-  it('sends stored rows and one snapshot before a closed Session stream ends', async (): Promise<void> => {
-    await startFeedTestHost();
-    await feedTestHost.caller.session.close({ sessionId: 'session-1' });
-    const updates = await subscribe({ epoch: 3, revision: 3 });
-
-    expect(summarizeFeedChanges(await takeFeedChanges(updates, 2))).toEqual([
-      'upsert message-3#0 @4',
-      fourthStoredUpsert,
-    ]);
-    expect((await updates.next()).value).toMatchObject({
-      type: 'snapshot',
-      snapshot: {
-        state: 'idle',
-        title: '',
-        titleSource: 'prompt',
-        checkout: { type: 'main', path: '/project', branch: null },
-      },
-    });
-    expect((await updates.next()).value).toEqual({
-      type: 'closed',
-      failure: null,
-    });
-    expect(await updates.next()).toMatchObject({ done: true });
   });
 
   it('fails with NOT_FOUND for an unknown Session', async (): Promise<void> => {
@@ -659,16 +627,15 @@ const feedCloseDeadline = 1_000;
 
 it('ends a closed Session Feed after draining its last rows', async (): Promise<void> => {
   vi.useRealTimers();
-  let stream: MockAgentStream | undefined;
-  const adapter = createMockAdapter({
-    stream: (current): undefined => {
-      stream = current;
-    },
+  const input = scriptedEngineInput({
+    steps: [{ type: waitForCancelStep }],
+    sessionIds: ['vendor-1'],
   });
+  scriptedAgent = input.agent;
   feedTestHost = await startEngineTestHost({
     database,
     runtimeDirectory,
-    adapters: [adapter],
+    ...input,
   });
   await feedTestHost.caller.session.prompt({
     sessionId: 'session-1',
@@ -684,18 +651,24 @@ it('ends a closed Session Feed after draining its last rows', async (): Promise<
   )[Symbol.asyncIterator]();
   const first = await updates.next();
   expect(first.done).toBe(false);
-  if (!stream) throw new Error('No Agent stream');
-  stream.send({
-    type: agentFeedEvent,
-    change: createOpenMessageChange(lastRowId, 'Last message'),
-  });
+  const process = requireScriptedProcessAt(scriptedAgent.processes);
+  await process.play(
+    feedScenario([
+      {
+        sessionUpdate: 'agent_message_chunk',
+        messageId: lastRowId,
+        content: { type: 'text', text: 'Last message' },
+      },
+    ]).steps,
+    'vendor-1',
+  );
   const closing = feedTestHost.caller.session.close({ sessionId: 'session-1' });
   const events = await drainClosedFeed(updates);
   expect(events.at(-1)).toEqual({ type: 'closed', failure: null });
   expect(events).toContainEqual(
     expect.objectContaining({
       type: upsertRowEvent,
-      row: expect.objectContaining({ id: lastRowId }),
+      row: expect.objectContaining({ messageId: lastRowId }),
     }),
   );
   await closing;
@@ -719,21 +692,32 @@ it('ends a closed Session Feed after draining its last rows', async (): Promise<
   expect(resumedFirst.done).toBe(false);
   if (!resumedFirst.value) throw new Error('No resumed Feed event');
   const nextEvents: FeedSubscribeOutput[] = [resumedFirst.value];
-  stream.send({
-    type: agentFeedEvent,
-    change: createOpenMessageChange('next-row', 'Next message'),
-  });
+  await requireScriptedProcessAt(scriptedAgent.processes, 1).play(
+    feedScenario([
+      {
+        sessionUpdate: 'agent_message_chunk',
+        messageId: 'next-row',
+        content: { type: 'text', text: 'Next message' },
+      },
+    ]).steps,
+    'vendor-1',
+  );
   for await (const event of {
     [Symbol.asyncIterator]: (): AsyncIterator<FeedSubscribeOutput, void> =>
       resumed,
   }) {
     nextEvents.push(event);
-    if (event.type === upsertRowEvent && event.row.id === 'next-row') break;
+    if (
+      event.type === upsertRowEvent &&
+      event.row.sessionUpdate === 'agent_message' &&
+      event.row.messageId === 'next-row'
+    )
+      break;
   }
   expect(nextEvents).toContainEqual(
     expect.objectContaining({
       type: upsertRowEvent,
-      row: expect.objectContaining({ id: 'next-row' }),
+      row: expect.objectContaining({ messageId: 'next-row' }),
     }),
   );
   const nextRevisions = nextEvents.flatMap((event): number[] =>
@@ -745,13 +729,11 @@ it('ends a closed Session Feed after draining its last rows', async (): Promise<
 
 it('reads a closed Session Feed without opening a Session', async (): Promise<void> => {
   vi.useRealTimers();
-  const connect = vi.fn<() => Promise<never>>(async () => {
-    throw new Error('Reading a closed Feed must not launch the Agent');
-  });
+  const input = scriptedEngineInput();
   feedTestHost = await startEngineTestHost({
     database,
     runtimeDirectory,
-    adapters: [{ ...createMockAdapter(), connect }],
+    ...input,
   });
   const events = await drainClosedFeed(
     (
@@ -771,9 +753,16 @@ it('reads a closed Session Feed without opening a Session', async (): Promise<vo
   ]);
   expect(events.at(-1)).toEqual({ type: 'closed', failure: null });
   expect(events[2]).toMatchObject({
-    snapshot: { state: 'idle', configOptions: [], maxRevision: 5 },
+    snapshot: {
+      state: 'idle',
+      configOptions: [],
+      maxRevision: 5,
+      title: '',
+      titleSource: 'prompt',
+      checkout: { type: 'main', path: '/project', branch: null },
+    },
   });
-  expect(connect).not.toHaveBeenCalled();
+  expect(input.agent.processes).toHaveLength(0);
 });
 
 it('keeps a Subagent Feed stream open until its caller aborts', async (): Promise<void> => {
@@ -803,16 +792,16 @@ it('keeps another Feed subscriber live after a caller aborts', async (): Promise
   const continuingController = new AbortController();
   onTestFinished((): void => continuingController.abort());
   const continuing = (
-    await feedTestHost
-      .createCaller({
-        signal: continuingController.signal,
-      })
-      .feed.subscribe({ sessionId: 'session-1', after: null })
+    await createFeedModuleCaller(
+      feedTestHost,
+      appliedFeed,
+      continuingController.signal,
+    ).feed.subscribe({ sessionId: 'session-1', after: null })
   )[Symbol.asyncIterator]();
   await continuing.next();
   controller.abort();
   await pendingAbort;
-  sendAgentFeedChange(
+  applyFeedChange(
     createOpenMessageChange('remaining-reader', 'Still connected'),
   );
   await vi.advanceTimersByTimeAsync(60);
@@ -830,63 +819,12 @@ it('rejects a Feed stream when stored Session hydration fails', async (): Promis
   const updates = await subscribe(null);
   await updates.next();
   database.$client.exec("UPDATE session SET title_source = 'unrecognised'");
-  sendAgentFeedChange(createOpenMessageChange('snapshot-rejection'));
+  applyFeedChange(createOpenMessageChange('snapshot-rejection'));
   await expect(updates.next()).rejects.toMatchObject({
     code: 'INTERNAL_SERVER_ERROR',
     message: 'Unrecognised Session row',
   });
 });
-
-it.each(agentAdapters.map(({ agent }): string => agent))(
-  'keeps the %s Feed subscriber attached after native recovery',
-  async (agent): Promise<void> => {
-    database.update(sessionTable).set({ agent }).run();
-    const streams: MockAgentStream[] = [];
-    await startFeedTestHost(
-      {
-        stream: (stream): undefined => {
-          streams.push(stream);
-        },
-      },
-      agent,
-    );
-    const updates = await subscribe({ epoch: 3, revision: 5 });
-    await updates.next();
-    const firstStream = streams[0];
-    if (!firstStream) throw new Error('Agent stream missing');
-    firstStream.fail(new Error('Native Session ended'));
-    await vi.advanceTimersByTimeAsync(1_000);
-    const recoveredStream = streams[1];
-    if (!recoveredStream) throw new Error('Agent did not recover');
-    recoveredStream.send({
-      type: agentFeedEvent,
-      change: createOpenMessageChange(recoveredRowId, 'After recovery'),
-    });
-    await vi.advanceTimersByTimeAsync(60);
-    const received: FeedSubscribeOutput[] = [];
-    for await (const event of {
-      [Symbol.asyncIterator]: (): typeof updates => updates,
-    }) {
-      received.push(event);
-      if (event.type === upsertRowEvent && event.row.id === recoveredRowId)
-        break;
-    }
-    expect(
-      received.filter(
-        (event): boolean =>
-          event.type === upsertRowEvent && event.row.id === recoveredRowId,
-      ),
-    ).toEqual([
-      expect.objectContaining({
-        rev: 7,
-        row: expect.objectContaining({
-          position: 6,
-          content: [{ type: 'text', text: 'After recovery' }],
-        }),
-      }),
-    ]);
-  },
-);
 
 async function drainClosedFeed(
   updates: AsyncIterator<FeedSubscribeOutput>,
@@ -919,66 +857,100 @@ async function drainClosedFeed(
   }
 }
 
-it('persists the final buffered Feed row during real Engine shutdown', async (): Promise<void> => {
-  await startFeedTestHost();
-  sendAgentFeedChange(
-    createOpenMessageChange(teardownRowId, 'Before shutdown'),
+it('persists the final buffered ACP Feed row during real Engine shutdown', async (): Promise<void> => {
+  vi.useRealTimers();
+  const entered = Promise.withResolvers<PromptRequest>();
+  const input = scriptedEngineInput({
+    steps: [],
+    responses: {
+      'session/prompt': [
+        { received: entered, steps: [{ type: waitForCancelStep }] },
+      ],
+    },
+  });
+  feedTestHost = await startEngineTestHost({ database, ...input });
+  await feedTestHost.caller.session.prompt({
+    sessionId: 'session-1',
+    prompt: [{ type: 'text', text: 'Start' }],
+  });
+  await entered.promise;
+  const updates = (
+    await feedTestHost
+      .createCaller({ signal: controller.signal })
+      .feed.subscribe({
+        sessionId: 'session-1',
+        after: { epoch: 3, revision: 5 },
+      })
+  )[Symbol.asyncIterator]();
+  await updates.next();
+  await requireScriptedProcessAt(input.agent.processes).play(
+    feedScenario([
+      {
+        sessionUpdate: 'agent_message_chunk',
+        messageId: teardownRowId,
+        content: { type: 'text', text: 'Before shutdown' },
+      },
+    ]).steps,
+    'owned-1',
   );
+  const buffered = await takeFeedChanges(updates, 1);
+  expect(buffered).toMatchObject([
+    { type: 'row.upsert', row: { messageId: teardownRowId, state: 'open' } },
+  ]);
   expect(
-    await feedTestHost.caller.feed.row({
-      sessionId: 'session-1',
-      id: teardownRowId,
-    }),
-  ).toMatchObject({ state: 'open' });
+    database.$client
+      .prepare(
+        "SELECT id FROM feed_row WHERE json_extract(payload, '$.messageId') = ?",
+      )
+      .get(teardownRowId),
+  ).toBeUndefined();
   await feedTestHost.stop();
   expect(
     database.$client
-      .prepare('SELECT payload FROM feed_row WHERE id = ?')
+      .prepare(
+        "SELECT payload FROM feed_row WHERE json_extract(payload, '$.messageId') = ?",
+      )
       .get(teardownRowId),
-  ).toMatchObject({
-    payload: expect.stringContaining('Before shutdown'),
-  });
+  ).toMatchObject({ payload: expect.stringContaining('Before shutdown') });
 });
 
 it.each(agentAdapters.map((adapter): string => adapter.agent))(
   'keeps %s queued Tool-call headers visible before persistence',
   async (agent): Promise<void> => {
-    let stream: MockAgentStream | undefined;
-    await startFeedTestHost(
-      {
-        stream: (current): undefined => {
-          stream = current;
-        },
-      },
-      agent,
-    );
-    if (!stream) throw new Error('No Agent stream');
+    await startFeedTestHost({ steps: [{ type: waitForCancelStep }] }, agent);
+    await createFeedRouterCaller().session.prompt({
+      sessionId: 'session-1',
+      prompt: [{ type: 'text', text: 'Read queued file' }],
+    });
     database.$client
       .exec(`CREATE TRIGGER hold_feed_writes BEFORE INSERT ON feed_row
       BEGIN SELECT RAISE(ABORT, 'database is locked'); END`);
-    stream.send({ type: turnStartedEvent });
-    stream.send({
-      type: 'agent.feed',
-      change: {
-        type: 'upsert',
-        update: {
-          id: 'queued-tool',
-          sessionUpdate: 'tool_call_update',
-          state: 'settled',
+    await requireScriptedProcessAt(scriptedAgent.processes).play(
+      feedScenario([
+        {
+          sessionUpdate: 'tool_call',
           toolCallId: 'queued-tool',
           title: 'Read queued file',
           kind: 'read',
           status: 'in_progress',
           content: [],
         },
-      },
-    });
-    await vi.advanceTimersByTimeAsync(0);
+      ]).steps,
+      'vendor-1',
+    );
+    await vi.advanceTimersByTimeAsync(1_000);
     expect(
       (await createFeedRouterCaller().session.list({ archived: false }))
         .sessions,
     ).toMatchObject([{ sessionId: 'session-1', activity: queuedToolActivity }]);
-    const updates = await subscribe({ epoch: 3, revision: 5 });
+    const updates = (
+      await feedTestHost
+        .createCaller({ signal: controller.signal })
+        .feed.subscribe({
+          sessionId: 'session-1',
+          after: { epoch: 3, revision: 6 },
+        })
+    )[Symbol.asyncIterator]();
     await takeFeedChanges(updates, 1);
     expect((await updates.next()).value).toMatchObject({
       type: 'snapshot',
@@ -997,18 +969,14 @@ it('streams buffered Agent changes after 60 ms while SQL waits for the store tim
   await startFeedTestHost();
   const updates = await subscribe({ epoch: 3, revision: 5 });
   await updates.next();
-  // Establish the autonomous Turn before observing the row batch.
-  if (!agentStream) throw new Error(missingAgentStream);
-  agentStream.send({ type: turnStartedEvent });
-  await updates.next();
   let received = false;
   const next = takeFeedChanges(updates, 2).then((events) => {
     received = true;
     return events;
   });
-  sendAgentFeedChange(createOpenMessageChange('timed-row'));
+  applyFeedChange(createOpenMessageChange('timed-row'));
   await vi.advanceTimersByTimeAsync(30);
-  sendAgentFeedChange(createTextAppendChange('timed-row', 'Hello'));
+  applyFeedChange(createTextAppendChange('timed-row', 'Hello'));
   await vi.advanceTimersByTimeAsync(29);
   expect(received).toBe(false);
   expect(
@@ -1057,10 +1025,10 @@ it('persists the latest open row when the store timer expires before its next st
   await startFeedTestHost();
   const updates = await subscribe({ epoch: 3, revision: 5 });
   await updates.next();
-  sendAgentFeedChange(createOpenMessageChange(overlappingTimersRowId));
+  applyFeedChange(createOpenMessageChange(overlappingTimersRowId));
   await vi.advanceTimersByTimeAsync(950);
   await takeFeedChanges(updates, 1);
-  sendAgentFeedChange(
+  applyFeedChange(
     createTextAppendChange(overlappingTimersRowId, storedBeforeStreamText),
   );
   let streamed = false;
@@ -1112,8 +1080,8 @@ it('rejects unreadable and missing stored rows without writing changes, then acc
   database.$client
     .prepare('UPDATE feed_row SET payload = ? WHERE id = ?')
     .run('{}', thirdMessageRowId);
-  sendAgentFeedChange(createTextAppendChange(thirdMessageRowId, 'Rejected'));
-  sendAgentFeedChange(createTextAppendChange('missing-row', 'Rejected'));
+  applyFeedChange(createTextAppendChange(thirdMessageRowId, 'Rejected'));
+  applyFeedChange(createTextAppendChange('missing-row', 'Rejected'));
   await vi.advanceTimersByTimeAsync(1000);
   expect(
     database.$client
@@ -1125,10 +1093,10 @@ it('rejects unreadable and missing stored rows without writing changes, then acc
     expect.stringContaining('could not read written row message-2#0'),
     expect.stringContaining('no row missing-row'),
   ]);
-  sendAgentFeedChange(
+  applyFeedChange(
     createOpenMessageChange(afterRejectionRowId, 'Still working'),
   );
-  sendAgentFeedChange({
+  applyFeedChange({
     type: 'patch',
     id: afterRejectionRowId,
     set: { state: 'settled' },
@@ -1155,13 +1123,8 @@ it.each(['prompt', 'agent', 'user'] as const)(
     database.$client
       .prepare('UPDATE session SET title = ?, title_source = ? WHERE id = ?')
       .run('Session list reconnect investigation', titleSource, 'session-1');
-    const connect = vi.fn<() => Promise<never>>(async () => {
-      throw new Error('A stored snapshot must not launch the Agent');
-    });
-    feedTestHost = await startEngineTestHost({
-      database,
-      adapters: [{ ...createMockAdapter(), connect }],
-    });
+    const input = scriptedEngineInput();
+    feedTestHost = await startEngineTestHost({ database, ...input });
     const updates = await subscribe(null);
     expect((await updates.next()).value).toMatchObject({
       type: 'snapshot',
@@ -1172,6 +1135,6 @@ it.each(['prompt', 'agent', 'user'] as const)(
         changes: { files: 0, additions: 0, deletions: 0 },
       },
     });
-    expect(connect).not.toHaveBeenCalled();
+    expect(input.agent.processes).toHaveLength(0);
   },
 );

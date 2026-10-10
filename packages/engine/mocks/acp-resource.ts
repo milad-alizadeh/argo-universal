@@ -1,23 +1,8 @@
-import {
-  agent,
-  ndJsonStream,
-  type AgentConnection,
-  type AgentNotificationHandlersByMethod,
-  type AgentRequestHandlersByMethod,
-  type SessionNotification,
-  type InitializeResponse,
-  type NewSessionResponse,
-  type CloseSessionResponse,
-  type LoadSessionResponse,
-  type ResumeSessionResponse,
-  type PromptResponse,
-  type SetSessionConfigOptionResponse,
-} from '@agentclientprotocol/sdk';
+import type { SessionNotification } from '@agentclientprotocol/sdk';
 import type {
   AcpOpenInput,
   AcpSessionDestination,
   AgentLaunch,
-  AcpProcess,
   AcpSessionLease,
 } from '../src/services/agents';
 
@@ -67,113 +52,6 @@ export const createResourceUpdate = (
     content: { type: 'text', text: sessionId },
   },
 });
-
-type ResourcePeerInput = {
-  autoExit?: boolean;
-  initialize?: AgentRequestHandlersByMethod['initialize'];
-  newSession?: AgentRequestHandlersByMethod['session/new'];
-  closeSession?: AgentRequestHandlersByMethod['session/close'];
-  loadSession?: AgentRequestHandlersByMethod['session/load'];
-  resumeSession?: AgentRequestHandlersByMethod['session/resume'];
-  prompt?: AgentRequestHandlersByMethod['session/prompt'];
-  setConfigOption?: AgentRequestHandlersByMethod['session/set_config_option'];
-  cancel?: AgentNotificationHandlersByMethod['session/cancel'];
-};
-type ResourceProcess = {
-  launch: AgentLaunch;
-  connection: AgentConnection;
-  exited: ReturnType<typeof Promise.withResolvers<void>>;
-  terminations: number;
-  // Breaks the transport while the process itself stays alive.
-  disconnect: () => void;
-};
-export const requireResourceProcessAt = (
-  processes: ResourceProcess[],
-  index = 0,
-): ResourceProcess => {
-  const process = processes[index];
-  if (!process) throw new Error('Missing ACP process');
-  return process;
-};
-export const createResourcePeer = (
-  input: ResourcePeerInput = {},
-): {
-  processes: ResourceProcess[];
-  launchProcess: (launch: AgentLaunch) => Promise<AcpProcess>;
-} => {
-  const processes: ResourceProcess[] = [];
-  let nextSession = 0;
-  return {
-    processes,
-    launchProcess: async (launch): Promise<AcpProcess> => {
-      const outgoing = new TransformStream<Uint8Array, Uint8Array>();
-      const incoming = new TransformStream<Uint8Array, Uint8Array>();
-      const connection = agent()
-        .onRequest(
-          'initialize',
-          input.initialize ??
-            ((): InitializeResponse => resourceInitialization),
-        )
-        .onRequest(
-          'session/new',
-          input.newSession ??
-            ((): NewSessionResponse => ({
-              sessionId: `owned-${++nextSession}`,
-            })),
-        )
-        .onRequest(
-          'session/close',
-          input.closeSession ?? ((): CloseSessionResponse => ({})),
-        )
-        .onRequest(
-          'session/load',
-          input.loadSession ?? ((): LoadSessionResponse => ({})),
-        )
-        .onRequest(
-          'session/resume',
-          input.resumeSession ?? ((): ResumeSessionResponse => ({})),
-        )
-        .onRequest(
-          'session/prompt',
-          input.prompt ??
-            ((): PromptResponse => ({
-              stopReason: 'end_turn',
-            })),
-        )
-        .onRequest(
-          'session/set_config_option',
-          input.setConfigOption ??
-            ((): SetSessionConfigOptionResponse => ({ configOptions: [] })),
-        )
-        .onNotification('session/cancel', input.cancel ?? ((): void => {}))
-        .connect(ndJsonStream(incoming.writable, outgoing.readable));
-      const transport = new AbortController();
-      const process = {
-        launch,
-        connection,
-        exited: Promise.withResolvers<void>(),
-        terminations: 0,
-        disconnect: (): void =>
-          transport.abort(new Error('ACP transport broke')),
-      };
-      processes.push(process);
-      return {
-        stream: ndJsonStream(
-          outgoing.writable,
-          incoming.readable.pipeThrough(new TransformStream(), {
-            signal: transport.signal,
-          }),
-        ),
-        exited: process.exited.promise,
-        terminate: async () => {
-          process.terminations += 1;
-          connection.close();
-          if (input.autoExit !== false) process.exited.resolve();
-        },
-      };
-    },
-  };
-};
 
 export const observeAcpRelease = (
   lease: AcpSessionLease,

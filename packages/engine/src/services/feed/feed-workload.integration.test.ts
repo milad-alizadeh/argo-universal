@@ -1,9 +1,9 @@
 import { setFlagsFromString } from 'node:v8';
 import { runInNewContext } from 'node:vm';
 import type { FeedSubscribeOutput } from '@repo/contracts';
+import type { ScriptedStep } from '@repo/mocks/agent/scripted-scenario';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
-import { sendAcpFeedUpdates } from '#mocks/acp-feed';
 
 // Published budgets for 8 Sessions each streaming a 200 KB Agent message (measured alone: ~2.3 MiB, p95 ~10 ms, worst 30–80 ms; beside the whole test run: p95 ~31 ms, worst ~109 ms).
 const retainedByteBudget = 8_388_608;
@@ -73,20 +73,16 @@ const readUntilIdle = async (
 
 it('long Agent messages in several Sessions stay within the retained-byte and event-loop-delay budgets', async () => {
   const host = await startAcpEngine({
-    // Like an Agent on stdio, chunks arrive in bursts between event-loop turns.
-    prompt: async (request) => {
-      for (let sent = 0; sent < chunkCount; sent += burstSize) {
-        await sendAcpFeedUpdates(
-          request,
-          Array.from({ length: burstSize }, () => ({
-            sessionUpdate: 'agent_message_chunk' as const,
-            content: { type: 'text' as const, text: `${chunk},` },
-          })),
-        );
-        await new Promise((resolve) => setImmediate(resolve));
-      }
-      return { stopReason: 'end_turn' };
-    },
+    steps: Array.from({ length: chunkCount / burstSize }, () => [
+      ...Array.from({ length: burstSize }, (): ScriptedStep => ({
+        type: 'update',
+        update: {
+          sessionUpdate: 'agent_message_chunk',
+          content: { type: 'text', text: `${chunk},` },
+        },
+      })),
+      { type: 'yield' as const },
+    ]).flat(),
   });
   const sessions = await Promise.all(
     Array.from({ length: sessionCount }, () =>

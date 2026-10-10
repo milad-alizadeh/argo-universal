@@ -1,7 +1,6 @@
 import type {
   CancelNotification,
   NewSessionRequest,
-  PromptResponse,
 } from '@agentclientprotocol/sdk';
 import type { SessionNewInput } from '@repo/contracts';
 import { expect, it } from 'vitest';
@@ -9,12 +8,9 @@ import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle, waitForAcpSnapshot } from '#mocks/acp-feed';
 
 type AcpEngine = Awaited<ReturnType<typeof startAcpEngine>>;
-type HeldPrompt = PromiseWithResolvers<PromptResponse['stopReason']>;
 
-const updateMethod = 'session/update';
 const finalText = 'Final output after cancel';
 
-// The Agent holds each prompt until the Client cancels it, then sends its final output.
 const startCancellableEngine = async (): Promise<{
   host: AcpEngine;
   cancels: CancelNotification[];
@@ -23,42 +19,40 @@ const startCancellableEngine = async (): Promise<{
 }> => {
   const cancels: CancelNotification[] = [];
   const openings: NewSessionRequest[] = [];
-  const held = new Map<string, HeldPrompt>();
-  const hold = (acpSessionId: string): HeldPrompt => {
-    const existing = held.get(acpSessionId);
-    if (existing) return existing;
-    const created = Promise.withResolvers<PromptResponse['stopReason']>();
-    held.set(acpSessionId, created);
-    return created;
-  };
+  const finishSibling = Promise.withResolvers<void>();
   const host = await startAcpEngine({
-    newSession: ({ params }) => {
-      openings.push(params);
-      return { sessionId: `owned-${openings.length}` };
-    },
-    cancel: ({ params }) => {
-      cancels.push(params);
-      hold(params.sessionId).resolve('cancelled');
-    },
-    prompt: async ({ params, client }) => {
-      const stopReason = await hold(params.sessionId).promise;
-      held.delete(params.sessionId);
-      await client.notify(updateMethod, {
-        sessionId: params.sessionId,
-        update: {
-          sessionUpdate: 'agent_message_chunk',
-          content: { type: 'text', text: `${finalText} ${params.sessionId}` },
+    steps: [],
+    responses: {
+      'session/new': [{ requests: openings }],
+      'session/prompt': ['owned-1', 'owned-2'].map((sessionId) => ({
+        sessionId,
+        result: {
+          stopReason:
+            sessionId === 'owned-1'
+              ? ('cancelled' as const)
+              : ('end_turn' as const),
         },
-      });
-      return { stopReason };
+        steps: [
+          {
+            type: 'wait-for-cancel' as const,
+            until: sessionId === 'owned-2' ? finishSibling.promise : undefined,
+          },
+          {
+            type: 'update' as const,
+            update: {
+              sessionUpdate: 'agent_message_chunk' as const,
+              content: {
+                type: 'text' as const,
+                text: `${finalText} ${sessionId}`,
+              },
+            },
+          },
+        ],
+      })),
     },
+    notifications: { 'session/cancel': { requests: cancels } },
   });
-  return {
-    host,
-    cancels,
-    openings,
-    release: (acpSessionId) => hold(acpSessionId).resolve('end_turn'),
-  };
+  return { host, cancels, openings, release: () => finishSibling.resolve() };
 };
 
 const startTurn = async (
@@ -131,7 +125,7 @@ it('cancelling one Session leaves another Session on the same ACP connection run
   release('owned-2');
   await waitForAcpSessionIdle(host, runningSession);
   expect({
-    processes: host.peer.processes.length,
+    processes: host.agent.processes.length,
     distinctCheckouts: new Set(openings.map((opening) => opening.cwd)).size,
     cancels,
     stillRunning: stillRunning.state,

@@ -1,36 +1,40 @@
 import type { SessionUpdate } from '@repo/contracts';
+import { feedScenario } from '@repo/mocks/agent/feed-scenarios';
 import { expect, it, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
-import { sendAcpFeedUpdates, waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 
 it('partial ACP tools remain readable during storage failure and retry commits the newest complete row', async () => {
   vi.spyOn(console, 'error').mockImplementation(() => {});
-  const sent = Promise.withResolvers<void>();
-  const completion = Promise.withResolvers<{ stopReason: 'end_turn' }>();
+  const completion = Promise.withResolvers<void>();
   const host = await startAcpEngine({
-    prompt: async (request) => {
-      host.database.$client.exec(
-        "CREATE TRIGGER hold_acp_feed BEFORE INSERT ON feed_row WHEN NEW.session_update = 'tool_call_update' BEGIN SELECT RAISE(FAIL, 'storage pressure'); END",
-      );
-      await sendAcpFeedUpdates(request, [
+    steps: [],
+    responses: {
+      'session/prompt': [
         {
-          sessionUpdate: 'tool_call',
-          toolCallId: 'queued',
-          title: 'Read original',
-          status: 'completed',
-          rawInput: { path: '/original' },
-          content: [
-            { type: 'content', content: { type: 'text', text: 'Original' } },
-          ],
+          steps: feedScenario([
+            {
+              sessionUpdate: 'tool_call',
+              toolCallId: 'queued',
+              title: 'Read original',
+              status: 'completed',
+              rawInput: { path: '/original' },
+              content: [
+                {
+                  type: 'content',
+                  content: { type: 'text', text: 'Original' },
+                },
+              ],
+            },
+            {
+              sessionUpdate: 'tool_call_update',
+              toolCallId: 'queued',
+              rawOutput: { ok: true },
+            },
+          ]).steps,
+          waitFor: completion.promise,
         },
-        {
-          sessionUpdate: 'tool_call_update',
-          toolCallId: 'queued',
-          rawOutput: { ok: true },
-        },
-      ]);
-      sent.resolve();
-      return completion.promise;
+      ],
     },
   });
   const created = await host.caller.session.new(emptySessionInput);
@@ -38,12 +42,14 @@ it('partial ACP tools remain readable during storage failure and retry commits t
     await host.caller.feed.subscribe({ ...created, after: null })
   )[Symbol.asyncIterator]();
   await events.next();
+  host.database.$client.exec(
+    "CREATE TRIGGER hold_acp_feed BEFORE INSERT ON feed_row WHEN NEW.session_update = 'tool_call_update' BEGIN SELECT RAISE(FAIL, 'storage pressure'); END",
+  );
   await host.caller.session.prompt({
     ...created,
     prompt: [{ type: 'text', text: 'Read' }],
   });
   try {
-    await sent.promise;
     let tool: SessionUpdate | undefined;
     for await (const event of {
       [Symbol.asyncIterator]: (): typeof events => events,
@@ -76,11 +82,11 @@ it('partial ACP tools remain readable during storage failure and retry commits t
         { timeout: 10000 },
       )
       .toEqual({ revision: 3 });
-    completion.resolve({ stopReason: 'end_turn' });
+    completion.resolve();
     await waitForAcpSessionIdle(host, created.sessionId);
   } finally {
     host.database.$client.exec('DROP TRIGGER IF EXISTS hold_acp_feed');
-    completion.resolve({ stopReason: 'end_turn' });
+    completion.resolve();
   }
   expect(
     host.database.$client

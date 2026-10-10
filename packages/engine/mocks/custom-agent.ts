@@ -1,20 +1,16 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import type { CustomAgentDefinition } from '@repo/contracts';
+import { scriptedAgentCommand } from '@repo/mocks/agent/scripted-agent-launch';
 import { onTestFinished } from 'vitest';
 import { openTestDatabase } from './database';
 import { startEngineTestHost } from './engine';
 import { initTestRepository } from './git';
 
-export const acpProgram = fileURLToPath(
-  new URL('./acp-process.mts', import.meta.url),
-);
 export const customAgentDefinition: CustomAgentDefinition = {
   name: 'Fixture ACP',
-  executable: process.execPath,
-  args: [acpProgram],
+  ...scriptedAgentCommand('reply'),
   env: [{ name: 'ARGO_348_PRESENT', value: 'fixture' }],
 };
 

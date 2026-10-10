@@ -23,10 +23,8 @@ const restoreFeedWritesAndAwaitCommit = async (
 it('initial prompted creation rejects a failed prompt commit and later retry never dispatches', async () => {
   const requests: PromptRequest[] = [];
   const host = await startAcpEngine({
-    prompt: ({ params }) => {
-      requests.push(params);
-      return { stopReason: 'end_turn' };
-    },
+    steps: [],
+    responses: { 'session/prompt': [{ requests }] },
   });
   host.database.$client.exec(rejectFeedInsertion);
   await expect(
@@ -45,10 +43,8 @@ it('initial prompted creation rejects a failed prompt commit and later retry nev
 it('a Turn insert failure rejects the later prompt receipt without ACP work', async () => {
   const requests: PromptRequest[] = [];
   const host = await startAcpEngine({
-    prompt: ({ params }) => {
-      requests.push(params);
-      return { stopReason: 'end_turn' };
-    },
+    steps: [],
+    responses: { 'session/prompt': [{ requests }] },
   });
   const created = await host.caller.session.new(emptySessionInput);
   host.database.$client.exec(
@@ -71,12 +67,18 @@ it('a Turn insert failure rejects the later prompt receipt without ACP work', as
 });
 
 it('a second submission cannot overtake an admitted running Turn', async () => {
-  const completion = Promise.withResolvers<{ stopReason: 'end_turn' }>();
+  const completion = Promise.withResolvers<void>();
   const requests: PromptRequest[] = [];
   const host = await startAcpEngine({
-    prompt: ({ params }) => {
-      requests.push(params);
-      return completion.promise;
+    steps: [],
+    responses: {
+      'session/prompt': [
+        {
+          requests,
+          waitFor: completion.promise,
+          result: { stopReason: 'end_turn' },
+        },
+      ],
     },
   });
   const created = await host.caller.session.new(emptySessionInput);
@@ -90,17 +92,19 @@ it('a second submission cannot overtake an admitted running Turn', async () => {
       prompt: [{ type: 'text', text: 'Second' }],
     }),
   ).rejects.toThrow('cannot accept');
-  completion.resolve({ stopReason: 'end_turn' });
+  completion.resolve();
   expect(requests).toHaveLength(1);
 });
 
 it('unsupported image prompts reject before success or Agent work', async () => {
   const requests: PromptRequest[] = [];
   const host = await startAcpEngine({
-    prompt: ({ params }) => {
-      requests.push(params);
-      return { stopReason: 'end_turn' };
+    steps: [],
+    initialize: {
+      protocolVersion: 1,
+      agentCapabilities: { sessionCapabilities: { close: {}, resume: {} } },
     },
+    responses: { 'session/prompt': [{ requests }] },
   });
   const created = await host.caller.session.new(emptySessionInput);
   await expect(
@@ -126,10 +130,8 @@ it('unsupported image prompts reject before success or Agent work', async () => 
 it('a new explicit submission succeeds after a rejected commit and does not inherit its closure failure', async () => {
   const requests: PromptRequest[] = [];
   const host = await startAcpEngine({
-    prompt: ({ params }) => {
-      requests.push(params);
-      return { stopReason: 'end_turn' };
-    },
+    steps: [],
+    responses: { 'session/prompt': [{ requests }] },
   });
   const created = await host.caller.session.new(emptySessionInput);
   host.database.$client.exec(rejectFeedInsertion);
@@ -140,6 +142,13 @@ it('a new explicit submission succeeds after a rejected commit and does not inhe
     }),
   ).rejects.toThrow(commitFailureMessage);
   await restoreFeedWritesAndAwaitCommit(host);
+  expect(requests).toEqual([]);
+  expect(
+    host.database.$client
+      .prepare('SELECT status, stop_reason FROM turn WHERE session_id = ?')
+      .get(created.sessionId),
+  ).toEqual({ status: 'ended', stop_reason: 'error' });
+
   await host.caller.session.prompt({
     ...created,
     prompt: [{ type: 'text', text: 'Explicit retry' }],

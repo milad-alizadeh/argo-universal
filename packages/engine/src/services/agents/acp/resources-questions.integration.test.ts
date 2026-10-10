@@ -1,22 +1,28 @@
-import type { LoadSessionResponse } from '@agentclientprotocol/sdk';
-import { expect, it, vi } from 'vitest';
-import { acpPermission } from '#mocks/acp-requests';
+import type {
+  RequestPermissionResponse,
+  LoadSessionResponse,
+  LoadSessionRequest,
+} from '@agentclientprotocol/sdk';
+import { acpPermission } from '@repo/mocks/agent/permission-scenario';
+import { expect, it } from 'vitest';
 import {
-  createResourcePeer,
   createResourceOpening,
   createResourceDestination,
-  requireResourceProcessAt,
 } from '#mocks/acp-resource';
+import {
+  createScriptedAgentProcess,
+  requireScriptedProcessAt,
+} from '#mocks/scripted-agent';
 import { createAcpResources } from '../index';
 
 it('unknown and withdrawn question ownership returns cancellation without consulting any destination', async () => {
   const loaded = Promise.withResolvers<LoadSessionResponse>();
+  const requestedLoad = Promise.withResolvers<LoadSessionRequest>();
   let questions = 0;
-  let requestedLoad = false;
-  const peer = createResourcePeer({
-    loadSession: () => {
-      requestedLoad = true;
-      return loaded.promise;
+  const peer = createScriptedAgentProcess({
+    steps: [],
+    responses: {
+      'session/load': [{ result: loaded.promise, received: requestedLoad }],
     },
   });
   const resources = createAcpResources(peer);
@@ -42,17 +48,16 @@ it('unknown and withdrawn question ownership returns cancellation without consul
       signal: abort.signal,
     })
     .catch((error: unknown): unknown => error);
-  await vi.waitFor(() => expect(requestedLoad).toBe(true));
+  await requestedLoad.promise;
   abort.abort();
-  const process = requireResourceProcessAt(peer.processes);
+  const process = requireScriptedProcessAt(peer.processes);
   for (const sessionId of ['unknown', 'withdrawn']) {
-    const response = await process.connection.client.request(
-      'session/request_permission',
-      {
-        ...acpPermission,
-        sessionId,
-      },
+    const answers: RequestPermissionResponse[] = [];
+    await process.play(
+      [{ type: 'permission', request: acpPermission, responses: answers }],
+      sessionId,
     );
+    const response = answers[0];
     expect(response).toEqual({ outcome: { outcome: 'cancelled' } });
   }
   expect(questions).toBe(0);

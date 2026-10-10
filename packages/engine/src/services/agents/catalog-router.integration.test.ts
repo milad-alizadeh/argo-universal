@@ -1,4 +1,4 @@
-import { createMockAdapter } from '@repo/mocks/agent';
+import { createAgentMetadata } from '@repo/mocks/agent';
 import { publishedRegistry } from '@repo/mocks/registry/catalog';
 import { expect, it, vi } from 'vitest';
 import { startEngineTestHost } from '#mocks/engine';
@@ -9,7 +9,7 @@ it('browses upstream metadata through Agents without opening a conversation', as
   const fetchAgents = vi.fn<() => Promise<unknown>>(
     async () => publishedRegistry,
   );
-  const adapter = createMockAdapter();
+  const adapter = createAgentMetadata();
   const connect = vi.spyOn(adapter, 'connect');
   const probe = vi.spyOn(adapter, 'probe');
   const { caller } = await startEngineTestHost({

@@ -3,13 +3,13 @@ import type {
   ClientRequestContext,
 } from '@agentclientprotocol/sdk';
 import { expect, it } from 'vitest';
-import { createAcpPeer } from '#mocks/acp-peer';
+import { createScriptedAgentWire } from '#mocks/scripted-agent';
 import { createAgentClient } from './client';
 
 const requestId = 'question-one';
 
 it('retains exact protocol correlation for a form elicitation response', async () => {
-  const peer = createAcpPeer();
+  const peer = createScriptedAgentWire({ steps: [] });
   const incoming =
     Promise.withResolvers<ClientRequestContext<CreateElicitationRequest>>();
   const connection = createAgentClient({

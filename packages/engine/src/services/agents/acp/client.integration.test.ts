@@ -1,7 +1,7 @@
 import type { SessionNotification } from '@agentclientprotocol/sdk';
+import { acpUpdates } from '@repo/mocks/agent/update-scenarios';
 import { expect, it } from 'vitest';
-import { createAcpPeer, readAcpRequest } from '#mocks/acp-peer';
-import { acpUpdates } from '#mocks/acp-updates';
+import { createScriptedAgentWire } from '#mocks/scripted-agent';
 import { createAgentClient } from './client';
 
 const sessionId = 'session-one';
@@ -13,7 +13,12 @@ const updateMethod = 'session/update';
 it.each(acpUpdates)(
   'accepts wire-earlier $sessionUpdate before immediate completion and closure',
   async (update) => {
-    const peer = createAcpPeer();
+    const peer = createScriptedAgentWire({
+      steps: [],
+      responses: {
+        'session/prompt': [{ steps: [{ type: 'hold' }] }],
+      },
+    });
     const accepted: SessionNotification[] = [];
     const connection = createAgentClient({
       stream: peer.stream,
@@ -32,7 +37,7 @@ it.each(acpUpdates)(
         connection.close();
         return [...accepted];
       });
-    const request = await readAcpRequest(peer);
+    const request = await peer.readRequest();
     await peer.send([
       {
         jsonrpc: jsonrpc,
@@ -49,7 +54,12 @@ it.each(acpUpdates)(
 it.each(acpUpdates)(
   'accepts wire-earlier $sessionUpdate before the next prompt',
   async (update) => {
-    const peer = createAcpPeer();
+    const peer = createScriptedAgentWire({
+      steps: [],
+      responses: {
+        'session/prompt': [{ steps: [{ type: 'hold' }] }],
+      },
+    });
     const accepted: { turn: number; notification: SessionNotification }[] = [];
     let turn = 1;
     const connection = createAgentClient({
@@ -72,7 +82,7 @@ it.each(acpUpdates)(
           prompt: [{ type: 'text', text: 'Second' }],
         });
       });
-    const first = await readAcpRequest(peer);
+    const first = await peer.readRequest();
     await peer.send([
       {
         jsonrpc: jsonrpc,
@@ -81,7 +91,7 @@ it.each(acpUpdates)(
       },
       { jsonrpc: jsonrpc, id: first.id, result: { stopReason: 'end_turn' } },
     ]);
-    const second = await readAcpRequest(peer);
+    const second = await peer.readRequest();
     await peer.send([
       {
         jsonrpc: jsonrpc,
@@ -101,7 +111,12 @@ it.each(acpUpdates)(
 );
 
 it('accepts notifications before the new Session response identifies its Session', async () => {
-  const peer = createAcpPeer();
+  const peer = createScriptedAgentWire({
+    steps: [],
+    responses: {
+      'session/new': [{ steps: [{ type: 'hold' }] }],
+    },
+  });
   const accepted: SessionNotification[] = [];
   const connection = createAgentClient({
     stream: peer.stream,
@@ -114,7 +129,7 @@ it('accepts notifications before the new Session response identifies its Session
   const opening = connection.agent
     .request('session/new', { cwd: '/checkout/one', mcpServers: [] })
     .then(() => [...accepted]);
-  const request = await readAcpRequest(peer);
+  const request = await peer.readRequest();
   await peer.send([
     {
       jsonrpc: jsonrpc,

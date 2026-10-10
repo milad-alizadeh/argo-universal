@@ -1,7 +1,8 @@
 import type { FeedSubscribeOutput } from '@repo/contracts';
+import { feedScenario } from '@repo/mocks/agent/feed-scenarios';
 import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
-import { sendAcpFeedUpdates, waitForAcpSessionIdle } from '#mocks/acp-feed';
+import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 
 const chunkCount = 5000;
 const chunks = Array.from({ length: chunkCount }, (_, index) => `${index},`);
@@ -28,18 +29,14 @@ const readMessageText = (
 };
 
 it('a subscriber that stops reading during a long message catches up whole without a gap', async () => {
-  const host = await startAcpEngine({
-    prompt: async (request) => {
-      await sendAcpFeedUpdates(
-        request,
-        chunks.map((text) => ({
-          sessionUpdate: 'agent_message_chunk',
-          content: { type: 'text', text },
-        })),
-      );
-      return { stopReason: 'end_turn' };
-    },
-  });
+  const host = await startAcpEngine(
+    feedScenario(
+      chunks.map((text) => ({
+        sessionUpdate: 'agent_message_chunk',
+        content: { type: 'text', text },
+      })),
+    ),
+  );
   const created = await host.caller.session.new(emptySessionInput);
   const slow = (await host.caller.feed.subscribe({ ...created, after: null }))[
     Symbol.asyncIterator
