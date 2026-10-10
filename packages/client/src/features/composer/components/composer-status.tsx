@@ -26,6 +26,7 @@ import { ComposerPopover } from './composer-popover';
 const successBackgroundClassName = 'bg-success';
 const warningBackgroundClassName = 'bg-warning';
 const mutedTextClassName = 'text-muted-foreground';
+const unselectableTextClassName = 'select-none';
 
 const fullPercent = 100;
 // Context use below this percent is the Smart zone; at or above, the Dumb zone.
@@ -188,7 +189,8 @@ export function ComposerPlan({
       </View>
       <Text
         selectable={false}
-        className={cn('select-none', wide ? 'type-secondary' : 'type-badge')}
+        role={wide ? 'secondary' : 'badge'}
+        className={unselectableTextClassName}
       >
         {wide ? `Plan ${done}/${entries.length}` : 'Plan'}
       </Text>
@@ -197,7 +199,8 @@ export function ComposerPlan({
           <Text
             selectable={false}
             numberOfLines={1}
-            className="select-none flex-1 min-w-0 type-secondary text-foreground"
+            role="secondary"
+            className="select-none flex-1 min-w-0 text-foreground"
           >
             {entries.find((entry) => entry.status === 'in_progress')?.content}
           </Text>
@@ -248,7 +251,12 @@ export function ComposerPlan({
           <View className="px-4 py-3 gap-1.5">
             <View className="flex-row items-center gap-2">
               <Icon name="checklist" className="text-foreground" />
-              <Text selectable={false} className="select-none type-heading">
+              <Text
+                selectable={false}
+                role={'heading'}
+
+                className="select-none"
+              >
                 Plan
               </Text>
             </View>
@@ -259,7 +267,7 @@ export function ComposerPlan({
                   className="h-1"
                 />
               </View>
-              <Text selectable={false} className="select-none type-secondary">
+              <Text selectable={false} role="secondary" className="select-none">
                 {done} of {entries.length} done
               </Text>
             </View>
@@ -375,8 +383,9 @@ function PlanSteps({ entries }: { entries: PlanEntry[] }): React.JSX.Element {
             </View>
             <Text
               selectable={false}
+              role="body"
               className={cn(
-                'select-none flex-1 min-w-0 type-body',
+                'select-none flex-1 min-w-0',
                 (entry.status === 'completed' ||
                   (!wide && entry.status === 'pending')) &&
                   mutedTextClassName,
@@ -432,16 +441,15 @@ export function ComposerStatusControls({
               <Icon name="scheduled" className={mutedTextClassName} />
               <Text
                 selectable={false}
-                className={cn(
-                  'select-none type-secondary text-foreground',
-                  !wide && 'hidden',
-                )}
+                role="secondary"
+                className={cn('select-none text-foreground', !wide && 'hidden')}
               >
                 Usage
               </Text>
               <Text
                 selectable={false}
-                className={cn('select-none type-secondary', !wide && 'hidden')}
+                role="secondary"
+                className={cn(unselectableTextClassName, !wide && 'hidden')}
               >
                 {status.usage.limits[0]?.usedPercent}%
               </Text>
@@ -451,24 +459,38 @@ export function ComposerStatusControls({
           {() => (
             <View className="pt-1 wide:pt-3">
               <View className="px-4 gap-1 pb-3">
-                <Text selectable={false} className="select-none type-heading">
+                <Text
+                  selectable={false}
+                  role={'heading'}
+
+                  className="select-none"
+                >
                   Usage
                 </Text>
               </View>
               {status.usage?.limits.map((limit) => (
                 <View key={limit.label} className="px-4 py-3 gap-1.5">
                   <View className="flex-row justify-between">
-                    <Text selectable={false} className="select-none type-body">
+                    <Text
+                      selectable={false}
+                      role="body"
+                      className="select-none"
+                    >
                       {limit.label}
                     </Text>
-                    <Text selectable={false} className="select-none type-body">
+                    <Text
+                      selectable={false}
+                      role="body"
+                      className="select-none"
+                    >
                       {limit.usedPercent}%
                     </Text>
                   </View>
                   <Meter percent={limit.usedPercent} />
                   <Text
                     selectable={false}
-                    className="select-none type-secondary"
+                    role="secondary"
+                    className="select-none"
                   >
                     {limit.resets}
                   </Text>
@@ -497,23 +519,23 @@ export function ComposerStatusControls({
               <ContextRing percent={percent} />
               <Text
                 selectable={false}
-                className={cn(
-                  'select-none type-secondary text-foreground',
-                  !wide && 'hidden',
-                )}
+                role="secondary"
+                className={cn('select-none text-foreground', !wide && 'hidden')}
               >
                 Context
               </Text>
               <View className={cn('flex-row', !wide && 'hidden')}>
-                <Text selectable={false} className="select-none type-secondary">
+                <Text
+                  selectable={false}
+                  role="secondary"
+                  className="select-none"
+                >
                   {compactNumber(context.used)}
                 </Text>
                 <Text
                   selectable={false}
-                  className={cn(
-                    'select-none type-secondary',
-                    !wide && 'hidden',
-                  )}
+                  role="secondary"
+                  className={cn(unselectableTextClassName, !wide && 'hidden')}
                 >
                   {' '}
                   / {compactNumber(context.size)}
@@ -525,30 +547,41 @@ export function ComposerStatusControls({
           {(close) => (
             <View className="p-4 gap-3.5">
               <View className="px-0 gap-0.5">
-                <Text selectable={false} className="select-none type-heading">
+                <Text
+                  selectable={false}
+                  role={'heading'}
+
+                  className="select-none"
+                >
                   Context window
                 </Text>
-                <Text selectable={false} className="select-none type-secondary">
+                <Text
+                  selectable={false}
+                  role="secondary"
+                  className="select-none"
+                >
                   Instructions, tools, files and the conversation the Agent
                   reads for its next reply.
                 </Text>
               </View>
               <View className="px-0 gap-2">
                 <View className="flex-row items-baseline gap-1">
-                  <Text selectable={false} className="select-none type-title">
+                  <Text selectable={false} role="title" className="select-none">
                     {compactNumber(context.used)}
                   </Text>
                   <Text
                     selectable={false}
-                    className="select-none type-body text-muted-foreground"
+                    role="body"
+                    className="select-none text-muted-foreground"
                   >
                     / {compactNumber(context.size)} tokens
                   </Text>
                   <Text
                     selectable={false}
+                    role="secondary"
                     className={cn(
-                      'select-none',
-                      'ml-auto type-secondary',
+                      unselectableTextClassName,
+                      'ml-auto',
                       contextZone(percent) === 'smart'
                         ? 'text-success'
                         : 'text-warning',
@@ -584,13 +617,15 @@ export function ComposerStatusControls({
                     <View className="flex-1 gap-0.5">
                       <Text
                         selectable={false}
-                        className="select-none type-secondary text-foreground"
+                        role="secondary"
+                        className="select-none text-foreground"
                       >
                         {zone.label}
                       </Text>
                       <Text
                         selectable={false}
-                        className="select-none type-secondary"
+                        role="secondary"
+                        className="select-none"
                       >
                         {zone.explanation}
                       </Text>
@@ -601,7 +636,8 @@ export function ComposerStatusControls({
               <View className="px-0 gap-3 flex-row items-center">
                 <Text
                   selectable={false}
-                  className="select-none flex-1 type-secondary"
+                  role="secondary"
+                  className="select-none flex-1"
                 >
                   Compact before the next task.
                 </Text>
@@ -614,7 +650,11 @@ export function ComposerStatusControls({
                   }}
                 >
                   <Icon name="compaction" />
-                  <Text selectable={false} className="select-none type-control">
+                  <Text
+                    selectable={false}
+                    role="control"
+                    className="select-none"
+                  >
                     Compact
                   </Text>
                 </Button>
@@ -656,14 +696,15 @@ export function ComposerWorkChips({
               <View className="flex-row items-center gap-1">
                 <Text
                   selectable={false}
+                  role="badge"
                   className={cn(
-                    'select-none type-badge',
+                    unselectableTextClassName,
                     work.running ? 'text-success' : mutedTextClassName,
                   )}
                 >
                   {work.count}
                 </Text>
-                <Text selectable={false} className="select-none type-badge">
+                <Text selectable={false} role="badge" className="select-none">
                   {label}
                 </Text>
               </View>

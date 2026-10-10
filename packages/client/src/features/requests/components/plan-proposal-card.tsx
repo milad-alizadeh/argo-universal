@@ -121,7 +121,7 @@ function PlanProposalInteraction({
                 : 'h-11 sm:h-11 flex-1 rounded-lg pr-3',
             )}
           >
-            <Text role={submitting ? 'status' : undefined}>
+            <Text semanticRole={submitting ? 'status' : undefined}>
               {submitting ? 'Sending…' : answerLabel}
             </Text>
             {wide && (
@@ -154,7 +154,7 @@ function PlanProposalInteraction({
         >
           <View className="flex-row items-center gap-1.5">
             <Icon name="plan-mode" className="text-muted-foreground" />
-            <Text className="min-w-0 flex-1 type-heading">
+            <Text role={'heading'} className="min-w-0 flex-1">
               Approve this plan?
             </Text>
             <Button
@@ -177,7 +177,7 @@ function PlanProposalInteraction({
         />
         {planning && !answered && (
           <View className={cn('gap-1.5 pt-1', expanded && 'px-4')}>
-            <Text className="type-body">What should change in the plan?</Text>
+            <Text role="body">What should change in the plan?</Text>
             <Textarea
               autoFocus
               accessibilityLabel="What should change in the plan?"
@@ -187,7 +187,7 @@ function PlanProposalInteraction({
               onChangeText={setFeedback}
               className="min-h-16 max-h-32 type-control bg-background dark:bg-background focus:border-ring focus:ring-[3px] focus:ring-ring/25 focus-visible:ring-ring/25 web:resize-none"
             />
-            <Text className="type-secondary">
+            <Text role="secondary">
               Required. The Agent keeps planning with it.
             </Text>
           </View>

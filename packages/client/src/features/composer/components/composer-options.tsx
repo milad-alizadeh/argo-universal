@@ -9,10 +9,8 @@ import { listTestIdProps } from '#lib/generic/list-test-id';
 import { Button } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
 import { Icon } from '../../../lib/generic/symbols/icon';
-import {
-  type ComposerConfigurationProps,
-  configurationChoices,
-} from './composer-configuration';
+import { configurationChoices } from '../state/configuration-choices';
+import type { ComposerConfigurationProps } from './composer-configuration';
 import { ComposerPopover } from './composer-popover';
 
 const settingsRowEstimate = 44;
@@ -70,7 +68,11 @@ function SettingRow({
   onConfigChange: ComposerConfigurationProps['onConfigChange'];
 }): React.JSX.Element {
   if (row.type === 'header')
-    return <Text className="px-2 pt-1.5 pb-1 type-secondary">{row.name}</Text>;
+    return (
+      <Text role="secondary" className="px-2 pt-1.5 pb-1">
+        {row.name}
+      </Text>
+    );
   const { option } = row;
   const boolean = row.type === 'boolean';
   const selected = boolean

@@ -107,10 +107,10 @@ export const SessionRow = memo(function SessionRow({
           />
         </View>
         <View className="min-w-0 flex-1 gap-0.5">
-          <Text numberOfLines={1} className="type-body">
+          <Text numberOfLines={1} role="body">
             {session.title}
           </Text>
-          <Text numberOfLines={1} className="type-secondary">
+          <Text numberOfLines={1} role="secondary">
             {session.activity}
           </Text>
           {hasMetadata && (
@@ -135,7 +135,7 @@ export const SessionRow = memo(function SessionRow({
                       />
                     ))}
                   </View>
-                  <Text className="type-secondary">
+                  <Text role="secondary">
                     {plan.done}/{plan.total}
                   </Text>
                 </View>
@@ -159,14 +159,12 @@ export const SessionRow = memo(function SessionRow({
                       />
                     )}
                   </View>
-                  <Text className="type-secondary">
-                    {session.subagents.total}
-                  </Text>
+                  <Text role="secondary">{session.subagents.total}</Text>
                 </View>
               )}
               {session.archivedAt !== null && (
                 <Badge variant="secondary" className="py-0">
-                  <Text className="type-badge text-muted-foreground">
+                  <Text role="badge" className="text-muted-foreground">
                     Archived
                   </Text>
                 </Badge>

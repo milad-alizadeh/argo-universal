@@ -74,11 +74,13 @@ export function PermissionRequest(
             size="md"
             className="shrink-0 text-muted-foreground"
           />
-          <Text className="min-w-0 flex-1 type-heading">{request.title}</Text>
+          <Text role={'heading'} className="min-w-0 flex-1">
+            {request.title}
+          </Text>
         </View>
         {input && (
           <View className="rounded-md bg-secondary px-3 py-2">
-            <Text className="type-code-block">{input}</Text>
+            <Text role="code">{input}</Text>
           </View>
         )}
         {denying && !alreadyAnswered ? (
@@ -90,7 +92,7 @@ export function PermissionRequest(
           />
         ) : null}
         {(!denying || alreadyAnswered) && reason && (
-          <Text className="type-secondary">{reason}</Text>
+          <Text role="secondary">{reason}</Text>
         )}
       </View>
     </RequestCard>
@@ -241,7 +243,7 @@ function DenialField({
 }): ReactNode {
   return (
     <View className="gap-1.5 pt-1">
-      <Text className="type-body">What should the Agent do instead?</Text>
+      <Text role="body">What should the Agent do instead?</Text>
       <Textarea
         accessibilityLabel="What should the Agent do instead?"
         autoFocus
@@ -253,7 +255,7 @@ function DenialField({
         onSubmitEditing={Platform.OS === 'web' ? undefined : onSubmit}
         className="min-h-16 bg-background dark:bg-background type-control web:resize-none web:focus-visible:ring-ring/25"
       />
-      <Text className="type-secondary">
+      <Text role="secondary">
         Optional. The Agent reads it with the denial.
       </Text>
     </View>

@@ -117,7 +117,7 @@ function ChoiceSheet<Value extends string>(
               onValueChange(choice.value);
             }}
           >
-            <Text className="type-body">{choice.label}</Text>
+            <Text role="body">{choice.label}</Text>
             <View className="size-4 items-center justify-center">
               {choice.value === value && (
                 <Icon name="check" size="sm" className="text-foreground" />

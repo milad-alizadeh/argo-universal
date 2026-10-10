@@ -51,7 +51,12 @@ export function DesktopLayoutView({
       onSectionChange={(next) => navigate(sectionDestination(next))}
       listHeader={
         listHeader ?? (
-          <Text role="heading" aria-level={2} className="pl-2 type-heading">
+          <Text
+            role={'heading'}
+            semanticRole="heading"
+            aria-level={2}
+            className="pl-2"
+          >
             {title}
           </Text>
         )
@@ -63,9 +68,9 @@ export function DesktopLayoutView({
           <PortalHost name={detailHeaderHost} />
         ) : (
           <Text
-            role="heading"
+            role={'heading'}
+            semanticRole="heading"
             aria-level={2}
-            className="type-heading"
             numberOfLines={1}
           >
             {destinationTitle(detail)}

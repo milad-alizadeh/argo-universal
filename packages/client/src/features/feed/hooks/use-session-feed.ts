@@ -2,7 +2,6 @@ import type {
   FeedSubscribeOutput,
   FeedSyncPoint,
   SessionSnapshot,
-  SessionUpdate,
   ToolCallUpdate,
 } from '@repo/contracts';
 import type { AppRouter } from '@repo/engine/router';
@@ -18,9 +17,11 @@ import {
   type FeedState,
   mergeNewestPage,
   mergeOlderPage,
+  syncPointOf,
 } from '../view/feed-state';
 import type { FeedView } from '../view/feed-view';
 import { keepUnchangedItems } from '../view/keep-unchanged-items';
+import { findLiveToolCall } from '../view/live-tool-call';
 import { toFeedView } from '../view/to-feed-view';
 
 type FeedPageQuery = ReturnType<
@@ -138,9 +139,8 @@ export function useSessionFeed(sessionId: string): SessionFeed {
   const retryOpen = useCallback(() => {
     closed.current = false;
     setClosureError(null);
-    const held = feedRef.current;
-    if (held.epoch === null) return;
-    const next = { epoch: held.epoch, revision: held.revision };
+    const next = syncPointOf(feedRef.current);
+    if (next === null) return;
     // A changed input resets useSubscription after it commits; the same input needs an explicit reset.
     if (syncPoint?.epoch === next.epoch && syncPoint.revision === next.revision)
       reset();
@@ -220,17 +220,4 @@ function useOlderPages({
   }, [queryClient, trpc, sessionId, replaceFeed, getFeed]);
 
   return { loadingOlder, loadOlder };
-}
-
-function findLiveToolCall(
-  rows: readonly SessionUpdate[],
-  snapshot: SessionSnapshot | null,
-): ToolCallUpdate | undefined {
-  const source = snapshot?.liveHeader?.source;
-  if (source?.type !== 'tool_call') return undefined;
-  return rows.findLast(
-    (row): row is ToolCallUpdate =>
-      row.sessionUpdate === 'tool_call_update' &&
-      row.toolCallId === source.toolCallId,
-  );
 }

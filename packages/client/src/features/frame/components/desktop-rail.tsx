@@ -50,7 +50,7 @@ const SectionButton = memo(function SectionButton({
           className="absolute -right-1 -top-1 min-w-4 border-0 bg-warning px-1 py-0"
           accessibilityLabel={badge.label}
         >
-          <Text className="type-badge text-warning-foreground">
+          <Text role="badge" className="text-warning-foreground">
             {badge.text}
           </Text>
         </Badge>

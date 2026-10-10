@@ -16,6 +16,10 @@ type CatalogProps = CatalogRefreshProps & {
   search: string;
 };
 type CatalogStatusProps = Pick<CatalogProps, 'catalog'>;
+type CatalogMessageProps = { title: string; children: React.ReactNode };
+type CatalogSearchProps = Pick<CatalogProps, 'search'>;
+const catalogNoticeClassName =
+  'flex-row items-start gap-2.5 rounded-lg bg-warning/8 p-3';
 
 export function AgentCatalog(props: CatalogProps): React.JSX.Element {
   return (
@@ -47,16 +51,17 @@ function CatalogEmpty(props: CatalogProps): React.JSX.Element {
   return <CatalogNoMatches search={props.search} />;
 }
 
-function CatalogNoMatches({
-  search,
-}: Pick<CatalogProps, 'search'>): React.JSX.Element {
+function CatalogNoMatches({ search }: CatalogSearchProps): React.JSX.Element {
   const title = search ? `No Agents match “${search}”` : 'No Agents found.';
   return (
-    <View className="items-center gap-1 px-4 py-12">
-      <Text className="type-heading text-center">{title}</Text>
-      {search && (
-        <Text className="type-secondary text-center">Check the spelling.</Text>
-      )}
+    <View className="px-4 py-12">
+      <CatalogMessage title={title}>
+        {search && (
+          <Text role="secondary" className="text-center">
+            Check the spelling.
+          </Text>
+        )}
+      </CatalogMessage>
     </View>
   );
 }
@@ -77,14 +82,24 @@ function CatalogUnavailableMessage({
   catalog,
 }: CatalogStatusProps): React.JSX.Element {
   return (
-    <View className="items-center gap-1">
-      <Text className="type-heading text-center">
-        Couldn’t load the registry
-      </Text>
-      <Text className="type-secondary text-center">
+    <CatalogMessage title="Couldn’t load the registry">
+      <Text role="secondary" className="text-center">
         No saved catalog yet. Try again.
       </Text>
-      <Text className="type-secondary text-center">{catalog.error}</Text>
+      <Text role="secondary" className="text-center">
+        {catalog.error}
+      </Text>
+    </CatalogMessage>
+  );
+}
+
+function CatalogMessage(props: CatalogMessageProps): React.JSX.Element {
+  return (
+    <View className="items-center gap-1">
+      <Text role={'heading'} className="text-center">
+        {props.title}
+      </Text>
+      {props.children}
     </View>
   );
 }
@@ -106,25 +121,19 @@ function CatalogRetry(props: CatalogRefreshProps): React.JSX.Element {
 function CatalogStatus({ catalog }: CatalogStatusProps): React.JSX.Element {
   return (
     <View className="gap-4 pb-4">
-      <Text className="type-secondary">
-        For this Server · {catalog.serverPlatform}
-      </Text>
+      <Text role="secondary">For this Server · {catalog.serverPlatform}</Text>
       {catalog.status === 'stale' && <CatalogNotice catalog={catalog} />}
     </View>
   );
 }
 
 function CatalogNotice({ catalog }: CatalogStatusProps): React.JSX.Element {
-  const title = 'Refresh failed · showing saved catalog';
   return (
-    <View
-      role="alert"
-      className="flex-row items-start gap-2.5 rounded-lg bg-warning/8 p-3"
-    >
+    <View role="alert" className={catalogNoticeClassName}>
       <Icon name="warning" className="text-warning" />
       <View className="min-w-0 flex-1 gap-0.5">
-        <Text className="type-heading">{title}</Text>
-        <Text className="type-secondary">{catalog.error}</Text>
+        <Text role={'heading'}>Refresh failed · showing saved catalog</Text>
+        <Text role="secondary">{catalog.error}</Text>
       </View>
     </View>
   );

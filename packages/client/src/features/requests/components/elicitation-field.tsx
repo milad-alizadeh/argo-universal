@@ -43,8 +43,8 @@ export function ElicitationField({
     <View className="gap-1.5">
       {property.type !== 'boolean' && (
         <View className="flex-row items-center gap-1">
-          <Text className="type-body">{label}</Text>
-          {required && <Text className="type-secondary">Required</Text>}
+          <Text role="body">{label}</Text>
+          {required && <Text role="secondary">Required</Text>}
         </View>
       )}
       <FieldControl
@@ -60,16 +60,18 @@ export function ElicitationField({
       />
       {property.description && (
         <Text
-          className={cn(
-            'type-secondary',
-            property.type === 'boolean' && 'pl-7',
-          )}
+          role="secondary"
+          className={cn(property.type === 'boolean' && 'pl-7')}
         >
           {property.description}
         </Text>
       )}
       {showError && error && (
-        <Text role="alert" className="type-secondary text-destructive">
+        <Text
+          semanticRole="alert"
+          role="secondary"
+          className="text-destructive"
+        >
           {error}
         </Text>
       )}
@@ -109,7 +111,7 @@ function FieldControl({
             onCheckedChange={change}
           />
         </View>
-        <Text className="min-w-0 flex-1 type-body">
+        <Text role="body" className="min-w-0 flex-1">
           {label}
           {required ? ' · Required' : ''}
         </Text>
@@ -148,7 +150,7 @@ function FieldControl({
                 )
               }
             />
-            <Text className="type-body">{option.title}</Text>
+            <Text role="body">{option.title}</Text>
           </View>
         ))}
       </View>

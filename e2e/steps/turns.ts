@@ -2,8 +2,9 @@ import type { Page } from '@playwright/test';
 import { z } from 'zod';
 import { expect } from '../fixtures';
 import { sessionId } from './feed';
-import { Then } from './fixtures';
-import { query } from './server-query';
+import { Given, Then } from './fixtures';
+import { startSession } from './live-session';
+import { mutate, query } from './server-query';
 
 const CompletedRow = z.object({
   sessionUpdate: z.string(),
@@ -57,3 +58,28 @@ Then(
     );
   },
 );
+
+Given('a Session with one completed Turn', async ({ page }): Promise<void> => {
+  await startSession(page, 'First prompt');
+  await expect(
+    page
+      .getByTestId('feed-scroll')
+      .getByText('The shared fixture completed this Turn.', { exact: true }),
+  ).toBeVisible();
+});
+
+Given(
+  'the Server closes the Session quietly',
+  async ({ page, server }): Promise<void> => {
+    await mutate({
+      page,
+      httpUrl: server.httpUrl,
+      procedure: 'session.close',
+      input: { sessionId: sessionId(page) },
+    });
+  },
+);
+
+Then('no alert is shown', async ({ page }): Promise<void> => {
+  await expect(page.getByRole('alert')).toHaveCount(0);
+});

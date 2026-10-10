@@ -37,6 +37,18 @@ describe('keepUnchangedItems', () => {
   );
 
   it.each(mocks)(
+    'hands back every item when only the Session title changed for $agent',
+    ({ rows, snapshot }) => {
+      const previous = toFeedView(rows, snapshot);
+      const renamed = { ...snapshot, title: `${snapshot.title} (renamed)` };
+      const next = keepUnchangedItems(previous, toFeedView(rows, renamed));
+      expect(keptObjects(previous.items, next.items)).toEqual(
+        previous.items.map(() => true),
+      );
+    },
+  );
+
+  it.each(mocks)(
     'rebuilds only the item that holds a changed row for $agent',
     ({ rows, snapshot }) => {
       const previous = toFeedView(rows, snapshot);

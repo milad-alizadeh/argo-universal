@@ -22,7 +22,9 @@ export default defineProject({
     // Zero retries: a flaky story fails like a flaky end-to-end test.
     retry: 0,
     sequence: { groupOrder: 1 },
-    exclude: ['../../packages/client/src/lib/generic/primitives/**'],
+    exclude: [
+      '../../packages/client/src/lib/generic/primitives/!(text.test).stories.tsx',
+    ],
     setupFiles: ['./vitest.setup.ts'],
     browser: {
       enabled: true,

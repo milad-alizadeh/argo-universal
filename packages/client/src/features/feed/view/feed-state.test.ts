@@ -7,6 +7,7 @@ import {
   type FeedState,
   mergeNewestPage,
   mergeOlderPage,
+  syncPointOf,
 } from './feed-state';
 
 type RowEvent = Exclude<FeedSubscribeOutput, { type: 'snapshot' | 'closed' }>;
@@ -31,6 +32,7 @@ function page(
   };
 }
 
+const upsert = 'row.upsert' as const;
 const rowEvents = (stream: readonly FeedSubscribeOutput[]): RowEvent[] =>
   stream.filter(
     (event): event is RowEvent =>
@@ -70,6 +72,41 @@ describe.each(recordedFeedMocks)('$agent $recording', (mock) => {
       );
     expect(feed.rows).toEqual(mock.rows);
     expect(feed.hasOlder).toBe(false);
+  });
+
+  it('keeps the same rows when a held row arrives again at its revision', () => {
+    const [row] = mock.rows;
+    if (!row) throw new Error('Recorded Feed needs a row');
+    const feed = mergeNewestPage(
+      emptyFeed,
+      page(mock.rows, mock.snapshot.maxRevision),
+    );
+    const replayed = applySubscriptionEvent(feed, {
+      type: upsert,
+      rev: row.revision,
+      row,
+    });
+    expect(replayed.feed.rows).toBe(feed.rows);
+  });
+
+  it('resumes live changes from the epoch and newest revision it holds', () => {
+    const newest = mock.rows.at(-1);
+    if (!newest) throw new Error('Recorded Feed needs a row');
+    const revision = mock.snapshot.maxRevision + 1;
+    const feed = applySubscriptionEvent(
+      mergeNewestPage(emptyFeed, {
+        ...page(mock.rows, mock.snapshot.maxRevision),
+        epoch: 3,
+      }),
+      { type: upsert, rev: revision, row: { ...newest, revision } },
+    ).feed;
+    expect(syncPointOf(feed)).toEqual({ epoch: 3, revision });
+  });
+});
+
+describe('syncPointOf', () => {
+  it('has no sync point before the first page', () => {
+    expect(syncPointOf(emptyFeed)).toBeNull();
   });
 });
 
@@ -118,7 +155,7 @@ describe('applySubscriptionEvent', () => {
     if (!row) throw new Error('No row');
     const feed = mergeNewestPage(emptyFeed, page(streamed.rows, 9));
     const stale = applySubscriptionEvent(feed, {
-      type: 'row.upsert',
+      type: upsert,
       rev: row.revision - 1,
       row: { ...row, revision: row.revision - 1, state: 'open' },
     });
@@ -133,7 +170,7 @@ describe('applySubscriptionEvent', () => {
     const [oldest] = streamed.rows;
     if (!oldest) throw new Error('No row');
     const result = applySubscriptionEvent(feed, {
-      type: 'row.upsert',
+      type: upsert,
       rev: streamed.snapshot.maxRevision + 1,
       row: { ...oldest, revision: streamed.snapshot.maxRevision + 1 },
     });
