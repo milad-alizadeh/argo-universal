@@ -10,6 +10,7 @@ import { createActor, waitFor } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
 import { storedMessage } from '#mocks/feed';
 import { initTestRepository } from '#mocks/git';
+import { writerDefaults } from '#mocks/writer';
 import { writeJobs } from '../feed';
 import { writerMachine } from '../feed';
 import {
@@ -185,7 +186,7 @@ it('reloads Feed positions and the vendor Session from writes still queued', asy
     .exec(`CREATE TRIGGER hold_session_write BEFORE UPDATE OF vendor_session_id ON session
     BEGIN SELECT RAISE(ABORT, 'database is locked'); END`);
   const writer = createActor(writerMachine, {
-    input: { now: (): number => Date.now(), database },
+    input: { ...writerDefaults, now: (): number => Date.now(), database },
   }).start();
   cleanups.push((): typeof writer => writer.stop());
   writer.send({

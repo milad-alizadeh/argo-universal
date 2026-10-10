@@ -10,6 +10,7 @@ import {
 } from 'xstate/graph';
 import { syncSupervisorMachine } from '../src/services/agents';
 import { writerMachine } from '../src/services/feed';
+import { writerDefaults } from './writer';
 
 type SupervisorSnapshot = SnapshotFrom<typeof syncSupervisorMachine>;
 const synchronized = 'xstate.done.actor.synchronize';
@@ -114,7 +115,7 @@ export function createCatalogSupervisorModel(database: Database): {
       database,
       now: Date.now,
       writer: createActor(writerMachine, {
-        input: { database, now: Date.now },
+        input: { ...writerDefaults, database, now: Date.now },
       }),
       fetchAgents: async (): Promise<never> => new Promise(() => {}),
     },

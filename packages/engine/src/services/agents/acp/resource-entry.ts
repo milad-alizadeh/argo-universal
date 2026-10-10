@@ -17,7 +17,6 @@ import type {
 import { AcpRouting } from './routing';
 
 const reservationLimit = 64;
-type RetireFailedGeneration = (checkouts: readonly string[]) => void;
 type ConfirmCheckoutRelease = () => Promise<void>;
 export class AcpResourceEntry {
   private readonly rejections = createRejectionCounter('ACP resources');
@@ -30,7 +29,7 @@ export class AcpResourceEntry {
   public constructor(
     private readonly input: AcpResourceInput,
     launch: AgentLaunch,
-    private readonly retireFailedGeneration: RetireFailedGeneration,
+    private readonly retireFailedGeneration: (checkouts: string[]) => void,
   ) {
     this.connection = new AcpResourceConnection(input, this.routing, launch);
     this.cleanup = new AcpResourceCleanup({
@@ -77,8 +76,9 @@ export class AcpResourceEntry {
     });
   }
   private requireAvailable(): void {
-    if (this.cleanup.retired || this.reservations.size >= reservationLimit)
-      throw new Error('ACP resource is unavailable');
+    if (this.cleanup.retired) throw new Error('ACP resource is unavailable');
+    if (this.reservations.size >= reservationLimit)
+      throw new Error('ACP resource opening limit reached');
   }
   private reserve(input: AcpOpenInput): AcpReservation {
     const reservation = reserveOpening(input);

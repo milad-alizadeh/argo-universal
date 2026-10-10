@@ -20,7 +20,11 @@ import {
   type SyncSupervisorInput,
 } from '../services/agents';
 import { blobsFolderIn, removeUnusedBlobs } from '../services/blob';
-import { writerMachine, databaseWriterId } from '../services/feed';
+import {
+  feedRowBudget,
+  writerMachine,
+  databaseWriterId,
+} from '../services/feed';
 import { seedProject } from '../services/projects';
 import {
   type RegistryInput,
@@ -245,6 +249,7 @@ export const engineMachine = setup({
             now: context.now,
             log: (line: string): void => writeEngineLog(context.home, line),
             blobsFolder: blobsFolderIn(context.home),
+            feedRowBudget,
           }),
         },
         {

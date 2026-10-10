@@ -8,10 +8,21 @@ import { sendAcpFeedUpdates, waitForAcpSessionIdle } from '#mocks/acp-feed';
 
 // More settled tool rows than the Writer keeps queued for the Feed.
 const toolCount = 300;
+const storageTimeoutMs = 30_000;
 const holdToolRows =
   "CREATE TRIGGER hold_tool_rows BEFORE INSERT ON feed_row WHEN NEW.session_update = 'tool_call_update' BEGIN SELECT RAISE(FAIL, 'storage failure'); END";
 
-it('a Turn that outgrows the Writer while storage fails is cancelled, and prompts wait for a commit', async () => {
+type FailingTurn = {
+  host: Awaited<ReturnType<typeof startAcpEngine>>;
+  sessionId: string;
+  cancels: CancelNotification[];
+  prompts: () => number;
+  prompt: (text: string) => Promise<unknown>;
+  recover: () => void;
+};
+
+// A Turn whose settled tool rows outgrow the Writer while `feed_row` inserts fail, run until the Session is idle.
+const runFailingTurn = async (): Promise<FailingTurn> => {
   vi.spyOn(console, 'error').mockImplementation(() => {});
   const cancels: CancelNotification[] = [];
   const cancelled = Promise.withResolvers<PromptResponse>();
@@ -43,31 +54,97 @@ it('a Turn that outgrows the Writer while storage fails is cancelled, and prompt
       ...created,
       prompt: [{ type: 'text', text }],
     });
-  try {
-    await prompt('Read everything');
-    await cancelled.promise;
-    await waitForAcpSessionIdle(host, created.sessionId);
-    expect(cancels).toHaveLength(1);
-    await expect(prompt('Again')).rejects.toThrow(/could not be saved/);
-    expect(prompts).toBe(1);
-  } finally {
+  const recover = (): void =>
     host.database.$client.exec('DROP TRIGGER IF EXISTS hold_tool_rows');
-  }
-  await expect
-    .poll(
-      () =>
-        host.database.$client
-          .prepare(
-            "SELECT stop_reason AS stopReason, error FROM turn WHERE session_id = ? AND status = 'ended'",
-          )
-          .get(created.sessionId),
-      { timeout: 10_000 },
-    )
-    .toEqual({
-      stopReason: 'error',
-      error: expect.stringContaining('Storage is failing'),
-    });
-  await prompt('Once storage recovers');
+  await prompt('Read everything');
+  await cancelled.promise;
   await waitForAcpSessionIdle(host, created.sessionId);
-  expect(prompts).toBe(2);
-}, 30_000);
+  return {
+    host,
+    sessionId: created.sessionId,
+    cancels,
+    prompts: (): number => prompts,
+    prompt,
+    recover,
+  };
+};
+
+const readStored = ({ host, sessionId }: FailingTurn, query: string): unknown =>
+  host.database.$client.prepare(query).get(sessionId);
+
+it(
+  'a Turn that outgrows the Writer while storage fails is cancelled once',
+  async () => {
+    const turn = await runFailingTurn();
+    turn.recover();
+
+    expect(turn.cancels).toHaveLength(1);
+  },
+  storageTimeoutMs,
+);
+
+it(
+  'prompts are refused while storage fails and the Agent is not prompted',
+  async () => {
+    const turn = await runFailingTurn();
+    await expect(turn.prompt('Again')).rejects.toThrow(/could not be saved/);
+    turn.recover();
+
+    expect(turn.prompts()).toBe(1);
+  },
+  storageTimeoutMs,
+);
+
+it(
+  'once storage recovers, the cancelled Turn ends with a storage error and every refused tool row is stored',
+  async () => {
+    const turn = await runFailingTurn();
+    turn.recover();
+
+    await expect
+      .poll(
+        () =>
+          readStored(
+            turn,
+            "SELECT stop_reason AS stopReason, error FROM turn WHERE session_id = ? AND status = 'ended'",
+          ),
+        { timeout: 10_000 },
+      )
+      .toEqual({
+        stopReason: 'error',
+        error: expect.stringContaining('Storage is failing'),
+      });
+    await expect
+      .poll(
+        () =>
+          readStored(
+            turn,
+            "SELECT count(*) AS rows FROM feed_row WHERE session_id = ? AND session_update = 'tool_call_update'",
+          ),
+        { timeout: 10_000 },
+      )
+      .toEqual({ rows: toolCount });
+  },
+  storageTimeoutMs,
+);
+
+it(
+  'a prompt reaches the Agent once storage recovers',
+  async () => {
+    const turn = await runFailingTurn();
+    turn.recover();
+    await expect
+      .poll(() =>
+        readStored(
+          turn,
+          "SELECT count(*) AS turns FROM turn WHERE session_id = ? AND status = 'ended'",
+        ),
+      )
+      .toEqual({ turns: 1 });
+    await turn.prompt('Once storage recovers');
+    await waitForAcpSessionIdle(turn.host, turn.sessionId);
+
+    expect(turn.prompts()).toBe(2);
+  },
+  storageTimeoutMs,
+);

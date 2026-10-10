@@ -4,7 +4,12 @@ export {
   userMessageChange,
   userMessageId,
 } from './feed-change';
-export { type FeedActorRef, type FeedEvent, feedMachine } from './feed-machine';
+export {
+  type FeedActorRef,
+  type FeedEvent,
+  feedBatchIntervalMs,
+  feedMachine,
+} from './feed-machine';
 export {
   type FeedRowWrite,
   hydrateStoredFeedRow,
@@ -21,10 +26,15 @@ export {
   type WriterProjection,
 } from './writer-projection';
 export type { WriterChange } from './writer-changes';
-export { type WriterEvent, writerMachine } from './writer-machine';
+export {
+  type WriterEvent,
+  type WriterInput,
+  storageFailingMessage,
+  writerMachine,
+} from './writer-machine';
+export { feedRowBudget, type FeedRowBudget } from './writer-budget';
 export type { WriterCommit } from './writer-commit';
 export { writeDatabaseJobAndWaitForCommit } from './database-write';
-export { writeBlobFile } from './blob-files';
 export type {
   AgentCatalogReplaceJob,
   AgentCatalogWriteRow,

@@ -24,10 +24,12 @@ import { settleFeedTurn } from './updates/settlement';
 import type { OutputBlob } from './updates/tool-output';
 import type { WriterCommit } from './writer-commit';
 import type { WriterJob } from './writer-job';
-import type { WriterEvent } from './writer-machine';
+import { storageFailingMessage, type WriterEvent } from './writer-machine';
 import { findDatabaseWriter } from './writer-system';
 
 const feedChangeApplied = 'feed.changeApplied';
+// How often a Feed sends its waiting changes to `feed.subscribe`.
+export const feedBatchIntervalMs = 60;
 const feedChangeRejected = 'feed.changeRejected';
 
 type FeedLogParameters = { line: string };
@@ -88,6 +90,8 @@ export type FeedEvent =
   | { type: 'feed.completeTurn'; turnId: string; published?: FeedPublication }
   | { type: 'feed.flush' };
 
+type FeedRowsJob = Extract<WriterJob, { type: 'feedRows' }>;
+
 // Raised after `feed.change` is applied, so each region reacts to it once.
 type FeedChangeApplied = {
   type: 'feed.changeApplied';
@@ -98,14 +102,20 @@ type FeedChangeRejected = { type: 'feed.changeRejected'; reason: string };
 export type FeedInternalEvent =
   | FeedChangeApplied
   | FeedChangeRejected
-  | { type: 'feed.publish'; published?: FeedPublication };
+  | { type: 'feed.publish'; published?: FeedPublication }
+  // The database writer refused a job of this Feed's rows; they stay in memory until a write is accepted.
+  | { type: 'feed.rowsRefused'; job: FeedRowsJob };
 
 export type FeedBatch = { type: 'feed.batch'; events: FeedStreamEvent[] };
 
 type WriterJobParameters = Pick<
   Extract<WriterEvent, { type: 'writer.write' }>,
-  'job' | 'committed' | 'refused'
->;
+  'committed'
+> & {
+  job: FeedRowsJob;
+  // A closing Feed cannot keep refused rows, so it logs them as lost.
+  isClosing?: boolean;
+};
 
 // Every changed row with the newest revision, as one job for the database writer.
 const createRowsWriteRequest = ({
@@ -114,14 +124,14 @@ const createRowsWriteRequest = ({
 }: {
   context: FeedContext;
   event: FeedEvent | FeedInternalEvent;
-}): WriterJobParameters & { job: Extract<WriterJob, { type: 'feedRows' }> } => {
+}): WriterJobParameters => {
   const rows = context.changedRowIds.flatMap((id): SessionUpdate[] => {
     const row = context.rows[id];
     return row ? [row] : [];
   });
   return {
     committed: 'committed' in event ? event.committed : undefined,
-    refused: context.storageFailing,
+    isClosing: event.type === 'feed.flush',
     job: {
       type: 'feedRows',
       sessionId: context.sessionId,
@@ -130,7 +140,7 @@ const createRowsWriteRequest = ({
       activityAt: context.activityAt,
       blobIds: promptBlobIds(rows),
       blobs: outputBlobsOf(rows, context.outputBlobs),
-    } satisfies WriterJob,
+    },
   };
 };
 
@@ -138,6 +148,8 @@ const writeRows = [
   { type: 'sendToWriter', params: createRowsWriteRequest },
   'dropWrittenRows',
 ] as const;
+
+const keepRows = ['keepRefusedRows', 'reportStorageFailing'] as const;
 
 export const feedMachine = setup({
   types: {
@@ -258,14 +270,41 @@ export const feedMachine = setup({
       events: context.streamEvents,
     })),
     clearBatch: assign({ streamEvents: [] }),
-    sendToWriter: ({ system }, params: WriterJobParameters): void => {
+    sendToWriter: ({ system, self }, params: WriterJobParameters): void => {
       const writer = findDatabaseWriter(system);
       if (writer?.getSnapshot().status !== 'active') {
         params.committed?.reject(new Error('Database Writer is unavailable'));
         return;
       }
-      writer.send({ type: 'writer.write', ...params });
+      const { job, committed, isClosing } = params;
+      writer.send({
+        type: 'writer.write',
+        job,
+        committed,
+        refused: (): void =>
+          isClosing
+            ? console.error(
+                `feed ${job.sessionId}: ${storageFailingMessage}, lost ${job.rows.length} rows up to revision ${job.maxRevision}`,
+              )
+            : self.send({ type: 'feed.rowsRefused', job }),
+      });
     },
+    // Refused rows come back unless a newer change replaced them, ahead of rows changed since.
+    keepRefusedRows: assign(({ context, event }): Partial<FeedContext> => {
+      assertEvent(event, 'feed.rowsRefused');
+      const { rows, blobs = [] } = event.job;
+      return {
+        rows: {
+          ...Object.fromEntries(rows.map((row) => [row.id, row])),
+          ...context.rows,
+        },
+        changedRowIds: [
+          ...new Set([...rows.map((row) => row.id), ...context.changedRowIds]),
+        ],
+        outputBlobs: [...blobs, ...context.outputBlobs],
+      };
+    }),
+    reportStorageFailing: ({ context }): void => context.storageFailing?.(),
     // Settled rows leave memory once written; open rows stay for their next change.
     dropWrittenRows: assign({
       rows: ({ context }): FeedContext['rows'] =>
@@ -287,7 +326,7 @@ export const feedMachine = setup({
     hasStreamEvents: ({ context }): boolean => context.streamEvents.length > 0,
     hasChangedRows: ({ context }): boolean => context.changedRowIds.length > 0,
   },
-  delays: { streamBatchDelay: 60, storeDelay: 1000 },
+  delays: { streamBatchDelay: feedBatchIntervalMs, storeDelay: 1000 },
 }).createMachine({
   id: 'feed',
   context: ({ input }): FeedContext => ({
@@ -364,11 +403,14 @@ export const feedMachine = setup({
                   { guard: 'changeSettled', actions: writeRows },
                   { target: 'dirty' },
                 ],
+                // Refused rows are offered again after the store delay.
+                'feed.rowsRefused': { target: 'dirty', actions: keepRows },
               },
             },
             dirty: {
               after: { storeDelay: { target: 'clean', actions: writeRows } },
               on: {
+                'feed.rowsRefused': { actions: keepRows },
                 'feed.changeApplied': {
                   guard: 'changeSettled',
                   target: 'clean',

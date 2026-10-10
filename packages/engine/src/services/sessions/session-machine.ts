@@ -52,7 +52,7 @@ import {
   type FeedEvent,
   type FeedActorRef,
 } from '../feed';
-import { userMessageChange } from '../feed';
+import { storageFailingMessage, userMessageChange } from '../feed';
 import { feedMachine } from '../feed';
 import { readWrittenRow, readUnaddressedPlan } from '../feed';
 import type { writerMachine } from '../feed';
@@ -194,7 +194,7 @@ export interface SessionContext extends SessionData {
   acpTurnOutcome: EndTurnParameters | null;
   feedEnded: boolean;
   // The database writer refused this Turn's Feed rows, so the Turn is cancelled and ends with a storage error.
-  storageFailedTurn: boolean;
+  hasStorageFailed: boolean;
 }
 
 const checkoutLimit = 10_000;
@@ -208,8 +208,8 @@ const interruptedTurn = (message: string): EndTurnParameters => ({
   stopReason: 'error',
   error: { code: 'interrupted', message },
 });
-const storageFailedTurn = interruptedTurn(
-  'Storage is failing, so the Turn was cancelled',
+const storageFailingTurnEnd = interruptedTurn(
+  `${storageFailingMessage}, so the Turn was cancelled`,
 );
 const connectionLostDuringTurn = interruptedTurn(
   'The Agent connection failed during the Turn',
@@ -571,7 +571,7 @@ const sessionSetup = setup({
       (_, params: SessionDataParameters): SessionData => params.data,
     ),
     rememberFeedEnded: assign({ feedEnded: true }),
-    rememberStorageFailure: assign({ storageFailedTurn: true }),
+    rememberStorageFailure: assign({ hasStorageFailed: true }),
     rememberFailure: assign(
       (_, params: FailureParameters): Pick<SessionContext, 'failure'> => ({
         failure: String(params.error),
@@ -692,7 +692,7 @@ const sessionSetup = setup({
     ),
     endTurn: enqueueActions(
       ({ context, enqueue }, ended: EndTurnParameters): void => {
-        const params = context.storageFailedTurn ? storageFailedTurn : ended;
+        const params = context.hasStorageFailed ? storageFailingTurnEnd : ended;
         if (context.activeTurnId)
           enqueue.sendTo(writer, {
             type: writeFeedEvent,
@@ -713,7 +713,7 @@ const sessionSetup = setup({
           activeTurnStartedAt: null,
           permissionQueue: [],
           elicitationQueue: [],
-          storageFailedTurn: false,
+          hasStorageFailed: false,
         });
       },
     ),
@@ -1225,7 +1225,7 @@ export const sessionMachine = sessionSetup.createMachine({
       createRejectionCounter(`ACP Session ${input.sessionId}`),
     ),
     acpTurnOutcome: null,
-    storageFailedTurn: false,
+    hasStorageFailed: false,
   }),
   output: ({ context }): Pick<SessionContext, 'failure'> => ({
     failure: context.failure,

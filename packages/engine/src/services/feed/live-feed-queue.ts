@@ -11,7 +11,7 @@ const isSnapshot = (event: LiveFeedEvent | undefined): event is FeedSnapshot =>
 // One subscriber's undelivered live events: past the limit its row changes give way to a catch-up from storage, and the newest Session snapshot stays.
 export class LiveFeedQueue {
   private events: LiveFeedEvent[] = [];
-  private overflowed = false;
+  private hasOverflowed = false;
 
   public push(events: readonly LiveFeedEvent[]): void {
     for (const event of events) this.append(event);
@@ -24,9 +24,9 @@ export class LiveFeedQueue {
 
   // True once after row changes were dropped, so the subscriber catches up from its last delivered revision.
   public takeOverflow(): boolean {
-    const overflowed = this.overflowed;
-    this.overflowed = false;
-    return overflowed;
+    const hasOverflowed = this.hasOverflowed;
+    this.hasOverflowed = false;
+    return hasOverflowed;
   }
 
   private append(event: LiveFeedEvent): void {
@@ -36,7 +36,7 @@ export class LiveFeedQueue {
   }
 
   private overflow(): void {
-    this.overflowed = true;
+    this.hasOverflowed = true;
     this.events = this.events.filter(isSnapshot).slice(-1);
   }
 }

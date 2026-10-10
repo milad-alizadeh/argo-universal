@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { ToolCallUpdate } from '@repo/contracts';
 import { expect, it, vi } from 'vitest';
@@ -6,6 +6,7 @@ import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { waitForAcpSessionIdle } from '#mocks/acp-feed';
 
 const previewBytes = 64 * 1024;
+const sessionUpdateMethod = 'session/update';
 const largeText = (label: string): string =>
   `${label}-head ${'x'.repeat(200_000)} ${label}-tail`;
 const output = largeText('output');
@@ -18,7 +19,7 @@ const startToolHost = (
 ): ReturnType<typeof startAcpEngine> =>
   startAcpEngine({
     prompt: async ({ params, client }) => {
-      await client.notify('session/update', {
+      await client.notify(sessionUpdateMethod, {
         sessionId: params.sessionId,
         update: {
           sessionUpdate: 'tool_call',
@@ -75,7 +76,7 @@ it('large tool output keeps a 64 KB head and tail, marks the row truncated and s
   const text = preview?.type === 'text' ? preview.text : '';
   expect(text.startsWith('output-head')).toBe(true);
   expect(text.endsWith('output-tail')).toBe(true);
-  expect(Buffer.byteLength(text)).toBeLessThanOrEqual(previewBytes + 8);
+  expect(Buffer.byteLength(text)).toBeLessThanOrEqual(previewBytes);
   expect(typeof row.rawOutput).toBe('string');
   expect(String(row.rawOutput)).toMatch(
     /^\{"stdout":"stdout-head[^]*stdout-tail"\}$/,
@@ -138,7 +139,7 @@ it('a later update replaces only the output fields it supplies', async () => {
           ],
         },
       ])
-        await client.notify('session/update', {
+        await client.notify(sessionUpdateMethod, {
           sessionId: params.sessionId,
           update,
         });
@@ -165,4 +166,61 @@ it('a capped multibyte text keeps only whole characters', async () => {
   const text = preview?.type === 'text' ? preview.text : '';
   expect(text).not.toContain('�');
   expect(text.replaceAll('€', '')).toBe('\n…\n');
+});
+
+it('rapid updates of a large output store only the whole output the row shows', async () => {
+  const host = await startAcpEngine({
+    prompt: async ({ params, client }) => {
+      for (const [index, status] of [
+        'in_progress',
+        'in_progress',
+        'in_progress',
+        'completed',
+      ].entries())
+        await client.notify(sessionUpdateMethod, {
+          sessionId: params.sessionId,
+          update: {
+            sessionUpdate: index === 0 ? 'tool_call' : 'tool_call_update',
+            toolCallId: 'run-1',
+            title: 'Run',
+            status,
+            rawOutput: { stdout: largeText(`update-${index}`) },
+          },
+        });
+      return { stopReason: 'end_turn' };
+    },
+  });
+  const row = await readToolRow(host);
+
+  expect(await readdir(host.blobsFolder)).toEqual([
+    row._meta?.argo?.fullOutput?.rawOutput?.blobId,
+  ]);
+  expect(
+    await readBlob(host, row._meta?.argo?.fullOutput?.rawOutput?.blobId),
+  ).toEqual({ stdout: largeText('update-3') });
+});
+
+it('many small text blocks share one 64 KB preview with the first and last kept', async () => {
+  const blocks = Array.from({ length: 20 }, (_, index) => ({
+    type: 'content' as const,
+    content: {
+      type: 'text' as const,
+      text: largeText(`block-${index}`).slice(0, 10_000),
+    },
+  }));
+  const host = await startToolHost({ content: blocks });
+  const row = await readToolRow(host);
+  const texts = row.content.map((block) =>
+    block.type === 'content' && block.content.type === 'text'
+      ? block.content.text
+      : '',
+  );
+
+  expect(Buffer.byteLength(texts.join(''))).toBeLessThanOrEqual(previewBytes);
+  expect(texts[0]).toBe(blocks[0]?.content.text);
+  expect(texts.at(-1)).toBe(blocks.at(-1)?.content.text);
+  expect(texts.filter((text) => text.includes('\n…\n'))).toHaveLength(1);
+  expect(
+    await readBlob(host, row._meta?.argo?.fullOutput?.content?.blobId),
+  ).toEqual(blocks);
 });

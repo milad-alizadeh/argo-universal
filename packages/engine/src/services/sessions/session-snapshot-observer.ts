@@ -1,16 +1,25 @@
 import type { FeedSubscribeOutput } from '@repo/contracts';
-import type { Observer, Subscription } from 'xstate';
-import type { FeedDeps } from '../feed';
+import type { Observer, SnapshotFrom, Subscription } from 'xstate';
+import { feedBatchIntervalMs, type FeedDeps } from '../feed';
 import type { RegistryActorRef } from './registry-machine';
 import type { SessionActorRef } from './session-machine';
 import { SessionSnapshotReader } from './session-snapshot-reader';
-
-const feedReadInterval = 60;
 
 type SnapshotEvent = Extract<
   FeedSubscribeOutput,
   { type: 'snapshot' | 'closed' }
 >;
+type SessionSnapshot = ReturnType<SessionActorRef['getSnapshot']>;
+type RegisteredSessions = SnapshotFrom<RegistryActorRef>['context']['sessions'];
+// What a snapshot is read from, in a fixed order.
+type SnapshotSources = readonly [
+  SessionActorRef | undefined,
+  SessionSnapshot['status'] | undefined,
+  SessionSnapshot['value'] | undefined,
+  SessionSnapshot['context'] | undefined,
+  ReturnType<FeedDeps['findFeed']>,
+  number,
+];
 type WatchOptions = Pick<FeedDeps, 'database' | 'findFeed' | 'findWriter'> & {
   findSession: (sessionId: string) => SessionActorRef | undefined;
   sessions?: RegistryActorRef;
@@ -31,12 +40,12 @@ class SessionSnapshotObserver implements Subscription {
   private feedListener: Subscription | undefined;
   private hasStopped = false;
   private serialized = '';
-  private sources: readonly unknown[] = [];
+  private sources: SnapshotSources | undefined;
   private feedVersion = 0;
   private feedThrottle: ReturnType<typeof setTimeout> | undefined;
-  private feedDirty = false;
+  private isFeedDirty = false;
   private registryListener: Subscription | undefined;
-  private registeredSessions: unknown;
+  private registeredSessions: RegisteredSessions | undefined;
   private readonly reader: SessionSnapshotReader;
 
   public constructor(
@@ -80,7 +89,7 @@ class SessionSnapshotObserver implements Subscription {
   }
 
   // The registry changes with every Session's every update; only its membership matters here.
-  private registryChanged(sessions: unknown): void {
+  private registryChanged(sessions: RegisteredSessions): void {
     if (sessions === this.registeredSessions) return;
     this.registeredSessions = sessions;
     this.sessionChanged();
@@ -165,21 +174,21 @@ class SessionSnapshotObserver implements Subscription {
   // A Feed change is read at once, then at most once per Feed batch window, so a burst of Agent updates is not read once per update.
   private feedChanged(): void {
     if (this.feedThrottle) {
-      this.feedDirty = true;
+      this.isFeedDirty = true;
       return;
     }
     this.feedVersion += 1;
     this.feedThrottle = setTimeout(
       (): void => this.feedWindowEnded(),
-      feedReadInterval,
+      feedBatchIntervalMs,
     );
     this.changed();
   }
 
   private feedWindowEnded(): void {
     this.feedThrottle = undefined;
-    if (!this.feedDirty) return;
-    this.feedDirty = false;
+    if (!this.isFeedDirty) return;
+    this.isFeedDirty = false;
     this.feedChanged();
   }
 
@@ -188,7 +197,7 @@ class SessionSnapshotObserver implements Subscription {
   }
 
   // What a snapshot is read from; an unchanged source list skips the read.
-  private readSources(): readonly unknown[] {
+  private readSources(): SnapshotSources {
     const session = this.session?.getSnapshot();
     return [
       this.session,
@@ -203,7 +212,7 @@ class SessionSnapshotObserver implements Subscription {
   private sourcesChanged(): boolean {
     const sources = this.readSources();
     const changed = sources.some(
-      (source, index) => source !== this.sources[index],
+      (source, index): boolean => source !== this.sources?.[index],
     );
     this.sources = sources;
     return changed;

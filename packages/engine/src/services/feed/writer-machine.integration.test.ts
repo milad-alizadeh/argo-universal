@@ -11,6 +11,7 @@ import {
 } from 'xstate';
 import {
   type AdjacencyMap,
+  adjacencyMapToArray,
   type EventExecutor,
   type GraphEventFromLogic,
   type StatePath,
@@ -18,6 +19,7 @@ import {
   getShortestPaths,
   getSimplePaths,
 } from 'xstate/graph';
+import { writerDefaults } from '#mocks/writer';
 import type { WriterJob, writeJobs } from './writer-job';
 import { writerMachine } from './writer-machine';
 
@@ -46,7 +48,7 @@ const machine = writerMachine.provide({
   actors: {
     writeBatch: fromPromise<
       ReturnType<typeof writeJobs>,
-      { database: Database; jobs: WriterJob[] }
+      { database: Database; blobsFolder: string; jobs: WriterJob[] }
     >(
       ({ input }): Promise<ReturnType<typeof writeJobs>> =>
         new Promise<ReturnType<typeof writeJobs>>((resolve, reject): void => {
@@ -77,9 +79,10 @@ type WriterSnapshot = SnapshotFrom<typeof machine>;
 
 // One queued Feed row job spends the budget, so the model reaches a refusal.
 const input = {
+  ...writerDefaults,
   now: (): number => 1000,
   database: mockDatabase,
-  feedRowJobLimit: 1,
+  feedRowBudget: { jobs: 1, bytes: writerDefaults.feedRowBudget.bytes },
 };
 const writeError = new Error('database is locked');
 const job = (index: number): WriterJob => ({
@@ -87,7 +90,9 @@ const job = (index: number): WriterJob => ({
   id: `turn-${index}`,
   set: { endedAt: index },
 });
-const feedRowsJob = (index: number): WriterJob => ({
+const feedRowsJob = (
+  index: number,
+): Extract<WriterJob, { type: 'feedRows' }> => ({
   type: 'feedRows',
   sessionId: 'session-1',
   rows: [],
@@ -225,14 +230,14 @@ const expectNoBatchRunning = (): void => {
 };
 const isWriteFailure = (line: string): boolean => line.startsWith('could not');
 const refusalLine =
-  'Storage is failing: refusing Feed rows while 1 Feed row jobs wait';
+  'Storage is failing: refusing Feed rows until queued ones commit';
 // A Writer refuses Feed rows only while its budget is spent, and logs at most once per refused job.
 const expectRefusals = (): void => {
-  const { queue, refusing } = writer.getSnapshot().context;
+  const { queue, hasLoggedRefusal } = writer.getSnapshot().context;
   const refusals = logLines.filter((line): boolean => line === refusalLine);
   expect(refusals.length).toBeLessThanOrEqual(refusedJobs.length);
-  if (refusing) expect(queue.some(isFeedRows)).toBe(true);
-  if (refusing) expect(refusals.length).toBeGreaterThan(0);
+  if (hasLoggedRefusal) expect(queue.some(isFeedRows)).toBe(true);
+  if (hasLoggedRefusal) expect(refusals.length).toBeGreaterThan(0);
 };
 const states: Record<string, (snapshot: WriterSnapshot) => void> = {
   idle: (snapshot): void => {
@@ -270,22 +275,44 @@ const budgetOptions = {
   ] satisfies WriterEvent[],
   serializeState: (
     snapshot: WriterSnapshot,
-    event: WriterEvent | undefined,
+    event?: WriterEvent,
     previous?: WriterSnapshot,
   ): string =>
     JSON.stringify({
       state: options.serializeState(snapshot, event, previous),
       feedRowsQueued: snapshot.context.queue.some(isFeedRows),
-      refusing: snapshot.context.refusing,
+      hasLoggedRefusal: snapshot.context.hasLoggedRefusal,
     }),
 };
-const shortestPaths = terminalPaths(getShortestPaths(machine, budgetOptions));
+// A write is keyed by its job's kind, so walking a Feed row refusal is proven apart from a lifecycle write.
+const eventKey = (event: WriterEvent): string =>
+  `${event.type}${event.job?.type === 'feedRows' ? ' feedRows' : ''}`;
+const budgetAdjacency = getAdjacencyMap(machine, budgetOptions);
+// What decides the transitions out of a state, without the event that reached it.
+const budgetKey = (snapshot: WriterSnapshot): string =>
+  budgetOptions.serializeState(snapshot);
+const budgetEdges = Map.groupBy(
+  adjacencyMapToArray(budgetAdjacency),
+  ({ state }): string => budgetKey(state),
+);
+// Each shortest path, then one more step along every transition out of where it ends, so every budget branch is walked.
+const shortestPaths = terminalPaths(
+  getShortestPaths(machine, budgetOptions).flatMap((path) =>
+    (budgetEdges.get(budgetKey(path.state)) ?? []).map(
+      ({ event, nextState }): StatePath<WriterSnapshot, WriterEvent> => ({
+        state: nextState,
+        weight: path.weight + 1,
+        steps: [...path.steps, { event, state: nextState }],
+      }),
+    ),
+  ),
+);
 const simplePaths = terminalPaths(getSimplePaths(machine, options));
 mockDatabase.$client.close();
 const title = (path: StatePath<WriterSnapshot, WriterEvent>): string =>
   path.steps
     .map(({ event }): string =>
-      `${event.type}${event.job?.type === 'feedRows' ? ' feedRows' : ''}`
+      eventKey(event)
         .replace(/^xstate\.after\.(\w+)\..*$/, 'after $1')
         .replace(/^xstate\.(done|error)\.actor\.(\w+)$/, '$2 $1'),
     )
@@ -337,12 +364,17 @@ describe('database writer model', (): void => {
         models: [
           {
             getAdjacencyMap: (): AdjacencyMap<WriterSnapshot, WriterEvent> =>
-              getAdjacencyMap(machine, budgetOptions),
+              budgetAdjacency,
           },
         ],
         paths: [...shortestPaths, ...simplePaths],
-        stateKey: (snapshot): string => JSON.stringify(snapshot.value),
-        eventKey: (event): typeof event.type => event.type,
+        stateKey: (snapshot): string =>
+          JSON.stringify({
+            value: snapshot.value,
+            feedRowsQueued: snapshot.context.queue.some(isFeedRows),
+            hasLoggedRefusal: snapshot.context.hasLoggedRefusal,
+          }),
+        eventKey,
       }),
     ).toEqual([]);
   });
@@ -353,7 +385,7 @@ describe('database writer', (): void => {
     writer = createActor(machine, { input }).start();
   });
 
-  it('refuses Feed rows past its budget, still queues lifecycle jobs, and accepts Feed rows again after a commit', async (): Promise<void> => {
+  it('refuses a Feed row job past its budget and rejects its commit', (): void => {
     sendWrite('feedRows');
     const committed = {
       resolve: vi.fn<() => void>(),
@@ -366,7 +398,6 @@ describe('database writer', (): void => {
       committed,
       refused,
     });
-    sendWrite();
 
     expect(committed.reject).toHaveBeenCalledWith(
       new Error('Storage is failing'),
@@ -374,11 +405,61 @@ describe('database writer', (): void => {
     expect(committed.resolve).not.toHaveBeenCalled();
     expect(refused).toHaveBeenCalledOnce();
     expect(logLines).toEqual([refusalLine]);
-    await settle((call): void => call.resolve());
+  });
+
+  it('logs only the first refusal until a batch commits', (): void => {
     sendWrite('feedRows');
+    sendWrite('feedRows');
+    sendWrite('feedRows');
+
+    expect(refusedJobs).toHaveLength(2);
+    expect(logLines).toEqual([refusalLine]);
+  });
+
+  it('queues lifecycle jobs while it refuses Feed rows', (): void => {
+    sendWrite('feedRows');
+    sendWrite('feedRows');
+    sendWrite();
+
+    expect(refusedJobs).toHaveLength(1);
     expect(
       writer.getSnapshot().context.queue.map((queued) => queued.type),
-    ).toEqual(['turnUpdate', 'feedRows']);
+    ).toEqual(['feedRows', 'turnUpdate']);
+  });
+
+  it('accepts Feed rows again once a batch commits', async (): Promise<void> => {
+    sendWrite('feedRows');
+    sendWrite('feedRows');
+    await settle((call): void => call.resolve());
+    sendWrite('feedRows');
+
+    expect(refusedJobs).toHaveLength(1);
+    expect(
+      writer.getSnapshot().context.queue.map((queued) => queued.type),
+    ).toEqual(['feedRows']);
+  });
+
+  it('refuses Feed rows once queued ones hold its byte budget', (): void => {
+    writer.stop();
+    writer = createActor(machine, {
+      input: { ...input, feedRowBudget: { jobs: 256, bytes: 1024 } },
+    }).start();
+    const data = Buffer.alloc(1024);
+    writer.send({
+      type: writeFeedEvent,
+      job: {
+        ...feedRowsJob(1),
+        blobs: [
+          {
+            blob: { blobId: 'b', mime: 'application/json', bytes: 1024 },
+            data,
+          },
+        ],
+      },
+    });
+    sendWrite('feedRows');
+
+    expect(refusedJobs).toHaveLength(1);
   });
 
   it('retries a failed batch with the jobs that arrived meanwhile', async (): Promise<void> => {
@@ -418,6 +499,7 @@ describe('database writer', (): void => {
           rows: [],
           maxRevision: 1,
           activityAt: 1000,
+          bytes: 2,
         },
       ],
       [
@@ -427,6 +509,7 @@ describe('database writer', (): void => {
           rows: [],
           maxRevision: 1,
           activityAt: 1000,
+          bytes: 2,
         },
       ],
     ]);

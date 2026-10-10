@@ -10,6 +10,7 @@ import type {
   FeedEvent,
   FeedInternalEvent,
 } from '../feed-machine';
+import { outputBlobsOf } from '../feed-row';
 import type {
   AcpContentInput,
   ContentAssemblyInput,
@@ -78,13 +79,17 @@ const createAcpContentInput = (
   findUnaddressedPlan: context.findUnaddressedPlan,
   unaddressedPlan: context.unaddressedPlan,
 });
+// A new whole output replaces the one its field showed, so memory holds one per field.
 const appendOutputBlobs = (
   context: FeedContext,
-  result: Pick<ContentResult, 'blobs'>,
-): FeedContext['outputBlobs'] => [
-  ...context.outputBlobs,
-  ...(result.blobs ?? []),
-];
+  result: Extract<ContentResult, { feed: Feed }>,
+): FeedContext['outputBlobs'] =>
+  result.blobs?.length
+    ? outputBlobsOf(Object.values(result.feed.rows), [
+        ...context.outputBlobs,
+        ...result.blobs,
+      ])
+    : context.outputBlobs;
 const createAcceptedFeedState = (
   context: FeedContext,
   result: Extract<ContentResult, { feed: Feed }>,

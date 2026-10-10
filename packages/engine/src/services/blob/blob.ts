@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto';
 import { readdir, rm, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
@@ -13,21 +12,15 @@ import { and, eq, lt, notExists } from 'drizzle-orm';
 import type { ActorRefFrom } from 'xstate';
 import type { z } from 'zod';
 import {
-  writeBlobFile,
-  writeDatabaseJobAndWaitForCommit,
-  type writerMachine,
-} from '../feed';
+  contentAddress,
+  unlessMissing,
+  writeContentFile,
+} from '../../lib/content-files';
+import { writeDatabaseJobAndWaitForCommit, type writerMachine } from '../feed';
 
 const unusedBlobAge = 86_400_000;
 
 export const blobsFolderIn = (home: string): string => join(home, 'blobs');
-
-const unlessMissing =
-  <T>(fallback: T): ((error: NodeJS.ErrnoException) => T) =>
-  (error: NodeJS.ErrnoException): T => {
-    if (error.code === 'ENOENT') return fallback;
-    throw error;
-  };
 
 const hasBytesAt = (bytes: Buffer, offset: number, expected: Buffer): boolean =>
   bytes.subarray(offset, offset + expected.length).equals(expected);
@@ -70,8 +63,8 @@ export async function uploadBlob(
       message: `An upload is at most ${maxBlobUploadBytes} bytes`,
     });
   const bytes = Buffer.from(await file.arrayBuffer());
-  const blobId = createHash('sha256').update(bytes).digest('hex');
-  await writeBlobFile(resources.blobsFolder, blobId, bytes);
+  const blobId = contentAddress(bytes);
+  await writeContentFile(resources.blobsFolder, blobId, bytes);
   const mime = mimeOf(bytes, file.type);
   await writeDatabaseJobAndWaitForCommit(
     resources.databaseWriter,

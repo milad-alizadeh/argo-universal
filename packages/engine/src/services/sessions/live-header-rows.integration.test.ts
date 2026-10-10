@@ -8,6 +8,7 @@ import { sql } from 'drizzle-orm';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import { createActor, waitFor } from 'xstate';
 import { countDatabaseReads, openTestDatabase } from '#mocks/database';
+import { writerDefaults } from '#mocks/writer';
 import { toFeedRowWrite } from '../feed';
 import { writerMachine } from '../feed';
 import { toLiveHeader } from './live-header';
@@ -140,7 +141,7 @@ it('keeps the earlier running Tool call after writer and memory overlays complet
     .exec(`CREATE TRIGGER hold_header_write BEFORE INSERT ON feed_row
     BEGIN SELECT RAISE(ABORT, 'database is locked'); END`);
   const writer = createActor(writerMachine, {
-    input: { now: (): number => Date.now(), database },
+    input: { ...writerDefaults, now: (): number => Date.now(), database },
   }).start();
   onTestFinished((): void => {
     writer.stop();

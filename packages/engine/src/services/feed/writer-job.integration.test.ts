@@ -14,8 +14,10 @@ import {
 } from 'vitest';
 import { createActor } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
+import { writerDefaults } from '#mocks/writer';
 import { hydrateStoredFeedRow, storedFeedColumns } from './feed-row';
-import { describeJob, type WriterJob, writeJobs } from './writer-job';
+import { type WriterJob, writeJobs } from './writer-job';
+import { describeJob } from './writer-lost-jobs';
 import { writerMachine } from './writer-machine';
 import { readWriterProjection } from './writer-projection';
 
@@ -63,7 +65,7 @@ const submitWrites = (
   committed: Promise<void>;
 } => {
   const writer = createActor(writerMachine, {
-    input: { database, now: () => 12000 },
+    input: { ...writerDefaults, database, now: () => 12000 },
   }).start();
   onTestFinished(() => {
     writer.stop();

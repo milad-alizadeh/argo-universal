@@ -15,6 +15,7 @@ import { feedMachine } from './feed-machine';
 const acpUpdateEventType = 'feed.acpUpdate';
 const modelAcpSessionId = 'model-session';
 const firstMessageRowId = 'message-1#0';
+const modelSessionId = 'session-1';
 
 /*
  * Symbolic graph traversal proves transition coverage only. Engine integration
@@ -24,7 +25,7 @@ const machine = feedMachine;
 type FeedSnapshot = SnapshotFrom<typeof machine>;
 const modelInput = {
   now: (): number => 1000,
-  sessionId: 'session-1',
+  sessionId: modelSessionId,
   epoch: 2,
   maxRevision: 0,
   nextPosition: 0,
@@ -59,6 +60,28 @@ const settleMessage = change({
   id: firstMessageRowId,
   set: { state: 'settled' },
 });
+// The database writer refused a write of a settled row, while storage fails.
+const refusedRows = {
+  type: 'feed.rowsRefused',
+  job: {
+    type: 'feedRows',
+    sessionId: modelSessionId,
+    rows: [
+      {
+        id: 'refused-1',
+        sessionId: modelSessionId,
+        position: 0,
+        revision: 1,
+        turnId: 'turn-1',
+        state: 'settled',
+        sessionUpdate: 'notice',
+        severity: 'info',
+        title: 'Refused notice',
+      },
+    ],
+    maxRevision: 1,
+  },
+} satisfies GraphEventFromLogic<typeof machine>;
 const streamBatchDelayEvent =
   'xstate.after.streamBatchDelay.feed.active.stream.batching';
 const storeDelayEvent = 'xstate.after.storeDelay.feed.active.store.dirty';
@@ -116,6 +139,7 @@ const events = [
   },
   { type: 'feed.completeTurn', turnId: 'turn-1' },
   { type: 'feed.flush' },
+  refusedRows,
   { type: streamBatchDelayEvent },
   { type: storeDelayEvent },
 ] satisfies GraphEventFromLogic<typeof machine>[];
@@ -179,7 +203,9 @@ const orderingOptions = {
   ...modelOptions,
   events: events.filter(
     (event) =>
-      event.type !== acpUpdateEventType && event.type !== 'feed.completeTurn',
+      event.type !== acpUpdateEventType &&
+      event.type !== 'feed.completeTurn' &&
+      event.type !== refusedRows.type,
   ),
   serializeState: serializeWith((sameAsPrevious): boolean => sameAsPrevious),
 };
@@ -203,6 +229,17 @@ describe('Feed structural graph', (): void => {
         eventKey: (event): string => JSON.stringify(event),
       }),
     ).toEqual([]);
+  });
+  it('keeps refused rows to write after the store delay', (): void => {
+    const refused = shortestPaths
+      .flatMap((path) => path.steps)
+      .filter((step) => step.event.type === refusedRows.type);
+    expect(refused.length).toBeGreaterThan(0);
+    for (const { state } of refused) {
+      expect(state.matches({ active: { store: 'dirty' } })).toBe(true);
+      expect(state.context.rows['refused-1']).toBeDefined();
+      expect(state.context.changedRowIds).toContain('refused-1');
+    }
   });
   it('structurally flushes both parallel regions before reaching the final state', (): void => {
     const flushed = shortestPaths

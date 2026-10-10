@@ -891,7 +891,7 @@ it('structurally cancels a running Turn whose Feed rows storage refuses', (): vo
   expect(refused.length).toBeGreaterThan(0);
   for (const { state } of refused) {
     expect(state.matches({ open: { live: 'cancelling' } })).toBe(true);
-    expect(state.context.storageFailedTurn).toBe(true);
+    expect(state.context.hasStorageFailed).toBe(true);
   }
 });
 

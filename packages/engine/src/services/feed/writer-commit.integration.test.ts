@@ -1,6 +1,7 @@
 import { expect, it, onTestFinished } from 'vitest';
 import { createActor, waitFor } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
+import { writerDefaults } from '#mocks/writer';
 import { writerMachine } from './writer-machine';
 
 const writeEvent = 'writer.write';
@@ -10,7 +11,12 @@ const startWriter = (): ReturnType<typeof openTestDatabase> & {
 } => {
   const storage = openTestDatabase();
   const writer = createActor(writerMachine, {
-    input: { database: storage.database, now: () => 1000, log: () => {} },
+    input: {
+      ...writerDefaults,
+      database: storage.database,
+      now: () => 1000,
+      log: () => {},
+    },
   }).start();
   onTestFinished(() => {
     writer.stop();

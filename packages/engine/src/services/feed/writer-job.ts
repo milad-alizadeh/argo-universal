@@ -9,9 +9,10 @@ import {
   turn,
 } from '@repo/db/schema';
 import { and, eq, gt, inArray, sql } from 'drizzle-orm';
-import { writeBlobFile } from './blob-files';
+import { writeContentFile } from '../../lib/content-files';
 import { toFeedRowWrite } from './feed-row';
 import type { OutputBlob } from './updates/tool-output';
+import { measureFeedRowsJob } from './writer-budget';
 import {
   applyCatalogSqlJob,
   isCatalogSqlJob,
@@ -35,6 +36,8 @@ export type WriterJob =
       blobIds?: string[];
       // Whole tool output the rows show as previews, stored before the rows.
       blobs?: OutputBlob[];
+      // What the job holds in memory, measured once when the Writer queues it.
+      bytes?: number;
     }
   | {
       type: 'sessionInsert';
@@ -197,57 +200,24 @@ function insertOutputBlobs(
 
 // Writes the files of the jobs' output Blobs, so their rows never name a missing file.
 export async function writeJobBlobFiles(
-  blobsFolder: string | undefined,
+  blobsFolder: string,
   jobs: readonly WriterJob[],
 ): Promise<void> {
   for (const job of jobs)
     if (job.type === 'feedRows')
-      for (const stored of job.blobs ?? []) {
-        if (!blobsFolder) throw new Error('Writer has no Blob folder');
-        await writeBlobFile(blobsFolder, stored.blob.blobId, stored.data);
-      }
-}
-
-const describedJobLimit = 20;
-
-// Names the first lost jobs and counts the rest, so the log stays bounded however long the queue grew.
-export function describeLostJobs(jobs: readonly WriterJob[]): string {
-  const named = jobs.slice(0, describedJobLimit).map(describeJob);
-  const rest = jobs.length - named.length;
-  return [...named, ...(rest > 0 ? [`and ${rest} more`] : [])].join('\n');
-}
-
-// One line naming what a job would have written, for the log of lost jobs.
-export function describeJob(job: WriterJob): string {
-  switch (job.type) {
-    case 'blobMetadataUpsert':
-      return `upsert Blob metadata ${job.blob.id}`;
-    case 'agentCatalogReplace':
-      return `replace catalog with ${job.rows.length} accepted Agent rows`;
-    case 'syncJobUpdate':
-      return `update sync job ${job.source}/${job.scope}`;
-    case 'feedRows':
-      return `Feed rows ${job.rows.map((row): string => row.id).join(', ')} of Session ${job.sessionId} at maxRevision ${job.maxRevision}`;
-    case 'sessionInsert':
-      return `insert Session ${job.session.id} of Project ${job.session.projectId}`;
-    case 'turnInsert':
-      return `insert Turn ${job.turn.id} of Session ${job.turn.sessionId}`;
-    case 'turnUpdate':
-      return `update Turn ${job.id}: ${Object.keys(job.set).join(', ')}`;
-    case 'sessionRowUpdate':
-      return `update Session ${job.id}: ${Object.keys(job.set).join(', ')}`;
-    default: {
-      const unhandled: never = job;
-      throw new Error(`Unhandled writer job ${unhandled}`);
-    }
-  }
+      for (const stored of job.blobs ?? [])
+        await writeContentFile(blobsFolder, stored.blob.blobId, stored.data);
 }
 
 // Queue time is shared by reads and writes, including retries of the same job.
 export function stampWriterJob(job: WriterJob, now: number): WriterJob {
   switch (job.type) {
     case 'feedRows':
-      return { ...job, activityAt: job.activityAt ?? now };
+      return {
+        ...job,
+        activityAt: job.activityAt ?? now,
+        bytes: job.bytes ?? measureFeedRowsJob(job),
+      };
     case 'sessionInsert':
       return {
         ...job,

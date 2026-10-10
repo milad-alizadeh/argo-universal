@@ -8,6 +8,7 @@ import {
   insertSession,
   openTestDatabase,
 } from '#mocks/database';
+import { writerDefaults } from '#mocks/writer';
 import type { WriterChange } from '../feed';
 import { writerMachine } from '../feed';
 import { registryMachine } from './registry-machine';
@@ -184,7 +185,7 @@ it.each(['session-1', 'child-1'])(
       "CREATE TRIGGER reject_turn BEFORE INSERT ON turn BEGIN SELECT RAISE(ABORT, 'locked'); END",
     );
     const writer = createActor(writerMachine, {
-      input: { database, now: () => 1000, log: () => {} },
+      input: { ...writerDefaults, database, now: () => 1000, log: () => {} },
     }).start();
     onTestFinished(() => {
       writer.stop();
@@ -267,7 +268,7 @@ it('rejects a malformed stored Session before a pending patch can replace its in
     "UPDATE session SET title_source = 'unrecognised'; CREATE TRIGGER reject_patch BEFORE UPDATE ON session BEGIN SELECT RAISE(ABORT, 'locked'); END",
   );
   const writer = createActor(writerMachine, {
-    input: { database, now: () => 1000, log: () => {} },
+    input: { ...writerDefaults, database, now: () => 1000, log: () => {} },
   }).start();
   onTestFinished(() => {
     writer.stop();
