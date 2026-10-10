@@ -1,5 +1,5 @@
+import { Uniwind } from 'uniwind';
 import { settleViewport } from './settle-viewport';
-import { applyTheme } from './theme';
 
 export const layoutWidths = { phone: 390, wide: 1440 } as const;
 
@@ -15,11 +15,11 @@ export async function eachLayout(
     for (const wide of [false, true]) {
       await settleViewport(wide ? layoutWidths.wide : layoutWidths.phone);
       for (const mode of ['light', 'dark'] as const) {
-        applyTheme('default', mode);
+        Uniwind.setTheme(mode);
         await assertion(wide);
       }
     }
   } finally {
-    applyTheme('default', 'light');
+    Uniwind.setTheme('light');
   }
 }
