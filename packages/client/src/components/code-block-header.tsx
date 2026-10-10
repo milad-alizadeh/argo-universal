@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { cn } from '#lib/utils';
 import { Text } from '#primitives/text';
 import { Icon } from '../lib/icon';
+import { resourceIcon } from '../lib/resource-name';
 import { CodeBlockTitle } from './code-block-title';
 import { CopyButton } from './copy-button';
 
@@ -33,7 +34,7 @@ export function CodeBlockHeader({
         <>
           <View className="h-5 w-icon-md shrink-0 items-center justify-center">
             <Icon
-              name={resource.uri.startsWith('file://') ? 'file' : 'resource'}
+              name={resourceIcon(resource.uri)}
               className="text-muted-foreground"
             />
           </View>
