@@ -94,37 +94,34 @@ function rejectClosedSession(
 }
 
 export async function openReadySession(
-  context: Pick<
+  deps: Pick<
     SessionRouterDeps,
     'sessions' | 'readSession' | 'sessionCommandSignal'
   >,
   sessionId: string,
   commandType: SessionCommand['type'] = 'session.prompt',
 ): Promise<SessionActorRef> {
-  validateSessionCommandAdmission(context);
+  validateSessionCommandAdmission(deps);
   const liveSession = findMachineActor(
-    context.sessions.system,
+    deps.sessions.system,
     sessionActorId(sessionId),
     sessionMachine,
   );
   if (liveSession) return waitForSessionReady(liveSession, commandType);
-  return waitForSessionReady(
-    openStoredSession(context, sessionId),
-    commandType,
-  );
+  return waitForSessionReady(openStoredSession(deps, sessionId), commandType);
 }
 
 function openStoredSession(
-  context: Pick<SessionRouterDeps, 'sessions' | 'readSession'>,
+  deps: Pick<SessionRouterDeps, 'sessions' | 'readSession'>,
   sessionId: string,
 ): SessionActorRef {
-  const sessionRecord = readWritableSession(context.readSession, sessionId);
-  sendCheckedRegistryCommand(context.sessions, {
+  const sessionRecord = readWritableSession(deps.readSession, sessionId);
+  sendCheckedRegistryCommand(deps.sessions, {
     type: 'sessions.open',
     sessionId,
     agent: sessionRecord.agent,
   });
-  return requireOpenSessionActor(context.sessions, sessionId);
+  return requireOpenSessionActor(deps.sessions, sessionId);
 }
 
 function readWritableSession(

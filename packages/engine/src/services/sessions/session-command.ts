@@ -44,15 +44,15 @@ export function rejectSessionCommand(
 }
 
 export function validateSessionCommandAdmission(
-  context: Pick<SessionRouterDeps, 'sessions' | 'sessionCommandSignal'>,
+  deps: Pick<SessionRouterDeps, 'sessions' | 'sessionCommandSignal'>,
 ): void {
-  validateEngineCommandAdmission(context.sessionCommandSignal);
-  const registrySnapshot = context.sessions.getSnapshot();
+  validateEngineCommandAdmission(deps.sessionCommandSignal);
+  const registrySnapshot = deps.sessions.getSnapshot();
   if (
     registrySnapshot.status !== 'active' ||
     !registrySnapshot.matches('running')
   )
-    rejectRegistryCommand(context.sessions, 'commands');
+    rejectRegistryCommand(deps.sessions, 'commands');
 }
 
 function validateEngineCommandAdmission(signal?: AbortSignal): void {

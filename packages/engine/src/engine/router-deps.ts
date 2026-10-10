@@ -16,46 +16,54 @@ import {
 import type { SystemDeps } from '../services/system';
 import { databaseWriterId, writerMachine } from '../storage';
 
-// Each router reads its own slice; only the Feed's sources are built here.
 export type AppRouterDeps = SessionRouterDeps &
   AgentsRouterDeps &
   BlobUploadDeps &
-  SystemDeps & { feed: FeedDeps };
+  SystemDeps &
+  FeedDeps;
 
-export type AppRouterInput = Omit<
-  AppRouterDeps,
-  'feed' | 'readSession' | 'createId'
-> &
-  Partial<Pick<AppRouterDeps, 'createId'>>;
+type FeedSourcesInput = { database: Database; sessions: RegistryActorRef };
 
-function createFeedDeps(
-  { database, sessions }: { database: Database; sessions: RegistryActorRef },
-  readSession: FeedDeps['readSession'],
-): FeedDeps {
-  const findSession = (sessionId: string): SessionActorRef | undefined =>
+type FeedSources = FeedSourcesInput &
+  Pick<FeedDeps, 'findFeed' | 'findWriter'> & {
+    findSession: (sessionId: string) => SessionActorRef | undefined;
+  };
+
+const findLiveSession =
+  (sessions: RegistryActorRef) =>
+  (sessionId: string): SessionActorRef | undefined =>
     findMachineActor(
       sessions.system,
       sessionActorId(sessionId),
       sessionMachine,
     );
-  const findFeed: FeedDeps['findFeed'] = (sessionId) =>
-    findSession(sessionId)?.getSnapshot().children.feed;
-  const findWriter: FeedDeps['findWriter'] = () =>
-    findMachineActor(sessions.system, databaseWriterId, writerMachine);
-  const sources = { database, sessions, findSession, findFeed, findWriter };
+
+// Where the Feed finds the live Session, its feed actor and the Writer.
+export function createFeedSources(input: FeedSourcesInput): FeedSources {
+  const findSession = findLiveSession(input.sessions);
   return {
-    ...sources,
-    readSession,
-    watchSessionSnapshot: createSessionSnapshotWatcher(sources),
+    ...input,
+    findSession,
+    findFeed: (sessionId) =>
+      findSession(sessionId)?.getSnapshot().children.feed,
+    findWriter: () =>
+      findMachineActor(input.sessions.system, databaseWriterId, writerMachine),
   };
 }
 
-export function createAppRouterDeps(input: AppRouterInput): AppRouterDeps {
-  const readSession = createSessionReader(input.database);
+export type AppRouterInput = Omit<AppRouterDeps, keyof FeedDeps | 'createId'> &
+  FeedSourcesInput &
+  Partial<Pick<AppRouterDeps, 'createId'>>;
+
+export function createAppRouterDeps(
+  input: AppRouterInput,
+  sources: FeedSources = createFeedSources(input),
+): AppRouterDeps {
   return {
     ...input,
+    ...sources,
     createId: input.createId ?? randomUUID,
-    readSession,
-    feed: createFeedDeps(input, readSession),
+    readSession: createSessionReader(input.database),
+    watchSessionSnapshot: createSessionSnapshotWatcher(sources),
   };
 }

@@ -77,37 +77,35 @@ async function waitForSessionInsertCommitted(
 }
 
 export async function createSession(
-  context: Pick<
+  deps: Pick<
     SessionRouterDeps,
     'database' | 'sessions' | 'createId' | 'sessionCommandSignal'
   >,
   newSession: SessionNewInput,
 ): Promise<SessionNewOutput> {
   const projectPath = await requireCheckoutProjectPath(
-    context.database,
+    deps.database,
     newSession,
   );
-  validateSessionCommandAdmission(context);
-  const sessionId = context.createId();
-  sendCheckedRegistryCommand(context.sessions, {
+  validateSessionCommandAdmission(deps);
+  const sessionId = deps.createId();
+  sendCheckedRegistryCommand(deps.sessions, {
     type: 'sessions.create',
     sessionId,
-    turnId: context.createId(),
+    turnId: deps.createId(),
     ...newSession,
     projectPath,
   });
-  await waitForSessionStored(
-    requireOpenSessionActor(context.sessions, sessionId),
-  );
+  await waitForSessionStored(requireOpenSessionActor(deps.sessions, sessionId));
   await waitForSessionInsertCommitted(
-    requireOpenSessionActor(context.sessions, sessionId),
+    requireOpenSessionActor(deps.sessions, sessionId),
   );
   await applyInitialConfiguration(
-    requireOpenSessionActor(context.sessions, sessionId),
+    requireOpenSessionActor(deps.sessions, sessionId),
     newSession,
   );
   await submitInitialAcpPrompt(
-    requireOpenSessionActor(context.sessions, sessionId),
+    requireOpenSessionActor(deps.sessions, sessionId),
   );
   return { sessionId };
 }

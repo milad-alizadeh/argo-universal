@@ -1,5 +1,10 @@
 import { ClockTick, SystemInfo } from '@repo/contracts';
-import { publicProcedure, routerFactory, zAsyncIterable } from '../../rpc';
+import {
+  publicProcedure,
+  router,
+  routerFactory,
+  zAsyncIterable,
+} from '../../rpc';
 import { streamClock } from './clock';
 import { readSystemInfo, type SystemDeps } from './info';
 
@@ -9,11 +14,11 @@ const clock = publicProcedure
     yield* streamClock(signal);
   });
 
-export const createSystemRouter = routerFactory(
-  (systemMetadata: SystemDeps) => ({
+export const createSystemRouter = routerFactory((deps: SystemDeps) =>
+  router({
     info: publicProcedure
       .output(SystemInfo)
-      .query((): SystemInfo => readSystemInfo(systemMetadata)),
+      .query((): SystemInfo => readSystemInfo(deps)),
     clock,
   }),
 );

@@ -31,17 +31,17 @@ export const applySessionConfig = (
   );
 };
 export const configureSession = async (
-  context: Pick<
+  deps: Pick<
     SessionRouterDeps,
     'sessions' | 'readSession' | 'sessionCommandSignal'
   >,
   input: SessionSetConfigOptionInput,
 ): Promise<SessionSetConfigOptionOutput> => {
   const session = await openReadySession(
-    context,
+    deps,
     input.sessionId,
     'session.setConfigOption',
   );
-  validateSessionCommandAdmission(context);
+  validateSessionCommandAdmission(deps);
   return { configOptions: await applySessionConfig(session, input) };
 };

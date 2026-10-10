@@ -6,24 +6,28 @@ import {
 import type { Database } from '@repo/db';
 import { listBranches } from '@repo/git';
 import { createRejectionCounter } from '@repo/machine-log';
-import { publicProcedure, routerFactory } from '../../rpc';
+import { publicProcedure, router, routerFactory } from '../../rpc';
 import { readProjects, readProjectPath } from './project';
 
-const createProjectList = (
-  database: Database,
-): (() => Promise<ProjectsListOutput>) => {
+type ProjectsDeps = { database: Database };
+
+const createProjectsReader = ({
+  database,
+}: ProjectsDeps): (() => Promise<ProjectsListOutput>) => {
   const rejections = createRejectionCounter('projects');
   return () => readProjects(database, rejections);
 };
 
-export const createProjectsRouter = routerFactory((database: Database) => ({
-  branches: publicProcedure
-    .input(ProjectsBranchesInput)
-    .output(ProjectsBranchesOutput)
-    .query(({ input }): Promise<ProjectsBranchesOutput> =>
-      listBranches(readProjectPath(database, input.projectId)),
-    ),
-  list: publicProcedure
-    .output(ProjectsListOutput)
-    .query(createProjectList(database)),
-}));
+export const createProjectsRouter = routerFactory((deps: ProjectsDeps) =>
+  router({
+    branches: publicProcedure
+      .input(ProjectsBranchesInput)
+      .output(ProjectsBranchesOutput)
+      .query(({ input }): Promise<ProjectsBranchesOutput> =>
+        listBranches(readProjectPath(deps.database, input.projectId)),
+      ),
+    list: publicProcedure
+      .output(ProjectsListOutput)
+      .query(createProjectsReader(deps)),
+  }),
+);

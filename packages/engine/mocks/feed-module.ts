@@ -2,7 +2,11 @@ import type { Database } from '@repo/db';
 import type { ScriptedScenario } from '@repo/mocks/agent/scripted-scenario';
 import { createActor } from 'xstate';
 import { type AppRouter, createAppRouter } from '../src/engine/router';
-import { createAppRouterDeps } from '../src/engine/router-deps';
+import {
+  type AppRouterInput,
+  createAppRouterDeps,
+  createFeedSources,
+} from '../src/engine/router-deps';
 import { findMachineActor } from '../src/lib/machine-actor';
 import {
   feedMachine,
@@ -10,8 +14,6 @@ import {
   readWrittenRow,
   type FeedActorRef,
 } from '../src/services/feed';
-import { createSessionSnapshotWatcher } from '../src/services/sessions';
-import { sessionActorId, sessionMachine } from '../src/services/sessions';
 import { databaseWriterId, writerMachine } from '../src/storage';
 import { waitForAcpSessionIdle } from './acp-feed';
 import { startEngineTestHost } from './engine';
@@ -83,38 +85,31 @@ export const startFeedModuleTestHost = async ({
   return { ...host, feed, agent: input.agent };
 };
 
+const feedModuleRouterInput = (
+  host: Awaited<ReturnType<typeof startEngineTestHost>>,
+  signal: AbortSignal,
+): AppRouterInput => ({
+  database: host.database,
+  sessions: host.sessionRegistry,
+  databaseWriter: host.databaseWriter,
+  blobsFolder: host.blobsFolder,
+  version: '1.2.3',
+  startedAt: '2026-10-03T00:00:00.000Z',
+  sessionCommandSignal: signal,
+  syncSupervisor: host.engine.system.get('syncSupervisor'),
+});
+
+// The router reads the module's own feed actor for session-1.
 export const createFeedModuleCaller = (
   host: Awaited<ReturnType<typeof startEngineTestHost>>,
   feed: FeedActorRef | undefined,
   signal: AbortSignal,
 ): ReturnType<AppRouter['createCaller']> => {
-  const deps = createAppRouterDeps({
-    database: host.database,
-    sessions: host.sessionRegistry,
-    databaseWriter: host.databaseWriter,
-    blobsFolder: host.blobsFolder,
-    version: '1.2.3',
-    startedAt: '2026-10-03T00:00:00.000Z',
-    sessionCommandSignal: signal,
-    syncSupervisor: host.engine.system.get('syncSupervisor'),
-  });
+  const input = feedModuleRouterInput(host, signal);
+  const sources = createFeedSources(input);
   const findFeed = (sessionId: string): FeedActorRef | undefined =>
-    sessionId === 'session-1' && feed ? feed : deps.feed.findFeed(sessionId);
-  const feedDeps = { ...deps.feed, findFeed };
-  return createAppRouter({
-    ...deps,
-    feed: {
-      ...feedDeps,
-      watchSessionSnapshot: createSessionSnapshotWatcher({
-        ...feedDeps,
-        findSession: (sessionId) =>
-          findMachineActor(
-            host.engine.system,
-            sessionActorId(sessionId),
-            sessionMachine,
-          ),
-        sessions: host.sessionRegistry,
-      }),
-    },
-  }).createCaller({}, { signal });
+    sessionId === 'session-1' && feed ? feed : sources.findFeed(sessionId);
+  return createAppRouter(
+    createAppRouterDeps(input, { ...sources, findFeed }),
+  ).createCaller({}, { signal });
 };

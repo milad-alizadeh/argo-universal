@@ -1067,6 +1067,25 @@
                 "message": "The Engine and Supervisor never import client or an App."
               },
               {
+                "group": [
+                  "../feed/**",
+                  "**/services/feed/**",
+                  "../sessions/**",
+                  "**/services/sessions/**",
+                  "../agents/**",
+                  "**/services/agents/**",
+                  "../blob/**",
+                  "**/services/blob/**",
+                  "../projects/**",
+                  "**/services/projects/**",
+                  "!../*/index",
+                  "!../*/index.ts",
+                  "!**/services/*/index",
+                  "!**/services/*/index.ts"
+                ],
+                "message": "Import another Engine domain through its index.ts face."
+              },
+              {
                 "group": ["**/engine/**"],
                 "message": "A module sits below the Engine composition, so it never imports engine/."
               }

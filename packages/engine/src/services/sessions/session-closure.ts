@@ -1,4 +1,4 @@
-import type { SessionCloseOutput } from '@repo/contracts';
+import type { SessionCancelOutput, SessionCloseOutput } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import { waitFor } from 'xstate';
 import type { SessionRouterDeps } from './router-deps';
@@ -19,11 +19,11 @@ const isClosing = (actor: SessionActorRef): boolean => {
 };
 
 export const closeSession = async (
-  context: Pick<SessionRouterDeps, 'sessions' | 'sessionCommandSignal'>,
+  deps: Pick<SessionRouterDeps, 'sessions' | 'sessionCommandSignal'>,
   sessionId: string,
 ): Promise<SessionCloseOutput> => {
-  validateSessionCommandAdmission(context);
-  const actor = requireLiveSessionActor(context.sessions.system, sessionId);
+  validateSessionCommandAdmission(deps);
+  const actor = requireLiveSessionActor(deps.sessions.system, sessionId);
   if (!isClosing(actor)) sendSessionCommand(actor, { type: 'session.close' });
   const outcome = await waitFor(
     actor,
@@ -37,5 +37,16 @@ export const closeSession = async (
       code: 'INTERNAL_SERVER_ERROR',
       message: outcome.context.failure,
     });
+  return {};
+};
+
+export const cancelSession = (
+  deps: Pick<SessionRouterDeps, 'sessions' | 'sessionCommandSignal'>,
+  sessionId: string,
+): SessionCancelOutput => {
+  validateSessionCommandAdmission(deps);
+  sendSessionCommand(requireLiveSessionActor(deps.sessions.system, sessionId), {
+    type: 'session.cancel',
+  });
   return {};
 };
