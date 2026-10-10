@@ -9,7 +9,7 @@ import {
 } from './section-root-view';
 
 const meta = {
-  title: 'screens/SectionRootScreen',
+  title: 'Screens/SectionRootScreen',
   component: SectionRootView,
   parameters: { screenPreview: true },
   args: { phone: null, page: null },
