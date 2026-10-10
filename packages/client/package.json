@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@expo/ui": "catalog:",
+    "@gorhom/bottom-sheet": "catalog:",
     "@legendapp/list": "catalog:",
     "@react-native-community/slider": "catalog:",
     "@repo/contracts": "workspace:*",
