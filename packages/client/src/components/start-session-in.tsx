@@ -203,7 +203,7 @@ export function ProjectPicker({
             onChangeText={setQuery}
             autoCapitalize="none"
             autoCorrect={false}
-            className="h-5 sm:h-5 flex-1 border-0 bg-transparent dark:bg-transparent p-0 px-0 type-control shadow-none web:focus-visible:ring-0"
+            className="h-5 sm:h-5 flex-1 rounded-none border-0 bg-transparent dark:bg-transparent p-0 px-0 type-control shadow-none web:focus-visible:ring-0"
           />
         </View>
       </View>
