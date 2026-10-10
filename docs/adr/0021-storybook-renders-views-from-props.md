@@ -16,7 +16,7 @@ It amends [ADR-0009](0009-screens-live-in-the-client-package.md): screens still 
 
 - Every view's loading, empty, error and disconnected states are props stories.
 - A section screen that embeds a connected screen takes it as a slot; its story passes a view.
-- Stories and everything under a feature's `components/` may not import tRPC, TanStack Query, the Connection's tRPC client or a data hook. Data hooks are named `use-*-query` or listed in the lint rule. oxlint enforces this.
+- Stories and everything under a feature's `components/` may not import tRPC, TanStack Query, the Connection's tRPC client or a data hook. Data hooks are named `use-*-query` or listed in the lint rule. oxlint enforces this in each feature as Spec 0011 moves it.
 - The Storybook harness (preview config, decorators, `each-layout`, `settle-viewport`, `Variations`, `RequestFrame`, theme) is exported as `@repo/client/storybook`, apart from the mock data in `@repo/client/mocks`. A fixture that one story uses lives beside that story.
 - The custom Agent screen has no view; its form gets the stories.
 

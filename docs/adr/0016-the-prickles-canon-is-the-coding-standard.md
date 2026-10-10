@@ -37,7 +37,7 @@ Where the canon cannot apply as written, these are the recorded applications (ow
 
    The accepted exceptions are `millisecondsPerSecond` defined once per package, and the Composer importing the Plan proposal card from the requests feature for its card swap (Spec 0006, Owner #17).
 
-   oxlint enforces the import direction with `no-restricted-imports` blocks in `tooling/oxlint/argo.json`; add a block when a tier folder is added. When to hoist and whether a name belongs to the product stay with code review, as A2 and TA1 leave them.
+   oxlint enforces the import direction with `no-restricted-imports` blocks in `tooling/oxlint/argo.json`; add a block when a tier folder is added. Spec 0011 moves the folders and their blocks ticket by ticket, so CI stays green. When to hoist and whether a name belongs to the product stay with code review, as A2 and TA1 leave them.
 
 10. **Thin Session handlers.** A5 permits the Session tRPC procedure to resolve its actor, apply the current admission checks, send one validated event and return the existing acknowledgement (Spec 0008, owner, 2026-10-08). This routing work stays beside the Session domain. Substantive rules, persistence and native lifecycle belong to domain operations and machines; there is no mandatory forwarding service or actor request/reply protocol.
 
