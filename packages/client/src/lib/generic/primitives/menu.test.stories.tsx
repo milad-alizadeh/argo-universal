@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { expect, fn, waitFor, within } from 'storybook/test';
+import { layoutWidths } from '../each-layout';
 import { settleViewport } from '../settle-viewport';
 import { Button } from './button';
 import { Menu } from './menu';
@@ -99,8 +100,8 @@ function keyboardSelection(width: number): Story {
   };
 }
 
-export const KeyboardSelectionWide = keyboardSelection(1440);
-export const KeyboardSelectionPhone = keyboardSelection(390);
+export const KeyboardSelectionWide = keyboardSelection(layoutWidths.wide);
+export const KeyboardSelectionPhone = keyboardSelection(layoutWidths.phone);
 
 function pointerSelection(width: number): Story {
   return {
@@ -143,7 +144,7 @@ function disabledTrigger(width: number): Story {
   };
 }
 
-export const PointerSelectionWide = pointerSelection(1440);
-export const PointerSelectionPhone = pointerSelection(390);
-export const DisabledWide = disabledTrigger(1440);
-export const DisabledPhone = disabledTrigger(390);
+export const PointerSelectionWide = pointerSelection(layoutWidths.wide);
+export const PointerSelectionPhone = pointerSelection(layoutWidths.phone);
+export const DisabledWide = disabledTrigger(layoutWidths.wide);
+export const DisabledPhone = disabledTrigger(layoutWidths.phone);
