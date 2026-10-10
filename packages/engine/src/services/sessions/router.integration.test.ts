@@ -1,6 +1,7 @@
 import type { AgentReady, VendorCommand } from '@repo/agents';
 import {
   permissionOptions,
+  ToolCallUpdate,
   type SessionSnapshot,
   type SessionAnswerElicitationInput,
   type SessionSetConfigOptionInput,
@@ -17,6 +18,7 @@ import { startEngineTestHost } from '#mocks/engine';
 
 const alreadyAnswered = 'already answered';
 const permissionAnswer = 'agent.answerPermission';
+const runCommand = 'Run command';
 
 async function readSessionSnapshot(
   subscribeToFeed: Awaited<
@@ -27,6 +29,26 @@ async function readSessionSnapshot(
   for await (const event of events)
     if (event.type === 'snapshot') return event.snapshot;
   throw new Error('No Session snapshot');
+}
+
+// The first Permission outcome the Feed streams for the `current` Tool call.
+async function readPermissionOutcome(
+  subscribeToFeed: Awaited<
+    ReturnType<typeof startEngineTestHost>
+  >['caller']['feed']['subscribe'],
+): Promise<unknown> {
+  const events = await subscribeToFeed({ sessionId: 'session-1', after: null });
+  for await (const event of events) {
+    let meta: unknown;
+    if (event.type === 'row.upsert' && event.row.id === 'current')
+      meta = event.row._meta;
+    if (event.type === 'row.patch' && event.id === 'current')
+      meta = event.set._meta;
+    const outcome =
+      ToolCallUpdate.shape._meta.safeParse(meta).data?.argo?.permissionOutcome;
+    if (outcome) return outcome;
+  }
+  throw new Error('No Permission outcome');
 }
 
 async function startPromptedSession(
@@ -68,7 +90,7 @@ async function startPermissionRequestSession(
     type: 'agent.permissionRequested',
     request: {
       toolCallId: 'current',
-      title: 'Run command',
+      title: runCommand,
       options: permissionOptions,
     },
   });
@@ -108,6 +130,48 @@ it('preserves the current Permission option and feedback when answering', async 
       message: 'Use a safer command',
     }),
   );
+});
+
+it('keeps the chosen native option on its Tool call in the Feed', async (): Promise<void> => {
+  const host = await startPromptedSession();
+  host.stream.send({
+    type: 'agent.feed',
+    change: {
+      type: 'upsert',
+      update: {
+        id: 'current',
+        toolCallId: 'current',
+        sessionUpdate: 'tool_call_update',
+        state: 'open',
+        title: runCommand,
+        kind: 'execute',
+        status: 'pending',
+        content: [],
+      },
+    },
+  });
+  host.stream.send({
+    type: 'agent.permissionRequested',
+    request: {
+      toolCallId: 'current',
+      title: runCommand,
+      options: permissionOptions,
+    },
+  });
+  const requestId = (await readSessionSnapshot(host.caller.feed.subscribe))
+    .pendingPermission?.requestId;
+  if (!requestId) throw new Error('No Permission request');
+  await host.caller.session.answerPermission({
+    sessionId: 'session-1',
+    requestId,
+    optionId: 'reject_once',
+  });
+  expect(await readPermissionOutcome(host.caller.feed.subscribe)).toEqual({
+    outcome: 'selected',
+    optionId: 'reject_once',
+    name: 'Deny',
+    kind: 'reject_once',
+  });
 });
 
 it('rejects an already answered Permission', async (): Promise<void> => {

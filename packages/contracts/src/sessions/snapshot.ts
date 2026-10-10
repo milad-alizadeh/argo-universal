@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { sessionColumns, turnColumns } from '../columns';
+import { PermissionOptionKind } from '../feed/tool-call';
 import { ChangesSummary } from './changes';
 import { SessionInfo } from './list';
 import { SessionConfigOption } from './set-config-option';
@@ -19,15 +20,6 @@ export const ContextUsage = z.strictObject({
     .optional(),
 });
 export type ContextUsage = z.infer<typeof ContextUsage>;
-
-// ACP `PermissionOptionKind`.
-export const PermissionOptionKind = z.enum([
-  'allow_once',
-  'allow_always',
-  'reject_once',
-  'reject_always',
-]);
-export type PermissionOptionKind = z.infer<typeof PermissionOptionKind>;
 
 // ACP `PermissionOption`: the Agent names its own option ids.
 export const PermissionOption = z.strictObject({

@@ -18,6 +18,16 @@ type ToolInput = {
   acpSessionId: string;
   findRow: (id: string) => SessionUpdate | undefined;
 };
+// The Feed row of an ACP Session's Tool call.
+export const acpToolCallRowId = (
+  acpSessionId: string,
+  toolCallId: string,
+): string =>
+  createScopedFeedRowId({
+    acpSessionId,
+    kind: 'tool_call_update',
+    upstreamId: toolCallId,
+  });
 const createInitialToolRow = (id: string, toolCallId: string): ToolRow => ({
   id,
   toolCallId,
@@ -72,11 +82,10 @@ const setToolRowState = (tool: ToolRow): ToolRow => ({
       : 'open',
 });
 const readOrCreateToolRow = (toolInput: ToolInput): ToolRow => {
-  const id = createScopedFeedRowId({
-    acpSessionId: toolInput.acpSessionId,
-    kind: 'tool_call_update',
-    upstreamId: toolInput.update.toolCallId,
-  });
+  const id = acpToolCallRowId(
+    toolInput.acpSessionId,
+    toolInput.update.toolCallId,
+  );
   const previous = toolInput.findRow(id);
   return previous?.sessionUpdate === 'tool_call_update'
     ? previous

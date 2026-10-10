@@ -206,7 +206,9 @@
               "startedAt": 1791297380809,
               "permissionOutcome": {
                 "outcome": "selected",
-                "optionId": "allow_once"
+                "optionId": "allow_once",
+                "name": "Allow once",
+                "kind": "allow_once"
               }
             }
           }
@@ -1418,7 +1420,9 @@
               "startedAt": 1791297713337,
               "permissionOutcome": {
                 "outcome": "selected",
-                "optionId": "allow_once"
+                "optionId": "allow_once",
+                "name": "Allow once",
+                "kind": "allow_once"
               }
             }
           }

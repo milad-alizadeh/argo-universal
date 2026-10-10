@@ -14,7 +14,11 @@ import type {
 import { appFixtureAgentIds } from '@repo/mocks/agent/app-fixtures';
 import { describe, expect, it, vi } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
-import { waitForAcpSessionIdle, waitForAcpSnapshot } from '#mocks/acp-feed';
+import {
+  sendAcpFeedUpdates,
+  waitForAcpSessionIdle,
+  waitForAcpSnapshot,
+} from '#mocks/acp-feed';
 
 type PromptHandler = AgentRequestHandlersByMethod['session/prompt'];
 type AcpEngine = Awaited<ReturnType<typeof startAcpEngine>>;
@@ -141,6 +145,17 @@ const recordPermissionOutcomes =
     );
     return { stopReason: 'end_turn' };
   };
+const readPermissionOutcome = async (
+  host: AcpEngine,
+  sessionId: string,
+  toolCallId: string,
+): Promise<unknown> =>
+  (
+    await host.caller.feed.page({ sessionId, direction: 'tail', limit: 40 })
+  ).rows.find(
+    (row) =>
+      row.sessionUpdate === 'tool_call_update' && row.toolCallId === toolCallId,
+  )?._meta?.argo;
 const recordElicitationResults =
   (
     results: Map<string, CreateElicitationResponse>,
@@ -205,6 +220,31 @@ describe.each(appFixtureAgentIds)('%s Permission requests', (agent) => {
       new Map([['tool-a', { outcome: 'selected', optionId: alwaysAllow }]]),
     );
   });
+
+  it.each([
+    [alwaysAllow, 'Always allow edits', 'allow_always'],
+    [reject, 'Reject', 'reject_once'],
+  ])(
+    'the Feed keeps the name and kind of the chosen %s option on its Tool call',
+    async (optionId, name, kind) => {
+      const { host, sessionId } = await startSession(agent, async (request) => {
+        await sendAcpFeedUpdates(request, [
+          { sessionUpdate: 'tool_call', toolCallId: 'tool-a', title: 'Edit' },
+        ]);
+        return recordPermissionOutcomes(new Map(), ['tool-a'])(request);
+      });
+      const pending = await waitForPermission(host, sessionId);
+      await host.caller.session.answerPermission({
+        sessionId,
+        requestId: pending.requestId,
+        optionId,
+      });
+      await waitForAcpSessionIdle(host, sessionId);
+      expect(await readPermissionOutcome(host, sessionId, 'tool-a')).toEqual({
+        permissionOutcome: { outcome: 'selected', optionId, name, kind },
+      });
+    },
+  );
 
   it('an answer in one Session never settles a request in another', async () => {
     const outcomes: Outcomes = new Map();

@@ -12,6 +12,7 @@ import { RequestFrame } from '../../mocks/request-preview';
 import { settleViewport } from '../../mocks/settle-viewport';
 import { toFeedView } from '../feed/to-feed-view';
 import { FeedItem } from './feed-item';
+import { PermissionOutcome } from './permission-outcome';
 import { PermissionRequest } from './permission-request';
 import galleryMeta, { Overview as Gallery } from './permission-request.stories';
 
@@ -267,6 +268,109 @@ export const FirstAgentOutcomePhone = permissionFeed(390, 0, true);
 export const FirstAgentOutcomeWide = permissionFeed(1440, 0, true);
 export const SecondAgentOutcomePhone = permissionFeed(390, 1, true);
 export const SecondAgentOutcomeWide = permissionFeed(1440, 1, true);
+
+// An ACP Agent names its own options: the answered recording with an option the Agent named.
+function chosenOptionFeed(
+  width: number,
+  recording: number,
+  option: { name: string; kind: 'allow_always' | 'reject_always' },
+): Story {
+  const mock = permissionMocks[recording];
+  if (!mock) throw new Error('Permission coverage needs both #54 recordings.');
+  const rows = mock.answered.rows.map((row) =>
+    row.sessionUpdate === 'tool_call_update' &&
+    row._meta?.argo?.permissionOutcome
+      ? {
+          ...row,
+          _meta: {
+            ...row._meta,
+            argo: {
+              ...row._meta.argo,
+              permissionOutcome: {
+                outcome: 'selected' as const,
+                optionId: `${option.kind}-option`,
+                ...option,
+              },
+            },
+          },
+        }
+      : row,
+  );
+  const groups = toFeedView(rows, mock.answered.snapshot).items.filter(
+    (item) => item.type === 'group',
+  );
+  return {
+    render: () => (
+      <RequestFrame>
+        {groups.map((item) => (
+          <FeedItem key={item.id} item={item} imageUrl={() => ''} />
+        ))}
+      </RequestFrame>
+    ),
+    play: async ({ canvas }) => {
+      await settleViewport(width);
+      await expect(
+        canvas.getByText(`You chose ${option.name}`, { exact: true }),
+      ).toBeVisible();
+      await expect(
+        canvas.queryByText(allowedOnceAnswer),
+      ).not.toBeInTheDocument();
+    },
+  };
+}
+const chosenAlwaysAllow = {
+  name: 'Always Allow',
+  kind: 'allow_always',
+} as const;
+const chosenNeverAllow = {
+  name: 'Never allow',
+  kind: 'reject_always',
+} as const;
+export const FirstAgentAlwaysAllowPhone = chosenOptionFeed(
+  390,
+  0,
+  chosenAlwaysAllow,
+);
+export const FirstAgentAlwaysAllowWide = chosenOptionFeed(
+  1440,
+  0,
+  chosenAlwaysAllow,
+);
+export const SecondAgentAlwaysAllowPhone = chosenOptionFeed(
+  390,
+  1,
+  chosenAlwaysAllow,
+);
+export const SecondAgentAlwaysAllowWide = chosenOptionFeed(
+  1440,
+  1,
+  chosenAlwaysAllow,
+);
+export const FirstAgentNeverAllowWide = chosenOptionFeed(
+  1440,
+  0,
+  chosenNeverAllow,
+);
+export const SecondAgentNeverAllowWide = chosenOptionFeed(
+  1440,
+  1,
+  chosenNeverAllow,
+);
+
+// Rows kept before the outcome carried a name and kind still read as their native option.
+export const StoredNativeOutcome: Story = {
+  render: () => (
+    <RequestFrame>
+      <PermissionOutcome
+        outcome={{ outcome: 'selected', optionId: 'allow_once' }}
+      />
+    </RequestFrame>
+  ),
+  play: async ({ canvas }) => {
+    await settleViewport(1440);
+    await expect(canvas.getByText(allowedOnceAnswer)).toBeVisible();
+  },
+};
 
 function galleryFixture(mock: RequestMock, width: number): Story {
   const props = permissionProps({ mock });

@@ -1,4 +1,7 @@
-import type { PermissionOutcome as Outcome } from '@repo/contracts';
+import {
+  type PermissionOutcome as Outcome,
+  PermissionOptionKind,
+} from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/text';
@@ -9,18 +12,34 @@ export interface PermissionOutcomeProps {
   message?: string;
 }
 
+// The kind of option the user chose; rows written before the kind was kept carry only a native option id, which is its kind.
+export function chosenPermissionKind(
+  outcome: Outcome | undefined,
+): PermissionOptionKind | undefined {
+  if (outcome?.outcome !== 'selected') return undefined;
+  return outcome.kind ?? PermissionOptionKind.safeParse(outcome.optionId).data;
+}
+
+const outcomeLabel = (
+  kind: PermissionOptionKind,
+  name: string | undefined,
+  message: string | undefined,
+): string | undefined => {
+  if (kind === 'allow_once') return 'You allowed this once';
+  if (kind === 'reject_once')
+    return message ? `You denied: “${message}”` : 'You denied';
+  return name && `You chose ${name}`;
+};
+
 export function PermissionOutcome({
   outcome,
   message,
 }: PermissionOutcomeProps): React.JSX.Element | null {
-  const allowed =
-    outcome.outcome === 'selected' && outcome.optionId === 'allow_once';
-  if (
-    outcome.outcome === 'cancelled' ||
-    (!allowed && outcome.optionId !== 'reject_once')
-  )
-    return null;
-  const label = message ? `You denied: “${message}”` : 'You denied';
+  const kind = chosenPermissionKind(outcome);
+  if (outcome.outcome !== 'selected' || !kind) return null;
+  const label = outcomeLabel(kind, outcome.name, message);
+  if (!label) return null;
+  const allowed = kind === 'allow_once' || kind === 'allow_always';
   return (
     <View className="flex-row items-start gap-1.5">
       <View
@@ -33,7 +52,7 @@ export function PermissionOutcome({
         />
       </View>
       <Text className="min-w-0 flex-1 type-body text-muted-foreground">
-        {allowed ? 'You allowed this once' : label}
+        {label}
       </Text>
     </View>
   );

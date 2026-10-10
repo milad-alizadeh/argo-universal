@@ -30,6 +30,7 @@ export type {
 } from './writer-agent-catalog';
 export type { CatalogSqlJob, SyncJobWrite } from './writer-catalog-sync';
 export { publishTurnContent } from './publication';
+export { acpToolCallRowId } from './updates/tools';
 export { readUnaddressedPlan } from './unaddressed-plan';
 export { databaseWriterId, findDatabaseWriter } from './writer-system';
 

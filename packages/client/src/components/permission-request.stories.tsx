@@ -22,6 +22,13 @@ type GalleryArgs = ComponentProps<typeof PermissionRequest> & {
   >['kind'];
 };
 
+const deniedOutcome = {
+  outcome: 'selected',
+  optionId: 'reject_once',
+  name: 'Deny',
+  kind: 'reject_once',
+} as const;
+
 const meta = {
   title: 'Sessions/PermissionRequest',
   component: PermissionRequest,
@@ -118,14 +125,32 @@ export const Overview = {
               ))}
           </Variation>
           <Variation label="Denied">
-            <PermissionOutcome
-              outcome={{ outcome: 'selected', optionId: 'reject_once' }}
-            />
+            <PermissionOutcome outcome={deniedOutcome} />
           </Variation>
           <Variation label="Denied with a message">
             <PermissionOutcome
-              outcome={{ outcome: 'selected', optionId: 'reject_once' }}
+              outcome={deniedOutcome}
               message="Don't force-push, open a new branch instead."
+            />
+          </Variation>
+          <Variation label="Chose another allow option">
+            <PermissionOutcome
+              outcome={{
+                outcome: 'selected',
+                optionId: 'allow-always',
+                name: 'Always Allow',
+                kind: 'allow_always',
+              }}
+            />
+          </Variation>
+          <Variation label="Chose another reject option">
+            <PermissionOutcome
+              outcome={{
+                outcome: 'selected',
+                optionId: 'reject-always',
+                name: 'Never allow',
+                kind: 'reject_always',
+              }}
             />
           </Variation>
         </Variations>
