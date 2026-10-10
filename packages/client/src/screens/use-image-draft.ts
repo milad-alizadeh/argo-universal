@@ -1,9 +1,10 @@
 import type { BlobRef, SessionNewInput } from '@repo/contracts';
+import { useMutation } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 import type { ComposerDraft } from '../components/composer';
+import { useTRPC } from '../trpc/context';
 import { draftPrompt } from './draft-prompt';
 import { pickImages } from './pick-images';
-import { useBlobUpload } from './use-blob-upload';
 
 export interface ImageDraft {
   draft: ComposerDraft;
@@ -13,8 +14,11 @@ export interface ImageDraft {
     sent: ComposerDraft,
   ) => Promise<SessionNewInput['prompt'] | undefined>;
   clearDraft: () => void;
-  imageSelectionError: string | undefined;
-  imageUpload: ReturnType<typeof useBlobUpload>;
+  uploading: boolean;
+  attachmentError:
+    | { kind: 'selection' | 'upload'; message: string }
+    | undefined;
+  clearUploadError: () => void;
 }
 
 export const imageSelectionFailureMessage =
@@ -28,8 +32,13 @@ export function useImageDraft(): ImageDraft {
   const [imageSelectionError, setImageSelectionError] = useState<string>();
   // The file behind each attached image, by its id in the draft.
   const imageFiles = useRef(new Map<string, Blob>());
-  // All of a draft's images upload together, so `imageUpload` reports them as one.
-  const imageUpload = useBlobUpload();
+  const upload = useTRPC().blob.upload.mutationOptions().mutationFn;
+  const imageUpload = useMutation({
+    mutationFn: (forms: FormData[], context) => {
+      if (!upload) throw new Error('Blob upload mutation function is missing');
+      return Promise.all(forms.map((form) => upload(form, context)));
+    },
+  });
 
   async function attachImages(): Promise<void> {
     try {
@@ -54,7 +63,7 @@ export function useImageDraft(): ImageDraft {
     setDraft(next);
   }
 
-  // Uploads the images at once, in draft order; undefined when any upload fails, which `imageUpload.error` shows.
+  // Uploads the images at once, in draft order; undefined when any upload fails.
   function uploadImages(sent: ComposerDraft): Promise<BlobRef[] | undefined> {
     const forms = sent.images.map((image) => {
       const file = imageFiles.current.get(image.id);
@@ -71,6 +80,7 @@ export function useImageDraft(): ImageDraft {
   async function uploadDraftAsPrompt(
     sent: ComposerDraft,
   ): Promise<SessionNewInput['prompt'] | undefined> {
+    imageUpload.reset();
     const images = await uploadImages(sent);
     return images && draftPrompt(sent.text, images);
   }
@@ -84,7 +94,21 @@ export function useImageDraft(): ImageDraft {
       changeDraft(emptyDraft);
       setImageSelectionError(undefined);
     },
-    imageSelectionError,
-    imageUpload,
+    uploading: imageUpload.isPending,
+    attachmentError: toAttachmentError(imageSelectionError, imageUpload.error),
+    clearUploadError: imageUpload.reset,
   };
+}
+
+function toAttachmentError(
+  selection: string | undefined,
+  upload: Error | null,
+): ImageDraft['attachmentError'] {
+  if (selection) return { kind: 'selection', message: selection };
+  if (upload)
+    return {
+      kind: 'upload',
+      message: `Couldn't upload the image. ${upload.message}`,
+    };
+  return undefined;
 }

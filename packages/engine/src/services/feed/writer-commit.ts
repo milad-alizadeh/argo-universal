@@ -1,7 +1,8 @@
-export type WriterCommit = Pick<
-  PromiseWithResolvers<void>,
-  'resolve' | 'reject'
-> & { waitForRetry?: true };
+export type WriterCommit = {
+  resolve: () => void;
+  reject: (error: unknown, retrying?: boolean) => void;
+  waitForRetry?: true;
+};
 export type PendingWriterCommit = { through: number; committed: WriterCommit };
 
 export const acknowledgeWrittenPrefix = (
@@ -22,7 +23,7 @@ export const rejectPendingCommits = (
 ): PendingWriterCommit[] => {
   for (const entry of pendingCommits)
     if (!retrying || !entry.committed.waitForRetry)
-      entry.committed.reject(error);
+      entry.committed.reject(error, retrying);
   return retrying
     ? pendingCommits.filter((entry) => entry.committed.waitForRetry)
     : [];

@@ -1,4 +1,3 @@
-import type { AgentsCatalogOutput } from '@repo/contracts';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
@@ -51,7 +50,7 @@ function CatalogHeading({ catalog }: CatalogViewProps): React.JSX.Element {
         Agents
       </Text>
       <Text className="type-secondary flex-1">
-        {catalog.query.data?.agents.length}
+        {catalog.catalog?.agents.length}
       </Text>
       <RefreshCatalog catalog={catalog} />
     </View>
@@ -78,15 +77,11 @@ function CatalogResult({
   catalog,
   search,
 }: CatalogResultProps): React.JSX.Element {
-  if (catalog.query.data)
+  if (catalog.catalog)
     return (
-      <AgentCatalog
-        catalog={catalogResult(catalog.query.data, catalog.syncError)}
-        search={search}
-        retry={catalog}
-      />
+      <AgentCatalog catalog={catalog.catalog} search={search} retry={catalog} />
     );
-  if (catalog.query.isError) return <CatalogError catalog={catalog} />;
+  if (catalog.error) return <CatalogError catalog={catalog} />;
   return <CatalogLoading />;
 }
 
@@ -98,18 +93,6 @@ function CatalogLoading(): React.JSX.Element {
   );
 }
 
-function catalogResult(
-  saved: AgentsCatalogOutput,
-  error: CatalogState['syncError'],
-): AgentsCatalogOutput {
-  if (!error) return saved;
-  return {
-    ...saved,
-    status: saved.fetchedAt === null ? 'unavailable' : 'stale',
-    error: error.message,
-  };
-}
-
 function CatalogError({
   catalog,
 }: {
@@ -118,7 +101,7 @@ function CatalogError({
   return (
     <LoadError
       title="Could not load the catalog"
-      description={catalog.query.error?.message ?? 'The Server did not answer'}
+      description={catalog.error?.message ?? 'The Server did not answer'}
       onRetry={catalog.refresh}
     />
   );
