@@ -278,9 +278,6 @@ catalogs:
     '@trpc/tanstack-react-query':
       specifier: 11.19.0
       version: 11.19.0
-    '@types/culori':
-      specifier: 4.0.1
-      version: 4.0.1
     '@types/node':
       specifier: 24.19.1
       version: 24.19.1
@@ -314,9 +311,6 @@ catalogs:
     clsx:
       specifier: 2.1.1
       version: 2.1.1
-    culori:
-      specifier: 4.0.2
-      version: 4.0.2
     diff:
       specifier: 9.0.0
       version: 9.0.0
@@ -954,9 +948,6 @@ importers:
       '@repo/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@repo/uniwind':
-        specifier: workspace:*
-        version: link:../../tooling/uniwind
       '@rn-primitives/checkbox':
         specifier: 'catalog:'
         version: 1.5.2(@types/react-dom@19.2.3(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.3(react@19.2.3))(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.3(patch_hash=48397f9a14456cf40a83ea7160cae7c1c36526b7cc206189b13769cb006e55f1)(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.87.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.2.18)(react@19.2.3)(supports-color@8.1.1))(react@19.2.3)
@@ -1296,15 +1287,7 @@ importers:
 
   tooling/typescript: {}
 
-  tooling/uniwind:
-    dependencies:
-      culori:
-        specifier: 'catalog:'
-        version: 4.0.2
-    devDependencies:
-      '@types/culori':
-        specifier: 'catalog:'
-        version: 4.0.1
+  tooling/uniwind: {}
 
   tooling/vitest:
     dependencies:
@@ -4694,9 +4677,6 @@ packages:
 
   '@types/chai@5.2.3':
     resolution: {integrity: sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA==}
-
-  '@types/culori@4.0.1':
-    resolution: {integrity: sha512-43M51r/22CjhbOXyGT361GZ9vncSVQ39u62x5eJdBQFviI8zWp2X5jzqg7k4M6PVgDQAClpy2bUe2dtwEgEDVQ==}
 
   '@types/deep-eql@4.0.2':
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
@@ -12382,8 +12362,6 @@ snapshots:
     dependencies:
       '@types/deep-eql': 4.0.2
       assertion-error: 2.0.1
-
-  '@types/culori@4.0.1': {}
 
   '@types/deep-eql@4.0.2': {}
 

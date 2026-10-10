@@ -13,7 +13,7 @@ import { UserMessage } from './user-message';
 
 const meta = {
   title: 'Tests/UserMessage',
-  globals: { themeId: 'default', mode: 'light' },
+  globals: { mode: 'light' },
   component: UserMessage,
   // The Feed gives every row its full width.
   decorators: [

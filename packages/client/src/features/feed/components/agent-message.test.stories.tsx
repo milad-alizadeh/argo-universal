@@ -16,7 +16,7 @@ const streamingCaretId = 'streaming-caret';
 
 const meta = {
   title: 'Tests/AgentMessage',
-  globals: { themeId: 'default', mode: 'light' },
+  globals: { mode: 'light' },
   component: AgentMessage,
   // The Feed gives every row its full width.
   decorators: [

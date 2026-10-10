@@ -1,4 +1,3 @@
-import { type ThemeId, themes } from '@repo/uniwind/themes';
 import { PortalHost } from '@rn-primitives/portal';
 import type * as React from 'react';
 import type { ReactNode } from 'react';
@@ -7,13 +6,13 @@ import { Platform, ScrollView, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Uniwind } from 'uniwind';
 import { BlobUrlContext } from './features/connection/trpc/blob-url';
-import { applyTheme } from './lib/generic/theme';
 import { cn } from './lib/generic/utils';
 import { recordedImageUrl } from './lib/product/feed-message.mocks';
 
 interface PreviewContext {
-  globals: { themeId?: string; mode?: string };
+  globals: { mode?: string };
   parameters: {
     standalonePreview?: boolean;
     previewPadding?: boolean;
@@ -28,22 +27,20 @@ const initialMetrics = {
 
 function ReusablesPreview({
   Story,
-  themeId,
   mode,
   standalone,
   padding,
   screen,
 }: {
   Story: ComponentType;
-  themeId: ThemeId;
   mode: 'light' | 'dark';
   standalone: boolean;
   padding: boolean;
   screen: boolean;
 }): React.JSX.Element {
   useLayoutEffect(() => {
-    applyTheme(themeId, Platform.OS === 'web' ? mode : 'system');
-  }, [themeId, mode]);
+    Uniwind.setTheme(Platform.OS === 'web' ? mode : 'system');
+  }, [mode]);
   let preview: ReactNode;
   if (screen) {
     preview = (
@@ -96,10 +93,6 @@ export function withReusablesPreview(
   return (
     <ReusablesPreview
       Story={Story}
-      themeId={
-        themes.find((theme) => theme.id === context.globals.themeId)?.id ??
-        'default'
-      }
       mode={context.globals.mode === 'dark' ? 'dark' : 'light'}
       standalone={context.parameters.standalonePreview === true}
       padding={context.parameters.previewPadding !== false}
