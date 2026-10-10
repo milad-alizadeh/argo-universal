@@ -4,7 +4,7 @@ import { ConnectionScreen } from './connection-screen';
 import { connectionScreenMocks } from './connection-screen.mocks';
 
 const meta = {
-  title: 'screens/ConnectionScreen',
+  title: 'Screens/ConnectionScreen',
   component: ConnectionScreen,
   parameters: { trpc: connectionScreenMocks },
 } satisfies Meta<typeof ConnectionScreen>;

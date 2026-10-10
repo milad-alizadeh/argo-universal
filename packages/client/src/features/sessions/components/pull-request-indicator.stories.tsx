@@ -3,7 +3,7 @@ import { Variation, Variations } from '../../../lib/generic/variations';
 import { PullRequestIndicator } from './pull-request-indicator';
 
 const meta = {
-  title: 'Shared/PullRequestIndicator',
+  title: 'Sessions/PullRequestIndicator',
   component: PullRequestIndicator,
   args: { number: 44, status: 'merged' },
 } satisfies Meta<typeof PullRequestIndicator>;

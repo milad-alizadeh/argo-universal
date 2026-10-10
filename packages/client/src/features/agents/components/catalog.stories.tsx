@@ -7,7 +7,7 @@ import { catalog, unavailableCatalog } from '../../../../mocks/agents-mock';
 import { AgentCatalog } from './catalog';
 
 const meta = {
-  title: 'Components/AgentCatalog',
+  title: 'Agents/AgentCatalog',
   component: AgentCatalog,
   args: { catalog, search: '', retry: { refresh: fn(), refreshing: false } },
   parameters: { screenPreview: true },

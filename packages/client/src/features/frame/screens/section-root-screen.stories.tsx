@@ -5,7 +5,7 @@ import { sessionListMocks } from '../../../../mocks/session-list-mock';
 import { SectionRootScreen } from './section-root-screen';
 
 const meta = {
-  title: 'screens/SectionRootScreen',
+  title: 'Screens/SectionRootScreen',
   component: SectionRootScreen,
   argTypes: {
     section: {
