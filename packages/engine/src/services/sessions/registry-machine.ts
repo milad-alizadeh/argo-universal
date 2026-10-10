@@ -10,6 +10,7 @@ import {
 } from 'xstate';
 import { agentProbeId, agentProbeMachine } from '../agents';
 import type { AcpResources, ResolveAgentLaunch } from '../agents';
+import { admitsExistingSession, admitsNewSession } from './agent-admission';
 import { createRegistrySessionInput } from './registry-session-input';
 import type { SessionCreationInput } from './session-data';
 import { type SessionActorRef, sessionMachine } from './session-machine';
@@ -125,11 +126,14 @@ export const registryMachine = setup({
     }),
   },
   guards: {
-    isRegisteredAgent: ({ context, event }): boolean =>
-      (event.type === createSessionEvent || event.type === 'sessions.open') &&
-      context.adapters.some(
-        (adapter): boolean => adapter.agent === event.agent,
-      ),
+    isRegisteredAgent: ({ context, event }): boolean => {
+      if (event.type === createSessionEvent)
+        return admitsNewSession(context, event.agent);
+      return (
+        event.type === 'sessions.open' &&
+        admitsExistingSession(context, event.agent)
+      );
+    },
     isSessionFailure: ({ event }): boolean =>
       'actorId' in event && event.actorId.startsWith('session:'),
     noSessions: ({ context }): boolean =>

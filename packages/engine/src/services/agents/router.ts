@@ -9,8 +9,11 @@ import { listAgents } from './agent-list';
 import { watchCommittedCatalogChanges } from './catalog/catalog-changes';
 import { readAgentCatalog } from './catalog/catalog-sql';
 import { requestAgentCatalogSync } from './catalog/sync-supervisor-machine';
+import { configurationProcedures } from './configuration/configuration-router';
+import { listCustomAgents } from './configuration/custom-agent-list';
 
 export const agentsRouter = router({
+  ...configurationProcedures,
   catalog: publicProcedure
     .input(AgentsCatalogInput)
     .query(({ ctx, input }): AgentsCatalogOutput =>
@@ -33,8 +36,8 @@ export const agentsRouter = router({
   list: publicProcedure
     .input(AgentsListInput)
     .output(AgentsListOutput)
-    .query(
-      ({ ctx: engineContext, input: request }): Promise<AgentsListOutput> =>
-        listAgents(engineContext.sessions, request),
-    ),
+    .query(async ({ ctx, input }): Promise<AgentsListOutput> => [
+      ...(await listAgents(ctx.sessions, input)),
+      ...(await listCustomAgents(ctx.database)),
+    ]),
 });

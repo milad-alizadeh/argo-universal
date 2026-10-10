@@ -61,13 +61,11 @@ export function ProjectSettingsScreen({
   );
 }
 
-export interface AgentSettingsScreenProps {
-  agent: string;
-}
-
-export function AgentSettingsScreen({
+export function AgentPlaceholder({
   agent,
-}: AgentSettingsScreenProps): React.JSX.Element {
+}: {
+  agent: string;
+}): React.JSX.Element {
   return (
     <Placeholder
       title="Agent"

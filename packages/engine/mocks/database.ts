@@ -1,8 +1,10 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { agentAdapters } from '@repo/agents';
 import { type Database, openDatabase } from '@repo/db';
-import { project, session } from '@repo/db/schema';
+import { agents, project, session } from '@repo/db/schema';
+import { notInArray } from 'drizzle-orm';
 import { onTestFinished, vi } from 'vitest';
 
 // A database in a new temp directory holding `project-1` and its Session `session-1`; `remove` closes and deletes it.
@@ -82,4 +84,20 @@ export function countDatabaseReads(database: Database): {
   const observed = vi.spyOn(database, 'select').mockImplementation(select);
   onTestFinished((): void => observed.mockRestore());
   return { database, metrics };
+}
+
+// Agent rows other than the native Agent identities every database starts with.
+export function readAddedAgentRows(
+  database: Database,
+): (typeof agents.$inferSelect)[] {
+  return database
+    .select()
+    .from(agents)
+    .where(
+      notInArray(
+        agents.id,
+        agentAdapters.map(({ agent }) => agent),
+      ),
+    )
+    .all();
 }

@@ -1,11 +1,11 @@
 import type {
   ClientConnection,
   InitializeResponse,
-  InitializeRequest,
 } from '@agentclientprotocol/sdk';
 import { createRejectionCounter } from '../../../lib/count-rejections';
 import { createAgentClient } from './client';
-import { openProtocolSession, sessionCapabilities } from './open-session';
+import { negotiateAcpInitialize } from './initialize';
+import { openProtocolSession } from './open-session';
 import { launchAcpProcess } from './process';
 import type {
   AcpProcess,
@@ -22,14 +22,6 @@ import { createAcpResponseReaders } from './response-readers';
 import { AcpResponseWrites } from './response-writes';
 import type { AcpRouting } from './routing';
 
-const initializeRequest: InitializeRequest = {
-  protocolVersion: 1,
-  clientCapabilities: {
-    plan: {},
-    session: { notices: {}, compaction: {} },
-    elicitation: { form: {} },
-  },
-};
 type Ready = {
   connection: ClientConnection;
   initialization: InitializeResponse;
@@ -68,7 +60,10 @@ export class AcpResourceConnection {
     });
     return {
       connection: this.connection,
-      initialization: await this.negotiate(this.connection),
+      initialization: await negotiateAcpInitialize(
+        this.connection.agent,
+        this.readers,
+      ),
     };
   }
   private createClientRequestHandlers(): ClientRequestHandlers {
@@ -82,17 +77,6 @@ export class AcpResourceConnection {
         this.writes,
       ),
     };
-  }
-  private async negotiate(
-    connection: ClientConnection,
-  ): Promise<InitializeResponse> {
-    const response = this.readers.initialize.parse(
-      await connection.agent.request<unknown>('initialize', initializeRequest),
-    );
-    const capabilities = sessionCapabilities(response);
-    if (!capabilities?.close)
-      throw new Error('Agent cannot close independent ACP sessions');
-    return response;
   }
   public observeResourceFailures(
     onResourceFailure: (error: unknown) => void,

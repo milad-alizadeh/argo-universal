@@ -4,8 +4,8 @@ import { View } from 'react-native';
 import { cn } from '#lib/utils';
 import { Checkbox } from '#primitives/checkbox';
 import { Input } from '#primitives/input';
-import { SelectMenu } from '#primitives/select-menu';
 import { Text } from '#primitives/text';
+import { SelectMenu } from '../primitives/select-menu';
 import {
   type ElicitationValue,
   elicitationChoices,

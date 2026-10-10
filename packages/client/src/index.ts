@@ -32,14 +32,15 @@ export { ConnectionScreen } from './screens/connection-screen';
 export { NewSessionScreen } from './screens/new-session-screen';
 export {
   AccountsScreen,
-  AgentSettingsScreen,
   AppearanceScreen,
   DevicesScreen,
   NotificationsScreen,
   ProjectSettingsScreen,
   ProjectsSettingsScreen,
 } from './screens/placeholder-screens';
+export { AgentSettingsScreen } from './screens/agents/agent-settings-screen';
 export { AgentsSettingsScreen } from './screens/agents/agents-settings-screen';
+export { CustomAgentScreen } from './screens/agents/custom-agent-screen';
 export { SectionRootScreen } from './screens/section-root-screen';
 export { SessionScreen } from './screens/session-screen';
 export { AppProviders } from './trpc/app-providers';

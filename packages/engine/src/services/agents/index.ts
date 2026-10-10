@@ -2,6 +2,11 @@ export { agentProbeMachine } from './agent-probe-machine';
 export { agentProbeId, findAgentProbe } from './agent-probe-system';
 
 export { agentsRouter } from './router';
+export {
+  isAgentDisabled,
+  readCustomDefinition,
+} from './configuration/configuration-sql';
+export { resolveCustomAgentLaunch } from './configuration/custom-launch';
 export { createAcpResources } from './acp/resources';
 export { createAcpResponseReaders } from './acp/response-readers';
 export type {

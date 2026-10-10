@@ -66,7 +66,8 @@ export function SettingsList({
         (destination.to === 'settings-projects' &&
           selectedDestination?.to === 'settings-project') ||
         (destination.to === 'settings-agents' &&
-          selectedDestination?.to === 'settings-agent'));
+          (selectedDestination?.to === 'settings-agent' ||
+            selectedDestination?.to === 'settings-agent-new')));
     let rowStatus: ReactNode = null;
     if (attention) {
       rowStatus = (
