@@ -37,11 +37,11 @@ import {
 import { closeSession } from './session-closure';
 import {
   sendSessionCommand,
+  submitSessionPrompt,
   validateSessionCommandAdmission,
 } from './session-command';
 import { createSession } from './session-creation';
 import { openReadySession } from './session-opening';
-import { submitSessionPrompt } from './session-submission';
 import { findSessionActor, requireLiveSessionActor } from './session-system';
 
 export const sessionRouter = router({

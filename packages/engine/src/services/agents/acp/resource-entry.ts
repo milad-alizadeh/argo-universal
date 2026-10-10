@@ -1,6 +1,6 @@
 import { createRejectionCounter } from '../../../lib/count-rejections';
-import { closeProtocolReservation } from './close-session';
 import {
+  closeProtocolReservation,
   releaseOpening,
   reserveOpening,
   watchWithdrawal,
