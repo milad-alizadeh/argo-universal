@@ -187,7 +187,7 @@
       --color-muted-foreground: hsl(0 0% 63.9%);
       --color-accent: hsl(0 0% 14.9%);
       --color-accent-foreground: hsl(0 0% 98%);
-      --color-destructive: hsl(0 70.9% 59.4%);
+      --color-destructive: var(--color-red-500);
       --color-destructive-foreground: var(--color-white);
       --color-border: hsl(0 0% 14.9%);
       --color-input: hsl(0 0% 14.9%);
