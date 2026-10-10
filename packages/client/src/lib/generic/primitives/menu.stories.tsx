@@ -27,7 +27,11 @@ function PermissionsMenu({
       onValueChange={setValue}
       disabled={disabled}
       trigger={
-        <Button variant="ghost" disabled={disabled}>
+        <Button
+          variant="ghost"
+          disabled={disabled}
+          className="android:h-auto android:min-h-10"
+        >
           <Text>{selected?.label}</Text>
         </Button>
       }

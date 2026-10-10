@@ -4,7 +4,7 @@ import {
   RNHostView,
   Text,
 } from '@expo/ui/jetpack-compose';
-import { selectable, width } from '@expo/ui/jetpack-compose/modifiers';
+import { defaultMinSize, selectable } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
@@ -91,7 +91,7 @@ function MenuChoice({
   return (
     <DropdownMenuItem
       modifiers={[
-        width(menuWidth),
+        defaultMinSize({ minWidth: menuWidth }),
         selectable(selected, onChoose, 'radioButton'),
       ]}
       elementColors={{

@@ -11,6 +11,19 @@ index 5a0433e22333e29720265e6c9d7a3f09e4feaf2a..3d6e54d16367d9cc872f8805ccdc1496
          android?: AndroidSymbol;
          web?: AndroidSymbol;
      };
+diff --git a/build/SymbolView.js b/build/SymbolView.js
+index 6b352b5bef63ede4877eee3a8ed2cae359c5ebdf..1d0da01ded8c93bf1d35b832295ab53be2ffb4ce 100644
+--- a/build/SymbolView.js
++++ b/build/SymbolView.js
+@@ -32,7 +32,7 @@ export function SymbolView(props) {
+     if (!loaded) {
+         return _jsx(View, { style: style });
+     }
+-    return (_jsx(View, { style: style, children: _jsx(Text, { style: {
++    return (_jsx(View, { style: style, children: _jsx(Text, { allowFontScaling: false, style: {
+                 fontFamily: font.name,
+                 color: props.tintColor ?? DEFAULT_SYMBOL_COLOR,
+                 fontSize: size,
 diff --git a/ios/SymbolView.swift b/ios/SymbolView.swift
 index d3209d17a4a0f91a2b6a18688a93e574a7da7d71..83c611794688e94b6c7f5172c46371a1f2585879 100644
 --- a/ios/SymbolView.swift
@@ -38,3 +51,15 @@ index acb6e0abb85dd9dbf3a3c48897b87380e792caae..7831f13f3b826baacfc22badcd033c0c
    /**
     * Fallback to render when a symbol for the given platform is not defined.
     */
+diff --git a/src/SymbolView.tsx b/src/SymbolView.tsx
+index 3df5fd5299da15f9e923c3fc0f0870bcca05be0e..e2f7498e9d84bde5bce2a76d54489a62a7b353ba 100644
+--- a/src/SymbolView.tsx
++++ b/src/SymbolView.tsx
+@@ -40,6 +40,7 @@ export function SymbolView(props: SymbolViewProps): JSX.Element {
+   return (
+     <View style={style}>
+       <Text
++        allowFontScaling={false}
+         style={{
+           fontFamily: font.name,
+           color: props.tintColor ?? DEFAULT_SYMBOL_COLOR,

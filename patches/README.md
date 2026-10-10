@@ -2,15 +2,15 @@
 
 ## @expo/ui@57.0.22
 
-`@expo__ui@57.0.22.patch` exposes DropdownMenu's `cornerRadius` through its published types and Compose props, then passes it to Material's native menu shape. Argo's Android Menu uses the approved 16dp radius. Menus without the prop retain Material's default shape.
+`@expo__ui@57.0.22.patch` exposes DropdownMenu's `cornerRadius` through its published types and Compose props, then passes it to Material's native menu shape. Argo's Android Menu uses the approved 16dp radius. Android autolinking compiles `expo-ui` from source so the Kotlin patch applies instead of linking the precompiled AAR. Menus without the prop retain Material's default shape.
 
 Remove this patch when the pinned Expo UI release ships the documented `cornerRadius` prop. It requires rebuilding the Android development client.
 
 ## expo-symbols@57.0.3
 
-`expo-symbols@57.0.3.patch` lets `SymbolView` on iOS fall back to `UIImage(named:)` when the name is not a system symbol, so it draws Argo's custom symbols from the app's asset catalog (ADR-0019). System symbols load exactly as before.
+`expo-symbols@57.0.3.patch` lets `SymbolView` on iOS fall back to `UIImage(named:)` when the name is not a system symbol, so it draws Argo's custom symbols from the app's asset catalog (ADR-0019). System symbols load exactly as before. The Android fallback renders its Material glyph without text scaling, so a 16dp icon stays inside its 16dp box at enlarged font settings; text labels still scale.
 
-Remove this patch when `expo-symbols` loads asset-catalog symbols itself. When upgrading `expo-symbols`, carry the one-line fallback into `ios/SymbolView.swift`.
+Remove this patch when `expo-symbols` loads asset-catalog symbols itself. When upgrading `expo-symbols`, carry the fallback into `ios/SymbolView.swift` and preserve fixed glyph sizing in `src/SymbolView.tsx` and its compiled output until upstream does so.
 
 ## react-native@0.86.3
 
