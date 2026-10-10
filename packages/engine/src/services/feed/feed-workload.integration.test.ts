@@ -5,9 +5,12 @@ import { expect, it } from 'vitest';
 import { emptySessionInput, startAcpEngine } from '#mocks/acp-engine';
 import { sendAcpFeedUpdates } from '#mocks/acp-feed';
 
-// Published budgets for 8 Sessions each streaming a 200 KB Agent message (measured: ~2.2 MiB, ~22 ms).
+// Published budgets for 8 Sessions each streaming a 200 KB Agent message (measured alone: ~2.3 MiB, p95 ~10 ms, worst 30–80 ms; beside the whole test run: p95 ~31 ms, worst ~109 ms).
 const retainedByteBudget = 8_388_608;
-const eventLoopDelayBudgetMs = 100;
+const eventLoopDelayP95BudgetMs = 50;
+// One garbage collection may stall a single sample; a whole-message reparse would stall for seconds.
+const eventLoopDelayWorstBudgetMs = 250;
+const p95 = 0.95;
 const sessionCount = 8;
 const chunkCount = 2000;
 const burstSize = 10;
@@ -112,7 +115,10 @@ it('long Agent messages in several Sessions stay within the retained-byte and ev
   expect({
     appended,
     withinRetainedBudget: retained <= retainedByteBudget,
-    withinDelayBudget: (delays.at(-1) ?? 0) <= eventLoopDelayBudgetMs,
+    withinDelayBudget:
+      (delays[Math.floor(delays.length * p95)] ?? 0) <=
+        eventLoopDelayP95BudgetMs &&
+      (delays.at(-1) ?? 0) <= eventLoopDelayWorstBudgetMs,
   }).toEqual({
     appended: sessions.map(() => chunkCount * (chunk.length + 1)),
     withinRetainedBudget: true,

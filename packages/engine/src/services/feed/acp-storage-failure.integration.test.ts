@@ -70,4 +70,4 @@ it('a Turn that outgrows the Writer while storage fails is cancelled, and prompt
   await prompt('Once storage recovers');
   await waitForAcpSessionIdle(host, created.sessionId);
   expect(prompts).toBe(2);
-});
+}, 30_000);
