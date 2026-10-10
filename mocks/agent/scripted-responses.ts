@@ -7,6 +7,7 @@ import {
   type CancelNotification,
   type PromptResponse,
   type JsonRpcId,
+  type ErrorResponse,
 } from '@agentclientprotocol/sdk';
 import {
   runTurn,
@@ -19,7 +20,7 @@ export type ScriptedResponse<Method extends AgentRequestMethod> = {
     | AgentRequestResponsesByMethod[Method]
     | Promise<AgentRequestResponsesByMethod[Method]>;
   rawResult?: unknown;
-  error?: string | { code: number; message: string; data?: unknown };
+  error?: string | ErrorResponse;
   sessionId?: string;
   steps?: readonly ScriptedStep[];
   waitFor?: Promise<void>;

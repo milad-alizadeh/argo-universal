@@ -51,6 +51,7 @@ const permissionTool = 'tool-1';
 const nextPermissionTool = 'tool-2';
 const optionId = 'allow_once';
 const promptInput = [{ type: 'text' as const, text: 'Hello' }];
+const rowUpsertEvent = 'row.upsert';
 
 const mixedQuestions = (
   permissions: RequestPermissionResponse[],
@@ -344,11 +345,21 @@ it('streams Session snapshots only when projected configuration changes', async 
   expect(await updates.next()).toMatchObject({ done: true });
 });
 
-it('shared process crashes resume the same identity and publish three Notices before terminal closure', async () => {
+it('keeps its Feed subscriber through resumed Agent output and three crashes before terminal closure', async () => {
   const openings: NewSessionRequest[] = [];
   const resumes: ResumeSessionRequest[] = [];
   const host = await startAcpEngine({
-    steps: [],
+    steps: [
+      {
+        type: 'update',
+        update: {
+          sessionUpdate: 'agent_message_chunk',
+          messageId: 'after-recovery',
+          content: { type: 'text', text: 'After recovery' },
+        },
+      },
+      { type: 'wait-for-cancel' },
+    ],
     responses: {
       'session/new': [{ requests: openings }],
       'session/resume': [{ requests: resumes }],
@@ -359,24 +370,54 @@ it('shared process crashes resume the same identity and publish three Notices be
     await host.caller.feed.subscribe({ ...created, after: null })
   )[Symbol.asyncIterator]();
   await updates.next();
+  const streamed: FeedSubscribeOutput[] = [];
   for (const index of [0, 1, 2]) {
     requireScriptedProcessAt(host.agent.processes, index).disconnect();
-    if (index < 2) {
-      await expect
-        .poll(() => host.agent.processes.length, { timeout: 10_000 })
-        .toBe(index + 2);
-      await waitForAcpSessionIdle(host, created.sessionId);
+    if (index === 2) continue;
+    await expect
+      .poll(() => host.agent.processes.length, { timeout: 10_000 })
+      .toBe(index + 2);
+    await waitForAcpSessionIdle(host, created.sessionId);
+    if (index !== 0) continue;
+    await host.caller.session.prompt({
+      ...created,
+      prompt: [{ type: 'text', text: 'Continue after recovery' }],
+    });
+    while (true) {
+      const next = await updates.next();
+      if (next.done) throw new Error('Feed closed before recovered output');
+      const event = next.value;
+      streamed.push(event);
+      if (
+        event.type === rowUpsertEvent &&
+        event.row.sessionUpdate === 'agent_message'
+      )
+        break;
     }
   }
-  const closed: FeedSubscribeOutput[] = [];
   for await (const event of {
     [Symbol.asyncIterator]: (): AsyncIterator<FeedSubscribeOutput> => updates,
   })
-    closed.push(event);
-  expect(closed.at(-1)).toEqual({
+    streamed.push(event);
+  expect(streamed.at(-1)).toEqual({
     type: 'closed',
     failure: 'The Agent stopped three times in ten minutes',
   });
+  expect(
+    streamed.filter(
+      (event) =>
+        event.type === rowUpsertEvent &&
+        event.row.sessionUpdate === 'agent_message' &&
+        event.row.state === 'open',
+    ),
+  ).toEqual([
+    expect.objectContaining({
+      row: expect.objectContaining({
+        messageId: 'after-recovery',
+        content: [{ type: 'text', text: 'After recovery' }],
+      }),
+    }),
+  ]);
   expect(openings).toHaveLength(1);
   expect(resumes.map((resume) => resume.sessionId)).toEqual([
     'owned-1',
@@ -386,7 +427,7 @@ it('shared process crashes resume the same identity and publish three Notices be
     (
       await host.caller.feed.page({ ...created, direction: 'tail' })
     ).rows.filter((row) => row.sessionUpdate === 'notice'),
-  ).toHaveLength(3);
+  ).toHaveLength(4);
 }, 15_000);
 
 it('attaches live Feed updates when a subscription starts while the Session opens', async () => {
@@ -427,9 +468,9 @@ it('attaches live Feed updates when a subscription starts while the Session open
     snapshot: { state: 'running', maxRevision: 1 },
   });
   let row = (await updates.next()).value;
-  while (row && row.type !== 'row.upsert') row = (await updates.next()).value;
+  while (row && row.type !== rowUpsertEvent) row = (await updates.next()).value;
   expect(row).toMatchObject({
-    type: 'row.upsert',
+    type: rowUpsertEvent,
     row: { sessionUpdate: 'user_message' },
   });
   await updates.return?.();

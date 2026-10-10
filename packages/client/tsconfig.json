@@ -1,6 +1,7 @@
 {
   "extends": "@repo/typescript/react-native.json",
   "compilerOptions": {
+    "allowImportingTsExtensions": true,
     // className props on React Native components come from Uniwind's type augmentation.
     "types": ["uniwind/types"]
   },
