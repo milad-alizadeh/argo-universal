@@ -21,6 +21,8 @@ import {
   fromCallback,
   fromPromise,
   type SnapshotFrom,
+  type PromiseActorLogic,
+  type EventObject,
 } from 'xstate';
 import {
   type DirectedGraphNode,
@@ -32,6 +34,8 @@ import {
   getAdjacencyMap,
   toDirectedGraph,
 } from 'xstate/graph';
+import type { AcpResources } from '../services/agents';
+import type { RegistryActorRef } from '../services/sessions';
 import type { HttpServer, HttpServerOptions } from './http-server';
 import type { EngineMessage } from './ipc';
 import { engineMachine } from './machine';
@@ -52,11 +56,7 @@ interface PendingCall<TInput, TOutput> {
 // A promise actor that records each call in `calls()` and settles only when an executor says so.
 const createPromiseMock = <TOutput, TInput>(
   calls: () => PendingCall<TInput, TOutput>[],
-): import('xstate').PromiseActorLogic<
-  TOutput,
-  TInput,
-  import('xstate').EventObject
-> =>
+): PromiseActorLogic<TOutput, TInput, EventObject> =>
   fromPromise<TOutput, TInput>(
     ({ input }): Promise<TOutput> =>
       new Promise<TOutput>((resolve, reject): void => {
@@ -71,6 +71,10 @@ let recoveryCalls: PendingCall<
 >[];
 let startHttpServerCalls: PendingCall<HttpServerOptions, HttpServer>[];
 let closeHttpServerCalls: PendingCall<{ server: HttpServer | null }, void>[];
+let closeResourceCalls: PendingCall<
+  { resources: AcpResources; sessions: RegistryActorRef | undefined },
+  void
+>[];
 let shutdownCommands: string[];
 let logs: string[];
 let processSignals: { send: (event: AnyEventObject) => void; live: boolean };
@@ -84,6 +88,8 @@ let mockDatabase = graphDatabase;
 let removeDatabase: () => void;
 // The closeHttpServer mock stands in for `close()`, so the handle itself is never called.
 const mockHttpServer: HttpServer = {
+  createCaller: (): never =>
+    expect.unreachable('Structural model does not call procedures'),
   close: (): never =>
     expect.unreachable('The machine closes through closeHttpServer'),
 };
@@ -122,6 +128,9 @@ const machineWithExternalMocks = engineMachine.provide({
   },
 });
 const machine = machineWithExternalMocks.provide({
+  actors: {
+    closeAcpResources: createPromiseMock(() => closeResourceCalls),
+  },
   actions: {
     stopSessions: (): number => shutdownCommands.push(stopAllSessionsEvent),
     drainWriter: (): number => shutdownCommands.push(drainWriterEvent),
@@ -199,6 +208,16 @@ const fixtures = [
     error: closeError,
   },
   { type: 'xstate.done.actor.sessions' },
+  {
+    type: 'xstate.done.actor.closeAcpResources',
+    actorId: 'closeAcpResources',
+    output: undefined,
+  },
+  {
+    type: 'xstate.error.actor.closeAcpResources',
+    actorId: 'closeAcpResources',
+    error: new Error('cleanup failed'),
+  },
   sessionFailure,
   { type: 'xstate.done.actor.databaseWriter' },
   writerFailure,
@@ -244,6 +263,9 @@ const canGraphEvent = (
       return snapshot.matches({ live: { stopping: 'closingHttp' } });
     case 'xstate.after.sessionStopLimit.engine.live.stopping.stoppingSessions':
       return snapshot.matches({ live: { stopping: 'stoppingSessions' } });
+    case 'xstate.done.actor.closeAcpResources':
+    case 'xstate.error.actor.closeAcpResources':
+      return snapshot.matches({ live: { stopping: 'closingAgents' } });
     case 'xstate.after.writerDrainLimit.engine.live.stopping.drainingWriter':
       return snapshot.matches({ live: { stopping: 'drainingWriter' } });
     case 'xstate.after.heartbeatInterval.engine.live.running':
@@ -307,6 +329,12 @@ const executors: Record<string, EventExecutor<EngineSnapshot, EngineEvent>> = {
   'xstate.done.actor.sessions': (): void =>
     engine.system.get('sessions').send({ type: stopAllSessionsEvent }),
   'xstate.error.actor.sessions': (): void => engine.send(sessionFailure),
+  'xstate.done.actor.closeAcpResources': (): Promise<void> =>
+    settle(() => latest(closeResourceCalls).resolve()),
+  'xstate.error.actor.closeAcpResources': ({ event }): Promise<void> =>
+    settle(() => {
+      if ('error' in event) latest(closeResourceCalls).reject(event.error);
+    }),
   'xstate.done.actor.databaseWriter': (): void =>
     engine.system.get('databaseWriter').send({ type: drainWriterEvent }),
   'xstate.error.actor.databaseWriter': (): void => engine.send(writerFailure),
@@ -393,6 +421,9 @@ const states: Record<string, (snapshot: EngineSnapshot) => void> = {
           startedAt: input.startedAt,
           database: mockDatabase,
           sessions: expect.anything(),
+          databaseWriter: expect.anything(),
+          syncSupervisor: expect.anything(),
+          commandAdmission: expect.any(AbortController),
         },
       }),
     ]);
@@ -427,6 +458,17 @@ const states: Record<string, (snapshot: EngineSnapshot) => void> = {
     expect(shutdownCommands).toEqual([stopAllSessionsEvent, drainWriterEvent]);
     expect(databaseCloses).toBe(0);
   },
+  'live.stopping.closingAgents': (snapshot): void => {
+    expectModelState(snapshot);
+    expect(databaseCloses).toBe(0);
+    expect(shutdownCommands).toEqual([stopAllSessionsEvent]);
+  },
+  'live.stopping.retainingAgentCleanup': (snapshot): void => {
+    expectModelState(snapshot);
+    expect(databaseCloses).toBe(0);
+    expect(shutdownCommands).toEqual([stopAllSessionsEvent]);
+    expect(snapshot.context.failure).toContain('cleanup remains unresolved');
+  },
   stopped: (snapshot): void => expectExit(snapshot, 0),
   failed: (snapshot): void => expectExit(snapshot, 1),
 };
@@ -457,6 +499,7 @@ beforeEach((): void => {
   recoveryCalls = [];
   startHttpServerCalls = [];
   closeHttpServerCalls = [];
+  closeResourceCalls = [];
   shutdownCommands = [];
   logs = [];
   messages = [];
@@ -490,13 +533,14 @@ it('finishes shutdown when the Session registry and writer complete immediately'
   );
 });
 
-it('keeps draining the writer when Sessions finish after their stop limit', async (): Promise<void> => {
+it('closes Agent resources before draining the writer when Sessions exceed their stop limit', async (): Promise<void> => {
   await startRunningEngine();
   engine.send({ type: stopEngineEvent, reason: 'SIGTERM' });
   await settle((): void => latest(closeHttpServerCalls).resolve());
   vi.advanceTimersByTime(10000);
-  expect(logs).toContain('Session stop limit reached; draining the writer');
+  expect(logs).toContain('Session stop limit reached; closing Agent resources');
   engine.system.get('sessions').send({ type: stopAllSessionsEvent });
+  await settle(() => latest(closeResourceCalls).resolve());
   expect(
     engine.getSnapshot().matches({ live: { stopping: 'drainingWriter' } }),
   ).toBe(true);

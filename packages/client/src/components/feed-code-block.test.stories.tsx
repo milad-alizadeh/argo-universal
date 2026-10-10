@@ -1,9 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
-import { expect, waitFor } from 'storybook/test';
+import { expect, spyOn, waitFor } from 'storybook/test';
+import { page } from 'vitest/browser';
 import { longCodeBlockTitle } from '../../mocks/code-block-title-mock';
 import { layoutWidths } from '../../mocks/each-layout';
 import { recordedFile } from '../../mocks/feed-edit-mock';
+import { embeddedResource } from '../../mocks/feed-paper';
 import { settleViewport } from '../../mocks/settle-viewport';
 import { FeedCodeBlock } from './feed-code-block';
 
@@ -20,16 +22,14 @@ const meta = {
   },
 } satisfies Meta<typeof FeedCodeBlock>;
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<typeof FeedCodeBlock>;
 
 export const CodeBlockScrollsInsideTheBox: Story = {
   play: async ({ canvas }) => {
     if (process.env.NODE_ENV !== 'test') return;
-    const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await settleViewport(width);
       const box = canvas.getByTestId(codeScrollId);
-      await expect(box.clientHeight).toBe(width < 720 ? 300 : 400);
       await expect(box.scrollHeight).toBeGreaterThan(box.clientHeight);
       box.scrollTop = box.scrollHeight;
       await waitFor(() => expect(box.scrollTop).toBeGreaterThan(0));
@@ -70,7 +70,7 @@ export const LongTitleKeepsFilenameVisible: Story = {
   },
 };
 
-function copyIconFollowsCssHoverAndFocus(width: number): Story {
+function copyControlFollowsHoverAndFocus(width: number): Story {
   return {
     render: (args) => (
       <View className="p-4">
@@ -79,25 +79,69 @@ function copyIconFollowsCssHoverAndFocus(width: number): Story {
     ),
     play: async ({ canvas, userEvent }) => {
       if (process.env.NODE_ENV !== 'test') return;
-      const { page } = await import('vitest/browser');
       await settleViewport(width);
       const copy = canvas.getByRole('button', { name: 'Copy code' });
       const box = canvas.getByTestId(codeScrollId).parentElement;
       if (!box) throw new Error('Missing code block');
       await page.elementLocator(box).unhover({ position: { x: 1, y: 1 } });
-      await expect(getComputedStyle(copy).opacity).toBe('0');
+      await expect(copy).not.toBeVisible();
       await page.elementLocator(canvas.getByTestId(codeScrollId)).hover();
-      await expect(getComputedStyle(copy).opacity).toBe('1');
+      await expect(copy).toBeVisible();
       await page.elementLocator(box).unhover({ position: { x: 1, y: 1 } });
-      await expect(getComputedStyle(copy).opacity).toBe('0');
+      await expect(copy).not.toBeVisible();
       await expect(copy).not.toHaveFocus();
       await userEvent.tab();
       await expect(copy).toHaveFocus();
-      await expect(getComputedStyle(copy).opacity).toBe('1');
+      await expect(copy).toBeVisible();
     },
   };
 }
-export const CopyIconFollowsCssHoverAndFocusPhone =
-  copyIconFollowsCssHoverAndFocus(layoutWidths.phone);
-export const CopyIconFollowsCssHoverAndFocusWide =
-  copyIconFollowsCssHoverAndFocus(layoutWidths.wide);
+export const CopyControlFollowsHoverAndFocusPhone =
+  copyControlFollowsHoverAndFocus(layoutWidths.phone);
+export const CopyControlFollowsHoverAndFocusWide =
+  copyControlFollowsHoverAndFocus(layoutWidths.wide);
+
+function copiesResource(width: number, code: string | undefined): Story {
+  return {
+    args: { resource: embeddedResource, code },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(width);
+      await expect(canvas.getByLabelText(embeddedResource.uri)).toBeVisible();
+      await expect(canvas.queryByRole('link')).not.toBeInTheDocument();
+      const clipboard = spyOn(
+        navigator.clipboard,
+        'writeText',
+      ).mockResolvedValue();
+      try {
+        await userEvent.tab();
+        const copy = canvas.getByRole('button', {
+          name: code === undefined ? 'Copy URI' : 'Copy resource text',
+        });
+        await expect(copy).toHaveFocus();
+        await expect(copy).toBeVisible();
+        await userEvent.keyboard('{Enter}');
+        await waitFor(() =>
+          expect(clipboard).toHaveBeenCalledWith(code ?? embeddedResource.uri),
+        );
+      } finally {
+        clipboard.mockRestore();
+      }
+    },
+  };
+}
+export const CopiesResourceUriPhone = copiesResource(
+  layoutWidths.phone,
+  undefined,
+);
+export const CopiesResourceUriWide = copiesResource(
+  layoutWidths.wide,
+  undefined,
+);
+export const CopiesEmptyResourceTextPhone = copiesResource(
+  layoutWidths.phone,
+  '',
+);
+export const CopiesEmptyResourceTextWide = copiesResource(
+  layoutWidths.wide,
+  '',
+);

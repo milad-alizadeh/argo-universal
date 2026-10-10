@@ -3,6 +3,7 @@ import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { expect } from 'storybook/test';
+import { page } from 'vitest/browser';
 import { createSessionCountsMock } from '../../mocks/session-counts-mock';
 import { sessionListMocks } from '../../mocks/session-list-mock';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
@@ -52,7 +53,6 @@ const meta = {
   parameters: { navigation: recorder, trpc: sessionListMocks },
   beforeEach: async (): Promise<void> => {
     recorder.reset();
-    const { page } = await import('vitest/browser');
     await page.viewport(390, 844);
   },
 } satisfies Meta<typeof PhoneSectionScreen>;

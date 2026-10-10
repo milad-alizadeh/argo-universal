@@ -1,0 +1,404 @@
+[
+  {
+    "agent": "agent-1",
+    "snapshot": {
+      "agent": "agent-1",
+      "title": "Show the result",
+      "titleSource": "prompt",
+      "checkout": {
+        "type": "main",
+        "path": "/private/var/folders/_z/yrg3s40d5k5cqgfnmffgq3l80000gn/T/argo-acp-engine-lowXDr",
+        "branch": "main"
+      },
+      "state": "idle",
+      "liveHeader": null,
+      "activeTurnId": null,
+      "usage": null,
+      "pendingPermission": null,
+      "pendingElicitation": null,
+      "pendingPlanProposal": null,
+      "configOptions": [],
+      "changes": {
+        "files": 0,
+        "additions": 0,
+        "deletions": 0
+      },
+      "maxRevision": 18,
+      "epoch": 0
+    },
+    "rows": [
+      {
+        "id": "[\"agent_message\",\"owned-1\",[\"upstream\",\"content\"]]",
+        "sessionId": "c4f4f2cc-bc3b-45b9-bd5f-60186e63bc7d",
+        "position": 1,
+        "revision": 16,
+        "turnId": "131aa496-3656-4e5c-a0fd-6597bd045c44",
+        "state": "settled",
+        "sessionUpdate": "agent_message",
+        "messageId": "content",
+        "content": [
+          {
+            "type": "text",
+            "text": "Before reference"
+          },
+          {
+            "type": "resource_link",
+            "name": "Project guide",
+            "uri": "file:///project/guide.md",
+            "description": "The current guide"
+          },
+          {
+            "type": "text",
+            "text": "After reference"
+          },
+          {
+            "type": "resource",
+            "resource": {
+              "uri": "file:///project/result.txt",
+              "text": "Embedded result"
+            }
+          },
+          {
+            "type": "unsupported",
+            "contentKind": "image",
+            "reason": "Image output requires stored Blob materialization",
+            "reference": "https://example.com/result.png"
+          }
+        ]
+      },
+      {
+        "id": "[\"notice\",\"owned-1\",[\"local\",2]]",
+        "sessionId": "c4f4f2cc-bc3b-45b9-bd5f-60186e63bc7d",
+        "position": 2,
+        "revision": 7,
+        "turnId": "131aa496-3656-4e5c-a0fd-6597bd045c44",
+        "state": "settled",
+        "sessionUpdate": "notice",
+        "severity": "warning",
+        "title": "Context almost full",
+        "description": "The next step may compact context."
+      },
+      {
+        "id": "[\"notice\",\"owned-1\",[\"local\",3]]",
+        "sessionId": "c4f4f2cc-bc3b-45b9-bd5f-60186e63bc7d",
+        "position": 3,
+        "revision": 8,
+        "turnId": "131aa496-3656-4e5c-a0fd-6597bd045c44",
+        "state": "settled",
+        "sessionUpdate": "notice",
+        "severity": "future-severity",
+        "title": "Future notice"
+      },
+      {
+        "id": "[\"compaction_update\",\"owned-1\",[\"upstream\",\"compaction\"]]",
+        "sessionId": "c4f4f2cc-bc3b-45b9-bd5f-60186e63bc7d",
+        "position": 4,
+        "revision": 17,
+        "turnId": "131aa496-3656-4e5c-a0fd-6597bd045c44",
+        "state": "settled",
+        "sessionUpdate": "compaction_update",
+        "compactionId": "compaction",
+        "status": "in_progress",
+        "summary": [
+          {
+            "type": "text",
+            "text": "Live context summary"
+          }
+        ]
+      },
+      {
+        "id": "[\"compaction_update\",\"owned-1\",[\"upstream\",\"failed-compaction\"]]",
+        "sessionId": "c4f4f2cc-bc3b-45b9-bd5f-60186e63bc7d",
+        "position": 5,
+        "revision": 11,
+        "turnId": "131aa496-3656-4e5c-a0fd-6597bd045c44",
+        "state": "settled",
+        "sessionUpdate": "compaction_update",
+        "compactionId": "failed-compaction",
+        "status": "failed",
+        "error": "Compaction could not finish"
+      },
+      {
+        "id": "[\"compaction_update\",\"owned-1\",[\"upstream\",\"future-compaction\"]]",
+        "sessionId": "c4f4f2cc-bc3b-45b9-bd5f-60186e63bc7d",
+        "position": 6,
+        "revision": 18,
+        "turnId": "131aa496-3656-4e5c-a0fd-6597bd045c44",
+        "state": "settled",
+        "sessionUpdate": "compaction_update",
+        "compactionId": "future-compaction",
+        "status": "constructor"
+      },
+      {
+        "id": "[\"plan_update\",\"owned-1\",[\"upstream\",\"file-plan\"]]",
+        "sessionId": "c4f4f2cc-bc3b-45b9-bd5f-60186e63bc7d",
+        "position": 7,
+        "revision": 13,
+        "turnId": "131aa496-3656-4e5c-a0fd-6597bd045c44",
+        "state": "settled",
+        "sessionUpdate": "plan_update",
+        "plan": {
+          "type": "file",
+          "planId": "file-plan",
+          "uri": "file:///project/plan.md"
+        },
+        "_meta": {
+          "argo": {
+            "removed": false,
+            "contentRevision": 13
+          }
+        }
+      },
+      {
+        "id": "[\"plan_update\",\"owned-1\",[\"upstream\",\"markdown-plan\"]]",
+        "sessionId": "c4f4f2cc-bc3b-45b9-bd5f-60186e63bc7d",
+        "position": 8,
+        "revision": 14,
+        "turnId": "131aa496-3656-4e5c-a0fd-6597bd045c44",
+        "state": "settled",
+        "sessionUpdate": "plan_update",
+        "plan": {
+          "type": "markdown",
+          "planId": "markdown-plan",
+          "content": "# Read-only Plan\n\nReview the guide."
+        },
+        "_meta": {
+          "argo": {
+            "removed": false,
+            "contentRevision": 14
+          }
+        }
+      },
+      {
+        "id": "[\"tool_call_update\",\"owned-1\",[\"upstream\",\"tool\"]]",
+        "sessionId": "c4f4f2cc-bc3b-45b9-bd5f-60186e63bc7d",
+        "position": 9,
+        "revision": 15,
+        "turnId": "131aa496-3656-4e5c-a0fd-6597bd045c44",
+        "state": "settled",
+        "sessionUpdate": "tool_call_update",
+        "toolCallId": "tool",
+        "title": "Lookup",
+        "kind": "execute",
+        "status": "completed",
+        "content": [
+          {
+            "type": "content",
+            "content": {
+              "type": "resource_link",
+              "name": "Tool reference",
+              "uri": "file:///project/tool.txt"
+            }
+          },
+          {
+            "type": "unsupported",
+            "contentKind": "terminal",
+            "reason": "Terminal output is unavailable without a Client terminal resource"
+          }
+        ],
+        "_meta": {}
+      }
+    ]
+  },
+  {
+    "agent": "agent-2",
+    "snapshot": {
+      "agent": "agent-2",
+      "title": "Show the result",
+      "titleSource": "prompt",
+      "checkout": {
+        "type": "main",
+        "path": "/private/var/folders/_z/yrg3s40d5k5cqgfnmffgq3l80000gn/T/argo-acp-engine-Fd8mMS",
+        "branch": "main"
+      },
+      "state": "idle",
+      "liveHeader": null,
+      "activeTurnId": null,
+      "usage": null,
+      "pendingPermission": null,
+      "pendingElicitation": null,
+      "pendingPlanProposal": null,
+      "configOptions": [],
+      "changes": {
+        "files": 0,
+        "additions": 0,
+        "deletions": 0
+      },
+      "maxRevision": 18,
+      "epoch": 0
+    },
+    "rows": [
+      {
+        "id": "[\"agent_message\",\"owned-1\",[\"upstream\",\"content\"]]",
+        "sessionId": "7ad679c4-a9c9-42a5-8927-af0871384d26",
+        "position": 1,
+        "revision": 16,
+        "turnId": "4d924b64-55d3-4ac4-894e-cd340a15afe2",
+        "state": "settled",
+        "sessionUpdate": "agent_message",
+        "messageId": "content",
+        "content": [
+          {
+            "type": "text",
+            "text": "Before reference"
+          },
+          {
+            "type": "resource_link",
+            "name": "Project guide",
+            "uri": "file:///project/guide.md",
+            "description": "The current guide"
+          },
+          {
+            "type": "text",
+            "text": "After reference"
+          },
+          {
+            "type": "resource",
+            "resource": {
+              "uri": "file:///project/result.txt",
+              "text": "Embedded result"
+            }
+          },
+          {
+            "type": "unsupported",
+            "contentKind": "image",
+            "reason": "Image output requires stored Blob materialization",
+            "reference": "https://example.com/result.png"
+          }
+        ]
+      },
+      {
+        "id": "[\"notice\",\"owned-1\",[\"local\",2]]",
+        "sessionId": "7ad679c4-a9c9-42a5-8927-af0871384d26",
+        "position": 2,
+        "revision": 7,
+        "turnId": "4d924b64-55d3-4ac4-894e-cd340a15afe2",
+        "state": "settled",
+        "sessionUpdate": "notice",
+        "severity": "warning",
+        "title": "Context almost full",
+        "description": "The next step may compact context."
+      },
+      {
+        "id": "[\"notice\",\"owned-1\",[\"local\",3]]",
+        "sessionId": "7ad679c4-a9c9-42a5-8927-af0871384d26",
+        "position": 3,
+        "revision": 8,
+        "turnId": "4d924b64-55d3-4ac4-894e-cd340a15afe2",
+        "state": "settled",
+        "sessionUpdate": "notice",
+        "severity": "future-severity",
+        "title": "Future notice"
+      },
+      {
+        "id": "[\"compaction_update\",\"owned-1\",[\"upstream\",\"compaction\"]]",
+        "sessionId": "7ad679c4-a9c9-42a5-8927-af0871384d26",
+        "position": 4,
+        "revision": 17,
+        "turnId": "4d924b64-55d3-4ac4-894e-cd340a15afe2",
+        "state": "settled",
+        "sessionUpdate": "compaction_update",
+        "compactionId": "compaction",
+        "status": "in_progress",
+        "summary": [
+          {
+            "type": "text",
+            "text": "Live context summary"
+          }
+        ]
+      },
+      {
+        "id": "[\"compaction_update\",\"owned-1\",[\"upstream\",\"failed-compaction\"]]",
+        "sessionId": "7ad679c4-a9c9-42a5-8927-af0871384d26",
+        "position": 5,
+        "revision": 11,
+        "turnId": "4d924b64-55d3-4ac4-894e-cd340a15afe2",
+        "state": "settled",
+        "sessionUpdate": "compaction_update",
+        "compactionId": "failed-compaction",
+        "status": "failed",
+        "error": "Compaction could not finish"
+      },
+      {
+        "id": "[\"compaction_update\",\"owned-1\",[\"upstream\",\"future-compaction\"]]",
+        "sessionId": "7ad679c4-a9c9-42a5-8927-af0871384d26",
+        "position": 6,
+        "revision": 18,
+        "turnId": "4d924b64-55d3-4ac4-894e-cd340a15afe2",
+        "state": "settled",
+        "sessionUpdate": "compaction_update",
+        "compactionId": "future-compaction",
+        "status": "constructor"
+      },
+      {
+        "id": "[\"plan_update\",\"owned-1\",[\"upstream\",\"file-plan\"]]",
+        "sessionId": "7ad679c4-a9c9-42a5-8927-af0871384d26",
+        "position": 7,
+        "revision": 13,
+        "turnId": "4d924b64-55d3-4ac4-894e-cd340a15afe2",
+        "state": "settled",
+        "sessionUpdate": "plan_update",
+        "plan": {
+          "type": "file",
+          "planId": "file-plan",
+          "uri": "file:///project/plan.md"
+        },
+        "_meta": {
+          "argo": {
+            "removed": false,
+            "contentRevision": 13
+          }
+        }
+      },
+      {
+        "id": "[\"plan_update\",\"owned-1\",[\"upstream\",\"markdown-plan\"]]",
+        "sessionId": "7ad679c4-a9c9-42a5-8927-af0871384d26",
+        "position": 8,
+        "revision": 14,
+        "turnId": "4d924b64-55d3-4ac4-894e-cd340a15afe2",
+        "state": "settled",
+        "sessionUpdate": "plan_update",
+        "plan": {
+          "type": "markdown",
+          "planId": "markdown-plan",
+          "content": "# Read-only Plan\n\nReview the guide."
+        },
+        "_meta": {
+          "argo": {
+            "removed": false,
+            "contentRevision": 14
+          }
+        }
+      },
+      {
+        "id": "[\"tool_call_update\",\"owned-1\",[\"upstream\",\"tool\"]]",
+        "sessionId": "7ad679c4-a9c9-42a5-8927-af0871384d26",
+        "position": 9,
+        "revision": 15,
+        "turnId": "4d924b64-55d3-4ac4-894e-cd340a15afe2",
+        "state": "settled",
+        "sessionUpdate": "tool_call_update",
+        "toolCallId": "tool",
+        "title": "Lookup",
+        "kind": "execute",
+        "status": "completed",
+        "content": [
+          {
+            "type": "content",
+            "content": {
+              "type": "resource_link",
+              "name": "Tool reference",
+              "uri": "file:///project/tool.txt"
+            }
+          },
+          {
+            "type": "unsupported",
+            "contentKind": "terminal",
+            "reason": "Terminal output is unavailable without a Client terminal resource"
+          }
+        ],
+        "_meta": {}
+      }
+    ]
+  }
+]

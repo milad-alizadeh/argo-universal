@@ -1,12 +1,16 @@
 import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { AgentProbe, AgentReady, VendorCommand } from '@repo/agents';
-import { newSessionInputs } from '@repo/api/mocks';
+import type {
+  AgentConnectInput,
+  AgentProbe,
+  AgentReady,
+  VendorCommand,
+} from '@repo/agents';
 import type { FeedSubscribeOutput, SessionNewInput } from '@repo/contracts';
 import { permissionOptions } from '@repo/contracts';
 import type { Database } from '@repo/db';
-import { turn } from '@repo/db/schema';
+import { session, turn } from '@repo/db/schema';
 import { sessionBranch } from '@repo/git';
 import {
   createMockAdapter,
@@ -14,22 +18,21 @@ import {
   type MockAgentStream,
   mockReady,
 } from '@repo/mocks/agent';
+import { newSessionInputs } from '@repo/mocks/app';
 import { eq } from 'drizzle-orm';
 import { beforeEach, expect, it, onTestFinished, vi } from 'vitest';
-import { waitFor } from 'xstate';
 import { insertSession, openTestDatabase } from '#mocks/database';
+import { startEngineTestHost } from '#mocks/engine';
 import { initTestRepository } from '#mocks/git';
-import { startRouterTestHost } from '#mocks/router';
-import { appRouter } from '../../engine/router';
 
 const agentConfigOptionsChangedEvent = 'agent.configOptionsChanged';
 const signInFailure = 'Sign in first';
-const sessionActorId = 'session:session-1';
 
 type SessionTestServer = Omit<
-  ReturnType<typeof startRouterTestHost>,
-  'databaseWriter'
+  Awaited<ReturnType<typeof startEngineTestHost>>,
+  'databaseWriter' | 'stop'
 > & {
+  connections: AgentConnectInput[];
   streams: Map<string, MockAgentStream>;
   commands: Map<string, VendorCommand[]>;
   configOptions: Extract<
@@ -47,9 +50,9 @@ beforeEach((): void => {
   });
 });
 
-function startSessionTestServer({
+async function startSessionTestServer({
   applyConfigOptions = true,
-} = {}): SessionTestServer {
+} = {}): Promise<SessionTestServer> {
   const directory = realpathSync(
     mkdtempSync(join(tmpdir(), 'session-service-')),
   );
@@ -72,22 +75,26 @@ function startSessionTestServer({
       ],
     },
   ];
+  const connections: AgentConnectInput[] = [];
   const streams = new Map<string, MockAgentStream>();
   const commands = new Map<string, VendorCommand[]>();
   const ready = { ...mockReady, configOptions };
   const script: MockAgentScript = {
     // Starts with the values the Session asks for, as the real adapters do.
-    connect: async (input): Promise<typeof ready> => ({
-      ...ready,
-      configOptions: configOptions.map((option): typeof option => ({
-        ...option,
-        currentValue: String(
-          input.configOptions.find(
-            (choice): boolean => choice.configId === option.configId,
-          )?.value ?? option.currentValue,
-        ),
-      })),
-    }),
+    connect: async (input): Promise<typeof ready> => {
+      connections.push(input);
+      return {
+        ...ready,
+        configOptions: configOptions.map((option): typeof option => ({
+          ...option,
+          currentValue: String(
+            input.configOptions.find(
+              (choice): boolean => choice.configId === option.configId,
+            )?.value ?? option.currentValue,
+          ),
+        })),
+      };
+    },
     stream: (stream): undefined => {
       streams.set(stream.input.sessionId, stream);
       commands.set(stream.input.sessionId, []);
@@ -112,7 +119,11 @@ function startSessionTestServer({
       });
     },
   };
-  const { sessionRegistry, context, caller } = startRouterTestHost({
+  vi.stubEnv('ARGO_PROJECT_PATH', directory);
+  cleanups.push((): void => {
+    vi.unstubAllEnvs();
+  });
+  const host = await startEngineTestHost({
     database,
     runtimeDirectory: join(directory, '.argo'),
     adapters: [
@@ -157,13 +168,12 @@ function startSessionTestServer({
     ],
   });
   return {
-    context,
-    caller,
-    sessionRegistry,
+    ...host,
+    connections,
     streams,
     commands,
     configOptions,
-    database,
+    database: host.database,
     git,
   };
 }
@@ -177,7 +187,7 @@ const newSession: SessionNewInput = {
 };
 
 it('rejects a new Session when the writer keeps its insert queued for retry', async (): Promise<void> => {
-  const { caller, database } = startSessionTestServer();
+  const { caller, database } = await startSessionTestServer();
   database.$client.exec(
     "CREATE TRIGGER reject_session_insert BEFORE INSERT ON session BEGIN SELECT RAISE(ABORT, 'database is locked'); END",
   );
@@ -193,21 +203,42 @@ it('rejects a new Session when the writer keeps its insert queued for retry', as
 });
 
 it('rejects a new Session whose insert is queued behind another retrying job', async (): Promise<void> => {
-  const { caller, database, sessionRegistry } = startSessionTestServer();
-  database.$client.exec(
-    "CREATE TRIGGER reject_session_update BEFORE UPDATE ON session BEGIN SELECT RAISE(ABORT, 'another job cannot be written'); END",
-  );
-  const databaseWriter = sessionRegistry.system.get('databaseWriter');
-  databaseWriter.send({
-    type: 'writer.write',
-    job: { type: 'sessionRowUpdate', id: 'session-1', set: { title: 'Held' } },
+  const { caller, database } = await startSessionTestServer();
+  await caller.session.setConfigOption({
+    sessionId: 'session-1',
+    configId: 'model',
+    type: 'id',
+    value: 'small',
   });
-  await waitFor(databaseWriter, (snapshot): boolean =>
-    snapshot.matches('waitingToRetry'),
+  await expect
+    .poll(
+      () =>
+        database.select().from(session).where(eq(session.id, 'session-1')).get()
+          ?.configValues,
+    )
+    .toEqual([{ configId: 'model', value: 'small' }]);
+  const rejectedUpdate = Promise.withResolvers<void>();
+  database.$client.function('record_rejected_update', () => {
+    rejectedUpdate.resolve();
+    return 0;
+  });
+  database.$client.exec(
+    "CREATE TRIGGER reject_session_update BEFORE UPDATE ON session BEGIN SELECT record_rejected_update(); SELECT RAISE(ABORT, 'another job cannot be written'); END",
   );
   onTestFinished((): void =>
     database.$client.exec('DROP TRIGGER reject_session_update'),
   );
+  await caller.session.setConfigOption({
+    sessionId: 'session-1',
+    configId: 'model',
+    type: 'id',
+    value: 'large',
+  });
+  await rejectedUpdate.promise;
+  expect(
+    database.select().from(session).where(eq(session.id, 'session-1')).get()
+      ?.configValues,
+  ).toEqual([{ configId: 'model', value: 'small' }]);
   await expect(caller.session.new(newSession)).rejects.toMatchObject({
     code: 'INTERNAL_SERVER_ERROR',
     message: expect.stringContaining(
@@ -217,7 +248,8 @@ it('rejects a new Session whose insert is queued behind another retrying job', a
 });
 
 it('creates the Checkout, starts the Agent with the chosen options and runs the first Turn in one call', async (): Promise<void> => {
-  const { caller, streams, database, commands } = startSessionTestServer();
+  const { caller, streams, database, commands } =
+    await startSessionTestServer();
   const { sessionId } = await caller.session.new({
     ...newSession,
     checkout: { type: 'worktree', baseBranch: 'feature' },
@@ -273,7 +305,7 @@ it('creates the Checkout, starts the Agent with the chosen options and runs the 
 it.each([{ type: 'main' }, { type: 'worktree', baseBranch: 'main' }] as const)(
   'leaves no Session and no worktree when the Agent cannot start in the $type checkout',
   async (checkout): Promise<void> => {
-    const { caller, git } = startSessionTestServer();
+    const { caller, git } = await startSessionTestServer();
     const readAgentAvailability = async (): Promise<
       | 'available'
       | 'not_installed'
@@ -311,7 +343,7 @@ it.each([{ type: 'main' }, { type: 'worktree', baseBranch: 'main' }] as const)(
 );
 
 it('refuses a New Session for an unknown Project, base branch or Agent', async (): Promise<void> => {
-  const { caller } = startSessionTestServer();
+  const { caller } = await startSessionTestServer();
   await expect(
     caller.session.new({ ...newSession, projectId: 'missing' }),
   ).rejects.toMatchObject({ code: 'NOT_FOUND' });
@@ -327,7 +359,7 @@ it('refuses a New Session for an unknown Project, base branch or Agent', async (
 });
 
 it('lists local branches with the current one, and null when HEAD is detached', async (): Promise<void> => {
-  const { caller, git } = startSessionTestServer();
+  const { caller, git } = await startSessionTestServer();
   expect(await caller.projects.branches({ projectId: 'project-1' })).toEqual({
     branches: ['feature', 'main'],
     currentBranch: 'main',
@@ -343,7 +375,7 @@ it('lists local branches with the current one, and null when HEAD is detached', 
 });
 
 it('defaults the checkout choice to a worktree from the current branch, and the main checkout when HEAD is detached', async (): Promise<void> => {
-  const { caller, git } = startSessionTestServer();
+  const { caller, git } = await startSessionTestServer();
   const readCheckoutChoice = async (): Promise<
     { type: 'worktree'; baseBranch: string } | { type: 'main' } | undefined
   > => (await caller.projects.list())[0]?.checkoutChoice;
@@ -356,26 +388,22 @@ it('defaults the checkout choice to a worktree from the current branch, and the 
 });
 
 it('returns the chosen config value and delivers later Agent changes through the Feed', async (): Promise<void> => {
-  const { caller, sessionRegistry, streams, configOptions, context } =
-    startSessionTestServer({
+  const { caller, streams, configOptions, createCaller } =
+    await startSessionTestServer({
       applyConfigOptions: false,
     });
   const sessionId = 'session-1';
-  sessionRegistry.system.get('sessions').send({
-    type: 'sessions.open',
+  await caller.session.setConfigOption({
     sessionId,
-    agent: 'mock',
+    configId: 'model',
+    type: 'id',
+    value: 'small',
   });
-  await waitFor(
-    sessionRegistry.system.get(`session:${sessionId}`),
-    (snapshot): boolean =>
-      snapshot.can({ type: 'session.prompt', turnId: 'ready', content: [] }),
-  );
   const controller = new AbortController();
   cleanups.push((): void => controller.abort());
-  const updates = await appRouter
-    .createCaller(context, { signal: controller.signal })
-    .feed.subscribe({ sessionId, after: null });
+  const updates = await createCaller({
+    signal: controller.signal,
+  }).feed.subscribe({ sessionId, after: null });
   const iterator = updates[Symbol.asyncIterator]();
   await iterator.next();
   expect(
@@ -420,7 +448,7 @@ it('returns the chosen config value and delivers later Agent changes through the
 });
 
 it('prompts and cancels through tRPC, with the same Session reopened only once', async (): Promise<void> => {
-  const { caller, streams } = startSessionTestServer();
+  const { caller, streams, connections } = await startSessionTestServer();
   const { messageId } = await caller.session.prompt({
     sessionId: 'session-1',
     prompt: [{ type: 'text', text: 'Hello' }],
@@ -445,10 +473,11 @@ it('prompts and cancels through tRPC, with the same Session reopened only once',
   });
   expect(next.messageId).not.toBe(messageId);
   expect(streams.get('session-1')).toBe(stream);
+  expect(connections).toHaveLength(1);
 });
 
 it('rejects unknown Sessions and input that breaks the contract', async (): Promise<void> => {
-  const { caller } = startSessionTestServer();
+  const { caller } = await startSessionTestServer();
   await expect(
     caller.session.prompt({
       sessionId: 'missing',
@@ -460,12 +489,12 @@ it('rejects unknown Sessions and input that breaks the contract', async (): Prom
   ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
 });
 
-it('reads a stored Session snapshot without opening an actor when its Feed is subscribed', async (): Promise<void> => {
-  const { sessionRegistry, context } = startSessionTestServer();
-  expect(sessionRegistry.system.get(sessionActorId)).toBeUndefined();
+it('reads a stored Session snapshot without connecting an Agent when its Feed is subscribed', async (): Promise<void> => {
+  const { connections, createCaller } = await startSessionTestServer();
+  expect(connections).toEqual([]);
   const controller = new AbortController();
   cleanups.push((): void => controller.abort());
-  const caller = appRouter.createCaller(context, { signal: controller.signal });
+  const caller = createCaller({ signal: controller.signal });
   const updates = await caller.feed.subscribe({
     sessionId: 'session-1',
     after: null,
@@ -475,47 +504,50 @@ it('reads a stored Session snapshot without opening an actor when its Feed is su
     type: 'snapshot',
     snapshot: { configOptions: [] },
   });
-  expect(sessionRegistry.system.get(sessionActorId)).toBeUndefined();
+  expect(connections).toEqual([]);
   controller.abort();
   await iterator.return?.();
 });
 
 it('removes a closed Session and resumes it with the stored Agent identity on the next prompt', async (): Promise<void> => {
-  const { caller, sessionRegistry, streams } = startSessionTestServer();
+  const { caller, connections, streams } = await startSessionTestServer();
   await caller.session.prompt({
     sessionId: 'session-1',
     prompt: [{ type: 'text', text: 'First' }],
   });
   await caller.session.cancel({ sessionId: 'session-1' });
-  const first = sessionRegistry.system.get(sessionActorId);
-  first.send({ type: 'session.close' });
-  await waitFor(first, (snapshot): boolean => snapshot.status === 'done');
+  await caller.session.close({ sessionId: 'session-1' });
   await caller.session.prompt({
     sessionId: 'session-1',
     prompt: [{ type: 'text', text: 'Resume' }],
   });
   expect(streams.get('session-1')?.input.vendorSessionId).toBe('vendor-1');
-  expect(sessionRegistry.system.get(sessionActorId)).not.toBe(first);
+  expect(
+    connections.map(({ sessionId, vendorSessionId }) => ({
+      sessionId,
+      vendorSessionId,
+    })),
+  ).toEqual([
+    { sessionId: 'session-1', vendorSessionId: null },
+    { sessionId: 'session-1', vendorSessionId: 'vendor-1' },
+  ]);
 });
 
 it('resumes a closed Session with the config it last ran with', async (): Promise<void> => {
-  const { caller, sessionRegistry, streams } = startSessionTestServer();
+  const { caller, streams } = await startSessionTestServer();
   const { sessionId } = await caller.session.new(newSession);
   await caller.session.cancel({ sessionId });
-  await caller.session.setConfigOption({
-    sessionId,
-    configId: 'model',
-    type: 'id',
-    value: 'small',
+  expect(
+    await caller.session.setConfigOption({
+      sessionId,
+      configId: 'model',
+      type: 'id',
+      value: 'small',
+    }),
+  ).toMatchObject({
+    configOptions: [{ configId: 'model', currentValue: 'small' }],
   });
-  const first = sessionRegistry.system.get(`session:${sessionId}`);
-  await vi.waitFor((): void =>
-    expect(first.getSnapshot().context.configOptions).toMatchObject([
-      { currentValue: 'small' },
-    ]),
-  );
-  first.send({ type: 'session.close' });
-  await waitFor(first, (snapshot): boolean => snapshot.status === 'done');
+  await caller.session.close({ sessionId });
   await caller.session.prompt({
     sessionId,
     prompt: [{ type: 'text', text: 'Resume' }],
@@ -526,7 +558,7 @@ it('resumes a closed Session with the config it last ran with', async (): Promis
 });
 
 it('refuses commands for a Subagent while keeping its stored Feed readable', async (): Promise<void> => {
-  const { caller, sessionRegistry, database } = startSessionTestServer();
+  const { caller, connections, database } = await startSessionTestServer();
   insertSession(database, { id: 'subagent', parentSessionId: 'session-1' });
   await expect(
     caller.session.prompt({
@@ -540,11 +572,11 @@ it('refuses commands for a Subagent while keeping its stored Feed readable', asy
   expect(
     await caller.feed.page({ sessionId: 'subagent', direction: 'tail' }),
   ).toMatchObject({ rows: [] });
-  expect(sessionRegistry.system.get('session:subagent')).toBeUndefined();
+  expect(connections).toEqual([]);
 });
 
 it('rejects config choices that the Agent did not offer', async (): Promise<void> => {
-  const { caller } = startSessionTestServer();
+  const { caller } = await startSessionTestServer();
   await expect(
     caller.session.setConfigOption({
       sessionId: 'session-1',
@@ -560,7 +592,7 @@ it('keeps the Session failure when the registry removes a Session during its Fee
   cleanups.push((): void => {
     vi.useRealTimers();
   });
-  const { caller, streams } = startSessionTestServer();
+  const { caller, streams } = await startSessionTestServer();
   await caller.session.prompt({
     sessionId: 'session-1',
     prompt: [{ type: 'text', text: 'Start a Turn' }],
@@ -587,7 +619,7 @@ it('keeps the Session failure when the registry removes a Session during its Fee
 });
 
 it('rejects a Permission answer for a different Tool call through the router', async (): Promise<void> => {
-  const { caller, streams } = startSessionTestServer();
+  const { caller, streams } = await startSessionTestServer();
   await caller.session.prompt({
     sessionId: 'session-1',
     prompt: [{ type: 'text', text: 'Start' }],
@@ -612,7 +644,7 @@ it('rejects a Permission answer for a different Tool call through the router', a
 it.each(newSessionInputs)(
   'creates an image prompt Session from the $agent App mock through the real router',
   async (input): Promise<void> => {
-    const { caller, streams, commands } = startSessionTestServer();
+    const { caller, streams, commands } = await startSessionTestServer();
     const configOptions = [{ configId: 'fast', value: true }];
     const { sessionId } = await caller.session.new({
       ...newSession,

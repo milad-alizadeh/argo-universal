@@ -1,3 +1,4 @@
+import type { FileHandle } from 'fs/promises';
 import { open } from 'node:fs/promises';
 import type {
   IncomingMessage,
@@ -34,9 +35,7 @@ const httpStatus = {
   internalError: 500,
 };
 
-const openBlob = (
-  path: string,
-): Promise<void | import('fs/promises').FileHandle> =>
+const openBlob = (path: string): Promise<void | FileHandle> =>
   open(path).catch((error: NodeJS.ErrnoException): void => {
     if (error.code === 'ENOENT') return;
     throw error;

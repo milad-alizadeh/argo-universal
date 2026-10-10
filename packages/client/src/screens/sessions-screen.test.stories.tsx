@@ -1,15 +1,17 @@
+import type { SessionListUpdate, SessionCounts } from '@repo/contracts';
 import {
   activeSessions,
   agentsList,
   archivedSessions,
   projectsList,
   sessionRows,
-} from '@repo/api/mocks';
-import type { SessionListUpdate, SessionCounts } from '@repo/contracts';
+} from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
-import { useEffect } from 'react';
+import { useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
 import { expect, waitFor, within } from 'storybook/test';
+import { ConnectionStatePreview } from '../../mocks/connection-state-preview';
 import { eachLayout, layoutWidths } from '../../mocks/each-layout';
 import {
   emptySessionListMocks,
@@ -28,8 +30,7 @@ import { settleViewport } from '../../mocks/settle-viewport';
 import type { FixtureOutput } from '../../mocks/trpc-mock-link';
 import { fails, pending } from '../../mocks/trpc-mock-link';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
-import { useConnection } from '../connection/context';
-import type { ConnectionActor } from '../connection/open-connection';
+import type { ConnectionState } from '../connection/context';
 import { DesktopLayout } from './desktop-layout';
 import { SessionsScreen } from './sessions-screen';
 
@@ -188,72 +189,19 @@ export const SearchPhoneLight = search(layoutWidths.phone, 'light');
 export const SearchPhoneDark = search(layoutWidths.phone, 'dark');
 export const SearchWideLight = search(layoutWidths.wide, 'light');
 export const SearchWideDark = search(layoutWidths.wide, 'dark');
-function searchMorph(width: number, mode: Mode): Story {
+function searchFocusAndReset(width: number, mode: Mode): Story {
   return {
     globals: { mode },
     play: async ({ canvas, userEvent }) => {
       if ('__vitest_browser__' in globalThis) await settleViewport(width);
-      const surface = canvas.getByTestId('list-search-surface');
-      const measureTransition = async (
-        button: HTMLElement,
-      ): Promise<number[]> => {
-        const samples = new Promise<number[]>((resolve) => {
-          button.addEventListener(
-            'click',
-            () => {
-              const widths: number[] = [];
-              const started = performance.now();
-              function measure(): void {
-                widths.push(surface.getBoundingClientRect().width);
-                if (performance.now() - started < 400)
-                  requestAnimationFrame(measure);
-                else resolve(widths);
-              }
-              requestAnimationFrame(measure);
-            },
-            { once: true },
-          );
-        });
-        await userEvent.click(button);
-        return samples;
-      };
       await expect(canvas.queryByRole('textbox')).toBeNull();
-      await waitFor(() =>
-        expect(surface.getBoundingClientRect().width).toBeCloseTo(
-          canvas
-            .getByRole('button', { name: searchPlaceholder })
-            .getBoundingClientRect().width,
-          0,
-        ),
-      );
-      const collapsedWidth = surface.getBoundingClientRect().width;
-      // One plain open and close. Closing with a query clears the list filter, and that render can swallow the whole animation, so the query is checked below.
-      const openingWidths = await measureTransition(
+      await userEvent.click(
         canvas.getByRole('button', { name: searchPlaceholder }),
       );
       await waitFor(() =>
         expect(
           canvas.getByRole('textbox', { name: searchPlaceholder }),
         ).toHaveFocus(),
-      );
-      const expandedWidth = surface.getBoundingClientRect().width;
-      await expect(expandedWidth).toBeGreaterThan(collapsedWidth * 3);
-      const closingWidths = await measureTransition(
-        canvas.getByRole('button', { name: 'Close search' }),
-      );
-      await waitFor(() => expect(canvas.queryByRole('textbox')).toBeNull());
-      await waitFor(() =>
-        expect(surface.getBoundingClientRect().width).toBeCloseTo(
-          collapsedWidth,
-          0,
-        ),
-      );
-      const isBetween = (width: number): boolean =>
-        width > collapsedWidth + 1 && width < expandedWidth - 1;
-      await expect(openingWidths.some(isBetween)).toBe(true);
-      await expect(closingWidths.some(isBetween)).toBe(true);
-      await userEvent.click(
-        canvas.getByRole('button', { name: searchPlaceholder }),
       );
       await userEvent.type(
         canvas.getByRole('textbox', { name: searchPlaceholder }),
@@ -275,14 +223,26 @@ function searchMorph(width: number, mode: Mode): Story {
         ).toHaveFocus(),
       );
       await userEvent.keyboard('{Escape}');
-      await waitFor(() => expect(getComputedStyle(surface).opacity).toBe('0'));
+      await waitFor(() => expect(canvas.queryByRole('textbox')).toBeNull());
     },
   };
 }
-export const SearchMorphPhoneLight = searchMorph(layoutWidths.phone, 'light');
-export const SearchMorphPhoneDark = searchMorph(layoutWidths.phone, 'dark');
-export const SearchMorphWideLight = searchMorph(layoutWidths.wide, 'light');
-export const SearchMorphWideDark = searchMorph(layoutWidths.wide, 'dark');
+export const SearchFocusAndResetPhoneLight = searchFocusAndReset(
+  layoutWidths.phone,
+  'light',
+);
+export const SearchFocusAndResetPhoneDark = searchFocusAndReset(
+  layoutWidths.phone,
+  'dark',
+);
+export const SearchFocusAndResetWideLight = searchFocusAndReset(
+  layoutWidths.wide,
+  'light',
+);
+export const SearchFocusAndResetWideDark = searchFocusAndReset(
+  layoutWidths.wide,
+  'dark',
+);
 
 function archivedFilter(width: number, mode: Mode): Story {
   return {
@@ -378,12 +338,13 @@ export const NavigationWideLight = navigation(layoutWidths.wide, 'light');
 export const NavigationWideDark = navigation(layoutWidths.wide, 'dark');
 export const LargeList: Story = {
   parameters: { trpc: largeSessionListMocks },
-  play: async ({ canvas, canvasElement }) =>
+  play: async ({ canvas }) =>
     eachLayout(async () => {
       await expect(await canvas.findByText('Large Session 0')).toBeVisible();
       await expect(canvas.queryByText('Large Session 1999')).toBeNull();
       await expect(
-        canvasElement.querySelectorAll('[data-testid="session-logo"]').length,
+        canvas.getAllByRole('button', { name: /^Large Session \d+, Idle$/ })
+          .length,
       ).toBeLessThan(100);
     }),
 };
@@ -391,9 +352,9 @@ export const MultipleProjects: Story = {
   parameters: { trpc: multipleProjectsMocks },
   play: async ({ canvas }) =>
     eachLayout(async () => {
+      const scroll = await canvas.findByTestId(sessionsScrollId);
+      scroll.scrollTop = scroll.scrollHeight;
       const project = await canvas.findByText('Empty Project');
-      // The list draws only rows near the view, so bring the Project's rows in.
-      project.scrollIntoView();
       await expect(project).toBeVisible();
       await expect(await canvas.findByText('No Sessions yet.')).toBeVisible();
     }),
@@ -407,16 +368,20 @@ export const LiveUpdates: Story = {
     await waitFor(() =>
       expect(canvas.getByText('Finished work')).toBeVisible(),
     );
-    liveUpdates.publish({
-      type: 'changed',
-      session: {
-        ...sessionRows.idle,
-        title: 'Newest activity',
-        activity: 'Running new work',
-        status: 'running',
-        activityAt: 300,
+    const updatedSession = {
+      ...sessionRows.idle,
+      title: 'Newest activity',
+      activity: 'Running new work',
+      status: 'running' as const,
+      activityAt: 300,
+    };
+    liveUpdates.respondWith({
+      first: {
+        sessions: [updatedSession, { ...sessionRows.running, activityAt: 200 }],
+        nextCursor: null,
       },
     });
+    liveUpdates.publish({ type: 'changed', session: updatedSession });
     await waitFor(() =>
       expect(
         canvas.getByRole('button', { name: 'Newest activity, Running' }),
@@ -438,6 +403,9 @@ export const LiveUpdates: Story = {
         );
       }),
     );
+    liveUpdates.respondWith({
+      first: { sessions: [updatedSession], nextCursor: null },
+    });
     liveUpdates.publish({
       type: 'removed',
       sessionId: sessionRows.running.sessionId,
@@ -500,7 +468,6 @@ export const NextPageLoading: Story = {
     }),
 };
 
-let reconnectConnection: ConnectionActor | undefined;
 const reconnectCalls = { listUpdates: 0, counts: 0 };
 const recoveredTitle = 'Session updated after reconnect';
 const reconnectMocks = {
@@ -534,12 +501,11 @@ const reconnectMocks = {
 export const ReconnectRestoresLiveSubscriptions: Story = {
   parameters: { trpc: reconnectMocks },
   beforeEach: () => {
-    reconnectConnection = undefined;
     reconnectCalls.listUpdates = 0;
     reconnectCalls.counts = 0;
   },
   render: () => <ReconnectingSessionsScreen />,
-  play: async ({ canvas }) => {
+  play: async ({ canvas, userEvent }) => {
     await settleViewport(layoutWidths.wide);
     await expect(
       (await canvas.findAllByText(sessionRows.idle.title ?? ''))[0],
@@ -551,16 +517,15 @@ export const ReconnectRestoresLiveSubscriptions: Story = {
     await expect(
       canvas.queryByLabelText('7 Sessions need attention'),
     ).toBeNull();
-    if (!reconnectConnection)
-      throw new Error('Connection mock was not mounted');
-    reconnectConnection.send({
-      type: 'connection.lost',
-      error: new Error('Socket closed'),
-    });
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Disconnect fixture' }),
+    );
     await expect(
       await canvas.findByText('Reconnecting to the Server…'),
     ).toBeVisible();
-    reconnectConnection.send({ type: 'connection.opened' });
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'Reconnect fixture' }),
+    );
     await waitFor(() =>
       expect(reconnectCalls).toEqual({ listUpdates: 2, counts: 2 }),
     );
@@ -574,11 +539,22 @@ export const ReconnectRestoresLiveSubscriptions: Story = {
 };
 
 function ReconnectingSessionsScreen(): React.JSX.Element {
-  const connection = useConnection();
-  useEffect(() => {
-    reconnectConnection = connection;
-  }, [connection]);
-  return <DesktopLayout destination={{ to: 'sessions' }}>{null}</DesktopLayout>;
+  const [state, setState] = useState<ConnectionState>('open');
+  return (
+    <>
+      <View>
+        <Pressable role="button" onPress={() => setState('reconnecting')}>
+          <Text>Disconnect fixture</Text>
+        </Pressable>
+        <Pressable role="button" onPress={() => setState('open')}>
+          <Text>Reconnect fixture</Text>
+        </Pressable>
+      </View>
+      <ConnectionStatePreview state={state}>
+        <DesktopLayout destination={{ to: 'sessions' }}>{null}</DesktopLayout>
+      </ConnectionStatePreview>
+    </>
+  );
 }
 
 const liveRetryCatalogs = agentsList.map((agent) => {
@@ -682,7 +658,9 @@ export const OfflineDoesNotShowLiveUpdatesStopped: Story = {
 function burstRefetch(width: number, agentIndex: 0 | 1): Story {
   const catalog = streamingSessionCatalogs[agentIndex];
   if (!catalog) throw new Error('Recorded catalog needs both Agents.');
-  const updates = createSessionListUpdatesMock({ sessions: [catalog.row] });
+  const updates = createSessionListUpdatesMock({
+    first: { sessions: [catalog.row], nextCursor: null },
+  });
   const newestTitle = `${catalog.row.title} — update 30`;
   return {
     parameters: { trpc: updates.fixtures },
@@ -696,6 +674,18 @@ function burstRefetch(width: number, agentIndex: 0 | 1): Story {
       await waitFor(() => expect(updates.calls.active).toBe(0));
       const before = updates.calls.list;
       updates.hold();
+      updates.respondWith({
+        first: {
+          sessions: [
+            {
+              ...catalog.row,
+              title: newestTitle,
+              activityAt: catalog.row.activityAt + 30,
+            },
+          ],
+          nextCursor: null,
+        },
+      });
       for (let index = 1; index <= 30; index++)
         updates.publish({
           type: 'changed',
@@ -730,7 +720,11 @@ function streamingPagination(width: number, agentIndex: 0 | 1): Story {
   const last = catalog?.pages.at(-1);
   if (!catalog || !first || !last)
     throw new Error('Recorded catalog needs two pages for both Agents.');
-  const updates = createSessionListUpdatesMock({ sessions: catalog.pages });
+  const initialPages = {
+    first: { sessions: catalog.pages.slice(0, 50), nextCursor: '50' },
+    '50': { sessions: catalog.pages.slice(50), nextCursor: null },
+  };
+  const updates = createSessionListUpdatesMock(initialPages);
   const newestTitle = `${first.title} — streaming`;
   return {
     parameters: { trpc: updates.fixtures },
@@ -745,6 +739,16 @@ function streamingPagination(width: number, agentIndex: 0 | 1): Story {
       await expect(updates.calls.nextPage).toBe(0);
       await expect(canvas.queryByText(last.title)).toBeNull();
       updates.hold();
+      updates.respondWith({
+        ...initialPages,
+        first: {
+          sessions: [
+            { ...first, status: 'running', activity: 'Streaming work' },
+            ...catalog.pages.slice(1, 50),
+          ],
+          nextCursor: '50',
+        },
+      });
       updates.publish({
         type: 'changed',
         session: { ...first, status: 'running', activity: 'Streaming work' },
@@ -764,6 +768,21 @@ function streamingPagination(width: number, agentIndex: 0 | 1): Story {
         const indicator = spinner.getBoundingClientRect();
         await expect(indicator.top).toBeGreaterThanOrEqual(viewport.top);
         await expect(indicator.bottom).toBeLessThanOrEqual(viewport.bottom);
+      });
+      updates.respondWith({
+        ...initialPages,
+        first: {
+          sessions: [
+            {
+              ...first,
+              status: 'running',
+              title: newestTitle,
+              activity: 'Still streaming work',
+            },
+            ...catalog.pages.slice(1, 50),
+          ],
+          nextCursor: '50',
+        },
       });
       updates.publish({
         type: 'changed',

@@ -6,6 +6,7 @@ import {
   _electron as electron,
   type Page,
   type ElectronApplication,
+  type Disposable,
 } from '@playwright/test';
 import { test as base } from 'playwright-bdd';
 import { z } from 'zod';
@@ -42,10 +43,7 @@ const readServerPid = async (home: string): Promise<number | null> => {
 };
 
 // The App prefers the Server URL the desktop preload sets over its built-in one, so tests can point it at any port.
-const pointAppAtServer = (
-  page: Page,
-  serverUrl: string,
-): Promise<import('@playwright/test').Disposable> =>
+const pointAppAtServer = (page: Page, serverUrl: string): Promise<Disposable> =>
   page.addInitScript((url): void => {
     Object.assign(globalThis, { argo: { serverUrl: url } });
   }, serverUrl);
@@ -55,7 +53,7 @@ export type ServerOptions = {
   mockAgents: MockAgents;
 };
 
-type App = { page: Page; httpUrl: string };
+type App = { page: Page; httpUrl: string; registryPath: string };
 
 // Polls system.info, so a test never calls a Server that is still starting.
 const waitForServer = (httpUrl: string): Promise<true> =>
@@ -91,7 +89,11 @@ export const test = base.extend<
         const page = await context.newPage();
         await pointAppAtServer(page, server.serverUrl);
         await page.goto('/');
-        await use({ page, httpUrl: server.httpUrl });
+        await use({
+          page,
+          httpUrl: server.httpUrl,
+          registryPath: server.registryPath,
+        });
       } finally {
         await server.stop();
       }
@@ -123,7 +125,11 @@ export const test = base.extend<
       });
       const httpUrl = fixtureServer.httpUrl;
       await waitForServer(httpUrl);
-      await use({ page: await electronApp.firstWindow(), httpUrl });
+      await use({
+        page: await electronApp.firstWindow(),
+        httpUrl,
+        registryPath: fixtureServer.registryPath,
+      });
     } finally {
       // Close the App before gracefully stopping its fixture Engine.
       try {

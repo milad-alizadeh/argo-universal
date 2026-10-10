@@ -3,9 +3,9 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/text';
 import { toolCallTitle, toolCallTitlePaths } from '../feed/tool-call-title';
-import { FeedCodeBlock } from './feed-code-block';
 import { ToolCallDisclosure } from './tool-call-disclosure';
 import { toolCallIcon } from './tool-call-icon';
+import { ToolOutput } from './tool-output';
 
 export interface ToolCallRowProps {
   row: ToolCallUpdate;
@@ -23,19 +23,6 @@ export function ToolCallRow({
   const path =
     row._meta?.argo?.commandActions?.find((action) => action.path)?.path ??
     row.locations?.[0]?.path;
-  const output = row.content
-    .flatMap((block) => {
-      if (block.type === 'terminal') return [block.output];
-      if (block.type !== 'content') return [];
-      if (block.content.type === 'text') return [block.content.text];
-      if (
-        block.content.type === 'resource' &&
-        block.content.resource.text !== undefined
-      )
-        return [block.content.resource.text];
-      return [];
-    })
-    .join('\n');
   return (
     <ToolCallDisclosure
       label={toolCallTitle(row, awaitingApproval)}
@@ -48,19 +35,14 @@ export function ToolCallRow({
       permissionOutcome={row._meta?.argo?.permissionOutcome}
       permissionMessage={permissionMessage}
     >
-      <FeedCodeBlock
-        language={path?.split('/').at(-1) ?? 'Output'}
-        code={output}
-        footer={
-          row.status === 'failed' || row.status === 'cancelled' ? (
-            <View className="px-3 pb-2">
-              <Text className="type-secondary">
-                {row.status === 'failed' ? 'Failed' : 'Stopped'}
-              </Text>
-            </View>
-          ) : undefined
-        }
-      />
+      <ToolOutput content={row.content} language={path?.split('/').at(-1)} />
+      {(row.status === 'failed' || row.status === 'cancelled') && (
+        <View className="px-3 pb-2">
+          <Text className="type-secondary">
+            {row.status === 'failed' ? 'Failed' : 'Stopped'}
+          </Text>
+        </View>
+      )}
     </ToolCallDisclosure>
   );
 }

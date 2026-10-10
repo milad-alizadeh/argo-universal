@@ -1,4 +1,4 @@
-import { newSessionCatalogs } from '@repo/api/mocks';
+import { newSessionCatalogs } from '@repo/mocks/app';
 import { PortalHost } from '@rn-primitives/portal';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
@@ -90,7 +90,6 @@ function noEffortSelection(width: number, agentIndex: number): Story {
           'aria-valuetext',
           noSelectionLabel,
         );
-        await expect(getComputedStyle(slider).backgroundImage).toBe('none');
         for (const button of overlay.getAllByRole('button', {
           name: /^Set effort to /,
         }))

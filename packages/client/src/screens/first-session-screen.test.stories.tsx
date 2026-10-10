@@ -1,13 +1,13 @@
-import {
-  newSessionCatalogs,
-  recordedFeedMocks,
-  sessionRows,
-} from '@repo/api/mocks';
 import type {
   FeedPageInput,
   FeedRowInput,
   FeedSubscribeInput,
 } from '@repo/contracts';
+import {
+  newSessionCatalogs,
+  recordedFeedMocks,
+  sessionRows,
+} from '@repo/mocks/app';
 import { PortalHost } from '@rn-primitives/portal';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
@@ -92,7 +92,9 @@ const sessionCatalogs = newSessionCatalogs.bothAvailable.map((agent, index) => {
 function keepsTheOpenSession(agentIndex: 0 | 1): Story {
   const catalog = sessionCatalogs[agentIndex];
   if (!catalog) throw new Error(missingAgentsFailure);
-  const updates = createSessionListUpdatesMock();
+  const updates = createSessionListUpdatesMock({
+    first: { sessions: [catalog.first, catalog.second], nextCursor: null },
+  });
   return {
     beforeEach: () => updates.reset(),
     parameters: {
@@ -109,6 +111,12 @@ function keepsTheOpenSession(agentIndex: 0 | 1): Story {
       ).toBeVisible();
       const message = await canvas.findByRole('textbox', { name: 'Message' });
       await userEvent.type(message, 'A half-typed draft');
+      updates.respondWith({
+        first: {
+          sessions: [{ ...catalog.second, activityAt: 300 }, catalog.first],
+          nextCursor: null,
+        },
+      });
       updates.publish({
         type: 'changed',
         session: { ...catalog.second, activityAt: 300 },
@@ -133,6 +141,9 @@ function keepsTheOpenSession(agentIndex: 0 | 1): Story {
       await expect(
         canvas.queryByRole('heading', { name: catalog.second.title }),
       ).toBeNull();
+      updates.respondWith({
+        first: { sessions: [catalog.second], nextCursor: null },
+      });
       updates.publish({ type: 'removed', sessionId: catalog.first.sessionId });
       await expect(
         await canvas.findByRole('heading', { name: catalog.second.title }),
@@ -258,18 +269,6 @@ function sessionUpdateMocks(
     ...idleSessionMocks,
     ...updates.fixtures,
     'agents.list': () => [catalog.agent],
-    'session.list': async (
-      input: Parameters<(typeof updates.fixtures)['session.list']>[0],
-    ) => {
-      const list = await updates.fixtures['session.list'](input);
-      return {
-        ...list,
-        sessions: list.sessions.map((session) => ({
-          ...session,
-          agent: catalog.agent.agent,
-        })),
-      };
-    },
     'feed.page': (input: FeedPageInput) =>
       catalog.feedFor(input.sessionId)['feed.page'](input),
     'feed.row': (input: FeedRowInput) =>
@@ -282,12 +281,12 @@ function sessionUpdateMocks(
 function keepsNewSessionUntilLeavingRoot(agentIndex: 0 | 1): Story {
   const catalog = sessionCatalogs[agentIndex];
   if (!catalog) throw new Error(missingAgentsFailure);
-  const updates = createSessionListUpdatesMock();
+  const updates = createSessionListUpdatesMock({
+    first: { sessions: [], nextCursor: null },
+  });
   return {
     beforeEach: () => {
       updates.reset();
-      updates.publish({ type: 'removed', sessionId: catalog.first.sessionId });
-      updates.publish({ type: 'removed', sessionId: catalog.second.sessionId });
     },
     parameters: {
       screenPreview: true,
@@ -303,6 +302,12 @@ function keepsNewSessionUntilLeavingRoot(agentIndex: 0 | 1): Story {
         await canvas.findByRole('textbox', { name: 'Message' }),
         'My new Session draft',
       );
+      updates.respondWith({
+        first: {
+          sessions: [{ ...catalog.first, activityAt: 300 }],
+          nextCursor: null,
+        },
+      });
       updates.publish({
         type: 'changed',
         session: { ...catalog.first, activityAt: 300 },

@@ -2,7 +2,7 @@ import type { AgentProbe } from '@repo/agents';
 import { createMockAdapter } from '@repo/mocks/agent';
 import { unwalkedTransitions } from '@repo/vitest/model-coverage';
 import { terminalPaths } from '@repo/vitest/model-paths';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi, type VitestUtils } from 'vitest';
 import { createActor, fromPromise, type SnapshotFrom } from 'xstate';
 import {
   type AdjacencyMap,
@@ -14,7 +14,7 @@ import { agentProbeMachine } from './agent-probe-machine';
 
 const refreshProbeEvent = 'agentProbe.refresh';
 
-afterEach((): import('vitest').VitestUtils => vi.useRealTimers());
+afterEach((): VitestUtils => vi.useRealTimers());
 
 const available: AgentProbe = { availability: 'available', configOptions: [] };
 const input = { adapter: createMockAdapter() };

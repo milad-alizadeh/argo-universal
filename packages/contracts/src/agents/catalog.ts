@@ -1,0 +1,43 @@
+import { z } from 'zod';
+import { agentColumns, syncJobsColumns } from '../columns';
+import type {
+  ACPAgent,
+  BinaryTarget,
+  PackageDistribution,
+} from './upstream/registry.gen';
+
+export type { ACPAgent, ACPAgentRegistry } from './upstream/registry.gen';
+export const AgentRecord = agentColumns;
+export type AgentRecord = z.infer<typeof AgentRecord>;
+export const SyncJobRecord = syncJobsColumns;
+export type SyncJobRecord = z.infer<typeof SyncJobRecord>;
+
+export const AgentsCatalogInput = z
+  .object({
+    search: z.string().optional(),
+  })
+  .optional();
+export type AgentsCatalogInput = z.infer<typeof AgentsCatalogInput>;
+
+export type RegistrySupport =
+  | { kind: 'binary'; recipe: BinaryTarget }
+  | { kind: 'npx' | 'uvx'; recipe: PackageDistribution }
+  | { kind: 'unsupported'; reason: string };
+
+export interface AgentsCatalogOutput {
+  agents: {
+    id: AgentRecord['id'];
+    entry: ACPAgent;
+    support: RegistrySupport;
+  }[];
+  serverPlatform: string;
+  status: 'fresh' | 'stale' | 'unavailable';
+  syncStatus: SyncJobRecord['status'];
+  fetchedAt: AgentRecord['catalogSyncedAt'];
+  error: string | null;
+  rejectedValues: number;
+}
+
+export interface AgentsCatalogSyncOutput {
+  accepted: true;
+}

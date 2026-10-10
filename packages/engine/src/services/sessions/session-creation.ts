@@ -12,6 +12,7 @@ import {
   requireOpenSessionActor,
   sendCheckedRegistryCommand,
 } from './session-opening';
+import { submitSessionPrompt } from './session-submission';
 
 async function requireCheckoutProjectPath(
   database: Context['database'],
@@ -64,7 +65,8 @@ async function waitForSessionInsertCommitted(
   sessionId: string,
 ): Promise<void> {
   const databaseWriter = findDatabaseWriter(sessionRegistry.system);
-  if (!databaseWriter) return;
+  if (!databaseWriter || databaseWriter.getSnapshot().status !== 'active')
+    throw new Error('Database Writer is unavailable');
   const writerSnapshot = await waitFor(
     databaseWriter,
     (writerSnapshot): boolean =>
@@ -73,7 +75,10 @@ async function waitForSessionInsertCommitted(
       writerSnapshot.matches('waitingToRetry'),
     { timeout: Infinity },
   );
-  if (isSessionInsertQueued(writerSnapshot, sessionId))
+  if (
+    writerSnapshot.status !== 'active' ||
+    isSessionInsertQueued(writerSnapshot, sessionId)
+  )
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
       message: writerSnapshot.matches('waitingToRetry')
@@ -106,5 +111,18 @@ export async function createSession(
     requireOpenSessionActor(context.sessions, sessionId),
   );
   await waitForSessionInsertCommitted(context.sessions, sessionId);
+  await submitInitialAcpPrompt(
+    requireOpenSessionActor(context.sessions, sessionId),
+  );
   return { sessionId };
 }
+
+const submitInitialAcpPrompt = (session: SessionActorRef): Promise<void> => {
+  const { input, acpLease } = session.getSnapshot().context;
+  if (!acpLease || input.kind !== 'new' || input.prompt.length === 0)
+    return Promise.resolve();
+  return submitSessionPrompt(session, {
+    turnId: input.turnId,
+    content: input.prompt,
+  });
+};

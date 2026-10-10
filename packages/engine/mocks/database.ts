@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { type Database, openDatabase } from '@repo/db';
 import { project, session } from '@repo/db/schema';
+import { onTestFinished, vi } from 'vitest';
 
 // A database in a new temp directory holding `project-1` and its Session `session-1`; `remove` closes and deletes it.
 export function openTestDatabase(
@@ -20,7 +21,7 @@ export function openTestDatabase(
     database,
     directory,
     remove: (): void => {
-      database.$client.close();
+      if (database.$client.isOpen) database.$client.close();
       rmSync(directory, { recursive: true, force: true });
     },
   };
@@ -77,5 +78,8 @@ export function countDatabaseReads(database: Database): {
         };
       },
     });
-  return { database: counted(database), metrics };
+  const select = counted(database).select.bind(database);
+  const observed = vi.spyOn(database, 'select').mockImplementation(select);
+  onTestFinished((): void => observed.mockRestore());
+  return { database, metrics };
 }

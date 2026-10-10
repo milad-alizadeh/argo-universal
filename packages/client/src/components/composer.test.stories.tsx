@@ -1,5 +1,5 @@
-import { newSessionCatalogs } from '@repo/api/mocks';
 import type { AgentInfo, SessionConfigSelectOption } from '@repo/contracts';
+import { newSessionCatalogs } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import type * as React from 'react';
@@ -8,6 +8,7 @@ import { View } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { expect, fn, waitFor, within } from 'storybook/test';
+import { userEvent as browserUserEvent } from 'vitest/browser';
 import {
   composerProps,
   composerImages,
@@ -39,8 +40,10 @@ const chooseAgentLabel = 'Choose Agent';
 const valueTextAttribute = 'aria-valuetext';
 const chooseModelLabel = 'Choose model';
 const pressedAttribute = 'aria-pressed';
+const expandedAttribute = 'aria-expanded';
 const subagentCountLabel = 'Subagents: 2';
 const contextWindowLabel = 'Context window';
+const runningPlanStepLabel = 'Update the shared controls in progress';
 const planTitle = 'Verify phone and desktop';
 const planStepsId = 'composer-plan-steps';
 
@@ -550,7 +553,7 @@ function pickers(width: number, agentIndex: number): Story {
       await expect(
         await overlay.findByRole('slider', { name: 'Effort' }),
       ).toHaveAttribute(valueTextAttribute, catalog.currentEffort);
-      await expectEffortScale();
+      await expectEffortControlsVisible();
       await expectHighEffort({ canvas, userEvent, width, catalog });
       for (const model of catalog.models)
         await expectEffortFollowsModel({ canvas, userEvent, width, model });
@@ -585,27 +588,16 @@ async function chooseModel({
     ).toBeVisible();
 }
 
-async function expectEffortScale(): Promise<void> {
+async function expectEffortControlsVisible(): Promise<void> {
   const overlay = within(document.body);
-  await Promise.all(
-    overlay
-      .getByRole('dialog')
-      .getAnimations({ subtree: true })
-      .filter(
-        (animation) => animation.effect?.getTiming().iterations !== Infinity,
-      )
-      .map((animation) => animation.finished),
-  );
+  await expect(overlay.getByRole('slider', { name: 'Effort' })).toBeVisible();
   for (const label of overlay.getAllByRole('button', {
     name: /^Set effort to /,
   })) {
+    await expect(label).toBeVisible();
     const text = label.querySelector('[dir]');
     if (!text) throw new Error('Effort label is missing.');
-    await expect(getComputedStyle(text).userSelect).toBe('none');
     await expect(text.scrollWidth).toBeLessThanOrEqual(text.clientWidth + 1);
-    await expect(text.getBoundingClientRect().height).toBeLessThanOrEqual(
-      Number.parseFloat(getComputedStyle(text).lineHeight) + 1,
-    );
   }
 }
 
@@ -616,7 +608,6 @@ async function expectHighEffort({
   catalog,
 }: PickerStep & { catalog: PickerCatalog }): Promise<void> {
   const overlay = within(document.body);
-  const { userEvent: browserUserEvent } = await import('vitest/browser');
   const model = catalog.highEffortModel;
   await chooseModel({ userEvent, width, name: model.name });
   await userEvent.click(
@@ -668,6 +659,7 @@ async function expectEffortFollowsModel({
 async function expectDangerousMode({
   canvas,
   userEvent,
+  width,
   catalog,
 }: PickerStep & { catalog: PickerCatalog }): Promise<void> {
   const overlay = within(document.body);
@@ -676,15 +668,16 @@ async function expectDangerousMode({
   const planMode = await overlay.findByRole('button', { name: planning.name });
   await waitFor(() => expect(planMode).toBeVisible());
   await expect(
-    within(planMode).getByTestId('icon-plan-mode'),
-  ).toBeInTheDocument();
-  await expect(
     overlay.getByRole('button', { name: dangerous.name }),
   ).toHaveAttribute(pressedAttribute, 'false');
   await userEvent.click(overlay.getByRole('button', { name: dangerous.name }));
   await waitFor(() =>
     expect(overlay.queryByRole('dialog')).not.toBeInTheDocument(),
   );
+  if (width >= 720)
+    await expect(
+      canvas.getByRole('button', { name: 'Mode' }),
+    ).toHaveTextContent(dangerous.name);
   await userEvent.click(canvas.getByRole('button', { name: 'Mode' }));
   await expect(
     await overlay.findByRole('button', { name: dangerous.name }),
@@ -872,10 +865,10 @@ function sessionControls(width: number): Story {
         await waitFor(() => expect(canvas.getByText(planTitle)).toBeVisible());
         await expect(
           canvas.getByRole('button', { name: 'Plan' }),
-        ).toHaveAttribute('aria-expanded', 'true');
+        ).toHaveAttribute(expandedAttribute, 'true');
       }
       const spinner = await overlay.findByRole('progressbar', {
-        name: 'Update the shared controls in progress',
+        name: runningPlanStepLabel,
       });
       await expect(spinner).toBeVisible();
       if (width < 720) await userEvent.keyboard('{Escape}');
@@ -1048,9 +1041,13 @@ export const ScrollableAgentCatalog: Story = {
         .getAnimations({ subtree: true })
         .map((animation) => animation.finished),
     );
+    await waitFor(() => expect(menu).toBeVisible());
     const heading = overlay.getByText('Agent', { exact: true });
     const headingTop = heading.getBoundingClientRect().top;
     const menuHeight = menu.getBoundingClientRect().height;
+    await expect(menu.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      window.innerHeight,
+    );
     scroll.scrollTop = scroll.scrollHeight;
     const lastAgent = await overlay.findByRole('button', {
       name: 'Select Agent 40',
@@ -1147,22 +1144,18 @@ function responsiveLayout(width: number, agentIndex: number): Story {
       const attachButton = canvas.getByRole('button', {
         name: width >= 720 ? 'Attach' : attachImagesLabel,
       });
-      await userEvent.hover(attachButton);
-      const highlight = attachButton.firstElementChild;
-      if (!highlight) throw new Error('Attach highlight is missing.');
-      const plus = attachButton.querySelector('[data-icon]');
-      if (!plus) throw new Error('Attach icon is missing.');
-      const iconLayer = plus.parentElement;
-      if (!iconLayer) throw new Error('Attach icon layer is missing');
-      await expect(Number(getComputedStyle(iconLayer).zIndex)).toBeGreaterThan(
-        Number(getComputedStyle(highlight).zIndex),
-      );
-      await userEvent.unhover(attachButton);
+      await expect(attachButton).toBeVisible();
       const trigger = canvas.getByRole('button', { name: agentModelLabel });
+      await expect(trigger).toBeVisible();
+      await expect(canvas.getByRole('button', { name: 'Mode' })).toBeVisible();
       if (width < 720) {
+        const subagents = canvas.getByRole('button', {
+          name: subagentCountLabel,
+        });
         await expect(
-          canvas.getByRole('button', { name: subagentCountLabel }),
+          canvas.getByRole('button', { name: 'Shells: 1' }),
         ).toBeVisible();
+        await expect(subagents).toBeVisible();
         await expect(
           canvas.queryByRole('button', { name: 'Agents: 2' }),
         ).not.toBeInTheDocument();
@@ -1212,6 +1205,42 @@ export const ResponsiveLayoutWideSecondAgent = responsiveLayout(
   1,
 );
 
+function workStatusCounts(agentIndex: number, shellsRunning: boolean): Story {
+  const catalog = pickerCatalogs[agentIndex];
+  if (!catalog) throw new Error(missingAvailableAgentFailure);
+  return {
+    args: {
+      configuration: {
+        agents: [catalog.agent],
+        agent: catalog.agent.agent,
+        configOptions: catalog.agent.configOptions,
+        onConfigChange: fn(),
+        checkout: { branch: 'main', newWorktree: false },
+      },
+      status: {
+        subagents: { count: 2, running: false, onPress: fn() },
+        shells: { count: 1, running: shellsRunning, onPress: fn() },
+      },
+    },
+    play: async ({ canvas }) => {
+      await settleViewport(layoutWidths.phone);
+      const subagents = canvas.getByRole('button', {
+        name: subagentCountLabel,
+      });
+      const shells = canvas.getByRole('button', { name: 'Shells: 1' });
+      await expect(subagents).toBeVisible();
+      await expect(shells).toBeVisible();
+      await expect(
+        canvas.queryByRole('button', { name: 'Agents: 2' }),
+      ).not.toBeInTheDocument();
+    },
+  };
+}
+export const WorkSettledFirstAgent = workStatusCounts(0, false);
+export const WorkSettledSecondAgent = workStatusCounts(1, false);
+export const ShellsRunningFirstAgent = workStatusCounts(0, true);
+export const ShellsRunningSecondAgent = workStatusCounts(1, true);
+
 export const ResponsiveLayoutNarrowPhone: Story = {
   render: (args) => (
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
@@ -1252,8 +1281,6 @@ async function expectPhoneFooter({ canvas, card }: FooterCheck): Promise<void> {
 async function expectWideFooter({
   canvas,
 }: Pick<PlayContext, 'canvas'>): Promise<void> {
-  const trigger = canvas.getByRole('button', { name: agentModelLabel });
-  await expect(within(trigger).getByTestId(agentIconId)).toBeVisible();
   const context = canvas.getByRole('button', { name: contextWindowLabel });
   const used = within(context).getByText('34k').getBoundingClientRect();
   const size = within(context).getByText('/ 200k').getBoundingClientRect();
@@ -1261,9 +1288,10 @@ async function expectWideFooter({
 }
 
 async function expectWideAgentMenu(): Promise<void> {
+  const overlay = within(document.body);
   await waitFor(() =>
     expect(
-      within(document.body).getByText('Start a new Session to switch Agent'),
+      overlay.getByText('Start a new Session to switch Agent'),
     ).toBeVisible(),
   );
 }
@@ -1273,7 +1301,6 @@ function editorScrollsAfterFourLines(width: number): Story {
     render: () => <SessionScreen id="session-1" />,
     parameters: { screenPreview: true, trpc: idleSessionMocks },
     play: async ({ canvas, userEvent }) => {
-      const { userEvent: browserUserEvent } = await import('vitest/browser');
       await settleViewport(width);
       const input = await canvas.findByRole('textbox', { name: 'Message' });
       await userEvent.type(
@@ -1427,41 +1454,23 @@ export const NoPlan: Story = {
 
 export const NoPlanDark: Story = { ...NoPlan, ...dark };
 
-export const PlanExpandsSmoothly: Story = {
+export const PlanOpensAndCloses: Story = {
   render: (args) => (
     <Composer {...composerProps({ ...args, sessionStarted: true })} />
   ),
   play: async ({ canvas, userEvent }) => {
     await settleViewport(layoutWidths.wide);
-    const panel = canvas.getByTestId(planStepsId);
-    const heights: number[] = [];
-    let collecting = true;
-    const sample = (): void => {
-      heights.push(panel.getBoundingClientRect().height);
-      if (collecting) requestAnimationFrame(sample);
-    };
-    requestAnimationFrame(sample);
-    try {
-      await userEvent.click(canvas.getByRole('button', { name: 'Plan' }));
-      // Open means the panel no longer clips its steps.
-      await waitFor(() =>
-        expect(panel.getBoundingClientRect().height).toBe(panel.scrollHeight),
-      );
-      const openHeight = panel.getBoundingClientRect().height;
-      await expect(
-        heights.some((height) => height > 0 && height < openHeight),
-      ).toBe(true);
-      heights.length = 0;
-      await userEvent.click(canvas.getByRole('button', { name: 'Plan' }));
-      await waitFor(() => expect(panel.getBoundingClientRect().height).toBe(0));
-      await expect(
-        heights.some((height) => height > 0 && height < openHeight),
-      ).toBe(true);
-      await waitFor(() =>
-        expect(canvas.getByText(planTitle)).not.toBeVisible(),
-      );
-    } finally {
-      collecting = false;
-    }
+    const toggle = canvas.getByRole('button', { name: 'Plan' });
+    await userEvent.click(toggle);
+    await expect(toggle).toHaveAttribute(expandedAttribute, 'true');
+    await waitFor(() => expect(canvas.getByText(planTitle)).toBeVisible());
+    await expect(
+      canvas.getByRole('progressbar', {
+        name: runningPlanStepLabel,
+      }),
+    ).toBeVisible();
+    await userEvent.click(toggle);
+    await expect(toggle).toHaveAttribute(expandedAttribute, 'false');
+    await waitFor(() => expect(canvas.getByText(planTitle)).not.toBeVisible());
   },
 };

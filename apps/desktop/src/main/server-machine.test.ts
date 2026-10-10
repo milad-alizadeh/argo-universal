@@ -10,6 +10,8 @@ import {
   fromCallback,
   fromPromise,
   type SnapshotFrom,
+  type PromiseActorLogic,
+  type EventObject,
 } from 'xstate';
 import {
   type DirectedGraphNode,
@@ -72,11 +74,7 @@ interface SpawnCall {
 // A promise actor that records each call in `calls()` and settles only when an executor says so.
 const createPromiseMock = <TOutput, TInput>(
   calls: () => PendingCall<TInput, TOutput>[],
-): import('xstate').PromiseActorLogic<
-  TOutput,
-  TInput,
-  import('xstate').EventObject
-> =>
+): PromiseActorLogic<TOutput, TInput, EventObject> =>
   fromPromise<TOutput, TInput>(
     ({ input }): Promise<TOutput> =>
       new Promise<TOutput>((resolve, reject): void => {

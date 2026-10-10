@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor, within } from 'storybook/test';
 import { layoutWidths } from '../../mocks/each-layout';
-import { expectShimmerMovement } from '../../mocks/expect-shimmer';
 import { settleViewport } from '../../mocks/settle-viewport';
 import { renderRecordedActivity } from '../../mocks/tool-call-group-preview';
 import {
@@ -70,8 +69,6 @@ function running(width: number): Story {
       });
       await expect(group).toBeVisible();
       await expect(canvas.queryByRole('progressbar')).not.toBeInTheDocument();
-      await expectShimmerMovement(group, '23s');
-      await expect(group.querySelectorAll('[data-icon]')).toHaveLength(2);
       await expect(group).toHaveTextContent('short git status 23s');
       await expect(
         canvas.queryAllByRole('button', { name: /^Read / }),

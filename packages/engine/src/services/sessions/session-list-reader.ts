@@ -1,5 +1,10 @@
 import type { SessionUpdate } from '@repo/contracts';
-import { SessionInfo, SessionRecord, Turn } from '@repo/contracts';
+import {
+  SessionInfo,
+  SessionRecord,
+  Turn,
+  selectPlanRowWithLatestContent,
+} from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
 import {
@@ -172,6 +177,10 @@ export function createSessionListReader(options: {
               turnId: job.id,
               validate,
             });
+          case 'blobMetadataUpsert':
+          case 'agentCatalogReplace':
+          case 'syncJobUpdate':
+            return [];
           default: {
             const unhandled: never = job;
             throw new Error(`Unhandled writer job ${unhandled}`);
@@ -402,7 +411,13 @@ function readSessionInformation(
           .where(
             and(eq(feedRow.sessionId, row.id), eq(feedRow.sessionUpdate, kind)),
           )
-          .orderBy(desc(feedRow.position))
+          .orderBy(
+            desc(
+              kind === 'plan_update'
+                ? sql`coalesce(json_extract(${feedRow.payload}, '$._meta.argo.contentRevision'), ${feedRow.revision})`
+                : feedRow.position,
+            ),
+          )
           .limit(1)
           .all()
           .map((stored): SessionUpdate | undefined =>
@@ -437,19 +452,10 @@ function readSessionInformation(
     message: updates.findLast(
       (
         update,
-      ): update is Extract<
-        import('@repo/contracts').SessionUpdate,
-        { sessionUpdate: 'agent_message' }
-      > => update.sessionUpdate === 'agent_message',
+      ): update is Extract<SessionUpdate, { sessionUpdate: 'agent_message' }> =>
+        update.sessionUpdate === 'agent_message',
     ),
-    plan: updates.findLast(
-      (
-        update,
-      ): update is Extract<
-        import('@repo/contracts').SessionUpdate,
-        { sessionUpdate: 'plan_update' }
-      > => update.sessionUpdate === 'plan_update',
-    ),
+    plan: selectPlanRowWithLatestContent(updates),
     live: live?.context ?? null,
     feed: feedContext ?? null,
     liveHeaderRows: Object.values(header.rows),

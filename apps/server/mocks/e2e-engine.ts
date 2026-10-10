@@ -2,14 +2,16 @@ import { randomUUID } from 'node:crypto';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { agentAdapters } from '@repo/agents';
-import { resolveRuntimeDirectory } from '@repo/api/server-runtime';
 import { ServerAddress } from '@repo/contracts';
 import type { EngineMessage } from '@repo/engine/ipc';
 import { engineMachine } from '@repo/engine/machine';
+import { resolveRuntimeDirectory } from '@repo/engine/server-runtime';
+import { createAppFixtureProcessLauncher } from '@repo/mocks/agent/acp-fixtures';
 import {
   AppFixtureAgents,
   createAppFixtureAdapters,
 } from '@repo/mocks/agent/app-fixtures';
+import { createFileAgentsFetcher } from '@repo/mocks/registry/port';
 import { createActor } from 'xstate';
 import { z } from 'zod';
 import packageJson from '../package.json' with { type: 'json' };
@@ -55,6 +57,20 @@ const engine = createActor(
       now: Date.now,
       createId: randomUUID,
       adapters: createAppFixtureAdapters(agentAdapters, options),
+      acp: { launchProcess: createAppFixtureProcessLauncher(options) },
+      resolveAgentLaunch: async (input) => ({
+        agentId: input.agent,
+        projectId: input.projectId,
+        executable: '/mock-agent',
+        version: '1',
+        args: [],
+        cwd: input.projectPath,
+        env: {},
+        authContext: 'shared-fixture',
+      }),
+      fetchAgents: createFileAgentsFetcher(
+        z.string().parse(process.env.ARGO_E2E_REGISTRY_PATH),
+      ),
     },
   },
 );

@@ -1,12 +1,13 @@
+import type { SessionNewInput } from '@repo/contracts';
 import {
   newSessionCatalogs,
   newSessionProjects,
   serverInfo,
-} from '@repo/api/mocks';
-import type { SessionNewInput } from '@repo/contracts';
+} from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, spyOn, waitFor, within } from 'storybook/test';
+import { page } from 'vitest/browser';
 import { composerImages } from '../../mocks/composer-mock';
 import { eachLayout, layoutWidths } from '../../mocks/each-layout';
 import {
@@ -215,7 +216,6 @@ export const NarrowMainColumn: Story = {
     </View>
   ),
   play: async ({ canvas, userEvent }) => {
-    const { page } = await import('vitest/browser');
     await page.viewport(1440, 844);
     const checkout = await canvas.findByRole('button', { name: 'Checkout' });
     await expect(checkout).toBeVisible();

@@ -1,10 +1,11 @@
+import type { SessionCounts } from '@repo/contracts';
 import {
   activeSessions,
   agentsList,
   archivedSessions,
   projectsList,
-} from '@repo/api/mocks';
-import type { SessionCounts } from '@repo/contracts';
+  sessionRows,
+} from '@repo/mocks/app';
 import type { FixtureOutput } from './trpc-mock-link';
 import type { Fixtures } from './trpc-mock-link';
 
@@ -12,32 +13,23 @@ import type { Fixtures } from './trpc-mock-link';
 export const sessionListMocks = {
   'projects.list': (): typeof projectsList => projectsList,
   'agents.list': (): typeof agentsList => agentsList,
-  'session.list': ({
-    projectId,
-    archived,
-    query,
-  }): FixtureOutput<'session.list'> => {
-    const list = archived ? archivedSessions : activeSessions;
-    return {
-      ...list,
-      sessions: list.sessions.filter(
-        (session) =>
-          (!projectId || session.projectId === projectId) &&
-          (!query || session.title.toLowerCase().includes(query.toLowerCase())),
-      ),
-    };
+  'session.list': ({ archived, query }): FixtureOutput<'session.list'> => {
+    if (archived) return archivedSessions;
+    if (!query) return activeSessions;
+    if (query === 'settings')
+      return {
+        sessions: agentsList.map(({ agent }) => ({
+          ...sessionRows.running,
+          agent,
+          sessionId: `${agent}:${sessionRows.running.sessionId}`,
+        })),
+        nextCursor: null,
+      };
+    return { sessions: [], nextCursor: null };
   },
   'session.listUpdates': async function* (): AsyncGenerator<never, void> {},
   'session.counts': async function* (): AsyncGenerator<SessionCounts, void> {
-    yield {
-      attention: activeSessions.sessions.filter(
-        (session) =>
-          session.status === 'needs_input' || session.status === 'unread',
-      ).length,
-      running: activeSessions.sessions.filter(
-        (session) => session.status === 'running',
-      ).length,
-    };
+    yield { attention: 4, running: 8 };
   },
 } satisfies Fixtures;
 

@@ -11,18 +11,20 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@agentclientprotocol/sdk": "catalog:",
     "@repo/agents": "workspace:*",
     "@repo/contracts": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/git": "workspace:*",
     "@trpc/server": "catalog:",
+    "ajv": "catalog:",
+    "ajv-formats": "catalog:",
     "drizzle-orm": "catalog:",
     "ws": "catalog:",
     "xstate": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@repo/api": "workspace:*",
     "@repo/mocks": "workspace:*",
     "@repo/typescript": "workspace:*",
     "@repo/vitest": "workspace:*",
@@ -34,8 +36,9 @@
   "exports": {
     "./machine": "./src/engine/machine.ts",
     "./router": "./src/engine/router.ts",
-    "./mocks": "./mocks/router.ts",
+    "./mocks": "./mocks/engine.ts",
     "./ipc": "./src/engine/ipc.ts",
-    "./rejections": "./src/lib/count-rejections.ts"
+    "./rejections": "./src/lib/count-rejections.ts",
+    "./server-runtime": "./src/server-runtime.mts"
   }
 }

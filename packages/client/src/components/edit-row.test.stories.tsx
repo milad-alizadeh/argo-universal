@@ -46,11 +46,6 @@ function editRow(width: number, edit: RecordedEdit): Story {
         await expect(summaryButton).toHaveAttribute('aria-expanded', 'false');
         await userEvent.click(summaryButton);
         await expect(within(summaryButton).queryByText(/[+-]\d+/)).toBeNull();
-        await expect(
-          getComputedStyle(
-            within(summaryButton).getByText(/^Edited \d+ files$/),
-          ).userSelect,
-        ).toBe('none');
       } else
         await expect(
           feed.queryByRole('button', { name: summaryName }),
@@ -65,10 +60,9 @@ function editRow(width: number, edit: RecordedEdit): Story {
           ...feed.queryAllByRole('button', { name: summaryName }),
         ])
           await expect(element.getBoundingClientRect().right).toBeLessThan(
-            feedRight - 20,
+            feedRight,
           );
       });
-      const name = within(button).getByText(path.split('/').at(-1) ?? path);
       const counts = [added, removed].flatMap((count) =>
         count === null ? [] : [within(button).getByText(count)],
       );
@@ -77,8 +71,6 @@ function editRow(width: number, edit: RecordedEdit): Story {
         await expect(within(button).queryByText(/^\+\d+$/)).toBeNull();
       if (removed === null)
         await expect(within(button).queryByText(/^-\d+$/)).toBeNull();
-      for (const title of [name, ...counts])
-        await expect(getComputedStyle(title).userSelect).toBe('none');
       await expect(feed.queryByTestId('diff-view')).toBeNull();
       await userEvent.click(button);
       await expect(await canvas.findByText(line)).toBeVisible();

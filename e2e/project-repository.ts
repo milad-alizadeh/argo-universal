@@ -1,3 +1,4 @@
+import type { PromiseWithChild } from 'child_process';
 import { execFile } from 'node:child_process';
 import { mkdir } from 'node:fs/promises';
 import { promisify } from 'node:util';
@@ -11,7 +12,7 @@ export async function createProjectRepository(
   await mkdir(directory, { recursive: true });
   const git = (
     ...arguments_: string[]
-  ): import('child_process').PromiseWithChild<{
+  ): PromiseWithChild<{
     stdout: string;
     stderr: string;
   }> => run('git', ['-C', directory, ...arguments_]);

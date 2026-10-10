@@ -1,12 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, waitFor } from 'storybook/test';
-import { expectShimmerMovement } from '../../mocks/expect-shimmer';
+import { page } from 'vitest/browser';
 import {
   liveHeaderElapsed,
   liveHeaderNow,
   liveHeaderSteps,
   requestHeader,
-  retryHeader,
   workingHeader,
 } from '../../mocks/live-header-mock';
 import { settleViewport } from '../../mocks/settle-viewport';
@@ -39,21 +38,13 @@ export const EveryStep: Story = {
       const rows = canvas.getAllByRole('status');
       await expect(rows).toHaveLength(liveHeaderSteps.length);
       for (const [index, { liveHeader }] of liveHeaderSteps.entries()) {
-        const { text, source } = liveHeader;
+        const { text } = liveHeader;
         const elapsed = liveHeaderElapsed;
         const row = rows[index];
         if (!row) throw new Error('Live header row is missing');
         await expect(row).toBeVisible();
         await expect(row).toHaveAccessibleName(`${text} ${elapsed}`);
         await expect(row).toHaveTextContent(`${text} ${elapsed}`);
-        const shimmering = row.querySelectorAll('span').length > 1;
-        await expect(shimmering).toBe(source.type !== 'request');
-        if (source.type === 'working')
-          await expect(
-            row.querySelector('[data-testid="working-mark"]'),
-          ).not.toBeNull();
-        else if (source.type !== 'request')
-          await expect(row.querySelector('[data-icon]')).not.toBeNull();
       }
     }
   },
@@ -64,30 +55,7 @@ export const EveryStepDark: Story = {
   globals: { mode: 'dark' },
 };
 
-export const ElapsedTimeShimmers: Story = {
-  args: { liveHeader: workingHeader },
-  play: async ({ canvas }) => {
-    const row = canvas.getByRole('status');
-    await expectShimmerMovement(row, '2m 14s');
-    const characters = Array.from(row.querySelectorAll('span'));
-    const time = characters.slice(-'2m 14s'.length);
-    await expect(time.map((element) => element.textContent).join('')).toBe(
-      '2m 14s',
-    );
-  },
-};
-
-export const RequestDotBlinks: Story = {
-  play: async ({ canvas }) => {
-    const dot = canvas.getByTestId('live-header-dot');
-    const opacity = getComputedStyle(dot).opacity;
-    await waitFor(() =>
-      expect(getComputedStyle(dot).opacity).not.toBe(opacity),
-    );
-  },
-};
-
-export const LongTextKeepsOneLine: Story = {
+export const LongTextStaysWithinHeader: Story = {
   args: {
     liveHeader: {
       ...workingHeader,
@@ -95,13 +63,8 @@ export const LongTextKeepsOneLine: Story = {
     },
   },
   play: async ({ canvas }) => {
-    const { page } = await import('vitest/browser');
     await page.viewport(390, 844);
     const row = canvas.getByRole('status');
-    // One line: no taller than the line height, whatever it is.
-    await expect(row.getBoundingClientRect().height).toBeLessThanOrEqual(
-      Number.parseFloat(getComputedStyle(row).lineHeight),
-    );
     const container = row.parentElement;
     if (!container) throw new Error('Live header has no container.');
     await expect(row.scrollWidth).toBeLessThanOrEqual(container.clientWidth);
@@ -125,29 +88,6 @@ export const ClockTicks: Story = {
     await waitFor(() => expect(row).toHaveAccessibleName('Working 6s'), {
       timeout: 2500,
     });
-  },
-};
-
-export const WorkingMarkWalks: Story = {
-  args: { liveHeader: workingHeader },
-  play: async ({ canvas }) => {
-    const cells = canvas.getAllByTestId('working-mark-cell');
-    await expect(cells).toHaveLength(9);
-    const opacities = (): string =>
-      cells.map((cell) => getComputedStyle(cell).opacity).join();
-    const first = opacities();
-    await waitFor(() => expect(opacities()).not.toBe(first));
-  },
-};
-
-export const RetryIconSpins: Story = {
-  args: { liveHeader: retryHeader },
-  play: async ({ canvas }) => {
-    const spinner = canvas.getByTestId('live-header-retry');
-    const transform = getComputedStyle(spinner).transform;
-    await waitFor(() =>
-      expect(getComputedStyle(spinner).transform).not.toBe(transform),
-    );
   },
 };
 

@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import type { Interface } from 'node:readline';
 import { describeError } from '../src/describe-error';
 import { findExecutable } from '../src/find-executable';
@@ -12,9 +12,7 @@ const environmentWithoutKeys = (): NodeJS.ProcessEnv => {
   delete environment.CODEX_API_KEY;
   return environment;
 };
-const startProcess = (
-  cwd: string,
-): import('node:child_process').ChildProcessWithoutNullStreams => {
+const startProcess = (cwd: string): ChildProcessWithoutNullStreams => {
   const executable = findExecutable(EXECUTABLE, process.env);
   if (!executable) throw new Error('Codex is not installed.');
   return spawn(executable, ['app-server', '--listen', 'stdio://'], {
@@ -29,7 +27,7 @@ const pendingRequests = (): Map<
   { resolve: (result: unknown) => void; reject: (error: Error) => void }
 > => new Map();
 export interface ProcessState {
-  child: import('node:child_process').ChildProcessWithoutNullStreams;
+  child: ChildProcessWithoutNullStreams;
   pending: ReturnType<typeof pendingRequests>;
   nextId: number;
   stderrTail: string;

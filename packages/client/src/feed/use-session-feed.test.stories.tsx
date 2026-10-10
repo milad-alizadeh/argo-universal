@@ -1,5 +1,5 @@
-import { newSessionCatalogs, recordedFeedMocks } from '@repo/api/mocks';
 import type { FeedSubscribeOutput } from '@repo/contracts';
+import { newSessionCatalogs, recordedFeedMocks } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useEffect } from 'react';

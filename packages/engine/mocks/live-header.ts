@@ -1,10 +1,10 @@
-import { recordedFeedMocks } from '@repo/api/mocks';
 import type {
   AgentThought,
   Notice,
   SessionUpdate,
   ToolCallUpdate,
 } from '@repo/contracts';
+import { recordedFeedMocks } from '@repo/mocks/app';
 
 type LiveHeaderMock = {
   agent: string;
@@ -42,12 +42,8 @@ type LiveHeaderMock = {
 const thought = recordedFeedMocks
   .flatMap((mock): SessionUpdate[] => mock.rows)
   .find(
-    (
-      row,
-    ): row is Extract<
-      import('@repo/contracts').SessionUpdate,
-      { sessionUpdate: 'agent_thought' }
-    > => row.sessionUpdate === 'agent_thought',
+    (row): row is Extract<SessionUpdate, { sessionUpdate: 'agent_thought' }> =>
+      row.sessionUpdate === 'agent_thought',
   );
 if (!thought) throw new Error('Recording needs an Agent thought');
 
@@ -57,10 +53,8 @@ export const liveHeaderMocks = recordedFeedMocks
     const command = mock.rows.find(
       (
         row,
-      ): row is Extract<
-        import('@repo/contracts').SessionUpdate,
-        { sessionUpdate: 'tool_call_update' }
-      > => row.sessionUpdate === 'tool_call_update' && row.kind === 'execute',
+      ): row is Extract<SessionUpdate, { sessionUpdate: 'tool_call_update' }> =>
+        row.sessionUpdate === 'tool_call_update' && row.kind === 'execute',
     );
     if (!command) throw new Error('Recording needs a command');
     return {
@@ -95,7 +89,7 @@ export const liveHeaderMocks = recordedFeedMocks
         revision: command.revision + 2,
         sessionUpdate: 'notice',
         state: 'settled',
-        severity: 'warning',
+        severity: 'warning' as const,
         title: 'Retrying',
         _meta: {
           argo: { retry: { attempt: 2, maxAttempts: 5, delayMs: 1000 } },
@@ -121,7 +115,7 @@ export const liveHeaderMocks = recordedFeedMocks
           state: 'settled',
           sessionUpdate: 'compaction_update',
           compactionId: 'compaction-1',
-          status: 'completed',
+          status: 'completed' as const,
         },
       ] satisfies SessionUpdate[],
     };

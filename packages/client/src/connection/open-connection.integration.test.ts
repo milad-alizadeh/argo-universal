@@ -1,9 +1,6 @@
-import { startRouterTestHost } from '@repo/engine/mocks';
-import { appRouter } from '@repo/engine/router';
+import { startEngineTestHost } from '@repo/engine/mocks';
 import { QueryClient, QueryObserver } from '@tanstack/react-query';
-import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { WebSocketServer } from 'ws';
 import { waitFor } from 'xstate';
 import { type ConnectionActor, openConnection } from './open-connection';
 
@@ -17,24 +14,13 @@ async function startServer(
   port = 0,
   version = '1.2.3',
 ): Promise<{ url: string; port: number; stop: () => Promise<void> }> {
-  const { context } = startRouterTestHost({ version });
-  const server = new WebSocketServer({ host: '127.0.0.1', port });
-  await new Promise((resolve) => server.once('listening', resolve));
-  applyWSSHandler({
-    wss: server,
-    router: appRouter,
-    createContext: () => context,
+  const host = await startEngineTestHost({
+    ...(port ? { port } : {}),
+    version,
   });
-  const stop = (): Promise<void> =>
-    new Promise<void>((resolve) => {
-      for (const client of server.clients) client.terminate();
-      server.close(() => resolve());
-    });
-  closers.push(stop);
-  const address = server.address();
-  if (!address || typeof address === 'string')
-    throw new Error('Server has no TCP address');
-  return { url: `ws://127.0.0.1:${address.port}`, port: address.port, stop };
+  const url = new URL(host.url);
+  url.protocol = 'ws:';
+  return { url: url.toString(), port: Number(url.port), stop: host.stop };
 }
 
 const waitForConnectionLink = (

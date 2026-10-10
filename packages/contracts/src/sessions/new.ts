@@ -21,7 +21,7 @@ export const InitialConfigOption = z.strictObject({
 });
 export type InitialConfigOption = z.infer<typeof InitialConfigOption>;
 
-// A Session is created and prompted in one call; no empty Session exists.
+// Creation can leave the real Session empty while its configuration is selected.
 export const SessionNewInput = z.strictObject({
   projectId: sessionColumns.shape.projectId,
   agent: sessionColumns.shape.agent,
@@ -29,7 +29,7 @@ export const SessionNewInput = z.strictObject({
   configOptions: z.array(InitialConfigOption),
   prompt: z
     .array(z.discriminatedUnion('type', [TextContent, ImageContent]))
-    .min(1),
+    .default([]),
 });
 export type SessionNewInput = z.infer<typeof SessionNewInput>;
 

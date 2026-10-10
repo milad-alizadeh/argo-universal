@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
-import { expect, waitFor } from 'storybook/test';
+import { expect, spyOn, waitFor } from 'storybook/test';
+import { page } from 'vitest/browser';
 import { layoutWidths } from '../../mocks/each-layout';
 import {
   recordedAgentMessage,
@@ -40,12 +41,12 @@ function markdownPlay(heading: string, firstHeader: string) {
   }): Promise<void> => {
     for (const width of widths) {
       await settleViewport(width);
-      for (const text of [heading, '1.', 'tsx', firstHeader])
-        await expect(canvas.getByText(text)).toBeVisible();
+      for (const text of [heading, 'feed.rows', '1.', 'tsx', firstHeader]) {
+        await expect(canvas.getAllByText(text)[0]).toBeVisible();
+      }
       await expect(
         canvas.getByRole('link', { name: 'ADR 0007' }),
       ).toBeVisible();
-      await expect(canvas.getAllByText('feed.rows')[0]).toBeVisible();
       await expect(canvas.queryByTestId(streamingCaretId)).toBeNull();
     }
   };
@@ -82,24 +83,23 @@ export const SecondAgentStreaming: Story = {
 
 export const CopyCodeRevealsOnHover: Story = {
   play: async ({ canvas }) => {
-    const { page } = await import('vitest/browser');
     await settleViewport(layoutWidths.wide);
     const copy = canvas.getByRole('button', { name: 'Copy code' });
     await page.elementLocator(copy).unhover();
-    await expect(getComputedStyle(copy).opacity).toBe('0');
+    await expect(copy).not.toBeVisible();
     await page.elementLocator(canvas.getByText('tsx')).hover();
-    await waitFor(() => expect(getComputedStyle(copy).opacity).toBe('1'));
+    await waitFor(() => expect(copy).toBeVisible());
   },
 };
 
 function copyCode(width: number): Story {
   return {
     play: async ({ canvas, userEvent }) => {
-      const { vi } = await import('vitest');
       const copied: string[] = [];
-      const clipboard = vi
-        .spyOn(navigator.clipboard, 'writeText')
-        .mockImplementation(async (text: string) => void copied.push(text));
+      const clipboard = spyOn(
+        navigator.clipboard,
+        'writeText',
+      ).mockImplementation(async (text: string) => void copied.push(text));
       try {
         await settleViewport(width);
         const copy = canvas.getByRole('button', { name: 'Copy code' });

@@ -62,6 +62,7 @@
     // Vendor names stay in the adapter and mock CLI folders (ADR-0004).
     "argo/vendor-name": "error",
     "argo/json-parse-cast": "error",
+    "argo/static-imports": "error",
     "argo/database-client": "error",
     "argo/drizzle-schema-boundary": "error",
     // A relative path into packages/, tooling/ or apps/ skips package.json, pnpm isolation and exports (A2).
@@ -362,10 +363,9 @@
       }
     },
     {
-      // D1: contracts, api, the db schema and client/src never import Node APIs, node:sqlite and node:sea included.
+      // D1: runtime Contracts, the db schema and client/src never import Node APIs, node:sqlite and node:sea included.
       "files": [
         "packages/contracts/**",
-        "packages/api/**",
         "packages/db/src/schema.ts",
         "packages/db/src/schema/**",
         "packages/client/src/**"
@@ -374,7 +374,7 @@
         "**/*.test.*",
         "**/*.stories.*",
         "**/mocks/**",
-        "packages/api/src/server-runtime.mts"
+        "packages/contracts/tools/**"
       ],
       "rules": { "import/no-nodejs-modules": "error" }
     },
@@ -429,9 +429,10 @@
       }
     },
     {
-      // D5
-      "files": ["packages/api/**"],
+      // D5: App mocks remain browser-safe and import only Contracts.
+      "files": ["mocks/app/**"],
       "rules": {
+        "import/no-nodejs-modules": "error",
         "no-restricted-imports": [
           "error",
           {
@@ -440,11 +441,9 @@
                 "group": [
                   "@repo/**",
                   "!@repo/contracts",
-                  "!@repo/contracts/**",
-                  "!@repo/vitest",
-                  "!@repo/vitest/**"
+                  "!@repo/contracts/**"
                 ],
-                "message": "api imports only contracts from the workspace."
+                "message": "App mocks import only Contracts from the workspace."
               }
             ]
           }
@@ -900,11 +899,11 @@
                   "@repo/**",
                   "!@repo/contracts",
                   "!@repo/contracts/**",
-                  "!@repo/api/server-runtime",
+                  "!@repo/engine/server-runtime",
                   "!@repo/vitest",
                   "!@repo/vitest/**"
                 ],
-                "message": "desktop imports only contracts and the Node-only API server-runtime subpath from the workspace."
+                "message": "desktop imports only contracts and the Node-only Engine server-runtime subpath from the workspace."
               }
             ]
           }
@@ -935,13 +934,14 @@
       }
     },
     {
-      // Apps launch processes only at the three launchers; all git work stays in packages/git (ADR-0008).
+      // Process ownership stays at the launchers; all git work stays in packages/git (ADR-0008).
       "files": ["apps/**", "packages/engine/**"],
       "excludeFiles": [
         "**/*.test.*",
         "**/mocks/**",
         "apps/server/src/supervisor/engine-process.ts",
         "packages/engine/src/services/system/info.ts",
+        "packages/engine/src/services/agents/acp/process.ts",
         "apps/desktop/src/main/server-process.ts"
       ],
       "rules": { "argo/child-process": "error" }

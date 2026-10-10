@@ -2,6 +2,7 @@ import { databaseClient } from './database-client.ts';
 import { jsonParseCast } from './json-parse-cast.ts';
 import { noInternalMock } from './no-internal-mock.ts';
 import { ruleTester } from './rule-tester.ts';
+import { staticImports } from './static-imports.ts';
 import { vendorName } from './vendor-name.ts';
 
 ruleTester.run('vendor-name', vendorName, {
@@ -51,5 +52,28 @@ ruleTester.run('no-internal-mock', noInternalMock, {
       errors: [{ messageId: 'noInternalMock' }],
     },
     { code: 'vi.mock(`../store`);', errors: [{ messageId: 'noInternalMock' }] },
+  ],
+});
+
+ruleTester.run('static-imports', staticImports, {
+  valid: [
+    "import { load } from './module';",
+    "import type { Shape } from './module';",
+    'const expression = "import(\'./module\')";',
+  ],
+  invalid: [
+    {
+      code: "await import('./module');",
+      errors: [{ messageId: 'staticImports' }],
+    },
+    { code: 'import(modulePath);', errors: [{ messageId: 'staticImports' }] },
+    {
+      code: "type Shape = import('./module').Shape;",
+      errors: [{ messageId: 'staticImports' }],
+    },
+    {
+      code: "type Module = typeof import('./module');",
+      errors: [{ messageId: 'staticImports' }],
+    },
   ],
 });

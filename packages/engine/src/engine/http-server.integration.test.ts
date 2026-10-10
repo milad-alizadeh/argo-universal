@@ -1,8 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { existsSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
+import { existsSync, readdirSync, rmSync } from 'node:fs';
 import { request } from 'node:http';
-import { createServer } from 'node:net';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { agentAdapters, type VendorCommand } from '@repo/agents';
 import { BlobUploadOutput, maxBlobUploadBytes } from '@repo/contracts';
@@ -11,33 +9,19 @@ import { session } from '@repo/db/schema';
 import { createMockAdapter, mockReady } from '@repo/mocks/agent';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { WebSocket } from 'ws';
-import { createActor } from 'xstate';
 import { z } from 'zod';
 import { openTestDatabase } from '#mocks/database';
-import { startRouterTestHost } from '#mocks/router';
-import { type RegistryActorRef, registryMachine } from '../services/sessions';
-import { startHttpServer } from './http-server';
+import { startEngineTestHost } from '#mocks/engine';
+import type { RegistryActorRef } from '../services/sessions';
+import { startHttpServer, type HttpServerOptions } from './http-server';
 
 let home: string;
 let port: number;
 let database: Database;
 let sessions: RegistryActorRef;
+let databaseWriter: HttpServerOptions['databaseWriter'];
 let removeDatabase: () => void;
 let closeServer: () => Promise<void>;
-
-const findFreePort = (): Promise<number> =>
-  new Promise<number>((resolve, reject): void => {
-    const server = createServer();
-    server.once('error', reject);
-    server.listen(0, '127.0.0.1', (): void => {
-      const address = server.address();
-      server.close((): void =>
-        typeof address === 'object' && address
-          ? resolve(address.port)
-          : reject(new Error('No free port')),
-      );
-    });
-  });
 
 // Resolves with the HTTP status of the upgrade: 101 when the WebSocket opens.
 const upgradeStatus = (headers: Record<string, string>): Promise<number> =>
@@ -78,17 +62,9 @@ const systemInfoStatus = (
 const readdirSafe = (folder: string): string[] =>
   existsSync(folder) ? readdirSync(folder) : [];
 
-const options = (): {
-  createId: (
-    options?: import('crypto').RandomUUIDOptions,
-  ) => import('crypto').UUID;
-  home: string;
-  port: number;
-  version: string;
-  startedAt: string;
-  database: Database;
-  sessions: RegistryActorRef;
-} => ({
+let syncSupervisor: HttpServerOptions['syncSupervisor'];
+
+const options = (): HttpServerOptions => ({
   createId: randomUUID,
   home,
   port,
@@ -96,27 +72,25 @@ const options = (): {
   startedAt: '2026-10-03T00:00:00.000Z',
   database,
   sessions,
+  databaseWriter,
+  syncSupervisor,
 });
 
 beforeEach(async (): Promise<void> => {
-  home = mkdtempSync(join(tmpdir(), 'server-http-server-'));
-  port = await findFreePort();
-  ({ database, remove: removeDatabase } = openTestDatabase());
-  sessions = createActor(registryMachine, {
-    input: {
-      now: (): number => Date.now(),
-      createId: randomUUID,
-      database,
-      runtimeDirectory: home,
-      adapters: [],
-    },
-  }).start();
-  ({ close: closeServer } = await startHttpServer(options()));
+  const stored = openTestDatabase();
+  database = stored.database;
+  removeDatabase = stored.remove;
+  const started = await startEngineTestHost({ database });
+  syncSupervisor = started.engine.system.get('syncSupervisor');
+  home = started.home;
+  port = Number(new URL(started.url).port);
+  sessions = started.sessionRegistry;
+  databaseWriter = started.databaseWriter;
+  closeServer = started.stop;
 });
 
 afterEach(async (): Promise<void> => {
   await closeServer();
-  sessions.stop();
   removeDatabase();
   rmSync(home, { recursive: true, force: true });
 });
@@ -247,9 +221,8 @@ it.each(agentAdapters.map((adapter): string => adapter.agent))(
     await closeServer();
     const startup = Promise.withResolvers<typeof mockReady>();
     const began = Promise.withResolvers<void>();
-    const connected = Promise.withResolvers<void>();
     const commands: VendorCommand[] = [];
-    const host = startRouterTestHost({
+    const host = await startEngineTestHost({
       database,
       runtimeDirectory: home,
       adapters: [
@@ -261,7 +234,6 @@ it.each(agentAdapters.map((adapter): string => adapter.agent))(
             },
             stream: (stream): undefined => {
               stream.receive((command): number => commands.push(command));
-              connected.resolve();
             },
           },
           agent,
@@ -269,10 +241,8 @@ it.each(agentAdapters.map((adapter): string => adapter.agent))(
       ],
     });
     database.update(session).set({ agent }).run();
-    ({ close: closeServer } = await startHttpServer({
-      ...options(),
-      sessions: host.sessionRegistry,
-    }));
+    closeServer = host.stop;
+    port = Number(new URL(host.url).port);
     const response = fetch(`http://127.0.0.1:${port}/trpc/session.prompt`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -282,9 +252,9 @@ it.each(agentAdapters.map((adapter): string => adapter.agent))(
       }),
     }).catch((): null => null);
     await began.promise;
-    await closeServer();
+    const closing = closeServer();
     startup.resolve(mockReady);
-    await connected.promise;
+    await closing;
     await new Promise<void>((resolve): NodeJS.Immediate =>
       setImmediate(resolve),
     );

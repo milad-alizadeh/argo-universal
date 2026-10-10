@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
-import { resolveRuntimeDirectory } from '@repo/api/server-runtime';
+import { resolveRuntimeDirectory } from '@repo/engine/server-runtime';
 import { z } from 'zod';
 
 // `pnpm dev` starts the Server, Expo, and desktop together; desktop waits for the other two.

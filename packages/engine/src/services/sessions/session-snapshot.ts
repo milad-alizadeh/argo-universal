@@ -19,9 +19,10 @@ export function isSessionReady(
   session: SnapshotFrom<typeof sessionMachine>,
 ): boolean {
   return (
-    session.context.capabilities !== null &&
-    session.matches({ open: 'live' }) &&
-    !session.matches({ open: { live: 'starting' } })
+    session.matches({ open: { acp: 'idle' } }) ||
+    (session.context.capabilities !== null &&
+      session.matches({ open: 'live' }) &&
+      !session.matches({ open: { live: 'starting' } }))
   );
 }
 
@@ -49,7 +50,10 @@ export function toSessionSnapshot(
   let state: SessionSnapshot['state'] = 'idle';
   if (
     session?.matches({ open: { live: { running: 'working' } } }) ||
-    session?.matches({ open: { live: 'cancelling' } })
+    session?.matches({ open: { live: 'cancelling' } }) ||
+    session?.matches({ open: { acp: 'committing' } }) ||
+    session?.matches({ open: { acp: 'activeTurn' } }) ||
+    session?.matches({ open: { acp: 'publishing' } })
   ) {
     state = 'running';
   } else if (

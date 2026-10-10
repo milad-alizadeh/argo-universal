@@ -8,7 +8,8 @@ const {
 const { getDefaultConfig } = require('expo/metro-config');
 const { withUniwindConfig } = require('uniwind/metro');
 
-/** @type {import('expo/metro-config').MetroConfig} */
+/** @import { MetroConfig } from 'expo/metro-config' */
+/** @type {MetroConfig} */
 const config = getDefaultConfig(__dirname);
 
 // Production bundles stub Storybook out; configPath must be absolute for the stub to match.

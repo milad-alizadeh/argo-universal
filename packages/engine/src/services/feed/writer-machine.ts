@@ -1,5 +1,21 @@
 import type { Database } from '@repo/db';
-import { and, assertEvent, assign, fromPromise, setup, stateIn } from 'xstate';
+import {
+  and,
+  assertEvent,
+  assign,
+  emit,
+  enqueueActions,
+  fromPromise,
+  setup,
+  stateIn,
+} from 'xstate';
+import { isCatalogSqlJob } from './writer-catalog-sync';
+import {
+  acknowledgeWrittenPrefix,
+  rejectPendingCommits,
+  type PendingWriterCommit,
+  type WriterCommit,
+} from './writer-commit';
 import {
   describeJob,
   stampWriterJob,
@@ -21,10 +37,11 @@ interface WriterContext extends WriterInput {
   queue: WriterJob[];
   // How many jobs at the front of `queue` the running `writeBatch` holds.
   batchSize: number;
+  pendingCommits: PendingWriterCommit[];
 }
 
 export type WriterEvent =
-  | { type: 'writer.write'; job: WriterJob }
+  | { type: 'writer.write'; job: WriterJob; committed?: WriterCommit }
   | { type: 'writer.drain' };
 
 // The jobs `takeBatch` counted, oldest first.
@@ -42,6 +59,7 @@ export const writerMachine = setup({
     input: {} as WriterInput,
     context: {} as WriterContext,
     events: {} as WriterEvent,
+    emitted: {} as { type: 'catalog.sqlCommitted' },
   },
   actors: {
     writeBatch: fromPromise<void, WriterBatchInput>(
@@ -49,7 +67,21 @@ export const writerMachine = setup({
     ),
   },
   actions: {
+    announceCatalogCommit: enqueueActions(({ context, enqueue }) => {
+      if (context.queue.slice(0, context.batchSize).some(isCatalogSqlJob))
+        enqueue(emit({ type: 'catalog.sqlCommitted' }));
+    }),
+
     enqueue: assign({
+      pendingCommits: ({ context, event }): PendingWriterCommit[] => {
+        assertEvent(event, 'writer.write');
+        return event.committed
+          ? [
+              ...context.pendingCommits,
+              { through: context.queue.length + 1, committed: event.committed },
+            ]
+          : context.pendingCommits;
+      },
       queue: ({ context, event }): WriterContext['queue'] => {
         assertEvent(event, 'writer.write');
         return [...context.queue, stampWriterJob(event.job, context.now())];
@@ -59,11 +91,28 @@ export const writerMachine = setup({
       batchSize: ({ context }): number => context.queue.length,
     }),
     dropBatch: assign({
+      pendingCommits: ({ context }): PendingWriterCommit[] =>
+        acknowledgeWrittenPrefix(context.pendingCommits, context.batchSize),
       queue: ({ context }): WriterContext['queue'] =>
         context.queue.slice(context.batchSize),
       batchSize: 0,
     }),
     releaseBatch: assign({ batchSize: 0 }),
+    retryCommits: assign({
+      pendingCommits: ({ context, event }): PendingWriterCommit[] =>
+        rejectPendingCommits(
+          context.pendingCommits,
+          'error' in event ? event.error : new Error('Writer cannot commit'),
+          true,
+        ),
+    }),
+    rejectCommits: assign({
+      pendingCommits: ({ context, event }) =>
+        rejectPendingCommits(
+          context.pendingCommits,
+          'error' in event ? event.error : new Error('Writer cannot commit'),
+        ),
+    }),
     log: ({ context }, params: WriterLogParameters): void => {
       const line = `databaseWriter: ${params.line}`;
       if (context.log) context.log(line);
@@ -82,6 +131,7 @@ export const writerMachine = setup({
     ...input,
     queue: [],
     batchSize: 0,
+    pendingCommits: [],
   }),
   initial: 'idle',
   on: { 'writer.write': { actions: 'enqueue' } },
@@ -103,16 +153,20 @@ export const writerMachine = setup({
           {
             guard: and(['drainRequested', 'hasJobsAfterBatch']),
             target: 'draining',
-            actions: 'dropBatch',
+            actions: ['announceCatalogCommit', 'dropBatch'],
           },
-          { guard: 'drainRequested', target: 'drained', actions: 'dropBatch' },
+          {
+            guard: 'drainRequested',
+            target: 'drained',
+            actions: ['announceCatalogCommit', 'dropBatch'],
+          },
           {
             guard: 'hasJobsAfterBatch',
             target: 'writing',
             reenter: true,
-            actions: 'dropBatch',
+            actions: ['announceCatalogCommit', 'dropBatch'],
           },
-          { target: 'idle', actions: 'dropBatch' },
+          { target: 'idle', actions: ['announceCatalogCommit', 'dropBatch'] },
         ],
         // While draining, a failed batch is tried once more at once, not after `writeRetryDelay`.
         onError: [
@@ -120,6 +174,7 @@ export const writerMachine = setup({
             guard: 'drainRequested',
             target: 'draining',
             actions: [
+              'retryCommits',
               {
                 type: 'log',
                 params: ({ event }): WriterLogParameters => ({
@@ -132,6 +187,7 @@ export const writerMachine = setup({
           {
             target: 'waitingToRetry',
             actions: [
+              'retryCommits',
               {
                 type: 'log',
                 params: ({ context, event }): WriterLogParameters => ({
@@ -151,7 +207,10 @@ export const writerMachine = setup({
     },
     waitingToRetry: {
       after: { writeRetryDelay: 'writing' },
-      on: { 'writer.drain': 'draining' },
+      on: {
+        'writer.drain': 'draining',
+        'writer.write': { actions: ['enqueue', 'retryCommits'] },
+      },
     },
     draining: {
       entry: 'takeBatch',
@@ -164,14 +223,18 @@ export const writerMachine = setup({
             guard: 'hasJobsAfterBatch',
             target: 'draining',
             reenter: true,
-            actions: 'dropBatch',
+            actions: ['announceCatalogCommit', 'dropBatch'],
           },
-          { target: 'drained', actions: 'dropBatch' },
+          {
+            target: 'drained',
+            actions: ['announceCatalogCommit', 'dropBatch'],
+          },
         ],
         // The jobs stay in `queue`, so the drained snapshot holds what was lost.
         onError: {
           target: 'drained',
           actions: [
+            'rejectCommits',
             {
               type: 'log',
               params: ({ context, event }): WriterLogParameters => ({

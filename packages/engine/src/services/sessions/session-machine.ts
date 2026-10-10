@@ -1,3 +1,4 @@
+import type { PromptRequest, PromptResponse } from '@agentclientprotocol/sdk';
 import {
   type AgentAdapter,
   type AgentCapabilities,
@@ -33,14 +34,35 @@ import {
   sendTo,
   setup,
   stateIn,
+  or,
+  type AnyActorRef,
+  type InputFrom,
 } from 'xstate';
 import { countRejection } from '../../lib/count-rejections';
+import { createRejectionCounter } from '../../lib/count-rejections';
 import { findAgentProbe } from '../agents';
-import { findDatabaseWriter } from '../feed';
+import type { AcpSessionLease } from '../agents';
+import { createAcpResponseReaders } from '../agents';
+import { blobsFolderIn } from '../blob';
+import {
+  findDatabaseWriter,
+  publishTurnContent,
+  type FeedEvent,
+  type FeedActorRef,
+} from '../feed';
 import { userMessageChange } from '../feed';
 import { feedMachine } from '../feed';
-import { readWrittenRow } from '../feed';
+import { readWrittenRow, readUnaddressedPlan } from '../feed';
 import type { writerMachine } from '../feed';
+import {
+  AcpSessionLifetime,
+  type AcpLifetimeEvent,
+  type AcpSessionDependencies,
+} from './conversation/acp-lifetime';
+import {
+  commitLocalPrompt,
+  type LocalSubmission,
+} from './conversation/submission';
 import {
   createSessionCheckout,
   discardSessionCheckout,
@@ -53,16 +75,15 @@ import {
 
 const nativeFailedEvent = 'native.failed';
 const rejectedMessageEvent = 'agent.messageRejected';
+const closedSessionTarget = '#session.closed';
+const discardingSessionTarget = '#session.discarding';
 const drainingNativeTarget = '#session.open.draining';
 const answerPermissionCommand = 'agent.answerPermission';
 const answerElicitationCommand = 'agent.answerElicitation';
 const writeFeedEvent = 'writer.write';
 const feedChangeEvent = 'feed.change';
 
-type FeedChangeEvent = Extract<
-  import('../feed').FeedEvent,
-  { type: 'feed.change' }
->;
+type FeedChangeEvent = Extract<FeedEvent, { type: 'feed.change' }>;
 type SessionDataParameters = { data: SessionData };
 type FailureParameters = { error: unknown };
 type LoadSessionInput = {
@@ -79,16 +100,27 @@ type EndTurnParameters = {
   error?: TurnError;
 };
 type StartTurnParameters = { turnId: string; content: ContentBlock[] };
+type AcpOperationInput = {
+  context: SessionContext;
+  findFeed: () => FeedActorRef | undefined;
+};
+const publishActiveTurnContent = (input: AcpOperationInput): Promise<void> => {
+  if (!input.context.activeTurnId) return Promise.resolve();
+  const feed = input.findFeed();
+  if (!feed || feed.getSnapshot().status !== 'active') return Promise.resolve();
+  return publishTurnContent(feed, input.context.activeTurnId);
+};
 
 // The registry passes the adapter for the Session's Agent.
 export type SessionMachineInput = SessionInput & {
   adapter: AgentAdapter;
   now: () => number;
   createId: () => string;
+  acp?: AcpSessionDependencies;
 };
 
 export type SessionCommand =
-  | { type: 'session.prompt'; turnId: string; content: ContentBlock[] }
+  | ({ type: 'session.prompt' } & LocalSubmission)
   | {
       type: 'session.answerPermission';
       toolCallId: string;
@@ -112,6 +144,7 @@ type NativeFailure = { type: typeof nativeFailedEvent; error: unknown };
 type SessionEvent =
   | SessionCommand
   | AgentEvent
+  | AcpLifetimeEvent
   | NativeFailure
   | { type: 'xstate.error.actor.vendorSession'; error: unknown };
 type NativeSessionInput = AgentConnectInput &
@@ -134,6 +167,13 @@ export interface SessionContext extends SessionData {
   pendingNativeStops: Set<Promise<void>>;
   // False for a new Session until its Agent is ready and its row is written.
   stored: boolean;
+  acpLifetime: AcpSessionLifetime;
+  acpLease: AcpSessionLease | null;
+  pendingSubmission: LocalSubmission | null;
+  acpPrompt: PromptRequest | null;
+  acpResponseReaders: ReturnType<typeof createAcpResponseReaders>;
+  acpTurnOutcome: EndTurnParameters | null;
+  feedEnded: boolean;
 }
 
 const checkoutLimit = 10_000;
@@ -147,9 +187,9 @@ const writer = ({
   system,
   self,
 }: {
-  system: import('xstate').AnyActorRef['system'];
-  self: import('xstate').AnyActorRef;
-}): import('xstate').AnyActorRef => findDatabaseWriter(system) ?? self;
+  system: AnyActorRef['system'];
+  self: AnyActorRef;
+}): AnyActorRef => findDatabaseWriter(system) ?? self;
 
 // The values an Agent reconnects with, read from the options it last reported.
 const toConfigValues = (
@@ -195,6 +235,64 @@ const sessionSetup = setup({
     output: {} as Pick<SessionContext, 'failure'>,
   },
   actors: {
+    publishTurn: fromPromise<void, AcpOperationInput>(({ input }) => {
+      const feed = input.findFeed();
+      if (!feed || !input.context.activeTurnId)
+        throw new Error('No finishing Turn Feed');
+      return publishTurnContent(feed, input.context.activeTurnId);
+    }),
+    commitPrompt: fromPromise<PromptRequest, AcpOperationInput>(
+      ({ input, signal }) => {
+        const {
+          pendingSubmission,
+          acpLease,
+          input: sessionInput,
+        } = input.context;
+        const feed = input.findFeed();
+        if (!pendingSubmission || !acpLease || !feed)
+          throw new Error('No Session submission destination');
+        return commitLocalPrompt(
+          {
+            submission: pendingSubmission,
+            lease: acpLease,
+            feed,
+            storage: {
+              database: sessionInput.database,
+              blobsFolder: blobsFolderIn(sessionInput.runtimeDirectory),
+            },
+          },
+          signal,
+        );
+      },
+    ),
+    promptAcp: fromPromise<PromptResponse, SessionContext>(
+      async ({ input }) => {
+        if (!input.acpLease || !input.acpPrompt)
+          throw new Error('No admitted ACP prompt');
+        return input.acpResponseReaders['session/prompt'].parse(
+          await input.acpLease.agent.request<unknown>(
+            'session/prompt',
+            input.acpPrompt,
+          ),
+        );
+      },
+    ),
+    acpSubscription: fromCallback<
+      AcpLifetimeEvent,
+      AcpSessionLifetime,
+      AcpLifetimeEvent
+    >(({ input, sendBack }) => input.bind(sendBack)),
+    openAcp: fromPromise<AcpSessionLease, SessionContext>(({ input }) =>
+      input.acpLifetime.open(input),
+    ),
+    closeAcp: fromPromise<void, AcpOperationInput>(async ({ input }) => {
+      await input.context.acpLifetime.close();
+      await publishActiveTurnContent(input);
+    }),
+    awaitAcpRelease: fromPromise<void, AcpOperationInput>(async ({ input }) => {
+      await input.context.acpLifetime.waitForRelease();
+      await publishActiveTurnContent(input);
+    }),
     createCheckout: fromPromise<SessionData, NewSessionInput>(
       ({ input, signal }): Promise<SessionData> =>
         createSessionCheckout(input, signal),
@@ -333,9 +431,73 @@ const sessionSetup = setup({
     }),
   },
   actions: {
+    forwardAcpUpdate: sendTo(
+      'feed',
+      ({ context, event }): Extract<FeedEvent, { type: 'feed.acpUpdate' }> => {
+        assertEvent(event, 'acp.update');
+        return {
+          type: 'feed.acpUpdate',
+          acpSessionId: event.notification.sessionId,
+          update: event.notification.update,
+          turnId: context.activeTurnId,
+        };
+      },
+    ),
+    rememberAcpOutcome: assign(
+      (
+        _,
+        outcome: EndTurnParameters,
+      ): Pick<SessionContext, 'acpTurnOutcome'> => ({
+        acpTurnOutcome: outcome,
+      }),
+    ),
+    rememberSubmission: assign(
+      ({ event }): Pick<SessionContext, 'pendingSubmission'> => {
+        assertEvent(event, 'session.prompt');
+        return { pendingSubmission: event };
+      },
+    ),
+    acknowledgeLocalPromptCommit: assign(
+      (
+        { context },
+        prompt: PromptRequest,
+      ): Pick<SessionContext, 'acpPrompt' | 'pendingSubmission'> => {
+        context.pendingSubmission?.committed?.resolve();
+        return {
+          acpPrompt: prompt,
+          pendingSubmission: context.pendingSubmission && {
+            ...context.pendingSubmission,
+            committed: undefined,
+          },
+        };
+      },
+    ),
+    rejectSubmission: assign(
+      (
+        { context },
+        params: FailureParameters,
+      ): Pick<SessionContext, 'pendingSubmission'> => {
+        context.pendingSubmission?.committed?.reject(params.error);
+        return { pendingSubmission: null };
+      },
+    ),
+    rememberAcpLease: assign(
+      (
+        _,
+        lease: AcpSessionLease,
+      ): Pick<SessionContext, 'acpLease' | 'vendorSessionId'> => ({
+        acpLease: lease,
+        vendorSessionId: lease.sessionId,
+      }),
+    ),
+    rememberAcpFailure: assign(({ event }): Pick<SessionContext, 'failure'> => {
+      assertEvent(event, 'acp.failed');
+      return { failure: String(event.error) };
+    }),
     rememberSession: assign(
       (_, params: SessionDataParameters): SessionData => params.data,
     ),
+    rememberFeedEnded: assign({ feedEnded: true }),
     rememberFailure: assign(
       (_, params: FailureParameters): Pick<SessionContext, 'failure'> => ({
         failure: String(params.error),
@@ -389,7 +551,7 @@ const sessionSetup = setup({
         configValues: toConfigValues(event.configOptions),
       });
     }),
-    // Writes the new Session's row once its Agent is ready, so no empty Session exists.
+    // The Agent must be ready before the Session row is written.
     storeSession: enqueueActions(({ context, enqueue }): void => {
       if (context.input.kind !== 'new') return;
       enqueue.assign({ stored: true });
@@ -470,10 +632,7 @@ const sessionSetup = setup({
     ),
     forwardFeed: sendTo(
       'feed',
-      ({
-        context,
-        event,
-      }): Extract<import('../feed').FeedEvent, { type: 'feed.change' }> => {
+      ({ context, event }): Extract<FeedEvent, { type: 'feed.change' }> => {
         assertEvent(event, 'agent.feed');
         return {
           type: feedChangeEvent,
@@ -696,15 +855,22 @@ const sessionSetup = setup({
     flushFeed: sendTo('feed', { type: 'feed.flush' }),
   },
   guards: {
+    usesAcp: ({ context }): boolean =>
+      context.input.acp !== undefined ||
+      (context.input.kind === 'new' && context.input.prompt.length === 0),
     isNew: ({ context }): boolean => context.input.kind === 'new',
     isUnstored: ({ context }): boolean => !context.stored,
+    hasEndedFeed: ({ context }): boolean => context.feedEnded,
     isPermissionHead: ({ context, event }): boolean =>
       event.type === 'session.answerPermission' &&
       context.permissionQueue[0]?.toolCallId === event.toolCallId,
     hasPermission: ({ context }): boolean => context.permissionQueue.length > 0,
     hasElicitation: ({ context }): boolean =>
       context.pendingElicitation !== null,
-    nativeAlreadyDrained: stateIn({ open: 'flushing' }),
+    nativeAlreadyDrained: or([
+      stateIn({ open: 'flushing' }),
+      stateIn({ open: { acp: 'flushing' } }),
+    ]),
     tooManyCrashes: ({ context }): boolean =>
       context.agentCrashes.length >= maxCrashesInWindow,
   },
@@ -793,6 +959,32 @@ const endedTurn = {
   }),
 } as const;
 
+const acpReleaseTransitions = [
+  {
+    guard: 'isUnstored',
+    target: discardingSessionTarget,
+    actions: {
+      type: 'endTurn',
+      params: { stopReason: 'cancelled' },
+    },
+  },
+  {
+    guard: 'hasEndedFeed',
+    target: closedSessionTarget,
+    actions: {
+      type: 'endTurn',
+      params: { stopReason: 'cancelled' },
+    },
+  },
+  {
+    target: 'flushing',
+    actions: {
+      type: 'endTurn',
+      params: { stopReason: 'cancelled' },
+    },
+  },
+] as const;
+
 export const sessionMachine = sessionSetup.createMachine({
   id: 'session',
   context: ({ input }): SessionContext => ({
@@ -820,6 +1012,15 @@ export const sessionMachine = sessionSetup.createMachine({
     failure: null,
     pendingNativeStops: new Set(),
     stored: input.kind === 'existing',
+    acpLifetime: new AcpSessionLifetime(input.acp),
+    acpLease: null,
+    pendingSubmission: null,
+    feedEnded: false,
+    acpPrompt: null,
+    acpResponseReaders: createAcpResponseReaders(
+      createRejectionCounter(`ACP Session ${input.sessionId}`),
+    ),
+    acpTurnOutcome: null,
   }),
   output: ({ context }): Pick<SessionContext, 'failure'> => ({
     failure: context.failure,
@@ -864,10 +1065,7 @@ export const sessionMachine = sessionSetup.createMachine({
       invoke: {
         id: 'feed',
         src: 'feed',
-        input: ({
-          context,
-          self,
-        }): import('xstate').InputFrom<typeof feedMachine> => ({
+        input: ({ context, self }): InputFrom<typeof feedMachine> => ({
           sessionId: context.sessionId,
           epoch: context.epoch,
           maxRevision: context.maxRevision,
@@ -881,9 +1079,23 @@ export const sessionMachine = sessionSetup.createMachine({
               sessionId: context.sessionId,
               id,
             }),
+          findUnaddressedPlan: (
+            acpSessionId,
+          ): ReturnType<typeof readUnaddressedPlan> =>
+            readUnaddressedPlan({
+              database: context.input.database,
+              writer: findDatabaseWriter(self.system),
+              sessionId: context.sessionId,
+              acpSessionId,
+            }),
         }),
         onDone: [
           { guard: 'nativeAlreadyDrained', target: 'closed' },
+          {
+            guard: 'usesAcp',
+            target: '.acp.closing',
+            actions: 'rememberFeedEnded',
+          },
           { target: 'stopping' },
         ],
         onError: [
@@ -898,6 +1110,19 @@ export const sessionMachine = sessionSetup.createMachine({
             },
           },
           {
+            guard: 'usesAcp',
+            target: '.acp.closing',
+            actions: [
+              'rememberFeedEnded',
+              {
+                type: 'rememberFailure',
+                params: ({ event }): FailureParameters => ({
+                  error: event.error,
+                }),
+              },
+            ],
+          },
+          {
             target: 'stopping',
             actions: {
               type: 'rememberFailure',
@@ -908,8 +1133,209 @@ export const sessionMachine = sessionSetup.createMachine({
           },
         ],
       },
-      initial: 'live',
+      initial: 'choosing',
       states: {
+        choosing: {
+          always: [{ guard: 'usesAcp', target: 'acp' }, { target: 'live' }],
+        },
+        acp: {
+          invoke: {
+            id: 'acpSubscription',
+            src: 'acpSubscription',
+            input: ({ context }): AcpSessionLifetime => context.acpLifetime,
+          },
+          initial: 'opening',
+          on: {
+            'session.close': { target: '.closing' },
+            'acp.failed': { actions: 'rememberAcpFailure' },
+            'acp.update': { actions: 'forwardAcpUpdate' },
+          },
+          states: {
+            opening: {
+              invoke: {
+                id: 'openAcp',
+                src: 'openAcp',
+                input: ({ context }): SessionContext => context,
+                onDone: {
+                  target: 'idle',
+                  actions: [
+                    {
+                      type: 'rememberAcpLease',
+                      params: ({ event }): AcpSessionLease => event.output,
+                    },
+                    'storeSession',
+                  ],
+                },
+                onError: {
+                  target: 'closing',
+                  actions: {
+                    type: 'rememberFailure',
+                    params: ({ event }): FailureParameters => ({
+                      error: event.error,
+                    }),
+                  },
+                },
+              },
+              on: { 'session.close': { target: 'closing' } },
+            },
+            idle: {
+              on: {
+                'session.close': { target: 'closing' },
+                'session.prompt': {
+                  target: 'committing',
+                  actions: [
+                    'rememberSubmission',
+                    { type: 'persistTurn', params: toPromptTurn },
+                  ],
+                },
+              },
+            },
+            committing: {
+              invoke: {
+                id: 'commitPrompt',
+                src: 'commitPrompt',
+                input: ({ context, self }): AcpOperationInput => ({
+                  context,
+                  findFeed: () => self.getSnapshot().children.feed,
+                }),
+                onDone: {
+                  target: 'activeTurn',
+                  actions: {
+                    type: 'acknowledgeLocalPromptCommit',
+                    params: ({ event }) => event.output,
+                  },
+                },
+                onError: {
+                  target: 'idle',
+                  actions: [
+                    {
+                      type: 'rejectSubmission',
+                      params: ({ event }): FailureParameters => ({
+                        error: event.error,
+                      }),
+                    },
+                    { type: 'endTurn', params: { stopReason: 'error' } },
+                  ],
+                },
+              },
+              on: {
+                'session.close': {
+                  target: 'closing',
+                  actions: {
+                    type: 'rejectSubmission',
+                    params: {
+                      error: new Error('Session closed before prompt commit'),
+                    },
+                  },
+                },
+              },
+            },
+            activeTurn: {
+              invoke: {
+                id: 'promptAcp',
+                src: 'promptAcp',
+                input: ({ context }) => context,
+                onDone: {
+                  target: 'publishing',
+                  actions: {
+                    type: 'rememberAcpOutcome',
+                    params: ({ event }) => ({
+                      stopReason: event.output.stopReason,
+                    }),
+                  },
+                },
+                onError: {
+                  target: 'publishing',
+                  actions: [
+                    {
+                      type: 'rememberFailure',
+                      params: ({ event }): FailureParameters => ({
+                        error: event.error,
+                      }),
+                    },
+                    {
+                      type: 'rememberAcpOutcome',
+                      params: { stopReason: 'error' },
+                    },
+                  ],
+                },
+              },
+              initial: 'working',
+              states: { working: {} },
+            },
+            publishing: {
+              invoke: {
+                id: 'publishTurn',
+                src: 'publishTurn',
+                input: ({ context, self }): AcpOperationInput => ({
+                  context,
+                  findFeed: () => self.getSnapshot().children.feed,
+                }),
+                onDone: {
+                  target: 'idle',
+                  actions: {
+                    type: 'endTurn',
+                    params: ({ context }) =>
+                      context.acpTurnOutcome ?? { stopReason: 'error' },
+                  },
+                },
+                onError: {
+                  target: 'closing',
+                  actions: {
+                    type: 'rememberFailure',
+                    params: ({ event }) => ({ error: event.error }),
+                  },
+                },
+              },
+            },
+            closing: {
+              entry: {
+                type: 'rejectSubmission',
+                params: {
+                  error: new Error(
+                    'The prompt could not be saved; no Agent work was started',
+                  ),
+                },
+              },
+              on: { 'session.close': {} },
+              invoke: {
+                id: 'closeAcp',
+                src: 'closeAcp',
+                input: ({ context, self }): AcpOperationInput => ({
+                  context,
+                  findFeed: () => self.getSnapshot().children.feed,
+                }),
+                onDone: acpReleaseTransitions,
+                onError: {
+                  target: 'retainingCleanup',
+                  actions: {
+                    type: 'rememberFailure',
+                    params: ({ event }): FailureParameters => ({
+                      error: event.error,
+                    }),
+                  },
+                },
+              },
+            },
+            retainingCleanup: {
+              on: { 'session.close': {} },
+              invoke: {
+                id: 'awaitAcpRelease',
+                src: 'awaitAcpRelease',
+                input: ({ context, self }): AcpOperationInput => ({
+                  context,
+                  findFeed: () => self.getSnapshot().children.feed,
+                }),
+                onDone: acpReleaseTransitions,
+              },
+            },
+            flushing: {
+              on: { 'session.close': {} },
+              entry: 'flushFeed',
+              after: { feedFlushLimit: closedSessionTarget },
+            },
+          },
+        },
         live: {
           invoke: {
             id: 'vendorSession',
@@ -1078,20 +1504,20 @@ export const sessionMachine = sessionSetup.createMachine({
             input: ({ context }): SessionContext['pendingNativeStops'] =>
               context.pendingNativeStops,
             onDone: [
-              { guard: 'isUnstored', target: '#session.discarding' },
+              { guard: 'isUnstored', target: discardingSessionTarget },
               { target: 'flushing' },
             ],
           },
           after: {
             agentStopLimit: [
-              { guard: 'isUnstored', target: '#session.discarding' },
+              { guard: 'isUnstored', target: discardingSessionTarget },
               { target: 'flushing' },
             ],
           },
         },
         flushing: {
           entry: 'flushFeed',
-          after: { feedFlushLimit: '#session.closed' },
+          after: { feedFlushLimit: closedSessionTarget },
         },
       },
     },

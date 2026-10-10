@@ -13,14 +13,14 @@ import {
   type MockAgentStream,
 } from '@repo/mocks/agent';
 import { expect, it, vi } from 'vitest';
-import { startRouterTestHost } from '#mocks/router';
+import { startEngineTestHost } from '#mocks/engine';
 
 const alreadyAnswered = 'already answered';
 const permissionAnswer = 'agent.answerPermission';
 
 async function readSessionSnapshot(
-  subscribeToFeed: ReturnType<
-    typeof startRouterTestHost
+  subscribeToFeed: Awaited<
+    ReturnType<typeof startEngineTestHost>
   >['caller']['feed']['subscribe'],
 ): Promise<SessionSnapshot> {
   const events = await subscribeToFeed({ sessionId: 'session-1', after: null });
@@ -32,14 +32,14 @@ async function readSessionSnapshot(
 async function startPromptedSession(
   agentReady: AgentReady = mockReady,
 ): Promise<
-  ReturnType<typeof startRouterTestHost> & {
+  Awaited<ReturnType<typeof startEngineTestHost>> & {
     stream: MockAgentStream;
     commands: VendorCommand[];
   }
 > {
   let stream: MockAgentStream | undefined;
   const commands: VendorCommand[] = [];
-  const host = startRouterTestHost({
+  const host = await startEngineTestHost({
     adapters: [
       createMockAdapter({
         connect: async (): Promise<AgentReady> => agentReady,
@@ -332,7 +332,7 @@ it.each(pagingInputs)(
     const connect = vi
       .fn<NonNullable<MockAgentScript['connect']>>()
       .mockResolvedValue(mockReady);
-    const { caller } = startRouterTestHost({
+    const { caller } = await startEngineTestHost({
       adapters: [createMockAdapter({ connect })],
     });
     expect(await caller.session.list(input)).toMatchObject({
@@ -344,7 +344,7 @@ it.each(pagingInputs)(
 );
 
 it('rejects an unsupported Session paging direction', async (): Promise<void> => {
-  const { caller } = startRouterTestHost();
+  const { caller } = await startEngineTestHost();
   await expect(
     Reflect.apply(caller.session.list, undefined, [
       { archived: false, direction: 'backward' },
@@ -376,7 +376,7 @@ it.each([
 ] as const)(
   'preserves the unimplemented $procedure error',
   async ({ procedure, input, message }): Promise<void> => {
-    const { caller } = startRouterTestHost();
+    const { caller } = await startEngineTestHost();
     await expect(
       Reflect.apply(caller.session[procedure], undefined, [input]),
     ).rejects.toMatchObject({ code: 'NOT_IMPLEMENTED', message });
@@ -390,7 +390,7 @@ it.each([
 ])(
   'rejects a malformed rename input before its handler: %j',
   async (input): Promise<void> => {
-    const { caller } = startRouterTestHost();
+    const { caller } = await startEngineTestHost();
     await expect(
       Reflect.apply(caller.session.rename, undefined, [input]),
     ).rejects.toMatchObject({ code: 'BAD_REQUEST' });

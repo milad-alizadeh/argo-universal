@@ -2,22 +2,16 @@ import { useSyncLayout } from '@legendapp/list/react-native';
 import type {
   BlobRef,
   ContentBlock,
-  ImageContent,
   UserMessage as UserMessageRow,
 } from '@repo/contracts';
 import type * as React from 'react';
 import { memo, useLayoutEffect, useRef, useState } from 'react';
-import {
-  Image,
-  Pressable,
-  Text as Span,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { Pressable, Text as Span, View } from 'react-native';
 import { withOccurrenceKeys } from '#lib/occurrence-keys';
-import { Dialog, DialogContent, DialogTitle } from '#primitives/dialog';
 import { Text } from '#primitives/text';
 import { Icon } from '../lib/icon';
+import { resourceName } from '../lib/resource-name';
+import { FeedImage } from './feed-image';
 import { inlineCodeClassName } from './feed-markdown';
 
 export interface UserMessageProps {
@@ -27,9 +21,6 @@ export interface UserMessageProps {
 }
 
 const clampedLines = 4;
-// The opened image fills at most this share of the window.
-const openImageWidthFraction = 0.9;
-const openImageHeightFraction = 0.8;
 
 type Reference = Extract<ContentBlock, { type: 'resource_link' | 'resource' }>;
 
@@ -91,60 +82,9 @@ function Bubble({ text }: { text: string }): React.JSX.Element {
   );
 }
 
-function imageLabel(image: ImageContent): string | undefined {
-  if (image._meta?.argo?.source === 'pasted') return 'Pasted';
-  const { width, height } = image.blob;
-  return width && height ? `${width}×${height}` : undefined;
-}
-
-function Thumbnail({
-  image,
-  imageUrl,
-}: {
-  image: ImageContent;
-  imageUrl: UserMessageProps['imageUrl'];
-}): React.JSX.Element {
-  const [open, setOpen] = useState(false);
-  const window = useWindowDimensions();
-  const label = imageLabel(image);
-  const aspectRatio =
-    image.blob.width && image.blob.height
-      ? image.blob.width / image.blob.height
-      : 1;
-  const width = Math.min(
-    window.width * openImageWidthFraction,
-    window.height * openImageHeightFraction * aspectRatio,
-  );
-  const source = { uri: imageUrl(image.blob) };
-  return (
-    <>
-      <Pressable
-        role="button"
-        aria-label={label ? `Open image, ${label}` : 'Open image'}
-        onPress={() => setOpen(true)}
-        className="h-[84px] w-[120px] shrink-0 overflow-hidden rounded-lg border border-border bg-muted"
-      >
-        <Image source={source} resizeMode="cover" className="size-full" />
-      </Pressable>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="w-auto gap-0 overflow-hidden p-0 sm:max-w-none">
-          <DialogTitle className="sr-only">{label ?? 'Image'}</DialogTitle>
-          <Image
-            source={source}
-            resizeMode="contain"
-            accessibilityLabel={label ?? 'Image'}
-            style={{ width, aspectRatio }}
-          />
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-}
-
 function referenceName(reference: Reference): string {
   if (reference.type === 'resource_link') return reference.name;
-  const path = reference.resource.uri.replace(/\/$/, '');
-  return path.slice(path.lastIndexOf('/') + 1);
+  return resourceName(reference.resource.uri);
 }
 
 function isFolder(reference: Reference): boolean {
@@ -199,7 +139,7 @@ export const UserMessage = memo(function UserMessage({
       {images.length > 0 && (
         <View className="max-w-full flex-row flex-wrap justify-end gap-1.5">
           {images.map((image) => (
-            <Thumbnail
+            <FeedImage
               key={image.blob.blobId}
               image={image}
               imageUrl={imageUrl}

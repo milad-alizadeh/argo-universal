@@ -1,12 +1,12 @@
 import type { AgentAdapter, AgentProbe } from '@repo/agents';
 import { createMockAdapter } from '@repo/mocks/agent';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi, type VitestUtils } from 'vitest';
 import { createActor, waitFor } from 'xstate';
 import { agentProbeMachine } from './agent-probe-machine';
 
 const refreshProbeEvent = 'agentProbe.refresh';
 const available: AgentProbe = { availability: 'available', configOptions: [] };
-afterEach((): import('vitest').VitestUtils => vi.useRealTimers());
+afterEach((): VitestUtils => vi.useRealTimers());
 
 it('shares a running probe with a refresh, and probes again once settled', async (): Promise<void> => {
   const settle = Promise.withResolvers<AgentProbe>();

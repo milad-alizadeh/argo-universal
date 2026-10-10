@@ -19,10 +19,10 @@ export interface FeedMarkdownProps {
   text: string;
   // An open row ends its text with a caret.
   streaming?: boolean;
-  variant?: 'feed' | 'proposal';
+  variant?: 'feed' | 'proposal' | 'summary';
 }
 
-const MarkdownVariant = createContext<'feed' | 'proposal'>('feed');
+const MarkdownVariant = createContext<FeedMarkdownProps['variant']>('feed');
 
 export const inlineCodeClassName =
   'rounded-sm bg-foreground/5 px-1.5 py-px type-code text-foreground';
@@ -108,14 +108,25 @@ function Prose({
   tokens,
   caret,
   className,
+  headingLevel,
 }: {
   tokens: Token[] | undefined;
   caret: boolean;
   className?: string;
+  headingLevel?: number;
 }): React.JSX.Element {
+  const variant = useContext(MarkdownVariant);
   return (
-    <Text className={cn('font-sans type-body', className)}>
-      <InlineTokens tokens={tokens} />
+    <Text
+      role={headingLevel === undefined ? undefined : 'heading'}
+      aria-level={headingLevel === undefined ? undefined : String(headingLevel)}
+      className={cn(
+        'font-sans type-body',
+        className,
+        variant === 'summary' && 'text-muted-foreground',
+      )}
+    >
+      <InlineTokens tokens={tokens} codeClassName={inlineCodeClassName} />
       {caret && <Caret />}
     </Text>
   );
@@ -170,7 +181,10 @@ function Table({ token }: { token: Tokens.Table }): React.JSX.Element {
               ({ item: cell, key }, column) => (
                 <View key={key} className={cellClassName(column)}>
                   <Text className="font-sans type-heading">
-                    <InlineTokens tokens={cell.tokens} />
+                    <InlineTokens
+                      tokens={cell.tokens}
+                      codeClassName={inlineCodeClassName}
+                    />
                   </Text>
                 </View>
               ),
@@ -220,16 +234,14 @@ function Block({
   token: Token;
   caret: boolean;
 }): React.JSX.Element | null {
-  const variant = useContext(MarkdownVariant);
   switch (token.type) {
     case 'heading':
       return (
         <Prose
           tokens={token.tokens}
           caret={caret}
-          className={
-            variant === 'proposal' ? 'type-heading' : 'pt-1 type-heading'
-          }
+          headingLevel={token.depth}
+          className={token.depth === 1 ? 'type-title' : 'type-heading'}
         />
       );
     case 'paragraph':

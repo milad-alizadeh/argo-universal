@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import type { Database } from '@repo/db';
 import { createRejectionCounter } from '../lib/count-rejections';
 import type { uploadBlob } from '../services/blob';
 import { type FeedDeps, findDatabaseWriter } from '../services/feed';
@@ -13,20 +14,25 @@ import type { SystemDeps } from '../services/system';
 import type { HttpServerOptions } from './http-server';
 
 export type Context = Pick<HttpServerOptions, 'sessions' | 'createId'> &
-  Parameters<typeof uploadBlob>[0] &
-  SystemDeps &
+  Parameters<typeof uploadBlob>[0] & {
+    database: Database;
+  } & SystemDeps &
   FeedDeps & {
     sessionCommandSignal?: AbortSignal;
     projectRejections: ReturnType<typeof createRejectionCounter>;
     sessionList: ReturnType<typeof createSessionList>;
+    databaseWriter: NonNullable<ReturnType<typeof findDatabaseWriter>>;
+    syncSupervisor: HttpServerOptions['syncSupervisor'];
   };
 
 export function createEngineContext(
   engineOptions: Pick<HttpServerOptions, 'sessions'> &
     Partial<Pick<HttpServerOptions, 'createId'>> &
-    Parameters<typeof uploadBlob>[0] &
-    SystemDeps &
-    Pick<Context, 'sessionCommandSignal'>,
+    Parameters<typeof uploadBlob>[0] & {
+      database: Database;
+    } & SystemDeps &
+    Pick<Context, 'sessionCommandSignal'> &
+    Pick<HttpServerOptions, 'databaseWriter' | 'syncSupervisor'>,
 ): Context {
   const findSession = (sessionId: string): SessionActorRef | undefined =>
     findSessionActor(engineOptions.sessions.system, sessionId);
@@ -53,5 +59,7 @@ export function createEngineContext(
       findWriter,
     }),
     sessionList: createSessionList(engineOptions),
+    databaseWriter: engineOptions.databaseWriter,
+    syncSupervisor: engineOptions.syncSupervisor,
   };
 }

@@ -1,5 +1,7 @@
 # Only human-typed text becomes a user message
 
+For ACP Sessions, the local submitted prompt is the human provenance boundary. Session persists that exact prompt as the Turn's first row before dispatch. ACP user-message echoes do not create another human row. Text arriving while idle remains Turn-null: the pinned SDK 1.7 baseline supplies no verified autonomous-start signal, so text alone cannot create a Turn (owner, 2026-10-09, Spec 0009 #349).
+
 Agents put their own text into the user's side of the transcript: system reminders, slash-command echoes, hook output, local command output, and injected AGENTS.md or environment blocks. Paseo shows most of it as user text. Argo trusts the vendor's origin flag instead. Only text that the vendor marks as typed by a human becomes a `user_message`, and it is shown as written.
 
 The adapter maps each recognised wrapper to a typed Session update:

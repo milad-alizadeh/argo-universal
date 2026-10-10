@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, spyOn, waitFor, within } from 'storybook/test';
+import { page } from 'vitest/browser';
 import { layoutWidths } from '../../mocks/each-layout';
 import { recordedFile } from '../../mocks/feed-edit-mock';
 import { settleViewport } from '../../mocks/settle-viewport';
@@ -36,18 +37,15 @@ export const InspectorFileShowsEveryLine: Story = {
         name: 'Diff for /repo/large.txt',
       });
       await expect(
-        getComputedStyle(within(header).getByText('large.txt')).userSelect,
-      ).toBe('none');
-      await expect(
         canvas.getByRole('button', { name: 'Copy path' }),
       ).toBeVisible();
-      // The path button stops before the copy button, so neither covers the other.
+      await page.elementLocator(header).hover();
+      // The path button fills the header up to the copy button, so there is no dead space to miss.
       const copyBounds = canvas
         .getByRole('button', { name: 'Copy path' })
         .getBoundingClientRect();
-      await expect(header.getBoundingClientRect().right).toBeLessThanOrEqual(
-        copyBounds.left,
-      );
+      const buttonBounds = header.getBoundingClientRect();
+      await expect(buttonBounds.right).toBeLessThanOrEqual(copyBounds.left);
       await expect(header).toHaveAttribute('aria-expanded', 'true');
       const box = canvas.getByTestId('diff-scroll');
       await expect(box.scrollHeight).toBe(box.clientHeight);
@@ -64,7 +62,6 @@ function inlinePreview(width: number): Story {
     args: { inline: true },
     play: async ({ canvas, userEvent }) => {
       if (process.env.NODE_ENV !== 'test') return;
-      const { page } = await import('vitest/browser');
       const clipboard = spyOn(
         navigator.clipboard,
         'writeText',

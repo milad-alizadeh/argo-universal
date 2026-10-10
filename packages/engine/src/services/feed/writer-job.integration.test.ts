@@ -207,7 +207,7 @@ describe('writeJobs', (): void => {
       },
     ];
 
-    expect((): void => writeJobs(database, jobs)).toThrow();
+    expect(() => writeJobs(database, jobs)).toThrow();
     expect(selectRows()).toEqual([]);
     expect(selectSession()?.maxRevision).toBe(0);
     expect(selectTurn()).toBeUndefined();

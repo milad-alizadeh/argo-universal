@@ -13,7 +13,7 @@ import { applyQueuedSession, queuedFeedRows, type WriterJob } from '../feed';
 import type { writerMachine } from '../feed';
 import { decodeStoredSession, storedSessionColumns } from './session-record';
 
-// The first Turn's id travels with the creation, so the Session prompts as soon as it is stored.
+// Prompted creation carries the first Turn's id.
 export type SessionCreationInput = SessionNewInput & {
   projectPath: string;
   turnId: string;
@@ -39,7 +39,7 @@ export interface SessionData {
   nextPosition: number;
 }
 
-// Creates the Checkout only; the Session row waits until its Agent is ready, so no empty Session exists.
+// The Session row waits until its Agent is ready.
 export async function createSessionCheckout(
   input: NewSessionInput,
   signal?: AbortSignal,

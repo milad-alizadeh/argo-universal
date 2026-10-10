@@ -1,9 +1,9 @@
+import type { SessionSnapshot, SessionUpdate } from '@repo/contracts';
 import {
   type FeedMock,
   newSessionCatalogs,
   recordedFeedMocks,
-} from '@repo/api/mocks';
-import type { SessionSnapshot, SessionUpdate } from '@repo/contracts';
+} from '@repo/mocks/app';
 import {
   recordedAgentMessage,
   recordedFeedMock,
@@ -13,7 +13,7 @@ import { createFeedMocks } from './feed-mock';
 import { unavailableNewSessionMocks } from './new-session-mock';
 import { createSubscriptionPublisher } from './subscription-publisher';
 import { completedCommand } from './tool-call-mock';
-import { type Fixtures, pending } from './trpc-mock-link';
+import { type Fixtures, type FixtureOutput, pending } from './trpc-mock-link';
 
 const catalogAgent = ((): (typeof newSessionCatalogs.bothAvailable)[number] => {
   const [agent] = newSessionCatalogs.bothAvailable;
@@ -40,9 +40,12 @@ function withWholeTail(
   };
 }
 
-function createSessionMocks(mock: FeedMock): Fixtures {
+function createSessionMocks(
+  mock: FeedMock,
+  pages?: Record<string, FixtureOutput<'feed.page'>>,
+): Fixtures {
   return {
-    ...createFeedMocks(mock),
+    ...createFeedMocks(mock, pages),
     'agents.list': () => newSessionCatalogs.bothAvailable,
     'session.prompt': () => ({ messageId: 'message-sent' }),
     'session.cancel': () => ({}),
@@ -143,9 +146,31 @@ const longFeed = withWholeTail(
   { ...editAndCommandRecording, rows: longRows },
   { maxRevision: Math.max(...longRows.map((row) => row.revision)) },
 );
-export const longSessionMocks = createSessionMocks(longFeed);
-
-const { 'feed.page': longFeedPage } = createFeedMocks(longFeed);
+// Fixed response pages for the large scroll fixture. Requests only select a page.
+function recordedScrollPages(
+  feed: FeedMock,
+): Record<string, FixtureOutput<'feed.page'>> {
+  const pages: Record<string, FixtureOutput<'feed.page'>> = {};
+  let key = 'tail';
+  for (let end = feed.rows.length; end > 0; end -= 150) {
+    const start = Math.max(0, end - 150);
+    const rows = feed.rows.slice(start, end);
+    const cursor = rows[0]?.position ?? null;
+    pages[key] = {
+      epoch: feed.snapshot.epoch,
+      maxRevision: feed.snapshot.maxRevision,
+      rows,
+      startCursor: cursor,
+      hasOlder: start > 0,
+      staleCursor: false,
+    };
+    key = String(cursor);
+  }
+  return pages;
+}
+const longPages = recordedScrollPages(longFeed);
+export const longSessionMocks = createSessionMocks(longFeed, longPages);
+const { 'feed.page': longFeedPage } = createFeedMocks(longFeed, longPages);
 
 // The newest page arrives; the page before it never does.
 export const loadingOlderSessionMocks: Fixtures = {
@@ -158,9 +183,10 @@ let releaseOlderPage = (): void => {};
 
 // Each older page waits until a test sends it, so the test can mark the reader's place first.
 function holdOlderPages(feed: FeedMock): Fixtures {
-  const { 'feed.page': feedPage } = createFeedMocks(feed);
+  const pages = recordedScrollPages(feed);
+  const { 'feed.page': feedPage } = createFeedMocks(feed, pages);
   return {
-    ...createSessionMocks(feed),
+    ...createSessionMocks(feed, pages),
     'feed.page': async (input) => {
       if (input.direction === 'before')
         await new Promise<void>((resolve) => {

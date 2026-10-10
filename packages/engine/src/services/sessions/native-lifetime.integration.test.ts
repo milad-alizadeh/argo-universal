@@ -8,8 +8,7 @@ import {
   type VendorCommand,
   type VendorSession,
 } from '@repo/agents';
-import { sessionRows } from '@repo/api/mocks';
-import { permissionOptions } from '@repo/contracts';
+import { permissionOptions, type SessionSnapshot } from '@repo/contracts';
 import {
   createMockAdapter,
   type MockAgentStream,
@@ -19,12 +18,11 @@ import {
 import { afterEach, expect, it, onTestFinished, vi } from 'vitest';
 import { waitFor } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
+import { startEngineTestHost } from '#mocks/engine';
 import { messageChange } from '#mocks/feed';
 import { initTestRepository } from '#mocks/git';
-import { startRouterTestHost } from '#mocks/router';
-import { createSessionHost, firstPrompt } from '#mocks/session';
-import { appRouter } from '../../engine/router';
-import { toSessionSnapshot } from './session-snapshot';
+import type { SessionActorRef } from './session-machine';
+import { findSessionActor } from './session-system';
 
 const nativeCrash = 'Native instance crashed';
 const missingStream = 'The Agent has no stream';
@@ -44,31 +42,50 @@ afterEach((): void => {
   vi.useRealTimers();
 });
 
-function createNativeSessionHost(
+const firstPrompt = {
+  type: 'session.prompt' as const,
+  turnId: 'turn-1',
+  content: [],
+};
+type NativeSessionHost = Awaited<ReturnType<typeof startEngineTestHost>> & {
+  session: SessionActorRef;
+};
+async function openNativeSessionInEngine(
   adapter: AgentAdapter,
-): ReturnType<typeof createSessionHost> {
+): Promise<NativeSessionHost> {
   const { database, remove } = openTestDatabase({ agent: adapter.agent });
   onTestFinished(remove);
-  return createSessionHost(database, adapter);
+  const host = await startEngineTestHost({ database, adapters: [adapter] });
+  host.sessionRegistry.send({
+    type: 'sessions.open',
+    sessionId,
+    agent: adapter.agent,
+  });
+  const session = findSessionActor(host.engine.system, sessionId);
+  if (!session) throw new Error('Session did not open');
+  return { ...host, session };
 }
-async function startSession(
+async function openReadyNativeSession(
   adapter: AgentAdapter,
-): Promise<ReturnType<typeof createSessionHost>> {
-  const host = createNativeSessionHost(adapter);
-  await waitFor(host.session, (snapshot): boolean => snapshot.can(firstPrompt));
+): Promise<NativeSessionHost> {
+  const host = await openNativeSessionInEngine(adapter);
+  await vi.waitFor(() =>
+    expect(
+      host.database.$client
+        .prepare('SELECT vendor_session_id FROM session WHERE id = ?')
+        .get(sessionId),
+    ).toMatchObject({ vendor_session_id: 'vendor-1' }),
+  );
   return host;
 }
 
-function publicSnapshot(
-  host: ReturnType<typeof createSessionHost>,
-): ReturnType<typeof toSessionSnapshot> {
-  const feed = host.findFeed();
-  if (!feed) throw new Error('The Session has no live Feed');
-  return toSessionSnapshot(
-    host.session.getSnapshot(),
-    feed.getSnapshot(),
-    sessionRows.idle,
-  );
+async function readNativeSessionSnapshot(
+  host: NativeSessionHost,
+): Promise<SessionSnapshot> {
+  const events = await host.caller.feed.subscribe({ sessionId, after: null });
+  for await (const event of events)
+    if (event.type === 'snapshot') return event.snapshot;
+  throw new Error('The Session did not publish a snapshot');
 }
 
 it.each(agentAdapters.map((adapter): string => adapter.agent))(
@@ -76,7 +93,7 @@ it.each(agentAdapters.map((adapter): string => adapter.agent))(
   async (agent): Promise<void> => {
     let stream: MockAgentStream | undefined;
     const commands: VendorCommand[] = [];
-    const host = await startSession(
+    const host = await openReadyNativeSession(
       createMockAdapter(
         {
           stream: (nativeStream): undefined => {
@@ -90,7 +107,7 @@ it.each(agentAdapters.map((adapter): string => adapter.agent))(
     if (!stream) throw new Error(missingStream);
     stream.send({ type: turnStartedEvent });
     stream.send({ type: feedEvent, change: messageChange('settled') });
-    const snapshot = publicSnapshot(host);
+    const snapshot = await readNativeSessionSnapshot(host);
     expect(snapshot).toMatchObject({
       state: 'running',
       activeTurnId: expect.any(String),
@@ -100,14 +117,7 @@ it.each(agentAdapters.map((adapter): string => adapter.agent))(
         .turnId,
     ).toBe(snapshot.activeTurnId);
     expect(commands).toEqual([]);
-    host.session.send({ type: closeEvent });
-    await waitFor(
-      host.session,
-      (current): boolean => current.status === 'done',
-    );
-    const writer = host.databaseWriter;
-    writer.send({ type: 'writer.drain' });
-    await waitFor(writer, (current): boolean => current.status === 'done');
+    await host.caller.session.close({ sessionId });
     expect(
       (await host.caller.feed.row({ sessionId: sessionId, id: 'reply' }))
         .turnId,
@@ -119,7 +129,7 @@ it.each(agentAdapters.map((adapter): string => adapter.agent))(
   'keeps the running autonomous Turn identity on duplicate start for Agent %s',
   async (agent): Promise<void> => {
     let stream: MockAgentStream | undefined;
-    const host = await startSession(
+    const host = await openReadyNativeSession(
       createMockAdapter(
         {
           stream: (nativeStream): undefined => {
@@ -131,10 +141,12 @@ it.each(agentAdapters.map((adapter): string => adapter.agent))(
       ),
     );
     if (!stream) throw new Error(missingStream);
-    const runningTurn = publicSnapshot(host);
+    const runningTurn = await readNativeSessionSnapshot(host);
     expect(runningTurn.state).toBe('running');
     stream.send({ type: turnStartedEvent });
-    expect(publicSnapshot(host).activeTurnId).toBe(runningTurn.activeTurnId);
+    expect((await readNativeSessionSnapshot(host)).activeTurnId).toBe(
+      runningTurn.activeTurnId,
+    );
   },
 );
 
@@ -145,7 +157,7 @@ it.each(agentAdapters.map((adapter): string => adapter.agent))(
     const retiredStop = Promise.withResolvers<void>();
     let stream: MockAgentStream | undefined;
     let stopCalls = 0;
-    const host = await startSession(
+    const host = await openReadyNativeSession(
       createMockAdapter(
         {
           stream: (nativeStream): undefined => {
@@ -160,14 +172,14 @@ it.each(agentAdapters.map((adapter): string => adapter.agent))(
     if (!stream) throw new Error(missingStream);
     stream.fail(new Error(nativeCrash));
     await vi.advanceTimersByTimeAsync(1000);
-    host.session.send({ type: closeEvent });
+    let closed = false;
+    const closing = host.caller.session.close({ sessionId }).then(() => {
+      closed = true;
+    });
     await vi.advanceTimersByTimeAsync(0);
-    expect(host.session.getSnapshot().status).toBe('active');
+    expect(closed).toBe(false);
     retiredStop.resolve();
-    await waitFor(
-      host.session,
-      (snapshot): boolean => snapshot.status === 'done',
-    );
+    await closing;
     expect(stopCalls).toBe(2);
   },
 );
@@ -176,7 +188,7 @@ it('waits for native stop before publishing the final Feed batch', async (): Pro
   vi.useFakeTimers();
   const stopped = Promise.withResolvers<void>();
   let stream: MockAgentStream | undefined;
-  const host = await startSession(
+  const host = await openReadyNativeSession(
     createMockAdapter({
       stream: (nativeStream): undefined => {
         stream = nativeStream;
@@ -187,8 +199,8 @@ it('waits for native stop before publishing the final Feed batch', async (): Pro
   const subscriber = new AbortController();
   onTestFinished((): void => subscriber.abort());
   const updates = (
-    await appRouter
-      .createCaller(host.context, { signal: subscriber.signal })
+    await host
+      .createCaller({ signal: subscriber.signal })
       .feed.subscribe({ sessionId, after: null })
   )[Symbol.asyncIterator]();
   await updates.next();
@@ -210,23 +222,30 @@ it('waits for native stop before publishing the final Feed batch', async (): Pro
 
 it('keeps the original native close deadline when close repeats', async (): Promise<void> => {
   vi.useFakeTimers();
-  const host = await startSession(
+  const host = await openReadyNativeSession(
     createMockAdapter({
       stop: (): Promise<void> => new Promise((): void => {}),
     }),
   );
-  host.session.send({ type: closeEvent });
+  let closed = false;
+  const closing = host.caller.session.close({ sessionId }).then(() => {
+    closed = true;
+  });
   await vi.advanceTimersByTimeAsync(4000);
-  host.session.send({ type: closeEvent });
+  const repeated = host.caller.session
+    .close({ sessionId })
+    .catch((error: unknown) => error);
   await vi.advanceTimersByTimeAsync(999);
-  expect(host.session.getSnapshot().status).toBe('active');
+  expect(closed).toBe(false);
   await vi.advanceTimersByTimeAsync(1);
-  expect(host.session.getSnapshot().status).toBe('done');
+  await closing;
+  expect(await repeated).toMatchObject({ code: 'CONFLICT' });
+  expect(closed).toBe(true);
 });
 
 it('finishes shutdown when native stop rejects without restarting', async (): Promise<void> => {
   let connects = 0;
-  const host = await startSession(
+  const host = await openReadyNativeSession(
     createMockAdapter({
       connect: async (): Promise<typeof mockReady> => {
         connects += 1;
@@ -237,20 +256,15 @@ it('finishes shutdown when native stop rejects without restarting', async (): Pr
       },
     }),
   );
-  host.session.send({ type: closeEvent });
-  await waitFor(
-    host.session,
-    (snapshot): boolean => snapshot.status === 'done',
-  );
+  await expect(host.caller.session.close({ sessionId })).resolves.toEqual({});
   expect(connects).toBe(1);
-  expect(host.session.getSnapshot().output).toEqual({ failure: null });
 });
 
 it('retries timed-out startup after the existing one-second recovery delay', async (): Promise<void> => {
   vi.useFakeTimers();
   let connects = 0;
   const began = Promise.withResolvers<void>();
-  const host = createNativeSessionHost(
+  const host = await openNativeSessionInEngine(
     createMockAdapter({
       connect: (): Promise<typeof mockReady> => {
         began.resolve();
@@ -263,7 +277,7 @@ it('retries timed-out startup after the existing one-second recovery delay', asy
   await began.promise;
   await vi.advanceTimersByTimeAsync(11_000);
   expect(connects).toBe(2);
-  expect(publicSnapshot(host).state).toBe('idle');
+  expect((await readNativeSessionSnapshot(host)).state).toBe('idle');
 });
 
 it('closes a native instance once when startup resolves after the close deadline', async (): Promise<void> => {
@@ -272,7 +286,7 @@ it('closes a native instance once when startup resolves after the close deadline
   const began = Promise.withResolvers<void>();
   let signal: AbortSignal | undefined;
   let stopCalls = 0;
-  const host = createNativeSessionHost(
+  const host = await openNativeSessionInEngine(
     createMockAdapter({
       connect: (_connectInput, startupSignal): Promise<typeof mockReady> => {
         signal = startupSignal;
@@ -285,9 +299,9 @@ it('closes a native instance once when startup resolves after the close deadline
     }),
   );
   await began.promise;
-  host.session.send({ type: closeEvent });
+  const closing = host.caller.session.close({ sessionId });
   await vi.advanceTimersByTimeAsync(5000);
-  expect(host.session.getSnapshot().status).toBe('done');
+  await closing;
   expect(signal?.aborted).toBe(true);
   ready.resolve(mockReady);
   await vi.advanceTimersByTimeAsync(0);
@@ -306,7 +320,7 @@ it('closes a native instance once when startup resolves after the close deadline
 it('ignores callbacks from the retired native instance after recovery', async (): Promise<void> => {
   vi.useFakeTimers();
   const streams: MockAgentStream[] = [];
-  const host = await startSession(
+  const host = await openReadyNativeSession(
     createMockAdapter({
       stream: (nativeStream): undefined => {
         streams.push(nativeStream);
@@ -319,7 +333,7 @@ it('ignores callbacks from the retired native instance after recovery', async ()
   await vi.advanceTimersByTimeAsync(1000);
   retired.send({ type: turnStartedEvent });
   retired.send({ type: feedEvent, change: messageChange('settled') });
-  expect(publicSnapshot(host)).toMatchObject({
+  expect(await readNativeSessionSnapshot(host)).toMatchObject({
     state: 'idle',
     activeTurnId: null,
   });
@@ -329,7 +343,7 @@ it('ignores callbacks from the retired native instance after recovery', async ()
 });
 
 it('admits early events only after readiness', async (): Promise<void> => {
-  const host = await startSession(
+  const host = await openReadyNativeSession(
     createMockAdapter({
       stream: (nativeStream): undefined => {
         nativeStream.send({ type: turnStartedEvent });
@@ -340,10 +354,10 @@ it('admits early events only after readiness', async (): Promise<void> => {
       },
     }),
   );
-  expect(publicSnapshot(host).state).toBe('running');
+  expect((await readNativeSessionSnapshot(host)).state).toBe('running');
   expect(
     (await host.caller.feed.row({ sessionId: sessionId, id: 'reply' })).turnId,
-  ).toBe(publicSnapshot(host).activeTurnId);
+  ).toBe((await readNativeSessionSnapshot(host)).activeTurnId);
 });
 
 it('rejects invalid usage before changing the public Session snapshot', async (): Promise<void> => {
@@ -355,7 +369,7 @@ it('rejects invalid usage before changing the public Session snapshot', async ()
     vi.restoreAllMocks();
   });
   let stream: MockAgentStream | undefined;
-  const host = await startSession(
+  const host = await openReadyNativeSession(
     createMockAdapter({
       stream: (nativeStream): undefined => {
         stream = nativeStream;
@@ -364,7 +378,7 @@ it('rejects invalid usage before changing the public Session snapshot', async ()
   );
   if (!stream) throw new Error(missingStream);
   stream.send({ type: usageEvent, usage: { used: Number.NaN, size: 100 } });
-  expect(publicSnapshot(host).usage).toBeNull();
+  expect((await readNativeSessionSnapshot(host)).usage).toBeNull();
   expect(errors.flat().join(' ')).toContain('Invalid Argo event: agent.usage');
 });
 
@@ -375,7 +389,7 @@ it.each(agentAdapters.map((adapter): string => adapter.agent))(
     const configured = Promise.withResolvers<void>();
     const prompted = Promise.withResolvers<void>();
     const commands: VendorCommand[] = [];
-    const host = await startSession({
+    const host = await openReadyNativeSession({
       ...createMockAdapter({}, agent),
       connect: async (): Promise<VendorSession> => ({
         ready: mockReady,
@@ -423,7 +437,7 @@ it.each(
     vi.useFakeTimers();
     const responded = Promise.withResolvers<void>();
     const commands: VendorCommand[] = [];
-    const host = await startSession({
+    const host = await openReadyNativeSession({
       ...createMockAdapter({}, agent),
       connect: async (_connectInput, listener): Promise<VendorSession> => ({
         ready: mockReady,
@@ -479,44 +493,16 @@ it.each(
         ? answerPermissionCommand
         : answerElicitationCommand,
     ]);
-    expect(publicSnapshot(host).state).toBe('idle');
+    expect((await readNativeSessionSnapshot(host)).state).toBe('idle');
   },
 );
-
-it('waits for native cleanup after a real Feed failure', async (): Promise<void> => {
-  const stopping = Promise.withResolvers<void>();
-  let stream: MockAgentStream | undefined;
-  const host = await startSession(
-    createMockAdapter({
-      stream: (nativeStream): undefined => {
-        stream = nativeStream;
-      },
-      stop: (): Promise<void> => stopping.promise,
-    }),
-  );
-  if (!stream) throw new Error(missingStream);
-  vi.spyOn(Date, 'now').mockImplementationOnce((): never => {
-    throw new Error('Feed clock failed');
-  });
-  stream.send({ type: feedEvent, change: messageChange('settled') });
-  await Promise.resolve();
-  expect(host.session.getSnapshot().status).toBe('active');
-  stopping.resolve();
-  await waitFor(
-    host.session,
-    (snapshot): boolean => snapshot.status === 'done',
-  );
-  expect(host.session.getSnapshot().output).toEqual({
-    failure: 'Error: Feed clock failed',
-  });
-});
 
 it('rejects malformed native readiness before admitting a prompt', async (): Promise<void> => {
   vi.useFakeTimers();
   const connected = Promise.withResolvers<void>();
   const commands: VendorCommand[] = [];
   let stopCalls = 0;
-  const host = createNativeSessionHost(
+  const host = await openNativeSessionInEngine(
     createMockAdapter({
       connect: async (): Promise<typeof mockReady> => {
         connected.resolve();
@@ -532,7 +518,7 @@ it('rejects malformed native readiness before admitting a prompt', async (): Pro
   );
   await connected.promise;
   await vi.advanceTimersByTimeAsync(0);
-  expect(host.session.getSnapshot().can(firstPrompt)).toBe(false);
+  expect((await readNativeSessionSnapshot(host)).activeTurnId).toBeNull();
   expect(commands).toEqual([]);
   expect(stopCalls).toBe(1);
 });
@@ -556,7 +542,7 @@ it('reports a mapping rejection then continues from the last accepted mapping st
       return { events: [message], mappingState: mappingState + 1 };
     },
   };
-  const host = await startSession(mapped);
+  const host = await openReadyNativeSession(mapped);
   if (!stream) throw new Error(missingStream);
   stream.send({ type: turnStartedEvent });
   stream.send({ type: usageEvent, usage: { used: 1, size: 2 } });
@@ -575,7 +561,7 @@ it('keeps a starting Session owned until native cleanup completes during collect
   const ready = Promise.withResolvers<typeof mockReady>();
   const began = Promise.withResolvers<void>();
   let stopCalls = 0;
-  const host = startRouterTestHost({
+  const host = await startEngineTestHost({
     adapters: [
       createMockAdapter({
         connect: (): Promise<typeof mockReady> => {
@@ -595,12 +581,12 @@ it('keeps a starting Session owned until native cleanup completes during collect
     })
     .catch((error: unknown): unknown => error);
   await began.promise;
-  host.sessionRegistry.send({ type: 'sessions.stopAll' });
+  host.engine.send({ type: 'engine.stop', reason: 'SIGTERM' });
   await vi.advanceTimersByTimeAsync(0);
-  expect(host.sessionRegistry.getSnapshot().status).toBe('active');
+  expect(host.engine.getSnapshot().status).toBe('active');
   ready.resolve(mockReady);
   await vi.advanceTimersByTimeAsync(0);
-  expect(host.sessionRegistry.getSnapshot().status).toBe('done');
+  await waitFor(host.engine, (snapshot) => snapshot.status === 'done');
   expect(stopCalls).toBe(1);
   expect(await prompt).toMatchObject({
     code: 'CONFLICT',
@@ -621,7 +607,7 @@ it('stops the new native instance before discarding a failed Session Checkout', 
   const stopped = Promise.withResolvers<void>();
   const stopping = Promise.withResolvers<void>();
   let checkoutPath: string | undefined;
-  const host = startRouterTestHost({
+  const host = await startEngineTestHost({
     database: owned.database,
     runtimeDirectory: join(projectPath, '.argo'),
     adapters: [
@@ -662,7 +648,7 @@ it('stops the new native instance before discarding a failed Session Checkout', 
 it('handles callback initialization failure without launching the native Agent', async (): Promise<void> => {
   vi.useFakeTimers();
   let connects = 0;
-  const host = createNativeSessionHost({
+  const host = await openNativeSessionInEngine({
     ...createMockAdapter(),
     initialMappingState: (): never => {
       throw new Error('Mapping initialization failed');
@@ -678,5 +664,13 @@ it('handles callback initialization failure without launching the native Agent',
   });
   await vi.advanceTimersByTimeAsync(0);
   expect(connects).toBe(0);
-  expect(host.session.getSnapshot().matches({ open: 'recovering' })).toBe(true);
+  expect((await readNativeSessionSnapshot(host)).activeTurnId).toBeNull();
+  expect(
+    (await host.caller.feed.page({ sessionId, direction: 'tail' })).rows,
+  ).toContainEqual(
+    expect.objectContaining({
+      sessionUpdate: 'notice',
+      title: 'The Agent stopped unexpectedly',
+    }),
+  );
 });

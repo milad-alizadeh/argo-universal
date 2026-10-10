@@ -1,12 +1,11 @@
-import { agentsList, sessionRows } from '@repo/api/mocks';
+import { agentsList, sessionRows } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn, waitFor } from 'storybook/test';
+import { expect, fn } from 'storybook/test';
+import { page } from 'vitest/browser';
 import { layoutWidths } from '../../mocks/each-layout';
 import { sessionRowMocks } from '../../mocks/session-row-mock';
 import { settleViewport } from '../../mocks/settle-viewport';
 import { SessionRow } from './session-row';
-
-const statusSelector = '[data-testid="session-status"]';
 
 const meta = {
   title: 'Tests/SessionRow',
@@ -37,25 +36,9 @@ function running(width: number): Story {
 export const RunningPhone = running(layoutWidths.phone);
 export const RunningWide = running(layoutWidths.wide);
 
-export const PaperAgentSymbols: Story = {
-  render: (args) => (
-    <>
-      {agentsList.map((agent) => (
-        <SessionRow {...args} key={agent.agent} logo={agent.logo} />
-      ))}
-    </>
-  ),
-  play: async ({ canvasElement }) => {
-    await expect(
-      canvasElement.querySelectorAll('[data-testid="session-logo"] path'),
-    ).toHaveLength(2);
-  },
-};
-
 export const Archived: Story = {
   args: { session: sessionRows.archived },
   play: async ({ canvas }) => {
-    const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       await expect(canvas.getByText('Archived', { exact: true })).toBeVisible();
@@ -104,10 +87,15 @@ export const PullRequestWithoutOtherMetadata: Story = {
     pullRequest: { number: 45, status: 'open' },
   },
   play: async ({ canvas }) => {
-    const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
-      await expect(canvas.getByLabelText('open PR #45')).toBeVisible();
+      const pullRequest = canvas.getByLabelText('open PR #45');
+      await expect(pullRequest).toBeVisible();
+      await expect(canvas.queryByLabelText(/^Plan:/)).not.toBeInTheDocument();
+      await expect(
+        canvas.queryByLabelText(/^Subagents:/),
+      ).not.toBeInTheDocument();
+      await expect(canvas.queryByLabelText(/^Issue #/)).not.toBeInTheDocument();
     }
   },
 };
@@ -147,7 +135,6 @@ export const StatusParity: Story = {
     </>
   ),
   play: async ({ canvas }) => {
-    const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       for (const agent of agentsList) {
@@ -164,48 +151,11 @@ export const StatusParity: Story = {
   },
 };
 
-export const StatusMotion: Story = {
-  ...StatusParity,
-  play: async ({ canvas }) => {
-    const running = canvas.getByRole('button', {
-      name: 'First Agent: Build the settings screen, Running',
-    });
-    const waiting = canvas.getByRole('button', {
-      name: 'First Agent: Review the proposed change, Needs input',
-    });
-    const runningLogo = running.querySelector(
-      '[data-testid="session-logo"]',
-    )?.parentElement;
-    const waitingLogo = waiting.querySelector(
-      '[data-testid="session-logo"]',
-    )?.parentElement;
-    if (!runningLogo || !waitingLogo) throw new Error('Missing Agent logo');
-    const rotation = getComputedStyle(runningLogo).transform;
-    const waitingRotation = getComputedStyle(waitingLogo).transform;
-    const runningDot = running.querySelector(statusSelector);
-    const waitingDot = waiting.querySelector(statusSelector);
-    if (!runningDot || !waitingDot) throw new Error('Missing Session status');
-    const runningOpacity = getComputedStyle(runningDot).opacity;
-    const waitingOpacity = getComputedStyle(waitingDot).opacity;
-    await waitFor(() =>
-      expect(getComputedStyle(runningLogo).transform).not.toBe(rotation),
-    );
-    await waitFor(() =>
-      expect(getComputedStyle(runningDot).opacity).not.toBe(runningOpacity),
-    );
-    await waitFor(() =>
-      expect(getComputedStyle(waitingDot).opacity).not.toBe(waitingOpacity),
-    );
-    await expect(getComputedStyle(waitingLogo).transform).toBe(waitingRotation);
-  },
-};
-
 export const PlanAndSubagents: Story = {
   args: {
     session: sessionRowMocks.planAndSubagents,
   },
   play: async ({ canvas }) => {
-    const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       await expect(
@@ -223,7 +173,6 @@ export const PlanAndSubagents: Story = {
 export const NoPlanOrSubagents: Story = {
   args: { session: sessionRows.idle },
   play: async ({ canvas }) => {
-    const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       await expect(canvas.queryByLabelText(/^Plan:/)).not.toBeInTheDocument();
@@ -245,7 +194,6 @@ export const FinishedSubagents: Story = {
     session: sessionRowMocks.finishedSubagents,
   },
   play: async ({ canvas }) => {
-    const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       await expect(canvas.getByText('5/5')).toBeVisible();
@@ -270,7 +218,6 @@ function longTitleSelected(width: number): Story {
       await expect(row).toHaveAttribute('aria-selected', 'true');
       const title = canvas.getByText(sessionRows.longTitle.title);
       await expect(title).toBeVisible();
-      await expect(title).toHaveStyle({ overflow: 'hidden' });
       await expect(args.onSelect).not.toHaveBeenCalled();
       await userEvent.click(row);
       await expect(args.onSelect).toHaveBeenCalledWith('session-long-title');

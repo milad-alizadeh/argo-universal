@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { expect, waitFor } from 'storybook/test';
+import { page } from 'vitest/browser';
 import { layoutWidths } from '../../mocks/each-layout';
 import { settleViewport } from '../../mocks/settle-viewport';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
@@ -85,7 +86,6 @@ export const AllGroupsNavigateWide = allGroupsNavigate(layoutWidths.wide);
 export const WaitingForData: Story = {
   args: { projects: [], agents: [] },
   play: async ({ canvas }) => {
-    const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       await expect(
@@ -127,7 +127,6 @@ export const ChildSelectionAndAttention: Story = {
     agentsNeedAttention: true,
   },
   play: async ({ canvas }) => {
-    const { page } = await import('vitest/browser');
     for (const width of [390, 1440]) {
       await page.viewport(width, 844);
       await waitFor(() =>
@@ -136,9 +135,8 @@ export const ChildSelectionAndAttention: Story = {
         ).toHaveAttribute('aria-selected', width === 390 ? 'false' : 'true'),
       );
       for (const kind of ['projects', 'agents']) {
-        await expect(
-          canvas.getByTestId(`settings-${kind}-attention`),
-        ).toBeVisible();
+        const dot = canvas.getByTestId(`settings-${kind}-attention`);
+        await expect(dot).toBeVisible();
       }
       await expect(canvas.queryByText('1', { exact: true })).toBeNull();
     }

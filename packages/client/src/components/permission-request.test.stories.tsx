@@ -1,12 +1,11 @@
-import type { RequestMock } from '@repo/api/mocks';
+import type { RequestMock } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { expect, fn } from 'storybook/test';
 import { permissionProps, permissionMocks } from '../../mocks/request-mock';
-import {
-  PermissionFeedPreview,
-  RequestFrame,
-} from '../../mocks/request-preview';
+import { RequestFrame } from '../../mocks/request-preview';
 import { settleViewport } from '../../mocks/settle-viewport';
+import { toFeedView } from '../feed/to-feed-view';
+import { FeedItem } from './feed-item';
 import { PermissionRequest } from './permission-request';
 import galleryMeta, { Overview as Gallery } from './permission-request.stories';
 
@@ -208,8 +207,18 @@ function permissionFeed(
 ): Story {
   const mock = permissionMocks[recording];
   if (!mock) throw new Error('Permission coverage needs both #54 recordings.');
+  const state = answered ? mock.answered : mock.pending;
+  const groups = toFeedView(state.rows, state.snapshot).items.filter(
+    (item) => item.type === 'group',
+  );
   return {
-    render: () => <PermissionFeedPreview mock={mock} answered={answered} />,
+    render: () => (
+      <RequestFrame>
+        {groups.map((item) => (
+          <FeedItem key={item.id} item={item} imageUrl={() => ''} />
+        ))}
+      </RequestFrame>
+    ),
     play: async ({ canvas, userEvent }) => {
       await settleViewport(width);
       if (answered) {

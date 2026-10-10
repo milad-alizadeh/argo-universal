@@ -1,8 +1,8 @@
 import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { resolveRuntimeDirectory } from '@repo/api/server-runtime';
 import { ServerAddress } from '@repo/contracts';
+import { resolveRuntimeDirectory } from '@repo/engine/server-runtime';
 import { reportUnrecognised } from './report-unrecognised';
 
 // One-shot I/O for the Server connection machine; the machine owns every wait.
