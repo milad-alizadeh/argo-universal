@@ -1,19 +1,13 @@
-import { appendFileSync, mkdirSync } from 'node:fs';
-import { join } from 'node:path';
 import { resolveRuntimeDirectory } from '@repo/engine/server-runtime';
+import { writeLog } from '@repo/machine-log';
 import { createActor } from 'xstate';
 import packageJson from '../../package.json' with { type: 'json' };
 import { supervisorMachine } from './machine';
 
 export function startSupervisor(options: { watch: boolean }): void {
   const home = resolveRuntimeDirectory();
-  const logFile = join(home, 'logs', 'supervisor.log');
-  mkdirSync(join(home, 'logs'), { recursive: true });
-  const log = (line: string): void => {
-    const stamped = `${new Date().toISOString()} supervisor ${process.pid}: ${line}`;
-    console.log(stamped);
-    appendFileSync(logFile, `${stamped}\n`);
-  };
+  const log = (line: string): void =>
+    writeLog({ home, label: 'supervisor', line });
 
   const supervisor = createActor(supervisorMachine, {
     input: {

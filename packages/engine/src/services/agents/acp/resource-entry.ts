@@ -1,4 +1,4 @@
-import { createRejectionCounter } from '../../../lib/count-rejections';
+import { createRejectionCounter } from '@repo/machine-log';
 import {
   closeProtocolReservation,
   releaseOpening,

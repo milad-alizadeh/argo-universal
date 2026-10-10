@@ -6,10 +6,10 @@ import {
 import type { Database } from '@repo/db';
 import { session } from '@repo/db/schema';
 import { isSessionBranch } from '@repo/git';
+import { createRejectionCounter } from '@repo/machine-log';
 import { TRPCError } from '@trpc/server';
 import { eq, getTableColumns, sql } from 'drizzle-orm';
 import type { infer as Infer } from 'zod';
-import { createRejectionCounter } from '../../lib/count-rejections';
 
 // JSON is decoded per row at the reader boundary, after SQLite has returned the bounded result.
 export const storedSessionColumns = {

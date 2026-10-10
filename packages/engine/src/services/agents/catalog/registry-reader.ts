@@ -3,9 +3,9 @@ import {
   registryAgentSchema,
   registrySchema,
 } from '@repo/contracts/registry-schema';
+import { createRejectionCounter } from '@repo/machine-log';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
-import { createRejectionCounter } from '../../../lib/count-rejections';
 
 const validator = addFormats(new Ajv({ strict: false })).addSchema(
   registryAgentSchema,

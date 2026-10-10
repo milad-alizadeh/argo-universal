@@ -1,5 +1,5 @@
 import type { AgentCheck, CustomAgentDefinition } from '@repo/contracts';
-import { createRejectionCounter } from '../../../lib/count-rejections';
+import { createRejectionCounter } from '@repo/machine-log';
 import { createAgentClient } from '../acp/client';
 import { negotiateAcpInitialize } from '../acp/initialize';
 import { launchAcpProcess } from '../acp/process';

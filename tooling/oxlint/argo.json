@@ -270,6 +270,23 @@
       }
     },
     {
+      "files": ["packages/machine-log/src/**"],
+      "excludeFiles": ["**/*.test.*"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@repo/**"],
+                "message": "Generic machine logging imports neither product nor local code (A2)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       // Generic tooling packages import only other tooling packages (A2, ADR-0016 item 9).
       "files": ["tooling/**"],
       "rules": {
