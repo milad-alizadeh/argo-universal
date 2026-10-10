@@ -18,7 +18,7 @@ import {
 } from './permission-choices';
 import { RequestAction, RequestCard, type RequestState } from './request-card';
 
-export type PermissionAnswer = Pick<
+type PermissionAnswer = Pick<
   SessionAnswerPermissionInput,
   'optionId' | 'message'
 >;

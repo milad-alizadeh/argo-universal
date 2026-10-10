@@ -43,9 +43,6 @@ export const workingHeader =
 export const requestHeader =
   liveHeaderSteps.find((step) => step.liveHeader.source.type === 'request')
     ?.liveHeader ?? missingStep('request');
-export const retryHeader =
-  liveHeaderSteps.find((step) => step.liveHeader.source.type === 'retry')
-    ?.liveHeader ?? missingStep('retry');
 
 function missingStep(type: string): never {
   throw new Error(`Recordings need a ${type} live header`);

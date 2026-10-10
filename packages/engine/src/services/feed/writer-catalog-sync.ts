@@ -10,7 +10,7 @@ import {
   type AgentConfigurationJob,
 } from './writer-agent-configuration';
 
-export type SyncJobWrite = {
+type SyncJobWrite = {
   type: 'syncJobUpdate';
   source: string;
   scope: string;
@@ -29,7 +29,7 @@ const catalogSqlJobTypes = new Set<string>([
 export function isCatalogSqlJob(job: { type: string }): job is CatalogSqlJob {
   return catalogSqlJobTypes.has(job.type);
 }
-export function updateSyncJob(
+function updateSyncJob(
   database: Pick<Database, 'insert' | 'update'>,
   job: SyncJobWrite,
 ): void {
@@ -47,7 +47,7 @@ export function updateSyncJob(
     })
     .run();
 }
-export function completeSyncJob(
+function completeSyncJob(
   database: Pick<Database, 'update'>,
   job: AgentCatalogReplaceJob,
 ): void {

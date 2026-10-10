@@ -1,42 +1,45 @@
 import { Host, Toggle } from '@expo/ui/swift-ui';
 import {
-  accessibilityLabel as accessibilityLabelModifier,
-  disabled as disabledModifier,
+  accessibilityLabel,
+  disabled,
   labelsHidden,
   tint,
   toggleStyle,
 } from '@expo/ui/swift-ui/modifiers';
-import type * as SwitchPrimitives from '@rn-primitives/switch';
 import type * as React from 'react';
-import { useResolveClassNames } from 'uniwind';
+import { usePrimitiveColor } from './primitive-color';
+import type { SwitchProps } from './switch-props';
 
-// The system switch, so it draws with the platform's glass.
-function Switch({
-  checked,
-  onCheckedChange,
-  disabled,
-  accessibilityLabel,
-}: React.ComponentProps<typeof SwitchPrimitives.Root> & {
-  size?: 'default' | 'small';
-}): React.JSX.Element {
-  const primary = useResolveClassNames('text-primary').color;
+function Switch(props: SwitchProps): React.JSX.Element {
+  const modifiers = useSwitchModifiers(props);
   return (
     <Host matchContents>
       <Toggle
-        isOn={checked}
-        onIsOnChange={onCheckedChange}
-        modifiers={[
-          toggleStyle('switch'),
-          labelsHidden(),
-          disabledModifier(!!disabled),
-          ...(accessibilityLabel
-            ? [accessibilityLabelModifier(accessibilityLabel)]
-            : []),
-          ...(typeof primary === 'string' ? [tint(primary)] : []),
-        ]}
+        isOn={props.checked}
+        onIsOnChange={props.onCheckedChange}
+        modifiers={modifiers}
       />
     </Host>
   );
+}
+
+function useSwitchModifiers(
+  props: SwitchProps,
+): React.ComponentProps<typeof Toggle>['modifiers'] {
+  const primary = usePrimitiveColor('text-primary');
+  return [
+    toggleStyle('switch'),
+    labelsHidden(),
+    disabled(!!props.disabled),
+    ...switchLabel(props.accessibilityLabel),
+    ...(primary === undefined ? [] : [tint(primary)]),
+  ];
+}
+
+function switchLabel(
+  label: string | undefined,
+): ReturnType<typeof accessibilityLabel>[] {
+  return label ? [accessibilityLabel(label)] : [];
 }
 
 export { Switch };

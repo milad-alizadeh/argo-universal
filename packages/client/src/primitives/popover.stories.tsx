@@ -2,11 +2,10 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { Button } from '#primitives/button';
 import { Input } from '#primitives/input';
-import { Label } from '#primitives/label';
 import { Text } from '#primitives/text';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
 
-function PopoverPreview() {
+function PopoverPreview(): React.JSX.Element {
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -14,55 +13,56 @@ function PopoverPreview() {
           <Text>Open popover</Text>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80" side="top">
-        <View className="gap-4">
-          <View className="gap-2">
-            <Text className="font-medium leading-none">Dimensions</Text>
-            <Text className="text-muted-foreground text-sm">
-              Set the dimensions for the layer.
-            </Text>
-          </View>
-          <View className="gap-2">
-            <View className="flex-row items-center gap-4">
-              <Label className="web:block w-24" htmlFor="width">
-                Width
-              </Label>
-              <Input id="width" defaultValue="100%" className="flex-1 sm:h-8" />
-            </View>
-            <View className="flex-row items-center gap-4">
-              <Label className="web:block w-24" htmlFor="maxWidth">
-                Max. width
-              </Label>
-              <Input
-                id="maxWidth"
-                defaultValue="300px"
-                className="flex-1 sm:h-8"
-              />
-            </View>
-            <View className="flex-row items-center gap-4">
-              <Label className="web:block w-24" htmlFor="height">
-                Height
-              </Label>
-              <Input
-                id="height"
-                defaultValue="25px"
-                className="flex-1 sm:h-8"
-              />
-            </View>
-            <View className="flex-row items-center gap-4">
-              <Label className="web:block w-24" htmlFor="maxHeight">
-                Max. height
-              </Label>
-              <Input
-                id="maxHeight"
-                defaultValue="none"
-                className="flex-1 sm:h-8"
-              />
-            </View>
-          </View>
-        </View>
-      </PopoverContent>
+      <DimensionContent />
     </Popover>
+  );
+}
+function DimensionContent(): React.JSX.Element {
+  return (
+    <PopoverContent className="w-80" side="top">
+      <View className="gap-4">
+        <DimensionHeading />
+        <DimensionFields />
+      </View>
+    </PopoverContent>
+  );
+}
+function DimensionHeading(): React.JSX.Element {
+  return (
+    <View className="gap-2">
+      <Text className="font-medium leading-none">Dimensions</Text>
+      <Text className="text-muted-foreground text-sm">
+        Set the dimensions for the layer.
+      </Text>
+    </View>
+  );
+}
+const dimensions = [
+  { id: 'width', label: 'Width', defaultValue: '100%' },
+  { id: 'maxWidth', label: 'Max. width', defaultValue: '300px' },
+  { id: 'height', label: 'Height', defaultValue: '25px' },
+  { id: 'maxHeight', label: 'Max. height', defaultValue: 'none' },
+];
+function DimensionFields(): React.JSX.Element {
+  return (
+    <View className="gap-2">
+      {dimensions.map((dimension) => (
+        <DimensionField key={dimension.id} {...dimension} />
+      ))}
+    </View>
+  );
+}
+function DimensionField({
+  id,
+  label,
+  defaultValue,
+}: (typeof dimensions)[number]): React.JSX.Element {
+  const inputProps = { id, accessibilityLabel: label, defaultValue };
+  return (
+    <View className="flex-row items-center gap-4">
+      <Text className="text-sm font-medium web:block w-24">{label}</Text>
+      <Input {...inputProps} className="flex-1 sm:h-8" />
+    </View>
   );
 }
 

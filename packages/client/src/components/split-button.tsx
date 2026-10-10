@@ -10,7 +10,7 @@ import { BottomSheet } from '../primitives/bottom-sheet';
 import { ChoiceMenu } from './choice-menu';
 import { useContentWide } from './content-layout';
 
-export interface SplitButtonChoice<Value extends string> {
+interface SplitButtonChoice<Value extends string> {
   value: Value;
   label: string;
 }

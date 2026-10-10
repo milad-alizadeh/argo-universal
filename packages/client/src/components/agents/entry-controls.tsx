@@ -5,7 +5,7 @@ import { Text } from '#primitives/text';
 import { Icon } from '../../lib/icon';
 
 type PressProps = { label: string; onPress: () => void; disabled?: boolean };
-export type EntryRowProps = PressProps & { detail?: string };
+type EntryRowProps = PressProps & { detail?: string };
 export type EntryListItem = EntryRowProps & { key: string };
 type EntryListProps = {
   items: readonly EntryListItem[];
@@ -72,7 +72,7 @@ function EntryRows({
 }
 
 // One phone list row naming an argument or variable; pressing it opens its sheet.
-export function EntryRow(props: EntryRowProps): React.JSX.Element {
+function EntryRow(props: EntryRowProps): React.JSX.Element {
   return (
     <Pressable
       role="button"

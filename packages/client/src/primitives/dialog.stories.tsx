@@ -12,10 +12,9 @@ import {
   DialogTrigger,
 } from '#primitives/dialog';
 import { Input } from '#primitives/input';
-import { Label } from '#primitives/label';
 import { Text } from '#primitives/text';
 
-function DialogPreview() {
+function DialogPreview(): React.JSX.Element {
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -23,35 +22,54 @@ function DialogPreview() {
           <Text>Open Dialog</Text>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Edit profile</DialogTitle>
-          <DialogDescription>
-            Make changes to your profile here. Click save when you&apos;re done.
-          </DialogDescription>
-        </DialogHeader>
-        <View className="grid gap-4">
-          <View className="grid gap-3">
-            <Label htmlFor="name-1">Name</Label>
-            <Input id="name-1" defaultValue="Pedro Duarte" />
-          </View>
-          <View className="grid gap-3">
-            <Label htmlFor="username-1">Username</Label>
-            <Input id="username-1" defaultValue="@peduarte" />
-          </View>
-        </View>
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline">
-              <Text>Cancel</Text>
-            </Button>
-          </DialogClose>
-          <Button>
-            <Text>Save changes</Text>
-          </Button>
-        </DialogFooter>
-      </DialogContent>
+      <ProfileContent />
     </Dialog>
+  );
+}
+function ProfileContent(): React.JSX.Element {
+  return (
+    <DialogContent className="sm:max-w-[425px]">
+      <ProfileHeader />
+      <ProfileFields />
+      <ProfileFooter />
+    </DialogContent>
+  );
+}
+function ProfileHeader(): React.JSX.Element {
+  return (
+    <DialogHeader>
+      <DialogTitle>Edit profile</DialogTitle>
+      <DialogDescription>
+        Make changes to your profile here. Click save when you&apos;re done.
+      </DialogDescription>
+    </DialogHeader>
+  );
+}
+const profileFields = [
+  { id: 'name-1', label: 'Name', defaultValue: 'Pedro Duarte' },
+  { id: 'username-1', label: 'Username', defaultValue: '@peduarte' },
+];
+function ProfileFields(): React.JSX.Element {
+  return (
+    <View className="grid gap-4">
+      {profileFields.map((field) => (
+        <ProfileField key={field.id} {...field} />
+      ))}
+    </View>
+  );
+}
+function ProfileFooter(): React.JSX.Element {
+  return (
+    <DialogFooter>
+      <DialogClose asChild>
+        <Button variant="outline">
+          <Text>Cancel</Text>
+        </Button>
+      </DialogClose>
+      <Button>
+        <Text>Save changes</Text>
+      </Button>
+    </DialogFooter>
   );
 }
 
@@ -66,3 +84,17 @@ export const Overview: Story = {
   name: 'Dialog',
   render: () => <DialogPreview />,
 };
+
+function ProfileField({
+  id,
+  label,
+  defaultValue,
+}: (typeof profileFields)[number]): React.JSX.Element {
+  const inputProps = { id, accessibilityLabel: label, defaultValue };
+  return (
+    <View className="grid gap-3">
+      <Text className="text-sm font-medium">{label}</Text>
+      <Input {...inputProps} />
+    </View>
+  );
+}

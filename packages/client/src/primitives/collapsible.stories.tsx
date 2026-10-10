@@ -11,46 +11,21 @@ import {
 } from './collapsible';
 import { Text } from './text';
 
+type CollapsibleExampleProps = {
+  initialOpen?: boolean;
+  disabled?: boolean;
+};
+
 function CollapsibleExample({
   initialOpen = false,
   disabled = false,
-}: {
-  initialOpen?: boolean;
-  disabled?: boolean;
-}) {
+}: CollapsibleExampleProps): React.JSX.Element {
   const [open, setOpen] = useState(initialOpen);
+  const props = { open, onOpenChange: setOpen, disabled };
   return (
-    <Collapsible
-      open={open}
-      onOpenChange={setOpen}
-      disabled={disabled}
-      className="w-full gap-2"
-    >
-      <View className="flex-row items-center justify-between gap-4">
-        <Text className="text-sm font-semibold">
-          @peduarte starred 3 repositories
-        </Text>
-        <CollapsibleTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            accessibilityLabel="Toggle repositories"
-          >
-            <Icon name="chevron-up-down" />
-          </Button>
-        </CollapsibleTrigger>
-      </View>
-      <View className="rounded-md border border-border px-4 py-2">
-        <Text className="text-sm">@radix-ui/primitives</Text>
-      </View>
-      <CollapsibleContent className="gap-2">
-        <View className="rounded-md border border-border px-4 py-2">
-          <Text className="text-sm">@radix-ui/react</Text>
-        </View>
-        <View className="rounded-md border border-border px-4 py-2">
-          <Text className="text-sm">@stitches/core</Text>
-        </View>
-      </CollapsibleContent>
+    <Collapsible {...props} className="w-full gap-2">
+      <RepositoriesHeader />
+      <RepositoriesContent />
     </Collapsible>
   );
 }
@@ -78,3 +53,48 @@ export const Overview: Story = {
     </Variations>
   ),
 };
+
+function RepositoriesHeader(): React.JSX.Element {
+  return (
+    <View className="flex-row items-center justify-between gap-4">
+      <Text className="text-sm font-semibold">
+        @peduarte starred 3 repositories
+      </Text>
+      <RepositoriesTrigger />
+    </View>
+  );
+}
+function RepositoryRow({ name }: { name: string }): React.JSX.Element {
+  return (
+    <View className="rounded-md border border-border px-4 py-2">
+      <Text className="text-sm">{name}</Text>
+    </View>
+  );
+}
+
+function RepositoriesContent(): React.JSX.Element {
+  return (
+    <>
+      {' '}
+      <RepositoryRow name="@radix-ui/primitives" />
+      <CollapsibleContent className="gap-2">
+        <RepositoryRow name="@radix-ui/react" />
+        <RepositoryRow name="@stitches/core" />
+      </CollapsibleContent>
+    </>
+  );
+}
+
+function RepositoriesTrigger(): React.JSX.Element {
+  return (
+    <CollapsibleTrigger asChild>
+      <Button
+        variant="ghost"
+        size="icon"
+        accessibilityLabel="Toggle repositories"
+      >
+        <Icon name="chevron-up-down" />
+      </Button>
+    </CollapsibleTrigger>
+  );
+}

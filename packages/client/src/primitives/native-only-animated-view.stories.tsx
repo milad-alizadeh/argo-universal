@@ -4,7 +4,7 @@ import { FadeIn } from 'react-native-reanimated';
 import { NativeOnlyAnimatedView } from './native-only-animated-view';
 import { Text } from './text';
 
-function AnimationExample() {
+function AnimationExample(): React.JSX.Element {
   return (
     <NativeOnlyAnimatedView entering={FadeIn.duration(200)}>
       <View className="rounded-md border border-border bg-card p-6">

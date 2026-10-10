@@ -91,7 +91,7 @@ const stopProcess = async (
   await exited;
   clearTimers();
 };
-export const closingProcess = (
+const closingProcess = (
   state: ProcessState,
   exited: Promise<void>,
 ): Promise<void> => (state.closing ??= stopProcess(state, exited));

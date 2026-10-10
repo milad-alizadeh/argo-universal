@@ -163,14 +163,14 @@ export function StartSessionIn({
   );
 }
 
-export interface ProjectPickerProps {
+interface ProjectPickerProps {
   projects: ProjectInfo[];
   projectId: string;
   onSelect: (projectId: string) => void;
 }
 
 // The Projects on the Server, found by name or folder; one tap picks one.
-export function ProjectPicker({
+function ProjectPicker({
   projects,
   projectId,
   onSelect,

@@ -13,8 +13,6 @@ import { PhoneDrawer } from './phone-drawer';
 import { PhoneShellCard } from './phone-shell-card';
 import { type Section, shellSections } from './shell-sections';
 
-export type { Section } from '../navigation/sections';
-
 const OpenDrawerContext = createContext<() => void>(() => {});
 
 const AttentionCountContext = createContext(0);

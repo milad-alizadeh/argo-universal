@@ -4,19 +4,12 @@ import type {
 } from '@anthropic-ai/claude-agent-sdk';
 
 export type {
-  AccountInfo,
-  PermissionResult,
   SDKAssistantMessage,
-  SDKControlInitializeResponse,
   SDKControlRequest,
-  SDKControlResponse,
   SDKMessage,
   SDKResultMessage,
-  SDKSystemMessage,
   SDKUserMessage,
 } from '@anthropic-ai/claude-agent-sdk';
-
-export type { AskUserQuestionInput } from '@anthropic-ai/claude-agent-sdk/sdk-tools';
 
 export type VendorMessage = (SDKMessage | SDKControlRequest) & {
   receivedAt?: number;

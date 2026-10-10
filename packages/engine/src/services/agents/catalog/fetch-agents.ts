@@ -1,6 +1,6 @@
 export type FetchAgents = (signal: AbortSignal) => Promise<unknown>;
 
-export const registryUrl =
+const registryUrl =
   'https://cdn.agentclientprotocol.com/registry/v1/latest/registry.json';
 
 const serverErrorStatus = 500;

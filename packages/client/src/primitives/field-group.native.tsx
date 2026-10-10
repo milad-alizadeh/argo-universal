@@ -1,145 +1,107 @@
+import { FieldGroup as NativeFieldGroup, Host } from '@expo/ui';
 import {
-  FieldGroup as NativeFieldGroup,
-  Host,
-  RNHostView,
-  Row,
-} from '@expo/ui';
-import {
-  HostPaletteContext,
-  useMaterialColors,
-} from '@expo/ui/jetpack-compose';
-import { fillMaxWidth } from '@expo/ui/jetpack-compose/modifiers';
-import {
-  frame,
   listRowBackground,
   padding,
   scrollContentBackground,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
-import { Children, isValidElement, useState } from 'react';
-import {
-  Platform,
-  processColor,
-  View,
-  useWindowDimensions,
-} from 'react-native';
+import { Children, isValidElement } from 'react';
+import { Platform, View, useWindowDimensions } from 'react-native';
 import { useResolveClassNames } from 'uniwind';
+import { PlatformFieldColors } from './field-group-colors';
+import { HostedRow } from './field-group-row';
 
-// SwiftUI's grouped Form adds this inset above its first section.
 const groupedFormTopInset = 35;
-const rgbMask = 0xffffff;
-const hexRadix = 16;
-const rgbHexLength = 6;
+type ChildrenProps = { children: React.ReactNode };
+type FieldSectionProps = ChildrenProps & {
+  background: ReturnType<typeof useResolveClassNames>['backgroundColor'];
+  sectionKey: React.Key | null;
+};
 
 function Group({
   children,
 }: React.ComponentProps<typeof View>): React.JSX.Element {
   const { height } = useWindowDimensions();
-  const background = useResolveClassNames('bg-card/50').backgroundColor;
-  const sections = Children.toArray(children).filter(
-    isValidElement<React.ComponentProps<typeof View>>,
-  );
-  const fieldGroup = (
-    <NativeFieldGroup
-      style={{ backgroundColor: 'transparent' }}
-      modifiers={
-        Platform.OS === 'ios'
-          ? [
-              scrollContentBackground('hidden'),
-              padding({ top: -groupedFormTopInset }),
-            ]
-          : []
-      }
-    >
-      {sections.map((section) => (
-        <NativeFieldGroup.Section
-          key={section.key}
-          modifiers={
-            Platform.OS === 'ios' && typeof background === 'string'
-              ? [listRowBackground(background)]
-              : []
-          }
-        >
-          {Children.toArray(section.props.children).map((child, index) => (
-            <HostedRow key={index}>{child}</HostedRow>
-          ))}
-        </NativeFieldGroup.Section>
-      ))}
-    </NativeFieldGroup>
-  );
   return (
-    <Host
-      matchContents={Platform.OS === 'android' ? { vertical: true } : false}
-      useViewportSizeMeasurement={Platform.OS === 'android'}
-      style={
-        Platform.OS === 'android' ? { width: '100%' } : { height: height / 2 }
-      }
-    >
-      {Platform.OS === 'android' ? (
-        <AndroidFieldColors>{fieldGroup}</AndroidFieldColors>
-      ) : (
-        fieldGroup
-      )}
+    <Host {...fieldHostProps(height)}>
+      <PlatformFieldColors>
+        <FieldSections>{children}</FieldSections>
+      </PlatformFieldColors>
     </Host>
   );
 }
 
-// Expo's sections read their row surface from the Host palette.
-function AndroidFieldColors({
-  children,
-}: {
-  children: React.ReactNode;
-}): React.JSX.Element {
-  const colors = useMaterialColors();
-  const surface = processColor(
-    useResolveClassNames('bg-muted').backgroundColor,
-  );
+function fieldHostProps(height: number): React.ComponentProps<typeof Host> {
+  if (Platform.OS === 'android')
+    return {
+      matchContents: { vertical: true },
+      useViewportSizeMeasurement: true,
+      style: { width: '100%' },
+    };
+  return {
+    matchContents: false,
+    useViewportSizeMeasurement: false,
+    style: { height: height / 2 },
+  };
+}
+
+function FieldSections({ children }: ChildrenProps): React.JSX.Element {
+  const sections = useSections(children);
   return (
-    <HostPaletteContext.Provider
-      value={{
-        ...colors,
-        surfaceContainer:
-          typeof surface === 'number'
-            ? `#${(surface & rgbMask).toString(hexRadix).padStart(rgbHexLength, '0')}ff`
-            : colors.surfaceContainer,
-      }}
+    <NativeFieldGroup
+      style={{ backgroundColor: 'transparent' }}
+      modifiers={groupModifiers()}
     >
-      {children}
-    </HostPaletteContext.Provider>
+      {sections}
+    </NativeFieldGroup>
   );
 }
 
-// The native row supplies its width; React Native supplies the control's measured height.
-function HostedRow({
-  children,
-}: {
-  children: React.ReactNode;
-}): React.JSX.Element {
-  const minimumHeight = useResolveClassNames('h-11').height;
-  const [height, setHeight] = useState(
-    typeof minimumHeight === 'number' ? minimumHeight : undefined,
-  );
+function useSections(children: React.ReactNode): React.JSX.Element[] {
+  const background = useResolveClassNames('bg-card/50').backgroundColor;
+  return Children.toArray(children)
+    .filter(isValidElement<React.ComponentProps<typeof View>>)
+    .map((section) =>
+      fieldSection({
+        sectionKey: section.key,
+        background,
+        children: section.props.children,
+      }),
+    );
+}
+
+function fieldSection(props: FieldSectionProps): React.JSX.Element {
+  const { background, children, sectionKey } = props;
   return (
-    <Row
-      style={{ height }}
-      modifiers={
-        Platform.OS === 'ios'
-          ? [frame({ height, maxWidth: Infinity })]
-          : [fillMaxWidth()]
-      }
+    <NativeFieldGroup.Section
+      key={sectionKey}
+      modifiers={sectionModifiers(background)}
     >
-      <RNHostView>
-        <View
-          className="w-full"
-          onLayout={(event) => setHeight(event.nativeEvent.layout.height)}
-        >
-          {children}
-        </View>
-      </RNHostView>
-    </Row>
+      {Children.map(Children.toArray(children), (child) => (
+        <HostedRow>{child}</HostedRow>
+      ))}
+    </NativeFieldGroup.Section>
   );
+}
+
+function groupModifiers(): React.ComponentProps<
+  typeof NativeFieldGroup
+>['modifiers'] {
+  return Platform.OS === 'ios'
+    ? [
+        scrollContentBackground('hidden'),
+        padding({ top: -groupedFormTopInset }),
+      ]
+    : [];
+}
+
+function sectionModifiers(
+  background: FieldSectionProps['background'],
+): React.ComponentProps<typeof NativeFieldGroup.Section>['modifiers'] {
+  return Platform.OS === 'ios' && typeof background === 'string'
+    ? [listRowBackground(background)]
+    : [];
 }
 
 const FieldGroup = Object.assign(Group, { Section: View });
-
 export { FieldGroup };

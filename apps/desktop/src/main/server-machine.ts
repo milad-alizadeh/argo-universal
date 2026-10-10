@@ -52,7 +52,7 @@ type ServerEvent =
   | { type: 'server.retry' }
   | { type: 'app.quit' };
 
-export type ServerEmitted =
+type ServerEmitted =
   | { type: 'server.ready'; address: ServerAddress }
   | { type: 'server.failed'; failure: string | null };
 

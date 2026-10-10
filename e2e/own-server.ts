@@ -7,7 +7,7 @@ import type { MockAgents } from './mock-agents';
 import { createProjectRepository } from './project-repository';
 import { findFreePort, serverHttpUrl, serverUrlFor } from './server-port';
 
-export { findFreePort, serverHttpUrl } from './server-port';
+export { findFreePort } from './server-port';
 
 const serverDirectory = path.resolve(import.meta.dirname, '../apps/server');
 const fixtureEngineArguments = ['--import', 'tsx', 'mocks/e2e-engine.ts'];

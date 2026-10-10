@@ -25,7 +25,7 @@ export interface ScrollFadeProps {
   height?: number;
 }
 
-export const scrollFadeHeight = { top: 28, bottom: 36 } as const;
+const scrollFadeHeight = { top: 28, bottom: 36 } as const;
 
 const fadeEasing = bezierEasing(easingCurve.standard);
 const [fadeIn, fadeOut] = [FadeIn, FadeOut].map((animation) =>

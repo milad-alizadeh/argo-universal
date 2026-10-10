@@ -2,7 +2,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { net, protocol } from 'electron';
 
-export const appScheme = 'app';
+const appScheme = 'app';
 export const appOrigin = `${appScheme}://app`;
 const temporaryRedirectStatus = 307;
 

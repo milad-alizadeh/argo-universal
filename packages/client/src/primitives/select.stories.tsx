@@ -16,36 +16,37 @@ const fruits = [
   { value: 'banana', label: 'Banana' },
   { value: 'blueberry', label: 'Blueberry' },
 ];
+type SelectExampleProps = {
+  size?: 'default' | 'sm';
+  disabled?: boolean;
+  initialValue?: { value: string; label: string };
+};
+
 function SelectExample({
   size = 'default',
   disabled = false,
   initialValue,
-}: {
-  size?: 'default' | 'sm';
-  disabled?: boolean;
-  initialValue?: { value: string; label: string };
-}) {
+}: SelectExampleProps): React.JSX.Element {
   const [value, setValue] = useState(initialValue);
   return (
     <Select value={value} onValueChange={setValue} disabled={disabled}>
       <SelectTrigger size={size} className="w-[180px]">
         <SelectValue placeholder="Select a fruit" />
       </SelectTrigger>
-      <SelectContent className="w-[180px]">
-        <SelectGroup>
-          <SelectLabel>Fruits</SelectLabel>
-          {fruits.map((fruit) => (
-            <SelectItem
-              key={fruit.value}
-              value={fruit.value}
-              label={fruit.label}
-            />
-          ))}
-        </SelectGroup>
-      </SelectContent>
+      <FruitOptions />
     </Select>
   );
 }
+
+const examples: {
+  label: string;
+  props: React.ComponentProps<typeof SelectExample>;
+}[] = [
+  { label: 'Placeholder', props: {} },
+  { label: 'Selected', props: { initialValue: fruits[0] } },
+  { label: 'Small', props: { size: 'sm' } },
+  { label: 'Disabled', props: { disabled: true } },
+];
 
 const meta = {
   title: 'Design System/Primitives/Select',
@@ -58,18 +59,24 @@ export const Overview: Story = {
   name: 'Select',
   render: () => (
     <Variations>
-      <Variation label="Placeholder">
-        <SelectExample />
-      </Variation>
-      <Variation label="Selected">
-        <SelectExample initialValue={fruits[0]} />
-      </Variation>
-      <Variation label="Small">
-        <SelectExample size="sm" />
-      </Variation>
-      <Variation label="Disabled">
-        <SelectExample disabled />
-      </Variation>
+      {examples.map(({ label, props }) => (
+        <Variation key={label} label={label}>
+          <SelectExample {...props} />
+        </Variation>
+      ))}
     </Variations>
   ),
 };
+
+function FruitOptions(): React.JSX.Element {
+  return (
+    <SelectContent className="w-[180px]">
+      <SelectGroup>
+        <SelectLabel>Fruits</SelectLabel>
+        {fruits.map((fruit) => (
+          <SelectItem key={fruit.value} {...fruit} />
+        ))}
+      </SelectGroup>
+    </SelectContent>
+  );
+}

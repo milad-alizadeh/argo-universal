@@ -23,7 +23,7 @@ const fixtures: Record<string, VendorMessage[]> = {
   interrupt,
   reply,
 };
-export const responses = (name: string): VendorMessage[] => {
+const responses = (name: string): VendorMessage[] => {
   const messages = fixtures[name];
   if (!messages) throw new Error(`Missing provider fixture: ${name}`);
   return messages;

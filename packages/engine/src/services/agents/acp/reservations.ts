@@ -35,9 +35,7 @@ export const reserveOpening = (input: AcpOpenInput): AcpReservation => ({
   closing: undefined,
   stopWithdrawal: () => {},
 });
-export const drainReservation = async (
-  reservation: AcpReservation,
-): Promise<void> => {
+const drainReservation = async (reservation: AcpReservation): Promise<void> => {
   reservation.controller.abort();
   while (reservation.pending.size > 0) await Promise.all(reservation.pending);
 };
