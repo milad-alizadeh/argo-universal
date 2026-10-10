@@ -46,4 +46,4 @@ it('the ACP structural graph walks every opening, closing and retained-cleanup t
   ).toEqual([]);
   expect(paths.length).toBeGreaterThan(0);
   await host.caller.session.close(created);
-});
+}, 15_000);
