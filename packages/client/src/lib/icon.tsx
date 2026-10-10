@@ -4,7 +4,8 @@ import { ActivityIndicator, type ActivityIndicatorProps } from 'react-native';
 import { useCSSVariable, withUniwind } from 'uniwind';
 import { cn } from '#lib/utils';
 import { TextClassContext } from '#primitives/text';
-import { type IconName, iconSymbols, type NativeSymbol } from './icon-names';
+import { type IconName, iconSymbols } from './icon-names';
+import type { NativeSymbol } from './native-symbol';
 import { SymbolGlyph } from './symbol-glyph';
 
 // sm for chevrons, carets and check marks; md for every other icon; lg for phone shell controls and the desktop rail.

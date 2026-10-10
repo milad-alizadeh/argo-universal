@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { auditReport } from './paper-drift/audit-report.mts';
 import { auditSummary, runAudit } from './paper-drift/audit.mts';
+import { readAppIconNames } from './paper-drift/icon-drift.mts';
 import type { Scope } from './paper-drift/master-kind.mts';
 import { masterLevels, nestedPairs } from './paper-drift/master-levels.mts';
 import { connectPaper, type PaperPort } from './paper-drift/paper-port.mts';
@@ -26,6 +27,7 @@ import { applyTokens, tokenReport } from './paper-drift/token-sync.mts';
 import {
   auditDataPath,
   auditReportPath,
+  iconSourcePaths,
   levelsPath,
   proposedRegistryPath,
   readPreviousSnapshot,
@@ -101,11 +103,10 @@ function registry(): Promise<void> {
 // Reads the last snapshot only; Paper is not touched.
 function audit(): Promise<void> {
   const taken = readSnapshot();
-  const found = runAudit(
-    taken,
-    readRegistry(registryPath),
-    readCodeTokens(themePath),
-  );
+  const found = runAudit(taken, readRegistry(registryPath), {
+    tokens: readCodeTokens(themePath),
+    icons: readAppIconNames(iconSourcePaths),
+  });
   writeLocal(auditDataPath, JSON.stringify(found, null, 2));
   writeLocal(auditReportPath, auditReport(taken, found));
   for (const line of auditSummary(found)) console.log(line);

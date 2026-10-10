@@ -58,6 +58,17 @@ function tokenLines(audit: Audit): string[] {
   return [...audit.tokens.mismatches.map(tokenLine), ...tail];
 }
 
+function iconLines(audit: Audit): string[] {
+  const { unknown, unlisted } = audit.icons;
+  return [
+    ...unknown.map(
+      (icon): string =>
+        `- Not an app icon: "Icon / ${icon.name}" ×${icon.count}`,
+    ),
+    ...unlisted.map((name): string => `- Missing from the library: ${name}`),
+  ];
+}
+
 function headerLines(audit: Audit): string[] {
   return [
     '# Paper drift audit',
@@ -78,5 +89,6 @@ export function auditReport(snapshot: Snapshot, audit: Audit): string {
     ...section('Names', audit.names.map(nameLine)),
     ...section('Tokens', tokenLines(audit)),
     ...section('Literal values', audit.literals.map(literalLine)),
+    ...section('Icons', iconLines(audit)),
   ].join('\n');
 }

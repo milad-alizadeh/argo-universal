@@ -10,6 +10,13 @@ export const registryPath = join(
   'tools/paper-drift/masters.json',
 );
 export const themePath = join(repositoryRoot, 'tooling/uniwind/theme.css');
+export const iconSourcePaths = [
+  'icon-names',
+  'file-symbols',
+  'status-symbols',
+].map((name): string =>
+  join(repositoryRoot, `packages/client/src/lib/${name}.ts`),
+);
 const localFolder = join(repositoryRoot, '.paper-drift');
 export const snapshotPath = join(localFolder, 'snapshot.json');
 export const proposedRegistryPath = join(localFolder, 'masters.proposed.json');
