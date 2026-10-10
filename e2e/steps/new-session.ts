@@ -140,6 +140,8 @@ Then('the Sessions list is shown', async ({ page }): Promise<void> => {
 When('I disable Fast mode', async ({ page }): Promise<void> => {
   await page.getByRole('button', { name: agentModelLabel }).click();
   await page.getByRole('switch', { name: 'Fast mode', exact: true }).click();
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: agentModelLabel }).click();
   await expect(
     page.getByRole('switch', { name: 'Fast mode', exact: true }),
   ).toHaveAttribute(checkedAttribute, 'false');
