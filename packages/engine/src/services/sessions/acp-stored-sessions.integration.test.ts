@@ -30,31 +30,44 @@ const readStoredFeed = (
 ): ReturnType<typeof host.caller.feed.page> =>
   host.caller.feed.page({ sessionId: 'session-1', direction: 'tail' });
 
-it('an old Session whose upstream context cannot resume keeps its history readable without importing Agent sessions', async () => {
-  const imported: string[] = [];
-  const host = await startEngineWithStoredSession({
+const startEngineRefusingResume = (
+  agentSessionCalls: string[],
+): ReturnType<typeof startEngineWithStoredSession> =>
+  startEngineWithStoredSession({
     resumeSession: () => {
       throw RequestError.resourceNotFound(nativeSessionId);
     },
     loadSession: ({ params }) => {
-      imported.push(params.sessionId);
+      agentSessionCalls.push(`load ${params.sessionId}`);
       return {};
     },
     prompt: ({ params }) => {
-      imported.push(params.sessionId);
+      agentSessionCalls.push(`prompt ${params.sessionId}`);
       return { stopReason: 'end_turn' };
     },
   });
+const promptStoredSession = (
+  host: Awaited<ReturnType<typeof startAcpEngine>>,
+): Promise<unknown> =>
+  host.caller.session.prompt({
+    sessionId: 'session-1',
+    prompt: [{ type: 'text', text: 'Continue' }],
+  });
 
-  await expect(
-    host.caller.session.prompt({
-      sessionId: 'session-1',
-      prompt: [{ type: 'text', text: 'Continue' }],
-    }),
-  ).rejects.toThrow('Resource not found');
+it('refuses a prompt to an old Session the Agent cannot resume with the Agent reason', async () => {
+  const host = await startEngineRefusingResume([]);
 
-  expect({ imported, feed: await readStoredFeed(host) }).toEqual({
-    imported: [],
+  await expect(promptStoredSession(host)).rejects.toThrow('Resource not found');
+});
+
+it('keeps an unresumable old Session history as stored without loading or prompting an Agent session', async () => {
+  const agentSessionCalls: string[] = [];
+  const host = await startEngineRefusingResume(agentSessionCalls);
+
+  await promptStoredSession(host).catch(() => {});
+
+  expect({ agentSessionCalls, feed: await readStoredFeed(host) }).toEqual({
+    agentSessionCalls: [],
     feed: expect.objectContaining({ rows: storedHistory, maxRevision: 2 }),
   });
 });

@@ -47,6 +47,12 @@ const storeRecording = (
   for (const row of rows) insertStoredRow(database, row);
 };
 
+const readRecordedSessionId = (rows: readonly SessionUpdate[]): string => {
+  const [first] = rows;
+  if (!first) throw new Error('A recording without rows');
+  return first.sessionId;
+};
+
 let caller: Awaited<ReturnType<typeof startEngineTestHost>>['caller'];
 
 beforeEach(async (): Promise<void> => {
@@ -60,11 +66,8 @@ beforeEach(async (): Promise<void> => {
 it.each(recordedFeedMocks)(
   'pages $agent $recording history stored before ACP as it was recorded',
   async ({ rows }): Promise<void> => {
-    const [first] = rows;
-    if (!first) throw new Error('A recording without rows');
-
     const page = await caller.feed.page({
-      sessionId: first.sessionId,
+      sessionId: readRecordedSessionId(rows),
       direction: 'tail',
       limit: 200,
     });
@@ -76,11 +79,9 @@ it.each(recordedFeedMocks)(
 it.each(recordedFeedMocks)(
   'catches up $agent $recording history stored before ACP from its first revision',
   async ({ rows }): Promise<void> => {
-    const [first] = rows;
-    if (!first) throw new Error('A recording without rows');
     const updates = (
       await caller.feed.subscribe({
-        sessionId: first.sessionId,
+        sessionId: readRecordedSessionId(rows),
         after: { epoch: 0, revision: 0 },
       })
     )[Symbol.asyncIterator]();

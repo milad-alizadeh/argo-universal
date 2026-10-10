@@ -159,7 +159,7 @@ export async function* streamFeed(
 
     if (reset) yield { type: 'reset', epoch };
     for (
-      let page = catchUp.firstPage;
+      let page = catchUp.readNextPage();
       page.length > 0;
       page = catchUp.readNextPage()
     )
@@ -172,7 +172,7 @@ export async function* streamFeed(
       const event = live.shift();
       if (event) {
         if (event.type === 'snapshot') yield event;
-        else if (event.rev > catchUp.highWaterMark)
+        else if (catchUp.isPastHighWaterMark(event.rev))
           yield* movedRows.deliver(event);
         continue;
       }
