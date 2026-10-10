@@ -144,7 +144,7 @@ if (!secondAgent)
 
 const meta = {
   title: 'Tests/Composer',
-  globals: { themeId: 'default', mode: 'light' },
+  globals: { mode: 'light' },
   component: Composer,
   render: (args): React.JSX.Element => (
     <Composer {...composerProps({ ...args })} />

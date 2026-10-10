@@ -3,16 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "dependencies": {
-    "culori": "catalog:"
-  },
-  "devDependencies": {
-    "@types/culori": "catalog:"
-  },
   "exports": {
     "./theme.css": "./theme.css",
-    "./react-native-web.css": "./react-native-web.css",
-    "./themes": "./themes.ts",
-    "./native-token-values": "./native-token-values.ts"
+    "./react-native-web.css": "./react-native-web.css"
   }
 }

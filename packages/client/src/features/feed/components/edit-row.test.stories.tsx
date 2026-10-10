@@ -11,7 +11,7 @@ import { EditRowPreview } from './edit-row-preview.mocks';
 const meta = {
   title: 'Tests/EditRow',
   component: EditRow,
-  globals: { themeId: 'default', mode: 'light' },
+  globals: { mode: 'light' },
   parameters: { screenPreview: true },
   render: ({ row }): React.JSX.Element => (
     <EditRowPreview key={row.id} row={row} />

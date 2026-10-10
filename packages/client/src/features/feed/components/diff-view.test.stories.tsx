@@ -13,7 +13,7 @@ const lastAddedLine = 'new value 60';
 const meta = {
   title: 'Tests/DiffView',
   component: DiffView,
-  globals: { themeId: 'default', mode: 'light' },
+  globals: { mode: 'light' },
   decorators: [
     (Story): React.JSX.Element => (
       <View className="w-full">

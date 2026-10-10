@@ -24,7 +24,6 @@
     "@react-native-async-storage/async-storage": "catalog:",
     "@react-native-community/slider": "catalog:",
     "@repo/contracts": "workspace:*",
-    "@repo/uniwind": "workspace:*",
     "@rn-primitives/checkbox": "catalog:",
     "@rn-primitives/collapsible": "catalog:",
     "@rn-primitives/dialog": "catalog:",

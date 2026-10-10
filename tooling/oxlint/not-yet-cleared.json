@@ -106,8 +106,6 @@
     { "files": ["packages/db/src/*"], "rules": { "stylistic/multiline-comment-style": "off" } },
     // complexity, max-lines, max-lines-per-function, max-params, max-statements, sonarjs/no-nested-template-literals, typescript/explicit-function-return-type
     { "files": ["packages/git/src/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "max-params": "off", "max-statements": "off", "sonarjs/no-nested-template-literals": "off" } },
-    // complexity, max-lines-per-function, typescript/explicit-function-return-type
-    { "files": ["tooling/uniwind/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
     // max-lines-per-function, typescript/explicit-function-return-type
     { "files": ["tooling/vitest/*"], "rules": { "max-lines-per-function": "off" } },
     // complexity, max-lines, max-lines-per-function, max-statements, sonarjs/cognitive-complexity, sonarjs/no-duplicate-string, sonarjs/no-os-command-from-path, sonarjs/publicly-writable-directories, typescript/explicit-function-return-type

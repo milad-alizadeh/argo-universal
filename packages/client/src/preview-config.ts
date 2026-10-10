@@ -1,4 +1,3 @@
-import { themes } from '@repo/uniwind/themes';
 import { withNavigationMocks } from '../mocks/with-navigation-mocks';
 import { withTrpcMocks } from '../mocks/with-trpc-mocks';
 import { withReusablesPreview } from './with-theme';
@@ -10,17 +9,9 @@ export const previewDecorators = [
   withNavigationMocks,
 ];
 
-export const previewGlobals = { themeId: 'default', mode: 'light' };
+export const previewGlobals = { mode: 'light' };
 
 export const previewGlobalTypes = {
-  themeId: {
-    description: 'Interface theme',
-    toolbar: {
-      icon: 'paintbrush',
-      dynamicTitle: true,
-      items: themes.map(({ id, label }) => ({ value: id, title: label })),
-    },
-  },
   mode: {
     description: 'Appearance mode',
     toolbar: {
