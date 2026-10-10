@@ -22,8 +22,8 @@ import {
   readWrittenRow,
   storedFeedColumns,
 } from './feed-row';
-import { queuedFeedRows } from './writer-job';
 import type { writerMachine } from './writer-machine';
+import { readWriterProjection } from './writer-projection';
 
 export interface FeedDeps {
   database: Database;
@@ -39,21 +39,13 @@ const readUnsavedRows = (
   feedResources: Pick<FeedDeps, 'findWriter' | 'findFeed'>,
   sessionId: string,
 ): Pick<FeedPageOutput, 'rows' | 'maxRevision'> => {
-  const jobs = queuedFeedRows(
-    feedResources.findWriter()?.getSnapshot().context.queue ?? [],
+  const pending = readWriterProjection(feedResources.findWriter()).feed(
     sessionId,
   );
   const feed = feedResources.findFeed(sessionId)?.getSnapshot().context;
   return {
-    rows: [
-      ...jobs.flatMap((job): SessionUpdate[] => job.rows),
-      ...Object.values(feed?.rows ?? {}),
-    ],
-    maxRevision: Math.max(
-      0,
-      ...jobs.map((job): number => job.maxRevision),
-      feed?.maxRevision ?? 0,
-    ),
+    rows: [...pending.rows, ...Object.values(feed?.rows ?? {})],
+    maxRevision: Math.max(0, pending.maxRevision, feed?.maxRevision ?? 0),
   };
 };
 
@@ -110,7 +102,10 @@ export function readFeedRow(
     feedResources.findFeed(sessionId)?.getSnapshot().context.rows[id] ??
     readWrittenRow({
       database: feedResources.database,
-      writer: feedResources.findWriter(),
+      pending: readWriterProjection(feedResources.findWriter()).feedRow(
+        sessionId,
+        id,
+      ),
       sessionId,
       id,
     });

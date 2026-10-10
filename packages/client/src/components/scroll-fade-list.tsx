@@ -7,7 +7,7 @@ import type * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { Platform, View } from 'react-native';
 import { cn } from '#lib/utils';
-import { ScrollFadeEdges, useScrollFadeEdges } from './scroll-fade';
+import { useScrollFadeEdges } from './scroll-fade';
 
 // Legend List's web build hands this to the scroll element as an unknown DOM attribute.
 const persistTaps =
@@ -29,7 +29,7 @@ export function ScrollFadeList<T>({
   onScroll,
   ...props
 }: ScrollFadeListProps<T>): React.JSX.Element {
-  const fade = useScrollFadeEdges();
+  const fade = useScrollFadeEdges({ surfaceClassName, onScroll });
   const { onContentSizeChange, onViewportChange } = fade;
   const list = useRef<LegendListRef>(null);
   const [contentHeight, setContentHeight] = useState<number>();
@@ -73,12 +73,9 @@ export function ScrollFadeList<T>({
         recycleItems={false}
         {...persistTaps}
         {...props}
-        onScroll={(event) => {
-          fade.onScroll(event);
-          onScroll?.(event);
-        }}
+        onScroll={fade.onScroll}
       />
-      <ScrollFadeEdges edges={fade.edges} className={surfaceClassName} />
+      {fade.overlays}
     </View>
   );
 }

@@ -3,18 +3,21 @@ import { SessionRecord, Turn } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { blob, blobRef, feedRow, session, turn } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  onTestFinished,
+} from 'vitest';
+import { createActor } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
 import { hydrateStoredFeedRow, storedFeedColumns } from './feed-row';
-import {
-  applyQueuedSession,
-  applyQueuedTurns,
-  describeJob,
-  queuedFeedRows,
-  stampWriterJob,
-  type WriterJob,
-  writeJobs,
-} from './writer-job';
+import { describeJob, type WriterJob, writeJobs } from './writer-job';
+import { writerMachine } from './writer-machine';
+import { readWriterProjection } from './writer-projection';
 
 let database: Database;
 let removeDatabase: () => void;
@@ -52,6 +55,28 @@ const selectSession = (): typeof session.$inferSelect | undefined =>
   database.select().from(session).where(eq(session.id, 'session-1')).get();
 const selectTurn = (): typeof turn.$inferSelect | undefined =>
   database.select().from(turn).where(eq(turn.id, 'turn-1')).get();
+
+const submitWrites = (
+  jobs: readonly WriterJob[],
+): {
+  writer: ReturnType<typeof createActor<typeof writerMachine>>;
+  committed: Promise<void>;
+} => {
+  const writer = createActor(writerMachine, {
+    input: { database, now: () => 12000 },
+  }).start();
+  onTestFinished(() => {
+    writer.stop();
+  });
+  const committed = Promise.withResolvers<void>();
+  for (const [index, job] of jobs.entries())
+    writer.send({
+      type: 'writer.write',
+      job,
+      committed: index === jobs.length - 1 ? committed : undefined,
+    });
+  return { writer, committed: committed.promise };
+};
 
 beforeEach((): void => {
   ({ database, remove: removeDatabase } = openTestDatabase());
@@ -244,7 +269,7 @@ describe('describeJob', (): void => {
   });
 });
 
-it('projects a queued Session row update exactly as its commit', (): void => {
+it('projects a queued Session row update exactly as its commit', async (): Promise<void> => {
   const clock = vi.spyOn(Date, 'now').mockReturnValue(12000);
   try {
     const before = SessionRecord.parse(selectSession());
@@ -262,12 +287,9 @@ it('projects a queued Session row update exactly as its commit', (): void => {
         },
       },
     ];
-    const projected = applyQueuedSession({
-      row: before,
-      sessionId: 'session-1',
-      jobs,
-    });
-    writeJobs(database, jobs);
+    const { writer, committed } = submitWrites(jobs);
+    const projected = readWriterProjection(writer).session(before, 'session-1');
+    await committed;
     const data = SessionRecord.omit({ createdAt: true, updatedAt: true });
     expect(data.parse(projected)).toEqual(data.parse(selectSession()));
     expect(projected).toMatchObject({ activityAt: 12000, maxRevision: 3 });
@@ -277,7 +299,7 @@ it('projects a queued Session row update exactly as its commit', (): void => {
   }
 });
 
-it('projects a queued Session insert exactly as its commit', (): void => {
+it('projects a queued Session insert exactly as its commit', async (): Promise<void> => {
   const jobs: WriterJob[] = [
     {
       type: 'sessionInsert',
@@ -293,12 +315,12 @@ it('projects a queued Session insert exactly as its commit', (): void => {
     },
   ];
   const original = structuredClone(jobs);
-  const projected = applyQueuedSession({
-    row: undefined,
-    sessionId: 'session-2',
-    jobs,
-  });
-  writeJobs(database, jobs);
+  const { writer, committed } = submitWrites(jobs);
+  const projected = readWriterProjection(writer).session(
+    undefined,
+    'session-2',
+  );
+  await committed;
   const data = SessionRecord.omit({ createdAt: true, updatedAt: true });
   expect(data.parse(projected)).toEqual(
     data.parse(
@@ -308,7 +330,7 @@ it('projects a queued Session insert exactly as its commit', (): void => {
   expect(jobs).toEqual(original);
 });
 
-it('projects a queued Turn insert exactly as its commit', (): void => {
+it('projects a queued Turn insert exactly as its commit', async (): Promise<void> => {
   const jobs: WriterJob[] = [
     {
       type: 'turnInsert',
@@ -320,12 +342,13 @@ it('projects a queued Turn insert exactly as its commit', (): void => {
       },
     },
   ];
-  const projected = applyQueuedTurns([], jobs);
-  writeJobs(database, jobs);
+  const { writer, committed } = submitWrites(jobs);
+  const projected = readWriterProjection(writer).turns([]);
+  await committed;
   expect(projected).toEqual([Turn.parse(selectTurn())]);
 });
 
-it('projects a queued Turn update exactly as its commit', (): void => {
+it('projects a queued Turn update exactly as its commit', async (): Promise<void> => {
   database
     .insert(turn)
     .values({
@@ -349,13 +372,14 @@ it('projects a queued Turn update exactly as its commit', (): void => {
       },
     },
   ];
-  const projected = applyQueuedTurns([before], jobs);
-  writeJobs(database, jobs);
+  const { writer, committed } = submitWrites(jobs);
+  const projected = readWriterProjection(writer).turns([before]);
+  await committed;
   expect(projected).toEqual([Turn.parse(selectTurn())]);
   expect(before).toEqual(original);
 });
 
-it('projects queued Feed rows and their Session revision exactly as their commit', (): void => {
+it('projects queued Feed rows and their Session revision exactly as their commit', async (): Promise<void> => {
   const before = SessionRecord.parse(selectSession());
   const jobs: WriterJob[] = [
     {
@@ -370,15 +394,11 @@ it('projects queued Feed rows and their Session revision exactly as their commit
       activityAt: 100,
     },
   ];
-  const projected = applyQueuedSession({
-    row: before,
-    sessionId: 'session-1',
-    jobs,
-  });
-  const rows = queuedFeedRows(jobs, 'session-1').flatMap(
-    (job): SessionUpdate[] => job.rows,
-  );
-  writeJobs(database, jobs);
+  const { writer, committed } = submitWrites(jobs);
+  const projection = readWriterProjection(writer);
+  const projected = projection.session(before, 'session-1');
+  const rows = projection.feed('session-1').rows;
+  await committed;
   const data = SessionRecord.omit({ createdAt: true, updatedAt: true });
   expect(data.parse(projected)).toEqual(data.parse(selectSession()));
   expect(rows).toEqual(
@@ -458,29 +478,23 @@ it.each([
   },
 ])(
   'keeps $kind times equal across repeated reads and commit',
-  ({ job, expected }): void => {
+  async ({ job, expected }): Promise<void> => {
     const before = SessionRecord.parse(selectSession());
-    const jobs = [stampWriterJob(job, 12000)];
+    const { writer, committed } = submitWrites([job]);
     const clock = vi.spyOn(Date, 'now').mockReturnValue(20000);
     try {
       expect({
-        activityAt: applyQueuedSession({
-          row: before,
-          sessionId: 'session-1',
-          jobs,
-        })?.activityAt,
-        startedAt: applyQueuedTurns([], jobs)[0]?.startedAt ?? null,
+        activityAt: readWriterProjection(writer).session(before, 'session-1')
+          ?.activityAt,
+        startedAt: readWriterProjection(writer).turns([])[0]?.startedAt ?? null,
       }).toEqual(expected);
       clock.mockReturnValue(30000);
       expect({
-        activityAt: applyQueuedSession({
-          row: before,
-          sessionId: 'session-1',
-          jobs,
-        })?.activityAt,
-        startedAt: applyQueuedTurns([], jobs)[0]?.startedAt ?? null,
+        activityAt: readWriterProjection(writer).session(before, 'session-1')
+          ?.activityAt,
+        startedAt: readWriterProjection(writer).turns([])[0]?.startedAt ?? null,
       }).toEqual(expected);
-      writeJobs(database, jobs);
+      await committed;
       expect({
         activityAt: selectSession()?.activityAt,
         startedAt: selectTurn()?.startedAt ?? null,

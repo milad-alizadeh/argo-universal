@@ -6,7 +6,7 @@ import { alias } from 'drizzle-orm/sqlite-core';
 import type { ActorRefFrom } from 'xstate';
 import { createRejectionCounter } from '../../lib/count-rejections';
 import { hydrateStoredFeedRow, newestRows, storedFeedColumns } from '../feed';
-import { type FeedRowWrite, queuedFeedRows } from '../feed';
+import { type FeedRowWrite, readWriterProjection } from '../feed';
 import type { writerMachine } from '../feed';
 
 type LiveHeaderRowsReader = (input: {
@@ -31,12 +31,9 @@ export function createLiveHeaderRowsReader({
   }): ReturnType<LiveHeaderRowsReader> => {
     if (turnId === null) return { rows: {}, rejected: false };
     const stored = readStoredHeaderRows({ database, sessionId, turnId });
-    const queued = queuedFeedRows(
-      writer?.getSnapshot().context.queue ?? [],
-      sessionId,
-    ).flatMap((job): SessionUpdate[] =>
-      job.rows.filter((row): boolean => row.turnId === turnId),
-    );
+    const queued = readWriterProjection(writer)
+      .feed(sessionId)
+      .rows.filter((row): boolean => row.turnId === turnId);
     let rejected = false;
     const parsed = [
       ...new Map(

@@ -1,11 +1,10 @@
 import type { SessionNewInput, SessionNewOutput } from '@repo/contracts';
 import { listBranches } from '@repo/git';
 import { TRPCError } from '@trpc/server';
-import { type SnapshotFrom, waitFor } from 'xstate';
+import { waitFor } from 'xstate';
 import type { Context } from '../../engine/context';
-import { findDatabaseWriter, type writerMachine } from '../feed';
+import { findDatabaseWriter } from '../feed';
 import { readProjectPath } from '../projects';
-import type { RegistryActorRef } from './registry-machine';
 import {
   submitSessionPrompt,
   validateSessionCommandAdmission,
@@ -53,40 +52,22 @@ async function waitForSessionStored(
     });
 }
 
-function isSessionInsertQueued(
-  writerSnapshot: SnapshotFrom<typeof writerMachine>,
-  sessionId: string,
-): boolean {
-  return writerSnapshot.context.queue.some(
-    (job): boolean =>
-      job.type === 'sessionInsert' && job.session.id === sessionId,
-  );
-}
-
 async function waitForSessionInsertCommitted(
-  sessionRegistry: RegistryActorRef,
-  sessionId: string,
+  sessionActor: SessionActorRef,
 ): Promise<void> {
-  const databaseWriter = findDatabaseWriter(sessionRegistry.system);
+  const databaseWriter = findDatabaseWriter(sessionActor.system);
   if (!databaseWriter || databaseWriter.getSnapshot().status !== 'active')
     throw new Error('Database Writer is unavailable');
-  const writerSnapshot = await waitFor(
-    databaseWriter,
-    (writerSnapshot): boolean =>
-      writerSnapshot.status !== 'active' ||
-      !isSessionInsertQueued(writerSnapshot, sessionId) ||
-      writerSnapshot.matches('waitingToRetry'),
-    { timeout: Infinity },
-  );
-  if (
-    writerSnapshot.status !== 'active' ||
-    isSessionInsertQueued(writerSnapshot, sessionId)
-  )
+  const { sessionId, sessionInsertCommitted } =
+    sessionActor.getSnapshot().context;
+  const outcome = await sessionInsertCommitted;
+  if (outcome !== 'committed')
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
-      message: writerSnapshot.matches('waitingToRetry')
-        ? `Session ${sessionId} was not stored because the writer is retrying. Retry the Session.`
-        : `Session ${sessionId} was not stored`,
+      message:
+        outcome === 'retrying'
+          ? `Session ${sessionId} was not stored because the writer is retrying. Retry the Session.`
+          : `Session ${sessionId} was not stored`,
     });
 }
 
@@ -113,7 +94,9 @@ export async function createSession(
   await waitForSessionStored(
     requireOpenSessionActor(context.sessions, sessionId),
   );
-  await waitForSessionInsertCommitted(context.sessions, sessionId);
+  await waitForSessionInsertCommitted(
+    requireOpenSessionActor(context.sessions, sessionId),
+  );
   await applyInitialConfiguration(
     requireOpenSessionActor(context.sessions, sessionId),
     newSession,

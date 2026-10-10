@@ -107,8 +107,8 @@ function SessionView({
     draft,
     changeDraft,
     attachImages,
-    imageUpload,
-    imageSelectionError,
+    uploading,
+    attachmentError,
     promptSession,
     cancelTurn,
     setConfigOption,
@@ -145,11 +145,11 @@ function SessionView({
   const fadeHeight = wide ? composerFadeHeight.wide : composerFadeHeight.phone;
   const startedAt = snapshot.liveHeader?.startedAt ?? null;
   let sendError: string | undefined;
-  if (imageSelectionError) sendError = imageSelectionError;
+  if (attachmentError?.kind === 'selection')
+    sendError = attachmentError.message;
   else if (promptSession.error)
     sendError = `Couldn't send. ${promptSession.error.message}`;
-  else if (imageUpload.error)
-    sendError = `Couldn't upload the image. ${imageUpload.error.message}`;
+  else if (attachmentError) sendError = attachmentError.message;
   else if (setConfigOption.error)
     sendError = `Couldn't change settings. ${setConfigOption.error.message}`;
   else if (closeSession.error)
@@ -212,7 +212,7 @@ function SessionView({
             onSend={(sent) => void sendDraft(sent)}
             onStop={() => cancelTurn.mutate({ sessionId })}
             sending={
-              imageUpload.isPending ||
+              uploading ||
               promptSession.isPending ||
               (!turnRunning && setConfigOption.isPending)
             }
@@ -289,7 +289,6 @@ function useSessionCommands(
   );
   async function sendDraft(sent: ComposerDraft): Promise<void> {
     promptSession.reset();
-    draft.imageUpload.reset();
     const prompt = await uploadDraftAsPrompt(sent);
     if (prompt?.length) promptSession.mutate({ sessionId, prompt });
   }

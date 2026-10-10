@@ -35,31 +35,18 @@ export function AgentModelSheetSettings({
   );
 }
 
-export function AgentModelSheetAgents({
-  onDone,
-}: {
+interface AgentModelSheetChoicesProps {
+  page: 'agent' | 'model';
   onDone: () => void;
-}): React.JSX.Element | null {
-  return <AgentModelSheetChoices onDone={onDone} Choices={AgentChoices} />;
 }
 
-export function AgentModelSheetModels({
+export function AgentModelSheetChoices({
+  page,
   onDone,
-}: {
-  onDone: () => void;
-}): React.JSX.Element | null {
-  return <AgentModelSheetChoices onDone={onDone} Choices={ModelChoices} />;
-}
-
-function AgentModelSheetChoices({
-  onDone,
-  Choices,
-}: {
-  onDone: () => void;
-  Choices: typeof AgentChoices | typeof ModelChoices;
-}): React.JSX.Element | null {
+}: AgentModelSheetChoicesProps): React.JSX.Element | null {
   const configuration = useAgentModelConfiguration();
   if (!configuration) return null;
+  const Choices = page === 'agent' ? AgentChoices : ModelChoices;
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic">
       <Choices configuration={configuration} onSelect={onDone} />
