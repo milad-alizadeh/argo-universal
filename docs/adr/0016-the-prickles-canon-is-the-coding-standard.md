@@ -33,7 +33,7 @@ Where the canon cannot apply as written, these are the recorded applications (ow
 
    Git is product because Checkout is a `GLOSSARY.md` term (ADR-0008). Shell and Turn have UI homonyms, so their word matches need a person. `lib/product/` holds product code that two or more features share, including navigation, which sits there to avoid a frame–sessions cycle. `lib/generic/` holds code that would compile after an npm publish and never imports a product word.
 
-   Other features import a feature only through its `index.ts`. The allowed feature edges are: sessions uses composer, feed, agents and connection; frame hosts section screens from sessions and settings; data hooks use connection. In the Engine, `rpc/` holds the base procedure and error mapping and sits below the modules, and each router takes its own dependencies.
+   Other features import a feature only through its `index.ts`, which is product tier (owner, 2026-10-10). The allowed feature edges are: sessions uses composer, feed, agents and connection; frame hosts section screens from sessions and settings; data hooks use connection. In the Engine, `rpc/` holds the base procedure and error mapping and sits below the modules, and each router takes its own dependencies.
 
    The accepted exceptions are `millisecondsPerSecond` defined once per package, and the Composer importing the Plan proposal card from the requests feature for its card swap (Spec 0006, Owner #17).
 
