@@ -180,6 +180,10 @@
       --color-card-foreground: hsl(0 0% 98%);
       --color-popover: hsl(0 0% 3.9%);
       --color-popover-foreground: hsl(0 0% 98%);
+      @variant web {
+        --color-card: var(--color-neutral-900);
+        --color-popover: var(--color-neutral-900);
+      }
       --color-primary: hsl(0 0% 98%);
       --color-primary-foreground: hsl(0 0% 9%);
       --color-tint: var(--color-neutral-400);
