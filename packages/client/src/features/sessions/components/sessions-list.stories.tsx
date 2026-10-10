@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
+import { Variation, Variations } from '../../../lib/generic/variations';
+import { SessionsList, type SessionsListProps } from './sessions-list';
 import {
   multipleProjects,
   sessionsListProps,
   largeSessions,
-} from '../../../../mocks/sessions-list-mock';
-import { Variation, Variations } from '../../../lib/generic/variations';
-import { SessionsList, type SessionsListProps } from './sessions-list';
+} from './sessions-list.fixtures';
 
 const meta = {
   title: 'Sessions/SessionsList',
