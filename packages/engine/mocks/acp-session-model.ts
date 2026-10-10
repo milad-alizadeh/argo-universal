@@ -11,6 +11,7 @@ import { sessionMachine } from '../src/services/sessions';
 
 export type AcpModelSnapshot = SnapshotFrom<typeof sessionMachine>;
 const closeEvent = 'session.close';
+const updateEvent = 'acp.update';
 const canApplyLifecycleEvent = (
   snapshot: AcpModelSnapshot,
   event: AcpModelEvent,
@@ -53,6 +54,11 @@ const canApplyLifecycleEvent = (
   return snapshot.matches({ open: 'acp' });
 };
 type AcpModelEvent = GraphEventFromLogic<typeof sessionMachine>;
+export function acpModelEventKey(event: AcpModelEvent): string {
+  return event.type === updateEvent
+    ? `${event.type}:${event.notification.update.sessionUpdate}`
+    : event.type;
+}
 export const createAcpSessionModel = (
   initial: AcpModelSnapshot,
 ): {
@@ -135,7 +141,17 @@ export const createAcpSessionModel = (
       error: new Error('publication failed'),
     },
     {
-      type: 'acp.update',
+      type: updateEvent,
+      notification: {
+        sessionId: lease.sessionId,
+        update: {
+          sessionUpdate: 'config_option_update',
+          configOptions: [],
+        },
+      },
+    },
+    {
+      type: updateEvent,
       notification: {
         sessionId: lease.sessionId,
         update: {
@@ -183,7 +199,7 @@ export const createAcpSessionModel = (
     fromState,
     events,
     limit: 5000,
-    serializeEvent: (event: AcpModelEvent): string => event.type,
+    serializeEvent: acpModelEventKey,
     filterEvents: (snapshot: AcpModelSnapshot, event: AcpModelEvent): boolean =>
       snapshot.status === 'active' && canApplyLifecycleEvent(snapshot, event),
     serializeState: (
@@ -196,7 +212,9 @@ export const createAcpSessionModel = (
         failure: snapshot.context.failure !== null,
         stored: snapshot.context.stored,
         feedEnded: snapshot.context.feedEnded,
-        via: event && `${JSON.stringify(previous?.value)} ${event.type}`,
+        via:
+          event &&
+          `${JSON.stringify(previous?.value)} ${acpModelEventKey(event)}`,
       }),
   };
   return {

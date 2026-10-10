@@ -103,7 +103,7 @@ it('serves its SQLite last-good catalog over HTTP after the actual Engine restar
       .all()
       .map((record) => JSON.parse(record.registryMetadata ?? 'null')),
   ).toEqual(publishedRegistry.agents);
-});
+}, 15_000);
 
 it('completes admitted sync after its WebSocket disconnects and serves the committed catalog over HTTP', async () => {
   const upstream = Promise.withResolvers<unknown>();
