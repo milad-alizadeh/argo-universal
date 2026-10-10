@@ -4,7 +4,7 @@ import { Variation, Variations } from '../../../lib/generic/variations';
 import { ConnectionBanner } from './connection-banner';
 
 const meta = {
-  title: 'Shared/ConnectionBanner',
+  title: 'Connection/ConnectionBanner',
   component: ConnectionBanner,
 } satisfies Meta<typeof ConnectionBanner>;
 export default meta;

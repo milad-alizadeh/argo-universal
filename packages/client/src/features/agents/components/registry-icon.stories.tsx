@@ -3,7 +3,7 @@ import { RegistryIcon } from './registry-icon';
 import { iconAgent } from './registry-icons.mocks';
 
 const meta = {
-  title: 'Components/RegistryIcon',
+  title: 'Agents/RegistryIcon',
   component: RegistryIcon,
   args: { agentName: iconAgent.entry.name, uri: undefined },
   argTypes: { uri: { control: 'text' } },

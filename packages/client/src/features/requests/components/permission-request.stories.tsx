@@ -30,7 +30,7 @@ const deniedOutcome = {
 } as const;
 
 const meta = {
-  title: 'Sessions/PermissionRequest',
+  title: 'Requests/PermissionRequest',
   component: PermissionRequest,
   parameters: { previewPadding: false },
   args: {
