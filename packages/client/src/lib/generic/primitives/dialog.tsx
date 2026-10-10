@@ -12,9 +12,10 @@ const Dialog = DialogPrimitive.Root;
 const DialogTrigger = DialogPrimitive.Trigger;
 const DialogClose = DialogPrimitive.Close;
 const contentClassName = cn(
-  'bg-background border-border z-50 mx-auto flex w-full flex-col gap-4 rounded-lg border p-6 shadow-lg shadow-black/5 sm:max-w-lg',
+  'bg-background border-border z-50 mx-auto flex w-full flex-col gap-4 rounded-lg web:rounded-surface border p-6 sm:max-w-lg',
   Platform.select({
-    web: 'animate-in fade-in-0 zoom-in-95 web:max-w-[calc(100%-2rem)] duration-200',
+    web: 'border-0 shadow-card animate-in fade-in-0 zoom-in-95 web:max-w-[calc(100%-2rem)] duration-200',
+    native: 'shadow-lg shadow-black/5',
   }),
 );
 const closeClassName = cn(

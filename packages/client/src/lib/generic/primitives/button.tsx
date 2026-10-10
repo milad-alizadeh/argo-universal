@@ -21,7 +21,7 @@ const buttonVariants = cva(
         destructive: cn(
           'bg-destructive active:bg-destructive/90 shadow-sm shadow-black/5',
           Platform.select({
-            web: 'hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40',
+            web: 'hover:bg-destructive/10 active:bg-destructive/10 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40',
           }),
         ),
         outline: cn(
@@ -72,7 +72,12 @@ const buttonTextVariants = cva(
     variants: {
       variant: {
         default: 'text-primary-foreground',
-        destructive: 'text-destructive-foreground',
+        destructive: cn(
+          'text-destructive-foreground',
+          Platform.select({
+            web: 'group-hover:text-destructive group-active:text-destructive',
+          }),
+        ),
         outline: cn(
           'group-active:text-accent-foreground',
           Platform.select({ web: 'group-hover:text-accent-foreground' }),

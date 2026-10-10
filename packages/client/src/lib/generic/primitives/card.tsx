@@ -4,7 +4,7 @@ import { Text, TextClassContext } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
 
 const cardClassName =
-  'bg-card border-border flex flex-col gap-6 rounded-xl border py-6 shadow-sm shadow-black/5';
+  'bg-card border-border flex flex-col gap-6 rounded-xl web:rounded-surface web:shadow-card border py-6 shadow-sm shadow-black/5';
 
 function Card({
   className,

@@ -165,14 +165,14 @@ export function Composer({
       {wide &&
         !planProposal &&
         (!!shownWrittenPlan || !!status?.plan?.length) && (
-          <View className="self-stretch mx-1.75 -mb-3 pb-3 rounded-t-lg border border-b-0 border-border bg-sidebar/80 shadow-composer web:backdrop-blur-composer web:backdrop-saturate-110">
+          <View className="self-stretch mx-1.75 -mb-3 pb-3 rounded-t-lg web:rounded-t-surface web:shadow-card border border-b-0 border-border bg-sidebar/80 shadow-composer web:backdrop-blur-composer web:backdrop-saturate-110">
             {planControls}
           </View>
         )}
       {planProposal ? (
         <PlanProposalCard {...planProposal} />
       ) : (
-        <View className="w-full rounded-xl border border-border bg-background/80 native:bg-background shadow-composer web:backdrop-blur-composer web:backdrop-saturate-110 z-10">
+        <View className="w-full rounded-xl web:rounded-surface web:shadow-card border border-border bg-background/80 native:bg-background shadow-composer web:backdrop-blur-composer web:backdrop-saturate-110 z-10">
           {draft.images.length > 0 && (
             <ScrollView
               horizontal
@@ -427,7 +427,7 @@ export function Composer({
       {wide && (configuration || status) && (
         <View
           className={cn(
-            'h-11 self-stretch mx-1.75 -mt-3 pt-3 pr-2.5 rounded-b-lg border border-t-0 border-border bg-sidebar/80 shadow-composer web:backdrop-blur-composer web:backdrop-saturate-110',
+            'h-11 self-stretch mx-1.75 -mt-3 pt-3 pr-2.5 rounded-b-lg web:rounded-b-surface web:shadow-card border border-t-0 border-border bg-sidebar/80 shadow-composer web:backdrop-blur-composer web:backdrop-saturate-110',
           )}
         >
           <View className="flex-1 min-h-0 flex-row items-center pl-0.5 gap-1">

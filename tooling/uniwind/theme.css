@@ -95,6 +95,8 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-surface: 28px;
+  --radius-search: 8px;
   --spacing-hairline: hairlineWidth();
   --spacing-phone-drawer: 300px;
   --spacing-phone-drawer-peek: 64px;
@@ -123,10 +125,12 @@
 @layer theme {
   :root {
     @variant ios {
+      --radius-search: 6px;
       /* React Native resolves ui-monospace to SF Mono on iOS. */
       --font-mono: ui-monospace;
     }
     @variant android {
+      --radius-search: 6px;
       --font-mono: monospace;
     }
     @variant light {
@@ -284,12 +288,13 @@
   font-weight: var(--font-weight-nav-action);
 }
 
+@utility shadow-card {
+  box-shadow: var(--shadow-card);
+}
+
 @layer utilities {
   .shadow-composer {
     box-shadow: var(--shadow-composer);
-  }
-  .shadow-card {
-    box-shadow: var(--shadow-card);
   }
   .shadow-sm {
     box-shadow:

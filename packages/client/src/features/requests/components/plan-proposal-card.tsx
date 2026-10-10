@@ -86,7 +86,7 @@ function PlanProposalInteraction({
         expanded && windowWide && 'bg-background',
         expanded &&
           !windowWide &&
-          'rounded-none border-0 shadow-none bg-popover',
+          'rounded-none web:rounded-none border-0 shadow-none web:shadow-none bg-popover',
       )}
       bodyClassName={expanded ? flexibleContentClassName : undefined}
       footerClassName={cn(

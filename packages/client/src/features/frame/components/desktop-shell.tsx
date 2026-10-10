@@ -191,7 +191,7 @@ export function DesktopShell({
         <View
           testID="desktop-panel"
           pointerEvents="none"
-          className="absolute bottom-shell-inset left-0 right-shell-inset top-shell-bar rounded-xl bg-sidebar"
+          className="absolute bottom-shell-inset left-0 right-shell-inset top-shell-bar rounded-xl web:rounded-surface web:shadow-card bg-sidebar"
         />
         <ShellPane
           testID="desktop-list"
@@ -243,7 +243,7 @@ export function DesktopShell({
           }
         >
           <View className="h-shell-bar" />
-          <ContentLayout className="overflow-hidden rounded-xl">
+          <ContentLayout className="overflow-hidden rounded-xl web:rounded-surface">
             {children}
           </ContentLayout>
         </ShellPane>
@@ -315,7 +315,9 @@ export function DesktopShell({
             testID="desktop-inspector-scroll"
             className={cn(
               'overflow-hidden',
-              inspectorExpanded ? 'rounded-xl' : 'rounded-r-xl',
+              inspectorExpanded
+                ? 'rounded-xl web:rounded-surface'
+                : 'rounded-r-xl web:rounded-r-surface',
             )}
             contentContainerClassName="grow"
             surfaceClassName="bg-sidebar"

@@ -12,6 +12,7 @@ const disabledInputClass = cn(
 );
 const platformInputClass = Platform.select({
   web: cn(
+    'rounded-lg',
     'placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground outline-none transition-[color,box-shadow] md:text-sm',
     'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
     'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',

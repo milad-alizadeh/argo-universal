@@ -61,7 +61,7 @@ function RequestContents(props: RequestCardProps): ReactNode {
 }
 
 const cardClassName =
-  'w-full max-w-composer rounded-xl border border-input/80 bg-background/80 shadow-composer web:backdrop-blur-composer web:backdrop-saturate-110';
+  'w-full max-w-composer rounded-xl web:rounded-surface web:shadow-card border border-input/80 bg-background/80 shadow-composer web:backdrop-blur-composer web:backdrop-saturate-110';
 
 function RequestBody({
   state,
