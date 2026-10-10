@@ -22,6 +22,8 @@ Where SF Symbols has no symbol for an Argo icon, Argo draws its own as a custom 
 - Electron on macOS: the page masks the path itself; no IPC is needed, since the art is Argo's own and its licence allows shipping it.
 - Android, web, Windows and Linux: the Material name, as for every icon.
 
+Inside a native SwiftUI row, which draws only system symbols, Argo's `Icon` draws in an `RNHostView` sized to its contents, and disclosure chevrons are system-drawn ([ADR-0020](0020-argo-owns-its-primitives.md), amending this section, owner, 2026-10-10).
+
 A filled icon uses the SF `.fill` variant. The Material Symbols font that `expo-symbols` loads has no fill axis, so Android, web, Windows and Linux show the outline.
 
 Paper designs may use SF Symbols exported as SVG, but only as mockups. They never reach the code.

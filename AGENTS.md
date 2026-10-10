@@ -30,6 +30,7 @@ One `GLOSSARY.md` and one `docs/adr/` folder at the repo root ("single-context")
 
 - Put all evidence and images in the PR body; upload images with `gh pr create --attach` or `gh pr edit --attach`, never commit them to Git.
 - Claude and Codex Sessions draw the same UI. Parity is part of every Session change.
+- Screens take controls from Argo's primitives only, never from `@expo/ui` or `@rn-primitives`. System controls draw natively on iOS and Android; content Argo draws stays React Native views with Uniwind (ADR-0020).
 - Use LegendList (`@legendapp/list/react-native`) by default for lists in the App.
 - Test assets live outside `src/`: `e2e/<flow>/`, `mocks/`, `tools/`. Call them mocks.
 - Every XState machine has model-based tests from `xstate/graph` that walk all of its transitions.
