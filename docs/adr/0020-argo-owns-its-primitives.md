@@ -28,7 +28,7 @@ Argo's Android FieldGroup and FieldSection are Argo's own Compose compositions, 
 
 ## Custom symbols in native rows
 
-This amends ADR-0019. SwiftUI `Image` draws only system symbols, so `custom.<name>` symbols such as `custom.robot` cannot render inside a native row. Native rows draw Argo's `Icon` inside an `RNHostView` sized to its contents, with leading icons at `--spacing-icon-md`. Disclosure chevrons stay system-drawn. Android Paper frames use Material Symbols, as ADR-0019 sets.
+This amends ADR-0019. SwiftUI `Image` draws only system symbols, so `custom.<name>` symbols such as `custom.robot` cannot render inside a native row. Native rows draw Argo's `Icon` inside an `RNHostView` sized to its contents, with leading phone list icons at `--spacing-icon-row` (owner correction, 2026-10-10). Disclosure chevrons stay system-drawn. Android Paper frames use Material Symbols, as ADR-0019 sets.
 
 ## Considered options
 

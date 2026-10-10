@@ -17,6 +17,7 @@ import {
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { type NativeColors, useNativeTheme } from '../native-theme';
+import { useIconPixels } from '../symbols/icon';
 import { useWide } from '../use-wide';
 import { type ListItemProps, listItemName } from './field-props';
 import { ListItem as WebListItem } from './list-item-view.tsx';
@@ -25,7 +26,7 @@ import { NativeRowIcon, NativeRowStatus } from './native-row';
 const rowHeight = 52;
 const inset = 16;
 const chevronSize = 12;
-const iconSeparatorInset = 28;
+const rowSpacing = 12;
 const disabledOpacity = 0.5;
 
 export function ListItem(props: ListItemProps): React.JSX.Element {
@@ -62,16 +63,17 @@ function rowModifiers(
 
 function RowContent(props: ListItemProps): React.JSX.Element {
   const color = useRowColor('primary');
+  const iconSize = useIconPixels('row');
   return (
     <HStack
-      spacing={12}
+      spacing={rowSpacing}
       modifiers={[
         padding({ vertical: 12 }),
         frame({ minHeight: rowHeight }),
         rowOpacity(props.disabled),
         alignmentGuide(
           'listRowSeparatorLeading',
-          props.icon ? iconSeparatorInset : 0,
+          props.icon ? iconSize + rowSpacing : 0,
         ),
       ]}
     >

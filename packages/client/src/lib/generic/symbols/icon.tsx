@@ -15,12 +15,13 @@ import { sfFilledPaths, type SymbolPath } from './sf-filled-paths';
 import { SymbolGlyph } from './symbol-glyph';
 import { useSymbolImageRenderer } from './symbol-images';
 
-// sm for chevrons, carets and check marks; md for every other icon; lg for phone shell controls and the desktop rail.
+// sm for chevrons and checks; md by default; lg for shell controls; row for native phone list icons.
 export const iconSizeClasses = {
   sm: 'size-icon-sm',
   mark: 'size-icon-mark',
   md: 'size-icon-md',
   lg: 'size-icon-lg',
+  row: 'size-icon-row',
 } as const;
 
 export type IconSize = keyof typeof iconSizeClasses;

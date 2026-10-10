@@ -6,7 +6,7 @@ import type { IconName } from '../symbols/icon-names';
 import type { ListItemProps } from './field-props';
 
 export function NativeRowIcon({ icon }: { icon: IconName }): React.JSX.Element {
-  const size = useIconPixels('md');
+  const size = useIconPixels('row');
   return (
     <RNHostView matchContents>
       <View
@@ -16,7 +16,7 @@ export function NativeRowIcon({ icon }: { icon: IconName }): React.JSX.Element {
         importantForAccessibility="no-hide-descendants"
         style={{ width: size, height: size }}
       >
-        <Icon name={icon} />
+        <Icon name={icon} size="row" />
       </View>
     </RNHostView>
   );
