@@ -54,10 +54,6 @@
     // Installed by the skills tool, not written in this repo.
     ".agents/",
     ".claude/skills/",
-    "skills-lock.json",
-    "playwright-report/",
-    "blob-report/",
-    "test-results/",
-    "storybook-static/"
+    "skills-lock.json"
   ]
 }

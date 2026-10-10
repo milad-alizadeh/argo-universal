@@ -11,7 +11,6 @@ import { z } from 'zod';
 import recordedOptions from './new-session-options.json';
 import { agentsList, projectsList } from './session-list';
 
-// Generated from both CLI catalogs by tools/generate-new-session-mocks.mts.
 export const newSessionOptions = z
   .array(
     z.strictObject({
