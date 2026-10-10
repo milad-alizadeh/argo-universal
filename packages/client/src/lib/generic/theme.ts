@@ -6,7 +6,6 @@ import {
 } from '@repo/uniwind/themes';
 import { Platform } from 'react-native';
 import { Uniwind } from 'uniwind';
-import { getDefaultContrastVariables } from './default-contrast-variables';
 
 export function applyTheme(themeId: ThemeId, mode: ThemeMode): void {
   for (const themeMode of ['light', 'dark'] as const) {
@@ -30,10 +29,7 @@ export function applyTheme(themeId: ThemeId, mode: ThemeMode): void {
         },
       ),
     );
-    Uniwind.updateCSSVariables(themeMode, {
-      ...getDefaultContrastVariables(themeMode),
-      ...variables,
-    });
+    Uniwind.updateCSSVariables(themeMode, variables);
   }
   Uniwind.setTheme(mode);
 }

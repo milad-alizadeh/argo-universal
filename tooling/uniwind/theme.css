@@ -146,10 +146,10 @@
       --color-secondary: var(--color-neutral-100);
       --color-secondary-foreground: var(--color-neutral-900);
       --color-muted: var(--color-neutral-100);
-      --color-muted-foreground: var(--color-neutral-600);
+      --color-muted-foreground: var(--color-neutral-500);
       --color-accent: var(--color-neutral-100);
       --color-accent-foreground: var(--color-neutral-900);
-      --color-destructive: var(--color-red-700);
+      --color-destructive: var(--color-red-500);
       --color-destructive-foreground: var(--color-white);
       --color-border: var(--color-neutral-200);
       --color-input: var(--color-neutral-200);
@@ -163,7 +163,7 @@
       --color-merged: var(--color-violet-600);
       --color-success: var(--color-green-600);
       --color-info: var(--color-blue-600);
-      --color-warning: var(--color-amber-700);
+      --color-warning: var(--color-amber-600);
       --color-warning-foreground: var(--color-white);
       --color-sidebar: var(--color-neutral-50);
       --color-shell-chrome: oklch(94% 0 0);
@@ -184,11 +184,11 @@
       --color-secondary: hsl(0 0% 14.9%);
       --color-secondary-foreground: hsl(0 0% 98%);
       --color-muted: hsl(0 0% 14.9%);
-      --color-muted-foreground: var(--color-neutral-400);
+      --color-muted-foreground: hsl(0 0% 63.9%);
       --color-accent: hsl(0 0% 14.9%);
       --color-accent-foreground: hsl(0 0% 98%);
-      --color-destructive: var(--color-red-400);
-      --color-destructive-foreground: var(--color-neutral-950);
+      --color-destructive: hsl(0 70.9% 59.4%);
+      --color-destructive-foreground: var(--color-white);
       --color-border: hsl(0 0% 14.9%);
       --color-input: hsl(0 0% 14.9%);
       --color-ring: hsl(300 0% 45%);
@@ -200,7 +200,7 @@
       --color-merged: oklch(70.2% 0.183 293.541);
       --color-success: oklch(72.3% 0.219 149.579);
       --color-info: oklch(70.7% 0.165 254.624);
-      --color-warning: var(--color-amber-500);
+      --color-warning: oklch(76.9% 0.188 70.08);
       --color-warning-foreground: hsl(0 0% 3.9%);
       --color-sidebar: oklch(20.5% 0 0);
       --color-shell-chrome: oklch(14.5% 0 0);
