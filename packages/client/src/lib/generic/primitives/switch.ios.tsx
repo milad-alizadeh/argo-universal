@@ -1,4 +1,4 @@
-import { Host, Toggle } from '@expo/ui/swift-ui';
+import { Toggle } from '@expo/ui/swift-ui';
 import {
   accessibilityLabel,
   disabled,
@@ -7,7 +7,8 @@ import {
   toggleStyle,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
-import { usePrimitiveColor } from './primitive-color';
+import { useNativeTheme } from '#lib/generic/native-theme';
+import { Host } from './host';
 import type { SwitchProps } from './switch-props';
 
 function Switch(props: SwitchProps): React.JSX.Element {
@@ -23,16 +24,17 @@ function Switch(props: SwitchProps): React.JSX.Element {
   );
 }
 
+// SwiftUI exposes only the tint; the off track, thumb and disabled look are the system's.
 function useSwitchModifiers(
   props: SwitchProps,
 ): React.ComponentProps<typeof Toggle>['modifiers'] {
-  const primary = usePrimitiveColor('text-primary');
+  const { tint: tintColor } = useNativeTheme().colors;
   return [
     toggleStyle('switch'),
     labelsHidden(),
     disabled(!!props.disabled),
     ...switchLabel(props.accessibilityLabel),
-    ...(primary === undefined ? [] : [tint(primary)]),
+    ...(tintColor === undefined ? [] : [tint(tintColor)]),
   ];
 }
 

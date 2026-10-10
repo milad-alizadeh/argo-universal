@@ -1,11 +1,14 @@
-import { Host, Menu, Picker, RNHostView, Text } from '@expo/ui/swift-ui';
+import { Menu, Picker, RNHostView, Text } from '@expo/ui/swift-ui';
 import {
   accessibilityLabel as accessibilityLabelModifier,
   pickerStyle,
   tag,
+  tint,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { View } from 'react-native';
+import { useNativeTheme } from '#lib/generic/native-theme';
+import { Host } from '#lib/generic/primitives/host';
 import type { ChoiceMenuProps } from './choice-menu';
 
 // The system menu, with a check on the chosen item.
@@ -16,10 +19,11 @@ export function ChoiceMenu<Value extends string>({
   onValueChange,
   trigger,
 }: ChoiceMenuProps<Value>): React.JSX.Element {
+  const modifiers = useMenuModifiers(accessibilityLabel);
   return (
     <Host matchContents>
       <Menu
-        modifiers={[accessibilityLabelModifier(accessibilityLabel)]}
+        modifiers={modifiers}
         label={
           <RNHostView matchContents>
             {/* The menu takes the tap, not the trigger drawn inside it. */}
@@ -41,4 +45,15 @@ export function ChoiceMenu<Value extends string>({
       </Menu>
     </Host>
   );
+}
+
+// The tint colours the check on the chosen item.
+function useMenuModifiers(
+  accessibilityLabel: string,
+): React.ComponentProps<typeof Menu>['modifiers'] {
+  const { tint: tintColor } = useNativeTheme().colors;
+  return [
+    accessibilityLabelModifier(accessibilityLabel),
+    ...(tintColor === undefined ? [] : [tint(tintColor)]),
+  ];
 }
