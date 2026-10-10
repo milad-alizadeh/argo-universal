@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type * as React from 'react';
 import { useState } from 'react';
 import { View } from 'react-native';
-import { expect, fn, within } from 'storybook/test';
+import { expect, fn, waitFor, within } from 'storybook/test';
 import { ContentLayout } from '#lib/product/content-layout';
 import { eachLayout, layoutWidths } from '../../../lib/generic/each-layout';
 import { settleViewport } from '../../../lib/generic/settle-viewport';
@@ -13,6 +13,8 @@ import {
 } from './new-session-view';
 import { exampleProject, readyNewSession } from './new-session-view.mocks';
 
+const pressedAttribute = 'aria-pressed';
+const newWorktreeLabel = 'New worktree';
 const openSessionLabel = 'Open Session';
 const failedStartMessage = 'The Agent exited before it was ready.';
 const projectLabel = `Project: ${exampleProject.name}`;
@@ -57,7 +59,7 @@ export const NarrowMainColumn: Story = {
   play: async ({ canvas, userEvent }) => {
     await settleViewport(layoutWidths.wide);
     const checkout = await canvas.findByRole('button', { name: 'Checkout' });
-    await expect(checkout).toHaveTextContent('New worktree');
+    await expect(checkout).toHaveTextContent(newWorktreeLabel);
     await expect(checkout).not.toHaveTextContent('main');
     await expect(
       canvas.getAllByRole('button', { name: 'Checkout' }),
@@ -67,6 +69,43 @@ export const NarrowMainColumn: Story = {
       await within(document.body).findByRole('button', { name: 'Local' }),
     );
     await expect(checkout).toHaveTextContent('Local');
+  },
+};
+
+export const CheckoutChoice: Story = {
+  render: () => <ChoosingCheckout />,
+  play: async ({ canvas, userEvent }) => {
+    const overlay = within(document.body);
+    await settleViewport(layoutWidths.wide);
+    const trigger = await canvas.findByRole('button', { name: 'Checkout' });
+    await expect(trigger).toHaveTextContent(newWorktreeLabel);
+    await userEvent.click(trigger);
+    await expect(
+      await overlay.findByRole('button', { name: /^New worktree$/ }),
+    ).toHaveAttribute(pressedAttribute, 'true');
+    await expect(overlay.queryByRole('switch')).not.toBeInTheDocument();
+    await expect(
+      overlay.queryByRole('textbox', { name: 'Search branches' }),
+    ).not.toBeInTheDocument();
+    await userEvent.click(overlay.getByRole('button', { name: /^Local$/ }));
+    await waitFor(() =>
+      expect(overlay.queryByRole('dialog')).not.toBeInTheDocument(),
+    );
+    await expect(trigger).toHaveTextContent('Local');
+    await userEvent.click(trigger);
+    await expect(
+      await overlay.findByRole('button', { name: /^Local$/ }),
+    ).toHaveAttribute(pressedAttribute, 'true');
+    await expect(
+      overlay.getByRole('button', { name: /^New worktree$/ }),
+    ).toHaveAttribute(pressedAttribute, 'false');
+    await userEvent.click(
+      overlay.getByRole('button', { name: /^New worktree$/ }),
+    );
+    await waitFor(() =>
+      expect(overlay.queryByRole('dialog')).not.toBeInTheDocument(),
+    );
+    await expect(trigger).toHaveTextContent(newWorktreeLabel);
   },
 };
 

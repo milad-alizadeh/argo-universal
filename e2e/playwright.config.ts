@@ -38,6 +38,15 @@ export default defineConfig<AppOptions & ServerOptions>({
       name: 'web',
       use: { ...devices['Desktop Chrome'], appTarget: 'web' },
     },
+    // The same export at phone width, so the phone frame is proven on the web build (Spec 0011).
+    {
+      name: 'web-phone',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 390, height: 844 },
+        appTarget: 'web',
+      },
+    },
     // The desktop App in production mode connects to its fixture Engine.
     {
       name: 'electron',

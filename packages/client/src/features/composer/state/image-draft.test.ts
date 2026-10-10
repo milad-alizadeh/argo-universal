@@ -75,6 +75,31 @@ describe('imageDraftReducer', () => {
   });
 });
 
+// Every Session's draft starts from emptyImageDraft, so isolation holds only while the reducer never changes the state it is given.
+describe('two drafts from the same start', () => {
+  it('keep their own text, images and files, and clearing one leaves the other', () => {
+    const first = imageDraftReducer(
+      imageDraftReducer(emptyImageDraft, {
+        type: 'changed',
+        draft: { text: 'Draft on this device.', images: [] },
+      }),
+      { type: 'picked', picked: [picked('first')] },
+    );
+    const second = imageDraftReducer(emptyImageDraft, {
+      type: 'changed',
+      draft: { text: 'A different draft.', images: [] },
+    });
+
+    const afterFirstSent = imageDraftReducer(first, { type: 'cleared' });
+
+    expect(afterFirstSent).toEqual(emptyImageDraft);
+    expect(second.draft).toEqual({ text: 'A different draft.', images: [] });
+    expect(second.files.size).toBe(0);
+    expect(emptyImageDraft.draft).toEqual({ text: '', images: [] });
+    expect(emptyImageDraft.files.size).toBe(0);
+  });
+});
+
 describe('toUploadForms', () => {
   it('names each upload after its image, in draft order', () => {
     const attached = imageDraftReducer(withText, {
