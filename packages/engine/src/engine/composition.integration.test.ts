@@ -530,14 +530,16 @@ it('serves live Session procedures and drains their Feed before closing the data
   expect(
     await caller.feed.row({ sessionId: 'session-1', id: messageId }),
   ).toMatchObject({ sessionUpdate: 'user_message' });
-  expect(
-    await caller.feed.row({
-      sessionId: 'session-1',
-      id: '["agent_message","owned-1",["upstream","reply"]]',
-    }),
-  ).toMatchObject({
-    content: [{ type: 'text', text: 'Hello from the Agent' }],
-  });
+  await expect
+    .poll(() =>
+      caller.feed.row({
+        sessionId: 'session-1',
+        id: '["agent_message","owned-1",["upstream","reply"]]',
+      }),
+    )
+    .toMatchObject({
+      content: [{ type: 'text', text: 'Hello from the Agent' }],
+    });
   engine.send({ type: engineStopEvent, reason: 'SIGTERM' });
   await waitFor(
     engine,
@@ -546,7 +548,13 @@ it('serves live Session procedures and drains their Feed before closing the data
   );
   expect(engineDatabase.$client.isOpen).toBe(false);
   expect(engine.getSnapshot().output).toEqual({ exitCode: 0 });
-  expect(database.select({ id: feedRow.id }).from(feedRow).all()).toEqual([
+  expect(
+    database
+      .select({ id: feedRow.id })
+      .from(feedRow)
+      .orderBy(feedRow.position)
+      .all(),
+  ).toEqual([
     { id: messageId },
     { id: '["agent_message","owned-1",["upstream","reply"]]' },
   ]);
