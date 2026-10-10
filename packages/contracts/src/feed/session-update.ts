@@ -118,8 +118,7 @@ export const knownCompactionStatuses = [
   'failed',
   'cancelled',
 ] as const;
-export const CompactionStatus = z.string();
-export type CompactionStatus = z.infer<typeof CompactionStatus>;
+const CompactionStatus = z.string();
 
 export const CompactionUpdate = z.strictObject({
   ...envelope,
@@ -147,8 +146,7 @@ export const SubagentUpdate = z.strictObject({
 export type SubagentUpdate = z.infer<typeof SubagentUpdate>;
 
 export const knownNoticeSeverities = ['info', 'warning', 'error'] as const;
-export const NoticeSeverity = z.string();
-export type NoticeSeverity = z.infer<typeof NoticeSeverity>;
+const NoticeSeverity = z.string();
 
 export const Notice = z.strictObject({
   ...envelope,
@@ -170,13 +168,7 @@ export const Notice = z.strictObject({
 });
 export type Notice = z.infer<typeof Notice>;
 
-export const TaskStatus = z.enum([
-  'running',
-  'completed',
-  'failed',
-  'cancelled',
-]);
-export type TaskStatus = z.infer<typeof TaskStatus>;
+const TaskStatus = z.enum(['running', 'completed', 'failed', 'cancelled']);
 
 // Argo extension: a background task (ADR-0006).
 export const TaskUpdate = z.strictObject({

@@ -21,8 +21,7 @@ export const SessionStatus = z.enum([
 ]);
 export type SessionStatus = z.infer<typeof SessionStatus>;
 
-export const SessionTitleSource = sessionColumns.shape.titleSource;
-export type SessionTitleSource = z.infer<typeof SessionTitleSource>;
+const SessionTitleSource = sessionColumns.shape.titleSource;
 
 export const SessionCheckout = z.strictObject({
   type: CheckoutChoice,
@@ -31,11 +30,10 @@ export const SessionCheckout = z.strictObject({
 });
 export type SessionCheckout = z.infer<typeof SessionCheckout>;
 
-export const SessionWorkCount = z.strictObject({
+const SessionWorkCount = z.strictObject({
   running: z.int(),
   total: z.int(),
 });
-export type SessionWorkCount = z.infer<typeof SessionWorkCount>;
 
 // One Session in a list, after ACP `SessionInfo`: `session` columns under ACP names, times in Unix milliseconds.
 export const SessionInfo = z.strictObject({

@@ -38,5 +38,4 @@ function ButtonGroup({ children, className }: ButtonGroupProps) {
   );
 }
 
-export type { ButtonGroupProps };
 export { ButtonGroup };

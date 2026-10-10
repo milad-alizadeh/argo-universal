@@ -14,8 +14,6 @@ export interface FeedFixtures {
   ) => AsyncGenerator<FeedMock['stream'][number], void>;
 }
 
-export { recordedFeedMocks } from '@repo/mocks/app';
-
 // One recorded Feed at the tRPC link, for any Session screen story (ADR 0010).
 export function createFeedMocks(
   mock: FeedMock,

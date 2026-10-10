@@ -21,15 +21,9 @@ export type {
   AgentLaunch,
   ResolveAgentLaunch,
 } from './acp/resource-types';
-export { fetchAgents, type FetchAgents } from './catalog/fetch-agents';
+export { type FetchAgents } from './catalog/fetch-agents';
 
-export { requestAgentCatalogSync } from './catalog/sync-supervisor-machine';
 export {
   syncSupervisorMachine,
   type SyncSupervisorInput,
 } from './catalog/sync-supervisor-machine';
-export { watchCommittedCatalogChanges } from './catalog/catalog-changes';
-export { catalogSyncActor } from './catalog/catalog-sync-machine';
-export { createRegistryReader } from './catalog/registry-reader';
-
-export type { RegistryReader } from './catalog/registry-reader';

@@ -3,7 +3,7 @@ import { Pressable, View } from 'react-native';
 import { Text } from '#primitives/text';
 import { Icon } from '../../lib/icon';
 
-export type CustomAgentRowEntry = { id: string; name: string };
+type CustomAgentRowEntry = { id: string; name: string };
 type RowProps = { onOpen: (agentId: string) => void };
 type OneRowProps = RowProps & { agent: CustomAgentRowEntry };
 type RowsProps = RowProps & { agents: CustomAgentRowEntry[] };

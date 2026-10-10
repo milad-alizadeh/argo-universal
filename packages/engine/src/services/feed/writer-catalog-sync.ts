@@ -10,7 +10,7 @@ import {
   type AgentConfigurationJob,
 } from './writer-agent-configuration';
 
-export type SyncJobWrite = {
+type SyncJobWrite = {
   type: 'syncJobUpdate';
   source: string;
   scope: string;

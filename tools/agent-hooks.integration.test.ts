@@ -91,6 +91,10 @@ beforeAll((): void => {
       path.join(root, 'tools', script),
     );
   symlinkSync(
+    path.join(repositoryRoot, 'tools/node_modules'),
+    path.join(root, 'tools/node_modules'),
+  );
+  symlinkSync(
     path.join(repositoryRoot, 'node_modules'),
     path.join(root, 'node_modules'),
   );

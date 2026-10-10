@@ -50,7 +50,7 @@ const configurationStore = createStore<ComposerConfigurationProps>();
 export const publishAgentModelConfiguration = configurationStore.publish;
 export const useAgentModelConfiguration = configurationStore.use;
 
-export interface SheetContent {
+interface SheetContent {
   // Which menu drew it, so only that menu keeps it current.
   owner: string;
   label: string;

@@ -11,7 +11,7 @@ export const customAgentDefinition: CustomAgentDefinition = {
 export const customAgentFailure =
   '/opt/homebrew/bin/example-acp was not found.';
 
-export const configuredAgents: ConfiguredAgent[] = [
+const configuredAgents: ConfiguredAgent[] = [
   {
     id: customAgentId,
     enabled: true,

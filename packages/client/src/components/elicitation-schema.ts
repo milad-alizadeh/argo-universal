@@ -24,10 +24,7 @@ interface ElicitationSchema {
 
 export type ElicitationValue = string | boolean | string[];
 export type ElicitationValues = Record<string, ElicitationValue>;
-export type ElicitationFormValues = Record<
-  string,
-  ElicitationValue | undefined
->;
+type ElicitationFormValues = Record<string, ElicitationValue | undefined>;
 const validator = addFormats(new Ajv({ allErrors: true, strict: false }));
 
 export function elicitationChoices(

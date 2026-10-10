@@ -18,7 +18,7 @@ import { RequestCard, type RequestState } from './request-card';
 
 const flexibleContentClassName = 'flex-1 min-h-0';
 
-export type PlanProposalAnswer =
+type PlanProposalAnswer =
   | Omit<
       Extract<SessionAnswerPlanProposalInput, { decision: 'approve' }>,
       'sessionId'

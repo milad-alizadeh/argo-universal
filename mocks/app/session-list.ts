@@ -3,7 +3,6 @@ import type {
   ProjectsListOutput,
   SessionInfo,
   SessionListOutput,
-  SessionListUpdate,
 } from '@repo/contracts';
 
 const exampleProjectPath = '/projects/example';
@@ -152,13 +151,3 @@ export const archivedSessions: SessionListOutput = {
   sessions: [sessionRows.archived],
   nextCursor: null,
 };
-export const emptySessions: SessionListOutput = {
-  sessions: [],
-  nextCursor: null,
-};
-
-export const sessionListUpdates: SessionListUpdate[] = [
-  { type: 'changed', session: sessionRows.running },
-  { type: 'changed', session: { ...sessionRows.running, status: 'unread' } },
-  { type: 'removed', sessionId: sessionRows.running.sessionId },
-];

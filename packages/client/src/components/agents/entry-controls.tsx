@@ -5,7 +5,7 @@ import { Text } from '#primitives/text';
 import { Icon } from '../../lib/icon';
 
 type PressProps = { label: string; onPress: () => void; disabled?: boolean };
-export type EntryRowProps = PressProps & { detail?: string };
+type EntryRowProps = PressProps & { detail?: string };
 export type EntryListItem = EntryRowProps & { key: string };
 type EntryListProps = {
   items: readonly EntryListItem[];

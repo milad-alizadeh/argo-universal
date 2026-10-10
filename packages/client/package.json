@@ -88,14 +88,12 @@
     "@storybook/react-native-web-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@types/ws": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-native": "catalog:",
     "storybook": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:",
-    "ws": "catalog:"
+    "vitest": "catalog:"
   }
 }

@@ -6,13 +6,13 @@ import type {
   ToolCallUpdate,
 } from '@repo/contracts';
 
-export interface FeedToolCall {
+interface FeedToolCall {
   type: 'tool_call';
   awaitingApproval?: boolean;
   row: ToolCallUpdate;
 }
 
-export interface FeedThought {
+interface FeedThought {
   type: 'thought';
   row: AgentThought;
 }
@@ -25,7 +25,7 @@ export interface FeedExploration {
   toolCalls: ToolCallUpdate[];
 }
 
-export interface FeedNotice {
+interface FeedNotice {
   type: 'row';
   row: Notice;
 }
@@ -49,7 +49,7 @@ export type FeedGroup = {
     }
 );
 
-export interface FeedStandaloneRow {
+interface FeedStandaloneRow {
   type: 'row';
   row: Exclude<
     SessionUpdate,
