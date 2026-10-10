@@ -11,10 +11,15 @@ import {
   type ModifierConfig,
 } from '@expo/ui/swift-ui/modifiers';
 import type { ComponentProps, ReactElement } from 'react';
+import { PlatformColor } from 'react-native';
+import { useIconPixels } from '../symbols/icon';
+import { iconSymbols } from '../symbols/icon-names';
+import { SymbolGlyph } from '../symbols/symbol-glyph';
 import { nativeModifiers } from './button-ios-modifiers';
 import { createNativeButton, NativeButtonIcon } from './button-native';
 import type { ButtonTheme } from './button-native-colors';
 import type { ButtonDataProps } from './button-props';
+import { nativeButtonVariant } from './button-state';
 
 export const Button = createNativeButton(NativeControl);
 
@@ -58,7 +63,7 @@ function nativeControlProps(
 
 type ButtonLabelProps = Pick<
   ButtonDataProps,
-  'label' | 'icon' | 'loading' | 'fullWidth' | 'role'
+  'label' | 'icon' | 'loading' | 'fullWidth' | 'role' | 'variant'
 > & { contentClass: string; contentColor?: string };
 
 function ButtonLabel(props: ButtonLabelProps): ReactElement {
@@ -74,18 +79,54 @@ function ButtonLabel(props: ButtonLabelProps): ReactElement {
 }
 
 function buttonLabelColor(
-  props: Pick<ButtonDataProps, 'role'> & { contentColor?: string },
+  props: Pick<ButtonDataProps, 'role' | 'variant'> & { contentColor?: string },
 ): ModifierConfig[] {
-  if (props.role === 'destructive' || props.contentColor === undefined)
-    return [];
+  if (props.role === 'destructive') return destructiveLabelColor(props);
+  if (props.contentColor === undefined) return [];
   return [foregroundStyle(props.contentColor)];
 }
 
+function destructiveLabelColor(
+  props: Pick<ButtonDataProps, 'role' | 'variant'>,
+): ModifierConfig[] {
+  return ['ghost', 'link'].includes(nativeButtonVariant(props))
+    ? [foregroundStyle(PlatformColor('systemRed'))]
+    : [];
+}
+
 function ButtonIcon(
-  props: Pick<ButtonDataProps, 'loading' | 'icon'> & { contentClass: string },
+  props: Pick<ButtonDataProps, 'loading' | 'icon' | 'role' | 'variant'> & {
+    contentClass: string;
+  },
 ): ReactElement | null {
   if (props.loading) return <ProgressView />;
+  if (usesSystemRedIcon(props)) return <SystemRedIcon icon={props.icon} />;
   return <NativeButtonIcon {...props} HostView={RNHostView} />;
+}
+
+function usesSystemRedIcon(
+  props: Pick<ButtonDataProps, 'role' | 'variant'>,
+): boolean {
+  return (
+    props.role === 'destructive' && nativeButtonVariant(props) !== 'default'
+  );
+}
+
+type NativeIconProps = Pick<ButtonDataProps, 'icon'>;
+
+function SystemRedIcon({ icon }: NativeIconProps): ReactElement | null {
+  const pixels = useIconPixels('md');
+  if (!icon) return null;
+  return (
+    <RNHostView matchContents>
+      <SymbolGlyph
+        {...iconSymbols[icon]}
+        pixels={pixels}
+        tintColor={PlatformColor('systemRed')}
+        testID={`icon-${icon}`}
+      />
+    </RNHostView>
+  );
 }
 
 export type { ButtonProps } from './button-props';

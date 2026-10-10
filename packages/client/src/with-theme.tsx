@@ -42,7 +42,7 @@ function ReusablesPreview({
   screen: boolean;
 }): React.JSX.Element {
   useLayoutEffect(() => {
-    applyTheme(themeId, mode);
+    applyTheme(themeId, Platform.OS === 'web' ? mode : 'system');
   }, [themeId, mode]);
   let preview: ReactNode;
   if (screen) {

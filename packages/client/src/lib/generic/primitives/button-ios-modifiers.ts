@@ -8,6 +8,7 @@ import {
   tint,
   type ModifierConfig,
 } from '@expo/ui/swift-ui/modifiers';
+import { PlatformColor } from 'react-native';
 import type {
   ButtonDataProps,
   ButtonSize,
@@ -77,6 +78,7 @@ function buttonTint(
   props: Pick<ButtonDataProps, 'role'>,
   primary: string | undefined,
 ): ModifierConfig[] {
-  if (props.role === 'destructive' || primary === undefined) return [];
+  if (props.role === 'destructive') return [tint(PlatformColor('systemRed'))];
+  if (primary === undefined) return [];
   return [tint(primary)];
 }

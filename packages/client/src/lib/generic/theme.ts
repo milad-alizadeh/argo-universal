@@ -7,7 +7,7 @@ import {
 import { Platform } from 'react-native';
 import { Uniwind } from 'uniwind';
 
-export function applyTheme(themeId: ThemeId, mode: ThemeMode): void {
+export function applyTheme(themeId: ThemeId, mode: ThemeMode | 'system'): void {
   for (const themeMode of ['light', 'dark'] as const) {
     const variables = Object.fromEntries(
       Object.entries(getThemeVariables(themeId, themeMode)).flatMap(
