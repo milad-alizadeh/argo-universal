@@ -3,17 +3,16 @@ import type { ScriptedScenario } from '@repo/mocks/agent/scripted-scenario';
 import { createActor } from 'xstate';
 import { createEngineContext } from '../src/engine/context';
 import { appRouter } from '../src/engine/router';
+import { findMachineActor } from '../src/lib/machine-actor';
 import {
   feedMachine,
-  findDatabaseWriter,
   readWriterProjection,
   readWrittenRow,
   type FeedActorRef,
 } from '../src/services/feed';
-import {
-  createSessionSnapshotWatcher,
-  findSessionActor,
-} from '../src/services/sessions';
+import { databaseWriterId, writerMachine } from '../src/services/feed';
+import { createSessionSnapshotWatcher } from '../src/services/sessions';
+import { sessionActorId, sessionMachine } from '../src/services/sessions';
 import { waitForAcpSessionIdle } from './acp-feed';
 import { startEngineTestHost } from './engine';
 import { scriptedEngineInput } from './scripted-engine';
@@ -69,7 +68,11 @@ export const startFeedModuleTestHost = async ({
         readWrittenRow({
           database: host.database,
           pending: readWriterProjection(
-            findDatabaseWriter(host.engine.system),
+            findMachineActor(
+              host.engine.system,
+              databaseWriterId,
+              writerMachine,
+            ),
           ).feedRow('session-1', id),
           sessionId: 'session-1',
           id,
@@ -105,7 +108,11 @@ export const createFeedModuleCaller = (
         findFeed,
         findWriter: context.findWriter,
         findSession: (sessionId) =>
-          findSessionActor(host.engine.system, sessionId),
+          findMachineActor(
+            host.engine.system,
+            sessionActorId(sessionId),
+            sessionMachine,
+          ),
         sessions: host.sessionRegistry,
       }),
     },

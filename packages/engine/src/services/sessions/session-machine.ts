@@ -41,13 +41,14 @@ import {
   type AnyActorRef,
   type InputFrom,
 } from 'xstate';
-import { findAgentProbe, RecoveryBlockedError } from '../agents';
+import { findMachineActor } from '../../lib/machine-actor';
+import { RecoveryBlockedError } from '../agents';
 import type { AcpSessionLease } from '../agents';
 import { createAcpResponseReaders } from '../agents';
+import { agentProbeId, agentProbeMachine } from '../agents';
 import { blobsFolderIn } from '../blob';
 import {
   acpToolCallRowId,
-  findDatabaseWriter,
   readWriterProjection,
   publishTurnContent,
   type FeedEvent,
@@ -56,7 +57,7 @@ import {
 import { userMessageChange } from '../feed';
 import { feedMachine } from '../feed';
 import { readWrittenRow, readUnaddressedPlan } from '../feed';
-import type { writerMachine } from '../feed';
+import { databaseWriterId, writerMachine } from '../feed';
 import { readAcpConfiguration } from './conversation/acp-configuration';
 import {
   AcpSessionLifetime,
@@ -262,7 +263,8 @@ const writer = ({
 }: {
   system: AnyActorRef['system'];
   self: AnyActorRef;
-}): AnyActorRef => findDatabaseWriter(system) ?? self;
+}): AnyActorRef =>
+  findMachineActor(system, databaseWriterId, writerMachine) ?? self;
 
 // A native Tool call's row is named by its id; an ACP one's is scoped to its ACP session.
 const permissionOutcomeChange = (
@@ -727,7 +729,11 @@ const sessionSetup = setup({
     ),
     // An Agent that could not start may have been signed out or removed since its last probe.
     refreshAgentProbe: enqueueActions(({ context, system, enqueue }): void => {
-      const probe = findAgentProbe(system, context.input.adapter.agent);
+      const probe = findMachineActor(
+        system,
+        agentProbeId(context.input.adapter.agent),
+        agentProbeMachine,
+      );
       if (probe) enqueue.sendTo(probe, { type: 'agentProbe.refresh' });
     }),
     rememberReady: enqueueActions(({ context, event, enqueue }): void => {
@@ -1405,7 +1411,11 @@ export const sessionMachine = sessionSetup.createMachine({
         src: 'loadSession',
         input: ({ context, self }): LoadSessionInput => ({
           session: context.input,
-          writer: findDatabaseWriter(self.system),
+          writer: findMachineActor(
+            self.system,
+            databaseWriterId,
+            writerMachine,
+          ),
         }),
         ...sessionEntryOutcome,
       },
@@ -1425,7 +1435,7 @@ export const sessionMachine = sessionSetup.createMachine({
             readWrittenRow({
               database: context.input.database,
               pending: readWriterProjection(
-                findDatabaseWriter(self.system),
+                findMachineActor(self.system, databaseWriterId, writerMachine),
               ).feedRow(context.sessionId, id),
               sessionId: context.sessionId,
               id,
@@ -1436,7 +1446,11 @@ export const sessionMachine = sessionSetup.createMachine({
           ): ReturnType<typeof readUnaddressedPlan> =>
             readUnaddressedPlan({
               database: context.input.database,
-              writer: findDatabaseWriter(self.system),
+              writer: findMachineActor(
+                self.system,
+                databaseWriterId,
+                writerMachine,
+              ),
               sessionId: context.sessionId,
               acpSessionId,
             }),

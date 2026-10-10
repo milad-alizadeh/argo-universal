@@ -4,12 +4,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { SessionNewInput } from '@repo/contracts';
 import { project, session } from '@repo/db/schema';
+import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { eq } from 'drizzle-orm';
 import { afterEach, expect, it, vi } from 'vitest';
 import { createActor, waitFor } from 'xstate';
 import { openTestDatabase } from '#mocks/database';
 import { storedMessage } from '#mocks/feed';
-import { initTestRepository } from '#mocks/git';
 import { writeJobs } from '../feed';
 import { writerMachine } from '../feed';
 import {

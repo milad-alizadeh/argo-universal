@@ -1,13 +1,15 @@
 import { randomUUID } from 'node:crypto';
-import { createServer } from 'node:net';
 import { dirname, join } from 'node:path';
 import type { Database } from '@repo/db';
+import { findFreePort } from '@repo/mocks/network/free-port';
 import { onTestFinished } from 'vitest';
-import { createActor, waitFor, type Actor } from 'xstate';
+import { createActor, waitFor, type Actor, type ActorRefFrom } from 'xstate';
 import type { HttpServer } from '../src/engine/http-server';
 import { engineMachine, type EngineInput } from '../src/engine/machine';
-import { findDatabaseWriter } from '../src/services/feed';
-import { findSessionRegistry } from '../src/services/sessions';
+import { findMachineActor } from '../src/lib/machine-actor';
+import { databaseWriterId, writerMachine } from '../src/services/feed';
+import type { RegistryActorRef } from '../src/services/sessions';
+import { sessionRegistryId, registryMachine } from '../src/services/sessions';
 import { openTestDatabase } from './database';
 import { scriptedEngineInput } from './scripted-engine';
 
@@ -19,8 +21,8 @@ type EngineTestOptions = Partial<EngineInput> & {
 type EngineConnections = {
   engine: Actor<typeof engineMachine>;
   database: Database;
-  sessionRegistry: NonNullable<ReturnType<typeof findSessionRegistry>>;
-  databaseWriter: NonNullable<ReturnType<typeof findDatabaseWriter>>;
+  sessionRegistry: RegistryActorRef;
+  databaseWriter: ActorRefFrom<typeof writerMachine>;
   createCaller: HttpServer['createCaller'];
   caller: ReturnType<HttpServer['createCaller']>;
 };
@@ -45,7 +47,7 @@ export async function startEngineTestHost(
       ? dirname(options.database.$client.location() ?? '')
       : (options.runtimeDirectory ?? storage?.directory));
   if (!home) throw new Error('Engine test storage is missing');
-  const port = options.port ?? (await findAvailableLoopbackPort());
+  const port = options.port ?? (await findFreePort());
   const engine = createActor(engineMachine, {
     input: {
       version: '1.2.3',
@@ -74,8 +76,16 @@ function readEngineTestHost(
   engine: Actor<typeof engineMachine>,
 ): EngineConnections {
   const { database, server } = engine.getSnapshot().context;
-  const sessionRegistry = findSessionRegistry(engine.system);
-  const databaseWriter = findDatabaseWriter(engine.system);
+  const sessionRegistry = findMachineActor(
+    engine.system,
+    sessionRegistryId,
+    registryMachine,
+  );
+  const databaseWriter = findMachineActor(
+    engine.system,
+    databaseWriterId,
+    writerMachine,
+  );
   if (!database || !server || !sessionRegistry || !databaseWriter)
     throw new Error('Engine is not ready');
   return {
@@ -102,17 +112,4 @@ function registerEngineCleanup(
     storage?.remove();
   });
   return stop;
-}
-
-function findAvailableLoopbackPort(): Promise<number> {
-  return new Promise((resolve, reject) => {
-    const socket = createServer();
-    socket.once('error', reject);
-    socket.listen(0, '127.0.0.1', () => {
-      const address = socket.address();
-      if (!address || typeof address === 'string')
-        throw new Error('Missing test port');
-      socket.close((error) => (error ? reject(error) : resolve(address.port)));
-    });
-  });
 }

@@ -11,6 +11,7 @@ import {
   type InputFrom,
   type AnyActorRef,
 } from 'xstate';
+import { findMachineActor } from '../lib/machine-actor';
 import {
   createAcpResources,
   type AcpResources,
@@ -26,7 +27,6 @@ import {
   type RegistryInput,
   registryMachine,
   sessionRegistryId,
-  findSessionRegistry,
   type RegistryActorRef,
 } from '../services/sessions';
 import {
@@ -404,7 +404,11 @@ export const engineMachine = setup({
                 src: 'closeAcpResources',
                 input: ({ context, self }): CloseAcpResourcesInput => ({
                   resources: context.acpResources,
-                  sessions: findSessionRegistry(self.system),
+                  sessions: findMachineActor(
+                    self.system,
+                    sessionRegistryId,
+                    registryMachine,
+                  ),
                 }),
                 onDone: { target: 'drainingWriter' },
                 onError: {
@@ -484,7 +488,7 @@ export const engineMachine = setup({
 function requireSessionRegistry(
   system: AnyActorRef['system'],
 ): RegistryActorRef {
-  const actor = findSessionRegistry(system);
+  const actor = findMachineActor(system, sessionRegistryId, registryMachine);
   if (!actor) throw new Error('The Session registry is not running');
   return actor;
 }

@@ -1,6 +1,7 @@
 import { TRPCError } from '@trpc/server';
 import { waitFor } from 'xstate';
 import type { Context } from '../../engine/context';
+import { findMachineActor } from '../../lib/machine-actor';
 import type { RegistryActorRef, RegistryCommand } from './registry-machine';
 import {
   rejectSessionCommand,
@@ -8,8 +9,9 @@ import {
   validateSessionCommandAdmission,
 } from './session-command';
 import type { SessionActorRef, SessionCommand } from './session-machine';
+import { sessionMachine } from './session-machine';
 import { isSessionReady } from './session-snapshot';
-import { findSessionActor } from './session-system';
+import { sessionActorId } from './session-system';
 
 export function sendCheckedRegistryCommand(
   sessionRegistry: RegistryActorRef,
@@ -25,7 +27,11 @@ export function requireOpenSessionActor(
   sessionRegistry: RegistryActorRef,
   sessionId: string,
 ): SessionActorRef {
-  const sessionActor = findSessionActor(sessionRegistry.system, sessionId);
+  const sessionActor = findMachineActor(
+    sessionRegistry.system,
+    sessionActorId(sessionId),
+    sessionMachine,
+  );
   if (!sessionActor)
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
@@ -93,7 +99,11 @@ export async function openReadySession(
   commandType: SessionCommand['type'] = 'session.prompt',
 ): Promise<SessionActorRef> {
   validateSessionCommandAdmission(context);
-  const liveSession = findSessionActor(context.sessions.system, sessionId);
+  const liveSession = findMachineActor(
+    context.sessions.system,
+    sessionActorId(sessionId),
+    sessionMachine,
+  );
   if (liveSession) return waitForSessionReady(liveSession, commandType);
   return waitForSessionReady(
     openStoredSession(context, sessionId),

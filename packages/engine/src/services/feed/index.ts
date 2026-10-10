@@ -24,7 +24,7 @@ export type {
 export { publishTurnContent } from './publication';
 export { acpToolCallRowId } from './updates/tools';
 export { readUnaddressedPlan } from './unaddressed-plan';
-export { databaseWriterId, findDatabaseWriter } from './writer-system';
+export { databaseWriterId } from './writer-system';
 
 export { feedRouter } from './router';
 export { titleFromPrompt } from './prompt-title';

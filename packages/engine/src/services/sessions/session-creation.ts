@@ -3,7 +3,8 @@ import { listBranches } from '@repo/git';
 import { TRPCError } from '@trpc/server';
 import { waitFor } from 'xstate';
 import type { Context } from '../../engine/context';
-import { findDatabaseWriter } from '../feed';
+import { findMachineActor } from '../../lib/machine-actor';
+import { databaseWriterId, writerMachine } from '../feed';
 import { readProjectPath } from '../projects';
 import {
   submitSessionPrompt,
@@ -55,7 +56,11 @@ async function waitForSessionStored(
 async function waitForSessionInsertCommitted(
   sessionActor: SessionActorRef,
 ): Promise<void> {
-  const databaseWriter = findDatabaseWriter(sessionActor.system);
+  const databaseWriter = findMachineActor(
+    sessionActor.system,
+    databaseWriterId,
+    writerMachine,
+  );
   if (!databaseWriter || databaseWriter.getSnapshot().status !== 'active')
     throw new Error('Database Writer is unavailable');
   const { sessionId, sessionInsertCommitted } =

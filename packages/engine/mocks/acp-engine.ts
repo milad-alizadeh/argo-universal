@@ -4,13 +4,13 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createAgentMetadata } from '@repo/mocks/agent';
 import type { ScriptedScenario } from '@repo/mocks/agent/scripted-scenario';
+import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { onTestFinished } from 'vitest';
 import type { EngineInput } from '../src/engine/machine';
 import type { AcpResourceInput } from '../src/services/agents';
 import { resourceLaunch } from './acp-resource';
 import { openTestDatabase } from './database';
 import { startEngineTestHost } from './engine';
-import { initTestRepository } from './git';
 import { createScriptedAgentProcess } from './scripted-agent';
 
 export const emptySessionInput = {

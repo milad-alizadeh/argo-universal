@@ -10,6 +10,8 @@
     { "files": ["apps/desktop/src/main/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "max-statements": "off", "sonarjs/no-nested-template-literals": "off", "sonarjs/no-os-command-from-path": "off", "sonarjs/no-unused-vars": "off", "sonarjs/publicly-writable-directories": "off", "unicorn/consistent-function-scoping": "off", "vitest/expect-expect": "off" } },
     // stylistic/multiline-comment-style
     { "files": ["apps/desktop/src/preload/*"], "rules": { "stylistic/multiline-comment-style": "off" } },
+    // sonarjs/no-os-command-from-path (moved with initTestRepository from packages/engine/mocks)
+    { "files": ["mocks/git/*"], "rules": { "sonarjs/no-os-command-from-path": "off" } },
     // complexity, max-lines, max-lines-per-function, sonarjs/no-duplicate-string, sonarjs/no-nested-conditional, sonarjs/no-os-command-from-path, typescript/consistent-type-assertions, typescript/explicit-function-return-type
     { "files": ["packages/engine/mocks/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "sonarjs/no-nested-conditional": "off", "sonarjs/no-os-command-from-path": "off" } },
     // complexity, max-lines, max-lines-per-function, max-params, max-statements, prefer-const, sonarjs/no-duplicate-string, sonarjs/no-os-command-from-path, sonarjs/no-unused-vars, typescript/await-thenable, typescript/consistent-type-assertions, typescript/explicit-function-return-type, typescript/no-meaningless-void-operator, vitest/expect-expect, vitest/no-conditional-expect, vitest/require-to-throw-message, vitest/valid-expect

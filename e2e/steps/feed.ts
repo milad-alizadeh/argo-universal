@@ -8,6 +8,8 @@ const FeedPage = z.object({
   rows: z.array(
     z.object({
       sessionUpdate: z.string(),
+      turnId: z.string(),
+      state: z.string(),
       content: z.array(z.record(z.string(), z.unknown())),
     }),
   ),

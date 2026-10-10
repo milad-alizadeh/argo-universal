@@ -12,6 +12,7 @@ import { listBranches } from '@repo/git';
 import { acpConfiguration } from '@repo/mocks/agent/acp-configuration';
 import { createAppFixtureAdapter } from '@repo/mocks/agent/app-fixtures';
 import { scenarios } from '@repo/mocks/agent/scenarios';
+import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { eq, sql } from 'drizzle-orm';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import type { ActorRefFrom } from 'xstate';
@@ -23,12 +24,13 @@ import {
   openTestDatabase,
 } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
-import { initTestRepository } from '#mocks/git';
 import { liveHeaderMocks } from '#mocks/live-header';
 import { requireScriptedProcessAt } from '#mocks/scripted-agent';
 import { createScriptedAgentLauncher } from '#mocks/scripted-agent';
 import { scriptedEngineInput } from '#mocks/scripted-engine';
-import { writerMachine, findDatabaseWriter } from '../services/feed';
+import { findMachineActor } from '../lib/machine-actor';
+import { writerMachine } from '../services/feed';
+import { databaseWriterId } from '../services/feed';
 
 const missingWriterMessage = 'Writer actor is missing';
 const engineStopEvent = 'engine.stop';
@@ -122,7 +124,11 @@ it.each(liveHeaderMocks)(
       if (typeof activeTurn?.id !== 'string')
         throw new Error('Session has no running Turn');
       revision += 1;
-      const writer = findDatabaseWriter(engine.system);
+      const writer = findMachineActor(
+        engine.system,
+        databaseWriterId,
+        writerMachine,
+      );
       if (!writer) throw new Error(missingWriterMessage);
       writer.send({
         type: writerWriteEvent,
@@ -645,7 +651,7 @@ it('sends live list changes and attention/running counts through request and Tur
     session: { sessionId: 'session-1', status: 'idle' },
   });
   const writer =
-    findDatabaseWriter(engine.system) ??
+    findMachineActor(engine.system, databaseWriterId, writerMachine) ??
     expect.unreachable(missingWriterMessage);
   for (const sessionId of ['archived', 'subagent'])
     writer.send({
@@ -841,7 +847,7 @@ it('publishes stored list changes, changes counts only when needed, and aborts a
   expect((await counts.next()).value).toEqual({ attention: 1, running: 0 });
   await updates.next();
   const writer =
-    findDatabaseWriter(engine.system) ??
+    findMachineActor(engine.system, databaseWriterId, writerMachine) ??
     expect.unreachable(missingWriterMessage);
   const waitingCounts = counts.next();
   writer.send({
@@ -930,7 +936,7 @@ it('shares one coalesced list read for three subscribers across fifty changes', 
     const secondChange = second.next();
     const nextCounts = counts.next();
     const writer =
-      findDatabaseWriter(engine.system) ??
+      findMachineActor(engine.system, databaseWriterId, writerMachine) ??
       expect.unreachable(missingWriterMessage);
     for (let index = 1; index <= 50; index += 1)
       writer.send({

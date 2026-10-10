@@ -1,18 +1,27 @@
 import { createAgentMetadata } from '@repo/mocks/agent';
 import { describe, expect, it } from 'vitest';
-import { createActor, createMachine, fromTransition } from 'xstate';
-import { agentProbeMachine } from './agent-probe-machine';
-import { agentProbeId, findAgentProbe } from './agent-probe-system';
+import {
+  type AnyActorRef,
+  createActor,
+  createMachine,
+  fromTransition,
+} from 'xstate';
+import { agentProbeId, agentProbeMachine } from '../services/agents';
+import { findMachineActor } from './machine-actor';
 
 const adapter = createAgentMetadata();
+const find = (
+  system: AnyActorRef['system'],
+): ReturnType<typeof findMachineActor> =>
+  findMachineActor(system, agentProbeId(adapter.agent), agentProbeMachine);
 
-describe('Agent probe ownership', (): void => {
+describe('findMachineActor', (): void => {
   it('finds a probe with supplied implementations', (): void => {
     const probe = createActor(agentProbeMachine.provide({}), {
       systemId: agentProbeId(adapter.agent),
       input: { adapter },
     });
-    expect(findAgentProbe(probe.system, adapter.agent)).toBe(probe);
+    expect(find(probe.system)).toBe(probe);
   });
 
   it('rejects an unrelated actor registered under the probe id', (): void => {
@@ -22,7 +31,7 @@ describe('Agent probe ownership', (): void => {
         systemId: agentProbeId(adapter.agent),
       },
     );
-    expect(findAgentProbe(unrelated.system, adapter.agent)).toBeUndefined();
+    expect(find(unrelated.system)).toBeUndefined();
   });
 
   it('rejects a different machine with the same machine id', (): void => {
@@ -34,11 +43,11 @@ describe('Agent probe ownership', (): void => {
       }),
       { systemId: agentProbeId(adapter.agent) },
     );
-    expect(findAgentProbe(unrelated.system, adapter.agent)).toBeUndefined();
+    expect(find(unrelated.system)).toBeUndefined();
   });
 
   it('reports an absent probe', (): void => {
     const probe = createActor(agentProbeMachine, { input: { adapter } });
-    expect(findAgentProbe(probe.system, adapter.agent)).toBeUndefined();
+    expect(find(probe.system)).toBeUndefined();
   });
 });

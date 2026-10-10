@@ -7,6 +7,8 @@
     "./agent": "./agent/metadata.ts",
     "./agent/*": "./agent/*.ts",
     "./app": "./app/index.ts",
+    "./git/*": "./git/*.ts",
+    "./network/*": "./network/*.ts",
     "./registry/*": "./registry/*.ts"
   },
   "scripts": {

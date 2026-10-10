@@ -18,8 +18,8 @@ import {
   readRepository,
   sessionBranch,
 } from '@repo/git';
+import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { expect, it, onTestFinished } from 'vitest';
-import { initTestRepository } from './git';
 
 const occupiedBranch = 'argo/occupied';
 

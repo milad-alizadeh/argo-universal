@@ -2,11 +2,11 @@ import { mkdtempSync, realpathSync, rmSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
 import { project } from '@repo/db/schema';
+import { initTestRepository } from '@repo/mocks/git/test-repository';
 import { eq } from 'drizzle-orm';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import { openTestDatabase } from '#mocks/database';
 import { startEngineTestHost } from '#mocks/engine';
-import { initTestRepository } from '#mocks/git';
 import { seedProject } from './index';
 
 const internalServerError = 'INTERNAL_SERVER_ERROR';

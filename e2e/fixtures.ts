@@ -8,9 +8,9 @@ import {
   type ElectronApplication,
   type Disposable,
 } from '@playwright/test';
+import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { test as base } from 'playwright-bdd';
 import { z } from 'zod';
-import type { MockAgents } from './mock-agents';
 import { pollServer, startOwnServer } from './own-server';
 
 export type AppOptions = { appTarget: 'web' | 'electron' };
@@ -50,7 +50,7 @@ const pointAppAtServer = (page: Page, serverUrl: string): Promise<Disposable> =>
 
 export type ServerOptions = {
   // Shared Argo fixture options by registered Agent identity.
-  mockAgents: MockAgents;
+  mockAgents: AppFixtureAgents;
 };
 
 type App = { page: Page; httpUrl: string; registryPath: string };
