@@ -7,6 +7,7 @@ import {
 } from '@repo/contracts';
 import type { Database } from '@repo/db';
 import { feedRow, session, turn } from '@repo/db/schema';
+import { createRejectionCounter } from '@repo/machine-log';
 import {
   and,
   desc,
@@ -24,7 +25,6 @@ import {
   type SQLiteSelectWithout,
 } from 'drizzle-orm/sqlite-core';
 import type { ActorRefFrom } from 'xstate';
-import { createRejectionCounter } from '../../lib/count-rejections';
 import { hydrateStoredFeedRow, newestRows, storedFeedColumns } from '../feed';
 import { readWriterProjection, type WriterChange } from '../feed';
 import type { writerMachine } from '../feed';

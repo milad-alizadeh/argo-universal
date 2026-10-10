@@ -1,6 +1,6 @@
+import { createRejectionCounter } from '@repo/machine-log';
 import { expect, it } from 'vitest';
 import { acpResponses } from '#mocks/acp-responses';
-import { createRejectionCounter } from '../../../lib/count-rejections';
 import { createAcpResponseReaders } from './response-readers';
 
 it.each(Object.values(acpResponses))(

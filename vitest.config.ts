@@ -10,7 +10,6 @@ export default defineConfig({
       'tooling/oxlint',
       'tools/vitest.config.mts',
     ],
-    // The scaffold has no tests yet, and Vitest exits 1 when it finds none.
     passWithNoTests: true,
   },
 });

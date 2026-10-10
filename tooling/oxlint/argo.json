@@ -59,7 +59,7 @@
       "error",
       { "considerDefaultExhaustiveForUnions": true }
     ],
-    // Vendor names stay in the adapter and mock CLI folders (ADR-0004).
+    // Vendor names stay in the adapter folders (ADR-0004).
     "argo/vendor-name": "error",
     "argo/json-parse-cast": "error",
     "argo/static-imports": "error",
@@ -100,7 +100,7 @@
     },
     {
       // ADR-0016 (1): one global cap for test files. A describe callback holds its cases, so a test function may run to the 150-line file cap with 30 statements.
-      "files": ["**/*.test.*", "e2e/**/*.spec.ts"],
+      "files": ["**/*.test.*"],
       "rules": {
         "max-lines-per-function": [
           "error",
@@ -156,7 +156,7 @@
     },
     {
       // Unit tests mock only outside modules, skip nothing, assert unconditionally and carry unique, valid titles.
-      "files": ["**/*.test.ts", "**/*.test.tsx", "**/*.test.mts"],
+      "files": ["**/*.test.ts", "**/*.test.mts"],
       "rules": {
         "argo/no-internal-mock": "error",
         "argo/unit-test-io": "error",
@@ -270,6 +270,23 @@
       }
     },
     {
+      "files": ["packages/machine-log/src/**"],
+      "excludeFiles": ["**/*.test.*"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@repo/**"],
+                "message": "Generic machine logging imports neither product nor local code (A2)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       // Generic tooling packages import only other tooling packages (A2, ADR-0016 item 9).
       "files": ["tooling/**"],
       "rules": {
@@ -323,7 +340,7 @@
       }
     },
     {
-      // App E2E drives a real Engine, injects fixture adapters and awaits every action (ADR-0018).
+      // App E2E drives a real Engine, uses external Agent fixtures and awaits every action (ADR-0018).
       "files": ["e2e/**"],
       "rules": {
         "playwright/no-element-handle": "error",
@@ -355,7 +372,7 @@
             "patterns": [
               {
                 "group": ["@repo/**", "!@repo/mocks", "!@repo/mocks/**"],
-                "message": "App E2E imports shared Agent adapter fixtures through @repo/mocks (ADR-0018)."
+                "message": "App E2E imports shared external Agent fixtures through @repo/mocks (ADR-0018)."
               }
             ]
           }

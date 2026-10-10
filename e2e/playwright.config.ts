@@ -46,7 +46,7 @@ export default defineConfig<AppOptions & ServerOptions>({
     },
   ],
 
-  // The web export; each App has a real Engine with shared fixture adapters.
+  // The web export; each App has a real Engine with shared external Agent fixtures.
   webServer: [
     {
       name: 'Web',

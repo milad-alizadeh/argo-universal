@@ -218,7 +218,7 @@ The real machine actor (`createActor(machine.provide(…))`) is the system under
 
 - **A mock worker**: a `fromCallback` that records itself, notes `worker.stop` through `receive`, and marks itself stopped in its cleanup. Executors drive it with `sendBack`.
 - **Mock `server.json` actions** that record writes and removals.
-- **Vitest fake timers** (`vi.useFakeTimers()`), which also fake `Date.now()` for `recordCrash` (docs/research/xstate.md, Gotcha 4).
+- **Vitest fake timers** (`vi.useFakeTimers()`), which also fake `Date.now()` for `recordCrash`.
 
 The model is the same machine as the system under test. Without effect checks, state checks would only compare the machine with itself, and the mutation runs below show that. The value comes from three things that the model does not supply:
 
@@ -631,7 +631,7 @@ export const workerMachine = setup({
 ## Vitest integration
 
 - Generate paths at module scope, so Vitest collects one `it` per path with `describe.each` and `it.each`. The path list is fixed before any test runs. A changed machine changes the test list, so name tests by their event sequence.
-- `vi.useFakeTimers()` in `beforeEach`, and `actor.stop()` plus `vi.useRealTimers()` in `afterEach`. Fake timers drive `after` because XState's default clock calls the global `setTimeout` at call time (docs/research/xstate.md, Testing with Vitest).
+- `vi.useFakeTimers()` in `beforeEach`, and `actor.stop()` plus `vi.useRealTimers()` in `afterEach`. Fake timers drive `after` because XState's default clock calls the global `setTimeout` at call time.
 - `path.test` is async. Return or await it, or a failure becomes an unhandled rejection.
 - Run size on the prototype: 636 supervisor tests in about 5 s wall time, path generation included, and 15 worker tests (S14). They live in `apps/server`, which already has a Vitest project in the root `vitest.config.ts`.
 

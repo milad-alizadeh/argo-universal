@@ -10,16 +10,7 @@
     "reportUnusedDisableDirectives": "error"
   },
   "ignorePatterns": [
-    "**/dist/**",
-    "**/.expo/**",
     "**/.turbo/**",
-    "**/.vitest/**",
-    "**/.vite/**",
-    "**/coverage/**",
-    "**/storybook-static/**",
-    "**/playwright-report/**",
-    "**/blob-report/**",
-    "**/test-results/**",
     "**/.features-gen/**",
     "packages/db/drizzle/**",
     "**/.rnstorybook/storybook.requires.ts",

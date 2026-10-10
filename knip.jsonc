@@ -13,9 +13,25 @@
       // A shell builtin in the dev and start scripts, not an npm binary.
       "ignoreBinaries": ["unset"]
     },
+    "apps/server": {
+      // The Supervisor and E2E launch these Engine entries by path in a separate process.
+      "entry": ["src/engine/main.ts", "mocks/e2e-engine.ts"]
+    },
+    "packages/engine": {
+      // macOS supplies the computer-name command.
+      "ignoreBinaries": ["scutil"]
+    },
     "apps/universal-app": {
       // Native modules the app must list itself so Expo autolinks them; @repo/client, expo-symbols and Expo Router reach them at runtime.
-      "ignoreDependencies": ["expo-font", "react-native-svg", "expo-updates"],
+      "ignoreDependencies": [
+        "expo-font",
+        "react-native-svg",
+        "@expo/ui",
+        "expo-clipboard",
+        "expo-file-system",
+        "expo-haptics",
+        "expo-image-picker"
+      ],
       // Config plugins that app.json names by path.
       "entry": ["plugins/*.mjs"]
     },
@@ -28,6 +44,8 @@
       ]
     },
     "e2e": {
+      // playwright-bdd loads step definitions from the config string.
+      "entry": ["steps/**/*.ts"],
       // Listed so Turborepo hashes the Server, App, and Desktop into the e2e tasks; the specs reach them over HTTP and Electron, not imports.
       "ignoreDependencies": [
         "@repo/desktop",

@@ -2,7 +2,7 @@ import type {
   ClientConnection,
   InitializeResponse,
 } from '@agentclientprotocol/sdk';
-import { createRejectionCounter } from '../../../lib/count-rejections';
+import { createRejectionCounter } from '@repo/machine-log';
 import { createAgentClient } from './client';
 import { negotiateAcpInitialize } from './initialize';
 import { openProtocolSession } from './open-session';
