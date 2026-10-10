@@ -77,7 +77,7 @@
     // complexity, max-lines-per-function
     { "files": ["packages/client/src/features/frame/hooks/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
     // complexity, max-lines-per-function
-    { "files": ["packages/client/src/features/frame/screens/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
+    { "files": ["packages/client/src/features/frame/screens/*"], "rules": { "max-lines-per-function": "off" } },
     // complexity, jsx-a11y/no-autofocus, max-lines, max-lines-per-function, max-statements, sonarjs/cognitive-complexity, sonarjs/no-nested-conditional, sonarjs/no-unused-vars, unicorn/no-useless-undefined, unicorn/prefer-ternary
     { "files": ["packages/client/src/features/requests/components/*"], "rules": { "complexity": "off", "jsx-a11y/no-autofocus": "off", "max-lines": "off", "max-lines-per-function": "off", "max-statements": "off", "sonarjs/cognitive-complexity": "off", "sonarjs/no-nested-conditional": "off", "sonarjs/no-unused-vars": "off", "unicorn/no-useless-undefined": "off", "unicorn/prefer-ternary": "off" } },
     // complexity, max-lines, max-lines-per-function, max-params, max-statements
