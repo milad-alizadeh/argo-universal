@@ -2,7 +2,7 @@ import type { PermissionOutcome as Outcome } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { FeedDisclosure, type FeedDisclosureProps } from './feed-disclosure';
-import { PermissionOutcome } from './permission-outcome';
+import { chosenPermissionKind, PermissionOutcome } from './permission-outcome';
 
 export function ToolCallDisclosure({
   permissionOutcome,
@@ -16,10 +16,7 @@ export function ToolCallDisclosure({
     <View className="gap-1">
       <FeedDisclosure
         {...props}
-        denied={
-          permissionOutcome?.outcome === 'selected' &&
-          permissionOutcome.optionId === 'reject_once'
-        }
+        denied={chosenPermissionKind(permissionOutcome)?.startsWith('reject')}
       />
       {permissionOutcome && (
         <PermissionOutcome
