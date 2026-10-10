@@ -8,7 +8,7 @@ An adapter is an `AgentAdapter` in the registry, `agentAdapters`. The Session in
 
 The adapter remains plain functions and imports no XState:
 
-- `connect(input, listener, signal)` starts or resumes the vendor session. It resolves to a `VendorSession`, holding ready data (`vendorSessionId`, `configOptions`, `capabilities`, `continuedOutside`), `run(command)` and `stop()`. The listener takes vendor messages, Agent events needing no mapping, and a failure. Session aborts startup and pending commands when the native lifetime ends; a late connection is still closed once.
+- `connect(input, listener, signal)` starts or resumes the Agent session. It resolves to a `VendorSession`, holding ready data (`vendorSessionId`, `configOptions`, `capabilities`, `continuedOutside`), `run(command)` and `stop()`. The listener takes vendor messages, Agent events needing no mapping, and a failure. Session aborts startup and pending commands when the native lifetime ends; a late connection is still closed once.
 - `toAgentEvents(message, mappingState)` maps one vendor message into Agent events. Mapping state belongs to that native lifetime; a rejected message does not replace the last accepted state.
 - `initialMappingState()` initializes that state.
 
