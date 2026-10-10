@@ -5,6 +5,8 @@ import type { RegistryActorRef } from './registry-machine';
 import type { SessionActorRef } from './session-machine';
 import { SessionSnapshotReader } from './session-snapshot-reader';
 
+const feedReadInterval = 60;
+
 type SnapshotEvent = Extract<
   FeedSubscribeOutput,
   { type: 'snapshot' | 'closed' }
@@ -29,6 +31,10 @@ class SessionSnapshotObserver implements Subscription {
   private feedListener: Subscription | undefined;
   private hasStopped = false;
   private serialized = '';
+  private sources: readonly unknown[] = [];
+  private feedVersion = 0;
+  private feedThrottle: ReturnType<typeof setTimeout> | undefined;
+  private feedDirty = false;
   private registryListener: Subscription | undefined;
   private readonly reader: SessionSnapshotReader;
 
@@ -52,6 +58,7 @@ class SessionSnapshotObserver implements Subscription {
     this.sessionListener?.unsubscribe();
     this.unwatchFeed();
     this.registryListener?.unsubscribe();
+    clearTimeout(this.feedThrottle);
   }
 
   private watchSession(): void {
@@ -142,16 +149,60 @@ class SessionSnapshotObserver implements Subscription {
     this.unwatchFeed();
     this.feed = feed;
     this.feedListener = feed.subscribe({
-      next: (): void => this.changed(),
+      next: (): void => this.feedChanged(),
       error: (error): void => this.reject(error),
     });
+  }
+
+  // A Feed change is read at once, then at most once per Feed batch window, so a burst of Agent updates is not read once per update.
+  private feedChanged(): void {
+    if (this.feedThrottle) {
+      this.feedDirty = true;
+      return;
+    }
+    this.feedVersion += 1;
+    this.feedThrottle = setTimeout(
+      (): void => this.feedWindowEnded(),
+      feedReadInterval,
+    );
+    this.changed();
+  }
+
+  private feedWindowEnded(): void {
+    this.feedThrottle = undefined;
+    if (!this.feedDirty) return;
+    this.feedDirty = false;
+    this.feedChanged();
   }
 
   private unwatchFeed(): void {
     this.feedListener?.unsubscribe();
   }
 
+  // What a snapshot is read from; an unchanged source list skips the read.
+  private readSources(): readonly unknown[] {
+    const session = this.session?.getSnapshot();
+    return [
+      this.session,
+      session?.status,
+      JSON.stringify(session?.value),
+      session?.context,
+      this.feed,
+      this.feedVersion,
+    ];
+  }
+
+  private sourcesChanged(): boolean {
+    const sources = this.readSources();
+    const changed = sources.some(
+      (source, index) => source !== this.sources[index],
+    );
+    this.sources = sources;
+    return changed;
+  }
+
   private publish(): void {
+    if (!this.sourcesChanged()) return;
     const result = this.reader.read(this.sessionId, this.session);
     const serialized = JSON.stringify(result.snapshot);
     if (serialized === this.serialized) return;

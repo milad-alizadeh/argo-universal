@@ -83,7 +83,7 @@ const readChangedRows = (
 
 // What a subscriber missed after its sync point, a page at a time, up to the revision captured when it subscribed.
 export class FeedCatchUp {
-  private readonly highWaterMark: number;
+  public readonly highWaterMark: number;
   private readonly firstPage: readonly SessionUpdate[];
   private readonly fitsOnePage: boolean;
   private pagesRead = 0;
