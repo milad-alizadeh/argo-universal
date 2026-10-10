@@ -155,7 +155,7 @@ function PlanProposalInteraction({
         >
           <View className="flex-row items-center gap-1.5">
             <Icon name="plan-mode" className="text-muted-foreground" />
-            <Text className="min-w-0 flex-1 text-sm leading-5.5 font-semibold">
+            <Text className="min-w-0 flex-1 type-heading">
               Approve this plan?
             </Text>
             <Button
@@ -175,9 +175,7 @@ function PlanProposalInteraction({
         <PlanProposalBody content={proposal.content} expanded={expanded} />
         {planning && !answered && (
           <View className={cn('gap-1.5 pt-1', expanded && 'px-4')}>
-            <Text className="text-sm leading-5 font-medium">
-              What should change in the plan?
-            </Text>
+            <Text className="type-body">What should change in the plan?</Text>
             <Textarea
               autoFocus
               accessibilityLabel="What should change in the plan?"
@@ -185,9 +183,9 @@ function PlanProposalInteraction({
               value={feedback}
               editable={!inactive}
               onChangeText={setFeedback}
-              className="min-h-16 max-h-32 text-sm leading-5 bg-background dark:bg-background focus:border-ring focus:ring-[3px] focus:ring-ring/25 focus-visible:ring-ring/25 web:resize-none"
+              className="min-h-16 max-h-32 type-control bg-background dark:bg-background focus:border-ring focus:ring-[3px] focus:ring-ring/25 focus-visible:ring-ring/25 web:resize-none"
             />
-            <Text className="text-sm leading-5 text-muted-foreground">
+            <Text className="type-secondary">
               Required. The Agent keeps planning with it.
             </Text>
           </View>

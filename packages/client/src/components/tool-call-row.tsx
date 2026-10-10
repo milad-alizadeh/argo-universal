@@ -2,7 +2,7 @@ import { isToolCallRunning, type ToolCallUpdate } from '@repo/contracts';
 import type * as React from 'react';
 import { View } from 'react-native';
 import { Text } from '#primitives/text';
-import { toolCallTitle } from '../feed/tool-call-title';
+import { toolCallTitle, toolCallTitlePaths } from '../feed/tool-call-title';
 import { FeedCodeBlock } from './feed-code-block';
 import { ToolCallDisclosure } from './tool-call-disclosure';
 import { toolCallIcon } from './tool-call-icon';
@@ -39,6 +39,7 @@ export function ToolCallRow({
   return (
     <ToolCallDisclosure
       label={toolCallTitle(row, awaitingApproval)}
+      paths={toolCallTitlePaths(row, awaitingApproval)}
       icon={toolCallIcon(row)}
       running={isToolCallRunning(row)}
       failed={row.status === 'failed'}
@@ -53,7 +54,7 @@ export function ToolCallRow({
         footer={
           row.status === 'failed' || row.status === 'cancelled' ? (
             <View className="px-3 pb-2">
-              <Text className="text-sm text-muted-foreground">
+              <Text className="type-secondary">
                 {row.status === 'failed' ? 'Failed' : 'Stopped'}
               </Text>
             </View>

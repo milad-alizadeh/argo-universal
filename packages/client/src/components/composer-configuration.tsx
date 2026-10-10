@@ -182,18 +182,14 @@ function Choice({
         <Text
           selectable={false}
           className={cn(
-            'select-none',
-            'text-sm leading-5 font-normal',
+            'select-none type-body',
             dangerous && destructiveTextClassName,
           )}
         >
           {label}
         </Text>
         {description && (
-          <Text
-            selectable={false}
-            className="select-none text-xs leading-4 font-normal text-muted-foreground"
-          >
+          <Text selectable={false} className="select-none type-secondary">
             {description}
           </Text>
         )}
@@ -222,7 +218,7 @@ function MenuHeading({ children }: { children: string }): React.JSX.Element {
   return (
     <Text
       selectable={false}
-      className="select-none px-2 py-1 text-xs leading-4 font-medium text-muted-foreground"
+      className="select-none px-2 py-1 type-badge text-muted-foreground"
     >
       {children}
     </Text>
@@ -278,30 +274,22 @@ function AgentChoices({
         >
           {wide && <Logo agent={agent} />}
           <View className="flex-1 min-w-0 gap-0.5">
-            <Text
-              selectable={false}
-              className="select-none text-sm leading-5 font-normal"
-            >
+            <Text selectable={false} className="select-none type-body">
               {agent.label}
             </Text>
             {availability && (
               <Text
                 selectable={false}
                 className={cn(
-                  'select-none text-xs leading-4',
-                  availability.reason
-                    ? 'text-muted-foreground'
-                    : 'text-warning',
+                  'select-none type-secondary',
+                  !availability.reason && 'text-warning',
                 )}
               >
                 {availability.label}
               </Text>
             )}
             {availability?.reason && agent.installStep && (
-              <Text
-                selectable={false}
-                className="select-none text-xs leading-4 text-muted-foreground"
-              >
+              <Text selectable={false} className="select-none type-secondary">
                 {agent.installStep}
               </Text>
             )}
@@ -319,7 +307,7 @@ function AgentChoices({
             <Text
               selectable={false}
               className={cn(
-                'select-none text-xs',
+                'select-none type-control',
                 availability.action === 'retry' && 'underline',
               )}
             >
@@ -333,10 +321,7 @@ function AgentChoices({
   // In a View, since bare Text in a list footer is inline on web and pads only its first line.
   const footer = configuration.onAgentChange ? null : (
     <View className="pl-8 pr-2 pb-1">
-      <Text
-        selectable={false}
-        className="select-none text-xs leading-4 text-muted-foreground"
-      >
+      <Text selectable={false} className="select-none type-secondary">
         Start a new Session to switch Agent
       </Text>
     </View>
@@ -421,14 +406,11 @@ function EffortControl({
       <View className="gap-0.5">
         <Text
           selectable={false}
-          className="select-none text-xs leading-4 font-medium text-muted-foreground"
+          className="select-none type-badge text-muted-foreground"
         >
           {selected ? 'Effort' : 'No selection'}
         </Text>
-        <Text
-          selectable={false}
-          className="select-none text-xs leading-4 text-muted-foreground"
-        >
+        <Text selectable={false} className="select-none type-secondary">
           More effort trades speed for deeper reasoning.
         </Text>
       </View>
@@ -478,7 +460,7 @@ function EffortControl({
                     selectable={false}
                     numberOfLines={1}
                     className={cn(
-                      'select-none text-xs leading-4 font-normal text-muted-foreground',
+                      'select-none type-secondary',
                       choice === selected && 'text-foreground',
                     )}
                   >
@@ -530,7 +512,7 @@ function AgentModelMenu({
           </Button>
           <Text
             selectable={false}
-            className="select-none flex-1 text-center text-sm leading-5 font-medium"
+            className="select-none flex-1 text-center type-control"
           >
             {page === 'agent' ? 'Agent' : 'Model'}
           </Text>
@@ -579,16 +561,13 @@ function AgentModelMenu({
               onPress={() => setPage('agent')}
               className="h-11 sm:h-11 px-2 gap-2 justify-start"
             >
-              <Text
-                selectable={false}
-                className="select-none flex-1 text-sm font-normal"
-              >
+              <Text selectable={false} className="select-none flex-1 type-body">
                 Agent
               </Text>
               <Logo agent={agent} />
               <Text
                 selectable={false}
-                className="select-none text-sm font-normal text-muted-foreground"
+                className="select-none type-body text-muted-foreground"
               >
                 {agent?.label}
               </Text>
@@ -603,7 +582,7 @@ function AgentModelMenu({
             {!configuration.onAgentChange && (
               <Text
                 selectable={false}
-                className="select-none text-xs leading-4 text-muted-foreground px-2 pb-1"
+                className="select-none type-secondary px-2 pb-1"
               >
                 Start a new Session to switch Agent
               </Text>
@@ -614,15 +593,12 @@ function AgentModelMenu({
               onPress={() => setPage('model')}
               className="h-11 sm:h-11 px-2 gap-2 justify-start"
             >
-              <Text
-                selectable={false}
-                className="select-none flex-1 text-sm font-normal"
-              >
+              <Text selectable={false} className="select-none flex-1 type-body">
                 Model
               </Text>
               <Text
                 selectable={false}
-                className="select-none text-sm font-normal text-muted-foreground"
+                className="select-none type-body text-muted-foreground"
               >
                 {modelName(current)}
               </Text>
@@ -640,7 +616,7 @@ function AgentModelMenu({
             <Icon name="waiting" className="text-muted-foreground" />
             <Text
               selectable={false}
-              className="select-none flex-1 text-xs leading-4 text-muted-foreground"
+              className="select-none flex-1 type-secondary"
             >
               A Turn is running. Changes apply from the next Turn.
             </Text>
@@ -684,9 +660,7 @@ export function ComposerAgentModelControl({
           <Text
             selectable={false}
             numberOfLines={1}
-            className={cn(
-              'select-none text-sm leading-5 font-normal min-w-0 shrink',
-            )}
+            className="select-none type-control min-w-0 shrink"
           >
             {modelName(current) || agent?.label}
           </Text>
@@ -695,9 +669,7 @@ export function ComposerAgentModelControl({
             effortLabel && (
               <Text
                 selectable={false}
-                className={cn(
-                  'select-none text-sm leading-5 font-normal text-muted-foreground shrink-0',
-                )}
+                className="select-none type-control text-muted-foreground shrink-0"
                 numberOfLines={1}
               >
                 {effortLabel}
@@ -757,8 +729,7 @@ export function ComposerModeControl({
           <Text
             selectable={false}
             className={cn(
-              'select-none',
-              'text-sm leading-5 font-normal text-muted-foreground',
+              'select-none type-control text-muted-foreground',
               !wide && 'hidden',
               current?._meta?.argo?.tone === 'dangerous' &&
                 destructiveTextClassName,
@@ -780,7 +751,7 @@ export function ComposerModeControl({
         <View className="p-1 gap-0.5">
           <Text
             selectable={false}
-            className="select-none px-2 pt-1.5 pb-1 text-xs leading-4 font-medium text-muted-foreground"
+            className="select-none px-2 pt-1.5 pb-1 type-badge text-muted-foreground"
           >
             Mode
           </Text>
@@ -865,7 +836,10 @@ export function ComposerCheckoutControl({
         <Text
           selectable={false}
           numberOfLines={1}
-          className="select-none min-w-0 shrink text-xs leading-4 font-normal font-mono"
+          className={cn(
+            'select-none min-w-0 shrink',
+            checkout.newWorktree ? 'type-code' : 'type-secondary',
+          )}
         >
           {checkout.newWorktree
             ? checkout.path
@@ -890,10 +864,7 @@ export function ComposerCheckoutControl({
             name={checkout.newWorktree ? 'branch' : 'folder'}
             className="text-muted-foreground"
           />
-          <Text
-            selectable={false}
-            className="select-none text-xs leading-4 font-normal text-muted-foreground"
-          >
+          <Text selectable={false} className="select-none type-secondary">
             {checkout.newWorktree ? 'New worktree' : 'Local'}
           </Text>
           <Icon

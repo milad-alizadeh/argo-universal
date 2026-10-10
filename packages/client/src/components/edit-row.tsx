@@ -114,7 +114,7 @@ export function EditRow({ row }: EditRowProps): React.JSX.Element {
         <Icon name="edit" className="shrink-0 text-destructive" />
         <Text className="type-body text-destructive">Couldn't edit</Text>
         {path ? (
-          <FileName path={path} className="type-body text-muted-foreground" />
+          <FileName path={path} className="text-muted-foreground" />
         ) : null}
         {error ? (
           <Text

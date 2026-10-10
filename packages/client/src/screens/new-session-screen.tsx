@@ -232,11 +232,7 @@ function useStartSession(onStartFailed: () => void): Pick<
 function NewSessionHeading(): React.JSX.Element {
   return (
     <View className="w-full max-w-composer gap-2 px-4">
-      <Text
-        role="heading"
-        aria-level={1}
-        className="text-[32px] leading-[38px] tracking-[-0.025em] font-semibold text-foreground"
-      >
+      <Text role="heading" aria-level={1} className="type-title">
         What should we work on?
       </Text>
     </View>

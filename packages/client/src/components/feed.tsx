@@ -55,13 +55,10 @@ function LoadingEarlier(): React.JSX.Element {
     <View
       role="progressbar"
       accessibilityLabel="Loading earlier"
-      className="h-5 flex-row items-center justify-center gap-1.5"
+      className="min-h-5 flex-row items-center justify-center gap-1.5"
     >
       <WorkingMark />
-      <ShimmerText
-        text="Loading earlier"
-        className="text-sm leading-5 text-foreground"
-      />
+      <ShimmerText text="Loading earlier" className="type-body" />
     </View>
   );
 }
@@ -69,13 +66,11 @@ function LoadingEarlier(): React.JSX.Element {
 function EmptyFeed({ branch }: { branch?: string }): React.JSX.Element {
   return (
     <View className="flex-1 items-center justify-center gap-1.5 p-6">
-      <Text role="heading" aria-level={2} className="text-base font-semibold">
+      <Text role="heading" aria-level={2} className="type-heading">
         What should we build?
       </Text>
       {!!branch && (
-        <Text className="font-mono text-xs leading-5 text-muted-foreground">
-          {branch}
-        </Text>
+        <Text className="type-code text-muted-foreground">{branch}</Text>
       )}
     </View>
   );

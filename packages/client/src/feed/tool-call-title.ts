@@ -4,6 +4,26 @@ import {
   type ToolCallUpdate,
 } from '@repo/contracts';
 
+// The paths a title names, which the Feed draws in mono.
+export function toolCallTitlePaths(
+  row: ToolCallUpdate,
+  awaitingApproval = false,
+): string[] {
+  if (awaitingApproval) return [];
+  const actions = knownCommandActions(row);
+  if (actions.length)
+    return actions.flatMap((action) =>
+      (action.type === 'read' ||
+        action.type === 'search' ||
+        action.type === 'list') &&
+      action.path
+        ? [action.path]
+        : [],
+    );
+  const path = row.locations?.[0]?.path;
+  return row.kind === 'read' && path ? [path] : [];
+}
+
 export function toolCallTitle(
   row: ToolCallUpdate,
   awaitingApproval = false,

@@ -23,7 +23,7 @@ export function FileName({
         },
       })}
       className={cn(
-        'select-none min-w-0 shrink web:underline web:decoration-ring web:underline-offset-2',
+        'select-none min-w-0 shrink type-code web:underline web:decoration-ring web:underline-offset-2',
         className,
       )}
     >

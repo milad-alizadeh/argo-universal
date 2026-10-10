@@ -260,7 +260,9 @@ export function SessionsScreen({
           className="h-9 sm:h-9 self-start flex-row gap-2 rounded-md px-3"
         >
           <Icon name="new-session" className="text-primary-foreground" />
-          <Text className="text-sm text-primary-foreground">New Session</Text>
+          <Text className="type-control text-primary-foreground">
+            New Session
+          </Text>
         </Button>
       </View>
     );

@@ -251,6 +251,46 @@
   }
 }
 
+/* Roles that look the same on every width and keep the colour they are given. */
+@utility type-control {
+  font-size: var(--text-control);
+  line-height: var(--leading-control);
+  font-weight: var(--font-weight-control);
+}
+
+@utility type-badge {
+  font-size: var(--text-badge);
+  line-height: var(--leading-badge);
+  font-weight: var(--font-weight-badge);
+}
+
+@utility type-code {
+  font-family: var(--font-mono);
+  font-size: var(--text-code);
+  line-height: var(--leading-code);
+  font-weight: var(--font-weight-code);
+}
+
+@utility type-code-block {
+  font-family: var(--font-mono);
+  font-size: var(--text-code-block);
+  line-height: var(--leading-code-block);
+  font-weight: var(--font-weight-code-block);
+}
+
+@utility type-nav-title {
+  font-size: var(--text-nav-title);
+  line-height: var(--leading-nav-title);
+  font-weight: var(--font-weight-nav-title);
+  letter-spacing: var(--tracking-nav-title);
+}
+
+@utility type-nav-action {
+  font-size: var(--text-nav-action);
+  line-height: var(--leading-nav-action);
+  font-weight: var(--font-weight-nav-action);
+}
+
 @layer utilities {
   .shadow-composer {
     box-shadow: var(--shadow-composer);

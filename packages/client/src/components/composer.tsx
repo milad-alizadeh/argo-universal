@@ -238,7 +238,7 @@ export function Composer({
                 )
               }
               style={Platform.OS === 'web' ? undefined : { height: textHeight }}
-              className="min-h-5 max-h-20 web:overflow-y-auto border-0 rounded-none bg-transparent dark:bg-transparent p-0 text-sm leading-5 shadow-none web:resize-none web:focus-visible:ring-0"
+              className="min-h-5 max-h-20 web:overflow-y-auto border-0 rounded-none bg-transparent dark:bg-transparent p-0 type-control shadow-none web:resize-none web:focus-visible:ring-0"
             />
           </View>
           <View className="flex-row items-center justify-between gap-2 pl-3.75 pr-2.5 pb-2.5">
@@ -341,7 +341,7 @@ export function Composer({
                         </View>
                         <Text
                           selectable={false}
-                          className="select-none text-sm leading-5 font-normal"
+                          className="select-none type-body"
                         >
                           {item.label}
                         </Text>
@@ -446,7 +446,7 @@ function ComposerWarning({
     <View role="alert" className="mx-4 mt-2 flex-row items-start gap-2">
       <ComposerGlyph name="warning" className="text-destructive" />
       <Text
-        className="min-w-0 flex-1 text-xs leading-4 text-destructive"
+        className="min-w-0 flex-1 type-secondary text-destructive"
         numberOfLines={numberOfLines}
       >
         {children}

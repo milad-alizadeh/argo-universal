@@ -3,7 +3,7 @@ import type * as React from 'react';
 import { View } from 'react-native';
 import { cn } from '#lib/utils';
 import { Text } from '#primitives/text';
-import { toolCallTitle } from '../feed/tool-call-title';
+import { toolCallTitle, toolCallTitlePaths } from '../feed/tool-call-title';
 import { useToolCallDuration } from '../feed/use-tool-call-duration';
 import { Icon } from '../lib/icon';
 import { FeedCodeBlock } from './feed-code-block';
@@ -45,6 +45,7 @@ export function CommandRow({
   return (
     <ToolCallDisclosure
       label={toolCallTitle(row, awaitingApproval)}
+      paths={toolCallTitlePaths(row, awaitingApproval)}
       icon="terminal"
       failed={failed}
       running={running}
@@ -67,7 +68,7 @@ export function CommandRow({
             )}
             <Text
               className={cn(
-                'font-mono text-xs leading-5 text-muted-foreground',
+                'type-code-block text-muted-foreground',
                 failed && 'text-destructive',
               )}
             >
