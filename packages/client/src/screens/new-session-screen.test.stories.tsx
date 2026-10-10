@@ -362,7 +362,8 @@ function openSessionBeforePrompt(width: number, agentIndex: number): Story {
       await userEvent.click(
         await overlay.findByRole('button', { name: `Select ${agent.label}` }),
       );
-      if (width === layoutWidths.wide && agentIndex !== 0) {
+      if (agentIndex !== 0) {
+        await userEvent.keyboard('{Escape}');
         const trigger = await canvas.findByRole('button', {
           name: agentModelLabel,
         });
@@ -374,7 +375,7 @@ function openSessionBeforePrompt(width: number, agentIndex: number): Story {
       ).toHaveAttribute(effortValueAttribute, defaultEffortLabel);
       if (width === layoutWidths.phone)
         await userEvent.click(
-          overlay.getByRole('button', { name: chooseModelLabel }),
+          await overlay.findByRole('button', { name: chooseModelLabel }),
         );
       await expect(
         await overlay.findByRole('button', {
