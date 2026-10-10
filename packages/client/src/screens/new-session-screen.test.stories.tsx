@@ -219,7 +219,8 @@ export const NarrowMainColumn: Story = {
     await page.viewport(1440, 844);
     const checkout = await canvas.findByRole('button', { name: 'Checkout' });
     await expect(checkout).toBeVisible();
-    await expect(checkout).toHaveTextContent(/New worktree from\s*main/);
+    await expect(checkout).toHaveTextContent('New worktree');
+    await expect(checkout).not.toHaveTextContent('main');
     await expect(
       canvas.getAllByRole('button', { name: 'Checkout' }),
     ).toHaveLength(1);
@@ -249,10 +250,11 @@ export const Ready: Story = {
       await expect(
         canvas.getAllByRole('button', { name: 'Checkout' }),
       ).toHaveLength(1);
-      if (!wide)
-        await expect(
-          canvas.getByRole('button', { name: 'Checkout' }),
-        ).toHaveTextContent(/New worktree from\s*main/);
+      if (!wide) {
+        const checkout = canvas.getByRole('button', { name: 'Checkout' });
+        await expect(checkout).toHaveTextContent('New worktree');
+        await expect(checkout).not.toHaveTextContent('main');
+      }
       await expect(
         canvas.getByRole('textbox', { name: 'Message' }),
       ).toHaveAttribute('placeholder', '');
