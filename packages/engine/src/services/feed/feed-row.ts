@@ -3,6 +3,7 @@ import type { Database } from '@repo/db';
 import { feedRow } from '@repo/db/schema';
 import { and, eq, getTableColumns, sql } from 'drizzle-orm';
 import { z } from 'zod';
+import type { OutputBlob } from './updates/tool-output';
 
 export type FeedRowWrite = Omit<
   typeof feedRow.$inferInsert,
@@ -30,6 +31,29 @@ export const promptBlobIds = (rows: readonly SessionUpdate[]): string[] => [
     ),
   ),
 ];
+
+// The waiting whole outputs the rows still show; an output a later update replaced is not stored.
+export const outputBlobsOf = (
+  rows: readonly SessionUpdate[],
+  blobs: readonly OutputBlob[],
+): OutputBlob[] => {
+  const shown = new Set(
+    rows.flatMap((row): string[] =>
+      row.sessionUpdate === 'tool_call_update'
+        ? Object.values(row._meta?.argo?.fullOutput ?? {}).map(
+            (blob): string => blob.blobId,
+          )
+        : [],
+    ),
+  );
+  return [
+    ...new Map(
+      blobs
+        .filter((blob): boolean => shown.has(blob.blob.blobId))
+        .map((blob): [string, OutputBlob] => [blob.blob.blobId, blob]),
+    ).values(),
+  ];
+};
 
 // A row as the `feed_row` table stores it: the envelope in columns, the rest in `payload`.
 export function toFeedRowWrite(row: SessionUpdate): FeedRowWrite {

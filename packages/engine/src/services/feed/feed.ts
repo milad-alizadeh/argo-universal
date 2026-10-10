@@ -1,7 +1,6 @@
 import type { SessionUpdate } from '@repo/contracts';
 import type {
   FeedPageInput,
-  FeedSnapshot,
   FeedPageOutput,
   FeedRowInput,
   FeedSubscribeInput,
@@ -20,13 +19,13 @@ import {
   type FeedRowSources,
   MovedRowDelivery,
 } from './feed-catch-up';
-import type { FeedStreamEvent } from './feed-change';
 import type { FeedActorRef } from './feed-machine';
 import {
   hydrateStoredFeedRow,
   readWrittenRow,
   storedFeedColumns,
 } from './feed-row';
+import { LiveFeedQueue } from './live-feed-queue';
 import { readWriterProjection } from './writer-projection';
 
 export interface FeedDeps extends FeedRowSources {
@@ -102,7 +101,32 @@ export function readFeedRow(
   return newest;
 }
 
-// Sends every row changed after `after`, then the feed actor's batches. With no sync point, or after `reset` for a new epoch, it skips stored rows, which the App pages.
+type CatchUpDelivery = {
+  catchUp: FeedCatchUp;
+  movedRows: MovedRowDelivery;
+};
+
+// Sends the rows changed after `after` a page at a time, up to the high-water mark the catch-up records.
+function* deliverCatchUp(
+  feedResources: FeedDeps,
+  sessionId: string,
+  syncPoint: { after: number; storedRevision: number },
+): Generator<FeedSubscribeOutput, CatchUpDelivery> {
+  const catchUp = new FeedCatchUp(feedResources, sessionId, syncPoint);
+  for (
+    let page = catchUp.readNextPage();
+    page.length > 0;
+    page = catchUp.readNextPage()
+  )
+    for (const row of page)
+      yield { type: 'row.upsert', rev: row.revision, row };
+  return {
+    catchUp,
+    movedRows: new MovedRowDelivery(catchUp.readMovedRows()),
+  };
+}
+
+// Sends every row changed after `after`, then the feed actor's batches. With no sync point, or after `reset` for a new epoch, it skips stored rows, which the App pages. A subscriber too slow for its live queue catches up again from the last revision it was sent.
 export async function* streamFeed(
   feedResources: FeedDeps,
   { sessionId, after }: FeedSubscribeInput,
@@ -110,7 +134,7 @@ export async function* streamFeed(
 ): AsyncGenerator<FeedSubscribeOutput> {
   const { epoch, maxRevision } = feedResources.readSession(sessionId);
 
-  const live: (FeedStreamEvent | FeedSnapshot)[] = [];
+  const live = new LiveFeedQueue();
   let wake: (() => void) | undefined;
   let feed: FeedActorRef | undefined;
   let listener: Subscription | undefined;
@@ -124,7 +148,7 @@ export async function* streamFeed(
     listener?.unsubscribe();
     feed = nextFeed;
     listener = feed.on('feed.batch', (batch): void => {
-      live.push(...batch.events);
+      live.push(batch.events);
       wake?.();
     });
   };
@@ -134,7 +158,7 @@ export async function* streamFeed(
       if (event.type === 'closed') {
         closed = true;
         failure = event.failure;
-      } else live.push(event);
+      } else live.push([event]);
       wake?.();
     },
     error: (error): void => {
@@ -152,32 +176,34 @@ export async function* streamFeed(
   try {
     throwSnapshotFailure();
     const reset = after !== null && after.epoch !== epoch;
-    const catchUp = new FeedCatchUp(feedResources, sessionId, {
+    if (reset) yield { type: 'reset', epoch };
+    let delivery = yield* deliverCatchUp(feedResources, sessionId, {
       after: after === null || reset ? maxRevision : after.revision,
       storedRevision: maxRevision,
     });
-
-    if (reset) yield { type: 'reset', epoch };
-    for (
-      let page = catchUp.readNextPage();
-      page.length > 0;
-      page = catchUp.readNextPage()
-    )
-      for (const row of page)
-        yield { type: 'row.upsert', rev: row.revision, row };
-    const movedRows = new MovedRowDelivery(catchUp.readMovedRows());
+    let delivered = delivery.catchUp.highWaterMark;
 
     while (!signal?.aborted) {
       throwSnapshotFailure();
+      if (live.takeOverflow()) {
+        delivery = yield* deliverCatchUp(feedResources, sessionId, {
+          after: delivered,
+          storedRevision: feedResources.readSession(sessionId).maxRevision,
+        });
+        delivered = Math.max(delivered, delivery.catchUp.highWaterMark);
+        continue;
+      }
       const event = live.shift();
       if (event) {
         if (event.type === 'snapshot') yield event;
-        else if (catchUp.isPastHighWaterMark(event.rev))
-          yield* movedRows.deliver(event);
+        else if (delivery.catchUp.isPastHighWaterMark(event.rev)) {
+          yield* delivery.movedRows.deliver(event);
+          delivered = event.rev;
+        }
         continue;
       }
       if (closed) {
-        yield* movedRows.releaseThrough();
+        yield* delivery.movedRows.releaseThrough();
         yield { type: 'closed', failure };
         return;
       }

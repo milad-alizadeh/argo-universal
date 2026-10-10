@@ -7,6 +7,7 @@ import {
   mapToolCallContent,
   collectUnsupportedToolContentReasons,
 } from './tool-content';
+import { capToolOutput } from './tool-output';
 
 type ToolUpdate = Extract<
   SessionNotification['update'],
@@ -92,11 +93,15 @@ const readOrCreateToolRow = (toolInput: ToolInput): ToolRow => {
     : createInitialToolRow(id, toolInput.update.toolCallId);
 };
 export const assembleToolCall = (input: ToolInput): AssembledContent => {
-  const update = setToolRowState(
-    mergeToolCallUpdate(readOrCreateToolRow(input), input.update),
+  const { row: update, blobs } = capToolOutput(
+    setToolRowState(
+      mergeToolCallUpdate(readOrCreateToolRow(input), input.update),
+    ),
+    input.update,
   );
   return {
     change: { type: 'upsert', update },
+    blobs,
     diagnostics: input.update.content
       ? collectUnsupportedToolContentReasons(update.content)
       : [],

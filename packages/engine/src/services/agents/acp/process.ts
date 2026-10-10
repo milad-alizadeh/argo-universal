@@ -35,10 +35,14 @@ const observeChildSpawn = (
     child.once('spawn', resolve);
     child.once('error', reject);
   });
+// One Agent frame may hold at most 32 MiB; a larger one fails the connection with the SDK's MessageTooLargeError.
+const agentFrameLimit = 33_554_432;
 const createAcpProtocolStream = (
   child: ChildProcessWithoutNullStreams,
 ): Stream =>
-  ndJsonStream(Writable.toWeb(child.stdin), createProcessOutputStream(child));
+  ndJsonStream(Writable.toWeb(child.stdin), createProcessOutputStream(child), {
+    maxMessageBytes: agentFrameLimit,
+  });
 const isOwnedPid = (pid: number | undefined): boolean =>
   typeof pid === 'number' && Number.isInteger(pid) && pid > 0;
 const signalOwnedProcess = (child: ChildProcessWithoutNullStreams): void => {

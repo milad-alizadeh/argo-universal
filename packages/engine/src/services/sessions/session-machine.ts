@@ -83,6 +83,7 @@ import {
 } from './session-data';
 
 const nativeFailedEvent = 'native.failed';
+const storageFailingEvent = 'session.storageFailing';
 const rejectedMessageEvent = 'agent.messageRejected';
 const closedSessionTarget = '#session.closed';
 const discardingSessionTarget = '#session.discarding';
@@ -162,6 +163,7 @@ type SessionEvent =
   | AgentEvent
   | AcpLifetimeEvent
   | NativeFailure
+  | { type: typeof storageFailingEvent }
   | { type: 'xstate.error.actor.vendorSession'; error: unknown };
 type NativeSessionInput = AgentConnectInput &
   Pick<SessionMachineInput, 'adapter'> &
@@ -191,6 +193,8 @@ export interface SessionContext extends SessionData {
   acpResponseReaders: ReturnType<typeof createAcpResponseReaders>;
   acpTurnOutcome: EndTurnParameters | null;
   feedEnded: boolean;
+  // The database writer refused this Turn's Feed rows, so the Turn is cancelled and ends with a storage error.
+  storageFailedTurn: boolean;
 }
 
 const checkoutLimit = 10_000;
@@ -204,6 +208,9 @@ const interruptedTurn = (message: string): EndTurnParameters => ({
   stopReason: 'error',
   error: { code: 'interrupted', message },
 });
+const storageFailedTurn = interruptedTurn(
+  'Storage is failing, so the Turn was cancelled',
+);
 const connectionLostDuringTurn = interruptedTurn(
   'The Agent connection failed during the Turn',
 );
@@ -564,6 +571,7 @@ const sessionSetup = setup({
       (_, params: SessionDataParameters): SessionData => params.data,
     ),
     rememberFeedEnded: assign({ feedEnded: true }),
+    rememberStorageFailure: assign({ storageFailedTurn: true }),
     rememberFailure: assign(
       (_, params: FailureParameters): Pick<SessionContext, 'failure'> => ({
         failure: String(params.error),
@@ -683,7 +691,8 @@ const sessionSetup = setup({
       },
     ),
     endTurn: enqueueActions(
-      ({ context, enqueue }, params: EndTurnParameters): void => {
+      ({ context, enqueue }, ended: EndTurnParameters): void => {
+        const params = context.storageFailedTurn ? storageFailedTurn : ended;
         if (context.activeTurnId)
           enqueue.sendTo(writer, {
             type: writeFeedEvent,
@@ -704,6 +713,7 @@ const sessionSetup = setup({
           activeTurnStartedAt: null,
           permissionQueue: [],
           elicitationQueue: [],
+          storageFailedTurn: false,
         });
       },
     ),
@@ -1215,6 +1225,7 @@ export const sessionMachine = sessionSetup.createMachine({
       createRejectionCounter(`ACP Session ${input.sessionId}`),
     ),
     acpTurnOutcome: null,
+    storageFailedTurn: false,
   }),
   output: ({ context }): Pick<SessionContext, 'failure'> => ({
     failure: context.failure,
@@ -1275,6 +1286,7 @@ export const sessionMachine = sessionSetup.createMachine({
               sessionId: context.sessionId,
               id,
             }),
+          storageFailing: (): void => self.send({ type: storageFailingEvent }),
           findUnaddressedPlan: (
             acpSessionId,
           ): ReturnType<typeof readUnaddressedPlan> =>
@@ -1519,6 +1531,10 @@ export const sessionMachine = sessionSetup.createMachine({
                   actions: ['answerAcpElicitation', 'removeElicitation'],
                 },
                 'session.cancel': { target: '.cancelling' },
+                [storageFailingEvent]: {
+                  target: '.cancelling',
+                  actions: 'rememberStorageFailure',
+                },
               },
               initial: 'working',
               states: {
@@ -1534,6 +1550,9 @@ export const sessionMachine = sessionSetup.createMachine({
                   entry: ['cancelAcpRequests', 'cancelAcpPrompt'],
                   on: {
                     'session.cancel': {},
+                    [storageFailingEvent]: {
+                      actions: 'rememberStorageFailure',
+                    },
                     [acpPermissionEvent]: { actions: 'refuseAcpRequest' },
                     [acpElicitationEvent]: { actions: 'refuseAcpRequest' },
                     [acpRequestWithdrawnEvent]: { actions: 'forgetAcpRequest' },
@@ -1839,6 +1858,10 @@ export const sessionMachine = sessionSetup.createMachine({
                 },
                 'agent.turnEnded': { target: 'idle', actions: endedTurn },
                 'session.cancel': { target: 'cancelling' },
+                [storageFailingEvent]: {
+                  target: 'cancelling',
+                  actions: 'rememberStorageFailure',
+                },
               },
               states: {
                 working: {
@@ -1856,6 +1879,7 @@ export const sessionMachine = sessionSetup.createMachine({
               on: {
                 'session.setConfigOption': { actions: 'holdConfig' },
                 'agent.turnEnded': { target: 'idle', actions: endedTurn },
+                [storageFailingEvent]: { actions: 'rememberStorageFailure' },
               },
               after: {
                 cancelLimit: {

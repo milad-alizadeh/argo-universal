@@ -1,5 +1,5 @@
-import { createHash, randomUUID } from 'node:crypto';
-import { mkdir, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { readdir, rm, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
   type BlobUploadInput,
@@ -12,7 +12,11 @@ import { TRPCError } from '@trpc/server';
 import { and, eq, lt, notExists } from 'drizzle-orm';
 import type { ActorRefFrom } from 'xstate';
 import type { z } from 'zod';
-import { writeDatabaseJobAndWaitForCommit, type writerMachine } from '../feed';
+import {
+  writeBlobFile,
+  writeDatabaseJobAndWaitForCommit,
+  type writerMachine,
+} from '../feed';
 
 const unusedBlobAge = 86_400_000;
 
@@ -53,9 +57,6 @@ const mimeOf = (bytes: Buffer, declared: string): string =>
   imageSignatures.find(([, matches]): boolean => matches(bytes))?.[0] ??
   (declared || 'application/octet-stream');
 
-const exists = (path: string): Promise<boolean> =>
-  stat(path).then((): boolean => true, unlessMissing(false));
-
 export async function uploadBlob(
   resources: {
     databaseWriter: ActorRefFrom<typeof writerMachine>;
@@ -70,13 +71,7 @@ export async function uploadBlob(
     });
   const bytes = Buffer.from(await file.arrayBuffer());
   const blobId = createHash('sha256').update(bytes).digest('hex');
-  const path = join(resources.blobsFolder, blobId);
-  if (!(await exists(path))) {
-    await mkdir(resources.blobsFolder, { recursive: true });
-    const partial = `${path}.${randomUUID()}.partial`;
-    await writeFile(partial, bytes);
-    await rename(partial, path);
-  }
+  await writeBlobFile(resources.blobsFolder, blobId, bytes);
   const mime = mimeOf(bytes, file.type);
   await writeDatabaseJobAndWaitForCommit(
     resources.databaseWriter,
