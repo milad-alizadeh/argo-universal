@@ -1,7 +1,7 @@
 import { Slot } from '@rn-primitives/slot';
 import type { ReactElement } from 'react';
 import * as React from 'react';
-import { Text as RNText } from 'react-native';
+import { Dimensions, PixelRatio, Platform, Text as RNText } from 'react-native';
 import { cn } from '#lib/generic/utils';
 
 const textRoles = {
@@ -40,11 +40,27 @@ function textClassName(
   );
 }
 
+function subscribeFontScale(onChange: () => void): () => void {
+  const subscription = Dimensions.addEventListener('change', onChange);
+  return () => subscription.remove();
+}
+
+function useNativeTextKey(asChild?: boolean): number | undefined {
+  const fontScale = React.useSyncExternalStore(
+    subscribeFontScale,
+    () => PixelRatio.getFontScale(),
+    () => 1,
+  );
+  return asChild || Platform.OS === 'web' ? undefined : fontScale;
+}
+
 function Text(options: TextProps): ReactElement {
   const { className, asChild, role, semanticRole, ...props } = options;
+  const key = useNativeTextKey(asChild);
   const textClass = React.useContext(TextClassContext);
   const Component = asChild ? Slot : RNText;
   return React.createElement(Component, {
+    key,
     className: textClassName({ role, className }, textClass),
     role: semanticRole,
     ...props,
