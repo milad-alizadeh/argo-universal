@@ -1,35 +1,15 @@
 import { spawn } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { ServerAddress } from '@repo/contracts';
-import { resolveRuntimeDirectory } from '@repo/engine/server-runtime';
-import { reportUnrecognised } from './report-unrecognised';
+import type { ServerAddress } from '@repo/contracts';
+import {
+  readServerAddress,
+  resolveRuntimeDirectory,
+} from '@repo/engine/server-runtime';
 
 // One-shot I/O for the Server connection machine; the machine owns every wait.
 
 // ARGO_HOME overrides ~/.argo, as in the Server.
 export const resolveHome = resolveRuntimeDirectory;
-
-async function readServerAddress(home: string): Promise<ServerAddress | null> {
-  let text: string;
-  try {
-    text = await readFile(join(home, 'server.json'), 'utf8');
-  } catch {
-    return null;
-  }
-  let json: unknown;
-  try {
-    json = JSON.parse(text);
-  } catch {
-    // The supervisor renames a complete file into place, so this is a foreign or damaged file.
-    console.error('desktop: server.json is not JSON');
-    return null;
-  }
-  const address = ServerAddress.safeParse(json);
-  if (address.success) return address.data;
-  reportUnrecognised('server.json', address.error);
-  return null;
-}
 
 export const isRunning = (pid: number): boolean => {
   try {
@@ -44,7 +24,7 @@ export const isRunning = (pid: number): boolean => {
 export async function readLiveServerAddress(
   home: string,
 ): Promise<ServerAddress | null> {
-  const address = await readServerAddress(home);
+  const address = readServerAddress(home);
   return address && isRunning(address.pid) ? address : null;
 }
 

@@ -1,18 +1,18 @@
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
-import { resolveRuntimeDirectory } from '@repo/engine/server-runtime';
+import {
+  readServerAddress,
+  resolveRuntimeDirectory,
+} from '@repo/engine/server-runtime';
 import { z } from 'zod';
 
 // `pnpm dev` starts the Server, Expo, and desktop together; desktop waits for the other two.
-const serverFile = join(resolveRuntimeDirectory(), 'server.json');
+const home = resolveRuntimeDirectory();
 const webUrl = process.env.ARGO_EXPO_WEB_URL ?? 'http://localhost:8081';
 const timeoutMs = 300_000;
 const requestTimeoutMs = 2000;
 const retryDelayMs = 500;
 
-// Plain Node cannot load @repo/contracts from source, so these copy the fields this script reads.
-const ServerAddress = z.object({ port: z.int() });
+// The part of the system.info answer this script reads.
 const SystemInfoResponse = z.object({
   result: z.object({ data: z.object({ version: z.string() }) }),
 });
@@ -33,15 +33,10 @@ const isRecognised = <Shape extends z.ZodType>(
   return false;
 };
 
-// True once server.json names a port and system.info, over tRPC's HTTP handler on that port, answers.
-export async function serverAnswers(file: string): Promise<boolean> {
-  let address: unknown;
-  try {
-    address = JSON.parse(await readFile(file, 'utf8'));
-  } catch {
-    return false;
-  }
-  if (!isRecognised('server.json', ServerAddress, address)) return false;
+// True once server.json in `home` names a port and system.info, over tRPC's HTTP handler on that port, answers.
+export async function serverAnswers(home: string): Promise<boolean> {
+  const address = readServerAddress(home);
+  if (!address) return false;
   let info: unknown;
   try {
     const response = await fetch(
@@ -68,11 +63,13 @@ const webAnswers = async (): Promise<boolean> => {
 };
 
 if (import.meta.main) {
-  console.log(`Waiting for ${serverFile}, its system.info, and ${webUrl}`);
+  console.log(
+    `Waiting for server.json in ${home}, its system.info, and ${webUrl}`,
+  );
   const deadline = Date.now() + timeoutMs;
-  while (!((await serverAnswers(serverFile)) && (await webAnswers()))) {
+  while (!((await serverAnswers(home)) && (await webAnswers()))) {
     if (Date.now() > deadline) {
-      console.error(`Gave up waiting for ${serverFile} and ${webUrl}`);
+      console.error(`Gave up waiting for the Server in ${home} and ${webUrl}`);
       process.exit(1);
     }
     await delay(retryDelayMs);

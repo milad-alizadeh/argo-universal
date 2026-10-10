@@ -534,8 +534,13 @@
             ],
             "patterns": [
               {
-                "group": ["@repo/**", "!@repo/mocks", "!@repo/mocks/**"],
-                "message": "App E2E imports shared external Agent fixtures through @repo/mocks (ADR-0018)."
+                "group": [
+                  "@repo/**",
+                  "!@repo/mocks",
+                  "!@repo/mocks/**",
+                  "!@repo/engine/server-runtime"
+                ],
+                "message": "App E2E imports shared external Agent fixtures through @repo/mocks (ADR-0018), and reads server.json through the Engine server-runtime subpath."
               }
             ]
           }

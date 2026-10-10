@@ -1,5 +1,4 @@
 import { readFileSync } from 'node:fs';
-import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import {
@@ -8,6 +7,7 @@ import {
   type ElectronApplication,
   type Disposable,
 } from '@playwright/test';
+import { readServerAddress } from '@repo/engine/server-runtime';
 import type { AppFixtureAgents } from '@repo/mocks/agent/app-fixtures';
 import { test as base } from 'playwright-bdd';
 import { z } from 'zod';
@@ -25,7 +25,6 @@ const electronPath = z
   );
 
 const ServerPackage = z.object({ version: z.string() });
-const ServerProcess = z.object({ pid: z.int() });
 
 // The version the Server reports in system.info.
 export const serverVersion = ServerPackage.parse(
@@ -35,12 +34,8 @@ export const serverVersion = ServerPackage.parse(
 ).version;
 
 // The supervisor removes server.json when it stops, so a file left behind names a Server still running.
-const readServerPid = async (home: string): Promise<number | null> => {
-  const text = await readFile(path.join(home, 'server.json'), 'utf8').catch(
-    (): null => null,
-  );
-  return text === null ? null : ServerProcess.parse(JSON.parse(text)).pid;
-};
+const readServerPid = (home: string): number | null =>
+  readServerAddress(home)?.pid ?? null;
 
 // The App prefers the Server URL the desktop preload sets over its built-in one, so tests can point it at any port.
 const pointAppAtServer = (page: Page, serverUrl: string): Promise<Disposable> =>
@@ -138,7 +133,7 @@ export const test = base.extend<
         await fixtureServer.stop();
       }
     }
-    const leftoverPid = await readServerPid(home);
+    const leftoverPid = readServerPid(home);
     if (leftoverPid !== null) {
       process.kill(leftoverPid, 'SIGTERM');
       throw new Error(
