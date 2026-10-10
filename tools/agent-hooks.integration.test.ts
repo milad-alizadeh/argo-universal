@@ -90,11 +90,6 @@ beforeAll((): void => {
       path.join(repositoryRoot, 'tools', script),
       path.join(root, 'tools', script),
     );
-  cpSync(
-    path.join(repositoryRoot, 'tools/paper-drift'),
-    path.join(root, 'tools/paper-drift'),
-    { recursive: true },
-  );
   symlinkSync(
     path.join(repositoryRoot, 'node_modules'),
     path.join(root, 'node_modules'),
@@ -230,17 +225,6 @@ describe('command', (): void => {
     const result = runHook('nonsense', {});
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('usage');
-  });
-});
-
-describe('after-paper-edit', (): void => {
-  it('says the drift check was skipped when there is no snapshot yet', (): void => {
-    const result = runHook('after-paper-edit', {
-      tool_name: 'mcp__paper__update_styles',
-      tool_input: { updates: [{ nodeIds: ['a'], styles: { gap: '4px' } }] },
-    });
-    expect(result.status).toBe(0);
-    expect(result.stdout).toContain('Paper drift check skipped');
   });
 });
 

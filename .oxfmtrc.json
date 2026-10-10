@@ -44,8 +44,6 @@
     "pnpm-lock.yaml",
     // The burn-down list keeps one line per folder.
     "tooling/oxlint/not-yet-cleared.json",
-    // The Paper registry keeps one line per master, so a diff names the master.
-    "tools/paper-drift/masters.json",
     "packages/db/drizzle/",
     "**/.rnstorybook/storybook.requires.ts",
     "*.gen.*",

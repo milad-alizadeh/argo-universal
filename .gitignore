@@ -46,5 +46,3 @@ __screenshots__/
 /packages/agents/codex/notification-methods.gen.json
 /packages/agents/claude/message-tags.gen.json
 
-# Paper drift snapshots, reports and sync screenshots
-/.paper-drift/
