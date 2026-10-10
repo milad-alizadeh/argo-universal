@@ -12,6 +12,7 @@ import { View } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { expect, spyOn, waitFor, within } from 'storybook/test';
+import { chooseEffort } from '../../mocks/choose-effort';
 import { composerImages } from '../../mocks/composer-mock';
 import { eachLayout, layoutWidths } from '../../mocks/each-layout';
 import { recordedImageUrl } from '../../mocks/feed-message-mock';
@@ -95,8 +96,8 @@ function unavailableAgentRetry(width: number, agentIndex: number): Story {
       await expect(current).toBeDisabled();
       await expect(within(current).getByText(recorded.reason)).toBeVisible();
       await expect(
-        overlay.queryByRole('button', { name: `Select ${other.label}` }),
-      ).not.toBeInTheDocument();
+        overlay.getByRole('button', { name: `Select ${other.label}` }),
+      ).toBeDisabled();
       await userEvent.click(
         overlay.getByRole('button', { name: `Retry ${recorded.agent.label}` }),
       );
@@ -112,8 +113,8 @@ function unavailableAgentRetry(width: number, agentIndex: number): Story {
         overlay.queryByText(recorded.reason),
       ).not.toBeInTheDocument();
       await expect(
-        overlay.queryByRole('button', { name: `Select ${other.label}` }),
-      ).not.toBeInTheDocument();
+        overlay.getByRole('button', { name: `Select ${other.label}` }),
+      ).toBeDisabled();
       await expect(
         agentProbeRequests.filter((input) => input?.refresh),
       ).toEqual([{ refresh: true }]);
@@ -841,24 +842,73 @@ const heldChoiceCatalogs = newSessionCatalogs.bothAvailable.map(
             !choice._meta?.argo?.supportedEffortLevels?.includes(level),
         ),
     );
-    const selected = efforts.find(
+    const offeredChoices = efforts.filter((choice) =>
+      levels.includes(choice.value),
+    );
+    const selected = offeredChoices.find(
       (choice) =>
         choice.value !== effort.currentValue &&
-        levels.includes(choice.value) &&
         !narrower?._meta?.argo?.supportedEffortLevels?.includes(choice.value),
     );
     if (!selected || !narrower)
       throw new Error(
         'Recorded catalog needs two model effort ranges and an effort outside the narrower range.',
       );
-    return { agent, recording, selected, narrower, model, effort };
+    // The slider moves one level per arrow press, and each move is a request to the Session.
+    const currentIndex = offeredChoices.findIndex(
+      (choice) => choice.value === effort.currentValue,
+    );
+    const selectedIndex = offeredChoices.indexOf(selected);
+    const step = selectedIndex > currentIndex ? 1 : -1;
+    const steps = Array.from(
+      { length: Math.abs(selectedIndex - currentIndex) },
+      (_, index) => offeredChoices[currentIndex + step * (index + 1)],
+    ).filter((choice) => choice !== undefined);
+    const offered = offeredChoices.map((choice) => choice.name);
+    /*
+     * The narrower model drops the chosen level: effort falls to the highest level it offers below
+     * that level in the full list, else to its middle level.
+     */
+    const narrowerOffered = efforts.filter((choice) =>
+      narrower?._meta?.argo?.supportedEffortLevels?.includes(choice.value),
+    );
+    const below = narrowerOffered.filter(
+      (choice) => efforts.indexOf(choice) < efforts.indexOf(selected),
+    );
+    const fallback =
+      below.at(-1) ?? narrowerOffered[Math.floor(narrowerOffered.length / 2)];
+    if (!fallback)
+      throw new Error(
+        'Recorded catalog needs effort levels on the narrower model.',
+      );
+    return {
+      agent,
+      recording,
+      selected,
+      fallback,
+      steps,
+      narrower,
+      model,
+      effort,
+      offered,
+    };
   },
 );
 
 function heldConfiguration(width: number, agentIndex: number): Story {
   const catalog = heldChoiceCatalogs[agentIndex];
   if (!catalog) throw new Error('Recorded catalog needs two Agents.');
-  const { agent, recording, selected, narrower, model, effort } = catalog;
+  const {
+    agent,
+    recording,
+    selected,
+    fallback,
+    steps,
+    narrower,
+    model,
+    effort,
+    offered,
+  } = catalog;
   const initial = {
     ...recording.snapshot,
     agent: agent.agent,
@@ -867,13 +917,13 @@ function heldConfiguration(width: number, agentIndex: number): Story {
     activeTurnId: 'held-config-turn',
     liveHeader: runningHeader,
   };
-  const heldEffort = {
+  const heldEffortAt = (level: { value: string }): typeof initial => ({
     ...initial,
     configOptions: initial.configOptions.map((option) =>
       option.category === 'thought_level' && option.type === 'select'
         ? {
             ...option,
-            currentValue: selected.value,
+            currentValue: level.value,
             _meta: {
               ...option._meta,
               argo: { ...option._meta?.argo, heldUntilNextTurn: true },
@@ -881,7 +931,14 @@ function heldConfiguration(width: number, agentIndex: number): Story {
           }
         : option,
     ),
-  };
+  });
+  const heldEffort = heldEffortAt(selected);
+  const effortRequests = steps.map((step) => ({
+    sessionId: 'session-1',
+    configId: effort.configId,
+    type: 'id' as const,
+    value: step.value,
+  }));
   const heldModel = {
     ...heldEffort,
     configOptions: heldEffort.configOptions.map((option) =>
@@ -897,8 +954,17 @@ function heldConfiguration(width: number, agentIndex: number): Story {
         : option,
     ),
   };
+  // The Session then commits the fallback level so the Agent runs with what the slider shows.
+  const heldFallback = {
+    ...heldModel,
+    configOptions: heldModel.configOptions.map((option) =>
+      option.category === 'thought_level' && option.type === 'select'
+        ? { ...option, currentValue: fallback.value }
+        : option,
+    ),
+  };
   let snapshot = initial;
-  const responses = [heldEffort, heldModel];
+  const responses = [...steps.map(heldEffortAt), heldModel, heldFallback];
   let responseIndex = 0;
   const requests: SessionSetConfigOptionInput[] = [];
   const snapshots = createSubscriptionPublisher<FeedSnapshot>();
@@ -940,28 +1006,12 @@ function heldConfiguration(width: number, agentIndex: number): Story {
           ),
         ).toBeVisible(),
       );
-      await userEvent.click(
-        await overlay.findByRole('button', {
-          name: `Set effort to ${selected.name}`,
-        }),
-      );
-      await waitFor(() =>
-        expect(requests).toEqual([
-          {
-            sessionId: 'session-1',
-            configId: effort.configId,
-            type: 'id',
-            value: selected.value,
-          },
-        ]),
-      );
-      const slider = overlay.getByRole('slider', { name: 'Effort' });
+      const slider = await overlay.findByRole('slider', { name: 'Effort' });
+      await chooseEffort(slider, offered, selected.name);
+      await waitFor(() => expect(requests).toEqual(effortRequests));
       await waitFor(() =>
         expect(slider).toHaveAttribute('aria-valuetext', selected.name),
       );
-      await expect(
-        overlay.getByRole('button', { name: `Set effort to ${selected.name}` }),
-      ).toHaveAttribute('aria-pressed', 'true');
       if (width === layoutWidths.phone)
         await userEvent.click(
           overlay.getByRole('button', { name: 'Choose model' }),
@@ -971,30 +1021,29 @@ function heldConfiguration(width: number, agentIndex: number): Story {
       );
       await waitFor(() =>
         expect(requests).toEqual([
-          {
-            sessionId: 'session-1',
-            configId: effort.configId,
-            type: 'id',
-            value: selected.value,
-          },
+          ...effortRequests,
           {
             sessionId: 'session-1',
             configId: model.configId,
             type: 'id',
             value: narrower.value,
           },
+          {
+            sessionId: 'session-1',
+            configId: effort.configId,
+            type: 'id',
+            value: fallback.value,
+          },
         ]),
       );
       await waitFor(() =>
         expect(overlay.getByRole('slider', { name: 'Effort' })).toHaveAttribute(
           'aria-valuetext',
-          'No selection',
+          fallback.name,
         ),
       );
       await expect(
-        overlay.queryByRole('button', {
-          name: `Set effort to ${selected.name}`,
-        }),
+        overlay.queryByText(selected.name, { exact: true }),
       ).not.toBeInTheDocument();
       await expect(
         overlay.getByText(

@@ -8,6 +8,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { expect, spyOn, waitFor, within } from 'storybook/test';
 import { page } from 'vitest/browser';
+import { chooseEffort } from '../../mocks/choose-effort';
 import { composerImages } from '../../mocks/composer-mock';
 import { eachLayout, layoutWidths } from '../../mocks/each-layout';
 import {
@@ -87,7 +88,22 @@ const effortModelCases = newSessionCatalogs.bothAvailable.map((agent) => {
     throw new Error(
       `Recorded catalog needs a default effort and models with differing effort levels for ${agent.label}.`,
     );
-  return { agent, model, effort, nextModel, unsupported, defaultEffort };
+  const visible = (supported: string[] | undefined): string[] =>
+    efforts
+      .filter((choice) => !supported || supported.includes(choice.value))
+      .map((choice) => choice.name);
+  const offered = visible(levels);
+  const nextOffered = visible(nextModel._meta?.argo?.supportedEffortLevels);
+  return {
+    agent,
+    model,
+    effort,
+    nextModel,
+    unsupported,
+    defaultEffort,
+    offered,
+    nextOffered,
+  };
 });
 
 const meta = {
@@ -572,8 +588,16 @@ function effortFollowsModel(width: number, agentIndex: number): Story {
     throw new Error(
       'Recorded catalog needs two Agents with model effort levels.',
     );
-  const { agent, model, effort, nextModel, unsupported, defaultEffort } =
-    recorded;
+  const {
+    agent,
+    model,
+    effort,
+    nextModel,
+    unsupported,
+    defaultEffort,
+    offered,
+    nextOffered,
+  } = recorded;
   return {
     parameters: {
       trpc: { 'agents.list': (): FixtureOutput<'agents.list'> => [agent] },
@@ -584,14 +608,9 @@ function effortFollowsModel(width: number, agentIndex: number): Story {
         name: agentModelLabel,
       });
       await userEvent.click(trigger);
-      await userEvent.click(
-        await overlay.findByRole('button', {
-          name: `Set effort to ${unsupported.name}`,
-        }),
-      );
-      await expect(
-        overlay.getByRole('slider', { name: 'Effort' }),
-      ).toHaveAttribute('aria-valuetext', unsupported.name);
+      const slider = await overlay.findByRole('slider', { name: 'Effort' });
+      await chooseEffort(slider, offered, unsupported.name);
+      await expect(slider).toHaveAttribute('aria-valuetext', unsupported.name);
       if (width === layoutWidths.phone)
         await userEvent.click(
           overlay.getByRole('button', { name: 'Choose model' }),
@@ -603,18 +622,20 @@ function effortFollowsModel(width: number, agentIndex: number): Story {
         await expect(trigger).toHaveTextContent(defaultEffort.name);
         await expect(trigger).not.toHaveTextContent(unsupported.name);
       }
+      const nextSlider = await overlay.findByRole('slider', { name: 'Effort' });
+      await waitFor(() =>
+        expect(nextSlider).toHaveAttribute(
+          'aria-valuetext',
+          defaultEffort.name,
+        ),
+      );
+      // The slider offers only the new model's levels, so the unsupported one is out of reach.
+      await expect(nextSlider).toHaveAttribute(
+        'max',
+        String(nextOffered.length - 1),
+      );
       await expect(
-        await overlay.findByRole('button', {
-          name: `Set effort to ${defaultEffort.name}`,
-        }),
-      ).toHaveAttribute('aria-pressed', 'true');
-      await expect(
-        overlay.getByRole('slider', { name: 'Effort' }),
-      ).toHaveAttribute('aria-valuetext', defaultEffort.name);
-      await expect(
-        overlay.queryByRole('button', {
-          name: `Set effort to ${unsupported.name}`,
-        }),
+        overlay.queryByText(unsupported.name, { exact: true }),
       ).not.toBeInTheDocument();
       await expect(
         overlay.queryByRole('switch', { name: 'Fast mode' }),
