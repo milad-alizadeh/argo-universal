@@ -56,7 +56,7 @@ When('I return to the Sessions list', async ({ page }): Promise<void> => {
 When(
   'I reload the App and open New Session with Agent {int}',
   async ({ page, server }, ordinal: number): Promise<void> => {
-    await page.goto('/');
+    await page.goto(new URL('/', page.url()).href);
     await startWithAgent(page, server.httpUrl, ordinal);
   },
 );
