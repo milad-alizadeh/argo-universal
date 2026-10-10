@@ -95,7 +95,7 @@ const absentCommands = [
     ): ReturnType<typeof caller.session.answerPermission> =>
       caller.session.answerPermission({
         sessionId: 'session-1',
-        toolCallId: 'stale',
+        requestId: 'stale',
         optionId: 'allow_once',
       }),
   },

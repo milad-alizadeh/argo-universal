@@ -176,7 +176,7 @@ it('keeps the earlier running Tool call after writer and memory overlays complet
         activeTurnId: 'turn-1',
         activeTurnStartedAt: 100,
         permissionQueue: [],
-        pendingElicitation: null,
+        elicitationQueue: [],
       },
       Object.values(rows),
     ),

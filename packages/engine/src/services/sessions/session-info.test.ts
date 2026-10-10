@@ -38,7 +38,7 @@ const live = {
   activeTurnId: 'turn-1',
   activeTurnStartedAt: 50,
   permissionQueue: [],
-  pendingElicitation: null,
+  elicitationQueue: [],
   failure: null,
 };
 const turn: Turn = {
@@ -83,11 +83,13 @@ const rules: { rule: string; input: SessionInfoInput; expected: unknown }[] = [
         ...live,
         permissionQueue: [
           {
+            requestId: 'request-1',
             toolCallId: 'tool-1',
             title: 'Run the checks',
             options: permissionOptions,
           },
           {
+            requestId: 'request-2',
             toolCallId: 'tool-2',
             title: 'Another request',
             options: permissionOptions,
@@ -314,12 +316,14 @@ const rules: { rule: string; input: SessionInfoInput; expected: unknown }[] = [
       live: {
         ...live,
         activeTurnId: null,
-        pendingElicitation: {
-          requestId: 'question-1',
-          mode: 'form',
-          message: 'Which file?',
-          requestedSchema: { properties: {} },
-        },
+        elicitationQueue: [
+          {
+            requestId: 'question-1',
+            mode: 'form',
+            message: 'Which file?',
+            requestedSchema: { properties: {} },
+          },
+        ],
       },
     },
     expected: {

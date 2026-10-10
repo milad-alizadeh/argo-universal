@@ -33,7 +33,7 @@ export const AgentLifecycleEvent = z
     }),
     z.strictObject({
       type: z.literal('agent.permissionRequested'),
-      request: PendingPermission,
+      request: PendingPermission.omit({ requestId: true }),
     }),
     z.strictObject({
       type: z.literal('agent.elicitationRequested'),

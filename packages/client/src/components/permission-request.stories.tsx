@@ -4,6 +4,8 @@ import type { ComponentProps } from 'react';
 import { View } from 'react-native';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
 import {
+  agentOptionsProps,
+  agentOptionsWithAlwaysReject,
   permissionProps,
   permissionMock,
   permissionMocks,
@@ -68,9 +70,18 @@ export const Overview = {
               })}
             />
           </Variation>
+          <Variation label="Agent options">
+            <PermissionRequest {...agentOptionsProps({})} />
+          </Variation>
+          <Variation label="Several reject options">
+            <PermissionRequest
+              {...agentOptionsProps({ options: agentOptionsWithAlwaysReject })}
+            />
+          </Variation>
           <Variation label="Deny with a message">
             <PermissionRequest
               {...permissionProps({
+                feedback: true,
                 denialMessage:
                   'Keep the cache. Run expo start --clear instead.',
               })}

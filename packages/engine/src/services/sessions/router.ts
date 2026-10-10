@@ -143,7 +143,7 @@ export const sessionRouter = router({
       validatePermissionAnswer(sessionActor, input);
       sendSessionCommand(sessionActor, {
         type: 'session.answerPermission',
-        toolCallId: input.toolCallId,
+        requestId: input.requestId,
         optionId: input.optionId,
         message: input.message,
       });
@@ -161,6 +161,7 @@ export const sessionRouter = router({
       validateElicitationAnswer(sessionActor, input);
       sendSessionCommand(sessionActor, {
         type: 'session.answerElicitation',
+        requestId: input.requestId,
         action: input.action,
         content: input.content,
       });

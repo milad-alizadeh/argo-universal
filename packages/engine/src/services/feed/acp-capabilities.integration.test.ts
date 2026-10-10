@@ -16,6 +16,10 @@ it('the real Client advertises only implemented Plan, Notice and Compaction exte
   await host.caller.session.new(emptySessionInput);
   expect(await received.promise).toMatchObject({
     protocolVersion: 1,
-    clientCapabilities: { plan: {}, session: { notices: {}, compaction: {} } },
+    clientCapabilities: {
+      plan: {},
+      session: { notices: {}, compaction: {} },
+      elicitation: { form: {} },
+    },
   });
 });

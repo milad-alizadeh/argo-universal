@@ -2,6 +2,7 @@ import type {
   AgentRequestHandlersByMethod,
   SessionNotification,
 } from '@agentclientprotocol/sdk';
+import type { SessionSnapshot } from '@repo/contracts';
 import { emptySessionInput, startAcpEngine } from './acp-engine';
 
 export type AcpFeedUpdates = SessionNotification['update'][];
@@ -18,19 +19,26 @@ export const sendAcpFeedUpdates = async (
       update,
     });
 };
+export const waitForAcpSnapshot = async (
+  host: Awaited<ReturnType<typeof startAcpEngine>>,
+  sessionId: string,
+  matches: (snapshot: SessionSnapshot) => boolean,
+): Promise<SessionSnapshot> => {
+  const events = await host.caller.feed.subscribe({ sessionId, after: null });
+  for await (const event of events)
+    if (event.type === 'snapshot' && matches(event.snapshot))
+      return event.snapshot;
+  throw new Error('The Feed closed before the expected Session snapshot');
+};
 export const waitForAcpSessionIdle = async (
   host: Awaited<ReturnType<typeof startAcpEngine>>,
   sessionId: string,
 ): Promise<void> => {
-  const events = await host.caller.feed.subscribe({ sessionId, after: null });
-  for await (const event of events)
-    if (
-      event.type === 'snapshot' &&
-      event.snapshot.state === 'idle' &&
-      event.snapshot.activeTurnId === null
-    )
-      return;
-  throw new Error('The Feed closed before the Session became idle');
+  await waitForAcpSnapshot(
+    host,
+    sessionId,
+    (snapshot) => snapshot.state === 'idle' && snapshot.activeTurnId === null,
+  );
 };
 export const openAcpFeedSession = async (
   updates: AcpFeedUpdates,

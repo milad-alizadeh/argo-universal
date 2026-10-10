@@ -477,14 +477,20 @@ it.each(
     });
     host.session.send(firstPrompt);
     await vi.advanceTimersByTimeAsync(0);
+    const { pendingPermission, pendingElicitation } =
+      await readNativeSessionSnapshot(host);
     host.session.send(
       requestKind === 'permission'
         ? {
             type: 'session.answerPermission',
-            toolCallId: 'current',
+            requestId: pendingPermission?.requestId ?? 'missing',
             optionId: null,
           }
-        : { type: 'session.answerElicitation', action: 'cancel' },
+        : {
+            type: 'session.answerElicitation',
+            requestId: pendingElicitation?.requestId ?? 'missing',
+            action: 'cancel',
+          },
     );
     await vi.advanceTimersByTimeAsync(0);
     expect(commands.map((command): string => command.type)).toEqual([
