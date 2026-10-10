@@ -43,6 +43,7 @@ const canApplyLifecycleEvent = (
   if (event.type === closeEvent) return snapshot.can({ type: closeEvent });
   if (
     event.type === 'session.prompt' ||
+    event.type === 'session.cancel' ||
     event.type === 'session.answerPermission' ||
     event.type === 'session.answerElicitation'
   )
@@ -50,6 +51,15 @@ const canApplyLifecycleEvent = (
   return snapshot.matches({ open: 'acp' });
 };
 type AcpModelEvent = GraphEventFromLogic<typeof sessionMachine>;
+// After a crash the model walks only the recovery loop, which keeps the crash count from multiplying every state.
+const walksAfterCrash = (
+  snapshot: AcpModelSnapshot,
+  event: AcpModelEvent,
+): boolean =>
+  snapshot.context.agentCrashes.length === 0 ||
+  event.type === 'acp.failed' ||
+  event.type === closeEvent ||
+  event.type.startsWith('xstate.');
 export const createAcpSessionModel = (
   initial: AcpModelSnapshot,
 ): {
@@ -156,6 +166,7 @@ export const createAcpSessionModel = (
     },
     { type: 'acp.requestWithdrawn', requestId: modelRequest },
     { type: 'agent.messageRejected', reason: 'Malformed model question' },
+    { type: 'session.cancel' },
     { type: closeEvent },
     { type: 'acp.failed', error: new Error('connection failed') },
     { type: 'xstate.done.actor.openAcp', actorId: 'openAcp', output: lease },
@@ -222,7 +233,9 @@ export const createAcpSessionModel = (
         ? `${event.type} blocked`
         : event.type,
     filterEvents: (snapshot: AcpModelSnapshot, event: AcpModelEvent): boolean =>
-      snapshot.status === 'active' && canApplyLifecycleEvent(snapshot, event),
+      snapshot.status === 'active' &&
+      walksAfterCrash(snapshot, event) &&
+      canApplyLifecycleEvent(snapshot, event),
     serializeState: (
       snapshot: AcpModelSnapshot,
       event: AcpModelEvent | undefined,

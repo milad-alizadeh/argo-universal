@@ -896,6 +896,9 @@ const sessionSetup = setup({
         enqueue.sendTo('feed', change);
       enqueue.assign({ permissionQueue: [], elicitationQueue: [] });
     }),
+    cancelAcpPrompt: ({ context }): void => {
+      context.acpLifetime.cancelPrompt();
+    },
     cancelRequests: enqueueActions(({ context, enqueue }): void => {
       for (const change of cancelledPermissions(
         context,
@@ -1515,6 +1518,7 @@ export const sessionMachine = sessionSetup.createMachine({
                   target: '.working',
                   actions: ['answerAcpElicitation', 'removeElicitation'],
                 },
+                'session.cancel': { target: '.cancelling' },
               },
               initial: 'working',
               states: {
@@ -1526,6 +1530,15 @@ export const sessionMachine = sessionSetup.createMachine({
                 },
                 awaitingPermission: {},
                 awaitingElicitation: {},
+                cancelling: {
+                  entry: ['cancelAcpRequests', 'cancelAcpPrompt'],
+                  on: {
+                    'session.cancel': {},
+                    [acpPermissionEvent]: { actions: 'refuseAcpRequest' },
+                    [acpElicitationEvent]: { actions: 'refuseAcpRequest' },
+                    [acpRequestWithdrawnEvent]: { actions: 'forgetAcpRequest' },
+                  },
+                },
               },
             },
             publishing: {
@@ -1693,7 +1706,17 @@ export const sessionMachine = sessionSetup.createMachine({
             flushing: {
               on: { 'session.close': {} },
               entry: 'flushFeed',
-              after: { feedFlushLimit: closedSessionTarget },
+              after: {
+                feedFlushLimit: {
+                  target: closedSessionTarget,
+                  actions: {
+                    type: 'rememberFailure',
+                    params: {
+                      error: 'The Feed did not flush before the Session closed',
+                    },
+                  },
+                },
+              },
             },
           },
         },
