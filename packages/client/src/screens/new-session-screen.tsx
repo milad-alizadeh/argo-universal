@@ -163,10 +163,11 @@ function useSessionChoices(projectId: string | undefined): SessionChoices {
 // One Send fails at most one of its two steps.
 function sendErrorMessage(
   startError: { message: string } | null,
-  uploadError: { message: string } | null,
+  attachmentError: ReturnType<typeof useImageDraft>['attachmentError'],
 ): string | undefined {
+  if (attachmentError?.kind === 'selection') return attachmentError.message;
   if (startError) return `Couldn't start the Session. ${startError.message}`;
-  if (uploadError) return `Couldn't upload the image. ${uploadError.message}`;
+  if (attachmentError) return attachmentError.message;
   return undefined;
 }
 
@@ -190,8 +191,9 @@ function useStartSession(onStartFailed: () => void): Pick<
     changeDraft,
     attachImages,
     uploadDraftAsPrompt,
-    imageUpload,
-    imageSelectionError,
+    uploading,
+    attachmentError,
+    clearUploadError,
   } = useImageDraft();
   const newSession = useMutation(
     trpc.session.new.mutationOptions({
@@ -203,7 +205,7 @@ function useStartSession(onStartFailed: () => void): Pick<
 
   // Clears the last Send's upload or start error.
   function clearSendErrors(): void {
-    imageUpload.reset();
+    clearUploadError();
     newSession.reset();
   }
 
@@ -222,10 +224,8 @@ function useStartSession(onStartFailed: () => void): Pick<
     attachImages,
     startSession,
     clearSendErrors,
-    sending: imageUpload.isPending || newSession.isPending,
-    sendError:
-      imageSelectionError ??
-      sendErrorMessage(newSession.error, imageUpload.error),
+    sending: uploading || newSession.isPending,
+    sendError: sendErrorMessage(newSession.error, attachmentError),
   };
 }
 
