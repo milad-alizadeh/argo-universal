@@ -47,11 +47,18 @@ export function toSessionSnapshot(
     activeTurnStartedAt: null,
     usage: null,
     permissionQueue: [],
-    pendingElicitation: null,
+    elicitationQueue: [],
     configOptions: [],
   };
   let state: SessionSnapshot['state'] = 'idle';
   if (
+    session?.matches({ open: { live: { running: 'awaitingPermission' } } }) ||
+    session?.matches({ open: { live: { running: 'awaitingElicitation' } } }) ||
+    session?.matches({ open: { acp: { activeTurn: 'awaitingPermission' } } }) ||
+    session?.matches({ open: { acp: { activeTurn: 'awaitingElicitation' } } })
+  ) {
+    state = 'requires_action';
+  } else if (
     session?.matches({ open: { live: { running: 'working' } } }) ||
     session?.matches({ open: { live: 'cancelling' } }) ||
     session?.matches({ open: { acp: 'committing' } }) ||
@@ -59,11 +66,6 @@ export function toSessionSnapshot(
     session?.matches({ open: { acp: 'publishing' } })
   ) {
     state = 'running';
-  } else if (
-    session?.matches({ open: { live: { running: 'awaitingPermission' } } }) ||
-    session?.matches({ open: { live: { running: 'awaitingElicitation' } } })
-  ) {
-    state = 'requires_action';
   }
   return {
     agent: storedSession.agent,
@@ -75,7 +77,7 @@ export function toSessionSnapshot(
     activeTurnId: context.activeTurnId,
     usage: context.usage,
     pendingPermission: context.permissionQueue[0] ?? null,
-    pendingElicitation: context.pendingElicitation,
+    pendingElicitation: context.elicitationQueue[0] ?? null,
     pendingPlanProposal: null,
     configOptions: context.configOptions,
     changes: noChanges,

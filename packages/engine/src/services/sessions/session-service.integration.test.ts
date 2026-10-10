@@ -618,7 +618,7 @@ it('keeps the Session failure when the registry removes a Session during its Fee
   });
 });
 
-it('rejects a Permission answer for a different Tool call through the router', async (): Promise<void> => {
+it('rejects a Permission answer for a different request through the router', async (): Promise<void> => {
   const { caller, streams } = await startSessionTestServer();
   await caller.session.prompt({
     sessionId: 'session-1',
@@ -635,7 +635,7 @@ it('rejects a Permission answer for a different Tool call through the router', a
   await expect(
     caller.session.answerPermission({
       sessionId: 'session-1',
-      toolCallId: 'stale-tool',
+      requestId: 'stale-request',
       optionId: 'allow_once',
     }),
   ).rejects.toMatchObject({ code: 'CONFLICT', message: 'already answered' });

@@ -12,6 +12,7 @@ import { sessionMachine } from '../src/services/sessions';
 export type AcpModelSnapshot = SnapshotFrom<typeof sessionMachine>;
 const closeEvent = 'session.close';
 const updateEvent = 'acp.update';
+const modelRequest = 'model-request';
 const canApplyLifecycleEvent = (
   snapshot: AcpModelSnapshot,
   event: AcpModelEvent,
@@ -24,6 +25,8 @@ const canApplyLifecycleEvent = (
     'xstate.done.actor.commitPrompt': 'committing',
     'xstate.error.actor.commitPrompt': 'committing',
     'xstate.error.actor.cancelAcp': { activeTurn: 'cancelling' },
+    'xstate.done.actor.promptAcp': 'activeTurn',
+    'xstate.error.actor.promptAcp': 'activeTurn',
     'xstate.done.actor.publishTurn': 'publishing',
     'xstate.error.actor.publishTurn': 'publishing',
     'xstate.done.actor.closeAcp': 'closing',
@@ -31,24 +34,17 @@ const canApplyLifecycleEvent = (
     'xstate.done.actor.awaitAcpRelease': 'retainingCleanup',
     'xstate.after.feedFlushLimit.session.open.acp.flushing': 'flushing',
   } as const;
-  if (
-    ['xstate.done.actor.promptAcp', 'xstate.error.actor.promptAcp'].includes(
-      event.type,
-    )
-  )
-    return snapshot.matches({ open: { acp: 'activeTurn' } });
   if (event.type in invoking) {
     const state = Reflect.get(invoking, event.type);
-    return (
-      JSON.stringify(snapshot.value) ===
-      JSON.stringify({ open: { acp: state } })
-    );
+    return snapshot.matches({ open: { acp: state } });
   }
   if (event.type === closeEvent) return snapshot.can({ type: closeEvent });
   if (
     event.type === 'session.prompt' ||
     event.type === 'session.cancel' ||
-    event.type === 'session.setConfigOption'
+    event.type === 'session.setConfigOption' ||
+    event.type === 'session.answerPermission' ||
+    event.type === 'session.answerElicitation'
   )
     return snapshot.can(event);
   return snapshot.matches({ open: 'acp' });
@@ -160,6 +156,38 @@ export const createAcpSessionModel = (
         },
       },
     },
+    {
+      type: 'acp.permissionRequested',
+      request: {
+        requestId: modelRequest,
+        toolCallId: 'model-tool',
+        title: 'Model edit',
+        options: [
+          { optionId: 'model-allow', name: 'Allow', kind: 'allow_once' },
+        ],
+      },
+    },
+    {
+      type: 'session.answerPermission',
+      requestId: modelRequest,
+      optionId: 'model-allow',
+    },
+    {
+      type: 'acp.elicitationRequested',
+      request: {
+        requestId: modelRequest,
+        mode: 'form',
+        message: 'Model question',
+        requestedSchema: { properties: {} },
+      },
+    },
+    {
+      type: 'session.answerElicitation',
+      requestId: modelRequest,
+      action: 'decline',
+    },
+    { type: 'acp.requestWithdrawn', requestId: modelRequest },
+    { type: 'agent.messageRejected', reason: 'Malformed model question' },
     { type: closeEvent },
     { type: 'acp.failed', error: new Error('connection failed') },
     {
@@ -198,7 +226,7 @@ export const createAcpSessionModel = (
   const options = {
     fromState,
     events,
-    limit: 5000,
+    limit: 10_000,
     serializeEvent: acpModelEventKey,
     filterEvents: (snapshot: AcpModelSnapshot, event: AcpModelEvent): boolean =>
       snapshot.status === 'active' && canApplyLifecycleEvent(snapshot, event),

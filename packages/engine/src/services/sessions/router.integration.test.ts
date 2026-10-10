@@ -60,7 +60,9 @@ async function startPromptedSession(
 
 async function startPermissionRequestSession(
   agentReady: AgentReady = mockReady,
-): Promise<Awaited<ReturnType<typeof startPromptedSession>>> {
+): Promise<
+  Awaited<ReturnType<typeof startPromptedSession>> & { requestId: string }
+> {
   const host = await startPromptedSession(agentReady);
   host.stream.send({
     type: 'agent.permissionRequested',
@@ -70,7 +72,10 @@ async function startPermissionRequestSession(
       options: permissionOptions,
     },
   });
-  return host;
+  const requestId = (await readSessionSnapshot(host.caller.feed.subscribe))
+    .pendingPermission?.requestId;
+  if (!requestId) throw new Error('No Permission request');
+  return { ...host, requestId };
 }
 
 async function startAnsweredPermissionSession(): Promise<
@@ -79,18 +84,18 @@ async function startAnsweredPermissionSession(): Promise<
   const host = await startPermissionRequestSession();
   await host.caller.session.answerPermission({
     sessionId: 'session-1',
-    toolCallId: 'current',
+    requestId: host.requestId,
     optionId: 'allow_once',
   });
   return host;
 }
 
 it('preserves the current Permission option and feedback when answering', async (): Promise<void> => {
-  const { caller, commands } = await startPermissionRequestSession();
+  const { caller, commands, requestId } = await startPermissionRequestSession();
   expect(
     await caller.session.answerPermission({
       sessionId: 'session-1',
-      toolCallId: 'current',
+      requestId,
       optionId: 'reject_once',
       message: 'Use a safer command',
     }),
@@ -106,25 +111,25 @@ it('preserves the current Permission option and feedback when answering', async 
 });
 
 it('rejects an already answered Permission', async (): Promise<void> => {
-  const { caller } = await startAnsweredPermissionSession();
+  const { caller, requestId } = await startAnsweredPermissionSession();
   await expect(
     caller.session.answerPermission({
       sessionId: 'session-1',
-      toolCallId: 'current',
+      requestId,
       optionId: 'allow_once',
     }),
   ).rejects.toMatchObject({ code: 'CONFLICT', message: alreadyAnswered });
 });
 
 it('rejects unsupported Permission feedback without consuming the request', async (): Promise<void> => {
-  const { caller, commands } = await startPermissionRequestSession({
+  const { caller, commands, requestId } = await startPermissionRequestSession({
     ...mockReady,
     capabilities: { ...mockReady.capabilities, permissionFeedback: false },
   });
   await expect(
     caller.session.answerPermission({
       sessionId: 'session-1',
-      toolCallId: 'current',
+      requestId,
       optionId: 'reject_once',
       message: 'Feedback',
     }),
@@ -143,14 +148,14 @@ it('rejects unsupported Permission feedback without consuming the request', asyn
 });
 
 it('answers a Permission without feedback when feedback is unsupported', async (): Promise<void> => {
-  const { caller, commands } = await startPermissionRequestSession({
+  const { caller, commands, requestId } = await startPermissionRequestSession({
     ...mockReady,
     capabilities: { ...mockReady.capabilities, permissionFeedback: false },
   });
   expect(
     await caller.session.answerPermission({
       sessionId: 'session-1',
-      toolCallId: 'current',
+      requestId,
       optionId: 'allow_once',
     }),
   ).toEqual({});

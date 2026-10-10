@@ -1,4 +1,4 @@
-import type { PendingElicitation } from '@repo/contracts';
+import type { PendingElicitation, PermissionOption } from '@repo/contracts';
 import { type RequestMock, recordedRequestMocks } from '@repo/mocks/app';
 import type {
   ElicitationFormProps,
@@ -144,4 +144,25 @@ export function elicitationProps({
     state: { kind: 'open' },
     ...props,
   };
+}
+
+// ACP Agents name their own options and may offer more than one of a kind.
+export const agentOptions: PermissionOption[] = [
+  { optionId: 'allow-always', name: 'Always Allow', kind: 'allow_always' },
+  { optionId: 'allow', name: 'Allow', kind: 'allow_once' },
+  { optionId: 'reject', name: 'Reject', kind: 'reject_once' },
+];
+export const agentOptionsWithAlwaysReject: PermissionOption[] = [
+  ...agentOptions,
+  { optionId: 'reject-always', name: 'Always Reject', kind: 'reject_always' },
+];
+
+export function agentOptionsProps({
+  options = agentOptions,
+  ...props
+}: Parameters<typeof permissionProps>[0] & {
+  options?: PermissionOption[];
+}): PermissionRequestProps {
+  const base = permissionProps(props);
+  return { ...base, request: { ...base.request, options } };
 }

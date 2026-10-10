@@ -1,7 +1,13 @@
 import type { RequestMock } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn } from 'storybook/test';
-import { permissionProps, permissionMocks } from '../../mocks/request-mock';
+import { expect, fn, waitFor, within } from 'storybook/test';
+import {
+  agentOptions,
+  agentOptionsProps,
+  agentOptionsWithAlwaysReject,
+  permissionProps,
+  permissionMocks,
+} from '../../mocks/request-mock';
 import { RequestFrame } from '../../mocks/request-preview';
 import { settleViewport } from '../../mocks/settle-viewport';
 import { toFeedView } from '../feed/to-feed-view';
@@ -11,6 +17,9 @@ import galleryMeta, { Overview as Gallery } from './permission-request.stories';
 
 const allowOnceLabel = 'Allow once';
 const allowedOnceAnswer = 'You allowed this once';
+const allowOptions = 'Allow options';
+const rejectOptions = 'Reject options';
+const alwaysReject = 'Always Reject';
 
 const denialFeedback = 'Keep the cache.';
 
@@ -30,7 +39,7 @@ type Story = StoryObj<typeof meta>;
 
 function denial(width: number): Story {
   return {
-    args: { denialMessage: denialFeedback },
+    args: { feedback: true, denialMessage: denialFeedback },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
       const input = canvas.getByRole('textbox', {
@@ -129,7 +138,7 @@ export const SecondAgentResponseErrorWide = responseError(
 
 function denyWithoutMessage(width: number): Story {
   return {
-    args: { denialMessage: '' },
+    args: { feedback: true, denialMessage: '' },
     play: async ({ canvas, userEvent, args }) => {
       await settleViewport(width);
       await userEvent.click(canvas.getByRole('button', { name: 'Back' }));
@@ -147,7 +156,7 @@ export const DenyWithoutMessagePhone = denyWithoutMessage(390);
 export const DenyWithoutMessageWide = denyWithoutMessage(1440);
 
 export const Keyboard: Story = {
-  args: { denialMessage: 'Use a new branch.' },
+  args: { feedback: true, denialMessage: 'Use a new branch.' },
   play: async ({ canvas, userEvent, args }) => {
     await settleViewport(1440);
     await expect(canvas.getByRole('textbox')).toHaveFocus();
@@ -163,6 +172,7 @@ export const Keyboard: Story = {
 };
 
 export const OpensDenial: Story = {
+  args: { feedback: true },
   play: async ({ canvas, userEvent, args }) => {
     await settleViewport(1440);
     await userEvent.click(canvas.getByRole('button', { name: 'Deny' }));
@@ -293,4 +303,184 @@ export const GallerySecondAgentPhone: Story = galleryFixture(
 export const GallerySecondAgentWide: Story = galleryFixture(
   secondGalleryAgent,
   1024,
+);
+
+const alwaysAllow = 'Always Allow';
+const alwaysAllowId = 'allow-always';
+const optionNames = agentOptions.map((option) => option.name);
+if (optionNames.join() !== 'Always Allow,Allow,Reject')
+  throw new Error('Recorded catalog needs Always Allow, Allow and Reject.');
+
+function agentOptionsArgs(
+  mock?: RequestMock,
+  options = agentOptions,
+): Story['args'] {
+  return agentOptionsProps({
+    mock,
+    options,
+    onAnswer: fn(),
+    onDenialMessageChange: fn(),
+  });
+}
+
+async function pickFromMenu(
+  userEvent: { click: (element: Element) => Promise<void> },
+  option: string,
+): Promise<void> {
+  const overlay = within(document.body);
+  const item = await overlay.findByRole('menuitemradio', { name: option });
+  await waitFor(() => expect(item).toBeVisible());
+  await userEvent.click(item);
+  await waitFor(() =>
+    expect(
+      overlay.queryByRole('menuitemradio', { name: option }),
+    ).not.toBeInTheDocument(),
+  );
+}
+
+async function pickFromSheet(
+  userEvent: { click: (element: Element) => Promise<void> },
+  label: string,
+  option: string,
+): Promise<void> {
+  const overlay = within(document.body);
+  const sheet = within(await overlay.findByRole('dialog', { name: label }));
+  await userEvent.click(sheet.getByRole('button', { name: option }));
+  await waitFor(() =>
+    expect(
+      overlay.queryByRole('dialog', { name: label }),
+    ).not.toBeInTheDocument(),
+  );
+}
+
+// Desktop merges every allow option into one split button; the chevron picks what it sends.
+function allowMenuWide(mock?: RequestMock): Story {
+  return {
+    args: agentOptionsArgs(mock),
+    play: async ({ canvas, userEvent, args }) => {
+      await settleViewport(1440);
+      await expect(
+        canvas.queryByRole('button', { name: alwaysAllow }),
+      ).not.toBeInTheDocument();
+      await userEvent.click(canvas.getByRole('button', { name: allowOptions }));
+      await pickFromMenu(userEvent, alwaysAllow);
+      await expect(args.onAnswer).not.toHaveBeenCalled();
+      await userEvent.click(canvas.getByRole('button', { name: alwaysAllow }));
+      await expect(args.onAnswer).toHaveBeenCalledTimes(1);
+      await expect(args.onAnswer).toHaveBeenCalledWith({
+        optionId: alwaysAllowId,
+      });
+    },
+  };
+}
+export const AllowMenuWide = allowMenuWide();
+export const SecondAgentAllowMenuWide = allowMenuWide(permissionMocks[1]);
+
+// Enter chooses the allow-once option, even when the Agent lists another first.
+function allowOnceLeads(mock?: RequestMock): Story {
+  return {
+    args: agentOptionsArgs(mock),
+    play: async ({ canvas, userEvent, args }) => {
+      await settleViewport(1440);
+      await userEvent.click(canvas.getByText(args.request.title));
+      await userEvent.keyboard('{Enter}');
+      await expect(args.onAnswer).toHaveBeenCalledTimes(1);
+      await expect(args.onAnswer).toHaveBeenCalledWith({ optionId: 'allow' });
+    },
+  };
+}
+export const AllowOnceLeads = allowOnceLeads();
+export const SecondAgentAllowOnceLeads = allowOnceLeads(permissionMocks[1]);
+
+// Once picked, Enter sends the picked allow option.
+function enterSendsPicked(mock?: RequestMock): Story {
+  return {
+    args: agentOptionsArgs(mock),
+    play: async ({ canvas, userEvent, args }) => {
+      await settleViewport(1440);
+      await userEvent.click(canvas.getByRole('button', { name: allowOptions }));
+      await pickFromMenu(userEvent, alwaysAllow);
+      await userEvent.click(canvas.getByText(args.request.title));
+      await userEvent.keyboard('{Enter}');
+      await expect(args.onAnswer).toHaveBeenCalledTimes(1);
+      await expect(args.onAnswer).toHaveBeenCalledWith({
+        optionId: alwaysAllowId,
+      });
+    },
+  };
+}
+export const EnterSendsPicked = enterSendsPicked();
+export const SecondAgentEnterSendsPicked = enterSendsPicked(permissionMocks[1]);
+
+function rejectMenuWide(mock?: RequestMock): Story {
+  return {
+    args: agentOptionsArgs(mock, agentOptionsWithAlwaysReject),
+    play: async ({ canvas, userEvent, args }) => {
+      await settleViewport(1440);
+      await expect(
+        canvas.queryByRole('button', { name: alwaysReject }),
+      ).not.toBeInTheDocument();
+      await userEvent.click(
+        canvas.getByRole('button', { name: rejectOptions }),
+      );
+      await pickFromMenu(userEvent, alwaysReject);
+      await expect(args.onAnswer).not.toHaveBeenCalled();
+      await userEvent.click(canvas.getByRole('button', { name: alwaysReject }));
+      await expect(args.onAnswer).toHaveBeenCalledWith({
+        optionId: 'reject-always',
+      });
+    },
+  };
+}
+export const RejectMenuWide = rejectMenuWide();
+export const SecondAgentRejectMenuWide = rejectMenuWide(permissionMocks[1]);
+
+// Phone groups options like desktop: two controls, allow on top; the chevron opens a Sheet.
+function groupedPhone(mock?: RequestMock): Story {
+  return {
+    args: agentOptionsArgs(mock, agentOptionsWithAlwaysReject),
+    play: async ({ canvas, userEvent, args }) => {
+      await settleViewport(390);
+      const buttons = canvas.getAllByRole('button');
+      await expect(buttons).toHaveLength(4);
+      await expect(buttons[0]).toHaveAccessibleName('Allow');
+      await expect(buttons[1]).toHaveAccessibleName(allowOptions);
+      await expect(buttons[2]).toHaveAccessibleName('Reject');
+      await expect(buttons[3]).toHaveAccessibleName(rejectOptions);
+      await userEvent.click(canvas.getByRole('button', { name: allowOptions }));
+      await pickFromSheet(userEvent, allowOptions, alwaysAllow);
+      await expect(args.onAnswer).not.toHaveBeenCalled();
+      await userEvent.click(canvas.getByRole('button', { name: alwaysAllow }));
+      await expect(args.onAnswer).toHaveBeenCalledTimes(1);
+      await expect(args.onAnswer).toHaveBeenCalledWith({
+        optionId: alwaysAllowId,
+      });
+    },
+  };
+}
+export const GroupedPhone = groupedPhone();
+export const SecondAgentGroupedPhone = groupedPhone(permissionMocks[1]);
+
+// Without delivered feedback, rejecting answers at once and offers no message field.
+function rejectWithoutFeedback(width: number, mock?: RequestMock): Story {
+  return {
+    args: agentOptionsArgs(mock),
+    play: async ({ canvas, userEvent, args }) => {
+      await settleViewport(width);
+      await userEvent.click(canvas.getByRole('button', { name: 'Reject' }));
+      await expect(args.onDenialMessageChange).not.toHaveBeenCalled();
+      await expect(canvas.queryByRole('textbox')).not.toBeInTheDocument();
+      await expect(args.onAnswer).toHaveBeenCalledWith({ optionId: 'reject' });
+    },
+  };
+}
+export const RejectWithoutFeedbackPhone = rejectWithoutFeedback(390);
+export const RejectWithoutFeedbackWide = rejectWithoutFeedback(1440);
+export const SecondAgentRejectWithoutFeedbackPhone = rejectWithoutFeedback(
+  390,
+  permissionMocks[1],
+);
+export const SecondAgentRejectWithoutFeedbackWide = rejectWithoutFeedback(
+  1440,
+  permissionMocks[1],
 );

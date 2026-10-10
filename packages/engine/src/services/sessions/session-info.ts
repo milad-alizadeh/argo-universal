@@ -33,7 +33,7 @@ export function toSessionInfo(
     ? live.activeTurnId !== null
     : latestTurn?.status === 'running';
   const needsInput = Boolean(
-    live?.permissionQueue[0] || live?.pendingElicitation,
+    live?.permissionQueue[0] || live?.elicitationQueue[0],
   );
   const header = toLiveHeader(
     {
@@ -43,7 +43,7 @@ export function toSessionInfo(
         live?.activeTurnStartedAt ??
         (running ? (latestTurn?.startedAt ?? null) : null),
       permissionQueue: live?.permissionQueue ?? [],
-      pendingElicitation: live?.pendingElicitation ?? null,
+      elicitationQueue: live?.elicitationQueue ?? [],
     },
     input.liveHeaderRows,
   );
