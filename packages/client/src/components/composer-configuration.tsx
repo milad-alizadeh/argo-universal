@@ -445,6 +445,17 @@ function EffortControl({
     const choice = effortChoices[Math.round(index)];
     if (choice) configuration.onConfigChange(effort.configId, choice.value);
   };
+  const slider = (
+    <Slider
+      accessibilityLabel="Effort"
+      valueLabel={levelLabel}
+      minimumValue={0}
+      maximumValue={Math.max(1, effortChoices.length - 1)}
+      step={1}
+      value={selectedIndex}
+      onValueChange={onSliderChange}
+    />
+  );
   // Phones draw the system slider under a row like Agent and Model, with the level on the right.
   if (Platform.OS !== 'web')
     return (
@@ -460,15 +471,7 @@ function EffortControl({
             {levelLabel}
           </Text>
         </View>
-        <Slider
-          accessibilityLabel="Effort"
-          valueLabel={levelLabel}
-          minimumValue={0}
-          maximumValue={Math.max(1, effortChoices.length - 1)}
-          step={1}
-          value={selectedIndex}
-          onValueChange={onSliderChange}
-        />
+        {slider}
       </View>
     );
   return (
@@ -485,15 +488,7 @@ function EffortControl({
         </Text>
       </View>
       <View className="gap-1.5">
-        <Slider
-          accessibilityLabel="Effort"
-          valueLabel={levelLabel}
-          minimumValue={0}
-          maximumValue={Math.max(1, effortChoices.length - 1)}
-          step={1}
-          value={selectedIndex}
-          onValueChange={onSliderChange}
-        />
+        {slider}
         <View className="flex-row justify-between px-1.5">
           {effortChoices.map((choice, index) => {
             let effortAlignment: string;

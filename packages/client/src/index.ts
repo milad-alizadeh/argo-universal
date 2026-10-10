@@ -1,8 +1,7 @@
 import type {} from './lib/reusables-compatibility';
 
 export {
-  AgentModelSheetAgents,
-  AgentModelSheetModels,
+  AgentModelSheetChoices,
   AgentModelSheetSettings,
   ComposerSheetContent,
   useSheetLabel,

@@ -3,44 +3,34 @@ import { presentationDragIndicator } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { cloneElement } from 'react';
 import { View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { ComposerSheetProps } from './composer-sheet';
-
-const minimumBottomPadding = 16;
+import {
+  type ComposerSheetProps,
+  useComposerSheetBottomPadding,
+} from './composer-sheet-layout';
 
 // The system sheet, sized to its content.
-export function ComposerSheet({
-  style,
-  open,
-  onOpenChange,
-  onClosed,
-  trigger,
-  label,
-  children,
-}: ComposerSheetProps): React.JSX.Element {
-  const insets = useSafeAreaInsets();
+export function ComposerSheet(props: ComposerSheetProps): React.JSX.Element {
+  const paddingBottom = useComposerSheetBottomPadding();
   return (
-    <View style={style}>
-      {cloneElement(trigger, { onPress: () => onOpenChange(true) })}
+    <View style={props.style}>
+      {cloneElement(props.trigger, { onPress: () => props.onOpenChange(true) })}
       <Host matchContents style={{ position: 'absolute' }}>
         <BottomSheet
-          isPresented={open}
-          onIsPresentedChange={onOpenChange}
+          isPresented={props.open}
+          onIsPresentedChange={props.onOpenChange}
           // iOS presents a picker on the top view controller, so report closing once the sheet has gone.
-          onDismiss={onClosed}
+          onDismiss={props.onClosed}
           fitToContents
         >
           <Group modifiers={[presentationDragIndicator('visible')]}>
             <RNHostView matchContents>
               <View
-                accessibilityLabel={label}
+                accessibilityLabel={props.label}
                 accessibilityViewIsModal
                 className="pt-4"
-                style={{
-                  paddingBottom: Math.max(minimumBottomPadding, insets.bottom),
-                }}
+                style={{ paddingBottom }}
               >
-                {children}
+                {props.children}
               </View>
             </RNHostView>
           </Group>
