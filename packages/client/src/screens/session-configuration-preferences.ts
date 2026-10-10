@@ -92,6 +92,7 @@ export function rememberSessionConfiguration(
   options: SessionConfigOption[],
 ): void {
   const selected = orderedOptions(options);
+  void client.cancelQueries({ queryKey: queryKey(agent), exact: true });
   client.setQueryData<SavedChoices>(queryKey(agent), (previous) => ({
     ...previous,
     ...Object.fromEntries(
