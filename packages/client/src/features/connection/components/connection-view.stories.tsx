@@ -3,7 +3,7 @@ import { ConnectionView } from './connection-view';
 import { loadedServer } from './connection-view.fixtures';
 
 const meta = {
-  title: 'screens/ConnectionScreen',
+  title: 'Screens/ConnectionScreen',
   component: ConnectionView,
   args: { connection: 'open', server: loadedServer },
 } satisfies Meta<typeof ConnectionView>;
