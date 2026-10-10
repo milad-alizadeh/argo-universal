@@ -3,6 +3,7 @@ import {
   accessibilityAddTraits,
   font,
   foregroundStyle,
+  headerProminence,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
 import { useWide } from '../use-wide';
@@ -11,8 +12,10 @@ import { FieldSection as WebFieldSection } from './field-section-view.tsx';
 
 export function FieldSection(props: FieldSectionProps): React.JSX.Element {
   if (useWide()) return <WebFieldSection {...props} />;
+  // Increased prominence preserves title case; the header sets its own font.
   return (
     <Section
+      modifiers={[headerProminence('increased')]}
       header={<SectionHeader title={props.title} />}
       footer={props.footer && <Text>{props.footer}</Text>}
     >
@@ -30,7 +33,7 @@ function SectionHeader({
   return (
     <Text
       modifiers={[
-        font({ textStyle: 'headline' }),
+        font({ textStyle: 'subheadline', weight: 'semibold' }),
         foregroundStyle({ type: 'hierarchical', style: 'secondary' }),
         accessibilityAddTraits(['isHeader']),
       ]}
