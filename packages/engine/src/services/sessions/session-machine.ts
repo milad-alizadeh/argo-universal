@@ -60,6 +60,12 @@ import {
   type AcpSessionDependencies,
 } from './conversation/acp-lifetime';
 import {
+  chooseConfigValue,
+  currentModel,
+  keepHeldConfigChoices,
+  toConfigValues,
+} from './conversation/configuration';
+import {
   commitLocalPrompt,
   type LocalSubmission,
 } from './conversation/submission';
@@ -190,23 +196,6 @@ const writer = ({
   system: AnyActorRef['system'];
   self: AnyActorRef;
 }): AnyActorRef => findDatabaseWriter(system) ?? self;
-
-// The values an Agent reconnects with, read from the options it last reported.
-const toConfigValues = (
-  configOptions: SessionConfigOption[],
-): AgentConfigValue[] =>
-  configOptions.map((option): AgentConfigValue => ({
-    configId: option.configId,
-    value: option.currentValue,
-  }));
-
-// The model the Agent runs with, which a Turn records.
-const currentModel = (configOptions: SessionConfigOption[]): string | null => {
-  const model = configOptions.find(
-    (option): boolean => option.category === 'model',
-  );
-  return model?.type === 'select' ? model.currentValue : null;
-};
 
 const permissionOutcomeChange = (
   toolCallId: string,
@@ -1556,35 +1545,3 @@ export const sessionMachine = sessionSetup.createMachine({
   },
 });
 export type SessionActorRef = ActorRefFrom<typeof sessionMachine>;
-
-function chooseConfigValue(
-  options: SessionConfigOption[],
-  choice: AgentConfigValue,
-  held: boolean,
-): SessionConfigOption[] {
-  return options.map((option): SessionConfigOption => {
-    if (option.configId !== choice.configId) return option;
-    const _meta = {
-      ...option._meta,
-      argo: { ...option._meta?.argo, heldUntilNextTurn: held },
-    };
-    if (option.type === 'boolean')
-      return typeof choice.value === 'boolean'
-        ? { ...option, currentValue: choice.value, _meta }
-        : option;
-    return typeof choice.value === 'string'
-      ? { ...option, currentValue: choice.value, _meta }
-      : option;
-  });
-}
-
-function keepHeldConfigChoices(
-  options: SessionConfigOption[],
-  held: AgentConfigValue[],
-): SessionConfigOption[] {
-  return held.reduce(
-    (current, choice): SessionConfigOption[] =>
-      chooseConfigValue(current, choice, true),
-    options,
-  );
-}

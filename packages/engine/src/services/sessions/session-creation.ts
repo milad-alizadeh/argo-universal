@@ -6,13 +6,15 @@ import type { Context } from '../../engine/context';
 import { findDatabaseWriter, type writerMachine } from '../feed';
 import { readProjectPath } from '../projects';
 import type { RegistryActorRef } from './registry-machine';
-import { validateSessionCommandAdmission } from './session-command';
+import {
+  submitSessionPrompt,
+  validateSessionCommandAdmission,
+} from './session-command';
 import type { SessionActorRef } from './session-machine';
 import {
   requireOpenSessionActor,
   sendCheckedRegistryCommand,
 } from './session-opening';
-import { submitSessionPrompt } from './session-submission';
 
 async function requireCheckoutProjectPath(
   database: Context['database'],
