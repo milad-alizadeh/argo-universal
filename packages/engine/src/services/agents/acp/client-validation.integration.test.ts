@@ -1,5 +1,5 @@
 import type { SessionNotification } from '@agentclientprotocol/sdk';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { createAcpPeer, readAcpRequest } from '#mocks/acp-peer';
 import { createAgentClient } from './client';
 
@@ -11,15 +11,18 @@ it.each([
       sessionId: 'one',
       update: { sessionUpdate: 'agent_message_chunk' },
     },
+    diagnostics: ['Error handling notification'],
   },
   {
     label: 'unknown notification',
     method: 'future/update',
     params: { anything: 'allowed' },
+    diagnostics: [],
   },
 ])(
-  'keeps $label outside the typed Session ingress',
-  async ({ method, params }) => {
+  'keeps $label outside the typed Session ingress with one SDK diagnostic at most',
+  async ({ method, params, diagnostics }) => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
     const peer = createAcpPeer();
     const accepted: SessionNotification[] = [];
     const connection = createAgentClient({
@@ -57,6 +60,7 @@ it.each([
         update: { sessionUpdate: 'current_mode_update', currentModeId: 'plan' },
       },
     ]);
+    expect(log.mock.calls.map(([line]) => line)).toEqual(diagnostics);
     connection.close();
     await connection.closed;
   },
