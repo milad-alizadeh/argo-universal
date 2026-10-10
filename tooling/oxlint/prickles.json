@@ -12,7 +12,7 @@
   "categories": { "correctness": "off" },
   "env": { "builtin": true },
   "settings": { "react": { "version": "999.999.999" } },
-  "ignorePatterns": ["dist/**", "build/**", "coverage/**", "node_modules/**"],
+  "ignorePatterns": ["node_modules/**"],
   "rules": {
     // tseslint.configs.recommended and sonarjs.configs.recommended, expanded by @oxlint/migrate.
     "no-array-constructor": "error",
@@ -418,7 +418,7 @@
   },
   "overrides": [
     {
-      "files": ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
+      "files": ["**/*.ts", "**/*.tsx", "**/*.mts"],
       "rules": {
         "constructor-super": "off",
         "getter-return": "off",

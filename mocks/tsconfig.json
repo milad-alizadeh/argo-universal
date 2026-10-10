@@ -5,5 +5,5 @@
     "exactOptionalPropertyTypes": true,
     "lib": ["es2025", "DOM"]
   },
-  "include": ["agent", "app"]
+  "include": ["agent", "app", "registry"]
 }
