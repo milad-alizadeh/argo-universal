@@ -73,12 +73,6 @@
       "skillPath": "drizzle-kit/skills/drizzle-responses-and-errors/SKILL.md",
       "computedHash": "fbc0b0d5aa071cf06eee711b5de52ad821a0d1e5bc0c703f0c59b429697331d3"
     },
-    "expo-design-system": {
-      "source": "expo/skills",
-      "sourceType": "github",
-      "skillPath": "plugins/expo/skills/expo-design-system/SKILL.md",
-      "computedHash": "06ee277d251026168256c663648e3de5dda1fbed925a0fb69fb008d78fa54bfa"
-    },
     "expo-dev-client": {
       "source": "expo/skills",
       "sourceType": "github",
