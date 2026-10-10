@@ -2,6 +2,7 @@ import {
   agent,
   ndJsonStream,
   type AgentConnection,
+  type AgentNotificationHandlersByMethod,
   type AgentRequestHandlersByMethod,
   type SessionNotification,
   type InitializeResponse,
@@ -11,7 +12,6 @@ import {
   type ResumeSessionResponse,
   type PromptResponse,
   type SetSessionConfigOptionResponse,
-  type AgentNotificationHandlersByMethod,
 } from '@agentclientprotocol/sdk';
 import type {
   AcpOpenInput,

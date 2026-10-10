@@ -1706,7 +1706,17 @@ export const sessionMachine = sessionSetup.createMachine({
             flushing: {
               on: { 'session.close': {} },
               entry: 'flushFeed',
-              after: { feedFlushLimit: closedSessionTarget },
+              after: {
+                feedFlushLimit: {
+                  target: closedSessionTarget,
+                  actions: {
+                    type: 'rememberFailure',
+                    params: {
+                      error: 'The Feed did not flush before the Session closed',
+                    },
+                  },
+                },
+              },
             },
           },
         },

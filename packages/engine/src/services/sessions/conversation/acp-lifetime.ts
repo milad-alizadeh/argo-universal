@@ -119,9 +119,7 @@ export class AcpSessionLifetime {
   public cancelRequest(requestId: string): void {
     this.requests.cancel(requestId);
   }
-  public cancelRequests(): void {
-    this.requests.cancelAll();
-  }
+  public cancelRequests = (): void => this.requests.cancelAll();
   public close(): Promise<void> {
     this.requests.cancelAll();
     this.controller.abort();

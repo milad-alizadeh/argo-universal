@@ -194,32 +194,56 @@ it.each(
     (['Permission', 'Elicitation'] as const).map((kind) => ({ agent, kind })),
   ),
 )(
-  '$agent Stop cancels a pending $kind and ends its Turn',
+  '$agent Stop cancels a pending $kind, refuses late answers and ends its Turn',
   async ({ agent, kind }) => {
     const response = Promise.withResolvers<
       RequestPermissionResponse | CreateElicitationResponse
     >();
-    const { host, sessionId } = await startSession(
-      agent,
-      async ({ params, client }) => {
-        response.resolve(
-          await (kind === 'Permission'
-            ? client.request(
-                requestPermission,
-                permissionRequest(params.sessionId, 'tool-a'),
-              )
-            : client.request(createElicitation, issueForm(params.sessionId))),
-        );
-        return { stopReason: 'cancelled' };
+    const cancelReceived = Promise.withResolvers<void>();
+    const host = await startAcpEngine(
+      {
+        cancel: () => cancelReceived.resolve(),
+        prompt: async ({ params, client }) => {
+          response.resolve(
+            await (kind === 'Permission'
+              ? client.request(
+                  requestPermission,
+                  permissionRequest(params.sessionId, 'tool-a'),
+                )
+              : client.request(createElicitation, issueForm(params.sessionId))),
+          );
+          await cancelReceived.promise;
+          return { stopReason: 'cancelled' };
+        },
       },
+      undefined,
+      agent,
     );
-    await (kind === 'Permission'
+    const { sessionId } = await host.caller.session.new({
+      ...emptySessionInput,
+      agent,
+    });
+    await promptSession(host, sessionId);
+    const pending = await (kind === 'Permission'
       ? waitForPermission(host, sessionId)
       : waitForElicitation(host, sessionId));
     await host.caller.session.cancel({ sessionId });
     expect(await response.promise).toEqual(
       kind === 'Permission' ? cancelled : { action: 'cancel' },
     );
+    await expect(
+      kind === 'Permission'
+        ? host.caller.session.answerPermission({
+            sessionId,
+            requestId: pending.requestId,
+            optionId: allowOnce,
+          })
+        : host.caller.session.answerElicitation({
+            sessionId,
+            requestId: pending.requestId,
+            action: 'decline',
+          }),
+    ).rejects.toThrow(alreadyAnswered);
     const snapshot = await waitForTurnEnd(host, sessionId);
     expect(snapshot.pendingPermission).toBeNull();
     expect(snapshot.pendingElicitation).toBeNull();
