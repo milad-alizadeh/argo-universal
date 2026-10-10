@@ -151,6 +151,7 @@
       --color-destructive: var(--color-red-500);
       --color-destructive-foreground: var(--color-white);
       --color-border: var(--color-neutral-200);
+      --color-separator: var(--color-neutral-200);
       --color-input: var(--color-neutral-200);
       --color-ring: var(--color-neutral-400);
       --color-chart-1: hsl(12 76% 61%);
@@ -190,6 +191,7 @@
       --color-destructive: var(--color-red-500);
       --color-destructive-foreground: var(--color-white);
       --color-border: hsl(0 0% 14.9%);
+      --color-separator: var(--color-neutral-700);
       --color-input: hsl(0 0% 14.9%);
       --color-ring: hsl(300 0% 45%);
       --color-chart-1: hsl(220 70% 50%);

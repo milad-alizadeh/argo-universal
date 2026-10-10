@@ -13,6 +13,7 @@ const colorTokens = [
   ['primary', '--color-primary'],
   ['primaryForeground', '--color-primary-foreground'],
   ['border', '--color-border'],
+  ['separator', '--color-separator'],
   ['destructive', '--color-destructive'],
 ] as const;
 const tokenNames = colorTokens.map(([, name]) => name);

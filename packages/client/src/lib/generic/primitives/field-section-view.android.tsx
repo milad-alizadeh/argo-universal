@@ -1,5 +1,6 @@
 import { Column, Text } from '@expo/ui/jetpack-compose';
 import {
+  background,
   clip,
   fillMaxWidth,
   padding,
@@ -16,13 +17,18 @@ const gutter = 16;
 const captionPadding = 4;
 
 export function FieldSection(props: FieldSectionProps): React.JSX.Element {
+  const { separator } = useNativeTheme().colors;
   if (useWide()) return <WebFieldSection {...props} />;
   return (
     <Column verticalArrangement={{ spacedBy: 8 }} modifiers={[fillMaxWidth()]}>
       <SectionCaption text={props.title} />
       <Column
         verticalArrangement={{ spacedBy: 1 }}
-        modifiers={[fillMaxWidth(), clip(Shapes.RoundedCorner(sectionRadius))]}
+        modifiers={[
+          fillMaxWidth(),
+          clip(Shapes.RoundedCorner(sectionRadius)),
+          background(separator ?? 'transparent'),
+        ]}
       >
         {props.children}
       </Column>

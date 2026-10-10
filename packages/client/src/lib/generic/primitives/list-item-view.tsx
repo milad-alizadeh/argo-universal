@@ -124,7 +124,7 @@ function separatorClasses(
   return (
     !navigation &&
     cn(
-      'web:after:absolute web:after:bottom-0 web:after:right-4 web:after:left-4 web:after:h-px web:after:bg-border web:last:after:hidden',
+      'web:after:absolute web:after:bottom-0 web:after:right-4 web:after:left-4 web:after:h-px web:after:bg-[var(--color-separator)] web:last:after:hidden',
       props.icon && 'web:after:left-11',
     )
   );

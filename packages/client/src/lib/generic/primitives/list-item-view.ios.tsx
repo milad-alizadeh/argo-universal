@@ -11,6 +11,7 @@ import {
   frame,
   listRowBackground,
   listRowInsets,
+  listRowSeparatorTint,
   opacity,
   padding,
 } from '@expo/ui/swift-ui/modifiers';
@@ -41,10 +42,11 @@ export function ListItem(props: ListItemProps): React.JSX.Element {
 function useRowModifiers(
   props: ListItemProps,
 ): React.ComponentProps<typeof Button>['modifiers'] {
-  const { muted } = useNativeTheme().colors;
+  const { muted, separator } = useNativeTheme().colors;
   return [
     buttonStyle('automatic'),
     listRowBackground(muted ?? 'transparent'),
+    listRowSeparatorTint(separator),
     listRowInsets({ top: 0, bottom: 0, leading: inset, trailing: inset }),
     accessibilityElement('ignore'),
     accessibilityLabel(listItemName(props)),
