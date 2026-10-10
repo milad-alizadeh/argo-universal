@@ -1,6 +1,6 @@
 import type { SessionSnapshot } from '@repo/contracts';
 import type { AppRouter } from '@repo/engine/router';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
 import type * as React from 'react';
 import { View } from 'react-native';
@@ -24,6 +24,7 @@ import { useBlobUrl } from '../trpc/blob-url';
 import type { ClientError } from '../trpc/context';
 import { useTRPC } from '../trpc/context';
 import { useAgents } from '../trpc/use-agents';
+import { rememberSessionConfiguration } from './session-configuration-preferences';
 import { useImageDraft } from './use-image-draft';
 
 type SessionMutation<Name extends 'prompt' | 'cancel' | 'setConfigOption'> =
@@ -109,7 +110,7 @@ function SessionView({
     cancelTurn,
     setConfigOption,
     sendDraft,
-  } = useSessionCommands(sessionId, resumeAfterCommand);
+  } = useSessionCommands(sessionId, resumeAfterCommand, snapshot?.agent);
 
   if (error)
     return (
@@ -254,8 +255,10 @@ function SessionView({
 function useSessionCommands(
   sessionId: string,
   resumeAfterCommand: () => void,
+  agent: string | undefined,
 ): SessionCommands {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const { clearDraft, uploadDraftAsPrompt, ...draft } = useImageDraft();
   const promptSession = useMutation(
     trpc.session.prompt.mutationOptions({
@@ -270,7 +273,18 @@ function useSessionCommands(
   );
   const setConfigOption = useMutation(
     trpc.session.setConfigOption.mutationOptions({
-      onSuccess: resumeAfterCommand,
+      onSuccess: ({ configOptions }, { configId }) => {
+        resumeAfterCommand();
+        if (!agent) return;
+        const changed = configOptions.find(
+          (option) => option.configId === configId,
+        );
+        if (
+          changed?.category === 'model' ||
+          changed?.category === 'thought_level'
+        )
+          rememberSessionConfiguration(queryClient, agent, configOptions);
+      },
     }),
   );
   async function sendDraft(sent: ComposerDraft): Promise<void> {

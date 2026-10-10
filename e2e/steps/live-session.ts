@@ -2,7 +2,11 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { Given, When, Then } from './fixtures';
 import { phone, wide } from './frame';
-import { openNewSession, openSessionBeforePrompt } from './new-session';
+import {
+  agentModelLabel,
+  openNewSession,
+  openSessionBeforePrompt,
+} from './new-session';
 
 export const liveTitle = 'Check the live list';
 export const attentionLabel = '1 Session needs attention';
@@ -70,3 +74,46 @@ Then(
     await expect(liveSessionRow(page)).toBeVisible();
   },
 );
+
+const chooseModelLabel = 'Choose model';
+
+async function reopenConfiguration(page: Page): Promise<void> {
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: agentModelLabel }).click();
+}
+
+When(
+  'I choose model {string} and effort {string}',
+  async ({ page }, model: string, effort: string): Promise<void> => {
+    await page.getByRole('button', { name: agentModelLabel }).click();
+    await page.getByRole('button', { name: chooseModelLabel }).click();
+    await page.getByRole('button', { name: model, exact: true }).click();
+    await reopenConfiguration(page);
+    await expectModel(page, model);
+    await page.getByRole('button', { name: `Set effort to ${effort}` }).click();
+    await reopenConfiguration(page);
+    await expectEffort(page, effort);
+    await page.keyboard.press('Escape');
+  },
+);
+Then(
+  'the configuration shows model {string} and effort {string}',
+  async ({ page }, model: string, effort: string): Promise<void> => {
+    await page.getByRole('button', { name: agentModelLabel }).click();
+    await expectModel(page, model);
+    await expectEffort(page, effort);
+    await page.keyboard.press('Escape');
+  },
+);
+
+async function expectModel(page: Page, model: string): Promise<void> {
+  await expect(
+    page.getByRole('button', { name: chooseModelLabel }),
+  ).toContainText(model);
+}
+async function expectEffort(page: Page, effort: string): Promise<void> {
+  await expect(page.getByRole('slider', { name: 'Effort' })).toHaveAttribute(
+    'aria-valuetext',
+    effort,
+  );
+}

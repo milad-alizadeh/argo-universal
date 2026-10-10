@@ -19,6 +19,7 @@
   "dependencies": {
     "@expo/ui": "catalog:",
     "@legendapp/list": "catalog:",
+    "@react-native-async-storage/async-storage": "catalog:",
     "@react-native-community/slider": "catalog:",
     "@repo/contracts": "workspace:*",
     "@repo/uniwind": "workspace:*",

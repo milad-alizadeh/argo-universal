@@ -173,7 +173,7 @@ function Choice({
       className={cn(
         'min-h-11 wide:min-h-8 h-auto sm:h-auto justify-start gap-2.5 px-2.5 wide:px-2 py-1.5 rounded-sm',
         'web:focus-visible:ring-0 web:focus-visible:bg-accent',
-        selected && 'bg-accent',
+        selected && 'bg-accent ios:bg-accent/50',
         description && 'min-h-13 wide:min-h-0',
         leading && 'items-start py-2',
       )}
@@ -269,7 +269,7 @@ export function AgentChoices({
             'min-h-11 wide:min-h-8 h-auto sm:h-auto py-1.5 px-2.5 has-[>[data-icon]]:px-2.5 wide:px-2 wide:has-[>[data-icon]]:px-2 rounded-sm justify-start gap-2.5 wide:gap-2 web:focus-visible:ring-0 web:focus-visible:bg-accent',
             configuration.onAgentChange &&
               agent.agent === configuration.agent &&
-              'bg-accent',
+              'bg-accent ios:bg-accent/50',
           )}
           onPress={() => {
             if (agent.agent !== configuration.agent)

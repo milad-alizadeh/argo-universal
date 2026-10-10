@@ -1,4 +1,24 @@
 Feature: New Session
+  Scenario Outline: Model and effort persist through creation and App restart with Agent <agent>
+    Given a phone Frame
+    And a New Session with Agent <agent>
+    When I choose model "Small" and effort "High"
+    And I open the Session before prompting
+    Then the configuration shows model "Small" and effort "High"
+    When I choose model "Large" and effort "Low"
+    And I return to the Sessions list
+    And I open another New Session with Agent <agent>
+    Then the configuration shows model "Large" and effort "Low"
+    When I reload the App and open New Session with Agent <agent>
+    Then the configuration shows model "Large" and effort "Low"
+    When I open the Session before prompting
+    Then the configuration shows model "Large" and effort "Low"
+
+    Examples:
+      | agent |
+      | 1     |
+      | 2     |
+
   Scenario Outline: Configure the actual Session before its first prompt with Agent <agent>
     Given a phone Frame
     And a New Session with Agent <agent>

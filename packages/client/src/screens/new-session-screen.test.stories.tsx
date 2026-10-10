@@ -1,10 +1,12 @@
-import type { SessionNewInput } from '@repo/contracts';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SessionNewInput } from '@repo/contracts';
 import {
   newSessionCatalogs,
   newSessionProjects,
   serverInfo,
 } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { useState } from 'react';
 import { View } from 'react-native';
 import { expect, waitFor, within } from 'storybook/test';
 import { page } from 'vitest/browser';
@@ -20,16 +22,26 @@ import {
   unavailableNewSessionMocks,
 } from '../../mocks/new-session-mock';
 import { settleViewport } from '../../mocks/settle-viewport';
-import type { FixtureOutput } from '../../mocks/trpc-mock-link';
+import type {
+  FixtureArguments,
+  FixtureOutput,
+} from '../../mocks/trpc-mock-link';
 import { pending } from '../../mocks/trpc-mock-link';
 import { createNavigationRecorder } from '../../mocks/with-navigation-mocks';
+import { TrpcMocks } from '../../mocks/with-trpc-mocks';
 import { ContentLayout } from '../components/content-layout';
+import { Button } from '../primitives/button';
+import { Text } from '../primitives/text';
 import { NewSessionScreen } from './new-session-screen';
 
 const openSessionLabel = 'Open Session';
 const createdSessionId = 'new-session';
 const chooseAgentLabel = 'Choose Agent';
 const agentModelLabel = 'Agent and model';
+const effortLabel = 'Effort';
+const defaultEffortLabel = 'Medium';
+const effortValueAttribute = 'aria-valuetext';
+const chooseModelLabel = 'Choose model';
 
 const recorder = createNavigationRecorder();
 const started: SessionNewInput[] = [];
@@ -46,13 +58,16 @@ const meta = {
     navigation: recorder,
     trpc: {
       ...newSessionMocks,
-      'session.new': (input: SessionNewInput): FixtureOutput<'session.new'> => {
-        started.push(input);
+      'session.new': (
+        input: FixtureArguments<'session.new'>[0],
+      ): FixtureOutput<'session.new'> => {
+        started.push(SessionNewInput.parse(input));
         return { sessionId: createdSessionId };
       },
     },
   },
-  beforeEach: (): void => {
+  beforeEach: async (): Promise<void> => {
+    await AsyncStorage.clear();
     recorder.reset();
     started.length = 0;
   },
@@ -248,7 +263,10 @@ export const OpeningReplacesThePage: Story = {
         projectId: exampleProject.id,
         agent: firstAgent.agent,
         checkout: { type: 'worktree', baseBranch: 'main' },
-        configOptions: [],
+        configOptions: [
+          { configId: 'model', value: 'default' },
+          { configId: 'effort', value: 'medium' },
+        ],
         prompt: [],
       },
     ]);
@@ -267,9 +285,6 @@ function openSessionBeforePrompt(width: number, agentIndex: number): Story {
       await userEvent.click(
         await canvas.findByRole('button', { name: agentModelLabel }),
       );
-      await expect(
-        overlay.queryByRole('slider', { name: 'Effort' }),
-      ).toBeNull();
       if (width === layoutWidths.phone)
         await userEvent.click(
           await overlay.findByRole('button', { name: chooseAgentLabel }),
@@ -277,6 +292,22 @@ function openSessionBeforePrompt(width: number, agentIndex: number): Story {
       await userEvent.click(
         await overlay.findByRole('button', { name: `Select ${agent.label}` }),
       );
+      if (width === layoutWidths.wide)
+        await userEvent.click(
+          canvas.getByRole('button', { name: agentModelLabel }),
+        );
+      await expect(
+        await overlay.findByRole('slider', { name: effortLabel }),
+      ).toHaveAttribute(effortValueAttribute, defaultEffortLabel);
+      if (width === layoutWidths.phone)
+        await userEvent.click(
+          overlay.getByRole('button', { name: chooseModelLabel }),
+        );
+      await expect(
+        await overlay.findByRole('button', {
+          name: agentIndex === 0 ? 'Opus 5.5 (recommended)' : 'GPT-6-Astra',
+        }),
+      ).toHaveAttribute('aria-pressed', 'true');
       await userEvent.keyboard('{Escape}');
       await userEvent.click(
         await canvas.findByRole('button', { name: openSessionLabel }),
@@ -285,7 +316,13 @@ function openSessionBeforePrompt(width: number, agentIndex: number): Story {
       await expect(started[0]).toMatchObject({
         agent: agent.agent,
         prompt: [],
-        configOptions: [],
+        configOptions: [
+          {
+            configId: 'model',
+            value: agentIndex === 0 ? 'default' : 'gpt-6-astra',
+          },
+          { configId: 'effort', value: 'medium' },
+        ],
       });
       await expect(recorder.replacements).toEqual([
         { to: 'session', id: createdSessionId },
@@ -309,6 +346,138 @@ export const OpenActualSessionWideSecondAgent = openSessionBeforePrompt(
   layoutWidths.wide,
   1,
 );
+
+function rememberedSelection(agentIndex: number): Story {
+  const agent = newSessionCatalogs.bothAvailable[agentIndex];
+  if (!agent) throw new Error('Recorded catalog needs two Agents.');
+  const model =
+    agentIndex === 0
+      ? { name: 'Opus 4.6', value: 'agent-one-opus-4-6' }
+      : { name: 'GPT-6-Luna', value: 'gpt-6-luna' };
+  return {
+    render: function RestartableApp(): React.JSX.Element {
+      const [restart, setRestart] = useState(0);
+      return (
+        <View className="flex-1">
+          <Button onPress={() => setRestart((value) => value + 1)}>
+            <Text>Restart App</Text>
+          </Button>
+          <TrpcMocks
+            key={restart}
+            fixtures={meta.parameters.trpc}
+            connectionState="open"
+          >
+            <NewSessionScreen />
+          </TrpcMocks>
+        </View>
+      );
+    },
+    play: async ({ canvas, userEvent }) => {
+      await settleViewport(layoutWidths.wide);
+      const configure = async (): Promise<void> => {
+        await userEvent.click(
+          await canvas.findByRole('button', { name: agentModelLabel }),
+        );
+        await userEvent.click(
+          await overlay.findByRole('button', { name: `Select ${agent.label}` }),
+        );
+        if (agentIndex !== 0)
+          await userEvent.click(
+            await canvas.findByRole('button', { name: agentModelLabel }),
+          );
+      };
+      await configure();
+      await userEvent.click(
+        await overlay.findByRole('button', { name: model.name }),
+      );
+      await userEvent.click(
+        overlay.getByRole('button', { name: 'Set effort to High' }),
+      );
+      await expect(
+        overlay.getByRole('slider', { name: effortLabel }),
+      ).toHaveAttribute(effortValueAttribute, 'High');
+      await userEvent.keyboard('{Escape}');
+      await userEvent.click(
+        canvas.getByRole('button', { name: openSessionLabel }),
+      );
+      await waitFor(() => expect(started).toHaveLength(1));
+      await expect(started[0]?.configOptions).toEqual([
+        { configId: 'model', value: model.value },
+        { configId: 'effort', value: 'high' },
+      ]);
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Restart App' }),
+      );
+      await configure();
+      await expect(
+        await overlay.findByRole('button', { name: model.name }),
+      ).toHaveAttribute('aria-pressed', 'true');
+      await expect(
+        overlay.getByRole('slider', { name: effortLabel }),
+      ).toHaveAttribute(effortValueAttribute, 'High');
+      await userEvent.keyboard('{Escape}');
+    },
+  };
+}
+export const RemembersSelectionFirstAgent = rememberedSelection(0);
+export const RemembersSelectionSecondAgent = rememberedSelection(1);
+
+export const ModelWithoutEffort: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await settleViewport(layoutWidths.wide);
+    await userEvent.click(
+      await canvas.findByRole('button', { name: agentModelLabel }),
+    );
+    await userEvent.click(
+      await overlay.findByRole('button', { name: 'Haiku 4.5' }),
+    );
+    await expect(
+      overlay.queryByRole('slider', { name: effortLabel }),
+    ).toBeNull();
+    await userEvent.keyboard('{Escape}');
+    await userEvent.click(
+      canvas.getByRole('button', { name: openSessionLabel }),
+    );
+    await waitFor(() => expect(started).toHaveLength(1));
+    await expect(started[0]?.configOptions).toEqual([
+      { configId: 'model', value: 'haiku' },
+    ]);
+  },
+};
+
+export const FallsBackToDefaultEffortForModel: Story = {
+  play: async ({ canvas, userEvent }) => {
+    await settleViewport(layoutWidths.wide);
+    await userEvent.click(
+      await canvas.findByRole('button', { name: agentModelLabel }),
+    );
+    await userEvent.click(
+      await overlay.findByRole('button', { name: 'Select Second Agent' }),
+    );
+    await userEvent.click(
+      canvas.getByRole('button', { name: agentModelLabel }),
+    );
+    await userEvent.click(
+      await overlay.findByRole('button', { name: 'Set effort to Ultra' }),
+    );
+    await userEvent.click(overlay.getByRole('button', { name: 'GPT-5.5' }));
+    await expect(
+      overlay.getByRole('slider', { name: effortLabel }),
+    ).toHaveAttribute(effortValueAttribute, defaultEffortLabel);
+    await expect(
+      overlay.queryByRole('button', { name: 'Set effort to Ultra' }),
+    ).toBeNull();
+    await userEvent.keyboard('{Escape}');
+    await userEvent.click(
+      canvas.getByRole('button', { name: openSessionLabel }),
+    );
+    await waitFor(() => expect(started).toHaveLength(1));
+    await expect(started[0]?.configOptions).toEqual([
+      { configId: 'model', value: 'gpt-5.5' },
+      { configId: 'effort', value: 'medium' },
+    ]);
+  },
+};
 
 const switchProject = (width: number, mode: Mode): Story => ({
   globals: { mode },

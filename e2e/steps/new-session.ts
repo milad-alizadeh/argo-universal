@@ -4,18 +4,20 @@ import { readAgent } from './agents';
 import { Given, When, Then } from './fixtures';
 
 const sessionSettingsLabel = 'Session settings';
+export const agentModelLabel = 'Agent and model';
+const openSessionLabel = 'Open Session';
 
 export async function openNewSession(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'New Session', exact: true }).click();
   await expect(page).toHaveURL(/\/sessions\/new$/);
   await expect(page.getByRole('img', { name: 'Connected' })).toBeVisible();
   await expect(
-    page.getByRole('button', { name: 'Open Session', exact: true }),
+    page.getByRole('button', { name: openSessionLabel, exact: true }),
   ).toBeVisible();
 }
 
 export async function chooseAgent(page: Page, label: string): Promise<void> {
-  await page.getByRole('button', { name: 'Agent and model' }).click();
+  await page.getByRole('button', { name: agentModelLabel }).click();
   await page.getByRole('button', { name: 'Choose Agent' }).click();
   await page.getByRole('button', { name: `Select ${label}` }).click();
   await expect(
@@ -41,6 +43,23 @@ Given(
   },
 );
 
+When(
+  'I open another New Session with Agent {int}',
+  async ({ page, server }, ordinal: number): Promise<void> => {
+    await startWithAgent(page, server.httpUrl, ordinal);
+  },
+);
+When('I return to the Sessions list', async ({ page }): Promise<void> => {
+  await page.goBack();
+  await expect(page).toHaveURL(/\/$/);
+});
+When(
+  'I reload the App and open New Session with Agent {int}',
+  async ({ page, server }, ordinal: number): Promise<void> => {
+    await page.goto('/');
+    await startWithAgent(page, server.httpUrl, ordinal);
+  },
+);
 Given(
   'Agent {int} can inspect image prompts',
   async ({ page, server }, ordinal: number): Promise<void> => {
@@ -75,7 +94,9 @@ Then('Back returns to the Sessions list', async ({ page }): Promise<void> => {
 });
 
 export async function openSessionBeforePrompt(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Open Session', exact: true }).click();
+  await page
+    .getByRole('button', { name: openSessionLabel, exact: true })
+    .click();
   await expect(page).toHaveURL(/\/sessions\/(?!new)[^/]+$/);
   await expect(
     page.getByRole('button', { name: 'Cancel creation' }),

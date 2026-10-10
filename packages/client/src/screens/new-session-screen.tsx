@@ -1,4 +1,4 @@
-import type { SessionNewInput } from '@repo/contracts';
+import type { SessionConfigOption, SessionNewInput } from '@repo/contracts';
 import type { AppRouter } from '@repo/engine/router';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import type { inferRouterOutputs } from '@trpc/server';
@@ -21,6 +21,7 @@ import { useNavigate } from '../navigation/context';
 import type { ClientError } from '../trpc/context';
 import { useTRPC } from '../trpc/context';
 import { useAgents } from '../trpc/use-agents';
+import { useNewSessionConfiguration } from './session-configuration-preferences';
 
 type ProjectsQuery = ReturnType<
   typeof useQuery<
@@ -37,6 +38,9 @@ interface SessionChoices {
   baseBranch: string;
   baseBranchLoaded: boolean;
   settings: SessionSettings | undefined;
+  configOptions: SessionConfigOption[];
+  configReady: boolean;
+  chooseConfig: (configId: string, value: string | boolean) => void;
   chooseProject: (id: string) => void;
   chooseAgent: (agent: string) => void;
   chooseNewWorktree: React.Dispatch<React.SetStateAction<boolean | undefined>>;
@@ -78,6 +82,8 @@ function useSessionChoices(projectId: string | undefined): SessionChoices {
     project?.checkoutChoice.type === 'worktree'
       ? project.checkoutChoice.baseBranch
       : (branches.data?.currentBranch ?? 'main');
+  const configuration = useNewSessionConfiguration(agent);
+  const { configOptions } = configuration;
 
   const settings: SessionSettings | undefined =
     project && agent
@@ -87,7 +93,10 @@ function useSessionChoices(projectId: string | undefined): SessionChoices {
           checkout: inNewWorktree
             ? { type: 'worktree', baseBranch }
             : { type: 'main' },
-          configOptions: [],
+          configOptions: configOptions.map(({ configId, currentValue }) => ({
+            configId,
+            value: currentValue,
+          })),
         }
       : undefined;
 
@@ -101,6 +110,9 @@ function useSessionChoices(projectId: string | undefined): SessionChoices {
     baseBranchLoaded:
       project?.checkoutChoice.type !== 'main' || branches.data !== undefined,
     settings,
+    configOptions,
+    configReady: configuration.ready,
+    chooseConfig: configuration.change,
     // Another Project starts from its own checkout default.
     chooseProject: (id: string) => {
       setChosenProjectId(id);
@@ -124,7 +136,7 @@ function NewSessionHeading(): React.JSX.Element {
   );
 }
 
-// Opens the chosen Session before its Composer can offer actual configuration.
+// Opens the chosen Session with its model and effort before the first prompt.
 export function NewSessionScreen({
   projectId,
 }: NewSessionScreenProps): React.JSX.Element {
@@ -205,8 +217,8 @@ export function NewSessionScreen({
                 configuration={{
                   agents: agents.data,
                   agent: agent?.agent ?? '',
-                  configOptions: [],
-                  onConfigChange: () => {},
+                  configOptions: choices.configOptions,
+                  onConfigChange: choices.chooseConfig,
                   onAgentChange: (nextAgent) => {
                     choices.chooseAgent(nextAgent);
                     newSession.reset();
@@ -230,6 +242,7 @@ export function NewSessionScreen({
                   !choices.settings ||
                   !agentAvailable ||
                   !choices.baseBranchLoaded ||
+                  !choices.configReady ||
                   newSession.isPending
                 }
                 onPress={() => {

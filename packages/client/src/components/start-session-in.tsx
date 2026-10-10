@@ -220,7 +220,7 @@ export function ProjectPicker({
               onPress={() => onSelect(project.id)}
               className={cn(
                 'h-auto sm:h-auto items-start justify-start gap-1.5 px-2.5 py-2 has-[>[data-icon]]:px-2.5 has-[>[data-icon]]:py-2 wide:p-2 wide:has-[>[data-icon]]:p-2 rounded-md web:focus-visible:ring-0 web:focus-visible:bg-accent',
-                selected && 'bg-accent',
+                selected && 'bg-accent ios:bg-accent/50',
               )}
             >
               <View className="h-5 shrink-0 justify-center">
