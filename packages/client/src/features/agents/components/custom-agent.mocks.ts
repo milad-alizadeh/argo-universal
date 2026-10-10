@@ -1,6 +1,7 @@
 import type { AgentRegistration, CustomAgentDefinition } from '@repo/contracts';
 import { fn, type Mock } from 'storybook/test';
 import type { SubmitCustomAgent } from '../hooks/use-custom-agent-form';
+import type { AgentSettingsViewProps } from './agent-settings-view';
 
 export const customAgentId = 'custom-agent-1';
 export const customAgentDefinition: CustomAgentDefinition = {
@@ -25,3 +26,12 @@ export const registers = (): Mock<SubmitCustomAgent> =>
   fn<SubmitCustomAgent>(() => Promise.resolve(registered));
 export const failsItsCheck = (): Mock<SubmitCustomAgent> =>
   fn<SubmitCustomAgent>(() => Promise.resolve(checkFailed));
+
+// A saved custom Agent whose program answered its check, with callback spies.
+export const agentSettingsArgs = (): AgentSettingsViewProps => ({
+  agentId: customAgentId,
+  definition: customAgentDefinition,
+  check: { status: 'ready' },
+  onCheck: fn(),
+  onSave: registers(),
+});

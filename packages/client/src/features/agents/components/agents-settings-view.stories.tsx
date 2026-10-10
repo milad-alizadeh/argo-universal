@@ -7,6 +7,7 @@ import {
   failedSyncCatalog,
   unavailableCatalog,
   agentsSettingsArgs,
+  emptyCatalog,
 } from './agents-settings-view.mocks';
 
 const meta = {
@@ -32,7 +33,7 @@ export const ErrorState: Story = {
 
 export const Empty: Story = {
   args: {
-    catalog: { status: 'loaded', catalog: { ...catalog, agents: [] } },
+    catalog: { status: 'loaded', catalog: emptyCatalog },
     customAgents: [],
   },
 };
@@ -44,7 +45,7 @@ export const RefreshFailed: Story = {
 export const NoMatches: Story = {
   args: {
     search: 'mistral',
-    catalog: { status: 'loaded', catalog: { ...catalog, agents: [] } },
+    catalog: { status: 'loaded', catalog: emptyCatalog },
   },
 };
 

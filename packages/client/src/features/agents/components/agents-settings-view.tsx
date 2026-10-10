@@ -4,14 +4,10 @@ import { Button } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
 import { LoadError } from '#lib/product/load-error';
 import type { CatalogLoad } from '../state/catalog-sync';
-import { AgentCatalog } from './catalog';
+import { AgentCatalog, type CatalogRefreshProps } from './catalog';
 import { CatalogSearch, type CatalogSearchProps } from './catalog-search';
 import { CustomAgentRows, type CustomAgentRowEntry } from './custom-agent-rows';
 
-export type CatalogRefreshProps = {
-  refreshing: boolean;
-  onRefresh: () => void;
-};
 export type AgentsSettingsViewProps = CatalogSearchProps &
   CatalogRefreshProps & {
     catalog: CatalogLoad;
@@ -108,7 +104,8 @@ function CatalogResult(props: ResultProps): React.JSX.Element {
     <AgentCatalog
       catalog={catalog.catalog}
       search={props.search}
-      retry={{ refresh: onRefresh, refreshing }}
+      refreshing={refreshing}
+      onRefresh={onRefresh}
     />
   );
 }

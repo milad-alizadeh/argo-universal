@@ -9,6 +9,7 @@ import {
   failedSyncCatalog,
   unavailableCatalog,
   agentsSettingsArgs,
+  emptyCatalog,
 } from './agents-settings-view.mocks';
 import { customAgentDefinition, customAgentId } from './custom-agent.mocks';
 
@@ -28,9 +29,9 @@ const syncError = 'Registry is offline';
 const firstAgent = catalog.agents[0];
 if (!firstAgent) throw new Error('Recorded catalog needs an Agent');
 const firstAgentName = firstAgent.entry.name;
-const emptyCatalog: CatalogLoad = {
+const emptyLoad: CatalogLoad = {
   status: 'loaded',
-  catalog: { ...catalog, agents: [] },
+  catalog: emptyCatalog,
 };
 
 export const ShowsTheCatalogAndCustomAgents: Story = {
@@ -66,7 +67,7 @@ export const RetriesACatalogTheServerCouldNotRead: Story = {
 };
 
 export const ShowsAnEmptyCatalog: Story = {
-  args: { catalog: emptyCatalog },
+  args: { catalog: emptyLoad },
   play: async ({ canvas }) => {
     await expect(canvas.getByText('No Agents found.')).toBeVisible();
     await expect(canvas.queryByText('Check the spelling.')).toBeNull();
@@ -74,7 +75,7 @@ export const ShowsAnEmptyCatalog: Story = {
 };
 
 export const ShowsNoMatchesForASearch: Story = {
-  args: { catalog: emptyCatalog, search: 'mistral' },
+  args: { catalog: emptyLoad, search: 'mistral' },
   play: async ({ canvas }) => {
     await expect(canvas.getByText('No Agents match “mistral”')).toBeVisible();
     await expect(canvas.getByText('Check the spelling.')).toBeVisible();

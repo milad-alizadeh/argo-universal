@@ -1,23 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { fn } from 'storybook/test';
 import { AgentSettingsView } from './agent-settings-view';
-import {
-  customAgentDefinition,
-  customAgentFailure,
-  customAgentId,
-  registers,
-} from './custom-agent.mocks';
+import { customAgentFailure, agentSettingsArgs } from './custom-agent.mocks';
 
 const meta = {
   title: 'Screens/AgentSettingsScreen',
   component: AgentSettingsView,
-  args: {
-    agentId: customAgentId,
-    definition: customAgentDefinition,
-    check: { status: 'ready' },
-    onCheck: fn(),
-    onSave: registers(),
-  },
+  args: agentSettingsArgs(),
   parameters: { screenPreview: true },
 } satisfies Meta<typeof AgentSettingsView>;
 export default meta;

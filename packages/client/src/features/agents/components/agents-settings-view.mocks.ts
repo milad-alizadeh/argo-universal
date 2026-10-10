@@ -79,3 +79,5 @@ export const agentsSettingsArgs = (): AgentsSettingsViewProps => ({
   onAddCustomAgent: fn(),
   onOpenCustomAgent: fn(),
 });
+
+export const emptyCatalog: AgentsCatalogOutput = { ...catalog, agents: [] };

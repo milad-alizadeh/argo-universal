@@ -1,14 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, fn, waitFor } from 'storybook/test';
+import { expect, waitFor } from 'storybook/test';
 import { layoutWidths } from '../../../lib/generic/each-layout';
 import { settleViewport } from '../../../lib/generic/settle-viewport';
 import { AgentSettingsView } from './agent-settings-view';
 import {
   customAgentDefinition,
   customAgentFailure,
-  customAgentId,
   failsItsCheck,
-  registers,
+  agentSettingsArgs,
 } from './custom-agent.mocks';
 
 const answered = 'Answered ACP initialize';
@@ -16,13 +15,7 @@ const answered = 'Answered ACP initialize';
 const meta = {
   title: 'Tests/AgentSettingsScreen',
   component: AgentSettingsView,
-  args: {
-    agentId: customAgentId,
-    definition: customAgentDefinition,
-    check: { status: 'ready' },
-    onCheck: fn(),
-    onSave: registers(),
-  },
+  args: agentSettingsArgs(),
   parameters: { screenPreview: true },
   beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
 } satisfies Meta<typeof AgentSettingsView>;
