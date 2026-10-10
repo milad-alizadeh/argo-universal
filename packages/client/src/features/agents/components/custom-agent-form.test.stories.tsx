@@ -1,44 +1,25 @@
-import type { AgentRegistration, CustomAgentDefinition } from '@repo/contracts';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { expect, waitFor, within } from 'storybook/test';
-import {
-  customAgentFailure,
-  customAgentId,
-  customAgentMocks,
-} from '../../../../mocks/agents-mock';
-import { createNavigationRecorder } from '../../../../mocks/with-navigation-mocks';
+import { expect, fn, waitFor, within } from 'storybook/test';
 import { layoutWidths } from '../../../lib/generic/each-layout';
 import { settleViewport } from '../../../lib/generic/settle-viewport';
-import { CustomAgentScreen } from './custom-agent-screen';
-
-const recorder = createNavigationRecorder();
-let registered: CustomAgentDefinition[] = [];
-let registration: 'ready' | 'failed' = 'ready';
+import { CustomAgentForm } from './custom-agent-form';
+import {
+  customAgentFailure,
+  failsItsCheck,
+  registers,
+} from './custom-agent.mocks';
 
 const meta = {
   title: 'Tests/CustomAgentScreen',
-  component: CustomAgentScreen,
-  parameters: {
-    navigation: recorder,
-    screenPreview: true,
-    trpc: {
-      ...customAgentMocks,
-      'agents.registerCustom': (
-        definition: CustomAgentDefinition,
-      ): AgentRegistration => {
-        registered.push(definition);
-        return registration === 'ready'
-          ? { status: 'ready', agentId: customAgentId }
-          : { status: 'failed', failure: customAgentFailure };
-      },
-    },
+  component: CustomAgentForm,
+  args: {
+    submitLabel: 'Add Agent',
+    onSubmit: registers(),
+    onCancel: fn(),
   },
-  beforeEach: (): void => {
-    recorder.reset();
-    registered = [];
-    registration = 'ready';
-  },
-} satisfies Meta<typeof CustomAgentScreen>;
+  parameters: { screenPreview: true },
+  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+} satisfies Meta<typeof CustomAgentForm>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 type Canvas = Parameters<NonNullable<Story['play']>>[0]['canvas'];
@@ -78,52 +59,46 @@ async function addArgument(
   ).toBeVisible();
 }
 
-function registers(layout: Layout): Story {
+function registersAt(layout: Layout): Story {
   return {
-    beforeEach: () => settleViewport(layoutWidths[layout]),
-    play: async ({ canvas, userEvent }) => {
-      const submit = await canvas.findByRole('button', addAgent);
+    beforeEach: (): Promise<void> => settleViewport(layoutWidths[layout]),
+    play: async ({ args, canvas, userEvent }) => {
+      const submit = canvas.getByRole('button', addAgent);
       await expect(submit).toBeDisabled();
       await fillProgram(canvas, userEvent);
       await addArgument(layout, canvas, userEvent);
       await waitFor(() => expect(submit).toBeEnabled());
       await userEvent.click(submit);
       await waitFor(() =>
-        expect(recorder.replacements).toEqual([
-          { to: 'settings-agent', agent: customAgentId },
-        ]),
-      );
-      await expect(registered).toEqual([
-        {
+        expect(args.onSubmit).toHaveBeenCalledWith({
           name: exampleName,
           executable: 'example-acp',
           args: ['--acp'],
           env: [],
-        },
-      ]);
+        }),
+      );
     },
   };
 }
 
-export const RegistersOnPhone: Story = registers('phone');
-export const RegistersOnDesktop: Story = registers('wide');
+export const RegistersOnPhone: Story = registersAt('phone');
+export const RegistersOnDesktop: Story = registersAt('wide');
 
 export const ShowsTheFailedCheck: Story = {
-  beforeEach: () => {
-    registration = 'failed';
+  args: {
+    onSubmit: failsItsCheck(),
   },
   play: async ({ canvas, userEvent }) => {
     await fillProgram(canvas, userEvent);
     await userEvent.click(canvas.getByRole('button', addAgent));
     await expect(await canvas.findByText('Check failed')).toBeVisible();
     await expect(canvas.getByText(customAgentFailure)).toBeVisible();
-    await expect(recorder.destinations).toEqual([]);
   },
 };
 
 export const RejectsShellLinesAndCredentials: Story = {
-  beforeEach: () => settleViewport(layoutWidths.wide),
-  play: async ({ canvas, userEvent }) => {
+  beforeEach: (): Promise<void> => settleViewport(layoutWidths.wide),
+  play: async ({ args, canvas, userEvent }) => {
     await userEvent.type(canvas.getByLabelText('Name'), exampleName);
     await userEvent.type(
       canvas.getByLabelText('Executable'),
@@ -144,6 +119,6 @@ export const RejectsShellLinesAndCredentials: Story = {
       ),
     ).toBeVisible();
     await expect(canvas.getByRole('button', addAgent)).toBeDisabled();
-    await expect(registered).toEqual([]);
+    await expect(args.onSubmit).not.toHaveBeenCalled();
   },
 };
