@@ -110,7 +110,8 @@ export const test = base.extend<
           ARGO_HOME: home,
           // Its own app data, so parallel launches each get the single-instance lock.
           ARGO_USER_DATA_DIRECTORY: testInfo.outputPath('user-data'),
-          ARGO_BACKGROUND: '1',
+          // CI's xvfb display has no one's focus to take, and a hidden window there draws a frame only every few seconds, which every click waits for.
+          ARGO_BACKGROUND: process.env.CI ? '0' : '1',
           PATH: '/usr/bin:/bin',
         },
       });
