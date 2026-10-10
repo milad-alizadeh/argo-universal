@@ -119,8 +119,12 @@ export class AcpSessionLifetime {
   public cancelRequest(requestId: string): void {
     this.requests.cancel(requestId);
   }
-  public cancelRequests(): void {
-    this.requests.cancelAll();
+  public cancelRequests = (): void => this.requests.cancelAll();
+  // The prompt's own result, not this request, ends the Turn.
+  public cancelPrompt(): void {
+    void this.lease?.agent
+      .notify('session/cancel', { sessionId: this.lease.sessionId })
+      .catch((error: unknown) => console.error('ACP cancel not sent', error));
   }
   public close(): Promise<void> {
     this.requests.cancelAll();

@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createMockAdapter } from '@repo/mocks/agent';
 import { onTestFinished } from 'vitest';
+import type { AcpResourceInput } from '../src/services/agents';
 import { createResourcePeer, resourceLaunch } from './acp-resource';
 import { openTestDatabase } from './database';
 import { startEngineTestHost } from './engine';
@@ -17,7 +18,8 @@ export const emptySessionInput = {
   prompt: [],
 };
 export const startAcpEngine = async (
-  peerInput: Parameters<typeof createResourcePeer>[0] = {},
+  peerInput: Parameters<typeof createResourcePeer>[0] &
+    Pick<AcpResourceInput, 'closeTimeoutMs'> = {},
   createId: () => string = randomUUID,
   agentId = 'mock',
 ): Promise<
@@ -33,7 +35,7 @@ export const startAcpEngine = async (
     database: storage.database,
     createId,
     adapters: [{ ...createMockAdapter(), agent: agentId }],
-    acp: peer,
+    acp: { ...peer, closeTimeoutMs: peerInput.closeTimeoutMs },
     resolveAgentLaunch: async (input) => ({
       ...resourceLaunch,
       agentId: input.agent,
