@@ -2,7 +2,7 @@ import { createActor, type Actor } from 'xstate';
 import type { EngineMessage } from './ipc';
 import { type EngineInput, engineMachine } from './machine';
 
-// The outside ports: the Agent process launcher (`acp.launchProcess`), the launch resolver, the Registry fetch, the clock and ids.
+// The Engine's settings (home, port, version, startedAt) and its outside ports: the Agent process launcher (`acp.launchProcess`), the launch resolver (`resolveAgentLaunch`), the Registry fetch (`fetchAgents`), the clock (`now`) and ids (`createId`).
 export type EnginePorts = EngineInput & {
   // Where the Engine reports `ready` and heartbeats; the Supervisor's IPC channel unless replaced.
   report?: (message: EngineMessage) => void;

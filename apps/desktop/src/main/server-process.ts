@@ -21,9 +21,7 @@ export const isRunning = (pid: number): boolean => {
 };
 
 // server.json when its pid is alive; the Supervisor removes the file when it stops, so a crash can leave one behind.
-export async function readLiveServerAddress(
-  home: string,
-): Promise<ServerAddress | null> {
+export function readLiveServerAddress(home: string): ServerAddress | null {
   const address = readServerAddress(home);
   return address && isRunning(address.pid) ? address : null;
 }

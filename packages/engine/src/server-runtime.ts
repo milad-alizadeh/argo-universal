@@ -11,6 +11,8 @@ import { ServerAddress } from '@repo/contracts';
 
 const serverAddressFile = 'server.json';
 let unrecognisedAddresses = 0;
+// The last damaged text reported, so a poller reports one damaged file once.
+let lastUnrecognisedText: string | null = null;
 
 // The Server and desktop share the ARGO_HOME boundary, including an empty override.
 export const resolveRuntimeDirectory = (): string =>
@@ -28,7 +30,7 @@ export function writeServerAddress(home: string, address: ServerAddress): void {
   renameSync(temporaryPath, filePath);
 }
 
-// The address in server.json; a missing file is null, and a damaged or foreign one is rejected, reported and counted.
+// The address in server.json; a missing file is null, and a damaged or foreign one is rejected, then reported and counted once per content.
 export function readServerAddress(home: string): ServerAddress | null {
   let text: string;
   try {
@@ -44,10 +46,13 @@ function parseServerAddress(text: string): ServerAddress | null {
   try {
     json = JSON.parse(text);
   } catch (error) {
-    return reportUnrecognised(error);
+    reportUnrecognised(text, error);
+    return null;
   }
   const address = ServerAddress.safeParse(json);
-  return address.success ? address.data : reportUnrecognised(address.error);
+  if (address.success) return address.data;
+  reportUnrecognised(text, address.error);
+  return null;
 }
 
 // Removes server.json only when it names `pid`, so one Server never removes another's file.
@@ -56,11 +61,12 @@ export function removeServerAddress(home: string, pid: number): void {
     rmSync(join(home, serverAddressFile), { force: true });
 }
 
-function reportUnrecognised(error: unknown): null {
+function reportUnrecognised(text: string, error: unknown): void {
+  if (text === lastUnrecognisedText) return;
+  lastUnrecognisedText = text;
   unrecognisedAddresses += 1;
   console.error(
     `unrecognised ${serverAddressFile} #${unrecognisedAddresses}`,
     error,
   );
-  return null;
 }

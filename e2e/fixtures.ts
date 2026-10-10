@@ -33,10 +33,6 @@ export const serverVersion = ServerPackage.parse(
   ),
 ).version;
 
-// The supervisor removes server.json when it stops, so a file left behind names a Server still running.
-const readServerPid = (home: string): number | null =>
-  readServerAddress(home)?.pid ?? null;
-
 // The App prefers the Server URL the desktop preload sets over its built-in one, so tests can point it at any port.
 const pointAppAtServer = (page: Page, serverUrl: string): Promise<Disposable> =>
   page.addInitScript((url): void => {
@@ -133,7 +129,8 @@ export const test = base.extend<
         await fixtureServer.stop();
       }
     }
-    const leftoverPid = readServerPid(home);
+    // The supervisor removes server.json when it stops, so a file left behind names a Server still running.
+    const leftoverPid = readServerAddress(home)?.pid ?? null;
     if (leftoverPid !== null) {
       process.kill(leftoverPid, 'SIGTERM');
       throw new Error(
