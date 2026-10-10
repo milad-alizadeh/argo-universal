@@ -35,10 +35,10 @@
     "vitest": "catalog:"
   },
   "exports": {
-    "./machine": "./src/engine/machine.ts",
+    "./compose": "./src/engine/compose.ts",
     "./router": "./src/engine/router.ts",
     "./mocks": "./mocks/engine.ts",
     "./ipc": "./src/engine/ipc.ts",
-    "./server-runtime": "./src/server-runtime.mts"
+    "./server-runtime": "./src/server-runtime.ts"
   }
 }

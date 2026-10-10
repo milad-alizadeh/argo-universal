@@ -90,7 +90,7 @@ const serverSetup = setup({
   actors: {
     // The Supervisor in server.json, if its pid is alive; of any version until release packaging checks it.
     readAddress: fromPromise<ServerAddress | null, ServerInput>(
-      ({ input }): Promise<ServerAddress | null> =>
+      async ({ input }): Promise<ServerAddress | null> =>
         readLiveServerAddress(input.home),
     ),
     // Sends `server.spawned`, then `server.exited` if the Supervisor exits while it starts.

@@ -3,9 +3,10 @@ import { dirname, join } from 'node:path';
 import type { Database } from '@repo/db';
 import { findFreePort } from '@repo/mocks/network/free-port';
 import { onTestFinished } from 'vitest';
-import { createActor, waitFor, type Actor, type ActorRefFrom } from 'xstate';
+import { waitFor, type ActorRefFrom } from 'xstate';
+import { composeEngine, type EngineActor } from '../src/engine/compose';
 import type { HttpServer } from '../src/engine/http-server';
-import { engineMachine, type EngineInput } from '../src/engine/machine';
+import type { EngineInput } from '../src/engine/machine';
 import { findMachineActor } from '../src/lib/machine-actor';
 import type { RegistryActorRef } from '../src/services/sessions';
 import { sessionRegistryId, registryMachine } from '../src/services/sessions';
@@ -19,7 +20,7 @@ type EngineTestOptions = Partial<EngineInput> & {
 };
 
 type EngineConnections = {
-  engine: Actor<typeof engineMachine>;
+  engine: EngineActor;
   database: Database;
   sessionRegistry: RegistryActorRef;
   databaseWriter: ActorRefFrom<typeof writerMachine>;
@@ -48,18 +49,16 @@ export async function startEngineTestHost(
       : (options.runtimeDirectory ?? storage?.directory));
   if (!home) throw new Error('Engine test storage is missing');
   const port = options.port ?? (await findFreePort());
-  const engine = createActor(engineMachine, {
-    input: {
-      version: '1.2.3',
-      startedAt: '2026-10-03T00:00:00.000Z',
-      now: Date.now,
-      createId: randomUUID,
-      ...scriptedEngineInput(),
-      fetchAgents: async () => ({ version: '1.0.0', agents: [] }),
-      ...options,
-      home,
-      port,
-    },
+  const engine = composeEngine({
+    version: '1.2.3',
+    startedAt: '2026-10-03T00:00:00.000Z',
+    now: Date.now,
+    createId: randomUUID,
+    ...scriptedEngineInput(),
+    fetchAgents: async () => ({ version: '1.0.0', agents: [] }),
+    ...options,
+    home,
+    port,
   }).start();
   const stop = registerEngineCleanup(engine, storage);
   await waitFor(engine, (snapshot) => snapshot.matches({ live: 'running' }));
@@ -72,9 +71,7 @@ export async function startEngineTestHost(
   };
 }
 
-function readEngineTestHost(
-  engine: Actor<typeof engineMachine>,
-): EngineConnections {
+function readEngineTestHost(engine: EngineActor): EngineConnections {
   const { database, server } = engine.getSnapshot().context;
   const sessionRegistry = findMachineActor(
     engine.system,
@@ -99,7 +96,7 @@ function readEngineTestHost(
 }
 
 function registerEngineCleanup(
-  engine: Actor<typeof engineMachine>,
+  engine: EngineActor,
   storage: ReturnType<typeof openTestDatabase> | undefined,
 ): () => Promise<void> {
   const stop = async (): Promise<void> => {

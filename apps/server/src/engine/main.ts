@@ -1,7 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { engineMachine } from '@repo/engine/machine';
+import { composeEngine } from '@repo/engine/compose';
 import { resolveRuntimeDirectory } from '@repo/engine/server-runtime';
-import { createActor } from 'xstate';
 import { z } from 'zod';
 import packageJson from '../../package.json' with { type: 'json' };
 
@@ -15,15 +14,13 @@ const port = z.coerce
   .parse(process.env.ARGO_SERVER_PORT ?? defaultPort);
 
 const home = resolveRuntimeDirectory();
-const engine = createActor(engineMachine, {
-  input: {
-    home,
-    now: Date.now,
-    createId: randomUUID,
-    port,
-    version: packageJson.version,
-    startedAt: new Date().toISOString(),
-  },
+const engine = composeEngine({
+  home,
+  now: Date.now,
+  createId: randomUUID,
+  port,
+  version: packageJson.version,
+  startedAt: new Date().toISOString(),
 });
 engine.subscribe({
   complete: (): never => {

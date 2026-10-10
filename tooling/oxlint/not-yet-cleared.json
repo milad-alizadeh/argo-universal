@@ -5,7 +5,7 @@
   // Never add a waiver identity or rule; the approved Engine relocations preserve existing identities (ADR-0017).
   "overrides": [
     // complexity, max-lines-per-function, max-statements, typescript/consistent-type-assertions, typescript/explicit-function-return-type
-    { "files": ["apps/desktop/scripts/*"], "rules": { "complexity": "off", "max-lines-per-function": "off", "max-statements": "off" } },
+    { "files": ["apps/desktop/scripts/*"], "rules": { "complexity": "off", "max-lines-per-function": "off" } },
     // complexity, max-lines, max-lines-per-function, max-statements, sonarjs/no-duplicate-string, sonarjs/no-nested-template-literals, sonarjs/no-os-command-from-path, sonarjs/no-unused-vars, sonarjs/publicly-writable-directories, typescript/consistent-type-assertions, typescript/explicit-function-return-type, unicorn/consistent-function-scoping, vitest/expect-expect
     { "files": ["apps/desktop/src/main/*"], "rules": { "complexity": "off", "max-lines": "off", "max-lines-per-function": "off", "max-statements": "off", "sonarjs/no-nested-template-literals": "off", "sonarjs/no-os-command-from-path": "off", "sonarjs/no-unused-vars": "off", "sonarjs/publicly-writable-directories": "off", "unicorn/consistent-function-scoping": "off", "vitest/expect-expect": "off" } },
     // stylistic/multiline-comment-style
