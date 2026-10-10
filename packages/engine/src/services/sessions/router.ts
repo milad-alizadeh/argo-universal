@@ -28,6 +28,7 @@ import {
 } from '@repo/contracts';
 import { TRPCError } from '@trpc/server';
 import { publicProcedure, router, zAsyncIterable } from '../../engine/trpc';
+import { findMachineActor } from '../../lib/machine-actor';
 import { userMessageId } from '../feed';
 import {
   validatePermissionAnswer,
@@ -41,8 +42,10 @@ import {
 } from './session-command';
 import { configureSession } from './session-configuration';
 import { createSession } from './session-creation';
+import { sessionMachine } from './session-machine';
 import { openReadySession } from './session-opening';
-import { findSessionActor, requireLiveSessionActor } from './session-system';
+import { requireLiveSessionActor } from './session-system';
+import { sessionActorId } from './session-system';
 
 export const sessionRouter = router({
   list: publicProcedure
@@ -122,9 +125,10 @@ export const sessionRouter = router({
     .output(SessionAnswerPermissionOutput)
     .mutation(({ ctx, input }): SessionAnswerPermissionOutput => {
       validateSessionCommandAdmission(ctx);
-      const sessionActor = findSessionActor(
+      const sessionActor = findMachineActor(
         ctx.sessions.system,
-        input.sessionId,
+        sessionActorId(input.sessionId),
+        sessionMachine,
       );
       validatePermissionAnswer(sessionActor, input);
       sendSessionCommand(sessionActor, {
@@ -140,9 +144,10 @@ export const sessionRouter = router({
     .output(SessionAnswerElicitationOutput)
     .mutation(({ ctx, input }): SessionAnswerElicitationOutput => {
       validateSessionCommandAdmission(ctx);
-      const sessionActor = findSessionActor(
+      const sessionActor = findMachineActor(
         ctx.sessions.system,
-        input.sessionId,
+        sessionActorId(input.sessionId),
+        sessionMachine,
       );
       validateElicitationAnswer(sessionActor, input);
       sendSessionCommand(sessionActor, {

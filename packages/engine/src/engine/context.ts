@@ -1,15 +1,18 @@
 import { randomUUID } from 'node:crypto';
 import type { Database } from '@repo/db';
 import { createRejectionCounter } from '@repo/machine-log';
+import type { ActorRefFrom } from 'xstate';
+import { findMachineActor } from '../lib/machine-actor';
 import type { uploadBlob } from '../services/blob';
-import { type FeedDeps, findDatabaseWriter } from '../services/feed';
+import { type FeedDeps } from '../services/feed';
+import { databaseWriterId, writerMachine } from '../services/feed';
 import {
   createSessionList,
   createSessionReader,
   createSessionSnapshotWatcher,
-  findSessionActor,
   type SessionActorRef,
 } from '../services/sessions';
+import { sessionActorId, sessionMachine } from '../services/sessions';
 import type { SystemDeps } from '../services/system';
 import type { HttpServerOptions } from './http-server';
 
@@ -21,7 +24,7 @@ export type Context = Pick<HttpServerOptions, 'sessions' | 'createId'> &
     sessionCommandSignal?: AbortSignal;
     projectRejections: ReturnType<typeof createRejectionCounter>;
     sessionList: ReturnType<typeof createSessionList>;
-    databaseWriter: NonNullable<ReturnType<typeof findDatabaseWriter>>;
+    databaseWriter: ActorRefFrom<typeof writerMachine>;
     syncSupervisor: HttpServerOptions['syncSupervisor'];
   };
 
@@ -35,11 +38,19 @@ export function createEngineContext(
     Pick<HttpServerOptions, 'databaseWriter' | 'syncSupervisor'>,
 ): Context {
   const findSession = (sessionId: string): SessionActorRef | undefined =>
-    findSessionActor(engineOptions.sessions.system, sessionId);
+    findMachineActor(
+      engineOptions.sessions.system,
+      sessionActorId(sessionId),
+      sessionMachine,
+    );
   const findFeed: FeedDeps['findFeed'] = (sessionId) =>
     findSession(sessionId)?.getSnapshot().children.feed;
   const findWriter: FeedDeps['findWriter'] = () =>
-    findDatabaseWriter(engineOptions.sessions.system);
+    findMachineActor(
+      engineOptions.sessions.system,
+      databaseWriterId,
+      writerMachine,
+    );
   return {
     database: engineOptions.database,
     blobsFolder: engineOptions.blobsFolder,

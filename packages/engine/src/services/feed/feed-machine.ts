@@ -10,6 +10,7 @@ import {
   enqueueActions,
   setup,
 } from 'xstate';
+import { findMachineActor } from '../../lib/machine-actor';
 import {
   applyFeedChange,
   changedRowId,
@@ -25,7 +26,8 @@ import type { OutputBlob } from './updates/tool-output';
 import type { WriterCommit } from './writer-commit';
 import type { WriterJob } from './writer-job';
 import type { WriterEvent } from './writer-machine';
-import { findDatabaseWriter } from './writer-system';
+import { writerMachine } from './writer-machine';
+import { databaseWriterId } from './writer-system';
 
 const feedChangeApplied = 'feed.changeApplied';
 const feedChangeRejected = 'feed.changeRejected';
@@ -259,7 +261,7 @@ export const feedMachine = setup({
     })),
     clearBatch: assign({ streamEvents: [] }),
     sendToWriter: ({ system }, params: WriterJobParameters): void => {
-      const writer = findDatabaseWriter(system);
+      const writer = findMachineActor(system, databaseWriterId, writerMachine);
       if (writer?.getSnapshot().status !== 'active') {
         params.committed?.reject(new Error('Database Writer is unavailable'));
         return;

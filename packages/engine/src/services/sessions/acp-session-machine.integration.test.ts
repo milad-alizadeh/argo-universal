@@ -6,8 +6,10 @@ import {
   createAcpSessionModel,
   type AcpModelSnapshot,
 } from '#mocks/acp-session-model';
+import { findMachineActor } from '../../lib/machine-actor';
 import type { AcpSessionLease } from '../agents';
-import { findSessionActor } from './index';
+import { sessionMachine } from './session-machine';
+import { sessionActorId } from './session-system';
 
 const feedFlushDelayEvent =
   'xstate.after.feedFlushLimit.session.open.acp.flushing';
@@ -35,7 +37,11 @@ const expectAcpState = (
 it('the ACP structural graph walks every opening, recovery, closing and retained-cleanup transition', async () => {
   const host = await startAcpEngine();
   const created = await host.caller.session.new(emptySessionInput);
-  const actor = findSessionActor(host.engine.system, created.sessionId);
+  const actor = findMachineActor(
+    host.engine.system,
+    sessionActorId(created.sessionId),
+    sessionMachine,
+  );
   if (!actor)
     throw new Error('The Session for the structural graph is missing');
   const { model, paths, lease } = createAcpSessionModel(actor.getSnapshot());

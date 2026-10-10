@@ -1,8 +1,8 @@
 import path from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
+import { findFreePort } from '@repo/mocks/network/free-port';
 import { defineBddConfig } from 'playwright-bdd';
 import type { AppOptions, ServerOptions } from './fixtures';
-import { findFreePort } from './server-port';
 
 const repositoryRoot = path.resolve(import.meta.dirname, '..');
 // A free port per run, so runs in several worktrees never meet; workers inherit it from the runner, which loads this file first.
