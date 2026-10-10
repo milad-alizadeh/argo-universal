@@ -46,7 +46,7 @@ export function Menu<Value extends string>({
                   if (event.key === 'Enter' || event.key === ' ')
                     event.preventDefault();
                 }}
-                className="min-h-9 flex-row items-center gap-3 cursor-default rounded-none px-4 py-1.5 hover:bg-muted focus:bg-muted active:bg-border focus-visible:outline-2 focus-visible:outline-foreground focus-visible:outline-offset-3"
+                className="min-h-9 flex-row items-center gap-3 cursor-default rounded-none px-4 py-1.5 hover:bg-muted focus:bg-muted active:bg-border focus-visible:outline-2 focus-visible:outline-foreground focus-visible:-outline-offset-2"
               >
                 <View className="min-w-0 flex-1">
                   <Text
