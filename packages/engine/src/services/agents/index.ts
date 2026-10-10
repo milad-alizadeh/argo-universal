@@ -3,6 +3,7 @@ export { agentProbeId, findAgentProbe } from './agent-probe-system';
 
 export { agentsRouter } from './router';
 export { createAcpResources } from './acp/resources';
+export { RecoveryBlockedError } from './acp/checkout-releases';
 export { createAcpResponseReaders } from './acp/response-readers';
 export type {
   AcpResources,

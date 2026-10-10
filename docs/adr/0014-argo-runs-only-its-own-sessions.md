@@ -6,7 +6,7 @@ Taking over a running external Session is not possible: Claude Code's terminal o
 
 Importing a stopped external Session, so that it becomes an Argo Session from then on, comes later with its own spec. Paseo, T3 Code and Nimbalyst stop at the same point.
 
-Argo owns its workflow and its Feed history. It resumes an Argo-created Session through ACP resume without replay and never imports the Agent's transcript again. Work continued in another app is not synchronized into the Feed: Argo does not read native transcript files and does not promise to detect outside continuation, so the earlier Notice for a Session continued in a terminal is withdrawn. After an interrupted Turn, the Feed says output may be missing and Argo never resends the prompt (owner, 2026-10-09, #345).
+Argo owns its workflow and its Feed history. It resumes an Argo-created Session through ACP resume without replay and never imports the Agent's transcript again. Work continued in another app is not synchronized into the Feed: ACP Sessions never read native transcript files (the native adapters stop at their ACP cutover), and Argo does not promise to detect outside continuation, so the earlier Notice for a Session continued in a terminal is withdrawn. After an interrupted Turn, the Feed says output may be missing and Argo never resends the prompt (owner, 2026-10-09, #345).
 
 ## Considered Options
 

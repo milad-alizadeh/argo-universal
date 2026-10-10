@@ -7,6 +7,7 @@ import {
   type AdjacencyMap,
 } from 'xstate/graph';
 import type { AcpSessionLease } from '../src/services/agents';
+import { RecoveryBlockedError } from '../src/services/agents';
 import { sessionMachine } from '../src/services/sessions';
 
 export type AcpModelSnapshot = SnapshotFrom<typeof sessionMachine>;
@@ -180,6 +181,11 @@ export const createAcpSessionModel = (
       error: new Error('recovery failed'),
     },
     {
+      type: 'xstate.error.actor.reopenAcp',
+      actorId: 'reopenAcp',
+      error: new RecoveryBlockedError(new Error('No exit')),
+    },
+    {
       type: 'xstate.error.actor.openAcp',
       actorId: 'openAcp',
       error: new Error('open failed'),
@@ -211,7 +217,10 @@ export const createAcpSessionModel = (
     fromState,
     events,
     limit: 10_000,
-    serializeEvent: (event: AcpModelEvent): string => event.type,
+    serializeEvent: (event: AcpModelEvent): string =>
+      'error' in event && event.error instanceof RecoveryBlockedError
+        ? `${event.type} blocked`
+        : event.type,
     filterEvents: (snapshot: AcpModelSnapshot, event: AcpModelEvent): boolean =>
       snapshot.status === 'active' && canApplyLifecycleEvent(snapshot, event),
     serializeState: (

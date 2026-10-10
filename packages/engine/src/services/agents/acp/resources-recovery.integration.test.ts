@@ -37,24 +37,61 @@ const failureRecorder = (
   };
 };
 
-it('a failed shared connection informs each attached Session once and fences its late callbacks', async () => {
+it('a failed shared connection informs each attached Session once', async () => {
   const peer = createResourcePeer({ autoExit: false });
   const resources = createAcpResources(peer);
-  const firstUpdates: SessionNotification[] = [];
-  const first = failureRecorder(firstUpdates);
+  const first = failureRecorder();
   const second = failureRecorder();
-  const firstLease = await resources.open(
-    createResourceOpening(first.destination),
-  );
+  await resources.open(createResourceOpening(first.destination));
   await resources.open(createResourceOpening(second.destination));
   const old = requireResourceProcessAt(peer.processes);
   old.disconnect();
   await vi.waitFor(() => expect(old.terminations).toBe(1));
-  await old.connection.client
-    .notify('session/update', createResourceUpdate(firstLease.sessionId))
-    .catch(() => {});
   expect([first.failures.length, second.failures.length]).toEqual([1, 1]);
-  expect(firstUpdates).toEqual([]);
+});
+
+it('a failed connection fences its late Session updates', async () => {
+  const peer = createResourcePeer({ autoExit: false });
+  const resources = createAcpResources(peer);
+  const updates: SessionNotification[] = [];
+  const lease = await resources.open(
+    createResourceOpening(failureRecorder(updates).destination),
+  );
+  const old = requireResourceProcessAt(peer.processes);
+  old.disconnect();
+  await vi.waitFor(() => expect(old.terminations).toBe(1));
+  await old.connection.client
+    .notify('session/update', createResourceUpdate(lease.sessionId))
+    .catch(() => {});
+  expect(updates).toEqual([]);
+});
+
+it('a failed process exiting late leaves its replacement shared', async () => {
+  const peer = createResourcePeer({ autoExit: false });
+  const resources = createAcpResources(peer);
+  await resources.open(createResourceOpening());
+  const old = requireResourceProcessAt(peer.processes);
+  old.disconnect();
+  await vi.waitFor(() => expect(old.terminations).toBe(1));
+  const recovery = resources.open(createResourceOpening());
+  old.exited.resolve();
+  await recovery;
+  await resources.open(createResourceOpening());
+  expect(peer.processes).toHaveLength(2);
+});
+
+it('shutdown waits for a failed process to exit', async () => {
+  const peer = createResourcePeer({ autoExit: false });
+  const resources = createAcpResources(peer);
+  await resources.open(createResourceOpening());
+  const old = requireResourceProcessAt(peer.processes);
+  old.disconnect();
+  await vi.waitFor(() => expect(old.terminations).toBe(1));
+  const shutdown = resources.shutdown();
+  const waiting = new Promise((resolve) => setTimeout(resolve, 20, 'waiting'));
+  expect(await Promise.race([shutdown, waiting])).toBe('waiting');
+  old.exited.resolve();
+  await expect(shutdown).resolves.toBeUndefined();
 });
 
 it('concurrent recovery shares one replacement initialization', async () => {

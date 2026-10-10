@@ -48,44 +48,59 @@ const pageRows = async (
 ): Promise<Awaited<ReturnType<AcpHost['caller']['feed']['page']>>['rows']> =>
   (await host.caller.feed.page({ sessionId, direction: 'tail' })).rows;
 
+type Recorded = {
+  prompts: PromptRequest[];
+  resumes: ResumeSessionRequest[];
+};
+// Breaks the connection while a Turn waits on its prompt, then waits for recovery.
+const interruptTurn = async (): Promise<
+  Recorded & { host: AcpHost; sessionId: string }
+> => {
+  const recorded: Recorded = { prompts: [], resumes: [] };
+  const host = await startAcpEngine({
+    prompt: ({ params }) => {
+      recorded.prompts.push(params);
+      return unansweredPrompt();
+    },
+    resumeSession: ({ params }) => {
+      recorded.resumes.push(params);
+      return {};
+    },
+  });
+  const created = await host.caller.session.new(emptySessionInput);
+  await host.caller.session.prompt({
+    ...created,
+    prompt: [{ type: 'text', text: 'Work' }],
+  });
+  await waitFor(requireSession(host, created.sessionId), () =>
+    Boolean(recorded.prompts.length),
+  );
+  requireResourceProcessAt(host.peer.processes).disconnect();
+  await waitForGeneration(host, created.sessionId, 2);
+  return { ...recorded, host, sessionId: created.sessionId };
+};
+
 it(
-  'a connection failure during a Turn records it as interrupted and resumes without resending the prompt',
+  'a connection failure during a Turn records the Turn as interrupted',
   recoveryTimeout,
   async () => {
-    const prompts: PromptRequest[] = [];
-    const resumes: ResumeSessionRequest[] = [];
-    const host = await startAcpEngine({
-      prompt: ({ params }) => {
-        prompts.push(params);
-        return unansweredPrompt();
-      },
-      resumeSession: ({ params }) => {
-        resumes.push(params);
-        return {};
-      },
+    const { host, sessionId } = await interruptTurn();
+    expect(readTurn(host, sessionId)).toEqual({
+      stopReason: 'error',
+      error: expect.stringContaining('interrupted'),
     });
-    const created = await host.caller.session.new(emptySessionInput);
-    await host.caller.session.prompt({
-      ...created,
-      prompt: [{ type: 'text', text: 'Work' }],
-    });
-    await waitFor(requireSession(host, created.sessionId), () =>
-      Boolean(prompts.length),
-    );
-    requireResourceProcessAt(host.peer.processes).disconnect();
-    await waitForGeneration(host, created.sessionId, 2);
+  },
+);
+
+it(
+  'an interrupted Turn is resumed without resending its prompt',
+  recoveryTimeout,
+  async () => {
+    const { prompts, resumes } = await interruptTurn();
     expect({
       prompts: prompts.length,
       resumed: resumes.map((resume) => resume.sessionId),
-      turn: readTurn(host, created.sessionId),
-    }).toEqual({
-      prompts: 1,
-      resumed: [prompts[0]?.sessionId],
-      turn: {
-        stopReason: 'error',
-        error: expect.stringContaining('interrupted'),
-      },
-    });
+    }).toEqual({ prompts: 1, resumed: [prompts[0]?.sessionId] });
   },
 );
 
@@ -93,18 +108,8 @@ it(
   'an interrupted Turn discloses that its output may be missing',
   recoveryTimeout,
   async () => {
-    const host = await startAcpEngine({ prompt: unansweredPrompt });
-    const created = await host.caller.session.new(emptySessionInput);
-    await host.caller.session.prompt({
-      ...created,
-      prompt: [{ type: 'text', text: 'Work' }],
-    });
-    await waitFor(requireSession(host, created.sessionId), (snapshot) =>
-      snapshot.matches({ open: { acp: 'activeTurn' } }),
-    );
-    requireResourceProcessAt(host.peer.processes).disconnect();
-    await waitForGeneration(host, created.sessionId, 2);
-    expect(await pageRows(host, created.sessionId)).toContainEqual(
+    const { host, sessionId } = await interruptTurn();
+    expect(await pageRows(host, sessionId)).toContainEqual(
       expect.objectContaining({
         sessionUpdate: 'notice',
         description: expect.stringContaining('may be missing'),
@@ -124,6 +129,32 @@ it(
     await waitForGeneration(host, first.sessionId, 2);
     await waitForGeneration(host, second.sessionId, 2);
     expect(host.peer.processes).toHaveLength(2);
+  },
+);
+
+it(
+  'a failed resume on the replacement retries within the crash budget',
+  recoveryTimeout,
+  async () => {
+    let resumes = 0;
+    const host = await startAcpEngine({
+      resumeSession: () => {
+        resumes += 1;
+        if (resumes === 1) throw new Error('Resume failed');
+        return {};
+      },
+    });
+    const created = await host.caller.session.new(emptySessionInput);
+    requireResourceProcessAt(host.peer.processes).disconnect();
+    await waitFor(
+      requireSession(host, created.sessionId),
+      (snapshot) =>
+        resumes === 2 && snapshot.matches({ open: { acp: 'idle' } }),
+      recoveryTimeout,
+    );
+    expect(
+      requireSession(host, created.sessionId).getSnapshot().context,
+    ).toMatchObject({ failure: null });
   },
 );
 
@@ -250,12 +281,14 @@ it(
       created.sessionId,
       (snapshot) => snapshot.pendingPermission !== null,
     );
+    const requestId = pending.pendingPermission?.requestId;
+    if (requestId === undefined) throw new Error('No pending permission');
     requireResourceProcessAt(host.peer.processes).disconnect();
     await waitForGeneration(host, created.sessionId, 2);
     await expect(
       host.caller.session.answerPermission({
         ...created,
-        requestId: pending.pendingPermission?.requestId ?? '',
+        requestId,
         optionId: 'read-once',
       }),
     ).rejects.toThrow('already answered');

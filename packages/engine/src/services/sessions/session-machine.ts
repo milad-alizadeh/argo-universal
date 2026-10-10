@@ -40,7 +40,7 @@ import {
 } from 'xstate';
 import { countRejection } from '../../lib/count-rejections';
 import { createRejectionCounter } from '../../lib/count-rejections';
-import { findAgentProbe } from '../agents';
+import { findAgentProbe, RecoveryBlockedError } from '../agents';
 import type { AcpSessionLease } from '../agents';
 import { createAcpResponseReaders } from '../agents';
 import { blobsFolderIn } from '../blob';
@@ -207,9 +207,8 @@ const interruptedTurn = (message: string): EndTurnParameters => ({
 const connectionLostDuringTurn = interruptedTurn(
   'The Agent connection failed during the Turn',
 );
-const connectionLostBeforePrompt = interruptedTurn(
-  'The Agent connection failed before the prompt was sent',
-);
+const connectionLostBeforePrompt =
+  'The Agent connection failed before the prompt was sent';
 // Resumed Agent context is not new Feed content.
 const replayedHistoryKinds = new Set([
   'user_message_chunk',
@@ -1022,6 +1021,8 @@ const sessionSetup = setup({
     flushFeed: sendTo('feed', { type: 'feed.flush' }),
   },
   guards: {
+    isRecoveryBlocked: ({ event }): boolean =>
+      'error' in event && event.error instanceof RecoveryBlockedError,
     isReplayedHistory: ({ context, event }): boolean =>
       event.type === 'acp.update' &&
       context.vendorSessionId !== null &&
@@ -1433,13 +1434,12 @@ export const sessionMachine = sessionSetup.createMachine({
                     {
                       type: 'rejectSubmission',
                       params: ({ event }): FailureParameters => ({
-                        error: new Error(
-                          connectionLostBeforePrompt.error?.message,
-                          { cause: event.error },
-                        ),
+                        error: new Error(connectionLostBeforePrompt, {
+                          cause: event.error,
+                        }),
                       }),
                     },
-                    { type: 'endTurn', params: connectionLostBeforePrompt },
+                    { type: 'endTurn', params: { stopReason: 'error' } },
                   ],
                 },
                 'session.close': {
@@ -1630,15 +1630,19 @@ export const sessionMachine = sessionSetup.createMachine({
                     params: ({ event }): AcpSessionLease => event.output,
                   },
                 },
-                onError: {
-                  target: 'retainingCleanup',
-                  actions: {
-                    type: 'storeFailure',
-                    params: ({ event }): FailureParameters => ({
-                      error: event.error,
-                    }),
+                onError: [
+                  {
+                    guard: 'isRecoveryBlocked',
+                    target: 'retainingCleanup',
+                    actions: {
+                      type: 'storeFailure',
+                      params: ({ event }): FailureParameters => ({
+                        error: event.error,
+                      }),
+                    },
                   },
-                },
+                  { target: 'recovering', actions: 'recordCrash' },
+                ],
               },
               on: {
                 'acp.failed': {},

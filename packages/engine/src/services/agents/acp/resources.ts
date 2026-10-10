@@ -31,6 +31,7 @@ const createLaunchReuseKey = (launch: AgentLaunch): string =>
   JSON.stringify(launch);
 class EngineAcpResources implements AcpResources {
   private readonly entries = new Map<string, AcpResourceEntry>();
+  private readonly retired = new Set<AcpResourceEntry>();
   private readonly checkoutReleases: CheckoutReleases;
   private stopped = false;
   public constructor(private readonly input: AcpResourceInput) {
@@ -54,7 +55,7 @@ class EngineAcpResources implements AcpResources {
     this.entries.set(key, entry);
     void entry
       .closed()
-      .then(() => this.entries.delete(key))
+      .then(() => this.forget(key, entry))
       .catch(() => {});
     return entry;
   }
@@ -64,12 +65,20 @@ class EngineAcpResources implements AcpResources {
     checkouts: readonly string[],
   ): void {
     if (this.entries.get(key) === entry) this.entries.delete(key);
+    this.retired.add(entry);
     this.checkoutReleases.retain(checkouts, entry.closed());
+  }
+  // A replacement may already hold the key of a generation that exits later.
+  private forget(key: string, entry: AcpResourceEntry): void {
+    if (this.entries.get(key) === entry) this.entries.delete(key);
+    this.retired.delete(entry);
   }
   public async shutdown(): Promise<void> {
     this.stopped = true;
     await Promise.all(
-      [...this.entries.values()].map((entry) => entry.shutdown()),
+      [...this.entries.values(), ...this.retired].map((entry) =>
+        entry.shutdown(),
+      ),
     );
   }
 }
