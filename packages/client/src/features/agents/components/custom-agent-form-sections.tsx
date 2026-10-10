@@ -42,7 +42,12 @@ export function EnvironmentSection(props: FormPartProps): React.JSX.Element {
 
 function SectionHeading({ children }: { children: string }): React.JSX.Element {
   return (
-    <Text role="heading" aria-level={2} className="type-heading h-8 leading-8">
+    <Text
+      semanticRole="heading"
+      aria-level={2}
+      role={'heading'}
+      className="h-8 leading-8"
+    >
       {children}
     </Text>
   );

@@ -79,11 +79,8 @@
   --leading-badge: var(--leading-4);
   --font-weight-badge: var(--font-weight-medium);
   --text-code: var(--text-xs);
-  --leading-code: var(--leading-4);
+  --leading-code: var(--leading-5);
   --font-weight-code: var(--font-weight-normal);
-  --text-code-block: var(--text-xs);
-  --leading-code-block: var(--leading-5);
-  --font-weight-code-block: var(--font-weight-normal);
   /* The gap between paragraphs, wherever text runs to more than one. */
   --spacing-paragraph: var(--spacing-3);
   --spacing-paragraph-wide: var(--spacing-2_5);
@@ -143,6 +140,8 @@
       --color-popover-foreground: var(--color-neutral-950);
       --color-primary: var(--color-neutral-900);
       --color-primary-foreground: var(--color-neutral-50);
+      /* Native controls: switch track, slider, checkmark and picker value. */
+      --color-tint: var(--color-neutral-900);
       --color-secondary: var(--color-neutral-100);
       --color-secondary-foreground: var(--color-neutral-900);
       --color-muted: var(--color-neutral-100);
@@ -150,6 +149,7 @@
       --color-accent: var(--color-neutral-100);
       --color-accent-foreground: var(--color-neutral-900);
       --color-destructive: var(--color-red-500);
+      --color-destructive-foreground: var(--color-white);
       --color-border: var(--color-neutral-200);
       --color-input: var(--color-neutral-200);
       --color-ring: var(--color-neutral-400);
@@ -180,13 +180,15 @@
       --color-popover-foreground: hsl(0 0% 98%);
       --color-primary: hsl(0 0% 98%);
       --color-primary-foreground: hsl(0 0% 9%);
+      --color-tint: var(--color-neutral-400);
       --color-secondary: hsl(0 0% 14.9%);
       --color-secondary-foreground: hsl(0 0% 98%);
       --color-muted: hsl(0 0% 14.9%);
       --color-muted-foreground: hsl(0 0% 63.9%);
       --color-accent: hsl(0 0% 14.9%);
       --color-accent-foreground: hsl(0 0% 98%);
-      --color-destructive: hsl(0 70.9% 59.4%);
+      --color-destructive: var(--color-red-500);
+      --color-destructive-foreground: var(--color-white);
       --color-border: hsl(0 0% 14.9%);
       --color-input: hsl(0 0% 14.9%);
       --color-ring: hsl(300 0% 45%);
@@ -269,13 +271,6 @@
   font-size: var(--text-code);
   line-height: var(--leading-code);
   font-weight: var(--font-weight-code);
-}
-
-@utility type-code-block {
-  font-family: var(--font-mono);
-  font-size: var(--text-code-block);
-  line-height: var(--leading-code-block);
-  font-weight: var(--font-weight-code-block);
 }
 
 @utility type-nav-title {

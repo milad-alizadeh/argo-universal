@@ -70,7 +70,8 @@
     // oxlint cannot resolve the re-exported members of @rn-primitives namespaces; tsc checks every namespace member.
     "import/namespace": "off",
     // React Native has no semantic HTML tags; `role` is how a View states its role.
-    "jsx-a11y/prefer-tag-over-role": "off"
+    "jsx-a11y/prefer-tag-over-role": "off",
+    "jsx-a11y/aria-role": ["error", { "ignoreNonDOM": true }]
   },
   "overrides": [
     {
@@ -257,8 +258,11 @@
       }
     },
     {
-      // The Connection's components and stories take props only: no tRPC, TanStack Query, tRPC client or data hook (ADR-0021).
-      "files": ["packages/client/src/features/connection/components/**"],
+      // Split features' components and stories take props only: no tRPC, TanStack Query, tRPC client or data hook (ADR-0021).
+      "files": [
+        "packages/client/src/features/agents/components/**",
+        "packages/client/src/features/connection/components/**"
+      ],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -291,6 +295,91 @@
                   "useConnectionState",
                   "useResubscribeOnReconnect"
                 ],
+                "message": "Components take props only: the screen calls data hooks (ADR-0021)."
+              },
+              {
+                "name": "#features/connection",
+                "importNames": [
+                  "useTRPC",
+                  "useConnection",
+                  "useConnectionState"
+                ],
+                "message": "Components take props only: the screen calls data hooks (ADR-0021)."
+              },
+              {
+                "name": "../hooks/use-agent-catalog",
+                "message": "Components take props only: the screen calls data hooks (ADR-0021)."
+              },
+              {
+                "name": "../hooks/use-agents",
+                "message": "Components take props only: the screen calls data hooks (ADR-0021)."
+              },
+              {
+                "name": "../hooks/use-custom-agents",
+                "message": "Components take props only: the screen calls data hooks (ADR-0021)."
+              }
+            ],
+            "patterns": [
+              {
+                "regex": "^#features/[^/]+/",
+                "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
+              },
+              {
+                "regex": "^\\.\\./\\.\\./[^.]",
+                "message": "Other features import a feature only through its index.ts (ADR-0016 item 9)."
+              },
+              {
+                "group": ["@repo/client", "@repo/client/**"],
+                "message": "Client modules never import the client barrel (A2)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // The Sessions components and stories take props only: no tRPC, TanStack Query or data hook (ADR-0021).
+      "files": ["packages/client/src/features/sessions/components/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@trpc/client",
+                "message": "Components take props only (ADR-0021)."
+              },
+              {
+                "name": "@trpc/tanstack-react-query",
+                "message": "Components take props only (ADR-0021)."
+              },
+              {
+                "name": "@tanstack/react-query",
+                "message": "Components take props only (ADR-0021)."
+              },
+              {
+                "name": "#features/connection",
+                "importNames": [
+                  "useTRPC",
+                  "useConnection",
+                  "useConnectionState",
+                  "useBlobUrl"
+                ],
+                "message": "Components take props only: the screen calls data hooks (ADR-0021)."
+              },
+              {
+                "name": "#features/agents",
+                "importNames": ["useAgents"],
+                "message": "Components take props only: the screen calls data hooks (ADR-0021)."
+              },
+              {
+                "name": "#features/feed",
+                "importNames": ["useSessionFeed"],
+                "message": "Components take props only: the screen calls data hooks (ADR-0021)."
+              },
+              {
+                "name": "#features/composer",
+                "importNames": ["useImageDraft", "useNewSessionConfiguration"],
                 "message": "Components take props only: the screen calls data hooks (ADR-0021)."
               }
             ],

@@ -51,7 +51,7 @@ export function PermissionOutcome({
           className="text-muted-foreground"
         />
       </View>
-      <Text className="min-w-0 flex-1 type-body text-muted-foreground">
+      <Text role="body" className="min-w-0 flex-1 text-muted-foreground">
         {label}
       </Text>
     </View>

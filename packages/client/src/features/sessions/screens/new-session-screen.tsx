@@ -1,152 +1,81 @@
-import type { SessionConfigOption, SessionNewInput } from '@repo/contracts';
-import type { AppRouter } from '@repo/engine/router';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import type { inferRouterOutputs } from '@trpc/server';
+import type { ProjectInfo, SystemInfo } from '@repo/contracts';
+import {
+  type UseQueryResult,
+  useMutation,
+  useQuery,
+} from '@tanstack/react-query';
 import type * as React from 'react';
 import { useState } from 'react';
-import { View } from 'react-native';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useAgents } from '#features/agents';
-import {
-  ComposerAgentModelControl,
-  ComposerCheckoutControl,
-} from '#features/composer';
-import { StartSessionIn } from '#features/composer';
 import { useNewSessionConfiguration } from '#features/composer';
 import { useConnectionState } from '#features/connection';
-import type { ClientError } from '#features/connection';
 import { useTRPC } from '#features/connection';
-import { Text } from '#lib/generic/primitives/text';
-import { useContentWide } from '#lib/product/content-layout';
-import { LoadError } from '#lib/product/load-error';
 import { useNavigate } from '#lib/product/navigation/context';
-import { keyboardAvoidingStyle, Screen } from '#lib/product/screen';
-import { Button } from '../../../lib/generic/primitives/button';
-
-type ProjectsQuery = ReturnType<
-  typeof useQuery<
-    inferRouterOutputs<AppRouter>['projects']['list'],
-    ClientError
-  >
->;
-interface SessionChoices {
-  projects: ProjectsQuery;
-  agents: ReturnType<typeof useAgents>;
-  project: NonNullable<ProjectsQuery['data']>[number] | undefined;
-  agent: NonNullable<ReturnType<typeof useAgents>['data']>[number] | undefined;
-  inNewWorktree: boolean;
-  baseBranch: string;
-  baseBranchLoaded: boolean;
-  settings: SessionSettings | undefined;
-  configOptions: SessionConfigOption[];
-  configReady: boolean;
-  chooseConfig: (configId: string, value: string | boolean) => void;
-  chooseProject: (id: string) => void;
-  chooseAgent: (agent: string) => void;
-  chooseNewWorktree: React.Dispatch<React.SetStateAction<boolean | undefined>>;
-}
+import {
+  NewSessionView,
+  type NewSessionViewProps,
+} from '../components/new-session-view';
+import { canOpenSession, toNewSessionInput } from '../state/open-session';
+import {
+  type ChosenSettings,
+  chooseAnotherProject,
+  chooseProject,
+  type SessionChoices,
+  toSessionChoices,
+} from '../state/session-choices';
 
 export interface NewSessionScreenProps {
   // The Project whose heading + opened this page.
   projectId?: string;
 }
 
-// What a new Session starts with, besides its prompt.
-type SessionSettings = Omit<SessionNewInput, 'prompt'>;
+export function NewSessionScreen({
+  projectId,
+}: NewSessionScreenProps): React.JSX.Element {
+  return <NewSessionView {...useNewSessionViewProps(projectId)} />;
+}
 
-// The reader's choices of where and how the Session runs, over the Project's and Agents' defaults.
-function useSessionChoices(projectId: string | undefined): SessionChoices {
+interface NewSessionData {
+  serverInfo: UseQueryResult<SystemInfo, unknown>;
+  projects: UseQueryResult<ProjectInfo[], unknown>;
+  agents: ReturnType<typeof useAgents>;
+  setChosen: React.Dispatch<React.SetStateAction<ChosenSettings>>;
+  choices: SessionChoices;
+  configuration: ReturnType<typeof useNewSessionConfiguration>;
+}
+
+// The Server's Projects and Agents with the reader's choices over their defaults.
+function useNewSessionData(projectId: string | undefined): NewSessionData {
   const trpc = useTRPC();
+  const serverInfo = useQuery(trpc.system.info.queryOptions());
   const projects = useQuery(trpc.projects.list.queryOptions());
   const agents = useAgents();
-  const [chosenProjectId, setChosenProjectId] = useState(projectId);
-  const [chosenAgent, setChosenAgent] = useState<string>();
-  const [chosenNewWorktree, setChosenNewWorktree] = useState<boolean>();
-
-  const project =
-    projects.data?.find((entry) => entry.id === chosenProjectId) ??
-    projects.data?.[0];
+  const [chosen, setChosen] = useState<ChosenSettings>({ projectId });
+  const project = chooseProject(projects.data ?? [], chosen.projectId);
   const branches = useQuery(
     trpc.projects.branches.queryOptions(
       { projectId: project?.id ?? '' },
       { enabled: project?.checkoutChoice.type === 'main' },
     ),
   );
-  const agent =
-    agents.data?.find((entry) => entry.agent === chosenAgent) ??
-    agents.data?.find((entry) => entry.availability === 'available') ??
-    agents.data?.[0];
-  const inNewWorktree =
-    chosenNewWorktree ?? project?.checkoutChoice.type !== 'main';
-  const baseBranch =
-    project?.checkoutChoice.type === 'worktree'
-      ? project.checkoutChoice.baseBranch
-      : (branches.data?.currentBranch ?? 'main');
-  const configuration = useNewSessionConfiguration(agent);
-  const { configOptions } = configuration;
-
-  const settings: SessionSettings | undefined =
-    project && agent
-      ? {
-          projectId: project.id,
-          agent: agent.agent,
-          checkout: inNewWorktree
-            ? { type: 'worktree', baseBranch }
-            : { type: 'main' },
-          configOptions: configOptions.map(({ configId, currentValue }) => ({
-            configId,
-            value: currentValue,
-          })),
-        }
-      : undefined;
-
-  return {
-    projects,
-    agents,
-    project,
-    agent,
-    inNewWorktree,
-    baseBranch,
-    baseBranchLoaded:
-      project?.checkoutChoice.type !== 'main' || branches.data !== undefined,
-    settings,
-    configOptions,
-    configReady: configuration.ready,
-    chooseConfig: configuration.change,
-    // Another Project starts from its own checkout default.
-    chooseProject: (id: string) => {
-      setChosenProjectId(id);
-      setChosenNewWorktree(undefined);
-    },
-    // The selected Agent opens the real Session.
-    chooseAgent: (nextAgent: string) => {
-      setChosenAgent(nextAgent);
-    },
-    chooseNewWorktree: setChosenNewWorktree,
-  };
+  const choices = toSessionChoices({
+    projects: projects.data ?? [],
+    agents: agents.data ?? [],
+    chosen,
+    branches: branches.data,
+  });
+  const configuration = useNewSessionConfiguration(choices.agent);
+  return { serverInfo, projects, agents, setChosen, choices, configuration };
 }
 
-function NewSessionHeading(): React.JSX.Element {
-  return (
-    <View className="w-full max-w-composer gap-2 px-4">
-      <Text role="heading" aria-level={1} className="type-title">
-        What should we work on?
-      </Text>
-    </View>
-  );
-}
-
-// Opens the chosen Session with its model and effort before the first prompt.
-export function NewSessionScreen({
-  projectId,
-}: NewSessionScreenProps): React.JSX.Element {
-  const wide = useContentWide();
+function useNewSessionViewProps(
+  projectId: string | undefined,
+): NewSessionViewProps {
   const trpc = useTRPC();
   const navigate = useNavigate();
   const connected = useConnectionState() === 'open';
-  const serverInfo = useQuery(trpc.system.info.queryOptions());
-  const choices = useSessionChoices(projectId);
-  const { projects, agents, project, agent } = choices;
+  const data = useNewSessionData(projectId);
+  const { serverInfo, projects, agents, choices, configuration } = data;
   const newSession = useMutation(
     trpc.session.new.mutationOptions({
       onSuccess: ({ sessionId }) =>
@@ -156,117 +85,63 @@ export function NewSessionScreen({
   );
 
   if (serverInfo.isError || projects.isError || agents.isError)
-    return (
-      <Screen edges={['bottom']}>
-        <View className="flex-1 justify-center">
-          <LoadError
-            title="Couldn't load New Session"
-            description="The Server didn't respond. Check that it's running, then retry."
-            onRetry={() => {
-              void serverInfo.refetch();
-              void projects.refetch();
-              void agents.refetch();
-            }}
-          />
-        </View>
-      </Screen>
-    );
+    return {
+      state: 'load-failed',
+      onRetry: () => {
+        void serverInfo.refetch();
+        void projects.refetch();
+        void agents.refetch();
+      },
+    };
   if (!serverInfo.data || !projects.data || !agents.data)
-    return <Screen edges={['bottom']} />;
+    return { state: 'loading' };
 
-  const agentAvailable = agent?.availability === 'available';
-  const checkout = {
-    branch: choices.baseBranch,
-    newWorktree: choices.inNewWorktree,
-    onNewWorktreeChange: choices.chooseNewWorktree,
+  const choose = (next: Partial<ChosenSettings>): void => {
+    data.setChosen((current) => ({ ...current, ...next }));
+    newSession.reset();
   };
-
-  return (
-    <Screen edges={['bottom']}>
-      <KeyboardAvoidingView
-        behavior="padding"
-        automaticOffset
-        style={keyboardAvoidingStyle}
-      >
-        <View className="flex-1 items-center justify-center px-6 pb-10">
-          {wide && <NewSessionHeading />}
-        </View>
-        <View
-          className={wide ? 'items-center px-6 pb-2' : 'items-center px-4 pb-2'}
-        >
-          <StartSessionIn
-            serverName={serverInfo.data.name}
-            serverConnected={connected}
-            projects={projects.data}
-            projectId={project?.id ?? ''}
-            onProjectChange={(id) => {
-              choices.chooseProject(id);
-              newSession.reset();
-            }}
-            checkout={checkout}
-            disabled={newSession.isPending}
-          />
-        </View>
-        <View
-          className={wide ? 'items-center px-6 pb-4' : 'items-center px-4 pb-4'}
-        >
-          <View className="w-full max-w-composer gap-3">
-            <View className="flex-row items-center justify-between gap-3">
-              <ComposerAgentModelControl
-                disabled={newSession.isPending || !choices.configReady}
-                configuration={{
-                  agents: agents.data,
-                  agent: agent?.agent ?? '',
-                  configOptions: choices.configOptions,
-                  onConfigChange: choices.chooseConfig,
-                  onAgentChange: (nextAgent) => {
-                    choices.chooseAgent(nextAgent);
-                    newSession.reset();
-                  },
-                  onAgentSetup: (setup) =>
-                    navigate({ to: 'settings-agent', agent: setup }),
-                  onAgentRetry: agents.retry,
-                  checkout,
-                }}
-              />
-              {wide && (
-                <ComposerCheckoutControl
-                  checkout={checkout}
-                  disabled={newSession.isPending}
-                />
-              )}
-              <Button
-                accessibilityLabel="Open Session"
-                disabled={
-                  !connected ||
-                  !choices.settings ||
-                  !agentAvailable ||
-                  !choices.baseBranchLoaded ||
-                  !choices.configReady ||
-                  newSession.isPending
-                }
-                onPress={() => {
-                  if (choices.settings)
-                    newSession.mutate({ ...choices.settings, prompt: [] });
-                }}
-                label="Open Session"
-                loading={newSession.isPending}
-                appearance="content"
-              />
-            </View>
-            {agent && !agentAvailable && (
-              <Text role="alert" className="text-destructive">
-                {agent.installStep}
-              </Text>
-            )}
-            {newSession.error && (
-              <Text role="alert" className="text-destructive">
-                Couldn't open the Session. {newSession.error.message}
-              </Text>
-            )}
-          </View>
-        </View>
-      </KeyboardAvoidingView>
-    </Screen>
-  );
+  const sessionInput = toNewSessionInput(choices, configuration.configOptions);
+  const { agent } = choices;
+  return {
+    state: 'ready',
+    serverName: serverInfo.data.name,
+    connected,
+    projects: projects.data,
+    projectId: choices.project?.id ?? '',
+    onProjectChange: (id) => {
+      data.setChosen((current) => chooseAnotherProject(current, id));
+      newSession.reset();
+    },
+    configuration: {
+      agents: agents.data,
+      agent: agent?.agent ?? '',
+      configOptions: configuration.configOptions,
+      onConfigChange: configuration.change,
+      onAgentChange: (next) => choose({ agent: next }),
+      onAgentSetup: (setup) => navigate({ to: 'settings-agent', agent: setup }),
+      onAgentRetry: agents.retry,
+      checkout: {
+        branch: choices.baseBranch,
+        newWorktree: choices.inNewWorktree,
+        onNewWorktreeChange: (newWorktree) =>
+          data.setChosen((current) => ({ ...current, newWorktree })),
+      },
+    },
+    configReady: configuration.ready,
+    canOpen: canOpenSession({
+      connected,
+      choices,
+      configReady: configuration.ready,
+      opening: newSession.isPending,
+    }),
+    opening: newSession.isPending,
+    onOpen: () => {
+      if (sessionInput) newSession.mutate(sessionInput);
+    },
+    setupStep:
+      agent && agent.availability !== 'available'
+        ? agent.installStep
+        : undefined,
+    openError: newSession.error?.message,
+  };
 }

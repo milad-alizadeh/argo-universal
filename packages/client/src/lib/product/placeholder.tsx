@@ -11,10 +11,10 @@ export function Placeholder({
 }): React.JSX.Element {
   return (
     <View className="flex-1 items-center justify-center gap-2 bg-background px-gutter py-6">
-      <Text role="heading" aria-level={1} variant="h3">
+      <Text semanticRole="heading" aria-level={1} role="title">
         {title}
       </Text>
-      <Text variant="muted" className="text-center">
+      <Text role="secondary" className="text-center">
         {description}
       </Text>
     </View>

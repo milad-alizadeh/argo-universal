@@ -1,5 +1,4 @@
 import {
-  Host,
   RNHostView,
   Text,
   TooltipBox,
@@ -7,6 +6,8 @@ import {
 } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
 import { useRef } from 'react';
+import { useNativeTheme } from '#lib/generic/native-theme';
+import { Host } from './host';
 import type { InfoPopoverProps } from './info-popover-props';
 import { InfoPopoverTrigger } from './info-popover-trigger';
 
@@ -28,10 +29,16 @@ export function InfoPopover(props: InfoPopoverProps): React.JSX.Element {
 function TooltipText({
   text,
 }: Pick<InfoPopoverProps, 'text'>): React.JSX.Element {
+  const { popover, popoverForeground } = useNativeTheme().colors;
   return (
-    <TooltipBox.RichTooltip>
+    <TooltipBox.RichTooltip
+      containerColor={popover}
+      contentColor={popoverForeground}
+      titleContentColor={popoverForeground}
+      actionContentColor={popoverForeground}
+    >
       <TooltipBox.RichTooltip.Text>
-        <Text>{text}</Text>
+        <Text color={popoverForeground}>{text}</Text>
       </TooltipBox.RichTooltip.Text>
     </TooltipBox.RichTooltip>
   );

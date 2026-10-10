@@ -1,138 +1,42 @@
 import type * as React from 'react';
 import { useState } from 'react';
-import { View } from 'react-native';
-import { Text } from '#lib/generic/primitives/text';
-import { LoadError } from '#lib/product/load-error';
 import { useNavigate } from '#lib/product/navigation/context';
-import { Button } from '../../../lib/generic/primitives/button';
-import { AgentCatalog } from '../components/catalog';
 import {
-  CatalogSearch,
-  type CatalogSearchProps,
-} from '../components/catalog-search';
-import { CustomAgentRows } from '../components/custom-agent-rows';
+  AgentsSettingsView,
+  type AgentsSettingsViewProps,
+} from '../components/agents-settings-view';
 import { useAgentCatalog } from '../hooks/use-agent-catalog';
 import { useCustomAgents } from '../hooks/use-custom-agents';
 
-type CatalogState = ReturnType<typeof useAgentCatalog>;
-type CatalogViewProps = { catalog: CatalogState };
-type CatalogResultProps = CatalogViewProps & Pick<CatalogSearchProps, 'search'>;
-interface CatalogControlsProps {
-  search: string;
-  onSearch: (search: string) => void;
-  catalog: CatalogState;
+type CustomAgentProps = Pick<
+  AgentsSettingsViewProps,
+  'customAgents' | 'onAddCustomAgent' | 'onOpenCustomAgent'
+>;
+
+function useCustomAgentProps(): CustomAgentProps {
+  const navigate = useNavigate();
+  const agents = useCustomAgents().data ?? [];
+  return {
+    customAgents: agents.map(({ id, definition }) => ({
+      id,
+      name: definition.name,
+    })),
+    onAddCustomAgent: () => navigate({ to: 'settings-agent-new' }),
+    onOpenCustomAgent: (agent) => navigate({ to: 'settings-agent', agent }),
+  };
 }
 
 export function AgentsSettingsScreen(): React.JSX.Element {
   const [search, setSearch] = useState('');
-  const catalog = useAgentCatalog(search);
+  const { load, refreshing, refresh } = useAgentCatalog(search);
   return (
-    <View className="flex-1 min-h-0 bg-background p-4">
-      <CatalogControls search={search} onSearch={setSearch} catalog={catalog} />
-      <CustomAgents />
-      <CatalogResult catalog={catalog} search={search} />
-    </View>
-  );
-}
-
-function CatalogControls({
-  search,
-  onSearch,
-  catalog,
-}: CatalogControlsProps): React.JSX.Element {
-  return (
-    <View className="gap-8 pb-0.5">
-      <CatalogSearch search={search} onSearch={onSearch} />
-      <CatalogHeading catalog={catalog} />
-    </View>
-  );
-}
-
-function CatalogHeading({ catalog }: CatalogViewProps): React.JSX.Element {
-  return (
-    <View className="h-8 flex-row items-center gap-2">
-      <Text role="heading" aria-level={1} className="type-heading">
-        Agents
-      </Text>
-      <Text className="type-secondary flex-1">
-        {catalog.catalog?.agents.length}
-      </Text>
-      <AddCustomAgent />
-      <RefreshCatalog catalog={catalog} />
-    </View>
-  );
-}
-
-function CustomAgents(): React.JSX.Element {
-  const navigate = useNavigate();
-  const agents = useCustomAgents().data ?? [];
-  return (
-    <CustomAgentRows
-      agents={agents.map(({ id, definition }) => ({
-        id,
-        name: definition.name,
-      }))}
-      onOpen={(agent) => navigate({ to: 'settings-agent', agent })}
-    />
-  );
-}
-
-function AddCustomAgent(): React.JSX.Element {
-  const navigate = useNavigate();
-  return (
-    <Button
-      variant="outline"
-      size="sm"
-      onPress={() => navigate({ to: 'settings-agent-new' })}
-      label={'Add custom'}
-    />
-  );
-}
-
-function RefreshCatalog({ catalog }: CatalogViewProps): React.JSX.Element {
-  const label = catalog.refreshing ? 'Refreshing…' : 'Refresh';
-  return (
-    <Button
-      variant="outline"
-      size="sm"
-      accessibilityLabel="Refresh catalog"
-      disabled={catalog.refreshing}
-      onPress={catalog.refresh}
-      label={label}
-    />
-  );
-}
-
-function CatalogResult({
-  catalog,
-  search,
-}: CatalogResultProps): React.JSX.Element {
-  if (catalog.catalog)
-    return (
-      <AgentCatalog catalog={catalog.catalog} search={search} retry={catalog} />
-    );
-  if (catalog.error) return <CatalogError catalog={catalog} />;
-  return <CatalogLoading />;
-}
-
-function CatalogLoading(): React.JSX.Element {
-  return (
-    <Text role="status" className="type-secondary py-4">
-      Loading the Agent catalog…
-    </Text>
-  );
-}
-
-function CatalogError({
-  catalog,
-}: {
-  catalog: CatalogState;
-}): React.JSX.Element {
-  return (
-    <LoadError
-      title="Could not load the catalog"
-      description={catalog.error?.message ?? 'The Server did not answer'}
-      onRetry={catalog.refresh}
+    <AgentsSettingsView
+      search={search}
+      onSearch={setSearch}
+      catalog={load}
+      refreshing={refreshing}
+      onRefresh={refresh}
+      {...useCustomAgentProps()}
     />
   );
 }

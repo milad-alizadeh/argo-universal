@@ -8,7 +8,10 @@ import {
 } from '#features/sessions';
 import { SettingsNavigationList } from '#features/settings';
 import { Text } from '#lib/generic/primitives/text';
-import type { NavigationDestination } from '#lib/product/navigation/context';
+import {
+  type NavigationDestination,
+  useNavigate,
+} from '#lib/product/navigation/context';
 import type { ScreenHeaderProps } from '#lib/product/navigation/screen-header';
 import type { Section } from '../../../lib/product/navigation/sections';
 import { shellSections } from '../components/shell-sections';
@@ -27,11 +30,14 @@ export function useSectionList(
   selectedDestination?: NavigationDestination,
 ): SectionList {
   const sessionsFilter = useSessionsFilter();
+  const navigate = useNavigate();
   if (section === 'sessions')
     return {
       header: <SessionsHeader {...sessionsFilter} />,
       phoneHeader: {
-        right: sessionsHeaderItems(sessionsFilter),
+        right: sessionsHeaderItems(sessionsFilter, () =>
+          navigate({ to: 'new-session' }),
+        ),
         search: {
           placeholder: 'Search Sessions',
           onChangeText: sessionsFilter.onQueryChange,
@@ -58,7 +64,7 @@ export function useSectionList(
         contentInsetAdjustmentBehavior="automatic"
         contentContainerClassName="px-gutter py-6"
       >
-        <Text variant="muted">
+        <Text role="secondary">
           {shellSections[section].title} list will appear here.
         </Text>
       </ScrollView>

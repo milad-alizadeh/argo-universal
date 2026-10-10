@@ -45,7 +45,7 @@ export function DesktopShellFrame({
         }
         listHeader={
           <Text
-            role="heading"
+            semanticRole="heading"
             aria-level={2}
             className="text-base font-semibold"
           >
@@ -59,7 +59,7 @@ export function DesktopShellFrame({
         }
         detailHeader={
           <Text
-            role="heading"
+            semanticRole="heading"
             aria-level={2}
             className="text-base font-semibold"
             numberOfLines={1}

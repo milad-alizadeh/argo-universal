@@ -19,7 +19,7 @@ export const InfoPopoverStory: StoryObj<typeof meta> = {
   render: (args) => (
     <View className="w-96 px-gutter pt-24">
       <View className="h-11 flex-row items-center gap-2">
-        <Text selectable={false} className="select-none type-body">
+        <Text selectable={false} role="body" className="select-none">
           Effort
         </Text>
         <View className="-ml-2">
@@ -36,7 +36,8 @@ function EffortValue(): React.JSX.Element {
   return (
     <Text
       selectable={false}
-      className="select-none type-body text-muted-foreground"
+      role="body"
+      className="select-none text-muted-foreground"
     >
       High
     </Text>

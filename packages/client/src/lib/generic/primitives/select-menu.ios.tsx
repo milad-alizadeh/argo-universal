@@ -1,14 +1,15 @@
-import { Host, Picker, Text } from '@expo/ui/swift-ui';
+import { Picker, Text } from '@expo/ui/swift-ui';
 import {
   accessibilityLabel,
   disabled,
   pickerStyle,
   tag,
-  tint,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
-import { usePrimitiveColor } from './primitive-color';
+import { useNativeTheme } from '#lib/generic/native-theme';
+import { Host } from './host';
 import type { SelectMenuProps } from './select-menu';
+import { optionalTint } from './swift-tint';
 
 const unchosen = '';
 
@@ -40,12 +41,13 @@ function usePickerModifiers(
     'accessibilityLabel' | 'disabled' | 'invalid'
   >,
 ): React.ComponentProps<typeof Picker>['modifiers'] {
-  const destructive = usePrimitiveColor('text-destructive');
+  const colors = useNativeTheme().colors;
+  const valueColor = props.invalid ? colors.destructive : colors.tint;
   return [
     pickerStyle('menu'),
     accessibilityLabel(props.accessibilityLabel),
     disabled(props.disabled),
-    ...(props.invalid && destructive !== undefined ? [tint(destructive)] : []),
+    ...optionalTint(valueColor),
   ];
 }
 

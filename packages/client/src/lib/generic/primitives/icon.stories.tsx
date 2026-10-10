@@ -9,7 +9,7 @@ import { IconButton } from './icon-button';
 import { renderStorybookSymbol } from './sf-symbol-images.mocks';
 
 const meta = {
-  title: 'Design System/Components/Icon',
+  title: 'Design System/Primitives/Icon',
   component: Icon,
   args: { name: 'add' },
   tags: ['third-party'],

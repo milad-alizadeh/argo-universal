@@ -71,9 +71,7 @@ function ActionContent({
 }): ReactNode {
   return (
     <>
-      <Text
-        className={cn('type-control', primary && 'text-primary-foreground')}
-      >
+      <Text role="control" className={cn(primary && 'text-primary-foreground')}>
         {children}
       </Text>
       {primary && <ReturnKey wide={wide} />}

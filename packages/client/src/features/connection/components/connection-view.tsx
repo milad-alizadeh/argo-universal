@@ -34,12 +34,12 @@ export function ConnectionView({
 }): React.JSX.Element {
   let serverInformation: ReactNode;
   if (server.status === 'loading') {
-    serverInformation = (
-      <Text className="type-secondary">Connecting to the Server…</Text>
-    );
+    serverInformation = <Text role="secondary">Connecting to the Server…</Text>;
   } else if (server.status === 'error') {
     serverInformation = (
-      <Text className="type-body text-destructive">{server.message}</Text>
+      <Text role="body" className="text-destructive">
+        {server.message}
+      </Text>
     );
   } else {
     serverInformation = (
@@ -78,8 +78,8 @@ function Row({
 }): React.JSX.Element {
   return (
     <View className="flex-row justify-between gap-4">
-      <Text className="type-secondary">{label}</Text>
-      <Text className="type-code">{value}</Text>
+      <Text role="secondary">{label}</Text>
+      <Text role="code">{value}</Text>
     </View>
   );
 }

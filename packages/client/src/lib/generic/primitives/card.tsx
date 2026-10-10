@@ -36,7 +36,7 @@ function CardTitle(options: CardTitleProps): ReactElement {
   return (
     <Text
       ref={ref}
-      role="heading"
+      semanticRole="heading"
       aria-level={3}
       className={cn('font-semibold leading-none', className)}
       {...props}

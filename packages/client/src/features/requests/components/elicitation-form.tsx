@@ -108,10 +108,10 @@ function RequestForm({
           {source && (
             <View className="flex-row items-center gap-1.5">
               <Icon name="plug" size="md" className="text-muted-foreground" />
-              <Text className="type-secondary">{source} asks</Text>
+              <Text role="secondary">{source} asks</Text>
             </View>
           )}
-          <Text className="type-heading">{request.message}</Text>
+          <Text role={'heading'}>{request.message}</Text>
         </View>
         <View className="gap-4 px-4 pt-3 pb-1">
           {schema.fields.map(({ name, key, property, required }) => (
@@ -140,7 +140,7 @@ function RequestForm({
       {!alreadyAnswered && invalid.length > 0 && (
         <View role="alert" className="flex-row items-center gap-1.5 px-4 pt-3">
           <Icon name="error" size="md" className="shrink-0 text-destructive" />
-          <Text className="min-w-0 flex-1 type-secondary text-destructive">
+          <Text role="secondary" className="min-w-0 flex-1 text-destructive">
             Fix{' '}
             {invalid
               .map(({ name, property }) => property.title ?? name)

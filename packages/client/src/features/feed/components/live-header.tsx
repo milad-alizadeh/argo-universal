@@ -114,7 +114,8 @@ export function LiveHeader({
       {request ? (
         <Text
           numberOfLines={1}
-          className="min-w-0 shrink type-body text-warning"
+          role="body"
+          className="min-w-0 shrink text-warning"
         >
           {title}
         </Text>

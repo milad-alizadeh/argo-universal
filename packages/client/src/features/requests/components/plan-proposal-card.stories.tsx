@@ -17,7 +17,7 @@ type GalleryArgs = ComponentProps<typeof PlanProposalCard> & {
 };
 
 const meta = {
-  title: 'Sessions/PlanProposalCard',
+  title: 'Requests/PlanProposalCard',
   component: PlanProposalCard,
   parameters: { screenPreview: true, previewPadding: false },
   args: {

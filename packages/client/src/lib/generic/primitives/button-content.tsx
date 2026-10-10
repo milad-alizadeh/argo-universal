@@ -18,14 +18,15 @@ export function ContentButton(props: ButtonProps): ReactElement {
   );
 }
 
-function ButtonText(
-  props: Pick<ButtonProps, 'label'> & {
-    labelNumberOfLines?: number;
-    labelClassName?: string;
-  },
-): ReactElement {
+type ButtonTextProps = Pick<ButtonProps, 'label'> & {
+  labelNumberOfLines?: number;
+  labelClassName?: string;
+};
+
+function ButtonText(props: ButtonTextProps): ReactElement {
   return (
     <Text
+      role="control"
       className={props.labelClassName}
       numberOfLines={props.labelNumberOfLines}
     >

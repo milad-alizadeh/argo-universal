@@ -33,7 +33,7 @@ export function PullRequestIndicator({
         name={appearance.icon}
         className={cn('shrink-0', appearance.className)}
       />
-      <Text className={cn('type-secondary', appearance.className)}>
+      <Text role="secondary" className={cn(appearance.className)}>
         #{number}
       </Text>
     </View>

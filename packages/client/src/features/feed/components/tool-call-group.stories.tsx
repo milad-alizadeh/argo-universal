@@ -5,7 +5,7 @@ import { renderRecordedActivity } from './tool-call-group-preview.mocks';
 import { toolCallGroupMock } from './tool-call.mocks';
 
 const meta = {
-  title: 'Sessions/Feed/ToolCallGroup',
+  title: 'Feed/ToolCallGroup',
   component: ToolCallGroup,
   args: {
     group: toolCallGroupMock.group,

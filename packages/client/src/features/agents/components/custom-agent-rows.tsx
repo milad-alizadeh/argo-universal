@@ -3,7 +3,7 @@ import { Pressable, View } from 'react-native';
 import { Text } from '#lib/generic/primitives/text';
 import { Icon } from '../../../lib/generic/symbols/icon';
 
-type CustomAgentRowEntry = { id: string; name: string };
+export type CustomAgentRowEntry = { id: string; name: string };
 type RowProps = { onOpen: (agentId: string) => void };
 type OneRowProps = RowProps & { agent: CustomAgentRowEntry };
 type RowsProps = RowProps & { agents: CustomAgentRowEntry[] };
@@ -59,8 +59,10 @@ function AgentTile(): React.JSX.Element {
 function RowText({ name }: { name: string }): React.JSX.Element {
   return (
     <View className="min-w-0 flex-1 gap-0.5">
-      <Text className="type-body min-h-6">{name}</Text>
-      <Text className="type-secondary">Custom ACP program</Text>
+      <Text role="body" className="min-h-6">
+        {name}
+      </Text>
+      <Text role="secondary">Custom ACP program</Text>
     </View>
   );
 }

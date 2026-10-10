@@ -16,8 +16,12 @@ export function LoadError({
 }: LoadErrorProps): React.JSX.Element {
   return (
     <View role="alert" className="items-center gap-1 px-4 py-8">
-      <Text className="text-center type-heading">{title}</Text>
-      <Text className="max-w-60 text-center type-secondary">{description}</Text>
+      <Text role={'heading'} className="text-center">
+        {title}
+      </Text>
+      <Text role="secondary" className="max-w-60 text-center">
+        {description}
+      </Text>
       <View className="pt-3">
         <Button variant="outline" size="sm" onPress={onRetry} label={'Retry'} />
       </View>

@@ -1,5 +1,4 @@
 import {
-  Host,
   ModalBottomSheet,
   type ModalBottomSheetRef,
   RNHostView,
@@ -8,10 +7,12 @@ import { fillMaxHeight } from '@expo/ui/jetpack-compose/modifiers';
 import type * as React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useResolveClassNames } from 'uniwind';
+import { useNativeTheme } from '#lib/generic/native-theme';
 import { BottomSheetContent } from './bottom-sheet-content';
 import { BottomSheetRoot } from './bottom-sheet-root';
 import { BottomSheetTrigger } from './bottom-sheet-trigger';
 import type { BottomSheetProps } from './bottom-sheet.types';
+import { Host } from './host';
 import { usePresentationClosed } from './native-only-animated-view';
 
 type SheetRef = React.RefObject<ModalBottomSheetRef | null>;
@@ -104,12 +105,13 @@ function hideSheet(
 
 function useSheetColors(): Pick<
   React.ComponentProps<typeof ModalBottomSheet>,
-  'containerColor' | 'scrimColor'
+  'containerColor' | 'contentColor' | 'scrimColor'
 > {
-  const background = useResolveClassNames('bg-popover');
+  const { popover, popoverForeground } = useNativeTheme().colors;
   const scrim = useResolveClassNames('bg-black/20');
   return {
-    containerColor: background.backgroundColor,
+    containerColor: popover,
+    contentColor: popoverForeground,
     scrimColor: scrim.backgroundColor,
   };
 }

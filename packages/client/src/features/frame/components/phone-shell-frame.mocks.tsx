@@ -58,7 +58,7 @@ export function PhoneShellFrame({
         ]}
       />
       <View testID="phone-shell-content" className="flex-1 gap-3 p-6">
-        <Text variant="muted">
+        <Text role="secondary">
           {selectedSection === 'sessions'
             ? 'Your Sessions appear here.'
             : `${title} will appear here.`}

@@ -1,12 +1,11 @@
-import { Host } from '@expo/ui';
 import type { ComponentType, ReactElement } from 'react';
-import { Platform } from 'react-native';
 import { Icon } from '../symbols/icon';
 import type { IconName } from '../symbols/icon-names';
 import { ContentButton } from './button-content';
 import { useNativeButtonTheme, type ButtonTheme } from './button-native-colors';
 import type { ButtonProps, SystemButtonProps } from './button-props';
 import { nativeButtonLayout } from './button-state';
+import { Host } from './host';
 
 export function createNativeButton(
   NativeButton: ComponentType<NativeDrawingProps>,
@@ -25,11 +24,7 @@ type NativeHostProps = SystemButtonProps & {
 function NativeButtonHost(props: NativeHostProps): ReactElement {
   const theme = useNativeButtonTheme(props);
   return (
-    <Host
-      colorScheme={theme.colorScheme}
-      seedColor={Platform.OS === 'android' ? theme.primary : undefined}
-      {...nativeButtonLayout(props.fullWidth)}
-    >
+    <Host {...nativeButtonLayout(props.fullWidth)}>
       <props.Drawing {...props} theme={theme} />
     </Host>
   );

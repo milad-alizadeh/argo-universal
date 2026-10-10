@@ -1,4 +1,4 @@
-import { useUniwind } from 'uniwind';
+import { useNativeTheme } from '../native-theme';
 import type { ButtonDataProps, ButtonVariant } from './button-props';
 import { isButtonDisabled, nativeButtonVariant } from './button-state';
 import { usePrimitiveColor } from './primitive-color';
@@ -23,7 +23,6 @@ const buttonColorClasses: Record<
 };
 
 export interface ButtonTheme {
-  colorScheme: 'light' | 'dark';
   primary: string | undefined;
   contentClass: string;
   colors: {
@@ -40,11 +39,10 @@ type ThemeProps = Pick<
 >;
 
 export function useNativeButtonTheme(props: ThemeProps): ButtonTheme {
-  const { theme } = useUniwind();
+  const { colors } = useNativeTheme();
   const classes = nativeColorClasses(props);
   return {
-    colorScheme: theme === 'dark' ? 'dark' : 'light',
-    primary: usePrimitiveColor(primaryClass),
+    primary: colors.tint,
     contentClass: isButtonDisabled(props)
       ? mutedForegroundClass
       : classes.content,

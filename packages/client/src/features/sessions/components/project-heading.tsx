@@ -63,7 +63,9 @@ export const ProjectHeading = memo(function ProjectHeading({
           <Text
             selectable={false}
             numberOfLines={1}
-            className="select-none min-w-0 flex-1 type-heading"
+            role={'heading'}
+
+            className="select-none min-w-0 flex-1"
           >
             {name}
           </Text>

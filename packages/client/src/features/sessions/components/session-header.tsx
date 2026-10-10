@@ -50,13 +50,11 @@ function StatusLine({
       <View className="size-2 items-center justify-center">
         <StatusIndicator status={status} size="small" testID="session-status" />
       </View>
-      <Text className={cn('type-badge', statusTextColor[status])}>
+      <Text role="badge" className={cn(statusTextColor[status])}>
         {statusLabels[status]}
       </Text>
       {startedAt !== null && (
-        <Text className="type-secondary">
-          for {formatElapsed(clock - startedAt)}
-        </Text>
+        <Text role="secondary">for {formatElapsed(clock - startedAt)}</Text>
       )}
     </View>
   );
@@ -96,10 +94,10 @@ export function SessionHeader({
       <Portal name="session-header" hostName={detailHeaderHost}>
         <View className="min-w-0 gap-0.5">
           <Text
-            role="heading"
+            semanticRole="heading"
             aria-level={2}
             numberOfLines={1}
-            className="type-heading"
+            role={'heading'}
           >
             {title}
           </Text>

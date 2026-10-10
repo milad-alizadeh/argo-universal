@@ -30,7 +30,7 @@ export function CustomAgentForm(
   const checking = useStore(form.store, (state) => state.isSubmitting);
   return (
     <View className="gap-8">
-      <Text className="type-secondary">{formDescription}</Text>
+      <Text role="secondary">{formDescription}</Text>
       <ProgramSection form={form} disabled={checking} />
       <EnvironmentSection form={form} disabled={checking} />
       <CheckFailure failure={checking ? null : failure} />
@@ -55,10 +55,18 @@ function FailureBox({ failure }: { failure: string }): React.JSX.Element {
       className="flex-row gap-2 rounded-md bg-destructive/8 p-3"
     >
       <Icon name="warning" className="text-destructive" />
-      <View className="min-w-0 flex-1 gap-1">
-        <Text className="type-heading text-destructive">Check failed</Text>
-        <Text className="type-code">{failure}</Text>
-      </View>
+      <FailureMessage failure={failure} />
+    </View>
+  );
+}
+
+function FailureMessage({ failure }: { failure: string }): React.JSX.Element {
+  return (
+    <View className="min-w-0 flex-1 gap-1">
+      <Text role={'heading'} className="text-destructive">
+        Check failed
+      </Text>
+      <Text role="code">{failure}</Text>
     </View>
   );
 }

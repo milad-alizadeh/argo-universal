@@ -11,7 +11,7 @@ import {
   oversizedComposerImage,
 } from '../../../../mocks/composer-mock';
 import { Variation, Variations } from '../../../lib/generic/variations';
-import { imageSelectionFailureMessage } from '../hooks/use-image-draft';
+import { imageSelectionFailureMessage } from '../state/image-draft';
 import { Composer } from './composer';
 
 const spacingAndColoursPrompt = 'Match the spacing and colours.';
@@ -20,7 +20,7 @@ const [firstAgent] = newSessionCatalogs.bothAvailable;
 if (!firstAgent) throw new Error('Recorded catalog needs an available Agent.');
 
 const meta = {
-  title: 'Sessions/Composer',
+  title: 'Composer/Composer',
   component: Composer,
   render: (args): React.JSX.Element => <Composer {...composerProps(args)} />,
   parameters: {

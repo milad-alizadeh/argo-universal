@@ -94,7 +94,7 @@ function EntryRowText(
 ): React.JSX.Element {
   return (
     <View className="min-w-0 flex-1">
-      <Text className="type-code" numberOfLines={1}>
+      <Text role="code" numberOfLines={1}>
         {props.label}
       </Text>
       <EntryDetail detail={props.detail} />
@@ -107,7 +107,7 @@ function EntryDetail({
 }: Pick<EntryRowProps, 'detail'>): React.JSX.Element | null {
   if (detail === undefined) return null;
   return (
-    <Text className="type-code text-muted-foreground" numberOfLines={1}>
+    <Text role="code" className="text-muted-foreground" numberOfLines={1}>
       {detail}
     </Text>
   );

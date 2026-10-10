@@ -69,17 +69,22 @@ function nativeControlProps(
   };
 }
 
-function nativeModifiers(
-  props: Pick<
-    ButtonDataProps,
-    'label' | 'accessibilityLabel' | 'fullWidth' | 'testID'
-  >,
-): ModifierConfig[] {
+type AccessibleButtonProps = Pick<
+  ButtonDataProps,
+  'label' | 'accessibilityLabel' | 'fullWidth' | 'testID' | 'loading'
+>;
+
+function nativeModifiers(props: AccessibleButtonProps): ModifierConfig[] {
   return [
-    semantics({ contentDescription: props.accessibilityLabel ?? props.label }),
+    semantics({ contentDescription: buttonDescription(props) }),
     ...(props.fullWidth ? [fillMaxWidth()] : []),
     ...buttonIdentifier(props.testID),
   ];
+}
+
+function buttonDescription(props: AccessibleButtonProps): string {
+  const label = props.accessibilityLabel ?? props.label;
+  return props.loading ? `${label}, Loading` : label;
 }
 
 function buttonIdentifier(identifier?: string): ModifierConfig[] {

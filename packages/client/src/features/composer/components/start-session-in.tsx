@@ -65,7 +65,8 @@ export function StartSessionIn({
           <Text
             selectable={false}
             numberOfLines={1}
-            className="select-none shrink type-body"
+            role="body"
+            className="select-none shrink"
           >
             {project?.name ?? 'Choose a Project'}
           </Text>
@@ -97,7 +98,7 @@ export function StartSessionIn({
       )}
     >
       <Icon name="computer" className="text-muted-foreground" />
-      <Text numberOfLines={1} className="type-body">
+      <Text numberOfLines={1} role="body">
         {serverName}
       </Text>
       <View
@@ -109,7 +110,9 @@ export function StartSessionIn({
         )}
       />
       {!serverConnected && (
-        <Text className="pl-1 type-secondary text-warning">Reconnecting…</Text>
+        <Text role="secondary" className="pl-1 text-warning">
+          Reconnecting…
+        </Text>
       )}
     </View>
   );
@@ -119,7 +122,7 @@ export function StartSessionIn({
         accessibilityLabel="Start the Session in"
         className="w-full max-w-composer flex-row items-center gap-4 pl-2.5"
       >
-        <Text className="pl-1.5 shrink-0 type-secondary">
+        <Text role="secondary" className="pl-1.5 shrink-0">
           Start the Session in
         </Text>
         {server}
@@ -128,7 +131,9 @@ export function StartSessionIn({
     );
   return (
     <View accessibilityLabel="Start the Session in" className="w-full">
-      <Text className="pl-4 pb-1 type-secondary">Start the Session in</Text>
+      <Text role="secondary" className="pl-4 pb-1">
+        Start the Session in
+      </Text>
       {server}
       {projectControl}
       <ComposerPopover
@@ -151,7 +156,8 @@ export function StartSessionIn({
             />
             <Text
               selectable={false}
-              className="select-none type-body text-muted-foreground"
+              role="body"
+              className="select-none text-muted-foreground"
             >
               {checkout.newWorktree ? 'New worktree' : 'Local'}
             </Text>
@@ -237,14 +243,16 @@ function ProjectPicker({
                 <Text
                   selectable={false}
                   numberOfLines={1}
-                  className="select-none type-body"
+                  role="body"
+                  className="select-none"
                 >
                   {project.name}
                 </Text>
                 <Text
                   selectable={false}
                   numberOfLines={1}
-                  className="select-none type-code text-muted-foreground"
+                  role="code"
+                  className="select-none text-muted-foreground"
                 >
                   {project.path}
                 </Text>
@@ -256,7 +264,9 @@ function ProjectPicker({
           );
         })}
         {found.length === 0 && (
-          <Text className="px-2 py-2 type-secondary">No Project matches.</Text>
+          <Text role="secondary" className="px-2 py-2">
+            No Project matches.
+          </Text>
         )}
       </View>
     </View>

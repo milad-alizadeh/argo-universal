@@ -1,7 +1,4 @@
-import type {
-  AgentsCatalogOutput,
-  AgentsCatalogSyncOutput,
-} from '@repo/contracts';
+import type { AgentsCatalogSyncOutput } from '@repo/contracts';
 import {
   type UseMutationResult,
   useMutation,
@@ -13,14 +10,12 @@ import { useSubscription } from '@trpc/tanstack-react-query';
 import { useEffect } from 'react';
 import type { ClientError } from '#features/connection';
 import { useTRPC } from '#features/connection';
+import { applyCatalogSync, type CatalogSync } from '../state/catalog-sync';
 
-export interface AgentCatalogState {
-  catalog: AgentsCatalogOutput | undefined;
-  loading: boolean;
-  error: ClientError | null;
-  refresh: () => void;
-  refreshing: boolean;
-}
+export type AgentCatalogState = CatalogSync & { refresh: () => void };
+
+const messageOf = (error: ClientError | null): string | null =>
+  error === null ? null : error.message;
 
 export function useAgentCatalog(search: string): AgentCatalogState {
   const catalogQuery = useTRPC().agents.catalog.queryOptions(
@@ -29,17 +24,11 @@ export function useAgentCatalog(search: string): AgentCatalogState {
   );
   const query = useQuery(catalogQuery);
   const refresh = useCatalogSync();
-  return {
-    catalog: query.data && catalogResult(query.data, refresh.error),
-    loading: query.isPending,
-    error: query.error,
-    refresh: (): void => refresh.mutate(),
-    refreshing: refresh.isPending || isCatalogSyncing(query.data),
-  };
-}
-
-function isCatalogSyncing(catalog: AgentsCatalogOutput | undefined): boolean {
-  return catalog ? ['pending', 'running'].includes(catalog.syncStatus) : false;
+  const sync = applyCatalogSync(
+    { catalog: query.data, error: messageOf(query.error) },
+    { pending: refresh.isPending, error: messageOf(refresh.error) },
+  );
+  return { ...sync, refresh: (): void => refresh.mutate() };
 }
 
 function useCatalogSync(): UseMutationResult<
@@ -84,16 +73,4 @@ function useCatalogChanges(sync: CatalogSyncReset): void {
       onData: update,
     }),
   );
-}
-
-function catalogResult(
-  saved: AgentsCatalogOutput,
-  error: ClientError | null,
-): AgentsCatalogOutput {
-  if (!error) return saved;
-  return {
-    ...saved,
-    status: saved.fetchedAt === null ? 'unavailable' : 'stale',
-    error: error.message,
-  };
 }

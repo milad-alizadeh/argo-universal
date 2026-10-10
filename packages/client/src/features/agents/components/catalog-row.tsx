@@ -32,14 +32,20 @@ function CatalogDescription({
 }: RowProps): React.JSX.Element {
   return (
     <View className="min-w-0 flex-1 gap-0.5">
-      <Text role="heading" aria-level={2} className="type-body min-h-6">
-        {entry.name}
-      </Text>
-      <Text className="type-secondary">{entry.description}</Text>
-      <Text className="type-secondary pt-1">
+      <CatalogName name={entry.name} />
+      <Text role="secondary">{entry.description}</Text>
+      <Text role="secondary" className="pt-1">
         v{entry.version} · {supportDescription(support)}
       </Text>
     </View>
+  );
+}
+
+function CatalogName({ name }: { name: string }): React.JSX.Element {
+  return (
+    <Text semanticRole="heading" aria-level={2} role="body" className="min-h-6">
+      {name}
+    </Text>
   );
 }
 

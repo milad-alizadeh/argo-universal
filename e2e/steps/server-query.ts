@@ -24,3 +24,14 @@ export async function query<Output>(
     .object({ result: z.object({ data: output }) })
     .parse(await response.json()).result.data;
 }
+
+type MutationInput = Omit<QueryInput<unknown>, 'output'>;
+
+// Calls a mutation over HTTP, as another client of the Server would.
+export async function mutate(input: MutationInput): Promise<void> {
+  const { page, httpUrl, procedure } = input;
+  const response = await page.request.post(`${httpUrl}/trpc/${procedure}`, {
+    data: input.input,
+  });
+  expect(response.ok()).toBe(true);
+}

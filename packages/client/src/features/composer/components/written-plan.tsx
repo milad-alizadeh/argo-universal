@@ -86,7 +86,9 @@ export function WrittenPlan({
       >
         <View className="flex-row items-center gap-1.5 px-4 py-2">
           <Icon name="file-text" className="text-muted-foreground" />
-          <Text className="min-w-0 flex-1 type-heading">{title}</Text>
+          <Text role={'heading'} className="min-w-0 flex-1">
+            {title}
+          </Text>
         </View>
         <WrittenPlanContent plan={plan} title={title} layout="sheet" />
       </BottomSheet>
@@ -115,7 +117,7 @@ function WrittenPlanContent({
       ) : (
         <View className="gap-2 px-4 pt-2 pb-4">
           <FeedCodeBlock resource={{ name: title, uri: plan.uri }} />
-          <Text className="type-secondary">
+          <Text role="secondary">
             The Agent shared where the plan is, not its text.
           </Text>
         </View>

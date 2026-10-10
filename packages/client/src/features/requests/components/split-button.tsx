@@ -123,7 +123,7 @@ function ChoiceSheet<Value extends string>(
                 'h-auto min-h-11 justify-between rounded-sm px-2 py-1.5 sm:h-auto',
             })}
           >
-            <Text className="type-body">{choice.label}</Text>
+            <Text role="body">{choice.label}</Text>
             <View className="size-4 items-center justify-center">
               {choice.value === value && (
                 <Icon name="check" size="sm" className="text-foreground" />

@@ -7,6 +7,7 @@ import { Button } from '../../../lib/generic/primitives/button';
 // undefined while the Server runs a fresh ACP initialize; readiness is never read from the saved record.
 export type CustomAgentCheck = AgentCheck | undefined;
 type StatusProps = { check: CustomAgentCheck; onCheck: () => void };
+type FailedStatusProps = { failure: string; onCheck: () => void };
 
 export function ReadinessChip({
   check,
@@ -36,7 +37,9 @@ function Chip({ kind }: { kind: keyof typeof chipTones }): React.JSX.Element {
   const { label, tone, text } = chipTones[kind];
   return (
     <View className={`h-5 justify-center rounded-full px-2 ${tone}`}>
-      <Text className={`type-badge ${text}`}>{label}</Text>
+      <Text role="badge" className={text}>
+        {label}
+      </Text>
     </View>
   );
 }
@@ -49,22 +52,20 @@ export function CustomAgentStatus({
   check,
   onCheck,
 }: StatusProps): React.JSX.Element {
-  if (!check)
-    return <Text className="type-secondary">Running ACP initialize…</Text>;
+  if (!check) return <Text role="secondary">Running ACP initialize…</Text>;
   if (check.status === 'ready')
-    return <Text className="type-body">Answered ACP initialize</Text>;
+    return <Text role="body">Answered ACP initialize</Text>;
   return <FailedStatus failure={check.failure} onCheck={onCheck} />;
 }
 
-function FailedStatus(props: {
-  failure: string;
-  onCheck: () => void;
-}): React.JSX.Element {
+function FailedStatus(props: FailedStatusProps): React.JSX.Element {
   return (
     <View className="flex-row items-start gap-4">
       <View className="flex-1 gap-1">
-        <Text className="type-body">Did not answer ACP initialize</Text>
-        <Text className="type-code text-destructive">{props.failure}</Text>
+        <Text role="body">Did not answer ACP initialize</Text>
+        <Text role="code" className="text-destructive">
+          {props.failure}
+        </Text>
       </View>
       <CheckAgain onPress={props.onCheck} />
     </View>
