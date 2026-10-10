@@ -1,18 +1,24 @@
 import { agentAdapters } from '@repo/agents';
 import type { AgentAdapter, AgentProbe } from '@repo/agents';
+import { SessionConfigOption as ArgoConfigOption } from '@repo/contracts';
 import { z } from 'zod';
-import { appConfiguration } from './acp-configuration';
+import { acpConfiguration } from './acp-configuration';
 import { createMockAdapter, type MockAgentScript } from './adapter';
+import { isScenarioName, type ScenarioName } from './scenarios';
 
 export const AppFixtureOptions = z.object({
   availability: z
     .enum(['available', 'not_installed', 'not_signed_in'])
     .default('available'),
-  scenario: z.enum(['reply', 'image']).default('reply'),
+  scenario: z.custom<ScenarioName>(isScenarioName).default('reply'),
 });
 export type AppFixtureOptions = z.input<typeof AppFixtureOptions>;
 export const AppFixtureAgents = z.record(z.string(), AppFixtureOptions);
 export type AppFixtureAgents = z.input<typeof AppFixtureAgents>;
+
+const appConfiguration = acpConfiguration.map(({ id, ...option }) =>
+  ArgoConfigOption.parse({ ...option, configId: id }),
+);
 
 type AgentIdentity = Pick<AgentAdapter, 'agent' | 'label' | 'logo'>;
 

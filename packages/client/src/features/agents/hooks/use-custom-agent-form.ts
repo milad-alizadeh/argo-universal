@@ -32,7 +32,7 @@ export type CustomAgentFormApi = ReactFormExtendedApi<
   unknown
 >;
 
-export const emptyCustomAgent: CustomAgentDefinition = {
+const emptyCustomAgent: CustomAgentDefinition = {
   name: '',
   executable: '',
   args: [],

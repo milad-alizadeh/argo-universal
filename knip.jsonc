@@ -1,6 +1,15 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignore": ["**/*.gen.*"],
   "workspaces": {
+    "packages/client": {
+      // Metro selects platform modules by filename rather than by a literal import.
+      "entry": ["src/**/*.@(android|ios|native|web).{ts,tsx}"]
+    },
+    "packages/agents": {
+      // The protocol generator is also a supported manual regeneration command.
+      "entry": ["codex/generate-protocol.ts"]
+    },
     "apps/desktop": {
       // Knip has no Electron Forge plugin, so forge.config.mts and the Vite `build` entries it names by string are listed by hand.
       "entry": [
@@ -24,13 +33,15 @@
     "apps/universal-app": {
       // Native modules the app must list itself so Expo autolinks them; @repo/client, expo-symbols and Expo Router reach them at runtime.
       "ignoreDependencies": [
-        "expo-font",
-        "react-native-svg",
         "@expo/ui",
         "expo-clipboard",
         "expo-file-system",
+        "expo-font",
         "expo-haptics",
-        "expo-image-picker"
+        "expo-image-picker",
+        "react-native-svg",
+        // Knip assumes OTA updates are installed unless Expo config explicitly disables them.
+        "expo-updates"
       ],
       // Config plugins that app.json names by path.
       "entry": ["plugins/*.mjs"]
@@ -44,7 +55,7 @@
       ]
     },
     "e2e": {
-      // playwright-bdd loads step definitions from the config string.
+      // playwright-bdd discovers step definitions through the config's steps glob.
       "entry": ["steps/**/*.ts"],
       // Listed so Turborepo hashes the Server, App, and Desktop into the e2e tasks; the specs reach them over HTTP and Electron, not imports.
       "ignoreDependencies": [
@@ -58,76 +69,6 @@
       "entry": ["*.{mts,mjs}"],
       // profile-shell.mjs resolves Playwright from @repo/e2e on purpose.
       "ignoreDependencies": ["@playwright/test"]
-    },
-    "packages/client": {
-      // Planned and vendored primitives are retained with their export surfaces; screens pick from them.
-      "ignore": [
-        "src/lib/generic/primitives/accordion.stories.tsx",
-        "src/lib/generic/primitives/accordion.tsx",
-        "src/lib/generic/primitives/alert-dialog.stories.tsx",
-        "src/lib/generic/primitives/alert-dialog.tsx",
-        "src/lib/generic/primitives/alert.stories.tsx",
-        "src/lib/generic/primitives/alert.tsx",
-        "src/lib/generic/primitives/aspect-ratio.stories.tsx",
-        "src/lib/generic/primitives/aspect-ratio.tsx",
-        "src/lib/generic/primitives/avatar.stories.tsx",
-        "src/lib/generic/primitives/avatar.tsx",
-        "src/lib/generic/primitives/badge.stories.tsx",
-        "src/lib/generic/primitives/badge.tsx",
-        "src/lib/generic/primitives/button.stories.tsx",
-        "src/lib/generic/primitives/button.tsx",
-        "src/lib/generic/primitives/card.stories.tsx",
-        "src/lib/generic/primitives/card.tsx",
-        "src/lib/generic/primitives/checkbox.stories.tsx",
-        "src/lib/generic/primitives/checkbox.tsx",
-        "src/lib/generic/primitives/collapsible.stories.tsx",
-        "src/lib/generic/primitives/collapsible.tsx",
-        "src/lib/generic/primitives/context-menu.stories.tsx",
-        "src/lib/generic/primitives/context-menu.tsx",
-        "src/lib/generic/primitives/dialog.stories.tsx",
-        "src/lib/generic/primitives/dialog.tsx",
-        "src/lib/generic/primitives/dropdown-menu.stories.tsx",
-        "src/lib/generic/primitives/dropdown-menu.tsx",
-        "src/lib/generic/primitives/hover-card.stories.tsx",
-        "src/lib/generic/primitives/hover-card.tsx",
-        "src/lib/generic/primitives/icon.tsx",
-        "src/lib/generic/primitives/input.stories.tsx",
-        "src/lib/generic/primitives/input.tsx",
-        "src/lib/generic/primitives/label.stories.tsx",
-        "src/lib/generic/primitives/label.tsx",
-        "src/lib/generic/primitives/menubar.stories.tsx",
-        "src/lib/generic/primitives/menubar.tsx",
-        "src/lib/generic/primitives/native-only-animated-view.stories.tsx",
-        "src/lib/generic/primitives/native-only-animated-view.tsx",
-        "src/lib/generic/primitives/popover.stories.tsx",
-        "src/lib/generic/primitives/popover.tsx",
-        "src/lib/generic/primitives/progress.stories.tsx",
-        "src/lib/generic/primitives/progress.tsx",
-        "src/lib/generic/primitives/radio-group.stories.tsx",
-        "src/lib/generic/primitives/radio-group.tsx",
-        "src/lib/generic/primitives/select.stories.tsx",
-        "src/lib/generic/primitives/select.tsx",
-        "src/lib/generic/primitives/separator.stories.tsx",
-        "src/lib/generic/primitives/separator.tsx",
-        "src/lib/generic/primitives/skeleton.stories.tsx",
-        "src/lib/generic/primitives/skeleton.tsx",
-        "src/lib/generic/primitives/slider.native.tsx",
-        "src/lib/generic/primitives/slider.tsx",
-        "src/lib/generic/primitives/switch.stories.tsx",
-        "src/lib/generic/primitives/switch.tsx",
-        "src/lib/generic/primitives/tabs.stories.tsx",
-        "src/lib/generic/primitives/tabs.tsx",
-        "src/lib/generic/primitives/text.stories.tsx",
-        "src/lib/generic/primitives/text.tsx",
-        "src/lib/generic/primitives/textarea.stories.tsx",
-        "src/lib/generic/primitives/textarea.tsx",
-        "src/lib/generic/primitives/toggle-group.stories.tsx",
-        "src/lib/generic/primitives/toggle-group.tsx",
-        "src/lib/generic/primitives/toggle.stories.tsx",
-        "src/lib/generic/primitives/toggle.tsx",
-        "src/lib/generic/primitives/tooltip.stories.tsx",
-        "src/lib/generic/primitives/tooltip.tsx"
-      ]
     }
   }
 }

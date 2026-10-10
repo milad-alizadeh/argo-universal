@@ -31,5 +31,4 @@ export function bezierEasing({
 }
 
 export const fullTurnDegrees = 360;
-export const halfTurnDegrees = 180;
 export const quarterTurnDegrees = 90;

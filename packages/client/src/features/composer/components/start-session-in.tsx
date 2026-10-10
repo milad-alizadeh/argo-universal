@@ -170,7 +170,7 @@ interface ProjectPickerProps {
 }
 
 // The Projects on the Server, found by name or folder; one tap picks one.
-export function ProjectPicker({
+function ProjectPicker({
   projects,
   projectId,
   onSelect,

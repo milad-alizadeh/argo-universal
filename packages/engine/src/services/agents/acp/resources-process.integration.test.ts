@@ -1,5 +1,5 @@
-import { fileURLToPath } from 'node:url';
 import type { SessionNotification } from '@agentclientprotocol/sdk';
+import { scriptedAgentCommand } from '@repo/mocks/agent/scripted-agent-launch';
 import { expect, it, onTestFinished, vi } from 'vitest';
 import {
   createResourceDestination,
@@ -9,9 +9,6 @@ import { createAcpResources } from '../index';
 
 const readProcessId = (sessionId: string): number =>
   Number(sessionId.split(':')[0]);
-const agentScript = fileURLToPath(
-  new URL('../../../../mocks/acp-process.mts', import.meta.url),
-);
 
 it('a missing executable rejects opening and releases the production resource after child closure', async () => {
   const resources = createAcpResources();
@@ -49,24 +46,23 @@ it('the production launch port owns a real stdio process and observes its final 
   const base = createResourceOpening();
   const resources = createAcpResources();
   onTestFinished(() => resources.shutdown());
-  vi.stubEnv('ARGO_348_AMBIENT', 'ambient');
+  vi.stubEnv('ARGO_AMBIENT_VALUE', 'ambient');
   vi.stubEnv('NODE_ENV', 'test');
   const lease = await resources.open({
     ...base,
     launch: {
       ...base.launch,
-      executable: process.execPath,
+      ...scriptedAgentCommand('reply'),
       cwd: process.cwd(),
-      env: { ARGO_348_PRESENT: 'captured' },
-      args: [agentScript],
+      env: { ARGO_LAUNCH_VALUE: 'captured' },
     },
   });
   expect(lease.initialization.protocolVersion).toBe(1);
-  expect(lease.initialization._meta).toEqual({
-    present: 'captured',
-    ambient: null,
-    nodeEnv: null,
-  });
+  // The OS may add its own variables; the Engine's own must not leak through.
+  const environment = lease.initialization._meta?.['environment'];
+  expect(environment).toMatchObject({ ARGO_LAUNCH_VALUE: 'captured' });
+  expect(environment).not.toHaveProperty('ARGO_AMBIENT_VALUE');
+  expect(environment).not.toHaveProperty('NODE_ENV');
   expect(process.kill(readProcessId(lease.sessionId), 0)).toBe(true);
   await lease.close();
   await lease.released;
@@ -83,9 +79,8 @@ it.each([1, 4, 8])(
     const base = createResourceOpening();
     const launch = {
       ...base.launch,
-      executable: process.execPath,
+      ...scriptedAgentCommand('reply'),
       cwd: process.cwd(),
-      args: [agentScript],
     };
     const updates = Array.from(
       { length: count },

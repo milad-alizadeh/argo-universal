@@ -19,33 +19,46 @@ export const Overview: Story = {
   name: 'ButtonGroup',
   render: () => (
     <Variations>
-      <Variation label="Split button">
-        <View className="flex-row">
-          <ButtonGroup>
-            <Button>
-              <Text>Allow</Text>
-            </Button>
-            <Button size="icon" accessibilityLabel="Allow options">
-              <Icon name="chevron-down" size="sm" />
-            </Button>
-          </ButtonGroup>
-        </View>
-      </Variation>
-      <Variation label="Secondary">
-        <View className="flex-row">
-          <ButtonGroup>
-            <Button variant="secondary">
-              <Text>Previous</Text>
-            </Button>
-            <Button variant="secondary">
-              <Text>Today</Text>
-            </Button>
-            <Button variant="secondary">
-              <Text>Next</Text>
-            </Button>
-          </ButtonGroup>
-        </View>
-      </Variation>
+      <SplitButtonExample />
+      <SecondaryButtonsExample />
     </Variations>
   ),
 };
+
+function SplitButtonExample(): React.JSX.Element {
+  return (
+    <Variation label="Split button">
+      <View className="flex-row">
+        <ButtonGroup>
+          <Button>
+            <Text>Allow</Text>
+          </Button>
+          <AllowOptions />
+        </ButtonGroup>
+      </View>
+    </Variation>
+  );
+}
+function SecondaryButtonsExample(): React.JSX.Element {
+  return (
+    <Variation label="Secondary">
+      <View className="flex-row">
+        <ButtonGroup>
+          {['Previous', 'Today', 'Next'].map((label) => (
+            <Button key={label} variant="secondary">
+              <Text>{label}</Text>
+            </Button>
+          ))}
+        </ButtonGroup>
+      </View>
+    </Variation>
+  );
+}
+
+function AllowOptions(): React.JSX.Element {
+  return (
+    <Button size="icon" accessibilityLabel="Allow options">
+      <Icon name="chevron-down" size="sm" />
+    </Button>
+  );
+}

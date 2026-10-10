@@ -121,16 +121,6 @@
       }
     },
     {
-      // Vendored react-native-reusables output; knip and jscpd exclude it too.
-      "files": ["packages/client/src/lib/generic/primitives/**"],
-      "rules": {
-        "no-else-return": "off",
-        "react/jsx-no-useless-fragment": "off",
-        "react/exhaustive-deps": "off",
-        "react/no-array-index-key": "off"
-      }
-    },
-    {
       // Icons take a named size (sm, md or lg) instead of a number or size-* class.
       "files": ["packages/client/src/**"],
       "rules": { "argo/icon-size": "error" }

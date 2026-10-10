@@ -1,5 +1,6 @@
 import { Slot } from '@rn-primitives/slot';
 import { cva, type VariantProps } from 'class-variance-authority';
+import type { ReactElement } from 'react';
 import { Platform, View } from 'react-native';
 import { TextClassContext } from '#lib/generic/primitives/text';
 import { cn } from '#lib/generic/utils';
@@ -56,7 +57,8 @@ type BadgeProps = React.ComponentProps<typeof View> &
     asChild?: boolean;
   } & VariantProps<typeof badgeVariants>;
 
-function Badge({ className, variant, asChild, ...props }: BadgeProps) {
+function Badge(options: BadgeProps): ReactElement {
+  const { className, variant, asChild, ...props } = options;
   const Component = asChild ? Slot : View;
   return (
     <TextClassContext.Provider value={badgeTextVariants({ variant })}>
@@ -68,5 +70,4 @@ function Badge({ className, variant, asChild, ...props }: BadgeProps) {
   );
 }
 
-export type { BadgeProps };
-export { Badge, badgeTextVariants, badgeVariants };
+export { Badge };

@@ -1,41 +1,40 @@
 import { Host, Switch as ComposeSwitch } from '@expo/ui/jetpack-compose';
 import { semantics } from '@expo/ui/jetpack-compose/modifiers';
-import type * as SwitchPrimitives from '@rn-primitives/switch';
 import type * as React from 'react';
-import { useResolveClassNames } from 'uniwind';
+import { usePrimitiveColor } from './primitive-color';
+import type { SwitchProps } from './switch-props';
 
-// The Material switch, in the app's primary colour instead of the Material theme's.
-function Switch({
-  checked,
-  onCheckedChange,
-  disabled,
-  accessibilityLabel,
-}: React.ComponentProps<typeof SwitchPrimitives.Root> & {
-  size?: 'default' | 'small';
-}): React.JSX.Element {
-  const primary = useResolveClassNames('text-primary').color;
-  const onPrimary = useResolveClassNames('text-primary-foreground').color;
-  const track = typeof primary === 'string' ? primary : undefined;
-  const thumb = typeof onPrimary === 'string' ? onPrimary : undefined;
+function Switch(props: SwitchProps): React.JSX.Element {
+  const colors = useSwitchColors();
   return (
     <Host matchContents>
       <ComposeSwitch
-        value={checked}
-        onCheckedChange={onCheckedChange}
-        enabled={!disabled}
-        colors={{
-          checkedTrackColor: track,
-          checkedBorderColor: track,
-          checkedThumbColor: thumb,
-        }}
-        modifiers={
-          accessibilityLabel
-            ? [semantics({ contentDescription: accessibilityLabel })]
-            : []
-        }
+        value={props.checked}
+        onCheckedChange={props.onCheckedChange}
+        enabled={!props.disabled}
+        colors={colors}
+        modifiers={switchSemantics(props.accessibilityLabel)}
       />
     </Host>
   );
+}
+
+function useSwitchColors(): React.ComponentProps<
+  typeof ComposeSwitch
+>['colors'] {
+  const track = usePrimitiveColor('text-primary');
+  const thumb = usePrimitiveColor('text-primary-foreground');
+  return {
+    checkedTrackColor: track,
+    checkedBorderColor: track,
+    checkedThumbColor: thumb,
+  };
+}
+
+function switchSemantics(
+  label: string | undefined,
+): ReturnType<typeof semantics>[] {
+  return label ? [semantics({ contentDescription: label })] : [];
 }
 
 export { Switch };

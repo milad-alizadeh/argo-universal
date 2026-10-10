@@ -9,7 +9,7 @@ export const findModel = (
   value: unknown,
 ): ModelInfo | undefined =>
   models.find((model): boolean => model.value === value);
-export function modelName(model: ModelInfo): string {
+function modelName(model: ModelInfo): string {
   if (model.value !== DEFAULT_VALUE) return model.displayName;
   if (model.description.includes(' · ')) return describedModelName(model);
   return resolvedModelName(model);

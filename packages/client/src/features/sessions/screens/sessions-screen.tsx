@@ -76,7 +76,7 @@ const sessionsFilterChoices = [
 ] as const;
 
 // Active or Archived; on a phone the trigger is a native header item with a dot while Archived shows.
-export function SessionsFilterMenu({
+function SessionsFilterMenu({
   archived,
   onArchivedChange,
 }: Pick<SessionsFilter, 'archived' | 'onArchivedChange'>): React.JSX.Element {
