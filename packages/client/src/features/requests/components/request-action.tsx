@@ -58,7 +58,7 @@ function ActionContent({
 }): ReactNode {
   return (
     <>
-      <Text className="type-control">{children}</Text>
+      <Text role="control">{children}</Text>
       {primary && <ReturnKey wide={wide} />}
     </>
   );

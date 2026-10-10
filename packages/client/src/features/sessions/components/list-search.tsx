@@ -127,9 +127,10 @@ export function ListSearch({
         style={titleStyle}
       >
         <Text
-          role="heading"
+          semanticRole="heading"
           aria-level={1}
-          className="pl-2 type-title"
+          role="title"
+          className="pl-2"
           numberOfLines={1}
         >
           {title}

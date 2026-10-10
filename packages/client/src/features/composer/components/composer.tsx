@@ -364,7 +364,8 @@ export function Composer({
                         </View>
                         <Text
                           selectable={false}
-                          className="select-none type-body"
+                          role="body"
+                          className="select-none"
                         >
                           {item.label}
                         </Text>
@@ -475,7 +476,8 @@ function ComposerWarning({
     <View role="alert" className="mx-4 mt-2 flex-row items-start gap-2">
       <ComposerGlyph name="warning" className="text-destructive" />
       <Text
-        className="min-w-0 flex-1 type-secondary text-destructive"
+        role="secondary"
+        className="min-w-0 flex-1 text-destructive"
         numberOfLines={numberOfLines}
       >
         {children}

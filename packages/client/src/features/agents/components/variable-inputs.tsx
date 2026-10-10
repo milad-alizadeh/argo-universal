@@ -16,8 +16,12 @@ type InputProps = { item: TextField; index: number; disabled: boolean };
 export function VariableColumns(): React.JSX.Element {
   return (
     <View className="flex-row gap-2 pr-11">
-      <Text className="type-secondary w-50">Name</Text>
-      <Text className="type-secondary flex-1">Value</Text>
+      <Text role="secondary" className="w-50">
+        Name
+      </Text>
+      <Text role="secondary" className="flex-1">
+        Value
+      </Text>
     </View>
   );
 }

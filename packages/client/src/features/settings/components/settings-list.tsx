@@ -82,7 +82,7 @@ export function SettingsList({
       );
     } else if (state !== undefined) {
       rowStatus = (
-        <Text className="shrink-0 type-secondary" numberOfLines={1}>
+        <Text role="secondary" className="shrink-0" numberOfLines={1}>
           {state}
         </Text>
       );
@@ -106,7 +106,7 @@ export function SettingsList({
             selected && 'text-foreground',
           )}
         />
-        <Text className="min-w-0 flex-1 type-body" numberOfLines={1}>
+        <Text role="body" className="min-w-0 flex-1" numberOfLines={1}>
           {label}
         </Text>
         {rowStatus}
@@ -186,9 +186,9 @@ function Group({
     <View className="wide:gap-0.5">
       <View className="h-9 shrink-0 justify-center pl-2.5 wide:h-8 wide:pr-1">
         <Text
-          role="heading"
+          semanticRole="heading"
           aria-level={2}
-          className="type-secondary"
+          role="secondary"
           numberOfLines={1}
         >
           {title}

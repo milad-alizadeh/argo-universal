@@ -27,10 +27,11 @@ export function ScreenHeaderMock({
         />
       ) : (
         <Text
-          role="heading"
+          semanticRole="heading"
+          role="nav-title"
           aria-level={1}
           numberOfLines={1}
-          className="min-w-0 flex-1 text-center text-[17px] font-semibold"
+          className="min-w-0 flex-1 text-center"
         >
           {title}
         </Text>

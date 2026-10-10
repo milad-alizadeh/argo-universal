@@ -57,7 +57,8 @@ function Bubble({ text }: { text: string }): React.JSX.Element {
         <Text
           numberOfLines={expanded ? undefined : clampedLines}
           onLayout={(event) => setShownHeight(event.nativeEvent.layout.height)}
-          className="font-sans type-body"
+          role="body"
+          className="font-sans"
         >
           <TypedText text={text} />
         </Text>
@@ -65,7 +66,8 @@ function Bubble({ text }: { text: string }): React.JSX.Element {
           <Text
             aria-hidden
             onLayout={(event) => setFullHeight(event.nativeEvent.layout.height)}
-            className="pointer-events-none absolute top-0 right-0 left-0 font-sans type-body opacity-0"
+            role="body"
+            className="pointer-events-none absolute top-0 right-0 left-0 font-sans opacity-0"
           >
             <TypedText text={text} />
           </Text>
@@ -73,7 +75,7 @@ function Bubble({ text }: { text: string }): React.JSX.Element {
       </View>
       {clamped && (
         <Pressable role="button" onPress={() => setExpanded(true)}>
-          <Text className="font-sans type-body text-muted-foreground">
+          <Text role="body" className="font-sans text-muted-foreground">
             Show more
           </Text>
         </Pressable>
@@ -108,7 +110,9 @@ function ReferenceChip({
         name={isFolder(reference) ? 'folder' : 'file'}
         className="text-muted-foreground"
       />
-      <Text className="font-sans type-body">{referenceName(reference)}</Text>
+      <Text role="body" className="font-sans">
+        {referenceName(reference)}
+      </Text>
     </View>
   );
 }

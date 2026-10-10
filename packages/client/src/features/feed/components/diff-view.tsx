@@ -43,8 +43,9 @@ function CodeLine({
       )}
     >
       <Text
+        role="code-block"
         className={cn(
-          'shrink-0 text-right type-code-block',
+          'shrink-0 text-right',
           lineStyles[line.kind].color,
           inline ? 'w-7' : 'w-9',
         )}
@@ -52,15 +53,14 @@ function CodeLine({
         {line.number ?? ''}
       </Text>
       <Text
-        className={cn(
-          'w-5 shrink-0 text-center type-code-block',
-          lineStyles[line.kind].color,
-        )}
+        role="code-block"
+        className={cn('w-5 shrink-0 text-center', lineStyles[line.kind].color)}
       >
         {line.kind === 'removed' ? '\u2212' : lineStyles[line.kind].sign}
       </Text>
       <Text
-        className="shrink-0 pr-3 type-code-block text-foreground"
+        role="code-block"
+        className="shrink-0 pr-3 text-foreground"
         selectable
       >
         {line.text}
@@ -98,14 +98,16 @@ function FileHeader({
               selectable={false}
               numberOfLines={1}
               ellipsizeMode="head"
-              className="min-w-0 shrink type-code text-muted-foreground web:[direction:rtl] web:text-left"
+              role="code"
+              className="min-w-0 shrink text-muted-foreground web:[direction:rtl] web:text-left"
             >
               {Platform.OS === 'web' ? `\u2066${folder}\u2069` : folder}
             </Text>
             <Text
               selectable={false}
               numberOfLines={1}
-              className="shrink-0 type-code text-foreground"
+              role="code"
+              className="shrink-0 text-foreground"
             >
               {name}
             </Text>
@@ -116,7 +118,8 @@ function FileHeader({
       {file.added > 0 && (
         <Text
           selectable={false}
-          className="select-none type-badge text-success"
+          role="badge"
+          className="select-none text-success"
         >
           +{file.added}
         </Text>
@@ -124,7 +127,8 @@ function FileHeader({
       {file.removed > 0 && (
         <Text
           selectable={false}
-          className="select-none type-badge text-destructive"
+          role="badge"
+          className="select-none text-destructive"
         >
           {`\u2212${file.removed}`}
         </Text>
@@ -202,7 +206,8 @@ export function DiffView({
           >
             <Text
               selectable={false}
-              className="select-none type-secondary no-underline group-hover:no-underline group-active:no-underline"
+              role="secondary"
+              className="select-none no-underline group-hover:no-underline group-active:no-underline"
             >
               Show all {lineCount} lines
             </Text>

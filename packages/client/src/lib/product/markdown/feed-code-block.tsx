@@ -60,7 +60,7 @@ export function FeedCodeBlock({
         hasBody={code !== undefined || !!description}
       />
       {code === undefined && !!description && (
-        <Text className="px-3 py-2 type-body text-foreground">
+        <Text role="body" className="px-3 py-2 text-foreground">
           {description}
         </Text>
       )}
@@ -73,7 +73,8 @@ export function FeedCodeBlock({
           >
             <Text
               selectable
-              className={cn('type-code-block text-foreground', textClassName)}
+              role="code-block"
+              className={cn('text-foreground', textClassName)}
             >
               {code}
             </Text>

@@ -63,7 +63,7 @@ export function NewSessionView(props: NewSessionViewProps): React.JSX.Element {
 function NewSessionHeading(): React.JSX.Element {
   return (
     <View className="w-full max-w-composer gap-2 px-4">
-      <Text role="heading" aria-level={1} className="type-title">
+      <Text role="title" semanticRole="heading" aria-level={1}>
         What should we work on?
       </Text>
     </View>
@@ -125,12 +125,12 @@ function ReadyNewSessionView(
               </Button>
             </View>
             {props.setupStep !== undefined && (
-              <Text role="alert" className="text-destructive">
+              <Text semanticRole="alert" className="text-destructive">
                 {props.setupStep}
               </Text>
             )}
             {props.openError !== undefined && (
-              <Text role="alert" className="text-destructive">
+              <Text semanticRole="alert" className="text-destructive">
                 Couldn't open the Session. {props.openError}
               </Text>
             )}

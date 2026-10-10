@@ -13,7 +13,7 @@ export function Variation({
 }): React.JSX.Element {
   return (
     <View className="gap-3">
-      <Text variant="muted">{label}</Text>
+      <Text role="secondary">{label}</Text>
       {children}
     </View>
   );

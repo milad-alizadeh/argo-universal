@@ -70,7 +70,8 @@
     // oxlint cannot resolve the re-exported members of @rn-primitives namespaces; tsc checks every namespace member.
     "import/namespace": "off",
     // React Native has no semantic HTML tags; `role` is how a View states its role.
-    "jsx-a11y/prefer-tag-over-role": "off"
+    "jsx-a11y/prefer-tag-over-role": "off",
+    "jsx-a11y/aria-role": ["error", { "ignoreNonDOM": true }]
   },
   "overrides": [
     {

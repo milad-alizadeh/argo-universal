@@ -34,6 +34,7 @@ import { ComposerPopover } from './composer-popover';
 import { ScrollFadeList } from './scroll-fade-list';
 
 const destructiveTextClassName = 'text-destructive';
+const unselectableTextClassName = 'select-none';
 // The trigger marks Fast mode with a bolt while it is on.
 const fastModeConfigId = 'fast';
 const effortDescription = 'More effort trades speed for deeper reasoning.';
@@ -210,15 +211,16 @@ function Choice({
       <View className={cn('flex-1 min-w-0 gap-0.5', leading && 'gap-0')}>
         <Text
           selectable={false}
+          role="body"
           className={cn(
-            'select-none type-body',
+            unselectableTextClassName,
             dangerous && destructiveTextClassName,
           )}
         >
           {label}
         </Text>
         {description && (
-          <Text selectable={false} className="select-none type-secondary">
+          <Text selectable={false} role="secondary" className="select-none">
             {description}
           </Text>
         )}
@@ -260,7 +262,8 @@ function MenuHeadingText({
   return (
     <Text
       selectable={false}
-      className="select-none type-badge text-muted-foreground"
+      role="badge"
+      className="select-none text-muted-foreground"
     >
       {children}
     </Text>
@@ -313,14 +316,15 @@ export function AgentChoices({
         >
           {wide && <Logo agent={agent} />}
           <View className="flex-1 min-w-0 gap-0.5">
-            <Text selectable={false} className="select-none type-body">
+            <Text selectable={false} role="body" className="select-none">
               {agent.label}
             </Text>
             {availability && (
               <Text
                 selectable={false}
+                role="secondary"
                 className={cn(
-                  'select-none type-secondary',
+                  unselectableTextClassName,
                   !availability.reason && 'text-warning',
                 )}
               >
@@ -328,7 +332,7 @@ export function AgentChoices({
               </Text>
             )}
             {availability?.reason && agent.installStep && (
-              <Text selectable={false} className="select-none type-secondary">
+              <Text selectable={false} role="secondary" className="select-none">
                 {agent.installStep}
               </Text>
             )}
@@ -344,8 +348,9 @@ export function AgentChoices({
           >
             <Text
               selectable={false}
+              role="control"
               className={cn(
-                'select-none type-control',
+                unselectableTextClassName,
                 availability.action === 'retry' && 'underline',
               )}
             >
@@ -487,10 +492,10 @@ function EffortControl({
   );
   const ends = (
     <View className="flex-row justify-between">
-      <Text selectable={false} className="select-none type-secondary">
+      <Text selectable={false} role="secondary" className="select-none">
         Fastest
       </Text>
-      <Text selectable={false} className="select-none type-secondary">
+      <Text selectable={false} role="secondary" className="select-none">
         Smartest
       </Text>
     </View>
@@ -502,7 +507,7 @@ function EffortControl({
       <View className="px-gutter-list native:px-0 pb-3">
         <View className="px-2.5 web:px-3 native:px-0 gap-1.5">
           <View className="h-11 flex-row items-center gap-2">
-            <Text selectable={false} className="select-none type-body">
+            <Text selectable={false} role="body" className="select-none">
               Effort
             </Text>
             {/* The margin sits the icon 6px after the label. */}
@@ -515,7 +520,8 @@ function EffortControl({
             <View className="flex-1" />
             <Text
               selectable={false}
-              className="select-none type-body text-muted-foreground"
+              role="body"
+              className="select-none text-muted-foreground"
             >
               {selected.name}
             </Text>
@@ -531,11 +537,11 @@ function EffortControl({
         <View className="flex-row items-center gap-2">
           <MenuHeadingText>Effort</MenuHeadingText>
           <View className="flex-1" />
-          <Text selectable={false} className="select-none type-secondary">
+          <Text selectable={false} role="secondary" className="select-none">
             {selected.name}
           </Text>
         </View>
-        <Text selectable={false} className="select-none type-secondary">
+        <Text selectable={false} role="secondary" className="select-none">
           {effortDescription}
         </Text>
       </View>
@@ -564,7 +570,7 @@ function SwitchOptions({
     <View className="px-gutter-list native:px-0 wide:px-0">
       {options.map((option) => {
         const label = (
-          <Text selectable={false} className="select-none type-body">
+          <Text selectable={false} role="body" className="select-none">
             {option.name}
           </Text>
         );
@@ -620,7 +626,11 @@ function SwitchOptions({
             <View className="flex-1 min-w-0 gap-0.5">
               {label}
               {option.description ? (
-                <Text selectable={false} className="select-none type-secondary">
+                <Text
+                  selectable={false}
+                  role="secondary"
+                  className="select-none"
+                >
                   {option.description}
                 </Text>
               ) : null}
@@ -673,7 +683,8 @@ export function AgentModelMenu({
           </Button>
           <Text
             selectable={false}
-            className="select-none flex-1 text-center type-control"
+            role="control"
+            className="select-none flex-1 text-center"
           >
             {page === 'agent' ? 'Agent' : 'Model'}
           </Text>
@@ -721,14 +732,16 @@ export function AgentModelMenu({
               >
                 <Text
                   selectable={false}
-                  className="select-none flex-1 type-body"
+                  role="body"
+                  className="select-none flex-1"
                 >
                   Agent
                 </Text>
                 <Logo agent={agent} />
                 <Text
                   selectable={false}
-                  className="select-none type-body text-muted-foreground"
+                  role="body"
+                  className="select-none text-muted-foreground"
                 >
                   {agent?.label}
                 </Text>
@@ -746,13 +759,15 @@ export function AgentModelMenu({
               >
                 <Text
                   selectable={false}
-                  className="select-none flex-1 type-body"
+                  role="body"
+                  className="select-none flex-1"
                 >
                   Model
                 </Text>
                 <Text
                   selectable={false}
-                  className="select-none type-body text-muted-foreground"
+                  role="body"
+                  className="select-none text-muted-foreground"
                 >
                   {modelName(current)}
                 </Text>
@@ -783,7 +798,8 @@ export function AgentModelMenu({
             <Icon name="waiting" className="text-muted-foreground" />
             <Text
               selectable={false}
-              className="select-none flex-1 type-secondary"
+              role="secondary"
+              className="select-none flex-1"
             >
               A Turn is running. Changes apply from the next Turn.
             </Text>
@@ -850,7 +866,8 @@ export function ComposerAgentModelControl({
           <Text
             selectable={false}
             numberOfLines={1}
-            className="select-none type-control min-w-0 shrink"
+            role="control"
+            className="select-none min-w-0 shrink"
           >
             {modelName(current) || agent?.label}
           </Text>
@@ -859,7 +876,8 @@ export function ComposerAgentModelControl({
             effortLabel && (
               <Text
                 selectable={false}
-                className="select-none type-control text-muted-foreground shrink-0"
+                role="control"
+                className="select-none text-muted-foreground shrink-0"
                 numberOfLines={1}
               >
                 {effortLabel}
@@ -926,8 +944,9 @@ export function ComposerModeControl({
           />
           <Text
             selectable={false}
+            role="control"
             className={cn(
-              'select-none type-control text-muted-foreground',
+              'select-none text-muted-foreground',
               !wide && 'hidden',
               current?._meta?.argo?.tone === 'dangerous' &&
                 destructiveTextClassName,
@@ -1029,10 +1048,8 @@ export function ComposerCheckoutControl({
         <Text
           selectable={false}
           numberOfLines={1}
-          className={cn(
-            'select-none min-w-0 shrink',
-            checkout.newWorktree ? 'type-code' : 'type-secondary',
-          )}
+          role={checkout.newWorktree ? 'code' : 'secondary'}
+          className={cn('select-none min-w-0 shrink')}
         >
           {checkout.newWorktree
             ? checkout.path
@@ -1057,7 +1074,7 @@ export function ComposerCheckoutControl({
             name={checkout.newWorktree ? 'branch' : 'folder'}
             className="text-muted-foreground"
           />
-          <Text selectable={false} className="select-none type-secondary">
+          <Text selectable={false} role="secondary" className="select-none">
             {checkout.newWorktree ? 'New worktree' : 'Local'}
           </Text>
           <Icon

@@ -10,7 +10,7 @@ export function InfoPopover(props: InfoPopoverProps): React.JSX.Element {
     <Popover>
       <InfoButton accessibilityLabel={props.accessibilityLabel} />
       <PopoverContent side="top" align="start" className="w-64 p-3">
-        <Text selectable={false} className="select-none type-secondary">
+        <Text selectable={false} role="secondary" className="select-none">
           {props.text}
         </Text>
       </PopoverContent>

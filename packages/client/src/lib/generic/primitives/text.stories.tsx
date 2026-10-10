@@ -1,30 +1,26 @@
-const variants = [
-  'default',
-  'h1',
-  'h2',
-  'h3',
-  'h4',
-  'p',
-  'blockquote',
+const roles = [
+  'title',
+  'heading',
+  'body',
+  'secondary',
+  'control',
+  'badge',
   'code',
-  'lead',
-  'large',
-  'small',
-  'muted',
+  'code-block',
+  'nav-title',
+  'nav-action',
 ] as const;
 
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { Variation, Variations } from '../variations';
 import { Text } from './text';
 
-function VariantExamples(): React.JSX.Element {
+function RoleExamples(): React.JSX.Element {
   return (
     <Variations>
-      {variants.map((variant) => (
-        <Variation key={variant} label={variant}>
-          <Text variant={variant}>
-            The quick brown fox jumps over the lazy dog.
-          </Text>
+      {roles.map((role) => (
+        <Variation key={role} label={role}>
+          <Text role={role}>The quick brown fox jumps over the lazy dog.</Text>
         </Variation>
       ))}
     </Variations>
@@ -33,12 +29,11 @@ function VariantExamples(): React.JSX.Element {
 
 const meta = {
   title: 'Design System/Primitives/Text',
-  tags: ['third-party'],
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Overview: Story = {
   name: 'Text',
-  render: VariantExamples,
+  render: RoleExamples,
 };

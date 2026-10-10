@@ -73,7 +73,10 @@ export function SessionsView({
           onRetry={onRetryLiveUpdates}
         />
       )}
-      <Text className="pl-gutter pr-3 py-1.5 wide:py-2 wide:pl-4.5 type-secondary">
+      <Text
+        role="secondary"
+        className="pl-gutter pr-3 py-1.5 wide:py-2 wide:pl-4.5"
+      >
         Projects
       </Text>
     </>
@@ -131,7 +134,7 @@ export function SessionsView({
           className="h-9 sm:h-9 self-start flex-row gap-2 rounded-md px-3"
         >
           <Icon name="new-session" className="text-primary-foreground" />
-          <Text className="type-control text-primary-foreground">
+          <Text role="control" className="text-primary-foreground">
             New Session
           </Text>
         </Button>

@@ -116,14 +116,17 @@ function FileEdits({ row }: EditRowProps): React.JSX.Element {
     return (
       <View className="min-h-5 flex-row items-center gap-1.5">
         <Icon name="edit" className="shrink-0 text-destructive" />
-        <Text className="type-body text-destructive">Couldn't edit</Text>
+        <Text role="body" className="text-destructive">
+          Couldn't edit
+        </Text>
         {path ? (
           <FileName path={path} className="text-muted-foreground" />
         ) : null}
         {error ? (
           <Text
             numberOfLines={1}
-            className="min-w-0 shrink type-body text-muted-foreground"
+            role="body"
+            className="min-w-0 shrink text-muted-foreground"
           >
             · {error}
           </Text>
@@ -143,7 +146,8 @@ function FileEdits({ row }: EditRowProps): React.JSX.Element {
         <Icon name="edit" className="text-muted-foreground" />
         <Text
           selectable={false}
-          className="select-none type-body text-muted-foreground"
+          role="body"
+          className="select-none text-muted-foreground"
         >
           Edited {files.length} files
         </Text>
