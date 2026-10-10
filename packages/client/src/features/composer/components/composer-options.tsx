@@ -9,10 +9,8 @@ import { listTestIdProps } from '#lib/generic/list-test-id';
 import { Button } from '#lib/generic/primitives/button';
 import { Text } from '#lib/generic/primitives/text';
 import { Icon } from '../../../lib/generic/symbols/icon';
-import {
-  type ComposerConfigurationProps,
-  configurationChoices,
-} from './composer-configuration';
+import { configurationChoices } from '../state/configuration-choices';
+import type { ComposerConfigurationProps } from './composer-configuration';
 import { ComposerPopover } from './composer-popover';
 
 const settingsRowEstimate = 44;

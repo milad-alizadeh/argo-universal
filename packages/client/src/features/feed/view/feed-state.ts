@@ -1,6 +1,7 @@
 import {
   type FeedPageOutput,
   type FeedSubscribeOutput,
+  type FeedSyncPoint,
   readFeedField,
   type SessionUpdate,
   writeFeedRowField,
@@ -33,6 +34,13 @@ export interface SubscriptionEventResult {
   missingRowId?: string;
   // The Server rebuilt the Feed; the App pages the tail again.
   reset?: true;
+}
+
+// Where live changes resume for the rows held, such as after the Server closed the Feed; null before the first page.
+export function syncPointOf(feed: FeedState): FeedSyncPoint | null {
+  return feed.epoch === null
+    ? null
+    : { epoch: feed.epoch, revision: feed.revision };
 }
 
 const byPosition = (first: SessionUpdate, second: SessionUpdate): number =>

@@ -23,6 +23,10 @@ import { Switch } from '../../../lib/generic/primitives/switch';
 import { Icon } from '../../../lib/generic/symbols/icon';
 import { useWide } from '../../../lib/generic/use-wide';
 import {
+  configurationChoices,
+  configurationEffortChoices,
+} from '../state/configuration-choices';
+import {
   publishAgentModelConfiguration,
   useNativeSheets,
 } from './agent-model-sheet-context';
@@ -53,15 +57,6 @@ export interface ComposerConfigurationProps {
   };
 }
 
-export function configurationChoices(
-  option?: SelectConfiguration,
-): SessionConfigSelectOption[] {
-  return (
-    option?.options.flatMap((entry) =>
-      'groupId' in entry ? entry.options : [entry],
-    ) ?? []
-  );
-}
 function switches(
   configuration: ComposerConfigurationProps,
 ): BooleanConfiguration[] {
@@ -77,20 +72,6 @@ function selection(
     (option): option is SelectConfiguration =>
       option.type === 'select' && option.category === category,
   );
-}
-export function configurationEffortChoices(
-  model: SelectConfiguration | undefined,
-  option: SelectConfiguration | undefined,
-): SessionConfigSelectOption[] {
-  const currentModel = configurationChoices(model).find(
-    (choice) => choice.value === model?.currentValue,
-  );
-  const levels = currentModel?._meta?.argo?.supportedEffortLevels;
-  return currentModel?._meta?.argo?.supportsEffort === false
-    ? []
-    : configurationChoices(option).filter(
-        (choice) => !levels || levels.includes(choice.value),
-      );
 }
 function currentEffort(configuration: ComposerConfigurationProps): {
   option: ReturnType<typeof selection>;

@@ -13,7 +13,7 @@ import { useState } from 'react';
 import {
   configurationChoices,
   configurationEffortChoices,
-} from '../components/composer-configuration';
+} from './configuration-choices';
 
 const categories = ['model', 'thought_level'] as const;
 type Category = (typeof categories)[number];
@@ -56,6 +56,26 @@ async function load(agent: string): Promise<SavedChoices> {
   );
   return { model: model ?? undefined, thought_level: effort ?? undefined };
 }
+
+// The choices this device saved for an Agent; a failed read starts from the Agent's defaults.
+export function savedChoicesQuery(agent: string): {
+  queryKey: readonly string[];
+  queryFn: () => Promise<SavedChoices>;
+  staleTime: number;
+} {
+  return {
+    queryKey: queryKey(agent),
+    queryFn: () =>
+      load(agent).catch((error: unknown) => {
+        console.error(
+          'Could not load Session configuration preferences',
+          error,
+        );
+        return {};
+      }),
+    staleTime: Infinity,
+  };
+}
 function withSavedChoice(
   option: RememberedOption,
   saved: SavedChoices,
@@ -68,7 +88,8 @@ function withSavedChoice(
   ].find((candidate) => offered.some((choice) => choice.value === candidate));
   return value === undefined ? undefined : { ...option, currentValue: value };
 }
-function draftConfiguration(
+// The model and effort a new Session starts with: each saved choice the Agent still offers, else its default, else its first offered value.
+export function draftConfiguration(
   agent: AgentInfo | undefined,
   saved: SavedChoices,
 ): RememberedOption[] {
@@ -120,19 +141,7 @@ export function useNewSessionConfiguration(
   const [switchValues, setSwitchValues] = useState<
     Record<string, Record<string, boolean>>
   >({});
-  const saved = useQuery({
-    queryKey: queryKey(id),
-    queryFn: () =>
-      load(id).catch((error: unknown) => {
-        console.error(
-          'Could not load Session configuration preferences',
-          error,
-        );
-        return {};
-      }),
-    enabled: !!agent,
-    staleTime: Infinity,
-  });
+  const saved = useQuery({ ...savedChoicesQuery(id), enabled: !!agent });
   const remembered = draftConfiguration(agent, saved.data ?? {});
   const configOptions = (agent?.configOptions ?? []).flatMap((option) => {
     if (isRememberedConfiguration(option))

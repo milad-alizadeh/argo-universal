@@ -466,6 +466,10 @@ function sending(width: number): Story {
         }),
       ).toBeDisabled();
       await expect(canvas.getByRole('button', { name: 'Send' })).toBeDisabled();
+      // The picker locks too, so a pending configuration change cannot be overtaken.
+      await expect(
+        canvas.getByRole('button', { name: agentModelLabel }),
+      ).toBeDisabled();
       await expect(args.onSend).not.toHaveBeenCalled();
     },
   };
