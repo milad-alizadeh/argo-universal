@@ -24,7 +24,10 @@ import type { AcpRouting } from './routing';
 
 const initializeRequest: InitializeRequest = {
   protocolVersion: 1,
-  clientCapabilities: { plan: {}, session: { notices: {}, compaction: {} } },
+  clientCapabilities: {
+    plan: {},
+    session: { configOptions: { boolean: {} }, notices: {}, compaction: {} },
+  },
 };
 type Ready = {
   connection: ClientConnection;

@@ -14,6 +14,8 @@ import {
   SessionHeader,
   type SessionHeaderStatus,
 } from '#components/session-header';
+import { Button } from '#primitives/button';
+import { Text } from '#primitives/text';
 import { useConnectionState } from '../connection/context';
 import { useSessionFeed } from '../feed/use-session-feed';
 import { useNavigate } from '../navigation/context';
@@ -91,6 +93,12 @@ function SessionView({
     loadOlder,
   } = useSessionFeed(sessionId);
   const agents = useAgents();
+  const trpc = useTRPC();
+  const closeSession = useMutation(
+    trpc.session.close.mutationOptions({
+      onSuccess: () => navigate({ to: 'sessions' }),
+    }),
+  );
   const {
     draft,
     changeDraft,
@@ -138,6 +146,10 @@ function SessionView({
     sendError = `Couldn't send. ${promptSession.error.message}`;
   else if (imageUpload.error)
     sendError = `Couldn't upload the image. ${imageUpload.error.message}`;
+  else if (setConfigOption.error)
+    sendError = `Couldn't change settings. ${setConfigOption.error.message}`;
+  else if (closeSession.error)
+    sendError = `Couldn't close the Session. ${closeSession.error.message}`;
 
   return (
     <Screen edges={['bottom']}>
@@ -166,6 +178,18 @@ function SessionView({
         />
         {/* The bottom slot: the Composer until request cards and banners land. */}
         <View className="relative z-10 -mt-12 items-center px-4 wide:px-6 wide:pb-4">
+          {!turnRunning && view.items.length === 0 && (
+            <Button
+              variant="ghost"
+              accessibilityLabel="Cancel creation"
+              disabled={
+                !connected || closeSession.isPending || promptSession.isPending
+              }
+              onPress={() => closeSession.mutate({ sessionId })}
+            >
+              <Text>Cancel creation</Text>
+            </Button>
+          )}
           <View
             pointerEvents="none"
             className="absolute inset-x-0 top-16 bottom-0 bg-card"
@@ -183,7 +207,11 @@ function SessionView({
             onAttachImages={() => void attachImages()}
             onSend={(sent) => void sendDraft(sent)}
             onStop={() => cancelTurn.mutate({ sessionId })}
-            sending={imageUpload.isPending || promptSession.isPending}
+            sending={
+              imageUpload.isPending ||
+              promptSession.isPending ||
+              (!turnRunning && setConfigOption.isPending)
+            }
             sendable={connected}
             error={sendError}
             writtenPlan={

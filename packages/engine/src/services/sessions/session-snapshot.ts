@@ -19,7 +19,10 @@ export function isSessionReady(
   session: SnapshotFrom<typeof sessionMachine>,
 ): boolean {
   return (
-    session.matches({ open: { acp: 'idle' } }) ||
+    (session.matches({ open: 'acp' }) &&
+      !(['opening', 'closing', 'retainingCleanup', 'flushing'] as const).some(
+        (state) => session.matches({ open: { acp: state } }),
+      )) ||
     (session.context.capabilities !== null &&
       session.matches({ open: 'live' }) &&
       !session.matches({ open: { live: 'starting' } }))

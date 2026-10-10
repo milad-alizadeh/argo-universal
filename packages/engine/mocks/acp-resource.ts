@@ -10,6 +10,8 @@ import {
   type LoadSessionResponse,
   type ResumeSessionResponse,
   type PromptResponse,
+  type SetSessionConfigOptionResponse,
+  type AgentNotificationHandlersByMethod,
 } from '@agentclientprotocol/sdk';
 import type {
   AcpOpenInput,
@@ -74,6 +76,8 @@ type ResourcePeerInput = {
   loadSession?: AgentRequestHandlersByMethod['session/load'];
   resumeSession?: AgentRequestHandlersByMethod['session/resume'];
   prompt?: AgentRequestHandlersByMethod['session/prompt'];
+  setConfigOption?: AgentRequestHandlersByMethod['session/set_config_option'];
+  cancel?: AgentNotificationHandlersByMethod['session/cancel'];
 };
 type ResourceProcess = {
   launch: AgentLaunch;
@@ -134,6 +138,12 @@ export const createResourcePeer = (
               stopReason: 'end_turn',
             })),
         )
+        .onRequest(
+          'session/set_config_option',
+          input.setConfigOption ??
+            ((): SetSessionConfigOptionResponse => ({ configOptions: [] })),
+        )
+        .onNotification('session/cancel', input.cancel ?? ((): void => {}))
         .connect(ndJsonStream(incoming.writable, outgoing.readable));
       const process = {
         launch,

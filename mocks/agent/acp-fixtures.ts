@@ -5,7 +5,9 @@ import {
   type AgentApp,
   type AgentRequestHandlersByMethod,
   type Stream,
+  type SessionConfigOption,
 } from '@agentclientprotocol/sdk';
+import { acpConfiguration } from './acp-configuration';
 import { AppFixtureOptions, type AppFixtureAgents } from './app-fixtures';
 import { imageReply, sharedReply } from './app-stream';
 
@@ -33,8 +35,9 @@ const createPromptReplyHandler =
   };
 const createAppFixtureAgentApp = (
   scenario: AppFixtureOptions['scenario'],
-): AgentApp =>
-  agent()
+): AgentApp => {
+  const sessions = new Map<string, SessionConfigOption[]>();
+  return agent()
     .onRequest('initialize', () => ({
       protocolVersion: 1,
       agentCapabilities: {
@@ -43,11 +46,30 @@ const createAppFixtureAgentApp = (
         sessionCapabilities: { close: {}, resume: {} },
       },
     }))
-    .onRequest('session/new', () => ({ sessionId: randomUUID() }))
+    .onRequest('session/new', () => {
+      const sessionId = randomUUID();
+      sessions.set(sessionId, acpConfiguration);
+      return { sessionId, configOptions: acpConfiguration };
+    })
+    .onRequest('session/set_config_option', ({ params }) => {
+      const configOptions = (sessions.get(params.sessionId) ?? []).map(
+        (option): SessionConfigOption => {
+          if (option.id !== params.configId) return option;
+          if (option.type === 'boolean' && typeof params.value === 'boolean')
+            return { ...option, currentValue: params.value };
+          if (option.type === 'select' && typeof params.value === 'string')
+            return { ...option, currentValue: params.value };
+          throw new Error('Wrong configuration value type');
+        },
+      );
+      sessions.set(params.sessionId, configOptions);
+      return { configOptions };
+    })
     .onRequest('session/close', () => ({}))
     .onRequest('session/resume', () => ({}))
     .onRequest('session/load', () => ({}))
     .onRequest('session/prompt', createPromptReplyHandler(scenario));
+};
 const connectAppFixtureProcess = (peer: AgentApp): AppFixtureProcess => {
   const outgoing = new TransformStream<Uint8Array, Uint8Array>();
   const incoming = new TransformStream<Uint8Array, Uint8Array>();

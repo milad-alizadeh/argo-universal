@@ -37,6 +37,7 @@ import { SessionsScreen } from './sessions-screen';
 
 const missingAgentsFailure = 'Recorded catalog needs both Agents.';
 const promptPlaceholder = 'What should we work on?';
+const openSessionLabel = 'Open Session';
 
 const meta = {
   title: 'Tests/FirstSessionScreen',
@@ -59,7 +60,7 @@ export const OpensNewSessionWithoutSessions: Story = {
   parameters: { trpc: { ...emptySessionListMocks, ...newSessionMocks } },
   play: async ({ canvas }) => {
     await expect(
-      await canvas.findByRole('textbox', { name: 'Message' }),
+      await canvas.findByRole('button', { name: openSessionLabel }),
     ).toBeVisible();
   },
 };
@@ -216,7 +217,7 @@ function listLoadFailure(width: number, agentIndex: 0 | 1): Story {
       await expect(calls).toBe(1);
       await userEvent.click(canvas.getByRole('button', { name: 'Retry' }));
       await expect(
-        await canvas.findByRole('textbox', { name: 'Message' }),
+        await canvas.findByRole('button', { name: openSessionLabel }),
       ).toBeVisible();
       await expect(canvas.queryByRole('alert')).toBeNull();
       await expect(calls).toBe(2);
@@ -298,10 +299,9 @@ function keepsNewSessionUntilLeavingRoot(agentIndex: 0 | 1): Story {
       await expect(
         await canvas.findByRole('heading', { name: promptPlaceholder }),
       ).toBeVisible();
-      await userEvent.type(
-        await canvas.findByRole('textbox', { name: 'Message' }),
-        'My new Session draft',
-      );
+      await expect(
+        canvas.queryByRole('textbox', { name: 'Message' }),
+      ).toBeNull();
       updates.respondWith({
         first: {
           sessions: [{ ...catalog.first, activityAt: 300 }],
@@ -323,8 +323,8 @@ function keepsNewSessionUntilLeavingRoot(agentIndex: 0 | 1): Story {
         canvas.queryByRole('heading', { name: catalog.first.title }),
       ).toBeNull();
       await expect(
-        canvas.getByRole('textbox', { name: 'Message' }),
-      ).toHaveValue('My new Session draft');
+        canvas.getByRole('button', { name: openSessionLabel }),
+      ).toBeVisible();
       await userEvent.click(row);
       await expect(
         await canvas.findByRole('heading', { name: catalog.first.title }),

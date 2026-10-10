@@ -54,8 +54,8 @@ Then(
 );
 
 Then('New Session cannot send a prompt', async ({ page }): Promise<void> => {
+  await expect(page.getByRole('textbox', { name: 'Message' })).toHaveCount(0);
   await expect(
-    page.getByRole('textbox', { name: 'Message' }),
-  ).not.toBeEditable();
-  await expect(page.getByRole('button', { name: 'Send' })).toBeDisabled();
+    page.getByRole('button', { name: 'Open Session' }),
+  ).toBeDisabled();
 });

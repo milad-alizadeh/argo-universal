@@ -10,6 +10,7 @@ import {
 } from '@repo/db/schema';
 import { and, eq, gt, inArray, sql } from 'drizzle-orm';
 import { toFeedRowWrite } from './feed-row';
+import { titleFromRows } from './prompt-title';
 import {
   applyCatalogSqlJob,
   isCatalogSqlJob,
@@ -121,6 +122,7 @@ export function writeJobs(
             .set({
               maxRevision: job.maxRevision,
               activityAt: job.activityAt ?? Date.now(),
+              title: sql`case when ${session.titleSource} = 'prompt' and ${session.title} = '' then ${titleFromRows(job.rows)} else ${session.title} end`,
             })
             .where(
               and(
@@ -256,6 +258,10 @@ export function applyQueuedSession({
             ...current,
             maxRevision: job.maxRevision,
             activityAt: job.activityAt ?? current.activityAt,
+            title:
+              current.titleSource === 'prompt' && current.title === ''
+                ? titleFromRows(job.rows)
+                : current.title,
           };
         break;
       case 'turnInsert':

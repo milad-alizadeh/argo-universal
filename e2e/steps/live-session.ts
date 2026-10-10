@@ -2,6 +2,7 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import { Given, When, Then } from './fixtures';
 import { phone, wide } from './frame';
+import { openNewSession, openSessionBeforePrompt } from './new-session';
 
 export const liveTitle = 'Check the live list';
 export const attentionLabel = '1 Session needs attention';
@@ -11,13 +12,11 @@ export function liveSessionRow(page: Page): Locator {
 }
 
 export async function startSession(page: Page, title: string): Promise<void> {
-  await page.getByRole('button', { name: 'New Session', exact: true }).click();
-  await expect(
-    page.getByText('Start the Session in', { exact: true }),
-  ).toBeVisible();
+  await openNewSession(page);
+  await openSessionBeforePrompt(page);
   await page.getByRole('textbox', { name: 'Message' }).fill(title);
   await page.getByRole('button', { name: 'Send', exact: true }).click();
-  await expect(page).toHaveURL(/\/sessions\/[^/]+$/);
+  await expect(page.getByRole('textbox', { name: 'Message' })).toHaveValue('');
 }
 
 When(

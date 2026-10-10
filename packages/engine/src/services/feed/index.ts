@@ -35,3 +35,4 @@ export { readUnaddressedPlan } from './unaddressed-plan';
 export { databaseWriterId, findDatabaseWriter } from './writer-system';
 
 export { feedRouter } from './router';
+export { titleFromPrompt } from './prompt-title';

@@ -15,6 +15,7 @@ import {
   ComposerModeControl,
 } from './composer-configuration';
 import { ComposerGlyph } from './composer-glyph';
+import { ComposerOptions } from './composer-options';
 import { ComposerPopover } from './composer-popover';
 import {
   ComposerPlan,
@@ -383,6 +384,12 @@ export function Composer({
               )}
             </View>
             <View className="flex-row items-center gap-2.5">
+              {configuration && (
+                <ComposerOptions
+                  configuration={configuration}
+                  disabled={inactive}
+                />
+              )}
               {configuration && (
                 <ComposerModeControl
                   configuration={configuration}

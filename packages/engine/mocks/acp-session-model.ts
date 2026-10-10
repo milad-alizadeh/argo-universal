@@ -18,10 +18,11 @@ const canApplyLifecycleEvent = (
   const invoking = {
     'xstate.done.actor.openAcp': 'opening',
     'xstate.error.actor.openAcp': 'opening',
+    'xstate.done.actor.configureAcp': 'configuring',
+    'xstate.error.actor.configureAcp': 'configuring',
     'xstate.done.actor.commitPrompt': 'committing',
     'xstate.error.actor.commitPrompt': 'committing',
-    'xstate.done.actor.promptAcp': { activeTurn: 'working' },
-    'xstate.error.actor.promptAcp': { activeTurn: 'working' },
+    'xstate.error.actor.cancelAcp': { activeTurn: 'cancelling' },
     'xstate.done.actor.publishTurn': 'publishing',
     'xstate.error.actor.publishTurn': 'publishing',
     'xstate.done.actor.closeAcp': 'closing',
@@ -29,6 +30,12 @@ const canApplyLifecycleEvent = (
     'xstate.done.actor.awaitAcpRelease': 'retainingCleanup',
     'xstate.after.feedFlushLimit.session.open.acp.flushing': 'flushing',
   } as const;
+  if (
+    ['xstate.done.actor.promptAcp', 'xstate.error.actor.promptAcp'].includes(
+      event.type,
+    )
+  )
+    return snapshot.matches({ open: { acp: 'activeTurn' } });
   if (event.type in invoking) {
     const state = Reflect.get(invoking, event.type);
     return (
@@ -37,7 +44,12 @@ const canApplyLifecycleEvent = (
     );
   }
   if (event.type === closeEvent) return snapshot.can({ type: closeEvent });
-  if (event.type === 'session.prompt') return snapshot.can(event);
+  if (
+    event.type === 'session.prompt' ||
+    event.type === 'session.cancel' ||
+    event.type === 'session.setConfigOption'
+  )
+    return snapshot.can(event);
   return snapshot.matches({ open: 'acp' });
 };
 type AcpModelEvent = GraphEventFromLogic<typeof sessionMachine>;
@@ -67,6 +79,23 @@ export const createAcpSessionModel = (
    */
   Object.assign(fromState.children, initial.children);
   const events = [
+    { type: 'session.cancel' },
+    {
+      type: 'xstate.error.actor.cancelAcp',
+      actorId: 'cancelAcp',
+      error: new Error('cancel failed'),
+    },
+    { type: 'session.setConfigOption', configId: 'fast', value: true },
+    {
+      type: 'xstate.done.actor.configureAcp',
+      actorId: 'configureAcp',
+      output: [],
+    },
+    {
+      type: 'xstate.error.actor.configureAcp',
+      actorId: 'configureAcp',
+      error: new Error('configuration failed'),
+    },
     {
       type: 'session.prompt',
       turnId: 'model-turn',
@@ -117,7 +146,11 @@ export const createAcpSessionModel = (
     },
     { type: closeEvent },
     { type: 'acp.failed', error: new Error('connection failed') },
-    { type: 'xstate.done.actor.openAcp', actorId: 'openAcp', output: lease },
+    {
+      type: 'xstate.done.actor.openAcp',
+      actorId: 'openAcp',
+      output: { lease, configOptions: initial.context.configOptions },
+    },
     {
       type: 'xstate.error.actor.openAcp',
       actorId: 'openAcp',
@@ -149,7 +182,7 @@ export const createAcpSessionModel = (
   const options = {
     fromState,
     events,
-    limit: 1000,
+    limit: 5000,
     serializeEvent: (event: AcpModelEvent): string => event.type,
     filterEvents: (snapshot: AcpModelSnapshot, event: AcpModelEvent): boolean =>
       snapshot.status === 'active' && canApplyLifecycleEvent(snapshot, event),

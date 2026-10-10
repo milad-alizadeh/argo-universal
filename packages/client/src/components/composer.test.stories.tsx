@@ -3,6 +3,7 @@ import { newSessionCatalogs } from '@repo/mocks/app';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import type { ReactElement } from 'react';
 import type * as React from 'react';
+import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { View } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
@@ -17,6 +18,7 @@ import {
   composerPlanDone,
   oversizedComposerImage,
 } from '../../mocks/composer-mock';
+import { updateComposerSettings } from '../../mocks/composer-settings-mock';
 import { layoutWidths } from '../../mocks/each-layout';
 import { newSessionMocks } from '../../mocks/new-session-mock';
 import { idleSessionMocks } from '../../mocks/session-screen-mock';
@@ -313,7 +315,7 @@ function attachmentMenus(width: number): Story {
         await userEvent.click(
           await overlay.findByRole('button', { name: label }),
         );
-        await expect(callback).toHaveBeenCalledOnce();
+        await waitFor(() => expect(callback).toHaveBeenCalledOnce());
         await expect(overlay.queryByRole('dialog')).not.toBeInTheDocument();
       }
     },
@@ -533,22 +535,17 @@ function pickers(width: number, agentIndex: number): Story {
   if (!catalog)
     throw new Error(`Recorded catalog needs an Agent at index ${agentIndex}.`);
   return {
-    parameters: { screenPreview: true, trpc: newSessionMocks },
-    render: () => <NewSessionScreen />,
+    parameters: { screenPreview: true },
+    render: () => (
+      <View className="flex-1 justify-end">
+        <ConfiguredComposer agent={catalog.agent} />
+      </View>
+    ),
     play: async ({ canvas, userEvent }) => {
       const overlay = within(document.body);
       await settleViewport(width);
       await userEvent.click(
         await canvas.findByRole('button', { name: agentModelLabel }),
-      );
-      if (width < 720)
-        await userEvent.click(
-          await overlay.findByRole('button', { name: chooseAgentLabel }),
-        );
-      await userEvent.click(
-        await overlay.findByRole('button', {
-          name: `Select ${catalog.agent.label}`,
-        }),
       );
       await expect(
         await overlay.findByRole('slider', { name: 'Effort' }),
@@ -561,6 +558,34 @@ function pickers(width: number, agentIndex: number): Story {
       await expectDangerousMode({ canvas, userEvent, width, catalog });
     },
   };
+}
+
+function ConfiguredComposer({
+  agent,
+}: {
+  agent: AgentInfo;
+}): React.JSX.Element {
+  const [configOptions, setConfigOptions] = useState(agent.configOptions);
+  return (
+    <Composer
+      {...composerProps({
+        draft: { text: '', images: [] },
+        onDraftChange: fn(),
+        onSend: fn(),
+        onAttachImages: fn(),
+        configuration: {
+          agents: [agent],
+          agent: agent.agent,
+          configOptions,
+          onConfigChange: (configId, value) =>
+            setConfigOptions((options) =>
+              updateComposerSettings(options, configId, value),
+            ),
+          checkout: { branch: 'main', newWorktree: false },
+        },
+      })}
+    />
+  );
 }
 export const PickersPhoneFirstAgent = pickers(layoutWidths.phone, 0);
 export const PickersPhoneSecondAgent = pickers(layoutWidths.phone, 1);
@@ -590,7 +615,9 @@ async function chooseModel({
 
 async function expectEffortControlsVisible(): Promise<void> {
   const overlay = within(document.body);
-  await expect(overlay.getByRole('slider', { name: 'Effort' })).toBeVisible();
+  await waitFor(() =>
+    expect(overlay.getByRole('slider', { name: 'Effort' })).toBeVisible(),
+  );
   for (const label of overlay.getAllByRole('button', {
     name: /^Set effort to /,
   })) {
@@ -664,7 +691,7 @@ async function expectDangerousMode({
 }: PickerStep & { catalog: PickerCatalog }): Promise<void> {
   const overlay = within(document.body);
   const { planning, dangerous } = catalog;
-  await userEvent.click(canvas.getByRole('button', { name: 'Mode' }));
+  await userEvent.click(await canvas.findByRole('button', { name: 'Mode' }));
   const planMode = await overlay.findByRole('button', { name: planning.name });
   await waitFor(() => expect(planMode).toBeVisible());
   await expect(
@@ -879,7 +906,7 @@ function sessionControls(width: number): Story {
         );
       }
       await userEvent.click(
-        canvas.getByRole('button', { name: contextWindowLabel }),
+        await canvas.findByRole('button', { name: contextWindowLabel }),
       );
       await waitFor(() =>
         expect(overlay.getByText('Smart zone · below 20%')).toBeVisible(),
@@ -888,7 +915,9 @@ function sessionControls(width: number): Story {
         await overlay.findByRole('button', { name: 'Compact' }),
       );
       await expect(onCompact).toHaveBeenCalledOnce();
-      await userEvent.click(canvas.getByRole('button', { name: 'Usage' }));
+      await userEvent.click(
+        await canvas.findByRole('button', { name: 'Usage' }),
+      );
       await waitFor(() =>
         expect(overlay.getByText('5-hour limit')).toBeVisible(),
       );
@@ -900,7 +929,7 @@ function sessionControls(width: number): Story {
       ).not.toBeInTheDocument();
       await userEvent.keyboard('{Escape}');
       await expect(args.onStop).not.toHaveBeenCalled();
-      const stop = canvas.getByRole('button', { name: 'Stop' });
+      const stop = await canvas.findByRole('button', { name: 'Stop' });
       await expect(stop).toBeEnabled();
       await expect(
         canvas.queryByRole('button', { name: 'Send' }),

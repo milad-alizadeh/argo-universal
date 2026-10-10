@@ -4,24 +4,26 @@ import type { ReactElement, ReactNode } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useResolveClassNames } from 'uniwind';
 import type { ButtonProps } from '#primitives/button';
-import { Popover, PopoverContent, PopoverTrigger } from '#primitives/popover';
 import { useWide } from '../navigation/use-wide';
+import { Popover, PopoverContent, PopoverTrigger } from '../primitives/popover';
 import { ComposerSheet } from './composer-sheet';
 
 function PopoverPanel({
   children,
   disabled,
+  close,
 }: {
   children: (close: (after?: () => void) => void) => ReactNode;
   disabled?: boolean;
+  close: (after?: () => void) => void;
 }): ReactNode {
   const { onOpenChange } = useRootContext();
   useEffect(() => {
     if (disabled) onOpenChange(false);
   }, [disabled, onOpenChange]);
   return children((after) => {
+    close(after);
     onOpenChange(false);
-    after?.();
   });
 }
 
@@ -42,14 +44,14 @@ export function ComposerPopover({
   const wide = useWide();
   const layout = useResolveClassNames(className ?? '');
   const [open, setOpen] = useState(false);
-  const { close, closed } = useAfterClose(setOpen);
+  const { close, closed, onOpenChange } = useAfterClose(setOpen);
   if (trigger.props.disabled && open) setOpen(false);
   if (!wide)
     return (
       <ComposerSheet
         style={layout}
         open={open}
-        onOpenChange={setOpen}
+        onOpenChange={onOpenChange}
         onClosed={closed}
         trigger={trigger}
         label={label}
@@ -58,7 +60,7 @@ export function ComposerPopover({
       </ComposerSheet>
     );
   return (
-    <Popover style={layout}>
+    <Popover style={layout} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild disabled={trigger.props.disabled}>
         {trigger}
       </PopoverTrigger>
@@ -66,10 +68,11 @@ export function ComposerPopover({
         side="top"
         align="start"
         accessibilityLabel={label}
+        onClosed={closed}
         style={{ width }}
         className="composer-popover p-0 rounded-lg overflow-hidden"
       >
-        <PopoverPanel disabled={!!trigger.props.disabled}>
+        <PopoverPanel disabled={!!trigger.props.disabled} close={close}>
           {children}
         </PopoverPanel>
       </PopoverContent>
@@ -80,9 +83,17 @@ export function ComposerPopover({
 function useAfterClose(setOpen: (open: boolean) => void): {
   close: (after?: () => void) => void;
   closed: () => void;
+  onOpenChange: (open: boolean) => void;
 } {
   const afterClose = useRef<(() => void) | undefined>(undefined);
   return {
+    onOpenChange: useCallback(
+      (open: boolean): void => {
+        if (open) afterClose.current = undefined;
+        setOpen(open);
+      },
+      [setOpen],
+    ),
     close: useCallback(
       (after?: () => void): void => {
         afterClose.current = after;

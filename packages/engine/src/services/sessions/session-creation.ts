@@ -10,6 +10,7 @@ import {
   submitSessionPrompt,
   validateSessionCommandAdmission,
 } from './session-command';
+import { applySessionConfig } from './session-configuration';
 import type { SessionActorRef } from './session-machine';
 import {
   requireOpenSessionActor,
@@ -113,6 +114,10 @@ export async function createSession(
     requireOpenSessionActor(context.sessions, sessionId),
   );
   await waitForSessionInsertCommitted(context.sessions, sessionId);
+  await applyInitialConfiguration(
+    requireOpenSessionActor(context.sessions, sessionId),
+    newSession,
+  );
   await submitInitialAcpPrompt(
     requireOpenSessionActor(context.sessions, sessionId),
   );
@@ -127,4 +132,19 @@ const submitInitialAcpPrompt = (session: SessionActorRef): Promise<void> => {
     turnId: input.turnId,
     content: input.prompt,
   });
+};
+
+const applyInitialConfiguration = async (
+  session: SessionActorRef,
+  input: SessionNewInput,
+): Promise<void> => {
+  if (!session.getSnapshot().context.acpLease) return;
+  for (const choice of input.configOptions)
+    await applySessionConfig(session, {
+      sessionId: session.getSnapshot().context.sessionId,
+      configId: choice.configId,
+      ...(typeof choice.value === 'boolean'
+        ? { type: 'boolean', value: choice.value }
+        : { type: 'id', value: choice.value }),
+    });
 };

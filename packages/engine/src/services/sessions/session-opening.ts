@@ -57,7 +57,9 @@ async function waitForSessionReady(
     sessionActor,
     (sessionSnapshot): boolean =>
       sessionSnapshot.status !== 'active' ||
-      !isInitialSessionStartup(sessionSnapshot),
+      (!isInitialSessionStartup(sessionSnapshot) &&
+        (commandType !== 'session.prompt' ||
+          !sessionSnapshot.matches({ open: { acp: 'configuring' } }))),
     { timeout: Infinity },
   );
   return requireReadySession(sessionActor, commandType);

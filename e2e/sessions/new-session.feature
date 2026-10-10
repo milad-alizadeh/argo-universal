@@ -1,4 +1,30 @@
 Feature: New Session
+  Scenario Outline: Configure the actual Session before its first prompt with Agent <agent>
+    Given a phone Frame
+    And a New Session with Agent <agent>
+    When I open the Session before prompting
+    And I enable Fast mode
+    And I send the prompt "Use my configured Session"
+    Then the Agent replies "The shared fixture completed this Turn."
+    And Fast mode remains enabled
+
+    Examples:
+      | agent |
+      | 1     |
+      | 2     |
+
+  Scenario Outline: Explicitly cancel an empty Session with Agent <agent>
+    Given a phone Frame
+    And a New Session with Agent <agent>
+    When I open the Session before prompting
+    And I cancel Session creation
+    Then the Sessions list is shown
+
+    Examples:
+      | agent |
+      | 1     |
+      | 2     |
+
   Scenario Outline: A text prompt starts a Session with Agent <agent>
     Given a phone Frame
     And a New Session with Agent <agent>
