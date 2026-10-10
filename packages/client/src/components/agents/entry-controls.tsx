@@ -72,7 +72,7 @@ function EntryRows({
 }
 
 // One phone list row naming an argument or variable; pressing it opens its sheet.
-export function EntryRow(props: EntryRowProps): React.JSX.Element {
+function EntryRow(props: EntryRowProps): React.JSX.Element {
   return (
     <Pressable
       role="button"

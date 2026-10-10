@@ -3,13 +3,15 @@ import { useState } from 'react';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
 import { Checkbox } from './checkbox';
 
+type CheckedExampleProps = {
+  initialChecked?: boolean;
+  disabled?: boolean;
+};
+
 function CheckedExample({
   initialChecked = false,
   disabled = false,
-}: {
-  initialChecked?: boolean;
-  disabled?: boolean;
-}) {
+}: CheckedExampleProps): React.JSX.Element {
   const [checked, setChecked] = useState(initialChecked);
   return (
     <Checkbox

@@ -1,5 +1,6 @@
 import { Slot } from '@rn-primitives/slot';
 import { cva, type VariantProps } from 'class-variance-authority';
+import type { ReactElement } from 'react';
 import * as React from 'react';
 import { Platform, Text as RNText, type Role } from 'react-native';
 import { cn } from '#lib/utils';
@@ -70,23 +71,39 @@ const ARIA_LEVEL: Partial<Record<TextVariant, string>> = {
 
 const TextClassContext = React.createContext<string | undefined>(undefined);
 
-function Text({
-  className,
-  asChild = false,
-  variant = 'default',
-  ...props
-}: React.ComponentProps<typeof RNText> &
+type TextProps = React.ComponentProps<typeof RNText> &
   React.RefAttributes<typeof RNText> &
   TextVariantProps & {
     asChild?: boolean;
-  }) {
+  };
+
+function textSemantics(variant: TextVariantProps['variant']): {
+  role?: Role;
+  level?: string;
+} {
+  if (!variant) return {};
+  return { role: ROLE[variant], level: ARIA_LEVEL[variant] };
+}
+
+function textClassName(
+  variant: TextVariantProps['variant'],
+  inherited?: string,
+  className?: string,
+): string {
+  return cn(textVariants({ variant }), inherited, className);
+}
+
+function Text(options: TextProps): ReactElement {
+  const { className, asChild, variant, ...props } = options;
+  const resolvedVariant = variant === undefined ? 'default' : variant;
   const textClass = React.useContext(TextClassContext);
   const Component = asChild ? Slot : RNText;
+  const classes = textClassName(resolvedVariant, textClass, className);
   return (
     <Component
-      className={cn(textVariants({ variant }), textClass, className)}
-      role={variant ? ROLE[variant] : undefined}
-      aria-level={variant ? ARIA_LEVEL[variant] : undefined}
+      className={classes}
+      role={textSemantics(resolvedVariant).role}
+      aria-level={textSemantics(resolvedVariant).level}
       {...props}
     />
   );

@@ -4,7 +4,7 @@ import type { TokenUsageBreakdown } from './protocol.gen';
 import type { ToolCallRow } from './tool-calls';
 export const messageTextField = 'content.0.text';
 
-export type TextKind = 'agent_message' | 'agent_thought';
+type TextKind = 'agent_message' | 'agent_thought';
 export type TextRow = Extract<FeedUpdate, { sessionUpdate: TextKind }>;
 export interface MappingState {
   vendorTurnId: string | null;

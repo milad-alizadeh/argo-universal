@@ -34,7 +34,7 @@ type WriterLogParameters = { line: string };
 const writeEvent = 'writer.write';
 // Feed row jobs the Writer keeps queued by default; past the limit it refuses more, while lifecycle jobs still queue.
 const defaultFeedRowJobLimit = 256;
-export const storageFailingMessage = 'Storage is failing';
+const storageFailingMessage = 'Storage is failing';
 
 export interface WriterInput {
   database: Database;

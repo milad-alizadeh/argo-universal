@@ -1,38 +1,36 @@
 import { Host, Slider as NativeSlider } from '@expo/ui/swift-ui';
 import {
-  accessibilityLabel as accessibilityLabelModifier,
+  accessibilityLabel,
   accessibilityValue,
   tint,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
-import { useResolveClassNames } from 'uniwind';
+import { usePrimitiveColor } from './primitive-color';
 import type { SliderProps } from './slider';
 
-// The system slider; it snaps to each step.
-export function Slider({
-  valueLabel,
-  accessibilityLabel,
-  value,
-  minimumValue,
-  maximumValue,
-  step,
-  onValueChange,
-}: SliderProps): React.JSX.Element {
-  const primary = useResolveClassNames('text-primary').color;
+export function Slider(props: SliderProps): React.JSX.Element {
+  const modifiers = useSliderModifiers(props);
   return (
     <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
       <NativeSlider
-        value={value ?? minimumValue}
-        min={minimumValue}
-        max={maximumValue}
-        step={step}
-        onValueChange={onValueChange}
-        modifiers={[
-          accessibilityLabelModifier(accessibilityLabel),
-          accessibilityValue(valueLabel),
-          ...(typeof primary === 'string' ? [tint(primary)] : []),
-        ]}
+        value={props.value ?? props.minimumValue}
+        min={props.minimumValue}
+        max={props.maximumValue}
+        step={props.step}
+        onValueChange={props.onValueChange}
+        modifiers={modifiers}
       />
     </Host>
   );
+}
+
+function useSliderModifiers(
+  props: Pick<SliderProps, 'accessibilityLabel' | 'valueLabel'>,
+): React.ComponentProps<typeof NativeSlider>['modifiers'] {
+  const primary = usePrimitiveColor('text-primary');
+  return [
+    accessibilityLabel(props.accessibilityLabel),
+    accessibilityValue(props.valueLabel),
+    ...(primary === undefined ? [] : [tint(primary)]),
+  ];
 }

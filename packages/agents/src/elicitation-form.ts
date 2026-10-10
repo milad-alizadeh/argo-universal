@@ -1,6 +1,6 @@
 import { parseAgentEvent, type AgentEvent } from './agent-events';
 
-export interface ElicitationQuestion {
+interface ElicitationQuestion {
   id: string;
   title: string;
   question: string;

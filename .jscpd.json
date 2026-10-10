@@ -7,7 +7,6 @@
   "ignore": [
     "**/node_modules/**",
     "**/*.stories.tsx",
-    "packages/client/src/primitives/**",
     "**/*.test.*",
     "**/mocks/**",
     "**/*.mocks.*",
@@ -22,7 +21,6 @@
     "ignore": {
       "node_modules": "Installed dependencies, not our source.",
       "*.stories.tsx": "Stories repeat the same render shape by design.",
-      "packages/client/src/primitives": "Primitives wrap the same platform component variant by variant.",
       "tests, mocks, e2e, tools": "Not production logic; a new-clones-only gate for tests comes later.",
       "generated files": "Fix the generator, not the output: *.gen.*, storybook.requires.ts, uniwind-types.d.ts, packages/db/drizzle."
     },

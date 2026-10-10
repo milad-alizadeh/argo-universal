@@ -51,7 +51,7 @@ const applyContentChange = (
     unaddressedPlan: assembled.unaddressedPlan,
   };
 };
-export const applyAcpContentUpdate = (
+const applyAcpContentUpdate = (
   input: AcpContentInput,
 ): ContentResult | undefined => {
   try {

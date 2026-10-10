@@ -10,41 +10,54 @@ import {
   CardTitle,
 } from '#primitives/card';
 import { Input } from '#primitives/input';
-import { Label } from '#primitives/label';
 import { Text } from '#primitives/text';
 
-function CardPreview() {
+function CardPreview(): React.JSX.Element {
   return (
     <Card className="w-full max-w-sm">
-      <CardHeader className="flex-row">
-        <View className="flex-1 gap-1.5">
-          <CardTitle>Subscribe to our newsletter</CardTitle>
-          <CardDescription>
-            Enter your details to receive updates and tips
-          </CardDescription>
-        </View>
-      </CardHeader>
-      <CardContent>
-        <View className="w-full justify-center gap-4">
-          <View className="gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" placeholder="m@example.com" />
-          </View>
-          <View className="gap-2">
-            <Label htmlFor="name">Name</Label>
-            <Input id="name" placeholder="John Doe" />
-          </View>
-        </View>
-      </CardContent>
-      <CardFooter className="flex-col gap-2">
-        <Button className="w-full">
-          <Text>Subscribe</Text>
-        </Button>
-        <Button variant="outline" className="w-full">
-          <Text>Later</Text>
-        </Button>
-      </CardFooter>
+      <NewsletterHeader />
+      <NewsletterFields />
+      <NewsletterFooter />
     </Card>
+  );
+}
+function NewsletterHeader(): React.JSX.Element {
+  return (
+    <CardHeader className="flex-row">
+      <View className="flex-1 gap-1.5">
+        <CardTitle>Subscribe to our newsletter</CardTitle>
+        <CardDescription>
+          Enter your details to receive updates and tips
+        </CardDescription>
+      </View>
+    </CardHeader>
+  );
+}
+const newsletterFields = [
+  { id: 'email', label: 'Email', placeholder: 'm@example.com' },
+  { id: 'name', label: 'Name', placeholder: 'John Doe' },
+];
+function NewsletterFields(): React.JSX.Element {
+  return (
+    <CardContent>
+      <View className="w-full justify-center gap-4">
+        {newsletterFields.map((field) => (
+          <NewsletterField key={field.id} {...field} />
+        ))}
+      </View>
+    </CardContent>
+  );
+}
+function NewsletterFooter(): React.JSX.Element {
+  return (
+    <CardFooter className="flex-col gap-2">
+      <Button className="w-full">
+        <Text>Subscribe</Text>
+      </Button>
+      <Button variant="outline" className="w-full">
+        <Text>Later</Text>
+      </Button>
+    </CardFooter>
   );
 }
 
@@ -59,3 +72,17 @@ export const Overview: Story = {
   name: 'Card',
   render: () => <CardPreview />,
 };
+
+function NewsletterField({
+  id,
+  label,
+  placeholder,
+}: (typeof newsletterFields)[number]): React.JSX.Element {
+  const inputProps = { id, accessibilityLabel: label, placeholder };
+  return (
+    <View className="gap-2">
+      <Text className="text-sm font-medium">{label}</Text>
+      <Input {...inputProps} />
+    </View>
+  );
+}

@@ -70,9 +70,7 @@ const answerOrTimeout = async (process: AcpProcess): Promise<void> => {
 };
 
 // Starts the program, sends the shared ACP initialize and stops it; readiness is never read from storage.
-export const checkAgentLaunch = async (
-  subject: CheckSubject,
-): Promise<AgentCheck> => {
+const checkAgentLaunch = async (subject: CheckSubject): Promise<AgentCheck> => {
   const process = await launchAcpProcess(subject.launch);
   try {
     await answerOrTimeout(process);

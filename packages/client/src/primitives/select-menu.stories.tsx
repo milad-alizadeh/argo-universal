@@ -11,27 +11,37 @@ const efforts = [
 
 type Effort = (typeof efforts)[number]['value'];
 
+type SelectMenuExampleProps = {
+  initialValue?: Effort;
+  disabled?: boolean;
+  invalid?: boolean;
+};
+
 function SelectMenuExample({
   initialValue,
   disabled = false,
   invalid = false,
-}: {
-  initialValue?: Effort;
-  disabled?: boolean;
-  invalid?: boolean;
-}) {
+}: SelectMenuExampleProps): React.JSX.Element {
   const [value, setValue] = useState(initialValue);
-  return (
-    <SelectMenu
-      accessibilityLabel="Effort"
-      value={value}
-      options={efforts}
-      onValueChange={setValue}
-      disabled={disabled}
-      invalid={invalid}
-    />
-  );
+  const menuProps = {
+    value,
+    options: efforts,
+    onValueChange: setValue,
+    disabled,
+    invalid,
+  };
+  return <SelectMenu accessibilityLabel="Effort" {...menuProps} />;
 }
+
+const examples: {
+  label: string;
+  props: React.ComponentProps<typeof SelectMenuExample>;
+}[] = [
+  { label: 'Placeholder', props: {} },
+  { label: 'Selected', props: { initialValue: 'medium' } },
+  { label: 'Invalid', props: { invalid: true } },
+  { label: 'Disabled', props: { initialValue: 'medium', disabled: true } },
+];
 
 const meta = {
   title: 'Design System/Primitives/SelectMenu',
@@ -43,18 +53,11 @@ export const Overview: Story = {
   name: 'SelectMenu',
   render: () => (
     <Variations>
-      <Variation label="Placeholder">
-        <SelectMenuExample />
-      </Variation>
-      <Variation label="Selected">
-        <SelectMenuExample initialValue="medium" />
-      </Variation>
-      <Variation label="Invalid">
-        <SelectMenuExample invalid />
-      </Variation>
-      <Variation label="Disabled">
-        <SelectMenuExample initialValue="medium" disabled />
-      </Variation>
+      {examples.map(({ label, props }) => (
+        <Variation key={label} label={label}>
+          <SelectMenuExample {...props} />
+        </Variation>
+      ))}
     </Variations>
   ),
 };

@@ -1,53 +1,86 @@
 import { Host, Picker, Text } from '@expo/ui/swift-ui';
 import {
-  accessibilityLabel as accessibilityLabelModifier,
-  disabled as disabledModifier,
+  accessibilityLabel,
+  disabled,
   pickerStyle,
   tag,
   tint,
 } from '@expo/ui/swift-ui/modifiers';
 import type * as React from 'react';
-import { useResolveClassNames } from 'uniwind';
+import { usePrimitiveColor } from './primitive-color';
 import type { SelectMenuProps } from './select-menu';
 
 const unchosen = '';
 
-// The system pop-up menu; it shows the placeholder until a choice is made.
-export function SelectMenu<Value extends string>({
-  value,
-  options,
-  onValueChange,
-  accessibilityLabel,
-  placeholder = 'Choose…',
-  disabled,
-  invalid,
-}: SelectMenuProps<Value>): React.JSX.Element {
-  const destructive = useResolveClassNames('text-destructive').color;
-  const chosen = options.find((option) => option.value === value);
+export function SelectMenu<Value extends string>(
+  props: SelectMenuProps<Value>,
+): React.JSX.Element {
+  const modifiers = usePickerModifiers(props);
+  const selection = pickerSelection(props);
   return (
     <Host matchContents>
-      <Picker
-        selection={chosen?.value ?? unchosen}
-        onSelectionChange={(next: string) => {
-          const option = options.find((item) => item.value === next);
-          if (option) onValueChange(option.value);
-        }}
-        modifiers={[
-          pickerStyle('menu'),
-          accessibilityLabelModifier(accessibilityLabel),
-          disabledModifier(disabled),
-          ...(invalid && typeof destructive === 'string'
-            ? [tint(destructive)]
-            : []),
-        ]}
-      >
-        {chosen ? null : <Text modifiers={[tag(unchosen)]}>{placeholder}</Text>}
-        {options.map((option) => (
-          <Text key={option.value} modifiers={[tag(option.value)]}>
-            {option.label}
-          </Text>
-        ))}
+      <Picker {...selection} modifiers={modifiers}>
+        <PickerChoices {...props} />
       </Picker>
     </Host>
   );
+}
+
+function chooseOption<Value extends string>(
+  next: string,
+  props: Pick<SelectMenuProps<Value>, 'options' | 'onValueChange'>,
+): void {
+  const option = props.options.find((item) => item.value === next);
+  if (option) props.onValueChange(option.value);
+}
+
+function usePickerModifiers(
+  props: Pick<
+    SelectMenuProps<string>,
+    'accessibilityLabel' | 'disabled' | 'invalid'
+  >,
+): React.ComponentProps<typeof Picker>['modifiers'] {
+  const destructive = usePrimitiveColor('text-destructive');
+  return [
+    pickerStyle('menu'),
+    accessibilityLabel(props.accessibilityLabel),
+    disabled(props.disabled),
+    ...(props.invalid && destructive !== undefined ? [tint(destructive)] : []),
+  ];
+}
+
+function pickerSelection<Value extends string>(
+  props: Pick<SelectMenuProps<Value>, 'value' | 'options' | 'onValueChange'>,
+): Pick<
+  React.ComponentProps<typeof Picker>,
+  'selection' | 'onSelectionChange'
+> {
+  return {
+    selection:
+      props.options.find((option) => option.value === props.value)?.value ??
+      unchosen,
+    onSelectionChange: (next): void => {
+      if (typeof next === 'string') chooseOption(next, props);
+    },
+  };
+}
+
+function PickerChoices<Value extends string>(
+  props: Pick<SelectMenuProps<Value>, 'value' | 'options' | 'placeholder'>,
+): React.JSX.Element {
+  const chosen = props.options.some((option) => option.value === props.value);
+  return (
+    <>
+      {!chosen && <PickerPlaceholder text={props.placeholder ?? 'Choose…'} />}
+      {props.options.map((option) => (
+        <Text key={option.value} modifiers={[tag(option.value)]}>
+          {option.label}
+        </Text>
+      ))}
+    </>
+  );
+}
+
+function PickerPlaceholder({ text }: { text: string }): React.JSX.Element {
+  return <Text modifiers={[tag(unchosen)]}>{text}</Text>;
 }

@@ -1,6 +1,15 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignore": ["**/*.gen.*"],
   "workspaces": {
+    "packages/client": {
+      // Metro selects platform modules by filename rather than by a literal import.
+      "entry": ["src/**/*.@(android|ios|native|web).{ts,tsx}"]
+    },
+    "packages/agents": {
+      // The protocol generator is also a supported manual regeneration command.
+      "entry": ["codex/generate-protocol.ts"]
+    },
     "apps/desktop": {
       // Knip has no Electron Forge plugin, so forge.config.mts and the Vite `build` entries it names by string are listed by hand.
       "entry": [
@@ -24,13 +33,15 @@
     "apps/universal-app": {
       // Native modules the app must list itself so Expo autolinks them; @repo/client, expo-symbols and Expo Router reach them at runtime.
       "ignoreDependencies": [
-        "expo-font",
-        "react-native-svg",
         "@expo/ui",
         "expo-clipboard",
         "expo-file-system",
+        "expo-font",
         "expo-haptics",
-        "expo-image-picker"
+        "expo-image-picker",
+        "react-native-svg",
+        // Knip assumes OTA updates are installed unless Expo config explicitly disables them.
+        "expo-updates"
       ],
       // Config plugins that app.json names by path.
       "entry": ["plugins/*.mjs"]
@@ -44,7 +55,7 @@
       ]
     },
     "e2e": {
-      // playwright-bdd loads step definitions from the config string.
+      // playwright-bdd discovers step definitions through the config's steps glob.
       "entry": ["steps/**/*.ts"],
       // Listed so Turborepo hashes the Server, App, and Desktop into the e2e tasks; the specs reach them over HTTP and Electron, not imports.
       "ignoreDependencies": [
@@ -58,76 +69,6 @@
       "entry": ["*.{mts,mjs}"],
       // profile-shell.mjs resolves Playwright from @repo/e2e on purpose.
       "ignoreDependencies": ["@playwright/test"]
-    },
-    "packages/client": {
-      // Planned and vendored primitives are retained with their export surfaces; screens pick from them.
-      "ignore": [
-        "src/primitives/accordion.stories.tsx",
-        "src/primitives/accordion.tsx",
-        "src/primitives/alert-dialog.stories.tsx",
-        "src/primitives/alert-dialog.tsx",
-        "src/primitives/alert.stories.tsx",
-        "src/primitives/alert.tsx",
-        "src/primitives/aspect-ratio.stories.tsx",
-        "src/primitives/aspect-ratio.tsx",
-        "src/primitives/avatar.stories.tsx",
-        "src/primitives/avatar.tsx",
-        "src/primitives/badge.stories.tsx",
-        "src/primitives/badge.tsx",
-        "src/primitives/button.stories.tsx",
-        "src/primitives/button.tsx",
-        "src/primitives/card.stories.tsx",
-        "src/primitives/card.tsx",
-        "src/primitives/checkbox.stories.tsx",
-        "src/primitives/checkbox.tsx",
-        "src/primitives/collapsible.stories.tsx",
-        "src/primitives/collapsible.tsx",
-        "src/primitives/context-menu.stories.tsx",
-        "src/primitives/context-menu.tsx",
-        "src/primitives/dialog.stories.tsx",
-        "src/primitives/dialog.tsx",
-        "src/primitives/dropdown-menu.stories.tsx",
-        "src/primitives/dropdown-menu.tsx",
-        "src/primitives/hover-card.stories.tsx",
-        "src/primitives/hover-card.tsx",
-        "src/primitives/icon.tsx",
-        "src/primitives/input.stories.tsx",
-        "src/primitives/input.tsx",
-        "src/primitives/label.stories.tsx",
-        "src/primitives/label.tsx",
-        "src/primitives/menubar.stories.tsx",
-        "src/primitives/menubar.tsx",
-        "src/primitives/native-only-animated-view.stories.tsx",
-        "src/primitives/native-only-animated-view.tsx",
-        "src/primitives/popover.stories.tsx",
-        "src/primitives/popover.tsx",
-        "src/primitives/progress.stories.tsx",
-        "src/primitives/progress.tsx",
-        "src/primitives/radio-group.stories.tsx",
-        "src/primitives/radio-group.tsx",
-        "src/primitives/select.stories.tsx",
-        "src/primitives/select.tsx",
-        "src/primitives/separator.stories.tsx",
-        "src/primitives/separator.tsx",
-        "src/primitives/skeleton.stories.tsx",
-        "src/primitives/skeleton.tsx",
-        "src/primitives/slider.native.tsx",
-        "src/primitives/slider.tsx",
-        "src/primitives/switch.stories.tsx",
-        "src/primitives/switch.tsx",
-        "src/primitives/tabs.stories.tsx",
-        "src/primitives/tabs.tsx",
-        "src/primitives/text.stories.tsx",
-        "src/primitives/text.tsx",
-        "src/primitives/textarea.stories.tsx",
-        "src/primitives/textarea.tsx",
-        "src/primitives/toggle-group.stories.tsx",
-        "src/primitives/toggle-group.tsx",
-        "src/primitives/toggle.stories.tsx",
-        "src/primitives/toggle.tsx",
-        "src/primitives/tooltip.stories.tsx",
-        "src/primitives/tooltip.tsx"
-      ]
     }
   }
 }

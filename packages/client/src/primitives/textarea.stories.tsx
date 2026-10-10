@@ -2,6 +2,19 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
 import { Textarea } from './textarea';
 
+const examples: {
+  label: string;
+  props: React.ComponentProps<typeof Textarea> & { 'aria-invalid'?: boolean };
+}[] = [
+  { label: 'Empty', props: { placeholder: 'Message' } },
+  {
+    label: 'Filled',
+    props: { defaultValue: 'Hello from Argo.', placeholder: 'Message' },
+  },
+  { label: 'Read-only', props: { editable: false, placeholder: 'Message' } },
+  { label: 'Invalid', props: { 'aria-invalid': true, placeholder: 'Message' } },
+];
+
 const meta = {
   title: 'Design System/Primitives/Textarea',
   tags: ['third-party'],
@@ -13,18 +26,11 @@ export const Overview: Story = {
   name: 'Textarea',
   render: () => (
     <Variations>
-      <Variation label="Empty">
-        <Textarea placeholder="Message" />
-      </Variation>
-      <Variation label="Filled">
-        <Textarea defaultValue="Hello from Argo." placeholder="Message" />
-      </Variation>
-      <Variation label="Read-only">
-        <Textarea editable={false} placeholder="Message" />
-      </Variation>
-      <Variation label="Invalid">
-        <Textarea aria-invalid placeholder="Message" />
-      </Variation>
+      {examples.map(({ label, props }) => (
+        <Variation key={label} label={label}>
+          <Textarea {...props} />
+        </Variation>
+      ))}
     </Variations>
   ),
 };

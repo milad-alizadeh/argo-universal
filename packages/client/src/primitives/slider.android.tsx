@@ -1,38 +1,40 @@
 import { Host, Slider as NativeSlider } from '@expo/ui/jetpack-compose';
 import type * as React from 'react';
-import { useResolveClassNames } from 'uniwind';
+import { usePrimitiveColor } from './primitive-color';
 import type { SliderProps } from './slider';
+import { sliderStopCount } from './slider-steps';
 
-// The Material slider; it snaps to each step.
-export function Slider({
-  value,
-  minimumValue,
-  maximumValue,
-  step,
-  onValueChange,
-}: SliderProps): React.JSX.Element {
-  const primary = useResolveClassNames('text-primary').color;
-  const muted = useResolveClassNames('text-muted').color;
-  const primaryColor = typeof primary === 'string' ? primary : undefined;
-  const mutedColor = typeof muted === 'string' ? muted : undefined;
-  // Compose counts only the stops between the two ends.
-  const stops = Math.round((maximumValue - minimumValue) / step) - 1;
+export function Slider(props: SliderProps): React.JSX.Element {
+  const colors = useSliderColors();
   return (
     <Host matchContents={{ vertical: true }} style={{ width: '100%' }}>
-      <NativeSlider
-        value={value ?? minimumValue}
-        min={minimumValue}
-        max={maximumValue}
-        steps={Math.max(0, stops)}
-        onValueChange={onValueChange}
-        colors={{
-          thumbColor: primaryColor,
-          activeTrackColor: primaryColor,
-          inactiveTrackColor: mutedColor,
-          activeTickColor: mutedColor,
-          inactiveTickColor: primaryColor,
-        }}
-      />
+      <NativeSlider {...sliderAttributes(props)} colors={colors} />
     </Host>
   );
+}
+
+function useSliderColors(): React.ComponentProps<
+  typeof NativeSlider
+>['colors'] {
+  const primary = usePrimitiveColor('text-primary');
+  const muted = usePrimitiveColor('text-muted');
+  return {
+    thumbColor: primary,
+    activeTrackColor: primary,
+    inactiveTrackColor: muted,
+    activeTickColor: muted,
+    inactiveTickColor: primary,
+  };
+}
+
+function sliderAttributes(
+  props: SliderProps,
+): React.ComponentProps<typeof NativeSlider> {
+  return {
+    value: props.value ?? props.minimumValue,
+    min: props.minimumValue,
+    max: props.maximumValue,
+    steps: Math.max(0, sliderStopCount(props) - 2),
+    onValueChange: props.onValueChange,
+  };
 }

@@ -13,7 +13,7 @@ import { writerMachine } from '../src/services/feed';
 
 type SupervisorSnapshot = SnapshotFrom<typeof syncSupervisorMachine>;
 const synchronized = 'xstate.done.actor.synchronize';
-export const supervisorEvents = [
+const supervisorEvents = [
   {
     type: 'sync.request',
     admitted: { resolve: (): void => {}, reject: (): void => {} },

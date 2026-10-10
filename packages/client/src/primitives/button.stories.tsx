@@ -38,13 +38,19 @@ export const Overview: Story = {
           </View>
         </Variation>
       ))}
-      <Variation label="Icon">
-        <View className="flex-row">
-          <Button size="icon" accessibilityLabel="Add">
-            <Icon name="add" />
-          </Button>
-        </View>
-      </Variation>
+      <IconExample />
     </Variations>
   ),
 };
+
+function IconExample(): React.JSX.Element {
+  return (
+    <Variation label="Icon">
+      <View className="flex-row">
+        <Button size="icon" accessibilityLabel="Add">
+          <Icon name="add" />
+        </Button>
+      </View>
+    </Variation>
+  );
+}

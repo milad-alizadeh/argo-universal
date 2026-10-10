@@ -1,23 +1,23 @@
+const variants = ['default', 'secondary', 'destructive', 'outline'] as const;
+
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { Variation, Variations } from '../../mocks/primitive-story-variations';
 import { Badge } from './badge';
 import { Text } from './text';
 
-function VariantExamples() {
+function VariantExamples(): React.JSX.Element {
   return (
     <Variations>
-      {(['default', 'secondary', 'destructive', 'outline'] as const).map(
-        (variant) => (
-          <Variation key={variant} label={variant}>
-            <View className="flex-row">
-              <Badge variant={variant}>
-                <Text>Badge</Text>
-              </Badge>
-            </View>
-          </Variation>
-        ),
-      )}
+      {variants.map((variant) => (
+        <Variation key={variant} label={variant}>
+          <View className="flex-row">
+            <Badge variant={variant}>
+              <Text>Badge</Text>
+            </Badge>
+          </View>
+        </Variation>
+      ))}
     </Variations>
   );
 }
