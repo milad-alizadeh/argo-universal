@@ -2,13 +2,14 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { View } from 'react-native';
 import { action } from 'storybook/actions';
 import {
+  composerFastModeConfiguration,
   composerLongListConfiguration,
-  composerNoEffortSelections,
+  composerUnlistedEffortConfigurations,
   composerUnavailableConfigurations,
 } from '../../mocks/composer-mock';
 import { ComposerAgentModelControl } from './composer-configuration';
 
-const configuration = composerNoEffortSelections[0];
+const configuration = composerUnlistedEffortConfigurations[0];
 if (!configuration)
   throw new Error('Recorded catalog needs an Agent with effort.');
 const meta = {
@@ -18,8 +19,8 @@ const meta = {
 } satisfies Meta<typeof ComposerAgentModelControl>;
 export default meta;
 
-export const NoEffortSelection: StoryObj<typeof meta> = {
-  name: 'No effort selection',
+export const DefaultEffort: StoryObj<typeof meta> = {
+  name: 'Default effort',
   render: (args) => (
     <View className="p-4">
       <ComposerAgentModelControl
@@ -56,5 +57,11 @@ export const UnavailableAgent: StoryObj<typeof meta> = {
 export const LongLists: StoryObj<typeof meta> = {
   name: 'Long Agent and model lists',
   args: { configuration: composerLongListConfiguration },
-  render: NoEffortSelection.render,
+  render: DefaultEffort.render,
+};
+
+export const FastMode: StoryObj<typeof meta> = {
+  name: 'Fast mode on',
+  args: { configuration: composerFastModeConfiguration(true) },
+  render: DefaultEffort.render,
 };

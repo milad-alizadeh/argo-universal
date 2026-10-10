@@ -1,6 +1,6 @@
 import * as DialogPrimitive from '@rn-primitives/dialog';
 import type * as React from 'react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import type { ComposerSheetProps } from './composer-sheet-layout';
 
@@ -32,12 +32,33 @@ export function ComposerSheet({
           <DialogPrimitive.Title className="sr-only">
             {label}
           </DialogPrimitive.Title>
-          <View className="items-center pt-1.5 pb-2">
-            <View className="w-9 h-1.25 rounded-full bg-muted-foreground/40" />
-          </View>
-          <ScrollView>{children}</ScrollView>
+          <SheetBody>{children}</SheetBody>
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>
+  );
+}
+
+// The sheet keeps the tallest height it has had, so moving to a shorter page does not shrink it.
+function SheetBody({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.JSX.Element {
+  const [tallest, setTallest] = useState(0);
+  return (
+    <View
+      style={{ minHeight: tallest }}
+      className="shrink"
+      onLayout={(event) => {
+        const { height } = event.nativeEvent.layout;
+        setTallest((previous) => Math.max(previous, height));
+      }}
+    >
+      <View className="items-center pt-1.5 pb-2">
+        <View className="w-9 h-1.25 rounded-full bg-muted-foreground/40" />
+      </View>
+      <ScrollView>{children}</ScrollView>
+    </View>
   );
 }

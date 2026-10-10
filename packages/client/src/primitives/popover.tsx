@@ -27,8 +27,12 @@ function PopoverContent({
   return (
     <PopoverPrimitive.Portal hostName={portalHost}>
       <FullWindowOverlay>
+        {/* On web the overlay wraps the content, so it carries the layer: z-50 like the sheets, and later in the page, so a popover opened from a sheet draws above it. */}
         <PopoverPrimitive.Overlay
-          style={Platform.select({ native: StyleSheet.absoluteFill })}
+          style={Platform.select({
+            native: StyleSheet.absoluteFill,
+            web: { zIndex: 50 },
+          })}
           asChild={Platform.OS !== 'web'}
         >
           <NativeOnlyAnimatedView

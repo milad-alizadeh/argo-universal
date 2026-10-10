@@ -6,8 +6,8 @@ import type {
   SessionConfigSelectOption,
 } from '@repo/contracts';
 import type * as React from 'react';
-import { useEffect, useState } from 'react';
-import { Platform, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Pressable, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import { withUniwind } from 'uniwind';
 import type { IconName } from '#lib/icon-names';
@@ -17,7 +17,9 @@ import { Text } from '#primitives/text';
 import { Icon } from '../lib/icon';
 import { listTestIdProps } from '../lib/list-test-id';
 import { useWide } from '../navigation/use-wide';
+import { InfoPopover } from '../primitives/info-popover';
 import { Slider } from '../primitives/slider';
+import { Switch } from '../primitives/switch';
 import {
   publishAgentModelConfiguration,
   useNativeSheets,
@@ -27,8 +29,12 @@ import { useContentWide } from './content-layout';
 import { ScrollFadeList } from './scroll-fade-list';
 
 const destructiveTextClassName = 'text-destructive';
+// The trigger marks Fast mode with a bolt while it is on.
+const fastModeConfigId = 'fast';
+const effortDescription = 'More effort trades speed for deeper reasoning.';
 
 type SelectConfiguration = Extract<SessionConfigOption, { type: 'select' }>;
+type BooleanConfiguration = Extract<SessionConfigOption, { type: 'boolean' }>;
 export interface ComposerConfigurationProps {
   agents: AgentInfo[];
   agent: string;
@@ -53,6 +59,13 @@ function choices(option?: SelectConfiguration): SessionConfigSelectOption[] {
     ) ?? []
   );
 }
+function switches(
+  configuration: ComposerConfigurationProps,
+): BooleanConfiguration[] {
+  return configuration.configOptions.filter(
+    (option): option is BooleanConfiguration => option.type === 'boolean',
+  );
+}
 function selection(
   configuration: ComposerConfigurationProps,
   category: string,
@@ -66,6 +79,8 @@ function currentEffort(configuration: ComposerConfigurationProps): {
   option: ReturnType<typeof selection>;
   choices: SessionConfigSelectOption[];
   selected: SessionConfigSelectOption | undefined;
+  // True when the Agent's value is not a level this model offers, so selected is the fallback.
+  fallback: boolean;
 } {
   const model = selection(configuration, 'model');
   const option = selection(configuration, 'thought_level');
@@ -79,13 +94,31 @@ function currentEffort(configuration: ComposerConfigurationProps): {
       : choices(option).filter(
           (choice) => !levels || levels.includes(choice.value),
         );
+  const current = effortChoices.find(
+    (choice) => choice.value === option?.currentValue,
+  );
   return {
     option,
     choices: effortChoices,
-    selected: effortChoices.find(
-      (choice) => choice.value === option?.currentValue,
-    ),
+    selected: current ?? fallbackEffort(choices(option), effortChoices, option),
+    fallback: !current && effortChoices.length > 0,
   };
+}
+
+// Effort always has a level: the highest offered level at or below the Agent's value, else the middle one.
+function fallbackEffort(
+  all: SessionConfigSelectOption[],
+  offered: SessionConfigSelectOption[],
+  option: ReturnType<typeof selection>,
+): SessionConfigSelectOption | undefined {
+  const rank = all.findIndex((choice) => choice.value === option?.currentValue);
+  const below =
+    rank < 0
+      ? []
+      : offered.filter(
+          (choice) => all.findIndex((c) => c.value === choice.value) < rank,
+        );
+  return below.at(-1) ?? offered[Math.floor(offered.length / 2)];
 }
 
 const configurationIcons: Record<string, IconName> = {
@@ -219,11 +252,24 @@ function modelName(choice?: SessionConfigSelectOption): string {
   );
 }
 
+// The heading's text starts where the rows' text does; padding on web Text is inline, so a View carries it.
 function MenuHeading({ children }: { children: string }): React.JSX.Element {
+  return (
+    <View className="px-1.5 wide:px-1 py-1">
+      <MenuHeadingText>{children}</MenuHeadingText>
+    </View>
+  );
+}
+
+function MenuHeadingText({
+  children,
+}: {
+  children: string;
+}): React.JSX.Element {
   return (
     <Text
       selectable={false}
-      className="select-none px-2 py-1 type-badge text-muted-foreground"
+      className="select-none type-badge text-muted-foreground"
     >
       {children}
     </Text>
@@ -238,11 +284,8 @@ export function AgentChoices({
   onSelect: () => void;
 }): React.JSX.Element {
   const wide = useWide();
-  const agents = configuration.onAgentChange
-    ? configuration.agents
-    : configuration.agents.filter(
-        (agent) => agent.agent === configuration.agent,
-      );
+  // A running Session keeps its Agent: the list stays, disabled, with that Agent chosen.
+  const agents = configuration.agents;
   const renderAgent = (agent: AgentInfo): React.JSX.Element => {
     const availability =
       agent.availability === 'available'
@@ -267,9 +310,9 @@ export function AgentChoices({
           aria-pressed={agent.agent === configuration.agent}
           className={cn(
             'min-h-11 wide:min-h-8 h-auto sm:h-auto py-1.5 px-2.5 has-[>[data-icon]]:px-2.5 wide:px-2 wide:has-[>[data-icon]]:px-2 rounded-sm justify-start gap-2.5 wide:gap-2 web:focus-visible:ring-0 web:focus-visible:bg-accent',
-            configuration.onAgentChange &&
-              agent.agent === configuration.agent &&
-              'bg-accent',
+            // The desktop pane sits on the sidebar colour, so its chosen row needs a deeper fill; a running Session dims only the Agents it cannot switch to.
+            agent.agent === configuration.agent &&
+              'bg-accent wide:bg-foreground/7 opacity-100 disabled:opacity-100',
           )}
           onPress={() => {
             if (agent.agent !== configuration.agent)
@@ -299,8 +342,7 @@ export function AgentChoices({
               </Text>
             )}
           </View>
-          {configuration.onAgentChange &&
-            agent.agent === configuration.agent && <Icon name="check" />}
+          {agent.agent === configuration.agent && <Icon name="check" />}
         </Button>
         {availability && onAvailabilityAction && (
           <Button
@@ -323,13 +365,9 @@ export function AgentChoices({
       </View>
     );
   };
-  // In a View, since bare Text in a list footer is inline on web and pads only its first line.
-  const footer = configuration.onAgentChange ? null : (
-    <View className="pl-8 pr-2 pb-1">
-      <Text selectable={false} className="select-none type-secondary">
-        Start a new Session to switch Agent
-      </Text>
-    </View>
+
+  const currentIndex = agents.findIndex(
+    (agent) => agent.agent === configuration.agent,
   );
   if (wide)
     return (
@@ -342,18 +380,17 @@ export function AgentChoices({
           paddingBottom: 4,
         }}
         data={agents}
+        initialScrollIndex={currentIndex > 0 ? currentIndex : undefined}
         keyExtractor={(agent) => agent.agent}
         renderItem={({ item }) => renderAgent(item)}
         estimatedItemSize={34}
         ItemSeparatorComponent={ChoiceSeparator}
-        ListFooterComponent={footer}
         extraData={configuration}
       />
     );
   return (
     <View className="px-gutter-list py-1 wide:p-1 gap-0.5">
       {agents.map(renderAgent)}
-      {footer}
     </View>
   );
 }
@@ -438,9 +475,10 @@ function EffortControl({
     choices: effortChoices,
     selected,
   } = currentEffort(configuration);
-  if (!effort || !effortChoices.length) return null;
-  const selectedIndex = selected ? effortChoices.indexOf(selected) : undefined;
-  const levelLabel = selected?.name ?? 'No selection';
+  const wide = useWide();
+  if (!effort || !effortChoices.length || !selected) return null;
+  const selectedIndex = effortChoices.indexOf(selected);
+  const levelLabel = selected.name;
   const onSliderChange = (index: number): void => {
     const choice = effortChoices[Math.round(index)];
     if (choice) configuration.onConfigChange(effort.configId, choice.value);
@@ -456,83 +494,149 @@ function EffortControl({
       onValueChange={onSliderChange}
     />
   );
-  // Phones draw the system slider under a row like Agent and Model, with the level on the right.
-  if (Platform.OS !== 'web')
+  const ends = (
+    <View className="flex-row justify-between">
+      <Text selectable={false} className="select-none type-secondary">
+        Fastest
+      </Text>
+      <Text selectable={false} className="select-none type-secondary">
+        Smartest
+      </Text>
+    </View>
+  );
+  // Outside the wide menu, Effort is a row like Agent and Model, with the level on the right.
+  if (!wide)
     return (
-      <View className="px-gutter pb-3">
-        <View className="h-11 flex-row items-center gap-2">
-          <Text selectable={false} className="select-none flex-1 type-body">
-            Effort
-          </Text>
-          <Text
-            selectable={false}
-            className="select-none type-body text-muted-foreground"
-          >
-            {levelLabel}
-          </Text>
+      // The same insets as the Agent and Model rows, so the labels line up.
+      <View className="px-gutter-list pb-3">
+        <View className="px-2.5 web:px-3 gap-1.5">
+          <View className="h-11 flex-row items-center gap-2">
+            <Text selectable={false} className="select-none type-body">
+              Effort
+            </Text>
+            {/* The margin sits the icon 6px after the label. */}
+            <View className="-ml-2">
+              <InfoPopover
+                accessibilityLabel="About effort"
+                text={effortDescription}
+              />
+            </View>
+            <View className="flex-1" />
+            <Text
+              selectable={false}
+              className="select-none type-body text-muted-foreground"
+            >
+              {selected.name}
+            </Text>
+          </View>
+          {slider}
+          {ends}
         </View>
-        {slider}
       </View>
     );
   return (
-    <View className="px-gutter wide:px-3 pt-2.5 pb-3 gap-2.5">
+    <View className="px-2 pt-2.5 pb-3 gap-2.5">
       <View className="gap-0.5">
-        <Text
-          selectable={false}
-          className="select-none type-badge text-muted-foreground"
-        >
-          {selected ? 'Effort' : levelLabel}
-        </Text>
+        <View className="flex-row items-center gap-2">
+          <MenuHeadingText>Effort</MenuHeadingText>
+          <View className="flex-1" />
+          <Text selectable={false} className="select-none type-secondary">
+            {selected.name}
+          </Text>
+        </View>
         <Text selectable={false} className="select-none type-secondary">
-          More effort trades speed for deeper reasoning.
+          {effortDescription}
         </Text>
       </View>
       <View className="gap-1.5">
         {slider}
-        <View className="flex-row justify-between px-1.5">
-          {effortChoices.map((choice, index) => {
-            let effortAlignment: string;
-            if (index === 0) {
-              effortAlignment = 'items-start';
-            } else if (index === effortChoices.length - 1) {
-              effortAlignment = 'items-end';
-            } else {
-              effortAlignment = 'items-center';
-            }
-            return (
-              <View
-                key={choice.value}
-                className={cn('w-1 overflow-visible', effortAlignment)}
-              >
-                <Button
-                  variant="ghost"
-                  accessibilityLabel={`Set effort to ${choice.name}`}
-                  aria-pressed={choice === selected}
-                  onPress={() =>
-                    configuration.onConfigChange(effort.configId, choice.value)
-                  }
-                  className={cn(
-                    'h-4 sm:h-4 native:w-16 px-0 py-0 active:bg-transparent hover:bg-transparent dark:hover:bg-transparent',
-                    index === 0 && '-ml-1.5 justify-start',
-                    index === effortChoices.length - 1 && '-mr-1.5 justify-end',
-                  )}
-                >
-                  <Text
-                    selectable={false}
-                    numberOfLines={1}
-                    className={cn(
-                      'select-none type-secondary',
-                      choice === selected && 'text-foreground',
-                    )}
-                  >
-                    {choice.name}
-                  </Text>
-                </Button>
-              </View>
-            );
-          })}
-        </View>
+        {ends}
       </View>
+    </View>
+  );
+}
+
+/*
+ * Each on/off option the Agent offers, such as Fast mode, is a row with a switch.
+ * Desktop shows the description under the name; the phone puts it behind an info button, as Effort does.
+ */
+function SwitchOptions({
+  configuration,
+}: {
+  configuration: ComposerConfigurationProps;
+}): React.JSX.Element | null {
+  const wide = useWide();
+  const options = switches(configuration);
+  if (!options.length) return null;
+  return (
+    // The same insets as the rows above, so the labels line up.
+    <View className="px-gutter-list wide:px-0">
+      {options.map((option) => {
+        const label = (
+          <Text selectable={false} className="select-none type-body">
+            {option.name}
+          </Text>
+        );
+        // The row is the control, so the switch only shows its state.
+        const toggle = (
+          <View
+            pointerEvents="none"
+            aria-hidden
+            importantForAccessibility="no-hide-descendants"
+          >
+            <Switch
+              size={wide ? 'small' : 'default'}
+              checked={option.currentValue}
+              onCheckedChange={() => {}}
+            />
+          </View>
+        );
+        const rowProps = {
+          accessibilityRole: 'switch',
+          accessibilityLabel: option.name,
+          accessibilityState: { checked: option.currentValue },
+          onPress: () =>
+            configuration.onConfigChange(option.configId, !option.currentValue),
+        } as const;
+        if (!wide)
+          return (
+            <Pressable
+              key={option.configId}
+              {...rowProps}
+              className="h-11 px-2.5 web:px-3 flex-row items-center gap-2"
+            >
+              {label}
+              {option.description ? (
+                // The margin sits the icon 6px after the label.
+                <View className="-ml-2">
+                  <InfoPopover
+                    accessibilityLabel={`About ${option.name.toLowerCase()}`}
+                    text={option.description}
+                  />
+                </View>
+              ) : null}
+              <View className="flex-1" />
+              {toggle}
+            </Pressable>
+          );
+        return (
+          <Pressable
+            key={option.configId}
+            {...rowProps}
+            className="px-2 py-2 flex-row items-center gap-3 rounded-sm web:outline-none web:hover:bg-accent web:focus-visible:bg-accent"
+          >
+            <View className="flex-1 min-w-0 gap-0.5">
+              {label}
+              {option.description ? (
+                <Text selectable={false} className="select-none type-secondary">
+                  {option.description}
+                </Text>
+              ) : null}
+            </View>
+            {toggle}
+          </Pressable>
+        );
+      })}
     </View>
   );
 }
@@ -619,10 +723,6 @@ export function AgentModelMenu({
             <Button
               variant="ghost"
               accessibilityLabel="Choose Agent"
-              disabled={
-                !configuration.onAgentChange &&
-                agent?.availability === 'available'
-              }
               onPress={() => openPage('agent')}
               className="h-11 sm:h-11 px-2.5 gap-2 justify-start"
             >
@@ -636,22 +736,12 @@ export function AgentModelMenu({
               >
                 {agent?.label}
               </Text>
-              {configuration.onAgentChange && (
-                <Icon
-                  size="sm"
-                  name="chevron-right"
-                  className="-ml-0.5 text-muted-foreground"
-                />
-              )}
+              <Icon
+                size="sm"
+                name="chevron-right"
+                className="-ml-0.5 text-muted-foreground"
+              />
             </Button>
-            {!configuration.onAgentChange && (
-              <Text
-                selectable={false}
-                className="select-none type-secondary px-2 pb-1"
-              >
-                Start a new Session to switch Agent
-              </Text>
-            )}
             <Button
               variant="ghost"
               accessibilityLabel="Choose model"
@@ -675,6 +765,7 @@ export function AgentModelMenu({
             </Button>
           </View>
         )}
+        <SwitchOptions configuration={configuration} />
         <EffortControl configuration={configuration} />
         {configuration.turnRunning && (
           <View className="flex-row gap-2 px-gutter wide:px-3 py-2.5 bg-muted">
@@ -705,7 +796,23 @@ export function ComposerAgentModelControl({
   const current = choices(model).find(
     (choice) => choice.value === model?.currentValue,
   );
-  const effortLabel = currentEffort(configuration).selected?.name;
+  const effort = currentEffort(configuration);
+  const effortLabel = effort.selected?.name;
+  const fastOn = switches(configuration).some(
+    (option) => option.configId === fastModeConfigId && option.currentValue,
+  );
+  // Commit the fallback level so what is shown is what the Agent runs with.
+  const fallbackValue = effort.fallback ? effort.selected?.value : undefined;
+  const effortConfigId = effort.option?.configId;
+  // The latest callback is read through a ref so a new callback identity does not commit again.
+  const onConfigChange = useRef(configuration.onConfigChange);
+  useEffect(() => {
+    onConfigChange.current = configuration.onConfigChange;
+  });
+  useEffect(() => {
+    if (effortConfigId && fallbackValue)
+      onConfigChange.current(effortConfigId, fallbackValue);
+  }, [effortConfigId, fallbackValue]);
   const agent = configuration.agents.find(
     (entry) => entry.agent === configuration.agent,
   );
@@ -747,6 +854,14 @@ export function ComposerAgentModelControl({
                 {effortLabel}
               </Text>
             )}
+          {fastOn && (
+            <Icon
+              name="fast-mode"
+              filled
+              className="text-foreground"
+              testID="fast-mode-on"
+            />
+          )}
           {wide && (
             <Icon
               size="sm"
@@ -821,12 +936,7 @@ export function ComposerModeControl({
     >
       {(close) => (
         <View className="px-gutter-list py-1 wide:p-1 gap-0.5">
-          <Text
-            selectable={false}
-            className="select-none px-2 pt-1.5 pb-1 type-badge text-muted-foreground"
-          >
-            Mode
-          </Text>
+          <MenuHeading>Mode</MenuHeading>
           {choices(mode).map((choice) => (
             <Choice
               key={choice.value}
