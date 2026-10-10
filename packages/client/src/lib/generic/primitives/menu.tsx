@@ -27,7 +27,7 @@ export function Menu<Value extends string>({
       <MenuPrimitive.Portal>
         <MenuPrimitive.Content
           align="end"
-          className="w-65 bg-popover rounded-surface py-2 shadow-card"
+          className="w-65 bg-popover rounded-surface py-2 shadow-card dark:border dark:border-border"
         >
           <MenuPrimitive.RadioGroup
             value={value}

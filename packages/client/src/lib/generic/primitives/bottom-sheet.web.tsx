@@ -88,6 +88,6 @@ function sheetContentProps(
     'aria-describedby': undefined,
     onCloseAutoFocus: props.onClosed,
     className:
-      'bottom-sheet max-h-[85vh] rounded-t-surface bg-popover pb-8.5 shadow-card outline-none',
+      'bottom-sheet max-h-[85vh] rounded-t-surface bg-popover pb-8.5 shadow-card dark:border dark:border-border outline-none',
   };
 }
