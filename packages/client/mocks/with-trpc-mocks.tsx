@@ -30,7 +30,7 @@ export function withTrpcMocks(
   );
 }
 
-export function TrpcMocks({
+function TrpcMocks({
   fixtures,
   connectionState,
   children,
