@@ -36,6 +36,7 @@ class SessionSnapshotObserver implements Subscription {
   private feedThrottle: ReturnType<typeof setTimeout> | undefined;
   private feedDirty = false;
   private registryListener: Subscription | undefined;
+  private registeredSessions: unknown;
   private readonly reader: SessionSnapshotReader;
 
   public constructor(
@@ -72,10 +73,17 @@ class SessionSnapshotObserver implements Subscription {
 
   private watchRegistry(): void {
     this.registryListener = this.options.sessions?.subscribe({
-      next: (): void => this.sessionChanged(),
+      next: (registry): void => this.registryChanged(registry.context.sessions),
       error: (error): void => this.reject(error),
       complete: (): void => this.closed(),
     });
+  }
+
+  // The registry changes with every Session's every update; only its membership matters here.
+  private registryChanged(sessions: unknown): void {
+    if (sessions === this.registeredSessions) return;
+    this.registeredSessions = sessions;
+    this.sessionChanged();
   }
 
   private sessionChanged(): void {
@@ -185,7 +193,7 @@ class SessionSnapshotObserver implements Subscription {
     return [
       this.session,
       session?.status,
-      JSON.stringify(session?.value),
+      session?.value,
       session?.context,
       this.feed,
       this.feedVersion,
